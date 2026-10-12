@@ -511,8 +511,8 @@ Goal: the polished, playable core loop with D12 content.
 | R3 | Kit seams are visible between modular pieces. | A strict edge contract, normal blending at the hex border, and a seam gate in P1. |
 | R4 | Asset throughput: high-poly + bake per piece is slow. | Scripted generators, a shared helper library, and family-level reviews. |
 | R5 | Single-threaded WASM limits simulation scale (TC1). | Simulation LOD, GPU compute for flocks, and a worker fallback (§7.3). |
-| R7 | Safari or Firefox WebGPU differences cause rendering bugs. | Local browser e2e tests in each supported browser before releases. |
-| R8 | Bundle size grows past Pages limits. | Size budgets enforced in `checkall-ci`, plus streaming biome packs. |
+| R6 | Safari or Firefox WebGPU differences cause rendering bugs. | Local browser e2e tests in each supported browser before releases. |
+| R7 | Bundle size grows past Pages limits. | Size budgets enforced in `checkall-ci`, plus streaming biome packs. |
 
 ## 17. Open questions
 
