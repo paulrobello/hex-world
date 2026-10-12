@@ -1292,10 +1292,10 @@ git commit -m "feat(web): Trunk WebGPU build, unsupported gate, hexWorld bridge,
 
 ---
 
-### Task 6: Engine-gate scene: 2,000 tiles, full post stack, diagnostics, perf gate
+### Task 6: Engine-gate scene: real tile workload, full post stack, diagnostics, perf gate
 
 **Files:**
-- Create: `crates/hex-render/src/post.rs`, `crates/hex-render/src/diag.rs`, `e2e/perf-gate.mjs`
+- Create: `crates/hex-render/src/post.rs`, `crates/hex-render/src/diag.rs`, `crates/hex-render/src/workload.rs`, `e2e/perf-gate.mjs`
 - Modify: `crates/hex-render/src/lib.rs`, `crates/hex-render/src/scene.rs`, `crates/hex-app/src/main.rs`, `Makefile`
 
 **Interfaces:**
@@ -1304,7 +1304,97 @@ git commit -m "feat(web): Trunk WebGPU build, unsupported gate, hexWorld bridge,
   - `pub enum QualityTier { Low, Medium, High, Ultra }`, with `High` as the default.
   - `pub struct FrameStats` with `fn push(&mut self, ms: f32)`, `fn p50(&self) -> f32` and `fn p95(&self) -> f32` over a 600-sample ring.
   - `#[derive(Resource)] pub struct DiagSnapshot { pub json: String }`, updated every 30 frames with `{"p50":..,"p95":..,"tiles":..,"ssao":bool,"gpu_preprocessing":"..","adapter":".."}`. `hex-app` copies it into `bridge::DIAG_JSON`.
-  - `make perf-gate`, which writes `docs/perf/p0-engine-gate.json`.
+  - `pub struct GateWorkload { pub tiles: usize, pub pieces_per_tile: usize, pub materials: usize, pub moving: usize, pub tris_lod0_per_tile: usize }` with `pub const GATE: GateWorkload` and `fn entities(&self) -> usize`. The gate scene spawns exactly this workload, and the perf JSON reports it.
+  - `#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum GateView { Strategic, Closeup }`, selected by `?view=closeup` (default `Strategic`).
+  - `make perf-gate`, which writes `docs/perf/p0-engine-gate.json` with both views measured.
+
+The gate must load Bevy with the real tile shape, not 2,000 bare prisms (owner rule: performance is measured at production-scale workload). PRD §6 and §10 define a tile as a base, 6 edge pieces, a center piece and a prop scatter, with LOD1/LOD2 at 50% and 15% of LOD0. The placeholder workload below copies those counts and triangle budgets. Agents come from PRD §7.2 (High tier: 300 vehicles; the 1,000 birds are the Task 7 boids).
+
+| Piece | Count per tile | LOD0 tris | Placeholder mesh |
+|---|---|---|---|
+| Base | 1 | 1,000 | `hex_prism` with a subdivided cap (rings) |
+| Edge pieces | 6 | 600 each | subdivided box strips along each edge |
+| Center | 1 | 1,500 | icosphere (subdivision 3), flattened |
+| Props | 12 | 800 each | icosphere (subdivision 2) and cylinders |
+| Per tile | 20 entities | 15,700 | |
+
+- 2,000 tiles × 20 = 40,000 static entities, plus 300 moving "vehicle" boxes driven along circles every frame.
+- 40 distinct `StandardMaterial`s (base color, roughness and metallic varied), assigned by `(tile index × 7 + piece index) % 40`.
+- Each piece has LOD0/LOD1/LOD2 meshes (decimated by lowering the subdivision level), switched with Bevy's `VisibilityRange`. Find its 0.20 form in `target/ref/bevy/examples/3d/visibility_range.rs`. LOD switch distances are 150 m and 400 m.
+- Two camera views are measured: `Strategic` (whole world, 900 m out, mostly LOD2) and `Closeup` (street level, 40 m above tile `(3, 2)` looking across the world, mostly LOD0 with deep shadow cascades).
+
+- [ ] **Step 0: Write the failing workload test, then implement `workload.rs`**
+
+`crates/hex-render/src/workload.rs`:
+```rust
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct GateWorkload {
+    pub tiles: usize,
+    pub pieces_per_tile: usize,
+    pub materials: usize,
+    pub moving: usize,
+    pub tris_lod0_per_tile: usize,
+}
+
+pub const GATE: GateWorkload = GateWorkload {
+    tiles: 2000,
+    pieces_per_tile: 20,
+    materials: 40,
+    moving: 300,
+    tris_lod0_per_tile: 1000 + 6 * 600 + 1500 + 12 * 800,
+};
+
+impl GateWorkload {
+    pub fn entities(&self) -> usize {
+        self.tiles * self.pieces_per_tile + self.moving
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum GateView {
+    #[default]
+    Strategic,
+    Closeup,
+}
+
+impl GateView {
+    pub fn parse(s: &str) -> Option<GateView> {
+        match s {
+            "strategic" => Some(GateView::Strategic),
+            "closeup" => Some(GateView::Closeup),
+            _ => None,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gate_matches_prd_tile_shape() {
+        assert_eq!(GATE.tiles, 2000);
+        assert_eq!(GATE.pieces_per_tile, 1 + 6 + 1 + 12);
+        assert_eq!(GATE.tris_lod0_per_tile, 15_700);
+        assert_eq!(GATE.entities(), 40_300);
+    }
+
+    #[test]
+    fn views_parse() {
+        assert_eq!(GateView::parse("closeup"), Some(GateView::Closeup));
+        assert_eq!(GateView::parse("x"), None);
+    }
+}
+```
+
+Run `cargo test -p hex-render workload` once before writing the implementation (expect a compile error), then once after (expect 2 passed).
+
+For each piece type, add a mesh builder in `scene.rs` that produces the three LODs. In a test, assert that each builder's LOD0 triangle count is within ±10% of the table value, and that LOD1 and LOD2 are at or below 55% and 20% of LOD0. Count triangles as `indices.len() / 3`.
+
+Then in `Scenario::Gate2000`, spawn the workload:
+- Each tile gets its 20 pieces as child entities of a `Tile` entity at the tile's world position.
+- Spawn 300 `Vehicle` entities, moved every frame by a system: `pos = center + (cos(t·ω), 0, sin(t·ω))·r`, using per-vehicle seeded ω and r.
+- `?view=` selects the camera view, and `args.rs` gains a `view` key using `GateView::parse`. Unknown values warn and fall back, exactly like the scenario key. Add a `flags_from_pairs` test for `view=closeup` and `view=bogus`.
 
 - [ ] **Step 1: Write the failing `FrameStats` tests in `diag.rs`**
 
@@ -1425,6 +1515,7 @@ fn sample(
     mut snap: ResMut<DiagSnapshot>,
     modes: Res<RenderModes>,
     tiles: Query<(), With<crate::scene::Tile>>,
+    meshes: Query<(), With<Mesh3d>>,
 ) {
     st.frames += 1;
     if st.frames > 60 {
@@ -1432,8 +1523,8 @@ fn sample(
     }
     if st.frames % 30 == 0 {
         snap.json = format!(
-            "{{\"p50\":{:.2},\"p95\":{:.2},\"tiles\":{},\"ssao\":{},\"gpu_preprocessing\":\"{}\",\"adapter\":\"{}\",\"samples\":{}}}",
-            st.stats.p50(), st.stats.p95(), tiles.iter().count(), modes.ssao,
+            "{{\"p50\":{:.2},\"p95\":{:.2},\"tiles\":{},\"entities\":{},\"ssao\":{},\"gpu_preprocessing\":\"{}\",\"adapter\":\"{}\",\"samples\":{}}}",
+            st.stats.p50(), st.stats.p95(), tiles.iter().count(), meshes.iter().count(), modes.ssao,
             modes.gpu_preprocessing, modes.adapter.replace('"', "'"), st.stats.samples.len()
         );
     }
@@ -1515,35 +1606,46 @@ const server = createServer(async (req, res) => {
 }).listen(0);
 const base = `http://127.0.0.1:${server.address().port}/`;
 
+// Uncapped: a vsync-locked 60 Hz run reports p95 ≈ 16.67 ms and would read as a false failure.
 const browser = await chromium.launch({ channel: "chromium", headless: true,
-  args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"] });
-const page = await browser.newPage({ viewport: { width: 2560, height: 1440 }, deviceScaleFactor: 1 });
+  args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
+         "--disable-gpu-vsync", "--disable-frame-rate-limit"] });
 const errors = [];
-page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
-await page.goto(base + "?scenario=gate2000");
-await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 120_000 });
-await page.waitForTimeout(15_000);
-const diag = await page.evaluate(() => window.hexWorld.diag());
-
-// Review Focus 5: resize mid-run must not error.
-await page.setViewportSize({ width: 1600, height: 900 });
-await page.waitForTimeout(2_000);
-await page.setViewportSize({ width: 2560, height: 1440 });
-await page.waitForTimeout(2_000);
-
-const ua = await page.evaluate(() => navigator.userAgent);
+const views = {};
+let ua = "";
+for (const view of ["strategic", "closeup"]) {
+  const page = await browser.newPage({ viewport: { width: 2560, height: 1440 }, deviceScaleFactor: 1 });
+  page.on("console", (m) => { if (m.type() === "error") errors.push(`[${view}] ${m.text()}`); });
+  await page.goto(base + `?scenario=gate2000&view=${view}`);
+  await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 120_000 });
+  await page.waitForTimeout(15_000);
+  views[view] = await page.evaluate(() => window.hexWorld.diag());
+  if (view === "strategic") {
+    // Review Focus 5: resize mid-run must not error.
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.waitForTimeout(2_000);
+    await page.setViewportSize({ width: 2560, height: 1440 });
+    await page.waitForTimeout(2_000);
+  }
+  ua = await page.evaluate(() => navigator.userAgent);
+  await page.close();
+}
 await browser.close();
 server.close();
 
-const result = { date: new Date().toISOString(), browser: "chromium-headless-gpu", ua, viewport: "2560x1440",
-  budget_p95_ms: 16.6, ...diag, console_errors: errors, pass: diag.tiles === 2000 && diag.p95 <= 16.6 && errors.length === 0 };
+const workload = { tiles: 2000, pieces_per_tile: 20, entities: 40300, tris_lod0_per_tile: 15700,
+  materials: 40, moving: 300, boids: 1000, cascades: 4, post: ["taa", "ssao", "bloom", "dof"] };
+const ok = (d) => d.tiles === 2000 && d.entities >= 40000 && d.p95 <= 16.6;
+const result = { date: new Date().toISOString(), browser: "chromium-headless-gpu-uncapped", ua, viewport: "2560x1440",
+  budget_p95_ms: 16.6, workload, views, console_errors: errors,
+  pass: ok(views.strategic) && ok(views.closeup) && errors.length === 0 };
 await mkdir("docs/perf", { recursive: true });
 await writeFile("docs/perf/p0-engine-gate.json", JSON.stringify(result, null, 2) + "\n");
 console.log(JSON.stringify(result, null, 2));
 if (!result.pass) process.exitCode = 1;
 ```
 
-Headless Chromium may cap the frame rate at 60 fps or below because of vsync. A p95 of about 16.7 ms then means vsync-bound, not over budget. If p50 sits at exactly 16.6–16.7 ms, re-run with `--disable-gpu-vsync --disable-frame-rate-limit` added to the args, and record both runs in the JSON (`"vsync_off": true`).
+If p50 still sits at exactly 16.6–16.7 ms in both views, the uncapping flags did not take effect. Note `"vsync_suspected": true` in the JSON and report it rather than calling the run a pass or a fail.
 
 `Makefile`:
 ```make
@@ -1557,7 +1659,7 @@ perf-gate: build-web
 Run: `make checkall && make perf-gate`
 Expected:
 - The gate passes.
-- `docs/perf/p0-engine-gate.json` is written with `tiles: 2000`, a non-empty `adapter`, and the `ssao` and `gpu_preprocessing` values.
+- `docs/perf/p0-engine-gate.json` is written with the workload block, both views reporting `tiles: 2000` and `entities` ≥ 40,000, a non-empty `adapter`, and the `ssao` and `gpu_preprocessing` values.
 - Record the pass or fail result. A failed budget does **not** block this task. It is the input to the decision in Task 10.
 - A console error or validation error **does** block it: fix it first.
 - Also run `make run ARGS="--scenario gate2000"` natively and look at the window, or use `--shot gate2000 --exit-after 300` and read `target/shots/gate2000.png`. TAA, bloom, SSAO darkening between columns, and DOF blur at the edges should be visible.
@@ -2331,7 +2433,7 @@ Commit the JSON with `git commit -m "docs(perf): live deploy size and time-to-in
 - [ ] **Step 1: Collect browser measurements**
 
 - Chrome: `make perf-gate`. This is already the JSON from Task 6/7, re-run on the final build.
-- Safari 26 (macOS): open `http://127.0.0.1:<trunk port>/?scenario=gate2000&diag=1` from `trunk serve --release`, or the live URL, in a 2560×1440 window. Wait 15 s and read p50, p95, ssao and gpu_preprocessing from the overlay. Use the computer-use tools if the agent drives it. Otherwise the owner reads the numbers out. Append them to the JSON under `"safari"`.
+- Safari 26 (macOS): for both `view=strategic` and `view=closeup`, open `http://127.0.0.1:<trunk port>/?scenario=gate2000&view=<view>&diag=1` from `trunk serve --release`, or the live URL, in a 2560×1440 window. Wait 15 s and read p50, p95, ssao and gpu_preprocessing from the overlay. Use the computer-use tools if the agent drives it. Otherwise the owner reads the numbers out. Append them to the JSON under `"safari"`.
 - iOS 26 Safari smoke test: the owner opens the live URL on the iPhone and confirms the hex renders, or that a WebGPU-off device shows the unsupported page. Record the answer.
 
 - [ ] **Step 2: Write `docs/decisions/0001-engine.md`**
@@ -2344,7 +2446,8 @@ Date: <YYYY-MM-DD>  Status: Accepted
 ## Measurements
 | Check | Chrome | Safari | Pass? |
 |---|---|---|---|
-| p95 frame time, 2,000 tiles, High, 1440p | … ms | … ms | ≤16.6 |
+| p95 frame time, gate workload (40,300 entities, 15.7k tris/tile LOD0), strategic view | … ms | … ms | ≤16.6 |
+| p95 frame time, gate workload, close-up view | … ms | … ms | ≤16.6 |
 | SSAO active | … | … | yes |
 | GPU preprocessing mode | … | … | — |
 | TAA / bloom / DOF visible, no validation errors | … | … | yes |
