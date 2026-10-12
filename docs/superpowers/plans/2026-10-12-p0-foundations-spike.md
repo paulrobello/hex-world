@@ -1394,7 +1394,7 @@ For each piece type, add a mesh builder in `scene.rs` that produces the three LO
 Then in `Scenario::Gate2000`, spawn the workload:
 - Each tile gets its 20 pieces as child entities of a `Tile` entity at the tile's world position.
 - Spawn 300 `Vehicle` entities, moved every frame by a system: `pos = center + (cos(t·ω), 0, sin(t·ω))·r`, using per-vehicle seeded ω and r.
-- `?view=` selects the camera view, and `args.rs` gains a `view` key using `GateView::parse`. Unknown values warn and fall back, exactly like the scenario key. Add a `flags_from_pairs` test for `view=closeup` and `view=bogus`.
+- `?view=` selects the camera view, and `args.rs` gains a `view` key using `GateView::parse` (add `"view"` to the key list in `web_pairs`, and pass the view to `HexRenderPlugin` as a new `view: GateView` field). Unknown values warn and fall back, exactly like the scenario key. Add a `flags_from_pairs` test for `view=closeup` and `view=bogus`.
 
 - [ ] **Step 1: Write the failing `FrameStats` tests in `diag.rs`**
 
