@@ -6,7 +6,7 @@
 | Repo | `paulrobello/hex-world` (public, MIT) |
 | Hosting | GitHub Pages, custom domain `hex-world.pardev.net` |
 | Owner | Paul Robello |
-| Status | Draft v1 — brainstorm complete, awaiting review |
+| Status | Approved v1 (2026-10-12) |
 | Date | 2026-10-12 |
 
 ## 1. Summary
@@ -337,7 +337,9 @@ This adapts par-factory's pipeline (`~/Repos/par-factory/docs/specs/09-asset-pip
 - **Scripted (structural):** bases, edge pieces, road, rail, river and coast pieces, buildings. An Opus 5.5 subagent writes a reproducible `scripts/blender/kit/<piece-id>.py` generator and runs it headless (`blender -b -P`). Rebuilding from the script must be deterministic.
 - **Interactive (organic heroes):** mountains, volcano, cliffs, animals, hero trees. An Opus 5.5 subagent sculpts through the Blender MCP in a live session. The `.blend` source is saved to external storage (A4), and the piece is exported through the same scripted bake and LOD stage.
 
-One subagent works on one kit piece at a time. Pieces are built serially per family, and the owner reviews each family together.
+One subagent works on one kit piece at a time. At most 3 Blender asset subagents run concurrently, to avoid exhausting the machine's resources. The owner reviews each family together.
+
+Concept art, reference images and texture references are generated with Higgsfield (`higgsfield` CLI).
 
 ### 11.2 Stages
 
@@ -522,4 +524,4 @@ Goal: the polished, playable core loop with D12 content.
 | Q2 | External storage for `.blend` sources (R2 bucket vs. other). | P1 |
 | Q3 | Decoder route for KTX2/meshopt (§9.3). | P0 |
 | Q4 | Tone mapper (AgX vs. ACES). | P1 |
-| Q5 | Whether to register this PRD in par-prd (`prd.pardev.net`) as the canonical copy. | Owner |
+| Q5 | Resolved: the PRD is not registered in par-prd. `PRD.md` in this repo is canonical. | Owner |
