@@ -13,7 +13,7 @@
 
 Hex World is a browser-based world-building game. The world starts as a single hex tile. The player picks tiles from an inventory, rotates them, and places them next to existing tiles where the edges are compatible. Each placed tile rises out of the ground in a staged assembly animation, and the world comes alive: cars drive the roads, trains cross tile boundaries, rivers flow, windmills turn, animals roam farms, and birds flock overhead.
 
-The target is a "stylized-real diorama" at AAA visual quality: real PBR materials on slightly exaggerated miniature proportions. It is rendered by a custom Rust + wgpu engine compiled to WebAssembly on WebGPU. Every 3D asset is authored high-poly in Blender, baked to PBR textures, and reduced to runtime LODs. Sound effects and ambience come from ElevenLabs. Music comes from Suno, using a prompt pack kept in the repo.
+The target is a "stylized-real diorama" at AAA visual quality: real PBR materials on slightly exaggerated miniature proportions. It is rendered with Bevy 0.20 (Rust, compiled to WebAssembly on WebGPU) extended with custom render passes, with a custom wgpu renderer as the fallback route (D2). Every 3D asset is authored high-poly in Blender, baked to PBR textures, and reduced to runtime LODs. Sound effects and ambience come from ElevenLabs. Music comes from Suno, using a prompt pack kept in the repo.
 
 ## 2. Goals and non-goals
 
@@ -40,7 +40,7 @@ Decisions made during the brainstorm. Codes are stable and referenced throughout
 | Code | Decision |
 |---|---|
 | D1 | Core loop: sandbox + progression. No fail state. New tiles unlock through combo recipes, which arrive after the MVP. |
-| D2 | Engine: Rust + wgpu → WASM, WebGPU required. No WebGL2 fallback, so compute shaders may be used freely. |
+| D2 | Engine: Bevy `=0.20.0` (wgpu 30) → WASM, WebGPU required, extended with custom render-graph nodes for water, VAT creatures, compute boids and any post effect Bevy lacks on the web. No WebGL2 fallback, so compute shaders may be used freely. The P0 spike is the decision gate: if Bevy's TAA, SSAO or DOF fail in browser WebGPU, or 2,000 tiles miss the frame budget, switch to a custom wgpu 30 renderer with standalone `bevy_ecs`. Research basis: §18. |
 | D3 | Adjacency: typed edge sockets on all 6 edges, with a compatibility table. Rotation rotates the sockets. |
 | D4 | Inventory: every unlocked tile type is unlimited. The panel filters or highlights tiles that are legal at the hovered slot. |
 | D5 | Elevation: discrete height levels (target 0–3) with cliff and ramp sockets. The MVP ships at a single level, and the schema reserves the height fields from day one. |
@@ -56,7 +56,7 @@ Decisions made during the brainstorm. Codes are stable and referenced throughout
 | D15 | Placement animation: staged assembly over about 1.5–2.5 s, skippable by placing the next tile. |
 | D16 | Scale: about 2,000 tiles at 60 fps on desktop. |
 | D17 | Asset authoring: Opus 5.5 subagents. Structural pieces come from scripted headless Blender generators, and organic hero pieces are made interactively through the Blender MCP with `.blend` sources kept. |
-| D18 | UI: an HTML/CSS overlay (TypeScript) over the wgpu canvas, talking to Rust through wasm-bindgen. |
+| D18 | UI: an HTML/CSS overlay (TypeScript) over the game canvas, talking to Rust through wasm-bindgen. Bevy UI and egui are not used for player-facing UI. |
 | D19 | Name "Hex World". Public repo under MIT. Deployed to GitHub Pages at `hex-world.pardev.net`. |
 | D20 | Players get an undo stack and a bulldoze tool. Bulldozing is blocked if it would split the world into disconnected islands. |
 | D21 | Audio rights: the owner holds paid ElevenLabs and Suno subscriptions and owns the rights to all generated audio, so it may be committed to the public repo and served from the public site. Each audio asset's provenance records the provider and subscription. |
@@ -77,7 +77,8 @@ Decisions made during the brainstorm. Codes are stable and referenced throughout
 |---|---|
 | TC1 | GitHub Pages cannot set COOP/COEP headers, so `SharedArrayBuffer` and WASM threads are unavailable. The `coi-serviceworker` workaround exists, but it is not used by default (it breaks on first load and complicates caching). |
 | TC2 | GitHub Pages limits: the published site should stay under 1 GB, individual files under 100 MB, and soft bandwidth is about 100 GB/month. The runtime asset payload has a hard budget (§10). |
-| TC3 | par-factory's runtime decoders (meshopt and KTX2 through three.js JS decoders) do not carry over. Rust/WASM decoding of KTX2/Basis and meshopt must be proven in P0. |
+| TC3 | par-factory's runtime decoders (meshopt and KTX2 through three.js JS decoders) do not carry over. `bevy_gltf` supports neither `EXT_meshopt_compression`, `KHR_mesh_quantization` nor `KHR_texture_basisu` (bevy#19104), and Bevy's `basis-universal` feature wraps C++ that is unproven on wasm32. The asset route must be proven in P0 (§9.3). |
+| TC5 | Bevy on wasm32 runs single-threaded: no pipelined rendering, and pipeline compilation blocks the frame. All render pipelines are warmed behind the loading screen. Bevy breaks its API about every 4 months, so the version is pinned exactly and upgrades are deliberate tasks. |
 | TC4 | WebGPU availability: Chrome/Edge 113+, Safari 26+, and Firefox 141+ on Windows. Feature detection gates the app. |
 
 ## 4. Gameplay
@@ -271,7 +272,8 @@ The deterministic simulation core (grid, sockets, networks, pathing, agents) run
 
 ### 9.1 Pipeline
 
-- Rust + wgpu on the WebGPU backend, compiled to `wasm32-unknown-unknown` with wasm-bindgen.
+- Bevy `=0.20.0` on wgpu's WebGPU backend, compiled to `wasm32-unknown-unknown` with wasm-bindgen and built with Trunk (as in `~/Repos/suck-it-up`). Bevy provides PBR, cascaded shadows, bloom, tone mapping, TAA, SSAO and DOF. Custom render-graph nodes add water, VAT creatures, compute boids and anything the P0 spike shows is missing on the web.
+- Default features are disabled and only the needed Bevy features are enabled, to control wasm size. The game crate keeps `opt-level=3` while dependencies use `"z"` (suck-it-up measured a 2× slowdown in hot loops at `"z"`).
 - A clustered-forward PBR pipeline (metallic-roughness, glTF-conformant) with an HDR target.
 - Lighting: a directional sun with cascaded shadow maps (3–4 cascades, PCF/PCSS soft shadows), image-based lighting from a prefiltered environment map plus irradiance, and SSAO (GTAO). Screen-space GI is evaluated in P5.
 - Water: shared shaders for rivers and ocean, with flow maps on rivers, Gerstner or FFT waves on the ocean, depth-based color absorption, shoreline foam, and screen-space refraction plus planar or SSR reflection.
@@ -294,7 +296,7 @@ The tier is auto-detected on first run from adapter info and a short benchmark, 
 ### 9.3 Asset formats at runtime
 
 - glTF 2.0 binary (GLB) with `EXT_meshopt_compression` and `KHR_texture_basisu` (KTX2: UASTC for normals, ETC1S or UASTC+RDO for color maps). The browser transcodes to BC7 or ASTC depending on what the adapter supports.
-- The decoders are chosen in P0 (TC3). Options: (a) Rust-native decoders compiled into the main WASM; (b) the official Basis Universal transcoder WASM and the meshoptimizer decoder JS/WASM, called from TypeScript, with the decoded buffers handed to Rust; (c) a build-time conversion into a custom pre-transcoded binary format, per target compression family, served by feature detection.
+- The route is chosen in P0 (TC3). Preferred: (a) textures are shipped as pre-transcoded KTX2 + zstd in two families, BC7 (desktop) and ASTC (Apple mobile, P7), selected at runtime from the device's `texture-compression-bc` / `-astc` features, so no Basis transcoder is needed and Bevy's `ktx2` + pure-Rust `zstd_rust` loader works as-is; meshes are meshopt-compressed and decoded before `bevy_gltf` sees them, either by a custom asset loader that rewrites the GLB using the pure-Rust `meshoptimizer-rs` decoder or by the official `meshopt_decoder.js` called through wasm-bindgen. Fallbacks: (b) Basis Universal through `bevy_basisu_loader` or the pure-Rust `basisu` crate; (c) uncompressed vertex data with only zstd at the transport level.
 
 ### 9.4 Hooks for the future atmosphere phases (D7)
 
@@ -316,8 +318,8 @@ Every MVP asset and shader carries these from the start:
 | Frame time on the reference desktop (Apple M-series, High tier, 1440p, 2,000 tiles) | ≤16.6 ms at the 95th percentile |
 | Main-thread simulation tick | ≤4 ms |
 | Draw calls after instancing and indirect draws | ≤500 |
-| Initial download before first interaction | ≤25 MB (WASM + core kit + UI) |
-| WASM binary (after `wasm-opt -Oz`, Brotli) | ≤6 MB |
+| Initial download before first interaction | ≤30 MB (WASM + core kit + UI) |
+| WASM binary over the wire (after `wasm-opt -Oz`, gzip as served by Pages) | ≤12 MB (Bevy's measured floor is about 7.6 MB) |
 | Total deployed site at the full game | ≤600 MB (TC2) |
 | Kit piece LOD0 | ≤4k tris typical, ≤12k for hero pieces (landmarks, volcano) |
 | LOD1 / LOD2 | ≤50% / ≤15% of LOD0 |
@@ -384,16 +386,17 @@ Runtime derivatives are committed directly (each under the budget). Interactive 
 crates/
   hex-core/      # grid, sockets, tile defs, placement rules, undo, save model (no GPU deps; native-testable)
   hex-sim/       # networks, pathing, agents, recipes (deterministic, fixed tick)
-  hex-render/    # wgpu renderer, materials, culling, LOD, post, photo mode
-  hex-assets/    # GLB/KTX2 loading, kit manifest, streaming
-  hex-app/       # wasm entry, frame loop, input actions, JS bridge (wasm-bindgen)
+  hex-render/    # Bevy render plugins: materials, custom nodes (water, VAT, boids), post config, photo mode
+  hex-assets/    # meshopt GLB loader, KTX2 family selection, kit manifest, streaming
+  hex-app/       # Bevy app + plugins, wasm entry, input actions, JS bridge (wasm-bindgen)
 web/             # Vite + TypeScript UI overlay, audio layer, IndexedDB, unsupported-browser page
 data/            # tile/socket/recipe RON, validated at build
 scripts/         # blender, audio, manifest, deploy
 ```
 
-- `hex-core` and `hex-sim` compile natively and are covered by `cargo test`. Rendering is isolated in `hex-render`.
-- A native desktop build of `hex-app` (wgpu with Metal) is kept working for fast iteration, profiling and screenshot tests.
+- `hex-core` has no Bevy dependency. `hex-sim` depends only on `bevy_ecs`, so it survives a fallback to the custom wgpu route (D2). Both compile natively and are covered by `cargo test`. Rendering is isolated in `hex-render`.
+- A native desktop build of `hex-app` (Bevy on Metal) is kept working for fast iteration, profiling and screenshot tests.
+- Reusable local prior art: `hexx` hex math and the WFC generator from `~/Repos/nurbles`; the Trunk build, WebGPU gate, Pages deploy and browser smoke test from `~/Repos/suck-it-up`; the headless Blender build/validate/promote scripts from `~/Repos/the-cube`.
 - The JS bridge is a typed command/event API (`placeTile`, `rotateGhost`, `undo`, events such as `tilePlaced`, `recipeUnlocked`, `audioEmitterUpdate`), with TypeScript types generated from Rust.
 
 ### 12.2 Save format
@@ -436,8 +439,11 @@ Each phase ends with every acceptance criterion verified, with evidence, and is 
 Goal: de-risk the stack before content work.
 
 - [ ] Rust workspace and Vite web shell build. `make checkall` and `make checkall-ci` exist and pass.
-- [ ] wgpu runs on the WebGPU backend in Chrome and Safari 26, rendering a lit PBR hex mesh. The native build renders the same scene.
-- [ ] One KTX2 + meshopt GLB is loaded and rendered in the browser. The decoder route (§9.3 a/b/c) is chosen and recorded with measured size and load time.
+- [ ] Bevy 0.20 runs on the WebGPU backend in Chrome and Safari 26 (macOS), rendering a lit PBR hex mesh. The native build renders the same scene. An iOS 26 Safari smoke test loads.
+- [ ] Engine gate (D2): 2,000 instanced hex tiles with 4 shadow cascades, bloom, TAA, SSAO and DOF hold the frame budget in Chrome and Safari on the reference machine. Logs confirm the SSAO plugin is active and report the GPU-preprocessing mode. The Bevy-vs-custom-wgpu decision is recorded with these measurements.
+- [ ] One custom compute pass (boids) and one custom material render inside Bevy's render graph on WebGPU.
+- [ ] One meshopt-compressed, quantized GLB and one BC7 KTX2 + zstd texture load and render on wasm32. The asset route (§9.3) is recorded with measured size and load time.
+- [ ] Wire size of the wasm and time to first interactive frame are measured on GitHub Pages.
 - [ ] The unsupported-browser page is shown when WebGPU is missing.
 - [ ] GitHub Actions deploys to Pages, and `https://hex-world.pardev.net` serves the build over HTTPS.
 - [ ] The `?shot=` and `?diag=1` hooks work.
@@ -508,7 +514,8 @@ Goal: the polished, playable core loop with D12 content.
 
 | Code | Risk | Mitigation |
 |---|---|---|
-| R1 | KTX2/meshopt decoding in Rust/WASM is immature (TC3). | P0 spike with three decoder routes (§9.3). |
+| R1 | KTX2/meshopt loading in Bevy on wasm is unproven (TC3). | P0 spike with the routes in §9.3. |
+| R8 | Bevy's web post stack (TAA, SSAO, DOF) fails or underperforms on browser WebGPU, or its API churn breaks custom nodes (TC5). | P0 engine gate with the custom wgpu fallback (D2). Exact version pin; upgrades as deliberate tasks. |
 | R2 | AAA quality at 2,000 tiles in a browser exceeds the frame budget. | Instancing, GPU culling, chunked LOD, quality tiers, and perf gates from P2 onward. |
 | R3 | Kit seams are visible between modular pieces. | A strict edge contract, normal blending at the hex border, and a seam gate in P1. |
 | R4 | Asset throughput: high-poly + bake per piece is slow. | Scripted generators, a shared helper library, and family-level reviews. |
@@ -522,6 +529,18 @@ Goal: the polished, playable core loop with D12 content.
 |---|---|---|
 | Q1 | Final hex scale (R = 16 m?) and level step (4 m?). | P1 look-dev |
 | Q2 | External storage for `.blend` sources (R2 bucket vs. other). | P1 |
-| Q3 | Decoder route for KTX2/meshopt (§9.3). | P0 |
+| Q3 | Asset route for KTX2/meshopt (§9.3). | P0 |
+| Q6 | Bevy vs custom wgpu final decision (D2 engine gate). | P0 |
 | Q4 | Tone mapper (AgX vs. ACES). | P1 |
 | Q5 | Resolved: the PRD is not registered in par-prd. `PRD.md` in this repo is canonical. | Owner |
+
+## 18. Engine research summary (2026-10-12)
+
+- Bevy 0.20.0 (released 2026-10-08, wgpu 30) is current. Bevy's WebGPU showcase demonstrates bloom, cascaded shadows, contact shadows, deferred rendering, volumetric fog, atmosphere, transmission and decals in the browser (https://bevy.org/examples-webgpu/).
+- TAA, DOF and SSR compile with web-specific workarounds but are not in the showcase. SSAO is disabled at runtime when the device allows fewer than 5 storage textures per stage (desktop adapters normally allow more). Irradiance volumes, meshlets and mesh shaders are off on wasm32.
+- On wasm32 Bevy is single-threaded, has no pipelined rendering, and compiles pipelines synchronously (TC5).
+- Bevy's measured wasm floor is about 24 MB raw, 7.6 MB gzip, 5.2 MB brotli. `~/Repos/suck-it-up` ships Bevy 0.19.1 to GitHub Pages at about 9.8 MB gzip, with custom WGSL materials and compute passes proven on WebGPU.
+- A custom wgpu 30 renderer is viable (mature WebGPU backend; `gltf`, `ktx2`, `ruzstd`, `glam` crates) but has no maintained renderer to build on (rend3 archived, three-d is WebGL2 only). Estimated 3–5 person-months for the PBR + post stack at production quality.
+- Fyrox and Blade have no WebGPU web path.
+- Decision: Bevy first, because it already supplies PBR, shadows, post effects, assets and the ECS. The P0 engine gate decides whether that holds.
+
