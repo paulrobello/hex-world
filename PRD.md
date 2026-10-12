@@ -59,6 +59,7 @@ Decisions made during the brainstorm. Codes are stable and referenced throughout
 | D18 | UI: an HTML/CSS overlay (TypeScript) over the wgpu canvas, talking to Rust through wasm-bindgen. |
 | D19 | Name "Hex World". Public repo under MIT. Deployed to GitHub Pages at `hex-world.pardev.net`. |
 | D20 | Players get an undo stack and a bulldoze tool. Bulldozing is blocked if it would split the world into disconnected islands. |
+| D21 | Audio rights: the owner holds paid ElevenLabs and Suno subscriptions and owns the rights to all generated audio, so it may be committed to the public repo and served from the public site. Each audio asset's provenance records the provider and subscription. |
 
 ### Assumptions (confirm or correct)
 
@@ -68,7 +69,7 @@ Decisions made during the brainstorm. Codes are stable and referenced throughout
 | A2 | Farm (with animals), windmill and rail/trains are not in the MVP. They ship in P3 alongside recipes. |
 | A3 | No WASM threads (TC1). Heavy simulation runs in a dedicated Web Worker running a second WASM instance, or on the GPU. |
 | A4 | High-poly `.blend` files and bake intermediates are kept out of git. Scripted pieces are rebuilt from their generators, and interactive hero `.blend` files live in external storage (§11.6). Only runtime derivatives are committed. |
-| A5 | The owner's Suno and ElevenLabs plan terms allow redistributing generated audio in a public repo and on a public site. This is verified before the first audio commit and recorded in each asset's provenance. |
+| A5 | Resolved, see D21. |
 
 ### Technical constraints
 
@@ -258,7 +259,7 @@ The deterministic simulation core (grid, sockets, networks, pathing, agents) run
 
 - `audio/music/prompts/*.md` holds one file per cue, with style tags, BPM, key, mood, instrumentation, structure tags, an instrumental flag, a loop intent and a target length.
 - The owner generates the tracks in Suno and drops the WAV or MP3 into `assets-source/audio/music/<cue-id>/`.
-- `make audio-master` normalizes loudness (music −18 LUFS integrated), sets loop points, encodes the runtime format, and writes the provenance JSON (the Suno plan tier confirmed against A5).
+- `make audio-master` normalizes loudness (music −18 LUFS integrated), sets loop points, encodes the runtime format, and writes the provenance JSON (provider and subscription, per D21).
 - The playlist crossfades between cues by world mood (the biome mix in view). Adaptive stems are a P5 option.
 
 ### 8.3 Runtime formats
@@ -363,7 +364,7 @@ web/public/assets/              # runtime GLB/KTX2/audio + manifest.json
 
 ### 11.4 Provenance
 
-Every asset gets `provenance.json` recording: the generator script hash or `.blend` storage reference, the authoring agent and model, Blender version, bake settings, tool versions (gltf-transform, KTX), source and runtime hashes, the license, and for audio the provider, plan tier and terms-check date (A5).
+Every asset gets `provenance.json` recording: the generator script hash or `.blend` storage reference, the authoring agent and model, Blender version, bake settings, tool versions (gltf-transform, KTX), source and runtime hashes, the license, and for audio the provider and subscription (D21).
 
 ### 11.5 Make targets
 
@@ -465,7 +466,7 @@ Goal: the polished, playable core loop with D12 content.
 - [ ] Photo mode with DOF and 4× export.
 - [ ] Quality tiers with auto-detection. 60 fps at the 95th percentile on the reference machine with a scripted 2,000-tile world on High.
 - [ ] Every §9.4 hook is present in the MVP assets and shaders (verified by the asset gate).
-- [ ] A5 (audio license terms) is verified and recorded.
+- [ ] Every audio asset's provenance records its provider and subscription (D21).
 
 ### P3 — Progression and farm/rail content
 
@@ -510,7 +511,6 @@ Goal: the polished, playable core loop with D12 content.
 | R3 | Kit seams are visible between modular pieces. | A strict edge contract, normal blending at the hex border, and a seam gate in P1. |
 | R4 | Asset throughput: high-poly + bake per piece is slow. | Scripted generators, a shared helper library, and family-level reviews. |
 | R5 | Single-threaded WASM limits simulation scale (TC1). | Simulation LOD, GPU compute for flocks, and a worker fallback (§7.3). |
-| R6 | Audio license terms disallow public redistribution. | The A5 gate before the first audio commit. Swap the provider if needed. |
 | R7 | Safari or Firefox WebGPU differences cause rendering bugs. | Local browser e2e tests in each supported browser before releases. |
 | R8 | Bundle size grows past Pages limits. | Size budgets enforced in `checkall-ci`, plus streaming biome packs. |
 
