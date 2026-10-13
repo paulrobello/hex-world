@@ -439,7 +439,7 @@ Each phase ends with every acceptance criterion verified, with evidence, and is 
 Goal: de-risk the stack before content work.
 
 - [ ] Rust workspace and Trunk web shell build. `make checkall` and `make checkall-ci` exist and pass.
-- [ ] Bevy 0.20 runs on the WebGPU backend in Chrome and Safari 26 (macOS), rendering a lit PBR hex mesh. The native build renders the same scene. An iOS 26 Safari smoke test loads.
+- [x] Bevy 0.20 runs on the WebGPU backend in Chrome and Safari 26 (macOS), rendering a lit PBR hex mesh. The native build renders the same scene. An iOS 26 Safari smoke test loads. (Verified on Safari 27.0.1, the installed version, and on the owner's iPhone on 2026-10-13.)
 - [ ] Engine gate (D2): 2,000 instanced hex tiles with 4 shadow cascades, bloom, TAA, SSAO and DOF hold the frame budget in Chrome and Safari on the reference machine. Logs confirm the SSAO plugin is active and report the GPU-preprocessing mode. The Bevy-vs-custom-wgpu decision is recorded with these measurements.
 - [ ] One custom compute pass (boids) and one custom material render inside Bevy's render graph on WebGPU.
 - [ ] One meshopt-compressed, quantized GLB and one BC7 KTX2 + zstd texture load and render on wasm32. The asset route (§9.3) is recorded with measured size and load time.
