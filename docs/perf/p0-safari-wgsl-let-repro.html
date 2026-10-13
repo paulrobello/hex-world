@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>WGSL let-handle repro</title>
+<style>body { font: 14px/1.5 ui-monospace, monospace; margin: 16px; background: #1d2126; color: #e6e6e6; } pre { white-space: pre-wrap; }</style>
+</head>
+<body>
+<h1>WGSL: <code>let</code> bound to a texture or sampler</h1>
+<p>Compiles the same fragment shader twice: once with a <code>let</code> alias for a texture and sampler handle (the
+pattern Bevy 0.20's <code>pbr_fragment.wesl</code> emits), and once with the handles used directly.
+Standalone: no engine, no build step. Serve over http(s) from localhost and open in Safari and Chrome.</p>
+<pre id="out">running…</pre>
+<script>
+const LET = `
+@group(0) @binding(0) var tex: texture_2d<f32>;
+@group(0) @binding(1) var samp: sampler;
+@fragment fn main(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
+  let t = tex;
+  let s = samp;
+  return textureSample(t, s, uv);
+}`;
+const DIRECT = `
+@group(0) @binding(0) var tex: texture_2d<f32>;
+@group(0) @binding(1) var samp: sampler;
+@fragment fn main(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
+  return textureSample(tex, samp, uv);
+}`;
+const VERT = `
+struct O { @builtin(position) pos: vec4<f32>, @location(0) uv: vec2<f32> };
+@vertex fn v(@builtin(vertex_index) i: u32) -> O { return O(vec4<f32>(0.0, 0.0, 0.0, 1.0), vec2<f32>(0.0)); }`;
+const out = document.getElementById("out");
+const say = (s) => { out.textContent += "\n" + s; console.log(s); };
+(async () => {
+  out.textContent = navigator.userAgent;
+  if (!navigator.gpu) return say("no navigator.gpu");
+  const feats = [...(navigator.gpu.wgslLanguageFeatures || [])];
+  say("wgslLanguageFeatures has texture_and_sampler_let: " + feats.includes("texture_and_sampler_let"));
+  say("wgslLanguageFeatures: " + feats.join(", "));
+  const device = await (await navigator.gpu.requestAdapter()).requestDevice();
+  for (const [name, code] of [["let-alias", LET], ["direct", DIRECT]]) {
+    const module = device.createShaderModule({ code });
+    const info = await module.getCompilationInfo();
+    const msgs = info.messages.map((m) => `${m.type} ${m.lineNum}:${m.linePos} ${m.message}`);
+    device.pushErrorScope("validation");
+    device.createRenderPipeline({
+      layout: "auto",
+      vertex: { module: device.createShaderModule({ code: VERT }) },
+      fragment: { module, targets: [{ format: "rgba8unorm" }] },
+    });
+    const err = await device.popErrorScope();
+    say(`${name}: compile ${msgs.length ? msgs.join(" | ") : "ok"}; pipeline ${err ? "ERROR " + err.message : "ok"}`);
+  }
+  say("done");
+})().catch((e) => say("exception: " + e));
+</script>
+</body>
+</html>

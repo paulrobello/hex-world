@@ -1,0 +1,3123 @@
+{
+  "date": "2026-10-13T02:53:25.807Z",
+  "budget_p95_ms": 16.6,
+  "viewport": "2560x1440",
+  "window": "600 frames after READY (frame 121 on)",
+  "runs_per_config": 3,
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped, fresh browser per run",
+    "webgpu_adapter": "apple | metal-3 | ",
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36"
+  },
+  "native": {
+    "present": "immediate",
+    "exit_after_seconds": 20
+  },
+  "load_limit": 15,
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "summary": [
+    {
+      "platform": "web",
+      "id": "instanced-full",
+      "view": "strategic",
+      "runs": 3,
+      "p50_median": 3.1,
+      "p95_median": 22,
+      "p95_min": 20.1,
+      "p95_max": 30.3,
+      "p99_per_run": [
+        42.2,
+        38,
+        51.5
+      ],
+      "mean_median": 5.15,
+      "mean_min": 5.13,
+      "mean_max": 5.24,
+      "max_max": 124.6,
+      "dropped_over_25ms_per_run": [
+        21,
+        43,
+        22
+      ],
+      "ready_s_median": 1.332,
+      "pass_budget_median": false,
+      "max_load_accepted": 14.9140625,
+      "console_errors": 0,
+      "echo_mismatch": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-full",
+      "view": "closeup",
+      "runs": 3,
+      "p50_median": 3.2,
+      "p95_median": 38.6,
+      "p95_min": 34.1,
+      "p95_max": 50.6,
+      "p99_per_run": [
+        59.9,
+        58.3,
+        69.1
+      ],
+      "mean_median": 6.51,
+      "mean_min": 6.19,
+      "mean_max": 6.51,
+      "max_max": 76,
+      "dropped_over_25ms_per_run": [
+        41,
+        43,
+        43
+      ],
+      "ready_s_median": 1.385,
+      "pass_budget_median": false,
+      "max_load_accepted": 14.9208984375,
+      "console_errors": 0,
+      "echo_mismatch": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-tuned",
+      "view": "strategic",
+      "runs": 3,
+      "p50_median": 3,
+      "p95_median": 3.7,
+      "p95_min": 3.6,
+      "p95_max": 3.9,
+      "p99_per_run": [
+        23.1,
+        40.1,
+        40.4
+      ],
+      "mean_median": 3.62,
+      "mean_min": 3.61,
+      "mean_max": 3.66,
+      "max_max": 58.1,
+      "dropped_over_25ms_per_run": [
+        5,
+        7,
+        15
+      ],
+      "ready_s_median": 1.181,
+      "pass_budget_median": true,
+      "max_load_accepted": 14.9208984375,
+      "console_errors": 0,
+      "echo_mismatch": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-tuned",
+      "view": "closeup",
+      "runs": 3,
+      "p50_median": 2.9,
+      "p95_median": 3.7,
+      "p95_min": 3.5,
+      "p95_max": 3.7,
+      "p99_per_run": [
+        38.4,
+        37.9,
+        35.6
+      ],
+      "mean_median": 3.65,
+      "mean_min": 3.61,
+      "mean_max": 3.73,
+      "max_max": 75.3,
+      "dropped_over_25ms_per_run": [
+        9,
+        12,
+        10
+      ],
+      "ready_s_median": 1.228,
+      "pass_budget_median": true,
+      "max_load_accepted": 14.6064453125,
+      "console_errors": 0,
+      "echo_mismatch": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid600",
+      "view": "strategic",
+      "runs": 3,
+      "p50_median": 3,
+      "p95_median": 3.8,
+      "p95_min": 3.7,
+      "p95_max": 3.8,
+      "p99_per_run": [
+        28.7,
+        42.6,
+        40.3
+      ],
+      "mean_median": 3.65,
+      "mean_min": 3.56,
+      "mean_max": 3.66,
+      "max_max": 61.2,
+      "dropped_over_25ms_per_run": [
+        8,
+        9,
+        8
+      ],
+      "ready_s_median": 1.158,
+      "pass_budget_median": true,
+      "max_load_accepted": 14.37158203125,
+      "console_errors": 0,
+      "echo_mismatch": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid600",
+      "view": "closeup",
+      "runs": 3,
+      "p50_median": 2.8,
+      "p95_median": 4,
+      "p95_min": 3.7,
+      "p95_max": 4,
+      "p99_per_run": [
+        49.5,
+        54,
+        69.1
+      ],
+      "mean_median": 4.34,
+      "mean_min": 4.31,
+      "mean_max": 4.36,
+      "max_max": 85.5,
+      "dropped_over_25ms_per_run": [
+        20,
+        20,
+        21
+      ],
+      "ready_s_median": 1.284,
+      "pass_budget_median": true,
+      "max_load_accepted": 14.37158203125,
+      "console_errors": 0,
+      "echo_mismatch": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid1200",
+      "view": "strategic",
+      "runs": 3,
+      "p50_median": 2.9,
+      "p95_median": 4.3,
+      "p95_min": 4.1,
+      "p95_max": 4.5,
+      "p99_per_run": [
+        30.8,
+        41.7,
+        45.2
+      ],
+      "mean_median": 4.23,
+      "mean_min": 4.16,
+      "mean_max": 4.31,
+      "max_max": 53.6,
+      "dropped_over_25ms_per_run": [
+        22,
+        21,
+        14
+      ],
+      "ready_s_median": 1.226,
+      "pass_budget_median": true,
+      "max_load_accepted": 14.1015625,
+      "console_errors": 0,
+      "echo_mismatch": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid1200",
+      "view": "closeup",
+      "runs": 3,
+      "p50_median": 3,
+      "p95_median": 4.3,
+      "p95_min": 4.2,
+      "p95_max": 4.5,
+      "p99_per_run": [
+        63,
+        50.7,
+        55.1
+      ],
+      "mean_median": 5.01,
+      "mean_min": 4.89,
+      "mean_max": 5.21,
+      "max_max": 67.6,
+      "dropped_over_25ms_per_run": [
+        26,
+        28,
+        28
+      ],
+      "ready_s_median": 1.297,
+      "pass_budget_median": true,
+      "max_load_accepted": 14.37255859375,
+      "console_errors": 0,
+      "echo_mismatch": 0
+    }
+  ],
+  "rows": [
+    {
+      "platform": "web",
+      "id": "instanced-full",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 4,
+      "shadow_dist": 2000,
+      "view": "strategic",
+      "p50": 3.1,
+      "p95": 20.1,
+      "p99": 42.2,
+      "mean": 5.13,
+      "max": 124.6,
+      "dropped_over_25ms": 21,
+      "pass_budget": false,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 5,
+            "instances": 31800,
+            "tris": 3110040
+          },
+          {
+            "view": "cascade3",
+            "draws": 5,
+            "instances": 40000,
+            "tris": 3912000
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          40000
+        ],
+        "union_tris": 3912000
+      },
+      "run": 1,
+      "ready_s": 1.297,
+      "console_errors": [],
+      "load_before": 14.4716796875,
+      "load_after": 14.9140625,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-full",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 4,
+      "shadow_dist": 2000,
+      "view": "closeup",
+      "p50": 3.2,
+      "p95": 38.6,
+      "p99": 59.9,
+      "mean": 6.19,
+      "max": 63.6,
+      "dropped_over_25ms": 41,
+      "pass_budget": false,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 300,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3588,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 10,
+            "instances": 2800,
+            "tris": 1754172
+          },
+          {
+            "view": "cascade1",
+            "draws": 15,
+            "instances": 12600,
+            "tris": 4376316
+          },
+          {
+            "view": "cascade2",
+            "draws": 15,
+            "instances": 33420,
+            "tris": 7533912
+          },
+          {
+            "view": "cascade3",
+            "draws": 15,
+            "instances": 40000,
+            "tris": 8663376
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          12880,
+          25160
+        ],
+        "union_tris": 8663376
+      },
+      "run": 1,
+      "ready_s": 1.345,
+      "console_errors": [],
+      "load_before": 14.9140625,
+      "load_after": 14.9208984375,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-tuned",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "large",
+      "cascades": 3,
+      "shadow_dist": 2000,
+      "view": "strategic",
+      "p50": 3.1,
+      "p95": 3.9,
+      "p99": 23.1,
+      "mean": 3.66,
+      "max": 58.1,
+      "dropped_over_25ms": 5,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 19,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 6
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          38380
+        ],
+        "union_tris": 3753564
+      },
+      "run": 1,
+      "ready_s": 1.181,
+      "console_errors": [],
+      "load_before": 14.9208984375,
+      "load_after": 14.6064453125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-tuned",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "large",
+      "cascades": 3,
+      "shadow_dist": 2000,
+      "view": "closeup",
+      "p50": 3,
+      "p95": 3.7,
+      "p99": 38.4,
+      "mean": 3.61,
+      "max": 47.7,
+      "dropped_over_25ms": 9,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71172096,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 6
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 6,
+            "instances": 1120,
+            "tris": 715932
+          },
+          {
+            "view": "cascade1",
+            "draws": 6,
+            "instances": 4704,
+            "tris": 2082696
+          },
+          {
+            "view": "cascade2",
+            "draws": 6,
+            "instances": 5936,
+            "tris": 2544696
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          12880,
+          9100
+        ],
+        "union_tris": 7092708
+      },
+      "run": 1,
+      "ready_s": 1.248,
+      "console_errors": [],
+      "load_before": 14.6064453125,
+      "load_after": 14.3173828125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid600",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 600,
+      "view": "strategic",
+      "p50": 3,
+      "p95": 3.7,
+      "p99": 28.7,
+      "mean": 3.56,
+      "max": 36.2,
+      "dropped_over_25ms": 8,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71172096,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 36,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 5,
+            "instances": 13100,
+            "tris": 1281180
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          40000
+        ],
+        "union_tris": 3912000
+      },
+      "run": 1,
+      "ready_s": 1.15,
+      "console_errors": [],
+      "load_before": 14.3173828125,
+      "load_after": 14.37158203125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid600",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 600,
+      "view": "closeup",
+      "p50": 3.1,
+      "p95": 4,
+      "p99": 49.5,
+      "mean": 4.31,
+      "max": 55.5,
+      "dropped_over_25ms": 20,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 222,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 2652,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 70975488,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 37,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 10,
+            "instances": 2800,
+            "tris": 1754172
+          },
+          {
+            "view": "cascade1",
+            "draws": 15,
+            "instances": 10080,
+            "tris": 3868200
+          },
+          {
+            "view": "cascade2",
+            "draws": 15,
+            "instances": 29180,
+            "tris": 6820200
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          9940,
+          17280
+        ],
+        "union_tris": 6820200
+      },
+      "run": 1,
+      "ready_s": 1.272,
+      "console_errors": [],
+      "load_before": 14.37158203125,
+      "load_after": 14.1015625,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid1200",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 1200,
+      "view": "strategic",
+      "p50": 3.1,
+      "p95": 4.1,
+      "p99": 30.8,
+      "mean": 4.16,
+      "max": 35.5,
+      "dropped_over_25ms": 22,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 5,
+            "instances": 40000,
+            "tris": 3912000
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          40000
+        ],
+        "union_tris": 3912000
+      },
+      "run": 1,
+      "ready_s": 1.231,
+      "console_errors": [],
+      "load_before": 14.1015625,
+      "load_after": 13.85302734375,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid1200",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 1200,
+      "view": "closeup",
+      "p50": 3,
+      "p95": 4.3,
+      "p99": 63,
+      "mean": 4.89,
+      "max": 67.6,
+      "dropped_over_25ms": 26,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 277,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3312,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71172096,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 10,
+            "instances": 2800,
+            "tris": 1754172
+          },
+          {
+            "view": "cascade1",
+            "draws": 15,
+            "instances": 18620,
+            "tris": 5451012
+          },
+          {
+            "view": "cascade2",
+            "draws": 15,
+            "instances": 37240,
+            "tris": 8393448
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          12880,
+          22400
+        ],
+        "union_tris": 8393448
+      },
+      "run": 1,
+      "ready_s": 1.284,
+      "console_errors": [],
+      "load_before": 13.85302734375,
+      "load_after": 13.78466796875,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-full",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 4,
+      "shadow_dist": 2000,
+      "view": "strategic",
+      "p50": 3.1,
+      "p95": 30.3,
+      "p99": 38,
+      "mean": 5.24,
+      "max": 41.1,
+      "dropped_over_25ms": 43,
+      "pass_budget": false,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 5,
+            "instances": 31800,
+            "tris": 3110040
+          },
+          {
+            "view": "cascade3",
+            "draws": 5,
+            "instances": 40000,
+            "tris": 3912000
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          40000
+        ],
+        "union_tris": 3912000
+      },
+      "run": 2,
+      "ready_s": 1.373,
+      "console_errors": [],
+      "load_before": 14.77880859375,
+      "load_after": 13.81640625,
+      "load_discarded": 1
+    },
+    {
+      "platform": "web",
+      "id": "instanced-full",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 4,
+      "shadow_dist": 2000,
+      "view": "closeup",
+      "p50": 3,
+      "p95": 50.6,
+      "p99": 58.3,
+      "mean": 6.51,
+      "max": 63.5,
+      "dropped_over_25ms": 43,
+      "pass_budget": false,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 299,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3576,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 10,
+            "instances": 2800,
+            "tris": 1754172
+          },
+          {
+            "view": "cascade1",
+            "draws": 15,
+            "instances": 12600,
+            "tris": 4376316
+          },
+          {
+            "view": "cascade2",
+            "draws": 15,
+            "instances": 33420,
+            "tris": 7533912
+          },
+          {
+            "view": "cascade3",
+            "draws": 15,
+            "instances": 40000,
+            "tris": 8663376
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          12880,
+          25160
+        ],
+        "union_tris": 8663376
+      },
+      "run": 2,
+      "ready_s": 1.385,
+      "console_errors": [],
+      "load_before": 13.81640625,
+      "load_after": 13.2705078125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-tuned",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "large",
+      "cascades": 3,
+      "shadow_dist": 2000,
+      "view": "strategic",
+      "p50": 3,
+      "p95": 3.7,
+      "p99": 40.1,
+      "mean": 3.62,
+      "max": 54.8,
+      "dropped_over_25ms": 7,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 19,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 6
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          38380
+        ],
+        "union_tris": 3753564
+      },
+      "run": 2,
+      "ready_s": 1.181,
+      "console_errors": [],
+      "load_before": 13.2705078125,
+      "load_after": 13.00830078125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-tuned",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "large",
+      "cascades": 3,
+      "shadow_dist": 2000,
+      "view": "closeup",
+      "p50": 2.9,
+      "p95": 3.5,
+      "p99": 37.9,
+      "mean": 3.73,
+      "max": 70,
+      "dropped_over_25ms": 12,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71172096,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 6
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 6,
+            "instances": 1120,
+            "tris": 715932
+          },
+          {
+            "view": "cascade1",
+            "draws": 6,
+            "instances": 4704,
+            "tris": 2082696
+          },
+          {
+            "view": "cascade2",
+            "draws": 6,
+            "instances": 5936,
+            "tris": 2544696
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          12880,
+          9100
+        ],
+        "union_tris": 7092708
+      },
+      "run": 2,
+      "ready_s": 1.228,
+      "console_errors": [],
+      "load_before": 13.00830078125,
+      "load_after": 13.00830078125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid600",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 600,
+      "view": "strategic",
+      "p50": 2.8,
+      "p95": 3.8,
+      "p99": 42.6,
+      "mean": 3.65,
+      "max": 45.5,
+      "dropped_over_25ms": 9,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71172096,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 36,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 5,
+            "instances": 13100,
+            "tris": 1281180
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          40000
+        ],
+        "union_tris": 3912000
+      },
+      "run": 2,
+      "ready_s": 1.203,
+      "console_errors": [],
+      "load_before": 13.63427734375,
+      "load_after": 13.2626953125,
+      "load_discarded": 2
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid600",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 600,
+      "view": "closeup",
+      "p50": 2.8,
+      "p95": 4,
+      "p99": 54,
+      "mean": 4.34,
+      "max": 58.4,
+      "dropped_over_25ms": 20,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 222,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 2652,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 70975488,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 37,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 10,
+            "instances": 2800,
+            "tris": 1754172
+          },
+          {
+            "view": "cascade1",
+            "draws": 15,
+            "instances": 10080,
+            "tris": 3868200
+          },
+          {
+            "view": "cascade2",
+            "draws": 15,
+            "instances": 29180,
+            "tris": 6820200
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          9940,
+          17280
+        ],
+        "union_tris": 6820200
+      },
+      "run": 2,
+      "ready_s": 1.294,
+      "console_errors": [],
+      "load_before": 13.2626953125,
+      "load_after": 13.2412109375,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid1200",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 1200,
+      "view": "strategic",
+      "p50": 2.9,
+      "p95": 4.5,
+      "p99": 41.7,
+      "mean": 4.31,
+      "max": 48.7,
+      "dropped_over_25ms": 21,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 5,
+            "instances": 40000,
+            "tris": 3912000
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          40000
+        ],
+        "union_tris": 3912000
+      },
+      "run": 2,
+      "ready_s": 1.226,
+      "console_errors": [],
+      "load_before": 13.2412109375,
+      "load_after": 13.6220703125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid1200",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 1200,
+      "view": "closeup",
+      "p50": 3.2,
+      "p95": 4.5,
+      "p99": 50.7,
+      "mean": 5.21,
+      "max": 55.8,
+      "dropped_over_25ms": 28,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 277,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3312,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71172096,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 10,
+            "instances": 2800,
+            "tris": 1754172
+          },
+          {
+            "view": "cascade1",
+            "draws": 15,
+            "instances": 18620,
+            "tris": 5451012
+          },
+          {
+            "view": "cascade2",
+            "draws": 15,
+            "instances": 37240,
+            "tris": 8393448
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          12880,
+          22400
+        ],
+        "union_tris": 8393448
+      },
+      "run": 2,
+      "ready_s": 1.331,
+      "console_errors": [],
+      "load_before": 13.6220703125,
+      "load_after": 14.37255859375,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-full",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 4,
+      "shadow_dist": 2000,
+      "view": "strategic",
+      "p50": 2.9,
+      "p95": 22,
+      "p99": 51.5,
+      "mean": 5.15,
+      "max": 55.4,
+      "dropped_over_25ms": 22,
+      "pass_budget": false,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 5,
+            "instances": 31800,
+            "tris": 3110040
+          },
+          {
+            "view": "cascade3",
+            "draws": 5,
+            "instances": 40000,
+            "tris": 3912000
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          40000
+        ],
+        "union_tris": 3912000
+      },
+      "run": 3,
+      "ready_s": 1.332,
+      "console_errors": [],
+      "load_before": 13.02587890625,
+      "load_after": 13.0234375,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-full",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 4,
+      "shadow_dist": 2000,
+      "view": "closeup",
+      "p50": 3.2,
+      "p95": 34.1,
+      "p99": 69.1,
+      "mean": 6.51,
+      "max": 76,
+      "dropped_over_25ms": 43,
+      "pass_budget": false,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 299,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3576,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 10,
+            "instances": 2800,
+            "tris": 1754172
+          },
+          {
+            "view": "cascade1",
+            "draws": 15,
+            "instances": 12600,
+            "tris": 4376316
+          },
+          {
+            "view": "cascade2",
+            "draws": 15,
+            "instances": 33420,
+            "tris": 7533912
+          },
+          {
+            "view": "cascade3",
+            "draws": 15,
+            "instances": 40000,
+            "tris": 8663376
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          12880,
+          25160
+        ],
+        "union_tris": 8663376
+      },
+      "run": 3,
+      "ready_s": 1.406,
+      "console_errors": [],
+      "load_before": 13.0234375,
+      "load_after": 13.181640625,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-tuned",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "large",
+      "cascades": 3,
+      "shadow_dist": 2000,
+      "view": "strategic",
+      "p50": 2.8,
+      "p95": 3.6,
+      "p99": 40.4,
+      "mean": 3.61,
+      "max": 43.3,
+      "dropped_over_25ms": 15,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 19,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 6
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          38380
+        ],
+        "union_tris": 3753564
+      },
+      "run": 3,
+      "ready_s": 1.188,
+      "console_errors": [],
+      "load_before": 13.181640625,
+      "load_after": 13.0869140625,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-tuned",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "large",
+      "cascades": 3,
+      "shadow_dist": 2000,
+      "view": "closeup",
+      "p50": 2.8,
+      "p95": 3.7,
+      "p99": 35.6,
+      "mean": 3.65,
+      "max": 75.3,
+      "dropped_over_25ms": 10,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71172096,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 6
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 6
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 6,
+            "instances": 1120,
+            "tris": 715932
+          },
+          {
+            "view": "cascade1",
+            "draws": 6,
+            "instances": 4704,
+            "tris": 2082696
+          },
+          {
+            "view": "cascade2",
+            "draws": 6,
+            "instances": 5936,
+            "tris": 2544696
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          12880,
+          9100
+        ],
+        "union_tris": 7092708
+      },
+      "run": 3,
+      "ready_s": 1.187,
+      "console_errors": [],
+      "load_before": 13.0869140625,
+      "load_after": 13.56005859375,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid600",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 600,
+      "view": "strategic",
+      "p50": 3,
+      "p95": 3.8,
+      "p99": 40.3,
+      "mean": 3.66,
+      "max": 61.2,
+      "dropped_over_25ms": 8,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71172096,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 36,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 5,
+            "instances": 13100,
+            "tris": 1281180
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          40000
+        ],
+        "union_tris": 3912000
+      },
+      "run": 3,
+      "ready_s": 1.158,
+      "console_errors": [],
+      "load_before": 13.56005859375,
+      "load_after": 13.35498046875,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid600",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 600,
+      "view": "closeup",
+      "p50": 2.8,
+      "p95": 3.7,
+      "p99": 69.1,
+      "mean": 4.36,
+      "max": 85.5,
+      "dropped_over_25ms": 21,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 222,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 2652,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 70975488,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 37,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 10,
+            "instances": 2800,
+            "tris": 1754172
+          },
+          {
+            "view": "cascade1",
+            "draws": 15,
+            "instances": 10080,
+            "tris": 3868200
+          },
+          {
+            "view": "cascade2",
+            "draws": 15,
+            "instances": 29180,
+            "tris": 6820200
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          9940,
+          17280
+        ],
+        "union_tris": 6820200
+      },
+      "run": 3,
+      "ready_s": 1.284,
+      "console_errors": [],
+      "load_before": 13.35498046875,
+      "load_after": 12.60546875,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid1200",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 1200,
+      "view": "strategic",
+      "p50": 2.9,
+      "p95": 4.3,
+      "p99": 45.2,
+      "mean": 4.23,
+      "max": 53.6,
+      "dropped_over_25ms": 14,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 301,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3600,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71041024,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 41,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 0,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade1",
+            "draws": 0,
+            "instances": 0,
+            "tris": 0
+          },
+          {
+            "view": "cascade2",
+            "draws": 5,
+            "instances": 40000,
+            "tris": 3912000
+          },
+          {
+            "view": "main",
+            "draws": 5,
+            "instances": 38380,
+            "tris": 3753564
+          }
+        ],
+        "union_instances_by_lod": [
+          0,
+          0,
+          40000
+        ],
+        "union_tris": 3912000
+      },
+      "run": 3,
+      "ready_s": 1.213,
+      "console_errors": [],
+      "load_before": 12.60546875,
+      "load_after": 12.876953125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "id": "instanced-mid1200",
+      "layout": "instanced",
+      "post": "full",
+      "shadows": "on",
+      "chunk": 7,
+      "shadow_casters": "all",
+      "cascades": 3,
+      "shadow_dist": 1200,
+      "view": "closeup",
+      "p50": 2.7,
+      "p95": 4.2,
+      "p99": 55.1,
+      "mean": 5.01,
+      "max": 58.3,
+      "dropped_over_25ms": 28,
+      "pass_budget": true,
+      "entities": 301,
+      "chunks": 309,
+      "visible_entities": 277,
+      "visible_mesh_material_pairs": 41,
+      "visible_tris": 3312,
+      "visible_by_lod": [
+        0,
+        0,
+        0
+      ],
+      "samples": 600,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "wasm_memory_bytes": 71172096,
+      "echo_mismatch": [],
+      "passes": [
+        {
+          "view": "main",
+          "phase": "opaque",
+          "multidraw_sets": 0,
+          "batchable_bins": 39,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "multidraw_sets": 0,
+          "batchable_bins": 38,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 8,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "multidraw_sets": 0,
+          "batchable_bins": 40,
+          "unbatchable": 0,
+          "non_mesh": 15
+        }
+      ],
+      "instanced": {
+        "views": [
+          {
+            "view": "cascade0",
+            "draws": 10,
+            "instances": 2800,
+            "tris": 1754172
+          },
+          {
+            "view": "cascade1",
+            "draws": 15,
+            "instances": 18620,
+            "tris": 5451012
+          },
+          {
+            "view": "cascade2",
+            "draws": 15,
+            "instances": 37240,
+            "tris": 8393448
+          },
+          {
+            "view": "main",
+            "draws": 15,
+            "instances": 13160,
+            "tris": 2709252
+          }
+        ],
+        "union_instances_by_lod": [
+          1960,
+          12880,
+          22400
+        ],
+        "union_tris": 8393448
+      },
+      "run": 3,
+      "ready_s": 1.297,
+      "console_errors": [],
+      "load_before": 12.876953125,
+      "load_after": 13.52734375,
+      "load_discarded": 0
+    }
+  ],
+  "merge_note": "Runs 1-2 from the first invocation; its run 3 aborted when the load guard discarded 4 samples of instanced-full strategic. Run 3 came from a second invocation (MATRIX_RUNS=1), same build, same guard."
+}

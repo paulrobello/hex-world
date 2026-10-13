@@ -1292,6 +1292,123 @@ git commit -m "feat(web): Trunk WebGPU build, unsupported gate, hexWorld bridge,
 
 ---
 
+### Task 11: Agent drive and debug harness (runs right after Task 5)
+
+The owner asked for this on 2026-10-12, following `~/.claude/guides/agent-operability.md`. An agent must be able to drive, observe, screenshot and exit the game from the command line, natively and on the web, with no OS screen-recording permission and no human. Tasks 6–10 use this harness for their own verification.
+
+**Files:**
+- Create: `crates/hex-app/src/control.rs` (command model + queue), `crates/hex-app/src/capture.rs` (in-app screenshot to PNG on both targets), `scripts/shots/gallery.json`, `e2e/shots.mjs`, `docs/agent-operability.md`
+- Modify: `crates/hex-app/src/args.rs`, `crates/hex-app/src/main.rs`, `crates/hex-app/src/bridge.rs`, `crates/hex-app/Cargo.toml`, `index.html`, `Makefile`, `README.md`
+
+**Interfaces:**
+- Consumes: `Flags`, `flags_from_pairs`, `RunFlags`, `FrameCount`, `bridge::{READY, STATE_JSON, DIAG_JSON}` (Tasks 4–5). The controller ruled that there is no `ShotRequest` resource.
+- Produces:
+  - `#[derive(Debug, Clone, PartialEq, serde::Deserialize)] #[serde(tag = "cmd", rename_all = "snake_case")] pub enum Command { Camera { pos: [f32; 3], look_at: [f32; 3] }, Screenshot { name: String }, Wait { frames: u32 }, Scenario { name: String }, DumpState { name: String }, Exit }`.
+  - `pub fn parse_script(json: &str) -> Result<Vec<Command>, String>`, which takes a JSON array of commands. Unknown `cmd` values and malformed fields return `Err` with the offending index.
+  - `#[derive(Resource, Default)] pub struct CommandQueue { .. }` with `push`, plus a Bevy system that runs one command per frame. `Wait` holds the queue for N frames.
+  - Capture uses Bevy's `Screenshot::primary_window()` on both targets. Native writes `target/shots/<name>.png`. Web encodes the PNG in wasm (the `image` crate with only the `png` feature, or Bevy's own image encode if 0.20 provides one) and stores it as a data URL keyed by name.
+  - JS API additions on `window.hexWorld`:
+    - `cmd(json: string) -> void` enqueues one command, or an array of them, and logs parse errors with `console.error`.
+    - `screenshot(name?: string) -> Promise<string>` resolves to a PNG data URL once the capture lands, with a 10 s timeout.
+    - `dumpState() -> object` returns the state JSON plus camera position, scenario, frame and seed.
+  - Native CLI additions: `--script <file.json>` (run a command list), `--screenshot-after <seconds>`, `--exit-after-seconds <seconds>`, `--size <W>x<H>` (fixed window size), `--seed <u64>` (stored in state for determinism), `--dump-state <path>` (writes the state JSON on exit).
+  - Make targets:
+    - `run-shot`: native, `--shot single`.
+    - `run-diag`: native gate2000 with `--diag` and `--dump-state target/state.json`.
+    - `shots`: native gallery. Runs `scripts/shots/gallery.json` and writes `target/shots/gallery-*.png`.
+    - `web-shots`: builds the web target, runs `node e2e/shots.mjs dist`, and writes `e2e/test-results/web-*.png` from the same gallery script using `hexWorld.cmd` and `hexWorld.screenshot`.
+
+- [ ] **Step 1: Write failing tests for `parse_script` in `control.rs`**
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_every_command() {
+        let s = r#"[{"cmd":"camera","pos":[0,90,90],"look_at":[0,0,0]},
+                    {"cmd":"wait","frames":30},{"cmd":"screenshot","name":"a"},
+                    {"cmd":"scenario","name":"gate2000"},{"cmd":"dump_state","name":"s"},{"cmd":"exit"}]"#;
+        let c = parse_script(s).unwrap();
+        assert_eq!(c.len(), 6);
+        assert_eq!(c[1], Command::Wait { frames: 30 });
+        assert_eq!(c[5], Command::Exit);
+    }
+
+    #[test]
+    fn unknown_command_reports_index() {
+        let e = parse_script(r#"[{"cmd":"wait","frames":1},{"cmd":"explode"}]"#).unwrap_err();
+        assert!(e.contains("1"), "{e}");
+    }
+
+    #[test]
+    fn malformed_json_is_error_not_panic() {
+        assert!(parse_script("not json").is_err());
+        assert!(parse_script(r#"{"cmd":"exit"}"#).is_err(), "top level must be an array");
+    }
+
+    #[test]
+    fn size_flag_parses() {
+        assert_eq!(parse_size("1920x1080"), Some((1920, 1080)));
+        assert_eq!(parse_size("19x"), None);
+    }
+}
+```
+
+Put `parse_size(&str) -> Option<(u32, u32)>` in `args.rs`, or move this last test into `args.rs` with it, and add the new flags to `flags_from_pairs` with tests in the existing style (valid value, and an invalid value that warns). Run `cargo test -p hex-app` and expect a compile error (RED).
+
+- [ ] **Step 2: Implement `control.rs`, `capture.rs` and the flag wiring until the tests pass (GREEN)**
+
+Rules:
+- Commands run in order, one per frame, after the scenario's startup systems.
+- `Scenario` despawns the tiles and the camera and re-runs the scenario setup, or, if Bevy 0.20 makes that awkward, reloads through a state transition. Record which you chose.
+- Never panic on a bad command. Log it and skip it.
+- Native `--script` reads the file at startup. A read or parse error logs and exits with code 2.
+- On the web, `hexWorld.cmd` passes JSON to a wasm export `hex_world_cmd(json: &str) -> bool`, which pushes onto a `static Mutex<Vec<Command>>` that a Bevy system drains.
+- `hexWorld.screenshot(name)` calls `hex_world_screenshot(name)`, then polls `hex_world_take_shot(name) -> Option<String>` every 100 ms until it gets a data URL or times out.
+- Determinism: the seed is stored. Animations and boids added later read it and expose a `no_anim` flag in the same way. Add the `--no-anim` flag now as a stored bool on `Flags`.
+
+- [ ] **Step 3: Write the gallery script and runners**
+
+`scripts/shots/gallery.json` is a command list:
+1. Single scenario: close orbit view, wait 60 frames, screenshot `gallery-single`.
+2. Same scenario: low angle across the tile, screenshot `gallery-single-low`.
+3. Switch to `gate2000`: wait 120 frames, strategic view, screenshot `gallery-gate-strategic`.
+4. Close-up at 40 m above tile (3, 2) looking across the world, screenshot `gallery-gate-closeup`.
+5. `dump_state`, then `exit`.
+
+Use camera positions consistent with `HEX_RADIUS = 16`.
+
+`e2e/shots.mjs` serves `dist`, launches GPU Chromium exactly as `e2e/smoke.mjs` does, waits for `hexWorld.ready()`, feeds the same JSON (minus `exit`) through `hexWorld.cmd`, collects each `hexWorld.screenshot(name)` data URL, and writes them as `e2e/test-results/web-<name>.png`. It fails on any console error.
+
+- [ ] **Step 4: Makefile, docs, and the double wasm build**
+
+- Add `run-shot`, `run-diag`, `shots` and `web-shots`.
+- Task 5's concern: `checkall-ci` runs `build-web` and then `web-size`, which deletes `dist` and rebuilds. Make `checkall-ci` depend on `web-size` only.
+- `docs/agent-operability.md` lists every flag, query parameter, JS API call, command, and make target, with one example each.
+- Link it from `README.md`.
+
+- [ ] **Step 5: Verify**
+
+Run:
+1. `make checkall`
+2. `make shots`, then Read every `target/shots/gallery-*.png`. Each must show the expected view, and none may be black.
+3. `make web-shots`, then Read every `e2e/test-results/web-*.png`. They must match the native views.
+4. `make web-smoke`, which must still print `smoke OK`.
+5. `cargo run -p hex-app --release -- --script /nonexistent.json`, which must exit with code 2 and a clear error.
+
+Record the exit codes in the report.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add crates/hex-app index.html Makefile README.md docs/agent-operability.md scripts/shots e2e/shots.mjs
+git commit -m "feat(dev): agent drive/debug harness — command scripts, in-app screenshots, dump-state, shot galleries"
+```
+
+---
+
 ### Task 6: Engine-gate scene: real tile workload, full post stack, diagnostics, perf gate
 
 **Files:**
@@ -2420,6 +2537,152 @@ Commit the JSON with `git commit -m "docs(perf): live deploy size and time-to-in
 
 ---
 
+### Task 12: Engine gate diagnosis (runs after Task 8, before Task 10)
+
+Task 6 measured a p95 of 24.8 ms (strategic) and 29.0 ms (close-up) on web WebGPU, against the 16.6 ms budget. The gate spawned 120,300 `Mesh3d` entities, because per-piece `VisibilityRange` LOD triples them, and web runs `PreprocessingOnly`, with no GPU culling. PRD §6 says the shipping architecture batches static kit pieces into per-chunk meshes or instance buffers. That means the Task 6 scene overstates per-entity CPU cost compared with what the game would ship. Before Task 10 decides Bevy vs custom wgpu, find out where the frame time goes, and measure the architecture we would actually ship. A single number is not enough.
+
+**Files:**
+- Create: `crates/hex-render/src/chunks.rs` (static chunk merging), `e2e/perf-matrix.mjs`, `docs/perf/p0-gate-diagnosis.md`, `docs/perf/p0-gate-matrix.json`
+- Modify: `crates/hex-render/src/scene.rs`, `crates/hex-render/src/lib.rs`, `crates/hex-app/src/args.rs` (new keys), `docs/agent-operability.md`, `Makefile`
+
+**Interfaces:**
+- Consumes: the Task 6 gate scene, `GateWorkload`, `GateView`, `DiagSnapshot`, the perf-gate server and launch code, and the Task 11 harness.
+- Produces:
+  - Gate query and CLI keys:
+    - `layout=entities|chunks`, default `entities`, which is the Task 6 behavior.
+    - `post=full|none`, where `none` turns off TAA, SSAO, bloom and DOF.
+    - `shadows=on|off`.
+    - `chunk=7|19` (hexes per chunk).
+    - Unknown values warn and fall back to the default, using the same flag-test style as Task 4.
+  - `layout=chunks` merges, per chunk and per LOD level, all static pieces that share a material into one mesh. Bevy's `VisibilityRange` is then applied per chunk instead of per piece. Vehicles stay as individual entities. The total triangle count at each LOD must equal the entities layout. Add a test asserting triangles and materials are preserved for one chunk.
+  - `make perf-matrix` runs every combination of {layout} × {post} × {shadows: on} × {view}, plus `layout=chunks post=full shadows=off`, on web (uncapped GPU Chromium, the same rules as perf-gate). It also runs the native binary uncapped (`--diag`, present-mode immediate or `AutoNoVsync`, `--exit-after-seconds 20`, `--dump-state`) for `layout=entities` and `layout=chunks` with `post=full`. It writes `docs/perf/p0-gate-matrix.json`, recording p50, p95, entities, draw-relevant counts and the adapter for every row.
+
+- [ ] **Step 1: Failing tests (RED)**
+  - The chunk merge preserves triangles and materials.
+  - Flag parsing works for the four new keys (valid and invalid values).
+
+- [ ] **Step 2: Implement chunk merging and the flags until the tests pass (GREEN)**
+
+- [ ] **Step 3: Run `make perf-matrix`**
+
+- [ ] **Step 4: Optionally, Chrome tracing**
+
+If the matrix shows that the CPU dominates (post-off and chunk rows improve sharply), capture one Chrome performance trace of the entities and chunks rows (Playwright `browser.startTracing`) and report the top 5 wasm self-time functions. Use symbol names if the `wasm-release` profile keeps them, or a profile with `debug = "line-tables-only"` built only for this measurement.
+
+- [ ] **Step 5: Write `docs/perf/p0-gate-diagnosis.md`**
+
+- The matrix as a table.
+- Where the frame time goes: CPU or GPU, per-entity overhead, post cost, shadow cost, native vs wasm.
+- Whether the shipping (chunks) architecture meets the budget on Bevy.
+- What a custom wgpu renderer would need to beat.
+
+Facts only: every claim cites a matrix row.
+
+- [ ] **Step 6: Gate and commit**
+
+Run `make checkall`, and `make shots` to confirm the chunks layout renders identically by eye. Read the PNGs.
+
+```bash
+git add crates Makefile e2e/perf-matrix.mjs docs/perf docs/agent-operability.md
+git commit -m "perf: gate diagnosis matrix — chunked statics, post/shadow toggles, native vs web"
+```
+
+---
+
+### Task 13: Visible FPS counter (owner request, runs after Task 12)
+
+The owner asked for an FPS counter they can see while playing.
+
+**Files:**
+- Create: `crates/hex-render/src/fps.rs`
+- Modify: `crates/hex-render/src/lib.rs`, `crates/hex-app/src/args.rs`, `crates/hex-app/src/control.rs` (only if a command is needed), `index.html`, `scripts/shots/gallery.json` (only if it needs the flag), `docs/agent-operability.md`
+
+**Interfaces:**
+- Consumes: `FrameStats` and `DiagSnapshot` (diag.rs), and the `Flags` parsing (args.rs).
+- Produces:
+  - `pub struct FpsReadout { pub fps: f32, pub frame_ms: f32, pub p95_ms: f32 }`, computed from a short rolling window of about 1 s plus the existing p95. It is a pure function over recent frame times, so it can be unit-tested.
+  - An on-screen counter on both targets. Native draws a small Bevy UI text node in the top-right corner. The web build uses the same Bevy UI text, so it appears in the canvas. Format: `60 fps · 16.4 ms · p95 17.1`.
+  - Visible by default. **F3** toggles it. The flag/query key `fps=on|off` sets the initial state, with `on` as the default.
+  - `make shots` and `make web-shots` pass `fps=off`, so the galleries stay clean and comparable. The perf gate leaves it on: the cost must be counted, and it is negligible.
+  - The text node carries `SceneEntity`, or is spawned outside the scene and survives scenario switches deliberately. Document which.
+
+- [ ] **Step 1: Failing tests (RED)**
+  - The readout math: 60 samples of 16.0 ms give fps 62.5 and frame_ms 16.0. An empty window gives 0. A spike is reflected in p95.
+  - Flag parsing for `fps` (on, off, and an invalid value that warns).
+
+- [ ] **Step 2: Implement until the tests pass (GREEN)**
+
+- [ ] **Step 3: Verify**
+  1. `make checkall`.
+  2. Native `--shot single` with `fps=on`: Read the PNG. The counter must be legible in the top-right.
+  3. `make web-shots`: the counter must be absent from those images.
+  4. `make web-smoke`.
+  5. `make perf-gate`: record whether p95 moved compared with the last run.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git commit -m "feat(ui): on-screen FPS counter (F3 toggle, fps=on|off)"
+```
+
+---
+
+### Task 14: Shipping-architecture gate: instanced chunks and shadow tuning (runs before Task 10)
+
+The Task 12 review found two gaps, and both must be closed before deciding Bevy vs custom wgpu:
+- The merged-chunk layout is not the shipping architecture. PRD §6 specifies per-chunk GPU instance buffers.
+- Shadow cost (4–10 ms) has not been tuned at all.
+
+This task measures what we would actually ship.
+
+**Files:**
+- Create: `crates/hex-render/src/instanced.rs`, `assets/shaders/instanced_piece.wesl`
+- Modify: `crates/hex-render/src/scene.rs`, `crates/hex-render/src/diag.rs`, `crates/hex-app/src/args.rs`, `e2e/perf-matrix.mjs`, `docs/perf/p0-gate-diagnosis.md`, `docs/agent-operability.md`, `Makefile`
+
+**Interfaces:**
+- Consumes: the gate workload, chunk math (chunks.rs), `piece_material`, the matrix runner, and the diag census.
+- Produces:
+  - `layout=instanced`. Use one draw per (piece mesh, LOD) across the world, or per chunk when chunk culling helps. Each draw is backed by an instance buffer of `{ transform, material_index }`. A single pipeline reads the material from a palette storage buffer, so the 40 materials become palette entries. Build on Bevy's custom instancing approach (`target/ref/bevy/examples/shader/custom_shader_instancing.rs`, or its 0.20 equivalent) and extend the instanced pipeline to the shadow and prepass passes. If Bevy's API makes shadow and prepass support for custom instancing infeasible, use mesh-tag/`MeshTag` instance indexing or the 0.20 mechanism the examples show, and document the choice. LOD keeps the 150/400 m switch, applied per chunk instance set or in the vertex shader. Triangles and pieces must stay equal to the `entities` layout. Add a test asserting instance counts per LOD equal 40,000 pieces.
+  - Shadow tuning knobs:
+    - `shadow_casters=all|large`. `large` adds `NotShadowCaster` (or the instanced equivalent) to props and to LOD2.
+    - `cascades=2|3|4`.
+    - `shadow_dist=<m>`, the cascade maximum distance.
+  - A per-pass draw census: main, prepass, and each shadow cascade counted separately (I4).
+  - `make perf-matrix` re-run on a fresh browser per web row, with native using `--present immediate`. Rows:
+
+    | Layout | Shadows | Post | Views |
+    |---|---|---|---|
+    | entities (baseline) | full | full | strategic, closeup |
+    | instanced | full | full | strategic, closeup |
+    | instanced | `shadow_casters=large`, 3 cascades | full | strategic, closeup |
+    | instanced | off | none | strategic, closeup |
+
+    Plus native rows for the same configurations.
+  - A rewrite of `docs/perf/p0-gate-diagnosis.md` against the new matrix. Every claim cites a row. It must answer: does the instanced shipping layout meet 16.6 ms p95 on Bevy WebGPU, with which shadow settings, and with how much headroom?
+
+- [ ] **Step 1: Failing tests (RED)**
+  - Instance counts and triangles per LOD equal the entities layout.
+  - Material palette indices are within 0..40.
+  - Flag parsing for the new keys.
+
+- [ ] **Step 2: Implement until the tests pass (GREEN)**
+
+- [ ] **Step 3: Visual check**
+
+Run `make shots` with `layout=instanced` and use distinct filenames. Read the PNGs: the result must look like the entities layout, with shadows present.
+
+- [ ] **Step 4: Run the matrix and write the diagnosis**
+
+- [ ] **Step 5: Gate and commit**
+
+Run `make checkall`.
+
+```bash
+git commit -m "perf: instanced shipping layout and shadow tuning in the gate matrix"
+```
+
+---
+
 ### Task 10: Engine gate decision
 
 **Files:**
@@ -2427,13 +2690,13 @@ Commit the JSON with `git commit -m "docs(perf): live deploy size and time-to-in
 - Modify: `PRD.md` (D2, §9.3, Q3, Q6, §18), `docs/perf/p0-engine-gate.json`
 
 **Interfaces:**
-- Consumes: the outputs of Tasks 6–9.
+- Consumes: the outputs of Tasks 6–9 and Tasks 12 and 14 (`docs/perf/p0-gate-matrix.json`, `docs/perf/p0-gate-diagnosis.md`). The decision weighs the shipping-architecture rows from Task 14 (`layout=instanced` with tuned shadows), not the Task 6 entities rows or the Task 12 merged-chunk rows.
 - Produces: the recorded decision Bevy vs custom wgpu (Q6) and the asset route (Q3).
 
 - [ ] **Step 1: Collect browser measurements**
 
 - Chrome: `make perf-gate`. This is already the JSON from Task 6/7, re-run on the final build.
-- Safari 26 (macOS): for both `view=strategic` and `view=closeup`, open `http://127.0.0.1:<trunk port>/?scenario=gate2000&view=<view>&diag=1` from `trunk serve --release`, or the live URL, in a 2560×1440 window. Wait 15 s and read p50, p95, ssao and gpu_preprocessing from the overlay. Use the computer-use tools if the agent drives it. Otherwise the owner reads the numbers out. Append them to the JSON under `"safari"`.
+- Safari 26 (macOS): for both `view=strategic` and `view=closeup`, open `http://127.0.0.1:<trunk port>/?scenario=gate2000&view=<view>&diag=1` from `trunk serve --release`, or the live URL, in a 2560×1440 window. Wait until the overlay shows a full post-READY window (`samples` 600), then read p50, p95, ssao and gpu_preprocessing_supported from it. Use the computer-use tools if the agent drives it. Otherwise the owner reads the numbers out. Append them to the JSON under `"safari"`.
 - iOS 26 Safari smoke test: the owner opens the live URL on the iPhone and confirms the hex renders, or that a WebGPU-off device shows the unsupported page. Record the answer.
 
 - [ ] **Step 2: Write `docs/decisions/0001-engine.md`**
@@ -2484,3 +2747,17 @@ Expected: passes.
 git add docs/decisions PRD.md docs/perf
 git commit -m "docs: record P0 engine gate decision and asset route"
 ```
+
+### Task 15: Safari WebGPU stall diagnosis (runs after Task 10, before the final review)
+
+Task 10 found that Safari 27.0.1 on macOS never renders: Bevy stops at frame 3, READY never fires, the canvas stays black, and no console error appears. WebGPU is present. The P0 gate requires Safari, so the cause must be found before deploy.
+
+**Files:**
+- Create: `docs/perf/p0-safari-diagnosis.md`
+- Modify: whatever the root cause requires, plus `docs/decisions/0001-engine.md` and `docs/perf/p0-engine-gate.json` (`"safari"`) with the outcome.
+
+- [ ] **Step 1: Reproduce and instrument without devtools.** Inject a page-side WebGPU tracer: wrap `GPUAdapter.requestDevice`, `GPUDevice` creation methods (`createRenderPipelineAsync`, `createComputePipelineAsync`, `createShaderModule` and its `getCompilationInfo`), `GPUQueue.submit`/`onSubmittedWorkDone`, `GPUBuffer.mapAsync`, `GPUCanvasContext.configure`/`getCurrentTexture`, `device.lost` and `uncapturederror`. Log each call and promise settlement with frame numbers. Raise Bevy/wgpu log level to the browser console.
+- [ ] **Step 2: Bisect.** Find the smallest configuration that stalls: an upstream Bevy 0.20 example (e.g. `3d_scene`) built for web, then hex-world's `single` scenario with plugins removed one at a time (compute boids, custom material, TAA, SSAO, KTX2 textures, meshopt).
+- [ ] **Step 3: Fix or work around** the root cause in hex-world, or prove it is upstream (Bevy, wgpu or WebKit) with a minimal reproduction, and record the workaround.
+- [ ] **Step 4: Verify** in real Safari (both views, `diag` READY with 600 samples, p95 recorded under the load guard) and re-run Chrome smoke. Update the decision doc, the Safari block in the engine-gate JSON, and the PRD if the decision changes.
+- [ ] **Step 5:** `make checkall-ci`, then commit.

@@ -1,0 +1,30 @@
+[package]
+name = "hex-render"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+hex-core = { path = "../hex-core" }
+hex-assets = { path = "../hex-assets", features = ["bevy"] }
+bytemuck = { version = "1", features = ["derive"] }
+bevy = { workspace = true, features = [
+    "3d_bevy_render",
+    "ui_bevy_render",
+    "default_app",
+    "std",
+    "bevy_winit",
+    "multi_threaded",
+    "default_font",
+    "bluenoise_texture",
+] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+bevy = { workspace = true, features = ["x11", "wayland"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+bevy = { workspace = true, features = ["web", "webgpu"] }
+
+[lints]
+workspace = true

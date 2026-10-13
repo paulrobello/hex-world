@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; connect-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:"
+    />
+    <title>Hex World</title>
+    <link rel="icon" href="data:," />
+    <style>
+      html, body { margin: 0; height: 100%; background: #1d2126; overflow: hidden; }
+      canvas#hex-world { display: block; width: 100%; height: 100%; outline: none; }
+      #diag { position: fixed; top: 8px; left: 8px; padding: 6px 8px; background: rgb(0 0 0 / 0.6);
+              color: #e6e6e6; font: 12px/1.4 ui-monospace, monospace; white-space: pre; display: none; }
+    </style>
+    <script src="web/wgsl-compat.js"></script>
+    <script>
+      // WebGPU gate before the wasm loads (PRD D2, TC4).
+      (function () {
+        function bail() { window.location.replace("web/unsupported.html"); }
+        if (!("gpu" in navigator) || !navigator.gpu) return bail();
+        navigator.gpu.requestAdapter().then(function (a) { if (!a) bail(); }).catch(bail);
+      })();
+    </script>
+    <link data-trunk rel="rust" href="crates/hex-app/Cargo.toml" data-bin="hex-world" data-cargo-profile="wasm-release" data-wasm-opt="z" />
+    <link data-trunk rel="copy-dir" href="web" />
+    <link data-trunk rel="copy-dir" href="assets" />
+    <link data-trunk rel="copy-file" href="CNAME" />
+  </head>
+  <body>
+    <canvas id="hex-world"></canvas>
+    <div id="diag"></div>
+    <script>
+      addEventListener("TrunkApplicationStarted", function () {
+        var w = window.wasmBindings;
+        if (!w) { console.error("hexWorld: wasmBindings missing"); return; }
+        window.hexWorld = {
+          ready: function () { return w.hex_world_ready(); },
+          state: function () { return JSON.parse(w.hex_world_state_json()); },
+          diag: function () { return JSON.parse(w.hex_world_diag_json()); },
+          dumpState: function () { return JSON.parse(w.hex_world_state_json()); },
+          // One command object or an array; parse errors are logged with console.error by wasm.
+          cmd: function (json) {
+            if (typeof json !== "string") json = JSON.stringify(json);
+            w.hex_world_cmd(json);
+          },
+          // Resolves to a PNG data URL once the capture lands, after any queued commands.
+          screenshot: function (name, timeoutMs) {
+            name = name || "shot-" + Date.now();
+            var deadline = Date.now() + (timeoutMs || 10000);
+            w.hex_world_screenshot(name);
+            return new Promise(function (resolve, reject) {
+              (function poll() {
+                var url = w.hex_world_take_shot(name);
+                if (url) return resolve(url);
+                if (Date.now() > deadline) return reject(new Error("hexWorld.screenshot timed out: " + name));
+                setTimeout(poll, 100);
+              })();
+            });
+          },
+        };
+        if (new URLSearchParams(location.search).get("diag") === "1") {
+          var el = document.getElementById("diag");
+          el.style.display = "block";
+          setInterval(function () { el.textContent = JSON.stringify(window.hexWorld.diag(), null, 1); }, 500);
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hex World needs WebGPU</title>
+    <link rel="icon" href="data:," />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #2b2c30;
+        color: #e6e6e6;
+        font: 16px/1.5 system-ui, sans-serif;
+      }
+      main {
+        max-width: 34rem;
+        padding: 2rem;
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin: 0 0 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="unsupported">
+      <h1>This browser can't run Hex World</h1>
+      <p>The app needs WebGPU, and this browser either doesn't support it or has it turned off.</p>
+      <p>Try a current desktop version of one of these:</p>
+      <ul>
+        <li>Chrome or Edge 113 or newer</li>
+        <li>Firefox 141 or newer</li>
+        <li>Safari 26 or newer, including iPhone and iPad</li>
+      </ul>
+      <p>If you're already on one of them, check that hardware acceleration is enabled.</p>
+    </main>
+  </body>
+</html>

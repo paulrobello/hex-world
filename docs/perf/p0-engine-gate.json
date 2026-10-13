@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-12T23:58:33.502Z",
+  "browser": "chromium-headless-gpu-uncapped",
+  "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "viewport": "2560x1440",
+  "fps_overlay": "on",
+  "webgpu_adapter": "apple | metal-3 | ",
+  "max_storage_textures_per_shader_stage": 8,
+  "budget_p95_ms": 16.6,
+  "workload": {
+    "tiles": 2000,
+    "pieces": 40000,
+    "mesh_entities": 120301,
+    "vehicles": 300,
+    "boids": 1000,
+    "tris_lod0_per_tile": 15348,
+    "materials": 40,
+    "post": [
+      "taa",
+      "ssao",
+      "bloom",
+      "dof"
+    ],
+    "not_measured": [],
+    "configured": {
+      "shadow_cascades": 4,
+      "lod_switch_m": [
+        150,
+        400
+      ]
+    },
+    "budget": {
+      "tiles": 2000,
+      "pieces": 40000,
+      "tris_lod0_per_tile": 15700,
+      "moving": 300,
+      "boids": 1000
+    }
+  },
+  "views": {
+    "strategic": {
+      "p50": 24.2,
+      "p95": 24.9,
+      "layout": "entities",
+      "chunk_size": 0,
+      "chunks": 0,
+      "shadows": true,
+      "visible_entities": 40301,
+      "visible_mesh_material_pairs": 241,
+      "visible_tris": 3915600,
+      "visible_by_lod": [
+        0,
+        0,
+        40000
+      ],
+      "wasm_memory_bytes": 404160512,
+      "tiles": 2000,
+      "entities": 120301,
+      "pieces": 40000,
+      "vehicles": 300,
+      "boids": 1000,
+      "tris_lod0_per_tile": 15348,
+      "materials": 40,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "ssao": true,
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "adapter": " | BrowserWebGpu | Other | ",
+      "samples": 600,
+      "frames": 720,
+      "window_start_frame": 121
+    },
+    "closeup": {
+      "p50": 28.2,
+      "p95": 29.5,
+      "layout": "entities",
+      "chunk_size": 0,
+      "chunks": 0,
+      "shadows": true,
+      "visible_entities": 41210,
+      "visible_mesh_material_pairs": 641,
+      "visible_tris": 9078424,
+      "visible_by_lod": [
+        2181,
+        13530,
+        25199
+      ],
+      "wasm_memory_bytes": 387186688,
+      "tiles": 2000,
+      "entities": 120301,
+      "pieces": 40000,
+      "vehicles": 300,
+      "boids": 1000,
+      "tris_lod0_per_tile": 15348,
+      "materials": 40,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "ssao": true,
+      "gpu_preprocessing_supported": "PreprocessingOnly",
+      "adapter": " | BrowserWebGpu | Other | ",
+      "samples": 600,
+      "frames": 720,
+      "window_start_frame": 121
+    }
+  },
+  "console_errors": [],
+  "vsync_suspected": false,
+  "thin_sample_views": [],
+  "pass": false
+}

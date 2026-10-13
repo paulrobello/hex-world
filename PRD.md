@@ -40,7 +40,7 @@ Decisions made during the brainstorm. Codes are stable and referenced throughout
 | Code | Decision |
 |---|---|
 | D1 | Core loop: sandbox + progression. No fail state. New tiles unlock through combo recipes, which arrive after the MVP. |
-| D2 | Engine: Bevy `=0.20.0` (wgpu 30) → WASM, WebGPU required, extended with custom render-graph nodes for water, VAT creatures, compute boids and any post effect Bevy lacks on the web. No WebGL2 fallback, so compute shaders may be used freely. The P0 spike is the decision gate: if Bevy's TAA, SSAO or DOF fail in browser WebGPU, or 2,000 tiles miss the frame budget, switch to a custom wgpu 30 renderer with standalone `bevy_ecs`. Research basis: §18. |
+| D2 | Engine: Bevy `=0.20.0` (wgpu 30) → WASM, WebGPU required, extended with custom render-graph nodes for water, VAT creatures, compute boids and any post effect Bevy lacks on the web. No WebGL2 fallback, so compute shaders may be used freely. P0 engine gate outcome (2026-10-12): Bevy stays, conditionally. In Chrome the instanced shipping layout holds the frame budget with TAA, SSAO, bloom and DOF active, using a reduced shadow setting, and full shadows miss it. Safari 27.0.1 renders through `web/wgsl-compat.js`, a page shim that works around Bevy's PBR shaders depending on the WGSL extension `texture_and_sampler_let`, which Safari lacks ([`docs/perf/p0-safari-diagnosis.md`](docs/perf/p0-safari-diagnosis.md)). On the tuned instanced rows its median mean frame time is 16.67 / 16.69 ms (strategic / close-up), and strategic run 2 had 15 frames over 25 ms. The custom wgpu 30 renderer with standalone `bevy_ecs` remains the documented fallback. Decision record: [`docs/decisions/0001-engine.md`](docs/decisions/0001-engine.md). Research basis: §18. |
 | D3 | Adjacency: typed edge sockets on all 6 edges, with a compatibility table. Rotation rotates the sockets. |
 | D4 | Inventory: every unlocked tile type is unlimited. The panel filters or highlights tiles that are legal at the hovered slot. |
 | D5 | Elevation: discrete height levels (target 0–3) with cliff and ramp sockets. The MVP ships at a single level, and the schema reserves the height fields from day one. |
@@ -296,7 +296,7 @@ The tier is auto-detected on first run from adapter info and a short benchmark, 
 ### 9.3 Asset formats at runtime
 
 - glTF 2.0 binary (GLB) with `EXT_meshopt_compression` and `KHR_texture_basisu` (KTX2: UASTC for normals, ETC1S or UASTC+RDO for color maps). The browser transcodes to BC7 or ASTC depending on what the adapter supports.
-- The route is chosen in P0 (TC3). Preferred: (a) textures are shipped as pre-transcoded KTX2 + zstd in two families, BC7 (desktop) and ASTC (Apple mobile, P7), selected at runtime from the device's `texture-compression-bc` / `-astc` features, so no Basis transcoder is needed and Bevy's `ktx2` + pure-Rust `zstd_rust` loader works as-is; meshes are meshopt-compressed and decoded before `bevy_gltf` sees them, either by a custom asset loader that rewrites the GLB using the pure-Rust `meshoptimizer-rs` decoder or by the official `meshopt_decoder.js` called through wasm-bindgen. Fallbacks: (b) Basis Universal through `bevy_basisu_loader` or the pure-Rust `basisu` crate; (c) uncompressed vertex data with only zstd at the transport level.
+- Decided in P0 (TC3, Q3; [`docs/decisions/0001-engine.md`](docs/decisions/0001-engine.md)): route (a), with meshes decoded by the pure-Rust `meshoptimizer-rs` GLB rewrite in `crates/hex-assets` and textures shipped as BC7/ASTC KTX2 + zstd with a PNG fallback. Route (a) as specified: textures are shipped as pre-transcoded KTX2 + zstd in two families, BC7 (desktop) and ASTC (Apple mobile, P7), selected at runtime from the device's `texture-compression-bc` / `-astc` features, so no Basis transcoder is needed and Bevy's `ktx2` + pure-Rust `zstd_rust` loader works as-is; meshes are meshopt-compressed and decoded before `bevy_gltf` sees them, either by a custom asset loader that rewrites the GLB using the pure-Rust `meshoptimizer-rs` decoder or by the official `meshopt_decoder.js` called through wasm-bindgen. Fallbacks: (b) Basis Universal through `bevy_basisu_loader` or the pure-Rust `basisu` crate; (c) uncompressed vertex data with only zstd at the transport level.
 
 ### 9.4 Hooks for the future atmosphere phases (D7)
 
@@ -389,7 +389,7 @@ crates/
   hex-render/    # Bevy render plugins: materials, custom nodes (water, VAT, boids), post config, photo mode
   hex-assets/    # meshopt GLB loader, KTX2 family selection, kit manifest, streaming
   hex-app/       # Bevy app + plugins, wasm entry, input actions, JS bridge (wasm-bindgen)
-web/             # Vite + TypeScript UI overlay, audio layer, IndexedDB, unsupported-browser page
+web/             # Trunk-served web shell (Vite + TypeScript UI overlay deferred to P2), audio layer, IndexedDB, unsupported-browser page
 data/            # tile/socket/recipe RON, validated at build
 scripts/         # blender, audio, manifest, deploy
 ```
@@ -438,7 +438,7 @@ Each phase ends with every acceptance criterion verified, with evidence, and is 
 
 Goal: de-risk the stack before content work.
 
-- [ ] Rust workspace and Vite web shell build. `make checkall` and `make checkall-ci` exist and pass.
+- [ ] Rust workspace and Trunk web shell build. `make checkall` and `make checkall-ci` exist and pass.
 - [ ] Bevy 0.20 runs on the WebGPU backend in Chrome and Safari 26 (macOS), rendering a lit PBR hex mesh. The native build renders the same scene. An iOS 26 Safari smoke test loads.
 - [ ] Engine gate (D2): 2,000 instanced hex tiles with 4 shadow cascades, bloom, TAA, SSAO and DOF hold the frame budget in Chrome and Safari on the reference machine. Logs confirm the SSAO plugin is active and report the GPU-preprocessing mode. The Bevy-vs-custom-wgpu decision is recorded with these measurements.
 - [ ] One custom compute pass (boids) and one custom material render inside Bevy's render graph on WebGPU.
@@ -529,8 +529,8 @@ Goal: the polished, playable core loop with D12 content.
 |---|---|---|
 | Q1 | Final hex scale (R = 16 m?) and level step (4 m?). | P1 look-dev |
 | Q2 | External storage for `.blend` sources (R2 bucket vs. other). | P1 |
-| Q3 | Asset route for KTX2/meshopt (§9.3). | P0 |
-| Q6 | Bevy vs custom wgpu final decision (D2 engine gate). | P0 |
+| Q3 | Resolved: pure-Rust `meshoptimizer-rs` GLB rewrite plus BC7/ASTC KTX2 + zstd with a PNG fallback (§9.3, [`docs/decisions/0001-engine.md`](docs/decisions/0001-engine.md)). | P0 |
+| Q6 | Provisional: Bevy retained (D2, [`docs/decisions/0001-engine.md`](docs/decisions/0001-engine.md)). The Safari 27 startup failure is diagnosed and worked around (`web/wgsl-compat.js`), and Safari renders. Paced p95 still misses 17.0 ms in Chrome and in Safari close-up. | P0 |
 | Q4 | Tone mapper (AgX vs. ACES). | P1 |
 | Q5 | Resolved: the PRD is not registered in par-prd. `PRD.md` in this repo is canonical. | Owner |
 
@@ -543,4 +543,5 @@ Goal: the polished, playable core loop with D12 content.
 - A custom wgpu 30 renderer is viable (mature WebGPU backend; `gltf`, `ktx2`, `ruzstd`, `glam` crates) but has no maintained renderer to build on (rend3 archived, three-d is WebGL2 only). Estimated 3–5 person-months for the PBR + post stack at production quality.
 - Fyrox and Blade have no WebGPU web path.
 - Decision: Bevy first, because it already supplies PBR, shadows, post effects, assets and the ECS. The P0 engine gate decides whether that holds.
+- P0 engine gate measured (2026-10-12, [`docs/decisions/0001-engine.md`](docs/decisions/0001-engine.md)): instanced layout, Chrome uncapped p95 strategic / close-up of 3.7 / 3.7 ms with tuned shadows, 3.8 / 4.0 ms with mid600, 4.3 / 4.3 ms with mid1200 and 22.0 / 38.6 ms (fail) with full shadows. Paced 60 Hz p95 is 17.3–17.5 ms, which fails the pre-set 17.0 ms. Safari 27.0.1 quit at frame 3 on a shader its compiler rejects (Bevy's `let` handle aliases need `texture_and_sampler_let`). With `web/wgsl-compat.js` it renders, and its paced p95 is 17.0 / 18.0 ms (strategic / close-up) at 1 ms timer resolution, with means of 16.67 / 16.69 ms. wasm is 8.46 MB gzip and READY takes 1.2–1.4 s (localhost; Pages measurement pending).
 
