@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-13T04:41:06.895Z",
+  "url": "https://hex-world.pardev.net/",
+  "browser": "headless Chromium (Metal)",
+  "viewport": "1280x800",
+  "ready_ms": 9640,
+  "wasm_wire_bytes": 8571055,
+  "wasm_encoding": "gzip",
+  "total_wire_bytes": 9209958,
+  "requests": 9,
+  "console_errors": [],
+  "note": "Single cold load from this machine's network; not a controlled timing run."
+}
