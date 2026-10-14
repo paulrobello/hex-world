@@ -1,0 +1,13 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-14",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/fish/ref-2.jpg",
+    "assets-source/refs/fish/ref-3.jpg"
+  ],
+  "rejected": [
+    "assets-source/refs/fish/ref-1.jpg"
+  ],
+  "notes": "Q5: model ref-3's stylized-real trout body with both its ocean and river palettes. ref-2 is approved for school layout only. ref-1's big-eyed cartoon fish is rejected. Reviewed in docs/review/2026-10-14-walkthrough.html (A12)."
+}

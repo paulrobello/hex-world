@@ -1,0 +1,10 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-14",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/bakery/ref-1.jpg",
+    "assets-source/refs/bakery/ref-2.jpg"
+  ],
+  "notes": "Its own tile with a road through it, so it chains like houses. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+}

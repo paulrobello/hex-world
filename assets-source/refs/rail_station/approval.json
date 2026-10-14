@@ -1,0 +1,10 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-14",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/rail_station/ref-1.jpg",
+    "assets-source/refs/rail_station/ref-2.jpg"
+  ],
+  "notes": "A side platform of about 20 m; the ref-1 shelter is the house style. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+}

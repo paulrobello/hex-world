@@ -1,0 +1,10 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-14",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/train/ref-1.jpg",
+    "assets-source/refs/train/ref-2.jpg"
+  ],
+  "notes": "Steam tank engine as drawn; runtime colour on the body, like the cars; two carriages. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+}

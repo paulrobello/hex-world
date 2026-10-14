@@ -1,0 +1,11 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-14",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/birds/ref-1.jpg",
+    "assets-source/refs/birds/ref-2.jpg",
+    "assets-source/refs/birds/ref-3.jpg"
+  ],
+  "notes": "Q6: starling-sized. ref-1 (gliding songbird) and ref-3 (roosting on an oak branch) are the modeling references; ref-2 is for flock layout only (its centre bird is upside down). Feather tips live in the texture at 100-200 triangles. Replaces the placeholder gulls, which the owner said read like fish. Reviewed in the walkthrough (A12)."
+}

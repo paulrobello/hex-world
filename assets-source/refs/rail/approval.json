@@ -1,0 +1,11 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-14",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/rail/ref-1.jpg",
+    "assets-source/refs/rail/ref-2.jpg",
+    "assets-source/refs/rail/ref-3.jpg"
+  ],
+  "notes": "Slightly wider than standard gauge so it reads at play distance; single track; bends across adjacent edges (60 degrees); a 60-degree rail-road level crossing with field gates. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+}

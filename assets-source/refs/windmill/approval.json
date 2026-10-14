@@ -1,0 +1,11 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-14",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/windmill/ref-1.jpg",
+    "assets-source/refs/windmill/ref-2.jpg",
+    "assets-source/refs/windmill/ref-3.jpg"
+  ],
+  "notes": "A flat tile for now (P4 brings elevation); white; the sails animate and the fantail stays still. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+}
