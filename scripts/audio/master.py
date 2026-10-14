@@ -4,7 +4,10 @@
 Usage: python3 scripts/audio/master.py [--root DIR] [--cue ID ...]
 
 Per cue in <root>/assets-source/audio/cues.json (PRD §8, §11.3, §11.4):
-  1. Decode the untouched source to 48 kHz float at the cue's channel count (amplitude fold).
+  1. Decode the untouched source to 48 kHz float at the cue's channel count (amplitude fold). A cue
+     with `sourceCue` masters another cue's source (a picked review candidate). A per-cue `filter`
+     (high-pass and a harmonic notch comb, for a provider hum) runs next, with circular context on
+     loops so the wrap stays continuous. A per-cue `cut` takes a faded excerpt as a one-shot.
   2. One-shots: trim leading and trailing silence, keeping the attack and decay, never below 0.5 s.
      Loops: a sample-seamless source (ElevenLabs loop mode) is rotated so head and tail sit at the
      same level; any other loop (music) is repaired by folding the tail over the head.
@@ -24,6 +27,7 @@ import argparse
 import array
 import json
 import math
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -128,6 +132,70 @@ def crossfade_loop(samples: array.array, channels: int, seconds: float) -> tuple
     return out, {"step": "crossfade-loop", "seconds": seconds, "framesRemoved": fade}
 
 
+def filter_chain(spec: dict) -> str:
+    """ffmpeg -af chain for a cues.json `filter`: optional high-pass, then a notch at each harmonic.
+
+    {"highpassHz": 150, "harmonicNotch": {"fundamentalHz": 200, "harmonics": 48, "widthHz": 6}}
+    """
+    parts = []
+    if spec.get("highpassHz"):
+        parts.append(f"highpass=f={spec['highpassHz']}:poles=2")
+    notch = spec.get("harmonicNotch") or []
+    done: set[float] = set()
+    for series in notch if isinstance(notch, list) else [notch]:
+        f0, width = float(series["fundamentalHz"]), float(series["widthHz"])
+        for k in range(1, int(series["harmonics"]) + 1):
+            if f0 * k < A.RATE / 2 - width and f0 * k not in done:
+                done.add(f0 * k)
+                parts.append(f"bandreject=f={f0 * k:g}:width_type=h:width={width:g}")
+    if not parts:
+        raise ValueError(f"filter {spec} names no stage")
+    return ",".join(parts)
+
+
+def apply_filter(layout: A.Layout, name: str, samples: array.array, channels: int, spec: dict,
+                 loop: bool) -> tuple[array.array, dict]:
+    """Runs the cue's filter. Loops get circular context on both sides, so the IIR start-up transient
+    falls in the discarded pad and the wrap stays continuous."""
+    chain = filter_chain(spec)
+    frames = len(samples) // channels
+    pad = min(int(LOOP_PAD_S * A.RATE), frames // 2) if loop else 0
+    body = (array.array("f", samples[(frames - pad) * channels:]) + samples
+            + array.array("f", samples[:pad * channels])) if pad else samples
+    src = layout.work / "tmp" / f"{name}.prefilter.wav"
+    dst = layout.work / "tmp" / f"{name}.filtered.wav"
+    A.write_wav(src, body, channels)
+    out = subprocess.run(["ffmpeg", "-nostdin", "-y", "-v", "error", "-i", str(src), "-af", chain,
+                          "-c:a", "pcm_f32le", str(dst)], capture_output=True)
+    if out.returncode != 0:
+        raise RuntimeError(f"{name}: filter failed: {out.stderr.decode().strip()}")
+    filtered, _ = A.decode(dst, channels)
+    if len(filtered) != len(body):
+        raise RuntimeError(f"{name}: filter changed the length ({len(body) // channels} -> {len(filtered) // channels})")
+    return (array.array("f", filtered[pad * channels:(pad + frames) * channels]),
+            {"step": "filter", "spec": spec, "chain": chain, "circularPadFrames": pad})
+
+
+def cut(samples: array.array, channels: int, spec: dict) -> tuple[array.array, dict]:
+    """A faded excerpt for a one-shot taken from a longer bed: {startSeconds, seconds, fadeInSeconds, fadeOutSeconds}."""
+    frames = len(samples) // channels
+    start = int(spec["startSeconds"] * A.RATE)
+    n = int(spec["seconds"] * A.RATE)
+    if start < 0 or n <= 0 or start + n > frames:
+        raise ValueError(f"cut {spec} does not fit {frames / A.RATE:.2f} s of source")
+    out = array.array("f", samples[start * channels:(start + n) * channels])
+    fin, fout = int(spec["fadeInSeconds"] * A.RATE), int(spec["fadeOutSeconds"] * A.RATE)
+    for f in range(min(fin, n)):
+        g = math.sin((f + 0.5) / fin * math.pi / 2) ** 2
+        for c in range(channels):
+            out[f * channels + c] *= g
+    for i in range(min(fout, n)):
+        g = math.sin((i + 0.5) / fout * math.pi / 2) ** 2
+        for c in range(channels):
+            out[(n - 1 - i) * channels + c] *= g
+    return out, {"step": "cut", **spec, "frames": n}
+
+
 def limit(layout: A.Layout, name: str, samples: array.array, channels: int, gain_db: float,
           ceiling_db: float, loop: bool) -> array.array:
     """Gain then a 4x-oversampled lookahead limiter. Loops get circular context on both sides."""
@@ -208,9 +276,19 @@ def encode(master: Path, out: Path, ext: str, channels: int, bitrate: str) -> li
     return args
 
 
-def find_source(layout: A.Layout, cue: dict) -> Path | None:
+def source_dir(layout: A.Layout, reg: dict, cue: dict) -> tuple[Path, str]:
+    """Where a cue's source and generation record live: its own folder, or its `sourceCue`'s."""
+    sid = cue.get("sourceCue") or cue["id"]
+    other = next((c for c in reg["cues"] if c["id"] == sid), None)
+    if other is None:
+        raise ValueError(f"{cue['id']}: sourceCue {sid} is not in cues.json")
+    return layout.cue_dir(other), sid
+
+
+def find_source(layout: A.Layout, reg: dict, cue: dict) -> Path | None:
+    folder, sid = source_dir(layout, reg, cue)
     for ext in SOURCE_EXTS:
-        p = layout.cue_dir(cue) / f"{cue['id']}{ext}"
+        p = folder / f"{sid}{ext}"
         if p.exists():
             return p
     return None
@@ -219,8 +297,8 @@ def find_source(layout: A.Layout, cue: dict) -> Path | None:
 REQUIRED_GENERATION = ("provider", "model", "subscription", "generationId")
 
 
-def generation_record(layout: A.Layout, cue: dict) -> dict:
-    path = layout.cue_dir(cue) / "generation.json"
+def generation_record(layout: A.Layout, reg: dict, cue: dict) -> dict:
+    path = source_dir(layout, reg, cue)[0] / "generation.json"
     if not path.exists():
         raise ValueError(f"{cue['id']}: {layout.rel(path)} missing (template: audio/music/generation.template.json)")
     gen = json.loads(path.read_text())
@@ -246,18 +324,23 @@ def master_cue(layout: A.Layout, reg: dict, cue: dict, tools: dict, script_hashe
     cls = reg["classes"][cue["class"]]
     target, ceiling = float(cls["lufs"]), float(reg["masterTruePeak"])
     channels = cue["channels"]
-    source = find_source(layout, cue)
+    source = find_source(layout, reg, cue)
     if source is None:
         if cue["provider"] == "suno":
             return {"id": cue["id"], "kind": cue["kind"], "class": cue["class"], "status": "pending-source",
                     "promptFile": cue.get("promptFile"), "events": cue["events"]}
-        raise ValueError(f"{cue['id']}: no source in {layout.rel(layout.cue_dir(cue))}")
-    gen = generation_record(layout, cue)
+        raise ValueError(f"{cue['id']}: no source in {layout.rel(source_dir(layout, reg, cue)[0])}")
+    gen = generation_record(layout, reg, cue)
     src_info = A.probe(source)
     samples, _ = A.decode(source, channels)
     before = measure(layout, f"{cue['id']}.source", samples, channels)
     steps: list[dict] = [{"step": "decode", "to": f"{A.RATE} Hz float, {channels} ch",
                           "fold": A.downmix(src_info["channels"], channels) if src_info["channels"] != channels else None}]
+    if cue.get("sourceCue"):
+        steps[0]["sourceCue"] = cue["sourceCue"]
+    if cue.get("filter"):
+        samples, info = apply_filter(layout, cue["id"], samples, channels, cue["filter"], cue["loop"])
+        steps.append(info)
 
     loop = None
     if cue["loop"]:
@@ -277,7 +360,7 @@ def master_cue(layout: A.Layout, reg: dict, cue: dict, tools: dict, script_hashe
             samples, info = crossfade_loop(samples, channels, cue.get("loopCrossfadeSeconds") or DEFAULT_LOOP_CROSSFADE_S)
             steps.append(info)
     else:
-        samples, info = trim_oneshot(samples, channels)
+        samples, info = cut(samples, channels, cue["cut"]) if cue.get("cut") else trim_oneshot(samples, channels)
         steps.append(info)
         samples, info = level(layout, cue, samples, channels, target, ceiling)
         steps.append(info)
@@ -330,7 +413,7 @@ def master_cue(layout: A.Layout, reg: dict, cue: dict, tools: dict, script_hashe
         "parameters": gen.get("parameters"),
         "generation": {"id": gen["generationId"], "generatedAt": gen.get("generatedAt"), "attempt": gen.get("attempt"),
                        "creditsCharged": gen.get("creditsCharged"),
-                       "record": A.file_record(layout, layout.cue_dir(cue) / "generation.json")},
+                       "record": A.file_record(layout, source_dir(layout, reg, cue)[0] / "generation.json")},
         "source": {**A.file_record(layout, source), **{k: src_info[k] for k in ("codec", "sampleRate", "channels", "durationSeconds")}},
         "loudness": {"targetLufs": target, "toleranceLu": reg["lufsTolerance"], "truePeakCeilingDb": reg["truePeakCeiling"],
                      "masterTruePeakDb": ceiling, "before": before, "master": master_lufs,
@@ -356,11 +439,14 @@ def master_cue(layout: A.Layout, reg: dict, cue: dict, tools: dict, script_hashe
     print(f"mastered {cue['id']:16} {cue['class']:5} {frames / A.RATE:6.2f}s  "
           f"{before['integrated']:6.1f} -> {webm['integrated']:6.1f} LUFS  TP {webm['truePeak']:5.1f} dBTP  {mode}"
           f"{'  DEVIATION' if deviation else ''}")
-    return {"id": cue["id"], "kind": cue["kind"], "class": cue["class"], "status": "mastered",
+    return {"id": cue["id"], "kind": cue["kind"], "class": cue["class"],
+            "status": "candidate" if cue.get("candidateFor") else "mastered",
+            **({"candidateFor": cue["candidateFor"]} if cue.get("candidateFor") else {}),
             "events": cue["events"], "playback": cue.get("playback") or cls["playback"], "channels": channels, "loop": loop,
             "durationSeconds": round(frames / A.RATE, 6), "decodedBytes": frames * channels * 4,
             "targetLufs": target,
-            "files": {r["path"].rsplit(".", 1)[1]: {"path": r["path"].removeprefix("assets/audio/"), "sha256": r["sha256"],
+            "files": {r["path"].rsplit(".", 1)[1]: {"path": os.path.relpath(layout.root / r["path"], layout.runtime),
+                                                     "sha256": r["sha256"],
                                                      "bytes": r["bytes"]} for r in runtime},
             "provenance": layout.rel(prov_path)}
 
@@ -376,7 +462,8 @@ def main() -> int:
     here = Path(__file__).resolve().parent
     script_hashes = {f"scripts/audio/{n}": A.sha256(here / n) for n in SCRIPTS}
     manifest_path = layout.runtime / "manifest.json"
-    old = {c["id"]: c for c in json.loads(manifest_path.read_text())["cues"]} if manifest_path.exists() else {}
+    prev = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    old = {c["id"]: c for c in prev.get("cues", []) + prev.get("candidates", [])}
     entries, errors = [], []
     for cue in reg["cues"]:
         if args.cue and cue["id"] not in args.cue:
@@ -393,7 +480,8 @@ def main() -> int:
         "sampleRate": A.RATE,
         "decodedBudgetBytes": reg["decodedBudgetBytes"],
         "formats": ["webm", "m4a"],
-        "cues": entries,
+        "cues": [e for e in entries if e["status"] != "candidate"],
+        "candidates": [e for e in entries if e["status"] == "candidate"],
     }
     layout.runtime.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")

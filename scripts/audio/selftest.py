@@ -5,7 +5,9 @@ Builds a tree in target/audio-selftest with three synthetic cues authored sample
 amplitudes (a one-shot with silence to trim, a loop that is seamless by construction, a stereo music
 cue that takes the crossfade path), masters it and requires audio-check to pass. Then it copies the
 passing tree three times and breaks one thing in each, requiring audio-check to exit non-zero with
-the matching message:
+the matching message (the bed also carries a cues.json `filter` notch at its 247.5 Hz tone, which must
+drop by 20 dB or more against the 110 Hz tone while the loop still passes, and a `cut` cue must master
+to exactly its excerpt length):
   hot        the one-shot's WebM re-encoded 9 dB hotter (loudness, true peak, hash);
   seam       the loop's WebM with a 0.3 step over its last 5 ms (wrap step);
   phase      the music's WebM with the right channel inverted (mono fold).
@@ -69,10 +71,14 @@ def build() -> None:
         {"id": "synth-hit", "kind": "sfx", "class": "sfx", "channels": 1, "loop": False, "use": "self-test",
          "events": ["tilePlaced"], "provider": "synthetic"},
         {"id": "synth-bed", "kind": "ambience", "class": "loop", "channels": 1, "loop": True, "use": "self-test",
-         "events": [], "provider": "synthetic"},
+         "events": [], "provider": "synthetic",
+         "filter": {"harmonicNotch": {"fundamentalHz": 247.5, "harmonics": 1, "widthHz": 6}}},
         {"id": "synth-music", "kind": "music", "class": "music", "channels": 2, "loop": True,
          "loopCrossfadeSeconds": 1.0, "use": "self-test", "events": [], "provider": "suno",
          "promptFile": "audio/music/prompts/synth-music.md"},
+        {"id": "synth-cut", "kind": "ambience", "class": "sfx", "channels": 1, "loop": False, "use": "self-test",
+         "events": [], "provider": "synthetic",
+         "cut": {"startSeconds": 1.0, "seconds": 3.0, "fadeInSeconds": 0.5, "fadeOutSeconds": 0.5}},
     ]
     reg = {**{k: v for k, v in repo.items() if k != "cues"}, "cues": cues}
     layout.source.mkdir(parents=True)
@@ -80,13 +86,23 @@ def build() -> None:
     prompt = ROOT / "audio/music/prompts/synth-music.md"
     prompt.parent.mkdir(parents=True)
     prompt.write_text("# synth-music\n\nSelf-test fixture: a synthetic chord, not a Suno prompt.\n")
-    for cue, samples, ch in ((cues[0], hit(), 1), (cues[1], bed(), 1), (cues[2], music(), 2)):
+    for cue, samples, ch in ((cues[0], hit(), 1), (cues[1], bed(), 1), (cues[2], music(), 2), (cues[3], bed(), 1)):
         d = layout.cue_dir(cue)
         A.write_wav(d / f"{cue['id']}.wav", samples, ch, fmt="s16")
         (d / "generation.json").write_text(json.dumps({
             "cueId": cue["id"], "provider": "synthetic (audio-check self-test)", "model": "scripts/audio/selftest.py",
             "subscription": "none (self-test fixture)", "generationId": f"selftest-{cue['id']}",
             "prompt": "sample-by-sample synthetic control signal"}, indent=2) + "\n")
+
+
+def tone_db(samples: array.array, hz: float) -> float:
+    """Level of one frequency over the whole signal (single-bin DFT), dB."""
+    re = im = 0.0
+    w = TAU * hz / A.RATE
+    for i, s in enumerate(samples):
+        re += s * math.cos(w * i)
+        im += s * math.sin(w * i)
+    return 20 * math.log10(max(math.hypot(re, im) / len(samples), 1e-12))
 
 
 def run(script: str, root: Path) -> tuple[int, str]:
@@ -114,6 +130,17 @@ def main() -> int:
     print(out)
     if code != 0:
         print(f"SELFTEST FAIL: audio-check exited {code} on the freshly mastered synthetic tree")
+        return 1
+
+    bed_master, _ = A.decode(ROOT / "target/audio-master/ambience/synth-bed.wav")
+    src, notched = bed(), (tone_db(bed_master, 247.5) - tone_db(bed_master, 110))
+    drop = (tone_db(src, 247.5) - tone_db(src, 110)) - notched
+    cut_frames = len(A.decode(ROOT / "target/audio-master/ambience/synth-cut.wav")[0])
+    print(f"--- filter: synth-bed 247.5 Hz tone {drop:.1f} dB down against 110 Hz (need >= 20) -> "
+          f"{'OK' if drop >= 20 else 'SELFTEST FAIL'}")
+    print(f"--- cut: synth-cut masters to {cut_frames} frames (need {3 * A.RATE}) -> "
+          f"{'OK' if cut_frames == 3 * A.RATE else 'SELFTEST FAIL'}")
+    if drop < 20 or cut_frames != 3 * A.RATE:
         return 1
 
     cases = []

@@ -87,8 +87,8 @@ def main() -> int:
 
     for cue_id in args.cues:
         cue = by_id.get(cue_id)
-        if cue is None or cue.get("provider") != "elevenlabs":
-            sys.exit(f"{cue_id}: not an elevenlabs cue in {CUES.relative_to(ROOT)}")
+        if cue is None or cue.get("provider") != "elevenlabs" or "generation" not in cue:
+            sys.exit(f"{cue_id}: not an elevenlabs cue with a generation block in {CUES.relative_to(ROOT)} (a sourceCue cue masters another cue's take)")
         if len(log["attempts"]) >= cap:
             sys.exit(f"generation cap reached: {len(log['attempts'])}/{cap} attempts logged; stopping")
         gen = cue["generation"]

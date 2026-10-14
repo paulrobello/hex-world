@@ -61,20 +61,20 @@
       "truePeak": -28.1
     },
     "master": {
-      "integrated": -16.0,
-      "lra": 5.9,
-      "truePeak": -2.3
+      "integrated": -16.5,
+      "lra": 6.4,
+      "truePeak": -2.8
     },
     "after": {
       "webm": {
-        "integrated": -16.0,
-        "lra": 5.9,
+        "integrated": -16.5,
+        "lra": 6.4,
         "truePeak": -1.2
       },
       "m4a": {
-        "integrated": -16.1,
-        "lra": 5.9,
-        "truePeak": -1.4
+        "integrated": -16.5,
+        "lra": 6.4,
+        "truePeak": -1.9
       }
     }
   },
@@ -85,38 +85,56 @@
       "fold": "pan=mono|c0=0.5*c0+0.5*c1"
     },
     {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 150,
+        "harmonicNotch": {
+          "fundamentalHz": 200,
+          "harmonics": 48,
+          "widthHz": 6
+        }
+      },
+      "chain": "highpass=f=150:poles=2,bandreject=f=200:width_type=h:width=6,bandreject=f=400:width_type=h:width=6,bandreject=f=600:width_type=h:width=6,bandreject=f=800:width_type=h:width=6,bandreject=f=1000:width_type=h:width=6,bandreject=f=1200:width_type=h:width=6,bandreject=f=1400:width_type=h:width=6,bandreject=f=1600:width_type=h:width=6,bandreject=f=1800:width_type=h:width=6,bandreject=f=2000:width_type=h:width=6,bandreject=f=2200:width_type=h:width=6,bandreject=f=2400:width_type=h:width=6,bandreject=f=2600:width_type=h:width=6,bandreject=f=2800:width_type=h:width=6,bandreject=f=3000:width_type=h:width=6,bandreject=f=3200:width_type=h:width=6,bandreject=f=3400:width_type=h:width=6,bandreject=f=3600:width_type=h:width=6,bandreject=f=3800:width_type=h:width=6,bandreject=f=4000:width_type=h:width=6,bandreject=f=4200:width_type=h:width=6,bandreject=f=4400:width_type=h:width=6,bandreject=f=4600:width_type=h:width=6,bandreject=f=4800:width_type=h:width=6,bandreject=f=5000:width_type=h:width=6,bandreject=f=5200:width_type=h:width=6,bandreject=f=5400:width_type=h:width=6,bandreject=f=5600:width_type=h:width=6,bandreject=f=5800:width_type=h:width=6,bandreject=f=6000:width_type=h:width=6,bandreject=f=6200:width_type=h:width=6,bandreject=f=6400:width_type=h:width=6,bandreject=f=6600:width_type=h:width=6,bandreject=f=6800:width_type=h:width=6,bandreject=f=7000:width_type=h:width=6,bandreject=f=7200:width_type=h:width=6,bandreject=f=7400:width_type=h:width=6,bandreject=f=7600:width_type=h:width=6,bandreject=f=7800:width_type=h:width=6,bandreject=f=8000:width_type=h:width=6,bandreject=f=8200:width_type=h:width=6,bandreject=f=8400:width_type=h:width=6,bandreject=f=8600:width_type=h:width=6,bandreject=f=8800:width_type=h:width=6,bandreject=f=9000:width_type=h:width=6,bandreject=f=9200:width_type=h:width=6,bandreject=f=9400:width_type=h:width=6,bandreject=f=9600:width_type=h:width=6",
+      "circularPadFrames": 48000
+    },
+    {
       "step": "source-loop-check",
-      "wrapStep": 0.000486,
-      "stepP999": 0.003851,
-      "headDb": -65.6,
-      "tailDb": -56.4,
-      "minWindowDb": -67.6,
+      "wrapStep": 0.000607,
+      "stepP999": 0.003691,
+      "headDb": -66.0,
+      "tailDb": -56.7,
+      "minWindowDb": -68.0,
       "seamless": true
     },
     {
       "step": "rotate-loop",
-      "offsetFrames": 412800,
-      "headTailLevelDeltaDb": 0.01
+      "offsetFrames": 216000,
+      "headTailLevelDeltaDb": 0.0
     },
     {
       "step": "loudness",
       "pass1": {
-        "integrated": -55.8,
-        "lra": 12.2,
+        "integrated": -56.0,
+        "lra": 12.7,
         "truePeak": -28.1
       },
       "targetLufs": -16.0,
-      "gainDb": 39.8,
-      "requiredPeakReductionDb": 13.7,
+      "gainDb": 40.0,
+      "requiredPeakReductionDb": 13.9,
       "mode": "limited",
-      "limiterInputGainDb": 42.9,
+      "limiterInputGainDb": 43.1,
       "limiterPasses": 3,
       "limiterCeilingDb": -2.5,
-      "windowsOverCeilingPct": 2.3
+      "windowsOverCeilingPct": 2.4
     },
     {
       "step": "settle",
       "trimDb": 0.2
+    },
+    {
+      "step": "encode-overshoot-trim",
+      "encodedTruePeakDb": -0.7,
+      "trimDb": -0.5
     },
     {
       "step": "encode-webm",
@@ -129,7 +147,7 @@
   ],
   "master": {
     "path": "target/audio-master/ambience/forest-birdsong.wav",
-    "sha256": "2cd616faa6e568356e54d96c7856d1d3ad3797db78a41892bd604746822ad9b5",
+    "sha256": "7ada7f96fd7c3c67c2ff341f9797e79712dfb2277dfab037ebd0be26de83cfc3",
     "frames": 1440000,
     "sampleRate": 48000,
     "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
@@ -137,8 +155,8 @@
   "runtime": [
     {
       "path": "assets/audio/ambience/forest-birdsong.webm",
-      "sha256": "457f9055070d37bf7e1ac09d275dbfc3e391c8c82394b760dc82de33b879398f",
-      "bytes": 224148,
+      "sha256": "770b1cb47664010055d7e98436fbc5e3d4220292acf0d874988ebf2a54923f92",
+      "bytes": 225204,
       "codec": "opus",
       "bitrate": "64k",
       "channels": 1,
@@ -146,16 +164,16 @@
       "durationSeconds": 30.008,
       "decodedFrames": 1440000,
       "loudness": {
-        "integrated": -16.0,
-        "lra": 5.9,
+        "integrated": -16.5,
+        "lra": 6.4,
         "truePeak": -1.2
       },
       "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/forest-birdsong.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/forest-birdsong.webm"
     },
     {
       "path": "assets/audio/ambience/forest-birdsong.m4a",
-      "sha256": "b255727d1c05f5a5989f3517c815e6bba0345d20307d1919789fcfcb406caecb",
-      "bytes": 368678,
+      "sha256": "6b826725e30fe34fa0996e0a83ddb88b0ba47af1e3168296e872d0448d60cb34",
+      "bytes": 368669,
       "codec": "aac",
       "bitrate": "96k",
       "channels": 1,
@@ -163,9 +181,9 @@
       "durationSeconds": 30.0,
       "decodedFrames": 1440000,
       "loudness": {
-        "integrated": -16.1,
-        "lra": 5.9,
-        "truePeak": -1.4
+        "integrated": -16.5,
+        "lra": 6.4,
+        "truePeak": -1.9
       },
       "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/forest-birdsong.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 96k -movflags +faststart assets/audio/ambience/forest-birdsong.m4a"
     }
@@ -180,9 +198,9 @@
     "aacEncoder": "ffmpeg native aac",
     "python": "3.14.8",
     "scripts": {
-      "scripts/audio/audio_lib.py": "ae1891a01615785375e2caacaae35fa2a6147e8af0bef73e9eef6fb19d6c060c",
-      "scripts/audio/master.py": "32a49b32803306e49bed2e8d7b5ca34a8e538527ef5917d4ab1ccb8f1506ce7f",
-      "scripts/audio/review.py": "c672b11bcee9bf8592cd6884b44e1ac0eee6ad636769bbb9f60aef9c771f2095"
+      "scripts/audio/audio_lib.py": "05bdda2d7cf660c981e41d716fb10613197cdc9c7966ad6344a4635e58189b5c",
+      "scripts/audio/master.py": "a4b5a649238440063340e7674babac0c53ca1a675205581fae5dfad9dabadd4a",
+      "scripts/audio/review.py": "80073ec6bbccbe7507a593b293aa4c26303e8215b196fb563269ede4a58e3e3b"
     }
   },
   "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",

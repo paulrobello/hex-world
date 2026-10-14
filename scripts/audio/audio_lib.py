@@ -35,6 +35,9 @@ class Layout:
         return self.source / cue["kind"] / cue["id"]
 
     def runtime_file(self, cue: dict, ext: str) -> Path:
+        # Review candidates (`candidateFor`) stay out of assets/, so the web build never ships them.
+        if cue.get("candidateFor"):
+            return self.source / "candidates" / f"{cue['id']}.{ext}"
         return self.runtime / cue["kind"] / f"{cue['id']}.{ext}"
 
     def rel(self, path: Path) -> str:

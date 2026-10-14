@@ -5,7 +5,7 @@
   "masterTruePeak": -2.0,
   "lufsTolerance": 1.0,
   "decodedBudgetBytes": 96000000,
-  "generationCap": 20,
+  "generationCap": 24,
   "classes": {
     "music": {
       "lufs": -18,
@@ -219,6 +219,14 @@
         "durationSeconds": 30,
         "promptInfluence": 0.5,
         "loop": true
+      },
+      "filter": {
+        "highpassHz": 150,
+        "harmonicNotch": {
+          "fundamentalHz": 200,
+          "harmonics": 48,
+          "widthHz": 6
+        }
       }
     },
     {
@@ -227,9 +235,115 @@
       "class": "loop",
       "channels": 1,
       "loop": true,
-      "use": "Global biome bed for grass and meadow in view (non-positional), and the quiet floor under every other bed.",
+      "use": "Global biome bed for grass and meadow in view (non-positional), and the quiet floor under every other bed. Mastered from the picked review candidate named by sourceCue (meadow-bed-a/b/c) until the owner chooses.",
       "events": [],
       "provider": "elevenlabs",
+      "sourceCue": "meadow-bed-a",
+      "filter": {
+        "highpassHz": 150,
+        "harmonicNotch": {
+          "fundamentalHz": 200,
+          "harmonics": 48,
+          "widthHz": 6
+        }
+      }
+    },
+    {
+      "id": "meadow-bed-a",
+      "kind": "ambience",
+      "class": "loop",
+      "channels": 1,
+      "loop": true,
+      "candidateFor": "meadow-bed",
+      "use": "Review candidate for meadow-bed (owner A/B in review.html); not loaded by the game.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Gentle summer meadow ambience: a soft steady breeze moving through long dry grass with a light, airy, continuous rustle of grass blades, and a skylark singing high and far away now and then. Calm, open and even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.",
+        "durationSeconds": 30,
+        "promptInfluence": 0.5,
+        "loop": true
+      },
+      "filter": {
+        "highpassHz": 150,
+        "harmonicNotch": {
+          "fundamentalHz": 200,
+          "harmonics": 48,
+          "widthHz": 6
+        }
+      }
+    },
+    {
+      "id": "meadow-bed-b",
+      "kind": "ambience",
+      "class": "loop",
+      "channels": 1,
+      "loop": true,
+      "candidateFor": "meadow-bed",
+      "use": "Review candidate for meadow-bed (owner A/B in review.html); not loaded by the game.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Open grassland on a calm sunny afternoon: a warm breeze sighing softly through tall grass, a light dry rustle that rises and settles gently, and a few small songbirds chirping sparsely in the distance. Even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.",
+        "durationSeconds": 30,
+        "promptInfluence": 0.6,
+        "loop": true
+      },
+      "filter": {
+        "highpassHz": 150,
+        "harmonicNotch": {
+          "fundamentalHz": 200,
+          "harmonics": 48,
+          "widthHz": 6
+        }
+      }
+    },
+    {
+      "id": "meadow-bed-c",
+      "kind": "ambience",
+      "class": "loop",
+      "channels": 1,
+      "loop": true,
+      "candidateFor": "meadow-bed",
+      "use": "Review candidate for meadow-bed (owner A/B in review.html); not loaded by the game.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Quiet pastoral meadow: light wind brushing through long grass and wildflowers with a soft, intermittent rustle, and faint distant birdsong, a skylark and a blackbird far across the field. Peaceful and airy, even level, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.",
+        "durationSeconds": 30,
+        "promptInfluence": 0.4,
+        "loop": true
+      },
+      "filter": {
+        "harmonicNotch": {
+          "fundamentalHz": 200,
+          "harmonics": 48,
+          "widthHz": 6
+        }
+      }
+    },
+    {
+      "id": "meadow-bees",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "use": "Occasional bee swarm, positional at a meadow tile with wildflower scatter near the camera focus, every 45-120 s at random, at low gain on the ambience bus. Cut from the first meadow-bed take (attempt 18).",
+      "events": [],
+      "provider": "elevenlabs",
+      "cut": {
+        "startSeconds": 1.0,
+        "seconds": 6.0,
+        "fadeInSeconds": 1.5,
+        "fadeOutSeconds": 2.0
+      },
+      "filter": {
+        "harmonicNotch": {
+          "fundamentalHz": 200,
+          "harmonics": 48,
+          "widthHz": 6
+        }
+      },
       "generation": {
         "text": "A steady warm hum of many bumblebees and honeybees working clover close by, over a constant soft rustle of long grass in a sunny summer field. Crickets and grasshoppers chirp gently in the background, and a skylark or yellowhammer sings now and then at mid distance. Calm, even level, continuous with no build or fade. Natural sound only: no voices, no music.",
         "durationSeconds": 30,

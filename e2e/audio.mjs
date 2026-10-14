@@ -89,7 +89,7 @@ try {
   save("loaded", a);
   check(a.format === "webm", `Opus/WebM picked in Chromium (${a.format})`);
   check(a.sampleRate === 48000, `context at the mastering rate (${a.sampleRate})`);
-  check(a.cues.loaded.length === 11, `11 decoded cues loaded (${a.cues.loaded.join(", ")})`);
+  check(a.cues.loaded.length === 12, `12 decoded cues loaded (${a.cues.loaded.join(", ")})`);
   check(a.cues.failed.length === 0 && a.cues.skipped.length === 0, `no failed or skipped cues ${JSON.stringify([a.cues.failed, a.cues.skipped])}`);
   // Gapless: each loop decodes in Chromium to exactly its manifest loop length, so the loop points
   // the runtime sets are the seam make audio-check verified on the ffmpeg decode.
@@ -103,6 +103,10 @@ try {
   check(audioRequests.every((u) => !/\.m4a$/.test(u)), "no m4a fetched when WebM plays");
   await until(async () => ((await audio()).bed.find((b) => b.cue === "meadow-bed")?.gain ?? 0) > 0.3, "meadow bed up for the start meadow");
   await until(async () => (await audio()).outputRms > 1e-4, "the bed reaches the output");
+  // The occasional bee swarm is armed 45-120 s out, with the start meadow as a flower tile.
+  a = await audio();
+  check(a.bees?.cue === "meadow-bees" && a.bees.nextAt > a.currentTime && a.bees.nextAt <= a.currentTime + 120
+    && a.bees.flowerTiles >= 1 && a.bees.plays === 0, `meadow-bees armed ${JSON.stringify(a.bees)}`);
 
   // Placement and UI cues from the manifest's event lists.
   await page.evaluate(() => window.hexWorld.selectTile("road_straight"));

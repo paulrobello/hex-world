@@ -17,6 +17,15 @@ import {
 import {
   type Biome,
   BED_CUE,
+  BEE_CUE,
+  BEE_LEVEL,
+  type BeeState,
+  type FlowerTile,
+  beeGate,
+  beeIdle,
+  beeStep,
+  isFlowerTile,
+  pickBeeTile,
   type Candidate,
   EMITTER_CUE,
   type Mix,
@@ -53,6 +62,10 @@ const SETTLE_TIMEOUT_S = 4;
 const WAIT_FOR_STAGE: Record<string, string> = { "place-thunk": "settled" };
 const RADIUS: number = schema.catalog.hex_radius;
 const BIOME_OF = new Map<string, Biome>(schema.catalog.tiles.map((t) => [t.id, biomeOf(t.id, t.edges)]));
+/** Tile defs whose scatter carries wildflowers: where the occasional bee swarm may play. */
+const FLOWER_DEFS = new Set(
+  schema.catalog.tiles.filter((t) => isFlowerTile(biomeOf(t.id, t.edges), t.scatter)).map((t) => t.id),
+);
 
 export interface Volumes {
   master: number;
@@ -157,6 +170,8 @@ export interface AudioDebug {
   fired: number;
   recent: Fired[];
   outputRms: number;
+  /** The occasional meadow-bees one-shot: schedule, last play and why the last due swarm was skipped. */
+  bees: BeeState & { cue: string; flowerTiles: number };
 }
 
 export interface AudioApi {
@@ -189,6 +204,8 @@ export class GameAudio {
   private byEvent = new Map<string, string[]>();
   private emitters = new Map<string, Voice>();
   private candidates: Candidate[] = [];
+  private bees: BeeState = beeIdle();
+  private flowers: FlowerTile[] = [];
   private beds = new Map<string, Voice>();
   private bedLevels = new Map<string, number>();
   private tracks = new Map<string, Track>();
@@ -378,7 +395,14 @@ export class GameAudio {
     }
   }
 
-  private play(id: string, event: string, at: { q: number; r: number } | null, rate: number): void {
+  private play(
+    id: string,
+    event: string,
+    at: { q: number; r: number } | null,
+    rate: number,
+    gain?: number,
+    record = true,
+  ): void {
     const ctx = this.ctx;
     const buf = this.buffers.get(id);
     const cue = this.cues.get(id);
@@ -392,7 +416,7 @@ export class GameAudio {
     const g = ctx.createGain();
     // Short attack and release, so a buffer that starts or ends off zero never clicks.
     const dur = buf.duration / rate;
-    const level = at && this.view ? this.placementLevel(at.q, at.r, this.view) : 1;
+    const level = gain ?? (at && this.view ? this.placementLevel(at.q, at.r, this.view) : 1);
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(level, t + 0.005);
     g.gain.setValueAtTime(level, Math.max(t + 0.005, t + dur - 0.012));
@@ -418,6 +442,7 @@ export class GameAudio {
         (this.instances.get(id) ?? []).filter((s) => s !== src),
       );
     };
+    if (!record) return;
     const f = { id, event, t };
     this.recent.push(f);
     if (this.recent.length > 16) this.recent.shift();
@@ -466,11 +491,13 @@ export class GameAudio {
     this.listener(ctx, cam.pos, cam.forward);
 
     const placed: PlacedTile[] = [];
+    const flowers: FlowerTile[] = [];
     const cands: Candidate[] = [];
     for (const t of play.tiles) {
       const [x, z] = cellWorld(t.q, t.r, RADIUS);
       const biome = BIOME_OF.get(t.tile) ?? "meadow";
       placed.push({ x, z, biome });
+      if (FLOWER_DEFS.has(t.tile)) flowers.push({ q: t.q, r: t.r, x, z });
       const cue = EMITTER_CUE[biome];
       if (cue && this.buffers.has(cue)) cands.push({ key: `${cue}@${key(t.q, t.r)}`, cue, gain: emitterGain(x, z, v) });
     }
@@ -479,6 +506,8 @@ export class GameAudio {
     this.updateEmitters(ctx, cands);
     this.updateBeds(ctx);
     this.updateMusic(ctx);
+    this.flowers = flowers;
+    this.updateBees(ctx, flowers, v);
     for (const [k, p] of this.pending)
       if (ctx.currentTime > p.deadline) {
         this.pending.delete(k);
@@ -565,6 +594,22 @@ export class GameAudio {
     }
   }
 
+  /** The occasional swarm: due every 45–120 s, at a flower tile near the focus, quiet and under the focus mix. */
+  private updateBees(ctx: AudioContext, flowers: readonly FlowerTile[], v: View): void {
+    const { muted, volumes } = this.settings;
+    const gate = beeGate({
+      muted,
+      master: volumes.master,
+      ambience: volumes.ambience,
+      loaded: this.buffers.has(BEE_CUE),
+    });
+    const step = beeStep(this.bees, ctx.currentTime, gate, () => pickBeeTile(flowers, v, Math.random), Math.random);
+    this.bees = step.state;
+    // Not recorded in `recent`: a swarm is ambience, and the event-cue history stays deterministic for tests.
+    if (step.play)
+      this.play(BEE_CUE, "bees", step.play, 1, BEE_LEVEL * emitterGain(step.play.x, step.play.z, v), false);
+  }
+
   private updateBeds(ctx: AudioContext): void {
     this.bedLevels = bedGains(this.mix);
     for (const [cue, g] of this.bedLevels) {
@@ -624,6 +669,7 @@ export class GameAudio {
     this.beds.clear();
     for (const tr of this.tracks.values()) tr.el.pause();
     this.music = musicIdle();
+    this.bees = beeIdle();
     this.pending.clear();
   }
 
@@ -686,6 +732,14 @@ export class GameAudio {
       fired: this.fired,
       recent: this.recent.map((f) => ({ ...f })),
       outputRms: round(this.rms(), 6),
+      bees: {
+        cue: BEE_CUE,
+        ...this.bees,
+        nextAt: this.bees.nextAt === null ? null : round(this.bees.nextAt, 3),
+        lastAt: this.bees.lastAt === null ? null : round(this.bees.lastAt, 3),
+        lastTile: this.bees.lastTile && { ...this.bees.lastTile },
+        flowerTiles: this.flowers.length,
+      },
     };
   }
 }

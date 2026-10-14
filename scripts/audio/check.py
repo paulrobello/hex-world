@@ -67,8 +67,9 @@ def check_cue(layout: A.Layout, reg: dict, cue: dict, manifest: dict, rows: list
             fail(f"{label} file missing: {rec.get('path')}")
         elif A.sha256(path) != rec.get("sha256"):
             fail(f"{label} hash mismatch for {rec['path']}")
-    if entry is None or entry.get("status") != "mastered":
-        fail("not listed as mastered in assets/audio/manifest.json")
+    want = "candidate" if cue.get("candidateFor") else "mastered"
+    if entry is None or entry.get("status") != want:
+        fail(f"not listed as {want} in assets/audio/manifest.json")
 
     cls = reg["classes"][cue["class"]]
     target, tol, ceiling = float(cls["lufs"]), float(reg["lufsTolerance"]), float(reg["truePeakCeiling"])
@@ -126,6 +127,8 @@ def check_cue(layout: A.Layout, reg: dict, cue: dict, manifest: dict, rows: list
             decoded_bytes = frames * ch * 4
         rows.append((cid, cue["class"], ext, f"{frames / A.RATE:.2f}s", f"{m['integrated']:.1f}", f"{m['truePeak']:.1f}",
                      f"{path.stat().st_size / 1024:.1f}", seam))
+    if cue.get("candidateFor"):
+        return 0  # a review candidate is never loaded by the game
     return decoded_bytes if (cue.get("playback") or cls["playback"]) == "decode" else -decoded_bytes
 
 
@@ -136,7 +139,8 @@ def main() -> int:
     layout = A.Layout(args.root.resolve())
     reg = layout.registry()
     manifest_path = layout.runtime / "manifest.json"
-    manifest = {c["id"]: c for c in json.loads(manifest_path.read_text())["cues"]} if manifest_path.exists() else {}
+    raw = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    manifest = {c["id"]: c for c in raw.get("cues", []) + raw.get("candidates", [])}
     rows: list[tuple] = []
     failures: list[str] = []
     decoded = streamed = 0

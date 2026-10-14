@@ -137,6 +137,92 @@ export function pickEmitters(cands: readonly Candidate[], voiced: ReadonlySet<st
   return out;
 }
 
+// ---------- Occasional bees (meadow-bees) ----------
+
+export const BEE_CUE = "meadow-bees";
+/** Seconds between bee swarms, drawn uniformly. */
+export const BEE_DELAY_S: readonly [number, number] = [45, 120];
+/** A swarm plays only at a flower tile within this many hex steps of the focus. */
+export const BEE_RANGE_STEPS = 3;
+/** The swarm's level before the focus mix: a quiet, passing one-shot. */
+export const BEE_LEVEL = 0.35;
+/** The scatter piece that makes a meadow tile a flower tile (data/tiles/*.ron `props.scatter`). */
+export const FLOWER_PIECE = "wildflower_clump";
+
+export const isFlowerTile = (biome: Biome, scatter: readonly string[]): boolean =>
+  biome === "meadow" && scatter.includes(FLOWER_PIECE);
+
+export const beeDelay = (rand: () => number): number => BEE_DELAY_S[0] + rand() * (BEE_DELAY_S[1] - BEE_DELAY_S[0]);
+
+export interface FlowerTile {
+  q: number;
+  r: number;
+  x: number;
+  z: number;
+}
+
+/** A flower tile in range of the focus, drawn at random weighted by the focus mix; null when none is in range. */
+export function pickBeeTile(tiles: readonly FlowerTile[], v: View, rand: () => number): FlowerTile | null {
+  const range = BEE_RANGE_STEPS * v.radius * Math.sqrt(3);
+  const near = tiles
+    .map((t) => ({ t, d: Math.hypot(t.x - v.focus[0], t.z - v.focus[2]) }))
+    .filter(({ d }) => d <= range)
+    .map(({ t, d }) => ({ t, w: focusWeight(d, v.zoom, v.radius) }));
+  const total = near.reduce((s, n) => s + n.w, 0);
+  if (total <= 0) return null;
+  let pick = rand() * total;
+  for (const n of near) {
+    pick -= n.w;
+    if (pick <= 0) return n.t;
+  }
+  return near.at(-1)?.t ?? null;
+}
+
+/** Why a due swarm may not play, or null when it may. */
+export type BeeGate = "muted" | "ambience-off" | "not-loaded" | "no-flower-tile" | null;
+
+export function beeGate(o: { muted: boolean; master: number; ambience: number; loaded: boolean }): BeeGate {
+  if (o.muted || o.master <= 0) return "muted";
+  if (o.ambience <= 0) return "ambience-off";
+  if (!o.loaded) return "not-loaded";
+  return null;
+}
+
+export interface BeeState {
+  /** Audio-clock seconds when the next swarm is due; null until the first step. */
+  nextAt: number | null;
+  lastAt: number | null;
+  lastTile: { q: number; r: number } | null;
+  plays: number;
+  /** Why the last due swarm was skipped, or null when it played. */
+  gatedBy: BeeGate;
+}
+
+export const beeIdle = (): BeeState => ({ nextAt: null, lastAt: null, lastTile: null, plays: 0, gatedBy: null });
+
+/**
+ * One scheduler step at audio time `now`. When a swarm is due it plays at a picked tile unless gated; either
+ * way the next one is drawn 45–120 s later, so a gated swarm is skipped rather than queued.
+ */
+export function beeStep(
+  st: BeeState,
+  now: number,
+  gate: BeeGate,
+  pick: () => FlowerTile | null,
+  rand: () => number,
+): { state: BeeState; play: FlowerTile | null } {
+  if (st.nextAt === null) return { state: { ...st, nextAt: now + beeDelay(rand) }, play: null };
+  if (now < st.nextAt) return { state: st, play: null };
+  const next = now + beeDelay(rand);
+  if (gate) return { state: { ...st, nextAt: next, gatedBy: gate }, play: null };
+  const tile = pick();
+  if (!tile) return { state: { ...st, nextAt: next, gatedBy: "no-flower-tile" }, play: null };
+  return {
+    state: { nextAt: next, lastAt: now, lastTile: { q: tile.q, r: tile.r }, plays: st.plays + 1, gatedBy: null },
+    play: tile,
+  };
+}
+
 // ---------- Music playlist (§8.2) ----------
 
 /**

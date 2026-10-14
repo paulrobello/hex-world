@@ -1,0 +1,201 @@
+{
+  "cueId": "meadow-bees",
+  "kind": "ambience",
+  "class": "sfx",
+  "version": 1,
+  "use": "Occasional bee swarm, positional at a meadow tile with wildflower scatter near the camera focus, every 45-120 s at random, at low gain on the ambience bus. Cut from the first meadow-bed take (attempt 18).",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "A steady warm hum of many bumblebees and honeybees working clover close by, over a constant soft rustle of long grass in a sunny summer field. Crickets and grasshoppers chirp gently in the background, and a skylark or yellowhammer sings now and then at mid distance. Calm, even level, continuous with no build or fade. Natural sound only: no voices, no music.",
+  "promptFile": null,
+  "parameters": {
+    "text": "A steady warm hum of many bumblebees and honeybees working clover close by, over a constant soft rustle of long grass in a sunny summer field. Crickets and grasshoppers chirp gently in the background, and a skylark or yellowhammer sings now and then at mid distance. Calm, even level, continuous with no build or fade. Natural sound only: no voices, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 30,
+    "prompt_influence": 0.5,
+    "loop": true
+  },
+  "generation": {
+    "id": "b05127160d4e2b9b5900ba1e0c6bbe28",
+    "generatedAt": "2026-10-14T04:50:45+00:00",
+    "attempt": 18,
+    "creditsCharged": 301,
+    "record": {
+      "path": "assets-source/audio/ambience/meadow-bees/generation.json",
+      "sha256": "9dcd0bfe3f0ef3281a4263fa3cb90785b21d0dd93f607a8eba3897eebbfbb83b",
+      "bytes": 2372
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/meadow-bees/meadow-bees.mp3",
+    "sha256": "644c48d318e2563b5e8e75736b267793b6d069b5f13cef10bbdd194b6c89bc11",
+    "bytes": 481115,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 30.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -25.0,
+      "lra": 5.8,
+      "truePeak": -7.1
+    },
+    "master": {
+      "integrated": -16.2,
+      "lra": 1.9,
+      "truePeak": -2.5
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.2,
+        "lra": 1.9,
+        "truePeak": -1.5
+      },
+      "m4a": {
+        "integrated": -16.3,
+        "lra": 1.8,
+        "truePeak": -2.4
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "harmonicNotch": {
+          "fundamentalHz": 200,
+          "harmonics": 48,
+          "widthHz": 6
+        }
+      },
+      "chain": "bandreject=f=200:width_type=h:width=6,bandreject=f=400:width_type=h:width=6,bandreject=f=600:width_type=h:width=6,bandreject=f=800:width_type=h:width=6,bandreject=f=1000:width_type=h:width=6,bandreject=f=1200:width_type=h:width=6,bandreject=f=1400:width_type=h:width=6,bandreject=f=1600:width_type=h:width=6,bandreject=f=1800:width_type=h:width=6,bandreject=f=2000:width_type=h:width=6,bandreject=f=2200:width_type=h:width=6,bandreject=f=2400:width_type=h:width=6,bandreject=f=2600:width_type=h:width=6,bandreject=f=2800:width_type=h:width=6,bandreject=f=3000:width_type=h:width=6,bandreject=f=3200:width_type=h:width=6,bandreject=f=3400:width_type=h:width=6,bandreject=f=3600:width_type=h:width=6,bandreject=f=3800:width_type=h:width=6,bandreject=f=4000:width_type=h:width=6,bandreject=f=4200:width_type=h:width=6,bandreject=f=4400:width_type=h:width=6,bandreject=f=4600:width_type=h:width=6,bandreject=f=4800:width_type=h:width=6,bandreject=f=5000:width_type=h:width=6,bandreject=f=5200:width_type=h:width=6,bandreject=f=5400:width_type=h:width=6,bandreject=f=5600:width_type=h:width=6,bandreject=f=5800:width_type=h:width=6,bandreject=f=6000:width_type=h:width=6,bandreject=f=6200:width_type=h:width=6,bandreject=f=6400:width_type=h:width=6,bandreject=f=6600:width_type=h:width=6,bandreject=f=6800:width_type=h:width=6,bandreject=f=7000:width_type=h:width=6,bandreject=f=7200:width_type=h:width=6,bandreject=f=7400:width_type=h:width=6,bandreject=f=7600:width_type=h:width=6,bandreject=f=7800:width_type=h:width=6,bandreject=f=8000:width_type=h:width=6,bandreject=f=8200:width_type=h:width=6,bandreject=f=8400:width_type=h:width=6,bandreject=f=8600:width_type=h:width=6,bandreject=f=8800:width_type=h:width=6,bandreject=f=9000:width_type=h:width=6,bandreject=f=9200:width_type=h:width=6,bandreject=f=9400:width_type=h:width=6,bandreject=f=9600:width_type=h:width=6",
+      "circularPadFrames": 0
+    },
+    {
+      "step": "cut",
+      "startSeconds": 1.0,
+      "seconds": 6.0,
+      "fadeInSeconds": 1.5,
+      "fadeOutSeconds": 2.0,
+      "frames": 288000
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -27.5,
+        "lra": 1.8,
+        "truePeak": -11.0
+      },
+      "targetLufs": -16.0,
+      "gainDb": 11.5,
+      "requiredPeakReductionDb": 2.5,
+      "mode": "limited",
+      "limiterInputGainDb": 11.5,
+      "limiterPasses": 1,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 1.3
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.2
+    },
+    {
+      "step": "encode-overshoot-trim",
+      "encodedTruePeakDb": -1.0,
+      "trimDb": -0.2
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/meadow-bees.wav",
+    "sha256": "cce3f71dc5d57cf450246715a2b16496b932363466c2035a352066b0c50650ee",
+    "frames": 288000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/meadow-bees.webm",
+      "sha256": "7ccc0c54034b75faa9f66667a66e3f6c4def3cd83f6386842dcb367e77855f9d",
+      "bytes": 47324,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 6.008,
+      "decodedFrames": 288000,
+      "loudness": {
+        "integrated": -16.2,
+        "lra": 1.9,
+        "truePeak": -1.5
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/meadow-bees.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/meadow-bees.webm"
+    },
+    {
+      "path": "assets/audio/ambience/meadow-bees.m4a",
+      "sha256": "bae39a1ac3ba6942308e39d2398364c9b719bd951cb5e6066ca3cf6b271db82e",
+      "bytes": 122008,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 6.0,
+      "decodedFrames": 288000,
+      "loudness": {
+        "integrated": -16.3,
+        "lra": 1.8,
+        "truePeak": -2.4
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/meadow-bees.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/meadow-bees.m4a"
+    }
+  ],
+  "decodedBytes": 1152000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "05bdda2d7cf660c981e41d716fb10613197cdc9c7966ad6344a4635e58189b5c",
+      "scripts/audio/master.py": "a4b5a649238440063340e7674babac0c53ca1a675205581fae5dfad9dabadd4a",
+      "scripts/audio/review.py": "80073ec6bbccbe7507a593b293aa4c26303e8215b196fb563269ede4a58e3e3b"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

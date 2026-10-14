@@ -5,10 +5,17 @@ import { test } from "node:test";
 import manifestJson from "../../../assets/audio/manifest.json" with { type: "json" };
 import { type Cue, type Manifest, busOf, eventCues, pickFormat, planDecode, playable } from "../src/audio-cues.ts";
 import {
+  BEE_CUE,
+  BEE_DELAY_S,
+  type FlowerTile,
   type Mix,
   type PlacedTile,
   type View,
   attenuation,
+  beeDelay,
+  beeGate,
+  beeIdle,
+  beeStep,
   bedGains,
   biomeMix,
   biomeOf,
@@ -16,10 +23,12 @@ import {
   emitterGain,
   emptyMix,
   focusWeight,
+  isFlowerTile,
   MUSIC_OPTS,
   musicGains,
   musicIdle,
   musicStep,
+  pickBeeTile,
   pickEmitters,
 } from "../src/audio-mix.ts";
 import schema from "../src/bridge-schema.json" with { type: "json" };
@@ -217,4 +226,110 @@ test("cues without a mood never join the playlist; losing every cue fades out", 
   st = musicStep(st, [], moodMix({ meadow: 1 }), 50);
   assert.deepEqual([st.current, st.previous], [null, "meadow-day"]);
   close(musicGains(st, 50 + MUSIC_OPTS.fade).get("meadow-day")!, 0);
+});
+
+// ---------- Occasional bees ----------
+
+const seq = (...xs: number[]) => {
+  let i = 0;
+  return () => xs[i++ % xs.length]!;
+};
+const flowerView: View = { camera: [0, 30, 20], focus: [0, 0, 0], zoom: 30, radius: R };
+const flower = (q: number, r: number): FlowerTile => {
+  const [x, z] = cellWorld(q, r, R);
+  return { q, r, x, z };
+};
+
+test("meadow-bees ships as a decoded ambience one-shot; review candidates never reach the game", () => {
+  const bees = manifest.cues.find((c) => c.id === BEE_CUE);
+  assert.ok(bees && bees.status === "mastered" && !bees.loop && bees.playback === "decode");
+  assert.equal(busOf(bees), "ambience");
+  const cands = (manifestJson as unknown as { candidates?: Cue[] }).candidates ?? [];
+  assert.deepEqual(
+    cands.map((c) => c.id),
+    ["meadow-bed-a", "meadow-bed-b", "meadow-bed-c"],
+  );
+  const ids = new Set(playable(manifest.cues, "webm").map((c) => c.id));
+  for (const c of cands) assert.ok(!ids.has(c.id), `${c.id} is not playable`);
+});
+
+test("flower tiles: meadow defs whose scatter carries wildflowers", () => {
+  const defs = schema.catalog.tiles.filter((t) => isFlowerTile(biomeOf(t.id, t.edges), t.scatter)).map((t) => t.id);
+  assert.ok(defs.includes("meadow"), `flower defs: ${defs.join(", ")}`);
+  assert.equal(isFlowerTile("forest", ["wildflower_clump"]), false);
+  assert.equal(isFlowerTile("meadow", ["rock_small"]), false);
+});
+
+test("bee delay spans 45-120 s", () => {
+  assert.equal(
+    beeDelay(() => 0),
+    BEE_DELAY_S[0],
+  );
+  close(
+    beeDelay(() => 0.999999),
+    BEE_DELAY_S[1],
+    1e-3,
+  );
+  close(
+    beeDelay(() => 0.5),
+    82.5,
+  );
+});
+
+test("bee tile: only flower tiles within three hex steps of the focus, weighted by the focus mix", () => {
+  const near = flower(1, 0);
+  const far = flower(6, 0);
+  assert.equal(
+    pickBeeTile([far], flowerView, () => 0.5),
+    null,
+  );
+  assert.equal(
+    pickBeeTile([], flowerView, () => 0.5),
+    null,
+  );
+  assert.deepEqual(
+    pickBeeTile([near, far], flowerView, () => 0.99),
+    near,
+  );
+  // The focus tile outweighs a ring-two tile, so a low draw lands on it.
+  const centre = flower(0, 0);
+  assert.deepEqual(
+    pickBeeTile([centre, flower(2, 0)], flowerView, () => 0.1),
+    centre,
+  );
+});
+
+test("bee gate: mute, a silent master or ambience bus, and an unloaded cue each hold the swarm", () => {
+  const on = { muted: false, master: 0.8, ambience: 0.7, loaded: true };
+  assert.equal(beeGate(on), null);
+  assert.equal(beeGate({ ...on, muted: true }), "muted");
+  assert.equal(beeGate({ ...on, master: 0 }), "muted");
+  assert.equal(beeGate({ ...on, ambience: 0 }), "ambience-off");
+  assert.equal(beeGate({ ...on, loaded: false }), "not-loaded");
+});
+
+test("bee schedule: first step arms, a due swarm plays once, a gated or tileless one is skipped and re-armed", () => {
+  const tile = flower(0, 1);
+  const rand = seq(0, 0.5, 1 - 1e-9, 0);
+  let { state, play } = beeStep(beeIdle(), 10, null, () => tile, rand);
+  assert.equal(play, null);
+  assert.equal(state.nextAt, 55);
+  ({ state, play } = beeStep(state, 54.9, null, () => tile, rand));
+  assert.equal(play, null);
+  ({ state, play } = beeStep(state, 55, null, () => tile, rand));
+  assert.deepEqual(play, tile);
+  assert.deepEqual(
+    { plays: state.plays, lastAt: state.lastAt, lastTile: state.lastTile, gatedBy: state.gatedBy },
+    { plays: 1, lastAt: 55, lastTile: { q: 0, r: 1 }, gatedBy: null },
+  );
+  assert.equal(state.nextAt, 55 + 82.5);
+  ({ state, play } = beeStep(state, 200, "muted", () => tile, rand));
+  assert.equal(play, null);
+  assert.equal(state.gatedBy, "muted");
+  assert.equal(state.plays, 1);
+  close(state.nextAt!, 320, 1e-3);
+  ({ state, play } = beeStep(state, 400, null, () => null, rand));
+  assert.equal(play, null);
+  assert.equal(state.gatedBy, "no-flower-tile");
+  assert.equal(state.nextAt, 445);
 });

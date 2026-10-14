@@ -48,7 +48,7 @@ async function gapless(btn) {
     const url = btn.dataset.src, buf = await ctx.decodeAudioData(await (await fetch(url)).arrayBuffer());
     const src = ctx.createBufferSource();
     src.buffer = buf; src.loop = true;
-    src.loopStart = +btn.dataset.start / +btn.dataset.rate; src.loopEnd = +btn.dataset.end / +btn.dataset.rate;
+    if (btn.dataset.end) { src.loopStart = +btn.dataset.start / +btn.dataset.rate; src.loopEnd = +btn.dataset.end / +btn.dataset.rate; }
     src.connect(ctx.destination); src.start();
     playing = { src, btn }; btn.textContent = 'Stop loop';
   } catch (e) {
@@ -65,7 +65,7 @@ def write(layout: A.Layout, reg: dict) -> None:
     by_class: dict[str, list[str]] = {c: [] for c in CLASS_ORDER}
     for entry in manifest["cues"]:
         by_class[entry["class"]].append(card(layout, entry, rel_runtime))
-    sections = "".join(
+    sections = ab_sections(layout, manifest, rel_runtime) + "".join(
         f"<h2>{CLASS_TITLE[c]}</h2><div class=grid>{''.join(cards)}</div>" for c, cards in by_class.items() if cards)
     log_path = layout.source / "generation-log.json"
     attempts = len(json.loads(log_path.read_text())["attempts"]) if log_path.exists() else 0
@@ -85,10 +85,48 @@ Serve the repo root over http (<code>python3 -m http.server</code>) for the gapl
     out.write_text(doc)
 
 
+def previous_card(layout: A.Layout, cue_id: str) -> str:
+    """The runtime files a cue shipped before its last re-master, kept in candidates/ for an A/B."""
+    base = layout.source / "candidates" / f"{cue_id}-previous"
+    if not base.with_suffix(".webm").exists():
+        return ""
+    webm, m4a = f"candidates/{cue_id}-previous.webm", f"candidates/{cue_id}-previous.m4a"
+    return f"""<div class=card><h3>{html.escape(cue_id)} (previous)</h3>
+<p class=meta>The runtime file before this re-master, for comparison only.</p>
+<audio controls preload=none loop><source src="{webm}" type="audio/webm; codecs=opus"><source src="{m4a}" type="audio/mp4"></audio>
+<button onclick=gapless(this) data-src='{webm}'>Gapless loop (Web Audio)</button></div>"""
+
+
+def ab_sections(layout: A.Layout, manifest: dict, rel_runtime: str) -> str:
+    """Owner A/B: re-mastered cues against their previous files, review candidates, and new cues to audition."""
+    reg = layout.registry()
+    by_id = {e["id"]: e for e in manifest["cues"] + manifest.get("candidates", [])}
+    out = []
+    for cue in reg["cues"]:
+        prev = previous_card(layout, cue["id"])
+        if prev and cue["id"] in by_id:
+            note = cue.get("filter") and f"New: re-mastered with the filter {html.escape(json.dumps(cue['filter']))}."
+            out.append(f"<h2>A/B: {html.escape(cue['id'])}, previous against new</h2><p class=lead>{note or ''}</p>"
+                       f"<div class=grid>{prev}{card(layout, by_id[cue['id']], rel_runtime)}</div>")
+    targets = sorted({e["candidateFor"] for e in manifest.get("candidates", [])})
+    for target in targets:
+        wired = next((c.get("sourceCue") for c in reg["cues"] if c["id"] == target), None)
+        cands = [e for e in manifest["candidates"] if e["candidateFor"] == target]
+        out.append(f"<h2>Candidates for {html.escape(target)}</h2><p class=lead>Pick one. Until then the game's "
+                   f"<code>{html.escape(target)}</code> masters <b>{html.escape(str(wired))}</b> (cues.json "
+                   f"<code>sourceCue</code>). Candidates are not shipped or loaded by the game.</p>"
+                   f"<div class=grid>{''.join(card(layout, e, rel_runtime) for e in cands)}</div>")
+    new = [by_id[c["id"]] for c in reg["cues"] if c.get("cut") and c["id"] in by_id]
+    if new:
+        out.append("<h2>New occasional one-shots</h2><div class=grid>"
+                   + "".join(card(layout, e, rel_runtime) for e in new) + "</div>")
+    return "".join(out)
+
+
 def card(layout: A.Layout, entry: dict, rel_runtime: str) -> str:
     cid = html.escape(entry["id"])
     events = ", ".join(entry["events"]) or "none (continuous emitter or bed)"
-    if entry["status"] != "mastered":
+    if entry["status"] not in ("mastered", "candidate"):
         prompt = entry.get("promptFile") or ""
         return (f"<div class=card><h3>{cid}</h3><p class=meta>{entry['kind']} · events: {html.escape(events)}</p>"
                 f"<p class=pending>No source yet. Generate it in Suno from <code>{html.escape(prompt)}</code>, then run make audio-master.</p></div>")
@@ -97,8 +135,8 @@ def card(layout: A.Layout, entry: dict, rel_runtime: str) -> str:
     m4a = prov["loudness"]["after"]["m4a"]
     lvl = next(s for s in prov["processing"] if s["step"] == "loudness")
     files = entry["files"]
-    src = f"{rel_runtime}/{files['webm']['path']}"
-    m4a_src = f"{rel_runtime}/{files['m4a']['path']}"
+    src = os.path.normpath(f"{rel_runtime}/{files['webm']['path']}")
+    m4a_src = os.path.normpath(f"{rel_runtime}/{files['m4a']['path']}")
     loop_attr = " loop" if entry["loop"] else ""
     gapless = ""
     if entry["loop"]:

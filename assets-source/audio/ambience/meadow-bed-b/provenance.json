@@ -1,0 +1,205 @@
+{
+  "cueId": "meadow-bed-b",
+  "kind": "ambience",
+  "class": "loop",
+  "version": 1,
+  "use": "Review candidate for meadow-bed (owner A/B in review.html); not loaded by the game.",
+  "events": [],
+  "loop": {
+    "startSample": 0,
+    "endSample": 1440000,
+    "sampleRate": 48000,
+    "startSeconds": 0.0,
+    "endSeconds": 30.0
+  },
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Open grassland on a calm sunny afternoon: a warm breeze sighing softly through tall grass, a light dry rustle that rises and settles gently, and a few small songbirds chirping sparsely in the distance. Even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Open grassland on a calm sunny afternoon: a warm breeze sighing softly through tall grass, a light dry rustle that rises and settles gently, and a few small songbirds chirping sparsely in the distance. Even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 30,
+    "prompt_influence": 0.6,
+    "loop": true
+  },
+  "generation": {
+    "id": "747395c61db56b9cc696680e94762339",
+    "generatedAt": "2026-10-14T14:19:29+00:00",
+    "attempt": 20,
+    "creditsCharged": 301,
+    "record": {
+      "path": "assets-source/audio/ambience/meadow-bed-b/generation.json",
+      "sha256": "7f5a73b37901e35b75b229c826561c444a8d3c4509c5f563edbd2249ae4de1a4",
+      "bytes": 2299
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/meadow-bed-b/meadow-bed-b.mp3",
+    "sha256": "74b7d630f7be5f1acb89ac77ad83584ddb2886f2db471f76139b9de806942d30",
+    "bytes": 481114,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 30.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -16.4,
+      "lra": 12.1,
+      "truePeak": -4.2
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 12.0,
+      "truePeak": -3.6
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.0,
+        "lra": 12.0,
+        "truePeak": -3.3
+      },
+      "m4a": {
+        "integrated": -16.1,
+        "lra": 12.0,
+        "truePeak": -3.6
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 150,
+        "harmonicNotch": {
+          "fundamentalHz": 200,
+          "harmonics": 48,
+          "widthHz": 6
+        }
+      },
+      "chain": "highpass=f=150:poles=2,bandreject=f=200:width_type=h:width=6,bandreject=f=400:width_type=h:width=6,bandreject=f=600:width_type=h:width=6,bandreject=f=800:width_type=h:width=6,bandreject=f=1000:width_type=h:width=6,bandreject=f=1200:width_type=h:width=6,bandreject=f=1400:width_type=h:width=6,bandreject=f=1600:width_type=h:width=6,bandreject=f=1800:width_type=h:width=6,bandreject=f=2000:width_type=h:width=6,bandreject=f=2200:width_type=h:width=6,bandreject=f=2400:width_type=h:width=6,bandreject=f=2600:width_type=h:width=6,bandreject=f=2800:width_type=h:width=6,bandreject=f=3000:width_type=h:width=6,bandreject=f=3200:width_type=h:width=6,bandreject=f=3400:width_type=h:width=6,bandreject=f=3600:width_type=h:width=6,bandreject=f=3800:width_type=h:width=6,bandreject=f=4000:width_type=h:width=6,bandreject=f=4200:width_type=h:width=6,bandreject=f=4400:width_type=h:width=6,bandreject=f=4600:width_type=h:width=6,bandreject=f=4800:width_type=h:width=6,bandreject=f=5000:width_type=h:width=6,bandreject=f=5200:width_type=h:width=6,bandreject=f=5400:width_type=h:width=6,bandreject=f=5600:width_type=h:width=6,bandreject=f=5800:width_type=h:width=6,bandreject=f=6000:width_type=h:width=6,bandreject=f=6200:width_type=h:width=6,bandreject=f=6400:width_type=h:width=6,bandreject=f=6600:width_type=h:width=6,bandreject=f=6800:width_type=h:width=6,bandreject=f=7000:width_type=h:width=6,bandreject=f=7200:width_type=h:width=6,bandreject=f=7400:width_type=h:width=6,bandreject=f=7600:width_type=h:width=6,bandreject=f=7800:width_type=h:width=6,bandreject=f=8000:width_type=h:width=6,bandreject=f=8200:width_type=h:width=6,bandreject=f=8400:width_type=h:width=6,bandreject=f=8600:width_type=h:width=6,bandreject=f=8800:width_type=h:width=6,bandreject=f=9000:width_type=h:width=6,bandreject=f=9200:width_type=h:width=6,bandreject=f=9400:width_type=h:width=6,bandreject=f=9600:width_type=h:width=6",
+      "circularPadFrames": 48000
+    },
+    {
+      "step": "source-loop-check",
+      "wrapStep": 0.019857,
+      "stepP999": 0.430098,
+      "headDb": -18.1,
+      "tailDb": -18.1,
+      "minWindowDb": -31.8,
+      "seamless": true
+    },
+    {
+      "step": "rotate-loop",
+      "offsetFrames": 345600,
+      "headTailLevelDeltaDb": 0.0
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -16.5,
+        "lra": 12.0,
+        "truePeak": -4.1
+      },
+      "targetLufs": -16.0,
+      "gainDb": 0.5,
+      "requiredPeakReductionDb": 0.0,
+      "mode": "linear"
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.0
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "96k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/meadow-bed-b.wav",
+    "sha256": "1594363cbae8a3c1ee6ab7b28b7de3e42d5e991559962a3adcfb76dee6e1cdaa",
+    "frames": 1440000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets-source/audio/candidates/meadow-bed-b.webm",
+      "sha256": "bce9a98c6db842d4c3d355e1b15d5a22009111e7ab921dd9a58ff14ed8e4ee80",
+      "bytes": 234755,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 30.008,
+      "decodedFrames": 1440000,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 12.0,
+        "truePeak": -3.3
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/meadow-bed-b.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets-source/audio/candidates/meadow-bed-b.webm"
+    },
+    {
+      "path": "assets-source/audio/candidates/meadow-bed-b.m4a",
+      "sha256": "8a784d3f03d3822e6eb44b90376916e4bbaeb5a3228c9d180f5b478e3454ebcd",
+      "bytes": 369320,
+      "codec": "aac",
+      "bitrate": "96k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 30.0,
+      "decodedFrames": 1440000,
+      "loudness": {
+        "integrated": -16.1,
+        "lra": 12.0,
+        "truePeak": -3.6
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/meadow-bed-b.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 96k -movflags +faststart assets-source/audio/candidates/meadow-bed-b.m4a"
+    }
+  ],
+  "decodedBytes": 5760000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "05bdda2d7cf660c981e41d716fb10613197cdc9c7966ad6344a4635e58189b5c",
+      "scripts/audio/master.py": "a4b5a649238440063340e7674babac0c53ca1a675205581fae5dfad9dabadd4a",
+      "scripts/audio/review.py": "80073ec6bbccbe7507a593b293aa4c26303e8215b196fb563269ede4a58e3e3b"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

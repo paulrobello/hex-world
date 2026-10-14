@@ -185,9 +185,9 @@
     "aacEncoder": "ffmpeg native aac",
     "python": "3.14.8",
     "scripts": {
-      "scripts/audio/audio_lib.py": "ae1891a01615785375e2caacaae35fa2a6147e8af0bef73e9eef6fb19d6c060c",
-      "scripts/audio/master.py": "32a49b32803306e49bed2e8d7b5ca34a8e538527ef5917d4ab1ccb8f1506ce7f",
-      "scripts/audio/review.py": "c672b11bcee9bf8592cd6884b44e1ac0eee6ad636769bbb9f60aef9c771f2095"
+      "scripts/audio/audio_lib.py": "05bdda2d7cf660c981e41d716fb10613197cdc9c7966ad6344a4635e58189b5c",
+      "scripts/audio/master.py": "a4b5a649238440063340e7674babac0c53ca1a675205581fae5dfad9dabadd4a",
+      "scripts/audio/review.py": "80073ec6bbccbe7507a593b293aa4c26303e8215b196fb563269ede4a58e3e3b"
     }
   },
   "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",

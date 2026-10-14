@@ -1,5 +1,5 @@
 {
-  "cap": 20,
+  "cap": 24,
   "attempts": [
     {
       "n": 1,
@@ -252,6 +252,48 @@
       "creditsCharged": 301,
       "subscriptionDelta": 0,
       "file": "assets-source/audio/ambience/meadow-bed/meadow-bed.mp3"
+    },
+    {
+      "n": 19,
+      "cueId": "meadow-bed-a",
+      "requestedAt": "2026-10-14T14:19:20+00:00",
+      "reason": "first take",
+      "creditsBefore": 8349,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "096effb254ccd09941daf654c5648f50",
+      "creditsAfter": 8349,
+      "creditsCharged": 301,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/meadow-bed-a/meadow-bed-a.mp3"
+    },
+    {
+      "n": 20,
+      "cueId": "meadow-bed-b",
+      "requestedAt": "2026-10-14T14:19:29+00:00",
+      "reason": "first take",
+      "creditsBefore": 8349,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "747395c61db56b9cc696680e94762339",
+      "creditsAfter": 8349,
+      "creditsCharged": 301,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/meadow-bed-b/meadow-bed-b.mp3"
+    },
+    {
+      "n": 21,
+      "cueId": "meadow-bed-c",
+      "requestedAt": "2026-10-14T14:19:38+00:00",
+      "reason": "first take",
+      "creditsBefore": 8349,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "33cc29b5d059799864ba3f1c67fee0c2",
+      "creditsAfter": 8349,
+      "creditsCharged": 301,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/meadow-bed-c/meadow-bed-c.mp3"
     }
   ]
 }
