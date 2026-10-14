@@ -193,6 +193,12 @@
         "assets-source/refs/ocean/ref-2.jpg"
       ],
       "notes": "Approved. ref-2's close-up shows a near-90 degree corner and a blue-tinted seabed; the tile is hexagonal per the kit contract. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "who": "Paul Robello",
+      "when": "2026-10-13",
+      "gate": "piece",
+      "notes": "Ocean set approved in chat from in-engine play shots under real water at 2.6 m depth (docs/checkpoints/ocean)."
     }
   ]
 }
