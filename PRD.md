@@ -172,11 +172,12 @@ EdgeSocket {
   lane: Option<LaneSpec>,  // road/rail/river crossing: offset along edge, width, direction
   height: u8,              // edge height level (0 in MVP; reserved for D5)
   profile: EdgeProfile,    // Flat | Cliff | Ramp (MVP: Flat only)
+  land: Option<Side>,      // directional kinds only (Beach): Left | Right, which side the land is on looking out across the edge
 }
 ```
 
 - `SocketKind` (MVP): `Grass`, `Forest`, `Road`, `River`, `Beach`, `Ocean`. Planned later: `Rail`, `Farm`, `Cliff`, `Mountain`, `Lava`, `Town` and others.
-- A data table (`data/sockets.ron`) defines which socket kinds may meet, symmetrically. For example, `Road`↔`Road` is legal, `Road`↔`Grass` is not (roads cannot dead-end into an edge), and `Ocean`↔`Grass` is not (coasts need a beach). Beach sockets are directional (owner, 2026-10-13, option O1): a beach edge's ground runs from grass height at its land end to the seabed at its sea end, so it only meets a beach edge whose coast continues the same way (`BeachL`↔`BeachR`, by which side the land is on, looking out across the edge). Beach edges never meet grass or ocean edges, so coastlines are continuous with no steps.
+- A data table (`data/sockets.ron`) defines which socket kinds may meet, symmetrically. For example, `Road`↔`Road` is legal, `Road`↔`Grass` is not (roads cannot dead-end into an edge), and `Ocean`↔`Grass` is not (coasts need a beach). Beach sockets are directional (owner, 2026-10-13, option O1): a beach edge's ground runs from grass height at its land end to the seabed at its sea end, so it only meets a beach edge whose coast continues the same way (`land: Left` against `land: Right`, by which side the land is on looking out across the edge; `data/sockets.ron` lists `Beach` as directional). Beach edges never meet grass or ocean edges, so coastlines are continuous with no steps.
 - Lane sockets must also match in lane offset and width, so roads and rivers line up exactly across the seam.
 - Height rules (P4): edges must have equal height, unless the edge profile is `Cliff` (any difference) or `Ramp` (a difference of exactly 1).
 

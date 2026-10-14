@@ -6,7 +6,7 @@ The HUD is the margin of a survey map sheet. The socket kinds are map classes (g
 
 - **THESIS:** The legal-slot filter is a legend you read at a glance. It refuses both the cozy-card inventory and the sci-fi glass HUD.
 - **OWN-WORLD:** Deep survey-blue panels, map-class colours used only as data, one magenta for the current tool and selection, crisp grotesk type with tabular figures, six-block socket codes beside every tile.
-- **STORY:** The player hovers a slot. The sheet prints "This slot needs: River on one edge, Grass, forest or beach beside it". Tiles that fit sit under "Fits here" with their socket code. The rest drop to compact rows that state why.
+- **STORY:** The player hovers a slot. The sheet prints "This slot needs: River on one edge, Grass or forest beside it". Tiles that fit sit under "Fits here" with their socket code. The rest drop to compact rows that state why.
 - **FIRST VIEWPORT:** A labelled tool bar top left (Place, Rotate R, Undo ⌘Z, Redo, Bulldoze B, then Photo and Settings). A full-height legend sheet on the right with the slot key, the fitting tiles and the blocked tiles. A tag beside the ghost names the selected tile and its rotation. Undo appears as a note bottom left.
 - **FORM:** Topographic map legend. Position 1 of 7 on the grounded list (the pick). Seed key `dc8cbb29`.
 - **SIGNATURE MOVE:** The slot key. A small hex diagram draws exactly which edges of the hovered slot are touched and by what, and each tile's six-block socket code lines up against it.
