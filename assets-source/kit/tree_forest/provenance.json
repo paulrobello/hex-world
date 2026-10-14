@@ -389,6 +389,12 @@
         "assets-source/refs/forest/ref-2.jpg"
       ],
       "notes": "Approved: spruce among oaks, ferns, fallen log. ref-2 sits on a square fragment; tiles are hexagonal. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "who": "Paul Robello",
+      "when": "2026-10-13",
+      "gate": "piece",
+      "notes": "Forest family approved in chat from the in-engine stand and seam shots. Forest-forest seam grass strip to be fixed by an edge piece (owner: create needed edge pieces)."
     }
   ]
 }
