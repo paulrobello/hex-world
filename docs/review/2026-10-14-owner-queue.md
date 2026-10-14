@@ -87,6 +87,25 @@ Approve or reject per ref. Two choices go with it:
 - **Fish:** they stay inside the water band between the bed and the surface, and show through the refraction. The texture budget holds at 16.
 - **Meshes:** both are procedural placeholders (gulls and koi) until A12's references are approved and modeled. The gull's 2.9 m wingspan is larger than the starling size proposed in A12.
 
+**A14. Photo mode and tilt-shift controls (PRD §4.6, §9.1).**
+- **Shots:** `docs/checkpoints/photo/` has these, all from `make shots-photo`:
+  - `photo-01-enter-tilt`
+  - `photo-02-dof-closeup` beside `-dof-off-closeup`
+  - `photo-03-tilt-roll-exposure`
+  - `photo-04-export-4x`, the 5120×3200 export
+  - `photo-05-exit-orbit`
+- **To try it:** press P in the running build, move with WASD/QE and the mouse, and exit with P or Esc.
+- **Built from the S8 and S9.4 mockups.** Deviations for you to accept or reject:
+  - Settings has only the Tilt-shift section, with no tabs.
+  - Export progress is indeterminate, because the engine renders in one pass.
+  - Cancel discards the result but does not stop the render.
+  - The saved toast has no "Show" action.
+  - Scales too large for the GPU are struck through.
+- **Look choice:** the manual-DOF lens uses a "miniature" sensor, 60× Bevy's default, so the diorama blurs like a model.
+- **Known issues:**
+  - During an export the window shows no camera for about 9 frames, which can flash the backdrop.
+  - 4× export on the web is untested for GPU memory; only 2× was tested there.
+
 ## Questions
 
 **Q1. Save label.** The HUD bar says "Not saved" because no autosave exists yet. The brief said "Saved". I recommend keeping "Not saved" until autosave lands, so the label tells the truth.
