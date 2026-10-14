@@ -176,7 +176,7 @@ EdgeSocket {
 ```
 
 - `SocketKind` (MVP): `Grass`, `Forest`, `Road`, `River`, `Beach`, `Ocean`. Planned later: `Rail`, `Farm`, `Cliff`, `Mountain`, `Lava`, `Town` and others.
-- A data table (`data/sockets.ron`) defines which socket kinds may meet, symmetrically. For example, `Road`↔`Road` is legal, `Road`↔`Grass` is not (roads cannot dead-end into an edge), `Beach`↔`Ocean` and `Beach`↔`Grass` are legal, and `Ocean`↔`Grass` is not (coasts need a beach).
+- A data table (`data/sockets.ron`) defines which socket kinds may meet, symmetrically. For example, `Road`↔`Road` is legal, `Road`↔`Grass` is not (roads cannot dead-end into an edge), and `Ocean`↔`Grass` is not (coasts need a beach). Beach sockets are directional (owner, 2026-10-13, option O1): a beach edge's ground runs from grass height at its land end to the seabed at its sea end, so it only meets a beach edge whose coast continues the same way (`BeachL`↔`BeachR`, by which side the land is on, looking out across the edge). Beach edges never meet grass or ocean edges, so coastlines are continuous with no steps.
 - Lane sockets must also match in lane offset and width, so roads and rivers line up exactly across the seam.
 - Height rules (P4): edges must have equal height, unless the edge profile is `Cliff` (any difference) or `Ramp` (a difference of exactly 1).
 
@@ -218,7 +218,9 @@ About 10 types. The exact variants are frozen at the start of P2.
 | 7 | River straight | River lanes on opposite edges. The bed is cut below the surface. |
 | 8 | River bend | Lanes 120° apart. |
 | 9 | River + road bridge | A road crossing a river: shows bridges and cross-network seams. |
-| 10 | Beach | A mix of grass, beach and ocean edges. Surf foam. |
+| 10 | Beach | A straight coast: ocean, ocean, beach, grass, grass, beach. Surf foam. |
+| 10a | Beach outer corner | A headland: ocean, ocean, beach, grass, beach, ocean. The coast turns around a point of land (owner, O1). |
+| 10b | Beach inner corner | A bay: ocean, beach, grass, grass, grass, beach. The coast turns inward (owner, O1). |
 | 11 | Ocean | Ocean on all edges. Deep water with a visible shelf below the surface. |
 
 ## 6. Modular asset kit (D11)
