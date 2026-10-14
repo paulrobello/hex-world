@@ -48,7 +48,7 @@ Choices to confirm:
 - The turn is tight (about a 2 m radius), and park-0 swings about 2.9 m onto the lawn.
 - With the tile's car cap at 2 and 3 houses, the two-storey has no car and its spot is the visitor space.
 
-The render pass (cars visibly parked, pulling out and parking in play) is in progress.
+In play: `docs/checkpoints/parking/parking-01..09.jpg`. Shots 01–03 show the parked cars, 04–06 a van reversing out and swinging round, 07–08 the same van nosing into a free spot at the other cluster, and 09 the settled yard. Cars keep their body and colour across trips.
 
 **A10. Streaming placeholders.** `docs/checkpoints/streaming/streaming-{0-start,1-placeholder,2-kit-mid-rise,3-settled}.jpg`. Until a tile's biome pack arrives it draws the old coloured placeholder, then swaps to the kit look mid-rise. The initial download fell from 32.8 to about 19.9 MiB. Confirm the placeholder look is acceptable for the first few seconds on a slow connection.
 
@@ -80,6 +80,12 @@ The full island is `docs/checkpoints/coast/coast-01..08.jpg`.
 Approve or reject per ref. Two choices go with it:
 - **Q5. Fish body.** Ref-1 leans cartoon, with a big eye. Ref-3 is a stylized-real trout shape, closer to the house style. I recommend ref-3's body, with both of its palettes.
 - **Q6. Bird size.** Starling-sized was the agent's choice, since the PRD gives none. Also, in birds ref-2 the centre bird is upside down and the feather tips would have to live in the texture at 100–200 triangles. Use ref-2 for flock layout only.
+
+**A13. Birds and fish in play (GPU boids).** `docs/checkpoints/boids/boids-01-flock.jpg`, `-02-roost`, `-03-fish-ocean`, `-04-fish-river` (`make shots-boids`).
+- **Budget:** 1,000 boids shared. Fish get 12 per water tile, up to 300, and birds get the rest. With 16 water tiles that is 808 birds and 192 fish.
+- **Birds:** they roost on forest oaks and launch in waves every 36 s.
+- **Fish:** they stay inside the water band between the bed and the surface, and show through the refraction. The texture budget holds at 16.
+- **Meshes:** both are procedural placeholders (gulls and koi) until A12's references are approved and modeled. The gull's 2.9 m wingspan is larger than the starling size proposed in A12.
 
 ## Questions
 
