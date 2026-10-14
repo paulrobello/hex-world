@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes perf-water-world initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast audio-e2e shots-boids shots-photo shots-scatter web-scatter
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world
 
 fmt:
 	cargo fmt --all
@@ -479,6 +479,20 @@ shots-coast:
 	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(COAST_DOCS)/$$n.jpg || exit 1; done
 	cp target/shots/coast-*.json $(COAST_DOCS)/
 	@echo "wrote $(COAST_DOCS)/"
+
+# Kit beach wet band (water contract §3): the coast island of the beach close-ups, four waterline
+# close-ups as JPEG, and a 5 s MP4 of the straight beach (150 frames at the fixed 1/30 s water step).
+WET_BAND_SHOTS = wet-band-01-straight wet-band-02-bay wet-band-03-seam-straight-headland wet-band-04-headland
+WET_BAND_DOCS = docs/checkpoints/wet-band
+shots-wet-band:
+	mkdir -p target/shots $(WET_BAND_DOCS)
+	rm -f target/shots/wet-band-*.png
+	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(WET_BAND_DOCS)/wet-band.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	@for n in $(WET_BAND_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(WET_BAND_DOCS)/$$n.jpg || exit 1; done
+	@test -s target/shots/wet-band-motion-149.png || { echo "missing wet-band-motion frames"; exit 1; }
+	ffmpeg -loglevel error -y -framerate 30 -i target/shots/wet-band-motion-%03d.png -vf scale=960:-2 -c:v libx264 -pix_fmt yuv420p -crf 22 $(WET_BAND_DOCS)/wet-band-motion.mp4
+	@echo "wrote $(WET_BAND_DOCS)/"
 
 # Boids checkpoint (PRD §7.2, crates/hex-render/src/boids.rs): runs docs/checkpoints/boids/boids.json
 # at 1600x1000 with tilt-shift off and fixed clocks (a river chain, a coast closing on ten ocean tiles,

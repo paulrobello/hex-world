@@ -936,11 +936,16 @@ pub fn insert_camera(cam: &mut EntityCommands, tier: QualityTier) {
     }
 }
 
+/// Advances the water clock and hands its time to the water, the placeholder beds and the kit's
+/// wet-band slots (`kit_material::FLAG_WET_BAND`), so a kit beach's soaked line follows the same
+/// swash as the water over it. Only those kit materials change: touching every kit material would
+/// re-prepare them all each frame.
 pub fn tick(
     time: Res<Time>,
     clock: Option<ResMut<WaterClock>>,
     mut water: ResMut<Assets<WaterMaterial>>,
     mut terrain: ResMut<Assets<TerrainMaterial>>,
+    mut kit: ResMut<Assets<crate::kit_material::KitMaterial>>,
 ) {
     let Some(mut clock) = clock else {
         return;
@@ -956,6 +961,19 @@ pub fn tick(
     }
     for (_, m) in terrain.iter_mut() {
         m.params.terrain_time = t;
+    }
+    let banded: Vec<_> = kit
+        .iter()
+        .filter(|(_, m)| {
+            m.extension.params.flags & crate::kit_material::FLAG_WET_BAND != 0
+                && m.extension.params.water_time != t
+        })
+        .map(|(id, _)| id)
+        .collect();
+    for id in banded {
+        if let Some(mut m) = kit.get_mut(id) {
+            m.extension.params.water_time = t;
+        }
     }
 }
 

@@ -176,6 +176,10 @@ pub struct Slot {
     /// takes the per-instance seasonal tint like the other foliage (PRD §9.4).
     #[serde(default)]
     pub foliage: bool,
+    /// Takes the live swash wet band at the waterline (`docs/kit/water-contract.md` §3): sand
+    /// darkens and glosses where the swash runs up, as on the look-dev's placeholder bed.
+    #[serde(default)]
+    pub wet_band: bool,
 }
 
 #[derive(Deserialize, Debug, Clone)]

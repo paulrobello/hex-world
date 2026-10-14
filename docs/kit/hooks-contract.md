@@ -12,7 +12,7 @@ No hook adds a sampled texture. Kit forward is already at WebGPU's 16 next to re
 |---|---|---|---|
 | Emissive, night-only intensity | masks **B**: 1 on emitters (house window glass, car head and tail lights), 0 elsewhere | `night` uniform × B × 4 added to emissive | `night` 0 |
 | Snow accumulation and up-facing coverage | masks **R**: snow capacity, 0 where snow never lies (glass, seabed) | `snow` × R × smoothstep(0.55, 0.85, N.y) | `snow` 0 |
-| Wetness and porosity | masks **G**: porosity, 0 under water | `wetness` × G darkens and glosses | `wetness` 0 |
+| Wetness and porosity | masks **G**: porosity, 0 under water | `wetness` × G darkens and glosses. On a `wetBand` slot (coast sand, water contract §3) it is scaled by 1 minus the live wet band's wetness, so rain wets only what the swash left dry | `wetness` 0 |
 | Foliage seasonal tint index | nothing to author for alpha-tested slots and non-bark tree slots; an opaque plant elsewhere sets `"foliage": true` on its manifest slot (`hooks::is_foliage`) | `FLAG_FOLIAGE` slot × the instance's `MeshTag` through `season_tint`: 0 summer, 1 early autumn, 2 late autumn | tag 0 (untagged) |
 | Time-of-day block | nothing to author | `hooks::TimeOfDay` drives the sun (direction, lux, colour), the sky (IBL intensity), fog (`DistanceFog`) and exposure (EV100 offset) through `hooks::atmosphere`, and the `night` uniform | hour 12, whose row is the look-dev rig exactly |
 | Water freeze | nothing to author | `WaterParams::freeze`, read only by the `WATER_FREEZE` pipeline variant (ice holds the surface at rest, a pale rough sheet hides the water below) | 0, variant off |

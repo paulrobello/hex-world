@@ -28,6 +28,9 @@ pub const FLAG_TILEABLE: u32 = 1;
 pub const FLAG_MASKS: u32 = 2;
 /// Foliage slot (`hooks::is_foliage`): the shader tints it by the instance's season index.
 pub const FLAG_FOLIAGE: u32 = 4;
+/// Coast-bed sand (`Slot::wet_band`): the live swash wet band of the look-dev's placeholder bed,
+/// on the water surface's clock (`water::tick`).
+pub const FLAG_WET_BAND: u32 = 8;
 
 pub type KitMaterial = ExtendedMaterial<StandardMaterial, KitExt>;
 
@@ -38,9 +41,11 @@ pub struct KitParams {
     pub snow: f32,
     pub wetness: f32,
     pub night: f32,
+    /// Water time (s) of the wet band (`WaterClock`); 0 on other slots.
+    pub water_time: f32,
+    /// Swash amplitude (m) of the wet band (`water::WASH_AMP`); 0 on other slots.
+    pub wash_amp: f32,
     pub _pad0: f32,
-    pub _pad1: f32,
-    pub _pad2: f32,
 }
 
 #[derive(Asset, AsBindGroup, Reflect, Debug, Clone, Default)]
@@ -79,6 +84,8 @@ pub struct SlotRequests {
     pub unique: Vec<(Channel, MapRequest)>,
     /// Takes the per-instance seasonal tint (`hooks::is_foliage`).
     pub foliage: bool,
+    /// Takes the live wet band (`Slot::wet_band`).
+    pub wet_band: bool,
 }
 
 fn req(stem: &str, ch: Channel, family: TextureFamily, repeat: bool) -> MapRequest {
@@ -104,6 +111,7 @@ pub fn slot_requests(
 ) -> Result<SlotRequests, String> {
     let mut out = SlotRequests {
         foliage: crate::hooks::is_foliage(p, slot),
+        wet_band: slot.wet_band,
         ..default()
     };
     if slot.masks {
@@ -170,6 +178,9 @@ pub fn params_for(r: &SlotRequests, hooks: KitHooks) -> KitParams {
     if r.foliage {
         flags |= FLAG_FOLIAGE;
     }
+    if r.wet_band {
+        flags |= FLAG_WET_BAND;
+    }
     let [snow, wetness, night] = crate::hooks::surface_hooks(hooks);
     KitParams {
         tile_inv_m: r.tile.as_ref().map_or(0.0, |t| t.1),
@@ -177,6 +188,11 @@ pub fn params_for(r: &SlotRequests, hooks: KitHooks) -> KitParams {
         snow,
         wetness,
         night,
+        wash_amp: if r.wet_band {
+            crate::water::WASH_AMP
+        } else {
+            0.0
+        },
         ..default()
     }
 }
@@ -421,6 +437,32 @@ mod tests {
             FLAG_TILEABLE | FLAG_MASKS
         );
         assert_eq!(params_for(&r, KitHooks::Snow).snow, 1.0);
+    }
+
+    /// A `wetBand` slot takes the live band with the swash amplitude and its tint's wetness; every
+    /// other slot leaves it off, so the band never reaches a slot that is not coast sand.
+    #[test]
+    fn wet_band_slot_flags_and_params() {
+        let band = M.replace(
+            r#""b_cap":{"tileable":"grass","masks":true}"#,
+            r#""b_cap":{"tileable":"grass","masks":true,"wetBand":true}"#,
+        );
+        let m = parse_manifest(&band).unwrap();
+        let p = &m.pieces[0];
+        let k = params_for(
+            &slot_requests(&m, p, &p.slots["b_cap"], TextureFamily::Bc7).unwrap(),
+            KitHooks::None,
+        );
+        assert_eq!(k.flags, FLAG_TILEABLE | FLAG_MASKS | FLAG_WET_BAND);
+        assert_eq!((k.wash_amp, k.water_time), (crate::water::WASH_AMP, 0.0));
+        let tree = params_for(
+            &slot_requests(&m, p, &p.slots["b_tree"], TextureFamily::Bc7).unwrap(),
+            KitHooks::None,
+        );
+        assert_eq!(tree.flags & FLAG_WET_BAND, 0);
+        assert_eq!(tree.wash_amp, 0.0);
+        let common = include_str!("kit_common.wesl");
+        assert!(common.contains(&format!("const FLAG_WET_BAND: u32 = {FLAG_WET_BAND}u;")));
     }
 
     /// Tree bark: a tileable set on UV0 (uv_transform scale) keeps masks on raw UV0 and must not

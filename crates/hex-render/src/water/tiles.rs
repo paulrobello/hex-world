@@ -818,6 +818,36 @@ mod tests {
         );
     }
 
+    /// The kit wet band reads the shore distance back from the bed height
+    /// (`water_common.wesl` `coast_shore`): its constants are this profile's, and the inversion
+    /// (mirrored here) returns `s` on the beach slope and the shelf, where the band and swash live.
+    #[test]
+    fn wet_band_inverts_the_coast_profile() {
+        let src = include_str!("../water_common.wesl");
+        for (name, v) in [
+            ("COAST_WATER_Y", WATER_Y),
+            ("COAST_LAND", LAND),
+            ("COAST_BEACH_TOP_S", BEACH_TOP_S),
+            ("COAST_SHELF_SLOPE", SHELF_SLOPE),
+        ] {
+            let line = format!("const {name}: f32 = {v:?};");
+            assert!(src.contains(&line), "water_common.wesl lacks `{line}`");
+        }
+        let shore = |rel: f32| {
+            let t = 1.0 - (1.0 - rel / LAND).max(0.0).sqrt();
+            if rel < 0.0 {
+                -rel / SHELF_SLOPE
+            } else {
+                BEACH_TOP_S * t
+            }
+        };
+        for i in 0..=110 {
+            let s = BEACH_TOP_S + i as f32 * 0.1;
+            let back = shore(coast_height(s) - WATER_Y);
+            assert!((back - s).abs() < 2e-3, "s {s}: inverted {back}");
+        }
+    }
+
     /// The 8 m lane is the water width: the bank crosses the water level 4 m from the centre line.
     #[test]
     fn river_waterline_is_the_lane_half_width() {

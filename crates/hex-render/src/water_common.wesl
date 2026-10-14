@@ -75,6 +75,34 @@ fn swash(shore: f32, t: f32) -> f32 {
     return a * 0.7 + 0.3;
 }
 
+// The kit coast bed (docs/kit/water-contract.md §3, water/tiles.rs `coast_height`): water at rest
+// at y = -1.4, the beach slope rising 1.4 m over the 8 m to the grass, the shelf falling 0.12 m/m.
+// tiles.rs tests hold these to the Rust constants.
+const COAST_WATER_Y: f32 = -1.4;
+const COAST_LAND: f32 = 1.4;
+const COAST_BEACH_TOP_S: f32 = -8.0;
+const COAST_SHELF_SLOPE: f32 = 0.12;
+
+// Seaward distance `s` (the water surface's shore distance) of a coast-bed point `rel` m above the
+// water at rest: the coast profile inverted on the beach slope and the shelf, where it is one to
+// one. A kit bed carries no shore distance of its own, and its profile is held to ±0.03 m there.
+fn coast_shore(rel: f32) -> f32 {
+    let t = 1.0 - sqrt(max(1.0 - rel / COAST_LAND, 0.0));
+    return select(COAST_BEACH_TOP_S * t, -rel / COAST_SHELF_SLOPE, rel < 0.0);
+}
+
+// Smooth value noise (about 0..1, one cell per unit): a breakup that binds no texture.
+fn value_noise(p: vec2<f32>) -> f32 {
+    let i = floor(p);
+    let f = fract(p);
+    let u = f * f * (3.0 - 2.0 * f);
+    let a = hash22(i).x;
+    let b = hash22(i + vec2(1.0, 0.0)).x;
+    let c = hash22(i + vec2(0.0, 1.0)).x;
+    let d = hash22(i + vec2(1.0, 1.0)).x;
+    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
 // How much of the swash a point feels: full within 2.5 m of the coast (and inland of it), on open
 // sea only.
 fn swash_weight(depth: f32, river: f32) -> f32 {

@@ -12,15 +12,17 @@ struct KitParams {
     snow: f32,
     wetness: f32,
     night: f32,
+    water_time: f32,
+    wash_amp: f32,
     _pad0: f32,
-    _pad1: f32,
-    _pad2: f32,
 }
 
 const FLAG_TILEABLE: u32 = 1u;
 const FLAG_MASKS: u32 = 2u;
 // A foliage slot: takes the per-instance seasonal tint (hex_render::hooks, crates/hex-render/src/hooks.rs).
 const FLAG_FOLIAGE: u32 = 4u;
+// Coast-bed sand: the live swash wet band (kit_material.wesl), on the water's clock in `water_time`.
+const FLAG_WET_BAND: u32 = 8u;
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> kit: KitParams;
 
