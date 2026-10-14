@@ -1,0 +1,178 @@
+{
+  "cueId": "discovery-stinger",
+  "kind": "music",
+  "class": "music",
+  "version": 1,
+  "use": "Recipe unlocked (P3). Short, so it is decoded rather than streamed.",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 2,
+  "provider": {
+    "name": "Suno",
+    "endpoint": null,
+    "model": "v6",
+    "subscription": "Suno Pro (paid, owner account)",
+    "outputFormat": null
+  },
+  "prompt": null,
+  "promptFile": {
+    "path": "audio/music/prompts/discovery-stinger.md",
+    "sha256": "61f8b414e74813f0b403cf62aac315c3812e630ed2f42bdeca8ba8eed3110866"
+  },
+  "parameters": null,
+  "generation": {
+    "id": "ef700fee-3198-4c66-90ce-4cb70b1fbc52",
+    "generatedAt": "2026-10-14",
+    "attempt": null,
+    "creditsCharged": null,
+    "record": {
+      "path": "assets-source/audio/music/discovery-stinger/generation.json",
+      "sha256": "fb81500ac2c026cf548a53ff57f7e2989911a7d3974ffef14e331979de981a56",
+      "bytes": 809
+    }
+  },
+  "source": {
+    "store": "local:assets-source/audio/music",
+    "key": "discovery-stinger/discovery-stinger.wav",
+    "sha256": "d9b9e31b162f563dca25fcd77b67ae569303f9ebe638ea0f49a775ba3b8ea96b",
+    "bytes": 34443280,
+    "codec": "pcm_s16le",
+    "sampleRate": 48000,
+    "channels": 2,
+    "durationSeconds": 179.32
+  },
+  "loudness": {
+    "targetLufs": -18.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -15.5,
+      "lra": 5.8,
+      "truePeak": -4.0
+    },
+    "master": {
+      "integrated": -18.0,
+      "lra": 3.4,
+      "truePeak": -6.2
+    },
+    "after": {
+      "webm": {
+        "integrated": -18.0,
+        "lra": 3.4,
+        "truePeak": -5.9
+      },
+      "m4a": {
+        "integrated": -18.1,
+        "lra": 3.4,
+        "truePeak": -6.2
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 2 ch",
+      "fold": null
+    },
+    {
+      "step": "cut",
+      "startSeconds": 0.0,
+      "seconds": 7.5,
+      "fadeInSeconds": 0.01,
+      "fadeOutSeconds": 1.5,
+      "frames": 360000
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -16.0,
+        "lra": 3.4,
+        "truePeak": -4.2
+      },
+      "targetLufs": -18.0,
+      "gainDb": -2.0,
+      "requiredPeakReductionDb": 0.0,
+      "mode": "linear"
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.0
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "128k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/music/discovery-stinger.wav",
+    "sha256": "d9a99f3e4de7c03767f816e28e43a8a445f997a29e48ce1aecd322c6052f0785",
+    "frames": 360000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/music/discovery-stinger.webm",
+      "sha256": "0e937772aae3303f0cb6a3fb96716190919adec5501986ae6df193dedef482ec",
+      "bytes": 142061,
+      "codec": "opus",
+      "bitrate": "128k",
+      "channels": 2,
+      "sampleRate": 48000,
+      "durationSeconds": 7.508,
+      "decodedFrames": 360000,
+      "loudness": {
+        "integrated": -18.0,
+        "lra": 3.4,
+        "truePeak": -5.9
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/music/discovery-stinger.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 2 -ar 48000 -c:a libopus -b:a 128k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/music/discovery-stinger.webm"
+    },
+    {
+      "path": "assets/audio/music/discovery-stinger.m4a",
+      "sha256": "5ee6417d65a88668e0ce0fd1cc118ccbe36a6acc3dedde82a8e7b2de0a8af65d",
+      "bytes": 152483,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 2,
+      "sampleRate": 48000,
+      "durationSeconds": 7.5,
+      "decodedFrames": 360000,
+      "loudness": {
+        "integrated": -18.1,
+        "lra": 3.4,
+        "truePeak": -6.2
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/music/discovery-stinger.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 2 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/music/discovery-stinger.m4a"
+    }
+  ],
+  "decodedBytes": 2880000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "08603516d84dc756556e8140a729d64034a6fad8fa7c39517d9b3a698203af8a"
+    }
+  },
+  "license": "Generated with the owner's paid Suno Pro subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

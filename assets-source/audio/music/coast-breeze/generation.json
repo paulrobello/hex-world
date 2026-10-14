@@ -1,0 +1,19 @@
+{
+  "cueId": "coast-breeze",
+  "provider": "Suno",
+  "model": "v6",
+  "subscription": "Suno Pro (paid, owner account)",
+  "generationId": "5ffb8ed2-aee2-475f-88de-a6b7ecb47003",
+  "songUrl": "https://suno.com/song/5ffb8ed2-aee2-475f-88de-a6b7ecb47003",
+  "generatedAt": "2026-10-14",
+  "createdAt": "2026-10-14T21:09:10Z",
+  "promptFile": "audio/music/prompts/coast-breeze.md",
+  "settings": {
+    "instrumental": true,
+    "weirdness": 35,
+    "styleInfluence": 70
+  },
+  "settingsSource": "the prompt pack's suggested values (audio/music/prompts/README.md, Suno settings); the cue's prompt file states none and they were not read from the Suno song",
+  "sourceComment": "made with suno; created=2026-10-14T21:09:10Z; id=5ffb8ed2-aee2-475f-88de-a6b7ecb47003",
+  "notes": "owner take, 2026-10-14"
+}

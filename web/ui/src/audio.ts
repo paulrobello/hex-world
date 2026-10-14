@@ -34,9 +34,11 @@ import {
   cellWorld,
   emitterGain,
   emptyMix,
+  MUSIC_OPTS,
   musicGains,
   musicIdle,
   musicStep,
+  PHOTO_CUE,
   nearestOneShotTile,
   oneShotDefs,
   oneShotGate,
@@ -168,7 +170,13 @@ export interface AudioDebug {
   bed: { cue: string; gain: number }[];
   mix: Mix;
   view: { focus: [number, number, number]; zoom: number } | null;
-  music: { tracks: number; current: string | null; previous: string | null; gains: { id: string; gain: number }[] };
+  music: {
+    tracks: number;
+    current: string | null;
+    previous: string | null;
+    /** Per streamed track: its playlist gain, and whether its media element plays and where it is (seconds). */
+    gains: { id: string; gain: number; paused: boolean; time: number }[];
+  };
   lastCue: Fired | null;
   fired: number;
   recent: Fired[];
@@ -531,7 +539,7 @@ export class GameAudio {
     this.mix = biomeMix(placed, v);
     this.updateEmitters(ctx, cands);
     this.updateBeds(ctx);
-    this.updateMusic(ctx);
+    this.updateMusic(ctx, play.photo_mode);
     this.oneShotTiles = oneShotTiles;
     this.updateOneShots(ctx, v);
     for (const [k, p] of this.pending)
@@ -701,9 +709,9 @@ export class GameAudio {
     }
   }
 
-  private updateMusic(ctx: AudioContext): void {
+  private updateMusic(ctx: AudioContext, photo: boolean): void {
     const ids = this.streams.filter((c) => c.kind === "music" || c.class === "music").map((c) => c.id);
-    this.music = musicStep(this.music, ids, this.mix, ctx.currentTime);
+    this.music = musicStep(this.music, ids, this.mix, ctx.currentTime, MUSIC_OPTS, photo ? PHOTO_CUE : null);
     const gains = musicGains(this.music, ctx.currentTime);
     for (const [id, g] of gains) {
       let tr = this.tracks.get(id);
@@ -820,7 +828,12 @@ export class GameAudio {
         tracks: this.streams.length,
         current: this.music.current,
         previous: this.music.previous,
-        gains: [...this.tracks].map(([id, tr]) => ({ id, gain: round(tr.level) })),
+        gains: [...this.tracks].map(([id, tr]) => ({
+          id,
+          gain: round(tr.level),
+          paused: tr.el.paused,
+          time: round(tr.el.currentTime, 3),
+        })),
       },
       lastCue: last && { ...last },
       fired: this.fired,

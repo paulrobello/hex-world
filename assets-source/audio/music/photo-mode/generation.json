@@ -1,0 +1,19 @@
+{
+  "cueId": "photo-mode",
+  "provider": "Suno",
+  "model": "v6",
+  "subscription": "Suno Pro (paid, owner account)",
+  "generationId": "ef6dc58c-b302-49a7-ad10-d2d758df87ea",
+  "songUrl": "https://suno.com/song/ef6dc58c-b302-49a7-ad10-d2d758df87ea",
+  "generatedAt": "2026-10-14",
+  "createdAt": "2026-10-14T21:15:52Z",
+  "promptFile": "audio/music/prompts/photo-mode.md",
+  "settings": {
+    "instrumental": true,
+    "weirdness": 35,
+    "styleInfluence": 70
+  },
+  "settingsSource": "the prompt pack's suggested values (audio/music/prompts/README.md, Suno settings); the cue's prompt file states none and they were not read from the Suno song",
+  "sourceComment": "made with suno; created=2026-10-14T21:15:52Z; id=ef6dc58c-b302-49a7-ad10-d2d758df87ea",
+  "notes": "owner take, 2026-10-14"
+}

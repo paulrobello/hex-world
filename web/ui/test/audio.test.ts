@@ -28,6 +28,7 @@ import {
   musicIdle,
   musicStep,
   nearestOneShotTile,
+  PHOTO_CUE,
   oneShotDefs,
   oneShotDelay,
   oneShotGate,
@@ -59,10 +60,14 @@ test("events map to the manifest's mastered cues", () => {
     assert.equal(map.get(e), undefined, `${e} has no cue`);
 });
 
-test("pending music sources are not playable", () => {
+test("mastered music is playable and a pending source is not", () => {
   const ids = playable(manifest.cues, "webm").map((c) => c.id);
-  assert.ok(!ids.includes("meadow-day"));
-  assert.ok(ids.includes("river-babble"));
+  for (const id of ["meadow-day", "coast-breeze", "hearth-town", "photo-mode", "river-babble"])
+    assert.ok(ids.includes(id), id);
+  const music = manifest.cues.filter((c) => c.kind === "music" && c.id !== "discovery-stinger");
+  assert.ok(music.length >= 5 && music.every((c) => c.playback === "stream"), "music streams");
+  const pending: Cue = { id: "song", kind: "music", class: "music", status: "pending-source", events: [] };
+  assert.deepEqual(playable([pending], "webm"), []);
   const missingM4a: Cue = { ...manifest.cues[0]!, id: "x", files: { webm: manifest.cues[0]!.files!.webm! } };
   assert.deepEqual(
     playable([missingM4a], "m4a").map((c) => c.id),
@@ -91,9 +96,13 @@ test("decoded budget: the real manifest fits, one-shots load before loops, strea
   const plan = planDecode(cues, manifest.decodedBudgetBytes, manifest.sampleRate, manifest.sampleRate);
   assert.equal(plan.skipped.length, 0);
   assert.ok(plan.bytes <= manifest.decodedBudgetBytes);
+  assert.ok(
+    cues.some((c) => c.playback === "stream"),
+    "the real manifest streams music",
+  );
   assert.equal(
     plan.bytes,
-    cues.reduce((s, c) => s + (c.decodedBytes ?? 0), 0),
+    cues.filter((c) => c.playback !== "stream").reduce((s, c) => s + (c.decodedBytes ?? 0), 0),
   );
   const order = plan.load.map((c) => c.class);
   assert.ok(order.lastIndexOf("ui") < order.indexOf("sfx") && order.lastIndexOf("sfx") < order.indexOf("loop"));
@@ -254,6 +263,22 @@ test("cues without a mood never join the playlist; losing every cue fades out", 
   st = musicStep(st, [], moodMix({ meadow: 1 }), 50);
   assert.deepEqual([st.current, st.previous], [null, "meadow-day"]);
   close(musicGains(st, 50 + MUSIC_OPTS.fade).get("meadow-day")!, 0);
+});
+
+test("photo mode's cue takes over at once and the mood's pick returns at once when it clears", () => {
+  const ids = [...SONGS, PHOTO_CUE, "title-theme"];
+  const o = MUSIC_OPTS;
+  let st = musicStep(musicIdle(), ids, moodMix({ meadow: 1 }), 0);
+  assert.equal(st.current, "meadow-day");
+  st = musicStep(st, ids, moodMix({ meadow: 1 }), 5, o, PHOTO_CUE);
+  assert.deepEqual([st.current, st.previous], [PHOTO_CUE, "meadow-day"], "inside the dwell, photo mode still wins");
+  close(musicGains(st, 5 + o.fade / 2).get(PHOTO_CUE)!, Math.SQRT1_2);
+  st = musicStep(st, ids, moodMix({ coast: 1 }), 8, o, PHOTO_CUE);
+  assert.equal(st.current, PHOTO_CUE, "the mood does not move the photo cue");
+  st = musicStep(st, ids, moodMix({ coast: 1 }), 9);
+  assert.deepEqual([st.current, st.previous], ["coast-breeze", PHOTO_CUE], "leaving photo mode skips the dwell");
+  st = musicStep(musicIdle(), SONGS, moodMix({ meadow: 1 }), 0, o, PHOTO_CUE);
+  assert.equal(st.current, "meadow-day", "an unplayable photo cue leaves the playlist alone");
 });
 
 // ---------- Occasional one-shots (bees, forest birds and leaves) ----------

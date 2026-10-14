@@ -183,7 +183,8 @@ def ab_sections(layout: A.Layout, manifest: dict, rel_runtime: str) -> str:
                 out.append(f"<h3>Round {rnd} ({label})</h3>" + (f"<p class=lead>{html.escape(note)}</p>" if note else ""))
             out.append("<div class=grid>" + "".join(card(layout, e, rel_runtime, cue_by_id.get(e["id"])) for e in group)
                        + "</div>")
-    new = [by_id[c["id"]] for c in reg["cues"] if c.get("cut") and not c.get("pool") and c["id"] in by_id]
+    new = [by_id[c["id"]] for c in reg["cues"]
+           if c.get("cut") and not c.get("pool") and c["kind"] != "music" and c["id"] in by_id]
     if new:
         out.append("<h2>New occasional one-shots</h2><div class=grid>"
                    + "".join(card(layout, e, rel_runtime) for e in new) + "</div>")
@@ -232,7 +233,13 @@ def card(layout: A.Layout, entry: dict, rel_runtime: str, cue: dict | None = Non
                if lvl["mode"] == "limited" else lvl["mode"])
     dev = f"<p class=dev>Deviation: {html.escape(prov['deviation'])}</p>" if prov.get("deviation") else ""
     kb = (files["webm"]["bytes"] + files["m4a"]["bytes"]) / 1024
-    source_rel = os.path.relpath(layout.root / prov["source"]["path"], layout.source)
+    src_rec = prov["source"]
+    if src_rec.get("store"):
+        source_link = (f"source <code>{html.escape(src_rec['key'])}</code> in the local store "
+                       f"(git-ignored, <code>assets-source/audio/music/</code> of the main checkout)")
+    else:
+        source_rel = os.path.relpath(layout.root / src_rec["path"], layout.source)
+        source_link = f'<a href="{html.escape(source_rel)}">source</a>'
     prompt = prov.get("prompt") or (prov.get("promptFile") or {}).get("path", "")
     pi = (prov.get("parameters") or {}).get("prompt_influence")
     influence = f"<p>prompt influence {pi}</p>" if pi is not None else ""
@@ -248,5 +255,5 @@ def card(layout: A.Layout, entry: dict, rel_runtime: str, cue: dict | None = Non
 <p class=meta>{html.escape(limiter)}</p>{dev}{floor_nums(prov)}{screening(cue)}
 <details><summary>Prompt and generation</summary><p>{html.escape(prompt)}</p>{influence}
 <p>{html.escape(prov['provider']['name'])} · {html.escape(prov['provider']['model'])} · attempt {prov['generation'].get('attempt')} ·
-id <code>{html.escape(str(prov['generation']['id']))}</code> · <a href="{html.escape(source_rel)}">source</a></p></details>
+id <code>{html.escape(str(prov['generation']['id']))}</code> · {source_link}</p></details>
 </div>"""

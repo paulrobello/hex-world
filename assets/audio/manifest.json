@@ -462,49 +462,181 @@
       "id": "meadow-day",
       "kind": "music",
       "class": "music",
-      "status": "pending-source",
-      "promptFile": "audio/music/prompts/meadow-day.md",
-      "events": []
+      "status": "mastered",
+      "events": [],
+      "playback": "stream",
+      "channels": 2,
+      "loop": {
+        "startSample": 0,
+        "endSample": 7555680,
+        "sampleRate": 48000,
+        "startSeconds": 0.0,
+        "endSeconds": 157.41
+      },
+      "durationSeconds": 157.41,
+      "decodedBytes": 60445440,
+      "targetLufs": -18.0,
+      "files": {
+        "webm": {
+          "path": "music/meadow-day.webm",
+          "sha256": "05f33d68b5a5e714c3598593a1a49eee4db6bb858893ff766442c574ec6ff127",
+          "bytes": 2889689
+        },
+        "m4a": {
+          "path": "music/meadow-day.m4a",
+          "sha256": "000048eac57c0af89ad1e9969183a216d36bba9ff0d0114726d4e4d0d1c28a08",
+          "bytes": 3253412
+        }
+      },
+      "provenance": "assets-source/audio/music/meadow-day/provenance.json"
     },
     {
       "id": "coast-breeze",
       "kind": "music",
       "class": "music",
-      "status": "pending-source",
-      "promptFile": "audio/music/prompts/coast-breeze.md",
-      "events": []
+      "status": "mastered",
+      "events": [],
+      "playback": "stream",
+      "channels": 2,
+      "loop": {
+        "startSample": 0,
+        "endSample": 7133280,
+        "sampleRate": 48000,
+        "startSeconds": 0.0,
+        "endSeconds": 148.61
+      },
+      "durationSeconds": 148.61,
+      "decodedBytes": 57066240,
+      "targetLufs": -18.0,
+      "files": {
+        "webm": {
+          "path": "music/coast-breeze.webm",
+          "sha256": "2c19b1a5f6f6eb8f803d7823a090ae0454939d291523944ab6ca52f2b794b683",
+          "bytes": 2707977
+        },
+        "m4a": {
+          "path": "music/coast-breeze.m4a",
+          "sha256": "71dc4f933e4d65041df731d5d13b619bb6e64d5842fc5bf5b4f71c30665d0f7d",
+          "bytes": 3023950
+        }
+      },
+      "provenance": "assets-source/audio/music/coast-breeze/provenance.json"
     },
     {
       "id": "hearth-town",
       "kind": "music",
       "class": "music",
-      "status": "pending-source",
-      "promptFile": "audio/music/prompts/hearth-town.md",
-      "events": []
+      "status": "mastered",
+      "events": [],
+      "playback": "stream",
+      "channels": 2,
+      "loop": {
+        "startSample": 0,
+        "endSample": 7893120,
+        "sampleRate": 48000,
+        "startSeconds": 0.0,
+        "endSeconds": 164.44
+      },
+      "durationSeconds": 164.44,
+      "decodedBytes": 63144960,
+      "targetLufs": -18.0,
+      "files": {
+        "webm": {
+          "path": "music/hearth-town.webm",
+          "sha256": "b01007c465ab8f31ddb8777f70c6a1cb1300d96451ea605e570f5b8620e07ac1",
+          "bytes": 2942107
+        },
+        "m4a": {
+          "path": "music/hearth-town.m4a",
+          "sha256": "89e1f10a5811cafe4179aabc8ae9a0124d5d12fe294a651fb58038838923bb2f",
+          "bytes": 3372401
+        }
+      },
+      "provenance": "assets-source/audio/music/hearth-town/provenance.json"
     },
     {
       "id": "photo-mode",
       "kind": "music",
       "class": "music",
-      "status": "pending-source",
-      "promptFile": "audio/music/prompts/photo-mode.md",
-      "events": []
+      "status": "mastered",
+      "events": [],
+      "playback": "stream",
+      "channels": 2,
+      "loop": {
+        "startSample": 0,
+        "endSample": 8150400,
+        "sampleRate": 48000,
+        "startSeconds": 0.0,
+        "endSeconds": 169.8
+      },
+      "durationSeconds": 169.8,
+      "decodedBytes": 65203200,
+      "targetLufs": -18.0,
+      "files": {
+        "webm": {
+          "path": "music/photo-mode.webm",
+          "sha256": "87b61b5e43d1d290d80c8be92194db2aced000fda5f7a7d3e24c0cde64bb3f05",
+          "bytes": 3213056
+        },
+        "m4a": {
+          "path": "music/photo-mode.m4a",
+          "sha256": "8a6c7cb89cf8937279f212e0deb893362dadec67e81dd00734c8c9ae0fcd0820",
+          "bytes": 3449528
+        }
+      },
+      "provenance": "assets-source/audio/music/photo-mode/provenance.json"
     },
     {
       "id": "title-theme",
       "kind": "music",
       "class": "music",
-      "status": "pending-source",
-      "promptFile": "audio/music/prompts/title-theme.md",
-      "events": []
+      "status": "mastered",
+      "events": [],
+      "playback": "stream",
+      "channels": 2,
+      "loop": null,
+      "durationSeconds": 179.296854,
+      "decodedBytes": 68849992,
+      "targetLufs": -18.0,
+      "files": {
+        "webm": {
+          "path": "music/title-theme.webm",
+          "sha256": "801fc1604f237e7c36c6d7fc98eea198cac04529b13ff6c55b6f549f137f70cb",
+          "bytes": 3340892
+        },
+        "m4a": {
+          "path": "music/title-theme.m4a",
+          "sha256": "847acebf194b3b2c74c516dec73bba8a375e9fda131e26b08398feae6bb885e4",
+          "bytes": 3637359
+        }
+      },
+      "provenance": "assets-source/audio/music/title-theme/provenance.json"
     },
     {
       "id": "discovery-stinger",
       "kind": "music",
       "class": "music",
-      "status": "pending-source",
-      "promptFile": "audio/music/prompts/discovery-stinger.md",
-      "events": []
+      "status": "mastered",
+      "events": [],
+      "playback": "decode",
+      "channels": 2,
+      "loop": null,
+      "durationSeconds": 7.5,
+      "decodedBytes": 2880000,
+      "targetLufs": -18.0,
+      "files": {
+        "webm": {
+          "path": "music/discovery-stinger.webm",
+          "sha256": "0e937772aae3303f0cb6a3fb96716190919adec5501986ae6df193dedef482ec",
+          "bytes": 142061
+        },
+        "m4a": {
+          "path": "music/discovery-stinger.m4a",
+          "sha256": "5ee6417d65a88668e0ce0fd1cc118ccbe36a6acc3dedde82a8e7b2de0a8af65d",
+          "bytes": 152483
+        }
+      },
+      "provenance": "assets-source/audio/music/discovery-stinger/provenance.json"
     }
   ],
   "candidates": []

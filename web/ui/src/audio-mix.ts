@@ -333,7 +333,8 @@ export function oneShotStep(
 
 /**
  * The biomes each playlist cue scores on. The manifest carries no mood yet, so it lives here; cues not
- * listed (photo-mode, title-theme, discovery-stinger) never join the biome playlist.
+ * listed (photo-mode, title-theme, discovery-stinger) never join the biome playlist. photo-mode plays as
+ * the forced cue while photo mode is open; title-theme and discovery-stinger have no hook yet.
  */
 export const MUSIC_MOOD: Record<string, readonly Biome[]> = {
   "meadow-day": ["meadow", "forest", "river"],
@@ -374,17 +375,33 @@ export function bestCue(ids: readonly string[], mix: Mix): string | null {
   return best;
 }
 
-/** One playlist step at audio time `now`. With no playable cues it stays idle. */
-export function musicStep(st: MusicState, ids: readonly string[], mix: Mix, now: number, o = MUSIC_OPTS): MusicState {
-  const best = bestCue(ids, mix);
+/** The cue photo mode (D7) plays in place of the biome playlist. */
+export const PHOTO_CUE = "photo-mode";
+
+/**
+ * One playlist step at audio time `now`. With no playable cues it stays idle. A playable `forced` cue
+ * (photo mode's) takes over at once, past the dwell and margin; when it clears, the mood's pick returns
+ * at once, since a cue outside the playlist never holds the dwell.
+ */
+export function musicStep(
+  st: MusicState,
+  ids: readonly string[],
+  mix: Mix,
+  now: number,
+  o = MUSIC_OPTS,
+  forced: string | null = null,
+): MusicState {
+  const pinned = forced && ids.includes(forced) ? forced : null;
+  const best = pinned ?? bestCue(ids, mix);
   let next = st;
   if (!best) {
     if (st.current) next = { current: null, previous: st.current, since: now };
   } else if (!st.current || !ids.includes(st.current)) next = { current: best, previous: st.current, since: now };
   else if (
     best !== st.current &&
-    now - st.since >= o.dwell &&
-    moodScore(best, mix) - moodScore(st.current, mix) >= o.margin
+    (pinned !== null ||
+      !(st.current in MUSIC_MOOD) ||
+      (now - st.since >= o.dwell && moodScore(best, mix) - moodScore(st.current, mix) >= o.margin))
   )
     next = { current: best, previous: st.current, since: now };
   // The outgoing cue is forgotten once its fade has finished.

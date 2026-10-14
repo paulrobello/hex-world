@@ -4,8 +4,11 @@
 Usage: python3 scripts/audio/master.py [--root DIR] [--cue ID ...]
 
 Per cue in <root>/assets-source/audio/cues.json (PRD §8, §11.3, §11.4):
-  1. Decode the untouched source to 48 kHz float at the cue's channel count (amplitude fold). A cue
-     with `sourceCue` masters another cue's source (a picked review candidate). A per-cue `filter`
+  1. Decode the untouched source to 48 kHz float at the cue's channel count (amplitude fold). Music
+     sources are git-ignored and read from the local store (audio_lib.Layout.stores: $HEX_MUSIC_STORE or
+     this tree's assets-source/audio/music, then the main checkout's), and provenance records them by
+     store key, SHA-256 and size. A cue with `sourceCue` masters another cue's source (a picked review
+     candidate). A loop's `loopEndSeconds` drops the take's ending (a fade-out or final chord). A per-cue `filter`
      (high-pass and a harmonic notch comb, for a provider hum) runs next, with circular context on
      loops so the wrap stays continuous. A per-cue `cut` takes a faded excerpt as a one-shot, and a
      per-cue `gate` then expands everything under a threshold set relative to the excerpt's loudest
@@ -50,7 +53,6 @@ LIMIT_MARGIN_DB = 0.5  # limiter ceiling sits this far under the master ceiling 
 ENCODE_MARGIN_DB = 0.2  # encoded true peak must sit this far under the contract ceiling
 LOOP_PAD_S = 1.0
 DEFAULT_LOOP_CROSSFADE_S = 0.5
-SOURCE_EXTS = (".wav", ".flac", ".aiff", ".aif", ".mp3", ".m4a", ".ogg")
 SCRIPTS = ("audio_lib.py", "master.py", "review.py")
 
 
@@ -332,11 +334,31 @@ def source_dir(layout: A.Layout, reg: dict, cue: dict) -> tuple[Path, str]:
 
 def find_source(layout: A.Layout, reg: dict, cue: dict) -> Path | None:
     folder, sid = source_dir(layout, reg, cue)
-    for ext in SOURCE_EXTS:
+    if folder.parent.name in A.STORE_KINDS:
+        return layout.find_stored_source(sid)
+    for ext in A.SOURCE_EXTS:
         p = folder / f"{sid}{ext}"
         if p.exists():
             return p
     return None
+
+
+def source_record(layout: A.Layout, reg: dict, cue: dict, source: Path) -> dict:
+    """A committed source by repo path; a store-kept (git-ignored) one by store, key, hash and size."""
+    folder, sid = source_dir(layout, reg, cue)
+    if folder.parent.name in A.STORE_KINDS:
+        return A.store_record(source, sid)
+    return A.file_record(layout, source)
+
+
+def trim_loop_end(samples: array.array, channels: int, seconds: float) -> tuple[array.array, dict]:
+    """Drops a take's ending (a fade-out or a final chord), so the crossfade folds groove over groove."""
+    frames = len(samples) // channels
+    end = int(round(seconds * A.RATE))
+    if end <= 0 or end > frames:
+        raise ValueError(f"loopEndSeconds {seconds} does not fit {frames / A.RATE:.2f} s of source")
+    return (array.array("f", samples[:end * channels]),
+            {"step": "trim-loop-end", "loopEndSeconds": seconds, "framesRemoved": frames - end})
 
 
 REQUIRED_GENERATION = ("provider", "model", "subscription", "generationId")
@@ -383,6 +405,11 @@ def master_cue(layout: A.Layout, reg: dict, cue: dict, tools: dict, script_hashe
                           "fold": A.downmix(src_info["channels"], channels) if src_info["channels"] != channels else None}]
     if cue.get("sourceCue"):
         steps[0]["sourceCue"] = cue["sourceCue"]
+    if cue.get("loopEndSeconds"):
+        if not cue["loop"]:
+            raise ValueError(f"{cue['id']}: loopEndSeconds is for loop cues")
+        samples, info = trim_loop_end(samples, channels, float(cue["loopEndSeconds"]))
+        steps.append(info)
     if cue.get("filter"):
         samples, info = apply_filter(layout, cue["id"], samples, channels, cue["filter"], cue["loop"])
         steps.append(info)
@@ -466,7 +493,8 @@ def master_cue(layout: A.Layout, reg: dict, cue: dict, tools: dict, script_hashe
         "generation": {"id": gen["generationId"], "generatedAt": gen.get("generatedAt"), "attempt": gen.get("attempt"),
                        "creditsCharged": gen.get("creditsCharged"),
                        "record": A.file_record(layout, source_dir(layout, reg, cue)[0] / "generation.json")},
-        "source": {**A.file_record(layout, source), **{k: src_info[k] for k in ("codec", "sampleRate", "channels", "durationSeconds")}},
+        "source": {**source_record(layout, reg, cue, source),
+                   **{k: src_info[k] for k in ("codec", "sampleRate", "channels", "durationSeconds")}},
         "loudness": {"targetLufs": target, "toleranceLu": reg["lufsTolerance"], "truePeakCeilingDb": reg["truePeakCeiling"],
                      "masterTruePeakDb": ceiling, "before": before, "master": master_lufs,
                      "after": {r["path"].rsplit(".", 1)[1]: r["loudness"] for r in runtime}},

@@ -10,12 +10,34 @@ import array
 import hashlib
 import json
 import math
+import os
 import re
 import subprocess
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 RATE = 48000  # Opus decodes at 48 kHz, so every master and runtime file uses it.
+SOURCE_EXTS = (".wav", ".flac", ".aiff", ".aif", ".mp3", ".m4a", ".ogg")
+# Music sources are git-ignored and live in a local store (assets-source/audio/README.md, Local source store).
+STORE_KINDS = ("music",)
+STORE_REF = "local:assets-source/audio/music"
+STORE_ENV = "HEX_MUSIC_STORE"
+
+
+def main_checkout(root: Path) -> Path | None:
+    """The main checkout of the git repository whose top level is `root`, or None when `root` is no checkout root."""
+    def git(*args: str) -> str | None:
+        try:
+            out = subprocess.run(["git", "rev-parse", *args], cwd=root, capture_output=True, text=True)
+        except OSError:
+            return None
+        return out.stdout.strip() if out.returncode == 0 else None
+
+    top = git("--show-toplevel")
+    if not top or Path(top).resolve() != root.resolve():
+        return None
+    common = git("--path-format=absolute", "--git-common-dir")
+    return Path(common).parent if common else None
 
 
 class Layout:
@@ -42,6 +64,32 @@ class Layout:
 
     def rel(self, path: Path) -> str:
         return path.resolve().relative_to(self.root.resolve()).as_posix()
+
+    def stores(self) -> list[Path]:
+        """Music source store roots, searched in order: $HEX_MUSIC_STORE, else this tree's own
+        assets-source/audio/music; then, from a linked git worktree, the main checkout's."""
+        env = os.environ.get(STORE_ENV)
+        roots = [Path(env).expanduser().resolve() if env else self.source / "music"]
+        main = main_checkout(self.root)
+        if main is not None and main.resolve() != self.root.resolve():
+            roots.append(main / "assets-source/audio/music")
+        return roots
+
+    def stored(self, key: str) -> Path | None:
+        """The first store holding `key` (`<cue-id>/<cue-id>.wav`), or None."""
+        return next((s / key for s in self.stores() if (s / key).is_file()), None)
+
+    def find_stored_source(self, sid: str) -> Path | None:
+        for ext in SOURCE_EXTS:
+            p = self.stored(f"{sid}/{sid}{ext}")
+            if p is not None:
+                return p
+        return None
+
+
+def store_record(path: Path, sid: str) -> dict:
+    """A source kept in the local store: located by store and key, never by a host path."""
+    return {"store": STORE_REF, "key": f"{sid}/{path.name}", "sha256": sha256(path), "bytes": path.stat().st_size}
 
 
 def sha256(path: Path) -> str:

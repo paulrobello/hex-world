@@ -1,0 +1,19 @@
+{
+  "cueId": "hearth-town",
+  "provider": "Suno",
+  "model": "v6",
+  "subscription": "Suno Pro (paid, owner account)",
+  "generationId": "aedcb601-3f0c-4ed4-be43-430871bbec52",
+  "songUrl": "https://suno.com/song/aedcb601-3f0c-4ed4-be43-430871bbec52",
+  "generatedAt": "2026-10-14",
+  "createdAt": "2026-10-14T21:11:35Z",
+  "promptFile": "audio/music/prompts/hearth-town.md",
+  "settings": {
+    "instrumental": true,
+    "weirdness": 35,
+    "styleInfluence": 70
+  },
+  "settingsSource": "the prompt pack's suggested values (audio/music/prompts/README.md, Suno settings); the cue's prompt file states none and they were not read from the Suno song",
+  "sourceComment": "made with suno; created=2026-10-14T21:11:35Z; id=aedcb601-3f0c-4ed4-be43-430871bbec52",
+  "notes": "owner take, 2026-10-14"
+}

@@ -1,0 +1,181 @@
+{
+  "cueId": "title-theme",
+  "kind": "music",
+  "class": "music",
+  "version": 1,
+  "use": "Title and main menu; plays once to a resolved ending.",
+  "events": [],
+  "loop": null,
+  "playback": "stream",
+  "channels": 2,
+  "provider": {
+    "name": "Suno",
+    "endpoint": null,
+    "model": "v6",
+    "subscription": "Suno Pro (paid, owner account)",
+    "outputFormat": null
+  },
+  "prompt": null,
+  "promptFile": {
+    "path": "audio/music/prompts/title-theme.md",
+    "sha256": "48cac5b0e3f569bfa84ad76155a254bbc28e3cdf4a9f32baff239d4f9755a0dc"
+  },
+  "parameters": null,
+  "generation": {
+    "id": "518adbbe-ea55-4cb5-bb9c-8806dc1e884e",
+    "generatedAt": "2026-10-14",
+    "attempt": null,
+    "creditsCharged": null,
+    "record": {
+      "path": "assets-source/audio/music/title-theme/generation.json",
+      "sha256": "47fbc3b002526a47821fab0832c87f01a2e6fa1a4602e4d11ea1a7bebdecdce7",
+      "bytes": 797
+    }
+  },
+  "source": {
+    "store": "local:assets-source/audio/music",
+    "key": "title-theme/title-theme.wav",
+    "sha256": "a47fd0b9d64bb94d6e84cee1a56d9f0d8fe4906222fc72e568ad837d12943a2d",
+    "bytes": 34466320,
+    "codec": "pcm_s16le",
+    "sampleRate": 48000,
+    "channels": 2,
+    "durationSeconds": 179.44
+  },
+  "loudness": {
+    "targetLufs": -18.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -16.5,
+      "lra": 7.2,
+      "truePeak": -3.8
+    },
+    "master": {
+      "integrated": -18.0,
+      "lra": 7.2,
+      "truePeak": -5.3
+    },
+    "after": {
+      "webm": {
+        "integrated": -18.0,
+        "lra": 7.2,
+        "truePeak": -5.4
+      },
+      "m4a": {
+        "integrated": -18.0,
+        "lra": 7.2,
+        "truePeak": -5.2
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 2 ch",
+      "fold": null
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 6871,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -16.5,
+        "lra": 7.2,
+        "truePeak": -3.8
+      },
+      "targetLufs": -18.0,
+      "gainDb": -1.5,
+      "requiredPeakReductionDb": 0.0,
+      "mode": "linear"
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.0
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "128k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/music/title-theme.wav",
+    "sha256": "cfbfa2545f71190fe34af2922b73a262153b82fd77d5148f29855bae9cea115f",
+    "frames": 8606249,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/music/title-theme.webm",
+      "sha256": "801fc1604f237e7c36c6d7fc98eea198cac04529b13ff6c55b6f549f137f70cb",
+      "bytes": 3340892,
+      "codec": "opus",
+      "bitrate": "128k",
+      "channels": 2,
+      "sampleRate": 48000,
+      "durationSeconds": 179.304,
+      "decodedFrames": 8606249,
+      "loudness": {
+        "integrated": -18.0,
+        "lra": 7.2,
+        "truePeak": -5.4
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/music/title-theme.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 2 -ar 48000 -c:a libopus -b:a 128k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/music/title-theme.webm"
+    },
+    {
+      "path": "assets/audio/music/title-theme.m4a",
+      "sha256": "847acebf194b3b2c74c516dec73bba8a375e9fda131e26b08398feae6bb885e4",
+      "bytes": 3637359,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 2,
+      "sampleRate": 48000,
+      "durationSeconds": 179.2969,
+      "decodedFrames": 8606249,
+      "loudness": {
+        "integrated": -18.0,
+        "lra": 7.2,
+        "truePeak": -5.2
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/music/title-theme.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 2 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/music/title-theme.m4a"
+    }
+  ],
+  "decodedBytes": 68849992,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "08603516d84dc756556e8140a729d64034a6fad8fa7c39517d9b3a698203af8a"
+    }
+  },
+  "license": "Generated with the owner's paid Suno Pro subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

@@ -97,11 +97,41 @@ try {
   check(a.cues.failed.length === 0 && a.cues.skipped.length === 0, `no failed or skipped cues ${JSON.stringify([a.cues.failed, a.cues.skipped])}`);
   // Gapless: each loop decodes in Chromium to exactly its manifest loop length, so the loop points
   // the runtime sets are the seam make audio-check verified on the ffmpeg decode.
-  for (const c of manifest.cues.filter((c) => c.loop && c.status === "mastered"))
+  for (const c of manifest.cues.filter((c) => c.loop && c.status === "mastered" && c.playback === "decode"))
     check(a.cues.frames[c.id] === c.loop.endSample,
       `${c.id} decodes to its loop length (${a.cues.frames[c.id]} frames, manifest ${c.loop.endSample})`);
   check(a.decodedBytes > 0 && a.decodedBytes <= a.decodedBudgetBytes, `decoded ${a.decodedBytes} B within ${a.decodedBudgetBytes} B`);
-  check(a.music.tracks === 0 && a.music.current === null, "no music mastered: the playlist idles");
+  // Music streams through a media element. The start meadow picks meadow-day, which fades in after the gesture.
+  const streamed = manifest.cues.filter((c) => c.status === "mastered" && c.playback === "stream").map((c) => c.id);
+  check(a.music.tracks === streamed.length && ["meadow-day", "coast-breeze", "hearth-town", "photo-mode"].every((id) => streamed.includes(id)),
+    `${streamed.length} music cues stream (${a.cues.streams.join(", ")})`);
+  const track = async (id) => (await audio()).music.gains.find((g) => g.id === id) ?? null;
+  const streaming = (id) => until(async () => {
+    const g = await track(id);
+    return g && !g.paused && g.time > 0 ? g : null;
+  }, `${id} streams: its media element plays`, 10_000);
+  await until(async () => (await audio()).music.current === "meadow-day", "the start meadow picks meadow-day");
+  const m0 = await streaming("meadow-day");
+  await page.waitForTimeout(1500);
+  const m1 = await track("meadow-day");
+  check(m0 && m1 && m1.gain > m0.gain && m1.time > m0.time,
+    `meadow-day's gain rises (${m0?.gain} -> ${m1?.gain}) while it plays (${m0?.time} -> ${m1?.time} s)`);
+  check(audioRequests.some((u) => /\/assets\/audio\/music\/meadow-day\.webm$/.test(u)), "meadow-day.webm is fetched after the gesture");
+  check(!audioRequests.some((u) => /\/music\/(title-theme|photo-mode|coast-breeze|hearth-town)\./.test(u)),
+    "no music the mix does not ask for is fetched");
+  // Photo mode (D7) switches to its own cue at once and back to the mood's pick when it closes.
+  await cmd({ cmd: "toggle", what: "photo" });
+  await until(async () => (await play()).photo_mode === true, "photo mode opens");
+  await until(async () => (await audio()).music.current === "photo-mode", "photo mode plays photo-mode");
+  const p0 = await streaming("photo-mode");
+  await page.waitForTimeout(1500);
+  const p1 = await track("photo-mode");
+  check(p0 && p1 && p1.gain > p0.gain && p1.time > p0.time,
+    `photo-mode's gain rises (${p0?.gain} -> ${p1?.gain}) while it plays (${p0?.time} -> ${p1?.time} s)`);
+  save("music", { meadow: [m0, m1], photo: [p0, p1], state: await audio() });
+  await cmd({ cmd: "toggle", what: "photo" });
+  await until(async () => (await play()).photo_mode === false, "photo mode closes");
+  await until(async () => (await audio()).music.current === "meadow-day", "closing photo mode returns to meadow-day");
   check(JSON.stringify(a.missingEmitters) === '["town-murmur"]', `only town murmur missing (${a.missingEmitters})`);
   check(audioRequests.every((u) => !/\.m4a$/.test(u)), "no m4a fetched when WebM plays");
   // The start meadow has no bed: an on-demand forest-birds play is what reaches the output. The start world

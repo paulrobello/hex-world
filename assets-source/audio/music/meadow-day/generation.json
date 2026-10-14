@@ -1,0 +1,19 @@
+{
+  "cueId": "meadow-day",
+  "provider": "Suno",
+  "model": "v6",
+  "subscription": "Suno Pro (paid, owner account)",
+  "generationId": "1e6d5098-3054-485b-9a71-bb2f6cafec7e",
+  "songUrl": "https://suno.com/song/1e6d5098-3054-485b-9a71-bb2f6cafec7e",
+  "generatedAt": "2026-10-14",
+  "createdAt": "2026-10-14T21:05:18Z",
+  "promptFile": "audio/music/prompts/meadow-day.md",
+  "settings": {
+    "instrumental": true,
+    "weirdness": 35,
+    "styleInfluence": 70
+  },
+  "settingsSource": "the prompt pack's suggested values (audio/music/prompts/README.md, Suno settings); the cue's prompt file states none and they were not read from the Suno song",
+  "sourceComment": "made with suno; created=2026-10-14T21:05:18Z; id=1e6d5098-3054-485b-9a71-bb2f6cafec7e",
+  "notes": "owner take, 2026-10-14"
+}

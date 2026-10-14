@@ -10,7 +10,7 @@ assets-source/audio/
   generation-log.json            every ElevenLabs POST, failed ones included (cap: generationCap)
   review.html                    owner audition page, rewritten by make audio-master
   {sfx,ambience,music}/<cue-id>/
-    <cue-id>.{mp3,wav}           untouched provider output (the source master)
+    <cue-id>.{mp3,wav}           untouched provider output (the source master); music sources are git-ignored (local store)
     generation.json              provider, model, subscription, prompt, generation id, credits
     provenance.json              written by make audio-master
     rejected/                    earlier takes; the .mp3 stays local, the .generation.json is committed
@@ -32,6 +32,10 @@ assets/audio/
 
 The tools are python3 (stdlib only) and ffmpeg with libopus. They were built and verified with ffmpeg 9.0.2, libopus 1.6.1 and Python 3.14.8. `audio-check` is not part of `make checkall`, because CI has no ffmpeg.
 
+## Local source store (music)
+
+A Suno take is about 34 MB of WAV, so music sources are never committed. `.gitignore` excludes `assets-source/audio/music/*/*.{wav,mp3}`, and the main checkout's `assets-source/audio/music/<cue-id>/<cue-id>.wav` is the store. `generation.json` and `provenance.json` beside each source are committed. The scripts (`audio_lib.Layout.stores`) look for a source in `$HEX_MUSIC_STORE` when it is set, else in the tree's own `assets-source/audio/music`, then, from a linked git worktree, in the main checkout's (found through `git rev-parse --git-common-dir`). Provenance records the source as `{"store": "local:assets-source/audio/music", "key": "<cue-id>/<cue-id>.wav", "sha256", "bytes"}` with no host path. `make audio-check` verifies the hash and size wherever a store holds the source. Where none does (CI, a fresh clone), it prints "source in local store, not present" as a note and still checks the runtime files, loudness, loops and the generation record. ElevenLabs sources stay committed as before.
+
 ## Classes and targets
 
 | Class | Integrated loudness | Playback | Use |
@@ -51,7 +55,8 @@ Either way the loop points are `[0, frames)` of the master, and the WebM decodes
 
 Per-cue fields in `cues.json` that change mastering:
 - `filter`: `{"highpassHz": 150, "lowpassHz": 9500, "stages": 2, "harmonicNotch": {"fundamentalHz": 200, "harmonics": 48, "widthHz": 6}}` runs right after decode, before the loop handling or the cut. `stages` repeats each 2-pole pass (12 dB per octave per stage). `harmonicNotch` may be a list of series. Loops are filtered with one second of circular context on each side, so the wrap stays continuous. ElevenLabs loop-mode takes carry a stationary 200 Hz harmonic series, the hum the owner heard in `forest-birdsong`, measured 2026-10-14 at +35 dB over the noise floor in its quietest frames. A weaker comb on other multiples of 50 Hz (250, 300, 1850, 2150 and 2550 Hz, +14 to +16 dB) and broadband hiss stayed after the notch, and the owner still heard the noise, so the loop was retired. The `forest-birds` cuts avoid both by band: their calls hold under 4% of their energy below 2.8 kHz (centroids 4.5–6 kHz), and the source floor holds 58% of its power over 9 kHz, so they pass 2.8–9.5 kHz with two stages each way.
-- `cut`: `{"startSeconds", "seconds", "fadeInSeconds", "fadeOutSeconds"}` masters a faded excerpt of a longer take as a one-shot, in place of the silence trim (`meadow-bees`, the `forest-birds` cuts). Several cues may cut one source, each with its own `sourceCue` and `cut`.
+- `loopEndSeconds`: a loop's body ends here in the source, and everything after (a take's fade-out or final chord) is dropped before the loop check and the crossfade, so the fold joins groove to groove. The music loops set it with a 2 s `loopCrossfadeSeconds`, at the point after which 10 s of onsets best match the opening's (spectral-flux correlation), so the fold lands on the beat. Provenance records it as the `trim-loop-end` step.
+- `cut`: `{"startSeconds", "seconds", "fadeInSeconds", "fadeOutSeconds"}` masters a faded excerpt of a longer take as a one-shot, in place of the silence trim (`meadow-bees`, the `forest-birds` cuts, and `discovery-stinger`, the first 7.5 s of a 3-minute Suno take). Several cues may cut one source, each with its own `sourceCue` and `cut`.
 - `gate`: `{"thresholdDbBelowPeak", "ratio", "rangeDb", "attackMs", "releaseMs"}` runs on a one-shot after the cut or trim, before leveling. It is a downward expander: the threshold sits `thresholdDbBelowPeak` under the excerpt's loudest 50 ms window, so it follows the take rather than an absolute level, and under it the gain falls by `ratio - 1` dB per dB, to at most `rangeDb` down. Provenance records the absolute threshold and how much of the cue the gate held closed.
 - `sourceCue`: masters another cue's source and generation record (each `forest-birds-N` names the retired `forest-birdsong`). `filter`, `cut`, `gate` and `bitrates` belong to the cue itself.
 - `pool`: groups one-shot variants that the runtime picks among at random (`forest-birds`, `forest-leaves`). The manifest entry carries it. Every pool variant must pass the floor criterion.
@@ -85,7 +90,9 @@ The runtime audio stream maps the events drained by `hex_world_events()` (`crate
 | none (occasional) | `forest-leaves-1` and `-2` (pool `forest-leaves`; the owner dropped `-3`) | sfx | One leaf rustle, positional at a forest tile within 3 hex steps of the focus, every 20–60 s at random. |
 | none (occasional) | `meadow-bees` | sfx | A 6 s bee-swarm one-shot on the ambience bus, positional at a wildflower meadow tile within 3 hex steps of the focus, every 45–120 s at random. It is an excerpt of a continuous hum, so it is exempt from the floor criterion. |
 | on demand | any pool or cue | | `hexWorld.audio.play(name)` plays a pool variant or a single cue now, positional at the nearest matching tile when there is one (`docs/agent-operability.md`). |
-| none (biome mix) | `meadow-day`, `coast-breeze`, `hearth-town` | music | They crossfade by the biome mix in view. `photo-mode` and `title-theme` are pending, and `discovery-stinger` is pending for P3. |
+| none (biome mix) | `meadow-day`, `coast-breeze`, `hearth-town` | music | Streamed through a media element after the first gesture. They crossfade by the biome mix in view (6 s equal power, 30 s dwell). |
+| photo mode open (`play.photo_mode`) | `photo-mode` | music | Takes over at once while photo mode is open, and the biome pick returns at once when it closes. |
+| none yet | `title-theme`, `discovery-stinger` | music | Mastered, not played: the game has no title screen yet, and the recipe discovery moment is P3. `discovery-stinger` is decoded, so it is loaded with the other decoded cues. |
 
 Events with no cue yet are `hoverChanged`, `toolChanged`, `inventoryToggled`, `photoModeToggled` and `actionRefused`. `riseStage` has no cue of its own: the runtime (`web/ui/src/audio.ts`) holds `place-thunk` until the tile's `settled` stage and drops it on `sink`.
 

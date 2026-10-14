@@ -12,6 +12,10 @@ e2e/test-results/
 # (shared by every worktree), referenced by SHA-256 in provenance
 /assets-source/blend/
 /assets-source/hdri/
+# Suno music sources (~34 MB each) stay in the main checkout's local store, referenced by SHA-256 in
+# provenance; generation.json and provenance.json beside them are committed
+/assets-source/audio/music/*/*.wav
+/assets-source/audio/music/*/*.mp3
 __pycache__/
 
 # Higgsfield job responses (local retry cache; jobId is kept in refs.json)

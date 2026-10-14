@@ -11,6 +11,8 @@ to exactly its excerpt length):
   hot        the one-shot's WebM re-encoded 9 dB hotter (loudness, true peak, hash);
   seam       the loop's WebM with a 0.3 step over its last 5 ms (wrap step);
   phase      the music's WebM with the right channel inverted (mono fold).
+A last copy moves the music source into a separate store ($HEX_MUSIC_STORE): master and check must find
+it there, the check must pass with a "not present" note without the store, and fail a changed source.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ from __future__ import annotations
 import array
 import json
 import math
+import os
 import random
 import shutil
 import subprocess
@@ -105,9 +108,44 @@ def tone_db(samples: array.array, hz: float) -> float:
     return 20 * math.log10(max(math.hypot(re, im) / len(samples), 1e-12))
 
 
-def run(script: str, root: Path) -> tuple[int, str]:
-    out = subprocess.run([sys.executable, str(HERE / script), "--root", str(root)], capture_output=True, text=True)
+def run(script: str, root: Path, store: Path | None = None) -> tuple[int, str]:
+    env = {k: v for k, v in os.environ.items() if k != A.STORE_ENV}
+    if store is not None:
+        env[A.STORE_ENV] = str(store)
+    out = subprocess.run([sys.executable, str(HERE / script), "--root", str(root)], capture_output=True, text=True,
+                         env=env)
     return out.returncode, out.stdout + out.stderr
+
+
+def store_cases() -> bool:
+    """The music source moved to a separate store: master and check find it through $HEX_MUSIC_STORE and
+    record a store reference; without the store the check passes with a note; a changed source fails."""
+    root = ROOT.with_name("audio-selftest-store")
+    store = ROOT.with_name("audio-selftest-musicstore")
+    for d in (root, store):
+        if d.exists():
+            shutil.rmtree(d)
+    shutil.copytree(ROOT, root)
+    (store / "synth-music").mkdir(parents=True)
+    shutil.move(root / "assets-source/audio/music/synth-music/synth-music.wav", store / "synth-music/synth-music.wav")
+    results = []
+    code, out = run("master.py", root, store)
+    src = json.loads((root / "assets-source/audio/music/synth-music/provenance.json").read_text())["source"]
+    want = {"store": A.STORE_REF, "key": "synth-music/synth-music.wav",
+            "sha256": A.sha256(store / "synth-music/synth-music.wav")}
+    results.append(("master reads $HEX_MUSIC_STORE and records a store reference",
+                    code == 0 and all(src.get(k) == v for k, v in want.items()) and "path" not in src))
+    code, out = run("check.py", root, store)
+    results.append(("check verifies the stored source", code == 0 and "not present" not in out))
+    code, out = run("check.py", root)
+    results.append(("check without the store passes with a note",
+                    code == 0 and "synth-music: source in local store, not present" in out))
+    A.write_wav(store / "synth-music/synth-music.wav", hit(), 1, fmt="s16")
+    code, out = run("check.py", root, store)
+    results.append(("check fails a changed stored source", code != 0 and "source hash mismatch" in out))
+    for name, ok in results:
+        print(f"--- store: {name} -> {'OK' if ok else 'SELFTEST FAIL'}")
+    return all(ok for _, ok in results)
 
 
 def reencode(root: Path, rel: str, samples: array.array, ch: int, bitrate: str) -> None:
@@ -186,6 +224,7 @@ def main() -> int:
     print(f"--- forced failure 'audio-selftest-template' (unfilled generation.json): audio-master exit {code} -> "
           f"{'OK' if ok else 'SELFTEST FAIL'}")
     print("\n".join(line for line in out.splitlines() if line.startswith(("FAIL", "  -"))))
+    failed |= not store_cases()
     if failed:
         return 1
     print("\nselftest OK: the synthetic tree passes, and each forced failure exits non-zero with its message")

@@ -1,0 +1,19 @@
+{
+  "cueId": "title-theme",
+  "provider": "Suno",
+  "model": "v6",
+  "subscription": "Suno Pro (paid, owner account)",
+  "generationId": "518adbbe-ea55-4cb5-bb9c-8806dc1e884e",
+  "songUrl": "https://suno.com/song/518adbbe-ea55-4cb5-bb9c-8806dc1e884e",
+  "generatedAt": "2026-10-14",
+  "createdAt": "2026-10-14T21:14:32Z",
+  "promptFile": "audio/music/prompts/title-theme.md",
+  "settings": {
+    "instrumental": true,
+    "weirdness": 35,
+    "styleInfluence": 70
+  },
+  "settingsSource": "the prompt pack's suggested values (audio/music/prompts/README.md, Suno settings); the cue's prompt file states none and they were not read from the Suno song",
+  "sourceComment": "made with suno; created=2026-10-14T21:14:32Z; id=518adbbe-ea55-4cb5-bb9c-8806dc1e884e",
+  "notes": "owner take, 2026-10-14"
+}

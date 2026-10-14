@@ -10,7 +10,9 @@ For each cue in <root>/assets-source/audio/cues.json:
   - loops: the decoded runtime file spans the manifest loop points, and the wrap at those points
     passes the wrap-step, head-to-tail level and interior-dropout checks;
   - stereo cues survive a mono fold (side energy under mid energy);
-  - provenance is complete and its source, generation-record and runtime hashes match the files;
+  - provenance is complete and its source, generation-record and runtime hashes match the files. A music
+    source lives in the git-ignored local store (audio_lib.Layout.stores); when no store holds it (CI, a
+    fresh clone) the check reports "source in local store, not present" as a note, not a failure;
   - the decoded size of every cue the runtime decodes (Web Audio float32 at 48 kHz) fits the budget;
   - one-shot pool variants (`pool`): the floor criterion of audio_lib.floor_report, on both decodes.
     meadow-bees has no pool and is exempt: it is an excerpt of a continuous hum by design.
@@ -40,13 +42,16 @@ def get(d: dict, dotted: str):
     return d
 
 
-def check_cue(layout: A.Layout, reg: dict, cue: dict, manifest: dict, rows: list, failures: list) -> int:
+def check_cue(layout: A.Layout, reg: dict, cue: dict, manifest: dict, rows: list, failures: list,
+              notes: list) -> int:
     """Checks one cue; returns its decoded bytes when the runtime decodes it, else 0."""
     cid = cue["id"]
     fail = lambda msg: failures.append(f"{cid}: {msg}")  # noqa: E731
     prov_path = layout.cue_dir(cue) / "provenance.json"
     entry = manifest.get(cid)
     sources = [p for p in layout.cue_dir(cue).glob(f"{cid}.*")] if layout.cue_dir(cue).exists() else []
+    if cue["kind"] in A.STORE_KINDS and layout.find_stored_source(cid):
+        sources.append(layout.find_stored_source(cid))
     if not prov_path.exists():
         if cue["provider"] == "suno" and not sources:
             rows.append((cid, cue["class"], "-", "pending: no source yet", "", "", "", ""))
@@ -64,7 +69,20 @@ def check_cue(layout: A.Layout, reg: dict, cue: dict, manifest: dict, rows: list
         {"provider": prov.get("provider"), "generation": prov.get("generation"), "prompt": prov.get("prompt")})]
     if missing:
         fail(f"provenance incomplete: {', '.join(missing)}")
-    for label, rec in (("source", prov.get("source") or {}), ("generation record", get(prov, "generation.record") or {})):
+    src = prov.get("source") or {}
+    if src.get("store"):
+        stored = layout.stored(src.get("key", ""))
+        if not src.get("key") or src["store"] != A.STORE_REF:
+            fail(f"source store reference incomplete: {src.get('store')} {src.get('key')}")
+        elif stored is None:
+            notes.append(f"{cid}: source in local store, not present ({src['store']}/{src['key']}, "
+                         f"sha256 {src['sha256'][:12]}, {src['bytes']} B); its hash was not verified")
+        elif A.sha256(stored) != src.get("sha256") or stored.stat().st_size != src.get("bytes"):
+            fail(f"source hash mismatch for {src['store']}/{src['key']} ({stored})")
+    checked = [("generation record", get(prov, "generation.record") or {})]
+    if not src.get("store"):
+        checked.insert(0, ("source", src))
+    for label, rec in checked:
         path = layout.root / rec.get("path", "")
         if not rec.get("path") or not path.is_file():
             fail(f"{label} file missing: {rec.get('path')}")
@@ -154,6 +172,7 @@ def main() -> int:
     manifest = {c["id"]: c for c in raw.get("cues", []) + raw.get("candidates", [])}
     rows: list[tuple] = []
     failures: list[str] = []
+    notes: list[str] = []
     decoded = streamed = 0
     runtime_bytes = 0
     for cue in reg["cues"]:
@@ -161,7 +180,7 @@ def main() -> int:
             if cue["id"] in manifest:
                 failures.append(f"{cue['id']}: retired but still listed in assets/audio/manifest.json")
             continue
-        n = check_cue(layout, reg, cue, manifest, rows, failures)
+        n = check_cue(layout, reg, cue, manifest, rows, failures, notes)
         decoded += max(n, 0)
         streamed += max(-n, 0)
     for path in sorted(layout.runtime.rglob("*")):
@@ -184,6 +203,11 @@ def main() -> int:
           f"everything decoded would be {(decoded + streamed) / 1e6:.1f} MB")
     if decoded > budget:
         failures.append(f"decoded total {decoded} bytes exceeds the {budget} byte budget (PRD §10)")
+    if notes:
+        print()
+        print("notes (not failures):")
+        for note in notes:
+            print(f"  - {note}")
     print()
     if failures:
         print(f"FAIL ({len(failures)}):")

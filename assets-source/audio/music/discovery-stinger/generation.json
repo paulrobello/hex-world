@@ -1,0 +1,19 @@
+{
+  "cueId": "discovery-stinger",
+  "provider": "Suno",
+  "model": "v6",
+  "subscription": "Suno Pro (paid, owner account)",
+  "generationId": "ef700fee-3198-4c66-90ce-4cb70b1fbc52",
+  "songUrl": "https://suno.com/song/ef700fee-3198-4c66-90ce-4cb70b1fbc52",
+  "generatedAt": "2026-10-14",
+  "createdAt": "2026-10-14T21:17:18Z",
+  "promptFile": "audio/music/prompts/discovery-stinger.md",
+  "settings": {
+    "instrumental": true,
+    "weirdness": 35,
+    "styleInfluence": 70
+  },
+  "settingsSource": "the prompt pack's suggested values (audio/music/prompts/README.md, Suno settings); the cue's prompt file states none and they were not read from the Suno song",
+  "sourceComment": "made with suno; created=2026-10-14T21:17:18Z; id=ef700fee-3198-4c66-90ce-4cb70b1fbc52",
+  "notes": "owner take, 2026-10-14"
+}
