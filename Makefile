@@ -1,4 +1,4 @@
-.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs
+.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise
 
 fmt:
 	cargo fmt --all
@@ -379,3 +379,16 @@ shots-water-play:
 thumbs:
 	cargo run -p hex-app --release -- --thumbs
 	uv run --script scripts/thumbs/build.py
+
+# Staged rise and Legend affordances (PRD §4.4, design/ui/legend/in-world.md): runs the script that
+# docs/checkpoints/rise/rise.mjs writes at 1280x800 with tilt-shift off and both clocks fixed (every
+# frame advances the rise by 1/60 s), then encode.sh writes the stage sheets, MP4 clips, stills and
+# state dumps next to it.
+RISE_DOCS = docs/checkpoints/rise
+shots-rise:
+	mkdir -p target/shots $(RISE_DOCS)
+	rm -f target/shots/rise-*.png target/shots/rise-*.json target/shots/aff-*.png target/shots/aff-*.json
+	node $(RISE_DOCS)/rise.mjs target/shots/rise-script.json
+	cargo run -p hex-app --release -- --scenario play --script target/shots/rise-script.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	bash $(RISE_DOCS)/encode.sh
+	rm -f target/shots/rise-*-f*.png

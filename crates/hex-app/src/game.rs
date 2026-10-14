@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use hex_core::{Axial, EdgeStatus, RotateDir, TileCatalog, TileDef, World};
 use hex_render::{
     ActiveScenario, Scenario,
-    play::{PlayGhost, PlayTile, PlayView},
+    play::{PlayGhost, PlayTile, PlayView, rise::RiseMessage},
 };
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -71,6 +71,17 @@ pub enum GameEvent {
         action: &'static str,
         reason: String,
     },
+    /// A stage of a tile's staged rise starts (PRD §4.4), for the audio layer's rumble and the
+    /// HUD: `column`, `cap`, `edges`, `props`, `agents`, then `settled`; `sink` when an undo or a
+    /// bulldoze takes a tile down. `skipped` cues arrive together from a fast-forward or under
+    /// reduced motion. Not kept in `recent_events` (five per placement would crowd it out).
+    RiseStage {
+        q: i32,
+        r: i32,
+        tile: String,
+        stage: &'static str,
+        skipped: bool,
+    },
 }
 
 /// The outcome of the latest game action (hover excluded), for `play.last_result`.
@@ -98,6 +109,8 @@ pub struct GameState {
     pub recent: VecDeque<GameEvent>,
     /// Bumped by every applied game action; `sync_view` rebuilds the render view when it moves.
     pub revision: u64,
+    /// Refused placements and bulldozes, so the renderer pulses the refused highlight each time.
+    pub refusals: u32,
 }
 
 impl GameState {
@@ -117,6 +130,7 @@ impl GameState {
             last: None,
             recent: VecDeque::new(),
             revision: 1,
+            refusals: 0,
         }
     }
 
@@ -328,6 +342,7 @@ impl GameState {
             Err(e) => {
                 let reason = e.to_string();
                 self.result("place", Some(cell), Some(reason.clone()));
+                self.refusals += 1;
                 vec![GameEvent::PlacementRefused {
                     q: cell.q,
                     r: cell.r,
@@ -353,6 +368,7 @@ impl GameState {
             Err(e) => {
                 let reason = e.to_string();
                 self.result("bulldoze", Some(cell), Some(reason.clone()));
+                self.refusals += 1;
                 vec![GameEvent::BulldozeRefused {
                     q: cell.q,
                     r: cell.r,
@@ -444,6 +460,8 @@ impl GameState {
             bulldoze: self
                 .bulldoze_target()
                 .map(|(c, reason)| (c, reason.is_none())),
+            bulldoze_mode: self.tool == Tool::Bulldoze && !self.photo_mode,
+            refusals: self.refusals,
         }
     }
 }
@@ -483,6 +501,19 @@ pub fn apply_actions(
         for e in game.apply(action) {
             publish_event(&e);
         }
+    }
+}
+
+/// Publishes the renderer's rise cues as `riseStage` events (after `hex_render::play::PlaySystems`).
+pub fn publish_rise_events(mut cues: MessageReader<RiseMessage>) {
+    for m in cues.read() {
+        publish_event(&GameEvent::RiseStage {
+            q: m.cell.q,
+            r: m.cell.r,
+            tile: m.tile.clone(),
+            stage: m.cue.name(),
+            skipped: m.skipped,
+        });
     }
 }
 

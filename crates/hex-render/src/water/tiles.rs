@@ -22,7 +22,14 @@ use super::{
     cell_transform, materials, ribbon_mesh, river_flow, skirt_mesh_for, smoothstep, surface_mesh,
     terrain_color, terrain_mesh_for,
 };
-use crate::{SceneEntity, play::PlayTile, post::QualityTier};
+use crate::{
+    SceneEntity,
+    play::{
+        PlayTile,
+        rise::{RisePart, RiseRole},
+    },
+    post::QualityTier,
+};
 
 /// Water surface (m): [`LAND`] below the meadow cap's border ring at y = 0, the prototype's
 /// plateau-to-water drop, which the terrain shader's grass line and wet band are tuned to.
@@ -580,6 +587,11 @@ pub struct WaterAssets<'a> {
 /// Spawns and despawns water entities to match the placed tiles. A cell is rebuilt only when its
 /// [`CellWater`] changes (its tile, its exposed edges, its river paths or its bed), so placing,
 /// bulldozing, undoing and redoing refresh the neighbours' cut faces too. `rebuild` drops all.
+///
+/// Rise hooks: every spawned entity carries a [`RisePart`] (the bed moves with the column, the
+/// surfaces and cut faces also fill), and the entities of a cell whose tile left the world are
+/// returned instead of despawned, so the tile's sink can take them down with it.
+#[must_use]
 pub fn sync(
     commands: &mut Commands,
     water: &mut PlayWater,
@@ -589,7 +601,7 @@ pub fn sync(
     catalog: &TileCatalog,
     kit_has: impl Fn(&str) -> bool,
     rebuild: bool,
-) {
+) -> Vec<(Axial, Vec<Entity>)> {
     if rebuild {
         for (_, (_, es)) in water.cells.drain() {
             for e in es {
@@ -598,17 +610,23 @@ pub fn sync(
         }
     }
     let want = layout(tiles, catalog, kit_has);
+    let placed: BTreeSet<Axial> = tiles.iter().map(|t| t.cell).collect();
+    let mut released = vec![];
     water.cells.retain(|cell, (cw, es)| {
         let keep = want.get(cell) == Some(cw);
         if !keep {
-            for e in es.drain(..) {
-                commands.entity(e).try_despawn();
+            if placed.contains(cell) {
+                for e in es.drain(..) {
+                    commands.entity(e).try_despawn();
+                }
+            } else {
+                released.push((*cell, std::mem::take(es)));
             }
         }
         keep
     });
     if want.keys().all(|c| water.cells.contains_key(c)) {
-        return;
+        return released;
     }
     let (water_mat, terrain_mat) = water
         .materials
@@ -642,6 +660,7 @@ pub fn sync(
         );
         water.cells.insert(cell, (cw, es));
     }
+    released
 }
 
 fn spawn_cell(
@@ -657,12 +676,14 @@ fn spawn_cell(
     let at_cell = Transform::from_xyz(c.x, 0.0, c.y);
     let mut out = vec![];
     if cw.bed {
+        let t = cell_transform(cell, rot);
         out.push(
             commands
                 .spawn((
                     Mesh3d(meshes.add(terrain_mesh_for(&field, cell, rot, FLOOR_Y))),
                     MeshMaterial3d(terrain.clone()),
-                    cell_transform(cell, rot),
+                    t,
+                    RisePart::new(cell, RiseRole::Bed, t),
                     SceneEntity,
                 ))
                 .id(),
@@ -693,6 +714,7 @@ fn spawn_cell(
                     Mesh3d(meshes.add(mesh)),
                     MeshMaterial3d(water.clone()),
                     t,
+                    RisePart::new(cell, RiseRole::Water, t),
                     NotShadowCaster,
                     WaterSurface,
                     SceneEntity,

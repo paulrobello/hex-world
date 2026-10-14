@@ -5,7 +5,10 @@ use std::sync::Mutex;
 use bevy::prelude::*;
 use hex_core::{Axial, RotateDir};
 use hex_render::{
-    ActiveScenario, Scenario, SceneEntity, setup_scene, tilt_shift::TiltShiftSettings,
+    ActiveScenario, Scenario, SceneEntity,
+    play::rise::{PlayRises, ReducedMotion},
+    setup_scene,
+    tilt_shift::TiltShiftSettings,
 };
 use serde::Deserialize;
 
@@ -54,6 +57,12 @@ pub enum Command {
     },
     DumpState {
         name: String,
+    },
+    /// Reduced motion (`prefers-reduced-motion` or the Settings override, sent by the overlay):
+    /// the staged rise and every affordance transition become instant cuts, with no breathing,
+    /// dust or camera shake.
+    SetReducedMotion {
+        on: bool,
     },
     Exit,
     // Play-scenario commands: each enqueues the same `Action` its key or mouse binding does.
@@ -154,6 +163,7 @@ pub fn run_commands(
     scene: Query<Entity, With<SceneEntity>>,
     mut tilt: ResMut<TiltShiftSettings>,
     mut actions: ResMut<ActionQueue>,
+    mut reduced: ResMut<ReducedMotion>,
 ) {
     queue.items.extend(INBOX.lock().unwrap().drain(..));
     if !*bridge::READY.lock().unwrap() {
@@ -201,6 +211,7 @@ pub fn run_commands(
             }
         }
         Command::DumpState { name } => dump_state(&name),
+        Command::SetReducedMotion { on } => reduced.0 = on,
         Command::Exit => exit.0 = true,
         _ => unreachable!("play commands return through `action`"),
     }
@@ -231,6 +242,7 @@ pub fn publish_state(
     tilt: Res<TiltShiftSettings>,
     game: Res<GameState>,
     sim: Res<CarSim>,
+    (rises, reduced): (Res<PlayRises>, Res<ReducedMotion>),
 ) {
     let camera = cameras.iter().next().map(|t| {
         serde_json::json!({ "pos": t.translation.to_array(), "forward": t.forward().to_array() })
@@ -244,6 +256,18 @@ pub fn publish_state(
     let play_state = play.then(|| {
         let mut p = game.state_json();
         sim.extend_state(&mut p);
+        if let serde_json::Value::Object(map) = &mut p {
+            let rising: Vec<serde_json::Value> = rises
+                .report()
+                .into_iter()
+                .map(|(c, tile, stage, t)| {
+                    serde_json::json!({ "q": c.q, "r": c.r, "tile": tile, "stage": stage,
+                                        "t": (f64::from(t) * 1e3).round() / 1e3 })
+                })
+                .collect();
+            map.insert("rising".into(), serde_json::json!(rising));
+            map.insert("reduced_motion".into(), serde_json::json!(reduced.0));
+        }
         p
     });
     let state = serde_json::json!({

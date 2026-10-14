@@ -137,19 +137,40 @@ impl Plugin for HexRenderPlugin {
                 tilt_shift::TiltShiftPlugin,
                 MaterialPlugin::<water::WaterMaterial>::default(),
                 MaterialPlugin::<water::TerrainMaterial>::default(),
+                MaterialPlugin::<play::affordances::AffordanceMaterial>::default(),
             ))
             .init_resource::<play::PlayView>()
             .init_resource::<play::PlayCatalog>()
+            .init_resource::<play::rise::PlayRises>()
+            .init_resource::<play::rise::ReducedMotion>()
+            .init_resource::<play::rise::CameraShake>()
+            .init_resource::<play::rise::PlayDust>()
+            .init_resource::<play::affordances::Affordances>()
+            .add_message::<play::rise::RiseMessage>()
             .init_resource::<cars::CarsView>()
             .init_resource::<cars::CarAssets>()
             .add_systems(Startup, scene::setup)
             .add_systems(
                 PostUpdate,
-                cars::sync.before(bevy::transform::TransformSystems::Propagate),
+                (cars::sync, play::rise::shake)
+                    .before(bevy::transform::TransformSystems::Propagate),
             )
+            .add_systems(First, play::rise::unshake)
             .add_systems(
                 Update,
-                (play::start_kit, play::finish_kit, play::sync).chain(),
+                (
+                    play::start_kit,
+                    play::finish_kit,
+                    play::sync,
+                    play::rise::advance,
+                    play::rise::animate,
+                    play::rise::sink,
+                    play::rise::dust,
+                    play::affordances::sync,
+                    play::affordances::animate,
+                )
+                    .chain()
+                    .in_set(play::PlaySystems),
             )
             .add_systems(
                 Update,

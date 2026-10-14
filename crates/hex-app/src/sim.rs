@@ -8,6 +8,7 @@ use hex_core::{Axial, PlacedTile, TileCatalog, World};
 use hex_render::{
     ActiveScenario, Scenario,
     cars::{CarPose, CarsView},
+    play::{PlaySystems, rise::PlayRises},
 };
 use hex_sim::{SimConfig, Simulation, TICK_HZ};
 use serde_json::{Value, json};
@@ -15,12 +16,28 @@ use serde_json::{Value, json};
 use crate::game::GameState;
 
 /// The 20 Hz tick. Nothing else in the app runs in `FixedUpdate`, so `Time<Fixed>` is the sim's.
+///
+/// It also orders the render's play systems between the game's view writer and the car mirror, so
+/// a placement starts its rise in the frame it lands and the mirror's agents gate reads that frame's
+/// rise state (frame-exact under `--clock fixed`), and publishes the rise cues after them.
 pub struct SimPlugin;
 
 impl Plugin for SimPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Time::<Fixed>::from_hz(f64::from(TICK_HZ)))
-            .add_systems(FixedUpdate, tick);
+            .add_systems(FixedUpdate, tick)
+            .configure_sets(
+                Update,
+                PlaySystems
+                    .after(crate::game::sync_view)
+                    .before(mirror_world),
+            )
+            .add_systems(
+                Update,
+                crate::game::publish_rise_events
+                    .after(PlaySystems)
+                    .before(crate::control::publish_state),
+            );
     }
 }
 
@@ -59,7 +76,28 @@ impl CarSim {
     /// missing from `catalog` are left out, as `Simulation::from_world` does. Returns whether the
     /// world had changed.
     pub fn mirror(&mut self, world: &World, catalog: &TileCatalog) -> bool {
-        let now = world.tiles();
+        self.mirror_tiles(world.tiles(), catalog)
+    }
+
+    /// [`CarSim::mirror`] with an agents gate: a tile not mirrored yet joins the sim only once
+    /// `ready` says its staged rise reached the agents stage (PRD §4.4 step 5), so cars never use a
+    /// road that is still rising. Tiles already mirrored stay; removals apply at once.
+    pub fn mirror_gated(
+        &mut self,
+        world: &World,
+        catalog: &TileCatalog,
+        ready: impl Fn(Axial) -> bool,
+    ) -> bool {
+        let now: BTreeMap<Axial, PlacedTile> = world
+            .tiles()
+            .iter()
+            .filter(|(c, t)| self.mirrored.get(c) == Some(t) || ready(**c))
+            .map(|(c, t)| (*c, t.clone()))
+            .collect();
+        self.mirror_tiles(&now, catalog)
+    }
+
+    fn mirror_tiles(&mut self, now: &BTreeMap<Axial, PlacedTile>, catalog: &TileCatalog) -> bool {
         let removed: Vec<Axial> = self
             .mirrored
             .keys()
@@ -118,9 +156,21 @@ impl CarSim {
     }
 }
 
-/// Mirrors the world into the sim whenever the game state changed (after `game::apply_actions`).
-pub fn mirror_world(game: Res<GameState>, mut sim: ResMut<CarSim>) {
-    if game.is_changed() {
+/// Mirrors the world into the sim whenever the game state or a rise changed (after
+/// `game::apply_actions` and the play systems). In the play scenario a placed tile waits for its
+/// rise's agents stage ([`CarSim::mirror_gated`]).
+pub fn mirror_world(
+    game: Res<GameState>,
+    active: Res<ActiveScenario>,
+    rises: Res<PlayRises>,
+    mut sim: ResMut<CarSim>,
+) {
+    if !game.is_changed() && !rises.is_changed() {
+        return;
+    }
+    if active.0 == Scenario::Play {
+        sim.mirror_gated(&game.world, &game.catalog, |c| rises.agents_ready(c));
+    } else {
         sim.mirror(&game.world, &game.catalog);
     }
 }
@@ -304,8 +354,44 @@ mod tests {
         assert!(!sim.mirror(&g.world, &g.catalog), "nothing left to mirror");
     }
 
+    /// The agents gate: a placed tile joins the sim only once it is ready (its rise reached the
+    /// agents stage); tiles already mirrored stay, and a removal applies while others are held.
+    #[test]
+    fn gated_mirror_holds_tiles_until_ready() {
+        let json = include_str!("../../../docs/checkpoints/cars/cars.json");
+        let mut g = GameState::new(1);
+        let mut sim = CarSim::new(&g.world, &g.catalog);
+        let mut cmds = parse_script(json).unwrap().into_iter();
+        for c in cmds.by_ref() {
+            if matches!(&c, Command::DumpState { name } if name == "cars-01-connected") {
+                break;
+            }
+            if let Some(a) = c.action() {
+                g.apply(a);
+            }
+        }
+        assert!(!sim.mirror_gated(&g.world, &g.catalog, |_| false));
+        assert_eq!(sim.stats.connected_destinations, 0, "every new tile held");
+        assert!(sim.mirror_gated(&g.world, &g.catalog, |_| true));
+        assert_eq!(sim.stats.connected_destinations, 2);
+        assert!(
+            !sim.mirror_gated(&g.world, &g.catalog, |_| false),
+            "mirrored tiles stay"
+        );
+        // The filler meadow is held while the bulldoze of the middle road applies at once.
+        g.apply(Action::SelectTile("meadow".into()));
+        g.apply(Action::Place(Axial::new(1, 0)));
+        g.apply(Action::Bulldoze(Axial::new(0, 1)));
+        assert!(g.world.tile(Axial::new(0, 1)).is_none());
+        assert!(sim.mirror_gated(&g.world, &g.catalog, |c| c != Axial::new(1, 0)));
+        assert_eq!(sim.stats.connected_destinations, 0);
+        assert!(!sim.mirrored.contains_key(&Axial::new(1, 0)));
+    }
+
     /// Replays the cars proof script (docs/checkpoints/cars/cars.json) headlessly with one tick
-    /// every third frame, as `--clock fixed` runs it, and checks each state dump's car fields.
+    /// every third frame and the ungated mirror. A native `--clock fixed` run gates each new tile
+    /// on its staged rise (`mirror_gated`), so its dumps taken right after a placement
+    /// (`cars-01-connected`, `cars-05-undo`) report fewer connected houses than this replay.
     #[test]
     fn checkpoint_sequence() {
         let json = include_str!("../../../docs/checkpoints/cars/cars.json");

@@ -2,9 +2,10 @@
 //! rules: `hex-app` writes [`PlayView`] and this module renders it.
 //!
 //! Placed tiles use kit pieces from `assets/kit/manifest.json` where the tile references them and
-//! plain coloured placeholders otherwise (a biome prism, lane strips, blocks). The ghost, its edge
-//! status markers, the frontier outlines and the bulldoze highlight are deliberately plain
-//! in-world placeholders, to be restyled once the UI direction is approved (§4.7, D18).
+//! plain coloured placeholders otherwise (a biome prism, lane strips, blocks). A newly placed tile
+//! plays its staged rise ([`rise`], PRD §4.4) and a removed one sinks. The slot ring, the ghost, its
+//! edge glow and socket key marks, and the bulldoze outlines are the Legend in-world affordances
+//! ([`affordances`], `design/ui/legend/in-world.md`).
 use std::collections::HashMap;
 
 use bevy::{
@@ -19,6 +20,11 @@ use hex_core::{
     Axial, Biome, EdgeStatus, HEX_RADIUS, LEVEL_STEP, SocketKind, TileCatalog, TileDef, hex_prism,
 };
 
+pub mod affordances;
+pub mod rise;
+
+use rise::{PlayRises, PropKind, ReducedMotion, RiseMessage, RisePart, RiseRole};
+
 use crate::{
     ActiveScenario, Scenario, SceneEntity,
     kit_material::{KitMaterial, build_material, slot_requests},
@@ -29,6 +35,11 @@ use crate::{
 };
 
 const APOTHEM: f32 = HEX_RADIUS * 0.866_025_4;
+
+/// The play systems (kit loading, the view sync, the rise and the affordances), in order. `hex-app`
+/// orders its view writer before this set and the car mirror after it.
+#[derive(SystemSet, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct PlaySystems;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlayTile {
@@ -56,6 +67,10 @@ pub struct PlayView {
     pub ghost: Option<PlayGhost>,
     /// Bulldoze tool: the hovered tile and whether removing it is allowed.
     pub bulldoze: Option<(Axial, bool)>,
+    /// The bulldoze tool is active (the slot ring hides).
+    pub bulldoze_mode: bool,
+    /// Refused placements and bulldozes so far; each new one pulses the refused highlight.
+    pub refusals: u32,
 }
 
 /// Tile definitions the view's ids resolve against (the embedded catalog `hex-app` also uses).
@@ -72,16 +87,11 @@ impl Default for PlayCatalog {
 #[derive(Component)]
 pub struct PlayTileRoot;
 
-/// Ghost, edge markers, frontier outlines and the bulldoze highlight.
-#[derive(Component)]
-pub struct PlayOverlay;
-
 /// Entities spawned for the current view. `setup` replaces it on every switch into the scenario,
 /// since the switch despawned the previous scene.
 #[derive(Resource, Default)]
 pub struct PlaySpawned {
     tiles: HashMap<Axial, (PlayTile, Entity)>,
-    overlay: Vec<Entity>,
     rebuild: bool,
 }
 
@@ -107,21 +117,13 @@ pub enum PlayKit {
 #[derive(Resource)]
 pub struct PlainAssets {
     prism: Handle<Mesh>,
-    ghost: Handle<Mesh>,
-    ring: Handle<Mesh>,
     strip: [Handle<Mesh>; 2],
     hub: Handle<Mesh>,
     pad: Handle<Mesh>,
     block: Handle<Mesh>,
-    chip: Handle<Mesh>,
-    bar: Handle<Mesh>,
     biome: [Handle<StandardMaterial>; 4],
     socket: [Handle<StandardMaterial>; 6],
-    status: [Handle<StandardMaterial>; 3],
     block_mat: Handle<StandardMaterial>,
-    ghost_mat: [Handle<StandardMaterial>; 2],
-    bulldoze_mat: [Handle<StandardMaterial>; 2],
-    frontier_mat: Handle<StandardMaterial>,
 }
 
 fn biome_index(b: Biome) -> usize {
@@ -137,14 +139,6 @@ fn socket_index(k: SocketKind) -> usize {
     SocketKind::ALL.iter().position(|&s| s == k).unwrap_or(0)
 }
 
-fn status_index(s: EdgeStatus) -> usize {
-    match s {
-        EdgeStatus::Compatible => 0,
-        EdgeStatus::Incompatible => 1,
-        EdgeStatus::Neutral => 2,
-    }
-}
-
 fn prism_mesh(radius: f32, height: f32) -> Mesh {
     let p = hex_prism(radius, height);
     Mesh::new(
@@ -155,34 +149,6 @@ fn prism_mesh(radius: f32, height: f32) -> Mesh {
     .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, p.normals)
     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, p.uvs)
     .with_inserted_indices(Indices::U32(p.indices))
-}
-
-/// A flat hexagonal outline between `inner` and `outer` circumradius, facing up.
-pub fn ring_mesh(inner: f32, outer: f32) -> Mesh {
-    let corner = |r: f32, i: usize| {
-        let a = (30.0 + 60.0 * i as f32).to_radians();
-        [r * a.cos(), 0.0, r * a.sin()]
-    };
-    let positions: Vec<[f32; 3]> = (0..6)
-        .flat_map(|i| [corner(outer, i), corner(inner, i)])
-        .collect();
-    let mut indices = vec![];
-    for i in 0..6u32 {
-        let (o0, i0, o1, i1) = (2 * i, 2 * i + 1, 2 * ((i + 1) % 6), 2 * ((i + 1) % 6) + 1);
-        // Corners run clockwise viewed from +Y, so (o0, i0, o1) is counter-clockwise from above.
-        indices.extend_from_slice(&[o0, i0, o1, o1, i0, i1]);
-    }
-    Mesh::new(
-        PrimitiveTopology::TriangleList,
-        RenderAssetUsages::default(),
-    )
-    .with_inserted_attribute(
-        Mesh::ATTRIBUTE_NORMAL,
-        vec![[0.0, 1.0, 0.0]; positions.len()],
-    )
-    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; positions.len()])
-    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, positions)
-    .with_inserted_indices(Indices::U32(indices))
 }
 
 fn lit(c: Color) -> StandardMaterial {
@@ -212,14 +178,10 @@ impl PlainAssets {
         let mut m = |c: StandardMaterial| mats.add(c);
         Self {
             prism: meshes.add(prism_mesh(HEX_RADIUS * 0.985, LEVEL_STEP)),
-            ghost: meshes.add(prism_mesh(HEX_RADIUS * 0.97, 0.8)),
-            ring: meshes.add(ring_mesh(HEX_RADIUS * 0.86, HEX_RADIUS * 0.94)),
             strip: [6.0, 8.0].map(|w| meshes.add(Cuboid::new(APOTHEM, 0.9, w))),
             hub: meshes.add(Cylinder::new(4.0, 0.9)),
             pad: meshes.add(Cuboid::new(11.0, 0.5, 11.0)),
             block: meshes.add(Cuboid::new(6.0, 5.0, 6.0)),
-            chip: meshes.add(Cuboid::new(2.5, 0.5, 5.0)),
-            bar: meshes.add(Cuboid::new(1.0, 0.6, HEX_RADIUS * 0.8)),
             biome: [
                 Color::srgb(0.33, 0.52, 0.22),
                 Color::srgb(0.17, 0.36, 0.15),
@@ -236,24 +198,7 @@ impl PlainAssets {
                 Color::srgb(0.04, 0.18, 0.55),
             ]
             .map(|c| m(flat(c))),
-            status: [
-                Color::srgb(0.15, 0.95, 0.30),
-                Color::srgb(1.00, 0.12, 0.10),
-                Color::srgb(0.38, 0.40, 0.46),
-            ]
-            .map(|c| m(flat(c))),
             block_mat: m(lit(Color::srgb(0.80, 0.72, 0.60))),
-            ghost_mat: [
-                Color::srgba(0.92, 0.96, 1.00, 0.35),
-                Color::srgba(1.00, 0.18, 0.15, 0.45),
-            ]
-            .map(|c| m(flat(c))),
-            bulldoze_mat: [
-                Color::srgba(1.00, 0.60, 0.10, 0.45),
-                Color::srgba(1.00, 0.10, 0.10, 0.55),
-            ]
-            .map(|c| m(flat(c))),
-            frontier_mat: m(flat(Color::srgba(1.0, 1.0, 1.0, 0.28))),
         }
     }
 }
@@ -270,6 +215,8 @@ pub fn setup(
         ..default()
     });
     commands.insert_resource(water::tiles::PlayWater::default());
+    commands.insert_resource(affordances::Affordances::default());
+    commands.insert_resource(rise::PlayDust::default());
     Transform::from_xyz(14.0, 95.0, 125.0).looking_at(Vec3::new(14.0, 0.0, 16.0), Vec3::Y)
 }
 
@@ -412,18 +359,22 @@ fn spawn_kit(
     kit: &HashMap<String, Vec<KitPart>>,
     piece: &str,
     t: Transform,
+    rise: Option<(Axial, RiseRole)>,
 ) -> bool {
     let Some(parts) = kit.get(piece) else {
         return false;
     };
     for part in parts {
-        p.spawn((
+        let mut e = p.spawn((
             Mesh3d(part.mesh.clone()),
             MeshMaterial3d(part.material.clone()),
             t,
             lod_range(part.lod),
             SceneEntity,
         ));
+        if let Some((cell, role)) = rise {
+            e.insert(RisePart::new(cell, role, t));
+        }
     }
     true
 }
@@ -444,15 +395,17 @@ fn spawn_tile(
 ) -> Entity {
     let [x, z] = t.cell.to_world(HEX_RADIUS);
     let def = catalog.get(&t.tile);
+    let rest = Transform::from_xyz(x, 0.0, z).with_rotation(piece_rotation(t.rotation));
     commands
         .spawn((
             PlayTileRoot,
-            Transform::from_xyz(x, 0.0, z).with_rotation(piece_rotation(t.rotation)),
+            rest,
+            RisePart::new(t.cell, RiseRole::Root, rest),
             Visibility::default(),
             SceneEntity,
         ))
         .with_children(|p| match def {
-            Some(def) => tile_children(p, plain, kit, catalog, def),
+            Some(def) => tile_children(p, plain, kit, catalog, def, t.cell),
             None => {
                 p.spawn((
                     Mesh3d(plain.prism.clone()),
@@ -465,24 +418,41 @@ fn spawn_tile(
         .id()
 }
 
+/// A hero prop's growth: trees scale up, buildings rise a floor at a time (roof included).
+fn prop_kind(piece: &str) -> PropKind {
+    if piece.contains("tree") {
+        PropKind::Tree
+    } else if piece.contains("twostorey") {
+        PropKind::Building { floors: 3 }
+    } else {
+        PropKind::Building { floors: 2 }
+    }
+}
+
 fn tile_children(
     p: &mut ChildSpawnerCommands,
     plain: &PlainAssets,
     kit: &HashMap<String, Vec<KitPart>>,
     catalog: &TileCatalog,
     def: &TileDef,
+    cell: Axial,
 ) {
     let plain_mesh = |p: &mut ChildSpawnerCommands,
                       mesh: &Handle<Mesh>,
                       mat: &Handle<StandardMaterial>,
-                      t: Transform| {
-        p.spawn((
+                      t: Transform,
+                      role: Option<RiseRole>| {
+        let mut e = p.spawn((
             Mesh3d(mesh.clone()),
             MeshMaterial3d(mat.clone()),
             t,
             SceneEntity,
         ));
+        if let Some(role) = role {
+            e.insert(RisePart::new(cell, role, t));
+        }
     };
+    let edge = Some((cell, RiseRole::Edge));
     let center_kit = def
         .center
         .as_ref()
@@ -490,12 +460,13 @@ fn tile_children(
     // Water tiles without their centre piece get the placeholder bed and the water surface from
     // `water::tiles` instead of a base and river strips; road strips stay as the bridge deck.
     let water_bed = !center_kit && water::tiles::water_kind(def, 0).is_some();
-    if !water_bed && !spawn_kit(p, kit, def.base.as_str(), Transform::IDENTITY) {
+    if !water_bed && !spawn_kit(p, kit, def.base.as_str(), Transform::IDENTITY, None) {
         plain_mesh(
             p,
             &plain.prism,
             &plain.biome[biome_index(def.biome)],
             Transform::from_xyz(0.0, -LEVEL_STEP, 0.0),
+            None,
         );
     }
     let lanes: Vec<(u8, SocketKind)> = (0..6u8)
@@ -508,17 +479,24 @@ fn tile_children(
         .collect();
     if center_kit {
         let center = def.center.as_ref().expect("checked above");
-        spawn_kit(p, kit, center.as_str(), Transform::IDENTITY);
+        spawn_kit(p, kit, center.as_str(), Transform::IDENTITY, edge);
         let pieces = def.edge_pieces(catalog.sockets());
         for &(e, kind) in &lanes {
             let piece = pieces[e as usize].map(|k| k.as_str()).unwrap_or_default();
-            if !spawn_kit(p, kit, piece, Transform::from_rotation(piece_rotation(e))) {
+            if !spawn_kit(
+                p,
+                kit,
+                piece,
+                Transform::from_rotation(piece_rotation(e)),
+                edge,
+            ) {
                 let i = (kind == SocketKind::River) as usize;
                 plain_mesh(
                     p,
                     &plain.strip[i],
                     &plain.socket[socket_index(kind)],
                     on_edge(e, APOTHEM / 2.0, 0.05),
+                    Some(RiseRole::Edge),
                 );
             }
         }
@@ -531,6 +509,7 @@ fn tile_children(
                 &plain.strip[i],
                 &plain.socket[socket_index(kind)],
                 on_edge(e, APOTHEM / 2.0, 0.05),
+                Some(RiseRole::Edge),
             );
         }
         if water_bed {
@@ -541,6 +520,7 @@ fn tile_children(
                 &plain.hub,
                 &plain.socket[socket_index(kind)],
                 Transform::from_xyz(0.0, 0.05, 0.0),
+                Some(RiseRole::Edge),
             );
         } else if def.center.is_some() && def.biome == Biome::Grass {
             plain_mesh(
@@ -548,103 +528,29 @@ fn tile_children(
                 &plain.pad,
                 &plain.block_mat,
                 Transform::from_xyz(0.0, 0.25, 0.0),
+                Some(RiseRole::Edge),
             );
         }
     }
-    for h in &def.props.hero {
+    let count = def.props.hero.len().min(u8::MAX as usize) as u8;
+    for (i, h) in def.props.hero.iter().enumerate() {
         let t = Transform::from_xyz(h.at[0], 0.0, h.at[1])
             .with_rotation(Quat::from_rotation_y(-h.yaw_deg.to_radians()));
-        if !spawn_kit(p, kit, h.piece.as_str(), t) {
+        let role = RiseRole::Prop {
+            order: i.min(u8::MAX as usize) as u8,
+            count,
+            kind: prop_kind(h.piece.as_str()),
+        };
+        if !spawn_kit(p, kit, h.piece.as_str(), t, Some((cell, role))) {
             plain_mesh(
                 p,
                 &plain.block,
                 &plain.block_mat,
                 t * Transform::from_xyz(0.0, 2.5, 0.0),
+                Some(role),
             );
         }
     }
-}
-
-fn spawn_overlay(
-    commands: &mut Commands,
-    plain: &PlainAssets,
-    catalog: &TileCatalog,
-    view: &PlayView,
-) -> Vec<Entity> {
-    let mut out = vec![];
-    let at = |c: Axial, y: f32| {
-        let [x, z] = c.to_world(HEX_RADIUS);
-        Transform::from_xyz(x, y, z)
-    };
-    for &c in &view.frontier {
-        out.push(
-            commands
-                .spawn((
-                    Mesh3d(plain.ring.clone()),
-                    MeshMaterial3d(plain.frontier_mat.clone()),
-                    at(c, 0.1),
-                    PlayOverlay,
-                    SceneEntity,
-                ))
-                .id(),
-        );
-    }
-    if let Some(g) = &view.ghost {
-        let def = catalog.get(&g.tile);
-        let root = commands
-            .spawn((
-                at(g.cell, 0.0),
-                Visibility::default(),
-                PlayOverlay,
-                SceneEntity,
-            ))
-            .with_children(|p| {
-                p.spawn((
-                    Mesh3d(plain.ghost.clone()),
-                    MeshMaterial3d(plain.ghost_mat[(!g.valid) as usize].clone()),
-                    Transform::from_xyz(0.0, 0.6, 0.0),
-                    SceneEntity,
-                ));
-                // The ghost's own sockets, so its rotation reads in a still frame.
-                if let Some(def) = def {
-                    for e in 0..6u8 {
-                        let w = (e + g.rotation) % 6;
-                        p.spawn((
-                            Mesh3d(plain.chip.clone()),
-                            MeshMaterial3d(
-                                plain.socket[socket_index(def.edges[e as usize].kind)].clone(),
-                            ),
-                            on_edge(w, APOTHEM * 0.62, 1.55),
-                            SceneEntity,
-                        ));
-                    }
-                }
-                for (w, s) in g.edges.iter().enumerate() {
-                    p.spawn((
-                        Mesh3d(plain.bar.clone()),
-                        MeshMaterial3d(plain.status[status_index(*s)].clone()),
-                        on_edge(w as u8, APOTHEM * 0.93, 1.5),
-                        SceneEntity,
-                    ));
-                }
-            })
-            .id();
-        out.push(root);
-    }
-    if let Some((c, allowed)) = view.bulldoze {
-        out.push(
-            commands
-                .spawn((
-                    Mesh3d(plain.ghost.clone()),
-                    MeshMaterial3d(plain.bulldoze_mat[(!allowed) as usize].clone()),
-                    at(c, 0.8).with_scale(Vec3::new(1.0, 3.0, 1.0)),
-                    PlayOverlay,
-                    SceneEntity,
-                ))
-                .id(),
-        );
-    }
-    out
 }
 
 /// Play's water hooks (`water::tiles`): the water entities, the water clock, and the camera.
@@ -658,9 +564,21 @@ type WaterHooks<'w, 's> = (
     ResMut<'w, Assets<water::TerrainMaterial>>,
 );
 
-/// Spawns and despawns tile entities to match the view, and rebuilds the overlay when it changes.
-/// Tiles wait for the kit so a tile never swaps from placeholder to kit piece mid-game. Water
-/// tiles also get their surfaces, cut faces and placeholder beds (`water::tiles::sync`).
+/// Play's rise hooks: the rise state, reduced motion and the rise cue writer.
+type RiseHooks<'w> = (
+    ResMut<'w, PlayRises>,
+    Res<'w, ReducedMotion>,
+    MessageWriter<'w, RiseMessage>,
+);
+
+/// Spawns and despawns tile entities to match the view. Tiles wait for the kit so a tile never
+/// swaps from placeholder to kit piece mid-game. Water tiles also get their surfaces, cut faces and
+/// placeholder beds (`water::tiles::sync`).
+///
+/// A tile new to the view (not on a rebuild) fast-forwards every running rise and starts its own;
+/// a tile gone from it sinks with its released water entities. A rebuild (the kit arriving, a
+/// switch into the scenario) draws every tile at rest.
+#[allow(clippy::too_many_arguments)]
 pub fn sync(
     mut commands: Commands,
     active: Res<ActiveScenario>,
@@ -671,6 +589,7 @@ pub fn sync(
     catalog: Res<PlayCatalog>,
     config: Res<GateConfig>,
     (water, clock, cameras, mut meshes, mut images, mut water_mats, mut terrain_mats): WaterHooks,
+    (mut rises, reduced, mut cues): RiseHooks,
 ) {
     let (Scenario::Play, Some(mut spawned), Some(plain)) = (active.0, spawned, plain) else {
         return;
@@ -689,11 +608,6 @@ pub fn sync(
     if !view.is_changed() && !spawned.rebuild {
         return;
     }
-    for e in spawned.overlay.drain(..) {
-        commands.entity(e).try_despawn();
-    }
-    spawned.overlay = spawn_overlay(&mut commands, &plain, &catalog.0, &view);
-
     let Some(PlayKit::Ready(kit)) = kit.as_deref() else {
         return;
     };
@@ -702,10 +616,12 @@ pub fn sync(
         for (_, (_, e)) in spawned.tiles.drain() {
             commands.entity(e).try_despawn();
         }
+        rises.reset(view.tiles.iter().map(|t| t.cell), &mut commands);
         spawned.rebuild = false;
     }
+    let mut released: HashMap<Axial, Vec<Entity>> = HashMap::new();
     if let Some(mut water) = water {
-        water::tiles::sync(
+        released = water::tiles::sync(
             &mut commands,
             &mut water,
             water::tiles::WaterAssets {
@@ -719,45 +635,58 @@ pub fn sync(
             &catalog.0,
             |id| kit.contains_key(id),
             rebuild,
-        );
+        )
+        .into_iter()
+        .collect();
     }
+    let mut out = vec![];
     let want: HashMap<Axial, &PlayTile> = view.tiles.iter().map(|t| (t.cell, t)).collect();
-    spawned.tiles.retain(|cell, (t, e)| {
-        let keep = want.get(cell).is_some_and(|w| *w == t);
-        if !keep {
+    let mut gone = vec![];
+    spawned.tiles.retain(|cell, (t, e)| match want.get(cell) {
+        Some(w) if *w == t => true,
+        Some(_) => {
             commands.entity(*e).try_despawn();
+            false
         }
-        keep
+        None => {
+            gone.push((*cell, t.tile.clone(), *e));
+            false
+        }
     });
-    for t in &view.tiles {
-        spawned.tiles.entry(t.cell).or_insert_with(|| {
-            let e = spawn_tile(&mut commands, &plain, kit, &catalog.0, t);
-            (t.clone(), e)
-        });
+    gone.sort_by_key(|(c, ..)| (c.q, c.r));
+    for (cell, tile, root) in gone {
+        let mut entities = vec![root];
+        entities.extend(released.remove(&cell).unwrap_or_default());
+        rises.remove(cell, &tile, entities, reduced.0, &mut commands, &mut out);
     }
+    for (_, es) in released {
+        for e in es {
+            commands.entity(e).try_despawn();
+        }
+    }
+    let added: Vec<&PlayTile> = view
+        .tiles
+        .iter()
+        .filter(|t| !spawned.tiles.contains_key(&t.cell))
+        .collect();
+    if !rebuild && !added.is_empty() {
+        rises.fast_forward(&mut out);
+    }
+    for t in added {
+        rises.cancel_sink(t.cell, &mut commands);
+        let e = spawn_tile(&mut commands, &plain, kit, &catalog.0, t);
+        spawned.tiles.insert(t.cell, (t.clone(), e));
+        match catalog.0.get(&t.tile).filter(|_| !rebuild) {
+            Some(def) => rises.begin(t.cell, &t.tile, &def.rise, reduced.0, &mut out),
+            None => rises.rest(t.cell),
+        }
+    }
+    cues.write_batch(out);
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn ring_faces_up() {
-        let m = ring_mesh(10.0, 12.0);
-        let Some(bevy::mesh::VertexAttributeValues::Float32x3(p)) =
-            m.attribute(Mesh::ATTRIBUTE_POSITION)
-        else {
-            panic!("positions missing");
-        };
-        let Some(Indices::U32(idx)) = m.indices() else {
-            panic!("indices missing");
-        };
-        assert_eq!(idx.len(), 36);
-        for t in idx.chunks(3) {
-            let [a, b, c] = [0, 1, 2].map(|k| Vec3::from(p[t[k] as usize]));
-            assert!((b - a).cross(c - a).y > 0.0, "triangle {t:?} faces down");
-        }
-    }
 
     #[test]
     fn on_edge_points_at_the_edge_midpoint() {

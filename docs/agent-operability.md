@@ -84,6 +84,7 @@ A script is a JSON array. Commands run in order, one per frame, starting once th
 | `bulldoze` | Play: remove the tile at `(q, r)`. Refused for the last tile or when the world would split | `{"cmd":"bulldoze","q":1,"r":2}` |
 | `set_tool` | Play: `place` or `bulldoze`. Left-click applies the tool at the hovered cell | `{"cmd":"set_tool","mode":"bulldoze"}` |
 | `toggle` | Play: `bulldoze` (B), `inventory` (Tab) or `photo` (P) | `{"cmd":"toggle","what":"inventory"}` |
+| `set_reduced_motion` | Reduced motion, for the overlay to send from `prefers-reduced-motion` or the Settings override (`hexWorld.cmd({...})`). On: the staged rise is an instant cut (every `riseStage` cue arrives at once with `skipped: true`), there is no dust, camera shake or sink, and every affordance fade, delay, breathing loop and pulse is an instant cut. The state JSON reports it as `play.reduced_motion` | `{"cmd":"set_reduced_motion","on":true}` |
 
 The play commands parse into the same input actions as their key and mouse bindings, and they act only in the play scenario (elsewhere they are logged and ignored). Bad `dir`, `mode` or `what` values, or a missing `q`/`r`, fail at parse time like any malformed command.
 
@@ -108,6 +109,7 @@ The play commands parse into the same input actions as their key and mouse bindi
 | `make shots-water [ARGS="--tier medium"]` | Water owner checkpoint: native stills from `scripts/shots/water.json` at 1600x1000 (overview, ocean, river, beach, ocean and river seam close-ups) and a 3 s motion clip per view (90 frames at `--water_clock fixed`, 960x600, `scripts/shots/water-motion.mjs`), all copied or encoded (MP4 and GIF, ffmpeg) into `docs/checkpoints/water/` |
 | `make shots-play [ARGS=...]` | Play checkpoint: runs `docs/checkpoints/play/play.json` natively at 1280x800 with `--tilt off` and copies JPEG stills and the state dumps to `docs/checkpoints/play/` (see [Play scenario](#play-scenario)) |
 | `make shots-cars [ARGS=...]` | Cars checkpoint: runs `docs/checkpoints/cars/cars.json` natively at 1280x800 with `--tilt off --clock fixed`: two house clusters joined by a road chain with a 120° bend, cars driving across the tile seams (overview, close-up and seam stills), a refused bulldoze of the middle road, a filler meadow that makes it legal, the bulldoze that disconnects the houses (cars despawn, spawn rate 0) and its undo. Copies JPEG stills and the state dumps to `docs/checkpoints/cars/` (see [Cars](#cars)) |
+| `make shots-rise [ARGS=...]` | Staged rise and Legend affordances: `docs/checkpoints/rise/rise.mjs` writes the script (a meadow, a house cluster, a river and an ocean rise captured on every frame, the fast-forward, undo-mid-rise and reduced-motion cases, and the affordance set), the app runs it at 1280x800 with `--tilt off --clock fixed --water_clock fixed`, and `encode.sh` writes a stage sheet and an MP4 per case, the fast-forward and undo clips and stills, the affordance stills and the state dumps to `docs/checkpoints/rise/`. Stage sheets read left to right, top to bottom at t = 0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.6 and 2.2 s |
 | `make shots-water-play [ARGS=...]` | Water tiles in play: runs `docs/checkpoints/water-play/water-play.json` natively at 1600x1000 with `--tilt off --water_clock fixed` (a river chain of straight, bend, bridge and straight under different rotations; a coast of beaches, oceans and a meadow; overview, coast, river, seam and cut-face close-ups; bulldoze, undo and redo of an ocean tile with its neighbours' cut faces), copies JPEG stills and the state dumps to `docs/checkpoints/water-play/`, then encodes a 3 s motion clip per view (90 frames at 960x600, `docs/checkpoints/water-play/motion.mjs`) to MP4 |
 | `make thumbs` | Legend inventory thumbnails: runs `hex-world --thumbs`, then `scripts/thumbs/build.py` (uv, Pillow 12.2.0 pinned) keys the magenta background to alpha (translucent water seen against it is unmixed into partial alpha), box-filters each frame 4x in premultiplied space to 96x96 (the 48 CSS px `.row__glyph` at 2x) and writes `assets/thumbs/<tile>-r<k>.webp` (lossy WebP q85 with lossless alpha), `assets/thumbs/manifest.json` (`tiles[id][k]` is rotation `k`'s image) and `docs/checkpoints/thumbs/contact-sheet.png`. It fails if a tile touches the frame edge or a frame's background is not the key (a frame captured black, seen once under host load 40 to 60: rerun). Two runs give byte-identical files. `make initial-download` counts `assets/thumbs/`, since the inventory sheet is open at first paint. The data validator (`crates/hex-core/tests/data_validator.rs`) requires an existing image for every (tile, rotation) and that rotations share an image exactly when their world-edge sockets are equal, so rerun it after changing a tile's sockets or kit pieces |
 | `make perf-water` | Water frame time at 2560x1440: web (uncapped GPU Chromium) and native (`--present immediate`), per tier (`WATER_TIERS`, default `high,low`) and view (start camera, ocean close-up), each run inside the host-load guard; writes `docs/perf/p2-water.json` |
@@ -127,16 +129,32 @@ Timing taken without this guard is not evidence.
 
 ## Play scenario
 
-`--scenario play` draws the game world held by `hex-app` (`crates/hex-app/src/game.rs`). It opens with one meadow at `(0, 0)` and follows the PRD §4.1–4.2 rules from `hex-core`. Tiles use kit pieces from `assets/kit/manifest.json` where the tile references them (meadow base, road straight centre and edge, hero oak) and plain placeholders otherwise: a coloured prism per biome, dark road and blue river strips meeting at a hub, and beige blocks for pending houses and pads. The in-world feedback is deliberately plain until the UI direction is approved (§4.7):
+`--scenario play` draws the game world held by `hex-app` (`crates/hex-app/src/game.rs`). It opens with one meadow at `(0, 0)` and follows the PRD §4.1–4.2 rules from `hex-core`. Tiles use kit pieces from `assets/kit/manifest.json` where the tile references them (meadow base, road straight centre and edge, hero oak) and plain placeholders otherwise: a coloured prism per biome, dark road and blue river strips meeting at a hub, and beige blocks for pending houses and pads.
 
-- a translucent ghost (white when it fits, red when it does not) with coloured chips for its own six sockets, so its rotation reads in a still frame
-- one bar per edge for the edge status: green compatible, red incompatible, grey neutral
-- faint white outlines on the frontier slots
-- an orange (allowed) or red (refused) column over the hovered tile in bulldoze mode
+The in-world affordances are the Legend direction's (`design/ui/legend/in-world.md`, `crates/hex-render/src/play/affordances.rs`):
+
+- every free slot: a neutral 2 px outline dashed 6 on 7 off at ground height, fading out (160 ms) in bulldoze and photo mode
+- the hovered slot: an ink outline at 90% and a 4% ink fill, crossfading in 120 ms
+- the ghost, 150 ms after a slot is hovered: a ghost-fill cap breathing 100% to 55% over 2.4 s, a 2 px ghost-line outline dashed 10 on 8 off, and road (18 px) and river (22 px) lane strokes at 60% standing in for the tile's meshes
+- edge glow on the ghost's rim: compatible 7 px solid with two halos, incompatible 7 px dashed 14 on 9 off with two halos and a 14 px cross tick, no neighbour 3 px neutral; drawn emissive (×2.5) for bloom. The glow fades in over 120 ms whenever the ghost changes (rotate, retarget)
+- socket key marks: on each touched edge, a 4 px line in the neighbour's socket colour along the middle 40% of the edge, 11 px inside the slot
+- a refused placement or bulldoze pulses the incompatible glow or the blocked outline once over 240 ms (core 7 to 13 px)
+- bulldoze: a removable tile gets a 4 px solid incompatible outline with an 8 px halo and a 12% fill; a tile whose removal would split the world gets a 4 px incompatible outline dashed 10 on 8 off, and the tiles it would cut off (every part but the largest) a 45° ink hatch every 10 px over sheet blue at 35% with a 2 px dotted ink outline; the last tile gets the dashed outline alone
+- a placement flashes the slot's rim in ink (×4) for 80 ms
+
+Widths are screen-space pixels at a device pixel ratio of 1 (multiplied by the window's scale factor), constant at every zoom: each line segment is a quad whose vertex shader (`assets/shaders/affordance.wesl`) projects both endpoints and pushes the corners out along the screen-space normal by the half-width in pixels. Dashes, the key marks' inset, the ticks and the hatch are in pixels too. The material binds no texture and draws without a depth test, over the world.
 
 Water tiles (river, beach, ocean) draw the approved water material (`crates/hex-render/src/water/tiles.rs`): a hex water surface on ocean and beach tiles, a 10 m strip along each river segment, and the underwater cut face on every water edge with no matching water across it, rebuilt on place, bulldoze, undo and redo (each rebuild logs `play water: (q, r) <tile> r<rotation> exposed [...]`). Until a water tile's centre piece is in the kit, it gets a placeholder bed (river channel, beach slope, ocean floor) instead of its base and river strips. The levels and profiles are the bed contract in `docs/kit/water-contract.md`. The play camera always carries the depth prepass and, from Medium up, screen-space transmission, and has no depth of field.
 
-Tiles appear instantly, because the staged rise is not built yet. Photo mode is only a flag so far: it hides the ghost and the frontier outlines.
+A placed tile plays the staged rise of PRD §4.4 from its `TileDef.rise` timeline (`crates/hex-render/src/play/rise.rs`; every MVP tile uses the default 2.0 s: column 0–0.6 s, cap 0.45–0.85 s, edges 0.8–1.2 s, props 1.1–1.7 s, agents 1.6–2.0 s):
+
+1. Column: the tile root rises from 4.6 m below rest (ease-out) with a dust puff around the rim and a camera micro-shake (about 3 px, decaying, added before transform propagation and removed at the start of the next frame, so input, picking and the `camera` command never see it). Water beds rise with the column.
+2. Cap: the column overshoots by up to 0.35 m and settles, with a slight dip.
+3. Edges: centre and edge pieces (roads, pads, lane strips) snap in (ease-out-back), and water surfaces and cut faces fill from the tile base up to the water level.
+4. Props: hero props grow in a staggered order, trees by scale, buildings floor by floor (two steps for a cottage, three for the two-storey).
+5. Agents: the car sim mirrors the tile only from this stage (see [Cars](#cars)).
+
+A new placement fast-forwards every running rise to its end state. Undo or bulldoze takes the tile down: it sinks 4.6 m over 400 ms (ease-in) with a smaller dust puff, its water going with it, then despawns; placing on that cell again replaces the sinking tile at once. Rebuilds (the kit arriving, a switch into the scenario) draw every tile at rest. Photo mode is only a flag so far: it hides the ghost and the slot ring.
 
 ### Controls (input-action layer)
 
@@ -179,6 +197,8 @@ In the play scenario the state JSON's `tiles` is the world's tile count, and `pl
 | `cars` | Live cars in the simulation |
 | `connected_destinations` | Houses that can reach at least one other house by road |
 | `spawn_rate_hz` | Cars spawned per second while under the cap: `connected_destinations` × 0.05 |
+| `rising` | Running rises: `[{q, r, tile, stage, t}]`, `stage` one of `column`, `cap`, `edges`, `props`, `agents`, `t` seconds since the placement |
+| `reduced_motion` | The `set_reduced_motion` flag |
 
 ### Events
 
@@ -198,12 +218,15 @@ Each event is an object whose `type` names it:
 | `inventoryToggled` | `open` |
 | `photoModeToggled` | `on` |
 | `actionRefused` | `action, reason`, for any other refusal: an empty undo stack, an unknown tile id, a click with nothing hovered |
+| `riseStage` | `q, r, tile, stage, skipped`: a staged-rise cue for the audio layer (the rumble) and the HUD. `stage` is `column`, `cap`, `edges`, `props`, `agents`, then `settled`, or `sink` when an undo or a bulldoze takes the tile down. `skipped` cues come together in one frame from a fast-forward or under reduced motion. Not kept in `recent_events` |
 
 Natively each event is also logged as `event: {...}`.
 
 ### Cars
 
 `crates/hex-app/src/sim.rs` keeps a `hex_sim::Simulation` in step with the world: whenever the game state changes it diffs the world's tiles against the ones it last mirrored, so a removed tile is a bulldoze and a new or changed tile a place, whichever action caused it (place, bulldoze, the undo of either, redo). A tile edit despawns every car routed over that tile. The sim ticks at 20 Hz in Bevy's `FixedUpdate` (`Time<Fixed>` is set to 20 Hz; nothing else uses the fixed schedule) and only while the play scenario is shown. Each frame the car poses are interpolated between the last two ticks with `Time<Fixed>::overstep_fraction()` and drawn by `crates/hex-render/src/cars.rs`: one entity per car id, all sharing one placeholder mesh and material (a 4.2 × 1.5 × 1.8 m low-poly car, neutral body, dark cabin and roof) so they draw as one instanced batch, standing on the road crown at y = 0.11 m. On tiles whose road centre is still a placeholder strip (bends, house pads) the 0.5 m strip hides the wheels. The default spawn rate is 0.05 cars per second per connected house, up to 300 cars.
+
+Agents wait for the rise: in the play scenario the mirror diffs against the world minus every tile whose rise has not reached its agents stage (`CarSim::mirror_gated`, `PlayRises::agents_ready`), so a road joins the car network 1.6 s after it lands, or at once when the next placement fast-forwards it. Removals still apply at once. `SimPlugin` orders the render's play systems between the view writer and the mirror, so the gate reads the same frame's rise state.
 
 ## Asset pipeline
 
