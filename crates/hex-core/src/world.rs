@@ -232,8 +232,28 @@ impl World {
         self.legal_rotations(catalog, cell, def).first().copied()
     }
 
-    /// The next legal rotation after `current` in `dir`, wrapping. Returns `current` when it is
-    /// the only legal rotation, and `None` when there is none.
+    /// The first rotation of each distinct legal orientation at `cell`, ascending. Rotations that
+    /// give every world edge an equal socket (a symmetric tile turned by its symmetry) count once
+    /// (PRD §4.7 Q6), so this is what R steps through and what "Rotation 2 of 3" counts.
+    pub fn distinct_legal_rotations(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+    ) -> Vec<u8> {
+        let mut out: Vec<u8> = vec![];
+        for k in self.legal_rotations(catalog, cell, def) {
+            if !out.iter().any(|&r| def.same_orientation(r, k)) {
+                out.push(k);
+            }
+        }
+        out
+    }
+
+    /// The next distinct legal orientation after `current` in `dir`, wrapping, as that
+    /// orientation's first rotation, so every step changes what the ghost shows. From an illegal
+    /// `current` it is the orientation of the next legal rotation in `dir`. Returns `current`'s own
+    /// orientation when it is the only legal one, and `None` when none is legal.
     pub fn cycle_rotation(
         &self,
         catalog: &TileCatalog,
@@ -242,13 +262,22 @@ impl World {
         current: u8,
         dir: RotateDir,
     ) -> Option<u8> {
-        let legal = self.legal_rotations(catalog, cell, def);
+        let reps = self.distinct_legal_rotations(catalog, cell, def);
+        let rep_of = |k: u8| reps.iter().position(|&r| def.same_orientation(r, k));
+        let n = reps.len();
+        if let Some(i) = rep_of(current % 6) {
+            return Some(match dir {
+                RotateDir::Forward => reps[(i + 1) % n],
+                RotateDir::Back => reps[(i + n - 1) % n],
+            });
+        }
         (1..=6u8)
             .map(|step| match dir {
                 RotateDir::Forward => (current % 6 + step) % 6,
                 RotateDir::Back => (current % 6 + 6 - step) % 6,
             })
-            .find(|k| legal.contains(k))
+            .find_map(rep_of)
+            .map(|i| reps[i])
     }
 
     /// Places `def_id` at `cell` if every touching edge is compatible (PRD §4.1 step 4).
@@ -505,21 +534,71 @@ mod tests {
     }
 
     #[test]
-    fn cycling_walks_legal_rotations_and_wraps() {
+    fn distinct_orientations_count_a_symmetric_turn_once() {
+        let c = catalog();
+        let w = World::new(1);
+        let road = def(&c, "road_straight");
+        // A straight road turned 180° shows the same sockets: 1 and 4, 2 and 5 are one orientation.
+        assert_eq!(w.legal_rotations(&c, EAST, road), vec![1, 2, 4, 5]);
+        assert!(road.same_orientation(1, 4) && road.same_orientation(2, 5));
+        assert!(!road.same_orientation(1, 2));
+        assert_eq!(w.distinct_legal_rotations(&c, EAST, road), vec![1, 2]);
+        let meadow = def(&c, "meadow");
+        assert_eq!(w.legal_rotations(&c, EAST, meadow).len(), 6);
+        assert_eq!(w.distinct_legal_rotations(&c, EAST, meadow), vec![0]);
+        assert!(
+            w.distinct_legal_rotations(&c, EAST, def(&c, "ocean"))
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn cycling_walks_distinct_orientations_and_wraps() {
         let c = catalog();
         let w = World::new(1);
         let road = def(&c, "road_straight");
         let next = |k, dir| w.cycle_rotation(&c, EAST, road, k, dir);
         assert_eq!(next(1, RotateDir::Forward), Some(2));
-        assert_eq!(next(2, RotateDir::Forward), Some(4));
-        assert_eq!(next(5, RotateDir::Forward), Some(1));
-        assert_eq!(next(1, RotateDir::Back), Some(5));
-        assert_eq!(next(4, RotateDir::Back), Some(2));
-        assert_eq!(next(0, RotateDir::Forward), Some(1));
+        assert_eq!(
+            next(2, RotateDir::Forward),
+            Some(1),
+            "4 shows 1's sockets and is skipped"
+        );
+        assert_eq!(next(5, RotateDir::Forward), Some(1), "5 is 2's orientation");
+        assert_eq!(next(1, RotateDir::Back), Some(2));
+        assert_eq!(next(4, RotateDir::Back), Some(2), "4 is 1's orientation");
+        assert_eq!(
+            next(0, RotateDir::Forward),
+            Some(1),
+            "illegal: the next legal orientation"
+        );
+        assert_eq!(
+            next(0, RotateDir::Back),
+            Some(2),
+            "back from 0 reaches 5, 2's orientation"
+        );
+        // Every press changes the orientation: R never lands on a duplicate.
+        let mut k = 1;
+        for _ in 0..6 {
+            let n = next(k, RotateDir::Forward).unwrap();
+            assert!(!road.same_orientation(k, n));
+            k = n;
+        }
         assert_eq!(
             w.cycle_rotation(&c, EAST, def(&c, "ocean"), 0, RotateDir::Forward),
             None
         );
+    }
+
+    #[test]
+    fn cycling_a_fully_symmetric_tile_stays_on_its_one_orientation() {
+        let c = catalog();
+        let w = World::new(1);
+        let meadow = def(&c, "meadow");
+        for dir in [RotateDir::Forward, RotateDir::Back] {
+            assert_eq!(w.cycle_rotation(&c, EAST, meadow, 0, dir), Some(0));
+            assert_eq!(w.cycle_rotation(&c, EAST, meadow, 3, dir), Some(0));
+        }
     }
 
     #[test]

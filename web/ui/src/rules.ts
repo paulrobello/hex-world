@@ -238,29 +238,6 @@ export function rotationReadout(def: TileDef, legal: readonly number[], k: numbe
   return { index: index < 0 ? 0 : index, count: distinct.length };
 }
 
-/**
- * Engine rotate steps (each moves to the next legal rotation, wrapping) until the ghost shows a
- * different orientation; 0 when every legal rotation looks the same.
- */
-export function stepsToNextOrientation(def: TileDef, legal: readonly number[], k: number, back: boolean): number {
-  if (!legal.length) return 1;
-  const key = orientation(def, k);
-  let cur = k;
-  for (let step = 1; step <= 6; step++) {
-    let next = cur;
-    for (let s = 1; s <= 6; s++) {
-      const c = back ? (cur + 6 - s) % 6 : (cur + s) % 6;
-      if (legal.includes(c)) {
-        next = c;
-        break;
-      }
-    }
-    if (orientation(def, next) !== key) return step;
-    cur = next;
-  }
-  return 0;
-}
-
 /** Tiles that removing `target` would cut off: everything outside the largest remaining part. */
 export function cutOff(tiles: TileMap, target: Cell): PlayTile[] {
   const rest = new Map(tiles);

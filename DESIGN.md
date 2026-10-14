@@ -207,7 +207,7 @@ The HUD is the margin of a survey map sheet laid beside the diorama. Socket kind
 
 Density is that of a legend: small, exact, tabular. One grotesk family (Manrope) carries every role, with tabular figures throughout. Colour splits into three strict jobs. Survey-blue and ink are the paper. One magenta marks the current tool and the current selection. The six socket colours and the ok, bad and caution states appear only as data. Panels sit in the margins (tool bar top left, sheet full height on the right, notes bottom left) so the centre stays clear for the ghost.
 
-The system was written after the build, from `style.css` (the owner-approved comp) and `screens.css` (the full pass). The Tiles sheet is open by default, stays open while the player hovers slots, and closes only by Tab or its close control. Tiles that do not fit stay in the list, dimmed with their reason, below every tile that fits. These are owner decisions and bind every later surface.
+The system was written after the build, from `design/ui/legend/style.css` (the owner-approved comp) and `design/ui/legend/screens.css` (the full pass), and moved to the repo root when the overlay shipped (owner Q7). Its sidecar is `.impeccable/design.json`, from which `web/ui/build.mjs` emits the colour, shadow, motion and focus tokens in front of `web/ui/src/hud.css`. The Tiles sheet is open by default, stays open while the player hovers slots, and closes only by Tab or its close control. Tiles that do not fit stay in the list, dimmed with their reason, below every tile that fits. These are owner decisions and bind every later surface.
 
 **Key Characteristics:**
 - Deep survey-blue panels on a near-black void, with no glass, no blur and no gradients on chrome.
@@ -244,7 +244,7 @@ A dark survey-blue paper with ink in three strengths, one magenta for selection,
 - **Rule** (`rule`): bar dividers, field separators, and the tab baseline.
 - **Track** (`track`): slider and progress tracks, and the off switch.
 - **Neutral Edge** (`neutral`): free-slot rings, unneighboured edges, and the slot key's dashed body.
-- **Ghost Fill and Ghost Line** (`ghost-fill`, `ghost-line`): the ghost cap tint and its dashed outline.
+- **Ghost Fill and Ghost Line** (`ghost-fill`, `ghost-line`): the ghost cap tint and its dashed outline. `ghost-fill` is derived from `socket-river` at 12% (`color-mix(in srgb, var(--k-V) 12%, transparent)`), so it cannot drift from the River socket.
 
 ### Named Rules
 **The Colour-as-Data Rule.** Socket colours appear only where they encode a socket: an edge, a code cell, a key mark, a mix-strip segment, a lane, or a tile fill. They never decorate chrome. The one standing exception is `ghost-fill`, which is the River hue at 12% (see Do's and Don'ts).
@@ -307,7 +307,7 @@ Panels are lifted off the diorama by soft, dark, ambient shadows. There is no gl
 
 ## Shapes
 
-Corners are small and square-shouldered. Panels use 6 px (`--r`). Every control, row, key, note, tooltip and callout uses 4 px. Swatches use 2 px and socket-code cells 1 px. Full rounds are reserved for the slider thumb, the save dot, the switch (13 px), the toast count, and the ghost tag's leading edge (`999px 4px 4px 999px`, a tag pointing at its ghost). When the ghost tag stacks a headline over a reason, it squares off to 6 px.
+Corners are small and square-shouldered. Panels use 6 px (`--r`). Every control, row, key, key cap, note, tooltip and callout uses 4 px (`--r-control`). Swatches use 2 px (`--r-swatch`) and socket-code cells 1 px (`--r-code`). Full rounds are reserved for the slider thumb, the save dot, the switch (13 px), the toast count, and the ghost tag's leading edge (`999px 4px 4px 999px` on `--r-control`, a tag pointing at its ghost). When the ghost tag stacks a headline over a reason, it squares off to 6 px.
 
 The hexagon is the system's only silhouette. It appears in the slot key, tile glyphs, the loading key, the place and bulldoze icons, and the free-slot ring. Dashed strokes mean "open or unresolved": the slot ring (6/7), the slot key body (5/5), the ghost outline (10/8), refusal edges (14/9), and the blocked bulldoze outline (10/8).
 
@@ -317,7 +317,7 @@ Icons are a single authored set on a 24 px grid with a 1.8 px round-capped strok
 
 ### Bar and Tool
 - **Bar:** a `sheet` panel with 6 px padding and 2 px gaps. It holds the world link (name over tile count and save state), 1 px `rule` dividers, and the tools.
-- **Tool:** 44 px tall, an icon plus a label plus a key cap, `ink-2` on transparent. Hover fills `sheet-2`. Active fills `pick` with white text. Bulldoze active fills `bad`. Firing a tool nudges its icon (rotate -14°, 180 ms) and rings it (6 px ink ring fading over 200 ms). Disabled drops to `ink-3` at 55%.
+- **Tool:** 44 px tall, an icon plus a label plus a key cap, `ink-2` on transparent. Hover fills `sheet-2`. Active fills `pick` with white text. Bulldoze active fills `bad`. Firing a tool nudges its icon (rotate -14°, 180 ms) and rings it (6 px ink ring fading over 180 ms). Disabled drops to `ink-3` at 55%.
 
 ### Sheet
 - A full-height right-margin panel: a headline plus a close chevron, an optional sub line, a scrolling body, and a foot of key hints at 12 px.
@@ -343,11 +343,11 @@ Icons are a single authored set on a 24 px grid with a 1.8 px round-capped strok
 
 ### Callout and Tooltip
 - **Callout (first run):** a small ink chip with a key cap and an icon, plus a dashed 1.5 px ink leader line ending in a dot, like a map callout. It fades and rises 4 px over 240 ms.
-- **Tooltip:** an ink chip showing name, key cap and an optional note. It appears after a 350 ms hover delay or immediately on keyboard focus, slides 4 px over 130 ms, and sits 8 px below its target.
+- **Tooltip:** an ink chip showing name, key cap and an optional note. It appears after a 350 ms hover delay or immediately on keyboard focus, slides 4 px over 120 ms, and sits 8 px below its target.
 
 ### Fields: Switch, Segmented Control, Slider, Note
 - **Field:** a label and a value on one line, with a hint below in `ink-3`. Fields are divided by 1 px `rule`.
-- **Switch:** 44 × 26 px on `track` with an `ink-2` knob. When on, it fills `ink` and the knob turns `sheet` and slides 18 px, over 150 ms.
+- **Switch:** 44 × 26 px on `track` with an `ink-2` knob. When on, it fills `ink` and the knob turns `sheet` and slides 18 px, over 120 ms.
 - **Segmented control:** sits on a 22% black well with 2 px padding and a 6 px radius. Options are 40 px tall and 4 px radius. The checked option fills `ink` with `ink-on-ink` text. An option may carry a 12 px sub line.
 - **Slider:** a 4 px track, filled in `ink` up to the value. The 18 px ink thumb has a 3 px `sheet` ring and scales to 1.12 on hover. On focus it shows a 5 px ink halo at 30%.
 - **Note:** a legend entry inside a sheet. It is a `sheet-2` card with a 20 px icon column and a bold `ink` lead line over `ink-2` text. Tone lives only in the icon colour (caution, bad or ok), never in a stripe.
@@ -363,7 +363,7 @@ The slot key and socket code are the system's identity, and every later surface 
 3. **Worlds mix strip:** a 6 px bar of socket-colour segments, flexed by each kind's tile count. It keys a whole world, both on save rows (120 px) and on the current world.
 4. **Import preview:** the incoming file's mix strip and counts, shown before it replaces or joins a world.
 5. **Loading hex key:** a 56 px hex whose six edges fill in the socket colours in order (G, F, R, V, B, O) as the kit arrives, then fills with Grass.
-6. **In-world socket key marks:** a 4 px line in the neighbour's socket colour along the middle 40% of each touched edge, 11 px inside the slot. It is the world's twin of the slot key (`in-world.md`).
+6. **In-world socket key marks:** a 4 px line in the neighbour's socket colour along the middle 40% of each touched edge, 11 px inside the slot. It is the world's twin of the slot key (`design/ui/legend/in-world.md`).
 
 ### Motion
 - **Curve:** one curve, `cubic-bezier(.22, .9, .3, 1)`, for everything.
@@ -378,14 +378,14 @@ The slot key and socket code are the system's identity, and every later surface 
 - **Do** pair every legality colour with a pattern and words: solid for ok; dashed with a cross tick for bad; thin for neutral.
 - **Do** keep `pick` for the current tool and the current selection only.
 - **Do** set every text in Manrope with tabular figures, at 12, 13, 14, 16 or 20 px, in weight 600, 700 or 800.
-- **Do** use ink, at 2 px offset 2 px, for the focus ring on every control.
+- **Do** use ink, at 2 px offset 2 px, for the focus ring on every control (`--focus-ring`, `--focus-width`, `--focus-offset`).
 - **Do** lift `ink-3` to `ink-3-lifted` on any `sheet-2` surface.
 - **Do** keep panels in the margins and the centre clear for the ghost, and apply the 1400 px narrow rule.
 - **Do** give every control a 44 px target (36 px for the small button).
 - **Do** use dashed strokes for open or unresolved shapes and drop-shadow glow for edge states. Both are native to this world.
 
 ### Don't:
-- **Don't** use a socket colour as decoration on chrome. The only standing exception is `ghost-fill`, the River hue at 12% on the ghost cap, which in-world.md specifies.
+- **Don't** use a socket colour as decoration on chrome. The only standing exception is `ghost-fill`, the River hue at 12% on the ghost cap, which `design/ui/legend/in-world.md` specifies.
 - **Don't** mark selection or note tone with a coloured side stripe. Use the 1.5 px full outline for selection and the icon colour for note tone.
 - **Don't** group the Tiles sheet by category. It groups by consequence: "Fits here" first, then "Doesn't fit here".
 - **Don't** hide tiles that do not fit. Dim them and state the reason.

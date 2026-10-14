@@ -29,7 +29,15 @@ jobs:
           rustup toolchain install stable --profile minimal --component rustfmt,clippy
           rustup target add wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/ui/package-lock.json
       - run: make fmt-check
+      # The HUD overlay (web/ui): typecheck, lint, unit tests and the esbuild bundle; npm ci runs via
+      # the lockfile stamp target.
+      - run: make ui-check
       - run: make lint
         timeout-minutes: 25
       - run: make typecheck
@@ -50,10 +58,19 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: wasm
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/ui/package-lock.json
       - name: Install trunk
         run: |
           curl -fsSL "https://github.com/trunk-rs/trunk/releases/download/${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" | sudo tar -xz -C /usr/local/bin
           trunk --version
+      # Trunk's pre_build hook runs `make ui-build`; install the overlay's tools first (the stamp
+      # target runs npm ci once, so the hook does not reinstall).
+      - name: Install UI dependencies
+        run: make web/ui/node_modules/.npm-ci.stamp
       - run: make web-size
       - uses: actions/upload-pages-artifact@v5
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'

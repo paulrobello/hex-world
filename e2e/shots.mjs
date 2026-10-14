@@ -34,7 +34,8 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
 try {
-  await page.goto(base + "?fps=off" + extra);
+  // Start from the Single scenario (the web default is play); every script switches scenario itself.
+  await page.goto(base + "?scenario=single&fps=off" + extra);
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 60_000 });
   // FIFO queue: screenshots go through screenshot() so they land behind the preceding wait/camera.
   for (const c of script) {

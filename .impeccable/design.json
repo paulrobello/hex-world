@@ -263,7 +263,7 @@
       "ghost-fill": {
         "role": "neutral",
         "displayName": "Ghost Fill",
-        "canonical": "rgb(74 163 223 / .12)",
+        "canonical": "color-mix(in srgb, var(--k-V) 12%, transparent)",
         "cssVar": "--ghost-fill",
         "tonalRamp": [
           "#0b2b41",
@@ -274,7 +274,9 @@
           "#70b6e6",
           "#a8d3f0",
           "#e1f0fa"
-        ]
+        ],
+        "derivedFrom": "socket-river",
+        "note": "The River socket at 12% (rgb(74 163 223 / .12)), derived from --k-V so it cannot drift from the socket colour. The one standing exception to the Colour-as-Data Rule; the engine draws it from socket_rgb(River) at 0.12."
       },
       "ghost-line": {
         "role": "neutral",
@@ -475,8 +477,8 @@
       },
       {
         "name": "t-toast",
-        "value": "200ms",
-        "purpose": "Toast rise and fade (screens.css overrides t)."
+        "value": "180ms",
+        "purpose": "Toast rise and fade, on the 180 ms base step (direction.md: the undo note fades in over 180 ms)."
       },
       {
         "name": "toast-dwell",
@@ -512,10 +514,13 @@
       }
     ],
     "focus": {
-      "ring": "outline: 2px solid var(--ink); outline-offset: 2px",
+      "ring": "outline: var(--focus-width) solid var(--focus-ring); outline-offset: var(--focus-offset)",
+      "color": "ink",
+      "width": "2px",
+      "offset": "2px",
       "escape": "F6 and Shift+F6 cycle focus across visible [data-region] landmarks. Tab is reserved for the Tiles sheet."
     },
-    "provenance": "Written after the build from design/ui/legend/style.css and screens.css. The sidecar sits at design/ui/legend/design.json instead of .impeccable/design.json, per the review boundary."
+    "provenance": "Written after the build from design/ui/legend/style.css and screens.css; moved to the repo root (DESIGN.md, .impeccable/design.json) when the overlay shipped (owner Q7). web/ui/build.mjs emits the colour, shadow, motion and focus tokens from this file in front of web/ui/src/hud.css."
   },
   "components": [
     {
@@ -585,7 +590,7 @@
   ],
   "narrative": {
     "northStar": "The Survey Sheet Margin",
-    "overview": "The HUD is the margin of a survey map sheet laid beside the diorama. Socket kinds are map classes (grass, forest, road, river, beach, ocean), so every tile is keyed by its six edge colours the way a map legend keys its symbols, and the slot the player points at prints its own key: what it needs. The diorama is the hero. The margin frames it in deep survey-blue panels and never competes with it.\n\nDensity is that of a legend: small, exact, tabular. One grotesk family (Manrope) carries every role, with tabular figures throughout. Colour splits into three strict jobs. Survey-blue and ink are the paper. One magenta marks the current tool and the current selection. The six socket colours and the ok, bad and caution states appear only as data. Panels sit in the margins (tool bar top left, sheet full height on the right, notes bottom left) so the centre stays clear for the ghost.\n\nThe system was written after the build, from `style.css` (the owner-approved comp) and `screens.css` (the full pass). The Tiles sheet is open by default, stays open while the player hovers slots, and closes only by Tab or its close control. Tiles that do not fit stay in the list, dimmed with their reason, below every tile that fits. These are owner decisions and bind every later surface.",
+    "overview": "The HUD is the margin of a survey map sheet laid beside the diorama. Socket kinds are map classes (grass, forest, road, river, beach, ocean), so every tile is keyed by its six edge colours the way a map legend keys its symbols, and the slot the player points at prints its own key: what it needs. The diorama is the hero. The margin frames it in deep survey-blue panels and never competes with it.\n\nDensity is that of a legend: small, exact, tabular. One grotesk family (Manrope) carries every role, with tabular figures throughout. Colour splits into three strict jobs. Survey-blue and ink are the paper. One magenta marks the current tool and the current selection. The six socket colours and the ok, bad and caution states appear only as data. Panels sit in the margins (tool bar top left, sheet full height on the right, notes bottom left) so the centre stays clear for the ghost.\n\nThe system was written after the build, from `design/ui/legend/style.css` (the owner-approved comp) and `design/ui/legend/screens.css` (the full pass), and moved to the repo root when the overlay shipped (owner Q7). Its sidecar is `.impeccable/design.json`, from which `web/ui/build.mjs` emits the colour, shadow, motion and focus tokens in front of `web/ui/src/hud.css`. The Tiles sheet is open by default, stays open while the player hovers slots, and closes only by Tab or its close control. Tiles that do not fit stay in the list, dimmed with their reason, below every tile that fits. These are owner decisions and bind every later surface.",
     "keyCharacteristics": [
       "Deep survey-blue panels on a near-black void, with no glass, no blur and no gradients on chrome.",
       "Six socket colours as the only chromatic vocabulary, always shown as data: edges, codes, keys, mix strips.",
@@ -636,14 +641,14 @@
       "**Do** pair every legality colour with a pattern and words: solid for ok; dashed with a cross tick for bad; thin for neutral.",
       "**Do** keep `pick` for the current tool and the current selection only.",
       "**Do** set every text in Manrope with tabular figures, at 12, 13, 14, 16 or 20 px, in weight 600, 700 or 800.",
-      "**Do** use ink, at 2 px offset 2 px, for the focus ring on every control.",
+      "**Do** use ink, at 2 px offset 2 px, for the focus ring on every control (`--focus-ring`, `--focus-width`, `--focus-offset`).",
       "**Do** lift `ink-3` to `ink-3-lifted` on any `sheet-2` surface.",
       "**Do** keep panels in the margins and the centre clear for the ghost, and apply the 1400 px narrow rule.",
       "**Do** give every control a 44 px target (36 px for the small button).",
       "**Do** use dashed strokes for open or unresolved shapes and drop-shadow glow for edge states. Both are native to this world."
     ],
     "donts": [
-      "**Don't** use a socket colour as decoration on chrome. The only standing exception is `ghost-fill`, the River hue at 12% on the ghost cap, which in-world.md specifies.",
+      "**Don't** use a socket colour as decoration on chrome. The only standing exception is `ghost-fill`, the River hue at 12% on the ghost cap, which `design/ui/legend/in-world.md` specifies.",
       "**Don't** mark selection or note tone with a coloured side stripe. Use the 1.5 px full outline for selection and the icon colour for note tone.",
       "**Don't** group the Tiles sheet by category. It groups by consequence: \"Fits here\" first, then \"Doesn't fit here\".",
       "**Don't** hide tiles that do not fit. Dim them and state the reason.",

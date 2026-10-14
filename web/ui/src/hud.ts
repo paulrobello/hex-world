@@ -14,7 +14,6 @@ import {
   isSlot,
   needsAt,
   rotationReadout,
-  stepsToNextOrientation,
   tileDef,
   tileMap,
 } from "./rules.ts";
@@ -141,13 +140,9 @@ export class Hud {
     const st = this.st;
     if (!st) return;
     this.fire("rotate");
-    const g = st.ghost;
-    const def = tileDef(st.selected);
-    // R moves to the next orientation that looks different: rotations with equal sockets count once.
-    const n = g && def ? stepsToNextOrientation(def, g.legal_rotations, g.rotation, back) : 1;
+    // One press, one engine step: the engine skips rotations that repeat an orientation (PRD §4.7 Q6).
     this.turns += back ? -1 : 1;
-    if (!n) return;
-    this.cmd(Array.from({ length: n }, () => ({ cmd: "rotate", dir: back ? "ccw" : "cw" }) as Command));
+    this.cmd({ cmd: "rotate", dir: back ? "ccw" : "cw" });
     this.advanceHint("rotate");
   }
 

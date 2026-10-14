@@ -75,9 +75,28 @@ fn parse_secs(k: &str, v: &str, warnings: &mut Vec<String>) -> Option<f32> {
     }
 }
 
+/// The start scenario when no `scenario` or `shot` key names one, or the one named is unknown. The
+/// web build opens on the game; the native build stays the dev and capture harness, whose scripts
+/// and baselines start from `single`.
+pub const fn default_scenario() -> Scenario {
+    if cfg!(target_arch = "wasm32") {
+        Scenario::Play
+    } else {
+        Scenario::Single
+    }
+}
+
 /// Shared by the native CLI (`--shot gate2000`) and the web query string (`?shot=gate2000`).
 pub fn flags_from_pairs(pairs: &[(String, String)]) -> (Flags, Vec<String>) {
-    let mut f = Flags::default();
+    flags_from_pairs_or(pairs, default_scenario())
+}
+
+/// [`flags_from_pairs`] with an explicit fallback scenario.
+pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Flags, Vec<String>) {
+    let mut f = Flags {
+        scenario: default,
+        ..Flags::default()
+    };
     let mut warnings = vec![];
     for (k, v) in pairs {
         match k.as_str() {
@@ -404,6 +423,33 @@ mod tests {
         let (f, w) = flags_from_pairs(&[]);
         assert_eq!(f.scenario, Scenario::Single);
         assert!(f.shot.is_none() && !f.diag && w.is_empty());
+    }
+
+    #[test]
+    fn web_default_is_play_and_others_stay_reachable() {
+        let web = Scenario::Play;
+        let (f, w) = flags_from_pairs_or(&p(&[("fps", "off")]), web);
+        assert_eq!(f.scenario, Scenario::Play);
+        assert!(w.is_empty());
+        let (f, w) = flags_from_pairs_or(&p(&[("shot", "nope")]), web);
+        assert_eq!(
+            f.scenario,
+            Scenario::Play,
+            "an unknown name falls back to the default"
+        );
+        assert_eq!(w.len(), 1);
+        for (name, s) in [
+            ("single", Scenario::Single),
+            ("gate2000", Scenario::Gate2000),
+            ("kit", Scenario::Kit),
+            ("water", Scenario::Water),
+            ("water_kit", Scenario::WaterKit),
+            ("play", Scenario::Play),
+        ] {
+            let (f, w) = flags_from_pairs_or(&p(&[("scenario", name)]), web);
+            assert_eq!(f.scenario, s, "?scenario={name}");
+            assert!(w.is_empty());
+        }
     }
 
     #[test]

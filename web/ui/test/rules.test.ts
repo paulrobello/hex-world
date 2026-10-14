@@ -14,7 +14,6 @@ import {
   needsAt,
   nothingFitsWhy,
   rotationReadout,
-  stepsToNextOrientation,
   summary,
   tileDef,
   tileMap,
@@ -75,18 +74,17 @@ test("fit counts distinct orientations and words refusals", () => {
   assert.equal(off.why, "Needs a river edge to meet the river.");
 });
 
-test("rotation readout and the steps R takes to a new orientation", () => {
+test("rotation readout counts distinct orientations (the engine's R steps through them)", () => {
   const slot = needsAt({ q: 1, r: 0 }, start);
   const road = def("road_straight");
   assert.deepEqual(rotationReadout(road, [1, 2, 4, 5], 4), { index: 0, count: 2 });
   assert.deepEqual(rotationReadout(road, [1, 2, 4, 5], 2), { index: 1, count: 2 });
-  assert.equal(stepsToNextOrientation(road, [1, 2, 4, 5], 1, false), 1);
-  // Every meadow rotation looks the same: R has nothing to show.
-  assert.equal(stepsToNextOrientation(def("meadow"), legalRotations(def("meadow"), slot), 0, false), 0);
+  // Every meadow rotation looks the same: one orientation, so the tag reads "Fits" with no R.
+  assert.deepEqual(rotationReadout(def("meadow"), legalRotations(def("meadow"), slot), 0), { index: 0, count: 1 });
   // road_junction repeats every 120 degrees: legal 0, 2, 4 are one orientation; 1, 3, 5 another.
   const j = def("road_junction");
-  assert.equal(stepsToNextOrientation(j, [0, 2, 4], 0, false), 0);
-  assert.equal(stepsToNextOrientation(j, [0, 1, 2, 3, 4, 5], 0, true), 1);
+  assert.deepEqual(rotationReadout(j, [0, 2, 4], 4), { index: 0, count: 1 });
+  assert.deepEqual(rotationReadout(j, [0, 1, 2, 3, 4, 5], 3), { index: 1, count: 2 });
 });
 
 test("the slot key lists lanes first", () => {

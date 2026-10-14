@@ -125,6 +125,14 @@ try {
   await until(async () => (await text(".ghost-tag")).includes("Rotation 2 of 2"), "tag reads Rotation 2 of 2");
   await page.waitForTimeout(250);
   await shot("s4-2-rotate");
+  // Moving off the slot (through (1, -1), where this rotation is illegal) and back keeps the
+  // chosen rotation instead of resetting to the first legal one.
+  const chosen = (await play()).rotation;
+  await pointAt(1, -1);
+  await until(async () => (await play()).rotation !== chosen, "(1, -1) snaps to a rotation legal there");
+  await pointAt(1, 0);
+  await until(async () => (await play()).rotation === chosen, "back on (1, 0): the chosen rotation, not a reset");
+  await until(async () => (await text(".ghost-tag")).includes("Rotation 2 of 2"), "tag still reads Rotation 2 of 2");
 
   // Q5: the pointer over the HUD keeps the last slot's filter, and the engine keeps hovering it.
   const [rx, ry] = await page.locator(".row[data-tile=river_bend]").boundingBox().then((b) => [b.x + b.width / 2, b.y + b.height / 2]);

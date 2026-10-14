@@ -253,6 +253,12 @@ impl TileDef {
         &self.edges[local_edge(world, rotation) as usize]
     }
 
+    /// Whether rotations `a` and `b` give every world edge an equal socket (kind, lane, land side,
+    /// height, profile): one orientation, as a symmetric tile turned by its symmetry (PRD §4.7 Q6).
+    pub fn same_orientation(&self, a: u8, b: u8) -> bool {
+        (0..6).all(|w| self.edge(w, a) == self.edge(w, b))
+    }
+
     /// Edge pieces by local edge, resolving [`EdgePieces::Derived`] through the socket table.
     pub fn edge_pieces<'a>(&'a self, sockets: &'a SocketTable) -> [Option<&'a KitRef>; 6] {
         match &self.edge_pieces {

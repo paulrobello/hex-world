@@ -1,6 +1,6 @@
 //! Play-scenario game state (PRD §4.1–4.2, D20): the hex-core world plus the player's selection,
 //! ghost rotation and tool. [`GameState::apply`] is the only way an action changes it.
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 
 use bevy::prelude::*;
 use hex_core::{Axial, EdgeStatus, RotateDir, TileCatalog, TileDef, World};
@@ -101,6 +101,9 @@ pub struct GameState {
     pub selected: String,
     /// Ghost rotation 0..6.
     pub rotation: u8,
+    /// The rotation the player last chose with R, per tile id. Hovering a slot or selecting the
+    /// tile again restores it wherever it is legal, instead of snapping to the first legal one.
+    pub chosen_rotation: BTreeMap<String, u8>,
     pub tool: Tool,
     pub hovered: Option<Axial>,
     pub inventory_open: bool,
@@ -123,6 +126,7 @@ impl GameState {
             catalog,
             selected,
             rotation: 0,
+            chosen_rotation: BTreeMap::new(),
             tool: Tool::Place,
             hovered: None,
             inventory_open: false,
@@ -150,15 +154,21 @@ impl GameState {
             .legal_rotations(&self.catalog, cell, self.selected_def())
     }
 
-    /// Auto-rotate (PRD §4.2): `snap` takes the first legal rotation, otherwise the rotation is
-    /// kept while it is still legal. With no legal rotation the rotation is left as it is.
+    /// Auto-rotate (PRD §4.2): `snap` takes the selected tile's chosen rotation when it is legal
+    /// here, else the first legal rotation; otherwise the rotation is kept while it is still legal.
+    /// With no legal rotation the rotation is left as it is.
     fn resnap(&mut self, snap: bool) {
         let Some(cell) = self.hovered_slot() else {
             return;
         };
         let legal = self.legal_here(cell);
+        let chosen = self
+            .chosen_rotation
+            .get(&self.selected)
+            .copied()
+            .filter(|k| legal.contains(k));
         if (snap || !legal.contains(&self.rotation))
-            && let Some(&k) = legal.first()
+            && let Some(k) = chosen.or_else(|| legal.first().copied())
         {
             self.rotation = k;
         }
@@ -262,6 +272,8 @@ impl GameState {
                     RotateDir::Forward => (self.rotation + 1) % 6,
                     RotateDir::Back => (self.rotation + 5) % 6,
                 });
+                self.chosen_rotation
+                    .insert(self.selected.clone(), self.rotation);
                 let valid = self.ghost().is_some_and(|g| g.3);
                 self.result("rotate", self.hovered, None);
                 vec![GameEvent::GhostRotated {
@@ -562,15 +574,64 @@ mod tests {
     }
 
     #[test]
-    fn rotate_cycles_legal_rotations_both_ways() {
+    fn rotate_cycles_distinct_legal_orientations_both_ways() {
         let mut g = game();
         g.apply(Action::SelectTile("road_straight".into()));
         g.apply(Action::Hover(Some(ax(1, 0))));
+        // Legal 1, 2, 4, 5, but a straight road turned 180° looks the same: two orientations.
         g.apply(Action::Rotate(RotateDir::Forward));
         assert_eq!(g.rotation, 2);
         g.apply(Action::Rotate(RotateDir::Forward));
-        assert_eq!(g.rotation, 4, "3 is illegal and skipped");
+        assert_eq!(g.rotation, 1, "4 repeats 1's sockets and is skipped");
         g.apply(Action::Rotate(RotateDir::Back));
+        assert_eq!(g.rotation, 2);
+        g.apply(Action::Rotate(RotateDir::Back));
+        assert_eq!(g.rotation, 1);
+    }
+
+    #[test]
+    fn rotate_on_a_fully_symmetric_tile_keeps_its_one_orientation() {
+        let mut g = game();
+        g.apply(Action::SelectTile("meadow".into()));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        assert_eq!(g.rotation, 0);
+        for dir in [RotateDir::Forward, RotateDir::Back] {
+            let e = g.apply(Action::Rotate(dir));
+            assert_eq!(g.rotation, 0);
+            assert_eq!(
+                e,
+                [GameEvent::GhostRotated {
+                    rotation: 0,
+                    valid: true
+                }]
+            );
+        }
+    }
+
+    #[test]
+    fn the_chosen_rotation_survives_moving_off_and_back_while_legal() {
+        let mut g = game();
+        g.apply(Action::SelectTile("road_straight".into()));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        assert_eq!(g.rotation, 1, "auto-rotate: the first legal rotation");
+        g.apply(Action::Rotate(RotateDir::Forward));
+        assert_eq!(g.rotation, 2);
+        // At (1, -1) the meadow sits on world edge 2, so rotation 2 is illegal there.
+        g.apply(Action::Hover(Some(ax(1, -1))));
+        assert_eq!(g.rotation, 0, "not legal here: the first legal rotation");
+        g.apply(Action::Hover(None));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        assert_eq!(
+            g.rotation, 2,
+            "back on the slot: the chosen rotation, not a reset"
+        );
+        g.apply(Action::Hover(Some(ax(0, 1))));
+        assert_eq!(g.rotation, 2, "legal at another slot too");
+        // Per tile: another tile snaps as usual, and the road keeps its choice.
+        g.apply(Action::SelectTile("road_bend_120".into()));
+        let first = g.ghost().unwrap().1[0];
+        assert_eq!(g.rotation, first);
+        g.apply(Action::SelectTile("road_straight".into()));
         assert_eq!(g.rotation, 2);
     }
 

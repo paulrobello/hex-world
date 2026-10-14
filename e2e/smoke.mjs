@@ -8,7 +8,8 @@ import { clampSampledTextures, countSampledTextures, markedModuleProbe } from ".
 
 const dist = process.argv[2] ?? "dist";
 const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain" };
+  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain",
+  ".jpg": "image/jpeg", ".woff2": "font/woff2" };
 const server = createServer(async (req, res) => {
   let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
   if (path.endsWith("/")) path += "index.html";
@@ -76,7 +77,7 @@ async function withPage(args, fn) {
 }
 let caseNo = 0;
 
-// 1. Default scenario becomes ready on the WebGPU backend.
+// 1. The Single scenario becomes ready on the WebGPU backend.
 await withPage(gpuArgs, async (page, errors) => {
   const kit = new Map();
   page.on("console", (m) => { if (/texture family/i.test(m.text())) console.log("app:", m.text()); });
@@ -85,7 +86,7 @@ await withPage(gpuArgs, async (page, errors) => {
     const t = r.timing(), size = (await r.sizes()).responseBodySize;
     kit.set(r.url().split("/").pop(), { ms: Math.round(t.responseEnd), bytes: size });
   });
-  await page.goto(base);
+  await page.goto(base + "?scenario=single");
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 60_000 });
   // The kit disc loads after the renderer is up; screenshot once both files have arrived.
   const deadline = Date.now() + 20_000;
@@ -108,12 +109,25 @@ await withPage(gpuArgs, async (page, errors) => {
   await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-single.png" });
 });
 
-// 2. Unknown scenario falls back to default without errors.
+// 2. The bare URL opens the game: the play scenario with the Legend HUD over it (web default).
+await withPage(gpuArgs, async (page) => {
+  await page.goto(base);
+  await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
+  const state = await page.evaluate(() => window.hexWorld.state());
+  if (state.scenario !== "Play") fail("bare URL did not open the play scenario: " + JSON.stringify(state.scenario));
+  await page.waitForSelector("#hud:not(.is-off) .bar", { state: "visible", timeout: 15_000 })
+    .catch(() => fail("bare URL: the HUD tool bar never showed"));
+  await page.waitForSelector(".sheet--tiles:not(.is-closed)", { state: "visible", timeout: 15_000 })
+    .catch(() => fail("bare URL: the Tiles sheet is not open by default"));
+  await page.screenshot({ path: "e2e/test-results/smoke-default-play.png" });
+});
+
+// 2b. Unknown scenario falls back to the web default (play) without errors.
 await withPage(gpuArgs, async (page, errors) => {
   await page.goto(base + "?shot=nope");
-  await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 60_000 });
+  await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
   const state = await page.evaluate(() => window.hexWorld.state());
-  if (state.scenario !== "Single") fail("bad scenario did not fall back: " + JSON.stringify(state));
+  if (state.scenario !== "Play") fail("bad scenario did not fall back: " + JSON.stringify(state.scenario));
   if (errors.some((e) => /panic|unreachable/i.test(e))) fail("panic on bad scenario");
 });
 
@@ -122,6 +136,15 @@ await withPage(["--disable-gpu"], async (page) => {
   await page.goto(base);
   await page.waitForURL(/unsupported\.html$/, { timeout: 15_000 }).catch(() => fail("no redirect without GPU"));
   if (!(await page.locator("#unsupported").count())) fail("unsupported page content missing");
+  // The Legend S11 page: one visible headline, the app icon and Manrope loaded under the page CSP.
+  await page.waitForLoadState("networkidle");
+  const s11 = await page.evaluate(async () => {
+    await document.fonts.ready;
+    const h1 = [...document.querySelectorAll("h1")].filter((h) => h.offsetParent);
+    const icon = document.querySelector(".card__icon");
+    return { h1: h1.map((h) => h.textContent), icon: !!icon?.naturalWidth, font: document.fonts.check("700 16px Manrope") };
+  });
+  if (s11.h1.length !== 1 || !s11.icon || !s11.font) fail("unsupported page not rendered: " + JSON.stringify(s11));
 });
 
 // 4. Forced WGSL compat shim (web/wgsl-compat.js, the Safari path): Tint must accept every rewritten module.

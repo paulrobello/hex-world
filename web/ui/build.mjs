@@ -11,9 +11,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..", "..");
 const out = join(here, "dist");
 
-// Tokens come from the approved Legend design sidecar (design.json): colours, shadows, motion.
+// Tokens come from the approved Legend design sidecar (.impeccable/design.json, beside the root
+// DESIGN.md): colours, shadows, motion and the focus ring.
 function tokensCss() {
-  const d = JSON.parse(readFileSync(join(repo, "design/ui/legend/design.json"), "utf8")).extensions;
+  const d = JSON.parse(readFileSync(join(repo, ".impeccable/design.json"), "utf8")).extensions;
   const lines = [];
   for (const [name, c] of Object.entries(d.colorMeta)) {
     const v = /^--[\w-]+$/.test(c.cssVar) ? c.cssVar : `--${name}`;
@@ -22,6 +23,9 @@ function tokensCss() {
   for (const s of d.shadows) if (/^(shadow|glow|ring)-/.test(s.name)) lines.push(`--${s.name}: ${s.value};`);
   for (const m of d.motion)
     if (/^(ease|t|t-fast|t-slow|t-toast|toast-dwell|tip-delay)$/.test(m.name)) lines.push(`--${m.name}: ${m.value};`);
+  lines.push(
+    `--focus-ring: var(--${d.focus.color});--focus-width: ${d.focus.width};--focus-offset: ${d.focus.offset};`,
+  );
   return `:root{${lines.join("")}}\n`;
 }
 
