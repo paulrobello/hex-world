@@ -210,6 +210,48 @@
       "creditsCharged": 301,
       "subscriptionDelta": 0,
       "file": "assets-source/audio/ambience/forest-birdsong/forest-birdsong.mp3"
+    },
+    {
+      "n": 16,
+      "cueId": "meadow-bed",
+      "requestedAt": "2026-10-14T04:47:41+00:00",
+      "reason": "owner: inaudible on laptop speakers; energy is sub-40 Hz rumble and >6 kHz hiss, 1-6 kHz band 18.5 dB under full band",
+      "creditsBefore": 7446,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "101838511b75515908540243da73efa7",
+      "creditsAfter": 7446,
+      "creditsCharged": 301,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/meadow-bed/meadow-bed.mp3"
+    },
+    {
+      "n": 17,
+      "cueId": "meadow-bed",
+      "requestedAt": "2026-10-14T04:48:39+00:00",
+      "reason": "take 16 is a shrill 7-13 kHz insect wall: 1-6 kHz band 16.3 dB under full band, no bees or grass, one bird; reprompted for mid-range crickets, bees and grass",
+      "creditsBefore": 7747,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "02b78d942603b00a8345f9b74e9facc1",
+      "creditsAfter": 7747,
+      "creditsCharged": 301,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/meadow-bed/meadow-bed.mp3"
+    },
+    {
+      "n": 18,
+      "cueId": "meadow-bed",
+      "requestedAt": "2026-10-14T04:50:45+00:00",
+      "reason": "take 17 is the same 7-13 kHz insect wall as take 16 (1-6 kHz band 16.6 dB under full band, no bees heard); reprompted to lead with a continuous bee hum and grass rustle",
+      "creditsBefore": 8048,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "b05127160d4e2b9b5900ba1e0c6bbe28",
+      "creditsAfter": 8048,
+      "creditsCharged": 301,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/meadow-bed/meadow-bed.mp3"
     }
   ]
 }

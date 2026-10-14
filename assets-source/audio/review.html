@@ -28,7 +28,7 @@ button { font:inherit; font-size:13px; padding:6px 10px; border-radius:6px; bord
 measured on the WebM by <code>make audio-master</code>. Loop cues have a gapless Web Audio player that loops at the
 manifest loop points, as the game will; the plain player's <code>loop</code> attribute can gap between repeats in some browsers.
 Serve the repo root over http (<code>python3 -m http.server</code>) for the gapless player.</p>
-<p class=lead>Generation attempts logged: 15 of 20. Approvals pending: creative and owner.</p>
+<p class=lead>Generation attempts logged: 18 of 20. Approvals pending: creative and owner.</p>
 <h2>Placement SFX (−16 LUFS)</h2><div class=grid><div class=card><h3>place-rumble</h3>
 <p class=meta>sfx · 1 ch · decode · events: tilePlaced</p>
 <audio controls preload=none><source src="../../assets/audio/sfx/place-rumble.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/sfx/place-rumble.m4a" type="audio/mp4"></audio>
@@ -164,14 +164,14 @@ id <code>3b4a7f3da416919006f2ff6c39ad2560</code> · <a href="ambience/forest-bir
 <audio controls preload=none loop><source src="../../assets/audio/ambience/meadow-bed.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/meadow-bed.m4a" type="audio/mp4"></audio>
 <button onclick=gapless(this) data-src='../../assets/audio/ambience/meadow-bed.webm' data-start=0 data-end=1440000 data-rate=48000>Gapless loop (Web Audio)</button>
 <div class=nums><span>length <b>30.00 s</b></span>
-<span>WebM <b>-16.0 LUFS</b> / <b>-1.7 dBTP</b></span>
-<span>m4a <b>-16.1</b> / <b>-1.2</b></span>
-<span>source <b>-41.9 LUFS</b></span>
-<span>runtime <b>599 KB</b></span></div>
-<p class=meta>limited 1.7 dB on 1.1% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Soft summer meadow ambience bed: a light breeze moving through tall grass, faint distant crickets and insects, a very occasional distant bird, calm and steady, continuous with no build or fade. Natural sound only: no voices, no music.</p>
-<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 11 ·
-id <code>a8b6c75adef83e0dcbebaa84d63c1fb3</code> · <a href="ambience/meadow-bed/meadow-bed.mp3">source</a></p></details>
+<span>WebM <b>-16.7 LUFS</b> / <b>-1.5 dBTP</b></span>
+<span>m4a <b>-16.8</b> / <b>-2.3</b></span>
+<span>source <b>-25.0 LUFS</b></span>
+<span>runtime <b>588 KB</b></span></div>
+<p class=meta>limited 3.9 dB on 4.2% of 20 ms windows</p>
+<details><summary>Prompt and generation</summary><p>A steady warm hum of many bumblebees and honeybees working clover close by, over a constant soft rustle of long grass in a sunny summer field. Crickets and grasshoppers chirp gently in the background, and a skylark or yellowhammer sings now and then at mid distance. Calm, even level, continuous with no build or fade. Natural sound only: no voices, no music.</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 18 ·
+id <code>b05127160d4e2b9b5900ba1e0c6bbe28</code> · <a href="ambience/meadow-bed/meadow-bed.mp3">source</a></p></details>
 </div></div><h2>Music (−18 LUFS)</h2><div class=grid><div class=card><h3>meadow-day</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/meadow-day.md</code>, then run make audio-master.</p></div><div class=card><h3>coast-breeze</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/coast-breeze.md</code>, then run make audio-master.</p></div><div class=card><h3>hearth-town</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/hearth-town.md</code>, then run make audio-master.</p></div><div class=card><h3>photo-mode</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/photo-mode.md</code>, then run make audio-master.</p></div><div class=card><h3>title-theme</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/title-theme.md</code>, then run make audio-master.</p></div><div class=card><h3>discovery-stinger</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/discovery-stinger.md</code>, then run make audio-master.</p></div></div>
 </main><script>
 let ctx = null, playing = null;

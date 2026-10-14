@@ -231,9 +231,9 @@
       "events": [],
       "provider": "elevenlabs",
       "generation": {
-        "text": "Soft summer meadow ambience bed: a light breeze moving through tall grass, faint distant crickets and insects, a very occasional distant bird, calm and steady, continuous with no build or fade. Natural sound only: no voices, no music.",
+        "text": "A steady warm hum of many bumblebees and honeybees working clover close by, over a constant soft rustle of long grass in a sunny summer field. Crickets and grasshoppers chirp gently in the background, and a skylark or yellowhammer sings now and then at mid distance. Calm, even level, continuous with no build or fade. Natural sound only: no voices, no music.",
         "durationSeconds": 30,
-        "promptInfluence": 0.3,
+        "promptInfluence": 0.5,
         "loop": true
       }
     },

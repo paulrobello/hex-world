@@ -21,28 +21,29 @@
     "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
     "outputFormat": "mp3_44100_128"
   },
-  "prompt": "Soft summer meadow ambience bed: a light breeze moving through tall grass, faint distant crickets and insects, a very occasional distant bird, calm and steady, continuous with no build or fade. Natural sound only: no voices, no music.",
+  "prompt": "A steady warm hum of many bumblebees and honeybees working clover close by, over a constant soft rustle of long grass in a sunny summer field. Crickets and grasshoppers chirp gently in the background, and a skylark or yellowhammer sings now and then at mid distance. Calm, even level, continuous with no build or fade. Natural sound only: no voices, no music.",
   "promptFile": null,
   "parameters": {
-    "text": "Soft summer meadow ambience bed: a light breeze moving through tall grass, faint distant crickets and insects, a very occasional distant bird, calm and steady, continuous with no build or fade. Natural sound only: no voices, no music.",
+    "text": "A steady warm hum of many bumblebees and honeybees working clover close by, over a constant soft rustle of long grass in a sunny summer field. Crickets and grasshoppers chirp gently in the background, and a skylark or yellowhammer sings now and then at mid distance. Calm, even level, continuous with no build or fade. Natural sound only: no voices, no music.",
     "model_id": "eleven_text_to_sound_v2",
     "duration_seconds": 30,
+    "prompt_influence": 0.5,
     "loop": true
   },
   "generation": {
-    "id": "a8b6c75adef83e0dcbebaa84d63c1fb3",
-    "generatedAt": "2026-10-14T03:47:41+00:00",
-    "attempt": 11,
+    "id": "b05127160d4e2b9b5900ba1e0c6bbe28",
+    "generatedAt": "2026-10-14T04:50:45+00:00",
+    "attempt": 18,
     "creditsCharged": 301,
     "record": {
       "path": "assets-source/audio/ambience/meadow-bed/generation.json",
-      "sha256": "d1b4ba599fee5d38df18105badc23a4ecd03f76a8a2e873a1459271919e97fc5",
-      "bytes": 1975
+      "sha256": "7fa69e2b9c8f1ccea55e9e060d349071f7b4f73b2a0cd304e7273cef58fbb952",
+      "bytes": 2254
     }
   },
   "source": {
     "path": "assets-source/audio/ambience/meadow-bed/meadow-bed.mp3",
-    "sha256": "551484a75a926769d7a532fe2d1c3d5d78106550a1dfe57e52cd73e8aab104c4",
+    "sha256": "644c48d318e2563b5e8e75736b267793b6d069b5f13cef10bbdd194b6c89bc11",
     "bytes": 481115,
     "codec": "mp3",
     "sampleRate": 44100,
@@ -55,25 +56,25 @@
     "truePeakCeilingDb": -1.0,
     "masterTruePeakDb": -2.0,
     "before": {
-      "integrated": -41.9,
-      "lra": 6.1,
-      "truePeak": -26.2
+      "integrated": -25.0,
+      "lra": 5.8,
+      "truePeak": -7.1
     },
     "master": {
-      "integrated": -16.0,
-      "lra": 5.1,
-      "truePeak": -2.5
+      "integrated": -16.7,
+      "lra": 5.4,
+      "truePeak": -3.0
     },
     "after": {
       "webm": {
-        "integrated": -16.0,
-        "lra": 5.1,
-        "truePeak": -1.7
+        "integrated": -16.7,
+        "lra": 5.4,
+        "truePeak": -1.5
       },
       "m4a": {
-        "integrated": -16.1,
-        "lra": 5.1,
-        "truePeak": -1.2
+        "integrated": -16.8,
+        "lra": 5.4,
+        "truePeak": -2.3
       }
     }
   },
@@ -85,37 +86,42 @@
     },
     {
       "step": "source-loop-check",
-      "wrapStep": 0.002846,
-      "stepP999": 0.032248,
-      "headDb": -41.4,
-      "tailDb": -43.2,
-      "minWindowDb": -50.2,
+      "wrapStep": 0.01212,
+      "stepP999": 0.144362,
+      "headDb": -30.0,
+      "tailDb": -31.4,
+      "minWindowDb": -33.9,
       "seamless": true
     },
     {
       "step": "rotate-loop",
-      "offsetFrames": 715200,
-      "headTailLevelDeltaDb": 0.01
+      "offsetFrames": 945600,
+      "headTailLevelDeltaDb": 0.0
     },
     {
       "step": "loudness",
       "pass1": {
-        "integrated": -41.9,
-        "lra": 5.2,
-        "truePeak": -26.2
+        "integrated": -25.0,
+        "lra": 6.0,
+        "truePeak": -7.1
       },
       "targetLufs": -16.0,
-      "gainDb": 25.9,
-      "requiredPeakReductionDb": 1.7,
+      "gainDb": 9.0,
+      "requiredPeakReductionDb": 3.9,
       "mode": "limited",
-      "limiterInputGainDb": 25.9,
+      "limiterInputGainDb": 9.0,
       "limiterPasses": 1,
       "limiterCeilingDb": -2.5,
-      "windowsOverCeilingPct": 1.1
+      "windowsOverCeilingPct": 4.2
     },
     {
       "step": "settle",
-      "trimDb": 0.0
+      "trimDb": 0.2
+    },
+    {
+      "step": "encode-overshoot-trim",
+      "encodedTruePeakDb": -0.5,
+      "trimDb": -0.7
     },
     {
       "step": "encode-webm",
@@ -128,7 +134,7 @@
   ],
   "master": {
     "path": "target/audio-master/ambience/meadow-bed.wav",
-    "sha256": "dde90427fa276555f79466b0a4beb9c06fb773e4f4b5210cc2c1a5f73c2597a9",
+    "sha256": "40a1017684df108564baf9b28bce7c4bc6c93e169e48dd8d23c8c4a151da4ced",
     "frames": 1440000,
     "sampleRate": 48000,
     "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
@@ -136,8 +142,8 @@
   "runtime": [
     {
       "path": "assets/audio/ambience/meadow-bed.webm",
-      "sha256": "120ac7b883c2e6ca9213b2048012a7386d474f92ff237a6947ad3c0f73cca275",
-      "bytes": 244326,
+      "sha256": "59ebf4dc7c955d69844741925b45cdbdc64f2350442b94654f3fa51f179a7a12",
+      "bytes": 233726,
       "codec": "opus",
       "bitrate": "64k",
       "channels": 1,
@@ -145,16 +151,16 @@
       "durationSeconds": 30.008,
       "decodedFrames": 1440000,
       "loudness": {
-        "integrated": -16.0,
-        "lra": 5.1,
-        "truePeak": -1.7
+        "integrated": -16.7,
+        "lra": 5.4,
+        "truePeak": -1.5
       },
       "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/meadow-bed.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/meadow-bed.webm"
     },
     {
       "path": "assets/audio/ambience/meadow-bed.m4a",
-      "sha256": "6216ba44d06d7aa6d102fb5c8f04537ba420fc6869182c3fd2f8cf401ffdad30",
-      "bytes": 369016,
+      "sha256": "638475a8fe82611c7b3d61861726c74ea9ad1e2162a702c0e538aa79471ce235",
+      "bytes": 368629,
       "codec": "aac",
       "bitrate": "96k",
       "channels": 1,
@@ -162,9 +168,9 @@
       "durationSeconds": 30.0,
       "decodedFrames": 1440000,
       "loudness": {
-        "integrated": -16.1,
-        "lra": 5.1,
-        "truePeak": -1.2
+        "integrated": -16.8,
+        "lra": 5.4,
+        "truePeak": -2.3
       },
       "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/meadow-bed.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 96k -movflags +faststart assets/audio/ambience/meadow-bed.m4a"
     }

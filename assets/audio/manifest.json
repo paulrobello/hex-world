@@ -323,13 +323,13 @@
       "files": {
         "webm": {
           "path": "ambience/meadow-bed.webm",
-          "sha256": "120ac7b883c2e6ca9213b2048012a7386d474f92ff237a6947ad3c0f73cca275",
-          "bytes": 244326
+          "sha256": "59ebf4dc7c955d69844741925b45cdbdc64f2350442b94654f3fa51f179a7a12",
+          "bytes": 233726
         },
         "m4a": {
           "path": "ambience/meadow-bed.m4a",
-          "sha256": "6216ba44d06d7aa6d102fb5c8f04537ba420fc6869182c3fd2f8cf401ffdad30",
-          "bytes": 369016
+          "sha256": "638475a8fe82611c7b3d61861726c74ea9ad1e2162a702c0e538aa79471ce235",
+          "bytes": 368629
         }
       },
       "provenance": "assets-source/audio/ambience/meadow-bed/provenance.json"

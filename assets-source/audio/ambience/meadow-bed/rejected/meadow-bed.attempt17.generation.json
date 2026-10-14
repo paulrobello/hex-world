@@ -1,0 +1,45 @@
+{
+  "cueId": "meadow-bed",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Warm sunny meadow ambience, full-bodied and clearly audible: field crickets chirping in gentle rhythmic pulses, grasshoppers rasping, bumblebees and honeybees humming past close by, grass rustling softly, and a skylark or yellowhammer singing now and then at mid distance. Insects lead, birds sparse. Not shrill: no high-pitched hiss. Even level, continuous with no build or fade. Natural sound only: no voices, no music, no wind rumble.",
+  "parameters": {
+    "text": "Warm sunny meadow ambience, full-bodied and clearly audible: field crickets chirping in gentle rhythmic pulses, grasshoppers rasping, bumblebees and honeybees humming past close by, grass rustling softly, and a skylark or yellowhammer singing now and then at mid distance. Insects lead, birds sparse. Not shrill: no high-pitched hiss. Even level, continuous with no build or fade. Natural sound only: no voices, no music, no wind rumble.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 30,
+    "prompt_influence": 0.5,
+    "loop": true
+  },
+  "generationId": "02b78d942603b00a8345f9b74e9facc1",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 04:48:38 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "301",
+    "content-length": "481115",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "02b78d942603b00a8345f9b74e9facc1",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T04:48:39+00:00",
+  "attempt": 17,
+  "creditsCharged": 301,
+  "sourceFile": "meadow-bed.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  },
+  "rejectedReason": "take 17 is the same 7-13 kHz insect wall as take 16 (1-6 kHz band 16.6 dB under full band, no bees heard); reprompted to lead with a continuous bee hum and grass rustle"
+}
