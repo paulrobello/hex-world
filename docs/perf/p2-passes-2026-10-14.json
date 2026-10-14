@@ -1,0 +1,2320 @@
+{
+  "date": "2026-10-14T10:13:45.370Z",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "gate2000",
+    "view": "strategic",
+    "layout": "instanced",
+    "chunk": "7",
+    "post": "full",
+    "shadows": "on",
+    "shadow_casters": "all",
+    "cascades": "3",
+    "shadow_dist": "600",
+    "tier": "high",
+    "fps": "off"
+  },
+  "budget_p95_ms": 16.6,
+  "load_limit": 15,
+  "rounds": 3,
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "channel": "chromium",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit --enable-webgpu-developer-features"
+  },
+  "native": {
+    "present": "immediate",
+    "exit_after_seconds": 25
+  },
+  "rows": [
+    {
+      "round": 0,
+      "platform": "web",
+      "timing": "off",
+      "tilt": "off",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "p50": 2.6,
+      "p95": 3.6,
+      "p99": 43.1,
+      "mean": 3.33,
+      "max": 65.3,
+      "dropped_over_25ms": 8,
+      "samples": 600,
+      "frames": 750,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            591
+          ],
+          [
+            "<16.7",
+            1
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            1
+          ],
+          [
+            "<50",
+            2
+          ],
+          [
+            "<100",
+            5
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 8,
+        "tail": [
+          {
+            "frame": 385,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 29.1,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 432,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 43.1,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 482,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 50.9,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 531,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 58.1,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 581,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 55,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 630,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 65.3,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 679,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 61.1,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 728,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 49.8,
+            "pipelines_waiting": 0
+          }
+        ],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "console_errors": [],
+      "load_before": 14.5009765625,
+      "load_after": 14.30029296875,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "platform": "native",
+      "timing": "off",
+      "tilt": "off",
+      "exit_code": 0,
+      "p50": 7.89,
+      "p95": 12.86,
+      "p99": 17.61,
+      "mean": 6.97,
+      "max": 23.55,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 3480,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            384
+          ],
+          [
+            "<16.7",
+            207
+          ],
+          [
+            "<20",
+            6
+          ],
+          [
+            "<25",
+            3
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail": [],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "load_before": 14.30029296875,
+      "load_after": 11.41650390625,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "platform": "web",
+      "timing": "off",
+      "tilt": "on",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "p50": 2.5,
+      "p95": 3.9,
+      "p99": 72.6,
+      "mean": 3.83,
+      "max": 87.1,
+      "dropped_over_25ms": 10,
+      "samples": 600,
+      "frames": 750,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            589
+          ],
+          [
+            "<16.7",
+            1
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            10
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 10,
+        "tail": [
+          {
+            "frame": 271,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 54.4,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 321,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 59.3,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 370,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 71.7,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 417,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 73.5,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 466,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 72.6,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 515,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 77.5,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 564,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 80.2,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 613,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 78.5,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 662,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 81.3,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 710,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 87.1,
+            "pipelines_waiting": 0
+          }
+        ],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "console_errors": [],
+      "load_before": 11.41650390625,
+      "load_after": 11.142578125,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "platform": "native",
+      "timing": "off",
+      "tilt": "on",
+      "exit_code": 0,
+      "p50": 8.24,
+      "p95": 13.25,
+      "p99": 18.77,
+      "mean": 7.45,
+      "max": 23.93,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 3270,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            326
+          ],
+          [
+            "<16.7",
+            257
+          ],
+          [
+            "<20",
+            11
+          ],
+          [
+            "<25",
+            6
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail": [],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "load_before": 11.142578125,
+      "load_after": 9.39306640625,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "platform": "native",
+      "timing": "on",
+      "tilt": "off",
+      "exit_code": 0,
+      "p50": 8.33,
+      "p95": 10.18,
+      "p99": 19.13,
+      "mean": 7.79,
+      "max": 23.78,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 3180,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            305
+          ],
+          [
+            "<16.7",
+            288
+          ],
+          [
+            "<20",
+            2
+          ],
+          [
+            "<25",
+            5
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail": [],
+        "threshold_ms": 25
+      },
+      "gpu": {
+        "total": {
+          "max": 5.19,
+          "mean": 4.48,
+          "p50": 4.52,
+          "p95": 4.83
+        },
+        "passes": {
+          "opaque": {
+            "max": 1.43,
+            "mean": 1.1,
+            "p50": 1.15,
+            "p95": 1.34
+          },
+          "post": {
+            "max": 0.82,
+            "mean": 0.46,
+            "p50": 0.46,
+            "p95": 0.6
+          },
+          "prepass": {
+            "max": 1.17,
+            "mean": 1.02,
+            "p50": 1.02,
+            "p95": 1.09
+          },
+          "preprocess": {
+            "max": 0.45,
+            "mean": 0.09,
+            "p50": 0.02,
+            "p95": 0.24
+          },
+          "shadow": {
+            "max": 1.04,
+            "mean": 0.68,
+            "p50": 0.71,
+            "p95": 0.89
+          },
+          "ssao": {
+            "max": 1.26,
+            "mean": 0.93,
+            "p50": 0.91,
+            "p95": 1.01
+          },
+          "taa": {
+            "max": 0.43,
+            "mean": 0.12,
+            "p50": 0.12,
+            "p95": 0.24
+          },
+          "tilt_shift": {
+            "max": 0.09,
+            "mean": 0.02,
+            "p50": 0.02,
+            "p95": 0.05
+          },
+          "transmission": {
+            "max": 0.27,
+            "mean": 0.05,
+            "p50": 0.01,
+            "p95": 0.21
+          },
+          "transparent": {
+            "max": 0.22,
+            "mean": 0.02,
+            "p50": 0.01,
+            "p95": 0.12
+          }
+        },
+        "frames": 600,
+        "rejected_non_monotonic": 0,
+        "tail_over_25ms": []
+      },
+      "load_before": 9.39306640625,
+      "load_after": 8.6513671875,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "platform": "native",
+      "timing": "on",
+      "tilt": "on",
+      "exit_code": 0,
+      "p50": 8.33,
+      "p95": 12.62,
+      "p99": 18.62,
+      "mean": 7.87,
+      "max": 26.2,
+      "dropped_over_25ms": 2,
+      "samples": 600,
+      "frames": 3120,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            301
+          ],
+          [
+            "<16.7",
+            284
+          ],
+          [
+            "<20",
+            10
+          ],
+          [
+            "<25",
+            3
+          ],
+          [
+            "<33.3",
+            2
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 2,
+        "tail": [
+          {
+            "frame": 2843,
+            "gpu_max_ms": 15.59,
+            "gpu_top": [
+              "post",
+              6.73
+            ],
+            "ms": 25.81,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 3047,
+            "gpu_max_ms": 5.15,
+            "gpu_top": [
+              "opaque",
+              1.19
+            ],
+            "ms": 26.2,
+            "pipelines_waiting": 0
+          }
+        ],
+        "threshold_ms": 25
+      },
+      "gpu": {
+        "total": {
+          "max": 15.59,
+          "mean": 4.91,
+          "p50": 4.94,
+          "p95": 5.26
+        },
+        "passes": {
+          "opaque": {
+            "max": 4.89,
+            "mean": 1.1,
+            "p50": 1.15,
+            "p95": 1.34
+          },
+          "post": {
+            "max": 6.73,
+            "mean": 0.39,
+            "p50": 0.38,
+            "p95": 0.47
+          },
+          "prepass": {
+            "max": 1.15,
+            "mean": 1.01,
+            "p50": 1.02,
+            "p95": 1.08
+          },
+          "preprocess": {
+            "max": 0.34,
+            "mean": 0.09,
+            "p50": 0.04,
+            "p95": 0.23
+          },
+          "shadow": {
+            "max": 2.74,
+            "mean": 0.67,
+            "p50": 0.69,
+            "p95": 0.88
+          },
+          "ssao": {
+            "max": 1.19,
+            "mean": 0.92,
+            "p50": 0.91,
+            "p95": 1
+          },
+          "taa": {
+            "max": 0.52,
+            "mean": 0.12,
+            "p50": 0.11,
+            "p95": 0.29
+          },
+          "tilt_shift": {
+            "max": 0.74,
+            "mean": 0.53,
+            "p50": 0.54,
+            "p95": 0.63
+          },
+          "transmission": {
+            "max": 0.26,
+            "mean": 0.06,
+            "p50": 0.01,
+            "p95": 0.21
+          },
+          "transparent": {
+            "max": 0.22,
+            "mean": 0.02,
+            "p50": 0.01,
+            "p95": 0.1
+          }
+        },
+        "frames": 600,
+        "rejected_non_monotonic": 0,
+        "tail_over_25ms": [
+          {
+            "frame": 2068,
+            "segments": {
+              "opaque": 5.43,
+              "post": 0.42,
+              "prepass": 10.18,
+              "preprocess": 0.01,
+              "shadow": 9.16,
+              "ssao": 1.01,
+              "taa": 2.29,
+              "tilt_shift": 0.55,
+              "transmission": 0,
+              "transparent": 0
+            },
+            "total_ms": 29.06
+          }
+        ]
+      },
+      "load_before": 8.6513671875,
+      "load_after": 8.99853515625,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "native",
+      "timing": "on",
+      "tilt": "on",
+      "exit_code": 0,
+      "p50": 8.23,
+      "p95": 16.2,
+      "p99": 21.29,
+      "mean": 7.9,
+      "max": 33.94,
+      "dropped_over_25ms": 5,
+      "samples": 600,
+      "frames": 3180,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            318
+          ],
+          [
+            "<16.7",
+            255
+          ],
+          [
+            "<20",
+            18
+          ],
+          [
+            "<25",
+            4
+          ],
+          [
+            "<33.3",
+            4
+          ],
+          [
+            "<50",
+            1
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 5,
+        "tail": [
+          {
+            "frame": 2645,
+            "gpu_max_ms": 15.86,
+            "gpu_top": [
+              "post",
+              7.45
+            ],
+            "ms": 25.09,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 2772,
+            "gpu_max_ms": 17.3,
+            "gpu_top": [
+              "post",
+              8.47
+            ],
+            "ms": 27.42,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 2896,
+            "gpu_max_ms": 5.05,
+            "gpu_top": [
+              "opaque",
+              1.31
+            ],
+            "ms": 33.94,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 3029,
+            "gpu_max_ms": 5.04,
+            "gpu_top": [
+              "opaque",
+              1.19
+            ],
+            "ms": 27.51,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 3128,
+            "gpu_max_ms": 5.08,
+            "gpu_top": [
+              "opaque",
+              1.23
+            ],
+            "ms": 25.12,
+            "pipelines_waiting": 0
+          }
+        ],
+        "threshold_ms": 25
+      },
+      "gpu": {
+        "total": {
+          "max": 17.3,
+          "mean": 4.88,
+          "p50": 4.91,
+          "p95": 5.11
+        },
+        "passes": {
+          "opaque": {
+            "max": 4.93,
+            "mean": 1.13,
+            "p50": 1.19,
+            "p95": 1.35
+          },
+          "post": {
+            "max": 8.47,
+            "mean": 0.39,
+            "p50": 0.37,
+            "p95": 0.42
+          },
+          "prepass": {
+            "max": 1.18,
+            "mean": 1.01,
+            "p50": 1.02,
+            "p95": 1.08
+          },
+          "preprocess": {
+            "max": 0.38,
+            "mean": 0.1,
+            "p50": 0.11,
+            "p95": 0.23
+          },
+          "shadow": {
+            "max": 2.85,
+            "mean": 0.65,
+            "p50": 0.6,
+            "p95": 0.86
+          },
+          "ssao": {
+            "max": 1.1,
+            "mean": 0.91,
+            "p50": 0.9,
+            "p95": 0.96
+          },
+          "taa": {
+            "max": 0.67,
+            "mean": 0.11,
+            "p50": 0.1,
+            "p95": 0.3
+          },
+          "tilt_shift": {
+            "max": 0.72,
+            "mean": 0.5,
+            "p50": 0.54,
+            "p95": 0.59
+          },
+          "transmission": {
+            "max": 0.23,
+            "mean": 0.06,
+            "p50": 0.04,
+            "p95": 0.18
+          },
+          "transparent": {
+            "max": 0.21,
+            "mean": 0.02,
+            "p50": 0.01,
+            "p95": 0.1
+          }
+        },
+        "frames": 600,
+        "rejected_non_monotonic": 0,
+        "tail_over_25ms": []
+      },
+      "load_before": 8.99853515625,
+      "load_after": 6.81591796875,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "native",
+      "timing": "on",
+      "tilt": "off",
+      "exit_code": 0,
+      "p50": 8.32,
+      "p95": 13.33,
+      "p99": 20.55,
+      "mean": 7.64,
+      "max": 28.95,
+      "dropped_over_25ms": 2,
+      "samples": 600,
+      "frames": 3330,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            304
+          ],
+          [
+            "<16.7",
+            275
+          ],
+          [
+            "<20",
+            13
+          ],
+          [
+            "<25",
+            6
+          ],
+          [
+            "<33.3",
+            2
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 2,
+        "tail": [
+          {
+            "frame": 3006,
+            "gpu_max_ms": 4.72,
+            "gpu_top": [
+              "opaque",
+              1.17
+            ],
+            "ms": 28.8,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 3301,
+            "gpu_max_ms": 16.8,
+            "gpu_top": [
+              "post",
+              8.34
+            ],
+            "ms": 28.95,
+            "pipelines_waiting": 0
+          }
+        ],
+        "threshold_ms": 25
+      },
+      "gpu": {
+        "total": {
+          "max": 16.8,
+          "mean": 4.45,
+          "p50": 4.48,
+          "p95": 4.69
+        },
+        "passes": {
+          "opaque": {
+            "max": 4.87,
+            "mean": 1.11,
+            "p50": 1.19,
+            "p95": 1.34
+          },
+          "post": {
+            "max": 8.34,
+            "mean": 0.49,
+            "p50": 0.48,
+            "p95": 0.59
+          },
+          "prepass": {
+            "max": 1.24,
+            "mean": 1.01,
+            "p50": 0.99,
+            "p95": 1.07
+          },
+          "preprocess": {
+            "max": 0.32,
+            "mean": 0.1,
+            "p50": 0.07,
+            "p95": 0.23
+          },
+          "shadow": {
+            "max": 8.83,
+            "mean": 0.66,
+            "p50": 0.63,
+            "p95": 0.85
+          },
+          "ssao": {
+            "max": 1.09,
+            "mean": 0.91,
+            "p50": 0.9,
+            "p95": 0.95
+          },
+          "taa": {
+            "max": 0.27,
+            "mean": 0.07,
+            "p50": 0.05,
+            "p95": 0.22
+          },
+          "tilt_shift": {
+            "max": 0.12,
+            "mean": 0.02,
+            "p50": 0.02,
+            "p95": 0.04
+          },
+          "transmission": {
+            "max": 0.34,
+            "mean": 0.06,
+            "p50": 0.04,
+            "p95": 0.22
+          },
+          "transparent": {
+            "max": 0.24,
+            "mean": 0.02,
+            "p50": 0.01,
+            "p95": 0.08
+          }
+        },
+        "frames": 600,
+        "rejected_non_monotonic": 0,
+        "tail_over_25ms": [
+          {
+            "frame": 4,
+            "segments": {
+              "opaque": 2.19,
+              "post": 5.91,
+              "prepass": 5.44,
+              "preprocess": 0.1,
+              "shadow": 10.1,
+              "ssao": 1.65,
+              "taa": 0.25,
+              "tilt_shift": 0.02,
+              "transmission": 0.01,
+              "transparent": 0.01
+            },
+            "total_ms": 25.68
+          }
+        ]
+      },
+      "load_before": 6.81591796875,
+      "load_after": 7.15234375,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "web",
+      "timing": "off",
+      "tilt": "on",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "p50": 2.5,
+      "p95": 4.2,
+      "p99": 74.6,
+      "mean": 3.81,
+      "max": 82.2,
+      "dropped_over_25ms": 9,
+      "samples": 600,
+      "frames": 750,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            590
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            1
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            9
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 9,
+        "tail": [
+          {
+            "frame": 315,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 57.9,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 364,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 65.5,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 413,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 74.6,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 462,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 81.2,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 511,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 81.6,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 560,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 82,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 609,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 81.9,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 658,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 82.2,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 707,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 81.9,
+            "pipelines_waiting": 0
+          }
+        ],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "console_errors": [],
+      "load_before": 7.15234375,
+      "load_after": 7.78076171875,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "native",
+      "timing": "off",
+      "tilt": "on",
+      "exit_code": 0,
+      "p50": 8.27,
+      "p95": 12.11,
+      "p99": 20.86,
+      "mean": 7.47,
+      "max": 47.75,
+      "dropped_over_25ms": 5,
+      "samples": 600,
+      "frames": 3390,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            320
+          ],
+          [
+            "<16.7",
+            266
+          ],
+          [
+            "<20",
+            7
+          ],
+          [
+            "<25",
+            2
+          ],
+          [
+            "<33.3",
+            3
+          ],
+          [
+            "<50",
+            2
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 5,
+        "tail": [
+          {
+            "frame": 3046,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 39.17,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 3182,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 47.75,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 3251,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 28.47,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 3315,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 32.34,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 3367,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 26.86,
+            "pipelines_waiting": 0
+          }
+        ],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "load_before": 7.78076171875,
+      "load_after": 6.40869140625,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "web",
+      "timing": "off",
+      "tilt": "off",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "p50": 2.8,
+      "p95": 3.8,
+      "p99": 11.3,
+      "mean": 3.28,
+      "max": 61.7,
+      "dropped_over_25ms": 5,
+      "samples": 600,
+      "frames": 720,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            589
+          ],
+          [
+            "<16.7",
+            6
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            3
+          ],
+          [
+            "<100",
+            2
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 5,
+        "tail": [
+          {
+            "frame": 484,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 43.5,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 534,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 33.3,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 584,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 43.8,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 634,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 50.4,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 684,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 61.7,
+            "pipelines_waiting": 0
+          }
+        ],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "console_errors": [],
+      "load_before": 6.40869140625,
+      "load_after": 6.40869140625,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "native",
+      "timing": "off",
+      "tilt": "off",
+      "exit_code": 0,
+      "p50": 8.2,
+      "p95": 16.43,
+      "p99": 17.56,
+      "mean": 7.7,
+      "max": 23.12,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 3390,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            332
+          ],
+          [
+            "<16.7",
+            248
+          ],
+          [
+            "<20",
+            19
+          ],
+          [
+            "<25",
+            1
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail": [],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "load_before": 6.40869140625,
+      "load_after": 7.912109375,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "platform": "web",
+      "timing": "off",
+      "tilt": "off",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "p50": 2.7,
+      "p95": 3.7,
+      "p99": 34.2,
+      "mean": 3.31,
+      "max": 52.1,
+      "dropped_over_25ms": 7,
+      "samples": 600,
+      "frames": 720,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            592
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            1
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            5
+          ],
+          [
+            "<100",
+            2
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 7,
+        "tail": [
+          {
+            "frame": 418,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 34.2,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 466,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 39.8,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 515,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 42.3,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 565,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 43.6,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 615,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 46.7,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 665,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 52.1,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 715,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 51.2,
+            "pipelines_waiting": 0
+          }
+        ],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "console_errors": [],
+      "load_before": 7.912109375,
+      "load_after": 7.912109375,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "platform": "native",
+      "timing": "off",
+      "tilt": "off",
+      "exit_code": 0,
+      "p50": 7.78,
+      "p95": 12.52,
+      "p99": 19.86,
+      "mean": 6.96,
+      "max": 21.97,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 3360,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            377
+          ],
+          [
+            "<16.7",
+            207
+          ],
+          [
+            "<20",
+            10
+          ],
+          [
+            "<25",
+            6
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail": [],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "load_before": 7.912109375,
+      "load_after": 6.27783203125,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "platform": "web",
+      "timing": "off",
+      "tilt": "on",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "p50": 2.6,
+      "p95": 4,
+      "p99": 74.7,
+      "mean": 3.84,
+      "max": 87,
+      "dropped_over_25ms": 10,
+      "samples": 600,
+      "frames": 750,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            587
+          ],
+          [
+            "<16.7",
+            3
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            1
+          ],
+          [
+            "<100",
+            9
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 10,
+        "tail": [
+          {
+            "frame": 273,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 42,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 322,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 51.1,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 371,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 61.2,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 420,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 82.8,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 469,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 74.7,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 518,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 81.7,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 566,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 87,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 612,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 82.9,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 660,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 76.3,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 709,
+            "gpu_max_ms": null,
+            "gpu_top": null,
+            "ms": 80.3,
+            "pipelines_waiting": 0
+          }
+        ],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "console_errors": [],
+      "load_before": 6.27783203125,
+      "load_after": 6.65576171875,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "platform": "native",
+      "timing": "off",
+      "tilt": "on",
+      "exit_code": 0,
+      "p50": 8.18,
+      "p95": 12.93,
+      "p99": 19.49,
+      "mean": 7.17,
+      "max": 23.1,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 3390,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            322
+          ],
+          [
+            "<16.7",
+            263
+          ],
+          [
+            "<20",
+            9
+          ],
+          [
+            "<25",
+            6
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail": [],
+        "threshold_ms": 25
+      },
+      "gpu": null,
+      "load_before": 6.65576171875,
+      "load_after": 6.0107421875,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "platform": "native",
+      "timing": "on",
+      "tilt": "off",
+      "exit_code": 0,
+      "p50": 8.22,
+      "p95": 14.87,
+      "p99": 22.5,
+      "mean": 7.51,
+      "max": 34.17,
+      "dropped_over_25ms": 5,
+      "samples": 600,
+      "frames": 3300,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            329
+          ],
+          [
+            "<16.7",
+            253
+          ],
+          [
+            "<20",
+            5
+          ],
+          [
+            "<25",
+            8
+          ],
+          [
+            "<33.3",
+            4
+          ],
+          [
+            "<50",
+            1
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 5,
+        "tail": [
+          {
+            "frame": 2807,
+            "gpu_max_ms": 15.74,
+            "gpu_top": [
+              "post",
+              7.42
+            ],
+            "ms": 34.17,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 2829,
+            "gpu_max_ms": 4.71,
+            "gpu_top": [
+              "opaque",
+              1.41
+            ],
+            "ms": 25.64,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 3144,
+            "gpu_max_ms": 4.64,
+            "gpu_top": [
+              "opaque",
+              1.28
+            ],
+            "ms": 28.06,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 3216,
+            "gpu_max_ms": 19.2,
+            "gpu_top": [
+              "prepass",
+              16.41
+            ],
+            "ms": 25.38,
+            "pipelines_waiting": 0
+          },
+          {
+            "frame": 3272,
+            "gpu_max_ms": 4.91,
+            "gpu_top": [
+              "opaque",
+              1.29
+            ],
+            "ms": 26.17,
+            "pipelines_waiting": 0
+          }
+        ],
+        "threshold_ms": 25
+      },
+      "gpu": {
+        "total": {
+          "max": 19.2,
+          "mean": 4.5,
+          "p50": 4.51,
+          "p95": 4.75
+        },
+        "passes": {
+          "opaque": {
+            "max": 4.92,
+            "mean": 1.12,
+            "p50": 1.19,
+            "p95": 1.37
+          },
+          "post": {
+            "max": 7.42,
+            "mean": 0.49,
+            "p50": 0.48,
+            "p95": 0.63
+          },
+          "prepass": {
+            "max": 16.41,
+            "mean": 1.04,
+            "p50": 1.02,
+            "p95": 1.09
+          },
+          "preprocess": {
+            "max": 0.39,
+            "mean": 0.1,
+            "p50": 0.09,
+            "p95": 0.23
+          },
+          "shadow": {
+            "max": 2.91,
+            "mean": 0.66,
+            "p50": 0.64,
+            "p95": 0.88
+          },
+          "ssao": {
+            "max": 1.22,
+            "mean": 0.91,
+            "p50": 0.9,
+            "p95": 0.97
+          },
+          "taa": {
+            "max": 0.31,
+            "mean": 0.08,
+            "p50": 0.05,
+            "p95": 0.22
+          },
+          "tilt_shift": {
+            "max": 0.08,
+            "mean": 0.02,
+            "p50": 0.02,
+            "p95": 0.04
+          },
+          "transmission": {
+            "max": 0.23,
+            "mean": 0.05,
+            "p50": 0.02,
+            "p95": 0.21
+          },
+          "transparent": {
+            "max": 0.22,
+            "mean": 0.02,
+            "p50": 0.01,
+            "p95": 0.08
+          }
+        },
+        "frames": 600,
+        "rejected_non_monotonic": 0,
+        "tail_over_25ms": [
+          {
+            "frame": 384,
+            "segments": {
+              "opaque": 1.16,
+              "post": 0.38,
+              "prepass": 21.74,
+              "preprocess": 0.19,
+              "shadow": 0.54,
+              "ssao": 0.9,
+              "taa": 0,
+              "tilt_shift": 0.02,
+              "transmission": 0.23,
+              "transparent": 0
+            },
+            "total_ms": 25.15
+          },
+          {
+            "frame": 1594,
+            "segments": {
+              "opaque": 4.59,
+              "post": 0.42,
+              "prepass": 9.13,
+              "preprocess": 0.01,
+              "shadow": 8.57,
+              "ssao": 0.9,
+              "taa": 2.88,
+              "tilt_shift": 0.02,
+              "transmission": 0,
+              "transparent": 0
+            },
+            "total_ms": 26.52
+          }
+        ]
+      },
+      "load_before": 6.0107421875,
+      "load_after": 8.28662109375,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "platform": "native",
+      "timing": "on",
+      "tilt": "on",
+      "exit_code": 0,
+      "p50": 8.34,
+      "p95": 14.63,
+      "p99": 17.42,
+      "mean": 8.17,
+      "max": 23.6,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 3090,
+      "tiles": 2000,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom",
+        "dof"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            294
+          ],
+          [
+            "<16.7",
+            295
+          ],
+          [
+            "<20",
+            9
+          ],
+          [
+            "<25",
+            2
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail": [],
+        "threshold_ms": 25
+      },
+      "gpu": {
+        "total": {
+          "max": 22.18,
+          "mean": 5,
+          "p50": 4.99,
+          "p95": 5.34
+        },
+        "passes": {
+          "opaque": {
+            "max": 4.87,
+            "mean": 1.1,
+            "p50": 1.16,
+            "p95": 1.36
+          },
+          "post": {
+            "max": 0.66,
+            "mean": 0.39,
+            "p50": 0.38,
+            "p95": 0.49
+          },
+          "prepass": {
+            "max": 10.89,
+            "mean": 1.04,
+            "p50": 1.02,
+            "p95": 1.11
+          },
+          "preprocess": {
+            "max": 0.33,
+            "mean": 0.09,
+            "p50": 0.04,
+            "p95": 0.24
+          },
+          "shadow": {
+            "max": 10.08,
+            "mean": 0.7,
+            "p50": 0.7,
+            "p95": 0.94
+          },
+          "ssao": {
+            "max": 1.4,
+            "mean": 0.93,
+            "p50": 0.9,
+            "p95": 1.04
+          },
+          "taa": {
+            "max": 3.75,
+            "mean": 0.14,
+            "p50": 0.14,
+            "p95": 0.28
+          },
+          "tilt_shift": {
+            "max": 0.8,
+            "mean": 0.53,
+            "p50": 0.54,
+            "p95": 0.63
+          },
+          "transmission": {
+            "max": 0.32,
+            "mean": 0.05,
+            "p50": 0.01,
+            "p95": 0.22
+          },
+          "transparent": {
+            "max": 0.22,
+            "mean": 0.02,
+            "p50": 0.01,
+            "p95": 0.09
+          }
+        },
+        "frames": 600,
+        "rejected_non_monotonic": 0,
+        "tail_over_25ms": [
+          {
+            "frame": 640,
+            "segments": {
+              "opaque": 4.78,
+              "post": 8.79,
+              "prepass": 0.02,
+              "preprocess": 0.18,
+              "shadow": 10.68,
+              "ssao": 0.04,
+              "taa": 0.21,
+              "tilt_shift": 0.53,
+              "transmission": 0.01,
+              "transparent": 0.01
+            },
+            "total_ms": 25.25
+          }
+        ]
+      },
+      "load_before": 8.28662109375,
+      "load_after": 7.56884765625,
+      "load_discarded": 0
+    }
+  ],
+  "summary": {
+    "web": {
+      "budget_run": {
+        "p95_median": 3.7,
+        "mean_median": 3.31,
+        "over_25ms_median": 7,
+        "pass": true
+      },
+      "tilt_shift_cost_ms": {
+        "mean": 0.52,
+        "p95": 0.2999999999999998
+      },
+      "gpu_total_p50_median": null,
+      "gpu_tilt_segment_p50_median": null
+    },
+    "native": {
+      "budget_run": {
+        "p95_median": 12.86,
+        "mean_median": 6.97,
+        "over_25ms_median": 0,
+        "pass": true
+      },
+      "tilt_shift_cost_ms": {
+        "mean": 0.4800000000000004,
+        "p95": 0.07000000000000028
+      },
+      "gpu_total_p50_median": 4.51,
+      "gpu_tilt_segment_p50_median": 0.54
+    }
+  }
+}

@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast audio-e2e shots-boids shots-photo shots-scatter web-scatter
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes perf-water-world initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast audio-e2e shots-boids shots-photo shots-scatter web-scatter
 
 fmt:
 	cargo fmt --all
@@ -363,6 +363,16 @@ perf-passes: build-web
 	cargo build -p hex-app --release
 	cd e2e && npm ci --no-audit --no-fund
 	node e2e/perf-passes.mjs dist target/release/hex-world
+
+# Water- and scatter-heavy play workload (P2 re-run): the deterministic 208-tile world of
+# e2e/water-world.mjs (ocean, coast, rivers, forests, meadows) built by script in play on High at
+# 2560x1440, measured after every rise settles, web (uncapped GPU Chromium) and native, tilt-shift on
+# and off, each run inside the host-load guard. Writes docs/perf/p2-water-world.json (PERF_OUT
+# overrides). WW_ONLY=web|native and WW_ROUNDS narrow the run.
+perf-water-world: build-web
+	cargo build -p hex-app --release
+	cd e2e && npm ci --no-audit --no-fund
+	caffeinate -d -u node e2e/perf-water-world.mjs dist target/release/hex-world
 
 # Play scenario checkpoint (P2 placement loop): runs the scripted proof docs/checkpoints/play/play.json
 # at 1280x800 with tilt-shift off, then copies JPEG stills and the state dumps next to it.

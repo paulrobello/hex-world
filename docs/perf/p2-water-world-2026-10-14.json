@@ -1,0 +1,640 @@
+{
+  "date": "2026-10-14T10:20:39.162Z",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "fps": "off",
+    "seed": "1"
+  },
+  "world": {
+    "generator": "e2e/water-world.mjs waterWorldScript(8)",
+    "tiles": 208,
+    "counts": {
+      "meadow": 39,
+      "river_straight": 31,
+      "forest": 33,
+      "beach": 34,
+      "river_bend": 5,
+      "beach_inner": 5,
+      "beach_outer": 11,
+      "house_cluster": 6,
+      "road_straight": 5,
+      "ocean": 39
+    },
+    "camera": {
+      "cmd": "camera",
+      "pos": [
+        30,
+        300,
+        360
+      ],
+      "look_at": [
+        30,
+        0,
+        0
+      ]
+    }
+  },
+  "budget_p95_ms": 16.6,
+  "load_limit": 15,
+  "rounds": 2,
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "window_note": "read 700+ frames after the last placement settled (web) or 900 frames after the script (native); the rolling 600-frame ring includes the every-30-frame visible-set census; the web page runs the play HUD overlay, which reads hexWorld.state() every animation frame",
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "channel": "chromium",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit --enable-webgpu-developer-features"
+  },
+  "native": {
+    "present": "immediate"
+  },
+  "rows": [
+    {
+      "round": 0,
+      "platform": "web",
+      "tilt": "on",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "settled_at_frame": 780,
+      "tiles": 208,
+      "water_tiles": 125,
+      "p50": 8.4,
+      "p95": 9.3,
+      "p99": 10,
+      "mean": 8.45,
+      "max": 14.2,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 1500,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "boids": 1000,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            280
+          ],
+          [
+            "<16.7",
+            320
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail_ms": []
+      },
+      "console_errors": [],
+      "load_before": 7.23486328125,
+      "load_after": 7.1201171875,
+      "load_discarded": 0
+    },
+    {
+      "vsync_like": true,
+      "round": 0,
+      "platform": "native",
+      "tilt": "on",
+      "exit_code": 0,
+      "tiles": 208,
+      "water_tiles": 125,
+      "p50": 16.66,
+      "p95": 17.27,
+      "p99": 20.3,
+      "mean": 16.59,
+      "max": 26.95,
+      "dropped_over_25ms": 3,
+      "samples": 600,
+      "frames": 1650,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "boids": 1000,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            342
+          ],
+          [
+            "<20",
+            251
+          ],
+          [
+            "<25",
+            4
+          ],
+          [
+            "<33.3",
+            3
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 3,
+        "tail_ms": [
+          25.2,
+          25.68,
+          26.95
+        ]
+      },
+      "load_before": 7.1201171875,
+      "load_after": 7.3154296875,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "platform": "web",
+      "tilt": "off",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "settled_at_frame": 780,
+      "tiles": 208,
+      "water_tiles": 125,
+      "p50": 8.2,
+      "p95": 9.2,
+      "p99": 10.2,
+      "mean": 8.26,
+      "max": 13.3,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 1500,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "boids": 1000,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            387
+          ],
+          [
+            "<16.7",
+            213
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail_ms": []
+      },
+      "console_errors": [],
+      "load_before": 7.3154296875,
+      "load_after": 7.61083984375,
+      "load_discarded": 0
+    },
+    {
+      "vsync_like": true,
+      "round": 0,
+      "platform": "native",
+      "tilt": "off",
+      "exit_code": 0,
+      "tiles": 208,
+      "water_tiles": 125,
+      "p50": 16.62,
+      "p95": 17.27,
+      "p99": 19.22,
+      "mean": 16.1,
+      "max": 27.42,
+      "dropped_over_25ms": 2,
+      "samples": 600,
+      "frames": 1650,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "boids": 1000,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            359
+          ],
+          [
+            "<20",
+            235
+          ],
+          [
+            "<25",
+            4
+          ],
+          [
+            "<33.3",
+            2
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 2,
+        "tail_ms": [
+          27.42,
+          26.08
+        ]
+      },
+      "load_before": 7.61083984375,
+      "load_after": 6.703125,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "web",
+      "tilt": "off",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "settled_at_frame": 780,
+      "tiles": 208,
+      "water_tiles": 125,
+      "p50": 7.8,
+      "p95": 8.6,
+      "p99": 9,
+      "mean": 7.92,
+      "max": 13.1,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 1500,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "boids": 1000,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            520
+          ],
+          [
+            "<16.7",
+            80
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail_ms": []
+      },
+      "console_errors": [],
+      "load_before": 6.703125,
+      "load_after": 7.19189453125,
+      "load_discarded": 0
+    },
+    {
+      "vsync_like": true,
+      "round": 1,
+      "platform": "native",
+      "tilt": "off",
+      "exit_code": 0,
+      "tiles": 208,
+      "water_tiles": 125,
+      "p50": 16.66,
+      "p95": 17.23,
+      "p99": 17.89,
+      "mean": 16.57,
+      "max": 27.29,
+      "dropped_over_25ms": 1,
+      "samples": 600,
+      "frames": 1650,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "boids": 1000,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            318
+          ],
+          [
+            "<20",
+            279
+          ],
+          [
+            "<25",
+            2
+          ],
+          [
+            "<33.3",
+            1
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 1,
+        "tail_ms": [
+          27.29
+        ]
+      },
+      "load_before": 7.19189453125,
+      "load_after": 8.740234375,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "web",
+      "tilt": "on",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "settled_at_frame": 780,
+      "tiles": 208,
+      "water_tiles": 125,
+      "p50": 8.1,
+      "p95": 8.8,
+      "p99": 9.3,
+      "mean": 8.14,
+      "max": 13.6,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 1500,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "boids": 1000,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            437
+          ],
+          [
+            "<16.7",
+            163
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail_ms": []
+      },
+      "console_errors": [],
+      "load_before": 8.740234375,
+      "load_after": 8.22900390625,
+      "load_discarded": 0
+    },
+    {
+      "vsync_like": true,
+      "round": 1,
+      "platform": "native",
+      "tilt": "on",
+      "exit_code": 0,
+      "tiles": 208,
+      "water_tiles": 125,
+      "p50": 16.64,
+      "p95": 17.28,
+      "p99": 18.16,
+      "mean": 16.67,
+      "max": 32.05,
+      "dropped_over_25ms": 2,
+      "samples": 600,
+      "frames": 1650,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "boids": 1000,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            341
+          ],
+          [
+            "<20",
+            254
+          ],
+          [
+            "<25",
+            3
+          ],
+          [
+            "<33.3",
+            2
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 2,
+        "tail_ms": [
+          32.05,
+          25.76
+        ]
+      },
+      "load_before": 8.22900390625,
+      "load_after": 7.810546875,
+      "load_discarded": 0
+    }
+  ],
+  "summary": {
+    "web_tilt_off": {
+      "p95_median": 9.2,
+      "mean_median": 8.26,
+      "over_25ms_median": 0,
+      "pass": true,
+      "runs": 2
+    },
+    "web_tilt_on": {
+      "p95_median": 9.3,
+      "mean_median": 8.45,
+      "over_25ms_median": 0,
+      "pass": true,
+      "runs": 2
+    },
+    "native_tilt_off": {
+      "p95_median": 17.27,
+      "mean_median": 16.57,
+      "over_25ms_median": 2,
+      "pass": false,
+      "vsync_like_runs": 2,
+      "runs": 2
+    },
+    "native_tilt_on": {
+      "p95_median": 17.28,
+      "mean_median": 16.67,
+      "over_25ms_median": 3,
+      "pass": false,
+      "vsync_like_runs": 2,
+      "runs": 2
+    }
+  },
+  "vsync_note": "vsync_like (p50 within 0.3 ms of 16.67 or 8.33, the perf-matrix/perf-tilt rule) was applied to the native rows after the run. Native play runs pin to 60 Hz even with --present immediate (as the kit scenario does, docs/perf/p2-tilt-shift.md), so their p95 is presentation pacing, not cost, and their pass flag does not measure the budget. The web rows are not paced: a diagnostic run with a requestAnimationFrame hook (tilt on, load 7.80 -> 7.35) measured the frame callback at 7.3 ms p50 of a 7.8 ms interval, so the web play frame is CPU-bound on the wasm main thread."
+}

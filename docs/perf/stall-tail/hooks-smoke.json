@@ -1,0 +1,329 @@
+{
+  "date": "2026-10-14T10:01:41.827Z",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "gate2000",
+    "view": "strategic",
+    "layout": "instanced",
+    "chunk": "7",
+    "post": "full",
+    "shadows": "on",
+    "shadow_casters": "all",
+    "cascades": "3",
+    "shadow_dist": "600",
+    "tier": "high",
+    "fps": "off",
+    "tilt": "off",
+    "gpu_timing": "off"
+  },
+  "load_limit": 15,
+  "browser": "chromium-headless-gpu (--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --enable-webgpu-developer-features; uncapped adds --disable-gpu-vsync --disable-frame-rate-limit)",
+  "rows": [
+    {
+      "round": 0,
+      "arm": "base",
+      "viewport": "2560x1440",
+      "paced": false,
+      "hud": true,
+      "poll_ms": 250,
+      "keys": {},
+      "p50": 2.7,
+      "p95": 3.6,
+      "p99": 22.8,
+      "mean": 3.3,
+      "max": 61.4,
+      "over_25ms": 6,
+      "histogram": [
+        [
+          "<8.33",
+          590
+        ],
+        [
+          "<16.7",
+          2
+        ],
+        [
+          "<20",
+          1
+        ],
+        [
+          "<25",
+          1
+        ],
+        [
+          "<33.3",
+          0
+        ],
+        [
+          "<50",
+          1
+        ],
+        [
+          "<100",
+          5
+        ],
+        [
+          ">=100",
+          0
+        ]
+      ],
+      "stall_ms": [
+        34.6,
+        53.8,
+        50.5,
+        61.4,
+        54.9,
+        60.6
+      ],
+      "stall_frame_gaps": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "pipelines_waiting_max": 0,
+      "wasm_memory_bytes": [
+        66584576,
+        66584576
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "page_errors": [],
+      "probe": null,
+      "trace": null,
+      "load_before": 7.71484375,
+      "load_after": 8.3779296875,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "arm": "hooks",
+      "viewport": "2560x1440",
+      "paced": false,
+      "hud": true,
+      "poll_ms": 250,
+      "keys": {},
+      "p50": 2.8,
+      "p95": 3.8,
+      "p99": 7.6,
+      "mean": 3.31,
+      "max": 55.3,
+      "over_25ms": 6,
+      "histogram": [
+        [
+          "<8.33",
+          594
+        ],
+        [
+          "<16.7",
+          0
+        ],
+        [
+          "<20",
+          0
+        ],
+        [
+          "<25",
+          0
+        ],
+        [
+          "<33.3",
+          1
+        ],
+        [
+          "<50",
+          2
+        ],
+        [
+          "<100",
+          3
+        ],
+        [
+          ">=100",
+          0
+        ]
+      ],
+      "stall_ms": [
+        26.4,
+        53.1,
+        45.9,
+        54.5,
+        46.9,
+        55.3
+      ],
+      "stall_frame_gaps": [
+        47,
+        50,
+        50,
+        50,
+        50
+      ],
+      "pipelines_waiting_max": 0,
+      "wasm_memory_bytes": [
+        66519040,
+        66519040
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "page_errors": [],
+      "probe": {
+        "raf_frames": 625,
+        "submits": 1252,
+        "done": 1146,
+        "interval_p50": 2.799999952316284,
+        "callback_p50": 2.600000023841858,
+        "callback_max": 56,
+        "submit_to_done_ms": {
+          "p50": 179.70000004768372,
+          "p95": 267.2000000476837,
+          "max": 286.10000002384186
+        },
+        "inflight_at_submit": {
+          "p50": 109,
+          "p95": 136,
+          "max": 146
+        },
+        "gct_max_ms": 0.19999992847442627,
+        "submit_max_ms": 0.10000002384185791,
+        "stalls": [
+          {
+            "interval_ms": 26.6,
+            "callback_ms": 26.5,
+            "get_current_texture_ms": 0,
+            "submit_ms": 0,
+            "inflight_at_submit": [
+              143,
+              144
+            ]
+          },
+          {
+            "interval_ms": 53.3,
+            "callback_ms": 53,
+            "get_current_texture_ms": 0,
+            "submit_ms": 0,
+            "inflight_at_submit": [
+              137,
+              138
+            ]
+          },
+          {
+            "interval_ms": 46,
+            "callback_ms": 45.7,
+            "get_current_texture_ms": 0,
+            "submit_ms": 0,
+            "inflight_at_submit": [
+              143,
+              144
+            ]
+          },
+          {
+            "interval_ms": 54.7,
+            "callback_ms": 54.4,
+            "get_current_texture_ms": 0,
+            "submit_ms": 0,
+            "inflight_at_submit": [
+              143,
+              144
+            ]
+          },
+          {
+            "interval_ms": 47.1,
+            "callback_ms": 46.9,
+            "get_current_texture_ms": 0,
+            "submit_ms": 0,
+            "inflight_at_submit": [
+              143,
+              144
+            ]
+          },
+          {
+            "interval_ms": 55.4,
+            "callback_ms": 55.1,
+            "get_current_texture_ms": 0,
+            "submit_ms": 0,
+            "inflight_at_submit": [
+              143,
+              144
+            ]
+          },
+          {
+            "interval_ms": 56.2,
+            "callback_ms": 56,
+            "get_current_texture_ms": 0.1,
+            "submit_ms": 0,
+            "inflight_at_submit": [
+              137,
+              138
+            ]
+          }
+        ]
+      },
+      "trace": null,
+      "load_before": 8.3779296875,
+      "load_after": 8.427734375,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "arm": "paced",
+      "viewport": "2560x1440",
+      "paced": true,
+      "hud": true,
+      "poll_ms": 250,
+      "keys": {},
+      "p50": 16.7,
+      "p95": 17.4,
+      "p99": 17.6,
+      "mean": 16.67,
+      "max": 17.8,
+      "over_25ms": 0,
+      "histogram": [
+        [
+          "<8.33",
+          0
+        ],
+        [
+          "<16.7",
+          326
+        ],
+        [
+          "<20",
+          274
+        ],
+        [
+          "<25",
+          0
+        ],
+        [
+          "<33.3",
+          0
+        ],
+        [
+          "<50",
+          0
+        ],
+        [
+          "<100",
+          0
+        ],
+        [
+          ">=100",
+          0
+        ]
+      ],
+      "stall_ms": [],
+      "stall_frame_gaps": [],
+      "pipelines_waiting_max": 0,
+      "wasm_memory_bytes": [
+        66519040,
+        66519040
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "page_errors": [],
+      "probe": null,
+      "trace": null,
+      "load_before": 8.427734375,
+      "load_after": 8.38037109375,
+      "load_discarded": 0
+    }
+  ]
+}

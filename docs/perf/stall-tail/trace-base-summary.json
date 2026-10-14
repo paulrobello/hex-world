@@ -1,0 +1,167 @@
+{
+  "trace": "target/stall/trace-base.json",
+  "events": 845683,
+  "main_thread": "Renderer/CrRendererMain",
+  "gpu_processes": [
+    "GPU Process"
+  ],
+  "window_ms": 999.79,
+  "animation_frames": 281,
+  "interval_ms": {
+    "p50": 2.345,
+    "p95": 3.824,
+    "max": 57.05
+  },
+  "callback_ms": {
+    "p50": 2.205,
+    "max": 56.79
+  },
+  "stalls": 6,
+  "stall_detail": [
+    {
+      "at_ms": 60,
+      "interval_ms": 48.9,
+      "callback_ms": 48.6
+    },
+    {
+      "at_ms": 229.3,
+      "interval_ms": 57,
+      "callback_ms": 56.8
+    },
+    {
+      "at_ms": 403.6,
+      "interval_ms": 56.7,
+      "callback_ms": 56.4
+    },
+    {
+      "at_ms": 584.9,
+      "interval_ms": 52.8,
+      "callback_ms": 52.5
+    },
+    {
+      "at_ms": 763.2,
+      "interval_ms": 47.7,
+      "callback_ms": 47.3
+    },
+    {
+      "at_ms": 939.5,
+      "interval_ms": 48,
+      "callback_ms": 47.7
+    }
+  ],
+  "stall_spacing_frames": [
+    49,
+    50,
+    49,
+    50,
+    49
+  ],
+  "gc": {
+    "events": 515,
+    "in_stalls": 0,
+    "total_ms": 54.11,
+    "distinct_names": 105
+  },
+  "memory_grow_events": [],
+  "top_in_stalls_vs_normal": [
+    {
+      "event": "Renderer/CrRendererMain :: ThreadControllerImpl::RunTask",
+      "stall_ms_per_frame": 51.79,
+      "normal_ms_per_frame": 2.49
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: ThreadControllerImpl::RunTask",
+      "stall_ms_per_frame": 51.75,
+      "normal_ms_per_frame": 2.47
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: Scheduler::RunTask",
+      "stall_ms_per_frame": 51.7,
+      "normal_ms_per_frame": 2.47
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+      "stall_ms_per_frame": 50.02,
+      "normal_ms_per_frame": 0.79
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: Graphics.Pipeline",
+      "stall_ms_per_frame": 50.02,
+      "normal_ms_per_frame": 0.79
+    },
+    {
+      "event": "Renderer/CrRendererMain :: v8.callFunction",
+      "stall_ms_per_frame": 51.55,
+      "normal_ms_per_frame": 2.36
+    },
+    {
+      "event": "Renderer/CrRendererMain :: FireAnimationFrame",
+      "stall_ms_per_frame": 51.55,
+      "normal_ms_per_frame": 2.37
+    },
+    {
+      "event": "Renderer/CrRendererMain :: FunctionCall",
+      "stall_ms_per_frame": 51.54,
+      "normal_ms_per_frame": 2.36
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: SkiaOutputDevice->ScheduleOverlays()",
+      "stall_ms_per_frame": 49.94,
+      "normal_ms_per_frame": 0.79
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: IOSurfaceImageBacking::WaitForCommandsToBeScheduled",
+      "stall_ms_per_frame": 49.93,
+      "normal_ms_per_frame": 0.79
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: IOSurfaceImageBacking::WaitForCommandsToBeScheduled::Dawn",
+      "stall_ms_per_frame": 49.93,
+      "normal_ms_per_frame": 0.79
+    },
+    {
+      "event": "Renderer/CrRendererMain :: CommandBufferProxyImpl::WaitForToken",
+      "stall_ms_per_frame": 49.16,
+      "normal_ms_per_frame": 0.12
+    },
+    {
+      "event": "GPU Process/VizCompositorThread :: ThreadControllerImpl::RunTask",
+      "stall_ms_per_frame": 9.98,
+      "normal_ms_per_frame": 0.53
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: GpuChannel::ExecuteDeferredRequest",
+      "stall_ms_per_frame": 1.66,
+      "normal_ms_per_frame": 1.67
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: WebGPU",
+      "stall_ms_per_frame": 1.65,
+      "normal_ms_per_frame": 1.67
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: CommandBuffer::Flush",
+      "stall_ms_per_frame": 1.65,
+      "normal_ms_per_frame": 1.67
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: CommandBufferStub::OnAsyncFlush",
+      "stall_ms_per_frame": 1.65,
+      "normal_ms_per_frame": 1.67
+    },
+    {
+      "event": "GPU Process/CrGpuMain :: CommandBufferService:PutChanged",
+      "stall_ms_per_frame": 1.64,
+      "normal_ms_per_frame": 1.66
+    }
+  ],
+  "excerpt": {
+    "path": "docs/perf/stall-tail/trace-base-excerpt.json",
+    "events": 225,
+    "stall_interval_ms": 57,
+    "window_us": [
+      589762070177,
+      589762167227
+    ]
+  }
+}
