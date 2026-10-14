@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex World needs WebGPU</title>
+<link rel="stylesheet" href="../assets/scene.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="screens.css">
+<style>
+  /* Served when WebGPU detection fails (PRD §13, TC4): static, no script needed to read it. */
+  body { overflow: auto; }
+  .still { position: fixed; inset: 0; }
+  .still img { position: absolute; left: -6%; top: 2%; width: 90%; height: auto; -webkit-mask-image: radial-gradient(ellipse 62% 60% at 50% 52%, #000 55%, transparent 100%); mask-image: radial-gradient(ellipse 62% 60% at 50% 52%, #000 55%, transparent 100%); }
+  .page { position: relative; min-height: 100vh; display: grid; grid-template-columns: 1fr minmax(0, 440px); align-items: center; padding: 20px; }
+  .card { grid-column: 2; padding: 28px 28px 22px; background: var(--sheet); border-radius: var(--r); box-shadow: var(--shadow-2); }
+  .card h1 { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; text-wrap: balance; }
+  .card > p { margin: 10px 0 0; color: var(--ink-2); font-size: var(--fs-4); line-height: 1.5; }
+  .you { display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start; margin: 18px 0 0; padding: 12px; border-radius: 4px; background: var(--sheet-2); font-size: var(--fs-3); color: var(--ink-2); }
+  .you b { display: block; color: var(--ink); }
+  .you svg { color: var(--bad); }
+  .card h2 { margin: 22px 0 6px; font-size: var(--fs-3); font-weight: 800; }
+  .works { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .works li { display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; align-items: center; min-height: 36px; font-size: var(--fs-3); }
+  .works li span:last-child { color: var(--ink-3); font-size: var(--fs-2); font-weight: 600; }
+  .works svg { color: var(--ok); }
+  .card svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .card .btn-row { margin-top: 20px; }
+  .card .btn svg { width: 18px; height: 18px; }
+  .adapter-only { display: none; }
+  :target ~ .page .adapter-only, .is-adapter .adapter-only { display: block; }
+  .is-adapter .gpu-only { display: none; }
+  .foot { margin: 18px 0 0; font-size: var(--fs-2); color: var(--ink-3); }
+  .foot a { color: var(--ink-2); text-underline-offset: 3px; }
+  @media (max-width: 860px) { .page { grid-template-columns: 1fr; padding: 16px; } .card { grid-column: 1; margin-top: 40vh; } }
+</style>
+</head>
+<body>
+<div class="still" aria-hidden="true"><img src="../assets/scene-water-overview.jpg" alt=""></div>
+<main class="page">
+  <section class="card" aria-labelledby="h">
+    <h1 id="h" class="gpu-only">Hex World needs WebGPU</h1>
+    <h1 class="adapter-only">Hex World couldn't reach your graphics card</h1>
+    <p class="gpu-only">This browser doesn't offer WebGPU, which Hex World uses to draw its world. Open it in one of the browsers below.</p>
+    <p class="adapter-only">WebGPU is on, but no graphics adapter answered. This usually means hardware acceleration is turned off in the browser.</p>
+    <div class="you" role="status">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></svg>
+      <div class="gpu-only"><b>Firefox 139 on macOS</b>No WebGPU in this version on this system.</div>
+      <div class="adapter-only"><b>Chrome 131 on Windows</b>WebGPU found. requestAdapter() returned nothing.</div>
+    </div>
+    <h2 class="gpu-only">Works in</h2>
+    <ul class="works gpu-only">
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Chrome</span><span>113 or newer</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Edge</span><span>113 or newer</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Safari</span><span>26 or newer</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Firefox on Windows</span><span>141 or newer</span></li>
+    </ul>
+    <div class="adapter-only">
+      <h2>Turn it on</h2>
+      <ul class="works">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true" style="color:var(--ink-2)"><path d="M4 7h8.5M17.5 7H20M4 17h2.5M11.5 17H20"/><circle cx="15" cy="7" r="2.4"/><circle cx="9" cy="17" r="2.4"/></svg><span>Settings, System, "Use graphics acceleration when available"</span><span></span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true" style="color:var(--ink-2)"><path d="M4.5 12a7.5 7.5 0 0 0 13.3 4.7M19.5 12A7.5 7.5 0 0 0 6.2 7.3"/><path d="M6 3.5v4h4M18 20.5v-4h-4"/></svg><span>Relaunch the browser, then retry</span><span></span></li>
+      </ul>
+      <div class="btn-row"><a class="btn btn--ink" href="loading.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 0 0 13.3 4.7M19.5 12A7.5 7.5 0 0 0 6.2 7.3"/><path d="M6 3.5v4h4M18 20.5v-4h-4"/></svg>Retry</a></div>
+    </div>
+    <p class="foot">Hex World is a free browser game with nothing to install. <a href="https://github.com/paulrobello/hex-world/issues">Report a problem</a></p>
+  </section>
+</main>
+<nav class="review-strip" aria-label="Review states"><a href="unsupported.html">S11.1</a><a href="unsupported.html#adapter">S11.2</a></nav>
+<script>
+  // Review only: the shipped page picks the variant server-side or from one feature check.
+  if (location.hash === "#adapter") document.body.classList.add("is-adapter");
+  addEventListener("hashchange", () => location.reload());
+  addEventListener("keydown", (e) => { if (e.key === "`") document.documentElement.classList.toggle("show-review"); });
+</script>
+</body>
+</html>

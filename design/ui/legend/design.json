@@ -1,0 +1,655 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-14T03:58:31+00:00",
+  "title": "Design System: Hex World, Legend",
+  "extensions": {
+    "colorMeta": {
+      "sheet": {
+        "role": "neutral",
+        "displayName": "Survey Blue",
+        "canonical": "rgb(18 39 58)",
+        "cssVar": "--sheet",
+        "tonalRamp": [
+          "#12273a",
+          "#1e4161",
+          "#2a5c88",
+          "#3676af",
+          "#508fc9",
+          "#7fadd7",
+          "#b1cde7",
+          "#e4eef7"
+        ]
+      },
+      "sheet-2": {
+        "role": "neutral",
+        "displayName": "Survey Blue, Raised",
+        "canonical": "rgb(25 52 76)",
+        "cssVar": "--sheet-2",
+        "tonalRamp": [
+          "#13273a",
+          "#204260",
+          "#2c5c86",
+          "#3976ad",
+          "#5290c6",
+          "#80add5",
+          "#b2cee6",
+          "#e4eef6"
+        ]
+      },
+      "sheet-3": {
+        "role": "neutral",
+        "displayName": "Survey Blue, High",
+        "canonical": "rgb(34 68 98)",
+        "cssVar": "--sheet-3",
+        "tonalRamp": [
+          "#142739",
+          "#21425f",
+          "#2e5c85",
+          "#3b76aa",
+          "#5590c4",
+          "#82add4",
+          "#b3cee5",
+          "#e4eef6"
+        ]
+      },
+      "void": {
+        "role": "neutral",
+        "displayName": "Void",
+        "canonical": "rgb(14 15 16)",
+        "cssVar": "--void",
+        "tonalRamp": [
+          "#242629",
+          "#3c4044",
+          "#53595f",
+          "#6b737a",
+          "#858c94",
+          "#a5abb0",
+          "#c9cccf",
+          "#ecedee"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "rgb(238 243 246)",
+        "cssVar": "--ink",
+        "tonalRamp": [
+          "#1a2932",
+          "#2c4553",
+          "#3e6075",
+          "#4f7c96",
+          "#6995b0",
+          "#91b1c5",
+          "#bcd0dc",
+          "#e8eff3"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "canonical": "rgb(176 197 214)",
+        "cssVar": "--ink-2",
+        "tonalRamp": [
+          "#1a2832",
+          "#2c4254",
+          "#3d5c76",
+          "#4e7797",
+          "#6890b1",
+          "#90aec5",
+          "#bccedc",
+          "#e7eef3"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "canonical": "rgb(132 156 176)",
+        "cssVar": "--ink-3",
+        "tonalRamp": [
+          "#1e272f",
+          "#32414e",
+          "#465b6d",
+          "#5a758c",
+          "#738fa5",
+          "#99adbd",
+          "#c1cdd7",
+          "#e9eef1"
+        ]
+      },
+      "ink-3-lifted": {
+        "role": "neutral",
+        "displayName": "Ink 3, Lifted",
+        "canonical": "rgb(146 170 190)",
+        "cssVar": "--ink-3 (scoped to sheet-2 surfaces)",
+        "tonalRamp": [
+          "#1d2730",
+          "#304150",
+          "#435b70",
+          "#567590",
+          "#6f8fa9",
+          "#96adc0",
+          "#bfcdd9",
+          "#e9eef2"
+        ]
+      },
+      "ink-on-ink": {
+        "role": "neutral",
+        "displayName": "Ink on Ink",
+        "canonical": "rgb(18 39 58)",
+        "cssVar": "--ink-on-ink",
+        "tonalRamp": [
+          "#12273a",
+          "#1e4161",
+          "#2a5c88",
+          "#3676af",
+          "#508fc9",
+          "#7fadd7",
+          "#b1cde7",
+          "#e4eef7"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "rgb(176 197 214 / .2)",
+        "cssVar": "--rule",
+        "tonalRamp": [
+          "#1a2832",
+          "#2c4254",
+          "#3d5c76",
+          "#4e7797",
+          "#6890b1",
+          "#90aec5",
+          "#bccedc",
+          "#e7eef3"
+        ]
+      },
+      "track": {
+        "role": "neutral",
+        "displayName": "Track",
+        "canonical": "rgb(255 255 255 / .1)",
+        "cssVar": "--track",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#595959",
+          "#737373",
+          "#8c8c8c",
+          "#ababab",
+          "#cccccc",
+          "#ededed"
+        ]
+      },
+      "pick": {
+        "role": "primary",
+        "displayName": "Survey Magenta",
+        "canonical": "rgb(198 46 104)",
+        "cssVar": "--pick",
+        "tonalRamp": [
+          "#3e0e21",
+          "#671836",
+          "#91224c",
+          "#ba2b62",
+          "#d4457b",
+          "#df769e",
+          "#ecacc4",
+          "#f8e2eb"
+        ]
+      },
+      "ok": {
+        "role": "secondary",
+        "displayName": "Fit Green",
+        "canonical": "rgb(123 224 143)",
+        "cssVar": "--ok",
+        "tonalRamp": [
+          "#0f3e18",
+          "#186728",
+          "#229138",
+          "#2cba48",
+          "#45d361",
+          "#77df8b",
+          "#acecb9",
+          "#e2f8e6"
+        ]
+      },
+      "bad": {
+        "role": "secondary",
+        "displayName": "Clash Red",
+        "canonical": "rgb(255 93 82)",
+        "cssVar": "--bad",
+        "tonalRamp": [
+          "#4c0500",
+          "#800800",
+          "#b20b00",
+          "#e60f00",
+          "#ff281a",
+          "#ff6157",
+          "#ff9f99",
+          "#ffdedb"
+        ]
+      },
+      "caution": {
+        "role": "secondary",
+        "displayName": "Survey Amber",
+        "canonical": "rgb(244 196 92)",
+        "cssVar": "--caution",
+        "tonalRamp": [
+          "#483305",
+          "#775408",
+          "#a7760b",
+          "#d7980f",
+          "#f0b128",
+          "#f4c661",
+          "#f9dc9f",
+          "#fdf3de"
+        ]
+      },
+      "neutral": {
+        "role": "neutral",
+        "displayName": "Neutral Edge",
+        "canonical": "rgb(214 228 240 / .55)",
+        "cssVar": "--neutral",
+        "tonalRamp": [
+          "#142838",
+          "#22425d",
+          "#305c83",
+          "#3d77a8",
+          "#5790c2",
+          "#84aed2",
+          "#b4cee4",
+          "#e5eef5"
+        ]
+      },
+      "ghost-fill": {
+        "role": "neutral",
+        "displayName": "Ghost Fill",
+        "canonical": "rgb(74 163 223 / .12)",
+        "cssVar": "--ghost-fill",
+        "tonalRamp": [
+          "#0b2b41",
+          "#13486c",
+          "#1b6598",
+          "#2282c3",
+          "#3c9cdd",
+          "#70b6e6",
+          "#a8d3f0",
+          "#e1f0fa"
+        ]
+      },
+      "ghost-line": {
+        "role": "neutral",
+        "displayName": "Ghost Line",
+        "canonical": "rgb(214 236 255 / .75)",
+        "cssVar": "--ghost-line",
+        "tonalRamp": [
+          "#00294c",
+          "#004480",
+          "#0060b2",
+          "#007be6",
+          "#1a95ff",
+          "#57b1ff",
+          "#99d0ff",
+          "#dbeeff"
+        ]
+      },
+      "socket-grass": {
+        "role": "tertiary",
+        "displayName": "Grass",
+        "canonical": "rgb(156 196 100)",
+        "cssVar": "--k-G",
+        "tonalRamp": [
+          "#293715",
+          "#455c23",
+          "#608131",
+          "#7ba63f",
+          "#95c059",
+          "#b1d185",
+          "#d0e3b5",
+          "#eef5e5"
+        ]
+      },
+      "socket-forest": {
+        "role": "tertiary",
+        "displayName": "Forest",
+        "canonical": "rgb(63 138 79)",
+        "cssVar": "--k-F",
+        "tonalRamp": [
+          "#18351e",
+          "#285832",
+          "#387b46",
+          "#489e5a",
+          "#61b774",
+          "#8bca99",
+          "#b9dfc1",
+          "#e6f4e9"
+        ]
+      },
+      "socket-road": {
+        "role": "tertiary",
+        "displayName": "Road",
+        "canonical": "rgb(226 104 60)",
+        "cssVar": "--k-R",
+        "tonalRamp": [
+          "#43190a",
+          "#6f2a11",
+          "#9b3a17",
+          "#c84b1e",
+          "#e16437",
+          "#e98e6c",
+          "#f2baa6",
+          "#fae7e0"
+        ]
+      },
+      "socket-river": {
+        "role": "tertiary",
+        "displayName": "River",
+        "canonical": "rgb(74 163 223)",
+        "cssVar": "--k-V",
+        "tonalRamp": [
+          "#0b2b41",
+          "#13486c",
+          "#1b6598",
+          "#2282c3",
+          "#3c9cdd",
+          "#70b6e6",
+          "#a8d3f0",
+          "#e1f0fa"
+        ]
+      },
+      "socket-beach": {
+        "role": "tertiary",
+        "displayName": "Beach",
+        "canonical": "rgb(227 194 122)",
+        "cssVar": "--k-B",
+        "tonalRamp": [
+          "#3f300d",
+          "#694f16",
+          "#936f1f",
+          "#be8f28",
+          "#d7a841",
+          "#e2bf74",
+          "#edd8ab",
+          "#f9f1e2"
+        ]
+      },
+      "socket-ocean": {
+        "role": "tertiary",
+        "displayName": "Ocean",
+        "canonical": "rgb(45 111 176)",
+        "cssVar": "--k-O",
+        "tonalRamp": [
+          "#10263d",
+          "#1a4066",
+          "#245a8e",
+          "#2f73b7",
+          "#488dd0",
+          "#79abdd",
+          "#aeccea",
+          "#e3edf8"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Sheet titles (Tiles, Settings, Worlds, Photo). --fs-5."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Bar world name and import title. Group and section heads use 800 at 13 px. --fs-4."
+      },
+      "name": {
+        "displayName": "Name",
+        "purpose": "Tile row names. --fs-4 at 700."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Base text, tools, buttons and fields. --fs-3; buttons and field labels at 700."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Row meta, key list, hints and tooltips. --fs-2."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Key caps, sheet foot and off-list meta. --fs-1."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-1",
+        "value": "0 8px 24px rgb(0 0 0 / .45)",
+        "purpose": "Bar, toast, tooltip, callout and stream chip."
+      },
+      {
+        "name": "shadow-2",
+        "value": "0 16px 40px rgb(0 0 0 / .5)",
+        "purpose": "The full-height sheet."
+      },
+      {
+        "name": "shadow-tag",
+        "value": "0 6px 16px rgb(0 0 0 / .45)",
+        "purpose": "Ghost tag (a style.css literal, not tokenised)."
+      },
+      {
+        "name": "glow-ok",
+        "value": "drop-shadow(0 0 6px rgb(123 224 143 / .9)) drop-shadow(0 0 14px rgb(123 224 143 / .6))",
+        "purpose": "Compatible edge, standing in for bloom."
+      },
+      {
+        "name": "glow-bad",
+        "value": "drop-shadow(0 0 6px rgb(255 93 82 / .9)) drop-shadow(0 0 14px rgb(255 93 82 / .5))",
+        "purpose": "Incompatible edge. The removal outline uses 8 px at .6."
+      },
+      {
+        "name": "ring-refusal",
+        "value": "inset 0 0 0 1.5px rgb(255 93 82)",
+        "purpose": "Refusal ghost tag. The Nothing-fits key uses the same ring at .55."
+      },
+      {
+        "name": "ring-select",
+        "value": "inset 0 0 0 1.5px rgb(198 46 104)",
+        "purpose": "Selected row outline (bad on the off list)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(.22, .9, .3, 1)",
+        "purpose": "The one curve for every transition and keyframe."
+      },
+      {
+        "name": "t-fast",
+        "value": "120ms",
+        "purpose": "Hover, select and edge-state crossfade."
+      },
+      {
+        "name": "t",
+        "value": "180ms",
+        "purpose": "Tool icon nudge; the base duration."
+      },
+      {
+        "name": "t-slow",
+        "value": "240ms",
+        "purpose": "Sheet slide, callout fade and refusal pulse."
+      },
+      {
+        "name": "t-toast",
+        "value": "200ms",
+        "purpose": "Toast rise and fade (screens.css overrides t)."
+      },
+      {
+        "name": "toast-dwell",
+        "value": "4000ms",
+        "purpose": "Toast auto-dismiss. Pauses while hovered."
+      },
+      {
+        "name": "tip-delay",
+        "value": "350ms",
+        "purpose": "Tooltip hover delay. Immediate on keyboard focus."
+      },
+      {
+        "name": "ghost-breathe",
+        "value": "2.4s ease-in-out infinite",
+        "purpose": "Ghost cap breathing. Off under reduced motion."
+      },
+      {
+        "name": "rise",
+        "value": "1500-2500ms cubic-bezier(.2, .9, .25, 1.08)",
+        "purpose": "Placed tile rise, per tile data, owned by the engine."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "@media (prefers-reduced-motion: reduce) { transition-duration: 0s; animation: none }",
+        "purpose": "Every transition and keyframe becomes an instant cut. Indeterminate progress becomes a full bar at 35%. State still reads by colour, pattern, icon and text. ?still pins motion the same way for captures."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow-desktop",
+        "value": "max-width: 1400px",
+        "purpose": "Key caps leave the bar for tooltips, tools pad 9 px, the Tiles sheet narrows to 340 px, and socket-code cells narrow to 7 px."
+      }
+    ],
+    "focus": {
+      "ring": "outline: 2px solid var(--ink); outline-offset: 2px",
+      "escape": "F6 and Shift+F6 cycle focus across visible [data-region] landmarks. Tab is reserved for the Tiles sheet."
+    },
+    "provenance": "Written after the build from design/ui/legend/style.css and screens.css. The sidecar sits at design/ui/legend/design.json instead of .impeccable/design.json, per the review boundary."
+  },
+  "components": [
+    {
+      "name": "Tool Bar",
+      "kind": "nav",
+      "refersTo": "bar",
+      "description": "The labelled tool bar, top left. Magenta marks the active tool.",
+      "html": "<nav class=\"ds-bar\"><b class=\"ds-bar-title\">Riverside</b><span class=\"ds-rule\"></span><button class=\"ds-tool is-active\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 2.8 20 7.4v9.2L12 21.2 4 16.6V7.4Z\"/><path d=\"M12 8.6v6.8M8.6 12h6.8\"/></svg>Place</button><button class=\"ds-tool\"><svg viewBox=\"0 0 24 24\"><path d=\"M19.5 12a7.5 7.5 0 1 1-2.2-5.3\"/><path d=\"M19.6 3.8v4.6H15\"/></svg>Rotate<kbd class=\"ds-kbd\">R</kbd></button></nav>",
+      "css": ".ds-bar{display:inline-flex;align-items:center;gap:2px;padding:6px;background:rgb(18 39 58);border-radius:6px;box-shadow:0 8px 24px rgb(0 0 0 / .45);font-family:Manrope,system-ui,sans-serif;color:rgb(238 243 246)}.ds-bar-title{margin:0 8px;font-weight:800;font-size:1rem;letter-spacing:-.01em}.ds-rule{width:1px;height:28px;margin:0 8px;background:rgb(176 197 214 / .2)}.ds-tool{display:flex;align-items:center;gap:7px;height:44px;padding:0 10px;border:0;border-radius:4px;background:transparent;color:rgb(176 197 214);font:600 .875rem Manrope,sans-serif;cursor:pointer;transition:background 120ms cubic-bezier(.22,.9,.3,1),color 120ms cubic-bezier(.22,.9,.3,1)}.ds-tool svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ds-tool:hover{background:rgb(25 52 76);color:rgb(238 243 246)}.ds-tool:focus-visible{outline:2px solid rgb(238 243 246);outline-offset:2px}.ds-tool.is-active{background:rgb(198 46 104);color:white}.ds-kbd{font:700 .75rem/1 Manrope,sans-serif;padding:3px 5px;border-radius:4px;background:rgb(255 255 255 / .08);color:rgb(176 197 214)}"
+    },
+    {
+      "name": "Slot Key",
+      "kind": "custom",
+      "refersTo": "key",
+      "description": "Signature: a hex that draws which edges of the hovered slot are touched and by what, with the needs in words.",
+      "html": "<div class=\"ds-key\"><svg viewBox=\"0 0 100 100\"><polygon class=\"b\" points=\"79.4,33 79.4,67 50,84 20.6,67 20.6,33 50,16\"/><line x1=\"79.4\" y1=\"67\" x2=\"50\" y2=\"84\" stroke=\"rgb(74 163 223)\"/><line x1=\"50\" y1=\"84\" x2=\"20.6\" y2=\"67\" stroke=\"rgb(156 196 100)\"/></svg><div><p>This slot needs</p><ul><li><i style=\"background:rgb(74 163 223)\"></i>River on one edge</li><li><i style=\"background:rgb(156 196 100)\"></i>Grass, forest or beach beside it</li></ul></div></div>",
+      "css": ".ds-key{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:center;width:340px;padding:12px;background:rgb(25 52 76);border-radius:4px;font-family:Manrope,sans-serif;color:rgb(238 243 246)}.ds-key svg{width:64px;height:64px}.ds-key .b{fill:none;stroke:rgb(214 228 240 / .55);stroke-width:2.5;stroke-dasharray:5 5}.ds-key line{stroke-width:9;stroke-linecap:round}.ds-key p{margin:0 0 4px;font-weight:800;font-size:.875rem}.ds-key ul{list-style:none;margin:0;padding:0;display:grid;gap:3px;font-size:.8125rem;color:rgb(176 197 214)}.ds-key i{display:inline-block;width:14px;height:4px;margin-right:7px;border-radius:2px;vertical-align:middle}"
+    },
+    {
+      "name": "Tile Row with Socket Code",
+      "kind": "custom",
+      "refersTo": "row",
+      "description": "Signature: a tile's legend entry, with six socket cells in edge order. A selected row gets a 1.5 px magenta outline.",
+      "html": "<button class=\"ds-row\" aria-pressed=\"true\"><span class=\"ds-glyph\"></span><span class=\"ds-text\"><b>River straight</b><small>2 rotations fit</small></span><span class=\"ds-code\"><i style=\"background:rgb(74 163 223)\"></i><i style=\"background:rgb(156 196 100)\"></i><i style=\"background:rgb(156 196 100)\"></i><i style=\"background:rgb(74 163 223)\"></i><i style=\"background:rgb(156 196 100)\"></i><i style=\"background:rgb(156 196 100)\"></i></span></button>",
+      "css": ".ds-row{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;width:340px;padding:6px 10px 6px 6px;border:0;border-radius:4px;background:transparent;color:rgb(238 243 246);font-family:Manrope,sans-serif;text-align:left;cursor:pointer;transition:background 120ms cubic-bezier(.22,.9,.3,1)}.ds-row:hover{background:rgb(25 52 76)}.ds-row[aria-pressed=true]{background:rgb(25 52 76);box-shadow:inset 0 0 0 1.5px rgb(198 46 104)}.ds-row:focus-visible{outline:2px solid rgb(238 243 246);outline-offset:2px}.ds-glyph{width:48px;height:48px;background:rgb(156 196 100);clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)}.ds-text{display:grid}.ds-text b{font-weight:700;font-size:1rem}.ds-text small{font-size:.8125rem;color:rgb(176 197 214)}.ds-code{display:grid;grid-template-columns:repeat(6,9px);gap:2px}.ds-code i{height:14px;border-radius:1px}"
+    },
+    {
+      "name": "Button (default, ink, bad, quiet)",
+      "kind": "button",
+      "refersTo": "btn",
+      "description": "44 px tall, 4 px radius, weight 700. Ink is the primary action and bad is destructive.",
+      "html": "<div class=\"ds-btns\"><button class=\"ds-btn ds-btn--ink\">Open as a new world</button><button class=\"ds-btn\">Replace</button><button class=\"ds-btn ds-btn--bad\">Delete</button><button class=\"ds-btn ds-btn--quiet\">Cancel</button></div>",
+      "css": ".ds-btns{display:flex;gap:8px;flex-wrap:wrap}.ds-btn{min-height:44px;padding:0 16px;border:0;border-radius:4px;background:rgb(25 52 76);color:rgb(238 243 246);font:700 .875rem Manrope,sans-serif;cursor:pointer;transition:background 120ms cubic-bezier(.22,.9,.3,1),transform 120ms cubic-bezier(.22,.9,.3,1)}.ds-btn:hover{background:rgb(34 68 98)}.ds-btn:active{transform:translateY(1px)}.ds-btn:focus-visible{outline:2px solid rgb(238 243 246);outline-offset:2px}.ds-btn--ink{background:rgb(238 243 246);color:rgb(18 39 58)}.ds-btn--ink:hover{background:white}.ds-btn--bad{background:rgb(255 93 82);color:rgb(40 8 6)}.ds-btn--bad:hover{background:rgb(255 120 110)}.ds-btn--quiet{background:transparent;color:rgb(176 197 214)}.ds-btn--quiet:hover{background:rgb(25 52 76);color:rgb(238 243 246)}"
+    },
+    {
+      "name": "Toast",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "A bottom-left margin note. One shows at a time, it stays 4 s, and tone lives on the icon only.",
+      "html": "<div class=\"ds-toast\"><svg viewBox=\"0 0 24 24\"><path d=\"M9 14 4 9l5-5\"/><path d=\"M4 9h10.5a5.5 5.5 0 0 1 0 11H11\"/></svg><p>Placed River straight</p><button>Undo</button></div>",
+      "css": ".ds-toast{display:inline-flex;align-items:center;gap:16px;padding:8px 8px 8px 14px;background:rgb(18 39 58);border-radius:6px;box-shadow:0 8px 24px rgb(0 0 0 / .45);color:rgb(238 243 246);font:600 .875rem Manrope,sans-serif}.ds-toast svg{width:20px;height:20px;fill:none;stroke:rgb(176 197 214);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ds-toast p{margin:0}.ds-toast button{min-height:36px;padding:0 14px;border:0;border-radius:4px;background:rgb(25 52 76);color:rgb(238 243 246);font:700 .875rem Manrope,sans-serif;cursor:pointer}.ds-toast button:hover{background:rgb(255 255 255 / .14)}.ds-toast button:focus-visible{outline:2px solid rgb(238 243 246);outline-offset:2px}"
+    },
+    {
+      "name": "Switch and Segmented Control",
+      "kind": "input",
+      "refersTo": "switch",
+      "description": "Settings controls. Ink marks on, and a dark well holds the group.",
+      "html": "<div class=\"ds-fields\"><button class=\"ds-switch\" role=\"switch\" aria-checked=\"true\"></button><div class=\"ds-seg\"><button aria-checked=\"false\">1×</button><button aria-checked=\"true\">2×</button><button aria-checked=\"false\">4×</button></div></div>",
+      "css": ".ds-fields{display:flex;gap:16px;align-items:center}.ds-switch{position:relative;width:44px;height:26px;border:0;border-radius:13px;background:rgb(255 255 255 / .1);cursor:pointer;transition:background 150ms cubic-bezier(.22,.9,.3,1)}.ds-switch::after{content:\"\";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:rgb(176 197 214);transition:transform 150ms cubic-bezier(.22,.9,.3,1)}.ds-switch[aria-checked=true]{background:rgb(238 243 246)}.ds-switch[aria-checked=true]::after{transform:translateX(18px);background:rgb(18 39 58)}.ds-switch:focus-visible{outline:2px solid rgb(238 243 246);outline-offset:2px}.ds-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:2px;background:rgb(0 0 0 / .22);border-radius:6px;width:220px}.ds-seg button{min-height:40px;border:0;border-radius:4px;background:transparent;color:rgb(176 197 214);font:700 .875rem Manrope,sans-serif;cursor:pointer}.ds-seg button:hover{color:rgb(238 243 246);background:rgb(255 255 255 / .05)}.ds-seg button[aria-checked=true]{background:rgb(238 243 246);color:rgb(18 39 58)}.ds-seg button:focus-visible{outline:2px solid rgb(238 243 246);outline-offset:1px}"
+    },
+    {
+      "name": "Note",
+      "kind": "card",
+      "refersTo": "note",
+      "description": "A legend entry inside a sheet. Tone lives in the icon colour, never in a stripe.",
+      "html": "<div class=\"ds-note\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 4 21 19.5H3Z\"/><path d=\"M12 10v4.2M12 17v.01\"/></svg><div><b>Autosave is off</b>This browser blocks storage. Export keeps your world.</div></div>",
+      "css": ".ds-note{display:grid;grid-template-columns:20px 1fr;gap:10px;width:340px;padding:10px 12px;border-radius:4px;background:rgb(25 52 76);color:rgb(176 197 214);font:600 .8125rem/1.4 Manrope,sans-serif}.ds-note svg{width:18px;height:18px;margin-top:1px;fill:none;stroke:rgb(244 196 92);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ds-note b{display:block;color:rgb(238 243 246);font-size:.875rem;margin-bottom:2px}"
+    },
+    {
+      "name": "Worlds Mix Strip",
+      "kind": "custom",
+      "refersTo": "socket-code-cell",
+      "description": "Signature recurrence: a world keyed by its socket mix, with segments flexed by tile count.",
+      "html": "<div class=\"ds-mix\"><i style=\"flex:6;background:rgb(156 196 100)\"></i><i style=\"flex:3;background:rgb(74 163 223)\"></i><i style=\"flex:2;background:rgb(227 194 122)\"></i><i style=\"flex:3;background:rgb(45 111 176)\"></i></div>",
+      "css": ".ds-mix{display:flex;width:120px;height:6px;gap:1px;border-radius:2px;overflow:hidden}.ds-mix i{display:block;height:100%}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Survey Sheet Margin",
+    "overview": "The HUD is the margin of a survey map sheet laid beside the diorama. Socket kinds are map classes (grass, forest, road, river, beach, ocean), so every tile is keyed by its six edge colours the way a map legend keys its symbols, and the slot the player points at prints its own key: what it needs. The diorama is the hero. The margin frames it in deep survey-blue panels and never competes with it.\n\nDensity is that of a legend: small, exact, tabular. One grotesk family (Manrope) carries every role, with tabular figures throughout. Colour splits into three strict jobs. Survey-blue and ink are the paper. One magenta marks the current tool and the current selection. The six socket colours and the ok, bad and caution states appear only as data. Panels sit in the margins (tool bar top left, sheet full height on the right, notes bottom left) so the centre stays clear for the ghost.\n\nThe system was written after the build, from `style.css` (the owner-approved comp) and `screens.css` (the full pass). The Tiles sheet is open by default, stays open while the player hovers slots, and closes only by Tab or its close control. Tiles that do not fit stay in the list, dimmed with their reason, below every tile that fits. These are owner decisions and bind every later surface.",
+    "keyCharacteristics": [
+      "Deep survey-blue panels on a near-black void, with no glass, no blur and no gradients on chrome.",
+      "Six socket colours as the only chromatic vocabulary, always shown as data: edges, codes, keys, mix strips.",
+      "One magenta for the current tool and the current selection.",
+      "Legality is never colour alone. It is always colour plus pattern (solid, dashed, tick) plus words.",
+      "One family, tabular figures, weights from 600 to 800, no uppercase labels.",
+      "Every control is at least 44 px tall, ready for touch."
+    ],
+    "rules": [
+      {
+        "name": "The Colour-as-Data Rule",
+        "body": "Socket colours appear only where they encode a socket: an edge, a code cell, a key mark, a mix-strip segment, a lane, or a tile fill. They never decorate chrome. The one standing exception is `ghost-fill`, which is the River hue at 12% (see Do's and Don'ts).",
+        "section": "colors"
+      },
+      {
+        "name": "The One Magenta Rule",
+        "body": "`pick` marks the current tool and the current selection only. Bulldoze takes `bad` instead of magenta, because the active tool there is destructive.",
+        "section": "colors"
+      },
+      {
+        "name": "The Never-Colour-Alone Rule",
+        "body": "Every state carries a second channel:",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "Manrope carries every role. Hierarchy comes from weight (600, 700 or 800) and the five-step scale, never from a second face, uppercase or tracking.",
+        "section": "typography"
+      },
+      {
+        "name": "The Narrow-Desktop Rule (1400 px)",
+        "body": "At 1400 px wide or less, key caps leave the bar and live only in tooltips, tools tighten to 9 px of side padding, the Tiles sheet narrows to 340 px, and socket-code cells narrow to 7 px. The bar and sheet never meet, and the ghost area stays clear (shot `s12-narrow-1280x720`).",
+        "section": "layout"
+      },
+      {
+        "name": "The F6 Escape Rule",
+        "body": "Tab belongs to the sheet: it opens and closes Tiles. So F6, and Shift+F6 to go back, moves focus between `[data-region]` landmarks (bar, sheet, toast), skipping closed ones. The sheet foot and the Settings key table both state it.",
+        "section": "layout"
+      },
+      {
+        "name": "The Paper-and-Ink Rule",
+        "body": "Raised means a lighter survey blue, never a border or a lighter shadow. Rings appear only as state: the selected row's outline, a refusal tag, or the \"Nothing fits\" key.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** key every tile, slot and world with the six socket colours in edge order: the code, the key, the mix strip.",
+      "**Do** pair every legality colour with a pattern and words: solid for ok; dashed with a cross tick for bad; thin for neutral.",
+      "**Do** keep `pick` for the current tool and the current selection only.",
+      "**Do** set every text in Manrope with tabular figures, at 12, 13, 14, 16 or 20 px, in weight 600, 700 or 800.",
+      "**Do** use ink, at 2 px offset 2 px, for the focus ring on every control.",
+      "**Do** lift `ink-3` to `ink-3-lifted` on any `sheet-2` surface.",
+      "**Do** keep panels in the margins and the centre clear for the ghost, and apply the 1400 px narrow rule.",
+      "**Do** give every control a 44 px target (36 px for the small button).",
+      "**Do** use dashed strokes for open or unresolved shapes and drop-shadow glow for edge states. Both are native to this world."
+    ],
+    "donts": [
+      "**Don't** use a socket colour as decoration on chrome. The only standing exception is `ghost-fill`, the River hue at 12% on the ghost cap, which in-world.md specifies.",
+      "**Don't** mark selection or note tone with a coloured side stripe. Use the 1.5 px full outline for selection and the icon colour for note tone.",
+      "**Don't** group the Tiles sheet by category. It groups by consequence: \"Fits here\" first, then \"Doesn't fit here\".",
+      "**Don't** hide tiles that do not fit. Dim them and state the reason.",
+      "**Don't** close the Tiles sheet on slot hover. Only Tab or its close control closes it.",
+      "**Don't** add a second family, uppercase labels or tracked-out caps.",
+      "**Don't** use glass, backdrop blur or bordered panels. Depth is tonal survey blue plus an ambient shadow."
+    ]
+  }
+}

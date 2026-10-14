@@ -1,0 +1,304 @@
+/* Legend, full pass. Extends style.css (the approved play-screen comp) with the components every
+   other screen needs. Tokens come from style.css; this file only adds what it lacked. */
+:root {
+  --void: rgb(14 15 16);
+  --sheet-3: rgb(34 68 98);
+  --ink-on-ink: rgb(18 39 58);
+  --caution: rgb(244 196 92);
+  --track: rgb(255 255 255 / .1);
+  --shadow-1: 0 8px 24px rgb(0 0 0 / .45);
+  --shadow-2: 0 16px 40px rgb(0 0 0 / .5);
+  --t-toast: 200ms;
+}
+html { background: var(--void); }
+body { line-height: 1.4; }
+.is-still *, .is-still *::before, .is-still *::after { transition: none !important; }
+.is-still *:not([data-hold]), .is-still *::before, .is-still *::after { animation: none !important; }
+.is-still [data-hold] { animation-play-state: paused !important; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ic { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: var(--sheet-2); border-radius: 4px; }
+
+/* ---------- Tool bar additions ---------- */
+.bar__world { display: grid; gap: 1px; height: 44px; align-content: center; padding: 0 10px; margin-right: 2px; border: 0; border-radius: 4px; background: transparent; text-align: left; cursor: pointer; transition: background var(--t-fast) var(--ease); }
+.bar__world:hover { background: var(--sheet-2); }
+.bar__world b { font-weight: 800; font-size: var(--fs-4); letter-spacing: -.01em; line-height: 1.1; }
+.bar__world > span { display: flex; align-items: center; gap: 6px; font-size: var(--fs-1); font-weight: 600; color: var(--ink-3); line-height: 1.2; }
+.save-state { position: relative; display: inline-grid; }
+.save-state > * { grid-area: 1 / 1; transition: opacity 150ms var(--ease); }
+.save-state [data-s] { opacity: 0; }
+.save-state[data-state=saved] [data-s=saved], .save-state[data-state=saving] [data-s=saving], .save-state[data-state=off] [data-s=off] { opacity: 1; }
+.save-state [data-s=off] { color: var(--caution); }
+.save-dot { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: var(--ok); vertical-align: 1px; }
+[data-s=saving] .save-dot { background: var(--ink-3); animation: blink 900ms ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .3; } }
+.tool:disabled { color: rgb(132 156 176 / .55); cursor: default; background: transparent; }
+.tool:disabled kbd { opacity: .5; }
+.tool:focus-visible, .row:focus-visible, .btn:focus-visible, .bar__world:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.is-bulldoze .tool[data-action=bulldoze] kbd { background: rgb(0 0 0 / .2); color: white; }
+.tool.is-fired { animation: fire 200ms var(--ease); }
+@keyframes fire { 0% { box-shadow: 0 0 0 0 rgb(238 243 246 / .5); } 100% { box-shadow: 0 0 0 6px rgb(238 243 246 / 0); } }
+
+/* Tooltip: name and shortcut, 4 px slide */
+.tip { position: fixed; z-index: 50; display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 10px; background: var(--ink); color: var(--ink-on-ink); border-radius: 4px; font-weight: 700; font-size: var(--fs-2); box-shadow: var(--shadow-1); pointer-events: none; opacity: 0; transform: translateY(-4px); transition: opacity 130ms var(--ease), transform 130ms var(--ease); white-space: nowrap; }
+.tip.is-shown { opacity: 1; transform: none; }
+.tip kbd { background: rgb(18 39 58 / .12); color: var(--ink-on-ink); }
+.tip small { font-weight: 600; font-size: var(--fs-2); color: rgb(18 39 58 / .7); }
+
+/* ---------- Buttons and fields (shared by every sheet) ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 4px; background: var(--sheet-2); color: var(--ink); font-weight: 700; font-size: var(--fs-3); cursor: pointer; transition: background var(--t-fast) var(--ease), transform var(--t-fast) var(--ease); text-decoration: none; }
+.btn:hover { background: var(--sheet-3); }
+.btn:active { transform: translateY(1px); }
+.btn--ink { background: var(--ink); color: var(--ink-on-ink); }
+.btn--ink:hover { background: white; }
+.btn--bad { background: var(--bad); color: rgb(40 8 6); }
+.btn--bad:hover { background: rgb(255 120 110); }
+.btn--quiet { background: transparent; color: var(--ink-2); }
+.btn--quiet:hover { background: var(--sheet-2); color: var(--ink); }
+.btn--sm { min-height: 36px; padding: 0 12px; font-size: var(--fs-2); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.field { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 12px; padding: 10px 0; }
+.field + .field { border-top: 1px solid var(--rule); }
+.field__label { font-weight: 700; font-size: var(--fs-3); }
+.field__hint { grid-column: 1 / -1; margin: -2px 0 0; font-size: var(--fs-2); color: var(--ink-3); }
+.field__value { font-weight: 700; font-size: var(--fs-2); color: var(--ink-2); min-width: 5ch; text-align: right; }
+.field--slider { grid-template-columns: 1fr auto; }
+.field--slider input[type=range] { grid-column: 1 / -1; }
+.field.is-disabled > :not(.field__hint) { opacity: .7; }
+
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer; --pct: 50%; }
+input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--ink) var(--pct), var(--track) var(--pct)); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7px; border-radius: 50%; background: var(--ink); border: 3px solid var(--sheet); box-shadow: 0 0 0 1px var(--ink); transition: transform var(--t-fast) var(--ease); }
+input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.12); }
+input[type=range]:focus-visible { outline: none; }
+input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px var(--ink), 0 0 0 5px rgb(238 243 246 / .3); }
+input[type=range]:disabled { cursor: default; }
+input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--track); }
+input[type=range]::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--ink); }
+input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--ink); border: 3px solid var(--sheet); }
+
+.switch { position: relative; width: 44px; height: 26px; flex: none; border: 0; border-radius: 13px; background: var(--track); cursor: pointer; transition: background 150ms var(--ease); }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--ink-2); transition: transform 150ms var(--ease), background 150ms var(--ease); }
+.switch[aria-checked=true] { background: var(--ink); }
+.switch[aria-checked=true]::after { transform: translateX(18px); background: var(--sheet); }
+.switch:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.switch:disabled { opacity: .45; cursor: default; }
+
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; padding: 2px; background: rgb(0 0 0 / .22); border-radius: 6px; }
+.seg button { min-height: 40px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: var(--ink-2); font-weight: 700; font-size: var(--fs-3); cursor: pointer; transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.seg button:hover { color: var(--ink); background: rgb(255 255 255 / .05); }
+.seg button[aria-checked=true] { background: var(--ink); color: var(--ink-on-ink); }
+.seg button:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.seg button small { display: block; font-weight: 600; font-size: var(--fs-1); opacity: .75; }
+
+.progress { position: relative; height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.progress > i { position: absolute; inset: 0 auto 0 0; width: var(--p, 0%); background: var(--ink); border-radius: 3px; transition: width 240ms linear; }
+.progress--indeterminate > i { width: 32%; animation: sweep 1.2s cubic-bezier(.45, 0, .55, 1) infinite; }
+@keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(320%); } }
+
+/* ---------- Sheets in the right margin: tiles, settings, worlds, photo ---------- */
+.sheet { z-index: 10; }
+.sheet--wide { width: 420px; }
+.sheet__head h1 { flex: none; }
+.sheet__sub { margin: 4px 0 0; font-size: var(--fs-2); color: var(--ink-3); }
+.sheet__body { flex: 1 1 0; min-height: 0; overflow: auto; margin: 0 -16px; padding: 0 16px; scrollbar-width: thin; scrollbar-color: var(--sheet-2) transparent; }
+.sheet__foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 12px; font-size: var(--fs-1); color: var(--ink-3); }
+.sheet__foot kbd { font-size: 11px; }
+.section-h { margin: 20px 0 4px; font-size: var(--fs-2); font-weight: 800; color: var(--ink); }
+.section-h:first-child { margin-top: 12px; }
+.tabs { display: flex; gap: 2px; margin: 14px 0 4px; border-bottom: 1px solid var(--rule); }
+.tabs button { position: relative; min-height: 40px; padding: 0 12px; border: 0; background: transparent; color: var(--ink-3); font-weight: 700; font-size: var(--fs-3); cursor: pointer; transition: color var(--t-fast) var(--ease); }
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-selected=true] { color: var(--ink); }
+.tabs button[aria-selected=true]::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 2px; background: var(--ink); border-radius: 1px; }
+.tabs button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.panel[hidden] { display: none; }
+.sheet .panel { animation: panel-in 150ms var(--ease); }
+@keyframes panel-in { from { opacity: 0; transform: translateY(4px); } }
+
+/* Notes inside a sheet: a legend entry, never a coloured side stripe */
+.note { display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start; margin: 10px 0; padding: 10px 12px; border-radius: 4px; background: var(--sheet-2); font-size: var(--fs-2); color: var(--ink-2); }
+.note .ic { width: 18px; height: 18px; margin-top: 1px; color: var(--ink-2); }
+.note b { display: block; color: var(--ink); font-size: var(--fs-3); margin-bottom: 2px; }
+.note--caution .ic { color: var(--caution); }
+.note--bad .ic { color: var(--bad); }
+.note--ok .ic { color: var(--ok); }
+.note .btn-row { grid-column: 2; margin-top: 8px; }
+
+/* ---------- Toast, extended: count, error, progress ---------- */
+.toast { z-index: 20; max-width: 520px; transition: opacity var(--t-toast) var(--ease), transform var(--t-toast) var(--ease); }
+.toast .ic { color: var(--ink-2); }
+.toast--bad .ic { color: var(--bad); }
+.toast--ok .ic { color: var(--ok); }
+.toast p { display: grid; }
+.toast p > span { transition: opacity 120ms var(--ease); }
+.toast p small { font-size: var(--fs-2); color: var(--ink-3); }
+.toast__count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-right: 4px; padding: 0 6px; border-radius: 11px; background: var(--sheet-2); font-weight: 800; font-size: var(--fs-1); }
+
+/* ---------- Streaming chip (S1.5): bottom left, never under the sheet ---------- */
+.stream-chip { position: fixed; left: var(--s-5); bottom: 84px; z-index: 15; display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--sheet); border-radius: var(--r); font-size: var(--fs-2); color: var(--ink-2); box-shadow: var(--shadow-1); transition: opacity 150ms var(--ease); }
+.stream-chip .progress { width: 72px; height: 4px; }
+.stream-chip[hidden] { display: flex !important; opacity: 0; pointer-events: none; }
+
+/* ---------- Coach marks (first run): a map callout with a leader line ---------- */
+.callout { position: fixed; z-index: 30; display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--ink); color: var(--ink-on-ink); border-radius: 4px; font-weight: 700; font-size: var(--fs-3); box-shadow: var(--shadow-1); opacity: 0; transform: translateY(4px); transition: opacity 240ms var(--ease), transform 240ms var(--ease); pointer-events: none; }
+.callout.is-shown { opacity: 1; transform: none; }
+.callout kbd { background: rgb(18 39 58 / .12); color: var(--ink-on-ink); }
+.callout .ic { width: 18px; height: 18px; color: var(--ink-on-ink); }
+.leader { position: fixed; inset: 0; z-index: 29; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.leader path { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 3 4; opacity: 0; transition: opacity 240ms var(--ease); }
+.leader circle { fill: var(--ink); opacity: 0; transition: opacity 240ms var(--ease); }
+.leader .is-shown { opacity: 1; }
+
+/* ---------- The in-world layer: slot ring, ghost, edge glow, bulldoze outlines ---------- */
+.world { position: fixed; inset: 0; }
+.world .scene > img { transition: opacity 300ms var(--ease); }
+.world svg.overlay { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.slot { fill: rgb(214 228 240 / .001); stroke: var(--neutral); stroke-width: 2; stroke-dasharray: 6 7; pointer-events: all; cursor: pointer; transition: stroke 120ms var(--ease), fill 120ms var(--ease), opacity 160ms var(--ease); }
+.slot:hover, .slot.is-hover { stroke: rgb(238 243 246 / .9); }
+.slot.is-hover { fill: rgb(238 243 246 / .04); }
+.is-bulldoze .slot, .is-photo .slot { opacity: 0; pointer-events: none; }
+.g-body { fill: var(--ghost-fill); stroke: var(--ghost-line); stroke-width: 2; stroke-dasharray: 10 8; animation: ghost-breathe 2.4s ease-in-out infinite; }
+.g-lane { fill: none; stroke-linecap: round; opacity: .6; transition: opacity 180ms var(--ease); }
+.g-lane.is-V { stroke: var(--k-V); stroke-width: 22; }
+.g-lane.is-R { stroke: var(--k-R); stroke-width: 18; }
+.g-edge { fill: none; stroke-linecap: round; transition: stroke 120ms var(--ease), opacity 120ms var(--ease); }
+.g-edge.is-free { stroke: var(--neutral); stroke-width: 3; opacity: .7; }
+.g-edge.is-ok { stroke: var(--ok); stroke-width: 7; filter: drop-shadow(0 0 6px rgb(123 224 143 / .9)) drop-shadow(0 0 14px rgb(123 224 143 / .6)); }
+.g-edge.is-bad { stroke: var(--bad); stroke-width: 7; stroke-dasharray: 14 9; filter: drop-shadow(0 0 6px rgb(255 93 82 / .9)) drop-shadow(0 0 14px rgb(255 93 82 / .5)); }
+.g-tick { stroke: var(--bad); stroke-width: 3.5; stroke-linecap: round; }
+.g-key { stroke-width: 4; stroke-linecap: round; opacity: .95; }
+.ghost-g { transition: opacity 150ms var(--ease); }
+.ghost-g.is-pulse .g-edge.is-bad { animation: bad-pulse 240ms var(--ease) 1; }
+@keyframes bad-pulse { 50% { stroke-width: 13; filter: drop-shadow(0 0 10px rgb(255 93 82)) drop-shadow(0 0 24px rgb(255 93 82 / .7)); } }
+.ghost-g.is-commit .g-edge { stroke: white; filter: drop-shadow(0 0 8px white); transition-duration: 80ms; }
+
+.placed .p-side { fill: rgb(58 44 34); }
+.placed .p-top { stroke: rgb(0 0 0 / .25); stroke-width: 1; }
+.placed .p-lane { fill: none; stroke-linecap: butt; }
+.placed { transform-box: fill-box; }
+.placed.is-rising { animation: rise var(--rise, 1800ms) cubic-bezier(.2, .9, .25, 1.08) both; }
+@keyframes rise { 0% { transform: translateY(26px); opacity: 0; } 20% { opacity: 1; } 70% { transform: translateY(-4px); } 100% { transform: none; } }
+.placed.is-leaving { animation: sink 260ms var(--ease) both; }
+@keyframes sink { to { transform: translateY(20px); opacity: 0; } }
+.dust { fill: rgb(214 200 170 / .35); animation: dust 900ms ease-out both; }
+.placed:not(.is-rising) .dust { display: none; }
+.key__swatch { box-sizing: border-box; }
+@keyframes dust { from { opacity: .8; transform: scale(.6); } to { opacity: 0; transform: scale(1.4); } }
+
+.t-hit { fill: transparent; stroke: none; pointer-events: none; cursor: crosshair; }
+.is-bulldoze .t-hit { pointer-events: all; }
+.t-out { fill: none; stroke-width: 4; stroke-linejoin: round; opacity: 0; transition: opacity 120ms var(--ease); }
+.t-out.is-remove { stroke: var(--bad); fill: rgb(255 93 82 / .12); opacity: 1; filter: drop-shadow(0 0 8px rgb(255 93 82 / .6)); }
+.t-out.is-blocked { stroke: var(--bad); stroke-dasharray: 10 8; fill: none; opacity: 1; }
+.t-cut { fill: url(#hatch); stroke: var(--ink); stroke-width: 2; stroke-dasharray: 3 5; opacity: 0; transition: opacity 160ms var(--ease); }
+.t-cut.is-shown { opacity: 1; }
+.t-gone { fill: var(--void); opacity: 0; transition: opacity 260ms var(--ease); }
+.t-gone.is-shown { opacity: .96; }
+
+/* Tag beside the ghost or the bulldoze target (extends .ghost-tag) */
+.ghost-tag { z-index: 12; transition: opacity 150ms var(--ease), transform 150ms var(--ease); max-width: 440px; }
+.ghost-tag.is-gone { opacity: 0; transform: translateY(4px); pointer-events: none; }
+.ghost-tag .ic { width: 18px; height: 18px; }
+.ghost-tag__fit.is-bad, .ghost-invalid .ghost-tag__fit { color: var(--bad); }
+.ghost-tag__fit { transition: color 120ms var(--ease); }
+.ghost-tag--bad { box-shadow: var(--shadow-1), inset 0 0 0 1.5px var(--bad); }
+
+/* ---------- The sheet's key in every mode ---------- */
+.key { transition: background 160ms var(--ease); }
+.key__hex .key__slot { fill: none; stroke: var(--neutral); stroke-width: 2.5; stroke-dasharray: 5 5; }
+.key__hex .key__edge { transition: stroke 160ms var(--ease), opacity 160ms var(--ease); }
+.key__hex .key__x { stroke: var(--bad); stroke-width: 5; stroke-linecap: round; }
+.key__list li { display: flex; align-items: baseline; gap: 0; }
+.key__list i { flex: none; }
+.key--empty .key__title { color: var(--ink); }
+.key--none { box-shadow: inset 0 0 0 1.5px rgb(255 93 82 / .55); }
+.key__more { margin: 8px 0 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.key__swatch { display: inline-block; width: 14px; height: 10px; margin-right: 7px; border-radius: 2px; vertical-align: -1px; }
+.key__swatch--remove { background: rgb(255 93 82 / .25); border: 2px solid var(--bad); }
+.key__swatch--blocked { border: 2px dashed var(--bad); }
+.key__swatch--cut { background: repeating-linear-gradient(135deg, rgb(238 243 246 / .7) 0 1.5px, transparent 1.5px 5px); box-shadow: inset 0 0 0 1px var(--ink-2); }
+
+/* Rows: FLIP-ready, identity kept between slots */
+.list { position: relative; }
+.row { position: relative; will-change: transform; }
+.row.is-dimmed .row__glyph { opacity: .45; filter: saturate(.3); transition: opacity 160ms var(--ease), filter 160ms var(--ease); }
+.row__glyph { transition: opacity 160ms var(--ease), filter 160ms var(--ease), transform 130ms var(--ease); }
+.row:hover .row__glyph { transform: translateY(-2px) scale(1.04); }
+.row__num { position: absolute; left: 4px; top: 4px; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 3px; background: rgb(0 0 0 / .35); font-size: 10px; font-weight: 800; color: var(--ink-2); }
+.list--off .row__num { display: none; }
+.list--all .row { grid-template-columns: 52px 1fr auto; }
+.list--all .row__code { display: grid; }
+.group { display: flex; align-items: baseline; gap: 0; }
+.group[hidden] { display: none; }
+.sheet .list--off { -webkit-mask-image: none; }
+.sheet--tiles .sheet__body { -webkit-mask-image: linear-gradient(180deg, #000 92%, transparent); }
+.list--off .row { cursor: pointer; }
+.empty-key { margin: 8px 0 0; font-size: var(--fs-2); color: var(--ink-3); }
+
+/* HUD hidden (S2.3) and photo hide: panels slide off their nearest edge */
+.hud-hidden .bar { transform: translateY(calc(-100% - 24px)); opacity: 0; }
+.hud-hidden .sheet { transform: translateX(calc(100% + 24px)); opacity: 0; }
+.hud-hidden .toast, .hud-hidden .ghost-tag { opacity: 0; }
+.bar { z-index: 11; transition: transform 200ms var(--ease), opacity 200ms var(--ease); }
+.show-ui { position: fixed; right: var(--s-5); bottom: var(--s-5); z-index: 25; display: flex; align-items: center; gap: 8px; padding: 0 12px; min-height: 40px; border: 0; border-radius: var(--r); background: rgb(18 39 58 / .85); color: var(--ink-2); font-weight: 700; font-size: var(--fs-2); cursor: pointer; opacity: 0; transform: translateY(6px); transition: opacity 200ms var(--ease), transform 200ms var(--ease); pointer-events: none; }
+.hud-hidden .show-ui { opacity: 1; transform: none; pointer-events: auto; }
+
+/* Review-only state strip: never part of the game, never in captures */
+.review-strip { position: fixed; left: 50%; bottom: 8px; z-index: 100; transform: translateX(-50%); display: none; gap: 4px; padding: 4px; background: rgb(0 0 0 / .7); border-radius: 6px; font-size: 11px; }
+.review-strip a { padding: 4px 6px; color: var(--ink-2); text-decoration: none; border-radius: 3px; }
+.review-strip a:hover { background: rgb(255 255 255 / .1); color: white; }
+.show-review .review-strip { display: flex; flex-wrap: wrap; max-width: 90vw; }
+
+/* Tertiary ink lifts on the lighter sheet-2 surfaces so it keeps 4.5:1 there too. */
+.key, .note, .current, .import, .bench, .tier[aria-checked=true], .tier:hover, .slot-row:hover, .slot-row.is-open, .row:hover, .row.is-hover, .row[aria-pressed=true], .you { --ink-3: rgb(146 170 190); }
+
+/* Bar world link, row hover twin for review states, inert lists in bulldoze */
+a.bar__world { color: inherit; text-decoration: none; }
+.ic--xs { width: 12px; height: 12px; margin-right: 2px; vertical-align: -2px; }
+.row.is-hover { background: var(--sheet-2); }
+.row.is-hover .row__glyph { transform: translateY(-2px) scale(1.04); }
+.sheet__body { transition: opacity 150ms var(--ease); }
+.sheet.is-inert .sheet__body { opacity: .4; pointer-events: none; }
+
+/* Narrow desktop (1280 wide): key caps move into tooltips and the sheet narrows, so the bar and
+   sheet never meet and the ghost area stays clear. Touch layout (P7) keeps the 44 px targets. */
+@media (max-width: 1400px) {
+  .bar kbd { display: none; }
+  .tool { padding: 0 9px; }
+  .sheet--tiles { width: 340px; }
+  .row__code { grid-template-columns: repeat(6, 7px); }
+}
+
+/* Selection without a side stripe: a full-row outline plus the row's own number key filled. */
+.row[aria-pressed="true"] { background: var(--sheet-2); box-shadow: inset 0 0 0 1.5px var(--pick); }
+.list--off .row[aria-pressed="true"] { box-shadow: inset 0 0 0 1.5px var(--bad); }
+.row[aria-pressed="true"] .row__num { background: var(--pick); color: white; }
+
+/* "Doesn't fit here" never scrolls out of sight: its header sticks to the sheet's foot. */
+.sheet--tiles .sheet__body { -webkit-mask-image: none; mask-image: none; }
+.sheet--tiles .group--off { position: sticky; bottom: 0; z-index: 1; margin: 0; padding: 14px 0 8px; background: var(--sheet); box-shadow: 0 -12px 12px -8px var(--sheet); cursor: pointer; }
+.sheet--tiles .group--off .group__more { width: 14px; height: 14px; margin-left: 6px; color: var(--ink-3); vertical-align: -2px; }
+
+/* Refusal tags set as headline over reason, never two ragged columns. */
+.tag-stack { display: grid; gap: 1px; line-height: 1.3; white-space: nowrap; }
+.tag-stack small { font-size: var(--fs-2); font-weight: 600; color: var(--bad); }
+.ghost-tag:has(.tag-stack) { border-radius: 6px; padding: 8px 14px 8px 12px; }
+
+/* Long sheets fade at the foot so clipped content reads as scrollable. */
+.sheet--photo .sheet__body, .sheet--settings .sheet__body { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 28px), transparent); }
+
+/* Stand-in caption, shown only while a flat placed tile is on screen. */
+.standin { position: fixed; right: 412px; bottom: 22px; z-index: 9; padding: 5px 10px; border-radius: 4px; background: rgb(18 39 58 / .85); color: var(--ink-2); font-size: var(--fs-1); font-weight: 600; opacity: 0; transition: opacity 200ms var(--ease); pointer-events: none; white-space: nowrap; }
+.standin.is-shown { opacity: 1; }
+body:has(.toast.is-shown) .standin { opacity: 0; }
+@media (max-width: 1400px) { .standin { right: 380px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Every transition and keyframe becomes an instant cut; state still shows by colour, icon and text. */
+  *, *::before, *::after { transition-duration: 0s !important; transition-delay: 0s !important; animation: none !important; }
+  .progress--indeterminate > i { width: 100%; opacity: .35; }
+}

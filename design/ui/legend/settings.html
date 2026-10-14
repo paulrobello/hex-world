@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex World · Settings</title>
+<link rel="stylesheet" href="../assets/scene.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="screens.css">
+<style>
+  .shot { position: fixed; inset: 0; background: var(--void); }
+  .shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 30% 50%; }
+  .shot img[data-on] { opacity: var(--tilt, .6); transition: opacity 150ms var(--ease); }
+  .tiers { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 2px; }
+  .tier { display: grid; grid-template-columns: 20px 1fr auto; gap: 4px 12px; align-items: center; min-height: 52px; padding: 6px 10px; border-radius: 4px; cursor: pointer; transition: background var(--t-fast) var(--ease); }
+  .tier:hover { background: var(--sheet-2); }
+  .tier[aria-checked=true] { background: var(--sheet-2); }
+  .tier:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .tier .radio { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--ink-3); transition: box-shadow var(--t-fast) var(--ease); }
+  .tier[aria-checked=true] .radio { box-shadow: inset 0 0 0 5px var(--ink); }
+  .tier b { font-weight: 700; font-size: var(--fs-3); }
+  .tier small { grid-column: 2 / -1; margin-top: -4px; font-size: var(--fs-2); color: var(--ink-3); }
+  .tier .tag { font-size: var(--fs-1); font-weight: 700; color: var(--ink-2); }
+  .tier .tag--detected { padding: 2px 6px; border-radius: 3px; background: rgb(255 255 255 / .08); }
+  .bench { display: none; gap: 8px; margin: 6px 0 4px; padding: 12px; border-radius: 4px; background: var(--sheet-2); }
+  .is-bench .bench { display: grid; }
+  .is-bench .tiers { opacity: .45; pointer-events: none; }
+  .bench p { display: flex; justify-content: space-between; margin: 0; font-size: var(--fs-2); color: var(--ink-2); }
+  .bench p b { color: var(--ink); font-size: var(--fs-3); }
+  .tier-note { display: none; }
+  .is-tier-up .tier-note { display: grid; }
+  .controls { width: 100%; border-collapse: collapse; font-size: var(--fs-2); }
+  .controls th { text-align: left; font-weight: 700; color: var(--ink); padding: 9px 0; }
+  .controls td { padding: 9px 0; color: var(--ink-2); text-align: right; }
+  .controls tr + tr { border-top: 1px solid var(--rule); }
+  .controls kbd { margin-left: 3px; }
+  .sheet--settings .sheet__body { padding-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="shot" aria-hidden="true">
+  <img src="../assets/scene-tilt-off-overview.jpg" alt="">
+  <img src="../assets/scene-tilt-on-overview.jpg" alt="" data-on>
+</div>
+<div data-mount="bar"></div>
+
+<section class="sheet sheet--wide sheet--settings" data-region aria-label="Settings">
+  <header class="sheet__head">
+    <h1>Settings</h1>
+    <button class="sheet__close" type="button" data-href="play.html" aria-label="Close settings" data-tip="Close|Esc"><svg><use href="#i-close"/></svg></button>
+  </header>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" aria-selected="true" aria-controls="p-graphics" id="t-graphics">Graphics</button>
+    <button type="button" role="tab" aria-selected="false" aria-controls="p-audio" id="t-audio">Audio</button>
+    <button type="button" role="tab" aria-selected="false" aria-controls="p-controls" id="t-controls">Controls</button>
+  </div>
+  <div class="sheet__body">
+    <div class="panel" id="p-graphics" role="tabpanel" aria-labelledby="t-graphics">
+      <h2 class="section-h">Quality</h2>
+      <div class="bench" role="status">
+        <p><b>Measuring this GPU</b><span data-bench-pct>62%</span></p>
+        <span class="progress"><i style="--p:62%" data-bench-bar></i></span>
+        <p><span>Apple M4 Max · Metal</span><span>About 3 seconds</span></p>
+      </div>
+      <ul class="tiers" role="radiogroup" aria-label="Quality tier" data-tiers>
+        <li class="tier" role="radio" tabindex="0" aria-checked="true" data-tier="auto"><span class="radio"></span><b>Auto</b><span class="tag">Uses High here</span><small>Chosen from this GPU and a short benchmark</small></li>
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-tier="low"><span class="radio"></span><b>Low</b><span class="tag">0.67×</span><small>2 shadow cascades · no SSAO · no water refraction</small></li>
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-tier="medium"><span class="radio"></span><b>Medium</b><span class="tag">0.85×</span><small>3 cascades · half-res SSAO · no water reflection</small></li>
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-tier="high"><span class="radio"></span><b>High</b><span class="tag tag--detected">Detected</span><small>1.0× · 4 cascades · full SSAO and water</small></li>
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-tier="ultra"><span class="radio"></span><b>Ultra</b><span class="tag">1.0× + TAA</span><small>4k shadows · bent normals · planar water reflection</small></li>
+      </ul>
+      <button class="btn btn--quiet btn--sm" type="button" data-bench style="margin-top:4px"><svg class="ic"><use href="#i-gpu"/></svg>Measure this GPU again</button>
+      <div class="note note--caution tier-note" role="status"><svg class="ic"><use href="#i-alert"/></svg><div><b>Ultra may run below 60 fps here</b>High measured 13.1 ms a frame on this GPU. Ultra adds 4k shadows and planar reflections.</div></div>
+
+      <h2 class="section-h">Tilt-shift</h2>
+      <div class="field"><span class="field__label">Miniature focus</span><button class="switch" type="button" role="switch" aria-checked="true" aria-label="Tilt-shift" data-tilt></button><span class="field__hint">Blurs near and far like a diorama photo. On from Medium up.</span></div>
+      <label class="field field--slider" data-tilt-strength><span class="field__label">Strength</span><output class="field__value" data-out="tilt">60%</output><input type="range" min="0" max="100" value="60" data-in="tilt" aria-label="Tilt-shift strength"></label>
+    </div>
+
+    <div class="panel" id="p-audio" role="tabpanel" aria-labelledby="t-audio" hidden>
+      <h2 class="section-h">Volume</h2>
+      <label class="field field--slider"><span class="field__label">Master</span><output class="field__value" data-vol>80%</output><input type="range" min="0" max="100" value="80" aria-label="Master volume"></label>
+      <label class="field field--slider"><span class="field__label">Music</span><output class="field__value" data-vol>55%</output><input type="range" min="0" max="100" value="55" aria-label="Music volume"></label>
+      <label class="field field--slider"><span class="field__label">Ambience</span><output class="field__value" data-vol>70%</output><input type="range" min="0" max="100" value="70" aria-label="Ambience volume"><span class="field__hint">Rivers, surf, birds and town, loudest where you zoom in.</span></label>
+      <label class="field field--slider"><span class="field__label">Effects</span><output class="field__value" data-vol>75%</output><input type="range" min="0" max="100" value="75" aria-label="Effects volume"></label>
+      <label class="field field--slider"><span class="field__label">Interface</span><output class="field__value" data-vol>50%</output><input type="range" min="0" max="100" value="50" aria-label="Interface volume"></label>
+      <div class="field"><span class="field__label">Mute everything</span><button class="switch" type="button" role="switch" aria-checked="false" aria-label="Mute everything"></button></div>
+    </div>
+
+    <div class="panel" id="p-controls" role="tabpanel" aria-labelledby="t-controls" hidden>
+      <h2 class="section-h">Placing</h2>
+      <div class="field"><span class="field__label">Auto-rotate</span><button class="switch" type="button" role="switch" aria-checked="true" aria-label="Auto-rotate"></button><span class="field__hint">The ghost starts at the first rotation that fits, and R steps through the ones that fit.</span></div>
+      <div class="field"><span class="field__label">Reduce motion</span><span></span><div class="seg" role="radiogroup" aria-label="Reduce motion" style="grid-column:1/-1"><button type="button" role="radio" aria-checked="true">Follow system<small>System: off</small></button><button type="button" role="radio" aria-checked="false">On</button><button type="button" role="radio" aria-checked="false">Off</button></div></div>
+      <h2 class="section-h">Keys</h2>
+      <table class="controls">
+        <tr><th scope="row">Orbit</th><td>Right-drag</td></tr>
+        <tr><th scope="row">Pan</th><td>Middle-drag, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows</td></tr>
+        <tr><th scope="row">Zoom</th><td>Wheel</td></tr>
+        <tr><th scope="row">Place</th><td>Left-click</td></tr>
+        <tr><th scope="row">Rotate</th><td><kbd>R</kbd> <kbd>⇧R</kbd> or Ctrl+wheel</td></tr>
+        <tr><th scope="row">Undo, redo</th><td><kbd>⌘Z</kbd> <kbd>⇧⌘Z</kbd></td></tr>
+        <tr><th scope="row">Bulldoze</th><td><kbd>B</kbd></td></tr>
+        <tr><th scope="row">Tiles</th><td><kbd>Tab</kbd></td></tr>
+        <tr><th scope="row">Photo mode</th><td><kbd>P</kbd></td></tr>
+        <tr><th scope="row">Hide UI</th><td><kbd>H</kbd></td></tr>
+        <tr><th scope="row">Next panel</th><td><kbd>F6</kbd>, since <kbd>Tab</kbd> opens tiles</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<nav class="review-strip" aria-label="Review states">
+  <a href="#graphics">S9.1</a><a href="#tier-up">S9.2</a><a href="#benchmark">S9.3</a><a href="#tilt-off">S9.4 off</a><a href="#audio">S9.5</a><a href="#controls">S9.6</a>
+</nav>
+
+<script src="proto.js"></script>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  document.querySelector("[data-mount=bar]").outerHTML = HW.bar({ active: "settings" });
+  document.querySelector(".tool[data-action=settings]").classList.add("is-active");
+  document.querySelector(".tool[data-action=place]").classList.remove("is-active");
+  const shot = $(".shot");
+  const setTilt = () => {
+    const on = $("[data-tilt]").getAttribute("aria-checked") === "true";
+    const v = +$("[data-in=tilt]").value;
+    shot.style.setProperty("--tilt", on ? v / 100 : 0);
+    $("[data-tilt-strength]").classList.toggle("is-disabled", !on);
+    $("[data-in=tilt]").disabled = !on;
+  };
+  document.addEventListener("input", (e) => {
+    if (e.target.matches("[data-in=tilt]")) { $("[data-out=tilt]").textContent = `${e.target.value}%`; setTilt(); }
+    const vol = e.target.closest(".field")?.querySelector("[data-vol]");
+    if (vol) vol.textContent = `${e.target.value}%`;
+  });
+  document.addEventListener("change", (e) => { if (e.target.matches("[data-tilt]")) setTilt(); });
+  const tiers = [...document.querySelectorAll(".tier")];
+  function pickTier(li) {
+    tiers.forEach((t) => { t.setAttribute("aria-checked", String(t === li)); t.tabIndex = t === li ? 0 : -1; });
+    document.body.classList.toggle("is-tier-up", li.dataset.tier === "ultra");
+  }
+  tiers.forEach((li) => li.addEventListener("click", () => pickTier(li)));
+  $("[data-tiers]").addEventListener("keydown", (e) => {
+    const i = tiers.indexOf(document.activeElement);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); const n = tiers[(i + (e.key === "ArrowDown" ? 1 : tiers.length - 1)) % tiers.length]; n.focus(); pickTier(n); }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") location.href = "play.html"; });
+  setTilt();
+  const STATES = {
+    "tier-up": () => pickTier(tiers[4]),
+    benchmark: () => document.body.classList.add("is-bench"),
+    "tilt-off": () => { $("[data-tilt]").setAttribute("aria-checked", "false"); setTilt(); },
+    audio: () => HW.selectTab($("#t-audio")),
+    controls: () => HW.selectTab($("#t-controls")),
+  };
+  STATES[HW.state()]?.();
+  $("[data-bench]").addEventListener("click", () => {
+    document.body.classList.add("is-bench");
+    let p = 0;
+    const t = setInterval(() => {
+      p += 4;
+      $("[data-bench-pct]").textContent = `${Math.min(p, 100)}%`;
+      $("[data-bench-bar]").style.setProperty("--p", `${Math.min(p, 100)}%`);
+      if (p >= 100) { clearInterval(t); document.body.classList.remove("is-bench"); }
+    }, 120);
+  });
+  addEventListener("hashchange", () => location.reload());
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex World · Play</title>
+<link rel="stylesheet" href="../assets/scene.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+<div class="scene"><img src="../assets/scene-water-overview.jpg" alt="The world: meadows, a river and a beach running into the sea"><svg class="overlay" viewBox="0 0 1600 1000" aria-hidden="true"></svg></div>
+
+<div data-mount="bar"></div>
+<div class="ghost-tag is-gone" role="status"></div>
+<div class="toast" data-toast role="status" aria-live="polite"></div>
+<p class="sr" data-live aria-live="polite"></p>
+<button class="show-ui" type="button" data-action="show-ui"><svg class="ic"><use href="#i-eye"/></svg>Show UI <kbd>H</kbd></button>
+<div class="stream-chip" data-stream hidden role="status"><svg class="ic"><use href="#i-import"/></svg><span>Loading coast pack</span><span class="progress"><i style="--p:62%"></i></span><span>2.4 MB</span></div>
+
+<section class="sheet sheet--tiles" data-panel data-region aria-label="Tile inventory">
+  <header class="sheet__head">
+    <h1>Tiles</h1>
+    <kbd>Tab</kbd>
+    <button class="sheet__close" type="button" data-action="inventory" aria-label="Close tiles, Tab" data-tip="Close|Tab"><svg><use href="#i-close"/></svg></button>
+  </header>
+  <div class="key" data-key></div>
+  <div class="sheet__body">
+    <h2 class="group" data-group="fit">Fits here <span data-count="fit">3</span></h2>
+    <ul class="list list--fit" data-list="fit"></ul>
+    <h2 class="group group--off" data-group="off">Doesn't fit here <span data-count="off">9</span><svg class="ic group__more" aria-hidden="true"><use href="#i-down"/></svg></h2>
+    <ul class="list list--off" data-list="off"></ul>
+  </div>
+  <p class="sheet__foot"><kbd>1–9</kbd> pick <kbd>R</kbd> turn <kbd>F6</kbd> next panel</p>
+</section>
+
+<nav class="review-strip" aria-label="Review states">
+  <a href="#open-idle">S3.1</a><a href="#default">S3.2</a><a href="#slot-grass">S3.3</a><a href="#nothing-fits">S3.4</a><a href="#tile-hover">S3.5</a><a href="#select-blocked">S3.7</a><a href="#keyboard">S3.8</a><a href="#closed">S3.9</a><a href="#rotate">S4.2</a><a href="#rotate-clash">S4.4</a><a href="#placed">S5.1</a><a href="#place-rejected">S5.2</a><a href="#undo">S6.1</a><a href="#redo">S6.2</a><a href="#undo-repeat">S6.3</a><a href="#undo-empty">S6.4</a><a href="#bulldoze">S7.2</a><a href="#bulldoze-done">S7.3</a><a href="#bulldoze-split">S7.4</a><a href="#hud-hidden">S2.3</a><a href="#tooltip">S2.4</a><a href="#streaming">S1.5</a><a href="#saving">S10.1</a><a href="#storage-off">S10.9</a>
+</nav>
+
+<script src="proto.js"></script>
+<script>
+  // The busy world: the approved water look-dev capture, framed as in the comp. Slot and tile
+  // outlines sit in the capture's 1600x1000 space. Edge e of a slot runs pts[e+2] to pts[e+3].
+  const shape = (cx, cy, s = 1) => [[-160, 0], [-30, -68], [130, -68], [160, 0], [30, 68], [-130, 68]].map(([x, y]) => [Math.round(cx + x * s), Math.round(cy + y * s)]);
+  window.WORLD = {
+    scene: { src: "../assets/scene-water-overview.jpg", x: 150, y: 96, s: 0.66 },
+    grassAt: [560, 720],
+    selected: "river_bend",
+    rise: 1800,
+    history: [
+      { kind: "seed", text: "placed Beach at (3, −2)" },
+      { kind: "seed", text: "placed River bend at (0, 1)" },
+      { kind: "seed", text: "placed Meadow at (−1, 0)" },
+    ],
+    slots: [
+      { id: "A", coord: "(−2, 1)", pts: [[-50, 513], [80, 445], [240, 445], [270, 513], [140, 581], [-20, 581]], needs: { 0: "G", 1: "V" } },
+      { id: "B", coord: "(−1, −1)", pts: [[350, 322], [450, 266], [600, 266], [625, 322], [530, 378], [372, 378]], needs: { 1: "G", 2: "G" }, adj: { 0: "C" } },
+      { id: "C", coord: "(0, −2)", pts: [[605, 274], [690, 226], [815, 226], [835, 274], [750, 322], [625, 322]], needs: { 1: "O", 2: "G" }, adj: { 3: "B" }, nearest: "A", noneWhy: "No tile carries both a river and the sea." },
+    ],
+    tiles: [
+      { id: "t1", name: "Meadow", pts: shape(400, 445) },
+      { id: "coast", name: "Beach", pts: shape(1000, 470), block: "Removing this would split your world", blockSub: "2 ocean tiles would be cut off", cut: [shape(1090, 345, 0.9), shape(1275, 405, 0.95)] },
+    ],
+  };
+  document.querySelector("[data-mount=bar]").outerHTML = HW.bar({ world: "Riverside", tiles: 14 });
+  const still = (fn) => (HW.still ? fn() : null);
+  window.WORLD_STATES = {
+    default: (a) => { a.select("river_bend"); a.hover(a.slotById("A")); },
+    "open-idle": (a) => a.select("river_bend"),
+    "slot-grass": (a) => { a.select("meadow"); a.hover(a.slotById("B")); },
+    "slot-beach": (a) => { a.select("beach"); a.hover(a.slotById("C")); },
+    "nothing-fits": (a) => {
+      a.select("river_straight"); a.hover(a.slotById("B")); a.place();
+      document.querySelectorAll(".placed").forEach((g) => g.classList.remove("is-rising"));
+      a.hover(a.slotById("C"));
+    },
+    "tile-hover": (a) => { a.select("river_bend"); a.hover(a.slotById("A")); document.querySelector(".row[data-tile=river_straight]").classList.add("is-hover"); },
+    "select-blocked": (a) => { a.select("meadow"); a.hover(a.slotById("A")); },
+    keyboard: (a) => { a.select("river_bend"); a.hover(a.slotById("A")); document.querySelector(".row[data-tile=river_straight]").focus(); },
+    closed: (a) => { a.select("river_bend"); a.hover(a.slotById("A")); a.toggleSheet(false); },
+    rotate: (a) => { a.select("river_bend"); a.hover(a.slotById("A")); a.rotate(); },
+    "rotate-clash": (a) => { a.st.manual = true; a.select("river_bend"); a.hover(a.slotById("A")); a.st.ri = 2; a.drawGhost(); },
+    placed: (a) => {
+      a.select("river_bend"); a.hover(a.slotById("A")); a.place();
+      still(() => document.querySelectorAll(".placed").forEach((g) => { g.dataset.hold = ""; g.style.animationDelay = "-1000ms"; }));
+    },
+    "place-rejected": (a) => {
+      a.select("meadow"); a.hover(a.slotById("A")); a.place();
+      still(() => document.querySelectorAll(".ghost-g .g-edge.is-bad").forEach((el) => { el.dataset.hold = ""; el.style.animationDelay = "-120ms"; }));
+    },
+    undo: (a) => { a.select("river_bend"); a.hover(a.slotById("A")); a.place(); a.undoRedo(false); },
+    redo: (a) => { a.select("river_bend"); a.hover(a.slotById("A")); a.place(); a.undoRedo(false); a.undoRedo(true); },
+    "undo-repeat": (a) => {
+      a.select("river_bend"); a.hover(a.slotById("A")); a.place();
+      a.select("meadow"); a.hover(a.slotById("B")); a.place();
+      a.select("beach"); a.hover(a.slotById("C")); a.place();
+      a.undoRedo(false); a.undoRedo(false); a.undoRedo(false);
+      a.select("river_bend"); a.hover(a.slotById("A"));
+    },
+    "undo-empty": (a) => { a.st.undo = []; a.syncTools(); a.select("river_bend"); a.hover(a.slotById("A")); HW.showTip(document.querySelector(".tool[data-action=undo]")); },
+    "redo-empty": (a) => { a.select("river_bend"); a.hover(a.slotById("A")); HW.showTip(document.querySelector(".tool[data-action=redo]")); },
+    tooltip: (a) => { a.select("river_bend"); a.hover(a.slotById("A")); HW.showTip(document.querySelector(".tool[data-action=photo]")); },
+    bulldoze: (a) => { a.setMode("bulldoze"); a.hoverTile(window.WORLD.tiles[0]); },
+    "bulldoze-done": (a) => { a.setMode("bulldoze"); const t = window.WORLD.tiles[0]; a.hoverTile(t); t.hit.dispatchEvent(new MouseEvent("click", { bubbles: true })); },
+    "bulldoze-split": (a) => { a.setMode("bulldoze"); a.hoverTile(window.WORLD.tiles[1]); },
+    "hud-hidden": (a) => { a.select("river_bend"); document.body.classList.add("hud-hidden"); },
+    streaming: (a) => { a.select("river_bend"); a.hover(a.slotById("A")); document.querySelector("[data-stream]").hidden = false; },
+    saving: (a) => { a.select("river_bend"); a.hover(a.slotById("A")); document.querySelector("[data-save]").dataset.state = "saving"; },
+    "storage-off": (a) => {
+      a.select("river_bend"); a.hover(a.slotById("A")); document.querySelector("[data-save]").dataset.state = "off";
+      HW.toast({ text: "Autosave is off in this window", sub: "This browser blocks storage here. Export keeps your world.", action: "Export", icon: "alert", tone: "caution", sticky: true });
+    },
+  };
+  addEventListener("hashchange", () => location.reload());
+</script>
+<script src="play.js"></script>
+</body>
+</html>

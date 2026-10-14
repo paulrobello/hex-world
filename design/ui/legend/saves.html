@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex World · Worlds</title>
+<link rel="stylesheet" href="../assets/scene.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="screens.css">
+<style>
+  .scene { --scene-x: 150px; --scene-y: 96px; --scene-s: .66; }
+  .current { display: grid; grid-template-columns: 112px 1fr; gap: 12px; margin: 14px 0 4px; padding: 12px; border-radius: 4px; background: var(--sheet-2); }
+  .thumb { width: 100%; aspect-ratio: 16 / 10; border-radius: 3px; object-fit: cover; background: var(--void); display: block; }
+  .current h2 { display: flex; align-items: center; gap: 6px; margin: 0; font-size: var(--fs-4); font-weight: 800; }
+  .current h2 .btn { min-height: 28px; padding: 0 6px; }
+  .current p { margin: 2px 0 8px; font-size: var(--fs-2); color: var(--ink-2); }
+  .current .btn-row { grid-column: 1 / -1; }
+  .mix { display: flex; height: 6px; gap: 1px; border-radius: 2px; overflow: hidden; }
+  .mix i { display: block; height: 100%; }
+  .slots { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .slot-row { display: grid; grid-template-columns: 76px 1fr auto auto; gap: 4px 12px; align-items: center; padding: 6px; border-radius: 4px; transition: background var(--t-fast) var(--ease); animation: panel-in 150ms var(--ease) both; }
+  .slot-row:hover, .slot-row.is-open { background: var(--sheet-2); }
+  .slot-row b { display: block; font-weight: 700; font-size: var(--fs-3); }
+  .slot-row small { display: block; font-size: var(--fs-2); color: var(--ink-3); }
+  .slot-row .mix { margin-top: 6px; width: 120px; }
+  .slot-row .btn { min-height: 36px; }
+  .icon-btn { width: 36px; padding: 0; }
+  .confirm { grid-column: 1 / -1; display: none; margin: 6px 0 2px; padding: 12px; border-radius: 4px; background: var(--sheet); font-size: var(--fs-2); color: var(--ink-2); animation: panel-in 200ms var(--ease); }
+  .confirm b { display: block; margin-bottom: 2px; color: var(--ink); font-size: var(--fs-3); }
+  .confirm .btn-row { margin-top: 10px; }
+  .is-open .confirm { display: block; }
+  .menu { position: fixed; z-index: 40; display: none; min-width: 180px; padding: 4px; background: var(--sheet-3); border-radius: var(--r); box-shadow: var(--shadow-2); }
+  .menu.is-open { display: grid; animation: panel-in 120ms var(--ease); }
+  .menu button { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: var(--ink); font-weight: 600; font-size: var(--fs-3); text-align: left; cursor: pointer; }
+  .menu button:hover, .menu button:focus-visible { background: rgb(255 255 255 / .08); outline: none; }
+  .menu .is-bad { color: rgb(255 138 128); }
+  .foot-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .drop { position: absolute; inset: 8px; z-index: 5; display: grid; place-items: center; align-content: center; gap: 10px; border: 2px dashed var(--ink-2); border-radius: var(--r); background: rgb(18 39 58 / .92); color: var(--ink); font-weight: 700; text-align: center; opacity: 0; pointer-events: none; transition: opacity 120ms var(--ease), border-color 120ms var(--ease); }
+  .drop .ic { width: 32px; height: 32px; }
+  .drop small { font-weight: 600; color: var(--ink-3); font-size: var(--fs-2); }
+  .is-drop .drop { opacity: 1; border-color: var(--ink); }
+  .import { display: none; margin: 12px 0 0; padding: 14px; border-radius: 4px; background: var(--sheet-2); animation: panel-in 200ms var(--ease); }
+  .is-preview .import--preview, .is-error .import--error { display: block; }
+  .import h2 { margin: 0; font-size: var(--fs-4); font-weight: 800; }
+  .import .file { display: flex; align-items: center; gap: 6px; margin: 2px 0 10px; font-size: var(--fs-2); color: var(--ink-3); }
+  .import .file .ic { width: 16px; height: 16px; }
+  .legend-rows { list-style: none; margin: 10px 0 12px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: var(--fs-2); color: var(--ink-2); }
+  .legend-rows li { display: flex; align-items: center; justify-content: space-between; }
+  .legend-rows li span:first-child { display: flex; align-items: center; gap: 7px; }
+  .legend-rows i { width: 14px; height: 4px; border-radius: 2px; }
+  .checks { list-style: none; margin: 10px 0 12px; padding: 0; display: grid; gap: 6px; font-size: var(--fs-2); color: var(--ink-2); }
+  .checks li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: start; }
+  .checks .ic { width: 16px; height: 16px; margin-top: 1px; }
+  .checks .ok .ic { color: var(--ok); }
+  .checks .bad { color: var(--ink); }
+  .checks .bad .ic { color: var(--bad); }
+  .checks .skip { color: var(--ink-3); }
+  .storage-off-only { display: none; }
+  .is-storage-off .storage-off-only { display: grid; }
+  .is-storage-off .storage-on-only { display: none; }
+  .empty-slots { margin: 8px 0; font-size: var(--fs-2); color: var(--ink-3); }
+</style>
+</head>
+<body>
+<div class="scene"><img src="../assets/scene-water-overview.jpg" alt="The world: meadows, a river and a beach running into the sea"></div>
+<div data-mount="bar"></div>
+<div class="toast" data-toast role="status" aria-live="polite"></div>
+
+<section class="sheet sheet--wide" data-region aria-label="Worlds">
+  <div class="drop" aria-hidden="true"><svg class="ic"><use href="#i-import"/></svg>Drop a .hexworld file to import it<small>You choose whether it replaces Riverside or opens as a new world.</small></div>
+  <header class="sheet__head">
+    <h1>Worlds</h1>
+    <button class="sheet__close" type="button" data-href="play.html" aria-label="Close worlds" data-tip="Close|Esc"><svg><use href="#i-close"/></svg></button>
+  </header>
+  <div class="sheet__body">
+    <div class="note note--caution storage-off-only" role="status"><svg class="ic"><use href="#i-alert"/></svg><div><b>Autosave is off in this window</b>This browser blocks storage here, which private windows often do. Exporting a .hexworld file keeps your world.</div></div>
+
+    <div class="current">
+      <img class="thumb" src="../assets/scene-water-overview.jpg" alt="Riverside">
+      <div>
+        <h2>Riverside <button class="btn btn--quiet icon-btn" type="button" aria-label="Rename Riverside" data-tip="Rename"><svg class="ic"><use href="#i-pencil"/></svg></button></h2>
+        <p class="storage-on-only" data-save-line>14 tiles · Saved 12 s ago</p>
+        <p class="storage-off-only">14 tiles · Not saved</p>
+        <div class="mix" data-mix="G6 V3 B2 O3" aria-label="Grass 6, river 3, beach 2, ocean 3"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn--sm" type="button" data-export><svg class="ic"><use href="#i-export"/></svg>Export .hexworld</button>
+        <button class="btn btn--sm btn--quiet" type="button"><svg class="ic"><use href="#i-copy"/></svg>Duplicate</button>
+      </div>
+    </div>
+
+    <h2 class="section-h">Saved in this browser <span style="color:var(--ink-3);margin-left:4px" class="storage-on-only">3</span></h2>
+    <p class="empty-slots storage-off-only">Saved worlds live in this browser's storage, which is blocked in this window.</p>
+    <ul class="slots storage-on-only">
+      <li class="slot-row" data-slot="meadow">
+        <img class="thumb" src="../assets/scene-tilt-off-overview.jpg" alt="">
+        <div><b>Meadowlands</b><small>23 tiles · Yesterday, 21:40</small><div class="mix" data-mix="G16 R5 F2"></div></div>
+        <button class="btn btn--sm" type="button" data-load>Load</button>
+        <button class="btn btn--quiet icon-btn" type="button" aria-label="More for Meadowlands" data-more><svg class="ic"><use href="#i-more"/></svg></button>
+        <div class="confirm" role="alert"><b>Load Meadowlands?</b>Riverside has changes from the last 2 minutes that aren't saved yet.<div class="btn-row"><button class="btn btn--ink btn--sm" type="button">Save Riverside, then load</button><button class="btn btn--sm" type="button">Load without saving</button><button class="btn btn--quiet btn--sm" type="button" data-cancel>Cancel</button></div></div>
+      </li>
+      <li class="slot-row" data-slot="coast" style="animation-delay:30ms">
+        <img class="thumb" src="../assets/scene-water-beach.jpg" alt="">
+        <div><b>Coastline</b><small>41 tiles · 11 Oct, 18:02</small><div class="mix" data-mix="G14 B9 O12 V3 R3"></div></div>
+        <button class="btn btn--sm" type="button" data-load>Load</button>
+        <button class="btn btn--quiet icon-btn" type="button" aria-label="More for Coastline" data-more><svg class="ic"><use href="#i-more"/></svg></button>
+        <div class="confirm" role="alert"><b>Delete Coastline?</b>Its 41 tiles and undo history are removed from this browser. Files you exported stay where they are.<div class="btn-row"><button class="btn btn--bad btn--sm" type="button"><svg class="ic"><use href="#i-trash"/></svg>Delete Coastline</button><button class="btn btn--quiet btn--sm" type="button" data-cancel>Keep it</button></div></div>
+      </li>
+      <li class="slot-row" data-slot="first" style="animation-delay:60ms">
+        <img class="thumb" src="../assets/scene-tilt-off-mid.jpg" alt="">
+        <div><b>First steps</b><small>7 tiles · 9 Oct, 10:15</small><div class="mix" data-mix="G6 R1"></div></div>
+        <button class="btn btn--sm" type="button" data-load>Load</button>
+        <button class="btn btn--quiet icon-btn" type="button" aria-label="More for First steps" data-more><svg class="ic"><use href="#i-more"/></svg></button>
+      </li>
+    </ul>
+
+    <div class="import import--preview" role="region" aria-label="Import preview">
+      <h2>Harbour Town</h2>
+      <p class="file"><svg class="ic"><use href="#i-file"/></svg>harbour-town.hexworld · 31 KB · format v2</p>
+      <div class="mix" data-mix="G24 V9 R11 B8 O11"></div>
+      <ul class="legend-rows">
+        <li><span><i style="background:var(--k-G)"></i>Grass</span><span>24</span></li>
+        <li><span><i style="background:var(--k-R)"></i>Road</span><span>11</span></li>
+        <li><span><i style="background:var(--k-V)"></i>River</span><span>9</span></li>
+        <li><span><i style="background:var(--k-O)"></i>Ocean</span><span>11</span></li>
+        <li><span><i style="background:var(--k-B)"></i>Beach</span><span>8</span></li>
+        <li><span>Saved</span><span>11 Oct 2026</span></li>
+      </ul>
+      <div class="btn-row"><button class="btn btn--ink btn--sm" type="button" data-open-new>Open as a new world</button><button class="btn btn--sm" type="button">Replace Riverside</button><button class="btn btn--quiet btn--sm" type="button" data-close-import>Cancel</button></div>
+    </div>
+
+    <div class="import import--error" role="alert">
+      <h2 data-err-title>This isn't a Hex World file</h2>
+      <p class="file"><svg class="ic"><use href="#i-file"/></svg><span data-err-file>harbour-town.zip · 24 KB</span></p>
+      <ul class="checks" data-err-checks>
+        <li class="ok"><svg class="ic"><use href="#i-check"/></svg><span>Read the file, 24 KB</span></li>
+        <li class="bad"><svg class="ic"><use href="#i-x"/></svg><span>Header: expected HEXW, found PK, which is a .zip archive</span></li>
+        <li class="skip"><svg class="ic"><use href="#i-more"/></svg><span>Format version, not checked</span></li>
+        <li class="skip"><svg class="ic"><use href="#i-more"/></svg><span>Tiles and sockets, not checked</span></li>
+      </ul>
+      <p style="margin:0 0 12px;font-size:var(--fs-2);color:var(--ink-2)" data-err-do>Unzip it first, then import the .hexworld file inside.</p>
+      <div class="btn-row"><button class="btn btn--ink btn--sm" type="button"><svg class="ic"><use href="#i-import"/></svg>Choose another file</button><button class="btn btn--quiet btn--sm" type="button" data-close-import>Cancel</button></div>
+    </div>
+
+    <div class="foot-actions">
+      <button class="btn" type="button"><svg class="ic"><use href="#i-plus"/></svg>New world</button>
+      <button class="btn" type="button" data-import><svg class="ic"><use href="#i-import"/></svg>Import .hexworld</button>
+    </div>
+  </div>
+</section>
+<div class="menu" role="menu" data-menu>
+  <button role="menuitem" type="button"><svg class="ic"><use href="#i-pencil"/></svg>Rename</button>
+  <button role="menuitem" type="button"><svg class="ic"><use href="#i-copy"/></svg>Duplicate</button>
+  <button role="menuitem" type="button"><svg class="ic"><use href="#i-export"/></svg>Export .hexworld</button>
+  <button role="menuitem" type="button" class="is-bad" data-delete><svg class="ic"><use href="#i-trash"/></svg>Delete</button>
+</div>
+
+<nav class="review-strip" aria-label="Review states">
+  <a href="#slots">S10.2</a><a href="#load-confirm">S10.3</a><a href="#menu">Row menu</a><a href="#delete-confirm">S10.4</a><a href="#export-done">S10.5</a><a href="#import-drop">S10.6 drop</a><a href="#import-preview">S10.6 preview</a><a href="#import-migrated">S10.7</a><a href="#import-error">S10.8</a><a href="#import-newer">S10.8 newer</a><a href="#storage-off">S10.9</a><a href="play.html#saving">S10.1</a>
+</nav>
+
+<script src="proto.js"></script>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const B = document.body;
+  document.querySelector("[data-mount=bar]").outerHTML = HW.bar({ world: "Riverside", tiles: 14 });
+  // Socket-class mix strip: the same six map colours that key every tile, now keying a whole world.
+  document.querySelectorAll("[data-mix]").forEach((m) => {
+    m.innerHTML = m.dataset.mix.split(" ").map((p) => `<i style="flex:${p.slice(1)};background:var(--k-${p[0]})"></i>`).join("");
+  });
+  const row = (id) => $(`[data-slot=${id}]`);
+  const closeAll = () => { document.querySelectorAll(".slot-row.is-open").forEach((r) => r.classList.remove("is-open")); $("[data-menu]").classList.remove("is-open"); };
+  let menuFor = null;
+  document.addEventListener("click", (e) => {
+    const load = e.target.closest("[data-load]");
+    if (load) { closeAll(); const r = load.closest(".slot-row"); if (r.dataset.slot === "meadow") r.classList.add("is-open"); else HW.toast({ text: `Loaded ${r.querySelector("b").textContent}`, icon: "check", tone: "ok", action: "Undo" }); }
+    if (e.target.closest("[data-cancel]")) closeAll();
+    const more = e.target.closest("[data-more]");
+    if (more) {
+      e.stopPropagation();
+      const m = $("[data-menu]"); const r = more.getBoundingClientRect();
+      menuFor = more.closest(".slot-row");
+      m.style.left = `${r.right - 180}px`; m.style.top = `${r.bottom + 4}px`;
+      m.classList.toggle("is-open"); m.querySelector("button").focus();
+      return;
+    }
+    if (e.target.closest("[data-delete]")) { closeAll(); (menuFor || row("coast")).classList.add("is-open"); return; }
+    if (!e.target.closest("[data-menu]")) $("[data-menu]").classList.remove("is-open");
+    if (e.target.closest("[data-export]")) HW.toast({ text: "Exported riverside.hexworld", sub: "18 KB, in your downloads", icon: "export", tone: "ok", action: "Show" });
+    if (e.target.closest("[data-import]")) { B.classList.remove("is-error"); B.classList.add("is-preview"); }
+    if (e.target.closest("[data-close-import]")) B.classList.remove("is-preview", "is-error");
+    if (e.target.closest("[data-open-new]")) { B.classList.remove("is-preview"); HW.toast({ text: "Opened Harbour Town as a new world", icon: "check", tone: "ok", action: "Undo" }); }
+  });
+  let depth = 0;
+  addEventListener("dragenter", (e) => { e.preventDefault(); depth++; B.classList.add("is-drop"); });
+  addEventListener("dragleave", () => { if (--depth <= 0) B.classList.remove("is-drop"); });
+  addEventListener("dragover", (e) => e.preventDefault());
+  addEventListener("drop", (e) => { e.preventDefault(); depth = 0; B.classList.remove("is-drop"); B.classList.add("is-preview"); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (document.querySelector(".is-open")) closeAll(); else location.href = "play.html"; } });
+
+  const STATES = {
+    "load-confirm": () => row("meadow").classList.add("is-open"),
+    menu: () => { const b = row("coast").querySelector("[data-more]"); b.click(); },
+    "delete-confirm": () => row("coast").classList.add("is-open"),
+    "export-done": () => $("[data-export]").click(),
+    "import-drop": () => B.classList.add("is-drop"),
+    "import-preview": () => B.classList.add("is-preview"),
+    "import-migrated": () => HW.toast({ text: "Imported Harbour Town", sub: "It was saved in format v1 and has been updated to v2.", icon: "check", tone: "ok", action: "Open" }),
+    "import-error": () => B.classList.add("is-error"),
+    "import-newer": () => {
+      B.classList.add("is-error");
+      $("[data-err-title]").textContent = "Made by a newer Hex World";
+      $("[data-err-file]").textContent = "harbour-town.hexworld · 31 KB";
+      $("[data-err-checks]").innerHTML = `<li class="ok"><svg class="ic"><use href="#i-check"/></svg><span>Read the file, 31 KB</span></li><li class="ok"><svg class="ic"><use href="#i-check"/></svg><span>Header: HEXW</span></li><li class="bad"><svg class="ic"><use href="#i-x"/></svg><span>Format v4. This version reads up to v2.</span></li><li class="skip"><svg class="ic"><use href="#i-more"/></svg><span>Tiles and sockets, not checked</span></li>`;
+      $("[data-err-do]").textContent = "Reload the page to get the newest Hex World, then import it again. Your worlds stay in this browser.";
+    },
+    "storage-off": () => { B.classList.add("is-storage-off"); document.querySelector("[data-save]").dataset.state = "off"; },
+  };
+  STATES[HW.state()]?.();
+  addEventListener("hashchange", () => location.reload());
+})();
+</script>
+</body>
+</html>

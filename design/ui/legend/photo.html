@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex World · Photo mode</title>
+<link rel="stylesheet" href="../assets/scene.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="screens.css">
+<style>
+  .shot { position: fixed; inset: 0; overflow: hidden; background: var(--void); }
+  .shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 240ms var(--ease); transform-origin: 42% 55%; }
+  .shot img[data-off] { opacity: 0; }
+  .dof-off .shot img[data-off] { opacity: 1; }
+  .focus-band { position: fixed; left: 0; right: 380px; height: 0; border-top: 1.5px dashed rgb(238 243 246 / .7); opacity: 0; transition: opacity 200ms var(--ease), top 120ms var(--ease); pointer-events: none; }
+  .focus-band span { position: absolute; left: 24px; top: -30px; padding: 4px 8px; border-radius: 4px; background: var(--sheet); font-size: var(--fs-2); font-weight: 700; }
+  .focus-band.is-shown { opacity: 1; }
+  .pbar { position: fixed; top: var(--s-5); left: var(--s-5); z-index: 11; display: flex; align-items: center; gap: 2px; padding: 6px; background: var(--sheet); border-radius: var(--r); box-shadow: var(--shadow-1); transition: transform 200ms var(--ease), opacity 200ms var(--ease); animation: drop-in 200ms var(--ease); }
+  .pbar__title { display: flex; align-items: center; gap: 8px; margin: 0 8px; font-weight: 800; font-size: var(--fs-4); }
+  .pbar__title .ic { color: var(--pick); }
+  .pbar__keys { display: flex; align-items: center; gap: 6px; padding: 0 10px; font-size: var(--fs-2); color: var(--ink-3); white-space: nowrap; }
+  .pbar__keys span + span::before { content: ""; display: inline-block; width: 1px; height: 14px; margin: 0 8px 0 2px; background: var(--rule); vertical-align: -2px; }
+  .sheet--photo { width: 340px; animation: slide-in 200ms var(--ease); }
+  @keyframes slide-in { from { transform: translateX(calc(100% + 24px)); opacity: 0; } }
+  @keyframes drop-in { from { transform: translateY(-12px); opacity: 0; } }
+  .is-still .sheet--photo, .is-still .pbar { animation: none; }
+  .hud-hidden .pbar { transform: translateY(calc(-100% - 24px)); opacity: 0; }
+  .export-dims { display: block; margin-top: 2px; font-size: var(--fs-1); }
+  .export-out { display: flex; justify-content: space-between; gap: 8px; margin: 10px 0 12px; font-size: var(--fs-2); color: var(--ink-3); }
+  .export-out b { color: var(--ink-2); font-weight: 700; }
+  .exporting { display: none; }
+  .is-exporting .exporting { display: grid; gap: 8px; }
+  .is-exporting .export-go { display: none; }
+  .exporting p { display: flex; justify-content: space-between; margin: 0; font-size: var(--fs-2); color: var(--ink-2); }
+  .export-fail { display: none; }
+  .is-export-failed .export-fail { display: grid; }
+  .is-export-failed .export-go { display: none; }
+  .sheet--photo .sheet__body { padding-bottom: 8px; }
+  .photo-export { margin: 0 -16px -12px; padding: 4px 16px 16px; border-top: 1px solid var(--rule); }
+  .photo-export .section-h { margin-top: 12px; }
+  .sheet--photo .field { padding: 7px 0; }
+  .sheet--photo .section-h { margin-top: 14px; }
+  .sheet--photo .section-h { display: flex; align-items: center; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="shot" aria-hidden="true">
+  <img src="../assets/scene-tilt-on-overview.jpg" alt="" data-on>
+  <img src="../assets/scene-tilt-off-overview.jpg" alt="" data-off>
+</div>
+<div class="focus-band" data-band style="top:52%"><span data-band-label>Focus 64 m</span></div>
+
+<nav class="pbar" data-region aria-label="Photo mode">
+  <p class="pbar__title"><svg class="ic"><use href="#i-photo"/></svg>Photo mode</p>
+  <span class="bar__rule" aria-hidden="true"></span>
+  <p class="pbar__keys"><span>Drag to look</span><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> fly</span><span><kbd>Q</kbd><kbd>E</kbd> down, up</span></p>
+  <span class="bar__rule" aria-hidden="true"></span>
+  <button class="tool" type="button" data-hide data-tip="Hide UI|H"><svg class="ic"><use href="#i-eyeoff"/></svg><span>Hide UI</span><kbd>H</kbd></button>
+  <button class="tool" type="button" data-href="play.html" data-tip="Back to building|P"><svg class="ic"><use href="#i-exit"/></svg><span>Exit</span><kbd>P</kbd></button>
+</nav>
+
+<section class="sheet sheet--photo" data-region aria-label="Photo settings">
+  <header class="sheet__head"><h1>Photo</h1><kbd>P</kbd></header>
+  <div class="sheet__body">
+    <h2 class="section-h">Depth of field</h2>
+    <div class="seg" role="radiogroup" aria-label="Depth of field" data-dof>
+      <button type="button" role="radio" aria-checked="false" data-value="off">Off</button>
+      <button type="button" role="radio" aria-checked="true" data-value="tilt">Tilt-shift</button>
+      <button type="button" role="radio" aria-checked="false" data-value="manual">Manual</button>
+    </div>
+    <label class="field field--slider" data-dof-field><span class="field__label">Focus distance</span><output class="field__value" data-out="focus">64 m</output><input type="range" min="5" max="400" value="64" data-in="focus" aria-label="Focus distance"></label>
+    <label class="field field--slider" data-dof-field><span class="field__label">Aperture</span><output class="field__value" data-out="ap">f/2.8</output><input type="range" min="0" max="8" value="2" step="1" data-in="ap" aria-label="Aperture"></label>
+
+    <h2 class="section-h">Camera</h2>
+    <label class="field field--slider"><span class="field__label">Exposure</span><output class="field__value" data-out="ev">+0.3 EV</output><input type="range" min="-2" max="2" value="0.3" step="0.1" data-in="ev" aria-label="Exposure"></label>
+    <label class="field field--slider"><span class="field__label">Field of view</span><output class="field__value" data-out="fov">50°</output><input type="range" min="20" max="90" value="50" data-in="fov" aria-label="Field of view"></label>
+    <label class="field field--slider"><span class="field__label">Roll</span><output class="field__value" data-out="roll">0°</output><input type="range" min="-15" max="15" value="0" data-in="roll" aria-label="Roll"></label>
+
+    <h2 class="section-h">World</h2>
+    <div class="field"><span class="field__label">Pause cars and birds</span><button class="switch" type="button" role="switch" aria-checked="true" aria-label="Pause cars and birds"></button></div>
+    <label class="field field--slider is-disabled"><span class="field__label">Time of day</span><output class="field__value">Noon</output><input type="range" min="0" max="24" value="12" disabled aria-label="Time of day"><span class="field__hint">Arrives with day and night.</span></label>
+  </div>
+  <div class="photo-export">
+    <h2 class="section-h">Save a PNG</h2>
+    <div class="seg" role="radiogroup" aria-label="Resolution" data-scale>
+      <button type="button" role="radio" aria-checked="false" data-value="1">1×<small class="export-dims">1440 × 900</small></button>
+      <button type="button" role="radio" aria-checked="true" data-value="2">2×<small class="export-dims">2880 × 1800</small></button>
+      <button type="button" role="radio" aria-checked="false" data-value="4">4×<small class="export-dims">5760 × 3600</small></button>
+    </div>
+    <p class="export-out"><span data-file>hex-world-2026-10-13.png</span><b data-size>about 9 MB</b></p>
+    <button class="btn btn--ink export-go" type="button" style="width:100%" data-export><svg class="ic"><use href="#i-export"/></svg>Save PNG</button>
+    <div class="exporting" role="status">
+      <p><span>Rendering 4× offscreen</span><span data-pct>2 of 4 passes</span></p>
+      <span class="progress"><i style="--p:50%" data-pbar></i></span>
+      <button class="btn btn--sm" type="button" data-cancel>Cancel</button>
+    </div>
+    <div class="note note--bad export-fail" role="alert"><svg class="ic"><use href="#i-alert"/></svg><div><b>The 4× render ran out of GPU memory</b>5760 × 3600 needs about 1.4 GB on this GPU. 2× renders the same shot at 2880 × 1800.<div class="btn-row" style="margin-top:8px"><button class="btn btn--ink btn--sm" type="button" data-save2>Save at 2×</button><button class="btn btn--quiet btn--sm" type="button" data-dismiss>Dismiss</button></div></div></div>
+  </div>
+</section>
+
+<div class="toast" data-toast role="status" aria-live="polite"></div>
+<button class="show-ui" type="button" data-show><svg class="ic"><use href="#i-eye"/></svg>Show UI <kbd>H</kbd></button>
+
+<nav class="review-strip" aria-label="Review states">
+  <a href="#panel">S8.1/8.2</a><a href="#focus">Focus drag</a><a href="#hidden">S8.3</a><a href="#export-4x">S8.4</a><a href="#exporting">S8.5</a><a href="#done">S8.6</a><a href="#failed">S8.7</a><a href="#dof-off">DOF off</a>
+</nav>
+
+<script src="proto.js"></script>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const imgs = document.querySelectorAll(".shot img");
+  const AP = ["f/1.4", "f/2", "f/2.8", "f/4", "f/5.6", "f/8", "f/11", "f/16", "f/22"];
+  const v = { ev: 0.3, fov: 50, roll: 0 };
+  function camera() {
+    const zoom = 50 / v.fov;
+    imgs.forEach((im) => { im.style.transform = `scale(${zoom.toFixed(3)}) rotate(${v.roll}deg)`; im.style.filter = `brightness(${(2 ** (v.ev - 0.3)).toFixed(3)})`; });
+  }
+  let bandTimer;
+  document.addEventListener("input", (e) => {
+    const k = e.target.dataset.in;
+    if (!k) return;
+    const val = +e.target.value;
+    if (k === "focus") {
+      $("[data-out=focus]").textContent = `${val} m`;
+      $("[data-band-label]").textContent = `Focus ${val} m`;
+      $("[data-band]").style.top = `${30 + (val / 400) * 45}%`;
+      $("[data-band]").classList.add("is-shown");
+      clearTimeout(bandTimer); bandTimer = setTimeout(() => $("[data-band]").classList.remove("is-shown"), 1000);
+    }
+    if (k === "ap") $("[data-out=ap]").textContent = AP[val];
+    if (k === "ev") { v.ev = val; $("[data-out=ev]").textContent = `${val >= 0 ? "+" : "−"}${Math.abs(val).toFixed(1)} EV`; }
+    if (k === "fov") { v.fov = val; $("[data-out=fov]").textContent = `${val}°`; }
+    if (k === "roll") { v.roll = val; $("[data-out=roll]").textContent = `${val > 0 ? "+" : val < 0 ? "−" : ""}${Math.abs(val)}°`; }
+    camera();
+  });
+  document.addEventListener("pick", (e) => {
+    if (e.target.matches("[data-dof]")) {
+      document.body.classList.toggle("dof-off", e.detail === "off");
+      document.querySelectorAll("[data-dof-field]").forEach((f) => f.classList.toggle("is-disabled", e.detail === "off"));
+    }
+    if (e.target.matches("[data-scale]")) $("[data-size]").textContent = { 1: "about 2 MB", 2: "about 9 MB", 4: "about 34 MB" }[e.detail];
+  });
+  const hide = (on) => document.body.classList.toggle("hud-hidden", on);
+  $("[data-hide]").addEventListener("click", () => hide(true));
+  $("[data-show]").addEventListener("click", () => hide(false));
+  document.addEventListener("keydown", (e) => {
+    if (e.target.matches("input")) return;
+    if (e.key.toLowerCase() === "h") hide(!document.body.classList.contains("hud-hidden"));
+    if (e.key === "Escape" || e.key.toLowerCase() === "p") location.href = "play.html";
+  });
+  const scale = () => $("[data-scale] [aria-checked=true]").dataset.value;
+  function done(s) {
+    document.body.classList.remove("is-exporting", "is-export-failed");
+    const dims = { 1: "1440 × 900", 2: "2880 × 1800", 4: "5760 × 3600" }[s];
+    HW.toast({ text: `Saved hex-world-2026-10-13.png`, sub: `${dims}, in your downloads`, icon: "check", tone: "ok", action: "Show" });
+  }
+  function run(s, fail) {
+    document.body.classList.add("is-exporting");
+    $("[data-pct]").parentElement.firstElementChild.textContent = `Rendering ${s}× offscreen`;
+    let pass = 0; const total = s * s > 4 ? 4 : s;
+    const step = () => {
+      pass++;
+      $("[data-pbar]").style.setProperty("--p", `${(pass / total) * 100}%`);
+      $("[data-pct]").textContent = `${pass} of ${total} passes`;
+      if (fail && pass === 3) { document.body.classList.remove("is-exporting"); document.body.classList.add("is-export-failed"); return; }
+      if (pass < total) run.t = setTimeout(step, 500); else setTimeout(() => done(s), 200);
+    };
+    run.t = setTimeout(step, 300);
+  }
+  $("[data-export]").addEventListener("click", () => run(scale(), scale() === "4"));
+  $("[data-cancel]").addEventListener("click", () => { clearTimeout(run.t); document.body.classList.remove("is-exporting"); });
+  $("[data-save2]").addEventListener("click", () => { document.querySelector("[data-scale] [data-value='2']").click(); document.body.classList.remove("is-export-failed"); run("2"); });
+  $("[data-dismiss]").addEventListener("click", () => document.body.classList.remove("is-export-failed"));
+  camera();
+
+  const pick4 = () => document.querySelector("[data-scale] [data-value='4']").click();
+  const STATES = {
+    focus: () => { const r = $("[data-in=focus]"); r.value = 120; r.dispatchEvent(new Event("input", { bubbles: true })); HW.paintRange(r); },
+    hidden: () => hide(true),
+    "export-4x": pick4,
+    exporting: () => { pick4(); document.body.classList.add("is-exporting"); $("[data-pbar]").style.setProperty("--p", "50%"); $("[data-pct]").parentElement.firstElementChild.textContent = "Rendering 4× offscreen"; },
+    done: () => done("2"),
+    failed: () => { pick4(); document.body.classList.add("is-export-failed"); },
+    "dof-off": () => document.querySelector("[data-dof] [data-value=off]").click(),
+  };
+  STATES[HW.state()]?.();
+  addEventListener("hashchange", () => location.reload());
+})();
+</script>
+</body>
+</html>

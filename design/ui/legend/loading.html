@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex World · Loading</title>
+<link rel="stylesheet" href="../assets/scene.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="screens.css">
+<style>
+  .scene { --scene-x: -194px; --scene-y: -160px; --scene-s: .9; opacity: 0; transition: opacity 300ms var(--ease); }
+  .scene > img { clip-path: polygon(40% 62%, 49.7% 54.3%, 59% 62.1%, 59.8% 76.7%, 59.88% 78.7%, 50% 86.6%, 40% 78.6%); }
+  .is-ready .scene { opacity: 1; }
+  .load { position: fixed; left: 50%; top: 50%; width: min(440px, calc(100vw - 32px)); transform: translate(-50%, -50%); padding: 24px 24px 18px; background: var(--sheet); border-radius: var(--r); box-shadow: var(--shadow-2); transition: opacity 300ms var(--ease); }
+  .is-ready .load { opacity: 0; pointer-events: none; }
+  .is-still.is-ready .load { opacity: .45; }
+  .load__head { display: grid; grid-template-columns: 56px 1fr; gap: 16px; align-items: center; }
+  .load__hex { width: 56px; height: 56px; }
+  .load__hex .track { fill: none; stroke: var(--track); stroke-width: 7; stroke-linejoin: round; }
+  .load__hex .done line { stroke-width: 7; stroke-linecap: butt; stroke-dasharray: 40; transition: stroke-dashoffset 240ms linear; }
+  .load__hex .fill { fill: var(--k-G); opacity: 0; transition: opacity 300ms var(--ease); }
+  .is-ready .load__hex .fill { opacity: 1; }
+  .load h1 { margin: 0; font-size: var(--fs-5); font-weight: 800; letter-spacing: -.015em; }
+  .load__stage { display: flex; justify-content: space-between; gap: 12px; margin: 4px 0 0; font-size: var(--fs-3); color: var(--ink-2); }
+  .load__stage b { font-weight: 700; color: var(--ink); }
+  .bar-seg { display: grid; gap: 3px; margin: 18px 0 14px; }
+  .bar-seg .progress { height: 6px; }
+  .stages { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .stages li { display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; align-items: center; min-height: 32px; font-size: var(--fs-2); color: var(--ink-3); transition: color 150ms var(--ease); }
+  .stages li b { font-weight: 700; }
+  .stages li span:last-child { font-weight: 600; }
+  .stages li[data-st=done], .stages li[data-st=active] { color: var(--ink); }
+  .stages li[data-st=done] span:last-child { color: var(--ink-3); }
+  .mark { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--ink-3); justify-self: center; }
+  [data-st=active] .mark { box-shadow: inset 0 0 0 4px var(--ink); }
+  [data-st=done] .mark { box-shadow: none; background: var(--ok); -webkit-mask: radial-gradient(circle, #000 60%, transparent 62%); }
+  [data-st=failed] { color: var(--ink) !important; }
+  [data-st=failed] .mark { box-shadow: none; background: var(--bad); }
+  .fail { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--rule); animation: panel-in 150ms var(--ease); }
+  .is-failed .fail { display: block; }
+  .fail p { margin: 0 0 12px; font-size: var(--fs-3); color: var(--ink-2); }
+  .fail p b { display: block; margin-bottom: 2px; color: var(--ink); font-size: var(--fs-4); }
+  .fail a.btn--quiet { color: var(--ink-2); }
+  .is-failed .bar-seg .progress > i { background: var(--ink-3); }
+  .working { display: none; }
+  @media (prefers-reduced-motion: reduce) { .working { display: inline; } }
+</style>
+</head>
+<body>
+<div class="scene" aria-hidden="true"><img src="../assets/scene-tilt-off-mid.jpg" alt=""></div>
+
+<main class="load" role="status" aria-live="polite" aria-label="Loading Hex World">
+  <div class="load__head">
+    <svg class="load__hex" viewBox="0 0 100 100" aria-hidden="true">
+      <polygon class="fill" points=""/>
+      <polygon class="track" points=""/>
+      <g class="done"></g>
+    </svg>
+    <div>
+      <h1 data-title>Hex World</h1>
+      <p class="load__stage"><b data-stage>Downloading the core kit</b><span data-bytes>12.4 of 27.6 MB</span></p>
+    </div>
+  </div>
+  <div class="bar-seg" data-bars></div>
+  <ul class="stages" data-stages></ul>
+  <div class="fail" role="alert">
+    <p><b>The core kit stopped downloading</b>The connection dropped at 11.2 of 18.0 MB. Retry picks up where it stopped.</p>
+    <div class="btn-row">
+      <button class="btn btn--ink" type="button" data-retry><svg class="ic"><use href="#i-retry"/></svg>Retry</button>
+      <a class="btn btn--quiet" href="https://github.com/paulrobello/hex-world/issues">Report a problem</a>
+    </div>
+  </div>
+</main>
+
+<nav class="review-strip" aria-label="Review states">
+  <a href="#first-load">S1.1</a><a href="#warming">S1.2</a><a href="#warming-count">S1.2 counted</a><a href="#ready">S1.3</a><a href="#failed">S1.4</a><a href="play.html#streaming">S1.5</a>
+</nav>
+
+<script src="proto.js"></script>
+<script>
+(() => {
+  // The ≤ 30 MB initial download (PRD §10): engine wasm, core kit, image-based lighting.
+  const STAGES = [
+    { id: "wasm", name: "Engine", label: "Downloading the engine", mb: 6.2 },
+    { id: "kit", name: "Core kit", label: "Downloading the core kit", mb: 18.0 },
+    { id: "ibl", name: "Lighting", label: "Downloading the lighting", mb: 3.4 },
+    { id: "gpu", name: "Renderer", label: "Preparing the renderer", pipelines: 112 },
+  ];
+  const TOTAL = STAGES.reduce((a, s) => a + (s.mb || 0), 0);
+  const $ = (s) => document.querySelector(s);
+  const hex = HW.hexPts(40);
+  document.querySelectorAll(".load__hex polygon").forEach((p) => p.setAttribute("points", hex));
+  // The hex key fills edge by edge in the six map-class colours: the legend assembling as the kit arrives.
+  const done = $(".load__hex .done");
+  const vx = (i) => { const a = ((-30 + 60 * i) * Math.PI) / 180; return [50 + 40 * Math.cos(a), 50 + 40 * Math.sin(a)]; };
+  done.innerHTML = "GFRVBO".split("").map((k, e) => { const [x1, y1] = vx(e + 4), [x2, y2] = vx(e + 5); return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" style="stroke:var(--k-${k})"/>`; }).join("");
+  $("[data-bars]").style.gridTemplateColumns = STAGES.filter((s) => s.mb).map((s) => `${s.mb}fr`).join(" ") + " 3fr";
+  $("[data-bars]").innerHTML = STAGES.map((s) => `<span class="progress" data-bar="${s.id}"><i></i></span>`).join("");
+  $("[data-stages]").innerHTML = STAGES.map((s) => `<li data-stage-row="${s.id}"><span class="mark"></span><b>${s.name}</b><span data-amt>${s.mb ? s.mb.toFixed(1) + " MB" : s.pipelines + " pipelines"}</span></li>`).join("");
+
+  // state: { stage index, fraction within stage, pipelines counted? }
+  function render(i, f, opts = {}) {
+    let bytes = 0;
+    STAGES.forEach((s, n) => {
+      const row = document.querySelector(`[data-stage-row=${s.id}]`);
+      const bar = document.querySelector(`[data-bar=${s.id}]`);
+      const st = n < i ? "done" : n === i ? (opts.failed ? "failed" : "active") : "todo";
+      row.dataset.st = st;
+      const frac = n < i ? 1 : n === i ? f : 0;
+      if (s.mb) bytes += s.mb * frac;
+      const amt = row.querySelector("[data-amt]");
+      if (s.mb) amt.textContent = st === "active" || st === "failed" ? `${(s.mb * f).toFixed(1)} of ${s.mb.toFixed(1)} MB` : `${s.mb.toFixed(1)} MB`;
+      else amt.innerHTML = st === "active" ? (opts.counted ? `${Math.round(s.pipelines * f)} of ${s.pipelines} pipelines` : `Compiling<span class="working">…</span>`) : `${s.pipelines} pipelines`;
+      if (bar) {
+        bar.classList.toggle("progress--indeterminate", st === "active" && !s.mb && !opts.counted);
+        bar.querySelector("i").style.setProperty("--p", `${frac * 100}%`);
+      }
+    });
+    const s = STAGES[Math.min(i, STAGES.length - 1)];
+    $("[data-stage]").textContent = opts.failed ? "Download stopped" : i >= STAGES.length ? "Ready" : s.label;
+    $("[data-bytes]").textContent = i >= STAGES.length - 1 ? `${TOTAL.toFixed(1)} MB` : `${bytes.toFixed(1)} of ${TOTAL.toFixed(1)} MB`;
+    const overall = i >= STAGES.length ? 1 : (bytes / TOTAL) * 0.85 + (i === 3 ? 0.15 * (opts.counted ? f : 0.5) : 0);
+    done.querySelectorAll("line").forEach((l, e) => { l.style.strokeDashoffset = 40 * (1 - Math.max(0, Math.min(1, overall * 6 - e))); });
+    document.body.classList.toggle("is-failed", !!opts.failed);
+    document.body.classList.toggle("is-ready", i >= STAGES.length);
+  }
+  render(0, 0);
+  // Gap bar for the renderer stage: it fills by pipeline count when known.
+  document.querySelector("[data-bar=gpu]").style.display = "";
+
+  const STATES = {
+    "first-load": () => render(1, 0.69),
+    warming: () => render(3, 0.4),
+    "warming-count": () => render(3, 38 / 112, { counted: true }),
+    ready: () => render(4, 1),
+    failed: () => render(1, 11.2 / 18, { failed: true }),
+  };
+  const state = HW.state();
+  if (STATES[state]) { STATES[state](); return; }
+
+  // Interactive run: bytes fill linearly, pipelines count, then the layer fades to the first tile.
+  let t0 = performance.now();
+  const plan = [1600, 3200, 900, 1800];
+  function tick(now) {
+    let el = now - t0, i = 0;
+    while (i < plan.length && el > plan[i]) { el -= plan[i]; i++; }
+    if (i >= plan.length) { render(4, 1); setTimeout(() => (location.href = "first-run.html"), 1200); return; }
+    render(i, el / plan[i], { counted: i === 3 });
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  $("[data-retry]").addEventListener("click", () => { t0 = performance.now() - 1600 - 3200 * 0.62; requestAnimationFrame(tick); });
+  addEventListener("hashchange", () => location.reload());
+})();
+</script>
+</body>
+</html>
