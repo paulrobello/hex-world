@@ -1,0 +1,191 @@
+{
+  "date": "2026-10-13T22:03:22.887Z",
+  "viewport": "2560x1440",
+  "budget_p95_ms": 16.6,
+  "load_limit": 15,
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist"
+  },
+  "native": {
+    "present": "immediate",
+    "exit_after_seconds": 25
+  },
+  "rows": [
+    {
+      "platform": "web",
+      "tier": "high",
+      "view": "overview",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "p50": 2.6,
+      "p95": 3.2,
+      "p99": 3.5,
+      "mean": 2.57,
+      "max": 4,
+      "samples": 600,
+      "frames": 810,
+      "window_start_frame": 121,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "console_errors": [],
+      "load_before": 14.41064453125,
+      "load_after": 14.41064453125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "native",
+      "tier": "high",
+      "view": "overview",
+      "exit_code": 0,
+      "p50": 16.55,
+      "p95": 17.14,
+      "p99": 17.56,
+      "mean": 13.7,
+      "max": 24.16,
+      "samples": 600,
+      "frames": 3390,
+      "window_start_frame": 121,
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "load_before": 14.41064453125,
+      "load_after": 13.19189453125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "tier": "high",
+      "view": "ocean",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "p50": 2.6,
+      "p95": 3.2,
+      "p99": 3.5,
+      "mean": 2.58,
+      "max": 6.9,
+      "samples": 600,
+      "frames": 810,
+      "window_start_frame": 121,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "console_errors": [],
+      "load_before": 14.7353515625,
+      "load_after": 14.91650390625,
+      "load_discarded": 1
+    },
+    {
+      "platform": "native",
+      "tier": "high",
+      "view": "ocean",
+      "exit_code": 0,
+      "p50": 16.66,
+      "p95": 17.5,
+      "p99": 17.82,
+      "mean": 16.67,
+      "max": 20.5,
+      "samples": 600,
+      "frames": 2130,
+      "window_start_frame": 121,
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "load_before": 14.91650390625,
+      "load_after": 12.1259765625,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "tier": "low",
+      "view": "overview",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "p50": 2.3,
+      "p95": 3,
+      "p99": 3.2,
+      "mean": 2.28,
+      "max": 3.6,
+      "samples": 600,
+      "frames": 780,
+      "window_start_frame": 121,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "ssao": false,
+      "post": [
+        "taa",
+        "bloom"
+      ],
+      "console_errors": [],
+      "load_before": 12.1259765625,
+      "load_after": 12.35595703125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "native",
+      "tier": "low",
+      "view": "overview",
+      "exit_code": 0,
+      "p50": 16.65,
+      "p95": 17.65,
+      "p99": 24.27,
+      "mean": 16.64,
+      "max": 29.84,
+      "samples": 600,
+      "frames": 1620,
+      "window_start_frame": 121,
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "ssao": false,
+      "post": [
+        "taa",
+        "bloom"
+      ],
+      "load_before": 12.35595703125,
+      "load_after": 13.83203125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "tier": "low",
+      "view": "ocean",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "p50": 2.6,
+      "p95": 3,
+      "p99": 3.3,
+      "mean": 2.6,
+      "max": 3.8,
+      "samples": 600,
+      "frames": 780,
+      "window_start_frame": 121,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "ssao": false,
+      "post": [
+        "taa",
+        "bloom"
+      ],
+      "console_errors": [],
+      "load_before": 13.83203125,
+      "load_after": 13.92529296875,
+      "load_discarded": 0
+    }
+  ],
+  "notes": [
+    "Measured at commit 73e92fb, before the exposed-edge skirts (a292596); the re-run after a292596 was stopped by the host-load guard (1-min load 35-62 for over 10 min).",
+    "Native frames are presentation-paced at 60 Hz on this host today: p50 16.55-16.66 ms, and scenario=gate2000 with the same --present immediate flags measured p50 16.55 / p95 17.92 in the same hour (P0 measured 4-8 ms p50). Native p95 here is vsync jitter, not water cost; the uncapped web numbers are the cost signal.",
+    "native low/ocean did not complete: the run wrote no state file (the script now records such runs as errors instead of aborting)."
+  ]
+}

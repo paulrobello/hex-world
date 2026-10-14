@@ -1,0 +1,120 @@
+{
+  "date": "2026-10-13T22:45:16.504Z",
+  "viewport": "2560x1440",
+  "budget_p95_ms": 16.6,
+  "load_limit": 15,
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist"
+  },
+  "native": {
+    "present": "immediate",
+    "exit_after_seconds": 25
+  },
+  "rows": [
+    {
+      "platform": "web",
+      "tier": "high",
+      "view": "overview",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "p50": 2.9,
+      "p95": 5.4,
+      "p99": 5.7,
+      "mean": 3.52,
+      "max": 102.7,
+      "samples": 600,
+      "frames": 810,
+      "window_start_frame": 121,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "console_errors": [],
+      "load_before": 13.42919921875,
+      "load_after": 13.154296875,
+      "load_discarded": 0
+    },
+    {
+      "platform": "native",
+      "tier": "high",
+      "view": "overview",
+      "exit_code": 0,
+      "p50": 16.66,
+      "p95": 17.1,
+      "p99": 17.56,
+      "mean": 16.67,
+      "max": 20.83,
+      "samples": 600,
+      "frames": 2310,
+      "window_start_frame": 121,
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "load_before": 13.154296875,
+      "load_after": 12.46337890625,
+      "load_discarded": 0
+    },
+    {
+      "platform": "web",
+      "tier": "high",
+      "view": "ocean",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "p50": 2.2,
+      "p95": 3.6,
+      "p99": 3.8,
+      "mean": 2.24,
+      "max": 22.1,
+      "samples": 600,
+      "frames": 780,
+      "window_start_frame": 121,
+      "adapter": " | BrowserWebGpu | Other | ",
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "console_errors": [],
+      "load_before": 12.46337890625,
+      "load_after": 11.94580078125,
+      "load_discarded": 0
+    },
+    {
+      "platform": "native",
+      "tier": "high",
+      "view": "ocean",
+      "exit_code": 0,
+      "p50": 16.16,
+      "p95": 44.24,
+      "p99": 91.98,
+      "mean": 17.43,
+      "max": 146.08,
+      "samples": 600,
+      "frames": 2250,
+      "window_start_frame": 121,
+      "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "load_before": 11.94580078125,
+      "load_after": 14.9775390625,
+      "load_discarded": 0
+    }
+  ],
+  "notes": [
+    "High tier at commit 23034e4 (cut faces on every exposed water edge). Load <= 15 before and after every run.",
+    "Native is still presentation-paced at 60 Hz on this host (p50 16.2-16.7 ms), so native p95 is pacing and stall noise; the native ocean run's p95 44 ms / max 146 ms came with a post-run load of 14.98, at the guard's edge.",
+    "Web max frame times (102.7 ms overview, 22.1 ms ocean) are single stalls; p95 5.4 / 3.6 ms."
+  ]
+}

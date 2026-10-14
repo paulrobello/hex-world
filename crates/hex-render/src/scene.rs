@@ -10,7 +10,7 @@ use hex_core::{Axial, HEX_RADIUS, hex_prism, spiral};
 use crate::{
     ActiveScenario, ActiveView, Scenario,
     chunks::{chunk_tiles, merge_by_material},
-    post::{QualityTier, camera_post_bundle, camera_ssao},
+    post::{camera_post_bundle, camera_ssao},
     workload::{
         GATE, GateConfig, GateView, Layout, PostMode, ShadowCasters, piece_material, unit_hash,
     },
@@ -560,11 +560,25 @@ pub fn setup(
     boids: Option<Res<crate::boids::BoidAssets>>,
     config: Option<Res<GateConfig>>,
     server: Res<AssetServer>,
+    (mut images, mut water_mats, mut terrain_mats): (
+        ResMut<Assets<Image>>,
+        ResMut<Assets<crate::water::WaterMaterial>>,
+        ResMut<Assets<crate::water::TerrainMaterial>>,
+    ),
 ) {
     let config = config.map(|c| *c).unwrap_or_default();
-    // Look-dev applies to the kit scenario only: single/gate2000 keep the P0 camera, so the P0 perf
-    // baseline and the instanced pipeline's mesh-view bind-group layout are unchanged.
-    let kit = scenario.0 == Scenario::Kit;
+    // Look-dev applies to the kit and water scenarios only: single/gate2000 keep the P0 camera, so
+    // the P0 perf baseline and the instanced pipeline's mesh-view bind-group layout are unchanged.
+    let water = scenario.0 == Scenario::Water;
+    let kit = scenario.0 == Scenario::Kit || water;
+    if water {
+        commands.insert_resource(crate::water::WaterClock {
+            t: 0.0,
+            fixed: config.water_fixed,
+        });
+    } else {
+        commands.remove_resource::<crate::water::WaterClock>();
+    }
     if let Some(boids) = boids {
         let flock = crate::boids::spawn_flock(&mut commands, &boids);
         commands.entity(flock).insert(SceneEntity);
@@ -590,6 +604,21 @@ pub fn setup(
             commands.remove_resource::<crate::kit_test::KitTestPending>();
             commands.insert_resource(crate::kit_scene::KitPending);
             Transform::from_xyz(14.0, 38.0, 62.0).looking_at(Vec3::new(14.0, 0.0, 0.0), Vec3::Y)
+        }
+        Scenario::Water => {
+            commands.remove_resource::<crate::instanced::InstancedScene>();
+            commands.remove_resource::<crate::kit_test::KitTestPending>();
+            commands.remove_resource::<crate::kit_scene::KitPending>();
+            commands.remove_resource::<crate::kit_scene::KitLoading>();
+            crate::water::spawn(
+                &mut commands,
+                &mut meshes,
+                &mut images,
+                &mut water_mats,
+                &mut terrain_mats,
+                config.tier,
+            );
+            Transform::from_xyz(-8.0, 34.0, 62.0).looking_at(Vec3::new(14.0, 0.0, 0.0), Vec3::Y)
         }
     };
 
@@ -618,11 +647,18 @@ pub fn setup(
         ..default()
     });
 
-    let tier = QualityTier::default();
+    let tier = config.tier;
     commands.insert_resource(crate::tilt_shift::settings_for(&config, kit, tier));
     let mut cam = commands.spawn((Camera3d::default(), camera, Msaa::Off, SceneEntity));
+    if water {
+        crate::water::insert_camera(&mut cam, tier);
+    }
     if config.post == PostMode::Full {
         cam.insert(camera_post_bundle(tier));
+        // The gate's far-focus DOF blurs every close-up; the water look-dev judges surface detail.
+        if water {
+            cam.remove::<bevy::post_process::dof::DepthOfField>();
+        }
         if let Some(ssao) = camera_ssao(tier) {
             cam.insert(ssao);
         }

@@ -312,6 +312,10 @@ pub struct GateConfig {
     pub ev100: Ev100,
     pub tilt: TiltMode,
     pub tilt_strength: TiltStrength,
+    /// Quality tier (PRD §9.2): the camera post stack, and the water variant.
+    pub tier: crate::post::QualityTier,
+    /// Water scenario only: advance water time by a fixed 1/30 s per frame (motion captures).
+    pub water_fixed: bool,
 }
 
 impl Default for GateConfig {
@@ -331,6 +335,8 @@ impl Default for GateConfig {
             ev100: Ev100::from_f32(crate::lookdev::KIT_EV100),
             tilt: TiltMode::Auto,
             tilt_strength: TiltStrength(100),
+            tier: crate::post::QualityTier::High,
+            water_fixed: false,
         }
     }
 }

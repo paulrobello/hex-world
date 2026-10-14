@@ -6,13 +6,26 @@ use bevy::{
     prelude::*,
 };
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub enum QualityTier {
     Low,
     Medium,
     #[default]
     High,
     Ultra,
+}
+
+impl QualityTier {
+    /// `tier=low|medium|high|ultra` (PRD §9.2).
+    pub fn parse(s: &str) -> Option<QualityTier> {
+        match s {
+            "low" => Some(QualityTier::Low),
+            "medium" => Some(QualityTier::Medium),
+            "high" => Some(QualityTier::High),
+            "ultra" => Some(QualityTier::Ultra),
+            _ => None,
+        }
+    }
 }
 
 /// Components for the camera at a tier. TAA requires MSAA off. Required components pull in

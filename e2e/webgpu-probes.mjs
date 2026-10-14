@@ -21,14 +21,17 @@ export function clampSampledTextures(lim) {
 // `{ pass, sampled }` for each render pipeline whose fragment module is a kit shader (it declares
 // the `tile_inv_m` uniform field): `pass` is "forward" when the module also declares
 // `masks_texture` (kit_material.wesl), else "prepass" (kit_prepass.wesl). `tilt` lists `{ sampled }`
-// for each render pipeline whose fragment module is the tilt-shift shader (it declares `focus_uv_y`).
+// for each render pipeline whose fragment module is the tilt-shift shader (it declares `focus_uv_y`). `water` lists
+// `{ pass, sampled, ibl, transmission }` for the water scenario's pipelines, `pass` being "water"
+// (water.wesl) or "terrain" (water_terrain.wesl).
 export function countSampledTextures() {
   const FRAGMENT = 2;
   const perBgl = new WeakMap();
   const perLayout = new WeakMap();
   const kitModules = new WeakMap();
   const tiltModules = new WeakSet();
-  const stats = { max: 0, layouts: [], kit: [], tilt: [] };
+  const waterModules = new WeakMap();
+  const stats = { max: 0, layouts: [], kit: [], tilt: [], water: [] };
   window.__sampledTextures = stats;
   const csm = GPUDevice.prototype.createShaderModule;
   GPUDevice.prototype.createShaderModule = function (desc) {
@@ -38,6 +41,12 @@ export function countSampledTextures() {
     // so a pipeline specialized before the IBL cubemaps loaded is distinguishable from the final one.
     if (/\btile_inv_m\b/.test(code))
       kitModules.set(mod, { pass: /\bmasks_texture\b/.test(code) ? "forward" : "prepass", ibl: /diffuse_environment_map/.test(code) });
+    // Water scenario (crates/hex-render/src/water.rs): the water surface declares `wave_count`, the
+    // terrain `terrain_time`; `transmission` marks a module composed with the view transmission texture
+    // (no \b: the composer prefixes imported names with their module path).
+    else if (/\bwave_count\b|\bterrain_time\b/.test(code))
+      waterModules.set(mod, { pass: /\bwave_count\b/.test(code) ? "water" : "terrain", ibl: /diffuse_environment_map/.test(code),
+        transmission: /view_transmission_texture/.test(code) });
     if (/\bfocus_uv_y\b/.test(code)) tiltModules.add(mod);
     return mod;
   };
@@ -61,6 +70,12 @@ export function countSampledTextures() {
     if (desc?.fragment?.module && tiltModules.has(desc.fragment.module)) {
       const sampled = perLayout.get(desc.layout) ?? null;
       if (!stats.tilt.some((t) => t.sampled === sampled)) stats.tilt.push({ sampled });
+    }
+    const w = desc?.fragment?.module && waterModules.get(desc.fragment.module);
+    if (w) {
+      const sampled = perLayout.get(desc.layout) ?? null;
+      if (!stats.water.some((k) => k.pass === w.pass && k.sampled === sampled && k.ibl === w.ibl && k.transmission === w.transmission))
+        stats.water.push({ ...w, sampled });
     }
     const mod = desc?.fragment?.module && kitModules.get(desc.fragment.module);
     if (!mod) return;

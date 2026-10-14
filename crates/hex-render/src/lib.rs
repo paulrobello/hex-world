@@ -13,6 +13,7 @@ pub mod lookdev;
 pub mod post;
 mod scene;
 pub mod tilt_shift;
+pub mod water;
 pub mod workload;
 pub use hex_assets::bevy::MeshoptGlbPlugin;
 pub use scene::{SceneEntity, TILE_HEIGHT, Tile, Vehicle, setup as setup_scene};
@@ -29,6 +30,8 @@ pub enum Scenario {
     Gate2000,
     /// The P1 kit family from `assets/kit/manifest.json` (`kit_scene`).
     Kit,
+    /// The hero-water look-dev patch (`water`).
+    Water,
 }
 
 impl Scenario {
@@ -37,6 +40,7 @@ impl Scenario {
             "single" => Some(Scenario::Single),
             "gate2000" => Some(Scenario::Gate2000),
             "kit" => Some(Scenario::Kit),
+            "water" => Some(Scenario::Water),
             _ => None,
         }
     }
@@ -47,6 +51,7 @@ impl Scenario {
             Scenario::Single => 1,
             Scenario::Gate2000 => 2000,
             Scenario::Kit => kit_scene::cell_count(kit_src),
+            Scenario::Water => water::layout().len(),
         }
     }
 }
@@ -96,6 +101,7 @@ pub struct HexRenderPlugin {
 impl Plugin for HexRenderPlugin {
     fn build(&self, app: &mut App) {
         bevy::shader::load_shader_library!(app, "kit_common.wesl");
+        bevy::shader::load_shader_library!(app, "water_common.wesl");
         app.insert_resource(ActiveScenario(self.scenario))
             .insert_resource(ActiveView(self.view))
             .insert_resource(self.config)
@@ -106,6 +112,8 @@ impl Plugin for HexRenderPlugin {
                 instanced::InstancedPlugin,
                 MaterialPlugin::<kit_material::KitMaterial>::default(),
                 tilt_shift::TiltShiftPlugin,
+                MaterialPlugin::<water::WaterMaterial>::default(),
+                MaterialPlugin::<water::TerrainMaterial>::default(),
             ))
             .add_systems(Startup, scene::setup)
             .add_systems(
@@ -116,6 +124,7 @@ impl Plugin for HexRenderPlugin {
                     kit_scene::start_kit,
                     kit_scene::finish_kit,
                     record_gpu_limits,
+                    water::tick,
                 ),
             );
     }
@@ -130,6 +139,7 @@ mod tests {
         assert_eq!(Scenario::parse("single"), Some(Scenario::Single));
         assert_eq!(Scenario::parse("gate2000"), Some(Scenario::Gate2000));
         assert_eq!(Scenario::parse("kit"), Some(Scenario::Kit));
+        assert_eq!(Scenario::parse("water"), Some(Scenario::Water));
         assert_eq!(Scenario::parse("nope"), None);
         assert_eq!(Scenario::parse(""), None);
     }
@@ -148,5 +158,6 @@ mod tests {
         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
         // Review M5: the fixture source lays out 3 cells, not the runtime family's 8.
         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
+        assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
     }
 }

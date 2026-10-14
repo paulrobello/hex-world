@@ -1,4 +1,4 @@
-.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt
+.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water
 
 fmt:
 	cargo fmt --all
@@ -264,3 +264,32 @@ web-shots-kit: build-web
 	mkdir -p e2e/test-results
 	rm -f e2e/test-results/web-kit-*.png
 	node e2e/shots.mjs dist scripts/shots/kit.json "$(QUERY)"
+
+# Water look-dev owner checkpoint (PRD P2): stills at 1600x1000 (lossless PNGs stay in target/shots,
+# JPEG copies go to docs/checkpoints/water/), then a 3 s MP4 per view (90 frames at a fixed 1/30 s
+# water step, 960x600) in the same folder.
+# ARGS passes app keys, e.g. ARGS="--tier medium".
+WATER_SHOTS = water-overview water-ocean water-river water-beach water-seam-ocean water-seam-river water-edge water-edge-river
+WATER_VIEWS = ocean river beach seam-ocean seam-river edge edge-river
+WATER_DOCS = docs/checkpoints/water
+shots-water:
+	mkdir -p target/shots $(WATER_DOCS)
+	rm -f target/shots/water-*.png
+	cargo run -p hex-app --release -- --script scripts/shots/water.json --size 1600x1000 --seed 1 --fps off --water_clock fixed $(ARGS)
+	@for n in $(WATER_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(WATER_DOCS)/$$n.jpg || exit 1; done
+	node scripts/shots/water-motion.mjs target/shots/water-motion-script.json
+	cargo run -p hex-app --release -- --script target/shots/water-motion-script.json --size 960x600 --seed 1 --fps off --water_clock fixed $(ARGS)
+	@for v in $(WATER_VIEWS); do \
+	  test -s target/shots/water-motion-$$v-089.png || { echo "missing water-motion-$$v frames"; exit 1; }; \
+	  ffmpeg -loglevel error -y -framerate 30 -i target/shots/water-motion-$$v-%03d.png -c:v libx264 -pix_fmt yuv420p -crf 22 $(WATER_DOCS)/water-motion-$$v.mp4 || exit 1; \
+	done
+	rm -f target/shots/water-motion-*.png
+	@echo "wrote $(WATER_DOCS)/"
+
+# Water frame time at 2560x1440, web (uncapped GPU Chromium) and native, under the host-load guard.
+# WATER_TIERS=high,low (default) and WATER_ONLY=web|native narrow the run.
+perf-water: build-web
+	cargo build -p hex-app --release
+	cd e2e && npm ci --no-audit --no-fund
+	node e2e/perf-water.mjs dist target/release/hex-world

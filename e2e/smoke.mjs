@@ -37,6 +37,13 @@ const WEBGPU_DEFAULT_SAMPLED = 16;
 // The tilt-shift pass samples the colour target and the prepass depth.
 const TILT_SAMPLED = 2;
 const KIT_SAMPLED = { ibl: { forward: 16, prepass: 7 }, noIbl: { forward: 14, prepass: 7 } };
+// Measured fragment-stage sampled textures of the water scenario's pipelines with post=full and the
+// IBL (2026-10-13). The view layout sets them: High adds SSAO (its texture and the normal prepass),
+// refracting tiers (High, Medium) add the transmission texture; each material binds one texture.
+const WATER_SAMPLED = { high: { water: 11, terrain: 11 }, medium: { water: 9, terrain: 9 }, low: { water: 8, terrain: 8 } };
+// Handle-let aliases the compat shim rewrites in a water scenario run: none, since neither water
+// shader composes StandardMaterial's PBR input (the marker probe still checks the water module).
+const WATER_COMPAT_ALIASES = 0;
 
 async function withPage(args, fn) {
   const browser = await chromium.launch({ channel: "chromium", headless: true, args });
@@ -225,6 +232,63 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
     }
     if (query === "?scenario=kit&kit_src=fixture" && clamp === null)
       await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-kit.png" });
+  });
+}
+
+// 6. Water scenario (PRD §9.1 hero water): the water and terrain pipelines must specialize and draw on
+// WebGPU with the device clamped to the default 16 sampled textures per stage, at High (refraction:
+// the view gains the transmission texture), Medium and Low (no transmission), and through the forced
+// WGSL compat shim. Counts are pinned exactly (fragment stage, post=full, IBL on), so a new binding
+// that eats the headroom fails here before it fails on a 16-texture adapter.
+for (const [query, aliases, clamp] of [["?scenario=water&post=full", null, WEBGPU_DEFAULT_SAMPLED],
+  ["?scenario=water&post=full&tier=medium", null, WEBGPU_DEFAULT_SAMPLED],
+  ["?scenario=water&post=full&tier=low", null, WEBGPU_DEFAULT_SAMPLED],
+  ["?wgsl_compat=1&scenario=water&post=full", WATER_COMPAT_ALIASES, null]]) {
+  const tier = /tier=(\w+)/.exec(query)?.[1] ?? "high";
+  const refraction = tier !== "low";
+  const want = WATER_SAMPLED[tier];
+  await withPage(gpuArgs, async (page) => {
+    if (clamp !== null) await page.addInitScript(clampSampledTextures, clamp);
+    await page.addInitScript(countSampledTextures);
+    if (aliases !== null) await page.addInitScript(markedModuleProbe, "water_noise_texture");
+    await page.goto(base + query);
+    await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
+    // Wait (bounded) for both pipelines composed with the IBL, then let compilation settle.
+    const deadline = Date.now() + 60_000;
+    while (Date.now() < deadline && !(await page.evaluate(() => {
+      const w = window.__sampledTextures?.water ?? [];
+      return w.some((k) => k.pass === "water" && k.ibl) && w.some((k) => k.pass === "terrain" && k.ibl);
+    }))) await page.waitForTimeout(200);
+    await page.waitForTimeout(1_500);
+    const { compat, sampled, limit, marked, state } = await page.evaluate(() => ({
+      compat: window.__wgslCompat, sampled: window.__sampledTextures, limit: window.__deviceSampledLimit,
+      marked: window.__markedModules, state: window.hexWorld.state() }));
+    const tag = `water ${query}${clamp !== null ? ` (clamped ${clamp})` : ""}`;
+    console.log(`${tag}: sampled textures per stage max ${sampled?.max}, water pipelines ${JSON.stringify(sampled?.water)}; ` +
+      `tiles ${state.tiles}; compat ${JSON.stringify(compat)}`);
+    if (state.scenario !== "Water" || state.tiles !== 12) fail(`${tag}: state ${JSON.stringify(state)}`);
+    for (const pass of ["water", "terrain"]) {
+      const got = (sampled?.water ?? []).filter((k) => k.pass === pass && k.ibl);
+      if (!got.length) fail(`${tag}: no IBL ${pass} pipeline was created`);
+      else if (!got.every((k) => k.sampled === want[pass])) fail(`${tag}: ${pass} pipeline uses ${got.map((k) => k.sampled)} sampled textures, expected ${want[pass]}`);
+      // The terrain shader never reads the transmission texture (its layout still counts it).
+      if (pass === "water" && got.some((k) => k.transmission !== refraction))
+        fail(`${tag}: water shader transmission binding ${JSON.stringify(got)}, expected ${refraction}`);
+    }
+    if (clamp !== null) {
+      if (limit !== clamp) fail(`${tag}: device limit ${limit}, expected ${clamp}`);
+      if (!(sampled?.max <= clamp)) fail(`${tag}: a pipeline layout uses ${sampled?.max} sampled textures`);
+    }
+    if (aliases !== null) {
+      if (!compat?.active || compat.aliases !== aliases)
+        fail(`wgsl-compat ${query}: expected ${aliases} aliases, got ` + JSON.stringify(compat));
+      if (compat?.unhandled) fail(`wgsl-compat ${query} left handle lets unrewritten: ` + compat.unhandled);
+      if (!marked?.length || !marked.every((m) => m.after === 0))
+        fail(`wgsl-compat ${query}: the water module kept handle aliases: ` + JSON.stringify(marked));
+      else console.log(`${tag}: water module through the shim ${JSON.stringify(marked)}`);
+    }
+    if (query === "?scenario=water&post=full")
+      await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-water.png" });
   });
 }
 

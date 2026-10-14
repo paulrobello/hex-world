@@ -191,9 +191,27 @@ pub fn flags_from_pairs(pairs: &[(String, String)]) -> (Flags, Vec<String>) {
                 v,
                 &mut warnings,
             ),
+            "tier" => set_or_warn(
+                &mut f.gate.tier,
+                hex_render::post::QualityTier::parse(v),
+                k,
+                v,
+                &mut warnings,
+            ),
             "tilt_strength" => set_or_warn(
                 &mut f.gate.tilt_strength,
                 hex_render::TiltStrength::parse(v),
+                k,
+                v,
+                &mut warnings,
+            ),
+            "water_clock" => set_or_warn(
+                &mut f.gate.water_fixed,
+                match v.as_str() {
+                    "fixed" => Some(true),
+                    "real" => Some(false),
+                    _ => None,
+                },
                 k,
                 v,
                 &mut warnings,
@@ -253,6 +271,8 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "ev100",
         "tilt",
         "tilt_strength",
+        "tier",
+        "water_clock",
     ]
     .iter()
     .filter_map(|k| params.get(k).map(|v| (k.to_string(), v)))
@@ -302,6 +322,22 @@ mod tests {
         let (f, w) = flags_from_pairs(&p(&[("kit_src", "p0")]));
         assert_eq!(f.gate.kit_src, hex_render::KitSource::Runtime);
         assert_eq!(w.len(), 1);
+    }
+
+    #[test]
+    fn water_keys() {
+        let (f, w) = flags_from_pairs(&p(&[
+            ("scenario", "water"),
+            ("tier", "low"),
+            ("water_clock", "fixed"),
+        ]));
+        assert_eq!(f.scenario, Scenario::Water);
+        assert_eq!(f.gate.tier, hex_render::post::QualityTier::Low);
+        assert!(f.gate.water_fixed && w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("tier", "epic"), ("water_clock", "x")]));
+        assert_eq!(f.gate.tier, hex_render::post::QualityTier::High);
+        assert!(!f.gate.water_fixed);
+        assert_eq!(w.len(), 2);
     }
 
     #[test]
