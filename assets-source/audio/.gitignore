@@ -1,0 +1,4 @@
+# Rejected provider takes stay local; their generation records (rejected/*.generation.json) and
+# generation-log.json are committed, so the audit trail survives without shipping unused audio.
+*/*/rejected/*
+!*/*/rejected/*.generation.json

@@ -1,0 +1,201 @@
+{
+  "cueId": "river-babble",
+  "kind": "ambience",
+  "class": "loop",
+  "version": 1,
+  "use": "Per-tile emitter on river tiles, positional, weighted by the focus mix.",
+  "events": [],
+  "loop": {
+    "startSample": 0,
+    "endSample": 1440000,
+    "sampleRate": 48000,
+    "startSeconds": 0.0,
+    "endSeconds": 30.0
+  },
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Smooth gentle stream flowing steadily over a shallow pebble bed: a soft continuous rush of running water with mellow, low burbling, no sharp splashes or bright plinks, even level throughout, continuous with no build or fade. Natural sound only: no birds, no wind gusts, no voices, no music.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Smooth gentle stream flowing steadily over a shallow pebble bed: a soft continuous rush of running water with mellow, low burbling, no sharp splashes or bright plinks, even level throughout, continuous with no build or fade. Natural sound only: no birds, no wind gusts, no voices, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 30,
+    "prompt_influence": 0.5,
+    "loop": true
+  },
+  "generation": {
+    "id": "cddb73b1e1f0b9495cd555b12e706cb0",
+    "generatedAt": "2026-10-14T03:51:24+00:00",
+    "attempt": 14,
+    "creditsCharged": 301,
+    "record": {
+      "path": "assets-source/audio/ambience/river-babble/generation.json",
+      "sha256": "1abfddd35efb147b1337475fe40ad3e49b0f41f7263d734a4d319d89e2415d97",
+      "bytes": 2120
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/river-babble/river-babble.mp3",
+    "sha256": "87f6c4ba5794828928fc4d075c99d7e90a229e600b9fae535d4f07279eb28d59",
+    "bytes": 481115,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 30.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -28.0,
+      "lra": 1.5,
+      "truePeak": -6.4
+    },
+    "master": {
+      "integrated": -16.3,
+      "lra": 0.9,
+      "truePeak": -2.6
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.3,
+        "lra": 0.9,
+        "truePeak": -1.6
+      },
+      "m4a": {
+        "integrated": -16.4,
+        "lra": 0.9,
+        "truePeak": -1.7
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "source-loop-check",
+      "wrapStep": 0.000637,
+      "stepP999": 0.091038,
+      "headDb": -29.8,
+      "tailDb": -28.9,
+      "minWindowDb": -34.7,
+      "seamless": true
+    },
+    {
+      "step": "rotate-loop",
+      "offsetFrames": 739200,
+      "headTailLevelDeltaDb": 0.01
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -28.0,
+        "lra": 1.7,
+        "truePeak": -6.4
+      },
+      "targetLufs": -16.0,
+      "gainDb": 12.0,
+      "requiredPeakReductionDb": 7.6,
+      "mode": "limited",
+      "limiterInputGainDb": 12.7,
+      "limiterPasses": 2,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 12.6
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.2
+    },
+    {
+      "step": "encode-overshoot-trim",
+      "encodedTruePeakDb": -0.9,
+      "trimDb": -0.3
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "96k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/river-babble.wav",
+    "sha256": "0ef63c7051da4ac9edcd35ee6d5296c7bd037b525c9d05866f88c23f57d80e77",
+    "frames": 1440000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/river-babble.webm",
+      "sha256": "7f1eece7364ca55301fd1ed7f2c47cce7d9f516befbb23d6cc68fb012ed4ea65",
+      "bytes": 260259,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 30.008,
+      "decodedFrames": 1440000,
+      "loudness": {
+        "integrated": -16.3,
+        "lra": 0.9,
+        "truePeak": -1.6
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/river-babble.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/river-babble.webm"
+    },
+    {
+      "path": "assets/audio/ambience/river-babble.m4a",
+      "sha256": "2b31bf8b004e0f9733725d51b126dd9447b48ea7c39b3cd1ba324475e3035b88",
+      "bytes": 371150,
+      "codec": "aac",
+      "bitrate": "96k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 30.0,
+      "decodedFrames": 1440000,
+      "loudness": {
+        "integrated": -16.4,
+        "lra": 0.9,
+        "truePeak": -1.7
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/river-babble.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 96k -movflags +faststart assets/audio/ambience/river-babble.m4a"
+    }
+  ],
+  "decodedBytes": 5760000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "ae1891a01615785375e2caacaae35fa2a6147e8af0bef73e9eef6fb19d6c060c",
+      "scripts/audio/master.py": "32a49b32803306e49bed2e8d7b5ca34a8e538527ef5917d4ab1ccb8f1506ce7f",
+      "scripts/audio/review.py": "c672b11bcee9bf8592cd6884b44e1ac0eee6ad636769bbb9f60aef9c771f2095"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

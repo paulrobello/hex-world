@@ -1,0 +1,43 @@
+{
+  "cueId": "place-rumble",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Soft low earthy rumble as a small patch of ground rises out of the soil: gentle shifting dirt, pebbles and roots settling, warm and rounded, close miniature diorama scale. Smooth fade in, short soft decay. No music, no voices, no wind, no harsh crack.",
+  "parameters": {
+    "text": "Soft low earthy rumble as a small patch of ground rises out of the soil: gentle shifting dirt, pebbles and roots settling, warm and rounded, close miniature diorama scale. Smooth fade in, short soft decay. No music, no voices, no wind, no harsh crack.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 1.8,
+    "prompt_influence": 0.5
+  },
+  "generationId": "621be729fb0ccb30a2bd6b93f8804bd9",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 03:46:43 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "18",
+    "content-length": "29301",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "621be729fb0ccb30a2bd6b93f8804bd9",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T03:46:43+00:00",
+  "attempt": 2,
+  "creditsCharged": 18,
+  "sourceFile": "place-rumble.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}

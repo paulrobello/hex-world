@@ -1,0 +1,45 @@
+{
+  "cueId": "forest-birdsong",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Calm daytime forest ambience: a constant soft bed of leaves rustling in a light breeze, with several gentle songbirds singing at a distance, overlapping so some birdsong is always present, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.",
+  "parameters": {
+    "text": "Calm daytime forest ambience: a constant soft bed of leaves rustling in a light breeze, with several gentle songbirds singing at a distance, overlapping so some birdsong is always present, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 30,
+    "prompt_influence": 0.4,
+    "loop": true
+  },
+  "generationId": "9737286efbe3abceb2a7472ba0ce6214",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 03:50:12 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "301",
+    "content-length": "481115",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "9737286efbe3abceb2a7472ba0ce6214",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T03:50:13+00:00",
+  "attempt": 13,
+  "creditsCharged": 301,
+  "sourceFile": "forest-birdsong.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  },
+  "rejectedReason": "crest too high for the -16 LUFS loop target: reaching it needs 11.4 dB (river) and 15.6 dB (forest) of limiting on 5-12% of 20 ms windows; prompt now asks for a smoother, distant texture"
+}

@@ -1,0 +1,198 @@
+{
+  "cueId": "place-rumble",
+  "kind": "sfx",
+  "class": "sfx",
+  "version": 1,
+  "use": "Ground rising under a newly placed tile, at the start of the staged rise (D15). Positional at the tile.",
+  "events": [
+    "tilePlaced"
+  ],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Soft low earthy rumble as a small patch of ground rises out of the soil: gentle shifting dirt, pebbles and roots settling, warm and rounded, close miniature diorama scale. Smooth fade in, short soft decay. No music, no voices, no wind, no harsh crack.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Soft low earthy rumble as a small patch of ground rises out of the soil: gentle shifting dirt, pebbles and roots settling, warm and rounded, close miniature diorama scale. Smooth fade in, short soft decay. No music, no voices, no wind, no harsh crack.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 1.8,
+    "prompt_influence": 0.5
+  },
+  "generation": {
+    "id": "621be729fb0ccb30a2bd6b93f8804bd9",
+    "generatedAt": "2026-10-14T03:46:43+00:00",
+    "attempt": 2,
+    "creditsCharged": 18,
+    "record": {
+      "path": "assets-source/audio/sfx/place-rumble/generation.json",
+      "sha256": "4b6a438ab763ab2a0a1ff6ad093d1170d101b0d87285f0450ba81ef0aa1d0815",
+      "bytes": 1994
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/sfx/place-rumble/place-rumble.mp3",
+    "sha256": "da4389cc82d1a7f8a6b7bf97dad7e12a6632977397427318f658faf7aa6b4656",
+    "bytes": 29301,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 1.76
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -58.1,
+      "lra": 0.0,
+      "truePeak": -37.7
+    },
+    "master": {
+      "integrated": -16.9,
+      "lra": 0.0,
+      "truePeak": -2.8
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.8,
+        "lra": 0.0,
+        "truePeak": -1.2
+      },
+      "m4a": {
+        "integrated": -16.9,
+        "lra": 0.0,
+        "truePeak": -2.7
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -58.1,
+        "lra": 0.0,
+        "truePeak": -37.7
+      },
+      "targetLufs": -16.0,
+      "gainDb": 42.1,
+      "requiredPeakReductionDb": 6.4,
+      "mode": "limited",
+      "limiterInputGainDb": 48.1,
+      "limiterPasses": 4,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 12.5
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.5
+    },
+    {
+      "step": "encode-overshoot-trim",
+      "encodedTruePeakDb": -0.5,
+      "trimDb": -0.7
+    },
+    {
+      "step": "encode-overshoot-trim",
+      "encodedTruePeakDb": -1.1,
+      "trimDb": -0.1
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/sfx/place-rumble.wav",
+    "sha256": "86a982f85d80cba9db7dee7448b5160a3fe82e371bac80d752986692681ab49c",
+    "frames": 84480,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/sfx/place-rumble.webm",
+      "sha256": "c61b4dab479f74cebfd7ced5e90afc86de3c4459bd8c8bc3e6f903fb5a773b94",
+      "bytes": 15261,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.768,
+      "decodedFrames": 84480,
+      "loudness": {
+        "integrated": -16.8,
+        "lra": 0.0,
+        "truePeak": -1.2
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/place-rumble.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/sfx/place-rumble.webm"
+    },
+    {
+      "path": "assets/audio/sfx/place-rumble.m4a",
+      "sha256": "c4b3299b63c2471961b2db65363295004268dabdb59c025b3ce97b7d82485511",
+      "bytes": 35940,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.76,
+      "decodedFrames": 84480,
+      "loudness": {
+        "integrated": -16.9,
+        "lra": 0.0,
+        "truePeak": -2.7
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/place-rumble.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/sfx/place-rumble.m4a"
+    }
+  ],
+  "decodedBytes": 337920,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "ae1891a01615785375e2caacaae35fa2a6147e8af0bef73e9eef6fb19d6c060c",
+      "scripts/audio/master.py": "32a49b32803306e49bed2e8d7b5ca34a8e538527ef5917d4ab1ccb8f1506ce7f",
+      "scripts/audio/review.py": "c672b11bcee9bf8592cd6884b44e1ac0eee6ad636769bbb9f60aef9c771f2095"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

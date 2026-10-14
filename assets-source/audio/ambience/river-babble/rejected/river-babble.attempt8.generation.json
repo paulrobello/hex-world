@@ -1,0 +1,44 @@
+{
+  "cueId": "river-babble",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Gentle shallow stream babbling over small smooth stones, close and steady, soft trickles and burbles, continuous calm flow with no build or fade. Natural outdoor sound only: no birds, no wind gusts, no voices, no music.",
+  "parameters": {
+    "text": "Gentle shallow stream babbling over small smooth stones, close and steady, soft trickles and burbles, continuous calm flow with no build or fade. Natural outdoor sound only: no birds, no wind gusts, no voices, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 30,
+    "loop": true
+  },
+  "generationId": "f838104ccb29abb0bd2f29cbd96e50b8",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 03:47:06 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "301",
+    "content-length": "481115",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "f838104ccb29abb0bd2f29cbd96e50b8",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T03:47:06+00:00",
+  "attempt": 8,
+  "creditsCharged": 301,
+  "sourceFile": "river-babble.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  },
+  "rejectedReason": "crest too high for the -16 LUFS loop target: reaching it needs 11.4 dB (river) and 15.6 dB (forest) of limiting on 5-12% of 20 ms windows; prompt now asks for a smoother, distant texture"
+}

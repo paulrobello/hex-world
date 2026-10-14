@@ -1,0 +1,189 @@
+{
+  "cueId": "ui-undo",
+  "kind": "sfx",
+  "class": "ui",
+  "version": 1,
+  "use": "Undo, and redo (the same cue; the runtime may pitch it up for redo).",
+  "events": [
+    "undone",
+    "redone"
+  ],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Soft UI undo sound: a short airy reverse swish rewinding, a gentle breathy whoosh that rises then stops softly, light and quick. No click, no beep, no music.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Soft UI undo sound: a short airy reverse swish rewinding, a gentle breathy whoosh that rises then stops softly, light and quick. No click, no beep, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 0.6,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "fff22c3e105c8207d0c37b70957f0787",
+    "generatedAt": "2026-10-14T03:46:58+00:00",
+    "attempt": 6,
+    "creditsCharged": 6,
+    "record": {
+      "path": "assets-source/audio/sfx/ui-undo/generation.json",
+      "sha256": "4fbe94c4227786432c0c23bc71a203dce234de7070faf604d212508fbbda0c35",
+      "bytes": 1794
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/sfx/ui-undo/ui-undo.mp3",
+    "sha256": "247f6fb9501ad75f34411ddb4a2adcb42394543a675792f0b8c26abbe2b26fe9",
+    "bytes": 10493,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 0.6
+  },
+  "loudness": {
+    "targetLufs": -20.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -22.1,
+      "lra": 0.0,
+      "truePeak": -1.8
+    },
+    "master": {
+      "integrated": -20.0,
+      "lra": 0.0,
+      "truePeak": -2.3
+    },
+    "after": {
+      "webm": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -1.9
+      },
+      "m4a": {
+        "integrated": -20.1,
+        "lra": 0.0,
+        "truePeak": -2.1
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -22.1,
+        "lra": 0.0,
+        "truePeak": -1.8
+      },
+      "targetLufs": -20.0,
+      "gainDb": 2.1,
+      "requiredPeakReductionDb": 2.3,
+      "mode": "limited",
+      "limiterInputGainDb": 4.2,
+      "limiterPasses": 4,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 10.0
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.2
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/sfx/ui-undo.wav",
+    "sha256": "bf3e71deabd09a31154f85eafb01279cdc2fa1842f44682d130cfd1427b9d3c8",
+    "frames": 28800,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/sfx/ui-undo.webm",
+      "sha256": "658d983958e3fd18b56e6c2961972aa518af9ae4387b854adb64461a035aed36",
+      "bytes": 4942,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 0.608,
+      "decodedFrames": 28800,
+      "loudness": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -1.9
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/ui-undo.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/sfx/ui-undo.webm"
+    },
+    {
+      "path": "assets/audio/sfx/ui-undo.m4a",
+      "sha256": "344fbe338b687e67dba84b36e52ec38ef6cd8b44c95419a6edd38bb52ac29b47",
+      "bytes": 11753,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 0.6,
+      "decodedFrames": 28800,
+      "loudness": {
+        "integrated": -20.1,
+        "lra": 0.0,
+        "truePeak": -2.1
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/ui-undo.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/sfx/ui-undo.m4a"
+    }
+  ],
+  "decodedBytes": 115200,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "ae1891a01615785375e2caacaae35fa2a6147e8af0bef73e9eef6fb19d6c060c",
+      "scripts/audio/master.py": "32a49b32803306e49bed2e8d7b5ca34a8e538527ef5917d4ab1ccb8f1506ce7f",
+      "scripts/audio/review.py": "c672b11bcee9bf8592cd6884b44e1ac0eee6ad636769bbb9f60aef9c771f2095"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

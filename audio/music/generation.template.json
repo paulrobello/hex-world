@@ -1,0 +1,12 @@
+{
+  "cueId": "<cue-id>",
+  "provider": "Suno",
+  "model": "<Suno model version shown on the song, e.g. v4.5>",
+  "subscription": "Suno <Pro|Premier> (paid, owner account)",
+  "generationId": "<Suno song id from the song URL, suno.com/song/<id>>",
+  "songUrl": "https://suno.com/song/<id>",
+  "generatedAt": "<YYYY-MM-DD>",
+  "promptFile": "audio/music/prompts/<cue-id>.md",
+  "settings": { "instrumental": true, "weirdness": 35, "styleInfluence": 70 },
+  "notes": "<why this take was chosen>"
+}

@@ -25,6 +25,4 @@ vocals, choir, drums, percussion, bass drops, edm, dark ambient, horror, drone n
 ```
 
 ## Chosen take
-- Song link / ID:
-- Date:
-- Notes:
+Record the take you keep in `assets-source/audio/music/photo-mode/generation.json`, copied from [`../generation.template.json`](../generation.template.json): the Suno song ID and link, model version, subscription and date. `make audio-master` reads that file into the cue's provenance (D21) and refuses a source without it. See [`../README.md`](../README.md).

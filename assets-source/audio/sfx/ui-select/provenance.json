@@ -1,0 +1,184 @@
+{
+  "cueId": "ui-select",
+  "kind": "sfx",
+  "class": "ui",
+  "version": 1,
+  "use": "A tile chosen in the inventory.",
+  "events": [
+    "tileSelected"
+  ],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Gentle soft UI select sound: a single warm muted wooden pluck, like a felt-tipped mallet tapping a small wooden block, rounded attack, short soft decay. Friendly and quiet. No harsh click, no beep, no reverb tail.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Gentle soft UI select sound: a single warm muted wooden pluck, like a felt-tipped mallet tapping a small wooden block, rounded attack, short soft decay. Friendly and quiet. No harsh click, no beep, no reverb tail.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 0.5,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "b5e1a831673167535e8b167429e2d71c",
+    "generatedAt": "2026-10-14T03:46:25+00:00",
+    "attempt": 1,
+    "creditsCharged": 5,
+    "record": {
+      "path": "assets-source/audio/sfx/ui-select/generation.json",
+      "sha256": "4afa2edaab5f74a58e826407004ffa800d5cd22278cc81fa251a3de6668ddb88",
+      "bytes": 1936
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/sfx/ui-select/ui-select.mp3",
+    "sha256": "9b1fb456f1be7d21f4a603d4817c8a84124b0642436eef0d04f66b68a25d8632",
+    "bytes": 8821,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 0.48
+  },
+  "loudness": {
+    "targetLufs": -20.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -48.1,
+      "lra": 0.0,
+      "truePeak": -28.6
+    },
+    "master": {
+      "integrated": -20.0,
+      "lra": 0.0,
+      "truePeak": -4.1
+    },
+    "after": {
+      "webm": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -4.3
+      },
+      "m4a": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -4.1
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -48.4,
+        "lra": 0.0,
+        "truePeak": -32.5
+      },
+      "targetLufs": -20.0,
+      "gainDb": 28.4,
+      "requiredPeakReductionDb": 0.0,
+      "mode": "linear"
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.0
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/sfx/ui-select.wav",
+    "sha256": "53c0bd595c2919550f161ab9987ebc59600acc3fe27badbb89376c6154f1f42c",
+    "frames": 23040,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/sfx/ui-select.webm",
+      "sha256": "a2c8f39d562040483050d958ebcb27c2272a7965887e4be70c3c81edf8e993be",
+      "bytes": 4550,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 0.488,
+      "decodedFrames": 23040,
+      "loudness": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -4.3
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/ui-select.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/sfx/ui-select.webm"
+    },
+    {
+      "path": "assets/audio/sfx/ui-select.m4a",
+      "sha256": "30f337056ddeb2d2956597f9b204938e12174f14f755af783f46f2410c127351",
+      "bytes": 9438,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 0.48,
+      "decodedFrames": 23040,
+      "loudness": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -4.1
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/ui-select.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/sfx/ui-select.m4a"
+    }
+  ],
+  "decodedBytes": 92160,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "ae1891a01615785375e2caacaae35fa2a6147e8af0bef73e9eef6fb19d6c060c",
+      "scripts/audio/master.py": "32a49b32803306e49bed2e8d7b5ca34a8e538527ef5917d4ab1ccb8f1506ce7f",
+      "scripts/audio/review.py": "c672b11bcee9bf8592cd6884b44e1ac0eee6ad636769bbb9f60aef9c771f2095"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

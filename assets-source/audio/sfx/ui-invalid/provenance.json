@@ -1,0 +1,189 @@
+{
+  "cueId": "ui-invalid",
+  "kind": "sfx",
+  "class": "ui",
+  "version": 1,
+  "use": "A placement or bulldoze the rules refuse.",
+  "events": [
+    "placementRefused",
+    "bulldozeRefused"
+  ],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Gentle UI 'not allowed' sound: a soft low muted double bonk on a hollow wooden block, two quick dull taps falling slightly in pitch, rounded attack, friendly rather than alarming. No buzzer, no beep, no harshness.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Gentle UI 'not allowed' sound: a soft low muted double bonk on a hollow wooden block, two quick dull taps falling slightly in pitch, rounded attack, friendly rather than alarming. No buzzer, no beep, no harshness.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 0.6,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "2d0cd61fe05af1314343509c4c70198e",
+    "generatedAt": "2026-10-14T03:46:54+00:00",
+    "attempt": 5,
+    "creditsCharged": 6,
+    "record": {
+      "path": "assets-source/audio/sfx/ui-invalid/generation.json",
+      "sha256": "567cc8486861c4566eb740d8d86ea987c992d849549c0a2d49ac3851c6ab45ce",
+      "bytes": 1939
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/sfx/ui-invalid/ui-invalid.mp3",
+    "sha256": "2ea622a3442ddc25965c76758fba91f8a3f0a307c70f84c2c5c8bce12d3903c8",
+    "bytes": 10493,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 0.6
+  },
+  "loudness": {
+    "targetLufs": -20.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -20.0,
+      "lra": 0.0,
+      "truePeak": -0.4
+    },
+    "master": {
+      "integrated": -20.0,
+      "lra": 0.0,
+      "truePeak": -2.4
+    },
+    "after": {
+      "webm": {
+        "integrated": -20.1,
+        "lra": 0.0,
+        "truePeak": -2.2
+      },
+      "m4a": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -2.4
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 4800,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -0.4
+      },
+      "targetLufs": -20.0,
+      "gainDb": 0.0,
+      "requiredPeakReductionDb": 1.6,
+      "mode": "limited",
+      "limiterInputGainDb": 2.1,
+      "limiterPasses": 4,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 4.0
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.1
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/sfx/ui-invalid.wav",
+    "sha256": "1aa992bc58b6793825b25d0b2636eb3de1e75b39ee04cce576f6d5d51ca15ef9",
+    "frames": 24000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/sfx/ui-invalid.webm",
+      "sha256": "7fe7019f3d77c47ea028a1fec1fe28bb13e931359a41ae0224e5de99bb987ea5",
+      "bytes": 4484,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 0.508,
+      "decodedFrames": 24000,
+      "loudness": {
+        "integrated": -20.1,
+        "lra": 0.0,
+        "truePeak": -2.2
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/ui-invalid.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/sfx/ui-invalid.webm"
+    },
+    {
+      "path": "assets/audio/sfx/ui-invalid.m4a",
+      "sha256": "dc22809afb44caf0d71cd2087b23ac76da2693c49c98e7d6357c1c788cb811dd",
+      "bytes": 9863,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 0.5,
+      "decodedFrames": 24000,
+      "loudness": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -2.4
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/ui-invalid.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/sfx/ui-invalid.m4a"
+    }
+  ],
+  "decodedBytes": 96000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "ae1891a01615785375e2caacaae35fa2a6147e8af0bef73e9eef6fb19d6c060c",
+      "scripts/audio/master.py": "32a49b32803306e49bed2e8d7b5ca34a8e538527ef5917d4ab1ccb8f1506ce7f",
+      "scripts/audio/review.py": "c672b11bcee9bf8592cd6884b44e1ac0eee6ad636769bbb9f60aef9c771f2095"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

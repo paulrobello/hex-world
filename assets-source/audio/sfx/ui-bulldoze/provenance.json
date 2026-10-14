@@ -1,0 +1,188 @@
+{
+  "cueId": "ui-bulldoze",
+  "kind": "sfx",
+  "class": "ui",
+  "version": 1,
+  "use": "A tile removed with the bulldoze tool.",
+  "events": [
+    "tileBulldozed"
+  ],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Small gentle toy-scale demolition: a soft crumble of earth and little wooden pieces collapsing into a pile, muted and rounded, cosy rather than violent, short decay. No explosion, no metal, no glass, no music.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Small gentle toy-scale demolition: a soft crumble of earth and little wooden pieces collapsing into a pile, muted and rounded, cosy rather than violent, short decay. No explosion, no metal, no glass, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 1.0,
+    "prompt_influence": 0.5
+  },
+  "generation": {
+    "id": "c88392322ddb61772967d5dee4a58e9b",
+    "generatedAt": "2026-10-14T03:47:02+00:00",
+    "attempt": 7,
+    "creditsCharged": 10,
+    "record": {
+      "path": "assets-source/audio/sfx/ui-bulldoze/generation.json",
+      "sha256": "09cda3560a95486e53f0981242c2d3480533f19ce6b6c2f51af3cd49c348ecd4",
+      "bytes": 1935
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/sfx/ui-bulldoze/ui-bulldoze.mp3",
+    "sha256": "60bd1498c1aac8c48cf72a2a03cc3af63dc1305ecbc59b132edfaaa755c34c02",
+    "bytes": 17180,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 1.0
+  },
+  "loudness": {
+    "targetLufs": -20.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -32.5,
+      "lra": 0.0,
+      "truePeak": -10.8
+    },
+    "master": {
+      "integrated": -20.0,
+      "lra": 0.0,
+      "truePeak": -2.4
+    },
+    "after": {
+      "webm": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -2.4
+      },
+      "m4a": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -2.3
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -32.5,
+        "lra": 0.0,
+        "truePeak": -10.8
+      },
+      "targetLufs": -20.0,
+      "gainDb": 12.5,
+      "requiredPeakReductionDb": 3.7,
+      "mode": "limited",
+      "limiterInputGainDb": 13.0,
+      "limiterPasses": 2,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 6.0
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.1
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/sfx/ui-bulldoze.wav",
+    "sha256": "ebc16ef1f963efd924a5b968cfdd65a3e2cb85aadaf0d3b3a412d2cf1c7bb02b",
+    "frames": 48000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/sfx/ui-bulldoze.webm",
+      "sha256": "756216c4b97dc0ae409d3b0c57a7f5432f56d71532923c160d9a17b9b688fee3",
+      "bytes": 10619,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.008,
+      "decodedFrames": 48000,
+      "loudness": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -2.4
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/ui-bulldoze.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/sfx/ui-bulldoze.webm"
+    },
+    {
+      "path": "assets/audio/sfx/ui-bulldoze.m4a",
+      "sha256": "f700796c5dd94b85daf188a38d79c5a25898cc72088e4d8459b5f25cb8300c65",
+      "bytes": 21536,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.0,
+      "decodedFrames": 48000,
+      "loudness": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -2.3
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/ui-bulldoze.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/sfx/ui-bulldoze.m4a"
+    }
+  ],
+  "decodedBytes": 192000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "ae1891a01615785375e2caacaae35fa2a6147e8af0bef73e9eef6fb19d6c060c",
+      "scripts/audio/master.py": "32a49b32803306e49bed2e8d7b5ca34a8e538527ef5917d4ab1ccb8f1506ce7f",
+      "scripts/audio/review.py": "c672b11bcee9bf8592cd6884b44e1ac0eee6ad636769bbb9f60aef9c771f2095"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

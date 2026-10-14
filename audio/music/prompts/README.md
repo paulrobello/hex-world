@@ -2,7 +2,8 @@
 
 Generate each cue in Suno, choose the best take, and save it as
 `assets-source/audio/music/<cue-id>/<cue-id>.wav`. Use a WAV export if your plan allows it, otherwise MP3.
-`make audio-master` (P2) normalizes loudness, sets loop points, encodes the runtime files and writes provenance (D13, D21).
+`make audio-master` normalizes loudness, sets loop points, encodes the runtime files and writes provenance (D13, D21).
+The step-by-step owner workflow is in [`../README.md`](../README.md).
 
 ## Shared direction (applies to every cue)
 
@@ -29,4 +30,4 @@ The P2 MVP needs at least 3 gameplay cues: `meadow-day`, `coast-breeze` and `hea
 
 ## Tracking
 
-Write the take you pick in the cue file's "Chosen take" section: the Suno song link or ID, the date, and a note. That record feeds the provenance file.
+Record the take you pick in `assets-source/audio/music/<cue-id>/generation.json`, copied from [`../generation.template.json`](../generation.template.json): the Suno song ID and link, the model version, the subscription, the date and a note. `make audio-master` copies that record into the cue's `provenance.json` and refuses a source without it.

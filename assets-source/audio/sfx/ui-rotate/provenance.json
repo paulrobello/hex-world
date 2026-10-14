@@ -1,0 +1,188 @@
+{
+  "cueId": "ui-rotate",
+  "kind": "sfx",
+  "class": "ui",
+  "version": 1,
+  "use": "The ghost tile rotated by 60 degrees.",
+  "events": [
+    "ghostRotated"
+  ],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Soft UI rotate sound: a small smooth wooden ratchet turning one notch, a quick muted tick with a rounded attack, cosy and tactile. No metal, no harsh click, no reverb tail.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Soft UI rotate sound: a small smooth wooden ratchet turning one notch, a quick muted tick with a rounded attack, cosy and tactile. No metal, no harsh click, no reverb tail.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 0.5,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "45b54208c09d83b2c495a82d469d5a86",
+    "generatedAt": "2026-10-14T03:46:51+00:00",
+    "attempt": 4,
+    "creditsCharged": 5,
+    "record": {
+      "path": "assets-source/audio/sfx/ui-rotate/generation.json",
+      "sha256": "0e9073eb7bbc2a858b732e9e0dd882859cdaafcff71e8c9421fb46a764541401",
+      "bytes": 1827
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/sfx/ui-rotate/ui-rotate.mp3",
+    "sha256": "c7a8c3f12b9a2a0e137fd87fdd3a39c3cdddd15d993f95a9f0fa6e2a67623f1e",
+    "bytes": 8821,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 0.48
+  },
+  "loudness": {
+    "targetLufs": -20.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -26.0,
+      "lra": 0.0,
+      "truePeak": -3.8
+    },
+    "master": {
+      "integrated": -20.0,
+      "lra": 0.0,
+      "truePeak": -2.0
+    },
+    "after": {
+      "webm": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -1.8
+      },
+      "m4a": {
+        "integrated": -19.9,
+        "lra": 0.0,
+        "truePeak": -1.9
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -26.0,
+        "lra": 0.0,
+        "truePeak": -3.8
+      },
+      "targetLufs": -20.0,
+      "gainDb": 6.0,
+      "requiredPeakReductionDb": 4.2,
+      "mode": "limited",
+      "limiterInputGainDb": 9.6,
+      "limiterPasses": 4,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 16.7
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.5
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/sfx/ui-rotate.wav",
+    "sha256": "dd7828f0ca00ee74794f4c9077d39bffc9aaa5dd08e4224e4ede0ea1d4d25ff8",
+    "frames": 23040,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/sfx/ui-rotate.webm",
+      "sha256": "52f585a1f6cc87c546f724ea65a54d5f896a466198f48fb97c1e1a2a5ad26b76",
+      "bytes": 6862,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 0.488,
+      "decodedFrames": 23040,
+      "loudness": {
+        "integrated": -20.0,
+        "lra": 0.0,
+        "truePeak": -1.8
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/ui-rotate.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/sfx/ui-rotate.webm"
+    },
+    {
+      "path": "assets/audio/sfx/ui-rotate.m4a",
+      "sha256": "965beee9132e7cd5a86c8c211558d6f71fbeca6b860ad1c1a53cb78a08d26e4d",
+      "bytes": 11129,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 0.48,
+      "decodedFrames": 23040,
+      "loudness": {
+        "integrated": -19.9,
+        "lra": 0.0,
+        "truePeak": -1.9
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/ui-rotate.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/sfx/ui-rotate.m4a"
+    }
+  ],
+  "decodedBytes": 92160,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "ae1891a01615785375e2caacaae35fa2a6147e8af0bef73e9eef6fb19d6c060c",
+      "scripts/audio/master.py": "32a49b32803306e49bed2e8d7b5ca34a8e538527ef5917d4ab1ccb8f1506ce7f",
+      "scripts/audio/review.py": "c672b11bcee9bf8592cd6884b44e1ac0eee6ad636769bbb9f60aef9c771f2095"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

@@ -1,0 +1,312 @@
+{
+  "version": 1,
+  "sampleRate": 48000,
+  "truePeakCeiling": -1.0,
+  "masterTruePeak": -2.0,
+  "lufsTolerance": 1.0,
+  "decodedBudgetBytes": 96000000,
+  "generationCap": 20,
+  "classes": {
+    "music": {
+      "lufs": -18,
+      "playback": "stream"
+    },
+    "sfx": {
+      "lufs": -16,
+      "playback": "decode",
+      "bitrates": {
+        "m4a": {
+          "1": "160k"
+        }
+      }
+    },
+    "loop": {
+      "lufs": -16,
+      "playback": "decode"
+    },
+    "ui": {
+      "lufs": -20,
+      "playback": "decode",
+      "bitrates": {
+        "m4a": {
+          "1": "160k"
+        }
+      }
+    }
+  },
+  "bitrates": {
+    "webm": {
+      "1": "64k",
+      "2": "128k"
+    },
+    "m4a": {
+      "1": "96k",
+      "2": "160k"
+    }
+  },
+  "cues": [
+    {
+      "id": "place-rumble",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "use": "Ground rising under a newly placed tile, at the start of the staged rise (D15). Positional at the tile.",
+      "events": [
+        "tilePlaced"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Soft low earthy rumble as a small patch of ground rises out of the soil: gentle shifting dirt, pebbles and roots settling, warm and rounded, close miniature diorama scale. Smooth fade in, short soft decay. No music, no voices, no wind, no harsh crack.",
+        "durationSeconds": 1.8,
+        "promptInfluence": 0.5,
+        "loop": false
+      }
+    },
+    {
+      "id": "place-thunk",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "use": "The tile settling into place, at the end of the staged rise. Positional at the tile.",
+      "events": [
+        "tilePlaced"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "A single soft satisfying thunk of a small wooden-and-earth tile settling firmly into place on a tabletop: muted, warm, rounded low-mid body, very short decay. No click, no ring, no reverb tail, no music.",
+        "durationSeconds": 0.6,
+        "promptInfluence": 0.6,
+        "loop": false
+      }
+    },
+    {
+      "id": "ui-select",
+      "kind": "sfx",
+      "class": "ui",
+      "channels": 1,
+      "loop": false,
+      "use": "A tile chosen in the inventory.",
+      "events": [
+        "tileSelected"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Gentle soft UI select sound: a single warm muted wooden pluck, like a felt-tipped mallet tapping a small wooden block, rounded attack, short soft decay. Friendly and quiet. No harsh click, no beep, no reverb tail.",
+        "durationSeconds": 0.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      }
+    },
+    {
+      "id": "ui-rotate",
+      "kind": "sfx",
+      "class": "ui",
+      "channels": 1,
+      "loop": false,
+      "use": "The ghost tile rotated by 60 degrees.",
+      "events": [
+        "ghostRotated"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Soft UI rotate sound: a small smooth wooden ratchet turning one notch, a quick muted tick with a rounded attack, cosy and tactile. No metal, no harsh click, no reverb tail.",
+        "durationSeconds": 0.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      }
+    },
+    {
+      "id": "ui-invalid",
+      "kind": "sfx",
+      "class": "ui",
+      "channels": 1,
+      "loop": false,
+      "use": "A placement or bulldoze the rules refuse.",
+      "events": [
+        "placementRefused",
+        "bulldozeRefused"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Gentle UI 'not allowed' sound: a soft low muted double bonk on a hollow wooden block, two quick dull taps falling slightly in pitch, rounded attack, friendly rather than alarming. No buzzer, no beep, no harshness.",
+        "durationSeconds": 0.6,
+        "promptInfluence": 0.6,
+        "loop": false
+      }
+    },
+    {
+      "id": "ui-undo",
+      "kind": "sfx",
+      "class": "ui",
+      "channels": 1,
+      "loop": false,
+      "use": "Undo, and redo (the same cue; the runtime may pitch it up for redo).",
+      "events": [
+        "undone",
+        "redone"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Soft UI undo sound: a short airy reverse swish rewinding, a gentle breathy whoosh that rises then stops softly, light and quick. No click, no beep, no music.",
+        "durationSeconds": 0.6,
+        "promptInfluence": 0.6,
+        "loop": false
+      }
+    },
+    {
+      "id": "ui-bulldoze",
+      "kind": "sfx",
+      "class": "ui",
+      "channels": 1,
+      "loop": false,
+      "use": "A tile removed with the bulldoze tool.",
+      "events": [
+        "tileBulldozed"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Small gentle toy-scale demolition: a soft crumble of earth and little wooden pieces collapsing into a pile, muted and rounded, cosy rather than violent, short decay. No explosion, no metal, no glass, no music.",
+        "durationSeconds": 1.0,
+        "promptInfluence": 0.5,
+        "loop": false
+      }
+    },
+    {
+      "id": "river-babble",
+      "kind": "ambience",
+      "class": "loop",
+      "channels": 1,
+      "loop": true,
+      "use": "Per-tile emitter on river tiles, positional, weighted by the focus mix.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Smooth gentle stream flowing steadily over a shallow pebble bed: a soft continuous rush of running water with mellow, low burbling, no sharp splashes or bright plinks, even level throughout, continuous with no build or fade. Natural sound only: no birds, no wind gusts, no voices, no music.",
+        "durationSeconds": 30,
+        "promptInfluence": 0.5,
+        "loop": true
+      }
+    },
+    {
+      "id": "surf",
+      "kind": "ambience",
+      "class": "loop",
+      "channels": 1,
+      "loop": true,
+      "use": "Per-tile emitter on beach and ocean tiles, positional, weighted by the focus mix.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Continuous gentle ocean surf on a sandy beach: soft overlapping waves washing in and out over a constant background wash of foam and water, no silent gaps between waves, calm, even level throughout, continuous with no build or fade. Natural sound only: no seagulls, no wind gusts, no voices, no music.",
+        "durationSeconds": 30,
+        "promptInfluence": 0.4,
+        "loop": true
+      }
+    },
+    {
+      "id": "forest-birdsong",
+      "kind": "ambience",
+      "class": "loop",
+      "channels": 1,
+      "loop": true,
+      "use": "Per-tile emitter on forest tiles, positional, weighted by the focus mix.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Soft distant forest ambience: a steady gentle rustle of leaves in a light breeze, with faint far-away songbirds softly blended into the background, no close or loud bird calls, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.",
+        "durationSeconds": 30,
+        "promptInfluence": 0.5,
+        "loop": true
+      }
+    },
+    {
+      "id": "meadow-bed",
+      "kind": "ambience",
+      "class": "loop",
+      "channels": 1,
+      "loop": true,
+      "use": "Global biome bed for grass and meadow in view (non-positional), and the quiet floor under every other bed.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Soft summer meadow ambience bed: a light breeze moving through tall grass, faint distant crickets and insects, a very occasional distant bird, calm and steady, continuous with no build or fade. Natural sound only: no voices, no music.",
+        "durationSeconds": 30,
+        "promptInfluence": 0.3,
+        "loop": true
+      }
+    },
+    {
+      "id": "meadow-day",
+      "kind": "music",
+      "class": "music",
+      "channels": 2,
+      "loop": true,
+      "loopCrossfadeSeconds": 1.5,
+      "use": "Music when grass, meadow and forest dominate the view.",
+      "events": [],
+      "provider": "suno",
+      "promptFile": "audio/music/prompts/meadow-day.md"
+    },
+    {
+      "id": "coast-breeze",
+      "kind": "music",
+      "class": "music",
+      "channels": 2,
+      "loop": true,
+      "loopCrossfadeSeconds": 1.5,
+      "use": "Music when beach and ocean dominate the view.",
+      "events": [],
+      "provider": "suno",
+      "promptFile": "audio/music/prompts/coast-breeze.md"
+    },
+    {
+      "id": "hearth-town",
+      "kind": "music",
+      "class": "music",
+      "channels": 2,
+      "loop": true,
+      "loopCrossfadeSeconds": 1.5,
+      "use": "Music when houses and roads dominate the view.",
+      "events": [],
+      "provider": "suno",
+      "promptFile": "audio/music/prompts/hearth-town.md"
+    },
+    {
+      "id": "photo-mode",
+      "kind": "music",
+      "class": "music",
+      "channels": 2,
+      "loop": true,
+      "loopCrossfadeSeconds": 1.5,
+      "use": "Music in photo mode (D7), free camera.",
+      "events": [],
+      "provider": "suno",
+      "promptFile": "audio/music/prompts/photo-mode.md"
+    },
+    {
+      "id": "title-theme",
+      "kind": "music",
+      "class": "music",
+      "channels": 2,
+      "loop": false,
+      "use": "Title and main menu; plays once to a resolved ending.",
+      "events": [],
+      "provider": "suno",
+      "promptFile": "audio/music/prompts/title-theme.md"
+    },
+    {
+      "id": "discovery-stinger",
+      "kind": "music",
+      "class": "music",
+      "channels": 2,
+      "loop": false,
+      "playback": "decode",
+      "use": "Recipe unlocked (P3). Short, so it is decoded rather than streamed.",
+      "events": [],
+      "provider": "suno",
+      "promptFile": "audio/music/prompts/discovery-stinger.md"
+    }
+  ]
+}

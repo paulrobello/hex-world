@@ -1,0 +1,43 @@
+{
+  "cueId": "ui-select",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Gentle soft UI select sound: a single warm muted wooden pluck, like a felt-tipped mallet tapping a small wooden block, rounded attack, short soft decay. Friendly and quiet. No harsh click, no beep, no reverb tail.",
+  "parameters": {
+    "text": "Gentle soft UI select sound: a single warm muted wooden pluck, like a felt-tipped mallet tapping a small wooden block, rounded attack, short soft decay. Friendly and quiet. No harsh click, no beep, no reverb tail.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 0.5,
+    "prompt_influence": 0.6
+  },
+  "generationId": "b5e1a831673167535e8b167429e2d71c",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 03:46:25 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "5",
+    "content-length": "8821",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "b5e1a831673167535e8b167429e2d71c",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T03:46:25+00:00",
+  "attempt": 1,
+  "creditsCharged": 5,
+  "sourceFile": "ui-select.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}

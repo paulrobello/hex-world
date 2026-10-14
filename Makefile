@@ -1,4 +1,4 @@
-.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand
+.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest
 
 fmt:
 	cargo fmt --all
@@ -335,3 +335,17 @@ shots-cars:
 	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(CARS_DOCS)/$$n.jpg || exit 1; done
 	cp target/shots/cars-*.json $(CARS_DOCS)/
 	@echo "wrote $(CARS_DOCS)/"
+
+# Audio pipeline (PRD §8, assets-source/audio/README.md). Needs python3 and ffmpeg with libopus.
+# Masters every cue in assets-source/audio/cues.json that has a source; CUE=<id> masters one.
+audio-master:
+	python3 scripts/audio/master.py $(if $(CUE),--cue $(CUE))
+
+# Loudness, true peak, loop seams, provenance hashes and the decoded-memory budget of assets/audio/.
+audio-check:
+	python3 scripts/audio/check.py
+
+# Masters a synthetic tree in target/audio-selftest, checks it passes, then proves a hot file,
+# a clicking loop seam and a phase-cancelling stereo cue each make audio-check exit non-zero.
+audio-check-selftest:
+	python3 scripts/audio/selftest.py

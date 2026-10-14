@@ -1,0 +1,44 @@
+{
+  "cueId": "river-babble",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Smooth gentle stream flowing steadily over a shallow pebble bed: a soft continuous rush of running water with mellow, low burbling, no sharp splashes or bright plinks, even level throughout, continuous with no build or fade. Natural sound only: no birds, no wind gusts, no voices, no music.",
+  "parameters": {
+    "text": "Smooth gentle stream flowing steadily over a shallow pebble bed: a soft continuous rush of running water with mellow, low burbling, no sharp splashes or bright plinks, even level throughout, continuous with no build or fade. Natural sound only: no birds, no wind gusts, no voices, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 30,
+    "prompt_influence": 0.5,
+    "loop": true
+  },
+  "generationId": "cddb73b1e1f0b9495cd555b12e706cb0",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 03:51:24 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "301",
+    "content-length": "481115",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "cddb73b1e1f0b9495cd555b12e706cb0",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T03:51:24+00:00",
+  "attempt": 14,
+  "creditsCharged": 301,
+  "sourceFile": "river-babble.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}
