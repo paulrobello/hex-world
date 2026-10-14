@@ -1,0 +1,352 @@
+//! World-space geometry on the XZ plane, in meters: tile transforms, segment shapes and lane paths.
+//!
+//! Directions follow `hex_core::axial`: edge 0 faces +x and edges run clockwise viewed from +Y,
+//! so edge `e` points at angle `60° · e` measured from +x toward +z.
+
+use hex_core::{Axial, HEX_RADIUS};
+
+/// `sqrt(3) / 2`, the sine of 60°.
+const HALF_SQRT3: f32 = 0.866_025_4;
+
+/// Outward unit normals of edges 0..6; entry `k` is also the `(cos, sin)` of rotation `k`.
+const EDGE_DIR: [[f32; 2]; 6] = [
+    [1.0, 0.0],
+    [0.5, HALF_SQRT3],
+    [-0.5, HALF_SQRT3],
+    [-1.0, 0.0],
+    [-0.5, -HALF_SQRT3],
+    [0.5, -HALF_SQRT3],
+];
+
+/// Distance from a cell center to each edge midpoint.
+pub const APOTHEM: f32 = HEX_RADIUS * HALF_SQRT3;
+
+/// Largest angle one arc sample may span, in radians (5°).
+const ARC_STEP: f32 = std::f32::consts::PI / 36.0;
+
+/// Shorter steps are dropped when a lane path is built, so every step has a direction.
+const MIN_STEP: f32 = 1e-4;
+
+pub type Vec2 = [f32; 2];
+
+pub fn add(a: Vec2, b: Vec2) -> Vec2 {
+    [a[0] + b[0], a[1] + b[1]]
+}
+
+pub fn sub(a: Vec2, b: Vec2) -> Vec2 {
+    [a[0] - b[0], a[1] - b[1]]
+}
+
+pub fn scale(a: Vec2, s: f32) -> Vec2 {
+    [a[0] * s, a[1] * s]
+}
+
+pub fn dot(a: Vec2, b: Vec2) -> f32 {
+    a[0] * b[0] + a[1] * b[1]
+}
+
+pub fn cross(a: Vec2, b: Vec2) -> f32 {
+    a[0] * b[1] - a[1] * b[0]
+}
+
+pub fn len(a: Vec2) -> f32 {
+    dot(a, a).sqrt()
+}
+
+pub fn dist(a: Vec2, b: Vec2) -> f32 {
+    len(sub(a, b))
+}
+
+pub fn lerp(a: Vec2, b: Vec2, t: f32) -> Vec2 {
+    add(a, scale(sub(b, a), t))
+}
+
+/// The driver's right for a heading `d` with +Y up: `(-d_z, d_x)`. Heading +x drives at +z.
+pub fn right_of(d: Vec2) -> Vec2 {
+    [-d[1], d[0]]
+}
+
+/// Rotates a tile-local point by `rotation` sixth-turns (local edge `e` lands on edge `e + k`).
+pub fn rotate(p: Vec2, rotation: u8) -> Vec2 {
+    let [c, s] = EDGE_DIR[(rotation % 6) as usize];
+    [p[0] * c - p[1] * s, p[0] * s + p[1] * c]
+}
+
+pub fn cell_center(cell: Axial) -> Vec2 {
+    cell.to_world(HEX_RADIUS)
+}
+
+/// World position of a lane crossing world edge `edge` of `cell`, `offset` meters along the edge
+/// tangent `(-n_z, n_x)` from the midpoint (the `LaneSpec` convention in `hex_core::socket`).
+pub fn lane_point(cell: Axial, edge: u8, offset: f32) -> Vec2 {
+    let n = EDGE_DIR[(edge % 6) as usize];
+    let tangent = [-n[1], n[0]];
+    add(
+        add(cell_center(cell), scale(n, APOTHEM)),
+        scale(tangent, offset),
+    )
+}
+
+/// Total length of a polyline.
+pub fn polyline_length(points: &[Vec2]) -> f32 {
+    points.windows(2).map(|w| dist(w[0], w[1])).sum()
+}
+
+/// Shortest distance from `p` to a polyline.
+pub fn distance_to_polyline(p: Vec2, points: &[Vec2]) -> f32 {
+    match points {
+        [] => f32::INFINITY,
+        [only] => dist(p, *only),
+        _ => points
+            .windows(2)
+            .map(|w| {
+                let d = sub(w[1], w[0]);
+                let l2 = dot(d, d);
+                let t = if l2 > 0.0 {
+                    (dot(sub(p, w[0]), d) / l2).clamp(0.0, 1.0)
+                } else {
+                    0.0
+                };
+                dist(p, lerp(w[0], w[1], t))
+            })
+            .fold(f32::INFINITY, f32::min),
+    }
+}
+
+/// The sampled shape of a segment from `from` to `to` through `interior` control points.
+///
+/// No control point gives a straight line. One gives the circular arc through all three points,
+/// since tile data places a single point at the arc midpoint. More give the polyline through them.
+pub fn segment_shape(from: Vec2, interior: &[Vec2], to: Vec2) -> Vec<Vec2> {
+    match interior {
+        [] => vec![from, to],
+        [mid] => arc_through(from, *mid, to),
+        _ => {
+            let mut points = Vec::with_capacity(interior.len() + 2);
+            points.push(from);
+            points.extend_from_slice(interior);
+            points.push(to);
+            points
+        }
+    }
+}
+
+/// Samples the circle through `a`, `m` and `b` from `a` to `b` via `m`, at most [`ARC_STEP`] apart.
+/// Collinear points give the polyline `a, m, b`.
+fn arc_through(a: Vec2, m: Vec2, b: Vec2) -> Vec<Vec2> {
+    let turn = cross(sub(m, a), sub(b, m));
+    let d = 2.0 * cross(sub(m, a), sub(b, a));
+    if turn.abs() <= 1e-6 * dist(a, b).powi(2) || d == 0.0 {
+        return vec![a, m, b];
+    }
+    // Circumcenter relative to `a`.
+    let (u, v) = (sub(m, a), sub(b, a));
+    let (uu, vv) = (dot(u, u), dot(v, v));
+    let center = add(
+        a,
+        [(v[1] * uu - u[1] * vv) / d, (u[0] * vv - v[0] * uu) / d],
+    );
+    let radius = dist(a, center);
+    let angle = |p: Vec2| (p[1] - center[1]).atan2(p[0] - center[0]);
+    let start = angle(a);
+    let tau = std::f32::consts::TAU;
+    let mut sweep = (angle(b) - start).rem_euclid(tau);
+    if turn < 0.0 {
+        sweep -= tau;
+    }
+    let steps = ((sweep.abs() / ARC_STEP).ceil() as usize).max(2);
+    let mut points = Vec::with_capacity(steps + 1);
+    points.push(a);
+    for i in 1..steps {
+        let t = start + sweep * i as f32 / steps as f32;
+        points.push([center[0] + radius * t.cos(), center[1] + radius * t.sin()]);
+    }
+    points.push(b);
+    points
+}
+
+/// Where a car is and which way it faces, in world XZ meters. `dir` is a unit vector.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Pose {
+    pub pos: Vec2,
+    pub dir: Vec2,
+}
+
+impl Pose {
+    /// Heading as a yaw angle in radians from +x toward +z.
+    pub fn yaw(&self) -> f32 {
+        self.dir[1].atan2(self.dir[0])
+    }
+}
+
+/// A route centerline shifted to the driver's right, parameterized by distance along it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct LanePath {
+    points: Vec<Vec2>,
+    /// Distance from the start to each point.
+    cum: Vec<f32>,
+}
+
+impl LanePath {
+    /// Offsets every vertex of `centerline` by `offset` along the average of the right normals of
+    /// its two steps, so the path stays continuous through corners and never strays farther than
+    /// `offset` from the centerline.
+    pub fn new(centerline: &[Vec2], offset: f32) -> Self {
+        let mut line: Vec<Vec2> = Vec::with_capacity(centerline.len());
+        for &p in centerline {
+            if line.last().is_none_or(|&q| dist(p, q) > MIN_STEP) {
+                line.push(p);
+            }
+        }
+        let dirs: Vec<Vec2> = line
+            .windows(2)
+            .map(|w| {
+                let d = sub(w[1], w[0]);
+                scale(d, 1.0 / len(d))
+            })
+            .collect();
+        let points: Vec<Vec2> = (0..line.len())
+            .map(|i| {
+                let before = i.checked_sub(1).and_then(|j| dirs.get(j));
+                let normal = match (before, dirs.get(i)) {
+                    (Some(&a), Some(&b)) => {
+                        let sum = add(right_of(a), right_of(b));
+                        let l = len(sum);
+                        if l > 1e-3 {
+                            scale(sum, 1.0 / l)
+                        } else {
+                            right_of(b)
+                        }
+                    }
+                    (Some(&d), None) | (None, Some(&d)) => right_of(d),
+                    (None, None) => [0.0, 0.0],
+                };
+                add(line[i], scale(normal, offset))
+            })
+            .collect();
+        let mut cum = Vec::with_capacity(points.len());
+        let mut total = 0.0;
+        for (i, p) in points.iter().enumerate() {
+            if i > 0 {
+                total += dist(points[i - 1], *p);
+            }
+            cum.push(total);
+        }
+        Self { points, cum }
+    }
+
+    pub fn length(&self) -> f32 {
+        self.cum.last().copied().unwrap_or(0.0)
+    }
+
+    pub fn points(&self) -> &[Vec2] {
+        &self.points
+    }
+
+    /// The pose `s` meters along the path, clamped to its ends.
+    pub fn pose_at_distance(&self, s: f32) -> Pose {
+        match self.points.len() {
+            0 => Pose {
+                pos: [0.0, 0.0],
+                dir: [1.0, 0.0],
+            },
+            1 => Pose {
+                pos: self.points[0],
+                dir: [1.0, 0.0],
+            },
+            n => {
+                let s = s.clamp(0.0, self.length());
+                let i = self.cum.partition_point(|&c| c <= s).clamp(1, n - 1);
+                let (a, b) = (self.points[i - 1], self.points[i]);
+                let step = self.cum[i] - self.cum[i - 1];
+                let t = if step > 0.0 {
+                    (s - self.cum[i - 1]) / step
+                } else {
+                    0.0
+                };
+                let d = sub(b, a);
+                Pose {
+                    pos: lerp(a, b, t),
+                    dir: scale(d, 1.0 / len(d)),
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn close(a: Vec2, b: Vec2) -> bool {
+        dist(a, b) < 1e-3
+    }
+
+    #[test]
+    fn rotation_maps_edge_normals_onto_rotated_edges() {
+        for k in 0..6u8 {
+            for e in 0..6u8 {
+                let got = rotate(EDGE_DIR[e as usize], k);
+                assert!(close(got, EDGE_DIR[((e + k) % 6) as usize]), "e{e} k{k}");
+            }
+        }
+    }
+
+    #[test]
+    fn lane_points_meet_the_neighbor_at_the_seam() {
+        let cell = Axial::new(2, -1);
+        for e in 0..6u8 {
+            let n = cell.neighbor(e);
+            let mid = scale(add(cell_center(cell), cell_center(n)), 0.5);
+            assert!(close(lane_point(cell, e, 0.0), mid));
+            assert!(close(
+                lane_point(cell, e, 1.0),
+                lane_point(n, (e + 3) % 6, -1.0)
+            ));
+        }
+    }
+
+    #[test]
+    fn arc_through_three_points_has_circle_length() {
+        // Quarter circle of radius 10 around the origin.
+        let s = 10.0 * std::f32::consts::FRAC_1_SQRT_2;
+        let pts = segment_shape([10.0, 0.0], &[[s, s]], [0.0, 10.0]);
+        let want = 10.0 * std::f32::consts::FRAC_PI_2;
+        assert!((polyline_length(&pts) - want).abs() < 0.01);
+        assert!(pts.iter().all(|p| (len(*p) - 10.0).abs() < 1e-3));
+        // Same arc, reversed: turns the other way.
+        let back = segment_shape([0.0, 10.0], &[[s, s]], [10.0, 0.0]);
+        assert!((polyline_length(&back) - want).abs() < 0.01);
+    }
+
+    #[test]
+    fn collinear_control_point_stays_straight() {
+        let pts = segment_shape([0.0, 0.0], &[[5.0, 0.0]], [10.0, 0.0]);
+        assert_eq!(pts, vec![[0.0, 0.0], [5.0, 0.0], [10.0, 0.0]]);
+    }
+
+    #[test]
+    fn heading_plus_x_drives_at_plus_z() {
+        let path = LanePath::new(&[[0.0, 0.0], [10.0, 0.0]], 1.5);
+        let pose = path.pose_at_distance(5.0);
+        assert!(close(pose.pos, [5.0, 1.5]));
+        assert!(close(pose.dir, [1.0, 0.0]));
+    }
+
+    #[test]
+    fn lane_path_stays_within_offset_of_a_corner() {
+        let line = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0]];
+        let path = LanePath::new(&line, 1.5);
+        for i in 0..=100 {
+            let p = path.pose_at_distance(path.length() * i as f32 / 100.0).pos;
+            assert!(distance_to_polyline(p, &line) <= 1.5 + 1e-4);
+        }
+    }
+
+    #[test]
+    fn pose_clamps_to_path_ends() {
+        let path = LanePath::new(&[[0.0, 0.0], [4.0, 0.0]], 0.0);
+        assert_eq!(path.pose_at_distance(-1.0).pos, [0.0, 0.0]);
+        assert_eq!(path.pose_at_distance(9.0).pos, [4.0, 0.0]);
+    }
+}

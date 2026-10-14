@@ -1,0 +1,12 @@
+[package]
+name = "hex-sim"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+hex-core = { path = "../hex-core" }
+
+[lints]
+workspace = true

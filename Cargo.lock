@@ -3090,6 +3090,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "hex-sim"
+version = "0.1.0"
+dependencies = [
+ "hex-core",
+]
+
+[[package]]
 name = "hexasphere"
 version = "19.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
