@@ -50,7 +50,7 @@ Decisions made during the brainstorm. Codes are stable and referenced throughout
 | D9 | Persistence: IndexedDB autosave with multiple slots, plus `.hexworld` file export and import. No backend. |
 | D10 | Art direction: stylized-real diorama. |
 | D11 | Tile composition: a hex base, 6 edge pieces, a center piece and scattered props, assembled from data-defined kit pieces. |
-| D12 | MVP content: about 10 tiles covering grass/meadow, forest, house, road, river, beach and ocean. Live agents are cars and birds. |
+| D12 | MVP content: about 10 tiles covering grass/meadow, forest, house, road, river, beach and ocean. Live agents are cars, birds and fish (fish added by the owner, 2026-10-13). |
 | D13 | Audio: Suno music via a repo prompt pack. The owner generates the tracks, and repo scripts master and validate them. ElevenLabs makes the SFX and ambience, which are spatial and mixed by camera focus. |
 | D14 | Camera: orbit, pan and zoom. First-person stroll and drive come later, so assets need close-range LOD0 quality and per-tile colliders from day one. |
 | D15 | Placement animation: staged assembly over about 1.5–2.5 s, skippable by placing the next tile. |
@@ -246,12 +246,13 @@ About 10 types. The exact variants are frozen at the start of P2.
 |---|---|---|
 | Car | Routes between destination nodes on the road graph (A* over a cached graph) and follows lane splines. Starts and ends in a house's parking spot (§7.1). Three body types to start: sedan, van and pickup truck (owner, 2026-10-13), each one model recoloured per instance at runtime (§6). Spawn rate scales with connected destinations. | P2 |
 | Bird | Boids flocking over the whole map, roosting in forest tiles. Runs on GPU compute. | P2 |
+| Fish | Schools that swim inside ocean and river water, visible through the clear surface. The same GPU boids pass as birds, confined to the water volume of connected water tiles and kept below the surface and above the bed (`docs/kit/water-contract.md`). They share the bird budget (owner, 2026-10-13). | P2 |
 | Boat | Drifts on ocean tiles and travels connected rivers. | P3 |
 | Train | Routes between stations on the rail graph. Multi-car consists that cross tile boundaries. | P3 |
 | Farm animals | Wander within their farm tile's bounds, using idle, graze and run states. | P3 |
 | Pedestrians | Walk sidewalk lanes in towns. | P6 |
 
-- Agent caps scale with the quality tier (reference target: 300 vehicles, 500 animals and 1,000 birds at High).
+- Agent caps scale with the quality tier (reference target: 300 vehicles, 500 animals and 1,000 boids at High, split between birds and fish: 700 birds and 300 fish by default, with fish scaled to the water tiles in the world).
 - Agents are simulated at a fixed 20 Hz tick and interpolated at render time. Off-screen agents drop to a coarse simulation LOD.
 - Skinned creatures use baked animation (vertex animation textures or a bone-transform atlas) so they can be GPU-instanced. No per-agent CPU skinning.
 - Animated props (windmill blades, water wheels, flags) use rigid object transforms or vertex animation textures.
@@ -495,7 +496,7 @@ Goal: the polished, playable core loop with D12 content.
 - [ ] Placement: ghost preview, rotation, edge glow, legal-slot inventory filter, auto-rotate.
 - [ ] Staged rise animation (§4.4), including below-surface features, skippable.
 - [ ] Road network stitching. Cars route between houses across tile boundaries, pulling out of and parking in per-house spots (§7.1).
-- [ ] GPU boids birds roosting in forests.
+- [ ] GPU boids: birds roosting in forests, and fish schooling in ocean and river water, sharing one boid budget.
 - [ ] Water: river flow and ocean waves with shore foam, meeting the §9.1 hero-water quality bar.
 - [ ] A gate sums the initial download (wasm + IBL + core pieces + sets, one texture family) and fails above 30 MB; hero assets stream after first interaction. (The gate runs in `make checkall-ci`: 22.4 MiB gated on ASTC, 2026-10-13. Still open: hero pieces load eagerly at runtime, and the PNG fallback is 32.4 MiB.)
 - [x] The owner approves the water look in a dedicated `water` scenario. Shots cover the ocean, a river, a beach and a tile seam, captured at rest and in motion. (Approved 2026-10-13, including underwater cut faces on exposed edges: `--scenario water`, `docs/checkpoints/water/`.)
