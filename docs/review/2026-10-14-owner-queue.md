@@ -186,6 +186,22 @@ The corner look is Q3. With scatter on, a treeless strip still runs along the se
   - **Per-pass GPU times:** `docs/perf/p2-passes.json`, after merge.
 - **Hero water audit:** waves and flow, reflection and refraction, seams, and the rise fill all have code and shot evidence. Foam and the wet band are partial: the kit beach shows a static damp tint, not the live wet band.
 
+**A21. Settings sheet: Graphics and Audio tabs (Legend S9).** `docs/checkpoints/settings/s9-*.jpg` puts each mockup beside the build.
+- **Graphics:** pick Auto, Low, Medium or High (plus Ultra when detection lands on High). It shows the detected tier and the reason, and a world's save remembers its quality.
+- **Audio:** mute, master volume and the mixer, per viewer.
+
+Deviations from the mockups:
+- No Controls tab.
+- No "measure this GPU again" benchmark.
+- The tier rows describe what each tier changes today. The mockup's resolution-scale tags and shadow cascades are not built yet (PRD §9.2).
+- The reason line uses the engine's technical wording.
+
+One behaviour to confirm: once you have chosen tilt-shift yourself, a tier change keeps your choice. The autosave resume also counts as a choice, so after your first reload, tilt-shift keeps your setting even if you never touched it.
+
+**A22. The live wet band on kit beaches.** `docs/checkpoints/wet-band/` shows a before/after for straight, bay, headland and seam, a motion clip, and `compare-waterline.jpg` against the look-dev. The soaked line now follows the swash exactly as in the approved water look-dev. It adds no texture, and the seams stay continuous.
+
+One look call: the hard-edged 0.6 m damp band stays as the base under the live band. Retinting it to dry sand in the manifest would hand the whole gradient to the shader, as the look-dev does, with no rebuild.
+
 ## Questions
 
 **Q1. Save label (resolved).** Autosave now exists, so the bar shows "Saved" as the brief asked, plus "Saving…" and "Autosave off". See A16.
@@ -285,7 +301,7 @@ Nothing is pushed.
 
 **PRD P2 checklist:** 15 of 20 boxes are checked, with evidence in each line. The 5 open:
 1. MVP tiles approved (you).
-2. The hero-water bar: the live wet band is in progress.
+2. The hero-water bar: the live wet band now ships (A22). Foam from flow speed is still weak, and the agent recommends tuning it inside the approved `water.wesl` with you.
 3. Music: your Suno cues.
 4. Shipped-UI sign-off (you).
 5. The web stall tail: explained, waiting on Q7.
