@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_bridge.py",
-      "sha256": "37fd02dfa58345b7e204480cf2abfd91fb6f8423b3c9355a7e64ac34e8afd405"
+      "sha256": "617369feeb569f41501c1a4e61fbea0e672b9419a180191b5c25497e6e94135e"
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
@@ -21,7 +21,7 @@
     },
     {
       "path": "scripts/blender/kit/_road.py",
-      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
     }
   ],
   "authoringAgent": {
@@ -152,7 +152,7 @@
         "bc7": 26462,
         "astc": 26035
       },
-      "glbBytes": 102676
+      "glbBytes": 102000
     },
     "textureEncodes": [
       {
@@ -191,8 +191,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.glb",
-      "sha256": "6632a59883a3422b24318dfd11241e24da921af471e12786934bb4408181422f",
-      "bytes": 102676
+      "sha256": "f0b84d3fbf6c6fd5efebce78c4bee32a5591660facb3b7d6aea2cf2c35c807ca",
+      "bytes": 102000
     },
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.bc7.ktx2",
@@ -233,7 +233,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T09:00:11.953Z",
+    "date": "2026-10-14T19:14:19.368Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -257,7 +257,7 @@
       "gate": "piece",
       "status": "pending",
       "requested": "2026-10-14",
-      "revision": "\u00a79.4 hook masks",
+      "revision": "§9.4 hook masks",
       "notes": "Pending owner re-approval: river_stone, river_reed, river_cattail and bridge_stone bound to the existing masks map, whose texels under the dressing and a 32 px halo around it now carry R 1, G porosity (as the river centres), B 0, A 1, and whose parked causeway block carries (1, 0.8, 0, 1); the road's AO texels are unchanged (compared texel for texel) and so are its mips 0 to 4; the reeds and cattails take the foliage season tint. The GLB is byte-identical, and A = 1 keeps the slots' AO as before (none). At the MVP values, outside each frame's run-to-run noise, at most 54 of 1.6 M isolated pixels differ, by at most 6 levels of 255 in the static frames (up to 23 beside moving agents in the coast checkpoint frames), with no visible change; the one static frame with zero run-to-run noise (the straight coast) shows 6 such pixels, caused by binding the map, while the masked shader math is an identity at those values. Review masks-river-bridge and masks-far, *-before.jpg against *-after.jpg, in docs/checkpoints/hooks/masks-{none,snow,wet,night,autumn}/. Earlier entries stay as history."
     },
     {
@@ -266,6 +266,13 @@
       "gate": "piece",
       "status": "approved",
       "notes": "A15: re-approved after the prop-mask rebuild (no change at MVP values). A2: shape, seams and LODs approved; colour re-checked on the TonyMcMapface re-shoot (Q4). docs/review/2026-10-14-walkthrough.html"
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "verge sink normals",
+      "notes": "Pending owner seam re-approval; not an approval. Rebuilt for the owner's 2026-10-14 road-verge bug (a dark strip in the meadow beside the road): every road_verge loop, the 31-degree verge sink slope included, now carries a +Z custom normal (_road.verge_normals_up), so the slope shades like the flat meadow grass on both sun sides. Positions, the shared PROFILE, LODs, UVs, sockets and the masks bake are unchanged (masks PNG and KTX2 byte-identical). In play the shade-side band went from 0.536 to 1.014 of the adjacent meadow's mean luminance and the sun-side band from 1.115 to 1.035. Review docs/checkpoints/road-verge/road-verge-{before,after}-*.jpg and road-verge-{before,after}-crop4x-{sun,shade}.png. Its road bed was flat-shaded; the verge faces are now smooth with the +Z normal, the asphalt and kerb stay flat. The controller records the owner's decision. Earlier entries stay as history."
     }
   ]
 }

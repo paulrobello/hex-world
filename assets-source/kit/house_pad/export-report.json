@@ -2,12 +2,12 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/house_pad.py",
-    "sha256": "8bbda915d43d8ddb0767da2e495ec91b8420eeac6c4af2817d0ddee134209b90"
+    "sha256": "83002f31883a8000ccfbacd24c4663f27fa680a63e3d9cc484d85c6c364b868d"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_road.py",
-      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
     }
   ],
   "lodTris": {

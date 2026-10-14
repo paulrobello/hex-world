@@ -10,6 +10,8 @@ Each entry gives what happened, the fix, and the minutes lost.
 5. **The worktree guard refuses heredoc file writes and `$SECONDS` loops.** Fix: write files with the editor tool, and a small node script for the bounded load wait. Same as meadow_base entry 4. 2 min.
 6. **The load guard and `make web-shots-kit` fight.** The target rebuilds the wasm with trunk first, which pushed the 1-minute load from 14 to 50 before the "after" reading. Fix: discard that run, wait, and rerun `node e2e/shots.mjs dist scripts/shots/kit.json ""` on the fresh `dist`. Skill gap: the R9 guidance should say to build first and guard only the shot run. 4 min.
 7. **`make kit-material` needs `assets-source/kit/materials/<set>/` to exist** for its final `cp`. Fix: `mkdir -p` first. 1 min.
+8. **The verge sink slope shaded as a dark strip in play (owner bug, 2026-10-14).** The 31-degree slope from the verge top down to BED_SINK kept its true normal, so on the side facing away from the sun it read at 0.536 of the adjacent meadow's luminance (1.115 on the sunlit side), from the kerb-side crease out to the wavy line where the meadow relief cuts it. Fix: `_road.verge_normals_up` gives every road_verge loop a +Z custom normal after the last join (all seven pieces that sweep PROFILE: the road pieces, river_road_bridge_center and house_pad); shade side 1.014, sun side 1.035 after (`docs/checkpoints/road-verge/`). The bridge's road bed was flat-shaded, and a flat face ignores custom normals, so the helper makes the verge faces smooth first. 10 min.
+9. **Shooting a straight road between meadows in play needs the right cell.** `place` auto-rotates to the first legal rotation, and a straight at (1, 0) beside the start meadow at (0, 0) cannot point a lane at it, so it came out at rotation 1 (diagonal); a straight at (1, -1) and (2, -1) lies along +X. At 38 m the boids filled the frame, so the play-height shots sit at 10 m. 6 min.
 
 ## Folded into the blender-asset skill
 1. `gates.md` (LOD1 / LOD2 row): the swept-profile formula and the shipped segment counts.
@@ -19,3 +21,5 @@ Each entry gives what happened, the fix, and the minutes lost.
 5. `SKILL.md` ("Worktree sessions").
 6. `SKILL.md` ("Timing": build first, guard only the measured or shot run) and `stages.md` (interactive route, step 8).
 7. Fixed in the `Makefile`: `kit-material` creates `assets-source/kit/materials/<set>/`. No skill change needed.
+8. `pitfalls.md` ("A ground slope that should read as ground needs up normals").
+9. No skill change: the cell choice and camera height are recorded in `docs/checkpoints/road-verge/road-verge.json`.

@@ -1,6 +1,6 @@
 {
   "name": "road_bend_120_center",
-  "date": "2026-10-14T03:25:57.319Z",
+  "date": "2026-10-14T19:08:12.377Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 16607,
       "astc": 16159
     },
-    "glbBytes": 41960
+    "glbBytes": 39468
   },
   "glb": {
-    "bytes": 41960,
-    "sha256": "199e2c3ef147177fbd70995c88ef3b30836aaeaf6f289016da16351daa23bd23"
+    "bytes": 39468,
+    "sha256": "e07aede9f70e34c8c1ddefa97422d610f47b7b9f57c7fb34bb78034d71e02275"
   }
 }

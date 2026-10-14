@@ -298,6 +298,7 @@ for i, (body, pt) in enumerate(zip(bodies, paints)):
     body = geom.join([body, *pt], f"{PIECE}_lod{i}")
     body.data.shade_smooth()
     body.data.set_sharp_from_angle(angle=math.radians(35.0))
+    _road.verge_normals_up(body)
     body.parent = root
     lods.append(body)
     names = [m.name for m in body.data.materials]

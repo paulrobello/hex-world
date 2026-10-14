@@ -1,6 +1,6 @@
 """Shared code for the turning road centre pieces: road_bend_120_center, road_bend_60_center and
-road_junction_center. `_road.py` stays byte-identical (it is a hashed dependency of the approved
-road_straight pieces), so everything new lives here and reuses `_road.PROFILE` and its constants.
+road_junction_center. Everything bend- and junction-specific lives here and reuses `_road.PROFILE`,
+its constants and `_road.verge_normals_up`.
 
 Joint contract. A road tile places `road_straight_edge` (x in [6, APOTHEM], rotated by k) at every
 lane edge k, so a centre piece meets the edge stub at r = JOINT (6 m) on the ray through edge k's
@@ -372,6 +372,7 @@ def build_piece(piece, beds_fn, paint_fn, segments, lanes, footprint, generator,
         body = geom.join([bed, pt], f"{piece}_lod{i}")
         body.data.shade_smooth()
         body.data.set_sharp_from_angle(angle=math.radians(30.0))
+        _road.verge_normals_up(body)
         body.parent = root
         lods.append(body)
         assert [m.name for m in body.data.materials] == list(_road.SLOTS), [m.name for m in body.data.materials]

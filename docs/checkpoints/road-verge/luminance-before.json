@@ -1,0 +1,50 @@
+{
+  "label": "before",
+  "regions_m": {
+    "band": [
+      4.015,
+      4.085
+    ],
+    "verge": [
+      3.45,
+      3.9
+    ],
+    "meadow": [
+      4.9,
+      5.8
+    ]
+  },
+  "luminance": "relative Y, Rec. 709 on sRGB-decoded pixels",
+  "sun": {
+    "band": {
+      "meanY": 0.1846,
+      "samples": 1280
+    },
+    "verge": {
+      "meanY": 0.1692,
+      "samples": 7406
+    },
+    "meadow": {
+      "meanY": 0.1655,
+      "samples": 14412
+    },
+    "band_over_meadow": 1.115,
+    "band_over_verge": 1.091
+  },
+  "shade": {
+    "band": {
+      "meanY": 0.0869,
+      "samples": 1280
+    },
+    "verge": {
+      "meanY": 0.1615,
+      "samples": 7406
+    },
+    "meadow": {
+      "meanY": 0.162,
+      "samples": 14412
+    },
+    "band_over_meadow": 0.536,
+    "band_over_verge": 0.538
+  }
+}

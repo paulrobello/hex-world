@@ -1,6 +1,6 @@
 {
   "name": "road_straight_center",
-  "date": "2026-10-13T19:59:46.529Z",
+  "date": "2026-10-14T19:08:11.514Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 8252,
       "astc": 8122
     },
-    "glbBytes": 30432
+    "glbBytes": 30248
   },
   "glb": {
-    "bytes": 30432,
-    "sha256": "4f28e9ffdce5aca5d4e1933a7f745f7f5287c367cc26c4c8d6aeb20f5be3fe1a"
+    "bytes": 30248,
+    "sha256": "1879e86ffcde2210cbe909d998ac358fade00b698d2ccf8eaac1df082ed0cf25"
   }
 }

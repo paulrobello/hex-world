@@ -9,7 +9,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_road.py",
-      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
     }
   ],
   "authoringAgent": {
@@ -168,7 +168,7 @@
         "bc7": 8252,
         "astc": 8122
       },
-      "glbBytes": 30432
+      "glbBytes": 30248
     },
     "textureEncodes": [
       {
@@ -207,8 +207,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/road_straight_center/road_straight_center.glb",
-      "sha256": "4f28e9ffdce5aca5d4e1933a7f745f7f5287c367cc26c4c8d6aeb20f5be3fe1a",
-      "bytes": 30432
+      "sha256": "1879e86ffcde2210cbe909d998ac358fade00b698d2ccf8eaac1df082ed0cf25",
+      "bytes": 30248
     },
     {
       "path": "assets/kit/p1/road_straight_center/road_straight_center.masks.bc7.ktx2",
@@ -249,7 +249,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-13T20:37:12.025Z",
+    "date": "2026-10-14T19:14:09.108Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -272,6 +272,13 @@
       "who": "Paul Robello",
       "when": "2026-10-13",
       "gate": "seam"
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "verge sink normals",
+      "notes": "Pending owner seam re-approval; not an approval. Rebuilt for the owner's 2026-10-14 road-verge bug (a dark strip in the meadow beside the road): every road_verge loop, the 31-degree verge sink slope included, now carries a +Z custom normal (_road.verge_normals_up), so the slope shades like the flat meadow grass on both sun sides. Positions, the shared PROFILE, LODs, UVs, sockets and the masks bake are unchanged (masks PNG and KTX2 byte-identical). In play the shade-side band went from 0.536 to 1.014 of the adjacent meadow's mean luminance and the sun-side band from 1.115 to 1.035. Review docs/checkpoints/road-verge/road-verge-{before,after}-*.jpg and road-verge-{before,after}-crop4x-{sun,shade}.png. The controller records the owner's decision. Earlier entries stay as history."
     }
   ]
 }

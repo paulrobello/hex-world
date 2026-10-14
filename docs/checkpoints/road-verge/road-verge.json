@@ -1,0 +1,37 @@
+[
+  {"cmd": "select_tile", "id": "road_straight"},
+  {"cmd": "place", "q": 1, "r": -1},
+  {"cmd": "place", "q": 2, "r": -1},
+  {"cmd": "select_tile", "id": "meadow"},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "place", "q": 1, "r": -2},
+  {"cmd": "place", "q": 2, "r": -2},
+  {"cmd": "hover", "q": 8, "r": -8},
+  {"cmd": "wait", "frames": 90},
+  {"cmd": "dump_state", "name": "road-verge-state"},
+
+  {"cmd": "camera", "pos": [1.86, 10, -14], "look_at": [15.86, 0, -24]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "road-verge-play"},
+
+  {"cmd": "camera", "pos": [1.86, 10, -34], "look_at": [15.86, 0, -24]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "road-verge-play-north"},
+
+  {"cmd": "camera", "pos": [13.86, 6, -19.2], "look_at": [13.86, 0, -19.5]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "road-verge-top-sun"},
+
+  {"cmd": "camera", "pos": [13.86, 6, -28.8], "look_at": [13.86, 0, -28.5]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "road-verge-top-shade"},
+
+  {"cmd": "camera", "pos": [13.86, 4, -12], "look_at": [13.86, 0, -19.6]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "road-verge-sun-side"},
+
+  {"cmd": "camera", "pos": [13.86, 4, -36], "look_at": [13.86, 0, -28.4]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "road-verge-shade-side"},
+  {"cmd": "exit"}
+]

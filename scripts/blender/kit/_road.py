@@ -15,6 +15,11 @@ Edge/center contract (owner requirement, controller C1/C2):
   31-degree slope to BED_SINK (-0.30 m) at |t| = SINK_T. The meadow cap relief stays in
   [-0.25, 0] (Task 8), so the slope always enters the cap: no crack between road and meadow, and the
   verge grass meets the cap grass in the same world-space tileable set.
+- Verge normals (owner bug 2026-10-14, the dark strip beside the road): every road_verge loop, the
+  31-degree sink slope included, carries a +Z custom normal (`verge_normals_up`, applied by every
+  piece that sweeps PROFILE after its last join and sharp-edge pass). With its true normal the slope
+  facing away from the sun shaded at about half the meadow's luminance, and the slope facing it
+  brighter, between the kerb and the line where the meadow relief cuts it.
 
 Centre-line dashes (controller C4): period P = 2 * APOTHEM / 5 = 5.5426 m, 2.7713 m on and 2.7713 m
 off, with a dash centred on x = 0. Then the pattern is mirror-symmetric about x = 0 and about
@@ -114,6 +119,30 @@ def build(name, x0, x1, segments, lod, materials_by_span):
     return scene.link(bpy.data.objects.new(name, mesh))
 
 
+def verge_normals_up(obj):
+    """+Z custom normals on every loop of a road_verge face; every other loop keeps its corner normal.
+    Call after the last join and set_sharp_from_angle: both rebuild the corner normals. Verge faces
+    are made smooth first, since a flat face ignores custom normals."""
+    mesh = obj.data
+    verge = {i for i, m in enumerate(mesh.materials) if m and m.name == VERGE_SLOT}
+    assert verge, f"{obj.name}: no {VERGE_SLOT} slot"
+    count = 0
+    for p in mesh.polygons:
+        if p.material_index in verge:
+            p.use_smooth = True
+    out = [tuple(n.vector) for n in mesh.corner_normals]
+    for p in mesh.polygons:
+        if p.material_index in verge:
+            for li in p.loop_indices:
+                out[li] = (0.0, 0.0, 1.0)
+            count += 1
+    assert count, f"{obj.name}: no {VERGE_SLOT} faces"
+    mesh.normals_split_custom_set(out)
+    mesh.update()
+    up = [mesh.corner_normals[li].vector.z for p in mesh.polygons if p.material_index in verge for li in p.loop_indices]
+    assert min(up) > 0.9999, (obj.name, min(up))
+
+
 def dash_spans(x0, x1):
     """Dash intervals of the centre line clipped to [x0, x1] (dash k centred on k * DASH_PERIOD)."""
     out = []
@@ -191,6 +220,7 @@ def build_piece(piece, x0, x1, segments, generator, sockets):
         body = geom.join([bed, pt], f"{piece}_lod{i}")
         body.data.shade_smooth()
         body.data.set_sharp_from_angle(angle=math.radians(30.0))
+        verge_normals_up(body)
         body.parent = root
         lods.append(body)
         assert [m.name for m in body.data.materials] == list(SLOTS), [m.name for m in body.data.materials]

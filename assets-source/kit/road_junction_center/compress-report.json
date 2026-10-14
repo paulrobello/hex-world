@@ -1,6 +1,6 @@
 {
   "name": "road_junction_center",
-  "date": "2026-10-14T03:39:28.614Z",
+  "date": "2026-10-14T19:08:12.847Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 20839,
       "astc": 20176
     },
-    "glbBytes": 57748
+    "glbBytes": 52264
   },
   "glb": {
-    "bytes": 57748,
-    "sha256": "8b655609a4f085356cc2b66c157165e5d1a8d626ba72206b513ca66243f9b95e"
+    "bytes": 52264,
+    "sha256": "36f2211db911aab7f1991d32d399f1607c923014c9df4b2108f16abfd6f9b801"
   }
 }

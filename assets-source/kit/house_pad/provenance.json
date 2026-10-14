@@ -4,12 +4,12 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/house_pad.py",
-    "sha256": "8bbda915d43d8ddb0767da2e495ec91b8420eeac6c4af2817d0ddee134209b90"
+    "sha256": "83002f31883a8000ccfbacd24c4663f27fa680a63e3d9cc484d85c6c364b868d"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_road.py",
-      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
     }
   ],
   "authoringAgent": {
@@ -148,7 +148,7 @@
         "bc7": 17644,
         "astc": 16874
       },
-      "glbBytes": 118744
+      "glbBytes": 118676
     },
     "textureEncodes": [
       {
@@ -187,8 +187,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/house_pad/house_pad.glb",
-      "sha256": "19d15556c01802e6a24d24c1b171f44a8e68d01af6862feacb90ee339d558112",
-      "bytes": 118744
+      "sha256": "03893ea816978bfc673b3acdcf5dc8eded61e32d82c808f9bd4c642a1c1d3644",
+      "bytes": 118676
     },
     {
       "path": "assets/kit/p1/house_pad/house_pad.masks.bc7.ktx2",
@@ -229,7 +229,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T06:30:17.475Z",
+    "date": "2026-10-14T19:14:21.915Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -261,7 +261,7 @@
       "gate": "piece",
       "status": "pending",
       "revision": "anchor-park sockets",
-      "notes": "Pending owner re-approval: re-exported with one anchor-park-<n> socket per house (PRD \u00a77.1 house parking). Geometry and bake are unchanged; review assets-source/kit/house_pad/renders/parking_top.jpg. The entry above approved the revision before the parking sockets."
+      "notes": "Pending owner re-approval: re-exported with one anchor-park-<n> socket per house (PRD §7.1 house parking). Geometry and bake are unchanged; review assets-source/kit/house_pad/renders/parking_top.jpg. The entry above approved the revision before the parking sockets."
     },
     {
       "who": "Paul Robello (owner)",
@@ -269,6 +269,13 @@
       "gate": "piece",
       "status": "approved",
       "notes": "A9: approved with the three anchor-park sockets, the road node on the driveway, the ~2.9 m lawn swing of the three-point turn and the visitor space. docs/review/2026-10-14-walkthrough.html"
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "verge sink normals",
+      "notes": "Pending owner seam re-approval; not an approval. Rebuilt for the owner's 2026-10-14 road-verge bug (a dark strip in the meadow beside the road): every road_verge loop, the 31-degree verge sink slope included, now carries a +Z custom normal (_road.verge_normals_up), so the slope shades like the flat meadow grass on both sun sides. Positions, the shared PROFILE, LODs, UVs, sockets and the masks bake are unchanged (masks PNG and KTX2 byte-identical). In play the shade-side band went from 0.536 to 1.014 of the adjacent meadow's mean luminance and the sun-side band from 1.115 to 1.035. Review docs/checkpoints/road-verge/road-verge-{before,after}-*.jpg and road-verge-{before,after}-crop4x-{sun,shade}.png. The driveway is the same PROFILE sweep and meets road_straight_edge at x = 6, so it takes the same normals. The controller records the owner's decision. Earlier entries stay as history."
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "name": "road_straight_edge",
-  "date": "2026-10-13T19:59:47.497Z",
+  "date": "2026-10-14T19:08:04.692Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 7042,
       "astc": 6923
     },
-    "glbBytes": 30140
+    "glbBytes": 29844
   },
   "glb": {
-    "bytes": 30140,
-    "sha256": "65c67969c090f41d977ca88de69381eaabc9ed543a90dc0f4b7b5f53e7e1603e"
+    "bytes": 29844,
+    "sha256": "d9feef4e624ddc213a14615307cc9ee5b0fe3c0dc307037237828979099f252c"
   }
 }

@@ -369,6 +369,7 @@ def build(piece, generator):
     for li, group in enumerate(parts):
         body = geom.join(group, f"{piece}_lod{li}")
         body.data.set_sharp_from_angle(angle=math.radians(30.0))
+        _road.verge_normals_up(body)
         body.parent = root
         lods.append(body)
     tris = [geom.tri_count(o) for o in lods]

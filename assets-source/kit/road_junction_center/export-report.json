@@ -7,11 +7,11 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_road.py",
-      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
     },
     {
       "path": "scripts/blender/kit/_road_bend.py",
-      "sha256": "30ed381d6e51bb8e813c45bba97f1659ac405de47b6184c744b8247386f25380"
+      "sha256": "3600718e406beb143a5462ebfcc133e41d6fa38bb209ba7fe702ddc7c71cd041"
     }
   ],
   "lodTris": {
