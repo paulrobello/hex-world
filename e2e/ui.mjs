@@ -192,8 +192,9 @@ try {
   // S7 bulldoze: B, a refused removal that would split the world, then a removable leaf.
   await key("b");
   await until(async () => (await play()).tool === "bulldoze", "B turns on bulldoze");
-  check(await page.locator(".tool[data-action=bulldoze].is-active").count() === 1, "bulldoze tool active");
-  check((await text(".key__title")) === "Bulldoze", "sheet key turns into the bulldoze legend");
+  // The HUD repaints from the next state publish, which lags the engine under host load.
+  await until(async () => (await page.locator(".tool[data-action=bulldoze].is-active").count()) === 1, "bulldoze tool active");
+  await until(async () => (await text(".key__title")) === "Bulldoze", "sheet key turns into the bulldoze legend");
   await pointAt(1, 0);
   await until(async () => (await play()).bulldoze?.allowed === false, "removing the road is refused by the engine");
   await until(async () => (await text(".ghost-tag")).includes("Removing this would split your world"), "split tag");
