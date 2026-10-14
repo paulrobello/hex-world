@@ -1,0 +1,47 @@
+/* Shared comp plumbing: the in-engine backdrop, the ghost slot and the tile glyphs.
+   Each direction supplies its own tokens (--k-*, --ok, --bad, --neutral) and chrome. */
+@font-face { font-family: "Manrope"; src: url("fonts/manrope-latin-wght.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Source Sans 3"; src: url("fonts/source-sans-3-latin-wght.woff2") format("woff2"); font-weight: 200 900; font-display: swap; }
+@font-face { font-family: "Unbounded"; src: url("fonts/unbounded-latin-wght.woff2") format("woff2"); font-weight: 200 900; font-display: swap; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: rgb(14 15 16); overflow: hidden; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+
+/* The scene is the 1600x1000 water look-dev capture, scaled and feathered into the void. */
+.scene { position: fixed; left: var(--scene-x, 0px); top: var(--scene-y, 0px); width: calc(1600px * var(--scene-s, .9)); aspect-ratio: 16 / 10; pointer-events: none; }
+.scene > img { width: 100%; height: 100%; display: block;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 100%), linear-gradient(180deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+  -webkit-mask-composite: source-in; mask-composite: intersect; }
+.scene > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+.ghost-body { fill: var(--ghost-fill, rgb(120 200 255 / .14)); stroke: var(--ghost-line, rgb(255 255 255 / .55)); stroke-width: 2.5; stroke-dasharray: 10 8; animation: ghost-breathe 2.4s ease-in-out infinite; }
+.ghost-river { fill: none; stroke: var(--k-V); stroke-width: 26; stroke-linecap: round; opacity: .55; }
+.edge { fill: none; stroke-width: 7; stroke-linecap: round; }
+.edge-ok { stroke: var(--ok); filter: drop-shadow(0 0 6px var(--ok)) drop-shadow(0 0 14px var(--ok)); }
+.edge-none { stroke: var(--neutral); stroke-width: 3; opacity: .7; }
+.ghost-invalid .edge-ok { stroke: var(--bad); filter: drop-shadow(0 0 6px var(--bad)) drop-shadow(0 0 14px var(--bad)); }
+.ghost-invalid .ghost-river { opacity: 0; }
+.is-bulldoze .ghost { opacity: 0; }
+.ghost { transition: opacity 180ms ease-out; }
+@keyframes ghost-breathe { 50% { fill-opacity: .55; } }
+
+/* Tile glyphs: stand-ins drawn from the F1 socket strings until thumbnails exist (F4). */
+.glyph { width: 100%; height: 100%; display: block; overflow: visible; }
+.g-rot { transform-origin: 50px 50px; transform-box: view-box; }
+.g-fill { stroke: none; }
+.g-edge { stroke-width: 7; stroke-linecap: butt; }
+.g-lane { stroke-width: 9; stroke-linecap: round; }
+.g-lane-R { stroke: var(--k-R); }
+.g-lane-V { stroke: var(--k-V); }
+.g-sand { fill: var(--k-B); }
+.g-tree { fill: color-mix(in oklab, var(--k-F) 70%, black); }
+.g-house { fill: var(--k-house, #e9e4da); }
+.g-bridge { fill: var(--k-R); stroke: var(--k-house, #e9e4da); stroke-width: 2; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost-body { animation: none; }
+  *, *::before, *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; }
+}

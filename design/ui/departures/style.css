@@ -1,0 +1,100 @@
+/* Departures: the inventory as a live board ranked by fit. Black panels, white type, tabular
+   counts, and one amber reserved for what just changed. */
+:root {
+  --black: rgb(9 10 11);
+  --panel: rgb(9 10 11 / .95);
+  --row: rgb(255 255 255 / .04);
+  --ink: rgb(246 246 243);
+  --ink-2: rgb(178 182 184);
+  --ink-3: rgb(128 133 136);
+  --amber: rgb(255 178 36);
+  --ok: rgb(92 218 145);
+  --bad: rgb(255 96 80);
+  --neutral: rgb(230 232 230 / .5);
+  --ghost-fill: rgb(255 255 255 / .08);
+  --ghost-line: rgb(255 255 255 / .8);
+  --k-G: rgb(128 176 88); --k-F: rgb(54 116 70); --k-R: rgb(214 214 208); --k-V: rgb(86 170 224); --k-B: rgb(224 196 132); --k-O: rgb(48 110 164);
+  --k-house: rgb(246 246 243);
+
+  --fs-1: .75rem; --fs-2: .8125rem; --fs-3: .875rem; --fs-4: 1rem; --fs-5: 1.375rem;
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;
+  --r: 2px;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --t-fast: 120ms; --t: 200ms; --t-rank: 320ms;
+}
+body { font-family: "Manrope", system-ui, sans-serif; color: var(--ink); font-size: var(--fs-3); }
+::selection { background: var(--amber); color: var(--black); }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+kbd { font: 700 .6875rem/1 "Manrope", sans-serif; padding: 2px 4px; border-radius: 2px; border: 1px solid rgb(255 255 255 / .22); color: var(--ink-2); }
+
+/* The board */
+.board { position: fixed; left: var(--s-5); top: var(--s-5); width: 456px; max-height: calc(100% - 140px); display: flex; flex-direction: column; background: var(--panel); border-radius: var(--r); box-shadow: 0 18px 40px rgb(0 0 0 / .6); transition: transform var(--t) var(--ease), opacity var(--t) var(--ease); }
+.board.is-closed { transform: translateX(calc(-100% - 24px)); opacity: 0; }
+.board__head { display: flex; align-items: flex-start; justify-content: space-between; padding: var(--s-4) var(--s-4) var(--s-3); }
+.board__head h1 { margin: 0; font: 600 var(--fs-5)/1.15 "Unbounded", sans-serif; letter-spacing: -.01em; }
+.board__slot { margin: 6px 0 0; font-size: var(--fs-2); color: var(--ink-2); }
+.board__slot b { color: var(--ink); font-weight: 700; }
+.board__close { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 8px; border: 1px solid rgb(255 255 255 / .16); border-radius: var(--r); background: transparent; color: var(--ink); cursor: pointer; }
+.board__close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+.board__close:hover { background: rgb(255 255 255 / .08); }
+.board__cols, .line { display: grid; grid-template-columns: 44px 1fr 48px 132px; gap: var(--s-3); align-items: center; }
+.board__cols { padding: 0 var(--s-4) 6px; font-size: .6875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid rgb(255 255 255 / .12); }
+.board__cols span:nth-child(3) { text-align: right; }
+.board__rows { list-style: none; margin: 0; padding: 4px 8px; display: grid; gap: 2px; }
+.board__rows--off { padding-top: 6px; border-top: 1px solid rgb(255 255 255 / .08); }
+.line { min-height: 48px; padding: 4px 8px; border-radius: var(--r); cursor: pointer; transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.line__glyph { width: 40px; height: 40px; }
+.line__name { font-weight: 700; font-size: var(--fs-4); }
+.line__fits { font: 600 var(--fs-5)/1 "Unbounded", sans-serif; text-align: right; font-variant-numeric: tabular-nums; }
+.line__meta { font-size: var(--fs-2); color: var(--ok); font-weight: 600; }
+.line.is-legal { background: var(--row); }
+.line.is-legal:hover { background: rgb(255 255 255 / .1); }
+.line[aria-pressed="true"] { background: var(--ink); color: var(--black); }
+.line[aria-pressed="true"] .line__meta { color: rgb(20 120 70); }
+.line[aria-pressed="true"]:hover { background: var(--ink); }
+/* Rows that moved up in the last re-rank carry the amber until they are hovered. */
+.line.is-legal:not([aria-pressed="true"]) { box-shadow: inset 2px 0 0 var(--amber); animation: rank-in var(--t-rank) var(--ease) both; animation-delay: calc(var(--i, 0) * 40ms); }
+@keyframes rank-in { from { transform: translateY(18px); background: rgb(255 178 36 / .22); } }
+.board__rows--off .line { min-height: 34px; grid-template-columns: 44px 1fr 48px 132px; }
+.board__rows--off .line__glyph { width: 26px; height: 26px; margin-left: 7px; opacity: .4; filter: saturate(.2); }
+.board__rows--off .line__name { font-size: var(--fs-3); font-weight: 600; color: var(--ink-2); }
+.board__rows--off .line__fits { font-size: var(--fs-3); color: var(--ink-3); }
+.board__rows--off .line__meta { color: var(--ink-3); font-weight: 500; font-size: .6875rem; line-height: 1.25; }
+.board__rows--off .line:hover { background: rgb(255 255 255 / .05); }
+.board__rows--off .line[aria-pressed="true"] { background: rgb(255 96 80 / .16); color: var(--ink); box-shadow: inset 2px 0 0 var(--bad); }
+.board__foot { margin: 0; padding: var(--s-3) var(--s-4) var(--s-4); font-size: var(--fs-1); color: var(--ink-3); display: flex; gap: 8px; align-items: center; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); flex: none; }
+
+/* Selected tile chip, pinned near the ghost */
+.selected { position: fixed; left: 610px; top: 430px; display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; background: var(--panel); border-radius: var(--r); box-shadow: 0 8px 20px rgb(0 0 0 / .5); }
+.selected__glyph { width: 32px; height: 32px; }
+.selected__name { font-weight: 700; }
+.selected__fit { font-size: var(--fs-2); color: var(--ok); font-weight: 600; }
+.ghost-invalid .selected__fit { color: var(--bad); }
+
+/* Dock: tools along the bottom, labelled */
+.dock { position: fixed; left: 50%; bottom: var(--s-5); transform: translateX(-50%); display: flex; align-items: stretch; gap: 2px; padding: 6px; background: var(--panel); border-radius: var(--r); box-shadow: 0 14px 32px rgb(0 0 0 / .6); }
+.dock__rule { width: 1px; margin: 8px 6px; background: rgb(255 255 255 / .14); }
+.tool { width: 84px; height: 60px; display: grid; justify-items: center; align-content: center; gap: 5px; border: 0; border-radius: var(--r); background: transparent; color: var(--ink-2); font-size: var(--fs-1); font-weight: 600; cursor: pointer; transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.tool span { display: flex; gap: 5px; align-items: center; }
+.tool svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tool:hover, .tool.is-hint { background: rgb(255 255 255 / .09); color: var(--ink); }
+.tool:active { transform: scale(.96); }
+.tool.is-active { background: var(--ink); color: var(--black); }
+.tool.is-active kbd { color: var(--black); border-color: rgb(0 0 0 / .3); }
+.is-bulldoze .tool[data-action=bulldoze] { background: var(--bad); color: var(--black); }
+.is-bulldoze .tool[data-action=place] { background: transparent; color: var(--ink-2); }
+.tool.is-fired { animation: flash var(--t) var(--ease); }
+@keyframes flash { from { background: rgb(255 178 36 / .35); } }
+
+/* Undo toast: an amber change row, top right */
+.toast { position: fixed; top: var(--s-5); right: var(--s-5); display: flex; align-items: center; gap: var(--s-3); padding: 8px 8px 8px 8px; background: var(--panel); border-radius: var(--r); box-shadow: 0 10px 26px rgb(0 0 0 / .55); opacity: 0; transform: translateY(-8px); transition: opacity var(--t) var(--ease), transform var(--t) var(--ease); }
+.toast.is-shown { opacity: 1; transform: none; }
+.toast__tag { padding: 5px 8px; border-radius: var(--r); background: var(--amber); color: var(--black); font-weight: 800; font-size: var(--fs-1); letter-spacing: .06em; text-transform: uppercase; }
+.toast p { margin: 0; }
+.toast__action { min-height: 36px; padding: 0 14px; border: 1px solid rgb(255 255 255 / .2); border-radius: var(--r); background: transparent; color: var(--ink); font-weight: 700; cursor: pointer; }
+.toast__action:hover { background: rgb(255 255 255 / .1); }
+
+.world { position: fixed; right: var(--s-5); bottom: var(--s-5); margin: 0; font: 600 var(--fs-2) "Unbounded", sans-serif; }
+.world span { margin-left: 8px; font: 500 var(--fs-2) "Manrope", sans-serif; color: var(--ink-2); }
+body:has([data-panel]:not(.is-closed)) .tool--inv { background: rgb(255 255 255 / .09); color: var(--ink); }

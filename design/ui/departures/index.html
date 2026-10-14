@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex World · Departures</title>
+<link rel="stylesheet" href="../assets/scene.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-place" viewBox="0 0 24 24"><path d="M12 2.8 20 7.4v9.2L12 21.2 4 16.6V7.4Z"/><path d="M12 8.6v6.8M8.6 12h6.8"/></symbol>
+    <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.6 3.8v4.6H15"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></symbol>
+    <symbol id="i-bulldoze" viewBox="0 0 24 24"><path d="M12 2.8 20 7.4v9.2L12 21.2 4 16.6V7.4Z"/><path d="m9 9 6 6M15 9l-6 6"/></symbol>
+    <symbol id="i-photo" viewBox="0 0 24 24"><path d="M3.5 8h3.2l1.9-2.8h6.8L17.3 8h3.2v11h-17Z"/><circle cx="12" cy="13.2" r="3.4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h8.5M17.5 7H20M4 17h2.5M11.5 17H20"/><circle cx="15" cy="7" r="2.4"/><circle cx="9" cy="17" r="2.4"/></symbol>
+    <symbol id="i-inventory" viewBox="0 0 24 24"><path d="M7.5 3.5 11 5.5v4L7.5 11.5 4 9.5v-4ZM16.5 3.5 20 5.5v4l-3.5 2L13 9.5v-4ZM12 12.5l3.5 2v4L12 20.5l-3.5-2v-4Z"/></symbol>
+  </defs>
+</svg>
+
+<div class="scene" style="--scene-x:520px; --scene-y:70px; --scene-s:.6">
+  <img src="../assets/scene-water-overview.jpg" alt="">
+  <svg viewBox="0 0 1600 1000" class="ghost" aria-hidden="true">
+    <polygon class="ghost-body" points="-50,513 80,445 240,445 270,513 140,581 -20,581"/>
+    <path class="ghost-river" data-ghost-variant="0" d="M205,547 Q110,522 -35,547"/>
+    <path class="ghost-river" data-ghost-variant="1" d="M205,547 Q128,500 160,445" hidden/>
+    <polyline class="edge edge-none" points="140,581 -20,581 -50,513 80,445 240,445"/>
+    <line class="edge edge-ok" x1="240" y1="445" x2="270" y2="513"/>
+    <line class="edge edge-ok" x1="270" y1="513" x2="140" y2="581"/>
+  </svg>
+</div>
+
+<section class="board" data-panel aria-label="Tile inventory">
+  <header class="board__head">
+    <div>
+      <h1>Tiles for this slot</h1>
+      <p class="board__slot">Touching <b>River</b> + <b>Grass</b> · ranked by fit</p>
+    </div>
+    <button class="board__close" data-action="inventory" aria-label="Close tiles, Tab"><svg><use href="#i-inventory"/></svg><kbd>Tab</kbd></button>
+  </header>
+  <div class="board__cols" aria-hidden="true"><span></span><span>Tile</span><span>Fits</span><span>Status</span></div>
+  <ol class="board__rows" data-list="fit"></ol>
+  <ol class="board__rows board__rows--off" data-list="nofit"></ol>
+  <p class="board__foot"><span class="dot" aria-hidden="true"></span>Re-ranked when you moved to this slot. Glyphs stand in for thumbnails (F4).</p>
+</section>
+
+<div class="selected" role="status">
+  <span class="selected__glyph" data-selected-glyph></span>
+  <span class="selected__name" data-selected-name>River bend</span>
+  <span class="selected__fit" data-selected-fit>Rotation 1 of 2</span>
+</div>
+
+<nav class="dock" aria-label="Tools">
+  <button class="tool is-active" data-action="place"><svg><use href="#i-place"/></svg><span>Place</span></button>
+  <button class="tool is-hint" data-action="rotate"><svg><use href="#i-rotate"/></svg><span>Rotate <kbd>R</kbd></span></button>
+  <button class="tool" data-action="undo"><svg><use href="#i-undo"/></svg><span>Undo <kbd>⌘Z</kbd></span></button>
+  <button class="tool" data-action="redo"><svg><use href="#i-redo"/></svg><span>Redo</span></button>
+  <button class="tool" data-action="bulldoze"><svg><use href="#i-bulldoze"/></svg><span>Bulldoze <kbd>B</kbd></span></button>
+  <span class="dock__rule" aria-hidden="true"></span>
+  <button class="tool tool--inv" data-action="inventory"><svg><use href="#i-inventory"/></svg><span>Tiles <kbd>Tab</kbd></span></button>
+  <button class="tool" data-action="photo"><svg><use href="#i-photo"/></svg><span>Photo <kbd>P</kbd></span></button>
+  <button class="tool" data-action="settings"><svg><use href="#i-settings"/></svg><span>Settings</span></button>
+</nav>
+
+<div class="toast is-shown" data-toast role="status">
+  <span class="toast__tag">Undo</span>
+  <p data-toast-text>Undid: placed Road bend 60° at (2, −1)</p>
+  <button class="toast__action" data-action="redo" data-toast-action>Redo</button>
+</div>
+
+<p class="world">Hex World <span>14 tiles · saved</span></p>
+
+<template data-tile-template>
+  <li class="line" role="button" tabindex="0" aria-pressed="false">
+    <span class="line__glyph" data-glyph></span>
+    <span class="line__name" data-name></span>
+    <span class="line__fits" data-key></span>
+    <span class="line__meta" data-meta></span>
+  </li>
+</template>
+
+<script src="../assets/comp.js"></script>
+<script>
+  // Departures shows rotation counts in the Fits column, not the hotkey digit.
+  document.querySelectorAll(".line").forEach((li) => {
+    const legal = li.classList.contains("is-legal");
+    li.querySelector(".line__fits").textContent = legal ? "2" : "0";
+  });
+  document.querySelectorAll(".board__rows:not(.board__rows--off) .line").forEach((li, i) => li.style.setProperty("--i", i));
+</script>
+</body>
+</html>

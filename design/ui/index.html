@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex World UI Directions</title>
+<link rel="stylesheet" href="assets/scene.css">
+<style>
+  :root { --bg: rgb(14 15 16); --card: rgb(24 26 28); --ink: rgb(240 241 239); --ink-2: rgb(178 183 186); --line: rgb(255 255 255 / .1); --focus: rgb(120 190 255); }
+  body { overflow: auto; background: var(--bg); color: var(--ink); font: 400 16px/1.55 "Manrope", system-ui, sans-serif; }
+  ::selection { background: var(--focus); color: var(--bg); }
+  a { color: inherit; text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+  main { max-width: 1240px; margin: 0 auto; padding: 56px 24px 72px; }
+  h1 { margin: 0; font: 600 2rem/1.15 "Unbounded", sans-serif; letter-spacing: -.01em; }
+  .lede { max-width: 68ch; margin: 14px 0 0; color: var(--ink-2); }
+  .dirs { display: grid; gap: 56px; margin-top: 48px; }
+  .dir { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+  .dir img { width: 100%; height: auto; display: block; border-radius: 6px; box-shadow: 0 18px 40px rgb(0 0 0 / .5); }
+  .dir h2 { margin: 0; font: 600 1.5rem/1.2 "Unbounded", sans-serif; }
+  .dir p { margin: 12px 0 0; max-width: 60ch; color: var(--ink-2); }
+  .dir p b { color: var(--ink); }
+  .dir ul { margin: 14px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px; font-weight: 600; }
+  .note { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--ink-2); max-width: 80ch; font-size: .9375rem; }
+  .note h2 { margin: 0 0 8px; color: var(--ink); font: 700 1rem/1.4 "Manrope", sans-serif; }
+  @media (max-width: 860px) { .dir { grid-template-columns: 1fr; } h1 { font-size: 1.5rem; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Hex World play screen: three directions</h1>
+  <p class="lede">Each comp shows the same moment over the same in-engine capture: the inventory open on a slot that touches a river and grass, three river tiles that fit, nine that do not and why, River bend selected at rotation 1 of 2, the ghost with its edge glow, the tool rail, and an undo toast. Open a comp to try hover, select, <b>Tab</b> to close and open the inventory, <b>R</b> to rotate, and <b>⌘Z</b> or <b>Ctrl+Z</b> for the undo toast. Click a dimmed tile to see the invalid state: the ghost's touching edges turn red and the reason follows the selection. Pick one, and the full mockup pass of every screen and state follows in that direction.</p>
+
+  <div class="dirs">
+    <section class="dir">
+      <a href="vitrine/index.html"><img src="vitrine/comp.png" alt="Vitrine comp: dark green caption rail along the bottom with lamp-lit tile captions, brass trim, tool rail on the left" width="1440" height="900"></a>
+      <div>
+        <h2>Vitrine</h2>
+        <p>The UI is the case around a habitat diorama. A brass-trimmed caption rail runs under the scene like the label rail under museum glass. <b>Tiles that fit are lit</b> by a warm lamp, tiles that do not stay dark with a one-line reason, and a pinned caption tells you what the hovered slot touches. It frames the world most literally, and the open rail costs about a quarter of the screen height.</p>
+        <ul><li><a href="vitrine/index.html">Open comp</a></li><li><a href="vitrine/direction.md">Direction contract</a></li></ul>
+      </div>
+    </section>
+
+    <section class="dir">
+      <a href="legend/index.html"><img src="legend/comp.png" alt="Legend comp: survey-blue legend sheet on the right with a slot key and socket colour codes, labelled tool bar top left" width="1440" height="900"></a>
+      <div>
+        <h2>Legend</h2>
+        <p>The UI is the margin of a survey map. Socket kinds are map classes, so every tile carries a six-colour socket code and the hovered slot prints its own key: <b>what this slot needs</b>. Fitting tiles sit on top, blocked tiles drop to compact rows with their reason. It is the most familiar layout of the three (tool bar plus right panel), and the clearest at teaching the edge rules.</p>
+        <ul><li><a href="legend/index.html">Open comp</a></li><li><a href="legend/direction.md">Direction contract</a></li></ul>
+      </div>
+    </section>
+
+    <section class="dir">
+      <a href="departures/index.html"><img src="departures/comp.png" alt="Departures comp: black board top left ranking tiles by fit count, labelled dock at the bottom centre, amber undo row top right" width="1440" height="900"></a>
+      <div>
+        <h2>Departures</h2>
+        <p>The inventory is a live board ranked by fit. When you move to another slot, <b>rows travel to their new rank</b> instead of blinking, and whatever moved keeps one amber mark until you have seen it. Big rotation counts, a labelled dock with large targets, black panels that disappear against the void. It is the most data-forward of the three and risks feeling like a tool rather than a toy.</p>
+        <ul><li><a href="departures/index.html">Open comp</a></li><li><a href="departures/direction.md">Direction contract</a></li></ul>
+      </div>
+    </section>
+  </div>
+
+  <div class="note">
+    <h2>Also considered</h2>
+    <p>Five other worlds were weighed and declined, each donating one discipline: a warm consumer app (accent colour only on what can be pressed, generous targets), a mascot catalog (every tile owns the same fixed furniture), a catalog sleeve (one colour code for sockets everywhere), a tabbed acetate manual (group by consequence, not category), and a variable-font specimen (R rotates the ghost and every fitting glyph in step). The category-standard look, a soft cozy-builder card tray, is also available if none of the three lands.</p>
+  </div>
+
+  <div class="note">
+    <h2>What the comps hold constant</h2>
+    <p>Legality follows the frozen tile list and socket table (P2 wave-1 plan, F1 and F2): for a slot touching River and Grass only River straight, River bend and River bridge fit, each in two rotations. Tile glyphs are stand-ins drawn from each tile's socket string, because rendered thumbnails are still pending (F4). The backdrop is the approved water look-dev capture (<code>docs/checkpoints/water/water-overview.jpg</code>). Fonts are self-hosted OFL files with their licences in <code>assets/fonts/</code>. The full screen and state list for the next pass is in <a href="inventory.md">inventory.md</a>.</p>
+  </div>
+</main>
+</body>
+</html>

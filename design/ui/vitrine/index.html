@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex World · Vitrine</title>
+<link rel="stylesheet" href="../assets/scene.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-place" viewBox="0 0 24 24"><path d="M12 2.8 20 7.4v9.2L12 21.2 4 16.6V7.4Z"/><path d="M12 8.6v6.8M8.6 12h6.8"/></symbol>
+    <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.6 3.8v4.6H15"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></symbol>
+    <symbol id="i-bulldoze" viewBox="0 0 24 24"><path d="M12 2.8 20 7.4v9.2L12 21.2 4 16.6V7.4Z"/><path d="m9 9 6 6M15 9l-6 6"/></symbol>
+    <symbol id="i-photo" viewBox="0 0 24 24"><path d="M3.5 8h3.2l1.9-2.8h6.8L17.3 8h3.2v11h-17Z"/><circle cx="12" cy="13.2" r="3.4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h8.5M17.5 7H20M4 17h2.5M11.5 17H20"/><circle cx="15" cy="7" r="2.4"/><circle cx="9" cy="17" r="2.4"/></symbol>
+    <symbol id="i-inventory" viewBox="0 0 24 24"><path d="M7.5 3.5 11 5.5v4L7.5 11.5 4 9.5v-4ZM16.5 3.5 20 5.5v4l-3.5 2L13 9.5v-4ZM12 12.5l3.5 2v4L12 20.5l-3.5-2v-4Z"/></symbol>
+  </defs>
+</svg>
+
+<div class="scene" style="--scene-x:300px; --scene-y:34px; --scene-s:.72">
+  <img src="../assets/scene-water-overview.jpg" alt="">
+  <svg viewBox="0 0 1600 1000" class="ghost" aria-hidden="true">
+    <polygon class="ghost-body" points="-50,513 80,445 240,445 270,513 140,581 -20,581"/>
+    <path class="ghost-river" data-ghost-variant="0" d="M205,547 Q110,522 -35,547"/>
+    <path class="ghost-river" data-ghost-variant="1" d="M205,547 Q128,500 160,445" hidden/>
+    <polyline class="edge edge-none" points="140,581 -20,581 -50,513 80,445 240,445"/>
+    <line class="edge edge-ok" x1="240" y1="445" x2="270" y2="513"/>
+    <line class="edge edge-ok" x1="270" y1="513" x2="140" y2="581"/>
+  </svg>
+</div>
+
+<aside class="slot-label" aria-live="polite">
+  <span class="slot-label__line" aria-hidden="true"></span>
+  <p class="slot-label__title">Open slot</p>
+  <p class="slot-label__body">Touches <b class="k k-river">River</b> and <b class="k k-grass">Grass</b></p>
+</aside>
+
+<header class="plate">
+  <p class="plate__name">Hex World</p>
+  <p class="plate__meta">14 tiles · Saved to Slot 1</p>
+</header>
+
+<nav class="rail" aria-label="Tools">
+  <button class="tool is-active" data-action="place" aria-label="Place tile"><svg><use href="#i-place"/></svg><span class="tool__tip">Place <kbd>Click</kbd></span></button>
+  <button class="tool is-hint" data-action="rotate" aria-label="Rotate tile, R"><svg><use href="#i-rotate"/></svg><span class="tool__tip">Rotate <kbd>R</kbd></span></button>
+  <button class="tool" data-action="undo" aria-label="Undo, Command Z"><svg><use href="#i-undo"/></svg><span class="tool__tip">Undo <kbd>⌘Z</kbd></span></button>
+  <button class="tool" data-action="redo" aria-label="Redo, Shift Command Z"><svg><use href="#i-redo"/></svg><span class="tool__tip">Redo <kbd>⇧⌘Z</kbd></span></button>
+  <button class="tool" data-action="bulldoze" aria-label="Bulldoze, B"><svg><use href="#i-bulldoze"/></svg><span class="tool__tip">Bulldoze <kbd>B</kbd></span></button>
+  <span class="rail__gap" aria-hidden="true"></span>
+  <button class="tool" data-action="photo" aria-label="Photo mode, P"><svg><use href="#i-photo"/></svg><span class="tool__tip">Photo <kbd>P</kbd></span></button>
+  <button class="tool" data-action="settings" aria-label="Settings"><svg><use href="#i-settings"/></svg><span class="tool__tip">Settings</span></button>
+</nav>
+
+<div class="toast is-shown" data-toast role="status">
+  <p data-toast-text>Undid: placed Road bend 60° at (2, −1)</p>
+  <button class="toast__action" data-action="redo" data-toast-action>Redo</button>
+</div>
+
+<section class="case" data-panel aria-label="Tile inventory">
+  <button class="case__handle" data-action="inventory" aria-label="Close inventory, Tab"><svg><use href="#i-inventory"/></svg><span>Tiles</span><kbd>Tab</kbd></button>
+
+  <div class="feature">
+    <div class="feature__glyph" data-selected-glyph></div>
+    <div class="feature__text">
+      <p class="feature__name" data-selected-name>River bend</p>
+      <p class="feature__fit" data-selected-fit>Rotation 1 of 2</p>
+      <p class="feature__hint"><kbd>R</kbd> next fit · <kbd>Click</kbd> place</p>
+    </div>
+  </div>
+
+  <div class="shelf">
+    <p class="shelf__head">Fits here <span data-count-fit>3</span></p>
+    <ul class="shelf__row" data-list="fit"></ul>
+  </div>
+  <div class="shelf shelf--dark">
+    <p class="shelf__head">Not here <span data-count-nofit>9</span></p>
+    <ul class="shelf__row" data-list="nofit"></ul>
+  </div>
+</section>
+
+<template data-tile-template>
+  <li class="cap" role="button" tabindex="0" aria-pressed="false">
+    <span class="cap__glyph" data-glyph></span>
+    <span class="cap__name" data-name></span>
+    <span class="cap__meta" data-meta></span>
+  </li>
+</template>
+
+<script src="../assets/comp.js"></script>
+</body>
+</html>
