@@ -190,6 +190,7 @@ export class Hud {
     worlds.onWantOpen = () => this.toggleWorlds(true);
     this.worlds = worlds;
     this.root.append(worlds.el, worlds.menuEl);
+    this.settings.attachWorld(p);
     this.syncWorld();
   }
 
@@ -852,8 +853,9 @@ export class Hud {
         if (st.pinned) this.cmd({ cmd: "unpin" });
         else if (this.worlds?.open) {
           if (!this.worlds.escape()) this.toggleWorlds(false);
-        } else if (this.settings.open) this.toggleSettings();
-        else if (st.tool === "bulldoze") this.cmd({ cmd: "set_tool", mode: "place" });
+        } else if (this.settings.open) {
+          if (!this.settings.escape()) this.toggleSettings();
+        } else if (st.tool === "bulldoze") this.cmd({ cmd: "set_tool", mode: "place" });
         else if (this.hidden) this.setHidden(false);
         else this.sheetSlot = null;
         return;

@@ -182,6 +182,7 @@ impl Plugin for HexRenderPlugin {
             .init_resource::<play::affordances::Affordances>()
             .init_resource::<play::ghost::GhostMeshes>()
             .init_resource::<play::ghost::GhostDrawn>()
+            .init_resource::<play::ghost::GhostReport>()
             .init_resource::<play::scatter::PlayScatter>()
             .init_resource::<play::scatter::ScatterLayouts>()
             .init_resource::<play::scatter::ScatterReport>()

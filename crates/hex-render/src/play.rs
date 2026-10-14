@@ -150,6 +150,8 @@ pub struct KitPart {
     pub(crate) lod: usize,
     pub(crate) mesh: Handle<Mesh>,
     material: Handle<KitMaterial>,
+    /// Its manifest material slot (`beach_sand`, `river_bed`, ...).
+    pub(crate) slot: String,
 }
 
 /// The built kit pieces. `Loading` holds pieces of packs that arrived before core; `Ready` is
@@ -446,6 +448,7 @@ fn build_piece(
                     lod,
                     mesh: prim.mesh.clone(),
                     material,
+                    slot: slot_name,
                 });
             }
         }

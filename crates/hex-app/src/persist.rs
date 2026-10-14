@@ -1265,4 +1265,74 @@ mod tests {
         );
         std::fs::remove_file(path).ok();
     }
+
+    /// Start over (the Settings sheet's World tab) is `new_world` on the world in place, so it
+    /// follows the load rule: photo mode exits, and the orbit camera, not the free one, comes back
+    /// over the origin at its pre-photo angle and zoom. The world is the start tile with no history.
+    #[test]
+    fn a_new_world_exits_photo_mode_with_the_orbit_camera_over_the_origin() {
+        use bevy::camera::Exposure;
+        use bevy::ecs::system::RunSystemOnce;
+        use hex_render::AgentsPaused;
+
+        use crate::photo::{PhotoExports, PhotoSession, PhotoSettings};
+
+        let (g, orbit) = played();
+        let mut app = App::new();
+        app.insert_resource(g)
+            .init_resource::<PhotoSession>()
+            .init_resource::<PhotoSettings>()
+            .init_resource::<PhotoExports>()
+            .init_resource::<AgentsPaused>()
+            .init_resource::<PersistQueue>()
+            .init_resource::<SavedSettings>()
+            .init_resource::<TiltShiftSettings>()
+            .init_resource::<TiltPinned>()
+            .init_resource::<hex_render::tier::TierChoice>()
+            .insert_resource(crate::RunFlags(Default::default()));
+        app.world_mut().spawn((
+            Camera3d::default(),
+            orbit,
+            Projection::Perspective(PerspectiveProjection::default()),
+            Exposure { ev100: 12.0 },
+        ));
+        let sync = |app: &mut App| app.world_mut().run_system_once(crate::photo::sync).unwrap();
+        app.world_mut()
+            .resource_mut::<GameState>()
+            .apply(Action::TogglePhoto);
+        sync(&mut app);
+        let mut cams = app
+            .world_mut()
+            .query_filtered::<&mut Transform, With<Camera3d>>();
+        *cams.single_mut(app.world_mut()).unwrap() =
+            Transform::from_xyz(-50.0, 5.0, 20.0).looking_at(Vec3::new(-50.0, 0.0, 0.0), Vec3::Y);
+
+        app.world_mut()
+            .resource_mut::<PersistQueue>()
+            .0
+            .push_back(Command::NewWorld);
+        app.world_mut().run_system_once(run).unwrap();
+        let seed = app.world().resource::<crate::RunFlags>().0.seed;
+        let game = app.world().resource::<GameState>();
+        assert!(!game.photo_mode, "a new world exits photo mode");
+        assert_eq!(game.world, World::new(seed), "only the start tile is left");
+        assert!(!game.world.can_undo() && !game.world.can_redo());
+        sync(&mut app);
+        let t = *cams.single(app.world()).unwrap();
+        let f = camera::focus(&t);
+        assert!(
+            f.x.abs() < 1e-3 && f.z.abs() < 1e-3,
+            "recentred over the origin ({f})"
+        );
+        assert!(
+            t.forward().dot(*orbit.forward()) > 0.9999,
+            "the orbit camera's angle, not the free camera's"
+        );
+        let zoom = |t: &Transform| (t.translation - camera::focus(t)).length();
+        assert!((zoom(&t) - zoom(&orbit)).abs() < 1e-2, "and its zoom");
+        assert!(
+            !app.world().resource::<AgentsPaused>().0,
+            "agents run again"
+        );
+    }
 }

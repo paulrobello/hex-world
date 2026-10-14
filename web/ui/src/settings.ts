@@ -4,10 +4,12 @@
 // and a loaded save show here too, and writes through the `set_tier`, `tilt` and `set_grade`
 // commands. Audio reads and writes `hexWorld.audio`, which keeps the levels per viewer in
 // localStorage; the colour grade is kept per viewer the same way, outside the world save.
+// The World tab (settings-world.ts) holds Start over.
 import type { AudioApi } from "./audio.ts";
 import type { GradeName, GradeState, HexWorld, QualityChoice, TierState, TiltState } from "./bridge.ts";
 import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
+import type { Persistence } from "./persist.ts";
 import {
   CHANNELS,
   type Channel,
@@ -20,6 +22,7 @@ import {
   selectedQuality,
   tierCommand,
 } from "./settings-model.ts";
+import { WorldPanel } from "./settings-world.ts";
 
 /** The viewer's stored colour grade, or null without one or without storage. */
 export function loadGrade(): string | null {
@@ -38,7 +41,7 @@ function saveGrade(g: GradeName): void {
   }
 }
 
-type Tab = "graphics" | "audio";
+type Tab = "graphics" | "audio" | "world";
 
 /** A tier pick waits this long for `state().tier` to follow before the row shows the engine's answer again. */
 const PICK_HOLD_MS = 3000;
@@ -68,6 +71,7 @@ export class Settings {
   private readonly strengthField: HTMLElement;
   private readonly volumes = new Map<Channel, Slider>();
   private readonly mute: HTMLButtonElement;
+  private readonly world = new WorldPanel();
   private shown = false;
   private tiltSig = "";
   private tierSig = "";
@@ -209,6 +213,7 @@ export class Settings {
     for (const [id, label, panel] of [
       ["graphics", "Graphics", graphics],
       ["audio", "Audio", audioPanel],
+      ["world", "World", this.world.el],
     ] as const) {
       const btn = h("button", {
         type: "button",
@@ -238,7 +243,7 @@ export class Settings {
       { class: "sheet sheet--wide sheet--settings is-closed", "data-region": "settings", "aria-label": "Settings" },
       h("header", { class: "sheet__head" }, h("h1", {}, "Settings"), close),
       strip,
-      h("div", { class: "sheet__body" }, graphics, audioPanel),
+      h("div", { class: "sheet__body" }, graphics, audioPanel, this.world.el),
     );
     this.el.toggleAttribute("inert", true);
     // Tab walks this sheet's own controls (the Hud leaves Tab to it while focus is inside), wrapping.
@@ -263,6 +268,7 @@ export class Settings {
     this.shown = v;
     this.el.classList.toggle("is-closed", !v);
     this.el.toggleAttribute("inert", !v);
+    this.world.reset();
     if (!v) return;
     this.tiltSig = "";
     this.tierSig = "";
@@ -276,8 +282,19 @@ export class Settings {
     return this.shown && t instanceof Node && this.el.contains(t);
   }
 
+  /** The World tab's Start over acts on the current world once persistence is up. */
+  attachWorld(p: Persistence): void {
+    this.world.attach(p);
+  }
+
+  /** Esc: an open Start over confirm closes first. Returns whether it used the key. */
+  escape(): boolean {
+    return this.shown && this.world.escape();
+  }
+
   render(tilt: TiltState | undefined, tier: TierState | undefined, grade?: GradeState): void {
     if (!this.shown) return;
+    if (this.tab === "world") this.world.render();
     this.renderTier(tier);
     this.renderGrade(grade);
     if (!tilt) return;
@@ -299,6 +316,8 @@ export class Settings {
       panel.hidden = k !== id;
     }
     if (id === "audio") this.syncAudio();
+    if (id === "world") this.world.render(true);
+    else this.world.reset();
   }
 
   private syncAudio(): void {

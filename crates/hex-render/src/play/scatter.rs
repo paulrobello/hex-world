@@ -561,6 +561,25 @@ impl Layout {
             .filter(|i| i.rule as usize == rule)
             .count()
     }
+
+    /// FNV-1a over every instance's rule, position, yaw and scale bits: equal layouts, equal value.
+    pub fn fingerprint(&self) -> u64 {
+        let mut h: u64 = 0xCBF2_9CE4_8422_2325;
+        for i in &self.instances {
+            let words = [
+                u32::from(i.rule),
+                i.pos.x.to_bits(),
+                i.pos.y.to_bits(),
+                i.pos.z.to_bits(),
+                i.yaw.to_bits(),
+                i.scale.to_bits(),
+            ];
+            for b in words.iter().flat_map(|w| w.to_le_bytes()) {
+                h = (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01B3);
+            }
+        }
+        h
+    }
 }
 
 /// SplitMix64.
@@ -753,6 +772,31 @@ pub struct PlayScatter {
     roots: HashMap<Entity, (Key, Option<Entity>)>,
 }
 
+impl PlayScatter {
+    /// The definition's prepared ground, built once its ground pieces are in the kit and shared by
+    /// every placed tile of that definition and the ghost.
+    pub(crate) fn ground(
+        &mut self,
+        def: &TileDef,
+        catalog: &TileCatalog,
+        kit: &HashMap<String, Vec<KitPart>>,
+        tris_of: &mut dyn FnMut(&str) -> Option<Vec<(Tri, String)>>,
+    ) -> Option<Arc<Prepared>> {
+        if !ground_pieces(def, catalog)
+            .iter()
+            .all(|(id, _)| kit.contains_key(*id))
+        {
+            return None;
+        }
+        if let Some(p) = self.prepared.get(&def.id) {
+            return Some(p.clone());
+        }
+        let p = Arc::new(prepare(def, catalog, tris_of)?);
+        self.prepared.insert(def.id.clone(), p.clone());
+        Some(p)
+    }
+}
+
 /// One drawn tile's scatter.
 #[derive(Clone, Debug)]
 pub struct TileScatter {
@@ -790,7 +834,7 @@ impl ScatterLayouts {
 pub struct ScatterReport(pub String);
 
 /// LOD0 triangles of a loaded kit piece with their slot names (`build_piece`'s slot walk).
-fn kit_tris(
+pub(crate) fn kit_tris(
     id: &str,
     packs: &PlayPacks,
     (gltfs, gltf_meshes, meshes): (&Assets<Gltf>, &Assets<GltfMesh>, &Assets<Mesh>),
@@ -881,10 +925,11 @@ fn report(
         }
         placed_total += l.instances.len();
         rows.push(format!(
-            "{{\"q\":{},\"r\":{},\"tile\":\"{}\",\"planned\":{},\"placed\":{},\"drawn\":{},\"area_m2\":{}}}",
+            "{{\"q\":{},\"r\":{},\"tile\":\"{}\",\"layout\":\"{:016x}\",\"planned\":{},\"placed\":{},\"drawn\":{},\"area_m2\":{}}}",
             c.q,
             c.r,
             t.tile,
+            l.fingerprint(),
             json_counts(&t.pieces, |i| l.planned[i] as usize),
             json_counts(&t.pieces, |i| l.placed(i)),
             json_counts(&t.pieces, drawn),
@@ -970,21 +1015,9 @@ pub fn sync(
         else {
             continue;
         };
-        let ground_ready = ground_pieces(def, &catalog.0)
-            .iter()
-            .all(|(id, _)| kit.contains_key(*id));
-        let prepared = match state.prepared.get(&def.id) {
-            Some(p) => Some(p.clone()),
-            None if ground_ready => {
-                prepare(def, &catalog.0, &mut |id| kit_tris(id, &packs, assets)).map(|p| {
-                    let p = Arc::new(p);
-                    state.prepared.insert(def.id.clone(), p.clone());
-                    p
-                })
-            }
-            None => None,
-        };
-        let Some(prepared) = prepared.filter(|_| ground_ready) else {
+        let Some(prepared) =
+            state.ground(def, &catalog.0, kit, &mut |id| kit_tris(id, &packs, assets))
+        else {
             waiting.push((cell, def.id.clone()));
             continue;
         };

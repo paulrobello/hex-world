@@ -289,6 +289,61 @@ test("new world, rename and delete", async () => {
   assert.equal(store.data.has("w-x"), false);
 });
 
+test("start over clears the world in place: same name and slot, the cleared world autosaved there", async () => {
+  const store = new MemoryBackend();
+  await store.write(
+    { id: "w-r", name: "Riverside", tiles: 4, updatedAt: 5, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([1]),
+  );
+  await store.write(
+    { id: "w-o", name: "Other", tiles: 2, updatedAt: 3, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([2]),
+  );
+  const { host, notes, p } = setup(store);
+  assert.equal(p.startOver(), false, "nothing to clear before the resume settles");
+  await p.start();
+  assert.equal(p.startOver(), false, "still waiting for the resumed world's loaded event");
+  p.onEvents([{ type: "loaded", tiles: 4, version: 1, settings: null }]);
+  assert.equal(p.current.id, "w-r");
+  p.observe([tile(0, 0, "meadow"), tile(1, 0, "meadow"), tile(2, 0, "forest"), tile(0, 1, "meadow")]);
+  p.onEvents([placed]);
+  host.sent.length = 0;
+  assert.equal(p.startOver(), true);
+  assert.deepEqual(
+    host.sent.map((c) => c.cmd),
+    ["save", "new_world"],
+    "the pending autosave is flushed ahead of the reset; the engine's new_world does the reset",
+  );
+  assert.equal(notes.at(-1)?.text, "Started Riverside over");
+  p.onEvents(host.savedEvents());
+  p.onEvents([{ type: "loaded", tiles: 1, version: 1, settings: null }]);
+  assert.deepEqual(p.current, { id: "w-r", name: "Riverside", stored: true }, "name and slot kept");
+  assert.equal(p.state, "saving", "the cleared world is autosaved once the HUD has seen it");
+  p.observe([tile(0, 0, "meadow")]);
+  await new Promise((r) => setTimeout(r, 60));
+  p.onEvents(host.savedEvents().slice(1));
+  await settle();
+  assert.equal(p.state, "saved");
+  const slots = await store.list();
+  assert.deepEqual(slots.map((m) => m.id).sort(), ["w-o", "w-r"], "no new slot");
+  assert.equal(store.meta.get("w-r")?.name, "Riverside");
+  assert.equal(store.meta.get("w-r")?.tiles, 1, "the slot now holds the start tile only");
+  assert.equal(p.slots[0]?.id, "w-r", "it stays the world the next start resumes");
+});
+
+test("start over with storage off resets the world and writes nothing", async () => {
+  const { host, p } = setup(null);
+  await p.start();
+  const name = p.current.name;
+  assert.equal(p.startOver(), true);
+  assert.equal(host.sent.at(-1)?.cmd, "new_world");
+  p.onEvents([{ type: "loaded", tiles: 1, version: 1, settings: null }]);
+  assert.equal(p.current.name, name);
+  assert.equal(p.state, "off");
+  await new Promise((r) => setTimeout(r, 60));
+  assert.equal(host.sent.filter((c) => c.cmd === "save").length, 0);
+});
+
 test("duplicate copies a world to a new slot that sorts under its source", async () => {
   const store = new MemoryBackend();
   await store.write(

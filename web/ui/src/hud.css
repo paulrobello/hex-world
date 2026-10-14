@@ -270,6 +270,7 @@
 .confirm { grid-column: 1 / -1; margin: 6px 0 2px; padding: 12px; border-radius: var(--r-control); background: var(--sheet); font-size: var(--fs-2); color: var(--ink-2); animation: panel-in var(--t) var(--ease); }
 .confirm b { display: block; margin-bottom: 2px; color: var(--ink); font-size: var(--fs-3); }
 .confirm .btn-row { margin-top: 10px; }
+.sheet--settings .confirm { background: var(--sheet-2); }
 .empty-slots { margin: 6px 0 4px; font-size: var(--fs-2); color: var(--ink-3); }
 .foot-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
 .name-edit { margin: 0; }

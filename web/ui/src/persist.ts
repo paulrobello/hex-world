@@ -470,6 +470,20 @@ export class Persistence {
     this.switches.push({ id: newId(this.now()), name: nextName(this.allNames()), stored: false, saveNow: false });
   }
 
+  /**
+   * Clears the world on screen back to the start tile in place (the engine's `new_world`, as New
+   * world sends): the same name and slot, no undo history, autosaved once the HUD has seen the
+   * cleared tiles. Returns false before the start-up resume has settled.
+   */
+  startOver(): boolean {
+    if (!this.ready) return false;
+    this.flush();
+    this.host.cmd({ cmd: "new_world" });
+    this.switches.push({ ...this.current, saveNow: true });
+    this.opts.notify?.({ text: `Started ${this.current.name} over`, icon: "check", tone: "ok" });
+    return true;
+  }
+
   /** Imports a .hexworld file as a new world. A refused file gets a toast saying why. */
   importFile(file: string, bytes: Uint8Array): boolean {
     this.flush();

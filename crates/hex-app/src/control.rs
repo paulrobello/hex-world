@@ -415,10 +415,11 @@ pub fn publish_state(
         Option<Res<hex_render::play::ghost::GhostDrawn>>,
     ),
     views: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
-    (boids, scatter, tier): (
+    (boids, scatter, tier, ghost_report): (
         Option<Res<hex_render::boids::BoidReport>>,
         Option<Res<hex_render::play::scatter::ScatterReport>>,
         Res<hex_render::tier::TierChoice>,
+        Option<Res<hex_render::play::ghost::GhostReport>>,
     ),
     (photo, session, exports, paused): (
         Res<PhotoSettings>,
@@ -473,6 +474,8 @@ pub fn publish_state(
                 .collect::<serde_json::Map<_, _>>()
         }),
         "ghost_meshes": ghost_drawn.as_ref().filter(|_| play).map(|g| g.0),
+        "ghost": ghost_report.filter(|_| play)
+            .and_then(|g| serde_json::from_str::<serde_json::Value>(&g.0).ok()),
         "pack_waiting": packs.as_ref().filter(|_| play).map(|p| {
             p.waiting().iter().map(|(c, tile, packs)| {
                 serde_json::json!({ "q": c.q, "r": c.r, "tile": tile, "packs": packs })

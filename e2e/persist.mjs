@@ -298,6 +298,125 @@ try {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.keyboard.press("Escape");
   await until(async () => !(await worldsOpen(page)), "Esc closes the Worlds sheet");
+
+  // Start over (Settings, World tab; owner request 2026-10-14): Cancel and Esc leave the world
+  // alone; confirming clears it in place to the start tile with no history, under the same name
+  // and slot, and the cleared world is what a reload resumes.
+  {
+    const slotsInDb = () => page.evaluate(() => new Promise((resolve, reject) => {
+      const req = indexedDB.open("hex-world");
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => {
+        const all = req.result.transaction("slots").objectStore("slots").getAll();
+        all.onerror = () => reject(all.error);
+        all.onsuccess = () => {
+          resolve(all.result.map((m) => ({ id: m.id, name: m.name, tiles: m.tiles })));
+          req.result.close();
+        };
+      };
+    }));
+    const confirmShown = () => page.locator("#settings-world .confirm:not([hidden])").count();
+    const focused = () => page.evaluate(() => document.activeElement?.dataset?.act ?? null);
+    const n0 = (await play()).tiles.length;
+    await page.evaluate(() => {
+      const h = window.hexWorld;
+      h.selectTile("meadow"); h.placeTile(4, 0);
+      h.selectTile("meadow"); h.placeTile(5, 0);
+      h.selectTile("forest"); h.placeTile(-2, 0);
+    });
+    await until(async () => (await play()).tiles.length === n0 + 3, "three more tiles placed before Start over");
+    const held = await play();
+    await until(async () => (await slotsInDb()).find((m) => m.name === "Riverside")?.tiles === held.tiles.length, `Riverside's slot is autosaved with ${held.tiles.length} tiles`);
+    await until(async () => (await text(".bar__world")).includes("Saved"), "settled before Start over");
+    const slots0 = await slotsInDb();
+    const slot = slots0.find((m) => m.name === "Riverside");
+    check(!!slot && held.can_undo, `Riverside's slot holds ${held.tiles.length} tiles, with history`);
+
+    await page.locator(".tool[data-action=settings]").click();
+    await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens");
+    await page.locator("#settings-tab-world").click();
+    await until(async () => page.locator("#settings-world:not([hidden])").count(), "the World tab shows");
+    check((await text("#settings-world .field__label")) === "Riverside", "the World tab names the current world");
+    await page.mouse.move(700, 450);
+    await page.evaluate(() => document.activeElement?.blur());
+    await page.waitForTimeout(250);
+    await shot("settings-world");
+
+    await page.locator("#settings-world [data-act=start-over]").click();
+    await until(confirmShown, "Start over asks first");
+    const ask = (await text("#settings-world .confirm")).replace(/\s+/g, " ");
+    check(ask.includes("Start over?") && ask.includes("This clears every tile in Riverside. You can't undo it."), `the confirm names the world ("${ask}")`);
+    check((await focused()) === "start-over-cancel", "focus moves to Cancel");
+    await page.mouse.move(700, 450);
+    await page.waitForTimeout(250);
+    await shot("settings-world-confirm");
+    await page.locator("#settings-world [data-act=start-over-cancel]").click();
+    await until(async () => !(await confirmShown()), "Cancel closes the confirm");
+    check((await focused()) === "start-over", "focus returns to Start over");
+    await page.waitForTimeout(300);
+    const kept = await play();
+    check(tileSet(kept) === tileSet(held) && kept.can_undo === held.can_undo && kept.can_redo === held.can_redo, "Cancel leaves the world and its history unchanged");
+
+    // Keyboard: Enter on Start over asks, Esc closes the confirm first and leaves Settings open.
+    await page.keyboard.press("Enter");
+    await until(confirmShown, "Enter on Start over asks");
+    await page.keyboard.press("Escape");
+    await until(async () => !(await confirmShown()), "Esc closes the confirm first");
+    check(await page.locator(".sheet--settings:not(.is-closed)").count() === 1, "and leaves Settings open");
+    check((await focused()) === "start-over", "focus is back on Start over");
+    check(tileSet(await play()) === tileSet(held), "Esc leaves the world unchanged");
+
+    await page.locator("#settings-world [data-act=start-over]").click();
+    await until(confirmShown, "Start over asks again");
+    await page.locator("#settings-world [data-act=start-over-confirm]").click();
+    await until(async () => (await play()).tiles.length === 1, "confirming clears the world to the start tile");
+    const cleared = await play();
+    check(cleared.tiles[0]?.q === 0 && cleared.tiles[0]?.r === 0, "the one tile left is the start tile at the origin");
+    check(!cleared.can_undo && !cleared.can_redo, "undo and redo history are empty");
+    check(!(await confirmShown()), "the confirm closes");
+    await until(async () => (await text(".toast.is-shown")).includes("Started Riverside over"), "a toast says the world started over");
+    await until(async () => { const b = (await text(".bar__world")).replace(/\s+/g, " "); return b.includes("Riverside") && b.includes("1 tile"); }, "the bar keeps the name, now 1 tile");
+    await until(async () => (await text(".bar__world")).includes("Saved"), "the cleared world is autosaved");
+    await until(async () => (await slotsInDb()).find((m) => m.id === slot?.id)?.tiles === 1, "the same slot now holds the cleared world");
+    const slots1 = await slotsInDb();
+    check(slots1.length === slots0.length, `no new slot (${slots0.length} before, ${slots1.length} after)`);
+    check(slots1.find((m) => m.id === slot?.id)?.name === "Riverside", "the slot keeps its name");
+
+    await page.reload();
+    await page.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.state().play, null, { timeout: 90_000 });
+    await until(async () => (await text(".bar__world")).includes("Riverside"), "the reload resumes Riverside");
+    await until(async () => (await play()).tiles.length === 1, "the reload keeps the cleared world (1 tile)");
+    const back = await play();
+    check(!back.can_undo && !back.can_redo, "and its empty history");
+
+    // Narrow desktop: the tab and its confirm fit inside the sheet and the window at 1280 × 720.
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.locator(".tool[data-action=settings]").click();
+    await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens at 1280 × 720");
+    check((await page.evaluate(() => document.activeElement?.id)) === "settings-tab-graphics", "focus lands on the Graphics tab after the reload");
+    await page.keyboard.press("End");
+    await until(async () => page.locator("#settings-tab-world[aria-selected=true]").count(), "End on the tab strip selects the World tab");
+    check((await page.evaluate(() => document.activeElement?.id)) === "settings-tab-world", "focus follows to the World tab");
+    await page.keyboard.press("Tab");
+    check((await focused()) === "start-over", "Tab reaches Start over");
+    await page.keyboard.press("Enter");
+    await until(confirmShown, "the confirm opens at 1280 × 720");
+    await page.waitForTimeout(300);
+    const sheetBox = await page.locator(".sheet--settings").boundingBox();
+    for (const act of ["start-over-confirm", "start-over-cancel"]) {
+      const b = await page.locator(`#settings-world [data-act=${act}]`).boundingBox();
+      check(!!b && b.x >= sheetBox.x && b.x + b.width <= sheetBox.x + sheetBox.width && b.y + b.height <= Math.min(720, sheetBox.y + sheetBox.height),
+        `${act} sits inside the sheet and the window at 1280 × 720`);
+    }
+    await page.mouse.move(400, 450);
+    await shot("settings-world-confirm-1280x720");
+    await page.keyboard.press("Escape");
+    await until(async () => !(await confirmShown()), "Esc closes the confirm at 1280 × 720");
+    await page.keyboard.press("Escape");
+    await until(async () => page.locator(".sheet--settings.is-closed").count(), "a second Esc closes Settings");
+    check((await play()).tiles.length === 1, "the cleared world is untouched by the cancelled confirm");
+    await page.setViewportSize({ width: 1440, height: 900 });
+  }
   await ctx.close();
 
   // ---------- Storage blocked: the game plays on and the bar says autosave is off ----------
