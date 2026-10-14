@@ -178,6 +178,14 @@ Q1 is now settled: the bar says "Autosave off" and "Saved", but the Worlds sheet
 
 The corner look is Q3. With scatter on, a treeless strip still runs along the seam (A18).
 
+**A20. Quality tiers and performance (for information; nothing to approve).**
+- **Tier detection:** a tier is picked at startup, and on this machine it is High both natively and on the web. Boids are capped at 1,000, 500 and 250 for High, Medium and Low. An explicit `?tier=` always wins.
+- **Measured** under the load guard (load 6.5–11.2 before and after every run, none discarded), on the 2,000-tile world at 2560×1440, High:
+  - **Web:** p95 frame time is 3.4–3.8 ms against the 16.6 ms budget. Tilt-shift adds 0.7 ms.
+  - **Native:** p95 is 10.8–11.9 ms with tilt-shift off. With it on, the worst run reached 16.5 ms, just 0.1 ms inside the budget, because native frames are bound by presentation or the CPU, not the GPU (about 4.4 ms of GPU time per frame).
+  - **Per-pass GPU times:** `docs/perf/p2-passes.json`, after merge.
+- **Hero water audit:** waves and flow, reflection and refraction, seams, and the rise fill all have code and shot evidence. Foam and the wet band are partial: the kit beach shows a static damp tint, not the live wet band.
+
 ## Questions
 
 **Q1. Save label (resolved).** Autosave now exists, so the bar shows "Saved" as the brief asked, plus "Saving…" and "Autosave off". See A16.
@@ -216,6 +224,8 @@ No change limited to the walls gets close while ACES stays. They would need 10 t
 - **The cost:** it reopens your 2026-10-13 choice of ACES (`docs/decisions/0002-asset-pipeline.md`) and needs re-approval of the kit and water look-dev shots.
 - **Alternative:** a re-baked noon IBL with lit ground. Untested, and unlikely to be enough under ACES alone.
 - Or keep ACES and accept black shaded walls.
+
+**F2. The web build has a stall tail.** 6–19 of every 600 frames take longer than 25 ms (30–67 ms each). They are evenly spaced every 24–50 frames, and no shader compile happens near them. Native shows none. The next step is a Chrome trace. This blocks the PRD item "the >25 ms stall tail is measured and fixed or accepted"; it is now measured, but not yet fixed or accepted.
 
 ## Decisions I made overnight (override any)
 
