@@ -1,9 +1,12 @@
-//! The fixed-tick car simulation (PRD §7.2): seeded spawning between connected destinations,
-//! A* routes and lane following, deterministic for a given seed and sequence of world edits.
+//! The fixed-tick car simulation (PRD §7.1, §7.2): every house cluster's houses own cars that wait
+//! in its parking spots, pull out on seeded departures, follow A* routes on their lanes and park in
+//! a free spot at another cluster. Deterministic for a given seed and sequence of world edits.
+
+use std::collections::BTreeMap;
 
 use hex_core::{Axial, NetworkKind, TileCatalog, TileDef, World};
 
-use crate::geom::{LanePath, Pose};
+use crate::geom::{self, LanePath, Pose, Vec2};
 use crate::network::{LinkId, Network, NodeId};
 
 /// Simulation ticks per second (PRD §7.2), independent of the render frame rate.
@@ -21,9 +24,9 @@ pub const MAX_LANE_OFFSET: f32 = 1.5;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SimConfig {
-    /// Most cars alive at once.
+    /// Most cars in the world, parked or driving.
     pub max_cars: usize,
-    /// Cars spawned per second for each connected destination.
+    /// Departures per second for each connected destination.
     pub spawn_per_destination_hz: f32,
     /// Driving speed in m/s.
     pub car_speed: f32,
@@ -46,14 +49,65 @@ impl Default for SimConfig {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct CarId(pub u64);
 
-/// A car driving its lane from one destination to another.
+/// The house that owns a car: hero prop `house` of the cluster tile at `cell`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct Home {
+    pub cell: Axial,
+    pub house: u16,
+}
+
+/// Parking spot `index` (in [`TileDef::parking`] order) of the cluster tile at `cell`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct SpotRef {
+    pub cell: Axial,
+    pub index: usize,
+}
+
+/// A car standing in a parking spot.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ParkedCar {
+    id: CarId,
+    home: Home,
+    spot: SpotRef,
+    pose: Pose,
+}
+
+impl ParkedCar {
+    pub fn id(&self) -> CarId {
+        self.id
+    }
+
+    pub fn home(&self) -> Home {
+        self.home
+    }
+
+    pub fn spot(&self) -> SpotRef {
+        self.spot
+    }
+
+    /// The spot's pose: the car's center and the way its nose points.
+    pub fn pose(&self) -> Pose {
+        self.pose
+    }
+}
+
+/// A car driving from one parking spot to another.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Car {
     id: CarId,
+    home: Home,
+    from: SpotRef,
+    to: SpotRef,
     origin: NodeId,
     destination: NodeId,
     links: Vec<LinkId>,
+    /// The whole trip: out of the spot, along the lanes, into the spot.
     path: LanePath,
+    /// The first `reverse` meters of `path` are driven backwards (the pull-out).
+    reverse: f32,
+    /// Where the trip leaves the origin's driveway for the road lanes, and where it rejoins the
+    /// destination's driveway, in meters along `path`.
+    lanes: (f32, f32),
     /// Distance along `path` at the previous tick.
     prev: f32,
     /// Distance along `path` now.
@@ -63,6 +117,20 @@ pub struct Car {
 impl Car {
     pub fn id(&self) -> CarId {
         self.id
+    }
+
+    pub fn home(&self) -> Home {
+        self.home
+    }
+
+    /// The spot the car pulled out of.
+    pub fn from_spot(&self) -> SpotRef {
+        self.from
+    }
+
+    /// The spot reserved for the car at its destination.
+    pub fn to_spot(&self) -> SpotRef {
+        self.to
     }
 
     pub fn origin(&self) -> NodeId {
@@ -78,26 +146,82 @@ impl Car {
         &self.links
     }
 
-    /// The lane the car follows, already offset to the right of the centerline.
+    /// The trip path: the parking legs at both ends and the lanes (offset right of the road
+    /// centerline) between them.
     pub fn path(&self) -> &LanePath {
         &self.path
     }
 
-    /// Meters driven along the lane path.
+    /// Meters at the start of the path driven in reverse.
+    pub fn reverse_length(&self) -> f32 {
+        self.reverse
+    }
+
+    /// The stretch of the path on road lanes, in meters from its start; the rest is driveway.
+    pub fn lane_span(&self) -> (f32, f32) {
+        self.lanes
+    }
+
+    /// Meters driven along the path.
     pub fn distance(&self) -> f32 {
         self.s
     }
 
+    /// The pose `d` meters along the trip, facing backwards on the reversing pull-out.
+    pub fn pose_at_distance(&self, d: f32) -> Pose {
+        let mut pose = self.path.pose_at_distance(d);
+        if d < self.reverse {
+            pose.dir = geom::scale(pose.dir, -1.0);
+        }
+        pose
+    }
+
     /// The pose between the previous tick (`alpha = 0`) and the latest one (`alpha = 1`), for
-    /// render interpolation. Interpolates distance along the lane, so it follows curves.
+    /// render interpolation. Interpolates distance along the path, so it follows curves.
     pub fn pose_at(&self, alpha: f32) -> Pose {
         let a = alpha.clamp(0.0, 1.0);
-        self.path
-            .pose_at_distance(self.prev + (self.s - self.prev) * a)
+        self.pose_at_distance(self.prev + (self.s - self.prev) * a)
     }
 
     pub fn arrived(&self) -> bool {
         self.s >= self.path.length()
+    }
+
+    /// Which part of the trip the car is on now.
+    pub fn phase(&self) -> CarPhase {
+        if self.s < self.reverse {
+            CarPhase::PullingOut
+        } else if self.s < self.lanes.0 {
+            CarPhase::Leaving
+        } else if self.s <= self.lanes.1 {
+            CarPhase::Road
+        } else {
+            CarPhase::Parking
+        }
+    }
+}
+
+/// The parts of a trip (PRD §7.1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum CarPhase {
+    /// Reversing out of the spot.
+    PullingOut,
+    /// Driving forward from the turn onto the outbound lane.
+    Leaving,
+    /// On the road lanes.
+    Road,
+    /// Driving from the inbound lane into the reserved spot.
+    Parking,
+}
+
+impl CarPhase {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            CarPhase::PullingOut => "pulling_out",
+            CarPhase::Leaving => "leaving",
+            CarPhase::Road => "road",
+            CarPhase::Parking => "parking",
+        }
     }
 }
 
@@ -120,16 +244,79 @@ impl Rng {
     }
 }
 
-/// Road and river graphs plus the cars on the roads.
+/// One parking spot in world space.
+#[derive(Clone, Debug)]
+struct Spot {
+    house: u16,
+    pose: Pose,
+    enter: Vec<Pose>,
+    back: Vec<Pose>,
+    leave: Vec<Pose>,
+    node: String,
+    /// The car parked here or driving here.
+    taken: Option<CarId>,
+}
+
+/// A placed tile with parking: its spots and its car cap.
+#[derive(Clone, Debug)]
+struct Cluster {
+    spots: Vec<Spot>,
+    cap: usize,
+}
+
+impl Cluster {
+    fn new(cell: Axial, def: &TileDef, rotation: u8) -> Self {
+        let center = geom::cell_center(cell);
+        let turn = 60.0 * f32::from(rotation % 6);
+        let pose = |p: hex_core::ParkPose| Pose {
+            pos: geom::add(center, geom::rotate(p.at, rotation)),
+            dir: geom::heading(p.yaw_deg + turn),
+        };
+        let spots = def
+            .parking
+            .iter()
+            .map(|s| Spot {
+                house: s.house,
+                pose: pose(s.pose()),
+                enter: s.enter.iter().copied().map(pose).collect(),
+                back: s.back.iter().copied().map(pose).collect(),
+                leave: s.leave.iter().copied().map(pose).collect(),
+                node: s.node.clone(),
+                taken: None,
+            })
+            .collect();
+        Self {
+            spots,
+            cap: def.car_cap(),
+        }
+    }
+
+    /// The owner's own spot when free, else the lowest free spot.
+    fn free_spot(&self, house: Option<u16>) -> Option<usize> {
+        let free = |i: &usize| self.spots[*i].taken.is_none();
+        house
+            .and_then(|h| (0..self.spots.len()).find(|&i| self.spots[i].house == h))
+            .filter(free)
+            .or_else(|| (0..self.spots.len()).find(free))
+    }
+}
+
+/// Road and river graphs, the parking clusters and the cars.
 #[derive(Clone, Debug)]
 pub struct Simulation {
     config: SimConfig,
     rng: Rng,
     roads: Network,
     rivers: Network,
+    clusters: BTreeMap<Axial, Cluster>,
+    /// Driving cars in id order.
     cars: Vec<Car>,
+    /// Parked cars in id order.
+    parked: Vec<ParkedCar>,
     next_car: u64,
     spawn_credit: f32,
+    departures: u64,
+    refused: u64,
     ticks: u64,
 }
 
@@ -143,9 +330,13 @@ impl Simulation {
             rng: Rng(seed),
             roads: Network::new(NetworkKind::Road),
             rivers: Network::new(NetworkKind::River),
+            clusters: BTreeMap::new(),
             cars: vec![],
+            parked: vec![],
             next_car: 0,
             spawn_credit: 0.0,
+            departures: 0,
+            refused: 0,
             ticks: 0,
         }
     }
@@ -166,30 +357,57 @@ impl Simulation {
         &self.config
     }
 
-    /// Mirrors a tile placed at `cell`. Replacing a tile despawns the cars routed over it.
+    /// Mirrors a tile placed at `cell`. Replacing a tile removes the cars routed over it and the
+    /// cars of the cluster it replaces. A tile with parking gets its owned cars, parked.
     pub fn apply_place(&mut self, cell: Axial, def: &TileDef, rotation: u8) {
+        self.remove_cluster(cell);
         self.drop_cars_on(cell);
         self.roads.insert_tile(cell, def, rotation);
         self.rivers.insert_tile(cell, def, rotation);
+        if !def.parking.is_empty() {
+            self.clusters
+                .insert(cell, Cluster::new(cell, def, rotation));
+        }
+        self.refill();
     }
 
-    /// Mirrors a bulldozed tile, despawning every car whose route crosses it.
+    /// Mirrors a bulldozed tile: removes every car routed over it, parked in it or owned by its
+    /// houses. Clusters that lost a car that way get one back in a free home spot.
     pub fn apply_bulldoze(&mut self, cell: Axial) {
+        self.remove_cluster(cell);
         self.drop_cars_on(cell);
         self.roads.remove_tile(cell);
         self.rivers.remove_tile(cell);
+        self.refill();
     }
 
-    /// Advances one fixed tick of [`TICK_SECONDS`]: moves every car, despawns the cars that had
-    /// already arrived (so the final approach still renders), then spawns new ones.
+    /// Advances one fixed tick of [`TICK_SECONDS`]: moves every driving car, parks the cars that
+    /// had already arrived (so the final approach still renders), then starts departures.
     pub fn tick(&mut self) {
         self.ticks += 1;
         let step = self.config.car_speed * TICK_SECONDS;
-        for car in &mut self.cars {
+        let mut arrived = vec![];
+        self.cars.retain_mut(|car| {
+            if car.s >= car.path.length() {
+                arrived.push((car.id, car.home, car.to));
+                return false;
+            }
             car.prev = car.s;
             car.s = (car.s + step).min(car.path.length());
+            true
+        });
+        for (id, home, spot) in arrived {
+            let pose = self
+                .spot(spot)
+                .expect("reserved spots outlive their cars")
+                .pose;
+            self.park(ParkedCar {
+                id,
+                home,
+                spot,
+                pose,
+            });
         }
-        self.cars.retain(|c| c.prev < c.path.length());
         self.spawn();
     }
 
@@ -198,14 +416,34 @@ impl Simulation {
         self.ticks
     }
 
-    /// Live cars in spawn order.
+    /// Driving cars in id order.
     pub fn cars(&self) -> &[Car] {
         &self.cars
     }
 
-    /// Cars spawned so far, including despawned ones.
+    /// Parked cars in id order.
+    pub fn parked(&self) -> &[ParkedCar] {
+        &self.parked
+    }
+
+    /// Cars in the world, parked or driving.
+    pub fn car_count(&self) -> usize {
+        self.cars.len() + self.parked.len()
+    }
+
+    /// Cars created so far, including removed ones.
     pub fn spawned(&self) -> u64 {
         self.next_car
+    }
+
+    /// Trips started so far.
+    pub fn departures(&self) -> u64 {
+        self.departures
+    }
+
+    /// Departures refused because no other connected cluster had a free spot.
+    pub fn refused(&self) -> u64 {
+        self.refused
     }
 
     pub fn network(&self, kind: NetworkKind) -> &Network {
@@ -215,20 +453,241 @@ impl Simulation {
         }
     }
 
+    /// The pose of a parking spot, if its cluster is placed.
+    pub fn spot_pose(&self, spot: SpotRef) -> Option<Pose> {
+        self.spot(spot).map(|s| s.pose)
+    }
+
+    /// Parking spots of the cluster at `cell`, and which car holds each (parked there or driving
+    /// there). Empty when `cell` has no cluster.
+    pub fn spots(&self, cell: Axial) -> Vec<(SpotRef, Option<CarId>)> {
+        self.clusters.get(&cell).map_or(vec![], |c| {
+            c.spots
+                .iter()
+                .enumerate()
+                .map(|(index, s)| (SpotRef { cell, index }, s.taken))
+                .collect()
+        })
+    }
+
+    /// Cars owned by the houses of the cluster at `cell`, parked or driving.
+    pub fn owned_by(&self, cell: Axial) -> usize {
+        self.cars.iter().filter(|c| c.home.cell == cell).count()
+            + self.parked.iter().filter(|c| c.home.cell == cell).count()
+    }
+
     /// Destinations that can reach at least one other destination by road.
     pub fn connected_destinations(&mut self) -> usize {
         self.roads.components().connected_destinations().len()
     }
 
-    /// Cars spawned per second while under the cap.
+    /// Departures per second.
     pub fn spawn_rate_hz(&mut self) -> f32 {
         self.connected_destinations() as f32 * self.config.spawn_per_destination_hz
     }
 
+    /// Sends the parked car `id` to a free spot at the cluster at `to`, or, when that cluster is
+    /// full or unreachable, to the first other cluster with a free spot that is connected to the
+    /// car's cluster, scanning clusters in cell order from `to`. Returns the reserved spot, or
+    /// `None` when the car is not parked or no connected cluster has room (the car stays).
+    pub fn send(&mut self, id: CarId, to: Axial) -> Option<SpotRef> {
+        let car = self.parked.iter().find(|c| c.id == id)?.clone();
+        let here = self.node_of(car.spot.cell)?;
+        let mut order: Vec<(Axial, Option<NodeId>)> = self
+            .clusters
+            .keys()
+            .map(|&c| (c, self.node_of(c)))
+            .collect();
+        let start = order.iter().position(|(c, _)| *c >= to).unwrap_or(0);
+        order.rotate_left(start);
+        let comps = self.roads.components();
+        let reachable: Vec<Axial> = order
+            .into_iter()
+            .filter(|(c, n)| *c != car.spot.cell && n.is_some_and(|n| comps.connected(here, n)))
+            .map(|(c, _)| c)
+            .collect();
+        let pick = reachable
+            .into_iter()
+            .find(|cell| self.clusters[cell].free_spot(None).is_some())?;
+        self.depart(car, pick)
+    }
+
+    /// The road node of the cluster at `cell`.
+    fn node_of(&self, cell: Axial) -> Option<NodeId> {
+        let spot = self.clusters.get(&cell)?.spots.first()?;
+        self.roads.local_node(cell, &spot.node)
+    }
+
+    fn spot(&self, spot: SpotRef) -> Option<&Spot> {
+        self.clusters.get(&spot.cell)?.spots.get(spot.index)
+    }
+
+    fn spot_mut(&mut self, spot: SpotRef) -> Option<&mut Spot> {
+        self.clusters.get_mut(&spot.cell)?.spots.get_mut(spot.index)
+    }
+
+    fn park(&mut self, car: ParkedCar) {
+        if let Some(s) = self.spot_mut(car.spot) {
+            s.taken = Some(car.id);
+        }
+        let at = self.parked.partition_point(|c| c.id < car.id);
+        self.parked.insert(at, car);
+    }
+
+    /// Starts `car` from its spot to a free spot at `cell`: the owner's spot when it is going home.
+    fn depart(&mut self, car: ParkedCar, cell: Axial) -> Option<SpotRef> {
+        let house = (car.home.cell == cell).then_some(car.home.house);
+        let index = self.clusters.get(&cell)?.free_spot(house)?;
+        let to = SpotRef { cell, index };
+        let (origin, destination) = (self.node_of(car.spot.cell)?, self.node_of(cell)?);
+        let route = self.roads.route(origin, destination)?;
+        let lane = LanePath::new(&route.centerline(&self.roads), self.config.lane_offset);
+        let lane_pts = lane.points();
+        if lane_pts.len() < 2 {
+            return None;
+        }
+        let out = lane.pose_at_distance(0.0);
+        let into = lane.pose_at_distance(lane.length());
+        let (from, dest) = (self.spot(car.spot)?, self.spot(to)?);
+
+        let mut back = vec![from.pose];
+        back.extend(from.back.iter().copied());
+        let back_pts = if back.len() > 1 {
+            geom::hermite_leg(&back, true)
+        } else {
+            vec![from.pose.pos]
+        };
+        let mut leave = vec![*back.last().expect("starts with the spot")];
+        leave.extend(from.leave.iter().copied());
+        leave.push(out);
+        let mut enter = vec![into];
+        enter.extend(dest.enter.iter().copied());
+        enter.push(dest.pose);
+
+        let mut points: Vec<Vec2> = back_pts;
+        let reverse = geom::polyline_length(&points);
+        points.extend(geom::hermite_leg(&leave, false).into_iter().skip(1));
+        let lane_start = geom::polyline_length(&points);
+        points.extend(lane_pts.iter().skip(1));
+        let lane_end = geom::polyline_length(&points);
+        points.extend(geom::hermite_leg(&enter, false).into_iter().skip(1));
+
+        let id = car.id;
+        self.parked.retain(|c| c.id != id);
+        if let Some(s) = self.spot_mut(car.spot) {
+            s.taken = None;
+        }
+        if let Some(s) = self.spot_mut(to) {
+            s.taken = Some(id);
+        }
+        let new = Car {
+            id,
+            home: car.home,
+            from: car.spot,
+            to,
+            origin,
+            destination,
+            links: route.links.clone(),
+            path: LanePath::new(&points, 0.0),
+            reverse,
+            lanes: (lane_start, lane_end),
+            prev: 0.0,
+            s: 0.0,
+        };
+        let at = self.cars.partition_point(|c| c.id < id);
+        self.cars.insert(at, new);
+        self.departures += 1;
+        Some(to)
+    }
+
+    /// Frees the spot a removed car held, unless the cluster went with it.
+    fn release(&mut self, spot: SpotRef, id: CarId) {
+        if let Some(s) = self.spot_mut(spot)
+            && s.taken == Some(id)
+        {
+            s.taken = None;
+        }
+    }
+
+    /// Removes the cluster at `cell` with every car owned by its houses, parked in it or driving
+    /// to it.
+    fn remove_cluster(&mut self, cell: Axial) {
+        if !self.clusters.contains_key(&cell) {
+            return;
+        }
+        let gone: Vec<(SpotRef, CarId)> = self
+            .parked
+            .iter()
+            .filter(|c| c.home.cell == cell || c.spot.cell == cell)
+            .map(|c| (c.spot, c.id))
+            .chain(
+                self.cars
+                    .iter()
+                    .filter(|c| c.home.cell == cell || c.to.cell == cell)
+                    .map(|c| (c.to, c.id)),
+            )
+            .collect();
+        self.parked
+            .retain(|c| c.home.cell != cell && c.spot.cell != cell);
+        self.cars
+            .retain(|c| c.home.cell != cell && c.to.cell != cell);
+        for (spot, id) in gone {
+            self.release(spot, id);
+        }
+        self.clusters.remove(&cell);
+    }
+
+    /// Removes every driving car routed over `cell`, freeing its reserved spot.
     fn drop_cars_on(&mut self, cell: Axial) {
-        if self.roads.links_of(cell).next().is_some() {
-            self.cars
-                .retain(|c| !c.links.iter().any(|link| link.cell == cell));
+        if self.roads.links_of(cell).next().is_none() {
+            return;
+        }
+        let gone: Vec<(SpotRef, CarId)> = self
+            .cars
+            .iter()
+            .filter(|c| c.links.iter().any(|link| link.cell == cell))
+            .map(|c| (c.to, c.id))
+            .collect();
+        self.cars
+            .retain(|c| !c.links.iter().any(|link| link.cell == cell));
+        for (spot, id) in gone {
+            self.release(spot, id);
+        }
+    }
+
+    /// Gives every cluster its owned cars (PRD §7.1): houses in spot order each own one car, up to
+    /// the tile's car cap and the global [`SimConfig::max_cars`]. A missing car is created parked
+    /// in its house's spot, or the cluster's lowest free spot.
+    fn refill(&mut self) {
+        let cells: Vec<Axial> = self.clusters.keys().copied().collect();
+        for cell in cells {
+            let cluster = &self.clusters[&cell];
+            let (cap, houses): (usize, Vec<u16>) =
+                (cluster.cap, cluster.spots.iter().map(|s| s.house).collect());
+            for house in houses {
+                if self.owned_by(cell) >= cap || self.car_count() >= self.config.max_cars {
+                    break;
+                }
+                let home = Home { cell, house };
+                let has_car = self.parked.iter().any(|c| c.home == home)
+                    || self.cars.iter().any(|c| c.home == home);
+                if has_car {
+                    continue;
+                }
+                let Some(index) = self.clusters[&cell].free_spot(Some(house)) else {
+                    break;
+                };
+                let spot = SpotRef { cell, index };
+                let pose = self.clusters[&cell].spots[index].pose;
+                let id = CarId(self.next_car);
+                self.next_car += 1;
+                self.park(ParkedCar {
+                    id,
+                    home,
+                    spot,
+                    pose,
+                });
+            }
         }
     }
 
@@ -239,45 +698,72 @@ impl Simulation {
             return;
         }
         self.spawn_credit += rate * TICK_SECONDS;
-        while self.spawn_credit >= 1.0 && self.cars.len() < self.config.max_cars {
+        while self.spawn_credit >= 1.0 {
             self.spawn_credit -= 1.0;
-            self.spawn_one();
+            self.depart_random();
         }
-        self.spawn_credit = self.spawn_credit.min(1.0);
     }
 
-    /// Spawns one car between a random pair of connected destinations.
-    fn spawn_one(&mut self) {
-        let (origin, destination) = {
+    /// Starts one seeded departure: a random parked car in a connected cluster goes home when it
+    /// is away and its home has room, else to a random other connected cluster (redirected to the
+    /// next one with a free spot when that one is full). Counts a refusal when none has room.
+    fn depart_random(&mut self) {
+        let (candidates, groups) = {
+            let nodes: Vec<(Axial, NodeId)> = self
+                .clusters
+                .keys()
+                .filter_map(|&c| Some((c, self.node_of(c)?)))
+                .collect();
             let comps = self.roads.components();
-            let starts = comps.connected_destinations();
-            if starts.is_empty() {
-                return;
-            }
-            let origin = starts[self.rng.below(starts.len())];
-            let Some(comp) = comps.of(origin) else {
-                return;
-            };
-            let group = comps.destinations(comp);
-            let Ok(skip) = group.binary_search(&origin) else {
-                return;
-            };
-            let pick = self.rng.below(group.len() - 1);
-            (origin, group[if pick >= skip { pick + 1 } else { pick }])
+            let connected = comps.connected_destinations();
+            let candidates: Vec<CarId> = self
+                .parked
+                .iter()
+                .filter(|c| {
+                    nodes
+                        .iter()
+                        .any(|(cell, n)| *cell == c.spot.cell && connected.binary_search(n).is_ok())
+                })
+                .map(|c| c.id)
+                .collect();
+            let groups: Vec<(Axial, Option<usize>)> =
+                nodes.iter().map(|(c, n)| (*c, comps.of(*n))).collect();
+            (candidates, groups)
         };
-        let Some(route) = self.roads.route(origin, destination) else {
+        if candidates.is_empty() {
             return;
+        }
+        let id = candidates[self.rng.below(candidates.len())];
+        let car = self
+            .parked
+            .iter()
+            .find(|c| c.id == id)
+            .expect("candidate is parked")
+            .clone();
+        let comp = groups
+            .iter()
+            .find(|(c, _)| *c == car.spot.cell)
+            .and_then(|(_, g)| *g);
+        let others: Vec<Axial> = groups
+            .iter()
+            .filter(|(c, g)| *c != car.spot.cell && *g == comp)
+            .map(|(c, _)| *c)
+            .collect();
+        if others.is_empty() {
+            return;
+        }
+        let pick = others[self.rng.below(others.len())];
+        let home = car.home.cell;
+        let target = if home != car.spot.cell
+            && others.contains(&home)
+            && self.clusters[&home].free_spot(None).is_some()
+        {
+            home
+        } else {
+            pick
         };
-        let path = LanePath::new(&route.centerline(&self.roads), self.config.lane_offset);
-        self.cars.push(Car {
-            id: CarId(self.next_car),
-            origin,
-            destination,
-            links: route.links.clone(),
-            path,
-            prev: 0.0,
-            s: 0.0,
-        });
-        self.next_car += 1;
+        if self.send(id, target).is_none() {
+            self.refused += 1;
+        }
     }
 }

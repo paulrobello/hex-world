@@ -135,6 +135,49 @@ pub struct NetworkSegment {
     pub points: Vec<[f32; 2]>,
 }
 
+/// A tile-local pose on a parking path: position in meters and the heading the car faces, in
+/// degrees from +x toward +z (the hero prop `yaw_deg` convention).
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ParkPose {
+    pub at: [f32; 2],
+    pub yaw_deg: f32,
+}
+
+/// A house's parking spot (PRD §7.1) and the short paths between it and the cluster's road node.
+///
+/// A car parks at `at` facing `yaw_deg`. It arrives forward from the node's inbound lane through
+/// `enter` into the spot. It leaves by reversing through `back` (the last pose is where it stops
+/// to change direction; empty means it pulls out forward), then drives forward through `leave` onto
+/// the node's outbound lane. Consecutive poses are joined by cubic Hermite curves whose end
+/// tangents follow the poses' headings, so every pose sets the direction of travel there.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ParkingSpot {
+    /// `park-<house>`; the tile's centre piece carries a matching `anchor-park-<house>` socket.
+    pub id: String,
+    /// Index into [`PropScatter::hero`] of the house that owns this spot.
+    pub house: u16,
+    /// The destination node in [`TileDef::nodes`] the paths join.
+    pub node: String,
+    pub at: [f32; 2],
+    pub yaw_deg: f32,
+    #[serde(default)]
+    pub enter: Vec<ParkPose>,
+    #[serde(default)]
+    pub back: Vec<ParkPose>,
+    #[serde(default)]
+    pub leave: Vec<ParkPose>,
+}
+
+impl ParkingSpot {
+    /// The spot's own pose.
+    pub fn pose(&self) -> ParkPose {
+        ParkPose {
+            at: self.at,
+            yaw_deg: self.yaw_deg,
+        }
+    }
+}
+
 /// A positional ambience source; the cue id names an audio asset.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AudioEmitter {
@@ -237,6 +280,9 @@ pub struct TileDef {
     pub nodes: Vec<NetworkNode>,
     #[serde(default)]
     pub networks: Vec<NetworkSegment>,
+    /// One spot per house that owns a car (PRD §7.1).
+    #[serde(default)]
+    pub parking: Vec<ParkingSpot>,
     #[serde(default)]
     pub emitters: Vec<AudioEmitter>,
     #[serde(default)]
@@ -265,6 +311,15 @@ impl TileDef {
             EdgePieces::Derived => std::array::from_fn(|e| sockets.edge_piece(self.edges[e].kind)),
             EdgePieces::Explicit(pieces) => std::array::from_fn(|e| pieces[e].as_ref()),
         }
+    }
+
+    /// The car cap of the tile's [`AgentKind::Car`] spawn rules, 0 without one.
+    pub fn car_cap(&self) -> usize {
+        self.agents
+            .iter()
+            .filter(|a| a.agent == AgentKind::Car)
+            .map(|a| usize::from(a.max))
+            .sum()
     }
 
     /// Every kit piece the tile references: base, center, edge pieces and props.
@@ -356,6 +411,8 @@ impl TileDef {
             }
         }
 
+        self.validate_parking(&mut issue);
+
         let total = self.rise.total();
         if !RISE_SECONDS.contains(&total) {
             issue(format!("rise lasts {total} s, outside {RISE_SECONDS:?}"));
@@ -373,6 +430,72 @@ impl TileDef {
         }
 
         issues
+    }
+
+    /// Parking rules (PRD §7.1): ids are `park-<house>` and unique, each names a house hero prop,
+    /// every spot's paths join a destination node at the end of a road segment (so the spot reaches
+    /// the road graph), every pose is finite, and the car cap fits the spots.
+    fn validate_parking(&self, issue: &mut impl FnMut(String)) {
+        if self.parking.is_empty() {
+            return;
+        }
+        let mut ids: BTreeSet<&str> = BTreeSet::new();
+        for spot in &self.parking {
+            let id = spot.id.as_str();
+            if !ids.insert(id) {
+                issue(format!("parking spot {id:?} is declared twice"));
+            }
+            if id != format!("park-{}", spot.house) {
+                issue(format!(
+                    "parking spot {id:?} must be named park-{} after its house",
+                    spot.house
+                ));
+            }
+            match self.props.hero.get(usize::from(spot.house)) {
+                Some(h) if h.piece.as_str().starts_with("house_") => {}
+                Some(h) => issue(format!(
+                    "parking spot {id:?} house {} is {:?}, not a house",
+                    spot.house, h.piece.0
+                )),
+                None => issue(format!(
+                    "parking spot {id:?} house {} is not a hero prop",
+                    spot.house
+                )),
+            }
+            let node = self.nodes.iter().find(|n| n.id == spot.node);
+            if node.is_none_or(|n| n.destination.is_none()) {
+                issue(format!(
+                    "parking spot {id:?} joins {:?}, which is not a declared destination node",
+                    spot.node
+                ));
+            }
+            let end = Endpoint::Node(spot.node.clone());
+            let on_road = self
+                .networks
+                .iter()
+                .any(|seg| seg.kind == NetworkKind::Road && (seg.from == end || seg.to == end));
+            if !on_road {
+                issue(format!(
+                    "parking spot {id:?} cannot reach the road: no road segment ends at {:?}",
+                    spot.node
+                ));
+            }
+            let finite = std::iter::once(spot.pose())
+                .chain(spot.enter.iter().copied())
+                .chain(spot.back.iter().copied())
+                .chain(spot.leave.iter().copied())
+                .all(|p| p.at[0].is_finite() && p.at[1].is_finite() && p.yaw_deg.is_finite());
+            if !finite {
+                issue(format!("parking spot {id:?} has a non-finite pose"));
+            }
+        }
+        let cap = self.car_cap();
+        if cap == 0 || cap > self.parking.len() {
+            issue(format!(
+                "car cap {cap} must be between 1 and the {} parking spots",
+                self.parking.len()
+            ));
+        }
     }
 }
 
@@ -416,11 +539,118 @@ mod tests {
                 to: Endpoint::Edge(1),
                 points: vec![[6.93, 4.0]],
             }],
+            parking: vec![],
             emitters: vec![],
             agents: vec![],
             rise: RiseTimeline::default(),
             unlock: Unlock::Default,
         }
+    }
+
+    /// A one-house cluster: road on edge 0 into node "home", one spot and a car cap of 1.
+    fn cluster() -> TileDef {
+        let mut t = bend60();
+        t.edges[1] = EdgeSocket::new(Grass);
+        t.props.hero = vec![HeroProp {
+            piece: "house_cottage".into(),
+            at: [-2.0, 5.0],
+            yaw_deg: 90.0,
+        }];
+        t.nodes = vec![NetworkNode {
+            id: "home".into(),
+            at: [8.0, 0.0],
+            destination: Some(Destination::House),
+        }];
+        t.networks = vec![NetworkSegment {
+            kind: NetworkKind::Road,
+            from: Endpoint::Edge(0),
+            to: Endpoint::Node("home".into()),
+            points: vec![],
+        }];
+        t.parking = vec![ParkingSpot {
+            id: "park-0".into(),
+            house: 0,
+            node: "home".into(),
+            at: [0.0, 2.0],
+            yaw_deg: 180.0,
+            enter: vec![],
+            back: vec![ParkPose {
+                at: [4.0, 0.0],
+                yaw_deg: 90.0,
+            }],
+            leave: vec![],
+        }];
+        t.agents = vec![AgentSpawnRule {
+            agent: AgentKind::Car,
+            max: 1,
+        }];
+        t
+    }
+
+    #[test]
+    fn valid_parking_has_no_issues() {
+        assert_eq!(cluster().validate(&sockets()), Vec::<String>::new());
+    }
+
+    #[test]
+    fn parking_spot_must_reach_a_road_destination_node() {
+        let mut t = cluster();
+        t.parking[0].node = "nowhere".into();
+        let issues = t.validate(&sockets());
+        assert!(
+            issues
+                .iter()
+                .any(|i| i.contains("not a declared destination node")),
+            "{issues:?}"
+        );
+        assert!(
+            issues.iter().any(|i| i.contains("cannot reach the road")),
+            "{issues:?}"
+        );
+
+        let mut t = cluster();
+        t.networks.clear();
+        t.edges[0] = EdgeSocket::new(Grass);
+        let issues = t.validate(&sockets());
+        assert_eq!(issues.len(), 1, "{issues:?}");
+        assert!(issues[0].contains("cannot reach the road"), "{issues:?}");
+    }
+
+    #[test]
+    fn parking_spot_ids_follow_their_house() {
+        let mut t = cluster();
+        t.parking[0].id = "spot".into();
+        assert!(t.validate(&sockets())[0].contains("park-0"));
+        let mut t = cluster();
+        t.parking[0].house = 3;
+        t.parking[0].id = "park-3".into();
+        assert!(t.validate(&sockets())[0].contains("not a hero prop"));
+        let mut t = cluster();
+        t.props.hero[0].piece = "rock_small".into();
+        assert!(t.validate(&sockets())[0].contains("not a house"));
+        let mut t = cluster();
+        t.parking.push(t.parking[0].clone());
+        assert!(
+            t.validate(&sockets())
+                .iter()
+                .any(|i| i.contains("declared twice"))
+        );
+    }
+
+    #[test]
+    fn car_cap_must_fit_the_spots() {
+        let mut t = cluster();
+        t.agents[0].max = 2;
+        assert!(t.validate(&sockets())[0].contains("car cap 2"));
+        t.agents.clear();
+        assert!(t.validate(&sockets())[0].contains("car cap 0"));
+    }
+
+    #[test]
+    fn non_finite_parking_pose_is_an_issue() {
+        let mut t = cluster();
+        t.parking[0].back[0].yaw_deg = f32::NAN;
+        assert!(t.validate(&sockets())[0].contains("non-finite"));
     }
 
     #[test]

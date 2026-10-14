@@ -79,7 +79,7 @@ pub fn put(net: &mut Network, cat: &TileCatalog, cell: Axial, id: &str, rotation
     net.insert_tile(cell, cat.get(id).expect("builtin tile"), rotation);
 }
 
-/// Houses at (1,0) and (3,0) joined by a road_straight at (2,0): 51.43 m between the house nodes.
+/// Houses at (1,0) and (3,0) joined by a road_straight at (2,0): 30.43 m between the house nodes.
 pub fn house_chain() -> Vec<Edit> {
     vec![
         Edit::Place(Axial::new(1, 0), "house_cluster", 0),

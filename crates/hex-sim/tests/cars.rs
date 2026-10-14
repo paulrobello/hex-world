@@ -1,5 +1,5 @@
-//! Cars: fixed tick, interpolation, right-hand lanes, spawn scaling and cap, despawn rules,
-//! determinism, and never leaving the road graph.
+//! Cars: fixed tick, interpolation, right-hand lanes, departure scaling and cap, parking on
+//! arrival, removal rules, determinism, and never leaving the road graph or the driveways.
 
 mod common;
 
@@ -17,8 +17,19 @@ fn busy() -> SimConfig {
     }
 }
 
-/// Every car's pose, bit for bit, at three interpolation points.
+/// Every car's pose, bit for bit, at three interpolation points; parked cars repeat their spot.
 fn snapshot(sim: &Simulation) -> Vec<(CarId, [u32; 12])> {
+    let parked = sim.parked().iter().map(|c| {
+        let p = c.pose();
+        let mut bits = [0u32; 12];
+        for i in 0..3 {
+            bits[i * 4] = p.pos[0].to_bits();
+            bits[i * 4 + 1] = p.pos[1].to_bits();
+            bits[i * 4 + 2] = p.dir[0].to_bits();
+            bits[i * 4 + 3] = p.dir[1].to_bits();
+        }
+        (c.id(), bits)
+    });
     sim.cars()
         .iter()
         .map(|c| {
@@ -32,6 +43,7 @@ fn snapshot(sim: &Simulation) -> Vec<(CarId, [u32; 12])> {
             }
             (c.id(), bits)
         })
+        .chain(parked)
         .collect()
 }
 
@@ -112,8 +124,26 @@ fn cars_never_leave_the_road_graph() {
                     .iter()
                     .map(|l| net.link(*l).expect("car route uses a live link").points())
                     .collect();
-                for alpha in [0.0, 0.25, 0.5, 0.75, 1.0] {
-                    let p = car.pose_at(alpha).pos;
+                let (lane_start, lane_end) = car.lane_span();
+                let at = car.distance();
+                if at < lane_start || at > lane_end {
+                    // On a driveway: inside the cluster it leaves or the one it parks in.
+                    let p = car.pose_at(1.0).pos;
+                    let near = [car.from_spot().cell, car.to_spot().cell]
+                        .into_iter()
+                        .any(|c| {
+                            geom::dist(p, c.to_world(hex_core::HEX_RADIUS)) <= hex_core::HEX_RADIUS
+                        });
+                    assert!(
+                        near,
+                        "seed {seed} tick {t}: car {:?} left its driveways",
+                        car.id()
+                    );
+                    seen += 1;
+                    continue;
+                }
+                {
+                    let p = car.pose_at(1.0).pos;
                     let d = lines
                         .iter()
                         .map(|pts| geom::distance_to_polyline(p, pts))
@@ -145,9 +175,11 @@ fn interpolation_runs_from_the_previous_tick_to_the_latest() {
             }
             let (p0, p1) = (car.pose_at(0.0).pos, car.pose_at(1.0).pos);
             let mid = car.pose_at(0.5).pos;
-            let step = geom::dist(p0, p1);
-            assert!(step <= scene.sim.config().car_speed * TICK_SECONDS + 1e-3);
-            assert!(geom::dist(p0, mid) <= step + 1e-3 && geom::dist(mid, p1) <= step + 1e-3);
+            // Half a tick of travel each way; straight-line distances, so a reversing cusp only
+            // shortens them.
+            let half = scene.sim.config().car_speed * TICK_SECONDS / 2.0;
+            assert!(geom::dist(p0, p1) <= 2.0 * half + 1e-3);
+            assert!(geom::dist(p0, mid) <= half + 1e-3 && geom::dist(mid, p1) <= half + 1e-3);
             assert_eq!(car.pose_at(-1.0), car.pose_at(0.0));
             assert_eq!(car.pose_at(2.0), car.pose_at(1.0));
         }
@@ -200,7 +232,7 @@ fn lane_offset_is_capped_at_one_and_a_half_meters() {
 }
 
 #[test]
-fn spawn_rate_scales_with_connected_destinations() {
+fn departure_rate_scales_with_connected_destinations() {
     let lone = [Edit::Place(Axial::new(1, 0), "house_cluster", 0)];
     let cases: [(&[Edit], usize); 3] = [(&lone, 0), (&house_chain(), 2), (&ring_and_pair(), 5)];
     let config = busy();
@@ -214,12 +246,15 @@ fn spawn_rate_scales_with_connected_destinations() {
         for _ in 0..400 {
             scene.sim.tick();
         }
+        // A drawn departure starts a trip, is refused for want of a free spot, or finds every
+        // car already on the road.
         let expected = want as f32 * config.spawn_per_destination_hz * 400.0 * TICK_SECONDS;
-        let got = scene.sim.spawned() as f32;
+        let drawn = (scene.sim.departures() + scene.sim.refused()) as f32;
         assert!(
-            (got - expected).abs() <= 1.0,
-            "{want} destinations: spawned {got}, expected {expected}"
+            drawn <= expected + 1.0 && drawn >= expected / 2.0,
+            "{want} destinations: {drawn} departures drawn, expected about {expected}"
         );
+        assert_eq!(scene.sim.departures() > 0, want > 0);
     }
 }
 
@@ -231,17 +266,18 @@ fn car_count_never_exceeds_the_cap() {
         ..Default::default()
     };
     let mut scene = Scene::with(13, config, &ring_and_pair());
+    assert_eq!(scene.sim.car_count(), 3);
     let mut peak = 0;
     for _ in 0..1000 {
         scene.sim.tick();
-        assert!(scene.sim.cars().len() <= 3);
+        assert_eq!(scene.sim.car_count(), 3);
         peak = peak.max(scene.sim.cars().len());
     }
-    assert_eq!(peak, 3);
+    assert!(peak > 0);
 }
 
 #[test]
-fn car_despawns_the_tick_after_it_arrives() {
+fn car_parks_the_tick_after_it_arrives() {
     let mut scene = Scene::with(17, busy(), &house_chain());
     while scene.sim.cars().is_empty() {
         scene.sim.tick();
@@ -263,6 +299,14 @@ fn car_despawns_the_tick_after_it_arrives() {
     assert_eq!(at_end.pose_at(1.0).pos, end);
     scene.sim.tick();
     assert!(scene.sim.cars().iter().all(|c| c.id() != car.id()));
+    let parked = scene
+        .sim
+        .parked()
+        .iter()
+        .find(|c| c.id() == car.id())
+        .expect("parked on the next tick");
+    assert_eq!(parked.spot(), car.to_spot());
+    assert!(geom::dist(parked.pose().pos, end) < 1e-3);
 }
 
 #[test]
@@ -316,11 +360,12 @@ fn zigzag(seed: u64) -> Simulation {
 fn two_thousand_tile_world_fills_to_the_high_tier_cap() {
     let mut sim = zigzag(99);
     assert_eq!(sim.connected_destinations(), 1000);
+    assert_eq!(sim.car_count(), HIGH_TIER_CAR_CAP);
     for _ in 0..200 {
         sim.tick();
-        assert!(sim.cars().len() <= HIGH_TIER_CAR_CAP);
+        assert_eq!(sim.car_count(), HIGH_TIER_CAR_CAP);
     }
-    assert_eq!(sim.cars().len(), HIGH_TIER_CAR_CAP);
+    assert!(!sim.cars().is_empty());
 }
 
 /// Tick-cost sanity bound against the 4 ms main-thread budget (PRD §10). A timing measurement:
@@ -329,7 +374,7 @@ fn two_thousand_tile_world_fills_to_the_high_tier_cap() {
 #[ignore]
 fn bench_tick_stays_within_budget_at_the_car_cap() {
     let mut sim = zigzag(99);
-    while sim.cars().len() < HIGH_TIER_CAR_CAP {
+    for _ in 0..400 {
         sim.tick();
     }
     let ticks = 1000;

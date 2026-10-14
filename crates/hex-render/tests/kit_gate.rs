@@ -1900,7 +1900,10 @@ fn check_bevy(kit: &Kit) -> Vec<String> {
             }
         }
         for (name, nh) in &g.named_nodes {
-            if name.starts_with("socket-lane-") || name.starts_with("anchor-prop-") {
+            if name.starts_with("socket-lane-")
+                || name.starts_with("anchor-prop-")
+                || name.starts_with("anchor-park-")
+            {
                 let ok = nodes
                     .get(nh)
                     .and_then(|n| n.extras.as_ref())

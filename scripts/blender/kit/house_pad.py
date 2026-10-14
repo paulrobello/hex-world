@@ -2,8 +2,16 @@
 
 The ground treatment under and between the three houses (data/tiles/house_cluster.ron): a level
 gravel yard framed by the houses, a stone garden edging where the yard meets the lawn, stone
-doorsteps, garden hedges, and an asphalt driveway that leaves the yard at the car destination node
-"houses" (runtime (2, 0)) and meets the edge-0 road stub at x = +6 on the road contract.
+doorsteps, garden hedges, and an asphalt driveway that leaves the yard at x = 2 and meets the edge-0
+road stub at x = +6 on the road contract.
+
+Parking (PRD §7.1): one `anchor-park-<n>` empty per house, n = the house's index in the tile's hero
+props (data/tiles/house_cluster.ron). Each marks the centre of a parked car at gravel height, rotated
+to the parked heading, and carries extras {kind: "park", house, length, width, heading_deg} sized for
+the largest car (the pickup, 5.4 x 2.0 m). The three spots stand side by side on the gravel, nose to
+the two-storey: one along each cottage front and one before the two-storey door. The pull-out and
+park paths from each spot to the cluster's road node are tile data (`parking` in house_cluster.ron),
+checked against these anchors by kit_gate.
 
 Frame: Blender (x, y, z) exports as runtime (x, z, -y), so a runtime (x, z) placement is Blender
 (x, -z). The layout below is symmetric about y = 0, so the sign only matters for documentation.
@@ -62,6 +70,10 @@ HEDGES = ((3.1, 5.45, 7.6, 5.45), (3.1, -5.45, 7.6, -5.45),
 HEDGE_W, HEDGE_H = 0.65, 1.05
 HEDGE_STEP = (0.5, 1.5, None)  # lengthwise station spacing per LOD (None: one span)
 HEDGE_RING = (10, 6, 4)  # cross-section vertices per LOD
+# Parking spots in the runtime frame: (house index, x, z, heading yaw from +x toward +z in degrees).
+# The cars stand 0.6 m apart, 0.3 m off the cottage doorsteps and 0.4 m off the two-storey's.
+PARK = ((0, -1.0, -2.6, 180.0), (1, -1.0, 2.6, 180.0), (2, -1.0, 0.0, 180.0))
+PARK_L, PARK_W = 5.4, 2.0
 MASK_SIZE = 512  # one masks bake over the 2R square: 16 px/m, as the road pieces
 SAMPLES = 64
 
@@ -298,6 +310,13 @@ col = collider.collider_from(lods[2], "cap", f"{PIECE}_collider")
 col.parent = root
 c = hexgeo.lane_frame(0, 0.0, _road.ROAD_WIDTH)["center"]
 export.add_socket("socket-lane-0", (*c, 0.0), root, kind="road", edge=0, offset=0.0, width=_road.ROAD_WIDTH)
+for house, x, z, yaw in PARK:
+    # Runtime (x, z) is Blender (x, -z), and a runtime heading yaw is Blender yaw -yaw.
+    hx, hz = math.cos(math.radians(yaw)) * PARK_L / 2, math.sin(math.radians(yaw)) * PARK_L / 2
+    for sx, sz in ((x + hx, z + hz), (x - hx, z - hz)):
+        assert YARD[0] <= sx <= YARD[1] and abs(sz) <= YARD[2] - PARK_W / 2, (house, sx, sz)
+    export.add_socket(f"anchor-park-{house}", (x, -z, YARD_Z), root, yaw_deg=-yaw, kind="park", house=house,
+                      length=PARK_L, width=PARK_W, heading_deg=yaw)
 export.export_glb(root, str(out / f"{PIECE}.glb"))
 export.write_export_report(str(out / "export-report.json"), root, PIECE, __file__)
 bake.write_bake_report(str(out / "bake-report.json"), receiverSignature=signature,

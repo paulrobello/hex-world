@@ -344,3 +344,83 @@ fn every_tile_rotation_has_a_thumbnail() {
 fn start_tile_is_in_the_catalog() {
     assert!(catalog().get(hex_core::START_TILE).is_some());
 }
+
+/// PRD §7.1: a tile's parking spots are exactly its centre piece's `anchor-park-<n>` sockets, at
+/// the same place and heading. Read from the piece's committed provenance (`sockets`, copied from
+/// the export report); kit_gate checks the same against the GLB itself.
+#[test]
+fn parking_spots_match_the_centre_piece_anchors() {
+    let mut problems = vec![];
+    let mut checked = 0;
+    let cat = catalog();
+    for def in cat.tiles() {
+        if def.parking.is_empty() {
+            continue;
+        }
+        let Some(center) = &def.center else {
+            problems.push(format!("{}: parking without a centre piece", def.id));
+            continue;
+        };
+        let path = repo_root().join(format!(
+            "assets-source/kit/{}/provenance.json",
+            center.as_str()
+        ));
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path:?}: {e}"));
+        let prov: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let anchors: BTreeMap<String, &serde_json::Value> = prov["sockets"]
+            .as_array()
+            .expect("provenance sockets")
+            .iter()
+            .filter_map(|s| {
+                let name = s["name"].as_str()?;
+                name.strip_prefix("anchor-").map(|id| (id.to_owned(), s))
+            })
+            .filter(|(id, _)| id.starts_with("park-"))
+            .collect();
+        let spots: BTreeSet<&str> = def.parking.iter().map(|s| s.id.as_str()).collect();
+        let names: BTreeSet<&str> = anchors.keys().map(String::as_str).collect();
+        if spots != names {
+            problems.push(format!(
+                "{}: spots {spots:?} differ from {} anchors {names:?}",
+                def.id,
+                center.as_str()
+            ));
+        }
+        for spot in &def.parking {
+            let Some(a) = anchors.get(&spot.id) else {
+                continue;
+            };
+            let p: Vec<f64> = a["position"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| v.as_f64().unwrap())
+                .collect();
+            // Runtime (x, y, z); tile-local (x, z).
+            let (dx, dz) = (p[0] - f64::from(spot.at[0]), p[2] - f64::from(spot.at[1]));
+            if dx.hypot(dz) > 1e-3 {
+                problems.push(format!(
+                    "{}: {} at {:?}, anchor at ({}, {})",
+                    def.id, spot.id, spot.at, p[0], p[2]
+                ));
+            }
+            // The export report's yaw is Blender's: a Blender yaw θ faces runtime (cos θ, -sin θ).
+            let blender = a["yaw"].as_f64().unwrap().to_radians();
+            let want = f64::from(spot.yaw_deg).to_radians();
+            let off = (blender.cos() - want.cos()).hypot(-blender.sin() - want.sin());
+            let extra = a["extras"]["heading_deg"].as_f64().unwrap_or(f64::NAN);
+            if off > 1e-3 || (extra - f64::from(spot.yaw_deg)).abs() > 1e-3 {
+                problems.push(format!(
+                    "{}: {} faces {} deg, anchor yaw {} (Blender), heading_deg {extra}",
+                    def.id,
+                    spot.id,
+                    spot.yaw_deg,
+                    blender.to_degrees()
+                ));
+            }
+            checked += 1;
+        }
+    }
+    assert!(checked > 0, "no parking spot was checked");
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}

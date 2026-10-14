@@ -18,8 +18,8 @@ fn house_chain_route_runs_between_the_house_nodes() {
     let mut net = scene.roads().clone();
     let (a, b) = (house(&net, Axial::new(1, 0)), house(&net, Axial::new(3, 0)));
     let route = net.route(a, b).expect("connected houses");
-    // Each house node sits 2 m from its cell center, so 4 apothems minus 2 × 2 m.
-    assert!((route.length - (4.0 * APOTHEM - 4.0)).abs() < 1e-3);
+    // Each house node sits 12.5 m from its cell center, on the driveway, so 4 apothems minus 2 × 12.5 m.
+    assert!((route.length - (4.0 * APOTHEM - 25.0)).abs() < 1e-3);
     assert_eq!(route.nodes.first(), Some(&a));
     assert_eq!(route.nodes.last(), Some(&b));
     assert_eq!(route.links.len(), 3);

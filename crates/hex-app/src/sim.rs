@@ -42,11 +42,16 @@ impl Plugin for SimPlugin {
 }
 
 /// What the state JSON reports about the cars, refreshed after every tick and world edit.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SimStats {
+    /// Cars driving.
     pub cars: usize,
+    /// Cars standing in parking spots (PRD §7.1).
+    pub parked_cars: usize,
     pub connected_destinations: usize,
     pub spawn_rate_hz: f32,
+    /// Every driving car: id, trip phase and position (for scripted checkpoints).
+    pub car_list: Vec<(u64, &'static str, [f32; 2])>,
 }
 
 #[derive(Resource)]
@@ -136,8 +141,15 @@ impl CarSim {
     fn refresh(&mut self) {
         self.stats = SimStats {
             cars: self.sim.cars().len(),
+            parked_cars: self.sim.parked().len(),
             connected_destinations: self.sim.connected_destinations(),
             spawn_rate_hz: self.sim.spawn_rate_hz(),
+            car_list: self
+                .sim
+                .cars()
+                .iter()
+                .map(|c| (c.id().0, c.phase().as_str(), c.pose_at(1.0).pos))
+                .collect(),
         };
     }
 
@@ -148,6 +160,20 @@ impl CarSim {
         };
         let rate = (f64::from(self.stats.spawn_rate_hz) * 1e6).round() / 1e6;
         map.insert("cars".into(), json!(self.stats.cars));
+        map.insert("parked_cars".into(), json!(self.stats.parked_cars));
+        let round = |v: f32| (f64::from(v) * 100.0).round() / 100.0;
+        map.insert(
+            "car_list".into(),
+            json!(
+                self.stats
+                    .car_list
+                    .iter()
+                    .map(|(id, phase, p)| json!({
+                        "id": id, "phase": phase, "x": round(p[0]), "z": round(p[1])
+                    }))
+                    .collect::<Vec<_>>()
+            ),
+        );
         map.insert(
             "connected_destinations".into(),
             json!(self.stats.connected_destinations),
@@ -182,11 +208,12 @@ pub fn tick(mut sim: ResMut<CarSim>, active: Res<ActiveScenario>) {
     }
 }
 
-/// Writes each car's pose between the last two ticks, at the fraction of a tick the fixed clock
-/// has accumulated since the latest one.
+/// Writes each driving car's pose between the last two ticks, at the fraction of a tick the fixed
+/// clock has accumulated since the latest one, and each parked car at its spot. A car keeps its id
+/// from spot to spot, so the same entity parks, pulls out and parks again without popping.
 pub fn publish_cars(sim: Res<CarSim>, fixed: Res<Time<Fixed>>, mut view: ResMut<CarsView>) {
-    let cars = sim.sim.cars();
-    if cars.is_empty() && view.cars.is_empty() {
+    let (cars, parked) = (sim.sim.cars(), sim.sim.parked());
+    if cars.is_empty() && parked.is_empty() && view.cars.is_empty() {
         return;
     }
     let alpha = fixed.overstep_fraction();
@@ -196,6 +223,15 @@ pub fn publish_cars(sim: Res<CarSim>, fixed: Res<Time<Fixed>>, mut view: ResMut<
         CarPose {
             id: c.id().0,
             // Seeded by the car id (never reused), so a car keeps its body type for its whole trip.
+            kind: CarKind::from_seed(c.id().0),
+            pos: pose.pos,
+            yaw: pose.yaw(),
+        }
+    }));
+    view.cars.extend(parked.iter().map(|c| {
+        let pose = c.pose();
+        CarPose {
+            id: c.id().0,
             kind: CarKind::from_seed(c.id().0),
             pos: pose.pos,
             yaw: pose.yaw(),
@@ -418,29 +454,26 @@ mod tests {
             match c {
                 Command::Wait { frames } => step(&mut sim, frames, &mut frame),
                 Command::DumpState { name } => {
-                    dumps.insert(name, sim.stats);
+                    dumps.insert(name, sim.stats.clone());
                 }
                 _ => {}
             }
         }
         let rate = SimConfig::default().spawn_per_destination_hz * 2.0;
-        let driving = dumps["cars-02-driving"];
+        let driving = &dumps["cars-02-driving"];
         assert_eq!(driving.connected_destinations, 2);
         assert_eq!(driving.spawn_rate_hz, rate);
         assert!(driving.cars >= 1, "{driving:?}");
-        let refused = dumps["cars-03-bulldoze-refused"];
+        let refused = &dumps["cars-03-bulldoze-refused"];
         assert_eq!(refused.connected_destinations, 2, "the middle road stays");
-        let cut = dumps["cars-04-disconnected"];
+        let cut = &dumps["cars-04-disconnected"];
         assert_eq!(
-            cut,
-            SimStats {
-                cars: 0,
-                connected_destinations: 0,
-                spawn_rate_hz: 0.0
-            },
-            "every car routed over the bulldozed road despawned"
+            (cut.cars, cut.connected_destinations, cut.spawn_rate_hz),
+            (0, 0, 0.0),
+            "every car routed over the bulldozed road is gone: {cut:?}"
         );
-        let undone = dumps["cars-05-undo"];
+        assert_eq!(cut.parked_cars, 4, "each house's car is back in its spot");
+        let undone = &dumps["cars-05-undo"];
         assert_eq!(undone.connected_destinations, 2);
         assert_eq!(undone.spawn_rate_hz, rate);
     }

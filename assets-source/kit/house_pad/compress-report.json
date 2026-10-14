@@ -1,6 +1,6 @@
 {
   "name": "house_pad",
-  "date": "2026-10-14T03:20:54.343Z",
+  "date": "2026-10-14T06:29:16.336Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 17644,
       "astc": 16874
     },
-    "glbBytes": 118156
+    "glbBytes": 118744
   },
   "glb": {
-    "bytes": 118156,
-    "sha256": "5c6b9f37affea581d46db1504b06dbccb37dee06bf4187a06978bfc59640bf9d"
+    "bytes": 118744,
+    "sha256": "19d15556c01802e6a24d24c1b171f44a8e68d01af6862feacb90ee339d558112"
   }
 }

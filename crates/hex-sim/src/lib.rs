@@ -3,7 +3,8 @@
 //!
 //! The app mirrors every world edit with [`Simulation::apply_place`] and
 //! [`Simulation::apply_bulldoze`], runs [`Simulation::tick`] at [`TICK_HZ`], and draws each car at
-//! [`Car::pose_at`] with the fraction of a tick elapsed since the last one.
+//! [`Car::pose_at`] with the fraction of a tick elapsed since the last one. Parked cars
+//! ([`Simulation::parked`]) stand still at [`ParkedCar::pose`] between trips (PRD §7.1).
 
 pub mod geom;
 pub mod network;
@@ -14,5 +15,6 @@ pub use geom::Pose;
 pub use network::{Components, Link, LinkId, Network, Node, NodeId, NodeKey};
 pub use route::Route;
 pub use sim::{
-    Car, CarId, HIGH_TIER_CAR_CAP, MAX_LANE_OFFSET, SimConfig, Simulation, TICK_HZ, TICK_SECONDS,
+    Car, CarId, CarPhase, HIGH_TIER_CAR_CAP, Home, MAX_LANE_OFFSET, ParkedCar, SimConfig,
+    Simulation, SpotRef, TICK_HZ, TICK_SECONDS,
 };

@@ -3,6 +3,14 @@
 // way edges run (clockwise seen from above: 90 maps +x to +z); a house's front door faces +x at
 // yaw 0. The layout matches house_pad (scripts/blender/kit/house_pad.py): the two cottages face
 // each other across the gravel yard and the two-storey closes its far end, facing the driveway.
+//
+// Parking (PRD §7.1): `park-<n>` is house n's spot, at the pad's `anchor-park-<n>` socket
+// (hex-core data_validator checks they match). The road graph ends at node "houses" on the driveway, 12.5 m out, so
+// the private driveway and yard belong to the parking paths. A car noses in from the inbound lane
+// (`enter`), and leaves with a three-point turn: it reverses out of the yard and swings its tail
+// across the driveway (`back`, ending at the cusp), then drives forward onto the outbound lane
+// (`leave`); the swing crosses the verge onto the lawn past the hedges. The paths keep a 5.4 x 2.0 m car clear of the houses, doorsteps, hedges and the other
+// two spots (hex-sim tests/parking.rs).
 (
     id: "house_cluster",
     biome: Grass,
@@ -24,10 +32,27 @@
         ],
     ),
     nodes: [
-        (id: "houses", at: (2.0, 0.0), destination: Some(House)),
+        (id: "houses", at: (12.5, 0.0), destination: Some(House)),
     ],
     networks: [
         (kind: Road, from: Edge(0), to: Node("houses")),
+    ],
+    parking: [
+        (
+            id: "park-0", house: 0, node: "houses", at: (-1.0, -2.6), yaw_deg: 180.0,
+            enter: [(at: (3.5, -2.6), yaw_deg: 180.0)],
+            back: [(at: (5.6, -2.6), yaw_deg: 180.0), (at: (9.9, 3.0), yaw_deg: 294.0)],
+        ),
+        (
+            id: "park-1", house: 1, node: "houses", at: (-1.0, 2.6), yaw_deg: 180.0,
+            enter: [(at: (3.5, 2.6), yaw_deg: 180.0)],
+            back: [(at: (4.4, 2.6), yaw_deg: 180.0), (at: (7.5, -1.5), yaw_deg: 74.0)],
+        ),
+        (
+            id: "park-2", house: 2, node: "houses", at: (-1.0, 0.0), yaw_deg: 180.0,
+            enter: [(at: (3.5, 0.0), yaw_deg: 180.0)],
+            back: [(at: (6.0, 0.0), yaw_deg: 180.0), (at: (8.5, -2.0), yaw_deg: 94.0)],
+        ),
     ],
     agents: [
         (agent: Car, max: 2),

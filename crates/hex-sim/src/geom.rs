@@ -165,6 +165,48 @@ fn arc_through(a: Vec2, m: Vec2, b: Vec2) -> Vec<Vec2> {
     points
 }
 
+/// Largest step between samples of a Hermite parking leg, in meters.
+const LEG_STEP: f32 = 0.1;
+
+/// The unit heading of a yaw in degrees from +x toward +z.
+pub fn heading(yaw_deg: f32) -> Vec2 {
+    let a = yaw_deg.to_radians();
+    [a.cos(), a.sin()]
+}
+
+/// Samples a parking leg through `poses` (position and facing), joining each consecutive pair with
+/// a cubic Hermite curve whose end tangents are the facings scaled by the chord length (negated
+/// when `reverse`, since a reversing car travels against its facing). Shared points appear once.
+pub fn hermite_leg(poses: &[Pose], reverse: bool) -> Vec<Vec2> {
+    let sign = if reverse { -1.0 } else { 1.0 };
+    let mut out: Vec<Vec2> = vec![];
+    for w in poses.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        let chord = dist(a.pos, b.pos);
+        let (ta, tb) = (scale(a.dir, sign * chord), scale(b.dir, sign * chord));
+        let n = ((chord / LEG_STEP).ceil() as usize).max(8);
+        let first = usize::from(!out.is_empty());
+        for i in first..=n {
+            let s = i as f32 / n as f32;
+            let (s2, s3) = (s * s, s * s * s);
+            let h00 = 2.0 * s3 - 3.0 * s2 + 1.0;
+            let h10 = s3 - 2.0 * s2 + s;
+            let h01 = -2.0 * s3 + 3.0 * s2;
+            let h11 = s3 - s2;
+            out.push(add(
+                add(scale(a.pos, h00), scale(ta, h10)),
+                add(scale(b.pos, h01), scale(tb, h11)),
+            ));
+        }
+    }
+    if out.is_empty()
+        && let Some(p) = poses.first()
+    {
+        out.push(p.pos);
+    }
+    out
+}
+
 /// Where a car is and which way it faces, in world XZ meters. `dir` is a unit vector.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Pose {
@@ -341,6 +383,37 @@ mod tests {
             let p = path.pose_at_distance(path.length() * i as f32 / 100.0).pos;
             assert!(distance_to_polyline(p, &line) <= 1.5 + 1e-4);
         }
+    }
+
+    #[test]
+    fn hermite_leg_meets_its_poses_with_their_headings() {
+        let a = Pose {
+            pos: [0.0, 0.0],
+            dir: [1.0, 0.0],
+        };
+        let b = Pose {
+            pos: [4.0, 4.0],
+            dir: [0.0, 1.0],
+        };
+        let pts = hermite_leg(&[a, b], false);
+        assert_eq!(pts[0], a.pos);
+        assert!(close(*pts.last().unwrap(), b.pos));
+        let first = sub(pts[1], pts[0]);
+        let last = sub(pts[pts.len() - 1], pts[pts.len() - 2]);
+        assert!(dot(scale(first, 1.0 / len(first)), a.dir) > 0.99);
+        assert!(dot(scale(last, 1.0 / len(last)), b.dir) > 0.99);
+        // Reversing travels against the facing.
+        let back = hermite_leg(
+            &[
+                a,
+                Pose {
+                    pos: [-4.0, 4.0],
+                    dir: [0.0, -1.0],
+                },
+            ],
+            true,
+        );
+        assert!(back[1][0] < 0.0);
     }
 
     #[test]

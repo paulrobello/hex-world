@@ -91,6 +91,14 @@ export interface RisingTile {
   t: number;
 }
 
+/** A driving car in `play.car_list`: its sim id, trip phase and world XZ position in metres. */
+export interface CarInfo {
+  id: number;
+  phase: "pulling_out" | "leaving" | "road" | "parking";
+  x: number;
+  z: number;
+}
+
 export interface PlayState {
   tool: Tool;
   selected: string;
@@ -108,7 +116,12 @@ export interface PlayState {
   can_redo: boolean;
   last_result: ActionResult | null;
   recent_events: GameEvent[];
+  /** Cars driving. */
   cars: number;
+  /** Cars standing in house parking spots (PRD §7.1). */
+  parked_cars: number;
+  /** Every driving car and the part of its trip it is on. */
+  car_list: CarInfo[];
   connected_destinations: number;
   spawn_rate_hz: number;
   rising: RisingTile[];
@@ -211,6 +224,8 @@ export const STATE_FIELDS = {
     last_result: true,
     recent_events: true,
     cars: true,
+    parked_cars: true,
+    car_list: true,
     connected_destinations: true,
     spawn_rate_hz: true,
     rising: true,

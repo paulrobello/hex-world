@@ -4,5 +4,13 @@
     "when": "2026-10-13",
     "gate": "piece",
     "notes": "House family approved in chat from the 6-view renders and in-engine shots (docs/checkpoints/houses)."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-13",
+    "gate": "piece",
+    "status": "pending",
+    "revision": "anchor-park sockets",
+    "notes": "Pending owner re-approval: re-exported with one anchor-park-<n> socket per house (PRD §7.1 house parking). Geometry and bake are unchanged; review assets-source/kit/house_pad/renders/parking_top.jpg. The entry above approved the revision before the parking sockets."
   }
 ]

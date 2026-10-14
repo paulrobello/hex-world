@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/house_pad.py",
-    "sha256": "caff61834eab805732a3aa783af213c24c5f4dd83d4cf26c0bdb23bcc17eac38"
+    "sha256": "8bbda915d43d8ddb0767da2e495ec91b8420eeac6c4af2817d0ddee134209b90"
   },
   "generatorDeps": [
     {
@@ -16,6 +16,9 @@
     "house_pad_lod2": 142
   },
   "nodes": [
+    "anchor-park-0",
+    "anchor-park-1",
+    "anchor-park-2",
     "house_pad",
     "house_pad_collider",
     "house_pad_lod0",
@@ -25,6 +28,54 @@
   ],
   "pieceId": "house_pad",
   "sockets": [
+    {
+      "extras": {
+        "heading_deg": 180.0,
+        "house": 0,
+        "kind": "park",
+        "length": 5.4,
+        "width": 2.0
+      },
+      "name": "anchor-park-0",
+      "position": [
+        -1.0,
+        0.05000000074505806,
+        -2.5999999046325684
+      ],
+      "yaw": 179.999991348578
+    },
+    {
+      "extras": {
+        "heading_deg": 180.0,
+        "house": 1,
+        "kind": "park",
+        "length": 5.4,
+        "width": 2.0
+      },
+      "name": "anchor-park-1",
+      "position": [
+        -1.0,
+        0.05000000074505806,
+        2.5999999046325684
+      ],
+      "yaw": 179.999991348578
+    },
+    {
+      "extras": {
+        "heading_deg": 180.0,
+        "house": 2,
+        "kind": "park",
+        "length": 5.4,
+        "width": 2.0
+      },
+      "name": "anchor-park-2",
+      "position": [
+        -1.0,
+        0.05000000074505806,
+        -0.0
+      ],
+      "yaw": 179.999991348578
+    },
     {
       "extras": {
         "edge": 0,

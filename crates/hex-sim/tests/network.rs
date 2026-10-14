@@ -214,7 +214,7 @@ fn house_cluster_chain_exposes_house_destinations() {
         assert!(houses.contains(&id));
         let node = net.node(id).unwrap();
         assert_eq!(node.destination(), Some(Destination::House));
-        let at = geom::add(cell.to_world(HEX_RADIUS), geom::rotate([2.0, 0.0], rot));
+        let at = geom::add(cell.to_world(HEX_RADIUS), geom::rotate([12.5, 0.0], rot));
         assert!(close(node.pos(), at));
     }
     // Rivers are a separate graph; this layout has none.

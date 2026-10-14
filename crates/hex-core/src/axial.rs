@@ -20,7 +20,7 @@ const DIRS: [(i32, i32); 6] = [(1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1
 impl Axial {
     pub const ORIGIN: Axial = Axial { q: 0, r: 0 };
 
-    pub fn new(q: i32, r: i32) -> Self {
+    pub const fn new(q: i32, r: i32) -> Self {
         Self { q, r }
     }
 
