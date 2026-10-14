@@ -26,8 +26,9 @@ const gpuArgs = process.env.PW_GPU === "swiftshader"
   ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
   : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 const fail = (m) => { console.error("FAIL:", m); process.exitCode = 1; };
-// Handle-let aliases the shim rewrites once the kit scenario has drawn: one module, the KitMaterial
-// fragment (Bevy's PBR input composed in), asserted by its `masks_texture` global (markedModuleProbe).
+// Handle-let aliases the shim rewrites per KitMaterial fragment module (Bevy's PBR input composed in),
+// asserted by its `masks_texture` global (markedModuleProbe). Usually one module; two when a pipeline
+// compiled before the IBL loaded is specialized again after it.
 const KIT_COMPAT_ALIASES = 8;
 // WebGPU's default maxSampledTexturesPerShaderStage.
 const WEBGPU_DEFAULT_SAMPLED = 16;
@@ -148,16 +149,18 @@ await withPage(["--disable-gpu"], async (page) => {
 });
 
 // 4. Forced WGSL compat shim (web/wgsl-compat.js, the Safari path): Tint must accept every rewritten module.
-// Exact alias counts pin Bevy 0.20's PBR fragment shader (8 handle lets); a Bevy bump that changes them must
-// be re-checked in Safari.
-for (const [query, aliases] of [["?wgsl_compat=1", 8],
+// Exact per-module alias counts pin Bevy 0.20's PBR fragment shader (8 handle lets); a Bevy bump that changes
+// them must be re-checked in Safari. A pipeline compiled before the IBL loads is specialized again after it,
+// so the same fragment can be rewritten twice under host load: the check is per rewritten module.
+const compatOk = (c, perModule) => c?.active && c.rewritten >= 1 && c.aliases === perModule * c.rewritten;
+for (const [query, aliases] of [["?wgsl_compat=1&scenario=single", 8],
   ["?wgsl_compat=1&scenario=gate2000&view=closeup&layout=instanced", 8]]) {
   await withPage(gpuArgs, async (page) => {
     await page.goto(base + query);
     await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
     const compat = await page.evaluate(() => window.__wgslCompat);
-    if (!compat?.active || compat.aliases !== aliases)
-      fail(`wgsl-compat ${query}: expected ${aliases} aliases, got ` + JSON.stringify(compat));
+    if (!compatOk(compat, aliases))
+      fail(`wgsl-compat ${query}: expected ${aliases} aliases per rewritten module, got ` + JSON.stringify(compat));
     else console.log(`wgsl-compat ${query}: ${compat.rewritten} module(s), ${compat.aliases} aliases, ${compat.ms.toFixed(1)} ms`);
     if (compat?.unhandled) fail(`wgsl-compat ${query} left handle lets unrewritten: ` + compat.unhandled);
   });
@@ -255,8 +258,8 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
       if (!(sampled?.max <= clamp)) fail(`${tag}: a pipeline layout uses ${sampled?.max} sampled textures`);
     }
     if (aliases !== null) {
-      if (!compat?.active || compat.aliases !== aliases)
-        fail(`wgsl-compat ${query}: expected ${aliases} aliases, got ` + JSON.stringify(compat));
+      if (!compatOk(compat, aliases))
+        fail(`wgsl-compat ${query}: expected ${aliases} aliases per rewritten module, got ` + JSON.stringify(compat));
       if (compat?.unhandled) fail(`wgsl-compat ${query} left handle lets unrewritten: ` + compat.unhandled);
       if (!marked?.some((m) => m.before > 0 && m.after === 0))
         fail(`wgsl-compat ${query}: the kit fragment (masks_texture) was not rewritten: ` + JSON.stringify(marked));
