@@ -1,0 +1,145 @@
+{
+  "name": "gravel",
+  "date": "2026-10-14T03:25:16.889Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/materials/gravel/gravel.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 931194,
+      "sha256": "3eae3999315baeea9d2f271e8c007ec8076687547dd83b7da98eefce79db1602"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/materials/gravel/gravel.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 946373,
+      "sha256": "fb1eafeb37d61d89ca01bb89758b166326eb9f33a327cdbd5432d5d47d1e7a90"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/materials/gravel/gravel.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 1612986,
+      "sha256": "584f04c73e4277ea86700642dfeb7bb55961864ab1a9f0ff1fdf52a073426c86"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/materials/gravel/gravel.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 1219394,
+      "sha256": "22c97504242d59d928e6207b679431330a450b5cc0a3b343fb53bed362af7556"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/materials/gravel/gravel.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 1148530,
+      "sha256": "ea2d1477433d9f5a58f8538b8a78c127855bf33f5a913cfcf583588200a42118"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/materials/gravel/gravel.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 2895785,
+      "sha256": "243aa551aea57ad49dfd700b2b263b84fb56f608b8a3e5a99a40e87af6b19d54"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/materials/gravel/gravel.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 580703,
+      "sha256": "84e3fedb5a2d3824fa980070b18a54a2c23789d59ce7acfb27f8de77b546a8ae"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/materials/gravel/gravel.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 578256,
+      "sha256": "382a52e022b87c49c1ebd041cfc67134d7fd86fddc833dd016688ff29d25814c"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/materials/gravel/gravel.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 923308,
+      "sha256": "2b0ded02a538b53ab3d40448f6d72929ef17d03f4db272824a6c6c9c912fd723"
+    }
+  ],
+  "budgets": {
+    "class": "tileable",
+    "ktxMax": 3600000,
+    "ktxBytes": {
+      "bc7": 2731291,
+      "astc": 2673159
+    }
+  }
+}

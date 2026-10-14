@@ -1,0 +1,4 @@
+# house_twostorey friction log
+
+1. **Thirteen windows and four quoined corners overran the prop budget on paper.** The cottage's casement detail (sill plus two glazing bars, 56 tris a window) would have put LOD0 near 1,500. Fix: the builder takes `bars` (sash windows without glazing bars) and a quoin step, so the stones are spaced, not stacked. LOD0 is 1,198, LOD1 498 and LOD2 68. Minutes lost: 5. Skill: no change. The budget arithmetic is in `project.md` (Budgets, buildings).
+2. **The in-engine shot needs a rebuild after every manifest change.** `kit_scene.rs` compiles `assets/kit/manifest.json` in with `include_str!`, so a native build started before the house entries landed skipped the houses. Under a host load of 85 from parallel agents, that rebuild took most of the shot time. Fix: add the manifest entries before starting the shot build. Minutes lost: 10. Skill: `stages.md` step 7 now says so.

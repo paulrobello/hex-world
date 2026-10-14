@@ -37,6 +37,8 @@ Everything in this file is specific to Hex World. When the skill is promoted to 
 ## Budgets
 Kit LOD0 ≤ 4000 tris and tree ≤ 3000. LOD1 ≤ 50% and LOD2 ≤ 15% of LOD0. GLB ≤ 2 MiB (2,097,152 B). Maps ≤ 2048². Full table: `gates.md`.
 
+Buildings (houses) are kind `prop`, because PRD §6 lists houses among the props: LOD0 ≤ 1,500 tris, KTX2 class `piece`. A unique 256 px/m atlas for a house (about 150 m²) would need about 4096², far over that budget. So a house samples the world-space `plaster` set tinted per slot for its isotropic surfaces, models directional detail (tile courses, timber framing, window frames) as geometry, and bakes only a unique 512² `masks` (AO, plus night B on the glass). See `scripts/blender/kit/_house.py`.
+
 KTX2 bytes are budgeted per family (BC7 and ASTC each) by budget class, per the owner ruling of 2026-10-13 (`KTX_BUDGETS` in `scripts/assets/kit-lib.mjs`):
 - `piece` (the default): 1,500,000 B, for a piece's unique maps (final, `docs/decisions/0002-asset-pipeline.md` D3).
 - `tileable`: 3,600,000 B per set. `make kit-material` assigns it automatically.

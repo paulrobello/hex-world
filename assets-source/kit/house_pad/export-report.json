@@ -1,0 +1,44 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/house_pad.py",
+    "sha256": "caff61834eab805732a3aa783af213c24c5f4dd83d4cf26c0bdb23bcc17eac38"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+    }
+  ],
+  "lodTris": {
+    "house_pad_lod0": 1766,
+    "house_pad_lod1": 476,
+    "house_pad_lod2": 142
+  },
+  "nodes": [
+    "house_pad",
+    "house_pad_collider",
+    "house_pad_lod0",
+    "house_pad_lod1",
+    "house_pad_lod2",
+    "socket-lane-0"
+  ],
+  "pieceId": "house_pad",
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "road",
+        "offset": 0.0,
+        "width": 6.0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

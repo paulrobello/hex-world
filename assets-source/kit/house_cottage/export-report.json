@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/house_cottage.py",
+    "sha256": "47b19e58c2cfa6c9733d3497423d8a065ebfe7eaea651455088c823659bb6172"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "16bd62ae92924c7240876908b7d25047fd60d77df3fa69709fb40c8432a29079"
+    }
+  ],
+  "lodTris": {
+    "house_cottage_lod0": 1048,
+    "house_cottage_lod1": 436,
+    "house_cottage_lod2": 54
+  },
+  "nodes": [
+    "house_cottage",
+    "house_cottage_collider",
+    "house_cottage_lod0",
+    "house_cottage_lod1",
+    "house_cottage_lod2"
+  ],
+  "pieceId": "house_cottage",
+  "sockets": []
+}

@@ -1,4 +1,8 @@
 // Three houses on a pad; the road from edge 0 ends at the car destination node.
+// Hero `at` is runtime (x, z) in metres from the hex centre. `yaw_deg` turns the piece about +Y the
+// way edges run (clockwise seen from above: 90 maps +x to +z); a house's front door faces +x at
+// yaw 0. The layout matches house_pad (scripts/blender/kit/house_pad.py): the two cottages face
+// each other across the gravel yard and the two-storey closes its far end, facing the driveway.
 (
     id: "house_cluster",
     biome: Grass,
@@ -14,9 +18,9 @@
     center: Some("house_pad"),
     props: (
         hero: [
-            (piece: "house_cottage", at: (-5.0, -4.5), yaw_deg: 0.0),
-            (piece: "house_cottage", at: (-5.0, 4.5), yaw_deg: 180.0),
-            (piece: "house_twostorey", at: (3.0, -7.0), yaw_deg: 90.0),
+            (piece: "house_cottage", at: (-0.5, -7.0), yaw_deg: 90.0),
+            (piece: "house_cottage", at: (-0.5, 7.0), yaw_deg: 270.0),
+            (piece: "house_twostorey", at: (-7.5, 0.0), yaw_deg: 0.0),
         ],
     ),
     nodes: [

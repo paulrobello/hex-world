@@ -1,0 +1,205 @@
+{
+  "pieceId": "house_pad",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/house_pad.py",
+    "sha256": "caff61834eab805732a3aa783af213c24c5f4dd83d4cf26c0bdb23bcc17eac38"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 1.5,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "CPU",
+    "marginPx": 12,
+    "maskStats": {
+      "yardAoMean": 0.9996507167816162,
+      "yardAoMin": 0.9686275124549866,
+      "yardAoP05": 1
+    },
+    "receiverSignature": "82e9eca5465b493925aef8e8aa19d05385524cec7860bc82a25284fd7d027d57",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 16.00015894642758,
+      "median": 8.871525343322393,
+      "min": 0.20053772549792664
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1766,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 476,
+      "ratio": 0.2695356738391846
+    },
+    {
+      "lod": 2,
+      "tris": 142,
+      "ratio": 0.08040770101925254
+    }
+  ],
+  "collider": {
+    "node": "house_pad_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "road",
+        "offset": 0,
+        "width": 6
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0,
+        0
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 16.00015894642758,
+    "median": 8.871525343322393,
+    "min": 0.20053772549792664
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 17644,
+        "astc": 16874
+      },
+      "glbBytes": 118156
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/house_pad/house_pad.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 17644,
+        "sha256": "72da17c815e97e6c374c1be844d7afc9c97ab46b0cd58ee0812187fd77a9dd18"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/house_pad/house_pad.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 16874,
+        "sha256": "52411bbd0728016e775077a0fa651d5aec836899afe81a4173bfb8c8a985cae4"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/house_pad/house_pad.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 28605,
+        "sha256": "cd9927ef20093a8f9a70b0fb4b775aefa46ab19dd818b381fca22c0aef1f9efb"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/house_pad/house_pad.glb",
+      "sha256": "5c6b9f37affea581d46db1504b06dbccb37dee06bf4187a06978bfc59640bf9d",
+      "bytes": 118156
+    },
+    {
+      "path": "assets/kit/p1/house_pad/house_pad.masks.bc7.ktx2",
+      "sha256": "72da17c815e97e6c374c1be844d7afc9c97ab46b0cd58ee0812187fd77a9dd18",
+      "bytes": 17644
+    },
+    {
+      "path": "assets/kit/p1/house_pad/house_pad.masks.astc.ktx2",
+      "sha256": "52411bbd0728016e775077a0fa651d5aec836899afe81a4173bfb8c8a985cae4",
+      "bytes": 16874
+    },
+    {
+      "path": "assets/kit/p1/house_pad/house_pad.masks.png",
+      "sha256": "cd9927ef20093a8f9a70b0fb4b775aefa46ab19dd818b381fca22c0aef1f9efb",
+      "bytes": 28605
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/house_cluster/ref-1.jpg",
+      "sha256": "99b42b6c4e28aff03bce328b31741cd433fc2c57df7545f3fd242952d502b58b",
+      "sourceSha256": "edbe02ef5c616667e08968fb3233de8a14e035356373a1d2c42fae69b0e26125",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "b55a6d3e-d7bf-4ab7-8176-691507ea9036",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), with a cluster of 3 small stylized-real rural houses (pitched clay-tile and slate roofs, rendered plaster and timber walls, chimneys, timber window frames) on a level gravel-and-paving pad, small gardens, low hedges and a picket fence, and a short asphalt driveway that leaves the pad and meets one flat edge of the tile square-on, where it joins a short stub of 6 m wide two-lane asphalt road with low kerbs and a faded dashed centre line, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/house_cluster/ref-2.jpg",
+      "sha256": "ca1a9994c8adba7a40be87bec53693cc62d9ef2779f5186a69b5784a4bf24c42",
+      "sourceSha256": "0d70d8f35debb193664fc98735985b7c463daa5a785244f953541017ac398316",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "94f3c6ca-f473-4f6c-9921-ba62d77810e7",
+      "prompt": "Close-up of one small stylized-real rural house on a diorama tile: weathered clay roof tiles, rendered plaster walls, timber window frames and front door, a chimney, a gravel path, a low hedge and a small garden, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T03:26:30.645Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/house_cluster/ref-1.jpg",
+        "assets-source/refs/house_cluster/ref-2.jpg"
+      ],
+      "notes": "Approved, including the timber-framed English cottage style (owner, in chat). Reviewed from assets-source/refs/contact-sheet.png in chat."
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "name": "house_twostorey",
+  "date": "2026-10-14T03:45:43.682Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/house_twostorey/house_twostorey.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 332772,
+      "sha256": "a4125e92f5d564efdc2ba2d469d91b97f8df20875e08d319d8d37aca616d195c"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/house_twostorey/house_twostorey.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 316272,
+      "sha256": "3f87aa807bd7e225a28eb6fe3f87fcb8775382fdc68e1174a98f4957c5845b0e"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/house_twostorey/house_twostorey.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 515702,
+      "sha256": "9ad2caab1fa2ecc12b8c9c0b05d44e802a561d7d294a77c893004fa400febed8"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 332772,
+      "astc": 316272
+    },
+    "glbBytes": 101068
+  },
+  "glb": {
+    "bytes": 101068,
+    "sha256": "a36bda005be084442ef33efed2e5c842d128b446105ada0a91fd5398681d1935"
+  }
+}

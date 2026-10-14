@@ -1,0 +1,25 @@
+{
+  "aoDistanceM": 1.5,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "CPU",
+  "marginPx": 12,
+  "maskStats": {
+    "yardAoMean": 0.9996507167816162,
+    "yardAoMin": 0.9686275124549866,
+    "yardAoP05": 1.0
+  },
+  "receiverSignature": "82e9eca5465b493925aef8e8aa19d05385524cec7860bc82a25284fd7d027d57",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 16.00015894642758,
+    "median": 8.871525343322393,
+    "min": 0.20053772549792664
+  }
+}

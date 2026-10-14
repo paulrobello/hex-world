@@ -33,6 +33,9 @@ pub struct Placement {
     pub rot: u8,
     /// Offset from the cell center in meters (x, z), applied after rotation.
     pub offset: [f32; 2],
+    /// Extra turn about +Y after `rot`, in degrees, the way edges run (90 maps +x to +z): a hero
+    /// prop's `yaw_deg` (`data/tiles/*.ron`).
+    pub yaw_deg: f32,
 }
 
 const fn place(piece: &'static str, q: i32, r: i32, rot: u8) -> Placement {
@@ -41,6 +44,16 @@ const fn place(piece: &'static str, q: i32, r: i32, rot: u8) -> Placement {
         cell: Axial { q, r },
         rot,
         offset: [0.0, 0.0],
+        yaw_deg: 0.0,
+    }
+}
+
+/// A hero prop at tile-local runtime `at` (x, z) with `yaw_deg`, on a tile placed at rot 0.
+const fn hero(piece: &'static str, q: i32, r: i32, at: [f32; 2], yaw_deg: f32) -> Placement {
+    Placement {
+        offset: at,
+        yaw_deg,
+        ..place(piece, q, r, 0)
     }
 }
 
@@ -64,6 +77,13 @@ pub fn kit_layout() -> Vec<Placement> {
         offset: [3.0, -2.0],
         ..place("tree_hero_oak", 0, 1, 0)
     });
+    // house_cluster (data/tiles/house_cluster.ron) on the meadow at (-1, 0): its edge-0 road stub
+    // meets road tile (0, 0)'s edge-3 stub, so the road runs on into the cluster's driveway.
+    v.push(place("house_pad", -1, 0, 0));
+    v.push(place("road_straight_edge", -1, 0, 0));
+    v.push(hero("house_cottage", -1, 0, [-0.5, -7.0], 90.0));
+    v.push(hero("house_cottage", -1, 0, [-0.5, 7.0], 270.0));
+    v.push(hero("house_twostorey", -1, 0, [-7.5, 0.0], 0.0));
     v
 }
 
@@ -88,6 +108,11 @@ pub fn source(src: KitSource) -> (&'static str, Vec<Placement>) {
 pub fn piece_rotation(rot: u8) -> Quat {
     // Edges run clockwise viewed from +Y: +x -> +z is a negative rotation about +Y.
     Quat::from_rotation_y(-(60.0 * (rot % 6) as f32).to_radians())
+}
+
+/// The piece's full rotation: its edge rotation `rot`, then its hero `yaw_deg` (same sense).
+pub fn placement_rotation(p: &Placement) -> Quat {
+    piece_rotation(p.rot) * Quat::from_rotation_y(-p.yaw_deg.to_radians())
 }
 
 pub fn resolve_placements(m: &KitManifest, layout: &[Placement]) -> (Vec<Placement>, Vec<String>) {
@@ -205,6 +230,7 @@ pub fn finish_kit(
         let [x, z] = p.cell.to_world(HEX_RADIUS);
         let rot = piece_rotation(p.rot);
         let pos = Vec3::new(x, 0.0, z) + rot * Vec3::new(p.offset[0], 0.0, p.offset[1]);
+        let rot = placement_rotation(p);
         for lod in 0..3usize {
             let Some(mh) = g.named_meshes.get(format!("{}_lod{lod}", p.piece).as_str()) else {
                 warn!("kit: {} has no {}_lod{lod}", p.piece, p.piece);
@@ -289,6 +315,31 @@ mod tests {
                 "k={k} {v}"
             );
         }
+    }
+
+    #[test]
+    fn hero_yaw_turns_the_way_edges_run() {
+        // data/tiles yaw_deg: 90 maps +x to +z, as edge 1 does; it composes after the tile's rot.
+        let p = |rot, yaw_deg| Placement {
+            yaw_deg,
+            ..place("house_cottage", 0, 0, rot)
+        };
+        let x = |p: Placement| placement_rotation(&p) * Vec3::X;
+        assert!((x(p(0, 90.0)) - Vec3::Z).length() < 1e-5);
+        assert!((x(p(0, 60.0)) - piece_rotation(1) * Vec3::X).length() < 1e-5);
+        assert!((x(p(1, 60.0)) - piece_rotation(2) * Vec3::X).length() < 1e-5);
+    }
+
+    #[test]
+    fn house_cluster_continues_the_road() {
+        // The cluster's edge-0 road stub meets road tile (0, 0)'s edge-3 stub.
+        let l = kit_layout();
+        let pad = l.iter().find(|p| p.piece == "house_pad").unwrap();
+        assert_eq!(pad.cell.neighbor(0), Axial { q: 0, r: 0 });
+        assert!(
+            l.iter()
+                .any(|p| p.piece == "road_straight_edge" && p.cell == pad.cell && p.rot == 0)
+        );
     }
 
     #[test]

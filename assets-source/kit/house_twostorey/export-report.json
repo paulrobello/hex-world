@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/house_twostorey.py",
+    "sha256": "a2f3bc95826c7c7feccee0c430bba7e086110ee76fa34595e6428042cb31235b"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "16bd62ae92924c7240876908b7d25047fd60d77df3fa69709fb40c8432a29079"
+    }
+  ],
+  "lodTris": {
+    "house_twostorey_lod0": 1198,
+    "house_twostorey_lod1": 498,
+    "house_twostorey_lod2": 68
+  },
+  "nodes": [
+    "house_twostorey",
+    "house_twostorey_collider",
+    "house_twostorey_lod0",
+    "house_twostorey_lod1",
+    "house_twostorey_lod2"
+  ],
+  "pieceId": "house_twostorey",
+  "sockets": []
+}

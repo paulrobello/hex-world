@@ -1,0 +1,204 @@
+{
+  "setId": "plaster",
+  "kind": "tileable",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/mat_plaster.py",
+    "sha256": "08bcf85e1cad8309b6e5a44aa965c8e865da5c278e47b237b2d6112f07b8c009"
+  },
+  "generatorDeps": [],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "device": "CPU",
+    "generator": "scripts/blender/kit/mat_plaster.py",
+    "generatorDeps": [],
+    "generatorSha256": "08bcf85e1cad8309b6e5a44aa965c8e865da5c278e47b237b2d6112f07b8c009",
+    "samples": 32,
+    "set": "plaster",
+    "size": 1024,
+    "tileM": 2
+  },
+  "bakeReport": {
+    "path": "assets-source/kit/materials/plaster/bake-report.json",
+    "sha256": "7658e1799a6624cd18fd88e622cbe4adfe6d28c4b1a893d7389fee23018dbfe5",
+    "bytes": 282
+  },
+  "compressReport": {
+    "path": "assets-source/kit/materials/plaster/compress-report.json",
+    "sha256": "01c9d45a559827dfe39dda1fc6d73dc1a8b6775c18f07461c78d9f269ded7e40",
+    "bytes": 3904
+  },
+  "compression": {
+    "budgets": {
+      "class": "tileable",
+      "ktxMax": 3600000,
+      "ktxBytes": {
+        "bc7": 1356159,
+        "astc": 1368505
+      }
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/materials/plaster/plaster.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 357672,
+        "sha256": "045a985bdd00de9f993d5997471e41c1abf46ea5a32ca1a41d7f723e50428f07"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/materials/plaster/plaster.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 360904,
+        "sha256": "d9de0e74440fca796eb4923f4e5bac7c039f73b59374b026d4cc5e90839b0359"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/materials/plaster/plaster.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 807925,
+        "sha256": "e914b0be58e7e81b8ec58fddbd295192cadd194231897cf00ff84b8d52d172b8"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/materials/plaster/plaster.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 818862,
+        "sha256": "f0b8f4464b43dd2813dce74daa00105de4da3e9253ccd46a3b7bcf0b8ab0d81b"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/materials/plaster/plaster.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 822545,
+        "sha256": "82b8e61909f60401b4705d484c432b722084e97cd627c5c667dbde1fc7ea192f"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/materials/plaster/plaster.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 1472109,
+        "sha256": "1c3a70c27148786cd173efab3d21617ac16a60f1a8cbb5274d26fc009899ccc5"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/materials/plaster/plaster.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 179625,
+        "sha256": "d0d9c84198d39b1cebb19d4de530c77420f7039e78e50262ea5f3833973be57b"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/materials/plaster/plaster.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 185056,
+        "sha256": "4c8df3b2e219c93991ed4365b9846eb731fdfa1800c042a966a30684785353ff"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/materials/plaster/plaster.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 243432,
+        "sha256": "d97ba7c5aae2ebcec7cea6a393ab1ee1ee28b7dbeb73e8d2953b37848a4318fe"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/materials/plaster/plaster.albedo.bc7.ktx2",
+      "sha256": "045a985bdd00de9f993d5997471e41c1abf46ea5a32ca1a41d7f723e50428f07",
+      "bytes": 357672
+    },
+    {
+      "path": "assets/kit/p1/materials/plaster/plaster.albedo.astc.ktx2",
+      "sha256": "d9de0e74440fca796eb4923f4e5bac7c039f73b59374b026d4cc5e90839b0359",
+      "bytes": 360904
+    },
+    {
+      "path": "assets/kit/p1/materials/plaster/plaster.albedo.png",
+      "sha256": "e914b0be58e7e81b8ec58fddbd295192cadd194231897cf00ff84b8d52d172b8",
+      "bytes": 807925
+    },
+    {
+      "path": "assets/kit/p1/materials/plaster/plaster.normal.bc7.ktx2",
+      "sha256": "f0b8f4464b43dd2813dce74daa00105de4da3e9253ccd46a3b7bcf0b8ab0d81b",
+      "bytes": 818862
+    },
+    {
+      "path": "assets/kit/p1/materials/plaster/plaster.normal.astc.ktx2",
+      "sha256": "82b8e61909f60401b4705d484c432b722084e97cd627c5c667dbde1fc7ea192f",
+      "bytes": 822545
+    },
+    {
+      "path": "assets/kit/p1/materials/plaster/plaster.normal.png",
+      "sha256": "1c3a70c27148786cd173efab3d21617ac16a60f1a8cbb5274d26fc009899ccc5",
+      "bytes": 1472109
+    },
+    {
+      "path": "assets/kit/p1/materials/plaster/plaster.orm.bc7.ktx2",
+      "sha256": "d0d9c84198d39b1cebb19d4de530c77420f7039e78e50262ea5f3833973be57b",
+      "bytes": 179625
+    },
+    {
+      "path": "assets/kit/p1/materials/plaster/plaster.orm.astc.ktx2",
+      "sha256": "4c8df3b2e219c93991ed4365b9846eb731fdfa1800c042a966a30684785353ff",
+      "bytes": 185056
+    },
+    {
+      "path": "assets/kit/p1/materials/plaster/plaster.orm.png",
+      "sha256": "d97ba7c5aae2ebcec7cea6a393ab1ee1ee28b7dbeb73e8d2953b37848a4318fe",
+      "bytes": 243432
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T03:34:23.206Z",
+    "checks": [
+      "kit-compress tileable budget",
+      "kit_gate textures"
+    ]
+  }
+}

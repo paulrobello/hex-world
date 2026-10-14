@@ -1,0 +1,25 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.6612706780433655,
+    "aoP05": 0.0,
+    "nightTexels": 10678
+  },
+  "receiverSignature": "ee32a9597c768e3c056da851b6a8ab1a098c126a26f752ddf4a2dfbda5fb4840",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 18.15443178550314,
+    "median": 18.153383770859744,
+    "min": 15.28615710277757
+  }
+}

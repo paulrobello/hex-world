@@ -1,0 +1,11 @@
+{
+  "blender": "5.2.2 LTS",
+  "device": "CPU",
+  "generator": "scripts/blender/kit/mat_gravel.py",
+  "generatorDeps": [],
+  "generatorSha256": "05b5b3e88e721444aaf5ae20bf9c4d56d72b028431092fa3c0a247862cb24de0",
+  "samples": 32,
+  "set": "gravel",
+  "size": 1024,
+  "tileM": 2.0
+}

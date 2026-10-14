@@ -1,0 +1,11 @@
+{
+  "blender": "5.2.2 LTS",
+  "device": "CPU",
+  "generator": "scripts/blender/kit/mat_plaster.py",
+  "generatorDeps": [],
+  "generatorSha256": "08bcf85e1cad8309b6e5a44aa965c8e865da5c278e47b237b2d6112f07b8c009",
+  "samples": 32,
+  "set": "plaster",
+  "size": 1024,
+  "tileM": 2.0
+}

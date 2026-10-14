@@ -1,0 +1,88 @@
+{
+  "name": "house_pad",
+  "date": "2026-10-14T03:20:54.343Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/house_pad/house_pad.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 17644,
+      "sha256": "72da17c815e97e6c374c1be844d7afc9c97ab46b0cd58ee0812187fd77a9dd18"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/house_pad/house_pad.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 16874,
+      "sha256": "52411bbd0728016e775077a0fa651d5aec836899afe81a4173bfb8c8a985cae4"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/house_pad/house_pad.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 28605,
+      "sha256": "cd9927ef20093a8f9a70b0fb4b775aefa46ab19dd818b381fca22c0aef1f9efb"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 17644,
+      "astc": 16874
+    },
+    "glbBytes": 118156
+  },
+  "glb": {
+    "bytes": 118156,
+    "sha256": "5c6b9f37affea581d46db1504b06dbccb37dee06bf4187a06978bfc59640bf9d"
+  }
+}
