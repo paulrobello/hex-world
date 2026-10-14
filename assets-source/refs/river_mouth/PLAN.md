@@ -1,6 +1,6 @@
 # River mouth and spring: plan for the reference gate
 
-**Status:** awaiting owner approval, together with `river_mouth/ref-1..3` and `river_spring/ref-1..3` (sheets: `river_mouth/sheet.jpg`, `river_spring/sheet.jpg`). Nothing is modeled yet. Owner request, 2026-10-14: a river must be able to reach the sea and to start inside land.
+**Status:** approved by the owner 2026-10-14 (`approval.json` in both families), with one change: **Q1, build both handednesses now** (a mirrored mouth with the river on edge 4). Q2-Q6 as recommended. Originally submitted together with `river_mouth/ref-1..3` and `river_spring/ref-1..3` (sheets: `river_mouth/sheet.jpg`, `river_spring/sheet.jpg`). Nothing is modeled yet. Owner request, 2026-10-14: a river must be able to reach the sea and to start inside land.
 
 **The refs set the look, not the geometry.** Both top-down slots (ref-2) came back pointy-topped, with the river leaving at a corner rather than at an edge midpoint. The pitfalls note says the model does not hold edge geometry. The socket tables below define the layout. `river_spring/ref-3` frames the pool on a dark tray, which is not the O4 skirt. `river_mouth/ref-3` reads as a hand-built resin model (static grass, fibre surf), so take only the layout of the fan and the foam from it, not its materials.
 

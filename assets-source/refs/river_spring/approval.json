@@ -1,0 +1,11 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-14",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/river_spring/ref-1.jpg",
+    "assets-source/refs/river_spring/ref-2.jpg",
+    "assets-source/refs/river_spring/ref-3.jpg"
+  ],
+  "notes": "Approved as look references; the PLAN's socket table sets the layout. ref-3 is for the pool close-up only (it sits on a dark tray, not the O4 skirt). Owner answer Q6: an 11 m pool centred 2 m behind the tile centre, with reeds, a granite ring and a few lily pads. See assets-source/refs/river_mouth/PLAN.md."
+}
