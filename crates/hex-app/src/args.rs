@@ -54,6 +54,8 @@ pub struct Flags {
     /// `clock=fixed`: every Bevy clock advances exactly 1/60 s per frame, so the 20 Hz car tick
     /// lands on every third frame and scripted runs replay identically.
     pub clock_fixed: bool,
+    /// Native only: render the tile thumbnails and exit (`thumbs::force_flags` sets the rest).
+    pub thumbs: bool,
 }
 
 /// `"1280x800"` -> `Some((1280, 800))`; zero or malformed sizes are rejected.
@@ -98,6 +100,7 @@ pub fn flags_from_pairs(pairs: &[(String, String)]) -> (Flags, Vec<String>) {
                 Err(_) => warnings.push(format!("bad exit-after '{v}'")),
             },
             "script" => f.script = Some(v.clone()),
+            "thumbs" => f.thumbs = v != "0",
             "dump-state" => f.dump_state = Some(v.clone()),
             "screenshot-after" => f.screenshot_after_secs = parse_secs(k, v, &mut warnings),
             "exit-after-seconds" => f.exit_after_secs = parse_secs(k, v, &mut warnings),

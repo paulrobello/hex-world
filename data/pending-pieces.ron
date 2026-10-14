@@ -18,6 +18,4 @@
         (id: "wildflower_clump", delivered_by: "S4 references, then wave-2 kit modeling: meadow props"),
         (id: "rock_small", delivered_by: "S4 references, then wave-2 kit modeling: meadow props"),
     ],
-    // One thumbnail per tile rotation; pending as a whole until the renderer exists.
-    thumbnails: Some("wave 2: tile thumbnail renderer"),
 )

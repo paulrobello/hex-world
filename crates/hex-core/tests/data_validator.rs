@@ -1,6 +1,6 @@
 //! Build-time validator for `data/` (PRD §5.3, plan F1–F4).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use hex_core::SocketKind::{self, *};
@@ -168,16 +168,105 @@ fn pending_list_is_honest() {
     }
 }
 
+/// `assets/thumbs/manifest.json` `tiles`: each tile id mapped to its image per rotation 0..6.
+fn thumbnail_manifest() -> BTreeMap<String, Vec<String>> {
+    let path = repo_root().join("assets/thumbs/manifest.json");
+    let text = std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("{}: {e} (run `make thumbs`)", path.display()));
+    let value: ron::Value = ron::from_str(&text).expect("thumbs manifest parses as a RON value");
+    let ron::Value::Map(root) = value else {
+        panic!("thumbs manifest root is not an object")
+    };
+    let Some(ron::Value::Map(tiles)) = root.get(&ron::Value::String("tiles".into())) else {
+        panic!("thumbs manifest has no tiles object")
+    };
+    tiles
+        .iter()
+        .map(|(k, v)| {
+            let ron::Value::String(id) = k else {
+                panic!("thumbs manifest tile key is not a string: {k:?}")
+            };
+            let ron::Value::Seq(files) = v else {
+                panic!("thumbs manifest {id} is not a list")
+            };
+            let files = files
+                .iter()
+                .map(|f| match f {
+                    ron::Value::String(f) => f.clone(),
+                    other => panic!("thumbs manifest {id} entry is not a string: {other:?}"),
+                })
+                .collect();
+            (id.clone(), files)
+        })
+        .collect()
+}
+
 #[test]
-fn thumbnails_are_pending_as_a_whole() {
-    let p = pending();
-    let by = p.thumbnails.as_deref().unwrap_or_else(|| {
-        panic!(
-            "thumbnails are no longer pending: the thumbnail renderer must add the per-rotation \
-             existence check here before removing the pending entry"
-        )
-    });
-    assert!(!by.trim().is_empty());
+fn thumbnails_are_no_longer_pending() {
+    assert_eq!(
+        pending().thumbnails,
+        None,
+        "thumbnails are enforced by every_tile_rotation_has_a_thumbnail: \
+         drop the thumbnails entry from data/pending-pieces.ron"
+    );
+}
+
+/// PRD §5.3: every rotation of every tile has a thumbnail. Rotations may share an image only when
+/// their world-edge sockets are equal, and must share one when they are.
+#[test]
+fn every_tile_rotation_has_a_thumbnail() {
+    let c = catalog();
+    let dir = repo_root().join("assets/thumbs");
+    let manifest = thumbnail_manifest();
+    let listed: BTreeSet<&str> = manifest.keys().map(String::as_str).collect();
+    let tiles: BTreeSet<&str> = c.tiles().iter().map(|t| t.id.as_str()).collect();
+    assert_eq!(
+        listed, tiles,
+        "assets/thumbs/manifest.json must list every catalog tile (run `make thumbs`)"
+    );
+    let mut problems: Vec<String> = vec![];
+    for t in c.tiles() {
+        let files = &manifest[&t.id];
+        if files.len() != 6 {
+            problems.push(format!(
+                "{}: {} rotations listed, needs 6",
+                t.id,
+                files.len()
+            ));
+            continue;
+        }
+        for (k, f) in files.iter().enumerate() {
+            if !dir.join(f).is_file() {
+                problems.push(format!(
+                    "{} rotation {k}: assets/thumbs/{f} is missing",
+                    t.id
+                ));
+            }
+        }
+        for a in 0..6u8 {
+            for b in a + 1..6 {
+                let same_image = files[a as usize] == files[b as usize];
+                let same_sockets = (0..6).all(|w| t.edge(w, a) == t.edge(w, b));
+                if same_image != same_sockets {
+                    problems.push(format!(
+                        "{}: rotations {a} and {b} {} one image but {} world-edge sockets",
+                        t.id,
+                        if same_image { "share" } else { "do not share" },
+                        if same_sockets {
+                            "have equal"
+                        } else {
+                            "differ in"
+                        },
+                    ));
+                }
+            }
+        }
+    }
+    assert!(
+        problems.is_empty(),
+        "tile thumbnails (run `make thumbs`):\n{}",
+        problems.join("\n")
+    );
 }
 
 #[test]

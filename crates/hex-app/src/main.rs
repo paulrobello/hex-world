@@ -11,6 +11,8 @@ mod capture;
 mod control;
 mod game;
 mod sim;
+#[cfg(not(target_arch = "wasm32"))]
+mod thumbs;
 
 #[derive(Resource)]
 struct RunFlags(args::Flags);
@@ -26,7 +28,12 @@ fn main() {
     let pairs = args::native_pairs();
     #[cfg(target_arch = "wasm32")]
     let pairs = args::web_pairs();
-    let (flags, warnings) = args::flags_from_pairs(&pairs);
+    #[cfg_attr(target_arch = "wasm32", allow(unused_mut))]
+    let (mut flags, warnings) = args::flags_from_pairs(&pairs);
+    #[cfg(not(target_arch = "wasm32"))]
+    if flags.thumbs {
+        thumbs::force_flags(&mut flags);
+    }
 
     #[cfg_attr(target_arch = "wasm32", allow(unused_mut))]
     let mut queue = control::CommandQueue::default();
@@ -118,6 +125,11 @@ fn main() {
                 .chain(),
         )
         .add_systems(Last, control::dump_state_on_exit);
+
+    #[cfg(not(target_arch = "wasm32"))]
+    if app.world().resource::<RunFlags>().0.thumbs {
+        app.add_plugins(thumbs::ThumbsPlugin);
+    }
 
     for w in warnings {
         warn!("{w}");

@@ -30,6 +30,8 @@ const STREAMED_CLASSES = new Set(["hero"]);
 const IBL = ["p1/ibl/noon.diffuse.ktx2", "p1/ibl/noon.specular.ktx2"];
 // The default web scenario (Single) loads this tile in crates/hex-render/src/kit_test.rs.
 const DEFAULT_TILE = { glb: "p0/hex_test.glb", stem: "p0/hex_test" };
+// The Legend inventory sheet is open at first paint and shows every tile's thumbnail (make thumbs).
+const THUMBS = ["assets", "thumbs"];
 
 const limit = budget();
 const repo = fileURLToPath(new URL("../..", import.meta.url));
@@ -101,6 +103,7 @@ function categories(fam) {
     ["core piece glb", core.map((p) => kit(p.glb))],
     ["core piece maps", pieceMaps(core, fam)],
     ["material sets", Object.values(manifest.materials).flatMap((s) => Object.values(s.maps).map((m) => famFile(m, fam)))],
+    ["tile thumbnails", [join(dist, ...THUMBS, "manifest.json"), ...filesUnder(join(dist, ...THUMBS))]],
   ];
 }
 

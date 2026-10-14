@@ -1,4 +1,4 @@
-.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play
+.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs
 
 fmt:
 	cargo fmt --all
@@ -372,3 +372,10 @@ shots-water-play:
 	done
 	rm -f target/shots/water-play-motion-*.png
 	@echo "wrote $(WATER_PLAY_DOCS)/"
+
+# Legend inventory tile thumbnails (PRD §5.3): every tile's distinct rotations rendered natively
+# through the play path at 4x (crates/hex-app/src/thumbs.rs), then keyed, downsampled to 96 px and
+# encoded into assets/thumbs/ with the contact sheet in docs/checkpoints/thumbs/. Needs uv.
+thumbs:
+	cargo run -p hex-app --release -- --thumbs
+	uv run --script scripts/thumbs/build.py
