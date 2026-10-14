@@ -6,7 +6,7 @@ Everything below waits on you. Work kept going overnight on everything that did 
 
 These five answers unblock the most work.
 
-1. **Q2. Push?** Main holds 98 unpushed local commits, and `make checkall-ci` is green. CI now runs the UI checks.
+1. **Q2. Push?** Main holds about 109 unpushed local commits, and `make checkall-ci` is green. CI now runs the UI checks.
 2. **Q4. Tone mapper?** ACES crushes shaded walls to pure black (F1). TonyMcMapface fixes it but reopens your ACES choice.
 3. **Kit approvals:** O4 skirts (A1), river family (A2), oak (A3), cars (A7), parking pad (A9), beach pieces (A11) and forest edges (A19). Every MVP tile now draws built pieces; approval is what remains.
 4. **Reference approvals:** fish and birds (A12) and the seven P3 families (A17). Modeling starts once these are approved.
@@ -190,7 +190,7 @@ The corner look is Q3. With scatter on, a treeless strip still runs along the se
 
 **Q1. Save label (resolved).** Autosave now exists, so the bar shows "Saved" as the brief asked, plus "Saving…" and "Autosave off". See A16.
 
-**Q2. Push.** Main holds 98 unpushed local commits, and nothing has been pushed. `make checkall-ci` is green on main, and CI now sets up Node and runs `make ui-check` (`93542a6`). Approve one push of main to origin?
+**Q2. Push.** Main holds about 109 unpushed local commits, and nothing has been pushed. `make checkall-ci` is green on main, and CI now sets up Node and runs `make ui-check` (`93542a6`). Approve one push of main to origin?
 
 **Q3. Forest edge corners.** Where a forest-forest edge sits next to a forest-meadow edge on the same tile, the litter has to stop at the corner. There are two options, shown in `assets-source/kit/forest_forest_edge/stills/corner-options/`: `before.jpg`, `O-a-after.jpg`, `O-b-after.jpg`, `O-b-overview.jpg`.
 - **O-a (shipping now):** the litter ends in a straight slope along the line from the corner.
