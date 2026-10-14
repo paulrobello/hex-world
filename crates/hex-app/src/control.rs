@@ -288,6 +288,7 @@ pub fn publish_state(
     sim: Res<CarSim>,
     (rises, reduced, packs): (Res<PlayRises>, Res<ReducedMotion>, Option<Res<PlayPacks>>),
     views: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
+    boids: Option<Res<hex_render::boids::BoidReport>>,
 ) {
     *bridge::VIEW.lock().unwrap() = views.iter().find(|(c, _)| c.is_active).and_then(|(c, gt)| {
         Some(bridge::View {
@@ -335,6 +336,7 @@ pub fn publish_state(
         }),
         "diag": serde_json::from_str::<serde_json::Value>(&bridge::DIAG_JSON.lock().unwrap())
             .unwrap_or(serde_json::Value::Null),
+        "boids": boids.and_then(|b| serde_json::from_str::<serde_json::Value>(&b.0).ok()),
     });
     *bridge::STATE_JSON.lock().unwrap() = state.to_string();
 }

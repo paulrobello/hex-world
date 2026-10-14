@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast audio-e2e
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast audio-e2e shots-boids
 
 fmt:
 	cargo fmt --all
@@ -434,6 +434,23 @@ shots-coast:
 	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(COAST_DOCS)/$$n.jpg || exit 1; done
 	cp target/shots/coast-*.json $(COAST_DOCS)/
 	@echo "wrote $(COAST_DOCS)/"
+
+# Boids checkpoint (PRD §7.2, crates/hex-render/src/boids.rs): runs docs/checkpoints/boids/boids.json
+# at 1600x1000 with tilt-shift off and fixed clocks (a river chain, a coast closing on ten ocean tiles,
+# a meadow and two forests; the flock overhead, birds roosting on an oak, fish through the ocean
+# surface and in the river channel, then a forest bulldozed, undone and redone), copies JPEG stills and the
+# state dumps next to it, and asserts the dumps (check.mjs: split, fish per region, roosts, roosting).
+BOIDS_SHOTS = boids-01-flock boids-02-roost boids-03-fish-ocean boids-04-fish-river
+BOIDS_DOCS = docs/checkpoints/boids
+shots-boids:
+	mkdir -p target/shots $(BOIDS_DOCS)
+	rm -f target/shots/boids-*.png target/shots/boids-*.json
+	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(BOIDS_DOCS)/boids.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	@for n in $(BOIDS_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(BOIDS_DOCS)/$$n.jpg || exit 1; done
+	cp target/shots/boids-*.json $(BOIDS_DOCS)/
+	node $(BOIDS_DOCS)/check.mjs $(BOIDS_DOCS)
+	@echo "wrote $(BOIDS_DOCS)/"
 
 # Legend inventory tile thumbnails (PRD §5.3): every tile's distinct rotations rendered natively
 # through the play path at 4x (crates/hex-app/src/thumbs.rs), then keyed, downsampled to 96 px and

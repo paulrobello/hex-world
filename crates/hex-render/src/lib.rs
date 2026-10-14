@@ -132,7 +132,9 @@ impl Plugin for HexRenderPlugin {
             .add_plugins((
                 diag::DiagPlugin,
                 cars::CarsPlugin,
-                boids::BoidsPlugin::default(),
+                boids::BoidsPlugin {
+                    budget: boids::BoidBudget::for_tier(self.config.tier),
+                },
                 fps::FpsPlugin { visible: self.fps },
                 instanced::InstancedPlugin,
                 MaterialPlugin::<kit_material::KitMaterial>::default(),

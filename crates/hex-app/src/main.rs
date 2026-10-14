@@ -101,6 +101,7 @@ fn main() {
         .add_plugins(sim::SimPlugin)
         .insert_resource(game)
         .insert_resource(cars)
+        .insert_resource(hex_render::boids::BoidSeed(flags.seed))
         .insert_resource(RunFlags(flags))
         .insert_resource(queue)
         .init_resource::<actions::ActionQueue>()
