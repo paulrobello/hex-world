@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/car_van.py",
+    "sha256": "d03933acfb115ee06f18e55bd645ad408b2e4e7229e7488002671236f812ed5b"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_car.py",
+      "sha256": "6789f2ccfd3f05533b0a859e4a12ae22e224775a3c404816af55a6515c326166"
+    }
+  ],
+  "lodTris": {
+    "car_van_lod0": 1088,
+    "car_van_lod1": 450,
+    "car_van_lod2": 162
+  },
+  "nodes": [
+    "car_van",
+    "car_van_collider",
+    "car_van_lod0",
+    "car_van_lod1",
+    "car_van_lod2"
+  ],
+  "pieceId": "car_van",
+  "sockets": []
+}

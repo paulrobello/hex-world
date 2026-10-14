@@ -2,6 +2,7 @@
 use bevy::prelude::*;
 
 pub mod boids;
+pub mod car_material;
 pub mod cars;
 mod chunks;
 pub mod diag;
@@ -130,6 +131,7 @@ impl Plugin for HexRenderPlugin {
             .insert_resource(self.config)
             .add_plugins((
                 diag::DiagPlugin,
+                cars::CarsPlugin,
                 boids::BoidsPlugin::default(),
                 fps::FpsPlugin { visible: self.fps },
                 instanced::InstancedPlugin,
@@ -147,13 +149,10 @@ impl Plugin for HexRenderPlugin {
             .init_resource::<play::rise::PlayDust>()
             .init_resource::<play::affordances::Affordances>()
             .add_message::<play::rise::RiseMessage>()
-            .init_resource::<cars::CarsView>()
-            .init_resource::<cars::CarAssets>()
             .add_systems(Startup, scene::setup)
             .add_systems(
                 PostUpdate,
-                (cars::sync, play::rise::shake)
-                    .before(bevy::transform::TransformSystems::Propagate),
+                play::rise::shake.before(bevy::transform::TransformSystems::Propagate),
             )
             .add_systems(First, play::rise::unshake)
             .add_systems(

@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/car_pickup.py",
+    "sha256": "c990ec4c03c4a23e6f70b4a68d8f144aa3bf39f89636438ab7b60864df5ff7a4"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_car.py",
+      "sha256": "6789f2ccfd3f05533b0a859e4a12ae22e224775a3c404816af55a6515c326166"
+    }
+  ],
+  "lodTris": {
+    "car_pickup_lod0": 1110,
+    "car_pickup_lod1": 496,
+    "car_pickup_lod2": 162
+  },
+  "nodes": [
+    "car_pickup",
+    "car_pickup_collider",
+    "car_pickup_lod0",
+    "car_pickup_lod1",
+    "car_pickup_lod2"
+  ],
+  "pieceId": "car_pickup",
+  "sockets": []
+}

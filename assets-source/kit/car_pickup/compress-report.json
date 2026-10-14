@@ -1,0 +1,88 @@
+{
+  "name": "car_pickup",
+  "date": "2026-10-14T05:55:10.620Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/car_pickup/car_pickup.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 128399,
+      "sha256": "9fe864ec37db33f309b5608e1689ca945fbbfaa4ae39325562c0fab756430bdb"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/car_pickup/car_pickup.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 124071,
+      "sha256": "f54928a1243d134991d19c3f799adfad5e89a2d3ba7b2eb13d81d719061dccf2"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/car_pickup/car_pickup.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 192171,
+      "sha256": "145c243bda892155f2777abad410f9a1000c7a81d0caa9c3fa5f56cbe34d4efb"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 128399,
+      "astc": 124071
+    },
+    "glbBytes": 97448
+  },
+  "glb": {
+    "bytes": 97448,
+    "sha256": "4fbc7ebe3cfff13ed9547f09020179810b948782fdf103a20a1e1e3631eaf16a"
+  }
+}

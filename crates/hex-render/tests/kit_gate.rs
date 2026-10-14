@@ -227,6 +227,47 @@ fn wind_verts(p: &PieceEntry, m: &gltf::Mesh, buffers: &[gltf::buffer::Data]) ->
     out
 }
 
+/// One primitive of a car LOD for the paint-mask gate: its material name and COLOR_0 (None when
+/// the primitive has none).
+type PaintPrim = (String, Option<Vec<[f32; 4]>>);
+
+fn paint_prims(m: &gltf::Mesh, buffers: &[gltf::buffer::Data]) -> Vec<PaintPrim> {
+    m.primitives()
+        .map(|prim| {
+            let r = prim.reader(|b| Some(&buffers[b.index()]));
+            let name = prim.material().name().unwrap_or_default().to_string();
+            (name, r.read_colors(0).map(|c| c.into_rgba_f32().collect()))
+        })
+        .collect()
+}
+
+/// Car runtime-recolour contract (PRD §6, `kit/_car.py`): COLOR_0 on every primitive of every LOD,
+/// rgb in [0, 1] (the unpainted surface colour), A a binary paint mask (0 or 1). The `<id>_body`
+/// slot carries paint, and the `<id>_glass` and `<id>_tyre` slots are never painted.
+fn paint_mask_errors(id: &str, lod: &str, prims: &[PaintPrim]) -> Vec<String> {
+    let mut e = vec![];
+    for (slot, colors) in prims {
+        let Some(c) = colors else {
+            e.push(format!("{id}: {lod} {slot} has no COLOR_0 (paint mask)"));
+            continue;
+        };
+        if c.iter().any(|v| v.iter().any(|x| !(0.0..=1.0).contains(x))) {
+            e.push(format!("{id}: {lod} {slot} COLOR_0 outside [0, 1]"));
+        }
+        if c.iter().any(|v| v[3] > 1e-3 && v[3] < 1.0 - 1e-3) {
+            e.push(format!("{id}: {lod} {slot} paint mask is not binary"));
+        }
+        let painted = c.iter().filter(|v| v[3] > 0.5).count();
+        if slot.ends_with("_body") && painted == 0 {
+            e.push(format!("{id}: {lod} {slot} has no painted vertex"));
+        }
+        if (slot.ends_with("_glass") || slot.ends_with("_tyre")) && painted > 0 {
+            e.push(format!("{id}: {lod} {slot} has {painted} painted vertices"));
+        }
+    }
+    e
+}
+
 /// Runtime height (the pivot is the trunk base at y = 0) below which wind U must stay near 0.
 const WIND_BASE_Y: f32 = 0.5;
 /// Max U in that band: the oak measures 0.04 (LOD0/1) and 0.015 (LOD2).
@@ -558,6 +599,17 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
                     &p.id,
                     &format!("{}_lod{i}", p.id),
                     &wind_verts(p, m, &buffers),
+                ));
+            }
+        }
+    }
+    if p.id.starts_with("car_") {
+        for (i, m) in lods.iter().enumerate() {
+            if let Some(m) = m {
+                e.extend(paint_mask_errors(
+                    &p.id,
+                    &format!("{}_lod{i}", p.id),
+                    &paint_prims(m, &buffers),
                 ));
             }
         }
@@ -2542,6 +2594,42 @@ fn tree_lod(min_u: f32) -> Vec<WindVert> {
         ([3.0, 11.0, 1.0], Some([1.0, 0.95]), true),
         ([2.0, 9.0, 3.0], Some([0.8, 0.45]), true),
     ]
+}
+
+#[test]
+fn car_paint_mask_contract() {
+    let ok = || -> Vec<PaintPrim> {
+        vec![
+            (
+                "c_body".into(),
+                Some(vec![[1.0, 1.0, 1.0, 1.0], [0.1, 0.1, 0.1, 0.0]]),
+            ),
+            ("c_glass".into(), Some(vec![[0.1, 0.1, 0.2, 0.0]])),
+            ("c_tyre".into(), Some(vec![[0.05, 0.05, 0.05, 0.0]])),
+        ]
+    };
+    assert_eq!(
+        paint_mask_errors("c", "c_lod0", &ok()),
+        Vec::<String>::new()
+    );
+    let mut missing = ok();
+    missing[1].1 = None;
+    assert_eq!(
+        paint_mask_errors("c", "c_lod1", &missing),
+        vec!["c: c_lod1 c_glass has no COLOR_0 (paint mask)".to_string()]
+    );
+    let mut soft = ok();
+    soft[0].1 = Some(vec![[1.0, 1.0, 1.0, 0.5]]);
+    let e = paint_mask_errors("c", "c_lod0", &soft);
+    assert!(e.iter().any(|m| m.contains("not binary")), "{e:?}");
+    assert!(e.iter().any(|m| m.contains("no painted vertex")), "{e:?}");
+    let mut painted_glass = ok();
+    painted_glass[1].1 = Some(vec![[1.0, 1.0, 1.0, 1.0]]);
+    let e = paint_mask_errors("c", "c_lod2", &painted_glass);
+    assert!(
+        e.iter().any(|m| m.contains("c_glass has 1 painted")),
+        "{e:?}"
+    );
 }
 
 #[test]

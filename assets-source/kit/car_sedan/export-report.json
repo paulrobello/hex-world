@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/car_sedan.py",
+    "sha256": "ae51621db5678604bd0d11375d43861bee548d9d937147dffc3829ac7e047e46"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_car.py",
+      "sha256": "6789f2ccfd3f05533b0a859e4a12ae22e224775a3c404816af55a6515c326166"
+    }
+  ],
+  "lodTris": {
+    "car_sedan_lod0": 1110,
+    "car_sedan_lod1": 466,
+    "car_sedan_lod2": 162
+  },
+  "nodes": [
+    "car_sedan",
+    "car_sedan_collider",
+    "car_sedan_lod0",
+    "car_sedan_lod1",
+    "car_sedan_lod2"
+  ],
+  "pieceId": "car_sedan",
+  "sockets": []
+}

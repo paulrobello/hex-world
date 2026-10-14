@@ -1,0 +1,86 @@
+{
+  "aoDistanceM": 0.45,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "CPU",
+  "extent": {
+    "x": [
+      -2.424999952316284,
+      2.4049999713897705
+    ],
+    "y": [
+      -0.9700000286102295,
+      0.9700000286102295
+    ],
+    "z": [
+      0.0,
+      1.7799999713897705
+    ]
+  },
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.7420010566711426,
+    "aoP05": 0.05882353335618973,
+    "nightTexels": 3876
+  },
+  "receiverSignature": "d5dc49cf9b48ce116147b1b1397f87a166570d37284cae979bf56884443e8c3c",
+  "samples": 64,
+  "skipped": false,
+  "surfaces": {
+    "chrome": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#a3a6a8"
+    },
+    "glass": {
+      "paint": 0.0,
+      "slot": "glass",
+      "srgb": "#1b252c"
+    },
+    "head": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#f4eedf"
+    },
+    "liner": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#2e2d2b"
+    },
+    "paint": {
+      "paint": 1.0,
+      "slot": "body",
+      "srgb": "#ffffff"
+    },
+    "plate": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#dedcd2"
+    },
+    "tail": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#a3110f"
+    },
+    "trim": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#1e1f21"
+    },
+    "tyre": {
+      "paint": 0.0,
+      "slot": "tyre",
+      "srgb": "#161616"
+    }
+  },
+  "texelDensityPxPerM": {
+    "max": 31.06249634147323,
+    "median": 30.386704190583615,
+    "min": 23.99998889068108
+  }
+}

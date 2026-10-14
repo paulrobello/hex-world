@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use hex_core::{Axial, PlacedTile, TileCatalog, World};
 use hex_render::{
     ActiveScenario, Scenario,
-    cars::{CarPose, CarsView},
+    cars::{CarKind, CarPose, CarsView},
     play::{PlaySystems, rise::PlayRises},
 };
 use hex_sim::{SimConfig, Simulation, TICK_HZ};
@@ -195,6 +195,8 @@ pub fn publish_cars(sim: Res<CarSim>, fixed: Res<Time<Fixed>>, mut view: ResMut<
         let pose = c.pose_at(alpha);
         CarPose {
             id: c.id().0,
+            // Seeded by the car id (never reused), so a car keeps its body type for its whole trip.
+            kind: CarKind::from_seed(c.id().0),
             pos: pose.pos,
             yaw: pose.yaw(),
         }

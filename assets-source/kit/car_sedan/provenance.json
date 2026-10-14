@@ -1,0 +1,260 @@
+{
+  "pieceId": "car_sedan",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/car_sedan.py",
+    "sha256": "ae51621db5678604bd0d11375d43861bee548d9d937147dffc3829ac7e047e46"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_car.py",
+      "sha256": "6789f2ccfd3f05533b0a859e4a12ae22e224775a3c404816af55a6515c326166"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.45,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "CPU",
+    "extent": {
+      "x": [
+        -2.140000104904175,
+        2.1419999599456787
+      ],
+      "y": [
+        -0.8999999761581421,
+        0.8999999761581421
+      ],
+      "z": [
+        0,
+        1.4199999570846558
+      ]
+    },
+    "marginPx": 4,
+    "maskStats": {
+      "aoMean": 0.7553011178970337,
+      "aoP05": 0.062745101749897,
+      "nightTexels": 6090
+    },
+    "receiverSignature": "0ef38458296cab9fd47b7eb3d005500c7b1c8bc45e030ef8aa32a98f9765065c",
+    "samples": 64,
+    "skipped": false,
+    "surfaces": {
+      "chrome": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#a3a6a8"
+      },
+      "glass": {
+        "paint": 0,
+        "slot": "glass",
+        "srgb": "#1b252c"
+      },
+      "head": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#f4eedf"
+      },
+      "liner": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#2e2d2b"
+      },
+      "paint": {
+        "paint": 1,
+        "slot": "body",
+        "srgb": "#ffffff"
+      },
+      "plate": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#dedcd2"
+      },
+      "tail": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#a3110f"
+      },
+      "trim": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#1e1f21"
+      },
+      "tyre": {
+        "paint": 0,
+        "slot": "tyre",
+        "srgb": "#161616"
+      }
+    },
+    "texelDensityPxPerM": {
+      "max": 39.035490301506684,
+      "median": 38.27297114553387,
+      "min": 30.580655057600598
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1110,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 466,
+      "ratio": 0.4198198198198198
+    },
+    {
+      "lod": 2,
+      "tris": 162,
+      "ratio": 0.14594594594594595
+    }
+  ],
+  "collider": {
+    "node": "car_sedan_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 39.035490301506684,
+    "median": 38.27297114553387,
+    "min": 30.580655057600598
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 126338,
+        "astc": 122681
+      },
+      "glbBytes": 96644
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/car_sedan/car_sedan.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 126338,
+        "sha256": "3e55e622dbe484106ce8115da3f53e287e8676886a7baa5108884412dd03215b"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/car_sedan/car_sedan.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 122681,
+        "sha256": "2c6930085675c114f5259fe4028d5ded86a54ba98e894ce2f0cff423d71da5ca"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/car_sedan/car_sedan.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 190028,
+        "sha256": "73edf4edea00d0bbb565bcf550f389a3bbfc8ff2cb02164a7b3f3ffb0601feb7"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/car_sedan/car_sedan.glb",
+      "sha256": "9fe7491dcd568720c68b172ff3a8c927ff97a27f2445207ac8e1b2ea0a0bd34c",
+      "bytes": 96644
+    },
+    {
+      "path": "assets/kit/p1/car_sedan/car_sedan.masks.bc7.ktx2",
+      "sha256": "3e55e622dbe484106ce8115da3f53e287e8676886a7baa5108884412dd03215b",
+      "bytes": 126338
+    },
+    {
+      "path": "assets/kit/p1/car_sedan/car_sedan.masks.astc.ktx2",
+      "sha256": "2c6930085675c114f5259fe4028d5ded86a54ba98e894ce2f0cff423d71da5ca",
+      "bytes": 122681
+    },
+    {
+      "path": "assets/kit/p1/car_sedan/car_sedan.masks.png",
+      "sha256": "73edf4edea00d0bbb565bcf550f389a3bbfc8ff2cb02164a7b3f3ffb0601feb7",
+      "bytes": 190028
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/vehicles/ref-1.jpg",
+      "sha256": "a3936e3a04c68ad8c642c3cb6b56a4d53cd97fb93f46783e54175b09f74da16c",
+      "sourceSha256": "f045f96185090a6100f9de822fc022862bb791ca6e9597e1fe43bb049d5d01d8",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "47c666c7-6654-4c11-a4f8-de5a8914b5e8",
+      "prompt": "A single compact four-door sedan car, about 4.2 m long, a softly rounded three-box shape with a short bonnet, short overhangs, slightly oversized wheels pushed out to the corners, four doors with side windows and a short separate boot, a plain grille of smooth horizontal slats with a blank centre and no emblem, the whole body painted one plain neutral light grey satin paint with no stripes, decals or two-tone, clearly separate dark-tinted window glass, black rubber tyres on simple silver-grey wheels, satin chrome and dark grey trim on the bumpers, grille, window surrounds and door handles, clear headlights at the front and red taillights wrapping around the rear corners, plain unbadged bodywork with no logos, emblems or lettering anywhere, timeless modern-classic European styling with softly rounded edges and slightly chunky friendly proportions, realistic scale-model detail, standing alone on the plain grey studio floor with a soft contact shadow, the whole vehicle centred in frame, seen from the front-left, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/vehicles/ref-2.jpg",
+      "sha256": "432a9634fc715febf87b5c6db97a44429429b0d685fd292cfebcba675f37bf50",
+      "sourceSha256": "3c844f6710dfd5b7d004e033525338243f9d0bb5fc5acafab40bd080ee96445b",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "7b33f77b-e669-4ba9-8b82-1d0ada9fa6e8",
+      "prompt": "A single small panel van, about 4.4 m long, a short sloping bonnet and a two-seat cab with windows only in the two front doors, a tall boxy cargo body behind the cab with solid painted side panels, a sliding side door and twin rear doors, the whole body painted one plain neutral light grey satin paint with no stripes, decals or two-tone, clearly separate dark-tinted window glass, black rubber tyres on simple silver-grey wheels, satin chrome and dark grey trim on the bumpers, grille, window surrounds and door handles, clear headlights at the front and red taillights wrapping around the rear corners, plain unbadged bodywork with no logos, emblems or lettering anywhere, timeless modern-classic European styling with softly rounded edges and slightly chunky friendly proportions, realistic scale-model detail, standing alone on the plain grey studio floor with a soft contact shadow, the whole vehicle centred in frame, seen from the front-left, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/vehicles/ref-3.jpg",
+      "sha256": "f01aacbc10829e5ec5183eb423b55ef44ac088245fbf34801e378b1282ffd163",
+      "sourceSha256": "81cd575a5bf4e05e656fdc7994d0bfda80b729a1795a239260b9251c6b29051d",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "f1f83061-bf30-4849-9f0e-e894506734c4",
+      "prompt": "A single compact pickup truck with a single cab, about 4.5 m long with a normal wheelbase and believable real-world proportions, only slightly chunky and never cartoonish, a short bonnet and a two-door cab with one row of seats. Behind the cab sits a clean rectangular open cargo box taking up nearly half the truck's length, empty and uncovered, its flat floor sunk well below the tops of its painted side walls, and a closed upright tailgate at the back, a plain grille of smooth horizontal slats with a blank centre and no emblem, the whole body painted one plain neutral light grey satin paint with no stripes, decals or two-tone, clearly separate dark-tinted window glass, black rubber tyres on simple silver-grey wheels, satin chrome and dark grey trim on the bumpers, grille, window surrounds and door handles, clear headlights at the front and red taillights wrapping around the rear corners, plain unbadged bodywork with no logos, emblems or lettering anywhere, timeless modern-classic European styling with softly rounded edges and slightly chunky friendly proportions, realistic scale-model detail, standing alone on the plain grey studio floor with a soft contact shadow, the whole vehicle centred in frame, seen from the front-left, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T05:55:52.600Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/vehicles/ref-1.jpg",
+        "assets-source/refs/vehicles/ref-2.jpg",
+        "assets-source/refs/vehicles/ref-3.jpg"
+      ],
+      "notes": "Sedan (ref-1), panel van (ref-2) and single-cab pickup (ref-3) approved in chat as shown (photoreal die-cast proportions). Make the van's front end generic; paint is a runtime per-instance recolour (PRD 6)."
+    }
+  ]
+}
