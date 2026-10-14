@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/beach_center.py",
+    "sha256": "faec74c1eeaf0d7639d740932a022512150ef0b5e9931bd48ce965849a5c7e8e"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_beach.py",
+      "sha256": "aea34b8de566967b0be23fddc1b36f55a780e0d96d2f648e1786cf8d963817b7"
+    },
+    {
+      "path": "scripts/blender/kit/_beach_dress.py",
+      "sha256": "ef4a16cf6ffb76ca552b75e07829b183576c22662920943af78fb52024334cd1"
+    }
+  ],
+  "lodTris": {
+    "beach_center_lod0": 860,
+    "beach_center_lod1": 388,
+    "beach_center_lod2": 88
+  },
+  "nodes": [
+    "beach_center",
+    "beach_center_collider",
+    "beach_center_lod0",
+    "beach_center_lod1",
+    "beach_center_lod2"
+  ],
+  "pieceId": "beach_center",
+  "sockets": []
+}

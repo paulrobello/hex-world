@@ -236,7 +236,8 @@ mod tests {
 
     #[test]
     fn builtin_pending_list_parses() {
+        // Empty once every tile's pieces are in the kit (the beach family closed the list).
         let p = PendingPieces::builtin().unwrap();
-        assert!(!p.pieces.is_empty());
+        assert!(p.pieces.iter().all(|e| !e.delivered_by.is_empty()));
     }
 }

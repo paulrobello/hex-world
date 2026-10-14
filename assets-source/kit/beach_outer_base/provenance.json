@@ -1,0 +1,247 @@
+{
+  "pieceId": "beach_outer_base",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/beach_outer_base.py",
+    "sha256": "3e66d3c69de8437467451ad3ff7c365705ced7831f435a3cf95231417e76b9b8"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_beach.py",
+      "sha256": "aea34b8de566967b0be23fddc1b36f55a780e0d96d2f648e1786cf8d963817b7"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "none",
+    "extraRingS": [
+      -1.952568,
+      3.5,
+      4.5,
+      5.5,
+      6.5,
+      7.5
+    ],
+    "lod2MaxRatio": 0.2,
+    "lodTris": [
+      3144,
+      1244,
+      562
+    ],
+    "marginPx": 0,
+    "profileErrorM": [
+      {
+        "deepMaxM": 0.0151,
+        "dryMaxM": 0.0063,
+        "wetMaxM": 0.0154
+      },
+      {
+        "deepMaxM": 0.0151,
+        "dryMaxM": 0.0096,
+        "wetMaxM": 0.0166
+      },
+      {
+        "deepMaxM": 0.0151,
+        "dryMaxM": 0.0228,
+        "wetMaxM": 0.0267
+      }
+    ],
+    "reason": "analytic masks (snow, wetness by s; AO 1): no bake",
+    "receiverSignature": "e57149cef5b9b840fcf9e1e50f9862f1fd0490e5ea2ecf43d1c791ecb0a3f902",
+    "rowsS": [
+      -8,
+      -7,
+      -6,
+      -5,
+      -4,
+      -3,
+      -2,
+      -1.952568,
+      -1,
+      0,
+      1,
+      2,
+      3,
+      3.5,
+      4,
+      4.5,
+      5,
+      5.5,
+      6,
+      6.5,
+      7,
+      7.5,
+      8
+    ],
+    "samples": 0,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 32.00007036704979,
+      "median": 31.885425361510563,
+      "min": 29.195907492360515
+    },
+    "wetTopS": -1.952568431852364
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 3144,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 1244,
+      "ratio": 0.39567430025445294
+    },
+    {
+      "lod": 2,
+      "tris": 562,
+      "ratio": 0.1787531806615776
+    }
+  ],
+  "collider": {
+    "node": "beach_outer_base_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 32.00007036704979,
+    "median": 31.885425361510563,
+    "min": 29.195907492360515
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 14272,
+        "astc": 13922
+      },
+      "glbBytes": 113476
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/beach_outer_base/beach_outer_base.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 14272,
+        "sha256": "3bc9d3fb4ab7b7c183b73e683f97d37a43447fd70a1d4e83b9eb109add387636"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/beach_outer_base/beach_outer_base.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 13922,
+        "sha256": "c87958b959f3d2a1c2dddc57a0758fc3253dca0fae3928532a05033b83239d13"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/beach_outer_base/beach_outer_base.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 26654,
+        "sha256": "f2c8bc975d9e1f0912d143f76741a94f4841d868bd96f9074c6842e07cfb75cf"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/beach_outer_base/beach_outer_base.glb",
+      "sha256": "a91f7412f8dade2ba8163c38f6aeed93a283ddb10ddf054861940ff1515fc7df",
+      "bytes": 113476
+    },
+    {
+      "path": "assets/kit/p1/beach_outer_base/beach_outer_base.masks.bc7.ktx2",
+      "sha256": "3bc9d3fb4ab7b7c183b73e683f97d37a43447fd70a1d4e83b9eb109add387636",
+      "bytes": 14272
+    },
+    {
+      "path": "assets/kit/p1/beach_outer_base/beach_outer_base.masks.astc.ktx2",
+      "sha256": "c87958b959f3d2a1c2dddc57a0758fc3253dca0fae3928532a05033b83239d13",
+      "bytes": 13922
+    },
+    {
+      "path": "assets/kit/p1/beach_outer_base/beach_outer_base.masks.png",
+      "sha256": "f2c8bc975d9e1f0912d143f76741a94f4841d868bd96f9074c6842e07cfb75cf",
+      "bytes": 26654
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/beach/ref-1.jpg",
+      "sha256": "70197b97b4579a58dc379b6ec221b40c6d52fc766d479fe0c52c09f5c6cb62d7",
+      "sourceSha256": "83fe5f0fa3c789100617486e46d202c3545d8e5adcafa158a4033f9f780c1799",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "081ff9a7-e526-474d-bd06-719886bf4d0c",
+      "prompt": "A single flat-sided hexagonal coast tile for a diorama, 32 m across. Ocean fills the side with two adjacent flat edges, lush meadow grass fills the two flat edges opposite them, and a curving sand shoreline runs across the tile from one flat edge to the opposite flat edge. Bands from land to sea: meadow grass, dry pale sand, a darker wet-sand band, a lacy white surf foam line, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Under the land the side walls show layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel); on the ocean side the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, with the sand floor sloping down, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/beach/ref-2.jpg",
+      "sha256": "d0a0cb5b52623c3962f484a30801d9fe29b991570c7d61949b228d7f38c72f16",
+      "sourceSha256": "b73a29c23160b506d955f670ec43fa5288badce025c83d4f2f2052b1bcb353ef",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "fc5bf24b-dec3-446a-ade8-a21f9e1efa3a",
+      "prompt": "Close-up of the waterline on a diorama beach tile: dry pale sand, a darker damp-sand band, a thin lacy white surf foam line along the shore, clear turquoise shallows over a rippled sandy floor with caustics, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T06:51:07.813Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/beach/ref-1.jpg",
+        "assets-source/refs/beach/ref-2.jpg"
+      ],
+      "notes": "Approved: grass, dry sand, wet band, surf foam, water column on the cut side. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-13",
+      "notes": "Pending owner review; not an approval. Review from the six-view renders in assets-source/kit/beach_outer_base/renders/ and the in-engine coast shots in docs/checkpoints/coast/ and assets-source/kit/beach_base/shots/. The controller records the owner's decision."
+    }
+  ]
+}

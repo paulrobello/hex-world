@@ -10,6 +10,7 @@ use ::bevy::{
     world_serialization::WorldSerializationPlugin,
 };
 use hex_assets::*;
+use hex_render::water::tiles::{Coastline, coast_height};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -620,7 +621,46 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
     {
         e.push(format!("{}: node {}_collider missing (D14)", p.id, p.id));
     }
-    let level = if p.kind == PieceKind::Base {
+    let coast = (p.kind == PieceKind::Base)
+        .then(|| coast_of_base(&p.id))
+        .flatten();
+    if let Some(coast) = &coast {
+        let rings: Vec<_> = lods
+            .iter()
+            .flatten()
+            .map(|m| border_ring_any(&positions(m, &buffers)))
+            .collect();
+        let flat: Vec<Vec<[f32; 2]>> = rings
+            .iter()
+            .map(|r| r.iter().map(|(q, _)| [q[0], q[2]]).collect())
+            .collect();
+        e.extend(ring_errors(&p.id, &flat, false));
+        for r in &rings {
+            e.extend(coast_ring_errors(&p.id, coast, r).0);
+        }
+        for (i, m) in lods.iter().enumerate() {
+            if let Some(m) = m {
+                let (_, err) = coast_profile_errors(
+                    &format!("{}_lod{i}", p.id),
+                    coast,
+                    &triangles(m, &buffers),
+                );
+                e.extend(err);
+            }
+        }
+        let min_y = positions(lod0, &buffers)
+            .iter()
+            .map(|(p, _)| p[1])
+            .fold(f32::MAX, f32::min);
+        if (min_y + hex_core::LEVEL_STEP).abs() > 0.005 {
+            e.push(format!(
+                "{}: skirt bottom {min_y} != -{}",
+                p.id,
+                hex_core::LEVEL_STEP
+            ));
+        }
+    }
+    let level = if p.kind == PieceKind::Base && coast.is_none() {
         base_ring_level(&p.id, &positions(lod0, &buffers)).unwrap_or_else(|err| {
             e.push(err);
             0.0
@@ -628,7 +668,7 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
     } else {
         0.0
     };
-    if p.kind.touches_border() {
+    if p.kind.touches_border() && coast.is_none() {
         let rings: Vec<_> = lods
             .iter()
             .flatten()
@@ -648,7 +688,7 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
             e.extend(cut_ring_errors(&p.id, ring, &cuts));
         }
     }
-    if p.kind == PieceKind::Base {
+    if p.kind == PieceKind::Base && coast.is_none() {
         let v = positions(lod0, &buffers);
         if let Some((p_bad, n_bad)) = v.iter().find(|(q, n)| {
             dist_to_border(q[0], q[2]).abs() < 1e-3
@@ -889,6 +929,10 @@ const LANE_CUT_LOD2_MAX_RATIO: f32 = 0.20;
 fn lod2_max_ratio(kit: &Kit, p: &PieceEntry) -> f32 {
     if p.kind == PieceKind::Base && !cut_lanes(kit, p).is_empty() {
         LANE_CUT_LOD2_MAX_RATIO
+    } else if p.kind == PieceKind::Base
+        && matches!(coast_of_base(&p.id), Some(Coastline::Arc { .. }))
+    {
+        COAST_ARC_LOD2_MAX_RATIO
     } else {
         LOD2_MAX_RATIO
     }
@@ -1013,6 +1057,188 @@ fn cut_ring_errors(id: &str, ring: &[[f32; 2]], cuts: &BTreeMap<u64, f32>) -> Ve
         }
     }
     e
+}
+
+/// The coastline (rotation 0) of the coast tile whose `base` names `id`: a coast base is the bed
+/// itself, held to the engine's analytic profile (docs/kit/water-contract.md §3, §5).
+fn coast_of_base(id: &str) -> Option<Coastline> {
+    let catalog = hex_core::TileCatalog::builtin().expect("builtin tile catalog");
+    catalog
+        .tiles()
+        .iter()
+        .filter(|t| t.base.as_str() == id)
+        .find_map(|t| Coastline::of(t, 0))
+}
+
+/// LOD2 ceiling of the coast-corner bases (headland, bay), the lane-cut ceiling extended: the
+/// ring and one-row skirt fix about 256 tris, and the arc rows on the smoothstep drop (slope up to
+/// 0.67 m/m) need about 300 more for the chord sag to stay inside the 0.03 m tolerance at LOD2
+/// (`beach_outer_base` 562 / 3,148 = 17.9%, `beach_inner_base` 590 / 3,244 = 18.2%).
+const COAST_ARC_LOD2_MAX_RATIO: f32 = 0.20;
+
+/// The coast profile's tolerances (contract §3): 0.03 m where the water is under 2.5 m deep and on
+/// the beach above it (s < 7.36), 0.10 m beyond, upward only on the ocean floor (s >= 8).
+const COAST_SHALLOW_S: f32 = 7.36;
+const COAST_TOL_NEAR: f32 = 0.03;
+const COAST_TOL_FAR: f32 = 0.10;
+
+/// Analytic bed normal at runtime (x, z): normalize(-h'(s) grad s, 1).
+fn coast_normal(coast: &Coastline, x: f32, z: f32) -> Vec3 {
+    let e = 1e-3;
+    let s = |x: f32, z: f32| coast.seaward(Vec2::new(x, z));
+    let g = Vec2::new(
+        (s(x + e, z) - s(x - e, z)) / (2.0 * e),
+        (s(x, z + e) - s(x, z - e)) / (2.0 * e),
+    );
+    let s0 = s(x, z);
+    let dh = (coast_height(s0 + e) - coast_height(s0 - e)) / (2.0 * e);
+    Vec3::new(-dh * g.x, 1.0, -dh * g.y).normalize()
+}
+
+/// Up-facing cap vertices on the hex border at any height (x, y, z) with their normals, split-normal
+/// duplicates removed.
+fn border_ring_any(v: &[([f32; 3], [f32; 3])]) -> Vec<([f32; 3], [f32; 3])> {
+    let mut ring: Vec<([f32; 3], [f32; 3])> = vec![];
+    for (p, n) in v {
+        if dist_to_border(p[0], p[2]).abs() < 1e-3
+            && n[1] > 0.5
+            && !ring
+                .iter()
+                .any(|(q, _)| near([q[0], q[2]], [p[0], p[2]], RING_TOL))
+        {
+            ring.push((*p, *n));
+        }
+    }
+    ring
+}
+
+/// A coast base's ring: every `border_ring(16)` lattice vertex present; any other vertex only on a
+/// beach edge (|s| < 8), with both beach edges carrying the same s samples (so every legal beach
+/// seam meets vertex for vertex); every vertex on the profile within 1 mm and its normal the
+/// analytic bed normal (both tiles of a seam shade alike). Returns the extra s samples.
+fn coast_ring_errors(
+    id: &str,
+    coast: &Coastline,
+    ring: &[([f32; 3], [f32; 3])],
+) -> (Vec<String>, Vec<f32>) {
+    let mut e = vec![];
+    let lattice = lattice_ring();
+    for (p, _, _) in &lattice {
+        if !ring.iter().any(|(q, _)| near(*p, [q[0], q[2]], RING_TOL)) {
+            e.push(format!("{id}: lattice ring vertex {p:?} missing"));
+        }
+    }
+    let mut extra: BTreeMap<u64, Vec<f32>> = BTreeMap::new();
+    for (q, n) in ring {
+        let s = coast.seaward(Vec2::new(q[0], q[2]));
+        let want = coast_height(s);
+        if (q[1] - want).abs() > 1e-3 {
+            e.push(format!(
+                "{id}: ring vertex {q:?} at s = {s:.3} off the coast profile ({want:.4})"
+            ));
+        }
+        let a = coast_normal(coast, q[0], q[2]);
+        if (Vec3::from(*n) - a).abs().max_element() > 1e-2 {
+            e.push(format!(
+                "{id}: ring normal {n:?} at {q:?} is not the bed normal {a} (seam shading)"
+            ));
+        }
+        if lattice
+            .iter()
+            .any(|(p, _, _)| near(*p, [q[0], q[2]], RING_TOL))
+        {
+            continue;
+        }
+        if s.abs() >= 8.0 - 1e-3 {
+            e.push(format!(
+                "{id}: ring vertex {q:?} is neither lattice nor on a beach edge (s = {s:.3})"
+            ));
+            continue;
+        }
+        let k = (0..6u64)
+            .max_by(|&a, &b| {
+                let d = |k: u64| {
+                    let t = (60.0 * k as f32).to_radians();
+                    q[0] * t.cos() + q[2] * t.sin()
+                };
+                d(a).total_cmp(&d(b))
+            })
+            .unwrap();
+        extra.entry(k).or_default().push(s);
+    }
+    let mut sets: Vec<Vec<f32>> = extra.into_values().collect();
+    for s in &mut sets {
+        s.sort_by(f32::total_cmp);
+    }
+    let same = |a: &[f32], b: &[f32]| {
+        a.len() == b.len() && a.iter().zip(b).all(|(x, y)| (x - y).abs() < 1e-3)
+    };
+    if sets.len() > 2 || sets.windows(2).any(|w| !same(&w[0], &w[1])) {
+        e.push(format!(
+            "{id}: beach edges carry different extra ring samples {sets:?}"
+        ));
+    }
+    (e, sets.into_iter().next().unwrap_or_default())
+}
+
+/// Triangles of a mesh, runtime positions.
+fn triangles(m: &gltf::Mesh, buffers: &[gltf::buffer::Data]) -> Vec<[[f32; 3]; 3]> {
+    let mut out = vec![];
+    for prim in m.primitives() {
+        let r = prim.reader(|b| Some(&buffers[b.index()]));
+        let pos: Vec<[f32; 3]> = r.read_positions().map(|i| i.collect()).unwrap_or_default();
+        let Some(idx) = r.read_indices() else {
+            continue;
+        };
+        let idx: Vec<u32> = idx.into_u32().collect();
+        for t in idx.as_chunks::<3>().0 {
+            out.push([0, 1, 2].map(|i| pos[t[i] as usize]));
+        }
+    }
+    out
+}
+
+/// The coast profile error of one LOD's up-facing faces, sampled at vertices, edge midpoints and
+/// interior points: (dry s < 0, wet 0 <= s < 7.36, deep s >= 7.36) maxima and the errors over the
+/// contract tolerance.
+fn coast_profile_errors(
+    id: &str,
+    coast: &Coastline,
+    tris: &[[[f32; 3]; 3]],
+) -> ([f32; 3], Vec<String>) {
+    let mut max = [0f32; 3];
+    let mut e = vec![];
+    const N: usize = 4;
+    for t in tris {
+        let [a, b, c] = t.map(Vec3::from);
+        if (b - a).cross(c - a).normalize_or_zero().y < 0.2 {
+            continue;
+        }
+        for i in 0..=N {
+            for j in 0..=N - i {
+                let q = a + (b - a) * (i as f32 / N as f32) + (c - a) * (j as f32 / N as f32);
+                let s = coast.seaward(Vec2::new(q.x, q.z));
+                let want = coast_height(s);
+                let err = (q.y - want).abs();
+                let (k, tol) = if s < 0.0 {
+                    (0, COAST_TOL_NEAR)
+                } else if s < COAST_SHALLOW_S {
+                    (1, COAST_TOL_NEAR)
+                } else {
+                    (2, COAST_TOL_FAR)
+                };
+                max[k] = max[k].max(err);
+                let below = s >= 8.0 && q.y < want - 1e-3;
+                if (err > tol || below) && e.len() < 5 {
+                    e.push(format!(
+                        "{id}: bed at {q} (s = {s:.3}) is {:.4} m off the coast profile ({want:.4})",
+                        q.y - want
+                    ));
+                }
+            }
+        }
+    }
+    (max, e)
 }
 
 /// Every centre piece against every edge piece of the same network kind, at each of its lane
@@ -1763,8 +1989,98 @@ fn geometry_budgets_lods_sockets_border() {
             e.extend(check_edge_profile(&k, p));
         }
         e.extend(check_center_edge_joint(&k));
+        e.extend(check_coast_seams(&k));
     }
     fail(e);
+}
+
+/// Every coast base carries the same extra beach-edge ring samples, so each legal beach seam
+/// (straight, headland and bay in any pairing) meets vertex for vertex (contract §6).
+fn check_coast_seams(kit: &Kit) -> Vec<String> {
+    let mut seen: Vec<(String, Vec<f32>)> = vec![];
+    for p in &kit.manifest.pieces {
+        let Some(coast) = (p.kind == PieceKind::Base)
+            .then(|| coast_of_base(&p.id))
+            .flatten()
+        else {
+            continue;
+        };
+        let Ok((doc, buffers, _)) = plain(kit, p) else {
+            continue;
+        };
+        let Some(m) = mesh_named(&doc, &format!("{}_lod0", p.id)) else {
+            continue;
+        };
+        let ring = border_ring_any(&positions(&m, &buffers));
+        seen.push((p.id.clone(), coast_ring_errors(&p.id, &coast, &ring).1));
+    }
+    let mut e = vec![];
+    if let Some((first, s0)) = seen.first() {
+        for (id, s) in &seen[1..] {
+            if s.len() != s0.len() || s.iter().zip(s0).any(|(a, b)| (a - b).abs() > 1e-3) {
+                e.push(format!(
+                    "{id}: beach-edge ring samples {s:?} differ from {first}'s {s0:?}"
+                ));
+            }
+        }
+    }
+    e
+}
+
+#[test]
+fn coast_bases_are_held_to_the_coast_profile() {
+    let catalog = hex_core::TileCatalog::builtin().unwrap();
+    let beach = Coastline::of(catalog.get("beach").unwrap(), 0).unwrap();
+    assert!(matches!(
+        coast_of_base("beach_outer_base"),
+        Some(Coastline::Arc {
+            land_inside: true,
+            ..
+        })
+    ));
+    assert!(coast_of_base("meadow_base").is_none());
+    // A ring point on the profile passes; one 5 cm off, or with a +Y normal on the slope, fails.
+    let s = |x: f32, z: f32| beach.seaward(Vec2::new(x, z));
+    let mid = [
+        APOTHEM * (120f32).to_radians().cos(),
+        APOTHEM * (120f32).to_radians().sin(),
+    ];
+    let dir = Vec2::new(-(120f32).to_radians().sin(), (120f32).to_radians().cos());
+    let at = |o: f32| {
+        let p = Vec2::from(mid) + dir * o;
+        let n = coast_normal(&beach, p.x, p.y);
+        ([p.x, coast_height(s(p.x, p.y)), p.y], n.to_array())
+    };
+    let good: Vec<_> = (-4..=4).map(|i| at(i as f32 * 0.5)).collect();
+    let errs = |r: &[([f32; 3], [f32; 3])]| coast_ring_errors("b", &beach, r).0;
+    assert!(
+        errs(&good)
+            .iter()
+            .all(|m| m.contains("lattice ring vertex")),
+        "{:?}",
+        errs(&good)
+    );
+    let mut raised = good.clone();
+    raised[2].0[1] += 0.05;
+    assert!(
+        errs(&raised)
+            .iter()
+            .any(|m| m.contains("off the coast profile"))
+    );
+    let mut flat = good.clone();
+    flat[2].1 = [0.0, 1.0, 0.0];
+    assert!(errs(&flat).iter().any(|m| m.contains("bed normal")));
+    // A face on the drop 5 cm off the profile fails; on the profile it passes.
+    let tri = |dy: f32| {
+        let q = |x: f32, z: f32| [x, coast_height(s(x, z)) + dy, z];
+        // Seaward is +x (cos 30, sin 30); a small triangle around s = 5.5.
+        let c = Vec2::new(30f32.to_radians().cos(), 30f32.to_radians().sin()) * 5.5;
+        [q(c.x, c.y), q(c.x, c.y + 0.08), q(c.x + 0.08, c.y)]
+    };
+    let ok = coast_profile_errors("t", &beach, &[tri(0.0)]);
+    assert!(ok.1.is_empty(), "{:?}", ok.1);
+    let off = coast_profile_errors("t", &beach, &[tri(0.05)]);
+    assert!(!off.1.is_empty() && off.0[1] > 0.04);
 }
 
 #[test]
@@ -2730,7 +3046,10 @@ fn texel_density_is_checked_per_material() {
 }
 
 /// A mesh's triangles in the runtime XZ plane: ([x, y, z] corners, slot name).
-fn triangles(m: &gltf::Mesh, buffers: &[gltf::buffer::Data]) -> Vec<([[f32; 3]; 3], String)> {
+fn triangles_with_slot(
+    m: &gltf::Mesh,
+    buffers: &[gltf::buffer::Data],
+) -> Vec<([[f32; 3]; 3], String)> {
     let mut out = vec![];
     for prim in m.primitives() {
         let name = prim.material().name().unwrap_or_default().to_string();
@@ -2798,7 +3117,7 @@ fn forest_edge_clearance(kit: &Kit, k: u8) -> Vec<String> {
             e.push(format!("{id} / forest_base: LOD{lod} mesh missing"));
             continue;
         };
-        let (et, bt) = (triangles(&em, &eb), triangles(&bm, &bb));
+        let (et, bt) = (triangles_with_slot(&em, &eb), triangles_with_slot(&bm, &bb));
         let (mut worst, mut float) = (f32::MAX, f32::MIN);
         for i in 0..55 {
             let x = APOTHEM - 0.05 - 0.1 * i as f32;

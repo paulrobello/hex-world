@@ -38,7 +38,7 @@ The prototype's open sea reaches 6 m deep and reads deeper blue than 2.6 m will.
 
 ## 3. Coast (`beach`, `beach_outer`, `beach_inner`)
 
-Owner decision O1 (2026-10-13): beach sockets are directional, and two coast-corner tiles join the straight beach. This section is the bed the coast kit pieces must match: `beach_base`/`beach_center`, `beach_outer_base`/`beach_outer_center` and `beach_inner_base`/`beach_inner_center` (all pending in `data/pending-pieces.ron`).
+Owner decision O1 (2026-10-13): beach sockets are directional, and two coast-corner tiles join the straight beach. This section is the bed the coast kit pieces must match: `beach_base`/`beach_center`, `beach_outer_base`/`beach_outer_center` and `beach_inner_base`/`beach_inner_center` (built, `scripts/blender/kit/_beach.py`; each base is the bed and `kit_gate` holds every LOD to this profile through `water::tiles::coast_height`, `coast_bases_are_held_to_the_coast_profile`).
 
 - **Sockets.** Every beach edge names the side its land is on, looking out across the edge from its own tile: `land: Right` puts the land at the corner the edge shares with the next edge clockwise (`e + 1`), `Left` at the corner it shares with `e - 1` (`data/sockets.ron` `directional: [Beach]`). A beach edge meets only a beach edge with the opposite side, so both tiles put their land corner on the same point, and it never meets grass, forest or ocean. Every legal coast seam therefore continues the same coast, and an ocean or grass neighbour only ever touches an ocean or grass edge.
 
@@ -71,7 +71,11 @@ Owner decision O1 (2026-10-13): beach sockets are directional, and two coast-cor
   - **Where `s < 7.36`** (the beach slope, the waterline and the shelf): within ±0.03 m of the profile. At the waterline the slope is 0.35 m/m, so the kit's waterline lies within about 0.09 m of the coastline (the straight line or the 24 m arc). On the headland and the bay the waterline must curve with the arc, not run straight between the beach-edge midpoints. The chord between them sits 3.2 m off the arc halfway along it.
   - **Elsewhere** (the dry beach top and grass above y = -1.0, the drop and the sea floor): within ±0.10 m. The sea floor's 0.10 m is upward only, as in §4.
   - **Rotation:** pieces are authored at rotation 0 in the frame of the table above and turned with the tile, like every kit piece. The headland and the bay have no mirror image in the catalog. Do not mirror one to make the other: the bay's arc bends around the sea, the headland's around the land.
-- **Wet band.** The placeholder bed's shader darkens and glosses sand up to 0.32-0.40 m above the water (y -1.4 to about -1.0) and follows the live swash run-up: `0.22 * swash`, from -0.09 to +0.22 m, only where the water is shallower than 2.5 m. A kit beach on `KitMaterial` does not get the live run-up line. That is open: either a static wet band baked into the kit beach's albedo and roughness up to y = -1.0, or a later hook.
+- **Wet band.** The placeholder bed's shader darkens and glosses sand up to 0.32-0.40 m above the water (y -1.4 to about -1.0) and follows the live swash run-up: `0.22 * swash`, from -0.09 to +0.22 m, only where the water is shallower than 2.5 m. A kit beach on `KitMaterial` does not get the live run-up line, so the kit beach carries a **static damp band** (decided with the coast kit pieces, approved refs/beach):
+  - It is its own material slot, `beach_wet`: the shared `plaster` set (the same set as the dry sand, `beach_sand`) with a darker, browner slot tint. No texture and no vertex colour is added. A tileable slot's roughness comes from the set's ORM, so the band is darker, not glossier.
+  - It runs from the waterline (s = 0) up to y = -0.8, 0.6 m above the water (s = -1.95), wider than the placeholder's band because the live run-up covers the lowest 0.22 m. Its edges are rows of constant `s`, so the band follows the 24 m arc on the headland and the bay.
+  - Below the waterline the bed takes `beach_seabed`, the tinted `gravel` set exactly as `ocean_base`, so the colour carries on across every ocean seam. The masks map carries the band as wetness (G = 1.0 on the band, 0.7 on dry sand and grass, 0 under water) and no snow under water (R = 0), for the §9.4 hooks.
+  - Pieces: `scripts/blender/kit/_beach.py` (`WET_TOP_Y`, `slot_of`) and the slot tints in `assets/kit/manifest.json`.
 
 ## 4. Ocean (`ocean`)
 
@@ -102,7 +106,7 @@ Each edge's bed profile depends only on its socket, so it matches any legal neig
 | Grass, Forest | y = 0 (the `meadow_base` border ring, 16 segments per edge) |
 | River (lane) | `y = -1.4 + h(|o|)`, where `o` is the offset from the lane centre along the edge. Symmetric about the midpoint. Ring vertices sit at offsets symmetric about it, at most 0.5 m apart within 6.83 m |
 | Ocean | y = -4.0 along the whole edge |
-| Beach | The coast profile (§3) at `s` = the distance from the edge midpoint toward the sea corner: -8 at the land corner (the side the socket's `land` names), +8 at the sea corner. The same on all three coast tiles |
+| Beach | The coast profile (§3) at `s` = the distance from the edge midpoint toward the sea corner: -8 at the land corner (the side the socket's `land` names), +8 at the sea corner. The same on all three coast tiles. Kit ring vertices: the 16-per-edge lattice (integer s) plus s = -1.953 (the damp band top), 3.5, 4.5, 5.5, 6.5 and 7.5 (the drop), identical on every coast base (`kit_gate` `check_coast_seams`) |
 
 - The engine treats an edge as continuous water when River meets River, Ocean meets Ocean, or Beach meets Beach with their seaward corners on the same point. Anywhere else it draws a cut face on each wet side.
 - Since owner O1 the sockets refuse **Beach against Ocean**, **Beach against Grass or Forest** and **mirrored Beach against Beach** (the same land side on both tiles, so the land end meets the sea end). Every legal beach seam continues the coast with matching beds. If a mismatched seam is ever loaded anyway, the engine still draws cut faces on it.

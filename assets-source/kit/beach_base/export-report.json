@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/beach_base.py",
+    "sha256": "f1332a438504fc89d74165f645df5d4107e74af993a4b2d285ba3a2d3508fd5b"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_beach.py",
+      "sha256": "aea34b8de566967b0be23fddc1b36f55a780e0d96d2f648e1786cf8d963817b7"
+    }
+  ],
+  "lodTris": {
+    "beach_base_lod0": 3242,
+    "beach_base_lod1": 1306,
+    "beach_base_lod2": 256
+  },
+  "nodes": [
+    "beach_base",
+    "beach_base_collider",
+    "beach_base_lod0",
+    "beach_base_lod1",
+    "beach_base_lod2"
+  ],
+  "pieceId": "beach_base",
+  "sockets": []
+}

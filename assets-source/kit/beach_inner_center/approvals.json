@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-13",
+    "notes": "Pending owner review; not an approval. Review from the six-view renders in assets-source/kit/beach_inner_center/renders/ and the in-engine coast shots in docs/checkpoints/coast/ and assets-source/kit/beach_base/shots/. The controller records the owner's decision."
+  }
+]

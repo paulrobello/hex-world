@@ -1,0 +1,77 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "none",
+  "extraRingS": [
+    -1.952568,
+    3.5,
+    4.5,
+    5.5,
+    6.5,
+    7.5
+  ],
+  "lod2MaxRatio": 0.15,
+  "lodTris": [
+    3242,
+    1306,
+    256
+  ],
+  "marginPx": 0,
+  "profileErrorM": [
+    {
+      "deepMaxM": 0.0151,
+      "dryMaxM": 0.0055,
+      "wetMaxM": 0.0151
+    },
+    {
+      "deepMaxM": 0.0151,
+      "dryMaxM": 0.0055,
+      "wetMaxM": 0.0151
+    },
+    {
+      "deepMaxM": 0.0151,
+      "dryMaxM": 0.0055,
+      "wetMaxM": 0.0151
+    }
+  ],
+  "reason": "analytic masks (snow, wetness by s; AO 1): no bake",
+  "receiverSignature": "17d43966158598b7e0cdd4ec8ec0f046c22640aa5a0cbc5e0ef12be50de7bf9f",
+  "rowsS": [
+    -8.0,
+    -7.0,
+    -6.0,
+    -5.0,
+    -4.0,
+    -3.0,
+    -2.0,
+    -1.952568,
+    -1.0,
+    0.0,
+    1.0,
+    2.0,
+    3.0,
+    3.5,
+    4.0,
+    4.5,
+    5.0,
+    5.5,
+    6.0,
+    6.5,
+    7.0,
+    7.5,
+    8.0
+  ],
+  "samples": 0,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 32.0000544916261,
+    "median": 31.885809257663958,
+    "min": 29.21371724766577
+  },
+  "wetTopS": -1.952568431852364
+}

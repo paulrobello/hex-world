@@ -1,0 +1,20 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {},
+  "device": "none",
+  "dressing": {
+    "logs": 3,
+    "pebbles": 21,
+    "tris": [
+      880,
+      380,
+      88
+    ],
+    "tufts": 14
+  },
+  "marginPx": 0,
+  "reason": "colour-only slots, no maps",
+  "receiverSignature": "c6735477cacbef643b4d7d5380dd3da7d92e652ad7eabaf1ca1371a4e12a770f",
+  "samples": 0,
+  "skipped": true
+}
