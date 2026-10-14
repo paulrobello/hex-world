@@ -1,0 +1,9 @@
+[
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-14",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved with one fix: remove the faint seam line behind the head (do it in the boids swap-in pass). Display scale in the boids: x2 of real size."
+  }
+]
