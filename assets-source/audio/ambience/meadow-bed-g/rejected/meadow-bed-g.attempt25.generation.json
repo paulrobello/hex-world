@@ -1,0 +1,45 @@
+{
+  "cueId": "meadow-bed-g",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Soft wind whispering through a field of dry summer grasses: a light, papery, continuous rustle with a gentle airy hiss, slowly swelling and easing like breathing, never gusty. Calm, open, even level, continuous with no build or fade. Natural sound only: no birds, no insects, no buzzing, no hum, no drone, no low rumble, no voices, no music.",
+  "parameters": {
+    "text": "Soft wind whispering through a field of dry summer grasses: a light, papery, continuous rustle with a gentle airy hiss, slowly swelling and easing like breathing, never gusty. Calm, open, even level, continuous with no build or fade. Natural sound only: no birds, no insects, no buzzing, no hum, no drone, no low rumble, no voices, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 30,
+    "prompt_influence": 0.6,
+    "loop": true
+  },
+  "generationId": "2987f4123c5d3b10460ec95c665a9226",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 15:36:57 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "301",
+    "content-length": "481114",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "2987f4123c5d3b10460ec95c665a9226",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T15:36:57+00:00",
+  "attempt": 25,
+  "creditsCharged": 301,
+  "sourceFile": "meadow-bed-g.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  },
+  "rejectedReason": "screen: 41 tonal 2-6 kHz chirp events in 30 s (birds; the prompt's 'no birds' did not hold) and a 12.9 dB level dip at 7.5 s (1 s windows); fails the no-birds and steady-level brief. Not retaken: the six-attempt allowance went to e and f."
+}

@@ -1,0 +1,45 @@
+{
+  "cueId": "meadow-bed-e",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Tall green meadow grass swaying in a light steady breeze: a delicate, high, airy hiss of seed heads and leaves rustling softly close to the microphone, crisp and bright, with gentle slow swells. Summery, peaceful and continuous at an even level, no build or fade. Pure grass rustle: no birds, no insects, no buzzing, no hum, no drone, no rumble, no voices, no music.",
+  "parameters": {
+    "text": "Tall green meadow grass swaying in a light steady breeze: a delicate, high, airy hiss of seed heads and leaves rustling softly close to the microphone, crisp and bright, with gentle slow swells. Summery, peaceful and continuous at an even level, no build or fade. Pure grass rustle: no birds, no insects, no buzzing, no hum, no drone, no rumble, no voices, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 30,
+    "prompt_influence": 0.7,
+    "loop": true
+  },
+  "generationId": "8d03474dc89f117a6d0975cc6d01050b",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 15:36:41 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "301",
+    "content-length": "481114",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "8d03474dc89f117a6d0975cc6d01050b",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T15:36:41+00:00",
+  "attempt": 23,
+  "creditsCharged": 301,
+  "sourceFile": "meadow-bed-e.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  },
+  "rejectedReason": "screen: steady 200 Hz harmonic series (+20.2 dB at 200 Hz, +20.6 dB at 400 Hz over the floor) and a 10.7 dB level dip at 9.75 s (1 s windows, 33.2 dB spread); fails the no-hum and no-dip-over-6-dB brief. Reprompted in take d's style: close, warm swishing rustle, no negatives list"
+}

@@ -28,7 +28,7 @@ button { font:inherit; font-size:13px; padding:6px 10px; border-radius:6px; bord
 measured on the WebM by <code>make audio-master</code>. Loop cues have a gapless Web Audio player that loops at the
 manifest loop points, as the game will; the plain player's <code>loop</code> attribute can gap between repeats in some browsers.
 Serve the repo root over http (<code>python3 -m http.server</code>) for the gapless player.</p>
-<p class=lead>Generation attempts logged: 21 of 24. Approvals pending: creative and owner.</p>
+<p class=lead>Generation attempts logged: 27 of 27. Approvals pending: creative and owner.</p>
 <h2>A/B: forest-birdsong, previous against new</h2><p class=lead>New: re-mastered with the filter {&quot;highpassHz&quot;: 150, &quot;harmonicNotch&quot;: {&quot;fundamentalHz&quot;: 200, &quot;harmonics&quot;: 48, &quot;widthHz&quot;: 6}}.</p><div class=grid><div class=card><h3>forest-birdsong (previous)</h3>
 <p class=meta>The runtime file before this re-master, for comparison only.</p>
 <audio controls preload=none loop><source src="candidates/forest-birdsong-previous.webm" type="audio/webm; codecs=opus"><source src="candidates/forest-birdsong-previous.m4a" type="audio/mp4"></audio>
@@ -42,10 +42,23 @@ Serve the repo root over http (<code>python3 -m http.server</code>) for the gapl
 <span>source <b>-55.8 LUFS</b></span>
 <span>runtime <b>580 KB</b></span></div>
 <p class=meta>limited 13.9 dB on 2.4% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Soft distant forest ambience: a steady gentle rustle of leaves in a light breeze, with faint far-away songbirds softly blended into the background, no close or loud bird calls, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.</p>
+<details><summary>Prompt and generation</summary><p>Soft distant forest ambience: a steady gentle rustle of leaves in a light breeze, with faint far-away songbirds softly blended into the background, no close or loud bird calls, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.</p><p>prompt influence 0.5</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 15 ·
 id <code>3b4a7f3da416919006f2ff6c39ad2560</code> · <a href="ambience/forest-birdsong/forest-birdsong.mp3">source</a></p></details>
-</div></div><h2>Candidates for meadow-bed</h2><p class=lead>Pick one. Until then the game's <code>meadow-bed</code> masters <b>meadow-bed-a</b> (cues.json <code>sourceCue</code>). Candidates are not shipped or loaded by the game.</p><div class=grid><div class=card><h3>meadow-bed-a</h3>
+</div></div><h2>Candidates for meadow-bed</h2><p class=lead>Pick one. Until then the game's <code>meadow-bed</code> masters <b>meadow-bed-d</b> (cues.json <code>sourceCue</code>). Candidates are not shipped or loaded by the game.</p><h3>Round 2 (new round)</h3><p class=lead>Owner, 2026-10-14: none of a-c; &#x27;go for something like gentle wind blowing grass&#x27;. Six takes were generated (attempts 22-27) and screened before mastering; only d passed the birds, hum and level screens. e and f were each retaken once and failed again, and g was discarded (level dips, a 200 Hz hum, low rumble, birds; see generation-log.json and each cue&#x27;s rejected/ records). d&#x27;s power still sits mostly above 8 kHz, as a-c&#x27;s did, but its 1-6 kHz band is 8 to 13 dB stronger than theirs. Its WebM is 96 kbps: at the 64 kbps loop default, Opus overshot the true peak by 3.3 dB and the trim left it at -18.7 LUFS.</p><div class=grid><div class=card><h3>meadow-bed-d</h3>
+<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none loop><source src="../../assets-source/audio/candidates/meadow-bed-d.webm" type="audio/webm; codecs=opus"><source src="../../assets-source/audio/candidates/meadow-bed-d.m4a" type="audio/mp4"></audio>
+<button onclick=gapless(this) data-src='../../assets-source/audio/candidates/meadow-bed-d.webm' data-start=0 data-end=1440000 data-rate=48000>Gapless loop (Web Audio)</button>
+<div class=nums><span>length <b>30.00 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-1.6 dBTP</b></span>
+<span>m4a <b>-16.2</b> / <b>-1.6</b></span>
+<span>source <b>-39.1 LUFS</b></span>
+<span>runtime <b>688 KB</b></span></div>
+<p class=meta>limited 4.6 dB on 1.9% of 20 ms windows</p><div class=nums><span>300 Hz–8 kHz <b>23.6%</b></span><span>&lt;300 Hz <b>1.8%</b></span><span>&gt;8 kHz <b>74.6%</b></span><span>1–6 kHz vs full <b>-10.6 dB</b></span><span>deepest dip <b>3.4 dB</b> (spread 9.4)</span><span>200 Hz series <b>+6.0 dB</b>, other tones none</span><span>birds <b>no</b> (0 chirp events)</span></div><p class=meta>Screened on the raw provider source, before any filter (scripts/audio/screen.py). Filter: none: no tone 10 dB or more over the floor.</p>
+<details><summary>Prompt and generation</summary><p>Close, detailed recording of a gentle summer breeze blowing through long dry grass: a soft, airy, continuous rustle and hiss of thin grass blades brushing together, with slow gentle swells that rise and settle smoothly. Calm, open and warm, even level throughout, continuous with no build or fade. Only wind and grass, nothing else.</p><p>prompt influence 0.5</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 22 ·
+id <code>09ba9be4f0de8aa2b4e115a68378bb89</code> · <a href="ambience/meadow-bed-d/meadow-bed-d.mp3">source</a></p></details>
+</div></div><h3>Round 1 (earlier round)</h3><p class=lead>Rejected by the owner 2026-10-14 (&#x27;i dont like any of the new meadow clips&#x27;). The later screen found birdsong in all three, a volume dip in b and low wind rumble in c.</p><div class=grid><div class=card><h3>meadow-bed-a</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
 <audio controls preload=none loop><source src="../../assets-source/audio/candidates/meadow-bed-a.webm" type="audio/webm; codecs=opus"><source src="../../assets-source/audio/candidates/meadow-bed-a.m4a" type="audio/mp4"></audio>
 <button onclick=gapless(this) data-src='../../assets-source/audio/candidates/meadow-bed-a.webm' data-start=0 data-end=1440000 data-rate=48000>Gapless loop (Web Audio)</button>
@@ -54,8 +67,8 @@ id <code>3b4a7f3da416919006f2ff6c39ad2560</code> · <a href="ambience/forest-bir
 <span>m4a <b>-16.9</b> / <b>-2.7</b></span>
 <span>source <b>-22.0 LUFS</b></span>
 <span>runtime <b>659 KB</b></span></div>
-<p class=meta>limited 3.3 dB on 2.6% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Gentle summer meadow ambience: a soft steady breeze moving through long dry grass with a light, airy, continuous rustle of grass blades, and a skylark singing high and far away now and then. Calm, open and even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.</p>
+<p class=meta>limited 3.3 dB on 2.6% of 20 ms windows</p><div class=nums><span>300 Hz–8 kHz <b>2.9%</b></span><span>&lt;300 Hz <b>0.0%</b></span><span>&gt;8 kHz <b>97.1%</b></span><span>1–6 kHz vs full <b>-23.8 dB</b></span><span>deepest dip <b>4.0 dB</b> (spread 6.5)</span><span>200 Hz series <b>+6.7 dB</b>, other tones none</span><span>birds <b>yes</b> (9 chirp events)</span></div><p class=meta>Screened on the raw provider source, before any filter (scripts/audio/screen.py).</p>
+<details><summary>Prompt and generation</summary><p>Gentle summer meadow ambience: a soft steady breeze moving through long dry grass with a light, airy, continuous rustle of grass blades, and a skylark singing high and far away now and then. Calm, open and even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.</p><p>prompt influence 0.5</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 19 ·
 id <code>096effb254ccd09941daf654c5648f50</code> · <a href="ambience/meadow-bed-a/meadow-bed-a.mp3">source</a></p></details>
 </div><div class=card><h3>meadow-bed-b</h3>
@@ -67,8 +80,8 @@ id <code>096effb254ccd09941daf654c5648f50</code> · <a href="ambience/meadow-bed
 <span>m4a <b>-16.1</b> / <b>-3.6</b></span>
 <span>source <b>-16.4 LUFS</b></span>
 <span>runtime <b>590 KB</b></span></div>
-<p class=meta>linear</p>
-<details><summary>Prompt and generation</summary><p>Open grassland on a calm sunny afternoon: a warm breeze sighing softly through tall grass, a light dry rustle that rises and settles gently, and a few small songbirds chirping sparsely in the distance. Even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.</p>
+<p class=meta>linear</p><div class=nums><span>300 Hz–8 kHz <b>23.5%</b></span><span>&lt;300 Hz <b>0.0%</b></span><span>&gt;8 kHz <b>76.5%</b></span><span>1–6 kHz vs full <b>-18.4 dB</b></span><span>deepest dip <b>11.8 dB</b> (spread 13.9)</span><span>200 Hz series <b>+10.9 dB</b>, other tones none</span><span>birds <b>yes</b> (13 chirp events)</span></div><p class=meta>Screened on the raw provider source, before any filter (scripts/audio/screen.py).</p>
+<details><summary>Prompt and generation</summary><p>Open grassland on a calm sunny afternoon: a warm breeze sighing softly through tall grass, a light dry rustle that rises and settles gently, and a few small songbirds chirping sparsely in the distance. Even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.</p><p>prompt influence 0.6</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 20 ·
 id <code>747395c61db56b9cc696680e94762339</code> · <a href="ambience/meadow-bed-b/meadow-bed-b.mp3">source</a></p></details>
 </div><div class=card><h3>meadow-bed-c</h3>
@@ -80,8 +93,8 @@ id <code>747395c61db56b9cc696680e94762339</code> · <a href="ambience/meadow-bed
 <span>m4a <b>-17.0</b> / <b>-1.5</b></span>
 <span>source <b>-47.2 LUFS</b></span>
 <span>runtime <b>582 KB</b></span></div>
-<p class=meta>limited 5.0 dB on 17.5% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Quiet pastoral meadow: light wind brushing through long grass and wildflowers with a soft, intermittent rustle, and faint distant birdsong, a skylark and a blackbird far across the field. Peaceful and airy, even level, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.</p>
+<p class=meta>limited 5.0 dB on 17.5% of 20 ms windows</p><div class=nums><span>300 Hz–8 kHz <b>4.8%</b></span><span>&lt;300 Hz <b>94.2%</b></span><span>&gt;8 kHz <b>0.9%</b></span><span>1–6 kHz vs full <b>-22.1 dB</b></span><span>deepest dip <b>2.1 dB</b> (spread 3.4)</span><span>200 Hz series <b>+3.2 dB</b>, other tones none</span><span>birds <b>yes</b> (11 chirp events)</span></div><p class=meta>Screened on the raw provider source, before any filter (scripts/audio/screen.py).</p>
+<details><summary>Prompt and generation</summary><p>Quiet pastoral meadow: light wind brushing through long grass and wildflowers with a soft, intermittent rustle, and faint distant birdsong, a skylark and a blackbird far across the field. Peaceful and airy, even level, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.</p><p>prompt influence 0.4</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 21 ·
 id <code>33cc29b5d059799864ba3f1c67fee0c2</code> · <a href="ambience/meadow-bed-c/meadow-bed-c.mp3">source</a></p></details>
 </div></div><h2>New occasional one-shots</h2><div class=grid><div class=card><h3>meadow-bees</h3>
@@ -94,7 +107,7 @@ id <code>33cc29b5d059799864ba3f1c67fee0c2</code> · <a href="ambience/meadow-bed
 <span>source <b>-25.0 LUFS</b></span>
 <span>runtime <b>165 KB</b></span></div>
 <p class=meta>limited 2.5 dB on 1.3% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>A steady warm hum of many bumblebees and honeybees working clover close by, over a constant soft rustle of long grass in a sunny summer field. Crickets and grasshoppers chirp gently in the background, and a skylark or yellowhammer sings now and then at mid distance. Calm, even level, continuous with no build or fade. Natural sound only: no voices, no music.</p>
+<details><summary>Prompt and generation</summary><p>A steady warm hum of many bumblebees and honeybees working clover close by, over a constant soft rustle of long grass in a sunny summer field. Crickets and grasshoppers chirp gently in the background, and a skylark or yellowhammer sings now and then at mid distance. Calm, even level, continuous with no build or fade. Natural sound only: no voices, no music.</p><p>prompt influence 0.5</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 18 ·
 id <code>b05127160d4e2b9b5900ba1e0c6bbe28</code> · <a href="ambience/meadow-bees/meadow-bees.mp3">source</a></p></details>
 </div></div><h2>Placement SFX (−16 LUFS)</h2><div class=grid><div class=card><h3>place-rumble</h3>
@@ -107,7 +120,7 @@ id <code>b05127160d4e2b9b5900ba1e0c6bbe28</code> · <a href="ambience/meadow-bee
 <span>source <b>-58.1 LUFS</b></span>
 <span>runtime <b>50 KB</b></span></div>
 <p class=meta>limited 6.4 dB on 12.5% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Soft low earthy rumble as a small patch of ground rises out of the soil: gentle shifting dirt, pebbles and roots settling, warm and rounded, close miniature diorama scale. Smooth fade in, short soft decay. No music, no voices, no wind, no harsh crack.</p>
+<details><summary>Prompt and generation</summary><p>Soft low earthy rumble as a small patch of ground rises out of the soil: gentle shifting dirt, pebbles and roots settling, warm and rounded, close miniature diorama scale. Smooth fade in, short soft decay. No music, no voices, no wind, no harsh crack.</p><p>prompt influence 0.5</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 2 ·
 id <code>621be729fb0ccb30a2bd6b93f8804bd9</code> · <a href="sfx/place-rumble/place-rumble.mp3">source</a></p></details>
 </div><div class=card><h3>place-thunk</h3>
@@ -120,7 +133,7 @@ id <code>621be729fb0ccb30a2bd6b93f8804bd9</code> · <a href="sfx/place-rumble/pl
 <span>source <b>-47.5 LUFS</b></span>
 <span>runtime <b>17 KB</b></span></div>
 <p class=meta>limited 4.0 dB on 6.7% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>A single soft satisfying thunk of a small wooden-and-earth tile settling firmly into place on a tabletop: muted, warm, rounded low-mid body, very short decay. No click, no ring, no reverb tail, no music.</p>
+<details><summary>Prompt and generation</summary><p>A single soft satisfying thunk of a small wooden-and-earth tile settling firmly into place on a tabletop: muted, warm, rounded low-mid body, very short decay. No click, no ring, no reverb tail, no music.</p><p>prompt influence 0.6</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 3 ·
 id <code>63f9d415c5e53ecc4b077eb90cd90178</code> · <a href="sfx/place-thunk/place-thunk.mp3">source</a></p></details>
 </div><div class=card><h3>meadow-bees</h3>
@@ -133,7 +146,7 @@ id <code>63f9d415c5e53ecc4b077eb90cd90178</code> · <a href="sfx/place-thunk/pla
 <span>source <b>-25.0 LUFS</b></span>
 <span>runtime <b>165 KB</b></span></div>
 <p class=meta>limited 2.5 dB on 1.3% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>A steady warm hum of many bumblebees and honeybees working clover close by, over a constant soft rustle of long grass in a sunny summer field. Crickets and grasshoppers chirp gently in the background, and a skylark or yellowhammer sings now and then at mid distance. Calm, even level, continuous with no build or fade. Natural sound only: no voices, no music.</p>
+<details><summary>Prompt and generation</summary><p>A steady warm hum of many bumblebees and honeybees working clover close by, over a constant soft rustle of long grass in a sunny summer field. Crickets and grasshoppers chirp gently in the background, and a skylark or yellowhammer sings now and then at mid distance. Calm, even level, continuous with no build or fade. Natural sound only: no voices, no music.</p><p>prompt influence 0.5</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 18 ·
 id <code>b05127160d4e2b9b5900ba1e0c6bbe28</code> · <a href="ambience/meadow-bees/meadow-bees.mp3">source</a></p></details>
 </div></div><h2>UI cues (−20 LUFS)</h2><div class=grid><div class=card><h3>ui-select</h3>
@@ -146,7 +159,7 @@ id <code>b05127160d4e2b9b5900ba1e0c6bbe28</code> · <a href="ambience/meadow-bee
 <span>source <b>-48.1 LUFS</b></span>
 <span>runtime <b>14 KB</b></span></div>
 <p class=meta>linear</p>
-<details><summary>Prompt and generation</summary><p>Gentle soft UI select sound: a single warm muted wooden pluck, like a felt-tipped mallet tapping a small wooden block, rounded attack, short soft decay. Friendly and quiet. No harsh click, no beep, no reverb tail.</p>
+<details><summary>Prompt and generation</summary><p>Gentle soft UI select sound: a single warm muted wooden pluck, like a felt-tipped mallet tapping a small wooden block, rounded attack, short soft decay. Friendly and quiet. No harsh click, no beep, no reverb tail.</p><p>prompt influence 0.6</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 1 ·
 id <code>b5e1a831673167535e8b167429e2d71c</code> · <a href="sfx/ui-select/ui-select.mp3">source</a></p></details>
 </div><div class=card><h3>ui-rotate</h3>
@@ -159,7 +172,7 @@ id <code>b5e1a831673167535e8b167429e2d71c</code> · <a href="sfx/ui-select/ui-se
 <span>source <b>-26.0 LUFS</b></span>
 <span>runtime <b>18 KB</b></span></div>
 <p class=meta>limited 4.2 dB on 16.7% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Soft UI rotate sound: a small smooth wooden ratchet turning one notch, a quick muted tick with a rounded attack, cosy and tactile. No metal, no harsh click, no reverb tail.</p>
+<details><summary>Prompt and generation</summary><p>Soft UI rotate sound: a small smooth wooden ratchet turning one notch, a quick muted tick with a rounded attack, cosy and tactile. No metal, no harsh click, no reverb tail.</p><p>prompt influence 0.6</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 4 ·
 id <code>45b54208c09d83b2c495a82d469d5a86</code> · <a href="sfx/ui-rotate/ui-rotate.mp3">source</a></p></details>
 </div><div class=card><h3>ui-invalid</h3>
@@ -172,7 +185,7 @@ id <code>45b54208c09d83b2c495a82d469d5a86</code> · <a href="sfx/ui-rotate/ui-ro
 <span>source <b>-20.0 LUFS</b></span>
 <span>runtime <b>14 KB</b></span></div>
 <p class=meta>limited 1.6 dB on 4.0% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Gentle UI &#x27;not allowed&#x27; sound: a soft low muted double bonk on a hollow wooden block, two quick dull taps falling slightly in pitch, rounded attack, friendly rather than alarming. No buzzer, no beep, no harshness.</p>
+<details><summary>Prompt and generation</summary><p>Gentle UI &#x27;not allowed&#x27; sound: a soft low muted double bonk on a hollow wooden block, two quick dull taps falling slightly in pitch, rounded attack, friendly rather than alarming. No buzzer, no beep, no harshness.</p><p>prompt influence 0.6</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 5 ·
 id <code>2d0cd61fe05af1314343509c4c70198e</code> · <a href="sfx/ui-invalid/ui-invalid.mp3">source</a></p></details>
 </div><div class=card><h3>ui-undo</h3>
@@ -185,7 +198,7 @@ id <code>2d0cd61fe05af1314343509c4c70198e</code> · <a href="sfx/ui-invalid/ui-i
 <span>source <b>-22.1 LUFS</b></span>
 <span>runtime <b>16 KB</b></span></div>
 <p class=meta>limited 2.3 dB on 10.0% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Soft UI undo sound: a short airy reverse swish rewinding, a gentle breathy whoosh that rises then stops softly, light and quick. No click, no beep, no music.</p>
+<details><summary>Prompt and generation</summary><p>Soft UI undo sound: a short airy reverse swish rewinding, a gentle breathy whoosh that rises then stops softly, light and quick. No click, no beep, no music.</p><p>prompt influence 0.6</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 6 ·
 id <code>fff22c3e105c8207d0c37b70957f0787</code> · <a href="sfx/ui-undo/ui-undo.mp3">source</a></p></details>
 </div><div class=card><h3>ui-bulldoze</h3>
@@ -198,7 +211,7 @@ id <code>fff22c3e105c8207d0c37b70957f0787</code> · <a href="sfx/ui-undo/ui-undo
 <span>source <b>-32.5 LUFS</b></span>
 <span>runtime <b>31 KB</b></span></div>
 <p class=meta>limited 3.7 dB on 6.0% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Small gentle toy-scale demolition: a soft crumble of earth and little wooden pieces collapsing into a pile, muted and rounded, cosy rather than violent, short decay. No explosion, no metal, no glass, no music.</p>
+<details><summary>Prompt and generation</summary><p>Small gentle toy-scale demolition: a soft crumble of earth and little wooden pieces collapsing into a pile, muted and rounded, cosy rather than violent, short decay. No explosion, no metal, no glass, no music.</p><p>prompt influence 0.5</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 7 ·
 id <code>c88392322ddb61772967d5dee4a58e9b</code> · <a href="sfx/ui-bulldoze/ui-bulldoze.mp3">source</a></p></details>
 </div></div><h2>Ambience loops (−16 LUFS)</h2><div class=grid><div class=card><h3>river-babble</h3>
@@ -211,7 +224,7 @@ id <code>c88392322ddb61772967d5dee4a58e9b</code> · <a href="sfx/ui-bulldoze/ui-
 <span>source <b>-28.0 LUFS</b></span>
 <span>runtime <b>617 KB</b></span></div>
 <p class=meta>limited 7.6 dB on 12.6% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Smooth gentle stream flowing steadily over a shallow pebble bed: a soft continuous rush of running water with mellow, low burbling, no sharp splashes or bright plinks, even level throughout, continuous with no build or fade. Natural sound only: no birds, no wind gusts, no voices, no music.</p>
+<details><summary>Prompt and generation</summary><p>Smooth gentle stream flowing steadily over a shallow pebble bed: a soft continuous rush of running water with mellow, low burbling, no sharp splashes or bright plinks, even level throughout, continuous with no build or fade. Natural sound only: no birds, no wind gusts, no voices, no music.</p><p>prompt influence 0.5</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 14 ·
 id <code>cddb73b1e1f0b9495cd555b12e706cb0</code> · <a href="ambience/river-babble/river-babble.mp3">source</a></p></details>
 </div><div class=card><h3>surf</h3>
@@ -224,7 +237,7 @@ id <code>cddb73b1e1f0b9495cd555b12e706cb0</code> · <a href="ambience/river-babb
 <span>source <b>-22.2 LUFS</b></span>
 <span>runtime <b>575 KB</b></span></div>
 <p class=meta>limited 2.8 dB on 3.0% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Continuous gentle ocean surf on a sandy beach: soft overlapping waves washing in and out over a constant background wash of foam and water, no silent gaps between waves, calm, even level throughout, continuous with no build or fade. Natural sound only: no seagulls, no wind gusts, no voices, no music.</p>
+<details><summary>Prompt and generation</summary><p>Continuous gentle ocean surf on a sandy beach: soft overlapping waves washing in and out over a constant background wash of foam and water, no silent gaps between waves, calm, even level throughout, continuous with no build or fade. Natural sound only: no seagulls, no wind gusts, no voices, no music.</p><p>prompt influence 0.4</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 12 ·
 id <code>a9d796e22d5247e0ad004e3daa5ebf03</code> · <a href="ambience/surf/surf.mp3">source</a></p></details>
 </div><div class=card><h3>forest-birdsong</h3>
@@ -237,7 +250,7 @@ id <code>a9d796e22d5247e0ad004e3daa5ebf03</code> · <a href="ambience/surf/surf.
 <span>source <b>-55.8 LUFS</b></span>
 <span>runtime <b>580 KB</b></span></div>
 <p class=meta>limited 13.9 dB on 2.4% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Soft distant forest ambience: a steady gentle rustle of leaves in a light breeze, with faint far-away songbirds softly blended into the background, no close or loud bird calls, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.</p>
+<details><summary>Prompt and generation</summary><p>Soft distant forest ambience: a steady gentle rustle of leaves in a light breeze, with faint far-away songbirds softly blended into the background, no close or loud bird calls, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.</p><p>prompt influence 0.5</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 15 ·
 id <code>3b4a7f3da416919006f2ff6c39ad2560</code> · <a href="ambience/forest-birdsong/forest-birdsong.mp3">source</a></p></details>
 </div><div class=card><h3>meadow-bed</h3>
@@ -245,14 +258,14 @@ id <code>3b4a7f3da416919006f2ff6c39ad2560</code> · <a href="ambience/forest-bir
 <audio controls preload=none loop><source src="../../assets/audio/ambience/meadow-bed.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/meadow-bed.m4a" type="audio/mp4"></audio>
 <button onclick=gapless(this) data-src='../../assets/audio/ambience/meadow-bed.webm' data-start=0 data-end=1440000 data-rate=48000>Gapless loop (Web Audio)</button>
 <div class=nums><span>length <b>30.00 s</b></span>
-<span>WebM <b>-16.8 LUFS</b> / <b>-2.3 dBTP</b></span>
-<span>m4a <b>-16.9</b> / <b>-2.7</b></span>
-<span>source <b>-22.0 LUFS</b></span>
-<span>runtime <b>659 KB</b></span></div>
-<p class=meta>limited 3.3 dB on 2.6% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Gentle summer meadow ambience: a soft steady breeze moving through long dry grass with a light, airy, continuous rustle of grass blades, and a skylark singing high and far away now and then. Calm, open and even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.</p>
-<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 19 ·
-id <code>096effb254ccd09941daf654c5648f50</code> · <a href="ambience/meadow-bed-a/meadow-bed-a.mp3">source</a></p></details>
+<span>WebM <b>-16.0 LUFS</b> / <b>-1.6 dBTP</b></span>
+<span>m4a <b>-16.2</b> / <b>-1.6</b></span>
+<span>source <b>-39.1 LUFS</b></span>
+<span>runtime <b>688 KB</b></span></div>
+<p class=meta>limited 4.6 dB on 1.9% of 20 ms windows</p>
+<details><summary>Prompt and generation</summary><p>Close, detailed recording of a gentle summer breeze blowing through long dry grass: a soft, airy, continuous rustle and hiss of thin grass blades brushing together, with slow gentle swells that rise and settle smoothly. Calm, open and warm, even level throughout, continuous with no build or fade. Only wind and grass, nothing else.</p><p>prompt influence 0.5</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 22 ·
+id <code>09ba9be4f0de8aa2b4e115a68378bb89</code> · <a href="ambience/meadow-bed-d/meadow-bed-d.mp3">source</a></p></details>
 </div></div><h2>Music (−18 LUFS)</h2><div class=grid><div class=card><h3>meadow-day</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/meadow-day.md</code>, then run make audio-master.</p></div><div class=card><h3>coast-breeze</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/coast-breeze.md</code>, then run make audio-master.</p></div><div class=card><h3>hearth-town</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/hearth-town.md</code>, then run make audio-master.</p></div><div class=card><h3>photo-mode</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/photo-mode.md</code>, then run make audio-master.</p></div><div class=card><h3>title-theme</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/title-theme.md</code>, then run make audio-master.</p></div><div class=card><h3>discovery-stinger</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/discovery-stinger.md</code>, then run make audio-master.</p></div></div>
 </main><script>
 let ctx = null, playing = null;

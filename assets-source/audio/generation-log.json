@@ -1,5 +1,5 @@
 {
-  "cap": 24,
+  "cap": 27,
   "attempts": [
     {
       "n": 1,
@@ -294,6 +294,90 @@
       "creditsCharged": 301,
       "subscriptionDelta": 0,
       "file": "assets-source/audio/ambience/meadow-bed-c/meadow-bed-c.mp3"
+    },
+    {
+      "n": 22,
+      "cueId": "meadow-bed-d",
+      "requestedAt": "2026-10-14T15:36:32+00:00",
+      "reason": "first take",
+      "creditsBefore": 9252,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "09ba9be4f0de8aa2b4e115a68378bb89",
+      "creditsAfter": 9252,
+      "creditsCharged": 301,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/meadow-bed-d/meadow-bed-d.mp3"
+    },
+    {
+      "n": 23,
+      "cueId": "meadow-bed-e",
+      "requestedAt": "2026-10-14T15:36:41+00:00",
+      "reason": "first take",
+      "creditsBefore": 9252,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "8d03474dc89f117a6d0975cc6d01050b",
+      "creditsAfter": 9252,
+      "creditsCharged": 301,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/meadow-bed-e/meadow-bed-e.mp3"
+    },
+    {
+      "n": 24,
+      "cueId": "meadow-bed-f",
+      "requestedAt": "2026-10-14T15:36:50+00:00",
+      "reason": "first take",
+      "creditsBefore": 9252,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "deaf10d16e0073de770861991948732f",
+      "creditsAfter": 9252,
+      "creditsCharged": 301,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/meadow-bed-f/meadow-bed-f.mp3"
+    },
+    {
+      "n": 25,
+      "cueId": "meadow-bed-g",
+      "requestedAt": "2026-10-14T15:36:57+00:00",
+      "reason": "first take",
+      "creditsBefore": 9252,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "2987f4123c5d3b10460ec95c665a9226",
+      "creditsAfter": 10155,
+      "creditsCharged": 301,
+      "subscriptionDelta": 903,
+      "file": "assets-source/audio/ambience/meadow-bed-g/meadow-bed-g.mp3"
+    },
+    {
+      "n": 26,
+      "cueId": "meadow-bed-e",
+      "requestedAt": "2026-10-14T15:38:00+00:00",
+      "reason": "screen: steady 200 Hz harmonic series (+20.2 dB at 200 Hz, +20.6 dB at 400 Hz over the floor) and a 10.7 dB level dip at 9.75 s (1 s windows, 33.2 dB spread); fails the no-hum and no-dip-over-6-dB brief. Reprompted in take d's style: close, warm swishing rustle, no negatives list",
+      "creditsBefore": 10456,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "7928b38a2315493a7d985b8762a3e98b",
+      "creditsAfter": 10456,
+      "creditsCharged": 301,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/meadow-bed-e/meadow-bed-e.mp3"
+    },
+    {
+      "n": 27,
+      "cueId": "meadow-bed-f",
+      "requestedAt": "2026-10-14T15:38:10+00:00",
+      "reason": "screen: low wind rumble, 64.9% of power below 300 Hz (round one c was 94.2%); fails the airy 300 Hz-8 kHz rustle brief. Reprompted in take d's style: close, papery rustle of long dry grass",
+      "creditsBefore": 10456,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "e4d9c094f2711c6b57b8435387301e23",
+      "creditsAfter": 10456,
+      "creditsCharged": 301,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/meadow-bed-f/meadow-bed-f.mp3"
     }
   ]
 }

@@ -382,7 +382,8 @@ def master_cue(layout: A.Layout, reg: dict, cue: dict, tools: dict, script_hashe
         runtime = []
         for ext in ("webm", "m4a"):
             out = layout.runtime_file(cue, ext)
-            bitrate = cls.get("bitrates", {}).get(ext, {}).get(str(channels)) or reg["bitrates"][ext][str(channels)]
+            bitrate = (cue.get("bitrates", {}).get(ext) or cls.get("bitrates", {}).get(ext, {}).get(str(channels))
+                       or reg["bitrates"][ext][str(channels)])
             args = encode(master, out, ext, channels, bitrate)
             info = A.probe(out)
             decoded, _ = A.decode(out, channels)

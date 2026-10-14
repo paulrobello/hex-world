@@ -5,7 +5,7 @@
   "masterTruePeak": -2.0,
   "lufsTolerance": 1.0,
   "decodedBudgetBytes": 96000000,
-  "generationCap": 24,
+  "generationCap": 27,
   "classes": {
     "music": {
       "lufs": -18,
@@ -235,18 +235,13 @@
       "class": "loop",
       "channels": 1,
       "loop": true,
-      "use": "Global biome bed for grass and meadow in view (non-positional), and the quiet floor under every other bed. Mastered from the picked review candidate named by sourceCue (meadow-bed-a/b/c) until the owner chooses.",
+      "use": "Global biome bed for grass and meadow in view (non-positional), and the quiet floor under every other bed. Mastered from the picked review candidate named by sourceCue (a meadow-bed-* candidate) until the owner chooses; its filter matches that candidate's.",
       "events": [],
       "provider": "elevenlabs",
-      "sourceCue": "meadow-bed-a",
-      "filter": {
-        "highpassHz": 150,
-        "harmonicNotch": {
-          "fundamentalHz": 200,
-          "harmonics": 48,
-          "widthHz": 6
-        }
-      }
+      "bitrates": {
+        "webm": "96k"
+      },
+      "sourceCue": "meadow-bed-d"
     },
     {
       "id": "meadow-bed-a",
@@ -270,6 +265,23 @@
           "fundamentalHz": 200,
           "harmonics": 48,
           "widthHz": 6
+        }
+      },
+      "review": {
+        "round": 1,
+        "roundNote": "Rejected by the owner 2026-10-14 ('i dont like any of the new meadow clips'). The later screen found birdsong in all three, a volume dip in b and low wind rumble in c.",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py)",
+          "below300HzPct": 0.0,
+          "band300to8kPct": 2.9,
+          "above8kPct": 97.1,
+          "band1to6kVsFullDb": -23.8,
+          "levelDeepestDipDb": 4.0,
+          "levelSpreadDb": 6.5,
+          "tone200HzSeriesMaxDb": 6.7,
+          "otherTonalPeaks": [],
+          "birdChirpEvents": 9,
+          "birds": true
         }
       }
     },
@@ -296,6 +308,23 @@
           "harmonics": 48,
           "widthHz": 6
         }
+      },
+      "review": {
+        "round": 1,
+        "roundNote": "Rejected by the owner 2026-10-14 ('i dont like any of the new meadow clips'). The later screen found birdsong in all three, a volume dip in b and low wind rumble in c.",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py)",
+          "below300HzPct": 0.0,
+          "band300to8kPct": 23.5,
+          "above8kPct": 76.5,
+          "band1to6kVsFullDb": -18.4,
+          "levelDeepestDipDb": 11.8,
+          "levelSpreadDb": 13.9,
+          "tone200HzSeriesMaxDb": 10.9,
+          "otherTonalPeaks": [],
+          "birdChirpEvents": 13,
+          "birds": true
+        }
       }
     },
     {
@@ -319,6 +348,61 @@
           "fundamentalHz": 200,
           "harmonics": 48,
           "widthHz": 6
+        }
+      },
+      "review": {
+        "round": 1,
+        "roundNote": "Rejected by the owner 2026-10-14 ('i dont like any of the new meadow clips'). The later screen found birdsong in all three, a volume dip in b and low wind rumble in c.",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py)",
+          "below300HzPct": 94.2,
+          "band300to8kPct": 4.8,
+          "above8kPct": 0.9,
+          "band1to6kVsFullDb": -22.1,
+          "levelDeepestDipDb": 2.1,
+          "levelSpreadDb": 3.4,
+          "tone200HzSeriesMaxDb": 3.2,
+          "otherTonalPeaks": [],
+          "birdChirpEvents": 11,
+          "birds": true
+        }
+      }
+    },
+    {
+      "id": "meadow-bed-d",
+      "kind": "ambience",
+      "class": "loop",
+      "channels": 1,
+      "loop": true,
+      "candidateFor": "meadow-bed",
+      "use": "Review candidate for meadow-bed (owner A/B in review.html); not loaded by the game.",
+      "events": [],
+      "provider": "elevenlabs",
+      "bitrates": {
+        "webm": "96k"
+      },
+      "generation": {
+        "text": "Close, detailed recording of a gentle summer breeze blowing through long dry grass: a soft, airy, continuous rustle and hiss of thin grass blades brushing together, with slow gentle swells that rise and settle smoothly. Calm, open and warm, even level throughout, continuous with no build or fade. Only wind and grass, nothing else.",
+        "durationSeconds": 30,
+        "promptInfluence": 0.5,
+        "loop": true
+      },
+      "review": {
+        "round": 2,
+        "roundNote": "Owner, 2026-10-14: none of a-c; 'go for something like gentle wind blowing grass'. Six takes were generated (attempts 22-27) and screened before mastering; only d passed the birds, hum and level screens. e and f were each retaken once and failed again, and g was discarded (level dips, a 200 Hz hum, low rumble, birds; see generation-log.json and each cue's rejected/ records). d's power still sits mostly above 8 kHz, as a-c's did, but its 1-6 kHz band is 8 to 13 dB stronger than theirs. Its WebM is 96 kbps: at the 64 kbps loop default, Opus overshot the true peak by 3.3 dB and the trim left it at -18.7 LUFS.",
+        "filterApplied": "none: no tone 10 dB or more over the floor",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py)",
+          "below300HzPct": 1.8,
+          "band300to8kPct": 23.6,
+          "above8kPct": 74.6,
+          "band1to6kVsFullDb": -10.6,
+          "levelDeepestDipDb": 3.4,
+          "levelSpreadDb": 9.4,
+          "tone200HzSeriesMaxDb": 6.0,
+          "otherTonalPeaks": [],
+          "birdChirpEvents": 0,
+          "birds": false
         }
       }
     },

@@ -247,7 +247,7 @@ test("meadow-bees ships as a decoded ambience one-shot; review candidates never 
   const cands = (manifestJson as unknown as { candidates?: Cue[] }).candidates ?? [];
   assert.deepEqual(
     cands.map((c) => c.id),
-    ["meadow-bed-a", "meadow-bed-b", "meadow-bed-c"],
+    ["meadow-bed-a", "meadow-bed-b", "meadow-bed-c", "meadow-bed-d"],
   );
   const ids = new Set(playable(manifest.cues, "webm").map((c) => c.id));
   for (const c of cands) assert.ok(!ids.has(c.id), `${c.id} is not playable`);

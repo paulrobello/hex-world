@@ -323,13 +323,13 @@
       "files": {
         "webm": {
           "path": "ambience/meadow-bed.webm",
-          "sha256": "2dc7d4558e1a26d8b684885f61bc0324bb53eb1369d4a835999187d78702c871",
-          "bytes": 298120
+          "sha256": "6208a3cf7cf58aa3c53855ddfc2c30c421f60d45141b573052de9decc0866a21",
+          "bytes": 336325
         },
         "m4a": {
           "path": "ambience/meadow-bed.m4a",
-          "sha256": "2091643a5860f9c6dc875a9788ce1b9c8c373865aab8955519cae33f189c3be4",
-          "bytes": 376835
+          "sha256": "1ca90680cc6d1bf940aef809d0642279b9c8d95d7b434b2130b3a53691cdd3d0",
+          "bytes": 368527
         }
       },
       "provenance": "assets-source/audio/ambience/meadow-bed/provenance.json"
@@ -508,6 +508,39 @@
         }
       },
       "provenance": "assets-source/audio/ambience/meadow-bed-c/provenance.json"
+    },
+    {
+      "id": "meadow-bed-d",
+      "kind": "ambience",
+      "class": "loop",
+      "status": "candidate",
+      "candidateFor": "meadow-bed",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": {
+        "startSample": 0,
+        "endSample": 1440000,
+        "sampleRate": 48000,
+        "startSeconds": 0.0,
+        "endSeconds": 30.0
+      },
+      "durationSeconds": 30.0,
+      "decodedBytes": 5760000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "../../assets-source/audio/candidates/meadow-bed-d.webm",
+          "sha256": "6208a3cf7cf58aa3c53855ddfc2c30c421f60d45141b573052de9decc0866a21",
+          "bytes": 336325
+        },
+        "m4a": {
+          "path": "../../assets-source/audio/candidates/meadow-bed-d.m4a",
+          "sha256": "1ca90680cc6d1bf940aef809d0642279b9c8d95d7b434b2130b3a53691cdd3d0",
+          "bytes": 368527
+        }
+      },
+      "provenance": "assets-source/audio/ambience/meadow-bed-d/provenance.json"
     }
   ]
 }

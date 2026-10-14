@@ -1,0 +1,45 @@
+{
+  "cueId": "meadow-bed-f",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, detailed recording of a light breeze drifting through a field of long dry summer grass: a gentle, continuous papery rustle and soft swish of grass blades, airy and warm, with slow even swells like slow breathing and no gusts. Calm and steady, continuous with no build or fade. Only wind and grass, nothing else.",
+  "parameters": {
+    "text": "Close, detailed recording of a light breeze drifting through a field of long dry summer grass: a gentle, continuous papery rustle and soft swish of grass blades, airy and warm, with slow even swells like slow breathing and no gusts. Calm and steady, continuous with no build or fade. Only wind and grass, nothing else.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 30,
+    "prompt_influence": 0.45,
+    "loop": true
+  },
+  "generationId": "e4d9c094f2711c6b57b8435387301e23",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 15:38:09 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "301",
+    "content-length": "481114",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "e4d9c094f2711c6b57b8435387301e23",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T15:38:10+00:00",
+  "attempt": 27,
+  "creditsCharged": 301,
+  "sourceFile": "meadow-bed-f.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  },
+  "rejectedReason": "screen: low wind rumble, 95.3% of power below 300 Hz and the 300 Hz-8 kHz band 20.1 dB under the full band; fails the airy-rustle brief. Cap reached, no further retake."
+}

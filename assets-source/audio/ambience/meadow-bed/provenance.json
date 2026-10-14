@@ -3,7 +3,7 @@
   "kind": "ambience",
   "class": "loop",
   "version": 1,
-  "use": "Global biome bed for grass and meadow in view (non-positional), and the quiet floor under every other bed. Mastered from the picked review candidate named by sourceCue (meadow-bed-a/b/c) until the owner chooses.",
+  "use": "Global biome bed for grass and meadow in view (non-positional), and the quiet floor under every other bed. Mastered from the picked review candidate named by sourceCue (a meadow-bed-* candidate) until the owner chooses; its filter matches that candidate's.",
   "events": [],
   "loop": {
     "startSample": 0,
@@ -21,29 +21,29 @@
     "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
     "outputFormat": "mp3_44100_128"
   },
-  "prompt": "Gentle summer meadow ambience: a soft steady breeze moving through long dry grass with a light, airy, continuous rustle of grass blades, and a skylark singing high and far away now and then. Calm, open and even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.",
+  "prompt": "Close, detailed recording of a gentle summer breeze blowing through long dry grass: a soft, airy, continuous rustle and hiss of thin grass blades brushing together, with slow gentle swells that rise and settle smoothly. Calm, open and warm, even level throughout, continuous with no build or fade. Only wind and grass, nothing else.",
   "promptFile": null,
   "parameters": {
-    "text": "Gentle summer meadow ambience: a soft steady breeze moving through long dry grass with a light, airy, continuous rustle of grass blades, and a skylark singing high and far away now and then. Calm, open and even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.",
+    "text": "Close, detailed recording of a gentle summer breeze blowing through long dry grass: a soft, airy, continuous rustle and hiss of thin grass blades brushing together, with slow gentle swells that rise and settle smoothly. Calm, open and warm, even level throughout, continuous with no build or fade. Only wind and grass, nothing else.",
     "model_id": "eleven_text_to_sound_v2",
     "duration_seconds": 30,
     "prompt_influence": 0.5,
     "loop": true
   },
   "generation": {
-    "id": "096effb254ccd09941daf654c5648f50",
-    "generatedAt": "2026-10-14T14:19:20+00:00",
-    "attempt": 19,
+    "id": "09ba9be4f0de8aa2b4e115a68378bb89",
+    "generatedAt": "2026-10-14T15:36:32+00:00",
+    "attempt": 22,
     "creditsCharged": 301,
     "record": {
-      "path": "assets-source/audio/ambience/meadow-bed-a/generation.json",
-      "sha256": "bf020c32820ce06e3769373ca9fe280d052d72aebf58d45ea4151a2f5ee33857",
-      "bytes": 2307
+      "path": "assets-source/audio/ambience/meadow-bed-d/generation.json",
+      "sha256": "854c275916c1b656efc4000d8f769de124041868e1a10f1050ddfda4c43ecab2",
+      "bytes": 2204
     }
   },
   "source": {
-    "path": "assets-source/audio/ambience/meadow-bed-a/meadow-bed-a.mp3",
-    "sha256": "5c048343a3285c9f40cbef531c1fe61f4ec179158beb3506c1e6a8178741227b",
+    "path": "assets-source/audio/ambience/meadow-bed-d/meadow-bed-d.mp3",
+    "sha256": "7bfa631a6f755b9cac74ce4764b10a758617d087e5a3f056c89fafd21680fb8c",
     "bytes": 481114,
     "codec": "mp3",
     "sampleRate": 44100,
@@ -56,25 +56,25 @@
     "truePeakCeilingDb": -1.0,
     "masterTruePeakDb": -2.0,
     "before": {
-      "integrated": -22.0,
-      "lra": 3.0,
-      "truePeak": -4.8
+      "integrated": -39.1,
+      "lra": 5.6,
+      "truePeak": -20.4
     },
     "master": {
-      "integrated": -16.8,
-      "lra": 3.4,
-      "truePeak": -3.2
+      "integrated": -16.0,
+      "lra": 4.8,
+      "truePeak": -2.4
     },
     "after": {
       "webm": {
-        "integrated": -16.8,
-        "lra": 3.4,
-        "truePeak": -2.3
+        "integrated": -16.0,
+        "lra": 4.8,
+        "truePeak": -1.6
       },
       "m4a": {
-        "integrated": -16.9,
-        "lra": 3.4,
-        "truePeak": -2.7
+        "integrated": -16.2,
+        "lra": 4.8,
+        "truePeak": -1.6
       }
     }
   },
@@ -83,63 +83,45 @@
       "step": "decode",
       "to": "48000 Hz float, 1 ch",
       "fold": "pan=mono|c0=0.5*c0+0.5*c1",
-      "sourceCue": "meadow-bed-a"
-    },
-    {
-      "step": "filter",
-      "spec": {
-        "highpassHz": 150,
-        "harmonicNotch": {
-          "fundamentalHz": 200,
-          "harmonics": 48,
-          "widthHz": 6
-        }
-      },
-      "chain": "highpass=f=150:poles=2,bandreject=f=200:width_type=h:width=6,bandreject=f=400:width_type=h:width=6,bandreject=f=600:width_type=h:width=6,bandreject=f=800:width_type=h:width=6,bandreject=f=1000:width_type=h:width=6,bandreject=f=1200:width_type=h:width=6,bandreject=f=1400:width_type=h:width=6,bandreject=f=1600:width_type=h:width=6,bandreject=f=1800:width_type=h:width=6,bandreject=f=2000:width_type=h:width=6,bandreject=f=2200:width_type=h:width=6,bandreject=f=2400:width_type=h:width=6,bandreject=f=2600:width_type=h:width=6,bandreject=f=2800:width_type=h:width=6,bandreject=f=3000:width_type=h:width=6,bandreject=f=3200:width_type=h:width=6,bandreject=f=3400:width_type=h:width=6,bandreject=f=3600:width_type=h:width=6,bandreject=f=3800:width_type=h:width=6,bandreject=f=4000:width_type=h:width=6,bandreject=f=4200:width_type=h:width=6,bandreject=f=4400:width_type=h:width=6,bandreject=f=4600:width_type=h:width=6,bandreject=f=4800:width_type=h:width=6,bandreject=f=5000:width_type=h:width=6,bandreject=f=5200:width_type=h:width=6,bandreject=f=5400:width_type=h:width=6,bandreject=f=5600:width_type=h:width=6,bandreject=f=5800:width_type=h:width=6,bandreject=f=6000:width_type=h:width=6,bandreject=f=6200:width_type=h:width=6,bandreject=f=6400:width_type=h:width=6,bandreject=f=6600:width_type=h:width=6,bandreject=f=6800:width_type=h:width=6,bandreject=f=7000:width_type=h:width=6,bandreject=f=7200:width_type=h:width=6,bandreject=f=7400:width_type=h:width=6,bandreject=f=7600:width_type=h:width=6,bandreject=f=7800:width_type=h:width=6,bandreject=f=8000:width_type=h:width=6,bandreject=f=8200:width_type=h:width=6,bandreject=f=8400:width_type=h:width=6,bandreject=f=8600:width_type=h:width=6,bandreject=f=8800:width_type=h:width=6,bandreject=f=9000:width_type=h:width=6,bandreject=f=9200:width_type=h:width=6,bandreject=f=9400:width_type=h:width=6,bandreject=f=9600:width_type=h:width=6",
-      "circularPadFrames": 48000
+      "sourceCue": "meadow-bed-d"
     },
     {
       "step": "source-loop-check",
-      "wrapStep": 0.026279,
-      "stepP999": 0.252523,
-      "headDb": -23.9,
-      "tailDb": -28.7,
-      "minWindowDb": -37.5,
+      "wrapStep": 0.008713,
+      "stepP999": 0.070692,
+      "headDb": -42.0,
+      "tailDb": -35.6,
+      "minWindowDb": -46.8,
       "seamless": true
     },
     {
       "step": "rotate-loop",
-      "offsetFrames": 504000,
+      "offsetFrames": 984000,
       "headTailLevelDeltaDb": 0.01
     },
     {
       "step": "loudness",
       "pass1": {
-        "integrated": -22.1,
-        "lra": 3.5,
-        "truePeak": -4.8
+        "integrated": -39.0,
+        "lra": 5.2,
+        "truePeak": -20.4
       },
       "targetLufs": -16.0,
-      "gainDb": 6.1,
-      "requiredPeakReductionDb": 3.3,
+      "gainDb": 23.0,
+      "requiredPeakReductionDb": 4.6,
       "mode": "limited",
-      "limiterInputGainDb": 6.1,
+      "limiterInputGainDb": 23.0,
       "limiterPasses": 1,
       "limiterCeilingDb": -2.5,
-      "windowsOverCeilingPct": 2.6
+      "windowsOverCeilingPct": 1.9
     },
     {
       "step": "settle",
       "trimDb": 0.1
     },
     {
-      "step": "encode-overshoot-trim",
-      "encodedTruePeakDb": -0.4,
-      "trimDb": -0.8
-    },
-    {
       "step": "encode-webm",
-      "bitrate": "64k"
+      "bitrate": "96k"
     },
     {
       "step": "encode-m4a",
@@ -148,7 +130,7 @@
   ],
   "master": {
     "path": "target/audio-master/ambience/meadow-bed.wav",
-    "sha256": "4ef66632e6aec4c14904e88267ad88363a3ecf53beedf6109301a3765f1740a2",
+    "sha256": "e911840c338e1b0d77fb4bc68944f54a14c301efabfc7c8b5c7695797cb88afe",
     "frames": 1440000,
     "sampleRate": 48000,
     "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
@@ -156,25 +138,25 @@
   "runtime": [
     {
       "path": "assets/audio/ambience/meadow-bed.webm",
-      "sha256": "2dc7d4558e1a26d8b684885f61bc0324bb53eb1369d4a835999187d78702c871",
-      "bytes": 298120,
+      "sha256": "6208a3cf7cf58aa3c53855ddfc2c30c421f60d45141b573052de9decc0866a21",
+      "bytes": 336325,
       "codec": "opus",
-      "bitrate": "64k",
+      "bitrate": "96k",
       "channels": 1,
       "sampleRate": 48000,
       "durationSeconds": 30.008,
       "decodedFrames": 1440000,
       "loudness": {
-        "integrated": -16.8,
-        "lra": 3.4,
-        "truePeak": -2.3
+        "integrated": -16.0,
+        "lra": 4.8,
+        "truePeak": -1.6
       },
-      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/meadow-bed.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/meadow-bed.webm"
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/meadow-bed.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 96k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/meadow-bed.webm"
     },
     {
       "path": "assets/audio/ambience/meadow-bed.m4a",
-      "sha256": "2091643a5860f9c6dc875a9788ce1b9c8c373865aab8955519cae33f189c3be4",
-      "bytes": 376835,
+      "sha256": "1ca90680cc6d1bf940aef809d0642279b9c8d95d7b434b2130b3a53691cdd3d0",
+      "bytes": 368527,
       "codec": "aac",
       "bitrate": "96k",
       "channels": 1,
@@ -182,9 +164,9 @@
       "durationSeconds": 30.0,
       "decodedFrames": 1440000,
       "loudness": {
-        "integrated": -16.9,
-        "lra": 3.4,
-        "truePeak": -2.7
+        "integrated": -16.2,
+        "lra": 4.8,
+        "truePeak": -1.6
       },
       "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/meadow-bed.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 96k -movflags +faststart assets/audio/ambience/meadow-bed.m4a"
     }
@@ -200,8 +182,8 @@
     "python": "3.14.8",
     "scripts": {
       "scripts/audio/audio_lib.py": "05bdda2d7cf660c981e41d716fb10613197cdc9c7966ad6344a4635e58189b5c",
-      "scripts/audio/master.py": "a4b5a649238440063340e7674babac0c53ca1a675205581fae5dfad9dabadd4a",
-      "scripts/audio/review.py": "80073ec6bbccbe7507a593b293aa4c26303e8215b196fb563269ede4a58e3e3b"
+      "scripts/audio/master.py": "b2c843e7c6932950a92d5c5f6ac13d9516ff6afb0eeaee8e34f9c46cb946ccb1",
+      "scripts/audio/review.py": "ed2ac1534729ce204d1284a42183bd2885ed2df55932525ad37347cedc8f8d35"
     }
   },
   "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",

@@ -1,0 +1,45 @@
+{
+  "cueId": "meadow-bed-f",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "A light breeze moving across an open grassy field on a calm summer day: slow, gentle swells of soft rustling grass, airy and quiet, smooth and continuous at an even level, with no loud gusts. Only wind in grass.",
+  "parameters": {
+    "text": "A light breeze moving across an open grassy field on a calm summer day: slow, gentle swells of soft rustling grass, airy and quiet, smooth and continuous at an even level, with no loud gusts. Only wind in grass.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 30,
+    "prompt_influence": 0.35,
+    "loop": true
+  },
+  "generationId": "deaf10d16e0073de770861991948732f",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 15:36:49 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "301",
+    "content-length": "481114",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "deaf10d16e0073de770861991948732f",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T15:36:50+00:00",
+  "attempt": 24,
+  "creditsCharged": 301,
+  "sourceFile": "meadow-bed-f.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  },
+  "rejectedReason": "screen: low wind rumble, 64.9% of power below 300 Hz (round one c was 94.2%); fails the airy 300 Hz-8 kHz rustle brief. Reprompted in take d's style: close, papery rustle of long dry grass"
+}

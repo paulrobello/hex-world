@@ -109,13 +109,23 @@ def ab_sections(layout: A.Layout, manifest: dict, rel_runtime: str) -> str:
             out.append(f"<h2>A/B: {html.escape(cue['id'])}, previous against new</h2><p class=lead>{note or ''}</p>"
                        f"<div class=grid>{prev}{card(layout, by_id[cue['id']], rel_runtime)}</div>")
     targets = sorted({e["candidateFor"] for e in manifest.get("candidates", [])})
+    cue_by_id = {c["id"]: c for c in reg["cues"]}
     for target in targets:
         wired = next((c.get("sourceCue") for c in reg["cues"] if c["id"] == target), None)
         cands = [e for e in manifest["candidates"] if e["candidateFor"] == target]
         out.append(f"<h2>Candidates for {html.escape(target)}</h2><p class=lead>Pick one. Until then the game's "
                    f"<code>{html.escape(target)}</code> masters <b>{html.escape(str(wired))}</b> (cues.json "
-                   f"<code>sourceCue</code>). Candidates are not shipped or loaded by the game.</p>"
-                   f"<div class=grid>{''.join(card(layout, e, rel_runtime) for e in cands)}</div>")
+                   f"<code>sourceCue</code>). Candidates are not shipped or loaded by the game.</p>")
+        rounds = sorted({(cue_by_id.get(e["id"]) or {}).get("review", {}).get("round", 1) for e in cands}, reverse=True)
+        for rnd in rounds:
+            group = [e for e in cands if (cue_by_id.get(e["id"]) or {}).get("review", {}).get("round", 1) == rnd]
+            note = next(((cue_by_id[e["id"]].get("review") or {}).get("roundNote") for e in group
+                         if (cue_by_id[e["id"]].get("review") or {}).get("roundNote")), None)
+            if len(rounds) > 1:
+                label = "new round" if rnd == rounds[0] else "earlier round"
+                out.append(f"<h3>Round {rnd} ({label})</h3>" + (f"<p class=lead>{html.escape(note)}</p>" if note else ""))
+            out.append("<div class=grid>" + "".join(card(layout, e, rel_runtime, cue_by_id.get(e["id"])) for e in group)
+                       + "</div>")
     new = [by_id[c["id"]] for c in reg["cues"] if c.get("cut") and c["id"] in by_id]
     if new:
         out.append("<h2>New occasional one-shots</h2><div class=grid>"
@@ -123,7 +133,25 @@ def ab_sections(layout: A.Layout, manifest: dict, rel_runtime: str) -> str:
     return "".join(out)
 
 
-def card(layout: A.Layout, entry: dict, rel_runtime: str) -> str:
+def screening(cue: dict | None) -> str:
+    """A candidate's pre-master screen (cues.json review.screening, from scripts/audio/screen.py)."""
+    review_block = (cue or {}).get("review") or {}
+    s = review_block.get("screening")
+    if not s:
+        return ""
+    others = ", ".join(f"{p['hz']} Hz +{p['db']}" for p in s.get("otherTonalPeaks", [])) or "none"
+    filt = review_block.get("filterApplied")
+    return (f"<div class=nums><span>300 Hz–8 kHz <b>{s['band300to8kPct']}%</b></span>"
+            f"<span>&lt;300 Hz <b>{s['below300HzPct']}%</b></span><span>&gt;8 kHz <b>{s['above8kPct']}%</b></span>"
+            f"<span>1–6 kHz vs full <b>{s['band1to6kVsFullDb']} dB</b></span>"
+            f"<span>deepest dip <b>{s['levelDeepestDipDb']} dB</b> (spread {s['levelSpreadDb']})</span>"
+            f"<span>200 Hz series <b>+{s['tone200HzSeriesMaxDb']} dB</b>, other tones {html.escape(others)}</span>"
+            f"<span>birds <b>{'yes' if s['birds'] else 'no'}</b> ({s['birdChirpEvents']} chirp events)</span></div>"
+            f"<p class=meta>Screened on the {html.escape(s['measuredOn'])}."
+            + (f" Filter: {html.escape(filt)}." if filt else "") + "</p>")
+
+
+def card(layout: A.Layout, entry: dict, rel_runtime: str, cue: dict | None = None) -> str:
     cid = html.escape(entry["id"])
     events = ", ".join(entry["events"]) or "none (continuous emitter or bed)"
     if entry["status"] not in ("mastered", "candidate"):
@@ -149,6 +177,8 @@ def card(layout: A.Layout, entry: dict, rel_runtime: str) -> str:
     kb = (files["webm"]["bytes"] + files["m4a"]["bytes"]) / 1024
     source_rel = os.path.relpath(layout.root / prov["source"]["path"], layout.source)
     prompt = prov.get("prompt") or (prov.get("promptFile") or {}).get("path", "")
+    pi = (prov.get("parameters") or {}).get("prompt_influence")
+    influence = f"<p>prompt influence {pi}</p>" if pi is not None else ""
     return f"""<div class=card><h3>{cid}</h3>
 <p class=meta>{entry['kind']} · {entry['channels']} ch · {entry['playback']} · events: {html.escape(events)}</p>
 <audio controls preload=none{loop_attr}><source src="{src}" type="audio/webm; codecs=opus"><source src="{m4a_src}" type="audio/mp4"></audio>
@@ -158,8 +188,8 @@ def card(layout: A.Layout, entry: dict, rel_runtime: str) -> str:
 <span>m4a <b>{m4a['integrated']:.1f}</b> / <b>{m4a['truePeak']:.1f}</b></span>
 <span>source <b>{prov['loudness']['before']['integrated']:.1f} LUFS</b></span>
 <span>runtime <b>{kb:.0f} KB</b></span></div>
-<p class=meta>{html.escape(limiter)}</p>{dev}
-<details><summary>Prompt and generation</summary><p>{html.escape(prompt)}</p>
+<p class=meta>{html.escape(limiter)}</p>{dev}{screening(cue)}
+<details><summary>Prompt and generation</summary><p>{html.escape(prompt)}</p>{influence}
 <p>{html.escape(prov['provider']['name'])} · {html.escape(prov['provider']['model'])} · attempt {prov['generation'].get('attempt')} ·
 id <code>{html.escape(str(prov['generation']['id']))}</code> · <a href="{html.escape(source_rel)}">source</a></p></details>
 </div>"""
