@@ -7,8 +7,9 @@ pub mod cars;
 mod chunks;
 pub mod diag;
 pub mod fps;
+pub mod hooks;
 pub mod instanced;
-mod kit_material;
+pub mod kit_material;
 mod kit_scene;
 mod kit_test;
 pub mod lookdev;
@@ -133,6 +134,7 @@ impl Plugin for HexRenderPlugin {
     fn build(&self, app: &mut App) {
         bevy::shader::load_shader_library!(app, "kit_common.wesl");
         bevy::shader::load_shader_library!(app, "water_common.wesl");
+        bevy::shader::load_shader_library!(app, "hooks.wesl");
         app.insert_resource(ActiveScenario(self.scenario))
             .insert_resource(ActiveView(self.view))
             .insert_resource(self.config)
@@ -149,6 +151,9 @@ impl Plugin for HexRenderPlugin {
                 MaterialPlugin::<water::WaterMaterial>::default(),
                 MaterialPlugin::<water::TerrainMaterial>::default(),
                 MaterialPlugin::<play::affordances::AffordanceMaterial>::default(),
+                hooks::HooksPlugin {
+                    hooks: self.config.kit_hooks,
+                },
             ))
             .init_resource::<AgentsPaused>()
             .init_resource::<play::PlayView>()

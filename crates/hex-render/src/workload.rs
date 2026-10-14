@@ -243,7 +243,8 @@ pub fn parse_shadow_dist(s: &str) -> Option<u32> {
         .filter(|&m| m as f32 > FIRST_CASCADE_FAR_BOUND && m <= 100_000)
 }
 
-/// `kit_hooks=`: drives the §9.4 hook uniforms for verification shots (default none = noon).
+/// `kit_hooks=`: drives the §9.4 hooks for verification shots (default none = noon, the MVP);
+/// `crate::hooks` maps each variant to its uniforms.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum KitHooks {
     #[default]
@@ -251,6 +252,12 @@ pub enum KitHooks {
     Snow,
     Wet,
     Night,
+    /// The time-of-day block at `hooks::DUSK`.
+    Dusk,
+    /// Water freeze 1.
+    Freeze,
+    /// Foliage instances tagged with autumn season indices.
+    Autumn,
 }
 
 impl KitHooks {
@@ -260,6 +267,9 @@ impl KitHooks {
             "snow" => Some(KitHooks::Snow),
             "wet" => Some(KitHooks::Wet),
             "night" => Some(KitHooks::Night),
+            "dusk" => Some(KitHooks::Dusk),
+            "freeze" => Some(KitHooks::Freeze),
+            "autumn" => Some(KitHooks::Autumn),
             _ => None,
         }
     }
@@ -434,6 +444,9 @@ mod tests {
             ("snow", KitHooks::Snow),
             ("wet", KitHooks::Wet),
             ("night", KitHooks::Night),
+            ("dusk", KitHooks::Dusk),
+            ("freeze", KitHooks::Freeze),
+            ("autumn", KitHooks::Autumn),
         ] {
             assert_eq!(KitHooks::parse(s), Some(h));
         }

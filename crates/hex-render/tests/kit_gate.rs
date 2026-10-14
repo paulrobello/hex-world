@@ -15,6 +15,9 @@ use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+/// The §9.4 hook gate (`tests/hooks/mod.rs`), so `make kit-check` covers it.
+mod hooks;
+
 fn repo() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../..")

@@ -590,14 +590,21 @@ pub struct WaterParams {
     pub wave_count: u32,
     pub sea_level: f32,
     pub wash_amp: f32,
+    /// PRD §9.4 water freeze: 0 is open water (the MVP value), 1 a frozen sheet (`crate::hooks`).
+    pub freeze: f32,
+    pub _pad0: f32,
+    pub _pad1: f32,
+    pub _pad2: f32,
 }
 
 /// Shader variants: Low drops refraction (and with it caustics), Medium drops the second caustic
-/// layer and the screen-space reflection march.
+/// layer and the screen-space reflection march. `freeze` compiles in the §9.4 ice paths, which read
+/// `WaterParams::freeze`; it is off for open water, so the MVP runs the approved shader unchanged.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct WaterKey {
     pub refraction: bool,
     pub hq: bool,
+    pub freeze: bool,
 }
 
 impl WaterKey {
@@ -605,16 +612,20 @@ impl WaterKey {
         WaterKey {
             refraction: tier != QualityTier::Low,
             hq: matches!(tier, QualityTier::High | QualityTier::Ultra),
+            freeze: false,
         }
     }
 
-    fn defs(self) -> Vec<bevy::shader::ShaderDefVal> {
+    pub fn defs(self) -> Vec<bevy::shader::ShaderDefVal> {
         let mut v = vec![];
         if self.refraction {
             v.push("WATER_REFRACTION".into());
         }
         if self.hq {
             v.push("WATER_HQ".into());
+        }
+        if self.freeze {
+            v.push("WATER_FREEZE".into());
         }
         v
     }
@@ -859,6 +870,7 @@ pub fn materials(
             wave_count: wave_count(tier),
             sea_level: level,
             wash_amp: WASH_AMP,
+            ..default()
         },
         noise: noise.clone(),
         key: WaterKey::for_tier(tier),
@@ -1177,8 +1189,8 @@ mod tests {
     }
 
     #[test]
-    fn params_are_16_bytes() {
-        assert_eq!(WaterParams::min_size().get(), 16);
+    fn params_match_their_wgsl_structs() {
+        assert_eq!(WaterParams::min_size().get(), 32);
         assert_eq!(TerrainParams::min_size().get(), 16);
     }
 }

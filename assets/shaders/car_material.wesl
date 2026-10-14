@@ -5,7 +5,8 @@
 // in: it arrives as the per-entity MeshTag (sRGB8 packed 0xBBGGRR), which lives in the mesh uniform,
 // so every car of one type and LOD stays in one instanced batch whatever its colour. `masks` (raw
 // UV0) carries the §9.4 hooks as in kit_material.wesl: R snow, G wetness, B night emissive (head and
-// tail lights), A baked AO. The extension adds one sampled texture, the same as the kit material.
+// tail lights), A baked AO; a slot without masks takes hex_render::hooks' uniform default. The
+// extension adds one sampled texture, the same as the kit material.
 import bevy_pbr::render::{
     mesh_functions,
     pbr_bindings,
@@ -13,6 +14,7 @@ import bevy_pbr::render::{
     pbr_fragment::pbr_input_from_standard_material,
     pbr_functions::alpha_discard,
 };
+import hex_render::hooks;
 
 @if(PREPASS_PIPELINE)
 import bevy_pbr::{
@@ -66,6 +68,9 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
         pbr_input.material.perceptual_roughness = mix(pbr_input.material.perceptual_roughness, 0.12, wet);
         pbr_input.material.emissive = vec4(pbr_input.material.emissive.rgb + c0 * m.b * car.night * 4.0, pbr_input.material.emissive.a);
     }
+    }
+    if ((car.car_flags & CAR_FLAG_MASKS) == 0u && hooks::any_on(car.snow, car.wetness, car.night)) {
+        pbr_input = hooks::surface(pbr_input, hooks::NO_MASKS, car.snow, car.wetness, car.night);
     }
 
     pbr_input.material.base_color = alpha_discard(pbr_input.material.flags, pbr_input.material.alpha_cutoff, pbr_input.material.base_color);

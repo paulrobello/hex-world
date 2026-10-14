@@ -19,6 +19,8 @@ struct KitParams {
 
 const FLAG_TILEABLE: u32 = 1u;
 const FLAG_MASKS: u32 = 2u;
+// A foliage slot: takes the per-instance seasonal tint (hex_render::hooks, crates/hex-render/src/hooks.rs).
+const FLAG_FOLIAGE: u32 = 4u;
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> kit: KitParams;
 

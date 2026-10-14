@@ -3,7 +3,8 @@
 // analytic wave normal + scrolling ripple detail (sea) or two-phase flow-map ripples (river), foam,
 // Bevy PBR lighting for the reflective surface (IBL, sun glints, shadows) and, under
 // WATER_REFRACTION, refraction of the opaque pass with depth absorption and bed caustics. Water is
-// not in the depth prepass, so the prepass depth under a water pixel is the bed.
+// not in the depth prepass, so the prepass depth under a water pixel is the bed. `freeze` is the
+// §9.4 hook for frozen rivers, 0 (open water) in the MVP.
 import bevy_pbr::render::{
     forward_io::{Vertex, decompress_vertex},
     mesh_functions,
@@ -21,6 +22,12 @@ struct WaterParams {
     wave_count: u32,
     sea_level: f32,
     wash_amp: f32,
+    // §9.4 water freeze (crates/hex-render/src/hooks.rs): 0 is open water, the MVP value; 1 is a
+    // frozen sheet. Read only by the WATER_FREEZE variant (water.rs `WaterKey::freeze`).
+    freeze: f32,
+    _pad0: f32,
+    _pad1: f32,
+    _pad2: f32,
 }
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> water: WaterParams;
@@ -65,6 +72,11 @@ fn vertex(v: Vertex) -> WaterVarying {
     if (moves) {
         p += g.disp * wc::wave_atten(depth, river);
         p.y += water.wash_amp * wc::swash(shore, t) * wc::swash_weight(depth, river);
+    }
+    // Freeze: ice holds the surface at rest (no waves, no swash). Compiled only into the frozen
+    // variant (WATER_FREEZE), so open water runs the approved shader unchanged.
+    @if(WATER_FREEZE) {
+        p = mix(p, rest, water.freeze);
     }
     var out: WaterVarying;
     out.skirt = select(0.0, 1.0, skirt);
@@ -116,6 +128,10 @@ const SIGMA_RIVER: vec3<f32> = vec3(0.38, 0.12, 0.16);
 // In-scattering albedo of a fully absorbing column, lit as a diffuse layer.
 const SCATTER_SEA: vec3<f32> = vec3(0.012, 0.085, 0.105);
 const SCATTER_RIVER: vec3<f32> = vec3(0.045, 0.11, 0.075);
+// Freeze: the ice sheet's albedo, roughness and how much of the water below it hides.
+const ICE_ALBEDO: vec3<f32> = vec3(0.40, 0.55, 0.66);
+const ICE_ROUGHNESS: f32 = 0.3;
+const ICE_COVER: f32 = 0.7;
 
 @fragment
 fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
@@ -214,6 +230,14 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
         pbr.material.perceptual_roughness = 1.0;
         pbr.material.reflectance = vec3(0.0);
     }
+    // Freeze: a flat, pale, rough sheet with a trace of the ripple detail (WATER_FREEZE only).
+    @if(WATER_FREEZE) {
+        let ice = water.freeze * (1.0 - in.skirt);
+        pbr.N = normalize(mix(n, normalize(vec3(detail.x * 0.15, 1.0, detail.y * 0.15)), ice));
+        pbr.material.base_color = vec4(mix(pbr.material.base_color.rgb, ICE_ALBEDO, ice), 1.0);
+        pbr.material.perceptual_roughness = mix(pbr.material.perceptual_roughness, ICE_ROUGHNESS, ice);
+        pbr.material.reflectance = mix(pbr.material.reflectance, vec3(0.5), ice);
+    }
 
     let n_dot_v = max(dot(n, pbr.V), 1e-4);
     let fresnel = select(F0_WATER + (1.0 - F0_WATER) * pow(1.0 - n_dot_v, 5.0), 0.0, skirt);
@@ -274,11 +298,17 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
     @else
     let hq = false;
     under *= 1.0 + 2.4 * wc::caustics(bed.xz * 0.55, t, hq) * fade;
+    @if(WATER_FREEZE) {
+        under *= 1.0 - ICE_COVER * water.freeze * (1.0 - in.skirt);
+    }
     color += under * trans * (1.0 - fresnel) * (1.0 - foam);
     return pbr_functions::main_pass_post_lighting_processing(pbr, vec4(color, 1.0));
 }
 @else {
     // Low tier: no transmission texture; blend over the opaque scene with the same transmittance.
+    @if(WATER_FREEZE)
+    let tr = dot(trans, vec3(0.3333)) * (1.0 - fresnel) * (1.0 - foam) * (1.0 - ICE_COVER * water.freeze * (1.0 - in.skirt));
+    @else
     let tr = dot(trans, vec3(0.3333)) * (1.0 - fresnel) * (1.0 - foam);
     let alpha = clamp(1.0 - tr, 0.02, 1.0);
     return pbr_functions::main_pass_post_lighting_processing(pbr, vec4(color / alpha, alpha));

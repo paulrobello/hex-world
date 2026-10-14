@@ -1,7 +1,8 @@
 //! Kit material (R6): StandardMaterial + `KitExt`. Tileable layers are sampled in world space in
 //! `kit_material.wesl` so rotated/translated neighbours line up, except a slot with `tileUvScale`
 //! (tree bark), whose set is sampled at UV0 scaled by StandardMaterial's `uv_transform`; `masks`
-//! (raw UV0) carries the §9.4 hooks (R snow, G wetness, B night emissive) and baked AO in A.
+//! (raw UV0) carries the §9.4 hooks (R snow, G wetness, B night emissive) and baked AO in A, and a
+//! foliage slot takes the per-instance seasonal tint (`crate::hooks`).
 //!
 //! Sampled-texture budget: a tileable set binds through StandardMaterial's own base-color,
 //! normal-map and metallic-roughness slots (the shader samples them at world-space UVs), so the
@@ -25,6 +26,8 @@ pub const SHADER: &str = "shaders/kit_material.wesl";
 pub const PREPASS_SHADER: &str = "shaders/kit_prepass.wesl";
 pub const FLAG_TILEABLE: u32 = 1;
 pub const FLAG_MASKS: u32 = 2;
+/// Foliage slot (`hooks::is_foliage`): the shader tints it by the instance's season index.
+pub const FLAG_FOLIAGE: u32 = 4;
 
 pub type KitMaterial = ExtendedMaterial<StandardMaterial, KitExt>;
 
@@ -74,6 +77,8 @@ pub struct SlotRequests {
     /// The tile is mapped on UV0 scaled by this factor, not in world space (`Slot::tile_uv_scale`).
     pub tile_uv_scale: Option<f32>,
     pub unique: Vec<(Channel, MapRequest)>,
+    /// Takes the per-instance seasonal tint (`hooks::is_foliage`).
+    pub foliage: bool,
 }
 
 fn req(stem: &str, ch: Channel, family: TextureFamily, repeat: bool) -> MapRequest {
@@ -97,7 +102,10 @@ pub fn slot_requests(
     slot: &Slot,
     family: TextureFamily,
 ) -> Result<SlotRequests, String> {
-    let mut out = SlotRequests::default();
+    let mut out = SlotRequests {
+        foliage: crate::hooks::is_foliage(p, slot),
+        ..default()
+    };
     if slot.masks {
         out.masks = p
             .maps
@@ -159,12 +167,16 @@ pub fn params_for(r: &SlotRequests, hooks: KitHooks) -> KitParams {
     if r.masks.is_some() {
         flags |= FLAG_MASKS;
     }
+    if r.foliage {
+        flags |= FLAG_FOLIAGE;
+    }
+    let [snow, wetness, night] = crate::hooks::surface_hooks(hooks);
     KitParams {
         tile_inv_m: r.tile.as_ref().map_or(0.0, |t| t.1),
         flags,
-        snow: (hooks == KitHooks::Snow) as u32 as f32,
-        wetness: (hooks == KitHooks::Wet) as u32 as f32,
-        night: (hooks == KitHooks::Night) as u32 as f32,
+        snow,
+        wetness,
+        night,
         ..default()
     }
 }

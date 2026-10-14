@@ -52,10 +52,11 @@ impl MaterialExtension for CarExt {
 }
 
 pub fn params_for(r: &SlotRequests, hooks: KitHooks) -> CarParams {
+    let [snow, wetness, night] = crate::hooks::surface_hooks(hooks);
     CarParams {
-        snow: (hooks == KitHooks::Snow) as u32 as f32,
-        wetness: (hooks == KitHooks::Wet) as u32 as f32,
-        night: (hooks == KitHooks::Night) as u32 as f32,
+        snow,
+        wetness,
+        night,
         car_flags: if r.masks.is_some() { CAR_FLAG_MASKS } else { 0 },
     }
 }

@@ -3,12 +3,13 @@
 // and sampled at world-space UVs (crates/hex-render/src/kit_common.wesl), so the extension adds only one sampled texture
 // (masks). kit_prepass.wesl writes the same tiled normal into the normal prepass.
 import bevy_pbr::render::{
+    mesh_functions,
     pbr_bindings,
     pbr_types,
     pbr_fragment::pbr_input_from_standard_material,
     pbr_functions::alpha_discard,
 };
-import hex_render::kit_common;
+import hex_render::{kit_common, hooks};
 
 @if(PREPASS_PIPELINE)
 import bevy_pbr::{
@@ -47,11 +48,25 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
         pbr_input.N = kit_common::tiled_normal(f);
     }
 
+    // §9.4 foliage seasonal tint: the instance's MeshTag is its season index. Untagged instances
+    // (every MVP instance) read 0 and skip it.
+    @if(VERTEX_OUTPUT_INSTANCE_INDEX) {
+    if ((kit_common::kit.flags & kit_common::FLAG_FOLIAGE) != 0u) {
+        let season = mesh_functions::get_tag(in.instance_index);
+        if (season != 0u) {
+            let c = pbr_input.material.base_color;
+            pbr_input.material.base_color = vec4(c.rgb * hooks::season_tint(season), c.a);
+        }
+    }
+    }
+
+    // §9.4 weather and night hooks (hex_render::hooks): zero at the fixed noon; `kit_hooks=` drives
+    // them for verification. A slot without a masks map takes the uniform default, only while a
+    // hook is on.
     @if(VERTEX_UVS_A) {
     if ((kit_common::kit.flags & kit_common::FLAG_MASKS) != 0u) {
         let m = textureSample(masks_texture, masks_sampler, in.uv);
         pbr_input.diffuse_occlusion *= m.a;
-        // §9.4 hooks: zero at the fixed noon; `kit_hooks=snow|wet|night` drives them for verification.
         let cover = m.r * kit_common::kit.snow * smoothstep(0.55, 0.85, pbr_input.N.y);
         let c0 = mix(pbr_input.material.base_color.rgb, vec3(0.90, 0.92, 0.95), cover);
         pbr_input.material.perceptual_roughness = mix(pbr_input.material.perceptual_roughness, 0.55, cover);
@@ -60,6 +75,9 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
         pbr_input.material.perceptual_roughness = mix(pbr_input.material.perceptual_roughness, 0.12, wet);
         pbr_input.material.emissive = vec4(pbr_input.material.emissive.rgb + c0 * m.b * kit_common::kit.night * 4.0, pbr_input.material.emissive.a);
     }
+    }
+    if ((kit_common::kit.flags & kit_common::FLAG_MASKS) == 0u && hooks::any_on(kit_common::kit.snow, kit_common::kit.wetness, kit_common::kit.night)) {
+        pbr_input = hooks::surface(pbr_input, hooks::NO_MASKS, kit_common::kit.snow, kit_common::kit.wetness, kit_common::kit.night);
     }
 
     pbr_input.material.base_color = alpha_discard(pbr_input.material.flags, pbr_input.material.alpha_cutoff, pbr_input.material.base_color);
