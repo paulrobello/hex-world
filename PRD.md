@@ -149,6 +149,7 @@ The player-facing UI (D18 overlay) is held to a hero standard, like water:
 - **Subtle interactions and motion:** every state change (hover, press, select, open, close, place, undo) has short, eased feedback. Motion explains cause and effect and never delays input. Reduced-motion is respected.
 - **Highly intuitive:** a first-time player can place, rotate, undo and bulldoze without reading help text. Affordances and the legal-slot filter make valid actions obvious.
 - **Mockups first:** before any UI is implemented, the owner reviews and approves mockups of every screen and the key interaction states, including motion (clips or interactive prototypes). UI work goes through the `impeccable` skill with a named design direction.
+- **Direction (owner, 2026-10-13):** Legend, a survey-map margin with a socket-colour code ([`design/ui/legend/direction.md`](design/ui/legend/direction.md); product brief [`PRODUCT.md`](PRODUCT.md)). The inventory sheet stays open until Tab closes it. Tiles that do not fit stay listed, dimmed with their reason, below the tiles that fit.
 
 ## 5. Tile system
 

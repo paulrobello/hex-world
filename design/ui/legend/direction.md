@@ -30,3 +30,10 @@ Raises from declined challengers:
 | Socket colours | Grass `rgb(156 196 100)`, Forest `rgb(63 138 79)`, Road `rgb(226 104 60)`, River `rgb(74 163 223)`, Beach `rgb(227 194 122)`, Ocean `rgb(45 111 176)`. |
 | Iconography | The shared authored 24 px SVG set at 1.8 px stroke. Icons carry text labels in the bar except Redo, Photo and Settings, which carry aria labels now and get tooltips in the full pass. |
 | Motion | `cubic-bezier(.22,.9,.3,1)`. Hover 120 ms. Select 120 ms (row fills, magenta bar). Rotate nudges the icon 180 ms and turns glyphs 220 ms. Sheet slides off the right edge in 240 ms. Undo note rises 8 px and fades in over 180 ms, dismisses at 4 s. Reduced motion makes all of it instant. |
+
+## Owner decisions (2026-10-13)
+
+- **Chosen direction:** Legend. Vitrine and Departures are retired; their comps stay as the record of the choice.
+- **Inventory:** the sheet is open by default and stays open while the player hovers slots. Only Tab (or its close control) closes it, and Tab reopens it.
+- **Tiles that do not fit:** stay in the list, dimmed with their reason, ordered below every tile that fits ("Fits here" first, then "Doesn't fit here").
+- **PRODUCT.md:** approved as written and moved to the repo root.
