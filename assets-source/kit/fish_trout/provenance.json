@@ -1,0 +1,394 @@
+{
+  "pieceId": "fish_trout",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/fish_trout.py",
+    "sha256": "8d6922a8c0f7aaa83ee9c98377c6bc4c7acbfbea34e52e008c8c523d57f6cf7a"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_fauna.py",
+      "sha256": "184bf0e63afe49ef50c453dec9e881575ef56aa54303340258e74de61f5cd2f1"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.08,
+    "bakeStats": {
+      "albedoLuma_ocean": {
+        "mean": 0.6869728709749564,
+        "p05": 0.4405282132448332
+      },
+      "albedoLuma_river": {
+        "mean": 0.4910109835051476,
+        "p05": 0.24967321256796518
+      },
+      "ao": {
+        "mean": 0.9431415796279907,
+        "min": 0,
+        "p05": 0.686274528503418,
+        "texels": 43976
+      },
+      "coverage": 0.167755126953125
+    },
+    "blender": "5.2.2 LTS",
+    "boid": {
+      "form": "fish",
+      "frame": "runtime +z forward, +y up; pivot at the body centre on the length axis",
+      "placeholder": {
+        "lengthM": 1.08,
+        "scaleToMatch": 2.7
+      },
+      "realLengthM": 0.4,
+      "tc1": {
+        "u": "wag weight: 0 forward of z = 0.06, linear to 1 at the caudal fork tips (z = -0.20)",
+        "v": "0 (reserved)"
+      },
+      "variants": {
+        "ocean": [
+          0,
+          0
+        ],
+        "river": [
+          0.5,
+          0
+        ],
+        "rule": "UV0 offset per instance; one texture set"
+      },
+      "wag": "x += U^2 * amplitude * sin(phase)"
+    },
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 512
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 128
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "colourSource": "numpy paint (no colour bake)",
+    "device": "CPU",
+    "lodTris": [
+      246,
+      94,
+      30
+    ],
+    "marginPx": 4,
+    "receiverSignature": "dbced63fb627c9e189c4cbe3ebaf1dfb9f6e74d72716f2677f345c71d4e8e18b",
+    "samples": 32,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 1161.8440268973388,
+      "median": 1126.3998088304534,
+      "min": 886.0172070749982
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 246,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 94,
+      "ratio": 0.3821138211382114
+    },
+    {
+      "lod": 2,
+      "tris": 30,
+      "ratio": 0.12195121951219512
+    }
+  ],
+  "collider": {
+    "node": "fish_trout_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 1161.8440268973388,
+    "median": 1126.3998088304534,
+    "min": 886.0172070749982
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 190056,
+        "astc": 191533
+      },
+      "glbBytes": 22008
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/fish_trout/fish_trout.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 10,
+        "bytes": 91526,
+        "sha256": "eea0ed3433f377ffba9e276bd3ac8ee41b75367be750f583d8f2739ed9923ed8"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/fish_trout/fish_trout.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 10,
+        "bytes": 91729,
+        "sha256": "15d38aad4a966c87bbdbc0c3b9186e2a8550a72b301d3baaea371e44ffe9b291"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/fish_trout/fish_trout.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 102377,
+        "sha256": "291ce179f9164804febcdd20aed278a6902e82261556cb208e1721b3cf3333ce"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/fish_trout/fish_trout.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 8,
+        "bytes": 641,
+        "sha256": "101b02e6dc76c65b5f3c9b7875bb54a761d5d39d60ed7ae2daa731f592f76eff"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/fish_trout/fish_trout.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 8,
+        "bytes": 641,
+        "sha256": "4c750f9d764c2a0f87d63f126edfffc66319b95d3a0ed634726b435f230c29b8"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/fish_trout/fish_trout.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 709,
+        "sha256": "9789d24af00c5448c0a8ea586d9f46c6b7b52f52f256cd973a359ca440c48735"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/fish_trout/fish_trout.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 28637,
+        "sha256": "a0d4c6e31fbd610e25a30feb734f76ecf1add6c4010f9352a6c63fbd39f5296e"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/fish_trout/fish_trout.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 28450,
+        "sha256": "9a55ffc9c827aa9fb3d152f1bb8c1c342b7dba51c9aa9ba83cc3a5bae2b3e99b"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/fish_trout/fish_trout.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 44914,
+        "sha256": "70c02548536ee2b9d86260b3da78e2cb3597800a738ffcb0724f5e0a7df83cd5"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/fish_trout/fish_trout.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 69252,
+        "sha256": "4ef9e1ed59eda9292f33c3ea9c24a69f7470dcb607b8c37a8c8ac4d306c5cf42"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/fish_trout/fish_trout.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 70713,
+        "sha256": "794266e8292a0c6b2a6108ef8ed9bdebfbf62352f9f084fe5ab98b940a34db4e"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/fish_trout/fish_trout.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 81113,
+        "sha256": "987eae65df8ef50f47d3de740c6eb07a52d8aa0f727887ba2165ac44f66c7be5"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.glb",
+      "sha256": "f5f99dacf9e40b23555ce19694c662f84d52109fe4d5d0373e4041a08cf37f0f",
+      "bytes": 22008
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.albedo.bc7.ktx2",
+      "sha256": "eea0ed3433f377ffba9e276bd3ac8ee41b75367be750f583d8f2739ed9923ed8",
+      "bytes": 91526
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.albedo.astc.ktx2",
+      "sha256": "15d38aad4a966c87bbdbc0c3b9186e2a8550a72b301d3baaea371e44ffe9b291",
+      "bytes": 91729
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.albedo.png",
+      "sha256": "291ce179f9164804febcdd20aed278a6902e82261556cb208e1721b3cf3333ce",
+      "bytes": 102377
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.masks.bc7.ktx2",
+      "sha256": "101b02e6dc76c65b5f3c9b7875bb54a761d5d39d60ed7ae2daa731f592f76eff",
+      "bytes": 641
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.masks.astc.ktx2",
+      "sha256": "4c750f9d764c2a0f87d63f126edfffc66319b95d3a0ed634726b435f230c29b8",
+      "bytes": 641
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.masks.png",
+      "sha256": "9789d24af00c5448c0a8ea586d9f46c6b7b52f52f256cd973a359ca440c48735",
+      "bytes": 709
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.normal.bc7.ktx2",
+      "sha256": "a0d4c6e31fbd610e25a30feb734f76ecf1add6c4010f9352a6c63fbd39f5296e",
+      "bytes": 28637
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.normal.astc.ktx2",
+      "sha256": "9a55ffc9c827aa9fb3d152f1bb8c1c342b7dba51c9aa9ba83cc3a5bae2b3e99b",
+      "bytes": 28450
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.normal.png",
+      "sha256": "70c02548536ee2b9d86260b3da78e2cb3597800a738ffcb0724f5e0a7df83cd5",
+      "bytes": 44914
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.orm.bc7.ktx2",
+      "sha256": "4ef9e1ed59eda9292f33c3ea9c24a69f7470dcb607b8c37a8c8ac4d306c5cf42",
+      "bytes": 69252
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.orm.astc.ktx2",
+      "sha256": "794266e8292a0c6b2a6108ef8ed9bdebfbf62352f9f084fe5ab98b940a34db4e",
+      "bytes": 70713
+    },
+    {
+      "path": "assets/kit/p1/fish_trout/fish_trout.orm.png",
+      "sha256": "987eae65df8ef50f47d3de740c6eb07a52d8aa0f727887ba2165ac44f66c7be5",
+      "bytes": 81113
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/fish/ref-1.jpg",
+      "sha256": "bad584cb48ff6627e9d162eacd03e39eae08d622f39366401fc1f99a44840614",
+      "sourceSha256": "f3409f2c26aa4674e9ffb9df8a348072a962900d7d101859436d72ca6e77189c",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e65c2f9a-4ba1-40a7-beb6-65a3b822f3b7",
+      "prompt": "A single small ocean school fish about 0.4 m long with a simple streamlined torpedo-shaped body with a smooth rounded head, a large dark eye, a clean forked tail fin, one small triangular dorsal fin and small rounded pectoral fins, every fin a solid smooth rounded shape, the scales reading as a soft satin sheen over broad smooth colour areas, smooth sculpted forms like a quality scale model with a bold readable silhouette, coloured with a blue-grey back fading to bright silver sides and a white underside, shown alone floating in mid-air above the plain grey studio floor with a soft shadow below, the whole fish centred in frame and seen exactly side-on in profile with the head to the left, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/fish/ref-2.jpg",
+      "sha256": "a066cdc40c75b293b444f61c1536174cad4eec2abbd4a3014efdf9fce6fbc3f8",
+      "sourceSha256": "269625fce6a37feb1fac5293c5f6136c0e71508b5402f983197bf180e4b1b779",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "130a220e-8c8b-48f2-94fd-5faebab10fb7",
+      "prompt": "Looking straight down from directly above at open shallow sea water that runs out past every edge of the frame, the clear water tinted pale turquoise over a pale sandy floor with a few scattered pebbles, gentle sun glints on the surface and soft caustic light on the sand. A small school of about twelve small ocean fish swims together just under the surface, all heading the same way toward the top right of the frame in a loose teardrop-shaped group, each fish about 0.4 m long with a streamlined torpedo-shaped body, a clean forked tail fin and small rounded pectoral fins spread to the sides, coloured with a blue-grey back fading to bright silver sides and a white underside, every fish reading as a clear separate dark blue-grey torpedo silhouette with its forked tail, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun"
+    },
+    {
+      "path": "assets-source/refs/fish/ref-3.jpg",
+      "sha256": "9e0cd96106680ae99106f8c1533cff095ced27b7f6aaaff7f6e8c5d26db51715",
+      "sourceSha256": "07afa244139cc5946948b74f9c26d79c65f100e3d24b31c11e3b9dd4d4b4d9be",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "3ecd32e8-7d22-401e-ab0c-b75f37da3b23",
+      "prompt": "Two small fish with exactly the same body shape and size swim one above the other in the same direction, both about 0.4 m long with a simple streamlined torpedo-shaped body with a smooth rounded head, a large dark eye, a clean forked tail fin, one small triangular dorsal fin and small rounded pectoral fins, every fin a solid smooth rounded shape, the scales reading as a soft satin sheen over broad smooth colour areas, smooth sculpted forms like a quality scale model with a bold readable silhouette, both seen exactly side-on in profile with the head to the left, floating in mid-air in front of the plain grey studio backdrop with soft shadows on the floor below. The upper fish is coloured with a blue-grey back fading to bright silver sides and a white underside. The lower fish is coloured with an olive-brown back fading to golden-olive sides with a few faint dark spots, a pale cream underside and orange-red lower fins. The picture shows only the two fish on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T18:43:25.283Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/fish/ref-2.jpg",
+        "assets-source/refs/fish/ref-3.jpg"
+      ],
+      "rejected": [
+        "assets-source/refs/fish/ref-1.jpg"
+      ],
+      "notes": "Q5: model ref-3's stylized-real trout body with both its ocean and river palettes. ref-2 is approved for school layout only. ref-1's big-eyed cartoon fish is rejected. Reviewed in docs/review/2026-10-14-walkthrough.html (A12)."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/bird_starling.py",
+    "sha256": "cc649478c2b7ec7ef156489458b212324d0dfeaa0894801859674fa68c9c22e0"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_fauna.py",
+      "sha256": "184bf0e63afe49ef50c453dec9e881575ef56aa54303340258e74de61f5cd2f1"
+    }
+  ],
+  "lodTris": {
+    "bird_starling_lod0": 184,
+    "bird_starling_lod1": 74,
+    "bird_starling_lod2": 22
+  },
+  "nodes": [
+    "bird_starling",
+    "bird_starling_collider",
+    "bird_starling_lod0",
+    "bird_starling_lod1",
+    "bird_starling_lod2"
+  ],
+  "pieceId": "bird_starling",
+  "sockets": []
+}

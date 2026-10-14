@@ -1,0 +1,81 @@
+{
+  "aoDistanceM": 0.08,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.47245514392852783,
+      "p05": 0.18562091886997223
+    },
+    "ao": {
+      "mean": 0.9357007741928101,
+      "min": 0.0,
+      "p05": 0.6235294342041016,
+      "texels": 105428
+    },
+    "coverage": 0.4021759033203125
+  },
+  "blender": "5.2.2 LTS",
+  "boid": {
+    "flap": "U > 0: rotate (|x| - hingeX, y - hingeY) about the hinge line by sign(x) * theta",
+    "fold": {
+      "back": 0.015,
+      "k": 0.25,
+      "rollDeg": -60.0,
+      "rule": "U > 0: scale (|x| - hingeX, y - hingeY) by k, then flap it by rollDeg (down), z -= back * U"
+    },
+    "form": "bird",
+    "frame": "runtime +z forward, +y up; pivot at the body centre on the shoulder hinge line",
+    "hinge": {
+      "tailBaseZ": -0.046,
+      "tailTipZ": -0.112,
+      "tipX": 0.2,
+      "x": 0.02,
+      "y": 0.014
+    },
+    "pivotToFeetM": 0.026,
+    "placeholder": {
+      "lengthM": 1.5125,
+      "scaleToMatch": 7.2,
+      "spanM": 2.875
+    },
+    "realLengthM": 0.197,
+    "realSpanM": 0.4,
+    "tc1": {
+      "u": "wing weight: 0 body and tail, (|x| - hingeX) / (tipX - hingeX) on the wings",
+      "v": "tail weight: 0 at the tail base (z = -0.046), 1 at the tail tip (z = -0.112)"
+    }
+  },
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 512
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 128
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colourSource": "numpy paint (no colour bake)",
+  "device": "CPU",
+  "lodTris": [
+    184,
+    74,
+    22
+  ],
+  "marginPx": 4,
+  "receiverSignature": "d2b7e8fa0c50bf80c739497dce42b15cce24d6c8f0c49445ec3fdd4d3441c113",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 1858.4732457659898,
+    "median": 1827.7429925144654,
+    "min": 1469.515890903509
+  }
+}

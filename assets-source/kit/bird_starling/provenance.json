@@ -1,0 +1,393 @@
+{
+  "pieceId": "bird_starling",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/bird_starling.py",
+    "sha256": "cc649478c2b7ec7ef156489458b212324d0dfeaa0894801859674fa68c9c22e0"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_fauna.py",
+      "sha256": "184bf0e63afe49ef50c453dec9e881575ef56aa54303340258e74de61f5cd2f1"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.08,
+    "bakeStats": {
+      "albedoLuma": {
+        "mean": 0.47245514392852783,
+        "p05": 0.18562091886997223
+      },
+      "ao": {
+        "mean": 0.9357007741928101,
+        "min": 0,
+        "p05": 0.6235294342041016,
+        "texels": 105428
+      },
+      "coverage": 0.4021759033203125
+    },
+    "blender": "5.2.2 LTS",
+    "boid": {
+      "flap": "U > 0: rotate (|x| - hingeX, y - hingeY) about the hinge line by sign(x) * theta",
+      "fold": {
+        "back": 0.015,
+        "k": 0.25,
+        "rollDeg": -60,
+        "rule": "U > 0: scale (|x| - hingeX, y - hingeY) by k, then flap it by rollDeg (down), z -= back * U"
+      },
+      "form": "bird",
+      "frame": "runtime +z forward, +y up; pivot at the body centre on the shoulder hinge line",
+      "hinge": {
+        "tailBaseZ": -0.046,
+        "tailTipZ": -0.112,
+        "tipX": 0.2,
+        "x": 0.02,
+        "y": 0.014
+      },
+      "pivotToFeetM": 0.026,
+      "placeholder": {
+        "lengthM": 1.5125,
+        "scaleToMatch": 7.2,
+        "spanM": 2.875
+      },
+      "realLengthM": 0.197,
+      "realSpanM": 0.4,
+      "tc1": {
+        "u": "wing weight: 0 body and tail, (|x| - hingeX) / (tipX - hingeX) on the wings",
+        "v": "tail weight: 0 at the tail base (z = -0.046), 1 at the tail tip (z = -0.112)"
+      }
+    },
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 512
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 128
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "colourSource": "numpy paint (no colour bake)",
+    "device": "CPU",
+    "lodTris": [
+      184,
+      74,
+      22
+    ],
+    "marginPx": 4,
+    "receiverSignature": "d2b7e8fa0c50bf80c739497dce42b15cce24d6c8f0c49445ec3fdd4d3441c113",
+    "samples": 32,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 1858.4732457659898,
+      "median": 1827.7429925144654,
+      "min": 1469.515890903509
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 184,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 74,
+      "ratio": 0.40217391304347827
+    },
+    {
+      "lod": 2,
+      "tris": 22,
+      "ratio": 0.11956521739130435
+    }
+  ],
+  "collider": {
+    "node": "bird_starling_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 1858.4732457659898,
+    "median": 1827.7429925144654,
+    "min": 1469.515890903509
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 184179,
+        "astc": 186650
+      },
+      "glbBytes": 19808
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/bird_starling/bird_starling.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 10,
+        "bytes": 73389,
+        "sha256": "d27e2e8315263461fb9459f89b235f85fea1b376a8b2ce58c3674ddd4f0565c3"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/bird_starling/bird_starling.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 10,
+        "bytes": 72824,
+        "sha256": "a362bb7b0febfab4c8816a6462d235011405400df60dea39cb2dd083aa593b70"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/bird_starling/bird_starling.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 67883,
+        "sha256": "30724eb1f8e9fe10cadee36be4da454db85ad26c05a882cc8cc54bf19b1c9a1a"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/bird_starling/bird_starling.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 8,
+        "bytes": 3237,
+        "sha256": "4cd6201492e8166d61f1361e9beee61058ea9593cf6a3e574388c9333c9154a6"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/bird_starling/bird_starling.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 8,
+        "bytes": 3218,
+        "sha256": "0cbad101aa3c22524c99d1b0c5797ebe51b6dd96eb55accc10acb22498427796"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/bird_starling/bird_starling.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 2302,
+        "sha256": "c0b1e753d7fa25d6fa3c419f291387c4d705414da3153c830f24a6f0150ef776"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/bird_starling/bird_starling.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 54832,
+        "sha256": "6b9e784dc5beedc09a572a59d2e8ecd2249f6d2f689eceb5ccb24b337a0aa5bb"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/bird_starling/bird_starling.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 55678,
+        "sha256": "6cd0450818494cc04725d8708fff534ecf19811b9635cf109e2c01edaea35ef1"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/bird_starling/bird_starling.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 65297,
+        "sha256": "e5af783333f60e3a6aad7fd279b5ba58d50f636635d9121d4ea915b24a753849"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/bird_starling/bird_starling.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 52721,
+        "sha256": "1a4277101499b7615e36f5a3fd8b784128da1d9e4bc51b147df4a043e2d8a0c5"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/bird_starling/bird_starling.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 54930,
+        "sha256": "dc889816769cd3b32fae30a4b9852ecd28d60da08288d19b5a25ee5d6077f069"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/bird_starling/bird_starling.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 65969,
+        "sha256": "f2730cc16671e3c1080444443c0aaac51467f310a46927f11c606ba781476010"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.glb",
+      "sha256": "ba11fd62cba5f5d1db37166dc08a9f997704eb1f551aa9fbe7dd4f08a562e8b5",
+      "bytes": 19808
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.albedo.bc7.ktx2",
+      "sha256": "d27e2e8315263461fb9459f89b235f85fea1b376a8b2ce58c3674ddd4f0565c3",
+      "bytes": 73389
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.albedo.astc.ktx2",
+      "sha256": "a362bb7b0febfab4c8816a6462d235011405400df60dea39cb2dd083aa593b70",
+      "bytes": 72824
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.albedo.png",
+      "sha256": "30724eb1f8e9fe10cadee36be4da454db85ad26c05a882cc8cc54bf19b1c9a1a",
+      "bytes": 67883
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.masks.bc7.ktx2",
+      "sha256": "4cd6201492e8166d61f1361e9beee61058ea9593cf6a3e574388c9333c9154a6",
+      "bytes": 3237
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.masks.astc.ktx2",
+      "sha256": "0cbad101aa3c22524c99d1b0c5797ebe51b6dd96eb55accc10acb22498427796",
+      "bytes": 3218
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.masks.png",
+      "sha256": "c0b1e753d7fa25d6fa3c419f291387c4d705414da3153c830f24a6f0150ef776",
+      "bytes": 2302
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.normal.bc7.ktx2",
+      "sha256": "6b9e784dc5beedc09a572a59d2e8ecd2249f6d2f689eceb5ccb24b337a0aa5bb",
+      "bytes": 54832
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.normal.astc.ktx2",
+      "sha256": "6cd0450818494cc04725d8708fff534ecf19811b9635cf109e2c01edaea35ef1",
+      "bytes": 55678
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.normal.png",
+      "sha256": "e5af783333f60e3a6aad7fd279b5ba58d50f636635d9121d4ea915b24a753849",
+      "bytes": 65297
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.orm.bc7.ktx2",
+      "sha256": "1a4277101499b7615e36f5a3fd8b784128da1d9e4bc51b147df4a043e2d8a0c5",
+      "bytes": 52721
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.orm.astc.ktx2",
+      "sha256": "dc889816769cd3b32fae30a4b9852ecd28d60da08288d19b5a25ee5d6077f069",
+      "bytes": 54930
+    },
+    {
+      "path": "assets/kit/p1/bird_starling/bird_starling.orm.png",
+      "sha256": "f2730cc16671e3c1080444443c0aaac51467f310a46927f11c606ba781476010",
+      "bytes": 65969
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/birds/ref-1.jpg",
+      "sha256": "fcc2e9b987e37fe9cbfe1051da279960e2ab5bef0edcf913e1821bcc521e1ac5",
+      "sourceSha256": "4cebe0c1f61876244838cec137311df611bc1675a6796cc22c9a3e755dc7e2c8",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "d7e28868-cf49-4232-a707-1fdd74f49c34",
+      "prompt": "A single small stylized songbird about the size of a starling with a compact rounded body, a round head, a short pointed dark beak, broad clearly shaped pointed wings with a smooth trailing edge and a short fan-shaped tail, in plain feather colour blocks: slate blue-grey back and upper wings, charcoal wingtips and tail tip, a warm rusty-orange breast and a pale cream underside, the feathers reading as broad smooth painted areas, smooth sculpted forms like a quality scale model with a bold readable silhouette, gliding with both wings spread and raised in a shallow V and the tail slightly fanned, shown alone floating in mid-air above the plain grey studio floor with a soft shadow below, the whole bird centred in frame and seen in true side profile from the bird's left with the head pointing to the left of the frame and the camera level with the bird, so the body profile and the outline of both raised wings read clearly above the back, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/birds/ref-2.jpg",
+      "sha256": "21c7b144786f0f57afe6bd6b197fe15d74f64129d4925248d99be70fc4645253",
+      "sourceSha256": "7b2cf71f557b4ee18fa5208601b03bbabc799a641c3ba2cd6aeed1457e206f8f",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "b23a4000-186c-4e1e-8e45-ee536b178864",
+      "prompt": "A bird's-eye view photographed from directly overhead with the camera pointing straight down at the ground: five small birds fly freely through open air in a loose group, each seen flat from above so its back, both spread upper wings and its fanned tail read as a clear separate cross-shaped silhouette, three gliding with wings spread wide and two with wings raised mid-flap. Each bird is a small stylized songbird about the size of a starling with a compact rounded body, a round head, a short pointed dark beak, broad clearly shaped pointed wings with a smooth trailing edge and a short fan-shaped tail, in plain feather colour blocks: slate blue-grey back and upper wings, charcoal wingtips and tail tip, a warm rusty-orange breast and a pale cream underside, the feathers reading as broad smooth painted areas, smooth sculpted forms like a quality scale model with a bold readable silhouette. Far below them lies a flat sunlit map-like landscape of lush meadow grass and the dark green rounded treetops of a forest edge, softly out of focus and running out past every edge of the frame, with small soft bird shadows on the grass, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, bright midday light"
+    },
+    {
+      "path": "assets-source/refs/birds/ref-3.jpg",
+      "sha256": "fc8652a33bc60c7333cddcc73602dd7a5a68bdba805a10ee716a55ca8124f1e2",
+      "sourceSha256": "f4f984169d47b3723dfbb88157ab1fb199c5d13905fc325c0dfbfecdf35ccc4a",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "28d76c15-0dc8-49e3-8b47-630f2de97694",
+      "prompt": "Three small birds roosting together on a leafy branch in the top of a broad rounded oak tree canopy, each a small stylized songbird about the size of a starling with a compact rounded body, a round head, a short pointed dark beak, broad clearly shaped pointed wings with a smooth trailing edge and a short fan-shaped tail, in plain feather colour blocks: slate blue-grey back and upper wings, charcoal wingtips and tail tip, a warm rusty-orange breast and a pale cream underside, the feathers reading as broad smooth painted areas, smooth sculpted forms like a quality scale model with a bold readable silhouette, all three with wings folded neatly against their bodies in a plump rounded resting posture, one facing left, one facing right and one turned toward the camera, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T18:43:22.646Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/birds/ref-1.jpg",
+        "assets-source/refs/birds/ref-2.jpg",
+        "assets-source/refs/birds/ref-3.jpg"
+      ],
+      "notes": "Q6: starling-sized. ref-1 (gliding songbird) and ref-3 (roosting on an oak branch) are the modeling references; ref-2 is for flock layout only (its centre bird is upside down). Feather tips live in the texture at 100-200 triangles. Replaces the placeholder gulls, which the owner said read like fish. Reviewed in the walkthrough (A12)."
+    }
+  ]
+}

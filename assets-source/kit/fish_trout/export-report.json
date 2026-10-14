@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/fish_trout.py",
+    "sha256": "8d6922a8c0f7aaa83ee9c98377c6bc4c7acbfbea34e52e008c8c523d57f6cf7a"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_fauna.py",
+      "sha256": "184bf0e63afe49ef50c453dec9e881575ef56aa54303340258e74de61f5cd2f1"
+    }
+  ],
+  "lodTris": {
+    "fish_trout_lod0": 246,
+    "fish_trout_lod1": 94,
+    "fish_trout_lod2": 30
+  },
+  "nodes": [
+    "fish_trout",
+    "fish_trout_collider",
+    "fish_trout_lod0",
+    "fish_trout_lod1",
+    "fish_trout_lod2"
+  ],
+  "pieceId": "fish_trout",
+  "sockets": []
+}

@@ -1,0 +1,80 @@
+{
+  "aoDistanceM": 0.08,
+  "bakeStats": {
+    "albedoLuma_ocean": {
+      "mean": 0.6869728709749564,
+      "p05": 0.4405282132448332
+    },
+    "albedoLuma_river": {
+      "mean": 0.4910109835051476,
+      "p05": 0.24967321256796518
+    },
+    "ao": {
+      "mean": 0.9431415796279907,
+      "min": 0.0,
+      "p05": 0.686274528503418,
+      "texels": 43976
+    },
+    "coverage": 0.167755126953125
+  },
+  "blender": "5.2.2 LTS",
+  "boid": {
+    "form": "fish",
+    "frame": "runtime +z forward, +y up; pivot at the body centre on the length axis",
+    "placeholder": {
+      "lengthM": 1.08,
+      "scaleToMatch": 2.7
+    },
+    "realLengthM": 0.4,
+    "tc1": {
+      "u": "wag weight: 0 forward of z = 0.06, linear to 1 at the caudal fork tips (z = -0.20)",
+      "v": "0 (reserved)"
+    },
+    "variants": {
+      "ocean": [
+        0.0,
+        0.0
+      ],
+      "river": [
+        0.5,
+        0.0
+      ],
+      "rule": "UV0 offset per instance; one texture set"
+    },
+    "wag": "x += U^2 * amplitude * sin(phase)"
+  },
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 512
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 128
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colourSource": "numpy paint (no colour bake)",
+  "device": "CPU",
+  "lodTris": [
+    246,
+    94,
+    30
+  ],
+  "marginPx": 4,
+  "receiverSignature": "dbced63fb627c9e189c4cbe3ebaf1dfb9f6e74d72716f2677f345c71d4e8e18b",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 1161.8440268973388,
+    "median": 1126.3998088304534,
+    "min": 886.0172070749982
+  }
+}

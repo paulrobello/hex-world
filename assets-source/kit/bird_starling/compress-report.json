@@ -1,0 +1,181 @@
+{
+  "name": "bird_starling",
+  "date": "2026-10-14T18:42:20.367Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/bird_starling/bird_starling.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 10,
+      "bytes": 73389,
+      "sha256": "d27e2e8315263461fb9459f89b235f85fea1b376a8b2ce58c3674ddd4f0565c3"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/bird_starling/bird_starling.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 10,
+      "bytes": 72824,
+      "sha256": "a362bb7b0febfab4c8816a6462d235011405400df60dea39cb2dd083aa593b70"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/bird_starling/bird_starling.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 67883,
+      "sha256": "30724eb1f8e9fe10cadee36be4da454db85ad26c05a882cc8cc54bf19b1c9a1a"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/bird_starling/bird_starling.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 8,
+      "bytes": 3237,
+      "sha256": "4cd6201492e8166d61f1361e9beee61058ea9593cf6a3e574388c9333c9154a6"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/bird_starling/bird_starling.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 8,
+      "bytes": 3218,
+      "sha256": "0cbad101aa3c22524c99d1b0c5797ebe51b6dd96eb55accc10acb22498427796"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/bird_starling/bird_starling.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 2302,
+      "sha256": "c0b1e753d7fa25d6fa3c419f291387c4d705414da3153c830f24a6f0150ef776"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/bird_starling/bird_starling.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 54832,
+      "sha256": "6b9e784dc5beedc09a572a59d2e8ecd2249f6d2f689eceb5ccb24b337a0aa5bb"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/bird_starling/bird_starling.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 55678,
+      "sha256": "6cd0450818494cc04725d8708fff534ecf19811b9635cf109e2c01edaea35ef1"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/bird_starling/bird_starling.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 65297,
+      "sha256": "e5af783333f60e3a6aad7fd279b5ba58d50f636635d9121d4ea915b24a753849"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/bird_starling/bird_starling.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 52721,
+      "sha256": "1a4277101499b7615e36f5a3fd8b784128da1d9e4bc51b147df4a043e2d8a0c5"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/bird_starling/bird_starling.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 54930,
+      "sha256": "dc889816769cd3b32fae30a4b9852ecd28d60da08288d19b5a25ee5d6077f069"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/bird_starling/bird_starling.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 65969,
+      "sha256": "f2730cc16671e3c1080444443c0aaac51467f310a46927f11c606ba781476010"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 184179,
+      "astc": 186650
+    },
+    "glbBytes": 19808
+  },
+  "glb": {
+    "bytes": 19808,
+    "sha256": "ba11fd62cba5f5d1db37166dc08a9f997704eb1f551aa9fbe7dd4f08a562e8b5"
+  }
+}

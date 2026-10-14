@@ -234,4 +234,14 @@
       "slots": { "car_pickup_body": { "roughness": 0.36, "masks": true },
                  "car_pickup_glass": { "roughness": 0.05, "masks": true },
                  "car_pickup_tyre": { "roughness": 0.88, "masks": true } },
-      "maps": { "masks": "p1/car_pickup/car_pickup.masks" } } ] }
+      "maps": { "masks": "p1/car_pickup/car_pickup.masks" } },
+    { "id": "bird_starling", "pack": "props", "kind": "prop", "glb": "p1/bird_starling/bird_starling.glb",
+      "provenance": "assets-source/kit/bird_starling/provenance.json",
+      "slots": { "bird_starling_body": { "unique": true, "masks": true } },
+      "maps": { "albedo": "p1/bird_starling/bird_starling.albedo", "normal": "p1/bird_starling/bird_starling.normal",
+                "orm": "p1/bird_starling/bird_starling.orm", "masks": "p1/bird_starling/bird_starling.masks" } },
+    { "id": "fish_trout", "pack": "props", "kind": "prop", "glb": "p1/fish_trout/fish_trout.glb",
+      "provenance": "assets-source/kit/fish_trout/provenance.json",
+      "slots": { "fish_trout_body": { "unique": true, "masks": true } },
+      "maps": { "albedo": "p1/fish_trout/fish_trout.albedo", "normal": "p1/fish_trout/fish_trout.normal",
+                "orm": "p1/fish_trout/fish_trout.orm", "masks": "p1/fish_trout/fish_trout.masks" } } ] }
