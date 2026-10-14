@@ -355,6 +355,12 @@
         "assets-source/refs/meadow_props/ref-2.jpg"
       ],
       "notes": "Approved: wildflower clumps (same species and colours) and rocks partly buried in the turf. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "who": "Paul Robello",
+      "when": "2026-10-13",
+      "gate": "piece",
+      "notes": "Meadow props approved in chat from the in-engine close/macro/mid/strategic shots."
     }
   ]
 }
