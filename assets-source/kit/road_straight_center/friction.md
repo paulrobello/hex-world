@@ -1,0 +1,21 @@
+# road_straight friction log
+
+Authoring agent: claude-code / claude-opus-5-5. Covers road_straight_center, road_straight_edge, the shared `_road.py` and the asphalt tileable set.
+Each entry gives what happened, the fix, and the minutes lost.
+
+1. **The brief's LOD segment counts fail the ratio gate once the profile is LOD-invariant.** With one profile in every LOD and paint in every LOD, a LOD's tris are `S·n + p`, so halving the segments always lands above 50% (edge (8, 4, 1) gave 51.5%, center (12, 6, 2) gave 51.5% and 16.2%). Fix: recompute from `S·n1 + p ≤ 0.5·(S·n0 + p)` and `S·n2 + p ≤ 0.15·(S·n0 + p)`, giving edge (9, 4, 1) and center (12, 5, 1) with S = 28. Skill gap: `gates.md` gives the LOD floor for border-ring pieces but not for swept profiles; add the swept formula. 3 min.
+2. **Paint and bed share top-down UVs, so a joined AO bake darkens the dashes.** The paint sits 3.5 cm above the bed with the same planar UV0, and both surfaces write the same masks texels. Fix: bake AO on the bed alone (`bake_to` hides the separate paint object), then join the paint into each LOD. Skill gap: `pitfalls.md` should say that overlapping decal geometry must join after the bake. 2 min.
+3. **Low-frequency 4D noise on the torus partly mirrors the tile.** At a scale near the torus size (asphalt wear at 2.2, cracks at 1.8), the noise barely varies along the sin component, so the tile correlates 0.16-0.18 with its own mirror and the 2×2 test shows kaleidoscope patches, although the wrap itself is seamless. Fix: keep every feature scale ≥ 4 on a tileM 2 set (mirror correlation fell to 0.10 / 0.02). Skill gap: `lib-contracts.md` `torus_coords` should state the minimum scale, and the seam check should include a mirror-correlation number, not only wrap-edge differences. 5 min.
+4. **Shadow acne on vertical kerb walls.** In-engine, the 0.12 m kerb faces that face the sun at a grazing angle show a sawtooth band. A `--shadows off` shot removes it completely, so it is the directional light's default depth/normal bias (`scene.rs`), not the asset. Not fixed here (renderer scope); reported as a concern. 6 min.
+5. **The worktree guard refuses heredoc file writes and `$SECONDS` loops.** Fix: write files with the editor tool, and a small node script for the bounded load wait. Same as meadow_base entry 4. 2 min.
+6. **The load guard and `make web-shots-kit` fight.** The target rebuilds the wasm with trunk first, which pushed the 1-minute load from 14 to 50 before the "after" reading. Fix: discard that run, wait, and rerun `node e2e/shots.mjs dist scripts/shots/kit.json ""` on the fresh `dist`. Skill gap: the R9 guidance should say to build first and guard only the shot run. 4 min.
+7. **`make kit-material` needs `assets-source/kit/materials/<set>/` to exist** for its final `cp`. Fix: `mkdir -p` first. 1 min.
+
+## Folded into the blender-asset skill
+1. `gates.md` (LOD1 / LOD2 row): the swept-profile formula and the shipped segment counts.
+2. `pitfalls.md` ("Overlapping decals join after the bake").
+3. `lib-contracts.md` (`torus_coords`: feature scale ≥ 4 on a tileM 2 set), `pitfalls.md` ("Low-frequency 4D noise mirrors the tile") and the `gates.md` tileable-set wrap row (mirror correlation; not gate-pinned).
+4. `pitfalls.md` ("Shadow acne in an in-engine shot is a renderer issue first"). The acne itself was fixed in the renderer: the kit's first shadow cascade ends at 25 m.
+5. `SKILL.md` ("Worktree sessions").
+6. `SKILL.md` ("Timing": build first, guard only the measured or shot run) and `stages.md` (interactive route, step 8).
+7. Fixed in the `Makefile`: `kit-material` creates `assets-source/kit/materials/<set>/`. No skill change needed.

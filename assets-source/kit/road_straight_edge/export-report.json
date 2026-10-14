@@ -1,0 +1,44 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/road_straight_edge.py",
+    "sha256": "4e2b869f71e2f7953bc2b1ac94961fff5959b0033573f741b01f575feba82fe9"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+    }
+  ],
+  "lodTris": {
+    "road_straight_edge_lod0": 256,
+    "road_straight_edge_lod1": 116,
+    "road_straight_edge_lod2": 32
+  },
+  "nodes": [
+    "road_straight_edge",
+    "road_straight_edge_collider",
+    "road_straight_edge_lod0",
+    "road_straight_edge_lod1",
+    "road_straight_edge_lod2",
+    "socket-lane-0"
+  ],
+  "pieceId": "road_straight_edge",
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "road",
+        "offset": 0.0,
+        "width": 6.0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

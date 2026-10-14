@@ -1,0 +1,28 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 12,
+  "maskStats": {
+    "mean": 0.9993626475334167,
+    "min": 0.9686275124549866,
+    "p01": 0.9843137860298157,
+    "snowMean": 1.0,
+    "texels": 632404,
+    "wetMax": 0.6980392336845398,
+    "wetMin": 0.5098039507865906
+  },
+  "receiverSignature": "3b9539f0065c28d29cf62398420935d9a9c3c537af34e4f94c055894c6a7b323",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 31.99998723644545,
+    "median": 31.99301248399805,
+    "min": 31.85460175157288
+  }
+}

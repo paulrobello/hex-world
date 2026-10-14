@@ -1,0 +1,5 @@
+{ "version": 1, "materials": {},
+  "pieces": [ { "id": "fixture", "kind": "base", "glb": "p1/fixture/fixture.glb",
+    "provenance": "crates/hex-render/tests/fixtures/kit/source/fixture/provenance.json",
+    "slots": { "fixture_cap": { "masks": true } },
+    "maps": { "masks": "p1/fixture/fixture.masks" } } ] }

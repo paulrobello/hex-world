@@ -1,0 +1,10 @@
+{
+  "blender": "5.2.2 LTS",
+  "device": "CPU",
+  "generator": "scripts/blender/kit/mat_bark.py",
+  "generatorSha256": "cc55b9c07d4e6d3a1e9266533004fd14a48c11f1383642d4b4ca2c31e045a55a",
+  "samples": 32,
+  "set": "bark",
+  "size": 1024,
+  "tileM": 2.0
+}

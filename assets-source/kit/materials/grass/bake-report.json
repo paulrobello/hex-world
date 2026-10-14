@@ -1,0 +1,10 @@
+{
+  "blender": "5.2.2 LTS",
+  "device": "CPU",
+  "generator": "scripts/blender/kit/mat_grass.py",
+  "generatorSha256": "03a2278d0bf0e4c4f1352cf38171b95f531d84792729940c0d6a753b2bcdb59b",
+  "samples": 32,
+  "set": "grass",
+  "size": 1024,
+  "tileM": 2.0
+}

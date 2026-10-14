@@ -1,0 +1,65 @@
+{
+  "approvals": [
+    {
+      "gate": "look-dev",
+      "when": "2026-10-13",
+      "who": "Paul Robello"
+    }
+  ],
+  "d2Exceptions": [
+    {
+      "what": "soil tileable set at tileM 4.0 (256 px/m) instead of D2's 512 px/m, so one strata set spans the 4 m skirt",
+      "when": "2026-10-13",
+      "who": "Paul Robello"
+    }
+  ],
+  "ev100": 12.5,
+  "hdri": {
+    "bytes": 5451493,
+    "file": "assets-source/hdri/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+    "license": "CC0 (https://polyhaven.com/license)",
+    "name": "kloofendal_48d_partly_cloudy_puresky",
+    "sha256": "5244534e9cf5b606f2ff513aa00ddb161b0a4826ffd88a0d3bd03ac29247d198",
+    "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr"
+  },
+  "ibl": {
+    "files": {
+      "noon.diffuse.ktx2": "4d55472b3aa5447eb0bdced387396cd07457b5c13cf5157cca0f4550441edc3a",
+      "noon.specular.ktx2": "f93b5db51d6b59bc850123b2f8a08ca9f6fed94caf3827aa71e5da55ebd5f75c"
+    },
+    "float16": {
+      "noon.diffuse.ktx2": {
+        "clamped": 0,
+        "nonFinite": 0
+      },
+      "noon.specular.ktx2": {
+        "clamped": 3,
+        "nonFinite": 0
+      }
+    },
+    "samples": 128,
+    "source": "assets-source/hdri/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+    "sourceSha256": "5244534e9cf5b606f2ff513aa00ddb161b0a4826ffd88a0d3bd03ac29247d198",
+    "specularBase": 256
+  },
+  "iblIntensity": 1500,
+  "masksAlpha": "ao",
+  "soilTileM": 4.0,
+  "sunDirection": [
+    0.553,
+    0.742,
+    0.379
+  ],
+  "texelDensity": {
+    "grassPxPerM": 512,
+    "masksMeasured": {
+      "max": 32.0,
+      "median": 31.99,
+      "min": 31.85
+    },
+    "masksPxPerM": 32,
+    "soilPxPerM": 256,
+    "source": "1024\u00b2 tileable maps over manifest tileM (grass 2.0, soil 4.0); masks from assets-source/kit/meadow_base/provenance.json texelDensityPxPerM"
+  },
+  "tonemap": "aces"
+}

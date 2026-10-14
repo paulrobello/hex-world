@@ -1,0 +1,101 @@
+{
+  "aoDistanceM": 0.35,
+  "bakeStats": {
+    "barkAo": {
+      "mean": 0.7143838405609131,
+      "min": 0.0,
+      "p01": 0.0,
+      "p05": 0.0941176563501358,
+      "texels": 252785
+    },
+    "canopyAo": {
+      "mean": 0.7172178030014038,
+      "min": 0.0,
+      "p01": 0.1882353127002716,
+      "p05": 0.3450980484485626,
+      "texels": 1929508
+    },
+    "leafAlphaCoverageByMip": [
+      0.5651,
+      0.5615,
+      0.5638,
+      0.5672,
+      0.5706,
+      0.5781,
+      0.5625,
+      0.7031,
+      1.0,
+      1.0
+    ]
+  },
+  "barkTile": {
+    "aoTexelDensityPxPerM": {
+      "max": 51.30269560251895,
+      "median": 44.39236507226257,
+      "min": 24.98007670239039
+    },
+    "set": "bark",
+    "tileUvScale": 12.0,
+    "uvPerM": 0.041666666666666664
+  },
+  "blend": {
+    "key": "tree_hero_oak/tree_hero_oak_high.blend",
+    "sha256": "5709011d47546ee830787c4cd5122deadbc2b8dd899ad8f96dfa591761fb293a",
+    "store": "local:assets-source/blend"
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.25,
+  "canopyShell": {
+    "aoDistanceM": 0.3,
+    "cageExtrusionM": 0.45,
+    "clumps": 11,
+    "maxRayDistanceM": 0.9,
+    "sectors": 3
+  },
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 2048
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 2048
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 2048
+    }
+  },
+  "culledReceiverFaces": {
+    "buried": 71,
+    "inCrown": 77,
+    "of": 616
+  },
+  "device": "METAL",
+  "marginPx": 8,
+  "maxRayDistanceM": 0.5,
+  "receiverSignature": "39cde62258b1539e12fa3df76ccf8f1449b47ebc6e80f57574c8408a559f2fae",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "tree_hero_oak_bark": {
+      "max": 615.6323472302274,
+      "median": 532.7083808671508,
+      "min": 299.7609204286847
+    },
+    "tree_hero_oak_canopy": {
+      "max": 418.23516942293287,
+      "median": 339.5200458741681,
+      "min": 208.6222620427368
+    },
+    "tree_hero_oak_leaves": {
+      "max": 455.9372369788102,
+      "median": 391.5990281051996,
+      "min": 335.57037931983314
+    }
+  }
+}

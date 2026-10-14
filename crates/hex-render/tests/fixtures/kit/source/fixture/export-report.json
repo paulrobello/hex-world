@@ -1,0 +1,38 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/fixture.py",
+    "sha256": "6c8e86f950f4ab5fa296aad2b51ce90df892538383ee27cc783e6343d1a3a5da"
+  },
+  "lodTris": {
+    "fixture_lod0": 684,
+    "fixture_lod1": 96,
+    "fixture_lod2": 72
+  },
+  "nodes": [
+    "fixture",
+    "fixture_collider",
+    "fixture_lod0",
+    "fixture_lod1",
+    "fixture_lod2",
+    "socket-lane-0"
+  ],
+  "pieceId": "fixture",
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "road",
+        "offset": 0.0,
+        "width": 6.0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

@@ -28,3 +28,8 @@ bevy = { workspace = true, features = ["web", "webgpu"] }
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+gltf = { version = "1", features = ["extras"] }
+serde_json = "1"
+sha2 = "0.10"

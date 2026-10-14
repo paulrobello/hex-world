@@ -12,8 +12,7 @@ use crate::{
     chunks::{chunk_tiles, merge_by_material},
     post::{QualityTier, camera_post_bundle, camera_ssao},
     workload::{
-        FIRST_CASCADE_FAR_BOUND, GATE, GateConfig, GateView, Layout, PostMode, ShadowCasters,
-        piece_material, unit_hash,
+        GATE, GateConfig, GateView, Layout, PostMode, ShadowCasters, piece_material, unit_hash,
     },
 };
 
@@ -70,7 +69,7 @@ const LOD_FAR: f32 = 400.0;
 const LOD_BAND: f32 = 5.0;
 const LOD_END: f32 = 100_000.0;
 
-fn lod_range(lod: usize) -> VisibilityRange {
+pub(crate) fn lod_range(lod: usize) -> VisibilityRange {
     let near = LOD_NEAR - LOD_BAND..LOD_NEAR + LOD_BAND;
     let far = LOD_FAR - LOD_BAND..LOD_FAR + LOD_BAND;
     let (start_margin, end_margin) = match lod {
@@ -560,8 +559,12 @@ pub fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     boids: Option<Res<crate::boids::BoidAssets>>,
     config: Option<Res<GateConfig>>,
+    server: Res<AssetServer>,
 ) {
     let config = config.map(|c| *c).unwrap_or_default();
+    // Look-dev applies to the kit scenario only: single/gate2000 keep the P0 camera, so the P0 perf
+    // baseline and the instanced pipeline's mesh-view bind-group layout are unchanged.
+    let kit = scenario.0 == Scenario::Kit;
     if let Some(boids) = boids {
         let flock = crate::boids::spawn_flock(&mut commands, &boids);
         commands.entity(flock).insert(SceneEntity);
@@ -569,14 +572,24 @@ pub fn setup(
     let camera = match scenario.0 {
         Scenario::Single => {
             commands.remove_resource::<crate::instanced::InstancedScene>();
+            commands.remove_resource::<crate::kit_scene::KitPending>();
+            commands.remove_resource::<crate::kit_scene::KitLoading>();
             spawn_single(&mut commands, &mut meshes, &mut materials);
             commands.insert_resource(crate::kit_test::KitTestPending);
             Transform::from_xyz(0.0, 63.0, 90.0).looking_at(Vec3::ZERO, Vec3::Y)
         }
         Scenario::Gate2000 => {
             commands.remove_resource::<crate::kit_test::KitTestPending>();
+            commands.remove_resource::<crate::kit_scene::KitPending>();
+            commands.remove_resource::<crate::kit_scene::KitLoading>();
             spawn_gate(&mut commands, &mut meshes, &mut materials, config);
             gate_camera(view.0)
+        }
+        Scenario::Kit => {
+            commands.remove_resource::<crate::instanced::InstancedScene>();
+            commands.remove_resource::<crate::kit_test::KitTestPending>();
+            commands.insert_resource(crate::kit_scene::KitPending);
+            Transform::from_xyz(14.0, 38.0, 62.0).looking_at(Vec3::new(14.0, 0.0, 0.0), Vec3::Y)
         }
     };
 
@@ -586,18 +599,22 @@ pub fn setup(
             shadow_maps_enabled: config.shadows,
             ..default()
         },
-        Transform::from_xyz(200.0, 400.0, 150.0).looking_at(Vec3::ZERO, Vec3::Y),
+        if kit {
+            crate::lookdev::sun_transform()
+        } else {
+            Transform::from_xyz(200.0, 400.0, 150.0).looking_at(Vec3::ZERO, Vec3::Y)
+        },
         CascadeShadowConfigBuilder {
             num_cascades: config.cascades as usize,
             maximum_distance: config.shadow_dist as f32,
-            first_cascade_far_bound: FIRST_CASCADE_FAR_BOUND,
+            first_cascade_far_bound: crate::lookdev::first_cascade_far_bound(kit),
             ..default()
         }
         .build(),
         SceneEntity,
     ));
     commands.insert_resource(GlobalAmbientLight {
-        brightness: 400.0,
+        brightness: if kit && config.ibl { 0.0 } else { 400.0 },
         ..default()
     });
 
@@ -607,6 +624,13 @@ pub fn setup(
         cam.insert(camera_post_bundle(tier));
         if let Some(ssao) = camera_ssao(tier) {
             cam.insert(ssao);
+        }
+    }
+    if kit {
+        cam.insert(crate::lookdev::tonemapping(config.tonemap));
+        cam.insert(crate::lookdev::exposure(config.ev100));
+        if config.ibl {
+            cam.insert(crate::lookdev::environment(&server));
         }
     }
 }

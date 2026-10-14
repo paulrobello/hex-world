@@ -105,6 +105,52 @@ pub fn parse_shadows(s: &str) -> Option<bool> {
     }
 }
 
+/// `ibl=on|off`: the noon environment map on the kit camera (D5).
+pub fn parse_ibl(s: &str) -> Option<bool> {
+    parse_shadows(s)
+}
+
+/// D4 candidates. ACES fitted is the default (owner look-dev ruling, 2026-10-13: AgX desaturated the
+/// meadow greens against the approved references).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum Tonemap {
+    AgX,
+    TonyMcMapface,
+    #[default]
+    AcesFitted,
+}
+
+impl Tonemap {
+    pub fn parse(s: &str) -> Option<Tonemap> {
+        match s {
+            "agx" => Some(Tonemap::AgX),
+            "tony" => Some(Tonemap::TonyMcMapface),
+            "aces" => Some(Tonemap::AcesFitted),
+            _ => None,
+        }
+    }
+}
+
+/// `ev100=<f32>`: the kit camera's exposure (EV100). Stored in hundredths so `GateConfig` stays `Eq`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Ev100(i32);
+
+impl Ev100 {
+    /// Finite values in [0, 20] (Bevy's range of sensible camera EV100s), rounded to 0.01.
+    pub fn parse(s: &str) -> Option<Ev100> {
+        let v: f32 = s.parse().ok()?;
+        (v.is_finite() && (0.0..=20.0).contains(&v)).then(|| Ev100::from_f32(v))
+    }
+
+    pub fn from_f32(v: f32) -> Ev100 {
+        Ev100((v * 100.0).round() as i32)
+    }
+
+    pub fn get(self) -> f32 {
+        self.0 as f32 / 100.0
+    }
+}
+
 /// Hexes per chunk: 7 (radius 1) or 19 (radius 2).
 pub fn parse_chunk(s: &str) -> Option<u32> {
     match s {
@@ -159,6 +205,52 @@ pub fn parse_shadow_dist(s: &str) -> Option<u32> {
         .filter(|&m| m as f32 > FIRST_CASCADE_FAR_BOUND && m <= 100_000)
 }
 
+/// `kit_hooks=`: drives the §9.4 hook uniforms for verification shots (default none = noon).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum KitHooks {
+    #[default]
+    None,
+    Snow,
+    Wet,
+    Night,
+}
+
+impl KitHooks {
+    pub fn parse(s: &str) -> Option<KitHooks> {
+        match s {
+            "none" => Some(KitHooks::None),
+            "snow" => Some(KitHooks::Snow),
+            "wet" => Some(KitHooks::Wet),
+            "night" => Some(KitHooks::Night),
+            _ => None,
+        }
+    }
+}
+
+/// `kit_src=`: what the kit scenario lays out. `Runtime` is `assets/kit/manifest.json` with the P1
+/// family layout; `Fixture` is the kit gate fixture, for checking the runtime path before any
+/// real piece ships.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum KitSource {
+    #[default]
+    Runtime,
+    Fixture,
+    /// The gate fixture with its cap bound to a probe tileable set (constant maps under
+    /// `assets/kit/p1/fixture_tile/`), so the tileable forward and prepass branches run.
+    FixtureTiled,
+}
+
+impl KitSource {
+    pub fn parse(s: &str) -> Option<KitSource> {
+        match s {
+            "runtime" => Some(KitSource::Runtime),
+            "fixture" => Some(KitSource::Fixture),
+            "fixture_tiled" => Some(KitSource::FixtureTiled),
+            _ => None,
+        }
+    }
+}
+
 /// Gate scene variant, read by `setup` on every (re)build.
 #[derive(bevy::prelude::Resource, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GateConfig {
@@ -170,6 +262,16 @@ pub struct GateConfig {
     pub cascades: u32,
     /// Cascade maximum distance in metres.
     pub shadow_dist: u32,
+    /// Kit scenario only.
+    pub kit_hooks: KitHooks,
+    /// Kit scenario only.
+    pub kit_src: KitSource,
+    /// Kit scenario only.
+    pub tonemap: Tonemap,
+    /// Kit scenario only: the noon IBL replaces the flat ambient light.
+    pub ibl: bool,
+    /// Kit scenario only: camera exposure (default `lookdev::KIT_EV100`).
+    pub ev100: Ev100,
 }
 
 impl Default for GateConfig {
@@ -182,6 +284,11 @@ impl Default for GateConfig {
             shadow_casters: ShadowCasters::All,
             cascades: 4,
             shadow_dist: 2_000,
+            kit_hooks: KitHooks::None,
+            kit_src: KitSource::Runtime,
+            tonemap: Tonemap::AcesFitted,
+            ibl: true,
+            ev100: Ev100::from_f32(crate::lookdev::KIT_EV100),
         }
     }
 }
@@ -211,6 +318,18 @@ mod tests {
     fn views_parse() {
         assert_eq!(GateView::parse("closeup"), Some(GateView::Closeup));
         assert_eq!(GateView::parse("x"), None);
+    }
+
+    #[test]
+    fn ev100_parses_in_range_only() {
+        assert_eq!(Ev100::parse("12.5").map(Ev100::get), Some(12.5));
+        assert_eq!(Ev100::parse("13.3").map(Ev100::get), Some(13.3));
+        assert_eq!(Ev100::parse("0"), Some(Ev100::from_f32(0.0)));
+        assert_eq!(Ev100::parse("21"), None);
+        assert_eq!(Ev100::parse("-1"), None);
+        assert_eq!(Ev100::parse("NaN"), None);
+        assert_eq!(Ev100::parse("bright"), None);
+        assert_eq!(GateConfig::default().ev100.get(), crate::lookdev::KIT_EV100);
     }
 
     #[test]
@@ -254,6 +373,43 @@ mod tests {
             (d.layout, d.post, d.shadows, d.chunk),
             (Layout::Entities, PostMode::Full, true, 7)
         );
+        assert_eq!(
+            (d.kit_hooks, d.kit_src),
+            (KitHooks::None, KitSource::Runtime)
+        );
+    }
+
+    #[test]
+    fn kit_keys_parse() {
+        for (s, h) in [
+            ("none", KitHooks::None),
+            ("snow", KitHooks::Snow),
+            ("wet", KitHooks::Wet),
+            ("night", KitHooks::Night),
+        ] {
+            assert_eq!(KitHooks::parse(s), Some(h));
+        }
+        assert_eq!(KitHooks::parse("hail"), None);
+        assert_eq!(KitSource::parse("runtime"), Some(KitSource::Runtime));
+        assert_eq!(KitSource::parse("fixture"), Some(KitSource::Fixture));
+        assert_eq!(
+            KitSource::parse("fixture_tiled"),
+            Some(KitSource::FixtureTiled)
+        );
+        assert_eq!(KitSource::parse("p0"), None);
+    }
+
+    #[test]
+    fn lookdev_keys_parse() {
+        assert_eq!(Tonemap::parse("agx"), Some(Tonemap::AgX));
+        assert_eq!(Tonemap::parse("tony"), Some(Tonemap::TonyMcMapface));
+        assert_eq!(Tonemap::parse("aces"), Some(Tonemap::AcesFitted));
+        assert_eq!(Tonemap::parse("filmic"), None);
+        assert_eq!(parse_ibl("on"), Some(true));
+        assert_eq!(parse_ibl("off"), Some(false));
+        assert_eq!(parse_ibl("1"), None);
+        let d = GateConfig::default();
+        assert_eq!((d.tonemap, d.ibl), (Tonemap::AcesFitted, true));
     }
 
     #[test]

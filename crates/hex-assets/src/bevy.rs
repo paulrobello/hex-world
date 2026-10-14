@@ -17,16 +17,20 @@ pub struct MeshoptGlbPlugin;
 
 impl Plugin for MeshoptGlbPlugin {
     fn build(&self, app: &mut App) {
-        let root = kit_root();
-        app.register_asset_source(
-            "kit",
-            AssetSourceBuilder::new(move || {
-                Box::new(MeshoptGlbReader(AssetSource::get_default_reader(
-                    root.clone(),
-                )()))
-            }),
-        );
+        register_kit_source(app, kit_root());
     }
+}
+
+/// Registers the `kit` source at `root` (tests pass an absolute fixture or repo path).
+pub fn register_kit_source(app: &mut App, root: String) {
+    app.register_asset_source(
+        "kit",
+        AssetSourceBuilder::new(move || {
+            Box::new(MeshoptGlbReader(AssetSource::get_default_reader(
+                root.clone(),
+            )()))
+        }),
+    );
 }
 
 /// Natively, `cargo run` resolves relative asset paths against the crate dir, so the kit root is

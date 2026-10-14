@@ -1,0 +1,76 @@
+# Pitfalls
+
+Known Blender, bake, export and KTX2 traps, from the asset-pipeline research and the P1 friction logs (`assets-source/kit/*/friction.md`).
+
+## Blender and its API
+- **Blender exits 0 on script errors.** Always pass `--python-exit-code 1` (vault `Tools/blender-script-failures-exit-zero.md`, `~/.claude/guides/blender-mcp.md`).
+- **Blender 5.2 API drift.**
+  - Use `BLENDER_EEVEE`, not `BLENDER_EEVEE_NEXT`.
+  - Leave `export_loglevel` unset.
+  - An empty RNA enum list does not mean a format is missing.
+  - Principled inputs are named `Emission Color` and `Coat Weight`.
+  - Sharp edges use `set_sharp_from_angle`.
+  - SCENE-mode animation export needs `use_active_scene=True`.
+  - Verified against 5.2.2 LTS (2026-10-13): `delaunay_2d_cdt(coords, edges, faces, output_type, epsilon, need_ids=True, /)` with output_type 1 = triangles inside the constraints; `MeshPolygon.use_smooth`, `Mesh.normals_split_custom_set_from_vertices` and `Mesh.corner_normals` exist; glTF `export_image_format` accepts `NONE`, and `export_tangents`, `export_texcoords`, `export_normals`, `use_active_scene`, `export_extras` exist; bake types include AO, NORMAL, ROUGHNESS and EMIT; `kernel_optimization_level` exists on the Cycles prefs.
+  - `Material.use_nodes` is deprecated (removed in 6.0) and warns on access. New materials already have a node tree with a Principled BSDF, so use `lib.materials.ensure_nodes(mat)` instead of setting `use_nodes`.
+  - Further 5.x renames beyond this list have not been checked.
+- **`matrix_world` is stale for objects created in the same script** until `bpy.context.view_layer.update()`. A socket empty read back before an update reports position (0, 0, 0). `export.write_export_report` updates the view layer first.
+- **Removed objects linger in `view_layer.objects` as `None`.** After `bpy.data.objects.remove` on a freshly opened file, iterating the view layer (for example `scene.select_only`) hits a `None` base. Call `bpy.context.view_layer.update()` after removals.
+- **Renders embed the wall-clock date.** Blender writes Date and RenderTime metadata into every PNG and JPEG, so re-renders of identical pixels differ in bytes. `gate.render_six_views` turns `use_stamp_date` and `use_stamp_render_time` off; do the same for any committed render.
+- **`make blender-test` is local only.** CI has no Blender, so never add it to `checkall`. Anything checked against committed files belongs in the Rust gate (`make test`).
+
+## Cycles bakes
+- A diffuse pass darkens base color, so bake base color and metallic through EMIT (`lib.bake.bake_emit_input`).
+- Triangulate before baking so the bake tangents and the exported tangents agree.
+- Set `use_clear` only on the first group. Keep `use_pass_direct` and `use_pass_indirect` off.
+- Image colorspace must be sRGB for base color and emission and Non-Color for everything else.
+- Metal kernels recompile per channel, so `kernel_optimization_level = "OFF"`. The bake device defaults to CPU; `lib.bake.setup_cycles` reads `HEXW_BAKE_DEVICE`.
+- `margin=0` leaves no gutter and mips bleed. Use about 8-12 px, with two masks where preservation matters (vault `Patterns/bounded-gutter-texture-bake-preservation.md`). Tileable sets are the exception: a wrapping tile has no gutter.
+- **Other meshes darken AO bakes.** A mesh 0.4 m above the cap took the fixture's AO from about 1.0 to 0.001. `lib.bake.bake_to` hides every mesh that is neither `low` nor in `highs` for the bake, so LOD1/LOD2 and colliders may exist before baking. Do not bypass `bake_to` with a raw `bpy.ops.object.bake`.
+- **Set the world AO distance before an AO bake.** The default is 10 m, so on a tree every limb and strand above darkened the bark (mean 0.55, a quarter of texels at 0). Set `scene.world.light_settings.distance` to the scale of the local relief (the oak: 0.35 m bark, 0.3 m canopy shell) and record it as `aoDistanceM` in the bake report.
+- **Buried receiver faces bake to 0.** Faces inside other geometry (intertwined trunk strands, root and limb starts) have no sky. Delete them from the receiver before the bake (`_tree.cull_buried`, `cull_inside_crown`).
+- **Re-derive cage and ray per piece and per relief.** The machine-scale cage 0.055 m and max ray 0.14 m do not carry over. The oak's 0.07 m bark relief needed cage 0.25 m and max ray 0.5 m: at cage 0.12 m 2.0% of texels missed, at 0.2 m 0.02%. Sweep a few values on a small diagnostic bake and read mean, p05 and miss rate, not just the image.
+- **A bake source needs a solid backing.** A high-poly made only of leaf cards lets rays through the gaps, which bake to 0 (black holes). Put a solid, dark surface just under the leaves (the oak's dome at 0.97 R).
+- **Bake normals against the smooth surface.** Baking tangent normals against a low-poly's interpolated normals encodes its facets, which reappear when the runtime normals change. Set the receiver's custom normals to the smooth shape's normals first (`_tree.shell_smooth_normals`).
+- **`bake_emit_input` takes `highs` once.** Its first four parameters are positional-only; `highs` in `**kw` raises a clear `TypeError`.
+- **Overlapping decals join after the bake.** Road paint 3.5 cm above the bed shares the bed's planar UV0, so a joined AO bake writes both into the same masks texels and darkens the dashes. Bake AO on the bed alone, then join the paint into each LOD.
+
+## Tileable sets
+- **Only 4D textures wrap.** `materials.torus_coords` wraps only when every texture is 4D Noise, Voronoi or White Noise with W linked. A 3D texture ignores W and mirrors the tile about its middle, which the 2×2 seam test does not show. Wave, Magic, Brick, Gradient and Checker cannot wrap.
+- **Low-frequency 4D noise mirrors the tile.** At a scale near the torus size the noise barely varies along the sin component, so the tile correlates with its own mirror (0.16-0.18 read as kaleidoscope patches). Keep every feature scale ≥ 4 on a tileM 2 set, and check the mirror correlation as well as the wrap edges.
+- **Judge the 2×2 tile at 1:1 before compressing.** Tight Voronoi tuft cells read as polka dots at 512 px/m. Voronoi suits sparse features (clover, pebbles); turf needs soft, high-distortion noise blades.
+- **Vertically banded sets** (soil strata) must line their bands up with the wall mapping (`project.md`, "Textures").
+
+## Leaves, foliage and LODs
+- **Alpha coverage below 0.5 collapses with mips.** A 4D Voronoi sliced at a fixed W gave sparse round blobs (11% opaque), and the alphaCutoff 0.5 canopy vanished from mip 7 on. Keep leaf-strip coverage at or above about 0.55 at mip 0 and measure it per mip (`gates.md`).
+- **Shader nodes cannot draw a lobed leaf.** Draw leaf tiles in numpy (`_leaves.py`: lobed outline, midrib, per-leaf tone, folded normal) and write them straight into the atlas strip; the live session loads the same arrays so the showcase and the engine match.
+- **Leaf cards decimate badly.** Build LOD1/LOD2 from a card subset scaled up to hold coverage (`card_subset`), and decimate only the bark.
+- **Normals in a card's plane give zero tangents.** MikkTSpace returns a zero tangent and gltf-validator fails `kit-compress` (`ACCESSOR_VECTOR3_NON_UNIT`). Blend part of the card's face normal back into authored foliage normals (`project.md`, "Foliage normals").
+- **Unweighted per-face medians are skewed by face count.** `uv.measure_texel_density` takes an unweighted per-face median, so many small leaf cards hid bark at 108 px/m behind a 270 px/m pooled median. The gate is per material for this reason; still read per-slot numbers when tuning.
+- Never decimate a border-ring piece; regenerate it.
+- **LOD seams.** `VisibilityRange` applies per chunk, so neighbouring tiles can sit at different LODs. Pin the border ring in every LOD and choose its subdivision so LOD2 can still reach 15%.
+
+## Coordinate frame and export
+- Blender Z-up exports to glTF Y-up as glTF x = Blender x and glTF z = −Blender y. Runtime edge 0 faces +x, edges run clockwise viewed from +Y, and +z is south. In Blender's top view, edge k's outward normal is at −60°·k.
+- Use a hex-center pivot for every piece. Author edge pieces for edge 0 and rotate them at runtime (PRD §6).
+- Apply transforms before joining. Check the result with root-relative positions on reimport, not in the viewport.
+- Each parentless root becomes one GLB in multi-root exports, so use one root per piece. `export_extras=True` carries socket metadata.
+- Hidden-from-render objects can drop out of selected exports. Keep the collider render-visible during export and hide it in the engine.
+- Export no images: textures are separate files.
+- **Keep attributes FLOAT.** bevy_gltf 0.20 rejects `KHR_mesh_quantization`. If a later phase quantizes, it needs dequantization in `meshopt_glb.rs` and one shared quantization volume (the hex bounds): per-mesh bounds snap neighbouring border vertices to different grids and the seams crack.
+- **The glTF exporter flips V.** A UV map exports as 1 − v (harmless for cyclic data such as wind phase).
+
+## KTX2
+- KTX-Software 4.4.2 `ktx create --encode` accepts only `basis-lz` or `uastc`, so BC7 is reachable only by transcoding (`ktx transcode --target bc7`). The pipeline encodes one UASTC q4 source (RDO, zstd 18) and transcodes it to BC7 and ASTC, so both families carry identical content. Encode ASTC directly only if a measured PSNR shortfall demands it.
+- Normals may use `--target bc5` (two channels). Bevy's two-component normal reconstruction for BC5 is unverified here.
+- Mips: albedo must be averaged in linear light and normals renormalized at each level (vault packing note).
+- UASTC RDO barely helps size. Detailed 1024² maps land at 0.90-1.25 B per base pixel including mips, against a raw 1.33, so resolution is the only real budget lever (`docs/perf/p1-texture-budget-probe.md`).
+- PNG input carries no transfer function. `ktx create --format R8G8B8A8_UNORM` without `--assign-tf linear` assumes sRGB and silently applies a lossy sRGB-to-linear conversion. `encodeMap` always passes `--assign-tf`, and `--normalize` is rejected for sRGB formats. The runtime decides a PNG's colour space from the channel name.
+
+## Look-dev and engine shots
+- **Look-dev parity.** Blender's view transform does not match Bevy's tonemapper. The 6-view Blender renders are evidence only; approval happens in engine.
+- **Shadow acne in an in-engine shot is a renderer issue first.** Grazing-angle kerb walls showed sawtooth acne that a `--shadows off` shot removed entirely; the fix was in the kit's shadow settings, not the asset.
+- **Tileable layers are sampled in world space** (`kit_material.wesl`), so neighbours line up under rotation. The exception is a slot with `tileUvScale` (tree bark), which samples its set on UV0 (`project.md`).
+
+## Node
+- **ESM ignores `NODE_PATH`.** Only `scripts/assets/` has a `node_modules`, so a bare `import sharp from "sharp"` in `scripts/refs/` or any other directory fails to resolve. Load pinned dependencies with `createRequire(new URL("../assets/package.json", import.meta.url))("sharp")` (snippet in `project.md`).

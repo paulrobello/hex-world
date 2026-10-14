@@ -1,0 +1,277 @@
+{
+  "pieceId": "road_straight_center",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/road_straight_center.py",
+    "sha256": "42a318a892be55108cec0402e313d09729c864a2105b8853e4854bb3e7b0323d"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "dashPeriodM": 5.542562584220407,
+    "device": "CPU",
+    "marginPx": 12,
+    "profile": [
+      [
+        -4.6,
+        -0.3
+      ],
+      [
+        -4,
+        0.06
+      ],
+      [
+        -3.25,
+        0.06
+      ],
+      [
+        -3.25,
+        0.2
+      ],
+      [
+        -3,
+        0.2
+      ],
+      [
+        -3,
+        0.08
+      ],
+      [
+        -1.5,
+        0.1
+      ],
+      [
+        0,
+        0.11
+      ],
+      [
+        1.5,
+        0.1
+      ],
+      [
+        3,
+        0.08
+      ],
+      [
+        3,
+        0.2
+      ],
+      [
+        3.25,
+        0.2
+      ],
+      [
+        3.25,
+        0.06
+      ],
+      [
+        4,
+        0.06
+      ],
+      [
+        4.6,
+        -0.3
+      ]
+    ],
+    "receiverSignature": "51e40b3140b130d4e65248458b3e4b0fa867c39891ca2a8807aefe5683fccdba",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 16,
+      "median": 15.999822619526926,
+      "min": 14.816152028044705
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 342,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 146,
+      "ratio": 0.4269005847953216
+    },
+    {
+      "lod": 2,
+      "tris": 34,
+      "ratio": 0.09941520467836257
+    }
+  ],
+  "collider": {
+    "node": "road_straight_center_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 0.5
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        -3,
+        0.05999999865889549,
+        -3.625
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 0.5
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        3,
+        0.05999999865889549,
+        3.625
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 16,
+    "median": 15.999822619526926,
+    "min": 14.816152028044705
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 8252,
+        "astc": 8122
+      },
+      "glbBytes": 30432
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/road_straight_center/road_straight_center.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 8252,
+        "sha256": "3d6a227d039b07c54ae25132a30354735ab095b5153205368ef9e6d8550e8be4"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/road_straight_center/road_straight_center.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 8122,
+        "sha256": "13904e4a0c89646b8fea5475a941d962b2f00b8d8cd815a7bb9652911ddb2fea"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/road_straight_center/road_straight_center.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 21554,
+        "sha256": "25f0e39916797402399a3b3f137a48db305771accad37e5235d7c2bea3e58c1e"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/road_straight_center/road_straight_center.glb",
+      "sha256": "4f28e9ffdce5aca5d4e1933a7f745f7f5287c367cc26c4c8d6aeb20f5be3fe1a",
+      "bytes": 30432
+    },
+    {
+      "path": "assets/kit/p1/road_straight_center/road_straight_center.masks.bc7.ktx2",
+      "sha256": "3d6a227d039b07c54ae25132a30354735ab095b5153205368ef9e6d8550e8be4",
+      "bytes": 8252
+    },
+    {
+      "path": "assets/kit/p1/road_straight_center/road_straight_center.masks.astc.ktx2",
+      "sha256": "13904e4a0c89646b8fea5475a941d962b2f00b8d8cd815a7bb9652911ddb2fea",
+      "bytes": 8122
+    },
+    {
+      "path": "assets/kit/p1/road_straight_center/road_straight_center.masks.png",
+      "sha256": "25f0e39916797402399a3b3f137a48db305771accad37e5235d7c2bea3e58c1e",
+      "bytes": 21554
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/road_straight/ref-1.jpg",
+      "sha256": "50e69158a77b55057795a601c23f371db0ba6903aaa2b5000de9f986ec25de70",
+      "sourceSha256": "090dd4fd5be4c9db6e85829ec887b4ed2aac2a73f4b698458373d2e7b24cf1f0",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e87afc15-22e2-491e-8965-8fb7db92c39e",
+      "prompt": "A single hexagonal diorama tile with a straight two-lane asphalt country road crossing from one flat edge to the opposite flat edge, 6 m wide road, grass shoulders, faded centre line, low curbs, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/road_straight/ref-2.jpg",
+      "sha256": "c4923215bad5475f78a9fade60b0991185806b9c183b890209335478e7ecc9f2",
+      "sourceSha256": "17b7169cbf0916448219814410476498cf80e749efa3a0cd854b4745ef6c4799",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "6f4a663b-f6e2-4666-afca-3bbcdba36e44",
+      "prompt": "Two identical hexagonal road tiles placed edge to edge with the road continuing seamlessly across the joint, close-up at the seam, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-13T20:37:12.025Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/road_straight/ref-1.jpg"
+      ],
+      "notes": "ref-1: straight two-lane asphalt road, dashed centre line, kerbs, grass verges. ref-2 not approved. Kit requirement (owner: \"we will need bent road tiles so road can change direction\"): the road profile and the edge/center design must support bent and turning road pieces later. Bent pieces are not built in P1. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "who": "Paul Robello",
+      "when": "2026-10-13",
+      "gate": "seam"
+    }
+  ]
+}

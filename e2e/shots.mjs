@@ -6,6 +6,8 @@ import { extname, join } from "node:path";
 
 const dist = process.argv[2] ?? "dist";
 const script = JSON.parse(await readFile(process.argv[3] ?? "scripts/shots/gallery.json", "utf8"));
+// Optional extra query keys, e.g. "kit_src=fixture".
+const extra = process.argv[4] ? "&" + process.argv[4] : "";
 const outDir = "e2e/test-results";
 const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm",
   ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain" };
@@ -32,7 +34,7 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
 try {
-  await page.goto(base + "?fps=off");
+  await page.goto(base + "?fps=off" + extra);
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 60_000 });
   // FIFO queue: screenshots go through screenshot() so they land behind the preceding wait/camera.
   for (const c of script) {

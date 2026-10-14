@@ -119,13 +119,21 @@ pub fn publish_state(
     active: Res<ActiveScenario>,
     queue: Res<CommandQueue>,
     cameras: Query<&Transform, With<Camera3d>>,
+    config: Option<Res<hex_render::GateConfig>>,
+    gpu: Option<Res<hex_render::GpuLimits>>,
 ) {
     let camera = cameras.iter().next().map(|t| {
         serde_json::json!({ "pos": t.translation.to_array(), "forward": t.forward().to_array() })
     });
+    let kit_src = config.map(|c| c.kit_src).unwrap_or_default();
+    // `null` until the render device exists (the web renderer starts asynchronously).
+    let gpu = gpu.map(|g| {
+        serde_json::json!({ "maxSampledTexturesPerShaderStage": g.max_sampled_textures_per_shader_stage })
+    });
     let state = serde_json::json!({
         "scenario": format!("{:?}", active.0),
-        "tiles": active.0.tile_count(),
+        "tiles": active.0.tile_count(kit_src),
+        "gpu": gpu,
         "frames": frames.0,
         "seed": flags.0.seed,
         "no_anim": flags.0.no_anim,

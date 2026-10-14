@@ -1,0 +1,56 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/road_straight_center.py",
+    "sha256": "42a318a892be55108cec0402e313d09729c864a2105b8853e4854bb3e7b0323d"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+    }
+  ],
+  "lodTris": {
+    "road_straight_center_lod0": 342,
+    "road_straight_center_lod1": 146,
+    "road_straight_center_lod2": 34
+  },
+  "nodes": [
+    "anchor-prop-0",
+    "anchor-prop-1",
+    "road_straight_center",
+    "road_straight_center_collider",
+    "road_straight_center_lod0",
+    "road_straight_center_lod1",
+    "road_straight_center_lod2"
+  ],
+  "pieceId": "road_straight_center",
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 0.5
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        -3.0,
+        0.05999999865889549,
+        -3.625
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 0.5
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        3.0,
+        0.05999999865889549,
+        3.625
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

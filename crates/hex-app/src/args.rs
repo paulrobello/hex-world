@@ -149,6 +149,41 @@ pub fn flags_from_pairs(pairs: &[(String, String)]) -> (Flags, Vec<String>) {
                 v,
                 &mut warnings,
             ),
+            "kit_hooks" => set_or_warn(
+                &mut f.gate.kit_hooks,
+                hex_render::KitHooks::parse(v),
+                k,
+                v,
+                &mut warnings,
+            ),
+            "kit_src" => set_or_warn(
+                &mut f.gate.kit_src,
+                hex_render::KitSource::parse(v),
+                k,
+                v,
+                &mut warnings,
+            ),
+            "tonemap" => set_or_warn(
+                &mut f.gate.tonemap,
+                hex_render::Tonemap::parse(v),
+                k,
+                v,
+                &mut warnings,
+            ),
+            "ibl" => set_or_warn(
+                &mut f.gate.ibl,
+                hex_render::parse_ibl(v),
+                k,
+                v,
+                &mut warnings,
+            ),
+            "ev100" => set_or_warn(
+                &mut f.gate.ev100,
+                hex_render::Ev100::parse(v),
+                k,
+                v,
+                &mut warnings,
+            ),
             "present" => set_or_warn(&mut f.present, Present::parse(v), k, v, &mut warnings),
             _ => {}
         }
@@ -197,6 +232,11 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "cascades",
         "shadow_dist",
         "fps",
+        "kit_hooks",
+        "kit_src",
+        "tonemap",
+        "ibl",
+        "ev100",
     ]
     .iter()
     .filter_map(|k| params.get(k).map(|v| (k.to_string(), v)))
@@ -224,6 +264,44 @@ mod tests {
         assert!(!f.fps_off && w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("fps", "maybe")]));
         assert!(!f.fps_off);
+        assert_eq!(w.len(), 1);
+    }
+
+    #[test]
+    fn kit_scenario_and_hooks() {
+        let (f, w) = flags_from_pairs(&p(&[("shot", "kit"), ("kit_hooks", "snow")]));
+        assert_eq!(f.scenario, Scenario::Kit);
+        assert_eq!(f.gate.kit_hooks, hex_render::KitHooks::Snow);
+        assert!(w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("kit_hooks", "hail")]));
+        assert_eq!(f.gate.kit_hooks, hex_render::KitHooks::None);
+        assert_eq!(w.len(), 1);
+    }
+
+    #[test]
+    fn kit_source_parses_or_warns() {
+        let (f, w) = flags_from_pairs(&p(&[("scenario", "kit"), ("kit_src", "fixture")]));
+        assert_eq!(f.gate.kit_src, hex_render::KitSource::Fixture);
+        assert!(w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("kit_src", "p0")]));
+        assert_eq!(f.gate.kit_src, hex_render::KitSource::Runtime);
+        assert_eq!(w.len(), 1);
+    }
+
+    #[test]
+    fn tonemap_and_ibl_keys() {
+        let (f, w) = flags_from_pairs(&p(&[("tonemap", "agx"), ("ibl", "off")]));
+        assert_eq!(f.gate.tonemap, hex_render::Tonemap::AgX);
+        assert!(!f.gate.ibl && w.is_empty());
+    }
+
+    #[test]
+    fn ev100_key() {
+        let (f, w) = flags_from_pairs(&p(&[("ev100", "13.3")]));
+        assert_eq!(f.gate.ev100.get(), 13.3);
+        assert!(w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("ev100", "dark")]));
+        assert_eq!(f.gate.ev100, hex_render::GateConfig::default().ev100);
         assert_eq!(w.len(), 1);
     }
 

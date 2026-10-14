@@ -1,0 +1,203 @@
+{
+  "setId": "soil",
+  "kind": "tileable",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/mat_soil.py",
+    "sha256": "cb3e83efb739769564b08a0e5e244c747dc2d6bce9678a0fe171d218867bbc1b"
+  },
+  "generatorDeps": [],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "device": "CPU",
+    "generator": "scripts/blender/kit/mat_soil.py",
+    "generatorSha256": "cb3e83efb739769564b08a0e5e244c747dc2d6bce9678a0fe171d218867bbc1b",
+    "samples": 32,
+    "set": "soil",
+    "size": 1024,
+    "tileM": 4
+  },
+  "bakeReport": {
+    "path": "assets-source/kit/materials/soil/bake-report.json",
+    "sha256": "3aa5e30f1c920e53fa34356acdfcdba2feec7a305fd19897fd3c54a9956f0170",
+    "bytes": 253
+  },
+  "compressReport": {
+    "path": "assets-source/kit/materials/soil/compress-report.json",
+    "sha256": "7c07cfc61cb254507c2a211dd280d8fa64c15e5d5703dd44e2b72ba5c3815746",
+    "bytes": 3850
+  },
+  "compression": {
+    "budgets": {
+      "class": "tileable",
+      "ktxMax": 3600000,
+      "ktxBytes": {
+        "bc7": 2206092,
+        "astc": 2263204
+      }
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/materials/soil/soil.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 820842,
+        "sha256": "1860507bd17ec3566ae1750f8e60807f99f0692d2a4411dc8a793d5bfcf45bdc"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/materials/soil/soil.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 843646,
+        "sha256": "09b1f811267aaa248fd37587edd42e7fd9627ebdcd74dd4d667fe424fbafce96"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/materials/soil/soil.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 1646806,
+        "sha256": "f7b771c23b7546881d80add497125931ed17e52fded67a7526d2ce5d93cc3b17"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/materials/soil/soil.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 1109256,
+        "sha256": "cabc3dca792608e9467e6deec2a6e1bdd1ce21b976896d25f85a3dce2c232983"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/materials/soil/soil.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 1120110,
+        "sha256": "e5177abe4764c938b087ef61926a83e209e41bd862d2c95f9d12d37e0ac77fb8"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/materials/soil/soil.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 2778235,
+        "sha256": "dfa6daf1bed6076abe5802dd9fcf8bcfe7a801f25062f0f12c06ed39ec2a6031"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/materials/soil/soil.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 275994,
+        "sha256": "9778f516c92bcea81ebe2561f038914c18b70350f504d0ca9ac7c83c60cbd3ee"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/materials/soil/soil.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 299448,
+        "sha256": "ddc92cecb810ec8d7c7cf1758650e1d0b6c659d2030144bc680f533e3e86127b"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/materials/soil/soil.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 605512,
+        "sha256": "70b2faf0f06144f07a75f5a087ac33bd9e525ed54b6b606cc581e289884dfcd8"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/materials/soil/soil.albedo.bc7.ktx2",
+      "sha256": "1860507bd17ec3566ae1750f8e60807f99f0692d2a4411dc8a793d5bfcf45bdc",
+      "bytes": 820842
+    },
+    {
+      "path": "assets/kit/p1/materials/soil/soil.albedo.astc.ktx2",
+      "sha256": "09b1f811267aaa248fd37587edd42e7fd9627ebdcd74dd4d667fe424fbafce96",
+      "bytes": 843646
+    },
+    {
+      "path": "assets/kit/p1/materials/soil/soil.albedo.png",
+      "sha256": "f7b771c23b7546881d80add497125931ed17e52fded67a7526d2ce5d93cc3b17",
+      "bytes": 1646806
+    },
+    {
+      "path": "assets/kit/p1/materials/soil/soil.normal.bc7.ktx2",
+      "sha256": "cabc3dca792608e9467e6deec2a6e1bdd1ce21b976896d25f85a3dce2c232983",
+      "bytes": 1109256
+    },
+    {
+      "path": "assets/kit/p1/materials/soil/soil.normal.astc.ktx2",
+      "sha256": "e5177abe4764c938b087ef61926a83e209e41bd862d2c95f9d12d37e0ac77fb8",
+      "bytes": 1120110
+    },
+    {
+      "path": "assets/kit/p1/materials/soil/soil.normal.png",
+      "sha256": "dfa6daf1bed6076abe5802dd9fcf8bcfe7a801f25062f0f12c06ed39ec2a6031",
+      "bytes": 2778235
+    },
+    {
+      "path": "assets/kit/p1/materials/soil/soil.orm.bc7.ktx2",
+      "sha256": "9778f516c92bcea81ebe2561f038914c18b70350f504d0ca9ac7c83c60cbd3ee",
+      "bytes": 275994
+    },
+    {
+      "path": "assets/kit/p1/materials/soil/soil.orm.astc.ktx2",
+      "sha256": "ddc92cecb810ec8d7c7cf1758650e1d0b6c659d2030144bc680f533e3e86127b",
+      "bytes": 299448
+    },
+    {
+      "path": "assets/kit/p1/materials/soil/soil.orm.png",
+      "sha256": "70b2faf0f06144f07a75f5a087ac33bd9e525ed54b6b606cc581e289884dfcd8",
+      "bytes": 605512
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-13T18:44:26.549Z",
+    "checks": [
+      "kit-compress tileable budget",
+      "kit_gate textures"
+    ]
+  }
+}

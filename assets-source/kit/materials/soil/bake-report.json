@@ -1,0 +1,10 @@
+{
+  "blender": "5.2.2 LTS",
+  "device": "CPU",
+  "generator": "scripts/blender/kit/mat_soil.py",
+  "generatorSha256": "cb3e83efb739769564b08a0e5e244c747dc2d6bce9678a0fe171d218867bbc1b",
+  "samples": 32,
+  "set": "soil",
+  "size": 1024,
+  "tileM": 4.0
+}

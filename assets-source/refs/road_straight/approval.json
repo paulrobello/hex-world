@@ -1,0 +1,7 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-13",
+  "gate": "reference",
+  "approved": ["assets-source/refs/road_straight/ref-1.jpg"],
+  "notes": "ref-1: straight two-lane asphalt road, dashed centre line, kerbs, grass verges. ref-2 not approved. Kit requirement (owner: \"we will need bent road tiles so road can change direction\"): the road profile and the edge/center design must support bent and turning road pieces later. Bent pieces are not built in P1. Reviewed from assets-source/refs/contact-sheet.png in chat."
+}

@@ -1,0 +1,143 @@
+{
+  "pieceId": "fixture",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/fixture.py",
+    "sha256": "6c8e86f950f4ab5fa296aad2b51ce90df892538383ee27cc783e6343d1a3a5da"
+  },
+  "generatorDeps": [],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "device": "CPU",
+    "note": "fixture: no bake",
+    "receiverSignature": "eaa26179d3b22fa67b1317153884aff6e0b55245697e82ad555c024d4ec902ca"
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 684,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 96,
+      "ratio": 0.14035087719298245
+    },
+    {
+      "lod": 2,
+      "tris": 72,
+      "ratio": 0.10526315789473684
+    }
+  ],
+  "collider": {
+    "node": "fixture_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "road",
+        "offset": 0,
+        "width": 6
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0,
+        0
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": null,
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 583,
+        "astc": 583
+      },
+      "glbBytes": 15588
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "crates/hex-render/tests/fixtures/kit/p1/fixture/fixture.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 7,
+        "bytes": 583,
+        "sha256": "26c04fe0d82c26440e33a5ff7064804334ac4ff6e6d91db1e634eb89e54888de"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "crates/hex-render/tests/fixtures/kit/p1/fixture/fixture.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 7,
+        "bytes": 583,
+        "sha256": "6fed563a3024e09e8e8cf1ef29b2ade760920e463940046a0196cf7583fc840f"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "crates/hex-render/tests/fixtures/kit/p1/fixture/fixture.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 377,
+        "sha256": "38d77687b4804f44675be0be6e4520d64725ccd24cac217b7d28eaa01d48cdcb"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "crates/hex-render/tests/fixtures/kit/p1/fixture/fixture.glb",
+      "sha256": "248be267fbf737d5f94c8bb52cf1e0decda651202fdfaf72657123e969b43c9b",
+      "bytes": 15588
+    },
+    {
+      "path": "crates/hex-render/tests/fixtures/kit/p1/fixture/fixture.masks.bc7.ktx2",
+      "sha256": "26c04fe0d82c26440e33a5ff7064804334ac4ff6e6d91db1e634eb89e54888de",
+      "bytes": 583
+    },
+    {
+      "path": "crates/hex-render/tests/fixtures/kit/p1/fixture/fixture.masks.astc.ktx2",
+      "sha256": "6fed563a3024e09e8e8cf1ef29b2ade760920e463940046a0196cf7583fc840f",
+      "bytes": 583
+    },
+    {
+      "path": "crates/hex-render/tests/fixtures/kit/p1/fixture/fixture.masks.png",
+      "sha256": "38d77687b4804f44675be0be6e4520d64725ccd24cac217b7d28eaa01d48cdcb",
+      "bytes": 377
+    }
+  ],
+  "references": [],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-13T14:44:53.499Z",
+    "checks": [
+      "fixture gate"
+    ]
+  },
+  "approvals": []
+}

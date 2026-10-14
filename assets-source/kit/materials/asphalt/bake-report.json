@@ -1,0 +1,10 @@
+{
+  "blender": "5.2.2 LTS",
+  "device": "CPU",
+  "generator": "scripts/blender/kit/mat_asphalt.py",
+  "generatorSha256": "dae28a9124109dfedb5ce58e2494ae9c8ca6fc9fe9b85147eef6e20d597db745",
+  "samples": 32,
+  "set": "asphalt",
+  "size": 1024,
+  "tileM": 2.0
+}

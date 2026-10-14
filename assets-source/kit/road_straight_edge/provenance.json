@@ -1,0 +1,266 @@
+{
+  "pieceId": "road_straight_edge",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/road_straight_edge.py",
+    "sha256": "4e2b869f71e2f7953bc2b1ac94961fff5959b0033573f741b01f575feba82fe9"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "dashPeriodM": 5.542562584220407,
+    "device": "CPU",
+    "marginPx": 12,
+    "profile": [
+      [
+        -4.6,
+        -0.3
+      ],
+      [
+        -4,
+        0.06
+      ],
+      [
+        -3.25,
+        0.06
+      ],
+      [
+        -3.25,
+        0.2
+      ],
+      [
+        -3,
+        0.2
+      ],
+      [
+        -3,
+        0.08
+      ],
+      [
+        -1.5,
+        0.1
+      ],
+      [
+        0,
+        0.11
+      ],
+      [
+        1.5,
+        0.1
+      ],
+      [
+        3,
+        0.08
+      ],
+      [
+        3,
+        0.2
+      ],
+      [
+        3.25,
+        0.2
+      ],
+      [
+        3.25,
+        0.06
+      ],
+      [
+        4,
+        0.06
+      ],
+      [
+        4.6,
+        -0.3
+      ]
+    ],
+    "receiverSignature": "d57a2b3ad05fe491e96f1a70b513a4a39bd0d1d419ad9a2ece232752428ce640",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 16.0000174798722,
+      "median": 15.99982229082961,
+      "min": 14.81613933481571
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 256,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 116,
+      "ratio": 0.453125
+    },
+    {
+      "lod": 2,
+      "tris": 32,
+      "ratio": 0.125
+    }
+  ],
+  "collider": {
+    "node": "road_straight_edge_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "road",
+        "offset": 0,
+        "width": 6
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0,
+        0
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 16.0000174798722,
+    "median": 15.99982229082961,
+    "min": 14.81613933481571
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 7042,
+        "astc": 6923
+      },
+      "glbBytes": 30140
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/road_straight_edge/road_straight_edge.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 7042,
+        "sha256": "534a21f7108749ea7552ea2863bfdb4013e025581b68c91624c51b810150e1f9"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/road_straight_edge/road_straight_edge.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 6923,
+        "sha256": "1c1723db290e1c98a84eb63e10548f117fb8081cc8519ac5806ec40234283c16"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/road_straight_edge/road_straight_edge.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 17284,
+        "sha256": "4d2e5822fff5e0f2bf2f5e1ed1851b55359bcb04404c79836806473334e37e18"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/road_straight_edge/road_straight_edge.glb",
+      "sha256": "65c67969c090f41d977ca88de69381eaabc9ed543a90dc0f4b7b5f53e7e1603e",
+      "bytes": 30140
+    },
+    {
+      "path": "assets/kit/p1/road_straight_edge/road_straight_edge.masks.bc7.ktx2",
+      "sha256": "534a21f7108749ea7552ea2863bfdb4013e025581b68c91624c51b810150e1f9",
+      "bytes": 7042
+    },
+    {
+      "path": "assets/kit/p1/road_straight_edge/road_straight_edge.masks.astc.ktx2",
+      "sha256": "1c1723db290e1c98a84eb63e10548f117fb8081cc8519ac5806ec40234283c16",
+      "bytes": 6923
+    },
+    {
+      "path": "assets/kit/p1/road_straight_edge/road_straight_edge.masks.png",
+      "sha256": "4d2e5822fff5e0f2bf2f5e1ed1851b55359bcb04404c79836806473334e37e18",
+      "bytes": 17284
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/road_straight/ref-1.jpg",
+      "sha256": "50e69158a77b55057795a601c23f371db0ba6903aaa2b5000de9f986ec25de70",
+      "sourceSha256": "090dd4fd5be4c9db6e85829ec887b4ed2aac2a73f4b698458373d2e7b24cf1f0",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e87afc15-22e2-491e-8965-8fb7db92c39e",
+      "prompt": "A single hexagonal diorama tile with a straight two-lane asphalt country road crossing from one flat edge to the opposite flat edge, 6 m wide road, grass shoulders, faded centre line, low curbs, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/road_straight/ref-2.jpg",
+      "sha256": "c4923215bad5475f78a9fade60b0991185806b9c183b890209335478e7ecc9f2",
+      "sourceSha256": "17b7169cbf0916448219814410476498cf80e749efa3a0cd854b4745ef6c4799",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "6f4a663b-f6e2-4666-afca-3bbcdba36e44",
+      "prompt": "Two identical hexagonal road tiles placed edge to edge with the road continuing seamlessly across the joint, close-up at the seam, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-13T20:37:15.843Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/road_straight/ref-1.jpg"
+      ],
+      "notes": "ref-1: straight two-lane asphalt road, dashed centre line, kerbs, grass verges. ref-2 not approved. Kit requirement (owner: \"we will need bent road tiles so road can change direction\"): the road profile and the edge/center design must support bent and turning road pieces later. Bent pieces are not built in P1. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "who": "Paul Robello",
+      "when": "2026-10-13",
+      "gate": "seam"
+    }
+  ]
+}

@@ -5,5 +5,15 @@
 /tools
 node_modules/
 e2e/test-results/
-*.blend1
+*.blend
+*.blend[0-9]*
 .DS_Store
+# R1: .blend sources and bake intermediates stay local in the main checkout's assets-source/blend/
+# (shared by every worktree), referenced by SHA-256 in provenance
+/assets-source/blend/
+/assets-source/hdri/
+__pycache__/
+
+# Higgsfield job responses (local retry cache; jobId is kept in refs.json)
+assets-source/refs/*/job-*.json
+assets-source/refs/contact-sheet.png

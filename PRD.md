@@ -68,7 +68,7 @@ Decisions made during the brainstorm. Codes are stable and referenced throughout
 | A1 | The world's first tile is grass/meadow. |
 | A2 | Farm (with animals), windmill and rail/trains are not in the MVP. They ship in P3 alongside recipes. |
 | A3 | No WASM threads (TC1). Heavy simulation runs in a dedicated Web Worker running a second WASM instance, or on the GPU. |
-| A4 | High-poly `.blend` files and bake intermediates are kept out of git. Scripted pieces are rebuilt from their generators, and interactive hero `.blend` files live in external storage (§11.6). Only runtime derivatives are committed. |
+| A4 | High-poly `.blend` files and bake intermediates are kept out of git. Scripted pieces are rebuilt from their generators, and interactive hero `.blend` files live in the local, gitignored blend store, referenced by SHA-256 (external storage deferred in P1, §11.6). Only runtime derivatives are committed. |
 | A5 | Resolved, see D21. |
 
 ### Technical constraints
@@ -141,12 +141,21 @@ Every action routes through an input-action layer, so touch gestures (P7) and a 
 - Hide UI, pause agents, and set the time of day once day/night exists (P5).
 - Export PNG at 1×, 2× or 4× resolution through an offscreen render target.
 
+### 4.7 UI quality bar (owner, 2026-10-13)
+
+The player-facing UI (D18 overlay) is held to a hero standard, like water:
+
+- **Polished:** a deliberate visual system (type scale, spacing, colour tokens, iconography) that frames the diorama instead of competing with it. No stock component-library look.
+- **Subtle interactions and motion:** every state change (hover, press, select, open, close, place, undo) has short, eased feedback. Motion explains cause and effect and never delays input. Reduced-motion is respected.
+- **Highly intuitive:** a first-time player can place, rotate, undo and bulldoze without reading help text. Affordances and the legal-slot filter make valid actions obvious.
+- **Mockups first:** before any UI is implemented, the owner reviews and approves mockups of every screen and the key interaction states, including motion (clips or interactive prototypes). UI work goes through the `impeccable` skill with a named design direction.
+
 ## 5. Tile system
 
 ### 5.1 Grid
 
 - Pointy-top hexes with axial coordinates `(q, r)`. Storage is a hash map from coordinate to placed tile.
-- World scale is real meters, so first person (P8) works without rescaling. Hex circumradius R = 16 m (about 27.7 m flat-to-flat), and the height level step is 4 m. Both values are constants, finalized during the P1 scale review.
+- World scale is real meters, so first person (P8) works without rescaling. Hex circumradius R = 16 m (about 27.7 m flat-to-flat), and the height level step is 4 m. Both values are constants, finalized in P1: R = 16 m, step 4 m (`hexgeo.py` asserted against `axial.rs`).
 - Edge indices 0–5 run clockwise from east. Rotation `k` maps edge `e` to `(e + k) mod 6`.
 
 ### 5.2 Sockets
@@ -277,8 +286,18 @@ The deterministic simulation core (grid, sockets, networks, pathing, agents) run
 - A clustered-forward PBR pipeline (metallic-roughness, glTF-conformant) with an HDR target.
 - Lighting: a directional sun with cascaded shadow maps (3–4 cascades, PCF/PCSS soft shadows), image-based lighting from a prefiltered environment map plus irradiance, and SSAO (GTAO). Screen-space GI is evaluated in P5.
 - Water: shared shaders for rivers and ocean, with flow maps on rivers, Gerstner or FFT waves on the ocean, depth-based color absorption, shoreline foam, and screen-space refraction plus planar or SSR reflection.
+- Water is a hero feature, owner-approved like the look-dev. The quality bar covers seven areas.
+  - **Animation.** Layered wave motion that never visibly loops: summed Gerstner or FFT waves on the ocean, and flow-map advection on rivers using two phase-offset layers to hide the reset.
+  - **Optics.** Fresnel reflection of the IBL sky and nearby geometry, sun glints, refraction with depth-tinted absorption and in-scattering, and animated caustics on shallow beds and shelves.
+  - **Foam.** Foam from water depth, wave crests and flow speed, plus shoreline wash and a wet-sand band on beaches.
+  - **Continuity.** World-space coordinates, so water continues across tile seams and rotations with no visible joint. The same seam close-up standard as the roads applies.
+  - **Exposed edges.** Where a water tile's edge has no water neighbour, its cut side renders as the water seen from inside: a skirt whose top follows the animated surface exactly, with depth absorption and tint down to the tile base and the surface's underside visible at the top. Never empty space.
+  - **Placement.** Water fills its channels during the staged rise (§4.4).
+  - **Quality tiers.** The effect scales per tier (§9.2). It must hold the P2 frame budget and fit inside WebGPU's 16 sampled-texture baseline per stage.
+  - **Prototype first.** Prototype the look in its own scenario before building the tile content.
 - Foliage: GPU-instanced with wind sway in the vertex shader. Alpha-tested leaves with dithered LOD transitions.
 - Post-processing: TAA, bloom, filmic tone mapping (AgX or ACES, chosen during the P1 look-dev), color grading by LUT, and DOF (used by photo mode).
+- Tilt-shift: a miniature-diorama look for the normal game camera, not only photo mode. A custom post node blurs by distance from a tilted focal plane that follows the orbit camera's focus point, with the blur strength scaled by zoom (strong when zoomed out, off near ground level) plus an optional saturation and contrast lift. It is a player toggle with a strength slider, it is on by default from Medium tier up, and it shares its kernel with photo mode's tilt-shift preset. Bevy's DOF has no tilted plane, so this is a custom node.
 - Culling: GPU frustum and Hi-Z occlusion culling with indirect draws, organized in chunks (for example 7- or 19-hex clusters).
 - LOD: three mesh LODs per kit piece with distance and screen-size selection and dithered cross-fade. Far chunks use merged meshes.
 
@@ -295,7 +314,7 @@ The tier is auto-detected on first run from adapter info and a short benchmark, 
 
 ### 9.3 Asset formats at runtime
 
-- glTF 2.0 binary (GLB) with `EXT_meshopt_compression` and `KHR_texture_basisu` (KTX2: UASTC for normals, ETC1S or UASTC+RDO for color maps). The browser transcodes to BC7 or ASTC depending on what the adapter supports.
+- glTF 2.0 binary (GLB) with `EXT_meshopt_compression` and sidecar KTX2 textures (UASTC+RDO source, transcoded offline to BC7 and ASTC with zstd, plus PNG), bound by the runtime; GLBs embed no images.
 - Decided in P0 (TC3, Q3; [`docs/decisions/0001-engine.md`](docs/decisions/0001-engine.md)): route (a), with meshes decoded by the pure-Rust `meshoptimizer-rs` GLB rewrite in `crates/hex-assets` and textures shipped as BC7/ASTC KTX2 + zstd with a PNG fallback. Route (a) as specified: textures are shipped as pre-transcoded KTX2 + zstd in two families, BC7 (desktop) and ASTC (Apple mobile, P7), selected at runtime from the device's `texture-compression-bc` / `-astc` features, so no Basis transcoder is needed and Bevy's `ktx2` + pure-Rust `zstd_rust` loader works as-is; meshes are meshopt-compressed and decoded before `bevy_gltf` sees them, either by a custom asset loader that rewrites the GLB using the pure-Rust `meshoptimizer-rs` decoder or by the official `meshopt_decoder.js` called through wasm-bindgen. Fallbacks: (b) Basis Universal through `bevy_basisu_loader` or the pure-Rust `basisu` crate; (c) uncompressed vertex data with only zstd at the transport level.
 
 ### 9.4 Hooks for the future atmosphere phases (D7)
@@ -337,7 +356,7 @@ This adapts par-factory's pipeline (`~/Repos/par-factory/docs/specs/09-asset-pip
 ### 11.1 Authoring routes
 
 - **Scripted (structural):** bases, edge pieces, road, rail, river and coast pieces, buildings. An Opus 5.5 subagent writes a reproducible `scripts/blender/kit/<piece-id>.py` generator and runs it headless (`blender -b -P`). Rebuilding from the script must be deterministic.
-- **Interactive (organic heroes):** mountains, volcano, cliffs, animals, hero trees. An Opus 5.5 subagent sculpts through the Blender MCP in a live session. The `.blend` source is saved to external storage (A4), and the piece is exported through the same scripted bake and LOD stage.
+- **Interactive (organic heroes):** mountains, volcano, cliffs, animals, hero trees. An Opus 5.5 subagent sculpts through the Blender MCP in a live session. The `.blend` source is saved to the local blend store and referenced by SHA-256 (§11.6), and the piece is exported through the same scripted bake and LOD stage.
 
 One subagent works on one kit piece at a time. At most 3 Blender asset subagents run concurrently, to avoid exhausting the machine's resources. The owner reviews each family together.
 
@@ -348,27 +367,28 @@ Concept art, reference images and texture references are generated with Higgsfie
 1. **High-poly:** sculpt or modifier-stack geometry at final detail (no tri budget). Bevels, damage and surface detail are modeled.
 2. **Low-poly cage / LOD0:** a retopologized or decimated mesh within budget, with clean UVs (one atlas per piece) and a texel density standard decided in P1.
 3. **Bake:** high-poly → LOD0 using Cycles bakes: base color, tangent-space normal, ORM (AO / roughness / metallic), emissive, plus the hook masks (§9.4).
-4. **LODs:** LOD1 and LOD2 through Blender Decimate (with the normal map reused), plus a simplified collider mesh (D14).
+4. **LODs:** LOD1 and LOD2 (with the normal map reused), plus a simplified collider mesh (D14). Border-touching pieces regenerate each LOD from the same border ring at a coarser interior and are never decimated, so the seam ring stays exact. Other pieces use Blender Decimate, and trees keep a scaled subset of their leaf cards and decimate only the bark.
 5. **Export:** a GLB with named nodes, sockets (`socket-lane-<n>`, `anchor-prop-<n>`), a pivot at the hex center or edge-0 midpoint, and Y-up.
-6. **Compress:** gltf-transform (pinned version), KTX2 (UASTC normals, ETC1S/UASTC color), meshopt quantization, validate, and a hard size-budget failure.
+6. **Compress:** gltf-transform 4.3.0 meshopt (`EXT_meshopt_compression`, FLOAT attributes, no `KHR_mesh_quantization`), glTF validation, per-channel UASTC → BC7/ASTC KTX2 + zstd with sRGB (base color, emissive) or linear (normal, ORM, masks) formats, PNG fallback, and hard GLB and texture byte budgets.
 7. **Gate:** reimport check (geometry, sockets, materials, LOD ratios, budget), a 6-view render, a seam test against neighbor pieces, an in-engine screenshot, and a provenance JSON. Then owner approval.
 
 ### 11.3 Directory layout
 
 ```
 assets-source/
-  kit/<piece-id>/               # generator output reports, renders, provenance (no .blend, see A4)
+  kit/<piece-id>/               # generator output reports, renders, provenance (no .blend, see §11.6)
+  blend/<piece-id>/             # .blend sources and bake intermediates (local-only, gitignored)
   audio/{sfx,ambience,music}/<cue-id>/
 scripts/blender/kit/<piece-id>.py
 scripts/blender/lib/            # shared bake/LOD/export helpers
 audio/music/prompts/<cue-id>.md
 data/{tiles,sockets.ron,recipes}
-web/public/assets/              # runtime GLB/KTX2/audio + manifest.json
+assets/kit/                     # runtime GLB/KTX2/PNG + manifest.json
 ```
 
 ### 11.4 Provenance
 
-Every asset gets `provenance.json` recording: the generator script hash or `.blend` storage reference, the authoring agent and model, Blender version, bake settings, tool versions (gltf-transform, KTX), source and runtime hashes, the license, and for audio the provider and subscription (D21).
+Every asset gets `provenance.json` recording: the generator script hash and the hashes of the helper modules it imports (interactive pieces also record their `.blend` SHA-256 reference), the authoring agent and model, Blender version, bake settings, tool versions (gltf-transform, KTX), source and runtime hashes, the license, and for audio the provider and subscription (D21).
 
 ### 11.5 Make targets
 
@@ -377,6 +397,8 @@ Every asset gets `provenance.json` recording: the generator script hash or `.ble
 ### 11.6 Large-file storage
 
 Runtime derivatives are committed directly (each under the budget). Interactive `.blend` sources and bake intermediates go to external storage (an R2 bucket or similar, decided in P1) and are referenced by hash in the provenance. Git LFS is not used for them because of quota limits.
+
+P1 (owner, 2026-10-13): external storage deferred. `.blend` sources and bake intermediates stay local in the gitignored `assets-source/blend/`, referenced by SHA-256 in provenance.
 
 ## 12. Technical architecture
 
@@ -442,7 +464,7 @@ Goal: de-risk the stack before content work.
 - [x] Bevy 0.20 runs on the WebGPU backend in Chrome and Safari 26 (macOS), rendering a lit PBR hex mesh. The native build renders the same scene. An iOS 26 Safari smoke test loads. (Verified on Safari 27.0.1, the installed version, and on the owner's iPhone on 2026-10-13.)
 - [ ] Engine gate (D2): 2,000 instanced hex tiles with 4 shadow cascades, bloom, TAA, SSAO and DOF hold the frame budget in Chrome and Safari on the reference machine. Logs confirm the SSAO plugin is active and report the GPU-preprocessing mode. The Bevy-vs-custom-wgpu decision is recorded with these measurements.
 - [ ] One custom compute pass (boids) and one custom material render inside Bevy's render graph on WebGPU.
-- [ ] One meshopt-compressed, quantized GLB and one BC7 KTX2 + zstd texture load and render on wasm32. The asset route (§9.3) is recorded with measured size and load time.
+- [ ] One meshopt-compressed GLB (float attributes, not quantized) and one BC7 KTX2 + zstd texture load and render on wasm32. The asset route (§9.3) is recorded with measured size and load time. (The P0 GLB is meshopt-compressed but not quantized; bevy_gltf 0.20 rejects `KHR_mesh_quantization`; see D7 in `docs/decisions/0002-asset-pipeline.md`.)
 - [ ] Wire size of the wasm and time to first interactive frame are measured on GitHub Pages.
 - [ ] The unsupported-browser page is shown when WebGPU is missing.
 - [ ] GitHub Actions deploys to Pages, and `https://hex-world.pardev.net` serves the build over HTTPS.
@@ -452,11 +474,12 @@ Goal: de-risk the stack before content work.
 
 Goal: one kit family through the full pipeline at final quality.
 
-- [ ] Shared Blender helper library: bake (all maps plus hook masks), LOD, collider, export, compress.
-- [ ] Scripted pieces: meadow base and road straight edge/center, each passing every gate in §11.2. Interactive route: one hero tree through the Blender MCP, also passing.
-- [ ] Look-dev: tone mapping, IBL and the texel density standard are chosen. The hex scale constants are finalized.
-- [ ] Seam test: two road tiles placed side by side show no visible seam in an in-engine close-up screenshot (owner-approved).
-- [ ] Provenance JSON complete for every piece. The external storage for `.blend` files is chosen and working.
+- [x] Shared Blender helper library: bake (all maps plus hook masks), LOD, collider, export, compress. Evidence: `scripts/blender/lib/`, its tests in `scripts/blender/tests/` and `make blender-test` (45 tests, exit 0, 2026-10-13).
+- [x] Scripted pieces: meadow base and road straight edge/center, each passing every gate in §11.2. Interactive route: one hero tree through the Blender MCP, also passing. Evidence: `make kit-check` and `assets-source/kit/{meadow_base,road_straight_edge,road_straight_center,tree_hero_oak}/provenance.json`.
+- [x] Look-dev: tone mapping, IBL and the texel density standard are chosen. The hex scale constants are finalized. Evidence: `assets-source/lookdev/lookdev.json` (`approvals`, `gate: "look-dev"`).
+- [x] Seam test: two road tiles placed side by side show no visible seam in an in-engine close-up screenshot (owner-approved). Evidence: `assets-source/kit/road_straight_edge/approvals.json` (`gate: "seam"`) and `assets-source/kit/road_straight_edge/seam-checkpoint.md`.
+- [x] Provenance JSON complete for every piece. Evidence: the four `assets-source/kit/<piece>/provenance.json` files and the four `assets-source/kit/materials/<set>/provenance.json` files, checked by `kit_gate::provenance_complete_and_hashes_match` and `kit_gate::material_provenance_complete_and_hashes_match`.
+- [ ] The external storage for `.blend` files is chosen and working. Deferred by owner (R1), local SHA-256-referenced storage in use (§11.6).
 
 ### P2 — MVP vertical slice
 
@@ -467,11 +490,16 @@ Goal: the polished, playable core loop with D12 content.
 - [ ] Staged rise animation (§4.4), including below-surface features, skippable.
 - [ ] Road network stitching. Cars route between houses across tile boundaries.
 - [ ] GPU boids birds roosting in forests.
-- [ ] Water: river flow and ocean waves with shore foam.
+- [ ] Water: river flow and ocean waves with shore foam, meeting the §9.1 hero-water quality bar.
+- [ ] A gate sums the initial download (wasm + IBL + core pieces + sets, one texture family) and fails above 30 MB; hero assets stream after first interaction.
+- [ ] The owner approves the water look in a dedicated `water` scenario. Shots cover the ocean, a river, a beach and a tile seam, captured at rest and in motion.
 - [ ] Spatial ambience with the focus mix. Placement and UI SFX. At least 3 Suno music cues mastered and crossfading.
+- [ ] The owner approves UI mockups (every screen and key interaction state, with motion) before UI implementation starts (§4.7).
+- [ ] The shipped UI meets the §4.7 quality bar, and the owner signs it off in the running build.
 - [ ] Undo/redo and bulldoze with the connectivity rule.
 - [ ] IndexedDB slots, autosave, `.hexworld` export and import.
 - [ ] Photo mode with DOF and 4× export.
+- [ ] Tilt-shift rendering (§9.1) in the game camera: zoom-scaled focal-plane blur, player toggle and strength slider, default on from Medium tier. It holds the P2 60 fps 95th-percentile budget on High, measured under the load guard.
 - [ ] Quality tiers with auto-detection. 60 fps at the 95th percentile on the reference machine with a scripted 2,000-tile world on High.
 - [ ] Every §9.4 hook is present in the MVP assets and shaders (verified by the asset gate).
 - [ ] Every audio asset's provenance records its provider and subscription (D21).

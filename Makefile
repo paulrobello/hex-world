@@ -1,4 +1,4 @@
-.PHONY: fetch-tools assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced
+.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev
 
 fmt:
 	cargo fmt --all
@@ -23,6 +23,23 @@ checkall-ci: checkall web-size
 fetch-tools:
 	bash scripts/fetch-ktx.sh
 
+BLENDER ?= /Applications/Blender.app/Contents/MacOS/Blender
+BLENDER_RUN = "$(BLENDER)" -b --factory-startup --python-exit-code 1
+
+blender-test:
+	$(BLENDER_RUN) -P scripts/blender/run_tests.py -- $(TEST)
+
+# Proves a failing Blender test fails make (brief §(e): Blender exits 0 on tracebacks without the flag).
+blender-test-selfcheck:
+	@mkdir -p target
+	@if HEXW_FORCE_FAIL=1 $(BLENDER_RUN) -P scripts/blender/run_tests.py -- test_runner_selfcheck > target/selfcheck.log 2>&1; \
+	then echo "FAIL: forced failure exited 0"; exit 1; \
+	elif grep -q "forced failure" target/selfcheck.log; then echo "selfcheck OK: failure propagates"; \
+	else echo "FAIL: Blender did not run the forced-failure test"; cat target/selfcheck.log; exit 1; fi
+
+refs:
+	bash scripts/refs/higgsfield-refs.sh $(PIECE)
+
 assets-p0: fetch-tools
 	cd scripts/assets && npm ci --no-audit --no-fund
 	node scripts/assets/build-p0-assets.mjs
@@ -32,6 +49,99 @@ assets-p0: fetch-tools
 	ktx transcode --target bc7 --zstd 18 target/hex_test.uastc.ktx2 assets/kit/p0/hex_test.bc7.ktx2 && \
 	ktx transcode --target astc --zstd 18 target/hex_test.uastc.ktx2 assets/kit/p0/hex_test.astc.ktx2 && \
 	ktx info assets/kit/p0/hex_test.bc7.ktx2 | head -20
+
+# P1 kit pipeline. Local only: needs Blender and tools/ktx-4.4.2. Per-channel color space lives in
+# scripts/assets/kit-lib.mjs CHANNELS (albedo/emissive sRGB; normal/orm/masks linear), asserted on every encode.
+kit-build:
+	@test -n "$(PIECE)" || { echo "usage: make kit-build PIECE=<id>"; exit 2; }
+	rm -rf target/kit-stage/$(PIECE) && mkdir -p target/kit-stage/$(PIECE) assets-source/kit/$(PIECE)
+	$(BLENDER_RUN) -P scripts/blender/kit/$(PIECE).py -- target/kit-stage/$(PIECE)
+	cp target/kit-stage/$(PIECE)/bake-report.json target/kit-stage/$(PIECE)/export-report.json assets-source/kit/$(PIECE)/
+
+kit-determinism:
+	@test -n "$(PIECE)" || { echo "usage: make kit-determinism PIECE=<id>"; exit 2; }
+	rm -rf target/kit-det && mkdir -p target/kit-det/a target/kit-det/b
+	HEXW_SKIP_BAKE=1 $(BLENDER_RUN) -P scripts/blender/kit/$(PIECE).py -- target/kit-det/a
+	HEXW_SKIP_BAKE=1 $(BLENDER_RUN) -P scripts/blender/kit/$(PIECE).py -- target/kit-det/b
+	@a=$$(shasum -a 256 target/kit-det/a/$(PIECE).glb | cut -d' ' -f1); b=$$(shasum -a 256 target/kit-det/b/$(PIECE).glb | cut -d' ' -f1); \
+	test "$$a" = "$$b" && echo "deterministic $$a" || { echo "FAIL: GLB differs $$a $$b"; exit 1; }
+
+# npm ci only when the lockfile is newer than the last install.
+ASSETS_NPM = scripts/assets/node_modules/.npm-ci.stamp
+$(ASSETS_NPM): scripts/assets/package-lock.json
+	cd scripts/assets && npm ci --no-audit --no-fund
+	touch $@
+
+# CLASS=piece|hero|tileable overrides the budget class (default: export-report.json "budgetClass", else piece).
+kit-compress: fetch-tools $(ASSETS_NPM)
+	@test -n "$(PIECE)" || { echo "usage: make kit-compress PIECE=<id> [CLASS=hero]"; exit 2; }
+	node scripts/assets/kit-compress.mjs piece $(PIECE) $(if $(CLASS),--class $(CLASS))
+
+kit-material: fetch-tools $(ASSETS_NPM)
+	@test -n "$(SET)" || { echo "usage: make kit-material SET=<set>"; exit 2; }
+	rm -rf target/kit-stage/materials/$(SET) && mkdir -p target/kit-stage/materials/$(SET) assets-source/kit/materials/$(SET)
+	$(BLENDER_RUN) -P scripts/blender/kit/mat_$(SET).py -- target/kit-stage/materials/$(SET)
+	node scripts/assets/kit-compress.mjs material $(SET)
+	cp target/kit-stage/materials/$(SET)/bake-report.json assets-source/kit/materials/$(SET)/
+
+kit-compress-test: fetch-tools $(ASSETS_NPM)
+	node --test scripts/assets/kit-compress.test.mjs scripts/assets/kit-provenance.test.mjs
+
+# Rebuilds the committed gate fixture. Local only: needs Blender and tools/ktx-4.4.2.
+# Then re-syncs assets/kit/p1/fixture, the byte copy kit_src=fixture serves (served_fixture_matches_the_gate_fixture).
+KIT_FIXTURE = crates/hex-render/tests/fixtures/kit
+kit-fixture: fetch-tools $(ASSETS_NPM)
+	rm -rf target/kit-stage/fixture && mkdir -p target/kit-stage/fixture
+	$(BLENDER_RUN) -P scripts/blender/kit/fixture.py -- target/kit-stage/fixture
+	node scripts/assets/kit-compress.mjs piece fixture --out $(KIT_FIXTURE)/p1/fixture --report $(KIT_FIXTURE)/source/fixture/compress-report.json
+	cp target/kit-stage/fixture/bake-report.json target/kit-stage/fixture/export-report.json $(KIT_FIXTURE)/source/fixture/
+	node scripts/assets/kit-provenance.mjs fixture --source $(KIT_FIXTURE)/source/fixture --runtime $(KIT_FIXTURE) --validated "fixture gate"
+	cp $(KIT_FIXTURE)/p1/fixture/* assets/kit/p1/fixture/
+
+kit-renders:
+	@test -n "$(PIECE)" || { echo "usage: make kit-renders PIECE=<id>"; exit 2; }
+	$(BLENDER_RUN) -P scripts/blender/kit_render.py -- $(PIECE)
+
+# The look-dev HDRI is gitignored (CC0, Poly Haven): download it into this checkout's
+# assets-source/hdri/ and verify it against the URL and SHA-256 recorded in lookdev.json.
+LOOKDEV = assets-source/lookdev/lookdev.json
+fetch-hdri:
+	@dst=$$(node -p 'require("./$(LOOKDEV)").hdri.file'); want=$$(node -p 'require("./$(LOOKDEV)").hdri.sha256'); \
+	test -f "$$dst" || { mkdir -p "$$(dirname "$$dst")" && curl -fL --max-time 300 -o "$$dst.part" "$$(node -p 'require("./$(LOOKDEV)").hdri.url')" && mv "$$dst.part" "$$dst"; } || exit 1; \
+	got=$$(shasum -a 256 "$$dst" | cut -d' ' -f1); \
+	if [ "$$got" = "$$want" ]; then echo "hdri OK $$dst"; else echo "FAIL: $$dst sha256 $$got != $$want"; exit 1; fi
+
+lookdev-ibl: fetch-hdri
+	$(BLENDER_RUN) -P scripts/blender/lookdev_ibl.py -- assets-source/hdri/kloofendal_48d_partly_cloudy_puresky_2k.hdr
+	. tools/ktx-env.sh && ktx validate assets/kit/p1/ibl/noon.specular.ktx2 && ktx validate assets/kit/p1/ibl/noon.diffuse.ktx2
+
+# The kit gate alone. checkall already runs it through `test` (cargo test --workspace).
+kit-check:
+	cargo test -p hex-render --test kit_gate
+
+# Writes provenance with validation.pass only after every non-provenance gate passes.
+# ROUTE=interactive defaults BLEND to the piece's .blend in the main checkout's store (owner O2,
+# scripts/blender/lib/paths.py; HEXW_BLEND_STORE overrides). Scripted pieces get no blendRef.
+BLEND_STORE = $(shell python3 scripts/blender/lib/paths.py store)
+KIT_BLEND = $(or $(BLEND),$(if $(filter interactive,$(ROUTE)),$(shell python3 scripts/blender/lib/paths.py blend $(PIECE))))
+KIT_PROV_ARGS = $(if $(REFS),--refs $(REFS)) $(if $(KIT_BLEND),--blend $(KIT_BLEND) --blend-store $(BLEND_STORE)) $(if $(ROUTE),--route $(ROUTE))
+kit-provenance:
+	@test -n "$(PIECE)" || { echo "usage: make kit-provenance PIECE=<id> [REFS=assets-source/refs/<ref>] [ROUTE=interactive [BLEND=path]]"; exit 2; }
+	@if [ "$(ROUTE)" = interactive ] && [ ! -f "$(KIT_BLEND)" ]; then \
+	  echo "kit-provenance: ROUTE=interactive needs the piece's .blend, got '$(KIT_BLEND)' (BLEND=, or python3 scripts/blender/lib/paths.py blend $(PIECE))"; exit 2; fi
+	node scripts/assets/kit-provenance.mjs $(PIECE) $(KIT_PROV_ARGS)
+	cargo test -p hex-render --test kit_gate -- --skip provenance
+	$(BLENDER_RUN) -P scripts/blender/kit_render.py -- $(PIECE)
+	node scripts/assets/kit-provenance.mjs $(PIECE) $(KIT_PROV_ARGS) \
+	  --validated "kit_gate geometry,kit_gate textures,kit_gate bevy reimport,blender reimport sockets,six-view render"
+
+# Provenance for a tileable set: assets-source/kit/materials/<set>/provenance.json.
+# The set must be in assets/kit/manifest.json "materials" before validation.pass is stamped.
+kit-material-provenance:
+	@test -n "$(SET)" || { echo "usage: make kit-material-provenance SET=<set>"; exit 2; }
+	node scripts/assets/kit-provenance.mjs $(SET) --material
+	cargo test -p hex-render --test kit_gate ktx2_color_space_mips_and_budgets
+	node scripts/assets/kit-provenance.mjs $(SET) --material --validated "kit-compress tileable budget,kit_gate textures"
 
 ref-bevy:
 	@test -d target/ref/bevy || git clone --depth 1 --branch v0.20.0 https://github.com/bevyengine/bevy target/ref/bevy
@@ -103,3 +213,31 @@ web-shots: build-web
 	mkdir -p e2e/test-results
 	rm -f e2e/test-results/web-*.png
 	node e2e/shots.mjs dist scripts/shots/gallery.json
+
+# The kit scenario's shots. ARGS / QUERY pass kit keys, e.g. ARGS="--kit_src fixture" and
+# QUERY="kit_src=fixture" for the gate fixture.
+KIT_SHOTS = kit-overview kit-seam-closeup kit-tree kit-tree-under kit-tree-game kit-lod1 kit-lod2
+shots-kit:
+	mkdir -p target/shots
+	rm -f target/shots/kit-*.png
+	cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off $(ARGS)
+	@for n in $(KIT_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; done
+	@echo "wrote target/shots/kit-*.png"
+
+# Tone-mapping comparison (D4) of the kit shots. ARGS passes kit keys and LOOKDEV_OUT moves the
+# output, e.g. ARGS="--kit_src fixture" LOOKDEV_OUT=target/shots/lookdev-fixture.
+LOOKDEV_OUT ?= target/shots
+shots-lookdev:
+	@mkdir -p $(LOOKDEV_OUT)
+	@for t in agx tony aces; do \
+	  rm -f target/shots/kit-*.png; \
+	  cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --tonemap $$t $(ARGS) || exit 1; \
+	  for n in kit-overview kit-seam-closeup kit-tree; do cp target/shots/$$n.png $(LOOKDEV_OUT)/lookdev-$$t-$$n.png || exit 1; done; \
+	done
+	@echo "wrote $(LOOKDEV_OUT)/lookdev-{agx,tony,aces}-*.png"
+
+web-shots-kit: build-web
+	cd e2e && npm ci --no-audit --no-fund
+	mkdir -p e2e/test-results
+	rm -f e2e/test-results/web-kit-*.png
+	node e2e/shots.mjs dist scripts/shots/kit.json "$(QUERY)"

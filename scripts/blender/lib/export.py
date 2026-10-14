@@ -1,0 +1,97 @@
+import ast
+import json
+import math
+import pathlib
+
+import bpy
+
+from . import bake, geom, hexgeo, scene
+
+REPO = pathlib.Path(__file__).resolve().parents[3]  # scripts/blender/lib -> repo root
+# KTX2 budget classes, read by kit-compress.mjs (KTX_BUDGETS in scripts/assets/kit-lib.mjs).
+BUDGET_CLASSES = ("piece", "tileable", "hero")
+
+
+def add_socket(name, loc, parent, yaw_deg=0.0, **extras):
+    """Named empty exported as a glTF node with extras (export_extras=True).
+    Names: socket-lane-<n> (network lanes), anchor-prop-<n> (prop anchors)."""
+    e = scene.empty(name, loc, parent)
+    e.rotation_euler = (0.0, 0.0, math.radians(yaw_deg))
+    for k, v in extras.items():
+        e[k] = v
+    return e
+
+
+def _tree(root):
+    out = [root]
+    for c in root.children:
+        out += _tree(c)
+    return out
+
+
+def export_glb(root, path):
+    """One root per GLB; no images (textures ship as sidecar KTX2/PNG, R6); tangents on; Y-up."""
+    pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
+    objs = _tree(root)
+    for o in objs:
+        o.hide_render = False
+        o.hide_set(False)
+    scene.select_only(objs, root)
+    bpy.ops.export_scene.gltf(
+        filepath=str(path), export_format="GLB", use_selection=True, use_active_scene=True,
+        export_yup=True, export_apply=True, export_extras=True, export_tangents=True,
+        export_normals=True, export_texcoords=True, export_cameras=False, export_lights=False,
+        export_image_format="NONE", export_materials="EXPORT", export_animations=False)
+
+
+def generator_deps(generator_path):
+    """Local helper modules a generator imports, transitively: every `_*.py` beside the importing
+    file named by any absolute `import _x` / `from _x import ...` statement, at any nesting depth
+    (ast.walk). Returns sorted
+    [{path (repo-relative POSIX), sha256}], so provenance changes when a shared helper such as
+    kit/_road.py changes. Names that do not resolve to a sibling file are ignored."""
+    seen, todo = {}, [pathlib.Path(generator_path).resolve()]
+    while todo:
+        src = todo.pop()
+        for node in ast.walk(ast.parse(src.read_text(), str(src))):
+            if isinstance(node, ast.Import):
+                names = [a.name for a in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                names = [node.module]
+            else:
+                continue
+            for name in names:
+                dep = src.parent / f"{name.split('.')[0]}.py"
+                if name.startswith("_") and dep.is_file() and dep not in seen:
+                    seen[dep] = bake.sha256_file(str(dep))
+                    todo.append(dep)
+    return sorted(({"path": p.relative_to(REPO).as_posix(), "sha256": h} for p, h in seen.items()),
+                  key=lambda d: d["path"])
+
+
+def write_export_report(path, root, piece_id, generator_path, budget_class=None):
+    """Writes {pieceId, nodes, lodTris, sockets, generator{path, sha256}, blender}; socket positions
+    are runtime frame (Y-up). generator.path is repo-relative (POSIX) so provenance never leaks
+    an absolute host path; generator_path must lie inside the repo. budget_class (one of
+    BUDGET_CLASSES, e.g. "hero") adds "budgetClass", which kit-compress uses as the KTX2 budget."""
+    if budget_class is not None and budget_class not in BUDGET_CLASSES:
+        raise ValueError(f"budget_class {budget_class!r} not in {BUDGET_CLASSES}")
+    bpy.context.view_layer.update()  # matrix_world is stale for objects created since the last update
+    nodes, lods, sockets = [], {}, []
+    for o in _tree(root):
+        nodes.append(o.name)
+        if o.type == "MESH" and o.name.startswith(f"{piece_id}_lod"):
+            lods[o.name] = geom.tri_count(o)
+        if o.name.startswith(("socket-lane-", "anchor-prop-")):
+            p = o.matrix_world.translation
+            sockets.append({"name": o.name, "position": list(hexgeo.blender_to_rt(p.x, p.y, p.z)),
+                            "yaw": math.degrees(o.matrix_world.to_euler().z),
+                            "extras": {k: o[k] for k in o.keys() if not k.startswith("_")}})
+    rep = {"pieceId": piece_id, "nodes": sorted(nodes), "lodTris": lods, "sockets": sockets,
+           "generator": {"path": pathlib.Path(generator_path).resolve().relative_to(REPO).as_posix(),
+                         "sha256": bake.sha256_file(generator_path)},
+           "generatorDeps": generator_deps(generator_path), "blender": bpy.app.version_string}
+    if budget_class is not None:
+        rep["budgetClass"] = budget_class
+    pathlib.Path(path).write_text(json.dumps(rep, indent=2, sort_keys=True) + "\n")
+    return rep

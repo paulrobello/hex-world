@@ -1,0 +1,106 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/meadow_base.py",
+    "sha256": "05e33fe42a7144c8cc7639e66de7d6d24eba5aa386b4a14e0c7b486a031b6976"
+  },
+  "lodTris": {
+    "meadow_base_lod0": 2604,
+    "meadow_base_lod1": 900,
+    "meadow_base_lod2": 286
+  },
+  "nodes": [
+    "anchor-prop-0",
+    "anchor-prop-1",
+    "anchor-prop-2",
+    "anchor-prop-3",
+    "anchor-prop-4",
+    "anchor-prop-5",
+    "meadow_base",
+    "meadow_base_collider",
+    "meadow_base_lod0",
+    "meadow_base_lod1",
+    "meadow_base_lod2"
+  ],
+  "pieceId": "meadow_base",
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        8.410329818725586,
+        -0.032643020153045654,
+        -3.3695976734161377
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        0.4676262140274048,
+        -0.1034674420952797,
+        -5.812877655029297
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        -7.9476637840271,
+        -0.1303224414587021,
+        -4.364846229553223
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-3",
+      "position": [
+        -4.731332778930664,
+        -0.11811724305152893,
+        2.984726905822754
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-4",
+      "position": [
+        0.827811062335968,
+        -0.018601812422275543,
+        8.824472427368164
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-5",
+      "position": [
+        4.113753318786621,
+        -0.07917525619268417,
+        3.2690999507904053
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

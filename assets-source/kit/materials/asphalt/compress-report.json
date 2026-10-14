@@ -1,0 +1,145 @@
+{
+  "name": "asphalt",
+  "date": "2026-10-13T19:13:33.312Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/materials/asphalt/asphalt.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 806406,
+      "sha256": "a8c68c68b9aa6b81a72d19a01432b89efe928a0309fe37cfea585070acfdb328"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/materials/asphalt/asphalt.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 852656,
+      "sha256": "b5ecfb6fb5b6a0f92ae663533205825b779e6e77ce3d0aab4b8e742b0f32c932"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/materials/asphalt/asphalt.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 1539512,
+      "sha256": "6e636f0fa4a07fdffb6ba0315c370a22474aa0da99539cdda104e5a193c66bb0"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/materials/asphalt/asphalt.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 1046553,
+      "sha256": "8bb617eb5fd6d2ce7c1dc539ab8fb9c56bac5852eaa9755b733e54493584d963"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/materials/asphalt/asphalt.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 1051724,
+      "sha256": "556c907334b9ae57e2ce6e99ff3e4f6701fd9854e7283ad5dc570b2ace85f774"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/materials/asphalt/asphalt.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 2604578,
+      "sha256": "645cc362f347f066c2cdfa27b292d41a7cb38161919b6c161a7dac97b6001c88"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/materials/asphalt/asphalt.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 531726,
+      "sha256": "d96d4931475f91efef4bd357df6a6d1fed4eebf75f7b5d4bb94d1bbfcef595e7"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/materials/asphalt/asphalt.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 508672,
+      "sha256": "7ce75d0e4e20f25aa1fb20b588631a5fe692ff011bae23c71d4bf9ffda3c6846"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/materials/asphalt/asphalt.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 844354,
+      "sha256": "ec8625728cba7596a8023d3636f955b957859489190450336d46ffbe44ed7970"
+    }
+  ],
+  "budgets": {
+    "class": "tileable",
+    "ktxMax": 3600000,
+    "ktxBytes": {
+      "bc7": 2384685,
+      "astc": 2413052
+    }
+  }
+}

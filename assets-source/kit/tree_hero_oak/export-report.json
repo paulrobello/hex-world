@@ -1,0 +1,32 @@
+{
+  "blender": "5.2.2 LTS",
+  "budgetClass": "hero",
+  "generator": {
+    "path": "scripts/blender/kit/tree_hero_oak.py",
+    "sha256": "832af1a85ba50e1a02057215b1252b7e50a7249262984065554ec3a4f4ec6f49"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_leaves.py",
+      "sha256": "d732efec23b5b9a52dca841bfc97f70fb9ab604b8f039eb6029fffaabb2ccf4a"
+    },
+    {
+      "path": "scripts/blender/kit/_tree.py",
+      "sha256": "037e8be778813c929864130240aa65e05042c153b8c386d3920566b6867d81ce"
+    }
+  ],
+  "lodTris": {
+    "tree_hero_oak_lod0": 2981,
+    "tree_hero_oak_lod1": 1472,
+    "tree_hero_oak_lod2": 436
+  },
+  "nodes": [
+    "tree_hero_oak",
+    "tree_hero_oak_collider",
+    "tree_hero_oak_lod0",
+    "tree_hero_oak_lod1",
+    "tree_hero_oak_lod2"
+  ],
+  "pieceId": "tree_hero_oak",
+  "sockets": []
+}
