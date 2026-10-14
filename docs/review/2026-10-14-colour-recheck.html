@@ -276,4 +276,16 @@ figcaption{font-size:12px;color:var(--muted)}.none{border:1px dashed var(--line)
 <figure><a href='../checkpoints/road-verge/road-verge-after-tony-crop4x-shade.png' target=_blank><img src='../checkpoints/road-verge/road-verge-after-tony-crop4x-shade.png' loading=lazy alt='Under the new look (road-verge-after-tony-*)'></a><figcaption>Under the new look (road-verge-after-tony-*)</figcaption></figure>
 </div>
 </section>
-</main></body></html>
+</main><script>
+// The plain review server can drop a few requests when many images load at once: retry each failed image up to 3 times.
+document.addEventListener("error", (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement)) return;
+  const n = Number(img.dataset.retry || 0);
+  if (n >= 3) return;
+  img.dataset.retry = String(n + 1);
+  const src = img.getAttribute("src").replace(/[?&]retry=\d+$/, "");
+  setTimeout(() => { img.src = src + (src.includes("?") ? "&" : "?") + "retry=" + (n + 1); }, 300 * (n + 1));
+}, true);
+</script>
+</body></html>
