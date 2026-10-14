@@ -1,0 +1,18 @@
+// Sharp bend: an 8 m radius arc around corner 0; the point is the arc midpoint.
+(
+    id: "road_bend_60",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    center: Some("road_bend_60_center"),
+    networks: [
+        (kind: Road, from: Edge(0), to: Edge(1), points: [(6.928, 4.0)]),
+    ],
+)

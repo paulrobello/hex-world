@@ -1,0 +1,15 @@
+// Coast runs along edges 2 and 5: ocean on 0-1, grass on 3-4.
+(
+    id: "beach",
+    biome: Beach,
+    base: "beach_base",
+    edges: (
+        (kind: Ocean),
+        (kind: Ocean),
+        (kind: Beach),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Beach),
+    ),
+    center: Some("beach_center"),
+)

@@ -5,7 +5,10 @@ pub const HEX_RADIUS: f32 = 16.0;
 /// Height of one elevation level in meters (PRD §5.1, frozen in P1 with HEX_RADIUS; D8).
 pub const LEVEL_STEP: f32 = 4.0;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+/// Ordered by `(q, r)`, so ordered maps and sorted lists of cells are deterministic.
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 pub struct Axial {
     pub q: i32,
     pub r: i32,

@@ -1,0 +1,23 @@
+// 3-way Y junction meeting at the center node.
+(
+    id: "road_junction",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+    ),
+    center: Some("road_junction_center"),
+    nodes: [
+        (id: "junction", at: (0.0, 0.0)),
+    ],
+    networks: [
+        (kind: Road, from: Edge(0), to: Node("junction")),
+        (kind: Road, from: Edge(2), to: Node("junction")),
+        (kind: Road, from: Edge(4), to: Node("junction")),
+    ],
+)

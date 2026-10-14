@@ -1,0 +1,31 @@
+// Three houses on a pad; the road from edge 0 ends at the car destination node.
+(
+    id: "house_cluster",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    center: Some("house_pad"),
+    props: (
+        hero: [
+            (piece: "house_cottage", at: (-5.0, -4.5), yaw_deg: 0.0),
+            (piece: "house_cottage", at: (-5.0, 4.5), yaw_deg: 180.0),
+            (piece: "house_twostorey", at: (3.0, -7.0), yaw_deg: 90.0),
+        ],
+    ),
+    nodes: [
+        (id: "houses", at: (2.0, 0.0), destination: Some(House)),
+    ],
+    networks: [
+        (kind: Road, from: Edge(0), to: Node("houses")),
+    ],
+    agents: [
+        (agent: Car, max: 2),
+    ],
+)

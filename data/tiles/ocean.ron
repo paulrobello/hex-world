@@ -1,0 +1,15 @@
+// Deep water with a visible shelf below the surface.
+(
+    id: "ocean",
+    biome: Ocean,
+    base: "ocean_base",
+    edges: (
+        (kind: Ocean),
+        (kind: Ocean),
+        (kind: Ocean),
+        (kind: Ocean),
+        (kind: Ocean),
+        (kind: Ocean),
+    ),
+    center: Some("ocean_center"),
+)

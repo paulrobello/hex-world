@@ -1,0 +1,23 @@
+// Socket compatibility (PRD §5.2, plan F2) and lane contract (plan F3).
+// `compatible` must list every kind and be symmetric; the loader rejects anything else.
+// Changing a lane width means changing every tile that carries that lane in the same commit.
+(
+    compatible: {
+        Grass: [Grass, Forest, Beach],
+        Forest: [Grass, Forest],
+        Road: [Road],
+        River: [River],
+        Beach: [Beach, Grass, Ocean],
+        Ocean: [Ocean, Beach],
+    },
+    lanes: {
+        // scripts/blender/kit/_road.py ROAD_WIDTH
+        Road: (offset: 0.0, width: 6.0),
+        // Water width. Provisional until the river asset family is modeled (F3).
+        River: (offset: 0.0, width: 8.0),
+    },
+    edge_pieces: {
+        Road: "road_straight_edge",
+        River: "river_edge",
+    },
+)

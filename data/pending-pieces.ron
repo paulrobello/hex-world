@@ -1,0 +1,35 @@
+// Kit pieces referenced by data/tiles before they exist in assets/kit/manifest.json (plan F4).
+// The validator fails on any reference that is in neither list, on an entry that is already in the
+// manifest (remove it here to enforce the piece), and on an entry no tile references.
+// Ids are working names; the modeling stream that builds a piece reconciles its id here and in the
+// tiles in the same commit.
+(
+    pieces: [
+        // Road family
+        (id: "road_bend_60_center", delivered_by: "S4 references, then wave-2 kit modeling: road family"),
+        (id: "road_bend_120_center", delivered_by: "S4 references, then wave-2 kit modeling: road family"),
+        (id: "road_junction_center", delivered_by: "S4 references, then wave-2 kit modeling: road family"),
+        // River family
+        (id: "river_straight_center", delivered_by: "S4 references, then wave-2 kit modeling: river family"),
+        (id: "river_bend_center", delivered_by: "S4 references, then wave-2 kit modeling: river family"),
+        (id: "river_edge", delivered_by: "S4 references, then wave-2 kit modeling: river family"),
+        (id: "river_road_bridge_center", delivered_by: "S4 references, then wave-2 kit modeling: river family (bridge)"),
+        // Coast family
+        (id: "beach_base", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
+        (id: "beach_center", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
+        (id: "ocean_base", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
+        (id: "ocean_center", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
+        // Forest family
+        (id: "forest_base", delivered_by: "S4 references, then wave-2 kit modeling: forest family"),
+        (id: "tree_forest", delivered_by: "S4 references, then wave-2 kit modeling: forest family"),
+        // Meadow props
+        (id: "wildflower_clump", delivered_by: "S4 references, then wave-2 kit modeling: meadow props"),
+        (id: "rock_small", delivered_by: "S4 references, then wave-2 kit modeling: meadow props"),
+        // Houses
+        (id: "house_pad", delivered_by: "S4 references, then wave-2 kit modeling: house family"),
+        (id: "house_cottage", delivered_by: "S4 references, then wave-2 kit modeling: house family"),
+        (id: "house_twostorey", delivered_by: "S4 references, then wave-2 kit modeling: house family"),
+    ],
+    // One thumbnail per tile rotation; pending as a whole until the renderer exists.
+    thumbnails: Some("wave 2: tile thumbnail renderer"),
+)

@@ -1,0 +1,20 @@
+// Start tile (A1). Grass on every edge, wildflower and rock scatter.
+(
+    id: "meadow",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    props: (
+        scatter: [
+            (piece: "wildflower_clump", density: 4.0),
+            (piece: "rock_small", density: 0.3),
+        ],
+    ),
+)

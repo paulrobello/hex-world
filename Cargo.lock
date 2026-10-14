@@ -3048,6 +3048,10 @@ dependencies = [
 [[package]]
 name = "hex-core"
 version = "0.1.0"
+dependencies = [
+ "ron",
+ "serde",
+]
 
 [[package]]
 name = "hex-render"

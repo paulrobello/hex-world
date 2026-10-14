@@ -1,0 +1,18 @@
+// The bed is cut below the surface by the center piece.
+(
+    id: "river_straight",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    center: Some("river_straight_center"),
+    networks: [
+        (kind: River, from: Edge(0), to: Edge(3)),
+    ],
+)

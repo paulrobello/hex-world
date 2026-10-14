@@ -1,0 +1,26 @@
+// Dense tree scatter; the hero oak is the bird roost.
+(
+    id: "forest",
+    biome: Forest,
+    base: "forest_base",
+    edges: (
+        (kind: Forest),
+        (kind: Forest),
+        (kind: Forest),
+        (kind: Forest),
+        (kind: Forest),
+        (kind: Forest),
+    ),
+    props: (
+        scatter: [
+            (piece: "tree_forest", density: 3.0),
+            (piece: "rock_small", density: 0.2),
+        ],
+        hero: [
+            (piece: "tree_hero_oak", at: (0.0, 0.0)),
+        ],
+    ),
+    agents: [
+        (agent: Bird, max: 12),
+    ],
+)

@@ -1,0 +1,19 @@
+// The road (edges 1-4) crosses the river (edges 0-3) at 60 degrees on a bridge.
+(
+    id: "river_road_bridge",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+    ),
+    center: Some("river_road_bridge_center"),
+    networks: [
+        (kind: River, from: Edge(0), to: Edge(3)),
+        (kind: Road, from: Edge(1), to: Edge(4)),
+    ],
+)
