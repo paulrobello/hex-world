@@ -106,6 +106,13 @@ Approve or reject per ref. Two choices go with it:
   - During an export the window shows no camera for about 9 frames, which can flash the backdrop.
   - 4× export on the web is untested for GPU memory; only 2× was tested there.
 
+**A15. Future-atmosphere hooks (§9.4), for a look only.** `docs/checkpoints/hooks/` (17 shots, `shots.sh`) shows each hook doing something:
+- the kit under snow, wet, night, dusk and autumn
+- the tree close-up under snow, night, dusk and autumn
+- the coast under freeze, dusk and night
+
+At the MVP values (noon, dry, summer, unfrozen) the game looks the same as before. The pixel diffs sit inside run-to-run noise, and the texture budget holds at 16. The asset gate now fails any new piece or shader that lacks a hook. 21 small prop slots on the river, beach and ocean centre pieces still need authored masks maps; that Blender work runs overnight.
+
 ## Questions
 
 **Q1. Save label.** The HUD bar says "Not saved" because no autosave exists yet. The brief said "Saved". I recommend keeping "Not saved" until autosave lands, so the label tells the truth.
