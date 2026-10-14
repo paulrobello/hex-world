@@ -121,6 +121,26 @@ impl World {
         }
     }
 
+    /// Rebuilds a world from saved parts. No rule checks run here: [`crate::save`] validates the
+    /// result against the catalog before handing it out.
+    pub(crate) fn from_parts(
+        seed: u64,
+        tiles: BTreeMap<Axial, PlacedTile>,
+        undo: VecDeque<Action>,
+        redo: Vec<Action>,
+    ) -> Self {
+        Self {
+            seed,
+            tiles,
+            history: History { undo, redo },
+        }
+    }
+
+    /// The undo stack (oldest first) and the redo stack (the next redo last).
+    pub(crate) fn history_stacks(&self) -> (&VecDeque<Action>, &[Action]) {
+        (&self.history.undo, &self.history.redo)
+    }
+
     pub fn seed(&self) -> u64 {
         self.seed
     }
