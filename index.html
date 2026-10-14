@@ -92,6 +92,16 @@
           cellRect: function (q, r) { return JSON.parse(w.hex_world_cell_rect(q, r)); },
           // Removes and returns a finished capture's PNG data URL (a screenshot or a photo export), else null.
           takeShot: function (name) { return w.hex_world_take_shot(name) || null; },
+          // Saves (PRD §12.2): cmd({cmd:"save",tag}) encodes after earlier commands and fires `saved`;
+          // takeSave(tag) then returns the .hexworld bytes as a Uint8Array (null before or after).
+          // load(bytes) validates a Uint8Array at once and queues it: {ok,tiles,version} or {ok:false,code,reason}.
+          takeSave: function (tag) { return w.hex_world_take_save(tag) || null; },
+          // The world as of the last frame, encoded at once, for a page hide that cannot wait a frame.
+          saveNow: function (v) {
+            return w.hex_world_save_now(v ? new Float32Array([v.master, v.music, v.sfx, v.ambience, v.ui]) : undefined) || null;
+          },
+          load: function (bytes) { return JSON.parse(w.hex_world_load(bytes)); },
+          newWorld: function () { this.cmd({ cmd: "new_world" }); },
           // Play-scenario actions: typed wrappers over cmd, queued like any other command.
           selectTile: function (id) { this.cmd({ cmd: "select_tile", id: id }); },
           hover: function (q, r) { this.cmd({ cmd: "hover", q: q, r: r }); },

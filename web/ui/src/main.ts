@@ -1,11 +1,13 @@
 // Boots the overlay: the loading layer at once, then the play HUD once the engine is ready and the
 // play scenario is up. Other scenarios (gates, look-dev) get no HUD and are polled once a second.
 import { type AudioApi, GameAudio } from "./audio.ts";
-import type { HexWorld } from "./bridge.ts";
+import type { HexWorld, Volumes } from "./bridge.ts";
 import { h } from "./dom.ts";
 import { Hud } from "./hud.ts";
 import { sprite } from "./icons.ts";
 import { Loading } from "./loading.ts";
+import { Persistence } from "./persist.ts";
+import { idbFactory, openSlots } from "./slots.ts";
 
 type Bridge = HexWorld & { audio?: AudioApi };
 
@@ -66,10 +68,29 @@ function run(root: HTMLElement, hw: Bridge): void {
   syncMotion();
   reduced.addEventListener("change", syncMotion);
   let hud: Hud | null = null;
+  let persist: Persistence | null = null;
   hw.watchEvents((batch) => {
     hud?.onEvents(batch);
     audio.onEvents(batch);
+    persist?.onEvents(batch);
   });
+  const startPersistence = (h: Hud) => {
+    void openSlots(idbFactory()).then((store) => {
+      persist = new Persistence(hw, store, {
+        volumes: () => busVolumes(audio.api().state().volumes),
+        download,
+        notify: (n) => h.note(n),
+        changed: () => h.syncWorld(),
+      });
+      h.attach(persist);
+      void persist.start();
+    });
+  };
+  // Leaving or hiding the page writes a pending autosave at once (best effort in pagehide).
+  addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") persist?.flushNow();
+  });
+  addEventListener("pagehide", () => persist?.flushNow());
   const tick = () => {
     // Pump before reading state, so the state is at least as new as the events it explains.
     hw.pumpEvents();
@@ -82,12 +103,37 @@ function run(root: HTMLElement, hw: Bridge): void {
       window.setTimeout(tick, 1000);
       return;
     }
-    if (!hud) hud = new Hud(root, hw);
+    if (!hud) {
+      hud = new Hud(root, hw);
+      startPersistence(hud);
+    }
+    persist?.observe(play.tiles);
     root.classList.remove("is-off");
     hud.render(play, state);
     requestAnimationFrame(tick);
   };
   tick();
+}
+
+/** The audio layer's buses as a save spells them. */
+function busVolumes(v: {
+  master: number;
+  music: number;
+  ambience: number;
+  effects: number;
+  interface: number;
+}): Volumes {
+  return { master: v.master, music: v.music, sfx: v.effects, ambience: v.ambience, ui: v.interface };
+}
+
+/** Saves `bytes` as a download named `name`. */
+function download(name: string, bytes: Uint8Array): void {
+  const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/octet-stream" }));
+  const a = h("a", { href: url, download: name, class: "sr" });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
 if (document.body) boot();

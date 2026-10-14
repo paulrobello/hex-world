@@ -12,8 +12,8 @@ use crate::actions::{Action, ActionQueue};
 /// Street-level close-up to far strategic (§4.5 zoom range), in metres from the focus point.
 pub const MIN_DISTANCE: f32 = 12.0;
 pub const MAX_DISTANCE: f32 = 2500.0;
-const MIN_PITCH: f32 = 0.14; // about 8°
-const MAX_PITCH: f32 = 1.55; // about 89°
+pub(crate) const MIN_PITCH: f32 = 0.14; // about 8°
+pub(crate) const MAX_PITCH: f32 = 1.55; // about 89°
 const ORBIT_RAD_PER_PX: f32 = 0.005;
 const ZOOM_PER_NOTCH: f32 = 0.88;
 /// Focus distance used when the camera looks at or above the horizon.
@@ -46,7 +46,8 @@ pub fn focus(t: &Transform) -> Vec3 {
     }
 }
 
-fn spherical(offset: Vec3) -> (f32, f32, f32) {
+/// Yaw, pitch and distance of a camera offset from its focus point.
+pub(crate) fn spherical(offset: Vec3) -> (f32, f32, f32) {
     let d = offset.length().max(1e-3);
     (
         offset.x.atan2(offset.z),
@@ -55,7 +56,8 @@ fn spherical(offset: Vec3) -> (f32, f32, f32) {
     )
 }
 
-fn place(focus: Vec3, yaw: f32, pitch: f32, dist: f32) -> Transform {
+/// The camera transform orbiting `focus` at yaw, pitch and distance.
+pub(crate) fn place(focus: Vec3, yaw: f32, pitch: f32, dist: f32) -> Transform {
     let offset = Vec3::new(
         pitch.cos() * yaw.sin(),
         pitch.sin(),

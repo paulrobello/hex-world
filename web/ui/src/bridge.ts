@@ -18,6 +18,44 @@ export interface Cell {
 
 export type Vec3 = [number, number, number];
 
+/** Audio bus gains as a save carries them (the audio layer's `effects` and `interface` are `sfx` and `ui`). */
+export interface Volumes {
+  master: number;
+  music: number;
+  sfx: number;
+  ambience: number;
+  ui: number;
+}
+
+/** The settings a `loaded` event hands the overlay. `quality` is stored, not yet applied. */
+export interface SavedSettings {
+  quality: string;
+  tilt_shift: boolean;
+  tilt_shift_strength: number;
+  volumes: Volumes;
+}
+
+/** Why `.hexworld` bytes were refused: the check that failed, in words, and the file's version for version refusals. */
+export type LoadRefusalCode =
+  | "too_large"
+  | "bad_magic"
+  | "newer_version"
+  | "unsupported_version"
+  | "truncated"
+  | "trailing_bytes"
+  | "checksum"
+  | "decode"
+  | "invalid_value"
+  | "invalid_world"
+  | "invalid_history"
+  | "io"
+  | "no_file";
+
+/** `hexWorld.load(bytes)`: answered at once; on ok the load is queued behind earlier commands. */
+export type LoadResult =
+  | { ok: true; tiles: number; version: number }
+  | { ok: false; code: LoadRefusalCode; reason: string; version: number | null };
+
 export type Command =
   | { cmd: "camera"; pos: [number, number, number]; look_at: [number, number, number] }
   | { cmd: "screenshot"; name: string }
@@ -46,7 +84,10 @@ export type Command =
       roll?: number | null;
       pause_agents?: boolean | null;
     }
-  | { cmd: "photo_export"; scale: 1 | 2 | 4; name: string };
+  | { cmd: "photo_export"; scale: 1 | 2 | 4; name: string }
+  | { cmd: "save"; tag: string | null; path: string | null; volumes: Volumes | null }
+  | { cmd: "load"; path: string | null }
+  | { cmd: "new_world" };
 
 export type GameEvent =
   | { type: "tilePlaced"; q: number; r: number; tile: string; rotation: number }
@@ -64,7 +105,10 @@ export type GameEvent =
   | { type: "actionRefused"; action: string; reason: string }
   | { type: "riseStage"; q: number; r: number; tile: string; stage: string; skipped: boolean }
   | { type: "photoExported"; name: string; width: number; height: number }
-  | { type: "photoExportFailed"; name: string; reason: string };
+  | { type: "photoExportFailed"; name: string; reason: string }
+  | { type: "saved"; tag: string | null; tiles: number; bytes: number }
+  | { type: "loaded"; tiles: number; version: number; settings: SavedSettings | null }
+  | { type: "loadRefused"; code: LoadRefusalCode; reason: string; version: number | null };
 
 export interface PlayTile {
   q: number;
@@ -208,6 +252,12 @@ export interface HexWorld {
   cellRect(q: number, r: number): Rect | null;
   /** Removes and returns a finished capture's PNG data URL (screenshots and photo exports). */
   takeShot(name: string): string | null;
+  /** The `.hexworld` bytes of the `save` command tagged `tag`, once its `saved` event fired; null before or after. */
+  takeSave(tag: string): Uint8Array | null;
+  /** Validates `.hexworld` bytes and queues their load behind earlier commands. */
+  load(bytes: Uint8Array): LoadResult;
+  /** The world as of the last frame as `.hexworld` bytes, at once; null before the first frame. */
+  saveNow(volumes: Volumes | null): Uint8Array | null;
 }
 
 // ---------- Field tables, checked against bridge-schema.json by test/bridge-sync.test.ts ----------
@@ -246,6 +296,9 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
     pause_agents: true,
   }),
   photo_export: keys<CommandOf<"photo_export">>({ scale: true, name: true }),
+  save: keys<CommandOf<"save">>({ tag: true, path: true, volumes: true }),
+  load: keys<CommandOf<"load">>({ path: true }),
+  new_world: keys<CommandOf<"new_world">>({}),
 };
 
 export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
@@ -265,6 +318,9 @@ export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
   riseStage: keys<EventOf<"riseStage">>({ q: true, r: true, tile: true, stage: true, skipped: true }),
   photoExported: keys<EventOf<"photoExported">>({ name: true, width: true, height: true }),
   photoExportFailed: keys<EventOf<"photoExportFailed">>({ name: true, reason: true }),
+  saved: keys<EventOf<"saved">>({ tag: true, tiles: true, bytes: true }),
+  loaded: keys<EventOf<"loaded">>({ tiles: true, version: true, settings: true }),
+  loadRefused: keys<EventOf<"loadRefused">>({ code: true, reason: true, version: true }),
 };
 
 export const ENUMS = {

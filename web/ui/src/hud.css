@@ -20,7 +20,7 @@
 .hud button { font: inherit; color: inherit; }
 .hud [hidden] { display: none !important; }
 .hud ::selection { background: var(--pick); color: white; }
-.hud > .bar, .hud > .sheet, .hud > .toast, .hud > .show-ui, .hud > .load { pointer-events: auto; }
+.hud > .bar, .hud > .sheet, .hud > .toast, .hud > .show-ui, .hud > .load, .hud > .menu { pointer-events: auto; }
 .hud .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .ic { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -31,13 +31,17 @@
 /* ---------- Tool bar: top left, labelled ---------- */
 .bar { position: fixed; top: var(--s-5); left: var(--s-5); z-index: 11; display: flex; align-items: center; gap: 2px; padding: 6px; background: var(--sheet); border-radius: var(--r); box-shadow: var(--shadow-1); transition: transform var(--t-slow) var(--ease), opacity var(--t-slow) var(--ease); }
 .bar__rule { width: 1px; height: 28px; margin: 0 var(--s-2); background: var(--rule); }
-.bar__world { display: grid; gap: 1px; height: 44px; align-content: center; padding: 0 10px; margin-right: 2px; border-radius: var(--r-control); text-align: left; cursor: default; }
-.bar__world b { font-weight: 800; font-size: var(--fs-4); letter-spacing: -.01em; line-height: 1.1; }
+.bar__world { display: grid; gap: 1px; height: 44px; align-content: center; padding: 0 10px; margin-right: 2px; border: 0; border-radius: var(--r-control); background: transparent; color: inherit; text-align: left; cursor: pointer; transition: background var(--t-fast) var(--ease); }
+.bar__world:hover, .bar__world.is-on { background: var(--sheet-2); --ink-3: var(--ink-3-lifted); }
+.bar__world b { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; font-size: var(--fs-4); letter-spacing: -.01em; line-height: 1.1; }
 .bar__world > span { display: flex; align-items: center; gap: 6px; font-size: var(--fs-1); font-weight: 600; color: var(--ink-3); line-height: 1.2; }
-.save-state { display: inline-flex; align-items: center; }
+.save-state { display: inline-grid; white-space: nowrap; }
+.save-state[data-state=none] { display: none; }
 .save-state[data-state=off] { color: var(--caution); }
+.save-state > [data-s] { grid-area: 1 / 1; display: inline-flex; align-items: center; visibility: hidden; opacity: 0; transition: opacity var(--t-fast) var(--ease), visibility var(--t-fast) var(--ease); }
+.save-state[data-state=saved] > [data-s=saved], .save-state[data-state=saving] > [data-s=saving], .save-state[data-state=off] > [data-s=off] { visibility: visible; opacity: 1; }
 .save-dot { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: var(--ok); }
-.save-state[data-state=saving] .save-dot { background: var(--ink-3); animation: blink 900ms ease-in-out infinite; }
+[data-s=saving] .save-dot { background: var(--ink-3); animation: blink 900ms ease-in-out infinite; }
 @keyframes blink { 50% { opacity: .3; } }
 
 .tool { display: flex; align-items: center; gap: 7px; height: 44px; min-width: 44px; padding: 0 10px; border: 0; border-radius: var(--r-control); background: transparent; color: var(--ink-2); font-weight: 600; font-size: var(--fs-3); cursor: pointer; transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
@@ -162,6 +166,10 @@
 .toast { position: fixed; left: var(--s-5); bottom: var(--s-5); z-index: 20; max-width: 520px; display: flex; align-items: center; gap: var(--s-4); padding: 8px 8px 8px 14px; background: var(--sheet); border-radius: var(--r); box-shadow: var(--shadow-1); opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity var(--t-toast) var(--ease), transform var(--t-toast) var(--ease); }
 .toast.is-shown { opacity: 1; transform: none; pointer-events: auto; }
 .toast .ic { color: var(--ink-2); }
+.toast--ok .ic { color: var(--ok); }
+.toast--bad .ic { color: var(--bad); }
+.toast--caution .ic { color: var(--caution); }
+.toast p small { font-size: var(--fs-2); font-weight: 600; color: var(--ink-3-lifted); }
 .toast p { display: grid; margin: 0; }
 .toast p > span { transition: opacity var(--t-fast) var(--ease); }
 .toast__count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-right: 6px; padding: 0 6px; border-radius: 11px; background: var(--sheet-2); font-weight: 800; font-size: var(--fs-1); }
@@ -227,6 +235,59 @@
 .btn--quiet { background: transparent; color: var(--ink-2); }
 .btn--quiet:hover { background: var(--sheet-2); color: var(--ink); }
 .btn--sm { min-height: 36px; padding: 0 12px; font-size: var(--fs-2); }
+.btn:active { transform: translateY(1px); }
+.hud .btn--bad { background: var(--bad); color: rgb(40 8 6); }
+.hud .btn--bad:hover { background: rgb(255 120 110); }
+.btn .ic { width: 18px; height: 18px; }
+
+/* ---------- Worlds (S10): saved worlds, keyed by their socket mix ---------- */
+.sheet--worlds { z-index: 12; width: 420px; }
+.sheet--worlds .sheet__body { padding-bottom: 4px; }
+.section-h { display: flex; align-items: baseline; gap: 6px; margin: 20px 0 6px; font-size: var(--fs-2); font-weight: 800; color: var(--ink); }
+.section-h__count { color: var(--ink-3); }
+.note { display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start; margin: 14px 0 0; padding: 10px 12px; border-radius: var(--r-control); background: var(--sheet-2); font-size: var(--fs-2); color: var(--ink-2); }
+.note .ic { width: 18px; height: 18px; margin-top: 1px; color: var(--ink-2); }
+.note b { display: block; margin-bottom: 2px; color: var(--ink); font-size: var(--fs-3); }
+.note--caution .ic { color: var(--caution); }
+.current { display: grid; grid-template-columns: 112px 1fr; gap: 12px; margin: 14px 0 4px; padding: 12px; border-radius: var(--r-control); background: var(--sheet-2); --ink-3: var(--ink-3-lifted); }
+.current h2 { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0; font-size: var(--fs-4); font-weight: 800; letter-spacing: -.01em; }
+.current h2 > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.current p { margin: 2px 0 8px; font-size: var(--fs-2); font-weight: 600; color: var(--ink-2); }
+.current .btn-row { grid-column: 1 / -1; }
+.icon-btn { width: 36px; min-height: 36px; padding: 0; flex: none; }
+.current h2 .icon-btn { width: 28px; min-height: 28px; }
+.icon-btn .ic { width: 18px; height: 18px; }
+.thumb { display: block; width: 100%; aspect-ratio: 16 / 10; border-radius: 3px; background: var(--void); }
+.wmap path { fill: var(--k); stroke: var(--void); stroke-width: .06; stroke-linejoin: round; }
+.mix { display: flex; gap: 1px; height: 6px; border-radius: var(--r-swatch); overflow: hidden; }
+.mix i { display: block; height: 100%; background: var(--k); }
+.slots { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.slot-row { display: grid; grid-template-columns: 76px 1fr auto auto; gap: 4px 12px; align-items: center; padding: 6px; border-radius: var(--r-control); transition: background var(--t-fast) var(--ease); animation: panel-in var(--t) var(--ease) both; }
+.slot-row:hover, .slot-row.is-open, .slot-row:focus-within { background: var(--sheet-2); --ink-3: var(--ink-3-lifted); }
+.slot-row__text { min-width: 0; }
+.slot-row b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: var(--fs-3); }
+.slot-row small { display: block; font-size: var(--fs-2); font-weight: 600; color: var(--ink-3); }
+.slot-row .mix { width: 120px; margin-top: 6px; }
+.confirm { grid-column: 1 / -1; margin: 6px 0 2px; padding: 12px; border-radius: var(--r-control); background: var(--sheet); font-size: var(--fs-2); color: var(--ink-2); animation: panel-in var(--t) var(--ease); }
+.confirm b { display: block; margin-bottom: 2px; color: var(--ink); font-size: var(--fs-3); }
+.confirm .btn-row { margin-top: 10px; }
+.empty-slots { margin: 6px 0 4px; font-size: var(--fs-2); color: var(--ink-3); }
+.foot-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.name-edit { margin: 0; }
+.rename { width: 100%; min-height: 32px; margin: 0; padding: 0 8px; border: 0; border-radius: var(--r-control); background: var(--sheet); color: var(--ink); font: 800 var(--fs-4)/1.2 "Manrope", sans-serif; letter-spacing: -.01em; box-shadow: inset 0 0 0 1.5px var(--ink-2); outline: none; }
+.rename:focus-visible { box-shadow: inset 0 0 0 1.5px var(--ink); }
+.slot-row .rename { min-height: 28px; font-size: var(--fs-3); font-weight: 700; }
+.menu { position: fixed; z-index: 40; display: none; min-width: 188px; padding: 4px; background: var(--sheet-3); border-radius: var(--r); box-shadow: var(--shadow-2); }
+.menu.is-open { display: grid; animation: panel-in var(--t-fast) var(--ease); }
+.menu button { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 10px; border: 0; border-radius: var(--r-control); background: transparent; color: var(--ink); font-weight: 600; font-size: var(--fs-3); text-align: left; cursor: pointer; }
+.menu button .ic { width: 18px; height: 18px; color: var(--ink-2); }
+.menu button:hover, .menu button:focus-visible { background: rgb(255 255 255 / .08); outline: none; }
+.menu .is-bad, .menu .is-bad .ic { color: rgb(255 138 128); }
+.drop { position: absolute; inset: 8px; z-index: 5; display: grid; place-items: center; align-content: center; gap: 10px; padding: 24px; border: 2px dashed var(--ink-2); border-radius: var(--r); background: rgb(18 39 58 / .94); color: var(--ink); font-weight: 700; text-align: center; opacity: 0; pointer-events: none; transition: opacity var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease); }
+.drop .ic { width: 32px; height: 32px; }
+.drop small { max-width: 30ch; font-weight: 600; font-size: var(--fs-2); color: var(--ink-3-lifted); }
+.sheet--worlds.is-drop .drop { opacity: 1; border-color: var(--ink); }
+@keyframes panel-in { from { opacity: 0; transform: translateY(4px); } }
 .working { display: none; }
 
 /* Narrow desktop (1400 px and under): key caps move into tooltips and the sheet narrows. */
@@ -234,6 +295,7 @@
   .bar kbd { display: none; }
   .tool { padding: 0 9px; }
   .sheet--tiles { width: 340px; }
+  .sheet--worlds { width: 400px; }
   .row__code { grid-template-columns: repeat(6, 7px); }
 }
 

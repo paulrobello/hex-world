@@ -28,6 +28,12 @@ const ICONS: Record<string, string[]> = {
   exit: ["M14.5 4.5h5v15h-5", "M10 8 6 12l4 4M6 12h9.5"],
   export: ["M12 15V4M7.5 8.5 12 4l4.5 4.5", "M4.5 14v5.5h15V14"],
   retry: ["M4.5 12a7.5 7.5 0 0 0 13.3 4.7M19.5 12A7.5 7.5 0 0 0 6.2 7.3", "M6 3.5v4h4M18 20.5v-4h-4"],
+  import: ["M12 4v11M7.5 10.5 12 15l4.5-4.5", "M4.5 14v5.5h15V14"],
+  pencil: ["m14.5 5.5 4 4L9 19H5v-4Z", "m12.5 7.5 4 4"],
+  trash: ["M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5"],
+  plus: ["M12 5v14M5 12h14"],
+  copy: ["M8.5 8.5h11v11h-11Z", "M15.5 8.5V4.5h-11v11h4"],
+  more: ["M6 12h.01M12 12h.01M18 12h.01"],
 };
 
 export function sprite(): SVGElement {

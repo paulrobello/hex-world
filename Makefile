@@ -48,11 +48,13 @@ ui-schema:
 	HEXW_UPDATE_SCHEMA=1 cargo test -p hex-app bridge::schema::schema_matches_web_ui
 
 # Local only (GPU Chromium, never CI): drives the HUD with real keyboard and mouse on the built site,
-# asserts through hexWorld.state() and writes e2e/test-results/ui/<mockup state>.jpg, then runs the
+# asserts through hexWorld.state() and writes e2e/test-results/ui/<mockup state>.jpg, then e2e/persist.mjs
+# (autosave, reload, export, import, storage blocked; docs/checkpoints/persistence/), then runs the
 # audio checks (audio-e2e).
 ui-e2e: build-web
 	cd e2e && npm ci --no-audit --no-fund
 	node e2e/ui.mjs dist
+	node e2e/persist.mjs dist
 	node e2e/audio.mjs dist
 
 # Local only: the web audio layer (PRD §8) read through hexWorld.audio.state(): nothing loads before a

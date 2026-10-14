@@ -314,6 +314,10 @@
       "q",
       "r"
     ],
+    "load": [
+      "path"
+    ],
+    "new_world": [],
     "photo": [
       "aperture",
       "dof",
@@ -334,6 +338,11 @@
     "redo": [],
     "rotate": [
       "dir"
+    ],
+    "save": [
+      "path",
+      "tag",
+      "volumes"
     ],
     "scenario": [
       "name"
@@ -407,6 +416,16 @@
     "inventoryToggled": [
       "open"
     ],
+    "loadRefused": [
+      "code",
+      "reason",
+      "version"
+    ],
+    "loaded": [
+      "settings",
+      "tiles",
+      "version"
+    ],
     "photoExportFailed": [
       "name",
       "reason"
@@ -433,6 +452,11 @@
       "skipped",
       "stage",
       "tile"
+    ],
+    "saved": [
+      "bytes",
+      "tag",
+      "tiles"
     ],
     "tileBulldozed": [
       "q",

@@ -10,6 +10,7 @@ mod camera;
 mod capture;
 mod control;
 mod game;
+mod persist;
 mod photo;
 mod sim;
 #[cfg(not(target_arch = "wasm32"))]
@@ -50,6 +51,14 @@ fn main() {
                 std::process::exit(2);
             }
         }
+    }
+
+    // `--load <path>` runs before any script command, once the scene is ready.
+    #[cfg(not(target_arch = "wasm32"))]
+    if let Some(path) = &flags.load {
+        queue.push_front(control::Command::Load {
+            path: Some(path.clone()),
+        });
     }
 
     #[cfg_attr(target_arch = "wasm32", allow(unused_mut))]
@@ -111,6 +120,8 @@ fn main() {
         .init_resource::<photo::PhotoSettings>()
         .init_resource::<photo::PhotoSession>()
         .init_resource::<photo::PhotoExports>()
+        .init_resource::<persist::PersistQueue>()
+        .init_resource::<persist::SavedSettings>()
         .init_resource::<hex_render::play::packs::PackRequests>()
         .add_systems(
             Update,
@@ -123,6 +134,8 @@ fn main() {
                 game::apply_actions,
                 photo::sync,
                 photo::run_exports,
+                persist::run,
+                persist::keep_latest,
                 request_selected_packs,
                 game::sync_view,
                 sim::mirror_world,
@@ -133,7 +146,7 @@ fn main() {
             )
                 .chain(),
         )
-        .add_systems(Last, control::dump_state_on_exit);
+        .add_systems(Last, (control::dump_state_on_exit, persist::save_on_exit));
 
     #[cfg(not(target_arch = "wasm32"))]
     if app.world().resource::<RunFlags>().0.thumbs {

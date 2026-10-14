@@ -4,6 +4,7 @@
 import type { Cell, Command, GameEvent, HexWorld, PlayState, Rect, State } from "./bridge.ts";
 import { h, isMac, reduceMotion, retrigger, s } from "./dom.ts";
 import { icon } from "./icons.ts";
+import { type Note, type Persistence, stateWords } from "./persist.ts";
 import {
   TILES,
   type TileMap,
@@ -21,6 +22,7 @@ import { Photo } from "./photo.ts";
 import { Settings } from "./settings.ts";
 import { Sheet } from "./sheet.ts";
 import { actionText, bulldozeRefusal, plural, tileName } from "./words.ts";
+import { Worlds } from "./worlds.ts";
 
 const MOD = isMac() ? "⌘" : "Ctrl+";
 const HINTS_KEY = "hexWorld.hints";
@@ -55,6 +57,12 @@ export class Hud {
   private readonly sheet: Sheet;
   private readonly tools = new Map<string, Tool>();
   private readonly tiles: HTMLElement;
+  private readonly worldBtn: HTMLButtonElement;
+  private readonly worldName: HTMLElement;
+  private readonly saveState: HTMLElement;
+  private persist: Persistence | null = null;
+  private worlds: Worlds | null = null;
+  private saveSig = "";
   private readonly tag: HTMLElement;
   private readonly toast: HTMLElement;
   private readonly live: HTMLElement;
@@ -99,6 +107,9 @@ export class Hud {
       (c) => this.gotoSlot(c),
     );
     this.tiles = h("span", {}, "1 tile");
+    this.worldName = h("b", {}, "World");
+    this.saveState = h("span", { class: "save-state", "data-state": "none" });
+    this.worldBtn = h("button", { class: "bar__world", type: "button", "aria-expanded": "false" });
     this.tag = h("div", { class: "ghost-tag is-gone", "aria-hidden": "true" });
     this.toast = h("div", { class: "toast", "data-region": "toast", role: "status", "aria-live": "polite" });
     this.live = h("p", { class: "sr", "aria-live": "polite" });
@@ -160,24 +171,82 @@ export class Hud {
     this.cmd({ cmd: "hover", q: c.q, r: c.r });
   }
 
+  // ---------- Worlds: autosave, saved worlds and files (S10) ----------
+  /** Wires persistence in once storage has answered: the bar's save state and the Worlds sheet. */
+  attach(p: Persistence): void {
+    this.persist = p;
+    const worlds = new Worlds(p, () => this.toggleWorlds(false));
+    worlds.onWantOpen = () => this.toggleWorlds(true);
+    this.worlds = worlds;
+    this.root.append(worlds.el, worlds.menuEl);
+    this.syncWorld();
+  }
+
+  private toggleWorlds(open = !this.worlds?.open): void {
+    if (!this.worlds) return;
+    if (open && this.settings.open) this.toggleSettings();
+    this.worlds.open = open;
+    this.worldBtn.setAttribute("aria-expanded", String(open));
+    this.worldBtn.classList.toggle("is-on", open);
+  }
+
+  /** The bar title: world name, tile count and autosave state (owner Q3), and the open sheet. */
+  syncWorld(): void {
+    const p = this.persist;
+    if (!p) return;
+    const sig = `${p.current.name}|${p.state}`;
+    if (sig !== this.saveSig) {
+      this.saveSig = sig;
+      this.worldName.textContent = p.current.name;
+      const st = this.saveState;
+      // All three words stack in one grid cell, so the bar keeps its width as the state changes.
+      if (!st.childElementCount)
+        st.append(
+          h("span", { "data-s": "saved" }, h("i", { class: "save-dot", "aria-hidden": "true" }), stateWords("saved")),
+          h("span", { "data-s": "saving" }, h("i", { class: "save-dot", "aria-hidden": "true" }), stateWords("saving")),
+          h("span", { "data-s": "off" }, icon("alert", "ic ic--xs"), stateWords("off")),
+        );
+      st.dataset.state = p.state;
+      this.worldBtn.setAttribute(
+        "aria-label",
+        `Worlds. ${p.current.name}, ${this.tiles.textContent}, ${stateWords(p.state)}`,
+      );
+    }
+    this.worlds?.render();
+  }
+
+  /** A margin note bottom left: one at a time, updated in place, gone after 4 s. */
+  note(n: Note): void {
+    const el = this.toast;
+    const text = h("p", {}, h("span", {}, n.text));
+    if (n.sub) text.append(h("small", {}, n.sub));
+    const parts: Node[] = [icon(n.icon), text];
+    if (n.action) {
+      const btn = h("button", { class: "toast__action", type: "button" }, n.action);
+      btn.addEventListener("click", () => {
+        el.classList.remove("is-shown");
+        n.onAction?.();
+      });
+      parts.push(btn);
+    }
+    this.toastState = null;
+    el.classList.remove("toast--ok", "toast--bad", "toast--caution");
+    if (n.tone) el.classList.add(`toast--${n.tone}`);
+    el.replaceChildren(...parts);
+    if (!el.classList.contains("is-shown")) {
+      void el.offsetWidth;
+      el.classList.add("is-shown");
+    }
+    this.say(n.sub ? `${n.text}. ${n.sub}` : n.text);
+    this.armToast();
+  }
+
   // ---------- Tool bar ----------
   private bar(): HTMLElement {
-    const world = h(
-      "div",
-      {
-        class: "bar__world",
-        "data-tip": "Worlds||Saving and named worlds are not built yet",
-        "aria-label": "World, not saved",
-      },
-      h("b", {}, "World"),
-      h(
-        "span",
-        {},
-        this.tiles,
-        " · ",
-        h("span", { class: "save-state", "data-state": "off" }, icon("alert", "ic ic--xs"), "Not saved"),
-      ),
-    );
+    const world = this.worldBtn;
+    world.dataset.tip = "Worlds||Save, load, export and import";
+    world.append(this.worldName, h("span", {}, this.tiles, " · ", this.saveState));
+    world.addEventListener("click", () => this.toggleWorlds());
     const bar = h("nav", { class: "bar", "data-region": "bar", "aria-label": "Tools" }, world, rule());
     const add = (a: string, ic: string, label: string, key: string, tip: string, aria?: string) => {
       const btn = h("button", { class: "tool", type: "button", "data-action": a, "data-tip": tip, "aria-label": aria });
@@ -219,11 +288,14 @@ export class Hud {
   private togglePhoto(): void {
     this.fire("photo");
     if (this.settings.open) this.toggleSettings();
+    this.toggleWorlds(false);
     this.cmd({ cmd: "toggle", what: "photo" });
   }
 
   private toggleSettings(): void {
     this.settings.open = !this.settings.open;
+    // Settings and Worlds share the right margin: one at a time.
+    if (this.settings.open) this.toggleWorlds(false);
     this.tools.get("settings")?.btn.classList.toggle("is-on", this.settings.open);
   }
 
@@ -300,7 +372,12 @@ export class Hud {
       !prev ||
       prev.tiles.length !== st.tiles.length ||
       events.some(
-        (e) => e.type === "tilePlaced" || e.type === "tileBulldozed" || e.type === "undone" || e.type === "redone",
+        (e) =>
+          e.type === "tilePlaced" ||
+          e.type === "tileBulldozed" ||
+          e.type === "undone" ||
+          e.type === "redone" ||
+          e.type === "loaded",
       );
     const before = this.map;
     if (changed) {
@@ -320,6 +397,7 @@ export class Hud {
     this.pin(st);
 
     this.syncBar(st);
+    this.syncWorld();
     this.renderSheet(st);
     this.renderTag(st, now);
     this.root.classList.toggle("is-hidden", this.hidden || st.photo_mode);
@@ -376,6 +454,13 @@ export class Hud {
       }
       case "toolChanged":
         if (e.mode === "bulldoze") this.advanceHint("bulldoze");
+        break;
+      case "loaded":
+        // A different world: nothing pointed at, placed or refused carries over.
+        this.sheetSlot = null;
+        this.placed = null;
+        this.refusal = null;
+        this.turns = 0;
         break;
       default:
         break;
@@ -501,7 +586,8 @@ export class Hud {
     const [l, t, r, b] = rect;
     const w = this.tag.offsetWidth;
     const hgt = this.tag.offsetHeight;
-    const limit = innerWidth - (this.open && !this.hidden ? this.sheet.el.offsetWidth + 40 : 20);
+    const panel = this.worlds?.open ? this.worlds.el : this.open ? this.sheet.el : null;
+    const limit = innerWidth - (panel && !this.hidden ? panel.offsetWidth + 40 : 20);
     let x = r + 14;
     let y = (t + b) / 2 - hgt / 2;
     if (x + w > limit) {
@@ -520,6 +606,7 @@ export class Hud {
     const line = h("span", {});
     if ((o.count ?? 1) > 1) line.append(h("span", { class: "toast__count" }, String(o.count)));
     line.append(o.text);
+    el.classList.remove("toast--ok", "toast--bad", "toast--caution");
     el.replaceChildren(icon(o.icon), h("p", {}, line), btn);
     if (!el.classList.contains("is-shown")) {
       void el.offsetWidth;
@@ -678,6 +765,9 @@ export class Hud {
   private onKey(e: KeyboardEvent): void {
     const st = this.st;
     if (!st || e.altKey) return;
+    // Typing (a world name) keeps every key, game keys included.
+    const target = e.target as HTMLElement | null;
+    if (target?.closest?.("input, textarea, [contenteditable=true]")) return;
     const mod = e.ctrlKey || e.metaKey;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     const take = () => {
@@ -726,7 +816,9 @@ export class Hud {
         return;
       case "Escape":
         take();
-        if (this.settings.open) this.toggleSettings();
+        if (this.worlds?.open) {
+          if (!this.worlds.escape()) this.toggleWorlds(false);
+        } else if (this.settings.open) this.toggleSettings();
         else if (st.tool === "bulldoze") this.cmd({ cmd: "set_tool", mode: "place" });
         else if (this.hidden) this.setHidden(false);
         else this.sheetSlot = null;

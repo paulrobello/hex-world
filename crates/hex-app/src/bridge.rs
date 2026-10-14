@@ -132,6 +132,40 @@ mod exports {
         let i = shots.iter().position(|(n, _)| *n == name)?;
         Some(shots.remove(i).1)
     }
+
+    /// The `.hexworld` bytes of the `save` command tagged `tag` (a `Uint8Array`), once its `saved`
+    /// event has fired; `undefined` before that or after they were taken. Bytes travel as typed
+    /// arrays beside the JSON command bridge, never as base64.
+    #[wasm_bindgen]
+    pub fn hex_world_take_save(tag: String) -> Option<Vec<u8>> {
+        crate::persist::take_save(&tag)
+    }
+
+    /// The `.hexworld` bytes of the world as of the last frame (a `Uint8Array`), at once, for a
+    /// page hide that cannot wait a frame for a `save` command. `volumes` is an optional
+    /// `Float32Array` of master, music, sfx, ambience and ui; `undefined` before the first frame.
+    #[wasm_bindgen]
+    pub fn hex_world_save_now(volumes: Option<Vec<f32>>) -> Option<Vec<u8>> {
+        let volumes = volumes.and_then(|v| match v[..] {
+            [master, music, sfx, ambience, ui] => Some(crate::persist::Volumes {
+                master,
+                music,
+                sfx,
+                ambience,
+                ui,
+            }),
+            _ => None,
+        });
+        crate::persist::save_now(volumes)
+    }
+
+    /// Validates `.hexworld` bytes (a `Uint8Array`) and queues their load behind every command
+    /// already sent. Returns JSON: `{"ok":true,"tiles":n,"version":v}`, or
+    /// `{"ok":false,"code":..,"reason":..,"version":..}` with a `loadRefused` event and no change.
+    #[wasm_bindgen]
+    pub fn hex_world_load(bytes: &[u8]) -> String {
+        crate::persist::load_result_json(&crate::persist::request_load(bytes))
+    }
 }
 
 /// The bridge contract the web UI overlay is typed against (`web/ui/src/bridge-schema.json`):
@@ -204,6 +238,9 @@ mod schema {
         r#"{"cmd":"toggle","what":"inventory"}"#,
         r#"{"cmd":"photo","dof":"tilt","focus":64,"aperture":2.8,"exposure":0.3,"fov":50,"roll":0,"pause_agents":true}"#,
         r#"{"cmd":"photo_export","scale":2,"name":"hex-world"}"#,
+        r#"{"cmd":"save","tag":"autosave","path":null,"volumes":{"master":0.8,"music":0.55,"sfx":0.75,"ambience":0.7,"ui":0.5}}"#,
+        r#"{"cmd":"load","path":null}"#,
+        r#"{"cmd":"new_world"}"#,
     ];
 
     /// Exhaustive on purpose: a new command fails to compile here until it has a sample above.
@@ -228,6 +265,9 @@ mod schema {
             Command::Toggle { .. } => "toggle",
             Command::Photo { .. } => "photo",
             Command::PhotoExport { .. } => "photo_export",
+            Command::Save { .. } => "save",
+            Command::Load { .. } => "load",
+            Command::NewWorld => "new_world",
         }
     }
 
@@ -321,8 +361,28 @@ mod schema {
                 name: "hex-world".into(),
                 reason: "too large".into(),
             },
+            GameEvent::Saved {
+                tag: Some("autosave".into()),
+                tiles: 2,
+                bytes: 120,
+            },
+            GameEvent::Loaded {
+                tiles: 2,
+                version: 1,
+                settings: Some(crate::persist::SettingsJson {
+                    quality: "auto",
+                    tilt_shift: true,
+                    tilt_shift_strength: 0.5,
+                    volumes: crate::persist::SavedSettings::default().volumes.into(),
+                }),
+            },
+            GameEvent::LoadRefused {
+                code: "bad_magic",
+                reason: "not a .hexworld file".into(),
+                version: None,
+            },
         ];
-        let mut seen = [false; 16];
+        let mut seen = [false; 19];
         for e in &samples {
             let i = match e {
                 GameEvent::TilePlaced { .. } => 0,
@@ -341,6 +401,9 @@ mod schema {
                 GameEvent::RiseStage { .. } => 13,
                 GameEvent::PhotoExported { .. } => 14,
                 GameEvent::PhotoExportFailed { .. } => 15,
+                GameEvent::Saved { .. } => 16,
+                GameEvent::Loaded { .. } => 17,
+                GameEvent::LoadRefused { .. } => 18,
             };
             seen[i] = true;
         }

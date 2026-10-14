@@ -94,6 +94,27 @@ pub enum GameEvent {
         stage: &'static str,
         skipped: bool,
     },
+    /// A `save` command encoded the world (PRD §12.2). On the web the bytes wait for
+    /// `hexWorld.takeSave(tag)`; natively a `path` was written. `tag` echoes the command's.
+    Saved {
+        tag: Option<String>,
+        tiles: u32,
+        bytes: u32,
+    },
+    /// A save replaced the world, or `new_world` reset it. `version` is the file's format version
+    /// before migration; `settings` is null for a new world, which keeps the current settings.
+    Loaded {
+        tiles: u32,
+        version: u16,
+        settings: Option<crate::persist::SettingsJson>,
+    },
+    /// A `.hexworld` file was refused and the world is unchanged. `code` names the check that
+    /// failed (`bad_magic`, `truncated`, `newer_version`, ...); `version` is set for version refusals.
+    LoadRefused {
+        code: &'static str,
+        reason: String,
+        version: Option<u16>,
+    },
 }
 
 /// The outcome of the latest game action (hover excluded), for `play.last_result`.
@@ -126,6 +147,11 @@ pub struct GameState {
     pub revision: u64,
     /// Refused placements and bulldozes, so the renderer pulses the refused highlight each time.
     pub refusals: u32,
+    /// Bumped whenever the tiles or the history change (a placement, a bulldoze, undo, redo or a
+    /// replaced world), so `persist::snapshot` copies the world only then.
+    pub world_rev: u64,
+    /// Bumped when the world is replaced wholesale; the render view's `epoch` (drawn at rest).
+    pub epoch: u64,
 }
 
 impl GameState {
@@ -147,6 +173,8 @@ impl GameState {
             recent: VecDeque::new(),
             revision: 1,
             refusals: 0,
+            world_rev: 0,
+            epoch: 0,
         }
     }
 
@@ -313,6 +341,7 @@ impl GameState {
                     return self.refuse("undo", "nothing to undo".into());
                 }
                 self.resnap(false);
+                self.world_rev += 1;
                 self.result("undo", None, None);
                 vec![GameEvent::Undone]
             }
@@ -321,6 +350,7 @@ impl GameState {
                     return self.refuse("redo", "nothing to redo".into());
                 }
                 self.resnap(false);
+                self.world_rev += 1;
                 self.result("redo", None, None);
                 vec![GameEvent::Redone]
             }
@@ -360,6 +390,7 @@ impl GameState {
         match self.world.place(&self.catalog, cell, &tile, rotation) {
             Ok(()) => {
                 self.resnap(false);
+                self.world_rev += 1;
                 self.result("place", Some(cell), None);
                 vec![GameEvent::TilePlaced {
                     q: cell.q,
@@ -387,6 +418,7 @@ impl GameState {
         match self.world.bulldoze(cell) {
             Ok(tile) => {
                 self.resnap(false);
+                self.world_rev += 1;
                 self.result("bulldoze", Some(cell), None);
                 vec![GameEvent::TileBulldozed {
                     q: cell.q,
@@ -405,6 +437,22 @@ impl GameState {
                 }]
             }
         }
+    }
+
+    /// Replaces the world with a loaded or a fresh one (PRD §12.2). The history travels with the
+    /// world; the pointer, tool and refusal state reset, and agents re-derive from the new world.
+    /// Photo mode is left as it is: `photo::sync` restores its own camera when it ends.
+    pub fn replace_world(&mut self, world: World, event: GameEvent) {
+        self.world = world;
+        self.hovered = None;
+        self.tool = Tool::Place;
+        self.last = None;
+        self.recent.clear();
+        self.recent.push_back(event);
+        self.chosen_rotation.clear();
+        self.revision += 1;
+        self.world_rev += 1;
+        self.epoch += 1;
     }
 
     /// The `play` object of the state JSON.
@@ -491,6 +539,7 @@ impl GameState {
                 .map(|(c, reason)| (c, reason.is_none())),
             bulldoze_mode: self.tool == Tool::Bulldoze && !self.photo_mode,
             refusals: self.refusals,
+            epoch: self.epoch,
         }
     }
 }

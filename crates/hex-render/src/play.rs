@@ -75,6 +75,22 @@ pub struct PlayView {
     pub bulldoze_mode: bool,
     /// Refused placements and bulldozes so far; each new one pulses the refused highlight.
     pub refusals: u32,
+    /// Bumped when the world is replaced wholesale (a loaded save, a new world): the next sync
+    /// redraws every tile settled, water filled and agents ready, with no rise, sink or cue.
+    /// Placements in the new world rise as usual.
+    pub epoch: u64,
+}
+
+impl PlaySpawned {
+    /// Whether this sync redraws every tile at rest: a scenario switch or core arriving set
+    /// `rebuild`, and a new view epoch (a replaced world) sets it here.
+    fn rebuild_for(&mut self, epoch: u64) -> bool {
+        if self.epoch != epoch {
+            self.epoch = epoch;
+            self.rebuild = true;
+        }
+        self.rebuild
+    }
 }
 
 /// Tile definitions the view's ids resolve against (the embedded catalog `hex-app` also uses).
@@ -102,6 +118,8 @@ pub struct PlaySpawned {
     /// change at a cell re-evaluates it and its six neighbours ([`PairPieces::update`]).
     pairs: PairPieces,
     pair_entities: HashMap<Axial, Vec<Entity>>,
+    /// The view epoch the spawned tiles belong to.
+    epoch: u64,
     /// Pieces built since the last sync: tiles drawing them swap to the kit look in place.
     refresh: HashSet<String>,
 }
@@ -710,7 +728,7 @@ pub fn sync(
             fixed: config.water_fixed,
         });
     }
-    if !view.is_changed() && !spawned.rebuild && spawned.refresh.is_empty() {
+    if !spawned.rebuild_for(view.epoch) && !view.is_changed() && spawned.refresh.is_empty() {
         return;
     }
     let Some(PlayKit::Ready(kit)) = kit.as_deref() else {
@@ -840,6 +858,18 @@ pub fn sync(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_new_view_epoch_redraws_every_tile_at_rest_once() {
+        let mut s = PlaySpawned::default();
+        assert!(!s.rebuild_for(0), "same epoch: tiles keep their rises");
+        assert!(s.rebuild_for(1), "a replaced world redraws at rest");
+        s.rebuild = false; // `sync` consumes the flag
+        assert!(
+            !s.rebuild_for(1),
+            "once per epoch, so later placements rise"
+        );
+    }
 
     #[test]
     fn on_edge_points_at_the_edge_midpoint() {

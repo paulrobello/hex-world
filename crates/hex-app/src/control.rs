@@ -17,6 +17,7 @@ use serde::Deserialize;
 
 use crate::actions::{Action, ActionQueue, Tool};
 use crate::game::GameState;
+use crate::persist::PersistQueue;
 use crate::photo::{Dof, PhotoExports, PhotoPatch, PhotoSession, PhotoSettings};
 use crate::sim::CarSim;
 use crate::{FrameCount, RunFlags, bridge, capture};
@@ -118,6 +119,21 @@ pub enum Command {
         scale: u32,
         name: String,
     },
+    /// Encodes the world as `.hexworld` bytes after every command queued before it (PRD §12.2).
+    /// `tag` is echoed in the `saved` event and keys `hexWorld.takeSave(tag)` on the web; natively
+    /// `path` writes the file. `volumes` are the web audio layer's, which the engine does not own.
+    Save {
+        tag: Option<String>,
+        path: Option<String>,
+        volumes: Option<crate::persist::Volumes>,
+    },
+    /// Replaces the world with a save: natively the file at `path`; on the web the bytes passed to
+    /// `hexWorld.load(bytes)`, which queues this command with no path.
+    Load {
+        path: Option<String>,
+    },
+    /// Resets to the start world with an empty history, keeping the settings.
+    NewWorld,
 }
 
 impl Command {
@@ -171,6 +187,11 @@ impl CommandQueue {
     pub fn push(&mut self, c: Command) {
         self.items.push_back(c);
     }
+
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+    pub fn push_front(&mut self, c: Command) {
+        self.items.push_front(c);
+    }
 }
 
 /// Set by any exit path; `exit_when_idle` sends `AppExit` once pending screenshots have landed.
@@ -188,6 +209,7 @@ pub fn run_commands(
     mut actions: ResMut<ActionQueue>,
     mut reduced: ResMut<ReducedMotion>,
     (mut photo, mut exports): (ResMut<PhotoSettings>, ResMut<PhotoExports>),
+    mut persist: ResMut<PersistQueue>,
 ) {
     queue.items.extend(INBOX.lock().unwrap().drain(..));
     if !*bridge::READY.lock().unwrap() {
@@ -255,6 +277,9 @@ pub fn run_commands(
         }),
         Command::PhotoExport { scale, name } => exports.push(scale, name),
         Command::Exit => exit.0 = true,
+        c @ (Command::Save { .. } | Command::Load { .. } | Command::NewWorld) => {
+            persist.0.push_back(c)
+        }
         _ => unreachable!("play commands return through `action`"),
     }
 }

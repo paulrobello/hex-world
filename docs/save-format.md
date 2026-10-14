@@ -123,4 +123,11 @@ Wire structs never use serde attributes that postcard cannot honor: `#[serde(def
 
 ## Slots and autosave
 
-The IndexedDB autosave slots (web layer, later) store the same `.hexworld` bytes as a file export. `SaveSlotMeta` holds the slot-list summary: name, save time, tile count and format version. The caller supplies the save time in Unix milliseconds, because hex-core reads no clock (`SystemTime::now` panics on `wasm32-unknown-unknown`).
+The web layer's IndexedDB slots (`web/ui/src/slots.ts` and `persist.ts`) store the same `.hexworld` bytes as a file export, produced by the bridge's `save` command and read back through `hexWorld.load(bytes)` (`crates/hex-app/src/persist.rs`). The world name is slot metadata, not part of the save, so a renamed world needs no format change and an imported file takes its name from the file name. Database `hex-world` version 1 has two object stores:
+
+| Store | Key | Value |
+|---|---|---|
+| `slots` | `id` (keyPath) | `{id, name, tiles, updatedAt, bytes, mix, map}`: the slot-list summary. `updatedAt` is Unix milliseconds of the last write or open, so the most recent slot resumes on start. `mix` counts tile edges per socket kind (the Worlds mix strip) and `map` keeps up to 400 `[q, r, tile, rotation]` for the thumbnail |
+| `saves` | slot id | The `.hexworld` bytes (a `Uint8Array`) |
+
+A write puts both records in one transaction. Autosave runs after every placement, bulldoze, undo and redo, debounced by 600 ms. hex-core's `SaveSlotMeta` (name, save time, tile count, format version) is the engine-side form of the summary; the caller supplies the save time, because hex-core reads no clock (`SystemTime::now` panics on `wasm32-unknown-unknown`).

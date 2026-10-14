@@ -59,6 +59,10 @@ pub struct Flags {
     /// `photo-export=1|2|4`: once ready, export a photo-mode PNG at that scale, named
     /// `photo-<n>x` (natively `target/shots/photo-<n>x.png`).
     pub photo_export: Option<u32>,
+    /// Native only: `.hexworld` file loaded before any script command (PRD §12.2).
+    pub load: Option<String>,
+    /// Native only: `.hexworld` file written with the world on exit.
+    pub save: Option<String>,
 }
 
 /// `"1280x800"` -> `Some((1280, 800))`; zero or malformed sizes are rejected.
@@ -124,6 +128,8 @@ pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Fl
             "script" => f.script = Some(v.clone()),
             "thumbs" => f.thumbs = v != "0",
             "dump-state" => f.dump_state = Some(v.clone()),
+            "load" => f.load = Some(v.clone()),
+            "save" => f.save = Some(v.clone()),
             "screenshot-after" => f.screenshot_after_secs = parse_secs(k, v, &mut warnings),
             "exit-after-seconds" => f.exit_after_secs = parse_secs(k, v, &mut warnings),
             "size" => match parse_size(v) {
