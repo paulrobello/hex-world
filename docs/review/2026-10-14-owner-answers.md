@@ -103,3 +103,4 @@ Owner's notes, verbatim: "there is no visual or ghost of the selected tile when 
 - **Fish at river mouths:** let the fish skim the shallow fan by relaxing the fish band over mouth tiles. The fan is not deepened.
 - **Colour grade default:** rich-3, which is ACES at EV100 12.5 with the shadow lift (owner, after playing ad423f2).
 - **Spring tile:** "spring color does not match surounding tiles". Fix in progress.
+- **Music bitrates:** keep Opus 128k and AAC 160k for now (32 MB across 12 files). Revisit once the full payload is known, and make cuts then if needed.
