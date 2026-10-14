@@ -241,7 +241,7 @@ About 10 types. The exact variants are frozen at the start of P2.
 
 | Agent | Behavior | Phase |
 |---|---|---|
-| Car | Routes between destination nodes on the road graph (A* over a cached graph) and follows lane splines. Starts and ends in a house's parking spot (§7.1). One model recoloured per instance at runtime (§6). Spawn rate scales with connected destinations. | P2 |
+| Car | Routes between destination nodes on the road graph (A* over a cached graph) and follows lane splines. Starts and ends in a house's parking spot (§7.1). Three body types to start: sedan, van and pickup truck (owner, 2026-10-13), each one model recoloured per instance at runtime (§6). Spawn rate scales with connected destinations. | P2 |
 | Bird | Boids flocking over the whole map, roosting in forest tiles. Runs on GPU compute. | P2 |
 | Boat | Drifts on ocean tiles and travels connected rivers. | P3 |
 | Train | Routes between stations on the rail graph. Multi-car consists that cross tile boundaries. | P3 |
