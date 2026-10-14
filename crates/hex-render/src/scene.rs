@@ -567,10 +567,10 @@ pub fn setup(
     ),
 ) {
     let config = config.map(|c| *c).unwrap_or_default();
-    // Look-dev applies to the kit and water scenarios only: single/gate2000 keep the P0 camera, so
+    // Look-dev applies to the kit, water and play scenarios only: single/gate2000 keep the P0 camera, so
     // the P0 perf baseline and the instanced pipeline's mesh-view bind-group layout are unchanged.
     let water = scenario.0.has_water();
-    let kit = scenario.0 == Scenario::Kit || water;
+    let kit = scenario.0 == Scenario::Kit || water || scenario.0 == Scenario::Play;
     if water {
         commands.insert_resource(crate::water::WaterClock {
             t: 0.0,
@@ -623,6 +623,13 @@ pub fn setup(
                 config.tier,
             );
             Transform::from_xyz(-8.0, 34.0, 62.0).looking_at(Vec3::new(14.0, 0.0, 0.0), Vec3::Y)
+        }
+        Scenario::Play => {
+            commands.remove_resource::<crate::instanced::InstancedScene>();
+            commands.remove_resource::<crate::kit_test::KitTestPending>();
+            commands.remove_resource::<crate::kit_scene::KitPending>();
+            commands.remove_resource::<crate::kit_scene::KitLoading>();
+            crate::play::setup(&mut commands, &mut meshes, &mut materials)
         }
     };
 

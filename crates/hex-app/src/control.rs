@@ -3,12 +3,32 @@ use std::collections::VecDeque;
 use std::sync::Mutex;
 
 use bevy::prelude::*;
+use hex_core::{Axial, RotateDir};
 use hex_render::{
     ActiveScenario, Scenario, SceneEntity, setup_scene, tilt_shift::TiltShiftSettings,
 };
 use serde::Deserialize;
 
+use crate::actions::{Action, ActionQueue, Tool};
+use crate::game::GameState;
 use crate::{FrameCount, RunFlags, bridge, capture};
+
+/// `rotate` direction: `cw` is R (clockwise viewed from above), `ccw` is Shift+R.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Spin {
+    Cw,
+    Ccw,
+}
+
+/// `toggle` target: the B, Tab and P bindings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Toggle {
+    Bulldoze,
+    Inventory,
+    Photo,
+}
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(tag = "cmd", rename_all = "snake_case")]
@@ -35,6 +55,61 @@ pub enum Command {
         name: String,
     },
     Exit,
+    // Play-scenario commands: each enqueues the same `Action` its key or mouse binding does.
+    SelectTile {
+        id: String,
+    },
+    /// Hover a cell, as the pointer does (scripts have no mouse).
+    Hover {
+        q: i32,
+        r: i32,
+    },
+    Rotate {
+        dir: Spin,
+    },
+    /// Place the selected tile at the current ghost rotation; a cell other than the hovered one
+    /// is hovered first, which auto-rotates.
+    Place {
+        q: i32,
+        r: i32,
+    },
+    Undo,
+    Redo,
+    Bulldoze {
+        q: i32,
+        r: i32,
+    },
+    SetTool {
+        mode: Tool,
+    },
+    Toggle {
+        what: Toggle,
+    },
+}
+
+impl Command {
+    /// The input action a play command enqueues; `None` for the other commands.
+    pub fn action(&self) -> Option<Action> {
+        Some(match self {
+            Command::SelectTile { id } => Action::SelectTile(id.clone()),
+            Command::Hover { q, r } => Action::Hover(Some(Axial::new(*q, *r))),
+            Command::Rotate { dir } => Action::Rotate(match dir {
+                Spin::Cw => RotateDir::Forward,
+                Spin::Ccw => RotateDir::Back,
+            }),
+            Command::Place { q, r } => Action::Place(Axial::new(*q, *r)),
+            Command::Undo => Action::Undo,
+            Command::Redo => Action::Redo,
+            Command::Bulldoze { q, r } => Action::Bulldoze(Axial::new(*q, *r)),
+            Command::SetTool { mode } => Action::SetTool(*mode),
+            Command::Toggle { what } => match what {
+                Toggle::Bulldoze => Action::ToggleBulldoze,
+                Toggle::Inventory => Action::ToggleInventory,
+                Toggle::Photo => Action::TogglePhoto,
+            },
+            _ => return None,
+        })
+    }
 }
 
 /// Parses a JSON array of commands; errors name the offending index.
@@ -77,6 +152,7 @@ pub fn run_commands(
     mut cameras: Query<&mut Transform, With<Camera3d>>,
     scene: Query<Entity, With<SceneEntity>>,
     mut tilt: ResMut<TiltShiftSettings>,
+    mut actions: ResMut<ActionQueue>,
 ) {
     queue.items.extend(INBOX.lock().unwrap().drain(..));
     if !*bridge::READY.lock().unwrap() {
@@ -90,6 +166,10 @@ pub fn run_commands(
         return;
     };
     info!("command: {cmd:?}");
+    if let Some(a) = cmd.action() {
+        actions.0.push_back(a);
+        return;
+    }
     match cmd {
         Command::Camera { pos, look_at } => {
             let t = Transform::from_translation(pos.into()).looking_at(look_at.into(), Vec3::Y);
@@ -121,6 +201,7 @@ pub fn run_commands(
         }
         Command::DumpState { name } => dump_state(&name),
         Command::Exit => exit.0 = true,
+        _ => unreachable!("play commands return through `action`"),
     }
 }
 
@@ -147,6 +228,7 @@ pub fn publish_state(
     config: Option<Res<hex_render::GateConfig>>,
     gpu: Option<Res<hex_render::GpuLimits>>,
     tilt: Res<TiltShiftSettings>,
+    game: Res<GameState>,
 ) {
     let camera = cameras.iter().next().map(|t| {
         serde_json::json!({ "pos": t.translation.to_array(), "forward": t.forward().to_array() })
@@ -156,9 +238,12 @@ pub fn publish_state(
     let gpu = gpu.map(|g| {
         serde_json::json!({ "maxSampledTexturesPerShaderStage": g.max_sampled_textures_per_shader_stage })
     });
+    let play = active.0 == Scenario::Play;
     let state = serde_json::json!({
         "scenario": format!("{:?}", active.0),
-        "tiles": active.0.tile_count(kit_src),
+        "tiles": if play { game.world.tiles().len() } else { active.0.tile_count(kit_src) },
+        "play": if play { game.state_json() } else { serde_json::Value::Null },
+        "events_pending": bridge::EVENTS.lock().unwrap().len(),
         "gpu": gpu,
         "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps },
         "frames": frames.0,
@@ -216,6 +301,53 @@ mod tests {
         );
         assert_eq!(c[1], Command::Wait { frames: 30 });
         assert_eq!(c[5], Command::Exit);
+    }
+
+    #[test]
+    fn parses_play_commands_into_actions() {
+        let s = r#"[{"cmd":"select_tile","id":"forest"},{"cmd":"hover","q":1,"r":-2},
+                    {"cmd":"rotate","dir":"cw"},{"cmd":"rotate","dir":"ccw"},
+                    {"cmd":"place","q":1,"r":0},{"cmd":"undo"},{"cmd":"redo"},
+                    {"cmd":"bulldoze","q":0,"r":1},{"cmd":"set_tool","mode":"bulldoze"},
+                    {"cmd":"toggle","what":"inventory"},{"cmd":"toggle","what":"photo"},
+                    {"cmd":"toggle","what":"bulldoze"}]"#;
+        let actions: Vec<_> = parse_script(s)
+            .unwrap()
+            .iter()
+            .map(|c| c.action().expect("play command"))
+            .collect();
+        assert_eq!(
+            actions,
+            [
+                Action::SelectTile("forest".into()),
+                Action::Hover(Some(Axial::new(1, -2))),
+                Action::Rotate(RotateDir::Forward),
+                Action::Rotate(RotateDir::Back),
+                Action::Place(Axial::new(1, 0)),
+                Action::Undo,
+                Action::Redo,
+                Action::Bulldoze(Axial::new(0, 1)),
+                Action::SetTool(Tool::Bulldoze),
+                Action::ToggleInventory,
+                Action::TogglePhoto,
+                Action::ToggleBulldoze,
+            ]
+        );
+        assert_eq!(Command::Exit.action(), None);
+        assert_eq!(Command::Wait { frames: 1 }.action(), None);
+    }
+
+    #[test]
+    fn bad_play_commands_fail_at_parse_time() {
+        for bad in [
+            r#"[{"cmd":"rotate","dir":"left"}]"#,
+            r#"[{"cmd":"set_tool","mode":"shovel"}]"#,
+            r#"[{"cmd":"place","q":1}]"#,
+            r#"[{"cmd":"hover","q":"a","r":0}]"#,
+            r#"[{"cmd":"toggle","what":"map"}]"#,
+        ] {
+            assert!(parse_script(bad).is_err(), "{bad}");
+        }
     }
 
     #[test]

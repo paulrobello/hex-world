@@ -3,10 +3,13 @@ use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use hex_render::{HexRenderPlugin, MeshoptGlbPlugin};
 
+mod actions;
 mod args;
 mod bridge;
+mod camera;
 mod capture;
 mod control;
+mod game;
 
 #[derive(Resource)]
 struct RunFlags(args::Flags);
@@ -79,8 +82,10 @@ fn main() {
             config: flags.gate,
             fps: !flags.fps_off,
         })
+        .insert_resource(game::GameState::new(flags.seed))
         .insert_resource(RunFlags(flags))
         .insert_resource(queue)
+        .init_resource::<actions::ActionQueue>()
         .init_resource::<FrameCount>()
         .init_resource::<control::ExitRequest>()
         .add_systems(
@@ -88,7 +93,11 @@ fn main() {
             (
                 frame_hooks,
                 timed_flags,
+                actions::read_input,
+                camera::pick_hover,
                 control::run_commands,
+                game::apply_actions,
+                game::sync_view,
                 control::publish_state,
                 publish_diag,
                 control::exit_when_idle,

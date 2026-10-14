@@ -1,7 +1,10 @@
 //! wasm-bindgen exports behind window.hexWorld. Shared state is written by Bevy systems.
+use std::collections::VecDeque;
 use std::sync::Mutex;
 
 pub static READY: Mutex<bool> = Mutex::new(false);
+/// Game events as JSON objects, oldest first, drained by `hex_world_events` (`hexWorld.events()`).
+pub static EVENTS: Mutex<VecDeque<String>> = Mutex::new(VecDeque::new());
 pub static STATE_JSON: Mutex<String> = Mutex::new(String::new());
 pub static DIAG_JSON: Mutex<String> = Mutex::new(String::new());
 
@@ -26,6 +29,13 @@ mod exports {
     pub fn hex_world_diag_json() -> String {
         let s = super::DIAG_JSON.lock().unwrap();
         if s.is_empty() { "{}".into() } else { s.clone() }
+    }
+
+    /// Drains the game event queue as a JSON array (`[]` when empty).
+    #[wasm_bindgen]
+    pub fn hex_world_events() -> String {
+        let drained: Vec<String> = super::EVENTS.lock().unwrap().drain(..).collect();
+        format!("[{}]", drained.join(","))
     }
 
     /// Enqueues one command object or an array of them. Returns false and logs on a parse error.

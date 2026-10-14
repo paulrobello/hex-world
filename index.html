@@ -46,6 +46,18 @@
             if (typeof json !== "string") json = JSON.stringify(json);
             w.hex_world_cmd(json);
           },
+          // Drains queued game events (tilePlaced, placementRefused, undone, ...), oldest first.
+          events: function () { return JSON.parse(w.hex_world_events()); },
+          // Play-scenario actions: typed wrappers over cmd, queued like any other command.
+          selectTile: function (id) { this.cmd({ cmd: "select_tile", id: id }); },
+          hover: function (q, r) { this.cmd({ cmd: "hover", q: q, r: r }); },
+          rotateGhost: function (dir) { this.cmd({ cmd: "rotate", dir: dir || "cw" }); },
+          placeTile: function (q, r) { this.cmd({ cmd: "place", q: q, r: r }); },
+          undo: function () { this.cmd({ cmd: "undo" }); },
+          redo: function () { this.cmd({ cmd: "redo" }); },
+          bulldoze: function (q, r) { this.cmd({ cmd: "bulldoze", q: q, r: r }); },
+          setTool: function (mode) { this.cmd({ cmd: "set_tool", mode: mode }); },
+          toggle: function (what) { this.cmd({ cmd: "toggle", what: what }); },
           // Resolves to a PNG data URL once the capture lands, after any queued commands.
           screenshot: function (name, timeoutMs) {
             name = name || "shot-" + Date.now();

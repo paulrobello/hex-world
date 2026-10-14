@@ -10,6 +10,7 @@ mod kit_material;
 mod kit_scene;
 mod kit_test;
 pub mod lookdev;
+pub mod play;
 pub mod post;
 mod scene;
 pub mod tilt_shift;
@@ -35,6 +36,8 @@ pub enum Scenario {
     /// The water patch and the `kit_src` kit pieces in one view, under the water camera: the
     /// sampled-texture gate for kit pipelines in a view with screen-space transmission (P2).
     WaterKit,
+    /// The playable world: placement, undo/redo and bulldoze, driven by `hex-app` (`play`).
+    Play,
 }
 
 impl Scenario {
@@ -45,6 +48,7 @@ impl Scenario {
             "kit" => Some(Scenario::Kit),
             "water" => Some(Scenario::Water),
             "water_kit" => Some(Scenario::WaterKit),
+            "play" => Some(Scenario::Play),
             _ => None,
         }
     }
@@ -63,6 +67,8 @@ impl Scenario {
                 cells.dedup();
                 cells.len()
             }
+            // The play world's size lives in hex-app's game state, which reports it.
+            Scenario::Play => 0,
         }
     }
 
@@ -131,7 +137,13 @@ impl Plugin for HexRenderPlugin {
                 MaterialPlugin::<water::WaterMaterial>::default(),
                 MaterialPlugin::<water::TerrainMaterial>::default(),
             ))
+            .init_resource::<play::PlayView>()
+            .init_resource::<play::PlayCatalog>()
             .add_systems(Startup, scene::setup)
+            .add_systems(
+                Update,
+                (play::start_kit, play::finish_kit, play::sync).chain(),
+            )
             .add_systems(
                 Update,
                 (
@@ -157,6 +169,7 @@ mod tests {
         assert_eq!(Scenario::parse("kit"), Some(Scenario::Kit));
         assert_eq!(Scenario::parse("water"), Some(Scenario::Water));
         assert_eq!(Scenario::parse("water_kit"), Some(Scenario::WaterKit));
+        assert_eq!(Scenario::parse("play"), Some(Scenario::Play));
         assert_eq!(Scenario::parse("nope"), None);
         assert_eq!(Scenario::parse(""), None);
     }

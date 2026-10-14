@@ -1,0 +1,362 @@
+//! The input-action layer (PRD §4.5): keyboard and mouse map to [`Action`]s, script and bridge
+//! commands enqueue the same actions, and only actions change the camera or the game. Touch (P7)
+//! and a first-person controller (P8) add bindings here without touching the game.
+use std::collections::VecDeque;
+
+use bevy::input::mouse::{AccumulatedMouseMotion, AccumulatedMouseScroll, MouseScrollUnit};
+use bevy::prelude::*;
+use hex_core::{Axial, RotateDir};
+use serde::{Deserialize, Serialize};
+
+/// The player's tool: place tiles or bulldoze them.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Tool {
+    #[default]
+    Place,
+    Bulldoze,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Action {
+    /// Orbit around the focus point by a screen-space drag in pixels.
+    Orbit(Vec2),
+    /// Pan in fractions of the view distance: x to the right, y forward along the ground.
+    Pan(Vec2),
+    /// Wheel notches, positive zooms in.
+    Zoom(f32),
+    /// Left-click: apply the current tool (place or bulldoze) at the hovered cell.
+    Primary,
+    /// Place the selected tile at a cell. A cell other than the hovered one is hovered first.
+    Place(Axial),
+    Bulldoze(Axial),
+    /// Pointer or script hover; `None` hovers nothing.
+    Hover(Option<Axial>),
+    /// Cycle the ghost rotation: `Forward` is clockwise viewed from above (R), `Back` is Shift+R.
+    Rotate(RotateDir),
+    Undo,
+    Redo,
+    ToggleBulldoze,
+    SetTool(Tool),
+    ToggleInventory,
+    TogglePhoto,
+    SelectTile(String),
+    /// Select the n-th inventory tile (catalog order), from the number-key binding.
+    SelectNth(usize),
+}
+
+impl Action {
+    /// Camera actions move the view; every other action goes to the game.
+    pub fn is_camera(&self) -> bool {
+        matches!(self, Action::Orbit(_) | Action::Pan(_) | Action::Zoom(_))
+    }
+}
+
+/// Actions waiting for this frame's `apply_actions`, from input, picking and commands.
+#[derive(Resource, Default)]
+pub struct ActionQueue(pub VecDeque<Action>);
+
+/// One frame of raw input, decoupled from Bevy so the binding map is unit-testable.
+#[derive(Clone, Debug, Default)]
+pub struct InputFrame {
+    pub just_pressed: Vec<KeyCode>,
+    pub held: Vec<KeyCode>,
+    pub mouse_just_pressed: Vec<MouseButton>,
+    pub mouse_held: Vec<MouseButton>,
+    /// Pointer motion in pixels this frame.
+    pub motion: Vec2,
+    /// Vertical wheel travel this frame in notches (lines), positive away from the user.
+    pub wheel: f32,
+    pub dt: f32,
+}
+
+impl InputFrame {
+    fn held_any(&self, keys: &[KeyCode]) -> bool {
+        keys.iter().any(|k| self.held.contains(k))
+    }
+
+    fn pressed(&self, k: KeyCode) -> bool {
+        self.just_pressed.contains(&k)
+    }
+
+    /// Ctrl on every platform, Cmd on macOS.
+    fn ctrl_or_cmd(&self) -> bool {
+        self.held_any(&[
+            KeyCode::ControlLeft,
+            KeyCode::ControlRight,
+            KeyCode::SuperLeft,
+            KeyCode::SuperRight,
+        ])
+    }
+
+    fn shift(&self) -> bool {
+        self.held_any(&[KeyCode::ShiftLeft, KeyCode::ShiftRight])
+    }
+}
+
+/// Mouse orbit is in pixels; pan converts pixels to view-distance fractions.
+const DRAG_PAN_PER_PX: f32 = 0.0012;
+/// Keyboard pan speed in view distances per second.
+const KEY_PAN_SPEED: f32 = 0.8;
+/// Pixel-unit scroll (trackpads, browsers) per wheel notch.
+pub const PIXELS_PER_NOTCH: f32 = 40.0;
+
+/// Number keys 1..9, 0, -, = select inventory tiles 1..12 (a provisional binding, not in §4.5).
+const SELECT_KEYS: [KeyCode; 12] = [
+    KeyCode::Digit1,
+    KeyCode::Digit2,
+    KeyCode::Digit3,
+    KeyCode::Digit4,
+    KeyCode::Digit5,
+    KeyCode::Digit6,
+    KeyCode::Digit7,
+    KeyCode::Digit8,
+    KeyCode::Digit9,
+    KeyCode::Digit0,
+    KeyCode::Minus,
+    KeyCode::Equal,
+];
+
+/// The §4.5 bindings. `rotate_wheel` carries fractional Ctrl+wheel travel between frames, so one
+/// notch is one rotation step and a trackpad flick rotates at most once per frame.
+pub fn map_input(f: &InputFrame, rotate_wheel: &mut f32) -> Vec<Action> {
+    let mut out = vec![];
+    let ctrl = f.ctrl_or_cmd();
+    let shift = f.shift();
+
+    if ctrl && f.pressed(KeyCode::KeyZ) {
+        out.push(if shift { Action::Redo } else { Action::Undo });
+    }
+    if !ctrl {
+        if f.pressed(KeyCode::KeyR) {
+            out.push(Action::Rotate(if shift {
+                RotateDir::Back
+            } else {
+                RotateDir::Forward
+            }));
+        }
+        if f.pressed(KeyCode::KeyB) {
+            out.push(Action::ToggleBulldoze);
+        }
+        if f.pressed(KeyCode::KeyP) {
+            out.push(Action::TogglePhoto);
+        }
+        for (i, k) in SELECT_KEYS.iter().enumerate() {
+            if f.pressed(*k) {
+                out.push(Action::SelectNth(i));
+            }
+        }
+    }
+    if f.pressed(KeyCode::Tab) {
+        out.push(Action::ToggleInventory);
+    }
+
+    if f.mouse_just_pressed.contains(&MouseButton::Left) && !ctrl {
+        out.push(Action::Primary);
+    }
+    if f.motion != Vec2::ZERO {
+        if f.mouse_held.contains(&MouseButton::Right) {
+            out.push(Action::Orbit(f.motion));
+        } else if f.mouse_held.contains(&MouseButton::Middle) {
+            out.push(Action::Pan(
+                Vec2::new(-f.motion.x, f.motion.y) * DRAG_PAN_PER_PX,
+            ));
+        }
+    }
+    if !ctrl {
+        let axis = |pos: &[KeyCode], neg: &[KeyCode]| {
+            f.held_any(pos) as i32 as f32 - f.held_any(neg) as i32 as f32
+        };
+        let dir = Vec2::new(
+            axis(
+                &[KeyCode::KeyD, KeyCode::ArrowRight],
+                &[KeyCode::KeyA, KeyCode::ArrowLeft],
+            ),
+            axis(
+                &[KeyCode::KeyW, KeyCode::ArrowUp],
+                &[KeyCode::KeyS, KeyCode::ArrowDown],
+            ),
+        );
+        if dir != Vec2::ZERO {
+            out.push(Action::Pan(dir.normalize() * KEY_PAN_SPEED * f.dt));
+        }
+    }
+
+    if ctrl {
+        *rotate_wheel += f.wheel;
+        if rotate_wheel.abs() >= 1.0 {
+            out.push(Action::Rotate(if *rotate_wheel > 0.0 {
+                RotateDir::Forward
+            } else {
+                RotateDir::Back
+            }));
+            *rotate_wheel = 0.0;
+        }
+    } else {
+        *rotate_wheel = 0.0;
+        if f.wheel != 0.0 {
+            out.push(Action::Zoom(f.wheel));
+        }
+    }
+    out
+}
+
+/// Reads this frame's keyboard and mouse into the action queue.
+pub fn read_input(
+    keys: Res<ButtonInput<KeyCode>>,
+    mouse: Res<ButtonInput<MouseButton>>,
+    motion: Res<AccumulatedMouseMotion>,
+    scroll: Res<AccumulatedMouseScroll>,
+    time: Res<Time>,
+    mut rotate_wheel: Local<f32>,
+    mut queue: ResMut<ActionQueue>,
+) {
+    let wheel = match scroll.unit {
+        MouseScrollUnit::Line => scroll.delta.y,
+        MouseScrollUnit::Pixel => scroll.delta.y / PIXELS_PER_NOTCH,
+    };
+    let frame = InputFrame {
+        just_pressed: keys.get_just_pressed().copied().collect(),
+        held: keys.get_pressed().copied().collect(),
+        mouse_just_pressed: mouse.get_just_pressed().copied().collect(),
+        mouse_held: mouse.get_pressed().copied().collect(),
+        motion: motion.delta,
+        wheel,
+        dt: time.delta_secs(),
+    };
+    queue.0.extend(map_input(&frame, &mut rotate_wheel));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn press(keys: &[KeyCode], held: &[KeyCode]) -> Vec<Action> {
+        let f = InputFrame {
+            just_pressed: keys.to_vec(),
+            held: held.iter().chain(keys).copied().collect(),
+            ..default()
+        };
+        map_input(&f, &mut 0.0)
+    }
+
+    #[test]
+    fn single_keys_map_to_the_table() {
+        assert_eq!(
+            press(&[KeyCode::KeyR], &[]),
+            [Action::Rotate(RotateDir::Forward)]
+        );
+        assert_eq!(press(&[KeyCode::KeyB], &[]), [Action::ToggleBulldoze]);
+        assert_eq!(press(&[KeyCode::Tab], &[]), [Action::ToggleInventory]);
+        assert_eq!(press(&[KeyCode::KeyP], &[]), [Action::TogglePhoto]);
+        assert_eq!(press(&[KeyCode::Digit3], &[]), [Action::SelectNth(2)]);
+        assert_eq!(press(&[KeyCode::Equal], &[]), [Action::SelectNth(11)]);
+    }
+
+    #[test]
+    fn modifiers_pick_the_variant() {
+        assert_eq!(
+            press(&[KeyCode::KeyR], &[KeyCode::ShiftLeft]),
+            [Action::Rotate(RotateDir::Back)]
+        );
+        for ctrl in [KeyCode::ControlLeft, KeyCode::SuperRight] {
+            assert_eq!(press(&[KeyCode::KeyZ], &[ctrl]), [Action::Undo]);
+            assert_eq!(
+                press(&[KeyCode::KeyZ], &[ctrl, KeyCode::ShiftRight]),
+                [Action::Redo]
+            );
+            // Ctrl/Cmd+R is the browser's reload, not a rotation.
+            assert!(press(&[KeyCode::KeyR], &[ctrl]).is_empty());
+        }
+        assert!(press(&[KeyCode::KeyZ], &[]).is_empty(), "bare Z is unbound");
+    }
+
+    #[test]
+    fn mouse_buttons_and_drags() {
+        let click = InputFrame {
+            mouse_just_pressed: vec![MouseButton::Left],
+            mouse_held: vec![MouseButton::Left],
+            ..default()
+        };
+        assert_eq!(map_input(&click, &mut 0.0), [Action::Primary]);
+
+        let orbit = InputFrame {
+            mouse_held: vec![MouseButton::Right],
+            motion: Vec2::new(10.0, -4.0),
+            ..default()
+        };
+        assert_eq!(
+            map_input(&orbit, &mut 0.0),
+            [Action::Orbit(Vec2::new(10.0, -4.0))]
+        );
+
+        let pan = InputFrame {
+            mouse_held: vec![MouseButton::Middle],
+            motion: Vec2::new(100.0, 50.0),
+            ..default()
+        };
+        let [Action::Pan(d)] = map_input(&pan, &mut 0.0)[..] else {
+            panic!("middle-drag must pan");
+        };
+        assert!(d.x < 0.0 && d.y > 0.0, "grab semantics: {d}");
+
+        let hover_only = InputFrame {
+            motion: Vec2::new(5.0, 5.0),
+            ..default()
+        };
+        assert!(map_input(&hover_only, &mut 0.0).is_empty());
+    }
+
+    #[test]
+    fn wasd_and_arrows_pan() {
+        let f = InputFrame {
+            held: vec![KeyCode::KeyW, KeyCode::ArrowRight],
+            dt: 0.5,
+            ..default()
+        };
+        let [Action::Pan(d)] = map_input(&f, &mut 0.0)[..] else {
+            panic!("expected one pan");
+        };
+        assert!(d.x > 0.0 && d.y > 0.0);
+        assert!((d.length() - KEY_PAN_SPEED * 0.5).abs() < 1e-5);
+    }
+
+    #[test]
+    fn wheel_zooms_and_ctrl_wheel_rotates_once_per_notch() {
+        let zoom = InputFrame {
+            wheel: 2.0,
+            ..default()
+        };
+        assert_eq!(map_input(&zoom, &mut 0.0), [Action::Zoom(2.0)]);
+
+        let mut acc = 0.0;
+        let half = InputFrame {
+            held: vec![KeyCode::ControlLeft],
+            wheel: 0.5,
+            ..default()
+        };
+        assert!(map_input(&half, &mut acc).is_empty(), "half a notch");
+        assert_eq!(
+            map_input(&half, &mut acc),
+            [Action::Rotate(RotateDir::Forward)]
+        );
+        let flick = InputFrame {
+            held: vec![KeyCode::ControlLeft],
+            wheel: -7.0,
+            ..default()
+        };
+        assert_eq!(
+            map_input(&flick, &mut acc),
+            [Action::Rotate(RotateDir::Back)],
+            "a flick rotates once, never zooms"
+        );
+    }
+
+    #[test]
+    fn camera_actions_are_classified() {
+        assert!(Action::Zoom(1.0).is_camera());
+        assert!(Action::Pan(Vec2::X).is_camera());
+        assert!(!Action::Primary.is_camera());
+        assert!(!Action::Undo.is_camera());
+    }
+}
