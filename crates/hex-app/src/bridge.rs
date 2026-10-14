@@ -145,7 +145,7 @@ mod schema {
 
     use bevy::camera::CameraProjection;
     use bevy::prelude::{GlobalTransform, PerspectiveProjection, Transform, Vec2, Vec3};
-    use hex_core::{Axial, EdgeStatus, SocketKind, TileCatalog, World};
+    use hex_core::{Axial, EdgeStatus, HEX_RADIUS, SocketKind, TileCatalog, World};
     use serde_json::{Value, json};
 
     use super::{View, cell_rect};
@@ -381,6 +381,8 @@ mod schema {
         crate::sim::CarSim::new(&g.world, &g.catalog).extend_state(&mut place);
         let rising = vec![(Axial::new(1, 0), "meadow".to_owned(), "column", 0.25)];
         crate::control::extend_play_rise(&mut place, rising, false);
+        let view = Transform::from_xyz(0.0, 60.0, 80.0).looking_at(Vec3::ZERO, Vec3::Y);
+        crate::control::extend_play_view(&mut place, Some(&view));
         g.apply(Action::SetTool(Tool::Bulldoze));
         g.apply(Action::Hover(Some(Axial::new(1, 0))));
         let bulldoze = g.state_json();
@@ -437,6 +439,7 @@ mod schema {
             "tiles": tiles,
             "compatible": compatible,
             "directional": directional,
+            "hex_radius": HEX_RADIUS,
         })
     }
 

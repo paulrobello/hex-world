@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast audio-e2e
 
 fmt:
 	cargo fmt --all
@@ -48,10 +48,19 @@ ui-schema:
 	HEXW_UPDATE_SCHEMA=1 cargo test -p hex-app bridge::schema::schema_matches_web_ui
 
 # Local only (GPU Chromium, never CI): drives the HUD with real keyboard and mouse on the built site,
-# asserts through hexWorld.state() and writes e2e/test-results/ui/<mockup state>.jpg.
+# asserts through hexWorld.state() and writes e2e/test-results/ui/<mockup state>.jpg, then runs the
+# audio checks (audio-e2e).
 ui-e2e: build-web
 	cd e2e && npm ci --no-audit --no-fund
 	node e2e/ui.mjs dist
+	node e2e/audio.mjs dist
+
+# Local only: the web audio layer (PRD §8) read through hexWorld.audio.state(): nothing loads before a
+# gesture, the context runs after one, events fire their cues, the focus mix, and mute. Writes
+# e2e/test-results/audio/*.json.
+audio-e2e: build-web
+	cd e2e && npm ci --no-audit --no-fund
+	node e2e/audio.mjs dist
 
 # initial-download runs after web-size, on the dist/ it just built (not a sibling prerequisite: under
 # make -j it would race web-size's rm -rf dist).

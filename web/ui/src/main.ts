@@ -1,14 +1,17 @@
 // Boots the overlay: the loading layer at once, then the play HUD once the engine is ready and the
 // play scenario is up. Other scenarios (gates, look-dev) get no HUD and are polled once a second.
+import { type AudioApi, GameAudio } from "./audio.ts";
 import type { HexWorld } from "./bridge.ts";
 import { h } from "./dom.ts";
 import { Hud } from "./hud.ts";
 import { sprite } from "./icons.ts";
 import { Loading } from "./loading.ts";
 
+type Bridge = HexWorld & { audio?: AudioApi };
+
 declare global {
   interface Window {
-    hexWorld?: HexWorld;
+    hexWorld?: Bridge;
   }
 }
 
@@ -52,18 +55,27 @@ function boot(): void {
   waitEngine();
 }
 
-function run(root: HTMLElement, hw: HexWorld): void {
+function run(root: HTMLElement, hw: Bridge): void {
+  // Audio unlocks on the first press in play. Its listeners go in before the HUD's, which stop game keys.
+  const audio = new GameAudio();
+  audio.listen();
+  hw.audio = audio.api();
   // Engine motion (the staged rise, shake) follows the OS reduced-motion setting, at start and on change.
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
   const syncMotion = () => hw.cmd({ cmd: "set_reduced_motion", on: reduced.matches });
   syncMotion();
   reduced.addEventListener("change", syncMotion);
   let hud: Hud | null = null;
-  hw.watchEvents((batch) => hud?.onEvents(batch));
+  hw.watchEvents((batch) => {
+    hud?.onEvents(batch);
+    audio.onEvents(batch);
+  });
   const tick = () => {
     // Pump before reading state, so the state is at least as new as the events it explains.
     hw.pumpEvents();
-    const play = hw.state().play;
+    const state = hw.state();
+    const play = state.play ?? null;
+    audio.update(play, state);
     if (!play) {
       hud?.sleep();
       root.classList.add("is-off");

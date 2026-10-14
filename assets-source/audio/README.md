@@ -66,7 +66,7 @@ The runtime audio stream maps the events drained by `hex_world_events()` (`crate
 | none (continuous) | `meadow-bed` | loop | The global bed for grass and meadow in view, non-positional. |
 | none (biome mix) | `meadow-day`, `coast-breeze`, `hearth-town` | music | They crossfade by the biome mix in view. `photo-mode` and `title-theme` are pending, and `discovery-stinger` is pending for P3. |
 
-Events with no cue yet are `hoverChanged`, `toolChanged` and `photoModeToggled`.
+Events with no cue yet are `hoverChanged`, `toolChanged`, `inventoryToggled`, `photoModeToggled` and `actionRefused`. `riseStage` has no cue of its own: the runtime (`web/ui/src/audio.ts`) holds `place-thunk` until the tile's `settled` stage and drops it on `sink`.
 
 ## Rights (D21)
 

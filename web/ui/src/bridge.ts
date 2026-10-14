@@ -14,6 +14,8 @@ export interface Cell {
   r: number;
 }
 
+export type Vec3 = [number, number, number];
+
 export type Command =
   | { cmd: "camera"; pos: [number, number, number]; look_at: [number, number, number] }
   | { cmd: "screenshot"; name: string }
@@ -111,12 +113,18 @@ export interface PlayState {
   spawn_rate_hz: number;
   rising: RisingTile[];
   reduced_motion: boolean;
+  /** The ground point the camera orbits, in world metres, or null without a camera. */
+  focus: Vec3 | null;
+  /** The camera's distance from `focus` in metres (§4.5 zoom range 12 to 2,500). */
+  zoom: number | null;
 }
 
 /** `hexWorld.state()`: only the fields the overlay reads; the rest are documented in docs/agent-operability.md. */
 export interface State {
   scenario?: string;
   play?: PlayState | null;
+  /** The game camera: position and unit forward vector in world metres. */
+  camera?: { pos: Vec3; forward: Vec3 } | null;
 }
 
 export type Rect = [left: number, top: number, right: number, bottom: number];
@@ -207,6 +215,8 @@ export const STATE_FIELDS = {
     spawn_rate_hz: true,
     rising: true,
     reduced_motion: true,
+    focus: true,
+    zoom: true,
   }),
   ghost: keys<Ghost>({ q: true, r: true, tile: true, rotation: true, valid: true, legal_rotations: true, edges: true }),
   bulldoze: keys<BulldozeTarget>({ q: true, r: true, allowed: true, reason: true }),

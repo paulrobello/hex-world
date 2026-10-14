@@ -253,6 +253,27 @@ pub fn extend_play_rise(
     map.insert("reduced_motion".into(), serde_json::json!(reduced_motion));
 }
 
+/// Adds the audio layer's view to the `play` state: `focus`, the ground point the camera orbits
+/// (`camera::focus`), and `zoom`, the camera's distance from it in metres. Both are `null` without a camera.
+pub fn extend_play_view(play: &mut serde_json::Value, camera: Option<&Transform>) {
+    let serde_json::Value::Object(map) = play else {
+        return;
+    };
+    let round = |v: f32| (f64::from(v) * 1e3).round() / 1e3;
+    let (focus, zoom) = match camera {
+        Some(t) => {
+            let f = crate::camera::focus(t);
+            (
+                serde_json::json!([round(f.x), round(f.y), round(f.z)]),
+                serde_json::json!(round(t.translation.distance(f))),
+            )
+        }
+        None => (serde_json::Value::Null, serde_json::Value::Null),
+    };
+    map.insert("focus".into(), focus);
+    map.insert("zoom".into(), zoom);
+}
+
 /// Publishes the state read by `hexWorld.state()`/`dumpState()` and `--dump-state`.
 pub fn publish_state(
     flags: Res<RunFlags>,
@@ -288,6 +309,7 @@ pub fn publish_state(
         let mut p = game.state_json();
         sim.extend_state(&mut p);
         extend_play_rise(&mut p, rises.report(), reduced.0);
+        extend_play_view(&mut p, cameras.iter().next());
         p
     });
     let state = serde_json::json!({
@@ -423,6 +445,18 @@ mod tests {
             parse_script(r#"{"cmd":"exit"}"#).is_err(),
             "top level must be an array"
         );
+    }
+
+    #[test]
+    fn play_view_reports_focus_and_zoom() {
+        let t =
+            Transform::from_xyz(30.0, 60.0, 80.0).looking_at(Vec3::new(30.0, 0.0, 0.0), Vec3::Y);
+        let mut p = serde_json::json!({});
+        extend_play_view(&mut p, Some(&t));
+        assert_eq!(p["focus"], serde_json::json!([30.0, 0.0, 0.0]));
+        assert_eq!(p["zoom"], serde_json::json!(100.0));
+        extend_play_view(&mut p, None);
+        assert!(p["focus"].is_null() && p["zoom"].is_null());
     }
 
     #[test]
