@@ -31,6 +31,9 @@
               color: #e6e6e6; font: 12px/1.4 ui-monospace, monospace; white-space: pre; display: none; }
     </style>
     <script src="web/wgsl-compat.js"></script>
+    <!-- The Legend HUD overlay (PRD D18): loading layer, tool bar and Tiles sheet. Source: web/ui. -->
+    <link rel="stylesheet" href="web/ui/hud.css" />
+    <script defer src="web/ui/hud.js"></script>
     <script>
       // WebGPU gate before the wasm loads (PRD D2, TC4).
       (function () {
@@ -40,7 +43,11 @@
       })();
     </script>
     <link data-trunk rel="rust" href="crates/hex-app/Cargo.toml" data-bin="hex-world" data-cargo-profile="wasm-release" data-wasm-opt="z" />
-    <link data-trunk rel="copy-dir" href="web" />
+    <!-- web/ ships piecewise so the overlay's sources and tooling (web/ui) stay out; only its build ships. -->
+    <link data-trunk rel="copy-dir" href="web/brand" data-target-path="web/brand" />
+    <link data-trunk rel="copy-file" href="web/unsupported.html" data-target-path="web" />
+    <link data-trunk rel="copy-file" href="web/wgsl-compat.js" data-target-path="web" />
+    <link data-trunk rel="copy-dir" href="web/ui/dist" data-target-path="web/ui" />
     <link data-trunk rel="copy-dir" href="assets" />
     <link data-trunk rel="copy-file" href="CNAME" />
     <link data-trunk rel="copy-file" href="favicon.ico" />
@@ -52,18 +59,36 @@
       addEventListener("TrunkApplicationStarted", function () {
         var w = window.wasmBindings;
         if (!w) { console.error("hexWorld: wasmBindings missing"); return; }
+        var queued = [], watchers = [];
+        function pump() {
+          var batch = JSON.parse(w.hex_world_events());
+          if (!batch.length) return;
+          queued = queued.concat(batch).slice(-256);
+          for (var i = 0; i < watchers.length; i++) watchers[i](batch);
+        }
+        // events_pending counts what events() would return: the wasm queue plus the pumped JS queue.
+        function state() {
+          var s = JSON.parse(w.hex_world_state_json());
+          if (typeof s.events_pending === "number") s.events_pending += queued.length;
+          return s;
+        }
         window.hexWorld = {
           ready: function () { return w.hex_world_ready(); },
-          state: function () { return JSON.parse(w.hex_world_state_json()); },
+          state: state,
           diag: function () { return JSON.parse(w.hex_world_diag_json()); },
-          dumpState: function () { return JSON.parse(w.hex_world_state_json()); },
+          dumpState: state,
           // One command object or an array; parse errors are logged with console.error by wasm.
           cmd: function (json) {
             if (typeof json !== "string") json = JSON.stringify(json);
             w.hex_world_cmd(json);
           },
-          // Drains queued game events (tilePlaced, placementRefused, undone, ...), oldest first.
-          events: function () { return JSON.parse(w.hex_world_events()); },
+          // Drains queued game events (tilePlaced, placementRefused, undone, ...), oldest first. The
+          // UI overlay sees every batch through watchEvents without taking events from callers here.
+          events: function () { pump(); var out = queued; queued = []; return out; },
+          watchEvents: function (cb) { watchers.push(cb); },
+          pumpEvents: pump,
+          // [left, top, right, bottom] in CSS px around cell (q, r) for the current camera, or null.
+          cellRect: function (q, r) { return JSON.parse(w.hex_world_cell_rect(q, r)); },
           // Play-scenario actions: typed wrappers over cmd, queued like any other command.
           selectTile: function (id) { this.cmd({ cmd: "select_tile", id: id }); },
           hover: function (q, r) { this.cmd({ cmd: "hover", q: q, r: r }); },

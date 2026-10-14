@@ -125,7 +125,7 @@ function row(platform, req, d, extra = {}) {
 }
 
 async function runWeb() {
-  const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm",
+  const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
     ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain" };
   const server = createServer(async (req, res) => {
     let path = decodeURIComponent(new URL(req.url, "http://x").pathname);

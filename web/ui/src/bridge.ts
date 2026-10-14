@@ -1,0 +1,218 @@
+// Typed view of window.hexWorld (index.html) and the Rust command, event and state shapes
+// (crates/hex-app/src/{control,game}.rs). The *_FIELDS tables are checked against
+// bridge-schema.json, which a Rust test regenerates from the real enums (make ui-schema).
+
+export type SocketKind = "Grass" | "Forest" | "Road" | "River" | "Beach" | "Ocean";
+export type Tool = "place" | "bulldoze";
+export type Spin = "cw" | "ccw";
+export type ToggleTarget = "bulldoze" | "inventory" | "photo";
+export type EdgeStatus = "Compatible" | "Incompatible" | "Neutral";
+export type HoveredKind = "tile" | "slot" | "empty";
+
+export interface Cell {
+  q: number;
+  r: number;
+}
+
+export type Command =
+  | { cmd: "camera"; pos: [number, number, number]; look_at: [number, number, number] }
+  | { cmd: "screenshot"; name: string }
+  | { cmd: "wait"; frames: number }
+  | { cmd: "scenario"; name: string }
+  | { cmd: "tilt"; on: boolean | null; strength: number | null }
+  | { cmd: "dump_state"; name: string }
+  | { cmd: "set_reduced_motion"; on: boolean }
+  | { cmd: "exit" }
+  | { cmd: "select_tile"; id: string }
+  | { cmd: "hover"; q: number; r: number }
+  | { cmd: "rotate"; dir: Spin }
+  | { cmd: "place"; q: number; r: number }
+  | { cmd: "undo" }
+  | { cmd: "redo" }
+  | { cmd: "bulldoze"; q: number; r: number }
+  | { cmd: "set_tool"; mode: Tool }
+  | { cmd: "toggle"; what: ToggleTarget };
+
+export type GameEvent =
+  | { type: "tilePlaced"; q: number; r: number; tile: string; rotation: number }
+  | { type: "placementRefused"; q: number; r: number; tile: string; rotation: number; reason: string }
+  | { type: "tileBulldozed"; q: number; r: number; tile: string }
+  | { type: "bulldozeRefused"; q: number; r: number; reason: string }
+  | { type: "undone" }
+  | { type: "redone" }
+  | { type: "tileSelected"; tile: string }
+  | { type: "ghostRotated"; rotation: number; valid: boolean }
+  | { type: "hoverChanged"; cell: Cell | null }
+  | { type: "toolChanged"; mode: Tool }
+  | { type: "inventoryToggled"; open: boolean }
+  | { type: "photoModeToggled"; on: boolean }
+  | { type: "actionRefused"; action: string; reason: string }
+  | { type: "riseStage"; q: number; r: number; tile: string; stage: string; skipped: boolean };
+
+export interface PlayTile {
+  q: number;
+  r: number;
+  tile: string;
+  rotation: number;
+}
+
+export interface Ghost {
+  q: number;
+  r: number;
+  tile: string;
+  rotation: number;
+  valid: boolean;
+  legal_rotations: number[];
+  edges: EdgeStatus[];
+}
+
+export interface BulldozeTarget {
+  q: number;
+  r: number;
+  allowed: boolean;
+  reason: string | null;
+}
+
+export interface ActionResult {
+  action: string;
+  ok: boolean;
+  cell: Cell | null;
+  reason: string | null;
+}
+
+/** A tile mid-rise: its stage name and the timeline position `t` in seconds. */
+export interface RisingTile {
+  q: number;
+  r: number;
+  tile: string;
+  stage: string;
+  t: number;
+}
+
+export interface PlayState {
+  tool: Tool;
+  selected: string;
+  rotation: number;
+  inventory_open: boolean;
+  photo_mode: boolean;
+  tiles: PlayTile[];
+  frontier: Cell[];
+  hovered: Cell | null;
+  hovered_kind: HoveredKind | null;
+  ghost: Ghost | null;
+  inventory: string[];
+  bulldoze: BulldozeTarget | null;
+  can_undo: boolean;
+  can_redo: boolean;
+  last_result: ActionResult | null;
+  recent_events: GameEvent[];
+  cars: number;
+  connected_destinations: number;
+  spawn_rate_hz: number;
+  rising: RisingTile[];
+  reduced_motion: boolean;
+}
+
+/** `hexWorld.state()`: only the fields the overlay reads; the rest are documented in docs/agent-operability.md. */
+export interface State {
+  scenario?: string;
+  play?: PlayState | null;
+}
+
+export type Rect = [left: number, top: number, right: number, bottom: number];
+
+export interface HexWorld {
+  ready(): boolean;
+  state(): State;
+  cmd(c: Command | Command[]): void;
+  events(): GameEvent[];
+  /** Overlay hook: every drained batch, without taking it from `events()` callers. */
+  watchEvents(cb: (batch: GameEvent[]) => void): void;
+  pumpEvents(): void;
+  cellRect(q: number, r: number): Rect | null;
+}
+
+// ---------- Field tables, checked against bridge-schema.json by test/bridge-sync.test.ts ----------
+// `keys<T>()` takes an object literal with exactly T's keys, so a field added to or dropped from a
+// type above fails to compile here until the table matches it.
+type Exactly<T> = { [K in keyof Required<T>]: true };
+const keys = <T>(o: Exactly<T>): string[] => Object.keys(o).sort();
+type CommandOf<K extends Command["cmd"]> = Omit<Extract<Command, { cmd: K }>, "cmd">;
+type EventOf<K extends GameEvent["type"]> = Omit<Extract<GameEvent, { type: K }>, "type">;
+
+export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
+  camera: keys<CommandOf<"camera">>({ pos: true, look_at: true }),
+  screenshot: keys<CommandOf<"screenshot">>({ name: true }),
+  wait: keys<CommandOf<"wait">>({ frames: true }),
+  scenario: keys<CommandOf<"scenario">>({ name: true }),
+  tilt: keys<CommandOf<"tilt">>({ on: true, strength: true }),
+  dump_state: keys<CommandOf<"dump_state">>({ name: true }),
+  set_reduced_motion: keys<CommandOf<"set_reduced_motion">>({ on: true }),
+  exit: keys<CommandOf<"exit">>({}),
+  select_tile: keys<CommandOf<"select_tile">>({ id: true }),
+  hover: keys<CommandOf<"hover">>({ q: true, r: true }),
+  rotate: keys<CommandOf<"rotate">>({ dir: true }),
+  place: keys<CommandOf<"place">>({ q: true, r: true }),
+  undo: keys<CommandOf<"undo">>({}),
+  redo: keys<CommandOf<"redo">>({}),
+  bulldoze: keys<CommandOf<"bulldoze">>({ q: true, r: true }),
+  set_tool: keys<CommandOf<"set_tool">>({ mode: true }),
+  toggle: keys<CommandOf<"toggle">>({ what: true }),
+};
+
+export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
+  tilePlaced: keys<EventOf<"tilePlaced">>({ q: true, r: true, tile: true, rotation: true }),
+  placementRefused: keys<EventOf<"placementRefused">>({ q: true, r: true, tile: true, rotation: true, reason: true }),
+  tileBulldozed: keys<EventOf<"tileBulldozed">>({ q: true, r: true, tile: true }),
+  bulldozeRefused: keys<EventOf<"bulldozeRefused">>({ q: true, r: true, reason: true }),
+  undone: keys<EventOf<"undone">>({}),
+  redone: keys<EventOf<"redone">>({}),
+  tileSelected: keys<EventOf<"tileSelected">>({ tile: true }),
+  ghostRotated: keys<EventOf<"ghostRotated">>({ rotation: true, valid: true }),
+  hoverChanged: keys<EventOf<"hoverChanged">>({ cell: true }),
+  toolChanged: keys<EventOf<"toolChanged">>({ mode: true }),
+  inventoryToggled: keys<EventOf<"inventoryToggled">>({ open: true }),
+  photoModeToggled: keys<EventOf<"photoModeToggled">>({ on: true }),
+  actionRefused: keys<EventOf<"actionRefused">>({ action: true, reason: true }),
+  riseStage: keys<EventOf<"riseStage">>({ q: true, r: true, tile: true, stage: true, skipped: true }),
+};
+
+export const ENUMS = {
+  tool: keys<Record<Tool, true>>({ place: true, bulldoze: true }),
+  spin: keys<Record<Spin, true>>({ cw: true, ccw: true }),
+  toggle: keys<Record<ToggleTarget, true>>({ bulldoze: true, inventory: true, photo: true }),
+  edge_status: keys<Record<EdgeStatus, true>>({ Compatible: true, Incompatible: true, Neutral: true }),
+};
+
+export const STATE_FIELDS = {
+  play: keys<PlayState>({
+    tool: true,
+    selected: true,
+    rotation: true,
+    inventory_open: true,
+    photo_mode: true,
+    tiles: true,
+    frontier: true,
+    hovered: true,
+    hovered_kind: true,
+    ghost: true,
+    inventory: true,
+    bulldoze: true,
+    can_undo: true,
+    can_redo: true,
+    last_result: true,
+    recent_events: true,
+    cars: true,
+    connected_destinations: true,
+    spawn_rate_hz: true,
+    rising: true,
+    reduced_motion: true,
+  }),
+  ghost: keys<Ghost>({ q: true, r: true, tile: true, rotation: true, valid: true, legal_rotations: true, edges: true }),
+  bulldoze: keys<BulldozeTarget>({ q: true, r: true, allowed: true, reason: true }),
+  last_result: keys<ActionResult>({ action: true, ok: true, cell: true, reason: true }),
+  tile: keys<PlayTile>({ q: true, r: true, tile: true, rotation: true }),
+  rising: keys<RisingTile>({ q: true, r: true, tile: true, stage: true, t: true }),
+  cell: keys<Cell>({ q: true, r: true }),
+  hovered_kind: keys<Record<HoveredKind, true>>({ tile: true, slot: true, empty: true }),
+};

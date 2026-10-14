@@ -1,0 +1,3 @@
+# Built by `make ui-build` (Trunk's pre-build hook); dist/ ships as web/ui/ in the site.
+/dist/
+/node_modules/

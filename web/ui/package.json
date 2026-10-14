@@ -1,0 +1,18 @@
+{
+  "name": "hex-world-ui",
+  "private": true,
+  "type": "module",
+  "description": "The Legend HUD overlay (PRD D18, §4.7): TypeScript over the game canvas, bundled by esbuild into web/ui/dist.",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "biome check .",
+    "test": "node --test test/"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@types/node": "24.13.0",
+    "esbuild": "0.28.2",
+    "typescript": "6.0.3"
+  }
+}

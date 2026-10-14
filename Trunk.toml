@@ -6,3 +6,13 @@ dist = "dist"
 addresses = ["127.0.0.1"]
 port = 8094
 open = false
+
+# The UI overlay builds into web/ui/dist before every Trunk build (trunk build and trunk serve), so the
+# site always ships the current HUD. Its output and tooling must not retrigger a serve rebuild.
+[watch]
+ignore = ["web/ui/dist", "web/ui/node_modules"]
+
+[[hooks]]
+stage = "pre_build"
+command = "make"
+command_arguments = ["--no-print-directory", "ui-build"]

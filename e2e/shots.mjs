@@ -9,7 +9,7 @@ const script = JSON.parse(await readFile(process.argv[3] ?? "scripts/shots/galle
 // Optional extra query keys, e.g. "kit_src=fixture".
 const extra = process.argv[4] ? "&" + process.argv[4] : "";
 const outDir = "e2e/test-results";
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm",
+const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
   ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain" };
 const server = createServer(async (req, res) => {
   let path = decodeURIComponent(new URL(req.url, "http://x").pathname);

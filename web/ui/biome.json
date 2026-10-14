@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "includes": [
+      "src/**",
+      "test/**",
+      "build.mjs",
+      "*.json",
+      "!src/bridge-schema.json",
+      "!test/rules-parity.json",
+      "!dist",
+      "!node_modules"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "linter": {
+    "rules": {
+      "preset": "recommended",
+      "style": { "noNonNullAssertion": "off" }
+    }
+  },
+  "css": {
+    "formatter": { "enabled": false }
+  },
+  "overrides": [
+    {
+      "includes": ["src/**/*.css"],
+      "linter": {
+        "rules": {
+          "complexity": { "noImportantStyles": "off" },
+          "style": { "noDescendingSpecificity": "off" }
+        }
+      }
+    }
+  ],
+  "assist": { "enabled": false }
+}

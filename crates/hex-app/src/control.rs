@@ -230,6 +230,26 @@ fn dump_state(name: &str) {
     }
 }
 
+/// Adds the staged rise to the `play` state: `rising` (tiles mid-rise, by cell) and `reduced_motion`.
+pub fn extend_play_rise(
+    play: &mut serde_json::Value,
+    rising: Vec<(Axial, String, &'static str, f32)>,
+    reduced_motion: bool,
+) {
+    let serde_json::Value::Object(map) = play else {
+        return;
+    };
+    let rising: Vec<serde_json::Value> = rising
+        .into_iter()
+        .map(|(c, tile, stage, t)| {
+            serde_json::json!({ "q": c.q, "r": c.r, "tile": tile, "stage": stage,
+                                "t": (f64::from(t) * 1e3).round() / 1e3 })
+        })
+        .collect();
+    map.insert("rising".into(), serde_json::json!(rising));
+    map.insert("reduced_motion".into(), serde_json::json!(reduced_motion));
+}
+
 /// Publishes the state read by `hexWorld.state()`/`dumpState()` and `--dump-state`.
 pub fn publish_state(
     flags: Res<RunFlags>,
@@ -243,7 +263,15 @@ pub fn publish_state(
     game: Res<GameState>,
     sim: Res<CarSim>,
     (rises, reduced): (Res<PlayRises>, Res<ReducedMotion>),
+    views: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
 ) {
+    *bridge::VIEW.lock().unwrap() = views.iter().find(|(c, _)| c.is_active).and_then(|(c, gt)| {
+        Some(bridge::View {
+            clip_from_world: c.clip_from_view() * gt.to_matrix().inverse(),
+            origin: c.logical_viewport_rect()?.min,
+            size: c.logical_viewport_size()?,
+        })
+    });
     let camera = cameras.iter().next().map(|t| {
         serde_json::json!({ "pos": t.translation.to_array(), "forward": t.forward().to_array() })
     });
@@ -256,18 +284,7 @@ pub fn publish_state(
     let play_state = play.then(|| {
         let mut p = game.state_json();
         sim.extend_state(&mut p);
-        if let serde_json::Value::Object(map) = &mut p {
-            let rising: Vec<serde_json::Value> = rises
-                .report()
-                .into_iter()
-                .map(|(c, tile, stage, t)| {
-                    serde_json::json!({ "q": c.q, "r": c.r, "tile": tile, "stage": stage,
-                                        "t": (f64::from(t) * 1e3).round() / 1e3 })
-                })
-                .collect();
-            map.insert("rising".into(), serde_json::json!(rising));
-            map.insert("reduced_motion".into(), serde_json::json!(reduced.0));
-        }
+        extend_play_rise(&mut p, rises.report(), reduced.0);
         p
     });
     let state = serde_json::json!({

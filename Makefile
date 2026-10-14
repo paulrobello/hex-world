@@ -1,4 +1,4 @@
-.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise
 
 fmt:
 	cargo fmt --all
@@ -16,7 +16,42 @@ typecheck:
 test:
 	cargo test --workspace
 
-checkall: fmt-check lint typecheck test
+checkall: fmt-check lint typecheck test ui-check
+
+# UI overlay (web/ui, PRD D18 and §14): TypeScript bundled by esbuild into web/ui/dist, which Trunk
+# ships as web/ui/ (index.html). Tools are pinned in web/ui/package-lock.json; npm ci runs only when
+# the lockfile is newer than the last install. Unit tests run .ts directly (Node 22.18+ type stripping).
+UI = web/ui
+UI_NPM = $(UI)/node_modules/.npm-ci.stamp
+$(UI_NPM): $(UI)/package-lock.json
+	cd $(UI) && npm ci --no-audit --no-fund
+	touch $@
+
+# Also Trunk's pre_build hook (Trunk.toml), so trunk build and trunk serve always carry the current HUD.
+ui-build: $(UI_NPM)
+	node $(UI)/build.mjs
+
+ui-typecheck: $(UI_NPM)
+	cd $(UI) && ./node_modules/.bin/tsc --noEmit -p .
+
+ui-lint: $(UI_NPM)
+	cd $(UI) && ./node_modules/.bin/biome check .
+
+ui-test:
+	node --test "$(UI)/test/*.test.ts"
+
+ui-check: ui-typecheck ui-lint ui-test ui-build
+
+# Rewrites the bridge contract (web/ui/src/bridge-schema.json) and the fit-rule parity fixture
+# (web/ui/test/rules-parity.json) from the Rust enums and hex-core; cargo test fails while they are stale.
+ui-schema:
+	HEXW_UPDATE_SCHEMA=1 cargo test -p hex-app bridge::schema::schema_matches_web_ui
+
+# Local only (GPU Chromium, never CI): drives the HUD with real keyboard and mouse on the built site,
+# asserts through hexWorld.state() and writes e2e/test-results/ui/<mockup state>.jpg.
+ui-e2e: build-web
+	cd e2e && npm ci --no-audit --no-fund
+	node e2e/ui.mjs dist
 
 # initial-download runs after web-size, on the dist/ it just built (not a sibling prerequisite: under
 # make -j it would race web-size's rm -rf dist).

@@ -7,7 +7,7 @@ import { BAD_TEXT } from "./console-errors.mjs";
 import { clampSampledTextures, countSampledTextures, markedModuleProbe } from "./webgpu-probes.mjs";
 
 const dist = process.argv[2] ?? "dist";
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm",
+const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
   ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain" };
 const server = createServer(async (req, res) => {
   let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
@@ -101,6 +101,10 @@ await withPage(gpuArgs, async (page, errors) => {
   if (!info) fail("no WebGPU adapter in GPU run");
   else if (/swiftshader/i.test(info) && process.env.PW_GPU !== "swiftshader") fail("SwiftShader adapter in GPU run: " + info);
   else console.log("adapter:", info);
+  // The HUD overlay (web/ui): its loading layer clears and no play HUD covers a non-play scenario,
+  // so canvas-locator screenshots here and in the perf scripts stay the engine's pixels.
+  const hud = await page.evaluate(() => ({ load: !!document.querySelector(".load"), off: !!document.querySelector("#hud.is-off") }));
+  if (hud.load || !hud.off) fail("HUD overlay left a layer over the Single scenario: " + JSON.stringify(hud));
   await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-single.png" });
 });
 

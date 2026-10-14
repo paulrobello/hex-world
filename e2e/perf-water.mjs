@@ -21,7 +21,7 @@ const stills = JSON.parse(await readFile("scripts/shots/water.json", "utf8"));
 const oceanCam = stills[stills.findIndex((c) => c.name === "water-ocean") - 2];
 const VIEWS = { overview: null, ocean: oceanCam };
 
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm",
+const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
   ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain" };
 const server = createServer(async (req, res) => {
   let path = decodeURIComponent(new URL(req.url, "http://x").pathname);

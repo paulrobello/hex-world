@@ -20,7 +20,7 @@ const W = 2560, H = 1440;
 const pick = (d) => ({ mean: d.mean, p50: d.p50, p95: d.p95, p99: d.p99, samples: d.samples, adapter: d.adapter });
 
 async function webSampler() {
-  const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm",
+  const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
     ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain" };
   const server = createServer(async (req, res) => {
     let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
