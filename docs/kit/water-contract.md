@@ -79,6 +79,30 @@ Owner decision O1 (2026-10-13): beach sockets are directional, and two coast-cor
   - Below the waterline the bed takes `beach_seabed`, the tinted `gravel` set exactly as `ocean_base`, so the colour carries on across every ocean seam. The masks map carries the band as wetness (G = 1.0 on the band, 0.7 on dry sand and grass, 0 under water) and no snow under water (R = 0), for the §9.4 hooks.
   - Pieces: `scripts/blender/kit/_beach.py` (`WET_TOP_Y`, `slot_of`) and the slot tints in `assets/kit/manifest.json`.
 
+## 3a. River mouth (`river_mouth`, `river_mouth_l`)
+
+Owner request 2026-10-14 (`assets-source/refs/river_mouth/PLAN.md`, approved with Q1-Q6). The straight beach with one land edge turned into River: `river_mouth` has the River on edge 3, `river_mouth_l` on edge 4 (the mirror image across the coast's seaward axis, authored mirrored in Blender; the engine never mirrors). The network runs from the River edge to the node `mouth` at the tile centre. A River node on a tile with a coastline is a mouth; any other River node is a spring (§3b). No schema field and no socket rule changed: River meets only River, Beach only the opposite-sided Beach, Ocean only Ocean.
+
+- **Coastline.** `Coastline::of` counts River as land beside a beach edge, so both mouths carry the straight beach's coastline and `s` of §3.
+- **Bed** (`tiles.rs` `mouth_height`, `Mouth`; kit `scripts/blender/kit/_mouth_profile.py`, which asserts the same spot values): `y = min(coast_height(s), -1.4 + h)`, where `d` is the distance to the centre line, a ray from the River edge's lane point through the node and on out to sea, and `h` is the §2 carve with an s-dependent half-width and bowl:
+  - `w(s) = 4.33 + 1.08 smoothstep(-8, 0, s)` (5.41 from the waterline on)
+  - `D(s) = 1.55 - 1.19 smoothstep(-8, 3, s)`, the centre depth (0.36 m at the shelf joint, Q3)
+  - `bed(d) = -(D - 0.05) max(0, 1 - (d/w)^2) - 0.05`, `bank = smoothstep(0.7 w, w + 2.5, d)`, `h = min(1.4, bed + (1.4 - bed) bank)`
+  - Where `s <= -8` (the grass reach and the whole River edge) this is the §2 profile exactly, so the River edge matches `river_straight`. Past `s = 3` the coast is deeper, so the ocean and beach edges stay on the coast profile.
+  - Spot values (y, `river_mouth`, runtime (x, z)): (-13.856, 0): -2.95; (-6, 0): -2.758; (0, 0): -1.977; (3.464, 0): -1.76 (s = 3); (8, 0): -3.735; (0, -8): -0.35 (the beach). The water is 8 m wide at s = -8, 8.8 m at s = -4 and 9.3 m at the waterline (the PLAN's 10 m assumed the full 1.55 m depth; the shallowing narrows it).
+  - The channel and fan take the `river_bed` slot wherever they set the bed; tolerances as §2 and §3.
+- **Surface.** One coast hex surface at -1.4. River weight and flow come from the centre line with `w(s)` and fade out over `s` from -3 to 0, handing over to the swash. No river strip on the mouth tile; the neighbour's strip ends at the River edge, whose 0.5 m vertices it shares with the hex grid.
+- **Foam band.** Where the river meets the surf: weight `(1 - smoothstep(0, 1, |s|)) (1 - smoothstep(0.75 w, w + 1, d))`, carried in the surface's UV_0.y (`water.rs` `MEET_TAG`, 0 on every other tile) and added to the foam in `water.wesl`, surging with the swash. No texture.
+- **Shore distance.** The mouth reports `s`; river tiles report `INLAND`. They differ along the River edge, where the river weight is 1 over all water, so the swash (weighted by 1 - river) does not act there.
+- **Fish.** The River edge is wet and continuous, so the region flood fill joins a river chain to the sea through a mouth (Q5), and the joined region counts as sea water (not `river`). The fish band needs about 0.7 m of water (bed clearance 0.45 m, surface clearance 0.25 m, plus the wave bound where the river weight fades). Measured along the centre line (`tiles.rs` `print_fish_room_along_the_mouth`, the baked `FishField` and the analytic band agree within 0.02 m): the room falls below `SPAWN_ROOM` (0.3 m) from s = -3.2, closes (below 0) from s = -1.17 to s = 4.37 with a minimum of -0.36 m, and is about -0.3 m at the s = 3 shelf joint. So the region is one, but fish do not swim across the fan. Opening a passage needs either a deeper channel at the shelf (a trench past s = 3, against Q3) or a fish band relaxed at mouths.
+
+## 3b. River spring (`river_spring`)
+
+River on edge 0 only, the network from edge 0 to the node `spring` at (-2, 0) (Q6).
+
+- **Bed** (`tiles.rs` `pool_height`): `y = min(river_height(d), -1.4 + carve(1.4, r, 5.95))`, with `d` the distance to the stream's centre line (node to edge 0) and `r` the distance to the node: the §2 channel joined to a round bowl, -2.95 at the node and meadow height from 8.45 m (about 3.4 m of meadow to edge 3). The edge-0 ring is `river_straight`'s.
+- **Surface.** One hex-grid surface at -1.4, kept within 6.5 m of the node and 5.5 m of the stream (a disc and a strip would overlap and z-fight). River weight 1 in the pool. The flow follows the stream and grows from 0 at the node over 6.5 m.
+
 ## 4. Ocean (`ocean`)
 
 - Flat bed at y = -4.0 along the whole border ring. Interior relief (sand ripples) may rise at most 0.10 m and must fall to 0 within 2 m of the border, as in `meadow_base`. The bed never goes below the base.
@@ -88,7 +112,7 @@ Owner decision O1 (2026-10-13): beach sockets are directional, and two coast-cor
 
 | | Engine (`water/tiles.rs`) | Kit piece |
 |---|---|---|
-| Water surface | Ocean and beach: a hex surface at y = -1.4 (0.5 m grid). River: a strip 10 m wide along each river segment. All waves, flow, foam, refraction and caustics in world space | none |
+| Water surface | Ocean, beach and river mouth: a hex surface at y = -1.4 (0.5 m grid). River: a strip 10 m wide along each river segment. Spring: the hex grid over the pool and stream. All waves, flow, foam, refraction and caustics in world space | none |
 | Cut faces | On each water edge with no matching water across it (§6), from the surface to the bed, clipped where the bed rises above the water | none |
 | Bed | Placeholder only, while the tile's centre piece is missing from the kit | All of it: banks, beach slope, shelf, sea floor and the column skirt from the bed rim down to -4.0 |
 
@@ -97,7 +121,7 @@ Bed requirements:
 - **`KitMaterial` only, with no new sampled texture.** Next to refracting water the kit forward pipeline samples exactly 16 textures, WebGPU's baseline (ADR 0002, smoke case `water_kit`), so there is no headroom.
 - **River tiles need a channel base.** River tiles name `meadow_base` as their base. Its cap covers the whole hex at y in [-0.25, 0] and would bury the channel. The river family must ship a base with the channel cut (or a centre piece that is the whole cap) and update `base` in the river tiles. Until then the engine skips the base and draws the placeholder bed.
 - **When the engine switches to the kit.** It stops drawing the placeholder bed once the tile's centre piece is in `assets/kit/manifest.json`, and from then on it draws `base` and the centre from the kit like any other tile. If `river_*_center` reaches the manifest while the river tiles still name `meadow_base`, the meadow cap buries the channel. The manifest entry and the `base` change in `data/tiles/river_*.ron` must land in the same commit. The same holds for each coast tile's centre with its base (`beach_center` with `beach_base`, `beach_outer_center` with `beach_outer_base`, `beach_inner_center` with `beach_inner_base`) and `ocean_center` with `ocean_base`: a base that is not the bed covers the water.
-- **What decides it is water.** A tile with a River network is a river tile. A tile with Ocean on every edge is ocean. A tile with some Ocean edges is a coast when its two beach edges form one of the three coastlines of §3. Only these tiles get water surfaces and cut faces.
+- **What decides it is water.** A tile with a River network is a river tile: a river mouth if it also has a coastline (§3a), a spring if its network ends at a node (§3b). A tile with Ocean on every edge is ocean. A tile with some Ocean edges is a coast when its two beach edges form one of the three coastlines of §3. Only these tiles get water surfaces and cut faces.
 
 ## 6. Seam rules
 
@@ -112,4 +136,4 @@ Each edge's bed profile depends only on its socket, so it matches any legal neig
 
 - The engine treats an edge as continuous water when River meets River, Ocean meets Ocean, or Beach meets Beach with their seaward corners on the same point. Anywhere else it draws a cut face on each wet side.
 - Since owner O1 the sockets refuse **Beach against Ocean**, **Beach against Grass or Forest** and **mirrored Beach against Beach** (the same land side on both tiles, so the land end meets the sea end). Every legal beach seam continues the coast with matching beds. If a mismatched seam is ever loaded anyway, the engine still draws cut faces on it.
-- River flow runs one way along each connected chain, starting from its open end with the lowest `(cell, edge)`. Placing a tile at that end can reverse a whole chain's flow. Kit pieces carry no flow direction.
+- River flow runs one way along each connected chain: from its spring, else from its open end with the lowest `(cell, edge)`, else from its mouth (a chain of mouths alone). Two springs or two mouths (Q4) start at the lower cell; the other one then ends the flow. A chain with a spring never reverses when tiles are placed at its open end; one without can. Kit pieces carry no flow direction.

@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-14",
+    "notes": "Pending owner review; not an approval. New piece: the mirrored mouth's dressing, the right-handed layout reflected across the seaward axis. Review the six-view renders in assets-source/kit/river_mouth_l_center/renders/ and river-mouth-05. In-engine shots in docs/checkpoints/river-mouth/. The controller records the owner's decision."
+  }
+]

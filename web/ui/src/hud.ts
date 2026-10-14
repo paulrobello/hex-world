@@ -361,7 +361,7 @@ export class Hud {
 
   render(st: PlayState, state: State = {}): void {
     this.photo.render(st.photo_mode, state.photo);
-    this.settings.render(state.tilt, state.tier);
+    this.settings.render(state.tilt, state.tier, state.grade);
     this.root.classList.toggle("is-photo", st.photo_mode);
     const prev = this.st;
     this.st = st;

@@ -75,6 +75,15 @@
       <h2 class="section-h">Tilt-shift</h2>
       <div class="field"><span class="field__label">Miniature focus</span><button class="switch" type="button" role="switch" aria-checked="true" aria-label="Tilt-shift" data-tilt></button><span class="field__hint">Blurs near and far like a diorama photo. On from Medium up.</span></div>
       <label class="field field--slider" data-tilt-strength><span class="field__label">Strength</span><output class="field__value" data-out="tilt">60%</output><input type="range" min="0" max="100" value="60" data-in="tilt" aria-label="Tilt-shift strength"></label>
+
+      <h2 class="section-h">Colour grade</h2>
+      <ul class="tiers" role="radiogroup" aria-label="Colour grade">
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="aces"><span class="radio"></span><b>ACES</b><small>The earlier look: deep colour, but shaded walls go black</small></li>
+        <li class="tier" role="radio" tabindex="0" aria-checked="true" data-grade="tony"><span class="radio"></span><b>Tony</b><small>The current look: every wall readable, softer colour</small></li>
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="rich-1"><span class="radio"></span><b>Rich 1</b><small>Current look with a fifth more colour</small></li>
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="rich-2"><span class="radio"></span><b>Rich 2</b><small>Current look with ACES-like contrast and colour, walls still readable</small></li>
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="rich-3"><span class="radio"></span><b>Rich 3</b><small>The earlier look with its shadows lifted out of black</small></li>
+      </ul>
     </div>
 
     <div class="panel" id="p-audio" role="tabpanel" aria-labelledby="t-audio" hidden>
@@ -134,7 +143,9 @@
     if (vol) vol.textContent = `${e.target.value}%`;
   });
   document.addEventListener("change", (e) => { if (e.target.matches("[data-tilt]")) setTilt(); });
-  const tiers = [...document.querySelectorAll(".tier")];
+  const tiers = [...document.querySelectorAll("[data-tiers] .tier")];
+  const grades = [...document.querySelectorAll("[data-grade]")];
+  grades.forEach((li) => li.addEventListener("click", () => grades.forEach((g) => { g.setAttribute("aria-checked", String(g === li)); g.tabIndex = g === li ? 0 : -1; })));
   function pickTier(li) {
     tiers.forEach((t) => { t.setAttribute("aria-checked", String(t === li)); t.tabIndex = t === li ? 0 : -1; });
     document.body.classList.toggle("is-tier-up", li.dataset.tier === "ultra");

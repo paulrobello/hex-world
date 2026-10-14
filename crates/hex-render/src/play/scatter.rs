@@ -1233,7 +1233,7 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 15, "every MVP tile ran");
+        assert_eq!(counts.len(), 18, "every MVP tile ran");
         for id in ["forest", "oak", "meadow", "road_straight", "house_cluster"] {
             assert!(counts[id] > 0, "{id} scatters: {counts:?}");
         }
@@ -1241,9 +1241,12 @@ mod tests {
             "ocean",
             "river_straight",
             "river_bend",
+            "river_spring",
             "beach",
             "beach_inner",
             "beach_outer",
+            "river_mouth",
+            "river_mouth_l",
         ] {
             assert_eq!(counts[id], 0, "{id} has no scatter floor: {counts:?}");
         }

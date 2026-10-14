@@ -1,0 +1,35 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_spring_center.py",
+    "sha256": "7dc8dd10cd239d033290426ed61c21cba785d5399ec3ccd177daf689f801237f"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "07b9c48ac86817ccb7c5d0286a4613ac38175e632b9d893c7b3f65702a140e1c"
+    },
+    {
+      "path": "scripts/blender/kit/_spring.py",
+      "sha256": "7069bb5eeb5284e7ae5bc5b0e6280b93a07c979a689e82dfe7678650a7e4e85c"
+    }
+  ],
+  "lodTris": {
+    "river_spring_center_lod0": 770,
+    "river_spring_center_lod1": 298,
+    "river_spring_center_lod2": 100
+  },
+  "nodes": [
+    "river_spring_center",
+    "river_spring_center_collider",
+    "river_spring_center_lod0",
+    "river_spring_center_lod1",
+    "river_spring_center_lod2"
+  ],
+  "pieceId": "river_spring_center",
+  "sockets": []
+}

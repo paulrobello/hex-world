@@ -321,6 +321,9 @@ pub struct GateConfig {
     pub ibl: bool,
     /// Kit scenario only: camera exposure (default `lookdev::KIT_EV100`).
     pub ev100: Ev100,
+    /// Kit scenario only: the look preset (`grade`); it sets `tonemap` and `ev100` unless their own
+    /// keys override them, and supplies the colour grading and backdrop.
+    pub grade: crate::grade::Grade,
     pub tilt: TiltMode,
     pub tilt_strength: TiltStrength,
     /// Quality tier (PRD §9.2): the camera post stack, and the water variant.
@@ -344,7 +347,8 @@ impl Default for GateConfig {
             tonemap: Tonemap::TonyMcMapface,
             ibl: true,
             ev100: Ev100::from_f32(crate::lookdev::KIT_EV100),
-            tilt: TiltMode::Auto,
+            grade: crate::grade::Grade::Tony,
+            tilt: TiltMode::Off,
             tilt_strength: TiltStrength(100),
             tier: crate::post::QualityTier::High,
             water_fixed: false,
@@ -485,7 +489,7 @@ mod tests {
         assert_eq!(TiltStrength::parse("-0.1"), None);
         assert_eq!(TiltStrength::parse("NaN"), None);
         let d = GateConfig::default();
-        assert_eq!((d.tilt, d.tilt_strength.get()), (TiltMode::Auto, 1.0));
+        assert_eq!((d.tilt, d.tilt_strength.get()), (TiltMode::Off, 1.0));
     }
 
     #[test]

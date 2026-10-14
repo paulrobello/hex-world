@@ -1,12 +1,18 @@
 // The Settings sheet's model: which quality row is selected from `state().tier`, the rows offered,
-// the detected tier with its reason, the Ultra note, roving keys, and the audio channel table.
+// the detected tier with its reason, the Ultra note, roving keys, the audio channel table, and the
+// colour grade rows with the startup choice between the stored grade and the page address.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { TierState } from "../src/bridge.ts";
+import type { GradeState, TierState } from "../src/bridge.ts";
 import {
   CHANNELS,
+  GRADE_KEY,
   autoTier,
+  gradeCommand,
+  gradeView,
+  isGrade,
   percent,
+  startupGrade,
   qualityView,
   roveIndex,
   selectedQuality,
@@ -123,4 +129,45 @@ test("audio: the mockup's channels in order, levels as whole percent", () => {
   assert.equal(percent(0.755), 76);
   assert.equal(percent(1.4), 100);
   assert.equal(percent(-1), 0);
+});
+
+const GRADE: GradeState = {
+  name: "tony",
+  presets: [
+    { name: "aces", detail: "The earlier look" },
+    { name: "tony", detail: "The current look" },
+    { name: "rich-1", detail: "A fifth more colour" },
+    { name: "rich-2", detail: "Richer greens" },
+    { name: "rich-3", detail: "Shadows lifted" },
+  ],
+};
+
+test("colour grade: one row per engine preset in its order, readable names, the engine's details", () => {
+  const v = gradeView(GRADE);
+  assert.deepEqual(
+    v.rows.map((r) => [r.id, r.name, r.detail]),
+    [
+      ["aces", "ACES", "The earlier look"],
+      ["tony", "Tony", "The current look"],
+      ["rich-1", "Rich 1", "A fifth more colour"],
+      ["rich-2", "Rich 2", "Richer greens"],
+      ["rich-3", "Rich 3", "Shadows lifted"],
+    ],
+  );
+  assert.equal(v.selected, "tony");
+  assert.equal(gradeView(GRADE, "rich-2").selected, "rich-2", "a pending pick shows until the engine follows");
+  assert.deepEqual(gradeView(undefined), { selected: null, rows: [] }, "no rows before the engine reports grades");
+  assert.deepEqual(gradeCommand("aces"), { cmd: "set_grade", grade: "aces" });
+});
+
+test("colour grade at startup: the stored choice, unless the address names one or it is unknown", () => {
+  assert.equal(startupGrade("", "rich-2"), "rich-2");
+  assert.equal(startupGrade("?scenario=play&tilt=off", "aces"), "aces");
+  assert.equal(startupGrade("?scenario=play&grade=aces", "rich-2"), null, "?grade= wins");
+  assert.equal(startupGrade("?grade=", "rich-2"), null, "an empty grade key still belongs to the engine");
+  assert.equal(startupGrade("", null), null, "nothing stored (or storage blocked)");
+  assert.equal(startupGrade("", "vivid"), null, "a stale name never reaches the engine");
+  assert.equal(GRADE_KEY, "hexWorld.grade");
+  assert.equal(isGrade("rich-3"), true);
+  assert.equal(isGrade(undefined), false);
 });

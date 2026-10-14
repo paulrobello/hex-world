@@ -1,0 +1,23 @@
+// River spring (owner request 2026-10-14, PLAN Q6): a pool 11 m across centred 2 m behind the tile
+// centre, welling up and running out as a stream through edge 0. A River node on a tile without a
+// coastline is a spring (water contract §3b): its chain flows away from it.
+(
+    id: "river_spring",
+    biome: Grass,
+    base: "river_spring_base",
+    edges: (
+        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    center: Some("river_spring_center"),
+    nodes: [
+        (id: "spring", at: (-2.0, 0.0)),
+    ],
+    networks: [
+        (kind: River, from: Edge(0), to: Node("spring")),
+    ],
+)

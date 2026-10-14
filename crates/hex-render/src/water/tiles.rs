@@ -20,7 +20,7 @@ use hex_core::{
 use super::{
     LAND, TerrainMaterial, WaterField, WaterKey, WaterMaterial, WaterSample, WaterSurface, carve,
     cell_transform, materials, ribbon_mesh, river_flow, skirt_mesh_for, smoothstep, surface_mesh,
-    terrain_color, terrain_mesh_for,
+    surface_mesh_where, terrain_color, terrain_mesh_for,
 };
 use crate::{
     SceneEntity,
@@ -66,6 +66,24 @@ const OPEN_SEA: f32 = 2.0 * DROP_END_S;
 const NO_RIVER: f32 = 1.0e4;
 /// Largest angle one river arc sample spans (2°: under 4 mm off the circle at the 24 m bend).
 const ARC_STEP: f32 = std::f32::consts::PI / 90.0;
+/// River mouth (water contract §3a): the channel's carve half-width grows from the river's
+/// [`RIVER_CUT_W`] at the beach top to this at the waterline, over [`MOUTH_W_RAMP`] in s.
+pub const MOUTH_W_SEA: f32 = 5.41;
+pub const MOUTH_W_RAMP: (f32, f32) = (BEACH_TOP_S, 0.0);
+/// The channel's bowl below its 0.05 m lip: the river's 1.5 m inland, shallowing over
+/// [`MOUTH_BOWL_RAMP`] to the shelf depth at the shelf joint (0.36 m of water on the centre line).
+const RIVER_BOWL: f32 = 1.5;
+pub const MOUTH_BOWL_SHELF: f32 = 0.31;
+pub const MOUTH_BOWL_RAMP: (f32, f32) = (BEACH_TOP_S, SHELF_S);
+/// River weight and flow hand over to the swash over this range of s.
+pub const MOUTH_FADE: (f32, f32) = (-3.0, 0.0);
+/// Half-width in s of the foam band where the river meets the surf.
+const MOUTH_FOAM_S: f32 = 1.0;
+/// Spring pool (water contract §3b): the bowl's carve half-width (5.5 m of water, the channel's
+/// 4.33 / 4.0 ratio), the surface disc's radius and the run over which the flow picks up.
+pub const POOL_W: f32 = 5.95;
+const POOL_SURFACE: f32 = 6.5;
+const SPRING_RAMP: f32 = 6.5;
 
 const APOTHEM: f32 = HEX_RADIUS * 0.866_025_4;
 
@@ -87,6 +105,96 @@ pub fn coast_height(s: f32) -> f32 {
 /// Bed height (m) at `dist` m from a river's centre line.
 pub fn river_height(dist: f32) -> f32 {
     WATER_Y + carve(LAND, dist, RIVER_CUT_W)
+}
+
+/// A spring's pool bed (m) at `dist` m from its node.
+pub fn pool_height(dist: f32) -> f32 {
+    WATER_Y + carve(LAND, dist, POOL_W)
+}
+
+/// The mouth channel's carve half-width at `s`.
+pub fn mouth_w(s: f32) -> f32 {
+    RIVER_CUT_W + (MOUTH_W_SEA - RIVER_CUT_W) * smoothstep(MOUTH_W_RAMP.0, MOUTH_W_RAMP.1, s)
+}
+
+fn mouth_bowl(s: f32) -> f32 {
+    RIVER_BOWL
+        + (MOUTH_BOWL_SHELF - RIVER_BOWL) * smoothstep(MOUTH_BOWL_RAMP.0, MOUTH_BOWL_RAMP.1, s)
+}
+
+/// River mouth bed (m) at `s` m seaward of the coastline and `dist` m from the channel's centre
+/// line: the coast profile, lowered by the channel. Where s <= -8 (the grass reach and the whole
+/// River edge) the channel is [`river_height`] exactly; past s = 3 the coast is deeper.
+pub fn mouth_height(s: f32, dist: f32) -> f32 {
+    let (w, bowl) = (mouth_w(s), mouth_bowl(s));
+    let bed = -bowl * (1.0 - (dist / w).powi(2)).max(0.0) - 0.05;
+    let bank = smoothstep(w * 0.7, w + 2.5, dist);
+    let channel = WATER_Y + (bed + (LAND - bed) * bank).min(LAND);
+    coast_height(s).min(channel)
+}
+
+/// A river mouth's bed in tile-local metres (world orientation), as the kit gate reads it: the
+/// straight coast and the channel's centre line, a ray from the River edge's lane point through
+/// the mouth node and on out to sea.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Mouth {
+    pub coast: Coastline,
+    pub start: Vec2,
+    pub dir: Vec2,
+}
+
+impl Mouth {
+    /// The mouth of `def` placed at `rotation`: a coastline and a River segment from an edge to a
+    /// node.
+    pub fn of(def: &TileDef, rotation: u8) -> Option<Mouth> {
+        let coast = Coastline::of(def, rotation)?;
+        let (edge, node) = river_node_end(def)?;
+        let start = turn(rotation, lane_point(def, edge));
+        let node = turn(rotation, node);
+        Some(Mouth {
+            coast,
+            start,
+            dir: (node - start).normalize(),
+        })
+    }
+
+    pub fn distance(&self, p: Vec2) -> f32 {
+        let t = (p - self.start).dot(self.dir).max(0.0);
+        p.distance(self.start + self.dir * t)
+    }
+
+    pub fn height(&self, p: Vec2) -> f32 {
+        mouth_height(self.coast.seaward(p), self.distance(p))
+    }
+}
+
+/// The lane point of local edge `local` (tile-local, unrotated).
+fn lane_point(def: &TileDef, local: u8) -> Vec2 {
+    let s = &def.edges[local as usize];
+    let n = edge_dir(local);
+    n * APOTHEM + Vec2::new(-n.y, n.x) * s.lane.map_or(0.0, |l| l.offset)
+}
+
+/// A tile-local offset turned to world orientation by `rotation`.
+fn turn(rotation: u8, p: Vec2) -> Vec2 {
+    let r = crate::kit_scene::piece_rotation(rotation) * Vec3::new(p.x, 0.0, p.y);
+    Vec2::new(r.x, r.z)
+}
+
+/// The first River segment that joins an edge to a node: (local edge, node position, tile-local).
+fn river_node_end(def: &TileDef) -> Option<(u8, Vec2)> {
+    def.networks
+        .iter()
+        .filter(|n| n.kind == NetworkKind::River)
+        .find_map(|n| match (&n.from, &n.to) {
+            (Endpoint::Edge(e), Endpoint::Node(id)) | (Endpoint::Node(id), Endpoint::Edge(e)) => {
+                def.nodes
+                    .iter()
+                    .find(|k| &k.id == id)
+                    .map(|k| (*e, Vec2::from(k.at)))
+            }
+            _ => None,
+        })
 }
 
 fn edge_dir(e: u8) -> Vec2 {
@@ -124,13 +232,18 @@ pub enum Coastline {
 }
 
 impl Coastline {
-    /// The coastline of `def` placed at `rotation`: two beach edges, one with land (grass or
-    /// forest) on the next edge clockwise, where the coast leaves with the land on its right, and
+    /// The coastline of `def` placed at `rotation`: two beach edges, one with land (grass, forest
+    /// or a river mouth's River) on the next edge clockwise, where the coast leaves with the land on its right, and
     /// one with land on the edge before it, 3 edges apart (straight), 2 (land between them: a
     /// headland) or 4 (sea between them: a bay). `None` for any other edge layout.
     pub fn of(def: &TileDef, rotation: u8) -> Option<Coastline> {
         let kind = |w: u8| def.edge(w % 6, rotation).kind;
-        let land = |w: u8| matches!(kind(w), SocketKind::Grass | SocketKind::Forest);
+        let land = |w: u8| {
+            matches!(
+                kind(w),
+                SocketKind::Grass | SocketKind::Forest | SocketKind::River
+            )
+        };
         let beach: Vec<u8> = (0..6).filter(|&w| kind(w) == SocketKind::Beach).collect();
         let [a, b] = beach[..] else {
             return None;
@@ -177,6 +290,12 @@ impl Coastline {
 pub enum WaterKind {
     /// Carries a river network: a channel and a surface strip along each river segment.
     River,
+    /// A river network ending at a node on a tile without a coastline: the pool around the node
+    /// (offset from the tile centre, world orientation) and its stream, under one surface.
+    Spring(Vec2),
+    /// A river network ending at a node on a coast tile: the coast and the channel fanning into
+    /// it, under one coast surface.
+    RiverMouth(Coastline),
     /// Some ocean edges: a coast (straight beach, headland or bay).
     Coast(Coastline),
     /// Ocean on every edge.
@@ -186,6 +305,12 @@ pub enum WaterKind {
 /// What water a tile carries at `rotation`, if any.
 pub fn water_kind(def: &TileDef, rotation: u8) -> Option<WaterKind> {
     if def.networks.iter().any(|n| n.kind == NetworkKind::River) {
+        if let Some(coast) = Coastline::of(def, rotation) {
+            return Some(WaterKind::RiverMouth(coast));
+        }
+        if let Some((_, node)) = river_node_end(def) {
+            return Some(WaterKind::Spring(turn(rotation, node)));
+        }
         return Some(WaterKind::River);
     }
     let ocean = def
@@ -233,7 +358,9 @@ fn edge_water(def: &TileDef, t: &PlayTile, world: u8) -> EdgeWater {
         SocketKind::River if socket.lane.is_some() => EdgeWater::River,
         SocketKind::Ocean => EdgeWater::Ocean,
         SocketKind::Beach => {
-            let Some(WaterKind::Coast(coast)) = water_kind(def, t.rotation) else {
+            let Some(WaterKind::Coast(coast) | WaterKind::RiverMouth(coast)) =
+                water_kind(def, t.rotation)
+            else {
                 return EdgeWater::Dry;
             };
             let corner = |deg: f32| {
@@ -253,13 +380,41 @@ fn edge_water(def: &TileDef, t: &PlayTile, world: u8) -> EdgeWater {
     }
 }
 
+/// Where a river segment ends: a world edge's lane, a spring (a node on a tile without a
+/// coastline) or a mouth (a node on a coast tile).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum RiverEnd {
+    Edge(u8),
+    Spring,
+    Mouth,
+}
+
+impl RiverEnd {
+    pub fn edge(self) -> Option<u8> {
+        match self {
+            RiverEnd::Edge(e) => Some(e),
+            _ => None,
+        }
+    }
+
+    /// Which end a chain's flow starts from: a spring, else an open edge, else a mouth (water
+    /// contract §6).
+    fn source_rank(self) -> u8 {
+        match self {
+            RiverEnd::Spring => 0,
+            RiverEnd::Edge(_) => 1,
+            RiverEnd::Mouth => 2,
+        }
+    }
+}
+
 /// A river centre line in world XZ, sampled densely, upstream first.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RiverPath {
     pub points: Vec<Vec2>,
-    /// World edges the path enters and leaves the tile by.
-    pub up: u8,
-    pub down: u8,
+    /// Where the path enters and leaves the tile.
+    pub up: RiverEnd,
+    pub down: RiverEnd,
 }
 
 /// The circle through `a`, `m` and `b`, sampled from `a` to `b` at most [`ARC_STEP`] apart (one
@@ -291,47 +446,62 @@ fn arc_through(a: Vec2, m: Vec2, b: Vec2) -> Vec<Vec2> {
     out
 }
 
-/// River segments of a placed tile as (from world edge, to world edge, centre line from -> to).
-fn river_segments(def: &TileDef, t: &PlayTile) -> Vec<(u8, u8, Vec<Vec2>)> {
-    let lane = |local: u8| {
-        let s = &def.edges[local as usize];
-        let n = edge_dir(local);
-        n * APOTHEM + Vec2::new(-n.y, n.x) * s.lane.map_or(0.0, |l| l.offset)
+/// River segments of a placed tile as (from end, to end, centre line from -> to). A mouth's
+/// centre line carries on past its node by an apothem, out to sea: the fan's bed follows it.
+fn river_segments(def: &TileDef, t: &PlayTile) -> Vec<(RiverEnd, RiverEnd, Vec<Vec2>)> {
+    let node_end = if Coastline::of(def, t.rotation).is_some() {
+        RiverEnd::Mouth
+    } else {
+        RiverEnd::Spring
+    };
+    let end = |e: &Endpoint| match e {
+        Endpoint::Edge(k) => Some((
+            RiverEnd::Edge(world_edge(*k, t.rotation)),
+            lane_point(def, *k),
+        )),
+        Endpoint::Node(id) => def
+            .nodes
+            .iter()
+            .find(|n| &n.id == id)
+            .map(|n| (node_end, Vec2::from(n.at))),
     };
     def.networks
         .iter()
         .filter(|n| n.kind == NetworkKind::River)
-        .filter_map(|n| match (&n.from, &n.to) {
-            (Endpoint::Edge(a), Endpoint::Edge(b)) => {
-                let pts: Vec<Vec2> = n.points.iter().map(|p| Vec2::from(*p)).collect();
-                let local = match pts.as_slice() {
-                    [] => vec![lane(*a), lane(*b)],
-                    [m] => arc_through(lane(*a), *m, lane(*b)),
-                    _ => [vec![lane(*a)], pts.clone(), vec![lane(*b)]].concat(),
-                };
-                let world = local
-                    .into_iter()
-                    .map(|p| to_world(t.cell, t.rotation, p))
-                    .collect();
-                Some((
-                    world_edge(*a, t.rotation),
-                    world_edge(*b, t.rotation),
-                    world,
-                ))
+        .filter_map(|n| {
+            let ((a, pa), (b, pb)) = (end(&n.from)?, end(&n.to)?);
+            let pts: Vec<Vec2> = n.points.iter().map(|p| Vec2::from(*p)).collect();
+            let mut local = match pts.as_slice() {
+                [] => vec![pa, pb],
+                [m] => arc_through(pa, *m, pb),
+                _ => [vec![pa], pts.clone(), vec![pb]].concat(),
+            };
+            let k = local.len();
+            if b == RiverEnd::Mouth {
+                let dir = (local[k - 1] - local[k - 2]).normalize();
+                local.push(pb + dir * APOTHEM);
+            } else if a == RiverEnd::Mouth {
+                let dir = (local[0] - local[1]).normalize();
+                local.insert(0, pa + dir * APOTHEM);
             }
-            _ => None,
+            let world = local
+                .into_iter()
+                .map(|p| to_world(t.cell, t.rotation, p))
+                .collect();
+            Some((a, b, world))
         })
         .collect()
 }
 
-/// Every placed river segment, oriented so the flow runs one way along each connected chain: each
-/// chain starts at its open end with the lowest (cell, edge), or for a loop at its lowest cell.
-/// Keyed by (cell, segment index among the tile's river segments).
+/// Every placed river segment, oriented so the flow runs one way along each connected chain (water
+/// contract §6): each chain starts at its spring, else at its open end with the lowest
+/// (cell, edge), else at its mouth; among several of the same kind, at the lowest cell. A loop
+/// starts at its lowest cell. Keyed by (cell, segment index among the tile's river segments).
 pub fn oriented_rivers(
     tiles: &[PlayTile],
     catalog: &TileCatalog,
 ) -> BTreeMap<(Axial, usize), RiverPath> {
-    let mut segs: BTreeMap<(Axial, usize), (u8, u8, Vec<Vec2>)> = BTreeMap::new();
+    let mut segs: BTreeMap<(Axial, usize), (RiverEnd, RiverEnd, Vec<Vec2>)> = BTreeMap::new();
     for t in tiles {
         if let Some(def) = catalog.get(&t.tile) {
             for (i, s) in river_segments(def, t).into_iter().enumerate() {
@@ -339,10 +509,11 @@ pub fn oriented_rivers(
             }
         }
     }
-    // The segment across world edge `e` of `cell`, if it ends there.
-    let across = |cell: Axial, e: u8| -> Option<(Axial, usize)> {
+    // The segment across `end` of `cell`, if it is an edge with a segment ending across it.
+    let across = |cell: Axial, end: RiverEnd| -> Option<(Axial, usize)> {
+        let e = end.edge()?;
         let n = cell.neighbor(e);
-        let back = opposite_edge(e);
+        let back = RiverEnd::Edge(opposite_edge(e));
         segs.range((n, 0)..=(n, usize::MAX))
             .find(|(_, (a, b, _))| *a == back || *b == back)
             .map(|(k, _)| *k)
@@ -367,18 +538,18 @@ pub fn oriented_rivers(
             }
             i += 1;
         }
-        let ends: Vec<(Axial, u8, usize)> = chain
+        let ends: Vec<(u8, Axial, RiverEnd, usize)> = chain
             .iter()
             .flat_map(|k| {
                 let (a, b, _) = segs[k];
                 [a, b]
                     .into_iter()
                     .filter(|&e| across(k.0, e).is_none())
-                    .map(move |e| (k.0, e, k.1))
+                    .map(move |e| (e.source_rank(), k.0, e, k.1))
             })
             .collect();
         let (mut cur, mut up) = match ends.iter().min() {
-            Some(&(cell, e, i)) => ((cell, i), e),
+            Some(&(_, cell, e, i)) => ((cell, i), e),
             None => {
                 let k = *chain.iter().min().expect("non-empty chain");
                 let (a, b, _) = segs[&k];
@@ -394,9 +565,9 @@ pub fn oriented_rivers(
                 (*a, pts.iter().rev().copied().collect())
             };
             out.insert(cur, RiverPath { points, up, down });
-            match across(cur.0, down) {
-                Some(next) if !seen.contains(&next) => {
-                    up = opposite_edge(down);
+            match (across(cur.0, down), down) {
+                (Some(next), RiverEnd::Edge(e)) if !seen.contains(&next) => {
+                    up = RiverEnd::Edge(opposite_edge(e));
                     cur = next;
                 }
                 _ => break,
@@ -463,12 +634,13 @@ pub fn layout(
         let own_paths = own.len();
         let mut paths = own.clone();
         for p in &own {
-            for e in [p.up, p.down] {
+            for e in [p.up, p.down].into_iter().filter_map(RiverEnd::edge) {
                 let n = t.cell.neighbor(e);
+                let back = RiverEnd::Edge(opposite_edge(e));
                 paths.extend(
                     rivers
                         .range((n, 0)..=(n, usize::MAX))
-                        .filter(|(_, q)| q.up == opposite_edge(e) || q.down == opposite_edge(e))
+                        .filter(|(_, q)| q.up == back || q.down == back)
                         .map(|(_, q)| q.clone()),
                 );
             }
@@ -519,6 +691,11 @@ impl TileField<'_> {
     fn seaward(&self, p: Vec2, coast: Coastline) -> f32 {
         coast.seaward(p - center(self.cell.tile.cell))
     }
+
+    /// Distance from a spring's node.
+    fn node_distance(&self, p: Vec2, node: Vec2) -> f32 {
+        p.distance(center(self.cell.tile.cell) + node)
+    }
 }
 
 impl WaterField for TileField<'_> {
@@ -530,6 +707,10 @@ impl WaterField for TileField<'_> {
         let p = Vec2::new(x, z);
         match self.cell.kind {
             WaterKind::River => river_height(self.river(p).0),
+            WaterKind::Spring(node) => {
+                river_height(self.river(p).0).min(pool_height(self.node_distance(p, node)))
+            }
+            WaterKind::RiverMouth(coast) => mouth_height(self.seaward(p, coast), self.river(p).0),
             WaterKind::Coast(coast) => coast_height(self.seaward(p, coast)),
             WaterKind::Ocean => OCEAN_BED_Y,
         }
@@ -547,6 +728,30 @@ impl WaterField for TileField<'_> {
                     river,
                     depth,
                     shore: INLAND,
+                }
+            }
+            WaterKind::Spring(node) => {
+                let (d, tangent) = self.river(p);
+                let r = self.node_distance(p, node);
+                let (stream, speed) = river_flow(d, RIVER_CUT_W);
+                let pool = 1.0 - smoothstep(POOL_W, POOL_W + 3.0, r);
+                WaterSample {
+                    flow: tangent * speed * stream * smoothstep(0.0, SPRING_RAMP, r),
+                    river: stream.max(pool),
+                    depth,
+                    shore: INLAND,
+                }
+            }
+            WaterKind::RiverMouth(coast) => {
+                let s = self.seaward(p, coast);
+                let (d, tangent) = self.river(p);
+                let (channel, speed) = river_flow(d, mouth_w(s));
+                let river = channel * (1.0 - smoothstep(MOUTH_FADE.0, MOUTH_FADE.1, s));
+                WaterSample {
+                    flow: tangent * speed * river,
+                    river,
+                    depth,
+                    shore: s,
                 }
             }
             WaterKind::Coast(coast) => WaterSample {
@@ -568,9 +773,28 @@ impl WaterField for TileField<'_> {
         let p = Vec2::new(x, z);
         match self.cell.kind {
             WaterKind::River => terrain_color(self.river(p).0 - RIVER_CUT_W, INLAND),
+            WaterKind::Spring(node) => terrain_color(
+                (self.river(p).0 - RIVER_CUT_W).min(self.node_distance(p, node) - POOL_W),
+                INLAND,
+            ),
+            WaterKind::RiverMouth(coast) => {
+                let s = self.seaward(p, coast);
+                terrain_color(self.river(p).0 - mouth_w(s), s)
+            }
             WaterKind::Coast(coast) => terrain_color(NO_RIVER, self.seaward(p, coast)),
             WaterKind::Ocean => terrain_color(NO_RIVER, OPEN_SEA),
         }
+    }
+
+    fn meet(&self, x: f32, z: f32) -> f32 {
+        let WaterKind::RiverMouth(coast) = self.cell.kind else {
+            return 0.0;
+        };
+        let p = Vec2::new(x, z);
+        let s = self.seaward(p, coast);
+        let w = mouth_w(s);
+        (1.0 - smoothstep(0.0, MOUTH_FOAM_S, s.abs()))
+            * (1.0 - smoothstep(0.75 * w, w + 1.0, self.river(p).0))
     }
 }
 
@@ -602,12 +826,12 @@ pub fn ribbon_rows(path: &RiverPath) -> Vec<(Vec2, Vec2)> {
         .iter()
         .enumerate()
         .map(|(i, &c)| {
-            let lat = if i == 0 {
-                (-edge_dir(path.up)).perp()
-            } else if i == n {
-                edge_dir(path.down).perp()
-            } else {
-                (centres[i + 1] - centres[i - 1]).normalize().perp()
+            let lat = match (i, path.up, path.down) {
+                (0, RiverEnd::Edge(e), _) => (-edge_dir(e)).perp(),
+                (0, _, _) => (centres[1] - centres[0]).normalize().perp(),
+                (_, _, RiverEnd::Edge(e)) if i == n => edge_dir(e).perp(),
+                _ if i == n => (centres[n] - centres[n - 1]).normalize().perp(),
+                _ => (centres[i + 1] - centres[i - 1]).normalize().perp(),
             };
             (c, lat)
         })
@@ -760,7 +984,19 @@ fn spawn_cell(
                 ));
             }
         }
-        WaterKind::Coast { .. } | WaterKind::Ocean => {
+        WaterKind::Spring(node) => {
+            // One surface for the pool and its stream (a disc and a strip would overlap):
+            // the hex grid, kept where either reaches.
+            let pool = c + node;
+            let keep = |w: Vec2| {
+                w.distance(pool) < POOL_SURFACE || field.river(w).0 < RIBBON_HALF + RIBBON_STEP
+            };
+            surfaces.push((
+                surface_mesh_where(&field, cell, rot, keep),
+                cell_transform(cell, rot),
+            ));
+        }
+        WaterKind::RiverMouth(_) | WaterKind::Coast(_) | WaterKind::Ocean => {
             surfaces.push((surface_mesh(&field, cell, rot), cell_transform(cell, rot)));
         }
     }
@@ -800,6 +1036,12 @@ mod tests {
 
     fn catalog() -> TileCatalog {
         TileCatalog::builtin().unwrap()
+    }
+
+    /// The world edge of a river end that must be one.
+    fn edge(end: RiverEnd) -> u8 {
+        end.edge()
+            .unwrap_or_else(|| panic!("{end:?} is not an edge"))
     }
 
     #[test]
@@ -873,6 +1115,7 @@ mod tests {
         ] {
             let t = tile(0, 0, id, rot);
             for (a, b, pts) in river_segments(cat.get(id).unwrap(), &t) {
+                let (a, b) = (edge(a), edge(b));
                 let n = pts.len();
                 let start = (pts[1] - pts[0]).normalize();
                 let end = (pts[n - 1] - pts[n - 2]).normalize();
@@ -899,8 +1142,8 @@ mod tests {
         assert_eq!(r.len(), 3);
         let mut links = 0;
         for (k, p) in &r {
-            if let Some((_, q)) = r.iter().find(|(j, _)| j.0 == k.0.neighbor(p.down)) {
-                assert_eq!(q.up, opposite_edge(p.down), "{k:?}");
+            if let Some((_, q)) = r.iter().find(|(j, _)| j.0 == k.0.neighbor(edge(p.down))) {
+                assert_eq!(edge(q.up), opposite_edge(edge(p.down)), "{k:?}");
                 links += 1;
             }
         }
@@ -1032,7 +1275,7 @@ mod tests {
         let flows: Vec<(u8, u8)> = [(-3, 3), (-2, 2), (-1, 1), (-1, 0)]
             .map(|(q, r)| {
                 let p = &lay[&Axial::new(q, r)].paths[0];
-                (p.up, p.down)
+                (edge(p.up), edge(p.down))
             })
             .to_vec();
         // One way along the chain: each downstream edge faces the next tile's upstream edge.
@@ -1069,7 +1312,7 @@ mod tests {
             let p = &cw.paths[0];
             let rows = ribbon_rows(p);
             let c = center(cw.tile.cell);
-            for (end, e) in [(rows[0], p.up), (rows[rows.len() - 1], p.down)] {
+            for (end, e) in [(rows[0], edge(p.up)), (rows[rows.len() - 1], edge(p.down))] {
                 assert!(end.0.distance(c + edge_dir(e) * APOTHEM) < 1e-3);
                 assert!(
                     end.1.dot(edge_dir(e)).abs() < 1e-5,
@@ -1164,7 +1407,7 @@ mod tests {
         for def in coast_tiles(&cat) {
             for rot in 0..6u8 {
                 let cw = alone(&cat, Axial::ORIGIN, &def.id, rot);
-                let WaterKind::Coast(coast) = cw.kind else {
+                let (WaterKind::Coast(coast) | WaterKind::RiverMouth(coast)) = cw.kind else {
                     panic!("{} r{rot} is {:?}", def.id, cw.kind);
                 };
                 let f = cw.field();
@@ -1189,6 +1432,11 @@ mod tests {
                                 assert!((s - want).abs() < 1e-3, "{at}: s {s}, want {want}");
                                 assert!((h - coast_height(want)).abs() < 1e-3, "{at}: {h}");
                             }
+                            // A mouth's River edge: river_straight's channel across the lane.
+                            SocketKind::River => {
+                                let o = (-8.0 + 16.0 * i as f32 / 32.0f32).abs();
+                                assert!((h - river_height(o)).abs() < 1e-3, "{at}: {h}");
+                            }
                             k => panic!("{at}: {k:?}"),
                         }
                     }
@@ -1196,7 +1444,7 @@ mod tests {
                 }
             }
         }
-        assert_eq!(edges, 3 * 6 * 6);
+        assert_eq!(edges, 5 * 6 * 6);
     }
 
     /// Owner O1 proof: for every pair of coast tiles and every pair of rotations the rules accept
@@ -1247,12 +1495,12 @@ mod tests {
                 }
             }
         }
-        // 3 tiles x 6 rotations x 2 beach edges, each facing 6 (tile, rotation) beach edges, of
-        // which the 3 with the opposite land side are accepted.
-        assert_eq!((accepted, refused), (108, 108));
+        // 5 tiles (beach, headland, bay, both mouths) x 6 rotations x 2 beach edges, each facing
+        // 10 (tile, rotation) beach edges, of which the 5 with the opposite land side are accepted.
+        assert_eq!((accepted, refused), (300, 300));
         assert_eq!(
             pairs.len(),
-            9,
+            25,
             "every coast tile meets every coast tile: {pairs:?}"
         );
     }
@@ -1386,6 +1634,372 @@ mod tests {
             2 * 12,
             "every coast tile joins the next on both beach edges"
         );
+    }
+
+    /// The engine's mouth bed is the kit's pinned profile (`scripts/blender/kit/_mouth_profile.py`
+    /// `SPOT`, Blender (x, y) = runtime (x, -z)) on both handednesses.
+    #[test]
+    fn mouth_bed_matches_the_kit_profile() {
+        let cat = catalog();
+        let spots = [
+            ("river_mouth", -13.856406, 0.0, -2.95),
+            ("river_mouth", -13.856406, 4.0, -1.3994),
+            ("river_mouth", -6.0, 0.0, -2.7575),
+            ("river_mouth", -3.0, 4.0, -1.6653),
+            ("river_mouth", 0.0, 0.0, -1.9773),
+            ("river_mouth", 3.4641, 0.0, -1.76),
+            ("river_mouth", 8.0, 0.0, -3.7353),
+            ("river_mouth", 0.0, 8.0, -0.35),
+            ("river_mouth_l", -6.928203, 12.0, -2.95),
+            ("river_mouth_l", 0.0, 0.0, -1.9773),
+        ];
+        for (id, x, y, want) in spots {
+            let m = Mouth::of(cat.get(id).unwrap(), 0).unwrap();
+            let p = Vec2::new(x, -y);
+            assert!(
+                (m.height(p) - want).abs() < 2e-3,
+                "{id} {p}: {}",
+                m.height(p)
+            );
+            let cw = alone(&cat, Axial::ORIGIN, id, 0);
+            assert!(
+                (cw.field().height(p.x, p.y) - m.height(p)).abs() < 1e-4,
+                "{id} field {p}"
+            );
+        }
+        // The mirror: river_mouth_l is river_mouth reflected across the seaward axis.
+        let (r, l) = (
+            Mouth::of(cat.get("river_mouth").unwrap(), 0).unwrap(),
+            Mouth::of(cat.get("river_mouth_l").unwrap(), 0).unwrap(),
+        );
+        let axis = Vec2::new(30f32.to_radians().cos(), 30f32.to_radians().sin());
+        for i in 0..400 {
+            let p = Vec2::new((i % 20) as f32 * 1.4 - 13.0, (i / 20) as f32 * 1.4 - 13.0);
+            let q = 2.0 * p.dot(axis) * axis - p;
+            assert!((r.height(p) - l.height(q)).abs() < 1e-4, "{p} vs {q}");
+        }
+    }
+
+    /// The river inputs meet their river neighbours: a mouth's River edge against river_straight,
+    /// a spring's against river_straight. Shore distance agrees wherever the swash acts (river
+    /// tiles report INLAND and the mouth its seaward s; swash weighs (1 - river), and the river
+    /// weight is 1 over all water at the seam).
+    #[test]
+    fn mouth_and_spring_meet_their_river_neighbours() {
+        let cat = catalog();
+        let o = Axial::ORIGIN;
+        for (id, rot, e) in [
+            ("river_mouth", 0u8, 3u8),
+            ("river_mouth", 2, 5),
+            ("river_mouth_l", 1, 5),
+            ("river_spring", 0, 0),
+            ("river_spring", 4, 4),
+        ] {
+            let n = o.neighbor(e);
+            let back = opposite_edge(e);
+            let rn = (0..6u8).find(|&r| world_edge(0, r) == back).unwrap();
+            let tiles = [
+                tile(o.q, o.r, id, rot),
+                tile(n.q, n.r, "river_straight", rn),
+            ];
+            let lay = layout(&tiles, &cat, |_| false);
+            assert!(!lay[&o].exposed.contains(&e), "{id} r{rot}: seam exposed");
+            let (fa, fb) = (lay[&o].field(), lay[&n].field());
+            let mid = (center(o) + center(n)) * 0.5;
+            let along = edge_dir(e).perp();
+            for i in 0..=32 {
+                let p = mid + along * (-8.0 + 0.5 * i as f32);
+                let (wa, wb) = (fa.water(p.x, p.y), fb.water(p.x, p.y));
+                let at = format!("{id} r{rot} at {p}");
+                assert!(
+                    (fa.height(p.x, p.y) - fb.height(p.x, p.y)).abs() < 1e-3,
+                    "{at}"
+                );
+                assert!((wa.depth - wb.depth).abs() < 1e-3, "{at}");
+                assert!((wa.river - wb.river).abs() < 1e-4, "{at}");
+                assert!(
+                    wa.flow.distance(wb.flow) < 1e-3,
+                    "{at}: {} vs {}",
+                    wa.flow,
+                    wb.flow
+                );
+                if wa.depth > 0.0 && wa.river < 1.0 {
+                    assert!((wa.shore - wb.shore).abs() < 1e-3, "{at}");
+                }
+            }
+        }
+    }
+
+    /// The flow rule (water contract §6): away from a spring, into a mouth, spring to mouth; two
+    /// springs or two mouths start at the lower cell.
+    #[test]
+    fn river_chains_flow_from_springs_into_mouths() {
+        let cat = catalog();
+        let o = Axial::ORIGIN;
+        let (e0, e3) = (o.neighbor(0), o.neighbor(3));
+        let ends = |tiles: &[PlayTile]| -> Vec<(Axial, RiverEnd, RiverEnd)> {
+            oriented_rivers(tiles, &cat)
+                .into_iter()
+                .map(|(k, p)| (k.0, p.up, p.down))
+                .collect()
+        };
+        use RiverEnd::{Edge, Mouth as M, Spring as S};
+        // Spring, then an open river end.
+        let got = ends(&[
+            tile(o.q, o.r, "river_spring", 0),
+            tile(e0.q, e0.r, "river_straight", 0),
+        ]);
+        assert!(
+            got.contains(&(o, S, Edge(0))) && got.contains(&(e0, Edge(3), Edge(0))),
+            "{got:?}"
+        );
+        // An open river end, then a mouth.
+        let got = ends(&[
+            tile(o.q, o.r, "river_mouth", 0),
+            tile(e3.q, e3.r, "river_straight", 0),
+        ]);
+        assert!(
+            got.contains(&(e3, Edge(3), Edge(0))) && got.contains(&(o, Edge(3), M)),
+            "{got:?}"
+        );
+        // Spring to mouth, whichever cell is lower.
+        let got = ends(&[
+            tile(o.q, o.r, "river_spring", 0),
+            tile(e0.q, e0.r, "river_mouth", 0),
+        ]);
+        assert!(
+            got.contains(&(o, S, Edge(0))) && got.contains(&(e0, Edge(3), M)),
+            "{got:?}"
+        );
+        let got = ends(&[
+            tile(o.q, o.r, "river_mouth", 0),
+            tile(e3.q, e3.r, "river_spring", 0),
+        ]);
+        assert!(
+            got.contains(&(e3, S, Edge(0))) && got.contains(&(o, Edge(3), M)),
+            "{got:?}"
+        );
+        // Two springs and two mouths: deterministic, from the lower cell.
+        for (a, b) in [("river_spring", 3u8), ("river_mouth", 3u8)] {
+            let (cell, rot0) = if a == "river_spring" {
+                (e0, 0u8)
+            } else {
+                (e3, 0u8)
+            };
+            let tiles = [tile(o.q, o.r, a, rot0), tile(cell.q, cell.r, a, b)];
+            let low = o.min(cell);
+            let r = oriented_rivers(&tiles, &cat);
+            let first = r.iter().find(|(k, _)| k.0 == low).unwrap().1;
+            assert!(matches!(first.up, S | M), "{a}: {:?}", first.up);
+            let other = r.iter().find(|(k, _)| k.0 != low).unwrap().1;
+            assert!(matches!(other.down, S | M), "{a}: {:?}", other.down);
+        }
+    }
+
+    /// The fish band's room along a mouth's centre line, from its River edge out to sea (water
+    /// contract §3a, Fish).
+    #[test]
+    #[ignore = "prints the measured fish room across the mouth fan"]
+    fn print_fish_room_along_the_mouth() {
+        use crate::boids::plan::{FishWorld, SPAWN_ROOM, band_at};
+        let cat = catalog();
+        let o = Axial::ORIGIN;
+        let (r, m) = (o.neighbor(3), o.neighbor(0));
+        let sea = m.neighbor(0);
+        let tiles = [
+            tile(r.q, r.r, "river_straight", 0),
+            tile(o.q, o.r, "river_straight", 0),
+            tile(m.q, m.r, "river_mouth", 0),
+            tile(sea.q, sea.r, "ocean", 0),
+        ];
+        let w = FishWorld::new(&tiles, &cat);
+        let c = center(m);
+        let sea_dir = Vec2::new(30f32.to_radians().cos(), 30f32.to_radians().sin());
+        let (mut lo, mut closed) = (f32::MAX, vec![]);
+        for i in 0..=280 {
+            let x = -APOTHEM + i as f32 * 0.1;
+            let p = c + Vec2::new(x, 0.0);
+            let s = Vec2::new(x, 0.0).dot(sea_dir);
+            let (band, baked) = (band_at(&w.cells, p), w.field.sample(p));
+            let room = band[2].min(baked[2]);
+            lo = lo.min(room);
+            if room < 0.0 {
+                closed.push(s);
+            }
+            if i % 20 == 0 {
+                println!(
+                    "s {s:6.2}: depth {:.3} room analytic {:.3} baked {:.3}",
+                    WATER_Y - lay_height(&w, p),
+                    band[2],
+                    baked[2]
+                );
+            }
+        }
+        println!(
+            "min room {lo:.3}; closed s {:?}..{:?}; SPAWN_ROOM {SPAWN_ROOM}",
+            closed.first(),
+            closed.last()
+        );
+    }
+
+    fn lay_height(w: &crate::boids::plan::FishWorld, p: Vec2) -> f32 {
+        let cell = w
+            .cells
+            .keys()
+            .copied()
+            .min_by(|a, b| center(*a).distance(p).total_cmp(&center(*b).distance(p)))
+            .unwrap();
+        w.cells[&cell].field().height(p.x, p.y)
+    }
+
+    /// Fish (Q5): a river chain from a spring through a mouth into the sea is one fish region.
+    #[test]
+    fn spring_river_mouth_and_sea_form_one_fish_region() {
+        let cat = catalog();
+        let o = Axial::ORIGIN;
+        let (s, m) = (o.neighbor(3), o.neighbor(0));
+        let sea = m.neighbor(0);
+        let tiles = [
+            tile(s.q, s.r, "river_spring", 0),
+            tile(o.q, o.r, "river_straight", 0),
+            tile(m.q, m.r, "river_mouth", 0),
+            tile(sea.q, sea.r, "ocean", 0),
+        ];
+        let w = crate::boids::plan::FishWorld::new(&tiles, &cat);
+        assert_eq!(w.regions.len(), 1, "{:?}", w.regions);
+        assert_eq!(w.regions[0].cells.len(), 4);
+        assert!(!w.regions[0].river, "the joined region holds sea water");
+    }
+
+    /// The river-mouth evidence layout (`docs/checkpoints/river-mouth/river-mouth.json`): two
+    /// chains from a spring through a straight and a bend into the sea, one through each mouth
+    /// handedness, with beaches continuing the coast. (q, r, tile, rotation).
+    const MOUTH_PROOF: [(i32, i32, &str, u8); 18] = [
+        (1, 0, "meadow", 0),
+        (2, 0, "river_bend", 0),
+        (3, 0, "river_mouth", 0),
+        (4, 0, "ocean", 0),
+        (3, 1, "ocean", 0),
+        (4, -1, "beach", 0),
+        (2, 1, "beach", 0),
+        (1, 1, "river_straight", 2),
+        (0, 2, "river_spring", 5),
+        (5, -1, "ocean", 0),
+        (-1, 0, "meadow", 0),
+        (-2, 0, "meadow", 0),
+        (-3, 0, "river_mouth_l", 3),
+        (-4, 0, "ocean", 0),
+        (-3, -1, "ocean", 0),
+        (-3, 1, "river_straight", 1),
+        (-3, 2, "river_bend", 2),
+        (-4, 3, "river_spring", 5),
+    ];
+
+    /// Prints the script commands that place [`MOUTH_PROOF`] with play's input semantics (hover
+    /// snaps to the first legal rotation, `rotate` steps through the distinct legal ones).
+    #[test]
+    #[ignore = "generates docs/checkpoints/river-mouth/river-mouth.json placements"]
+    fn print_mouth_proof_commands() {
+        let cat = catalog();
+        let mut world = World::new(1);
+        for (q, r, id, want) in MOUTH_PROOF {
+            let def = cat.get(id).unwrap();
+            let cell = Axial::new(q, r);
+            let legal = world.legal_rotations(&cat, cell, def);
+            assert!(legal.contains(&want), "{id} at ({q}, {r}): legal {legal:?}");
+            let mut rot = world.auto_rotate(&cat, cell, def).unwrap();
+            let mut steps = 0;
+            while !def.same_orientation(rot, want) {
+                rot = world
+                    .cycle_rotation(&cat, cell, def, rot, hex_core::RotateDir::Forward)
+                    .unwrap();
+                steps += 1;
+                assert!(steps < 7, "{id} at ({q}, {r})");
+            }
+            println!("  {{\"cmd\": \"select_tile\", \"id\": \"{id}\"}},");
+            println!("  {{\"cmd\": \"hover\", \"q\": {q}, \"r\": {r}}},");
+            for _ in 0..steps {
+                println!("  {{\"cmd\": \"rotate\", \"dir\": \"cw\"}},");
+            }
+            println!("  {{\"cmd\": \"place\", \"q\": {q}, \"r\": {r}}},");
+            world.place(&cat, cell, id, rot).unwrap();
+        }
+    }
+
+    /// `docs/checkpoints/river-mouth/river-mouth.json` replayed on the rules with play's input
+    /// semantics places every tile of [`MOUTH_PROOF`] in its orientation, refuses nothing, and
+    /// gives two chains that flow from a spring into a mouth, each one fish region with the sea.
+    #[test]
+    fn mouth_proof_script_places_both_chains() {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../docs/checkpoints/river-mouth/river-mouth.json"
+        );
+        let text = std::fs::read_to_string(path).unwrap();
+        let script: Vec<serde_json::Value> = serde_json::from_str(&text).unwrap();
+        let cat = catalog();
+        let mut world = World::new(1);
+        let (mut selected, mut hovered, mut rotation) = ("meadow".to_owned(), None, 0u8);
+        let n = |cmd: &serde_json::Value, k: &str| i32::try_from(cmd[k].as_i64().unwrap()).unwrap();
+        for cmd in &script {
+            match cmd["cmd"].as_str().unwrap() {
+                "select_tile" => selected = cmd["id"].as_str().unwrap().to_owned(),
+                "hover" => {
+                    let c = Axial::new(n(cmd, "q"), n(cmd, "r"));
+                    hovered = Some(c);
+                    if let Some(k) = world.auto_rotate(&cat, c, cat.get(&selected).unwrap()) {
+                        rotation = k;
+                    }
+                }
+                "rotate" => {
+                    let c = hovered.unwrap();
+                    let def = cat.get(&selected).unwrap();
+                    rotation = world
+                        .cycle_rotation(&cat, c, def, rotation, hex_core::RotateDir::Forward)
+                        .unwrap();
+                }
+                "place" => {
+                    let c = Axial::new(n(cmd, "q"), n(cmd, "r"));
+                    assert_eq!(hovered, Some(c), "place without hover at {c:?}");
+                    world.place(&cat, c, &selected, rotation).unwrap();
+                }
+                _ => {}
+            }
+        }
+        for (q, r, id, want) in MOUTH_PROOF {
+            let t = world.tile(Axial::new(q, r)).unwrap();
+            let def = cat.get(id).unwrap();
+            assert_eq!(t.def, id);
+            assert!(
+                def.same_orientation(t.rotation, want),
+                "{id} at ({q}, {r}): r{}",
+                t.rotation
+            );
+        }
+        let tiles: Vec<PlayTile> = world
+            .tiles()
+            .iter()
+            .map(|(c, t)| PlayTile {
+                cell: *c,
+                tile: t.def.clone(),
+                rotation: t.rotation,
+            })
+            .collect();
+        let lay = layout(&tiles, &cat, |_| false);
+        for (spring, mouth) in [((0, 2), (3, 0)), ((-4, 3), (-3, 0))] {
+            let s = &lay[&Axial::new(spring.0, spring.1)].paths[0];
+            let m = &lay[&Axial::new(mouth.0, mouth.1)].paths[0];
+            assert_eq!((s.up, m.down), (RiverEnd::Spring, RiverEnd::Mouth));
+        }
+        let fish = crate::boids::plan::FishWorld::new(&tiles, &cat);
+        for cell in [(0, 2), (-4, 3)] {
+            let region = fish
+                .regions
+                .iter()
+                .find(|g| g.cells.contains(&Axial::new(cell.0, cell.1)))
+                .unwrap();
+            assert!(!region.river, "{cell:?}: the spring's water joins the sea");
+        }
     }
 
     /// Placement order of `docs/checkpoints/water-play/water-play.json`: (q, r, tile, rotate steps

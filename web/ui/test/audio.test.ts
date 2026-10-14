@@ -18,6 +18,7 @@ import {
   bedGains,
   biomeMix,
   biomeOf,
+  emitterCues,
   cellWorld,
   emitterGain,
   emptyMix,
@@ -156,6 +157,16 @@ test("biomes come from the catalog edges", () => {
   assert.equal(b("beach"), "coast");
   assert.equal(b("ocean"), "coast");
   assert.equal(b("house_cluster"), "town");
+  const cues = (id: string) => {
+    const t = schema.catalog.tiles.find((x) => x.id === id)!;
+    return emitterCues(t.id, t.edges);
+  };
+  // A river mouth carries both the river's babble and the surf; a spring is river water.
+  assert.deepEqual(cues("river_mouth"), ["river-babble", "surf"]);
+  assert.deepEqual(cues("river_mouth_l"), ["river-babble", "surf"]);
+  assert.deepEqual(cues("river_spring"), ["river-babble"]);
+  assert.deepEqual(cues("beach"), ["surf"]);
+  assert.deepEqual(cues("meadow"), []);
 });
 
 test("biome mix in view sums to one and falls back to the whole world", () => {

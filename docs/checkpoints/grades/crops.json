@@ -1,0 +1,15 @@
+[
+ {"name": "mouth-left-wall", "view": "mouth", "box": [103, 523, 327, 697]},
+ {"name": "mouth-right-wall", "view": "mouth", "box": [1303, 523, 1517, 697]},
+ {"name": "mouth-grass", "view": "mouth", "box": [63, 273, 327, 332]},
+ {"name": "mouth-water", "view": "mouth", "box": [653, 333, 947, 467]},
+ {"name": "backdrop", "view": "mouth", "box": [603, 43, 997, 137]},
+ {"name": "bridge-face", "view": "bridge-arch", "box": [403, 383, 1097, 462]},
+ {"name": "bridge-water", "view": "bridge-arch", "box": [603, 853, 997, 977]},
+ {"name": "bridge-gravel", "view": "bridge-arch", "box": [1403, 653, 1577, 717]},
+ {"name": "meadow-wall", "view": "coast", "box": [20, 290, 140, 360]},
+ {"name": "sea", "view": "coast", "box": [20, 780, 500, 980]},
+ {"name": "roof", "view": "houses", "box": [670, 480, 870, 560]},
+ {"name": "forest", "view": "oak", "box": [20, 150, 300, 550]},
+ {"name": "meadow-grass", "view": "meadow", "box": [200, 450, 1100, 800]}
+]

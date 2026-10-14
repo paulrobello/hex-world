@@ -16,9 +16,12 @@ export const TILE_NAMES: Record<string, string> = {
   river_straight: "River straight",
   river_bend: "River bend",
   river_road_bridge: "River bridge",
+  river_spring: "River spring",
   beach: "Beach",
   beach_outer: "Headland",
   beach_inner: "Bay",
+  river_mouth: "River mouth",
+  river_mouth_l: "River mouth mirrored",
   ocean: "Ocean",
 };
 

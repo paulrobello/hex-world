@@ -1,0 +1,49 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_spring_base.py",
+    "sha256": "845405593f4d3f5727db8ba407845cae120e11af5dfd993eabe47780e2115c37"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    },
+    {
+      "path": "scripts/blender/kit/_spring.py",
+      "sha256": "7069bb5eeb5284e7ae5bc5b0e6280b93a07c979a689e82dfe7678650a7e4e85c"
+    }
+  ],
+  "lodTris": {
+    "river_spring_base_lod0": 3970,
+    "river_spring_base_lod1": 1602,
+    "river_spring_base_lod2": 726
+  },
+  "nodes": [
+    "river_spring_base",
+    "river_spring_base_collider",
+    "river_spring_base_lod0",
+    "river_spring_base_lod1",
+    "river_spring_base_lod2",
+    "socket-lane-0"
+  ],
+  "pieceId": "river_spring_base",
+  "sockets": [
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 0,
+        "kind": "river",
+        "offset": 0.0,
+        "width": 8.0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

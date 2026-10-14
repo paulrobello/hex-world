@@ -46,6 +46,9 @@ const WARM_FRAMES: u32 = 30;
 const SETTLE_FRAMES: u32 = 20;
 /// Frames held after the request, so the capture never sees the next tile.
 const HOLD_FRAMES: u32 = 3;
+/// Extra captures of a tile whose frame came back all black before the run keeps the black frame
+/// (and the build step fails on it).
+const BLANK_RETRIES: u32 = 3;
 
 /// The thumbnail mode's fixed render settings: the play scenario with no post stack, tilt-shift
 /// or FPS counter, the fixed clock, and the supersampled window.
@@ -123,6 +126,8 @@ struct ThumbRun {
     frame: u32,
     stage: usize,
     stage_frame: u32,
+    blank: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    retries: u32,
 }
 
 impl ThumbRun {
@@ -147,6 +152,8 @@ impl ThumbRun {
             frame: 0,
             stage: 0,
             stage_frame: 0,
+            blank: Default::default(),
+            retries: 0,
         }
     }
 }
@@ -188,9 +195,10 @@ impl Plugin for ThumbsPlugin {
     }
 }
 
-/// Holds the thumbnail camera and hides the GPU flock every frame.
+/// Holds the thumbnail camera and the key clear colour and hides the GPU flock every frame.
 fn stage_scene(
     mut commands: Commands,
+    mut clear: ResMut<ClearColor>,
     mut cameras: Query<
         (
             Entity,
@@ -215,6 +223,10 @@ fn stage_scene(
                 commands.entity(e).insert(DebandDither::Disabled);
             }
         }
+    }
+    // Every scene build sets the grade's backdrop as the clear colour.
+    if clear.0 != KEY {
+        clear.0 = KEY;
     }
     for (name, mut vis) in &mut named {
         if name.as_str() == "boids" && *vis != Visibility::Hidden {
@@ -243,6 +255,8 @@ fn drive(
         stages,
         stage,
         stage_frame,
+        blank,
+        retries,
         ..
     } = &mut *run;
     let Some(s) = stages.get(*stage) else {
@@ -269,12 +283,24 @@ fn drive(
         None => WARM_FRAMES,
         Some(name) => {
             if *stage_frame == SETTLE_FRAMES {
-                capture::request(&mut commands, name);
+                blank.store(false, std::sync::atomic::Ordering::SeqCst);
+                let keep_black = *retries >= BLANK_RETRIES;
+                capture::request_unless_blank(&mut commands, name, blank.clone(), keep_black);
             }
             SETTLE_FRAMES + HOLD_FRAMES
         }
     };
-    if *stage_frame >= last {
+    // A shot stage moves on only once its capture is encoded, so a blank frame can be retaken.
+    if *stage_frame >= last && (s.shot.is_none() || capture::pending() == 0) {
+        if s.shot.is_some()
+            && blank.swap(false, std::sync::atomic::Ordering::SeqCst)
+            && *retries < BLANK_RETRIES
+        {
+            *retries += 1;
+            *stage_frame = 0;
+            return;
+        }
+        *retries = 0;
         *stage += 1;
         *stage_frame = 0;
     }
@@ -286,6 +312,13 @@ mod tests {
 
     fn catalog() -> TileCatalog {
         TileCatalog::builtin().unwrap()
+    }
+
+    #[test]
+    fn only_a_fully_black_frame_counts_as_blank() {
+        assert!(capture::all_black(&[0, 0, 0, 255, 0, 0, 0, 255]));
+        assert!(!capture::all_black(&[0, 0, 0, 255, 0, 1, 0, 255]));
+        assert!(!capture::all_black(&[]));
     }
 
     #[test]
@@ -307,15 +340,18 @@ mod tests {
             ("river_straight", 3),
             ("river_bend", 6),
             ("river_road_bridge", 3),
+            ("river_spring", 6),
             ("beach", 6),
             ("beach_outer", 6),
             ("beach_inner", 6),
+            ("river_mouth", 6),
+            ("river_mouth_l", 6),
             ("ocean", 1),
         ];
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 15 + 57);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 18 + 75);
     }
 
     #[test]

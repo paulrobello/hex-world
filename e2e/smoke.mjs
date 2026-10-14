@@ -51,9 +51,27 @@ const KIT_SAMPLED_WITH_WATER = { forward: KIT_SAMPLED.ibl.forward + 1, prepass: 
 // IBL. The view layout sets them: High adds SSAO (its texture and the normal prepass), refracting
 // tiers (High, Medium) add the transmission texture; each material binds one texture.
 const WATER_SAMPLED = { high: { water: 10, terrain: 10 }, medium: { water: 8, terrain: 8 }, low: { water: 7, terrain: 7 } };
-// Handle-let aliases the compat shim rewrites in a water scenario run: none, since neither water
-// shader composes StandardMaterial's PBR input (the marker probe still checks the water module).
-const WATER_COMPAT_ALIASES = 0;
+// Handle-let aliases per rewritten module in a water scenario run: neither water shader composes
+// StandardMaterial's PBR input (the marker probe checks the water module keeps none), but the boid
+// material's fragment does, as the kit fragment does.
+const WATER_COMPAT_ALIASES = KIT_COMPAT_ALIASES;
+
+// The boid material (crates/hex-render/src/boids.rs: StandardMaterial + `masks`, the boid buffer a
+// vertex-stage storage binding) draws in every scenario. Its forward pipeline samples exactly what the
+// kit forward pipeline does in the same view: 15 with the IBL, 13 without, 16 beside refracting water.
+async function waitBoids(page, ibl, deadline) {
+  while (Date.now() < deadline && !(await page.evaluate((ibl) =>
+    (window.__sampledTextures?.boid ?? []).some((b) => b.ibl === ibl), ibl))) await page.waitForTimeout(200);
+}
+function checkBoids(tag, sampled, ibl, want, transmission) {
+  const got = (sampled?.boid ?? []).filter((b) => b.ibl === ibl);
+  if (!got.length) fail(`${tag}: no boid pipeline (ibl ${ibl}) was created: ${JSON.stringify(sampled?.boid)}`);
+  else if (!got.every((b) => b.sampled === want))
+    fail(`${tag}: boid pipeline uses ${got.map((b) => b.sampled)} sampled textures, expected ${want}`);
+  else if (!got.every((b) => b.transmission === transmission))
+    fail(`${tag}: boid pipeline transmission binding ${JSON.stringify(got)}, expected ${transmission}`);
+  else console.log(`${tag}: boid pipelines ${JSON.stringify(sampled.boid)}`);
+}
 
 async function withPage(args, fn) {
   const browser = await chromium.launch({ channel: "chromium", headless: true, args });
@@ -247,8 +265,10 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
   // attribute) under the default 16 clamp (D7).
   ["?scenario=kit&post=full", null, WEBGPU_DEFAULT_SAMPLED]]) {
   const ibl = !query.includes("ibl=off");
-  // The kit scenario turns the tilt-shift pass on by default (High tier, zoomed out); `tilt=off` must not create it.
+  // Tilt-shift is off by default (owner, 2026-10-14), so every case but the `tilt=off` one asks for it
+  // with `tilt=on` to keep its pipeline under the clamp; `tilt=off` must not create it.
   const tiltOn = !query.includes("tilt=off");
+  const nav = tiltOn ? `${query}&tilt=on` : query;
   const want = ibl ? KIT_SAMPLED.ibl : KIT_SAMPLED.noIbl;
   await withPage(gpuArgs, async (page, errors) => {
     let spawned = null;
@@ -264,7 +284,7 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
     if (clamp !== null) await page.addInitScript(clampSampledTextures, clamp);
     await page.addInitScript(countSampledTextures);
     if (aliases !== null) await page.addInitScript(markedModuleProbe, "masks_texture");
-    await page.goto(base + pinHigh(query));
+    await page.goto(base + pinHigh(nav));
     await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
     const deadline = Date.now() + 30_000;
     while (spawned === null && Date.now() < deadline) await page.waitForTimeout(100);
@@ -284,6 +304,7 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
       (window.__sampledTextures?.kit ?? []).some((k) => k.pass === "forward" && k.ibl)))) await page.waitForTimeout(200);
     // Tilt-shift builds its pipeline once the shader loads and a frame runs with the camera component.
     while (tiltOn && Date.now() < deadline + 60_000 && !(await page.evaluate(() => window.__sampledTextures?.tilt?.length))) await page.waitForTimeout(200);
+    await waitBoids(page, ibl, deadline + 60_000);
     const { compat, sampled, limit, marked, gpu } = await page.evaluate(() => ({
       compat: window.__wgslCompat, sampled: window.__sampledTextures, limit: window.__deviceSampledLimit,
       marked: window.__markedModules, gpu: window.hexWorld.state().gpu }));
@@ -305,6 +326,7 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
       fail(`${tag}: tilt-shift pipeline uses ${tilts.map((t) => t.sampled)} sampled textures, expected ${TILT_SAMPLED}`);
     else if (!tiltOn && tilts.length) fail(`${tag}: tilt=off still created a tilt-shift pipeline: ${JSON.stringify(tilts)}`);
     else console.log(`${tag}: tilt-shift ${tiltOn ? `pipeline sampled textures ${JSON.stringify(tilts)}` : "off, no pipeline"}`);
+    checkBoids(tag, sampled, ibl, want.forward, false);
     const iblSeen = JSON.stringify(Object.fromEntries(iblStatus));
     if (ibl && !(iblStatus.get("noon.specular.ktx2") === 200 && iblStatus.get("noon.diffuse.ktx2") === 200))
       fail(`${tag}: IBL cubemaps not both loaded with 200: ${iblSeen}`);
@@ -374,8 +396,8 @@ for (const [query, aliases, clamp] of [["?scenario=water&post=full", null, WEBGP
       if (!(sampled?.max <= clamp)) fail(`${tag}: a pipeline layout uses ${sampled?.max} sampled textures`);
     }
     if (aliases !== null) {
-      if (!compat?.active || compat.aliases !== aliases)
-        fail(`wgsl-compat ${query}: expected ${aliases} aliases, got ` + JSON.stringify(compat));
+      if (!compatOk(compat, aliases))
+        fail(`wgsl-compat ${query}: expected ${aliases} aliases per rewritten module, got ` + JSON.stringify(compat));
       if (compat?.unhandled) fail(`wgsl-compat ${query} left handle lets unrewritten: ` + compat.unhandled);
       if (!marked?.length || !marked.every((m) => m.after === 0))
         fail(`wgsl-compat ${query}: the water module kept handle aliases: ` + JSON.stringify(marked));
@@ -419,9 +441,11 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
       return (s.kit ?? []).some((k) => k.pass === "forward" && k.ibl) && (s.kit ?? []).some((k) => k.pass === "prepass") &&
         (s.water ?? []).some((k) => k.pass === "water" && k.ibl) && (s.water ?? []).some((k) => k.pass === "terrain" && k.ibl);
     }))) await page.waitForTimeout(200);
+    await waitBoids(page, true, deadline + 60_000);
     await page.waitForTimeout(1_500);
     const { sampled, limit, state } = await page.evaluate(() => ({
       sampled: window.__sampledTextures, limit: window.__deviceSampledLimit, state: window.hexWorld.state() }));
+    checkBoids(tag, sampled, true, KIT_SAMPLED_WITH_WATER.forward, true);
     console.log(`${tag}: ${spawned} meshes; sampled textures per stage max ${sampled?.max}, kit pipelines ` +
       `${JSON.stringify(sampled?.kit)}, water pipelines ${JSON.stringify(sampled?.water)}; state.gpu ${JSON.stringify(state.gpu)}`);
     if (state.scenario !== "WaterKit" || state.tiles !== 12) fail(`${tag}: state scenario ${state.scenario}, tiles ${state.tiles}`);
@@ -481,6 +505,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
         (s.kit ?? []).some((k) => k.pass === "forward" && k.ibl && k.transmission) && (s.kit ?? []).some((k) => k.pass === "prepass") &&
         (s.water ?? []).some((k) => k.pass === "water" && k.ibl);
     }))) await page.waitForTimeout(200);
+    await waitBoids(page, true, deadline + 30_000);
     await page.waitForTimeout(1_500);
     // The ghost's see-through meshes (GhostMaterial: one uniform, no texture) beside refracting water,
     // so their pipeline is created under the same clamp.
@@ -498,6 +523,10 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     console.log(`${tag}: tiles ${state.tiles}; sampled textures per stage max ${sampled?.max}, kit pipelines ` +
       `${JSON.stringify(sampled?.kit)}, water pipelines ${JSON.stringify(sampled?.water)}; state.gpu ${JSON.stringify(state.gpu)}`);
     if (state.scenario !== "Play" || state.tiles !== 5) fail(`${tag}: state scenario ${state.scenario}, tiles ${state.tiles}`);
+    // Birds over the start world and fish in the river and ocean tiles: the boid forward pipeline
+    // beside refracting water binds the transmission texture, at exactly 16.
+    checkBoids(tag, sampled, true, KIT_SAMPLED_WITH_WATER.forward, true);
+    if (state.boids?.pieces !== "ready") fail(`${tag}: boid pieces ${JSON.stringify(state.boids?.pieces)}, expected ready`);
     for (const pass of ["forward", "prepass"]) {
       const got = (sampled?.kit ?? []).filter((k) => k.pass === pass && (pass === "prepass" || k.ibl));
       if (!got.length) fail(`${tag}: no kit ${pass} pipeline was created`);

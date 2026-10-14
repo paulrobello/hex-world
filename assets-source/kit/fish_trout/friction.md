@@ -13,3 +13,9 @@ Shared with `bird_starling` (builder `scripts/blender/kit/_fauna.py`); see its l
    with the normal, ORM and masks maps duplicated into both halves. The builder asserts that no island
    plus its gutter spills past the half. No skill change yet: one piece uses it; promote it to
    `project.md` if a second variant piece appears. Lost about 0 minutes.
+3. **Painted gill edge read as a seam (owner, 2026-10-14).** `paint()` drew the gill-cover edge as a 16 %
+   dark albedo band plus a 0.35 mm height step around the full girth, and the central-difference normal
+   turned the step into an 11-degree ridge (normal G 0.596 on one texel row). On the textured render it
+   read as a joint behind the head. Both are removed; geometry and the GLB are unchanged. No skill change:
+   one piece; if a second numpy-painted piece hits it, add "no hard steps in a painted height field" to
+   `pitfalls.md`. Lost about 5 minutes.

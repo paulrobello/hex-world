@@ -82,6 +82,8 @@ Measured on the shipped build against the ACES frames (`docs/checkpoints/shade-d
 
 The water look-dev's river wall stays dark because its crop sits on the O4 profile's near-black foot. A ×20 `WALL_TINT` probe lifted it to 22.6/255, which shows that the factor reaches the shader. ACES stays selectable with `--tonemap aces --ev100 12.5`. The kit and water look-dev shots are re-taken on this look before their approvals.
 
+**Grades (owner, 2026-10-14 feedback: the Tony look feels washed out).** The tone mapper, exposure, Bevy `ColorGrading` and backdrop now come from one named preset, `hex_render::grade::Grade`, read by every kit, water and play camera: `tony` (the ruling above, still the default), `aces` (the 2026-10-13 look, with Bevy's default clear colour so its backdrop reads as before) and three in-between candidates, `rich-1` to `rich-3`. `--grade`, `?grade=`, the `set_grade` command and the Settings sheet switch them live. Settings and measurements: `docs/checkpoints/grades/`; comparison page: `docs/review/2026-10-14-grade-compare.html`. The default is the owner's pick.
+
 ### D5. IBL
 
 - Source: Poly Haven `kloofendal_48d_partly_cloudy_puresky`, 2k equirect HDR, CC0 (https://polyhaven.com/license), 5,451,493 B, SHA-256 `5244534e…d198`. Gitignored. `make fetch-hdri` downloads it from the URL in `lookdev.json` and verifies the hash.

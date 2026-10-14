@@ -1,0 +1,5 @@
+# river_mouth_l_center friction
+
+This piece is the mirror of `river_mouth_center`, built by the shared helper `scripts/blender/kit/_mouth_dress.py`. Every snag on the layout and the budget is logged in `assets-source/kit/river_mouth_center/friction.md`. They apply here unchanged, because both pieces use one placement list.
+
+1. **Mirroring is done natively, with no snag (0 min).** The placement list is generated once in the "r" frame from the seed `"river_mouth_center"`. Each anchor and each log axis is then reflected across the seaward axis (Blender -30°) with p' = 2(p·u)u - p, where u = (cos 30°, -sin 30°). Every item is built at its reflected anchor on the "l" bed. `mirrored()` asserts that `height("l", R(p)) == height("r", p)` for every anchor. The mesh is never negative-scaled, so winding, normals and tangents stay authored. The tri counts match the "r" piece exactly (836 / 380 / 108). The masks are evaluated on the "l" bed. Skill fold: none needed. The rule "never mirror a finished mesh" already applies.

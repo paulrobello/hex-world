@@ -1,0 +1,57 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_mouth_l_base.py",
+    "sha256": "b968a83da9753a3dd8b3c4954a904d089fb39fbcd8c14130052430f57ffd0c8e"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_beach.py",
+      "sha256": "aea34b8de566967b0be23fddc1b36f55a780e0d96d2f648e1786cf8d963817b7"
+    },
+    {
+      "path": "scripts/blender/kit/_mouth.py",
+      "sha256": "de95627fb197d8eca03f071fc32e9ac359f0d75604034168e7d3f0e29dadb2af"
+    },
+    {
+      "path": "scripts/blender/kit/_mouth_profile.py",
+      "sha256": "723495164008b6c2fd71969d872fecbf5ce5c63690a6145d717e1e4414ee6874"
+    },
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    }
+  ],
+  "lodTris": {
+    "river_mouth_l_base_lod0": 3592,
+    "river_mouth_l_base_lod1": 1488,
+    "river_mouth_l_base_lod2": 709
+  },
+  "nodes": [
+    "river_mouth_l_base",
+    "river_mouth_l_base_collider",
+    "river_mouth_l_base_lod0",
+    "river_mouth_l_base_lod1",
+    "river_mouth_l_base_lod2",
+    "socket-lane-4"
+  ],
+  "pieceId": "river_mouth_l_base",
+  "sockets": [
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 4,
+        "kind": "river",
+        "offset": 0.0,
+        "width": 8.0
+      },
+      "name": "socket-lane-4",
+      "position": [
+        -6.928203105926514,
+        0.0,
+        -12.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

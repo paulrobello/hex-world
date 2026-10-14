@@ -46,11 +46,14 @@ struct WaterVarying {
     // 1 on the cut faces of the volume at exposed tile edges (water.rs `skirt_mesh`), 0 on the surface.
     @location(5) skirt: f32,
     // Cut faces: terrain height under this point of the edge (the face is clipped below it).
+    // Surface: the river-mouth foam weight (water.rs `MEET_TAG`), 0 on every other tile.
     @location(6) ground: f32,
 }
 
 // water.rs `SKIRT_TAG`: a cut-face vertex carries SKIRT_TAG + terrain height in UV_0.y.
 const SKIRT_TAG: f32 = 10.0;
+// water.rs `MEET_TAG`: a surface vertex carries the mouth foam weight times MEET_TAG in UV_0.y.
+const MEET_TAG: f32 = 0.4;
 
 @vertex
 fn vertex(v: Vertex) -> WaterVarying {
@@ -65,7 +68,7 @@ fn vertex(v: Vertex) -> WaterVarying {
     // Surface vertices and skirt tops (at rest on the sea level) move with the waves, by the same
     // function at the same world XZ as the rim they share, so the cut face never parts from the surface.
     let skirt = u.uv.y > 0.5;
-    out_ground = u.uv.y - SKIRT_TAG;
+    out_ground = select(u.uv.y / MEET_TAG, u.uv.y - SKIRT_TAG, skirt);
     let moves = !skirt || rest.y > water.sea_level - 1e-4;
     let g = wc::gerstner(rest.xz, t, water.wave_count);
     var p = rest;
@@ -205,7 +208,9 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
     let lines = smoothstep(0.6, 0.95, sin(column * 7.0 - t * 2.1 + nb * 4.0)) * (1.0 - smoothstep(0.05, 1.2, column)) * (1.0 - river);
     let crest = smoothstep(0.45, 0.75, g.pinch * atten);
     let rapids = river * smoothstep(0.8, 1.3, speed) * 0.45;
-    let raw = max(contact, lines * 0.75) + crest + rapids;
+    // River mouth: a band where the outflow meets the surf, surging as the swash runs in.
+    let meet = select(in.ground, 0.0, skirt) * (0.5 + 0.5 * clamp(wc::swash(in.site.z, t), 0.0, 1.0));
+    let raw = max(contact, lines * 0.75) + crest + rapids + meet;
     let foam = select(clamp((raw - (1.0 - nb) * 0.85) * 2.4, 0.0, 1.0), 0.0, skirt);
 
     // Surface lighting from Bevy's PBR: IBL reflection and the sun's specular (glints) with its

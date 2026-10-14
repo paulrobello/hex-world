@@ -39,6 +39,17 @@ page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text()))
 
 const shot = (name) => page.screenshot({ path: `${out}/${name}.jpg`, type: "jpeg", quality: 88 });
 const play = () => page.evaluate(() => window.hexWorld.state().play);
+/** A screenshot cropped to the cells given as [q, r], with a margin of half a cell. */
+async function shotCells(name, ...cells) {
+  const rects = await Promise.all(cells.map(([q, r]) => page.evaluate(([q, r]) => window.hexWorld.cellRect(q, r), [q, r])));
+  const [x0, y0] = [Math.min(...rects.map((b) => b[0])), Math.min(...rects.map((b) => b[1]))];
+  const [x1, y1] = [Math.max(...rects.map((b) => b[2])), Math.max(...rects.map((b) => b[3]))];
+  const m = 0.5 * Math.max(...rects.map((b) => b[2] - b[0]));
+  const vp = page.viewportSize();
+  const x = Math.max(0, x0 - m), y = Math.max(0, y0 - m);
+  await page.screenshot({ path: `${out}/${name}.jpg`, type: "jpeg", quality: 92,
+    clip: { x, y, width: Math.min(vp.width, x1 + m) - x, height: Math.min(vp.height, y1 + m) - y } });
+}
 const text = (sel) => page.locator(sel).first().innerText().catch(() => "");
 async function until(fn, what, ms = 10_000) {
   const deadline = Date.now() + ms;
@@ -253,6 +264,24 @@ try {
   await page.mouse.up();
   await until(async () => (await play()).tiles.length === 3, "meadow placed at (2, 0)");
 
+  // Owner 2026-10-14: in place mode the placed tile under the pointer gets a faint rim (in-world.md,
+  // Hovered tile), and the state names it; the pointer on the HUD hovers no placed tile.
+  await until(async () => (await play()).rising.length === 0, "the meadow at (2, 0) settles", 20_000);
+  await pointAt(0, 0);
+  const over = await play();
+  check(over.tool === "place" && over.hovered_kind === "tile", `place mode: the pointer over (0, 0) reports a placed tile (${over.hovered_kind})`);
+  check(!over.ghost && !over.bulldoze, "no ghost and no bulldoze target over a placed tile");
+  await page.waitForTimeout(300);
+  await shotCells("hover-tile-placed", [0, 0], [0, 1]);
+  await pointAt(0, 1);
+  check((await play()).hovered_kind === "slot", "the empty slot at (0, 1) reports a slot");
+  await page.waitForTimeout(400);
+  await shotCells("hover-tile-slot", [0, 0], [0, 1]);
+  await pointAt(0, 0);
+  const title = await page.locator(".bar__world").boundingBox();
+  await page.mouse.move(title.x + title.width / 2, title.y + title.height / 2, { steps: 12 });
+  await until(async () => (await play()).hovered_kind !== "tile", "the pointer on the HUD bar hovers no placed tile");
+
   // S7 bulldoze: B, a refused removal that would split the world, then a removable leaf.
   await key("b");
   await until(async () => (await play()).tool === "bulldoze", "B turns on bulldoze");
@@ -298,12 +327,13 @@ try {
   await shot("s2-3-hud-hidden");
   await key("h");
 
-  // S3.4 nothing fits: a river straight west of the start meadow and a beach turned so a beach
-  // edge faces (-1, 1) leave that slot needing a river and a beach at once, which no tile carries.
+  // S3.4 nothing fits: a road straight west of the start meadow and a beach turned so a beach
+  // edge faces (-1, 1) leave that slot needing a road and a beach at once, which no tile carries
+  // (a river and a beach fit the river mouth).
   // Set up through the bridge (auto-rotate picks those rotations), then driven by mouse.
   await page.evaluate(() => {
     const h = window.hexWorld;
-    h.selectTile("river_straight"); h.placeTile(-1, 0);
+    h.selectTile("road_straight"); h.placeTile(-1, 0);
     h.selectTile("beach"); h.placeTile(-2, 1);
     h.selectTile("meadow");
   });
@@ -529,7 +559,7 @@ try {
   } else console.log(`ok: Ultra is not offered (Auto uses ${autoUses})`);
 
   // Keyboard: Home on the radio list returns to Auto, which hands the tier back to detection.
-  await page.locator(".tier[aria-checked=true]").focus();
+  await page.locator(".tier[data-tier][aria-checked=true]").focus();
   await key("Home");
   await until(async () => { const t = (await st()).tier; return t.source === tier0.source && t.tier === tier0.tier; }, "Home picks Auto: the detected tier is back");
   check(await page.evaluate(() => document.activeElement?.dataset.tier === "auto"), "focus follows to the Auto row");
@@ -587,6 +617,124 @@ try {
   const sheet = await page.locator(".sheet--tiles").boundingBox();
   check(bar.x + bar.width < sheet.x, `bar (right ${Math.round(bar.x + bar.width)}) clears the sheet (left ${Math.round(sheet.x)}) at 1280 px`);
   await shot("s12-narrow-1280x720");
+
+  // Colour grade (Settings → Graphics): a row per engine preset; a pick switches the look live and is
+  // kept per viewer in localStorage (hexWorld.grade), outside the world save, so it holds over a reload.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const grade = async () => (await st()).grade;
+  check((await grade())?.name === "tony", `the grade starts at the default (${(await grade())?.name})`);
+  await page.locator(".tool[data-action=settings]").click();
+  await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens for the colour grade");
+  await page.locator("#settings-tab-graphics").click();
+  await until(async () => page.locator("#settings-tab-graphics[aria-selected=true]").count(), "the Graphics tab is back");
+  const presets = (await grade()).presets.map((p) => p.name);
+  const rowIds = await page.locator(".tiers[aria-label='Colour grade'] .tier").evaluateAll((els) => els.map((e) => e.dataset.grade));
+  check(JSON.stringify(rowIds) === JSON.stringify(presets), `one Colour grade row per engine preset (${rowIds.join(", ")})`);
+  check((await text(".tier[data-grade=rich-2] small")) === (await grade()).presets.find((p) => p.name === "rich-2").detail, "the row shows the engine's description");
+  check(await page.locator(".tier[data-grade=tony][aria-checked=true]").count() === 1, "the Tony row is checked");
+  await page.locator(".tier[data-grade=rich-2]").scrollIntoViewIfNeeded();
+  await page.locator(".tier[data-grade=rich-2]").click();
+  await until(async () => (await grade()).name === "rich-2", "picking Rich 2 sets state().grade");
+  check((await grade()).name === "rich-2", "a click on Rich 2 sets state().grade to rich-2");
+  check(await page.locator(".tier[data-grade=rich-2][aria-checked=true]").count() === 1, "the Rich 2 row is checked");
+  check(await page.evaluate(() => localStorage.getItem("hexWorld.grade")) === "rich-2", "the pick is stored for this viewer");
+  await page.mouse.move(700, 450);
+  await page.waitForTimeout(300);
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.locator(".tiers[aria-label='Colour grade']").scrollIntoViewIfNeeded();
+  await shot("s9-6-settings-colour-grade");
+  // Keyboard: ArrowUp from Rich 2 moves to Rich 1 and picks it.
+  await page.locator(".tier[data-grade=rich-2]").focus();
+  await key("ArrowUp");
+  await until(async () => (await grade()).name === "rich-1", "ArrowUp picks Rich 1");
+  check(await page.evaluate(() => document.activeElement?.dataset.grade === "rich-1"), "focus follows to the Rich 1 row");
+  await key("ArrowDown");
+  await until(async () => (await grade()).name === "rich-2", "ArrowDown picks Rich 2 again");
+
+  // Reload: the stored grade is sent once the overlay starts, and the row shows it.
+  await page.reload({ waitUntil: "commit" });
+  await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
+  await until(async () => (await play())?.tiles != null, "play is back after the reload", 30_000);
+  await until(async () => (await grade())?.name === "rich-2", "the stored grade holds over a reload", 15_000);
+  check((await grade())?.name === "rich-2", `state().grade reports ${(await grade())?.name} after the reload`);
+  await page.locator(".tool[data-action=settings]").click();
+  await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens after the reload");
+  await until(async () => page.locator(".tier[data-grade=rich-2][aria-checked=true]").count(), "the Rich 2 row is checked after the reload");
+  check(await page.locator(".tier[data-grade=rich-2][aria-checked=true]").count() === 1, "the Rich 2 row is checked after the reload");
+
+  // ?grade= in the address wins over the stored choice and leaves it stored.
+  await page.goto(base + "?scenario=play&tilt=off&fps=off&grade=aces", { waitUntil: "commit" });
+  await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
+  await until(async () => (await play())?.tiles != null, "play is back with ?grade=aces", 30_000);
+  await page.waitForTimeout(1000);
+  check((await grade()).name === "aces", `?grade=aces wins over the stored grade (${(await grade()).name})`);
+  check(await page.evaluate(() => localStorage.getItem("hexWorld.grade")) === "rich-2", "and the stored choice stays rich-2");
+
+  // The grade reaches the WebGPU frame: engine captures (canvas only, no HUD) at one camera under
+  // tony, aces, rich-2 and tony again. Agents and water move between frames, so tony against tony is
+  // the noise floor. aces changes the tone mapper; rich-2 keeps tony's and differs only by its
+  // ColorGrading (sections and post-saturation), so its difference proves the grading runs on WebGPU.
+  const capture = async (g, name) => {
+    await page.evaluate((g) => window.hexWorld.cmd([{ cmd: "set_grade", grade: g }, { cmd: "wait", frames: 20 }]), g);
+    await until(async () => (await grade()).name === g, `the frame grade is ${g}`);
+    return page.evaluate((n) => window.hexWorld.screenshot(n, 60_000), name);
+  };
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "camera", pos: [18, 22, 26], look_at: [0, 0, 0] }));
+  const frames = [
+    await capture("tony", "grade-tony-a"),
+    await capture("aces", "grade-aces"),
+    await capture("rich-2", "grade-rich-2"),
+    await capture("tony", "grade-tony-b"),
+  ];
+  const stats = await page.evaluate(async (urls) => {
+    const W = 480;
+    const pixels = await Promise.all(urls.map(async (u) => {
+      // The page CSP refuses fetch() of data: URLs (connect-src 'self') but lets images load them.
+      const bmp = new Image();
+      bmp.src = u;
+      await bmp.decode();
+      const c = new OffscreenCanvas(W, Math.round((W * bmp.height) / bmp.width));
+      const g = c.getContext("2d");
+      g.drawImage(bmp, 0, 0, c.width, c.height);
+      return g.getImageData(0, 0, c.width, c.height).data;
+    }));
+    const sat = (d) => {
+      let s = 0, l = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]);
+        s += mx ? (mx - mn) / mx : 0;
+        l += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+      }
+      return { sat: s / (d.length / 4), luma: l / (d.length / 4) };
+    };
+    const mad = (a, b) => {
+      let t = 0;
+      for (let i = 0; i < a.length; i += 4) t += Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]);
+      return t / ((a.length / 4) * 3);
+    };
+    return {
+      tony: sat(pixels[0]),
+      aces: sat(pixels[1]),
+      rich2: sat(pixels[2]),
+      tony2: sat(pixels[3]),
+      gradeDiff: mad(pixels[0], pixels[1]),
+      gradingDiff: mad(pixels[0], pixels[2]),
+      noise: mad(pixels[0], pixels[3]),
+    };
+  }, frames);
+  const f = (v) => v.toFixed(3);
+  console.log(`grade frames: tony sat ${f(stats.tony.sat)} luma ${f(stats.tony.luma)} | aces sat ${f(stats.aces.sat)} luma ${f(stats.aces.luma)} | tony again sat ${f(stats.tony2.sat)} luma ${f(stats.tony2.luma)}`);
+  console.log(`grade frames: mean |tony - aces| ${f(stats.gradeDiff)} / 255, mean |tony - tony again| ${f(stats.noise)} / 255`);
+  check(stats.gradeDiff > 2 && stats.gradeDiff > 3 * stats.noise, `the grade changes the WebGPU frame (${f(stats.gradeDiff)} against noise ${f(stats.noise)})`);
+  console.log(`grade frames: rich-2 sat ${f(stats.rich2.sat)} luma ${f(stats.rich2.luma)}, mean |tony - rich-2| ${f(stats.gradingDiff)} / 255`);
+  check(
+    stats.gradingDiff > 1 && stats.gradingDiff > 3 * stats.noise,
+    `ColorGrading changes the WebGPU frame (rich-2 ${f(stats.gradingDiff)} against noise ${f(stats.noise)})`,
+  );
+  check(
+    stats.rich2.sat > Math.max(stats.tony.sat, stats.tony2.sat) + 0.01,
+    `rich-2 raises saturation on WebGPU (${f(stats.rich2.sat)} against tony ${f(stats.tony.sat)})`,
+  );
 } catch (e) {
   fail(String(e?.stack ?? e));
 } finally {

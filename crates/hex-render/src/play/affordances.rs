@@ -1,6 +1,6 @@
 //! The Legend in-world affordances (`design/ui/legend/in-world.md`): the free-slot ring, the
-//! hovered slot, the ghost with its edge glow and socket key marks, the bulldoze outlines and the
-//! commit flash. `hex-app` writes [`PlayView`]; this module draws it.
+//! hovered slot, the faint rim on a hovered placed tile, the ghost with its edge glow and socket key
+//! marks, the bulldoze outlines and the commit flash. `hex-app` writes [`PlayView`]; this module draws it.
 //!
 //! Screen-space widths: every line is a quad per segment drawn with [`AffordanceMaterial`], whose
 //! vertex shader (`assets/shaders/affordance.wesl`) projects both endpoints and pushes the quad's
@@ -409,6 +409,8 @@ pub fn ease(u: f32) -> f32 {
 enum Key {
     Ring,
     Hover(Axial),
+    /// A placed tile under the pointer in place mode.
+    TileHover(Axial),
     Ghost(Axial),
     Bulldoze(Axial),
     Flash(Axial, u32),
@@ -498,6 +500,17 @@ fn hover_parts(cell: Axial) -> Vec<PartSpec> {
             anim: Anim::Plain,
         },
     ]
+}
+
+/// The faint rim on a placed tile under the pointer: ink, solid, thinner and far fainter than the
+/// hovered slot's outline, at the cap rim like the bulldoze target.
+fn tile_hover_parts(cell: Axial) -> Vec<PartSpec> {
+    vec![PartSpec {
+        mesh: line_mesh(&hex_segs(centre(cell, CAP_Y), RIM_R)),
+        params: AffordanceParams::line(INK, 0.35, 1.5),
+        layer: 1.0,
+        anim: Anim::Plain,
+    }]
 }
 
 fn ghost_parts(view: &PlayView, catalog: &TileCatalog, meshes: bool) -> Vec<PartSpec> {
@@ -739,6 +752,14 @@ fn wanted(
     if let Some(cell) = view.pointer_slot {
         out.push((Key::Hover(cell), 0, true));
     }
+    // Bulldoze mode outlines the hovered tile as its target instead; a tile still waiting for its
+    // pack shows the waiting outline.
+    if let Some(cell) = view
+        .pointer_tile
+        .filter(|c| !view.bulldoze_mode && !waiting.contains(c))
+    {
+        out.push((Key::TileHover(cell), 0, true));
+    }
     if let Some(g) = &view.ghost {
         out.push((Key::Hover(g.cell), 0, true));
         let edges: Vec<u8> = g.edges.iter().map(|s| status_hash(*s)).collect();
@@ -770,6 +791,7 @@ fn parts_for(key: Key, view: &PlayView, catalog: &TileCatalog, meshes: bool) -> 
     match key {
         Key::Ring => ring_parts(&view.frontier),
         Key::Hover(c) => hover_parts(c),
+        Key::TileHover(c) => tile_hover_parts(c),
         Key::Ghost(_) => ghost_parts(view, catalog, meshes),
         Key::Bulldoze(_) => bulldoze_parts(view),
         Key::Flash(c, _) => flash_parts(c),
@@ -781,7 +803,7 @@ fn parts_for(key: Key, view: &PlayView, catalog: &TileCatalog, meshes: bool) -> 
 fn timing(key: Key) -> (f32, f32, f32) {
     match key {
         Key::Ring => (0.16, 0.16, 0.0),
-        Key::Hover(_) => (0.12, 0.12, 0.0),
+        Key::Hover(_) | Key::TileHover(_) => (0.12, 0.12, 0.0),
         Key::Ghost(_) => (0.12, 0.10, 0.15),
         Key::Bulldoze(_) => (0.16, 0.15, 0.0),
         Key::Flash(..) => (0.0, 0.08, 0.0),
@@ -1046,6 +1068,7 @@ pub fn animate(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::play::{PlayGhost, PlayTile};
 
     #[test]
     fn line_mesh_has_a_quad_per_segment() {
@@ -1107,6 +1130,76 @@ mod tests {
         f.t = 0.27;
         assert!((f.value() - 1.0).abs() < 1e-6);
         assert!(f.done());
+    }
+
+    fn shown(view: &PlayView, waiting: &[Axial]) -> Vec<Key> {
+        let catalog = TileCatalog::builtin().unwrap();
+        wanted(view, &catalog, waiting, true)
+            .into_iter()
+            .filter(|w| w.2)
+            .map(|w| w.0)
+            .collect()
+    }
+
+    #[test]
+    fn a_placed_tile_under_the_pointer_gets_the_faint_rim_in_place_mode_only() {
+        let (origin, east, slot) = (Axial::ORIGIN, Axial::new(1, 0), Axial::new(0, 1));
+        let tile = |cell| PlayTile {
+            cell,
+            tile: "meadow".into(),
+            rotation: 0,
+        };
+        // Place mode, as `hex-app` builds it with the pointer over the placed tile at (1, 0).
+        let place = PlayView {
+            tiles: vec![tile(origin), tile(east)],
+            frontier: vec![slot],
+            pointer_tile: Some(east),
+            ..default()
+        };
+        let keys = shown(&place, &[]);
+        assert!(keys.contains(&Key::TileHover(east)), "{keys:?}");
+        assert!(!keys.contains(&Key::Hover(east)), "not the slot outline");
+        let p = &tile_hover_parts(east)[0].params;
+        let slot_line = &hover_parts(slot)[1].params;
+        assert!(p.color.w < slot_line.color.w * 0.5 && p.shape.x < slot_line.shape.x);
+        // A pinned slot elsewhere keeps its ghost beside the rim.
+        let pinned = PlayView {
+            ghost: Some(PlayGhost {
+                cell: slot,
+                tile: "meadow".into(),
+                rotation: 0,
+                edges: [EdgeStatus::Neutral; 6],
+                valid: true,
+                pinned: true,
+            }),
+            ..place.clone()
+        };
+        let keys = shown(&pinned, &[]);
+        assert!(keys.contains(&Key::TileHover(east)) && keys.contains(&Key::Ghost(slot)));
+        // Bulldoze mode: only the bulldoze target outlines the tile.
+        let bulldoze = PlayView {
+            frontier: vec![],
+            bulldoze: Some((east, true)),
+            bulldoze_mode: true,
+            ..place.clone()
+        };
+        let keys = shown(&bulldoze, &[]);
+        assert!(!keys.contains(&Key::TileHover(east)), "{keys:?}");
+        assert!(keys.contains(&Key::Bulldoze(east)));
+        // Photo mode: `hex-app` clears the frontier, the ghost and the pointer tile.
+        let photo = PlayView {
+            frontier: vec![],
+            pointer_tile: None,
+            ..place.clone()
+        };
+        assert!(
+            !shown(&photo, &[])
+                .iter()
+                .any(|k| matches!(k, Key::TileHover(_)))
+        );
+        // A tile waiting for its pack keeps the waiting outline alone.
+        let keys = shown(&place, &[east]);
+        assert!(!keys.contains(&Key::TileHover(east)) && keys.contains(&Key::Waiting(east)));
     }
 
     #[test]

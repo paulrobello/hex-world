@@ -557,7 +557,6 @@ pub fn setup(
     view: Res<ActiveView>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    boids: Option<Res<crate::boids::BoidAssets>>,
     config: Option<Res<GateConfig>>,
     server: Res<AssetServer>,
     (mut images, mut water_mats, mut terrain_mats): (
@@ -578,10 +577,6 @@ pub fn setup(
         });
     } else {
         commands.remove_resource::<crate::water::WaterClock>();
-    }
-    if let Some(boids) = boids {
-        let flock = crate::boids::spawn_flock(&mut commands, &boids);
-        commands.entity(flock).insert(SceneEntity);
     }
     let camera = match scenario.0 {
         Scenario::Single => {
@@ -662,6 +657,11 @@ pub fn setup(
     let tilt = crate::tilt_shift::settings_for(&config, kit, tier);
     commands.insert_resource(tilt);
     commands.insert_resource(crate::tilt_shift::TiltTierDefault(tilt));
+    commands.insert_resource(ClearColor(if kit {
+        config.grade.backdrop()
+    } else {
+        crate::lookdev::BACKDROP
+    }));
     let mut cam = commands.spawn((Camera3d::default(), camera, Msaa::Off, SceneEntity));
     if water {
         crate::water::insert_camera(&mut cam, tier);
@@ -677,8 +677,7 @@ pub fn setup(
         }
     }
     if kit {
-        cam.insert(crate::lookdev::tonemapping(config.tonemap));
-        cam.insert(crate::lookdev::exposure(config.ev100));
+        cam.insert(crate::grade::camera_bundle(&config));
         if config.ibl {
             cam.insert(crate::lookdev::environment(&server));
         }

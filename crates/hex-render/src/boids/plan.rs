@@ -180,21 +180,29 @@ fn dome_point(c: [f32; 3], r: f32, azimuth: f32, elevation: f32) -> Vec3 {
 
 /// The oak's perches: (clump, elevation in degrees, azimuth offset in radians from the clump's
 /// outward direction). Chosen against the GLB's canopy shell (`oak_perches_sit_on_the_canopy`):
-/// each lies on a dome no higher dome covers. Twelve, the forest's bird `max`.
-const OAK_PERCHES: [(usize, f32, f32); 12] = [
-    (0, 48.0, 0.0),
-    (1, 45.0, 0.0),
-    (2, 45.0, -0.6),
-    (3, 45.0, -0.6),
-    (4, 45.0, -0.3),
-    (5, 65.0, 0.0),
-    (6, 28.0, 0.0),
-    (7, 38.0, 0.6),
-    (8, 45.0, 0.0),
-    (9, 65.0, 1.2),
-    (9, 65.0, -0.6),
-    (10, 90.0, 0.0),
+/// each lies on a dome no higher dome covers, at its top or on the outer rim of its top, never
+/// mid-slope (owner, 2026-10-14: at [`PERCH_MIN_ELEVATION`] or above the dome tilts at most about
+/// 20 degrees, so a level bird sits on it). Only the domes of clumps 2, 3, 5, 9 and 10 have open
+/// tops; the others' tops lie under a higher dome. Twelve, the forest's bird `max`, at least
+/// about 0.6 m apart. The last field lifts the dome point (the canopy shell) to the top of the
+/// foliage there, leaf cards included, measured against the GLB by the same test.
+const OAK_PERCHES: [(usize, f32, f32, f32); 12] = [
+    (10, 80.0, 0.0, 0.04),
+    (10, 72.0, 1.2, 0.04),
+    (10, 72.0, -1.2, 0.04),
+    (9, 80.0, 0.0, 0.10),
+    (9, 72.0, 1.2, 0.20),
+    (9, 72.0, -1.2, 0.06),
+    (5, 72.0, -0.6, 0.0),
+    (5, 72.0, 0.3, 0.04),
+    (2, 68.0, -0.3, 0.07),
+    (2, 68.0, 0.9, 0.09),
+    (3, 68.0, -0.3, 0.0),
+    (3, 68.0, 0.9, 0.07),
 ];
+/// The lowest perch elevation on an oak dome (degrees): the dome's normal tilts about 20 degrees
+/// from vertical there.
+pub const PERCH_MIN_ELEVATION: f32 = 68.0;
 
 /// Perch points on a tree piece's canopy, piece-local in the runtime frame (Y up, trunk base at
 /// the origin). Empty for a piece birds do not roost on.
@@ -202,9 +210,9 @@ pub fn canopy_perches(piece: &str) -> Vec<Vec3> {
     match piece {
         "tree_hero_oak" => OAK_PERCHES
             .iter()
-            .map(|&(k, el, daz)| {
+            .map(|&(k, el, daz, lift)| {
                 let (c, r, _) = OAK_CLUMPS[k];
-                dome_point(c, r, c[1].atan2(c[0]) + daz, el.to_radians())
+                dome_point(c, r, c[1].atan2(c[0]) + daz, el.to_radians()) + Vec3::Y * lift
             })
             .collect(),
         "tree_forest" => {
@@ -229,11 +237,13 @@ pub struct TreeInstance {
 }
 
 impl TreeInstance {
-    /// Its canopy perches, tile-local.
-    fn perches(&self) -> impl Iterator<Item = Vec3> + '_ {
-        canopy_perches(&self.piece)
-            .into_iter()
-            .map(|p| self.at + self.yaw * (p * self.scale))
+    /// Its canopy perches, tile-local, each with the level direction a bird sitting there faces:
+    /// out from the trunk (the tree's +x for a perch on its axis, a spire top).
+    fn perches(&self) -> impl Iterator<Item = (Vec3, Vec3)> + '_ {
+        canopy_perches(&self.piece).into_iter().map(|p| {
+            let out = Vec3::new(p.x, 0.0, p.z).try_normalize().unwrap_or(Vec3::X);
+            (self.at + self.yaw * (p * self.scale), self.yaw * out)
+        })
     }
 }
 
@@ -258,6 +268,8 @@ pub struct Roost {
     pub cell: Axial,
     pub slot: u8,
     pub pos: Vec3,
+    /// The level direction a perched bird faces: out from its tree's trunk.
+    pub face: Vec3,
 }
 
 /// Tree pieces with canopy perches: what [`BoidPlan::set_world`] watches arrive in the kit.
@@ -301,18 +313,18 @@ pub fn roosts_with(
         let [x, z] = t.cell.to_world(HEX_RADIUS);
         let (centre, rot) = (Vec3::new(x, 0.0, z), piece_rotation(t.rotation));
         let max = max.min(usize::from(u8::MAX));
-        let hero: Vec<Vec3> = tree_instances(def)
+        let hero: Vec<(Vec3, Vec3)> = tree_instances(def)
             .iter()
             .filter(|t| drawn(&t.piece))
-            .flat_map(TreeInstance::perches)
+            .flat_map(|t| t.perches().collect::<Vec<_>>())
             .collect();
         // Perch k of every scattered tree before perch k + 1 of any.
-        let trees: Vec<Vec<Vec3>> = scatter
+        let trees: Vec<Vec<(Vec3, Vec3)>> = scatter
             .get(&t.cell)
             .map(|v| v.iter().map(|tree| tree.perches().collect()).collect())
             .unwrap_or_default();
         let deepest = trees.iter().map(Vec::len).max().unwrap_or(0);
-        let spread: Vec<Vec3> = (0..deepest)
+        let spread: Vec<(Vec3, Vec3)> = (0..deepest)
             .flat_map(|k| trees.iter().filter_map(move |p| p.get(k).copied()))
             .collect();
         let hero_share = if spread.is_empty() {
@@ -326,11 +338,12 @@ pub fn roosts_with(
             .into_iter()
             .take(take_hero)
             .chain(spread.into_iter().take(take_spread));
-        for (slot, local) in perches.enumerate() {
+        for (slot, (local, face)) in perches.enumerate() {
             out.push(Roost {
                 cell: t.cell,
                 slot: slot as u8,
                 pos: centre + rot * local,
+                face: rot * face,
             });
         }
     }
@@ -1453,14 +1466,64 @@ mod tests {
             .find(|m| m.name() == Some("tree_hero_oak_lod0"))
             .unwrap();
         let mut canopy: Vec<Vec3> = vec![];
+        // Triangles of the canopy shell and the leaf cards.
+        let mut tris: Vec<[Vec3; 3]> = vec![];
         for prim in mesh.primitives() {
-            if prim.material().name() != Some("tree_hero_oak_canopy") {
-                continue;
-            }
+            let shell = match prim.material().name() {
+                Some("tree_hero_oak_canopy") => true,
+                Some("tree_hero_oak_leaves") => false,
+                _ => continue,
+            };
             let rd = prim.reader(|b| Some(&buffers[b.index()]));
-            canopy.extend(rd.read_positions().unwrap().map(Vec3::from));
+            let pos: Vec<Vec3> = rd.read_positions().unwrap().map(Vec3::from).collect();
+            let idx: Vec<u32> = rd.read_indices().unwrap().into_u32().collect();
+            tris.extend(
+                idx.as_chunks::<3>()
+                    .0
+                    .iter()
+                    .map(|t| [pos[t[0] as usize], pos[t[1] as usize], pos[t[2] as usize]]),
+            );
+            if shell {
+                canopy.extend(pos);
+            }
         }
         assert!(canopy.len() > 100, "canopy primitive found");
+        assert!(
+            OAK_PERCHES.iter().all(|p| p.1 >= PERCH_MIN_ELEVATION),
+            "a perch mid-slope"
+        );
+        // The highest foliage surface over XZ point `q`: a vertical line against every triangle.
+        let surface = |q: Vec2| -> f32 {
+            let mut top = f32::MIN;
+            for [a, b, c] in &tris {
+                let (a2, b2, c2) = (a.xz(), b.xz(), c.xz());
+                let d = (b2 - a2).perp_dot(c2 - a2);
+                if d.abs() < 1e-9 {
+                    continue;
+                }
+                let u = (q - a2).perp_dot(c2 - a2) / d;
+                let v = (b2 - a2).perp_dot(q - a2) / d;
+                if u >= 0.0 && v >= 0.0 && u + v <= 1.0 {
+                    top = top.max(a.y + u * (b.y - a.y) + v * (c.y - a.y));
+                }
+            }
+            top
+        };
+        // Owner feedback (2026-10-14): a perched bird sits on the foliage, not in it. Each perch
+        // is at the highest canopy-or-leaf surface under the folded bird (0.35 m around it: the
+        // body is 0.79 m long at display scale), so the pivot-to-feet lift puts it on the leaves.
+        let mut off = vec![];
+        for p in canopy_perches("tree_hero_oak") {
+            let top = (0..8)
+                .map(|k| Vec2::from_angle(k as f32 * std::f32::consts::FRAC_PI_4) * 0.35)
+                .chain([Vec2::ZERO])
+                .map(|o| surface(p.xz() + o))
+                .fold(f32::MIN, f32::max);
+            if p.y < top - 0.02 || p.y > top + 0.08 {
+                off.push((p, p.y - top));
+            }
+        }
+        assert!(off.is_empty(), "perches off the foliage top: {off:?}");
         for p in canopy_perches("tree_hero_oak") {
             let near = canopy
                 .iter()

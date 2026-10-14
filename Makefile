@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world shots-ghost
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth
 
 fmt:
 	cargo fmt --all
@@ -485,6 +485,21 @@ shots-coast:
 	cp target/shots/coast-*.json $(COAST_DOCS)/
 	@echo "wrote $(COAST_DOCS)/"
 
+# River mouth and spring (owner 2026-10-14, water contract §3a/§3b): runs
+# docs/checkpoints/river-mouth/river-mouth.json (a spring-to-sea chain through each mouth
+# handedness, the fan and foam, the spring pool, River and Beach edge seams, fish at the mouth) at
+# 1600x1000 with tilt-shift off and fixed clocks, then copies JPEG stills and the state dump.
+RIVER_MOUTH_SHOTS = river-mouth-01-chain-right river-mouth-02-chain-mirrored river-mouth-03-fan-right river-mouth-04-fan-foam-topdown river-mouth-05-fan-mirrored river-mouth-06-spring-pool river-mouth-07-seam-river-edge river-mouth-08-seam-river-edge-bend river-mouth-09-seam-beach-edge5 river-mouth-10-seam-beach-edge2 river-mouth-11-fish-at-mouth
+RIVER_MOUTH_DOCS = docs/checkpoints/river-mouth
+shots-river-mouth:
+	mkdir -p target/shots $(RIVER_MOUTH_DOCS)
+	rm -f target/shots/river-mouth-*.png target/shots/river-mouth-*.json
+	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(RIVER_MOUTH_DOCS)/river-mouth.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	@for n in $(RIVER_MOUTH_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(RIVER_MOUTH_DOCS)/$$n.jpg || exit 1; done
+	cp target/shots/river-mouth-state.json $(RIVER_MOUTH_DOCS)/
+	@echo "wrote $(RIVER_MOUTH_DOCS)/"
+
 # Kit beach wet band (water contract §3): the coast island of the beach close-ups, four waterline
 # close-ups as JPEG, and a 5 s MP4 of the straight beach (150 frames at the fixed 1/30 s water step).
 WET_BAND_SHOTS = wet-band-01-straight wet-band-02-bay wet-band-03-seam-straight-headland wet-band-04-headland
@@ -501,11 +516,12 @@ shots-wet-band:
 
 # Boids checkpoint (PRD §7.2, crates/hex-render/src/boids.rs): runs docs/checkpoints/boids/boids.json
 # at 1600x1000 with tilt-shift off and fixed clocks (a river chain, a coast closing on ten ocean tiles,
-# a meadow and two oak tiles; the flock overhead, birds roosting on an oak, fish through the ocean
-# surface and in the river channel, then an oak tile bulldozed, undone and redone), copies JPEG stills
-# and the state dumps next to it, and asserts the dumps (check.mjs: split, fish per region and river
-# group sizes, roosts, roosting).
-BOIDS_SHOTS = boids-01-flock boids-02-roost boids-03-fish-ocean boids-04-fish-river
+# a meadow and two oak tiles; the flock overhead, birds roosting on an oak with a 16-degree close-up
+# of the folded starlings on the canopy, fish through the ocean surface and in the river channel with a
+# close-up, then an oak tile bulldozed, undone (the birds flapping back in to it) and redone), copies
+# JPEG stills and the state dumps next to it, and asserts the dumps (check.mjs: split, fish per region
+# and river group sizes, each region's palette, the boid pieces loaded, roosts, roosting).
+BOIDS_SHOTS = boids-01-flock boids-02-roost boids-02-roost-close boids-03-fish-ocean boids-04-fish-river boids-04-fish-river-close boids-07-settle boids-07-flap-close
 BOIDS_DOCS = docs/checkpoints/boids
 shots-boids:
 	mkdir -p target/shots $(BOIDS_DOCS)
@@ -565,3 +581,16 @@ shots-rise:
 	cargo run -p hex-app --release -- --scenario play --script target/shots/rise-script.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
 	bash $(RISE_DOCS)/encode.sh
 	rm -f target/shots/rise-*-f*.png
+
+# Bulldoze dust cloud (owner request 2026-10-14, design/ui/legend/in-world.md Bulldoze): runs the
+# script docs/checkpoints/bulldoze-dust/bulldoze-dust.mjs writes at 1280x800 with tilt-shift off and
+# both clocks fixed (every frame advances 1/60 s), then encode.sh writes the bulldoze stills, a stage
+# sheet, the bulldoze and undo clips and the state dumps next to it.
+DUST_DOCS = docs/checkpoints/bulldoze-dust
+shots-bulldoze-dust:
+	mkdir -p target/shots $(DUST_DOCS)
+	rm -f target/shots/dust-*.png target/shots/dust-*.json
+	node $(DUST_DOCS)/bulldoze-dust.mjs target/shots/dust-script.json
+	cargo run -p hex-app --release -- --scenario play --script target/shots/dust-script.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	bash $(DUST_DOCS)/encode.sh
+	rm -f target/shots/dust-*-f*.png

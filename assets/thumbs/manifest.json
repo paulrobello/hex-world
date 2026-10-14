@@ -108,6 +108,14 @@
       "river_road_bridge-r1.webp",
       "river_road_bridge-r2.webp"
     ],
+    "river_spring": [
+      "river_spring-r0.webp",
+      "river_spring-r1.webp",
+      "river_spring-r2.webp",
+      "river_spring-r3.webp",
+      "river_spring-r4.webp",
+      "river_spring-r5.webp"
+    ],
     "beach": [
       "beach-r0.webp",
       "beach-r1.webp",
@@ -131,6 +139,22 @@
       "beach_inner-r3.webp",
       "beach_inner-r4.webp",
       "beach_inner-r5.webp"
+    ],
+    "river_mouth": [
+      "river_mouth-r0.webp",
+      "river_mouth-r1.webp",
+      "river_mouth-r2.webp",
+      "river_mouth-r3.webp",
+      "river_mouth-r4.webp",
+      "river_mouth-r5.webp"
+    ],
+    "river_mouth_l": [
+      "river_mouth_l-r0.webp",
+      "river_mouth_l-r1.webp",
+      "river_mouth_l-r2.webp",
+      "river_mouth_l-r3.webp",
+      "river_mouth_l-r4.webp",
+      "river_mouth_l-r5.webp"
     ],
     "ocean": [
       "ocean-r0.webp",

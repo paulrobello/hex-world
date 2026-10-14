@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-14",
+    "notes": "Pending owner review; not an approval. New piece: the bed of the mirrored river mouth (River on edge 4), authored mirrored. Review the six-view renders in assets-source/kit/river_mouth_l_base/renders/ and river-mouth-02, -05 and -07. In-engine shots in docs/checkpoints/river-mouth/. The controller records the owner's decision."
+  }
+]

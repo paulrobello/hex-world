@@ -1,0 +1,42 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    }
+  },
+  "device": "none",
+  "dressing": {
+    "dryItemsEdge2Shoulder": 3,
+    "dryItemsEdge5Shoulder": 11,
+    "hand": "r",
+    "logs": 3,
+    "pebbles": 11,
+    "pebblesUnderWater": 3,
+    "reedClumps": 3,
+    "reedsEdge2Bank": 0,
+    "reedsEdge5Bank": 3,
+    "stones": 12,
+    "tris": [
+      836,
+      380,
+      108
+    ],
+    "tufts": 11
+  },
+  "marginPx": 0,
+  "masks": {
+    "ao": 1.0,
+    "night": 0.0,
+    "porosity": [
+      1.0,
+      0.55
+    ],
+    "snow": "1 on dry bed, 0 under the water"
+  },
+  "reason": "no Cycles bake: the masks are an analytic field of the mouth bed on the planar UV0",
+  "receiverSignature": "1f5b6267bcaaf672a89179e905d429deb2ce49e5e62d131eec11e608687cc1d0",
+  "samples": 0,
+  "skipped": true
+}

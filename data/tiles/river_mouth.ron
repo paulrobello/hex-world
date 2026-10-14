@@ -1,0 +1,25 @@
+// River mouth (owner request 2026-10-14, assets-source/refs/river_mouth/PLAN.md): the straight beach
+// with land edge 3 turned into River. Ocean on 0-1, beach on 2 (land right, the corner shared with the
+// River edge) and 5 (land left, the corner shared with grass edge 4). The river runs from edge 3 to the
+// waterline at the tile centre, where it fans out over the sand into the sea. A River node on a tile
+// with a coastline is a mouth (water contract §3a); `river_mouth_l` is the mirrored handedness.
+(
+    id: "river_mouth",
+    biome: Beach,
+    base: "river_mouth_base",
+    edges: (
+        (kind: Ocean),
+        (kind: Ocean),
+        (kind: Beach, land: Some(Right)),
+        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
+        (kind: Grass),
+        (kind: Beach, land: Some(Left)),
+    ),
+    center: Some("river_mouth_center"),
+    nodes: [
+        (id: "mouth", at: (0.0, 0.0)),
+    ],
+    networks: [
+        (kind: River, from: Edge(3), to: Node("mouth")),
+    ],
+)

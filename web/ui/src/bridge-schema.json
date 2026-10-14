@@ -260,6 +260,26 @@
       },
       {
         "edges": [
+          "River",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "id": "river_spring",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "scatter": []
+      },
+      {
+        "edges": [
           "Ocean",
           "Ocean",
           "Beach",
@@ -312,6 +332,46 @@
           null,
           "Right",
           null,
+          null,
+          null,
+          "Left"
+        ],
+        "scatter": []
+      },
+      {
+        "edges": [
+          "Ocean",
+          "Ocean",
+          "Beach",
+          "River",
+          "Grass",
+          "Beach"
+        ],
+        "id": "river_mouth",
+        "land": [
+          null,
+          null,
+          "Right",
+          null,
+          null,
+          "Left"
+        ],
+        "scatter": []
+      },
+      {
+        "edges": [
+          "Ocean",
+          "Ocean",
+          "Beach",
+          "Grass",
+          "River",
+          "Beach"
+        ],
+        "id": "river_mouth_l",
+        "land": [
+          null,
+          null,
+          "Right",
           null,
           null,
           "Left"
@@ -400,6 +460,9 @@
     "select_tile": [
       "id"
     ],
+    "set_grade": [
+      "grade"
+    ],
     "set_reduced_motion": [
       "on"
     ],
@@ -432,6 +495,13 @@
       "Compatible",
       "Incompatible",
       "Neutral"
+    ],
+    "grade": [
+      "aces",
+      "tony",
+      "rich-1",
+      "rich-2",
+      "rich-3"
     ],
     "spin": [
       "ccw",
@@ -550,6 +620,14 @@
       "rotation",
       "tile",
       "valid"
+    ],
+    "grade": [
+      "name",
+      "presets"
+    ],
+    "grade_preset": [
+      "detail",
+      "name"
     ],
     "hovered_kind": [
       "empty",

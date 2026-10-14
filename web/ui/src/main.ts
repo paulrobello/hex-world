@@ -7,6 +7,8 @@ import { Hud } from "./hud.ts";
 import { sprite } from "./icons.ts";
 import { Loading } from "./loading.ts";
 import { Persistence } from "./persist.ts";
+import { loadGrade } from "./settings.ts";
+import { gradeCommand, startupGrade } from "./settings-model.ts";
 import { idbFactory, openSlots } from "./slots.ts";
 
 type Bridge = HexWorld & { audio?: AudioApi };
@@ -67,6 +69,9 @@ function run(root: HTMLElement, hw: Bridge): void {
   const syncMotion = () => hw.cmd({ cmd: "set_reduced_motion", on: reduced.matches });
   syncMotion();
   reduced.addEventListener("change", syncMotion);
+  // The viewer's colour grade; a `grade` key in the address wins and leaves the stored choice alone.
+  const grade = startupGrade(location.search, loadGrade());
+  if (grade) hw.cmd(gradeCommand(grade));
   let hud: Hud | null = null;
   let persist: Persistence | null = null;
   hw.watchEvents((batch) => {

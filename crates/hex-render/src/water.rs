@@ -249,7 +249,15 @@ pub trait WaterField {
     fn water(&self, x: f32, z: f32) -> WaterSample;
     /// Terrain vertex COLOR: (land, river, shore distance, 1).
     fn terrain(&self, x: f32, z: f32) -> [f32; 4];
+    /// Foam weight in [0, 1] where a river mouth meets the surf (water contract §3a); 0 elsewhere.
+    fn meet(&self, _x: f32, _z: f32) -> f32 {
+        0.0
+    }
 }
+
+/// UV_0.y of a surface vertex: the [`WaterField::meet`] foam weight times this, under the 0.5
+/// that marks a cut-face vertex (`water.wesl` reads it back).
+pub const MEET_TAG: f32 = 0.4;
 
 /// The look-dev patch: [`height`], [`water_sample`] and the prototype's river and coast.
 pub struct Lookdev;
@@ -324,19 +332,39 @@ pub(crate) fn cell_transform(cell: Axial, rot: u8) -> Transform {
 }
 
 /// One cell's water surface in cell-local space at the field's level: COLOR carries (flow.x,
-/// flow.z, river, depth) and UV_0 carries (shore distance, 0 = surface), sampled at the vertex's
-/// world position.
+/// flow.z, river, depth) and UV_0 carries (shore distance, mouth foam weight * [`MEET_TAG`]),
+/// sampled at the vertex's world position.
 pub fn surface_mesh(field: &impl WaterField, cell: Axial, rot: u8) -> Mesh {
-    let (local, idx) = hex_grid(GRID, HEX_RADIUS);
+    surface_mesh_where(field, cell, rot, |_| true)
+}
+
+/// [`surface_mesh`] keeping only the triangles with a vertex where `keep` holds (world XZ).
+pub fn surface_mesh_where(
+    field: &impl WaterField,
+    cell: Axial,
+    rot: u8,
+    keep: impl Fn(Vec2) -> bool,
+) -> Mesh {
+    let (local, mut idx) = hex_grid(GRID, HEX_RADIUS);
     let t = cell_transform(cell, rot);
     let level = field.level();
     let mut colors = Vec::with_capacity(local.len());
     let mut uvs = Vec::with_capacity(local.len());
+    let mut kept = Vec::with_capacity(local.len());
     for p in &local {
         let w = t.transform_point(*p);
         let s = field.water(w.x, w.z);
         colors.push([s.flow.x, s.flow.y, s.river, s.depth]);
-        uvs.push([s.shore, 0.0]);
+        uvs.push([s.shore, field.meet(w.x, w.z) * MEET_TAG]);
+        kept.push(keep(w.xz()));
+    }
+    if kept.iter().any(|k| !k) {
+        idx = idx
+            .chunks(3)
+            .filter(|tri| tri.iter().any(|&i| kept[i as usize]))
+            .flatten()
+            .copied()
+            .collect();
     }
     let n = local.len();
     Mesh::new(
@@ -380,7 +408,7 @@ pub fn ribbon_mesh(
             let s = field.water(w.x, w.y);
             pos.push([w.x - origin.x, level, w.y - origin.y]);
             colors.push([s.flow.x, s.flow.y, s.river, s.depth]);
-            uvs.push([s.shore, 0.0]);
+            uvs.push([s.shore, field.meet(w.x, w.y) * MEET_TAG]);
         }
     }
     let stride = cols + 1;

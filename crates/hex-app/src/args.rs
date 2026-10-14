@@ -109,6 +109,8 @@ pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Fl
         ..Flags::default()
     };
     let mut warnings = vec![];
+    // `tonemap` and `ev100` override the grade's own values whatever the key order.
+    let (mut grade, mut tonemap_set, mut ev100_set) = (None, false, false);
     for (k, v) in pairs {
         match k.as_str() {
             "shot" | "scenario" => {
@@ -201,13 +203,15 @@ pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Fl
                 v,
                 &mut warnings,
             ),
-            "tonemap" => set_or_warn(
-                &mut f.gate.tonemap,
-                hex_render::Tonemap::parse(v),
-                k,
-                v,
-                &mut warnings,
-            ),
+            "tonemap" => {
+                let t = hex_render::Tonemap::parse(v);
+                tonemap_set |= t.is_some();
+                set_or_warn(&mut f.gate.tonemap, t, k, v, &mut warnings);
+            }
+            "grade" => match hex_render::Grade::parse(v) {
+                Some(g) => grade = Some(g),
+                None => warnings.push(format!("unknown grade '{v}', using default")),
+            },
             "ibl" => set_or_warn(
                 &mut f.gate.ibl,
                 hex_render::parse_ibl(v),
@@ -215,13 +219,11 @@ pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Fl
                 v,
                 &mut warnings,
             ),
-            "ev100" => set_or_warn(
-                &mut f.gate.ev100,
-                hex_render::Ev100::parse(v),
-                k,
-                v,
-                &mut warnings,
-            ),
+            "ev100" => {
+                let e = hex_render::Ev100::parse(v);
+                ev100_set |= e.is_some();
+                set_or_warn(&mut f.gate.ev100, e, k, v, &mut warnings);
+            }
             "tilt" => set_or_warn(
                 &mut f.gate.tilt,
                 hex_render::TiltMode::parse(v),
@@ -278,6 +280,15 @@ pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Fl
             _ => {}
         }
     }
+    if let Some(g) = grade {
+        f.gate.grade = g;
+        if !tonemap_set {
+            f.gate.tonemap = g.tonemap();
+        }
+        if !ev100_set {
+            f.gate.ev100 = hex_render::Ev100::from_f32(g.ev100());
+        }
+    }
     (f, warnings)
 }
 
@@ -325,6 +336,7 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "kit_hooks",
         "kit_src",
         "tonemap",
+        "grade",
         "ibl",
         "ev100",
         "tilt",
@@ -435,6 +447,27 @@ mod tests {
     }
 
     #[test]
+    fn grade_sets_tone_map_and_exposure_unless_their_keys_override() {
+        let (f, w) = flags_from_pairs(&p(&[("grade", "aces")]));
+        assert!(w.is_empty(), "{w:?}");
+        assert_eq!(f.gate.grade, hex_render::Grade::Aces);
+        assert_eq!(f.gate.tonemap, hex_render::Tonemap::AcesFitted);
+        assert_eq!(f.gate.ev100.get(), 12.5);
+        let (f, _) = flags_from_pairs(&p(&[("ev100", "13"), ("grade", "aces")]));
+        assert_eq!(
+            (f.gate.tonemap, f.gate.ev100.get()),
+            (hex_render::Tonemap::AcesFitted, 13.0)
+        );
+        let (f, _) = flags_from_pairs(&p(&[("grade", "rich-2"), ("tonemap", "agx")]));
+        assert_eq!(
+            (f.gate.grade, f.gate.tonemap),
+            (hex_render::Grade::Rich2, hex_render::Tonemap::AgX)
+        );
+        let (f, w) = flags_from_pairs(&p(&[("grade", "vivid")]));
+        assert_eq!((f.gate.grade, w.len()), (hex_render::Grade::Tony, 1));
+    }
+
+    #[test]
     fn tonemap_and_ibl_keys() {
         let (f, w) = flags_from_pairs(&p(&[("tonemap", "agx"), ("ibl", "off")]));
         assert_eq!(f.gate.tonemap, hex_render::Tonemap::AgX);
@@ -458,7 +491,7 @@ mod tests {
         assert_eq!(f.gate.tilt_strength.get(), 0.5);
         assert!(w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("tilt", "maybe"), ("tilt_strength", "2")]));
-        assert_eq!(f.gate.tilt, hex_render::TiltMode::Auto);
+        assert_eq!(f.gate.tilt, hex_render::TiltMode::Off);
         assert_eq!(w.len(), 2);
     }
 

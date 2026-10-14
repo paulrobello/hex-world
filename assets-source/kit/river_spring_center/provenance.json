@@ -1,0 +1,223 @@
+{
+  "pieceId": "river_spring_center",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/river_spring_center.py",
+    "sha256": "7dc8dd10cd239d033290426ed61c21cba785d5399ec3ccd177daf689f801237f"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "07b9c48ac86817ccb7c5d0286a4613ac38175e632b9d893c7b3f65702a140e1c"
+    },
+    {
+      "path": "scripts/blender/kit/_spring.py",
+      "sha256": "7069bb5eeb5284e7ae5bc5b0e6280b93a07c979a689e82dfe7678650a7e4e85c"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 256
+      }
+    },
+    "device": "none",
+    "dressing": {
+      "granite": 12,
+      "lilyPads": 5,
+      "reedClumps": 10,
+      "streamStones": 10,
+      "tris": [
+        770,
+        298,
+        100
+      ]
+    },
+    "marginPx": 0,
+    "masks": {
+      "ao": 1,
+      "lilyUv": [
+        0.001953125,
+        0.001953125
+      ],
+      "night": 0,
+      "porosity": [
+        1,
+        0.8
+      ],
+      "snow": "0 under water, 1 elsewhere"
+    },
+    "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
+    "receiverSignature": "e21db9581a24cca0a7bbd7cf7da66966c7409d73a15929c2d042751d5b48a322",
+    "samples": 0,
+    "skipped": true
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 770,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 298,
+      "ratio": 0.38701298701298703
+    },
+    {
+      "lod": 2,
+      "tris": 100,
+      "ratio": 0.12987012987012986
+    }
+  ],
+  "collider": {
+    "node": "river_spring_center_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": null,
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 4535,
+        "astc": 4231
+      },
+      "glbBytes": 101712
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/river_spring_center/river_spring_center.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 9,
+        "bytes": 4535,
+        "sha256": "b87c62ca7d2f7fbbd1477256c2922af18c1e44dcb995b625574463a02bf7d504"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/river_spring_center/river_spring_center.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 9,
+        "bytes": 4231,
+        "sha256": "727bd896938ed7e6bf0e531ab59a57c430b607b9043f6a02a4cad4b612ec6660"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/river_spring_center/river_spring_center.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 5031,
+        "sha256": "ac0f6c071c60fe29d4c437085e0d76b0c79aee777cf17358af7f718ce579c934"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/river_spring_center/river_spring_center.glb",
+      "sha256": "c6372f13a6124fbe2ae3085699f2fd603ed5e1680daac7a4c62c776d5fa189f7",
+      "bytes": 101712
+    },
+    {
+      "path": "assets/kit/p1/river_spring_center/river_spring_center.masks.bc7.ktx2",
+      "sha256": "b87c62ca7d2f7fbbd1477256c2922af18c1e44dcb995b625574463a02bf7d504",
+      "bytes": 4535
+    },
+    {
+      "path": "assets/kit/p1/river_spring_center/river_spring_center.masks.astc.ktx2",
+      "sha256": "727bd896938ed7e6bf0e531ab59a57c430b607b9043f6a02a4cad4b612ec6660",
+      "bytes": 4231
+    },
+    {
+      "path": "assets/kit/p1/river_spring_center/river_spring_center.masks.png",
+      "sha256": "ac0f6c071c60fe29d4c437085e0d76b0c79aee777cf17358af7f718ce579c934",
+      "bytes": 5031
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/river_spring/ref-1.jpg",
+      "sha256": "da6ff823ee9d14ad16753c9b49d1f48356a122d594c00e4f35ab10ace9f45e03",
+      "sourceSha256": "300e7ecc93dc2cde3958345251e8177416ed61810e9d80c9b2deeaf358b33597",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "89d40d7b-7ae0-439c-88e5-d537699d2718",
+      "prompt": "Spring tile: a single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. Near the middle of the tile a small round spring pool about 12 m across sits in a shallow grassy hollow, ringed by weathered grey rocks, tussocks of reeds and rushes and a few water plants, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed, a pale pebbly floor showing through the water and a gentle ring of ripples where the spring wells up. An 8 m wide river runs out of the pool to the middle of one flat edge of the tile in a channel sunk below the meadow surface between natural earthy banks with pebbles and reeds. Where the river reaches the tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. The rest of the tile is open meadow grass, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/river_spring/ref-2.jpg",
+      "sha256": "f0157ff03b83e4d7be8786685479bdead1d60780f61791eafed9584164ce2111",
+      "sourceSha256": "42c8e8ad9ffbcd2f14bb4bce5c8de0276520bcd3975492f0db8fb10826513434",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "31d9788d-03f8-449c-9843-06ec65e77e26",
+      "prompt": "Spring tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame. Seen from above, a small round clear spring pool about 12 m across sits in the middle of the tile, ringed by grey rocks and reeds, and an 8 m wide river runs out of the pool straight down to the middle of the bottom side, meeting it square-on, in a channel sunk below the meadow surface between natural earthy banks, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Where the river reaches the bottom side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. The other five sides are open meadow grass, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/river_spring/ref-3.jpg",
+      "sha256": "b2f96e6273ea1bcb182884205420ec05b9477a4a82511febbcf7dd1dd09d1ac0",
+      "sourceSha256": "ab4dd052f5b6c48106bdc90e3240f4759d4546a9c70da616bf6a7abaa166b7bb",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "fef4b534-e932-4373-a377-ff3ad8f38d52",
+      "prompt": "Close-up of a small spring pool on a hexagonal diorama tile: clear water welling up over a pale pebbly floor with a gentle ring of ripples on the surface, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed, ringed by weathered lichen-spotted grey rocks, tussocks of reeds and rushes and lush meadow grass, and the start of a small stream flowing out of the pool between natural earthy banks with pebbles, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T19:59:22.596Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/river_spring/ref-1.jpg",
+        "assets-source/refs/river_spring/ref-2.jpg",
+        "assets-source/refs/river_spring/ref-3.jpg"
+      ],
+      "notes": "Approved as look references; the PLAN's socket table sets the layout. ref-3 is for the pool close-up only (it sits on a dark tray, not the O4 skirt). Owner answer Q6: an 11 m pool centred 2 m behind the tile centre, with reeds, a granite ring and a few lily pads. See assets-source/refs/river_mouth/PLAN.md."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "notes": "Pending owner review; not an approval. New piece: bank stones, reeds, a lichen granite ring around the pool and colour-only lily pads. Review the six-view renders in assets-source/kit/river_spring_center/renders/ and river-mouth-06. In-engine shots in docs/checkpoints/river-mouth/. The controller records the owner's decision."
+    }
+  ]
+}

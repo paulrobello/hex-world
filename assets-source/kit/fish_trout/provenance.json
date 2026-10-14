@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/fish_trout.py",
-    "sha256": "8d6922a8c0f7aaa83ee9c98377c6bc4c7acbfbea34e52e008c8c523d57f6cf7a"
+    "sha256": "fc27263dd5506f17ec0598a0ba6d959fc0b84ea1d6a6c67f9cc5889f302c2202"
   },
   "generatorDeps": [
     {
@@ -27,11 +27,11 @@
     "aoDistanceM": 0.08,
     "bakeStats": {
       "albedoLuma_ocean": {
-        "mean": 0.6869728709749564,
-        "p05": 0.4405282132448332
+        "mean": 0.6876434554730233,
+        "p05": 0.44113588701810996
       },
       "albedoLuma_river": {
-        "mean": 0.4910109835051476,
+        "mean": 0.49150008307986637,
         "p05": 0.24967321256796518
       },
       "ao": {
@@ -136,8 +136,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 190056,
-        "astc": 191533
+        "bc7": 185891,
+        "astc": 187492
       },
       "glbBytes": 22008
     },
@@ -150,8 +150,8 @@
         "transfer": "srgb",
         "vkFormat": 146,
         "levels": 10,
-        "bytes": 91526,
-        "sha256": "eea0ed3433f377ffba9e276bd3ac8ee41b75367be750f583d8f2739ed9923ed8"
+        "bytes": 90021,
+        "sha256": "fdc767e0e8257d2a08c2f0069c0f326173f96998e4618bfedc9f2f94d1a44565"
       },
       {
         "channel": "albedo",
@@ -161,8 +161,8 @@
         "transfer": "srgb",
         "vkFormat": 158,
         "levels": 10,
-        "bytes": 91729,
-        "sha256": "15d38aad4a966c87bbdbc0c3b9186e2a8550a72b301d3baaea371e44ffe9b291"
+        "bytes": 90205,
+        "sha256": "284f9b567eadad361c45b064d65b2e611bb437d566987584ebfa42876e99e0cb"
       },
       {
         "channel": "albedo",
@@ -170,8 +170,8 @@
         "path": "assets/kit/p1/fish_trout/fish_trout.albedo.png",
         "format": "PNG",
         "transfer": "srgb",
-        "bytes": 102377,
-        "sha256": "291ce179f9164804febcdd20aed278a6902e82261556cb208e1721b3cf3333ce"
+        "bytes": 100544,
+        "sha256": "e9e8b70c1c476f14d597187f260550252ba4ebfe72a135fffae04800b2060815"
       },
       {
         "channel": "masks",
@@ -212,8 +212,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 28637,
-        "sha256": "a0d4c6e31fbd610e25a30feb734f76ecf1add6c4010f9352a6c63fbd39f5296e"
+        "bytes": 25977,
+        "sha256": "0c20b163a49838fff28551dd837169de479ff35b29534aa4a220a6c219b55d53"
       },
       {
         "channel": "normal",
@@ -223,8 +223,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 28450,
-        "sha256": "9a55ffc9c827aa9fb3d152f1bb8c1c342b7dba51c9aa9ba83cc3a5bae2b3e99b"
+        "bytes": 25933,
+        "sha256": "3f693a0a9b7956367d760bc3693b5b174906caac3a140223547a42d44c7f3e0c"
       },
       {
         "channel": "normal",
@@ -232,8 +232,8 @@
         "path": "assets/kit/p1/fish_trout/fish_trout.normal.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 44914,
-        "sha256": "70c02548536ee2b9d86260b3da78e2cb3597800a738ffcb0724f5e0a7df83cd5"
+        "bytes": 42884,
+        "sha256": "a38d6bf1c4f02c1769ed27831f91193700a560a029a9c29657c46afa029ee984"
       },
       {
         "channel": "orm",
@@ -276,18 +276,18 @@
     },
     {
       "path": "assets/kit/p1/fish_trout/fish_trout.albedo.bc7.ktx2",
-      "sha256": "eea0ed3433f377ffba9e276bd3ac8ee41b75367be750f583d8f2739ed9923ed8",
-      "bytes": 91526
+      "sha256": "fdc767e0e8257d2a08c2f0069c0f326173f96998e4618bfedc9f2f94d1a44565",
+      "bytes": 90021
     },
     {
       "path": "assets/kit/p1/fish_trout/fish_trout.albedo.astc.ktx2",
-      "sha256": "15d38aad4a966c87bbdbc0c3b9186e2a8550a72b301d3baaea371e44ffe9b291",
-      "bytes": 91729
+      "sha256": "284f9b567eadad361c45b064d65b2e611bb437d566987584ebfa42876e99e0cb",
+      "bytes": 90205
     },
     {
       "path": "assets/kit/p1/fish_trout/fish_trout.albedo.png",
-      "sha256": "291ce179f9164804febcdd20aed278a6902e82261556cb208e1721b3cf3333ce",
-      "bytes": 102377
+      "sha256": "e9e8b70c1c476f14d597187f260550252ba4ebfe72a135fffae04800b2060815",
+      "bytes": 100544
     },
     {
       "path": "assets/kit/p1/fish_trout/fish_trout.masks.bc7.ktx2",
@@ -306,18 +306,18 @@
     },
     {
       "path": "assets/kit/p1/fish_trout/fish_trout.normal.bc7.ktx2",
-      "sha256": "a0d4c6e31fbd610e25a30feb734f76ecf1add6c4010f9352a6c63fbd39f5296e",
-      "bytes": 28637
+      "sha256": "0c20b163a49838fff28551dd837169de479ff35b29534aa4a220a6c219b55d53",
+      "bytes": 25977
     },
     {
       "path": "assets/kit/p1/fish_trout/fish_trout.normal.astc.ktx2",
-      "sha256": "9a55ffc9c827aa9fb3d152f1bb8c1c342b7dba51c9aa9ba83cc3a5bae2b3e99b",
-      "bytes": 28450
+      "sha256": "3f693a0a9b7956367d760bc3693b5b174906caac3a140223547a42d44c7f3e0c",
+      "bytes": 25933
     },
     {
       "path": "assets/kit/p1/fish_trout/fish_trout.normal.png",
-      "sha256": "70c02548536ee2b9d86260b3da78e2cb3597800a738ffcb0724f5e0a7df83cd5",
-      "bytes": 44914
+      "sha256": "a38d6bf1c4f02c1769ed27831f91193700a560a029a9c29657c46afa029ee984",
+      "bytes": 42884
     },
     {
       "path": "assets/kit/p1/fish_trout/fish_trout.orm.bc7.ktx2",
@@ -367,7 +367,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T18:43:25.283Z",
+    "date": "2026-10-14T19:41:36.381Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -396,6 +396,13 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved with one fix: remove the faint seam line behind the head (do it in the boids swap-in pass). Display scale in the boids: x2 of real size."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "piece",
+      "status": "pending",
+      "notes": "Pending owner re-approval of the seam fix; not an approval. The seam was the painted gill-cover edge (a dark albedo band plus a height step that the normal map turned into a ridge, both around the full girth), now removed from the generator's paint() with geometry, UVs, LODs and the boid contract unchanged."
     }
   ]
 }

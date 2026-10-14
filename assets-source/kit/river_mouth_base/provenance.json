@@ -1,0 +1,322 @@
+{
+  "pieceId": "river_mouth_base",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/river_mouth_base.py",
+    "sha256": "1153aff6f3c98777c58c5c47dec568dc3a1aecac937cbcd81a1139acc2c04fc5"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_beach.py",
+      "sha256": "aea34b8de566967b0be23fddc1b36f55a780e0d96d2f648e1786cf8d963817b7"
+    },
+    {
+      "path": "scripts/blender/kit/_mouth.py",
+      "sha256": "de95627fb197d8eca03f071fc32e9ac359f0d75604034168e7d3f0e29dadb2af"
+    },
+    {
+      "path": "scripts/blender/kit/_mouth_profile.py",
+      "sha256": "723495164008b6c2fd71969d872fecbf5ce5c63690a6145d717e1e4414ee6874"
+    },
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "none",
+    "extraRingS": [
+      -1.952568,
+      3.5,
+      4.5,
+      5.5,
+      6.5,
+      7.5
+    ],
+    "hand": "r",
+    "jointDeltaM": 0.0017,
+    "lod2MaxRatio": 0.2,
+    "lodParams": [
+      [
+        0.7,
+        0.85,
+        0.75,
+        0.01,
+        6,
+        0.75
+      ],
+      [
+        1.8,
+        2.6,
+        1.25,
+        0.02,
+        5,
+        1.6
+      ],
+      [
+        40,
+        null,
+        2,
+        0.03,
+        4,
+        2
+      ]
+    ],
+    "lodTris": [
+      3592,
+      1488,
+      709
+    ],
+    "marginPx": 0,
+    "profileErrorM": [
+      {
+        "channelDryMaxM": 0.0459,
+        "coastDryMaxM": 0.0081,
+        "deepMaxM": 0.0151,
+        "refineIterations": 2,
+        "steinerVertices": 0,
+        "wetMaxM": 0.027
+      },
+      {
+        "channelDryMaxM": 0.054,
+        "coastDryMaxM": 0.0055,
+        "deepMaxM": 0.0151,
+        "refineIterations": 3,
+        "steinerVertices": 0,
+        "wetMaxM": 0.0268
+      },
+      {
+        "channelDryMaxM": 0.0683,
+        "coastDryMaxM": 0.0254,
+        "deepMaxM": 0.0151,
+        "refineIterations": 3,
+        "steinerVertices": 0,
+        "wetMaxM": 0.0269
+      }
+    ],
+    "reason": "analytic masks (snow above water, wetness by channel and s; AO 1): no bake",
+    "receiverSignature": "45e2a548ab01871b1f5c64fb1de3f86c3f3611d76557f5dd9aece46aa14a9bd2",
+    "rowsS": [
+      -8,
+      -7,
+      -6,
+      -5,
+      -4,
+      -3,
+      -2,
+      -1.952568,
+      -1,
+      0,
+      1,
+      2,
+      3,
+      3.5,
+      4,
+      4.5,
+      5,
+      5.5,
+      6,
+      6.5,
+      7,
+      7.5,
+      8
+    ],
+    "samples": 0,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 32.0002161742152,
+      "median": 31.552852637382426,
+      "min": 22.8978489748444
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 3592,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 1488,
+      "ratio": 0.4142538975501114
+    },
+    {
+      "lod": 2,
+      "tris": 709,
+      "ratio": 0.19738307349665923
+    }
+  ],
+  "collider": {
+    "node": "river_mouth_base_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 3,
+        "kind": "river",
+        "offset": 0,
+        "width": 8
+      },
+      "name": "socket-lane-3",
+      "position": [
+        -13.856406211853027,
+        0,
+        1.6969203955408477e-15
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 32.0002161742152,
+    "median": 31.552852637382426,
+    "min": 22.8978489748444
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 19454,
+        "astc": 19857
+      },
+      "glbBytes": 153140
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/river_mouth_base/river_mouth_base.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 19454,
+        "sha256": "8671fbb9737de9fffb5c5ea2f789321367c5588668646ef1e9cf66d13e771def"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/river_mouth_base/river_mouth_base.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 19857,
+        "sha256": "5e6e52b8b35c85565609841747f2117ab564c3b29e76ec751a9fb646670ca9bf"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/river_mouth_base/river_mouth_base.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 28476,
+        "sha256": "f49b86220f590f0bf32284da15a78fa43b2a842df540b513ff093ce013954393"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/river_mouth_base/river_mouth_base.glb",
+      "sha256": "e01a7727828b9c13bde7d55c8456613288ced4aff9b7ce62813d0f2ee78e5b4e",
+      "bytes": 153140
+    },
+    {
+      "path": "assets/kit/p1/river_mouth_base/river_mouth_base.masks.bc7.ktx2",
+      "sha256": "8671fbb9737de9fffb5c5ea2f789321367c5588668646ef1e9cf66d13e771def",
+      "bytes": 19454
+    },
+    {
+      "path": "assets/kit/p1/river_mouth_base/river_mouth_base.masks.astc.ktx2",
+      "sha256": "5e6e52b8b35c85565609841747f2117ab564c3b29e76ec751a9fb646670ca9bf",
+      "bytes": 19857
+    },
+    {
+      "path": "assets/kit/p1/river_mouth_base/river_mouth_base.masks.png",
+      "sha256": "f49b86220f590f0bf32284da15a78fa43b2a842df540b513ff093ce013954393",
+      "bytes": 28476
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/river_mouth/ref-1.jpg",
+      "sha256": "cf235ee11370067da4ca0bc347dd0b407b948fac510d5b488bc7e88068f9805f",
+      "sourceSha256": "5f58a0a23cfc0b824d057137c8f1fc245e59b24afe7d2eac628310ac4c887e32",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "3c6a800c-09d6-4e93-996f-c46b9ab3e02e",
+      "prompt": "River mouth coast tile: a single flat-sided hexagonal coast tile for a diorama, 32 m across. Ocean fills the side with two adjacent flat edges, lush meadow grass fills the two flat edges opposite them, and a straight sand shoreline runs across the tile from one flat edge to the opposite flat edge. Bands from land to sea: meadow grass, dry pale sand, a darker damp-sand band, a lacy white surf foam line, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. An 8 m wide river runs in from the middle of one grass edge in a channel sunk below the meadow surface between natural earthy banks with pebbles and reeds, and flows straight across the tile toward the sea. Where it reaches the sand the banks fall away and the river opens out to about 10 m wide in a shallow fan of clear rippled water over the sand and runs out into the surf. Under the grass the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth; where the river and the ocean reach the tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, with the sand floor sloping down, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/river_mouth/ref-2.jpg",
+      "sha256": "fc23fbbb217640ed91684897d769c4a3dec3c92aa5d981f72f223aae434b8475",
+      "sourceSha256": "4e5c138ef241f34cc3ce31d2c07e458280b0c67021f41f96dc61bdf43475656e",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "aec485d0-7060-4bd6-a148-8d1d104c2180",
+      "prompt": "River mouth coast tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, flat-topped so one flat side faces the camera along the bottom of the frame. Seen from above, ocean fills the top side and the upper-right side, lush meadow grass fills the bottom side and the lower-left side, and a straight sand beach runs diagonally across the middle of the tile from the middle of the upper-left side to the middle of the lower-right side, with bands from land to sea: meadow grass, dry pale sand, a darker damp-sand band, a lacy white surf foam line, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. An 8 m wide river runs in square-on at the middle of the bottom side, in a channel sunk below the meadow surface between natural earthy banks, and flows straight up the tile. Where it crosses the sand in the middle of the tile it opens out to about 10 m wide in a shallow fan over the sand and flows out into the sea toward the top side. Under the grass the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, and where the river reaches the bottom side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/river_mouth/ref-3.jpg",
+      "sha256": "08d76d8a4c708961f9d821195e0f13c12d8135b7de892cb6343e40d244d6580f",
+      "sourceSha256": "ef4ad9229c991ca1d843de4efec7336513f2f9e12e3f6f3861b8243da5ac71ac",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "f0808a59-354f-48ae-ad80-2f75db4e08a1",
+      "prompt": "Close-up of the river mouth on a diorama beach tile: a small clear river runs from between grassy earthy banks across pale sand, opening out into a broad shallow stream of rippled water over the sandy floor, and runs into the sea at a lacy white surf foam line, with a darker damp-sand band along both sides of the stream and clear turquoise shallows over a rippled sandy floor with caustics, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T20:14:30.607Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/river_mouth/ref-1.jpg",
+        "assets-source/refs/river_mouth/ref-2.jpg",
+        "assets-source/refs/river_mouth/ref-3.jpg"
+      ],
+      "notes": "Approved as look references; the PLAN's socket table sets the layout (ref-2 came back pointy-topped). ref-3 is for the fan and foam layout only, not materials. Owner answers: Q1 build BOTH handednesses now (river on edge 3, and a mirrored tile with the river on edge 4, generated mirrored in Blender); Q2 straight beach only; Q3 the channel shallows from 1.55 m inland to 0.36 m at the shelf; Q4 allow chains with two springs or two mouths, deterministic flow rule; Q5 one connected fish region, palette by spawn water. See assets-source/refs/river_mouth/PLAN.md."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "notes": "Pending owner review; not an approval. New piece: the bed of the right-handed river mouth (River on edge 3): the straight beach's coast profile with the river channel carved in and fanned to the shelf (water contract §3a). Review the six-view renders in assets-source/kit/river_mouth_base/renders/ and river-mouth-03, -04, -08, -09 and -10. In-engine shots in docs/checkpoints/river-mouth/. The controller records the owner's decision."
+    }
+  ]
+}

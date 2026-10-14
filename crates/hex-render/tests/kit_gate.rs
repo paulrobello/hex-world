@@ -10,7 +10,7 @@ use ::bevy::{
     world_serialization::WorldSerializationPlugin,
 };
 use hex_assets::*;
-use hex_render::water::tiles::{Coastline, coast_height};
+use hex_render::water::tiles::{Coastline, Mouth, coast_height};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -624,7 +624,13 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
     {
         e.push(format!("{}: node {}_collider missing (D14)", p.id, p.id));
     }
-    let coast = (p.kind == PieceKind::Base)
+    let mouth = (p.kind == PieceKind::Base)
+        .then(|| mouth_of_base(&p.id))
+        .flatten();
+    if let Some(m) = &mouth {
+        e.extend(mouth_base_errors(kit, p, m, &lods, &buffers));
+    }
+    let coast = (p.kind == PieceKind::Base && mouth.is_none())
         .then(|| coast_of_base(&p.id))
         .flatten();
     if let Some(coast) = &coast {
@@ -663,7 +669,7 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
             ));
         }
     }
-    let level = if p.kind == PieceKind::Base && coast.is_none() {
+    let level = if p.kind == PieceKind::Base && coast.is_none() && mouth.is_none() {
         base_ring_level(&p.id, &positions(lod0, &buffers)).unwrap_or_else(|err| {
             e.push(err);
             0.0
@@ -671,7 +677,7 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
     } else {
         0.0
     };
-    if p.kind.touches_border() && coast.is_none() {
+    if p.kind.touches_border() && coast.is_none() && mouth.is_none() {
         let rings: Vec<_> = lods
             .iter()
             .flatten()
@@ -691,7 +697,7 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
             e.extend(cut_ring_errors(&p.id, ring, &cuts));
         }
     }
-    if p.kind == PieceKind::Base && coast.is_none() {
+    if p.kind == PieceKind::Base && coast.is_none() && mouth.is_none() {
         let v = positions(lod0, &buffers);
         if let Some((p_bad, n_bad)) = v.iter().find(|(q, n)| {
             dist_to_border(q[0], q[2]).abs() < 1e-3
@@ -1071,6 +1077,163 @@ fn coast_of_base(id: &str) -> Option<Coastline> {
         .iter()
         .filter(|t| t.base.as_str() == id)
         .find_map(|t| Coastline::of(t, 0))
+}
+
+/// The mouth (rotation 0) of the river-mouth tile whose `base` names `id`: the base is the bed,
+/// held to the engine's analytic mouth profile (water contract §3a).
+fn mouth_of_base(id: &str) -> Option<Mouth> {
+    let catalog = hex_core::TileCatalog::builtin().expect("builtin tile catalog");
+    catalog
+        .tiles()
+        .iter()
+        .filter(|t| t.base.as_str() == id)
+        .find_map(|t| Mouth::of(t, 0))
+}
+
+/// Analytic mouth bed normal at runtime (x, z), by central differences.
+fn mouth_normal(m: &Mouth, x: f32, z: f32) -> Vec3 {
+    let e = 1e-3;
+    let h = |x: f32, z: f32| m.height(Vec2::new(x, z));
+    Vec3::new(
+        -(h(x + e, z) - h(x - e, z)) / (2.0 * e),
+        1.0,
+        -(h(x, z + e) - h(x, z - e)) / (2.0 * e),
+    )
+    .normalize()
+}
+
+/// A river-mouth base (water contract §3a, §6): the ring identical across LODs; every lattice
+/// vertex present except inside the River cut, and nothing else on the ring but the cut's bank
+/// tops and beach-edge samples; every ring vertex on the mouth bed within 1 mm, with the analytic
+/// normal off the River edge; every LOD's up-facing faces on the bed (0.03 m where the water is
+/// under 2.5 m deep or the bed is below y = -1.0, 0.10 m elsewhere, upward only on the sea floor);
+/// the skirt down to the base.
+fn mouth_base_errors(
+    kit: &Kit,
+    p: &PieceEntry,
+    m: &Mouth,
+    lods: &[Option<gltf::Mesh>],
+    buffers: &[gltf::buffer::Data],
+) -> Vec<String> {
+    let id = &p.id;
+    let mut e = vec![];
+    let rings: Vec<_> = lods
+        .iter()
+        .flatten()
+        .map(|g| border_ring_any(&positions(g, buffers)))
+        .collect();
+    let flat: Vec<Vec<[f32; 2]>> = rings
+        .iter()
+        .map(|r| r.iter().map(|(q, _)| [q[0], q[2]]).collect())
+        .collect();
+    e.extend(ring_errors(id, &flat, false));
+    let cuts: BTreeMap<u64, f32> = lane_sockets(kit, p)
+        .into_iter()
+        .filter_map(|(k, (_, c))| Some((k, c? as f32)))
+        .collect();
+    if cuts.is_empty() {
+        e.push(format!("{id}: no cut lane socket on its River edge"));
+    }
+    let lattice = lattice_ring();
+    let in_cut = |k: u64, o: f32| cuts.get(&k).is_some_and(|&c| o.abs() < c - 1e-3);
+    let banks: Vec<[f32; 2]> = cuts
+        .iter()
+        .flat_map(|(&k, &c)| {
+            let a = (60.0 * k as f32).to_radians();
+            let mid = [APOTHEM * a.cos(), APOTHEM * a.sin()];
+            [-c, c].map(|o| [mid[0] + a.sin() * o, mid[1] - a.cos() * o])
+        })
+        .collect();
+    let edge_of = |q: [f32; 2]| {
+        (0..6u64)
+            .max_by(|&a, &b| {
+                let d = |k: u64| {
+                    let t = (60.0 * k as f32).to_radians();
+                    q[0] * t.cos() + q[1] * t.sin()
+                };
+                d(a).total_cmp(&d(b))
+            })
+            .unwrap()
+    };
+    if let Some(ring) = rings.first() {
+        for (q, k, o) in &lattice {
+            if !in_cut(*k, *o) && !ring.iter().any(|(r, _)| near(*q, [r[0], r[2]], RING_TOL)) {
+                e.push(format!("{id}: lattice ring vertex {q:?} missing"));
+            }
+        }
+        for (q, n) in ring {
+            let xz = Vec2::new(q[0], q[2]);
+            let want = m.height(xz);
+            if (q[1] - want).abs() > 1e-3 {
+                e.push(format!(
+                    "{id}: ring vertex {q:?} off the mouth bed ({want:.4})"
+                ));
+            }
+            let flat = [q[0], q[2]];
+            let k = edge_of(flat);
+            if !cuts.contains_key(&k) {
+                let a = mouth_normal(m, q[0], q[2]);
+                if (Vec3::from(*n) - a).abs().max_element() > 1e-2 {
+                    e.push(format!(
+                        "{id}: ring normal {n:?} at {q:?} is not the bed normal {a} (seam shading)"
+                    ));
+                }
+            }
+            let lattice_pt = lattice.iter().any(|(l, _, _)| near(*l, flat, RING_TOL));
+            let bank = banks.iter().any(|b| near(*b, flat, RING_TOL));
+            let beach = m.coast.seaward(xz).abs() < 8.0 - 1e-3 && !cuts.contains_key(&k);
+            if !lattice_pt && !bank && !beach {
+                e.push(format!(
+                    "{id}: ring vertex {q:?} is neither lattice, bank top nor on a beach edge"
+                ));
+            }
+        }
+    }
+    for (i, g) in lods.iter().enumerate() {
+        let Some(g) = g else { continue };
+        let mut n_err = 0;
+        for tri in triangles(g, buffers) {
+            let [a, b, c] = tri.map(Vec3::from);
+            if (b - a).cross(c - a).normalize_or_zero().y < 0.2 {
+                continue;
+            }
+            const N: usize = 4;
+            for u in 0..=N {
+                for v in 0..=N - u {
+                    let q = a + (b - a) * (u as f32 / N as f32) + (c - a) * (v as f32 / N as f32);
+                    let xz = Vec2::new(q.x, q.z);
+                    let want = m.height(xz);
+                    let s = m.coast.seaward(xz);
+                    let tol = if want < -1.0 && want > -3.9 {
+                        COAST_TOL_NEAR
+                    } else {
+                        COAST_TOL_FAR
+                    };
+                    let err = q.y - want;
+                    let below = s >= 8.0 && err < -1e-3;
+                    if (err.abs() > tol || below) && n_err < 5 {
+                        n_err += 1;
+                        e.push(format!(
+                            "{id}_lod{i}: bed at {q} (s = {s:.3}) is {err:.4} m off the mouth bed ({want:.4})"
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    if let Some(Some(g)) = lods.first() {
+        let min_y = positions(g, buffers)
+            .iter()
+            .map(|(q, _)| q[1])
+            .fold(f32::MAX, f32::min);
+        if (min_y + hex_core::LEVEL_STEP).abs() > 0.005 {
+            e.push(format!(
+                "{id}: skirt bottom {min_y} != -{}",
+                hex_core::LEVEL_STEP
+            ));
+        }
+    }
+    e
 }
 
 /// LOD2 ceiling of the coast-corner bases (headland, bay), the lane-cut ceiling extended: the
@@ -2045,6 +2208,16 @@ fn coast_bases_are_held_to_the_coast_profile() {
         })
     ));
     assert!(coast_of_base("meadow_base").is_none());
+    // The river mouths' bases are held to the mouth bed (`mouth_base_errors`), and their beach
+    // edges still join `check_coast_seams`.
+    for id in ["river_mouth_base", "river_mouth_l_base"] {
+        let m = mouth_of_base(id).unwrap_or_else(|| panic!("{id}: no mouth"));
+        assert_eq!(Some(m.coast), coast_of_base(id), "{id}");
+        assert!((m.height(Vec2::ZERO) - (-1.9773)).abs() < 2e-3, "{id}");
+    }
+    assert!(
+        mouth_of_base("beach_base").is_none() && mouth_of_base("river_straight_base").is_none()
+    );
     // A ring point on the profile passes; one 5 cm off, or with a +Y normal on the slope, fails.
     let s = |x: f32, z: f32| beach.seaward(Vec2::new(x, z));
     let mid = [

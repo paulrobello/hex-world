@@ -11,7 +11,7 @@ use crate::tile::{KitRef, TileDef};
 
 /// Every file in `data/tiles/`, as `(id, RON text)`, in inventory order (plan F1, with the owner O1
 /// coast corners after the straight beach, as PRD §5.4 lists them).
-pub const BUILTIN_TILES: [(&str, &str); 15] = [
+pub const BUILTIN_TILES: [(&str, &str); 18] = [
     ("meadow", include_str!("../../../data/tiles/meadow.ron")),
     ("forest", include_str!("../../../data/tiles/forest.ron")),
     ("oak", include_str!("../../../data/tiles/oak.ron")),
@@ -47,6 +47,10 @@ pub const BUILTIN_TILES: [(&str, &str); 15] = [
         "river_road_bridge",
         include_str!("../../../data/tiles/river_road_bridge.ron"),
     ),
+    (
+        "river_spring",
+        include_str!("../../../data/tiles/river_spring.ron"),
+    ),
     ("beach", include_str!("../../../data/tiles/beach.ron")),
     (
         "beach_outer",
@@ -55,6 +59,14 @@ pub const BUILTIN_TILES: [(&str, &str); 15] = [
     (
         "beach_inner",
         include_str!("../../../data/tiles/beach_inner.ron"),
+    ),
+    (
+        "river_mouth",
+        include_str!("../../../data/tiles/river_mouth.ron"),
+    ),
+    (
+        "river_mouth_l",
+        include_str!("../../../data/tiles/river_mouth_l.ron"),
     ),
     ("ocean", include_str!("../../../data/tiles/ocean.ron")),
 ];

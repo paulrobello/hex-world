@@ -13,7 +13,7 @@ Motion uses `cubic-bezier(.22, .9, .3, 1)` unless stated. Under `prefers-reduced
 | Compatible | `rgb(123 224 143)` | Touching edge that matches its neighbour. Emissive ×2.5. |
 | Incompatible | `rgb(255 93 82)` | Touching edge that clashes; bulldoze target. Emissive ×2.5. |
 | Neutral | `rgb(214 228 240)` at 55% | Edge with no neighbour; free-slot outline. Not emissive. |
-| Ink | `rgb(238 243 246)` | Hovered slot outline, commit flash, cut-off hatch. |
+| Ink | `rgb(238 243 246)` | Hovered slot outline, hovered tile rim, commit flash, cut-off hatch. |
 | Ghost line | `rgb(214 236 255)` at 75% | Ghost outline. |
 | Ghost fill | `rgb(74 163 223)` at 12% | Ghost cap tint. |
 | Socket: Grass | `rgb(156 196 100)` | Socket key mark. |
@@ -32,6 +32,16 @@ Legality is never colour alone. Compatible edges are solid, incompatible edges a
 - The slot ring hides in bulldoze and photo mode (160 ms fade).
 - The hovered slot stays the sheet's slot while the pointer moves onto the HUD. Another slot, Esc, or a placement replaces it.
 - Pinning (owner choice U4, 2026-10-14): a click on a free slot pins it. The ghost, its rotation and the sheet stay on the pinned slot while the pointer crosses other tiles on its way to the sheet, and a second click on it places. A click on another free slot pins that one; Esc or a click elsewhere unpins. The pinned ghost's outline is solid, and the slot under the pointer keeps the hovered outline so the next click's target is visible.
+
+## Hovered tile
+
+Owner request, 2026-10-14: a placed tile under the pointer gets a faint outline, so the player sees which tile the pointer is on.
+
+- With the place tool, the placed tile under the pointer draws a thin hex rim at the cap rim (the bulldoze target's rim): ink at 35%, 1.5 px, solid, with no fill, glow or breathing. It is clearly fainter than the hovered slot's 90%, 2 px dashed outline.
+- Fades in 120 ms and out 120 ms. Under reduced motion it cuts on and off.
+- Hidden in bulldoze mode, where the bulldoze target outlines the hovered tile instead, in photo mode, and while the pointer is on the HUD (the engine then hovers nothing, or the sheet's slot).
+- A tile still waiting for its pack shows only the waiting outline.
+- With a pinned slot (U4), the pinned ghost stays and the rim follows the pointer over placed tiles.
 
 ## Ghost
 
@@ -75,7 +85,7 @@ The signature of the Legend direction, carried into the world. For every touched
 
 Rejected placement (the selected tile does not fit): the incompatible edges pulse once over 240 ms, core 7 to 13 px and halo 10 and 24 px, then settle. No camera shake. The tag keeps its reason.
 
-Undo of a placement: the tile reverses its rise, sinking 400 ms ease-in with a short dust puff. The prototype fades it in 260 ms.
+Undo of a placement (and redo of a bulldoze): the tile reverses its rise, sinking 400 ms ease-in with a short dust puff around the rim. The prototype fades it in 260 ms. A bulldoze gets the dust cloud instead (see Bulldoze).
 
 ## Bulldoze
 
@@ -86,7 +96,8 @@ Undo of a placement: the tile reverses its rise, sinking 400 ms ease-in with a s
 | Last tile | Same as split, without the hatch | None | Tag "The world needs at least one tile" |
 
 - Mode change in and out: 150 ms. The cursor becomes the bulldoze cursor and the ghost and slot ring hide.
-- Clicking a blocked target repeats the 240 ms pulse on its outline. Clicking a removable tile sinks it (400 ms) and the HUD toast offers Undo.
+- Clicking a blocked target repeats the 240 ms pulse on its outline. Clicking a removable tile destroys it: it sinks 700 ms ease-in inside a dust cloud and the HUD toast offers Undo.
+- The dust cloud (owner request 2026-10-14) covers the whole hex: a darker earthy swell across the hex area, a lighter billow thrown past the rim and up from the centre several metres, and a few dark debris bits tossed up that fall back. It lingers about 2 s after the tile is gone, the upper billow thinning first, and is clear by 2.8 s. 120 particles at most on two shared meshes, unlit, no shadows, the same layout every time for a given cell. Reduced motion: no cloud, the tile is gone at once. Undo and redo keep the short puff above.
 - Highlights fade in 160 ms.
 
 ## Audio pairing (§8.1)

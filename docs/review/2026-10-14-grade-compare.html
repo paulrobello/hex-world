@@ -1,0 +1,121 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Grade Compare</title><style>
+:root{--bg:#f4f5f2;--card:#fff;--ink:#1c211e;--muted:#5b655f;--line:#d7dbd5;--accent:#2f6f4f;--rec:#eaf3ee;--warn:#9a5b13}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#121513;--card:#1b1f1d;--ink:#e6eae7;--muted:#a1aba5;--line:#2c3330;--accent:#7cc39c;--rec:#1d2b23;--warn:#e0a35a}}
+:root[data-theme=dark]{--bg:#121513;--card:#1b1f1d;--ink:#e6eae7;--muted:#a1aba5;--line:#2c3330;--accent:#7cc39c;--rec:#1d2b23;--warn:#e0a35a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,sans-serif}
+main{max-width:1500px;margin:0 auto;padding:20px 16px 80px;overflow-wrap:anywhere}h1{font-size:22px;margin:0 0 6px}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 20px}nav a{font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+section{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin:0 0 18px;scroll-margin-top:12px}
+h2{font-size:18px;margin:0 0 8px}h2 span{color:var(--muted);font-weight:500}p{margin:6px 0;max-width:100ch}
+.rec{background:var(--rec);border-left:3px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(270px,100%),1fr));gap:10px;margin-top:10px}
+figure{margin:0}figure img{width:100%;border-radius:4px;border:1px solid var(--line);display:block;aspect-ratio:16/10;object-fit:cover}
+figcaption{font-size:12px;color:var(--muted)}figcaption b{color:var(--ink);font-size:13px}
+.top{font-size:13px;color:var(--muted)}.scroll{overflow-x:auto}
+table{border-collapse:collapse;font-size:13px;margin:8px 0}td,th{border:1px solid var(--line);padding:4px 8px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}th{background:var(--rec)}td.low{color:var(--warn);font-weight:600}
+code{font-size:13px}dl{margin:6px 0}dt{font-weight:600;margin-top:6px}dd{margin:0 0 0 16px;color:var(--muted)}
+</style></head><body><main>
+<h1>Colour grade comparison, 2026-10-14</h1>
+<p class=top>Owner feedback: the TonyMcMapface look feels washed out next to the earlier ACES look; something between the two. Five presets, each shot live from the same native frames (1600x1000, seed 1, fixed clocks, tilt-shift off, photo mode with depth of field off). The default stays <code>tony</code>; nothing here changes it. Click an image for full size.</p>
+<div class=rec><b>All three in-between presets bring the grass, roof and sea colour back to the ACES level and keep the river-mouth walls readable; the forest and river water stay below ACES.</b> Grass saturation is 0.302 under tony and 0.364 under aces; rich-1, rich-2 and rich-3 read 0.373, 0.367 and 0.358. Forest canopy reads 0.458, 0.457 and 0.424 against aces 0.559 (tony 0.368), and river water 0.256, 0.253 and 0.274 against 0.290. The mouth walls read 12.1, 9.0 and 8.5/255 against 0.6/255 under aces. They differ in contrast: rich-1 keeps tony's light shadows, rich-2 deepens them part way, and rich-3 is the ACES curve with only the black floor lifted.</div>
+<nav><a href='#overview'>Overview with houses</a><a href='#houses'>Houses</a><a href='#bridge'>River and bridge</a><a href='#mouth'>River mouth wall</a><a href='#oak'>Forest and oak</a><a href='#coast'>Coast and beach</a><a href='#meadow'>Meadow close-up</a><a href='#numbers'>Numbers</a><a href='#switch'>How to switch</a></nav>
+<section id=presets><h2>Presets</h2><div class=scroll><table><tr><th>Preset</th><th style='text-align:left'>Settings</th><th style='text-align:left'>In one line</th></tr>
+<tr><td><b>aces</b></td><td style='text-align:left;white-space:normal'>AcesFitted, EV100 12.5, no grading, Bevy&#x27;s default clear colour (43, 44, 47)</td><td style='text-align:left;white-space:normal'>The earlier look: deep colour, but shaded walls go black</td></tr>
+<tr><td><b>tony</b></td><td style='text-align:left;white-space:normal'>TonyMcMapface, EV100 12.9, no grading, lookdev::BACKDROP</td><td style='text-align:left;white-space:normal'>The current look: every wall readable, softer colour</td></tr>
+<tr><td><b>rich-1</b></td><td style='text-align:left;white-space:normal'>TonyMcMapface, EV100 12.9, post-tonemap saturation 1.2</td><td style='text-align:left;white-space:normal'>Current look with a fifth more colour</td></tr>
+<tr><td><b>rich-2</b></td><td style='text-align:left;white-space:normal'>TonyMcMapface, EV100 12.9, every section gamma 0.926 and gain 1.135 (a 1.08 log contrast about 0.18 linear), post-tonemap saturation 1.12, backdrop linear (0.0046, 0.0047, 0.0058)</td><td style='text-align:left;white-space:normal'>Current look with ACES-like contrast and colour, walls still readable</td></tr>
+<tr><td><b>rich-3</b></td><td style='text-align:left;white-space:normal'>AcesFitted, EV100 12.5, shadows and highlights lift +0.013 before the curve, backdrop linear (0.011, 0.0118, 0.0142)</td><td style='text-align:left;white-space:normal'>The earlier look with its shadows lifted out of black</td></tr>
+</table></div>
+<p><b>tony</b> reproduces the shipped look: against the 2026-10-14 <code>o-shipped</code> crops the walls read 12.2 and 12.0 (12.1, 12.0), the grass 125.3 (124.9), the backdrop 16.0 (16.0) and the bridge face 31.1 (31.1). A frame taken before any <code>set_grade</code> matches it within 0.7/255 on every crop (<code>default</code> rows in measurements.txt). <b>aces</b> reproduces the ACES frames with today's lighter soil: walls 0.65/255, grass 128.0, backdrop 15.4.</p>
+<p><b>Why these tools.</b> Bevy grades on exposed linear values before the tone curve, except post-saturation. Section contrast pivots at 0.5 linear, so any contrast above 1 turns the walls (about 0.004) black again; no preset uses it. Bevy also blends the shadow/midtone boundary into the highlights section, so every preset keeps the shadows and highlights sections equal to avoid a seam at level 0.1.</p>
+<p><b>rich-1</b> is tony with post-tonemap saturation 1.2. Brightness is unchanged and the walls stay at 12/255. <b>rich-2</b> adds a log contrast about 0.18 linear, (c &times; 1.135)<sup>1.08</sup>, which deepens shade (walls 9.0, bridge face 27.3, forest 62 against 67) and keeps the grass at its tony brightness, plus post-saturation 1.12. <b>rich-3</b> is ACES at EV100 12.5 with +0.013 linear added below the curve (shadows and highlights sections), which lifts the walls from 0.6 to 8.5/255 and the bridge face from 7.8 to 17.8; the rest of the frame stays within about 4/255 of aces.</p>
+<p>Each preset carries its own backdrop clear colour, because the backdrop passes through the same curve and grading: all five read 15.3 to 16.0/255.</p>
+<p>Frames were shot under heavy host load from other agents (1-minute load 30 to 41 after a bounded wait); every frame was checked and none was black or empty. No timings were taken.</p>
+</section>
+<section id='overview'><h2>Overview with houses <span>scatter world, high three-quarter view</span></h2><div class=grid>
+<figure><a href='../checkpoints/grades/frames/grade-overview-aces.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-overview-aces.jpg' loading=lazy alt='Overview with houses, aces'></a><figcaption><b>aces</b> The earlier look: deep colour, but shaded walls go black</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-overview-tony.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-overview-tony.jpg' loading=lazy alt='Overview with houses, tony'></a><figcaption><b>tony</b> The current look: every wall readable, softer colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-overview-rich-1.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-overview-rich-1.jpg' loading=lazy alt='Overview with houses, rich-1'></a><figcaption><b>rich-1</b> Current look with a fifth more colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-overview-rich-2.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-overview-rich-2.jpg' loading=lazy alt='Overview with houses, rich-2'></a><figcaption><b>rich-2</b> Current look with ACES-like contrast and colour, walls still readable</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-overview-rich-3.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-overview-rich-3.jpg' loading=lazy alt='Overview with houses, rich-3'></a><figcaption><b>rich-3</b> The earlier look with its shadows lifted out of black</figcaption></figure>
+</div></section>
+<section id='houses'><h2>Houses <span>house cluster beside the road</span></h2><div class=grid>
+<figure><a href='../checkpoints/grades/frames/grade-houses-aces.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-houses-aces.jpg' loading=lazy alt='Houses, aces'></a><figcaption><b>aces</b> The earlier look: deep colour, but shaded walls go black</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-houses-tony.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-houses-tony.jpg' loading=lazy alt='Houses, tony'></a><figcaption><b>tony</b> The current look: every wall readable, softer colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-houses-rich-1.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-houses-rich-1.jpg' loading=lazy alt='Houses, rich-1'></a><figcaption><b>rich-1</b> Current look with a fifth more colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-houses-rich-2.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-houses-rich-2.jpg' loading=lazy alt='Houses, rich-2'></a><figcaption><b>rich-2</b> Current look with ACES-like contrast and colour, walls still readable</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-houses-rich-3.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-houses-rich-3.jpg' loading=lazy alt='Houses, rich-3'></a><figcaption><b>rich-3</b> The earlier look with its shadows lifted out of black</figcaption></figure>
+</div></section>
+<section id='bridge'><h2>River and bridge <span>river chain, bridge and mouth (river-play.json)</span></h2><div class=grid>
+<figure><a href='../checkpoints/grades/frames/grade-bridge-aces.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-bridge-aces.jpg' loading=lazy alt='River and bridge, aces'></a><figcaption><b>aces</b> The earlier look: deep colour, but shaded walls go black</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-bridge-tony.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-bridge-tony.jpg' loading=lazy alt='River and bridge, tony'></a><figcaption><b>tony</b> The current look: every wall readable, softer colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-bridge-rich-1.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-bridge-rich-1.jpg' loading=lazy alt='River and bridge, rich-1'></a><figcaption><b>rich-1</b> Current look with a fifth more colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-bridge-rich-2.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-bridge-rich-2.jpg' loading=lazy alt='River and bridge, rich-2'></a><figcaption><b>rich-2</b> Current look with ACES-like contrast and colour, walls still readable</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-bridge-rich-3.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-bridge-rich-3.jpg' loading=lazy alt='River and bridge, rich-3'></a><figcaption><b>rich-3</b> The earlier look with its shadows lifted out of black</figcaption></figure>
+</div></section>
+<section id='mouth'><h2>River mouth wall <span>the shade-diagnosis mouth camera (k5-river-04)</span></h2><div class=grid>
+<figure><a href='../checkpoints/grades/frames/grade-mouth-aces.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-mouth-aces.jpg' loading=lazy alt='River mouth wall, aces'></a><figcaption><b>aces</b> The earlier look: deep colour, but shaded walls go black</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-mouth-tony.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-mouth-tony.jpg' loading=lazy alt='River mouth wall, tony'></a><figcaption><b>tony</b> The current look: every wall readable, softer colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-mouth-rich-1.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-mouth-rich-1.jpg' loading=lazy alt='River mouth wall, rich-1'></a><figcaption><b>rich-1</b> Current look with a fifth more colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-mouth-rich-2.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-mouth-rich-2.jpg' loading=lazy alt='River mouth wall, rich-2'></a><figcaption><b>rich-2</b> Current look with ACES-like contrast and colour, walls still readable</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-mouth-rich-3.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-mouth-rich-3.jpg' loading=lazy alt='River mouth wall, rich-3'></a><figcaption><b>rich-3</b> The earlier look with its shadows lifted out of black</figcaption></figure>
+</div></section>
+<section id='oak'><h2>Forest and oak <span>scatter world, oak tile among pines (scatter-12-oak)</span></h2><div class=grid>
+<figure><a href='../checkpoints/grades/frames/grade-oak-aces.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-oak-aces.jpg' loading=lazy alt='Forest and oak, aces'></a><figcaption><b>aces</b> The earlier look: deep colour, but shaded walls go black</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-oak-tony.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-oak-tony.jpg' loading=lazy alt='Forest and oak, tony'></a><figcaption><b>tony</b> The current look: every wall readable, softer colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-oak-rich-1.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-oak-rich-1.jpg' loading=lazy alt='Forest and oak, rich-1'></a><figcaption><b>rich-1</b> Current look with a fifth more colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-oak-rich-2.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-oak-rich-2.jpg' loading=lazy alt='Forest and oak, rich-2'></a><figcaption><b>rich-2</b> Current look with ACES-like contrast and colour, walls still readable</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-oak-rich-3.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-oak-rich-3.jpg' loading=lazy alt='Forest and oak, rich-3'></a><figcaption><b>rich-3</b> The earlier look with its shadows lifted out of black</figcaption></figure>
+</div></section>
+<section id='coast'><h2>Coast and beach <span>coast island (beach-closeups.json, beach-05 camera)</span></h2><div class=grid>
+<figure><a href='../checkpoints/grades/frames/grade-coast-aces.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-coast-aces.jpg' loading=lazy alt='Coast and beach, aces'></a><figcaption><b>aces</b> The earlier look: deep colour, but shaded walls go black</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-coast-tony.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-coast-tony.jpg' loading=lazy alt='Coast and beach, tony'></a><figcaption><b>tony</b> The current look: every wall readable, softer colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-coast-rich-1.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-coast-rich-1.jpg' loading=lazy alt='Coast and beach, rich-1'></a><figcaption><b>rich-1</b> Current look with a fifth more colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-coast-rich-2.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-coast-rich-2.jpg' loading=lazy alt='Coast and beach, rich-2'></a><figcaption><b>rich-2</b> Current look with ACES-like contrast and colour, walls still readable</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-coast-rich-3.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-coast-rich-3.jpg' loading=lazy alt='Coast and beach, rich-3'></a><figcaption><b>rich-3</b> The earlier look with its shadows lifted out of black</figcaption></figure>
+</div></section>
+<section id='meadow'><h2>Meadow close-up <span>scatter world, low meadow view (scatter-03-meadow)</span></h2><div class=grid>
+<figure><a href='../checkpoints/grades/frames/grade-meadow-aces.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-meadow-aces.jpg' loading=lazy alt='Meadow close-up, aces'></a><figcaption><b>aces</b> The earlier look: deep colour, but shaded walls go black</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-meadow-tony.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-meadow-tony.jpg' loading=lazy alt='Meadow close-up, tony'></a><figcaption><b>tony</b> The current look: every wall readable, softer colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-meadow-rich-1.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-meadow-rich-1.jpg' loading=lazy alt='Meadow close-up, rich-1'></a><figcaption><b>rich-1</b> Current look with a fifth more colour</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-meadow-rich-2.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-meadow-rich-2.jpg' loading=lazy alt='Meadow close-up, rich-2'></a><figcaption><b>rich-2</b> Current look with ACES-like contrast and colour, walls still readable</figcaption></figure>
+<figure><a href='../checkpoints/grades/frames/grade-meadow-rich-3.jpg' target=_blank><img src='../checkpoints/grades/frames/grade-meadow-rich-3.jpg' loading=lazy alt='Meadow close-up, rich-3'></a><figcaption><b>rich-3</b> The earlier look with its shadows lifted out of black</figcaption></figure>
+</div></section>
+<section id=numbers><h2>Numbers <span>measured on the PNG frames, docs/checkpoints/grades/measurements.txt</span></h2><p>Crop boxes are in <code>crops.json</code>: the shade-diagnosis boxes on the mouth and bridge-arch cameras, plus new boxes on other cameras: the shaded meadow cut wall and the sea (coast view), a roof, the forest canopy and the meadow close-up. Walls under 8/255 are marked.</p>
+<h3>Shade (sRGB luma /255)</h3><div class=scroll><table><tr><th>Crop</th><th>aces</th><th>tony</th><th>rich-1</th><th>rich-2</th><th>rich-3</th></tr>
+<tr><td>River-mouth wall, left</td><td class='low'>0.7</td><td class=''>12.2</td><td class=''>12.1</td><td class=''>9.1</td><td class=''>8.6</td></tr>
+<tr><td>River-mouth wall, right</td><td class='low'>0.6</td><td class=''>12.0</td><td class=''>12.0</td><td class=''>8.9</td><td class=''>8.5</td></tr>
+<tr><td>Bridge arch face</td><td class=''>7.8</td><td class=''>31.1</td><td class=''>31.1</td><td class=''>27.3</td><td class=''>17.8</td></tr>
+<tr><td>Meadow cut wall (coast)</td><td class=''>22.4</td><td class=''>30.8</td><td class=''>30.9</td><td class=''>28.4</td><td class=''>22.2</td></tr>
+<tr><td>Backdrop</td><td class=''>15.4</td><td class=''>16.0</td><td class=''>16.0</td><td class=''>15.6</td><td class=''>15.3</td></tr>
+</table></div>
+<h3>Lit surfaces (sRGB luma /255)</h3><div class=scroll><table><tr><th>Crop</th><th>aces</th><th>tony</th><th>rich-1</th><th>rich-2</th><th>rich-3</th></tr>
+<tr><td>Grass (mouth)</td><td class=''>128.0</td><td class=''>125.3</td><td class=''>124.5</td><td class=''>125.4</td><td class=''>128.9</td></tr>
+<tr><td>Gravel</td><td class=''>122.6</td><td class=''>124.1</td><td class=''>122.7</td><td class=''>123.0</td><td class=''>120.0</td></tr>
+<tr><td>River water (mouth)</td><td class=''>87.2</td><td class=''>99.5</td><td class=''>99.3</td><td class=''>98.6</td><td class=''>90.0</td></tr>
+<tr><td>River water (bridge)</td><td class=''>95.7</td><td class=''>103.3</td><td class=''>100.1</td><td class=''>98.9</td><td class=''>91.2</td></tr>
+</table></div>
+<h3>Saturation (mean HSV S per pixel)</h3><div class=scroll><table><tr><th>Crop</th><th>aces</th><th>tony</th><th>rich-1</th><th>rich-2</th><th>rich-3</th></tr>
+<tr><td>Grass (mouth)</td><td class=''>0.364</td><td class=''>0.302</td><td class=''>0.373</td><td class=''>0.367</td><td class=''>0.358</td></tr>
+<tr><td>Grass (meadow close-up)</td><td class=''>0.629</td><td class=''>0.510</td><td class=''>0.681</td><td class=''>0.644</td><td class=''>0.599</td></tr>
+<tr><td>River water</td><td class=''>0.290</td><td class=''>0.208</td><td class=''>0.256</td><td class=''>0.253</td><td class=''>0.274</td></tr>
+<tr><td>Sea (coast)</td><td class=''>0.399</td><td class=''>0.334</td><td class=''>0.417</td><td class=''>0.407</td><td class=''>0.396</td></tr>
+<tr><td>Roof</td><td class=''>0.613</td><td class=''>0.518</td><td class=''>0.611</td><td class=''>0.603</td><td class=''>0.608</td></tr>
+<tr><td>Forest canopy</td><td class=''>0.559</td><td class=''>0.368</td><td class=''>0.458</td><td class=''>0.457</td><td class=''>0.424</td></tr>
+</table></div>
+</section>
+<section id=switch><h2>How to switch</h2><dl><dt>Settings</dt><dd>Settings, Graphics tab, Colour grade: pick a row; it applies at once and is remembered in this browser (not in the world save).</dd><dt>Web address</dt><dd><code>?grade=rich-2</code> (overrides the remembered choice for that visit).</dd><dt>Native</dt><dd><code>cargo run -p hex-app --release -- --scenario play --grade rich-2</code>; <code>--tonemap</code> and <code>--ev100</code> still override the preset's own values.</dd><dt>Live, from the console or a script</dt><dd><code>hexWorld.cmd({cmd: 'set_grade', grade: 'rich-2'})</code>; <code>hexWorld.state().grade</code> reports the active preset and the list.</dd></dl></section>
+</main><script>
+// The plain review server can drop a few requests when many images load at once: retry each failed image up to 3 times.
+document.addEventListener("error", (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement)) return;
+  const n = Number(img.dataset.retry || 0);
+  if (n >= 3) return;
+  img.dataset.retry = String(n + 1);
+  const src = img.getAttribute("src").replace(/[?&]retry=\d+$/, "");
+  setTimeout(() => { img.src = src + (src.includes("?") ? "&" : "?") + "retry=" + (n + 1); }, 300 * (n + 1));
+}, true);
+</script>
+</body></html>

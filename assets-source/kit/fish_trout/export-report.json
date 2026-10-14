@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/fish_trout.py",
-    "sha256": "8d6922a8c0f7aaa83ee9c98377c6bc4c7acbfbea34e52e008c8c523d57f6cf7a"
+    "sha256": "fc27263dd5506f17ec0598a0ba6d959fc0b84ea1d6a6c67f9cc5889f302c2202"
   },
   "generatorDeps": [
     {

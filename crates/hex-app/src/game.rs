@@ -158,6 +158,9 @@ pub struct GameState {
     pub world_rev: u64,
     /// Bumped when the world is replaced wholesale; the render view's `epoch` (drawn at rest).
     pub epoch: u64,
+    /// The cell the latest world change bulldozed, so the renderer raises a dust cloud over its
+    /// sink; any other world change (a placement, undo, redo, a replaced world) clears it.
+    pub last_bulldoze: Option<Axial>,
 }
 
 impl GameState {
@@ -182,6 +185,7 @@ impl GameState {
             refusals: 0,
             world_rev: 0,
             epoch: 0,
+            last_bulldoze: None,
         }
     }
 
@@ -401,6 +405,7 @@ impl GameState {
                     return self.refuse("undo", "nothing to undo".into());
                 }
                 let mut events = vec![GameEvent::Undone];
+                self.last_bulldoze = None;
                 events.extend(self.drop_stale_pin());
                 self.resnap(false);
                 self.world_rev += 1;
@@ -412,6 +417,7 @@ impl GameState {
                     return self.refuse("redo", "nothing to redo".into());
                 }
                 let mut events = vec![GameEvent::Redone];
+                self.last_bulldoze = None;
                 events.extend(self.drop_stale_pin());
                 self.resnap(false);
                 self.world_rev += 1;
@@ -491,6 +497,7 @@ impl GameState {
                 if self.pinned.take().is_some() {
                     events.push(GameEvent::PinChanged { cell: None });
                 }
+                self.last_bulldoze = None;
                 self.resnap(false);
                 self.world_rev += 1;
                 self.result("place", Some(cell), None);
@@ -519,6 +526,7 @@ impl GameState {
                     r: cell.r,
                     tile: tile.def,
                 }];
+                self.last_bulldoze = Some(cell);
                 events.extend(self.drop_stale_pin());
                 self.resnap(false);
                 self.world_rev += 1;
@@ -550,6 +558,7 @@ impl GameState {
         self.recent.clear();
         self.recent.push_back(event);
         self.chosen_rotation.clear();
+        self.last_bulldoze = None;
         self.revision += 1;
         self.world_rev += 1;
         self.epoch += 1;
@@ -639,10 +648,14 @@ impl GameState {
             pointer_slot: self.hovered_slot().filter(|&c| {
                 self.tool == Tool::Place && !self.photo_mode && self.pinned.is_some_and(|p| p != c)
             }),
+            pointer_tile: self.hovered.filter(|&c| {
+                self.tool == Tool::Place && !self.photo_mode && self.world.tile(c).is_some()
+            }),
             bulldoze: self
                 .bulldoze_target()
                 .map(|(c, reason)| (c, reason.is_none())),
             bulldoze_mode: self.tool == Tool::Bulldoze && !self.photo_mode,
+            bulldozed: self.last_bulldoze,
             refusals: self.refusals,
             epoch: self.epoch,
             world_seed: self.world.seed(),
@@ -859,6 +872,38 @@ mod tests {
     }
 
     #[test]
+    fn only_a_bulldoze_marks_the_removed_cell_for_the_dust_cloud() {
+        let mut g = game();
+        place(&mut g, "forest", ax(-1, 0));
+        g.apply(Action::Undo);
+        assert!(g.world.tile(ax(-1, 0)).is_none());
+        assert_eq!(
+            g.view().bulldozed,
+            None,
+            "an undone placement sinks with the puff"
+        );
+        g.apply(Action::Redo);
+        g.apply(Action::Bulldoze(ax(-1, 0)));
+        assert!(g.world.tile(ax(-1, 0)).is_none());
+        assert_eq!(g.view().bulldozed, Some(ax(-1, 0)));
+        g.apply(Action::Undo);
+        assert_eq!(g.view().bulldozed, None);
+        g.apply(Action::Redo);
+        assert_eq!(
+            g.view().bulldozed,
+            None,
+            "a redone bulldoze steps the history"
+        );
+        // Bulldoze, place on the same cell, undo: the undo takes the tile down, not the bulldoze.
+        place(&mut g, "forest", ax(-1, 0));
+        g.apply(Action::Bulldoze(ax(-1, 0)));
+        place(&mut g, "meadow", ax(-1, 0));
+        g.apply(Action::Undo);
+        assert!(g.world.tile(ax(-1, 0)).is_none());
+        assert_eq!(g.view().bulldozed, None);
+    }
+
+    #[test]
     fn primary_follows_the_tool() {
         let mut g = game();
         assert!(matches!(
@@ -997,6 +1042,35 @@ mod tests {
             Some(ax(1, 0)),
             "the ghost is back under the pointer"
         );
+    }
+
+    #[test]
+    fn the_view_names_a_hovered_placed_tile_in_place_mode_only() {
+        let mut g = game();
+        place(&mut g, "meadow", ax(1, 0));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        let v = g.view();
+        assert_eq!(v.pointer_tile, Some(ax(1, 0)));
+        assert!(v.ghost.is_none() && v.pointer_slot.is_none());
+        g.apply(Action::Hover(Some(ax(2, 0))));
+        assert_eq!(
+            g.view().pointer_tile,
+            None,
+            "a free slot is not a placed tile"
+        );
+        // A pin keeps its ghost while the rim follows the pointer over placed tiles.
+        g.apply(Action::Pin(ax(2, 0)));
+        g.apply(Action::Hover(Some(ax(0, 0))));
+        let v = g.view();
+        assert_eq!(v.pointer_tile, Some(ax(0, 0)));
+        assert!(v.ghost.is_some_and(|gh| gh.pinned && gh.cell == ax(2, 0)));
+        g.apply(Action::TogglePhoto);
+        assert_eq!(g.view().pointer_tile, None, "photo mode");
+        g.apply(Action::TogglePhoto);
+        g.apply(Action::ToggleBulldoze);
+        let v = g.view();
+        assert_eq!(v.pointer_tile, None, "bulldoze mode");
+        assert_eq!(v.bulldoze.map(|b| b.0), Some(ax(0, 0)));
     }
 
     /// The proof script's game sequence (docs/checkpoints/play/play.json), replayed headlessly.

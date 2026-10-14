@@ -1,21 +1,42 @@
-// Settings (S9, design/ui/legend/settings.html): the Graphics tab (Quality, S9.1, and Tilt-shift,
-// S9.4) and the Audio tab (S9.5). The Controls tab is not built. Graphics reads `state().tier` and
-// `state().tilt` every frame while open, so the T key, scripts and a loaded save show here too, and
-// writes through the `set_tier` and `tilt` commands. Audio reads and writes `hexWorld.audio`, which
-// keeps the levels per viewer in localStorage.
+// Settings (S9, design/ui/legend/settings.html): the Graphics tab (Quality, S9.1, Tilt-shift, S9.4,
+// and Colour grade) and the Audio tab (S9.5). The Controls tab is not built. Graphics reads
+// `state().tier`, `state().tilt` and `state().grade` every frame while open, so the T key, scripts
+// and a loaded save show here too, and writes through the `set_tier`, `tilt` and `set_grade`
+// commands. Audio reads and writes `hexWorld.audio`, which keeps the levels per viewer in
+// localStorage; the colour grade is kept per viewer the same way, outside the world save.
 import type { AudioApi } from "./audio.ts";
-import type { HexWorld, QualityChoice, TierState, TiltState } from "./bridge.ts";
+import type { GradeName, GradeState, HexWorld, QualityChoice, TierState, TiltState } from "./bridge.ts";
 import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
 import {
   CHANNELS,
   type Channel,
+  GRADE_KEY,
+  gradeCommand,
+  gradeView,
   percent,
   qualityView,
   roveIndex,
   selectedQuality,
   tierCommand,
 } from "./settings-model.ts";
+
+/** The viewer's stored colour grade, or null without one or without storage. */
+export function loadGrade(): string | null {
+  try {
+    return localStorage.getItem(GRADE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveGrade(g: GradeName): void {
+  try {
+    localStorage.setItem(GRADE_KEY, g);
+  } catch {
+    /* Storage refused: the grade holds until the page closes. */
+  }
+}
 
 type Tab = "graphics" | "audio";
 
@@ -39,6 +60,8 @@ export class Settings {
   private readonly caution: HTMLElement;
   private readonly cautionTitle: HTMLElement;
   private readonly cautionBody: HTMLElement;
+  private readonly gradeHead: HTMLElement;
+  private readonly gradeList: HTMLUListElement;
   private readonly toggle: HTMLButtonElement;
   private readonly strength: HTMLInputElement;
   private readonly out: HTMLOutputElement;
@@ -50,6 +73,9 @@ export class Settings {
   private tierSig = "";
   private tier: TierState | undefined;
   private pick: { id: QualityChoice; until: number } | null = null;
+  private gradeSig = "";
+  private grade: GradeState | undefined;
+  private gradePick: { id: GradeName; until: number } | null = null;
 
   constructor(hw: HexWorld, audio: AudioApi | null, onClose: () => void, onChange: () => void) {
     this.hw = hw;
@@ -68,7 +94,9 @@ export class Settings {
       const li = (e.target as Element).closest<HTMLElement>(".tier");
       if (li) this.pickTier(li.dataset.tier as QualityChoice);
     });
-    this.tierList.addEventListener("keydown", (e) => this.tierKey(e));
+    this.tierList.addEventListener("keydown", (e) =>
+      this.radioKey(e, this.tierList, "tier", (id) => this.pickTier(id as QualityChoice)),
+    );
     this.tierReason = h("p", { class: "tier-reason" });
     this.cautionTitle = h("b");
     this.cautionBody = h("span");
@@ -106,6 +134,17 @@ export class Settings {
       this.out,
       this.strength,
     );
+
+    // ---------- Graphics: Colour grade ----------
+    this.gradeHead = h("h2", { class: "section-h", hidden: true }, "Colour grade");
+    this.gradeList = h("ul", { class: "tiers", role: "radiogroup", "aria-label": "Colour grade", hidden: true });
+    this.gradeList.addEventListener("click", (e) => {
+      const li = (e.target as Element).closest<HTMLElement>(".tier");
+      if (li) this.pickGrade(li.dataset.grade as GradeName);
+    });
+    this.gradeList.addEventListener("keydown", (e) =>
+      this.radioKey(e, this.gradeList, "grade", (id) => this.pickGrade(id as GradeName)),
+    );
     const graphics = h(
       "div",
       { class: "panel", role: "tabpanel" },
@@ -122,6 +161,8 @@ export class Settings {
         h("span", { class: "field__hint" }, "Blurs near and far like a diorama photo. On from Medium up."),
       ),
       this.strengthField,
+      this.gradeHead,
+      this.gradeList,
     );
 
     // ---------- Audio ----------
@@ -225,6 +266,7 @@ export class Settings {
     if (!v) return;
     this.tiltSig = "";
     this.tierSig = "";
+    this.gradeSig = "";
     this.syncAudio();
     this.tabs.get(this.tab)!.btn.focus({ preventScroll: true });
   }
@@ -234,9 +276,10 @@ export class Settings {
     return this.shown && t instanceof Node && this.el.contains(t);
   }
 
-  render(tilt: TiltState | undefined, tier: TierState | undefined): void {
+  render(tilt: TiltState | undefined, tier: TierState | undefined, grade?: GradeState): void {
     if (!this.shown) return;
     this.renderTier(tier);
+    this.renderGrade(grade);
     if (!tilt) return;
     const sig = `${tilt.enabled}|${tilt.strength}`;
     if (sig === this.tiltSig) return;
@@ -309,22 +352,58 @@ export class Settings {
     this.renderTier(this.tier);
   }
 
-  private tierKey(e: KeyboardEvent): void {
-    const rows = [...this.tierList.querySelectorAll<HTMLElement>(".tier")];
+  private renderGrade(grade: GradeState | undefined): void {
+    this.grade = grade;
+    const pick = this.gradePick;
+    if (pick && (grade?.name === pick.id || performance.now() > pick.until)) this.gradePick = null;
+    const v = gradeView(grade, this.gradePick?.id ?? null);
+    const sig = JSON.stringify(v);
+    if (sig === this.gradeSig) return;
+    this.gradeSig = sig;
+    const focused = (document.activeElement as HTMLElement | null)?.dataset?.grade;
+    this.gradeList.replaceChildren(
+      ...v.rows.map((r) => {
+        const on = r.id === v.selected;
+        return h(
+          "li",
+          { class: "tier", role: "radio", tabindex: on ? 0 : -1, "aria-checked": String(on), "data-grade": r.id },
+          h("span", { class: "radio", "aria-hidden": "true" }),
+          h("b", {}, r.name),
+          h("small", {}, r.detail),
+        );
+      }),
+    );
+    this.gradeHead.hidden = this.gradeList.hidden = v.rows.length === 0;
+    if (focused) this.gradeList.querySelector<HTMLElement>(`[data-grade="${focused}"]`)?.focus({ preventScroll: true });
+  }
+
+  /** A grade pick switches the look live and is kept for this viewer; it never queues an autosave. */
+  private pickGrade(id: GradeName): void {
+    const now = this.gradePick?.id ?? this.grade?.name;
+    if (id === now) return;
+    this.gradePick = { id, until: performance.now() + PICK_HOLD_MS };
+    this.hw.cmd(gradeCommand(id));
+    saveGrade(id);
+    this.renderGrade(this.grade);
+  }
+
+  /** Space and Enter pick the focused row; arrows, Home and End move along the radio list and pick. */
+  private radioKey(e: KeyboardEvent, list: HTMLElement, attr: "tier" | "grade", pick: (id: string) => void): void {
+    const rows = [...list.querySelectorAll<HTMLElement>(".tier")];
     const i = rows.indexOf(document.activeElement as HTMLElement);
     if (i < 0) return;
     if (e.key === " " || e.key === "Enter") {
       e.preventDefault();
-      this.pickTier(rows[i]!.dataset.tier as QualityChoice);
+      pick(rows[i]!.dataset[attr]!);
       return;
     }
     const n = roveIndex(i, rows.length, e.key, "y");
     if (n == null) return;
     e.preventDefault();
-    const id = rows[n]!.dataset.tier as QualityChoice;
+    const id = rows[n]!.dataset[attr]!;
     rows[n]!.focus();
-    this.pickTier(id);
-    this.tierList.querySelector<HTMLElement>(`[data-tier="${id}"]`)?.focus();
+    pick(id);
+    list.querySelector<HTMLElement>(`[data-${attr}="${id}"]`)?.focus();
   }
 }
 

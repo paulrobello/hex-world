@@ -27,6 +27,14 @@ export const EMITTER_CUE: Record<Biome, string | null> = {
   town: "town-murmur",
 };
 
+/** The positional loops a tile carries: its biome's, plus the surf on a river mouth (River and sea edges). */
+export function emitterCues(id: string, edges: readonly string[]): string[] {
+  const biome = biomeOf(id, edges);
+  const cues = [EMITTER_CUE[biome]];
+  if (biome === "river" && (edges.includes("Ocean") || edges.includes("Beach"))) cues.push(EMITTER_CUE.coast);
+  return cues.filter((c): c is string => !!c);
+}
+
 /** The non-positional bed per biome, weighted by its share of the view. Only river and coast carry one. */
 export const BED_CUE: Record<Biome, { cue: string; level: number } | null> = {
   meadow: null,

@@ -10,8 +10,9 @@
 //!    car simulation.
 //!
 //! Every stage start is announced as a [`RiseMessage`] (the audio layer's rumble cue). A new
-//! placement fast-forwards every running rise to its end state, and a removed tile sinks for
-//! [`SINK_SECONDS`]. Under [`ReducedMotion`] a rise is an instant cut with no dust or shake.
+//! placement fast-forwards every running rise to its end state, and a removed tile sinks: for
+//! [`SINK_SECONDS`] with a small puff after an undo, for [`BULLDOZE_SINK_SECONDS`] inside a dust
+//! cloud after a bulldoze. Under [`ReducedMotion`] a rise is an instant cut with no dust or shake.
 use std::collections::{HashMap, HashSet};
 
 use bevy::prelude::*;
@@ -23,8 +24,10 @@ use crate::{ActiveScenario, Scenario, SceneEntity};
 pub const RISE_DEPTH: f32 = LEVEL_STEP + 0.6;
 /// Peak height of the cap's overshoot above rest (m).
 pub const OVERSHOOT: f32 = 0.35;
-/// Undo and bulldoze sink a tile this long (s), ease-in (`design/ui/legend/in-world.md`, Place).
+/// Undo and redo sink a tile this long (s), ease-in (`design/ui/legend/in-world.md`, Place).
 pub const SINK_SECONDS: f32 = 0.4;
+/// A bulldozed tile sinks this long (s), ease-in, inside its dust cloud (`in-world.md`, Bulldoze).
+pub const BULLDOZE_SINK_SECONDS: f32 = 0.7;
 /// Tile base (m), where water starts to fill from.
 const FLOOR_Y: f32 = -LEVEL_STEP;
 /// Peak camera shake as a fraction of the camera's distance to the rising tile (~3 px at 1280 px).
@@ -42,8 +45,27 @@ pub enum RiseCue {
     Stage(RiseStage),
     /// The rise reached its end state.
     Settled,
-    /// The tile left the world (undo or bulldoze) and sinks.
-    Sink,
+    /// The tile left the world and sinks. Both kinds are `sink` on the event wire.
+    Sink(SinkKind),
+}
+
+/// Why a tile left the world.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SinkKind {
+    /// An undo or redo stepped the history: a short sink with a small puff.
+    Undo,
+    /// The bulldoze tool: a longer sink inside a dust cloud.
+    Bulldoze,
+}
+
+impl SinkKind {
+    /// How long the tile takes to sink (s).
+    pub fn seconds(self) -> f32 {
+        match self {
+            SinkKind::Undo => SINK_SECONDS,
+            SinkKind::Bulldoze => BULLDOZE_SINK_SECONDS,
+        }
+    }
 }
 
 impl RiseCue {
@@ -51,7 +73,7 @@ impl RiseCue {
         match self {
             RiseCue::Stage(s) => stage_name(s),
             RiseCue::Settled => "settled",
-            RiseCue::Sink => "sink",
+            RiseCue::Sink(_) => "sink",
         }
     }
 }
@@ -341,6 +363,7 @@ struct Sink {
     /// Rest heights captured on the first frame.
     bases: Vec<(Entity, f32)>,
     t: f32,
+    seconds: f32,
 }
 
 /// Rise state of every drawn tile. A cell missing from it is not drawn yet; `None` is settled.
@@ -446,10 +469,12 @@ impl PlayRises {
     }
 
     /// The tile at `cell` left the view: its root and water entities sink, then despawn.
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn remove(
         &mut self,
         cell: Axial,
         tile: &str,
+        kind: SinkKind,
         entities: Vec<Entity>,
         reduced: bool,
         commands: &mut Commands,
@@ -461,7 +486,7 @@ impl PlayRises {
         out.push(RiseMessage {
             cell,
             tile: tile.to_owned(),
-            cue: RiseCue::Sink,
+            cue: RiseCue::Sink(kind),
             skipped: reduced,
         });
         if reduced {
@@ -474,6 +499,7 @@ impl PlayRises {
                 entities,
                 bases: vec![],
                 t: 0.0,
+                seconds: kind.seconds(),
             });
         }
     }
@@ -567,7 +593,7 @@ pub fn animate(
     rises.settled.clear();
 }
 
-/// Sinks removed tiles over [`SINK_SECONDS`] (ease-in), then despawns them.
+/// Sinks removed tiles over their [`SinkKind::seconds`] (ease-in), then despawns them.
 pub fn sink(
     time: Res<Time>,
     mut commands: Commands,
@@ -587,7 +613,7 @@ pub fn sink(
                 .collect();
         }
         s.t += dt;
-        let u = (s.t / SINK_SECONDS).min(1.0);
+        let u = (s.t / s.seconds).min(1.0);
         if u >= 1.0 {
             for e in &s.entities {
                 commands.entity(*e).try_despawn();
@@ -603,28 +629,171 @@ pub fn sink(
     });
 }
 
-/// One dust puff: shared mesh, its own fading material, CPU-moved particles.
+/// One dust puff or cloud: shared meshes, its own fading layer materials, CPU-moved particles.
 struct Puff {
     entities: Vec<Entity>,
-    material: Handle<StandardMaterial>,
+    layers: Vec<(Handle<StandardMaterial>, Layer)>,
     particles: Vec<Particle>,
     t: f32,
-    alpha: f32,
 }
 
-#[derive(Clone, Copy)]
+/// A puff's material layer: one colour whose alpha holds, then fades out quadratically.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Layer {
+    rgb: [f32; 3],
+    alpha: f32,
+    /// Seconds at full alpha.
+    hold: f32,
+    /// Seconds by which the alpha reaches 0.
+    end: f32,
+    shape: Shape,
+}
+
+/// The shared mesh a layer's particles draw with.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Shape {
+    /// The rise and undo puffs' small spheres.
+    Puff,
+    /// The bulldoze cloud's large spheres, subdivided once more so their outline stays round.
+    Cloud,
+    /// Debris bits.
+    Chunk,
+}
+
+impl Shape {
+    fn mesh(self) -> Mesh {
+        match self {
+            Shape::Puff => Sphere::new(1.0).mesh().ico(1).expect("ico 1"),
+            Shape::Cloud => Sphere::new(1.0).mesh().ico(2).expect("ico 2"),
+            Shape::Chunk => Cuboid::new(1.0, 0.7, 1.2).into(),
+        }
+    }
+}
+
+impl Layer {
+    fn alpha_at(&self, t: f32) -> f32 {
+        let v = ((t - self.hold) / (self.end - self.hold)).clamp(0.0, 1.0);
+        self.alpha * (1.0 - v) * (1.0 - v)
+    }
+}
+
+/// The rise and undo puffs' colour.
+const PUFF_RGB: [f32; 3] = [0.66, 0.58, 0.46];
+
+/// The bulldoze cloud's layers: a darker low swell over the hex, a lighter billow from the rim and
+/// the centre that thins sooner as it rises, and dark debris bits.
+const CLOUD_LAYERS: [Layer; 3] = [
+    Layer {
+        rgb: [0.54, 0.45, 0.34],
+        alpha: 0.42,
+        hold: 0.9,
+        end: 2.7,
+        shape: Shape::Cloud,
+    },
+    Layer {
+        rgb: PUFF_RGB,
+        alpha: 0.34,
+        hold: 0.6,
+        end: 2.4,
+        shape: Shape::Cloud,
+    },
+    Layer {
+        rgb: [0.30, 0.24, 0.17],
+        alpha: 0.95,
+        hold: 1.2,
+        end: 2.2,
+        shape: Shape::Chunk,
+    },
+];
+/// Bulldoze cloud particles per layer: swell, billow (rim, then centre), debris.
+const CLOUD_SWELL: u32 = 40;
+const CLOUD_RIM: u32 = 24;
+const CLOUD_COLUMN: u32 = 38;
+const CLOUD_DEBRIS: u32 = 18;
+/// Particles in one bulldoze cloud.
+pub const CLOUD_PARTICLES: u32 = CLOUD_SWELL + CLOUD_RIM + CLOUD_COLUMN + CLOUD_DEBRIS;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
 struct Particle {
     origin: Vec3,
+    /// Initial throw (m/s), slowed by `drag`.
     vel: Vec3,
+    /// Drag on the throw (1/s).
+    drag: f32,
+    /// Steady rise as the dust spreads (m/s).
+    lift: f32,
+    /// Fall (m/s²), debris only.
+    gravity: f32,
+    /// Radius at spawn and when grown (m).
     size: (f32, f32),
+    /// Seconds to grow to full size.
+    grow: f32,
+    /// Life fraction after which the particle shrinks away (1: never).
+    shrink: f32,
     life: f32,
+    /// Index into the puff's layers.
+    layer: usize,
+    /// Tumble rate (rad/s), debris only.
+    spin: f32,
 }
 
-/// Live dust puffs and the shared particle mesh.
+impl Particle {
+    fn at(&self, t: f32) -> Vec3 {
+        let throw = self.vel * (1.0 - (-self.drag * t).exp()) / self.drag;
+        let mut p = self.origin + throw + Vec3::Y * (self.lift * t - 0.5 * self.gravity * t * t);
+        p.y = p.y.max(0.05);
+        p
+    }
+
+    fn radius(&self, t: f32) -> f32 {
+        let u = (t / self.life).min(1.0);
+        let grown =
+            self.size.0 + (self.size.1 - self.size.0) * ease_out_cubic((t / self.grow).min(1.0));
+        let tail = if self.shrink < 1.0 {
+            1.0 - smoothstep01(((u - self.shrink) / (1.0 - self.shrink)).clamp(0.0, 1.0))
+        } else {
+            1.0
+        };
+        (grown * tail).max(1e-3)
+    }
+}
+
+/// What a rise cue raises.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Dust {
+    /// `n` particles thrown from the hex rim (a column start or an undo sink).
+    Puff { n: u32, strength: f32, alpha: f32 },
+    /// The bulldoze cloud over the whole hex ([`CLOUD_PARTICLES`]).
+    Cloud,
+}
+
+/// The dust a cue raises: none for cues a fast-forward skipped or under reduced motion.
+pub fn dust_for(cue: RiseCue, skipped: bool, reduced: bool) -> Option<Dust> {
+    if skipped || reduced {
+        return None;
+    }
+    match cue {
+        RiseCue::Stage(RiseStage::Column) => Some(Dust::Puff {
+            n: 48,
+            strength: 1.0,
+            alpha: 0.32,
+        }),
+        RiseCue::Sink(SinkKind::Undo) => Some(Dust::Puff {
+            n: 24,
+            strength: 0.6,
+            alpha: 0.26,
+        }),
+        RiseCue::Sink(SinkKind::Bulldoze) => Some(Dust::Cloud),
+        _ => None,
+    }
+}
+
+/// Live dust puffs and the shared particle meshes.
 #[derive(Resource, Default)]
 pub struct PlayDust {
     puffs: Vec<Puff>,
-    mesh: Option<Handle<Mesh>>,
+    /// One shared mesh per [`Shape`], made on first use.
+    meshes: [Option<Handle<Mesh>>; 3],
 }
 
 fn hash01(cell: Axial, i: u32, salt: u32) -> f32 {
@@ -646,22 +815,120 @@ fn particles(cell: Axial, n: u32, strength: f32) -> Vec<Particle> {
             let a = (i as f32 + hash01(cell, i, 1)) / n as f32 * std::f32::consts::TAU;
             let dir = Vec3::new(a.cos(), 0.0, a.sin());
             let r = HEX_RADIUS * (0.86 + 0.12 * hash01(cell, i, 2));
+            let life = 0.9 + 0.5 * hash01(cell, i, 7);
             Particle {
                 origin: Vec3::new(cx, 0.15, cz) + dir * r,
                 vel: (dir * (2.5 + 3.0 * hash01(cell, i, 3))
                     + Vec3::Y * (1.2 + 2.2 * hash01(cell, i, 4)))
                     * strength,
+                drag: 3.0,
+                lift: 0.4,
+                gravity: 0.0,
                 size: (
                     0.3 + 0.3 * hash01(cell, i, 5),
                     1.2 + 1.2 * hash01(cell, i, 6),
                 ),
-                life: 0.9 + 0.5 * hash01(cell, i, 7),
+                grow: life,
+                shrink: 1.0,
+                life,
+                layer: 0,
+                spin: 0.0,
             }
         })
         .collect()
 }
 
-/// Spawns a puff on each column start and sink, and moves and fades the live ones.
+/// The bulldoze cloud at `cell`: a low swell across the whole hex, a billow thrown out past the
+/// rim and up from the centre, and debris bits tossed up that fall back. Deterministic per cell.
+fn cloud(cell: Axial) -> Vec<Particle> {
+    use std::f32::consts::TAU;
+    let [cx, cz] = cell.to_world(HEX_RADIUS);
+    let centre = Vec3::new(cx, 0.0, cz);
+    let h = |i: u32, salt: u32| hash01(cell, i, salt);
+    // A point in the disc of radius `r`, uniform by area.
+    let disc = |i: u32, r: f32| {
+        let a = TAU * h(i, 21);
+        let d = r * h(i, 22).sqrt();
+        (Vec3::new(a.cos(), 0.0, a.sin()), d)
+    };
+    let mut out = Vec::with_capacity(CLOUD_PARTICLES as usize);
+    for i in 0..CLOUD_SWELL {
+        let (dir, d) = disc(i, HEX_RADIUS * 0.8);
+        out.push(Particle {
+            origin: centre + dir * d + Vec3::Y * (0.6 + 1.0 * h(i, 24)),
+            vel: dir * (0.8 + 1.6 * h(i, 25)) + Vec3::Y * (2.0 + 2.5 * h(i, 26)),
+            drag: 3.0,
+            lift: 0.8 + 0.7 * h(i, 27),
+            gravity: 0.0,
+            size: (2.6 + 1.4 * h(i, 28), 5.0 + 2.0 * h(i, 29)),
+            grow: 0.6,
+            shrink: 0.7,
+            life: 2.3 + 0.5 * h(i, 23),
+            layer: 0,
+            spin: 0.0,
+        });
+    }
+    for j in 0..CLOUD_RIM {
+        let i = CLOUD_SWELL + j;
+        let a = (j as f32 + h(i, 31)) / CLOUD_RIM as f32 * TAU;
+        let dir = Vec3::new(a.cos(), 0.0, a.sin());
+        out.push(Particle {
+            origin: centre + dir * HEX_RADIUS * (0.82 + 0.14 * h(i, 32)) + Vec3::Y * 0.3,
+            vel: dir * (4.0 + 5.0 * h(i, 33)) + Vec3::Y * (2.5 + 3.5 * h(i, 34)),
+            drag: 3.0,
+            lift: 1.2 + 1.0 * h(i, 35),
+            gravity: 0.0,
+            size: (1.2 + 0.6 * h(i, 36), 3.5 + 2.0 * h(i, 37)),
+            grow: 0.8,
+            shrink: 0.6,
+            life: 2.0 + 0.6 * h(i, 38),
+            layer: 1,
+            spin: 0.0,
+        });
+    }
+    for j in 0..CLOUD_COLUMN {
+        let i = CLOUD_SWELL + CLOUD_RIM + j;
+        let (dir, d) = disc(i, HEX_RADIUS * 0.65);
+        out.push(Particle {
+            origin: centre + dir * d + Vec3::Y * 1.0,
+            vel: dir * (0.6 + 1.4 * h(i, 41)) + Vec3::Y * (6.0 + 5.0 * h(i, 42)),
+            drag: 2.0,
+            lift: 2.0 + 1.4 * h(i, 43),
+            gravity: 0.0,
+            size: (2.2 + 1.2 * h(i, 44), 5.0 + 2.0 * h(i, 45)),
+            grow: 0.9,
+            shrink: 0.55,
+            life: 2.1 + 0.5 * h(i, 46),
+            layer: 1,
+            spin: 0.0,
+        });
+    }
+    for j in 0..CLOUD_DEBRIS {
+        let i = CLOUD_SWELL + CLOUD_RIM + CLOUD_COLUMN + j;
+        let (dir, d) = disc(i, HEX_RADIUS * 0.7);
+        let s = 0.7 + 0.6 * h(i, 51);
+        let (vy, g) = (7.0 + 6.0 * h(i, 53), 14.0);
+        // Drag only shortens the flight, so the bit lies on the ground for its last 0.3 s or more.
+        let landed = (vy + (vy * vy + 2.0 * g * 0.6).sqrt()) / g + 0.3;
+        out.push(Particle {
+            origin: centre + dir * d + Vec3::Y * 0.6,
+            vel: dir * (3.0 + 5.0 * h(i, 52)) + Vec3::Y * vy,
+            drag: 0.4,
+            lift: 0.0,
+            gravity: g,
+            size: (s, s),
+            grow: 0.1,
+            shrink: 0.75,
+            life: landed,
+            layer: 2,
+            spin: 4.0 + 6.0 * h(i, 55),
+        });
+    }
+    out
+}
+
+/// Spawns a puff on each column start and undo sink and a cloud on each bulldoze sink, and moves
+/// and fades the live ones.
 #[allow(clippy::too_many_arguments)]
 pub fn dust(
     time: Res<Time>,
@@ -674,31 +941,45 @@ pub fn dust(
     mut transforms: Query<&mut Transform>,
 ) {
     for m in cues.read() {
-        let (n, strength, alpha) = match m.cue {
-            RiseCue::Stage(RiseStage::Column) if !m.skipped => (48, 1.0, 0.32),
-            RiseCue::Sink if !m.skipped => (24, 0.6, 0.26),
-            _ => continue,
-        };
-        if reduced.0 {
+        let Some(kind) = dust_for(m.cue, m.skipped, reduced.0) else {
             continue;
-        }
-        let mesh = dust
-            .mesh
-            .get_or_insert_with(|| meshes.add(Sphere::new(1.0).mesh().ico(1).expect("ico 1")))
-            .clone();
-        let material = materials.add(StandardMaterial {
-            base_color: Color::srgba(0.66, 0.58, 0.46, alpha),
-            unlit: true,
-            alpha_mode: AlphaMode::Blend,
-            ..default()
-        });
-        let ps = particles(m.cell, n, strength);
+        };
+        let (layers, ps) = match kind {
+            Dust::Puff { n, strength, alpha } => (
+                vec![Layer {
+                    rgb: PUFF_RGB,
+                    alpha,
+                    hold: 0.0,
+                    end: 1.2,
+                    shape: Shape::Puff,
+                }],
+                particles(m.cell, n, strength),
+            ),
+            Dust::Cloud => (CLOUD_LAYERS.to_vec(), cloud(m.cell)),
+        };
+        let layers: Vec<(Handle<StandardMaterial>, Layer)> = layers
+            .into_iter()
+            .map(|l| {
+                let [r, g, b] = l.rgb;
+                let material = materials.add(StandardMaterial {
+                    base_color: Color::srgba(r, g, b, l.alpha),
+                    unlit: true,
+                    alpha_mode: AlphaMode::Blend,
+                    ..default()
+                });
+                (material, l)
+            })
+            .collect();
         let entities = ps
             .iter()
             .map(|p| {
+                let (material, layer) = &layers[p.layer];
+                let mesh = dust.meshes[layer.shape as usize]
+                    .get_or_insert_with(|| meshes.add(layer.shape.mesh()))
+                    .clone();
                 commands
                     .spawn((
-                        Mesh3d(mesh.clone()),
+                        Mesh3d(mesh),
                         MeshMaterial3d(material.clone()),
                         Transform::from_translation(p.origin).with_scale(Vec3::splat(p.size.0)),
                         bevy::light::NotShadowCaster,
@@ -709,10 +990,9 @@ pub fn dust(
             .collect();
         dust.puffs.push(Puff {
             entities,
-            material,
+            layers,
             particles: ps,
             t: 0.0,
-            alpha,
         });
     }
     if dust.puffs.is_empty() {
@@ -724,18 +1004,20 @@ pub fn dust(
         let t = puff.t;
         let mut alive = false;
         for (e, p) in puff.entities.iter().zip(&puff.particles) {
-            let u = (t / p.life).min(1.0);
-            alive |= u < 1.0;
+            alive |= t < p.life;
             if let Ok(mut tr) = transforms.get_mut(*e) {
-                // Drag 3/s on the throw, a slow lift as the dust spreads.
-                let drift = p.vel * (1.0 - (-3.0 * t).exp()) / 3.0 + Vec3::Y * 0.4 * t;
-                tr.translation = p.origin + drift;
-                tr.scale = Vec3::splat(p.size.0 + (p.size.1 - p.size.0) * ease_out_cubic(u));
+                tr.translation = p.at(t);
+                tr.scale = Vec3::splat(p.radius(t));
+                if p.spin != 0.0 {
+                    tr.rotation =
+                        Quat::from_euler(EulerRot::YXZ, p.spin * t, 0.7 * p.spin * t, 0.0);
+                }
             }
         }
-        if let Some(mut m) = materials.get_mut(&puff.material) {
-            let u = (t / 1.2).min(1.0);
-            m.base_color.set_alpha(puff.alpha * (1.0 - u) * (1.0 - u));
+        for (handle, layer) in &puff.layers {
+            if let Some(mut m) = materials.get_mut(handle) {
+                m.base_color.set_alpha(layer.alpha_at(t));
+            }
         }
         if !alive {
             for e in &puff.entities {
@@ -930,5 +1212,139 @@ mod tests {
         assert!((floors_up(0.5, 2) - 0.5).abs() < 1e-5, "first floor up");
         assert!((floors_up(1.0, 3) - 1.0).abs() < 1e-5);
         assert!(floors_up(0.2, 3) < 1.0 / 3.0 + 0.05);
+    }
+
+    /// Removes a tile of `kind` at (1, 0): the rises, the cues and whether its root still exists.
+    fn removed(kind: SinkKind, reduced: bool) -> (PlayRises, Vec<RiseMessage>, bool) {
+        let mut world = World::new();
+        let root = world.spawn(Transform::IDENTITY).id();
+        let mut queue = bevy::ecs::world::CommandQueue::default();
+        let mut rises = PlayRises::default();
+        let mut out = vec![];
+        let mut commands = Commands::new(&mut queue, &world);
+        rises.remove(
+            Axial::new(1, 0),
+            "forest",
+            kind,
+            vec![root],
+            reduced,
+            &mut commands,
+            &mut out,
+        );
+        queue.apply(&mut world);
+        let alive = world.get_entity(root).is_ok();
+        (rises, out, alive)
+    }
+
+    #[test]
+    fn bulldoze_sinks_longer_inside_the_cloud_and_undo_with_the_puff() {
+        let (rises, out, alive) = removed(SinkKind::Bulldoze, false);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].cue, RiseCue::Sink(SinkKind::Bulldoze));
+        assert_eq!(
+            out[0].cue.name(),
+            "sink",
+            "the event wire keeps one sink stage"
+        );
+        assert!(alive && rises.sinks.len() == 1);
+        assert_eq!(rises.sinks[0].seconds, BULLDOZE_SINK_SECONDS);
+        assert_eq!(
+            dust_for(out[0].cue, out[0].skipped, false),
+            Some(Dust::Cloud)
+        );
+
+        let (rises, out, _) = removed(SinkKind::Undo, false);
+        assert_eq!(out[0].cue, RiseCue::Sink(SinkKind::Undo));
+        assert_eq!(rises.sinks[0].seconds, SINK_SECONDS);
+        assert!(matches!(
+            dust_for(out[0].cue, out[0].skipped, false),
+            Some(Dust::Puff { n: 24, .. })
+        ));
+    }
+
+    #[test]
+    fn reduced_motion_skips_the_bulldoze_cloud_and_sink() {
+        let (rises, out, alive) = removed(SinkKind::Bulldoze, true);
+        assert!(out[0].skipped && rises.sinks.is_empty() && !alive);
+        assert_eq!(dust_for(out[0].cue, out[0].skipped, true), None);
+        let bulldoze = RiseCue::Sink(SinkKind::Bulldoze);
+        assert_eq!(dust_for(bulldoze, false, true), None);
+        assert_eq!(dust_for(bulldoze, true, false), None);
+    }
+
+    #[test]
+    fn the_cloud_covers_the_hex_billows_up_and_spreads_past_the_rim() {
+        let cell = Axial::new(2, -1);
+        let ps = cloud(cell);
+        assert_eq!(ps.len(), CLOUD_PARTICLES as usize);
+        assert!(ps.len() <= 120);
+        assert_eq!(ps, cloud(cell), "deterministic per cell");
+        assert_ne!(ps, cloud(Axial::new(0, 1)));
+        let [cx, cz] = cell.to_world(HEX_RADIUS);
+        let flat = |p: Vec3| Vec2::new(p.x - cx, p.z - cz).length();
+        let dust: Vec<&Particle> = ps.iter().filter(|p| p.layer < 2).collect();
+        let inner = dust
+            .iter()
+            .filter(|p| flat(p.origin) < 0.5 * HEX_RADIUS)
+            .count();
+        assert!(inner >= 15, "the hex interior, not just the rim: {inner}");
+        let top = dust
+            .iter()
+            .map(|p| p.at(p.life).y + p.size.1)
+            .fold(0.0, f32::max);
+        assert!(top > 6.0, "billows several metres up: {top}");
+        let reach = dust
+            .iter()
+            .map(|p| flat(p.at(1.0)) + p.radius(1.0))
+            .fold(0.0, f32::max);
+        assert!(reach > HEX_RADIUS + 3.0, "spreads past the rim: {reach}");
+        let life = dust.iter().map(|p| p.life).fold(0.0, f32::max);
+        assert!(
+            (BULLDOZE_SINK_SECONDS + 1.6..BULLDOZE_SINK_SECONDS + 2.4).contains(&life),
+            "lingers about 2 s after the tile is gone: {life}"
+        );
+        let debris: Vec<&Particle> = ps.iter().filter(|p| p.layer == 2).collect();
+        assert!(
+            !debris.is_empty()
+                && debris
+                    .iter()
+                    .all(|p| CLOUD_LAYERS[p.layer].shape == Shape::Chunk)
+        );
+        assert!(
+            debris.iter().all(|p| p.at(p.life).y < 0.1),
+            "debris falls back"
+        );
+        let thin = CLOUD_LAYERS[1].alpha_at(2.0) / CLOUD_LAYERS[1].alpha;
+        assert!(thin < CLOUD_LAYERS[0].alpha_at(2.0) / CLOUD_LAYERS[0].alpha);
+        assert!(CLOUD_LAYERS.iter().all(|l| l.alpha_at(l.end) == 0.0));
+    }
+
+    /// Entities the dust system spawns for one cue.
+    fn spawned_for(cue: RiseCue, reduced: bool) -> usize {
+        let mut app = App::new();
+        app.init_resource::<Time>()
+            .init_resource::<PlayDust>()
+            .insert_resource(ReducedMotion(reduced))
+            .init_resource::<Assets<Mesh>>()
+            .init_resource::<Assets<StandardMaterial>>()
+            .add_message::<RiseMessage>()
+            .add_systems(Update, dust);
+        app.world_mut().write_message(RiseMessage {
+            cell: Axial::new(1, 0),
+            tile: "forest".into(),
+            cue,
+            skipped: false,
+        });
+        app.update();
+        let mut q = app.world_mut().query::<&Mesh3d>();
+        q.iter(app.world()).count()
+    }
+
+    #[test]
+    fn the_dust_system_raises_the_cloud_only_for_a_bulldoze() {
+        let bulldoze = RiseCue::Sink(SinkKind::Bulldoze);
+        assert_eq!(spawned_for(bulldoze, false), CLOUD_PARTICLES as usize);
+        assert_eq!(spawned_for(RiseCue::Sink(SinkKind::Undo), false), 24);
+        assert_eq!(spawned_for(bulldoze, true), 0, "reduced motion: no cloud");
     }
 }

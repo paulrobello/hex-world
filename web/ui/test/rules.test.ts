@@ -103,18 +103,25 @@ test("the slot key lists lanes first", () => {
   assert.equal(summary(def("meadow")), "Grass all round");
 });
 
-test("a slot that needs a river and a beach fits nothing (the e2e S3.4 world)", () => {
-  const river = world([0, 0, "meadow", 0], [-1, 0, "river_straight", 1]);
-  // The e2e places the beach through auto-rotate: the first legal rotation, its grass on the river bank.
-  assert.deepEqual(legalRotations(def("beach"), needsAt({ q: -2, r: 1 }, river)), [1, 2]);
-  const w = world([0, 0, "meadow", 0], [-1, 0, "river_straight", 1], [-2, 1, "beach", 1]);
+test("a slot that needs a road and a beach fits nothing (the e2e S3.4 world)", () => {
+  // A river and a beach no longer: the river mouths carry both (water contract §3a).
+  const road = world([0, 0, "meadow", 0], [-1, 0, "road_straight", 1]);
+  // The e2e places the beach through auto-rotate: the first legal rotation, its grass on the road's verge.
+  assert.deepEqual(legalRotations(def("beach"), needsAt({ q: -2, r: 1 }, road)), [1, 2]);
+  const w = world([0, 0, "meadow", 0], [-1, 0, "road_straight", 1], [-2, 1, "beach", 1]);
   const needs = needsAt({ q: -1, r: 1 }, w);
-  assert.deepEqual(needs.kinds, [null, null, null, "Beach", "River", "Grass"]);
+  assert.deepEqual(needs.kinds, [null, null, null, "Beach", "Road", "Grass"]);
   assert.ok(TILES.every((t) => !fit(t, needs).ok));
-  assert.equal(nothingFitsWhy(needs.kinds), "No tile carries both a river and a beach.");
+  assert.equal(nothingFitsWhy(needs.kinds), "No tile carries both a road and a beach.");
   assert.deepEqual(
     needLines(needs.kinds).map((l) => l.text),
-    ["River on one edge", "Beach beside it", "Grass or forest beside it"],
+    ["Road on one edge", "Beach beside it", "Grass or forest beside it"],
+  );
+  // The river version of this slot fits the river mouth.
+  const river = world([0, 0, "meadow", 0], [-1, 0, "river_straight", 1], [-2, 1, "beach", 1]);
+  assert.deepEqual(
+    TILES.filter((t) => fit(t, needsAt({ q: -1, r: 1 }, river)).ok).map((t) => t.id),
+    ["river_mouth"],
   );
 });
 

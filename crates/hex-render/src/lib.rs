@@ -8,6 +8,7 @@ mod chunks;
 pub mod diag;
 pub mod fps;
 pub mod gpu_timing;
+pub mod grade;
 pub mod hooks;
 pub mod instanced;
 pub mod kit_material;
@@ -21,6 +22,7 @@ pub mod tier;
 pub mod tilt_shift;
 pub mod water;
 pub mod workload;
+pub use grade::Grade;
 pub use hex_assets::bevy::MeshoptGlbPlugin;
 pub use scene::{SceneEntity, TILE_HEIGHT, Tile, Vehicle, setup as setup_scene};
 pub use workload::{

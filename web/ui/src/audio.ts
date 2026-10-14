@@ -30,6 +30,7 @@ import {
   bedGains,
   biomeMix,
   biomeOf,
+  emitterCues,
   cellWorld,
   emitterGain,
   emptyMix,
@@ -65,6 +66,7 @@ const SETTLE_TIMEOUT_S = 4;
 const WAIT_FOR_STAGE: Record<string, string> = { "place-thunk": "settled" };
 const RADIUS: number = schema.catalog.hex_radius;
 const BIOME_OF = new Map<string, Biome>(schema.catalog.tiles.map((t) => [t.id, biomeOf(t.id, t.edges)]));
+const CUES_OF = new Map<string, string[]>(schema.catalog.tiles.map((t) => [t.id, emitterCues(t.id, t.edges)]));
 /** Per one-shot row, the tile defs it may play at. */
 const ONE_SHOT_DEFS = new Map(ONE_SHOTS.map((row) => [row.name, oneShotDefs(row, schema.catalog.tiles)]));
 
@@ -522,8 +524,8 @@ export class GameAudio {
       placed.push({ x, z, biome });
       for (const row of ONE_SHOTS)
         if (ONE_SHOT_DEFS.get(row.name)?.has(t.tile)) oneShotTiles.get(row.name)!.push({ q: t.q, r: t.r, x, z });
-      const cue = EMITTER_CUE[biome];
-      if (cue && this.buffers.has(cue)) cands.push({ key: `${cue}@${key(t.q, t.r)}`, cue, gain: emitterGain(x, z, v) });
+      for (const cue of CUES_OF.get(t.tile) ?? [])
+        if (this.buffers.has(cue)) cands.push({ key: `${cue}@${key(t.q, t.r)}`, cue, gain: emitterGain(x, z, v) });
     }
     this.candidates = cands;
     this.mix = biomeMix(placed, v);

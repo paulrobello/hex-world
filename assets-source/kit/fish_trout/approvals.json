@@ -5,5 +5,12 @@
     "gate": "piece",
     "status": "approved",
     "notes": "Approved with one fix: remove the faint seam line behind the head (do it in the boids swap-in pass). Display scale in the boids: x2 of real size."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-14",
+    "gate": "piece",
+    "status": "pending",
+    "notes": "Pending owner re-approval of the seam fix; not an approval. The seam was the painted gill-cover edge (a dark albedo band plus a height step that the normal map turned into a ridge, both around the full girth), now removed from the generator's paint() with geometry, UVs, LODs and the boid contract unchanged."
   }
 ]

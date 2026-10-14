@@ -75,10 +75,15 @@ pub struct PlayView {
     pub ghost: Option<PlayGhost>,
     /// A free slot under the pointer while another slot is pinned: a click there pins it.
     pub pointer_slot: Option<Axial>,
+    /// A placed tile under the pointer with the place tool, outside photo mode: a faint rim marks it.
+    pub pointer_tile: Option<Axial>,
     /// Bulldoze tool: the hovered tile and whether removing it is allowed.
     pub bulldoze: Option<(Axial, bool)>,
     /// The bulldoze tool is active (the slot ring hides).
     pub bulldoze_mode: bool,
+    /// The cell the latest world change bulldozed: when its tile leaves the view it sinks inside a
+    /// dust cloud ([`rise::SinkKind::Bulldoze`]) rather than with the undo puff.
+    pub bulldozed: Option<Axial>,
     /// Refused placements and bulldozes so far; each new one pulses the refused highlight.
     pub refusals: u32,
     /// Bumped when the world is replaced wholesale (a loaded save, a new world): the next sync
@@ -848,7 +853,20 @@ pub fn sync(
     for (cell, tile, root) in gone {
         let mut entities = vec![root];
         entities.extend(released.remove(&cell).unwrap_or_default());
-        rises.remove(cell, &tile, entities, reduced.0, &mut commands, &mut out);
+        let kind = if view.bulldozed == Some(cell) {
+            rise::SinkKind::Bulldoze
+        } else {
+            rise::SinkKind::Undo
+        };
+        rises.remove(
+            cell,
+            &tile,
+            kind,
+            entities,
+            reduced.0,
+            &mut commands,
+            &mut out,
+        );
     }
     for (_, es) in released {
         for e in es {
@@ -986,7 +1004,7 @@ mod tests {
     #[test]
     fn every_mvp_tile_resolves_and_biomes_index() {
         let c = PlayCatalog::default();
-        assert_eq!(c.0.tiles().len(), 15);
+        assert_eq!(c.0.tiles().len(), 18);
         let biomes: std::collections::BTreeSet<_> =
             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
         assert_eq!(biomes.len(), 4);

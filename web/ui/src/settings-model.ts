@@ -1,7 +1,15 @@
-// What the Settings sheet (S9) shows, from `state().tier` and the audio levels, kept free of the DOM
-// so Node tests read it directly. The rows describe what each tier changes in the renderer today
-// (hex_render: SSAO, the water variant, tilt-shift taps, boid caps), not the PRD §9.2 targets.
-import type { QualityChoice, TierName, TierState } from "./bridge.ts";
+// What the Settings sheet (S9) shows, from `state().tier`, `state().grade` and the audio levels, kept
+// free of the DOM so Node tests read it directly. The rows describe what each tier changes in the
+// renderer today (hex_render: SSAO, the water variant, tilt-shift taps, boid caps), not the PRD §9.2
+// targets. The colour grade rows take their descriptions from the engine.
+import {
+  GRADES,
+  type GradeName,
+  type GradeState,
+  type QualityChoice,
+  type TierName,
+  type TierState,
+} from "./bridge.ts";
 
 export const TIER_NAME: Record<TierName, string> = { low: "Low", medium: "Medium", high: "High", ultra: "Ultra" };
 
@@ -96,6 +104,52 @@ export const tierCommand = (id: QualityChoice): { cmd: "set_tier"; tier: Quality
   cmd: "set_tier",
   tier: id,
 });
+
+/** The viewer's colour grade in localStorage; it is not part of the world save. */
+export const GRADE_KEY = "hexWorld.grade";
+
+/** A grade's display name: "aces" is "ACES", "rich-2" is "Rich 2". */
+export function gradeLabel(name: string): string {
+  if (name === "aces") return "ACES";
+  const words = name.replaceAll("-", " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+export interface GradeRow {
+  id: GradeName;
+  name: string;
+  detail: string;
+}
+
+export interface GradeView {
+  /** The checked row: a pending pick until `state().grade.name` follows, else the engine's grade. */
+  selected: GradeName | null;
+  rows: GradeRow[];
+}
+
+export function gradeView(g: GradeState | undefined, pick: GradeName | null = null): GradeView {
+  return {
+    selected: pick ?? g?.name ?? null,
+    rows: (g?.presets ?? []).map((p) => ({ id: p.name, name: gradeLabel(p.name), detail: p.detail })),
+  };
+}
+
+export const gradeCommand = (grade: GradeName): { cmd: "set_grade"; grade: GradeName } => ({
+  cmd: "set_grade",
+  grade,
+});
+
+export const isGrade = (v: string | null | undefined): v is GradeName =>
+  (GRADES as readonly string[]).includes(v ?? "");
+
+/**
+ * The grade to send at startup: the stored choice, unless the page address names one (`?grade=` is
+ * read by the engine itself and wins) or the stored value is not a known grade.
+ */
+export function startupGrade(search: string, stored: string | null): GradeName | null {
+  if (new URLSearchParams(search).has("grade")) return null;
+  return isGrade(stored) ? stored : null;
+}
 
 /** Arrow keys over a roving group of `n` items (tabs, tier radios): the index to move to, or null. */
 export function roveIndex(i: number, n: number, key: string, axis: "x" | "y"): number | null {

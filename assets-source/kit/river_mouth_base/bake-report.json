@@ -1,0 +1,113 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "none",
+  "extraRingS": [
+    -1.952568,
+    3.5,
+    4.5,
+    5.5,
+    6.5,
+    7.5
+  ],
+  "hand": "r",
+  "jointDeltaM": 0.0017,
+  "lod2MaxRatio": 0.2,
+  "lodParams": [
+    [
+      0.7,
+      0.85,
+      0.75,
+      0.01,
+      6,
+      0.75
+    ],
+    [
+      1.8,
+      2.6,
+      1.25,
+      0.02,
+      5,
+      1.6
+    ],
+    [
+      40.0,
+      null,
+      2.0,
+      0.03,
+      4,
+      2.0
+    ]
+  ],
+  "lodTris": [
+    3592,
+    1488,
+    709
+  ],
+  "marginPx": 0,
+  "profileErrorM": [
+    {
+      "channelDryMaxM": 0.0459,
+      "coastDryMaxM": 0.0081,
+      "deepMaxM": 0.0151,
+      "refineIterations": 2,
+      "steinerVertices": 0,
+      "wetMaxM": 0.027
+    },
+    {
+      "channelDryMaxM": 0.054,
+      "coastDryMaxM": 0.0055,
+      "deepMaxM": 0.0151,
+      "refineIterations": 3,
+      "steinerVertices": 0,
+      "wetMaxM": 0.0268
+    },
+    {
+      "channelDryMaxM": 0.0683,
+      "coastDryMaxM": 0.0254,
+      "deepMaxM": 0.0151,
+      "refineIterations": 3,
+      "steinerVertices": 0,
+      "wetMaxM": 0.0269
+    }
+  ],
+  "reason": "analytic masks (snow above water, wetness by channel and s; AO 1): no bake",
+  "receiverSignature": "45e2a548ab01871b1f5c64fb1de3f86c3f3611d76557f5dd9aece46aa14a9bd2",
+  "rowsS": [
+    -8.0,
+    -7.0,
+    -6.0,
+    -5.0,
+    -4.0,
+    -3.0,
+    -2.0,
+    -1.952568,
+    -1.0,
+    0.0,
+    1.0,
+    2.0,
+    3.0,
+    3.5,
+    4.0,
+    4.5,
+    5.0,
+    5.5,
+    6.0,
+    6.5,
+    7.0,
+    7.5,
+    8.0
+  ],
+  "samples": 0,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 32.0002161742152,
+    "median": 31.552852637382426,
+    "min": 22.8978489748444
+  }
+}

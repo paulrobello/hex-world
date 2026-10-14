@@ -32,6 +32,45 @@ pub fn request(commands: &mut Commands, name: &str) {
         });
 }
 
+/// Every pixel's colour channels are zero: a frame the GPU never drew (seen under heavy GPU
+/// contention), as opposed to a dark scene, which always carries some colour.
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+pub fn all_black(data: &[u8]) -> bool {
+    !data.is_empty()
+        && data
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .all(|p| p[0] == 0 && p[1] == 0 && p[2] == 0)
+}
+
+/// Like [`request`], but an all-black frame is not stored unless `keep_black` is set; `blank` is
+/// raised instead so the caller can capture again.
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+pub fn request_unless_blank(
+    commands: &mut Commands,
+    name: &str,
+    blank: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    keep_black: bool,
+) {
+    PENDING.fetch_add(1, Ordering::SeqCst);
+    let name = name.to_string();
+    commands
+        .spawn(Screenshot::primary_window())
+        .observe(move |shot: On<ScreenshotCaptured>| {
+            let black = shot.image.data.as_deref().is_some_and(all_black);
+            if black {
+                blank.store(true, Ordering::SeqCst);
+            }
+            if !black || keep_black {
+                let _ = store(&name, encode_png(shot.image.clone()));
+            } else {
+                warn!("screenshot {name} came back all black; capturing again");
+            }
+            PENDING.fetch_sub(1, Ordering::SeqCst);
+        });
+}
+
 /// Captures an offscreen image target (photo mode's export) to a PNG stored like a screenshot,
 /// then reports the PNG's pixel size or the error to `done`.
 pub fn request_image(

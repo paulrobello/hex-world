@@ -69,6 +69,12 @@ pub enum Command {
     SetTier {
         tier: String,
     },
+    /// Look preset at runtime (`aces`, `tony`, `rich-1`, `rich-2`, `rich-3`; `hex_render::grade`):
+    /// the cameras' tone mapper, exposure and grading and the backdrop switch with no rebuild. The
+    /// Settings sheet sends this; the overlay keeps the choice per viewer, not in the world save.
+    SetGrade {
+        grade: String,
+    },
     /// Reduced motion (`prefers-reduced-motion` or the Settings override, sent by the overlay):
     /// the staged rise and every affordance transition become instant cuts, with no breathing,
     /// dust or camera shake.
@@ -288,6 +294,18 @@ pub fn run_commands(
             }
             None => warn!("set_tier command: unknown tier '{tier}', skipped"),
         },
+        Command::SetGrade { grade } => match hex_render::Grade::parse(&grade) {
+            // Photo mode re-applies its entry exposure every frame, so it shifts with the grade.
+            Some(g) => commands.queue(move |w: &mut World| {
+                let shift = hex_render::grade::apply(w, g);
+                if let Some(mut s) = w.get_resource_mut::<PhotoSession>()
+                    && let Some(e) = s.saved.as_mut().and_then(|snap| snap.ev100.as_mut())
+                {
+                    *e += shift;
+                }
+            }),
+            None => warn!("set_grade command: unknown grade '{grade}', skipped"),
+        },
         Command::SetReducedMotion { on } => reduced.0 = on,
         Command::Photo {
             dof,
@@ -369,6 +387,15 @@ pub fn extend_play_view(play: &mut serde_json::Value, camera: Option<&Transform>
     map.insert("zoom".into(), zoom);
 }
 
+/// `state().grade`: the active look preset and every preset with its one-line description.
+pub fn grade_json(active: hex_render::Grade) -> serde_json::Value {
+    let presets: Vec<serde_json::Value> = hex_render::Grade::ALL
+        .iter()
+        .map(|g| serde_json::json!({ "name": g.name(), "detail": g.detail() }))
+        .collect();
+    serde_json::json!({ "name": active.name(), "presets": presets })
+}
+
 /// Publishes the state read by `hexWorld.state()`/`dumpState()` and `--dump-state`.
 pub fn publish_state(
     flags: Res<RunFlags>,
@@ -410,7 +437,8 @@ pub fn publish_state(
     let camera = cameras.iter().next().map(|t| {
         serde_json::json!({ "pos": t.translation.to_array(), "forward": t.forward().to_array() })
     });
-    let kit_src = config.map(|c| c.kit_src).unwrap_or_default();
+    let kit_src = config.as_ref().map(|c| c.kit_src).unwrap_or_default();
+    let grade = grade_json(config.map(|c| c.grade).unwrap_or_default());
     let gpu_limits = gpu.as_deref().copied();
     // `null` until the render device exists (the web renderer starts asynchronously).
     let gpu = gpu.map(|g| {
@@ -433,6 +461,7 @@ pub fn publish_state(
         "gpu": gpu,
         "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps, "chosen": tilt_chosen.0 },
         "tier": tier.json(),
+        "grade": grade,
         "photo": crate::photo::state_json(&photo, &session, &exports, paused.0, sim.ticks(), gpu_limits.as_ref()),
         "frames": frames.0,
         "seed": flags.0.seed,

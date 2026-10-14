@@ -226,6 +226,7 @@ mod schema {
         r#"{"cmd":"tilt","on":true,"strength":0.5}"#,
         r#"{"cmd":"dump_state","name":"s"}"#,
         r#"{"cmd":"set_tier","tier":"low"}"#,
+        r#"{"cmd":"set_grade","grade":"rich-1"}"#,
         r#"{"cmd":"set_reduced_motion","on":true}"#,
         r#"{"cmd":"exit"}"#,
         r#"{"cmd":"select_tile","id":"meadow"}"#,
@@ -256,6 +257,7 @@ mod schema {
             Command::Tilt { .. } => "tilt",
             Command::DumpState { .. } => "dump_state",
             Command::SetTier { .. } => "set_tier",
+            Command::SetGrade { .. } => "set_grade",
             Command::SetReducedMotion { .. } => "set_reduced_motion",
             Command::Exit => "exit",
             Command::SelectTile { .. } => "select_tile",
@@ -482,7 +484,10 @@ mod schema {
             0,
             None,
         );
+        let grade = crate::control::grade_json(hex_render::Grade::default());
         json!({
+            "grade": keys(&grade),
+            "grade_preset": keys(&grade["presets"][0]),
             "play": keys(&place),
             "ghost": keys(&place["ghost"]),
             "bulldoze": keys(&bulldoze["bulldoze"]),
@@ -604,6 +609,7 @@ mod schema {
                 "toggle": serde_variants::<Toggle>(r#""__none__""#),
                 "dof": serde_variants::<crate::photo::Dof>(r#""__none__""#),
                 "edge_status": edge_status_names(),
+                "grade": hex_render::Grade::ALL.iter().map(|g| g.name()).collect::<Vec<_>>(),
             },
             "state": play_shapes(),
             "catalog": catalog(&c),

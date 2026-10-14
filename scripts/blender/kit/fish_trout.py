@@ -148,10 +148,8 @@ def paint(P, part, variant):
     col = fa.mix(col, p["upper"], fa.smoothstep(0.05, 0.42, v))
     col = fa.mix(col, p["back"], fa.smoothstep(0.42, 0.82, v))
     height = np.zeros(n, np.float32)
-    # Gill cover: a backward-bowed edge, the plate raised a little in front of it.
-    dg = f - (0.122 + 0.012 * (1 - v ** 2))
-    col = col * (1 - 0.16 * fa.smoothstep(0.0022, 0.0, np.abs(dg)))[:, None]
-    height += np.where(dg > 0, 0.00035, 0.0) * (np.abs(v) < 0.95)
+    # No gill-cover edge: drawn as a dark band plus a height step around the full girth, it read as a
+    # seam behind the head (owner, 2026-10-14).
     # Mouth: a short downturned line from the snout tip.
     vm = -0.18 - (0.199 - f) / 0.023 * 0.2
     mouth = (f > 0.176) & (f < 0.199) & (np.abs(v - vm) < 0.06)

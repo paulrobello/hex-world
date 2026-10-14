@@ -25,7 +25,9 @@ export function clampSampledTextures(lim) {
 // `transmission` is true when the layout binds the view transmission texture (group 0, binding 24). `tilt` lists `{ sampled }`
 // for each render pipeline whose fragment module is the tilt-shift shader (it declares `focus_uv_y`). `water` lists
 // `{ pass, sampled, ibl, transmission }` for the water scenario's pipelines, `pass` being "water"
-// (water.wesl) or "terrain" (water_terrain.wesl).
+// (water.wesl) or "terrain" (water_terrain.wesl). `boid` lists `{ sampled, ibl, transmission }` for each
+// render pipeline whose fragment module is the boid material (it declares the `boid_verts` field,
+// assets/shaders/boid_material.wesl).
 export function countSampledTextures() {
   const FRAGMENT = 2;
   const perBgl = new WeakMap();
@@ -35,7 +37,8 @@ export function countSampledTextures() {
   const kitModules = new WeakMap();
   const tiltModules = new WeakSet();
   const waterModules = new WeakMap();
-  const stats = { max: 0, layouts: [], kit: [], tilt: [], water: [] };
+  const boidModules = new WeakMap();
+  const stats = { max: 0, layouts: [], kit: [], tilt: [], water: [], boid: [] };
   window.__sampledTextures = stats;
   const csm = GPUDevice.prototype.createShaderModule;
   GPUDevice.prototype.createShaderModule = function (desc) {
@@ -52,6 +55,8 @@ export function countSampledTextures() {
       waterModules.set(mod, { pass: /\bwave_count\b/.test(code) ? "water" : "terrain", ibl: /diffuse_environment_map/.test(code),
         transmission: /view_transmission_texture/.test(code) });
     if (/\bfocus_uv_y\b/.test(code)) tiltModules.add(mod);
+    if (/\bboid_verts\b/.test(code))
+      boidModules.set(mod, { ibl: /diffuse_environment_map/.test(code), transmission: /view_transmission_texture/.test(code) });
     return mod;
   };
   const cbgl = GPUDevice.prototype.createBindGroupLayout;
@@ -82,6 +87,14 @@ export function countSampledTextures() {
       const sampled = perLayout.get(desc.layout) ?? null;
       if (!stats.water.some((k) => k.pass === w.pass && k.sampled === sampled && k.ibl === w.ibl && k.transmission === w.transmission))
         stats.water.push({ ...w, sampled });
+    }
+    const bm = desc?.fragment?.module && boidModules.get(desc.fragment.module);
+    if (bm) {
+      const sampled = perLayout.get(desc.layout) ?? null;
+      // As for the kit: the layout binds the view transmission texture at group 0 binding 24.
+      const transmission = ((perLayoutGroups.get(desc.layout) ?? [])[0] ?? []).includes(24);
+      if (!stats.boid.some((k) => k.sampled === sampled && k.ibl === bm.ibl && k.transmission === transmission))
+        stats.boid.push({ sampled, ibl: bm.ibl, transmission });
     }
     const mod = desc?.fragment?.module && kitModules.get(desc.fragment.module);
     if (!mod) return;

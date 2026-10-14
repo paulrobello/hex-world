@@ -1,6 +1,6 @@
 {
   "name": "fish_trout",
-  "date": "2026-10-14T18:42:28.325Z",
+  "date": "2026-10-14T19:38:34.800Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "srgb",
       "vkFormat": 146,
       "levels": 10,
-      "bytes": 91526,
-      "sha256": "eea0ed3433f377ffba9e276bd3ac8ee41b75367be750f583d8f2739ed9923ed8"
+      "bytes": 90021,
+      "sha256": "fdc767e0e8257d2a08c2f0069c0f326173f96998e4618bfedc9f2f94d1a44565"
     },
     {
       "channel": "albedo",
@@ -59,8 +59,8 @@
       "transfer": "srgb",
       "vkFormat": 158,
       "levels": 10,
-      "bytes": 91729,
-      "sha256": "15d38aad4a966c87bbdbc0c3b9186e2a8550a72b301d3baaea371e44ffe9b291"
+      "bytes": 90205,
+      "sha256": "284f9b567eadad361c45b064d65b2e611bb437d566987584ebfa42876e99e0cb"
     },
     {
       "channel": "albedo",
@@ -68,8 +68,8 @@
       "path": "assets/kit/p1/fish_trout/fish_trout.albedo.png",
       "format": "PNG",
       "transfer": "srgb",
-      "bytes": 102377,
-      "sha256": "291ce179f9164804febcdd20aed278a6902e82261556cb208e1721b3cf3333ce"
+      "bytes": 100544,
+      "sha256": "e9e8b70c1c476f14d597187f260550252ba4ebfe72a135fffae04800b2060815"
     },
     {
       "channel": "masks",
@@ -110,8 +110,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 28637,
-      "sha256": "a0d4c6e31fbd610e25a30feb734f76ecf1add6c4010f9352a6c63fbd39f5296e"
+      "bytes": 25977,
+      "sha256": "0c20b163a49838fff28551dd837169de479ff35b29534aa4a220a6c219b55d53"
     },
     {
       "channel": "normal",
@@ -121,8 +121,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 28450,
-      "sha256": "9a55ffc9c827aa9fb3d152f1bb8c1c342b7dba51c9aa9ba83cc3a5bae2b3e99b"
+      "bytes": 25933,
+      "sha256": "3f693a0a9b7956367d760bc3693b5b174906caac3a140223547a42d44c7f3e0c"
     },
     {
       "channel": "normal",
@@ -130,8 +130,8 @@
       "path": "assets/kit/p1/fish_trout/fish_trout.normal.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 44914,
-      "sha256": "70c02548536ee2b9d86260b3da78e2cb3597800a738ffcb0724f5e0a7df83cd5"
+      "bytes": 42884,
+      "sha256": "a38d6bf1c4f02c1769ed27831f91193700a560a029a9c29657c46afa029ee984"
     },
     {
       "channel": "orm",
@@ -169,8 +169,8 @@
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 190056,
-      "astc": 191533
+      "bc7": 185891,
+      "astc": 187492
     },
     "glbBytes": 22008
   },

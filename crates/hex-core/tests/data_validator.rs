@@ -45,7 +45,7 @@ fn manifest_piece_ids() -> BTreeSet<String> {
 
 /// Plan F1 with the owner O1 coast corners and the U3 oak split from the forest (PRD §5.4): edges
 /// 0..5 for each MVP tile.
-const F1: [(&str, [SocketKind; 6]); 15] = [
+const F1: [(&str, [SocketKind; 6]); 18] = [
     ("meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("forest", [Forest, Forest, Forest, Forest, Forest, Forest]),
     ("oak", [Forest, Forest, Forest, Forest, Forest, Forest]),
@@ -60,9 +60,12 @@ const F1: [(&str, [SocketKind; 6]); 15] = [
         "river_road_bridge",
         [River, Road, Grass, River, Road, Grass],
     ),
+    ("river_spring", [River, Grass, Grass, Grass, Grass, Grass]),
     ("beach", [Ocean, Ocean, Beach, Grass, Grass, Beach]),
     ("beach_outer", [Ocean, Ocean, Beach, Grass, Beach, Ocean]),
     ("beach_inner", [Ocean, Beach, Grass, Grass, Grass, Beach]),
+    ("river_mouth", [Ocean, Ocean, Beach, River, Grass, Beach]),
+    ("river_mouth_l", [Ocean, Ocean, Beach, Grass, River, Beach]),
     ("ocean", [Ocean, Ocean, Ocean, Ocean, Ocean, Ocean]),
 ];
 
@@ -116,8 +119,9 @@ fn the_f1_tiles_have_exactly_the_f1_edge_kinds() {
 
 /// Owner O1: every beach edge names the side its land is on, looking out across it from its own
 /// tile (`Side::Right` is the corner shared with edge `e + 1`). The land corner is shared with a
-/// grass or forest edge and the sea corner with an ocean edge, and every coast tile carries one
-/// coastline: one beach edge with the land on its right and one with it on its left.
+/// grass, forest or river edge (a river mouth, water contract §3a) and the sea corner with an ocean
+/// edge, and every coast tile carries one coastline: one beach edge with the land on its right and
+/// one with it on its left.
 #[test]
 fn every_beach_edge_names_the_side_its_land_is_on() {
     let mut coasts = 0;
@@ -138,7 +142,7 @@ fn every_beach_edge_names_the_side_its_land_is_on() {
             };
             let (l, o) = (t.edges[land_edge].kind, t.edges[sea_edge].kind);
             assert!(
-                matches!(l, Grass | Forest),
+                matches!(l, Grass | Forest | River),
                 "{} edge {e}: land on the {land:?} faces edge {land_edge} {l:?}",
                 t.id
             );
@@ -151,7 +155,10 @@ fn every_beach_edge_names_the_side_its_land_is_on() {
         }
         assert_eq!((beach.len(), rights), (2, 1), "{}: one coastline", t.id);
     }
-    assert_eq!(coasts, 3, "beach, beach_outer and beach_inner");
+    assert_eq!(
+        coasts, 5,
+        "beach, beach_outer, beach_inner, river_mouth and river_mouth_l"
+    );
 }
 
 #[test]

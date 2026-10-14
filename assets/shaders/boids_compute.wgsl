@@ -1,8 +1,10 @@
 // GPU boids (crates/hex-render/src/boids.rs). The CPU plan (boids/plan.rs) owns every decision:
 // which slots are birds and which fish, where each spawns, which roost a bird is sent to and when,
 // and the fish field. This pass only moves the flock. Constants mirror plan.rs.
-struct Boid { pos: vec4<f32>, vel: vec4<f32> };
-struct Ctl { spawn: vec4<f32>, info: vec4<f32> };
+// anim (read by boid_material.wesl): x wing-beat or tail-wag phase, y flap drive (0 glide, 1 flap),
+// z the fish palette's U offset (ctl.look.x).
+struct Boid { pos: vec4<f32>, vel: vec4<f32>, anim: vec4<f32> };
+struct Ctl { spawn: vec4<f32>, info: vec4<f32>, look: vec4<f32> };
 struct Params {
     count: u32, birds: u32, fish: u32, roosts: u32,
     dt: f32, time: f32, mode: u32, field_w: u32,
@@ -123,7 +125,7 @@ fn stress(i: u32, me: Boid) -> Boid {
     v += vec3<f32>(-me.pos.x, 80.0 - me.pos.y, -me.pos.z) * 0.0005; // stay over the world
     let speed = clamp(length(v), 6.0, 18.0);
     v = normalize(v + vec3<f32>(1e-5, 0.0, 0.0)) * speed;
-    return Boid(vec4<f32>(me.pos.xyz + v * params.dt, me.pos.w), vec4<f32>(v, FLY));
+    return Boid(vec4<f32>(me.pos.xyz + v * params.dt, me.pos.w), vec4<f32>(v, FLY), me.anim);
 }
 
 // A play bird: flocks over the world, flies to its roost when sent and sits there, launches when
@@ -137,10 +139,11 @@ fn fly(i: u32, me: Boid, c: Ctl) -> Boid {
     if (ri >= 0 && u32(ri) < params.roosts) {
         let r = roosts[ri].xyz;
         let age = params.time - c.info.z;
-        var hd = vec3<f32>(0.0, 0.0, 1.0);
-        if (length(v.xz) > 1e-6) { hd = normalize(vec3<f32>(v.x, 0.0, v.z)); }
         if (age >= APPROACH) {
-            return Boid(vec4<f32>(r, me.pos.w), vec4<f32>(hd * 0.001, PERCH));
+            // Perched: level and facing out from the tree (roost w, the CPU's heading angle), so
+            // the material draws the bird upright on the canopy, not along the slope it came in on.
+            let face = roosts[ri].w;
+            return Boid(vec4<f32>(r, me.pos.w), vec4<f32>(vec3<f32>(cos(face), 0.0, sin(face)) * 0.001, PERCH), me.anim);
         }
         let to = r - p;
         let dist = length(to);
@@ -149,7 +152,7 @@ fn fly(i: u32, me: Boid, c: Ctl) -> Boid {
         // Pulled onto the perch by APPROACH, so the CPU's roosting count is what is drawn.
         let w = pow(clamp(age / APPROACH, 0.0, 1.0), 6.0);
         let np = mix(p + v * dt, r, w);
-        return Boid(vec4<f32>(np, me.pos.w), vec4<f32>(v, SETTLE));
+        return Boid(vec4<f32>(np, me.pos.w), vec4<f32>(v, SETTLE), me.anim);
     }
     if (me.vel.w == PERCH || me.vel.w == SETTLE) {
         // Released: up and out of the canopy.
@@ -189,7 +192,7 @@ fn fly(i: u32, me: Boid, c: Ctl) -> Boid {
     v.y -= v.y * 0.02 * k;
     let speed = clamp(length(v), 5.0, 12.0);
     v = normalize(v + vec3<f32>(1e-5, 0.0, 0.0)) * speed;
-    return Boid(vec4<f32>(p + v * dt, me.pos.w), vec4<f32>(v, FLY));
+    return Boid(vec4<f32>(p + v * dt, me.pos.w), vec4<f32>(v, FLY), me.anim);
 }
 
 // A fish: schools with its neighbours, wanders, holds the upper water column and turns away from
@@ -201,7 +204,7 @@ fn swim(i: u32, me: Boid, c: Ctl) -> Boid {
     let here = band(p.xz);
     if (here.z < 0.0) {
         // Stranded: the water under it went (bulldoze, undo). The plan moved its spawn.
-        return Boid(vec4<f32>(c.spawn.xyz, me.pos.w), vec4<f32>(v, SWIM));
+        return Boid(vec4<f32>(c.spawn.xyz, me.pos.w), vec4<f32>(v, SWIM), me.anim);
     }
     var center = vec3<f32>(0.0);
     var align = vec3<f32>(0.0);
@@ -251,7 +254,7 @@ fn swim(i: u32, me: Boid, c: Ctl) -> Boid {
     }
     v = vec3<f32>(h.x, clamp(v.y, -0.4, 0.4), h.y);
     let st = confine(p, v, dt);
-    return Boid(vec4<f32>(st.p, me.pos.w), vec4<f32>(st.v, SWIM));
+    return Boid(vec4<f32>(st.p, me.pos.w), vec4<f32>(st.v, SWIM), me.anim);
 }
 
 @compute @workgroup_size(64)
@@ -261,7 +264,7 @@ fn update(@builtin(global_invocation_id) id: vec3<u32>) {
     let me = boids[i];
     let c = ctl[i];
     if (c.info.x > 1.5) {
-        boids[i] = Boid(vec4<f32>(c.spawn.xyz, c.spawn.w), vec4<f32>(0.0, 0.0, 0.0, IDLE));
+        boids[i] = Boid(vec4<f32>(c.spawn.xyz, c.spawn.w), vec4<f32>(0.0, 0.0, 0.0, IDLE), vec4<f32>(0.0));
         return;
     }
     let fish = c.info.x > 0.5;
@@ -271,14 +274,44 @@ fn update(@builtin(global_invocation_id) id: vec3<u32>) {
         var sp = 8.0;
         var mode = FLY;
         if (fish) { sp = 1.0; mode = SWIM; }
-        boids[i] = Boid(vec4<f32>(c.spawn.xyz, c.spawn.w), vec4<f32>(cos(a) * sp, 0.0, sin(a) * sp, mode));
+        let anim = vec4<f32>(hash(i * 977u + 5u) * TAU, 1.0, c.look.x, 0.0);
+        boids[i] = Boid(vec4<f32>(c.spawn.xyz, c.spawn.w), vec4<f32>(cos(a) * sp, 0.0, sin(a) * sp, mode), anim);
         return;
     }
+    var next: Boid;
     if (params.mode == 0u) {
-        boids[i] = stress(i, me);
+        next = stress(i, me);
     } else if (fish) {
-        boids[i] = swim(i, me, c);
+        next = swim(i, me, c);
     } else {
-        boids[i] = fly(i, me, c);
+        next = fly(i, me, c);
     }
+    next.anim = animate(i, next, c);
+    boids[i] = next;
+}
+
+// Wing beats and tail wags advance with the boid clock, so they hold still with the flock when
+// photo mode pauses the agents. Birds alternate bursts of flapping with glides (starlings), flap
+// harder while climbing and settling, and fold their wings on the perch (no beat).
+fn animate(i: u32, b: Boid, c: Ctl) -> vec4<f32> {
+    let dt = params.dt;
+    var a = b.anim;
+    let mode = b.vel.w;
+    var rate = 0.0;
+    if (mode == SWIM) {
+        rate = TAU * (1.6 + 0.9 * length(b.vel.xyz));
+        a.y = 1.0;
+    } else if (mode == PERCH) {
+        a.y = 0.0;
+    } else {
+        let burst = sin(params.time * 0.8 + hash(i * 31u + 7u) * TAU);
+        var drive = clamp(0.5 + 1.4 * burst + 0.3 * b.vel.y, 0.0, 1.0);
+        rate = TAU * 3.2;
+        if (mode == SETTLE) { drive = 1.0; rate = TAU * 4.5; }
+        a.y = mix(a.y, drive, clamp(dt * 3.0, 0.0, 1.0));
+    }
+    a.x = a.x + rate * dt;
+    if (a.x > TAU) { a.x = a.x - TAU * floor(a.x / TAU); }
+    a.z = c.look.x;
+    return a;
 }
