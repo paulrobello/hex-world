@@ -1,7 +1,8 @@
 // Local-only persistence e2e (make ui-e2e): GPU Chromium on the built site. Autosave to IndexedDB
 // and resume after a reload, rename, export, new world, import by picker, a refused file by
 // drag-and-drop and by picker, load and delete a slot, and the storage-blocked bar. Asserts through
-// hexWorld.state() and the HUD's text, and saves the owner's captures to docs/checkpoints/persistence/.
+// hexWorld.state() and the HUD's text, and saves captures to e2e/test-results/persistence/ (set
+// PERSIST_OUT=docs/checkpoints/persistence to refresh the owner's committed captures).
 import { chromium } from "playwright";
 import { createServer } from "node:http";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -9,7 +10,7 @@ import { extname, join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
 
 const dist = process.argv[2] ?? "dist";
-const out = "docs/checkpoints/persistence";
+const out = process.env.PERSIST_OUT ?? "e2e/test-results/persistence";
 const work = "e2e/test-results/persist";
 mkdirSync(out, { recursive: true });
 mkdirSync(work, { recursive: true });

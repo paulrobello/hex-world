@@ -49,7 +49,7 @@ ui-schema:
 
 # Local only (GPU Chromium, never CI): drives the HUD with real keyboard and mouse on the built site,
 # asserts through hexWorld.state() and writes e2e/test-results/ui/<mockup state>.jpg, then e2e/persist.mjs
-# (autosave, reload, export, import, storage blocked; docs/checkpoints/persistence/), then runs the
+# (autosave, reload, export, import, storage blocked; e2e/test-results/persistence/, or PERSIST_OUT), then runs the
 # audio checks (audio-e2e).
 ui-e2e: build-web
 	cd e2e && npm ci --no-audit --no-fund
