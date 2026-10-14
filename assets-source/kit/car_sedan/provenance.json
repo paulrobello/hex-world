@@ -255,6 +255,13 @@
         "assets-source/refs/vehicles/ref-3.jpg"
       ],
       "notes": "Sedan (ref-1), panel van (ref-2) and single-cab pickup (ref-3) approved in chat as shown (photoreal die-cast proportions). Make the van's front end generic; paint is a runtime per-instance recolour (PRD 6)."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "A7: approved with runtime paint (12 palette colours). An in-engine pickup close-up is still owed to the evidence. docs/review/2026-10-14-walkthrough.html"
     }
   ]
 }

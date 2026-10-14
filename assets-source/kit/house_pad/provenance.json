@@ -261,7 +261,14 @@
       "gate": "piece",
       "status": "pending",
       "revision": "anchor-park sockets",
-      "notes": "Pending owner re-approval: re-exported with one anchor-park-<n> socket per house (PRD §7.1 house parking). Geometry and bake are unchanged; review assets-source/kit/house_pad/renders/parking_top.jpg. The entry above approved the revision before the parking sockets."
+      "notes": "Pending owner re-approval: re-exported with one anchor-park-<n> socket per house (PRD \u00a77.1 house parking). Geometry and bake are unchanged; review assets-source/kit/house_pad/renders/parking_top.jpg. The entry above approved the revision before the parking sockets."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "A9: approved with the three anchor-park sockets, the road node on the driveway, the ~2.9 m lawn swing of the three-point turn and the visitor space. docs/review/2026-10-14-walkthrough.html"
     }
   ]
 }

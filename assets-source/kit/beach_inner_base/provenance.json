@@ -242,6 +242,13 @@
       "status": "pending",
       "requested": "2026-10-13",
       "notes": "Pending owner review; not an approval. Review from the six-view renders in assets-source/kit/beach_inner_base/renders/ and the in-engine coast shots in docs/checkpoints/coast/ and assets-source/kit/beach_base/shots/. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "A11: approved; the static damp band is retinted to dry sand so the live wet band owns the gradient (A22). Colour re-checked on the TonyMcMapface re-shoot (Q4). docs/review/2026-10-14-walkthrough.html"
     }
   ]
 }

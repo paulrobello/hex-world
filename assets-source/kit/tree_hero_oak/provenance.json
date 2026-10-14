@@ -465,6 +465,13 @@
       "revision": "p3-rims-bark-ao",
       "requested": "2026-10-14",
       "notes": "Pending owner re-approval; not an approval. P2 polish round 2: dome shell rings placed at equal steps of the normal angle (7 rings, 3/4/7/7/7/5/3 columns per sector) so the rims no longer show 46-48 degree corners; roots at a 1.3 m ring step and a 4-column underside ring pay for it (LOD0 2,956 tris). Bark high-poly ridges 0.07 -> 0.025 m (live/07_p3_bark_relief.py): bark AO mean 0.645 -> 0.678 over all texels, 0.721 -> 0.758 over visible texels. Review assets-source/kit/tree_hero_oak/renders/p3_sheet.jpg (p2 left, p3 right) and the p3_*.jpg stills. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "A3: round 2 approved against ref-1; no third pass. docs/review/2026-10-14-walkthrough.html"
     }
   ]
 }
