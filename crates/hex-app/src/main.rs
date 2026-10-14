@@ -106,6 +106,7 @@ fn main() {
         .init_resource::<actions::ActionQueue>()
         .init_resource::<FrameCount>()
         .init_resource::<control::ExitRequest>()
+        .init_resource::<hex_render::play::packs::PackRequests>()
         .add_systems(
             Update,
             (
@@ -115,6 +116,7 @@ fn main() {
                 camera::pick_hover,
                 control::run_commands,
                 game::apply_actions,
+                request_selected_packs,
                 game::sync_view,
                 sim::mirror_world,
                 sim::publish_cars,
@@ -173,6 +175,17 @@ fn frame_hooks(
     }
     if flags.0.exit_after_frames.is_some_and(|n| frames.0 >= n) {
         exit.0 = true;
+    }
+}
+
+/// Hands the selected tile to the kit streamer, which requests its packs at once (selection does
+/// not change the render view until a slot is hovered).
+fn request_selected_packs(
+    game: Res<game::GameState>,
+    mut requests: ResMut<hex_render::play::packs::PackRequests>,
+) {
+    if requests.selected.as_deref() != Some(game.selected.as_str()) {
+        requests.selected = Some(game.selected.clone());
     }
 }
 

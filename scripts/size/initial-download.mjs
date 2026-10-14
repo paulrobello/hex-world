@@ -3,15 +3,19 @@
 //
 // Sums what a Trunk-built dist/ sends before the first interaction, per texture family, and fails
 // when the larger of BC7 and ASTC exceeds the budget. PNG (the fallback family) is reported only.
+// Kit content counts only the `core` pack of assets/kit/manifest.json; the other packs stream after
+// the first interaction (crates/hex-render/src/play/packs.rs) and are printed per pack, not counted.
 //
 // Usage: node scripts/size/initial-download.mjs [dist-dir]
 //   INITIAL_DOWNLOAD_BUDGET_BYTES=<positive integer> overrides the 30 MiB budget (gate self-test).
-// Exit: 0 pass, 1 over budget, 2 bad input (missing file, malformed dist/, bad override).
+// Exit: 0 pass, 1 over budget, 2 bad input (missing file, malformed dist/, a manifest entry with no
+// pack, a core piece sampling a non-core set, bad override).
 //
 // Bytes are counted as GitHub Pages serves them. Probed on hex-world.pardev.net 2026-10-13:
 // .wasm, .js, .html and .glb came back with content-encoding gzip; .ktx2, .png and .wgsl came
 // back without it. So .wasm/.js/.html/.json/.glb count as gzipped, everything else counts raw.
 // .wesl was not on the live site; it counts raw (unknown type, so Pages is assumed not to gzip it).
+// .css is not in the probe either and counts raw (an overestimate if Pages gzips it).
 // Gzipped bytes are Node zlib level 9: against the live wasm and GLB it read 0.08% and 0.6% above
 // the bytes Pages sent, where macOS `gzip -9` read 1.2% below them.
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
@@ -24,14 +28,15 @@ const MIB = 1_048_576;
 const GZIP_EXT = new Set([".wasm", ".js", ".html", ".json", ".glb"]);
 const FAMILIES = { bc7: "bc7.ktx2", astc: "astc.ktx2", png: "png" }; // hex-assets family_suffix
 const GATED = ["bc7", "astc"];
-// Budget classes (compress-report.json `budgets.class`) that stream after first interaction.
-const STREAMED_CLASSES = new Set(["hero"]);
+const CORE = "core"; // hex-assets CORE_PACK
 // Not in the manifest: the IBL is hardcoded in crates/hex-render/src/lookdev.rs.
 const IBL = ["p1/ibl/noon.diffuse.ktx2", "p1/ibl/noon.specular.ktx2"];
 // The default web scenario (Single) loads this tile in crates/hex-render/src/kit_test.rs.
 const DEFAULT_TILE = { glb: "p0/hex_test.glb", stem: "p0/hex_test" };
 // The Legend inventory sheet is open at first paint and shows every tile's thumbnail (make thumbs).
 const THUMBS = ["assets", "thumbs"];
+// The TypeScript HUD overlay (web/ui/dist, copied to dist/web/ui by Trunk) when it is built.
+const OVERLAY = ["web", "ui"];
 
 const limit = budget();
 const repo = fileURLToPath(new URL("../..", import.meta.url));
@@ -83,26 +88,48 @@ if (glue.length === 0) die(`no JS glue (*.js) in ${dist}`);
 
 function budgetClass(piece) {
   const report = join(repo, dirname(piece.provenance), "compress-report.json");
-  if (!existsSync(report)) return "unknown"; // No class recorded: counted as core.
+  if (!existsSync(report)) return "unknown";
   return JSON.parse(readFileSync(report, "utf8")).budgets?.class ?? "unknown";
 }
+
+// The runtime manifest names every piece's and set's pack (kit_gate checks the same).
+const missing = [
+  ...Object.entries(manifest.materials).filter(([, s]) => typeof s.pack !== "string").map(([id]) => `set ${id}`),
+  ...manifest.pieces.filter((p) => typeof p.pack !== "string").map((p) => `piece ${p.id}`),
+];
+if (missing.length) die(`no "pack" on ${missing.join(", ")} in ${manifestPath}`);
+const sets = Object.entries(manifest.materials).map(([id, s]) => ({ id, ...s }));
 const pieces = manifest.pieces.map((p) => ({ ...p, cls: budgetClass(p) }));
-const core = pieces.filter((p) => !STREAMED_CLASSES.has(p.cls));
-const streamed = pieces.filter((p) => STREAMED_CLASSES.has(p.cls));
+const packIds = [...new Set([CORE, ...pieces.map((p) => p.pack), ...sets.map((s) => s.pack)])];
+const inPack = (k) => ({ pieces: pieces.filter((p) => p.pack === k), sets: sets.filter((s) => s.pack === k) });
+// Sets a pack's pieces sample that another pack owns: loaded with the pack, counted in their owner.
+const borrowed = (k) => [...new Set(inPack(k).pieces.flatMap((p) =>
+  Object.values(p.slots).map((sl) => sl.tileable).filter((id) => id && manifest.materials[id]?.pack !== k)))];
+if (borrowed(CORE).length) die(`core pieces sample non-core set(s) ${borrowed(CORE).join(", ")}`);
+const core = inPack(CORE);
 const pieceMaps = (ps, fam) => ps.flatMap((p) => Object.values(p.maps ?? {}).map((s) => famFile(s, fam)));
+const setMaps = (ss, fam) => ss.flatMap((s) => Object.values(s.maps).map((m) => famFile(m, fam)));
+const packFiles = (k, fam) => {
+  const { pieces: ps, sets: ss } = inPack(k);
+  return [...ps.map((p) => kit(p.glb)), ...pieceMaps(ps, fam), ...setMaps(ss, fam)];
+};
+
+const overlayDir = join(dist, ...OVERLAY);
+const webShell = filesUnder(join(dist, "web")).filter((f) => !f.startsWith(overlayDir + sep));
 
 function categories(fam) {
   return [
     ["wasm", [join(dist, wasm[0])]],
     ["js glue", [...glue.map((f) => join(dist, f)), ...filesUnder(join(dist, "snippets"))]],
-    ["html + web shell", [join(dist, "index.html"), ...filesUnder(join(dist, "web"))]],
+    ["html + web shell", [join(dist, "index.html"), ...webShell]],
+    ["ui overlay (web/ui)", filesUnder(overlayDir)],
     ["shaders", filesUnder(join(dist, "assets", "shaders"))],
     ["kit manifest", [manifestPath]],
     ["ibl", IBL.map(kit)],
     ["default tile (p0)", [kit(DEFAULT_TILE.glb), famFile(DEFAULT_TILE.stem, fam)]],
-    ["core piece glb", core.map((p) => kit(p.glb))],
-    ["core piece maps", pieceMaps(core, fam)],
-    ["material sets", Object.values(manifest.materials).flatMap((s) => Object.values(s.maps).map((m) => famFile(m, fam)))],
+    ["core piece glb", core.pieces.map((p) => kit(p.glb))],
+    ["core piece maps", pieceMaps(core.pieces, fam)],
+    ["core material sets", setMaps(core.sets, fam)],
     ["tile thumbnails", [join(dist, ...THUMBS, "manifest.json"), ...filesUnder(join(dist, ...THUMBS))]],
   ];
 }
@@ -124,6 +151,8 @@ const n = (v) => v.toLocaleString("en-US");
 const mib = (v) => (v / MIB).toFixed(2);
 const row = (label, t) =>
   `  ${label.padEnd(30)} ${String(t.files).padStart(5)} ${n(t.raw).padStart(14)} ${n(t.wire).padStart(14)} ${mib(t.wire).padStart(8)}`;
+const header = () =>
+  console.log(`  ${"category".padEnd(30)} ${"files".padStart(5)} ${"raw B".padStart(14)} ${"wire B".padStart(14)} ${"wire MiB".padStart(8)}`);
 
 const counted = new Set();
 const totals = {};
@@ -131,7 +160,7 @@ console.log(`initial download of ${dist} (wire = zlib gzip level 9 for ${[...GZI
 for (const fam of Object.keys(FAMILIES)) {
   const seen = new Set();
   console.log(`\nfamily ${fam}${GATED.includes(fam) ? " (gated)" : " (fallback, report only)"}`);
-  console.log(`  ${"category".padEnd(30)} ${"files".padStart(5)} ${"raw B".padStart(14)} ${"wire B".padStart(14)} ${"wire MiB".padStart(8)}`);
+  header();
   const total = { files: 0, raw: 0, wire: 0 };
   for (const [label, paths] of categories(fam)) {
     const t = sum(paths, seen);
@@ -139,16 +168,23 @@ for (const fam of Object.keys(FAMILIES)) {
     console.log(row(label, t));
   }
   console.log(row("TOTAL initial download", total));
-  const later = sum([...streamed.map((p) => kit(p.glb)), ...pieceMaps(streamed, fam)], seen);
-  console.log(row("streamed (not counted)", later));
-  console.log(`  all-as-core total: ${n(total.wire + later.wire)} B (${mib(total.wire + later.wire)} MiB)`);
+  let later = 0;
+  for (const k of packIds.filter((k) => k !== CORE)) {
+    const t = sum(packFiles(k, fam), seen);
+    later += t.wire;
+    const b = borrowed(k).filter((id) => manifest.materials[id]?.pack !== CORE);
+    console.log(row(`pack ${k} (streamed)`, t) + (b.length ? `  + loads ${b.join(", ")} from another pack` : ""));
+  }
+  console.log(`  all-as-core total: ${n(total.wire + later)} B (${mib(total.wire + later)} MiB)`);
   for (const p of seen) counted.add(p);
   totals[fam] = total.wire;
 }
 
-console.log("\npieces:");
-for (const p of pieces) {
-  console.log(`  ${p.id.padEnd(24)} class ${p.cls.padEnd(9)} ${STREAMED_CLASSES.has(p.cls) ? "streamed after first interaction" : "core"}`);
+console.log("\npacks:");
+for (const k of packIds) {
+  const { pieces: ps, sets: ss } = inPack(k);
+  const when = k === CORE ? "before the first interaction" : "streamed after the first interaction";
+  console.log(`  ${k.padEnd(8)} ${when}: pieces ${ps.map((p) => `${p.id} (${p.cls})`).join(", ") || "-"}; sets ${ss.map((s) => s.id).join(", ") || "-"}`);
 }
 const skipped = new Map();
 for (const f of filesUnder(dist)) {
@@ -159,11 +195,11 @@ for (const f of filesUnder(dist)) {
   e.raw += statSync(f).size;
   skipped.set(d, e);
 }
-console.log("\ndist files not counted in any family:");
+console.log("\ndist files not counted in any family or pack:");
 for (const [d, e] of skipped) console.log(`  ${d.padEnd(40)} ${String(e.files).padStart(4)} files ${n(e.raw).padStart(14)} B raw`);
 
 const gated = GATED.reduce((a, b) => (totals[b] > totals[a] ? b : a));
-const verdict = `initial download ${n(totals[gated])} B (${mib(totals[gated])} MiB, family ${gated}) vs budget ${n(limit)} B (${mib(limit)} MiB)`;
+const verdict = `initial download ${n(totals[gated])} B (${mib(totals[gated])} MiB, family ${gated}) vs budget ${n(limit)} B (${mib(limit)} MiB), headroom ${n(limit - totals[gated])} B (${mib(limit - totals[gated])} MiB)`;
 if (totals[gated] > limit) {
   console.error(`\nFAIL: ${verdict}`);
   process.exit(1);

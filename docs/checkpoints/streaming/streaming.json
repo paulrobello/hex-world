@@ -1,0 +1,18 @@
+[
+  { "cmd": "camera", "pos": [24, 34, 58], "look_at": [14, -1.5, 0] },
+  { "cmd": "wait", "frames": 30 },
+  { "cmd": "dump_state", "name": "streaming-state-0-start" },
+  { "cmd": "screenshot", "name": "streaming-0-start" },
+  { "cmd": "select_tile", "id": "forest" },
+  { "cmd": "place", "q": 1, "r": 0 },
+  { "cmd": "wait", "frames": 28 },
+  { "cmd": "screenshot", "name": "streaming-1-placeholder" },
+  { "cmd": "dump_state", "name": "streaming-state-1-placeholder" },
+  { "cmd": "wait", "frames": 40 },
+  { "cmd": "screenshot", "name": "streaming-2-kit-mid-rise" },
+  { "cmd": "dump_state", "name": "streaming-state-2-kit-mid-rise" },
+  { "cmd": "wait", "frames": 150 },
+  { "cmd": "screenshot", "name": "streaming-3-settled" },
+  { "cmd": "dump_state", "name": "streaming-state-3-settled" },
+  { "cmd": "exit" }
+]

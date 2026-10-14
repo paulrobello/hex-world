@@ -425,5 +425,120 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
   });
 }
 
+// 9. Kit streaming by pack (PRD §10, crates/hex-render/src/play/packs.rs). Before the first
+// interaction the play scenario may fetch only core files (the network log, mapped to packs through
+// dist's kit manifest), and every core file must be in by READY. Selecting the forest tile requests
+// the forest and hero packs at once; their files are held (page.route) so the tile, placed next, is caught on its
+// placeholder mid-rise, then released: the tile must leave `pack_waiting` (swapped to the kit look)
+// and its rise must run on to an unskipped `settled` cue, which a rebuild (it resets every rise to
+// rest with no cue) would not produce. Every other pack then streams in the background.
+{
+  const manifest = JSON.parse(await readFile(join(dist, "assets/kit/manifest.json"), "utf8"));
+  const packOf = new Map([["p1/ibl/noon.diffuse.ktx2", "core"], ["p1/ibl/noon.specular.ktx2", "core"]]);
+  const suffixes = ["bc7.ktx2", "astc.ktx2", "png"];
+  const addMaps = (maps, pack) => Object.values(maps ?? {}).forEach((m) => suffixes.forEach((s) => packOf.set(`${m}.${s}`, pack)));
+  for (const s of Object.values(manifest.materials)) addMaps(s.maps, s.pack);
+  for (const p of manifest.pieces) { packOf.set(p.glb, p.pack); addMaps(p.maps, p.pack); }
+  const packIds = [...new Set(manifest.pieces.map((p) => p.pack))];
+  await withPage(gpuArgs, async (page) => {
+    const tag = "streaming";
+    const log = [];
+    let phase = "before";
+    page.on("request", (r) => {
+      const m = new URL(r.url()).pathname.match(/\/assets\/kit\/(.+)$/);
+      if (m) log.push({ path: m[1], phase });
+    });
+    let release;
+    const held = new Promise((r) => { release = r; });
+    await page.route(/\/assets\/kit\/p1\/(forest_base|tree_forest|tree_hero_oak|materials\/litter|materials\/bark)\//,
+      async (route) => { await held; await route.continue(); });
+    await page.goto(base + "?scenario=play");
+    if (!(await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 }).then(() => true, () => false))) {
+      fail(`${tag}: never ready`);
+      release();
+      return;
+    }
+    const state = () => page.evaluate(() => window.hexWorld.state());
+    let s = await state();
+    if (s.packs?.core !== "ready") fail(`${tag}: core not ready at READY: ${JSON.stringify(s.packs)}`);
+    // No interaction for 2 s: nothing but core may load.
+    await page.waitForTimeout(2_000);
+    s = await state();
+    const idle = packIds.filter((k) => k !== "core" && s.packs?.[k] !== "idle");
+    if (idle.length) fail(`${tag}: packs requested before any interaction: ${JSON.stringify(s.packs)}`);
+    const before = log.filter((e) => e.phase === "before");
+    const family = before.map((e) => e.path).find((p) => /\.(bc7\.ktx2|astc\.ktx2|png)$/.test(p) && !p.includes("/ibl/"))?.replace(/^.*?\.(bc7\.ktx2|astc\.ktx2|png)$/, "$1");
+    const notCore = before.filter((e) => packOf.get(e.path) !== "core");
+    if (notCore.length) fail(`${tag}: non-core kit requests before interaction: ${notCore.map((e) => e.path).join(", ")}`);
+    const coreFiles = [...packOf].filter(([p, k]) => k === "core" && (p.endsWith(".glb") || p.endsWith(`.${family}`) || p.includes("/ibl/"))).map(([p]) => p);
+    const missingCore = coreFiles.filter((p) => !before.some((e) => e.path === p));
+    if (!family || missingCore.length) fail(`${tag}: family ${family}; core files never requested: ${missingCore.join(", ")}`);
+    console.log(`${tag}: before interaction ${before.length} kit requests, all core (family ${family}); packs ${JSON.stringify(s.packs)}`);
+
+    phase = "after";
+    // Selecting the forest tile requests its packs before any slot is hovered.
+    await page.evaluate(() => { window.hexWorld.events(); window.hexWorld.selectTile("forest"); });
+    const selDeadline = Date.now() + 10_000;
+    while (Date.now() < selDeadline && (s = await state()).packs?.forest !== "loading") await page.waitForTimeout(50);
+    if (s.packs?.forest !== "loading" || s.packs?.hero !== "loading" || s.tiles !== 1)
+      fail(`${tag}: selecting the forest tile did not request its packs: ${JSON.stringify(s.packs)}`);
+    const onSelect = log.filter((e) => e.phase === "after" && packOf.get(e.path) === "forest").length;
+    console.log(`${tag}: selected forest (no hover, no placement): ${onSelect} forest files requested, packs ${JSON.stringify(s.packs)}`);
+    await page.evaluate(() => window.hexWorld.placeTile(1, 0));
+    const deadline = Date.now() + 20_000;
+    while (Date.now() < deadline && !(s = await state()).pack_waiting?.some((w) => w.q === 1 && w.r === 0)) await page.waitForTimeout(50);
+    const waiting = s.pack_waiting?.find((w) => w.q === 1 && w.r === 0);
+    const rise0 = s.play?.rising?.find((t) => t.q === 1 && t.r === 0);
+    if (s.tiles !== 2 || !waiting || waiting.tile !== "forest") fail(`${tag}: forest tile not placed and waiting: ${JSON.stringify(s.pack_waiting)}`);
+    if (JSON.stringify(waiting?.packs) !== JSON.stringify(["forest", "hero"])) fail(`${tag}: forest tile waits on ${JSON.stringify(waiting?.packs)}`);
+    if (s.packs?.forest !== "loading" || s.packs?.hero !== "loading") fail(`${tag}: forest/hero not loading: ${JSON.stringify(s.packs)}`);
+    if (!rise0) fail(`${tag}: forest tile is not rising: ${JSON.stringify(s.play?.rising)}`);
+    await page.waitForTimeout(150);
+    await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-streaming-placeholder.png" });
+    const forestFiles = [...packOf].filter(([p, k]) => k === "forest" && (p.endsWith(".glb") || p.endsWith(`.${family}`))).map(([p]) => p);
+    const requested = new Set(log.filter((e) => e.phase === "after").map((e) => e.path));
+    const unrequested = forestFiles.filter((p) => !requested.has(p));
+    if (unrequested.length) fail(`${tag}: forest pack files not requested after the placement: ${unrequested.join(", ")}`);
+    console.log(`${tag}: placed forest at (1, 0): waiting ${JSON.stringify(waiting?.packs)}, rise t ${rise0?.t} s (${rise0?.stage}); ` +
+      `${forestFiles.length} forest files requested (held), packs ${JSON.stringify(s.packs)}`);
+
+    release();
+    const swapDeadline = Date.now() + 30_000;
+    let swapped = null;
+    while (Date.now() < swapDeadline) {
+      s = await state();
+      if (s.packs?.forest === "ready" && s.packs?.hero === "ready" && !s.pack_waiting?.some((w) => w.q === 1 && w.r === 0)) { swapped = s; break; }
+      await page.waitForTimeout(25);
+    }
+    if (!swapped) { fail(`${tag}: forest tile never swapped: ${JSON.stringify(s.packs)} waiting ${JSON.stringify(s.pack_waiting)}`); return; }
+    const riseAtSwap = swapped.play?.rising?.find((t) => t.q === 1 && t.r === 0);
+    if (riseAtSwap && rise0 && !(riseAtSwap.t > rise0.t)) fail(`${tag}: rise clock went back across the swap: ${rise0.t} -> ${riseAtSwap.t}`);
+    const settleDeadline = Date.now() + 10_000;
+    let settled = null;
+    const events = [];
+    while (Date.now() < settleDeadline && !settled) {
+      events.push(...(await page.evaluate(() => window.hexWorld.events())));
+      settled = events.find((e) => e.type === "riseStage" && e.q === 1 && e.r === 0 && e.stage === "settled");
+      if (!settled) await page.waitForTimeout(50);
+    }
+    if (!settled || settled.skipped) fail(`${tag}: forest rise did not settle on its own after the swap: ${JSON.stringify(settled)}`);
+    console.log(`${tag}: swapped to kit ${riseAtSwap ? `mid-rise at t ${riseAtSwap.t} s (${riseAtSwap.stage})` : "after the rise"}; ` +
+      `settled cue skipped=${settled?.skipped}`);
+    await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-streaming-kit.png" });
+    const allDeadline = Date.now() + 60_000;
+    while (Date.now() < allDeadline && !packIds.every((k) => s.packs?.[k] === "ready")) {
+      await page.waitForTimeout(250);
+      s = await state();
+    }
+    if (!packIds.every((k) => s.packs?.[k] === "ready")) fail(`${tag}: background streaming did not finish: ${JSON.stringify(s.packs)}`);
+    const order = [];
+    for (const e of log.filter((e) => e.phase === "after")) {
+      const k = packOf.get(e.path);
+      if (k && k !== "core" && !order.includes(k)) order.push(k);
+    }
+    console.log(`${tag}: after the placement packs were first requested in order ${order.join(", ")}; final ${JSON.stringify(s.packs)}`);
+  });
+}
+
 server.close();
 console.log(process.exitCode ? "smoke FAILED" : "smoke OK");

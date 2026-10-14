@@ -6,7 +6,7 @@
 //! plays its staged rise ([`rise`], PRD §4.4) and a removed one sinks. The slot ring, the ghost, its
 //! edge glow and socket key marks, and the bulldoze outlines are the Legend in-world affordances
 //! ([`affordances`], `design/ui/legend/in-world.md`).
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use bevy::{
     asset::RenderAssetUsages,
@@ -15,13 +15,16 @@ use bevy::{
     prelude::*,
     render::{renderer::RenderDevice, settings::WgpuFeatures},
 };
-use hex_assets::{KitManifest, TextureFamily, parse_manifest, select_family};
+use hex_assets::{parse_manifest, select_family};
 use hex_core::{
     Axial, Biome, EdgeStatus, HEX_RADIUS, LEVEL_STEP, SocketKind, TileCatalog, TileDef, hex_prism,
 };
 
 pub mod affordances;
+pub mod packs;
 pub mod rise;
+
+use packs::{PackRequests, PlayPacks};
 
 use rise::{PlayRises, PropKind, ReducedMotion, RiseMessage, RisePart, RiseRole};
 
@@ -93,6 +96,8 @@ pub struct PlayTileRoot;
 pub struct PlaySpawned {
     tiles: HashMap<Axial, (PlayTile, Entity)>,
     rebuild: bool,
+    /// Pieces built since the last sync: tiles drawing them swap to the kit look in place.
+    refresh: HashSet<String>,
 }
 
 #[derive(Clone)]
@@ -102,15 +107,12 @@ pub struct KitPart {
     material: Handle<KitMaterial>,
 }
 
-/// The kit pieces, loaded once on the first entry into the scenario. A piece missing from the
-/// manifest (pending, plan F4) or failing to load has no entry and draws as a placeholder.
+/// The built kit pieces. `Loading` holds pieces of packs that arrived before core; `Ready` is
+/// core and every pack since ([`packs`]). A piece missing from the manifest (pending, plan F4),
+/// failing to load, or in a pack still streaming has no entry and draws as a placeholder.
 #[derive(Resource)]
 pub enum PlayKit {
-    Loading {
-        manifest: KitManifest,
-        items: Vec<(String, Handle<Gltf>)>,
-        family: TextureFamily,
-    },
+    Loading(HashMap<String, Vec<KitPart>>),
     Ready(HashMap<String, Vec<KitPart>>),
 }
 
@@ -220,15 +222,31 @@ pub fn setup(
     Transform::from_xyz(14.0, 95.0, 125.0).looking_at(Vec3::new(14.0, 0.0, 16.0), Vec3::Y)
 }
 
-/// Starts loading every manifest piece the first time the play scenario runs.
+/// Requests the core pack the first time the play scenario runs, then each frame the packs the
+/// view and the selected tile need and, after the first interaction, the rest ([`packs`]).
+#[allow(clippy::too_many_arguments)]
 pub fn start_kit(
     mut commands: Commands,
     active: Res<ActiveScenario>,
     kit: Option<Res<PlayKit>>,
-    device: Option<Res<RenderDevice>>,
-    server: Res<AssetServer>,
+    packs: Option<ResMut<PlayPacks>>,
+    requests: Option<Res<PackRequests>>,
+    view: Res<PlayView>,
+    catalog: Res<PlayCatalog>,
+    (device, server): (Option<Res<RenderDevice>>, Res<AssetServer>),
 ) {
-    let (Scenario::Play, None, Some(device)) = (active.0, kit, device) else {
+    if active.0 != Scenario::Play {
+        return;
+    }
+    if let (Some(_), Some(mut packs)) = (&kit, packs) {
+        let changed = view.is_changed();
+        packs.update(&view, changed, &catalog.0, requests.as_deref(), &server);
+        if changed {
+            packs.refresh_waiting(&view, &catalog.0);
+        }
+        return;
+    }
+    let (None, Some(device)) = (kit, device) else {
         return;
     };
     let f = device.features();
@@ -244,101 +262,60 @@ pub fn start_kit(
             return;
         }
     };
-    let items = manifest
-        .pieces
-        .iter()
-        .map(|e| (e.id.clone(), server.load(format!("kit://{}", e.glb))))
-        .collect();
-    commands.insert_resource(PlayKit::Loading {
-        manifest,
-        items,
-        family,
-    });
+    let mut packs = PlayPacks::new(manifest, family);
+    packs.request(hex_assets::CORE_PACK, &server);
+    commands.insert_resource(packs);
+    commands.insert_resource(PlayKit::Loading(HashMap::new()));
 }
 
-/// Builds each loaded piece's meshes and materials (the slot walk of `kit_scene::finish_kit`).
+/// Builds the meshes and materials of every piece in the packs that finished loading (the slot
+/// walk of `kit_scene::finish_kit`). Core's arrival draws the world; a later pack's pieces swap in
+/// place on the tiles that draw them (`sync`).
+#[allow(clippy::too_many_arguments)]
 pub fn finish_kit(
     mut kit: Option<ResMut<PlayKit>>,
+    mut packs: Option<ResMut<PlayPacks>>,
     spawned: Option<ResMut<PlaySpawned>>,
+    view: Res<PlayView>,
+    catalog: Res<PlayCatalog>,
     server: Res<AssetServer>,
-    gltfs: Res<Assets<Gltf>>,
-    gltf_meshes: Res<Assets<GltfMesh>>,
-    mut materials: ResMut<Assets<KitMaterial>>,
+    (gltfs, gltf_meshes, mut materials): (
+        Res<Assets<Gltf>>,
+        Res<Assets<GltfMesh>>,
+        ResMut<Assets<KitMaterial>>,
+    ),
     config: Res<GateConfig>,
 ) {
-    let Some(PlayKit::Loading {
-        manifest,
-        items,
-        family,
-    }) = kit.as_deref()
-    else {
+    let (Some(kit), Some(packs)) = (kit.as_deref_mut(), packs.as_deref_mut()) else {
         return;
     };
-    let failed = |h: &Handle<Gltf>| {
-        server.load_state(h).is_failed() || server.recursive_dependency_load_state(h).is_failed()
-    };
-    if items
-        .iter()
-        .any(|(_, h)| !server.is_loaded_with_dependencies(h) && !failed(h))
-    {
+    let arrived = packs.poll(&server);
+    if arrived.is_empty() {
         return;
     }
-    let mut pieces: HashMap<String, Vec<KitPart>> = HashMap::new();
-    for (id, h) in items {
-        let (Some(g), Some(entry)) = (
-            gltfs.get(h).filter(|_| !failed(h)),
-            manifest.pieces.iter().find(|e| &e.id == id),
-        ) else {
-            warn!("play: kit piece {id} failed to load, drawn as a placeholder");
-            continue;
-        };
-        let mut parts = vec![];
-        let mut by_slot: HashMap<String, Option<Handle<KitMaterial>>> = HashMap::new();
-        for lod in 0..3usize {
-            let Some(gm) = g
-                .named_meshes
-                .get(format!("{id}_lod{lod}").as_str())
-                .and_then(|mh| gltf_meshes.get(mh))
-            else {
+    packs.refresh_waiting(&view, &catalog.0);
+    let (PlayKit::Loading(pieces) | PlayKit::Ready(pieces)) = &mut *kit;
+    let mut built = HashSet::new();
+    for pack in arrived {
+        let ids: Vec<String> = packs
+            .manifest
+            .pack_pieces(pack)
+            .map(|e| e.id.clone())
+            .collect();
+        for id in ids {
+            let parts = build_piece(
+                &id,
+                packs,
+                &server,
+                (&gltfs, &gltf_meshes, &mut materials),
+                config.kit_hooks,
+            );
+            if parts.is_empty() {
+                warn!("play: kit piece {id} failed to load, drawn as a placeholder");
                 continue;
-            };
-            for prim in &gm.primitives {
-                let slot_name = prim
-                    .material
-                    .as_ref()
-                    .and_then(|mh| {
-                        g.named_materials
-                            .iter()
-                            .find(|(_, v)| *v == mh)
-                            .map(|(k, _)| k.to_string())
-                    })
-                    .unwrap_or_default();
-                let Some(slot) = entry.slots.get(&slot_name) else {
-                    continue;
-                };
-                let mat = by_slot
-                    .entry(slot_name.clone())
-                    .or_insert_with(|| match slot_requests(manifest, entry, slot, *family) {
-                        Ok(r) => {
-                            Some(materials.add(build_material(&server, slot, &r, config.kit_hooks)))
-                        }
-                        Err(e) => {
-                            warn!("play: {e}, slot {slot_name} skipped");
-                            None
-                        }
-                    })
-                    .clone();
-                if let Some(material) = mat {
-                    parts.push(KitPart {
-                        lod,
-                        mesh: prim.mesh.clone(),
-                        material,
-                    });
-                }
             }
-        }
-        if !parts.is_empty() {
             pieces.insert(id.clone(), parts);
+            built.insert(id);
         }
     }
     info!("play: kit pieces ready: {:?}", {
@@ -346,12 +323,87 @@ pub fn finish_kit(
         ids.sort();
         ids
     });
-    if let Some(kit) = kit.as_deref_mut() {
+    let mut spawned = spawned;
+    if packs.core_ready()
+        && let PlayKit::Loading(pieces) = &mut *kit
+    {
+        let pieces = std::mem::take(pieces);
         *kit = PlayKit::Ready(pieces);
+        if let Some(s) = spawned.as_deref_mut() {
+            s.rebuild = true;
+        }
+    } else if matches!(kit, PlayKit::Ready(_))
+        && let Some(s) = spawned.as_deref_mut()
+    {
+        s.refresh.extend(built);
     }
-    if let Some(mut s) = spawned {
-        s.rebuild = true;
+}
+
+/// One loaded piece's parts by LOD, with a material per manifest slot.
+fn build_piece(
+    id: &str,
+    packs: &PlayPacks,
+    server: &AssetServer,
+    (gltfs, gltf_meshes, materials): (&Assets<Gltf>, &Assets<GltfMesh>, &mut Assets<KitMaterial>),
+    hooks: crate::workload::KitHooks,
+) -> Vec<KitPart> {
+    let (manifest, family) = (&packs.manifest, packs.family);
+    let failed = |h: &Handle<Gltf>| {
+        server.load_state(h).is_failed() || server.recursive_dependency_load_state(h).is_failed()
+    };
+    let (Some(g), Some(entry)) = (
+        packs
+            .glb(id)
+            .filter(|h| !failed(h))
+            .and_then(|h| gltfs.get(h)),
+        manifest.pieces.iter().find(|e| e.id == id),
+    ) else {
+        return vec![];
+    };
+    let mut parts = vec![];
+    let mut by_slot: HashMap<String, Option<Handle<KitMaterial>>> = HashMap::new();
+    for lod in 0..3usize {
+        let Some(gm) = g
+            .named_meshes
+            .get(format!("{id}_lod{lod}").as_str())
+            .and_then(|mh| gltf_meshes.get(mh))
+        else {
+            continue;
+        };
+        for prim in &gm.primitives {
+            let slot_name = prim
+                .material
+                .as_ref()
+                .and_then(|mh| {
+                    g.named_materials
+                        .iter()
+                        .find(|(_, v)| *v == mh)
+                        .map(|(k, _)| k.to_string())
+                })
+                .unwrap_or_default();
+            let Some(slot) = entry.slots.get(&slot_name) else {
+                continue;
+            };
+            let mat = by_slot
+                .entry(slot_name.clone())
+                .or_insert_with(|| match slot_requests(manifest, entry, slot, family) {
+                    Ok(r) => Some(materials.add(build_material(server, slot, &r, hooks))),
+                    Err(e) => {
+                        warn!("play: {e}, slot {slot_name} skipped");
+                        None
+                    }
+                })
+                .clone();
+            if let Some(material) = mat {
+                parts.push(KitPart {
+                    lod,
+                    mesh: prim.mesh.clone(),
+                    material,
+                });
+            }
+        }
     }
+    parts
 }
 
 fn spawn_kit(
@@ -571,13 +623,15 @@ type RiseHooks<'w> = (
     MessageWriter<'w, RiseMessage>,
 );
 
-/// Spawns and despawns tile entities to match the view. Tiles wait for the kit so a tile never
-/// swaps from placeholder to kit piece mid-game. Water tiles also get their surfaces, cut faces and
-/// placeholder beds (`water::tiles::sync`).
+/// Spawns and despawns tile entities to match the view. Tiles wait for the core pack; a tile that
+/// draws a piece from a pack still streaming draws its placeholder, and swaps to the kit look in
+/// place when the pack arrives (its children are respawned under the same root, so a running rise
+/// keeps its pose and clock). Water tiles also get their surfaces, cut faces and placeholder beds
+/// (`water::tiles::sync`, which respawns a cell whose centre piece arrived).
 ///
 /// A tile new to the view (not on a rebuild) fast-forwards every running rise and starts its own;
-/// a tile gone from it sinks with its released water entities. A rebuild (the kit arriving, a
-/// switch into the scenario) draws every tile at rest.
+/// a tile gone from it sinks with its released water entities. A rebuild (core arriving, a switch
+/// into the scenario) draws every tile at rest.
 #[allow(clippy::too_many_arguments)]
 pub fn sync(
     mut commands: Commands,
@@ -605,7 +659,7 @@ pub fn sync(
             fixed: config.water_fixed,
         });
     }
-    if !view.is_changed() && !spawned.rebuild {
+    if !view.is_changed() && !spawned.rebuild && spawned.refresh.is_empty() {
         return;
     }
     let Some(PlayKit::Ready(kit)) = kit.as_deref() else {
@@ -618,6 +672,7 @@ pub fn sync(
         }
         rises.reset(view.tiles.iter().map(|t| t.cell), &mut commands);
         spawned.rebuild = false;
+        spawned.refresh.clear();
     }
     let mut released: HashMap<Axial, Vec<Entity>> = HashMap::new();
     if let Some(mut water) = water {
@@ -662,6 +717,21 @@ pub fn sync(
     for (_, es) in released {
         for e in es {
             commands.entity(e).try_despawn();
+        }
+    }
+    let refresh = std::mem::take(&mut spawned.refresh);
+    for (cell, (t, root)) in spawned.tiles.iter().filter(|_| !refresh.is_empty()) {
+        let Some(def) = catalog.0.get(&t.tile) else {
+            continue;
+        };
+        if packs::drawn_pieces(def, &catalog.0)
+            .iter()
+            .any(|p| refresh.contains(*p))
+        {
+            commands
+                .entity(*root)
+                .despawn_children()
+                .with_children(|p| tile_children(p, &plain, kit, &catalog.0, def, *cell));
         }
     }
     let added: Vec<&PlayTile> = view

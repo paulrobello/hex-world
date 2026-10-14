@@ -1649,6 +1649,59 @@ fn manifests_parse() {
     );
 }
 
+/// Streaming packs (PRD §10, §15 P2): the runtime manifest names a pack on every piece and set
+/// (the parser's core default is for the gate fixtures only), core holds everything the start tile
+/// draws, and a hero-class piece (full-detail maps) never loads before the first interaction.
+#[test]
+fn packs_declared_core_draws_the_start_tile_and_heroes_stream() {
+    let mut e = vec![];
+    let path = repo().join("assets/kit/manifest.json");
+    let raw: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    for (id, s) in raw["materials"].as_object().unwrap() {
+        if !s["pack"].is_string() {
+            e.push(format!("material set {id}: no \"pack\""));
+        }
+    }
+    for p in raw["pieces"].as_array().unwrap() {
+        if !p["pack"].is_string() {
+            e.push(format!("piece {}: no \"pack\"", p["id"]));
+        }
+    }
+    let kit = kits().pop().unwrap();
+    let m = &kit.manifest;
+    let catalog = hex_core::TileCatalog::builtin().unwrap();
+    let start = catalog.get(hex_core::START_TILE).unwrap();
+    for r in start.kit_refs(catalog.sockets()) {
+        // Scatter props are not drawn in play yet (play.rs spawns `props.hero` only).
+        if start.props.scatter.iter().any(|s| &s.piece == r) {
+            continue;
+        }
+        match m.piece_pack(r.as_str()) {
+            Some(CORE_PACK) | None => {}
+            Some(k) => e.push(format!(
+                "start tile {} draws {} from pack {k}; it must be core",
+                start.id,
+                r.as_str()
+            )),
+        }
+    }
+    if m.packs().first() != Some(&CORE_PACK) {
+        e.push(format!("no core pack: {:?}", m.packs()));
+    }
+    for p in &m.pieces {
+        match budget_class(p) {
+            Ok(BudgetClass::Hero) if p.pack() == CORE_PACK => e.push(format!(
+                "{}: budget class hero in pack core; hero assets stream after the first interaction",
+                p.id
+            )),
+            Ok(_) => {}
+            Err(err) => e.push(err),
+        }
+    }
+    fail(e);
+}
+
 #[test]
 fn geometry_budgets_lods_sockets_border() {
     let mut e = vec![];

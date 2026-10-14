@@ -1,7 +1,7 @@
 //! `assets/kit/manifest.json`: kit pieces, their material slots and sidecar maps (R6).
 use crate::{TextureFamily, family_suffix};
 use serde::Deserialize;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub const GLB_MAX_BYTES: u64 = 2_097_152; // PRD §10
 /// KTX2 bytes per texture family (BC7 and ASTC counted separately), by budget class. Owner ruling
@@ -11,6 +11,13 @@ pub const KTX_BUDGETS: [(BudgetClass, u64); 3] = [
     (BudgetClass::Tileable, 3_600_000),
     (BudgetClass::Hero, 11_500_000),
 ];
+/// The pack loaded before the first interaction (PRD §10): the start meadow, the road family and
+/// their sets. A piece or set without a `pack` is core.
+pub const CORE_PACK: &str = "core";
+/// Every pack id, `core` first; the other packs stream after the first interaction in this order
+/// (PRD §10 "Kit content streams in by biome pack"). A pack id outside this list is a manifest
+/// error, so a typo cannot start a pack of its own.
+pub const PACKS: [&str; 6] = [CORE_PACK, "props", "forest", "hero", "village", "water"];
 pub const LOD1_MAX_RATIO: f32 = 0.5;
 pub const LOD2_MAX_RATIO: f32 = 0.15;
 pub const APOTHEM: f32 = hex_core_apothem();
@@ -128,6 +135,15 @@ pub struct TileSet {
     /// World meters covered by one repeat of the tile (D2: 1024 px over 2 m = 512 px/m).
     pub tile_m: f32,
     pub maps: BTreeMap<Channel, String>,
+    /// Streaming pack (one of [`PACKS`]); `None` is [`CORE_PACK`].
+    #[serde(default)]
+    pub pack: Option<String>,
+}
+
+impl TileSet {
+    pub fn pack(&self) -> &str {
+        self.pack.as_deref().unwrap_or(CORE_PACK)
+    }
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
@@ -172,6 +188,23 @@ pub struct PieceEntry {
     /// Map stems under `assets/kit/`, without the family suffix.
     #[serde(default)]
     pub maps: BTreeMap<Channel, String>,
+    /// Streaming pack (one of [`PACKS`]); `None` is [`CORE_PACK`].
+    #[serde(default)]
+    pub pack: Option<String>,
+}
+
+impl PieceEntry {
+    pub fn pack(&self) -> &str {
+        self.pack.as_deref().unwrap_or(CORE_PACK)
+    }
+
+    /// Tileable sets the piece's slots sample.
+    pub fn tileable_sets(&self) -> BTreeSet<&str> {
+        self.slots
+            .values()
+            .filter_map(|s| s.tileable.as_deref())
+            .collect()
+    }
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -182,8 +215,75 @@ pub struct KitManifest {
     pub pieces: Vec<PieceEntry>,
 }
 
+impl KitManifest {
+    /// Packs that hold at least one piece or set, in [`PACKS`] order.
+    pub fn packs(&self) -> Vec<&'static str> {
+        PACKS
+            .into_iter()
+            .filter(|k| {
+                self.pieces.iter().any(|p| p.pack() == *k)
+                    || self.materials.values().any(|s| s.pack() == *k)
+            })
+            .collect()
+    }
+
+    /// The pieces in `pack`.
+    pub fn pack_pieces<'a>(&'a self, pack: &'a str) -> impl Iterator<Item = &'a PieceEntry> {
+        self.pieces.iter().filter(move |p| p.pack() == pack)
+    }
+
+    /// Tileable sets a pack loads: the sets it owns and every set its pieces sample, whichever
+    /// pack owns it (bark for the hero oak, gravel for the ocean seabed).
+    pub fn pack_sets(&self, pack: &str) -> BTreeSet<String> {
+        let mut out: BTreeSet<String> = self
+            .materials
+            .iter()
+            .filter(|(_, s)| s.pack() == pack)
+            .map(|(id, _)| id.clone())
+            .collect();
+        for p in self.pack_pieces(pack) {
+            out.extend(p.tileable_sets().into_iter().map(str::to_owned));
+        }
+        out
+    }
+
+    /// The pack of piece `id`, if the manifest has it.
+    pub fn piece_pack(&self, id: &str) -> Option<&str> {
+        self.pieces
+            .iter()
+            .find(|p| p.id == id)
+            .map(PieceEntry::pack)
+    }
+}
+
 pub fn parse_manifest(json: &str) -> Result<KitManifest, String> {
     let m: KitManifest = serde_json::from_str(json).map_err(|e| format!("manifest: {e}"))?;
+    let known = |owner: &str, pack: &str| {
+        if PACKS.contains(&pack) {
+            Ok(())
+        } else {
+            Err(format!("{owner}: unknown pack {pack} (known: {PACKS:?})"))
+        }
+    };
+    for (id, s) in &m.materials {
+        known(id, s.pack())?;
+    }
+    for p in &m.pieces {
+        known(&p.id, p.pack())?;
+        // Core must be complete on its own: it is everything before the first interaction.
+        if p.pack() == CORE_PACK
+            && let Some(set) = p
+                .tileable_sets()
+                .into_iter()
+                .find(|s| m.materials.get(*s).is_some_and(|t| t.pack() != CORE_PACK))
+        {
+            return Err(format!(
+                "{}: core piece samples set {set} from pack {}; core sets must be core",
+                p.id,
+                m.materials[set].pack()
+            ));
+        }
+    }
     for p in &m.pieces {
         for (name, slot) in &p.slots {
             if let Some(set) = &slot.tileable
@@ -265,6 +365,38 @@ mod tests {
         assert!(parse_manifest(&no_set).unwrap_err().contains("tileUvScale"));
         let zero = uv.replace("16.0", "0.0");
         assert!(parse_manifest(&zero).unwrap_err().contains("tileUvScale"));
+    }
+
+    #[test]
+    fn packs_default_to_core_and_must_be_known() {
+        let m = parse_manifest(OK).unwrap();
+        assert_eq!(m.pieces[0].pack(), CORE_PACK);
+        assert_eq!(m.materials["grass"].pack(), CORE_PACK);
+        assert_eq!(m.packs(), vec![CORE_PACK]);
+        let typo = OK.replace(r#""kind":"base""#, r#""kind":"base","pack":"forrest""#);
+        assert!(
+            parse_manifest(&typo)
+                .unwrap_err()
+                .contains("unknown pack forrest")
+        );
+    }
+
+    #[test]
+    fn core_pieces_need_core_sets_and_packs_load_their_pieces_sets() {
+        let streamed_set = OK.replace(r#""tileM":2.0,"#, r#""tileM":2.0,"pack":"forest","#);
+        let e = parse_manifest(&streamed_set).unwrap_err();
+        assert!(
+            e.contains("core piece samples set grass from pack forest"),
+            "{e}"
+        );
+        let both = streamed_set.replace(r#""kind":"base""#, r#""kind":"base","pack":"hero""#);
+        let m = parse_manifest(&both).unwrap();
+        assert_eq!(m.packs(), vec!["forest", "hero"]);
+        assert_eq!(m.piece_pack("meadow_base"), Some("hero"));
+        // The hero pack loads the forest-owned set its piece samples; forest owns it.
+        assert!(m.pack_sets("hero").contains("grass"));
+        assert!(m.pack_sets("forest").contains("grass"));
+        assert_eq!(m.pack_pieces("forest").count(), 0);
     }
 
     #[test]

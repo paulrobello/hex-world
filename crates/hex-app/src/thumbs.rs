@@ -8,7 +8,11 @@
 use bevy::prelude::*;
 use bevy::render::view::DebandDither;
 use hex_core::{Axial, EdgeSocket, TileCatalog, TileDef};
-use hex_render::play::{PlayKit, PlayTile, PlayView, rise::ReducedMotion};
+use hex_render::play::{
+    PlayKit, PlayTile, PlayView,
+    packs::{PackRequests, PlayPacks},
+    rise::ReducedMotion,
+};
 use hex_render::{PostMode, Scenario, TiltMode};
 
 use crate::{args::Flags, capture, control::ExitRequest, game};
@@ -168,6 +172,10 @@ impl Plugin for ThumbsPlugin {
         app.insert_resource(ClearColor(KEY))
             .insert_resource(ReducedMotion(true))
             .insert_resource(ThumbRun::new(&catalog))
+            .insert_resource(PackRequests {
+                all: true,
+                ..default()
+            })
             .add_systems(
                 Update,
                 (
@@ -217,12 +225,15 @@ fn stage_scene(
 fn drive(
     mut commands: Commands,
     mut run: ResMut<ThumbRun>,
-    kit: Option<Res<PlayKit>>,
+    (kit, packs): (Option<Res<PlayKit>>, Option<Res<PlayPacks>>),
     mut view: ResMut<PlayView>,
     mut exit: ResMut<ExitRequest>,
 ) {
     run.frame += 1;
-    let ready = matches!(kit.as_deref(), Some(PlayKit::Ready(_)));
+    // Every pack, not just core: the thumbnails show each tile's kit look. No packs resource with a
+    // ready kit means the manifest failed to parse and every tile is a placeholder anyway.
+    let ready =
+        matches!(kit.as_deref(), Some(PlayKit::Ready(_))) && packs.is_none_or(|p| p.all_ready());
     if run.frame < START_FRAME || !ready || exit.0 {
         return;
     }

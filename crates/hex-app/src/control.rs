@@ -6,7 +6,10 @@ use bevy::prelude::*;
 use hex_core::{Axial, RotateDir};
 use hex_render::{
     ActiveScenario, Scenario, SceneEntity,
-    play::rise::{PlayRises, ReducedMotion},
+    play::{
+        packs::PlayPacks,
+        rise::{PlayRises, ReducedMotion},
+    },
     setup_scene,
     tilt_shift::TiltShiftSettings,
 };
@@ -262,7 +265,7 @@ pub fn publish_state(
     tilt: Res<TiltShiftSettings>,
     game: Res<GameState>,
     sim: Res<CarSim>,
-    (rises, reduced): (Res<PlayRises>, Res<ReducedMotion>),
+    (rises, reduced, packs): (Res<PlayRises>, Res<ReducedMotion>, Option<Res<PlayPacks>>),
     views: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
 ) {
     *bridge::VIEW.lock().unwrap() = views.iter().find(|(c, _)| c.is_active).and_then(|(c, gt)| {
@@ -299,6 +302,15 @@ pub fn publish_state(
         "no_anim": flags.0.no_anim,
         "camera": camera,
         "queued": queue.items.len(),
+        "packs": packs.as_ref().filter(|_| play).map(|p| {
+            p.status().map(|(k, s)| (k.to_owned(), serde_json::json!(s.as_str())))
+                .collect::<serde_json::Map<_, _>>()
+        }),
+        "pack_waiting": packs.as_ref().filter(|_| play).map(|p| {
+            p.waiting().iter().map(|(c, tile, packs)| {
+                serde_json::json!({ "q": c.q, "r": c.r, "tile": tile, "packs": packs })
+            }).collect::<Vec<_>>()
+        }),
         "diag": serde_json::from_str::<serde_json::Value>(&bridge::DIAG_JSON.lock().unwrap())
             .unwrap_or(serde_json::Value::Null),
     });
