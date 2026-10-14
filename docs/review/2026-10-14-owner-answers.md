@@ -86,3 +86,8 @@ Owner's notes, verbatim: "there is no visual or ghost of the selected tile when 
 - **River fish:** singles and small groups of 2 to 5, not big schools. This is handled on the pine/oak boids branch.
 - **Road verge:** the dark strip beside roads is the 31° verge sink slope. Fix queued on card 01a13bad2862.
 - **Ambience:** the bus defaults to 10%.
+
+## Round 11
+
+- **Bird and fish pieces:** both approved. Fix the faint fish head seam during the swap-in. Display scale is ×4 real size for the bird and ×2 for the fish.
+- **Oak tile ground:** keep the forest_base clearing as shipped. The brown litter floor joins across pine neighbours.
