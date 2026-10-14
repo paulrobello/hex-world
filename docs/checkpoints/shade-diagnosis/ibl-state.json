@@ -1,0 +1,203 @@
+{
+ "native play, frame 119 (before first interaction)": {
+  "frames": 119,
+  "packs": {
+   "core": "ready",
+   "forest": "idle",
+   "hero": "idle",
+   "props": "idle",
+   "village": "idle",
+   "water": "idle"
+  },
+  "post": [
+   "taa",
+   "ssao",
+   "bloom"
+  ],
+  "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+  "ibl_diag": [
+   {
+    "ambient": 0.0,
+    "env": {
+     "diffuse": {
+      "format": "Rgba16Float",
+      "in_assets": true,
+      "load": "Some(Loaded)",
+      "mips": 1,
+      "size": [
+       32,
+       32,
+       6
+      ],
+      "view_dim": "Some(Cube)"
+     },
+     "intensity": 1500.0,
+     "specular": {
+      "format": "Rgba16Float",
+      "in_assets": true,
+      "load": "Some(Loaded)",
+      "mips": 9,
+      "size": [
+       256,
+       256,
+       6
+      ],
+      "view_dim": "Some(Cube)"
+     }
+    },
+    "ev100": 12.5,
+    "ssao": true,
+    "tonemap": "AcesFitted"
+   }
+  ]
+ },
+ "native play, frame 592 (after the shots)": {
+  "frames": 592,
+  "packs": {
+   "core": "ready",
+   "forest": "ready",
+   "hero": "ready",
+   "props": "ready",
+   "village": "ready",
+   "water": "ready"
+  },
+  "post": [
+   "taa",
+   "ssao",
+   "bloom"
+  ],
+  "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+  "ibl_diag": [
+   {
+    "ambient": 0.0,
+    "env": {
+     "diffuse": {
+      "format": "Rgba16Float",
+      "in_assets": true,
+      "load": "Some(Loaded)",
+      "mips": 1,
+      "size": [
+       32,
+       32,
+       6
+      ],
+      "view_dim": "Some(Cube)"
+     },
+     "intensity": 1500.0,
+     "specular": {
+      "format": "Rgba16Float",
+      "in_assets": true,
+      "load": "Some(Loaded)",
+      "mips": 9,
+      "size": [
+       256,
+       256,
+       6
+      ],
+      "view_dim": "Some(Cube)"
+     }
+    },
+    "ev100": 12.5,
+    "ssao": true,
+    "tonemap": "AcesFitted"
+   }
+  ]
+ },
+ "web play, frame 600 (after the shots)": {
+  "frames": 600,
+  "packs": {
+   "core": "ready",
+   "forest": "ready",
+   "hero": "ready",
+   "props": "ready",
+   "village": "ready",
+   "water": "ready"
+  },
+  "post": [
+   "taa",
+   "ssao",
+   "bloom"
+  ],
+  "adapter": " | BrowserWebGpu | Other | ",
+  "ibl_diag": [
+   {
+    "ambient": 0,
+    "env": {
+     "diffuse": {
+      "format": "Rgba16Float",
+      "in_assets": true,
+      "load": "Some(Loaded)",
+      "mips": 1,
+      "size": [
+       32,
+       32,
+       6
+      ],
+      "view_dim": "Some(Cube)"
+     },
+     "intensity": 1500,
+     "specular": {
+      "format": "Rgba16Float",
+      "in_assets": true,
+      "load": "Some(Loaded)",
+      "mips": 9,
+      "size": [
+       256,
+       256,
+       6
+      ],
+      "view_dim": "Some(Cube)"
+     }
+    },
+    "ev100": 12.5,
+    "ssao": true,
+    "tonemap": "AcesFitted"
+   }
+  ]
+ },
+ "native water look-dev": {
+  "frames": 301,
+  "packs": null,
+  "post": [
+   "taa",
+   "ssao",
+   "bloom"
+  ],
+  "adapter": "Apple M4 Max | Metal | IntegratedGpu | ",
+  "ibl_diag": [
+   {
+    "ambient": 0.0,
+    "env": {
+     "diffuse": {
+      "format": "Rgba16Float",
+      "in_assets": true,
+      "load": "Some(Loaded)",
+      "mips": 1,
+      "size": [
+       32,
+       32,
+       6
+      ],
+      "view_dim": "Some(Cube)"
+     },
+     "intensity": 1500.0,
+     "specular": {
+      "format": "Rgba16Float",
+      "in_assets": true,
+      "load": "Some(Loaded)",
+      "mips": 9,
+      "size": [
+       256,
+       256,
+       6
+      ],
+      "view_dim": "Some(Cube)"
+     }
+    },
+    "ev100": 12.5,
+    "ssao": true,
+    "tonemap": "AcesFitted"
+   }
+  ]
+ }
+}

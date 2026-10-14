@@ -21,7 +21,7 @@ Everything below waits on you. Work kept going overnight on everything that did 
 1. Build and serve it:
    - `make build-web`
    - `python3 -m http.server 8094 --bind 127.0.0.1 --directory dist`
-2. Open http://127.0.0.1:8094/?scenario=play.
+2. Open http://127.0.0.1:8094/. The bare URL now opens play.
 3. Click once. Nothing loads or plays before the first interaction.
 4. Place tiles, rotate, undo and bulldoze, then zoom onto a river, coast or forest to bring its ambience up.
 
@@ -32,6 +32,46 @@ Not built yet:
 - an audio key. Neither PRD §4.5 nor the Legend design defines one.
 
 **A7. Cars: sedan, van and pickup with runtime paint.** In play: `docs/checkpoints/cars-kit/cars-kit-01-busy.jpg`, `-02-hub`, `-03-closeup-sedan`, `-03-closeup-van`, and night `-04`/`-05`. Blender six-views are in `assets-source/kit/car_*/renders/`. There are 12 palette colours, and the draw count does not grow with colour. There is no in-engine close-up of the pickup yet.
+
+**A8. Shipped Legend UI against the mockups.** `docs/checkpoints/ui-followups/` has 23 `hud-<state>-mockup-vs-shipped.jpg` side-by-sides, the S11 unsupported page (`unsupported-s11-*-mockup-vs-shipped.jpg`, `unsupported-390-both-variants.jpg`) and the bare URL opening play (`default-scenario-bare-url.jpg`). The drift list from your Q7 answer is now tokens.
+
+Two choices were made for you:
+- The DESIGN.md sidecar sits at `.impeccable/design.json`, not a bare root `design.json`, because impeccable treats a root `design.json` as a legacy location.
+- Native builds still default to the `single` scenario, the capture harness. Only the web defaults to play.
+
+This item is the PRD sign-off "the owner signs off the shipped UI in the running build". Open the bare URL to try it.
+
+**A9. House parking.** `assets-source/kit/house_pad/renders/parking_top.jpg`, `parking_three_quarter.jpg`, and `parking_paths.jpg` (blue is arriving, red is reversing out, yellow is driving onto the lane). house_pad was re-exported with three `anchor-park-<n>` sockets and needs your re-approval.
+
+Choices to confirm:
+- The cluster's road node moved from (2, 0) to (12.5, 0) on the driveway to make room for the three-point turn.
+- The turn is tight (about a 2 m radius), and park-0 swings about 2.9 m onto the lawn.
+- With the tile's car cap at 2 and 3 houses, the two-storey has no car and its spot is the visitor space.
+
+The render pass (cars visibly parked, pulling out and parking in play) is in progress.
+
+**A10. Streaming placeholders.** `docs/checkpoints/streaming/streaming-{0-start,1-placeholder,2-kit-mid-rise,3-settled}.jpg`. Until a tile's biome pack arrives it draws the old coloured placeholder, then swaps to the kit look mid-rise. The initial download fell from 32.8 to about 19.9 MiB. Confirm the placeholder look is acceptable for the first few seconds on a slow connection.
+
+**A11. Beach pieces (straight, Headland, Bay; 6 pieces).** Close-ups:
+- `assets-source/kit/beach_base/shots/beach-01-seam-straight-headland.jpg`
+- `beach-02-bay.jpg`
+- `beach-03-wet-band.jpg`
+- `beach-04-headland.jpg`
+- `beach-05-island-mid.jpg`
+
+The full island is `docs/checkpoints/coast/coast-01..08.jpg`.
+
+**How the colours work:**
+- Dry sand is the shared plaster set, tinted.
+- The damp band is the same set tinted darker, from the waterline up 0.6 m.
+- The seabed is tinted gravel, as on the ocean pieces.
+- None of this adds a texture.
+
+**Notes:**
+- **Damp band edge:** its upper edge is a hard line. Say if you want it feathered.
+- **Village pack:** plaster lives in the village pack, so placing a beach also streams the village pack. Tinted gravel would avoid that, but it read as pebbles.
+
+**D5. The coast corner bases get a 20% LOD2 ceiling, like the river bases (D1).** The Headland and Bay sit at about 18%. 15% was reachable only by padding LOD0 to about 3,950 triangles, which spends triangles where nobody sees them.
 
 ## Questions
 
@@ -47,7 +87,30 @@ I recommend O-a now and O-b once forest moves into a streamed biome pack. The re
 
 ## Findings
 
-**F1. Walls facing away from the sun render almost black in play.** Examples: the river mouth's cut wall (`assets-source/kit/river_edge/shots/engine-04-mouth-straight.jpg`), the bridge arch's underside (`engine-05-bridge-arch.jpg`), and the beach tile's land walls (`docs/checkpoints/skirt-o4/skirt-o4-06-close-beach.jpg`). With IBL on, kit scenes set ambient light to 0 (`crates/hex-render/src/scene.rs`, `GlobalAmbientLight`). That leaves the noon IBL as the only fill on faces the sun misses, and here it barely lifts the O4 soil off black. I have not yet confirmed whether the IBL is weak, missing in native play shots, or crushed by SSAO. My recommendation is to have an agent diagnose this and lift the fill globally, then re-shoot these three, rather than patch individual materials. Tell me if you want that, or if the dark north side is intended.
+**F1. Walls facing away from the sun render pure black, and the ACES tone mapper causes it.** Diagnosis is in `docs/checkpoints/shade-diagnosis/`: `measurements.txt`, `frames/`, and `crop-map-*.jpg` showing where each crop sits.
+
+Examples:
+- the river mouth's cut wall (`assets-source/kit/river_edge/shots/engine-04-mouth-straight.jpg`)
+- the bridge arch's underside (`engine-05`)
+- the land walls beside the beach
+
+What the diagnosis found:
+- **The IBL works.** It is attached at intensity 1500 and loaded before the first shot. Native and web measure the same.
+- **ACES clips them to black.** Bevy's fitted ACES curve outputs pure black for any input below about 0.0033 linear. The shaded O4 soil walls reach about 0.0030, because the "puresky" HDRI has no lit ground below the horizon to bounce light up, and O4 soil is very dark (linear albedo about 0.04).
+- **SSAO is not the cause.**
+- **Your approved water look-dev has the same black wall** (0.6/255).
+
+No change limited to the walls gets close while ACES stays. They would need 10 to 15 times more light, and doubling the IBL, ambient 400, or exposure EV 11.5 reach only 1/255.
+
+**Q4. Reopen the tone mapper?**
+- **Recommended:** TonyMcMapface at EV 12.9, plus a lighter O4 soil and an explicit backdrop colour.
+  - Walls go from 0 to about 9–16/255 and the bridge face from 8 to 31/255.
+  - Grass and gravel move under 3%, and river water about 14% brighter.
+  - The empty backdrop rises from 15 to 47 unless its colour is set.
+  - Compare the `frames/l-tony-ev12.9-*` and `k-tony+soil-x2.5-*` frames against the `frames/a-current-*` frames.
+- **The cost:** it reopens your 2026-10-13 choice of ACES (`docs/decisions/0002-asset-pipeline.md`) and needs re-approval of the kit and water look-dev shots.
+- **Alternative:** a re-baked noon IBL with lit ground. Untested, and unlikely to be enough under ACES alone.
+- Or keep ACES and accept black shaded walls.
 
 ## Decisions I made overnight (override any)
 
