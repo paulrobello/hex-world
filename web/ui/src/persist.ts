@@ -202,6 +202,7 @@ export class Persistence {
     for (const e of batch) {
       switch (e.type) {
         case "tilePlaced":
+        case "tileReplaced":
         case "tileBulldozed":
         case "undone":
         case "redone":

@@ -61,7 +61,10 @@ export function pickFormat(formats: readonly Format[], canPlay: (mime: string) =
 export const playable = (cues: readonly Cue[], format: Format): Cue[] =>
   cues.filter((c) => c.status === "mastered" && !!c.files?.[format]);
 
-/** Game event type → cue ids, in manifest order, from each cue's `events` list. */
+/** Events that sound like another event: a replace is a placement (owner feedback, 2026-10-14). */
+export const EVENT_ALIASES: Readonly<Record<string, string>> = { tileReplaced: "tilePlaced" };
+
+/** Game event type → cue ids, in manifest order, from each cue's `events` list and the aliases. */
 export function eventCues(cues: readonly Cue[]): Map<string, string[]> {
   const m = new Map<string, string[]>();
   for (const c of cues)
@@ -70,6 +73,10 @@ export function eventCues(cues: readonly Cue[]): Map<string, string[]> {
       ids.push(c.id);
       m.set(e, ids);
     }
+  for (const [alias, event] of Object.entries(EVENT_ALIASES)) {
+    const ids = m.get(event);
+    if (ids && !m.has(alias)) m.set(alias, [...ids]);
+  }
   return m;
 }
 

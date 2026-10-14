@@ -1,7 +1,7 @@
 // The Tiles sheet (S3): the slot key, "Fits here" and "Doesn't fit here" with reasons, socket codes,
 // number keys. Rows keep their identity across slots so a re-rank animates (FLIP) instead of blinking.
 import type { Cell } from "./bridge.ts";
-import { h, reduceMotion, s } from "./dom.ts";
+import { h, isMac, reduceMotion, s } from "./dom.ts";
 import { KIND_CLASS, TilePicture, hexPoints, socketHex } from "./glyph.ts";
 import { icon } from "./icons.ts";
 import {
@@ -98,6 +98,14 @@ export class Sheet {
       h("kbd", {}, "F6"),
       " next panel",
     );
+    const mods = h(
+      "p",
+      { class: "sheet__mods" },
+      h("kbd", {}, "Shift-click"),
+      " place ",
+      h("kbd", {}, isMac() ? "⌘-click" : "Ctrl-click"),
+      " replace",
+    );
     this.el = h(
       "section",
       { class: "sheet sheet--tiles", "data-region": "sheet", "aria-label": "Tile inventory" },
@@ -105,6 +113,7 @@ export class Sheet {
       this.key,
       this.body,
       foot,
+      mods,
     );
     this.rows = TILES.map((def) => {
       const meta = h("span", { class: "row__meta" });

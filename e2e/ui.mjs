@@ -38,6 +38,11 @@ page.on("pageerror", (e) => errors.push(String(e)));
 page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text())) errors.push(m.text()); });
 
 const shot = (name) => page.screenshot({ path: `${out}/${name}.jpg`, type: "jpeg", quality: 88 });
+// Placement modifiers (owner feedback 2026-10-14); PLACEMENT_OUT=docs/checkpoints/placement refreshes the committed captures.
+const placementOut = process.env.PLACEMENT_OUT ?? "e2e/test-results/placement";
+mkdirSync(placementOut, { recursive: true });
+const placementShot = (name, clip) =>
+  page.screenshot({ path: `${placementOut}/${name}.jpg`, type: "jpeg", quality: 88, ...(clip ? { clip } : {}) });
 const play = () => page.evaluate(() => window.hexWorld.state().play);
 /** A screenshot cropped to the cells given as [q, r], with a margin of half a cell. */
 async function shotCells(name, ...cells) {
@@ -81,6 +86,15 @@ async function pinHere(q, r) {
 /** Events since the last call (the overlay watches without draining them from us). */
 const events = () => page.evaluate(() => window.hexWorld.events());
 const key = (k) => page.keyboard.press(k);
+/** A click with a modifier held across frames, as a player holds it (one frame would collapse its press and release). */
+async function modClick(mod) {
+  await page.keyboard.down(mod);
+  await page.waitForTimeout(80);
+  await page.mouse.down();
+  await page.mouse.up();
+  await page.waitForTimeout(80);
+  await page.keyboard.up(mod);
+}
 const rowNumber = async (id) => (await text(`.row[data-tile=${id}] .row__num`)).trim();
 
 try {
@@ -369,6 +383,125 @@ try {
   await page.locator(".tool[data-action=undo]").hover();
   await until(async () => (await text(".tip.is-shown")).includes("Nothing to undo"), "Undo tooltip says Nothing to undo");
   await shot("s6-4-undo-empty");
+
+  // Placement modifiers: Shift-click places a run of the selected tile with no pin step, Ctrl or
+  // Cmd-click swaps a placed tile (one undo step), a refused swap changes nothing, and the canvas
+  // never opens the browser's context menu.
+  const tileAt = (p, q, r) => p.tiles.find((t) => same(t, q, r));
+  await page.evaluate(() => {
+    window.__menus = [];
+    window.__downs = [];
+    addEventListener("contextmenu", (e) => window.__menus.push({ button: e.button, ctrl: e.ctrlKey, prevented: e.defaultPrevented }));
+    addEventListener("pointerdown", (e) => window.__downs.push({ button: e.button, ctrl: e.ctrlKey, meta: e.metaKey, target: e.target?.tagName + "." + e.target?.className }), true);
+  });
+  const modsText = (await text(".sheet__mods")).replace(/\s+/g, " ");
+  check(/Shift-click place .*-click replace/.test(modsText), `the sheet footer names the modifier clicks (${modsText})`);
+  const mods = await page.locator(".sheet__mods").boundingBox();
+  check(mods && mods.height < 30, `the modifier hint is one line (${Math.round(mods?.height ?? 0)} px)`);
+  await page.locator(".sheet--tiles").screenshot({ path: `${placementOut}/footer-hint.jpg`, type: "jpeg", quality: 88 });
+  await page.evaluate(() => window.hexWorld.selectTile("meadow"));
+  await until(async () => (await play()).selected === "meadow", "Meadow selected for the run");
+  await page.focus("canvas#hex-world");
+  await events();
+  const run = [[-1, 0], [-2, 0], [-3, 0]];
+  await page.keyboard.down("Shift");
+  for (const [q, r] of run) {
+    await pointAt(q, r);
+    await until(async () => same((await play()).ghost, q, r), `the ghost follows the pointer to (${q}, ${r})`);
+    const n = (await play()).tiles.length;
+    await page.mouse.down();
+    await page.mouse.up();
+    await until(async () => (await play()).tiles.length === n + 1, `Shift-click places at (${q}, ${r})`);
+    check(!(await play()).pinned, `no pin after the Shift-click at (${q}, ${r})`);
+  }
+  await page.keyboard.up("Shift");
+  const runEvents = await events();
+  check(!runEvents.some((e) => e.type === "pinChanged"), "the Shift run never pins");
+  check(runEvents.filter((e) => e.type === "tilePlaced" && e.tile === "meadow").length === 3, "three meadows placed in a row");
+  await page.waitForTimeout(2300);
+  await placementShot("shift-run-three-meadows");
+  // A plain click still pins after the run (no stuck Shift).
+  await pointAt(-1, 1);
+  await page.mouse.down();
+  await page.mouse.up();
+  await until(async () => same((await play()).pinned, -1, 1), "a plain click after the Shift run pins (-1, 1)");
+  await key("Escape");
+  await until(async () => !(await play()).pinned, "Esc unpins");
+
+  // Ctrl-click (Cmd on macOS also works) swaps the meadow at (-2, 0) for a pine forest.
+  await page.evaluate(() => window.hexWorld.selectTile("forest"));
+  await until(async () => (await play()).selected === "forest", "Pine forest selected");
+  await pointAt(-2, 0);
+  await events();
+  let p = await play();
+  const countBefore = p.tiles.length;
+  await modClick("Control");
+  await until(async () => tileAt(await play(), -2, 0)?.tile === "forest", "Ctrl-click replaces the meadow with a pine forest");
+  p = await play();
+  check(p.tiles.length === countBefore, "a replace keeps the tile count");
+  check(!p.pinned, "a replace pins nothing");
+  const swap = await events();
+  check(swap.some((e) => e.type === "tileReplaced" && same(e, -2, 0) && e.tile === "forest" && e.replaced === "meadow"), "tileReplaced names the swap");
+  await until(async () => (await text(".ghost-tag")).includes("Replaced Meadow with Pine forest"), "the tag names the swap");
+  await page.waitForTimeout(700);
+  await placementShot("ctrl-replace-mid-swap");
+  await page.waitForTimeout(2200);
+  await placementShot("ctrl-replace-forest");
+  const downs = await page.evaluate(() => window.__downs.slice(-1)[0]);
+  console.log(`ctrl-click reached the page as button ${downs?.button} (ctrl ${downs?.ctrl})`);
+
+  // Undo restores the meadow in one step; redo swaps the forest back; undo again for the next cases.
+  await key("ControlOrMeta+z");
+  await until(async () => tileAt(await play(), -2, 0)?.tile === "meadow", "one undo restores the meadow");
+  await until(async () => (await text(".toast.is-shown")).includes("Undid: replaced Meadow with Pine forest"), "undo toast names the replace");
+  check((await play()).tiles.length === countBefore, "undo keeps the tile count");
+  await page.waitForTimeout(2600);
+  await placementShot("ctrl-replace-undone");
+  await key("ControlOrMeta+Shift+z");
+  await until(async () => tileAt(await play(), -2, 0)?.tile === "forest", "redo swaps the forest back");
+  await key("ControlOrMeta+z");
+  await until(async () => tileAt(await play(), -2, 0)?.tile === "meadow", "undo again");
+
+  // Cmd-click (Meta) replaces too.
+  await modClick("Meta");
+  await until(async () => tileAt(await play(), -2, 0)?.tile === "forest", "Cmd-click replaces as well");
+  await key("ControlOrMeta+z");
+  await until(async () => tileAt(await play(), -2, 0)?.tile === "meadow", "and undo restores it");
+
+  // A refused replace: ocean cannot meet the meadows around (-2, 0). The world stays as it was.
+  await page.evaluate(() => window.hexWorld.selectTile("ocean"));
+  await until(async () => (await play()).selected === "ocean", "Ocean selected");
+  await pointAt(-2, 0);
+  await events();
+  const tilesBefore = JSON.stringify((await play()).tiles);
+  const undoBefore = (await play()).can_undo;
+  await modClick("Control");
+  await until(async () => (await play()).last_result?.action === "replace" && (await play()).last_result?.ok === false, "the replace is refused");
+  check(JSON.stringify((await play()).tiles) === tilesBefore, "a refused replace leaves the world unchanged");
+  check((await play()).can_undo === undoBefore, "and records nothing to undo");
+  check((await events()).some((e) => e.type === "placementRefused" && same(e, -2, 0) && e.tile === "ocean"), "placementRefused at (-2, 0)");
+  await until(async () => (await text(".ghost-tag")).includes("doesn't fit") || (await page.locator(".ghost-tag--bad").count()) > 0, "the tag shows the refusal");
+  await placementShot("ctrl-replace-refused");
+
+  // The context menu never opens over the canvas: Ctrl-clicks and a right-click are all prevented.
+  const [cx, cy] = await centre(-2, 0);
+  await page.mouse.click(cx, cy, { button: "right" });
+  await page.waitForTimeout(150);
+  const menus = await page.evaluate(() => window.__menus);
+  check(menus.length > 0, `context menu events seen over the canvas (${menus.length})`);
+  check(menus.every((m) => m.prevented), `every context menu over the canvas is prevented (${JSON.stringify(menus)})`);
+  const synthetic = await page.evaluate(() =>
+    document.querySelector("canvas#hex-world").dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, ctrlKey: true })),
+  );
+  check(synthetic === false, "a Ctrl contextmenu dispatched at the canvas is cancelled");
+  // A plain click still pins after the Ctrl and Cmd clicks (no stuck modifier).
+  await page.evaluate(() => window.hexWorld.selectTile("meadow"));
+  await pointAt(-1, 1);
+  await page.mouse.down();
+  await page.mouse.up();
+  await until(async () => same((await play()).pinned, -1, 1), "a plain click after the Ctrl run pins (-1, 1)");
+  await key("Escape");
+  await until(async () => !(await play()).pinned, "Esc unpins");
 
   // S8 photo mode (PRD §4.6): P enters (the HUD hides, agents pause), WASD and E fly the free camera,
   // the panel changes DOF, a 2× PNG exports through the offscreen target and downloads, then P leaves

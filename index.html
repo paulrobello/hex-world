@@ -109,6 +109,7 @@
           hover: function (q, r) { this.cmd({ cmd: "hover", q: q, r: r }); },
           rotateGhost: function (dir) { this.cmd({ cmd: "rotate", dir: dir || "cw" }); },
           placeTile: function (q, r) { this.cmd({ cmd: "place", q: q, r: r }); },
+          replaceTile: function (q, r) { this.cmd({ cmd: "replace", q: q, r: r }); },
           pin: function (q, r) { this.cmd({ cmd: "pin", q: q, r: r }); },
           unpin: function () { this.cmd({ cmd: "unpin" }); },
           undo: function () { this.cmd({ cmd: "undo" }); },

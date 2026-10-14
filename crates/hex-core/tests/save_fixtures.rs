@@ -180,6 +180,56 @@ fn v2_tilt_chosen_keeps_the_players_toggle() {
     }
 }
 
+/// The save in `v3-replaced.hexworld`: the v2 world with the road at EAST replaced by a pine forest
+/// (the newest undo record), then the meadow at SOUTH replaced by an oak and that replace undone
+/// (the next redo).
+fn replaced_v3(c: &TileCatalog) -> SaveData {
+    let mut save = tilt_chosen_v2(c);
+    let w = &mut save.world;
+    w.replace(c, EAST, "forest", 0).unwrap();
+    w.replace(c, SOUTH, "oak", 2).unwrap();
+    assert!(w.undo());
+    save
+}
+
+#[test]
+fn v3_replaced_keeps_replace_records_on_both_stacks() {
+    let c = catalog();
+    let bytes = std::fs::read(fixture_dir().join("v3-replaced.hexworld")).unwrap();
+    let save = SaveData::decode(&bytes, &c).unwrap();
+    assert!(
+        save.settings.tilt_shift_chosen && !save.settings.tilt_shift,
+        "v3 keeps v2's tilt_shift_chosen"
+    );
+    let mut w = save.world.clone();
+    assert_eq!(w.tile(EAST).unwrap().def, "forest");
+    assert_eq!(w.tile(SOUTH).unwrap().def, "meadow");
+    assert!(w.redo(), "redo swaps the oak in");
+    assert_eq!(w.tile(SOUTH).unwrap().def, "oak");
+    assert!(
+        w.undo() && w.undo(),
+        "undo swaps the oak and then the forest out"
+    );
+    let road = w.tile(EAST).unwrap();
+    assert_eq!((road.def.as_str(), road.rotation), ("road_straight", 1));
+    if SAVE_FORMAT_VERSION == 3 {
+        assert_eq!(save, replaced_v3(&c));
+    }
+}
+
+#[test]
+#[ignore = "writes the v3 fixture once; fixtures are frozen"]
+fn write_v3_fixture() {
+    let path = fixture_dir().join("v3-replaced.hexworld");
+    assert!(
+        !path.exists(),
+        "{} exists and is frozen; add a new version instead",
+        path.display()
+    );
+    assert_eq!(SAVE_FORMAT_VERSION, 3, "this writer only produces v3");
+    std::fs::write(&path, replaced_v3(&catalog()).encode()).unwrap();
+}
+
 #[test]
 #[ignore = "writes the v2 fixture once; fixtures are frozen"]
 fn write_v2_fixture() {

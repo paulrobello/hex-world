@@ -235,6 +235,7 @@ mod schema {
         r#"{"cmd":"place","q":1,"r":0}"#,
         r#"{"cmd":"pin","q":1,"r":0}"#,
         r#"{"cmd":"unpin"}"#,
+        r#"{"cmd":"replace","q":1,"r":0}"#,
         r#"{"cmd":"undo"}"#,
         r#"{"cmd":"redo"}"#,
         r#"{"cmd":"bulldoze","q":1,"r":0}"#,
@@ -266,6 +267,7 @@ mod schema {
             Command::Place { .. } => "place",
             Command::Pin { .. } => "pin",
             Command::Unpin => "unpin",
+            Command::Replace { .. } => "replace",
             Command::Undo => "undo",
             Command::Redo => "redo",
             Command::Bulldoze { .. } => "bulldoze",
@@ -334,6 +336,13 @@ mod schema {
                 r: 0,
                 reason: "no tile here".into(),
             },
+            GameEvent::TileReplaced {
+                q: 1,
+                r: 0,
+                tile: "forest".into(),
+                rotation: 2,
+                replaced: "meadow".into(),
+            },
             GameEvent::Undone,
             GameEvent::Redone,
             GameEvent::TileSelected {
@@ -393,7 +402,7 @@ mod schema {
                 version: None,
             },
         ];
-        let mut seen = [false; 20];
+        let mut seen = [false; 21];
         for e in &samples {
             let i = match e {
                 GameEvent::TilePlaced { .. } => 0,
@@ -416,6 +425,7 @@ mod schema {
                 GameEvent::Loaded { .. } => 17,
                 GameEvent::LoadRefused { .. } => 18,
                 GameEvent::PinChanged { .. } => 19,
+                GameEvent::TileReplaced { .. } => 20,
             };
             seen[i] = true;
         }

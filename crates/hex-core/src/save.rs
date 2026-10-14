@@ -19,7 +19,7 @@ use crate::world::{Action, HISTORY_DEPTH, PlacedTile, World};
 pub const SAVE_MAGIC: [u8; 8] = *b"HEXWORLD";
 
 /// The format version [`SaveData::encode`] writes. [`SaveData::decode`] reads `1..=` this.
-pub const SAVE_FORMAT_VERSION: u16 = 2;
+pub const SAVE_FORMAT_VERSION: u16 = 3;
 
 /// Largest file [`SaveData::decode`] looks at.
 pub const MAX_SAVE_BYTES: usize = 16 * 1024 * 1024;
@@ -276,8 +276,8 @@ impl std::error::Error for SaveError {}
 impl SaveData {
     /// The `.hexworld` bytes at [`SAVE_FORMAT_VERSION`]. Autosave slots store the same bytes.
     pub fn encode(&self) -> Vec<u8> {
-        let payload = postcard::to_allocvec(&v2::Save::from_runtime(self))
-            .expect("postcard serializes the v2 wire structs");
+        let payload = postcard::to_allocvec(&v3::Save::from_runtime(self))
+            .expect("postcard serializes the v3 wire structs");
         envelope(SAVE_FORMAT_VERSION, &payload)
     }
 
@@ -357,8 +357,9 @@ fn open_envelope(bytes: &[u8]) -> Result<(u16, &[u8]), SaveError> {
 /// A new version `N` adds an arm `N => …` and turns the `N - 1` arm into an upgrade step.
 pub(crate) fn migrate(version: u16, payload: &[u8]) -> Result<SaveData, SaveError> {
     match version {
-        1 => v2::Save::from(decode_exact::<v1::Save>(payload)?).into_runtime(),
-        2 => decode_exact::<v2::Save>(payload)?.into_runtime(),
+        1 => v3::Save::from(v2::Save::from(decode_exact::<v1::Save>(payload)?)).into_runtime(),
+        2 => v3::Save::from(decode_exact::<v2::Save>(payload)?).into_runtime(),
+        3 => decode_exact::<v3::Save>(payload)?.into_runtime(),
         v => Err(SaveError::UnsupportedVersion(v)),
     }
 }
@@ -484,6 +485,9 @@ fn validate_history(world: &World, catalog: &TileCatalog) -> Result<(), HistoryI
         let ok = match action {
             Action::Place { cell, tile } => tiles.remove(cell).as_ref() == Some(tile),
             Action::Bulldoze { cell, tile } => tiles.insert(*cell, tile.clone()).is_none(),
+            Action::Replace { cell, from, to } => {
+                tiles.insert(*cell, from.clone()).as_ref() == Some(to)
+            }
         };
         check_step(&tiles, catalog, stack, index, action, ok)?;
     }
@@ -493,6 +497,9 @@ fn validate_history(world: &World, catalog: &TileCatalog) -> Result<(), HistoryI
         let ok = match action {
             Action::Place { cell, tile } => tiles.insert(*cell, tile.clone()).is_none(),
             Action::Bulldoze { cell, tile } => tiles.remove(cell).as_ref() == Some(tile),
+            Action::Replace { cell, from, to } => {
+                tiles.insert(*cell, to.clone()).as_ref() == Some(from)
+            }
         };
         check_step(&tiles, catalog, stack, index, action, ok)?;
     }
@@ -508,11 +515,10 @@ fn check_step(
     matched: bool,
 ) -> Result<(), HistoryIssue> {
     if !matched {
-        let (Action::Place { cell, .. } | Action::Bulldoze { cell, .. }) = action;
         return Err(HistoryIssue::Mismatch {
             stack,
             index,
-            cell: *cell,
+            cell: action.cell(),
         });
     }
     validate_tiles(tiles, catalog).map_err(|issue| HistoryIssue::InvalidState {
@@ -625,56 +631,12 @@ mod v1 {
             ))
         }
     }
-
-    impl HistoryAction {
-        pub(super) fn new(action: &Action) -> Self {
-            match action {
-                Action::Place { cell, tile } => Self {
-                    kind: ActionKind::Place,
-                    tile: Tile::new(*cell, tile),
-                },
-                Action::Bulldoze { cell, tile } => Self {
-                    kind: ActionKind::Bulldoze,
-                    tile: Tile::new(*cell, tile),
-                },
-            }
-        }
-
-        pub(super) fn into_runtime(self) -> Result<Action, WorldIssue> {
-            let (cell, tile) = self.tile.into_runtime()?;
-            Ok(match self.kind {
-                ActionKind::Place => Action::Place { cell, tile },
-                ActionKind::Bulldoze => Action::Bulldoze { cell, tile },
-            })
-        }
-    }
-
-    /// Converts one history stack; issues use [`HistoryIssue`] indices (0 = the next applied).
-    pub(super) fn history_into_runtime(
-        actions: Vec<HistoryAction>,
-        stack: HistoryStack,
-    ) -> Result<Vec<Action>, SaveError> {
-        let len = actions.len();
-        actions
-            .into_iter()
-            .enumerate()
-            .map(|(i, a)| {
-                a.into_runtime().map_err(|issue| {
-                    SaveError::InvalidHistory(HistoryIssue::InvalidState {
-                        stack,
-                        index: len - 1 - i,
-                        issue,
-                    })
-                })
-            })
-            .collect()
-    }
 }
 
 /// Format version 2: v1 plus `Settings::tilt_shift_chosen`, the player's own tilt-shift toggle
 /// (owner, 2026-10-14). Tiles, history and camera keep v1's wire types. Frozen once a v2 file exists.
 mod v2 {
-    use super::v1::{Camera, HistoryAction, Quality, Tile, history_into_runtime};
+    use super::v1::{Camera, HistoryAction, Quality, Tile};
     use super::*;
 
     #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -730,6 +692,138 @@ mod v2 {
                 },
             }
         }
+    }
+}
+
+/// Format version 3: v2 plus the `Replace` history record (owner feedback, 2026-10-14: Ctrl or
+/// Cmd-click swaps a placed tile as one undoable action). Tiles, camera and settings keep the v1 and
+/// v2 wire types. Frozen once a v3 file exists.
+mod v3 {
+    use super::v1::{Camera, Quality, Tile};
+    use super::v2::Settings;
+    use super::*;
+
+    #[derive(Debug, PartialEq, Serialize, Deserialize)]
+    pub(super) struct Save {
+        pub world_seed: u64,
+        /// Sorted by `(q, r)`.
+        pub tiles: Vec<Tile>,
+        /// Oldest first.
+        pub undo: Vec<HistoryAction>,
+        /// The next redo last.
+        pub redo: Vec<HistoryAction>,
+        /// Sorted.
+        pub unlocks: Vec<String>,
+        pub camera: Camera,
+        pub settings: Settings,
+    }
+
+    #[derive(Debug, PartialEq, Serialize, Deserialize)]
+    pub(super) enum ActionKind {
+        Place,
+        Bulldoze,
+        Replace,
+    }
+
+    /// `tile` is the tile a `Place` or `Replace` put down, or the tile a `Bulldoze` removed, and its
+    /// `q` and `r` are the action's cell. `replaced` is the tile a `Replace` swapped out, at the same
+    /// cell; it is `None` for the other kinds.
+    #[derive(Debug, PartialEq, Serialize, Deserialize)]
+    pub(super) struct HistoryAction {
+        pub kind: ActionKind,
+        pub tile: Tile,
+        pub replaced: Option<Tile>,
+    }
+
+    /// v2 to v3: every v2 record is a `Place` or a `Bulldoze`, which v3 keeps as they were.
+    impl From<v2::Save> for Save {
+        fn from(v: v2::Save) -> Self {
+            let up = |a: v1::HistoryAction| HistoryAction {
+                kind: match a.kind {
+                    v1::ActionKind::Place => ActionKind::Place,
+                    v1::ActionKind::Bulldoze => ActionKind::Bulldoze,
+                },
+                tile: a.tile,
+                replaced: None,
+            };
+            Self {
+                world_seed: v.world_seed,
+                tiles: v.tiles,
+                undo: v.undo.into_iter().map(up).collect(),
+                redo: v.redo.into_iter().map(up).collect(),
+                unlocks: v.unlocks,
+                camera: v.camera,
+                settings: v.settings,
+            }
+        }
+    }
+
+    impl HistoryAction {
+        pub(super) fn new(action: &Action) -> Self {
+            match action {
+                Action::Place { cell, tile } => Self {
+                    kind: ActionKind::Place,
+                    tile: Tile::new(*cell, tile),
+                    replaced: None,
+                },
+                Action::Bulldoze { cell, tile } => Self {
+                    kind: ActionKind::Bulldoze,
+                    tile: Tile::new(*cell, tile),
+                    replaced: None,
+                },
+                Action::Replace { cell, from, to } => Self {
+                    kind: ActionKind::Replace,
+                    tile: Tile::new(*cell, to),
+                    replaced: Some(Tile::new(*cell, from)),
+                },
+            }
+        }
+
+        /// `Err(None)` is a record whose kind and `replaced` disagree, or whose two tiles sit on
+        /// different cells; `Err(Some(issue))` is a tile that breaks a structural rule.
+        fn into_runtime(self) -> Result<Action, Option<WorldIssue>> {
+            let (cell, tile) = self.tile.into_runtime().map_err(Some)?;
+            let replaced = match self.replaced {
+                Some(t) => Some(t.into_runtime().map_err(Some)?),
+                None => None,
+            };
+            match (self.kind, replaced) {
+                (ActionKind::Place, None) => Ok(Action::Place { cell, tile }),
+                (ActionKind::Bulldoze, None) => Ok(Action::Bulldoze { cell, tile }),
+                (ActionKind::Replace, Some((at, from))) if at == cell => Ok(Action::Replace {
+                    cell,
+                    from,
+                    to: tile,
+                }),
+                _ => Err(None),
+            }
+        }
+    }
+
+    /// Converts one history stack; issues use [`HistoryIssue`] indices (0 = the next applied).
+    fn history_into_runtime(
+        actions: Vec<HistoryAction>,
+        stack: HistoryStack,
+    ) -> Result<Vec<Action>, SaveError> {
+        let len = actions.len();
+        actions
+            .into_iter()
+            .enumerate()
+            .map(|(i, a)| {
+                let index = len - 1 - i;
+                let cell = Axial::new(a.tile.q, a.tile.r);
+                a.into_runtime().map_err(|issue| {
+                    SaveError::InvalidHistory(match issue {
+                        Some(issue) => HistoryIssue::InvalidState {
+                            stack,
+                            index,
+                            issue,
+                        },
+                        None => HistoryIssue::Mismatch { stack, index, cell },
+                    })
+                })
+            })
+            .collect()
     }
 
     impl Save {
@@ -873,11 +967,11 @@ mod tests {
         }
     }
 
-    fn wire(save: &SaveData) -> v2::Save {
-        v2::Save::from_runtime(save)
+    fn wire(save: &SaveData) -> v3::Save {
+        v3::Save::from_runtime(save)
     }
 
-    fn file(wire: &v2::Save) -> Vec<u8> {
+    fn file(wire: &v3::Save) -> Vec<u8> {
         envelope(SAVE_FORMAT_VERSION, &postcard::to_allocvec(wire).unwrap())
     }
 
@@ -1085,14 +1179,14 @@ mod tests {
         );
     }
 
-    fn tile_at(w: &mut v2::Save, q: i32, r: i32) -> &mut v1::Tile {
+    fn tile_at(w: &mut v3::Save, q: i32, r: i32) -> &mut v1::Tile {
         w.tiles.iter_mut().find(|t| (t.q, t.r) == (q, r)).unwrap()
     }
 
     #[test]
     fn worlds_that_break_the_rules_are_rejected() {
         let c = catalog();
-        let invalid = |w: &v2::Save| match decode(&file(w)) {
+        let invalid = |w: &v3::Save| match decode(&file(w)) {
             Err(SaveError::InvalidWorld(issue)) => issue,
             other => panic!("expected InvalidWorld, got {other:?}"),
         };
@@ -1210,8 +1304,8 @@ mod tests {
             );
         }
         let mut w = wire(&sample(&c));
-        w.redo.push(v1::HistoryAction {
-            kind: v1::ActionKind::Place,
+        w.redo.push(v3::HistoryAction {
+            kind: v3::ActionKind::Place,
             tile: v1::Tile {
                 q: 0,
                 r: i32::MIN,
@@ -1220,6 +1314,7 @@ mod tests {
                 rotation: 0,
                 seed: 0,
             },
+            replaced: None,
         });
         assert_eq!(
             decode(&file(&w)),
@@ -1234,7 +1329,7 @@ mod tests {
     #[test]
     fn histories_that_cannot_replay_are_rejected() {
         let c = catalog();
-        let invalid = |w: &v2::Save| match decode(&file(w)) {
+        let invalid = |w: &v3::Save| match decode(&file(w)) {
             Err(SaveError::InvalidHistory(issue)) => issue,
             other => panic!("expected InvalidHistory, got {other:?}"),
         };
@@ -1265,8 +1360,8 @@ mod tests {
 
         // Undoing a bulldoze that never happened would overwrite the occupied origin.
         let mut w = wire(&sample(&c));
-        w.undo.push(v1::HistoryAction {
-            kind: v1::ActionKind::Bulldoze,
+        w.undo.push(v3::HistoryAction {
+            kind: v3::ActionKind::Bulldoze,
             tile: v1::Tile {
                 q: 0,
                 r: 0,
@@ -1275,6 +1370,7 @@ mod tests {
                 rotation: 0,
                 seed: 0,
             },
+            replaced: None,
         });
         assert_eq!(
             invalid(&w),
@@ -1292,9 +1388,10 @@ mod tests {
             camera: camera(),
             settings: settings(),
         });
-        w.undo.push(v1::HistoryAction {
-            kind: v1::ActionKind::Place,
+        w.undo.push(v3::HistoryAction {
+            kind: v3::ActionKind::Place,
             tile: v1::Tile::new(Axial::ORIGIN, World::new(1).tile(Axial::ORIGIN).unwrap()),
+            replaced: None,
         });
         assert_eq!(
             invalid(&w),
@@ -1308,8 +1405,8 @@ mod tests {
         // A redo that drops an unknown tile into the world.
         let mut w = wire(&sample(&c));
         w.redo.clear();
-        w.redo.push(v1::HistoryAction {
-            kind: v1::ActionKind::Place,
+        w.redo.push(v3::HistoryAction {
+            kind: v3::ActionKind::Place,
             tile: v1::Tile {
                 q: 2,
                 r: 0,
@@ -1318,6 +1415,7 @@ mod tests {
                 rotation: 0,
                 seed: 0,
             },
+            replaced: None,
         });
         assert!(matches!(
             invalid(&w),
@@ -1329,8 +1427,8 @@ mod tests {
         ));
 
         let mut w = wire(&sample(&c));
-        let filler = || v1::HistoryAction {
-            kind: v1::ActionKind::Place,
+        let filler = || v3::HistoryAction {
+            kind: v3::ActionKind::Place,
             tile: v1::Tile {
                 q: 9,
                 r: 9,
@@ -1339,11 +1437,140 @@ mod tests {
                 rotation: 0,
                 seed: 0,
             },
+            replaced: None,
         };
         w.undo.splice(0..0, (0..HISTORY_DEPTH).map(|_| filler()));
         let depth = w.undo.len() + w.redo.len();
         assert!(depth > HISTORY_DEPTH);
         assert_eq!(invalid(&w), HistoryIssue::TooDeep(depth));
+    }
+
+    /// The sample with the road at EAST replaced by a forest, then the meadow at (0, 1) replaced by
+    /// a forest and that replace undone: a `Replace` on top of each stack.
+    fn replaced_sample(c: &TileCatalog) -> SaveData {
+        let mut save = sample(c);
+        let w = &mut save.world;
+        w.redo();
+        w.replace(c, EAST, "forest", 0).unwrap();
+        w.replace(c, Axial::new(0, 1), "forest", 4).unwrap();
+        w.undo();
+        save
+    }
+
+    #[test]
+    fn replace_records_round_trip_and_replay() {
+        let c = catalog();
+        let save = replaced_sample(&c);
+        let (undo, redo) = save.world.history_stacks();
+        assert!(matches!(undo.back(), Some(Action::Replace { .. })));
+        assert!(matches!(redo.last(), Some(Action::Replace { .. })));
+        let back = decode(&save.encode()).unwrap();
+        assert_eq!(back, save);
+        let mut w = back.world;
+        assert!(w.undo());
+        let road = w.tile(EAST).unwrap();
+        assert_eq!(
+            (road.def.as_str(), road.rotation),
+            ("road_straight", 1),
+            "undo brings the road back at its rotation"
+        );
+        assert!(w.redo() && w.redo());
+        assert_eq!(w.tile(Axial::new(0, 1)).unwrap().def, "forest");
+    }
+
+    #[test]
+    fn tampered_replace_records_are_rejected() {
+        let c = catalog();
+        let invalid = |w: &v3::Save| match decode(&file(w)) {
+            Err(SaveError::InvalidHistory(issue)) => issue,
+            other => panic!("expected InvalidHistory, got {other:?}"),
+        };
+        // The newest undo record replaced EAST's road: claim it swapped out a forest. Undoing it
+        // puts that forest back, so the oldest record, the road's placement, no longer matches.
+        let mut w = wire(&replaced_sample(&c));
+        w.undo.last_mut().unwrap().replaced.as_mut().unwrap().def = "forest".into();
+        assert_eq!(
+            invalid(&w),
+            HistoryIssue::Mismatch {
+                stack: HistoryStack::Undo,
+                index: 4,
+                cell: EAST
+            }
+        );
+        // Claim it put down a meadow, which is not the tile at EAST now.
+        let mut w = wire(&replaced_sample(&c));
+        w.undo.last_mut().unwrap().tile.def = "meadow".into();
+        assert_eq!(
+            invalid(&w),
+            HistoryIssue::Mismatch {
+                stack: HistoryStack::Undo,
+                index: 0,
+                cell: EAST
+            }
+        );
+        // A replace whose two tiles sit on different cells.
+        let mut w = wire(&replaced_sample(&c));
+        w.undo.last_mut().unwrap().replaced.as_mut().unwrap().q = 7;
+        assert_eq!(
+            invalid(&w),
+            HistoryIssue::Mismatch {
+                stack: HistoryStack::Undo,
+                index: 0,
+                cell: EAST
+            }
+        );
+        // A place carrying a replaced tile, and a replace without one.
+        let mut w = wire(&replaced_sample(&c));
+        let place = w.undo.first_mut().unwrap();
+        place.replaced = Some(v1::Tile::new(
+            Axial::new(9, 9),
+            &World::new(1).tiles()[&Axial::ORIGIN],
+        ));
+        assert!(matches!(invalid(&w), HistoryIssue::Mismatch { .. }));
+        let mut w = wire(&replaced_sample(&c));
+        w.redo.last_mut().unwrap().replaced = None;
+        assert!(matches!(invalid(&w), HistoryIssue::Mismatch { .. }));
+        // Redoing a replace into a tile that does not fit the neighbours.
+        let mut w = wire(&replaced_sample(&c));
+        w.redo.last_mut().unwrap().tile.def = "ocean".into();
+        assert!(matches!(
+            invalid(&w),
+            HistoryIssue::InvalidState {
+                stack: HistoryStack::Redo,
+                index: 0,
+                issue: WorldIssue::Incompatible { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn a_v2_payload_upgrades_with_its_history() {
+        let c = catalog();
+        let save = sample(&c);
+        let (undo, redo) = save.world.history_stacks();
+        let old = |a: &Action| match a {
+            Action::Place { cell, tile } => v1::HistoryAction {
+                kind: v1::ActionKind::Place,
+                tile: v1::Tile::new(*cell, tile),
+            },
+            Action::Bulldoze { cell, tile } => v1::HistoryAction {
+                kind: v1::ActionKind::Bulldoze,
+                tile: v1::Tile::new(*cell, tile),
+            },
+            Action::Replace { .. } => unreachable!("the sample has no replace"),
+        };
+        let w3 = wire(&save);
+        let w2 = v2::Save {
+            world_seed: w3.world_seed,
+            tiles: w3.tiles,
+            undo: undo.iter().map(old).collect(),
+            redo: redo.iter().map(old).collect(),
+            unlocks: w3.unlocks,
+            camera: w3.camera,
+            settings: w3.settings,
+        };
+        let bytes = envelope(2, &postcard::to_allocvec(&w2).unwrap());
+        assert_eq!(decode(&bytes), Ok(save));
     }
 
     /// SplitMix64, so the fuzz corpus is reproducible without a `rand` dependency.

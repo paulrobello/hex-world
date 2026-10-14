@@ -32,6 +32,15 @@ pub enum Action {
     Look(Vec2),
     /// Left-click: apply the current tool (place or bulldoze) at the hovered cell.
     Primary,
+    /// Shift+click: place the selected tile on the hovered slot at once, at the ghost's rotation
+    /// for that slot, with no pin step. A pin on another slot stays. Anywhere else, in bulldoze
+    /// mode or with nothing hovered it is a plain [`Action::Primary`].
+    QuickPlace,
+    /// Ctrl or Cmd+click: [`Action::Replace`] at the hovered cell.
+    QuickReplace,
+    /// Swap the placed tile at a cell for the selected tile, at the ghost's rotation when that
+    /// fits, else the first rotation that fits. On a free slot it places as [`Action::QuickPlace`].
+    Replace(Axial),
     /// Place the selected tile at a cell. A cell other than the hovered one is hovered first.
     /// Clears any pinned slot first, so the rotation is the one legal at this cell.
     Place(Axial),
@@ -214,8 +223,14 @@ pub fn map_input(f: &InputFrame, rotate_wheel: &mut f32) -> Vec<Action> {
         out.push(Action::Escape);
     }
 
-    if f.mouse_just_pressed.contains(&MouseButton::Left) && !ctrl {
-        out.push(Action::Primary);
+    if f.mouse_just_pressed.contains(&MouseButton::Left) {
+        out.push(if ctrl {
+            Action::QuickReplace
+        } else if shift {
+            Action::QuickPlace
+        } else {
+            Action::Primary
+        });
     }
     if f.motion != Vec2::ZERO {
         if f.mouse_held.contains(&MouseButton::Right) {
@@ -375,6 +390,46 @@ mod tests {
             ..default()
         };
         assert!(map_input(&hover_only, &mut 0.0).is_empty());
+    }
+
+    fn click_with(held: &[KeyCode]) -> Vec<Action> {
+        let f = InputFrame {
+            held: held.to_vec(),
+            mouse_just_pressed: vec![MouseButton::Left],
+            mouse_held: vec![MouseButton::Left],
+            ..default()
+        };
+        map_input(&f, &mut 0.0)
+    }
+
+    #[test]
+    fn modifier_clicks_place_and_replace() {
+        assert_eq!(click_with(&[]), [Action::Primary], "a plain click pins");
+        for shift in [KeyCode::ShiftLeft, KeyCode::ShiftRight] {
+            assert_eq!(click_with(&[shift]), [Action::QuickPlace]);
+        }
+        for m in [
+            KeyCode::ControlLeft,
+            KeyCode::ControlRight,
+            KeyCode::SuperLeft,
+            KeyCode::SuperRight,
+        ] {
+            assert_eq!(click_with(&[m]), [Action::QuickReplace], "{m:?}");
+            assert_eq!(
+                click_with(&[m, KeyCode::ShiftLeft]),
+                [Action::QuickReplace],
+                "Ctrl or Cmd wins over Shift"
+            );
+        }
+        let held_only = InputFrame {
+            held: vec![KeyCode::ShiftLeft],
+            mouse_held: vec![MouseButton::Left],
+            ..default()
+        };
+        assert!(
+            map_input(&held_only, &mut 0.0).is_empty(),
+            "only the press acts, not a held button"
+        );
     }
 
     #[test]

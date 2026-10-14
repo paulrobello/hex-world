@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, VecDeque};
 
 use bevy::prelude::*;
-use hex_core::{Axial, EdgeStatus, RotateDir, TileCatalog, TileDef, World};
+use hex_core::{Axial, EdgeStatus, ReplaceError, RotateDir, TileCatalog, TileDef, World};
 use hex_render::{
     ActiveScenario, Scenario,
     play::{PlayGhost, PlayTile, PlayView, rise::RiseMessage},
@@ -38,6 +38,15 @@ pub enum GameEvent {
         q: i32,
         r: i32,
         tile: String,
+    },
+    /// The placed tile at `(q, r)` was swapped for `tile` at `rotation` in one undoable step;
+    /// `replaced` is the tile id that was there.
+    TileReplaced {
+        q: i32,
+        r: i32,
+        tile: String,
+        rotation: u8,
+        replaced: String,
     },
     BulldozeRefused {
         q: i32,
@@ -372,6 +381,17 @@ impl GameState {
                 (Tool::Place, Some(cell)) => self.place(cell),
                 (Tool::Bulldoze, Some(cell)) => self.bulldoze(cell),
             },
+            Action::QuickPlace => match self.hovered {
+                Some(cell) if self.tool == Tool::Place && self.world.is_slot(cell) => {
+                    self.quick_place(cell)
+                }
+                _ => self.apply_inner(Action::Primary),
+            },
+            Action::QuickReplace => match self.hovered {
+                Some(cell) => self.replace(cell),
+                None => self.refuse("replace", "no cell hovered".into()),
+            },
+            Action::Replace(cell) => self.replace(cell),
             Action::Place(cell) => {
                 let mut events = self.set_pin(None);
                 events.extend(self.apply_inner(Action::Hover(Some(cell))));
@@ -485,7 +505,92 @@ impl GameState {
     }
 
     fn place(&mut self, cell: Axial) -> Vec<GameEvent> {
-        let (tile, rotation) = (self.selected.clone(), self.rotation);
+        self.place_with(cell, self.rotation)
+    }
+
+    /// The rotation the ghost would show on the free slot `cell`: the current one when the ghost
+    /// is there, else the selected tile's chosen rotation where legal, else the first legal one.
+    fn snap_rotation(&self, cell: Axial) -> u8 {
+        if self.target_slot() == Some(cell) {
+            return self.rotation;
+        }
+        let legal = self.legal_here(cell);
+        self.chosen_rotation
+            .get(&self.selected)
+            .copied()
+            .filter(|k| legal.contains(k))
+            .or_else(|| legal.first().copied())
+            .unwrap_or(self.rotation)
+    }
+
+    /// Shift+click on a free slot: places at once at the ghost's rotation for it. The pin, if it
+    /// is on another slot, stays.
+    fn quick_place(&mut self, cell: Axial) -> Vec<GameEvent> {
+        let rotation = self.snap_rotation(cell);
+        self.place_with(cell, rotation)
+    }
+
+    /// Swaps the tile at `cell` for the selected tile (one undoable action). The ghost's rotation
+    /// is preferred where it fits, else the first rotation that fits. A free slot places as
+    /// Shift+click does; the same tile in the same orientation changes nothing.
+    fn replace(&mut self, cell: Axial) -> Vec<GameEvent> {
+        if self.tool != Tool::Place || self.photo_mode {
+            return self.refuse("replace", "replacing needs the place tool".into());
+        }
+        if self.world.is_slot(cell) {
+            return self.quick_place(cell);
+        }
+        let tile = self.selected.clone();
+        let legal = self
+            .world
+            .replace_rotations(&self.catalog, cell, self.selected_def());
+        let rotation = if legal.contains(&self.rotation) {
+            self.rotation
+        } else {
+            legal.first().copied().unwrap_or(self.rotation)
+        };
+        match self.world.replace(&self.catalog, cell, &tile, rotation) {
+            Ok(old) => {
+                let mut events = vec![GameEvent::TileReplaced {
+                    q: cell.q,
+                    r: cell.r,
+                    tile,
+                    rotation,
+                    replaced: old.def,
+                }];
+                events.extend(self.drop_stale_pin());
+                self.last_bulldoze = None;
+                self.resnap(false);
+                self.world_rev += 1;
+                self.result("replace", Some(cell), None);
+                events
+            }
+            Err(ReplaceError::Unchanged) => {
+                self.result(
+                    "replace",
+                    Some(cell),
+                    Some(ReplaceError::Unchanged.to_string()),
+                );
+                vec![]
+            }
+            Err(ReplaceError::Empty) => self.refuse("replace", ReplaceError::Empty.to_string()),
+            Err(e) => {
+                let reason = e.to_string();
+                self.result("replace", Some(cell), Some(reason.clone()));
+                self.refusals += 1;
+                vec![GameEvent::PlacementRefused {
+                    q: cell.q,
+                    r: cell.r,
+                    tile,
+                    rotation,
+                    reason,
+                }]
+            }
+        }
+    }
+
+    fn place_with(&mut self, cell: Axial, rotation: u8) -> Vec<GameEvent> {
+        let tile = self.selected.clone();
         match self.world.place(&self.catalog, cell, &tile, rotation) {
             Ok(()) => {
                 let mut events = vec![GameEvent::TilePlaced {
@@ -494,9 +599,7 @@ impl GameState {
                     tile,
                     rotation,
                 }];
-                if self.pinned.take().is_some() {
-                    events.push(GameEvent::PinChanged { cell: None });
-                }
+                events.extend(self.drop_stale_pin());
                 self.last_bulldoze = None;
                 self.resnap(false);
                 self.world_rev += 1;
@@ -1042,6 +1145,189 @@ mod tests {
             Some(ax(1, 0)),
             "the ghost is back under the pointer"
         );
+    }
+
+    #[test]
+    fn shift_click_places_a_run_without_pinning() {
+        let mut g = game();
+        g.apply(Action::SelectTile("meadow".into()));
+        for q in 1..=3 {
+            g.apply(Action::Hover(Some(ax(q, 0))));
+            let e = g.apply(Action::QuickPlace);
+            assert!(
+                e.contains(&GameEvent::TilePlaced {
+                    q,
+                    r: 0,
+                    tile: "meadow".into(),
+                    rotation: 0
+                }),
+                "{e:?}"
+            );
+            assert!(!e.iter().any(|e| matches!(e, GameEvent::PinChanged { .. })));
+            assert_eq!(g.pinned, None, "no pin step");
+        }
+        assert_eq!(g.world.tiles().len(), 4);
+        // On a placed tile Shift+click is a plain click: refused, nothing placed or pinned.
+        g.apply(Action::Hover(Some(ax(2, 0))));
+        assert!(matches!(
+            g.apply(Action::QuickPlace)[..],
+            [GameEvent::PlacementRefused { .. }]
+        ));
+    }
+
+    #[test]
+    fn shift_click_uses_the_ghost_rotation_and_keeps_a_pin_elsewhere() {
+        let mut g = game();
+        g.apply(Action::SelectTile("road_straight".into()));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        g.apply(Action::Rotate(RotateDir::Forward));
+        assert_eq!(g.rotation, 2, "the player turned the ghost");
+        g.apply(Action::QuickPlace);
+        assert_eq!(g.world.tile(ax(1, 0)).unwrap().rotation, 2);
+        // A pin on (-1, 0): Shift+click on (0, -1) places there and the pin stays.
+        g.apply(Action::Pin(ax(-1, 0)));
+        g.apply(Action::Hover(Some(ax(0, -1))));
+        let e = g.apply(Action::QuickPlace);
+        assert!(
+            g.world.tile(ax(0, -1)).is_some(),
+            "placed at (0, -1): {e:?}"
+        );
+        assert_eq!(g.pinned, Some(ax(-1, 0)), "the pin elsewhere stays");
+        assert!(!e.iter().any(|e| matches!(e, GameEvent::PinChanged { .. })));
+        // Shift+click on the pinned slot places there and clears the pin.
+        g.apply(Action::Hover(Some(ax(-1, 0))));
+        let e = g.apply(Action::QuickPlace);
+        assert!(e.contains(&GameEvent::PinChanged { cell: None }), "{e:?}");
+        assert!(g.world.tile(ax(-1, 0)).is_some());
+    }
+
+    #[test]
+    fn shift_click_where_nothing_fits_is_refused() {
+        let mut g = game();
+        g.apply(Action::SelectTile("ocean".into()));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        let refusals = g.refusals;
+        let e = g.apply(Action::QuickPlace);
+        assert!(matches!(e[..], [GameEvent::PlacementRefused { .. }]));
+        assert_eq!(g.refusals, refusals + 1, "the refusal pulses");
+        assert_eq!((g.world.tiles().len(), g.pinned), (1, None));
+    }
+
+    #[test]
+    fn shift_click_in_bulldoze_mode_bulldozes() {
+        let mut g = game();
+        place(&mut g, "meadow", ax(1, 0));
+        g.apply(Action::SetTool(Tool::Bulldoze));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        g.apply(Action::QuickPlace);
+        assert!(g.world.tile(ax(1, 0)).is_none());
+    }
+
+    #[test]
+    fn ctrl_click_replaces_one_undoable_step() {
+        let mut g = game();
+        place(&mut g, "meadow", ax(1, 0));
+        g.apply(Action::SelectTile("forest".into()));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        let rev = g.world_rev;
+        let e = g.apply(Action::QuickReplace);
+        assert_eq!(
+            e,
+            [GameEvent::TileReplaced {
+                q: 1,
+                r: 0,
+                tile: "forest".into(),
+                rotation: g.rotation,
+                replaced: "meadow".into(),
+            }]
+        );
+        assert_eq!(g.world.tile(ax(1, 0)).unwrap().def, "forest");
+        assert_eq!(g.world.tiles().len(), 2);
+        assert!(g.world_rev > rev, "the autosave snapshot moves");
+        assert_eq!(g.view().bulldozed, None, "a replace is not a bulldoze");
+        assert_eq!(g.last.as_ref().unwrap().action, "replace");
+        assert_eq!(g.apply(Action::Undo), [GameEvent::Undone]);
+        assert_eq!(g.world.tile(ax(1, 0)).unwrap().def, "meadow");
+        assert_eq!(g.apply(Action::Redo), [GameEvent::Redone]);
+        assert_eq!(g.world.tile(ax(1, 0)).unwrap().def, "forest");
+        // The same tile in the same orientation: nothing happens, no event, no refusal pulse.
+        let refusals = g.refusals;
+        assert!(g.apply(Action::QuickReplace).is_empty());
+        assert_eq!(g.refusals, refusals);
+        assert!(!g.last.as_ref().unwrap().ok);
+        assert!(!g.world.can_redo() && g.world.can_undo());
+    }
+
+    #[test]
+    fn replace_prefers_the_ghost_rotation_else_the_first_that_fits() {
+        let mut g = game();
+        place(&mut g, "meadow", ax(1, 0));
+        g.apply(Action::SelectTile("road_straight".into()));
+        g.apply(Action::Hover(Some(ax(-1, 0))));
+        g.apply(Action::Rotate(RotateDir::Forward));
+        let ghost = g.rotation;
+        // At (1, 0) the meadows sit on world edge 3 only, so the ghost's rotation from (-1, 0)
+        // fits there when its road ends avoid edge 3.
+        let fits = g.world.replace_rotations(
+            &g.catalog,
+            ax(1, 0),
+            g.catalog.get("road_straight").unwrap(),
+        );
+        g.apply(Action::Replace(ax(1, 0)));
+        let got = g.world.tile(ax(1, 0)).unwrap().rotation;
+        if fits.contains(&ghost) {
+            assert_eq!(got, ghost);
+        } else {
+            assert_eq!(got, fits[0]);
+        }
+        assert!(fits.contains(&got));
+    }
+
+    #[test]
+    fn a_refused_replace_changes_nothing_and_pulses() {
+        let mut g = game();
+        place(&mut g, "meadow", ax(1, 0));
+        g.apply(Action::SelectTile("ocean".into()));
+        let before = g.world.clone();
+        let refusals = g.refusals;
+        let e = g.apply(Action::Replace(ax(1, 0)));
+        assert!(
+            matches!(&e[..], [GameEvent::PlacementRefused { tile, reason, .. }]
+                if tile == "ocean" && reason.contains("do not fit")),
+            "{e:?}"
+        );
+        assert_eq!(g.world, before);
+        assert_eq!(g.refusals, refusals + 1);
+        let last = g.last.as_ref().unwrap();
+        assert_eq!((last.action, last.ok), ("replace", false));
+        // Bulldoze mode and empty cells refuse without a pulse.
+        g.apply(Action::SetTool(Tool::Bulldoze));
+        assert!(matches!(
+            g.apply(Action::Replace(ax(1, 0)))[..],
+            [GameEvent::ActionRefused {
+                action: "replace",
+                ..
+            }]
+        ));
+        g.apply(Action::SetTool(Tool::Place));
+        assert!(matches!(
+            g.apply(Action::Replace(ax(7, 7)))[..],
+            [GameEvent::ActionRefused {
+                action: "replace",
+                ..
+            }]
+        ));
+        assert_eq!(g.refusals, refusals + 1);
+    }
+
+    #[test]
+    fn ctrl_click_on_a_free_slot_places_like_shift_click() {
+        let mut g = game();
+        g.apply(Action::SelectTile("forest".into()));
+        g.apply(Action::Hover(Some(ax(0, 1))));
+        let e = g.apply(Action::QuickReplace);
+        assert!(matches!(e[..], [GameEvent::TilePlaced { q: 0, r: 1, .. }]));
+        assert_eq!(g.pinned, None);
     }
 
     #[test]

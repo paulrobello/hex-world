@@ -108,6 +108,12 @@ pub enum Command {
     },
     /// Clear the pinned slot, as Esc does.
     Unpin,
+    /// Swap the placed tile at a cell for the selected tile in one undoable step, as Ctrl or
+    /// Cmd+click does: the ghost's rotation where it fits, else the first rotation that fits.
+    Replace {
+        q: i32,
+        r: i32,
+    },
     Undo,
     Redo,
     Bulldoze {
@@ -169,6 +175,7 @@ impl Command {
             Command::Place { q, r } => Action::Place(Axial::new(*q, *r)),
             Command::Pin { q, r } => Action::Pin(Axial::new(*q, *r)),
             Command::Unpin => Action::Unpin,
+            Command::Replace { q, r } => Action::Replace(Axial::new(*q, *r)),
             Command::Undo => Action::Undo,
             Command::Redo => Action::Redo,
             Command::Bulldoze { q, r } => Action::Bulldoze(Axial::new(*q, *r)),
@@ -562,7 +569,8 @@ mod tests {
     fn parses_play_commands_into_actions() {
         let s = r#"[{"cmd":"select_tile","id":"forest"},{"cmd":"hover","q":1,"r":-2},
                     {"cmd":"rotate","dir":"cw"},{"cmd":"rotate","dir":"ccw"},
-                    {"cmd":"place","q":1,"r":0},{"cmd":"undo"},{"cmd":"redo"},
+                    {"cmd":"place","q":1,"r":0},{"cmd":"replace","q":1,"r":0},
+                    {"cmd":"undo"},{"cmd":"redo"},
                     {"cmd":"bulldoze","q":0,"r":1},{"cmd":"set_tool","mode":"bulldoze"},
                     {"cmd":"toggle","what":"inventory"},{"cmd":"toggle","what":"photo"},
                     {"cmd":"toggle","what":"bulldoze"}]"#;
@@ -579,6 +587,7 @@ mod tests {
                 Action::Rotate(RotateDir::Forward),
                 Action::Rotate(RotateDir::Back),
                 Action::Place(Axial::new(1, 0)),
+                Action::Replace(Axial::new(1, 0)),
                 Action::Undo,
                 Action::Redo,
                 Action::Bulldoze(Axial::new(0, 1)),

@@ -76,6 +76,8 @@
 .sheet__body { flex: 1 1 0; min-height: 0; overflow: auto; margin: 0 -16px; padding: 0 16px; scrollbar-width: thin; scrollbar-color: var(--sheet-2) transparent; transition: opacity var(--t) var(--ease); }
 .sheet__foot { display: flex; align-items: center; gap: 8px; margin: auto 0 0; padding-top: 12px; font-size: var(--fs-1); color: var(--ink-3); }
 .sheet__foot kbd { font-size: 11px; }
+.sheet__mods { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; font-size: var(--fs-1); color: var(--ink-3); }
+.sheet__mods kbd { font-size: 11px; }
 .sheet.is-inert .sheet__body { opacity: .4; pointer-events: none; }
 
 /* The slot key: which edges of the slot are touched, and by what. */

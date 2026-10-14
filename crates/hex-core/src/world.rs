@@ -80,11 +80,59 @@ impl fmt::Display for BulldozeError {
 
 impl std::error::Error for BulldozeError {}
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ReplaceError {
+    Empty,
+    UnknownTile(String),
+    BadRotation(u8),
+    /// World edges whose neighbor socket does not fit.
+    Incompatible(Vec<u8>),
+    /// The same tile in the same orientation is already there, so nothing would change.
+    Unchanged,
+}
+
+impl fmt::Display for ReplaceError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ReplaceError::Empty => write!(f, "no tile here"),
+            ReplaceError::UnknownTile(id) => write!(f, "unknown tile {id:?}"),
+            ReplaceError::BadRotation(k) => write!(f, "rotation {k} is not 0..6"),
+            ReplaceError::Incompatible(edges) => write!(f, "edges {edges:?} do not fit"),
+            ReplaceError::Unchanged => write!(f, "that tile is already here"),
+        }
+    }
+}
+
+impl std::error::Error for ReplaceError {}
+
 /// A reversible world change.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Action {
-    Place { cell: Axial, tile: PlacedTile },
-    Bulldoze { cell: Axial, tile: PlacedTile },
+    Place {
+        cell: Axial,
+        tile: PlacedTile,
+    },
+    Bulldoze {
+        cell: Axial,
+        tile: PlacedTile,
+    },
+    /// The tile at `cell` swapped in one step: `from` was there, `to` took its place.
+    Replace {
+        cell: Axial,
+        from: PlacedTile,
+        to: PlacedTile,
+    },
+}
+
+impl Action {
+    /// The cell the action changes.
+    pub fn cell(&self) -> Axial {
+        match self {
+            Action::Place { cell, .. }
+            | Action::Bulldoze { cell, .. }
+            | Action::Replace { cell, .. } => *cell,
+        }
+    }
 }
 
 /// LIFO undo and redo stacks. Part of the save (PRD §4.2).
@@ -320,6 +368,68 @@ impl World {
         Ok(())
     }
 
+    /// Rotations 0..6 at which `def` may take the place of the tile at `cell`, ascending: every
+    /// touching edge fits its neighbor. Empty when `cell` holds no tile. Swapping a tile keeps the
+    /// world connected, so only the edges are checked.
+    pub fn replace_rotations(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef) -> Vec<u8> {
+        if !self.tiles.contains_key(&cell) {
+            return vec![];
+        }
+        (0..6)
+            .filter(|&k| {
+                !self
+                    .edge_status(catalog, cell, def, k)
+                    .contains(&EdgeStatus::Incompatible)
+            })
+            .collect()
+    }
+
+    /// Swaps the tile at `cell` for `def_id` at `rotation` as one undoable action. The same tile
+    /// in the same orientation (equal sockets on every edge) is [`ReplaceError::Unchanged`] and
+    /// records nothing. Returns the tile that was there.
+    pub fn replace(
+        &mut self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def_id: &str,
+        rotation: u8,
+    ) -> Result<PlacedTile, ReplaceError> {
+        let def = catalog
+            .get(def_id)
+            .ok_or_else(|| ReplaceError::UnknownTile(def_id.to_owned()))?;
+        let Some(from) = self.tiles.get(&cell).cloned() else {
+            return Err(ReplaceError::Empty);
+        };
+        if rotation >= 6 {
+            return Err(ReplaceError::BadRotation(rotation));
+        }
+        if from.def == def_id && def.same_orientation(from.rotation, rotation) {
+            return Err(ReplaceError::Unchanged);
+        }
+        let bad: Vec<u8> = self
+            .edge_status(catalog, cell, def, rotation)
+            .iter()
+            .enumerate()
+            .filter(|(_, s)| **s == EdgeStatus::Incompatible)
+            .map(|(w, _)| w as u8)
+            .collect();
+        if !bad.is_empty() {
+            return Err(ReplaceError::Incompatible(bad));
+        }
+        let to = PlacedTile {
+            def: def_id.to_owned(),
+            rotation,
+            seed: cell_seed(self.seed, cell),
+        };
+        self.tiles.insert(cell, to.clone());
+        self.record(Action::Replace {
+            cell,
+            from: from.clone(),
+            to,
+        });
+        Ok(from)
+    }
+
     /// Whether the tile at `cell` may be removed: not the last tile, and the rest stays connected.
     pub fn can_bulldoze(&self, cell: Axial) -> Result<(), BulldozeError> {
         if !self.tiles.contains_key(&cell) {
@@ -368,6 +478,9 @@ impl World {
             Action::Bulldoze { cell, tile } => {
                 self.tiles.insert(*cell, tile.clone());
             }
+            Action::Replace { cell, from, .. } => {
+                self.tiles.insert(*cell, from.clone());
+            }
         }
         self.history.redo.push(action);
         true
@@ -384,6 +497,9 @@ impl World {
             }
             Action::Bulldoze { cell, .. } => {
                 self.tiles.remove(cell);
+            }
+            Action::Replace { cell, to, .. } => {
+                self.tiles.insert(*cell, to.clone());
             }
         }
         self.history.undo.push_back(action);
@@ -1034,6 +1150,100 @@ mod tests {
         assert_eq!(w.tiles().len(), 1 + total - HISTORY_DEPTH);
         assert!(w.tile(Axial::new(50, 0)).is_some());
         assert!(w.tile(Axial::new(51, 0)).is_none());
+    }
+
+    #[test]
+    fn replace_swaps_a_tile_that_fits_its_neighbours() {
+        let c = catalog();
+        let mut w = World::new(1);
+        w.place(&c, EAST, "meadow", 0).unwrap();
+        assert_eq!(
+            w.replace_rotations(&c, EAST, def(&c, "forest")).len(),
+            6,
+            "forest fits beside the meadow at every rotation"
+        );
+        assert!(w.replace_rotations(&c, EAST, def(&c, "ocean")).is_empty());
+        assert!(
+            w.replace_rotations(&c, Axial::new(2, 0), def(&c, "forest"))
+                .is_empty(),
+            "an empty cell has nothing to replace"
+        );
+        let old = w.replace(&c, EAST, "forest", 2).unwrap();
+        assert_eq!((old.def.as_str(), old.rotation), ("meadow", 0));
+        let t = w.tile(EAST).unwrap();
+        assert_eq!((t.def.as_str(), t.rotation), ("forest", 2));
+        assert_eq!(t.seed, cell_seed(1, EAST));
+        assert_eq!(w.tiles().len(), 2);
+    }
+
+    #[test]
+    fn replace_refuses_what_does_not_fit_and_leaves_the_world() {
+        let c = catalog();
+        let mut w = World::new(1);
+        w.place(&c, EAST, "meadow", 0).unwrap();
+        let before = w.clone();
+        assert_eq!(
+            w.replace(&c, EAST, "ocean", 0),
+            Err(ReplaceError::Incompatible(vec![3]))
+        );
+        assert_eq!(
+            w.replace(&c, Axial::new(2, 0), "forest", 0),
+            Err(ReplaceError::Empty)
+        );
+        assert_eq!(
+            w.replace(&c, EAST, "castle", 0),
+            Err(ReplaceError::UnknownTile("castle".into()))
+        );
+        assert_eq!(
+            w.replace(&c, EAST, "forest", 6),
+            Err(ReplaceError::BadRotation(6))
+        );
+        assert_eq!(w, before, "refusals change neither tiles nor history");
+    }
+
+    #[test]
+    fn replace_with_the_same_tile_and_orientation_is_a_no_op() {
+        let c = catalog();
+        let mut w = World::new(1);
+        w.place(&c, EAST, "road_straight", 1).unwrap();
+        let before = w.clone();
+        assert_eq!(
+            w.replace(&c, EAST, "road_straight", 1),
+            Err(ReplaceError::Unchanged)
+        );
+        // Rotation 4 shows rotation 1's sockets on every edge: the same orientation.
+        assert_eq!(
+            w.replace(&c, EAST, "road_straight", 4),
+            Err(ReplaceError::Unchanged)
+        );
+        assert_eq!(w, before, "a no-op records nothing");
+        // Another orientation of the same tile turns it in place.
+        w.replace(&c, EAST, "road_straight", 2).unwrap();
+        assert_eq!(w.tile(EAST).unwrap().rotation, 2);
+    }
+
+    #[test]
+    fn replace_is_one_undo_step_and_redo_reapplies_it() {
+        let c = catalog();
+        let mut w = World::new(1);
+        w.place(&c, EAST, "meadow", 0).unwrap();
+        let placed = w.tiles().clone();
+        w.replace(&c, EAST, "forest", 3).unwrap();
+        let replaced = w.clone();
+        assert!(w.undo());
+        assert_eq!(w.tiles(), &placed, "one undo restores the meadow");
+        assert!(w.can_undo() && w.can_redo());
+        assert!(w.redo());
+        assert_eq!(w, replaced, "redo puts the forest back at rotation 3");
+        // Undo twice: the replace, then the placement.
+        assert!(w.undo() && w.undo());
+        assert_eq!(w.tiles(), World::new(1).tiles());
+        // A new action after an undone replace clears its redo.
+        assert!(w.redo() && w.redo());
+        assert!(w.undo());
+        w.place(&c, Axial::new(-1, 0), "meadow", 0).unwrap();
+        assert!(!w.can_redo());
+        assert_eq!(w.tile(EAST).unwrap().def, "meadow");
     }
 
     #[test]

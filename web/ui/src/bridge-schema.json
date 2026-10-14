@@ -443,6 +443,10 @@
       "r"
     ],
     "redo": [],
+    "replace": [
+      "q",
+      "r"
+    ],
     "rotate": [
       "dir"
     ],
@@ -590,6 +594,13 @@
     "tilePlaced": [
       "q",
       "r",
+      "rotation",
+      "tile"
+    ],
+    "tileReplaced": [
+      "q",
+      "r",
+      "replaced",
       "rotation",
       "tile"
     ],

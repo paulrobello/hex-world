@@ -56,13 +56,16 @@ pub enum SinkKind {
     Undo,
     /// The bulldoze tool: a longer sink inside a dust cloud.
     Bulldoze,
+    /// A replace swapped the tile out (or its undo or redo swapped it back): a short sink with no
+    /// dust, and the new tile rises once it is down.
+    Replace,
 }
 
 impl SinkKind {
     /// How long the tile takes to sink (s).
     pub fn seconds(self) -> f32 {
         match self {
-            SinkKind::Undo => SINK_SECONDS,
+            SinkKind::Undo | SinkKind::Replace => SINK_SECONDS,
             SinkKind::Bulldoze => BULLDOZE_SINK_SECONDS,
         }
     }
@@ -466,6 +469,14 @@ impl PlayRises {
     pub(crate) fn undrawn(&mut self, cell: Axial) {
         self.cells.remove(&cell);
         self.settled.remove(&cell);
+    }
+
+    /// Holds the rise just begun at `cell` below ground for `secs` before its column starts, so a
+    /// tile swapped in by a replace rises once the old one has sunk. No cue falls due meanwhile.
+    pub(crate) fn delay(&mut self, cell: Axial, secs: f32) {
+        if let Some(Some(r)) = self.cells.get_mut(&cell) {
+            r.t -= secs;
+        }
     }
 
     /// The tile at `cell` left the view: its root and water entities sink, then despawn.
@@ -1253,6 +1264,14 @@ mod tests {
             Some(Dust::Cloud)
         );
 
+        let (rises, out, _) = removed(SinkKind::Replace, false);
+        assert_eq!(out[0].cue.name(), "sink");
+        assert_eq!(
+            rises.sinks[0].seconds, SINK_SECONDS,
+            "a replace sinks short"
+        );
+        assert_eq!(dust_for(out[0].cue, out[0].skipped, false), None);
+
         let (rises, out, _) = removed(SinkKind::Undo, false);
         assert_eq!(out[0].cue, RiseCue::Sink(SinkKind::Undo));
         assert_eq!(rises.sinks[0].seconds, SINK_SECONDS);
@@ -1345,6 +1364,11 @@ mod tests {
         let bulldoze = RiseCue::Sink(SinkKind::Bulldoze);
         assert_eq!(spawned_for(bulldoze, false), CLOUD_PARTICLES as usize);
         assert_eq!(spawned_for(RiseCue::Sink(SinkKind::Undo), false), 24);
+        assert_eq!(
+            spawned_for(RiseCue::Sink(SinkKind::Replace), false),
+            0,
+            "a tile swapped out by a replace sinks without dust"
+        );
         assert_eq!(spawned_for(bulldoze, true), 0, "reduced motion: no cloud");
     }
 }

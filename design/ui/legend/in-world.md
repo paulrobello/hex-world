@@ -31,7 +31,7 @@ Legality is never colour alone. Compatible edges are solid, incompatible edges a
 - Hovered slot: outline goes to ink at 90% and the cap gets an ink fill at 4%. Crossfade 120 ms.
 - The slot ring hides in bulldoze and photo mode (160 ms fade).
 - The hovered slot stays the sheet's slot while the pointer moves onto the HUD. Another slot, Esc, or a placement replaces it.
-- Pinning (owner choice U4, 2026-10-14): a click on a free slot pins it. The ghost, its rotation and the sheet stay on the pinned slot while the pointer crosses other tiles on its way to the sheet, and a second click on it places. A click on another free slot pins that one; Esc or a click elsewhere unpins. The pinned ghost's outline is solid, and the slot under the pointer keeps the hovered outline so the next click's target is visible.
+- Pinning (owner choice U4, 2026-10-14): a click on a free slot pins it. The ghost, its rotation and the sheet stay on the pinned slot while the pointer crosses other tiles on its way to the sheet, and a second click on it places. A click on another free slot pins that one; Esc or a click elsewhere unpins. The pinned ghost's outline is solid, and the slot under the pointer keeps the hovered outline so the next click's target is visible. Shift-click skips the pin and places at once (see Place).
 
 ## Hovered tile
 
@@ -85,7 +85,20 @@ The signature of the Legend direction, carried into the world. For every touched
 
 Rejected placement (the selected tile does not fit): the incompatible edges pulse once over 240 ms, core 7 to 13 px and halo 10 and 24 px, then settle. No camera shake. The tag keeps its reason.
 
+Shift-click (owner feedback, 2026-10-14) places the selected tile on the slot under the pointer in one click, at the ghost's rotation there, with no pin step, so a held Shift lays a run of the same tile. The ghost keeps following the pointer, a pin on another slot stays, and a slot where nothing fits refuses as above.
+
 Undo of a placement (and redo of a bulldoze): the tile reverses its rise, sinking 400 ms ease-in with a short dust puff around the rim. The prototype fades it in 260 ms. A bulldoze gets the dust cloud instead (see Bulldoze).
+
+## Replace
+
+Ctrl-click, or Cmd-click on macOS (owner feedback, 2026-10-14), on a placed tile swaps it for the selected tile at the ghost's rotation when that fits the neighbours, else the first rotation that fits. It is one undoable step.
+
+| Time | World | HUD |
+|---|---|---|
+| 0 ms | The old tile sinks 400 ms, ease-in, with no dust puff and no bulldoze cloud. | The tag beside the cell reads "Replaced {old} with {new}" with a check, then fades at 1.1 s. The placement cues play. |
+| 400 ms | The new tile's staged rise starts (§4.4), with its usual dust. | Autosave reads "Saving…". |
+
+When nothing fits, the tile stays. The tag carries the bad ring and the reason, and `ui-invalid` plays. The same tile in the same orientation changes nothing. Undo and redo of a replace swap the tiles back the same way. The canvas never opens the browser's context menu, so Ctrl-click works on macOS. The Tiles sheet's footer names both clicks: "Shift-click place · ⌘-click replace".
 
 ## Bulldoze
 

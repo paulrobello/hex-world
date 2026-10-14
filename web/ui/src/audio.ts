@@ -142,6 +142,8 @@ interface Pending {
   q: number;
   r: number;
   deadline: number;
+  /** Sinks at the cell to let pass: a replace sinks the old tile before the new one settles. */
+  skipSinks: number;
 }
 
 export interface AudioDebug {
@@ -409,6 +411,7 @@ export class GameAudio {
             q: at.q,
             r: at.r,
             deadline: ctx.currentTime + SETTLE_TIMEOUT_S,
+            skipSinks: e.type === "tileReplaced" ? 1 : 0,
           });
           continue;
         }
@@ -421,8 +424,10 @@ export class GameAudio {
   private onRise(q: number, r: number, stage: string): void {
     const p = this.pending.get(key(q, r));
     if (!p) return;
-    if (stage === "sink") this.pending.delete(key(q, r));
-    else if (stage === WAIT_FOR_STAGE[p.id]) {
+    if (stage === "sink") {
+      if (p.skipSinks > 0) p.skipSinks--;
+      else this.pending.delete(key(q, r));
+    } else if (stage === WAIT_FOR_STAGE[p.id]) {
       this.pending.delete(key(q, r));
       this.play(p.id, p.event, p, 1);
     }

@@ -85,6 +85,7 @@ export type Command =
   | { cmd: "unpin" }
   | { cmd: "rotate"; dir: Spin }
   | { cmd: "place"; q: number; r: number }
+  | { cmd: "replace"; q: number; r: number }
   | { cmd: "undo" }
   | { cmd: "redo" }
   | { cmd: "bulldoze"; q: number; r: number }
@@ -110,6 +111,7 @@ export type GameEvent =
   | { type: "placementRefused"; q: number; r: number; tile: string; rotation: number; reason: string }
   | { type: "tileBulldozed"; q: number; r: number; tile: string }
   | { type: "bulldozeRefused"; q: number; r: number; reason: string }
+  | { type: "tileReplaced"; q: number; r: number; tile: string; rotation: number; replaced: string }
   | { type: "undone" }
   | { type: "redone" }
   | { type: "tileSelected"; tile: string }
@@ -331,6 +333,7 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   unpin: keys<CommandOf<"unpin">>({}),
   rotate: keys<CommandOf<"rotate">>({ dir: true }),
   place: keys<CommandOf<"place">>({ q: true, r: true }),
+  replace: keys<CommandOf<"replace">>({ q: true, r: true }),
   undo: keys<CommandOf<"undo">>({}),
   redo: keys<CommandOf<"redo">>({}),
   bulldoze: keys<CommandOf<"bulldoze">>({ q: true, r: true }),
@@ -356,6 +359,7 @@ export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
   placementRefused: keys<EventOf<"placementRefused">>({ q: true, r: true, tile: true, rotation: true, reason: true }),
   tileBulldozed: keys<EventOf<"tileBulldozed">>({ q: true, r: true, tile: true }),
   bulldozeRefused: keys<EventOf<"bulldozeRefused">>({ q: true, r: true, reason: true }),
+  tileReplaced: keys<EventOf<"tileReplaced">>({ q: true, r: true, tile: true, rotation: true, replaced: true }),
   undone: keys<EventOf<"undone">>({}),
   redone: keys<EventOf<"redone">>({}),
   tileSelected: keys<EventOf<"tileSelected">>({ tile: true }),

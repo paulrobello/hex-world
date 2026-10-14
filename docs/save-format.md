@@ -38,9 +38,9 @@ The payload is postcard 1.x (pinned to `=1.1.3`). Postcard is not self-describin
 - A `String` is a varint byte length followed by UTF-8. A `Vec` is a varint count followed by its elements. A fixed array such as `[f32; 3]` is its elements with no count.
 - A struct is its fields in declaration order, with no names. An enum is a varint variant index followed by that variant's fields.
 
-## Current schema (version 2)
+## Current schema (version 3)
 
-Version 2 is version 1 plus one settings field, `tilt_shift_chosen`. Tiles, history and camera keep the version 1 wire types.
+Version 3 is version 2 with a third history record kind, `Replace`, and a `replaced` tile on every history record. Tiles, camera and settings keep the version 1 and 2 wire types.
 
 ```rust
 Save {
@@ -53,8 +53,8 @@ Save {
     settings: Settings,
 }
 Tile { q: i32, r: i32, level: u8, def: String, rotation: u8, seed: u64 }
-HistoryAction { kind: ActionKind, tile: Tile }  // tile.q and tile.r are the action's cell
-ActionKind = Place (0) | Bulldoze (1)
+HistoryAction { kind: ActionKind, tile: Tile, replaced: Option<Tile> }  // tile.q and tile.r are the action's cell
+ActionKind = Place (0) | Bulldoze (1) | Replace (2)
 Camera { focus: [f32; 3], yaw: f32, pitch: f32, distance: f32 }
 Settings {
     quality: Quality,
@@ -70,7 +70,7 @@ Settings {
 Quality = Auto (0) | Low (1) | Medium (2) | High (3) | Ultra (4)
 ```
 
-`q` and `r` are pointy-top axial coordinates. `level` is the tile's elevation level, reserved from day one (PRD D5 plans levels 0..=3). The MVP has a single level, so encoders write 0 and decoders reject anything else. P4 widens the accepted range to 0..=3 without a version bump, because a v1 file that uses levels is still a valid v1 file. A pre-P4 build reports such a file as `LevelOutOfRange` rather than `UnsupportedVersion`. Rotation `k` means local edge `e` faces world edge `e + k`. A `Place` action carries the tile it placed, and a `Bulldoze` action carries the tile it removed. Distances are in meters, angles are in radians, and volumes are linear gains.
+`q` and `r` are pointy-top axial coordinates. `level` is the tile's elevation level, reserved from day one (PRD D5 plans levels 0..=3). The MVP has a single level, so encoders write 0 and decoders reject anything else. P4 widens the accepted range to 0..=3 without a version bump, because a v1 file that uses levels is still a valid v1 file. A pre-P4 build reports such a file as `LevelOutOfRange` rather than `UnsupportedVersion`. Rotation `k` means local edge `e` faces world edge `e + k`. A `Place` action carries the tile it placed, and a `Bulldoze` action carries the tile it removed. A `Replace` action carries the tile it put down in `tile` and the tile it swapped out in `replaced`, on the same cell; `replaced` is `None` for the other kinds, and a record whose kind and `replaced` disagree, or whose two tiles sit on different cells, is `InvalidHistory` with `Mismatch`. Version 2 records (`HistoryAction { kind: ActionKind, tile: Tile }` with `ActionKind = Place (0) | Bulldoze (1)`) upgrade with `replaced: None`. Distances are in meters, angles are in radians, and volumes are linear gains.
 
 ## Versions
 
@@ -78,6 +78,7 @@ Quality = Auto (0) | Low (1) | Medium (2) | High (3) | Ultra (4)
 |---|---|---|---|
 | 1 | 2026-10-13 (P2 wave 2, W2a) | First version | `v1-small-world.hexworld` |
 | 2 | 2026-10-14 (owner decision A21) | `Settings::tilt_shift_chosen`: whether the player toggled tilt-shift themselves. While it is false, a quality-tier change drives tilt-shift; while it is true, the tier keeps the player's toggle and strength. A v1 file upgrades with it false, because v1 cannot tell the player's toggle from the tier's default | `v2-tilt-chosen.hexworld` |
+| 3 | 2026-10-14 (owner feedback on placement) | The `Replace` history record: Ctrl or Cmd-click swaps a placed tile in one undoable step, which v2's place and bulldoze records cannot express without a disconnected or empty world in between. A v2 file upgrades with every record's `replaced` empty | `v3-replaced.hexworld` |
 
 ## Decode order and errors
 

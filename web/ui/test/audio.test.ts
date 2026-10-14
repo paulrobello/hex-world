@@ -56,6 +56,7 @@ test("events map to the manifest's mastered cues", () => {
   assert.deepEqual(map.get("undone"), ["ui-undo"]);
   assert.deepEqual(map.get("redone"), ["ui-undo"]);
   assert.deepEqual(map.get("tileBulldozed"), ["ui-bulldoze"]);
+  assert.deepEqual(map.get("tileReplaced"), ["place-rumble", "place-thunk"], "a replace sounds like a placement");
   for (const e of ["hoverChanged", "toolChanged", "inventoryToggled", "photoModeToggled", "actionRefused", "riseStage"])
     assert.equal(map.get(e), undefined, `${e} has no cue`);
 });

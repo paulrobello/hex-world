@@ -190,6 +190,11 @@ test("undo and redo text comes from the tile diff", () => {
   assert.equal(actionText(diffTiles(after, before), true), "placed River bend at (1, 0)");
   // Undoing a bulldoze brings the tile back.
   assert.equal(actionText(diffTiles(after, before), false), "removed River bend");
+  // A replace swaps the tile on one cell; undo and redo both name the swap.
+  const replaced = world([0, 0, "meadow", 0], [1, 0, "forest", 2]);
+  const meadow = world([0, 0, "meadow", 0], [1, 0, "meadow", 0]);
+  assert.equal(actionText(diffTiles(replaced, meadow), false), "replaced Meadow with Pine forest");
+  assert.equal(actionText(diffTiles(meadow, replaced), true), "replaced Meadow with Pine forest");
   const t: PlayTile = { q: -1, r: 2, tile: "forest", rotation: 0 };
   assert.equal(coord(t), "(−1, 2)");
 });

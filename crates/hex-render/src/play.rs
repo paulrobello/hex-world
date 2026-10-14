@@ -742,7 +742,11 @@ pub fn sync(
     config: Res<GateConfig>,
     (water, clock, cameras, mut meshes, mut images, mut water_mats, mut terrain_mats): WaterHooks,
     (mut rises, reduced, mut cues): RiseHooks,
-    (packs, waiting_out): (Option<Res<PlayPacks>>, Option<ResMut<PlayWaiting>>),
+    (packs, waiting_out, children): (
+        Option<Res<PlayPacks>>,
+        Option<ResMut<PlayWaiting>>,
+        Query<&Children>,
+    ),
 ) {
     let (Scenario::Play, Some(mut spawned), Some(plain)) = (active.0, spawned, plain) else {
         return;
@@ -835,11 +839,14 @@ pub fn sync(
     let mut out = vec![];
     let want: HashMap<Axial, &PlayTile> = view.tiles.iter().map(|t| (t.cell, t)).collect();
     let mut gone = vec![];
+    // A cell whose tile changed in place (a replace, or its undo or redo): the old tile sinks
+    // without dust and the new one rises once it is down.
+    let mut swapped = vec![];
     let mut changed: BTreeSet<Axial> = BTreeSet::new();
     spawned.tiles.retain(|cell, (t, e)| match want.get(cell) {
         Some(w) if *w == t => true,
         Some(_) => {
-            commands.entity(*e).try_despawn();
+            swapped.push((*cell, t.tile.clone(), *e));
             changed.insert(*cell);
             false
         }
@@ -865,6 +872,27 @@ pub fn sync(
             cell,
             &tile,
             kind,
+            entities,
+            reduced.0,
+            &mut commands,
+            &mut out,
+        );
+    }
+    let swapped_cells: HashSet<Axial> = swapped.iter().map(|(c, ..)| *c).collect();
+    for (cell, tile, root) in swapped {
+        let mut entities = vec![root];
+        entities.extend(released.remove(&cell).unwrap_or_default());
+        // The new tile's rise poses every part of this cell; the sinking tile's parts leave it.
+        for &e in &entities {
+            commands.entity(e).try_remove::<RisePart>();
+            for d in children.iter_descendants(e) {
+                commands.entity(d).try_remove::<RisePart>();
+            }
+        }
+        rises.remove(
+            cell,
+            &tile,
+            rise::SinkKind::Replace,
             entities,
             reduced.0,
             &mut commands,
@@ -936,7 +964,10 @@ pub fn sync(
     }
     let added_cells: BTreeSet<Axial> = added.iter().map(|t| t.cell).collect();
     for t in added {
-        rises.cancel_sink(t.cell, &mut commands);
+        let swap = swapped_cells.contains(&t.cell);
+        if !swap {
+            rises.cancel_sink(t.cell, &mut commands);
+        }
         let e = spawn_tile(&mut commands, &plain, kit, &catalog.0, t);
         spawned.tiles.insert(t.cell, (t.clone(), e));
         if waiting_cells.contains(&t.cell) {
@@ -946,7 +977,12 @@ pub fn sync(
             continue;
         }
         match catalog.0.get(&t.tile).filter(|_| !rebuild) {
-            Some(def) => rises.begin(t.cell, &t.tile, &def.rise, reduced.0, &mut out),
+            Some(def) => {
+                rises.begin(t.cell, &t.tile, &def.rise, reduced.0, &mut out);
+                if swap {
+                    rises.delay(t.cell, rise::SinkKind::Replace.seconds());
+                }
+            }
             None => rises.rest(t.cell),
         }
     }

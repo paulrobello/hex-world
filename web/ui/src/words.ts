@@ -43,6 +43,10 @@ export function actionText(diff: TileDiff, isRedo: boolean): string {
     return `placed ${tileName(t.tile)} at ${coord(t)}`;
   }
   if (removed.length === 1 && !placed.length) return `removed ${tileName(removed[0]!.tile)}`;
+  // A replace swaps the tile on one cell: undo brings the old one back, redo the new one.
+  const [put, took] = [placed[0], removed[0]];
+  if (placed.length === 1 && removed.length === 1 && put && took && put.q === took.q && put.r === took.r)
+    return `replaced ${tileName(took.tile)} with ${tileName(put.tile)}`;
   return "the last change";
 }
 

@@ -89,8 +89,8 @@ export class Hud {
   /** The overlay has re-sent `hover` for the sheet's slot since the pointer left the canvas. */
   private hoverResent = false;
   private lastRotate = 0;
-  private placed: { cell: Cell; tile: string; until: number } | null = null;
-  private refusal: { cell: Cell; text: string; until: number } | null = null;
+  private placed: { cell: Cell; text: string; until: number } | null = null;
+  private refusal: { cell: Cell; tile: string; text: string; until: number } | null = null;
   private toastState: { verb: string; count: number } | null = null;
   private toastTimer = 0;
   private tipTimer = 0;
@@ -388,6 +388,7 @@ export class Hud {
       events.some(
         (e) =>
           e.type === "tilePlaced" ||
+          e.type === "tileReplaced" ||
           e.type === "tileBulldozed" ||
           e.type === "undone" ||
           e.type === "redone" ||
@@ -443,17 +444,25 @@ export class Hud {
   private onEvent(e: GameEvent, before: TileMap, now: number): void {
     switch (e.type) {
       case "tilePlaced":
-        this.placed = { cell: e, tile: e.tile, until: now + PLACED_TAG_MS };
+        this.placed = { cell: e, text: `Placed ${tileName(e.tile)}`, until: now + PLACED_TAG_MS };
         this.refusal = null;
         this.fire("place");
         this.say(`Placed ${tileName(e.tile)}.`);
         this.advanceHint("place");
         break;
+      case "tileReplaced": {
+        const text = `Replaced ${tileName(e.replaced)} with ${tileName(e.tile)}`;
+        this.placed = { cell: e, text, until: now + PLACED_TAG_MS };
+        this.refusal = null;
+        this.fire("place");
+        this.say(`${text}.`);
+        break;
+      }
       case "placementRefused": {
         const def = tileDef(e.tile);
         const why = def ? fit(def, needsAt(e, this.map)).why : "";
         const text = why || "An edge doesn't match its neighbour.";
-        this.refusal = { cell: e, text, until: now + 2000 };
+        this.refusal = { cell: e, tile: e.tile, text, until: now + 2000 };
         if (!reduceMotion()) retrigger(this.tag, "is-pulse");
         this.say(`${tileName(e.tile)} doesn't fit here. ${text}`);
         break;
@@ -562,8 +571,15 @@ export class Hud {
       }
     } else if (this.placed && st.tool === "place" && (!st.ghost || sameCell(st.ghost, this.placed.cell))) {
       cell = this.placed.cell;
-      sig = `placed|${cellKey(cell)}`;
-      parts.push(icon("check", "ic ok-ic"), h("span", {}, `Placed ${tileName(this.placed.tile)}`));
+      sig = `placed|${cellKey(cell)}|${this.placed.text}`;
+      parts.push(icon("check", "ic ok-ic"), h("span", {}, this.placed.text));
+    } else if (this.refusal && st.tool === "place" && this.map.has(cellKey(this.refusal.cell))) {
+      // A refused replace: the placed tile stays, and the tag says why the selected one can't swap in.
+      const f = this.refusal;
+      cell = f.cell;
+      bad = true;
+      sig = `swap|${cellKey(cell)}|${f.tile}|${f.text}`;
+      parts.push(icon("alert"), h("span", {}, tileName(f.tile)), h("span", { class: "ghost-tag__fit is-bad" }, f.text));
     } else if (st.tool === "place" && st.ghost) {
       const g = st.ghost;
       cell = g;
@@ -747,6 +763,19 @@ export class Hud {
       },
       { passive: false },
     );
+    // Ctrl+click is the macOS context menu. The engine reads a left press with Ctrl or Cmd held as
+    // a replace; when the browser reports that click as the right button, the overlay sends it.
+    let downButton = -1;
+    this.canvas?.addEventListener("pointerdown", (e) => {
+      downButton = e.button;
+    });
+    this.canvas?.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      const st = this.st;
+      if (isMac() && e.ctrlKey && downButton === 2 && st?.tool === "place" && !st.photo_mode && st.hovered)
+        this.cmd({ cmd: "replace", q: st.hovered.q, r: st.hovered.r });
+      downButton = -1;
+    });
     this.canvas?.addEventListener("pointerleave", () => {
       this.pointerOff = true;
     });
