@@ -151,6 +151,44 @@ impl Ev100 {
     }
 }
 
+/// `tilt=`: the tilt-shift pass. `Auto` follows the quality tier (off on Low) and runs in the kit
+/// scenario only, so the P0 perf baselines are unchanged; `On` and `Off` force it in any scenario.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum TiltMode {
+    #[default]
+    Auto,
+    On,
+    Off,
+}
+
+impl TiltMode {
+    pub fn parse(s: &str) -> Option<TiltMode> {
+        match s {
+            "auto" => Some(TiltMode::Auto),
+            "on" => Some(TiltMode::On),
+            "off" => Some(TiltMode::Off),
+            _ => None,
+        }
+    }
+}
+
+/// `tilt_strength=<f32>`: the tilt-shift strength slider, 0..=1. Stored in hundredths so
+/// `GateConfig` stays `Eq`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct TiltStrength(i32);
+
+impl TiltStrength {
+    pub fn parse(s: &str) -> Option<TiltStrength> {
+        let v: f32 = s.parse().ok()?;
+        (v.is_finite() && (0.0..=1.0).contains(&v))
+            .then(|| TiltStrength((v * 100.0).round() as i32))
+    }
+
+    pub fn get(self) -> f32 {
+        self.0 as f32 / 100.0
+    }
+}
+
 /// Hexes per chunk: 7 (radius 1) or 19 (radius 2).
 pub fn parse_chunk(s: &str) -> Option<u32> {
     match s {
@@ -272,6 +310,8 @@ pub struct GateConfig {
     pub ibl: bool,
     /// Kit scenario only: camera exposure (default `lookdev::KIT_EV100`).
     pub ev100: Ev100,
+    pub tilt: TiltMode,
+    pub tilt_strength: TiltStrength,
 }
 
 impl Default for GateConfig {
@@ -289,6 +329,8 @@ impl Default for GateConfig {
             tonemap: Tonemap::AcesFitted,
             ibl: true,
             ev100: Ev100::from_f32(crate::lookdev::KIT_EV100),
+            tilt: TiltMode::Auto,
+            tilt_strength: TiltStrength(100),
         }
     }
 }
@@ -410,6 +452,20 @@ mod tests {
         assert_eq!(parse_ibl("1"), None);
         let d = GateConfig::default();
         assert_eq!((d.tonemap, d.ibl), (Tonemap::AcesFitted, true));
+    }
+
+    #[test]
+    fn tilt_keys_parse() {
+        assert_eq!(TiltMode::parse("auto"), Some(TiltMode::Auto));
+        assert_eq!(TiltMode::parse("on"), Some(TiltMode::On));
+        assert_eq!(TiltMode::parse("off"), Some(TiltMode::Off));
+        assert_eq!(TiltMode::parse("1"), None);
+        assert_eq!(TiltStrength::parse("0.5").map(TiltStrength::get), Some(0.5));
+        assert_eq!(TiltStrength::parse("1.5"), None);
+        assert_eq!(TiltStrength::parse("-0.1"), None);
+        assert_eq!(TiltStrength::parse("NaN"), None);
+        let d = GateConfig::default();
+        assert_eq!((d.tilt, d.tilt_strength.get()), (TiltMode::Auto, 1.0));
     }
 
     #[test]

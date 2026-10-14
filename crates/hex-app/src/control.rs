@@ -3,7 +3,9 @@ use std::collections::VecDeque;
 use std::sync::Mutex;
 
 use bevy::prelude::*;
-use hex_render::{ActiveScenario, Scenario, SceneEntity, setup_scene};
+use hex_render::{
+    ActiveScenario, Scenario, SceneEntity, setup_scene, tilt_shift::TiltShiftSettings,
+};
 use serde::Deserialize;
 
 use crate::{FrameCount, RunFlags, bridge, capture};
@@ -11,11 +13,27 @@ use crate::{FrameCount, RunFlags, bridge, capture};
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(tag = "cmd", rename_all = "snake_case")]
 pub enum Command {
-    Camera { pos: [f32; 3], look_at: [f32; 3] },
-    Screenshot { name: String },
-    Wait { frames: u32 },
-    Scenario { name: String },
-    DumpState { name: String },
+    Camera {
+        pos: [f32; 3],
+        look_at: [f32; 3],
+    },
+    Screenshot {
+        name: String,
+    },
+    Wait {
+        frames: u32,
+    },
+    Scenario {
+        name: String,
+    },
+    /// Runtime tilt-shift toggle and strength (the `T` key and the strength slider's script form).
+    Tilt {
+        on: Option<bool>,
+        strength: Option<f32>,
+    },
+    DumpState {
+        name: String,
+    },
     Exit,
 }
 
@@ -58,6 +76,7 @@ pub fn run_commands(
     mut exit: ResMut<ExitRequest>,
     mut cameras: Query<&mut Transform, With<Camera3d>>,
     scene: Query<Entity, With<SceneEntity>>,
+    mut tilt: ResMut<TiltShiftSettings>,
 ) {
     queue.items.extend(INBOX.lock().unwrap().drain(..));
     if !*bridge::READY.lock().unwrap() {
@@ -94,6 +113,12 @@ pub fn run_commands(
             }
             None => warn!("scenario command: unknown scenario '{name}', skipped"),
         },
+        Command::Tilt { on, strength } => {
+            tilt.enabled = on.unwrap_or(tilt.enabled);
+            if let Some(v) = strength.filter(|v| (0.0..=1.0).contains(v)) {
+                tilt.strength = v;
+            }
+        }
         Command::DumpState { name } => dump_state(&name),
         Command::Exit => exit.0 = true,
     }
@@ -121,6 +146,7 @@ pub fn publish_state(
     cameras: Query<&Transform, With<Camera3d>>,
     config: Option<Res<hex_render::GateConfig>>,
     gpu: Option<Res<hex_render::GpuLimits>>,
+    tilt: Res<TiltShiftSettings>,
 ) {
     let camera = cameras.iter().next().map(|t| {
         serde_json::json!({ "pos": t.translation.to_array(), "forward": t.forward().to_array() })
@@ -134,6 +160,7 @@ pub fn publish_state(
         "scenario": format!("{:?}", active.0),
         "tiles": active.0.tile_count(kit_src),
         "gpu": gpu,
+        "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps },
         "frames": frames.0,
         "seed": flags.0.seed,
         "no_anim": flags.0.no_anim,
@@ -176,9 +203,17 @@ mod tests {
     fn parses_every_command() {
         let s = r#"[{"cmd":"camera","pos":[0,90,90],"look_at":[0,0,0]},
                     {"cmd":"wait","frames":30},{"cmd":"screenshot","name":"a"},
-                    {"cmd":"scenario","name":"gate2000"},{"cmd":"dump_state","name":"s"},{"cmd":"exit"}]"#;
+                    {"cmd":"scenario","name":"gate2000"},{"cmd":"dump_state","name":"s"},{"cmd":"exit"},
+                    {"cmd":"tilt","on":false,"strength":0.5}]"#;
         let c = parse_script(s).unwrap();
-        assert_eq!(c.len(), 6);
+        assert_eq!(c.len(), 7);
+        assert_eq!(
+            c[6],
+            Command::Tilt {
+                on: Some(false),
+                strength: Some(0.5)
+            }
+        );
         assert_eq!(c[1], Command::Wait { frames: 30 });
         assert_eq!(c[5], Command::Exit);
     }

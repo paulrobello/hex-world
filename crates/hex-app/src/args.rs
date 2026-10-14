@@ -184,6 +184,20 @@ pub fn flags_from_pairs(pairs: &[(String, String)]) -> (Flags, Vec<String>) {
                 v,
                 &mut warnings,
             ),
+            "tilt" => set_or_warn(
+                &mut f.gate.tilt,
+                hex_render::TiltMode::parse(v),
+                k,
+                v,
+                &mut warnings,
+            ),
+            "tilt_strength" => set_or_warn(
+                &mut f.gate.tilt_strength,
+                hex_render::TiltStrength::parse(v),
+                k,
+                v,
+                &mut warnings,
+            ),
             "present" => set_or_warn(&mut f.present, Present::parse(v), k, v, &mut warnings),
             _ => {}
         }
@@ -237,6 +251,8 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "tonemap",
         "ibl",
         "ev100",
+        "tilt",
+        "tilt_strength",
     ]
     .iter()
     .filter_map(|k| params.get(k).map(|v| (k.to_string(), v)))
@@ -303,6 +319,17 @@ mod tests {
         let (f, w) = flags_from_pairs(&p(&[("ev100", "dark")]));
         assert_eq!(f.gate.ev100, hex_render::GateConfig::default().ev100);
         assert_eq!(w.len(), 1);
+    }
+
+    #[test]
+    fn tilt_keys() {
+        let (f, w) = flags_from_pairs(&p(&[("tilt", "on"), ("tilt_strength", "0.5")]));
+        assert_eq!(f.gate.tilt, hex_render::TiltMode::On);
+        assert_eq!(f.gate.tilt_strength.get(), 0.5);
+        assert!(w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("tilt", "maybe"), ("tilt_strength", "2")]));
+        assert_eq!(f.gate.tilt, hex_render::TiltMode::Auto);
+        assert_eq!(w.len(), 2);
     }
 
     #[test]

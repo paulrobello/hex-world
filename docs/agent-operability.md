@@ -14,6 +14,7 @@ Flags take the form `--name value`. A bare `--name` means `1`. Bad values log a 
 | `--tonemap <agx\|tony\|aces>` | Kit scenario only. Camera tone mapping (D4): `aces` (default, ACES fitted, owner look-dev ruling 2026-10-13), `agx` (AgX) or `tony` (TonyMcMapface). Other scenarios keep the P0 camera | `--tonemap aces` |
 | `--ibl <on\|off>` | Kit scenario only. `on` (default) adds the prefiltered noon `EnvironmentMapLight` (`kit://p1/ibl/noon.{diffuse,specular}.ktx2`, intensity `lookdev::IBL_INTENSITY`) and sets the global ambient light to 0; `off` keeps the flat 400 ambient. With IBL on the kit forward pipeline samples 16 textures per fragment stage, exactly WebGPU's default limit (14 with `off`) | `--ibl off` |
 | `--ev100 <f32>` | Kit scenario only. Kit camera exposure (EV100, 0–20, default `lookdev::KIT_EV100` = 12.5, chosen from an exposure sweep and owner-approved 2026-10-13; Bevy's default 9.7 clips the 30,000 lx sun). The kit scenario also aims its sun along the HDRI sun direction `lookdev::KIT_SUN_DIR` = (0.553, 0.742, 0.379); other scenarios keep the P0 light | `--ev100 13.3` |
+| `--tilt <auto\|on\|off>`, `--tilt_strength <0..1>` | Tilt-shift post pass (PRD §9.1, `hex_render::tilt_shift`): a sharp horizontal band at the camera's look-at point on the ground, blur growing with screen distance from the band and with depth difference, plus a small saturation lift. Fades out as the focus distance drops from 48 m to 12 m. `auto` (default) is on from the Medium tier up (8 taps Medium, 16 High, 24 Ultra, off on Low) and only in the kit scenario with `post=full`, so P0 baselines are unchanged; `on`/`off` force it in any scenario. `T` toggles it at runtime. One pass, 2 sampled textures in the fragment stage (colour and prepass depth). `make shots-tilt` writes the off/on pair to `docs/shots/tilt-shift/` | `--tilt off` |
 | `--view <name>` | Gate camera view: `strategic` (default, whole world from 900 m) or `closeup` (40 m above tile (3, 2)). Unknown values warn and fall back | `--view closeup` |
 | `--shot <name>` | Select the scenario and save `target/shots/<name>.png` at frame 120 | `--shot single` |
 | `--exit-after <frames>` | Exit after N frames | `--exit-after 180` |
@@ -35,11 +36,11 @@ Flags take the form `--name value`. A bare `--name` means `1`. Bad values log a 
 | `--shadows <on\|off>` | Directional-light shadow maps (`cascades` cascades). Default `on` | `--shadows off` |
 | `--present <mode>` | Native only. `fifo` (default, vsync), `immediate`, or `novsync` (Bevy `AutoNoVsync`: immediate, else mailbox, else fifo). Use `novsync` for uncapped frame times | `--present novsync` |
 
-Every exit path waits until pending screenshots have been written. The gate keys (`layout`, `chunk`, `post`, `shadows`, `shadow_casters`, `cascades`, `shadow_dist`, `kit_hooks`, `kit_src`, `tonemap`, `ibl`, `ev100`) are read on every scene build, so a `scenario` command keeps them. Unknown values warn and fall back to the default.
+Every exit path waits until pending screenshots have been written. The gate keys (`layout`, `chunk`, `post`, `shadows`, `shadow_casters`, `cascades`, `shadow_dist`, `kit_hooks`, `kit_src`, `tonemap`, `ibl`, `ev100`, `tilt`, `tilt_strength`) are read on every scene build, so a `scenario` command keeps them. Unknown values warn and fall back to the default.
 
 ## Web query parameters
 
-`shot`, `scenario`, `view`, `diag`, `exit-after`, `seed`, `no-anim`, `layout`, `chunk`, `post`, `shadows`, `shadow_casters`, `cascades`, `shadow_dist`, `fps`, `kit_hooks`, `kit_src`, `tonemap`, `ibl`, `ev100`, with the same meanings as the flags. Example: `http://127.0.0.1:8094/?scenario=gate2000&view=closeup&diag=1`.
+`shot`, `scenario`, `view`, `diag`, `exit-after`, `seed`, `no-anim`, `layout`, `chunk`, `post`, `shadows`, `shadow_casters`, `cascades`, `shadow_dist`, `fps`, `kit_hooks`, `kit_src`, `tonemap`, `ibl`, `ev100`, `tilt`, `tilt_strength`, with the same meanings as the flags. Example: `http://127.0.0.1:8094/?scenario=gate2000&view=closeup&diag=1`.
 
 `wgsl_compat` (`0` or `1`) controls `web/wgsl-compat.js`, which inlines the WGSL `let` texture and sampler handle aliases that browsers without the `texture_and_sampler_let` language extension (Safari 27) reject. `1` forces the rewrite on, `0` turns it off, and by default it is active only when the browser lacks the extension. `window.__wgslCompat` is set before the app loads (absent when WebGPU is unavailable) and holds `{ active, native, modules, rewritten, aliases, unhandled, ms }`: `active` is whether the rewrite is on, `native` whether the browser supports the extension, `modules` and `rewritten` count the shader modules seen and changed, `aliases` the aliases inlined, `unhandled` the bindless aliases left alone, and `ms` the time spent rewriting.
 
@@ -66,6 +67,7 @@ A script is a JSON array. Commands run in order, one per frame, starting once th
 | `wait` | Hold the queue for N frames | `{"cmd":"wait","frames":60}` |
 | `screenshot` | Native: `target/shots/<name>.png`. Web: data URL for `hex_world_take_shot` | `{"cmd":"screenshot","name":"overview"}` |
 | `scenario` | Despawn the scene and rebuild it as `single`, `gate2000` or `kit` | `{"cmd":"scenario","name":"gate2000"}` |
+| `tilt` | Runtime tilt-shift toggle and strength; either field may be omitted. The state JSON reports it under `tilt` | `{"cmd":"tilt","on":false,"strength":0.5}` |
 | `dump_state` | Log the state JSON; natively also write `target/shots/<name>.json` | `{"cmd":"dump_state","name":"after-move"}` |
 | `exit` | Exit once pending screenshots are written (native) | `{"cmd":"exit"}` |
 

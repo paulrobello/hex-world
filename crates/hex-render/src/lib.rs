@@ -12,13 +12,14 @@ mod kit_test;
 pub mod lookdev;
 pub mod post;
 mod scene;
+pub mod tilt_shift;
 pub mod workload;
 pub use hex_assets::bevy::MeshoptGlbPlugin;
 pub use scene::{SceneEntity, TILE_HEIGHT, Tile, Vehicle, setup as setup_scene};
 pub use workload::{
     Ev100, GATE, GateConfig, GateView, GateWorkload, KitHooks, KitSource, Layout, PostMode,
-    ShadowCasters, Tonemap, parse_cascades, parse_chunk, parse_ibl, parse_shadow_dist,
-    parse_shadows,
+    ShadowCasters, TiltMode, TiltStrength, Tonemap, parse_cascades, parse_chunk, parse_ibl,
+    parse_shadow_dist, parse_shadows,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -104,6 +105,7 @@ impl Plugin for HexRenderPlugin {
                 fps::FpsPlugin { visible: self.fps },
                 instanced::InstancedPlugin,
                 MaterialPlugin::<kit_material::KitMaterial>::default(),
+                tilt_shift::TiltShiftPlugin,
             ))
             .add_systems(Startup, scene::setup)
             .add_systems(

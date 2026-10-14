@@ -619,6 +619,7 @@ pub fn setup(
     });
 
     let tier = QualityTier::default();
+    commands.insert_resource(crate::tilt_shift::settings_for(&config, kit, tier));
     let mut cam = commands.spawn((Camera3d::default(), camera, Msaa::Off, SceneEntity));
     if config.post == PostMode::Full {
         cam.insert(camera_post_bundle(tier));

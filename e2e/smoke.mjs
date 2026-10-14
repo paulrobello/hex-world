@@ -34,6 +34,8 @@ const WEBGPU_DEFAULT_SAMPLED = 16;
 // forward count is asserted exactly, so the clamped case cannot pass without the kit pipeline.
 // `ibl=on` (the kit default) adds the two noon environment cubemaps to the view bind group, which
 // puts the forward pipeline exactly at WebGPU's default 16 (measured 2026-10-13): no headroom left.
+// The tilt-shift pass samples the colour target and the prepass depth.
+const TILT_SAMPLED = 2;
 const KIT_SAMPLED = { ibl: { forward: 16, prepass: 7 }, noIbl: { forward: 14, prepass: 7 } };
 
 async function withPage(args, fn) {
@@ -138,11 +140,14 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
   ["?scenario=kit&kit_src=fixture_tiled&post=full", null, WEBGPU_DEFAULT_SAMPLED],
   ["?wgsl_compat=1&scenario=kit&kit_src=fixture_tiled&post=full", KIT_COMPAT_ALIASES, null],
   ["?scenario=kit&kit_src=fixture_tiled&post=full&ibl=off", null, WEBGPU_DEFAULT_SAMPLED],
+  ["?scenario=kit&kit_src=fixture_tiled&post=full&tilt=off", null, WEBGPU_DEFAULT_SAMPLED],
   // The runtime kit: meadow, roads and the hero oak (UV-mapped tileable bark slot with tileUvScale,
   // the unique canopy-shell slot, the alpha-masked double-sided leaves slot, and the TEXCOORD_1 wind
   // attribute) under the default 16 clamp (D7).
   ["?scenario=kit&post=full", null, WEBGPU_DEFAULT_SAMPLED]]) {
   const ibl = !query.includes("ibl=off");
+  // The kit scenario turns the tilt-shift pass on by default (High tier, zoomed out); `tilt=off` must not create it.
+  const tiltOn = !query.includes("tilt=off");
   const want = ibl ? KIT_SAMPLED.ibl : KIT_SAMPLED.noIbl;
   await withPage(gpuArgs, async (page, errors) => {
     let spawned = null;
@@ -176,6 +181,8 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
     // and is not counted; any pipeline composed with the IBL must still match exactly.
     while (ibl && Date.now() < deadline + 60_000 && !(await page.evaluate(() =>
       (window.__sampledTextures?.kit ?? []).some((k) => k.pass === "forward" && k.ibl)))) await page.waitForTimeout(200);
+    // Tilt-shift builds its pipeline once the shader loads and a frame runs with the camera component.
+    while (tiltOn && Date.now() < deadline + 60_000 && !(await page.evaluate(() => window.__sampledTextures?.tilt?.length))) await page.waitForTimeout(200);
     const { compat, sampled, limit, marked, gpu } = await page.evaluate(() => ({
       compat: window.__wgslCompat, sampled: window.__sampledTextures, limit: window.__deviceSampledLimit,
       marked: window.__markedModules, gpu: window.hexWorld.state().gpu }));
@@ -191,6 +198,12 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
       if (!got.length) fail(`${tag}: no kit ${pass} pipeline was created`);
       else if (!got.every((n) => n === want[pass])) fail(`${tag}: kit ${pass} pipeline uses ${got} sampled textures, expected ${want[pass]}`);
     }
+    const tilts = sampled?.tilt ?? [];
+    if (tiltOn && !tilts.length) fail(`${tag}: no tilt-shift pipeline was created`);
+    else if (tiltOn && !tilts.every((t) => t.sampled === TILT_SAMPLED))
+      fail(`${tag}: tilt-shift pipeline uses ${tilts.map((t) => t.sampled)} sampled textures, expected ${TILT_SAMPLED}`);
+    else if (!tiltOn && tilts.length) fail(`${tag}: tilt=off still created a tilt-shift pipeline: ${JSON.stringify(tilts)}`);
+    else console.log(`${tag}: tilt-shift ${tiltOn ? `pipeline sampled textures ${JSON.stringify(tilts)}` : "off, no pipeline"}`);
     const iblSeen = JSON.stringify(Object.fromEntries(iblStatus));
     if (ibl && !(iblStatus.get("noon.specular.ktx2") === 200 && iblStatus.get("noon.diffuse.ktx2") === 200))
       fail(`${tag}: IBL cubemaps not both loaded with 200: ${iblSeen}`);

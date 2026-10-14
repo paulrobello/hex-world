@@ -20,13 +20,15 @@ export function clampSampledTextures(lim) {
 // holds `{ max, layouts, kit }`: `layouts` lists each distinct per-layout count, and `kit` lists
 // `{ pass, sampled }` for each render pipeline whose fragment module is a kit shader (it declares
 // the `tile_inv_m` uniform field): `pass` is "forward" when the module also declares
-// `masks_texture` (kit_material.wesl), else "prepass" (kit_prepass.wesl).
+// `masks_texture` (kit_material.wesl), else "prepass" (kit_prepass.wesl). `tilt` lists `{ sampled }`
+// for each render pipeline whose fragment module is the tilt-shift shader (it declares `focus_uv_y`).
 export function countSampledTextures() {
   const FRAGMENT = 2;
   const perBgl = new WeakMap();
   const perLayout = new WeakMap();
   const kitModules = new WeakMap();
-  const stats = { max: 0, layouts: [], kit: [] };
+  const tiltModules = new WeakSet();
+  const stats = { max: 0, layouts: [], kit: [], tilt: [] };
   window.__sampledTextures = stats;
   const csm = GPUDevice.prototype.createShaderModule;
   GPUDevice.prototype.createShaderModule = function (desc) {
@@ -36,6 +38,7 @@ export function countSampledTextures() {
     // so a pipeline specialized before the IBL cubemaps loaded is distinguishable from the final one.
     if (/\btile_inv_m\b/.test(code))
       kitModules.set(mod, { pass: /\bmasks_texture\b/.test(code) ? "forward" : "prepass", ibl: /diffuse_environment_map/.test(code) });
+    if (/\bfocus_uv_y\b/.test(code)) tiltModules.add(mod);
     return mod;
   };
   const cbgl = GPUDevice.prototype.createBindGroupLayout;
@@ -55,6 +58,10 @@ export function countSampledTextures() {
     return layout;
   };
   const record = (desc) => {
+    if (desc?.fragment?.module && tiltModules.has(desc.fragment.module)) {
+      const sampled = perLayout.get(desc.layout) ?? null;
+      if (!stats.tilt.some((t) => t.sampled === sampled)) stats.tilt.push({ sampled });
+    }
     const mod = desc?.fragment?.module && kitModules.get(desc.fragment.module);
     if (!mod) return;
     const { pass, ibl } = mod;

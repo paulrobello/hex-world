@@ -1,4 +1,4 @@
-.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev
+.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt
 
 fmt:
 	cargo fmt --all
@@ -235,6 +235,29 @@ shots-lookdev:
 	  for n in kit-overview kit-seam-closeup kit-tree; do cp target/shots/$$n.png $(LOOKDEV_OUT)/lookdev-$$t-$$n.png || exit 1; done; \
 	done
 	@echo "wrote $(LOOKDEV_OUT)/lookdev-{agx,tony,aces}-*.png"
+
+# Tilt-shift off vs on (PRD §9.1): same cameras and seed, only `--tilt` differs. Writes
+# docs/shots/tilt-shift/tilt-{off,on}-<view>.png.
+TILT_VIEWS = overview mid wide
+TILT_OUT = docs/shots/tilt-shift
+shots-tilt:
+	@mkdir -p target/shots $(TILT_OUT)
+	@for m in off on; do \
+	  rm -f target/shots/tilt-*.png; \
+	  cargo run -p hex-app --release -- --script scripts/shots/tilt.json --size 1600x1000 --seed 1 --fps off --tilt $$m $(ARGS) || exit 1; \
+	  for n in $(TILT_VIEWS); do test -s target/shots/tilt-$$n.png || { echo "missing tilt-$$n.png"; exit 1; }; cp target/shots/tilt-$$n.png $(TILT_OUT)/tilt-$$m-$$n.png; done; \
+	done
+	@echo "wrote $(TILT_OUT)/tilt-{off,on}-*.png"
+
+# The same pair in Chromium on WebGPU: e2e/test-results/web-tilt-{off,on}-<view>.png.
+web-shots-tilt: build-web
+	cd e2e && npm ci --no-audit --no-fund
+	mkdir -p e2e/test-results
+	rm -f e2e/test-results/web-tilt-*.png
+	@for m in off on; do \
+	  node e2e/shots.mjs dist scripts/shots/tilt.json "tilt=$$m" || exit 1; \
+	  for n in $(TILT_VIEWS); do mv e2e/test-results/web-tilt-$$n.png e2e/test-results/web-tilt-$$m-$$n.png; done; \
+	done
 
 web-shots-kit: build-web
 	cd e2e && npm ci --no-audit --no-fund
