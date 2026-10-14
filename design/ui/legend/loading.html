@@ -8,12 +8,12 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="screens.css">
 <style>
-  .scene { --scene-x: -194px; --scene-y: -160px; --scene-s: .9; opacity: 0; transition: opacity 300ms var(--ease); }
-  .scene > img { clip-path: polygon(40% 62%, 49.7% 54.3%, 59% 62.1%, 59.8% 76.7%, 59.88% 78.7%, 50% 86.6%, 40% 78.6%); }
+  .scene { --scene-x: 0px; --scene-y: 0px; --scene-s: .9; opacity: 0; transition: opacity 300ms var(--ease); }
   .is-ready .scene { opacity: 1; }
   .load { position: fixed; left: 50%; top: 50%; width: min(440px, calc(100vw - 32px)); transform: translate(-50%, -50%); padding: 24px 24px 18px; background: var(--sheet); border-radius: var(--r); box-shadow: var(--shadow-2); transition: opacity 300ms var(--ease); }
   .is-ready .load { opacity: 0; pointer-events: none; }
   .is-still.is-ready .load { opacity: .45; }
+  .load__icon { position: absolute; left: 50%; bottom: calc(100% + 20px); width: 64px; height: 64px; transform: translateX(-50%); }
   .load__head { display: grid; grid-template-columns: 56px 1fr; gap: 16px; align-items: center; }
   .load__hex { width: 56px; height: 56px; }
   .load__hex .track { fill: none; stroke: var(--track); stroke-width: 7; stroke-linejoin: round; }
@@ -47,9 +47,10 @@
 </style>
 </head>
 <body>
-<div class="scene" aria-hidden="true"><img src="../assets/scene-tilt-off-mid.jpg" alt=""></div>
+<div class="scene" aria-hidden="true"><img src="../../../docs/checkpoints/ui-captures/ui-first-one.jpg" alt=""></div>
 
 <main class="load" role="status" aria-live="polite" aria-label="Loading Hex World">
+  <img class="load__icon" src="../../../web/brand/icon-512.png" alt="" width="64" height="64">
   <div class="load__head">
     <svg class="load__hex" viewBox="0 0 100 100" aria-hidden="true">
       <polygon class="fill" points=""/>

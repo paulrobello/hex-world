@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="screens.css">
 </head>
 <body>
-<div class="scene"><img src="../assets/scene-water-overview.jpg" alt="The world: meadows, a river and a beach running into the sea"><svg class="overlay" viewBox="0 0 1600 1000" aria-hidden="true"></svg></div>
+<div class="scene"><img src="../../../docs/checkpoints/ui-captures/ui-play-world.jpg" alt="The world: meadows, forest, a river, two houses on a road, and a beach running into the sea"><svg class="overlay" viewBox="0 0 1600 1000" aria-hidden="true"></svg></div>
 
 <div data-mount="bar"></div>
 <div class="ghost-tag is-gone" role="status"></div>
@@ -40,27 +40,37 @@
 
 <script src="proto.js"></script>
 <script>
-  // The busy world: the approved water look-dev capture, framed as in the comp. Slot and tile
-  // outlines sit in the capture's 1600x1000 space. Edge e of a slot runs pts[e+2] to pts[e+3].
-  const shape = (cx, cy, s = 1) => [[-160, 0], [-30, -68], [130, -68], [160, 0], [30, 68], [-130, 68]].map(([x, y]) => [Math.round(cx + x * s), Math.round(cy + y * s)]);
+  // The busy world: a native play-scenario capture (docs/checkpoints/ui-captures/ui-play.json), 14 real
+  // tiles at the play camera's angle, in photo mode so the engine's own slot outlines stay out of it.
+  // Slot and tile outlines are those cells projected through the same camera into the capture's
+  // 1600x1000 space; each slot's needs are its real neighbours' edges. Edge e of a slot runs
+  // pts[e+2] to pts[e+3]. `real` lists the placements the engine was captured making at the same
+  // camera, so placing them shows the engine's pixels; any other placement falls back to a stand-in.
+  const CAP = "../../../docs/checkpoints/ui-captures/";
   window.WORLD = {
-    scene: { src: "../assets/scene-water-overview.jpg", x: 150, y: 96, s: 0.66 },
-    grassAt: [560, 720],
+    scene: { src: CAP + "ui-play-world.jpg", x: 0, y: 0, s: Math.min(0.9, innerWidth / 1600, innerHeight / 1000) },
+    grassAt: [592, 494],
     selected: "river_bend",
     rise: 1800,
     history: [
-      { kind: "seed", text: "placed Beach at (3, −2)" },
-      { kind: "seed", text: "placed River bend at (0, 1)" },
-      { kind: "seed", text: "placed Meadow at (−1, 0)" },
+      { kind: "seed", text: "placed House cluster at (1, 2)" },
+      { kind: "seed", text: "placed Meadow at (−1, 3)" },
+      { kind: "seed", text: "placed Forest at (0, 3)" },
     ],
     slots: [
-      { id: "A", coord: "(−2, 1)", pts: [[-50, 513], [80, 445], [240, 445], [270, 513], [140, 581], [-20, 581]], needs: { 0: "G", 1: "V" } },
-      { id: "B", coord: "(−1, −1)", pts: [[350, 322], [450, 266], [600, 266], [625, 322], [530, 378], [372, 378]], needs: { 1: "G", 2: "G" }, adj: { 0: "C" } },
-      { id: "C", coord: "(0, −2)", pts: [[605, 274], [690, 226], [815, 226], [835, 274], [750, 322], [625, 322]], needs: { 1: "O", 2: "G" }, adj: { 3: "B" }, nearest: "A", noneWhy: "No tile carries both a river and the sea." },
+      { id: "A", coord: "(−2, 0)", pts: [[251, 467], [332, 442], [389, 467], [368, 521], [281, 550], [222, 521]], hull: [[218, 522], [248, 466], [333, 440], [393, 466], [397, 482], [375, 538], [286, 569], [225, 538]], needs: { 0: "G", 1: "V" } },
+      { id: "B", coord: "(1, −1)", pts: [[617, 395], [684, 373], [746, 395], [743, 441], [672, 466], [608, 441]], hull: [[605, 442], [614, 394], [684, 372], [748, 394], [749, 410], [746, 458], [674, 484], [607, 458]], needs: { 1: "G", 2: "G" }, adj: { 0: "C" } },
+      { id: "C", coord: "(2, −1)", pts: [[748, 395], [812, 373], [877, 395], [880, 441], [813, 466], [745, 441]], hull: [[742, 442], [745, 394], [812, 372], [879, 394], [883, 442], [882, 458], [813, 484], [743, 458]], needs: { 1: "O", 2: "G" }, adj: { 3: "B" }, nearest: "A", noneWhy: "No tile carries both a river and the sea." },
+    ],
+    real: [
+      { slot: "A", tile: "river_bend", k: 1, src: CAP + "ui-play-placed.jpg" },
+      { slot: "B", tile: "meadow", k: 0, src: CAP + "ui-play-placed.jpg" },
+      { slot: "C", tile: "beach", k: 0, src: CAP + "ui-play-placed.jpg" },
+      { slot: "B", tile: "river_straight", k: 0, src: CAP + "ui-play-alt.jpg" },
     ],
     tiles: [
-      { id: "t1", name: "Meadow", pts: shape(400, 445) },
-      { id: "coast", name: "Beach", pts: shape(1000, 470), block: "Removing this would split your world", blockSub: "2 ocean tiles would be cut off", cut: [shape(1090, 345, 0.9), shape(1275, 405, 0.95)] },
+      { id: "t1", name: "Meadow", pts: [[544, 769], [640, 727], [724, 769], [719, 861], [616, 911], [527, 861]], hull: [[522, 863], [541, 767], [640, 724], [728, 767], [729, 784], [724, 879], [619, 932], [527, 879]], goneSrc: CAP + "ui-play-alt.jpg" },
+      { id: "coast", name: "Beach", pts: [[673, 467], [744, 442], [812, 467], [813, 521], [738, 550], [667, 521]], block: "Removing this would split your world", blockSub: "2 ocean tiles would be cut off", cut: [[[814, 467], [881, 442], [953, 467], [961, 521], [890, 550], [815, 521]], [[955, 467], [1019, 442], [1094, 467], [1109, 521], [1043, 550], [963, 521]]] },
     ],
   };
   document.querySelector("[data-mount=bar]").outerHTML = HW.bar({ world: "Riverside", tiles: 14 });

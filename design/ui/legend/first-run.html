@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="screens.css">
 </head>
 <body>
-<div class="scene"><img src="../assets/scene-tilt-off-mid.jpg" alt="The first meadow tile floating in the dark"><svg class="overlay" viewBox="0 0 1600 1000" aria-hidden="true"></svg></div>
+<div class="scene"><img src="../../../docs/checkpoints/ui-captures/ui-first-one.jpg" alt="The first meadow tile floating in the dark"><svg class="overlay" viewBox="0 0 1600 1000" aria-hidden="true"></svg></div>
 
 <div data-mount="bar"></div>
 <div class="ghost-tag is-gone" role="status"></div>
@@ -39,25 +39,28 @@
 
 <script src="proto.js"></script>
 <script>
-  // A new world is one meadow tile (PRD A1). No one-tile capture exists yet, so the backdrop is one
-  // hex masked out of the P1 tilt-shift capture (docs/shots/tilt-shift/tilt-off-mid.png).
-  // Slot order is upper-left, top, upper-right, lower-right, bottom, lower-left (pointy-top on screen).
-  const H = [[-158, -80], [-3, -157], [154, -80], [159, 66], [2, 145], [-158, 66]];
-  const hex = (cx, cy, s = 1) => H.map(([x, y]) => [Math.round(cx + x * s), Math.round(cy + y * s)]);
+  // A new world is one meadow tile (PRD A1): a native capture of the play scenario's first tile
+  // (docs/checkpoints/ui-captures/ui-first-run.json), in photo mode so the engine's slot outlines stay
+  // out of it. Slots are the six neighbours projected through the same camera; slot order is
+  // upper-left, top, upper-right, lower-right, bottom, lower-left. `real` points each slot at the
+  // same camera's capture of a meadow placed there, so placing Meadow shows the engine's pixels.
+  const CAP = "../../../docs/checkpoints/ui-captures/";
+  const RING = CAP + "ui-first-ring.jpg";
   window.WORLD = {
-    scene: { src: "../assets/scene-tilt-off-mid.jpg", x: -194, y: -160, s: 0.9, clip: "polygon(40% 62%, 49.7% 54.3%, 59% 62.1%, 59.8% 76.7%, 59.88% 78.7%, 50% 86.6%, 40% 78.6%)" },
-    grassAt: [798, 705],
+    scene: { src: CAP + "ui-first-one.jpg", x: 0, y: 0, s: Math.min(0.9, innerWidth / 1600, innerHeight / 1000) },
+    grassAt: [593, 513],
     selected: "meadow",
     rise: 1800,
     slots: [
-      { id: "W", coord: "(−1, 0)", pts: hex(486, 700), needs: { 0: "G" } },
-      { id: "NW", coord: "(0, −1)", pts: hex(638, 487, 0.92), needs: { 1: "G" } },
-      { id: "NE", coord: "(1, −1)", pts: hex(950, 487, 0.92), needs: { 2: "G" } },
-      { id: "E", coord: "(1, 0)", pts: hex(1110, 700), needs: { 3: "G" } },
-      { id: "SE", coord: "(0, 1)", pts: hex(960, 929, 1.04), needs: { 4: "G" } },
-      { id: "SW", coord: "(−1, 1)", pts: hex(643, 929, 1.04), needs: { 5: "G" } },
+      { id: "W", coord: "(−1, 0)", pts: [[178, 453], [342, 405], [459, 453], [421, 567], [233, 634], [108, 567]], hull: [[100, 569], [174, 451], [344, 401], [466, 451], [473, 484], [436, 603], [245, 673], [118, 603]], needs: { 0: "G" } },
+      { id: "NW", coord: "(0, −1)", pts: [[385, 319], [519, 282], [629, 319], [612, 403], [462, 451], [345, 403]], hull: [[339, 405], [381, 317], [520, 279], [634, 317], [637, 349], [621, 437], [469, 488], [349, 437]], needs: { 1: "G" } },
+      { id: "NE", coord: "(1, −1)", pts: [[632, 319], [756, 282], [876, 319], [883, 403], [747, 451], [616, 403]], hull: [[610, 405], [628, 317], [756, 279], [881, 317], [889, 405], [887, 437], [748, 488], [615, 437]], needs: { 2: "G" } },
+      { id: "E", coord: "(1, 0)", pts: [[749, 453], [885, 405], [1030, 453], [1056, 567], [906, 634], [743, 567]], hull: [[737, 569], [744, 451], [885, 401], [1036, 451], [1063, 569], [1057, 603], [903, 673], [739, 603]], needs: { 3: "G" } },
+      { id: "SE", coord: "(0, 1)", pts: [[571, 637], [741, 570], [904, 637], [918, 799], [724, 898], [540, 799]], hull: [[531, 803], [565, 634], [741, 565], [910, 634], [926, 803], [922, 836], [726, 939], [540, 836]], needs: { 4: "G" } },
+      { id: "SW", coord: "(−1, 1)", pts: [[234, 637], [422, 570], [566, 637], [534, 799], [312, 898], [156, 799]], hull: [[147, 803], [228, 634], [424, 565], [573, 634], [579, 668], [549, 836], [325, 939], [167, 836]], needs: { 5: "G" } },
     ],
-    tiles: [{ id: "m0", name: "Meadow", pts: hex(798, 700), block: "The world needs at least one tile", blockSub: "Place another before removing this one" }],
+    real: ["W", "NW", "NE", "E", "SE", "SW"].map((slot) => ({ slot, tile: "meadow", k: 0, src: RING })),
+    tiles: [{ id: "m0", name: "Meadow", pts: [[464, 453], [614, 405], [745, 453], [739, 567], [569, 634], [426, 567]], block: "The world needs at least one tile", blockSub: "Place another before removing this one" }],
     hints: [
       {
         html: `${HW.icon("place")}Click a dashed slot to place Meadow`,

@@ -14,6 +14,7 @@
   .still img { position: absolute; left: -6%; top: 2%; width: 90%; height: auto; -webkit-mask-image: radial-gradient(ellipse 62% 60% at 50% 52%, #000 55%, transparent 100%); mask-image: radial-gradient(ellipse 62% 60% at 50% 52%, #000 55%, transparent 100%); }
   .page { position: relative; min-height: 100vh; display: grid; grid-template-columns: 1fr minmax(0, 440px); align-items: center; padding: 20px; }
   .card { grid-column: 2; padding: 28px 28px 22px; background: var(--sheet); border-radius: var(--r); box-shadow: var(--shadow-2); }
+  .card__icon { display: block; width: 56px; height: 56px; margin: 0 0 18px; }
   .card h1 { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; text-wrap: balance; }
   .card > p { margin: 10px 0 0; color: var(--ink-2); font-size: var(--fs-4); line-height: 1.5; }
   .you { display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start; margin: 18px 0 0; padding: 12px; border-radius: 4px; background: var(--sheet-2); font-size: var(--fs-3); color: var(--ink-2); }
@@ -39,6 +40,7 @@
 <div class="still" aria-hidden="true"><img src="../assets/scene-water-overview.jpg" alt=""></div>
 <main class="page">
   <section class="card" aria-labelledby="h">
+    <img class="card__icon" src="../../../web/brand/icon-512.png" alt="" width="56" height="56">
     <h1 id="h" class="gpu-only">Hex World needs WebGPU</h1>
     <h1 class="adapter-only">Hex World couldn't reach your graphics card</h1>
     <p class="gpu-only">This browser doesn't offer WebGPU, which Hex World uses to draw its world. Open it in one of the browsers below.</p>

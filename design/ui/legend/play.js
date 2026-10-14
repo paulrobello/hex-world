@@ -30,6 +30,17 @@
   const layer = (cls) => { const g = document.createElementNS(NS, "g"); g.setAttribute("class", cls); svg.appendChild(g); return g; };
   const gTiles = layer("tiles"), gPlaced = layer("placed-layer"), gSlots = layer("slots"), gGhost = layer("ghost-g");
   const P = (pts) => pts.map((p) => p.join(",")).join(" ");
+  // A region of another native capture taken at the same camera (a placed tile, a removed one),
+  // clipped to the cell's prism outline so the engine's own pixels stand in the scene.
+  let clipN = 0;
+  function capture(parent, cls, src, hull) {
+    const g = document.createElementNS(NS, "g");
+    g.setAttribute("class", cls);
+    const id = `cap-clip-${clipN++}`;
+    g.innerHTML = `<clipPath id="${id}"><polygon points="${P(hull)}"/></clipPath><image href="${src}" width="1600" height="1000" clip-path="url(#${id})"/>`;
+    parent.appendChild(g);
+    return g;
+  }
   const centre = (pts) => [pts.reduce((a, p) => a + p[0], 0) / 6, pts.reduce((a, p) => a + p[1], 0) / 6];
   const side = (pts, e) => [pts[(e + 2) % 6], pts[(e + 3) % 6]];
   const mid = ([a, b]) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
@@ -45,7 +56,7 @@
   (W.tiles || []).forEach((t) => {
     const mk = (cls, pts) => { const p = document.createElementNS(NS, "polygon"); p.setAttribute("class", cls); p.setAttribute("points", P(pts)); gTiles.appendChild(p); return p; };
     t.cutEls = (t.cut || []).map((c) => mk("t-cut", c));
-    t.gone = mk("t-gone", t.pts);
+    t.gone = t.goneSrc ? capture(gTiles, "t-gone t-gone--real", t.goneSrc, t.hull) : mk("t-gone", t.pts);
     t.out = mk("t-out", t.pts);
     t.hit = mk("t-hit", t.pts);
     t.hit.dataset.tile = t.id;
@@ -292,8 +303,19 @@
   }
   const BASE = { G: "rgb(84 132 56)", F: "rgb(52 104 58)", O: "rgb(38 112 130)" };
   function drawPlaced(slot, t, k) {
+    const real = (W.real || []).find((c) => c.slot === slot.id && c.tile === t.id && c.k === k);
+    if (real) {
+      const g = capture(gPlaced, "placed is-rising", real.src, slot.hull);
+      g.style.setProperty("--rise", `${W.rise || 1800}ms`);
+      standin();
+      st.rising.push(g);
+      if (!HW.instant()) setTimeout(() => g.classList.remove("is-rising"), (W.rise || 1800) + 50);
+      return g;
+    }
+    // No native capture of this tile at this slot and rotation: a flat stand-in, captioned as one.
     const g = document.createElementNS(NS, "g");
     g.setAttribute("class", "placed is-rising");
+    g.dataset.standin = "";
     g.style.setProperty("--rise", `${W.rise || 1800}ms`);
     const pts = slot.pts, c = centre(pts);
     const d = 22;
@@ -404,9 +426,9 @@
   }
   const cap = document.createElement("p");
   cap.className = "standin";
-  cap.textContent = "Placed tiles here are a flat stand-in. The engine draws the real tile and its rise.";
+  cap.textContent = "No capture of this tile here: a flat stand-in. The engine draws the real tile.";
   document.body.appendChild(cap);
-  function standin() { cap.classList.toggle("is-shown", !!gPlaced.querySelector(".placed:not(.is-leaving)")); }
+  function standin() { cap.classList.toggle("is-shown", !!gPlaced.querySelector(".placed[data-standin]:not(.is-leaving)")); }
   const live = $("[data-live]");
   function announce(msg) { if (live) live.textContent = msg; }
 

@@ -198,6 +198,7 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .t-cut.is-shown { opacity: 1; }
 .t-gone { fill: var(--void); opacity: 0; transition: opacity 260ms var(--ease); }
 .t-gone.is-shown { opacity: .96; }
+.t-gone--real.is-shown { opacity: 1; }
 
 /* Tag beside the ghost or the bulldoze target (extends .ghost-tag) */
 .ghost-tag { z-index: 12; transition: opacity 150ms var(--ease), transform 150ms var(--ease); max-width: 440px; }

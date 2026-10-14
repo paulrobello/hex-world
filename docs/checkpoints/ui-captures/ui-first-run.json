@@ -1,0 +1,21 @@
+[
+  {"cmd": "camera", "pos": [19, 73.59, 83.43], "look_at": [19, 0, -1]},
+  {"cmd": "toggle", "what": "photo"},
+  {"cmd": "hover", "q": 9, "r": -9},
+  {"cmd": "wait", "frames": 60},
+  {"cmd": "screenshot", "name": "ui-first-one"},
+  {"cmd": "dump_state", "name": "ui-first-one"},
+
+  {"cmd": "select_tile", "id": "meadow"},
+  {"cmd": "place", "q": -1, "r": 0},
+  {"cmd": "place", "q": 0, "r": -1},
+  {"cmd": "place", "q": 1, "r": -1},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "place", "q": 0, "r": 1},
+  {"cmd": "place", "q": -1, "r": 1},
+  {"cmd": "hover", "q": 9, "r": -9},
+  {"cmd": "wait", "frames": 60},
+  {"cmd": "screenshot", "name": "ui-first-ring"},
+  {"cmd": "dump_state", "name": "ui-first-ring"},
+  {"cmd": "exit"}
+]
