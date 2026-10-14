@@ -3,9 +3,7 @@
   "catalog": {
     "compatible": {
       "Beach": [
-        "Grass",
-        "Beach",
-        "Ocean"
+        "Beach"
       ],
       "Forest": [
         "Grass",
@@ -13,11 +11,9 @@
       ],
       "Grass": [
         "Grass",
-        "Forest",
-        "Beach"
+        "Forest"
       ],
       "Ocean": [
-        "Beach",
         "Ocean"
       ],
       "River": [
@@ -27,6 +23,9 @@
         "Road"
       ]
     },
+    "directional": [
+      "Beach"
+    ],
     "start": "meadow",
     "tiles": [
       {
@@ -38,7 +37,15 @@
           "Grass",
           "Grass"
         ],
-        "id": "meadow"
+        "id": "meadow",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       },
       {
         "edges": [
@@ -49,7 +56,15 @@
           "Forest",
           "Forest"
         ],
-        "id": "forest"
+        "id": "forest",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       },
       {
         "edges": [
@@ -60,7 +75,15 @@
           "Grass",
           "Grass"
         ],
-        "id": "house_cluster"
+        "id": "house_cluster",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       },
       {
         "edges": [
@@ -71,7 +94,15 @@
           "Grass",
           "Grass"
         ],
-        "id": "road_straight"
+        "id": "road_straight",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       },
       {
         "edges": [
@@ -82,7 +113,15 @@
           "Grass",
           "Grass"
         ],
-        "id": "road_bend_120"
+        "id": "road_bend_120",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       },
       {
         "edges": [
@@ -93,7 +132,15 @@
           "Grass",
           "Grass"
         ],
-        "id": "road_bend_60"
+        "id": "road_bend_60",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       },
       {
         "edges": [
@@ -104,7 +151,15 @@
           "Road",
           "Grass"
         ],
-        "id": "road_junction"
+        "id": "road_junction",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       },
       {
         "edges": [
@@ -115,7 +170,15 @@
           "Grass",
           "Grass"
         ],
-        "id": "river_straight"
+        "id": "river_straight",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       },
       {
         "edges": [
@@ -126,7 +189,15 @@
           "Grass",
           "Grass"
         ],
-        "id": "river_bend"
+        "id": "river_bend",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       },
       {
         "edges": [
@@ -137,7 +208,15 @@
           "Road",
           "Grass"
         ],
-        "id": "river_road_bridge"
+        "id": "river_road_bridge",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       },
       {
         "edges": [
@@ -148,7 +227,53 @@
           "Grass",
           "Beach"
         ],
-        "id": "beach"
+        "id": "beach",
+        "land": [
+          null,
+          null,
+          "Right",
+          null,
+          null,
+          "Left"
+        ]
+      },
+      {
+        "edges": [
+          "Ocean",
+          "Ocean",
+          "Beach",
+          "Grass",
+          "Beach",
+          "Ocean"
+        ],
+        "id": "beach_outer",
+        "land": [
+          null,
+          null,
+          "Right",
+          null,
+          "Left",
+          null
+        ]
+      },
+      {
+        "edges": [
+          "Ocean",
+          "Beach",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Beach"
+        ],
+        "id": "beach_inner",
+        "land": [
+          null,
+          "Right",
+          null,
+          null,
+          null,
+          "Left"
+        ]
       },
       {
         "edges": [
@@ -159,7 +284,15 @@
           "Ocean",
           "Ocean"
         ],
-        "id": "ocean"
+        "id": "ocean",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       }
     ]
   },

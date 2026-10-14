@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast
 
 fmt:
 	cargo fmt --all
@@ -407,6 +407,24 @@ shots-water-play:
 	done
 	rm -f target/shots/water-play-motion-*.png
 	@echo "wrote $(WATER_PLAY_DOCS)/"
+
+# Coast checkpoint (owner O1, directional beach sockets): runs docs/checkpoints/coast/coast.json at
+# 1600x1000 with tilt-shift off and fixed clocks (an island closed by straight, headland and bay
+# tiles under ten rotations inside an ocean ring, seam close-ups, a headland filling mid-rise, and
+# the refused beach-against-ocean and beach-against-grass placements), then copies JPEG stills and
+# the state dumps next to it.
+# caffeinate keeps the display awake: a sleeping display captures every frame black, and `test -s`
+# passes on a black frame.
+COAST_SHOTS = coast-01-overview coast-02-refused-beach coast-03-headland coast-04-bay coast-05-seam-straight-headland coast-06-seam-topdown coast-07-seam-straight-headland coast-08-rise-headland-fill
+COAST_DOCS = docs/checkpoints/coast
+shots-coast:
+	mkdir -p target/shots $(COAST_DOCS)
+	rm -f target/shots/coast-*.png target/shots/coast-*.json
+	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(COAST_DOCS)/coast.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	@for n in $(COAST_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(COAST_DOCS)/$$n.jpg || exit 1; done
+	cp target/shots/coast-*.json $(COAST_DOCS)/
+	@echo "wrote $(COAST_DOCS)/"
 
 # Legend inventory tile thumbnails (PRD §5.3): every tile's distinct rotations rendered natively
 # through the play path at 4x (crates/hex-app/src/thumbs.rs), then keyed, downsampled to 96 px and

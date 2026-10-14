@@ -8,7 +8,7 @@
 use bevy::prelude::*;
 use bevy::render::view::DebandDither;
 use hex_core::{Axial, EdgeSocket, TileCatalog, TileDef};
-use hex_render::play::{PlayKit, PlayTile, PlayView};
+use hex_render::play::{PlayKit, PlayTile, PlayView, rise::ReducedMotion};
 use hex_render::{PostMode, Scenario, TiltMode};
 
 use crate::{args::Flags, capture, control::ExitRequest, game};
@@ -163,7 +163,10 @@ impl Plugin for ThumbsPlugin {
             eprintln!("hex-world: cannot prepare {RAW_DIR}: {e}");
             std::process::exit(2);
         }
+        // Thumbnails show tiles at rest: under reduced motion a rise is an instant cut, so no
+        // capture lands mid-rise (dust, a column still climbing past the frame edge).
         app.insert_resource(ClearColor(KEY))
+            .insert_resource(ReducedMotion(true))
             .insert_resource(ThumbRun::new(&catalog))
             .add_systems(
                 Update,
@@ -291,12 +294,14 @@ mod tests {
             ("river_bend", 6),
             ("river_road_bridge", 3),
             ("beach", 6),
+            ("beach_outer", 6),
+            ("beach_inner", 6),
             ("ocean", 1),
         ];
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 12 + 44);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 14 + 56);
     }
 
     #[test]

@@ -108,6 +108,22 @@
       "beach-r4.webp",
       "beach-r5.webp"
     ],
+    "beach_outer": [
+      "beach_outer-r0.webp",
+      "beach_outer-r1.webp",
+      "beach_outer-r2.webp",
+      "beach_outer-r3.webp",
+      "beach_outer-r4.webp",
+      "beach_outer-r5.webp"
+    ],
+    "beach_inner": [
+      "beach_inner-r0.webp",
+      "beach_inner-r1.webp",
+      "beach_inner-r2.webp",
+      "beach_inner-r3.webp",
+      "beach_inner-r4.webp",
+      "beach_inner-r5.webp"
+    ],
     "ocean": [
       "ocean-r0.webp",
       "ocean-r0.webp",

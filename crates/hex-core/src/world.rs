@@ -401,6 +401,7 @@ pub fn cell_seed(world_seed: u64, cell: Axial) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::socket::{Side, SocketKind};
 
     fn catalog() -> TileCatalog {
         TileCatalog::builtin().unwrap_or_else(|e| panic!("{e}"))
@@ -444,10 +445,8 @@ mod tests {
             w.legal_rotations(&c, EAST, def(&c, "road_straight")),
             vec![1, 2, 4, 5]
         );
-        assert_eq!(
-            w.legal_rotations(&c, EAST, def(&c, "beach")),
-            vec![0, 1, 4, 5]
-        );
+        // A beach edge never faces the meadow (owner O1): only its grass edges 3 and 4 may.
+        assert_eq!(w.legal_rotations(&c, EAST, def(&c, "beach")), vec![0, 5]);
         assert!(w.legal_rotations(&c, EAST, def(&c, "ocean")).is_empty());
         assert_eq!(w.legal_rotations(&c, EAST, def(&c, "meadow")).len(), 6);
     }
@@ -604,6 +603,133 @@ mod tests {
         let slot = Axial::new(1, -1);
         assert!(w.legal_rotations(&c, slot, def(&c, "ocean")).is_empty());
         assert_eq!(w.legal_rotations(&c, slot, def(&c, "forest")).len(), 6);
+    }
+
+    /// A beach east of the start meadow: coast along its world edges 2 (land on the right) and 5.
+    fn coast_world(c: &TileCatalog) -> World {
+        let mut w = World::new(1);
+        w.place(c, EAST, "beach", 0).unwrap();
+        w
+    }
+
+    /// Owner O1: across a beach edge the coast only continues the same way. (0,1) meets the
+    /// beach's edge 2 (land on the right) with its own edge 5, which needs the land on its left;
+    /// the mirrored beach puts its land end against the sea end and is refused.
+    #[test]
+    fn coast_continues_only_the_same_way() {
+        let c = catalog();
+        let mut w = coast_world(&c);
+        let next = Axial::new(0, 1);
+        let beach = def(&c, "beach");
+        assert_eq!(w.legal_rotations(&c, next, beach), vec![0]);
+        assert_eq!(beach.edge(5, 3).kind, SocketKind::Beach);
+        assert_eq!(
+            w.edge_status(&c, next, beach, 3)[5],
+            EdgeStatus::Incompatible
+        );
+        assert_eq!(
+            w.place(&c, next, "beach", 3),
+            Err(PlaceError::Incompatible(vec![4, 5]))
+        );
+        w.place(&c, next, "beach", 0).unwrap();
+    }
+
+    /// Owner O1: beach edges never meet grass or ocean edges, under any rotation.
+    #[test]
+    fn beach_never_meets_grass_or_ocean() {
+        let c = catalog();
+        let mut w = coast_world(&c);
+        // A beach edge (local 5) against the meadow.
+        assert_eq!(
+            w.place(&c, Axial::new(-1, 0), "beach", 1),
+            Err(PlaceError::Incompatible(vec![0]))
+        );
+        // Grass against the beach's edge 2, ocean against its edge 5.
+        assert_eq!(
+            w.place(&c, Axial::new(0, 1), "meadow", 0),
+            Err(PlaceError::Incompatible(vec![5]))
+        );
+        assert_eq!(
+            w.place(&c, Axial::new(2, -1), "ocean", 0),
+            Err(PlaceError::Incompatible(vec![2]))
+        );
+        for id in ["meadow", "forest", "ocean"] {
+            assert!(
+                w.legal_rotations(&c, Axial::new(2, -1), def(&c, id))
+                    .is_empty(),
+                "{id} beside a beach edge"
+            );
+        }
+        // Every coast tile at every rotation fits beside the meadow only with a grass edge there.
+        let lone = World::new(1);
+        for id in ["beach", "beach_outer", "beach_inner"] {
+            let d = def(&c, id);
+            for k in 0..6 {
+                let facing = d.edge(3, k).kind;
+                assert_eq!(
+                    lone.fits(&c, EAST, d, k),
+                    facing == SocketKind::Grass,
+                    "{id} r{k} shows {facing:?} to the meadow"
+                );
+            }
+        }
+    }
+
+    /// Where the coast goes after (0,1), next to the beach east of the meadow: a straight beach
+    /// carries it on along the same line, the headland turns it one edge toward the land (round
+    /// the meadow) and the bay one edge away from it. Each has exactly one legal rotation.
+    #[test]
+    fn corners_turn_the_coast_toward_and_away_from_the_land() {
+        let c = catalog();
+        let w = coast_world(&c);
+        let next = Axial::new(0, 1);
+        for (id, rotation, leaves_by) in [
+            ("beach", 0, 2),
+            ("beach_outer", 1, 3),
+            ("beach_inner", 0, 1),
+        ] {
+            let d = def(&c, id);
+            assert_eq!(w.legal_rotations(&c, next, d), vec![rotation], "{id}");
+            // The coast enters by the edge with the land on its left (world 5, facing the beach)
+            // and leaves by the one with the land on its right.
+            let side = |s: Side| -> Vec<u8> {
+                (0..6)
+                    .filter(|&e| d.edge(e, rotation).land == Some(s))
+                    .collect()
+            };
+            assert_eq!(side(Side::Left), vec![5], "{id}");
+            assert_eq!(side(Side::Right), vec![leaves_by], "{id}");
+        }
+    }
+
+    /// Six headlands close a coast round the start meadow (an island), and six bays close one
+    /// round an ocean (a lake). Every seam in each ring is a beach-to-beach join.
+    #[test]
+    fn rings_of_corners_close_an_island_and_a_lake() {
+        let c = catalog();
+        let mut w = World::new(1);
+        for d in 0..6u8 {
+            // Grass edge 3 faces the meadow across world edge d + 3.
+            w.place(&c, Axial::ORIGIN.neighbor(d), "beach_outer", d)
+                .unwrap_or_else(|e| panic!("headland {d}: {e}"));
+        }
+        assert_eq!(w.tiles().len(), 7);
+
+        let mut w = World::new(1);
+        let lake = Axial::new(2, 0);
+        for d in [3, 4, 5, 0, 1, 2] {
+            // Ocean edge 0 faces the lake across world edge d + 3.
+            w.place(&c, lake.neighbor(d), "beach_inner", (d + 3) % 6)
+                .unwrap_or_else(|e| panic!("bay {d}: {e}"));
+        }
+        w.place(&c, lake, "ocean", 0).unwrap();
+        assert_eq!(w.tiles().len(), 8);
+        // A gap in the ring takes only the bay that closes it, at one rotation.
+        let gap = lake.neighbor(1);
+        w.bulldoze(gap).unwrap();
+        let fitting: Vec<&str> = w.inventory(&c, gap).iter().map(|d| d.id.as_str()).collect();
+        assert_eq!(fitting, ["beach_inner"]);
+        assert_eq!(w.legal_rotations(&c, gap, def(&c, "beach_inner")), vec![4]);
     }
 
     fn line_of_three(c: &TileCatalog) -> World {

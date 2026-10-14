@@ -36,17 +36,41 @@ The prototype's open sea reaches 6 m deep and reads deeper blue than 2.6 m will.
 - **Bank tuck.** The engine's water strip runs 5 m either side of the centre line, so at `d = 5` the bank must stand at least 0.5 m above the water. The profile gives 0.71 m.
 - **Width evidence.** The approved prototype river is 6 m wide (half-width 3), widening to 10 m at the mouth. 8 m sits inside that range, the road (6 m) bridges it, and the 13.66 m channel leaves at least 7 m of meadow to the tile corners, so **keep 8 m**. No change to `data/` is proposed.
 
-## 3. Coast (`beach`)
+## 3. Coast (`beach`, `beach_outer`, `beach_inner`)
 
-- **Seaward axis.** The unit sum of the ocean edges' normals minus the grass edges' normals: 30 degrees for `beach` (ocean on 0-1, grass on 3-4). `s` is the distance along it from the tile centre. The ocean edges lie at s in [8, 16], the grass edges at s in [-16, -8], and the beach edges 2 and 5 run from s = -8 (landward corner) to s = +8 (seaward corner).
-- **Profile** (y as a function of s):
+Owner decision O1 (2026-10-13): beach sockets are directional, and two coast-corner tiles join the straight beach. This section is the bed the coast kit pieces must match: `beach_base`/`beach_center`, `beach_outer_base`/`beach_outer_center` and `beach_inner_base`/`beach_inner_center` (all pending in `data/pending-pieces.ron`).
+
+- **Sockets.** Every beach edge names the side its land is on, looking out across the edge from its own tile: `land: Right` puts the land at the corner the edge shares with the next edge clockwise (`e + 1`), `Left` at the corner it shares with `e - 1` (`data/sockets.ron` `directional: [Beach]`). A beach edge meets only a beach edge with the opposite side, so both tiles put their land corner on the same point, and it never meets grass, forest or ocean. Every legal coast seam therefore continues the same coast, and an ocean or grass neighbour only ever touches an ocean or grass edge.
+
+| Tile | Edges 0-5 | Land right | Land left | Coastline (rotation 0) |
+|---|---|---|---|---|
+| `beach` (straight) | O O B G G B | 2 | 5 | Straight line through the centre along the edge-2/edge-5 axis, sea toward 30 degrees |
+| `beach_outer` (headland) | O O B G B O | 2 | 4 | 24 m arc about C = (-27.713, 0), two apothems past grass edge 3, land inside |
+| `beach_inner` (bay) | O B G G G B | 1 | 5 | 24 m arc about C = (27.713, 0), two apothems past ocean edge 0, sea inside |
+
+- **Seaward distance `s`.** The signed distance from the tile's coastline, positive out to sea, with `p` the tile-local position (rotation turns the coastline with the tile). The coastline is the waterline through the midpoints of the two beach edges, crossing each at a right angle:
+  - `beach`: `s = p · (cos 30°, sin 30°)`.
+  - `beach_outer`: `s = |p - C| - 24`.
+  - `beach_inner`: `s = 24 - |p - C|`.
+  - The arc's centre lies on both beach edges' lines (they meet two apothems out, 27.713 m from the tile centre) and the radius is 1.5 R = 24 m, the distance from there to each beach-edge midpoint. So along every beach edge `s` is the distance from the edge midpoint toward the sea corner, linear from -8 at the land corner through 0 at the midpoint to +8 at the sea corner, on all three tiles. This is what makes beds meet across every legal beach seam.
+  - Ocean edges lie at `s >= 8` and grass edges at `s <= -8`. The tight spots are the bay's ocean edge (8 at its corners, 10.14 at its midpoint), the headland's ocean edges next to a beach edge (8 at the shared corner) and the headland's grass edge (-8 at its corners, -10.14 at its midpoint).
+  - The gradient of `s` along a beach edge is the edge direction on all three tiles, so the bed's slope across the seam matches too, not only its height.
+  - The engine derives the coastline from the edge kinds (beach edges and the grass beside them), never from the `land` sides, so `coast_beds_match_across_every_legal_beach_seam` in `water/tiles.rs` checks the sides against the geometry: for all 3 x 3 tile pairs, every rotation pair the sockets accept across a beach edge (108) has matching beds, depth and shore distance along the whole edge, and every beach-to-beach pairing they refuse (108) steps by the full 4 m.
+- **Profile** (y as a function of s, the same on all three tiles):
   - `s <= -8`: 0.0 (grass level)
   - `-8 < s < 0`: `-1.4 + 1.4 t (2 - t)` with `t = s / -8`. This is the look-dev beach curve over 8 m instead of 12, and it meets the grass with zero slope (0.35 m/m at the waterline).
-  - `s = 0`: -1.4, the waterline through the tile centre, along the edge-2/edge-5 axis
+  - `s = 0`: -1.4, the waterline: the coastline itself, through both beach-edge midpoints
   - `0 <= s <= 3`: the shelf, -0.12 m/m (the look-dev offshore slope) to -1.76
   - `3 < s < 8`: drop to the ocean bed, `-1.76 - 2.24 * smoothstep(3, 8, s)`
   - `s >= 8`: -4.0
-  - The beach width (8 m) and shelf length (3 m) *may move* with the look check.
+  - Spot values (y): s = -8: 0.0; -6: -0.09; -4: -0.35; -2: -0.79; 0: -1.40; 1.5: -1.58; 3: -1.76; 4: -1.99; 5.5: -2.88; 7: -3.77; 8: -4.0.
+  - The water is shallower than 2.5 m for `s < 7.36`.
+  - The beach width (8 m) and shelf length (3 m) *may move* with the look check. Moving either moves the profile on all three tiles together.
+- **Tolerances for the coast kit pieces** (the general rules at the top, applied to the coast):
+  - **Border ring:** exactly on the profile. Beach edges carry the profile at `s` = distance from the edge midpoint toward the sea corner, grass edges sit at y = 0 and ocean edges at y = -4.0.
+  - **Where `s < 7.36`** (the beach slope, the waterline and the shelf): within ±0.03 m of the profile. At the waterline the slope is 0.35 m/m, so the kit's waterline lies within about 0.09 m of the coastline (the straight line or the 24 m arc). On the headland and the bay the waterline must curve with the arc, not run straight between the beach-edge midpoints. The chord between them sits 3.2 m off the arc halfway along it.
+  - **Elsewhere** (the dry beach top and grass above y = -1.0, the drop and the sea floor): within ±0.10 m. The sea floor's 0.10 m is upward only, as in §4.
+  - **Rotation:** pieces are authored at rotation 0 in the frame of the table above and turned with the tile, like every kit piece. The headland and the bay have no mirror image in the catalog. Do not mirror one to make the other: the bay's arc bends around the sea, the headland's around the land.
 - **Wet band.** The placeholder bed's shader darkens and glosses sand up to 0.32-0.40 m above the water (y -1.4 to about -1.0) and follows the live swash run-up: `0.22 * swash`, from -0.09 to +0.22 m, only where the water is shallower than 2.5 m. A kit beach on `KitMaterial` does not get the live run-up line. That is open: either a static wet band baked into the kit beach's albedo and roughness up to y = -1.0, or a later hook.
 
 ## 4. Ocean (`ocean`)
@@ -66,8 +90,8 @@ Bed requirements:
 - **Opaque and in the depth prepass.** Water is not in the prepass and reads the prepass depth as its bed (refraction, absorption, foam, caustics). A bed that skips the prepass breaks all of these.
 - **`KitMaterial` only, with no new sampled texture.** Next to refracting water the kit forward pipeline samples exactly 16 textures, WebGPU's baseline (ADR 0002, smoke case `water_kit`), so there is no headroom.
 - **River tiles need a channel base.** River tiles name `meadow_base` as their base. Its cap covers the whole hex at y in [-0.25, 0] and would bury the channel. The river family must ship a base with the channel cut (or a centre piece that is the whole cap) and update `base` in the river tiles. Until then the engine skips the base and draws the placeholder bed.
-- **When the engine switches to the kit.** It stops drawing the placeholder bed once the tile's centre piece is in `assets/kit/manifest.json`, and from then on it draws `base` and the centre from the kit like any other tile. If `river_*_center` reaches the manifest while the river tiles still name `meadow_base`, the meadow cap buries the channel. The manifest entry and the `base` change in `data/tiles/river_*.ron` must land in the same commit. The same holds for `beach_center` with `beach_base` and `ocean_center` with `ocean_base`: a base that is not the bed covers the water.
-- **What decides it is water.** A tile with a River network is a river tile. A tile with Ocean on every edge is ocean. A tile with some Ocean edges is a coast. Only these tiles get water surfaces and cut faces.
+- **When the engine switches to the kit.** It stops drawing the placeholder bed once the tile's centre piece is in `assets/kit/manifest.json`, and from then on it draws `base` and the centre from the kit like any other tile. If `river_*_center` reaches the manifest while the river tiles still name `meadow_base`, the meadow cap buries the channel. The manifest entry and the `base` change in `data/tiles/river_*.ron` must land in the same commit. The same holds for each coast tile's centre with its base (`beach_center` with `beach_base`, `beach_outer_center` with `beach_outer_base`, `beach_inner_center` with `beach_inner_base`) and `ocean_center` with `ocean_base`: a base that is not the bed covers the water.
+- **What decides it is water.** A tile with a River network is a river tile. A tile with Ocean on every edge is ocean. A tile with some Ocean edges is a coast when its two beach edges form one of the three coastlines of §3. Only these tiles get water surfaces and cut faces.
 
 ## 6. Seam rules
 
@@ -78,8 +102,8 @@ Each edge's bed profile depends only on its socket, so it matches any legal neig
 | Grass, Forest | y = 0 (the `meadow_base` border ring, 16 segments per edge) |
 | River (lane) | `y = -1.4 + h(|o|)`, where `o` is the offset from the lane centre along the edge. Symmetric about the midpoint. Ring vertices sit at offsets symmetric about it, at most 0.5 m apart within 6.83 m |
 | Ocean | y = -4.0 along the whole edge |
-| Beach | The coast profile with s running from -8 at the landward corner to +8 at the seaward corner |
+| Beach | The coast profile (§3) at `s` = the distance from the edge midpoint toward the sea corner: -8 at the land corner (the side the socket's `land` names), +8 at the sea corner. The same on all three coast tiles |
 
 - The engine treats an edge as continuous water when River meets River, Ocean meets Ocean, or Beach meets Beach with their seaward corners on the same point. Anywhere else it draws a cut face on each wet side.
-- The sockets also allow **Beach against Ocean** (a beach's edge 2 or 5 against an ocean tile) and **Beach against Beach mirrored** (seaward end against landward end). Their beds step at the seam, so the engine draws cut faces there. A directional beach socket (Beach-seaward-left / -right) would make both illegal. That is a `data/sockets.ron` change for the core stream, recommended but not made here.
+- Since owner O1 the sockets refuse **Beach against Ocean**, **Beach against Grass or Forest** and **mirrored Beach against Beach** (the same land side on both tiles, so the land end meets the sea end). Every legal beach seam continues the coast with matching beds. If a mismatched seam is ever loaded anyway, the engine still draws cut faces on it.
 - River flow runs one way along each connected chain, starting from its open end with the lowest `(cell, edge)`. Placing a tile at that end can reverse a whole chain's flow. Kit pieces carry no flow direction.

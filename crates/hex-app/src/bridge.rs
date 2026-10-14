@@ -136,7 +136,7 @@ mod exports {
 
 /// The bridge contract the web UI overlay is typed against (`web/ui/src/bridge-schema.json`):
 /// command and event names with their fields, enum spellings, the `play` state keys, the tile
-/// catalog with its socket table, and legal rotations for every frontier slot of two scripted
+/// catalog with its socket table, and legal rotations for every frontier slot of four scripted
 /// worlds (the overlay's fit rules are checked against them). `make ui-schema` rewrites the file;
 /// `web/ui/test/bridge-sync.test.ts` checks the TypeScript side against it.
 #[cfg(test)]
@@ -408,7 +408,18 @@ mod schema {
         let tiles: Vec<Value> = c
             .tiles()
             .iter()
-            .map(|t| json!({ "id": t.id, "edges": t.edges.iter().map(|e| kind_name(e.kind)).collect::<Vec<_>>() }))
+            .map(|t| {
+                json!({
+                    "id": t.id,
+                    "edges": t.edges.iter().map(|e| kind_name(e.kind)).collect::<Vec<_>>(),
+                    "land": t.edges.iter().map(|e| serde_json::to_value(e.land).unwrap()).collect::<Vec<_>>(),
+                })
+            })
+            .collect();
+        let directional: Vec<String> = SocketKind::ALL
+            .iter()
+            .filter(|&&k| c.sockets().directional(k))
+            .map(|&k| kind_name(k))
             .collect();
         let compatible: BTreeMap<String, Vec<String>> = SocketKind::ALL
             .iter()
@@ -421,8 +432,28 @@ mod schema {
                 (kind_name(a), ok)
             })
             .collect();
-        json!({ "start": hex_core::START_TILE, "tiles": tiles, "compatible": compatible })
+        json!({
+            "start": hex_core::START_TILE,
+            "tiles": tiles,
+            "compatible": compatible,
+            "directional": directional,
+        })
     }
+
+    /// A coast part-built (owner O1): four meadows, then a straight beach, a headland and a bay,
+    /// so the frontier asks for beach edges with the land on either side.
+    const COAST_PART_BUILT: &str = r#"[
+        {"cmd": "select_tile", "id": "meadow"},
+        {"cmd": "place", "q": 0, "r": 1},
+        {"cmd": "place", "q": 1, "r": 1},
+        {"cmd": "place", "q": -1, "r": 0},
+        {"cmd": "select_tile", "id": "beach"},
+        {"cmd": "place", "q": 0, "r": -1},
+        {"cmd": "select_tile", "id": "beach_outer"},
+        {"cmd": "place", "q": 1, "r": -1},
+        {"cmd": "select_tile", "id": "beach_inner"},
+        {"cmd": "place", "q": 1, "r": 0}
+    ]"#;
 
     /// Legal rotations of every catalog tile at every frontier slot of the world a script leaves.
     fn parity(c: &TileCatalog, script: &str) -> Value {
@@ -480,10 +511,12 @@ mod schema {
     fn parity_worlds() -> Value {
         let c = TileCatalog::builtin().unwrap();
         json!({
-            "about": "Legal rotations of every tile at every frontier slot of two scripted worlds, from hex-core (make ui-schema). web/ui/test/rules.test.ts checks the overlay's fit rules against it.",
+            "about": "Legal rotations of every tile at every frontier slot of four scripted worlds, from hex-core (make ui-schema). web/ui/test/rules.test.ts checks the overlay's fit rules against it.",
             "worlds": [
                 parity(&c, include_str!("../../../docs/checkpoints/play/play.json")),
                 parity(&c, include_str!("../../../docs/checkpoints/water-play/water-play.json")),
+                parity(&c, COAST_PART_BUILT),
+                parity(&c, include_str!("../../../docs/checkpoints/coast/coast.json")),
             ],
         })
     }

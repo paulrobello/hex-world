@@ -1,4 +1,6 @@
-// Coast runs along edges 2 and 5: ocean on 0-1, grass on 3-4.
+// Straight coast along edges 2 and 5: ocean on 0-1, grass on 3-4. Looking out from the tile, edge 2
+// has the land on its right (the corner it shares with grass edge 3) and edge 5 on its left (the
+// corner it shares with grass edge 4).
 (
     id: "beach",
     biome: Beach,
@@ -6,10 +8,10 @@
     edges: (
         (kind: Ocean),
         (kind: Ocean),
-        (kind: Beach),
+        (kind: Beach, land: Some(Right)),
         (kind: Grass),
         (kind: Grass),
-        (kind: Beach),
+        (kind: Beach, land: Some(Left)),
     ),
     center: Some("beach_center"),
 )

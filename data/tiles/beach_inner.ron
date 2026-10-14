@@ -1,0 +1,16 @@
+// Bay (owner O1): the coast turns inward around ocean edge 0. Grass on 2, 3 and 4. Edge 1 has the
+// land on its right (the corner it shares with grass edge 2), edge 5 on its left (grass edge 4).
+(
+    id: "beach_inner",
+    biome: Beach,
+    base: "beach_inner_base",
+    edges: (
+        (kind: Ocean),
+        (kind: Beach, land: Some(Right)),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Beach, land: Some(Left)),
+    ),
+    center: Some("beach_inner_center"),
+)

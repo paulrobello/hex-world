@@ -274,7 +274,8 @@ impl TileDef {
 
     /// Rule problems in this definition, each prefixed with the tile id. Empty means valid.
     ///
-    /// Checks the lane contract (a lane exactly on lane-kind edges, equal to the table's lane),
+    /// Checks the lane contract (a lane exactly on lane-kind edges, equal to the table's lane), the
+    /// land side (exactly on directional edges),
     /// network endpoints (each lane edge is the endpoint of exactly one segment of the matching
     /// kind, and no endpoint sits on a non-lane edge or names an undeclared node) and the rise
     /// length.
@@ -290,6 +291,13 @@ impl TileDef {
                 )),
                 (Some(_), None) => issue(format!("edge {e} {:?} needs a lane", edge.kind)),
                 (None, Some(_)) => issue(format!("edge {e} {:?} cannot carry a lane", edge.kind)),
+                _ => {}
+            }
+            match (sockets.directional(edge.kind), edge.land) {
+                (true, None) => issue(format!("edge {e} {:?} needs a land side", edge.kind)),
+                (false, Some(_)) => {
+                    issue(format!("edge {e} {:?} cannot carry a land side", edge.kind))
+                }
                 _ => {}
             }
         }
@@ -365,7 +373,7 @@ impl TileDef {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::socket::{LaneSpec, SocketKind::*};
+    use crate::socket::{LaneSpec, Side, SocketKind::*};
 
     fn sockets() -> SocketTable {
         SocketTable::builtin().unwrap()
@@ -518,6 +526,27 @@ mod tests {
         });
         t.edges[2].lane = road_lane();
         assert_eq!(t.validate(&sockets()).len(), 2);
+    }
+
+    #[test]
+    fn land_side_belongs_only_on_directional_edges() {
+        let mut t = bend60();
+        t.edges[2] = EdgeSocket::new(Beach);
+        t.edges[3].land = Some(Side::Left);
+        let issues = t.validate(&sockets());
+        assert!(
+            issues
+                .iter()
+                .any(|i| i.contains("edge 2 Beach needs a land side")),
+            "{issues:?}"
+        );
+        assert!(
+            issues
+                .iter()
+                .any(|i| i.contains("edge 3 Grass cannot carry a land side")),
+            "{issues:?}"
+        );
+        assert_eq!(issues.len(), 2);
     }
 
     #[test]

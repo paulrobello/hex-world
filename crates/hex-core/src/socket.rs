@@ -1,4 +1,4 @@
-//! Edge sockets and the socket compatibility table (PRD §5.2, plan F2/F3).
+//! Edge sockets and the socket compatibility table (PRD §5.2, plan F2/F3, owner O1).
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -49,6 +49,26 @@ impl LaneSpec {
     }
 }
 
+/// Which side of a directional edge the land is on, looking out across the edge from its own tile
+/// (PRD §5.2, owner O1). `Right` puts the land at the corner the edge shares with the next edge
+/// clockwise (`e + 1`), `Left` at the corner it shares with `e - 1`. The two tiles at a seam look in
+/// opposite directions, so a coast continues the same way only where `Left` meets `Right`. A proper
+/// rotation never changes the side.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Side {
+    Left,
+    Right,
+}
+
+impl Side {
+    pub fn opposite(self) -> Side {
+        match self {
+            Side::Left => Side::Right,
+            Side::Right => Side::Left,
+        }
+    }
+}
+
 /// Edge cross-section shape. Only `Flat` is used in the MVP (D5); `Cliff` and `Ramp` arrive in P4.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EdgeProfile {
@@ -64,6 +84,9 @@ pub struct EdgeSocket {
     pub kind: SocketKind,
     #[serde(default)]
     pub lane: Option<LaneSpec>,
+    /// The land side of a directional edge (`data/sockets.ron` `directional`), `None` elsewhere.
+    #[serde(default)]
+    pub land: Option<Side>,
     /// Edge height level; 0 for every MVP edge.
     #[serde(default)]
     pub height: u8,
@@ -76,6 +99,7 @@ impl EdgeSocket {
         Self {
             kind,
             lane: None,
+            land: None,
             height: 0,
             profile: EdgeProfile::Flat,
         }
@@ -92,6 +116,9 @@ pub struct SocketTableFile {
     /// Edge piece derived for an edge of this kind when a tile does not list its own (PRD §6).
     #[serde(default)]
     pub edge_pieces: BTreeMap<SocketKind, KitRef>,
+    /// Kinds whose edges carry a land [`Side`] and meet only the opposite side (owner O1).
+    #[serde(default)]
+    pub directional: Vec<SocketKind>,
 }
 
 /// A validated, symmetric socket compatibility table.
@@ -173,14 +200,26 @@ impl SocketTable {
     }
 
     /// Whether two edges may meet across a seam: compatible kinds, matching lanes (both absent, or
-    /// both present with equal width and mirrored offset, see [`LaneSpec`]) and a legal height step.
+    /// both present with equal width and mirrored offset, see [`LaneSpec`]), opposite land sides on
+    /// directional edges (both absent, or `Left` against `Right`, see [`Side`]) and a legal height
+    /// step.
     pub fn edges_compatible(&self, a: &EdgeSocket, b: &EdgeSocket) -> bool {
         let lanes = match (&a.lane, &b.lane) {
             (None, None) => true,
             (Some(x), Some(y)) => x.meets(y),
             _ => false,
         };
-        self.kinds_compatible(a.kind, b.kind) && lanes && heights_compatible(a, b)
+        let sides = match (a.land, b.land) {
+            (None, None) => true,
+            (Some(x), Some(y)) => x == y.opposite(),
+            _ => false,
+        };
+        self.kinds_compatible(a.kind, b.kind) && lanes && sides && heights_compatible(a, b)
+    }
+
+    /// Whether edges of `kind` are directional: each carries a land [`Side`].
+    pub fn directional(&self, kind: SocketKind) -> bool {
+        self.file.directional.contains(&kind)
     }
 
     /// The canonical lane for a lane kind, or `None` for kinds that never carry one.
@@ -216,21 +255,26 @@ mod tests {
     use super::SocketKind::*;
     use super::*;
 
-    /// Plan F2, as unordered pairs.
-    const F2_LEGAL: [(SocketKind, SocketKind); 9] = [
+    /// Plan F2 with owner O1 (beach never meets grass or ocean), as unordered pairs.
+    const F2_LEGAL: [(SocketKind, SocketKind); 7] = [
         (Grass, Grass),
         (Grass, Forest),
         (Forest, Forest),
         (Road, Road),
         (River, River),
         (Beach, Beach),
-        (Beach, Grass),
-        (Beach, Ocean),
         (Ocean, Ocean),
     ];
 
     fn table() -> SocketTable {
         SocketTable::builtin().expect("data/sockets.ron loads")
+    }
+
+    fn beach(land: Side) -> EdgeSocket {
+        EdgeSocket {
+            land: Some(land),
+            ..EdgeSocket::new(Beach)
+        }
     }
 
     fn lane(kind: SocketKind, offset: f32, width: f32) -> EdgeSocket {
@@ -297,14 +341,51 @@ mod tests {
     fn table_missing_a_kind_is_rejected() {
         let mut file = table().file().clone();
         file.compatible.remove(&Ocean);
-        file.compatible
-            .get_mut(&Beach)
-            .unwrap()
-            .retain(|k| *k != Ocean);
         assert_eq!(
             SocketTable::new(file),
             Err(SocketTableError::MissingKind(Ocean))
         );
+    }
+
+    #[test]
+    fn only_beach_is_directional() {
+        let t = table();
+        for k in SocketKind::ALL {
+            assert_eq!(t.directional(k), k == Beach, "{k:?}");
+        }
+    }
+
+    /// A coast continues the same way: the land sides are named looking out from each tile, so
+    /// the two tiles at a seam see the same land corner on opposite hands.
+    #[test]
+    fn beach_meets_only_the_opposite_land_side() {
+        let t = table();
+        assert!(t.edges_compatible(&beach(Side::Left), &beach(Side::Right)));
+        assert!(t.edges_compatible(&beach(Side::Right), &beach(Side::Left)));
+        assert!(!t.edges_compatible(&beach(Side::Left), &beach(Side::Left)));
+        assert!(!t.edges_compatible(&beach(Side::Right), &beach(Side::Right)));
+        assert!(!t.edges_compatible(&beach(Side::Left), &EdgeSocket::new(Beach)));
+    }
+
+    #[test]
+    fn beach_never_meets_grass_or_ocean_on_either_side() {
+        let t = table();
+        for side in [Side::Left, Side::Right] {
+            for k in [Grass, Forest, Road, River, Ocean] {
+                let other = EdgeSocket {
+                    land: Some(side.opposite()),
+                    ..EdgeSocket::new(k)
+                };
+                assert!(
+                    !t.edges_compatible(&beach(side), &EdgeSocket::new(k)),
+                    "{k:?}"
+                );
+                assert!(
+                    !t.edges_compatible(&beach(side), &other),
+                    "{k:?} with a side"
+                );
+            }
+        }
     }
 
     #[test]
@@ -368,6 +449,13 @@ mod tests {
         };
         assert!(!t.edges_compatible(&EdgeSocket::new(Grass), &high));
         assert!(t.edges_compatible(&high, &high.clone()));
+    }
+
+    #[test]
+    fn beach_socket_reads_its_land_side_from_ron() {
+        let e: EdgeSocket = ron::from_str("(kind: Beach, land: Some(Right))").unwrap();
+        assert_eq!(e, beach(Side::Right));
+        assert_eq!(Side::Right.opposite(), Side::Left);
     }
 
     #[test]

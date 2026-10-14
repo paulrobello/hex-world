@@ -1,15 +1,28 @@
 // The placement rules the sheet reads (PRD §4.1–4.2), from the Rust catalog and socket table in
 // bridge-schema.json. hex-core stays the authority: test/rules.test.ts checks legalRotations
-// against hex-core's own answers for every slot of two scripted worlds (rules-parity.json).
+// against hex-core's own answers for every slot of four scripted worlds (rules-parity.json).
 import type { Cell, PlayTile, SocketKind } from "./bridge.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
+
+/**
+ * Which side of a directional (beach) edge the land is on, looking out across the edge from its own
+ * tile: `Right` is the corner shared with edge e + 1 (hex-core `Side`). Across a seam the two tiles
+ * look opposite ways, so a coast carries on only where `Left` meets `Right` (owner O1).
+ */
+export type Side = "Left" | "Right";
 
 export interface TileDef {
   id: string;
   edges: SocketKind[];
+  /** The land side of each directional edge, null on the others (hex-core `EdgeSocket::land`). */
+  land: (Side | null)[];
 }
 
-export const TILES: TileDef[] = schema.catalog.tiles.map((t) => ({ id: t.id, edges: t.edges as SocketKind[] }));
+export const TILES: TileDef[] = schema.catalog.tiles.map((t) => ({
+  id: t.id,
+  edges: t.edges as SocketKind[],
+  land: t.land as (Side | null)[],
+}));
 export const START_TILE: string = schema.catalog.start;
 const COMPAT = schema.catalog.compatible as Record<SocketKind, SocketKind[]>;
 const BY_ID = new Map(TILES.map((t) => [t.id, t]));
@@ -38,35 +51,65 @@ export function rotated(def: TileDef, k: number): SocketKind[] {
   return [0, 1, 2, 3, 4, 5].map((w) => def.edges[(w - k + 12) % 6]!);
 }
 
+/** World-edge land sides of a tile turned by k (a turn never changes a side). */
+export function rotatedLand(def: TileDef, k: number): (Side | null)[] {
+  return [0, 1, 2, 3, 4, 5].map((w) => def.land[(w - k + 12) % 6]!);
+}
+
+/** Equal for two rotations exactly when their world-edge sockets are equal. */
+const orientation = (def: TileDef, k: number): string => `${rotated(def, k).join()}|${rotatedLand(def, k).join()}`;
+
+/**
+ * Whether my edge may meet the edge it faces (hex-core `edges_compatible` for MVP edges): the kinds
+ * are compatible, and directional edges have opposite land sides (both absent, or Left on Right).
+ */
+export const meets = (theirs: SocketKind, theirLand: Side | null, mine: SocketKind, myLand: Side | null): boolean =>
+  compatible(theirs, mine) && (theirLand === null || myLand === null ? theirLand === myLand : theirLand !== myLand);
+
 export type TileMap = Map<string, PlayTile>;
 export const tileMap = (tiles: readonly PlayTile[]): TileMap => new Map(tiles.map((t) => [cellKey(t), t]));
 
-/** What each world edge of `slot` touches: the neighbour's facing socket, or null. */
-export type Needs = (SocketKind | null)[];
+/** The socket kinds around a slot, by world edge, null where nothing touches it. */
+export type Kinds = (SocketKind | null)[];
+
+/** What each world edge of a slot touches: the neighbour's facing socket kind and its land side. */
+export interface Needs {
+  kinds: Kinds;
+  land: (Side | null)[];
+}
+
 export function needsAt(slot: Cell, tiles: TileMap): Needs {
-  return [0, 1, 2, 3, 4, 5].map((w) => {
+  const facing = [0, 1, 2, 3, 4, 5].map((w) => {
     const n = tiles.get(cellKey(neighbor(slot, w)));
     const def = n && tileDef(n.tile);
-    return def ? rotated(def, n.rotation)[(w + 3) % 6]! : null;
+    const back = (w + 3) % 6;
+    return def ? { kind: rotated(def, n.rotation)[back]!, land: rotatedLand(def, n.rotation)[back]! } : null;
   });
+  return { kinds: facing.map((f) => f?.kind ?? null), land: facing.map((f) => f?.land ?? null) };
 }
 
 export const isSlot = (c: Cell, tiles: TileMap): boolean =>
   !tiles.has(cellKey(c)) && [0, 1, 2, 3, 4, 5].some((w) => tiles.has(cellKey(neighbor(c, w))));
 
-const clashes = (r: SocketKind[], needs: Needs): number[] =>
-  [0, 1, 2, 3, 4, 5].filter((w) => needs[w] != null && !compatible(needs[w]!, r[w]!));
+/** World edges where `def` turned by k does not meet what the slot touches. */
+function clashes(def: TileDef, k: number, needs: Needs): number[] {
+  const [r, l] = [rotated(def, k), rotatedLand(def, k)];
+  return [0, 1, 2, 3, 4, 5].filter((w) => {
+    const theirs = needs.kinds[w];
+    return theirs != null && !meets(theirs, needs.land[w] ?? null, r[w]!, l[w]!);
+  });
+}
 
 /** Rotations 0..6 at which `def` fits a slot with these needs, ascending (hex-core legal_rotations). */
 export function legalRotations(def: TileDef, needs: Needs): number[] {
-  return [0, 1, 2, 3, 4, 5].filter((k) => clashes(rotated(def, k), needs).length === 0);
+  return [0, 1, 2, 3, 4, 5].filter((k) => clashes(def, k, needs).length === 0);
 }
 
 /** The first rotation of each distinct orientation among `ks` (equal world-edge sockets count once). */
 export function distinctRotations(def: TileDef, ks: readonly number[]): number[] {
   const seen = new Set<string>();
   return ks.filter((k) => {
-    const key = rotated(def, k).join();
+    const key = orientation(def, k);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -91,15 +134,22 @@ const accepting = (n: SocketKind): SocketKind[] =>
 
 /** Why a tile cannot meet a socket kind at all. */
 function missing(n: SocketKind): string {
-  if (n === "River" || n === "Road") return `Needs a ${lower(n)} edge to meet the ${lower(n)}.`;
+  if (n === "River" || n === "Road" || n === "Beach") return `Needs a ${lower(n)} edge to meet the ${lower(n)}.`;
   return `Needs ${listOr(accepting(n).map(lower))} to meet the ${n === "Ocean" ? "sea" : lower(n)}.`;
 }
+
+/** Where a beach would end: "the sea" for ocean, else the kind ("the grass"). */
+const end = (k: SocketKind): string => (k === "Ocean" ? "the sea" : `the ${lower(k)}`);
 
 function clashPhrase(mine: SocketKind, theirs: SocketKind): string {
   if (mine === "Road") return `Its road would dead-end into the ${lower(theirs)}.`;
   if (mine === "River") return `Its river would run into the ${lower(theirs)}.`;
   if (theirs === "Road") return `The road here would dead-end into its ${lower(mine)}.`;
   if (theirs === "River") return `The river here would run into its ${lower(mine)}.`;
+  // Beach meets only beach, with the land on opposite sides (owner O1): beach on beach is a side clash.
+  if (mine === "Beach" && theirs === "Beach") return "The coast here runs the other way.";
+  if (mine === "Beach") return `Its beach would end at ${end(theirs)}.`;
+  if (theirs === "Beach") return `The beach here would end at its ${mine === "Ocean" ? "sea" : lower(mine)}.`;
   if (mine === "Ocean") return `Ocean can't meet ${lower(theirs)}. Coasts need a beach.`;
   if (theirs === "Ocean") return `${KIND_NAME[mine]} can't meet the ocean. Coasts need a beach.`;
   return `${KIND_NAME[mine]} can't meet ${lower(theirs)}.`;
@@ -122,13 +172,13 @@ export function fit(def: TileDef, needs: Needs): Fit {
   let bestK = 0;
   let best = 7;
   for (let k = 0; k < 6; k++) {
-    const n = clashes(rotated(def, k), needs).length;
+    const n = clashes(def, k, needs).length;
     if (n < best) [best, bestK] = [n, k];
   }
-  const kinds = [...new Set(needs.filter((n): n is SocketKind => n != null))];
+  const kinds = [...new Set(needs.kinds.filter((n): n is SocketKind => n != null))];
   const lacking = kinds.find((n) => !def.edges.some((e) => compatible(n, e)));
-  const w = clashes(rotated(def, bestK), needs)[0] ?? 0;
-  const why = lacking ? missing(lacking) : clashPhrase(rotated(def, bestK)[w]!, needs[w]!);
+  const w = clashes(def, bestK, needs)[0] ?? 0;
+  const why = lacking ? missing(lacking) : clashPhrase(rotated(def, bestK)[w]!, needs.kinds[w]!);
   return { ok: false, legal, distinct: [], why, bestK };
 }
 
@@ -141,19 +191,15 @@ export function fitMeta(def: TileDef, f: Fit): string {
 const LINE_ORDER: SocketKind[] = ["River", "Road", "Ocean", "Beach", "Forest", "Grass"];
 
 /** What the slot key prints: lanes first ("River on one edge"), then what may sit beside them. */
-export function needLines(needs: Needs): { kind: SocketKind; text: string }[] {
+export function needLines(needs: Kinds): { kind: SocketKind; text: string }[] {
   const kinds = needs.filter((n): n is SocketKind => n != null);
   const uniq = LINE_ORDER.filter((k) => kinds.includes(k));
   const hasLane = uniq.some((k) => k === "Road" || k === "River");
-  const hasRiver = uniq.includes("River");
   return uniq.map((n) => {
     const count = kinds.filter((x) => x === n).length;
     const where = count === 1 ? "on one edge" : `on ${count} edges`;
     if (n === "Road" || n === "River") return { kind: n, text: `${KIND_NAME[n]} ${where}` };
-    // A beach can no longer sit beside a river (directional beach sockets, PRD §5.2), so the key
-    // never offers it there, ahead of the socket table catching up.
-    const accepts = accepting(n).filter((k) => !(hasRiver && k === "Beach"));
-    return { kind: n, text: `${cap(listOr(accepts.map(lower)))} ${hasLane ? "beside it" : where}` };
+    return { kind: n, text: `${cap(listOr(accepting(n).map(lower)))} ${hasLane ? "beside it" : where}` };
   });
 }
 
@@ -167,7 +213,7 @@ const CARRY: Record<SocketKind, string> = {
 };
 
 /** Why nothing fits a slot: two of its needs no single tile meets together, when there are two. */
-export function nothingFitsWhy(needs: Needs): string {
+export function nothingFitsWhy(needs: Kinds): string {
   const kinds = LINE_ORDER.filter((k) => needs.includes(k));
   const meets = (t: TileDef, n: SocketKind) => t.edges.some((e) => compatible(n, e));
   for (const [i, a] of kinds.entries())
@@ -187,8 +233,8 @@ export function summary(def: TileDef): string {
 /** Where the ghost's rotation sits among the distinct legal orientations ("Rotation 2 of 3"). */
 export function rotationReadout(def: TileDef, legal: readonly number[], k: number): { index: number; count: number } {
   const distinct = distinctRotations(def, legal);
-  const key = rotated(def, k).join();
-  const index = distinct.findIndex((d) => rotated(def, d).join() === key);
+  const key = orientation(def, k);
+  const index = distinct.findIndex((d) => orientation(def, d) === key);
   return { index: index < 0 ? 0 : index, count: distinct.length };
 }
 
@@ -198,7 +244,7 @@ export function rotationReadout(def: TileDef, legal: readonly number[], k: numbe
  */
 export function stepsToNextOrientation(def: TileDef, legal: readonly number[], k: number, back: boolean): number {
   if (!legal.length) return 1;
-  const key = rotated(def, k).join();
+  const key = orientation(def, k);
   let cur = k;
   for (let step = 1; step <= 6; step++) {
     let next = cur;
@@ -209,7 +255,7 @@ export function stepsToNextOrientation(def: TileDef, legal: readonly number[], k
         break;
       }
     }
-    if (rotated(def, next).join() !== key) return step;
+    if (orientation(def, next) !== key) return step;
     cur = next;
   }
   return 0;

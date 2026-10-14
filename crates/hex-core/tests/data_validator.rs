@@ -4,7 +4,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use hex_core::SocketKind::{self, *};
-use hex_core::{BUILTIN_TILES, EdgeProfile, PendingPieces, SOCKETS_RON, TileCatalog, TileDef};
+use hex_core::{
+    BUILTIN_TILES, EdgeProfile, PendingPieces, SOCKETS_RON, Side, TileCatalog, TileDef,
+};
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -41,8 +43,8 @@ fn manifest_piece_ids() -> BTreeSet<String> {
         .collect()
 }
 
-/// Plan F1: edges 0..5 for each MVP tile.
-const F1: [(&str, [SocketKind; 6]); 12] = [
+/// Plan F1 with the owner O1 coast corners (PRD §5.4): edges 0..5 for each MVP tile.
+const F1: [(&str, [SocketKind; 6]); 14] = [
     ("meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("forest", [Forest, Forest, Forest, Forest, Forest, Forest]),
     ("house_cluster", [Road, Grass, Grass, Grass, Grass, Grass]),
@@ -57,6 +59,8 @@ const F1: [(&str, [SocketKind; 6]); 12] = [
         [River, Road, Grass, River, Road, Grass],
     ),
     ("beach", [Ocean, Ocean, Beach, Grass, Grass, Beach]),
+    ("beach_outer", [Ocean, Ocean, Beach, Grass, Beach, Ocean]),
+    ("beach_inner", [Ocean, Beach, Grass, Grass, Grass, Beach]),
     ("ocean", [Ocean, Ocean, Ocean, Ocean, Ocean, Ocean]),
 ];
 
@@ -96,7 +100,7 @@ fn tile_ids_are_unique_and_rules_hold() {
 }
 
 #[test]
-fn the_twelve_f1_tiles_have_exactly_the_f1_edge_kinds() {
+fn the_fourteen_f1_tiles_have_exactly_the_f1_edge_kinds() {
     let c = catalog();
     assert_eq!(c.tiles().len(), F1.len());
     for (id, kinds) in F1 {
@@ -106,6 +110,46 @@ fn the_twelve_f1_tiles_have_exactly_the_f1_edge_kinds() {
         let got: Vec<SocketKind> = t.edges.iter().map(|e| e.kind).collect();
         assert_eq!(got, kinds, "{id}");
     }
+}
+
+/// Owner O1: every beach edge names the side its land is on, looking out across it from its own
+/// tile (`Side::Right` is the corner shared with edge `e + 1`). The land corner is shared with a
+/// grass or forest edge and the sea corner with an ocean edge, and every coast tile carries one
+/// coastline: one beach edge with the land on its right and one with it on its left.
+#[test]
+fn every_beach_edge_names_the_side_its_land_is_on() {
+    let mut coasts = 0;
+    for t in catalog().tiles() {
+        let beach: Vec<usize> = (0..6).filter(|&e| t.edges[e].kind == Beach).collect();
+        if beach.is_empty() {
+            continue;
+        }
+        coasts += 1;
+        let mut rights = 0;
+        for &e in &beach {
+            let land = t.edges[e]
+                .land
+                .unwrap_or_else(|| panic!("{} edge {e} has no land side", t.id));
+            let (land_edge, sea_edge) = match land {
+                Side::Right => ((e + 1) % 6, (e + 5) % 6),
+                Side::Left => ((e + 5) % 6, (e + 1) % 6),
+            };
+            let (l, o) = (t.edges[land_edge].kind, t.edges[sea_edge].kind);
+            assert!(
+                matches!(l, Grass | Forest),
+                "{} edge {e}: land on the {land:?} faces edge {land_edge} {l:?}",
+                t.id
+            );
+            assert_eq!(
+                o, Ocean,
+                "{} edge {e}: sea side faces edge {sea_edge}",
+                t.id
+            );
+            rights += usize::from(land == Side::Right);
+        }
+        assert_eq!((beach.len(), rights), (2, 1), "{}: one coastline", t.id);
+    }
+    assert_eq!(coasts, 3, "beach, beach_outer and beach_inner");
 }
 
 #[test]

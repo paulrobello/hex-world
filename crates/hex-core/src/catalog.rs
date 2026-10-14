@@ -9,8 +9,9 @@ use serde::{Deserialize, Serialize};
 use crate::socket::{SocketTable, SocketTableError};
 use crate::tile::{KitRef, TileDef};
 
-/// Every file in `data/tiles/`, as `(id, RON text)`, in inventory order (plan F1).
-pub const BUILTIN_TILES: [(&str, &str); 12] = [
+/// Every file in `data/tiles/`, as `(id, RON text)`, in inventory order (plan F1, with the owner O1
+/// coast corners after the straight beach, as PRD §5.4 lists them).
+pub const BUILTIN_TILES: [(&str, &str); 14] = [
     ("meadow", include_str!("../../../data/tiles/meadow.ron")),
     ("forest", include_str!("../../../data/tiles/forest.ron")),
     (
@@ -46,6 +47,14 @@ pub const BUILTIN_TILES: [(&str, &str); 12] = [
         include_str!("../../../data/tiles/river_road_bridge.ron"),
     ),
     ("beach", include_str!("../../../data/tiles/beach.ron")),
+    (
+        "beach_outer",
+        include_str!("../../../data/tiles/beach_outer.ron"),
+    ),
+    (
+        "beach_inner",
+        include_str!("../../../data/tiles/beach_inner.ron"),
+    ),
     ("ocean", include_str!("../../../data/tiles/ocean.ron")),
 ];
 

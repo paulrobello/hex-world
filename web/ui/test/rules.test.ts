@@ -9,6 +9,7 @@ import {
   fitMeta,
   isSlot,
   legalRotations,
+  meets,
   needLines,
   needsAt,
   nothingFitsWhy,
@@ -49,11 +50,11 @@ test("every catalog tile has a display name", () => {
 
 test("needs read the neighbour's facing edge", () => {
   // East of the start meadow, edge 3 (west) touches grass.
-  assert.deepEqual(needsAt({ q: 1, r: 0 }, start), [null, null, null, "Grass", null, null]);
+  assert.deepEqual(needsAt({ q: 1, r: 0 }, start).kinds, [null, null, null, "Grass", null, null]);
   const w = world([0, 0, "meadow", 0], [1, 0, "road_straight", 1]);
   // road_straight turned once carries road on world edges 1 and 4. (1,1) lies across edge 1 of (1,0),
   // so its own edge 4 meets that road.
-  assert.equal(needsAt({ q: 1, r: 1 }, w)[4], "Road");
+  assert.equal(needsAt({ q: 1, r: 1 }, w).kinds[4], "Road");
 });
 
 test("fit counts distinct orientations and words refusals", () => {
@@ -68,7 +69,7 @@ test("fit counts distinct orientations and words refusals", () => {
   assert.equal(fitMeta(def("road_straight"), road), "2 rotations fit");
   const ocean = fit(def("ocean"), slot);
   assert.equal(ocean.ok, false);
-  assert.equal(ocean.why, "Needs grass, forest or beach to meet the grass.");
+  assert.equal(ocean.why, "Needs grass or forest to meet the grass.");
   const river = world([0, 0, "river_straight", 0]);
   const off = fit(def("meadow"), needsAt({ q: 1, r: 0 }, river));
   assert.equal(off.why, "Needs a river edge to meet the river.");
@@ -95,24 +96,65 @@ test("the slot key lists lanes first", () => {
   ]);
   assert.deepEqual(needLines(["Road", "Grass", null, null, null, null])[1], {
     kind: "Grass",
-    text: "Grass, forest or beach beside it",
+    text: "Grass or forest beside it",
   });
   assert.deepEqual(needLines([null, null, null, "Grass", "Grass", null]), [
-    { kind: "Grass", text: "Grass, forest or beach on 2 edges" },
+    { kind: "Grass", text: "Grass or forest on 2 edges" },
   ]);
   assert.equal(summary(def("road_straight")), "Road and grass edges");
   assert.equal(summary(def("meadow")), "Grass all round");
 });
 
-test("a slot that needs a river and the sea fits nothing (the e2e S3.4 world)", () => {
-  const w = world([0, 0, "meadow", 0], [-1, 0, "river_straight", 1], [-2, 1, "beach", 0]);
+test("a slot that needs a river and a beach fits nothing (the e2e S3.4 world)", () => {
+  const river = world([0, 0, "meadow", 0], [-1, 0, "river_straight", 1]);
+  // The e2e places the beach through auto-rotate: the first legal rotation, its grass on the river bank.
+  assert.deepEqual(legalRotations(def("beach"), needsAt({ q: -2, r: 1 }, river)), [1, 2]);
+  const w = world([0, 0, "meadow", 0], [-1, 0, "river_straight", 1], [-2, 1, "beach", 1]);
   const needs = needsAt({ q: -1, r: 1 }, w);
-  assert.deepEqual(needs, [null, null, null, "Ocean", "River", "Grass"]);
+  assert.deepEqual(needs.kinds, [null, null, null, "Beach", "River", "Grass"]);
   assert.ok(TILES.every((t) => !fit(t, needs).ok));
-  assert.equal(nothingFitsWhy(needs), "No tile carries both a river and the sea.");
+  assert.equal(nothingFitsWhy(needs.kinds), "No tile carries both a river and a beach.");
   assert.deepEqual(
-    needLines(needs).map((l) => l.text),
-    ["River on one edge", "Ocean beside it", "Grass or forest beside it"],
+    needLines(needs.kinds).map((l) => l.text),
+    ["River on one edge", "Beach beside it", "Grass or forest beside it"],
+  );
+});
+
+test("beach edges meet only a coast running the same way (owner O1, hex-core world.rs)", () => {
+  // Land sides oppose across a seam: the two tiles look out across it from opposite sides.
+  assert.ok(meets("Beach", "Right", "Beach", "Left"));
+  assert.ok(!meets("Beach", "Right", "Beach", "Right"));
+  assert.ok(!meets("Beach", "Right", "Grass", null));
+  assert.ok(!meets("Ocean", null, "Beach", "Left"));
+  assert.ok(meets("Grass", null, "Forest", null));
+  // (0,1) touches the meadow on its edge 4 and the beach's edge 2 (land on the right) on its edge 5.
+  const coast = world([0, 0, "meadow", 0], [1, 0, "beach", 0]);
+  const next = needsAt({ q: 0, r: 1 }, coast);
+  assert.deepEqual(next.kinds, [null, null, null, null, "Grass", "Beach"]);
+  assert.deepEqual(next.land, [null, null, null, null, null, "Right"]);
+  // The straight beach carries on, the headland turns toward the land, the bay away from it.
+  assert.deepEqual(legalRotations(def("beach"), next), [0]);
+  assert.deepEqual(legalRotations(def("beach_outer"), next), [1]);
+  assert.deepEqual(legalRotations(def("beach_inner"), next), [0]);
+  assert.equal(fit(def("meadow"), next).why, "Needs a beach edge to meet the beach.");
+  assert.equal(fit(def("ocean"), next).why, "Needs grass or forest to meet the grass.");
+  // A beach whose land runs the wrong way into another beach.
+  const mirrored = world([0, 0, "meadow", 0], [1, 0, "beach", 0], [-1, 2, "beach", 3]);
+  assert.equal(fit(def("beach"), needsAt({ q: 0, r: 1 }, mirrored)).why, "The coast here runs the other way.");
+});
+
+test("a beach edge against grass is refused in the player's words", () => {
+  // (1,0) touches three meadows: every beach rotation puts a beach or ocean edge against grass.
+  const land = world([0, 0, "meadow", 0], [0, 1, "meadow", 0], [1, 1, "meadow", 0]);
+  const needs = needsAt({ q: 1, r: 0 }, land);
+  const beach = fit(def("beach"), needs);
+  assert.equal(beach.ok, false);
+  assert.equal(beach.bestK, 4);
+  assert.equal(beach.why, "Its beach would end at the grass.");
+  // Only the bay wraps three grass edges.
+  assert.deepEqual(
+    TILES.filter((t) => t.id.startsWith("beach") && fit(t, needs).ok).map((t) => t.id),
+    ["beach_inner"],
   );
 });
 

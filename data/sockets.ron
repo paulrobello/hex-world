@@ -1,14 +1,15 @@
-// Socket compatibility (PRD §5.2, plan F2) and lane contract (plan F3).
+// Socket compatibility (PRD §5.2, plan F2, owner O1) and lane contract (plan F3).
 // `compatible` must list every kind and be symmetric; the loader rejects anything else.
 // Changing a lane width means changing every tile that carries that lane in the same commit.
 (
     compatible: {
-        Grass: [Grass, Forest, Beach],
+        Grass: [Grass, Forest],
         Forest: [Grass, Forest],
         Road: [Road],
         River: [River],
-        Beach: [Beach, Grass, Ocean],
-        Ocean: [Ocean, Beach],
+        // A coast never steps against grass or ocean: beach edges meet only beach edges.
+        Beach: [Beach],
+        Ocean: [Ocean],
     },
     lanes: {
         // scripts/blender/kit/_road.py ROAD_WIDTH
@@ -20,4 +21,9 @@
         Road: "road_straight_edge",
         River: "river_edge",
     },
+    // Owner O1: a beach edge's ground runs from grass height at its land end to the seabed at its
+    // sea end. Each beach edge names its land side, looking out across the edge from its own tile
+    // (`land: Some(Right)` puts the land at the corner shared with the next edge clockwise), and
+    // meets only the opposite side, so the coast continues the same way across every seam.
+    directional: [Beach],
 )

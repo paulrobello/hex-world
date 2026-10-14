@@ -6,6 +6,7 @@ import { KIND_CLASS, TilePicture, hexPoints } from "./glyph.ts";
 import { icon } from "./icons.ts";
 import {
   type Fit,
+  type Kinds,
   type Needs,
   TILES,
   type TileDef,
@@ -249,7 +250,8 @@ export class Sheet {
     }
     if (!anyFit) k.classList.add("key--none");
     const list = h("ul", { class: "key__list" });
-    for (const l of needLines(v.slot.needs)) list.append(h("li", {}, h("i", { class: KIND_CLASS[l.kind] }), l.text));
+    for (const l of needLines(v.slot.needs.kinds))
+      list.append(h("li", {}, h("i", { class: KIND_CLASS[l.kind] }), l.text));
     const body = h(
       "div",
       {},
@@ -257,7 +259,7 @@ export class Sheet {
       list,
     );
     if (!anyFit) {
-      body.append(h("p", { class: "empty-key" }, nothingFitsWhy(v.slot.needs)));
+      body.append(h("p", { class: "empty-key" }, nothingFitsWhy(v.slot.needs.kinds)));
       if (v.nearest) {
         const go = h("button", { class: "btn btn--sm", type: "button" }, icon("focus"), "Show the nearest slot");
         const near = v.nearest;
@@ -272,12 +274,12 @@ export class Sheet {
         );
       }
     }
-    k.append(keyHex(v.slot.needs, !anyFit), body);
+    k.append(keyHex(v.slot.needs.kinds, !anyFit), body);
   }
 }
 
 /** The signature move: a hex that draws exactly which edges of the slot are touched, and by what. */
-function keyHex(needs: Needs, none: boolean): SVGElement {
+function keyHex(needs: Kinds, none: boolean): SVGElement {
   const v = (i: number): [number, number] => {
     const a = ((-30 + 60 * i) * Math.PI) / 180;
     return [50 + 34 * Math.cos(a), 50 + 34 * Math.sin(a)];

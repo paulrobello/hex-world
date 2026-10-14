@@ -48,13 +48,17 @@ pub const RIBBON_HALF: f32 = 5.0;
 /// Lateral steps of the river strip (0.5 m) and its row spacing along the centre line (m).
 const RIBBON_COLS: u32 = 20;
 const RIBBON_STEP: f32 = 0.5;
-/// Coast profile along the seaward axis `s` (m from the tile centre): grass level up to
-/// [`BEACH_TOP_S`], the beach slope down to the waterline at s = 0, a shallow shelf to
-/// [`SHELF_S`], then the drop to the ocean bed, reached at [`DROP_END_S`].
+/// Coast profile along `s`, the signed distance from the tile's [`Coastline`] (m, positive out to
+/// sea): grass level up to [`BEACH_TOP_S`], the beach slope down to the waterline at s = 0, a
+/// shallow shelf to [`SHELF_S`], then the drop to the ocean bed, reached at [`DROP_END_S`].
 pub const BEACH_TOP_S: f32 = -8.0;
 pub const SHELF_S: f32 = 3.0;
 pub const SHELF_SLOPE: f32 = 0.12;
 pub const DROP_END_S: f32 = 8.0;
+/// Radius (m) of the coast-corner tiles' coastline: the circle centred where the lines of the two
+/// beach edges meet, two apothems out past the edge between them, through both beach-edge
+/// midpoints (1.5 R).
+pub const COAST_ARC_RADIUS: f32 = 1.5 * HEX_RADIUS;
 /// Shore distance reported where no coast is near (river tiles) and on the open ocean.
 const INLAND: f32 = -40.0;
 const OPEN_SEA: f32 = 2.0 * DROP_END_S;
@@ -65,7 +69,7 @@ const ARC_STEP: f32 = std::f32::consts::PI / 90.0;
 
 const APOTHEM: f32 = HEX_RADIUS * 0.866_025_4;
 
-/// Bed height (m) at `s` m along the seaward axis of a coast tile.
+/// Bed height (m) at `s` m seaward of a coast tile's [`Coastline`].
 pub fn coast_height(s: f32) -> f32 {
     let rel = if s <= BEACH_TOP_S {
         LAND
@@ -100,12 +104,81 @@ fn to_world(cell: Axial, rotation: u8, p: Vec2) -> Vec2 {
     center(cell) + Vec2::new(r.x, r.z)
 }
 
+/// A coast tile's coastline, in world-oriented metres from the tile centre: the waterline through
+/// the midpoints of its two beach edges, crossing each at a right angle (owner O1). Its signed
+/// distance [`Coastline::seaward`] is the `s` of [`coast_height`]. Along every beach edge `s` runs
+/// linearly from -8 at the land corner to +8 at the sea corner, the same for all three shapes, so
+/// beds meet across every beach-to-beach seam. Ocean edges lie at s >= 8 (the ocean bed) and grass
+/// edges at s <= -8 (grass level), so beds also meet ocean and grass neighbours.
+///
+/// It comes from the edge kinds alone (beach edges and the grass beside them), never from the
+/// sockets' land sides, so the seam test checks those sides against the geometry.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Coastline {
+    /// `beach`: the straight line through the centre; `sea` is the unit seaward normal.
+    Straight { sea: Vec2 },
+    /// `beach_outer` (the headland, land inside) and `beach_inner` (the bay, sea inside): the
+    /// [`COAST_ARC_RADIUS`] circle about `centre`, two apothems out past the edge between the two
+    /// beach edges, on both beach edges' lines.
+    Arc { centre: Vec2, land_inside: bool },
+}
+
+impl Coastline {
+    /// The coastline of `def` placed at `rotation`: two beach edges, one with land (grass or
+    /// forest) on the next edge clockwise, where the coast leaves with the land on its right, and
+    /// one with land on the edge before it, 3 edges apart (straight), 2 (land between them: a
+    /// headland) or 4 (sea between them: a bay). `None` for any other edge layout.
+    pub fn of(def: &TileDef, rotation: u8) -> Option<Coastline> {
+        let kind = |w: u8| def.edge(w % 6, rotation).kind;
+        let land = |w: u8| matches!(kind(w), SocketKind::Grass | SocketKind::Forest);
+        let beach: Vec<u8> = (0..6).filter(|&w| kind(w) == SocketKind::Beach).collect();
+        let [a, b] = beach[..] else {
+            return None;
+        };
+        let (right, left) = if land(a + 1) { (a, b) } else { (b, a) };
+        if !land(right + 1) || !land(left + 5) {
+            return None;
+        }
+        let beyond = |e: u8| edge_dir(e) * 2.0 * APOTHEM;
+        match (left + 6 - right) % 6 {
+            // Sea on the left of the right-hand beach edge, looking out across it.
+            3 => Some(Coastline::Straight {
+                sea: -edge_dir(right).perp(),
+            }),
+            2 => Some(Coastline::Arc {
+                centre: beyond((right + 1) % 6),
+                land_inside: true,
+            }),
+            4 => Some(Coastline::Arc {
+                centre: beyond((right + 5) % 6),
+                land_inside: false,
+            }),
+            _ => None,
+        }
+    }
+
+    /// Signed distance (m) from the coastline to `p`, metres from the tile centre in world
+    /// orientation: positive out to sea.
+    pub fn seaward(&self, p: Vec2) -> f32 {
+        match *self {
+            Coastline::Straight { sea } => p.dot(sea),
+            Coastline::Arc {
+                centre,
+                land_inside,
+            } => {
+                let d = p.distance(centre) - COAST_ARC_RADIUS;
+                if land_inside { d } else { -d }
+            }
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum WaterKind {
     /// Carries a river network: a channel and a surface strip along each river segment.
     River,
-    /// Some ocean edges: a beach. `sea` is the unit seaward direction in world XZ.
-    Coast { sea: Vec2 },
+    /// Some ocean edges: a coast (straight beach, headland or bay).
+    Coast(Coastline),
     /// Ocean on every edge.
     Ocean,
 }
@@ -123,20 +196,7 @@ pub fn water_kind(def: &TileDef, rotation: u8) -> Option<WaterKind> {
     match ocean {
         0 => None,
         6 => Some(WaterKind::Ocean),
-        _ => {
-            let mut sea = Vec2::ZERO;
-            for (e, s) in def.edges.iter().enumerate() {
-                match s.kind {
-                    SocketKind::Ocean => sea += edge_dir(e as u8),
-                    SocketKind::Grass | SocketKind::Forest => sea -= edge_dir(e as u8),
-                    _ => {}
-                }
-            }
-            let r = crate::kit_scene::piece_rotation(rotation) * Vec3::new(sea.x, 0.0, sea.y);
-            Some(WaterKind::Coast {
-                sea: Vec2::new(r.x, r.z).normalize_or(Vec2::X),
-            })
-        }
+        _ => Coastline::of(def, rotation).map(WaterKind::Coast),
     }
 }
 
@@ -173,21 +233,21 @@ fn edge_water(def: &TileDef, t: &PlayTile, world: u8) -> EdgeWater {
         SocketKind::River if socket.lane.is_some() => EdgeWater::River,
         SocketKind::Ocean => EdgeWater::Ocean,
         SocketKind::Beach => {
-            let Some(WaterKind::Coast { sea }) = water_kind(def, t.rotation) else {
+            let Some(WaterKind::Coast(coast)) = water_kind(def, t.rotation) else {
                 return EdgeWater::Dry;
             };
-            let c = center(t.cell);
             let corner = |deg: f32| {
                 let a = deg.to_radians();
-                c + Vec2::new(a.cos(), a.sin()) * HEX_RADIUS
+                Vec2::new(a.cos(), a.sin()) * HEX_RADIUS
             };
             let mid = 60.0 * world as f32;
             let (a, b) = (corner(mid - 30.0), corner(mid + 30.0));
-            EdgeWater::Coast(if (a - c).dot(sea) > (b - c).dot(sea) {
+            let sea = if coast.seaward(a) > coast.seaward(b) {
                 a
             } else {
                 b
-            })
+            };
+            EdgeWater::Coast(center(t.cell) + sea)
         }
         _ => EdgeWater::Dry,
     }
@@ -456,8 +516,8 @@ impl TileField<'_> {
         best
     }
 
-    fn seaward(&self, p: Vec2, sea: Vec2) -> f32 {
-        (p - center(self.cell.tile.cell)).dot(sea)
+    fn seaward(&self, p: Vec2, coast: Coastline) -> f32 {
+        coast.seaward(p - center(self.cell.tile.cell))
     }
 }
 
@@ -470,7 +530,7 @@ impl WaterField for TileField<'_> {
         let p = Vec2::new(x, z);
         match self.cell.kind {
             WaterKind::River => river_height(self.river(p).0),
-            WaterKind::Coast { sea } => coast_height(self.seaward(p, sea)),
+            WaterKind::Coast(coast) => coast_height(self.seaward(p, coast)),
             WaterKind::Ocean => OCEAN_BED_Y,
         }
     }
@@ -489,11 +549,11 @@ impl WaterField for TileField<'_> {
                     shore: INLAND,
                 }
             }
-            WaterKind::Coast { sea } => WaterSample {
+            WaterKind::Coast(coast) => WaterSample {
                 flow: Vec2::ZERO,
                 river: 0.0,
                 depth,
-                shore: self.seaward(p, sea),
+                shore: self.seaward(p, coast),
             },
             WaterKind::Ocean => WaterSample {
                 flow: Vec2::ZERO,
@@ -508,7 +568,7 @@ impl WaterField for TileField<'_> {
         let p = Vec2::new(x, z);
         match self.cell.kind {
             WaterKind::River => terrain_color(self.river(p).0 - RIVER_CUT_W, INLAND),
-            WaterKind::Coast { sea } => terrain_color(NO_RIVER, self.seaward(p, sea)),
+            WaterKind::Coast(coast) => terrain_color(NO_RIVER, self.seaward(p, coast)),
             WaterKind::Ocean => terrain_color(NO_RIVER, OPEN_SEA),
         }
     }
@@ -728,7 +788,7 @@ fn spawn_cell(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hex_core::{World, opposite_edge};
+    use hex_core::{Side, World, opposite_edge};
 
     fn tile(q: i32, r: i32, id: &str, rotation: u8) -> PlayTile {
         PlayTile {
@@ -873,7 +933,8 @@ mod tests {
     }
 
     /// Exposed edges follow adjacency: open river ends and lone ocean sides get a cut face; joined
-    /// water edges and dry edges do not; a beach edge against an ocean side is a mismatched seam.
+    /// water edges and dry edges do not; a beach edge against an ocean side is a mismatched seam
+    /// (the rules refuse it since owner O1, but the layout stays safe if one is ever loaded).
     #[test]
     fn exposed_edges_follow_adjacency_and_sockets() {
         let cat = catalog();
@@ -894,7 +955,7 @@ mod tests {
         // Beach at rotation 0: ocean edges 0 and 1, beach edges 2 and 5, grass edges 3 and 4.
         let beach = layout(&[tile(0, 0, "beach", 0)], &cat, |_| false);
         assert_eq!(beach[&Axial::new(0, 0)].exposed, vec![0, 1, 2, 5]);
-        // An ocean tile beside the beach's edge 2: a legal seam whose beds differ.
+        // An ocean tile beside the beach's edge 2: beds that differ along the seam.
         let side = layout(
             &[tile(0, 0, "beach", 0), tile(-1, 1, "ocean", 0)],
             &cat,
@@ -995,6 +1056,306 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// Tiles with a beach edge, in catalog order: `beach`, `beach_outer`, `beach_inner`.
+    fn coast_tiles(cat: &TileCatalog) -> Vec<&TileDef> {
+        cat.tiles()
+            .iter()
+            .filter(|t| t.edges.iter().any(|e| e.kind == SocketKind::Beach))
+            .collect()
+    }
+
+    /// One tile's water on its own, so nothing a neighbour contributes can hide a mismatch.
+    fn alone(cat: &TileCatalog, cell: Axial, id: &str, rotation: u8) -> CellWater {
+        let t = tile(cell.q, cell.r, id, rotation);
+        layout(&[t], cat, |_| false)
+            .remove(&cell)
+            .unwrap_or_else(|| panic!("{id} r{rotation} carries no water"))
+    }
+
+    /// `n + 1` points from the corner at 60 e - 30 degrees to the one at 60 e + 30 (the corner
+    /// world edge `e` of `cell` shares with edge `e + 1`).
+    fn along_edge(cell: Axial, e: u8, n: usize) -> Vec<Vec2> {
+        let c = center(cell);
+        let corner = |deg: f32| {
+            let a = deg.to_radians();
+            c + Vec2::new(a.cos(), a.sin()) * HEX_RADIUS
+        };
+        let mid = 60.0 * e as f32;
+        let (a, b) = (corner(mid - 30.0), corner(mid + 30.0));
+        (0..=n).map(|i| a.lerp(b, i as f32 / n as f32)).collect()
+    }
+
+    #[test]
+    fn coastline_shapes_follow_the_edge_layout() {
+        let cat = catalog();
+        let shape = |id: &str, rot: u8| Coastline::of(cat.get(id).unwrap(), rot);
+        let deg = |d: f32| Vec2::new(d.to_radians().cos(), d.to_radians().sin());
+        for rot in 0..6u8 {
+            let turn = 60.0 * rot as f32;
+            // The straight beach keeps its seaward axis: between its ocean edges 0 and 1.
+            let Some(Coastline::Straight { sea }) = shape("beach", rot) else {
+                panic!("beach r{rot}");
+            };
+            assert!(sea.distance(deg(30.0 + turn)) < 1e-5, "beach r{rot} {sea}");
+            // Headland: centred two apothems past its grass edge 3, land inside.
+            let Some(Coastline::Arc {
+                centre,
+                land_inside: true,
+            }) = shape("beach_outer", rot)
+            else {
+                panic!("beach_outer r{rot}");
+            };
+            assert!(centre.distance(deg(180.0 + turn) * 2.0 * APOTHEM) < 1e-3);
+            // Bay: centred two apothems past its ocean edge 0, sea inside.
+            let Some(Coastline::Arc {
+                centre,
+                land_inside: false,
+            }) = shape("beach_inner", rot)
+            else {
+                panic!("beach_inner r{rot}");
+            };
+            assert!(centre.distance(deg(turn) * 2.0 * APOTHEM) < 1e-3);
+        }
+        for id in ["meadow", "ocean", "river_straight"] {
+            assert_eq!(shape(id, 0), None, "{id}");
+        }
+    }
+
+    /// The coast bed contract on every coast tile at every rotation, each tile alone: along each
+    /// beach edge `s` runs linearly from -8 at the land corner (named by the socket's land side)
+    /// to +8 at the sea corner, every ocean edge lies on the ocean bed and every grass edge at
+    /// grass level, so beds meet ocean and grass neighbours without a step.
+    #[test]
+    fn coast_beds_meet_grass_and_ocean_and_run_down_each_beach_edge() {
+        let cat = catalog();
+        let mut edges = 0;
+        for def in coast_tiles(&cat) {
+            for rot in 0..6u8 {
+                let cw = alone(&cat, Axial::ORIGIN, &def.id, rot);
+                let WaterKind::Coast(coast) = cw.kind else {
+                    panic!("{} r{rot} is {:?}", def.id, cw.kind);
+                };
+                let f = cw.field();
+                for e in 0..6u8 {
+                    let socket = def.edge(e, rot);
+                    for (i, p) in along_edge(Axial::ORIGIN, e, 32).into_iter().enumerate() {
+                        let h = f.height(p.x, p.y);
+                        let at = format!("{} r{rot} edge {e} point {i}", def.id);
+                        match socket.kind {
+                            SocketKind::Ocean => assert!((h - OCEAN_BED_Y).abs() < 1e-5, "{at}"),
+                            SocketKind::Grass => assert!(h.abs() < 1e-6, "{at}: {h}"),
+                            SocketKind::Beach => {
+                                // Points run toward the corner shared with edge e + 1: the land
+                                // corner when the land is on the right.
+                                let t = -8.0 + 16.0 * i as f32 / 32.0;
+                                let want = if socket.land == Some(Side::Right) {
+                                    -t
+                                } else {
+                                    t
+                                };
+                                let s = coast.seaward(p);
+                                assert!((s - want).abs() < 1e-3, "{at}: s {s}, want {want}");
+                                assert!((h - coast_height(want)).abs() < 1e-3, "{at}: {h}");
+                            }
+                            k => panic!("{at}: {k:?}"),
+                        }
+                    }
+                    edges += 1;
+                }
+            }
+        }
+        assert_eq!(edges, 3 * 6 * 6);
+    }
+
+    /// Owner O1 proof: for every pair of coast tiles and every pair of rotations the rules accept
+    /// as neighbours across a beach edge, the two tiles' beds agree along the whole shared edge,
+    /// and so do water depth and shore distance, each tile's field computed from that tile alone.
+    /// Every beach-to-beach pairing the rules refuse (the land sides do not oppose) is a mirrored
+    /// seam whose beds step by the full coast drop.
+    #[test]
+    fn coast_beds_match_across_every_legal_beach_seam() {
+        let cat = catalog();
+        let sockets = cat.sockets();
+        let coast = coast_tiles(&cat);
+        let a_cell = Axial::ORIGIN;
+        let (mut accepted, mut refused) = (0, 0);
+        let mut pairs: BTreeSet<(&str, &str)> = BTreeSet::new();
+        for a in &coast {
+            for ra in 0..6u8 {
+                let wa = alone(&cat, a_cell, &a.id, ra);
+                for w in (0..6u8).filter(|&w| a.edge(w, ra).kind == SocketKind::Beach) {
+                    let b_cell = a_cell.neighbor(w);
+                    let back = opposite_edge(w);
+                    for b in &coast {
+                        for rb in (0..6u8).filter(|&rb| b.edge(back, rb).kind == SocketKind::Beach)
+                        {
+                            let wb = alone(&cat, b_cell, &b.id, rb);
+                            let (fa, fb) = (wa.field(), wb.field());
+                            let seam = format!("{} r{ra} | {} r{rb} across edge {w}", a.id, b.id);
+                            let pts = along_edge(a_cell, w, 64);
+                            let step = pts
+                                .iter()
+                                .map(|p| (fa.height(p.x, p.y) - fb.height(p.x, p.y)).abs())
+                                .fold(0.0, f32::max);
+                            if !sockets.edges_compatible(a.edge(w, ra), b.edge(back, rb)) {
+                                assert!(step > 3.9, "{seam}: refused, yet beds step only {step}");
+                                refused += 1;
+                                continue;
+                            }
+                            assert!(step < 1e-4, "{seam}: beds step {step}");
+                            for p in &pts {
+                                let (sa, sb) = (fa.water(p.x, p.y), fb.water(p.x, p.y));
+                                assert!((sa.depth - sb.depth).abs() < 1e-4, "{seam} at {p}");
+                                assert!((sa.shore - sb.shore).abs() < 1e-3, "{seam} at {p}");
+                            }
+                            accepted += 1;
+                            pairs.insert((&a.id, &b.id));
+                        }
+                    }
+                }
+            }
+        }
+        // 3 tiles x 6 rotations x 2 beach edges, each facing 6 (tile, rotation) beach edges, of
+        // which the 3 with the opposite land side are accepted.
+        assert_eq!((accepted, refused), (108, 108));
+        assert_eq!(
+            pairs.len(),
+            9,
+            "every coast tile meets every coast tile: {pairs:?}"
+        );
+    }
+
+    /// `docs/checkpoints/coast/coast.json` replayed on the rules with play's input semantics
+    /// (`hex-app` `game.rs`): hovering a new slot or selecting a tile snaps to the first legal
+    /// rotation, `rotate` cycles the legal rotations (one step when there are none), and `place`
+    /// hovers its cell first. Exactly three placements are refused: ocean against a beach edge,
+    /// grass against a beach edge, and a beach edge against grass. The rest close an island of
+    /// straight, headland and bay tiles under many rotations, ringed by ocean, with no beach edge
+    /// left open and matching beds across every beach seam.
+    #[test]
+    fn coast_proof_script_closes_an_island() {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../docs/checkpoints/coast/coast.json"
+        );
+        let text = std::fs::read_to_string(path).unwrap();
+        let script: Vec<serde_json::Value> = serde_json::from_str(&text).unwrap();
+        let cat = catalog();
+        let mut world = World::new(1);
+        let (mut selected, mut hovered, mut rotation) = ("meadow".to_owned(), None, 0u8);
+        let snap = |world: &World, selected: &str, hovered: Option<Axial>, rotation: &mut u8| {
+            if let Some(c) = hovered.filter(|&c| world.is_slot(c))
+                && let Some(k) = world.auto_rotate(&cat, c, cat.get(selected).unwrap())
+            {
+                *rotation = k;
+            }
+        };
+        let mut refused = vec![];
+        for cmd in &script {
+            let at = || {
+                let n = |k: &str| i32::try_from(cmd[k].as_i64().unwrap()).unwrap();
+                Axial::new(n("q"), n("r"))
+            };
+            match cmd["cmd"].as_str().unwrap() {
+                "select_tile" => {
+                    selected = cmd["id"].as_str().unwrap().to_owned();
+                    snap(&world, &selected, hovered, &mut rotation);
+                }
+                "hover" | "place" if hovered != Some(at()) => {
+                    hovered = Some(at());
+                    snap(&world, &selected, hovered, &mut rotation);
+                    if cmd["cmd"] == "place"
+                        && let Err(e) = world.place(&cat, at(), &selected, rotation)
+                    {
+                        refused.push((at(), selected.clone(), e));
+                    }
+                }
+                "place" => {
+                    if let Err(e) = world.place(&cat, at(), &selected, rotation) {
+                        refused.push((at(), selected.clone(), e));
+                    }
+                }
+                "rotate" => {
+                    let dir = match cmd["dir"].as_str().unwrap() {
+                        "cw" => hex_core::RotateDir::Forward,
+                        _ => hex_core::RotateDir::Back,
+                    };
+                    let def = cat.get(&selected).unwrap();
+                    rotation = hovered
+                        .filter(|&c| world.is_slot(c))
+                        .and_then(|c| world.cycle_rotation(&cat, c, def, rotation, dir))
+                        .unwrap_or(match dir {
+                            hex_core::RotateDir::Forward => (rotation + 1) % 6,
+                            hex_core::RotateDir::Back => (rotation + 5) % 6,
+                        });
+                }
+                _ => {}
+            }
+        }
+        let refusal = |q, r, id: &str, edges: Vec<u8>| {
+            (
+                Axial::new(q, r),
+                id.to_owned(),
+                hex_core::PlaceError::Incompatible(edges),
+            )
+        };
+        assert_eq!(
+            refused,
+            [
+                refusal(-1, -1, "ocean", vec![0]),
+                refusal(1, -1, "meadow", vec![3]),
+                refusal(1, 0, "beach", vec![3]),
+            ]
+        );
+        let tiles: Vec<PlayTile> = world
+            .tiles()
+            .iter()
+            .map(|(c, t)| PlayTile {
+                cell: *c,
+                tile: t.def.clone(),
+                rotation: t.rotation,
+            })
+            .collect();
+        let coast: Vec<&PlayTile> = tiles
+            .iter()
+            .filter(|t| t.tile.starts_with("beach"))
+            .collect();
+        let count = |id: &str| coast.iter().filter(|t| t.tile == id).count();
+        assert_eq!(
+            (count("beach"), count("beach_outer"), count("beach_inner")),
+            (2, 8, 2)
+        );
+        let placements: BTreeSet<(&str, u8)> = coast
+            .iter()
+            .map(|t| (t.tile.as_str(), t.rotation))
+            .collect();
+        assert_eq!(placements.len(), 10, "{placements:?}");
+        assert_eq!(world.tiles().len(), 4 + 12 + 18);
+        let lay = layout(&tiles, &cat, |_| false);
+        let mut seams = 0;
+        for t in &coast {
+            let cw = &lay[&t.cell];
+            assert_eq!(cw.exposed, Vec::<u8>::new(), "{t:?}: open water edge");
+            let def = cat.get(&t.tile).unwrap();
+            for w in (0..6u8).filter(|&w| def.edge(w, t.rotation).kind == SocketKind::Beach) {
+                let other = &lay[&t.cell.neighbor(w)];
+                for p in along_edge(t.cell, w, 32) {
+                    let (ha, hb) = (cw.field().height(p.x, p.y), other.field().height(p.x, p.y));
+                    assert!(
+                        (ha - hb).abs() < 1e-4,
+                        "{t:?} edge {w} at {p}: {ha} vs {hb}"
+                    );
+                }
+                seams += 1;
+            }
+        }
+        assert_eq!(
+            seams,
+            2 * 12,
+            "every coast tile joins the next on both beach edges"
+        );
     }
 
     /// Placement order of `docs/checkpoints/water-play/water-play.json`: (q, r, tile, rotate steps

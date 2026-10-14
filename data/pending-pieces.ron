@@ -10,6 +10,10 @@
         // Coast family
         (id: "beach_base", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
         (id: "beach_center", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
+        (id: "beach_outer_base", delivered_by: "Owner O1 coast corners, then kit modeling: coast family (headland)"),
+        (id: "beach_outer_center", delivered_by: "Owner O1 coast corners, then kit modeling: coast family (headland)"),
+        (id: "beach_inner_base", delivered_by: "Owner O1 coast corners, then kit modeling: coast family (bay)"),
+        (id: "beach_inner_center", delivered_by: "Owner O1 coast corners, then kit modeling: coast family (bay)"),
         // Meadow props
     ],
 )

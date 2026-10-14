@@ -98,7 +98,7 @@ try {
   // S3.3 slot hovered: the filter and the slot key.
   await pointAt(1, 0);
   await until(async () => (await text(".key__title")) === "This slot needs", "slot key prints what the slot needs");
-  check((await text(".key__list")).includes("Grass, forest or beach on one edge"), "key lists the grass edge");
+  check((await text(".key__list")).includes("Grass or forest on one edge"), "key lists the grass edge");
   check((await text(".group--off")).includes("Doesn't fit here"), "Doesn't fit here group present");
   check(await page.locator(".list--off .row[data-tile=ocean]").count() === 1, "ocean listed under Doesn't fit here");
   check((await text(".list--off .row[data-tile=ocean] .row__meta")).includes("grass"), "ocean row states its reason");
@@ -225,8 +225,8 @@ try {
   await shot("s2-3-hud-hidden");
   await key("h");
 
-  // S3.4 nothing fits: a river straight west of the start meadow and a beach turned so its ocean
-  // edge faces (-1, 1) leave that slot needing a river and the sea at once, which no tile carries.
+  // S3.4 nothing fits: a river straight west of the start meadow and a beach turned so a beach
+  // edge faces (-1, 1) leave that slot needing a river and a beach at once, which no tile carries.
   // Set up through the bridge (auto-rotate picks those rotations), then driven by mouse.
   await page.evaluate(() => {
     const h = window.hexWorld;

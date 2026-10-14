@@ -1,0 +1,16 @@
+// Headland (owner O1): the coast turns around a point of land on edge 3. Ocean on 0, 1 and 5. Edge 2
+// has the land on its right (the corner it shares with grass edge 3), edge 4 on its left.
+(
+    id: "beach_outer",
+    biome: Beach,
+    base: "beach_outer_base",
+    edges: (
+        (kind: Ocean),
+        (kind: Ocean),
+        (kind: Beach, land: Some(Right)),
+        (kind: Grass),
+        (kind: Beach, land: Some(Left)),
+        (kind: Ocean),
+    ),
+    center: Some("beach_outer_center"),
+)
