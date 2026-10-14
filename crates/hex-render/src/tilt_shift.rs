@@ -141,6 +141,32 @@ pub fn build_uniform(
     })
 }
 
+/// Photo mode's tilt-shift preset (PRD §4.6): the same kernel and pass, with the focus distance
+/// and strength set by the photo panel instead of the ground ray and zoom. While present it wins
+/// over [`TiltShiftSettings`], which keeps the player's game-camera choice for when photo mode ends.
+#[derive(Resource, Clone, Copy, Debug, PartialEq)]
+pub struct TiltOverride {
+    /// View-space distance of the sharp band (m).
+    pub focus_m: f32,
+    /// 0..=1, applied without the zoom fade so close-ups blur too.
+    pub strength: f32,
+}
+
+/// Uniform for the photo preset: the band sits on the optical axis (screen centre).
+pub fn build_override_uniform(o: &TiltOverride, taps: u32, near: f32) -> Option<TiltShift> {
+    let amount = o.strength.clamp(0.0, 1.0);
+    (amount > 0.01).then_some(TiltShift {
+        focus_uv_y: 0.5,
+        band_half: BAND_HALF,
+        focus_depth: o.focus_m.max(0.5),
+        near,
+        max_radius: MAX_RADIUS * amount,
+        depth_weight: 0.6,
+        saturation: SATURATION_LIFT * amount,
+        taps: taps.clamp(1, 32),
+    })
+}
+
 /// Initial settings for a scene (re)build. `Auto` is on from Medium up and only in the kit
 /// scenario with the post stack; `On` forces it at any tier (Low uses the Medium tap count).
 pub fn settings_for(config: &GateConfig, kit: bool, tier: QualityTier) -> TiltShiftSettings {
@@ -193,6 +219,7 @@ fn toggle_key(keys: Option<Res<ButtonInput<KeyCode>>>, mut settings: ResMut<Tilt
 fn update_cameras(
     mut commands: Commands,
     settings: Res<TiltShiftSettings>,
+    photo: Option<Res<TiltOverride>>,
     cameras: Query<(Entity, &GlobalTransform, &Projection, Has<TiltShift>), With<Camera3d>>,
 ) {
     for (entity, transform, projection, has) in &cameras {
@@ -212,7 +239,11 @@ fn update_cameras(
         } else {
             0.5
         };
-        match build_uniform(&settings, dist, uv_y, p.near) {
+        let uniform = match photo.as_deref() {
+            Some(o) => build_override_uniform(o, settings.taps, p.near),
+            None => build_uniform(&settings, dist, uv_y, p.near),
+        };
+        match uniform {
             Some(u) => {
                 commands.entity(entity).insert(u);
             }
@@ -437,6 +468,20 @@ mod tests {
             focus_distance(Vec3::new(0.0, 2.0, 0.0), Vec3::Z),
             FALLBACK_FOCUS_M
         );
+    }
+
+    #[test]
+    fn photo_override_ignores_zoom_and_the_player_toggle() {
+        let o = TiltOverride {
+            focus_m: 6.0,
+            strength: 0.5,
+        };
+        // A 6 m close-up is below ZOOM_OFF_M, where the game camera's effect is off.
+        let u = build_override_uniform(&o, 16, 0.1).unwrap();
+        assert_eq!((u.focus_uv_y, u.focus_depth, u.taps), (0.5, 6.0, 16));
+        assert!((u.max_radius - MAX_RADIUS * 0.5).abs() < 1e-6);
+        let off = TiltOverride { strength: 0.0, ..o };
+        assert!(build_override_uniform(&off, 16, 0.1).is_none());
     }
 
     #[test]

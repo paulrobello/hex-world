@@ -314,6 +314,19 @@
       "q",
       "r"
     ],
+    "photo": [
+      "aperture",
+      "dof",
+      "exposure",
+      "focus",
+      "fov",
+      "pause_agents",
+      "roll"
+    ],
+    "photo_export": [
+      "name",
+      "scale"
+    ],
     "place": [
       "q",
       "r"
@@ -350,6 +363,11 @@
     ]
   },
   "enums": {
+    "dof": [
+      "manual",
+      "off",
+      "tilt"
+    ],
     "edge_status": [
       "Compatible",
       "Incompatible",
@@ -388,6 +406,15 @@
     ],
     "inventoryToggled": [
       "open"
+    ],
+    "photoExportFailed": [
+      "name",
+      "reason"
+    ],
+    "photoExported": [
+      "height",
+      "name",
+      "width"
     ],
     "photoModeToggled": [
       "on"
@@ -456,6 +483,20 @@
       "cell",
       "ok",
       "reason"
+    ],
+    "photo": [
+      "agents_paused",
+      "aperture",
+      "dof",
+      "exporting",
+      "exposure",
+      "focus",
+      "fov",
+      "max_texture",
+      "on",
+      "pause_agents",
+      "roll",
+      "sim_ticks"
     ],
     "play": [
       "bulldoze",

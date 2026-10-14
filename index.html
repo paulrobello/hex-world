@@ -90,6 +90,8 @@
           pumpEvents: pump,
           // [left, top, right, bottom] in CSS px around cell (q, r) for the current camera, or null.
           cellRect: function (q, r) { return JSON.parse(w.hex_world_cell_rect(q, r)); },
+          // Removes and returns a finished capture's PNG data URL (a screenshot or a photo export), else null.
+          takeShot: function (name) { return w.hex_world_take_shot(name) || null; },
           // Play-scenario actions: typed wrappers over cmd, queued like any other command.
           selectTile: function (id) { this.cmd({ cmd: "select_tile", id: id }); },
           hover: function (q, r) { this.cmd({ cmd: "hover", q: q, r: r }); },
@@ -100,6 +102,28 @@
           bulldoze: function (q, r) { this.cmd({ cmd: "bulldoze", q: q, r: r }); },
           setTool: function (mode) { this.cmd({ cmd: "set_tool", mode: mode }); },
           toggle: function (what) { this.cmd({ cmd: "toggle", what: what }); },
+          // Photo mode (PRD §4.6): panel values ({ dof, focus, aperture, exposure, fov, roll, pause_agents }).
+          photo: function (values) { this.cmd(Object.assign({ cmd: "photo" }, values)); },
+          // Resolves to { name, width, height, url } once the offscreen PNG lands, or rejects with the reason.
+          exportPhoto: function (scale, name, timeoutMs) {
+            name = name || "hex-world-" + Date.now();
+            var deadline = Date.now() + (timeoutMs || 60000);
+            this.cmd({ cmd: "photo_export", scale: scale || 1, name: name });
+            return new Promise(function (resolve, reject) {
+              (function poll() {
+                pump();
+                var url = w.hex_world_take_shot(name);
+                if (url) {
+                  var ev = queued.filter(function (e) { return e.type === "photoExported" && e.name === name; })[0];
+                  return resolve({ name: name, width: ev ? ev.width : null, height: ev ? ev.height : null, url: url });
+                }
+                var bad = queued.filter(function (e) { return e.type === "photoExportFailed" && e.name === name; })[0];
+                if (bad) return reject(new Error(bad.reason));
+                if (Date.now() > deadline) return reject(new Error("hexWorld.exportPhoto timed out: " + name));
+                setTimeout(poll, 100);
+              })();
+            });
+          },
           // Resolves to a PNG data URL once the capture lands, after any queued commands.
           screenshot: function (name, timeoutMs) {
             name = name || "shot-" + Date.now();

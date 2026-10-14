@@ -270,6 +270,113 @@ try {
   await until(async () => (await text(".tip.is-shown")).includes("Nothing to undo"), "Undo tooltip says Nothing to undo");
   await shot("s6-4-undo-empty");
 
+  // S8 photo mode (PRD §4.6): P enters (the HUD hides, agents pause), WASD and E fly the free camera,
+  // the panel changes DOF, a 2× PNG exports through the offscreen target and downloads, then P leaves
+  // (HUD back, agents running, the orbit camera exactly where it was).
+  const st = () => page.evaluate(() => window.hexWorld.state());
+  await page.mouse.move(700, 880);
+  await page.waitForTimeout(4200);
+  const orbit = (await st()).camera;
+  await page.focus("canvas#hex-world");
+  await key("p");
+  await until(async () => { const s = await st(); return s.play.photo_mode && s.photo.on; }, "P enters photo mode");
+  await until(async () => page.locator(".hud.is-hidden.is-photo").count(), "the play HUD hides in photo mode");
+  check(await page.locator(".photo-ui:not(.is-off) .sheet--photo").count() === 1, "photo panel shown");
+  check(await page.locator(".hud.is-photo > .show-ui").isHidden(), "the play HUD's Show UI stays away");
+  await until(async () => (await st()).photo.agents_paused === true, "entering pauses agents");
+  const t0 = (await st()).photo.sim_ticks;
+  await page.waitForTimeout(800);
+  check((await st()).photo.sim_ticks === t0, `the car sim holds at tick ${t0} while paused`);
+  await page.waitForTimeout(250);
+  await shot("s8-2-photo-panel");
+
+  await page.focus("canvas#hex-world");
+  await page.keyboard.down("w");
+  await page.keyboard.down("e");
+  await page.waitForTimeout(700);
+  await page.keyboard.up("e");
+  await page.keyboard.up("w");
+  const flown = (await st()).camera;
+  const moved = Math.hypot(...flown.pos.map((v, i) => v - orbit.pos[i]));
+  check(moved > 1, `WASD/E flew the free camera ${moved.toFixed(1)} m`);
+  check(flown.pos[1] > orbit.pos[1], "E rises");
+
+  await page.locator(".sheet--photo .seg[aria-label='Depth of field'] button[data-value=manual]").click();
+  await until(async () => (await st()).photo.dof === "manual", "DOF switches to manual");
+  await page.locator(".sheet--photo input[aria-label='Focus distance']").evaluate((el) => {
+    el.value = "30";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await until(async () => (await st()).photo.focus === 30, "focus distance reaches the engine");
+  await page.locator(".sheet--photo input[aria-label='Aperture']").evaluate((el) => {
+    el.value = "0";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await until(async () => (await st()).photo.aperture === 1.4, "aperture f/1.4 reaches the engine");
+  await until(async () => page.locator(".focus-band.is-shown").count(), "the focus band shows while focusing");
+  await shot("s8-2-photo-focus-drag");
+
+  await page.focus("canvas#hex-world");
+  await key("h");
+  await until(async () => page.locator(".photo-ui.is-hidden").count(), "H hides the photo UI");
+  await page.waitForTimeout(300);
+  await shot("s8-3-photo-ui-hidden");
+  await key("h");
+  await until(async () => !(await page.locator(".photo-ui.is-hidden").count()), "H shows it again");
+
+  await page.locator(".sheet--photo .seg[aria-label='Resolution'] button[data-value='2']").click();
+  check((await text(".sheet--photo .seg[aria-label='Resolution'] button[data-value='2'] small")) === "2880 × 1800", "2× shows 2880 × 1800");
+  const [download] = await Promise.all([
+    page.waitForEvent("download", { timeout: 90_000 }),
+    page.locator(".sheet--photo .export-go").click(),
+  ]);
+  const png = `${out}/photo-export-2x.png`;
+  await download.saveAs(png);
+  const head = readFileSync(png);
+  const pngW = head.readUInt32BE(16);
+  const pngH = head.readUInt32BE(20);
+  check(head.toString("latin1", 1, 4) === "PNG" && pngW === 2880 && pngH === 1800, `2× export is a ${pngW} × ${pngH} PNG (want 2880 × 1800)`);
+  check(/^hex-world-\d{4}-\d\d-\d\d\.png$/.test(download.suggestedFilename()), `download named ${download.suggestedFilename()}`);
+  await until(async () => /Saved hex-world-/.test(await text(".photo-ui .toast.is-shown")), "Saved toast (S8.6)");
+  await shot("s8-6-photo-saved");
+
+  await page.focus("canvas#hex-world");
+  await key("p");
+  await until(async () => { const s = await st(); return !s.play.photo_mode && !s.photo.on; }, "P leaves photo mode");
+  await until(async () => !(await page.locator(".hud.is-hidden").count()), "the play HUD is back");
+  const back = (await st()).camera;
+  check(back.pos.every((v, i) => Math.abs(v - orbit.pos[i]) < 1e-3), `orbit camera restored at ${back.pos.map((v) => v.toFixed(2))}`);
+  check(back.forward.every((v, i) => Math.abs(v - orbit.forward[i]) < 1e-3), "orbit camera faces where it did");
+  await until(async () => (await st()).photo.agents_paused === false, "exiting resumes agents");
+  const t1 = (await st()).photo.sim_ticks;
+  await until(async () => (await st()).photo.sim_ticks > t1, "the car sim ticks again", 3000);
+
+  // Esc leaves photo mode too.
+  await key("p");
+  await until(async () => (await st()).play.photo_mode, "P enters again");
+  // The HUD repaints a frame after the engine; Esc before it would reach the play HUD instead.
+  await until(async () => page.locator(".photo-ui:not(.is-off)").count(), "the photo UI is back");
+  await key("Escape");
+  await until(async () => !(await st()).play.photo_mode, "Esc leaves photo mode");
+
+  // S9.4 Settings: the game camera's tilt-shift toggle and strength slider (the page runs tilt=off).
+  await page.locator(".tool[data-action=settings]").click();
+  await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens");
+  check((await st()).tilt.enabled === false, "tilt-shift starts off (tilt=off)");
+  await page.locator(".sheet--settings .switch").click();
+  await until(async () => (await st()).tilt.enabled === true, "the toggle turns tilt-shift on");
+  await page.locator(".sheet--settings input[aria-label='Tilt-shift strength']").evaluate((el) => {
+    el.value = "60";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await until(async () => Math.abs((await st()).tilt.strength - 0.6) < 1e-6, "the slider sets strength 0.6");
+  await page.waitForTimeout(300);
+  await shot("s9-4-settings-tilt");
+  await page.locator(".sheet--settings .switch").click();
+  await until(async () => (await st()).tilt.enabled === false, "and off again");
+  await key("Escape");
+  await until(async () => page.locator(".sheet--settings.is-closed").count(), "Esc closes Settings");
+
   // Engine motion follows the OS reduced-motion setting, at start and on change.
   check((await play()).reduced_motion === false, "reduced_motion starts off with the OS setting");
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -280,8 +387,8 @@ try {
   // S12 narrow desktop: the bar and sheet never meet.
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.waitForTimeout(400);
-  const bar = await page.locator(".bar").boundingBox();
-  const sheet = await page.locator(".sheet").boundingBox();
+  const bar = await page.locator(".bar[data-region=bar]").boundingBox();
+  const sheet = await page.locator(".sheet--tiles").boundingBox();
   check(bar.x + bar.width < sheet.x, `bar (right ${Math.round(bar.x + bar.width)}) clears the sheet (left ${Math.round(sheet.x)}) at 1280 px`);
   await shot("s12-narrow-1280x720");
 } catch (e) {

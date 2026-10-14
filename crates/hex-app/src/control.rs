@@ -17,6 +17,7 @@ use serde::Deserialize;
 
 use crate::actions::{Action, ActionQueue, Tool};
 use crate::game::GameState;
+use crate::photo::{Dof, PhotoExports, PhotoPatch, PhotoSession, PhotoSettings};
 use crate::sim::CarSim;
 use crate::{FrameCount, RunFlags, bridge, capture};
 
@@ -98,6 +99,25 @@ pub enum Command {
     Toggle {
         what: Toggle,
     },
+    /// Photo-mode panel values (PRD §4.6), each clamped to its slider; omitted fields keep theirs.
+    /// `dof` is `off`, `tilt` (the tilt-shift kernel) or `manual`; `focus` is metres, `aperture`
+    /// an f-number, `exposure` stops brighter, `fov` and `roll` degrees.
+    Photo {
+        dof: Option<Dof>,
+        focus: Option<f32>,
+        aperture: Option<f32>,
+        exposure: Option<f32>,
+        fov: Option<f32>,
+        roll: Option<f32>,
+        pause_agents: Option<bool>,
+    },
+    /// Renders the game camera offscreen at `scale` (1, 2 or 4) times the window's logical size and
+    /// saves a PNG: `target/shots/<name>.png` natively, `hexWorld.takeShot(name)` on the web. Ends
+    /// with a `photoExported` or `photoExportFailed` event.
+    PhotoExport {
+        scale: u32,
+        name: String,
+    },
 }
 
 impl Command {
@@ -167,6 +187,7 @@ pub fn run_commands(
     mut tilt: ResMut<TiltShiftSettings>,
     mut actions: ResMut<ActionQueue>,
     mut reduced: ResMut<ReducedMotion>,
+    (mut photo, mut exports): (ResMut<PhotoSettings>, ResMut<PhotoExports>),
 ) {
     queue.items.extend(INBOX.lock().unwrap().drain(..));
     if !*bridge::READY.lock().unwrap() {
@@ -215,6 +236,24 @@ pub fn run_commands(
         }
         Command::DumpState { name } => dump_state(&name),
         Command::SetReducedMotion { on } => reduced.0 = on,
+        Command::Photo {
+            dof,
+            focus,
+            aperture,
+            exposure,
+            fov,
+            roll,
+            pause_agents,
+        } => photo.apply(&PhotoPatch {
+            dof,
+            focus,
+            aperture,
+            exposure,
+            fov,
+            roll,
+            pause_agents,
+        }),
+        Command::PhotoExport { scale, name } => exports.push(scale, name),
         Command::Exit => exit.0 = true,
         _ => unreachable!("play commands return through `action`"),
     }
@@ -289,6 +328,12 @@ pub fn publish_state(
     (rises, reduced, packs): (Res<PlayRises>, Res<ReducedMotion>, Option<Res<PlayPacks>>),
     views: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
     boids: Option<Res<hex_render::boids::BoidReport>>,
+    (photo, session, exports, paused): (
+        Res<PhotoSettings>,
+        Res<PhotoSession>,
+        Res<PhotoExports>,
+        Res<hex_render::AgentsPaused>,
+    ),
 ) {
     *bridge::VIEW.lock().unwrap() = views.iter().find(|(c, _)| c.is_active).and_then(|(c, gt)| {
         Some(bridge::View {
@@ -301,9 +346,11 @@ pub fn publish_state(
         serde_json::json!({ "pos": t.translation.to_array(), "forward": t.forward().to_array() })
     });
     let kit_src = config.map(|c| c.kit_src).unwrap_or_default();
+    let gpu_limits = gpu.as_deref().copied();
     // `null` until the render device exists (the web renderer starts asynchronously).
     let gpu = gpu.map(|g| {
-        serde_json::json!({ "maxSampledTexturesPerShaderStage": g.max_sampled_textures_per_shader_stage })
+        serde_json::json!({ "maxSampledTexturesPerShaderStage": g.max_sampled_textures_per_shader_stage,
+                            "maxTextureDimension2D": g.max_texture_dimension_2d })
     });
     let play = active.0 == Scenario::Play;
     let play_state = play.then(|| {
@@ -320,6 +367,7 @@ pub fn publish_state(
         "events_pending": bridge::EVENTS.lock().unwrap().len(),
         "gpu": gpu,
         "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps },
+        "photo": crate::photo::state_json(&photo, &session, &exports, paused.0, sim.ticks(), gpu_limits.as_ref()),
         "frames": frames.0,
         "seed": flags.0.seed,
         "no_anim": flags.0.no_anim,
@@ -373,9 +421,29 @@ mod tests {
         let s = r#"[{"cmd":"camera","pos":[0,90,90],"look_at":[0,0,0]},
                     {"cmd":"wait","frames":30},{"cmd":"screenshot","name":"a"},
                     {"cmd":"scenario","name":"gate2000"},{"cmd":"dump_state","name":"s"},{"cmd":"exit"},
-                    {"cmd":"tilt","on":false,"strength":0.5}]"#;
+                    {"cmd":"tilt","on":false,"strength":0.5},
+                    {"cmd":"photo","dof":"manual","focus":12.5},{"cmd":"photo_export","scale":4,"name":"p"}]"#;
         let c = parse_script(s).unwrap();
-        assert_eq!(c.len(), 7);
+        assert_eq!(c.len(), 9);
+        assert_eq!(
+            c[7],
+            Command::Photo {
+                dof: Some(Dof::Manual),
+                focus: Some(12.5),
+                aperture: None,
+                exposure: None,
+                fov: None,
+                roll: None,
+                pause_agents: None,
+            }
+        );
+        assert_eq!(
+            c[8],
+            Command::PhotoExport {
+                scale: 4,
+                name: "p".into()
+            }
+        );
         assert_eq!(
             c[6],
             Command::Tilt {

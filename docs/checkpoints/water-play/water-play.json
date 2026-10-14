@@ -30,6 +30,7 @@
   {"cmd": "place", "q": 1, "r": -1},
   {"cmd": "hover", "q": 9, "r": -9},
   {"cmd": "toggle", "what": "photo"},
+  {"cmd": "photo", "dof": "off", "pause_agents": false},
   {"cmd": "wait", "frames": 60},
   {"cmd": "dump_state", "name": "water-play-state"},
 

@@ -84,7 +84,7 @@ function run(root: HTMLElement, hw: Bridge): void {
     }
     if (!hud) hud = new Hud(root, hw);
     root.classList.remove("is-off");
-    hud.render(play);
+    hud.render(play, state);
     requestAnimationFrame(tick);
   };
   tick();

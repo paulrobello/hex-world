@@ -27,27 +27,47 @@ pub fn request(commands: &mut Commands, name: &str) {
     commands
         .spawn(Screenshot::primary_window())
         .observe(move |shot: On<ScreenshotCaptured>| {
-            store(&name, encode_png(shot.image.clone()));
+            let _ = store(&name, encode_png(shot.image.clone()));
+            PENDING.fetch_sub(1, Ordering::SeqCst);
+        });
+}
+
+/// Captures an offscreen image target (photo mode's export) to a PNG stored like a screenshot,
+/// then reports the PNG's pixel size or the error to `done`.
+pub fn request_image(
+    commands: &mut Commands,
+    name: &str,
+    image: Handle<Image>,
+    done: impl Fn(Result<UVec2, String>) + Send + Sync + 'static,
+) {
+    PENDING.fetch_add(1, Ordering::SeqCst);
+    let name = name.to_string();
+    commands
+        .spawn(Screenshot::image(image))
+        .observe(move |shot: On<ScreenshotCaptured>| {
+            let size = UVec2::new(shot.image.width(), shot.image.height());
+            done(store(&name, encode_png(shot.image.clone())).map(|()| size));
             PENDING.fetch_sub(1, Ordering::SeqCst);
         });
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn store(name: &str, png: Result<Vec<u8>, String>) {
+fn store(name: &str, png: Result<Vec<u8>, String>) -> Result<(), String> {
     let path = format!("{SHOT_DIR}/{name}.png");
     let res = png.and_then(|bytes| {
         std::fs::create_dir_all(SHOT_DIR)
             .and_then(|_| std::fs::write(&path, bytes))
             .map_err(|e| e.to_string())
     });
-    match res {
+    match &res {
         Ok(()) => info!("wrote {path}"),
         Err(e) => error!("screenshot {name} failed: {e}"),
     }
+    res
 }
 
 #[cfg(target_arch = "wasm32")]
-fn store(name: &str, png: Result<Vec<u8>, String>) {
+fn store(name: &str, png: Result<Vec<u8>, String>) -> Result<(), String> {
     match png {
         Ok(bytes) => {
             let url = format!("data:image/png;base64,{}", base64(&bytes));
@@ -55,8 +75,12 @@ fn store(name: &str, png: Result<Vec<u8>, String>) {
             shots.retain(|(n, _)| n != name);
             shots.push((name.to_string(), url));
             info!("captured screenshot {name}");
+            Ok(())
         }
-        Err(e) => error!("screenshot {name} failed: {e}"),
+        Err(e) => {
+            error!("screenshot {name} failed: {e}");
+            Err(e)
+        }
     }
 }
 

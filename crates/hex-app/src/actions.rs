@@ -25,6 +25,11 @@ pub enum Action {
     Pan(Vec2),
     /// Wheel notches, positive zooms in.
     Zoom(f32),
+    /// Photo mode's free camera: metres along the view's horizontal right (x), world up (y) and
+    /// the view direction (z).
+    Fly(Vec3),
+    /// Photo mode's mouse look by a drag in pixels (x turns right, y tilts down).
+    Look(Vec2),
     /// Left-click: apply the current tool (place or bulldoze) at the hovered cell.
     Primary,
     /// Place the selected tile at a cell. A cell other than the hovered one is hovered first.
@@ -40,6 +45,8 @@ pub enum Action {
     SetTool(Tool),
     ToggleInventory,
     TogglePhoto,
+    /// Esc in photo mode: leaves it; does nothing outside it.
+    ExitPhoto,
     SelectTile(String),
     /// Select the n-th inventory tile (catalog order), from the number-key binding.
     SelectNth(usize),
@@ -48,7 +55,10 @@ pub enum Action {
 impl Action {
     /// Camera actions move the view; every other action goes to the game.
     pub fn is_camera(&self) -> bool {
-        matches!(self, Action::Orbit(_) | Action::Pan(_) | Action::Zoom(_))
+        matches!(
+            self,
+            Action::Orbit(_) | Action::Pan(_) | Action::Zoom(_) | Action::Fly(_) | Action::Look(_)
+        )
     }
 }
 
@@ -100,6 +110,10 @@ const DRAG_PAN_PER_PX: f32 = 0.0012;
 const KEY_PAN_SPEED: f32 = 0.8;
 /// Pixel-unit scroll (trackpads, browsers) per wheel notch.
 pub const PIXELS_PER_NOTCH: f32 = 40.0;
+/// Photo free-camera speed in metres per second (WASD, Q/E); Shift flies four times faster.
+pub const FLY_SPEED: f32 = 12.0;
+/// Photo free-camera dolly per wheel notch, in metres.
+const FLY_PER_NOTCH: f32 = 2.0;
 
 /// Number keys 1..9, 0, -, = select inventory tiles 1..12 (a provisional binding, not in §4.5).
 const SELECT_KEYS: [KeyCode; 12] = [
@@ -116,6 +130,45 @@ const SELECT_KEYS: [KeyCode; 12] = [
     KeyCode::Minus,
     KeyCode::Equal,
 ];
+
+/// Photo mode's bindings (§4.5): P or Esc leaves, WASD flies, Q/E move down and up, a left or right
+/// drag looks around and the wheel dollies. Nothing places, rotates or opens a panel.
+pub fn map_photo_input(f: &InputFrame) -> Vec<Action> {
+    let mut out = vec![];
+    if f.pressed(KeyCode::KeyP) && !f.ctrl_or_cmd() {
+        out.push(Action::TogglePhoto);
+    } else if f.pressed(KeyCode::Escape) {
+        out.push(Action::ExitPhoto);
+    }
+    if f.motion != Vec2::ZERO
+        && (f.mouse_held.contains(&MouseButton::Left) || f.mouse_held.contains(&MouseButton::Right))
+    {
+        out.push(Action::Look(f.motion));
+    }
+    if !f.ctrl_or_cmd() {
+        let axis = |pos: &[KeyCode], neg: &[KeyCode]| {
+            f.held_any(pos) as i32 as f32 - f.held_any(neg) as i32 as f32
+        };
+        let dir = Vec3::new(
+            axis(
+                &[KeyCode::KeyD, KeyCode::ArrowRight],
+                &[KeyCode::KeyA, KeyCode::ArrowLeft],
+            ),
+            axis(&[KeyCode::KeyE], &[KeyCode::KeyQ]),
+            axis(
+                &[KeyCode::KeyW, KeyCode::ArrowUp],
+                &[KeyCode::KeyS, KeyCode::ArrowDown],
+            ),
+        );
+        let speed = FLY_SPEED * if f.shift() { 4.0 } else { 1.0 };
+        let mut step = dir.normalize_or_zero() * speed * f.dt;
+        step.z += f.wheel * FLY_PER_NOTCH;
+        if step != Vec3::ZERO {
+            out.push(Action::Fly(step));
+        }
+    }
+    out
+}
 
 /// The §4.5 bindings. `rotate_wheel` carries fractional Ctrl+wheel travel between frames, so one
 /// notch is one rotation step and a trackpad flick rotates at most once per frame.
@@ -208,6 +261,7 @@ pub fn read_input(
     motion: Res<AccumulatedMouseMotion>,
     scroll: Res<AccumulatedMouseScroll>,
     time: Res<Time>,
+    game: Res<crate::game::GameState>,
     mut rotate_wheel: Local<f32>,
     mut queue: ResMut<ActionQueue>,
 ) {
@@ -224,7 +278,12 @@ pub fn read_input(
         wheel,
         dt: time.delta_secs(),
     };
-    queue.0.extend(map_input(&frame, &mut rotate_wheel));
+    if game.photo_mode {
+        *rotate_wheel = 0.0;
+        queue.0.extend(map_photo_input(&frame));
+    } else {
+        queue.0.extend(map_input(&frame, &mut rotate_wheel));
+    }
 }
 
 #[cfg(test)]
@@ -350,6 +409,61 @@ mod tests {
             [Action::Rotate(RotateDir::Back)],
             "a flick rotates once, never zooms"
         );
+    }
+
+    #[test]
+    fn photo_mode_flies_looks_and_leaves() {
+        let fly = InputFrame {
+            held: vec![KeyCode::KeyW, KeyCode::KeyE],
+            dt: 0.5,
+            ..default()
+        };
+        let [Action::Fly(d)] = map_photo_input(&fly)[..] else {
+            panic!("WASD/QE fly in photo mode");
+        };
+        assert!(d.z > 0.0 && d.y > 0.0 && d.x == 0.0, "{d}");
+        assert!((d.length() - FLY_SPEED * 0.5).abs() < 1e-4);
+        let down = InputFrame {
+            held: vec![KeyCode::KeyQ],
+            dt: 1.0,
+            ..default()
+        };
+        assert_eq!(
+            map_photo_input(&down),
+            [Action::Fly(Vec3::new(0.0, -FLY_SPEED, 0.0))]
+        );
+
+        let look = InputFrame {
+            mouse_just_pressed: vec![MouseButton::Left],
+            mouse_held: vec![MouseButton::Left],
+            motion: Vec2::new(8.0, -3.0),
+            ..default()
+        };
+        assert_eq!(
+            map_photo_input(&look),
+            [Action::Look(Vec2::new(8.0, -3.0))],
+            "a click looks, never places"
+        );
+        let press = |k| InputFrame {
+            just_pressed: vec![k],
+            held: vec![k],
+            ..default()
+        };
+        assert_eq!(
+            map_photo_input(&press(KeyCode::KeyP)),
+            [Action::TogglePhoto]
+        );
+        assert_eq!(
+            map_photo_input(&press(KeyCode::Escape)),
+            [Action::ExitPhoto]
+        );
+        for k in [KeyCode::KeyR, KeyCode::KeyB, KeyCode::Tab, KeyCode::Digit1] {
+            assert!(
+                map_photo_input(&press(k)).is_empty(),
+                "{k:?} is inert in photo mode"
+            );
+        }
+        assert!(Action::Fly(Vec3::X).is_camera() && Action::Look(Vec2::X).is_camera());
     }
 
     #[test]

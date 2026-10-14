@@ -322,11 +322,12 @@ fn plan_boids(
     inputs: Option<ResMut<BoidInputs>>,
     mut buffers: ResMut<Assets<ShaderBuffer>>,
     mut report: ResMut<BoidReport>,
+    paused: Option<Res<crate::AgentsPaused>>,
 ) {
     let Some(mut inputs) = inputs else {
         return;
     };
-    let dt = time.delta_secs().min(MAX_DT);
+    let dt = step_dt(time.delta_secs(), paused.is_some_and(|p| p.0));
     let play = active.0 == Scenario::Play;
     let state = &mut *state;
     if state.scenario != Some(active.0) {
@@ -448,6 +449,12 @@ pub fn report_json(c: &BoidCounts, play: bool, dispatched: u32) -> String {
         c.water_tiles,
         regions.join(",")
     )
+}
+
+/// The compute step for a frame: clamped, and zero while photo mode pauses the agents (the flock
+/// and the roost waves hold still).
+pub fn step_dt(delta: f32, paused: bool) -> f32 {
+    if paused { 0.0 } else { delta.min(MAX_DT) }
 }
 
 /// Spawns the flock entity; `scene::setup` calls this so it is a `SceneEntity` like the rest.
@@ -587,6 +594,13 @@ fn dispatch_boids(
 mod tests {
     use super::*;
     use bevy::mesh::VertexAttributeValues;
+
+    #[test]
+    fn paused_boids_take_no_step() {
+        assert_eq!(step_dt(0.016, true), 0.0);
+        assert_eq!(step_dt(0.016, false), 0.016);
+        assert_eq!(step_dt(5.0, false), MAX_DT);
+    }
 
     #[test]
     fn mesh_has_one_double_sided_shape_per_boid() {

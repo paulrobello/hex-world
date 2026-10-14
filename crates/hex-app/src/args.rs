@@ -56,6 +56,9 @@ pub struct Flags {
     pub clock_fixed: bool,
     /// Native only: render the tile thumbnails and exit (`thumbs::force_flags` sets the rest).
     pub thumbs: bool,
+    /// `photo-export=1|2|4`: once ready, export a photo-mode PNG at that scale, named
+    /// `photo-<n>x` (natively `target/shots/photo-<n>x.png`).
+    pub photo_export: Option<u32>,
 }
 
 /// `"1280x800"` -> `Some((1280, 800))`; zero or malformed sizes are rejected.
@@ -253,6 +256,10 @@ pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Fl
                 &mut warnings,
             ),
             "present" => set_or_warn(&mut f.present, Present::parse(v), k, v, &mut warnings),
+            "photo-export" => match v.parse::<u32>() {
+                Ok(n) if crate::photo::EXPORT_SCALES.contains(&n) => f.photo_export = Some(n),
+                _ => warnings.push(format!("bad photo-export '{v}', expected 1, 2 or 4")),
+            },
             _ => {}
         }
     }
@@ -310,6 +317,7 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "tier",
         "water_clock",
         "clock",
+        "photo-export",
     ]
     .iter()
     .filter_map(|k| params.get(k).map(|v| (k.to_string(), v)))
@@ -619,5 +627,13 @@ mod tests {
         let (f, w) = flags_from_pairs(&p(&[("seed", "-3")]));
         assert_eq!(f.seed, 0);
         assert_eq!(w.len(), 1);
+    }
+
+    #[test]
+    fn photo_export_takes_one_two_or_four() {
+        let (f, w) = flags_from_pairs(&p(&[("photo-export", "4")]));
+        assert_eq!((f.photo_export, w.len()), (Some(4), 0));
+        let (f, w) = flags_from_pairs(&p(&[("photo-export", "3")]));
+        assert_eq!((f.photo_export, w.len()), (None, 1));
     }
 }

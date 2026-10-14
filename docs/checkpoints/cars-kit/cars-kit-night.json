@@ -1,6 +1,7 @@
 [
   {"cmd": "camera", "pos": [40, 170, 130], "look_at": [30, 0, 0]},
   {"cmd": "toggle", "what": "photo"},
+  {"cmd": "photo", "dof": "off", "pause_agents": false},
   {"cmd": "select_tile", "id": "road_junction"},
   {"cmd": "place", "q": 1, "r": 0},
   {"cmd": "select_tile", "id": "road_straight"},

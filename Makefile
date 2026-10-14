@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast audio-e2e shots-boids
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast audio-e2e shots-boids shots-photo
 
 fmt:
 	cargo fmt --all
@@ -379,6 +379,30 @@ shots-cars:
 	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(CARS_DOCS)/$$n.jpg || exit 1; done
 	cp target/shots/cars-*.json $(CARS_DOCS)/
 	@echo "wrote $(CARS_DOCS)/"
+
+# Photo mode checkpoint (PRD §4.6): runs docs/checkpoints/photo/photo.json at 1280x800 with the
+# game camera's tilt-shift off and `--clock fixed`: enter (tilt preset), a manual-DOF close-up and
+# the same shot with DOF off, the tilt preset with roll and exposure, a 4x offscreen export
+# (5120x3200), then exit back to the orbit camera. Copies JPEG stills, the state dumps, the export's
+# PNG size and mean, and the DOF-vs-off RMSE (fails at or below 0.004, a lens that did nothing) to
+# the folder; the full-size PNG stays in target/shots.
+PHOTO_SHOTS = photo-01-enter-tilt photo-02-dof-closeup photo-02-dof-off-closeup photo-03-tilt-roll-exposure photo-04-export-4x photo-05-exit-orbit
+PHOTO_DOCS = docs/checkpoints/photo
+shots-photo:
+	mkdir -p target/shots $(PHOTO_DOCS)
+	rm -f target/shots/photo-*.png target/shots/photo-*.json
+	cargo run -p hex-app --release -- --scenario play --script $(PHOTO_DOCS)/photo.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
+	@for n in $(PHOTO_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(PHOTO_DOCS)/$$n.jpg || exit 1; done
+	magick identify -format '{"png": "%f", "width": %w, "height": %h, "mean": %[fx:mean]}\n' target/shots/photo-04-export-4x.png > $(PHOTO_DOCS)/photo-04-export-4x.size.json
+	@grep -q '"width": 5120, "height": 3200' $(PHOTO_DOCS)/photo-04-export-4x.size.json || { echo "4x export is not 5120x3200"; cat $(PHOTO_DOCS)/photo-04-export-4x.size.json; exit 1; }
+	@for n in $(PHOTO_SHOTS); do m=$$(magick target/shots/$$n.png -format '%[fx:mean]' info:); \
+	  awk -v m="$$m" 'BEGIN { exit !(m > 0.02) }' || { echo "$$n.png is black (mean $$m)"; exit 1; }; done
+	@r=$$(magick compare -metric RMSE target/shots/photo-02-dof-closeup.png target/shots/photo-02-dof-off-closeup.png null: 2>&1 | sed -E 's/.*\(([0-9.e-]+)\).*/\1/'); \
+	  awk -v r="$$r" 'BEGIN { exit !(r > 0.004) }' || { echo "manual DOF changed nothing (RMSE $$r)"; exit 1; }; \
+	  echo "{\"dof_vs_off_rmse\": $$r}" > $(PHOTO_DOCS)/photo-02-dof-rmse.json; echo "manual DOF vs off: RMSE $$r"
+	cp target/shots/photo-*.json $(PHOTO_DOCS)/
+	@echo "wrote $(PHOTO_DOCS)/"
 
 # Audio pipeline (PRD §8, assets-source/audio/README.md). Needs python3 and ffmpeg with libopus.
 # Masters every cue in assets-source/audio/cues.json that has a source; CUE=<id> masters one.

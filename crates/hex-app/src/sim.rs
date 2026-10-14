@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use bevy::prelude::*;
 use hex_core::{Axial, PlacedTile, TileCatalog, World};
 use hex_render::{
-    ActiveScenario, Scenario,
+    ActiveScenario, AgentsPaused, Scenario,
     cars::{CarKind, CarPose, CarsView},
     play::{PlaySystems, rise::PlayRises},
 };
@@ -60,6 +60,8 @@ pub struct CarSim {
     /// The world's tiles as last mirrored into `sim`.
     mirrored: BTreeMap<Axial, PlacedTile>,
     stats: SimStats,
+    /// Fixed ticks run so far (photo mode's pause holds it still).
+    ticks: u64,
 }
 
 impl CarSim {
@@ -69,6 +71,7 @@ impl CarSim {
             sim: Simulation::from_world(world, catalog, SimConfig::default()),
             mirrored: world.tiles().clone(),
             stats: SimStats::default(),
+            ticks: 0,
         };
         s.refresh();
         s
@@ -135,7 +138,12 @@ impl CarSim {
     /// One fixed tick of `hex_sim::TICK_SECONDS`.
     pub fn tick(&mut self) {
         self.sim.tick();
+        self.ticks += 1;
         self.refresh();
+    }
+
+    pub fn ticks(&self) -> u64 {
+        self.ticks
     }
 
     fn refresh(&mut self) {
@@ -201,17 +209,28 @@ pub fn mirror_world(
     }
 }
 
-/// The fixed tick; the sim runs only while the play scenario is shown.
-pub fn tick(mut sim: ResMut<CarSim>, active: Res<ActiveScenario>) {
-    if active.0 == Scenario::Play {
+/// The fixed tick; the sim runs only while the play scenario is shown and photo mode has not
+/// paused the agents.
+pub fn tick(mut sim: ResMut<CarSim>, active: Res<ActiveScenario>, paused: Res<AgentsPaused>) {
+    if active.0 == Scenario::Play && !paused.0 {
         sim.tick();
     }
 }
 
 /// Writes each driving car's pose between the last two ticks, at the fraction of a tick the fixed
 /// clock has accumulated since the latest one, and each parked car at its spot. A car keeps its id
-/// from spot to spot, so the same entity parks, pulls out and parks again without popping.
-pub fn publish_cars(sim: Res<CarSim>, fixed: Res<Time<Fixed>>, mut view: ResMut<CarsView>) {
+/// from spot to spot, so the same entity parks, pulls out and parks again without popping. Paused,
+/// the poses stay as last written: the fixed clock's overstep keeps cycling, and interpolating with
+/// it would rock each car between two poses.
+pub fn publish_cars(
+    sim: Res<CarSim>,
+    fixed: Res<Time<Fixed>>,
+    paused: Res<AgentsPaused>,
+    mut view: ResMut<CarsView>,
+) {
+    if paused.0 {
+        return;
+    }
     let (cars, parked) = (sim.sim.cars(), sim.sim.parked());
     if cars.is_empty() && parked.is_empty() && view.cars.is_empty() {
         return;

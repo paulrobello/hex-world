@@ -66,6 +66,7 @@
 
   {"cmd": "hover", "q": 9, "r": -9},
   {"cmd": "toggle", "what": "photo"},
+  {"cmd": "photo", "dof": "off", "pause_agents": false},
   {"cmd": "camera", "pos": [90, 18, 56], "look_at": [66, -1.5, 22]},
   {"cmd": "wait", "frames": 150},
   {"cmd": "select_tile", "id": "beach_outer"},

@@ -1,7 +1,7 @@
 // The play HUD (S2–S7): tool bar, Tiles sheet, the tag beside the ghost, undo/redo toasts, bulldoze,
 // first-run callouts and keys. It reads hexWorld.state() and events every frame and acts only
 // through bridge commands, so the engine stays the one owner of game state.
-import type { Cell, Command, GameEvent, HexWorld, PlayState, Rect } from "./bridge.ts";
+import type { Cell, Command, GameEvent, HexWorld, PlayState, Rect, State } from "./bridge.ts";
 import { h, isMac, reduceMotion, retrigger, s } from "./dom.ts";
 import { icon } from "./icons.ts";
 import {
@@ -17,6 +17,8 @@ import {
   tileDef,
   tileMap,
 } from "./rules.ts";
+import { Photo } from "./photo.ts";
+import { Settings } from "./settings.ts";
 import { Sheet } from "./sheet.ts";
 import { actionText, bulldozeRefusal, plural, tileName } from "./words.ts";
 
@@ -60,6 +62,8 @@ export class Hud {
   private readonly callout: HTMLElement;
   private readonly leader: SVGElement;
   private readonly canvas: HTMLCanvasElement | null;
+  private readonly photo: Photo;
+  private readonly settings: Settings;
 
   private st: PlayState | null = null;
   private pending: GameEvent[] = [];
@@ -114,6 +118,10 @@ export class Hud {
       this.leader,
       this.tip,
     );
+    this.photo = new Photo(hw);
+    this.settings = new Settings(hw, () => this.toggleSettings());
+    this.root.append(this.settings.el);
+    document.body.append(this.photo.root);
     this.wireInput();
     const done = Number(storeGet(HINTS_KEY) ?? 0);
     if (done < HINTS.length) this.hint = done;
@@ -188,9 +196,8 @@ export class Hud {
     bar.append(rule());
     add("inventory", "inventory", "Tiles", "Tab", "Tiles|Tab", "Tiles, Tab");
     bar.append(rule());
-    add("photo", "photo", "", "", "Photo mode|P|Not built yet", "Photo mode, not built yet");
-    add("settings", "settings", "", "", "Settings||Not built yet", "Settings, not built yet");
-    for (const a of ["photo", "settings"]) this.tools.get(a)!.btn.setAttribute("aria-disabled", "true");
+    add("photo", "photo", "", "", "Photo mode|P", "Photo mode, P");
+    add("settings", "settings", "", "", "Settings", "Settings");
     return bar;
   }
 
@@ -205,6 +212,19 @@ export class Hud {
     else if (a === "redo") this.history(true);
     else if (a === "bulldoze") this.toggleBulldoze();
     else if (a === "inventory") this.toggleSheet();
+    else if (a === "photo") this.togglePhoto();
+    else if (a === "settings") this.toggleSettings();
+  }
+
+  private togglePhoto(): void {
+    this.fire("photo");
+    if (this.settings.open) this.toggleSettings();
+    this.cmd({ cmd: "toggle", what: "photo" });
+  }
+
+  private toggleSettings(): void {
+    this.settings.open = !this.settings.open;
+    this.tools.get("settings")?.btn.classList.toggle("is-on", this.settings.open);
   }
 
   private history(redo: boolean): void {
@@ -251,9 +271,13 @@ export class Hud {
 
   onEvents(batch: GameEvent[]): void {
     this.pending.push(...batch);
+    this.photo.onEvents(batch);
   }
 
-  render(st: PlayState): void {
+  render(st: PlayState, state: State = {}): void {
+    this.photo.render(st.photo_mode, state.photo);
+    this.settings.render(state.tilt);
+    this.root.classList.toggle("is-photo", st.photo_mode);
     const prev = this.st;
     this.st = st;
     const events = this.pending;
@@ -660,6 +684,11 @@ export class Hud {
       e.preventDefault();
       e.stopImmediatePropagation();
     };
+    // Photo mode owns P, Esc and H and swallows the game keys; with a modifier nothing acts (no undo).
+    if (st.photo_mode || this.photo.active) {
+      if (!mod && this.photo.key(e)) take();
+      return;
+    }
     if (mod) {
       if (k === "z") {
         take();
@@ -688,8 +717,8 @@ export class Hud {
         if (!e.repeat) this.toggleBulldoze();
         return;
       case "p":
-        // Photo mode is not built yet; P must not put the engine in a mode the HUD cannot leave.
         take();
+        if (!e.repeat) this.togglePhoto();
         return;
       case "h":
         take();
@@ -697,7 +726,8 @@ export class Hud {
         return;
       case "Escape":
         take();
-        if (st.tool === "bulldoze") this.cmd({ cmd: "set_tool", mode: "place" });
+        if (this.settings.open) this.toggleSettings();
+        else if (st.tool === "bulldoze") this.cmd({ cmd: "set_tool", mode: "place" });
         else if (this.hidden) this.setHidden(false);
         else this.sheetSlot = null;
         return;

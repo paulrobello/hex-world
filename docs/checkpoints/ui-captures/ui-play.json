@@ -1,6 +1,7 @@
 [
   {"cmd": "camera", "pos": [39, 151.12, 175.39], "look_at": [39, 0, 2]},
   {"cmd": "toggle", "what": "photo"},
+  {"cmd": "photo", "dof": "off", "pause_agents": false},
 
   {"cmd": "select_tile", "id": "beach"},
   {"cmd": "hover", "q": 1, "r": 0},

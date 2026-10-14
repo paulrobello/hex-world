@@ -8,6 +8,8 @@ export type Spin = "cw" | "ccw";
 export type ToggleTarget = "bulldoze" | "inventory" | "photo";
 export type EdgeStatus = "Compatible" | "Incompatible" | "Neutral";
 export type HoveredKind = "tile" | "slot" | "empty";
+/** Photo mode's depth of field: off, the tilt-shift kernel, or the lens (manual). */
+export type Dof = "off" | "tilt" | "manual";
 
 export interface Cell {
   q: number;
@@ -33,7 +35,18 @@ export type Command =
   | { cmd: "redo" }
   | { cmd: "bulldoze"; q: number; r: number }
   | { cmd: "set_tool"; mode: Tool }
-  | { cmd: "toggle"; what: ToggleTarget };
+  | { cmd: "toggle"; what: ToggleTarget }
+  | {
+      cmd: "photo";
+      dof?: Dof | null;
+      focus?: number | null;
+      aperture?: number | null;
+      exposure?: number | null;
+      fov?: number | null;
+      roll?: number | null;
+      pause_agents?: boolean | null;
+    }
+  | { cmd: "photo_export"; scale: 1 | 2 | 4; name: string };
 
 export type GameEvent =
   | { type: "tilePlaced"; q: number; r: number; tile: string; rotation: number }
@@ -49,7 +62,9 @@ export type GameEvent =
   | { type: "inventoryToggled"; open: boolean }
   | { type: "photoModeToggled"; on: boolean }
   | { type: "actionRefused"; action: string; reason: string }
-  | { type: "riseStage"; q: number; r: number; tile: string; stage: string; skipped: boolean };
+  | { type: "riseStage"; q: number; r: number; tile: string; stage: string; skipped: boolean }
+  | { type: "photoExported"; name: string; width: number; height: number }
+  | { type: "photoExportFailed"; name: string; reason: string };
 
 export interface PlayTile {
   q: number;
@@ -132,10 +147,50 @@ export interface PlayState {
   zoom: number | null;
 }
 
+/** A photo export in flight: its name, scale and PNG size in pixels. */
+export interface PhotoExportJob {
+  name: string;
+  scale: number;
+  width: number;
+  height: number;
+}
+
+/** `state().photo`: the photo panel (PRD §4.6) and what the engine is doing with it. */
+export interface PhotoState {
+  on: boolean;
+  dof: Dof;
+  /** Metres. */
+  focus: number;
+  /** f-number. */
+  aperture: number;
+  /** Stops brighter than the game camera. */
+  exposure: number;
+  /** Degrees. */
+  fov: number;
+  /** Degrees. */
+  roll: number;
+  pause_agents: boolean;
+  agents_paused: boolean;
+  /** The car sim's fixed ticks so far; it holds still while agents are paused. */
+  sim_ticks: number;
+  exporting: PhotoExportJob | null;
+  /** The GPU's largest texture side, which caps the export size; null before the renderer starts. */
+  max_texture: number | null;
+}
+
+/** `state().tilt`: the game camera's tilt-shift (PRD §9.1). */
+export interface TiltState {
+  enabled: boolean;
+  strength: number;
+  taps: number;
+}
+
 /** `hexWorld.state()`: only the fields the overlay reads; the rest are documented in docs/agent-operability.md. */
 export interface State {
   scenario?: string;
   play?: PlayState | null;
+  photo?: PhotoState;
+  tilt?: TiltState;
   /** The game camera: position and unit forward vector in world metres. */
   camera?: { pos: Vec3; forward: Vec3 } | null;
 }
@@ -151,6 +206,8 @@ export interface HexWorld {
   watchEvents(cb: (batch: GameEvent[]) => void): void;
   pumpEvents(): void;
   cellRect(q: number, r: number): Rect | null;
+  /** Removes and returns a finished capture's PNG data URL (screenshots and photo exports). */
+  takeShot(name: string): string | null;
 }
 
 // ---------- Field tables, checked against bridge-schema.json by test/bridge-sync.test.ts ----------
@@ -179,6 +236,16 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   bulldoze: keys<CommandOf<"bulldoze">>({ q: true, r: true }),
   set_tool: keys<CommandOf<"set_tool">>({ mode: true }),
   toggle: keys<CommandOf<"toggle">>({ what: true }),
+  photo: keys<CommandOf<"photo">>({
+    dof: true,
+    focus: true,
+    aperture: true,
+    exposure: true,
+    fov: true,
+    roll: true,
+    pause_agents: true,
+  }),
+  photo_export: keys<CommandOf<"photo_export">>({ scale: true, name: true }),
 };
 
 export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
@@ -196,6 +263,8 @@ export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
   photoModeToggled: keys<EventOf<"photoModeToggled">>({ on: true }),
   actionRefused: keys<EventOf<"actionRefused">>({ action: true, reason: true }),
   riseStage: keys<EventOf<"riseStage">>({ q: true, r: true, tile: true, stage: true, skipped: true }),
+  photoExported: keys<EventOf<"photoExported">>({ name: true, width: true, height: true }),
+  photoExportFailed: keys<EventOf<"photoExportFailed">>({ name: true, reason: true }),
 };
 
 export const ENUMS = {
@@ -203,6 +272,7 @@ export const ENUMS = {
   spin: keys<Record<Spin, true>>({ cw: true, ccw: true }),
   toggle: keys<Record<ToggleTarget, true>>({ bulldoze: true, inventory: true, photo: true }),
   edge_status: keys<Record<EdgeStatus, true>>({ Compatible: true, Incompatible: true, Neutral: true }),
+  dof: keys<Record<Dof, true>>({ off: true, tilt: true, manual: true }),
 };
 
 export const STATE_FIELDS = {
@@ -240,4 +310,18 @@ export const STATE_FIELDS = {
   rising: keys<RisingTile>({ q: true, r: true, tile: true, stage: true, t: true }),
   cell: keys<Cell>({ q: true, r: true }),
   hovered_kind: keys<Record<HoveredKind, true>>({ tile: true, slot: true, empty: true }),
+  photo: keys<PhotoState>({
+    on: true,
+    dof: true,
+    focus: true,
+    aperture: true,
+    exposure: true,
+    fov: true,
+    roll: true,
+    pause_agents: true,
+    agents_paused: true,
+    sim_ticks: true,
+    exporting: true,
+    max_texture: true,
+  }),
 };

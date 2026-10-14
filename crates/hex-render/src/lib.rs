@@ -85,7 +85,13 @@ impl Scenario {
 #[derive(Resource, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GpuLimits {
     pub max_sampled_textures_per_shader_stage: u32,
+    /// Largest 2D texture side; bounds photo mode's offscreen export (PRD §4.6).
+    pub max_texture_dimension_2d: u32,
 }
+
+/// Photo mode's agent pause (PRD §4.6): cars and boids hold still while it is set.
+#[derive(Resource, Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct AgentsPaused(pub bool);
 
 fn record_gpu_limits(
     mut commands: Commands,
@@ -99,6 +105,7 @@ fn record_gpu_limits(
         max_sampled_textures_per_shader_stage: device
             .limits()
             .max_sampled_textures_per_shader_stage,
+        max_texture_dimension_2d: device.limits().max_texture_dimension_2d,
     };
     info!(
         "gpu: max_sampled_textures_per_shader_stage={}",
@@ -143,6 +150,7 @@ impl Plugin for HexRenderPlugin {
                 MaterialPlugin::<water::TerrainMaterial>::default(),
                 MaterialPlugin::<play::affordances::AffordanceMaterial>::default(),
             ))
+            .init_resource::<AgentsPaused>()
             .init_resource::<play::PlayView>()
             .init_resource::<play::PlayCatalog>()
             .init_resource::<play::rise::PlayRises>()

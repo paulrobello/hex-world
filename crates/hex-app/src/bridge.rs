@@ -202,6 +202,8 @@ mod schema {
         r#"{"cmd":"bulldoze","q":1,"r":0}"#,
         r#"{"cmd":"set_tool","mode":"bulldoze"}"#,
         r#"{"cmd":"toggle","what":"inventory"}"#,
+        r#"{"cmd":"photo","dof":"tilt","focus":64,"aperture":2.8,"exposure":0.3,"fov":50,"roll":0,"pause_agents":true}"#,
+        r#"{"cmd":"photo_export","scale":2,"name":"hex-world"}"#,
     ];
 
     /// Exhaustive on purpose: a new command fails to compile here until it has a sample above.
@@ -224,6 +226,8 @@ mod schema {
             Command::Bulldoze { .. } => "bulldoze",
             Command::SetTool { .. } => "set_tool",
             Command::Toggle { .. } => "toggle",
+            Command::Photo { .. } => "photo",
+            Command::PhotoExport { .. } => "photo_export",
         }
     }
 
@@ -308,8 +312,17 @@ mod schema {
                 stage: "column",
                 skipped: false,
             },
+            GameEvent::PhotoExported {
+                name: "hex-world".into(),
+                width: 2880,
+                height: 1800,
+            },
+            GameEvent::PhotoExportFailed {
+                name: "hex-world".into(),
+                reason: "too large".into(),
+            },
         ];
-        let mut seen = [false; 14];
+        let mut seen = [false; 16];
         for e in &samples {
             let i = match e {
                 GameEvent::TilePlaced { .. } => 0,
@@ -326,6 +339,8 @@ mod schema {
                 GameEvent::PhotoModeToggled { .. } => 11,
                 GameEvent::ActionRefused { .. } => 12,
                 GameEvent::RiseStage { .. } => 13,
+                GameEvent::PhotoExported { .. } => 14,
+                GameEvent::PhotoExportFailed { .. } => 15,
             };
             seen[i] = true;
         }
@@ -386,6 +401,14 @@ mod schema {
         g.apply(Action::SetTool(Tool::Bulldoze));
         g.apply(Action::Hover(Some(Axial::new(1, 0))));
         let bulldoze = g.state_json();
+        let photo = crate::photo::state_json(
+            &crate::photo::PhotoSettings::default(),
+            &crate::photo::PhotoSession::default(),
+            &crate::photo::PhotoExports::default(),
+            false,
+            0,
+            None,
+        );
         json!({
             "play": keys(&place),
             "ghost": keys(&place["ghost"]),
@@ -395,6 +418,7 @@ mod schema {
             "rising": keys(&place["rising"][0]),
             "cell": keys(&place["hovered"]),
             "hovered_kind": ["empty", "slot", "tile"],
+            "photo": keys(&photo),
         })
     }
 
@@ -504,6 +528,7 @@ mod schema {
                 "tool": tool,
                 "spin": serde_variants::<Spin>(r#""__none__""#),
                 "toggle": serde_variants::<Toggle>(r#""__none__""#),
+                "dof": serde_variants::<crate::photo::Dof>(r#""__none__""#),
                 "edge_status": edge_status_names(),
             },
             "state": play_shapes(),

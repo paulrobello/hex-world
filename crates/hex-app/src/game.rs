@@ -65,6 +65,18 @@ pub enum GameEvent {
     PhotoModeToggled {
         on: bool,
     },
+    /// A photo-mode PNG export finished (PRD §4.6): natively written under `target/shots`, on the
+    /// web taken with `hexWorld.takeShot(name)`. Sizes are the PNG's pixels.
+    PhotoExported {
+        name: String,
+        width: u32,
+        height: u32,
+    },
+    /// The export did not render, for example a 4× target past this GPU's texture limit.
+    PhotoExportFailed {
+        name: String,
+        reason: String,
+    },
     /// Any other refused action (undo with an empty stack, an unknown tile id, a click with
     /// nothing hovered).
     ActionRefused {
@@ -232,7 +244,11 @@ impl GameState {
 
     fn apply_inner(&mut self, action: Action) -> Vec<GameEvent> {
         match action {
-            Action::Orbit(_) | Action::Pan(_) | Action::Zoom(_) => vec![],
+            Action::Orbit(_)
+            | Action::Pan(_)
+            | Action::Zoom(_)
+            | Action::Fly(_)
+            | Action::Look(_) => vec![],
             Action::Hover(cell) => {
                 if cell == self.hovered {
                     return vec![];
@@ -328,7 +344,8 @@ impl GameState {
                     open: self.inventory_open,
                 }]
             }
-            Action::TogglePhoto => {
+            Action::ExitPhoto if !self.photo_mode => vec![],
+            Action::TogglePhoto | Action::ExitPhoto => {
                 self.photo_mode = !self.photo_mode;
                 self.result("toggle_photo", None, None);
                 vec![GameEvent::PhotoModeToggled {
@@ -481,7 +498,7 @@ impl GameState {
 /// Events not yet drained by `hex_world_events`; nothing drains natively, so the oldest drop.
 pub const EVENT_QUEUE_CAP: usize = 256;
 
-fn publish_event(e: &GameEvent) {
+pub fn publish_event(e: &GameEvent) {
     let json = serde_json::to_string(e).unwrap_or_default();
     info!("event: {json}");
     let mut q = bridge::EVENTS.lock().unwrap();

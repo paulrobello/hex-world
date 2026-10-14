@@ -18,6 +18,23 @@ const ORBIT_RAD_PER_PX: f32 = 0.005;
 const ZOOM_PER_NOTCH: f32 = 0.88;
 /// Focus distance used when the camera looks at or above the horizon.
 const HORIZON_FOCUS: f32 = 100.0;
+/// Photo free camera: mouse-look rate, the pitch limit short of straight up or down, and the
+/// lowest eye height (it never flies under the ground plane).
+const LOOK_RAD_PER_PX: f32 = 0.003;
+const FREE_MAX_PITCH: f32 = 1.5;
+const FREE_MIN_HEIGHT: f32 = 0.5;
+
+/// Yaw (about +Y, 0 looking down -Z) and pitch of a view direction. Roll does not move the
+/// forward vector, so a rolled photo camera reads back the same yaw and pitch.
+pub fn yaw_pitch(forward: Vec3) -> (f32, f32) {
+    let f = forward.normalize_or_zero();
+    ((-f.x).atan2(-f.z), f.y.clamp(-1.0, 1.0).asin())
+}
+
+/// The photo camera's orientation: yaw, then pitch, then roll about the view axis.
+pub fn free_rotation(yaw: f32, pitch: f32, roll: f32) -> Quat {
+    Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll)
+}
 
 /// Where the view centre meets the ground (y = 0), the point the camera orbits.
 pub fn focus(t: &Transform) -> Vec3 {
@@ -49,6 +66,27 @@ fn place(focus: Vec3, yaw: f32, pitch: f32, dist: f32) -> Transform {
 
 /// Applies one camera action; other actions return the transform unchanged.
 pub fn apply(t: Transform, action: &Action) -> Transform {
+    match *action {
+        Action::Fly(d) => {
+            let (yaw, _) = yaw_pitch(*t.forward());
+            let right = Vec3::new(yaw.cos(), 0.0, -yaw.sin());
+            let mut out = t;
+            out.translation += right * d.x + Vec3::Y * d.y + *t.forward() * d.z;
+            out.translation.y = out.translation.y.max(FREE_MIN_HEIGHT);
+            return out;
+        }
+        Action::Look(d) => {
+            let (yaw, pitch) = yaw_pitch(*t.forward());
+            let mut out = t;
+            out.rotation = free_rotation(
+                yaw - d.x * LOOK_RAD_PER_PX,
+                (pitch - d.y * LOOK_RAD_PER_PX).clamp(-FREE_MAX_PITCH, FREE_MAX_PITCH),
+                0.0,
+            );
+            return out;
+        }
+        _ => {}
+    }
     let c = focus(&t);
     let (yaw, pitch, dist) = spherical(t.translation - c);
     match *action {
@@ -190,6 +228,48 @@ mod tests {
         let low = apply(t, &Action::Orbit(Vec2::new(0.0, -10_000.0)));
         assert!(top.translation.y < (top.translation - f0).length());
         assert!(low.translation.y > 0.0);
+    }
+
+    #[test]
+    fn free_camera_flies_along_the_view_and_looks_without_orbiting() {
+        let t = cam();
+        let fwd = *t.forward();
+        let f = apply(t, &Action::Fly(Vec3::new(0.0, 0.0, 5.0)));
+        assert!((f.translation - (t.translation + fwd * 5.0)).length() < 1e-4);
+        assert_eq!(f.rotation, t.rotation, "flying never turns the view");
+        let up = apply(t, &Action::Fly(Vec3::new(0.0, 3.0, 0.0)));
+        assert!((up.translation.y - t.translation.y - 3.0).abs() < 1e-4);
+        let side = apply(t, &Action::Fly(Vec3::new(2.0, 0.0, 0.0)));
+        assert!(
+            (side.translation.y - t.translation.y).abs() < 1e-4,
+            "strafe is level"
+        );
+        assert!(side.translation.dot(fwd) - t.translation.dot(fwd) < 1e-3);
+        let floor = apply(t, &Action::Fly(Vec3::new(0.0, -1_000.0, 0.0)));
+        assert_eq!(floor.translation.y, FREE_MIN_HEIGHT);
+
+        let l = apply(t, &Action::Look(Vec2::new(100.0, 0.0)));
+        assert_eq!(
+            l.translation, t.translation,
+            "look turns in place, unlike orbit"
+        );
+        let (y0, p0) = yaw_pitch(fwd);
+        let (y1, p1) = yaw_pitch(*l.forward());
+        assert!((y0 - y1 - 0.3).abs() < 1e-4 && (p0 - p1).abs() < 1e-4);
+        let top = apply(t, &Action::Look(Vec2::new(0.0, -100_000.0)));
+        assert!((yaw_pitch(*top.forward()).1 - FREE_MAX_PITCH).abs() < 1e-4);
+    }
+
+    #[test]
+    fn yaw_pitch_inverts_free_rotation_under_roll() {
+        for (yaw, pitch) in [(0.0, 0.0), (1.0, -0.4), (-2.5, 0.9)] {
+            let q = free_rotation(yaw, pitch, 0.3);
+            let (y, p) = yaw_pitch(q * Vec3::NEG_Z);
+            assert!(
+                (y - yaw).abs() < 1e-4 && (p - pitch).abs() < 1e-4,
+                "{yaw} {pitch}"
+            );
+        }
     }
 
     #[test]

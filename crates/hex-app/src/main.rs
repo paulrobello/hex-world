@@ -10,6 +10,7 @@ mod camera;
 mod capture;
 mod control;
 mod game;
+mod photo;
 mod sim;
 #[cfg(not(target_arch = "wasm32"))]
 mod thumbs;
@@ -107,6 +108,9 @@ fn main() {
         .init_resource::<actions::ActionQueue>()
         .init_resource::<FrameCount>()
         .init_resource::<control::ExitRequest>()
+        .init_resource::<photo::PhotoSettings>()
+        .init_resource::<photo::PhotoSession>()
+        .init_resource::<photo::PhotoExports>()
         .init_resource::<hex_render::play::packs::PackRequests>()
         .add_systems(
             Update,
@@ -117,6 +121,8 @@ fn main() {
                 camera::pick_hover,
                 control::run_commands,
                 game::apply_actions,
+                photo::sync,
+                photo::run_exports,
                 request_selected_packs,
                 game::sync_view,
                 sim::mirror_world,
@@ -173,6 +179,17 @@ fn frame_hooks(
         && let Some(name) = &flags.0.shot
     {
         capture::request(&mut commands, name);
+    }
+    if frames.0 == SHOT_FRAME
+        && let Some(scale) = flags.0.photo_export
+    {
+        control::INBOX
+            .lock()
+            .unwrap()
+            .push(control::Command::PhotoExport {
+                scale,
+                name: format!("photo-{scale}x"),
+            });
     }
     if flags.0.exit_after_frames.is_some_and(|n| frames.0 >= n) {
         exit.0 = true;

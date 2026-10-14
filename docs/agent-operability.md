@@ -23,6 +23,7 @@ Flags take the form `--name value`. A bare `--name` means `1`. Bad values log a 
 | `--exit-after <frames>` | Exit after N frames | `--exit-after 180` |
 | `--exit-after-seconds <s>` | Exit after N wall-clock seconds | `--exit-after-seconds 10` |
 | `--screenshot-after <s>` | Save one screenshot after N seconds, named by `--shot` or `screenshot-after` | `--screenshot-after 2` |
+| `--photo-export <1\|2\|4>` | At frame 120, queue a `photo_export` at that scale named `photo-<n>x`: the game camera renders offscreen at n times the window's logical size and saves `target/shots/photo-<n>x.png` (see [Photo mode](#photo-mode)) | `--photo-export 4` |
 | `--script <file.json>` | Run a command list (see below). A missing or invalid file exits with code 2 before the window opens | `--script scripts/shots/gallery.json` |
 | `--thumbs` | Native only. Renders the Legend inventory's tile thumbnails and exits (`crates/hex-app/src/thumbs.rs`, PRD §5.3). Forces the play scenario at 384x384 with `--post none --tilt off --fps off --clock fixed`, a magenta clear colour, no deband dither and the boids hidden, then shows each catalog tile alone at the origin by writing `PlayView`, so `hex_render::play` draws its kit pieces or placeholders exactly as in the game. One fixed camera on the play start camera's side (pitch 58°, 20° field of view, edge 0 on the right) frames every tile at one scale. It requests every kit pack and starts once all of them have loaded. Each tile is shown once to warm up pipelines and textures; then each distinct rotation (rotations with equal world-edge sockets share one image) is captured at a fixed frame to `target/shots/thumbs/<tile>-r<k>.png`, with the mapping in `target/shots/thumbs/plan.json`. It overrides `--scenario`, `--size`, `--post`, `--tilt`, `--fps`, `--clock`, `--shot`, `--script` and the exit and screenshot timers; look-dev and quality keys such as `--tonemap`, `--ibl`, `--ev100`, `--shadows`, `--cascades`, `--tier` and `--seed` pass through and change the images, so `make thumbs` passes none. Use `make thumbs` | `--thumbs` |
 | `--size <W>x<H>` | Fixed, non-resizable window at scale factor 1, so PNGs are exactly W by H | `--size 1280x800` |
@@ -44,7 +45,7 @@ Every exit path waits until pending screenshots have been written. The gate keys
 
 ## Web query parameters
 
-`shot`, `scenario`, `view`, `diag`, `exit-after`, `seed`, `no-anim`, `layout`, `chunk`, `post`, `shadows`, `shadow_casters`, `cascades`, `shadow_dist`, `fps`, `kit_hooks`, `kit_src`, `tonemap`, `ibl`, `ev100`, `tilt`, `tilt_strength`, `tier`, `water_clock`, `clock`, with the same meanings as the flags. Example: `http://127.0.0.1:8094/?scenario=gate2000&view=closeup&diag=1`.
+`shot`, `scenario`, `view`, `diag`, `exit-after`, `seed`, `no-anim`, `layout`, `chunk`, `post`, `shadows`, `shadow_casters`, `cascades`, `shadow_dist`, `fps`, `kit_hooks`, `kit_src`, `tonemap`, `ibl`, `ev100`, `tilt`, `tilt_strength`, `tier`, `water_clock`, `clock`, `photo-export`, with the same meanings as the flags. Example: `http://127.0.0.1:8094/?scenario=gate2000&view=closeup&diag=1`.
 
 The web build's default scenario is `play`: the bare URL (and an unknown `scenario` or `shot` name) opens the game with the Legend HUD. Every other scenario stays reachable by query, for example `?scenario=single` for the one-tile look the native build opens on (`args::default_scenario`). The web galleries (`e2e/shots.mjs`) and web-smoke's Single case load `?scenario=single` explicitly.
 
@@ -68,6 +69,9 @@ Defined after the `TrunkApplicationStarted` event.
 | `cellRect(q, r)` | `[left, top, right, bottom]` in CSS pixels around cell `(q, r)` (its hex at ground and 2 m), from the camera of the last frame; `null` before the camera exists or when the cell is behind it. The HUD anchors its tags with it, and the UI e2e aims the mouse with it | `hexWorld.cellRect(1, 0)` |
 | `selectTile(id)`, `hover(q, r)`, `rotateGhost(dir)`, `placeTile(q, r)`, `undo()`, `redo()`, `bulldoze(q, r)`, `setTool(mode)`, `toggle(what)` | Typed wrappers over `cmd` for the play commands below, queued like any command | `hexWorld.placeTile(1, 0)` |
 | `screenshot(name?, timeoutMs = 10000)` | Promise of a PNG data URL. The capture is queued behind earlier commands | `await hexWorld.screenshot("view")` |
+| `takeShot(name)` | Removes and returns a finished capture's PNG data URL (a screenshot or a photo export), else `null` | `hexWorld.takeShot("hex-world")` |
+| `photo(values)` | Typed wrapper over the `photo` command | `hexWorld.photo({ dof: "manual", focus: 30 })` |
+| `exportPhoto(scale, name?, timeoutMs = 60000)` | Sends `photo_export` and resolves to `{name, width, height, url}` (a PNG data URL) once it lands, or rejects with the `photoExportFailed` reason | `await hexWorld.exportPhoto(2)` |
 
 ## Commands
 
@@ -90,6 +94,8 @@ A script is a JSON array. Commands run in order, one per frame, starting once th
 | `bulldoze` | Play: remove the tile at `(q, r)`. Refused for the last tile or when the world would split | `{"cmd":"bulldoze","q":1,"r":2}` |
 | `set_tool` | Play: `place` or `bulldoze`. Left-click applies the tool at the hovered cell | `{"cmd":"set_tool","mode":"bulldoze"}` |
 | `toggle` | Play: `bulldoze` (B), `inventory` (Tab) or `photo` (P) | `{"cmd":"toggle","what":"inventory"}` |
+| `photo` | Photo-mode panel values, any subset, each clamped: `dof` (`off`, `tilt`, `manual`), `focus` (m, 1 to 1,000), `aperture` (f-number, 1.4 to 22), `exposure` (stops brighter, -3 to 3), `fov` (degrees, 15 to 100), `roll` (degrees, -45 to 45), `pause_agents`. Values persist between sessions; entering resets focus to the orbit focus distance, FOV to the orbit FOV, and roll and exposure to 0 | `{"cmd":"photo","dof":"manual","focus":30,"aperture":2.8}` |
+| `photo_export` | Renders the game camera offscreen at `scale` (1, 2 or 4) times the window's logical size and saves a PNG: natively `target/shots/<name>.png`, on the web `hexWorld.takeShot(name)`. Ends with `photoExported` or `photoExportFailed` | `{"cmd":"photo_export","scale":4,"name":"hero"}` |
 | `set_reduced_motion` | Reduced motion, for the overlay to send from `prefers-reduced-motion` or the Settings override (`hexWorld.cmd({...})`). On: the staged rise is an instant cut (every `riseStage` cue arrives at once with `skipped: true`), there is no dust, camera shake or sink, and every affordance fade, delay, breathing loop and pulse is an instant cut. The state JSON reports it as `play.reduced_motion` | `{"cmd":"set_reduced_motion","on":true}` |
 
 The play commands parse into the same input actions as their key and mouse bindings, and they act only in the play scenario (elsewhere they are logged and ignored). Bad `dir`, `mode` or `what` values, or a missing `q`/`r`, fail at parse time like any malformed command.
@@ -206,11 +212,12 @@ Every input becomes an action (`crates/hex-app/src/actions.rs`), and scripts and
 | Undo / redo | Ctrl/Cmd+Z / Ctrl/Cmd+Shift+Z |
 | Bulldoze tool toggle | B |
 | Inventory toggle | Tab (the `inventory_open` flag; the HUD's Tiles sheet follows it) |
-| Photo mode toggle | P (native only for now: the HUD swallows P until photo mode has a screen) |
+| Photo mode toggle | P; Esc also leaves photo mode |
+| Photo free camera | In photo mode only: WASD fly along the view (Shift for 4×), Q/E down and up, left- or right-drag looks, the wheel dollies. R, B, Tab, digits and clicks do nothing |
 | Select tile type | 1–9, 0, -, = pick inventory tiles 1–12 in catalog order natively; in the browser the HUD maps 1–9 to its "Fits here" order |
 | Hover | Pointer over the ground plane (y = 0) |
 
-In the browser the HUD overlay owns R, Shift+R, B, Tab, P, H, F6, Esc, Enter, the digit keys and Ctrl/Cmd+Z: it catches them on the window in the capture phase, before the canvas, and sends the matching bridge command, so one press acts once. Camera keys (WASD, arrows), F3 and T still reach the engine, and clicking a HUD control keeps keyboard focus on the canvas.
+In the browser the HUD overlay owns R, Shift+R, B, Tab, P, H, F6, Esc, Enter, the digit keys and Ctrl/Cmd+Z (in photo mode P and Esc leave, H hides the photo panel, and the game keys are swallowed): it catches them on the window in the capture phase, before the canvas, and sends the matching bridge command, so one press acts once. Camera keys (WASD, arrows), F3 and T still reach the engine, and clicking a HUD control keeps keyboard focus on the canvas.
 
 The camera rig keeps no state. Each orbit, pan or zoom derives its focus point from where the view centre meets the ground, so the `camera` command keeps working. Pointer hover is emitted only when the cell under the pointer changes, so a scripted `hover` holds while the cursor rests over the window. F3 (FPS counter) and T (tilt-shift) stay direct key reads in `hex-render`, because they are debug and look-dev toggles rather than §4.5 player actions.
 
@@ -239,6 +246,8 @@ In the play scenario the state JSON's `tiles` is the world's tile count, and `pl
 | `reduced_motion` | The `set_reduced_motion` flag |
 | `focus`, `zoom` | The ground point the camera orbits `[x, y, z]` and the camera's distance from it in metres, for the audio focus mix; `null` without a camera |
 
+The top-level `photo` object (every scenario) reports photo mode: `on` (a session is open), the panel values `dof`, `focus`, `aperture`, `exposure`, `fov`, `roll` and `pause_agents`, `agents_paused` (cars and boids holding still now), `sim_ticks` (the car sim's fixed ticks so far, which hold while paused), `exporting` (`{name, scale, width, height}` while an export renders, else `null`) and `max_texture` (the GPU's largest texture side, `null` before the renderer starts). `gpu.maxTextureDimension2D` reports the same limit.
+
 ### Events
 
 Each event is an object whose `type` names it:
@@ -256,6 +265,8 @@ Each event is an object whose `type` names it:
 | `toolChanged` | `mode` |
 | `inventoryToggled` | `open` |
 | `photoModeToggled` | `on` |
+| `photoExported` | `name, width, height`: the PNG landed (native file, or `takeShot(name)` on the web) |
+| `photoExportFailed` | `name, reason`, for example a 4× size past the GPU's texture limit, with the scale that fits |
 | `actionRefused` | `action, reason`, for any other refusal: an empty undo stack, an unknown tile id, a click with nothing hovered |
 | `riseStage` | `q, r, tile, stage, skipped`: a staged-rise cue for the audio layer (the rumble) and the HUD. `stage` is `column`, `cap`, `edges`, `props`, `agents`, then `settled`, or `sink` when an undo or a bulldoze takes the tile down. `skipped` cues come together in one frame from a fast-forward or under reduced motion. Not kept in `recent_events` |
 
@@ -275,6 +286,16 @@ The player HUD is the Legend direction (mockups in `design/ui/legend/`, the syst
 - **Type sync.** `web/ui/src/bridge.ts` types every command, event and play-state field; its field tables must equal `bridge-schema.json`, which the hex-app test `bridge::schema::schema_matches_web_ui` regenerates from the Rust enums. A Rust change fails `cargo test` until `make ui-schema` runs, then `make ui-test` until `bridge.ts` matches.
 - **Audio.** `web/ui/src/audio.ts` plays `assets/audio/manifest.json` through the Web Audio API. It fetches nothing until the first pointer or key press in the play scenario, which also creates the AudioContext at 48 kHz. It picks Opus/WebM, or m4a when `canPlayType` refuses WebM, and decodes `decode` cues (interface and placement one-shots first, then the ambience loops) within `decodedBudgetBytes`. Music cues stream through media elements. Game events fire the cues listed in each cue's `events`: placement one-shots are positional at the tile, the thunk waits for the tile's `riseStage` `settled`, and redo plays the undo cue a little higher. River, coast and forest tiles carry looped HRTF-panned emitters (`river-babble`, `surf`, `forest-birdsong`), up to three voices per cue, whose gain is the inverse-distance attenuation from the camera times a focus weight around `play.focus` that widens with `play.zoom` (`audio-mix.ts`). A non-positional bed follows the biome mix in view (`meadow-bed`, plus quieter beds from the river, coast and forest loops). The music playlist crossfades at equal power between mood cues once they are mastered; with none mastered it stays idle. The buses and their defaults follow the Legend Settings → Audio mockup (master 80%, music 55%, ambience 70%, effects 75%, interface 50%). There is no audio control in the HUD yet, because the Legend places it in the unbuilt Settings screen, so mute and volume are set through `hexWorld.audio`.
 - **Not built yet.** Photo mode, Settings and Worlds: their bar entries are disabled with a tooltip, and the save state reads "Not saved" because autosave does not exist.
+
+### Photo mode
+
+PRD §4.6, `crates/hex-app/src/photo.rs`. Photo mode follows `play.photo_mode`, so P, Esc, `toggle photo` and the overlay share one snapshot: entering takes the orbit camera's transform, FOV, exposure and lens, and leaving writes them back exactly. The camera entity stays the same and photo mode adds no prepass, so no kit or water pipeline gains a binding (kit forward stays at 16 sampled textures beside refracting water):
+
+- **DOF `manual`** puts Bevy's `DepthOfField` on the camera (focus distance, f-number) with a sensor 60 times Bevy's default, so the diorama blurs like a miniature. The play camera carries no `DepthOfField` (it drops the gate's far-focus one), so the lens is inserted while Manual is chosen and removed for the other choices and on exit; it is a post pass with its own pipelines, so no mesh pipeline gains a binding. **`tilt`** drives the game camera's tilt-shift pass through `tilt_shift::TiltOverride`, focused by the panel with no zoom fade and its strength from the f-number (full at f/1.4, gone at f/22). **`off`** leaves the lens at the game camera's far focus. The player's own tilt-shift setting comes back untouched.
+- **Pause** (default on): the car sim skips its fixed ticks and keeps the last published poses (interpolating with the cycling overstep would rock each car), and the boid compute step is 0. Water and the rise keep their clocks.
+- **Export** retargets the game camera to an uninitialised `Rgba8UnormSrgb` image at the export size for 8 frames (TAA settles), captures it with `Screenshot::image`, then hands the camera back to the window. No camera draws to the window for those 9 frames, so the window can show the clear colour during an export (an open UX item for owner review). Sizes past `max_texture_dimension_2d` are refused. The lens's pixel blur cap scales with the export.
+
+`make shots-photo` runs `docs/checkpoints/photo/photo.json` natively at 1280x800 with `--tilt off --clock fixed` (enter on the tilt preset, a manual-DOF close-up and the same frame with DOF off, the tilt preset with roll and exposure, a 4× export at 5120x3200, and exit back to the orbit camera) and copies JPEG stills, the state dumps and the export's measured size and mean to `docs/checkpoints/photo/`. Older checkpoint scripts that use `toggle photo` only for a clean frame send `{"cmd":"photo","dof":"off","pause_agents":false}` after it, so their cars keep driving and `--tilt off` still holds.
 
 ### Cars
 
