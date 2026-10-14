@@ -184,7 +184,7 @@ The corner look is Q3. With scatter on, a treeless strip still runs along the se
 
 **Q2. Push.** Main holds 98 unpushed local commits, and nothing has been pushed. `make checkall-ci` is green on main, and CI now sets up Node and runs `make ui-check` (`93542a6`). Approve one push of main to origin?
 
-**Q3. Forest edge corners.** Where a forest-forest edge sits next to a forest-meadow edge on the same tile, the litter has to stop at the corner. There are two options, shown in `assets-source/kit/forest_forest_edge/stills/corner-options/` after merge: `before.jpg`, `O-a-after.jpg`, `O-b-after.jpg`, `O-b-overview.jpg`.
+**Q3. Forest edge corners.** Where a forest-forest edge sits next to a forest-meadow edge on the same tile, the litter has to stop at the corner. There are two options, shown in `assets-source/kit/forest_forest_edge/stills/corner-options/`: `before.jpg`, `O-a-after.jpg`, `O-b-after.jpg`, `O-b-overview.jpg`.
 - **O-a (shipping now):** the litter ends in a straight slope along the line from the corner.
 - **O-b:** the litter pulls back into forest_base's own wavy grass rim. It reads better, but it needs 18 more pieces (about 0.9 MB) and curve-exact cuts.
 
@@ -221,7 +221,7 @@ No change limited to the walls gets close while ACES stays. They would need 10 t
 
 **D1. Lane-cut LOD2 ceiling.** River bases may keep 20% of LOD0's triangles at LOD2. At 15% the bend's channel profile drifts past the water contract's 0.03 m tolerance. Every other piece stays at 15%.
 
-**D3. The forest edge piece comes in six per-edge variants.** forest_base is not the same under each of its six edges. A single rotated edge piece therefore had to float up to 0.18 m above the litter to clear every edge (`assets-source/kit/forest_forest_edge/stills/mock-seam-after.jpg`, once merged). Six variants, one per local edge of the base, fit exactly. The edge-piece resolver picks the family by socket pair and the variant by the base's local edge.
+**D3. The forest edge piece comes in six per-edge variants.** forest_base is not the same under each of its six edges. A single rotated edge piece therefore had to float up to 0.18 m above the litter to clear every edge (`assets-source/kit/forest_forest_edge/stills/mock-seam-after.jpg`). Six variants, one per local edge of the base, fit exactly. The edge-piece resolver picks the family by socket pair and the variant by the base's local edge.
 
 **D2. Forest edge pieces are chosen by socket pair, base edge and corner flags.** `sockets.ron` `pair_edge_pieces`, merged as `8337a52`. The corner look is Q3.
 
