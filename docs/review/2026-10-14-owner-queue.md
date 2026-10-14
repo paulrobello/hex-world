@@ -245,7 +245,7 @@ No change limited to the walls gets close while ACES stays. They would need 10 t
 - **Evidence:** `docs/perf/stall-tail/README.md`. The trace rules out garbage collection, wasm memory growth, the HUD, state polling and audio.
 - **Fix:** an opt-in limit, `?frame_latency=3`, removes the uncapped tail (0 frames over 25 ms per 600), at a cost of about 0.4 ms mean.
 - **Re-run on the merged build, under the load guard:** native tilt-on p95 is 12.1–13.3 ms, and the web is 3.6–4.2 ms. A 208-tile water and scatter world runs web p95 8.6–9.3 ms with no stalls.
-- **Native:** a small new tail appeared, 2–5 frames over 25 ms in 5 of 12 runs. It is not yet investigated.
+- **Native tail, now investigated** (`docs/perf/stall-tail/native.md`): 50 of 54 frames over 25 ms are waits for the window's next drawable. They fall on a 1-second wall-clock grid and occur equally on the older build, so the app's work is not the cause. The best guess, not proven, is other processes' GPU work. The surface already uses the maximum of 3 drawables. A clean-host re-run (`PASSES_ONLY=native make perf-passes` with other apps closed) would confirm it.
 
 **Q7. Accept the uncapped-only web tail, or turn the frame-latency limit on by default?** I recommend turning it on by default: it is harmless at 60 Hz and removes the tail on fast GPUs with high-refresh or uncapped displays.
 
