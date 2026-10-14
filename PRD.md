@@ -234,12 +234,13 @@ About 10 types. The exact variants are frozen at the start of P2.
 
 - Road, rail (P3) and river segments inside each tile are spline graphs with endpoints at the edge lanes. On placement, endpoints are stitched to the neighbors' matching endpoints to form a global graph per network type.
 - Destinations are tagged nodes: houses, later stations, farms and factories.
+- **House parking (owner, 2026-10-13).** Each house on a house pad has its own parking spot, marked by an `anchor-park-<n>` socket on the pad, with a short path from the spot to the cluster's road node. A car leaves by pulling out of a spot onto the driveway and arrives by parking in a spot, so cars never pop in or out at the yard edge. Each house owns its car, and the tile's `AgentSpawnRule` max caps the cars per cluster.
 
 ### 7.2 Agents
 
 | Agent | Behavior | Phase |
 |---|---|---|
-| Car | Routes between destination nodes on the road graph (A* over a cached graph) and follows lane splines. Spawn rate scales with connected destinations. | P2 |
+| Car | Routes between destination nodes on the road graph (A* over a cached graph) and follows lane splines. Starts and ends in a house's parking spot (§7.1). Spawn rate scales with connected destinations. | P2 |
 | Bird | Boids flocking over the whole map, roosting in forest tiles. Runs on GPU compute. | P2 |
 | Boat | Drifts on ocean tiles and travels connected rivers. | P3 |
 | Train | Routes between stations on the rail graph. Multi-car consists that cross tile boundaries. | P3 |
@@ -489,7 +490,7 @@ Goal: the polished, playable core loop with D12 content.
 - [ ] All MVP tiles (§5.4) are built through the pipeline and approved.
 - [ ] Placement: ghost preview, rotation, edge glow, legal-slot inventory filter, auto-rotate.
 - [ ] Staged rise animation (§4.4), including below-surface features, skippable.
-- [ ] Road network stitching. Cars route between houses across tile boundaries.
+- [ ] Road network stitching. Cars route between houses across tile boundaries, pulling out of and parking in per-house spots (§7.1).
 - [ ] GPU boids birds roosting in forests.
 - [ ] Water: river flow and ocean waves with shore foam, meeting the §9.1 hero-water quality bar.
 - [ ] A gate sums the initial download (wasm + IBL + core pieces + sets, one texture family) and fails above 30 MB; hero assets stream after first interaction. (The gate runs in `make checkall-ci`: 22.4 MiB gated on ASTC, 2026-10-13. Still open: hero pieces load eagerly at runtime, and the PNG fallback is 32.4 MiB.)
