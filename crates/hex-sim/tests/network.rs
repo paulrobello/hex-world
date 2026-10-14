@@ -95,10 +95,22 @@ fn road_ends_that_do_not_face_each_other_stay_apart() {
     assert_eq!(net.node(seam).unwrap().links().len(), 1);
 }
 
+/// Centre-line length of a road bend whose lane rays leave the hex center `alpha` apart: the two
+/// straight `road_straight_edge` stubs from each edge midpoint in to r = 6, joined by the arc
+/// tangent to both, radius 6 tan(alpha / 2) turning through pi - alpha. The tile polyline samples
+/// that arc every 10 degrees, so its chords fall short by at most rho (pi - alpha) d^2 / 24
+/// (d = 10 degrees): 0.009 m and 0.014 m, inside the 0.02 m tolerance.
+fn stub_tangent_bend_length(alpha: f32) -> f32 {
+    let rho = 6.0 * (alpha / 2.0).tan();
+    2.0 * (APOTHEM - 6.0) + rho * (std::f32::consts::PI - alpha)
+}
+
 #[test]
-fn sixty_degree_bend_is_an_8m_arc_between_adjacent_edges() {
+fn sixty_degree_bend_is_a_stub_tangent_arc_between_adjacent_edges() {
     let cat = catalog();
-    let want = 8.0 * std::f32::consts::TAU / 3.0;
+    // 2 (8 sqrt 3 - 6) + 2 sqrt 3 * 2 pi / 3 = 15.713 + 7.255 = 22.968 m.
+    let want = stub_tangent_bend_length(std::f32::consts::FRAC_PI_3);
+    assert!((want - 22.968).abs() < 1e-3, "{want}");
     for k in 0..6u8 {
         let mut net = Network::new(NetworkKind::Road);
         put(&mut net, &cat, Axial::ORIGIN, "road_bend_60", k);
@@ -112,9 +124,11 @@ fn sixty_degree_bend_is_an_8m_arc_between_adjacent_edges() {
 }
 
 #[test]
-fn hundred_twenty_degree_bend_is_a_24m_arc_two_edges_apart() {
+fn hundred_twenty_degree_bend_is_a_stub_tangent_arc_two_edges_apart() {
     let cat = catalog();
-    let want = 24.0 * std::f32::consts::PI / 3.0;
+    // 2 (8 sqrt 3 - 6) + 6 sqrt 3 * pi / 3 = 15.713 + 10.883 = 26.596 m.
+    let want = stub_tangent_bend_length(2.0 * std::f32::consts::FRAC_PI_3);
+    assert!((want - 26.596).abs() < 1e-3, "{want}");
     for k in 0..6u8 {
         let mut net = Network::new(NetworkKind::Road);
         put(&mut net, &cat, Axial::ORIGIN, "road_bend_120", k);
@@ -149,7 +163,7 @@ fn bend_continues_a_straight_road_at_both_seams() {
     let from = net.seam_node(Axial::ORIGIN.neighbor(0), 0).unwrap();
     let to = net.seam_node(Axial::ORIGIN.neighbor(1), 1).unwrap();
     let route = net.route(from, to).expect("bend joins the straights");
-    let want = 4.0 * APOTHEM + 8.0 * std::f32::consts::TAU / 3.0;
+    let want = 4.0 * APOTHEM + stub_tangent_bend_length(std::f32::consts::FRAC_PI_3);
     assert!((route.length - want).abs() < 0.05);
 }
 

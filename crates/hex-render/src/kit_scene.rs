@@ -84,6 +84,20 @@ pub fn kit_layout() -> Vec<Placement> {
     v.push(hero("house_cottage", -1, 0, [-0.5, -7.0], 90.0));
     v.push(hero("house_cottage", -1, 0, [-0.5, 7.0], 270.0));
     v.push(hero("house_twostorey", -1, 0, [-7.5, 0.0], 0.0));
+    // Road-family centre pieces on ring cells, each with its edge stubs. The wide bend on (0, -1)
+    // turns from world edge 3 to world edge 5, both on the layout's outer rim.
+    v.push(place("road_bend_120_center", 0, -1, 3));
+    v.push(place("road_straight_edge", 0, -1, 3));
+    v.push(place("road_straight_edge", 0, -1, 5));
+    // The sharp bend on (2,-1), lanes on world edges 2 and 3.
+    v.push(place("road_bend_60_center", 2, -1, 2));
+    v.push(place("road_straight_edge", 2, -1, 2));
+    v.push(place("road_straight_edge", 2, -1, 3));
+    // The Y junction on (1,-1); its edge 0 meets the sharp bend's edge-3 lane.
+    v.push(place("road_junction_center", 1, -1, 0));
+    for k in [0, 2, 4] {
+        v.push(place("road_straight_edge", 1, -1, k));
+    }
     v
 }
 

@@ -624,16 +624,24 @@ fn check_edge_profile(kit: &Kit, p: &PieceEntry) -> Vec<String> {
 /// Each LOD's cross-section at runtime x = `x`: the (y, z) of every vertex on that plane, in 0.1 mm
 /// units, sorted and deduplicated.
 fn lod_sections(kit: &Kit, p: &PieceEntry, x: f32) -> Vec<Vec<(i64, i64)>> {
+    lane_sections(kit, p, x, 0)
+}
+
+/// Like [`lod_sections`], after rotating the piece so its edge `lane` lands on edge 0 (the inverse
+/// of the runtime placement rotation that takes edge 0 to edge `lane`).
+fn lane_sections(kit: &Kit, p: &PieceEntry, x: f32, lane: u8) -> Vec<Vec<(i64, i64)>> {
     let Ok((doc, buffers, _)) = plain(kit, p) else {
         return vec![];
     };
+    let (s, c) = (60.0 * lane as f32).to_radians().sin_cos();
     (0..3)
         .filter_map(|i| mesh_named(&doc, &format!("{}_lod{i}", p.id)))
         .map(|m| {
             let mut sec: Vec<(i64, i64)> = positions(&m, &buffers)
                 .iter()
-                .filter(|(q, _)| (q[0] - x).abs() < 1e-3)
-                .map(|(q, _)| ((q[1] * 1e4).round() as i64, (q[2] * 1e4).round() as i64))
+                .map(|(q, _)| [q[0] * c + q[2] * s, q[1], -q[0] * s + q[2] * c])
+                .filter(|q| (q[0] - x).abs() < 1e-3)
+                .map(|q| ((q[1] * 1e4).round() as i64, (q[2] * 1e4).round() as i64))
                 .collect();
             sec.sort();
             sec.dedup();
@@ -642,12 +650,38 @@ fn lod_sections(kit: &Kit, p: &PieceEntry, x: f32) -> Vec<Vec<(i64, i64)>> {
         .collect()
 }
 
-/// Road centre/edge joint. `center[i]` is LOD i's (x = +6, x = -6) sections and
-/// `edge[i]` the edge piece's LOD i section at x = +6. The -6 joint meets a rot-3 edge piece, whose
-/// section there is the edge section mirrored (z -> -z).
+/// The lane edges of a centre piece: the edges with a lane on the tile (`data/tiles`) whose
+/// `center` names it. A piece no tile names keeps the straight pair, edges 0 and 3.
+fn center_lanes(id: &str) -> Vec<u8> {
+    let catalog = hex_core::TileCatalog::builtin().expect("builtin tile catalog");
+    catalog
+        .tiles()
+        .iter()
+        .find(|t| t.center.as_ref().is_some_and(|c| c.as_str() == id))
+        .map(|t| {
+            (0..6u8)
+                .filter(|&e| t.edges[e as usize].lane.is_some())
+                .collect()
+        })
+        .unwrap_or_else(|| vec![0, 3])
+}
+
+/// Same section within one 0.1 mm unit per coordinate (absorbs the f32 lane rotation).
+fn same_section(a: &[(i64, i64)], b: &[(i64, i64)]) -> bool {
+    let near = |p: &(i64, i64), q: &(i64, i64)| (p.0 - q.0).abs() <= 1 && (p.1 - q.1).abs() <= 1;
+    a.len() == b.len()
+        && a.iter().all(|p| b.iter().any(|q| near(p, q)))
+        && b.iter().all(|q| a.iter().any(|p| near(p, q)))
+}
+
+/// Road centre/edge joint. `center[i][j]` is LOD i's section at lane `lanes[j]`, rotated onto
+/// edge 0, and `edge[i]` the edge piece's LOD i section at x = +6. Each lane meets an edge piece
+/// rotated onto it, so every lane section must equal the edge section (for lane 3 this is the
+/// x = -6 section mirrored, z -> -z).
 fn joint_errors(
     id: &str,
-    center: &[(Vec<(i64, i64)>, Vec<(i64, i64)>)],
+    lanes: &[u8],
+    center: &[Vec<Vec<(i64, i64)>>],
     edge: &[Vec<(i64, i64)>],
 ) -> Vec<String> {
     let mut e = vec![];
@@ -658,18 +692,13 @@ fn joint_errors(
             edge.len()
         ));
     }
-    for (i, ((pos, neg), want)) in center.iter().zip(edge).enumerate() {
-        let mut mirror: Vec<_> = want.iter().map(|&(y, z)| (y, -z)).collect();
-        mirror.sort();
-        if pos != want {
-            e.push(format!(
-                "{id}: LOD{i} section at x = +6 differs from the edge piece's"
-            ));
-        }
-        if neg != &mirror {
-            e.push(format!(
-                "{id}: LOD{i} section at x = -6 differs from the mirrored edge piece's"
-            ));
+    for (i, (secs, want)) in center.iter().zip(edge).enumerate() {
+        for (lane, sec) in lanes.iter().zip(secs) {
+            if !same_section(sec, want) {
+                e.push(format!(
+                    "{id}: LOD{i} section at lane {lane} differs from the edge piece's"
+                ));
+            }
         }
     }
     e
@@ -689,65 +718,48 @@ fn lane_socket_edges(kit: &Kit, p: &PieceEntry) -> BTreeSet<u64> {
         .collect()
 }
 
-/// `lod_sections` at x = `x` after rotating the piece so its edge `k` faces +x (edge 0).
-fn lod_sections_at_edge(kit: &Kit, p: &PieceEntry, x: f32, k: u64) -> Vec<Vec<(i64, i64)>> {
-    let Ok((doc, buffers, _)) = plain(kit, p) else {
-        return vec![];
-    };
-    let (s, c) = (60.0 * k as f32).to_radians().sin_cos();
-    (0..3)
-        .filter_map(|i| mesh_named(&doc, &format!("{}_lod{i}", p.id)))
-        .map(|m| {
-            let mut sec: Vec<(i64, i64)> = positions(&m, &buffers)
-                .iter()
-                .map(|(q, _)| (q[0] * c + q[2] * s, q[1], -q[0] * s + q[2] * c))
-                .filter(|(rx, _, _)| (rx - x).abs() < 1e-3)
-                .map(|(_, y, rz)| ((y * 1e4).round() as i64, (rz * 1e4).round() as i64))
-                .collect();
-            sec.sort();
-            sec.dedup();
-            sec
-        })
-        .collect()
-}
-
-/// A centre piece that declares `socket-lane-*` nodes joins the network only at those edges (a
-/// building pad's driveway, a bend): each declared edge's x = +6 section must equal every edge
-/// piece's, in every LOD.
-fn lane_joint_errors(kit: &Kit, c: &PieceEntry, edges: &BTreeSet<u64>) -> Vec<String> {
+/// A centre piece against every edge piece of the kit at each of `lanes`: the section at r = 6
+/// on the lane, rotated onto edge 0, must equal the edge piece's x = +6 section in every LOD.
+fn lane_joint_errors(kit: &Kit, c: &PieceEntry, lanes: &[u8]) -> Vec<String> {
     let mut e = vec![];
-    for &k in edges {
-        let secs = lod_sections_at_edge(kit, c, 6.0, k);
-        if secs.len() != 3 || secs.iter().any(|s| s.is_empty()) {
-            e.push(format!(
-                "{}: a LOD has no vertices on the edge-{k} joint",
-                c.id
-            ));
-        }
-        for edge in kit
-            .manifest
-            .pieces
-            .iter()
-            .filter(|p| p.kind == PieceKind::Edge)
-        {
-            let want = lod_sections(kit, edge, 6.0);
-            for (i, (got, want)) in secs.iter().zip(&want).enumerate() {
-                if got != want {
-                    e.push(format!(
-                        "{} / {}: LOD{i} section at the edge-{k} joint differs from the edge piece's",
-                        c.id, edge.id
-                    ));
-                }
-            }
-        }
+    let per_lane: Vec<_> = lanes
+        .iter()
+        .map(|&k| lane_sections(kit, c, 6.0, k))
+        .collect();
+    if per_lane
+        .iter()
+        .any(|l| l.len() != 3 || l.iter().any(Vec::is_empty))
+    {
+        e.push(format!(
+            "{}: a LOD has no vertices at r = 6 on lanes {lanes:?}",
+            c.id
+        ));
+    }
+    let lods = per_lane.iter().map(Vec::len).min().unwrap_or(0);
+    let center: Vec<Vec<_>> = (0..lods)
+        .map(|i| per_lane.iter().map(|l| l[i].clone()).collect())
+        .collect();
+    for edge in kit
+        .manifest
+        .pieces
+        .iter()
+        .filter(|p| p.kind == PieceKind::Edge)
+    {
+        let id = format!("{} / {}", c.id, edge.id);
+        e.extend(joint_errors(
+            &id,
+            lanes,
+            &center,
+            &lod_sections(kit, edge, 6.0),
+        ));
     }
     e
 }
 
-/// Every centre piece against every edge piece in the same kit, at the x = ±6 joint. A centre that
-/// declares lane sockets is checked at those edges instead (`lane_joint_errors`).
+/// Every centre piece against every edge piece in the same kit, at r = 6 on each of its lane
+/// edges (`center_lanes`: the tile that names it as `center`). A centre that declares
+/// `socket-lane-*` nodes (house_pad's driveway) must declare exactly those lane edges.
 fn check_center_edge_joint(kit: &Kit) -> Vec<String> {
-    let half = 6.0;
     let mut e = vec![];
     for c in kit
         .manifest
@@ -755,26 +767,16 @@ fn check_center_edge_joint(kit: &Kit) -> Vec<String> {
         .iter()
         .filter(|p| p.kind == PieceKind::Center)
     {
-        let edges = lane_socket_edges(kit, c);
-        if !edges.is_empty() {
-            e.extend(lane_joint_errors(kit, c, &edges));
-            continue;
+        let lanes = center_lanes(&c.id);
+        let declared = lane_socket_edges(kit, c);
+        let want: BTreeSet<u64> = lanes.iter().map(|&k| k as u64).collect();
+        if !declared.is_empty() && declared != want {
+            e.push(format!(
+                "{}: socket-lane edges {declared:?} differ from the tile's lane edges {want:?}",
+                c.id
+            ));
         }
-        let pos = lod_sections(kit, c, half);
-        let neg = lod_sections(kit, c, -half);
-        if pos.iter().chain(&neg).any(|s| s.is_empty()) {
-            e.push(format!("{}: a LOD has no vertices on x = ±6", c.id));
-        }
-        let center: Vec<_> = pos.into_iter().zip(neg).collect();
-        for edge in kit
-            .manifest
-            .pieces
-            .iter()
-            .filter(|p| p.kind == PieceKind::Edge)
-        {
-            let id = format!("{} / {}", c.id, edge.id);
-            e.extend(joint_errors(&id, &center, &lod_sections(kit, edge, half)));
-        }
+        e.extend(lane_joint_errors(kit, c, &lanes));
     }
     e
 }
@@ -1931,8 +1933,8 @@ fn gate_requires_approved_references_for_real_pieces() {
     assert_eq!(check_provenance(&k, &p), Vec::<String>::new());
 }
 
-/// The centre piece's sections at x = +6 and x = -6 must equal the edge piece's
-/// section at x = 6 (the -6 joint meets a rot-3 edge piece, so it compares against the mirror).
+/// Real pieces through the one joint check: house_pad at its single lane (declared by socket and
+/// by its tile), the straight at 0 and 3, the wide bend at 0 and 2, and wrong edges failing.
 #[test]
 fn lane_socket_centre_is_checked_at_its_declared_edges() {
     let k = kits()
@@ -1942,49 +1944,83 @@ fn lane_socket_centre_is_checked_at_its_declared_edges() {
     let piece = |id: &str| k.manifest.pieces.iter().find(|p| p.id == id).unwrap();
     let pad = piece("house_pad");
     assert_eq!(lane_socket_edges(&k, pad), BTreeSet::from([0]));
-    assert!(lane_joint_errors(&k, pad, &BTreeSet::from([0])).is_empty());
+    // The tile catalog (house_cluster) gives the pad the same single lane its sockets declare.
+    assert_eq!(center_lanes("house_pad"), vec![0]);
+    assert!(lane_joint_errors(&k, pad, &[0]).is_empty());
     // The pad has no road at edge 3, so the rotated joint check must fail there.
-    let e = lane_joint_errors(&k, pad, &BTreeSet::from([3]));
-    assert!(e.iter().any(|m| m.contains("edge-3")), "{e:?}");
+    let e = lane_joint_errors(&k, pad, &[3]);
+    assert!(e.iter().any(|m| m.contains("lane 3")), "{e:?}");
     // The straight centre, turned so its x = -6 end faces edge 0, still meets the edge section.
     let straight = piece("road_straight_center");
-    assert!(lane_joint_errors(&k, straight, &BTreeSet::from([0, 3])).is_empty());
+    assert!(lane_joint_errors(&k, straight, &[0, 3]).is_empty());
+    // A turning piece checked at the wrong edge fails: the wide bend's lanes are 0 and 2, not 1.
+    let bend = piece("road_bend_120_center");
+    assert!(lane_joint_errors(&k, bend, &center_lanes(&bend.id)).is_empty());
+    let e = lane_joint_errors(&k, bend, &[0, 1]);
+    assert!(e.iter().any(|m| m.contains("lane 1")), "{e:?}");
+    assert!(check_center_edge_joint(&k).is_empty());
 }
 
+/// The centre piece's section at every lane, rotated onto edge 0, must equal the edge piece's
+/// section at x = 6 (within 0.1 mm), for the straight pair and for turning pieces alike.
 #[test]
 fn center_sections_must_meet_the_edge_section() {
     let edge = vec![(0, -30_000), (0, 30_000), (800, 5)];
-    let mirror = vec![(0, -30_000), (0, 30_000), (800, -5)];
-    let ok = (edge.clone(), mirror.clone());
+    let ok = vec![edge.clone(), edge.clone()];
     assert!(
         joint_errors(
             "c",
+            &[0, 3],
             &[ok.clone(), ok.clone()],
             &[edge.clone(), edge.clone()]
+        )
+        .is_empty()
+    );
+    // f32 rotation noise of one 0.1 mm unit is absorbed.
+    let noisy = vec![(0, -30_001), (1, 30_000), (800, 4)];
+    assert!(
+        joint_errors(
+            "c",
+            &[0, 2],
+            &[vec![edge.clone(), noisy]],
+            std::slice::from_ref(&edge)
         )
         .is_empty()
     );
     let moved = vec![(0, -30_000), (0, 30_000), (900, 5)];
     let e = joint_errors(
         "c",
-        &[ok.clone(), (moved, mirror.clone())],
+        &[0, 3],
+        &[ok.clone(), vec![moved, edge.clone()]],
         &[edge.clone(), edge.clone()],
     );
     assert!(
-        e.iter().any(|m| m.contains("LOD1") && m.contains("x = +6")),
+        e.iter().any(|m| m.contains("LOD1") && m.contains("lane 0")),
         "{e:?}"
     );
+    // The straight -6 joint: a section that is not the mirrored edge section fails at lane 3.
+    let mirror = vec![(0, -30_000), (0, 30_000), (800, -5)];
     let e = joint_errors(
         "c",
-        &[(edge.clone(), edge.clone())],
+        &[0, 3],
+        &[vec![edge.clone(), mirror]],
         std::slice::from_ref(&edge),
     );
     assert!(
-        e.iter().any(|m| m.contains("LOD0") && m.contains("x = -6")),
+        e.iter().any(|m| m.contains("LOD0") && m.contains("lane 3")),
         "{e:?}"
     );
-    let e = joint_errors("c", &[ok.clone(), ok], &[edge]);
+    let e = joint_errors("c", &[0, 3], &[ok.clone(), ok], &[edge]);
     assert!(e.iter().any(|m| m.contains("LOD count")), "{e:?}");
+}
+
+#[test]
+fn center_lanes_come_from_the_tiles() {
+    assert_eq!(center_lanes("road_straight_center"), vec![0, 3]);
+    assert_eq!(center_lanes("road_bend_120_center"), vec![0, 2]);
+    assert_eq!(center_lanes("road_bend_60_center"), vec![0, 1]);
+    assert_eq!(center_lanes("road_junction_center"), vec![0, 2, 4]);
+    assert_eq!(center_lanes("not_a_piece"), vec![0, 3]);
 }
 
 #[test]

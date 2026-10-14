@@ -6,9 +6,6 @@
 (
     pieces: [
         // Road family
-        (id: "road_bend_60_center", delivered_by: "S4 references, then wave-2 kit modeling: road family"),
-        (id: "road_bend_120_center", delivered_by: "S4 references, then wave-2 kit modeling: road family"),
-        (id: "road_junction_center", delivered_by: "S4 references, then wave-2 kit modeling: road family"),
         // River family
         (id: "river_straight_center", delivered_by: "S4 references, then wave-2 kit modeling: river family"),
         (id: "river_bend_center", delivered_by: "S4 references, then wave-2 kit modeling: river family"),

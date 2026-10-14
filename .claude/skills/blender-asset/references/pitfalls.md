@@ -60,7 +60,14 @@ Known Blender, bake, export and KTX2 traps, from the asset-pipeline research and
 - Hidden-from-render objects can drop out of selected exports. Keep the collider render-visible during export and hide it in the engine.
 - Export no images: textures are separate files.
 - **Keep attributes FLOAT.** bevy_gltf 0.20 rejects `KHR_mesh_quantization`. If a later phase quantizes, it needs dequantization in `meshopt_glb.rs` and one shared quantization volume (the hex bounds): per-mesh bounds snap neighbouring border vertices to different grids and the seams crack.
+- **Imported glTF objects use quaternion rotation.** Setting `rotation_euler` on an imported root does nothing until `rotation_mode = "XYZ"` (self-review composites that place edge stubs at other edges).
 - **The glTF exporter flips V.** A UV map exports as 1 − v (harmless for cyclic data such as wind phase).
+
+## Turning road pieces (bends, junctions)
+- **Stubs fix the joint at r = 6.** A road tile places `road_straight_edge` at every lane edge, so a turning centre piece meets a straight stub at r = 6 on each lane ray. A bend is then an arc tangent to both rays there, radius 6·tan(α/2) for lane rays α apart: 10.392 m (lanes 0 and 2) and 3.464 m (lanes 0 and 1). The 3.464 m arc is tighter than the profile's half width (SINK_T 4.6), so the inner verge cannot be swept on the bend side; `_road_bend.py` stops the sweep at the kerb foot and sweeps the dropped verge points round the far side of the arc centre.
+- **The `_road.py` bend dash rule meets frozen stubs.** The stubs keep period P with a dash crossing the joint (on for 1.843 m inside the centre piece), so a centre path starts and ends with that dash and spreads the rest evenly (`_road_bend.dash_intervals`).
+- **Never edit `_road.py` for a new road piece.** It is a hashed `generatorDep` of the approved straights; shared turning code lives in `_road_bend.py`, which imports it.
+- **Check the joint in the generator.** `_road_bend.joint_section_errors` mirrors the gate's per-lane section test on the built LODs, so a stray vertex on a joint plane fails the build, not the later `kit-check`.
 
 ## KTX2
 - KTX-Software 4.4.2 `ktx create --encode` accepts only `basis-lz` or `uastc`, so BC7 is reachable only by transcoding (`ktx transcode --target bc7`). The pipeline encodes one UASTC q4 source (RDO, zstd 18) and transcodes it to BC7 and ASTC, so both families carry identical content. Encode ASTC directly only if a measured PSNR shortfall demands it.

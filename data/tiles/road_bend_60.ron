@@ -1,4 +1,7 @@
-// Sharp bend: an 8 m radius arc around corner 0; the point is the arc midpoint.
+// Sharp bend (road_bend_60_center): straight from each edge midpoint in to r = 6 (the
+// road_straight_edge stubs), joined by a 3.464 m radius arc tangent to both. The points are the
+// two joints and the arc sampled every 10 degrees between them, a polyline for hex-sim
+// (scripts/blender/kit/_road_bend.py).
 (
     id: "road_bend_60",
     biome: Grass,
@@ -13,6 +16,6 @@
     ),
     center: Some("road_bend_60_center"),
     networks: [
-        (kind: Road, from: Edge(0), to: Edge(1), points: [(6.928, 4.0)]),
+        (kind: Road, from: Edge(0), to: Edge(1), points: [(6.000, 0.000), (5.398, 0.053), (4.815, 0.209), (4.268, 0.464), (3.773, 0.810), (3.346, 1.237), (3.000, 1.732), (2.745, 2.279), (2.589, 2.863), (2.536, 3.464), (2.589, 4.066), (2.745, 4.649), (3.000, 5.196)]),
     ],
 )

@@ -1,0 +1,5 @@
+# road_junction_center friction
+
+1. **Fixed costs set the LOD0 floor** (about 5 min). The three arms (28 tris each, one segment at every LOD so their joint rows stay exact), the asphalt box (24) and the arm paint (6) cost 114 tris in every LOD, and LOD2 adds one fillet segment per wedge (33), so LOD2 is at least 147 and LOD0 must reach 980. The fillets carry it: (28, 10, 1) segments give 1038 / 444 / 147 (43%, 14.2%). This is the gates.md LOD-floor formula with a large fixed p; no skill change beyond what it already says.
+2. **Paint treatment** (decision, no time lost). Arm dashes stop at the mouth (the stub's joint dash ends at 4.157 m, just short of the 4 m mouth) and there is no paint in the box, matching the owner-approved ref-3. A give-way line was not used: a symmetric Y has no priority road.
+3. **Welding the rotated wedge units** (no time lost). The box is one wedge unit (arm, box sector, fillet) rotated by 0, 2 and 4 edge steps; `Mesh.obj(weld=True)` merges the shared box and fillet seams with `remove_doubles` at 0.1 mm before triangulating. No skill change.

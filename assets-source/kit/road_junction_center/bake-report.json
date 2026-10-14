@@ -1,0 +1,92 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "dashPeriodM": 5.542562584220407,
+  "device": "CPU",
+  "junction": {
+    "filletRadiusM": 3.9282032302755074,
+    "mouthM": 4.0,
+    "paint": "arm dashes stop at the mouth; none in the box"
+  },
+  "lanes": [
+    0,
+    2,
+    4
+  ],
+  "marginPx": 12,
+  "profile": [
+    [
+      -4.6,
+      -0.3
+    ],
+    [
+      -4.0,
+      0.06
+    ],
+    [
+      -3.25,
+      0.06
+    ],
+    [
+      -3.25,
+      0.2
+    ],
+    [
+      -3.0,
+      0.2
+    ],
+    [
+      -3.0,
+      0.08
+    ],
+    [
+      -1.5,
+      0.1
+    ],
+    [
+      0.0,
+      0.11
+    ],
+    [
+      1.5,
+      0.1
+    ],
+    [
+      3.0,
+      0.08
+    ],
+    [
+      3.0,
+      0.2
+    ],
+    [
+      3.25,
+      0.2
+    ],
+    [
+      3.25,
+      0.06
+    ],
+    [
+      4.0,
+      0.06
+    ],
+    [
+      4.6,
+      -0.3
+    ]
+  ],
+  "receiverSignature": "fb3f5c1cf98e5c9e8a8b50658d12658ffaf40e4e88785710790d04533d28e240",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 16.003310004534885,
+    "median": 15.999966882044916,
+    "min": 14.815661567750846
+  }
+}

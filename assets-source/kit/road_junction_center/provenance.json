@@ -1,0 +1,310 @@
+{
+  "pieceId": "road_junction_center",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/road_junction_center.py",
+    "sha256": "97a095253af01c9bd532001fea63f81ed339cbe8441b0741150f0fab6cbb8f47"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+    },
+    {
+      "path": "scripts/blender/kit/_road_bend.py",
+      "sha256": "30ed381d6e51bb8e813c45bba97f1659ac405de47b6184c744b8247386f25380"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "dashPeriodM": 5.542562584220407,
+    "device": "CPU",
+    "junction": {
+      "filletRadiusM": 3.9282032302755074,
+      "mouthM": 4,
+      "paint": "arm dashes stop at the mouth; none in the box"
+    },
+    "lanes": [
+      0,
+      2,
+      4
+    ],
+    "marginPx": 12,
+    "profile": [
+      [
+        -4.6,
+        -0.3
+      ],
+      [
+        -4,
+        0.06
+      ],
+      [
+        -3.25,
+        0.06
+      ],
+      [
+        -3.25,
+        0.2
+      ],
+      [
+        -3,
+        0.2
+      ],
+      [
+        -3,
+        0.08
+      ],
+      [
+        -1.5,
+        0.1
+      ],
+      [
+        0,
+        0.11
+      ],
+      [
+        1.5,
+        0.1
+      ],
+      [
+        3,
+        0.08
+      ],
+      [
+        3,
+        0.2
+      ],
+      [
+        3.25,
+        0.2
+      ],
+      [
+        3.25,
+        0.06
+      ],
+      [
+        4,
+        0.06
+      ],
+      [
+        4.6,
+        -0.3
+      ]
+    ],
+    "receiverSignature": "fb3f5c1cf98e5c9e8a8b50658d12658ffaf40e4e88785710790d04533d28e240",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 16.003310004534885,
+      "median": 15.999966882044916,
+      "min": 14.815661567750846
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1038,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 444,
+      "ratio": 0.4277456647398844
+    },
+    {
+      "lod": 2,
+      "tris": 147,
+      "ratio": 0.1416184971098266
+    }
+  ],
+  "collider": {
+    "node": "road_junction_center_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 0.5
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        2.348398447036743,
+        0.05999999865889549,
+        4.067545413970947
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 0.5
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        -4.696796894073486,
+        0.05999999865889549,
+        2.6645352591003757e-15
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 0.5
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        2.348398447036743,
+        0.05999999865889549,
+        -4.067545413970947
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 16.003310004534885,
+    "median": 15.999966882044916,
+    "min": 14.815661567750846
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 20839,
+        "astc": 20176
+      },
+      "glbBytes": 57748
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/road_junction_center/road_junction_center.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 20839,
+        "sha256": "efa2d569d372788cfc7ec02f54478bfa1c608573eefeabb3c0f38be1826fc246"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/road_junction_center/road_junction_center.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 20176,
+        "sha256": "54faddf3c853d79829f1afab016770500da2fc743d33519d63651dfed69d9919"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/road_junction_center/road_junction_center.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 32949,
+        "sha256": "fc7018387ca3bb1e1196f5107a2c7e91be242df8798d0ecc034f99004f4e5484"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/road_junction_center/road_junction_center.glb",
+      "sha256": "8b655609a4f085356cc2b66c157165e5d1a8d626ba72206b513ca66243f9b95e",
+      "bytes": 57748
+    },
+    {
+      "path": "assets/kit/p1/road_junction_center/road_junction_center.masks.bc7.ktx2",
+      "sha256": "efa2d569d372788cfc7ec02f54478bfa1c608573eefeabb3c0f38be1826fc246",
+      "bytes": 20839
+    },
+    {
+      "path": "assets/kit/p1/road_junction_center/road_junction_center.masks.astc.ktx2",
+      "sha256": "54faddf3c853d79829f1afab016770500da2fc743d33519d63651dfed69d9919",
+      "bytes": 20176
+    },
+    {
+      "path": "assets/kit/p1/road_junction_center/road_junction_center.masks.png",
+      "sha256": "fc7018387ca3bb1e1196f5107a2c7e91be242df8798d0ecc034f99004f4e5484",
+      "bytes": 32949
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/road_bends/ref-1.jpg",
+      "sha256": "f5c2443032b5108a9e921cab7563f186a7452fe7d86c7c0f6b38d8de8810dc49",
+      "sourceSha256": "3ed9ec978cd4482d188adb0226886d9734786e3a5f94449800e6231587b836b7",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "89ed2f8f-c376-4b85-a9e6-3d6c58eb7ebe",
+      "prompt": "Sharp bend road tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), flat-topped so one flat side faces the camera along the bottom of the frame, carrying a 6 m wide two-lane asphalt country road, faded dashed white centre line, low concrete kerbs, grass verges with tufts and small bushes. Seen from above, the road starts at the middle of the bottom side and turns sharply right to end at the middle of the lower-right side, the neighbouring side that shares the bottom-right corner. The road stays in the bottom-right part of the tile and the rest of the tile is open grass, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, soil strata visible on the front side walls"
+    },
+    {
+      "path": "assets-source/refs/road_bends/ref-2.jpg",
+      "sha256": "58a38eb9c6f1e4d3439a0b9892fd73f646d4ea1047081f2f046867e06a02fe20",
+      "sourceSha256": "6dfc7dbbc65d40dffcd2c6421acb933aedc133e5d8fd24e08cf65ec8ca9da322",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "d9c3f0d9-d919-4d8f-b1c4-bb5ffed347c4",
+      "prompt": "Wide bend road tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), flat-topped so one flat side faces the camera along the bottom of the frame, carrying a 6 m wide two-lane asphalt country road, faded dashed white centre line, low concrete kerbs, grass verges with tufts and small bushes. Seen from above, the road starts at the middle of the bottom side and curves gently right to end at the middle of the upper-right side. The lower-right side between the two road ends is grass, and the top side opposite the start is grass too, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, soil strata visible on the front side walls"
+    },
+    {
+      "path": "assets-source/refs/road_bends/ref-3.jpg",
+      "sha256": "bbedd94f5b2abef972013ebfbc29fc087d6e9373ef5747e70127e7b2bc8ce20f",
+      "sourceSha256": "5b711d28938d04deb5d76f2032ec9317d38e99f8d53e27db383506a4e085c330",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "f7da97f1-4366-41a5-87b5-54ede4f5bb52",
+      "prompt": "Y junction road tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), with a three-way junction of 6 m wide two-lane asphalt country road, faded dashed white centre line, low concrete kerbs, grass verges with tufts and small bushes. Three road arms meet at the tile centre in a symmetric Y, each arm 120 degrees from the next, leaving through three alternating flat edges (every other edge) square-on at the edge midpoints, with grass on the three edges between the arms. The kerbs curve smoothly between neighbouring arms and the dashed centre lines stop short of the junction. Exactly three arms, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, soil strata visible on the front side walls"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T03:42:54.731Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/road_bends/ref-1.jpg",
+        "assets-source/refs/road_bends/ref-2.jpg",
+        "assets-source/refs/road_bends/ref-3.jpg"
+      ],
+      "notes": "Approved for the road look (asphalt, kerbs, verges, dashed centre line, soil strata). ref-1 (sharp 60 degree bend) has its road ends one side too far apart; bend geometry follows the _road.py lane contract, not the image. ref-2 wide 120 degree bend and ref-3 Y junction approved as drawn. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    }
+  ]
+}

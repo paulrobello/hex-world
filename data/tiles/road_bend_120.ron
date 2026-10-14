@@ -1,4 +1,7 @@
-// Wide bend: a 24 m radius arc centered outside the tile; the point is the arc midpoint.
+// Wide bend (road_bend_120_center): straight from each edge midpoint in to r = 6 (the
+// road_straight_edge stubs), joined by a 10.392 m radius arc tangent to both. The points are the
+// two joints and the arc sampled every 10 degrees between them, a polyline for hex-sim
+// (scripts/blender/kit/_road_bend.py).
 (
     id: "road_bend_120",
     biome: Grass,
@@ -13,6 +16,6 @@
     ),
     center: Some("road_bend_120_center"),
     networks: [
-        (kind: Road, from: Edge(0), to: Edge(2), points: [(1.856, 3.215)]),
+        (kind: Road, from: Edge(0), to: Edge(2), points: [(6.000, 0.000), (4.195, 0.158), (2.446, 0.627), (0.804, 1.392), (-0.680, 2.431), (-1.961, 3.712), (-3.000, 5.196)]),
     ],
 )

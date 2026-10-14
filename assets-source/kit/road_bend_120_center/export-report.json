@@ -1,0 +1,60 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/road_bend_120_center.py",
+    "sha256": "cfac7f1311b3e3e9cadea0a8811bffe85f54b52b844385ee943f6afdf08d00b3"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+    },
+    {
+      "path": "scripts/blender/kit/_road_bend.py",
+      "sha256": "30ed381d6e51bb8e813c45bba97f1659ac405de47b6184c744b8247386f25380"
+    }
+  ],
+  "lodTris": {
+    "road_bend_120_center_lod0": 468,
+    "road_bend_120_center_lod1": 208,
+    "road_bend_120_center_lod2": 62
+  },
+  "nodes": [
+    "anchor-prop-0",
+    "anchor-prop-1",
+    "road_bend_120_center",
+    "road_bend_120_center_collider",
+    "road_bend_120_center_lod0",
+    "road_bend_120_center_lod1",
+    "road_bend_120_center_lod2"
+  ],
+  "pieceId": "road_bend_120_center",
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 0.5
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        -1.0086524486541748,
+        0.05999999865889549,
+        -1.7470372915267944
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 0.5
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        2.616347551345825,
+        0.05999999865889549,
+        4.531646728515625
+      ],
+      "yaw": 0.0
+    }
+  ]
+}
