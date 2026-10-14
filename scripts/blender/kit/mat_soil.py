@@ -1,5 +1,8 @@
-"""Tileable 'soil' PBR set: 1024² over 4 m = 256 px/m (owner-approved D2 exception, 2026-10-13: one strata set per 4 m wall). Scripted; seamless via lib.materials.torus_coords.
-Look: ref-1's layered side walls, dark topsoil over red clay over gravel (owner ruling B1)."""
+"""Tileable 'soil' PBR set: 1024² over 4 m = 256 px/m (owner-approved D2 exception, 2026-10-13: one profile per 4 m wall). Scripted; seamless via lib.materials.torus_coords.
+Look: the owner's O4 "cutaway" (2026-10-13, replacing ruling B1's dark topsoil over red clay over gravel): a grass
+lip over root-dark topsoil, a warm brown body that darkens softly into a near-black foot, no bright strata bands.
+Option 4 of mat_soil_alt.py (the comparison record, docs/checkpoints/skirt-options/), inlined here so this file is
+the whole generator: it imports no `_*.py` helper, so provenance hashes exactly what it ran."""
 import pathlib
 import random
 import sys
@@ -20,16 +23,26 @@ bsdf = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
 vec, w = materials.torus_coords(nt, scale=TILE_M)
 
 
-# Every texture is 4D and fed (vec, w) only: 3D textures ignore W and mirror the tile (no wrap).
-def noise(scale, detail=4.0, rough=0.5, distortion=0.0):
+def stretched(su, sv):
+    """Torus coordinates scaled per axis: su < sv stretches features along the wall (U), su > sv along V."""
+    vm = nt.nodes.new("ShaderNodeVectorMath")
+    vm.operation = "MULTIPLY"
+    vm.inputs[1].default_value = (su, su, sv)
+    nt.links.new(vec, vm.inputs[0])
+    return vm.outputs[0], math("MULTIPLY", w, sv)
+
+
+# Every texture is 4D and fed torus coordinates only: 3D textures ignore W and mirror the tile (no wrap).
+def noise(scale, detail=4.0, rough=0.5, distortion=0.0, coords=None):
+    v4, w4 = coords or (vec, w)
     n = nt.nodes.new("ShaderNodeTexNoise")
     n.noise_dimensions = "4D"
     n.inputs["Scale"].default_value = scale
     n.inputs["Detail"].default_value = detail
     n.inputs["Roughness"].default_value = rough
     n.inputs["Distortion"].default_value = distortion
-    nt.links.new(vec, n.inputs["Vector"])
-    nt.links.new(w, n.inputs["W"])
+    nt.links.new(v4, n.inputs["Vector"])
+    nt.links.new(w4, n.inputs["W"])
     return n.outputs["Fac"]
 
 
@@ -94,36 +107,50 @@ def smooth(x, lo, hi):
     return n.outputs["Result"]
 
 
-# Strata (ref-1): topsoil, red clay, gravel banded along V. Walls map texture-up to world +Y and the
-# cap rim (world y = 0) sits on the V = 1/0 wrap, so the rim must be topsoil. The band coordinate is
-# fract(V + offset + seamless jitter): V is recovered from the torus coordinates as atan2(w, z) / 2π,
-# so it stays a function of (vec, w) only, and fract keeps it continuous across the wrap.
+# Depth below the rim, t in [0, 1): 0 at the cap rim, 1 at the skirt foot. Walls map V = -y / tileM, so
+# with tileM 4 one tile spans the 4 m skirt and the rim and the foot share the wrap row (top PNG row = rim).
+# V is recovered from the torus coordinates as atan2(w, z) / 2π, so t stays a function of (vec, w) only.
 sep = nt.nodes.new("ShaderNodeSeparateXYZ")
 nt.links.new(vec, sep.inputs[0])
-v = math("DIVIDE", math("ARCTAN2", w, sep.outputs["Z"]), 6.283185307179586)
-jitter = math("MULTIPLY", math("SUBTRACT", noise(3.0, detail=3.0), 0.5), 0.03)
-band = math("FRACT", math("ADD", math("ADD", v, -0.02), jitter))
-# Upward on the wall: gravel (0-0.25), clay (0.3-0.55), topsoil (0.6-1.0). With tileM 4 the tile spans the
-# whole 4 m skirt, so the rim and the skirt foot share the wrap row; the topsoil/gravel contact at band 0 = 1
-# sits 0.02-0.14 m above the foot, leaving one strata set per wall.
-grain = noise(60.0, detail=6.0, rough=0.6)
-topsoil = ramp(grain, [(0.35, "#1f1a16"), (0.65, "#3a2f27")])
-clay = ramp(noise(25.0, detail=5.0, rough=0.6, distortion=0.6), [(0.35, "#7a3524"), (0.65, "#a04a30")])
-pebbles = voronoi(45.0)
-pebble_mask = math("SUBTRACT", 1.0, smooth(pebbles.outputs["Distance"], 0.35, 0.5))
-gravel = mix(pebble_mask, ramp(grain, [(0.3, "#4a3d30"), (0.7, "#6a5846")]),
-             ramp(pebbles.outputs["Color"], [(0.3, "#6d7176"), (0.7, "#9a9ea2")]))
-col = mix(smooth(band, 0.25, 0.3), gravel, clay)
-col = mix(smooth(band, 0.55, 0.6), col, topsoil)
-specks = voronoi(30.0)
-speck_mask = math("MULTIPLY", math("SUBTRACT", 1.0, smooth(specks.outputs["Distance"], 0.08, 0.14)),
-                  smooth(specks.outputs["Color"], 0.72, 0.73))
-col = mix(speck_mask, col, "#8b8f93")
-nt.links.new(col, bsdf.inputs["Base Color"])
+t = math("FRACT", math("MULTIPLY", math("DIVIDE", math("ARCTAN2", w, sep.outputs["Z"]), 6.283185307179586), -1.0))
 
-gravel_h = math("MULTIPLY", pebble_mask, math("SUBTRACT", 1.0, smooth(band, 0.25, 0.3)))
-height = math("ADD", math("MULTIPLY", grain, 0.5), math("MULTIPLY", gravel_h, 0.5))
-height = math("ADD", height, math("MULTIPLY", speck_mask, 0.3))
+LIP_T = 0.03  # 12 cm grass lip under the rim
+
+
+def grass_lip(col, height):
+    """Grass hanging over the rim: blade-like lower edge (noise stretched along V), a root-dark line under it.
+    Only the lower edge is jittered, so the rim row itself is always lip and the foot never is."""
+    blades = noise(70.0, detail=3.0, rough=0.6, coords=stretched(1.0, 0.12))
+    edge = math("ADD", LIP_T, math("MULTIPLY", math("SUBTRACT", blades, 0.5), 0.03))
+    lip = math("SUBTRACT", 1.0, smooth(math("SUBTRACT", t, edge), -0.002, 0.002))
+    roots = math("MULTIPLY", math("SUBTRACT", 1.0, smooth(math("SUBTRACT", t, edge), 0.0, 0.025)), 0.7)
+    col = mix(roots, col, "#1c1510")
+    turf = ramp(noise(90.0, detail=4.0, rough=0.6), [(0.3, "#2f4a1b"), (0.7, "#4e722b")])
+    col = mix(lip, col, turf)
+    height = math("ADD", math("MULTIPLY", height, math("SUBTRACT", 1.0, lip)), math("MULTIPLY", lip, blades))
+    return col, height
+
+
+grain = noise(60.0, detail=6.0, rough=0.6)
+mottle = noise(9.0, detail=3.0, rough=0.5)
+smear = noise(14.0, detail=3.0, rough=0.5, coords=stretched(0.3, 1.0))
+
+# Root-dark under the lip, warm brown body, soft darkening into the foot (wobbled, never a line).
+body = ramp(math("ADD", math("MULTIPLY", mottle, 0.6), math("MULTIPLY", smear, 0.4)),
+            [(0.3, "#47352a"), (0.7, "#5a4433")])
+col = mix(math("MULTIPLY", math("SUBTRACT", grain, 0.5), 0.5), body, "#2a1f17")
+top = math("SUBTRACT", 1.0, smooth(t, 0.04, 0.16))
+col = mix(math("MULTIPLY", top, 0.55), col, "#2a1f18")
+fall = smooth(math("ADD", t, math("MULTIPLY", math("SUBTRACT", noise(6.0, detail=2.0, coords=stretched(1.0, 0.05)), 0.5), 0.15)), 0.3, 1.0)
+col = mix(math("MULTIPLY", fall, 0.85), col, "#181411")
+stones = voronoi(40.0)
+stone_mask = math("MULTIPLY", math("SUBTRACT", 1.0, smooth(stones.outputs["Distance"], 0.10, 0.17)),
+                  smooth(stones.outputs["Color"], 0.82, 0.83))
+stone_mask = math("MULTIPLY", stone_mask, math("SUBTRACT", 1.0, fall))
+col = mix(math("MULTIPLY", stone_mask, 0.6), col, "#6a5d50")
+height = math("ADD", math("MULTIPLY", grain, 0.6), math("MULTIPLY", stone_mask, 0.4))
+col, height = grass_lip(col, height)
+nt.links.new(col, bsdf.inputs["Base Color"])
 
 rough = nt.nodes.new("ShaderNodeMapRange")
 rough.inputs["To Min"].default_value = 0.95

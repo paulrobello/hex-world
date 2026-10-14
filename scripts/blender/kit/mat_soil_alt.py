@@ -5,7 +5,8 @@ drop-in replacements for the `soil` set (1024² over tileM 4.0, so the swap need
   3 strata:   the round-2 icon's warm browns, two thin muted seams of uneven height and width, grass lip.
   4 cutaway:  grass lip over root-dark topsoil that grades softly into a dark base at the foot.
 Usage: blender -b --factory-startup --python-exit-code 1 -P mat_soil_alt.py -- <out_dir> <n>
-Helpers are copied from mat_soil.py on purpose: that generator is hashed by the approved soil set."""
+Helpers are copied from mat_soil.py on purpose: that generator is hashed by the approved soil set.
+The owner chose option 4 on 2026-10-13: mat_soil.py now builds exactly that look as the shipped `soil` set."""
 import pathlib
 import random
 import sys

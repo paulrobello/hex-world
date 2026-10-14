@@ -5,7 +5,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/mat_soil.py",
-    "sha256": "cb3e83efb739769564b08a0e5e244c747dc2d6bce9678a0fe171d218867bbc1b"
+    "sha256": "c585df629045582c2dd7cf0901e95b01b3c3bfe2eca8267eedc0dd9ba75603af"
   },
   "generatorDeps": [],
   "authoringAgent": {
@@ -23,7 +23,8 @@
     "blender": "5.2.2 LTS",
     "device": "CPU",
     "generator": "scripts/blender/kit/mat_soil.py",
-    "generatorSha256": "cb3e83efb739769564b08a0e5e244c747dc2d6bce9678a0fe171d218867bbc1b",
+    "generatorDeps": [],
+    "generatorSha256": "c585df629045582c2dd7cf0901e95b01b3c3bfe2eca8267eedc0dd9ba75603af",
     "samples": 32,
     "set": "soil",
     "size": 1024,
@@ -31,21 +32,21 @@
   },
   "bakeReport": {
     "path": "assets-source/kit/materials/soil/bake-report.json",
-    "sha256": "3aa5e30f1c920e53fa34356acdfcdba2feec7a305fd19897fd3c54a9956f0170",
-    "bytes": 253
+    "sha256": "0b7c34a0bbbf9a92229c699f46c9aa54cb667e1b653c830a7662a769e1afbadd",
+    "bytes": 276
   },
   "compressReport": {
     "path": "assets-source/kit/materials/soil/compress-report.json",
-    "sha256": "7c07cfc61cb254507c2a211dd280d8fa64c15e5d5703dd44e2b72ba5c3815746",
-    "bytes": 3850
+    "sha256": "92d3d0d7d589f45c91e4456a8346b3caeddeff36105e98bcd7fb95a4d9ab62ea",
+    "bytes": 3849
   },
   "compression": {
     "budgets": {
       "class": "tileable",
       "ktxMax": 3600000,
       "ktxBytes": {
-        "bc7": 2206092,
-        "astc": 2263204
+        "bc7": 1826070,
+        "astc": 1856152
       }
     },
     "textureEncodes": [
@@ -57,8 +58,8 @@
         "transfer": "srgb",
         "vkFormat": 146,
         "levels": 11,
-        "bytes": 820842,
-        "sha256": "1860507bd17ec3566ae1750f8e60807f99f0692d2a4411dc8a793d5bfcf45bdc"
+        "bytes": 359337,
+        "sha256": "6038f92642064d2dc11f211126eb533e829acc94ff82957a2152de7f4f2ff426"
       },
       {
         "channel": "albedo",
@@ -68,8 +69,8 @@
         "transfer": "srgb",
         "vkFormat": 158,
         "levels": 11,
-        "bytes": 843646,
-        "sha256": "09b1f811267aaa248fd37587edd42e7fd9627ebdcd74dd4d667fe424fbafce96"
+        "bytes": 359315,
+        "sha256": "935a11955e76dc21c831dba62a56963c37117455667cdd52c5e451157a343020"
       },
       {
         "channel": "albedo",
@@ -77,8 +78,8 @@
         "path": "assets/kit/p1/materials/soil/soil.albedo.png",
         "format": "PNG",
         "transfer": "srgb",
-        "bytes": 1646806,
-        "sha256": "f7b771c23b7546881d80add497125931ed17e52fded67a7526d2ce5d93cc3b17"
+        "bytes": 853236,
+        "sha256": "bde1de0df6f339414e530649a4516f55f8f6399408c930cafeb6c0beb285bd82"
       },
       {
         "channel": "normal",
@@ -88,8 +89,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 1109256,
-        "sha256": "cabc3dca792608e9467e6deec2a6e1bdd1ce21b976896d25f85a3dce2c232983"
+        "bytes": 1099962,
+        "sha256": "5ce833be2e62cc10311fb73108c22e2a59d66e943f9be2ac4d252215e43f9753"
       },
       {
         "channel": "normal",
@@ -99,8 +100,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 1120110,
-        "sha256": "e5177abe4764c938b087ef61926a83e209e41bd862d2c95f9d12d37e0ac77fb8"
+        "bytes": 1104116,
+        "sha256": "0b4d52ba82904c378c196ac2c159d9ce6a8c213f53df38b4ae328a6ed47110ac"
       },
       {
         "channel": "normal",
@@ -108,8 +109,8 @@
         "path": "assets/kit/p1/materials/soil/soil.normal.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 2778235,
-        "sha256": "dfa6daf1bed6076abe5802dd9fcf8bcfe7a801f25062f0f12c06ed39ec2a6031"
+        "bytes": 2745992,
+        "sha256": "7d75ef5f858b338d4b88b3a0044c89af615eace7347471a4b89404a66d46e257"
       },
       {
         "channel": "orm",
@@ -119,8 +120,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 275994,
-        "sha256": "9778f516c92bcea81ebe2561f038914c18b70350f504d0ca9ac7c83c60cbd3ee"
+        "bytes": 366771,
+        "sha256": "728e5f3c3cd738f243d38e23e0baafbd17c8cd805596e96d194c0945ca711fd0"
       },
       {
         "channel": "orm",
@@ -130,8 +131,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 299448,
-        "sha256": "ddc92cecb810ec8d7c7cf1758650e1d0b6c659d2030144bc680f533e3e86127b"
+        "bytes": 392721,
+        "sha256": "0570241c451b15e281fc0ec35cb2db82613e051ff08d6e06de3f02610b35dd5c"
       },
       {
         "channel": "orm",
@@ -139,62 +140,62 @@
         "path": "assets/kit/p1/materials/soil/soil.orm.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 605512,
-        "sha256": "70b2faf0f06144f07a75f5a087ac33bd9e525ed54b6b606cc581e289884dfcd8"
+        "bytes": 560456,
+        "sha256": "27d52843f94fae0351c0cc95cebe6d36b133e253bc1f331dceb774b2e3cf1c72"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/materials/soil/soil.albedo.bc7.ktx2",
-      "sha256": "1860507bd17ec3566ae1750f8e60807f99f0692d2a4411dc8a793d5bfcf45bdc",
-      "bytes": 820842
+      "sha256": "6038f92642064d2dc11f211126eb533e829acc94ff82957a2152de7f4f2ff426",
+      "bytes": 359337
     },
     {
       "path": "assets/kit/p1/materials/soil/soil.albedo.astc.ktx2",
-      "sha256": "09b1f811267aaa248fd37587edd42e7fd9627ebdcd74dd4d667fe424fbafce96",
-      "bytes": 843646
+      "sha256": "935a11955e76dc21c831dba62a56963c37117455667cdd52c5e451157a343020",
+      "bytes": 359315
     },
     {
       "path": "assets/kit/p1/materials/soil/soil.albedo.png",
-      "sha256": "f7b771c23b7546881d80add497125931ed17e52fded67a7526d2ce5d93cc3b17",
-      "bytes": 1646806
+      "sha256": "bde1de0df6f339414e530649a4516f55f8f6399408c930cafeb6c0beb285bd82",
+      "bytes": 853236
     },
     {
       "path": "assets/kit/p1/materials/soil/soil.normal.bc7.ktx2",
-      "sha256": "cabc3dca792608e9467e6deec2a6e1bdd1ce21b976896d25f85a3dce2c232983",
-      "bytes": 1109256
+      "sha256": "5ce833be2e62cc10311fb73108c22e2a59d66e943f9be2ac4d252215e43f9753",
+      "bytes": 1099962
     },
     {
       "path": "assets/kit/p1/materials/soil/soil.normal.astc.ktx2",
-      "sha256": "e5177abe4764c938b087ef61926a83e209e41bd862d2c95f9d12d37e0ac77fb8",
-      "bytes": 1120110
+      "sha256": "0b4d52ba82904c378c196ac2c159d9ce6a8c213f53df38b4ae328a6ed47110ac",
+      "bytes": 1104116
     },
     {
       "path": "assets/kit/p1/materials/soil/soil.normal.png",
-      "sha256": "dfa6daf1bed6076abe5802dd9fcf8bcfe7a801f25062f0f12c06ed39ec2a6031",
-      "bytes": 2778235
+      "sha256": "7d75ef5f858b338d4b88b3a0044c89af615eace7347471a4b89404a66d46e257",
+      "bytes": 2745992
     },
     {
       "path": "assets/kit/p1/materials/soil/soil.orm.bc7.ktx2",
-      "sha256": "9778f516c92bcea81ebe2561f038914c18b70350f504d0ca9ac7c83c60cbd3ee",
-      "bytes": 275994
+      "sha256": "728e5f3c3cd738f243d38e23e0baafbd17c8cd805596e96d194c0945ca711fd0",
+      "bytes": 366771
     },
     {
       "path": "assets/kit/p1/materials/soil/soil.orm.astc.ktx2",
-      "sha256": "ddc92cecb810ec8d7c7cf1758650e1d0b6c659d2030144bc680f533e3e86127b",
-      "bytes": 299448
+      "sha256": "0570241c451b15e281fc0ec35cb2db82613e051ff08d6e06de3f02610b35dd5c",
+      "bytes": 392721
     },
     {
       "path": "assets/kit/p1/materials/soil/soil.orm.png",
-      "sha256": "70b2faf0f06144f07a75f5a087ac33bd9e525ed54b6b606cc581e289884dfcd8",
-      "bytes": 605512
+      "sha256": "27d52843f94fae0351c0cc95cebe6d36b133e253bc1f331dceb774b2e3cf1c72",
+      "bytes": 560456
     }
   ],
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-13T18:44:26.549Z",
+    "date": "2026-10-14T05:34:35.360Z",
     "checks": [
       "kit-compress tileable budget",
       "kit_gate textures"

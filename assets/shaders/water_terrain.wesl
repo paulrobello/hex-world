@@ -31,7 +31,16 @@ const SAND: vec3<f32> = vec3(0.50, 0.42, 0.29);
 const SAND_UNDER: vec3<f32> = vec3(0.40, 0.35, 0.25);
 const SOIL: vec3<f32> = vec3(0.16, 0.115, 0.075);
 const GRAVEL: vec3<f32> = vec3(0.21, 0.19, 0.16);
-const STRATA: vec3<f32> = vec3(0.20, 0.15, 0.10);
+// Skirt walls: the kit `soil` set's O4 cutaway (scripts/blender/kit/mat_soil.py), linear from its sRGB stops.
+const WALL_BODY_LO: vec3<f32> = vec3(0.063, 0.036, 0.023);
+const WALL_BODY_HI: vec3<f32> = vec3(0.102, 0.058, 0.033);
+const WALL_GRAIN: vec3<f32> = vec3(0.023, 0.014, 0.0086);
+const WALL_TOPSOIL: vec3<f32> = vec3(0.023, 0.014, 0.0091);
+const WALL_FOOT: vec3<f32> = vec3(0.0091, 0.007, 0.0056);
+const WALL_ROOTS: vec3<f32> = vec3(0.0116, 0.0075, 0.0052);
+// Grass rim above sea level (water.rs LAND: world y = 0 in play) and the kit skirt height (LEVEL_STEP).
+const WALL_RIM: f32 = 1.4;
+const WALL_DEPTH: f32 = 4.0;
 
 @fragment
 fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> FragmentOutput {
@@ -68,10 +77,26 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
     albedo *= mix(1.0, 0.55, wet);
     rough = mix(rough, 0.18, wet * step(-0.02, y));
 
-    // Skirt walls: banded soil, a diorama cut.
+    // Skirt walls: the O4 cutaway on the kit skirts' world-height profile (depth below the grass rim over
+    // the 4 m skirt), so a cut wall matches a neighbouring meadow wall at the same height. A grass lip
+    // under a grass-level rim, root-dark topsoil, a warm brown body darkening softly into a near-black foot.
+    // Wall-plane noise (along the wall, down it): the xz samples above draw vertical streaks on a wall.
+    // 0.866x + 0.5z stretches no hex edge by more than 2x. Sampled here, as implicit-LOD sampling
+    // needs uniform control flow.
+    let wn = textureSample(terrain_noise_texture, terrain_noise_sampler, vec2(0.866 * wp.x + 0.5 * wp.z, wp.y) / 3.0);
     if (cap < 0.5) {
-        albedo = STRATA * (0.75 + 0.35 * fract(wp.y * 0.6 + nz.b * 0.4));
-        rough = 0.95;
+        let d = WALL_RIM - y;
+        let tw = clamp(d / WALL_DEPTH, 0.0, 1.0);
+        var wall = mix(WALL_BODY_LO, WALL_BODY_HI, wn.b);
+        wall = mix(wall, WALL_GRAIN, (wn.a - 0.5) * 0.5);
+        wall = mix(wall, WALL_TOPSOIL, 0.55 * (1.0 - smoothstep(0.04, 0.16, tw)));
+        wall = mix(wall, WALL_FOOT, 0.85 * smoothstep(0.3, 1.0, tw + (nz.b - 0.5) * 0.15));
+        let edge = 0.12 + (fine.g - 0.5) * 0.12;
+        // Only a rim within the lip depth of the grass level gets a lip, and the cap is grass there.
+        let lip = 1.0 - smoothstep(edge - 0.008, edge + 0.008, d);
+        wall = mix(wall, WALL_ROOTS, 0.7 * (1.0 - smoothstep(0.0, 0.1, d - edge)));
+        albedo = mix(wall, GRASS * (0.8 + 0.4 * nz.a), lip);
+        rough = mix(0.95, 0.85, lip);
     }
 
     let ripple = (fine.xy * 2.0 - 1.0) * mix(0.12, 0.04, grass_w);
