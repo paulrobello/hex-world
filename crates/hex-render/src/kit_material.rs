@@ -5,7 +5,8 @@
 //!
 //! Sampled-texture budget: a tileable set binds through StandardMaterial's own base-color,
 //! normal-map and metallic-roughness slots (the shader samples them at world-space UVs), so the
-//! extension adds only `masks`. WebGPU's default per-stage limit is 16.
+//! extension adds only `masks`. WebGPU's default per-stage limit is 16: the forward pipeline uses
+//! 15 with the IBL and 16 in a view with refracting water (its transmission texture).
 use bevy::{
     image::{ImageAddressMode, ImageLoaderSettings, ImageSampler, ImageSamplerDescriptor},
     math::Affine2,

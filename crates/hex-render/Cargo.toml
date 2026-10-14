@@ -9,6 +9,10 @@ publish.workspace = true
 hex-core = { path = "../hex-core" }
 hex-assets = { path = "../hex-assets", features = ["bevy"] }
 bytemuck = { version = "1", features = ["derive"] }
+# No `bluenoise_texture`: it binds a blue-noise texture in every mesh pipeline's view bind group
+# (read only by contact shadows, SSR and runtime env-map filtering, none used here), and with it the
+# kit forward pipeline needs 17 sampled textures in a refracting-water view, over WebGPU's default 16
+# (`water_kit` smoke case). `3d_bevy_render` still brings `ktx2` and `zstd_rust`.
 bevy = { workspace = true, features = [
     "3d_bevy_render",
     "ui_bevy_render",
@@ -17,7 +21,6 @@ bevy = { workspace = true, features = [
     "bevy_winit",
     "multi_threaded",
     "default_font",
-    "bluenoise_texture",
 ] }
 
 [target.'cfg(target_os = "linux")'.dependencies]

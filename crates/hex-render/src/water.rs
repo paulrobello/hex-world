@@ -8,9 +8,11 @@
 //! from world position too.
 //!
 //! Both materials are custom `Material`s, not `ExtendedMaterial<StandardMaterial, _>`: the
-//! StandardMaterial layout binds its texture slots even when unused, and the kit forward pipeline
-//! already sits at WebGPU's 16 sampled textures with the IBL. Water also needs the view's
-//! transmission texture (refraction), so it keeps its own material group to one texture.
+//! StandardMaterial layout binds its texture slots even when unused, and they keep their own
+//! material group to one texture. Refracting tiers put `ScreenSpaceTransmission` on the camera,
+//! which adds the view transmission texture to every mesh pipeline in the view: the kit forward
+//! pipeline then samples 16 textures (15 with the IBL alone), exactly WebGPU's default limit, so a
+//! new view or kit texture binding needs headroom found first (`water_kit` smoke case).
 use bevy::{
     asset::RenderAssetUsages,
     core_pipeline::prepass::DepthPrepass,
@@ -719,7 +721,7 @@ pub const FIXED_STEP: f32 = 1.0 / 30.0;
 #[derive(Component)]
 pub struct WaterSurface;
 
-/// Spawns the look-dev patch; `setup` calls it for `Scenario::Water`.
+/// Spawns the look-dev patch; `setup` calls it for `Scenario::Water` and `Scenario::WaterKit`.
 pub fn spawn(
     commands: &mut Commands,
     meshes: &mut Assets<Mesh>,

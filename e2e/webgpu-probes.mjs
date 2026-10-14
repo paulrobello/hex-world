@@ -18,16 +18,20 @@ export function clampSampledTextures(lim) {
 // Counts sampled textures visible to the fragment stage in every pipeline layout the app creates
 // (the number WebGPU checks against maxSampledTexturesPerShaderStage). `window.__sampledTextures`
 // holds `{ max, layouts, kit }`: `layouts` lists each distinct per-layout count, and `kit` lists
-// `{ pass, sampled }` for each render pipeline whose fragment module is a kit shader (it declares
+// `{ pass, sampled, ibl, transmission, groups }` for each render pipeline whose fragment module is a kit shader (it declares
 // the `tile_inv_m` uniform field): `pass` is "forward" when the module also declares
-// `masks_texture` (kit_material.wesl), else "prepass" (kit_prepass.wesl). `tilt` lists `{ sampled }`
+// `masks_texture` (kit_material.wesl), else "prepass" (kit_prepass.wesl); `groups` lists, per bind
+// group, the binding numbers of those fragment-visible textures (the breakdown behind `sampled`), and
+// `transmission` is true when the layout binds the view transmission texture (group 0, binding 24). `tilt` lists `{ sampled }`
 // for each render pipeline whose fragment module is the tilt-shift shader (it declares `focus_uv_y`). `water` lists
 // `{ pass, sampled, ibl, transmission }` for the water scenario's pipelines, `pass` being "water"
 // (water.wesl) or "terrain" (water_terrain.wesl).
 export function countSampledTextures() {
   const FRAGMENT = 2;
   const perBgl = new WeakMap();
+  const perBglBindings = new WeakMap();
   const perLayout = new WeakMap();
+  const perLayoutGroups = new WeakMap();
   const kitModules = new WeakMap();
   const tiltModules = new WeakSet();
   const waterModules = new WeakMap();
@@ -53,8 +57,9 @@ export function countSampledTextures() {
   const cbgl = GPUDevice.prototype.createBindGroupLayout;
   GPUDevice.prototype.createBindGroupLayout = function (desc) {
     const bgl = cbgl.apply(this, arguments);
-    const n = (desc?.entries ?? []).filter((e) => (e.texture || e.externalTexture) && (e.visibility & FRAGMENT)).length;
-    perBgl.set(bgl, n);
+    const tex = (desc?.entries ?? []).filter((e) => (e.texture || e.externalTexture) && (e.visibility & FRAGMENT));
+    perBgl.set(bgl, tex.length);
+    perBglBindings.set(bgl, tex.map((e) => e.binding));
     return bgl;
   };
   const cpl = GPUDevice.prototype.createPipelineLayout;
@@ -64,6 +69,7 @@ export function countSampledTextures() {
     if (!stats.layouts.includes(n)) stats.layouts.push(n);
     const layout = cpl.apply(this, arguments);
     perLayout.set(layout, n);
+    perLayoutGroups.set(layout, (desc?.bindGroupLayouts ?? []).map((b) => (b ? perBglBindings.get(b) ?? [] : [])));
     return layout;
   };
   const record = (desc) => {
@@ -81,7 +87,12 @@ export function countSampledTextures() {
     if (!mod) return;
     const { pass, ibl } = mod;
     const sampled = perLayout.get(desc.layout) ?? null;
-    if (!stats.kit.some((k) => k.pass === pass && k.sampled === sampled && k.ibl === ibl)) stats.kit.push({ pass, sampled, ibl });
+    const groups = perLayoutGroups.get(desc.layout) ?? null;
+    // Bevy binds the view transmission texture at group 0 binding 24 (mesh_view_bindings.rs) in every
+    // mesh pipeline of a view with ScreenSpaceTransmission, whether or not the shader reads it.
+    const transmission = (groups?.[0] ?? []).includes(24);
+    if (!stats.kit.some((k) => k.pass === pass && k.sampled === sampled && k.ibl === ibl && k.transmission === transmission))
+      stats.kit.push({ pass, sampled, ibl, transmission, groups });
   };
   for (const name of ["createRenderPipeline", "createRenderPipelineAsync"]) {
     const orig = GPUDevice.prototype[name];

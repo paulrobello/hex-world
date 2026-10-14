@@ -30,17 +30,22 @@ const fail = (m) => { console.error("FAIL:", m); process.exitCode = 1; };
 const KIT_COMPAT_ALIASES = 8;
 // WebGPU's default maxSampledTexturesPerShaderStage.
 const WEBGPU_DEFAULT_SAMPLED = 16;
-// Measured fragment-stage sampled textures of the kit pipelines with post=full (2026-10-13). The
-// forward count is asserted exactly, so the clamped case cannot pass without the kit pipeline.
-// `ibl=on` (the kit default) adds the two noon environment cubemaps to the view bind group, which
-// puts the forward pipeline exactly at WebGPU's default 16 (measured 2026-10-13): no headroom left.
+// Measured fragment-stage sampled textures of the kit pipelines with post=full. The forward count
+// is asserted exactly, so the clamped case cannot pass without the kit pipeline. Forward: the view
+// bind group (point and directional shadow maps, SSAO, depth/normal/motion-vector prepass, plus the
+// two noon environment cubemaps with `ibl=on`) and the material (StandardMaterial's six slots and
+// `masks`). Bevy's `bluenoise_texture` feature is off (crates/hex-render/Cargo.toml), so the view
+// binds no blue-noise texture: 15 with the IBL, one below WebGPU's default 16.
 // The tilt-shift pass samples the colour target and the prepass depth.
 const TILT_SAMPLED = 2;
-const KIT_SAMPLED = { ibl: { forward: 16, prepass: 7 }, noIbl: { forward: 14, prepass: 7 } };
+const KIT_SAMPLED = { ibl: { forward: 15, prepass: 7 }, noIbl: { forward: 13, prepass: 7 } };
+// A camera with screen-space transmission (refracting water, High and Medium) adds the view
+// transmission texture to every mesh pipeline in its view, the kit's included: exactly 16 at High.
+const KIT_SAMPLED_WITH_WATER = { forward: KIT_SAMPLED.ibl.forward + 1, prepass: KIT_SAMPLED.ibl.prepass };
 // Measured fragment-stage sampled textures of the water scenario's pipelines with post=full and the
-// IBL (2026-10-13). The view layout sets them: High adds SSAO (its texture and the normal prepass),
-// refracting tiers (High, Medium) add the transmission texture; each material binds one texture.
-const WATER_SAMPLED = { high: { water: 11, terrain: 11 }, medium: { water: 9, terrain: 9 }, low: { water: 8, terrain: 8 } };
+// IBL. The view layout sets them: High adds SSAO (its texture and the normal prepass), refracting
+// tiers (High, Medium) add the transmission texture; each material binds one texture.
+const WATER_SAMPLED = { high: { water: 10, terrain: 10 }, medium: { water: 8, terrain: 8 }, low: { water: 7, terrain: 7 } };
 // Handle-let aliases the compat shim rewrites in a water scenario run: none, since neither water
 // shader composes StandardMaterial's PBR input (the marker probe still checks the water module).
 const WATER_COMPAT_ALIASES = 0;
@@ -289,6 +294,67 @@ for (const [query, aliases, clamp] of [["?scenario=water&post=full", null, WEBGP
     }
     if (query === "?scenario=water&post=full")
       await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-water.png" });
+  });
+}
+
+// 7. Water and kit pieces in one view (PRD §15 P2, ADR 0002 "Water and the texture limit"):
+// `scenario=water_kit` spawns the water patch and the kit under the water camera. At High the camera
+// has screen-space transmission, so the kit forward pipeline binds the view transmission texture on
+// top of the IBL. With the device clamped to WebGPU's default 16 it must specialize and draw with no
+// validation error; its count is pinned exactly and its layout must bind the transmission texture.
+for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?scenario=water_kit&post=full"]) {
+  const clamp = WEBGPU_DEFAULT_SAMPLED;
+  await withPage(gpuArgs, async (page) => {
+    let spawned = null;
+    page.on("console", (m) => {
+      const s = /kit: spawned (\d+) meshes/.exec(m.text());
+      if (s) spawned = Number(s[1]);
+    });
+    await page.addInitScript(clampSampledTextures, clamp);
+    await page.addInitScript(countSampledTextures);
+    await page.goto(base + query);
+    const tag = `water_kit ${query} (clamped ${clamp})`;
+    // A pipeline layout over the limit is a device validation error that stops the app before READY:
+    // report what the probe saw instead of throwing.
+    if (!(await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 }).then(() => true, () => false))) {
+      const s = await page.evaluate(() => window.__sampledTextures);
+      fail(`${tag}: never ready; sampled textures per stage max ${s?.max}, kit pipelines ${JSON.stringify(s?.kit)}`);
+      return;
+    }
+    const deadline = Date.now() + 60_000;
+    while (spawned === null && Date.now() < deadline) await page.waitForTimeout(100);
+    if (!spawned) { fail(`${tag}: no kit meshes spawned (${spawned})`); return; }
+    // Wait (bounded) for the IBL-composed kit forward, water and terrain pipelines, then let compilation settle.
+    while (Date.now() < deadline + 30_000 && !(await page.evaluate(() => {
+      const s = window.__sampledTextures ?? {};
+      return (s.kit ?? []).some((k) => k.pass === "forward" && k.ibl) && (s.kit ?? []).some((k) => k.pass === "prepass") &&
+        (s.water ?? []).some((k) => k.pass === "water" && k.ibl) && (s.water ?? []).some((k) => k.pass === "terrain" && k.ibl);
+    }))) await page.waitForTimeout(200);
+    await page.waitForTimeout(1_500);
+    const { sampled, limit, state } = await page.evaluate(() => ({
+      sampled: window.__sampledTextures, limit: window.__deviceSampledLimit, state: window.hexWorld.state() }));
+    console.log(`${tag}: ${spawned} meshes; sampled textures per stage max ${sampled?.max}, kit pipelines ` +
+      `${JSON.stringify(sampled?.kit)}, water pipelines ${JSON.stringify(sampled?.water)}; state.gpu ${JSON.stringify(state.gpu)}`);
+    if (state.scenario !== "WaterKit" || state.tiles !== 12) fail(`${tag}: state scenario ${state.scenario}, tiles ${state.tiles}`);
+    for (const pass of ["forward", "prepass"]) {
+      const got = (sampled?.kit ?? []).filter((k) => k.pass === pass && (pass === "prepass" || k.ibl));
+      if (!got.length) fail(`${tag}: no kit ${pass} pipeline was created`);
+      else if (!got.every((k) => k.sampled === KIT_SAMPLED_WITH_WATER[pass]))
+        fail(`${tag}: kit ${pass} pipeline uses ${got.map((k) => k.sampled)} sampled textures, expected ${KIT_SAMPLED_WITH_WATER[pass]}`);
+      if (pass === "forward" && !got.every((k) => k.transmission))
+        fail(`${tag}: kit forward pipeline layout lacks the view transmission texture: ${JSON.stringify(got)}`);
+    }
+    for (const pass of ["water", "terrain"]) {
+      const got = (sampled?.water ?? []).filter((k) => k.pass === pass && k.ibl);
+      if (!got.length) fail(`${tag}: no IBL ${pass} pipeline was created`);
+      else if (!got.every((k) => k.sampled === WATER_SAMPLED.high[pass]))
+        fail(`${tag}: ${pass} pipeline uses ${got.map((k) => k.sampled)} sampled textures, expected ${WATER_SAMPLED.high[pass]}`);
+    }
+    if (limit !== clamp) fail(`${tag}: device limit ${limit}, expected ${clamp}`);
+    if (state.gpu?.maxSampledTexturesPerShaderStage !== clamp) fail(`${tag}: hexWorld.state().gpu ${JSON.stringify(state.gpu)}`);
+    if (!(sampled?.max <= clamp)) fail(`${tag}: a pipeline layout uses ${sampled?.max} sampled textures`);
+    if (query === "?scenario=water_kit&post=full")
+      await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-water-kit.png" });
   });
 }
 

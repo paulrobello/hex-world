@@ -32,6 +32,9 @@ pub enum Scenario {
     Kit,
     /// The hero-water look-dev patch (`water`).
     Water,
+    /// The water patch and the `kit_src` kit pieces in one view, under the water camera: the
+    /// sampled-texture gate for kit pipelines in a view with screen-space transmission (P2).
+    WaterKit,
 }
 
 impl Scenario {
@@ -41,18 +44,31 @@ impl Scenario {
             "gate2000" => Some(Scenario::Gate2000),
             "kit" => Some(Scenario::Kit),
             "water" => Some(Scenario::Water),
+            "water_kit" => Some(Scenario::WaterKit),
             _ => None,
         }
     }
 
-    /// Hex cells the scenario lays out. Only the kit scenario depends on the source (`kit_src`).
+    /// Hex cells the scenario lays out. The kit scenarios depend on the source (`kit_src`).
     pub fn tile_count(self, kit_src: KitSource) -> usize {
         match self {
             Scenario::Single => 1,
             Scenario::Gate2000 => 2000,
             Scenario::Kit => kit_scene::cell_count(kit_src),
             Scenario::Water => water::layout().len(),
+            Scenario::WaterKit => {
+                let mut cells: Vec<_> = water::layout().into_iter().map(|(c, _)| c).collect();
+                cells.extend(kit_scene::source(kit_src).1.iter().map(|p| p.cell));
+                cells.sort_by_key(|c| (c.q, c.r));
+                cells.dedup();
+                cells.len()
+            }
         }
+    }
+
+    /// Scenarios that spawn the water patch and use its camera.
+    pub fn has_water(self) -> bool {
+        matches!(self, Scenario::Water | Scenario::WaterKit)
     }
 }
 
@@ -140,6 +156,7 @@ mod tests {
         assert_eq!(Scenario::parse("gate2000"), Some(Scenario::Gate2000));
         assert_eq!(Scenario::parse("kit"), Some(Scenario::Kit));
         assert_eq!(Scenario::parse("water"), Some(Scenario::Water));
+        assert_eq!(Scenario::parse("water_kit"), Some(Scenario::WaterKit));
         assert_eq!(Scenario::parse("nope"), None);
         assert_eq!(Scenario::parse(""), None);
     }
@@ -159,5 +176,10 @@ mod tests {
         // Review M5: the fixture source lays out 3 cells, not the runtime family's 8.
         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
+        // Both kit sources lay out cells that are already water-patch cells.
+        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
+        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 12);
+        assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
+        assert!(!Scenario::Kit.has_water());
     }
 }
