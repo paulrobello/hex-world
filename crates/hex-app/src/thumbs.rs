@@ -30,12 +30,12 @@ const KEY: Color = Color::srgb(1.0, 0.0, 1.0);
 
 /// Camera: on the play start camera's side (+Z, edge 0 on the right), pitched near top-down, with
 /// a narrow field of view so the far and near edges keep nearly the same scale. One pose for every
-/// tile, so all thumbnails share one scale. The hex fills about 84% of the width and the frame
-/// keeps a 12% top margin for pieces taller than today's oak and two-storey house.
+/// tile, so all thumbnails share one scale. The hex fills about 75% of the width, leaving room for
+/// scattered spruces near the border, whose crowns rise and overhang the edge by up to 1 m.
 const PITCH_DEG: f32 = 58.0;
 const FOV_DEG: f32 = 20.0;
-const DISTANCE: f32 = 96.0;
-const LOOK_AT: Vec3 = Vec3::new(0.0, 1.5, 1.5);
+const DISTANCE: f32 = 108.0;
+const LOOK_AT: Vec3 = Vec3::new(0.0, 3.5, 1.5);
 
 /// Frames before the first stage. Starting at a fixed frame keeps every capture on the same frame
 /// number from run to run, so `--clock fixed` time-driven materials match.

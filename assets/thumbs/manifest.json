@@ -10,11 +10,11 @@
   ],
   "format": "webp",
   "camera": {
-    "distance_m": 96.0,
+    "distance_m": 108.0,
     "fov_deg": 20.0,
     "look_at": [
       0.0,
-      1.5,
+      3.5,
       1.5
     ],
     "pitch_deg": 58.0
