@@ -1,6 +1,6 @@
 {
   "name": "river_bend_center",
-  "date": "2026-10-14T05:50:11.894Z",
+  "date": "2026-10-14T08:33:00.599Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -39,13 +39,45 @@
       }
     }
   },
-  "textureEncodes": [],
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 4689,
+      "sha256": "3db9388839d8ffbad58af151f50cf6f8ce90c7728bead73b4dd6d82c83f4fdb0"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 4888,
+      "sha256": "0adac15ea4e3a3673d6f1bbc9bfaa1a8915930a2ef0e14bbc5f2880a6efcf331"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 6377,
+      "sha256": "14979433687dc30cecc2693cf9cc2887101ceeb654704c941ec268b9b29b589e"
+    }
+  ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 0,
-      "astc": 0
+      "bc7": 4689,
+      "astc": 4888
     },
     "glbBytes": 106812
   },

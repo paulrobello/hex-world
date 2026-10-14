@@ -1,6 +1,6 @@
 {
   "name": "beach_center",
-  "date": "2026-10-14T06:50:17.465Z",
+  "date": "2026-10-14T08:32:55.926Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -39,13 +39,45 @@
       }
     }
   },
-  "textureEncodes": [],
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/beach_center/beach_center.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 6043,
+      "sha256": "ad1cb30e875716567e7ff740eb9f056232b55f1a7eaa782fc0bacadb77fa152b"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/beach_center/beach_center.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 6058,
+      "sha256": "928245cdd71225a22dac371360fbe5f24bffdb7bfa287844358280cccbb799d6"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/beach_center/beach_center.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 9999,
+      "sha256": "bed7b2df6085bbc21fb35ce95da77834e4287409d315d56ce8cff52fec0d02aa"
+    }
+  ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 0,
-      "astc": 0
+      "bc7": 6043,
+      "astc": 6058
     },
     "glbBytes": 81632
   },

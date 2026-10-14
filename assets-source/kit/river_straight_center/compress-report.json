@@ -1,6 +1,6 @@
 {
   "name": "river_straight_center",
-  "date": "2026-10-14T05:50:09.454Z",
+  "date": "2026-10-14T08:32:59.464Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -39,13 +39,45 @@
       }
     }
   },
-  "textureEncodes": [],
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/river_straight_center/river_straight_center.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 1001,
+      "sha256": "10e70a2caabb06b4ceb899762c4b7dad5319374e5b3d8337f9f3a5bc41d2296f"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/river_straight_center/river_straight_center.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 970,
+      "sha256": "71d4f571639de5f130bce34c0368c54933ad5c5bd79052fded7b9f19b299186e"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/river_straight_center/river_straight_center.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 1886,
+      "sha256": "150b3556b7b7a9c1114a0c70a14057e9d368d4166dc29ba2bd2a9b1e6e4d30c0"
+    }
+  ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 0,
-      "astc": 0
+      "bc7": 1001,
+      "astc": 970
     },
     "glbBytes": 106564
   },

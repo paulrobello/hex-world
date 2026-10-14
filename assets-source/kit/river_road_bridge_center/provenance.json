@@ -13,11 +13,11 @@
     },
     {
       "path": "scripts/blender/kit/_river_bridge.py",
-      "sha256": "00eae58d8ebdf06bff63a739bef100311d6d96932c1620883fd641748bb794f0"
+      "sha256": "37fd02dfa58345b7e204480cf2abfd91fb6f8423b3c9355a7e64ac34e8afd405"
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "92cce3788e571d513a4c8b4b18d2db91a4f0350209626e96cfbe9f8c7684b70c"
+      "sha256": "07b9c48ac86817ccb7c5d0286a4613ac38175e632b9d893c7b3f65702a140e1c"
     },
     {
       "path": "scripts/blender/kit/_road.py",
@@ -56,6 +56,26 @@
       "stones": 13
     },
     "marginPx": 12,
+    "maskStats": {
+      "dressTexels": 3751,
+      "haloTexels": 33090,
+      "roadTexels": 28290,
+      "stoneTexels": 256
+    },
+    "masks": {
+      "dressPorosity": [
+        1,
+        0.8
+      ],
+      "haloPx": 32,
+      "roadClearPx": 11,
+      "stoneBlockPx": 16,
+      "stonePorosity": 0.8,
+      "stoneUv": [
+        0.005,
+        0.005
+      ]
+    },
     "receiverSignature": "77f8cbcd6abc260907d30908562fad9b398c458d867951f57e38c68852568da5",
     "samples": 64,
     "skipped": false,
@@ -129,8 +149,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 19112,
-        "astc": 18942
+        "bc7": 26462,
+        "astc": 26035
       },
       "glbBytes": 102676
     },
@@ -143,8 +163,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 19112,
-        "sha256": "a1b88c42bfad9be51bc186e2cf15281fe4bc04d08a8a13c7cd77aa3cdcc1f646"
+        "bytes": 26462,
+        "sha256": "b735f3ae2398c54a8e78d69d5d1e343cf01ed9553ec1d05086ba4e3c405643ee"
       },
       {
         "channel": "masks",
@@ -154,8 +174,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 18942,
-        "sha256": "e81c1f9f66bd70256bcbd8aa68ff9ad04306a73d1788119d18a6ec2bf3537aef"
+        "bytes": 26035,
+        "sha256": "8592d43b010b5a5d35ac5ef2a112bd056f3febde0b34b3c8632d88e33ff46e14"
       },
       {
         "channel": "masks",
@@ -163,8 +183,8 @@
         "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 30025,
-        "sha256": "bafdd6077793d6d575d0c3efdad7cd6671886b100748acafad79e408dc01d589"
+        "bytes": 34443,
+        "sha256": "59a3be0c5be38d042d98e0120a9a708553cda22fd88d814f58e4f3ea72fa5966"
       }
     ]
   },
@@ -176,18 +196,18 @@
     },
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.bc7.ktx2",
-      "sha256": "a1b88c42bfad9be51bc186e2cf15281fe4bc04d08a8a13c7cd77aa3cdcc1f646",
-      "bytes": 19112
+      "sha256": "b735f3ae2398c54a8e78d69d5d1e343cf01ed9553ec1d05086ba4e3c405643ee",
+      "bytes": 26462
     },
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.astc.ktx2",
-      "sha256": "e81c1f9f66bd70256bcbd8aa68ff9ad04306a73d1788119d18a6ec2bf3537aef",
-      "bytes": 18942
+      "sha256": "8592d43b010b5a5d35ac5ef2a112bd056f3febde0b34b3c8632d88e33ff46e14",
+      "bytes": 26035
     },
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.png",
-      "sha256": "bafdd6077793d6d575d0c3efdad7cd6671886b100748acafad79e408dc01d589",
-      "bytes": 30025
+      "sha256": "59a3be0c5be38d042d98e0120a9a708553cda22fd88d814f58e4f3ea72fa5966",
+      "bytes": 34443
     }
   ],
   "references": [
@@ -213,7 +233,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T05:50:38.911Z",
+    "date": "2026-10-14T09:00:11.953Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -232,6 +252,13 @@
         "assets-source/refs/river_road_bridge/ref-2.jpg"
       ],
       "notes": "Approved: stone arch road bridge crossing the river at 60 degrees. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "§9.4 hook masks",
+      "notes": "Pending owner re-approval: river_stone, river_reed, river_cattail and bridge_stone bound to the existing masks map, whose texels under the dressing and a 32 px halo around it now carry R 1, G porosity (as the river centres), B 0, A 1, and whose parked causeway block carries (1, 0.8, 0, 1); the road's AO texels are unchanged (compared texel for texel) and so are its mips 0 to 4; the reeds and cattails take the foliage season tint. The GLB is byte-identical, and A = 1 keeps the slots' AO as before (none). At the MVP values, outside each frame's run-to-run noise, at most 54 of 1.6 M isolated pixels differ, by at most 6 levels of 255 in the static frames (up to 23 beside moving agents in the coast checkpoint frames), with no visible change; the one static frame with zero run-to-run noise (the straight coast) shows 6 such pixels, caused by binding the map, while the masked shader math is an identity at those values. Review masks-river-bridge and masks-far, *-before.jpg against *-after.jpg, in docs/checkpoints/hooks/masks-{none,snow,wet,night,autumn}/. Earlier entries stay as history."
     }
   ]
 }

@@ -146,9 +146,11 @@ pub fn water_freeze(h: KitHooks) -> f32 {
 }
 
 /// A foliage slot takes the per-instance seasonal tint: every alpha-tested slot (leaf cards,
-/// needles, flower clumps) and every slot of a tree except its bark.
+/// needles, flower clumps), every slot of a tree except its bark, and every slot the manifest marks
+/// `foliage` (opaque plants on other pieces: dune grass, reeds, hedges).
 pub fn is_foliage(p: &PieceEntry, slot: &Slot) -> bool {
-    slot.alpha_cutoff.is_some()
+    slot.foliage
+        || slot.alpha_cutoff.is_some()
         || (p.kind == PieceKind::Tree && slot.tileable.as_deref() != Some(BARK_SET))
 }
 

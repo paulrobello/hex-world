@@ -11,11 +11,11 @@
     },
     {
       "path": "scripts/blender/kit/_river_bridge.py",
-      "sha256": "00eae58d8ebdf06bff63a739bef100311d6d96932c1620883fd641748bb794f0"
+      "sha256": "37fd02dfa58345b7e204480cf2abfd91fb6f8423b3c9355a7e64ac34e8afd405"
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "92cce3788e571d513a4c8b4b18d2db91a4f0350209626e96cfbe9f8c7684b70c"
+      "sha256": "07b9c48ac86817ccb7c5d0286a4613ac38175e632b9d893c7b3f65702a140e1c"
     },
     {
       "path": "scripts/blender/kit/_road.py",

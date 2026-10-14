@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/ocean_center.py",
-    "sha256": "84c7fac7d1f3d6adf5faf9f5e89f8ea3e0dbe546549f9e86242a8de07275ed62"
+    "sha256": "2ddd8126e8e65a83a491f751de3c4ff77fc20cb7371865e4978820fed6c01764"
   },
   "generatorDeps": [
     {

@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "92cce3788e571d513a4c8b4b18d2db91a4f0350209626e96cfbe9f8c7684b70c"
+      "sha256": "07b9c48ac86817ccb7c5d0286a4613ac38175e632b9d893c7b3f65702a140e1c"
     }
   ],
   "authoringAgent": {
@@ -29,7 +29,12 @@
   },
   "bake": {
     "blender": "5.2.2 LTS",
-    "channels": {},
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 256
+      }
+    },
     "device": "none",
     "dressing": {
       "reedClumps": 10,
@@ -41,6 +46,16 @@
       ]
     },
     "marginPx": 0,
+    "masks": {
+      "ao": 1,
+      "night": 0,
+      "porosity": [
+        1,
+        0.8
+      ],
+      "snow": 1
+    },
+    "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
     "receiverSignature": "6cabfe2df531d067b3938fa3938b3fa0f32fb61c0d5f98a7c87fd81d3e016eb2",
     "samples": 0,
     "skipped": true
@@ -74,18 +89,65 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 0,
-        "astc": 0
+        "bc7": 4689,
+        "astc": 4888
       },
       "glbBytes": 106812
     },
-    "textureEncodes": []
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 9,
+        "bytes": 4689,
+        "sha256": "3db9388839d8ffbad58af151f50cf6f8ce90c7728bead73b4dd6d82c83f4fdb0"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 9,
+        "bytes": 4888,
+        "sha256": "0adac15ea4e3a3673d6f1bbc9bfaa1a8915930a2ef0e14bbc5f2880a6efcf331"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 6377,
+        "sha256": "14979433687dc30cecc2693cf9cc2887101ceeb654704c941ec268b9b29b589e"
+      }
+    ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_bend_center/river_bend_center.glb",
       "sha256": "b808307a243cd83e8a2316268c6a1b39e556ac9a56e74a895c208cd6826285bd",
       "bytes": 106812
+    },
+    {
+      "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.bc7.ktx2",
+      "sha256": "3db9388839d8ffbad58af151f50cf6f8ce90c7728bead73b4dd6d82c83f4fdb0",
+      "bytes": 4689
+    },
+    {
+      "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.astc.ktx2",
+      "sha256": "0adac15ea4e3a3673d6f1bbc9bfaa1a8915930a2ef0e14bbc5f2880a6efcf331",
+      "bytes": 4888
+    },
+    {
+      "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.png",
+      "sha256": "14979433687dc30cecc2693cf9cc2887101ceeb654704c941ec268b9b29b589e",
+      "bytes": 6377
     }
   ],
   "references": [
@@ -111,7 +173,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T05:50:36.403Z",
+    "date": "2026-10-14T09:00:09.404Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -130,6 +192,13 @@
         "assets-source/refs/river/ref-2.jpg"
       ],
       "notes": "Approved: channel cut below the meadow surface, natural banks, water column on the cut face. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "§9.4 hook masks",
+      "notes": "Pending owner re-approval: a masks map (R 1, G porosity 1.0 at the waterline to 0.8 up the bank, B 0, A 1) bound to river_stone, river_reed and river_cattail; the reeds and cattails take the foliage season tint. The GLB is byte-identical, and A = 1 keeps the slots' AO as before (none). At the MVP values, outside each frame's run-to-run noise, at most 54 of 1.6 M isolated pixels differ, by at most 6 levels of 255 in the static frames (up to 23 beside moving agents in the coast checkpoint frames), with no visible change; the one static frame with zero run-to-run noise (the straight coast) shows 6 such pixels, caused by binding the map, while the masked shader math is an identity at those values. Review masks-river-bend and masks-far, *-before.jpg against *-after.jpg, in docs/checkpoints/hooks/masks-{none,snow,wet,night,autumn}/. Earlier entries stay as history."
     }
   ]
 }

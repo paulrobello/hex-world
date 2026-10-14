@@ -12,6 +12,11 @@ carries the whole bed.
   y = +-ARCH_A just above the water, crown 1 m higher) and its barrel along the river, pier faces
   under the springing, and parapets with end pillars on the road edges over the water.
 - Bank stones and reeds as on the other river centres, kept clear of the causeway.
+- Masks (planar UV0, 512 px): the road's AO bake as before, plus `dress_masks` for the slots that
+  carry no AO: the bank stones and reeds take the river centres' field (`_river_dress.masks_field`)
+  over their own texels and a halo around them, and the causeway's one parked texel (`STONE_UV`)
+  takes stone values. A is 1 on all of it, the AO those slots had before they bound the map, so the
+  MVP look is unchanged. The halo keeps the unbaked A = 0 background out of the dressing's mips.
 Road frame: r along the road (lane 4 -> lane 1), t across it; Blender (x, y) = r u + t v with
 u = (0.5, -0.866) and v = (0.866, 0.5) (hexgeo.rotate_xy by one edge step)."""
 import math
@@ -47,6 +52,14 @@ STONE_SLOT = "bridge_stone"
 ROAD_SEGMENTS = (12, 5, 1)  # = road_straight_center
 ARCH_SEGMENTS = (16, 8, 3)
 MASK_SIZE = 512
+STONE_UV = (0.005, 0.005)  # where every causeway loop is parked (a world-space tileable slot)
+STONE_POROSITY = 0.8  # masks G on the causeway: stone over the water
+STONE_BLOCK = 16  # the parked texel's corner block, so the mips down to 32 x 32 still read stone
+# The AO bake leaves A = 0 off the road, which box-filtered mips blend into the dressing (A 0.4 at
+# mip 4 without a halo). HALO_PX of dressing values around its texels keeps A >= 0.9 to mip 4;
+# ROAD_CLEAR_PX of untouched texels around the road's baked texels keep road mips 0-4 unchanged.
+HALO_PX = 32
+ROAD_CLEAR_PX = 11
 COS, SIN = math.cos(math.radians(60)), math.sin(math.radians(60))
 
 
@@ -201,6 +214,72 @@ def dressing(name, lod, rnd_seed):
     return scene.link(bpy.data.objects.new(name, mesh)), len(stones), len(reeds)
 
 
+def uv_footprint(objs, size, grow=0):
+    """(size*size,) bool, Blender pixel order: the texels whose centres lie in a UV0 triangle of
+    objs, plus every texel under a UV0 vertex (thin reed blades), grown by `grow` texels."""
+    m = np.zeros((size, size), bool)
+    for o in objs:
+        uvl = o.data.uv_layers["UVMap"].data
+        for poly in o.data.polygons:
+            uvs = np.array([tuple(uvl[li].uv) for li in poly.loop_indices]) * size
+            for u, v in uvs:
+                m[min(max(int(v), 0), size - 1), min(max(int(u), 0), size - 1)] = True
+            for k in range(1, len(uvs) - 1):
+                a, b, c = uvs[0], uvs[k], uvs[k + 1]
+                lo = np.clip(np.floor(np.minimum(np.minimum(a, b), c)).astype(int), 0, size - 1)
+                hi = np.clip(np.ceil(np.maximum(np.maximum(a, b), c)).astype(int), 0, size - 1)
+                ii, jj = np.meshgrid(np.arange(lo[0], hi[0] + 1), np.arange(lo[1], hi[1] + 1))
+                px, py = ii + 0.5, jj + 0.5
+                d1 = (px - b[0]) * (a[1] - b[1]) - (a[0] - b[0]) * (py - b[1])
+                d2 = (px - c[0]) * (b[1] - c[1]) - (b[0] - c[0]) * (py - c[1])
+                d3 = (px - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (py - a[1])
+                inside = ~(((d1 < 0) | (d2 < 0) | (d3 < 0)) & ((d1 > 0) | (d2 > 0) | (d3 > 0)))
+                m[jj[inside], ii[inside]] = True
+    return grow_mask(m, grow).ravel()
+
+
+def grow_mask(m, n):
+    """A 2D bool mask grown by n texels (4-neighbourhood)."""
+    for _ in range(n):
+        g = m.copy()
+        g[1:, :] |= m[:-1, :]
+        g[:-1, :] |= m[1:, :]
+        g[:, 1:] |= m[:, :-1]
+        g[:, :-1] |= m[:, 1:]
+        m = g
+    return m
+
+
+def dress_masks(masks_png, dress, road, size=MASK_SIZE):
+    """Writes the dressing's and the causeway's masks into the road's baked masks without touching
+    a road texel or the road's mips 0-4: the dressing's footprint (grown 3 texels) must miss the
+    road's baked texels (A > 0: islands and gutter), its halo (HALO_PX) stays ROAD_CLEAR_PX from
+    them, and the parked stone block misses both. Returns texel counts for the bake report."""
+    n, px = bake.load_png(masks_png)
+    assert n == size, (n, size)
+    baked = (px[:, 3] > 0).reshape(size, size)
+    dress_fp = uv_footprint(dress, size, grow=3)
+    road_fp = uv_footprint(road, size)
+    assert not (dress_fp & (road_fp | baked.ravel())).any(), "dressing masks would overwrite road texels"
+    halo = grow_mask(dress_fp.reshape(size, size), HALO_PX) & ~grow_mask(baked, ROAD_CLEAR_PX)
+    fill = dress_fp | halo.ravel()
+    block = np.zeros((size, size), bool)
+    j0, i0 = int(STONE_UV[1] * size), int(STONE_UV[0] * size)
+    assert j0 < STONE_BLOCK and i0 < STONE_BLOCK, (j0, i0)
+    block[:STONE_BLOCK, :STONE_BLOCK] = True
+    block = block.ravel()
+    assert not (block & (road_fp | baked.ravel() | fill)).any(), "parked stone block overlaps other texels"
+    c = (np.arange(size, dtype=np.float64) + 0.5) / size * 2 * hexgeo.HEX_R - hexgeo.HEX_R
+    xs, ys = np.meshgrid(c, c)
+    wet = _river_dress.porosity(np.vectorize(_river.LAYOUTS["straight"]["dist"])(xs, ys)).ravel()
+    k = int(fill.sum())
+    px[fill] = np.stack([np.ones(k), wet[fill], np.zeros(k), np.ones(k)], axis=1)
+    px[block] = (1.0, STONE_POROSITY, 0.0, 1.0)
+    bake.write_png(size, px, masks_png)
+    return {"dressTexels": int(dress_fp.sum()), "haloTexels": int(fill.sum() - dress_fp.sum()),
+            "stoneTexels": int(block.sum()), "roadTexels": int(road_fp.sum())}
+
+
 def joint_clearance(objs, tol=0.002):
     """Only the road may have vertices on the r = +-6 joint planes (the gate compares every vertex
     there with the road edge section)."""
@@ -231,7 +310,7 @@ def build(piece, generator):
     slots = list(_road.SLOTS) + [STONE_SLOT] + list(_river_dress.DRESS_SLOTS)
     all_mats = [road_mats[n] for n in _road.SLOTS] + [stone_mat] + dress_mats
     index = {n: i for i, n in enumerate(slots)}
-    parts, beds = [], []
+    parts, beds, dresses, roads = [], [], [], []
     stats = {}
     for li in range(3):
         bed, pt = road(f"{piece}_lod{li}_road", li, index)
@@ -265,9 +344,12 @@ def build(piece, generator):
             for d in o.data.uv_layers["UVMap"].data:
                 d.uv = (0.005, 0.005)
         beds.append(bed)
+        dresses.append(dress)
+        roads += [bed, pt]
         parts.append(group)
 
     signature = bake.receiver_signature([beds[0]])
+    mask_stats = None
     texel = uv.measure_texel_density(beds[0], MASK_SIZE)
     if not skip_bake:
         bake.setup_cycles(samples=64)
@@ -280,6 +362,8 @@ def build(piece, generator):
         wet = np.where(np.abs(t) <= _road.ROAD_WIDTH / 2 + _road.KERB_W, 0.3, 0.7).ravel().astype(np.float32)
         bake.make_masks(MASK_SIZE, 1.0, wet, 0.0, ao_png, str(out / f"{piece}.masks.png"))
         os.remove(ao_png)
+        mask_stats = dress_masks(str(out / f"{piece}.masks.png"), dresses, roads)
+        print(f"{piece}: masks {mask_stats}")
 
     lods = []
     for li, group in enumerate(parts):
@@ -301,7 +385,10 @@ def build(piece, generator):
     bake.write_bake_report(str(out / "bake-report.json"), receiverSignature=signature,
                            device=os.environ.get("HEXW_BAKE_DEVICE", "CPU"), samples=64, marginPx=12,
                            channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}},
-                           texelDensityPxPerM=texel, dressing=stats,
+                           texelDensityPxPerM=texel, dressing=stats, maskStats=mask_stats,
+                           masks={"dressPorosity": list(_river_dress.POROSITY), "stonePorosity": STONE_POROSITY,
+                                  "stoneUv": list(STONE_UV), "stoneBlockPx": STONE_BLOCK, "haloPx": HALO_PX,
+                                  "roadClearPx": ROAD_CLEAR_PX},
                            causeway={"halfWidthM": W, "deckZ": DECK_Z, "archHalfSpanM": ARCH_A,
                                      "springZ": SPRING_Z, "archRiseM": ARCH_RISE},
                            skipped=skip_bake)

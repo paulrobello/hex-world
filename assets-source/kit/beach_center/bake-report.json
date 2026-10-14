@@ -1,6 +1,11 @@
 {
   "blender": "5.2.2 LTS",
-  "channels": {},
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    }
+  },
   "device": "none",
   "dressing": {
     "logs": 3,
@@ -13,7 +18,16 @@
     "tufts": 12
   },
   "marginPx": 0,
-  "reason": "colour-only slots, no maps",
+  "masks": {
+    "ao": 1.0,
+    "night": 0.0,
+    "porosity": [
+      0.55,
+      1.0
+    ],
+    "snow": 1.0
+  },
+  "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
   "receiverSignature": "50db1a5279bcb272ec1741e84da57da67864201a7c7f25c86a9e5b10eca160df",
   "samples": 0,
   "skipped": true

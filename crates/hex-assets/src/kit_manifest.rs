@@ -172,6 +172,10 @@ pub struct Slot {
     /// surfaces world-space tiling cannot map, such as tree bark.
     #[serde(default)]
     pub tile_uv_scale: Option<f32>,
+    /// A plant that is neither alpha-tested nor part of a tree (grass tufts, reeds, hedges): it
+    /// takes the per-instance seasonal tint like the other foliage (PRD §9.4).
+    #[serde(default)]
+    pub foliage: bool,
 }
 
 #[derive(Deserialize, Debug, Clone)]

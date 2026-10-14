@@ -1,12 +1,13 @@
 """Dressing centres for the river family: bank stones at the waterline and reed clumps on the banks,
-placed along the channel centre line of a `_river.LAYOUTS` layout. Colour-only slots, no texture.
-Kept apart from `_river.py` so the bases and the mouth stub do not depend on it (provenance hashes
+placed along the channel centre line of a `_river.LAYOUTS` layout. Colour-only slots plus the
+piece's §9.4 masks map on the planar UV0 (`masks_field`). Kept apart from `_river.py` so the bases and the mouth stub do not depend on it (provenance hashes
 every imported helper)."""
 import math
 import pathlib
 import sys
 
 import bpy
+import numpy as np
 
 from lib import bake, collider, export, geom, hexgeo, materials, scene, uv
 
@@ -15,6 +16,29 @@ from _river import BEND_C, BEND_R, JOINT_X, LAYOUTS, profile_z
 
 STONE, REED, CATTAIL = "river_stone", "river_reed", "river_cattail"
 DRESS_SLOTS = (STONE, REED, CATTAIL)
+MASK_SIZE = 256  # 8 px/m on the 32 m planar UV0: every channel is a smooth field of (x, y)
+POROSITY = (1.0, 0.8)  # G at the waterline (d <= 4.5 m; the water edge is d = 4) and up the bank (d >= 6 m)
+
+
+def porosity(d):
+    """Masks G at distance d from the channel centre line: wettest at the waterline, easing off up
+    the bank where the reeds stand."""
+    t = np.clip((np.asarray(d, np.float64) - 4.5) / 1.5, 0.0, 1.0)
+    return POROSITY[0] + (POROSITY[1] - POROSITY[0]) * t * t * (3.0 - 2.0 * t)
+
+
+def masks_field(dist):
+    """The §9.4 masks (R, G, B, A), each a (size*size,) array in Blender pixel order over the planar
+    UV0 (`uv.planar_cap_uv`, the 2R square), for a channel whose centre-line distance is dist(x, y).
+    An analytic field, so no bake and no change to the GLB. R 1: snow lies on stones and reeds alike,
+    and the shader keeps it to up-facing faces. G `porosity`. B 0: nothing glows. A 1: these slots
+    had no AO before the map, so the MVP look is unchanged."""
+    c = (np.arange(MASK_SIZE, dtype=np.float64) + 0.5) / MASK_SIZE * 2 * hexgeo.HEX_R - hexgeo.HEX_R
+    xs, ys = np.meshgrid(c, c)
+    wet = porosity(np.vectorize(dist)(xs, ys))
+    n = MASK_SIZE * MASK_SIZE
+    return (np.ones(n, np.float32), wet.ravel().astype(np.float32), np.zeros(n, np.float32),
+            np.ones(n, np.float32))
 
 
 def arc_angles():
@@ -82,7 +106,7 @@ def _cattail(bm, top):
 
 def build_dressing(piece, layout, generator, per_side=14, skip=None, extra=None):
     """Bank stones at the waterline and reed clumps on the banks, both sides of the channel, seeded
-    by the piece id. Colour-only slots (no texture, no masks). LOD1 keeps half the stones and reeds,
+    by the piece id. Colour-only slots plus the masks map (`masks_field`, written to `out`). LOD1 keeps half the stones and reeds,
     LOD2 the six biggest stones. `skip(x, y)` drops a placement (the bridge footprint); `extra(li)`
     returns more LOD objects to join (the bridge)."""
     import random
@@ -153,6 +177,7 @@ def build_dressing(piece, layout, generator, per_side=14, skip=None, extra=None)
     assert tris[1] <= 0.5 * tris[0] and tris[2] <= 0.15 * tris[0], tris
     col = collider.collider_from(lods[2], "box", f"{piece}_collider")
     col.parent = root
+    bake.write_png(MASK_SIZE, np.stack(masks_field(dist), axis=1), str(out / f"{piece}.masks.png"))
     return root, lods, out, {"stones": len(stones), "reedClumps": len(reeds), "tris": tris}
 
 
@@ -160,5 +185,8 @@ def finish_dressing(root, lods, out, piece, generator, stats, **report):
     export.export_glb(root, str(out / f"{piece}.glb"))
     export.write_export_report(str(out / "export-report.json"), root, piece, generator)
     bake.write_bake_report(str(out / "bake-report.json"), receiverSignature=bake.receiver_signature([lods[0]]),
-                           device="none", samples=0, marginPx=0, channels={}, dressing=stats, skipped=True,
-                           **report)
+                           device="none", samples=0, marginPx=0,
+                           channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}}, dressing=stats,
+                           skipped=True,
+                           reason="no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
+                           masks={"snow": 1.0, "porosity": list(POROSITY), "night": 0.0, "ao": 1.0}, **report)

@@ -90,113 +90,7 @@ const MASKS_EXEMPT: &[(&str, &str)] = &[
 /// Real gaps, reported for re-authoring: (piece, slot, what is missing). These slots run on the
 /// uniform default (full snow on up-facing faces, full porosity, no emitters, no AO) until their
 /// piece ships an authored masks map bound to the slot.
-const KNOWN_MISSING: &[(&str, &str, &str)] = &[
-    (
-        "ocean_center",
-        "coast_pebble",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "ocean_center",
-        "coast_rock",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "beach_center",
-        "beach_dunegrass",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "beach_center",
-        "beach_driftwood",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "beach_center",
-        "beach_pebble",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "beach_outer_center",
-        "beach_dunegrass",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "beach_outer_center",
-        "beach_driftwood",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "beach_outer_center",
-        "beach_pebble",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "beach_inner_center",
-        "beach_dunegrass",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "beach_inner_center",
-        "beach_driftwood",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "beach_inner_center",
-        "beach_pebble",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "river_straight_center",
-        "river_stone",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "river_straight_center",
-        "river_reed",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "river_straight_center",
-        "river_cattail",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "river_bend_center",
-        "river_stone",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "river_bend_center",
-        "river_reed",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "river_bend_center",
-        "river_cattail",
-        "no masks map (R snow, G wetness, A AO)",
-    ),
-    (
-        "river_road_bridge_center",
-        "bridge_stone",
-        "slot not bound to the piece's masks map (masks: false)",
-    ),
-    (
-        "river_road_bridge_center",
-        "river_stone",
-        "slot not bound to the piece's masks map (masks: false)",
-    ),
-    (
-        "river_road_bridge_center",
-        "river_reed",
-        "slot not bound to the piece's masks map (masks: false)",
-    ),
-    (
-        "river_road_bridge_center",
-        "river_cattail",
-        "slot not bound to the piece's masks map (masks: false)",
-    ),
-];
+const KNOWN_MISSING: &[(&str, &str, &str)] = &[];
 
 fn authored(p: &PieceEntry, slot: &Slot) -> bool {
     slot.masks && p.maps.contains_key(&Channel::Masks)
@@ -283,6 +177,14 @@ const SNOW_EXEMPT_SUFFIX: &[(&str, &str)] = &[("_glass", "glass sheds snow")];
 const SUBMERGED: &[(&str, &str)] = &[
     ("coast_seabed", "seabed: always under the sea"),
     ("beach_seabed", "seabed: always under the sea"),
+    (
+        "coast_pebble",
+        "ocean_center: pebbles on the ocean floor, under at least 2.5 m of water",
+    ),
+    (
+        "coast_rock",
+        "ocean_center: rocks within 0.10 m of the ocean floor, under at least 2.5 m of water",
+    ),
 ];
 /// A slot named with this suffix is a light-bearing surface (house windows, car lamps): its
 /// piece's masks must carry night emission (B) on it.
@@ -439,15 +341,39 @@ fn authored_masks_carry_snow_wetness_and_night_channels() {
 // ---------------------------------------------------------------------------------------------
 // Foliage seasonal tint (per-instance MeshTag on a FLAG_FOLIAGE slot).
 
-/// The requirement, stated independently of `hooks::is_foliage`: every alpha-tested slot and every
-/// non-bark slot of a tree is foliage, and every tree has foliage.
+/// Opaque plant slots outside the alpha-tested and tree rules (slot name, what it is). Each must
+/// carry the manifest's `"foliage": true`, and a slot that carries it must be listed here, so the
+/// flag is checked against this list and never against itself.
+const PLANTS: &[(&str, &str)] = &[
+    ("house_pad_hedge", "the house pads' clipped hedges"),
+    ("beach_dunegrass", "dune-grass tufts on the beach tiles"),
+    ("river_reed", "reed blades on the river banks"),
+    ("river_cattail", "cattail seed heads on the reeds"),
+];
+
+/// The requirement, stated independently of `hooks::is_foliage`: every alpha-tested slot, every
+/// non-bark slot of a tree and every slot in [`PLANTS`] is foliage, and every tree has foliage.
 fn foliage_errors(m: &KitManifest) -> Vec<String> {
+    foliage_errors_with(m, PLANTS, &mut BTreeSet::new())
+}
+
+/// [`foliage_errors`] against `plants`, adding the indices of the entries it matched to `used`.
+fn foliage_errors_with(
+    m: &KitManifest,
+    plants: &[(&str, &str)],
+    used: &mut BTreeSet<usize>,
+) -> Vec<String> {
     let mut e = vec![];
     for p in &m.pieces {
         let mut any = false;
         for (name, slot) in &p.slots {
+            let plant = plants.iter().position(|(s, _)| s == name);
+            if let Some(i) = plant {
+                used.insert(i);
+            }
             let want = slot.alpha_cutoff.is_some()
-                || (p.kind == PieceKind::Tree && slot.tileable.as_deref() != Some("bark"));
+                || (p.kind == PieceKind::Tree && slot.tileable.as_deref() != Some("bark"))
+                || plant.is_some();
             let got = match slot_requests(m, p, slot, TextureFamily::Png) {
                 Ok(r) => params_for(&r, KitHooks::None).flags & FLAG_FOLIAGE != 0,
                 Err(err) => {
@@ -479,12 +405,24 @@ fn foliage_errors(m: &KitManifest) -> Vec<String> {
     e
 }
 
+/// A [`PLANTS`] entry that matched no slot in any manifest no longer applies.
+fn stale_plants(plants: &[(&str, &str)], used: &BTreeSet<usize>) -> Vec<String> {
+    plants
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| !used.contains(i))
+        .map(|(_, (s, _))| format!("PLANTS {s}: no slot of that name; remove it"))
+        .collect()
+}
+
 #[test]
 fn foliage_slots_take_the_per_instance_season_tint() {
     let mut e = vec![];
+    let mut used = BTreeSet::new();
     for kit in kits() {
-        e.extend(foliage_errors(&kit.manifest));
+        e.extend(foliage_errors_with(&kit.manifest, PLANTS, &mut used));
     }
+    e.extend(stale_plants(PLANTS, &used));
     fail(e);
 }
 
@@ -931,6 +869,29 @@ fn gate_catches_foliage_without_the_season_tint() {
     assert!(
         e.iter()
             .any(|s| s.contains("tree_hero_oak: tree has no foliage slot")),
+        "{e:?}"
+    );
+    // A listed plant without the manifest flag, a flagged slot that is not a listed plant, and a
+    // stale list entry each fail.
+    let mut m = runtime_manifest();
+    let pad = m.pieces.iter_mut().find(|p| p.id == "house_pad").unwrap();
+    pad.slots.get_mut("house_pad_hedge").unwrap().foliage = false;
+    pad.slots.get_mut("house_pad_gravel").unwrap().foliage = true;
+    let e = foliage_errors(&m);
+    assert!(
+        e.iter().any(|s| s.contains(
+            "house_pad: house_pad_hedge is foliage but its material does not take the seasonal tint"
+        )) && e.iter().any(|s| s
+            .contains("house_pad: house_pad_gravel takes the seasonal tint but is not foliage")),
+        "{e:?}"
+    );
+    let mut plants = PLANTS.to_vec();
+    plants.push(("no_such_plant", "test"));
+    let mut used = BTreeSet::new();
+    let mut e = foliage_errors_with(&runtime_manifest(), &plants, &mut used);
+    e.extend(stale_plants(&plants, &used));
+    assert!(
+        e.len() == 1 && e[0].contains("PLANTS no_such_plant"),
         "{e:?}"
     );
 }
