@@ -49,3 +49,5 @@ Raises from declined challengers:
 - **Q7.** `DESIGN.md` and its sidecar move to the repo root when the overlay is implemented. The documenter's drift list is tokenised then: the dead side-stripe rule, focus-ring colour, motion durations off the 120/180/240 ms scale, the 4 px radius and the ghost fill colour.
 - **Q8.** Shots ship as JPEG (quality 88, 4:4:4).
 - **Q9.** Caution colour `rgb(244 196 92)` is a token, for non-blocking warnings (autosave off, a quality tier above the detected one).
+
+- **Mockups approved (owner, 2026-10-13):** "ui approved". The full pass in `review.html` (on real captures, f07069b) is the build target for the overlay.
