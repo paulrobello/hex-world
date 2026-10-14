@@ -200,6 +200,12 @@
         "assets-source/refs/house_cluster/ref-2.jpg"
       ],
       "notes": "Approved, including the timber-framed English cottage style (owner, in chat). Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "who": "Paul Robello",
+      "when": "2026-10-13",
+      "gate": "piece",
+      "notes": "House family approved in chat from the 6-view renders and in-engine shots (docs/checkpoints/houses)."
     }
   ]
 }
