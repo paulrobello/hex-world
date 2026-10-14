@@ -3,7 +3,7 @@
   <!-- The in-engine water overview shot (docs/checkpoints/water), set on its own void colour. -->
   <rect width="1200" height="630" fill="#0e100f"/>
   <image x="230" y="40" width="992" height="620" href="../../docs/checkpoints/water/water-overview.jpg"/>
-  <image x="64" y="50" width="64" height="64" href="concept-b2.svg"/>
+  <image x="64" y="50" width="64" height="64" href="concept-b1.svg"/>
   <g font-family="Manrope ExtraLight">
     <text x="146" y="106" font-size="66" font-weight="800" fill="#eef3f6">Hex World</text>
     <text x="64" y="172" font-size="30" font-weight="700" fill="#eef3f6">A browser world-building game.</text>

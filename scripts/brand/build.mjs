@@ -48,8 +48,8 @@ const VARIANTS = [
   { id: "b4", name: "B4  Rising",
     line: ["The tile lifts out of its empty slot, outlined in", "the Legend pick magenta: the placement moment."] },
 ];
-const WIRED = "b2";
-const WIRED_REASON = ["The strata read as a slice of the world", "and the river cut is unique to it; the", "tall slab still holds at 16 px."];
+const WIRED = "b1";
+const WIRED_REASON = ["Owner choice (2026-10-13): the lit", "river-bend tile, round 1's idea with", "real lighting."];
 const B3_NOTE = "B3 (in-engine render) not attempted: the kit layout rings every tile with neighbours, the play scene draws slot outlines, there is no FOV flag, and crates/ was out of scope.";
 
 function resvgVersion() {
