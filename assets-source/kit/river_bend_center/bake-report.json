@@ -1,0 +1,18 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {},
+  "device": "none",
+  "dressing": {
+    "reedClumps": 10,
+    "stones": 28,
+    "tris": [
+      860,
+      320,
+      120
+    ]
+  },
+  "marginPx": 0,
+  "receiverSignature": "6cabfe2df531d067b3938fa3938b3fa0f32fb61c0d5f98a7c87fd81d3e016eb2",
+  "samples": 0,
+  "skipped": true
+}

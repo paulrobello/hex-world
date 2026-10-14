@@ -1,0 +1,88 @@
+{
+  "name": "river_bend_base",
+  "date": "2026-10-14T05:50:04.866Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 163228,
+      "sha256": "fae0a63f1eab597d7a59fd64abd6cd4de332c7c56cc92ad64154a6ae7bb28df6"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 159734,
+      "sha256": "dd11d85a8d9caa2c5375611fb37db75707f85b801a8c3dd0ddac39d7c985518c"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 242387,
+      "sha256": "92719924887dec4f758d24b29deddf6a20a98838d96536f16a559b6c7e8280ab"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 163228,
+      "astc": 159734
+    },
+    "glbBytes": 128108
+  },
+  "glb": {
+    "bytes": 128108,
+    "sha256": "0654ad92fc6b3a62631007dc5e7c2508c05e5cbc535588781045194d2cd01dea"
+  }
+}

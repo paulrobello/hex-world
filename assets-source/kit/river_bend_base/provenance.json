@@ -1,0 +1,291 @@
+{
+  "pieceId": "river_bend_base",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/river_bend_base.py",
+    "sha256": "1c2be0b0f67b2ab381c7cbc8c40439c0aeecefd2611d9a324ff168f3d1b2823c"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 6,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "interiorOffsets": [
+      null,
+      null,
+      [
+        -6.83,
+        -5.7,
+        -4.33,
+        -3.5,
+        -3.031,
+        -2,
+        -0.8,
+        0,
+        0.8,
+        2,
+        3.031,
+        3.5,
+        4.33,
+        5.7,
+        6.83
+      ]
+    ],
+    "lod2MaxRatio": 0.2,
+    "marginPx": 12,
+    "maskStats": {
+      "mean": 0.9668331146240234,
+      "min": 0,
+      "p01": 0,
+      "p05": 0.9215686917304993,
+      "texels": 632404
+    },
+    "profileErrorM": [
+      {
+        "dryMaxM": 0.0809,
+        "wetMaxM": 0.0274
+      },
+      {
+        "dryMaxM": 0.0709,
+        "wetMaxM": 0.0254
+      },
+      {
+        "dryMaxM": 0.0643,
+        "wetMaxM": 0.0283
+      }
+    ],
+    "profileOffsets": [
+      -6.83,
+      -6.342142857142858,
+      -5.854285714285715,
+      -5.366428571428571,
+      -4.878571428571428,
+      -4.390714285714286,
+      -3.902857142857143,
+      -3.415,
+      -2.9271428571428575,
+      -2.439285714285714,
+      -1.9514285714285715,
+      -1.4635714285714287,
+      -0.9757142857142858,
+      -0.4878571428571429,
+      0,
+      0.4878571428571429,
+      0.9757142857142858,
+      1.4635714285714287,
+      1.9514285714285715,
+      2.439285714285714,
+      2.9271428571428575,
+      3.415,
+      3.902857142857143,
+      4.390714285714286,
+      4.878571428571428,
+      5.366428571428571,
+      5.854285714285715,
+      6.342142857142858,
+      6.83
+    ],
+    "receiverSignature": "67b2d2fcb4c2210ea0653691055f2c36a91e86612991e7c57dbc0832bb4eef73",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 32.00001937391591,
+      "median": 31.429116175649508,
+      "min": 26.669512971586283
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 3678,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 1704,
+      "ratio": 0.4632952691680261
+    },
+    {
+      "lod": 2,
+      "tris": 724,
+      "ratio": 0.19684611201740077
+    }
+  ],
+  "collider": {
+    "node": "river_bend_base_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 0,
+        "kind": "river",
+        "offset": 0,
+        "width": 8
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0,
+        0
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 2,
+        "kind": "river",
+        "offset": 0,
+        "width": 8
+      },
+      "name": "socket-lane-2",
+      "position": [
+        -6.928203105926514,
+        0,
+        12
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 32.00001937391591,
+    "median": 31.429116175649508,
+    "min": 26.669512971586283
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 163228,
+        "astc": 159734
+      },
+      "glbBytes": 128108
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 163228,
+        "sha256": "fae0a63f1eab597d7a59fd64abd6cd4de332c7c56cc92ad64154a6ae7bb28df6"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 159734,
+        "sha256": "dd11d85a8d9caa2c5375611fb37db75707f85b801a8c3dd0ddac39d7c985518c"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 242387,
+        "sha256": "92719924887dec4f758d24b29deddf6a20a98838d96536f16a559b6c7e8280ab"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/river_bend_base/river_bend_base.glb",
+      "sha256": "0654ad92fc6b3a62631007dc5e7c2508c05e5cbc535588781045194d2cd01dea",
+      "bytes": 128108
+    },
+    {
+      "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.bc7.ktx2",
+      "sha256": "fae0a63f1eab597d7a59fd64abd6cd4de332c7c56cc92ad64154a6ae7bb28df6",
+      "bytes": 163228
+    },
+    {
+      "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.astc.ktx2",
+      "sha256": "dd11d85a8d9caa2c5375611fb37db75707f85b801a8c3dd0ddac39d7c985518c",
+      "bytes": 159734
+    },
+    {
+      "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.png",
+      "sha256": "92719924887dec4f758d24b29deddf6a20a98838d96536f16a559b6c7e8280ab",
+      "bytes": 242387
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/river/ref-1.jpg",
+      "sha256": "dab614b05590faabb7a2e7afe89f381d3cd356ffa06c18e6908f6f0e0c5e376d",
+      "sourceSha256": "29d6315023b50ce140ee9cd81df7bae4742d0456d2e2477d41ce8cb3d016f42f",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "4c55204d-d467-4828-849f-7f954e7d4786",
+      "prompt": "Two separate flat-sided hexagonal diorama tiles side by side, each 32 m across with a meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel). Left tile: a straight river running from one flat edge across to the opposite flat edge. Right tile: a curved river running from one flat edge to the flat edge two positions away, skipping one edge, a gentle bend. The 8 m wide river channel is sunk below the meadow surface between natural earthy banks with pebbles and reeds, clear water tinted pale turquoise at the margins and teal-blue in the middle, sun glints, soft caustics on the pebbly channel floor. Where the river reaches the tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/river/ref-2.jpg",
+      "sha256": "7c55c8d0a01b336a9934a7e1cf65e78ddbfc909f091bb92a320b37d9d968b4f9",
+      "sourceSha256": "2701aa68e02d17f45ec67ffcd7e4eb0dd5e3eebe5f1693cfa2c4419f0fb00d30",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "cf6a46c0-a15a-4455-884f-8b1e76c0746a",
+      "prompt": "Close-up of a natural river bank on a hexagonal diorama tile: the meadow grass edge, an earthy bank sloping down to the water, pebbles and reeds, clear water tinted pale turquoise at the margins and teal-blue in the middle, sun glints, soft caustics on the pebbly channel floor, and where the channel reaches the tile side wall the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T05:50:31.525Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/river/ref-1.jpg",
+        "assets-source/refs/river/ref-2.jpg"
+      ],
+      "notes": "Approved: channel cut below the meadow surface, natural banks, water column on the cut face. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    }
+  ]
+}

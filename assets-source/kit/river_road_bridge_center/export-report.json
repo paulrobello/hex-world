@@ -1,0 +1,72 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_road_bridge_center.py",
+    "sha256": "eff75b960feabf4d8308a39671b7a51e52d72e80253f645a6cf7b4ddb3687b1e"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    },
+    {
+      "path": "scripts/blender/kit/_river_bridge.py",
+      "sha256": "00eae58d8ebdf06bff63a739bef100311d6d96932c1620883fd641748bb794f0"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "92cce3788e571d513a4c8b4b18d2db91a4f0350209626e96cfbe9f8c7684b70c"
+    },
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+    }
+  ],
+  "lodTris": {
+    "river_road_bridge_center_lod0": 920,
+    "river_road_bridge_center_lod1": 396,
+    "river_road_bridge_center_lod2": 120
+  },
+  "nodes": [
+    "river_road_bridge_center",
+    "river_road_bridge_center_collider",
+    "river_road_bridge_center_lod0",
+    "river_road_bridge_center_lod1",
+    "river_road_bridge_center_lod2",
+    "socket-lane-1",
+    "socket-lane-4"
+  ],
+  "pieceId": "river_road_bridge_center",
+  "sockets": [
+    {
+      "extras": {
+        "edge": 1,
+        "kind": "road",
+        "offset": 0.0,
+        "width": 6.0
+      },
+      "name": "socket-lane-1",
+      "position": [
+        6.928203105926514,
+        0.0,
+        12.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "edge": 4,
+        "kind": "road",
+        "offset": 0.0,
+        "width": 6.0
+      },
+      "name": "socket-lane-4",
+      "position": [
+        -6.928203105926514,
+        0.0,
+        -12.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

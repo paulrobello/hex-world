@@ -1,0 +1,237 @@
+{
+  "pieceId": "river_road_bridge_center",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/river_road_bridge_center.py",
+    "sha256": "eff75b960feabf4d8308a39671b7a51e52d72e80253f645a6cf7b4ddb3687b1e"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    },
+    {
+      "path": "scripts/blender/kit/_river_bridge.py",
+      "sha256": "00eae58d8ebdf06bff63a739bef100311d6d96932c1620883fd641748bb794f0"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "92cce3788e571d513a4c8b4b18d2db91a4f0350209626e96cfbe9f8c7684b70c"
+    },
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "59ef399369203ea8db29ade847e59b260bf75545e762204ed0ef564845fa0c71"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "causeway": {
+      "archHalfSpanM": 3.6,
+      "archRiseM": 1,
+      "deckZ": -0.31,
+      "halfWidthM": 4.6,
+      "springZ": -1.45
+    },
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "CPU",
+    "dressing": {
+      "reedClumps": 6,
+      "stones": 13
+    },
+    "marginPx": 12,
+    "receiverSignature": "77f8cbcd6abc260907d30908562fad9b398c458d867951f57e38c68852568da5",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 16.00001947859747,
+      "median": 15.999824160915377,
+      "min": 14.81613297625116
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 920,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 396,
+      "ratio": 0.43043478260869567
+    },
+    {
+      "lod": 2,
+      "tris": 120,
+      "ratio": 0.13043478260869565
+    }
+  ],
+  "collider": {
+    "node": "river_road_bridge_center_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "edge": 1,
+        "kind": "road",
+        "offset": 0,
+        "width": 6
+      },
+      "name": "socket-lane-1",
+      "position": [
+        6.928203105926514,
+        0,
+        12
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "edge": 4,
+        "kind": "road",
+        "offset": 0,
+        "width": 6
+      },
+      "name": "socket-lane-4",
+      "position": [
+        -6.928203105926514,
+        0,
+        -12
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 16.00001947859747,
+    "median": 15.999824160915377,
+    "min": 14.81613297625116
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 19112,
+        "astc": 18942
+      },
+      "glbBytes": 102676
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 19112,
+        "sha256": "a1b88c42bfad9be51bc186e2cf15281fe4bc04d08a8a13c7cd77aa3cdcc1f646"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 18942,
+        "sha256": "e81c1f9f66bd70256bcbd8aa68ff9ad04306a73d1788119d18a6ec2bf3537aef"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 30025,
+        "sha256": "bafdd6077793d6d575d0c3efdad7cd6671886b100748acafad79e408dc01d589"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.glb",
+      "sha256": "6632a59883a3422b24318dfd11241e24da921af471e12786934bb4408181422f",
+      "bytes": 102676
+    },
+    {
+      "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.bc7.ktx2",
+      "sha256": "a1b88c42bfad9be51bc186e2cf15281fe4bc04d08a8a13c7cd77aa3cdcc1f646",
+      "bytes": 19112
+    },
+    {
+      "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.astc.ktx2",
+      "sha256": "e81c1f9f66bd70256bcbd8aa68ff9ad04306a73d1788119d18a6ec2bf3537aef",
+      "bytes": 18942
+    },
+    {
+      "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.png",
+      "sha256": "bafdd6077793d6d575d0c3efdad7cd6671886b100748acafad79e408dc01d589",
+      "bytes": 30025
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/river_road_bridge/ref-1.jpg",
+      "sha256": "726e36ba51e35eb63e50e1dfe4d518ab12f5bdcf080d1c10af3fd66d128e011b",
+      "sourceSha256": "4efa7841822847d2c2c7e9a33b28b7bf01a820cf4a80d4af494e775136516b53",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e652e17d-2b2c-46d8-b107-23cb84eb9cf3",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel). A straight 8 m wide river runs between one pair of opposite flat edges in a channel cut below the meadow surface with natural earthy banks, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. A 6 m wide two-lane asphalt country road, faded dashed white centre line, low concrete kerbs, grass verges with tufts and small bushes runs straight between another pair of opposite flat edges and crosses the river at 60 degrees on a small single-span stone-faced road bridge with low parapet walls and abutments set into the banks. Where the river meets the tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/river_road_bridge/ref-2.jpg",
+      "sha256": "049dfc5aa87617077b78f47b7e28ef975405ff030031f9fd9a2c6a5e40b66d5d",
+      "sourceSha256": "e88e60f7f8e6c3fc0b8cacd573d65b5b4014c9b84cfd5bf5eb853ca1cf7b7d1c",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "91be44e6-004a-4f16-9e2e-87cf189bec0e",
+      "prompt": "Close-up of a small single-span stone-faced country road bridge on a diorama tile: the asphalt deck with low kerbs and a faded dashed centre line, low stone parapet walls, abutments set into earthy river banks, the river flowing underneath, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T05:50:38.911Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/river_road_bridge/ref-1.jpg",
+        "assets-source/refs/river_road_bridge/ref-2.jpg"
+      ],
+      "notes": "Approved: stone arch road bridge crossing the river at 60 degrees. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    }
+  ]
+}

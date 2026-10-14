@@ -1,0 +1,8 @@
+# river_road_bridge_center friction
+
+Shared with the river family: see `assets-source/kit/river_edge/friction.md` (kind scoping, lane-cut bases, the false black-frame bisect).
+
+1. **The frozen road stubs hang over the channel** (about 10 min of design). The road crosses at 60 degrees, so the channel band (|y| <= 6.83) runs under the `road_straight_edge` stubs out to r = 10.7, and a stub's verge corner at r = 6 sits over open water (y = -2.9). Fix: the stone causeway spans the whole road strip inside the channel band (|t| <= 4.6, the profile's sink edge), so the bridge centre carries the stubs' footing; its face walls stop 1 cm under the road's sink edge and its ends are buried in the banks. No skill change: geometry of this piece.
+2. **Material indices set before the slots existed became 0** (10 min). `polygon.material_index = 4` on a mesh with no material slots is clamped to 0 without an error, so the first export put the whole bridge in `road_asphalt` (one primitive), which the gate does not catch. Fix: append the slots first, then set the indices (and keep the indices bmesh wrote, which survive `to_mesh`). Skill: `pitfalls.md`.
+3. **The stone slot was briefly colour-only** (counted in river_edge friction 6). Black shots from an idle-asleep display looked like a `plaster` tileable problem; the plaster stone renders at every rotation under `caffeinate`, so it is back. No skill change beyond that entry.
+4. **Road joint clearance** (2 min). The gate compares every vertex within 1 mm of r = +-6 with the road edge section, so `joint_clearance` asserts in the generator that no stone or dressing vertex lies within 2 mm of either joint plane. No skill change: covered by `pitfalls.md` (Check the joint in the generator).

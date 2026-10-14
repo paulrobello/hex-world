@@ -1,0 +1,62 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_bend_base.py",
+    "sha256": "1c2be0b0f67b2ab381c7cbc8c40439c0aeecefd2611d9a324ff168f3d1b2823c"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    }
+  ],
+  "lodTris": {
+    "river_bend_base_lod0": 3678,
+    "river_bend_base_lod1": 1704,
+    "river_bend_base_lod2": 724
+  },
+  "nodes": [
+    "river_bend_base",
+    "river_bend_base_collider",
+    "river_bend_base_lod0",
+    "river_bend_base_lod1",
+    "river_bend_base_lod2",
+    "socket-lane-0",
+    "socket-lane-2"
+  ],
+  "pieceId": "river_bend_base",
+  "sockets": [
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 0,
+        "kind": "river",
+        "offset": 0.0,
+        "width": 8.0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 2,
+        "kind": "river",
+        "offset": 0.0,
+        "width": 8.0
+      },
+      "name": "socket-lane-2",
+      "position": [
+        -6.928203105926514,
+        0.0,
+        12.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

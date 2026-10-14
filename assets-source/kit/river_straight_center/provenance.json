@@ -1,0 +1,135 @@
+{
+  "pieceId": "river_straight_center",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/river_straight_center.py",
+    "sha256": "0b40823927eda22af18739d481c6fa484e50df449bbe9929dcb04ba6868fb9f7"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "92cce3788e571d513a4c8b4b18d2db91a4f0350209626e96cfbe9f8c7684b70c"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {},
+    "device": "none",
+    "dressing": {
+      "reedClumps": 10,
+      "stones": 28,
+      "tris": [
+        860,
+        320,
+        120
+      ]
+    },
+    "marginPx": 0,
+    "receiverSignature": "0334319331662f6a6d161f90e36ad41590d803e186ecad57a0b47c1622424a64",
+    "samples": 0,
+    "skipped": true
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 860,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 320,
+      "ratio": 0.37209302325581395
+    },
+    {
+      "lod": 2,
+      "tris": 120,
+      "ratio": 0.13953488372093023
+    }
+  ],
+  "collider": {
+    "node": "river_straight_center_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": null,
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 0,
+        "astc": 0
+      },
+      "glbBytes": 106564
+    },
+    "textureEncodes": []
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/river_straight_center/river_straight_center.glb",
+      "sha256": "2c48524588ea4df97f40e672936c7d81b0e8ecbc79bee2021dd2ee8dde85a650",
+      "bytes": 106564
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/river/ref-1.jpg",
+      "sha256": "dab614b05590faabb7a2e7afe89f381d3cd356ffa06c18e6908f6f0e0c5e376d",
+      "sourceSha256": "29d6315023b50ce140ee9cd81df7bae4742d0456d2e2477d41ce8cb3d016f42f",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "4c55204d-d467-4828-849f-7f954e7d4786",
+      "prompt": "Two separate flat-sided hexagonal diorama tiles side by side, each 32 m across with a meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel). Left tile: a straight river running from one flat edge across to the opposite flat edge. Right tile: a curved river running from one flat edge to the flat edge two positions away, skipping one edge, a gentle bend. The 8 m wide river channel is sunk below the meadow surface between natural earthy banks with pebbles and reeds, clear water tinted pale turquoise at the margins and teal-blue in the middle, sun glints, soft caustics on the pebbly channel floor. Where the river reaches the tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/river/ref-2.jpg",
+      "sha256": "7c55c8d0a01b336a9934a7e1cf65e78ddbfc909f091bb92a320b37d9d968b4f9",
+      "sourceSha256": "2701aa68e02d17f45ec67ffcd7e4eb0dd5e3eebe5f1693cfa2c4419f0fb00d30",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "cf6a46c0-a15a-4455-884f-8b1e76c0746a",
+      "prompt": "Close-up of a natural river bank on a hexagonal diorama tile: the meadow grass edge, an earthy bank sloping down to the water, pebbles and reeds, clear water tinted pale turquoise at the margins and teal-blue in the middle, sun glints, soft caustics on the pebbly channel floor, and where the channel reaches the tile side wall the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T05:50:34.131Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/river/ref-1.jpg",
+        "assets-source/refs/river/ref-2.jpg"
+      ],
+      "notes": "Approved: channel cut below the meadow surface, natural banks, water column on the cut face. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    }
+  ]
+}

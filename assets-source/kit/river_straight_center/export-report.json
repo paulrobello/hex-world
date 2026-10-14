@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_straight_center.py",
+    "sha256": "0b40823927eda22af18739d481c6fa484e50df449bbe9929dcb04ba6868fb9f7"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "92cce3788e571d513a4c8b4b18d2db91a4f0350209626e96cfbe9f8c7684b70c"
+    }
+  ],
+  "lodTris": {
+    "river_straight_center_lod0": 860,
+    "river_straight_center_lod1": 320,
+    "river_straight_center_lod2": 120
+  },
+  "nodes": [
+    "river_straight_center",
+    "river_straight_center_collider",
+    "river_straight_center_lod0",
+    "river_straight_center_lod1",
+    "river_straight_center_lod2"
+  ],
+  "pieceId": "river_straight_center",
+  "sockets": []
+}

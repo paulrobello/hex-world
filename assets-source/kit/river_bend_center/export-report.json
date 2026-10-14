@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_bend_center.py",
+    "sha256": "6e8db2458fdef5690332d65716cba0951d6eff28b82e6f7406dad8a5b59f3dc5"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "92cce3788e571d513a4c8b4b18d2db91a4f0350209626e96cfbe9f8c7684b70c"
+    }
+  ],
+  "lodTris": {
+    "river_bend_center_lod0": 860,
+    "river_bend_center_lod1": 320,
+    "river_bend_center_lod2": 120
+  },
+  "nodes": [
+    "river_bend_center",
+    "river_bend_center_collider",
+    "river_bend_center_lod0",
+    "river_bend_center_lod1",
+    "river_bend_center_lod2"
+  ],
+  "pieceId": "river_bend_center",
+  "sockets": []
+}

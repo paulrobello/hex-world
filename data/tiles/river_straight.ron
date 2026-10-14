@@ -1,8 +1,8 @@
-// The bed is cut below the surface by the center piece.
+// The channel-cut base carries the bed (water contract); the centre adds bank stones and reeds.
 (
     id: "river_straight",
     biome: Grass,
-    base: "meadow_base",
+    base: "river_straight_base",
     edges: (
         (kind: River, lane: Some((offset: 0.0, width: 8.0))),
         (kind: Grass),

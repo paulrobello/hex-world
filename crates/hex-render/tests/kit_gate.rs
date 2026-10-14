@@ -11,7 +11,7 @@ use ::bevy::{
 };
 use hex_assets::*;
 use sha2::{Digest, Sha256};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 fn repo() -> PathBuf {
@@ -512,7 +512,7 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
             p.kind.lod0_budget()
         ));
     }
-    for (i, max) in [(1, LOD1_MAX_RATIO), (2, LOD2_MAX_RATIO)] {
+    for (i, max) in [(1, LOD1_MAX_RATIO), (2, lod2_max_ratio(kit, p))] {
         match &lods[i] {
             None => e.push(format!("{}: mesh {}_lod{i} missing", p.id, p.id)),
             Some(m) if tris(m) as f32 > max * t0 as f32 => e.push(format!(
@@ -582,7 +582,19 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
             .flatten()
             .map(|m| border_ring_at(&positions(m, &buffers), level))
             .collect();
-        e.extend(ring_errors(&p.id, &rings, p.kind == PieceKind::Base));
+        let cuts: BTreeMap<u64, f32> = lane_sockets(kit, p)
+            .into_iter()
+            .filter_map(|(k, (_, c))| Some((k, c? as f32)))
+            .collect();
+        let lane_cut = p.kind == PieceKind::Base && !cuts.is_empty();
+        e.extend(ring_errors(
+            &p.id,
+            &rings,
+            p.kind == PieceKind::Base && !lane_cut,
+        ));
+        if lane_cut && let Some(ring) = rings.first() {
+            e.extend(cut_ring_errors(&p.id, ring, &cuts));
+        }
     }
     if p.kind == PieceKind::Base {
         let v = positions(lod0, &buffers);
@@ -756,56 +768,220 @@ fn lane_socket_edges(kit: &Kit, p: &PieceEntry) -> BTreeSet<u64> {
         .collect()
 }
 
-/// A centre piece against every edge piece of the kit at each of `lanes`: the section at r = 6
-/// on the lane, rotated onto edge 0, must equal the edge piece's x = +6 section in every LOD.
-fn lane_joint_errors(kit: &Kit, c: &PieceEntry, lanes: &[u8]) -> Vec<String> {
-    let mut e = vec![];
-    let per_lane: Vec<_> = lanes
+/// A piece's `socket-lane-*` extras by edge: (network kind, `cut` half-width). A base that
+/// declares lanes with a `cut` is lane-cut (the river bases): its border ring leaves out each
+/// lane's channel, and it owns the joint with the edge piece there.
+fn lane_sockets(kit: &Kit, p: &PieceEntry) -> BTreeMap<u64, (String, Option<f64>)> {
+    let Ok((doc, _, _)) = plain(kit, p) else {
+        return BTreeMap::new();
+    };
+    doc.nodes()
+        .filter(|n| n.name().is_some_and(|s| s.starts_with("socket-lane-")))
+        .filter_map(|n| {
+            let v: serde_json::Value = serde_json::from_str(n.extras().as_ref()?.get()).ok()?;
+            let kind = v["kind"].as_str().unwrap_or("road").to_string();
+            Some((v["edge"].as_u64()?, (kind, v["cut"].as_f64())))
+        })
+        .collect()
+}
+
+/// The network an edge piece carries (`road`, `river`), from its lane socket.
+fn edge_kind(kit: &Kit, p: &PieceEntry) -> Option<String> {
+    lane_sockets(kit, p).into_values().next().map(|(k, _)| k)
+}
+
+/// Where a centre meets an edge piece: the edge piece's inner end, its smallest runtime x on LOD0
+/// (6 for the road stub, APOTHEM - 1 for the river mouth).
+fn joint_x(kit: &Kit, edge: &PieceEntry) -> f32 {
+    let Ok((doc, buffers, _)) = plain(kit, edge) else {
+        return 6.0;
+    };
+    mesh_named(&doc, &format!("{}_lod0", edge.id))
+        .map(|m| {
+            positions(&m, &buffers)
+                .iter()
+                .map(|(q, _)| q[0])
+                .fold(f32::MAX, f32::min)
+        })
+        .unwrap_or(6.0)
+}
+
+/// The tile whose `center` names `id`.
+fn center_tile(id: &str) -> Option<hex_core::TileDef> {
+    let catalog = hex_core::TileCatalog::builtin().expect("builtin tile catalog");
+    catalog
+        .tiles()
         .iter()
-        .map(|&k| lane_sections(kit, c, 6.0, k))
-        .collect();
-    if per_lane
-        .iter()
-        .any(|l| l.len() != 3 || l.iter().any(Vec::is_empty))
-    {
-        e.push(format!(
-            "{}: a LOD has no vertices at r = 6 on lanes {lanes:?}",
-            c.id
-        ));
+        .find(|t| t.center.as_ref().is_some_and(|c| c.as_str() == id))
+        .cloned()
+}
+
+/// The network kind of each lane of the tile whose `center` names `id` (`road`, `river`).
+fn tile_lane_kinds(id: &str) -> BTreeMap<u8, String> {
+    center_tile(id)
+        .map(|t| {
+            (0..6u8)
+                .filter(|&e| t.edges[e as usize].lane.is_some())
+                .map(|e| (e, format!("{:?}", t.edges[e as usize].kind).to_lowercase()))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// LOD2 ceiling of a lane-cut base (gates.md, LOD floor for border pieces): its ring and one-row
+/// skirt fix about 300 tris, and the river bend's arc needs 16 rows to stay inside the water
+/// contract tolerance at LOD2 (owner, 2026-10-13).
+const LANE_CUT_LOD2_MAX_RATIO: f32 = 0.20;
+
+/// LOD2's ratio ceiling: `LANE_CUT_LOD2_MAX_RATIO` for a lane-cut base, `LOD2_MAX_RATIO` otherwise.
+fn lod2_max_ratio(kit: &Kit, p: &PieceEntry) -> f32 {
+    if p.kind == PieceKind::Base && !cut_lanes(kit, p).is_empty() {
+        LANE_CUT_LOD2_MAX_RATIO
+    } else {
+        LOD2_MAX_RATIO
     }
-    let lods = per_lane.iter().map(Vec::len).min().unwrap_or(0);
-    let center: Vec<Vec<_>> = (0..lods)
-        .map(|i| per_lane.iter().map(|l| l[i].clone()).collect())
-        .collect();
-    for edge in kit
-        .manifest
+}
+
+/// The lanes a lane-cut base cuts (its lane sockets with a `cut`).
+fn cut_lanes(kit: &Kit, base: &PieceEntry) -> Vec<u8> {
+    lane_sockets(kit, base)
+        .into_iter()
+        .filter(|(_, (_, cut))| cut.is_some())
+        .map(|(k, _)| k as u8)
+        .collect()
+}
+
+/// The lanes the base of the tile whose `center` names `id` cuts: the lane-cut base owns the
+/// joint there, so the centre is not checked at those lanes.
+fn base_cut_lanes(kit: &Kit, id: &str) -> BTreeSet<u8> {
+    let Some(t) = center_tile(id) else {
+        return BTreeSet::new();
+    };
+    kit.manifest
         .pieces
         .iter()
-        .filter(|p| p.kind == PieceKind::Edge)
-    {
-        let id = format!("{} / {}", c.id, edge.id);
-        e.extend(joint_errors(
-            &id,
-            lanes,
-            &center,
-            &lod_sections(kit, edge, 6.0),
-        ));
+        .find(|p| p.id == t.base.as_str() && p.kind == PieceKind::Base)
+        .map(|b| cut_lanes(kit, b).into_iter().collect())
+        .unwrap_or_default()
+}
+
+/// A piece against every edge piece of the same network kind at each of `lanes`: the section at
+/// the joint (the edge piece's inner end, `joint_x`) on the lane, rotated onto edge 0, must equal
+/// the edge piece's section there in every LOD. A lane's kind comes from the piece's own lane
+/// socket, else from the tile that names it as `center`, else it is a road.
+fn lane_joint_errors(kit: &Kit, c: &PieceEntry, lanes: &[u8]) -> Vec<String> {
+    let declared = lane_sockets(kit, c);
+    let tile = tile_lane_kinds(&c.id);
+    let mut e = vec![];
+    for &k in lanes {
+        let kind = declared
+            .get(&(k as u64))
+            .map(|(s, _)| s.clone())
+            .or_else(|| tile.get(&k).cloned())
+            .unwrap_or_else(|| "road".to_string());
+        for edge in
+            kit.manifest.pieces.iter().filter(|p| {
+                p.kind == PieceKind::Edge && edge_kind(kit, p).as_deref() == Some(&kind)
+            })
+        {
+            let x = joint_x(kit, edge);
+            let secs = lane_sections(kit, c, x, k);
+            if secs.len() != 3 || secs.iter().any(Vec::is_empty) {
+                e.push(format!(
+                    "{}: a LOD has no vertices at the lane {k} joint (x = {x})",
+                    c.id
+                ));
+            }
+            let center: Vec<Vec<_>> = secs.into_iter().map(|s| vec![s]).collect();
+            let id = format!("{} / {}", c.id, edge.id);
+            e.extend(joint_errors(
+                &id,
+                &[k],
+                &center,
+                &lod_sections(kit, edge, x),
+            ));
+        }
     }
     e
 }
 
-/// Every centre piece against every edge piece in the same kit, at r = 6 on each of its lane
-/// edges (`center_lanes`: the tile that names it as `center`). A centre that declares
-/// `socket-lane-*` nodes (house_pad's driveway) must declare exactly those lane edges.
+/// Runtime border-ring lattice (`hexgeo.border_ring(16)`): (point, edge, offset from the edge
+/// midpoint along the edge).
+fn lattice_ring() -> Vec<([f32; 2], u64, f32)> {
+    let r = 16.0f32;
+    let corner = |i: i32| {
+        let a = (30.0 + 60.0 * i as f32).to_radians();
+        [r * a.cos(), r * a.sin()]
+    };
+    let mut out = vec![];
+    for k in 0..6 {
+        let (a, b) = (corner(k - 1), corner(k));
+        for s in 0..16 {
+            let t = s as f32 / 16.0;
+            out.push((
+                [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t],
+                k as u64,
+                (t - 0.5) * r,
+            ));
+        }
+    }
+    out
+}
+
+/// A lane-cut base's ring: at least 24 vertices; every lattice vertex present except inside a cut
+/// lane's channel (|offset| < cut); nothing else on the ring but the two bank-top points of each
+/// cut (|offset| = cut).
+fn cut_ring_errors(id: &str, ring: &[[f32; 2]], cuts: &BTreeMap<u64, f32>) -> Vec<String> {
+    let mut e = vec![];
+    if ring.len() < 24 {
+        e.push(format!("{id}: border ring has {} vertices", ring.len()));
+    }
+    let lattice = lattice_ring();
+    let cut = |k: u64, o: f32| cuts.get(&k).is_some_and(|&c| o.abs() < c - 1e-3);
+    for (p, k, o) in &lattice {
+        if !cut(*k, *o) && !ring.iter().any(|q| near(*p, *q, RING_TOL)) {
+            e.push(format!("{id}: lattice ring vertex {p:?} missing"));
+        }
+    }
+    let banks: Vec<[f32; 2]> = cuts
+        .iter()
+        .flat_map(|(&k, &c)| {
+            let a = (60.0 * k as f32).to_radians();
+            let m = [APOTHEM * a.cos(), APOTHEM * a.sin()];
+            [-c, c].map(|o| [m[0] + a.sin() * o, m[1] - a.cos() * o])
+        })
+        .collect();
+    for q in ring {
+        if !lattice.iter().any(|(p, _, _)| near(*p, *q, RING_TOL))
+            && !banks.iter().any(|b| near(*b, *q, RING_TOL))
+        {
+            e.push(format!(
+                "{id}: ring vertex {q:?} is neither lattice nor bank top"
+            ));
+        }
+    }
+    e
+}
+
+/// Every centre piece against every edge piece of the same network kind, at each of its lane
+/// edges (`center_lanes`: the tile that names it as `center`) that the tile's base does not cut.
+/// A centre that declares `socket-lane-*` nodes (house_pad's driveway) must declare exactly those
+/// lane edges. Every lane-cut base is checked at its cut lanes.
 fn check_center_edge_joint(kit: &Kit) -> Vec<String> {
     let mut e = vec![];
-    for c in kit
-        .manifest
-        .pieces
-        .iter()
-        .filter(|p| p.kind == PieceKind::Center)
-    {
-        let lanes = center_lanes(&c.id);
+    for c in &kit.manifest.pieces {
+        if c.kind == PieceKind::Base {
+            e.extend(lane_joint_errors(kit, c, &cut_lanes(kit, c)));
+            continue;
+        }
+        if c.kind != PieceKind::Center {
+            continue;
+        }
+        let owned = base_cut_lanes(kit, &c.id);
+        let lanes: Vec<u8> = center_lanes(&c.id)
+            .into_iter()
+            .filter(|k| !owned.contains(k))
+            .collect();
         let declared = lane_socket_edges(kit, c);
         let want: BTreeSet<u64> = lanes.iter().map(|&k| k as u64).collect();
         if !declared.is_empty() && declared != want {
@@ -2071,6 +2247,93 @@ fn center_sections_must_meet_the_edge_section() {
     );
     let e = joint_errors("c", &[0, 3], &[ok.clone(), ok], &[edge]);
     assert!(e.iter().any(|m| m.contains("LOD count")), "{e:?}");
+}
+
+/// A lane-cut base keeps every lattice ring vertex outside its cut lanes, and adds only the two
+/// bank-top points of each cut.
+#[test]
+fn lane_cut_base_ring_leaves_out_only_its_lanes() {
+    let cut = 6.83f32;
+    let cuts = BTreeMap::from([(0u64, cut), (3u64, cut)]);
+    let bank = |k: u64, o: f32| {
+        let a = (60.0 * k as f32).to_radians();
+        [
+            APOTHEM * a.cos() + a.sin() * o,
+            APOTHEM * a.sin() - a.cos() * o,
+        ]
+    };
+    let mut ring: Vec<[f32; 2]> = lattice_ring()
+        .into_iter()
+        .filter(|(_, k, o)| !(cuts.contains_key(k) && o.abs() < cut))
+        .map(|(p, _, _)| p)
+        .collect();
+    for k in [0, 3] {
+        ring.push(bank(k, cut));
+        ring.push(bank(k, -cut));
+    }
+    assert_eq!(cut_ring_errors("b", &ring, &cuts), Vec::<String>::new());
+    // A lattice vertex missing outside the cut fails, and so does a stray vertex inside it.
+    let e = cut_ring_errors("b", &ring[1..], &cuts);
+    assert!(e.iter().any(|m| m.contains("missing")), "{e:?}");
+    let mut stray = ring.clone();
+    stray.push(bank(0, 2.5));
+    let e = cut_ring_errors("b", &stray, &cuts);
+    assert!(e.iter().any(|m| m.contains("neither lattice")), "{e:?}");
+}
+
+/// Only a lane-cut base gets the wider LOD2 ceiling; every other piece keeps 15%, and the river
+/// bend base's LOD2 sits between the two (so the general ratio alone would fail it).
+#[test]
+fn lane_cut_bases_get_the_wider_lod2_ceiling() {
+    let k = kits()
+        .into_iter()
+        .find(|k| k.manifest.pieces.iter().any(|p| p.id == "river_bend_base"))
+        .expect("runtime kit holds river_bend_base");
+    let piece = |id: &str| k.manifest.pieces.iter().find(|p| p.id == id).unwrap();
+    for id in ["river_bend_base", "river_straight_base"] {
+        assert_eq!(
+            lod2_max_ratio(&k, piece(id)),
+            LANE_CUT_LOD2_MAX_RATIO,
+            "{id}"
+        );
+    }
+    for id in [
+        "meadow_base",
+        "river_edge",
+        "road_straight_center",
+        "river_bend_center",
+    ] {
+        assert_eq!(lod2_max_ratio(&k, piece(id)), LOD2_MAX_RATIO, "{id}");
+    }
+    let bend = piece("river_bend_base");
+    let (doc, _, _) = plain(&k, bend).unwrap();
+    let t = |i: usize| tris(&mesh_named(&doc, &format!("river_bend_base_lod{i}")).unwrap()) as f32;
+    let ratio = t(2) / t(0);
+    assert!(
+        ratio > LOD2_MAX_RATIO && ratio <= LANE_CUT_LOD2_MAX_RATIO,
+        "{ratio}"
+    );
+}
+
+/// Joints are scoped by network kind: the river pieces meet river_edge at its inner end, the road
+/// centres meet only the road edge pieces, and `same_section` absorbs one 0.1 mm unit.
+#[test]
+fn joints_are_scoped_by_network_kind() {
+    assert!(same_section(&[(0, 5), (10, 7)], &[(1, 4), (10, 8)]));
+    assert!(!same_section(&[(0, 5)], &[(2, 5)]));
+    let k = kits()
+        .into_iter()
+        .find(|k| k.manifest.pieces.iter().any(|p| p.id == "river_edge"))
+        .expect("runtime kit holds river_edge");
+    let piece = |id: &str| k.manifest.pieces.iter().find(|p| p.id == id).unwrap();
+    assert_eq!(edge_kind(&k, piece("river_edge")).as_deref(), Some("river"));
+    assert_eq!(
+        edge_kind(&k, piece("road_straight_edge")).as_deref(),
+        Some("road")
+    );
+    assert!((joint_x(&k, piece("road_straight_edge")) - 6.0).abs() < 1e-4);
+    assert!((joint_x(&k, piece("river_edge")) - (APOTHEM - 1.0)).abs() < 1e-3);
+    assert_eq!(check_center_edge_joint(&k), Vec::<String>::new());
 }
 
 #[test]

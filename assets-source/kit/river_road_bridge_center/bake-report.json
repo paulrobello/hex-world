@@ -1,0 +1,30 @@
+{
+  "blender": "5.2.2 LTS",
+  "causeway": {
+    "archHalfSpanM": 3.6,
+    "archRiseM": 1.0,
+    "deckZ": -0.31,
+    "halfWidthM": 4.6,
+    "springZ": -1.45
+  },
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "CPU",
+  "dressing": {
+    "reedClumps": 6,
+    "stones": 13
+  },
+  "marginPx": 12,
+  "receiverSignature": "77f8cbcd6abc260907d30908562fad9b398c458d867951f57e38c68852568da5",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 16.00001947859747,
+    "median": 15.999824160915377,
+    "min": 14.81613297625116
+  }
+}

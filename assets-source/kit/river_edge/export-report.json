@@ -1,0 +1,44 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_edge.py",
+    "sha256": "e7ccc03fa43228a2eacccb31c4cf95186f03ef9c23921cb2716aa2afe452fd97"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    }
+  ],
+  "lodTris": {
+    "river_edge_lod0": 784,
+    "river_edge_lod1": 392,
+    "river_edge_lod2": 112
+  },
+  "nodes": [
+    "river_edge",
+    "river_edge_collider",
+    "river_edge_lod0",
+    "river_edge_lod1",
+    "river_edge_lod2",
+    "socket-lane-0"
+  ],
+  "pieceId": "river_edge",
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "river",
+        "offset": 0.0,
+        "width": 8.0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

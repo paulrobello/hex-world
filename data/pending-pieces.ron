@@ -7,10 +7,6 @@
     pieces: [
         // Road family
         // River family
-        (id: "river_straight_center", delivered_by: "S4 references, then wave-2 kit modeling: river family"),
-        (id: "river_bend_center", delivered_by: "S4 references, then wave-2 kit modeling: river family"),
-        (id: "river_edge", delivered_by: "S4 references, then wave-2 kit modeling: river family"),
-        (id: "river_road_bridge_center", delivered_by: "S4 references, then wave-2 kit modeling: river family (bridge)"),
         // Coast family
         (id: "beach_base", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
         (id: "beach_center", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),

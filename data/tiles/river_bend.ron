@@ -2,7 +2,7 @@
 (
     id: "river_bend",
     biome: Grass,
-    base: "meadow_base",
+    base: "river_bend_base",
     edges: (
         (kind: River, lane: Some((offset: 0.0, width: 8.0))),
         (kind: Grass),
