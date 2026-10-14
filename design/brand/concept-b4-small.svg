@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 16 16">
+  <title>Hex World</title>
+  <defs><clipPath id="c"><polygon points="8,0 16,3 16,6 8,9 0,6 0,3"/></clipPath></defs>
+  <polygon points="8,8 16,11.75 8,15.5 0,11.75" fill="#06111b" fill-opacity=".45"/>
+  <polygon points="8,8.5 15.5,11.75 8,15.5 0.5,11.75" fill="none" stroke="#c62e68" stroke-width="1" stroke-linejoin="round"/>
+  <polygon points="0,6 8,9 8,11.5 0,8.5" fill="#9b6e47"/>
+  <polygon points="8,9 16,6 16,8.5 8,11.5" fill="#6a4830"/>
+  <polygon points="0,7.75 8,10.75 16,7.75 16,8.5 8,11.5 0,8.5" fill="#3a2a1c" fill-opacity=".5"/>
+  <polygon points="0,6 8,9 16,6 16,7 8,10 0,7" fill="#3a6326"/>
+  <polygon points="8,0 16,3 16,6 8,9 0,6 0,3" fill="#94c25c"/>
+  <polygon points="8,0 16,3 8,6 0,3" fill="#bcdc78" fill-opacity=".55"/>
+  <g clip-path="url(#c)">
+    <path d="M0,4.5 C4,6.3 9,6.6 12.4,1.6" fill="none" stroke="#e8cb88" stroke-width="3.4"/>
+    <path d="M0,4.5 C4,6.3 9,6.6 12.4,1.6" fill="none" stroke="#4aa3df" stroke-width="2"/>
+    <ellipse cx="13" cy="8.6" rx="2" ry="1" fill="#12301b" fill-opacity=".45"/>
+  </g>
+  <circle cx="12" cy="6.6" r="2" fill="#4c9852"/>
+  <circle cx="11.5" cy="6" r="1" fill="#93d06f"/>
+</svg>

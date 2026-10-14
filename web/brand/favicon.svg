@@ -1,11 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 16 16">
   <title>Hex World</title>
-  <polygon points="382.4,183 382.4,329 256,402 129.6,329 129.6,183 256,110" fill="#12273a"/>
-  <polygon points="476,129 476,383 382.4,329 382.4,183" fill="#e3c27a"/>
-  <polygon points="476,383 256,510 256,402 382.4,329" fill="#9cc464"/>
-  <polygon points="256,510 36,383 129.6,329 256,402" fill="#3f8a4f"/>
-  <polygon points="36,383 36,129 129.6,183 129.6,329" fill="#2d6fb0"/>
-  <polygon points="36,129 256,2 256,110 129.6,183" fill="#4aa3df"/>
-  <polygon points="256,2 476,129 382.4,183 256,110" fill="#e2683c"/>
-  <polygon points="313.2,223 313.2,289 256,322 198.8,289 198.8,223 256,190" fill="#c62e68"/>
+  <defs><clipPath id="c"><polygon points="4,1 12,1 16,4 12,7 4,7 0,4"/></clipPath></defs>
+  <polygon points="0,4 4,7 4,15 0,12" fill="#9b6e47"/>
+  <polygon points="4,7 12,7 12,15 4,15" fill="#87603f"/>
+  <polygon points="12,7 16,4 16,12 12,15" fill="#5e412c"/>
+  <polygon points="0,9 4,12 12,12 16,9 16,10 12,13 4,13 0,10" fill="#3a2a1c" fill-opacity=".4"/>
+  <polygon points="0,11.5 4,14.5 12,14.5 16,11.5 16,12 12,15 4,15 0,12" fill="#3a2a1c" fill-opacity=".5"/>
+  <polygon points="0,4 4,7 12,7 16,4 16,5 12,8 4,8 0,5" fill="#3a6326"/>
+  <rect x="6.5" y="7" width="3" height="1.5" fill="#caa461"/>
+  <rect x="7" y="7" width="2" height="2" fill="#2f78bd"/>
+  <polygon points="4,1 12,1 16,4 12,7 4,7 0,4" fill="#94c25c"/>
+  <polygon points="4,1 12,1 14,2.5 2,2.5" fill="#bcdc78" fill-opacity=".55"/>
+  <g clip-path="url(#c)">
+    <path d="M2,2.5 C5,3 8,4 8,7.5" fill="none" stroke="#e8cb88" stroke-width="3.2"/>
+    <path d="M2,2.5 C5,3 8,4 8,7.5" fill="none" stroke="#4aa3df" stroke-width="2"/>
+    <ellipse cx="10.4" cy="3.6" rx="2" ry=".9" fill="#12301b" fill-opacity=".45"/>
+  </g>
+  <rect x="9" y="2.4" width=".8" height="1.4" fill="#5a3d28"/>
+  <circle cx="9.4" cy="1.6" r="2" fill="#4c9852"/>
+  <circle cx="8.9" cy="1.1" r="1" fill="#93d06f"/>
+  <polygon points="11,4.5 14,4.5 14,6 11,6" fill="#f2e7cf"/>
+  <polygon points="10.5,4.6 12.5,3 14.5,4.6" fill="#e2683c"/>
 </svg>

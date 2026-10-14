@@ -1,6 +1,7 @@
-// Re-authors the icon SVGs in design/brand/ from hex geometry (pointy-top, edge 0 east, as in
-// hex-core and the Legend comp). The committed SVGs are the source of truth and `make brand` never
-// runs this. Run it only to change the geometry, then review the diff:
+// Re-authors the round-1 icon concept SVGs (A, B, C) and concept A's three icon sources, kept as
+// history since round 2 wired the Diorama (see author-b.mjs). Hex geometry is pointy-top, edge 0
+// east, as in hex-core and the Legend comp. The committed SVGs are the source of truth and
+// `make brand` never runs this. Run it only to change the geometry, then review the diff:
 //
 //     node scripts/brand/author-svg.mjs design/brand
 import { writeFileSync } from "node:fs";
@@ -105,7 +106,7 @@ function glyph({ full = false, scale = 1 } = {}) {
 writeFileSync(`${out}/concept-a-socket-key.svg`, socketKey());
 writeFileSync(`${out}/concept-b-diorama.svg`, diorama());
 writeFileSync(`${out}/concept-c-legend-glyph.svg`, glyph());
-// Recommended concept (A) sources.
+// Concept A's icon sources, wired in round 1 and kept as history.
 function socketKeySmall() {
   const C = 256, ro = 254, ri = 146, rp = 66;
   const kinds = ["beach", "grass", "forest", "ocean", "river", "road"];
@@ -119,7 +120,7 @@ function socketKeySmall() {
   s += `  <polygon points="${pts(hex(C, C, rp))}" fill="${T.pick}"/>\n</svg>\n`;
   return s;
 }
-writeFileSync(`${out}/icon.svg`, socketKey().replace("Hex World: Socket Key", "Hex World"));
-writeFileSync(`${out}/icon-small.svg`, socketKeySmall());
-writeFileSync(`${out}/icon-maskable.svg`, socketKey({ full: true, scale: 0.9 }).replace("Hex World: Socket Key", "Hex World"));
+writeFileSync(`${out}/concept-a-icon.svg`, socketKey().replace("Hex World: Socket Key", "Hex World"));
+writeFileSync(`${out}/concept-a-icon-small.svg`, socketKeySmall());
+writeFileSync(`${out}/concept-a-icon-maskable.svg`, socketKey({ full: true, scale: 0.9 }).replace("Hex World: Socket Key", "Hex World"));
 console.log("ok");
