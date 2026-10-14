@@ -37,3 +37,15 @@ Raises from declined challengers:
 - **Inventory:** the sheet is open by default and stays open while the player hovers slots. Only Tab (or its close control) closes it, and Tab reopens it.
 - **Tiles that do not fit:** stay in the list, dimmed with their reason, ordered below every tile that fits ("Fits here" first, then "Doesn't fit here").
 - **PRODUCT.md:** approved as written and moved to the repo root.
+
+### Full-pass answers (owner, 2026-10-13: "Yes to all")
+
+- **Q1.** Rebase the mockups onto the real play captures (`docs/checkpoints/play/`) in place of the flat placed-tile stand-in and the masked one-tile world, and put the app icon on the loading and unsupported screens.
+- **Q2.** The Legend unsupported page (S11) replaces `web/unsupported.html` when the overlay is built.
+- **Q3.** The bar title shows the world name, tile count and autosave state ("Riverside · 14 tiles · Saved").
+- **Q4.** New keys: H hides the UI, F6 moves focus between panels (Tab belongs to the sheet), and in photo mode WASD flies the camera and Q/E move it down and up (PRD §4.5).
+- **Q5.** While the pointer is over the HUD, the sheet keeps the last hovered slot's filter.
+- **Q6.** Rotation counts are distinct orientations. A tile with a single fit shows "Fits" with no R key.
+- **Q7.** `DESIGN.md` and its sidecar move to the repo root when the overlay is implemented. The documenter's drift list is tokenised then: the dead side-stripe rule, focus-ring colour, motion durations off the 120/180/240 ms scale, the 4 px radius and the ghost fill colour.
+- **Q8.** Shots ship as JPEG (quality 88, 4:4:4).
+- **Q9.** Caution colour `rgb(244 196 92)` is a token, for non-blocking warnings (autosave off, a quality tier above the detected one).

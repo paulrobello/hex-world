@@ -131,6 +131,9 @@ Placing another tile fast-forwards any tiles that are still animating to their e
 | Bulldoze tool | B |
 | Inventory | Tab |
 | Photo mode | P |
+| Hide UI | H |
+| Move focus between panels | F6 |
+| Photo mode camera | WASD fly, Q / E down and up |
 
 Every action routes through an input-action layer, so touch gestures (P7) and a first-person controller (P8) map onto the same actions.
 
