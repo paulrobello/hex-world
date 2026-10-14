@@ -113,9 +113,27 @@ Approve or reject per ref. Two choices go with it:
 
 At the MVP values (noon, dry, summer, unfrozen) the game looks the same as before. The pixel diffs sit inside run-to-run noise, and the texture budget holds at 16. The asset gate now fails any new piece or shader that lacks a hook. 21 small prop slots on the river, beach and ocean centre pieces still need authored masks maps; that Blender work runs overnight.
 
+**A16. Save slots, autosave, and .hexworld import/export (PRD D9).**
+- **Captures:** `docs/checkpoints/persistence/`.
+- **Autosave:** it runs 600 ms after each edit and also flushes when the page hides. The bar reads "Riverside · 14 tiles · Saved / Saving… / Autosave off".
+- **Worlds sheet:** it has new, rename, duplicate, delete, export and import (picker or drag-drop). A refused file gets a plain toast.
+- **Loading:** loaded worlds appear settled, with no rise.
+
+Differences from the mockups for you to accept or reject:
+- Rename is inline, which has no mockup.
+- Thumbnails are socket-colour maps, not photos.
+- The load confirm (S10.3), import preview (S10.6) and refusal checks panel (S10.8) are not built.
+- Duplicate was added.
+
+Two choices to confirm:
+- Volumes are not restored from a save, so a shared world can't override your audio levels.
+- Loading a world keeps photo mode on.
+
+Q1 is now settled: the bar says "Autosave off" and "Saved", but the Worlds sheet still uses the mockup's "Not saved" for the off state.
+
 ## Questions
 
-**Q1. Save label.** The HUD bar says "Not saved" because no autosave exists yet. The brief said "Saved". I recommend keeping "Not saved" until autosave lands, so the label tells the truth.
+**Q1. Save label (resolved).** Autosave now exists, so the bar shows "Saved" as the brief asked, plus "Saving…" and "Autosave off". See A16.
 
 **Q3. Forest edge corners.** Where a forest-forest edge sits next to a forest-meadow edge on the same tile, the litter has to stop at the corner. There are two options, shown in `assets-source/kit/forest_forest_edge/stills/corner-options/` after merge: `before.jpg`, `O-a-after.jpg`, `O-b-after.jpg`, `O-b-overview.jpg`.
 - **O-a (shipping now):** the litter ends in a straight slope along the line from the corner.
