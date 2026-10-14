@@ -460,15 +460,15 @@ Each phase ends with every acceptance criterion verified, with evidence, and is 
 
 Goal: de-risk the stack before content work.
 
-- [ ] Rust workspace and Trunk web shell build. `make checkall` and `make checkall-ci` exist and pass.
+- [x] Rust workspace and Trunk web shell build. `make checkall` and `make checkall-ci` exist and pass.
 - [x] Bevy 0.20 runs on the WebGPU backend in Chrome and Safari 26 (macOS), rendering a lit PBR hex mesh. The native build renders the same scene. An iOS 26 Safari smoke test loads. (Verified on Safari 27.0.1, the installed version, and on the owner's iPhone on 2026-10-13.)
-- [ ] Engine gate (D2): 2,000 instanced hex tiles with 4 shadow cascades, bloom, TAA, SSAO and DOF hold the frame budget in Chrome and Safari on the reference machine. Logs confirm the SSAO plugin is active and report the GPU-preprocessing mode. The Bevy-vs-custom-wgpu decision is recorded with these measurements.
-- [ ] One custom compute pass (boids) and one custom material render inside Bevy's render graph on WebGPU.
-- [ ] One meshopt-compressed GLB (float attributes, not quantized) and one BC7 KTX2 + zstd texture load and render on wasm32. The asset route (§9.3) is recorded with measured size and load time. (The P0 GLB is meshopt-compressed but not quantized; bevy_gltf 0.20 rejects `KHR_mesh_quantization`; see D7 in `docs/decisions/0002-asset-pipeline.md`.)
-- [ ] Wire size of the wasm and time to first interactive frame are measured on GitHub Pages.
-- [ ] The unsupported-browser page is shown when WebGPU is missing.
-- [ ] GitHub Actions deploys to Pages, and `https://hex-world.pardev.net` serves the build over HTTPS.
-- [ ] The `?shot=` and `?diag=1` hooks work.
+- [x] Engine gate (D2): 2,000 instanced hex tiles with 4 shadow cascades, bloom, TAA, SSAO and DOF hold the frame budget in Chrome and Safari on the reference machine. Logs confirm the SSAO plugin is active and report the GPU-preprocessing mode. The Bevy-vs-custom-wgpu decision is recorded with these measurements. (Provisional: Bevy stays; Chrome uncapped p95 3.7–4.3 ms on the tuned instanced layout, but full shadows fail and paced p95 is 17.3–17.5 ms against 17.0. Carry-overs for P2: GPU timestamp queries and the >25 ms stall tail. See [`docs/decisions/0001-engine.md`](docs/decisions/0001-engine.md).)
+- [x] One custom compute pass (boids) and one custom material render inside Bevy's render graph on WebGPU.
+- [x] One meshopt-compressed GLB (float attributes, not quantized) and one BC7 KTX2 + zstd texture load and render on wasm32. The asset route (§9.3) is recorded with measured size and load time. (The P0 GLB is meshopt-compressed but not quantized; bevy_gltf 0.20 rejects `KHR_mesh_quantization`; see D7 in `docs/decisions/0002-asset-pipeline.md`.)
+- [x] Wire size of the wasm and time to first interactive frame are measured on GitHub Pages (`docs/perf/p0-deploy.json`: 8,571,055 B gzip wasm, READY 9.6 s on one cold load).
+- [x] The unsupported-browser page is shown when WebGPU is missing.
+- [x] GitHub Actions deploys to Pages, and `https://hex-world.pardev.net` serves the build over HTTPS.
+- [x] The `?shot=` and `?diag=1` hooks work.
 
 ### P1 — Asset pipeline proof
 
@@ -492,14 +492,16 @@ Goal: the polished, playable core loop with D12 content.
 - [ ] GPU boids birds roosting in forests.
 - [ ] Water: river flow and ocean waves with shore foam, meeting the §9.1 hero-water quality bar.
 - [ ] A gate sums the initial download (wasm + IBL + core pieces + sets, one texture family) and fails above 30 MB; hero assets stream after first interaction.
-- [ ] The owner approves the water look in a dedicated `water` scenario. Shots cover the ocean, a river, a beach and a tile seam, captured at rest and in motion.
+- [x] The owner approves the water look in a dedicated `water` scenario. Shots cover the ocean, a river, a beach and a tile seam, captured at rest and in motion. (Approved 2026-10-13, including underwater cut faces on exposed edges: `--scenario water`, `docs/checkpoints/water/`.)
 - [ ] Spatial ambience with the focus mix. Placement and UI SFX. At least 3 Suno music cues mastered and crossfading.
 - [ ] The owner approves UI mockups (every screen and key interaction state, with motion) before UI implementation starts (§4.7).
 - [ ] The shipped UI meets the §4.7 quality bar, and the owner signs it off in the running build.
 - [ ] Undo/redo and bulldoze with the connectivity rule.
+- [ ] Water tiles and kit pieces render in one view within 16 sampled textures per stage: refraction's transmission texture currently takes the kit forward pipeline to 17 (water prototype finding, ADR 0002).
+- [ ] GPU timestamp queries attribute frame cost, and the >25 ms stall tail is measured and fixed or accepted with evidence (ADR 0001 carry-over).
 - [ ] IndexedDB slots, autosave, `.hexworld` export and import.
 - [ ] Photo mode with DOF and 4× export.
-- [ ] Tilt-shift rendering (§9.1) in the game camera: zoom-scaled focal-plane blur, player toggle and strength slider, default on from Medium tier. It holds the P2 60 fps 95th-percentile budget on High, measured under the load guard.
+- [ ] Tilt-shift rendering (§9.1) in the game camera: zoom-scaled focal-plane blur, player toggle and strength slider, default on from Medium tier. It holds the P2 60 fps 95th-percentile budget on High, measured under the load guard. (Look owner-approved 2026-10-13: the pass, tier scaling and `--tilt` keys are on main; still open are the strength slider, the photo-mode kernel share and the 2,000-tile measurement.)
 - [ ] Quality tiers with auto-detection. 60 fps at the 95th percentile on the reference machine with a scripted 2,000-tile world on High.
 - [ ] Every §9.4 hook is present in the MVP assets and shaders (verified by the asset gate).
 - [ ] Every audio asset's provenance records its provider and subscription (D21).
