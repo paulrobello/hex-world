@@ -76,3 +76,13 @@ Owner's notes, verbatim: "there is no visual or ghost of the selected tile when 
 - **U2:** smaller flocks, on top of A13's 25% fewer birds. The A12 starling model replaces the fish-like placeholder.
 - **U6:** each tile-list row shows a hex with coloured sides that turns with the current rotation.
 - **A8 sign-off:** this waits for U1, U3, U4 and U6 in the running build.
+
+## Round 10: river mouth and spring (owner request: rivers must reach the sea and start inside land)
+
+- **References:** `river_mouth` and `river_spring` are approved as look references. The PLAN's socket table sets the layout.
+- **Q1:** build both mouth handednesses now: the river on edge 3, plus a mirrored tile with the river on edge 4.
+- **Q2, Q3, Q4 and Q6:** as recommended in `assets-source/refs/river_mouth/PLAN.md`.
+- **Q5:** fish form one connected region, with the palette set by the water each fish spawns in.
+- **River fish:** singles and small groups of 2 to 5, not big schools. This is handled on the pine/oak boids branch.
+- **Road verge:** the dark strip beside roads is the 31° verge sink slope. Fix queued on card 01a13bad2862.
+- **Ambience:** the bus defaults to 10%.
