@@ -101,3 +101,5 @@ Owner's notes, verbatim: "there is no visual or ghost of the selected tile when 
 - **Bulldoze:** add a dust cloud during the destruction. In progress.
 - **Mega tiles:** a 7-hex centre plus ring with a huge feature. Filed as a low-priority backlog idea.
 - **Fish at river mouths:** let the fish skim the shallow fan by relaxing the fish band over mouth tiles. The fan is not deepened.
+- **Colour grade default:** rich-3, which is ACES at EV100 12.5 with the shadow lift (owner, after playing ad423f2).
+- **Spring tile:** "spring color does not match surounding tiles". Fix in progress.
