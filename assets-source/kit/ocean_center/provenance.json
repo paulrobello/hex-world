@@ -1,0 +1,120 @@
+{
+  "pieceId": "ocean_center",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/ocean_center.py",
+    "sha256": "84c7fac7d1f3d6adf5faf9f5e89f8ea3e0dbe546549f9e86242a8de07275ed62"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_coast.py",
+      "sha256": "e9810a9e852621856239bf566ce949d676ee7a647755983c8cc3e7b193a71574"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {},
+    "reason": "colour-only slots, no maps",
+    "receiverSignature": "34d5a467816d45fcbb20b013c9f9222ffafed20aa3468a50c5891bffc78a0976",
+    "skipped": true
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1400,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 360,
+      "ratio": 0.2571428571428571
+    },
+    {
+      "lod": 2,
+      "tris": 120,
+      "ratio": 0.08571428571428572
+    }
+  ],
+  "collider": {
+    "node": "ocean_center_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": null,
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 0,
+        "astc": 0
+      },
+      "glbBytes": 138220
+    },
+    "textureEncodes": []
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/ocean_center/ocean_center.glb",
+      "sha256": "b61382d099c25e641b19fb1e5f4466d9c62d59c6e434aafcfa37162fff7c1fca",
+      "bytes": 138220
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/ocean/ref-1.jpg",
+      "sha256": "3702fa1838b2b4868b78a899055dc65cb5df78ca21877f4e41fd3ea52e8410e9",
+      "sourceSha256": "b506b0b02c86e7db990ae556065825b00217824f2383b90444da349e17465ec7",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "88781f5f-812f-4b69-b54a-2280a7abee77",
+      "prompt": "A single regular hexagonal deep ocean tile for a diorama with exactly six straight flat edges, 32 m across, on a plain neutral grey studio backdrop. Open temperate sea with layered gentle waves, a few white foam flecks on crests, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. On every side the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. Through the clear side walls a pale sandy shelf rises toward one edge and slopes down to a darker sandy seabed with scattered pebbles. Photoreal PBR rendering with plain sand and pebbles only, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/ocean/ref-2.jpg",
+      "sha256": "009e38e8f4b171c1c09c0fdeee812dc908c4d9a20f4004c69886d773c10307b3",
+      "sourceSha256": "08f9aa28c0d45b9fbc36d30e8ad52e9117e9209fd92505adfec522295d4d931c",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "bdca8aae-2293-43f9-8765-c3db8809e125",
+      "prompt": "Close-up at one corner of a hexagonal diorama ocean tile on a plain neutral grey studio backdrop, looking at the 120 degree corner where two side faces of the hexagon meet. The tile is one cast block of clear tinted resin with no container, no glass walls and no rim: the top of each side face follows the wavy water surface exactly, the water column turquoise near the top fading to deep blue lower down, a pale sandy shelf stepping down to a darker sandy seabed with a few pebbles, soft caustic light on the sand, photoreal PBR rendering, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T04:32:13.117Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/ocean/ref-1.jpg",
+        "assets-source/refs/ocean/ref-2.jpg"
+      ],
+      "notes": "Approved. ref-2's close-up shows a near-90 degree corner and a blue-tinted seabed; the tile is hexagonal per the kit contract. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    }
+  ]
+}

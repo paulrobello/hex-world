@@ -14,8 +14,6 @@
         // Coast family
         (id: "beach_base", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
         (id: "beach_center", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
-        (id: "ocean_base", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
-        (id: "ocean_center", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
         // Forest family
         (id: "forest_base", delivered_by: "S4 references, then wave-2 kit modeling: forest family"),
         (id: "tree_forest", delivered_by: "S4 references, then wave-2 kit modeling: forest family"),

@@ -1,0 +1,34 @@
+{
+  "aoDistanceM": 0.6,
+  "bedY": -4.0,
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.3,
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "highTris": 71600,
+  "marginPx": 12,
+  "maskStats": {
+    "mean": 0.9982153177261353,
+    "min": 0.2196078598499298,
+    "missRate": 0.0,
+    "p01": 0.9843137860298157,
+    "p05": 0.9843137860298157,
+    "texels": 632404
+  },
+  "maxRayDistanceM": 0.6,
+  "oceanDepthM": 2.6,
+  "receiverSignature": "62d13e15401ba4cda9fbdc37735d835374a67f6acc2f64df2f2f11a4ddb89694",
+  "samples": 64,
+  "skipped": false,
+  "surfaceY": -1.4,
+  "texelDensityPxPerM": {
+    "max": 32.00001904336818,
+    "median": 31.999773699805758,
+    "min": 31.990094545744025
+  }
+}

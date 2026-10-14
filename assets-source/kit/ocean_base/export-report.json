@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/ocean_base.py",
+    "sha256": "962a2565b203d4d637b701c880aa4097777f7d9e3e028af3a888204f0521b120"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_coast.py",
+      "sha256": "e9810a9e852621856239bf566ce949d676ee7a647755983c8cc3e7b193a71574"
+    }
+  ],
+  "lodTris": {
+    "ocean_base_lod0": 1104,
+    "ocean_base_lod1": 312,
+    "ocean_base_lod2": 94
+  },
+  "nodes": [
+    "ocean_base",
+    "ocean_base_collider",
+    "ocean_base_lod0",
+    "ocean_base_lod1",
+    "ocean_base_lod2"
+  ],
+  "pieceId": "ocean_base",
+  "sockets": []
+}

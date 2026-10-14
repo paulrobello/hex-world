@@ -191,9 +191,9 @@ mod tests {
             .collect();
         cells.sort();
         cells.dedup();
-        assert_eq!(cells.len(), 8);
+        assert_eq!(cells.len(), 11);
         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
-        // Review M5: the fixture source lays out 3 cells, not the runtime family's 8.
+        // Review M5: the fixture source lays out 3 cells, not the runtime family's 11.
         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
         // Both kit sources lay out cells that are already water-patch cells.

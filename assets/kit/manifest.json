@@ -76,4 +76,12 @@
                  "house_twostorey_frame": { "color": [0.7, 0.69, 0.65], "roughness": 0.6, "masks": true },
                  "house_twostorey_door": { "color": [0.1, 0.16, 0.12], "roughness": 0.5, "masks": true },
                  "house_twostorey_glass": { "color": [0.2, 0.16, 0.1], "roughness": 0.2, "masks": true } },
-      "maps": { "masks": "p1/house_twostorey/house_twostorey.masks" } } ] }
+      "maps": { "masks": "p1/house_twostorey/house_twostorey.masks" } },
+    { "id": "ocean_base", "kind": "base", "glb": "p1/ocean_base/ocean_base.glb",
+      "provenance": "assets-source/kit/ocean_base/provenance.json",
+      "slots": { "coast_seabed": { "tileable": "gravel", "color": [1.5, 1.46, 1.26], "masks": true } },
+      "maps": { "masks": "p1/ocean_base/ocean_base.masks" } },
+    { "id": "ocean_center", "kind": "prop", "glb": "p1/ocean_center/ocean_center.glb",
+      "provenance": "assets-source/kit/ocean_center/provenance.json",
+      "slots": { "coast_pebble": { "color": [0.105, 0.095, 0.08], "roughness": 0.45 },
+                 "coast_rock": { "color": [0.17, 0.16, 0.14], "roughness": 0.6 } } } ] }

@@ -97,10 +97,40 @@ fn dist_to_border(x: f32, z: f32) -> f32 {
 
 /// Cap vertices on the hex border at y = 0 as (x, z), with split-normal duplicates removed.
 fn border_ring(v: &[([f32; 3], [f32; 3])]) -> Vec<[f32; 2]> {
+    border_ring_at(v, 0.0)
+}
+
+/// Heights a base's cap border ring may sit at, one per edge-socket bed profile that is flat
+/// (docs/kit/water-contract.md §6): Grass and Forest at y = 0 (`meadow_base`), Ocean at the tile
+/// base y = -LEVEL_STEP (`ocean_base`, the ocean bed is the column floor).
+const BASE_RING_LEVELS: [f32; 2] = [0.0, -hex_core::LEVEL_STEP];
+
+/// The y of a base's cap border ring: its up-facing border vertices must share one height, and
+/// that height must be a contract level. No such vertices gives 0 (the ring check then fails).
+fn base_ring_level(id: &str, v: &[([f32; 3], [f32; 3])]) -> Result<f32, String> {
+    let ys: Vec<f32> = v
+        .iter()
+        .filter(|(p, n)| dist_to_border(p[0], p[2]).abs() < 1e-3 && n[1] > 0.5)
+        .map(|(p, _)| p[1])
+        .collect();
+    let Some(&y) = ys.first() else {
+        return Ok(0.0);
+    };
+    if ys.iter().any(|q| (q - y).abs() > 1e-3) {
+        return Err(format!("{id}: base border ring is not flat"));
+    }
+    BASE_RING_LEVELS
+        .into_iter()
+        .find(|l| (l - y).abs() < 1e-3)
+        .ok_or_else(|| format!("{id}: base border ring at y = {y} is not a contract level"))
+}
+
+/// Cap vertices on the hex border at y = `level` as (x, z), with split-normal duplicates removed.
+fn border_ring_at(v: &[([f32; 3], [f32; 3])], level: f32) -> Vec<[f32; 2]> {
     let mut ring: Vec<[f32; 2]> = vec![];
     for (p, n) in v {
         if dist_to_border(p[0], p[2]).abs() < 1e-3
-            && p[1].abs() < 1e-3
+            && (p[1] - level).abs() < 1e-3
             && n[1] > 0.5
             && !ring.iter().any(|q| near(*q, [p[0], p[2]], RING_TOL))
         {
@@ -538,11 +568,19 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
     {
         e.push(format!("{}: node {}_collider missing (D14)", p.id, p.id));
     }
+    let level = if p.kind == PieceKind::Base {
+        base_ring_level(&p.id, &positions(lod0, &buffers)).unwrap_or_else(|err| {
+            e.push(err);
+            0.0
+        })
+    } else {
+        0.0
+    };
     if p.kind.touches_border() {
         let rings: Vec<_> = lods
             .iter()
             .flatten()
-            .map(|m| border_ring(&positions(m, &buffers)))
+            .map(|m| border_ring_at(&positions(m, &buffers), level))
             .collect();
         e.extend(ring_errors(&p.id, &rings, p.kind == PieceKind::Base));
     }
@@ -550,7 +588,7 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
         let v = positions(lod0, &buffers);
         if let Some((p_bad, n_bad)) = v.iter().find(|(q, n)| {
             dist_to_border(q[0], q[2]).abs() < 1e-3
-                && q[1].abs() < 1e-3
+                && (q[1] - level).abs() < 1e-3
                 && n[1] > 0.5
                 && n[1] < 0.999
         }) {
@@ -1749,6 +1787,27 @@ fn ring_must_match_across_lods_and_rotate_onto_itself() {
         e.iter().any(|m| m.contains("border ring has 12 vertices")),
         "{e:?}"
     );
+}
+
+#[test]
+fn base_ring_level_must_be_flat_and_a_contract_level() {
+    let at = |y: f32| -> Vec<([f32; 3], [f32; 3])> {
+        hex_ring()
+            .into_iter()
+            .map(|[x, z]| ([x, y, z], [0.0, 1.0, 0.0]))
+            .collect()
+    };
+    assert_eq!(base_ring_level("b", &at(0.0)), Ok(0.0));
+    let ocean = at(-hex_core::LEVEL_STEP);
+    assert_eq!(base_ring_level("b", &ocean), Ok(-hex_core::LEVEL_STEP));
+    assert_eq!(border_ring_at(&ocean, -hex_core::LEVEL_STEP).len(), 24);
+    assert!(border_ring(&ocean).is_empty());
+    let e = base_ring_level("b", &at(-1.4)).unwrap_err();
+    assert!(e.contains("not a contract level"), "{e}");
+    let mut tilted = at(-hex_core::LEVEL_STEP);
+    tilted[3].0[1] += 0.01;
+    let e = base_ring_level("b", &tilted).unwrap_err();
+    assert!(e.contains("not flat"), "{e}");
 }
 
 #[test]

@@ -1,0 +1,198 @@
+{
+  "pieceId": "ocean_base",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/ocean_base.py",
+    "sha256": "962a2565b203d4d637b701c880aa4097777f7d9e3e028af3a888204f0521b120"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_coast.py",
+      "sha256": "e9810a9e852621856239bf566ce949d676ee7a647755983c8cc3e7b193a71574"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.6,
+    "bedY": -4,
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.3,
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "highTris": 71600,
+    "marginPx": 12,
+    "maskStats": {
+      "mean": 0.9982153177261353,
+      "min": 0.2196078598499298,
+      "missRate": 0,
+      "p01": 0.9843137860298157,
+      "p05": 0.9843137860298157,
+      "texels": 632404
+    },
+    "maxRayDistanceM": 0.6,
+    "oceanDepthM": 2.6,
+    "receiverSignature": "62d13e15401ba4cda9fbdc37735d835374a67f6acc2f64df2f2f11a4ddb89694",
+    "samples": 64,
+    "skipped": false,
+    "surfaceY": -1.4,
+    "texelDensityPxPerM": {
+      "max": 32.00001904336818,
+      "median": 31.999773699805758,
+      "min": 31.990094545744025
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1104,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 312,
+      "ratio": 0.2826086956521739
+    },
+    {
+      "lod": 2,
+      "tris": 94,
+      "ratio": 0.08514492753623189
+    }
+  ],
+  "collider": {
+    "node": "ocean_base_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 32.00001904336818,
+    "median": 31.999773699805758,
+    "min": 31.990094545744025
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 108107,
+        "astc": 112180
+      },
+      "glbBytes": 34076
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/ocean_base/ocean_base.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 108107,
+        "sha256": "5550ace2fd8307ce655cf39e8c94ee95d8c9a9406bcdfb97f2bea6d6d594fd4c"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/ocean_base/ocean_base.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 112180,
+        "sha256": "d20c3b10fee8f7d77e508ab8bb8434640f3e1d4dffa7a5dcd3ed909da3fdf83c"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/ocean_base/ocean_base.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 213844,
+        "sha256": "865bba49ba51ab375ef8fe9eab2dd1569724217ff947d2c976240e9935889828"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/ocean_base/ocean_base.glb",
+      "sha256": "fe486a94cdfda5c5873793e93b32e4a598746077995403524f35d34c1edf864a",
+      "bytes": 34076
+    },
+    {
+      "path": "assets/kit/p1/ocean_base/ocean_base.masks.bc7.ktx2",
+      "sha256": "5550ace2fd8307ce655cf39e8c94ee95d8c9a9406bcdfb97f2bea6d6d594fd4c",
+      "bytes": 108107
+    },
+    {
+      "path": "assets/kit/p1/ocean_base/ocean_base.masks.astc.ktx2",
+      "sha256": "d20c3b10fee8f7d77e508ab8bb8434640f3e1d4dffa7a5dcd3ed909da3fdf83c",
+      "bytes": 112180
+    },
+    {
+      "path": "assets/kit/p1/ocean_base/ocean_base.masks.png",
+      "sha256": "865bba49ba51ab375ef8fe9eab2dd1569724217ff947d2c976240e9935889828",
+      "bytes": 213844
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/ocean/ref-1.jpg",
+      "sha256": "3702fa1838b2b4868b78a899055dc65cb5df78ca21877f4e41fd3ea52e8410e9",
+      "sourceSha256": "b506b0b02c86e7db990ae556065825b00217824f2383b90444da349e17465ec7",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "88781f5f-812f-4b69-b54a-2280a7abee77",
+      "prompt": "A single regular hexagonal deep ocean tile for a diorama with exactly six straight flat edges, 32 m across, on a plain neutral grey studio backdrop. Open temperate sea with layered gentle waves, a few white foam flecks on crests, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. On every side the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. Through the clear side walls a pale sandy shelf rises toward one edge and slopes down to a darker sandy seabed with scattered pebbles. Photoreal PBR rendering with plain sand and pebbles only, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/ocean/ref-2.jpg",
+      "sha256": "009e38e8f4b171c1c09c0fdeee812dc908c4d9a20f4004c69886d773c10307b3",
+      "sourceSha256": "08f9aa28c0d45b9fbc36d30e8ad52e9117e9209fd92505adfec522295d4d931c",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "bdca8aae-2293-43f9-8765-c3db8809e125",
+      "prompt": "Close-up at one corner of a hexagonal diorama ocean tile on a plain neutral grey studio backdrop, looking at the 120 degree corner where two side faces of the hexagon meet. The tile is one cast block of clear tinted resin with no container, no glass walls and no rim: the top of each side face follows the wavy water surface exactly, the water column turquoise near the top fading to deep blue lower down, a pale sandy shelf stepping down to a darker sandy seabed with a few pebbles, soft caustic light on the sand, photoreal PBR rendering, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T04:32:15.845Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/ocean/ref-1.jpg",
+        "assets-source/refs/ocean/ref-2.jpg"
+      ],
+      "notes": "Approved. ref-2's close-up shows a near-90 degree corner and a blue-tinted seabed; the tile is hexagonal per the kit contract. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    }
+  ]
+}

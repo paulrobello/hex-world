@@ -17,6 +17,8 @@ Known Blender, bake, export and KTX2 traps, from the asset-pipeline research and
 - **`matrix_world` is stale for objects created in the same script** until `bpy.context.view_layer.update()`. A socket empty read back before an update reports position (0, 0, 0). `export.write_export_report` updates the view layer first.
 - **Removed objects linger in `view_layer.objects` as `None`.** After `bpy.data.objects.remove` on a freshly opened file, iterating the view layer (for example `scene.select_only`) hits a `None` base. Call `bpy.context.view_layer.update()` after removals.
 - **Renders embed the wall-clock date.** Blender writes Date and RenderTime metadata into every PNG and JPEG, so re-renders of identical pixels differ in bytes. `gate.render_six_views` turns `use_stamp_date` and `use_stamp_render_time` off; do the same for any committed render.
+- **A copied `target/` can embed another checkout's data files.** `hex-core` compiles `data/tiles/*.ron` and `data/pending-pieces.ron` in with `include_str!`, and a cache copied from the main checkout can carry those files as they were in whichever checkout last built it, so cargo does not rebuild it when the worktree's copies change: the data validator then reports a stale pending list ("ocean_base is in assets/kit/manifest.json: remove it from data/pending-pieces.ron" with the line already removed). Run `cargo clean -p hex-core` after editing `data/` in a worktree whose `target/` was copied.
+- **Never run two `make kit-determinism` at once.** Every run shares `target/kit-det/{a,b}` and starts with `rm -rf`, so a parallel run deletes the other's output and it fails with "GLB differs" on a missing file. Run them one at a time.
 - **`make blender-test` is local only.** CI has no Blender, so never add it to `checkall`. Anything checked against committed files belongs in the Rust gate (`make test`).
 
 ## Cycles bakes
@@ -51,6 +53,8 @@ Known Blender, bake, export and KTX2 traps, from the asset-pipeline research and
 - Never decimate a border-ring piece; regenerate it.
 - **Do not transfer UVs from LOD0 to rebuilt LODs by nearest face.** A `DATA_TRANSFER` (`POLYINTERP_NEAREST`) gives LOD faces whose corners touch two LOD0 islands UVs from both, so they stretch across the atlas and sample garbage (house_cottage: LOD1 glass lost its night glow). Unwrap all LODs into one atlas and bake each LOD onto its own islands (`clear` on the first bake only, margin below the island spacing), as `kit/_house.py` does. Verify per LOD on the reimported GLB: density min, median and max, plus the masks value at key faces. The 6-view render shows only LOD0.
 - **LOD seams.** `VisibilityRange` applies per chunk, so neighbouring tiles can sit at different LODs. Pin the border ring in every LOD and choose its subdivision so LOD2 can still reach 15%.
+
+- **A lane-less centre piece is kind `prop`.** `kit_gate::check_center_edge_joint` treats every `center` without `socket-lane-*` nodes as the road hub, which must have sections at x = ±6 matching the edge pieces. Tile detail with no lanes (ocean_center's pebbles and rocks) fails that, so it ships as kind `prop` (LOD0 ≤ 1,500 tris, no border or joint checks), still named in the tile's `center` field.
 
 ## Coordinate frame and export
 - Blender Z-up exports to glTF Y-up as glTF x = Blender x and glTF z = −Blender y. Runtime edge 0 faces +x, edges run clockwise viewed from +Y, and +z is south. In Blender's top view, edge k's outward normal is at −60°·k.

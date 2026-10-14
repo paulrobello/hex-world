@@ -98,6 +98,12 @@ pub fn kit_layout() -> Vec<Placement> {
     for k in [0, 2, 4] {
         v.push(place("road_straight_edge", 1, -1, k));
     }
+    // Three ocean tiles meeting at one corner, each at another rotation (seams under rotation), with
+    // open edges to the east. Cells stay inside the water look-dev patch, so `water_kit` keeps 12.
+    for (q, r, k) in [(1, 1, 0), (2, 1, 3), (2, 0, 1)] {
+        v.push(place("ocean_base", q, r, k));
+        v.push(place("ocean_center", q, r, k));
+    }
     v
 }
 
