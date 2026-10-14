@@ -31,6 +31,9 @@
 .seg button[aria-checked=true] { background: var(--ink); color: var(--ink-on-ink); }
 .seg button small { display: block; font-weight: 600; font-size: var(--fs-1); opacity: .75; }
 .seg button small.is-over { text-decoration: line-through; }
+.seg button:disabled { cursor: not-allowed; opacity: .55; }
+.seg button:disabled:hover { color: var(--ink-2); background: transparent; }
+.export-cap { margin: 6px 0 0; }
 
 .note { display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start; margin: 10px 0; padding: 10px 12px; border-radius: var(--r-control); background: var(--sheet-2); font-size: var(--fs-2); color: var(--ink-2); }
 .note .ic { width: 18px; height: 18px; margin-top: 1px; color: var(--ink-2); }

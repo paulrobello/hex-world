@@ -1,0 +1,347 @@
+[
+ {
+  "name": "ghost-meadow-a",
+  "note": "meadow at (0, -1)",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Compatible",
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "q": 0,
+   "r": -1,
+   "rotation": 0,
+   "tile": "meadow",
+   "valid": true
+  },
+  "ghost_meshes": true
+ },
+ {
+  "name": "ghost-meadow-b",
+  "note": "meadow at (0, -1) after R",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Compatible",
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "q": 0,
+   "r": -1,
+   "rotation": 0,
+   "tile": "meadow",
+   "valid": true
+  },
+  "ghost_meshes": true
+ },
+ {
+  "name": "ghost-forest-a",
+  "note": "forest at (-1, -1)",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "q": -1,
+   "r": -1,
+   "rotation": 0,
+   "tile": "forest",
+   "valid": true
+  },
+  "ghost_meshes": true
+ },
+ {
+  "name": "ghost-forest-b",
+  "note": "forest at (-1, -1) after R",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "q": -1,
+   "r": -1,
+   "rotation": 0,
+   "tile": "forest",
+   "valid": true
+  },
+  "ghost_meshes": true
+ },
+ {
+  "name": "ghost-house-a",
+  "note": "house_cluster at (-2, 0)",
+  "ghost": {
+   "edges": [
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "q": -2,
+   "r": 0,
+   "rotation": 1,
+   "tile": "house_cluster",
+   "valid": true
+  },
+  "ghost_meshes": true
+ },
+ {
+  "name": "ghost-house-b",
+  "note": "house_cluster at (-2, 0) after R",
+  "ghost": {
+   "edges": [
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "q": -2,
+   "r": 0,
+   "rotation": 2,
+   "tile": "house_cluster",
+   "valid": true
+  },
+  "ghost_meshes": true
+ },
+ {
+  "name": "ghost-river-a",
+  "note": "river_straight at (-2, 0)",
+  "ghost": {
+   "edges": [
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    1,
+    2,
+    4,
+    5
+   ],
+   "q": -2,
+   "r": 0,
+   "rotation": 1,
+   "tile": "river_straight",
+   "valid": true
+  },
+  "ghost_meshes": true
+ },
+ {
+  "name": "ghost-river-b",
+  "note": "river_straight at (-2, 0) after R",
+  "ghost": {
+   "edges": [
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    1,
+    2,
+    4,
+    5
+   ],
+   "q": -2,
+   "r": 0,
+   "rotation": 2,
+   "tile": "river_straight",
+   "valid": true
+  },
+  "ghost_meshes": true
+ },
+ {
+  "name": "edge-fit",
+  "note": "road straight continuing the road: compatible edges",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Compatible",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    1,
+    2,
+    4,
+    5
+   ],
+   "q": 2,
+   "r": 0,
+   "rotation": 1,
+   "tile": "road_straight",
+   "valid": true
+  },
+  "ghost_meshes": true
+ },
+ {
+  "name": "edge-clash",
+  "note": "ocean against grass: incompatible edges",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Incompatible",
+    "Incompatible",
+    "Incompatible"
+   ],
+   "legal_rotations": [],
+   "q": 0,
+   "r": 1,
+   "rotation": 1,
+   "tile": "ocean",
+   "valid": false
+  },
+  "ghost_meshes": true
+ },
+ {
+  "name": "ghost-pinned",
+  "note": "road straight pinned at (2, 0) with the pointer over (0, -1)",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Compatible",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    1,
+    2,
+    4,
+    5
+   ],
+   "q": 2,
+   "r": 0,
+   "rotation": 1,
+   "tile": "road_straight",
+   "valid": true
+  },
+  "ghost_meshes": true
+ },
+ {
+  "name": "ghost-fallback",
+  "note": "house cluster while the village pack is held: outline and edge colours only",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Compatible",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    0,
+    1,
+    2,
+    4,
+    5
+   ],
+   "q": 1,
+   "r": 0,
+   "rotation": 0,
+   "tile": "house_cluster",
+   "valid": true
+  },
+  "ghost_meshes": false
+ },
+ {
+  "name": "ghost-fallback-landed",
+  "note": "the same ghost once the village pack arrived",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Neutral",
+    "Neutral",
+    "Compatible",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    0,
+    1,
+    2,
+    4,
+    5
+   ],
+   "q": 1,
+   "r": 0,
+   "rotation": 0,
+   "tile": "house_cluster",
+   "valid": true
+  },
+  "ghost_meshes": true
+ }
+]

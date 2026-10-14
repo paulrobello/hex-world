@@ -31,10 +31,12 @@ Legality is never colour alone. Compatible edges are solid, incompatible edges a
 - Hovered slot: outline goes to ink at 90% and the cap gets an ink fill at 4%. Crossfade 120 ms.
 - The slot ring hides in bulldoze and photo mode (160 ms fade).
 - The hovered slot stays the sheet's slot while the pointer moves onto the HUD. Another slot, Esc, or a placement replaces it.
+- Pinning (owner choice U4, 2026-10-14): a click on a free slot pins it. The ghost, its rotation and the sheet stay on the pinned slot while the pointer crosses other tiles on its way to the sheet, and a second click on it places. A click on another free slot pins that one; Esc or a click elsewhere unpins. The pinned ghost's outline is solid, and the slot under the pointer keeps the hovered outline so the next click's target is visible.
 
 ## Ghost
 
-- The tile's real meshes at 45% opacity, desaturated 30% and tinted 15% toward ink, sitting at cap height. In the prototype, coloured lane strokes stand in for the meshes (river 22 px, road 18 px, both at 60%).
+- The tile's real meshes at 45% opacity, desaturated 30% and tinted 15% toward ink, sitting at cap height. The engine draws them untextured, one tint per part (base by biome, lanes by socket kind, trees, buildings), since the kit pipeline has no sampled texture to spare beside refracting water. While the tile's pack is still streaming, and in the prototype, coloured lane strokes stand in for the meshes (river 22 px, road 18 px, both at 60%).
+- The tile's own socket colours (owner choice U1): a 5 px line in the tile's socket colour on each edge at the current rotation, along the middle 72% of the edge, 11 px inside the rim.
 - Outline: ghost line colour, 2 px, dashed 10 on and 8 off, at the cap rim.
 - Breathing: cap fill opacity 100% to 55% and back over 2.4 s, ease-in-out, looping. Off under reduced motion.
 - Appears 150 ms after a slot is hovered with a tile selected, at the first legal rotation (auto-rotate). Disappears in 100 ms when the pointer leaves for a non-slot.
@@ -53,7 +55,7 @@ State changes crossfade in 120 ms.
 
 ## Socket key marks
 
-The signature of the Legend direction, carried into the world. For every touched edge of the hovered slot, a 4 px line in the neighbour's socket colour runs along the middle 40% of the edge, set 11 px inside the slot, under the edge glow. It is the in-world twin of the slot key in the sheet, so the player can match "River on one edge" to the blue mark at the river side without reading.
+The signature of the Legend direction, carried into the world. For every touched edge of the hovered slot, a 4 px line in the neighbour's socket colour runs along the middle 40% of the edge, set 11 px outside the slot on the neighbour's side, under the edge glow. The tile's own colour sits 11 px inside, so each touched edge reads neighbour, glow (fit or clash), tile. It is the in-world twin of the slot key in the sheet, so the player can match "River on one edge" to the blue mark at the river side without reading.
 
 ## Rotate
 

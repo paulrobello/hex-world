@@ -67,6 +67,9 @@ pub struct ScatterRule {
     /// Keep-out distance from network centerlines, in meters.
     #[serde(default)]
     pub lane_clearance: f32,
+    /// Grow in clustered drifts from the tile's seeded noise instead of spreading evenly.
+    #[serde(default)]
+    pub drift: bool,
 }
 
 /// A prop at a fixed tile-local position.

@@ -4,6 +4,11 @@
       "gate": "look-dev",
       "when": "2026-10-13",
       "who": "Paul Robello"
+    },
+    {
+      "gate": "tone mapper reopened (Q4): TonyMcMapface at EV100 12.9, soil x2.5, explicit backdrop",
+      "when": "2026-10-14",
+      "who": "Paul Robello"
     }
   ],
   "d2Exceptions": [
@@ -13,7 +18,7 @@
       "who": "Paul Robello"
     }
   ],
-  "ev100": 12.5,
+  "ev100": 12.9,
   "hdri": {
     "bytes": 5451493,
     "file": "assets-source/hdri/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
@@ -61,5 +66,5 @@
     "soilPxPerM": 256,
     "source": "1024\u00b2 tileable maps over manifest tileM (grass 2.0, soil 4.0); masks from assets-source/kit/meadow_base/provenance.json texelDensityPxPerM"
   },
-  "tonemap": "aces"
+  "tonemap": "tony"
 }

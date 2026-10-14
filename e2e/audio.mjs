@@ -134,6 +134,9 @@ try {
   await fired("ui-rotate", "ghostRotated");
   await page.mouse.down();
   await page.mouse.up();
+  await until(async () => same((await play()).pinned, 1, 0), "the first click pins (1, 0)");
+  await page.mouse.down();
+  await page.mouse.up();
   await until(async () => (await tiles()) === 2, "road placed at (1, 0)");
   await fired("place-rumble", "tilePlaced");
   await fired("place-thunk", "tilePlaced", 6_000);

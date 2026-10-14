@@ -55,13 +55,25 @@ impl BoidBudget {
     }
 
     /// (birds, fish) for a world with `water_tiles` water tiles. Fish scale with the water up to
-    /// `fish_max`, and the fish budget the water cannot use goes to the birds.
+    /// `fish_max`; birds are [`BIRD_PERCENT`] of the slots the fish leave (owner A13: 25% fewer
+    /// than filling them), and the rest stay idle.
     pub fn split(&self, water_tiles: usize) -> (u32, u32) {
         let fish = (u64::from(self.fish_per_water_tile) * water_tiles as u64)
             .min(u64::from(self.fish_max.min(self.total))) as u32;
-        (self.total - fish, fish)
+        ((self.total - fish) * BIRD_PERCENT / 100, fish)
     }
 }
+
+/// Share of the slots fish leave that play fills with birds (owner A13, 2026-10-14: 25% fewer
+/// birds than the 100% it was).
+pub const BIRD_PERCENT: u32 = 75;
+/// Birds per flock (owner U2: smaller flocks). A play bird coheres and aligns only with the birds
+/// of its own flock (slots `k * FLOCK_SIZE ..`, within 22 m) and keeps clear of every bird. A flock
+/// spawns together and roosts together, so an oak's 12 perches take one whole flock. Before U2
+/// every free bird cohered with every other within 22 m, so the sky held one cloud.
+pub const FLOCK_SIZE: u32 = 12;
+/// Horizontal radius (m) a flock spawns within around its centre.
+pub const FLOCK_SPREAD: f32 = 6.0;
 
 /// `total` shared out in proportion to `weights` by largest remainder (ties to the lower index).
 pub fn allocate(total: u32, weights: &[u32]) -> Vec<u32> {
@@ -512,6 +524,9 @@ pub struct FishRegion {
     pub best: Vec3,
     /// Room at `best`; regions with less than [`SPAWN_ROOM`] get no fish.
     pub room: f32,
+    /// River water alone (no ocean or beach tile): its fish swim alone or in small groups
+    /// ([`river_groups`]) instead of one school.
+    pub river: bool,
 }
 
 /// The fish's water: the water module's layout of the placed tiles, its regions and the field.
@@ -565,11 +580,19 @@ impl FishWorld {
             .into_iter()
             .map(|cells_in| {
                 let (best, room) = best_point(&field, &cells_in);
+                let river = cells_in.iter().all(|c| {
+                    catalog.get(&cells[c].tile.tile).is_some_and(|d| {
+                        d.edges
+                            .iter()
+                            .all(|e| !matches!(e.kind, SocketKind::Ocean | SocketKind::Beach))
+                    })
+                });
                 FishRegion {
                     cells: cells_in,
                     fish: 0,
                     best,
                     room,
+                    river,
                 }
             })
             .collect();
@@ -595,6 +618,20 @@ impl FishWorld {
             .collect();
         for (r, n) in self.regions.iter_mut().zip(allocate(fish, &weights)) {
             r.fish = n;
+        }
+    }
+
+    /// A spawn point for member `k` of a group whose first fish spawned at `lead`: beside it where
+    /// the water has room, else on it.
+    pub fn beside(&self, lead: Vec3, k: usize) -> Vec3 {
+        let a = k as f32 * 2.4;
+        let q = lead.xz() + Vec2::new(a.cos(), a.sin()) * 0.6;
+        let (b, g) = (band_at(&self.cells, q), self.field.sample(q));
+        let (lo, hi) = (b[0].max(g[0]), b[1].min(g[1]));
+        if b[2] >= SPAWN_ROOM && g[2] >= SPAWN_ROOM && hi >= lo {
+            Vec3::new(q.x, lead.y.clamp(lo, hi), q.y)
+        } else {
+            lead
         }
     }
 
@@ -647,6 +684,31 @@ fn best_point(field: &FishField, cells: &[Axial]) -> (Vec3, f32) {
     best
 }
 
+/// Share of a river region's fish that swim alone (owner, 2026-10-14: rivers hold mostly single
+/// fish and small groups of 2 to 5).
+pub const RIVER_ALONE: f32 = 0.6;
+/// The largest group of river fish.
+pub const RIVER_GROUP_MAX: u32 = 5;
+
+/// The group sizes `fish` river fish of the region named by `cell` split into, in slot order:
+/// [`RIVER_ALONE`] of them (rounded) alone, the rest in groups of 2 to [`RIVER_GROUP_MAX`] (a
+/// last odd fish alone too), shuffled. Seeded from the world seed and the cell.
+pub fn river_groups(seed: u64, cell: Axial, fish: u32) -> Vec<u32> {
+    let mut rng = Rng(cell_seed(seed, cell) ^ 0x6E1D_F15A_0B5E_2C47);
+    let alone = ((fish as f32 * RIVER_ALONE).round() as u32).min(fish);
+    let mut out = vec![1; alone as usize];
+    let mut left = fish - alone;
+    while left > 0 {
+        let n = (2 + (rng.next_u64() % u64::from(RIVER_GROUP_MAX - 1)) as u32).min(left);
+        out.push(n);
+        left -= n;
+    }
+    for k in (1..out.len()).rev() {
+        out.swap(k, (rng.next_u64() % (k as u64 + 1)) as usize);
+    }
+    out
+}
+
 // ---------------------------------------------------------------------------------------------
 // The plan: slots, roost waves, counts
 
@@ -667,6 +729,8 @@ pub const SKY_MARGIN: f32 = 24.0;
 pub enum SlotKind {
     Bird,
     Fish,
+    /// A slot play leaves empty ([`BIRD_PERCENT`]): parked and not drawn.
+    Idle,
 }
 
 /// One boid slot as the CPU sees it. A changed `generation` makes the compute pass reset the
@@ -683,6 +747,20 @@ pub struct Slot {
     pub region: Option<usize>,
 }
 
+/// One fish region as the published state reports it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RegionCount {
+    /// Its first cell.
+    pub cell: Axial,
+    pub tiles: u32,
+    pub fish: u32,
+    pub river: bool,
+    /// The most fish that school together (a river's largest group; an ocean's every fish).
+    pub largest_group: u32,
+    /// Fish swimming alone.
+    pub singles: u32,
+}
+
 /// What the published state reports.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct BoidCounts {
@@ -693,8 +771,7 @@ pub struct BoidCounts {
     pub roosting: u32,
     pub settling: u32,
     pub water_tiles: u32,
-    /// (first cell, water tiles, fish) per region.
-    pub regions: Vec<(Axial, u32, u32)>,
+    pub regions: Vec<RegionCount>,
 }
 
 /// The CPU state of the boids. `play` worlds get roosts, fish and the play sky; the other
@@ -711,6 +788,9 @@ pub struct BoidPlan {
     /// Roost groups by cell: (cycle start, perches taken).
     groups: BTreeMap<Axial, (f32, bool)>,
     pub water: FishWorld,
+    /// Each fish's school by fish index (slot minus `birds`): 0 for a sea region's one school,
+    /// else a key its river group alone shares (the group's first fish index plus 1).
+    pub schools: Vec<u32>,
     /// Flock centre (xyz) and horizontal radius (w).
     pub sky: Vec4,
     cursor: usize,
@@ -740,6 +820,7 @@ impl BoidPlan {
             roosts: vec![],
             groups: BTreeMap::new(),
             water: FishWorld::default(),
+            schools: vec![],
             sky: Vec4::new(0.0, 80.0, 0.0, 400.0),
             cursor: 0,
             tiles: None,
@@ -805,15 +886,24 @@ impl BoidPlan {
         plan
     }
 
+    /// Where bird slot `slot` spawns: within [`FLOCK_SPREAD`] of its flock's seeded point in the sky.
     fn sky_point(&self, slot: u32) -> Vec3 {
-        let mut rng = Rng(self.seed ^ u64::from(slot).wrapping_mul(0xD1B5_4A32_D192_ED03));
+        let flock = slot / FLOCK_SIZE;
+        let mut rng = Rng(self.seed ^ u64::from(flock).wrapping_mul(0xD1B5_4A32_D192_ED03));
         let a = rng.unit() * std::f32::consts::TAU;
         let d = rng.unit().sqrt() * self.sky.w;
-        let y = SKY_LOW + rng.unit() * (SKY_HIGH - SKY_LOW);
-        Vec3::new(self.sky.x + a.cos() * d, y, self.sky.z + a.sin() * d)
+        let y = SKY_LOW + 2.0 + rng.unit() * (SKY_HIGH - SKY_LOW - 4.0);
+        let mut own = Rng(self.seed ^ u64::from(slot).wrapping_mul(0xA076_1D64_78BD_642F));
+        let b = own.unit() * std::f32::consts::TAU;
+        let e = own.unit().sqrt() * FLOCK_SPREAD;
+        Vec3::new(
+            self.sky.x + a.cos() * d + b.cos() * e,
+            y + (own.unit() - 0.5) * 3.0,
+            self.sky.z + a.sin() * d + b.sin() * e,
+        )
     }
 
-    /// Rebuilds roosts, fish regions, the field and the bird/fish split from the placed tiles
+    /// Rebuilds roosts, fish regions, the field and the bird/fish/idle split from the placed tiles
     /// (in play, those past their rise's agents stage) and the tree pieces the kit draws (`drawn`;
     /// a forest swapping from its placeholder to the kit gains its roosts). Returns false when
     /// nothing changed.
@@ -857,10 +947,19 @@ impl BoidPlan {
         let (_, fish) = self.budget.split(self.water.cells.len());
         self.water.allocate(fish);
         let fish: u32 = self.water.regions.iter().map(|r| r.fish).sum();
-        (self.birds, self.fish) = (self.budget.total - fish, fish);
+        (self.birds, self.fish) = ((self.budget.total - fish) * BIRD_PERCENT / 100, fish);
         let mut region_of = vec![];
+        self.schools.clear();
         for (ri, r) in self.water.regions.iter().enumerate() {
             region_of.extend(std::iter::repeat_n(ri, r.fish as usize));
+            if r.river {
+                for n in river_groups(self.seed, r.cells[0], r.fish) {
+                    let key = self.schools.len() as u32 + 1;
+                    self.schools.extend(std::iter::repeat_n(key, n as usize));
+                }
+            } else {
+                self.schools.extend(std::iter::repeat_n(0, r.fish as usize));
+            }
         }
         for i in 0..self.slots.len() {
             let old = self.slots[i];
@@ -876,9 +975,29 @@ impl BoidPlan {
                         region: None,
                     };
                 }
+            } else if (i as u32) >= self.birds + self.fish {
+                if old.kind != SlotKind::Idle {
+                    s = Slot {
+                        kind: SlotKind::Idle,
+                        generation: old.generation + 1,
+                        spawn: Vec3::ZERO,
+                        roost: None,
+                        assigned_at: 0.0,
+                        region: None,
+                    };
+                }
             } else {
-                let ri = region_of[i - self.birds as usize];
-                let spawn = self.water.spawn(ri, self.seed, i as u32);
+                let f = i - self.birds as usize;
+                let ri = region_of[f];
+                let school = self.schools[f];
+                // A river group's later fish spawn beside its first.
+                let lead = (school as usize).checked_sub(1).filter(|&l| l < f);
+                let spawn = match lead {
+                    Some(l) => self
+                        .water
+                        .beside(self.slots[self.birds as usize + l].spawn, f - l),
+                    None => self.water.spawn(ri, self.seed, i as u32),
+                };
                 let keep = old.kind == SlotKind::Fish
                     && self.water.regions[ri]
                         .cells
@@ -920,29 +1039,48 @@ impl BoidPlan {
         true
     }
 
-    /// Sends free birds to every perch of the group at `cell`.
+    /// Sends free birds to every free perch of the group at `cell`: whole free flocks first (from
+    /// the cursor on), so a flock roosts and launches together, then any free bird.
     fn assign(&mut self, cell: Axial, at: f32, perched: bool) {
         let perches: Vec<Roost> = self
             .roosts
             .iter()
             .filter(|r| r.cell == cell)
+            .filter(|r| !self.slots.iter().any(|s| s.roost == Some((r.cell, r.slot))))
             .copied()
             .collect();
         let n = self.birds as usize;
-        if n == 0 {
+        if n == 0 || perches.is_empty() {
             return;
         }
-        for r in perches {
-            if self.slots.iter().any(|s| s.roost == Some((r.cell, r.slot))) {
-                continue;
+        let free = |s: &Slot| s.kind == SlotKind::Bird && s.roost.is_none();
+        let size = FLOCK_SIZE as usize;
+        let flocks = n.div_ceil(size);
+        let mut birds: Vec<usize> = vec![];
+        for o in 0..flocks {
+            if birds.len() >= perches.len() {
+                break;
             }
-            let Some(k) = (0..n)
-                .map(|o| (self.cursor + o) % n)
-                .find(|&k| self.slots[k].kind == SlotKind::Bird && self.slots[k].roost.is_none())
-            else {
-                return;
-            };
-            self.cursor = (k + 1) % n;
+            let f = (self.cursor / size + o) % flocks;
+            let members = f * size..((f + 1) * size).min(n);
+            if members.clone().all(|k| free(&self.slots[k])) {
+                birds.extend(members);
+            }
+        }
+        for o in 0..n {
+            if birds.len() >= perches.len() {
+                break;
+            }
+            let k = (self.cursor + o) % n;
+            if free(&self.slots[k]) && !birds.contains(&k) {
+                birds.push(k);
+            }
+        }
+        birds.truncate(perches.len());
+        if let Some(&last) = birds.last() {
+            self.cursor = (last + 1) % n;
+        }
+        for (k, r) in birds.into_iter().zip(perches) {
             let s = &mut self.slots[k];
             s.roost = Some((r.cell, r.slot));
             s.assigned_at = at;
@@ -1003,12 +1141,29 @@ impl BoidPlan {
             roosting,
             settling,
             water_tiles: self.water.cells.len() as u32,
-            regions: self
-                .water
-                .regions
-                .iter()
-                .map(|r| (r.cells[0], r.cells.len() as u32, r.fish))
-                .collect(),
+            regions: {
+                let mut first = 0;
+                self.water
+                    .regions
+                    .iter()
+                    .map(|r| {
+                        let schools = &self.schools[first..first + r.fish as usize];
+                        first += r.fish as usize;
+                        let mut sizes: BTreeMap<u32, u32> = BTreeMap::new();
+                        for &k in schools {
+                            *sizes.entry(k).or_default() += 1;
+                        }
+                        RegionCount {
+                            cell: r.cells[0],
+                            tiles: r.cells.len() as u32,
+                            fish: r.fish,
+                            river: r.river,
+                            largest_group: sizes.values().copied().max().unwrap_or(0),
+                            singles: sizes.values().filter(|&&n| n == 1).count() as u32,
+                        }
+                    })
+                    .collect()
+            },
         }
     }
 }
@@ -1037,10 +1192,10 @@ mod tests {
     }
 
     #[test]
-    fn a_forest_gains_its_roosts_when_its_pack_swaps_the_oak_in() {
+    fn an_oak_tile_gains_its_roosts_when_its_pack_swaps_the_oak_in() {
         let c = catalog();
         let mut plan = BoidPlan::play(BoidBudget::HIGH, 2);
-        let world = [tile(0, 0, "meadow", 0), tile(1, 0, "forest", 0)];
+        let world = [tile(0, 0, "meadow", 0), tile(1, 0, "oak", 0)];
         assert!(plan.set_world(&world, &c, &|p| p != "tree_hero_oak", 1.0));
         assert!(plan.roosts.is_empty(), "the oak is still a placeholder");
         assert!(!plan.set_world(&world, &c, &|p| p != "tree_hero_oak", 1.5));
@@ -1061,21 +1216,59 @@ mod tests {
         assert_eq!((m.total, m.fish_max, m.fish_per_water_tile), (500, 150, 12));
         let l = BoidBudget::for_tier(QualityTier::Low);
         assert_eq!((l.total, l.fish_max, l.fish_per_water_tile), (250, 75, 12));
-        assert_eq!(l.split(100), (175, 75), "Low caps fish at 75");
+        assert_eq!(l.split(100), (131, 75), "Low caps fish at 75");
         let b = BoidBudget::HIGH;
+        // A13: birds are 75% of what they were (1,000 with no water, 808 in the boids world).
         assert_eq!(
             b.split(0),
-            (1_000, 0),
-            "no water: the fish budget goes to birds"
+            (750, 0),
+            "no water: three quarters of the fish budget goes to birds"
         );
-        assert_eq!(b.split(1), (988, 12));
-        assert_eq!(b.split(10), (880, 120));
-        assert_eq!(b.split(25), (700, 300), "the default split");
-        assert_eq!(b.split(400), (700, 300), "fish cap at 300");
+        assert_eq!(b.split(1), (741, 12));
+        assert_eq!(b.split(10), (660, 120));
+        assert_eq!(
+            b.split(16),
+            (606, 192),
+            "the boids checkpoint's 16 water tiles"
+        );
+        assert_eq!(b.split(25), (525, 300), "the default split");
+        assert_eq!(b.split(400), (525, 300), "fish cap at 300");
         for n in 0..60 {
             let (birds, fish) = b.split(n);
-            assert_eq!(birds + fish, b.total);
+            assert_eq!(birds, (b.total - fish) * 3 / 4);
+            assert!(birds + fish <= b.total);
         }
+    }
+
+    /// Birds spawn by flock: a flock's members start within its spread, and two flocks apart.
+    #[test]
+    fn flocks_spawn_together() {
+        let mut plan = BoidPlan::play(BoidBudget::HIGH, 9);
+        plan.set_world_all(
+            &[tile(0, 0, "meadow", 0), tile(3, 0, "meadow", 0)],
+            &catalog(),
+            0.0,
+        );
+        let birds: Vec<Vec3> = plan.slots[..plan.birds as usize]
+            .iter()
+            .map(|s| s.spawn)
+            .collect();
+        let size = FLOCK_SIZE as usize;
+        let mut apart = 0;
+        for (f, members) in birds.chunks(size).enumerate() {
+            let c = members.iter().copied().sum::<Vec3>() / members.len() as f32;
+            for p in members {
+                assert!(p.xz().distance(c.xz()) <= 2.0 * FLOCK_SPREAD, "flock {f}");
+                assert!((SKY_LOW..=SKY_HIGH).contains(&p.y), "flock {f} at {p}");
+            }
+            if let Some(next) = birds.get((f + 1) * size) {
+                apart += usize::from(next.xz().distance(c.xz()) > 2.0 * FLOCK_SPREAD);
+            }
+        }
+        assert!(
+            apart > birds.len() / size / 2,
+            "flocks spread over the sky: {apart}"
+        );
     }
 
     #[test]
@@ -1107,8 +1300,8 @@ mod tests {
     #[test]
     fn roosts_come_from_bird_rules_and_hero_canopies() {
         let c = catalog();
-        let forest = c.get("forest").unwrap();
-        let rule = forest
+        let oak = c.get("oak").unwrap();
+        let rule = oak
             .agents
             .iter()
             .find(|a| a.agent == AgentKind::Bird)
@@ -1117,7 +1310,7 @@ mod tests {
         assert_eq!(canopy_perches("tree_hero_oak").len(), 12);
         let tiles = [
             tile(0, 0, "meadow", 0),
-            tile(1, 0, "forest", 2),
+            tile(1, 0, "oak", 2),
             tile(0, 1, "road_straight", 0),
         ];
         let r = roosts(&tiles, &c, &|_| true);
@@ -1129,7 +1322,7 @@ mod tests {
             assert!(x.pos.y > 5.0 && x.pos.y < 12.0, "{x:?} in the canopy");
         }
         // The roosts turn with the tile.
-        let r0 = roosts(&[tile(1, 0, "forest", 0)], &c, &|_| true);
+        let r0 = roosts(&[tile(1, 0, "oak", 0)], &c, &|_| true);
         assert!(r0.iter().zip(&r).any(|(a, b)| a.pos.distance(b.pos) > 0.5));
         assert!(
             roosts(
@@ -1145,11 +1338,62 @@ mod tests {
         );
     }
 
-    /// Scattered spruces share the forest's bird cap with the oak: half each, spire tops first,
-    /// scaled and turned with each spruce and the tile; with no oak drawn they take the whole cap.
+    /// The pine forest has no Bird rule since the split (U3), so it never roosts: a world without
+    /// an oak keeps every bird in the air.
+    #[test]
+    fn pine_forests_have_no_roosts_and_birds_stay_airborne() {
+        let c = catalog();
+        let cell = Axial::new(1, 0);
+        let trees: Vec<TreeInstance> = (0..20)
+            .map(|k| TreeInstance {
+                piece: "tree_forest".into(),
+                at: Vec3::new(k as f32 - 10.0, 0.0, 4.0),
+                yaw: Quat::IDENTITY,
+                scale: 1.0,
+            })
+            .collect();
+        let scatter = BTreeMap::from([(cell, trees)]);
+        let world = [tile(0, 0, "meadow", 0), tile(1, 0, "forest", 0)];
+        assert!(roosts_with(&world, &c, &|_| true, &scatter).is_empty());
+        let mut plan = BoidPlan::play(BoidBudget::HIGH, 4);
+        plan.set_scatter(1, || scatter.clone());
+        assert!(plan.set_world_all(&world, &c, 1.0));
+        plan.tick(1.0 + APPROACH);
+        let n = plan.counts(1.0 + APPROACH);
+        assert_eq!((n.roosts, n.roosting, n.settling), (0, 0, 0));
+        assert!(plan.slots.iter().all(|s| s.roost.is_none()));
+    }
+
+    /// The pre-split forest (a hero oak among the spruces, with a Bird rule), as a catalog of its
+    /// own: scattered trees on a roosting tile still share its cap with the hero.
+    fn mixed_forest_catalog() -> TileCatalog {
+        let mut tiles: Vec<(&str, String)> = hex_core::BUILTIN_TILES
+            .iter()
+            .map(|(id, text)| (*id, (*text).to_owned()))
+            .collect();
+        let forest = tiles.iter_mut().find(|(id, _)| *id == "forest").unwrap();
+        forest.1 = forest.1.replace(
+            "(piece: \"rock_small\", density: 0.2),\n        ],",
+            "(piece: \"rock_small\", density: 0.2),\n        ],\n        \
+             hero: [(piece: \"tree_hero_oak\", at: (0.0, 0.0))],",
+        );
+        forest.1 = forest.1.replace(
+            "    ),\n)",
+            "    ),\n    agents: [(agent: Bird, max: 12)],\n)",
+        );
+        let refs: Vec<(&str, &str)> = tiles.iter().map(|(id, t)| (*id, t.as_str())).collect();
+        let c = TileCatalog::from_ron(hex_core::SOCKETS_RON, &refs).unwrap();
+        assert_eq!(c.get("forest").unwrap().props.hero.len(), 1);
+        assert_eq!(c.get("forest").unwrap().agents.len(), 1);
+        c
+    }
+
+    /// Scattered spruces share a roosting tile's bird cap with its oak: half each, spire tops
+    /// first, scaled and turned with each spruce and the tile; with no oak drawn they take the
+    /// whole cap.
     #[test]
     fn scattered_spruces_roost_within_the_bird_max() {
-        let c = catalog();
+        let c = mixed_forest_catalog();
         let cell = Axial::new(1, 0);
         let spruce = |x: f32, z: f32, scale: f32| TreeInstance {
             piece: "tree_forest".into(),
@@ -1237,7 +1481,7 @@ mod tests {
     }
 
     #[test]
-    fn placing_and_bulldozing_a_forest_adds_and_removes_roosts() {
+    fn placing_and_bulldozing_an_oak_adds_and_removes_roosts() {
         let c = catalog();
         let mut plan = BoidPlan::play(BoidBudget::HIGH, 7);
         assert!(plan.set_world_all(&[tile(0, 0, "meadow", 0)], &c, 0.0));
@@ -1247,12 +1491,20 @@ mod tests {
             "unchanged world"
         );
         // Place: 12 roosts, birds fly in and are roosting after the approach.
-        let world = [tile(0, 0, "meadow", 0), tile(1, 0, "forest", 0)];
+        let world = [tile(0, 0, "meadow", 0), tile(1, 0, "oak", 0)];
         assert!(plan.set_world_all(&world, &c, 1.0));
         assert_eq!(plan.roosts.len(), 12);
         plan.tick(1.0);
         let n = plan.counts(1.0);
         assert_eq!((n.roosting, n.settling), (0, 12));
+        let flocks: BTreeSet<usize> = plan
+            .slots
+            .iter()
+            .enumerate()
+            .filter(|(_, s)| s.roost.is_some())
+            .map(|(k, _)| k / FLOCK_SIZE as usize)
+            .collect();
+        assert_eq!(flocks.len(), 1, "one whole flock takes the oak: {flocks:?}");
         let n = plan.counts(1.0 + APPROACH);
         assert_eq!((n.roosting, n.settling), (12, 0));
         // The wave launches them, and the next cycle takes birds again.
@@ -1271,12 +1523,12 @@ mod tests {
     }
 
     #[test]
-    fn a_world_opening_with_a_forest_opens_with_perched_birds() {
+    fn a_world_opening_with_an_oak_opens_with_perched_birds() {
         let mut plan = BoidPlan::play(BoidBudget::HIGH, 3);
         // Before play's first rebuild no tile is past its rise.
         plan.set_world_all(&[], &catalog(), 0.0);
         assert!(plan.roosts.is_empty());
-        plan.set_world_all(&[tile(0, 0, "forest", 0)], &catalog(), 0.5);
+        plan.set_world_all(&[tile(0, 0, "oak", 0)], &catalog(), 0.5);
         plan.tick(0.5);
         assert_eq!(plan.counts(0.5).roosting, 12);
         let perched: Vec<&Slot> = plan.slots.iter().filter(|s| s.roost.is_some()).collect();
@@ -1319,14 +1571,65 @@ mod tests {
             .find(|r| r.cells.contains(&Axial::new(1, 0)))
             .unwrap();
         assert!(ocean.fish >= 36, "{ocean:?}");
-        // The play plan: 7 water tiles, 84 fish, 916 birds.
+        // The play plan: 7 water tiles, 84 fish, 687 birds (75% of the 916 slots fish leave), and
+        // the last 229 slots idle.
         let mut plan = BoidPlan::play(BoidBudget::HIGH, 1);
         plan.set_world_all(&water_world(), &c, 0.0);
-        assert_eq!((plan.birds, plan.fish), (916, 84));
+        assert_eq!((plan.birds, plan.fish), (687, 84));
         let n = plan.counts(0.0);
-        assert_eq!(n.regions.iter().map(|r| r.2).sum::<u32>(), 84);
-        assert!(plan.slots[..916].iter().all(|s| s.kind == SlotKind::Bird));
-        assert!(plan.slots[916..].iter().all(|s| s.kind == SlotKind::Fish));
+        assert_eq!(n.regions.iter().map(|r| r.fish).sum::<u32>(), 84);
+        assert!(plan.slots[..687].iter().all(|s| s.kind == SlotKind::Bird));
+        assert!(
+            plan.slots[687..771]
+                .iter()
+                .all(|s| s.kind == SlotKind::Fish)
+        );
+        assert!(plan.slots[771..].iter().all(|s| s.kind == SlotKind::Idle));
+        // Drying the world up turns the fish into birds, and idles the slots past them.
+        plan.set_world_all(&[tile(0, 0, "meadow", 0)], &c, 1.0);
+        assert_eq!((plan.birds, plan.fish), (750, 0));
+        assert!(plan.slots[..750].iter().all(|s| s.kind == SlotKind::Bird));
+        assert!(plan.slots[750..].iter().all(|s| s.kind == SlotKind::Idle));
+    }
+
+    /// River fish swim alone or in groups of 2 to 5, most of them alone, each group spawning
+    /// together; sea fish keep one school per region (owner, 2026-10-14).
+    #[test]
+    fn river_fish_swim_alone_or_in_small_groups() {
+        let c = catalog();
+        for seed in 0..32u64 {
+            let sizes = river_groups(seed, Axial::new(-4, 0), 48);
+            assert_eq!(sizes.iter().sum::<u32>(), 48);
+            assert!(
+                sizes.iter().all(|&n| (1..=RIVER_GROUP_MAX).contains(&n)),
+                "{sizes:?}"
+            );
+            let alone = sizes.iter().filter(|&&n| n == 1).count();
+            assert!(alone * 2 > 48, "seed {seed}: {alone} of 48 alone");
+            assert!(
+                sizes.iter().any(|&n| n > 1),
+                "seed {seed}: some small groups"
+            );
+            assert_eq!(sizes, river_groups(seed, Axial::new(-4, 0), 48));
+        }
+        let mut plan = BoidPlan::play(BoidBudget::HIGH, 1);
+        plan.set_world_all(&water_world(), &c, 0.0);
+        let counts = plan.counts(0.0);
+        let river = counts.regions.iter().find(|r| r.river).unwrap();
+        let sea = counts.regions.iter().find(|r| !r.river).unwrap();
+        assert!(river.largest_group <= RIVER_GROUP_MAX && river.singles * 2 > river.fish);
+        assert_eq!(sea.largest_group, sea.fish, "the sea keeps one school");
+        assert_eq!(sea.singles, 0);
+        let b = plan.birds as usize;
+        for (f, &k) in plan.schools.iter().enumerate() {
+            if k > 0 && (k as usize - 1) < f {
+                let lead = plan.slots[b + k as usize - 1].spawn;
+                assert!(
+                    plan.slots[b + f].spawn.distance(lead) < 1.0,
+                    "fish {f} beside its group"
+                );
+            }
+        }
     }
 
     #[test]

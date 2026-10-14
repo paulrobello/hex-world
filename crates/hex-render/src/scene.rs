@@ -659,7 +659,9 @@ pub fn setup(
     });
 
     let tier = config.tier;
-    commands.insert_resource(crate::tilt_shift::settings_for(&config, kit, tier));
+    let tilt = crate::tilt_shift::settings_for(&config, kit, tier);
+    commands.insert_resource(tilt);
+    commands.insert_resource(crate::tilt_shift::TiltTierDefault(tilt));
     let mut cam = commands.spawn((Camera3d::default(), camera, Msaa::Off, SceneEntity));
     if water {
         crate::water::insert_camera(&mut cam, tier);

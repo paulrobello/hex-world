@@ -19,7 +19,7 @@ use crate::world::{Action, HISTORY_DEPTH, PlacedTile, World};
 pub const SAVE_MAGIC: [u8; 8] = *b"HEXWORLD";
 
 /// The format version [`SaveData::encode`] writes. [`SaveData::decode`] reads `1..=` this.
-pub const SAVE_FORMAT_VERSION: u16 = 1;
+pub const SAVE_FORMAT_VERSION: u16 = 2;
 
 /// Largest file [`SaveData::decode`] looks at.
 pub const MAX_SAVE_BYTES: usize = 16 * 1024 * 1024;
@@ -73,6 +73,9 @@ pub struct AudioVolumes {
 pub struct GameSettings {
     pub quality: QualitySetting,
     pub tilt_shift: bool,
+    /// The player toggled tilt-shift themselves, so a quality-tier change keeps their toggle and
+    /// strength. While false the tier drives tilt-shift (format v2; v1 files load as false).
+    pub tilt_shift_chosen: bool,
     pub tilt_shift_strength: f32,
     pub volumes: AudioVolumes,
 }
@@ -273,8 +276,8 @@ impl std::error::Error for SaveError {}
 impl SaveData {
     /// The `.hexworld` bytes at [`SAVE_FORMAT_VERSION`]. Autosave slots store the same bytes.
     pub fn encode(&self) -> Vec<u8> {
-        let payload = postcard::to_allocvec(&v1::Save::from_runtime(self))
-            .expect("postcard serializes the v1 wire structs");
+        let payload = postcard::to_allocvec(&v2::Save::from_runtime(self))
+            .expect("postcard serializes the v2 wire structs");
         envelope(SAVE_FORMAT_VERSION, &payload)
     }
 
@@ -354,7 +357,8 @@ fn open_envelope(bytes: &[u8]) -> Result<(u16, &[u8]), SaveError> {
 /// A new version `N` adds an arm `N => …` and turns the `N - 1` arm into an upgrade step.
 pub(crate) fn migrate(version: u16, payload: &[u8]) -> Result<SaveData, SaveError> {
     match version {
-        1 => decode_exact::<v1::Save>(payload)?.into_runtime(),
+        1 => v2::Save::from(decode_exact::<v1::Save>(payload)?).into_runtime(),
+        2 => decode_exact::<v2::Save>(payload)?.into_runtime(),
         v => Err(SaveError::UnsupportedVersion(v)),
     }
 }
@@ -603,7 +607,7 @@ mod v1 {
             }
         }
 
-        fn into_runtime(self) -> Result<(Axial, PlacedTile), WorldIssue> {
+        pub(super) fn into_runtime(self) -> Result<(Axial, PlacedTile), WorldIssue> {
             let cell = Axial::new(self.q, self.r);
             if self.level > MAX_LEVEL {
                 return Err(WorldIssue::LevelOutOfRange {
@@ -623,7 +627,7 @@ mod v1 {
     }
 
     impl HistoryAction {
-        fn new(action: &Action) -> Self {
+        pub(super) fn new(action: &Action) -> Self {
             match action {
                 Action::Place { cell, tile } => Self {
                     kind: ActionKind::Place,
@@ -636,7 +640,7 @@ mod v1 {
             }
         }
 
-        fn into_runtime(self) -> Result<Action, WorldIssue> {
+        pub(super) fn into_runtime(self) -> Result<Action, WorldIssue> {
             let (cell, tile) = self.tile.into_runtime()?;
             Ok(match self.kind {
                 ActionKind::Place => Action::Place { cell, tile },
@@ -646,7 +650,7 @@ mod v1 {
     }
 
     /// Converts one history stack; issues use [`HistoryIssue`] indices (0 = the next applied).
-    fn history_into_runtime(
+    pub(super) fn history_into_runtime(
         actions: Vec<HistoryAction>,
         stack: HistoryStack,
     ) -> Result<Vec<Action>, SaveError> {
@@ -664,6 +668,68 @@ mod v1 {
                 })
             })
             .collect()
+    }
+}
+
+/// Format version 2: v1 plus `Settings::tilt_shift_chosen`, the player's own tilt-shift toggle
+/// (owner, 2026-10-14). Tiles, history and camera keep v1's wire types. Frozen once a v2 file exists.
+mod v2 {
+    use super::v1::{Camera, HistoryAction, Quality, Tile, history_into_runtime};
+    use super::*;
+
+    #[derive(Debug, PartialEq, Serialize, Deserialize)]
+    pub(super) struct Save {
+        pub world_seed: u64,
+        /// Sorted by `(q, r)`.
+        pub tiles: Vec<Tile>,
+        /// Oldest first.
+        pub undo: Vec<HistoryAction>,
+        /// The next redo last.
+        pub redo: Vec<HistoryAction>,
+        /// Sorted.
+        pub unlocks: Vec<String>,
+        pub camera: Camera,
+        pub settings: Settings,
+    }
+
+    #[derive(Debug, PartialEq, Serialize, Deserialize)]
+    pub(super) struct Settings {
+        pub quality: Quality,
+        pub tilt_shift: bool,
+        pub tilt_shift_chosen: bool,
+        pub tilt_shift_strength: f32,
+        pub volume_master: f32,
+        pub volume_music: f32,
+        pub volume_sfx: f32,
+        pub volume_ambience: f32,
+        pub volume_ui: f32,
+    }
+
+    /// v1 to v2: a v1 file cannot say whether its tilt-shift was the player's toggle or the
+    /// tier's default, so it loads as not chosen and the tier drives tilt-shift.
+    impl From<v1::Save> for Save {
+        fn from(v: v1::Save) -> Self {
+            let s = v.settings;
+            Self {
+                world_seed: v.world_seed,
+                tiles: v.tiles,
+                undo: v.undo,
+                redo: v.redo,
+                unlocks: v.unlocks,
+                camera: v.camera,
+                settings: Settings {
+                    quality: s.quality,
+                    tilt_shift: s.tilt_shift,
+                    tilt_shift_chosen: false,
+                    tilt_shift_strength: s.tilt_shift_strength,
+                    volume_master: s.volume_master,
+                    volume_music: s.volume_music,
+                    volume_sfx: s.volume_sfx,
+                    volume_ambience: s.volume_ambience,
+                    volume_ui: s.volume_ui,
+                },
+            }
+        }
     }
 
     impl Save {
@@ -697,6 +763,7 @@ mod v1 {
                         QualitySetting::Ultra => Quality::Ultra,
                     },
                     tilt_shift: s.tilt_shift,
+                    tilt_shift_chosen: s.tilt_shift_chosen,
                     tilt_shift_strength: s.tilt_shift_strength,
                     volume_master: s.volumes.master,
                     volume_music: s.volumes.music,
@@ -739,6 +806,7 @@ mod v1 {
                         Quality::Ultra => QualitySetting::Ultra,
                     },
                     tilt_shift: s.tilt_shift,
+                    tilt_shift_chosen: s.tilt_shift_chosen,
                     tilt_shift_strength: s.tilt_shift_strength,
                     volumes: AudioVolumes {
                         master: s.volume_master,
@@ -777,6 +845,7 @@ mod tests {
         GameSettings {
             quality: QualitySetting::High,
             tilt_shift: true,
+            tilt_shift_chosen: true,
             tilt_shift_strength: 0.6,
             volumes: AudioVolumes {
                 master: 0.8,
@@ -804,12 +873,12 @@ mod tests {
         }
     }
 
-    fn wire(save: &SaveData) -> v1::Save {
-        v1::Save::from_runtime(save)
+    fn wire(save: &SaveData) -> v2::Save {
+        v2::Save::from_runtime(save)
     }
 
-    fn file(wire: &v1::Save) -> Vec<u8> {
-        envelope(1, &postcard::to_allocvec(wire).unwrap())
+    fn file(wire: &v2::Save) -> Vec<u8> {
+        envelope(SAVE_FORMAT_VERSION, &postcard::to_allocvec(wire).unwrap())
     }
 
     fn decode(bytes: &[u8]) -> Result<SaveData, SaveError> {
@@ -822,7 +891,7 @@ mod tests {
         let save = sample(&c);
         let bytes = save.encode();
         assert_eq!(&bytes[..8], b"HEXWORLD");
-        assert_eq!(&bytes[8..10], &1u16.to_le_bytes());
+        assert_eq!(&bytes[8..10], &SAVE_FORMAT_VERSION.to_le_bytes());
         let back = SaveData::decode(&bytes, &c).unwrap();
         assert_eq!(back, save);
         assert_eq!(back.encode(), bytes, "encoding is deterministic");
@@ -982,7 +1051,7 @@ mod tests {
         let mut payload = postcard::to_allocvec(&wire(&sample(&catalog()))).unwrap();
         payload.push(0);
         assert_eq!(
-            decode(&envelope(1, &payload)),
+            decode(&envelope(SAVE_FORMAT_VERSION, &payload)),
             Err(SaveError::Decode("1 unread payload bytes".into()))
         );
     }
@@ -1016,14 +1085,14 @@ mod tests {
         );
     }
 
-    fn tile_at(w: &mut v1::Save, q: i32, r: i32) -> &mut v1::Tile {
+    fn tile_at(w: &mut v2::Save, q: i32, r: i32) -> &mut v1::Tile {
         w.tiles.iter_mut().find(|t| (t.q, t.r) == (q, r)).unwrap()
     }
 
     #[test]
     fn worlds_that_break_the_rules_are_rejected() {
         let c = catalog();
-        let invalid = |w: &v1::Save| match decode(&file(w)) {
+        let invalid = |w: &v2::Save| match decode(&file(w)) {
             Err(SaveError::InvalidWorld(issue)) => issue,
             other => panic!("expected InvalidWorld, got {other:?}"),
         };
@@ -1165,7 +1234,7 @@ mod tests {
     #[test]
     fn histories_that_cannot_replay_are_rejected() {
         let c = catalog();
-        let invalid = |w: &v1::Save| match decode(&file(w)) {
+        let invalid = |w: &v2::Save| match decode(&file(w)) {
             Err(SaveError::InvalidHistory(issue)) => issue,
             other => panic!("expected InvalidHistory, got {other:?}"),
         };
@@ -1361,7 +1430,7 @@ mod tests {
         let mut random = Tally::default();
         for _ in 0..3000 {
             let len = rng.below(payload.len() * 2);
-            random.record(&envelope(1, &rng.bytes(len)), &c);
+            random.record(&envelope(SAVE_FORMAT_VERSION, &rng.bytes(len)), &c);
         }
         assert!(random.decode > 0);
         let mut mutated_tally = Tally::default();
@@ -1374,7 +1443,7 @@ mod tests {
             if rng.below(4) == 0 {
                 mutated.truncate(rng.below(mutated.len()));
             }
-            mutated_tally.record(&envelope(1, &mutated), &c);
+            mutated_tally.record(&envelope(SAVE_FORMAT_VERSION, &mutated), &c);
         }
         // The corpus reaches every stage: postcard, the rule checks, and acceptance.
         let t = &mutated_tally;

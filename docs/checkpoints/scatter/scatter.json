@@ -4,10 +4,14 @@
 
   {"cmd": "select_tile", "id": "forest"},
   {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "select_tile", "id": "oak"},
   {"cmd": "place", "q": 2, "r": 0},
+  {"cmd": "select_tile", "id": "forest"},
   {"cmd": "place", "q": 1, "r": -1},
   {"cmd": "place", "q": 2, "r": -1},
+  {"cmd": "select_tile", "id": "oak"},
   {"cmd": "place", "q": 3, "r": -1},
+  {"cmd": "select_tile", "id": "forest"},
   {"cmd": "place", "q": 3, "r": 0},
   {"cmd": "place", "q": 0, "r": -1},
   {"cmd": "select_tile", "id": "meadow"},
@@ -49,6 +53,18 @@
   {"cmd": "camera", "pos": [54, 36, 52], "look_at": [69.3, 0, 24]},
   {"cmd": "wait", "frames": 30},
   {"cmd": "screenshot", "name": "scatter-05-forest-closeup"},
+
+  {"cmd": "camera", "pos": [55.4, 30, 34], "look_at": [55.4, 2, 0]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "scatter-12-oak"},
+
+  {"cmd": "camera", "pos": [41.6, 44, 26], "look_at": [41.6, 0, -8]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "scatter-13-junction"},
+
+  {"cmd": "camera", "pos": [14, 64, 76], "look_at": [14, 0, 34]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "scatter-14-meadow-drifts"},
 
   {"cmd": "camera", "pos": [20, 160, 150], "look_at": [20, 0, -5]},
   {"cmd": "toggle", "what": "photo"},

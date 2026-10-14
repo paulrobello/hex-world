@@ -510,7 +510,7 @@
       {
         "name": "narrow-desktop",
         "value": "max-width: 1400px",
-        "purpose": "Key caps leave the bar for tooltips, tools pad 9 px, the Tiles sheet narrows to 340 px, and socket-code cells narrow to 7 px."
+        "purpose": "Key caps leave the bar for tooltips, tools pad 9 px, the Tiles sheet narrows to 340 px, and row socket hexes narrow to 28 px."
       }
     ],
     "focus": {
@@ -540,12 +540,12 @@
       "css": ".ds-key{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:center;width:340px;padding:12px;background:rgb(25 52 76);border-radius:4px;font-family:Manrope,sans-serif;color:rgb(238 243 246)}.ds-key svg{width:64px;height:64px}.ds-key .b{fill:none;stroke:rgb(214 228 240 / .55);stroke-width:2.5;stroke-dasharray:5 5}.ds-key line{stroke-width:9;stroke-linecap:round}.ds-key p{margin:0 0 4px;font-weight:800;font-size:.875rem}.ds-key ul{list-style:none;margin:0;padding:0;display:grid;gap:3px;font-size:.8125rem;color:rgb(176 197 214)}.ds-key i{display:inline-block;width:14px;height:4px;margin-right:7px;border-radius:2px;vertical-align:middle}"
     },
     {
-      "name": "Tile Row with Socket Code",
+      "name": "Tile Row with Socket Hex",
       "kind": "custom",
       "refersTo": "row",
-      "description": "Signature: a tile's legend entry, with six socket cells in edge order. A selected row gets a 1.5 px magenta outline.",
-      "html": "<button class=\"ds-row\" aria-pressed=\"true\"><span class=\"ds-glyph\"></span><span class=\"ds-text\"><b>River straight</b><small>2 rotations fit</small></span><span class=\"ds-code\"><i style=\"background:rgb(74 163 223)\"></i><i style=\"background:rgb(156 196 100)\"></i><i style=\"background:rgb(156 196 100)\"></i><i style=\"background:rgb(74 163 223)\"></i><i style=\"background:rgb(156 196 100)\"></i><i style=\"background:rgb(156 196 100)\"></i></span></button>",
-      "css": ".ds-row{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;width:340px;padding:6px 10px 6px 6px;border:0;border-radius:4px;background:transparent;color:rgb(238 243 246);font-family:Manrope,sans-serif;text-align:left;cursor:pointer;transition:background 120ms cubic-bezier(.22,.9,.3,1)}.ds-row:hover{background:rgb(25 52 76)}.ds-row[aria-pressed=true]{background:rgb(25 52 76);box-shadow:inset 0 0 0 1.5px rgb(198 46 104)}.ds-row:focus-visible{outline:2px solid rgb(238 243 246);outline-offset:2px}.ds-glyph{width:48px;height:48px;background:rgb(156 196 100);clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)}.ds-text{display:grid}.ds-text b{font-weight:700;font-size:1rem}.ds-text small{font-size:.8125rem;color:rgb(176 197 214)}.ds-code{display:grid;grid-template-columns:repeat(6,9px);gap:2px}.ds-code i{height:14px;border-radius:1px}"
+      "description": "Signature: a tile's legend entry, with a socket hex in the slot key's geometry, each edge in its socket colour, turned to the rotation the row's picture shows. A selected row gets a 1.5 px magenta outline.",
+      "html": "<button class=\"ds-row\" aria-pressed=\"true\"><span class=\"ds-glyph\"></span><span class=\"ds-text\"><b>River straight</b><small>2 rotations fit</small></span><svg class=\"ds-hex\" viewBox=\"0 0 100 100\"><polygon points=\"79.4,33 79.4,67 50,84 20.6,67 20.6,33 50,16\"/><line x1=\"79.4\" y1=\"33\" x2=\"79.4\" y2=\"67\" style=\"stroke:rgb(74 163 223)\"/><line x1=\"79.4\" y1=\"67\" x2=\"50\" y2=\"84\" style=\"stroke:rgb(156 196 100)\"/><line x1=\"50\" y1=\"84\" x2=\"20.6\" y2=\"67\" style=\"stroke:rgb(156 196 100)\"/><line x1=\"20.6\" y1=\"67\" x2=\"20.6\" y2=\"33\" style=\"stroke:rgb(74 163 223)\"/><line x1=\"20.6\" y1=\"33\" x2=\"50\" y2=\"16\" style=\"stroke:rgb(156 196 100)\"/><line x1=\"50\" y1=\"16\" x2=\"79.4\" y2=\"33\" style=\"stroke:rgb(156 196 100)\"/></svg></button>",
+      "css": ".ds-row{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;width:340px;padding:6px 10px 6px 6px;border:0;border-radius:4px;background:transparent;color:rgb(238 243 246);font-family:Manrope,sans-serif;text-align:left;cursor:pointer;transition:background 120ms cubic-bezier(.22,.9,.3,1)}.ds-row:hover{background:rgb(25 52 76)}.ds-row[aria-pressed=true]{background:rgb(25 52 76);box-shadow:inset 0 0 0 1.5px rgb(198 46 104)}.ds-row:focus-visible{outline:2px solid rgb(238 243 246);outline-offset:2px}.ds-glyph{width:48px;height:48px;background:rgb(156 196 100);clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)}.ds-text{display:grid}.ds-text b{font-weight:700;font-size:1rem}.ds-text small{font-size:.8125rem;color:rgb(176 197 214)}.ds-hex{width:32px;height:32px}.ds-hex polygon{fill:none;stroke:rgb(214 228 240 / .55);stroke-width:2.5;stroke-dasharray:5 5}.ds-hex line{stroke-width:9;stroke-linecap:round}"
     },
     {
       "name": "Button (default, ink, bad, quiet)",
@@ -582,7 +582,7 @@
     {
       "name": "Worlds Mix Strip",
       "kind": "custom",
-      "refersTo": "socket-code-cell",
+      "refersTo": "socket-hex",
       "description": "Signature recurrence: a world keyed by its socket mix, with segments flexed by tile count.",
       "html": "<div class=\"ds-mix\"><i style=\"flex:6;background:rgb(156 196 100)\"></i><i style=\"flex:3;background:rgb(74 163 223)\"></i><i style=\"flex:2;background:rgb(227 194 122)\"></i><i style=\"flex:3;background:rgb(45 111 176)\"></i></div>",
       "css": ".ds-mix{display:flex;width:120px;height:6px;gap:1px;border-radius:2px;overflow:hidden}.ds-mix i{display:block;height:100%}"
@@ -622,7 +622,7 @@
       },
       {
         "name": "The Narrow-Desktop Rule (1400 px)",
-        "body": "At 1400 px wide or less, key caps leave the bar and live only in tooltips, tools tighten to 9 px of side padding, the Tiles sheet narrows to 340 px, and socket-code cells narrow to 7 px. The bar and sheet never meet, and the ghost area stays clear (shot `s12-narrow-1280x720`).",
+        "body": "At 1400 px wide or less, key caps leave the bar and live only in tooltips, tools tighten to 9 px of side padding, the Tiles sheet narrows to 340 px, and row socket hexes narrow to 28 px. The bar and sheet never meet, and the ghost area stays clear (shot `s12-narrow-1280x720`).",
         "section": "layout"
       },
       {

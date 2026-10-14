@@ -65,6 +65,8 @@ fn small_world_v1(c: &TileCatalog) -> SaveData {
         settings: GameSettings {
             quality: QualitySetting::High,
             tilt_shift: true,
+            // v1 has no such field: a v1 file loads with tilt-shift driven by the tier.
+            tilt_shift_chosen: false,
             tilt_shift_strength: 0.6,
             volumes: AudioVolumes {
                 master: 0.8,
@@ -127,10 +129,19 @@ fn v1_small_world_restores_tiles_history_camera_and_settings() {
         ("road_straight", 1, cell_seed(2026, EAST))
     );
     assert_eq!(w.tile(WEST).unwrap().rotation, 3);
+    // Saved before the pine and oak split (U3): its forest loads as the pine forest, no oak.
+    assert_eq!(w.tile(WEST).unwrap().def, "forest");
+    let pine = c.get("forest").unwrap();
+    assert!(pine.props.hero.is_empty() && pine.agents.is_empty());
     assert!(save.unlocks.is_empty());
     assert_eq!(save.camera.distance, 180.0);
     assert_eq!(save.settings.quality, QualitySetting::High);
     assert_eq!(save.settings.volumes.ui, 0.9);
+    assert!(save.settings.tilt_shift, "the v1 toggle value is kept");
+    assert!(
+        !save.settings.tilt_shift_chosen,
+        "a v1 file cannot say the player chose tilt-shift, so the tier drives it"
+    );
 
     // Redo replays the beach, then the bulldoze; undo walks back to the start meadow.
     assert!(w.can_undo() && w.can_redo());
@@ -146,6 +157,40 @@ fn v1_small_world_restores_tiles_history_camera_and_settings() {
     if SAVE_FORMAT_VERSION == 1 {
         assert_eq!(save, small_world_v1(&c));
     }
+}
+
+/// The save in `v2-tilt-chosen.hexworld`: the v1 small world with the player's own tilt-shift
+/// toggle (off) recorded.
+fn tilt_chosen_v2(c: &TileCatalog) -> SaveData {
+    let mut save = small_world_v1(c);
+    save.settings.tilt_shift = false;
+    save.settings.tilt_shift_chosen = true;
+    save
+}
+
+#[test]
+fn v2_tilt_chosen_keeps_the_players_toggle() {
+    let c = catalog();
+    let bytes = std::fs::read(fixture_dir().join("v2-tilt-chosen.hexworld")).unwrap();
+    let save = SaveData::decode(&bytes, &c).unwrap();
+    assert!(save.settings.tilt_shift_chosen);
+    assert!(!save.settings.tilt_shift);
+    if SAVE_FORMAT_VERSION == 2 {
+        assert_eq!(save, tilt_chosen_v2(&c));
+    }
+}
+
+#[test]
+#[ignore = "writes the v2 fixture once; fixtures are frozen"]
+fn write_v2_fixture() {
+    let path = fixture_dir().join("v2-tilt-chosen.hexworld");
+    assert!(
+        !path.exists(),
+        "{} exists and is frozen; add a new version instead",
+        path.display()
+    );
+    assert_eq!(SAVE_FORMAT_VERSION, 2, "this writer only produces v2");
+    std::fs::write(&path, tilt_chosen_v2(&catalog()).encode()).unwrap();
 }
 
 #[test]

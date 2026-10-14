@@ -439,6 +439,12 @@ impl PlayRises {
         self.cells.insert(cell, None);
     }
 
+    /// A placed tile that is not drawn yet (hidden until its pack arrives).
+    pub(crate) fn undrawn(&mut self, cell: Axial) {
+        self.cells.remove(&cell);
+        self.settled.remove(&cell);
+    }
+
     /// The tile at `cell` left the view: its root and water entities sink, then despawn.
     pub(crate) fn remove(
         &mut self,

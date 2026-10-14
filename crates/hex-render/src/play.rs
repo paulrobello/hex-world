@@ -22,6 +22,7 @@ use hex_core::{
 };
 
 pub mod affordances;
+pub mod ghost;
 pub mod packs;
 pub mod rise;
 pub mod scatter;
@@ -62,6 +63,8 @@ pub struct PlayGhost {
     pub edges: [EdgeStatus; 6],
     /// False when the tile does not fit here at this rotation.
     pub valid: bool,
+    /// The ghost sits on a pinned slot (U4) rather than under the pointer.
+    pub pinned: bool,
 }
 
 /// What the play scenario draws, written by `hex-app` when the game changes.
@@ -70,6 +73,8 @@ pub struct PlayView {
     pub tiles: Vec<PlayTile>,
     pub frontier: Vec<Axial>,
     pub ghost: Option<PlayGhost>,
+    /// A free slot under the pointer while another slot is pinned: a click there pins it.
+    pub pointer_slot: Option<Axial>,
     /// Bulldoze tool: the hovered tile and whether removing it is allowed.
     pub bulldoze: Option<(Axial, bool)>,
     /// The bulldoze tool is active (the slot ring hides).
@@ -125,12 +130,20 @@ pub struct PlaySpawned {
     epoch: u64,
     /// Pieces built since the last sync: tiles drawing them swap to the kit look in place.
     refresh: HashSet<String>,
+    /// Placed tiles hidden until every pack they draw from arrives (owner decision A10), with
+    /// whether they rise on arrival (a placement) or appear at rest (a rebuild or loaded world).
+    hidden: HashMap<Axial, bool>,
 }
+
+/// Placed tiles hidden until their pack arrives, sorted by cell: the empty slot shows a soft
+/// pulsing outline instead ([`affordances`]).
+#[derive(Resource, Clone, Debug, Default, PartialEq)]
+pub struct PlayWaiting(pub Vec<Axial>);
 
 #[derive(Clone)]
 pub struct KitPart {
-    lod: usize,
-    mesh: Handle<Mesh>,
+    pub(crate) lod: usize,
+    pub(crate) mesh: Handle<Mesh>,
     material: Handle<KitMaterial>,
 }
 
@@ -245,6 +258,8 @@ pub fn setup(
     });
     commands.insert_resource(water::tiles::PlayWater::default());
     commands.insert_resource(affordances::Affordances::default());
+    commands.insert_resource(PlayWaiting::default());
+    commands.insert_resource(ghost::GhostMeshes::default());
     commands.insert_resource(rise::PlayDust::default());
     Transform::from_xyz(14.0, 95.0, 125.0).looking_at(Vec3::new(14.0, 0.0, 16.0), Vec3::Y)
 }
@@ -505,7 +520,7 @@ fn respawn_pairs(
 
 /// Child transform for something authored on edge 0, moved to local edge `e` at `along` metres
 /// from the centre and height `y`.
-fn on_edge(e: u8, along: f32, y: f32) -> Transform {
+pub(crate) fn on_edge(e: u8, along: f32, y: f32) -> Transform {
     let rot = piece_rotation(e);
     Transform::from_translation(rot * Vec3::new(along, y, 0.0)).with_rotation(rot)
 }
@@ -695,11 +710,14 @@ type RiseHooks<'w> = (
     MessageWriter<'w, RiseMessage>,
 );
 
-/// Spawns and despawns tile entities to match the view. Tiles wait for the core pack; a tile that
-/// draws a piece from a pack still streaming draws its placeholder, and swaps to the kit look in
-/// place when the pack arrives (its children are respawned under the same root, so a running rise
-/// keeps its pose and clock). Water tiles also get their surfaces, cut faces and placeholder beds
-/// (`water::tiles::sync`, which respawns a cell whose centre piece arrived).
+/// Spawns and despawns tile entities to match the view. Tiles wait for the core pack. A placed
+/// tile that draws a piece from a pack still streaming is hidden, and so are its water entities,
+/// until every such pack arrives (owner decision A10, 2026-10-14): the placement itself has
+/// already registered in the game, and the empty slot shows the [`PlayWaiting`] outline. On
+/// arrival its children are respawned with the kit look and it rises then (or appears at rest if
+/// it was hidden by a rebuild). A piece outside the manifest, or one that failed to load, still
+/// draws its placeholder, since its pack is ready. Water tiles also get their surfaces, cut faces
+/// and placeholder beds (`water::tiles::sync`, which respawns a cell whose centre piece arrived).
 ///
 /// A tile new to the view (not on a rebuild) fast-forwards every running rise and starts its own;
 /// a tile gone from it sinks with its released water entities. A rebuild (core arriving, a switch
@@ -716,10 +734,27 @@ pub fn sync(
     config: Res<GateConfig>,
     (water, clock, cameras, mut meshes, mut images, mut water_mats, mut terrain_mats): WaterHooks,
     (mut rises, reduced, mut cues): RiseHooks,
+    (packs, waiting_out): (Option<Res<PlayPacks>>, Option<ResMut<PlayWaiting>>),
 ) {
     let (Scenario::Play, Some(mut spawned), Some(plain)) = (active.0, spawned, plain) else {
         return;
     };
+    let waits = |t: &PlayTile| {
+        packs.as_deref().is_some_and(|p| {
+            catalog
+                .0
+                .get(&t.tile)
+                .is_some_and(|def| p.tile_waiting(def, &catalog.0))
+        })
+    };
+    // Hidden tiles whose packs have all arrived: drawn this frame even when no piece was built
+    // (a piece that failed to load draws its placeholder).
+    let arrived: Vec<Axial> = spawned
+        .hidden
+        .keys()
+        .copied()
+        .filter(|c| spawned.tiles.get(c).is_some_and(|(t, _)| !waits(t)))
+        .collect();
     // The play camera and clock get what water needs as soon as the scenario is up (`setup` only
     // adds them for the look-dev scenarios), so the first water tile changes no pipeline.
     for cam in &cameras {
@@ -731,23 +766,44 @@ pub fn sync(
             fixed: config.water_fixed,
         });
     }
-    if !spawned.rebuild_for(view.epoch) && !view.is_changed() && spawned.refresh.is_empty() {
+    if !spawned.rebuild_for(view.epoch)
+        && !view.is_changed()
+        && spawned.refresh.is_empty()
+        && arrived.is_empty()
+    {
         return;
     }
     let Some(PlayKit::Ready(kit)) = kit.as_deref() else {
         return;
     };
+    let waiting_cells: HashSet<Axial> = view
+        .tiles
+        .iter()
+        .filter(|t| waits(t))
+        .map(|t| t.cell)
+        .collect();
     let rebuild = spawned.rebuild;
     if rebuild {
         for (_, (_, e)) in spawned.tiles.drain() {
             commands.entity(e).try_despawn();
         }
         rises.reset(view.tiles.iter().map(|t| t.cell), &mut commands);
+        for &c in &waiting_cells {
+            rises.undrawn(c);
+        }
         spawned.rebuild = false;
         spawned.pairs = PairPieces::default();
         spawned.pair_entities.clear();
         spawned.refresh.clear();
+        spawned.hidden.clear();
     }
+    // Water entities of hidden tiles wait with them.
+    let water_tiles: Vec<PlayTile> = view
+        .tiles
+        .iter()
+        .filter(|t| !waiting_cells.contains(&t.cell))
+        .cloned()
+        .collect();
     let mut released: HashMap<Axial, Vec<Entity>> = HashMap::new();
     if let Some(mut water) = water {
         released = water::tiles::sync(
@@ -760,7 +816,7 @@ pub fn sync(
                 terrain_mats: &mut terrain_mats,
             },
             config.tier,
-            &view.tiles,
+            &water_tiles,
             &catalog.0,
             |id| kit.contains_key(id),
             rebuild,
@@ -786,6 +842,9 @@ pub fn sync(
     });
     gone.sort_by_key(|(c, ..)| (c.q, c.r));
     changed.extend(gone.iter().map(|(c, ..)| *c));
+    for c in &changed {
+        spawned.hidden.remove(c);
+    }
     for (cell, tile, root) in gone {
         let mut entities = vec![root];
         entities.extend(released.remove(&cell).unwrap_or_default());
@@ -798,7 +857,33 @@ pub fn sync(
     }
     let refresh = std::mem::take(&mut spawned.refresh);
     let mut refreshed: BTreeSet<Axial> = BTreeSet::new();
+    let mut shown: BTreeSet<Axial> = BTreeSet::new();
+    for cell in arrived {
+        let (Some(rise), Some((t, root))) =
+            (spawned.hidden.remove(&cell), spawned.tiles.get(&cell))
+        else {
+            continue;
+        };
+        let Some(def) = catalog.0.get(&t.tile) else {
+            continue;
+        };
+        commands
+            .entity(*root)
+            .insert(Visibility::Inherited)
+            .despawn_children()
+            .with_children(|p| tile_children(p, &plain, kit, &catalog.0, def, cell));
+        if rise {
+            rises.begin(cell, &t.tile, &def.rise, reduced.0, &mut out);
+        } else {
+            rises.rest(cell);
+        }
+        refreshed.insert(cell);
+        shown.insert(cell);
+    }
     for (cell, (t, root)) in spawned.tiles.iter().filter(|_| !refresh.is_empty()) {
+        if shown.contains(cell) || spawned.hidden.contains_key(cell) {
+            continue;
+        }
         let Some(def) = catalog.0.get(&t.tile) else {
             continue;
         };
@@ -833,6 +918,12 @@ pub fn sync(
         rises.cancel_sink(t.cell, &mut commands);
         let e = spawn_tile(&mut commands, &plain, kit, &catalog.0, t);
         spawned.tiles.insert(t.cell, (t.clone(), e));
+        if waiting_cells.contains(&t.cell) {
+            commands.entity(e).insert(Visibility::Hidden);
+            spawned.hidden.insert(t.cell, !rebuild);
+            rises.undrawn(t.cell);
+            continue;
+        }
         match catalog.0.get(&t.tile).filter(|_| !rebuild) {
             Some(def) => rises.begin(t.cell, &t.tile, &def.rise, reduced.0, &mut out),
             None => rises.rest(t.cell),
@@ -849,13 +940,21 @@ pub fn sync(
     // from nothing to the kit in place.
     redraw.extend(added_cells.iter().copied());
     redraw.extend(refreshed);
-    let rising = if rebuild {
+    let mut rising = if rebuild {
         BTreeSet::new()
     } else {
         added_cells
     };
+    rising.extend(shown);
     respawn_pairs(&mut commands, &mut spawned, kit, &redraw, &rising);
     cues.write_batch(out);
+    let mut now: Vec<Axial> = spawned.hidden.keys().copied().collect();
+    now.sort_by_key(|c| (c.q, c.r));
+    if let Some(mut w) = waiting_out
+        && w.0 != now
+    {
+        w.0 = now;
+    }
 }
 
 #[cfg(test)]
@@ -887,7 +986,7 @@ mod tests {
     #[test]
     fn every_mvp_tile_resolves_and_biomes_index() {
         let c = PlayCatalog::default();
-        assert_eq!(c.0.tiles().len(), 14);
+        assert_eq!(c.0.tiles().len(), 15);
         let biomes: std::collections::BTreeSet<_> =
             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
         assert_eq!(biomes.len(), 4);

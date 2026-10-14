@@ -211,7 +211,7 @@ export class Worlds {
     const cur = p.slots.find((m) => m.id === p.current.id);
     const tiles = p.tilesNow;
     const line = !p.storageOn
-      ? `${plural(tiles, "tile")} · Not saved`
+      ? `${plural(tiles, "tile")} · ${stateWords("off")}`
       : p.state === "saving"
         ? `${plural(tiles, "tile")} · Saving…`
         : p.savedAt

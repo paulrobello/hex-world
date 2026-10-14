@@ -77,6 +77,29 @@
       },
       {
         "edges": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest"
+        ],
+        "id": "oak",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "scatter": [
+          "rock_small",
+          "wildflower_clump"
+        ]
+      },
+      {
+        "edges": [
           "Road",
           "Grass",
           "Grass",
@@ -351,6 +374,10 @@
       "name",
       "scale"
     ],
+    "pin": [
+      "q",
+      "r"
+    ],
     "place": [
       "q",
       "r"
@@ -390,6 +417,7 @@
       "what"
     ],
     "undo": [],
+    "unpin": [],
     "wait": [
       "frames"
     ]
@@ -460,6 +488,9 @@
     ],
     "photoModeToggled": [
       "on"
+    ],
+    "pinChanged": [
+      "cell"
     ],
     "placementRefused": [
       "q",
@@ -562,6 +593,7 @@
       "last_result",
       "parked_cars",
       "photo_mode",
+      "pinned",
       "recent_events",
       "reduced_motion",
       "rising",

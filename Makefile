@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world shots-ghost
 
 fmt:
 	cargo fmt --all
@@ -220,6 +220,11 @@ brand:
 web-smoke: build-web
 	cd e2e && npm ci --no-audit --no-fund
 	node e2e/smoke.mjs dist
+
+# Local only (GPU Chromium): ghost evidence for owner feedback U1, written to docs/checkpoints/ghost/.
+shots-ghost: build-web
+	cd e2e && npm ci --no-audit --no-fund
+	node e2e/ghost-shots.mjs dist
 
 perf-gate: build-web
 	cd e2e && npm ci --no-audit --no-fund
@@ -496,9 +501,10 @@ shots-wet-band:
 
 # Boids checkpoint (PRD §7.2, crates/hex-render/src/boids.rs): runs docs/checkpoints/boids/boids.json
 # at 1600x1000 with tilt-shift off and fixed clocks (a river chain, a coast closing on ten ocean tiles,
-# a meadow and two forests; the flock overhead, birds roosting on an oak, fish through the ocean
-# surface and in the river channel, then a forest bulldozed, undone and redone), copies JPEG stills and the
-# state dumps next to it, and asserts the dumps (check.mjs: split, fish per region, roosts, roosting).
+# a meadow and two oak tiles; the flock overhead, birds roosting on an oak, fish through the ocean
+# surface and in the river channel, then an oak tile bulldozed, undone and redone), copies JPEG stills
+# and the state dumps next to it, and asserts the dumps (check.mjs: split, fish per region and river
+# group sizes, roosts, roosting).
 BOIDS_SHOTS = boids-01-flock boids-02-roost boids-03-fish-ocean boids-04-fish-river
 BOIDS_DOCS = docs/checkpoints/boids
 shots-boids:
@@ -512,13 +518,14 @@ shots-boids:
 	@echo "wrote $(BOIDS_DOCS)/"
 
 # Scatter checkpoint (PRD §5.3, crates/hex-render/src/play/scatter.rs): runs
-# docs/checkpoints/scatter/scatter.json at 1600x1000 with tilt-shift off and fixed clocks (a forest
-# cluster, meadows, a forest between a road and a river, a house cluster; then a forest rising,
+# docs/checkpoints/scatter/scatter.json at 1600x1000 with tilt-shift off and fixed clocks (a cluster
+# of pine forests and oak tiles with their junctions, meadows with flower drifts, a forest between a
+# road and a river, a house cluster; then a forest rising,
 # bulldozed, undone, and again under reduced motion) after every pack has landed, then
 # scatter-stream.json with the streamed packs held (a forest and the start meadow before and after
 # their packs land). Copies JPEG stills and the state dumps next to it, and asserts the dumps
 # (check.mjs: per-tile counts, roosts, undo, reduced motion, streaming, draw calls).
-SCATTER_SHOTS = scatter-01-overview scatter-02-forest-cluster scatter-03-meadow scatter-04-road-river scatter-05-forest-closeup scatter-06-rise-props scatter-07-rise-settled
+SCATTER_SHOTS = scatter-01-overview scatter-02-forest-cluster scatter-03-meadow scatter-04-road-river scatter-05-forest-closeup scatter-06-rise-props scatter-07-rise-settled scatter-12-oak scatter-13-junction scatter-14-meadow-drifts
 SCATTER_DOCS = docs/checkpoints/scatter
 shots-scatter:
 	mkdir -p target/shots $(SCATTER_DOCS)

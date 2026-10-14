@@ -117,8 +117,7 @@
 .row__text { display: grid; min-width: 0; }
 .row__name { font-weight: 700; font-size: var(--fs-4); }
 .row__meta { font-size: var(--fs-2); color: var(--ink-2); }
-.row__code { display: grid; grid-template-columns: repeat(6, 9px); gap: 2px; }
-.row__code i { height: 14px; border-radius: var(--r-code); }
+.row__hex { display: block; width: 32px; height: 32px; }
 .row__num { position: absolute; left: 4px; top: 4px; display: grid; place-items: center; width: 16px; height: 16px; border-radius: var(--r-control); background: rgb(0 0 0 / .35); font-size: 10px; font-weight: 800; color: var(--ink-2); }
 .row__num:empty { display: none; }
 .row[aria-pressed=true] .row__num { background: var(--pick); color: white; }
@@ -126,13 +125,13 @@
 .list--off .row__glyph { width: 28px; height: 28px; opacity: .45; filter: saturate(.3); }
 .list--off .row__name { font-size: var(--fs-3); font-weight: 600; color: var(--ink-2); }
 .list--off .row__meta { font-size: var(--fs-1); color: var(--ink-3); }
-.list--off .row__code, .list--off .row__num { display: none; }
+.list--off .row__hex, .list--off .row__num { display: none; }
 .list--off .row[aria-pressed=true] { box-shadow: inset 0 0 0 1.5px var(--bad); }
 
 /* Socket colours as data: one class per kind (no inline styles under the CSP). */
 .k-G { --k: var(--k-G); } .k-F { --k: var(--k-F); } .k-R { --k: var(--k-R); }
 .k-V { --k: var(--k-V); } .k-B { --k: var(--k-B); } .k-O { --k: var(--k-O); }
-.row__code i, .key__list i { background: var(--k); }
+.key__list i { background: var(--k); }
 .key__edge, .glyph .g-edge { stroke: var(--k); }
 .glyph .g-fill { fill: var(--k); stroke: none; }
 
@@ -296,7 +295,7 @@
   .tool { padding: 0 9px; }
   .sheet--tiles { width: 340px; }
   .sheet--worlds { width: 400px; }
-  .row__code { grid-template-columns: repeat(6, 7px); }
+  .row__hex { width: 28px; height: 28px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

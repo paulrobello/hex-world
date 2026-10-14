@@ -2,7 +2,7 @@
 // number keys. Rows keep their identity across slots so a re-rank animates (FLIP) instead of blinking.
 import type { Cell } from "./bridge.ts";
 import { h, reduceMotion, s } from "./dom.ts";
-import { KIND_CLASS, TilePicture, hexPoints } from "./glyph.ts";
+import { KIND_CLASS, TilePicture, hexPoints, socketHex } from "./glyph.ts";
 import { icon } from "./icons.ts";
 import {
   type Fit,
@@ -25,6 +25,8 @@ interface Row {
   meta: HTMLElement;
   num: HTMLElement;
   pic: TilePicture;
+  /** The socket hex's turning group, rotated with `pic`. */
+  hexRot: SVGGElement;
 }
 
 export interface SheetView {
@@ -108,20 +110,20 @@ export class Sheet {
       const meta = h("span", { class: "row__meta" });
       const num = h("span", { class: "row__num", "aria-hidden": "true" });
       const pic = new TilePicture(def);
-      const code = h("span", { class: "row__code", "aria-hidden": "true" });
-      for (const e of def.edges) code.append(h("i", { class: KIND_CLASS[e], title: e }));
+      const hex = socketHex(def);
+      const hexRot = hex.querySelector<SVGGElement>(".g-rot")!;
       const btn = h(
         "button",
         { class: "row", type: "button", "data-tile": def.id, "aria-pressed": "false" },
         pic.el,
         h("span", { class: "row__text" }, h("span", { class: "row__name" }, tileName(def.id)), meta),
-        code,
+        hex,
         num,
       );
       btn.addEventListener("click", () => onSelect(def.id));
       const li = h("li", {}, btn);
       this.fitList.append(li);
-      return { def, li, btn, meta, num, pic };
+      return { def, li, btn, meta, num, pic, hexRot };
     });
     this.el.addEventListener("keydown", (e) => {
       const row = (e.target as Element).closest?.(".row");
@@ -176,6 +178,8 @@ export class Sheet {
             ? v.ghostRotation
             : f.distinct[((v.turns % f.distinct.length) + f.distinct.length) % f.distinct.length]!;
       r.pic.show(k);
+      const turn = `rotate(${k * 60}deg)`;
+      if (r.hexRot.style.transform !== turn) r.hexRot.style.transform = turn;
     }
     if (moved) {
       for (const r of fitting) this.fitList.append(r.li);

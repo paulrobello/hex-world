@@ -6,7 +6,8 @@ import type { TileDiff } from "./rules.ts";
 /** Display names for every catalog id (test/rules.test.ts keeps it in step with the catalog). */
 export const TILE_NAMES: Record<string, string> = {
   meadow: "Meadow",
-  forest: "Forest",
+  forest: "Pine forest",
+  oak: "Oak",
   house_cluster: "House cluster",
   road_straight: "Road straight",
   road_bend_120: "Road bend 120°",

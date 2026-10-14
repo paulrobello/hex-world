@@ -10,7 +10,7 @@ This is the schema contract for Hex World saves (PRD §12.2, D9). The code is `c
 | History | The undo stack and the redo stack (PRD §4.2), so Ctrl+Z works after a load |
 | Unlocks | Unlocked content ids (P3). Always empty today |
 | Camera | Orbit focus point, yaw, pitch and distance |
-| Settings | Quality tier (Auto, Low, Medium, High, Ultra), the tilt-shift toggle and strength, and audio volumes for the master, music, SFX, ambience and UI buses |
+| Settings | Quality tier (Auto, Low, Medium, High, Ultra), the tilt-shift toggle and strength, whether the player chose that toggle (v2), and audio volumes for the master, music, SFX, ambience and UI buses |
 
 Agents are not saved. They are re-derived from the world on load.
 
@@ -38,7 +38,9 @@ The payload is postcard 1.x (pinned to `=1.1.3`). Postcard is not self-describin
 - A `String` is a varint byte length followed by UTF-8. A `Vec` is a varint count followed by its elements. A fixed array such as `[f32; 3]` is its elements with no count.
 - A struct is its fields in declaration order, with no names. An enum is a varint variant index followed by that variant's fields.
 
-## Version 1 schema
+## Current schema (version 2)
+
+Version 2 is version 1 plus one settings field, `tilt_shift_chosen`. Tiles, history and camera keep the version 1 wire types.
 
 ```rust
 Save {
@@ -57,6 +59,7 @@ Camera { focus: [f32; 3], yaw: f32, pitch: f32, distance: f32 }
 Settings {
     quality: Quality,
     tilt_shift: bool,
+    tilt_shift_chosen: bool,   // v2 only: the player toggled tilt-shift themselves
     tilt_shift_strength: f32,
     volume_master: f32,
     volume_music: f32,
@@ -74,6 +77,7 @@ Quality = Auto (0) | Low (1) | Medium (2) | High (3) | Ultra (4)
 | Version | Introduced | Change | Fixture |
 |---|---|---|---|
 | 1 | 2026-10-13 (P2 wave 2, W2a) | First version | `v1-small-world.hexworld` |
+| 2 | 2026-10-14 (owner decision A21) | `Settings::tilt_shift_chosen`: whether the player toggled tilt-shift themselves. While it is false, a quality-tier change drives tilt-shift; while it is true, the tier keeps the player's toggle and strength. A v1 file upgrades with it false, because v1 cannot tell the player's toggle from the tier's default | `v2-tilt-chosen.hexworld` |
 
 ## Decode order and errors
 

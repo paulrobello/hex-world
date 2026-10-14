@@ -316,6 +316,7 @@ test("one-shot rows: bees at flower tiles, forest birds and leaves at forest til
   for (const row of [BIRDS, LEAVES]) {
     const defs = oneShotDefs(row, schema.catalog.tiles);
     assert.ok(defs.has("forest"), `${row.name} plays at forest`);
+    assert.ok(defs.has("oak"), `${row.name} plays at the oak tile`);
     for (const t of schema.catalog.tiles.filter((t) => defs.has(t.id)))
       assert.equal(biomeOf(t.id, t.edges), "forest", `${row.name} def ${t.id}`);
     for (const id of [

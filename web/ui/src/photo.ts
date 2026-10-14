@@ -9,6 +9,9 @@ import { icon } from "./icons.ts";
 const STOPS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22];
 const SCALES = [1, 2, 4] as const;
 type Scale = (typeof SCALES)[number];
+/** The engine refuses 4× on the web until a 4× export there is tested for GPU memory (photo.rs). */
+const WEB_MAX_SCALE: Scale = 2;
+const OVER_WEB_MAX = "4× is off on the web until it is tested for GPU memory.";
 const TOAST_MS = 4000;
 const BAND_MS = 1000;
 /** Rough PNG bytes per pixel for a lit diorama: the 5120 × 3200 native proof was 20.3 MB, 1.24 B/px. */
@@ -50,10 +53,11 @@ function setSlider(s: Slider, v: number): void {
   (s.input as HTMLInputElement & { paint?: () => void }).paint?.();
 }
 
-/** A segmented radio group (Legend seg); `pick` fires with the chosen value. */
+/** A segmented radio group (Legend seg); `pick` fires with the chosen value. An option with `off`
+ * is disabled, with `off` as its reason, and the arrow keys pass over it. */
 function seg<T extends string>(
   label: string,
-  options: { value: T; text: string; sub?: string }[],
+  options: { value: T; text: string; sub?: string; off?: string | undefined }[],
   pick: (v: T) => void,
 ): { el: HTMLElement; set: (v: T) => void; subs: Map<T, HTMLElement> } {
   const el = h("div", { class: "seg", role: "radiogroup", "aria-label": label });
@@ -61,6 +65,11 @@ function seg<T extends string>(
   const subs = new Map<T, HTMLElement>();
   for (const o of options) {
     const b = h("button", { type: "button", role: "radio", "aria-checked": "false", "data-value": o.value }, o.text);
+    if (o.off !== undefined) {
+      b.disabled = true;
+      b.title = o.off;
+      b.setAttribute("aria-description", o.off);
+    }
     if (o.sub !== undefined) {
       const small = h("small", { class: "export-dims" }, o.sub);
       subs.set(o.value, small);
@@ -79,7 +88,7 @@ function seg<T extends string>(
   el.addEventListener("keydown", (e) => {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
     e.preventDefault();
-    const keys = [...buttons.keys()];
+    const keys = [...buttons.keys()].filter((k) => !buttons.get(k)?.disabled);
     const i = keys.findIndex((k) => buttons.get(k)?.getAttribute("aria-checked") === "true");
     const n = keys[(i + (e.key === "ArrowRight" ? 1 : keys.length - 1)) % keys.length]!;
     set(n);
@@ -208,7 +217,12 @@ export class Photo {
     // Export.
     this.scale = seg<`${Scale}`>(
       "Resolution",
-      SCALES.map((s) => ({ value: `${s}` as `${Scale}`, text: `${s}×`, sub: "" })),
+      SCALES.map((s) => ({
+        value: `${s}` as `${Scale}`,
+        text: `${s}×`,
+        sub: "",
+        off: s > WEB_MAX_SCALE ? OVER_WEB_MAX : undefined,
+      })),
       (v) => {
         this.chosen = Number(v) as Scale;
         this.failedScale = null;
@@ -244,6 +258,7 @@ export class Photo {
       { class: "photo-export" },
       h("h2", { class: "section-h" }, "Save a PNG"),
       this.scale.el,
+      h("p", { class: "field__hint export-cap" }, OVER_WEB_MAX),
       h("p", { class: "export-out" }, this.file, this.size),
       go,
       h(
@@ -424,14 +439,15 @@ export class Photo {
       this.retryBtn.hidden = this.failedScale === 1;
     }
     // A scale past this GPU's texture limit still runs, and the engine's refusal explains why.
+    // Scales over the web cap are disabled as well as struck through.
     for (const s of SCALES) {
       const [sw, sh] = this.sizeFor(s);
-      this.scale.subs.get(`${s}`)?.classList.toggle("is-over", Math.max(sw, sh) > this.maxTexture);
+      this.scale.subs.get(`${s}`)?.classList.toggle("is-over", s > WEB_MAX_SCALE || Math.max(sw, sh) > this.maxTexture);
     }
   }
 
   private export(scale: Scale): void {
-    if (this.job) return;
+    if (this.job || scale > WEB_MAX_SCALE) return;
     const stamp = new Date().toISOString().slice(11, 19).replaceAll(":", "");
     const name = `hex-world-${today()}-${stamp}`;
     this.job = { name, scale, file: `hex-world-${today()}.png`, cancelled: false };

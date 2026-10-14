@@ -541,6 +541,10 @@ const SHADER_EXEMPT: &[(&str, &str)] = &[
         "assets/shaders/affordance.wesl",
         "placement UI overlay, not a world surface",
     ),
+    (
+        "assets/shaders/ghost.wesl",
+        "see-through placement preview, not a world surface",
+    ),
     ("assets/shaders/tilt_shift.wesl", "post pass: no surface"),
     (
         "crates/hex-render/src/kit_common.wesl",

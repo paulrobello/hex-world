@@ -41,6 +41,12 @@ pub const EXPOSURE_EV: (f32, f32) = (-3.0, 3.0);
 pub const FOV_DEG: (f32, f32) = (15.0, 100.0);
 pub const ROLL_DEG: (f32, f32) = (-45.0, 45.0);
 pub const EXPORT_SCALES: [u32; 3] = [1, 2, 4];
+/// The largest export scale offered: 4× natively, 2× on the web until a 4× export there is tested
+/// for GPU memory (owner, 2026-10-14).
+#[cfg(not(target_arch = "wasm32"))]
+pub const MAX_EXPORT_SCALE: u32 = 4;
+#[cfg(target_arch = "wasm32")]
+pub const MAX_EXPORT_SCALE: u32 = 2;
 /// The diorama reads as a miniature, so the manual lens uses a sensor this many times Bevy's
 /// 18.66 mm default (blur in pixels grows linearly with it). At true scale f/2.8 focused at 20 m
 /// blurs a 60 m background by about 0.3 px at 800 px tall; here by about 17 px.
@@ -320,11 +326,16 @@ fn set_lens(
     }
 }
 
-/// PNG size for an export: the window's logical size times `scale` (1, 2 or 4), refused past the
-/// GPU's largest texture side (mockup S8.7 suggests the next scale down).
-pub fn export_size(base: UVec2, scale: u32, max_dim: u32) -> Result<UVec2, String> {
+/// PNG size for an export: the window's logical size times `scale` (1, 2 or 4), refused above
+/// `max_scale` or past the GPU's largest texture side (mockup S8.7 suggests the next scale down).
+pub fn export_size(base: UVec2, scale: u32, max_dim: u32, max_scale: u32) -> Result<UVec2, String> {
     if !EXPORT_SCALES.contains(&scale) {
         return Err(format!("scale {scale}× is not one of 1×, 2× or 4×"));
+    }
+    if scale > max_scale {
+        return Err(format!(
+            "{scale}× is off on the web until it is tested for GPU memory. {max_scale}× is the largest."
+        ));
     }
     if base.x == 0 || base.y == 0 {
         return Err("the window has no size".into());
@@ -457,7 +468,7 @@ pub fn run_exports(
         window.height().round() as u32,
     );
     let max_dim = limits.map_or(8192, |l| l.max_texture_dimension_2d);
-    let size = match export_size(base, scale, max_dim) {
+    let size = match export_size(base, scale, max_dim, MAX_EXPORT_SCALE) {
         Ok(s) => s,
         Err(e) => return fail(e),
     };
@@ -466,6 +477,9 @@ pub fn run_exports(
         size.x, size.y, base.x, base.y
     );
     let image = images.add(target_image(size));
+    // With no camera on the window, Bevy 0.20 acquires and presents no swap-chain texture for it,
+    // so the window keeps its last frame until the camera comes back (no backdrop flash, A14).
+    // Another camera targeting the window during the job would break that.
     let window_target = std::mem::replace(&mut *target, RenderTarget::Image(image.clone().into()));
     exports.job = Some(ExportJob {
         name,
@@ -515,21 +529,33 @@ mod tests {
     #[test]
     fn export_size_is_the_window_times_the_scale() {
         let base = UVec2::new(1440, 900);
-        assert_eq!(export_size(base, 1, 8192), Ok(UVec2::new(1440, 900)));
-        assert_eq!(export_size(base, 2, 8192), Ok(UVec2::new(2880, 1800)));
-        assert_eq!(export_size(base, 4, 8192), Ok(UVec2::new(5760, 3600)));
-        assert!(export_size(base, 3, 8192).is_err(), "only 1, 2 and 4");
-        assert!(export_size(UVec2::ZERO, 1, 8192).is_err());
+        assert_eq!(export_size(base, 1, 8192, 4), Ok(UVec2::new(1440, 900)));
+        assert_eq!(export_size(base, 2, 8192, 4), Ok(UVec2::new(2880, 1800)));
+        assert_eq!(export_size(base, 4, 8192, 4), Ok(UVec2::new(5760, 3600)));
+        assert!(export_size(base, 3, 8192, 4).is_err(), "only 1, 2 and 4");
+        assert!(export_size(UVec2::ZERO, 1, 8192, 4).is_err());
     }
 
     #[test]
     fn export_past_the_texture_limit_is_refused_with_the_scale_that_fits() {
-        let e = export_size(UVec2::new(2560, 1440), 4, 8192).unwrap_err();
+        let e = export_size(UVec2::new(2560, 1440), 4, 8192, 4).unwrap_err();
         assert!(e.contains("10240 × 5760") && e.contains("2× fits"), "{e}");
         assert_eq!(
-            export_size(UVec2::new(2560, 1440), 2, 8192),
+            export_size(UVec2::new(2560, 1440), 2, 8192, 4),
             Ok(UVec2::new(5120, 2880))
         );
+    }
+
+    #[test]
+    fn the_web_cap_refuses_4x_and_keeps_2x() {
+        let base = UVec2::new(1280, 800);
+        let e = export_size(base, 4, 16384, 2).unwrap_err();
+        assert!(
+            e.contains("4× is off on the web") && e.contains("2×"),
+            "{e}"
+        );
+        assert_eq!(export_size(base, 2, 16384, 2), Ok(UVec2::new(2560, 1600)));
+        assert_eq!(MAX_EXPORT_SCALE, 4, "native keeps 4×");
     }
 
     #[test]

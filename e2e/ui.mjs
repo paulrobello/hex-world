@@ -60,6 +60,13 @@ async function pointAt(q, r) {
   await page.mouse.move(x, y, { steps: 4 });
   await until(async () => same((await play()).hovered, q, r), `pointer hovers (${q}, ${r})`);
 }
+/** The first click on the slot under the pointer pins it (skipped when it is pinned already); the next one places. */
+async function pinHere(q, r) {
+  if (same((await play()).pinned, q, r)) return;
+  await page.mouse.down();
+  await page.mouse.up();
+  await until(async () => same((await play()).pinned, q, r), `the first click pins (${q}, ${r})`);
+}
 /** Events since the last call (the overlay watches without draining them from us). */
 const events = () => page.evaluate(() => window.hexWorld.events());
 const key = (k) => page.keyboard.press(k);
@@ -142,6 +149,55 @@ try {
   check((await text(".key__title")) === "This slot needs", "sheet keeps the slot's filter over the HUD");
   await shot("s3-5-tile-hover");
 
+  // Pinning: one click on a slot pins it. The ghost, its rotation and the sheet stay on the pin while
+  // the pointer roams, R turns it from the sheet, and Esc only unpins.
+  await pointAt(1, 0);
+  await page.waitForTimeout(200);
+  const pinKey = await page.locator(".key").innerHTML();
+  await events();
+  await page.mouse.down();
+  await page.mouse.up();
+  await until(async () => same((await play()).pinned, 1, 0), "one click pins (1, 0)");
+  check((await play()).tiles.length === 1, "the pinning click places nothing");
+  check((await events()).some((e) => e.type === "pinChanged" && same(e.cell, 1, 0)), "pinChanged names (1, 0)");
+  await until(async () => (await text(".ghost-tag")).includes("Pinned"), "the tag says the slot is pinned");
+  await pointAt(0, 0);
+  await pointAt(1, -1);
+  let pin = await play();
+  check(same(pin.pinned, 1, 0) && same(pin.ghost, 1, 0), "over (1, -1) the pin and the ghost stay on (1, 0)");
+  check(pin.ghost?.rotation === chosen, "and the ghost keeps the rotation chosen there (no snap to (1, -1))");
+  check((await page.locator(".key").innerHTML()) === pinKey, "the slot key stays on (1, 0) while (1, -1) is hovered");
+  await page.mouse.move(rx, ry, { steps: 12 });
+  await page.waitForTimeout(400);
+  pin = await play();
+  check(!same(pin.hovered, 1, 0), `over the sheet hovered follows the pointer (${JSON.stringify(pin.hovered)}), not the pin`);
+  check(same(pin.pinned, 1, 0) && same(pin.ghost, 1, 0), "over the sheet the pin and the ghost stay on (1, 0)");
+  check((await page.locator(".key").innerHTML()) === pinKey, "the sheet's slot key stays on (1, 0)");
+  await shot("pin-1-pinned-sheet");
+
+  // R from the sheet turns the pinned ghost, and the selected row's socket hex turns with it.
+  const rowTurn = () =>
+    page.locator(".list--fit .row[aria-pressed=true] .row__hex .g-rot").evaluate((g) => g.style.transform);
+  const turnA = await rowTurn();
+  check(turnA === `rotate(${chosen * 60}deg)`, `the selected row's hex shows the ghost's rotation (${turnA})`);
+  await shot("rows-rot-a");
+  await key("r");
+  await until(async () => (await play()).ghost?.rotation !== chosen, "R from the sheet turns the pinned ghost");
+  pin = await play();
+  check(same(pin.ghost, 1, 0) && same(pin.pinned, 1, 0), "the turned ghost stays on the pin (1, 0)");
+  await until(async () => (await rowTurn()) === `rotate(${pin.ghost.rotation * 60}deg)`, "the selected row's hex turns with the ghost");
+  check((await rowTurn()) !== turnA, "the row hex's transform changed");
+  await page.waitForTimeout(400);
+  await shot("rows-rot-b");
+
+  // Esc with a pin only unpins: the tool, the sheet and its slot stay.
+  await key("Escape");
+  await until(async () => !(await play()).pinned, "Esc unpins");
+  await page.waitForTimeout(200);
+  pin = await play();
+  check(pin.tool === "place" && pin.inventory_open === true && pin.tiles.length === 1, "that Esc does nothing else: still placing, the sheet open");
+  check((await text(".key__title")) === "This slot needs", "the sheet keeps its slot (that Esc did not clear it)");
+
   // S3.7 a tile that doesn't fit, selected by mouse; S5.2 the refused click.
   await page.locator(".list--off .row[data-tile=ocean]").click();
   await until(async () => (await play()).selected === "ocean", "click selects Ocean");
@@ -152,18 +208,25 @@ try {
   await events();
   await page.mouse.down();
   await page.mouse.up();
+  await until(async () => same((await play()).pinned, 1, 0), "the first click pins (1, 0) again");
+  check((await play()).tiles.length === 1, "pinning a slot the tile doesn't fit places nothing");
+  await page.mouse.down();
+  await page.mouse.up();
   await until(async () => (await play()).last_result?.ok === false, "the click is refused");
   check((await play()).tiles.length === 1, "refused placement leaves 1 tile");
   check((await events()).some((e) => e.type === "placementRefused"), "placementRefused event");
+  check(same((await play()).pinned, 1, 0), "a refusal keeps the pin");
   await shot("s5-2-place-rejected");
 
   // S5.1 place: Road straight at (1, 0).
   await page.locator(".row[data-tile=road_straight]").click();
   await until(async () => (await play()).selected === "road_straight", "click selects Road straight");
   await pointAt(1, 0);
+  await pinHere(1, 0);
   await page.mouse.down();
   await page.mouse.up();
   await until(async () => (await play()).tiles.length === 2, "road placed");
+  check(!(await play()).pinned, "placing clears the pin");
   await until(async () => (await text(".ghost-tag")).includes("Placed Road straight"), "tag acknowledges the placement");
   check((await text(".bar__world")).includes("2 tiles"), "bar title counts 2 tiles");
   await shot("s5-1-placed-rise");
@@ -185,6 +248,7 @@ try {
   await key(await rowNumber("meadow"));
   await until(async () => (await play()).selected === "meadow", "number key selects Meadow");
   await pointAt(2, 0);
+  await pinHere(2, 0);
   await page.mouse.down();
   await page.mouse.up();
   await until(async () => (await play()).tiles.length === 3, "meadow placed at (2, 0)");
@@ -252,6 +316,12 @@ try {
   await page.locator(".key button", { hasText: "Show the nearest slot" }).click();
   await until(async () => { const h = (await play()).hovered; return h && !same(h, -1, 1); }, "Show the nearest slot hovers another slot");
   await until(async () => (await text(".key__title")) === "This slot needs", "the key moves to the nearest fitting slot");
+  await until(async () => {
+    const p = await play();
+    return p.pinned && !same(p.pinned, -1, 1) && same(p.ghost, p.pinned.q, p.pinned.r);
+  }, "Show the nearest slot pins it, with the ghost there");
+  await key("Escape");
+  await until(async () => !(await play()).pinned, "Esc unpins the nearest slot");
   for (let i = 0; i < 2; i++) await key("ControlOrMeta+z");
   await until(async () => (await play()).tiles.length === 2, "the setup undone");
   await page.waitForTimeout(4200);
@@ -326,10 +396,52 @@ try {
 
   await page.locator(".sheet--photo .seg[aria-label='Resolution'] button[data-value='2']").click();
   check((await text(".sheet--photo .seg[aria-label='Resolution'] button[data-value='2'] small")) === "2880 × 1800", "2× shows 2880 × 1800");
-  const [download] = await Promise.all([
-    page.waitForEvent("download", { timeout: 90_000 }),
-    page.locator(".sheet--photo .export-go").click(),
-  ]);
+  // The web caps exports at 2× until 4× is tested for GPU memory: 4× is disabled, struck through and explained.
+  const four = page.locator(".sheet--photo .seg[aria-label='Resolution'] button[data-value='4']");
+  check(await four.isDisabled(), "4× is disabled on the web");
+  check(await four.locator("small.is-over").count() === 1, "4× is struck through on the web");
+  check(/4× is off on the web/.test(await text(".sheet--photo .export-cap")), "the export box says why 4× is off");
+  // Owner decision A14: no backdrop flash while the export renders offscreen. The window has no
+  // camera then, so the canvas must keep showing the last frame; each capture taken while
+  // `photo.exporting` is set is compared with one taken just before.
+  const canvasMean = async (png) => {
+    const b64 = (png ?? (await page.locator("canvas#hex-world").screenshot())).toString("base64");
+    return page.evaluate(async (s) => {
+      const bytes = Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+      const bmp = await createImageBitmap(new Blob([bytes], { type: "image/png" }));
+      const c = new OffscreenCanvas(64, 40);
+      const g = c.getContext("2d");
+      g.drawImage(bmp, 0, 0, 64, 40);
+      const d = g.getImageData(0, 0, 64, 40).data;
+      let sum = 0;
+      for (let i = 0; i < d.length; i += 4) sum += (d[i] + d[i + 1] + d[i + 2]) / 765;
+      return sum / (d.length / 4);
+    }, b64);
+  };
+  const beforeMean = await canvasMean();
+  const downloadP = page.waitForEvent("download", { timeout: 90_000 });
+  await page.locator(".sheet--photo .export-go").click();
+  // A capture counts only when `photo.exporting` is set both before and after it, so it was taken
+  // while the window had no camera; the others are logged as unbracketed.
+  const during = [];
+  const unbracketed = [];
+  let seen = false;
+  const flashDeadline = Date.now() + 20_000;
+  while (Date.now() < flashDeadline && during.length < 6) {
+    const s0 = await st();
+    if (!s0.photo.exporting) { if (seen || Date.now() > flashDeadline - 15_000) break; continue; }
+    seen = true;
+    const png = await page.locator("canvas#hex-world").screenshot();
+    const s1 = await st();
+    const m = Number((await canvasMean(png)).toFixed(4));
+    (s1.photo.exporting ? during : unbracketed).push(m);
+  }
+  console.log(`photo export: canvas mean before ${beforeMean.toFixed(4)}; ${during.length} capture(s) bracketed by ` +
+    `photo.exporting ${JSON.stringify(during)}, unbracketed ${JSON.stringify(unbracketed)}` +
+    (during.length ? "" : " (inconclusive: the export ended before a bracketed capture)"));
+  check(during.every((m) => Math.abs(m - beforeMean) < 0.25 * beforeMean + 0.01),
+    `no backdrop flash while exporting (canvas mean before ${beforeMean.toFixed(4)}, bracketed ${JSON.stringify(during)})`);
+  const download = await downloadP;
   const png = `${out}/photo-export-2x.png`;
   await download.saveAs(png);
   const head = readFileSync(png);

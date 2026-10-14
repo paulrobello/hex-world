@@ -38,6 +38,8 @@ const WALL_GRAIN: vec3<f32> = vec3(0.023, 0.014, 0.0086);
 const WALL_TOPSOIL: vec3<f32> = vec3(0.023, 0.014, 0.0091);
 const WALL_FOOT: vec3<f32> = vec3(0.0091, 0.007, 0.0056);
 const WALL_ROOTS: vec3<f32> = vec3(0.0116, 0.0075, 0.0052);
+// The kit soil slots' colour factor (assets/kit/manifest.json, owner 2026-10-14 Q4); change both together.
+const WALL_TINT: f32 = 2.5;
 // Grass rim above sea level (water.rs LAND: world y = 0 in play) and the kit skirt height (LEVEL_STEP).
 const WALL_RIM: f32 = 1.4;
 const WALL_DEPTH: f32 = 4.0;
@@ -95,7 +97,7 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
         // Only a rim within the lip depth of the grass level gets a lip, and the cap is grass there.
         let lip = 1.0 - smoothstep(edge - 0.008, edge + 0.008, d);
         wall = mix(wall, WALL_ROOTS, 0.7 * (1.0 - smoothstep(0.0, 0.1, d - edge)));
-        albedo = mix(wall, GRASS * (0.8 + 0.4 * nz.a), lip);
+        albedo = mix(wall, GRASS * (0.8 + 0.4 * nz.a), lip) * WALL_TINT;
         rough = mix(0.95, 0.85, lip);
     }
 

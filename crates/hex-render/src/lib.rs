@@ -142,6 +142,7 @@ impl Plugin for HexRenderPlugin {
         bevy::shader::load_shader_library!(app, "water_common.wesl");
         bevy::shader::load_shader_library!(app, "hooks.wesl");
         app.insert_resource(ActiveScenario(self.scenario))
+            .insert_resource(ClearColor(lookdev::BACKDROP))
             .insert_resource(ActiveView(self.view))
             .insert_resource(self.config)
             .add_plugins((
@@ -164,6 +165,7 @@ impl Plugin for HexRenderPlugin {
                 MaterialPlugin::<water::WaterMaterial>::default(),
                 MaterialPlugin::<water::TerrainMaterial>::default(),
                 MaterialPlugin::<play::affordances::AffordanceMaterial>::default(),
+                MaterialPlugin::<play::ghost::GhostMaterial>::default(),
                 hooks::HooksPlugin {
                     hooks: self.config.kit_hooks,
                 },
@@ -176,6 +178,8 @@ impl Plugin for HexRenderPlugin {
             .init_resource::<play::rise::CameraShake>()
             .init_resource::<play::rise::PlayDust>()
             .init_resource::<play::affordances::Affordances>()
+            .init_resource::<play::ghost::GhostMeshes>()
+            .init_resource::<play::ghost::GhostDrawn>()
             .init_resource::<play::scatter::PlayScatter>()
             .init_resource::<play::scatter::ScatterLayouts>()
             .init_resource::<play::scatter::ScatterReport>()
@@ -197,6 +201,7 @@ impl Plugin for HexRenderPlugin {
                     play::rise::animate,
                     play::rise::sink,
                     play::rise::dust,
+                    play::ghost::sync,
                     play::affordances::sync,
                     play::affordances::animate,
                 )

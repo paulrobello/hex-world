@@ -86,7 +86,8 @@ export class Hud {
   private engineOpen: boolean | null = null;
   private hidden = false;
   private pointerOff = true;
-  private pinned = false;
+  /** The overlay has re-sent `hover` for the sheet's slot since the pointer left the canvas. */
+  private hoverResent = false;
   private lastRotate = 0;
   private placed: { cell: Cell; tile: string; until: number } | null = null;
   private refusal: { cell: Cell; text: string; until: number } | null = null;
@@ -174,8 +175,11 @@ export class Hud {
 
   private gotoSlot(c: Cell): void {
     this.sheetSlot = c;
-    this.pinned = true;
-    this.cmd({ cmd: "hover", q: c.q, r: c.r });
+    this.hoverResent = true;
+    this.cmd([
+      { cmd: "hover", q: c.q, r: c.r },
+      { cmd: "pin", q: c.q, r: c.r },
+    ]);
   }
 
   // ---------- Worlds: autosave, saved worlds and files (S10) ----------
@@ -395,15 +399,26 @@ export class Hud {
     }
     for (const e of events) this.onEvent(e, before, now);
 
-    // The sheet's slot sticks to the last slot pointed at until another slot, Esc or a placement.
-    if (st.tool === "place" && st.hovered_kind === "slot" && st.hovered && !sameCell(st.hovered, this.sheetSlot)) {
+    // The sheet's slot is the engine's pinned slot; unpinned, it sticks to the last slot pointed at
+    // until another slot, Esc or a placement.
+    if (st.pinned) {
+      if (!sameCell(st.pinned, this.sheetSlot)) {
+        this.sheetSlot = st.pinned;
+        this.turns = 0;
+      }
+    } else if (
+      st.tool === "place" &&
+      st.hovered_kind === "slot" &&
+      st.hovered &&
+      !sameCell(st.hovered, this.sheetSlot)
+    ) {
       this.sheetSlot = st.hovered;
       this.turns = 0;
-      this.pinned = false;
+      this.hoverResent = false;
       this.advanceHint("hover");
     }
     if (this.sheetSlot && !isSlot(this.sheetSlot, this.map)) this.sheetSlot = null;
-    this.pin(st);
+    this.resendHover(st);
 
     this.syncBar(st);
     this.syncWorld();
@@ -413,10 +428,14 @@ export class Hud {
     this.renderHint(st);
   }
 
-  /** Keeps the engine hovering the sheet's slot while the pointer is off the canvas, so R works there. */
-  private pin(st: PlayState): void {
-    if (!this.pointerOff || this.pinned || !this.sheetSlot || st.tool !== "place" || st.hovered) return;
-    this.pinned = true;
+  /**
+   * Keeps the engine hovering the sheet's slot while the pointer is off the canvas, so R works there.
+   * A pinned slot needs no hover: the engine holds the ghost there and `hovered` follows the pointer.
+   */
+  private resendHover(st: PlayState): void {
+    if (st.pinned || !this.pointerOff || this.hoverResent || !this.sheetSlot || st.tool !== "place" || st.hovered)
+      return;
+    this.hoverResent = true;
     this.cmd({ cmd: "hover", q: this.sheetSlot.q, r: this.sheetSlot.r });
   }
 
@@ -553,9 +572,11 @@ export class Hud {
       if (f?.ok && g.valid) {
         const { index, count } = rotationReadout(def!, g.legal_rotations, g.rotation);
         const text = count === 1 ? "Fits" : `Rotation ${index + 1} of ${count}`;
-        sig = `ok|${cellKey(g)}|${g.tile}|${text}`;
+        const pinned = sameCell(st.pinned, g);
+        sig = `ok|${cellKey(g)}|${g.tile}|${text}|${pinned}`;
         parts.push(h("span", {}, name), h("span", { class: "ghost-tag__fit" }, text));
         if (count > 1) parts.push(h("kbd", {}, "R"));
+        if (pinned) parts.push(h("span", { class: "ghost-tag__fit is-quiet" }, "Pinned · click to place"));
       } else {
         bad = true;
         const clashes = g.edges.filter((e) => e === "Incompatible").length;
@@ -730,7 +751,7 @@ export class Hud {
     });
     this.canvas?.addEventListener("pointerenter", () => {
       this.pointerOff = false;
-      this.pinned = false;
+      this.hoverResent = false;
     });
     // Tooltips: name and key after 350 ms of hover, at once on keyboard focus.
     this.root.addEventListener("pointerover", (e) => {
@@ -827,7 +848,9 @@ export class Hud {
         return;
       case "Escape":
         take();
-        if (this.worlds?.open) {
+        // A pinned slot comes first: this press only unpins.
+        if (st.pinned) this.cmd({ cmd: "unpin" });
+        else if (this.worlds?.open) {
           if (!this.worlds.escape()) this.toggleWorlds(false);
         } else if (this.settings.open) this.toggleSettings();
         else if (st.tool === "bulldoze") this.cmd({ cmd: "set_tool", mode: "place" });
@@ -837,8 +860,8 @@ export class Hud {
       case "Enter":
         if (onRow || (e.target as Element).closest?.("button")) return;
         take();
-        if (st.tool === "place" && st.hovered_kind === "slot" && st.hovered)
-          this.cmd({ cmd: "place", q: st.hovered.q, r: st.hovered.r });
+        // The ghost sits on the pinned slot when there is one, else on the hovered slot.
+        if (st.tool === "place" && st.ghost) this.cmd({ cmd: "place", q: st.ghost.q, r: st.ghost.r });
         return;
       default:
         break;
@@ -886,7 +909,7 @@ const HINTS: Hint[] = [
       return west ? hud.cellCentre(west) : null;
     },
     offset: [-170, 150],
-    body: (st) => [icon("place"), `Click a dashed slot to place ${tileName(st.selected)}`],
+    body: (st) => [icon("place"), `Click a dashed slot to pin it, click again to place ${tileName(st.selected)}`],
   },
   {
     done: ["rotate", "place"],

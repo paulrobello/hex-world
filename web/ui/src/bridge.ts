@@ -77,6 +77,8 @@ export type Command =
   | { cmd: "exit" }
   | { cmd: "select_tile"; id: string }
   | { cmd: "hover"; q: number; r: number }
+  | { cmd: "pin"; q: number; r: number }
+  | { cmd: "unpin" }
   | { cmd: "rotate"; dir: Spin }
   | { cmd: "place"; q: number; r: number }
   | { cmd: "undo" }
@@ -109,6 +111,7 @@ export type GameEvent =
   | { type: "tileSelected"; tile: string }
   | { type: "ghostRotated"; rotation: number; valid: boolean }
   | { type: "hoverChanged"; cell: Cell | null }
+  | { type: "pinChanged"; cell: Cell | null }
   | { type: "toolChanged"; mode: Tool }
   | { type: "inventoryToggled"; open: boolean }
   | { type: "photoModeToggled"; on: boolean }
@@ -177,6 +180,8 @@ export interface PlayState {
   tiles: PlayTile[];
   frontier: Cell[];
   hovered: Cell | null;
+  /** The slot a click pinned: the ghost stays there while the pointer moves; null when nothing is pinned. */
+  pinned: Cell | null;
   hovered_kind: HoveredKind | null;
   ghost: Ghost | null;
   inventory: string[];
@@ -303,6 +308,8 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   exit: keys<CommandOf<"exit">>({}),
   select_tile: keys<CommandOf<"select_tile">>({ id: true }),
   hover: keys<CommandOf<"hover">>({ q: true, r: true }),
+  pin: keys<CommandOf<"pin">>({ q: true, r: true }),
+  unpin: keys<CommandOf<"unpin">>({}),
   rotate: keys<CommandOf<"rotate">>({ dir: true }),
   place: keys<CommandOf<"place">>({ q: true, r: true }),
   undo: keys<CommandOf<"undo">>({}),
@@ -335,6 +342,7 @@ export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
   tileSelected: keys<EventOf<"tileSelected">>({ tile: true }),
   ghostRotated: keys<EventOf<"ghostRotated">>({ rotation: true, valid: true }),
   hoverChanged: keys<EventOf<"hoverChanged">>({ cell: true }),
+  pinChanged: keys<EventOf<"pinChanged">>({ cell: true }),
   toolChanged: keys<EventOf<"toolChanged">>({ mode: true }),
   inventoryToggled: keys<EventOf<"inventoryToggled">>({ open: true }),
   photoModeToggled: keys<EventOf<"photoModeToggled">>({ on: true }),
@@ -365,6 +373,7 @@ export const STATE_FIELDS = {
     tiles: true,
     frontier: true,
     hovered: true,
+    pinned: true,
     hovered_kind: true,
     ghost: true,
     inventory: true,

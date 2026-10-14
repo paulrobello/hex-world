@@ -171,8 +171,11 @@ try {
     check(a.muted === true && a.volumes.master === 0.3, `this viewer's mute and master level persist (${a.muted}, ${a.volumes.master})`);
     await page.locator(".tool[data-action=settings]").click();
     await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens after the reload");
-    check(await page.locator(".tier[data-tier=low][aria-checked=true]").count() === 1, "Settings shows Low checked");
-    check(await page.locator(".sheet--settings .switch[aria-label='Tilt-shift'][aria-checked=true]").count() === 1, "and tilt-shift on");
+    // The sheet repaints its controls from state after it opens, so wait for the DOM, not the first frame.
+    if (await until(async () => (await page.locator(".tier[data-tier=low][aria-checked=true]").count()) === 1, "Settings shows Low checked"))
+      console.log("ok: Settings shows Low checked");
+    if (await until(async () => (await page.locator(".sheet--settings .switch[aria-label='Tilt-shift'][aria-checked=true]").count()) === 1, "and tilt-shift on"))
+      console.log("ok: and tilt-shift on");
     await page.locator("#settings-tab-audio").click();
     check((await page.locator(".sheet--settings input[aria-label='Master volume']").inputValue()) === "30", "the Master slider reads 30%");
     check(await page.locator(".sheet--settings .switch[aria-label='Mute everything'][aria-checked=true]").count() === 1, "Mute everything reads on");
@@ -321,6 +324,8 @@ try {
   await p2.locator(".bar__world").click();
   await b.until(async () => worldsOpen(p2), "Worlds sheet opens with storage blocked");
   await p2.waitForTimeout(300);
+  const sheetText = await b.text(".sheet--worlds");
+  check(sheetText.includes("· Autosave off") && !sheetText.includes("Not saved"), "the Worlds sheet reads Autosave off, as the bar does");
   await b.shot("storage-off-worlds");
   await blocked.close();
 } catch (e) {

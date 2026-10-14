@@ -71,13 +71,15 @@ opens in Perfetto. The raw 207 MB trace is not committed.
 The trace's stall spacing of 49–50 frames is not the visible-set census period (30 frames), so the
 census frames in that window do not explain it.
 
-## Fix: an opt-in frame-latency limit
+## Fix: a frame-latency limit, on by default
 
-The default build is unchanged, because the backlog never forms at 60 Hz. Paced runs keep at most two
+The limit was measured as an opt-in key; owner decision Q7 (2026-10-14) turned it on by default at 3
+(`?frame_latency=off` turns it off). The backlog never forms at 60 Hz: paced runs keep at most two
 frames in flight and have 0 frames over 25 ms (p95 17.0–17.6 ms, 4 runs). `?frame_latency=N`
 (`web/frame-latency.js`, N from 1 to 8) bounds the page the way wgpu's native surface does: a frame
 that submitted stays in flight until `onSubmittedWorkDone`, and while N frames are in flight the next
-`requestAnimationFrame` callback waits. Without the key nothing is patched.
+`requestAnimationFrame` callback waits. In the table below, "base" is the page without the limit
+(today `?frame_latency=off`).
 
 Before/after, 2 runs each under the load guard. The shipped key was measured on the rebuilt `dist` with
 `web/frame-latency.js` (`fix.json`, load 10.9–14.9); the page-shim prototypes came first (`limiter.json`,

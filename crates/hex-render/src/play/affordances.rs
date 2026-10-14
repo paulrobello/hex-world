@@ -31,7 +31,8 @@ use bevy::{
 use hex_core::{Axial, EdgeStatus, HEX_RADIUS, SocketKind, TileCatalog, opposite_edge, world_edge};
 
 use super::{
-    PlayCatalog, PlayView,
+    PlayCatalog, PlayView, PlayWaiting,
+    ghost::GhostDrawn,
     rise::{ReducedMotion, RiseCue, RiseMessage},
 };
 use crate::{ActiveScenario, Scenario, SceneEntity};
@@ -411,6 +412,8 @@ enum Key {
     Ghost(Axial),
     Bulldoze(Axial),
     Flash(Axial, u32),
+    /// A placed tile hidden until its pack arrives ([`PlayWaiting`]).
+    Waiting(Axial),
 }
 
 struct Element {
@@ -497,11 +500,18 @@ fn hover_parts(cell: Axial) -> Vec<PartSpec> {
     ]
 }
 
-fn ghost_parts(view: &PlayView, catalog: &TileCatalog) -> Vec<PartSpec> {
+fn ghost_parts(view: &PlayView, catalog: &TileCatalog, meshes: bool) -> Vec<PartSpec> {
     let Some(g) = &view.ghost else {
         return vec![];
     };
     let c = centre(g.cell, CAP_Y);
+    // A pinned ghost's outline is solid, so the slot reads as held while the pointer is away.
+    let outline = AffordanceParams::line(GHOST_LINE, 0.75, 2.0);
+    let outline = if g.pinned {
+        AffordanceParams::line(GHOST_LINE, 0.95, 3.0)
+    } else {
+        outline.dashed(10.0, 8.0)
+    };
     let mut out = vec![
         PartSpec {
             mesh: fill_mesh(&[hex_poly(c, RIM_R)]),
@@ -511,13 +521,14 @@ fn ghost_parts(view: &PlayView, catalog: &TileCatalog) -> Vec<PartSpec> {
         },
         PartSpec {
             mesh: line_mesh(&hex_segs(c, RIM_R)),
-            params: AffordanceParams::line(GHOST_LINE, 0.75, 2.0).dashed(10.0, 8.0),
+            params: outline,
             layer: 4.0,
             anim: Anim::Plain,
         },
     ];
-    // Lane strokes stand in for the tile's meshes (the prototype's ghost): river 22 px, road 18 px.
-    if let Some(def) = catalog.get(&g.tile) {
+    let def = catalog.get(&g.tile);
+    // Lane strokes stand in for the tile's meshes while its pack streams: river 22 px, road 18 px.
+    if let Some(def) = def.filter(|_| !meshes) {
         for (kind, width) in [(SocketKind::River, 22.0), (SocketKind::Road, 18.0)] {
             let segs: Vec<_> = (0..6u8)
                 .filter(|&e| {
@@ -541,7 +552,28 @@ fn ghost_parts(view: &PlayView, catalog: &TileCatalog) -> Vec<PartSpec> {
             }
         }
     }
-    // Socket key marks: the neighbour's class along the middle 40% of each touched edge, 11 px in.
+    // The tile's own socket on each edge at this rotation, 11 px inside the rim, and the
+    // neighbour's socket key mark facing it 11 px outside: the edge glow between them says fit or
+    // clash.
+    if let Some(def) = def {
+        for kind in SocketKind::ALL {
+            let segs: Vec<_> = (0..6u8)
+                .filter(|&w| def.edge(w, g.rotation).kind == kind)
+                .map(|w| {
+                    let (a, b) = edge_seg(c, w, RIM_R);
+                    (a.lerp(b, 0.14), a.lerp(b, 0.86))
+                })
+                .collect();
+            if !segs.is_empty() {
+                out.push(PartSpec {
+                    mesh: line_mesh(&segs),
+                    params: AffordanceParams::line(socket_rgb(kind), 1.0, 5.0).inset(11.0),
+                    layer: 5.0,
+                    anim: Anim::Glow,
+                });
+            }
+        }
+    }
     let sockets = neighbour_sockets(view, catalog, g.cell);
     for kind in SocketKind::ALL {
         let segs: Vec<_> = (0..6u8)
@@ -554,7 +586,7 @@ fn ghost_parts(view: &PlayView, catalog: &TileCatalog) -> Vec<PartSpec> {
         if !segs.is_empty() {
             out.push(PartSpec {
                 mesh: line_mesh(&segs),
-                params: AffordanceParams::line(socket_rgb(kind), 0.95, 4.0).inset(11.0),
+                params: AffordanceParams::line(socket_rgb(kind), 0.95, 4.0).inset(-11.0),
                 layer: 5.0,
                 anim: Anim::Glow,
             });
@@ -680,11 +712,33 @@ fn flash_parts(cell: Axial) -> Vec<PartSpec> {
     }]
 }
 
+/// The loading cue on a placed tile's empty slot while its pack streams (owner decision A10): a
+/// soft outline that breathes like the ghost fill, and holds still under reduced motion.
+fn waiting_parts(cell: Axial) -> Vec<PartSpec> {
+    vec![PartSpec {
+        mesh: line_mesh(&hex_segs(centre(cell, GROUND_Y), SLOT_R)),
+        params: AffordanceParams::line(INK, 0.6, 2.5),
+        layer: 1.0,
+        anim: Anim::Breath,
+    }]
+}
+
 /// What the view asks for: (key, signature, whether it shows).
-fn wanted(view: &PlayView, catalog: &TileCatalog) -> Vec<(Key, u64, bool)> {
+fn wanted(
+    view: &PlayView,
+    catalog: &TileCatalog,
+    waiting: &[Axial],
+    meshes: bool,
+) -> Vec<(Key, u64, bool)> {
     let mut out = vec![];
+    for &cell in waiting {
+        out.push((Key::Waiting(cell), 0, true));
+    }
     let ring_on = !view.frontier.is_empty() && !view.bulldoze_mode;
     out.push((Key::Ring, sig_of(&view.frontier), ring_on));
+    if let Some(cell) = view.pointer_slot {
+        out.push((Key::Hover(cell), 0, true));
+    }
     if let Some(g) = &view.ghost {
         out.push((Key::Hover(g.cell), 0, true));
         let edges: Vec<u8> = g.edges.iter().map(|s| status_hash(*s)).collect();
@@ -694,7 +748,9 @@ fn wanted(view: &PlayView, catalog: &TileCatalog) -> Vec<(Key, u64, bool)> {
             .collect();
         out.push((
             Key::Ghost(g.cell),
-            sig_of(&(&g.tile, g.rotation, g.valid, edges, sockets)),
+            sig_of(&(
+                &g.tile, g.rotation, g.valid, edges, sockets, g.pinned, meshes,
+            )),
             true,
         ));
     }
@@ -710,13 +766,14 @@ fn wanted(view: &PlayView, catalog: &TileCatalog) -> Vec<(Key, u64, bool)> {
     out
 }
 
-fn parts_for(key: Key, view: &PlayView, catalog: &TileCatalog) -> Vec<PartSpec> {
+fn parts_for(key: Key, view: &PlayView, catalog: &TileCatalog, meshes: bool) -> Vec<PartSpec> {
     match key {
         Key::Ring => ring_parts(&view.frontier),
         Key::Hover(c) => hover_parts(c),
-        Key::Ghost(_) => ghost_parts(view, catalog),
+        Key::Ghost(_) => ghost_parts(view, catalog, meshes),
         Key::Bulldoze(_) => bulldoze_parts(view),
         Key::Flash(c, _) => flash_parts(c),
+        Key::Waiting(c) => waiting_parts(c),
     }
 }
 
@@ -728,6 +785,7 @@ fn timing(key: Key) -> (f32, f32, f32) {
         Key::Ghost(_) => (0.12, 0.10, 0.15),
         Key::Bulldoze(_) => (0.16, 0.15, 0.0),
         Key::Flash(..) => (0.0, 0.08, 0.0),
+        Key::Waiting(_) => (0.16, 0.12, 0.0),
     }
 }
 
@@ -775,15 +833,18 @@ pub fn sync(
     view: Res<PlayView>,
     catalog: Res<PlayCatalog>,
     reduced: Res<ReducedMotion>,
+    drawn: Res<GhostDrawn>,
     mut aff: ResMut<Affordances>,
     mut cues: MessageReader<RiseMessage>,
     (mut meshes, mut materials): (ResMut<Assets<Mesh>>, ResMut<Assets<AffordanceMaterial>>),
+    waiting: Option<Res<PlayWaiting>>,
 ) {
     if active.0 != Scenario::Play {
         cues.clear();
         return;
     }
     let instant = reduced.0;
+    let ghost_meshes = drawn.0;
     let mut flashes = vec![];
     for m in cues.read() {
         if m.cue == RiseCue::Stage(RiseStage::Column) && !m.skipped {
@@ -802,7 +863,7 @@ pub fn sync(
             &mut meshes,
             &mut materials,
             root,
-            parts_for(key, &view, &catalog.0),
+            parts_for(key, &view, &catalog.0, ghost_meshes),
         );
         let mut alpha = Fade::at(1.0);
         alpha.to(0.0, 0.08, 0.0);
@@ -820,10 +881,18 @@ pub fn sync(
         aff.refusals = view.refusals;
         aff.pulse = (!instant).then_some(0.0);
     }
-    if !view.is_changed() {
+    if !view.is_changed()
+        && !drawn.is_changed()
+        && !waiting.as_ref().is_some_and(|w| w.is_changed())
+    {
         return;
     }
-    let want = wanted(&view, &catalog.0);
+    let want = wanted(
+        &view,
+        &catalog.0,
+        waiting.as_deref().map_or(&[], |w| w.0.as_slice()),
+        ghost_meshes,
+    );
     let keys: HashSet<Key> = want.iter().filter(|w| w.2).map(|w| w.0).collect();
     for el in aff.elements.iter_mut() {
         if !keys.contains(&el.key) && !matches!(el.key, Key::Flash(..)) {
@@ -856,7 +925,7 @@ pub fn sync(
                         &mut meshes,
                         &mut materials,
                         el.root,
-                        parts_for(key, &view, &catalog.0),
+                        parts_for(key, &view, &catalog.0, ghost_meshes),
                     );
                     el.glow = Fade::at(0.0);
                     el.glow.to(1.0, if instant { 0.0 } else { 0.12 }, 0.0);
@@ -871,7 +940,7 @@ pub fn sync(
                     &mut meshes,
                     &mut materials,
                     root,
-                    parts_for(key, &view, &catalog.0),
+                    parts_for(key, &view, &catalog.0, ghost_meshes),
                 );
                 let mut alpha = Fade::at(0.0);
                 alpha.to(1.0, fade_in, delay);

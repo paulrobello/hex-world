@@ -122,3 +122,15 @@ water-l-tony-ev12.9 water-river-wall   srgb_luma=   8.69/255  lin_Y=0.00319  rgb
 water-l-tony-ev12.9 ref-water-grass    srgb_luma= 106.10/255  lin_Y=0.14824  rgb=(87.5,115.3,70.0)  frame_mean=60.1
 water-l-tony-ev12.9 ref-water-bank     srgb_luma=  94.38/255  lin_Y=0.11362  rgb=(101.1,94.0,78.6)  frame_mean=60.1
 beach-l-tony-ev12.9 beach-meadow-wall  srgb_luma=  19.62/255  lin_Y=0.00686  rgb=(20.3,19.8,15.9)  frame_mean=62.3
+o-shipped      mouth-left-wall    srgb_luma=  12.14/255  lin_Y=0.00377  rgb=(13.3,11.8,11.8)  frame_mean=36.6
+o-shipped      mouth-right-wall   srgb_luma=  12.00/255  lin_Y=0.00372  rgb=(13.2,11.7,11.6)  frame_mean=36.6
+o-shipped      ref-mouth-grass    srgb_luma= 124.94/255  lin_Y=0.20784  rgb=(109.9,132.7,92.6)  frame_mean=36.6
+o-shipped      ref-background     srgb_luma=  15.99/255  lin_Y=0.00518  rgb=(15.3,16.1,17.4)  frame_mean=36.6
+o-shipped      ref-mouth-water    srgb_luma=  99.69/255  lin_Y=0.12878  rgb=(83.0,104.9,96.9)  frame_mean=36.6
+o-shipped      bridge-face        srgb_luma=  31.06/255  lin_Y=0.01376  rgb=(30.3,31.0,33.7)  frame_mean=49.8
+o-shipped      ref-bridge-water   srgb_luma=  99.54/255  lin_Y=0.13000  rgb=(85.7,104.7,89.5)  frame_mean=49.8
+o-shipped      ref-bridge-gravel  srgb_luma= 121.82/255  lin_Y=0.19578  rgb=(133.6,120.5,100.0)  frame_mean=49.8
+water-o-shipped water-river-wall   srgb_luma=   7.99/255  lin_Y=0.00243  rgb=(7.6,8.1,8.2)  frame_mean=45.6
+water-o-shipped ref-water-grass    srgb_luma= 106.15/255  lin_Y=0.14840  rgb=(87.6,115.3,70.1)  frame_mean=45.6
+water-o-shipped ref-water-bank     srgb_luma=  94.13/255  lin_Y=0.11295  rgb=(101.8,93.4,78.9)  frame_mean=45.6
+beach-o-shipped beach-meadow-wall  srgb_luma=  27.78/255  lin_Y=0.01158  rgb=(31.2,27.2,23.0)  frame_mean=49.9

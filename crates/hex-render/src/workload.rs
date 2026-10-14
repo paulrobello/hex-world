@@ -110,13 +110,14 @@ pub fn parse_ibl(s: &str) -> Option<bool> {
     parse_shadows(s)
 }
 
-/// D4 candidates. ACES fitted is the default (owner look-dev ruling, 2026-10-13: AgX desaturated the
-/// meadow greens against the approved references).
+/// D4 candidates. TonyMcMapface is the default (owner, 2026-10-14, Q4): Bevy's fitted ACES outputs
+/// pure black below about 0.0033 linear, where the shaded soil walls sit. AgX desaturated the meadow
+/// greens against the approved references (2026-10-13).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum Tonemap {
     AgX,
-    TonyMcMapface,
     #[default]
+    TonyMcMapface,
     AcesFitted,
 }
 
@@ -340,7 +341,7 @@ impl Default for GateConfig {
             shadow_dist: 2_000,
             kit_hooks: KitHooks::None,
             kit_src: KitSource::Runtime,
-            tonemap: Tonemap::AcesFitted,
+            tonemap: Tonemap::TonyMcMapface,
             ibl: true,
             ev100: Ev100::from_f32(crate::lookdev::KIT_EV100),
             tilt: TiltMode::Auto,
@@ -470,7 +471,7 @@ mod tests {
         assert_eq!(parse_ibl("off"), Some(false));
         assert_eq!(parse_ibl("1"), None);
         let d = GateConfig::default();
-        assert_eq!((d.tonemap, d.ibl), (Tonemap::AcesFitted, true));
+        assert_eq!((d.tonemap, d.ibl), (Tonemap::TonyMcMapface, true));
     }
 
     #[test]

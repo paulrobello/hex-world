@@ -10,6 +10,7 @@ struct Boid { pos: vec4<f32>, vel: vec4<f32> };
 const SETTLE: f32 = 1.0;
 const PERCH: f32 = 2.0;
 const SWIM: f32 = 3.0;
+const IDLE: f32 = 4.0;
 
 // Procedural placeholder forms until bird and fish kit pieces exist: 8 vertices each, local frame
 // +z forward, +x right, +y up (metres). Triangles (boids.rs BOID_TRIS): wings or flanks (0 1 3,
@@ -57,6 +58,13 @@ fn vertex(v: Vertex) -> VOut {
     let corner = local % 8u;
     let b = boids[id];
     let mode = b.vel.w;
+    if (mode > IDLE - 0.5) {
+        // An idle slot (boids_compute.wgsl): every corner on one point, so nothing rasterizes.
+        var idle: VOut;
+        idle.clip = position_world_to_clip(b.pos.xyz);
+        idle.color = vec3<f32>(0.0);
+        return idle;
+    }
     let fish = mode > SWIM - 0.5;
     // Animation phase from the distance travelled, so wings and tails beat with the motion.
     let phase = dot(b.pos.xyz, vec3<f32>(0.9, 1.3, 0.7)) * 0.6 + hash(id) * 6.2831853;

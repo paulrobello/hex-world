@@ -232,6 +232,8 @@ mod schema {
         r#"{"cmd":"hover","q":1,"r":0}"#,
         r#"{"cmd":"rotate","dir":"cw"}"#,
         r#"{"cmd":"place","q":1,"r":0}"#,
+        r#"{"cmd":"pin","q":1,"r":0}"#,
+        r#"{"cmd":"unpin"}"#,
         r#"{"cmd":"undo"}"#,
         r#"{"cmd":"redo"}"#,
         r#"{"cmd":"bulldoze","q":1,"r":0}"#,
@@ -260,6 +262,8 @@ mod schema {
             Command::Hover { .. } => "hover",
             Command::Rotate { .. } => "rotate",
             Command::Place { .. } => "place",
+            Command::Pin { .. } => "pin",
+            Command::Unpin => "unpin",
             Command::Undo => "undo",
             Command::Redo => "redo",
             Command::Bulldoze { .. } => "bulldoze",
@@ -340,6 +344,9 @@ mod schema {
             GameEvent::HoverChanged {
                 cell: Some(Axial::new(1, 0)),
             },
+            GameEvent::PinChanged {
+                cell: Some(Axial::new(1, 0)),
+            },
             GameEvent::ToolChanged { mode: Tool::Place },
             GameEvent::InventoryToggled { open: true },
             GameEvent::PhotoModeToggled { on: true },
@@ -384,7 +391,7 @@ mod schema {
                 version: None,
             },
         ];
-        let mut seen = [false; 19];
+        let mut seen = [false; 20];
         for e in &samples {
             let i = match e {
                 GameEvent::TilePlaced { .. } => 0,
@@ -406,6 +413,7 @@ mod schema {
                 GameEvent::Saved { .. } => 16,
                 GameEvent::Loaded { .. } => 17,
                 GameEvent::LoadRefused { .. } => 18,
+                GameEvent::PinChanged { .. } => 19,
             };
             seen[i] = true;
         }

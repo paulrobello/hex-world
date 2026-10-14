@@ -33,7 +33,14 @@ pub enum Action {
     /// Left-click: apply the current tool (place or bulldoze) at the hovered cell.
     Primary,
     /// Place the selected tile at a cell. A cell other than the hovered one is hovered first.
+    /// Clears any pinned slot first, so the rotation is the one legal at this cell.
     Place(Axial),
+    /// Pin a free slot: the ghost and the inventory stay on it while the pointer moves.
+    Pin(Axial),
+    /// Clear the pinned slot.
+    Unpin,
+    /// Esc outside photo mode: unpins a pinned slot, else leaves photo mode (nothing otherwise).
+    Escape,
     Bulldoze(Axial),
     /// Pointer or script hover; `None` hovers nothing.
     Hover(Option<Axial>),
@@ -203,6 +210,9 @@ pub fn map_input(f: &InputFrame, rotate_wheel: &mut f32) -> Vec<Action> {
     if f.pressed(KeyCode::Tab) {
         out.push(Action::ToggleInventory);
     }
+    if f.pressed(KeyCode::Escape) {
+        out.push(Action::Escape);
+    }
 
     if f.mouse_just_pressed.contains(&MouseButton::Left) && !ctrl {
         out.push(Action::Primary);
@@ -307,6 +317,7 @@ mod tests {
         );
         assert_eq!(press(&[KeyCode::KeyB], &[]), [Action::ToggleBulldoze]);
         assert_eq!(press(&[KeyCode::Tab], &[]), [Action::ToggleInventory]);
+        assert_eq!(press(&[KeyCode::Escape], &[]), [Action::Escape]);
         assert_eq!(press(&[KeyCode::KeyP], &[]), [Action::TogglePhoto]);
         assert_eq!(press(&[KeyCode::Digit3], &[]), [Action::SelectNth(2)]);
         assert_eq!(press(&[KeyCode::Equal], &[]), [Action::SelectNth(11)]);

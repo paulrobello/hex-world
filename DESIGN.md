@@ -116,10 +116,9 @@ components:
   row-off:
     textColor: "{colors.ink-2}"
     padding: "3px 10px 3px 6px"
-  socket-code-cell:
-    rounded: "{rounded.code}"
-    width: "9px"
-    height: "14px"
+  socket-hex:
+    width: "32px"
+    height: "32px"
   btn:
     backgroundColor: "{colors.sheet-2}"
     textColor: "{colors.ink}"
@@ -230,7 +229,7 @@ A dark survey-blue paper with ink in three strengths, one magenta for selection,
 - **Survey Amber** (`caution`): "Not saved" and caution notes only.
 
 ### Tertiary: the six socket colours
-- **Grass** (`socket-grass`), **Forest** (`socket-forest`), **Road** (`socket-road`), **River** (`socket-river`), **Beach** (`socket-beach`) and **Ocean** (`socket-ocean`). In CSS these are `--k-G`, `--k-F`, `--k-R`, `--k-V`, `--k-B` and `--k-O`. They drive the tile glyph edges and fill, the six-block socket code, the slot key's edge marks, the Worlds mix strip, the loading hex key, the ghost's road and river lanes, and the in-world socket key marks.
+- **Grass** (`socket-grass`), **Forest** (`socket-forest`), **Road** (`socket-road`), **River** (`socket-river`), **Beach** (`socket-beach`) and **Ocean** (`socket-ocean`). In CSS these are `--k-G`, `--k-F`, `--k-R`, `--k-V`, `--k-B` and `--k-O`. They drive the tile glyph edges and fill, the row socket hex, the slot key's edge marks, the Worlds mix strip, the loading hex key, the ghost's road and river lanes, and the in-world socket key marks.
 
 ### Neutral
 - **Survey Blue** (`sheet`): every panel. That covers the bar, sheet, toast, ghost tag and stream chip.
@@ -284,11 +283,11 @@ The scale has five steps: 12, 13, 14, 16 and 20 px (`--fs-1` to `--fs-5`).
 
 The layout is a set of margins around a clear centre. The **tool bar** is fixed top left, 20 px in (`s-5`). The **sheet** is fixed right, full height, inset 20 px top, right and bottom, and 372 px wide (420 px for the Settings, Worlds and Photo sheets). **Toasts** sit bottom left, 20 px in. The **stream chip** sits above the toast at 84 px from the bottom. The **ghost tag** sits beside the ghost. The centre belongs to the ghost and the diorama.
 
-Spacing uses a six-step scale: 4, 8, 12, 16, 20 and 28 px. Tight gaps of 2 and 3 px separate rows and code cells. The sheet's inner padding is 16 / 16 / 12 px. The key sits 16 px below the head, with 12 px of inner padding.
+Spacing uses a six-step scale: 4, 8, 12, 16, 20 and 28 px. Tight gaps of 2 and 3 px separate rows and key lines. The sheet's inner padding is 16 / 16 / 12 px. The key sits 16 px below the head, with 12 px of inner padding.
 
 Every tool, button and row is at least 44 px tall, except the small button, which is 36 px. Touch arrives in P7 and keeps these targets.
 
-**The Narrow-Desktop Rule (1400 px).** At 1400 px wide or less, key caps leave the bar and live only in tooltips, tools tighten to 9 px of side padding, the Tiles sheet narrows to 340 px, and socket-code cells narrow to 7 px. The bar and sheet never meet, and the ghost area stays clear (shot `s12-narrow-1280x720`).
+**The Narrow-Desktop Rule (1400 px).** At 1400 px wide or less, key caps leave the bar and live only in tooltips, tools tighten to 9 px of side padding, the Tiles sheet narrows to 340 px, and the row socket hex narrows to 28 px. The bar and sheet never meet, and the ghost area stays clear (shot `s12-narrow-1280x720`).
 
 **The F6 Escape Rule.** Tab belongs to the sheet: it opens and closes Tiles. So F6, and Shift+F6 to go back, moves focus between `[data-region]` landmarks (bar, sheet, toast), skipping closed ones. The sheet foot and the Settings key table both state it.
 
@@ -307,7 +306,7 @@ Panels are lifted off the diorama by soft, dark, ambient shadows. There is no gl
 
 ## Shapes
 
-Corners are small and square-shouldered. Panels use 6 px (`--r`). Every control, row, key, key cap, note, tooltip and callout uses 4 px (`--r-control`). Swatches use 2 px (`--r-swatch`) and socket-code cells 1 px (`--r-code`). Full rounds are reserved for the slider thumb, the save dot, the switch (13 px), the toast count, and the ghost tag's leading edge (`999px 4px 4px 999px` on `--r-control`, a tag pointing at its ghost). When the ghost tag stacks a headline over a reason, it squares off to 6 px.
+Corners are small and square-shouldered. Panels use 6 px (`--r`). Every control, row, key, key cap, note, tooltip and callout uses 4 px (`--r-control`). Swatches use 2 px (`--r-swatch`). Full rounds are reserved for the slider thumb, the save dot, the switch (13 px), the toast count, and the ghost tag's leading edge (`999px 4px 4px 999px` on `--r-control`, a tag pointing at its ghost). When the ghost tag stacks a headline over a reason, it squares off to 6 px.
 
 The hexagon is the system's only silhouette. It appears in the slot key, tile glyphs, the loading key, the place and bulldoze icons, and the free-slot ring. Dashed strokes mean "open or unresolved": the slot ring (6/7), the slot key body (5/5), the ghost outline (10/8), refusal edges (14/9), and the blocked bulldoze outline (10/8).
 
@@ -332,7 +331,7 @@ Icons are a single authored set on a 24 px grid with a 1.8 px round-capped strok
 ### Row and Socket Code (signature)
 - **Row:** a 52 px glyph, then name over meta, then the socket code. Hover fills `sheet-2` and lifts the glyph 2 px at 1.04 scale. Selection fills `sheet-2`, draws a 1.5 px inset `pick` outline, and fills the row's number key (1 to 9) with `pick`.
 - **Off row ("Doesn't fit here"):** compact, with a 28 px glyph at 45% opacity and 30% saturation, the name at 14 px in `ink-2`, the reason in 12 px meta, and no code. Selected, it draws a `bad` outline.
-- **Socket code:** six 9 × 14 px cells with 2 px gaps and 1 px radius, one per edge in edge order, each in its socket colour. It is the tile's legend entry and lines up against the slot key.
+- **Socket code:** a 32 px hex in the slot key's geometry, every edge a line in its socket colour, turned to the rotation the row's picture shows, with the picture's turn transition. It is the tile's legend entry and lines up against the slot key.
 
 ### Toast
 - A margin note at bottom left on `sheet`: an icon, text over an optional 13 px sub line, and an optional action button on `sheet-2`. It rises 8 px and fades in, dismisses after 4 s, and pauses while hovered. One toast shows at a time and updates in place, with a count pill for repeats ("2 Undone"). The icon carries tone: `bad` or `ok`.

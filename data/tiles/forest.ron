@@ -1,4 +1,5 @@
-// Dense tree scatter; the hero oak is the bird roost.
+// The pine forest: dense spruce scatter and rocks, no oak (owner U3). Its id stays "forest" so
+// saves, scenarios and the perf worlds keep loading as pine forests.
 (
     id: "forest",
     biome: Forest,
@@ -16,11 +17,5 @@
             (piece: "tree_forest", density: 3.0),
             (piece: "rock_small", density: 0.2),
         ],
-        hero: [
-            (piece: "tree_hero_oak", at: (0.0, 0.0)),
-        ],
     ),
-    agents: [
-        (agent: Bird, max: 12),
-    ],
 )

@@ -119,6 +119,10 @@ await withPage(gpuArgs, async (page) => {
   await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
   const state = await page.evaluate(() => window.hexWorld.state());
   if (state.scenario !== "Play") fail("bare URL did not open the play scenario: " + JSON.stringify(state.scenario));
+  // The web frame-latency limit is on by default (web/frame-latency.js).
+  const fl = await page.evaluate(() => window.__frameLatency && { limit: window.__frameLatency.limit, source: window.__frameLatency.source, deferrals: window.__frameLatency.deferrals() });
+  if (fl?.limit !== 3 || fl?.source !== "default") fail("bare URL: frame-latency limit not on by default: " + JSON.stringify(fl));
+  else console.log("frame-latency (bare URL):", JSON.stringify(fl));
   await page.waitForSelector("#hud:not(.is-off) .bar", { state: "visible", timeout: 15_000 })
     .catch(() => fail("bare URL: the HUD tool bar never showed"));
   await page.waitForSelector(".sheet--tiles:not(.is-closed)", { state: "visible", timeout: 15_000 })
@@ -126,13 +130,24 @@ await withPage(gpuArgs, async (page) => {
   await page.screenshot({ path: "e2e/test-results/smoke-default-play.png" });
 });
 
-// 2b. Unknown scenario falls back to the web default (play) without errors.
+// 2b. Unknown scenario falls back to the web default (play) without errors; the URL sets the
+// frame-latency limit.
 await withPage(gpuArgs, async (page, errors) => {
-  await page.goto(base + "?shot=nope");
+  await page.goto(base + "?shot=nope&frame_latency=2");
   await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
   const state = await page.evaluate(() => window.hexWorld.state());
   if (state.scenario !== "Play") fail("bad scenario did not fall back: " + JSON.stringify(state.scenario));
+  const fl = await page.evaluate(() => window.__frameLatency && { limit: window.__frameLatency.limit, source: window.__frameLatency.source });
+  if (fl?.limit !== 2 || fl?.source !== "url") fail("?frame_latency=2 did not set the limit: " + JSON.stringify(fl));
   if (errors.some((e) => /panic|unreachable/i.test(e))) fail("panic on bad scenario");
+});
+
+// 2b2. `?frame_latency=off` turns the default limit off: nothing is patched.
+await withPage(gpuArgs, async (page) => {
+  await page.goto(base + "?scenario=single&frame_latency=off");
+  await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 60_000 });
+  const fl = await page.evaluate(() => window.__frameLatency ?? null);
+  if (fl !== null) fail("?frame_latency=off still patched the frame loop: " + JSON.stringify(fl));
 });
 
 // 2c. Quality tier (PRD §9.2): with no `tier` key it is detected from the adapter's limits and
@@ -464,9 +479,20 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
       const s = window.__sampledTextures ?? {};
       return window.hexWorld.state().tiles === 5 &&
         (s.kit ?? []).some((k) => k.pass === "forward" && k.ibl && k.transmission) && (s.kit ?? []).some((k) => k.pass === "prepass") &&
-        (s.water ?? []).some((k) => k.pass === "water" && k.ibl) && (s.water ?? []).some((k) => k.pass === "terrain" && k.ibl);
+        (s.water ?? []).some((k) => k.pass === "water" && k.ibl);
     }))) await page.waitForTimeout(200);
     await page.waitForTimeout(1_500);
+    // The ghost's see-through meshes (GhostMaterial: one uniform, no texture) beside refracting water,
+    // so their pipeline is created under the same clamp.
+    await page.evaluate(() => { const h = window.hexWorld; h.selectTile("river_straight"); h.hover(-2, 0); });
+    const ghostBy = Date.now() + 30_000;
+    while (Date.now() < ghostBy && !(await page.evaluate(() => window.hexWorld.state().ghost_meshes === true)))
+      await page.waitForTimeout(200);
+    await page.waitForTimeout(1_000);
+    const ghost = await page.evaluate(() => ({ meshes: window.hexWorld.state().ghost_meshes, at: window.hexWorld.state().play?.ghost }));
+    console.log(`${tag}: ghost ${JSON.stringify(ghost)}`);
+    if (ghost.meshes !== true || ghost.at?.q !== -2 || ghost.at?.r !== 0)
+      fail(`${tag}: the ghost at (-2, 0) is not drawn with its meshes: ${JSON.stringify(ghost)}`);
     const { sampled, limit, state } = await page.evaluate(() => ({
       sampled: window.__sampledTextures, limit: window.__deviceSampledLimit, state: window.hexWorld.state() }));
     console.log(`${tag}: tiles ${state.tiles}; sampled textures per stage max ${sampled?.max}, kit pipelines ` +
@@ -480,10 +506,15 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
       if (pass === "forward" && !got.every((k) => k.transmission))
         fail(`${tag}: kit forward pipeline layout lacks the view transmission texture: ${JSON.stringify(got)}`);
     }
+    // Play draws the terrain material only as the placeholder bed of a water tile whose centre
+    // piece is not in the manifest. A tile waiting on the water pack is hidden (owner decision A10),
+    // so with every centre piece shipped no terrain pipeline is created here; the water scenario
+    // cases above cover the terrain pipeline's texture count.
     for (const pass of ["water", "terrain"]) {
       const got = (sampled?.water ?? []).filter((k) => k.pass === pass && k.ibl);
-      if (!got.length) fail(`${tag}: no IBL ${pass} pipeline was created`);
-      else if (!got.every((k) => k.sampled === WATER_SAMPLED.high[pass]))
+      if (!got.length) {
+        if (pass === "water") fail(`${tag}: no IBL ${pass} pipeline was created`);
+      } else if (!got.every((k) => k.sampled === WATER_SAMPLED.high[pass]))
         fail(`${tag}: ${pass} pipeline uses ${got.map((k) => k.sampled)} sampled textures, expected ${WATER_SAMPLED.high[pass]}`);
       if (pass === "water" && !got.every((k) => k.transmission))
         fail(`${tag}: water shader not composed with the transmission texture: ${JSON.stringify(got)}`);
@@ -497,10 +528,10 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
 
 // 9. Kit streaming by pack (PRD §10, crates/hex-render/src/play/packs.rs). Before the first
 // interaction the play scenario may fetch only core files (the network log, mapped to packs through
-// dist's kit manifest), and every core file must be in by READY. Selecting the forest tile requests
-// the forest and hero packs at once; their files are held (page.route) so the tile, placed next, is caught on its
-// placeholder mid-rise, then released: the tile must leave `pack_waiting` (swapped to the kit look)
-// and its rise must run on to an unskipped `settled` cue, which a rebuild (it resets every rise to
+// dist's kit manifest), and every core file must be in by READY. Selecting the oak tile requests
+// the forest and hero packs at once; their files are held (page.route) so the tile, placed next, is caught
+// waiting (placed and undoable, hidden, not rising), then released: the tile must leave `pack_waiting`
+// and rise in the kit look to an unskipped `settled` cue, which a rebuild (it resets every rise to
 // rest with no cue) would not produce. Every other pack then streams in the background.
 {
   const manifest = JSON.parse(await readFile(join(dist, "assets/kit/manifest.json"), "utf8"));
@@ -546,30 +577,34 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     console.log(`${tag}: before interaction ${before.length} kit requests, all core (family ${family}); packs ${JSON.stringify(s.packs)}`);
 
     phase = "after";
-    // Selecting the forest tile requests its packs before any slot is hovered.
-    await page.evaluate(() => { window.hexWorld.events(); window.hexWorld.selectTile("forest"); });
+    // Selecting the oak tile requests its packs (forest_base, the hero oak) before any slot is hovered.
+    await page.evaluate(() => { window.hexWorld.events(); window.hexWorld.selectTile("oak"); });
     const selDeadline = Date.now() + 10_000;
     while (Date.now() < selDeadline && (s = await state()).packs?.forest !== "loading") await page.waitForTimeout(50);
     if (s.packs?.forest !== "loading" || s.packs?.hero !== "loading" || s.tiles !== 1)
-      fail(`${tag}: selecting the forest tile did not request its packs: ${JSON.stringify(s.packs)}`);
+      fail(`${tag}: selecting the oak tile did not request its packs: ${JSON.stringify(s.packs)}`);
     const onSelect = log.filter((e) => e.phase === "after" && packOf.get(e.path) === "forest").length;
-    console.log(`${tag}: selected forest (no hover, no placement): ${onSelect} forest files requested, packs ${JSON.stringify(s.packs)}`);
+    console.log(`${tag}: selected oak (no hover, no placement): ${onSelect} forest files requested, packs ${JSON.stringify(s.packs)}`);
     await page.evaluate(() => window.hexWorld.placeTile(1, 0));
     const deadline = Date.now() + 20_000;
     while (Date.now() < deadline && !(s = await state()).pack_waiting?.some((w) => w.q === 1 && w.r === 0)) await page.waitForTimeout(50);
     const waiting = s.pack_waiting?.find((w) => w.q === 1 && w.r === 0);
     const rise0 = s.play?.rising?.find((t) => t.q === 1 && t.r === 0);
-    if (s.tiles !== 2 || !waiting || waiting.tile !== "forest") fail(`${tag}: forest tile not placed and waiting: ${JSON.stringify(s.pack_waiting)}`);
-    if (JSON.stringify(waiting?.packs) !== JSON.stringify(["forest", "hero"])) fail(`${tag}: forest tile waits on ${JSON.stringify(waiting?.packs)}`);
+    if (s.tiles !== 2 || !waiting || waiting.tile !== "oak") fail(`${tag}: oak tile not placed and waiting: ${JSON.stringify(s.pack_waiting)}`);
+    if (JSON.stringify(waiting?.packs) !== JSON.stringify(["forest", "hero"])) fail(`${tag}: oak tile waits on ${JSON.stringify(waiting?.packs)}`);
     if (s.packs?.forest !== "loading" || s.packs?.hero !== "loading") fail(`${tag}: forest/hero not loading: ${JSON.stringify(s.packs)}`);
-    if (!rise0) fail(`${tag}: forest tile is not rising: ${JSON.stringify(s.play?.rising)}`);
+    // Owner decision A10: the placement registers at once (tiles, undo), but the tile stays hidden
+    // and does not rise until its packs arrive.
+    if (rise0) fail(`${tag}: oak tile rises before its packs arrive: ${JSON.stringify(rise0)}`);
+    if (!s.play?.tiles?.some((t) => t.q === 1 && t.r === 0 && t.tile === "oak") || !s.play?.can_undo)
+      fail(`${tag}: the placement did not register while its packs stream: ${JSON.stringify(s.play?.tiles)} can_undo ${s.play?.can_undo}`);
     await page.waitForTimeout(150);
-    await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-streaming-placeholder.png" });
+    await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-streaming-waiting.png" });
     const forestFiles = [...packOf].filter(([p, k]) => k === "forest" && (p.endsWith(".glb") || p.endsWith(`.${family}`))).map(([p]) => p);
     const requested = new Set(log.filter((e) => e.phase === "after").map((e) => e.path));
     const unrequested = forestFiles.filter((p) => !requested.has(p));
     if (unrequested.length) fail(`${tag}: forest pack files not requested after the placement: ${unrequested.join(", ")}`);
-    console.log(`${tag}: placed forest at (1, 0): waiting ${JSON.stringify(waiting?.packs)}, rise t ${rise0?.t} s (${rise0?.stage}); ` +
+    console.log(`${tag}: placed oak at (1, 0): waiting ${JSON.stringify(waiting?.packs)}, hidden (not rising); ` +
       `${forestFiles.length} forest files requested (held), packs ${JSON.stringify(s.packs)}`);
 
     release();
@@ -580,9 +615,8 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
       if (s.packs?.forest === "ready" && s.packs?.hero === "ready" && !s.pack_waiting?.some((w) => w.q === 1 && w.r === 0)) { swapped = s; break; }
       await page.waitForTimeout(25);
     }
-    if (!swapped) { fail(`${tag}: forest tile never swapped: ${JSON.stringify(s.packs)} waiting ${JSON.stringify(s.pack_waiting)}`); return; }
+    if (!swapped) { fail(`${tag}: oak tile never swapped: ${JSON.stringify(s.packs)} waiting ${JSON.stringify(s.pack_waiting)}`); return; }
     const riseAtSwap = swapped.play?.rising?.find((t) => t.q === 1 && t.r === 0);
-    if (riseAtSwap && rise0 && !(riseAtSwap.t > rise0.t)) fail(`${tag}: rise clock went back across the swap: ${rise0.t} -> ${riseAtSwap.t}`);
     const settleDeadline = Date.now() + 10_000;
     let settled = null;
     const events = [];
@@ -591,7 +625,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
       settled = events.find((e) => e.type === "riseStage" && e.q === 1 && e.r === 0 && e.stage === "settled");
       if (!settled) await page.waitForTimeout(50);
     }
-    if (!settled || settled.skipped) fail(`${tag}: forest rise did not settle on its own after the swap: ${JSON.stringify(settled)}`);
+    if (!settled || settled.skipped) fail(`${tag}: oak rise did not settle on its own after the swap: ${JSON.stringify(settled)}`);
     console.log(`${tag}: swapped to kit ${riseAtSwap ? `mid-rise at t ${riseAtSwap.t} s (${riseAtSwap.stage})` : "after the rise"}; ` +
       `settled cue skipped=${settled?.skipped}`);
     await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-streaming-kit.png" });

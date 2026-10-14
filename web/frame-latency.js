@@ -1,13 +1,26 @@
-// Opt-in frame-latency limit for the web build: `?frame_latency=N` (1 to 8) lets at most N rendered
-// frames' WebGPU work stay unfinished before the next animation frame runs, the bound wgpu's native
-// surface keeps with its maximum frame latency. Without the key nothing is patched.
+// Frame-latency limit for the web build, on by default: at most 3 rendered frames' WebGPU work stay
+// unfinished before the next animation frame runs, the bound wgpu's native surface keeps with its
+// maximum frame latency. `?frame_latency=N` (1 to 8) changes the limit; `?frame_latency=off` (or 0)
+// patches nothing.
 // Why: when animation frames come faster than the browser's GPU side can consume them (uncapped
 // Chrome), Chrome queues about 180 ms of WebGPU work and then blocks the page's main thread for
 // 25-90 ms while the compositor waits for that work to be scheduled (docs/perf/stall-tail/). At
-// 60 Hz the queue stays at one or two frames, so the default build leaves frame scheduling alone.
+// 60 Hz the queue stays at one or two frames and the limit changes nothing measurable.
 (function () {
-  var n = Math.floor(Number(new URLSearchParams(location.search).get("frame_latency")));
-  if (!(n >= 1 && n <= 8) || !window.GPUQueue || !window.requestAnimationFrame) return;
+  var DEFAULT_LIMIT = 3;
+  var key = new URLSearchParams(location.search).get("frame_latency");
+  var source = key === null ? "default" : "url";
+  if (key === "off" || key === "0") {
+    console.info("frame-latency: off (url)");
+    return;
+  }
+  var n = key === null ? DEFAULT_LIMIT : Math.floor(Number(key));
+  if (!(n >= 1 && n <= 8)) {
+    console.warn("frame-latency: ignoring frame_latency=" + key + " (1 to 8, or off); using " + DEFAULT_LIMIT);
+    n = DEFAULT_LIMIT;
+    source = "default";
+  }
+  if (!window.GPUQueue || !window.requestAnimationFrame) return;
   var queue = null, submitted = false, inflight = 0, deferrals = 0, nextId = -1;
   var waiting = [], byId = new Map();
   var submit = GPUQueue.prototype.submit;
@@ -64,7 +77,9 @@
   };
   window.__frameLatency = {
     limit: n,
+    source: source,
     inflight: function () { return inflight; },
     deferrals: function () { return deferrals; },
   };
+  console.info("frame-latency: limit " + n + " (" + source + ")");
 })();

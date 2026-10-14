@@ -1,6 +1,6 @@
 //! `scenario=water`: the hero-water look-dev (PRD §9.1, P2). One ocean, one river with a bend, a
-//! beach and hex joints, on placeholder terrain, lit with the kit look-dev (ACES, EV100 12.5, noon
-//! IBL, the HDRI sun).
+//! beach and hex joints, on placeholder terrain, lit with the kit look-dev (TonyMcMapface, EV100 12.9,
+//! noon IBL, the HDRI sun).
 //!
 //! Water and terrain are separate hex meshes per cell, each spawned with its own rotation, so the
 //! shaders must be continuous across joints and rotations: every wave, flow and foam term is a

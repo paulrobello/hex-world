@@ -1,4 +1,4 @@
-// Start tile (A1). Grass on every edge, wildflower and rock scatter.
+// Start tile (A1). Grass on every edge, wildflowers in clustered drifts (A18) and rock scatter.
 (
     id: "meadow",
     biome: Grass,
@@ -13,7 +13,7 @@
     ),
     props: (
         scatter: [
-            (piece: "wildflower_clump", density: 4.0),
+            (piece: "wildflower_clump", density: 4.0, drift: true),
             (piece: "rock_small", density: 0.3),
         ],
     ),

@@ -53,6 +53,7 @@ export function glyph(def: TileDef): SVGElement {
       [64, 60],
     ] as const)
       g.append(s("circle", { class: "g-tree", cx: x, cy: y, r: 7 }));
+  if (def.id === "oak") g.append(s("circle", { class: "g-tree", cx: C, cy: C, r: 15 }));
   if (def.id === "house_cluster")
     for (const [x, y] of [
       [44, 44],
@@ -75,6 +76,20 @@ export function glyph(def: TileDef): SVGElement {
     g.append(s("line", { class: `g-edge ${KIND_CLASS[def.edges[e]!]}`, x1, y1, x2, y2 }));
   }
   return s("svg", { class: "glyph", viewBox: "0 0 100 100", "aria-hidden": "true" }, g);
+}
+
+/**
+ * The tile's sockets as a hex in the slot key's geometry, one coloured line per edge, at rotation 0;
+ * its inner `.g-rot` group turns with the row picture.
+ */
+export function socketHex(def: TileDef): SVGElement {
+  const g = s("g", { class: "g-rot" }, s("polygon", { class: "key__slot", points: hexPoints(34) }));
+  for (let e = 0; e < 6; e++) {
+    const [x1, y1] = vertex(e, 34);
+    const [x2, y2] = vertex(e + 1, 34);
+    g.append(s("line", { class: `key__edge ${KIND_CLASS[def.edges[e]!]}`, x1, y1, x2, y2 }));
+  }
+  return s("svg", { class: "row__hex", viewBox: "0 0 100 100", "aria-hidden": "true" }, g);
 }
 
 /** The thumbnail URL for a tile at rotation k, or null without baked thumbnails. */

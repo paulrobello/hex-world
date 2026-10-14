@@ -86,12 +86,18 @@ impl Default for TiltShiftSettings {
     }
 }
 
-/// Set once the player chooses tilt-shift themselves: the Settings switch or slider (the `tilt`
-/// command), the `T` key, or a loaded save, which stores their last choice. A tier change then
-/// keeps their toggle and strength and takes only the new tier's taps. Until then a tier change
-/// resets both to the tier's default.
+/// Set once the player toggles tilt-shift themselves: the Settings switch (a `tilt` command with
+/// `on`) or the `T` key. A strength-only `tilt` command does not set it. A loaded save restores the
+/// flag it was saved with (format v2 `tilt_shift_chosen`; v1 files load unset), so the autosave
+/// resume alone never counts as a choice. While set, a tier change keeps the player's toggle and
+/// strength and takes only the new tier's taps; while unset it resets both to the tier's default.
 #[derive(Resource, Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct TiltPinned(pub bool);
+
+/// The tilt-shift the last scene (re)build set from the tier: where a loaded world with no
+/// player choice puts the toggle and strength back.
+#[derive(Resource, Clone, Copy, Debug, Default, PartialEq)]
+pub struct TiltTierDefault(pub TiltShiftSettings);
 
 /// The settings after a tier rebuild: `rebuilt` (the new tier's default), or the player's `before`
 /// toggle and strength with the new tier's taps once they chose them.
@@ -213,6 +219,7 @@ impl Plugin for TiltShiftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TiltShiftSettings>()
             .init_resource::<TiltPinned>()
+            .init_resource::<TiltTierDefault>()
             .add_plugins((
                 ExtractComponentPlugin::<TiltShift>::default(),
                 UniformComponentPlugin::<TiltShift>::default(),

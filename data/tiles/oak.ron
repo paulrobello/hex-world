@@ -1,0 +1,27 @@
+// The hero oak on forest_base's litter and grass rim, with rocks and a few flowers (owner U3).
+// Forest edges, so it mixes freely with the pine forest; the oak is the bird roost.
+(
+    id: "oak",
+    biome: Forest,
+    base: "forest_base",
+    edges: (
+        (kind: Forest),
+        (kind: Forest),
+        (kind: Forest),
+        (kind: Forest),
+        (kind: Forest),
+        (kind: Forest),
+    ),
+    props: (
+        scatter: [
+            (piece: "rock_small", density: 0.5),
+            (piece: "wildflower_clump", density: 0.9),
+        ],
+        hero: [
+            (piece: "tree_hero_oak", at: (0.0, 0.0)),
+        ],
+    ),
+    agents: [
+        (agent: Bird, max: 12),
+    ],
+)

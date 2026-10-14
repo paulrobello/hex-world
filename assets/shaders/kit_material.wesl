@@ -51,8 +51,8 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
     // Live wet band on coast-bed sand (FLAG_WET_BAND, docs/kit/water-contract.md §3): the look-dev
     // placeholder bed's band (water_terrain.wesl) on the water surface's swash at the same world
     // point, so the soaked line follows the run-up. Damp sand darkens and glosses up to 0.32-0.40 m
-    // above the water; sand the swash reaches is wetter still. The slot's own tint (the static damp
-    // band) is the base it darkens, as the placeholder darkens its sand.
+    // above the water; sand the swash reaches is wetter still. The slot's own tint is dry sand
+    // (owner, 2026-10-14), so the band owns the whole gradient, as the placeholder darkens its sand.
     var shore_wet = 0.0;
     if ((kit_common::kit.flags & kit_common::FLAG_WET_BAND) != 0u) {
         let wp = in.world_position.xyz;

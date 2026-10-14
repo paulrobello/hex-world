@@ -7,7 +7,7 @@
 //! after the first interaction (a change of selection, or the first change to the view after the
 //! start world) the remaining packs stream one at a time in `PACKS` order. A pack's request fetches its pieces' GLBs and every map their slots sample
 //! (sets owned by other packs included) plus the sets it owns, and it is ready only once all of
-//! them have loaded, so a tile swaps from its placeholder straight to the textured kit look.
+//! them have loaded, so a tile hidden while it waits appears straight in the textured kit look.
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use bevy::{gltf::Gltf, prelude::*};
@@ -18,7 +18,7 @@ use super::PlayView;
 use crate::kit_material::{MapRequest, load_map, slot_requests};
 
 /// Native only: frames a streamed (non-core) pack waits after its request before its files are
-/// fetched, so a shot can catch a tile on its placeholder (`docs/checkpoints/streaming/`). Disk
+/// fetched, so a shot can catch a tile while it waits (`docs/checkpoints/streaming/`). Disk
 /// loads otherwise land within a few frames, inside the rise.
 pub const HOLD_ENV: &str = "HEXW_PACK_HOLD_FRAMES";
 
@@ -60,7 +60,7 @@ pub struct PackRequests {
 }
 
 /// The play kit's packs: their load state, the first-interaction trigger, and the placed tiles
-/// still drawn with a placeholder for a pack that has not arrived.
+/// still hidden for a pack that has not arrived.
 #[derive(Resource)]
 pub struct PlayPacks {
     pub(super) manifest: KitManifest,
@@ -314,6 +314,13 @@ impl PlayPacks {
             .collect()
     }
 
+    /// Whether a tile draws a piece from a pack that is not ready yet: its visual waits for it.
+    pub fn tile_waiting(&self, def: &TileDef, catalog: &TileCatalog) -> bool {
+        self.tile_packs(def, catalog)
+            .iter()
+            .any(|k| self.state(k) != Some(PackState::Ready))
+    }
+
     /// Recomputes the placed tiles waiting on a pack.
     pub fn refresh_waiting(&mut self, view: &PlayView, catalog: &TileCatalog) {
         let mut waiting = vec![];
@@ -341,7 +348,7 @@ impl PlayPacks {
             .filter_map(|k| self.state(k).map(|s| (*k, s)))
     }
 
-    /// `(cell, tile, packs)`: placed tiles drawn with a placeholder until these packs arrive.
+    /// `(cell, tile, packs)`: placed tiles hidden until these packs arrive.
     pub fn waiting(&self) -> &[(Axial, String, Vec<&'static str>)] {
         &self.waiting
     }
@@ -364,8 +371,10 @@ mod tests {
         let need = |id: &str| p.tile_packs(c.get(id).unwrap(), &c);
         assert_eq!(need("meadow"), BTreeSet::from([CORE_PACK]));
         assert_eq!(need("road_straight"), BTreeSet::from([CORE_PACK]));
-        // The forest base and the hero oak; the scatter spruce and rocks are not drawn in play.
-        assert_eq!(need("forest"), BTreeSet::from(["forest", "hero"]));
+        // The pine forest needs its base; the oak tile its base and the hero oak. Scatter (spruces,
+        // rocks, flowers) does not hold a tile back: each rule draws once its piece is in the kit.
+        assert_eq!(need("forest"), BTreeSet::from(["forest"]));
+        assert_eq!(need("oak"), BTreeSet::from(["forest", "hero"]));
         assert_eq!(
             need("house_cluster"),
             BTreeSet::from([CORE_PACK, "village"])

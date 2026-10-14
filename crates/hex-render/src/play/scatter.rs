@@ -1,5 +1,6 @@
-//! Seeded prop scatter in play (PRD §5.3, §6): the forest's spruces and rocks and the meadow's
-//! wildflowers and rocks, from each tile's `props.scatter` rules.
+//! Seeded prop scatter in play (PRD §5.3, §6): the pine forest's spruces and rocks, the oak tile's
+//! rocks and flowers on the litter, and the meadow's wildflowers and rocks, from each tile's
+//! `props.scatter` rules.
 //!
 //! - **Seed.** A tile scatters from `hex_core::cell_seed(world seed, cell)`, which is exactly its
 //!   `PlacedTile::seed`. [`layout`] is a pure function of the definition, that seed and the tile's
@@ -10,11 +11,15 @@
 //!   seed, which keeps its mean over cells exact. Exclusions move instances onto the ground that is
 //!   left and do not thin the count; where blue-noise spacing cannot fit it, the report's `placed`
 //!   falls short of `planned`.
+//! - **Drifts.** A rule with `drift` (the meadow's wildflowers, A18) grows only on the [`DRIFT_SHARE`]
+//!   of its ground where the tile's seeded value noise ([`drift_noise`]) is highest, so its
+//!   instances gather in a few clustered drifts. The noise is tile-local and seeded from the tile
+//!   alone, so a tile needs no neighbour to scatter and redraws identically.
 //! - **Ground.** An instance stands only on its piece's floor slots ([`floor_slots`]) of the topmost
 //!   LOD0 surface of the tile's base, centre and lane edge pieces, sampled the way the kit gate's
-//!   `surface_at` does: trees on `forest_base_floor` (the litter), wildflowers on `meadow_base_cap`,
-//!   rocks on either. Its whole ground footprint must lie on that floor, so nothing stands on a road,
-//!   a river bed or bank, a house pad or driveway, a beach, a rim, a skirt or water
+//!   `surface_at` does: trees on `forest_base_floor` (the litter), rocks and wildflowers on either
+//!   that and `meadow_base_cap`. Its whole ground footprint must lie on that floor, so nothing
+//!   stands on a road, a river bed or bank, a house pad or driveway, a beach, a rim, a skirt or water
 //!   ([`excluded_slot`]). It keeps clear of hero props (a tree clears the oak's canopy), of road and
 //!   river centrelines (`lane_clearance`, at least the lane's half width plus [`LANE_GAP`]) and of
 //!   the hex border (a crown overhangs it by at most [`CROWN_OVERHANG`]), and stands upright at the
@@ -69,6 +74,13 @@ pub const HERO_GAP: f32 = 0.25;
 pub const LANE_GAP: f32 = 1.0;
 /// Gap (m) between a footprint and the hex border.
 pub const BORDER_GAP: f32 = 0.3;
+/// Share of a drift rule's ground (its highest-noise cells) its instances grow on.
+pub const DRIFT_SHARE: f32 = 0.25;
+/// Same-piece instances in a drift keep this many ground reaches apart (2 when spread evenly), so
+/// their clumps may overlap a little.
+pub const DRIFT_PACK: f32 = 1.4;
+/// Lattice spacing (m) of the drift noise's coarse octave; the fine octave is half of it.
+pub const DRIFT_CELL: f32 = 7.0;
 /// Dart throws per wanted instance before a rule gives up.
 const ATTEMPTS: u32 = 60;
 /// Raster step (m) of the ground the dart thrower samples, and its half extent (m).
@@ -84,8 +96,7 @@ const BUCKETS: usize = 33;
 pub fn floor_slots(piece: &str) -> &'static [&'static str] {
     match piece {
         "tree_forest" => &["forest_base_floor"],
-        "rock_small" => &["forest_base_floor", "meadow_base_cap"],
-        "wildflower_clump" => &["meadow_base_cap"],
+        "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
         _ => &[],
     }
 }
@@ -533,12 +544,14 @@ impl Instance {
     }
 }
 
-/// A tile's scatter. `planned` and `area` are per rule.
+/// A tile's scatter. `planned`, `area` (the rule's whole ground) and `spacing` (the least distance
+/// between two of its instances) are per rule.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Layout {
     pub instances: Vec<Instance>,
     pub planned: Vec<u32>,
     pub area: Vec<f32>,
+    pub spacing: Vec<f32>,
 }
 
 impl Layout {
@@ -569,6 +582,50 @@ impl Rng {
     fn below(&mut self, n: usize) -> usize {
         (self.next() % n as u64) as usize
     }
+}
+
+/// A lattice value in [0, 1) of the drift noise: SplitMix64 of the seed and the lattice point.
+fn lattice(seed: u64, i: i32, j: i32) -> f32 {
+    let key = (u64::from(i as u32) << 32) | u64::from(j as u32);
+    Rng(seed ^ key.wrapping_mul(0xD6E8_FEB8_6659_FD93)).unit()
+}
+
+/// Value noise at `p` (tile-local metres) on a lattice `cell` metres apart, smoothstep-blended.
+/// Arithmetic and `floor` alone, so native and wasm agree bit for bit.
+fn value_noise(seed: u64, p: Vec2, cell: f32) -> f32 {
+    let g = p / cell;
+    let (fx, fz) = (g.x.floor(), g.y.floor());
+    let (i, j) = (fx as i32, fz as i32);
+    let ease = |t: f32| t * t * (3.0 - 2.0 * t);
+    let (u, v) = (ease(g.x - fx), ease(g.y - fz));
+    let a = lattice(seed, i, j) + u * (lattice(seed, i + 1, j) - lattice(seed, i, j));
+    let b = lattice(seed, i, j + 1) + u * (lattice(seed, i + 1, j + 1) - lattice(seed, i, j + 1));
+    a + v * (b - a)
+}
+
+/// The drift noise of a tile with seed `seed` at `p`: two octaves of value noise.
+pub fn drift_noise(seed: u64, p: Vec2) -> f32 {
+    let s = seed ^ 0xD71F_7A55_0C3E_91B5;
+    (value_noise(s, p, DRIFT_CELL) + 0.35 * value_noise(s.rotate_left(17), p, 0.5 * DRIFT_CELL))
+        / 1.35
+}
+
+/// The cells of `mask` a drift rule grows on: the [`DRIFT_SHARE`] with the highest drift noise.
+fn drift_cells(seed: u64, mask: &Mask) -> Vec<u32> {
+    let mut scored: Vec<(f32, u32)> = mask
+        .cells
+        .iter()
+        .map(|&k| {
+            let k_ = k as usize;
+            let p = Vec2::new(cell_centre(k_ % CELLS), cell_centre(k_ / CELLS));
+            (drift_noise(seed, p), k)
+        })
+        .collect();
+    scored.sort_by(|a, b| b.0.total_cmp(&a.0).then(a.1.cmp(&b.1)));
+    let keep = ((scored.len() as f32 * DRIFT_SHARE).ceil() as usize).min(scored.len());
+    let mut cells: Vec<u32> = scored[..keep].iter().map(|&(_, k)| k).collect();
+    cells.sort_unstable();
+    cells
 }
 
 /// Lowest surface height under the centre and a 0.3 m ring around `p`, if `p` stands on `floors`.
@@ -607,12 +664,22 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
         let want = (rule.density.max(0.0) * CAP_AREA / 100.0 + rng.unit()).floor() as u32;
         out.planned.push(want);
         out.area.push(mask.area);
-        if want == 0 || mask.cells.is_empty() {
+        let drift;
+        let cells = if rule.drift {
+            drift = drift_cells(seed, mask);
+            &drift
+        } else {
+            &mask.cells
+        };
+        let grows_on = cells.len() as f32 * RASTER * RASTER;
+        let pack = if rule.drift { DRIFT_PACK } else { 2.0 };
+        let spacing = (BLUE_NOISE * (grows_on / want.max(1) as f32).sqrt())
+            .max(pack * fp.ground)
+            .max(CROWN_SPACING * fp.crown);
+        out.spacing.push(spacing);
+        if want == 0 || cells.is_empty() {
             continue;
         }
-        let spacing = (BLUE_NOISE * (mask.area / want as f32).sqrt())
-            .max(2.0 * fp.ground)
-            .max(CROWN_SPACING * fp.crown);
         let jitter = scale_jitter(fp);
         let floors = floor_slots(piece);
         let mut n = 0;
@@ -620,7 +687,7 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
             if n == want {
                 break;
             }
-            let k = mask.cells[rng.below(mask.cells.len())] as usize;
+            let k = cells[rng.below(cells.len())] as usize;
             let p = Vec2::new(
                 cell_centre(k % CELLS) + (rng.unit() - 0.5) * RASTER,
                 cell_centre(k / CELLS) + (rng.unit() - 0.5) * RASTER,
@@ -1050,13 +1117,14 @@ mod tests {
             piece: piece.into(),
             density,
             lane_clearance: 0.0,
+            drift: false,
         }
     }
 
     #[test]
     fn the_same_seed_gives_the_same_instances() {
         let c = catalog();
-        for id in ["forest", "meadow"] {
+        for id in ["forest", "oak", "meadow"] {
             let def = c.get(id).unwrap();
             let g = prepared(def).expect("ground pieces in the kit");
             let a = layout(def, 7, &g);
@@ -1165,8 +1233,8 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 14, "every MVP tile ran");
-        for id in ["forest", "meadow", "road_straight", "house_cluster"] {
+        assert_eq!(counts.len(), 15, "every MVP tile ran");
+        for id in ["forest", "oak", "meadow", "road_straight", "house_cluster"] {
             assert!(counts[id] > 0, "{id} scatters: {counts:?}");
         }
         for id in [
@@ -1182,11 +1250,13 @@ mod tests {
     }
 
     /// Density is per 100 m² of the hex cap: the mean count over cells matches it within 3%, every
-    /// tile places its whole planned count, and same-piece neighbours keep the blue-noise spacing.
+    /// tile places its whole planned count, and same-piece neighbours keep the rule's spacing: the
+    /// blue-noise spacing over its ground (a drift's share of it), never under two ground reaches
+    /// ([`DRIFT_PACK`] in a drift).
     #[test]
     fn density_is_per_100_m2_of_cap_and_spacing_is_blue_noise() {
         let c = catalog();
-        for id in ["forest", "meadow"] {
+        for id in ["forest", "oak", "meadow"] {
             let def = c.get(id).unwrap();
             let g = prepared(def).unwrap();
             let seeds = 64u64;
@@ -1215,9 +1285,16 @@ mod tests {
                         .filter(|i| i.rule as usize == ri)
                         .map(|i| i.pos.xz())
                         .collect();
-                    let spacing = (BLUE_NOISE * (l.area[ri] / n.max(1) as f32).sqrt())
-                        .max(2.0 * fp.ground)
-                        .max(CROWN_SPACING * fp.crown);
+                    let share = if r.drift { DRIFT_SHARE } else { 1.0 };
+                    let even = BLUE_NOISE * (share * l.area[ri] / n.max(1) as f32).sqrt();
+                    let pack = if r.drift { DRIFT_PACK } else { 2.0 };
+                    let want = even.max(pack * fp.ground).max(CROWN_SPACING * fp.crown);
+                    assert!(
+                        (l.spacing[ri] - want).abs() < 0.05,
+                        "{id}: spacing {} vs {want}",
+                        l.spacing[ri]
+                    );
+                    let spacing = l.spacing[ri];
                     for (a, p) in pts.iter().enumerate() {
                         for q in &pts[a + 1..] {
                             assert!(p.distance(*q) >= spacing - 1e-4, "{id}: too close");
@@ -1263,8 +1340,8 @@ mod tests {
             .collect();
         let mean = nn.iter().sum::<f32>() / nn.len() as f32;
         let sd = (nn.iter().map(|d| (d - mean).powi(2)).sum::<f32>() / nn.len() as f32).sqrt();
-        // A lattice spreads ~0%; dense Poisson-disc packing (20 spruces around the oak's clearance)
-        // still spreads ~7%.
+        // A lattice spreads ~0%; dense Poisson-disc packing (20 spruces on the litter) still spreads
+        // several per cent.
         assert!(
             sd > 0.05 * mean,
             "nearest-neighbour spread {sd} of mean {mean}"
@@ -1354,15 +1431,18 @@ mod tests {
         }
     }
 
-    /// The forest's spruces leave the oak's canopy clear, so its perches stay open.
+    /// Spruces scattered round a hero oak leave its canopy clear, so its perches stay open. No
+    /// shipped tile pairs them since the split (U3), so the pine forest is given the oak tile's oak.
     #[test]
     fn spruces_clear_the_oak_canopy() {
         let c = catalog();
-        let def = c.get("forest").unwrap();
-        assert!(def.agents.iter().any(|a| a.agent == AgentKind::Bird));
-        let g = prepared(def).unwrap();
+        let oak = c.get("oak").unwrap();
+        assert!(oak.agents.iter().any(|a| a.agent == AgentKind::Bird));
+        let mut def = c.get("forest").unwrap().clone();
+        def.props.hero = oak.props.hero.clone();
+        let g = prepared(&def).unwrap();
         for seed in 0..16 {
-            for i in layout(def, seed, &g)
+            for i in layout(&def, seed, &g)
                 .instances
                 .iter()
                 .filter(|i| i.rule == 0)
@@ -1373,6 +1453,103 @@ mod tests {
                     i.pos
                 );
             }
+        }
+    }
+
+    /// The split (U3): the pine forest is spruces and rocks with no hero and no bird roost; the oak
+    /// tile is the hero oak, rocks and a few flowers on forest_base's litter, and the roost. Both
+    /// have Forest on every edge.
+    #[test]
+    fn pine_and_oak_tiles_split_the_forest() {
+        let c = catalog();
+        let pine = c.get("forest").unwrap();
+        let oak = c.get("oak").unwrap();
+        for d in [pine, oak] {
+            assert_eq!(d.base.as_str(), "forest_base", "{}", d.id);
+            assert!(
+                d.edges.iter().all(|e| e.kind == SocketKind::Forest),
+                "{}",
+                d.id
+            );
+        }
+        let pieces = |d: &TileDef| -> Vec<String> {
+            d.props
+                .scatter
+                .iter()
+                .map(|r| r.piece.as_str().to_owned())
+                .collect()
+        };
+        assert_eq!(pieces(pine), ["tree_forest", "rock_small"]);
+        assert!(pine.props.hero.is_empty() && pine.agents.is_empty());
+        assert_eq!(pieces(oak), ["rock_small", "wildflower_clump"]);
+        assert_eq!(oak.props.hero.len(), 1);
+        assert_eq!(oak.props.hero[0].piece.as_str(), "tree_hero_oak");
+        let g = prepared(oak).unwrap();
+        let mut flowers = 0;
+        for seed in 0..32 {
+            let l = layout(oak, seed, &g);
+            assert_eq!(l.placed(0), l.planned[0] as usize, "rocks");
+            assert_eq!(l.placed(1), l.planned[1] as usize, "flowers");
+            flowers += l.placed(1);
+            for i in l.instances.iter().filter(|i| i.rule == 1) {
+                let (_, slot) = g.surface.at(i.pos.x, i.pos.z).unwrap();
+                assert_eq!(slot, "forest_base_floor", "a flower on the litter");
+            }
+        }
+        let mean = flowers as f32 / 32.0;
+        assert!((4.0..=8.0).contains(&mean), "a few flowers: {mean}");
+    }
+
+    /// Drift rules cluster: over 4 m quadrats of the ground, the meadow's flowers have an index of
+    /// dispersion (variance over mean count) well above 1, where the same rule spread evenly stays
+    /// below it. The drifts follow the tile's seed, not a fixed pattern.
+    #[test]
+    fn meadow_flowers_grow_in_clustered_drifts() {
+        let c = catalog();
+        let meadow = c.get("meadow").unwrap();
+        assert!(meadow.props.scatter[0].drift, "the meadow's flowers drift");
+        assert!(!meadow.props.scatter[1].drift, "its rocks do not");
+        let mut even = meadow.clone();
+        even.props.scatter[0].drift = false;
+        let g = prepared(meadow).unwrap();
+        let quad = |x: f32, z: f32| ((x / 4.0).floor() as i32, (z / 4.0).floor() as i32);
+        let dispersion = |def: &TileDef, seed: u64| {
+            let l = layout(def, seed, &g);
+            let mut quads: BTreeMap<(i32, i32), u32> = BTreeMap::new();
+            for &k in &g.masks[0].cells {
+                let k = k as usize;
+                quads
+                    .entry(quad(cell_centre(k % CELLS), cell_centre(k / CELLS)))
+                    .or_default();
+            }
+            for i in l.instances.iter().filter(|i| i.rule == 0) {
+                *quads.entry(quad(i.pos.x, i.pos.z)).or_default() += 1;
+            }
+            let n = quads.len() as f32;
+            let mean = quads.values().map(|&v| v as f32).sum::<f32>() / n;
+            let var = quads
+                .values()
+                .map(|&v| (v as f32 - mean).powi(2))
+                .sum::<f32>()
+                / n;
+            var / mean
+        };
+        let seeds: Vec<u64> = (0..16)
+            .map(|k| cell_seed(5, Axial::new(k, 1 - k)))
+            .collect();
+        let drift = seeds.iter().map(|&s| dispersion(meadow, s)).sum::<f32>() / 16.0;
+        let spread = seeds.iter().map(|&s| dispersion(&even, s)).sum::<f32>() / 16.0;
+        assert!(
+            drift > 1.6,
+            "drifts cluster: dispersion {drift} (even {spread})"
+        );
+        assert!(spread < 1.0, "an even spread does not: dispersion {spread}");
+        let (a, b) = (seeds[0], seeds[1]);
+        let p = Vec2::new(3.0, -4.0);
+        assert_ne!(drift_noise(a, p), drift_noise(b, p), "seeded per tile");
+        for k in 0..200 {
+            let q = Vec2::new(k as f32 * 0.37 - 30.0, 17.0 - k as f32 * 0.21);
+            assert!((0.0..1.0).contains(&drift_noise(a, q)), "{q}");
         }
     }
 }

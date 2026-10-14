@@ -94,6 +94,14 @@ pub enum Command {
         q: i32,
         r: i32,
     },
+    /// Pin a free slot (U4), as the first click on it does: the ghost, its rotation and the
+    /// inventory stay there while the pointer moves. Refused for a cell that is not a free slot.
+    Pin {
+        q: i32,
+        r: i32,
+    },
+    /// Clear the pinned slot, as Esc does.
+    Unpin,
     Undo,
     Redo,
     Bulldoze {
@@ -153,6 +161,8 @@ impl Command {
                 Spin::Ccw => RotateDir::Back,
             }),
             Command::Place { q, r } => Action::Place(Axial::new(*q, *r)),
+            Command::Pin { q, r } => Action::Pin(Axial::new(*q, *r)),
+            Command::Unpin => Action::Unpin,
             Command::Undo => Action::Undo,
             Command::Redo => Action::Redo,
             Command::Bulldoze { q, r } => Action::Bulldoze(Axial::new(*q, *r)),
@@ -261,7 +271,9 @@ pub fn run_commands(
             if let Some(v) = strength.filter(|v| (0.0..=1.0).contains(v)) {
                 tilt.strength = v;
             }
-            pinned.0 = true;
+            if on.is_some() {
+                pinned.0 = true;
+            }
         }
         Command::DumpState { name } => dump_state(&name),
         Command::SetTier { tier } => match crate::persist::quality_setting(&tier) {
@@ -366,10 +378,15 @@ pub fn publish_state(
     cameras: Query<&Transform, With<Camera3d>>,
     config: Option<Res<hex_render::GateConfig>>,
     gpu: Option<Res<hex_render::GpuLimits>>,
-    tilt: Res<TiltShiftSettings>,
+    (tilt, tilt_chosen): (Res<TiltShiftSettings>, Res<TiltPinned>),
     game: Res<GameState>,
     sim: Res<CarSim>,
-    (rises, reduced, packs): (Res<PlayRises>, Res<ReducedMotion>, Option<Res<PlayPacks>>),
+    (rises, reduced, packs, ghost_drawn): (
+        Res<PlayRises>,
+        Res<ReducedMotion>,
+        Option<Res<PlayPacks>>,
+        Option<Res<hex_render::play::ghost::GhostDrawn>>,
+    ),
     views: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
     (boids, scatter, tier): (
         Option<Res<hex_render::boids::BoidReport>>,
@@ -414,7 +431,7 @@ pub fn publish_state(
         "play": play_state,
         "events_pending": bridge::EVENTS.lock().unwrap().len(),
         "gpu": gpu,
-        "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps },
+        "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps, "chosen": tilt_chosen.0 },
         "tier": tier.json(),
         "photo": crate::photo::state_json(&photo, &session, &exports, paused.0, sim.ticks(), gpu_limits.as_ref()),
         "frames": frames.0,
@@ -426,6 +443,7 @@ pub fn publish_state(
             p.status().map(|(k, s)| (k.to_owned(), serde_json::json!(s.as_str())))
                 .collect::<serde_json::Map<_, _>>()
         }),
+        "ghost_meshes": ghost_drawn.as_ref().filter(|_| play).map(|g| g.0),
         "pack_waiting": packs.as_ref().filter(|_| play).map(|p| {
             p.waiting().iter().map(|(c, tile, packs)| {
                 serde_json::json!({ "q": c.q, "r": c.r, "tile": tile, "packs": packs })

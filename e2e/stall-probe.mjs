@@ -17,7 +17,9 @@ const dist = process.argv[2] ?? "dist";
 const OUT = process.argv[3] ?? "target/stall-probe.json";
 const ROUNDS = Number(process.env.PROBE_ROUNDS ?? 2);
 const KEYS = { scenario: "gate2000", view: "strategic", layout: "instanced", chunk: "7", post: "full", shadows: "on",
-  shadow_casters: "all", cascades: "3", shadow_dist: "600", tier: "high", fps: "off", tilt: "off", gpu_timing: "off" };
+  shadow_casters: "all", cascades: "3", shadow_dist: "600", tier: "high", fps: "off", tilt: "off", gpu_timing: "off",
+  // The web build limits frame latency by default; the probe's baseline arms measure the unlimited page.
+  frame_latency: "off" };
 const UNCAPPED = ["--disable-gpu-vsync", "--disable-frame-rate-limit"];
 // One suspect per arm; everything else is the perf-passes budget run.
 const ARMS = {

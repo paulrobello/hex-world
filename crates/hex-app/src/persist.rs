@@ -11,13 +11,14 @@ use hex_core::{
     SaveError, TileCatalog, World,
 };
 use hex_render::post::QualityTier;
-use hex_render::tilt_shift::{TiltPinned, TiltShiftSettings};
+use hex_render::tilt_shift::{TiltPinned, TiltShiftSettings, TiltTierDefault};
 use serde::{Deserialize, Serialize};
 
 use crate::RunFlags;
 use crate::camera::{self, MAX_DISTANCE, MAX_PITCH, MIN_DISTANCE, MIN_PITCH};
 use crate::control::{self, Command};
 use crate::game::{self, GameEvent, GameState};
+use crate::photo::PhotoSession;
 
 /// Audio bus gains as the bridge spells them (the save's `sfx` and `ui` are the web audio layer's
 /// `effects` and `interface` buses).
@@ -246,11 +247,21 @@ fn default_camera() -> CameraState {
     }
 }
 
-/// Everything the save holds, read from the running game.
+/// The running game's tilt-shift: the settings, whether the player chose them (`TiltPinned`),
+/// and the tier's default.
+pub struct TiltLive<'a> {
+    pub settings: &'a mut TiltShiftSettings,
+    pub chosen: &'a mut bool,
+    pub tier_default: Option<TiltShiftSettings>,
+}
+
+/// Everything the save holds, read from the running game. `tilt_chosen` is whether the player
+/// toggled tilt-shift themselves.
 pub fn snapshot(
     game: &GameState,
     camera: Option<&Transform>,
     tilt: &TiltShiftSettings,
+    tilt_chosen: bool,
     saved: &SavedSettings,
 ) -> SaveData {
     SaveData {
@@ -260,6 +271,7 @@ pub fn snapshot(
         settings: GameSettings {
             quality: saved.quality,
             tilt_shift: tilt.enabled,
+            tilt_shift_chosen: tilt_chosen,
             tilt_shift_strength: tilt.strength,
             volumes: saved.volumes,
         },
@@ -267,21 +279,29 @@ pub fn snapshot(
 }
 
 /// Puts a decoded save into the running game and returns its `loaded` event. Agents re-derive
-/// from the new world (`sim::mirror_world` follows the game resource).
+/// from the new world (`sim::mirror_world` follows the game resource). A save whose tilt-shift
+/// the player chose restores it and the choice; any other save puts tilt-shift back to the
+/// tier's default and leaves it unchosen, so tier changes keep driving it.
 pub fn apply(
     save: SaveData,
     version: u16,
     game: &mut GameState,
     camera: Option<&mut Transform>,
-    tilt: &mut TiltShiftSettings,
+    tilt: TiltLive,
     saved: &mut SavedSettings,
 ) -> GameEvent {
     if let Some(t) = camera {
         *t = camera_transform(&save.camera);
     }
     let s = save.settings;
-    tilt.enabled = s.tilt_shift;
-    tilt.strength = s.tilt_shift_strength.clamp(0.0, 1.0);
+    *tilt.chosen = s.tilt_shift_chosen;
+    if s.tilt_shift_chosen {
+        tilt.settings.enabled = s.tilt_shift;
+        tilt.settings.strength = s.tilt_shift_strength.clamp(0.0, 1.0);
+    } else if let Some(d) = tilt.tier_default {
+        tilt.settings.enabled = d.enabled;
+        tilt.settings.strength = d.strength;
+    }
     saved.quality = s.quality;
     saved.volumes = s.volumes;
     let event = GameEvent::Loaded {
@@ -398,11 +418,11 @@ fn load_source(path: Option<&str>) -> Result<(SaveData, u16), Refusal> {
 fn save_bytes(
     game: &GameState,
     camera: Option<&Transform>,
-    tilt: &TiltShiftSettings,
+    (tilt, tilt_chosen): (&TiltShiftSettings, bool),
     saved: &SavedSettings,
     path: Option<&str>,
 ) -> Result<Vec<u8>, String> {
-    let bytes = snapshot(game, camera, tilt, saved).encode();
+    let bytes = snapshot(game, camera, tilt, tilt_chosen, saved).encode();
     #[cfg(not(target_arch = "wasm32"))]
     if let Some(p) = path {
         std::fs::write(p, &bytes).map_err(|e| format!("cannot write {p}: {e}"))?;
@@ -420,7 +440,7 @@ pub fn handle(
     cmd: Command,
     game: &mut GameState,
     camera: Option<&mut Transform>,
-    tilt: &mut TiltShiftSettings,
+    tilt: TiltLive,
     saved: &mut SavedSettings,
     seed: u64,
 ) -> GameEvent {
@@ -429,7 +449,8 @@ pub fn handle(
             if let Some(v) = volumes {
                 saved.volumes = v.into();
             }
-            match save_bytes(game, camera.as_deref(), tilt, saved, path.as_deref()) {
+            let t = (&*tilt.settings, *tilt.chosen);
+            match save_bytes(game, camera.as_deref(), t, saved, path.as_deref()) {
                 Ok(bytes) => {
                     let len = u32::try_from(bytes.len()).unwrap_or(u32::MAX);
                     store_save(tag.as_deref().unwrap_or(""), bytes);
@@ -461,32 +482,53 @@ pub fn handle(
 }
 
 /// Runs the queued persistence commands after the frame's game actions (see `main`'s chain). A
-/// loaded save's quality is applied (a `tier` key still wins) and its tilt-shift counts as the
-/// player's choice, so the tier rebuild that follows keeps it.
+/// loaded save's quality is applied (a `tier` key still wins). Its tilt-shift counts as the
+/// player's choice only when the save says the player toggled it, so an autosave resume leaves
+/// tier changes driving tilt-shift ([`apply`]).
+///
+/// Loading a world or starting a new one exits photo mode. `photo::sync` runs before this system
+/// and restores the snapshot's transform on exit, so the snapshot takes the new world's camera.
 pub fn run(
     mut commands: Commands,
     mut queue: ResMut<PersistQueue>,
     mut game: ResMut<GameState>,
     mut cameras: Query<&mut Transform, With<Camera3d>>,
-    (mut tilt, mut pinned): (ResMut<TiltShiftSettings>, ResMut<TiltPinned>),
+    (mut tilt, mut pinned, tier_default): (
+        ResMut<TiltShiftSettings>,
+        ResMut<TiltPinned>,
+        Option<Res<TiltTierDefault>>,
+    ),
     mut saved: ResMut<SavedSettings>,
+    mut photo: ResMut<PhotoSession>,
     flags: Res<RunFlags>,
 ) {
     while let Some(cmd) = queue.0.pop_front() {
         let mut cam = cameras.iter_mut().next();
+        let in_photo = game.photo_mode;
+        // A new world keeps the orbit camera's angle and zoom, not the free camera's.
+        if in_photo
+            && matches!(cmd, Command::NewWorld)
+            && let (Some(snap), Some(t)) = (photo.saved, cam.as_deref_mut())
+        {
+            *t = snap.transform;
+        }
         let event = handle(
             cmd,
             &mut game,
             cam.as_deref_mut(),
-            &mut tilt,
+            TiltLive {
+                settings: &mut tilt,
+                chosen: &mut pinned.0,
+                tier_default: tier_default.as_deref().map(|d| d.0),
+            },
             &mut saved,
             flags.0.seed,
         );
+        let loaded = matches!(event, GameEvent::Loaded { .. });
         if let GameEvent::Loaded {
             settings: Some(_), ..
         } = &event
         {
-            pinned.0 = true;
             hex_render::tier::request(
                 &mut commands,
                 quality_tier(saved.quality),
@@ -495,6 +537,14 @@ pub fn run(
             );
         }
         game::publish_event(&event);
+        if in_photo && loaded {
+            if let (Some(snap), Some(t)) = (photo.saved.as_mut(), cam.as_deref()) {
+                snap.transform = *t;
+            }
+            for e in game.apply(crate::actions::Action::ExitPhoto) {
+                game::publish_event(&e);
+            }
+        }
     }
 }
 
@@ -502,7 +552,7 @@ pub fn run(
 pub fn keep_latest(
     game: Res<GameState>,
     cameras: Query<&Transform, With<Camera3d>>,
-    tilt: Res<TiltShiftSettings>,
+    (tilt, chosen): (Res<TiltShiftSettings>, Res<TiltPinned>),
     saved: Res<SavedSettings>,
 ) {
     let camera = cameras
@@ -513,6 +563,7 @@ pub fn keep_latest(
     let settings = GameSettings {
         quality: saved.quality,
         tilt_shift: tilt.enabled,
+        tilt_shift_chosen: chosen.0,
         tilt_shift_strength: tilt.strength,
         volumes: saved.volumes,
     };
@@ -553,14 +604,20 @@ pub fn save_on_exit(
     mut exits: MessageReader<AppExit>,
     game: Res<GameState>,
     cameras: Query<&Transform, With<Camera3d>>,
-    tilt: Res<TiltShiftSettings>,
+    (tilt, chosen): (Res<TiltShiftSettings>, Res<TiltPinned>),
     saved: Res<SavedSettings>,
 ) {
     if exits.read().next().is_none() {
         return;
     }
     if let Some(path) = &flags.0.save
-        && let Err(e) = save_bytes(&game, cameras.iter().next(), &tilt, &saved, Some(path))
+        && let Err(e) = save_bytes(
+            &game,
+            cameras.iter().next(),
+            (&tilt, chosen.0),
+            &saved,
+            Some(path),
+        )
     {
         warn!("--save: {e}");
     }
@@ -581,6 +638,30 @@ mod tests {
 
     fn ax(q: i32, r: i32) -> Axial {
         Axial::new(q, r)
+    }
+
+    /// The tilt-shift a test game runs with: settings, the player's-choice flag, and the tier's
+    /// default (on at 0.5, as High builds it in play).
+    #[derive(Default)]
+    struct Tilt {
+        s: TiltShiftSettings,
+        chosen: bool,
+    }
+
+    const TIER_DEFAULT: TiltShiftSettings = TiltShiftSettings {
+        enabled: true,
+        strength: 0.5,
+        taps: 16,
+    };
+
+    impl Tilt {
+        fn live(&mut self) -> TiltLive<'_> {
+            TiltLive {
+                settings: &mut self.s,
+                chosen: &mut self.chosen,
+                tier_default: Some(TIER_DEFAULT),
+            }
+        }
     }
 
     /// A world with placements, a bulldoze, an undo (so both stacks hold actions) and a camera.
@@ -614,10 +695,13 @@ mod tests {
     fn save_then_load_through_the_commands_keeps_world_history_camera_and_settings() {
         let _outbox = outbox();
         let (mut g, mut cam) = played();
-        let mut tilt = TiltShiftSettings {
-            enabled: false,
-            strength: 0.35,
-            ..Default::default()
+        let mut tilt = Tilt {
+            s: TiltShiftSettings {
+                enabled: false,
+                strength: 0.35,
+                ..Default::default()
+            },
+            chosen: true,
         };
         let mut saved = SavedSettings::default();
         let volumes = Volumes {
@@ -631,7 +715,7 @@ mod tests {
             save_cmd("rt-a", Some(volumes)),
             &mut g,
             Some(&mut cam),
-            &mut tilt,
+            tilt.live(),
             &mut saved,
             7,
         );
@@ -642,7 +726,7 @@ mod tests {
         // Load into a fresh game, camera and settings, the way a page reload does.
         let mut g2 = GameState::new(7);
         let mut cam2 = Transform::from_xyz(0.0, 90.0, 90.0).looking_at(Vec3::ZERO, Vec3::Y);
-        let mut tilt2 = TiltShiftSettings::default();
+        let mut tilt2 = Tilt::default();
         let mut saved2 = SavedSettings::default();
         let (save, version) = decode(&bytes).unwrap();
         let e = apply(
@@ -650,7 +734,7 @@ mod tests {
             version,
             &mut g2,
             Some(&mut cam2),
-            &mut tilt2,
+            tilt2.live(),
             &mut saved2,
         );
         let GameEvent::Loaded {
@@ -676,7 +760,8 @@ mod tests {
             cam2.forward().dot(*cam.forward()) > 0.9999,
             "camera direction"
         );
-        assert_eq!((tilt2.enabled, tilt2.strength), (false, 0.35));
+        assert_eq!((tilt2.s.enabled, tilt2.s.strength), (false, 0.35));
+        assert!(tilt2.chosen, "the player's toggle travels with the save");
         assert_eq!(saved2.volumes, AudioVolumes::from(volumes));
 
         // The loaded history replays: undo and redo act exactly as they would have before.
@@ -693,13 +778,13 @@ mod tests {
     fn bad_files_are_refused_with_typed_reasons_and_leave_the_world_alone() {
         let _outbox = outbox();
         let (mut g, mut cam) = played();
-        let mut tilt = TiltShiftSettings::default();
+        let mut tilt = Tilt::default();
         let mut saved = SavedSettings::default();
         handle(
             save_cmd("bad-src", None),
             &mut g,
             Some(&mut cam),
-            &mut tilt,
+            tilt.live(),
             &mut saved,
             7,
         );
@@ -741,13 +826,13 @@ mod tests {
     fn web_load_validates_at_once_and_applies_in_queue_order() {
         let _outbox = outbox();
         let (mut g, mut cam) = played();
-        let mut tilt = TiltShiftSettings::default();
+        let mut tilt = Tilt::default();
         let mut saved = SavedSettings::default();
         handle(
             save_cmd("web-src", None),
             &mut g,
             Some(&mut cam),
-            &mut tilt,
+            tilt.live(),
             &mut saved,
             7,
         );
@@ -774,18 +859,18 @@ mod tests {
         let json: serde_json::Value = serde_json::from_str(&load_result_json(&r)).unwrap();
         assert_eq!(
             json,
-            serde_json::json!({ "ok": true, "tiles": 5, "version": 1 })
+            serde_json::json!({ "ok": true, "tiles": 5, "version": SAVE_FORMAT_VERSION })
         );
         let queued: Vec<Command> = control::INBOX.lock().unwrap().drain(..).collect();
         assert_eq!(queued, [Command::Load { path: None }]);
 
         let mut g2 = GameState::new(7);
         let load = || Command::Load { path: None };
-        let e = handle(load(), &mut g2, None, &mut tilt, &mut saved, 7);
+        let e = handle(load(), &mut g2, None, tilt.live(), &mut saved, 7);
         assert!(matches!(e, GameEvent::Loaded { tiles: 5, .. }), "{e:?}");
         assert_eq!(g2.world, g.world);
         // Nothing left pending: a second load is refused and the world is untouched.
-        let e = handle(load(), &mut g2, None, &mut tilt, &mut saved, 7);
+        let e = handle(load(), &mut g2, None, tilt.live(), &mut saved, 7);
         assert!(
             matches!(
                 e,
@@ -805,14 +890,14 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("world.hexworld").to_string_lossy().into_owned();
         let (mut g, mut cam) = played();
-        let mut tilt = TiltShiftSettings::default();
+        let mut tilt = Tilt::default();
         let mut saved = SavedSettings::default();
         let cmd = Command::Save {
             tag: None,
             path: Some(path.clone()),
             volumes: None,
         };
-        let e = handle(cmd, &mut g, Some(&mut cam), &mut tilt, &mut saved, 7);
+        let e = handle(cmd, &mut g, Some(&mut cam), tilt.live(), &mut saved, 7);
         assert!(matches!(e, GameEvent::Saved { tiles: 5, .. }), "{e:?}");
         let mut g2 = GameState::new(7);
         let mut cam2 = Transform::default();
@@ -822,7 +907,7 @@ mod tests {
             },
             &mut g2,
             Some(&mut cam2),
-            &mut tilt,
+            tilt.live(),
             &mut saved,
             7,
         );
@@ -835,7 +920,7 @@ mod tests {
             },
             &mut g2,
             None,
-            &mut tilt,
+            tilt.live(),
             &mut saved,
             7,
         );
@@ -873,6 +958,7 @@ mod tests {
         let mut world = bevy::prelude::World::new();
         world.insert_resource(game);
         world.insert_resource(TiltShiftSettings::default());
+        world.insert_resource(TiltPinned::default());
         world.insert_resource(SavedSettings::default());
         world.spawn((Camera3d::default(), cam));
         world.run_system_once(keep_latest).unwrap();
@@ -913,18 +999,18 @@ mod tests {
         g.apply(Action::SelectTile("meadow".into()));
         g.apply(Action::Place(ax(1, 1)));
         assert_eq!(g.view().epoch, before, "a fresh placement rises as usual");
-        let mut tilt = TiltShiftSettings::default();
+        let mut tilt = Tilt::default();
         let mut saved = SavedSettings::default();
         handle(
             save_cmd("epoch", None),
             &mut g,
             Some(&mut cam),
-            &mut tilt,
+            tilt.live(),
             &mut saved,
             7,
         );
         let (save, v) = decode(&take_save("epoch").unwrap()).unwrap();
-        apply(save, v, &mut g, Some(&mut cam), &mut tilt, &mut saved);
+        apply(save, v, &mut g, Some(&mut cam), tilt.live(), &mut saved);
         assert_eq!(
             g.view().epoch,
             before + 1,
@@ -976,5 +1062,207 @@ mod tests {
             "a newer save replaces its tag's"
         );
         assert!(SAVED.lock().unwrap().len() <= SAVED_CAP);
+    }
+
+    /// Owner decision A21 (2026-10-14): a save the player never toggled tilt-shift in (the
+    /// autosave resume) does not count as their choice, so the tier keeps driving tilt-shift.
+    #[test]
+    fn an_unchosen_save_leaves_the_tier_driving_tilt_shift() {
+        let (mut g, mut cam) = played();
+        let mut tilt = Tilt {
+            s: TiltShiftSettings {
+                enabled: false,
+                strength: 0.2,
+                taps: 16,
+            },
+            chosen: false,
+        };
+        let mut saved = SavedSettings::default();
+        handle(
+            save_cmd("unchosen", None),
+            &mut g,
+            Some(&mut cam),
+            tilt.live(),
+            &mut saved,
+            7,
+        );
+        let (save, v) = decode(&take_save("unchosen").unwrap()).unwrap();
+        assert!(!save.settings.tilt_shift_chosen);
+
+        // Resume into a session where the player had toggled tilt-shift off.
+        let mut g2 = GameState::new(7);
+        let mut tilt2 = Tilt {
+            s: TiltShiftSettings {
+                enabled: false,
+                strength: 0.9,
+                taps: 16,
+            },
+            chosen: true,
+        };
+        apply(save, v, &mut g2, None, tilt2.live(), &mut saved);
+        assert!(!tilt2.chosen, "the resume is not the player's choice");
+        assert_eq!(
+            (tilt2.s.enabled, tilt2.s.strength),
+            (TIER_DEFAULT.enabled, TIER_DEFAULT.strength),
+            "tilt-shift goes back to the tier's default"
+        );
+        let medium = TiltShiftSettings {
+            enabled: false,
+            strength: 0.5,
+            taps: 8,
+        };
+        assert_eq!(
+            hex_render::tilt_shift::kept_tilt(tilt2.s, medium, tilt2.chosen),
+            medium,
+            "a tier change after the resume still drives tilt-shift"
+        );
+    }
+
+    /// The player's own toggle is kept through a save, a reload and a tier change.
+    #[test]
+    fn a_chosen_toggle_survives_save_reload_and_a_tier_change() {
+        let (mut g, mut cam) = played();
+        let mut tilt = Tilt {
+            s: TiltShiftSettings {
+                enabled: false,
+                strength: 0.7,
+                taps: 16,
+            },
+            chosen: true,
+        };
+        let mut saved = SavedSettings::default();
+        handle(
+            save_cmd("chosen", None),
+            &mut g,
+            Some(&mut cam),
+            tilt.live(),
+            &mut saved,
+            7,
+        );
+        let (save, v) = decode(&take_save("chosen").unwrap()).unwrap();
+        assert!(save.settings.tilt_shift_chosen);
+        let mut g2 = GameState::new(7);
+        let mut tilt2 = Tilt::default();
+        apply(save, v, &mut g2, None, tilt2.live(), &mut saved);
+        assert!(tilt2.chosen);
+        assert_eq!((tilt2.s.enabled, tilt2.s.strength), (false, 0.7));
+        let low = TiltShiftSettings {
+            enabled: false,
+            strength: 0.5,
+            taps: 4,
+        };
+        let kept = hex_render::tilt_shift::kept_tilt(tilt2.s, low, tilt2.chosen);
+        assert_eq!((kept.enabled, kept.strength, kept.taps), (false, 0.7, 4));
+    }
+
+    /// Owner decision A16 (2026-10-14): loading a world exits photo mode. The orbit camera comes
+    /// back at the save's pose with its FOV, exposure and lens, and agents run again.
+    #[test]
+    fn loading_a_world_exits_photo_mode_at_the_saved_camera() {
+        use bevy::camera::Exposure;
+        use bevy::ecs::system::RunSystemOnce;
+        use hex_render::{AgentsPaused, tilt_shift::TiltOverride};
+
+        use crate::photo::{PhotoExports, PhotoSession, PhotoSettings};
+
+        let (mut g, cam) = played();
+        let mut tilt = Tilt::default();
+        let mut saved = SavedSettings::default();
+        let path = std::env::temp_dir()
+            .join(format!("hexw-photo-load-{}.hexworld", std::process::id()))
+            .to_string_lossy()
+            .into_owned();
+        let save = Command::Save {
+            tag: None,
+            path: Some(path.clone()),
+            volumes: None,
+        };
+        handle(
+            save,
+            &mut g,
+            Some(&mut cam.clone()),
+            tilt.live(),
+            &mut saved,
+            7,
+        );
+
+        let mut app = App::new();
+        app.insert_resource(GameState::new(7))
+            .init_resource::<PhotoSession>()
+            .init_resource::<PhotoSettings>()
+            .init_resource::<PhotoExports>()
+            .init_resource::<AgentsPaused>()
+            .init_resource::<PersistQueue>()
+            .init_resource::<SavedSettings>()
+            .init_resource::<TiltShiftSettings>()
+            .init_resource::<TiltPinned>()
+            .init_resource::<hex_render::tier::TierChoice>()
+            .insert_resource(crate::RunFlags(Default::default()));
+        let orbit = Transform::from_xyz(0.0, 60.0, 80.0).looking_at(Vec3::ZERO, Vec3::Y);
+        let fov = PerspectiveProjection::default().fov;
+        app.world_mut().spawn((
+            Camera3d::default(),
+            orbit,
+            Projection::Perspective(PerspectiveProjection::default()),
+            Exposure { ev100: 12.0 },
+        ));
+        let sync = |app: &mut App| app.world_mut().run_system_once(crate::photo::sync).unwrap();
+        app.world_mut()
+            .resource_mut::<GameState>()
+            .apply(Action::TogglePhoto);
+        sync(&mut app);
+        app.world_mut()
+            .resource_mut::<PhotoSettings>()
+            .apply(&crate::photo::PhotoPatch {
+                fov: Some(80.0),
+                roll: Some(12.0),
+                exposure: Some(1.0),
+                ..Default::default()
+            });
+        sync(&mut app);
+        assert!(app.world().resource::<AgentsPaused>().0);
+        assert!(app.world().get_resource::<TiltOverride>().is_some());
+
+        app.world_mut()
+            .resource_mut::<PersistQueue>()
+            .0
+            .push_back(Command::Load {
+                path: Some(path.clone()),
+            });
+        app.world_mut().run_system_once(run).unwrap();
+        assert!(
+            !app.world().resource::<GameState>().photo_mode,
+            "a load exits photo mode"
+        );
+        assert!(
+            app.world()
+                .resource::<GameState>()
+                .recent
+                .iter()
+                .any(|e| matches!(e, GameEvent::PhotoModeToggled { on: false })),
+            "the exit is published like any other"
+        );
+        sync(&mut app);
+        let mut q = app
+            .world_mut()
+            .query::<(&Transform, &Projection, &Exposure)>();
+        let (t, p, e) = q.single(app.world()).unwrap();
+        let Projection::Perspective(p) = p else {
+            unreachable!()
+        };
+        assert!(
+            t.translation.distance(cam.translation) < 1e-2
+                && t.forward().dot(*cam.forward()) > 0.9999,
+            "the camera is the save's orbit pose, not the free camera or the pre-photo one"
+        );
+        assert!((p.fov - fov).abs() < 1e-6, "FOV restored");
+        assert_eq!(e.ev100, 12.0, "exposure restored");
+        assert!(app.world().resource::<PhotoSession>().saved.is_none());
+        assert!(app.world().get_resource::<TiltOverride>().is_none());
+        assert!(
+            !app.world().resource::<AgentsPaused>().0,
+            "agents run again"
+        );
+        std::fs::remove_file(path).ok();
     }
 }

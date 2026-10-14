@@ -61,6 +61,27 @@ Against 30 MB (30,000,000 B), the core is 20.7 MB with about 9.3 MB of headroom,
 
 ACES fitted is the kit camera default (owner look-dev checkpoint, 2026-10-13), chosen over AgX and TonyMcMapface from the three-way shots. The kit camera exposure is EV100 12.5 (`lookdev::KIT_EV100`, from a sweep: Bevy's default 9.7 clips the 30,000 lx sun). Evidence: `assets-source/lookdev/lookdev.json` (`tonemap: "aces"`, `ev100: 12.5`, `approvals`), `assets-source/kit/meadow_base/lookdev-checkpoint.md`.
 
+**Reopened 2026-10-14 (owner, review queue Q4): TonyMcMapface at EV100 12.9.** Walls facing away from the sun rendered pure black (0/255). Bevy's fitted ACES curve outputs black for any input below about 0.0033 linear. The shaded O4 soil walls reach about 0.0030, because the puresky HDRI has no lit ground to bounce light up and the soil's linear albedo is about 0.04. No change limited to the walls came close under ACES: doubling the IBL, ambient 400 or EV 11.5 reached about 1/255. The owner chose three changes together:
+
+- `Tonemap::TonyMcMapface` is the default and `lookdev::KIT_EV100` is 12.9, for every kit, water and play camera (`GateConfig::default`).
+- The O4 soil is lightened ×2.5 in linear albedo: `"color": [2.5, 2.5, 2.5]` on every `soil` slot in `assets/kit/manifest.json`, mirrored by `WALL_TINT` in `water_terrain.wesl`. The set's textures are unchanged.
+- The backdrop is explicit: `lookdev::BACKDROP` is the app's `ClearColor`. Under TonyMcMapface, Bevy's default clear colour would rise from about 15 to 47/255.
+
+Measured on the shipped build against the ACES frames (`docs/checkpoints/shade-diagnosis/measurements.txt`, `a-current` against `o-shipped`, sRGB luma /255):
+
+| Crop | ACES, EV 12.5 | Shipped |
+|---|---|---|
+| River-mouth cut walls | 0.01, 0.00 | 12.1, 12.0 |
+| Bridge arch face | 7.8 | 31.1 |
+| Meadow wall beside the beach | 2.2 | 27.8 |
+| Water look-dev river cut wall | 0.6 | 8.0 |
+| Grass | 128.2 | 124.9 |
+| Gravel | 121.6 | 121.8 |
+| River water (mouth, bridge) | 85.6, 86.8 | 99.7, 99.5 |
+| Backdrop | 15.4 | 16.0 |
+
+The water look-dev's river wall stays dark because its crop sits on the O4 profile's near-black foot. A ×20 `WALL_TINT` probe lifted it to 22.6/255, which shows that the factor reaches the shader. ACES stays selectable with `--tonemap aces --ev100 12.5`. The kit and water look-dev shots are re-taken on this look before their approvals.
+
 ### D5. IBL
 
 - Source: Poly Haven `kloofendal_48d_partly_cloudy_puresky`, 2k equirect HDR, CC0 (https://polyhaven.com/license), 5,451,493 B, SHA-256 `5244534e…d198`. Gitignored. `make fetch-hdri` downloads it from the URL in `lookdev.json` and verifies the hash.

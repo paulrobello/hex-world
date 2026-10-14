@@ -298,6 +298,7 @@ mod tests {
         let want = [
             ("meadow", 1),
             ("forest", 1),
+            ("oak", 1),
             ("house_cluster", 6),
             ("road_straight", 3),
             ("road_bend_120", 6),
@@ -314,7 +315,7 @@ mod tests {
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 14 + 56);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 15 + 57);
     }
 
     #[test]

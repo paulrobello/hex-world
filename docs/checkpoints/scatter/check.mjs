@@ -1,8 +1,8 @@
 // Asserts the scatter checkpoint's state dumps (make shots-scatter): every pack landed before the
-// shots, each forest and meadow scatters its planned count (the density per 100 m² of cap times
-// 665 m²) and draws all of it, nothing else scatters, spruces add roosts within each forest's bird
-// max, the rising forest scatters, bulldoze takes its scatter and undo brings back the same counts,
-// and the 20-tile world stays inside the draw-call budget.
+// shots, each pine forest, oak tile and meadow scatters its planned count (the density per 100 m²
+// of cap times 665 m²) and draws all of it, nothing else scatters, only the oak tiles roost (12
+// each), the rising forest scatters, bulldoze takes its scatter and undo brings back the same
+// counts, and the 20-tile world stays inside the draw-call budget.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -16,6 +16,7 @@ const check = (ok, what, got) => {
 const CAP = 1.5 * Math.sqrt(3) * 16 * 16;
 const DENSITY = {
   forest: { tree_forest: 3.0, rock_small: 0.2 },
+  oak: { rock_small: 0.5, wildflower_clump: 0.9 },
   meadow: { wildflower_clump: 4.0, rock_small: 0.3 },
 };
 const key = (t) => `${t.q},${t.r}`;
@@ -26,7 +27,7 @@ check(placed.tiles === 19, "19 tiles placed (refused placements would be missing
 check(Object.values(placed.packs).every((v) => v === "ready"), "every pack ready", placed.packs);
 check((placed.pack_waiting ?? []).length === 0 && s.waiting.length === 0, "no tile waits on a pack or its ground", { packs: placed.pack_waiting, scatter: s.waiting });
 const scattering = placed.play.tiles.filter((t) => t.tile in DENSITY).map(key).sort();
-check(JSON.stringify(s.tiles.map(key).sort()) === JSON.stringify(scattering), "exactly the forests and meadows scatter", s.tiles.map((t) => `${t.tile}@${key(t)}`));
+check(JSON.stringify(s.tiles.map(key).sort()) === JSON.stringify(scattering), "exactly the pine forests, oak tiles and meadows scatter", s.tiles.map((t) => `${t.tile}@${key(t)}`));
 for (const t of s.tiles) {
   for (const [piece, d] of Object.entries(DENSITY[t.tile])) {
     const want = (d * CAP) / 100;
@@ -34,8 +35,8 @@ for (const t of s.tiles) {
     check(ok, `${t.tile}@${key(t)} ${piece} planned = placed = drawn ≈ ${want.toFixed(2)}`, [t.planned[piece], t.placed[piece], t.drawn[piece]]);
   }
 }
-const forests = s.tiles.filter((t) => t.tile === "forest").length;
-check(placed.boids.roosts === 12 * forests, `12 roosts on each of ${forests} forests (oak plus spruces)`, placed.boids.roosts);
+const oaks = s.tiles.filter((t) => t.tile === "oak").length;
+check(oaks === 2 && placed.boids.roosts === 12 * oaks, `12 roosts on each of ${oaks} oak tiles, none on the pine forests`, placed.boids.roosts);
 
 const rising = read("scatter-06-rise-props");
 const r = rising.play.rising.find((x) => x.q === 1 && x.r === 2);

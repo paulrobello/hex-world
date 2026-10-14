@@ -6,10 +6,11 @@
 //! the budget split, where birds roost and when they launch, and the water each fish school is
 //! confined to; it uploads that as read-only buffers and never reads the flock back.
 //!
-//! In `play` the birds flock over the world and roost on the forest's oak canopy and the tops of
-//! its scattered spruces (`play::scatter`) in waves, and
-//! the fish school in the water volume of connected water tiles. Every other scenario keeps the
-//! P0 stress flock: every slot a bird over an 800 m square.
+//! In `play` the birds fly in small flocks over the world and roost in waves on the oak tiles' oak
+//! canopies (a tile's Bird rule; scattered spruces on such a tile would share its cap,
+//! `play::scatter`), and the fish school in the water volume of connected water tiles. A world
+//! without an oak keeps every bird in the air. Every other scenario keeps the P0 stress flock:
+//! every slot a bird over an 800 m square.
 use std::{
     borrow::Cow,
     sync::atomic::{AtomicU32, Ordering},
@@ -87,7 +88,8 @@ pub struct Boid {
 }
 
 /// One slot as the CPU sets it: `spawn` xyz and generation (a new generation resets the boid
-/// there), `info` (kind: 0 bird 1 fish, roost index or -1, time sent to the roost, 0).
+/// there), `info` (kind: 0 bird 1 fish 2 idle, roost index or -1, time sent to the roost, a
+/// fish's school key: it coheres only with fish of the same key).
 #[derive(Clone, Copy, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 #[repr(C)]
 pub struct Ctl {
@@ -214,7 +216,8 @@ struct Params {
     field_h: u32,
     field_x0: i32,
     field_z0: i32,
-    _pad: u32,
+    /// Birds per play flock ([`plan::FLOCK_SIZE`]).
+    flock: u32,
     /// Play flock centre (xyz) and horizontal radius (w).
     sky: Vec4,
 }
@@ -420,18 +423,26 @@ fn plan_boids(
         plan.tick(t);
     }
     if plan.slots_dirty {
+        let birds = plan.birds as usize;
         let ctl: Vec<Ctl> = plan
             .slots
             .iter()
-            .map(|s| Ctl {
+            .enumerate()
+            .map(|(i, s)| Ctl {
                 spawn: [s.spawn.x, s.spawn.y, s.spawn.z, s.generation as f32],
                 info: [
-                    f32::from(u8::from(s.kind == plan::SlotKind::Fish)),
+                    match s.kind {
+                        plan::SlotKind::Bird => 0.0,
+                        plan::SlotKind::Fish => 1.0,
+                        plan::SlotKind::Idle => 2.0,
+                    },
                     s.roost
                         .and_then(|k| plan.roost_index(k))
                         .map_or(-1.0, |i| i as f32),
                     s.assigned_at,
-                    0.0,
+                    i.checked_sub(birds)
+                        .and_then(|f| plan.schools.get(f))
+                        .map_or(0.0, |&k| k as f32),
                 ],
             })
             .collect();
@@ -471,7 +482,7 @@ fn plan_boids(
         field_h: f.h,
         field_x0: f.x0,
         field_z0: f.z0,
-        _pad: 0,
+        flock: plan::FLOCK_SIZE,
         sky: plan.sky,
     };
     report.0 = report_json(&plan.counts(t), plan.play, dispatched_boids());
@@ -482,10 +493,10 @@ pub fn report_json(c: &BoidCounts, play: bool, dispatched: u32) -> String {
     let regions: Vec<String> = c
         .regions
         .iter()
-        .map(|(cell, tiles, fish)| {
+        .map(|g| {
             format!(
-                "{{\"q\":{},\"r\":{},\"tiles\":{tiles},\"fish\":{fish}}}",
-                cell.q, cell.r
+                "{{\"q\":{},\"r\":{},\"tiles\":{},\"fish\":{},\"river\":{},\"largest_group\":{},\"singles\":{}}}",
+                g.cell.q, g.cell.r, g.tiles, g.fish, g.river, g.largest_group, g.singles
             )
         })
         .collect();
@@ -692,12 +703,12 @@ mod tests {
         let c = hex_core::TileCatalog::builtin().unwrap();
         let tiles = [crate::play::PlayTile {
             cell: hex_core::Axial::new(0, 0),
-            tile: "forest".into(),
+            tile: "oak".into(),
             rotation: 0,
         }];
         plan.set_world(&tiles, &c, &|_| true, 0.0);
         let s = report_json(&plan.counts(0.0), true, 1000);
-        assert!(s.starts_with("{\"mode\":\"play\",\"budget\":1000,\"birds\":1000,\"fish\":0,\"roosts\":12,\"roosting\":12"), "{s}");
+        assert!(s.starts_with("{\"mode\":\"play\",\"budget\":1000,\"birds\":750,\"fish\":0,\"roosts\":12,\"roosting\":12"), "{s}");
         assert!(
             s.ends_with("\"fish_regions\":[],\"dispatched\":1000}"),
             "{s}"

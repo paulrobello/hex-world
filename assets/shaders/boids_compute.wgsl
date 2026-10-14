@@ -6,7 +6,7 @@ struct Ctl { spawn: vec4<f32>, info: vec4<f32> };
 struct Params {
     count: u32, birds: u32, fish: u32, roosts: u32,
     dt: f32, time: f32, mode: u32, field_w: u32,
-    field_h: u32, field_x0: i32, field_z0: i32, _pad: u32,
+    field_h: u32, field_x0: i32, field_z0: i32, flock: u32,
     sky: vec4<f32>,
 };
 @group(0) @binding(0) var<storage, read_write> boids: array<Boid>;
@@ -21,6 +21,8 @@ const FLY: f32 = 0.0;
 const SETTLE: f32 = 1.0;
 const PERCH: f32 = 2.0;
 const SWIM: f32 = 3.0;
+// A slot play leaves empty (plan::BIRD_PERCENT): parked, and collapsed by boid_material.wesl.
+const IDLE: f32 = 4.0;
 
 // plan.rs: the fish field's chunks, and the roost and sky constants.
 const CHUNK: f32 = 16.0;
@@ -158,15 +160,18 @@ fn fly(i: u32, me: Boid, c: Ctl) -> Boid {
     var align = vec3<f32>(0.0);
     var sep = vec3<f32>(0.0);
     var n = 0.0;
+    // plan::FLOCK_SIZE: cohere and align with the own flock only, keep clear of every bird.
+    let size = max(params.flock, 1u);
+    let flock = i / size;
     for (var j = 0u; j < params.birds; j++) {
         if (j == i) { continue; }
         let o = boids[j];
         if (o.vel.w != FLY) { continue; }
         let d = o.pos.xyz - p;
         let dist = length(d);
-        if (dist < 22.0) {
+        if (dist < 3.0) { sep -= d / max(dist, 0.05); }
+        if (dist < 22.0 && j / size == flock) {
             center += o.pos.xyz; align += o.vel.xyz; n += 1.0;
-            if (dist < 3.0) { sep -= d / max(dist, 0.05); }
         }
     }
     if (n > 0.0) {
@@ -202,15 +207,17 @@ fn swim(i: u32, me: Boid, c: Ctl) -> Boid {
     var align = vec3<f32>(0.0);
     var sep = vec3<f32>(0.0);
     var n = 0.0;
+    // plan::BoidPlan::schools: cohere and align with the own school only (a sea region's one
+    // school, a river's group of 1 to 5), keep clear of every fish.
     for (var j = params.birds; j < params.birds + params.fish; j++) {
         if (j == i) { continue; }
         let o = boids[j];
         let d = o.pos.xyz - p;
         let dist = length(d);
-        if (dist < 4.0) {
+        if (dist < 4.0 && ctl[j].info.w == c.info.w) {
             center += o.pos.xyz; align += o.vel.xyz; n += 1.0;
-            if (dist < 0.9) { sep -= d / max(dist * dist, 0.05); }
         }
+        if (dist < 0.9) { sep -= d / max(dist * dist, 0.05); }
     }
     if (n > 0.0) {
         v += (center / n - p) * (0.8 * dt) + (align / n - v) * (1.2 * dt);
@@ -253,6 +260,10 @@ fn update(@builtin(global_invocation_id) id: vec3<u32>) {
     if (i >= params.count) { return; }
     let me = boids[i];
     let c = ctl[i];
+    if (c.info.x > 1.5) {
+        boids[i] = Boid(vec4<f32>(c.spawn.xyz, c.spawn.w), vec4<f32>(0.0, 0.0, 0.0, IDLE));
+        return;
+    }
     let fish = c.info.x > 0.5;
     if (me.pos.w != c.spawn.w) {
         // A new generation: (re)spawn the slot where the plan put it.
