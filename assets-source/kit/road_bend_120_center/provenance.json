@@ -306,6 +306,12 @@
         "assets-source/refs/road_bends/ref-3.jpg"
       ],
       "notes": "Approved for the road look (asphalt, kerbs, verges, dashed centre line, soil strata). ref-1 (sharp 60 degree bend) has its road ends one side too far apart; bend geometry follows the _road.py lane contract, not the image. ref-2 wide 120 degree bend and ref-3 Y junction approved as drawn. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "who": "Paul Robello",
+      "when": "2026-10-13",
+      "gate": "piece",
+      "notes": "Road family approved in chat from the 6-view renders and in-engine joint shots. The 60 degree inner-corner crease is accepted for now (card 01a13887daba755ab6e588eabf7242f1)."
     }
   ]
 }
