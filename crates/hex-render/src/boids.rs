@@ -6,7 +6,8 @@
 //! the budget split, where birds roost and when they launch, and the water each fish school is
 //! confined to; it uploads that as read-only buffers and never reads the flock back.
 //!
-//! In `play` the birds flock over the world and roost on the forest's oak canopy in waves, and
+//! In `play` the birds flock over the world and roost on the forest's oak canopy and the tops of
+//! its scattered spruces (`play::scatter`) in waves, and
 //! the fish school in the water volume of connected water tiles. Every other scenario keeps the
 //! P0 stress flock: every slot a bird over an 800 m square.
 use std::{
@@ -41,8 +42,29 @@ pub use plan::{BoidBudget, BoidCounts, BoidPlan};
 
 use crate::{
     ActiveScenario, Scenario,
-    play::{PlayCatalog, PlayKit, PlaySystems, PlayView, rise::PlayRises},
+    play::{PlayCatalog, PlayKit, PlaySystems, PlayView, rise::PlayRises, scatter::ScatterLayouts},
 };
+
+/// The drawn scattered trees that have canopy perches, by cell, nearest the centre first.
+fn scatter_trees(
+    s: &ScatterLayouts,
+) -> std::collections::BTreeMap<hex_core::Axial, Vec<plan::TreeInstance>> {
+    let mut out: std::collections::BTreeMap<_, Vec<_>> = Default::default();
+    let mut drawn: Vec<_> = s
+        .drawn()
+        .filter(|(_, piece, _)| !plan::canopy_perches(piece).is_empty())
+        .collect();
+    drawn.sort_by_key(|(_, _, i)| i.order);
+    for (cell, piece, i) in drawn {
+        out.entry(cell).or_default().push(plan::TreeInstance {
+            piece: piece.to_owned(),
+            at: i.pos,
+            yaw: i.rotation(),
+            scale: i.scale,
+        });
+    }
+    out
+}
 
 const COMPUTE_SHADER: &str = "shaders/boids_compute.wgsl";
 const MATERIAL_SHADER: &str = "shaders/boid_material.wesl";
@@ -311,11 +333,12 @@ fn plan_boids(
     time: Res<Time>,
     active: Res<ActiveScenario>,
     seed: Option<Res<BoidSeed>>,
-    (view, catalog, rises, kit): (
+    (view, catalog, rises, kit, scatter): (
         Res<PlayView>,
         Res<PlayCatalog>,
         Res<PlayRises>,
         Option<Res<PlayKit>>,
+        Option<Res<ScatterLayouts>>,
     ),
     mut state: ResMut<BoidState>,
     mut sim: ResMut<BoidSim>,
@@ -364,6 +387,9 @@ fn plan_boids(
             .collect();
         let drawn =
             |id: &str| matches!(kit.as_deref(), Some(PlayKit::Ready(m)) if m.contains_key(id));
+        if let Some(s) = scatter.as_deref() {
+            plan.set_scatter(s.revision, || scatter_trees(s));
+        }
         plan.set_world(&ready, &catalog.0, &drawn, t);
         plan.tick(t);
     }

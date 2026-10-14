@@ -352,7 +352,10 @@ pub fn publish_state(
     sim: Res<CarSim>,
     (rises, reduced, packs): (Res<PlayRises>, Res<ReducedMotion>, Option<Res<PlayPacks>>),
     views: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
-    boids: Option<Res<hex_render::boids::BoidReport>>,
+    (boids, scatter): (
+        Option<Res<hex_render::boids::BoidReport>>,
+        Option<Res<hex_render::play::scatter::ScatterReport>>,
+    ),
     (photo, session, exports, paused): (
         Res<PhotoSettings>,
         Res<PhotoSession>,
@@ -410,6 +413,8 @@ pub fn publish_state(
         "diag": serde_json::from_str::<serde_json::Value>(&bridge::DIAG_JSON.lock().unwrap())
             .unwrap_or(serde_json::Value::Null),
         "boids": boids.and_then(|b| serde_json::from_str::<serde_json::Value>(&b.0).ok()),
+        "scatter": scatter.filter(|_| play)
+            .and_then(|s| serde_json::from_str::<serde_json::Value>(&s.0).ok()),
     });
     *bridge::STATE_JSON.lock().unwrap() = state.to_string();
 }

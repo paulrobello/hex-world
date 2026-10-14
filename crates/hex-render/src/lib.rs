@@ -163,6 +163,9 @@ impl Plugin for HexRenderPlugin {
             .init_resource::<play::rise::CameraShake>()
             .init_resource::<play::rise::PlayDust>()
             .init_resource::<play::affordances::Affordances>()
+            .init_resource::<play::scatter::PlayScatter>()
+            .init_resource::<play::scatter::ScatterLayouts>()
+            .init_resource::<play::scatter::ScatterReport>()
             .add_message::<play::rise::RiseMessage>()
             .add_systems(Startup, scene::setup)
             .add_systems(
@@ -176,6 +179,7 @@ impl Plugin for HexRenderPlugin {
                     play::start_kit,
                     play::finish_kit,
                     play::sync,
+                    play::scatter::sync,
                     play::rise::advance,
                     play::rise::animate,
                     play::rise::sink,

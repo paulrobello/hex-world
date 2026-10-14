@@ -540,6 +540,7 @@ impl GameState {
             bulldoze_mode: self.tool == Tool::Bulldoze && !self.photo_mode,
             refusals: self.refusals,
             epoch: self.epoch,
+            world_seed: self.world.seed(),
         }
     }
 }

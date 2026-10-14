@@ -208,11 +208,20 @@ pub struct TreeInstance {
     pub piece: String,
     pub at: Vec3,
     pub yaw: Quat,
+    pub scale: f32,
 }
 
-/// The trees birds can roost in on a tile: its hero props. Play does not place scatter props yet
-/// (the forest's `tree_forest` spruces); once it does, their instances join this list and their
-/// canopies become roosts through [`canopy_perches`].
+impl TreeInstance {
+    /// Its canopy perches, tile-local.
+    fn perches(&self) -> impl Iterator<Item = Vec3> + '_ {
+        canopy_perches(&self.piece)
+            .into_iter()
+            .map(|p| self.at + self.yaw * (p * self.scale))
+    }
+}
+
+/// The hero trees on a tile. Its scattered spruces come from `play::scatter` through
+/// [`BoidPlan::set_scatter`].
 pub fn tree_instances(def: &TileDef) -> Vec<TreeInstance> {
     def.props
         .hero
@@ -221,6 +230,7 @@ pub fn tree_instances(def: &TileDef) -> Vec<TreeInstance> {
             piece: h.piece.as_str().to_owned(),
             at: Vec3::new(h.at[0], 0.0, h.at[1]),
             yaw: Quat::from_rotation_y(-h.yaw_deg.to_radians()),
+            scale: 1.0,
         })
         .collect()
 }
@@ -236,14 +246,27 @@ pub struct Roost {
 /// Tree pieces with canopy perches: what [`BoidPlan::set_world`] watches arrive in the kit.
 pub const PERCH_PIECES: [&str; 2] = ["tree_hero_oak", "tree_forest"];
 
-/// Bird roosts of the placed tiles: the canopy perches of each tile with a `Bird` agent rule,
-/// capped at the rule's `max` (the forest's 12), in world space. Only trees `drawn` reports as
-/// kit pieces count, so a forest still on its placeholder (its pack streaming) has no roosts
-/// until the oak swaps in. Sorted by cell, then slot.
+/// Bird roosts of the placed tiles from their hero trees alone ([`roosts_with`], no scatter).
 pub fn roosts(
     tiles: &[PlayTile],
     catalog: &TileCatalog,
     drawn: &dyn Fn(&str) -> bool,
+) -> Vec<Roost> {
+    roosts_with(tiles, catalog, drawn, &BTreeMap::new())
+}
+
+/// Bird roosts of the placed tiles: the canopy perches of each tile with a `Bird` agent rule,
+/// capped at the rule's `max` (the forest's 12), in world space. Only hero trees `drawn` reports
+/// as kit pieces count, so a forest still on its placeholder (its pack streaming) has no roosts
+/// until the oak swaps in. `scatter` holds each cell's drawn scattered trees, nearest the centre
+/// first. With both, the hero canopies keep half the cap (rounded up) and the scattered trees take
+/// the rest, every spire top before any lower perch; either side's unused share goes to the other.
+/// Sorted by cell, then slot (hero perches first).
+pub fn roosts_with(
+    tiles: &[PlayTile],
+    catalog: &TileCatalog,
+    drawn: &dyn Fn(&str) -> bool,
+    scatter: &BTreeMap<Axial, Vec<TreeInstance>>,
 ) -> Vec<Roost> {
     let mut sorted: Vec<&PlayTile> = tiles.iter().collect();
     sorted.sort_by_key(|t| (t.cell.q, t.cell.r));
@@ -260,13 +283,33 @@ pub fn roosts(
             .sum();
         let [x, z] = t.cell.to_world(HEX_RADIUS);
         let (centre, rot) = (Vec3::new(x, 0.0, z), piece_rotation(t.rotation));
-        let trees = tree_instances(def).into_iter().filter(|t| drawn(&t.piece));
-        let perches = trees.flat_map(|tree| {
-            canopy_perches(&tree.piece)
-                .into_iter()
-                .map(move |p| tree.at + tree.yaw * p)
-        });
-        for (slot, local) in perches.take(max.min(usize::from(u8::MAX))).enumerate() {
+        let max = max.min(usize::from(u8::MAX));
+        let hero: Vec<Vec3> = tree_instances(def)
+            .iter()
+            .filter(|t| drawn(&t.piece))
+            .flat_map(TreeInstance::perches)
+            .collect();
+        // Perch k of every scattered tree before perch k + 1 of any.
+        let trees: Vec<Vec<Vec3>> = scatter
+            .get(&t.cell)
+            .map(|v| v.iter().map(|tree| tree.perches().collect()).collect())
+            .unwrap_or_default();
+        let deepest = trees.iter().map(Vec::len).max().unwrap_or(0);
+        let spread: Vec<Vec3> = (0..deepest)
+            .flat_map(|k| trees.iter().filter_map(move |p| p.get(k).copied()))
+            .collect();
+        let hero_share = if spread.is_empty() {
+            max
+        } else {
+            max.div_ceil(2)
+        };
+        let take_spread = spread.len().min(max - hero.len().min(hero_share));
+        let take_hero = hero.len().min(max - take_spread);
+        let perches = hero
+            .into_iter()
+            .take(take_hero)
+            .chain(spread.into_iter().take(take_spread));
+        for (slot, local) in perches.enumerate() {
             out.push(Roost {
                 cell: t.cell,
                 slot: slot as u8,
@@ -669,6 +712,11 @@ pub struct BoidPlan {
     tiles: Option<Vec<PlayTile>>,
     /// Which of [`PERCH_PIECES`] the kit draws, as of the last `set_world`.
     drawn: Vec<bool>,
+    /// Drawn scattered trees by cell ([`Self::set_scatter`]), their revision, and whether they
+    /// changed since the last `set_world`.
+    scatter: BTreeMap<Axial, Vec<TreeInstance>>,
+    scatter_rev: u64,
+    scatter_dirty: bool,
     /// Slot data changed (the ctl buffer).
     pub slots_dirty: bool,
     /// Roosts or the fish field changed.
@@ -691,8 +739,25 @@ impl BoidPlan {
             cursor: 0,
             tiles: None,
             drawn: vec![],
+            scatter: BTreeMap::new(),
+            scatter_rev: 0,
+            scatter_dirty: false,
             slots_dirty: true,
             world_dirty: true,
+        }
+    }
+
+    /// The drawn scattered trees by cell (tile-local, nearest the centre first) at `revision`;
+    /// a new revision makes the next `set_world` rebuild the roosts.
+    pub fn set_scatter(
+        &mut self,
+        revision: u64,
+        trees: impl FnOnce() -> BTreeMap<Axial, Vec<TreeInstance>>,
+    ) {
+        if revision != self.scatter_rev {
+            self.scatter_rev = revision;
+            self.scatter = trees();
+            self.scatter_dirty = true;
         }
     }
 
@@ -755,7 +820,9 @@ impl BoidPlan {
         t: f32,
     ) -> bool {
         let now: Vec<bool> = PERCH_PIECES.iter().map(|p| drawn(p)).collect();
-        if !self.play || (self.tiles.as_deref() == Some(tiles) && self.drawn == now) {
+        if !self.play
+            || (self.tiles.as_deref() == Some(tiles) && self.drawn == now && !self.scatter_dirty)
+        {
             return false;
         }
         // The world appears all at once (entering play draws the start world, or a loaded one, at
@@ -763,6 +830,7 @@ impl BoidPlan {
         let first = self.tiles.as_ref().is_none_or(|t| t.is_empty());
         self.tiles = Some(tiles.to_vec());
         self.drawn = now;
+        self.scatter_dirty = false;
         // Sky over the world's bounding box.
         if !tiles.is_empty() {
             let pts: Vec<Vec2> = tiles
@@ -822,7 +890,7 @@ impl BoidPlan {
             self.slots[i] = s;
         }
         // Roosts: perches that vanished release their birds; new forests start a cycle now.
-        self.roosts = roosts(tiles, catalog, drawn);
+        self.roosts = roosts_with(tiles, catalog, drawn, &self.scatter);
         let cells: BTreeSet<Axial> = self.roosts.iter().map(|r| r.cell).collect();
         let keys: BTreeSet<(Axial, u8)> = self.roosts.iter().map(|r| (r.cell, r.slot)).collect();
         for s in &mut self.slots {
@@ -1071,6 +1139,55 @@ mod tests {
             roosts(&tiles, &c, &|p| p != "tree_hero_oak").is_empty(),
             "no oak drawn, no roosts"
         );
+    }
+
+    /// Scattered spruces share the forest's bird cap with the oak: half each, spire tops first,
+    /// scaled and turned with each spruce and the tile; with no oak drawn they take the whole cap.
+    #[test]
+    fn scattered_spruces_roost_within_the_bird_max() {
+        let c = catalog();
+        let cell = Axial::new(1, 0);
+        let spruce = |x: f32, z: f32, scale: f32| TreeInstance {
+            piece: "tree_forest".into(),
+            at: Vec3::new(x, -0.1, z),
+            yaw: Quat::from_rotation_y(0.7),
+            scale,
+        };
+        let trees: Vec<TreeInstance> = (0..20)
+            .map(|k| {
+                let a = k as f32 * 0.9;
+                spruce(8.0 * a.cos(), 8.0 * a.sin(), 0.9 + 0.01 * k as f32)
+            })
+            .collect();
+        let scatter = BTreeMap::from([(cell, trees.clone())]);
+        let world = [tile(0, 0, "meadow", 0), tile(1, 0, "forest", 3)];
+        let r = roosts_with(&world, &c, &|_| true, &scatter);
+        assert_eq!(r.len(), 12, "the forest's bird max");
+        let [cx, cz] = cell.to_world(HEX_RADIUS);
+        let centre = Vec3::new(cx, 0.0, cz);
+        let (oak, spires) = r.split_at(6);
+        let oak_only = roosts(&world, &c, &|_| true);
+        assert_eq!(oak, &oak_only[..6], "the oak keeps its first six perches");
+        let rot = piece_rotation(3);
+        for (k, x) in spires.iter().enumerate() {
+            let t = &trees[k];
+            let want = centre + rot * (t.at + Vec3::Y * SPRUCE_TOP * t.scale);
+            assert!(x.pos.distance(want) < 1e-3, "spire {k}: {x:?} vs {want}");
+        }
+        let no_oak = roosts_with(&world, &c, &|p| p != "tree_hero_oak", &scatter);
+        assert_eq!(no_oak.len(), 12);
+        assert!(no_oak.iter().all(|x| x.pos.y > 10.0), "spire tops");
+        let mut plan = BoidPlan::play(BoidBudget::HIGH, 2);
+        assert!(plan.set_world_all(&world, &c, 1.0));
+        assert!(!plan.set_world_all(&world, &c, 1.1));
+        plan.set_scatter(1, || scatter.clone());
+        assert!(
+            plan.set_world_all(&world, &c, 1.2),
+            "new scatter rebuilds the roosts"
+        );
+        assert_eq!(plan.roosts.len(), 12);
+        plan.set_scatter(1, || unreachable!("same revision"));
+        assert!(!plan.set_world_all(&world, &c, 1.3));
     }
 
     /// The oak perches sit on the GLB's canopy shell and are open from above.

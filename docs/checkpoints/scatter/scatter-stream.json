@@ -1,0 +1,10 @@
+[
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "select_tile", "id": "forest"},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "dump_state", "name": "scatter-stream-1-held"},
+  {"cmd": "wait", "frames": 900},
+  {"cmd": "dump_state", "name": "scatter-stream-2-landed"},
+  {"cmd": "exit"}
+]

@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast audio-e2e shots-boids shots-photo
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast audio-e2e shots-boids shots-photo shots-scatter web-scatter
 
 fmt:
 	cargo fmt --all
@@ -477,6 +477,34 @@ shots-boids:
 	cp target/shots/boids-*.json $(BOIDS_DOCS)/
 	node $(BOIDS_DOCS)/check.mjs $(BOIDS_DOCS)
 	@echo "wrote $(BOIDS_DOCS)/"
+
+# Scatter checkpoint (PRD §5.3, crates/hex-render/src/play/scatter.rs): runs
+# docs/checkpoints/scatter/scatter.json at 1600x1000 with tilt-shift off and fixed clocks (a forest
+# cluster, meadows, a forest between a road and a river, a house cluster; then a forest rising,
+# bulldozed, undone, and again under reduced motion) after every pack has landed, then
+# scatter-stream.json with the streamed packs held (a forest and the start meadow before and after
+# their packs land). Copies JPEG stills and the state dumps next to it, and asserts the dumps
+# (check.mjs: per-tile counts, roosts, undo, reduced motion, streaming, draw calls).
+SCATTER_SHOTS = scatter-01-overview scatter-02-forest-cluster scatter-03-meadow scatter-04-road-river scatter-05-forest-closeup scatter-06-rise-props scatter-07-rise-settled
+SCATTER_DOCS = docs/checkpoints/scatter
+shots-scatter:
+	mkdir -p target/shots $(SCATTER_DOCS)
+	rm -f target/shots/scatter-*.png target/shots/scatter-*.json
+	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	HEXW_PACK_HOLD_FRAMES=120 caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter-stream.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
+	@for n in $(SCATTER_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(SCATTER_DOCS)/$$n.jpg || exit 1; done
+	cp target/shots/scatter-*.json $(SCATTER_DOCS)/
+	node $(SCATTER_DOCS)/check.mjs $(SCATTER_DOCS)
+	@echo "wrote $(SCATTER_DOCS)/"
+
+# Scatter on WebGPU (local only, GPU Chromium): the scatter checkpoint's 20-tile world on the built
+# site with post=full and the device clamped to 16 sampled textures per stage. Asserts every kit
+# forward pipeline binds exactly 16 next to refracting water, the per-tile scatter matches the native
+# dump at the same seed, and the pass census stays within 500 draws (e2e/scatter.mjs).
+web-scatter: build-web
+	cd e2e && npm ci --no-audit --no-fund
+	caffeinate -d -u node e2e/scatter.mjs dist $(SCATTER_DOCS)
 
 # Legend inventory tile thumbnails (PRD §5.3): every tile's distinct rotations rendered natively
 # through the play path at 4x (crates/hex-app/src/thumbs.rs), then keyed, downsampled to 96 px and

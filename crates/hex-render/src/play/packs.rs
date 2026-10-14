@@ -85,8 +85,8 @@ fn hold_frames() -> u32 {
     0
 }
 
-/// Kit pieces a placed tile draws: base, centre, edge pieces and hero props. Scatter props are not
-/// drawn in play yet, so they do not make a tile wait.
+/// Kit pieces a placed tile draws: base, centre, edge pieces and hero props. Scatter props are left
+/// out: they do not make a tile wait, and `scatter` draws them once their pack lands.
 pub fn drawn_pieces<'a>(def: &'a TileDef, catalog: &'a TileCatalog) -> BTreeSet<&'a str> {
     let scatter: BTreeSet<&str> = def.props.scatter.iter().map(|s| s.piece.as_str()).collect();
     def.kit_refs(catalog.sockets())

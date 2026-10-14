@@ -22,7 +22,7 @@ check(b.water_tiles === 16, "16 water tiles", b.water_tiles);
 check(b.fish === 192 && b.birds === 808, "12 fish per water tile, the rest of the budget to birds", { birds: b.birds, fish: b.fish });
 const regions = b.fish_regions.map((r) => [r.tiles, r.fish]).sort((x, y) => y[0] - x[0]);
 check(JSON.stringify(regions) === JSON.stringify([[12, 144], [4, 48]]), "coast region 12 tiles 144 fish, river 4 tiles 48 fish", b.fish_regions);
-check(b.roosts === 24, "12 roosts on each forest oak", b.roosts);
+check(b.roosts === 24, "12 roosts on each forest (its oak and, once scattered, its spruces)", b.roosts);
 check(b.dispatched === 1000, "the GPU pass ran every slot", b.dispatched);
 
 const roost = read("boids-02-roost").boids;

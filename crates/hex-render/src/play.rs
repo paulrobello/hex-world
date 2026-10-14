@@ -24,6 +24,7 @@ use hex_core::{
 pub mod affordances;
 pub mod packs;
 pub mod rise;
+pub mod scatter;
 
 use packs::{PackRequests, PlayPacks};
 
@@ -79,6 +80,8 @@ pub struct PlayView {
     /// redraws every tile settled, water filled and agents ready, with no rise, sink or cue.
     /// Placements in the new world rise as usual.
     pub epoch: u64,
+    /// The world seed: each tile scatters from it and its cell ([`scatter`]).
+    pub world_seed: u64,
 }
 
 impl PlaySpawned {
