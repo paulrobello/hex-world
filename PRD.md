@@ -514,7 +514,7 @@ Goal: the polished, playable core loop with D12 content.
 - [ ] Tilt-shift rendering (§9.1) in the game camera: zoom-scaled focal-plane blur, player toggle and strength slider, default on from Medium tier. It holds the P2 60 fps 95th-percentile budget on High, measured under the load guard. (Look owner-approved 2026-10-13: the pass, tier scaling and `--tilt` keys are on main; still open are the strength slider, the photo-mode kernel share and the 2,000-tile measurement.)
 - [ ] Quality tiers with auto-detection. 60 fps at the 95th percentile on the reference machine with a scripted 2,000-tile world on High.
 - [ ] Every §9.4 hook is present in the MVP assets and shaders (verified by the asset gate).
-- [ ] Every audio asset's provenance records its provider and subscription (D21).
+- [x] Every audio asset's provenance records its provider and subscription (D21). (`make audio-check` fails any mastered cue whose provenance lacks them; all 11 mastered SFX and ambience cues record ElevenLabs and the subscription tier, 2026-10-14. Music cues get the same check when the owner's Suno sources are mastered.)
 
 ### P3 — Progression and farm/rail content
 
