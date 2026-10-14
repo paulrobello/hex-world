@@ -29,14 +29,18 @@ page's animation frames come faster than the browser's GPU side consumes them.
   fast frames at 2.4–2.8 ms followed by one 45–60 ms stall. Tilt-shift adds GPU work per frame, so the
   backlog per cycle and the stall get longer: the worst frame per run was 79–87 ms with it on, against 40–69 ms off.
 
-Native has no such tail. There `--present immediate` frames are CPU-bound at about 7 ms against a 4.5 ms
-GPU total, and the wgpu surface bounds frame latency, so no GPU queue forms. The perf-passes re-run on
-`bf64195` (`../p2-passes-2026-10-14.json`) did log 2–5 native frames over 25 ms per 600 (worst 47.8 ms)
+Native has no such tail. There `--present immediate` frames wait on the window's drawable, not the CPU:
+the main thread is busy about 0.9 ms and the render thread about 2.2 ms a frame against a 4.5 ms GPU
+total, and the render thread spends the rest of the 7–8 ms frame in `get_current_texture` until one of
+the surface's three drawables comes back (`native.md`). The wgpu surface bounds frames in flight, so no
+GPU queue forms. The perf-passes re-run on `bf64195` (`../p2-passes-2026-10-14.json`) did log 2–5
+native frames over 25 ms per 600 (worst 47.8 ms)
 in 5 of 12 runs, against 1 frame in 1 of 12 in the earlier file. They are not this queue. Of the 14 in
 timing-on runs, 6 sit next to a GPU frame of 15.6–19.2 ms (3–4 times the 4.5 ms median) and 8 next to
 GPU frames of about 5 ms. The GPU ring also logged GPU frames over 25 ms (prepass and shadow segments of
-9–22 ms) in 4 of 6 timing-on runs, mostly before the frame-time window. That native tail is a separate
-open item.
+9–22 ms) in 4 of 6 timing-on runs, mostly before the frame-time window. That native tail is attributed
+in `native.md`: long waits for the next drawable, a few of them after another process's GPU work, plus
+two rare CPU-side events.
 
 The play scenario agrees with the mechanism. The web water world (`../p2-water-world-2026-10-14.json`)
 runs uncapped at 7.8–8.4 ms a frame, CPU-bound in the wasm callback (7.3 ms of a 7.8 ms interval), and
