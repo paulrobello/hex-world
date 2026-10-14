@@ -1,4 +1,4 @@
-/* ---------- Photo mode (S8) and Settings (S9.4): fields, from design/ui/legend/screens.css ---------- */
+/* ---------- Photo mode (S8) and Settings (S9): fields, from design/ui/legend/screens.css ---------- */
 .section-h { margin: 20px 0 4px; font-size: var(--fs-2); font-weight: 800; color: var(--ink); }
 .section-h:first-child { margin-top: 12px; }
 .field { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 12px; padding: 10px 0; }
@@ -41,6 +41,28 @@
 /* ---------- Settings sheet: over the Tiles sheet on the right ---------- */
 .sheet--wide { width: 420px; z-index: 12; }
 .sheet__body { flex: 1 1 0; min-height: 0; overflow: auto; margin: 0 -16px; padding: 0 16px; scrollbar-width: thin; scrollbar-color: var(--sheet-2) transparent; }
+.sheet--settings .sheet__body { padding-bottom: 8px; }
+
+/* Settings tabs (S9): the selected tab is underlined in ink on the rule; the ring sits inside the strip. */
+.tabs { display: flex; gap: 2px; margin: 14px 0 4px; border-bottom: 1px solid var(--rule); }
+.tabs button { position: relative; min-height: 40px; padding: 0 12px; border: 0; border-radius: var(--r-control) var(--r-control) 0 0; background: transparent; color: var(--ink-3); font-weight: 700; font-size: var(--fs-3); cursor: pointer; transition: color var(--t-fast) var(--ease); }
+.tabs button:hover, .tabs button[aria-selected=true] { color: var(--ink); }
+.tabs button[aria-selected=true]::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 2px; border-radius: 1px; background: var(--ink); }
+.hud .tabs button:focus-visible { outline-offset: calc(var(--focus-width) * -1); }
+.sheet--settings .panel { animation: panel-in var(--t-fast) var(--ease); }
+@keyframes panel-in { from { opacity: 0; transform: translateY(4px); } }
+
+/* Quality (S9.1): a radio list, the checked row raised to sheet-2 (ink-3 lifts there to keep 4.5:1). */
+.tiers { display: grid; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; }
+.tier { display: grid; grid-template-columns: 20px 1fr auto; gap: 4px 12px; align-items: center; min-height: 52px; padding: 6px 10px; border-radius: var(--r-control); cursor: pointer; transition: background var(--t-fast) var(--ease); }
+.tier:hover, .tier[aria-checked=true] { background: var(--sheet-2); --ink-3: var(--ink-3-lifted); }
+.tier .radio { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--ink-3); transition: box-shadow var(--t-fast) var(--ease); }
+.tier[aria-checked=true] .radio { box-shadow: inset 0 0 0 5px var(--ink); }
+.tier b { font-weight: 700; font-size: var(--fs-3); }
+.tier small { grid-column: 2 / -1; margin-top: -4px; font-size: var(--fs-2); color: var(--ink-3); }
+.tier .tag { font-size: var(--fs-1); font-weight: 700; color: var(--ink-2); }
+.tier .tag--detected { padding: 2px 6px; border-radius: 3px; background: rgb(255 255 255 / .08); }
+.tier-reason { margin: 8px 10px 0; font-size: var(--fs-2); color: var(--ink-3); overflow-wrap: anywhere; }
 
 /* ---------- Photo mode: its own overlay root, so the play HUD's hide never takes it ---------- */
 .photo-ui.is-off { display: none; }

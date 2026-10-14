@@ -10,7 +10,8 @@ use hex_core::{
     AudioVolumes, CameraState, GameSettings, QualitySetting, SAVE_FORMAT_VERSION, SaveData,
     SaveError, TileCatalog, World,
 };
-use hex_render::tilt_shift::TiltShiftSettings;
+use hex_render::post::QualityTier;
+use hex_render::tilt_shift::{TiltPinned, TiltShiftSettings};
 use serde::{Deserialize, Serialize};
 
 use crate::RunFlags;
@@ -67,6 +68,29 @@ pub struct SettingsJson {
     pub tilt_shift: bool,
     pub tilt_shift_strength: f32,
     pub volumes: Volumes,
+}
+
+/// The `set_tier` spelling of a quality setting (`auto` or a tier name).
+pub fn quality_setting(name: &str) -> Option<QualitySetting> {
+    Some(match name {
+        "auto" => QualitySetting::Auto,
+        "low" => QualitySetting::Low,
+        "medium" => QualitySetting::Medium,
+        "high" => QualitySetting::High,
+        "ultra" => QualitySetting::Ultra,
+        _ => return None,
+    })
+}
+
+/// The tier a quality setting asks for; `None` is Auto (detection's answer).
+pub fn quality_tier(q: QualitySetting) -> Option<QualityTier> {
+    match q {
+        QualitySetting::Auto => None,
+        QualitySetting::Low => Some(QualityTier::Low),
+        QualitySetting::Medium => Some(QualityTier::Medium),
+        QualitySetting::High => Some(QualityTier::High),
+        QualitySetting::Ultra => Some(QualityTier::Ultra),
+    }
 }
 
 fn quality_name(q: QualitySetting) -> &'static str {
@@ -436,12 +460,15 @@ pub fn handle(
     }
 }
 
-/// Runs the queued persistence commands after the frame's game actions (see `main`'s chain).
+/// Runs the queued persistence commands after the frame's game actions (see `main`'s chain). A
+/// loaded save's quality is applied (a `tier` key still wins) and its tilt-shift counts as the
+/// player's choice, so the tier rebuild that follows keeps it.
 pub fn run(
+    mut commands: Commands,
     mut queue: ResMut<PersistQueue>,
     mut game: ResMut<GameState>,
     mut cameras: Query<&mut Transform, With<Camera3d>>,
-    mut tilt: ResMut<TiltShiftSettings>,
+    (mut tilt, mut pinned): (ResMut<TiltShiftSettings>, ResMut<TiltPinned>),
     mut saved: ResMut<SavedSettings>,
     flags: Res<RunFlags>,
 ) {
@@ -455,6 +482,18 @@ pub fn run(
             &mut saved,
             flags.0.seed,
         );
+        if let GameEvent::Loaded {
+            settings: Some(_), ..
+        } = &event
+        {
+            pinned.0 = true;
+            hex_render::tier::request(
+                &mut commands,
+                quality_tier(saved.quality),
+                "loaded save".into(),
+                true,
+            );
+        }
         game::publish_event(&event);
     }
 }
@@ -897,6 +936,19 @@ mod tests {
         };
         let c = camera_state(&camera_transform(&wild));
         assert!(c.pitch <= MAX_PITCH + 1e-3 && c.distance <= MAX_DISTANCE + 1e-1);
+    }
+
+    #[test]
+    fn set_tier_spellings_map_to_the_saved_quality_and_back() {
+        for name in ["auto", "low", "medium", "high", "ultra"] {
+            let q = quality_setting(name).expect(name);
+            assert_eq!(quality_name(q), name);
+            assert_eq!(
+                quality_tier(q).map(QualityTier::name),
+                (name != "auto").then_some(name)
+            );
+        }
+        assert_eq!(quality_setting("max"), None);
     }
 
     #[test]

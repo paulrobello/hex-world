@@ -359,23 +359,107 @@ try {
   await key("Escape");
   await until(async () => !(await st()).play.photo_mode, "Esc leaves photo mode");
 
-  // S9.4 Settings: the game camera's tilt-shift toggle and strength slider (the page runs tilt=off).
+  // S9 Settings (design/ui/legend/settings.html): Graphics (Quality S9.1, Tilt-shift S9.4) and Audio
+  // (S9.5) tabs. The page runs tilt=off, so tilt-shift starts off whatever the tier.
+  const tiltSwitch = page.locator(".sheet--settings .switch[aria-label='Tilt-shift']");
+  const setRange = (label, v) =>
+    page.locator(`.sheet--settings input[aria-label='${label}']`).evaluate((el, v) => {
+      el.value = String(v);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }, v);
+  const audio = () => page.evaluate(() => window.hexWorld.audio.state());
   await page.locator(".tool[data-action=settings]").click();
   await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens");
+  check(await page.evaluate(() => document.activeElement?.id === "settings-tab-graphics"), "focus lands on the Graphics tab");
+  const tier0 = (await st()).tier;
+  check(["detected", "probe"].includes(tier0?.source), `the tier starts from detection (${tier0?.tier}, ${tier0?.source})`);
+  const autoUses = tier0.probe?.tier ?? tier0.detected?.tier;
+  await until(async () => (await page.locator(".tier[data-tier=auto][aria-checked=true]").count()) === 1, "Auto is checked");
+  check((await text(".tier[data-tier=auto] .tag")) === `Uses ${autoUses[0].toUpperCase()}${autoUses.slice(1)} here`, "Auto names the tier it uses");
+  check(await page.locator(`.tier[data-tier=${autoUses}] .tag--detected`).count() === 1, "the detected tier's row is tagged");
+  const reason = await text(".tier-reason");
+  check(reason.startsWith("Detected ") && reason.includes(tier0.detected.reason), `the reason line: "${reason}"`);
   check((await st()).tilt.enabled === false, "tilt-shift starts off (tilt=off)");
-  await page.locator(".sheet--settings .switch").click();
-  await until(async () => (await st()).tilt.enabled === true, "the toggle turns tilt-shift on");
-  await page.locator(".sheet--settings input[aria-label='Tilt-shift strength']").evaluate((el) => {
-    el.value = "60";
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
+  await tiltSwitch.click();
+  await until(async () => (await st()).tilt.enabled === true, "the switch turns tilt-shift on");
+  await setRange("Tilt-shift strength", 60);
   await until(async () => Math.abs((await st()).tilt.strength - 0.6) < 1e-6, "the slider sets strength 0.6");
+  await page.mouse.move(700, 450);
   await page.waitForTimeout(300);
-  await shot("s9-4-settings-tilt");
-  await page.locator(".sheet--settings .switch").click();
-  await until(async () => (await st()).tilt.enabled === false, "and off again");
+  await page.evaluate(() => document.activeElement?.blur()); // the mockup states carry no focus ring
+  await shot("s9-1-settings-graphics");
+
+  // Picking Low: state().tier follows, the scene rebuilds around the same camera, world and HUD
+  // state, and the player's tilt-shift (on, 0.6) outlives the tier's default (off on Low).
+  const beforeTier = await st();
+  await page.locator(".tier[data-tier=low]").click();
+  await until(async () => { const t = (await st()).tier; return t.tier === "low" && t.source === "runtime"; }, "picking Low sets state().tier");
+  check(await page.locator(".tier[data-tier=low][aria-checked=true]").count() === 1, "the Low row is checked");
+  await page.waitForTimeout(500);
+  const afterTier = await st();
+  check(afterTier.camera.pos.every((v, i) => Math.abs(v - beforeTier.camera.pos[i]) < 1e-3), "the camera keeps its position");
+  check(afterTier.camera.forward.every((v, i) => Math.abs(v - beforeTier.camera.forward[i]) < 1e-3), "and its heading");
+  const tilesOf = (p) => p.tiles.map((t) => `${t.q},${t.r},${t.tile},${t.rotation}`).sort().join(" ");
+  check(tilesOf(afterTier.play) === tilesOf(beforeTier.play), "the world is unchanged");
+  check(afterTier.play.selected === beforeTier.play.selected && afterTier.play.tool === beforeTier.play.tool, "the selected tile and tool hold");
+  check(afterTier.play.inventory_open === beforeTier.play.inventory_open, "the engine's inventory flag holds");
+  check(afterTier.tilt.enabled === true && Math.abs(afterTier.tilt.strength - 0.6) < 1e-6, "the player's tilt-shift survives the tier change");
+  check(afterTier.tilt.taps === 8, `tilt-shift takes Low's tap count (${afterTier.tilt.taps})`);
+
+  // Ultra, where detection lands on High: the caution note (S9.2).
+  if (await page.locator(".tier[data-tier=ultra]").count()) {
+    await page.locator(".tier[data-tier=ultra]").click();
+    await until(async () => (await st()).tier.tier === "ultra", "picking Ultra sets the tier");
+    await until(async () => page.locator(".sheet--settings .note--caution:not([hidden])").count(), "the Ultra note shows");
+    await page.waitForTimeout(300);
+    await shot("s9-2-settings-tier-up");
+  } else console.log(`ok: Ultra is not offered (Auto uses ${autoUses})`);
+
+  // Keyboard: Home on the radio list returns to Auto, which hands the tier back to detection.
+  await page.locator(".tier[aria-checked=true]").focus();
+  await key("Home");
+  await until(async () => { const t = (await st()).tier; return t.source === tier0.source && t.tier === tier0.tier; }, "Home picks Auto: the detected tier is back");
+  check(await page.evaluate(() => document.activeElement?.dataset.tier === "auto"), "focus follows to the Auto row");
+  await tiltSwitch.click();
+  await until(async () => (await st()).tilt.enabled === false, "and tilt-shift off again");
+  await page.waitForTimeout(300);
+  await page.evaluate(() => document.activeElement?.blur());
+  await shot("s9-4-settings-tilt-off");
+
+  // Audio (S9.5): ArrowRight on the tab strip, the mockup's channels at this viewer's levels.
+  await page.locator("#settings-tab-graphics").focus();
+  await key("ArrowRight");
+  await until(async () => page.locator("#settings-tab-audio[aria-selected=true]").count(), "ArrowRight selects the Audio tab");
+  const a0 = await audio();
+  for (const [label, bus] of [["Master", "master"], ["Music", "music"], ["Ambience", "ambience"], ["Effects", "effects"], ["Interface", "interface"]]) {
+    const v = await page.locator(`.sheet--settings input[aria-label='${label} volume']`).inputValue();
+    check(Number(v) === Math.round(a0.volumes[bus] * 100), `${label} shows ${v}% (audio ${a0.volumes[bus]})`);
+  }
+  await page.waitForTimeout(200);
+  await page.evaluate(() => document.activeElement?.blur());
+  await shot("s9-5-settings-audio");
+  await setRange("Master volume", 40);
+  await setRange("Music volume", 30);
+  await until(async () => { const a = await audio(); return a.volumes.master === 0.4 && a.volumes.music === 0.3; }, "the sliders set audio.state().volumes");
+  await page.locator(".sheet--settings .switch[aria-label='Mute everything']").click();
+  await until(async () => (await audio()).muted === true, "the switch mutes audio.state()");
+  await page.locator(".sheet--settings .switch[aria-label='Mute everything']").click();
+  await until(async () => (await audio()).muted === false, "and unmutes");
+
+  // Tab walks the sheet's controls and wraps; it does not toggle Tiles while focus is in Settings.
+  const invOpen = (await play()).inventory_open;
+  await page.locator(".sheet--settings .switch[aria-label='Mute everything']").focus();
+  await key("Tab");
+  check(await page.evaluate(() => document.activeElement?.closest(".sheet--settings") != null), "Tab from the last control wraps inside Settings");
+  await page.waitForTimeout(100);
+  check((await play()).inventory_open === invOpen, "Tab inside Settings leaves the Tiles sheet alone");
+
+  // Esc closes from a focused slider, and focus returns to the Settings tool.
+  await page.locator(".sheet--settings input[aria-label='Master volume']").focus();
   await key("Escape");
-  await until(async () => page.locator(".sheet--settings.is-closed").count(), "Esc closes Settings");
+  await until(async () => page.locator(".sheet--settings.is-closed").count(), "Esc on a slider closes Settings");
+  check(await page.evaluate(() => document.activeElement?.closest(".tool[data-action=settings]") != null), "focus returns to the Settings tool");
 
   // Engine motion follows the OS reduced-motion setting, at start and on change.
   check((await play()).reduced_motion === false, "reduced_motion starts off with the OS setting");

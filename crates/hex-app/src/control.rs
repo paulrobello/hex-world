@@ -11,13 +11,13 @@ use hex_render::{
         rise::{PlayRises, ReducedMotion},
     },
     setup_scene,
-    tilt_shift::TiltShiftSettings,
+    tilt_shift::{TiltPinned, TiltShiftSettings},
 };
 use serde::Deserialize;
 
 use crate::actions::{Action, ActionQueue, Tool};
 use crate::game::GameState;
-use crate::persist::PersistQueue;
+use crate::persist::{PersistQueue, SavedSettings};
 use crate::photo::{Dof, PhotoExports, PhotoPatch, PhotoSession, PhotoSettings};
 use crate::sim::CarSim;
 use crate::{FrameCount, RunFlags, bridge, capture};
@@ -63,8 +63,9 @@ pub enum Command {
     DumpState {
         name: String,
     },
-    /// Quality tier at runtime (`low`, `medium`, `high`, `ultra`): rebuilds the scene at the new
-    /// tier with the camera kept (`hex_render::tier`). The future Settings UI sends this.
+    /// Quality tier at runtime (`auto`, `low`, `medium`, `high`, `ultra`): rebuilds the scene at the
+    /// new tier with the camera kept (`hex_render::tier`); `auto` returns to the detected tier. The
+    /// choice is the save's quality from then on. The Settings sheet sends this.
     SetTier {
         tier: String,
     },
@@ -210,11 +211,11 @@ pub fn run_commands(
     mut exit: ResMut<ExitRequest>,
     mut cameras: Query<&mut Transform, With<Camera3d>>,
     scene: Query<Entity, With<SceneEntity>>,
-    mut tilt: ResMut<TiltShiftSettings>,
+    (mut tilt, mut pinned): (ResMut<TiltShiftSettings>, ResMut<TiltPinned>),
     mut actions: ResMut<ActionQueue>,
     mut reduced: ResMut<ReducedMotion>,
     (mut photo, mut exports): (ResMut<PhotoSettings>, ResMut<PhotoExports>),
-    mut persist: ResMut<PersistQueue>,
+    (mut persist, mut saved): (ResMut<PersistQueue>, ResMut<SavedSettings>),
 ) {
     queue.items.extend(INBOX.lock().unwrap().drain(..));
     if !*bridge::READY.lock().unwrap() {
@@ -260,15 +261,19 @@ pub fn run_commands(
             if let Some(v) = strength.filter(|v| (0.0..=1.0).contains(v)) {
                 tilt.strength = v;
             }
+            pinned.0 = true;
         }
         Command::DumpState { name } => dump_state(&name),
-        Command::SetTier { tier } => match hex_render::post::QualityTier::parse(&tier) {
-            Some(t) => hex_render::tier::set_tier(
-                &mut commands,
-                t,
-                hex_render::tier::TierSource::Runtime,
-                "set_tier command".into(),
-            ),
+        Command::SetTier { tier } => match crate::persist::quality_setting(&tier) {
+            Some(q) => {
+                saved.quality = q;
+                hex_render::tier::request(
+                    &mut commands,
+                    crate::persist::quality_tier(q),
+                    "set_tier command".into(),
+                    false,
+                );
+            }
             None => warn!("set_tier command: unknown tier '{tier}', skipped"),
         },
         Command::SetReducedMotion { on } => reduced.0 = on,

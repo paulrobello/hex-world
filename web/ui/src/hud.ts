@@ -1,6 +1,7 @@
 // The play HUD (S2–S7): tool bar, Tiles sheet, the tag beside the ghost, undo/redo toasts, bulldoze,
 // first-run callouts and keys. It reads hexWorld.state() and events every frame and acts only
 // through bridge commands, so the engine stays the one owner of game state.
+import type { AudioApi } from "./audio.ts";
 import type { Cell, Command, GameEvent, HexWorld, PlayState, Rect, State } from "./bridge.ts";
 import { h, isMac, reduceMotion, retrigger, s } from "./dom.ts";
 import { icon } from "./icons.ts";
@@ -97,7 +98,7 @@ export class Hud {
 
   private readonly hw: HexWorld;
 
-  constructor(host: HTMLElement, hw: HexWorld) {
+  constructor(host: HTMLElement, hw: HexWorld, audio: AudioApi | null = null) {
     this.hw = hw;
     this.root = host;
     this.canvas = document.querySelector<HTMLCanvasElement>("canvas#hex-world");
@@ -130,7 +131,13 @@ export class Hud {
       this.tip,
     );
     this.photo = new Photo(hw);
-    this.settings = new Settings(hw, () => this.toggleSettings());
+    // Quality and tilt-shift travel in the save, so a change there queues an autosave.
+    this.settings = new Settings(
+      hw,
+      audio,
+      () => this.toggleSettings(),
+      () => this.persist?.settingsChanged(),
+    );
     this.root.append(this.settings.el);
     document.body.append(this.photo.root);
     this.wireInput();
@@ -293,7 +300,9 @@ export class Hud {
   }
 
   private toggleSettings(): void {
+    const returnFocus = this.settings.holds(document.activeElement);
     this.settings.open = !this.settings.open;
+    if (returnFocus) this.tools.get("settings")?.btn.focus({ preventScroll: true });
     // Settings and Worlds share the right margin: one at a time.
     if (this.settings.open) this.toggleWorlds(false);
     this.tools.get("settings")?.btn.classList.toggle("is-on", this.settings.open);
@@ -348,7 +357,7 @@ export class Hud {
 
   render(st: PlayState, state: State = {}): void {
     this.photo.render(st.photo_mode, state.photo);
-    this.settings.render(state.tilt);
+    this.settings.render(state.tilt, state.tier);
     this.root.classList.toggle("is-photo", st.photo_mode);
     const prev = this.st;
     this.st = st;
@@ -767,7 +776,9 @@ export class Hud {
     if (!st || e.altKey) return;
     // Typing (a world name) keeps every key, game keys included.
     const target = e.target as HTMLElement | null;
-    if (target?.closest?.("input, textarea, [contenteditable=true]")) return;
+    if (target?.closest?.("input:not([type=range]), textarea, [contenteditable=true]")) return;
+    // Inside Settings, Tab walks its controls and Enter, Space and arrows act on them; Esc still closes.
+    if (this.settings.holds(target) && /^(Tab|Enter| |Arrow\w+|Home|End|PageUp|PageDown)$/.test(e.key)) return;
     const mod = e.ctrlKey || e.metaKey;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     const take = () => {

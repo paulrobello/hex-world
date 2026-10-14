@@ -104,7 +104,7 @@ function run(root: HTMLElement, hw: Bridge): void {
       return;
     }
     if (!hud) {
-      hud = new Hud(root, hw);
+      hud = new Hud(root, hw, hw.audio ?? null);
       startPersistence(hud);
     }
     persist?.observe(play.tiles);

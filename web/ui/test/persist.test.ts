@@ -360,3 +360,22 @@ test("a store that starts failing turns autosave off instead of breaking play", 
   assert.equal(p.state, "off");
   assert.equal(notes.at(-1)?.text, "Autosave stopped");
 });
+
+test("settings: a quality or tilt-shift change autosaves like an edit, and waits for the resume", async () => {
+  const store = new MemoryBackend();
+  const { host, p } = setup(store);
+  p.settingsChanged();
+  assert.equal(p.state, "saved", "before start has settled nothing is queued");
+  await p.start();
+  p.observe([tile(0, 0, "meadow")]);
+  p.settingsChanged();
+  p.settingsChanged();
+  assert.equal(p.state, "saving");
+  await new Promise((r) => setTimeout(r, 60));
+  assert.equal(host.sent.filter((c) => c.cmd === "save").length, 1, "one debounced save");
+  p.onEvents(host.savedEvents());
+  await settle();
+  assert.equal(p.state, "saved");
+  assert.equal((await store.list()).length, 1);
+  assert.ok(p.flushNow() === false, "nothing left pending for a page hide");
+});

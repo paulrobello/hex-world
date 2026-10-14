@@ -134,6 +134,62 @@ try {
   await until(async () => (await play()).tiles.length === 6, "the edit made inside the debounce survives the reload (page hide flush)");
   await until(async () => (await text(".bar__world")).includes("World 1"), "same world after the quick reload");
 
+  // Settings round trip (S9): quality and tilt-shift travel in the save and apply when it loads;
+  // audio levels and mute are this viewer's own (hexWorld.audio, localStorage).
+  {
+    const st = () => page.evaluate(() => window.hexWorld.state());
+    const audio = () => page.evaluate(() => window.hexWorld.audio.state());
+    const setRange = (label, v) =>
+      page.locator(`.sheet--settings input[aria-label='${label}']`).evaluate((el, v) => {
+        el.value = String(v);
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }, v);
+    await until(async () => (await text(".bar__world")).includes("Saved"), "settled before the settings change");
+    await page.locator(".tool[data-action=settings]").click();
+    await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens");
+    const detected = (await st()).tier;
+    await page.locator(".tier[data-tier=low]").click();
+    await until(async () => { const t = (await st()).tier; return t.tier === "low" && t.source === "runtime"; }, "Low picked");
+    await page.locator(".sheet--settings .switch[aria-label='Tilt-shift']").click();
+    await until(async () => (await st()).tilt.enabled, "tilt-shift on (the page runs tilt=off)");
+    await setRange("Tilt-shift strength", 35);
+    await until(async () => Math.abs((await st()).tilt.strength - 0.35) < 1e-6, "strength 0.35");
+    await page.locator("#settings-tab-audio").click();
+    await setRange("Master volume", 30);
+    await page.locator(".sheet--settings .switch[aria-label='Mute everything']").click();
+    await until(async () => { const a = await audio(); return a.muted && a.volumes.master === 0.3; }, "master 0.3, muted");
+    await until(async () => (await text(".bar__world")).includes("Saved"), "the settings change is autosaved");
+    await page.reload();
+    await page.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.state().play, null, { timeout: 90_000 });
+    await until(async () => (await play()).tiles.length === 6, "the world resumes after the reload");
+    await until(async () => { const t = (await st()).tier; return t.tier === "low" && t.reason === "loaded save"; }, "the loaded save applies its quality (Low)");
+    const s = await st();
+    check(s.tier.detected?.tier === detected.detected?.tier, `detection still reports ${s.tier.detected?.tier}`);
+    check(s.tilt.enabled === true && Math.abs(s.tilt.strength - 0.35) < 1e-6, `the save's tilt-shift holds through the tier rebuild (${s.tilt.enabled}, ${s.tilt.strength})`);
+    const a = await audio();
+    check(a.muted === true && a.volumes.master === 0.3, `this viewer's mute and master level persist (${a.muted}, ${a.volumes.master})`);
+    await page.locator(".tool[data-action=settings]").click();
+    await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens after the reload");
+    check(await page.locator(".tier[data-tier=low][aria-checked=true]").count() === 1, "Settings shows Low checked");
+    check(await page.locator(".sheet--settings .switch[aria-label='Tilt-shift'][aria-checked=true]").count() === 1, "and tilt-shift on");
+    await page.locator("#settings-tab-audio").click();
+    check((await page.locator(".sheet--settings input[aria-label='Master volume']").inputValue()) === "30", "the Master slider reads 30%");
+    check(await page.locator(".sheet--settings .switch[aria-label='Mute everything'][aria-checked=true]").count() === 1, "Mute everything reads on");
+    await shot("settings-after-reload");
+    // Back to Auto, untilted and unmuted at the default level for the steps below.
+    await page.locator(".sheet--settings .switch[aria-label='Mute everything']").click();
+    await setRange("Master volume", 80);
+    await page.locator("#settings-tab-graphics").click();
+    await page.locator(".tier[data-tier=auto]").click();
+    await until(async () => { const t = (await st()).tier; return t.tier === detected.tier && t.source === detected.source; }, "Auto returns to the detected tier");
+    await page.locator(".sheet--settings .switch[aria-label='Tilt-shift']").click();
+    await until(async () => !(await st()).tilt.enabled, "tilt-shift off");
+    await page.keyboard.press("Escape");
+    await until(async () => page.locator(".sheet--settings.is-closed").count(), "Esc closes Settings");
+    await until(async () => (await text(".bar__world")).includes("Saved"), "the restored settings are saved");
+  }
+
   // Worlds sheet: rename the current world.
   await page.locator(".bar__world").click();
   await until(async () => worldsOpen(page), "the bar title opens the Worlds sheet");

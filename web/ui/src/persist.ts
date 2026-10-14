@@ -225,6 +225,11 @@ export class Persistence {
     this.debounce.poke();
   }
 
+  /** A setting the save carries (quality, tilt-shift) changed: autosave as after an edit. */
+  settingsChanged(): void {
+    this.dirty();
+  }
+
   /** Queues any pending autosave now, ahead of whatever is sent next (a world switch). */
   flush(): void {
     this.debounce.flush();

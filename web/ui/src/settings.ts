@@ -1,29 +1,85 @@
-// Settings (S9), first slice: the Graphics tab's Tilt-shift section (S9.4, PRD §9.1), the game
-// camera's player toggle and strength slider. Quality, Audio and Controls are not built yet. It reads
-// `state().tilt` every frame, so the T key and scripts that change tilt-shift show here too, and
-// writes through the `tilt` command.
-import type { HexWorld, TiltState } from "./bridge.ts";
+// Settings (S9, design/ui/legend/settings.html): the Graphics tab (Quality, S9.1, and Tilt-shift,
+// S9.4) and the Audio tab (S9.5). The Controls tab is not built. Graphics reads `state().tier` and
+// `state().tilt` every frame while open, so the T key, scripts and a loaded save show here too, and
+// writes through the `set_tier` and `tilt` commands. Audio reads and writes `hexWorld.audio`, which
+// keeps the levels per viewer in localStorage.
+import type { AudioApi } from "./audio.ts";
+import type { HexWorld, QualityChoice, TierState, TiltState } from "./bridge.ts";
 import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
+import {
+  CHANNELS,
+  type Channel,
+  percent,
+  qualityView,
+  roveIndex,
+  selectedQuality,
+  tierCommand,
+} from "./settings-model.ts";
+
+type Tab = "graphics" | "audio";
+
+/** A tier pick waits this long for `state().tier` to follow before the row shows the engine's answer again. */
+const PICK_HOLD_MS = 3000;
+
+interface Slider {
+  input: HTMLInputElement;
+  out: HTMLOutputElement;
+}
 
 export class Settings {
   readonly el: HTMLElement;
   private readonly hw: HexWorld;
+  private readonly audio: AudioApi | null;
+  private readonly changed: () => void;
+  private readonly tabs = new Map<Tab, { btn: HTMLButtonElement; panel: HTMLElement }>();
+  private tab: Tab = "graphics";
+  private readonly tierList: HTMLUListElement;
+  private readonly tierReason: HTMLElement;
+  private readonly caution: HTMLElement;
+  private readonly cautionTitle: HTMLElement;
+  private readonly cautionBody: HTMLElement;
   private readonly toggle: HTMLButtonElement;
   private readonly strength: HTMLInputElement;
   private readonly out: HTMLOutputElement;
   private readonly strengthField: HTMLElement;
+  private readonly volumes = new Map<Channel, Slider>();
+  private readonly mute: HTMLButtonElement;
   private shown = false;
-  private sig = "";
+  private tiltSig = "";
+  private tierSig = "";
+  private tier: TierState | undefined;
+  private pick: { id: QualityChoice; until: number } | null = null;
 
-  constructor(hw: HexWorld, onClose: () => void) {
+  constructor(hw: HexWorld, audio: AudioApi | null, onClose: () => void, onChange: () => void) {
     this.hw = hw;
+    this.audio = audio;
+    this.changed = onChange;
     const close = h(
       "button",
       { class: "sheet__close", type: "button", "aria-label": "Close settings", "data-tip": "Close|Esc" },
       icon("close"),
     );
     close.addEventListener("click", onClose);
+
+    // ---------- Graphics: Quality ----------
+    this.tierList = h("ul", { class: "tiers", role: "radiogroup", "aria-label": "Quality tier" });
+    this.tierList.addEventListener("click", (e) => {
+      const li = (e.target as Element).closest<HTMLElement>(".tier");
+      if (li) this.pickTier(li.dataset.tier as QualityChoice);
+    });
+    this.tierList.addEventListener("keydown", (e) => this.tierKey(e));
+    this.tierReason = h("p", { class: "tier-reason" });
+    this.cautionTitle = h("b");
+    this.cautionBody = h("span");
+    this.caution = h(
+      "div",
+      { class: "note note--caution", role: "status", hidden: true },
+      icon("alert"),
+      h("div", {}, this.cautionTitle, this.cautionBody),
+    );
+
+    // ---------- Graphics: Tilt-shift ----------
     this.toggle = h("button", {
       class: "switch",
       type: "button",
@@ -34,13 +90,15 @@ export class Settings {
     this.toggle.addEventListener("click", () => {
       const on = this.toggle.getAttribute("aria-checked") !== "true";
       this.hw.cmd({ cmd: "tilt", on, strength: null });
+      this.changed();
     });
     this.strength = h("input", { type: "range", min: 0, max: 100, step: 1, "aria-label": "Tilt-shift strength" });
     this.out = h("output", { class: "field__value" });
     this.strength.addEventListener("input", () => {
-      this.paintStrength();
+      paint(this.strength, this.out);
       this.hw.cmd({ cmd: "tilt", on: null, strength: Number(this.strength.value) / 100 });
     });
+    this.strength.addEventListener("change", () => this.changed());
     this.strengthField = h(
       "label",
       { class: "field field--slider" },
@@ -48,24 +106,112 @@ export class Settings {
       this.out,
       this.strength,
     );
+    const graphics = h(
+      "div",
+      { class: "panel", role: "tabpanel" },
+      h("h2", { class: "section-h" }, "Quality"),
+      this.tierList,
+      this.tierReason,
+      this.caution,
+      h("h2", { class: "section-h" }, "Tilt-shift"),
+      h(
+        "div",
+        { class: "field" },
+        h("span", { class: "field__label" }, "Miniature focus"),
+        this.toggle,
+        h("span", { class: "field__hint" }, "Blurs near and far like a diorama photo. On from Medium up."),
+      ),
+      this.strengthField,
+    );
+
+    // ---------- Audio ----------
+    const audioPanel = h(
+      "div",
+      { class: "panel", role: "tabpanel", hidden: true },
+      h("h2", { class: "section-h" }, "Volume"),
+    );
+    for (const c of CHANNELS) {
+      const input = h("input", { type: "range", min: 0, max: 100, step: 1, "aria-label": `${c.label} volume` });
+      const out = h("output", { class: "field__value" });
+      input.addEventListener("input", () => {
+        paint(input, out);
+        this.audio?.setVolume(Number(input.value) / 100, c.bus);
+      });
+      this.volumes.set(c.bus, { input, out });
+      audioPanel.append(
+        h(
+          "label",
+          { class: "field field--slider" },
+          h("span", { class: "field__label" }, c.label),
+          out,
+          input,
+          c.hint ? h("span", { class: "field__hint" }, c.hint) : null,
+        ),
+      );
+    }
+    this.mute = h("button", {
+      class: "switch",
+      type: "button",
+      role: "switch",
+      "aria-checked": "false",
+      "aria-label": "Mute everything",
+    });
+    this.mute.addEventListener("click", () => {
+      const on = this.mute.getAttribute("aria-checked") !== "true";
+      this.audio?.setMuted(on);
+      this.mute.setAttribute("aria-checked", String(on));
+    });
+    audioPanel.append(h("div", { class: "field" }, h("span", { class: "field__label" }, "Mute everything"), this.mute));
+
+    // ---------- Tabs ----------
+    const strip = h("div", { class: "tabs", role: "tablist", "aria-label": "Settings" });
+    for (const [id, label, panel] of [
+      ["graphics", "Graphics", graphics],
+      ["audio", "Audio", audioPanel],
+    ] as const) {
+      const btn = h("button", {
+        type: "button",
+        role: "tab",
+        id: `settings-tab-${id}`,
+        "aria-controls": `settings-${id}`,
+      });
+      btn.textContent = label;
+      panel.id = `settings-${id}`;
+      panel.setAttribute("aria-labelledby", btn.id);
+      btn.addEventListener("click", () => this.select(id));
+      strip.append(btn);
+      this.tabs.set(id, { btn, panel });
+    }
+    strip.addEventListener("keydown", (e) => {
+      const ids = [...this.tabs.keys()];
+      const n = roveIndex(ids.indexOf(this.tab), ids.length, e.key, "x");
+      if (n == null) return;
+      e.preventDefault();
+      this.select(ids[n]!);
+      this.tabs.get(ids[n]!)!.btn.focus();
+    });
+    this.select("graphics");
+
     this.el = h(
       "section",
       { class: "sheet sheet--wide sheet--settings is-closed", "data-region": "settings", "aria-label": "Settings" },
       h("header", { class: "sheet__head" }, h("h1", {}, "Settings"), close),
-      h(
-        "div",
-        { class: "sheet__body" },
-        h("h2", { class: "section-h" }, "Tilt-shift"),
-        h(
-          "div",
-          { class: "field" },
-          h("span", { class: "field__label" }, "Miniature focus"),
-          this.toggle,
-          h("span", { class: "field__hint" }, "Blurs near and far like a diorama photo. On from Medium up."),
-        ),
-        this.strengthField,
-      ),
+      strip,
+      h("div", { class: "sheet__body" }, graphics, audioPanel),
     );
+    this.el.toggleAttribute("inert", true);
+    // Tab walks this sheet's own controls (the Hud leaves Tab to it while focus is inside), wrapping.
+    this.el.addEventListener("keydown", (e) => {
+      if (e.key !== "Tab" || e.altKey || e.ctrlKey || e.metaKey) return;
+      const all = [...this.el.querySelectorAll<HTMLElement>("button, input, [tabindex='0']")].filter(
+        (x) => !x.closest("[hidden]") && !(x as HTMLInputElement).disabled,
+      );
+      const i = all.indexOf(document.activeElement as HTMLElement);
+      const edge = e.shiftKey ? i <= 0 : i === all.length - 1;
+      if (!edge) return;
+      e.preventDefault();
+      all[e.shiftKey ? all.length - 1 : 0]?.focus();
+    });
   }
 
   get open(): boolean {
@@ -75,23 +221,115 @@ export class Settings {
   set open(v: boolean) {
     this.shown = v;
     this.el.classList.toggle("is-closed", !v);
-    if (v) this.toggle.focus({ preventScroll: true });
+    this.el.toggleAttribute("inert", !v);
+    if (!v) return;
+    this.tiltSig = "";
+    this.tierSig = "";
+    this.syncAudio();
+    this.tabs.get(this.tab)!.btn.focus({ preventScroll: true });
   }
 
-  render(tilt: TiltState | undefined): void {
-    if (!tilt || !this.shown) return;
+  /** Whether focus is inside the sheet (the Hud then leaves Tab, Enter, Space and arrows to it). */
+  holds(t: EventTarget | null): boolean {
+    return this.shown && t instanceof Node && this.el.contains(t);
+  }
+
+  render(tilt: TiltState | undefined, tier: TierState | undefined): void {
+    if (!this.shown) return;
+    this.renderTier(tier);
+    if (!tilt) return;
     const sig = `${tilt.enabled}|${tilt.strength}`;
-    if (sig === this.sig) return;
-    this.sig = sig;
+    if (sig === this.tiltSig) return;
+    this.tiltSig = sig;
     this.toggle.setAttribute("aria-checked", String(tilt.enabled));
     if (document.activeElement !== this.strength) this.strength.value = String(Math.round(tilt.strength * 100));
     this.strength.disabled = !tilt.enabled;
     this.strengthField.classList.toggle("is-disabled", !tilt.enabled);
-    this.paintStrength();
+    paint(this.strength, this.out);
   }
 
-  private paintStrength(): void {
-    this.strength.style.setProperty("--pct", `${this.strength.value}%`);
-    this.out.textContent = `${this.strength.value}%`;
+  private select(id: Tab): void {
+    this.tab = id;
+    for (const [k, { btn, panel }] of this.tabs) {
+      btn.setAttribute("aria-selected", String(k === id));
+      btn.tabIndex = k === id ? 0 : -1;
+      panel.hidden = k !== id;
+    }
+    if (id === "audio") this.syncAudio();
   }
+
+  private syncAudio(): void {
+    const a = this.audio?.state();
+    if (!a) return;
+    for (const [bus, s] of this.volumes) {
+      s.input.value = String(percent(a.volumes[bus]));
+      paint(s.input, s.out);
+    }
+    this.mute.setAttribute("aria-checked", String(a.muted));
+  }
+
+  private renderTier(tier: TierState | undefined): void {
+    this.tier = tier;
+    const pick = this.pick;
+    if (pick && (selectedQuality(tier) === pick.id || performance.now() > pick.until)) this.pick = null;
+    const v = qualityView(tier);
+    const selected = this.pick?.id ?? v.selected;
+    const sig = JSON.stringify([v, selected]);
+    if (sig === this.tierSig) return;
+    this.tierSig = sig;
+    const focused = (document.activeElement as HTMLElement | null)?.dataset?.tier;
+    this.tierList.replaceChildren(
+      ...v.rows.map((r) => {
+        const on = r.id === selected;
+        const li = h(
+          "li",
+          { class: "tier", role: "radio", tabindex: on ? 0 : -1, "aria-checked": String(on), "data-tier": r.id },
+          h("span", { class: "radio", "aria-hidden": "true" }),
+          h("b", {}, r.name),
+          r.tag ? h("span", { class: r.detected ? "tag tag--detected" : "tag" }, r.tag) : null,
+          h("small", {}, r.detail),
+        );
+        return li;
+      }),
+    );
+    if (focused) this.tierList.querySelector<HTMLElement>(`[data-tier="${focused}"]`)?.focus({ preventScroll: true });
+    this.tierReason.textContent = v.reason ?? "";
+    this.tierReason.hidden = !v.reason;
+    this.caution.hidden = !v.caution;
+    this.cautionTitle.textContent = v.caution?.title ?? "";
+    this.cautionBody.textContent = v.caution?.body ?? "";
+  }
+
+  private pickTier(id: QualityChoice): void {
+    const now = this.pick?.id ?? selectedQuality(this.tier);
+    if (id === now) return;
+    this.pick = { id, until: performance.now() + PICK_HOLD_MS };
+    this.hw.cmd(tierCommand(id));
+    this.changed();
+    this.renderTier(this.tier);
+  }
+
+  private tierKey(e: KeyboardEvent): void {
+    const rows = [...this.tierList.querySelectorAll<HTMLElement>(".tier")];
+    const i = rows.indexOf(document.activeElement as HTMLElement);
+    if (i < 0) return;
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      this.pickTier(rows[i]!.dataset.tier as QualityChoice);
+      return;
+    }
+    const n = roveIndex(i, rows.length, e.key, "y");
+    if (n == null) return;
+    e.preventDefault();
+    const id = rows[n]!.dataset.tier as QualityChoice;
+    rows[n]!.focus();
+    this.pickTier(id);
+    this.tierList.querySelector<HTMLElement>(`[data-tier="${id}"]`)?.focus();
+  }
+}
+
+/** The slider's filled track and its percent readout. */
+function paint(input: HTMLInputElement, out: HTMLOutputElement): void {
+  input.style.setProperty("--pct", `${input.value}%`);
+  out.textContent = `${input.value}%`;
 }

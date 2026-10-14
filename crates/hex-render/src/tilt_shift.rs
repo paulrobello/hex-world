@@ -86,6 +86,31 @@ impl Default for TiltShiftSettings {
     }
 }
 
+/// Set once the player chooses tilt-shift themselves: the Settings switch or slider (the `tilt`
+/// command), the `T` key, or a loaded save, which stores their last choice. A tier change then
+/// keeps their toggle and strength and takes only the new tier's taps. Until then a tier change
+/// resets both to the tier's default.
+#[derive(Resource, Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct TiltPinned(pub bool);
+
+/// The settings after a tier rebuild: `rebuilt` (the new tier's default), or the player's `before`
+/// toggle and strength with the new tier's taps once they chose them.
+pub fn kept_tilt(
+    before: TiltShiftSettings,
+    rebuilt: TiltShiftSettings,
+    pinned: bool,
+) -> TiltShiftSettings {
+    if pinned {
+        TiltShiftSettings {
+            enabled: before.enabled,
+            strength: before.strength,
+            taps: rebuilt.taps,
+        }
+    } else {
+        rebuilt
+    }
+}
+
 /// Camera component and shader uniform. Present on a camera only while the effect should run,
 /// so a disabled effect costs nothing.
 #[derive(Component, ExtractComponent, Clone, Copy, Debug, Default, ShaderType)]
@@ -187,6 +212,7 @@ pub struct TiltShiftPlugin;
 impl Plugin for TiltShiftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TiltShiftSettings>()
+            .init_resource::<TiltPinned>()
             .add_plugins((
                 ExtractComponentPlugin::<TiltShift>::default(),
                 UniformComponentPlugin::<TiltShift>::default(),
@@ -213,9 +239,14 @@ impl Plugin for TiltShiftPlugin {
 pub struct TiltShiftPass;
 
 /// `T` toggles the effect at runtime.
-fn toggle_key(keys: Option<Res<ButtonInput<KeyCode>>>, mut settings: ResMut<TiltShiftSettings>) {
+fn toggle_key(
+    keys: Option<Res<ButtonInput<KeyCode>>>,
+    mut settings: ResMut<TiltShiftSettings>,
+    mut pinned: ResMut<TiltPinned>,
+) {
     if keys.is_some_and(|k| k.just_pressed(KeyCode::KeyT)) {
         settings.enabled = !settings.enabled;
+        pinned.0 = true;
         info!(
             "tilt-shift: {}",
             if settings.enabled { "on" } else { "off" }
@@ -511,5 +542,32 @@ mod tests {
             ..on()
         };
         assert!(build_uniform(&zero, 72.0, 0.5, 0.1).is_none());
+    }
+
+    #[test]
+    fn a_tier_rebuild_keeps_the_players_choice_and_takes_the_new_taps() {
+        let player = TiltShiftSettings {
+            enabled: true,
+            strength: 0.3,
+            taps: 16,
+        };
+        let low_default = TiltShiftSettings {
+            enabled: false,
+            strength: 1.0,
+            taps: 8,
+        };
+        assert_eq!(
+            kept_tilt(player, low_default, true),
+            TiltShiftSettings {
+                enabled: true,
+                strength: 0.3,
+                taps: 8,
+            }
+        );
+        assert_eq!(
+            kept_tilt(player, low_default, false),
+            low_default,
+            "untouched, the tier's default applies"
+        );
     }
 }

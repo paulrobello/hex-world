@@ -9,7 +9,12 @@ use bevy::{
     render::renderer::{RenderAdapterInfo, RenderDevice},
 };
 
-use crate::{SceneEntity, post::QualityTier, workload::GateConfig};
+use crate::{
+    SceneEntity,
+    post::QualityTier,
+    tilt_shift::{TiltPinned, TiltShiftSettings, kept_tilt},
+    workload::GateConfig,
+};
 
 /// Frames whose real delta feeds the web warm-up probe. It decides on the last one, ten frames
 /// before READY (`diag::READY_FRAME`), so a step down rebuilds the scene before harnesses act.
@@ -320,6 +325,61 @@ pub fn set_tier(commands: &mut Commands, tier: QualityTier, source: TierSource, 
     commands.queue(move |world: &mut World| apply_tier(world, tier, source, reason));
 }
 
+/// What Auto means once detection has run, as the startup applied it: the probe's tier and both
+/// reasons when the probe stepped down, else the static rules' tier and reason. `None` before the
+/// render device exists.
+pub fn auto_choice(choice: &TierChoice) -> Option<(QualityTier, TierSource, String)> {
+    let (detected, why) = choice.detected.clone()?;
+    Some(match &choice.probe {
+        Some(p) if p.tier != detected => (
+            p.tier,
+            TierSource::Probe,
+            format!("{why}; probe: {}", p.reason),
+        ),
+        _ => (detected, TierSource::Detected, why),
+    })
+}
+
+/// Resolves a player's quality choice, `want` (`None` is Auto), against the current choice. A save's
+/// quality never overrides a `tier` key (`from_save`); Auto before the device exists hands the tier
+/// back to detection (`Default`). `None`: nothing to apply now.
+pub fn resolve(
+    choice: &TierChoice,
+    want: Option<QualityTier>,
+    reason: String,
+    from_save: bool,
+) -> Option<(QualityTier, TierSource, String)> {
+    if from_save && choice.source == TierSource::Explicit {
+        return None;
+    }
+    match want {
+        Some(t) => Some((t, TierSource::Runtime, reason)),
+        None => auto_choice(choice),
+    }
+}
+
+/// Queues a player's quality choice (the `set_tier` command, or a loaded save's quality).
+pub fn request(
+    commands: &mut Commands,
+    want: Option<QualityTier>,
+    reason: String,
+    from_save: bool,
+) {
+    commands.queue(move |world: &mut World| {
+        let choice = world.resource::<TierChoice>();
+        let undetected = choice.detected.is_none();
+        match resolve(choice, want, reason, from_save) {
+            Some((tier, source, reason)) => apply_tier(world, tier, source, reason),
+            None if want.is_none() && undetected && !from_save => {
+                let mut choice = world.resource_mut::<TierChoice>();
+                choice.source = TierSource::Default;
+                choice.reason = "default until the render device exists".into();
+            }
+            None => {}
+        }
+    });
+}
+
 fn apply_tier(world: &mut World, tier: QualityTier, source: TierSource, reason: String) {
     let current = world.resource::<GateConfig>().tier;
     {
@@ -341,6 +401,8 @@ fn apply_tier(world: &mut World, tier: QualityTier, source: TierSource, reason: 
         .iter(world)
         .next()
         .copied();
+    let tilt_before = world.get_resource::<TiltShiftSettings>().copied();
+    let pinned = world.get_resource::<TiltPinned>().is_some_and(|p| p.0);
     let scene: Vec<Entity> = world
         .query_filtered::<Entity, With<SceneEntity>>()
         .iter(world)
@@ -354,6 +416,12 @@ fn apply_tier(world: &mut World, tier: QualityTier, source: TierSource, reason: 
     if let Err(e) = world.run_system_cached(crate::scene::setup) {
         warn!("tier: scene rebuild failed: {e}");
         return;
+    }
+    // The rebuild resets tilt-shift to the new tier's default; a player's own choice outlives it.
+    if let (Some(before), Some(mut now)) =
+        (tilt_before, world.get_resource_mut::<TiltShiftSettings>())
+    {
+        *now = kept_tilt(before, *now, pinned);
     }
     if let Some(t) = camera {
         for mut c in world
@@ -562,6 +630,58 @@ mod tests {
         let p = probe(High, &[600.0; 60]);
         assert_eq!(p.tier, High);
         assert!(p.reason.starts_with("inconclusive"), "{}", p.reason);
+    }
+
+    fn detected(tier: QualityTier, probe: Option<QualityTier>) -> TierChoice {
+        TierChoice {
+            tier,
+            source: TierSource::Runtime,
+            reason: "set_tier command".into(),
+            detected: Some((High, "rules".into())),
+            probe: probe.map(|t| ProbeResult {
+                median_ms: 30.0,
+                kept: 60,
+                hitches: 0,
+                tier: t,
+                reason: "slow".into(),
+            }),
+            ..default()
+        }
+    }
+
+    #[test]
+    fn auto_returns_to_what_detection_applied() {
+        assert_eq!(
+            auto_choice(&detected(Low, None)),
+            Some((High, TierSource::Detected, "rules".into()))
+        );
+        assert_eq!(
+            auto_choice(&detected(Low, Some(High))),
+            Some((High, TierSource::Detected, "rules".into())),
+            "a probe that held keeps the rules' reason"
+        );
+        assert_eq!(
+            auto_choice(&detected(Low, Some(Medium))),
+            Some((Medium, TierSource::Probe, "rules; probe: slow".into()))
+        );
+        assert_eq!(auto_choice(&TierChoice::new(High, false)), None);
+    }
+
+    #[test]
+    fn a_saved_quality_never_beats_a_tier_key() {
+        let mut keyed = detected(Medium, None);
+        keyed.source = TierSource::Explicit;
+        assert_eq!(resolve(&keyed, Some(Low), "loaded save".into(), true), None);
+        assert_eq!(resolve(&keyed, None, "loaded save".into(), true), None);
+        assert_eq!(
+            resolve(&keyed, Some(Low), "set_tier command".into(), false),
+            Some((Low, TierSource::Runtime, "set_tier command".into())),
+            "the player's own pick still applies"
+        );
+        assert_eq!(
+            resolve(&detected(High, None), Some(Low), "loaded save".into(), true),
+            Some((Low, TierSource::Runtime, "loaded save".into()))
+        );
     }
 
     #[test]

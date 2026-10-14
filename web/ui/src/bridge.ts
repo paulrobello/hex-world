@@ -10,6 +10,12 @@ export type EdgeStatus = "Compatible" | "Incompatible" | "Neutral";
 export type HoveredKind = "tile" | "slot" | "empty";
 /** Photo mode's depth of field: off, the tilt-shift kernel, or the lens (manual). */
 export type Dof = "off" | "tilt" | "manual";
+/** Quality tiers (PRD §9.2). */
+export type TierName = "low" | "medium" | "high" | "ultra";
+/** A quality choice: a tier, or `auto` (the detected tier). The save stores it. */
+export type QualityChoice = "auto" | TierName;
+/** Where the tier in force came from (`docs/agent-operability.md`, "Quality tier"). */
+export type TierSource = "default" | "explicit" | "detected" | "probe" | "runtime";
 
 export interface Cell {
   q: number;
@@ -27,9 +33,12 @@ export interface Volumes {
   ui: number;
 }
 
-/** The settings a `loaded` event hands the overlay. `quality` is stored, not yet applied. */
+/**
+ * The settings a `loaded` event reports. The engine has already applied `quality` (a `tier` key
+ * still wins) and the tilt-shift pair; `volumes` stay unapplied, since audio levels are per viewer.
+ */
 export interface SavedSettings {
-  quality: string;
+  quality: QualityChoice;
   tilt_shift: boolean;
   tilt_shift_strength: number;
   volumes: Volumes;
@@ -63,7 +72,7 @@ export type Command =
   | { cmd: "scenario"; name: string }
   | { cmd: "tilt"; on: boolean | null; strength: number | null }
   | { cmd: "dump_state"; name: string }
-  | { cmd: "set_tier"; tier: "low" | "medium" | "high" | "ultra" }
+  | { cmd: "set_tier"; tier: QualityChoice }
   | { cmd: "set_reduced_motion"; on: boolean }
   | { cmd: "exit" }
   | { cmd: "select_tile"; id: string }
@@ -230,12 +239,25 @@ export interface TiltState {
   taps: number;
 }
 
+/** `state().tier`: the tier in force, why, and what detection found (the overlay reads these fields). */
+export interface TierState {
+  tier: TierName;
+  source: TierSource;
+  reason: string;
+  /** The static rules' answer, also when a `tier` key overrides it; null before the render device exists. */
+  detected: { tier: TierName; reason: string } | null;
+  /** The web warm-up probe; null natively, for explicit tiers and before it decides. */
+  probe: { median_ms: number; kept: number; hitches: number; tier: TierName; reason: string } | null;
+  changes: number;
+}
+
 /** `hexWorld.state()`: only the fields the overlay reads; the rest are documented in docs/agent-operability.md. */
 export interface State {
   scenario?: string;
   play?: PlayState | null;
   photo?: PhotoState;
   tilt?: TiltState;
+  tier?: TierState;
   /** The game camera: position and unit forward vector in world metres. */
   camera?: { pos: Vec3; forward: Vec3 } | null;
 }
