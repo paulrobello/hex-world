@@ -100,3 +100,4 @@ Owner's notes, verbatim: "there is no visual or ghost of the selected tile when 
 - **Perched birds:** "nesting birds do not look good" (placeholder gulls lie flat on the canopy). Handled in the starling swap.
 - **Bulldoze:** add a dust cloud during the destruction. In progress.
 - **Mega tiles:** a 7-hex centre plus ring with a huge feature. Filed as a low-priority backlog idea.
+- **Fish at river mouths:** let the fish skim the shallow fan by relaxing the fish band over mouth tiles. The fan is not deepened.
