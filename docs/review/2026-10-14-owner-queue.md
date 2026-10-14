@@ -7,7 +7,7 @@ Everything below waits on you. Work kept going overnight on everything that did 
 These five answers unblock the most work.
 
 1. **Q2. Push?** Main holds about 109 unpushed local commits, and `make checkall-ci` is green. CI now runs the UI checks.
-2. **Q4. Tone mapper?** ACES crushes shaded walls to pure black (F1). TonyMcMapface fixes it but reopens your ACES choice.
+2. **Q4. Tone mapper?** ACES crushes shaded walls to pure black (F1). TonyMcMapface fixes it but reopens your ACES choice. Also **Q7**: turn on the web frame-latency limit by default, which ends the stall tail (F2).
 3. **Kit approvals:** O4 skirts (A1), river family (A2), oak (A3), cars (A7), parking pad (A9), beach pieces (A11) and forest edges (A19). Every MVP tile now draws built pieces; approval is what remains.
 4. **Reference approvals:** fish and birds (A12) and the seven P3 families (A17). Modeling starts once these are approved.
 5. **UI sign-off in the running build:** the HUD (A8), photo mode (A14) and save slots (A16). Run `make build-web`, then `python3 -m http.server 8094 --bind 127.0.0.1 --directory dist`, and open http://127.0.0.1:8094/.
@@ -283,13 +283,12 @@ Nothing is pushed.
 - The thumbnail camera clipping tall spruces.
 - A helper-name clash in the kit gate.
 
-**PRD P2 checklist:** 14 of 20 boxes are checked, with evidence in each line. The 6 open:
+**PRD P2 checklist:** 15 of 20 boxes are checked, with evidence in each line. The 5 open:
 1. MVP tiles approved (you).
-2. The hero-water bar: foam and the live wet band are partial.
+2. The hero-water bar: the live wet band is in progress.
 3. Music: your Suno cues.
 4. Shipped-UI sign-off (you).
-5. The web stall tail.
-6. Tilt-shift, pending a re-measure on the merged build.
+5. The web stall tail: explained, waiting on Q7.
 
 **Board:** every card that waits on you is set to blocked, pointing at its item here. New backlog cards:
 - the web stall tail
