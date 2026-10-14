@@ -18,5 +18,5 @@ Agents and scripts can drive, screenshot and inspect the game natively and on th
 
 - Product plan and phase checklists: `PRD.md` (§15 is the phase list).
 - 3D asset work: the project skill `.claude/skills/blender-asset/` (`make kit-build`, `kit-compress`, `kit-provenance`, `kit-check`). `.blend` sources live only in the main checkout's gitignored `assets-source/blend/`.
-- Gates: `make checkall` (fast), `make checkall-ci` (CI parity, run before any push), `make web-smoke` (local GPU browser), `make kit-check` (assets).
+- Gates: `make checkall` (fast), `make checkall-ci` (CI parity, run before any push), `make web-smoke` (local GPU browser, including the clamped 16-texture `water_kit` case), `make initial-download` (30 MiB first-load budget, also in `checkall-ci`), `make kit-check` (assets).
 - Past plans: `docs/superpowers/plans/`.

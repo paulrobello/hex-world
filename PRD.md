@@ -448,7 +448,7 @@ Following `~/.claude/guides/agent-operability.md`, both the native and web build
 ## 14. Quality gates and testing
 
 - `make checkall` (fast): `cargo fmt --check`, `clippy -D warnings`, `cargo test` (core and sim), TypeScript typecheck, lint and unit tests, data validation (tiles, sockets, recipes), and asset gates for staged assets.
-- `make checkall-ci`: everything in `checkall` plus the WASM release build, the bundle-size budget, and the deploy-artifact check.
+- `make checkall-ci`: everything in `checkall` plus the WASM release build, the bundle-size budget, the initial-download gate (`scripts/size/initial-download.mjs`, ≤30 MiB for the larger of BC7 and ASTC), and the deploy-artifact check.
 - Browser e2e and perf tests run locally with Playwright on GPU Chromium (`channel: 'chromium'`, Metal ANGLE flags) and are never run in CI. They cover a placement scenario, an undo/bulldoze scenario, a save/load round trip, a photo-mode export, and a 2,000-tile perf scenario.
 - Visual regression: `?shot=` scenarios compared against approved baselines with a perceptual tolerance.
 - Unit-tested core rules: socket compatibility, rotation, legal-slot computation, bulldoze connectivity, undo/redo, save migration, and network stitching.
@@ -492,13 +492,13 @@ Goal: the polished, playable core loop with D12 content.
 - [ ] Road network stitching. Cars route between houses across tile boundaries.
 - [ ] GPU boids birds roosting in forests.
 - [ ] Water: river flow and ocean waves with shore foam, meeting the §9.1 hero-water quality bar.
-- [ ] A gate sums the initial download (wasm + IBL + core pieces + sets, one texture family) and fails above 30 MB; hero assets stream after first interaction.
+- [ ] A gate sums the initial download (wasm + IBL + core pieces + sets, one texture family) and fails above 30 MB; hero assets stream after first interaction. (The gate runs in `make checkall-ci`: 22.4 MiB gated on ASTC, 2026-10-13. Still open: hero pieces load eagerly at runtime, and the PNG fallback is 32.4 MiB.)
 - [x] The owner approves the water look in a dedicated `water` scenario. Shots cover the ocean, a river, a beach and a tile seam, captured at rest and in motion. (Approved 2026-10-13, including underwater cut faces on exposed edges: `--scenario water`, `docs/checkpoints/water/`.)
 - [ ] Spatial ambience with the focus mix. Placement and UI SFX. At least 3 Suno music cues mastered and crossfading.
 - [ ] The owner approves UI mockups (every screen and key interaction state, with motion) before UI implementation starts (§4.7).
 - [ ] The shipped UI meets the §4.7 quality bar, and the owner signs it off in the running build.
 - [ ] Undo/redo and bulldoze with the connectivity rule.
-- [ ] Water tiles and kit pieces render in one view within 16 sampled textures per stage: refraction's transmission texture currently takes the kit forward pipeline to 17 (water prototype finding, ADR 0002).
+- [x] Water tiles and kit pieces render in one view within 16 sampled textures per stage. (Fixed 2026-10-13 by dropping Bevy's unused `bluenoise_texture` view binding: kit forward is exactly 16 next to refracting water. Gated by `make web-smoke` case `water_kit`, which clamps the device to 16 and fails at 17. ADR 0002.)
 - [ ] GPU timestamp queries attribute frame cost, and the >25 ms stall tail is measured and fixed or accepted with evidence (ADR 0001 carry-over).
 - [ ] IndexedDB slots, autosave, `.hexworld` export and import.
 - [ ] Photo mode with DOF and 4× export.
