@@ -1,0 +1,31 @@
+{
+  "issue": "Owner 2026-10-14: the river_spring tile's grass reads as a flat, darker, greyer hex beside meadow and river tiles.",
+  "method": "Median sRGB of a grass-only box per tile in the 1600x1000 frame; luma is Rec.709 (0-255), sat is HSV saturation. Script: spring-colour.json (play scenario, --tilt off, both clocks fixed, grade tony).",
+  "owner": {
+    "shot": "owner screenshot, 292x209 crop",
+    "spring": {"luma": 92.8, "sat": 0.43},
+    "meadow": {"luma": 102.0, "sat": 0.51},
+    "riverTileGrass": {"luma": 102.6, "sat": 0.515},
+    "notes": "No pool stones, reeds or lilies on the spring: river_spring_center was not drawn."
+  },
+  "before": {
+    "shot": "spring-colour-01-before-placeholder-bed.jpg",
+    "how": "Current tree with the spring's water cell forced to bed=true (the state the engine enters when the tile's centre piece is not in the kit).",
+    "spring": {"luma": 103.1, "sat": 0.434},
+    "meadow": {"luma": 112.3, "sat": 0.512},
+    "riverStraightGrass": {"luma": 113.3, "sat": 0.496}
+  },
+  "after": {
+    "shot": "spring-colour-02-after-kit-spring-meadows.jpg",
+    "how": "Current tree, unmodified: river_spring_center loaded, play water log 'bed false'.",
+    "spring": {"luma": 113.2, "sat": 0.512},
+    "meadow": {"luma": 112.7, "sat": 0.514},
+    "riverStraightGrass": {"luma": 113.3, "sat": 0.496}
+  },
+  "mouth": {
+    "shot": "spring-colour-03-kit-mouth-beach-meadow.jpg",
+    "how": "Current tree, unmodified: river_mouth_center loaded, play water log 'bed false'.",
+    "mouthGrass": {"luma": 114.1, "sat": 0.498},
+    "meadow": {"luma": 112.9, "sat": 0.502}
+  }
+}
