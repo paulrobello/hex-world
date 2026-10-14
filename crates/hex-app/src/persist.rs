@@ -569,6 +569,13 @@ pub fn save_on_exit(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // SAVED and PENDING_LOADS are process-global and tests run in parallel: the cap test's 11 saves
+    // evict other tests' entries, so every test that touches them holds this lock.
+    static OUTBOX: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    fn outbox() -> std::sync::MutexGuard<'static, ()> {
+        OUTBOX.lock().unwrap_or_else(|e| e.into_inner())
+    }
     use crate::actions::Action;
     use hex_core::Axial;
 
@@ -605,6 +612,7 @@ mod tests {
 
     #[test]
     fn save_then_load_through_the_commands_keeps_world_history_camera_and_settings() {
+        let _outbox = outbox();
         let (mut g, mut cam) = played();
         let mut tilt = TiltShiftSettings {
             enabled: false,
@@ -683,6 +691,7 @@ mod tests {
 
     #[test]
     fn bad_files_are_refused_with_typed_reasons_and_leave_the_world_alone() {
+        let _outbox = outbox();
         let (mut g, mut cam) = played();
         let mut tilt = TiltShiftSettings::default();
         let mut saved = SavedSettings::default();
@@ -730,6 +739,7 @@ mod tests {
     /// applies the pending save in order. The only test touching the pending queue and the inbox.
     #[test]
     fn web_load_validates_at_once_and_applies_in_queue_order() {
+        let _outbox = outbox();
         let (mut g, mut cam) = played();
         let mut tilt = TiltShiftSettings::default();
         let mut saved = SavedSettings::default();
@@ -897,6 +907,7 @@ mod tests {
 
     #[test]
     fn a_replaced_world_moves_the_view_epoch_and_a_placement_does_not() {
+        let _outbox = outbox();
         let (mut g, mut cam) = played();
         let before = g.view().epoch;
         g.apply(Action::SelectTile("meadow".into()));
@@ -953,6 +964,7 @@ mod tests {
 
     #[test]
     fn saved_bytes_are_kept_per_tag_and_capped() {
+        let _outbox = outbox();
         for i in 0..SAVED_CAP + 3 {
             store_save(&format!("cap-{i}"), vec![i as u8]);
         }
