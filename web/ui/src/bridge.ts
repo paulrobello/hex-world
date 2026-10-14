@@ -104,7 +104,11 @@ export type Command =
   | { cmd: "photo_export"; scale: 1 | 2 | 4; name: string }
   | { cmd: "save"; tag: string | null; path: string | null; volumes: Volumes | null }
   | { cmd: "load"; path: string | null }
-  | { cmd: "new_world" };
+  | { cmd: "new_world" }
+  | { cmd: "walk"; on: boolean | null; pointer_lock: boolean | null }
+  | { cmd: "walk_to"; x: number; z: number; heading: number | null; pitch: number | null }
+  | { cmd: "walk_step"; forward: number; right: number; seconds: number; jog: boolean | null }
+  | { cmd: "walk_look"; heading: number | null; pitch: number | null };
 
 export type GameEvent =
   | { type: "tilePlaced"; q: number; r: number; tile: string; rotation: number }
@@ -121,8 +125,13 @@ export type GameEvent =
   | { type: "toolChanged"; mode: Tool }
   | { type: "inventoryToggled"; open: boolean }
   | { type: "photoModeToggled"; on: boolean }
+  | { type: "walkModeToggled"; on: boolean }
   | { type: "actionRefused"; action: string; reason: string }
   | { type: "riseStage"; q: number; r: number; tile: string; stage: string; skipped: boolean }
+  /** A car reverses out of its spot (trip start): its sim id, the spot's cell and world XZ in metres. */
+  | { type: "carPulledOut"; id: number; q: number; r: number; x: number; z: number }
+  /** A car stands in its reserved spot (trip end), as carPulledOut. */
+  | { type: "carParked"; id: number; q: number; r: number; x: number; z: number }
   | { type: "photoExported"; name: string; width: number; height: number }
   | { type: "photoExportFailed"; name: string; reason: string }
   | { type: "saved"; tag: string | null; tiles: number; bytes: number }
@@ -183,6 +192,8 @@ export interface PlayState {
   rotation: number;
   inventory_open: boolean;
   photo_mode: boolean;
+  /** First-person walk mode (PRD P8): the HUD hides behind the walk hint. */
+  walk_mode: boolean;
   tiles: PlayTile[];
   frontier: Cell[];
   hovered: Cell | null;
@@ -243,6 +254,35 @@ export interface PhotoState {
   max_texture: number | null;
 }
 
+/** Why the walker's latest move stopped. */
+export type WalkBlocked = "building" | "tree" | "rock" | "water" | "edge" | "steep";
+
+/** `state().walk`: first-person walk mode (PRD P8). Position fields are null while it is off. */
+export interface WalkState {
+  on: boolean;
+  /** Feet on the ground, world metres. */
+  feet: Vec3 | null;
+  eye: Vec3 | null;
+  /** Degrees clockwise viewed from above, 0 toward -Z. */
+  heading: number | null;
+  pitch: number | null;
+  /** Ground height under the feet (m). */
+  ground: number | null;
+  water_depth: number | null;
+  cell: Cell | null;
+  tile: string | null;
+  blocked: WalkBlocked | null;
+  /** The collider's kit piece when `blocked` is a building, tree or rock. */
+  blocked_by: string | null;
+  moving: boolean;
+  airborne: boolean;
+  /** Metres walked since entering. */
+  distance: number;
+  /** Seconds left of a scripted `walk_step`. */
+  step_left: number | null;
+  pointer_lock: boolean;
+}
+
 /** `state().tilt`: the game camera's tilt-shift (PRD §9.1). */
 export interface TiltState {
   enabled: boolean;
@@ -282,6 +322,7 @@ export interface State {
   scenario?: string;
   play?: PlayState | null;
   photo?: PhotoState;
+  walk?: WalkState;
   tilt?: TiltState;
   tier?: TierState;
   grade?: GradeState;
@@ -354,6 +395,10 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   save: keys<CommandOf<"save">>({ tag: true, path: true, volumes: true }),
   load: keys<CommandOf<"load">>({ path: true }),
   new_world: keys<CommandOf<"new_world">>({}),
+  walk: keys<CommandOf<"walk">>({ on: true, pointer_lock: true }),
+  walk_to: keys<CommandOf<"walk_to">>({ x: true, z: true, heading: true, pitch: true }),
+  walk_step: keys<CommandOf<"walk_step">>({ forward: true, right: true, seconds: true, jog: true }),
+  walk_look: keys<CommandOf<"walk_look">>({ heading: true, pitch: true }),
 };
 
 export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
@@ -371,8 +416,11 @@ export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
   toolChanged: keys<EventOf<"toolChanged">>({ mode: true }),
   inventoryToggled: keys<EventOf<"inventoryToggled">>({ open: true }),
   photoModeToggled: keys<EventOf<"photoModeToggled">>({ on: true }),
+  walkModeToggled: keys<EventOf<"walkModeToggled">>({ on: true }),
   actionRefused: keys<EventOf<"actionRefused">>({ action: true, reason: true }),
   riseStage: keys<EventOf<"riseStage">>({ q: true, r: true, tile: true, stage: true, skipped: true }),
+  carPulledOut: keys<EventOf<"carPulledOut">>({ id: true, q: true, r: true, x: true, z: true }),
+  carParked: keys<EventOf<"carParked">>({ id: true, q: true, r: true, x: true, z: true }),
   photoExported: keys<EventOf<"photoExported">>({ name: true, width: true, height: true }),
   photoExportFailed: keys<EventOf<"photoExportFailed">>({ name: true, reason: true }),
   saved: keys<EventOf<"saved">>({ tag: true, tiles: true, bytes: true }),
@@ -397,6 +445,7 @@ export const STATE_FIELDS = {
     rotation: true,
     inventory_open: true,
     photo_mode: true,
+    walk_mode: true,
     tiles: true,
     frontier: true,
     hovered: true,
@@ -439,6 +488,24 @@ export const STATE_FIELDS = {
     sim_ticks: true,
     exporting: true,
     max_texture: true,
+  }),
+  walk: keys<WalkState>({
+    on: true,
+    feet: true,
+    eye: true,
+    heading: true,
+    pitch: true,
+    ground: true,
+    water_depth: true,
+    cell: true,
+    tile: true,
+    blocked: true,
+    blocked_by: true,
+    moving: true,
+    airborne: true,
+    distance: true,
+    step_left: true,
+    pointer_lock: true,
   }),
   grade: keys<GradeState>({ name: true, default: true, presets: true }),
   grade_preset: keys<GradePreset>({ name: true, detail: true }),

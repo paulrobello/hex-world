@@ -5,8 +5,8 @@
   "masterTruePeak": -2.0,
   "lufsTolerance": 1.0,
   "decodedBudgetBytes": 96000000,
-  "generationCap": 30,
-  "generationCapNote": "Owner, 2026-10-14: the forest and meadow loop beds were retired and the forests got one-shot pools. The cap was raised from 27 by at most 10 for short non-loop ElevenLabs forest-leaves takes (forest-birds takes were allowed only if every cut from the paid forest-birdsong take failed the floor criterion; none did). Three leaf takes were spent (attempts 28-30, 40 credits each), so the cap is set to the 30 attempts logged.",
+  "generationCap": 39,
+  "generationCapNote": "Owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
   "classes": {
     "music": {
       "lufs": -18,
@@ -685,6 +685,185 @@
       },
       "retired": true,
       "retiredNote": "Owner, 2026-10-14: dropped from the pool after listening (the most high-frequency content of the three)."
+    },
+    {
+      "id": "car-door-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "car-door",
+      "use": "One car door closing, of the car-door pool: positional at the parking spot when a car finishes parking (carParked), only within 3 hex steps of the camera focus, on the ambience bus.",
+      "events": [
+        "carParked"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a small car's door being shut gently in a quiet driveway: one soft, solid, well-damped thud of the door closing, with a short muffled latch click inside it. Studio-quiet background, with silence before and after the door.",
+        "durationSeconds": 1.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 90,
+        "stages": 2
+      },
+      "retired": true,
+      "retiredNote": "2026-10-14, at mastering: a sharp, transient-sparse thud (0.15 s within 20 dB of its loudest 50 ms window). Reaching the -16 LUFS sfx target took 49 dB of limiter input gain against 27.9 dB of plain gain, and it still settled at -19.5 LUFS with its floor 34.3 dB under the peak window (needs 40), so it failed make audio-check twice over. car-door-2 and car-door-3, with more body in the thunk, master linearly."
+    },
+    {
+      "id": "car-door-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "car-door",
+      "use": "One car door closing, of the car-door pool: positional at the parking spot when a car finishes parking (carParked), only within 3 hex steps of the camera focus, on the ambience bus.",
+      "events": [
+        "carParked"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a hatchback's driver door swinging shut on a calm evening: a single warm, rounded, cushioned thunk with a light rubber-seal sigh. Studio-quiet background, with silence before and after the door.",
+        "durationSeconds": 1.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 90,
+        "stages": 2
+      }
+    },
+    {
+      "id": "car-door-3",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "car-door",
+      "use": "One car door closing, of the car-door pool: positional at the parking spot when a car finishes parking (carParked), only within 3 hex steps of the camera focus, on the ambience bus.",
+      "events": [
+        "carParked"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a small family car's passenger door being pushed shut on a quiet afternoon: one warm, padded, rounded thunk with a soft rubber-seal sigh after it. Studio-quiet background, with silence before and after the door.",
+        "durationSeconds": 1.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "stages": 2
+      }
+    },
+    {
+      "id": "car-start-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "car-start",
+      "use": "One engine start and gentle pull-away, of the car-start pool: positional at the parking spot when a car pulls out (carPulledOut), only within 3 hex steps of the camera focus, on the ambience bus.",
+      "events": [
+        "carPulledOut"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a small petrol car starting in a quiet driveway and pulling away gently: a brief soft starter whir, the engine catches into a smooth, low, quiet idle, then the car rolls away slowly and its gentle hum fades out into complete silence, about four seconds in all. Studio-quiet background, with silence before the start and after the car has gone.",
+        "durationSeconds": 4.5,
+        "promptInfluence": 0.5,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 90,
+        "stages": 2
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 22,
+        "ratio": 3,
+        "rangeDb": 45,
+        "attackMs": 5,
+        "releaseMs": 250
+      },
+      "retired": true,
+      "retiredNote": "2026-10-14, at mastering: the starter whir is its loudest moment, and reaching -16 LUFS took 11.6 dB of limiting, which flattened the idle and pull-away to within about 15 dB of the peak. Its floor stayed 31.2 dB under the peak window (needs 40) with the gate's range at 45 or 70 dB; a deeper gate (18 dB threshold, ratio 4) chopped the idle. car-start-2's crank, silence and engine keep a 44 dB floor."
+    },
+    {
+      "id": "car-start-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "car-start",
+      "use": "One engine start and gentle pull-away, of the car-start pool: positional at the parking spot when a car pulls out (carPulledOut), only within 3 hex steps of the camera focus, on the ambience bus.",
+      "events": [
+        "carPulledOut"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a little old hatchback starting on a calm morning: a short starter churn, a soft low burble that settles to a gentle idle, then the car eases off down the lane and its mellow engine note drifts away to complete silence. Studio-quiet background, with silence before the start and after the car has gone.",
+        "durationSeconds": 4.5,
+        "promptInfluence": 0.5,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 90,
+        "stages": 2
+      }
+    },
+    {
+      "id": "car-drive-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "car-drive",
+      "use": "One soft low-speed pass-by, of the car-drive pool: positional at a driving car (play.car_list, phase road) once per trip when it comes within 3 hex steps of the camera focus, the panner following the car. On the ambience bus.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "A four-second, close, isolated recording on a quiet village street: one second of silence, then a little vintage car putters past in about two seconds, the cheerful, mid-pitched putt-putt of its small engine swelling as it comes close and fading as it goes, then one second of silence. Studio-quiet background.",
+        "durationSeconds": 4,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "retired": true,
+      "retiredNote": "2026-10-14: no take passed. Attempt 33 was a pure sub rumble (99.9% of power under 300 Hz, floor 28.8 dB under the peak window); attempt 34 an airy whoosh (77% of the pass-by's power over 8 kHz) over a 2.5 s sub-60 Hz tail (floor 33.8 dB); attempt 36, the source left here, a continuous engine at -51.5 dBFS peak with no silence before or after (54% under 60 Hz, floor 20.1 dB). The generator either gave the pass-by shape with no audible engine or an audible engine that ran the whole take, so the pool keeps car-drive-2's receding half alone and the runtime varies its rate per car."
+    },
+    {
+      "id": "car-drive-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "car-drive",
+      "use": "The car-drive pool's one variant, a soft putt-putt pass-by: positional at a driving car (play.car_list, phase road) once per trip when it comes within 3 hex steps of the camera focus, the panner and the focus-mix gain following the car, its rate varied by the car id so passes differ. On the ambience bus. The receding half of the take, so it settles to silence.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a little vintage car puttering slowly past along a quiet village street: the cheerful, mid-pitched putt-putt of its small engine and the soft roll of its tyres, coming in from silence, passing close by and fading away into silence, about three seconds in all. Studio-quiet background, with silence before and after the car.",
+        "durationSeconds": 4,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 70,
+        "stages": 2
+      },
+      "cut": {
+        "startSeconds": 1.8,
+        "seconds": 2.2,
+        "fadeInSeconds": 0.3,
+        "fadeOutSeconds": 0.05
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 14,
+        "ratio": 4,
+        "rangeDb": 45,
+        "attackMs": 50,
+        "releaseMs": 150
+      }
     },
     {
       "id": "meadow-day",

@@ -3060,11 +3060,16 @@ dependencies = [
 name = "hex-assets"
 version = "0.1.0"
 dependencies = [
+ "async-io",
  "bevy",
  "gltf",
+ "js-sys",
  "meshoptimizer-rs",
  "serde",
  "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]

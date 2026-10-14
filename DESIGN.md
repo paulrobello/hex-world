@@ -287,7 +287,7 @@ Spacing uses a six-step scale: 4, 8, 12, 16, 20 and 28 px. Tight gaps of 2 and 3
 
 Every tool, button and row is at least 44 px tall, except the small button, which is 36 px. Touch arrives in P7 and keeps these targets.
 
-**The Narrow-Desktop Rule (1400 px).** At 1400 px wide or less, key caps leave the bar and live only in tooltips, tools tighten to 9 px of side padding, the Tiles sheet narrows to 340 px, and the row socket hex narrows to 28 px. The bar and sheet never meet, and the ghost area stays clear (shot `s12-narrow-1280x720`).
+**The Narrow-Desktop Rule (1400 px).** At 1400 px wide or less, key caps leave the bar and live only in tooltips, tools tighten to 9 px of side padding, the bar's rules to 4 px of margin and the world name to 128 px, the Tiles sheet narrows to 340 px, and the row socket hex narrows to 28 px. The bar and sheet never meet, and the ghost area stays clear (shot `s12-narrow-1280x720`).
 
 **The F6 Escape Rule.** Tab belongs to the sheet: it opens and closes Tiles. So F6, and Shift+F6 to go back, moves focus between `[data-region]` landmarks (bar, sheet, toast), skipping closed ones. The sheet foot and the Settings key table both state it.
 

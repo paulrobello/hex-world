@@ -22,6 +22,7 @@ import {
 import { Photo } from "./photo.ts";
 import { Settings } from "./settings.ts";
 import { Sheet } from "./sheet.ts";
+import { Walk } from "./walk.ts";
 import { actionText, bulldozeRefusal, plural, tileName } from "./words.ts";
 import { Worlds } from "./worlds.ts";
 
@@ -73,6 +74,7 @@ export class Hud {
   private readonly canvas: HTMLCanvasElement | null;
   private readonly photo: Photo;
   private readonly settings: Settings;
+  private readonly walk: Walk;
 
   private st: PlayState | null = null;
   private pending: GameEvent[] = [];
@@ -141,6 +143,8 @@ export class Hud {
     );
     this.root.append(this.settings.el);
     document.body.append(this.photo.root);
+    this.walk = new Walk(hw, this.canvas);
+    document.body.append(this.walk.root);
     this.wireInput();
     const done = Number(storeGet(HINTS_KEY) ?? 0);
     if (done < HINTS.length) this.hint = done;
@@ -277,6 +281,7 @@ export class Hud {
     bar.append(rule());
     add("inventory", "inventory", "Tiles", "Tab", "Tiles|Tab", "Tiles, Tab");
     bar.append(rule());
+    add("walk", "walk", "", "", "Walk around|F|First person: WASD walks, Esc leaves", "Walk around, F");
     add("photo", "photo", "", "", "Photo mode|P", "Photo mode, P");
     add("settings", "settings", "", "", "Settings", "Settings");
     return bar;
@@ -294,6 +299,7 @@ export class Hud {
     else if (a === "bulldoze") this.toggleBulldoze();
     else if (a === "inventory") this.toggleSheet();
     else if (a === "photo") this.togglePhoto();
+    else if (a === "walk") this.enterWalk();
     else if (a === "settings") this.toggleSettings();
   }
 
@@ -302,6 +308,16 @@ export class Hud {
     if (this.settings.open) this.toggleSettings();
     this.toggleWorlds(false);
     this.cmd({ cmd: "toggle", what: "photo" });
+  }
+
+  /** Leaves the sheets to the walk hint and asks the engine for first person. */
+  private enterWalk(): void {
+    this.fire("walk");
+    if (this.settings.open) this.toggleSettings();
+    this.toggleWorlds(false);
+    clearTimeout(this.tipTimer);
+    this.tip.classList.remove("is-shown");
+    this.walk.set(true);
   }
 
   private toggleSettings(): void {
@@ -362,6 +378,8 @@ export class Hud {
 
   render(st: PlayState, state: State = {}): void {
     this.photo.render(st.photo_mode, state.photo);
+    this.walk.render(st.walk_mode);
+    this.root.classList.toggle("is-walking", st.walk_mode);
     this.settings.render(state.tilt, state.tier, state.grade);
     this.root.classList.toggle("is-photo", st.photo_mode);
     const prev = this.st;
@@ -426,7 +444,7 @@ export class Hud {
     this.syncWorld();
     this.renderSheet(st);
     this.renderTag(st, now);
-    this.root.classList.toggle("is-hidden", this.hidden || st.photo_mode);
+    this.root.classList.toggle("is-hidden", this.hidden || st.photo_mode || st.walk_mode);
     this.renderHint(st);
   }
 
@@ -435,7 +453,15 @@ export class Hud {
    * A pinned slot needs no hover: the engine holds the ghost there and `hovered` follows the pointer.
    */
   private resendHover(st: PlayState): void {
-    if (st.pinned || !this.pointerOff || this.hoverResent || !this.sheetSlot || st.tool !== "place" || st.hovered)
+    if (
+      st.pinned ||
+      st.walk_mode ||
+      !this.pointerOff ||
+      this.hoverResent ||
+      !this.sheetSlot ||
+      st.tool !== "place" ||
+      st.hovered
+    )
       return;
     this.hoverResent = true;
     this.cmd({ cmd: "hover", q: this.sheetSlot.q, r: this.sheetSlot.r });
@@ -841,6 +867,15 @@ export class Hud {
       if (!mod && this.photo.key(e)) take();
       return;
     }
+    // Walk mode owns F and Esc and swallows the game keys; WASD, the arrows, Shift and Space walk in the engine.
+    if (st.walk_mode || this.walk.on) {
+      if (mod) return;
+      if (k === "f" || k === "Escape") {
+        take();
+        if (!e.repeat) this.walk.set(false);
+      } else if (/^(r|b|p|h|Tab|F6|Enter|[0-9=-])$/.test(e.code === "Tab" ? "Tab" : k)) take();
+      return;
+    }
     if (mod) {
       if (k === "z") {
         take();
@@ -875,6 +910,10 @@ export class Hud {
       case "h":
         take();
         if (!e.repeat) this.setHidden(!this.hidden);
+        return;
+      case "f":
+        take();
+        if (!e.repeat) this.enterWalk();
         return;
       case "Escape":
         take();

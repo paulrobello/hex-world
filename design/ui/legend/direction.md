@@ -50,4 +50,5 @@ Raises from declined challengers:
 - **Q8.** Shots ship as JPEG (quality 88, 4:4:4).
 - **Q9.** Caution colour `rgb(244 196 92)` is a token, for non-blocking warnings (autosave off, a quality tier above the detected one).
 
+- **Walk mode (PRD P8, 2026-10-14).** The bar gains an icon-only Walk button between Tiles and Photo (the walker glyph from the shared 24 px set at 1.8 px stroke, tooltip "Walk around F"). While walking the HUD steps aside as in photo mode, and one margin note at the bottom centre replaces it: the walker icon, "Click to look around" (once the pointer is locked, "Mouse looks around"), the WASD, Shift and Space keys on a quiet line, and a Leave button with Esc. A 4 px ink dot marks the centre of the view. It uses the toast's sheet, radius, shadow and 180 ms fade, so it adds no new visual language. Built straight from the owner's request without a mockup round; the stills are in `docs/checkpoints/first-person/` and `e2e/test-results/ui/walk-1-first-person.jpg`.
 - **Mockups approved (owner, 2026-10-13):** "ui approved". The full pass in `review.html` (on real captures, f07069b) is the build target for the overlay.

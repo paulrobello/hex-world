@@ -501,21 +501,34 @@ pub fn run(
     mut saved: ResMut<SavedSettings>,
     mut photo: ResMut<PhotoSession>,
     flags: Res<RunFlags>,
+    mut walk: ResMut<crate::walk::WalkSession>,
 ) {
     while let Some(cmd) = queue.0.pop_front() {
         let mut cam = cameras.iter_mut().next();
         let in_photo = game.photo_mode;
+        // Walking, saves take the orbit camera, never the walker's eye.
+        let in_walk = game.walk_mode;
+        let mut orbit = walk.orbit();
         // A new world keeps the orbit camera's angle and zoom, not the free camera's.
-        if in_photo
-            && matches!(cmd, Command::NewWorld)
-            && let (Some(snap), Some(t)) = (photo.saved, cam.as_deref_mut())
-        {
-            *t = snap.transform;
+        if let (true, Some(snap), Some(t)) = (
+            matches!(cmd, Command::NewWorld),
+            photo
+                .saved
+                .map(|s| s.transform)
+                .filter(|_| in_photo)
+                .or(orbit),
+            cam.as_deref_mut(),
+        ) {
+            *t = snap;
         }
+        let save_cam = match cmd {
+            Command::Save { .. } if orbit.is_some() => orbit.as_mut(),
+            _ => cam.as_deref_mut(),
+        };
         let event = handle(
             cmd,
             &mut game,
-            cam.as_deref_mut(),
+            save_cam,
             TiltLive {
                 settings: &mut tilt,
                 chosen: &mut pinned.0,
@@ -545,6 +558,15 @@ pub fn run(
                 game::publish_event(&e);
             }
         }
+        // Loading a world or starting a new one leaves walk mode at the loaded orbit camera.
+        if in_walk && loaded {
+            if let (Some(snap), Some(t)) = (walk.saved.as_mut(), cam.as_deref()) {
+                snap.transform = *t;
+            }
+            for e in game.apply(crate::actions::Action::SetWalk(false)) {
+                game::publish_event(&e);
+            }
+        }
     }
 }
 
@@ -554,10 +576,12 @@ pub fn keep_latest(
     cameras: Query<&Transform, With<Camera3d>>,
     (tilt, chosen): (Res<TiltShiftSettings>, Res<TiltPinned>),
     saved: Res<SavedSettings>,
+    walk: Res<crate::walk::WalkSession>,
 ) {
-    let camera = cameras
-        .iter()
-        .next()
+    let orbit = walk.orbit();
+    let camera = orbit
+        .as_ref()
+        .or(cameras.iter().next())
         .map(camera_state)
         .unwrap_or_else(default_camera);
     let settings = GameSettings {
@@ -606,14 +630,16 @@ pub fn save_on_exit(
     cameras: Query<&Transform, With<Camera3d>>,
     (tilt, chosen): (Res<TiltShiftSettings>, Res<TiltPinned>),
     saved: Res<SavedSettings>,
+    walk: Res<crate::walk::WalkSession>,
 ) {
     if exits.read().next().is_none() {
         return;
     }
+    let orbit = walk.orbit();
     if let Some(path) = &flags.0.save
         && let Err(e) = save_bytes(
             &game,
-            cameras.iter().next(),
+            orbit.as_ref().or(cameras.iter().next()),
             (&tilt, chosen.0),
             &saved,
             Some(path),
@@ -960,6 +986,7 @@ mod tests {
         world.insert_resource(TiltShiftSettings::default());
         world.insert_resource(TiltPinned::default());
         world.insert_resource(SavedSettings::default());
+        world.insert_resource(crate::walk::WalkSession::default());
         world.spawn((Camera3d::default(), cam));
         world.run_system_once(keep_latest).unwrap();
         let volumes = Volumes {
@@ -1189,6 +1216,7 @@ mod tests {
         let mut app = App::new();
         app.insert_resource(GameState::new(7))
             .init_resource::<PhotoSession>()
+            .init_resource::<crate::walk::WalkSession>()
             .init_resource::<PhotoSettings>()
             .init_resource::<PhotoExports>()
             .init_resource::<AgentsPaused>()
@@ -1281,6 +1309,7 @@ mod tests {
         let mut app = App::new();
         app.insert_resource(g)
             .init_resource::<PhotoSession>()
+            .init_resource::<crate::walk::WalkSession>()
             .init_resource::<PhotoSettings>()
             .init_resource::<PhotoExports>()
             .init_resource::<AgentsPaused>()

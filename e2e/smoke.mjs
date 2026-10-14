@@ -73,14 +73,15 @@ function checkBoids(tag, sampled, ibl, want, transmission) {
   else console.log(`${tag}: boid pipelines ${JSON.stringify(sampled.boid)}`);
 }
 
-async function withPage(args, fn) {
+// `allow(message)` exempts console messages a case provokes on purpose (its injected request failures).
+async function withPage(args, fn, allow = () => false) {
   const browser = await chromium.launch({ channel: "chromium", headless: true, args });
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   const no = ++caseNo;
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   // Bevy's wasm logger prints ERROR through console.log, so match the text, not only the console type.
-  page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text())) errors.push(m.text()); });
+  page.on("console", (m) => { if ((m.type() === "error" || BAD_TEXT.test(m.text())) && !allow(m)) errors.push(m.text()); });
   // Surface WebGPU validation errors that nothing catches.
   await page.addInitScript(() => {
     if (!window.GPUAdapter) return;
@@ -671,6 +672,75 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     }
     console.log(`${tag}: after the placement packs were first requested in order ${order.join(", ")}; final ${JSON.stringify(s.packs)}`);
   });
+}
+
+// 10. Kit fetch retries (crates/hex-assets/src/bevy.rs): any host can drop a request, and one dropped
+// fetch must not remove a feature for the session. The first request for a boid piece (core, loaded in
+// every scenario) and for a forest pack file is reset: both are re-read and the game ends with the
+// boids drawn, the forest pack ready and nothing in `assets.failed`. Then the boid piece is reset on
+// every request: it gives up after the first request and three retries, names the file in an error
+// and in `assets.failed`, and the flock degrades to `boids.pieces = "failed"` as before.
+{
+  const BIRD = "p1/bird_starling/bird_starling.glb";
+  const FOREST = "p1/forest_base/forest_base.glb";
+  const ATTEMPTS = 4;
+  // Bevy's own error for the failed load, which does not name the file (the web reader's message).
+  const BEVY_LOAD_ERROR = /I\/O error while loading asset: Failed to fetch path/;
+  const kitUrl = (m) => m.location()?.url ?? "";
+  const dropped = (paths) => (m) => m.text().startsWith("Failed to load resource") && paths.some((p) => kitUrl(m).endsWith(`/assets/kit/${p}`));
+  const play = async (page, tag) => {
+    await page.goto(base + "?scenario=play&tier=high");
+    const ok = await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 }).then(() => true, () => false);
+    if (!ok) fail(`${tag}: never ready`);
+    return ok;
+  };
+  const until = async (page, done, ms) => {
+    const deadline = Date.now() + ms;
+    let s;
+    while (Date.now() < deadline && !done((s = await page.evaluate(() => window.hexWorld.state())))) await page.waitForTimeout(100);
+    return s;
+  };
+
+  await withPage(gpuArgs, async (page) => {
+    const tag = "kit-retry";
+    const hits = new Map();
+    for (const path of [BIRD, FOREST]) {
+      await page.route(`**/assets/kit/${path}`, async (route) => {
+        const n = (hits.get(path) ?? 0) + 1;
+        hits.set(path, n);
+        if (n === 1) await route.abort("connectionreset");
+        else await route.continue();
+      });
+    }
+    if (!(await play(page, tag))) return;
+    await page.evaluate(() => { window.hexWorld.events(); window.hexWorld.selectTile("forest"); });
+    const s = await until(page, (s) => s.packs?.forest === "ready" && ["ready", "failed"].includes(s.boids?.pieces), 60_000);
+    const counts = Object.fromEntries([BIRD, FOREST].map((p) => [p, hits.get(p) ?? 0]));
+    if (counts[BIRD] !== 2 || counts[FOREST] !== 2) fail(`${tag}: each reset file should be requested twice: ${JSON.stringify(counts)}`);
+    if (s.boids?.pieces !== "ready") fail(`${tag}: boids.pieces ${s.boids?.pieces} after a reset boid piece request`);
+    if (s.packs?.forest !== "ready" || s.packs?.core !== "ready") fail(`${tag}: packs ${JSON.stringify(s.packs)}`);
+    if (!Array.isArray(s.assets?.failed) || s.assets.failed.length) fail(`${tag}: assets.failed ${JSON.stringify(s.assets)}`);
+    console.log(`${tag}: requests ${JSON.stringify(counts)}; boids.pieces ${s.boids?.pieces}, packs core ${s.packs?.core} forest ${s.packs?.forest}, assets.failed ${JSON.stringify(s.assets?.failed)}`);
+  }, dropped([BIRD, FOREST]));
+
+  await withPage(gpuArgs, async (page) => {
+    const tag = "kit-give-up";
+    let hits = 0;
+    const gaveUp = [];
+    page.on("console", (m) => { if (m.text().includes("ERROR") && m.text().includes(`kit://${BIRD}`)) gaveUp.push(m.text()); });
+    await page.route(`**/assets/kit/${BIRD}`, async (route) => { hits++; await route.abort("connectionreset"); });
+    const t0 = Date.now();
+    if (!(await play(page, tag))) return;
+    const s = await until(page, (s) => s.boids?.pieces === "failed" && s.assets?.failed?.length, 30_000);
+    const secs = ((Date.now() - t0) / 1000).toFixed(1);
+    if (hits !== ATTEMPTS) fail(`${tag}: ${hits} requests for ${BIRD}, expected ${ATTEMPTS} (the first and three retries)`);
+    if (s.boids?.pieces !== "failed") fail(`${tag}: boids.pieces ${s.boids?.pieces}, expected failed`);
+    if (JSON.stringify(s.assets?.failed) !== JSON.stringify([`kit://${BIRD}`])) fail(`${tag}: assets.failed ${JSON.stringify(s.assets)}`);
+    if (s.packs?.core !== "ready") fail(`${tag}: core pack ${s.packs?.core}, expected ready with the bird as a placeholder`);
+    if (!gaveUp.some((t) => /giving up/.test(t))) fail(`${tag}: no give-up error naming kit://${BIRD}: ${JSON.stringify(gaveUp)}`);
+    console.log(`${tag}: ${hits} requests, gave up within ${secs} s of load; boids.pieces ${s.boids?.pieces}, assets.failed ${JSON.stringify(s.assets?.failed)}; ` +
+      `errors naming the file: ${gaveUp.length} (${gaveUp.map((t) => t.replace(/%c/g, "").slice(0, 120)).join(" | ")})`);
+  }, (m) => dropped([BIRD])(m) || m.text().includes(BIRD) || BEVY_LOAD_ERROR.test(m.text()));
 }
 
 server.close();

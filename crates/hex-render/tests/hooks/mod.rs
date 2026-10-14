@@ -524,7 +524,7 @@ const SHADER_EXEMPT: &[(&str, &str)] = &[
     ),
     (
         "assets/shaders/water_terrain.wesl",
-        "placeholder bed, drawn only until a tile's centre piece is in the kit (water contract)",
+        "placeholder bed, drawn only while a water tile's base piece is missing from the kit (water contract)",
     ),
     (
         "assets/shaders/instanced_piece.wesl",

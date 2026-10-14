@@ -1,0 +1,44 @@
+{
+  "cueId": "car-drive-1",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording of one small car driving slowly past on a smooth village street: a soft, low, rounded engine purr and a gentle roll of tyres that rises out of silence, passes close by and fades away again into complete silence, about three seconds in all. Calm and unhurried. Studio-quiet background, with silence before and after the car.",
+  "parameters": {
+    "text": "Close, isolated recording of one small car driving slowly past on a smooth village street: a soft, low, rounded engine purr and a gentle roll of tyres that rises out of silence, passes close by and fades away again into complete silence, about three seconds in all. Calm and unhurried. Studio-quiet background, with silence before and after the car.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 4,
+    "prompt_influence": 0.6
+  },
+  "generationId": "4e3623ce0ff41e6b03dceae07309125c",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 22:10:33 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "40",
+    "content-length": "65244",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "4e3623ce0ff41e6b03dceae07309125c",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T22:10:33+00:00",
+  "attempt": 33,
+  "creditsCharged": 40,
+  "sourceFile": "car-drive-1.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  },
+  "rejectedReason": "screen: 99.9% of power under 300 Hz (86% under 60 Hz) and 0.1% over 300 Hz after a 90 Hz high-pass: a pure sub rumble with no tyre roll, near-silent on laptop speakers and a boom elsewhere; floor 28.8 dB under the peak window (needs 40). Reprompted for the tyre swish and air of a pass-by heard from the pavement"
+}

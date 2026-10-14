@@ -634,6 +634,50 @@ try {
   await key("Escape");
   await until(async () => !(await st()).play.photo_mode, "Esc leaves photo mode");
 
+  // First-person walk (PRD P8): the bar's Walk button enters at eye level on the ground nearest the
+  // camera focus and the HUD steps aside for the walk hint; W held on the real keyboard walks and
+  // the walker stays on land; a scripted walk_step walks for exactly its seconds; F leaves with the
+  // orbit camera exactly where it was.
+  await until(async () => !(await page.locator(".hud.is-hidden").count()), "the play HUD is back before walking");
+  const orbitWalk = (await st()).camera;
+  await page.focus("canvas#hex-world");
+  await page.locator(".tool[data-action=walk]").click();
+  await until(async () => { const s = await st(); return s.play.walk_mode && s.walk.on; }, "the Walk button enters walk mode");
+  await until(async () => page.locator(".hud.is-hidden.is-walking").count(), "the play HUD hides while walking");
+  await until(async () => page.locator(".walk-ui:not(.is-off) .walk-hint").count(), "the walk hint shows");
+  check(await page.locator(".hud.is-walking > .show-ui").isHidden(), "no Show UI button while walking");
+  const w0 = (await st()).walk;
+  check(w0.tile !== null && w0.ground !== null, `the walker stands on ${w0.tile} at ground ${w0.ground}`);
+  check(Math.abs(w0.eye[1] - w0.feet[1] - 1.7) < 0.05, `eye height ${(w0.eye[1] - w0.feet[1]).toFixed(2)} m`);
+  check((await st()).play.ghost === null, "no ghost while walking");
+  // Face the centre of the walker's tile, so a short walk stays on it.
+  const [tileX, tileZ] = [Math.sqrt(3) * 16 * (w0.cell.q + w0.cell.r / 2), 24 * w0.cell.r];
+  const [dx, dz] = [tileX - w0.feet[0], tileZ - w0.feet[2]];
+  const heading = Math.hypot(dx, dz) > 0.5 ? (Math.atan2(dx, -dz) * 180) / Math.PI : 0;
+  await page.evaluate((h) => window.hexWorld.cmd({ cmd: "walk_look", heading: h, pitch: -5 }), heading);
+  await until(async () => Math.abs(((await st()).walk.heading - ((heading + 360) % 360) + 540) % 360 - 180) < 0.5, "walk_look turns the walker");
+  await page.focus("canvas#hex-world");
+  await page.keyboard.down("w");
+  await page.waitForTimeout(1200);
+  await page.keyboard.up("w");
+  const w1 = await until(async () => { const w = (await st()).walk; return !w.moving && w; }, "the walker stops when W is released");
+  const walked = Math.hypot(w1.feet[0] - w0.feet[0], w1.feet[2] - w0.feet[2]);
+  check(walked > 0.8 && walked < 3.5, `W walks ${walked.toFixed(2)} m in 1.2 s (1.4 m/s)`);
+  check(w1.tile !== null && w1.ground !== null && w1.water_depth <= 0.6, `still on land: ${w1.tile}, water ${w1.water_depth} m`);
+  await shot("walk-1-first-person");
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "walk_look", heading: null, pitch: 0 }));
+  const d0 = w1.distance;
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "walk_step", forward: -1, right: 0, seconds: 1, jog: false }));
+  const w2 = await until(async () => { const w = (await st()).walk; return w.step_left === null && w.distance > d0 && w; }, "walk_step ends");
+  check(w2.blocked !== null || Math.abs(w2.distance - d0 - 1.4) < 0.05, `walk_step walks 1 s: ${(w2.distance - d0).toFixed(3)} m (blocked: ${w2.blocked})`);
+  await key("f");
+  await until(async () => { const s = await st(); return !s.play.walk_mode && !s.walk.on; }, "F leaves walk mode");
+  await until(async () => !(await page.locator(".hud.is-hidden").count()), "the play HUD is back after walking");
+  await until(async () => page.locator(".walk-ui.is-off").count(), "the walk hint goes");
+  const backWalk = (await st()).camera;
+  check(backWalk.pos.every((v, i) => Math.abs(v - orbitWalk.pos[i]) < 1e-3), `orbit camera restored at ${backWalk.pos.map((v) => v.toFixed(2))}`);
+  check(backWalk.forward.every((v, i) => Math.abs(v - orbitWalk.forward[i]) < 1e-3), "orbit camera faces where it did");
+
   // S9 Settings (design/ui/legend/settings.html): Graphics (Quality S9.1, Tilt-shift S9.4) and Audio
   // (S9.5) tabs. The page runs tilt=off, so tilt-shift starts off whatever the tier.
   const tiltSwitch = page.locator(".sheet--settings .switch[aria-label='Tilt-shift']");

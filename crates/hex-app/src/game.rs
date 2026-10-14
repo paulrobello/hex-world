@@ -78,6 +78,10 @@ pub enum GameEvent {
     PhotoModeToggled {
         on: bool,
     },
+    /// First-person walk mode (PRD P8) turned on or off.
+    WalkModeToggled {
+        on: bool,
+    },
     /// A photo-mode PNG export finished (PRD §4.6): natively written under `target/shots`, on the
     /// web taken with `hexWorld.takeShot(name)`. Sizes are the PNG's pixels.
     PhotoExported {
@@ -106,6 +110,23 @@ pub enum GameEvent {
         tile: String,
         stage: &'static str,
         skipped: bool,
+    },
+    /// A car starts a trip, reversing out of its parking spot (PRD §7.1): the car's sim id, the
+    /// spot's cell, and the spot's world XZ in metres. Not kept in `recent_events`.
+    CarPulledOut {
+        id: u64,
+        q: i32,
+        r: i32,
+        x: f32,
+        z: f32,
+    },
+    /// A car finished its trip and stands in its reserved spot, as [`GameEvent::CarPulledOut`].
+    CarParked {
+        id: u64,
+        q: i32,
+        r: i32,
+        x: f32,
+        z: f32,
     },
     /// A `save` command encoded the world (PRD §12.2). On the web the bytes wait for
     /// `hexWorld.takeSave(tag)`; natively a `path` was written. `tag` echoes the command's.
@@ -156,6 +177,8 @@ pub struct GameState {
     pub pinned: Option<Axial>,
     pub inventory_open: bool,
     pub photo_mode: bool,
+    /// First-person walk mode (PRD P8): placement and bulldoze are off and the HUD hides.
+    pub walk_mode: bool,
     pub last: Option<ActionResult>,
     pub recent: VecDeque<GameEvent>,
     /// Bumped by every applied game action; `sync_view` rebuilds the render view when it moves.
@@ -188,6 +211,7 @@ impl GameState {
             pinned: None,
             inventory_open: false,
             photo_mode: false,
+            walk_mode: false,
             last: None,
             recent: VecDeque::new(),
             revision: 1,
@@ -261,9 +285,14 @@ impl GameState {
         }
     }
 
-    /// The ghost at the target slot; none in bulldoze mode or photo mode.
+    /// Photo or walk mode: the world is only looked at, so no ghost, slot ring or bulldoze target.
+    fn viewing(&self) -> bool {
+        self.photo_mode || self.walk_mode
+    }
+
+    /// The ghost at the target slot; none in bulldoze mode, photo mode or walk mode.
     pub fn ghost(&self) -> Option<(Axial, Vec<u8>, [EdgeStatus; 6], bool)> {
-        if self.tool != Tool::Place || self.photo_mode {
+        if self.tool != Tool::Place || self.viewing() {
             return None;
         }
         let cell = self.target_slot()?;
@@ -277,7 +306,7 @@ impl GameState {
 
     /// The hovered tile in bulldoze mode, with the refusal reason when removing it is blocked.
     pub fn bulldoze_target(&self) -> Option<(Axial, Option<String>)> {
-        if self.tool != Tool::Bulldoze || self.photo_mode {
+        if self.tool != Tool::Bulldoze || self.viewing() {
             return None;
         }
         let cell = self.hovered.filter(|c| self.world.tile(*c).is_some())?;
@@ -318,12 +347,35 @@ impl GameState {
     }
 
     fn apply_inner(&mut self, action: Action) -> Vec<GameEvent> {
+        if self.walk_mode
+            && let Some(name) = crate::walk::refused_while_walking(&action)
+        {
+            return self.refuse(name, "leave walk mode first".into());
+        }
         match action {
             Action::Orbit(_)
             | Action::Pan(_)
             | Action::Zoom(_)
             | Action::Fly(_)
-            | Action::Look(_) => vec![],
+            | Action::Look(_)
+            | Action::Stride(_)
+            | Action::WalkLook(_)
+            | Action::Hop => vec![],
+            Action::ToggleWalk => self.apply_inner(Action::SetWalk(!self.walk_mode)),
+            Action::ExitWalk => self.apply_inner(Action::SetWalk(false)),
+            Action::SetWalk(on) => {
+                if on == self.walk_mode {
+                    return vec![];
+                }
+                if on && self.photo_mode {
+                    return self.refuse("walk", "leave photo mode first".into());
+                }
+                let mut events = if on { self.set_pin(None) } else { vec![] };
+                self.walk_mode = on;
+                self.result("walk", None, None);
+                events.push(GameEvent::WalkModeToggled { on });
+                events
+            }
             Action::Hover(cell) => {
                 if cell == self.hovered {
                     return vec![];
@@ -707,6 +759,7 @@ impl GameState {
             "rotation": self.rotation,
             "inventory_open": self.inventory_open,
             "photo_mode": self.photo_mode,
+            "walk_mode": self.walk_mode,
             "tiles": tiles,
             "frontier": self.world.frontier(),
             "hovered": self.hovered,
@@ -735,7 +788,7 @@ impl GameState {
                     rotation: t.rotation,
                 })
                 .collect(),
-            frontier: if self.photo_mode {
+            frontier: if self.viewing() {
                 vec![]
             } else {
                 self.world.frontier()
@@ -749,15 +802,15 @@ impl GameState {
                 pinned: self.pinned == Some(cell),
             }),
             pointer_slot: self.hovered_slot().filter(|&c| {
-                self.tool == Tool::Place && !self.photo_mode && self.pinned.is_some_and(|p| p != c)
+                self.tool == Tool::Place && !self.viewing() && self.pinned.is_some_and(|p| p != c)
             }),
             pointer_tile: self.hovered.filter(|&c| {
-                self.tool == Tool::Place && !self.photo_mode && self.world.tile(c).is_some()
+                self.tool == Tool::Place && !self.viewing() && self.world.tile(c).is_some()
             }),
             bulldoze: self
                 .bulldoze_target()
                 .map(|(c, reason)| (c, reason.is_none())),
-            bulldoze_mode: self.tool == Tool::Bulldoze && !self.photo_mode,
+            bulldoze_mode: self.tool == Tool::Bulldoze && !self.viewing(),
             bulldozed: self.last_bulldoze,
             refusals: self.refusals,
             epoch: self.epoch,
@@ -785,9 +838,14 @@ pub fn apply_actions(
     mut queue: ResMut<ActionQueue>,
     mut game: ResMut<GameState>,
     active: Res<ActiveScenario>,
+    mut walk: ResMut<crate::walk::WalkSession>,
     mut cameras: Query<&mut Transform, With<Camera3d>>,
 ) {
     for action in queue.0.drain(..) {
+        if action.is_walk() {
+            walk.intent(&action);
+            continue;
+        }
         if action.is_camera() {
             for mut t in &mut cameras {
                 *t = crate::camera::apply(*t, &action);

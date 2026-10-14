@@ -17,7 +17,17 @@ import {
 import {
   type Biome,
   BED_CUE,
+  CAR_CUES,
+  CAR_EVENT_KIND,
   type Candidate,
+  type CarKind,
+  type CarPlay,
+  type CarRequest,
+  type CarState,
+  type CarVoice,
+  carIdle,
+  carInRange,
+  carStep,
   EMITTER_CUE,
   type Mix,
   type MusicState,
@@ -49,7 +59,7 @@ import {
   pickVariant,
   resolveOneShot,
 } from "./audio-mix.ts";
-import type { GameEvent, PlayState, State } from "./bridge.ts";
+import type { CarInfo, GameEvent, PlayState, State } from "./bridge.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
 
 const BASE = "assets/audio/";
@@ -195,6 +205,21 @@ export interface AudioDebug {
   };
   /** Every occasional one-shot row by name: its pool's variants, schedule, last play and matching tiles in play. */
   oneShots: Record<string, OneShotState & { pool: string; variants: string[]; tiles: number }>;
+  /**
+   * Car cues: the voices sounding, trip events waiting for a voice, plays so far, the last variant per pool, why
+   * the last cue was held back, driving cars in range of the focus, each pool's variants, and the latest plays
+   * (`event` is carPulledOut, carParked or carDriving).
+   */
+  cars: {
+    voices: CarVoice[];
+    pending: number;
+    plays: number;
+    lastCue: Record<string, string>;
+    gatedBy: CarState["gatedBy"];
+    inRange: number;
+    pools: Record<string, string[]>;
+    recent: { id: string; event: string; car: number; t: number; gain: number; rate: number }[];
+  };
 }
 
 /** What `audio.play(name)` did: the variant played and where, or why nothing played. */
@@ -247,6 +272,15 @@ export class GameAudio {
   private view: View | null = null;
   private instances = new Map<string, AudioBufferSourceNode[]>();
   private pending = new Map<string, Pending>();
+  private cars: CarState = carIdle();
+  /** Trip events drained since the last update. */
+  private carEvents: CarRequest[] = [];
+  /** Per car pool, its variants from the manifest, in manifest order. */
+  private carPools = new Map<string, string[]>();
+  /** The sounding car voice per car: its follow gain and panner, which a pass-by moves with its car. */
+  private carNodes = new Map<number, { follow: GainNode; pan: PannerNode; kind: CarKind }>();
+  private carRecent: AudioDebug["cars"]["recent"] = [];
+  private carsInRange = 0;
   private recent: Fired[] = [];
   private fired = 0;
   private lastAt = 0;
@@ -317,6 +351,8 @@ export class GameAudio {
       const m = (await res.json()) as Manifest;
       this.manifest = m;
       for (const row of ONE_SHOTS) this.variants.set(row.name, resolveOneShot(row.pool, m.cues)?.variants ?? []);
+      for (const { pool } of Object.values(CAR_CUES))
+        this.carPools.set(pool, resolveOneShot(pool, m.cues, [])?.variants ?? []);
       const probe = document.createElement("audio");
       this.format = pickFormat(m.formats, (mime) => probe.canPlayType(mime));
       if (!this.format) throw new Error("no playable audio format");
@@ -399,6 +435,11 @@ export class GameAudio {
     for (const e of batch) {
       if (e.type === "riseStage") {
         this.onRise(e.q, e.r, e.stage);
+        continue;
+      }
+      // Each trip event names one pool (CAR_CUES), never every variant its manifest cues list.
+      if (e.type === "carPulledOut" || e.type === "carParked") {
+        this.carEvents.push({ car: e.id, kind: CAR_EVENT_KIND[e.type]!, x: e.x, z: e.z, at: ctx.currentTime });
         continue;
       }
       const at = "q" in e && "r" in e ? { q: e.q, r: e.r } : null;
@@ -496,6 +537,10 @@ export class GameAudio {
 
   private panner(ctx: AudioContext, q: number, r: number): PannerNode {
     const [x, z] = cellWorld(q, r, RADIUS);
+    return this.pannerAt(ctx, x, z);
+  }
+
+  private pannerAt(ctx: AudioContext, x: number, z: number): PannerNode {
     // Panning only: the distance and focus gain is computed in audio-mix.ts and applied before this.
     return new PannerNode(ctx, {
       panningModel: "HRTF",
@@ -547,6 +592,7 @@ export class GameAudio {
     this.updateMusic(ctx, play.photo_mode);
     this.oneShotTiles = oneShotTiles;
     this.updateOneShots(ctx, v);
+    this.updateCars(ctx, v, play.car_list, state.photo?.agents_paused === true);
     for (const [k, p] of this.pending)
       if (ctx.currentTime > p.deadline) {
         this.pending.delete(k);
@@ -669,6 +715,73 @@ export class GameAudio {
     }
   }
 
+  /** Car cues (owner request 2026-10-14): trip events at their spots, pass-bys at driving cars, near the focus only. */
+  private updateCars(ctx: AudioContext, v: View, driving: readonly CarInfo[], paused: boolean): void {
+    const { muted, volumes } = this.settings;
+    const events = this.carEvents;
+    this.carEvents = [];
+    const gate = oneShotGate({ muted, master: volumes.master, ambience: volumes.ambience, loaded: true });
+    const step = carStep(
+      this.cars,
+      ctx.currentTime,
+      events,
+      driving,
+      v,
+      gate,
+      (pool) => (this.carPools.get(pool) ?? []).filter((id) => this.buffers.has(id)),
+      (cue) => this.buffers.get(cue)?.duration ?? 0,
+      Math.random,
+      paused,
+    );
+    this.cars = step.state;
+    this.carsInRange = driving.filter((c) => carInRange(c.x, c.z, v)).length;
+    for (const p of step.play) this.playCar(ctx, p);
+    const at = new Map(driving.map((c) => [c.id, c]));
+    for (const [car, n] of this.carNodes) {
+      const c = at.get(car);
+      if (!c || n.kind !== "drive") continue;
+      n.pan.positionX.setTargetAtTime(c.x, ctx.currentTime, 0.05);
+      n.pan.positionZ.setTargetAtTime(c.z, ctx.currentTime, 0.05);
+      this.glide(n.follow.gain, CAR_CUES.drive.level * emitterGain(c.x, c.z, v));
+    }
+  }
+
+  /** One car voice: the cue's own envelope, then a follow gain and a panner a pass-by moves with its car. */
+  private playCar(ctx: AudioContext, p: CarPlay): void {
+    const buf = this.buffers.get(p.cue);
+    const cue = this.cues.get(p.cue);
+    if (!buf || !cue) return;
+    const t = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = p.rate;
+    const env = ctx.createGain();
+    const dur = buf.duration / p.rate;
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(1, t + 0.005);
+    env.gain.setValueAtTime(1, Math.max(t + 0.005, t + dur - 0.012));
+    env.gain.linearRampToValueAtTime(0, t + dur);
+    const follow = ctx.createGain();
+    follow.gain.value = p.gain;
+    const pan = this.pannerAt(ctx, p.x, p.z);
+    src
+      .connect(env)
+      .connect(follow)
+      .connect(pan)
+      .connect(this.buses.get(busOf(cue))!);
+    src.start(t);
+    this.carNodes.set(p.car, { follow, pan, kind: p.kind });
+    src.onended = () => {
+      env.disconnect();
+      follow.disconnect();
+      pan.disconnect();
+      if (this.carNodes.get(p.car)?.follow === follow) this.carNodes.delete(p.car);
+    };
+    const event = { start: "carPulledOut", door: "carParked", drive: "carDriving" }[p.kind];
+    this.carRecent.push({ id: p.cue, event, car: p.car, t: round(t, 3), gain: round(p.gain), rate: round(p.rate) });
+    if (this.carRecent.length > 16) this.carRecent.shift();
+  }
+
   /** `audio.play(name)`: a pool, row or cue now, sharing the row's last-variant memory and play count. */
   private playNamed(name: string): PlayResult {
     const ctx = this.ctx;
@@ -761,6 +874,8 @@ export class GameAudio {
     this.music = musicIdle();
     this.oneShots = new Map(ONE_SHOTS.map((row) => [row.name, oneShotIdle()]));
     this.pending.clear();
+    this.cars = carIdle();
+    this.carEvents = [];
   }
 
   // ---------- Debug hook ----------
@@ -854,6 +969,16 @@ export class GameAudio {
         flowerTiles: bees.tiles,
       },
       oneShots,
+      cars: {
+        voices: this.cars.voices.map((x) => ({ ...x, endsAt: round(x.endsAt, 3) })),
+        pending: this.cars.pending.length,
+        plays: this.cars.plays,
+        lastCue: { ...this.cars.lastCue },
+        gatedBy: this.cars.gatedBy,
+        inRange: this.carsInRange,
+        pools: Object.fromEntries(this.carPools),
+        recent: this.carRecent.map((f) => ({ ...f })),
+      },
     };
   }
 }

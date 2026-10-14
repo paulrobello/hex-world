@@ -147,6 +147,7 @@ pub fn ground_cell(ray: Ray3d) -> Option<Axial> {
 /// pinned while the OS cursor rests over the window.
 pub fn pick_hover(
     active: Res<ActiveScenario>,
+    game: Res<crate::game::GameState>,
     windows: Query<&Window, With<PrimaryWindow>>,
     cameras: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
     mut last: Local<Option<Axial>>,
@@ -158,10 +159,14 @@ pub fn pick_hover(
     let Ok(window) = windows.single() else {
         return;
     };
-    let cell = window.cursor_position().and_then(|p| {
-        let (camera, gt) = cameras.iter().next()?;
-        ground_cell(camera.viewport_to_world(gt, p).ok()?)
-    });
+    // Walking, the pointer looks around rather than pointing at cells.
+    let cell = (!game.walk_mode)
+        .then_some(())
+        .and(window.cursor_position())
+        .and_then(|p| {
+            let (camera, gt) = cameras.iter().next()?;
+            ground_cell(camera.viewport_to_world(gt, p).ok()?)
+        });
     if cell != *last {
         *last = cell;
         queue.0.push_back(Action::Hover(cell));

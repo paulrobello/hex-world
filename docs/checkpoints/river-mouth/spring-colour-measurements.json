@@ -27,5 +27,9 @@
     "how": "Current tree, unmodified: river_mouth_center loaded, play water log 'bed false'.",
     "mouthGrass": {"luma": 114.1, "sat": 0.498},
     "meadow": {"luma": 112.9, "sat": 0.502}
+  },
+  "centreMissing": {
+    "shot": "spring-colour-04-centre-missing-kit-base.jpg",
+    "how": "After the fix (water::tiles::stand_in_bed, 2026-10-14): river_spring_center.glb hidden so it fails to load (state().assets.failed lists it). The spring draws its kit base and the water surface, play water log 'bed false': its grass matches the meadows and only the centre's pool stones are missing."
   }
 }

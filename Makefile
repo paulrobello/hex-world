@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-first-person
 
 fmt:
 	cargo fmt --all
@@ -392,6 +392,20 @@ shots-play:
 	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(PLAY_DOCS)/$$n.jpg || exit 1; done
 	cp target/shots/play-*.json $(PLAY_DOCS)/
 	@echo "wrote $(PLAY_DOCS)/"
+
+# First-person walk checkpoint (PRD P8): builds a village street, a forest, a river, a beach and
+# an ocean with docs/checkpoints/first-person/first-person.json, walks them at eye level at
+# 1280x800 with tilt-shift off and `--clock fixed`, then copies JPEG stills and the state dumps.
+FP_SHOTS = fp-00-orbit fp-02-village-street fp-03-forest fp-04-river-bank fp-05-beach fp-06-map-edge fp-07-orbit-back
+FP_DOCS = docs/checkpoints/first-person
+shots-first-person:
+	mkdir -p target/shots $(FP_DOCS)
+	rm -f target/shots/fp-*.png target/shots/fp-*.json
+	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(FP_DOCS)/first-person.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	@for n in $(FP_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(FP_DOCS)/$$n.jpg || exit 1; done
+	cp target/shots/fp-*.json $(FP_DOCS)/
+	@echo "wrote $(FP_DOCS)/"
 
 # Cars checkpoint (P2 W3a): runs the scripted proof docs/checkpoints/cars/cars.json at 1280x800 with
 # tilt-shift off and `--clock fixed` (one 20 Hz sim tick every third frame, so the run replays

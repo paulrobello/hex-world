@@ -6,13 +6,29 @@ license.workspace = true
 publish.workspace = true
 
 [features]
-bevy = ["dep:bevy"]
+bevy = [
+    "dep:bevy",
+    "dep:async-io",
+    "dep:js-sys",
+    "dep:wasm-bindgen",
+    "dep:wasm-bindgen-futures",
+    "dep:web-sys",
+]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 meshoptimizer-rs = "=0.2.1"
-bevy = { workspace = true, optional = true, features = ["bevy_asset", "std"] }
+bevy = { workspace = true, optional = true, features = ["bevy_asset", "bevy_log", "std"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+async-io = { version = "2", optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = { version = "0.3", optional = true }
+wasm-bindgen = { version = "0.2", optional = true }
+wasm-bindgen-futures = { version = "0.4", optional = true }
+web-sys = { version = "0.3", optional = true, features = ["Window"] }
 
 [dev-dependencies]
 gltf = "1"

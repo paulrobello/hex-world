@@ -66,6 +66,18 @@ pub enum Action {
     SelectTile(String),
     /// Select the n-th inventory tile (catalog order), from the number-key binding.
     SelectNth(usize),
+    /// F: enter or leave first-person walk mode.
+    ToggleWalk,
+    /// Enter (`true`) or leave walk mode; the `walk` command and the HUD button.
+    SetWalk(bool),
+    /// Esc in walk mode: leaves it; does nothing outside it.
+    ExitWalk,
+    /// Walk mode: ground offset in metres, x to the walker's right and y forward.
+    Stride(Vec2),
+    /// Walk mode's mouse look in pixels (x turns right, y tilts down).
+    WalkLook(Vec2),
+    /// Walk mode: Space hops.
+    Hop,
 }
 
 impl Action {
@@ -75,6 +87,11 @@ impl Action {
             self,
             Action::Orbit(_) | Action::Pan(_) | Action::Zoom(_) | Action::Fly(_) | Action::Look(_)
         )
+    }
+
+    /// Walk actions move the walker (`walk::sync`); they never reach the game or the orbit camera.
+    pub fn is_walk(&self) -> bool {
+        matches!(self, Action::Stride(_) | Action::WalkLook(_) | Action::Hop)
     }
 }
 
@@ -186,6 +203,53 @@ pub fn map_photo_input(f: &InputFrame) -> Vec<Action> {
     out
 }
 
+/// Walk mode's bindings (PRD P8): F or Esc leaves, WASD or the arrows walk (Shift jogs), Space
+/// hops, and the mouse looks while a button is held or the page holds the pointer lock. Nothing
+/// places, rotates or opens a panel.
+pub fn map_walk_input(f: &InputFrame, pointer_lock: bool) -> Vec<Action> {
+    let mut out = vec![];
+    let ctrl = f.ctrl_or_cmd();
+    if f.pressed(KeyCode::KeyF) && !ctrl {
+        out.push(Action::ToggleWalk);
+    } else if f.pressed(KeyCode::Escape) {
+        out.push(Action::ExitWalk);
+    }
+    if f.pressed(KeyCode::Space) {
+        out.push(Action::Hop);
+    }
+    if f.motion != Vec2::ZERO
+        && (pointer_lock
+            || f.mouse_held.contains(&MouseButton::Left)
+            || f.mouse_held.contains(&MouseButton::Right))
+    {
+        out.push(Action::WalkLook(f.motion));
+    }
+    if !ctrl {
+        let axis = |pos: &[KeyCode], neg: &[KeyCode]| {
+            f.held_any(pos) as i32 as f32 - f.held_any(neg) as i32 as f32
+        };
+        let dir = Vec2::new(
+            axis(
+                &[KeyCode::KeyD, KeyCode::ArrowRight],
+                &[KeyCode::KeyA, KeyCode::ArrowLeft],
+            ),
+            axis(
+                &[KeyCode::KeyW, KeyCode::ArrowUp],
+                &[KeyCode::KeyS, KeyCode::ArrowDown],
+            ),
+        );
+        let speed = if f.shift() {
+            crate::walk::JOG_SPEED
+        } else {
+            crate::walk::WALK_SPEED
+        };
+        if dir != Vec2::ZERO {
+            out.push(Action::Stride(dir.normalize() * speed * f.dt));
+        }
+    }
+    out
+}
+
 /// The §4.5 bindings. `rotate_wheel` carries fractional Ctrl+wheel travel between frames, so one
 /// notch is one rotation step and a trackpad flick rotates at most once per frame.
 pub fn map_input(f: &InputFrame, rotate_wheel: &mut f32) -> Vec<Action> {
@@ -209,6 +273,9 @@ pub fn map_input(f: &InputFrame, rotate_wheel: &mut f32) -> Vec<Action> {
         }
         if f.pressed(KeyCode::KeyP) {
             out.push(Action::TogglePhoto);
+        }
+        if f.pressed(KeyCode::KeyF) {
+            out.push(Action::ToggleWalk);
         }
         for (i, k) in SELECT_KEYS.iter().enumerate() {
             if f.pressed(*k) {
@@ -287,6 +354,7 @@ pub fn read_input(
     scroll: Res<AccumulatedMouseScroll>,
     time: Res<Time>,
     game: Res<crate::game::GameState>,
+    walk: Res<crate::walk::WalkSession>,
     mut rotate_wheel: Local<f32>,
     mut queue: ResMut<ActionQueue>,
 ) {
@@ -306,6 +374,9 @@ pub fn read_input(
     if game.photo_mode {
         *rotate_wheel = 0.0;
         queue.0.extend(map_photo_input(&frame));
+    } else if game.walk_mode {
+        *rotate_wheel = 0.0;
+        queue.0.extend(map_walk_input(&frame, walk.pointer_lock));
     } else {
         queue.0.extend(map_input(&frame, &mut rotate_wheel));
     }
@@ -336,6 +407,83 @@ mod tests {
         assert_eq!(press(&[KeyCode::KeyP], &[]), [Action::TogglePhoto]);
         assert_eq!(press(&[KeyCode::Digit3], &[]), [Action::SelectNth(2)]);
         assert_eq!(press(&[KeyCode::Equal], &[]), [Action::SelectNth(11)]);
+        assert_eq!(press(&[KeyCode::KeyF], &[]), [Action::ToggleWalk]);
+    }
+
+    #[test]
+    fn walk_mode_walks_jogs_hops_looks_and_leaves() {
+        let f = InputFrame {
+            held: vec![KeyCode::KeyW],
+            dt: 0.5,
+            ..default()
+        };
+        assert_eq!(
+            map_walk_input(&f, false),
+            [Action::Stride(Vec2::new(
+                0.0,
+                crate::walk::WALK_SPEED * 0.5
+            ))]
+        );
+        let jog = InputFrame {
+            held: vec![KeyCode::KeyD, KeyCode::ShiftLeft],
+            dt: 1.0,
+            ..default()
+        };
+        assert_eq!(
+            map_walk_input(&jog, false),
+            [Action::Stride(Vec2::new(crate::walk::JOG_SPEED, 0.0))]
+        );
+        let press = |k| InputFrame {
+            just_pressed: vec![k],
+            held: vec![k],
+            ..default()
+        };
+        assert_eq!(map_walk_input(&press(KeyCode::Space), false), [Action::Hop]);
+        assert_eq!(
+            map_walk_input(&press(KeyCode::KeyF), false),
+            [Action::ToggleWalk]
+        );
+        assert_eq!(
+            map_walk_input(&press(KeyCode::Escape), false),
+            [Action::ExitWalk]
+        );
+        for k in [
+            KeyCode::KeyR,
+            KeyCode::KeyB,
+            KeyCode::Tab,
+            KeyCode::KeyP,
+            KeyCode::Digit1,
+        ] {
+            assert!(
+                map_walk_input(&press(k), false).is_empty(),
+                "{k:?} is inert in walk mode"
+            );
+        }
+        let hover = InputFrame {
+            motion: Vec2::new(6.0, 2.0),
+            ..default()
+        };
+        assert!(
+            map_walk_input(&hover, false).is_empty(),
+            "no look without a button"
+        );
+        assert_eq!(
+            map_walk_input(&hover, true),
+            [Action::WalkLook(Vec2::new(6.0, 2.0))],
+            "the pointer lock looks with no button"
+        );
+        let drag = InputFrame {
+            mouse_just_pressed: vec![MouseButton::Left],
+            mouse_held: vec![MouseButton::Left],
+            motion: Vec2::new(-3.0, 1.0),
+            ..default()
+        };
+        assert_eq!(
+            map_walk_input(&drag, false),
+            [Action::WalkLook(Vec2::new(-3.0, 1.0))],
+            "a click looks, never places"
+        );
+        assert!(Action::Hop.is_walk() && !Action::Hop.is_camera());
     }
 
     #[test]

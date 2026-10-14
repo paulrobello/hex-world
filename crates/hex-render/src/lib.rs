@@ -20,10 +20,11 @@ pub mod post;
 mod scene;
 pub mod tier;
 pub mod tilt_shift;
+pub mod walk;
 pub mod water;
 pub mod workload;
 pub use grade::Grade;
-pub use hex_assets::bevy::MeshoptGlbPlugin;
+pub use hex_assets::bevy::{KitLoadFailures, MeshoptGlbPlugin};
 pub use scene::{SceneEntity, TILE_HEIGHT, Tile, Vehicle, setup as setup_scene};
 pub use workload::{
     Ev100, GATE, GateConfig, GateView, GateWorkload, KitHooks, KitSource, Layout, PostMode,

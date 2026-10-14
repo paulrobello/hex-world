@@ -1,0 +1,457 @@
+//! First-person walk mode (PRD P8, D14): the walker stands on the kit ground at eye height, walks
+//! with WASD (Shift jogs), looks with the mouse and hops with Space, and is stopped by buildings,
+//! trunks, rocks, deep water and the map edge (`hex_render::walk`). The world keeps running.
+//!
+//! Enter and exit follow `GameState::walk_mode`, so the F key, Esc, the HUD button and the `walk`
+//! command share one snapshot: entering takes the orbit camera's transform and FOV, leaving writes
+//! them back exactly. Saves never see the walker: they take the snapshot's orbit camera.
+use std::collections::VecDeque;
+
+use bevy::prelude::*;
+use hex_render::{
+    play::PlaySystems,
+    tilt_shift::TiltOverride,
+    walk::{Blocked, WalkGround},
+};
+use serde_json::{Value, json};
+
+use crate::actions::Action;
+use crate::camera::{focus, free_rotation, yaw_pitch};
+use crate::game::GameState;
+
+/// Eye height above the feet (m).
+pub const EYE_HEIGHT: f32 = 1.7;
+/// Walking and jogging speeds (m/s).
+pub const WALK_SPEED: f32 = 1.4;
+pub const JOG_SPEED: f32 = 3.5;
+/// Vertical field of view while walking (degrees); leaving restores the orbit camera's.
+pub const WALK_FOV_DEG: f32 = 60.0;
+/// Mouse look rate (radians per pixel) and the pitch limit short of straight up or down.
+pub const LOOK_RAD_PER_PX: f32 = 0.0025;
+const MAX_PITCH: f32 = 1.4;
+/// The eye eases toward its height over the ground at this rate (1/s), so kerbs and slopes glide.
+const EYE_EASE: f32 = 12.0;
+/// A hop's take-off speed (m/s) and gravity (m/s²): about half a metre up.
+const HOP_SPEED: f32 = 3.2;
+const GRAVITY: f32 = 9.81;
+/// `walk_to` moves a target that is blocked (a trunk, deep water) to standable ground this close (m).
+pub const WALK_TO_SNAP: f32 = 4.0;
+/// The pitch the walker enters at (radians, slightly down).
+const ENTRY_PITCH: f32 = -0.08;
+
+/// The orbit camera as walk mode found it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct OrbitSnapshot {
+    pub transform: Transform,
+    /// Vertical FOV in radians.
+    pub fov: f32,
+}
+
+/// A scripted request from the `walk_to`, `walk_look` and `walk_step` commands.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum WalkRequest {
+    /// Stand on the ground at world (x, z), refused where nothing stands; optional heading and pitch.
+    To {
+        x: f32,
+        z: f32,
+        heading: Option<f32>,
+        pitch: Option<f32>,
+    },
+    /// Look at heading and pitch (degrees); either may be omitted.
+    Look {
+        heading: Option<f32>,
+        pitch: Option<f32>,
+    },
+    /// Walk as if the keys were held for `seconds` of game time: `forward` and `right` in -1..1.
+    Step {
+        forward: f32,
+        right: f32,
+        seconds: f32,
+        jog: bool,
+    },
+}
+
+/// The walker: feet on the ground, heading and pitch, the eased eye height and a hop in flight.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Walker {
+    pub feet: Vec3,
+    /// Yaw about +Y (0 looks toward -Z, positive turns toward -X), as `camera::yaw_pitch`.
+    pub yaw: f32,
+    pub pitch: f32,
+    pub eye_y: f32,
+    pub vy: f32,
+    pub airborne: bool,
+}
+
+/// The open walk session: `saved` is `Some` while the game is in walk mode.
+#[derive(Resource, Default)]
+pub struct WalkSession {
+    pub saved: Option<OrbitSnapshot>,
+    pub walker: Walker,
+    /// The page holds the pointer lock (the HUD tells the engine): mouse motion looks with no button.
+    pub pointer_lock: bool,
+    pub requests: VecDeque<WalkRequest>,
+    /// A scripted walk in progress: direction (right, forward), jog, game seconds left.
+    pub script: Option<(Vec2, bool, f32)>,
+    /// This frame's input: ground offset (right, forward) in metres, look in pixels, a hop.
+    pub stride: Vec2,
+    pub look: Vec2,
+    pub hop: bool,
+    /// The latest move's stop reason, kept until the walker next moves freely.
+    pub blocked: Option<Blocked>,
+    /// Metres moved in the latest frame.
+    pub moved: f32,
+    /// Metres walked since entering.
+    pub distance: f32,
+}
+
+impl WalkSession {
+    /// The orbit camera a save should store while walking.
+    pub fn orbit(&self) -> Option<Transform> {
+        self.saved.map(|s| s.transform)
+    }
+
+    /// Takes a walk action from the input layer.
+    pub fn intent(&mut self, a: &Action) {
+        match *a {
+            Action::Stride(d) => self.stride += d,
+            Action::WalkLook(d) => self.look += d,
+            Action::Hop => self.hop = true,
+            _ => {}
+        }
+    }
+}
+
+/// Game actions refused while walking (placement, bulldoze, history and photo mode), by the name
+/// `last_result` and `actionRefused` report; `None` for the rest.
+pub fn refused_while_walking(a: &Action) -> Option<&'static str> {
+    Some(match a {
+        Action::Primary => "primary",
+        Action::Place(_) => "place",
+        Action::Pin(_) => "pin",
+        Action::Bulldoze(_) => "bulldoze",
+        Action::Rotate(_) => "rotate",
+        Action::Undo => "undo",
+        Action::Redo => "redo",
+        Action::ToggleBulldoze | Action::SetTool(_) => "set_tool",
+        Action::TogglePhoto => "toggle_photo",
+        _ => return None,
+    })
+}
+
+/// Unit ground directions of a yaw: forward (the view's) and right.
+pub fn axes(yaw: f32) -> (Vec2, Vec2) {
+    (
+        Vec2::new(-yaw.sin(), -yaw.cos()),
+        Vec2::new(yaw.cos(), -yaw.sin()),
+    )
+}
+
+/// Compass heading in degrees, clockwise viewed from above: 0 looks toward -Z, 90 toward +X.
+pub fn heading_deg(yaw: f32) -> f32 {
+    (-yaw.to_degrees()).rem_euclid(360.0)
+}
+
+pub fn yaw_of_heading(deg: f32) -> f32 {
+    -deg.to_radians()
+}
+
+/// The eye transform of a walker.
+pub fn eye(w: &Walker) -> Transform {
+    Transform::from_xyz(w.feet.x, w.eye_y, w.feet.z)
+        .with_rotation(free_rotation(w.yaw, w.pitch, 0.0))
+}
+
+/// Puts the walker on the standable ground nearest `p` within [`WALK_TO_SNAP`] metres, or says
+/// why nothing stands at `p`.
+fn stand_at(ground: &WalkGround, w: &mut Walker, p: Vec2) -> Result<(), Blocked> {
+    let at = match ground.stand(p) {
+        Ok(h) => Vec3::new(p.x, h, p.y),
+        Err(b) => ground
+            .nearest_stand(p)
+            .filter(|q| q.xz().distance(p) <= WALK_TO_SNAP)
+            .ok_or(b)?,
+    };
+    let h = at.y;
+    w.feet = at;
+    w.eye_y = h + EYE_HEIGHT;
+    w.vy = 0.0;
+    w.airborne = false;
+    Ok(())
+}
+
+/// One frame of walking: look, the scripted or keyed stride through the ground, the hop and the
+/// eased eye. Returns the metres moved.
+pub fn advance(s: &mut WalkSession, ground: &WalkGround, dt: f32) -> f32 {
+    let w = &mut s.walker;
+    w.yaw -= s.look.x * LOOK_RAD_PER_PX;
+    w.pitch = (w.pitch - s.look.y * LOOK_RAD_PER_PX).clamp(-MAX_PITCH, MAX_PITCH);
+    let mut stride = s.stride;
+    if let Some((dir, jog, left)) = s.script.as_mut() {
+        let t = dt.min(*left);
+        let speed = if *jog { JOG_SPEED } else { WALK_SPEED };
+        stride += dir.normalize_or_zero() * speed * t;
+        *left -= t;
+        if *left <= 1e-6 {
+            s.script = None;
+        }
+    }
+    let (fwd, right) = axes(w.yaw);
+    let delta = right * stride.x + fwd * stride.y;
+    if s.hop && !w.airborne {
+        w.vy = HOP_SPEED;
+        w.airborne = true;
+    }
+    let before = w.feet;
+    let ground_y = if delta != Vec2::ZERO {
+        let step = ground.step(w.feet, delta);
+        w.feet.x = step.pos.x;
+        w.feet.z = step.pos.z;
+        s.blocked = step.blocked;
+        step.pos.y
+    } else {
+        ground.ground(w.feet.xz()).unwrap_or(w.feet.y)
+    };
+    if w.airborne {
+        w.feet.y += w.vy * dt;
+        w.vy -= GRAVITY * dt;
+        if w.feet.y <= ground_y {
+            w.feet.y = ground_y;
+            w.vy = 0.0;
+            w.airborne = false;
+        }
+    } else {
+        w.feet.y = ground_y;
+    }
+    let target = w.feet.y + EYE_HEIGHT;
+    w.eye_y += (target - w.eye_y) * (1.0 - (-EYE_EASE * dt).exp());
+    s.stride = Vec2::ZERO;
+    s.look = Vec2::ZERO;
+    s.hop = false;
+    let moved = before.xz().distance(w.feet.xz());
+    s.moved = moved;
+    s.distance += moved;
+    moved
+}
+
+/// Enters and leaves walk mode on `GameState::walk_mode` edges and walks while it is on (after
+/// `game::apply_actions` and `photo::sync`).
+#[allow(clippy::too_many_arguments)]
+pub fn sync(
+    mut commands: Commands,
+    game: Res<GameState>,
+    mut session: ResMut<WalkSession>,
+    ground: Res<WalkGround>,
+    time: Res<Time>,
+    tilt: Option<Res<TiltOverride>>,
+    mut cams: Query<(&mut Transform, &mut Projection), With<Camera3d>>,
+) {
+    let Some((mut t, mut proj)) = cams.iter_mut().next() else {
+        return;
+    };
+    match (game.walk_mode, session.saved) {
+        (true, None) => {
+            let fov = match &*proj {
+                Projection::Perspective(p) => p.fov,
+                _ => return,
+            };
+            session.saved = Some(OrbitSnapshot { transform: *t, fov });
+            let f = focus(&t);
+            let (yaw, _) = yaw_pitch(*t.forward());
+            let start = ground
+                .nearest_stand(f.xz())
+                .unwrap_or(Vec3::new(f.x, 0.0, f.z));
+            session.walker = Walker {
+                feet: start,
+                yaw,
+                pitch: ENTRY_PITCH,
+                eye_y: start.y + EYE_HEIGHT,
+                vy: 0.0,
+                airborne: false,
+            };
+            session.blocked = None;
+            session.distance = 0.0;
+            if let Projection::Perspective(p) = &mut *proj {
+                p.fov = WALK_FOV_DEG.to_radians();
+            }
+            info!("walk mode: on at {start}");
+        }
+        (false, Some(snap)) => {
+            *t = snap.transform;
+            if let Projection::Perspective(p) = &mut *proj {
+                p.fov = snap.fov;
+            }
+            if tilt.is_some() {
+                commands.remove_resource::<TiltOverride>();
+            }
+            let s = &mut *session;
+            s.saved = None;
+            s.script = None;
+            s.requests.clear();
+            s.pointer_lock = false;
+            (s.stride, s.look, s.hop) = (Vec2::ZERO, Vec2::ZERO, false);
+            info!("walk mode: off, orbit camera restored");
+            return;
+        }
+        (false, None) => {
+            let s = &mut *session;
+            s.requests.clear();
+            (s.stride, s.look, s.hop) = (Vec2::ZERO, Vec2::ZERO, false);
+            return;
+        }
+        (true, Some(_)) => {}
+    }
+    let s = &mut *session;
+    while let Some(r) = s.requests.pop_front() {
+        match r {
+            WalkRequest::To {
+                x,
+                z,
+                heading,
+                pitch,
+            } => match stand_at(&ground, &mut s.walker, Vec2::new(x, z)) {
+                Ok(()) => {
+                    s.blocked = None;
+                    s.script = None;
+                    look_at(&mut s.walker, heading, pitch);
+                }
+                Err(b) => {
+                    s.blocked = Some(b.clone());
+                    warn!("walk_to ({x}, {z}) refused: {}", b.reason());
+                }
+            },
+            WalkRequest::Look { heading, pitch } => look_at(&mut s.walker, heading, pitch),
+            WalkRequest::Step {
+                forward,
+                right,
+                seconds,
+                jog,
+            } => {
+                s.script = (seconds > 0.0 && seconds.is_finite()).then_some((
+                    Vec2::new(right, forward),
+                    jog,
+                    seconds,
+                ));
+            }
+        }
+    }
+    advance(s, &ground, time.delta_secs());
+    let e = eye(&s.walker);
+    if *t != e {
+        *t = e;
+    }
+    // Tilt-shift is off in first person whatever the setting: a zero-strength override.
+    let off = TiltOverride {
+        focus_m: 1.0,
+        strength: 0.0,
+    };
+    if tilt.as_deref() != Some(&off) {
+        commands.insert_resource(off);
+    }
+}
+
+fn look_at(w: &mut Walker, heading: Option<f32>, pitch: Option<f32>) {
+    if let Some(h) = heading.filter(|h| h.is_finite()) {
+        w.yaw = yaw_of_heading(h);
+    }
+    if let Some(p) = pitch.filter(|p| p.is_finite()) {
+        w.pitch = p.to_radians().clamp(-MAX_PITCH, MAX_PITCH);
+    }
+}
+
+fn round(v: f32) -> f64 {
+    (f64::from(v) * 1e3).round() / 1e3
+}
+
+/// `state().walk`: whether walk mode is on, the feet, eye, heading and pitch, the ground under
+/// the feet, the tile there, the water depth, what stopped the latest move, and the scripted walk.
+pub fn state_json(s: &WalkSession, ground: &WalkGround) -> Value {
+    let on = s.saved.is_some();
+    let w = &s.walker;
+    let v3 = |v: Vec3| json!([round(v.x), round(v.y), round(v.z)]);
+    let tile = ground.tile_at(w.feet.xz());
+    json!({
+        "on": on,
+        "feet": on.then(|| v3(w.feet)),
+        "eye": on.then(|| v3(Vec3::new(w.feet.x, w.eye_y, w.feet.z))),
+        "heading": on.then(|| round(heading_deg(w.yaw))),
+        "pitch": on.then(|| round(w.pitch.to_degrees())),
+        "ground": on.then(|| ground.ground(w.feet.xz()).ok().map(round)).flatten(),
+        "water_depth": on.then(|| round(ground.water_depth(w.feet.xz()))),
+        "cell": tile.filter(|_| on).map(|(c, _)| json!({ "q": c.q, "r": c.r })),
+        "tile": tile.filter(|_| on).map(|(_, t)| t),
+        "blocked": s.blocked.as_ref().filter(|_| on).map(Blocked::reason),
+        "blocked_by": s.blocked.as_ref().filter(|_| on).and_then(|b| b.piece()),
+        "moving": on && s.moved > 0.0,
+        "airborne": on && w.airborne,
+        "distance": round(s.distance),
+        "step_left": s.script.filter(|_| on).map(|(_, _, left)| round(left)),
+        "pointer_lock": on && s.pointer_lock,
+    })
+}
+
+/// While walking, the audio focus mix centres on the walker's feet with a one-hex spread, and the
+/// listener (the camera) is the walker's head.
+pub fn extend_play_view(play: &mut Value, s: &WalkSession) {
+    let (Some(_), Value::Object(map)) = (s.saved, play) else {
+        return;
+    };
+    let f = s.walker.feet;
+    map.insert("focus".into(), json!([round(f.x), round(f.y), round(f.z)]));
+    map.insert("zoom".into(), json!(round(EYE_HEIGHT)));
+}
+
+/// The walk resources and the ground rebuild (after the play systems, so the scatter is current).
+pub struct WalkPlugin;
+
+impl Plugin for WalkPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<WalkSession>()
+            .init_resource::<WalkGround>()
+            .add_systems(Update, hex_render::walk::sync.after(PlaySystems));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn axes_match_the_camera_forward() {
+        for yaw in [0.0f32, 0.7, -2.1, 3.0] {
+            let t = Transform::default().with_rotation(free_rotation(yaw, 0.0, 0.0));
+            let (fwd, right) = axes(yaw);
+            assert!((t.forward().xz() - fwd).length() < 1e-5, "{yaw}");
+            assert!((t.right().xz() - right).length() < 1e-5, "{yaw}");
+            let back = yaw_of_heading(heading_deg(yaw));
+            assert!(
+                ((back - yaw).rem_euclid(std::f32::consts::TAU))
+                    .min((yaw - back).rem_euclid(std::f32::consts::TAU))
+                    < 1e-4
+            );
+        }
+        assert!((heading_deg(yaw_of_heading(90.0)) - 90.0).abs() < 1e-4);
+        assert_eq!(
+            axes(yaw_of_heading(90.0)).0.round(),
+            Vec2::X,
+            "heading 90 is +X"
+        );
+    }
+
+    #[test]
+    fn a_scripted_step_walks_for_exactly_its_seconds_on_open_ground() {
+        // An empty world is all edge: the walker stays put and reports it.
+        let ground = WalkGround::default();
+        let mut s = WalkSession {
+            script: Some((Vec2::Y, false, 0.5)),
+            ..Default::default()
+        };
+        let moved = advance(&mut s, &ground, 1.0 / 60.0);
+        assert_eq!(moved, 0.0);
+        assert_eq!(s.blocked, Some(Blocked::Edge));
+        for _ in 0..40 {
+            advance(&mut s, &ground, 1.0 / 60.0);
+        }
+        assert!(s.script.is_none(), "the step ends after its seconds");
+    }
+}

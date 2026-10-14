@@ -238,6 +238,39 @@ try {
   check(zoomed.mix.river > 0.5, `the biome mix in view turns to river (${zoomed.mix.river})`);
   await until(async () => (await audio()).outputRms > 1e-4, "ambience audible before mute");
 
+  // Cars (owner request 2026-10-14): a new world with the cars checkpoint's two connected house clusters. A
+  // seeded departure pulls a car out about 10 s after both connect; its pull-out plays car-start at the spot, its
+  // pass-by car-drive at the car, and its park car-door, all within three hex steps of the focus.
+  await cmd({ cmd: "new_world" });
+  await until(async () => (await tiles()) === 1, "a new world");
+  const script = JSON.parse(readFileSync("docs/checkpoints/cars/cars.json", "utf8"));
+  const build = script.slice(0, script.findIndex((c) => c.cmd === "dump_state"))
+    .filter((c) => ["select_tile", "place", "hover", "rotate"].includes(c.cmd));
+  await cmd(build);
+  await until(async () => (await play()).connected_destinations === 2, "two house clusters connected", 20_000);
+  await cmd({ cmd: "camera", pos: [14, 80, 100], look_at: [14, 0, 4] });
+  const pools = Object.fromEntries(["car-start", "car-door", "car-drive"]
+    .map((p) => [p, manifest.cues.filter((c) => c.pool === p && c.status === "mastered").map((c) => c.id)]));
+  a = await audio();
+  check(JSON.stringify(a.cars.pools) === JSON.stringify(pools), `car pools from the manifest ${JSON.stringify(a.cars.pools)}`);
+  let maxVoices = 0;
+  const carPlay = (event, pool, ms) => until(async () => {
+    const s = await audio();
+    maxVoices = Math.max(maxVoices, s.cars.voices.length);
+    return s.cars.recent.find((f) => f.event === event && pools[pool].includes(f.id)) ?? null;
+  }, `${event} plays ${pool}`, ms);
+  const pulled = await carPlay("carPulledOut", "car-start", 60_000);
+  const drove = await carPlay("carDriving", "car-drive", 30_000);
+  const parked = await carPlay("carParked", "car-door", 90_000);
+  a = await audio();
+  save("cars", { pulled, drove, parked, maxVoices, cars: a.cars, play: await play() });
+  check(pulled && drove && parked && pulled.car === drove.car && pulled.t < drove.t,
+    `one car's pull-out, then its pass-by ${JSON.stringify([pulled, drove])}`);
+  for (const f of [pulled, drove, parked].filter(Boolean))
+    check(f.gain > 0 && f.gain <= 0.4 && Math.abs(f.rate - 1) <= 0.05, `${f.id} at focus-mix gain ${f.gain}, rate ${f.rate}`);
+  check(maxVoices <= 3, `never more than three car voices (${maxVoices})`);
+  check(a.recent.every((f) => !f.id.startsWith("car-")), "car cues stay out of the event-cue history");
+
   // Mute silences the output, and the setting persists for this viewer.
   await page.evaluate(() => window.hexWorld.audio.setMuted(true));
   await page.waitForTimeout(500);

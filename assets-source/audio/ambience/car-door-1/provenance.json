@@ -1,0 +1,225 @@
+{
+  "cueId": "car-door-1",
+  "kind": "ambience",
+  "class": "sfx",
+  "version": 1,
+  "use": "One car door closing, of the car-door pool: positional at the parking spot when a car finishes parking (carParked), only within 3 hex steps of the camera focus, on the ambience bus.",
+  "events": [
+    "carParked"
+  ],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Close, isolated recording of a small car's door being shut gently in a quiet driveway: one soft, solid, well-damped thud of the door closing, with a short muffled latch click inside it. Studio-quiet background, with silence before and after the door.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Close, isolated recording of a small car's door being shut gently in a quiet driveway: one soft, solid, well-damped thud of the door closing, with a short muffled latch click inside it. Studio-quiet background, with silence before and after the door.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 1.5,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "bf5e708acd33e2f8846c05f9cd1515e2",
+    "generatedAt": "2026-10-14T22:09:04+00:00",
+    "attempt": 31,
+    "creditsCharged": 15,
+    "record": {
+      "path": "assets-source/audio/ambience/car-door-1/generation.json",
+      "sha256": "811c0bf13a1ccff5bc6ce1768d6281818f82934a3c6aea352ddae64862cf1578",
+      "bytes": 2016
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/car-door-1/car-door-1.mp3",
+    "sha256": "e585cddab722e5f81ccfcd2eac5b80a0dd57261cef0f8900c93b1e525525f49d",
+    "bytes": 24702,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 1.48
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -42.7,
+      "lra": 0.0,
+      "truePeak": -18.9
+    },
+    "master": {
+      "integrated": -19.5,
+      "lra": 0.0,
+      "truePeak": -2.0
+    },
+    "after": {
+      "webm": {
+        "integrated": -19.5,
+        "lra": 0.0,
+        "truePeak": -1.3
+      },
+      "m4a": {
+        "integrated": -19.6,
+        "lra": 0.0,
+        "truePeak": -1.6
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 90,
+        "stages": 2
+      },
+      "chain": "highpass=f=90:poles=2,highpass=f=90:poles=2",
+      "circularPadFrames": 0
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -43.9,
+        "lra": 0.0,
+        "truePeak": -24.0
+      },
+      "targetLufs": -16.0,
+      "gainDb": 27.9,
+      "requiredPeakReductionDb": 5.9,
+      "mode": "limited",
+      "limiterInputGainDb": 49.0,
+      "limiterPasses": 4,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 2.7
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.5
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/car-door-1.wav",
+    "sha256": "c0cb7e0a6e42fb4d3942e76554ecb7258c745bccf923a12d05ec51ff9b50b727",
+    "frames": 71040,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/car-door-1.webm",
+      "sha256": "8ae8a4d650e4df84dfe565e26a990de62b6e225f9918f4e3a4547f532eca96d6",
+      "bytes": 12024,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.488,
+      "decodedFrames": 71040,
+      "loudness": {
+        "integrated": -19.5,
+        "lra": 0.0,
+        "truePeak": -1.3
+      },
+      "floor": {
+        "peakWindowDb": -6.9,
+        "floorDb": -41.2,
+        "floorBelowPeakDb": 34.3,
+        "floorBandPct": {
+          "below1500": 77.4,
+          "1500to9k": 21.3,
+          "above9k": 1.3
+        },
+        "interiorWindows": 29,
+        "problems": [
+          "floor -41.2 dB is only 34.3 dB under the -6.9 dB peak window (needs 40)"
+        ]
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/car-door-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/car-door-1.webm"
+    },
+    {
+      "path": "assets/audio/ambience/car-door-1.m4a",
+      "sha256": "436bed294773c71b7679b2f3ba8c7d886ad79cb63056b704ea248d0ae867e1fa",
+      "bytes": 28695,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.48,
+      "decodedFrames": 71040,
+      "loudness": {
+        "integrated": -19.6,
+        "lra": 0.0,
+        "truePeak": -1.6
+      },
+      "floor": {
+        "peakWindowDb": -6.8,
+        "floorDb": -41.3,
+        "floorBelowPeakDb": 34.4,
+        "floorBandPct": {
+          "below1500": 77.2,
+          "1500to9k": 21.6,
+          "above9k": 1.2
+        },
+        "interiorWindows": 29,
+        "problems": [
+          "floor -41.3 dB is only 34.4 dB under the -6.8 dB peak window (needs 40)"
+        ]
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/car-door-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/car-door-1.m4a"
+    }
+  ],
+  "decodedBytes": 284160,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "c0d737550b72975c3c797f499d22df7f75879fda81aa0819372a09658c2741bb"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

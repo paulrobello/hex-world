@@ -15,6 +15,7 @@ mod photo;
 mod sim;
 #[cfg(not(target_arch = "wasm32"))]
 mod thumbs;
+mod walk;
 
 #[derive(Resource)]
 struct RunFlags(args::Flags);
@@ -112,6 +113,7 @@ fn main() {
             gpu_timing: flags.gpu_timing,
         })
         .add_plugins(sim::SimPlugin)
+        .add_plugins(walk::WalkPlugin)
         .insert_resource(game)
         .insert_resource(cars)
         .insert_resource(hex_render::boids::BoidSeed(flags.seed))
@@ -136,6 +138,7 @@ fn main() {
                 control::run_commands,
                 game::apply_actions,
                 photo::sync,
+                walk::sync,
                 photo::run_exports,
                 persist::run,
                 persist::keep_latest,

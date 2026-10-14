@@ -622,7 +622,7 @@
       },
       {
         "name": "The Narrow-Desktop Rule (1400 px)",
-        "body": "At 1400 px wide or less, key caps leave the bar and live only in tooltips, tools tighten to 9 px of side padding, the Tiles sheet narrows to 340 px, and row socket hexes narrow to 28 px. The bar and sheet never meet, and the ghost area stays clear (shot `s12-narrow-1280x720`).",
+        "body": "At 1400 px wide or less, key caps leave the bar and live only in tooltips, tools tighten to 9 px of side padding, the bar's rules to 4 px of margin and the world name to 128 px, the Tiles sheet narrows to 340 px, and row socket hexes narrow to 28 px. The bar and sheet never meet, and the ghost area stays clear (shot `s12-narrow-1280x720`).",
         "section": "layout"
       },
       {

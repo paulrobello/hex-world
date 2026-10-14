@@ -1,0 +1,43 @@
+{
+  "cueId": "car-drive-2",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording of a little vintage car puttering slowly past along a quiet village street: the cheerful, mid-pitched putt-putt of its small engine and the soft roll of its tyres, coming in from silence, passing close by and fading away into silence, about three seconds in all. Studio-quiet background, with silence before and after the car.",
+  "parameters": {
+    "text": "Close, isolated recording of a little vintage car puttering slowly past along a quiet village street: the cheerful, mid-pitched putt-putt of its small engine and the soft roll of its tyres, coming in from silence, passing close by and fading away into silence, about three seconds in all. Studio-quiet background, with silence before and after the car.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 4,
+    "prompt_influence": 0.6
+  },
+  "generationId": "81e25234f98ab4c7f69a6711e0d64a08",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 22:12:03 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "40",
+    "content-length": "65244",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "81e25234f98ab4c7f69a6711e0d64a08",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T22:12:04+00:00",
+  "attempt": 35,
+  "creditsCharged": 40,
+  "sourceFile": "car-drive-2.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}

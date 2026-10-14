@@ -28,7 +28,7 @@ button { font:inherit; font-size:13px; padding:6px 10px; border-radius:6px; bord
 measured on the WebM by <code>make audio-master</code>. Loop cues have a gapless Web Audio player that loops at the
 manifest loop points, as the game will; the plain player's <code>loop</code> attribute can gap between repeats in some browsers.
 Serve the repo root over http (<code>python3 -m http.server</code>) for the gapless player.</p>
-<p class=lead>Generation attempts logged: 30 of 30. Approvals pending: creative and owner.</p>
+<p class=lead>Generation attempts logged: 39 of 39. Approvals pending: creative and owner.</p>
 <h2>New one-shot pool: forest-birds (4 variants)</h2><p class=lead>Single birdsong phrases cut from the paid forest-birdsong take (attempt 15), whose birds the owner liked. Each cut is high-passed at 2.8 kHz and low-passed at 9.5 kHz (two 2-pole stages each, so the 50 Hz-multiple hum comb and the hiss over 9 kHz go), then gated between notes. The game plays one at a forest tile near the focus every 12-40 s. The floor numbers are the owner's 2026-10-14 criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p><p><button onclick="randomVariant(this, 'forest-birds')">Play a random variant</button> <span class=meta data-now='forest-birds'></span></p><div class=grid data-pool='forest-birds'><div class=card><h3>forest-birds-1</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
 <audio controls preload=none><source src="../../assets/audio/ambience/forest-birds-1.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/forest-birds-1.m4a" type="audio/mp4"></audio>
@@ -107,6 +107,58 @@ id <code>95ed4fc8321b3e52865fb8cdc9e1d432</code> · <a href="ambience/forest-lea
 <details><summary>Prompt and generation</summary><p>Close, isolated recording of a light breeze catching one leafy branch: a quick, soft flutter of leaves that rises, shimmers briefly and falls away into complete silence within about two seconds. Studio-quiet background, with silence before and after the flutter.</p><p>prompt influence 0.6</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 29 ·
 id <code>8c0a900a09f35752cc112c6791c0e695</code> · <a href="ambience/forest-leaves-2/forest-leaves-2.mp3">source</a></p></details>
+</div></div><h2>New one-shot pool: car-door (2 variants)</h2><p class=lead>A car door closing, one ElevenLabs take each, high-passed (two stages, 90 Hz for variant 2 and 60 Hz for variant 3) to drop the sub-60 Hz boom the takes carried. car-door-1 was retired at mastering (see its retiredNote). The game plays one at the parking spot when a car finishes parking, within 3 hex steps of the focus, on the ambience bus. The floor numbers are the owner's 2026-10-14 criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p><p><button onclick="randomVariant(this, 'car-door')">Play a random variant</button> <span class=meta data-now='car-door'></span></p><div class=grid data-pool='car-door'><div class=card><h3>car-door-2</h3>
+<p class=meta>ambience · 1 ch · decode · events: carParked</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/car-door-2.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/car-door-2.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>1.48 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-2.3 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.3</b></span>
+<span>source <b>-43.5 LUFS</b></span>
+<span>runtime <b>37 KB</b></span></div>
+<p class=meta>linear</p><div class=nums><span>webm floor <b>44.6 dB</b> under peak (pass), &lt;1.5k 71.9% · 1.5–9k 25.4% · &gt;9k 2.6%</span><span>m4a floor <b>44.6 dB</b> under peak (pass), &lt;1.5k 71.2% · 1.5–9k 26.4% · &gt;9k 2.5%</span></div>
+<details><summary>Prompt and generation</summary><p>Close, isolated recording of a hatchback&#x27;s driver door swinging shut on a calm evening: a single warm, rounded, cushioned thunk with a light rubber-seal sigh. Studio-quiet background, with silence before and after the door.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 37 ·
+id <code>7a6bc0b05ab2301432c3f2e18cd1c2a7</code> · <a href="ambience/car-door-2/car-door-2.mp3">source</a></p></details>
+</div><div class=card><h3>car-door-3</h3>
+<p class=meta>ambience · 1 ch · decode · events: carParked</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/car-door-3.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/car-door-3.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>1.12 s</b></span>
+<span>WebM <b>-16.5 LUFS</b> / <b>-1.3 dBTP</b></span>
+<span>m4a <b>-16.5</b> / <b>-2.0</b></span>
+<span>source <b>-25.0 LUFS</b></span>
+<span>runtime <b>30 KB</b></span></div>
+<p class=meta>limited 8.5 dB on 5.4% of 20 ms windows</p><div class=nums><span>webm floor <b>44.8 dB</b> under peak (pass), &lt;1.5k 93.2% · 1.5–9k 6.5% · &gt;9k 0.3%</span><span>m4a floor <b>44.7 dB</b> under peak (pass), &lt;1.5k 93.8% · 1.5–9k 5.9% · &gt;9k 0.3%</span></div>
+<details><summary>Prompt and generation</summary><p>Close, isolated recording of a small family car&#x27;s passenger door being pushed shut on a quiet afternoon: one warm, padded, rounded thunk with a soft rubber-seal sigh after it. Studio-quiet background, with silence before and after the door.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 39 ·
+id <code>632206f6f4b0c9a8e4e2c774e6137de0</code> · <a href="ambience/car-door-3/car-door-3.mp3">source</a></p></details>
+</div></div><h2>New one-shot pool: car-start (1 variants)</h2><p class=lead>One variant: an engine start and gentle pull-away, high-passed at 90 Hz. It is a loud starter crank, about 1 s of silence, then a quieter engine that drives off. car-start-1 was retired at mastering (see its retiredNote). The game plays it at the spot when a car pulls out, within 3 hex steps of the focus, at a rate varied by car id. The floor numbers are the owner's 2026-10-14 criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p><p><button onclick="randomVariant(this, 'car-start')">Play a random variant</button> <span class=meta data-now='car-start'></span></p><div class=grid data-pool='car-start'><div class=card><h3>car-start-2</h3>
+<p class=meta>ambience · 1 ch · decode · events: carPulledOut</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/car-start-2.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/car-start-2.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>4.48 s</b></span>
+<span>WebM <b>-16.7 LUFS</b> / <b>-1.3 dBTP</b></span>
+<span>m4a <b>-16.5</b> / <b>-2.1</b></span>
+<span>source <b>-18.3 LUFS</b></span>
+<span>runtime <b>120 KB</b></span></div>
+<p class=meta>limited 13.3 dB on 4.5% of 20 ms windows</p><div class=nums><span>webm floor <b>43.9 dB</b> under peak (pass), &lt;1.5k 77.8% · 1.5–9k 18.2% · &gt;9k 4.0%</span><span>m4a floor <b>44.0 dB</b> under peak (pass), &lt;1.5k 77.6% · 1.5–9k 18.5% · &gt;9k 3.9%</span></div>
+<details><summary>Prompt and generation</summary><p>Close, isolated recording of a little old hatchback starting on a calm morning: a short starter churn, a soft low burble that settles to a gentle idle, then the car eases off down the lane and its mellow engine note drifts away to complete silence. Studio-quiet background, with silence before the start and after the car has gone.</p><p>prompt influence 0.5</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 38 ·
+id <code>f6c77704d4ce4d31a73c58f6883b59b8</code> · <a href="ambience/car-start-2/car-start-2.mp3">source</a></p></details>
+</div></div><h2>New one-shot pool: car-drive (1 variants)</h2><p class=lead>One variant: the receding half of a putt-putt pass-by take (car-drive-2, attempt 35), high-passed at 70 Hz and gated so it settles to silence. Three car-drive-1 takes failed (see its retiredNote). The game plays it once per trip at a driving car within 3 hex steps of the focus, the sound following the car, at a rate varied by car id (about 5% either way) so passes differ. The floor numbers are the owner's 2026-10-14 criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p><p><button onclick="randomVariant(this, 'car-drive')">Play a random variant</button> <span class=meta data-now='car-drive'></span></p><div class=grid data-pool='car-drive'><div class=card><h3>car-drive-2</h3>
+<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/car-drive-2.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/car-drive-2.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>2.20 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-2.1 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.3</b></span>
+<span>source <b>-38.6 LUFS</b></span>
+<span>runtime <b>58 KB</b></span></div>
+<p class=meta>limited 1.0 dB on 4.5% of 20 ms windows</p><div class=nums><span>webm floor <b>53.2 dB</b> under peak (pass), &lt;1.5k 99.1% · 1.5–9k 0.8% · &gt;9k 0.1%</span><span>m4a floor <b>53.1 dB</b> under peak (pass), &lt;1.5k 99.1% · 1.5–9k 0.8% · &gt;9k 0.1%</span></div>
+<details><summary>Prompt and generation</summary><p>Close, isolated recording of a little vintage car puttering slowly past along a quiet village street: the cheerful, mid-pitched putt-putt of its small engine and the soft roll of its tyres, coming in from silence, passing close by and fading away into silence, about three seconds in all. Studio-quiet background, with silence before and after the car.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 35 ·
+id <code>81e25234f98ab4c7f69a6711e0d64a08</code> · <a href="ambience/car-drive-2/car-drive-2.mp3">source</a></p></details>
 </div></div><h2>New occasional one-shots</h2><div class=grid><div class=card><h3>meadow-bees</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
 <audio controls preload=none><source src="../../assets/audio/ambience/meadow-bees.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/meadow-bees.m4a" type="audio/mp4"></audio>

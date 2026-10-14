@@ -1,0 +1,44 @@
+{
+  "cueId": "car-drive-1",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording from the pavement of a small hatchback passing by at a gentle 20 miles an hour on a smooth, dry village street: the soft swish of its tyres on the tarmac and a light, airy whoosh as it goes by, over the quiet hum of its small engine. It rises out of silence, passes close by and fades away again into silence, about three seconds in all. Studio-quiet background, with silence before and after the car.",
+  "parameters": {
+    "text": "Close, isolated recording from the pavement of a small hatchback passing by at a gentle 20 miles an hour on a smooth, dry village street: the soft swish of its tyres on the tarmac and a light, airy whoosh as it goes by, over the quiet hum of its small engine. It rises out of silence, passes close by and fades away again into silence, about three seconds in all. Studio-quiet background, with silence before and after the car.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 4,
+    "prompt_influence": 0.6
+  },
+  "generationId": "ff100599a498a3662ff99b2e53e25bb7",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 22:11:26 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "40",
+    "content-length": "65244",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "ff100599a498a3662ff99b2e53e25bb7",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T22:11:26+00:00",
+  "attempt": 34,
+  "creditsCharged": 40,
+  "sourceFile": "car-drive-1.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  },
+  "rejectedReason": "screen: the pass-by itself (0.4-1.4 s) is an airy whoosh with 77% of its power over 8 kHz and no engine note in the audible range (the owner dropped forest-leaves-3 for its high-frequency content), and a 2.5 s sub-60 Hz rumble follows it; floor 33.8 dB under the peak window (needs 40). Reprompted with the putt-putt engine that gave car-drive-2 its 120-300 Hz body, and an explicit second of silence before and after"
+}

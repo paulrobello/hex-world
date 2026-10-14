@@ -1,0 +1,227 @@
+{
+  "cueId": "car-drive-2",
+  "kind": "ambience",
+  "class": "sfx",
+  "version": 1,
+  "use": "The car-drive pool's one variant, a soft putt-putt pass-by: positional at a driving car (play.car_list, phase road) once per trip when it comes within 3 hex steps of the camera focus, the panner and the focus-mix gain following the car, its rate varied by the car id so passes differ. On the ambience bus. The receding half of the take, so it settles to silence.",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Close, isolated recording of a little vintage car puttering slowly past along a quiet village street: the cheerful, mid-pitched putt-putt of its small engine and the soft roll of its tyres, coming in from silence, passing close by and fading away into silence, about three seconds in all. Studio-quiet background, with silence before and after the car.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Close, isolated recording of a little vintage car puttering slowly past along a quiet village street: the cheerful, mid-pitched putt-putt of its small engine and the soft roll of its tyres, coming in from silence, passing close by and fading away into silence, about three seconds in all. Studio-quiet background, with silence before and after the car.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 4,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "81e25234f98ab4c7f69a6711e0d64a08",
+    "generatedAt": "2026-10-14T22:12:04+00:00",
+    "attempt": 35,
+    "creditsCharged": 40,
+    "record": {
+      "path": "assets-source/audio/ambience/car-drive-2/generation.json",
+      "sha256": "7ecafe9d4dfd126a190c629f5a36f92aa4b673f256c0b8b9b1f67fb93a62778b",
+      "bytes": 2193
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/car-drive-2/car-drive-2.mp3",
+    "sha256": "96da026b25132b0a57d8db998895580c4f71005ef71ccac9826bf21a40956c2d",
+    "bytes": 65244,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 4.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -38.6,
+      "lra": 1.5,
+      "truePeak": -25.5
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 0.0,
+      "truePeak": -2.3
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.1
+      },
+      "m4a": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.3
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 70,
+        "stages": 2
+      },
+      "chain": "highpass=f=70:poles=2,highpass=f=70:poles=2",
+      "circularPadFrames": 0
+    },
+    {
+      "step": "cut",
+      "startSeconds": 1.8,
+      "seconds": 2.2,
+      "fadeInSeconds": 0.3,
+      "fadeOutSeconds": 0.05,
+      "frames": 105600
+    },
+    {
+      "step": "gate",
+      "thresholdDbBelowPeak": 14,
+      "ratio": 4,
+      "rangeDb": 45,
+      "attackMs": 50,
+      "releaseMs": 150,
+      "peakWindowDb": -35.26,
+      "thresholdDb": -49.26,
+      "closedPct": 52.4
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -43.1,
+        "lra": 0.0,
+        "truePeak": -28.1
+      },
+      "targetLufs": -16.0,
+      "gainDb": 27.1,
+      "requiredPeakReductionDb": 1.0,
+      "mode": "limited",
+      "limiterInputGainDb": 28.1,
+      "limiterPasses": 3,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 4.5
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.2
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/car-drive-2.wav",
+    "sha256": "8fe73e9f96d3cf885d71a3e805fba9466e8111e7bd5d9349b876de2ed80c7279",
+    "frames": 105600,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/car-drive-2.webm",
+      "sha256": "66bafcfa9f31fbdbb2bc0550d408b43011b4b5324ebe18b8b3ca31d5baca6aa5",
+      "bytes": 18005,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 2.208,
+      "decodedFrames": 105600,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.1
+      },
+      "floor": {
+        "peakWindowDb": -9.0,
+        "floorDb": -62.2,
+        "floorBelowPeakDb": 53.2,
+        "floorBandPct": {
+          "below1500": 99.1,
+          "1500to9k": 0.8,
+          "above9k": 0.1
+        },
+        "interiorWindows": 37,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/car-drive-2.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/car-drive-2.webm"
+    },
+    {
+      "path": "assets/audio/ambience/car-drive-2.m4a",
+      "sha256": "35adf078613d8c92dbce7919516f77f28244e6fada83a5e17a38e5fd56bd1d2f",
+      "bytes": 41377,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 2.2,
+      "decodedFrames": 105600,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.3
+      },
+      "floor": {
+        "peakWindowDb": -8.9,
+        "floorDb": -62.0,
+        "floorBelowPeakDb": 53.1,
+        "floorBandPct": {
+          "below1500": 99.1,
+          "1500to9k": 0.8,
+          "above9k": 0.1
+        },
+        "interiorWindows": 37,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/car-drive-2.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/car-drive-2.m4a"
+    }
+  ],
+  "decodedBytes": 422400,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "0172b72dde69a4e658fbc88c3970ddd3850b12cdae0964a6b4de247174717dfa"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

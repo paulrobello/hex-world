@@ -107,6 +107,18 @@ POOL_NOTE = {
                      "a forest tile near the focus every 12-40 s."),
     "forest-leaves": ("Short leaf rustles, one ElevenLabs take each, high-passed at 250 Hz and gated so each settles to "
                       "silence. The game plays one at a forest tile near the focus every 20-60 s."),
+    "car-door": ("A car door closing, one ElevenLabs take each, high-passed (two stages, 90 Hz for variant 2 and 60 Hz for "
+                 "variant 3) to drop the sub-60 Hz boom the takes carried. car-door-1 was retired at mastering (see its "
+                 "retiredNote). The game plays one at the parking spot when a car finishes parking, within 3 hex steps "
+                 "of the focus, on the ambience bus."),
+    "car-start": ("One variant: an engine start and gentle pull-away, high-passed at 90 Hz. It is a loud starter crank, "
+                  "about 1 s of silence, then a quieter engine that drives off. car-start-1 was retired at mastering (see "
+                  "its retiredNote). The game plays it at the spot when a car pulls out, within 3 hex steps of the focus, "
+                  "at a rate varied by car id."),
+    "car-drive": ("One variant: the receding half of a putt-putt pass-by take (car-drive-2, attempt 35), high-passed at "
+                  "70 Hz and gated so it settles to silence. Three car-drive-1 takes failed (see its retiredNote). The "
+                  "game plays it once per trip at a driving car within 3 hex steps of the focus, the sound following "
+                  "the car, at a rate varied by car id (about 5% either way) so passes differ."),
 }
 
 

@@ -487,6 +487,26 @@
     "unpin": [],
     "wait": [
       "frames"
+    ],
+    "walk": [
+      "on",
+      "pointer_lock"
+    ],
+    "walk_look": [
+      "heading",
+      "pitch"
+    ],
+    "walk_step": [
+      "forward",
+      "jog",
+      "right",
+      "seconds"
+    ],
+    "walk_to": [
+      "heading",
+      "pitch",
+      "x",
+      "z"
     ]
   },
   "enums": {
@@ -530,6 +550,20 @@
       "q",
       "r",
       "reason"
+    ],
+    "carParked": [
+      "id",
+      "q",
+      "r",
+      "x",
+      "z"
+    ],
+    "carPulledOut": [
+      "id",
+      "q",
+      "r",
+      "x",
+      "z"
     ],
     "ghostRotated": [
       "rotation",
@@ -610,7 +644,10 @@
     "toolChanged": [
       "mode"
     ],
-    "undone": []
+    "undone": [],
+    "walkModeToggled": [
+      "on"
+    ]
   },
   "state": {
     "bulldoze": [
@@ -692,6 +729,7 @@
       "spawn_rate_hz",
       "tiles",
       "tool",
+      "walk_mode",
       "zoom"
     ],
     "rising": [
@@ -706,6 +744,24 @@
       "r",
       "rotation",
       "tile"
+    ],
+    "walk": [
+      "airborne",
+      "blocked",
+      "blocked_by",
+      "cell",
+      "distance",
+      "eye",
+      "feet",
+      "ground",
+      "heading",
+      "moving",
+      "on",
+      "pitch",
+      "pointer_lock",
+      "step_left",
+      "tile",
+      "water_depth"
     ]
   }
 }

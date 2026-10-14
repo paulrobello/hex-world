@@ -20,6 +20,7 @@ use crate::game::GameState;
 use crate::persist::{PersistQueue, SavedSettings};
 use crate::photo::{Dof, PhotoExports, PhotoPatch, PhotoSession, PhotoSettings};
 use crate::sim::CarSim;
+use crate::walk::{WalkRequest, WalkSession};
 use crate::{FrameCount, RunFlags, bridge, capture};
 
 /// `rotate` direction: `cw` is R (clockwise viewed from above), `ccw` is Shift+R.
@@ -160,6 +161,35 @@ pub enum Command {
     },
     /// Resets to the start world with an empty history, keeping the settings.
     NewWorld,
+    /// First-person walk mode (PRD P8): `on` enters or leaves it (omitted keeps it); the HUD sends
+    /// `pointer_lock` when the page gains or loses the pointer lock, so mouse motion looks with no
+    /// button held.
+    Walk {
+        on: Option<bool>,
+        pointer_lock: Option<bool>,
+    },
+    /// Walk mode: stand on the ground at world `(x, z)` metres, facing `heading` (degrees clockwise
+    /// from -Z viewed from above) and `pitch` (degrees, up positive) when given. Refused, with
+    /// `walk.blocked` saying why, where nothing stands.
+    WalkTo {
+        x: f32,
+        z: f32,
+        heading: Option<f32>,
+        pitch: Option<f32>,
+    },
+    /// Walk mode: walk as if the keys were held for `seconds` of game time, `forward` and `right`
+    /// in -1..1 (`jog` at jogging speed), through the same collision as the keys.
+    WalkStep {
+        forward: f32,
+        right: f32,
+        seconds: f32,
+        jog: Option<bool>,
+    },
+    /// Walk mode: look toward `heading` and `pitch` (degrees); either may be omitted.
+    WalkLook {
+        heading: Option<f32>,
+        pitch: Option<f32>,
+    },
 }
 
 impl Command {
@@ -180,6 +210,7 @@ impl Command {
             Command::Redo => Action::Redo,
             Command::Bulldoze { q, r } => Action::Bulldoze(Axial::new(*q, *r)),
             Command::SetTool { mode } => Action::SetTool(*mode),
+            Command::Walk { on: Some(on), .. } => Action::SetWalk(*on),
             Command::Toggle { what } => match what {
                 Toggle::Bulldoze => Action::ToggleBulldoze,
                 Toggle::Inventory => Action::ToggleInventory,
@@ -239,6 +270,7 @@ pub fn run_commands(
     mut reduced: ResMut<ReducedMotion>,
     (mut photo, mut exports): (ResMut<PhotoSettings>, ResMut<PhotoExports>),
     (mut persist, mut saved): (ResMut<PersistQueue>, ResMut<SavedSettings>),
+    mut walk: ResMut<WalkSession>,
 ) {
     queue.items.extend(INBOX.lock().unwrap().drain(..));
     if !*bridge::READY.lock().unwrap() {
@@ -252,6 +284,13 @@ pub fn run_commands(
         return;
     };
     info!("command: {cmd:?}");
+    if let Command::Walk {
+        pointer_lock: Some(lock),
+        ..
+    } = cmd
+    {
+        walk.pointer_lock = lock;
+    }
     if let Some(a) = cmd.action() {
         actions.0.push_back(a);
         return;
@@ -336,6 +375,32 @@ pub fn run_commands(
         c @ (Command::Save { .. } | Command::Load { .. } | Command::NewWorld) => {
             persist.0.push_back(c)
         }
+        Command::Walk { .. } => {}
+        Command::WalkTo {
+            x,
+            z,
+            heading,
+            pitch,
+        } => walk.requests.push_back(WalkRequest::To {
+            x,
+            z,
+            heading,
+            pitch,
+        }),
+        Command::WalkStep {
+            forward,
+            right,
+            seconds,
+            jog,
+        } => walk.requests.push_back(WalkRequest::Step {
+            forward,
+            right,
+            seconds,
+            jog: jog.unwrap_or(false),
+        }),
+        Command::WalkLook { heading, pitch } => walk
+            .requests
+            .push_back(WalkRequest::Look { heading, pitch }),
         _ => unreachable!("play commands return through `action`"),
     }
 }
@@ -433,12 +498,14 @@ pub fn publish_state(
         Res<hex_render::tier::TierChoice>,
         Option<Res<hex_render::play::ghost::GhostReport>>,
     ),
-    (photo, session, exports, paused): (
+    (photo, session, exports, paused, kit_failures): (
         Res<PhotoSettings>,
         Res<PhotoSession>,
         Res<PhotoExports>,
         Res<hex_render::AgentsPaused>,
+        Option<Res<hex_render::KitLoadFailures>>,
     ),
+    (walk, walk_ground): (Res<WalkSession>, Res<hex_render::walk::WalkGround>),
 ) {
     *bridge::VIEW.lock().unwrap() = views.iter().find(|(c, _)| c.is_active).and_then(|(c, gt)| {
         Some(bridge::View {
@@ -464,6 +531,7 @@ pub fn publish_state(
         sim.extend_state(&mut p);
         extend_play_rise(&mut p, rises.report(), reduced.0);
         extend_play_view(&mut p, cameras.iter().next());
+        crate::walk::extend_play_view(&mut p, &walk);
         p
     });
     let state = serde_json::json!({
@@ -476,6 +544,7 @@ pub fn publish_state(
         "tier": tier.json(),
         "grade": grade,
         "photo": crate::photo::state_json(&photo, &session, &exports, paused.0, sim.ticks(), gpu_limits.as_ref()),
+        "walk": crate::walk::state_json(&walk, &walk_ground),
         "frames": frames.0,
         "seed": flags.0.seed,
         "no_anim": flags.0.no_anim,
@@ -498,6 +567,7 @@ pub fn publish_state(
         "boids": boids.and_then(|b| serde_json::from_str::<serde_json::Value>(&b.0).ok()),
         "scatter": scatter.filter(|_| play)
             .and_then(|s| serde_json::from_str::<serde_json::Value>(&s.0).ok()),
+        "assets": { "failed": kit_failures.map(|f| f.list()).unwrap_or_default() },
     });
     *bridge::STATE_JSON.lock().unwrap() = state.to_string();
 }

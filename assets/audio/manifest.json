@@ -459,6 +459,120 @@
       "provenance": "assets-source/audio/ambience/forest-leaves-2/provenance.json"
     },
     {
+      "id": "car-door-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "car-door",
+      "events": [
+        "carParked"
+      ],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.48,
+      "decodedBytes": 284160,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/car-door-2.webm",
+          "sha256": "02579199879e3241441386766a816965ed642c35ef681ab4f92868121c73e50b",
+          "bytes": 10576
+        },
+        "m4a": {
+          "path": "ambience/car-door-2.m4a",
+          "sha256": "f342c93d2c4e48f1f1649208f53fdf11a35159dd0756cd62c1b11567ab761fb8",
+          "bytes": 27620
+        }
+      },
+      "provenance": "assets-source/audio/ambience/car-door-2/provenance.json"
+    },
+    {
+      "id": "car-door-3",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "car-door",
+      "events": [
+        "carParked"
+      ],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.121625,
+      "decodedBytes": 215352,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/car-door-3.webm",
+          "sha256": "30c8d0a01db1482bd146534ede6fdcdf7792a72f98465d4976f2886acd587244",
+          "bytes": 9027
+        },
+        "m4a": {
+          "path": "ambience/car-door-3.m4a",
+          "sha256": "24627805ff95ed32ab2f6295db3228e7a294cf706e746aaaf6e89451bd6e60dd",
+          "bytes": 22039
+        }
+      },
+      "provenance": "assets-source/audio/ambience/car-door-3/provenance.json"
+    },
+    {
+      "id": "car-start-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "car-start",
+      "events": [
+        "carPulledOut"
+      ],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 4.48,
+      "decodedBytes": 860160,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/car-start-2.webm",
+          "sha256": "f862b07065b9745e083d3ed956686dbb136a21013dac63875338d92059d4791a",
+          "bytes": 32785
+        },
+        "m4a": {
+          "path": "ambience/car-start-2.m4a",
+          "sha256": "f64607b5619167c8bac2556a494cd140bc109e7f8a820c2685bb7a0b7355e099",
+          "bytes": 90525
+        }
+      },
+      "provenance": "assets-source/audio/ambience/car-start-2/provenance.json"
+    },
+    {
+      "id": "car-drive-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "car-drive",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.2,
+      "decodedBytes": 422400,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/car-drive-2.webm",
+          "sha256": "66bafcfa9f31fbdbb2bc0550d408b43011b4b5324ebe18b8b3ca31d5baca6aa5",
+          "bytes": 18005
+        },
+        "m4a": {
+          "path": "ambience/car-drive-2.m4a",
+          "sha256": "35adf078613d8c92dbce7919516f77f28244e6fada83a5e17a38e5fd56bd1d2f",
+          "bytes": 41377
+        }
+      },
+      "provenance": "assets-source/audio/ambience/car-drive-2/provenance.json"
+    },
+    {
       "id": "meadow-day",
       "kind": "music",
       "class": "music",

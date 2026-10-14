@@ -6,6 +6,18 @@ import manifestJson from "../../../assets/audio/manifest.json" with { type: "jso
 import { type Cue, type Manifest, busOf, eventCues, pickFormat, planDecode, playable } from "../src/audio-cues.ts";
 import {
   BED_CUE,
+  CAR_CUES,
+  CAR_DRIVE_GAP_S,
+  CAR_EVENT_WAIT_S,
+  CAR_RATE_SPREAD,
+  CAR_VOICES,
+  type CarRequest,
+  type CarState,
+  type DrivingCar,
+  carIdle,
+  carInRange,
+  carRate,
+  carStep,
   EMITTER_CUE,
   type Mix,
   MUSIC_OPTS,
@@ -59,6 +71,9 @@ test("events map to the manifest's mastered cues", () => {
   assert.deepEqual(map.get("tileReplaced"), ["place-rumble", "place-thunk"], "a replace sounds like a placement");
   for (const e of ["hoverChanged", "toolChanged", "inventoryToggled", "photoModeToggled", "actionRefused", "riseStage"])
     assert.equal(map.get(e), undefined, `${e} has no cue`);
+  // Documentation only: the runtime routes trip events to one pick from the pool (CAR_CUES), never to every cue.
+  assert.deepEqual(map.get("carPulledOut"), ["car-start-2"]);
+  assert.deepEqual(map.get("carParked"), ["car-door-2", "car-door-3"]);
 });
 
 test("mastered music is playable and a pending source is not", () => {
@@ -578,4 +593,163 @@ test("on demand: the matching tile nearest the focus, at any distance", () => {
   assert.deepEqual(nearestOneShotTile([far, near], flowerView.focus), near);
   assert.deepEqual(nearestOneShotTile([far], flowerView.focus), far, "out of the scheduler's range still counts");
   assert.equal(nearestOneShotTile([], flowerView.focus), null);
+});
+
+// ---------- Cars ----------
+const carView: View = { camera: [0, 96, 72], focus: [0, 0, 0], zoom: 120, radius: R };
+const carPools: Record<string, string[]> = {
+  "car-start": ["start-a"],
+  "car-door": ["door-a", "door-b"],
+  "car-drive": ["drive-a"],
+};
+const carVariants = (pool: string) => carPools[pool] ?? [];
+const carSeconds = (cue: string) => (cue.startsWith("door") ? 1.5 : cue.startsWith("start") ? 4.5 : 2.2);
+const trip = (car: number, kind: "start" | "door", q: number, r: number, at = 0): CarRequest => {
+  const [x, z] = cellWorld(q, r, R);
+  return { car, kind, x, z, at };
+};
+const onRoad = (id: number, q: number, r: number): DrivingCar => {
+  const [x, z] = cellWorld(q, r, R);
+  return { id, phase: "road", x, z };
+};
+const step = (st: CarState, now: number, events: CarRequest[] = [], driving: DrivingCar[] = [], rand = () => 0.5) =>
+  carStep(st, now, events, driving, carView, null, carVariants, carSeconds, rand);
+
+test("cars: trip events play their pool at the spot, only within three hex steps of the focus", () => {
+  const r1 = step(carIdle(), 10, [trip(1, "start", 1, 0, 10), trip(2, "door", 4, 0, 10)]);
+  assert.deepEqual(
+    r1.play.map((p) => [p.car, p.kind, p.cue]),
+    [[1, "start", "start-a"]],
+  );
+  const [x, z] = cellWorld(1, 0, R);
+  assert.deepEqual([r1.play[0]!.x, r1.play[0]!.z], [x, z]);
+  close(r1.play[0]!.gain, CAR_CUES.start.level * emitterGain(x, z, carView));
+  assert.equal(r1.state.pending.length, 0, "the out-of-range door is dropped, not queued");
+  assert.equal(r1.state.gatedBy, "out-of-range");
+  assert.ok(carInRange(...cellWorld(3, 0, R), carView) && !carInRange(...cellWorld(4, 0, R), carView));
+  close(r1.state.voices[0]!.endsAt, 10 + 4.5 / carRate(1));
+});
+
+test("cars: at most CAR_VOICES at once; a trip event waits for a voice, then is dropped", () => {
+  const four = [1, 2, 3, 4].map((id) => trip(id, "door", 0, 0, 0));
+  const r1 = step(carIdle(), 0, four);
+  assert.equal(r1.play.length, CAR_VOICES);
+  assert.deepEqual(
+    r1.state.pending.map((e) => e.car),
+    [4],
+  );
+  assert.equal(r1.state.gatedBy, "cap");
+  const r2 = step(r1.state, 1);
+  assert.equal(r2.play.length, 0, "still capped while the doors sound");
+  const r3 = step(r2.state, 1.6);
+  assert.deepEqual(
+    r3.play.map((p) => p.car),
+    [4],
+    "a voice ended inside the wait",
+  );
+  const late = step(step(carIdle(), 0, four).state, CAR_EVENT_WAIT_S + 0.1);
+  assert.equal(late.play.length, 0, "past the wait the event is gone");
+  assert.equal(late.state.pending.length, 0);
+});
+
+test("cars: one voice per car, one pass-by per trip, pass-bys spaced, never the same door twice running", () => {
+  const r1 = step(carIdle(), 0, [], [onRoad(7, 1, 0)]);
+  assert.deepEqual(
+    r1.play.map((p) => [p.car, p.kind]),
+    [[7, "drive"]],
+  );
+  assert.equal(step(r1.state, 3, [], [onRoad(7, 1, 0)]).play.length, 0, "one pass-by per trip");
+  // The car parks (it leaves car_list) while its pass-by sounds: the door waits for that voice to end.
+  const r2 = step(r1.state, 1, [trip(7, "door", 1, 0, 1)]);
+  assert.equal(r2.play.length, 0);
+  const r3 = step(r2.state, 2.5);
+  assert.deepEqual(
+    r3.play.map((p) => [p.car, p.kind]),
+    [[7, "door"]],
+  );
+  // Parked, it lost its pass-by mark, so its next trip gets one again once it is on the road.
+  const r4 = step(r3.state, 10, [trip(7, "start", 4, 0, 10)]);
+  assert.equal(r4.play.length, 0, "the pull-out is out of range");
+  assert.deepEqual(
+    step(r4.state, 12, [], [onRoad(7, 1, 0)]).play.map((p) => [p.car, p.kind]),
+    [[7, "drive"]],
+  );
+  // Two cars entering range together: the louder first, the other after the gap.
+  const both = [onRoad(1, 2, 0), onRoad(2, 0, 1)];
+  const r5 = step(carIdle(), 0, [], both);
+  assert.deepEqual(
+    r5.play.map((p) => p.car),
+    [2],
+  );
+  assert.equal(step(r5.state, CAR_DRIVE_GAP_S - 0.1, [], both).play.length, 0);
+  assert.deepEqual(
+    step(r5.state, CAR_DRIVE_GAP_S, [], both).play.map((p) => p.car),
+    [1],
+  );
+  assert.equal(step(carIdle(), 0, [], [{ ...onRoad(3, 0, 0), phase: "pulling_out" }]).play.length, 0, "off-road");
+  // Doors alternate between the pool's variants whatever the draw.
+  let st = carIdle();
+  const doors: string[] = [];
+  for (let i = 0; i < 6; i++) {
+    const r = step(st, i * 10, [trip(10 + i, "door", 0, 0, i * 10)], [], () => 0);
+    doors.push(r.play[0]!.cue);
+    st = r.state;
+  }
+  assert.deepEqual(doors, ["door-a", "door-b", "door-a", "door-b", "door-a", "door-b"]);
+});
+
+test("cars: a gated step (mute, no ambience) drops waiting trip events and plays nothing", () => {
+  for (const gate of ["muted", "ambience-off"] as const) {
+    const r = carStep(
+      carIdle(),
+      0,
+      [trip(1, "start", 0, 0)],
+      [onRoad(2, 0, 0)],
+      carView,
+      gate,
+      carVariants,
+      carSeconds,
+      () => 0.5,
+    );
+    assert.equal(r.play.length, 0);
+    assert.equal(r.state.pending.length, 0);
+    assert.equal(r.state.gatedBy, gate);
+  }
+  const unloaded = carStep(
+    carIdle(),
+    0,
+    [trip(1, "start", 0, 0)],
+    [],
+    carView,
+    null,
+    () => [],
+    carSeconds,
+    () => 0.5,
+  );
+  assert.equal(unloaded.play.length, 0, "an undecoded pool plays nothing");
+});
+
+test("cars: no pass-by starts while photo mode holds the agents, and none replays after", () => {
+  const road = [onRoad(1, 0, 1), onRoad(2, 1, 0)];
+  const first = step(carIdle(), 0, [], [road[0]!]);
+  assert.deepEqual(
+    first.play.map((p) => p.car),
+    [1],
+  );
+  const held = carStep(first.state, 5, [], road, carView, null, carVariants, carSeconds, () => 0.5, true);
+  assert.equal(held.play.length, 0, "a frozen car on the road plays nothing");
+  assert.deepEqual(held.state.drove, [1], "the pass-by mark survives the pause");
+  const resumed = step(held.state, 6, [], road);
+  assert.deepEqual(
+    resumed.play.map((p) => p.car),
+    [2],
+    "only the car that never had its pass-by",
+  );
+});
+
+test("cars: each car keeps one rate within the spread", () => {
+  const rates = Array.from({ length: 200 }, (_, i) => carRate(i));
+  assert.ok(rates.every((r) => Math.abs(r - 1) <= CAR_RATE_SPREAD + 1e-9));
+  assert.equal(carRate(42), carRate(42));
+  assert.ok(new Set(rates.map((r) => r.toFixed(3))).size > 50, "rates differ between cars");
 });

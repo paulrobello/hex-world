@@ -13,7 +13,7 @@ use hex_render::{
 use hex_sim::{SimConfig, Simulation, TICK_HZ};
 use serde_json::{Value, json};
 
-use crate::game::GameState;
+use crate::game::{GameEvent, GameState};
 
 /// The 20 Hz tick. Nothing else in the app runs in `FixedUpdate`, so `Time<Fixed>` is the sim's.
 ///
@@ -135,11 +135,28 @@ impl CarSim {
         true
     }
 
-    /// One fixed tick of `hex_sim::TICK_SECONDS`.
-    pub fn tick(&mut self) {
+    /// One fixed tick of `hex_sim::TICK_SECONDS`. Returns the trips that ended and began on it, in
+    /// that order: every car that had arrived parks on this tick, and a car departing on it starts
+    /// at distance 0 (a car may do both). Cars removed by a world edit are neither.
+    pub fn tick(&mut self) -> Vec<GameEvent> {
+        let mut events: Vec<GameEvent> = self
+            .sim
+            .cars()
+            .iter()
+            .filter(|c| c.arrived())
+            .map(|c| car_event(c.id().0, c.to_spot().cell, c.pose_at(1.0).pos, true))
+            .collect();
         self.sim.tick();
         self.ticks += 1;
         self.refresh();
+        events.extend(
+            self.sim
+                .cars()
+                .iter()
+                .filter(|c| c.distance() <= 0.0)
+                .map(|c| car_event(c.id().0, c.from_spot().cell, c.pose_at(0.0).pos, false)),
+        );
+        events
     }
 
     pub fn ticks(&self) -> u64 {
@@ -190,6 +207,17 @@ impl CarSim {
     }
 }
 
+/// A trip's end (`parked`) or start at a spot in `cell`, with the spot's world XZ to the centimetre.
+fn car_event(id: u64, cell: Axial, pos: [f32; 2], parked: bool) -> GameEvent {
+    let cm = |v: f32| (v * 100.0).round() / 100.0;
+    let (q, r, x, z) = (cell.q, cell.r, cm(pos[0]), cm(pos[1]));
+    if parked {
+        GameEvent::CarParked { id, q, r, x, z }
+    } else {
+        GameEvent::CarPulledOut { id, q, r, x, z }
+    }
+}
+
 /// Mirrors the world into the sim whenever the game state or a rise changed (after
 /// `game::apply_actions` and the play systems). In the play scenario a placed tile waits for its
 /// rise's agents stage ([`CarSim::mirror_gated`]).
@@ -210,10 +238,12 @@ pub fn mirror_world(
 }
 
 /// The fixed tick; the sim runs only while the play scenario is shown and photo mode has not
-/// paused the agents.
+/// paused the agents. Each trip's end and start goes out as an event (the audio layer's car cues).
 pub fn tick(mut sim: ResMut<CarSim>, active: Res<ActiveScenario>, paused: Res<AgentsPaused>) {
     if active.0 == Scenario::Play && !paused.0 {
-        sim.tick();
+        for e in sim.tick() {
+            crate::game::publish_event(&e);
+        }
     }
 }
 
@@ -443,6 +473,60 @@ mod tests {
         assert!(sim.mirror_gated(&g.world, &g.catalog, |c| c != Axial::new(1, 0)));
         assert_eq!(sim.stats.connected_destinations, 0);
         assert!(!sim.mirrored.contains_key(&Axial::new(1, 0)));
+    }
+
+    /// The trip events of the cars proof layout over two simulated minutes: every pull-out is at
+    /// the car's spot as it was parked, every park at the spot the car was driving to, a car parks
+    /// only after it pulled out, and the driving count is pull-outs minus parks throughout.
+    #[test]
+    fn ticks_report_each_pull_out_and_park_at_the_spot() {
+        let json = include_str!("../../../docs/checkpoints/cars/cars.json");
+        let mut g = GameState::new(1);
+        let mut sim = CarSim::new(&g.world, &g.catalog);
+        for c in parse_script(json).unwrap() {
+            if matches!(&c, Command::DumpState { name } if name == "cars-01-connected") {
+                break;
+            }
+            if let Some(a) = c.action() {
+                g.apply(a);
+            }
+        }
+        sim.mirror(&g.world, &g.catalog);
+        let at = |cell: Axial, x: f32, z: f32, spots: &[(Axial, [f32; 2])]| {
+            spots
+                .iter()
+                .any(|(c, p)| *c == cell && (p[0] - x).abs() < 0.01 && (p[1] - z).abs() < 0.01)
+        };
+        let (mut out, mut parked, mut away) = (0, 0, BTreeSet::new());
+        for _ in 0..(120 * hex_sim::TICK_HZ) {
+            let spots: Vec<(Axial, [f32; 2])> = sim
+                .sim
+                .parked()
+                .iter()
+                .map(|c| (c.spot().cell, c.pose().pos))
+                .chain(sim.sim.cars().iter().map(|c| {
+                    let p = sim.sim.spot_pose(c.to_spot()).unwrap().pos;
+                    (c.to_spot().cell, p)
+                }))
+                .collect();
+            for e in sim.tick() {
+                match e {
+                    GameEvent::CarPulledOut { id, q, r, x, z } => {
+                        assert!(at(Axial::new(q, r), x, z, &spots), "{e:?} not at a spot");
+                        assert!(away.insert(id), "{id} pulled out twice without parking");
+                        out += 1;
+                    }
+                    GameEvent::CarParked { id, q, r, x, z } => {
+                        assert!(at(Axial::new(q, r), x, z, &spots), "{e:?} not at its spot");
+                        assert!(away.remove(&id), "{id} parked without pulling out");
+                        parked += 1;
+                    }
+                    other => panic!("not a car event: {other:?}"),
+                }
+            }
+            assert_eq!(sim.stats.cars, out - parked);
+        }
+        assert!(out >= 3 && parked >= 2, "{out} pull-outs, {parked} parks");
     }
 
     /// Replays the cars proof script (docs/checkpoints/cars/cars.json) headlessly with one tick

@@ -246,6 +246,10 @@ mod schema {
         r#"{"cmd":"save","tag":"autosave","path":null,"volumes":{"master":0.8,"music":0.55,"sfx":0.75,"ambience":0.7,"ui":0.5}}"#,
         r#"{"cmd":"load","path":null}"#,
         r#"{"cmd":"new_world"}"#,
+        r#"{"cmd":"walk","on":true,"pointer_lock":false}"#,
+        r#"{"cmd":"walk_to","x":4,"z":-2,"heading":90,"pitch":-5}"#,
+        r#"{"cmd":"walk_step","forward":1,"right":0,"seconds":2,"jog":false}"#,
+        r#"{"cmd":"walk_look","heading":180,"pitch":0}"#,
     ];
 
     /// Exhaustive on purpose: a new command fails to compile here until it has a sample above.
@@ -278,6 +282,10 @@ mod schema {
             Command::Save { .. } => "save",
             Command::Load { .. } => "load",
             Command::NewWorld => "new_world",
+            Command::Walk { .. } => "walk",
+            Command::WalkTo { .. } => "walk_to",
+            Command::WalkStep { .. } => "walk_step",
+            Command::WalkLook { .. } => "walk_look",
         }
     }
 
@@ -372,6 +380,20 @@ mod schema {
                 stage: "column",
                 skipped: false,
             },
+            GameEvent::CarPulledOut {
+                id: 3,
+                q: -2,
+                r: 1,
+                x: -41.57,
+                z: 24.0,
+            },
+            GameEvent::CarParked {
+                id: 3,
+                q: 3,
+                r: -1,
+                x: 69.28,
+                z: -24.0,
+            },
             GameEvent::PhotoExported {
                 name: "hex-world".into(),
                 width: 2880,
@@ -401,8 +423,9 @@ mod schema {
                 reason: "not a .hexworld file".into(),
                 version: None,
             },
+            GameEvent::WalkModeToggled { on: true },
         ];
-        let mut seen = [false; 21];
+        let mut seen = [false; 24];
         for e in &samples {
             let i = match e {
                 GameEvent::TilePlaced { .. } => 0,
@@ -425,7 +448,10 @@ mod schema {
                 GameEvent::Loaded { .. } => 17,
                 GameEvent::LoadRefused { .. } => 18,
                 GameEvent::PinChanged { .. } => 19,
-                GameEvent::TileReplaced { .. } => 20,
+                GameEvent::CarPulledOut { .. } => 20,
+                GameEvent::CarParked { .. } => 21,
+                GameEvent::TileReplaced { .. } => 22,
+                GameEvent::WalkModeToggled { .. } => 23,
             };
             seen[i] = true;
         }
@@ -495,7 +521,12 @@ mod schema {
             None,
         );
         let grade = crate::control::grade_json(hex_render::Grade::default());
+        let walk = crate::walk::state_json(
+            &crate::walk::WalkSession::default(),
+            &hex_render::walk::WalkGround::default(),
+        );
         json!({
+            "walk": keys(&walk),
             "grade": keys(&grade),
             "grade_preset": keys(&grade["presets"][0]),
             "play": keys(&place),

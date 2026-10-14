@@ -329,6 +329,181 @@ export function oneShotStep(
   };
 }
 
+// ---------- Cars (owner request 2026-10-14) ----------
+
+/** A car cue: the pool it plays from and its level before the focus mix. */
+export interface CarCue {
+  pool: string;
+  level: number;
+}
+
+export type CarKind = "start" | "door" | "drive";
+
+/** Trip events and their cues; the drive pass-by comes from `play.car_list`, not from an event. */
+export const CAR_CUES: Record<CarKind, CarCue> = {
+  start: { pool: "car-start", level: 0.4 },
+  door: { pool: "car-door", level: 0.4 },
+  drive: { pool: "car-drive", level: 0.3 },
+};
+export const CAR_EVENT_KIND: Record<string, CarKind> = { carPulledOut: "start", carParked: "door" };
+/** Cars sound only within this many hex steps of the focus. */
+export const CAR_RANGE_STEPS = 3;
+/** Car voices sounding at once, every kind together. */
+export const CAR_VOICES = 3;
+/** Least time between two drive pass-bys starting, so cars entering range together never stack. */
+export const CAR_DRIVE_GAP_S = 1.5;
+/** A trip event waits this long for a free voice (its car's or the cap's), then it is dropped. */
+export const CAR_EVENT_WAIT_S = 2;
+/** Each car plays its cues at its own rate, up to this fraction either way, since the pools are small. */
+export const CAR_RATE_SPREAD = 0.05;
+
+/** A trip event waiting for a voice, or a driving car that may get its pass-by. */
+export interface CarRequest {
+  car: number;
+  kind: CarKind;
+  x: number;
+  z: number;
+  /** Audio time the event arrived; drives use the step's time. */
+  at: number;
+}
+
+export interface CarVoice {
+  car: number;
+  cue: string;
+  kind: CarKind;
+  endsAt: number;
+}
+
+export interface CarState {
+  /** Voices still sounding. */
+  voices: CarVoice[];
+  /** Trip events waiting for a voice. */
+  pending: CarRequest[];
+  /** Cars whose pass-by already played on their current trip. */
+  drove: number[];
+  /** Per pool, the variant played last, so the next pick avoids it. */
+  lastCue: Record<string, string>;
+  lastDriveAt: number | null;
+  plays: number;
+  /** Why the last car cue was held back, or null when it played. */
+  gatedBy: OneShotGate | "out-of-range" | "cap" | null;
+}
+
+export const carIdle = (): CarState => ({
+  voices: [],
+  pending: [],
+  drove: [],
+  lastCue: {},
+  lastDriveAt: null,
+  plays: 0,
+  gatedBy: null,
+});
+
+/** A car's playback rate: fixed per car id, within CAR_RATE_SPREAD of 1. */
+export function carRate(id: number): number {
+  let h = Math.imul(id, 2654435761) >>> 0;
+  h = (h ^ (h >>> 15)) >>> 0;
+  return 1 + CAR_RATE_SPREAD * ((h % 2001) / 1000 - 1);
+}
+
+export function carInRange(x: number, z: number, v: View): boolean {
+  return Math.hypot(x - v.focus[0], z - v.focus[2]) <= CAR_RANGE_STEPS * v.radius * Math.sqrt(3);
+}
+
+export interface DrivingCar {
+  id: number;
+  phase: string;
+  x: number;
+  z: number;
+}
+
+export interface CarPlay {
+  car: number;
+  kind: CarKind;
+  cue: string;
+  x: number;
+  z: number;
+  gain: number;
+  rate: number;
+}
+
+/**
+ * One car step at audio time `now`. New trip events join the queue (a trip's start or end also clears the
+ * car's pass-by mark), then the queue, oldest first, and the driving cars on the road, loudest first, get
+ * voices while fewer than CAR_VOICES sound: never a second voice for one car, never a car outside the range,
+ * one pass-by per car per trip, and pass-bys at least CAR_DRIVE_GAP_S apart. A gated step drops the queue.
+ * While `paused` (photo mode holding the agents) `driving` is frozen, so no pass-by starts.
+ */
+export function carStep(
+  st: CarState,
+  now: number,
+  events: readonly CarRequest[],
+  driving: readonly DrivingCar[],
+  v: View,
+  gate: OneShotGate,
+  variants: (pool: string) => readonly string[],
+  seconds: (cue: string) => number,
+  rand: () => number,
+  paused = false,
+): { state: CarState; play: CarPlay[] } {
+  const live = new Set(driving.map((c) => c.id));
+  const tripped = new Set(events.map((e) => e.car));
+  const s: CarState = {
+    ...st,
+    voices: st.voices.filter((x) => x.endsAt > now),
+    pending: [...st.pending, ...events].filter((e) => now - e.at <= CAR_EVENT_WAIT_S),
+    drove: st.drove.filter((id) => live.has(id) && !tripped.has(id)),
+    lastCue: { ...st.lastCue },
+  };
+  if (gate) return { state: { ...s, pending: [], gatedBy: gate }, play: [] };
+  const play: CarPlay[] = [];
+  const voiced = (car: number) => s.voices.some((x) => x.car === car);
+  const start = (r: CarRequest): boolean => {
+    const row = CAR_CUES[r.kind];
+    const gain = row.level * emitterGain(r.x, r.z, v);
+    const cue = gain >= MIN_EMITTER_GAIN ? pickVariant(variants(row.pool), s.lastCue[row.pool] ?? null, rand) : null;
+    if (!cue) return false;
+    const rate = carRate(r.car);
+    s.lastCue[row.pool] = cue;
+    s.voices.push({ car: r.car, cue, kind: r.kind, endsAt: now + seconds(cue) / rate });
+    s.plays++;
+    s.gatedBy = null;
+    play.push({ car: r.car, kind: r.kind, cue, x: r.x, z: r.z, gain, rate });
+    return true;
+  };
+  const waiting: CarRequest[] = [];
+  for (const e of s.pending) {
+    if (!carInRange(e.x, e.z, v)) {
+      s.gatedBy = "out-of-range";
+      continue;
+    }
+    if (voiced(e.car) || s.voices.length >= CAR_VOICES) {
+      if (s.voices.length >= CAR_VOICES) s.gatedBy = "cap";
+      waiting.push(e);
+      continue;
+    }
+    start(e);
+  }
+  s.pending = waiting;
+  if (paused) return { state: s, play };
+  const drives = driving
+    .filter((c) => c.phase === "road" && !s.drove.includes(c.id) && !voiced(c.id) && carInRange(c.x, c.z, v))
+    .map((c) => ({ c, g: emitterGain(c.x, c.z, v) }))
+    .sort((a, b) => b.g - a.g);
+  for (const { c } of drives) {
+    if (s.voices.length >= CAR_VOICES) {
+      s.gatedBy = "cap";
+      break;
+    }
+    if (s.lastDriveAt !== null && now - s.lastDriveAt < CAR_DRIVE_GAP_S) break;
+    if (start({ car: c.id, kind: "drive", x: c.x, z: c.z, at: now })) {
+      s.drove.push(c.id);
+      s.lastDriveAt = now;
+    }
+  }
+  return { state: s, play };
+}
+
 // ---------- Music playlist (§8.2) ----------
 
 /**

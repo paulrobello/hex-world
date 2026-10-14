@@ -1,6 +1,6 @@
 //! Water tiles in `play` (PRD §9.1): the approved water material on placed ocean, beach and river
-//! tiles, the cut faces on their exposed edges, and placeholder beds until the river and coast kit
-//! families exist. The numbers here are the bed contract in `docs/kit/water-contract.md`.
+//! tiles, the cut faces on their exposed edges, and a placeholder bed where a tile's base piece is
+//! missing from the kit. The numbers here are the bed contract in `docs/kit/water-contract.md`.
 //!
 //! Each water tile gets a [`TileField`]: tile-local bed profiles that depend only on the tile's
 //! sockets, so they match across every legal seam, sampled at world positions. River centre lines
@@ -303,6 +303,13 @@ pub enum WaterKind {
 }
 
 /// What water a tile carries at `rotation`, if any.
+/// Whether `def` takes the placeholder bed: a water tile whose base piece is missing from the kit
+/// (failed, or outside the manifest). Every water tile's base is its bed (water contract §5), so a
+/// missing or loading centre piece never puts the stand-in over a kit base.
+pub fn stand_in_bed(def: &TileDef, kit_has: impl Fn(&str) -> bool) -> bool {
+    water_kind(def, 0).is_some() && !kit_has(def.base.as_str())
+}
+
 pub fn water_kind(def: &TileDef, rotation: u8) -> Option<WaterKind> {
     if def.networks.iter().any(|n| n.kind == NetworkKind::River) {
         if let Some(coast) = Coastline::of(def, rotation) {
@@ -587,7 +594,7 @@ pub struct CellWater {
     /// The tile's own river paths, then its connected neighbours' (river tiles only).
     pub paths: Vec<RiverPath>,
     pub own_paths: usize,
-    /// Draw the placeholder bed (the tile's centre piece is not in the kit yet).
+    /// Draw the placeholder bed ([`stand_in_bed`]: the tile's base piece is not in the kit).
     pub bed: bool,
 }
 
@@ -645,7 +652,7 @@ pub fn layout(
                 );
             }
         }
-        let bed = !def.center.as_ref().is_some_and(|c| kit_has(c.as_str()));
+        let bed = stand_in_bed(def, &kit_has);
         out.insert(
             t.cell,
             CellWater {
@@ -2268,6 +2275,53 @@ mod tests {
             &lay[&Axial::new(5, -1)].paths[0],
         );
         assert_eq!((s.up, m.down), (RiverEnd::Spring, RiverEnd::Mouth));
+    }
+
+    /// Owner 2026-10-14: `river_spring_center` failed to load and the stand-in bed covered the
+    /// spring's kit base (a pale hex). The stand-in follows the base, the bed, never the centre.
+    #[test]
+    fn the_stand_in_bed_is_drawn_only_where_the_base_is_missing() {
+        let cat = catalog();
+        let water: Vec<&TileDef> = cat
+            .tiles()
+            .iter()
+            .filter(|d| water_kind(d, 0).is_some())
+            .collect();
+        for id in [
+            "river_spring",
+            "river_mouth",
+            "river_straight",
+            "beach",
+            "ocean",
+        ] {
+            assert!(water.iter().any(|d| d.id == id), "{id} is a water tile");
+        }
+        for def in &water {
+            let center = def
+                .center
+                .as_ref()
+                .expect("every water tile has a centre")
+                .as_str();
+            let base = def.base.as_str();
+            let bed = |has: &dyn Fn(&str) -> bool| {
+                let lay = layout(&[tile(0, 0, &def.id, 0)], &cat, has);
+                let bed = lay[&Axial::ORIGIN].bed;
+                assert_eq!(bed, stand_in_bed(def, has), "{}", def.id);
+                bed
+            };
+            assert!(!bed(&|_| true), "{}: whole kit", def.id);
+            assert!(!bed(&|p| p != center), "{}: centre missing", def.id);
+            assert!(bed(&|p| p != base), "{}: base missing", def.id);
+            assert!(bed(&|_| false), "{}: no kit", def.id);
+        }
+        // The rule leans on every water tile's base being its bed: no land tile shares one.
+        for land in cat.tiles().iter().filter(|d| water_kind(d, 0).is_none()) {
+            for def in &water {
+                assert_ne!(land.base, def.base, "{} and {}", land.id, def.id);
+            }
+        }
+        let meadow = cat.get("meadow").unwrap();
+        assert!(!stand_in_bed(meadow, |_| false), "land tiles never take it");
     }
 
     /// Placement order of `docs/checkpoints/water-play/water-play.json`: (q, r, tile, rotate steps

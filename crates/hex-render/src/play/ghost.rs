@@ -310,8 +310,7 @@ fn ghost_pieces<'a>(
 ) -> Vec<(&'a str, Transform, Role)> {
     let mut out = vec![];
     let center_kit = def.center.as_ref().is_some_and(|c| has(c.as_str()));
-    let water_bed = !center_kit && water::tiles::water_kind(def, 0).is_some();
-    if !water_bed {
+    if !water::tiles::stand_in_bed(def, &has) {
         out.push((
             def.base.as_str(),
             Transform::IDENTITY,

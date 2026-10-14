@@ -1,0 +1,241 @@
+{
+  "cueId": "car-start-1",
+  "kind": "ambience",
+  "class": "sfx",
+  "version": 1,
+  "use": "One engine start and gentle pull-away, of the car-start pool: positional at the parking spot when a car pulls out (carPulledOut), only within 3 hex steps of the camera focus, on the ambience bus.",
+  "events": [
+    "carPulledOut"
+  ],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Close, isolated recording of a small petrol car starting in a quiet driveway and pulling away gently: a brief soft starter whir, the engine catches into a smooth, low, quiet idle, then the car rolls away slowly and its gentle hum fades out into complete silence, about four seconds in all. Studio-quiet background, with silence before the start and after the car has gone.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Close, isolated recording of a small petrol car starting in a quiet driveway and pulling away gently: a brief soft starter whir, the engine catches into a smooth, low, quiet idle, then the car rolls away slowly and its gentle hum fades out into complete silence, about four seconds in all. Studio-quiet background, with silence before the start and after the car has gone.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 4.5,
+    "prompt_influence": 0.5
+  },
+  "generation": {
+    "id": "30b1f84e9cff62a057805c28d0e97825",
+    "generatedAt": "2026-10-14T22:09:47+00:00",
+    "attempt": 32,
+    "creditsCharged": 45,
+    "record": {
+      "path": "assets-source/audio/ambience/car-start-1/generation.json",
+      "sha256": "e22f02becfdc9d015cce36c26ff7b1c9ce4b794098cc3f1c9f26d2559df928b3",
+      "bytes": 2262
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/car-start-1/car-start-1.mp3",
+    "sha256": "f0fc0548d57817397438cb27426204de47cb15682dfba18588cc78d5a7f78e65",
+    "bytes": 72767,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 4.48
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -47.8,
+      "lra": 6.9,
+      "truePeak": -23.1
+    },
+    "master": {
+      "integrated": -16.3,
+      "lra": 5.1,
+      "truePeak": -2.3
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.3,
+        "lra": 5.0,
+        "truePeak": -1.2
+      },
+      "m4a": {
+        "integrated": -16.3,
+        "lra": 5.0,
+        "truePeak": -2.0
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 90,
+        "stages": 2
+      },
+      "chain": "highpass=f=90:poles=2,highpass=f=90:poles=2",
+      "circularPadFrames": 0
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "gate",
+      "thresholdDbBelowPeak": 22,
+      "ratio": 3,
+      "rangeDb": 70,
+      "attackMs": 5,
+      "releaseMs": 250,
+      "peakWindowDb": -36.56,
+      "thresholdDb": -58.56,
+      "closedPct": 65.8
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -48.9,
+        "lra": 12.0,
+        "truePeak": -23.3
+      },
+      "targetLufs": -16.0,
+      "gainDb": 32.9,
+      "requiredPeakReductionDb": 11.6,
+      "mode": "limited",
+      "limiterInputGainDb": 42.1,
+      "limiterPasses": 4,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 1.8
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.5
+    },
+    {
+      "step": "encode-overshoot-trim",
+      "encodedTruePeakDb": -0.9,
+      "trimDb": -0.3
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/car-start-1.wav",
+    "sha256": "c48a330c96369a341853490e05d892c3a47e5673e8c13c8b73e9e8f28de09750",
+    "frames": 215040,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/car-start-1.webm",
+      "sha256": "1620abee27ddbc6513c6c57d902bf3a852617317a924d607352fcb48caaa081f",
+      "bytes": 34099,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 4.488,
+      "decodedFrames": 215040,
+      "loudness": {
+        "integrated": -16.3,
+        "lra": 5.0,
+        "truePeak": -1.2
+      },
+      "floor": {
+        "peakWindowDb": -9.4,
+        "floorDb": -40.6,
+        "floorBelowPeakDb": 31.2,
+        "floorBandPct": {
+          "below1500": 99.9,
+          "1500to9k": 0.1,
+          "above9k": 0.0
+        },
+        "interiorWindows": 89,
+        "problems": [
+          "floor -40.6 dB is only 31.2 dB under the -9.4 dB peak window (needs 40)"
+        ]
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/car-start-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/car-start-1.webm"
+    },
+    {
+      "path": "assets/audio/ambience/car-start-1.m4a",
+      "sha256": "1cecddc42d7a3e80638f0539e41162914f719e3fe251f8e069c09fb65fc7713c",
+      "bytes": 92667,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 4.48,
+      "decodedFrames": 215040,
+      "loudness": {
+        "integrated": -16.3,
+        "lra": 5.0,
+        "truePeak": -2.0
+      },
+      "floor": {
+        "peakWindowDb": -9.5,
+        "floorDb": -40.6,
+        "floorBelowPeakDb": 31.1,
+        "floorBandPct": {
+          "below1500": 99.9,
+          "1500to9k": 0.1,
+          "above9k": 0.0
+        },
+        "interiorWindows": 89,
+        "problems": [
+          "floor -40.6 dB is only 31.1 dB under the -9.5 dB peak window (needs 40)"
+        ]
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/car-start-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/car-start-1.m4a"
+    }
+  ],
+  "decodedBytes": 860160,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "c0d737550b72975c3c797f499d22df7f75879fda81aa0819372a09658c2741bb"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

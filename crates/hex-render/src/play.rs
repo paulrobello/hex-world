@@ -604,9 +604,11 @@ fn tile_children(
         .center
         .as_ref()
         .is_some_and(|c| kit.contains_key(c.as_str()));
-    // Water tiles without their centre piece get the placeholder bed and the water surface from
-    // `water::tiles` instead of a base and river strips; road strips stay as the bridge deck.
-    let water_bed = !center_kit && water::tiles::water_kind(def, 0).is_some();
+    // A water tile's water surface comes from `water::tiles`, and so does its placeholder bed when
+    // its base (the bed) is missing. While its centre is missing no river strips or hub are drawn
+    // over the channel; road strips stay as the bridge deck.
+    let water_bed = water::tiles::stand_in_bed(def, |id| kit.contains_key(id));
+    let pending_water = !center_kit && water::tiles::water_kind(def, 0).is_some();
     if !water_bed && !spawn_kit(p, kit, def.base.as_str(), Transform::IDENTITY, None) {
         plain_mesh(
             p,
@@ -620,7 +622,7 @@ fn tile_children(
         .filter_map(|e| {
             let s = &def.edges[e as usize];
             (s.lane.is_some()
-                && (s.kind == SocketKind::Road || (s.kind == SocketKind::River && !water_bed)))
+                && (s.kind == SocketKind::Road || (s.kind == SocketKind::River && !pending_water)))
                 .then_some((e, s.kind))
         })
         .collect();
@@ -659,7 +661,7 @@ fn tile_children(
                 Some(RiseRole::Edge),
             );
         }
-        if water_bed {
+        if pending_water {
             // No hub in the channel: the road strips meet over the water.
         } else if let Some(&(_, kind)) = lanes.first() {
             plain_mesh(
@@ -725,7 +727,7 @@ type RiseHooks<'w> = (
 /// arrival its children are respawned with the kit look and it rises then (or appears at rest if
 /// it was hidden by a rebuild). A piece outside the manifest, or one that failed to load, still
 /// draws its placeholder, since its pack is ready. Water tiles also get their surfaces, cut faces
-/// and placeholder beds (`water::tiles::sync`, which respawns a cell whose centre piece arrived).
+/// and placeholder beds (`water::tiles::sync`, which respawns a cell whose base piece arrived).
 ///
 /// A tile new to the view (not on a rebuild) fast-forwards every running rise and starts its own;
 /// a tile gone from it sinks with its released water entities. A rebuild (core arriving, a switch
