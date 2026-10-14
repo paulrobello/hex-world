@@ -31,8 +31,6 @@ const GATED = ["bc7", "astc"];
 const CORE = "core"; // hex-assets CORE_PACK
 // Not in the manifest: the IBL is hardcoded in crates/hex-render/src/lookdev.rs.
 const IBL = ["p1/ibl/noon.diffuse.ktx2", "p1/ibl/noon.specular.ktx2"];
-// The default web scenario (Single) loads this tile in crates/hex-render/src/kit_test.rs.
-const DEFAULT_TILE = { glb: "p0/hex_test.glb", stem: "p0/hex_test" };
 // The Legend inventory sheet is open at first paint and shows every tile's thumbnail (make thumbs).
 const THUMBS = ["assets", "thumbs"];
 // The TypeScript HUD overlay (web/ui/dist, copied to dist/web/ui by Trunk) when it is built.
@@ -126,7 +124,6 @@ function categories(fam) {
     ["shaders", filesUnder(join(dist, "assets", "shaders"))],
     ["kit manifest", [manifestPath]],
     ["ibl", IBL.map(kit)],
-    ["default tile (p0)", [kit(DEFAULT_TILE.glb), famFile(DEFAULT_TILE.stem, fam)]],
     ["core piece glb", core.pieces.map((p) => kit(p.glb))],
     ["core piece maps", pieceMaps(core.pieces, fam)],
     ["core material sets", setMaps(core.sets, fam)],
