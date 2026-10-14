@@ -8,7 +8,7 @@
   ],
   "d2Exceptions": [
     {
-      "what": "soil tileable set at tileM 4.0 (256 px/m) instead of D2's 512 px/m, so one strata set spans the 4 m skirt",
+      "what": "soil tileable set at tileM 4.0 (256 px/m) instead of D2's 512 px/m, so one soil profile (the owner's O4 cutaway, 2026-10-13) spans the 4 m skirt",
       "when": "2026-10-13",
       "who": "Paul Robello"
     }

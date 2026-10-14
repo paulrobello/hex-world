@@ -52,7 +52,7 @@ The prototype's open sea reaches 6 m deep and reads deeper blue than 2.6 m will.
 ## 4. Ocean (`ocean`)
 
 - Flat bed at y = -4.0 along the whole border ring. Interior relief (sand ripples) may rise at most 0.10 m and must fall to 0 within 2 m of the border, as in `meadow_base`. The bed never goes below the base.
-- **Cut faces.** On an exposed edge the engine draws the water volume's cut face from the animated surface down to the bed: depth absorption and tint, plus the bright underside of the surface at the top (PRD §9.1). With the bed at the base, the face reaches the tile base. The kit's column skirt (soil strata) covers only what lies below the bed, which is nothing for the ocean.
+- **Cut faces.** On an exposed edge the engine draws the water volume's cut face from the animated surface down to the bed: depth absorption and tint, plus the bright underside of the surface at the top (PRD §9.1). With the bed at the base, the face reaches the tile base. The kit's column skirt (the O4 cutaway soil set) covers only what lies below the bed, which is nothing for the ocean.
 
 ## 5. What the engine draws and what the kit supplies
 
