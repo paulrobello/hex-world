@@ -17,6 +17,22 @@ Everything below waits on you. Work kept going overnight on everything that did 
 
 **A5. Water tiles in play.** `docs/checkpoints/water-play/*.jpg` (ocean, beach, river, seams across rotations, bulldoze and undo). This is the last criterion on the water-tiles card.
 
+**A6. Audio mix (SFX and ambience).** You can only judge this by listening.
+1. Build and serve it:
+   - `make build-web`
+   - `python3 -m http.server 8094 --bind 127.0.0.1 --directory dist`
+2. Open http://127.0.0.1:8094/?scenario=play.
+3. Click once. Nothing loads or plays before the first interaction.
+4. Place tiles, rotate, undo and bulldoze, then zoom onto a river, coast or forest to bring its ambience up.
+
+Mute and volume live in the console until the Settings screen exists: `hexWorld.audio.setMuted(true)` and `hexWorld.audio.setVolume(0.5)`.
+
+Not built yet:
+- town murmur, the per-tile placement stingers and all music. You generate the music in Suno.
+- an audio key. Neither PRD §4.5 nor the Legend design defines one.
+
+**A7. Cars: sedan, van and pickup with runtime paint.** In play: `docs/checkpoints/cars-kit/cars-kit-01-busy.jpg`, `-02-hub`, `-03-closeup-sedan`, `-03-closeup-van`, and night `-04`/`-05`. Blender six-views are in `assets-source/kit/car_*/renders/`. There are 12 palette colours, and the draw count does not grow with colour. There is no in-engine close-up of the pickup yet.
+
 ## Questions
 
 **Q1. Save label.** The HUD bar says "Not saved" because no autosave exists yet. The brief said "Saved". I recommend keeping "Not saved" until autosave lands, so the label tells the truth.
