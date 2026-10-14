@@ -378,33 +378,6 @@
       "provenance": "assets-source/audio/ambience/forest-birds-3/provenance.json"
     },
     {
-      "id": "forest-birds-4",
-      "kind": "ambience",
-      "class": "sfx",
-      "status": "mastered",
-      "pool": "forest-birds",
-      "events": [],
-      "playback": "decode",
-      "channels": 1,
-      "loop": null,
-      "durationSeconds": 2.6,
-      "decodedBytes": 499200,
-      "targetLufs": -16.0,
-      "files": {
-        "webm": {
-          "path": "ambience/forest-birds-4.webm",
-          "sha256": "292447b794e1b06cd00a6e9acd7722c1bc406919f84e8a9d9440b3d6c605742f",
-          "bytes": 22724
-        },
-        "m4a": {
-          "path": "ambience/forest-birds-4.m4a",
-          "sha256": "39f0350c02be0f658849ea924e6456a39acadc5400a45a3c293b53cedca95d50",
-          "bytes": 55256
-        }
-      },
-      "provenance": "assets-source/audio/ambience/forest-birds-4/provenance.json"
-    },
-    {
       "id": "forest-birds-5",
       "kind": "ambience",
       "class": "sfx",
@@ -484,33 +457,6 @@
         }
       },
       "provenance": "assets-source/audio/ambience/forest-leaves-2/provenance.json"
-    },
-    {
-      "id": "forest-leaves-3",
-      "kind": "ambience",
-      "class": "sfx",
-      "status": "mastered",
-      "pool": "forest-leaves",
-      "events": [],
-      "playback": "decode",
-      "channels": 1,
-      "loop": null,
-      "durationSeconds": 4.0,
-      "decodedBytes": 768000,
-      "targetLufs": -16.0,
-      "files": {
-        "webm": {
-          "path": "ambience/forest-leaves-3.webm",
-          "sha256": "00b229a7882b917497d9edff0a40cc8f5dd99f36dc58e5b0533f438ecf447dde",
-          "bytes": 31551
-        },
-        "m4a": {
-          "path": "ambience/forest-leaves-3.m4a",
-          "sha256": "7a7e43ded12890bbc576ced1600413a42ad5a3b8d6fe80ac7f4df68e35a782dd",
-          "bytes": 87211
-        }
-      },
-      "provenance": "assets-source/audio/ambience/forest-leaves-3/provenance.json"
     },
     {
       "id": "meadow-day",

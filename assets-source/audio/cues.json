@@ -566,7 +566,9 @@
         "rangeDb": 45,
         "attackMs": 3,
         "releaseMs": 120
-      }
+      },
+      "retired": true,
+      "retiredNote": "Owner, 2026-10-14: dropped from the pool after listening (the noisiest of the five calls)."
     },
     {
       "id": "forest-birds-5",
@@ -680,7 +682,9 @@
         "rangeDb": 45,
         "attackMs": 5,
         "releaseMs": 250
-      }
+      },
+      "retired": true,
+      "retiredNote": "Owner, 2026-10-14: dropped from the pool after listening (the most high-frequency content of the three)."
     },
     {
       "id": "meadow-day",
