@@ -1,4 +1,4 @@
-.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water
+.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download
 
 fmt:
 	cargo fmt --all
@@ -18,7 +18,10 @@ test:
 
 checkall: fmt-check lint typecheck test
 
+# initial-download runs after web-size, on the dist/ it just built (not a sibling prerequisite: under
+# make -j it would race web-size's rm -rf dist).
 checkall-ci: checkall web-size
+	@$(MAKE) --no-print-directory initial-download
 
 fetch-tools:
 	bash scripts/fetch-ktx.sh
@@ -155,6 +158,13 @@ web-size:
 	@wasm=$$(ls dist/*.wasm); raw=$$(wc -c < $$wasm | tr -d ' '); gz=$$(gzip -9 -c $$wasm | wc -c | tr -d ' '); \
 	echo "wasm raw=$$raw gzip=$$gz"; \
 	test $$gz -le 12582912 || { echo "FAIL: wasm gzip $$gz > 12 MiB budget"; exit 1; }
+
+# PRD §10/§15 P2: wasm + JS + shell + shaders + IBL + core kit pieces + material sets, one texture
+# family, as served by Pages, <= 30 MiB for the larger of BC7 and ASTC. Measures whatever dist/
+# holds now and builds it only when missing; run web-size or build-web first to refresh it.
+initial-download:
+	@test -d dist || $(MAKE) --no-print-directory build-web
+	node scripts/size/initial-download.mjs dist
 
 web-smoke: build-web
 	cd e2e && npm ci --no-audit --no-fund
