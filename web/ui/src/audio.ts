@@ -78,7 +78,7 @@ export interface Volumes {
 type VolumeKey = keyof Volumes;
 
 /** The Legend Settings → Audio defaults (design/ui/legend/settings.html). */
-const DEFAULTS: Volumes = { master: 0.8, music: 0.55, ambience: 0.7, effects: 0.75, interface: 0.5 };
+const DEFAULTS: Volumes = { master: 0.8, music: 0.55, ambience: 0.1, effects: 0.75, interface: 0.5 };
 
 interface Settings {
   muted: boolean;
