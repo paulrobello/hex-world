@@ -2,9 +2,19 @@
 
 Everything below waits on you. Work kept going overnight on everything that did not need you. Paths are relative to the repo root. The review server (`.claude/launch.json`, `hex-world-review`, http://127.0.0.1:8095/) serves the repo, so an image path opens at `http://127.0.0.1:8095/<path>`.
 
+## Start here
+
+These five answers unblock the most work.
+
+1. **Q2. Push?** Main holds 98 unpushed local commits, and `make checkall-ci` is green. CI now runs the UI checks.
+2. **Q4. Tone mapper?** ACES crushes shaded walls to pure black (F1). TonyMcMapface fixes it but reopens your ACES choice.
+3. **Kit approvals:** O4 skirts (A1), river family (A2), oak (A3), cars (A7), parking pad (A9), beach pieces (A11) and forest edges (A19). Every MVP tile now draws built pieces; approval is what remains.
+4. **Reference approvals:** fish and birds (A12) and the seven P3 families (A17). Modeling starts once these are approved.
+5. **UI sign-off in the running build:** the HUD (A8), photo mode (A14) and save slots (A16). Run `make build-web`, then `python3 -m http.server 8094 --bind 127.0.0.1 --directory dist`, and open http://127.0.0.1:8094/.
+
 ## Approvals
 
-**A1. O4 cutaway skirts, as shipped.** `docs/checkpoints/skirt-o4/sheet.jpg` (8 in-play shots). The soil set is now your O4 pick. Meadow, forest, house and river skirts sample it, and the beach and river cut walls copy it in the shader. Please re-approve `meadow_base`, `forest_base` and the river skirts on this look. Known issue: the beach tile's land walls face north, away from the sun, so they read near-black in shot 06. Every north-facing wall in the kit does the same.
+**A1. O4 cutaway skirts, as shipped.** `docs/checkpoints/skirt-o4/sheet.jpg` (8 in-play shots). The soil set is now your O4 pick. Meadow, forest, house and river skirts sample it, and the beach and river cut walls copy it in the shader. Please re-approve `meadow_base`, `forest_base` and the river skirts on this look. Known issue: walls facing away from the sun render black. F1 explains why; it is the tone mapper, not the skirt.
 
 **A2. River family (6 pieces: edge, straight, bend, bridge).** Merged as `4509640`. In-play shots, re-taken on main with the final bend mesh and the O4 skirts: `assets-source/kit/river_edge/shots/engine-01..09.jpg` (overview, the straight-to-bend and bend-to-bridge seams, the river mouth, the bridge arch, the bend, LOD1, LOD2). The bend's LOD2 uses a 20% triangle ceiling instead of 15% (decision D1).
 
@@ -79,8 +89,6 @@ The full island is `docs/checkpoints/coast/coast-01..08.jpg`.
 - **Damp band edge:** its upper edge is a hard line. Say if you want it feathered.
 - **Village pack:** plaster lives in the village pack, so placing a beach also streams the village pack. Tinted gravel would avoid that, but it read as pebbles.
 
-**D5. The coast corner bases get a 20% LOD2 ceiling, like the river bases (D1).** The Headland and Bay sit at about 18%. 15% was reachable only by padding LOD0 to about 3,950 triangles, which spends triangles where nobody sees them.
-
 **A12. Fish and bird references (reference gate; nothing is modeled yet).** Sheets: `assets-source/refs/fish/sheet.jpg` and `assets-source/refs/birds/sheet.jpg`.
 - **Fish:** ref-1 is a single ocean fish in profile, ref-2 a school seen from above over sand, and ref-3 the same body in an ocean palette and a river palette.
 - **Birds:** ref-1 is a gliding songbird in profile, ref-2 five seen from above with their shadows, and ref-3 three roosting on an oak branch.
@@ -119,7 +127,7 @@ Approve or reject per ref. Two choices go with it:
 - the tree close-up under snow, night, dusk and autumn
 - the coast under freeze, dusk and night
 
-At the MVP values (noon, dry, summer, unfrozen) the game looks the same as before. The pixel diffs sit inside run-to-run noise, and the texture budget holds at 16. The asset gate now fails any new piece or shader that lacks a hook. 21 small prop slots on the river, beach and ocean centre pieces still need authored masks maps; that Blender work runs overnight.
+At the MVP values (noon, dry, summer, unfrozen) the game looks the same as before. The pixel diffs sit inside run-to-run noise, and the texture budget holds at 16. The asset gate now fails any new piece or shader that lacks a hook. The 21 small prop slots on the river, beach and ocean centre pieces now have authored masks maps (`docs/checkpoints/hooks/masks-*/`). That rebuilt 7 pieces with no change at MVP values, and they need your re-approval. One open point: a coast view shows 6 beach-dressing outline pixels off by 3–5/255, cause not found.
 
 **A16. Save slots, autosave, and .hexworld import/export (PRD D9).**
 - **Captures:** `docs/checkpoints/persistence/`.
@@ -164,17 +172,23 @@ Q1 is now settled: the bar says "Autosave off" and "Saved", but the Worlds sheet
 - **Flowers:** meadow flowers sit evenly spaced. Clustered drifts would need a rule.
 - **Gulls:** the placeholder gulls read large and white above the trees. See A12/A13.
 
+**A19. Forest-forest edge pieces.** These are six per-edge variants that carry the litter across the seam between two forest tiles.
+- **In engine:** `assets-source/kit/forest_forest_edge/shots/engine-01..07.jpg`. They cover two and three forests, the junction where three meet, the meadow corner, and bulldoze and undo.
+- **Six-view renders:** `assets-source/kit/forest_forest_edge_e*/renders/`.
+
+The corner look is Q3. With scatter on, a treeless strip still runs along the seam (A18).
+
 ## Questions
 
 **Q1. Save label (resolved).** Autosave now exists, so the bar shows "Saved" as the brief asked, plus "Saving…" and "Autosave off". See A16.
+
+**Q2. Push.** Main holds 98 unpushed local commits, and nothing has been pushed. `make checkall-ci` is green on main, and CI now sets up Node and runs `make ui-check` (`93542a6`). Approve one push of main to origin?
 
 **Q3. Forest edge corners.** Where a forest-forest edge sits next to a forest-meadow edge on the same tile, the litter has to stop at the corner. There are two options, shown in `assets-source/kit/forest_forest_edge/stills/corner-options/` after merge: `before.jpg`, `O-a-after.jpg`, `O-b-after.jpg`, `O-b-overview.jpg`.
 - **O-a (shipping now):** the litter ends in a straight slope along the line from the corner.
 - **O-b:** the litter pulls back into forest_base's own wavy grass rim. It reads better, but it needs 18 more pieces (about 0.9 MB) and curve-exact cuts.
 
 I recommend O-a now and O-b once forest moves into a streamed biome pack. The resolver passes the corner flags either way, so switching later needs no engine change.
-
-**Q2. Push.** Main holds 62+ unpushed local commits. Nothing has been pushed. CI does not run the UI checks yet, and I am fixing that parity gap before asking. Approve one push once `make checkall-ci` is green?
 
 ## Findings
 
@@ -209,8 +223,10 @@ No change limited to the walls gets close while ACES stays. They would need 10 t
 
 **D3. The forest edge piece comes in six per-edge variants.** forest_base is not the same under each of its six edges. A single rotated edge piece therefore had to float up to 0.18 m above the litter to clear every edge (`assets-source/kit/forest_forest_edge/stills/mock-seam-after.jpg`, once merged). Six variants, one per local edge of the base, fit exactly. The edge-piece resolver picks the family by socket pair and the variant by the base's local edge.
 
-**D2. Forest-forest edge piece first, engine wiring second.** The Blender piece is being built now. Choosing edge pieces by (own, neighbour) socket pair touches the same socket code as the beach stream, so that part waits for the beach stream to merge.
+**D2. Forest edge pieces are chosen by socket pair, base edge and corner flags.** `sockets.ron` `pair_edge_pieces`, merged as `8337a52`. The corner look is Q3.
+
+**D5. The coast corner bases get a 20% LOD2 ceiling, like the river bases (D1).** The Headland and Bay sit at about 18%. 15% was reachable only by padding LOD0 to about 3,950 triangles, which spends triangles where nobody sees them.
 
 ## Status
 
-The status of each stream is filled in as streams land overnight; see the bottom of this file.
+See the bottom section, "Overnight summary", which I update as the last streams land.
