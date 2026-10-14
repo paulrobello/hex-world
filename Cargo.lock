@@ -3048,6 +3048,7 @@ dependencies = [
  "bevy",
  "hex-core",
  "hex-render",
+ "hex-sim",
  "image",
  "serde",
  "serde_json",

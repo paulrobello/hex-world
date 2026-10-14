@@ -11,6 +11,7 @@ use serde::Deserialize;
 
 use crate::actions::{Action, ActionQueue, Tool};
 use crate::game::GameState;
+use crate::sim::CarSim;
 use crate::{FrameCount, RunFlags, bridge, capture};
 
 /// `rotate` direction: `cw` is R (clockwise viewed from above), `ccw` is Shift+R.
@@ -229,6 +230,7 @@ pub fn publish_state(
     gpu: Option<Res<hex_render::GpuLimits>>,
     tilt: Res<TiltShiftSettings>,
     game: Res<GameState>,
+    sim: Res<CarSim>,
 ) {
     let camera = cameras.iter().next().map(|t| {
         serde_json::json!({ "pos": t.translation.to_array(), "forward": t.forward().to_array() })
@@ -239,10 +241,15 @@ pub fn publish_state(
         serde_json::json!({ "maxSampledTexturesPerShaderStage": g.max_sampled_textures_per_shader_stage })
     });
     let play = active.0 == Scenario::Play;
+    let play_state = play.then(|| {
+        let mut p = game.state_json();
+        sim.extend_state(&mut p);
+        p
+    });
     let state = serde_json::json!({
         "scenario": format!("{:?}", active.0),
         "tiles": if play { game.world.tiles().len() } else { active.0.tile_count(kit_src) },
-        "play": if play { game.state_json() } else { serde_json::Value::Null },
+        "play": play_state,
         "events_pending": bridge::EVENTS.lock().unwrap().len(),
         "gpu": gpu,
         "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps },

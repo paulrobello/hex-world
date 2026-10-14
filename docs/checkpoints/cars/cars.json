@@ -1,0 +1,43 @@
+[
+  {"cmd": "camera", "pos": [14, 80, 100], "look_at": [14, 0, 4]},
+  {"cmd": "toggle", "what": "photo"},
+
+  {"cmd": "select_tile", "id": "road_straight"},
+  {"cmd": "place", "q": 0, "r": 1},
+  {"cmd": "place", "q": -1, "r": 1},
+  {"cmd": "select_tile", "id": "house_cluster"},
+  {"cmd": "place", "q": -2, "r": 1},
+  {"cmd": "select_tile", "id": "road_bend_120"},
+  {"cmd": "hover", "q": 1, "r": 1},
+  {"cmd": "rotate", "dir": "cw"},
+  {"cmd": "place", "q": 1, "r": 1},
+  {"cmd": "select_tile", "id": "road_straight"},
+  {"cmd": "place", "q": 2, "r": 0},
+  {"cmd": "select_tile", "id": "house_cluster"},
+  {"cmd": "place", "q": 3, "r": -1},
+  {"cmd": "dump_state", "name": "cars-01-connected"},
+
+  {"cmd": "wait", "frames": 1300},
+  {"cmd": "screenshot", "name": "cars-02-overview"},
+  {"cmd": "camera", "pos": [-10, 12, 40], "look_at": [-2, 0.5, 22.5]},
+  {"cmd": "screenshot", "name": "cars-02-closeup"},
+  {"cmd": "dump_state", "name": "cars-02-driving"},
+  {"cmd": "camera", "pos": [76, 14, 8], "look_at": [56, 0.5, -6]},
+  {"cmd": "screenshot", "name": "cars-02-seam"},
+
+  {"cmd": "bulldoze", "q": 0, "r": 1},
+  {"cmd": "dump_state", "name": "cars-03-bulldoze-refused"},
+  {"cmd": "select_tile", "id": "meadow"},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "bulldoze", "q": 0, "r": 1},
+  {"cmd": "dump_state", "name": "cars-04-disconnected"},
+  {"cmd": "camera", "pos": [14, 80, 100], "look_at": [14, 0, 4]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "cars-04-disconnected"},
+
+  {"cmd": "undo"},
+  {"cmd": "dump_state", "name": "cars-05-undo"},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "cars-05-undo"},
+  {"cmd": "exit"}
+]

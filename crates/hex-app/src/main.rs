@@ -10,6 +10,7 @@ mod camera;
 mod capture;
 mod control;
 mod game;
+mod sim;
 
 #[derive(Resource)]
 struct RunFlags(args::Flags);
@@ -65,7 +66,15 @@ fn main() {
         };
     }
 
+    let game = game::GameState::new(flags.seed);
+    let cars = sim::CarSim::new(&game.world, &game.catalog);
     let mut app = App::new();
+    if flags.clock_fixed {
+        // 1/60 s rounded up to the nanosecond, so three frames always cover one 50 ms sim tick.
+        app.insert_resource(bevy::time::TimeUpdateStrategy::ManualDuration(
+            std::time::Duration::from_nanos(16_666_667),
+        ));
+    }
     // Asset sources must be registered before `AssetPlugin` (inside DefaultPlugins) builds.
     app.add_plugins(MeshoptGlbPlugin)
         .add_plugins(
@@ -82,7 +91,9 @@ fn main() {
             config: flags.gate,
             fps: !flags.fps_off,
         })
-        .insert_resource(game::GameState::new(flags.seed))
+        .add_plugins(sim::SimPlugin)
+        .insert_resource(game)
+        .insert_resource(cars)
         .insert_resource(RunFlags(flags))
         .insert_resource(queue)
         .init_resource::<actions::ActionQueue>()
@@ -98,6 +109,8 @@ fn main() {
                 control::run_commands,
                 game::apply_actions,
                 game::sync_view,
+                sim::mirror_world,
+                sim::publish_cars,
                 control::publish_state,
                 publish_diag,
                 control::exit_when_idle,

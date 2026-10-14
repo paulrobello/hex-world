@@ -1,4 +1,4 @@
-.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play brand
+.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand
 
 fmt:
 	cargo fmt --all
@@ -321,3 +321,17 @@ shots-play:
 	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(PLAY_DOCS)/$$n.jpg || exit 1; done
 	cp target/shots/play-*.json $(PLAY_DOCS)/
 	@echo "wrote $(PLAY_DOCS)/"
+
+# Cars checkpoint (P2 W3a): runs the scripted proof docs/checkpoints/cars/cars.json at 1280x800 with
+# tilt-shift off and `--clock fixed` (one 20 Hz sim tick every third frame, so the run replays
+# identically), then copies JPEG stills and the state dumps next to it.
+CARS_SHOTS = cars-02-overview cars-02-closeup cars-02-seam cars-04-disconnected cars-05-undo
+CARS_DOCS = docs/checkpoints/cars
+shots-cars:
+	mkdir -p target/shots $(CARS_DOCS)
+	rm -f target/shots/cars-*.png target/shots/cars-*.json
+	cargo run -p hex-app --release -- --scenario play --script $(CARS_DOCS)/cars.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
+	@for n in $(CARS_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(CARS_DOCS)/$$n.jpg || exit 1; done
+	cp target/shots/cars-*.json $(CARS_DOCS)/
+	@echo "wrote $(CARS_DOCS)/"

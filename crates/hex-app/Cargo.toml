@@ -12,6 +12,7 @@ path = "src/main.rs"
 [dependencies]
 hex-core = { path = "../hex-core" }
 hex-render = { path = "../hex-render" }
+hex-sim = { path = "../hex-sim" }
 bevy = { workspace = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

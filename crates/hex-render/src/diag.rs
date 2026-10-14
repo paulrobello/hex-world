@@ -319,6 +319,7 @@ fn sample(
         Option<&Lod>,
     )>,
     vehicles: Query<(), With<Vehicle>>,
+    cars: Query<(), With<crate::cars::PlayCar>>,
     cameras: Query<(Has<TemporalAntiAliasing>, Has<Bloom>, Has<DepthOfField>), With<Camera3d>>,
     lights: Query<(&DirectionalLight, &CascadeShadowConfig)>,
     instanced: Option<Res<crate::instanced::InstancedScene>>,
@@ -401,7 +402,7 @@ fn sample(
         };
         let c = st.census;
         snap.json = format!(
-            "{{\"p50\":{:.2},\"p95\":{:.2},\"p99\":{:.2},\"mean\":{:.2},\"max\":{:.2},\"dropped_over_25ms\":{},\"layout\":\"{}\",\"chunk_size\":{},\"chunks\":{},\"shadows\":{},\"shadow_casters\":\"{}\",\"cascades\":{},\"shadow_dist\":{:.0},\"passes\":[{}],\"instanced\":{},\"visible_entities\":{},\"visible_mesh_material_pairs\":{},\"visible_tris\":{},\"visible_by_lod\":{:?},\"wasm_memory_bytes\":{},\"tiles\":{},\"entities\":{},\"pieces\":{},\"vehicles\":{},\"boids\":{},\"tris_lod0_per_tile\":{},\"materials\":{},\"post\":[{}],\"ssao\":{},\"gpu_preprocessing_supported\":\"{}\",\"adapter\":\"{}\",\"samples\":{},\"frames\":{},\"window_start_frame\":{}}}",
+            "{{\"p50\":{:.2},\"p95\":{:.2},\"p99\":{:.2},\"mean\":{:.2},\"max\":{:.2},\"dropped_over_25ms\":{},\"layout\":\"{}\",\"chunk_size\":{},\"chunks\":{},\"shadows\":{},\"shadow_casters\":\"{}\",\"cascades\":{},\"shadow_dist\":{:.0},\"passes\":[{}],\"instanced\":{},\"visible_entities\":{},\"visible_mesh_material_pairs\":{},\"visible_tris\":{},\"visible_by_lod\":{:?},\"wasm_memory_bytes\":{},\"tiles\":{},\"entities\":{},\"pieces\":{},\"vehicles\":{},\"cars\":{},\"boids\":{},\"tris_lod0_per_tile\":{},\"materials\":{},\"post\":[{}],\"ssao\":{},\"gpu_preprocessing_supported\":\"{}\",\"adapter\":\"{}\",\"samples\":{},\"frames\":{},\"window_start_frame\":{}}}",
             st.stats.p50(),
             st.stats.p95(),
             st.stats.p99(),
@@ -428,6 +429,7 @@ fn sample(
             meshes.iter().count(),
             facts.pieces,
             vehicles.iter().count(),
+            cars.iter().count(),
             crate::boids::dispatched_boids(),
             facts.tris_lod0_per_tile,
             facts.materials,

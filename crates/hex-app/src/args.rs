@@ -51,6 +51,9 @@ pub struct Flags {
     /// `fps=off` starts with the FPS counter hidden (default on; F3 toggles at runtime).
     pub fps_off: bool,
     pub dump_state: Option<String>,
+    /// `clock=fixed`: every Bevy clock advances exactly 1/60 s per frame, so the 20 Hz car tick
+    /// lands on every third frame and scripted runs replay identically.
+    pub clock_fixed: bool,
 }
 
 /// `"1280x800"` -> `Some((1280, 800))`; zero or malformed sizes are rejected.
@@ -216,6 +219,17 @@ pub fn flags_from_pairs(pairs: &[(String, String)]) -> (Flags, Vec<String>) {
                 v,
                 &mut warnings,
             ),
+            "clock" => set_or_warn(
+                &mut f.clock_fixed,
+                match v.as_str() {
+                    "fixed" => Some(true),
+                    "real" => Some(false),
+                    _ => None,
+                },
+                k,
+                v,
+                &mut warnings,
+            ),
             "present" => set_or_warn(&mut f.present, Present::parse(v), k, v, &mut warnings),
             _ => {}
         }
@@ -273,6 +287,7 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "tilt_strength",
         "tier",
         "water_clock",
+        "clock",
     ]
     .iter()
     .filter_map(|k| params.get(k).map(|v| (k.to_string(), v)))
@@ -338,6 +353,19 @@ mod tests {
         assert_eq!(f.gate.tier, hex_render::post::QualityTier::High);
         assert!(!f.gate.water_fixed);
         assert_eq!(w.len(), 2);
+    }
+
+    #[test]
+    fn clock_key() {
+        let (f, w) = flags_from_pairs(&[]);
+        assert!(!f.clock_fixed && w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("clock", "fixed")]));
+        assert!(f.clock_fixed && w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("clock", "fixed"), ("clock", "sometimes")]));
+        assert!(
+            f.clock_fixed && w.len() == 1,
+            "a bad value keeps the previous one"
+        );
     }
 
     #[test]
