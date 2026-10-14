@@ -464,7 +464,11 @@ mod tests {
             (hex_render::Grade::Rich2, hex_render::Tonemap::AgX)
         );
         let (f, w) = flags_from_pairs(&p(&[("grade", "vivid")]));
-        assert_eq!((f.gate.grade, w.len()), (hex_render::Grade::Tony, 1));
+        assert_eq!((f.gate.grade, w.len()), (hex_render::Grade::Rich3, 1));
+        assert_eq!(
+            (f.gate.tonemap, f.gate.ev100.get()),
+            (hex_render::Tonemap::AcesFitted, 12.5)
+        );
     }
 
     #[test]

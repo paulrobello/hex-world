@@ -269,9 +269,11 @@ export interface GradePreset {
   detail: string;
 }
 
-/** `state().grade`: the look in force and every preset, in display order. */
+/** `state().grade`: the look in force, the default look, and every preset in display order. */
 export interface GradeState {
   name: GradeName;
+  /** The look with no `?grade=` and no stored choice (`hex_render::Grade::default()`). */
+  default: GradeName;
   presets: GradePreset[];
 }
 
@@ -438,6 +440,6 @@ export const STATE_FIELDS = {
     exporting: true,
     max_texture: true,
   }),
-  grade: keys<GradeState>({ name: true, presets: true }),
+  grade: keys<GradeState>({ name: true, default: true, presets: true }),
   grade_preset: keys<GradePreset>({ name: true, detail: true }),
 };

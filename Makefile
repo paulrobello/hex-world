@@ -290,14 +290,15 @@ shots-kit:
 	@for n in $(KIT_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; done
 	@echo "wrote target/shots/kit-*.png"
 
-# Tone-mapping comparison (D4) of the kit shots. ARGS passes kit keys and LOOKDEV_OUT moves the
-# output, e.g. ARGS="--kit_src fixture" LOOKDEV_OUT=target/shots/lookdev-fixture.
+# Tone-mapping comparison (D4) of the kit shots over the `tony` grade's exposure, grading and
+# backdrop. ARGS passes kit keys and LOOKDEV_OUT moves the output, e.g. ARGS="--kit_src fixture"
+# LOOKDEV_OUT=target/shots/lookdev-fixture.
 LOOKDEV_OUT ?= target/shots
 shots-lookdev:
 	@mkdir -p $(LOOKDEV_OUT)
 	@for t in agx tony aces; do \
 	  rm -f target/shots/kit-*.png; \
-	  cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --tonemap $$t $(ARGS) || exit 1; \
+	  cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --grade tony --tonemap $$t $(ARGS) || exit 1; \
 	  for n in kit-overview kit-seam-closeup kit-tree; do cp target/shots/$$n.png $(LOOKDEV_OUT)/lookdev-$$t-$$n.png || exit 1; done; \
 	done
 	@echo "wrote $(LOOKDEV_OUT)/lookdev-{agx,tony,aces}-*.png"
@@ -515,13 +516,16 @@ shots-wet-band:
 	@echo "wrote $(WET_BAND_DOCS)/"
 
 # Boids checkpoint (PRD §7.2, crates/hex-render/src/boids.rs): runs docs/checkpoints/boids/boids.json
-# at 1600x1000 with tilt-shift off and fixed clocks (a river chain, a coast closing on ten ocean tiles,
-# a meadow and two oak tiles; the flock overhead, birds roosting on an oak with a 16-degree close-up
-# of the folded starlings on the canopy, fish through the ocean surface and in the river channel with a
-# close-up, then an oak tile bulldozed, undone (the birds flapping back in to it) and redone), copies
-# JPEG stills and the state dumps next to it, and asserts the dumps (check.mjs: split, fish per region
-# and river group sizes, each region's palette, the boid pieces loaded, roosts, roosting).
-BOIDS_SHOTS = boids-01-flock boids-02-roost boids-02-roost-close boids-03-fish-ocean boids-04-fish-river boids-04-fish-river-close boids-07-settle boids-07-flap-close
+# at 1600x1000 with tilt-shift off and fixed clocks (the single start tile with no birds; a river
+# chain, a coast closing on ten ocean tiles, ten meadows and two oak tiles; the flock overhead, birds
+# roosting on an oak with a 16-degree close-up of the folded starlings on the canopy, fish through the
+# ocean surface and in the river channel with a close-up, then an oak tile bulldozed, undone (the birds
+# flapping back in to it) and redone; then a spring, straight and river mouth joined to the coast, with
+# fish on the mouth's fan and river fish near it), copies JPEG stills and the state dumps next to it,
+# and asserts the dumps (check.mjs: birds per land tile, bird slots and fish, fish per region and river
+# group sizes, each region's palette, the boid pieces loaded, roosts, roosting, river groups in the
+# joined region and fish crossing the fan, which the fixed clock's fish track reads back from the GPU).
+BOIDS_SHOTS = boids-01-flock boids-02-roost boids-02-roost-close boids-03-fish-ocean boids-04-fish-river boids-04-fish-river-close boids-04-fish-river-play boids-07-settle boids-07-flap-close boids-10-mouth-fan boids-11-mouth-river
 BOIDS_DOCS = docs/checkpoints/boids
 shots-boids:
 	mkdir -p target/shots $(BOIDS_DOCS)

@@ -119,6 +119,8 @@ export interface GradeRow {
   id: GradeName;
   name: string;
   detail: string;
+  /** "Default" on the engine's default grade, else null. */
+  tag: string | null;
 }
 
 export interface GradeView {
@@ -130,7 +132,12 @@ export interface GradeView {
 export function gradeView(g: GradeState | undefined, pick: GradeName | null = null): GradeView {
   return {
     selected: pick ?? g?.name ?? null,
-    rows: (g?.presets ?? []).map((p) => ({ id: p.name, name: gradeLabel(p.name), detail: p.detail })),
+    rows: (g?.presets ?? []).map((p) => ({
+      id: p.name,
+      name: gradeLabel(p.name),
+      detail: p.detail,
+      tag: p.name === g?.default ? "Default" : null,
+    })),
   };
 }
 

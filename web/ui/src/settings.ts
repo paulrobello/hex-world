@@ -162,7 +162,7 @@ export class Settings {
         { class: "field" },
         h("span", { class: "field__label" }, "Miniature focus"),
         this.toggle,
-        h("span", { class: "field__hint" }, "Blurs near and far like a diorama photo. On from Medium up."),
+        h("span", { class: "field__hint" }, "Blurs near and far like a diorama photo. Off by default."),
       ),
       this.strengthField,
       this.gradeHead,
@@ -388,6 +388,7 @@ export class Settings {
           { class: "tier", role: "radio", tabindex: on ? 0 : -1, "aria-checked": String(on), "data-grade": r.id },
           h("span", { class: "radio", "aria-hidden": "true" }),
           h("b", {}, r.name),
+          r.tag ? h("span", { class: "tag" }, r.tag) : null,
           h("small", {}, r.detail),
         );
       }),

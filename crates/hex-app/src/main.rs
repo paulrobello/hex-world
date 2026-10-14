@@ -90,7 +90,8 @@ fn main() {
         // 1/60 s rounded up to the nanosecond, so three frames always cover one 50 ms sim tick.
         app.insert_resource(bevy::time::TimeUpdateStrategy::ManualDuration(
             std::time::Duration::from_nanos(16_666_667),
-        ));
+        ))
+        .init_resource::<hex_render::boids::FishTrack>();
     }
     // Asset sources must be registered before `AssetPlugin` (inside DefaultPlugins) builds.
     app.add_plugins(MeshoptGlbPlugin)

@@ -110,14 +110,15 @@ pub fn parse_ibl(s: &str) -> Option<bool> {
     parse_shadows(s)
 }
 
-/// D4 candidates. TonyMcMapface is the default (owner, 2026-10-14, Q4): Bevy's fitted ACES outputs
-/// pure black below about 0.0033 linear, where the shaded soil walls sit. AgX desaturated the meadow
-/// greens against the approved references (2026-10-13).
+/// D4 candidates. The default is the default grade's (`rich-3`, owner 2026-10-14): ACES fitted, with
+/// a shadow lift before the curve because fitted ACES outputs pure black below about 0.0033 linear,
+/// where the shaded soil walls sit. AgX desaturated the meadow greens against the approved
+/// references (2026-10-13).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum Tonemap {
     AgX,
-    #[default]
     TonyMcMapface,
+    #[default]
     AcesFitted,
 }
 
@@ -319,7 +320,7 @@ pub struct GateConfig {
     pub tonemap: Tonemap,
     /// Kit scenario only: the noon IBL replaces the flat ambient light.
     pub ibl: bool,
-    /// Kit scenario only: camera exposure (default `lookdev::KIT_EV100`).
+    /// Kit scenario only: camera exposure (default: the default grade's).
     pub ev100: Ev100,
     /// Kit scenario only: the look preset (`grade`); it sets `tonemap` and `ev100` unless their own
     /// keys override them, and supplies the colour grading and backdrop.
@@ -334,6 +335,7 @@ pub struct GateConfig {
 
 impl Default for GateConfig {
     fn default() -> Self {
+        let grade = crate::grade::Grade::default();
         Self {
             layout: Layout::Entities,
             post: PostMode::Full,
@@ -344,10 +346,10 @@ impl Default for GateConfig {
             shadow_dist: 2_000,
             kit_hooks: KitHooks::None,
             kit_src: KitSource::Runtime,
-            tonemap: Tonemap::TonyMcMapface,
+            tonemap: grade.tonemap(),
             ibl: true,
-            ev100: Ev100::from_f32(crate::lookdev::KIT_EV100),
-            grade: crate::grade::Grade::Tony,
+            ev100: Ev100::from_f32(grade.ev100()),
+            grade,
             tilt: TiltMode::Off,
             tilt_strength: TiltStrength(100),
             tier: crate::post::QualityTier::High,
@@ -392,7 +394,10 @@ mod tests {
         assert_eq!(Ev100::parse("-1"), None);
         assert_eq!(Ev100::parse("NaN"), None);
         assert_eq!(Ev100::parse("bright"), None);
-        assert_eq!(GateConfig::default().ev100.get(), crate::lookdev::KIT_EV100);
+        assert_eq!(
+            GateConfig::default().ev100.get(),
+            crate::grade::Grade::default().ev100()
+        );
     }
 
     #[test]
@@ -475,7 +480,8 @@ mod tests {
         assert_eq!(parse_ibl("off"), Some(false));
         assert_eq!(parse_ibl("1"), None);
         let d = GateConfig::default();
-        assert_eq!((d.tonemap, d.ibl), (Tonemap::TonyMcMapface, true));
+        assert_eq!((d.tonemap, d.ibl), (Tonemap::AcesFitted, true));
+        assert_eq!(Tonemap::default(), d.tonemap);
     }
 
     #[test]

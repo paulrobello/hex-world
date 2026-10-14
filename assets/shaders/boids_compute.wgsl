@@ -2,7 +2,7 @@
 // which slots are birds and which fish, where each spawns, which roost a bird is sent to and when,
 // and the fish field. This pass only moves the flock. Constants mirror plan.rs.
 // anim (read by boid_material.wesl): x wing-beat or tail-wag phase, y flap drive (0 glide, 1 flap),
-// z the fish palette's U offset (ctl.look.x).
+// z the fish palette's U offset (ctl.look.x), w a river fish's growth over its display scale.
 struct Boid { pos: vec4<f32>, vel: vec4<f32>, anim: vec4<f32> };
 struct Ctl { spawn: vec4<f32>, info: vec4<f32>, look: vec4<f32> };
 struct Params {
@@ -26,11 +26,18 @@ const SWIM: f32 = 3.0;
 // A slot play leaves empty (plan::BIRD_PERCENT): parked, and collapsed by boid_material.wesl.
 const IDLE: f32 = 4.0;
 
-// plan.rs: the fish field's chunks, and the roost and sky constants.
+// plan.rs: the fish field's chunks, the band height a fish levels out under, and the roost and
+// sky constants.
 const CHUNK: f32 = 16.0;
 const SIDE: u32 = 17u;
 const STEP: f32 = 1.0;
 const LAND: vec4<f32> = vec4<f32>(0.0, -1.0, -4.0, 0.0);
+const LEVEL_BAND: f32 = 0.5;
+// plan::{RIVER_GROW, TROUT_TOP, SKIM_GAP} and the water surface (water::LAND below 0).
+const RIVER_GROW: f32 = 0.3;
+const TROUT_TOP: f32 = 0.172;
+const SKIM_GAP: f32 = 0.02;
+const WATER_Y: f32 = -1.4;
 const APPROACH: f32 = 8.0;
 const SKY_LOW: f32 = 22.0;
 const SKY_HIGH: f32 = 44.0;
@@ -82,7 +89,7 @@ fn room_grad(p: vec2<f32>) -> vec2<f32> {
 struct Step { p: vec3<f32>, v: vec3<f32> };
 
 // plan::confine: integrate; if the new XZ has no room, stay and turn up the room gradient; then
-// clamp y into the band.
+// clamp y into the band and damp the climb where the band is thin (a river mouth's skim water).
 fn confine(p: vec3<f32>, v: vec3<f32>, dt: f32) -> Step {
     var np = p + v * dt;
     var nv = v;
@@ -97,6 +104,7 @@ fn confine(p: vec3<f32>, v: vec3<f32>, dt: f32) -> Step {
         b = band(p.xz);
     }
     np.y = clamp(np.y, b.x, max(b.y, b.x));
+    nv.y = nv.y * clamp((b.y - b.x) / LEVEL_BAND, 0.0, 1.0);
     return Step(np, nv);
 }
 
@@ -158,6 +166,16 @@ fn fly(i: u32, me: Boid, c: Ctl) -> Boid {
         // Released: up and out of the canopy.
         let a = hash(i * 13u + u32(params.time * 7.0)) * TAU;
         v = vec3<f32>(cos(a) * 5.0, 7.0, sin(a) * 5.0);
+    }
+    if (c.info.x > 2.5) {
+        // Leaving (plan::SlotKind::Leaving, its flock no longer in the world): outward from the
+        // sky's centre and a little up, off the map, until the plan idles the slot.
+        var out = norm2(p.xz - params.sky.xz);
+        if (dot(out, out) < 0.5) { out = vec2<f32>(1.0, 0.0); }
+        v = mix(v, vec3<f32>(out.x * 12.0, 2.0, out.y * 12.0), clamp(1.2 * dt, 0.0, 1.0));
+        let away = clamp(length(v), 5.0, 12.0);
+        v = normalize(v + vec3<f32>(1e-5, 0.0, 0.0)) * away;
+        return Boid(vec4<f32>(p + v * dt, me.pos.w), vec4<f32>(v, FLY), me.anim);
     }
     var center = vec3<f32>(0.0);
     var align = vec3<f32>(0.0);
@@ -263,11 +281,12 @@ fn update(@builtin(global_invocation_id) id: vec3<u32>) {
     if (i >= params.count) { return; }
     let me = boids[i];
     let c = ctl[i];
-    if (c.info.x > 1.5) {
+    // ctl info.x: 0 bird, 1 fish, 2 idle, 3 leaving bird.
+    if (abs(c.info.x - 2.0) < 0.5) {
         boids[i] = Boid(vec4<f32>(c.spawn.xyz, c.spawn.w), vec4<f32>(0.0, 0.0, 0.0, IDLE), vec4<f32>(0.0));
         return;
     }
-    let fish = c.info.x > 0.5;
+    let fish = abs(c.info.x - 1.0) < 0.5;
     if (me.pos.w != c.spawn.w) {
         // A new generation: (re)spawn the slot where the plan put it.
         let a = hash(i * 2654435761u + u32(c.spawn.w)) * TAU;
@@ -313,5 +332,14 @@ fn animate(i: u32, b: Boid, c: Ctl) -> vec4<f32> {
     a.x = a.x + rate * dt;
     if (a.x > TAU) { a.x = a.x - TAU * floor(a.x / TAU); }
     a.z = c.look.x;
+    // A river-palette fish draws up to RIVER_GROW larger (boid_material.wesl scales by 1 + w)
+    // where the band's ceiling leaves its larger fin under the surface: in river water, not on a
+    // mouth's skim water.
+    var grow = 0.0;
+    if (mode == SWIM && c.look.x > 0.25) {
+        let ceil = band(b.pos.xz).y;
+        grow = clamp((WATER_Y - ceil - SKIM_GAP) / TROUT_TOP - 1.0, 0.0, RIVER_GROW);
+    }
+    a.w = mix(a.w, grow, clamp(dt * 2.0, 0.0, 1.0));
     return a;
 }

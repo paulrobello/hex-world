@@ -9,6 +9,9 @@
 //! water each fish school is confined to and each fish's palette; it uploads that as read-only
 //! buffers and never reads the flock back.
 //!
+//! Fixed-clock capture runs (`--clock fixed`) also insert [`FishTrack`], which reads the flock
+//! back each frame to count fish crossing between river and sea water for the checkpoint dumps.
+//!
 //! In `play` the birds fly in small flocks over the world and roost in waves on the oak tiles' oak
 //! canopies (a tile's Bird rule; scattered spruces on such a tile would share its cap,
 //! `play::scatter`), and the fish school in the water volume of connected water tiles. A world
@@ -30,6 +33,7 @@ use bevy::{
     render::{
         Render, RenderApp, RenderStartup, RenderSystems,
         extract_resource::{ExtractResource, ExtractResourcePlugin},
+        gpu_readback::{Readback, ReadbackComplete},
         render_asset::RenderAssets,
         render_resource::{
             binding_types::{storage_buffer_read_only_sized, storage_buffer_sized, uniform_buffer},
@@ -50,7 +54,7 @@ pub use plan::{BoidBudget, BoidCounts, BoidPlan};
 use crate::{
     ActiveScenario, Scenario, SceneEntity,
     play::{PlayCatalog, PlayKit, PlaySystems, PlayView, rise::PlayRises, scatter::ScatterLayouts},
-    water::tiles::{CellWater, WaterKind},
+    water::tiles::CellWater,
 };
 
 /// The drawn scattered trees that have canopy perches, by cell, nearest the centre first.
@@ -105,12 +109,13 @@ pub struct Boid {
     /// xyz velocity; w what it is doing (fly, settle, perch, swim; see the compute shader).
     pub vel: [f32; 4],
     /// Animation the compute pass keeps: x wing-beat or tail-wag phase, y flap drive (0 gliding,
-    /// 1 flapping), z the fish palette's U offset, w unused.
+    /// 1 flapping), z the fish palette's U offset, w a river fish's growth over its display scale
+    /// (`plan::RIVER_GROW`).
     pub anim: [f32; 4],
 }
 
 /// One slot as the CPU sets it: `spawn` xyz and generation (a new generation resets the boid
-/// there), `info` (kind: 0 bird 1 fish 2 idle, roost index or -1, time sent to the roost, a
+/// there), `info` (kind: 0 bird 1 fish 2 idle 3 leaving bird, roost index or -1, time sent to the roost, a
 /// fish's school key: it coheres only with fish of the same key), `look` (x: the fish palette's U
 /// offset, 0 ocean or [`RIVER_U`]).
 #[derive(Clone, Copy, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
@@ -121,15 +126,20 @@ pub struct Ctl {
     pub look: [f32; 4],
 }
 
-/// A fish's palette offset: the river palette where it spawns in river water (a river tile, and
-/// so a spring), the ocean palette on coast and ocean tiles (owner Q5).
+/// A fish's palette offset: the river palette where it spawns in river water (a river or spring
+/// tile, [`plan::river_water`], the water that decides its grouping), the ocean palette on mouth,
+/// coast and ocean tiles (owner Q5).
 pub fn fish_palette(
     cells: &std::collections::BTreeMap<hex_core::Axial, CellWater>,
     spawn: Vec3,
 ) -> f32 {
-    match cells.get(&plan::cell_at(spawn.xz())).map(|c| &c.kind) {
-        Some(WaterKind::River) => RIVER_U,
-        _ => 0.0,
+    if cells
+        .get(&plan::cell_at(spawn.xz()))
+        .is_some_and(|c| plan::river_water(&c.kind))
+    {
+        RIVER_U
+    } else {
+        0.0
     }
 }
 
@@ -417,6 +427,7 @@ impl Plugin for BoidsPlugin {
             (
                 plan_boids.after(PlaySystems),
                 (load_pieces, build_forms, sync_flock).chain(),
+                track_fish,
             ),
         );
 
@@ -476,8 +487,11 @@ fn init_boids(
     let count = budget.total;
     // RENDER_WORLD only: the GPU owns the state after upload, and a main-world copy that
     // changed would overwrite the simulation. Generation 0 never matches a slot, so the first
-    // dispatch spawns every boid from its `Ctl`.
+    // dispatch spawns every boid from its `Ctl`. COPY_SRC: [`FishTrack`] reads it back.
     let boids = storage(&mut buffers, vec![Boid::zeroed(); count as usize], "boids");
+    if let Some(mut b) = buffers.get_mut(&boids) {
+        b.buffer_usage |= BufferUsages::COPY_SRC;
+    }
     let inputs = BoidInputs {
         ctl: storage(
             &mut buffers,
@@ -719,7 +733,11 @@ fn plan_boids(
     inputs: Option<ResMut<BoidInputs>>,
     mut buffers: ResMut<Assets<ShaderBuffer>>,
     mut report: ResMut<BoidReport>,
-    (paused, pieces): (Option<Res<crate::AgentsPaused>>, Option<Res<BoidPieces>>),
+    (paused, pieces, track): (
+        Option<Res<crate::AgentsPaused>>,
+        Option<Res<BoidPieces>>,
+        Option<Res<FishTrack>>,
+    ),
 ) {
     let Some(mut inputs) = inputs else {
         return;
@@ -780,6 +798,7 @@ fn plan_boids(
                         plan::SlotKind::Bird => 0.0,
                         plan::SlotKind::Fish => 1.0,
                         plan::SlotKind::Idle => 2.0,
+                        plan::SlotKind::Leaving => 3.0,
                     },
                     s.roost
                         .and_then(|k| plan.roost_index(k))
@@ -852,6 +871,151 @@ fn plan_boids(
         &river_palettes(plan),
         pieces,
     );
+    if let Some(track) = track
+        && let Some(open) = report.0.strip_suffix('}')
+    {
+        report.0 = format!("{open},\"fish_track\":{}}}", track.json());
+    }
+}
+
+/// Fish crossing between river and sea water, counted from the flock read back each frame: the
+/// checkpoint's evidence that fish swim through a river mouth (owner, 2026-10-14). Inserted only
+/// for fixed-clock capture runs; play itself never reads the flock back.
+#[derive(Resource, Clone, Debug, Default)]
+pub struct FishTrack {
+    /// Readbacks folded in.
+    pub samples: u32,
+    /// Fish (a slot and its generation) seen in river water and later in sea water, and the
+    /// other way round: across a mouth's fan ([`FAN_S`]), which is neither.
+    pub river_to_sea: u32,
+    pub sea_to_river: u32,
+    /// Per fish slot: (generation, water first seen in, crossed, last position, boid clock then).
+    fish: Vec<Option<(u32, Side, bool, Vec2, f32)>>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Side {
+    River,
+    Sea,
+}
+
+/// The stretch of a river mouth's fan (s, metres seaward of its coastline) a crossing passes:
+/// the band was closed from s = -1.17 to 4.37 before fish skimmed it. Upstream of it is river
+/// water, past it sea water.
+const FAN_S: (f32, f32) = (-3.0, 6.0);
+
+/// Fastest a fish moves (m/s): the compute pass caps its horizontal speed at 2 m/s. A longer jump
+/// between two readbacks is a respawn or a stranded fish put back, not a swim.
+const TRACK_SPEED: f32 = 2.5;
+
+impl FishTrack {
+    fn json(&self) -> String {
+        format!(
+            "{{\"samples\":{},\"crossed\":{},\"river_to_sea\":{},\"sea_to_river\":{}}}",
+            self.samples,
+            self.river_to_sea + self.sea_to_river,
+            self.river_to_sea,
+            self.sea_to_river
+        )
+    }
+
+    /// Folds one readback of the flock in at boid clock `t`.
+    pub fn observe(&mut self, plan: &BoidPlan, boids: &[Boid], t: f32) {
+        self.samples += 1;
+        self.fish.resize(plan.slots.len(), None);
+        for (i, slot) in plan.slots.iter().enumerate() {
+            let b = boids.get(i);
+            let fish = slot.kind == plan::SlotKind::Fish;
+            let Some(b) = b.filter(|b| fish && b.pos[3] as u32 == slot.generation) else {
+                self.fish[i] = None;
+                continue;
+            };
+            let p = Vec2::new(b.pos[0], b.pos[2]);
+            let cell = plan::cell_at(p);
+            let side = match plan.water.cells.get(&cell).map(|c| &c.kind) {
+                Some(k) if plan::river_water(k) => Some(Side::River),
+                Some(crate::water::tiles::WaterKind::RiverMouth(coast)) => {
+                    let s = coast.seaward(p - Vec2::from(cell.to_world(hex_core::HEX_RADIUS)));
+                    if s < FAN_S.0 {
+                        Some(Side::River)
+                    } else if s > FAN_S.1 {
+                        Some(Side::Sea)
+                    } else {
+                        None
+                    }
+                }
+                Some(_) => Some(Side::Sea),
+                None => None,
+            };
+            let entry = &mut self.fish[i];
+            let fresh = entry.is_none_or(|(g, _, _, last, at)| {
+                g != slot.generation || last.distance(p) > TRACK_SPEED * (t - at).max(0.0) + 0.5
+            });
+            if fresh {
+                *entry = side.map(|s| (slot.generation, s, false, p, t));
+                continue;
+            }
+            let Some((_, first, crossed, last, at)) = entry else {
+                continue;
+            };
+            (*last, *at) = (p, t);
+            if !*crossed && side.is_some_and(|s| s != *first) {
+                *crossed = true;
+                match first {
+                    Side::River => self.river_to_sea += 1,
+                    Side::Sea => self.sea_to_river += 1,
+                }
+            }
+        }
+    }
+}
+
+/// Marks the entity that reads the flock back for [`FishTrack`].
+#[derive(Component)]
+struct FishReadback;
+
+/// With a [`FishTrack`], keeps one readback of the current flock buffer.
+fn track_fish(
+    mut commands: Commands,
+    track: Option<Res<FishTrack>>,
+    assets: Option<Res<BoidAssets>>,
+    readers: Query<(Entity, &Readback), With<FishReadback>>,
+) {
+    let (Some(_), Some(assets)) = (track, assets) else {
+        return;
+    };
+    let mut current = false;
+    for (e, r) in &readers {
+        match r {
+            Readback::Buffer { buffer, .. } if *buffer == assets.boids => current = true,
+            _ => commands.entity(e).despawn(),
+        }
+    }
+    if !current {
+        commands
+            .spawn((Readback::buffer(assets.boids.clone()), FishReadback))
+            .observe(fold_readback);
+    }
+}
+
+fn fold_readback(
+    ev: On<ReadbackComplete>,
+    state: Res<BoidState>,
+    track: Option<ResMut<FishTrack>>,
+) {
+    let Some(mut track) = track else {
+        return;
+    };
+    let boids: Vec<Boid> = ev
+        .data
+        .as_chunks::<{ std::mem::size_of::<Boid>() }>()
+        .0
+        .iter()
+        .map(|c| bytemuck::pod_read_unaligned(c.as_slice()))
+        .collect();
+    if state.plan.play {
+        track.observe(&state.plan, &boids, state.t);
+    }
 }
 
 /// River-palette fish per fish region (the plan's region order).
@@ -868,8 +1032,10 @@ pub fn river_palettes(plan: &BoidPlan) -> Vec<u32> {
     out
 }
 
-/// The `boids` object of the published state. `river_palette` counts each region's fish drawn
-/// with the river palette; `pieces` is the bird and fish pieces' load state.
+/// The `boids` object of the published state. Per fish region, `river_fish`,
+/// `river_largest_group` and `river_singles` describe the fish spawned in its river water and
+/// `river_palette` counts the fish drawn with the river palette; `pieces` is the bird and fish
+/// pieces' load state.
 pub fn report_json(
     c: &BoidCounts,
     play: bool,
@@ -883,7 +1049,7 @@ pub fn report_json(
         .enumerate()
         .map(|(i, g)| {
             format!(
-                "{{\"q\":{},\"r\":{},\"tiles\":{},\"fish\":{},\"river\":{},\"largest_group\":{},\"singles\":{},\"river_palette\":{}}}",
+                "{{\"q\":{},\"r\":{},\"tiles\":{},\"fish\":{},\"river\":{},\"largest_group\":{},\"singles\":{},\"river_fish\":{},\"river_largest_group\":{},\"river_singles\":{},\"river_palette\":{}}}",
                 g.cell.q,
                 g.cell.r,
                 g.tiles,
@@ -891,15 +1057,20 @@ pub fn report_json(
                 g.river,
                 g.largest_group,
                 g.singles,
+                g.river_fish,
+                g.river_largest_group,
+                g.river_singles,
                 river_palette.get(i).copied().unwrap_or(0)
             )
         })
         .collect();
     format!(
-        "{{\"mode\":\"{}\",\"budget\":{},\"birds\":{},\"fish\":{},\"roosts\":{},\"roosting\":{},\"settling\":{},\"water_tiles\":{},\"fish_regions\":[{}],\"dispatched\":{dispatched},\"pieces\":\"{pieces}\"}}",
+        "{{\"mode\":\"{}\",\"budget\":{},\"birds\":{},\"bird_slots\":{},\"leaving\":{},\"fish\":{},\"roosts\":{},\"roosting\":{},\"settling\":{},\"water_tiles\":{},\"fish_regions\":[{}],\"dispatched\":{dispatched},\"pieces\":\"{pieces}\"}}",
         if play { "play" } else { "stress" },
         c.budget,
         c.birds,
+        c.bird_slots,
+        c.leaving,
         c.fish,
         c.roosts,
         c.roosting,
@@ -1201,18 +1372,99 @@ mod tests {
         }
     }
 
+    /// The tracker counts a fish that swims from river water across a mouth into the sea, not one
+    /// that turns back in the mouth or one put back at its spawn.
+    #[test]
+    fn fish_track_counts_mouth_crossings() {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let o = hex_core::Axial::new(0, 0);
+        let (s, m) = (o.neighbor(3), o.neighbor(0));
+        let sea = m.neighbor(0);
+        let t = |a: hex_core::Axial, id: &str| crate::play::PlayTile {
+            cell: a,
+            tile: id.into(),
+            rotation: 0,
+        };
+        let world = [
+            t(s, "river_spring"),
+            t(o, "river_straight"),
+            t(m, "river_mouth"),
+            t(sea, "ocean"),
+        ];
+        let mut plan = BoidPlan::play(BoidBudget::HIGH, 1);
+        plan.set_world(&world, &c, &|_| true, 0.0);
+        let b = plan.birds as usize;
+        let at = |cell: hex_core::Axial, i: usize| {
+            let mut v = vec![Boid::zeroed(); plan.slots.len()];
+            let [x, z] = cell.to_world(hex_core::HEX_RADIUS);
+            v[i].pos = [x, -1.0, z, plan.slots[i].generation as f32];
+            v
+        };
+        let mut track = FishTrack::default();
+        // Fish b swims river, mouth, sea at 1.5 m/s; fish b + 1 goes river, mouth and back.
+        let step = |from: hex_core::Axial, to: hex_core::Axial| {
+            let [x0, z0] = from.to_world(hex_core::HEX_RADIUS);
+            let [x1, z1] = to.to_world(hex_core::HEX_RADIUS);
+            Vec2::new(x1 - x0, z1 - z0).length() / 1.5
+        };
+        let mut clock = 0.0;
+        track.observe(&plan, &at(o, b), clock);
+        clock += step(o, m);
+        track.observe(&plan, &at(m, b), clock);
+        clock += step(m, sea);
+        track.observe(&plan, &at(sea, b), clock);
+        assert_eq!((track.river_to_sea, track.sea_to_river), (1, 0));
+        track.observe(&plan, &at(o, b + 1), clock);
+        clock += step(o, m);
+        track.observe(&plan, &at(m, b + 1), clock);
+        clock += step(m, o);
+        track.observe(&plan, &at(o, b + 1), clock);
+        // A jump straight from the river to the sea is a respawn, not a crossing.
+        track.observe(&plan, &at(sea, b + 1), clock + 0.1);
+        assert_eq!((track.river_to_sea, track.sea_to_river), (1, 0));
+        assert!(track.json().contains("\"crossed\":1"), "{}", track.json());
+    }
+
+    /// The compute pass's copies of the plan's fish constants agree with it.
+    #[test]
+    fn compute_shader_constants_match_the_plan() {
+        let src = include_str!("../../../assets/shaders/boids_compute.wgsl");
+        for (name, want) in [
+            ("LEVEL_BAND", plan::LEVEL_BAND),
+            ("RIVER_GROW", plan::RIVER_GROW),
+            ("TROUT_TOP", plan::TROUT_TOP),
+            ("SKIM_GAP", plan::SKIM_GAP),
+            ("WATER_Y", crate::water::tiles::WATER_Y),
+        ] {
+            let line = src
+                .lines()
+                .find(|l| l.starts_with(&format!("const {name}: f32 = ")))
+                .unwrap_or_else(|| panic!("{name} missing"));
+            let got: f32 = line
+                .trim_end_matches(';')
+                .rsplit(' ')
+                .next()
+                .unwrap()
+                .parse()
+                .unwrap();
+            assert_eq!(got, want, "{name}");
+        }
+    }
+
     #[test]
     fn report_is_json_with_the_counts() {
         let mut plan = BoidPlan::play(BoidBudget::HIGH, 1);
         let c = hex_core::TileCatalog::builtin().unwrap();
-        let tiles = [crate::play::PlayTile {
-            cell: hex_core::Axial::new(0, 0),
-            tile: "oak".into(),
-            rotation: 0,
-        }];
+        let tiles: Vec<crate::play::PlayTile> = (0..8)
+            .map(|k| crate::play::PlayTile {
+                cell: hex_core::Axial::new(k, 0),
+                tile: if k == 0 { "oak" } else { "meadow" }.into(),
+                rotation: 0,
+            })
+            .collect();
         plan.set_world(&tiles, &c, &|_| true, 0.0);
         let s = report_json(&plan.counts(0.0), true, 1000, &[], "loading");
-        assert!(s.starts_with("{\"mode\":\"play\",\"budget\":1000,\"birds\":750,\"fish\":0,\"roosts\":12,\"roosting\":12"), "{s}");
+        assert!(s.starts_with("{\"mode\":\"play\",\"budget\":1000,\"birds\":24,\"bird_slots\":750,\"leaving\":0,\"fish\":0,\"roosts\":12,\"roosting\":12"), "{s}");
         assert!(
             s.ends_with("\"fish_regions\":[],\"dispatched\":1000,\"pieces\":\"loading\"}"),
             "{s}"

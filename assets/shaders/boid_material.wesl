@@ -31,6 +31,10 @@ struct BoidForm {
 
 const FORM_FISH: u32 = 1u;
 const FLAG_MASKS: u32 = 1u;
+// boids::RIVER_U: the river palette's half of the fish atlas. RIVER_LIFT brings its mean linear
+// luminance (0.29) to the ocean palette's (0.45).
+const RIVER_U: f32 = 0.5;
+const RIVER_LIFT: f32 = 1.5;
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> form: BoidForm;
 @group(constants::MATERIAL_BIND_GROUP) @binding(101) var boid_masks_texture: texture_2d<f32>;
@@ -115,7 +119,8 @@ fn vertex(v: Vertex) -> VertexOutput {
     fwd = normalize(vec3<f32>(fwd.x, clamp(fwd.y, -0.5, 0.5), fwd.z) + vec3<f32>(1e-5, 0.0, 0.0));
     let right = normalize(cross(vec3<f32>(0.0, 1.0, 0.0), fwd));
     let up = cross(fwd, right);
-    let s = p * form.scale;
+    // A river fish's growth (boids_compute.wgsl anim.w, plan::RIVER_GROW).
+    let s = p * form.scale * (1.0 + select(0.0, b.anim.w, fish_form));
     let world = b.pos.xyz + vec3<f32>(0.0, lift, 0.0) + right * s.x + up * s.y + fwd * s.z;
     out.world_position = vec4<f32>(world, 1.0);
     out.position = position_world_to_clip(world);
@@ -137,6 +142,14 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
     @if(VERTEX_UVS_A) {
     if ((form.flags & FLAG_MASKS) != 0u) {
         pbr_input.diffuse_occlusion *= textureSample(boid_masks_texture, boid_masks_sampler, in.uv).a;
+    }
+    }
+    @if(VERTEX_UVS_A) {
+    if (form.kind == FORM_FISH && in.uv.x >= RIVER_U) {
+        // The river palette under murky river water (owner, 2026-10-14: river fish were not
+        // seen): lifted toward the ocean palette's brightness, hue kept.
+        let c = pbr_input.material.base_color.rgb;
+        pbr_input.material.base_color = vec4<f32>(min(c * RIVER_LIFT, vec3<f32>(1.0)), pbr_input.material.base_color.a);
     }
     }
     pbr_input.material.base_color = alpha_discard(pbr_input.material.flags, pbr_input.material.alpha_cutoff, pbr_input.material.base_color);

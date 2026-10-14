@@ -755,7 +755,8 @@ try {
   // kept per viewer in localStorage (hexWorld.grade), outside the world save, so it holds over a reload.
   await page.setViewportSize({ width: 1440, height: 900 });
   const grade = async () => (await st()).grade;
-  check((await grade())?.name === "tony", `the grade starts at the default (${(await grade())?.name})`);
+  check((await grade())?.name === "rich-3", `the grade starts at the default rich-3 (${(await grade())?.name})`);
+  check((await grade())?.default === "rich-3", `state().grade.default is rich-3 (${(await grade())?.default})`);
   await page.locator(".tool[data-action=settings]").click();
   await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens for the colour grade");
   await page.locator("#settings-tab-graphics").click();
@@ -764,7 +765,10 @@ try {
   const rowIds = await page.locator(".tiers[aria-label='Colour grade'] .tier").evaluateAll((els) => els.map((e) => e.dataset.grade));
   check(JSON.stringify(rowIds) === JSON.stringify(presets), `one Colour grade row per engine preset (${rowIds.join(", ")})`);
   check((await text(".tier[data-grade=rich-2] small")) === (await grade()).presets.find((p) => p.name === "rich-2").detail, "the row shows the engine's description");
-  check(await page.locator(".tier[data-grade=tony][aria-checked=true]").count() === 1, "the Tony row is checked");
+  check(await page.locator(".tier[data-grade=rich-3][aria-checked=true]").count() === 1, "the Rich 3 row is checked");
+  const tags = await page.locator(".tiers[aria-label='Colour grade'] .tier").evaluateAll((els) =>
+    els.map((e) => [e.dataset.grade, e.querySelector(".tag")?.textContent ?? null]).filter(([, t]) => t));
+  check(JSON.stringify(tags) === JSON.stringify([["rich-3", "Default"]]), `only the Rich 3 row is labelled Default (${JSON.stringify(tags)})`);
   await page.locator(".tier[data-grade=rich-2]").scrollIntoViewIfNeeded();
   await page.locator(".tier[data-grade=rich-2]").click();
   await until(async () => (await grade()).name === "rich-2", "picking Rich 2 sets state().grade");

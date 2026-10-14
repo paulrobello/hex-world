@@ -15,11 +15,12 @@ use crate::workload::{Ev100, GateConfig, Tonemap};
 pub enum Grade {
     /// AcesFitted at EV100 12.5 with Bevy's default clear colour: the look before 2026-10-14.
     Aces,
-    /// TonyMcMapface at EV100 12.9 (owner, 2026-10-14, Q4): the shipped look.
-    #[default]
+    /// TonyMcMapface at EV100 12.9 (owner, 2026-10-14, Q4): the default until `rich-3` replaced it.
     Tony,
     Rich1,
     Rich2,
+    /// The default (owner, 2026-10-14, after the grade comparison).
+    #[default]
     Rich3,
 }
 
@@ -63,11 +64,11 @@ impl Grade {
     /// One line for the Settings sheet and the comparison page.
     pub fn detail(self) -> &'static str {
         match self {
-            Grade::Aces => "The earlier look: deep colour, but shaded walls go black",
-            Grade::Tony => "The current look: every wall readable, softer colour",
-            Grade::Rich1 => "Current look with a fifth more colour",
-            Grade::Rich2 => "Current look with ACES-like contrast and colour, walls still readable",
-            Grade::Rich3 => "The earlier look with its shadows lifted out of black",
+            Grade::Aces => "The first look: deep colour, but shaded walls go black",
+            Grade::Tony => "Every wall readable, softer colour",
+            Grade::Rich1 => "Tony with a fifth more colour",
+            Grade::Rich2 => "Tony with ACES-like contrast and colour, walls still readable",
+            Grade::Rich3 => "ACES colour with its shadows lifted out of black",
         }
     }
 
@@ -193,20 +194,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn names_round_trip_and_tony_is_the_default() {
+    fn names_round_trip_and_rich3_is_the_default() {
         for g in Grade::ALL {
             assert_eq!(Grade::parse(g.name()), Some(g));
             assert!(!g.detail().is_empty());
         }
         assert_eq!(Grade::parse("filmic"), None);
-        assert_eq!(GateConfig::default().grade, Grade::Tony);
+        assert_eq!(Grade::default(), Grade::Rich3);
+        assert_eq!(GateConfig::default().grade, Grade::default());
     }
 
     #[test]
-    fn tony_is_the_shipped_look_and_aces_the_earlier_one() {
+    fn rich3_is_the_shipped_look_and_tony_and_aces_the_earlier_ones() {
         let d = GateConfig::default();
-        assert_eq!(Grade::Tony.tonemap(), d.tonemap);
-        assert_eq!(Grade::Tony.ev100(), d.ev100.get());
+        assert_eq!(Grade::Rich3.tonemap(), d.tonemap);
+        assert_eq!(Grade::Rich3.ev100(), d.ev100.get());
+        assert_eq!(
+            (Grade::Rich3.tonemap(), Grade::Rich3.ev100()),
+            (Tonemap::AcesFitted, 12.5)
+        );
+        assert_eq!(Grade::Rich3.grading().shadows.lift, RICH3_LIFT);
+        assert_eq!(Grade::Rich3.grading().midtones.lift, 0.0);
+        assert_eq!(
+            (Grade::Tony.tonemap(), Grade::Tony.ev100()),
+            (Tonemap::TonyMcMapface, crate::lookdev::KIT_EV100)
+        );
         assert_eq!(Grade::Tony.grading(), ColorGrading::default());
         assert_eq!(Grade::Tony.backdrop(), crate::lookdev::BACKDROP);
         assert_eq!(

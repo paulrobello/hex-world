@@ -394,13 +394,18 @@ pub fn extend_play_view(play: &mut serde_json::Value, camera: Option<&Transform>
     map.insert("zoom".into(), zoom);
 }
 
-/// `state().grade`: the active look preset and every preset with its one-line description.
+/// `state().grade`: the active look preset, the default one, and every preset with its one-line
+/// description.
 pub fn grade_json(active: hex_render::Grade) -> serde_json::Value {
     let presets: Vec<serde_json::Value> = hex_render::Grade::ALL
         .iter()
         .map(|g| serde_json::json!({ "name": g.name(), "detail": g.detail() }))
         .collect();
-    serde_json::json!({ "name": active.name(), "presets": presets })
+    serde_json::json!({
+        "name": active.name(),
+        "default": hex_render::Grade::default().name(),
+        "presets": presets,
+    })
 }
 
 /// Publishes the state read by `hexWorld.state()`/`dumpState()` and `--dump-state`.

@@ -144,7 +144,11 @@ impl Plugin for HexRenderPlugin {
         bevy::shader::load_shader_library!(app, "water_common.wesl");
         bevy::shader::load_shader_library!(app, "hooks.wesl");
         app.insert_resource(ActiveScenario(self.scenario))
-            .insert_resource(ClearColor(lookdev::BACKDROP))
+            .insert_resource(ClearColor(if grade::graded(self.scenario) {
+                self.config.grade.backdrop()
+            } else {
+                lookdev::BACKDROP
+            }))
             .insert_resource(ActiveView(self.view))
             .insert_resource(self.config)
             .add_plugins((

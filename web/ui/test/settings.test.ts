@@ -132,10 +132,11 @@ test("audio: the mockup's channels in order, levels as whole percent", () => {
 });
 
 const GRADE: GradeState = {
-  name: "tony",
+  name: "rich-3",
+  default: "rich-3",
   presets: [
-    { name: "aces", detail: "The earlier look" },
-    { name: "tony", detail: "The current look" },
+    { name: "aces", detail: "The first look" },
+    { name: "tony", detail: "Every wall readable" },
     { name: "rich-1", detail: "A fifth more colour" },
     { name: "rich-2", detail: "Richer greens" },
     { name: "rich-3", detail: "Shadows lifted" },
@@ -147,14 +148,22 @@ test("colour grade: one row per engine preset in its order, readable names, the 
   assert.deepEqual(
     v.rows.map((r) => [r.id, r.name, r.detail]),
     [
-      ["aces", "ACES", "The earlier look"],
-      ["tony", "Tony", "The current look"],
+      ["aces", "ACES", "The first look"],
+      ["tony", "Tony", "Every wall readable"],
       ["rich-1", "Rich 1", "A fifth more colour"],
       ["rich-2", "Rich 2", "Richer greens"],
       ["rich-3", "Rich 3", "Shadows lifted"],
     ],
   );
-  assert.equal(v.selected, "tony");
+  assert.equal(v.selected, "rich-3", "the default grade is checked when nothing else is chosen");
+  assert.deepEqual(
+    v.rows.filter((r) => r.tag).map((r) => [r.id, r.tag]),
+    [["rich-3", "Default"]],
+    "only the engine's default row is labelled",
+  );
+  const picked = gradeView({ ...GRADE, name: "aces" });
+  assert.equal(picked.selected, "aces", "another grade in force is checked");
+  assert.equal(picked.rows.find((r) => r.tag)?.id, "rich-3", "and the default label stays on the default row");
   assert.equal(gradeView(GRADE, "rich-2").selected, "rich-2", "a pending pick shows until the engine follows");
   assert.deepEqual(gradeView(undefined), { selected: null, rows: [] }, "no rows before the engine reports grades");
   assert.deepEqual(gradeCommand("aces"), { cmd: "set_grade", grade: "aces" });

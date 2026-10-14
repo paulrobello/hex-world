@@ -1828,8 +1828,10 @@ mod tests {
             }
             if i % 20 == 0 {
                 println!(
-                    "s {s:6.2}: depth {:.3} room analytic {:.3} baked {:.3}",
+                    "s {s:6.2}: depth {:.3} band {:.3}..{:.3} under the surface, room analytic {:.3} baked {:.3}",
                     WATER_Y - lay_height(&w, p),
+                    WATER_Y - band[0],
+                    WATER_Y - band[1],
                     band[2],
                     baked[2]
                 );
@@ -1840,6 +1842,65 @@ mod tests {
             closed.first(),
             closed.last()
         );
+    }
+
+    /// Fish skim a river mouth's shallow fan (owner, 2026-10-14; the fan is not deepened): along
+    /// both mouth handednesses' centre lines, from the river tile through the mouth into the
+    /// ocean, the band stays open with the trout inside the water, the room never dips under the
+    /// river channel's (so the shore turn does not send fish back), and a fish swimming the line
+    /// is never turned back.
+    #[test]
+    fn the_fish_band_is_open_along_both_mouth_centre_lines() {
+        use crate::boids::plan::{
+            FishWorld, TROUT_BELLY, TROUT_TOP, band_at, cell_at, confine, river_room,
+        };
+        let cat = catalog();
+        let tiles: Vec<PlayTile> = MOUTH_PROOF
+            .iter()
+            .map(|&(q, r, id, rotation)| tile(q, r, id, rotation))
+            .collect();
+        let w = FishWorld::new(&tiles, &cat);
+        let floor = river_room() - 0.02;
+        for (q, r, id) in [(3, 0, "river_mouth"), (-3, 0, "river_mouth_l")] {
+            let cell = Axial::new(q, r);
+            let rot = tiles.iter().find(|t| t.cell == cell).unwrap().rotation;
+            let m = Mouth::of(cat.get(id).unwrap(), rot).unwrap();
+            let start = center(cell) + m.start;
+            let (from, to) = (-3.0, 2.0 * APOTHEM + 5.0);
+            assert!(w.cells[&cell_at(start + m.dir * to)].kind == WaterKind::Ocean);
+            let mut lo = f32::MAX;
+            for i in 0..=((to - from) * 10.0) as usize {
+                let p = start + m.dir * (from + i as f32 * 0.1);
+                let (a, g) = (band_at(&w.cells, p), w.field.sample(p));
+                lo = lo.min(a[2]).min(g[2]);
+                assert!(a[2] >= floor && g[2] >= floor, "{id} at {p}: {a:?} {g:?}");
+                let bed = lay_height(&w, p);
+                assert!(a[0] <= a[1], "{id} at {p}: {a:?}");
+                assert!(
+                    a[1] + TROUT_TOP < WATER_Y,
+                    "{id} at {p}: fin through the surface"
+                );
+                assert!(
+                    a[0] - TROUT_BELLY > bed,
+                    "{id} at {p}: belly in the bed {bed}"
+                );
+            }
+            println!("{id}: min room along the centre line {lo:.3}");
+            // Swim the line at 1 m/s: never stopped and turned.
+            let dt = 1.0 / 30.0;
+            let v = Vec3::new(m.dir.x, 0.0, m.dir.y);
+            let a0 = start + m.dir * from;
+            let mut pos = Vec3::new(a0.x, WATER_Y - 0.4, a0.y);
+            for _ in 0..((to - from) * 30.0) as usize {
+                let (np, nv) = confine(&w.field, pos, v, dt);
+                assert!(nv.xz().dot(m.dir) > 0.99, "{id}: turned back at {pos}");
+                pos = np;
+            }
+            assert!(
+                w.cells[&cell_at(pos.xz())].kind == WaterKind::Ocean,
+                "{id}: reached {pos}"
+            );
+        }
     }
 
     fn lay_height(w: &crate::boids::plan::FishWorld, p: Vec2) -> f32 {
@@ -2000,6 +2061,213 @@ mod tests {
                 .unwrap();
             assert!(!region.river, "{cell:?}: the spring's water joins the sea");
         }
+    }
+
+    /// `script` replayed on the rules with play's input semantics (hover snaps to the first legal
+    /// rotation, `rotate` steps through the distinct legal ones); every placement, bulldoze, undo
+    /// and redo must succeed.
+    fn replay(script: &[serde_json::Value], cat: &TileCatalog) -> World {
+        let mut world = World::new(1);
+        let (mut selected, mut hovered, mut rotation) = ("meadow".to_owned(), None, 0u8);
+        let n = |cmd: &serde_json::Value, k: &str| i32::try_from(cmd[k].as_i64().unwrap()).unwrap();
+        for cmd in script {
+            let at = || Axial::new(n(cmd, "q"), n(cmd, "r"));
+            match cmd["cmd"].as_str().unwrap() {
+                "select_tile" => selected = cmd["id"].as_str().unwrap().to_owned(),
+                "hover" => {
+                    hovered = Some(at());
+                    if let Some(k) = world.auto_rotate(cat, at(), cat.get(&selected).unwrap()) {
+                        rotation = k;
+                    }
+                }
+                "rotate" => {
+                    let def = cat.get(&selected).unwrap();
+                    rotation = world
+                        .cycle_rotation(
+                            cat,
+                            hovered.unwrap(),
+                            def,
+                            rotation,
+                            hex_core::RotateDir::Forward,
+                        )
+                        .unwrap();
+                }
+                "place" => {
+                    if hovered != Some(at()) {
+                        hovered = Some(at());
+                        rotation = world
+                            .auto_rotate(cat, at(), cat.get(&selected).unwrap())
+                            .unwrap_or_else(|| {
+                                panic!("{selected} has no legal rotation at {:?}", at())
+                            });
+                    }
+                    world
+                        .place(cat, at(), &selected, rotation)
+                        .unwrap_or_else(|e| panic!("{selected} at {:?}: {e:?}", at()));
+                }
+                "bulldoze" => {
+                    world.bulldoze(at()).unwrap();
+                }
+                "undo" => assert!(world.undo()),
+                "redo" => assert!(world.redo()),
+                _ => {}
+            }
+        }
+        world
+    }
+
+    /// The boids checkpoint's additions (owner, 2026-10-14): nine more meadows (birds scale with
+    /// land) and, after the redo, a chain spring, straight, mouth into the coast's ocean. Prints
+    /// the commands that place them; `boids_script_builds_its_world` checks the script.
+    #[test]
+    #[ignore = "generates docs/checkpoints/boids/boids.json placements"]
+    fn print_boids_additions() {
+        let cat = catalog();
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../docs/checkpoints/boids/boids.json"
+        );
+        let script: Vec<serde_json::Value> =
+            serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let mut world = replay(&script, &cat);
+        let meadow = cat.get("meadow").unwrap();
+        let candidates = [
+            (1, -2),
+            (1, -3),
+            (2, -3),
+            (0, -3),
+            (-1, -2),
+            (-1, -1),
+            (2, -2),
+            (-1, -3),
+            (0, -4),
+            (1, -4),
+            (2, -4),
+            (3, -3),
+        ];
+        let mut placed = 0;
+        for (q, r) in candidates {
+            let c = Axial::new(q, r);
+            if placed < 9 && world.tile(c).is_none() && world.auto_rotate(&cat, c, meadow).is_some()
+            {
+                world.place(&cat, c, "meadow", 0).unwrap();
+                println!("  {{\"cmd\": \"place\", \"q\": {q}, \"r\": {r}}},");
+                placed += 1;
+            }
+        }
+        println!("placed {placed} meadows");
+        let want = |id: &str, faces: &[(u8, SocketKind)]| -> u8 {
+            let def = cat.get(id).unwrap();
+            (0..6u8)
+                .find(|&k| faces.iter().all(|&(e, kind)| def.edge(e, k).kind == kind))
+                .unwrap()
+        };
+        let chain = [
+            (
+                5,
+                -1,
+                "river_mouth",
+                want(
+                    "river_mouth",
+                    &[
+                        (2, SocketKind::Ocean),
+                        (3, SocketKind::Ocean),
+                        (5, SocketKind::River),
+                    ],
+                ),
+            ),
+            (
+                6,
+                -2,
+                "river_straight",
+                want(
+                    "river_straight",
+                    &[(2, SocketKind::River), (5, SocketKind::River)],
+                ),
+            ),
+            (
+                7,
+                -3,
+                "river_spring",
+                want("river_spring", &[(2, SocketKind::River)]),
+            ),
+        ];
+        for (q, r, id, rot) in chain {
+            let def = cat.get(id).unwrap();
+            let cell = Axial::new(q, r);
+            let legal = world.legal_rotations(&cat, cell, def);
+            assert!(
+                legal.contains(&rot),
+                "{id} at ({q}, {r}) r{rot}: legal {legal:?}"
+            );
+            let mut k = world.auto_rotate(&cat, cell, def).unwrap();
+            let mut steps = 0;
+            while !def.same_orientation(k, rot) {
+                k = world
+                    .cycle_rotation(&cat, cell, def, k, hex_core::RotateDir::Forward)
+                    .unwrap();
+                steps += 1;
+                assert!(steps < 7, "{id}");
+            }
+            println!("  {{\"cmd\": \"select_tile\", \"id\": \"{id}\"}},");
+            println!("  {{\"cmd\": \"hover\", \"q\": {q}, \"r\": {r}}},");
+            for _ in 0..steps {
+                println!("  {{\"cmd\": \"rotate\", \"dir\": \"cw\"}},");
+            }
+            println!("  {{\"cmd\": \"place\", \"q\": {q}, \"r\": {r}}},");
+            world.place(&cat, cell, id, k).unwrap();
+        }
+    }
+
+    /// `docs/checkpoints/boids/boids.json` replayed on the rules places every tile, bulldozes,
+    /// undoes and redoes as scripted, and ends with 12 land tiles (three flocks, as before the
+    /// bulldoze's 13) and a spring, straight and mouth joined to the coast's sea as one fish
+    /// region.
+    #[test]
+    fn boids_script_builds_its_world() {
+        let cat = catalog();
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../docs/checkpoints/boids/boids.json"
+        );
+        let script: Vec<serde_json::Value> =
+            serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let world = replay(&script, &cat);
+        let tiles: Vec<PlayTile> = world
+            .tiles()
+            .iter()
+            .map(|(c, t)| PlayTile {
+                cell: *c,
+                tile: t.def.clone(),
+                rotation: t.rotation,
+            })
+            .collect();
+        assert_eq!(tiles.len(), 31);
+        let fish = crate::boids::plan::FishWorld::new(&tiles, &cat);
+        assert_eq!(fish.cells.len(), 19);
+        assert_eq!(
+            tiles.len() - fish.cells.len(),
+            12,
+            "land tiles after the redo"
+        );
+        let region = fish
+            .regions
+            .iter()
+            .find(|g| g.cells.contains(&Axial::new(7, -3)))
+            .unwrap();
+        for c in [(6, -2), (5, -1), (4, -1), (1, 0)] {
+            assert!(
+                region.cells.contains(&Axial::new(c.0, c.1)),
+                "{c:?} {region:?}"
+            );
+        }
+        assert_eq!(region.cells.len(), 15);
+        let lay = layout(&tiles, &cat, |_| false);
+        let (s, m) = (
+            &lay[&Axial::new(7, -3)].paths[0],
+            &lay[&Axial::new(5, -1)].paths[0],
+        );
+        assert_eq!((s.up, m.down), (RiverEnd::Spring, RiverEnd::Mouth));
     }
 
     /// Placement order of `docs/checkpoints/water-play/water-play.json`: (q, r, tile, rotate steps

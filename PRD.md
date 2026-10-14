@@ -251,14 +251,14 @@ About 10 types. The exact variants are frozen at the start of P2.
 | Agent | Behavior | Phase |
 |---|---|---|
 | Car | Routes between destination nodes on the road graph (A* over a cached graph) and follows lane splines. Starts and ends in a house's parking spot (§7.1). Three body types to start: sedan, van and pickup truck (owner, 2026-10-13), each one model recoloured per instance at runtime (§6). Spawn rate scales with connected destinations. | P2 |
-| Bird | Boids flying in small flocks over the whole map, roosting on oak tiles. Runs on GPU compute. | P2 |
-| Fish | Schools that swim inside ocean and river water, visible through the clear surface. The same GPU boids pass as birds, confined to the water volume of connected water tiles and kept below the surface and above the bed (`docs/kit/water-contract.md`). They share the bird budget (owner, 2026-10-13). | P2 |
+| Bird | Boids flying in small flocks over the whole map, roosting on oak tiles. Runs on GPU compute. The count scales with the map: a flock of 12 per 4 land tiles, none over the start tile, flocks flying in and away as tiles are placed and bulldozed (owner, 2026-10-14). | P2 |
+| Fish | Schools that swim inside ocean and river water, visible through the clear surface. The same GPU boids pass as birds, confined to the water volume of connected water tiles and kept below the surface and above the bed (`docs/kit/water-contract.md`). They share the bird budget (owner, 2026-10-13). Fish skim a river mouth's shallow fan to pass between river and sea, and fish spawned in river water keep singles and small groups where a river joins the sea (owner, 2026-10-14). | P2 |
 | Boat | Drifts on ocean tiles and travels connected rivers. | P3 |
 | Train | Routes between stations on the rail graph. Multi-car consists that cross tile boundaries. | P3 |
 | Farm animals | Wander within their farm tile's bounds, using idle, graze and run states. | P3 |
 | Pedestrians | Walk sidewalk lanes in towns. | P6 |
 
-- Agent caps scale with the quality tier (reference target: 300 vehicles, 500 animals and 1,000 boids at High, split between birds and fish: 700 birds and 300 fish by default, with fish scaled to the water tiles in the world).
+- Agent caps scale with the quality tier (reference target: 300 vehicles, 500 animals and 1,000 boids at High, split between birds and fish: fish scaled to the water tiles in the world up to 300, birds to the land tiles up to 75% of the slots the fish leave).
 - Agents are simulated at a fixed 20 Hz tick and interpolated at render time. Off-screen agents drop to a coarse simulation LOD.
 - Skinned creatures use baked animation (vertex animation textures or a bone-transform atlas) so they can be GPU-instanced. No per-agent CPU skinning.
 - Animated props (windmill blades, water wheels, flags) use rigid object transforms or vertex animation textures.
@@ -310,8 +310,8 @@ The deterministic simulation core (grid, sockets, networks, pathing, agents) run
   - **Quality tiers.** The effect scales per tier (§9.2). It must hold the P2 frame budget and fit inside WebGPU's 16 sampled-texture baseline per stage.
   - **Prototype first.** Prototype the look in its own scenario before building the tile content.
 - Foliage: GPU-instanced with wind sway in the vertex shader. Alpha-tested leaves with dithered LOD transitions.
-- Post-processing: TAA, bloom, filmic tone mapping (TonyMcMapface at EV100 12.9, owner 2026-10-14, D4 in [`docs/decisions/0002-asset-pipeline.md`](docs/decisions/0002-asset-pipeline.md)), color grading by LUT, and DOF (used by photo mode).
-- Tilt-shift: a miniature-diorama look for the normal game camera, not only photo mode. A custom post node blurs by distance from a tilted focal plane that follows the orbit camera's focus point, with the blur strength scaled by zoom (strong when zoomed out, off near ground level) plus an optional saturation and contrast lift. It is a player toggle with a strength slider, it is on by default from Medium tier up, and it shares its kernel with photo mode's tilt-shift preset. Bevy's DOF has no tilted plane, so this is a custom node.
+- Post-processing: TAA, bloom, filmic tone mapping (the `rich-3` grade by default: ACES fitted at EV100 12.5 with a shadow lift before the curve, owner 2026-10-14; named grades switch the tone mapper, exposure, grading and backdrop live; D4 in [`docs/decisions/0002-asset-pipeline.md`](docs/decisions/0002-asset-pipeline.md)), color grading by LUT, and DOF (used by photo mode).
+- Tilt-shift: a miniature-diorama look for the normal game camera, not only photo mode. A custom post node blurs by distance from a tilted focal plane that follows the orbit camera's focus point, with the blur strength scaled by zoom (strong when zoomed out, off near ground level) plus an optional saturation and contrast lift. It is a player toggle with a strength slider, it is off by default (owner, 2026-10-14; it was on from the Medium tier), and it shares its kernel with photo mode's tilt-shift preset. Bevy's DOF has no tilted plane, so this is a custom node.
 - Culling: GPU frustum and Hi-Z occlusion culling with indirect draws, organized in chunks (for example 7- or 19-hex clusters).
 - LOD: three mesh LODs per kit piece with distance and screen-size selection and dithered cross-fade. Far chunks use merged meshes.
 
@@ -575,7 +575,7 @@ Goal: the polished, playable core loop with D12 content.
 | Q2 | External storage for `.blend` sources (R2 bucket vs. other). | P1 |
 | Q3 | Resolved: pure-Rust `meshoptimizer-rs` GLB rewrite plus BC7/ASTC KTX2 + zstd with a PNG fallback (§9.3, [`docs/decisions/0001-engine.md`](docs/decisions/0001-engine.md)). | P0 |
 | Q6 | Provisional: Bevy retained (D2, [`docs/decisions/0001-engine.md`](docs/decisions/0001-engine.md)). The Safari 27 startup failure is diagnosed and worked around (`web/wgsl-compat.js`), and Safari renders. Paced p95 still misses 17.0 ms in Chrome and in Safari close-up. | P0 |
-| Q4 | Resolved: TonyMcMapface at EV100 12.9 (owner, 2026-10-14). ACES fitted, chosen at the 2026-10-13 look-dev, clipped walls facing away from the sun to black (D4, [`docs/decisions/0002-asset-pipeline.md`](docs/decisions/0002-asset-pipeline.md)). | P1 |
+| Q4 | Resolved: the `rich-3` grade is the default (owner, 2026-10-14, after the grade comparison): ACES fitted at EV100 12.5 with a +0.013 linear shadow lift before the curve. ACES fitted, chosen at the 2026-10-13 look-dev, clipped walls facing away from the sun to black; TonyMcMapface at EV100 12.9 (owner, 2026-10-14) kept the walls readable but read washed out, and stays selectable as `tony` (D4, [`docs/decisions/0002-asset-pipeline.md`](docs/decisions/0002-asset-pipeline.md)). | P1 |
 | Q5 | Resolved: the PRD is not registered in par-prd. `PRD.md` in this repo is canonical. | Owner |
 
 ## 18. Engine research summary (2026-10-12)

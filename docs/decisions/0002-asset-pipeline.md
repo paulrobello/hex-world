@@ -63,7 +63,7 @@ ACES fitted is the kit camera default (owner look-dev checkpoint, 2026-10-13), c
 
 **Reopened 2026-10-14 (owner, review queue Q4): TonyMcMapface at EV100 12.9.** Walls facing away from the sun rendered pure black (0/255). Bevy's fitted ACES curve outputs black for any input below about 0.0033 linear. The shaded O4 soil walls reach about 0.0030, because the puresky HDRI has no lit ground to bounce light up and the soil's linear albedo is about 0.04. No change limited to the walls came close under ACES: doubling the IBL, ambient 400 or EV 11.5 reached about 1/255. The owner chose three changes together:
 
-- `Tonemap::TonyMcMapface` is the default and `lookdev::KIT_EV100` is 12.9, for every kit, water and play camera (`GateConfig::default`).
+- `Tonemap::TonyMcMapface` is the default and `lookdev::KIT_EV100` is 12.9, for every kit, water and play camera (`GateConfig::default`). Superseded as the default by `rich-3` the same day (below); `--grade tony` keeps this look.
 - The O4 soil is lightened ×2.5 in linear albedo: `"color": [2.5, 2.5, 2.5]` on every `soil` slot in `assets/kit/manifest.json`, mirrored by `WALL_TINT` in `water_terrain.wesl`. The set's textures are unchanged.
 - The backdrop is explicit: `lookdev::BACKDROP` is the app's `ClearColor`. Under TonyMcMapface, Bevy's default clear colour would rise from about 15 to 47/255.
 
@@ -80,9 +80,22 @@ Measured on the shipped build against the ACES frames (`docs/checkpoints/shade-d
 | River water (mouth, bridge) | 85.6, 86.8 | 99.7, 99.5 |
 | Backdrop | 15.4 | 16.0 |
 
-The water look-dev's river wall stays dark because its crop sits on the O4 profile's near-black foot. A ×20 `WALL_TINT` probe lifted it to 22.6/255, which shows that the factor reaches the shader. ACES stays selectable with `--tonemap aces --ev100 12.5`. The kit and water look-dev shots are re-taken on this look before their approvals.
+The water look-dev's river wall stays dark because its crop sits on the O4 profile's near-black foot. A ×20 `WALL_TINT` probe lifted it to 22.6/255, which shows that the factor reaches the shader. Plain ACES stays selectable with `--grade aces`. The kit and water look-dev shots are re-taken on this look before their approvals.
 
-**Grades (owner, 2026-10-14 feedback: the Tony look feels washed out).** The tone mapper, exposure, Bevy `ColorGrading` and backdrop now come from one named preset, `hex_render::grade::Grade`, read by every kit, water and play camera: `tony` (the ruling above, still the default), `aces` (the 2026-10-13 look, with Bevy's default clear colour so its backdrop reads as before) and three in-between candidates, `rich-1` to `rich-3`. `--grade`, `?grade=`, the `set_grade` command and the Settings sheet switch them live. Settings and measurements: `docs/checkpoints/grades/`; comparison page: `docs/review/2026-10-14-grade-compare.html`. The default is the owner's pick.
+**Grades (owner, 2026-10-14 feedback: the Tony look feels washed out).** The tone mapper, exposure, Bevy `ColorGrading` and backdrop now come from one named preset, `hex_render::grade::Grade`, read by every kit, water and play camera: `tony` (the ruling above, the default until the pick below), `aces` (the 2026-10-13 look, with Bevy's default clear colour so its backdrop reads as before) and three in-between candidates, `rich-1` to `rich-3`. `--grade`, `?grade=`, the `set_grade` command and the Settings sheet switch them live. Settings and measurements: `docs/checkpoints/grades/`; comparison page: `docs/review/2026-10-14-grade-compare.html`. The default is the owner's pick.
+
+**Default: `rich-3` (owner, 2026-10-14, after the grade comparison: "make color grade Rich 3 the default").** ACES fitted at EV100 12.5 with a +0.013 linear lift on the shadow and highlight sections before the curve (`RICH3_LIFT`), and its own backdrop, linear (0.0110, 0.0118, 0.0142), which reads about 15/255 under that curve. `Grade::default()` is `Rich3`, and `GateConfig::default()` takes its grade, tone mapper and exposure from it, so every kit, water and play camera, the look-dev shots, photo mode and the Legend thumbnails get it unless `--grade`/`?grade=` or a viewer's stored Settings choice picks another; `--tonemap` and `--ev100` still override the grade's own values. The Settings Colour grade rows label it Default (`state().grade.default`). It keeps ACES's colour and lifts the shaded walls out of black, though they stay darker than under `tony`. Measured in `docs/checkpoints/grades/measurements.txt` (sRGB luma /255 and HSV saturation):
+
+| Crop | `aces` | `tony` | `rich-3` |
+|---|---|---|---|
+| River-mouth cut walls | 0.65, 0.63 | 12.2, 12.0 | 8.6, 8.5 |
+| Bridge arch face | 7.8 | 31.1 | 17.8 |
+| Meadow wall beside the beach | 22.4 | 30.8 | 22.2 |
+| River-mouth grass | 128.0 | 125.3 | 128.9 |
+| Backdrop | 15.4 | 16.0 | 15.3 |
+| Meadow grass saturation | 0.629 | 0.510 | 0.599 |
+| Roof saturation | 0.613 | 0.518 | 0.608 |
+| Sea saturation | 0.399 | 0.334 | 0.396 |
 
 ### D5. IBL
 

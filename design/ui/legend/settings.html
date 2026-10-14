@@ -73,16 +73,16 @@
       <div class="note note--caution tier-note" role="status"><svg class="ic"><use href="#i-alert"/></svg><div><b>Ultra may run below 60 fps here</b>High measured 13.1 ms a frame on this GPU. Ultra adds 4k shadows and planar reflections.</div></div>
 
       <h2 class="section-h">Tilt-shift</h2>
-      <div class="field"><span class="field__label">Miniature focus</span><button class="switch" type="button" role="switch" aria-checked="true" aria-label="Tilt-shift" data-tilt></button><span class="field__hint">Blurs near and far like a diorama photo. On from Medium up.</span></div>
+      <div class="field"><span class="field__label">Miniature focus</span><button class="switch" type="button" role="switch" aria-checked="true" aria-label="Tilt-shift" data-tilt></button><span class="field__hint">Blurs near and far like a diorama photo. Off by default.</span></div>
       <label class="field field--slider" data-tilt-strength><span class="field__label">Strength</span><output class="field__value" data-out="tilt">60%</output><input type="range" min="0" max="100" value="60" data-in="tilt" aria-label="Tilt-shift strength"></label>
 
       <h2 class="section-h">Colour grade</h2>
       <ul class="tiers" role="radiogroup" aria-label="Colour grade">
-        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="aces"><span class="radio"></span><b>ACES</b><small>The earlier look: deep colour, but shaded walls go black</small></li>
-        <li class="tier" role="radio" tabindex="0" aria-checked="true" data-grade="tony"><span class="radio"></span><b>Tony</b><small>The current look: every wall readable, softer colour</small></li>
-        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="rich-1"><span class="radio"></span><b>Rich 1</b><small>Current look with a fifth more colour</small></li>
-        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="rich-2"><span class="radio"></span><b>Rich 2</b><small>Current look with ACES-like contrast and colour, walls still readable</small></li>
-        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="rich-3"><span class="radio"></span><b>Rich 3</b><small>The earlier look with its shadows lifted out of black</small></li>
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="aces"><span class="radio"></span><b>ACES</b><small>The first look: deep colour, but shaded walls go black</small></li>
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="tony"><span class="radio"></span><b>Tony</b><small>Every wall readable, softer colour</small></li>
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="rich-1"><span class="radio"></span><b>Rich 1</b><small>Tony with a fifth more colour</small></li>
+        <li class="tier" role="radio" tabindex="-1" aria-checked="false" data-grade="rich-2"><span class="radio"></span><b>Rich 2</b><small>Tony with ACES-like contrast and colour, walls still readable</small></li>
+        <li class="tier" role="radio" tabindex="0" aria-checked="true" data-grade="rich-3"><span class="radio"></span><b>Rich 3</b><span class="tag">Default</span><small>ACES colour with its shadows lifted out of black</small></li>
       </ul>
     </div>
 

@@ -104,3 +104,10 @@ Owner's notes, verbatim: "there is no visual or ghost of the selected tile when 
 - **Colour grade default:** rich-3, which is ACES at EV100 12.5 with the shadow lift (owner, after playing ad423f2).
 - **Spring tile:** "spring color does not match surounding tiles". Fix in progress.
 - **Music bitrates:** keep Opus 128k and AAC 160k for now (32 MB across 12 files). Revisit once the full payload is known, and make cuts then if needed.
+
+## Round 13: fish branch questions
+
+- **Spring fish palette:** keep the agent's change. Fish spawned in a spring use the river palette and river grouping, like the river they swim down.
+- **River fish visibility:** leave as shipped. Fish read clearly close up, are borderline at 50 m and cannot be identified from the 145 m opening camera. No further brightening or growth beyond 30%.
+- **Grass:** blades on High and Ultra near the camera, with wind built from several noise layers (large travelling gusts, medium patches, small flutter). In progress.
+- **River mouth fan:** "the river mouth coloring needs to be blended more where it meets the sand". In progress.
