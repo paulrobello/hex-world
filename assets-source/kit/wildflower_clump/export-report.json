@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/wildflower_clump.py",
+    "sha256": "8365d24e8bb13fe522c48a0be4ca588ae39a580d4ddbfed7f0d678cb6fe5b6b1"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    }
+  ],
+  "lodTris": {
+    "wildflower_clump_lod0": 582,
+    "wildflower_clump_lod1": 198,
+    "wildflower_clump_lod2": 30
+  },
+  "nodes": [
+    "wildflower_clump",
+    "wildflower_clump_collider",
+    "wildflower_clump_lod0",
+    "wildflower_clump_lod1",
+    "wildflower_clump_lod2"
+  ],
+  "pieceId": "wildflower_clump",
+  "sockets": []
+}

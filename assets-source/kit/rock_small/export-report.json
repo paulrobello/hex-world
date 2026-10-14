@@ -1,0 +1,22 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/rock_small.py",
+    "sha256": "cb99f5ac4da0fe8f4f6cf31a95c226748202cf3ac439645eb2b8130eb62ea6ce"
+  },
+  "generatorDeps": [],
+  "lodTris": {
+    "rock_small_lod0": 1077,
+    "rock_small_lod1": 473,
+    "rock_small_lod2": 137
+  },
+  "nodes": [
+    "rock_small",
+    "rock_small_collider",
+    "rock_small_lod0",
+    "rock_small_lod1",
+    "rock_small_lod2"
+  ],
+  "pieceId": "rock_small",
+  "sockets": []
+}

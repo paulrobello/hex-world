@@ -1,0 +1,63 @@
+{
+  "aoDistanceM": 0.25,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.426379531621933,
+      "min": 0.2222222536802292,
+      "p01": 0.2666666805744171,
+      "p05": 0.30980393290519714,
+      "texels": 144792
+    },
+    "ao": {
+      "mean": 0.8572361469268799,
+      "min": 0.0941176563501358,
+      "p01": 0.3137255012989044,
+      "p05": 0.4392157196998596,
+      "texels": 144792
+    },
+    "mossFraction": 0.09700121553676999,
+    "normalMissFraction": 0.0,
+    "roughness": {
+      "mean": 0.8254581093788147,
+      "min": 0.7215686440467834,
+      "p01": 0.7215686440467834,
+      "p05": 0.7215686440467834,
+      "texels": 144792
+    }
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.04,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 512
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 128
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "CPU",
+  "extentZ": [
+    -0.30491650104522705,
+    0.3160054683685303
+  ],
+  "marginPx": 8,
+  "maxRayDistanceM": 0.1,
+  "receiverSignature": "a6c2205004a48bd5e12f8ebc3908fd366e0b8f48d7d73c13dc6d7e0821f7c941",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 291.6224393295519,
+    "median": 271.1107990796313,
+    "min": 213.1688611795751
+  }
+}

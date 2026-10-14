@@ -99,4 +99,14 @@
     { "id": "ocean_center", "kind": "prop", "glb": "p1/ocean_center/ocean_center.glb",
       "provenance": "assets-source/kit/ocean_center/provenance.json",
       "slots": { "coast_pebble": { "color": [0.105, 0.095, 0.08], "roughness": 0.45 },
-                 "coast_rock": { "color": [0.17, 0.16, 0.14], "roughness": 0.6 } } } ] }
+                 "coast_rock": { "color": [0.17, 0.16, 0.14], "roughness": 0.6 } } },
+    { "id": "rock_small", "kind": "prop", "glb": "p1/rock_small/rock_small.glb",
+      "provenance": "assets-source/kit/rock_small/provenance.json",
+      "slots": { "rock_small_rock": { "unique": true, "masks": true } },
+      "maps": { "albedo": "p1/rock_small/rock_small.albedo", "normal": "p1/rock_small/rock_small.normal",
+                "orm": "p1/rock_small/rock_small.orm", "masks": "p1/rock_small/rock_small.masks" } },
+    { "id": "wildflower_clump", "kind": "prop", "glb": "p1/wildflower_clump/wildflower_clump.glb",
+      "provenance": "assets-source/kit/wildflower_clump/provenance.json",
+      "slots": { "wildflower_clump_foliage": { "unique": true, "masks": true, "alphaCutoff": 0.5 } },
+      "maps": { "albedo": "p1/wildflower_clump/wildflower_clump.albedo", "normal": "p1/wildflower_clump/wildflower_clump.normal",
+                "orm": "p1/wildflower_clump/wildflower_clump.orm", "masks": "p1/wildflower_clump/wildflower_clump.masks" } } ] }

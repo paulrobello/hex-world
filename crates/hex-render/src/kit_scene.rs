@@ -36,6 +36,8 @@ pub struct Placement {
     /// Extra turn about +Y after `rot`, in degrees, the way edges run (90 maps +x to +z): a hero
     /// prop's `yaw_deg` (`data/tiles/*.ron`).
     pub yaw_deg: f32,
+    /// Height in meters: props sit on the base's relief at their spot (0 for bases and networks).
+    pub y: f32,
 }
 
 const fn place(piece: &'static str, q: i32, r: i32, rot: u8) -> Placement {
@@ -45,6 +47,7 @@ const fn place(piece: &'static str, q: i32, r: i32, rot: u8) -> Placement {
         rot,
         offset: [0.0, 0.0],
         yaw_deg: 0.0,
+        y: 0.0,
     }
 }
 
@@ -104,8 +107,36 @@ pub fn kit_layout() -> Vec<Placement> {
         v.push(place("ocean_base", q, r, k));
         v.push(place("ocean_center", q, r, k));
     }
+    // Meadow props on the meadow at (-1, 1) (base rotation 4), each lifted onto the meadow relief at
+    // its spot (`relief()` in scripts/blender/kit/meadow_base.py, evaluated in the base's frame).
+    for (piece, offset, rot, y) in MEADOW_PROPS {
+        v.push(Placement {
+            offset,
+            y,
+            ..place(piece, -1, 1, rot)
+        });
+    }
     v
 }
+
+/// (piece, offset, rotation, relief height) of the meadow props in the kit layout.
+const MEADOW_PROPS: [(&str, [f32; 2], u8, f32); 15] = [
+    ("rock_small", [-6.0, 5.0], 0, -0.124),
+    ("rock_small", [5.0, 6.0], 2, -0.083),
+    ("rock_small", [-2.5, -7.0], 4, -0.151),
+    ("wildflower_clump", [-4.8, 4.2], 1, -0.172),
+    ("wildflower_clump", [-6.9, 6.4], 3, -0.066),
+    ("wildflower_clump", [-5.0, 6.6], 5, -0.104),
+    ("wildflower_clump", [4.0, 7.2], 0, -0.091),
+    ("wildflower_clump", [6.2, 4.6], 2, -0.075),
+    ("wildflower_clump", [-3.6, -6.0], 1, -0.080),
+    ("wildflower_clump", [-1.4, -8.0], 3, -0.129),
+    ("wildflower_clump", [-7.4, 3.4], 4, -0.065),
+    ("wildflower_clump", [0.0, 5.5], 2, -0.163),
+    ("wildflower_clump", [-2.0, 3.0], 0, -0.138),
+    ("wildflower_clump", [-8.5, 0.5], 5, -0.176),
+    ("wildflower_clump", [2.0, 8.5], 1, -0.141),
+];
 
 /// The gate fixture on the same seam as the road tiles, plus one rotated neighbour.
 pub fn fixture_layout() -> Vec<Placement> {
@@ -249,7 +280,7 @@ pub fn finish_kit(
         };
         let [x, z] = p.cell.to_world(HEX_RADIUS);
         let rot = piece_rotation(p.rot);
-        let pos = Vec3::new(x, 0.0, z) + rot * Vec3::new(p.offset[0], 0.0, p.offset[1]);
+        let pos = Vec3::new(x, p.y, z) + rot * Vec3::new(p.offset[0], 0.0, p.offset[1]);
         let rot = placement_rotation(p);
         for lod in 0..3usize {
             let Some(mh) = g.named_meshes.get(format!("{}_lod{lod}", p.piece).as_str()) else {

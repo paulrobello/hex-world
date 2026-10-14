@@ -15,7 +15,5 @@
         (id: "beach_base", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
         (id: "beach_center", delivered_by: "S4 references, then wave-2 kit modeling: coast family"),
         // Meadow props
-        (id: "wildflower_clump", delivered_by: "S4 references, then wave-2 kit modeling: meadow props"),
-        (id: "rock_small", delivered_by: "S4 references, then wave-2 kit modeling: meadow props"),
     ],
 )
