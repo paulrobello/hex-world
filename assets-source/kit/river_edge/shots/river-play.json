@@ -11,6 +11,7 @@
   {"cmd": "place", "q": -3, "r": 3},
   {"cmd": "hover", "q": 9, "r": -9},
   {"cmd": "toggle", "what": "photo"},
+  {"cmd": "photo", "dof": "off", "pause_agents": false},
   {"cmd": "wait", "frames": 90},
   {"cmd": "dump_state", "name": "k5-river-play-state"},
 

@@ -9,8 +9,8 @@
 set -euo pipefail
 DOCS=docs/checkpoints/cars-kit
 OUT=target/shots
-CLOSEUPS="sedan:${SEDAN:-41} van:${VAN:-32}"
-NIGHT=${NIGHT_SHOT:-07}
+CLOSEUPS="sedan:${SEDAN:-02} van:${VAN:-43} pickup:${PICKUP:-22}"
+NIGHT=${NIGHT_SHOT:-04}
 mkdir -p "$OUT"
 rm -f "$OUT"/cars-kit-*.png "$OUT"/cars-kit-*.json
 cargo build -p hex-app --release

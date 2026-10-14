@@ -341,11 +341,11 @@ WATER_DOCS = docs/checkpoints/water
 shots-water:
 	mkdir -p target/shots $(WATER_DOCS)
 	rm -f target/shots/water-*.png
-	cargo run -p hex-app --release -- --script scripts/shots/water.json --size 1600x1000 --seed 1 --fps off --water_clock fixed $(ARGS)
+	cargo run -p hex-app --release -- --script scripts/shots/water.json --size 1600x1000 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
 	@for n in $(WATER_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
 	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(WATER_DOCS)/$$n.jpg || exit 1; done
 	node scripts/shots/water-motion.mjs target/shots/water-motion-script.json
-	cargo run -p hex-app --release -- --script target/shots/water-motion-script.json --size 960x600 --seed 1 --fps off --water_clock fixed $(ARGS)
+	cargo run -p hex-app --release -- --script target/shots/water-motion-script.json --size 960x600 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
 	@for v in $(WATER_VIEWS); do \
 	  test -s target/shots/water-motion-$$v-089.png || { echo "missing water-motion-$$v frames"; exit 1; }; \
 	  ffmpeg -loglevel error -y -framerate 30 -i target/shots/water-motion-$$v-%03d.png -c:v libx264 -pix_fmt yuv420p -crf 22 $(WATER_DOCS)/water-motion-$$v.mp4 || exit 1; \
