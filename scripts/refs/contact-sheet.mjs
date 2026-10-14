@@ -1,5 +1,5 @@
 // Builds the owner-review contact sheet: one row per piece, its refs side by side (as many as its refs.json lists), labeled.
-// Usage: node scripts/refs/contact-sheet.mjs <out.png> <piece>...
+// Usage: node scripts/refs/contact-sheet.mjs <out.png|out.jpg> <piece>...
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 const sharp = createRequire(new URL("../assets/package.json", import.meta.url))("sharp");
@@ -22,6 +22,8 @@ for (const [r, id] of pieces.entries()) {
     layers.push({ input: img, left, top: top + LABEL });
   }
 }
-await sharp({ create: { width: sheetW, height: GAP + pieces.length * rowH, channels: 3, background: "#121212" } })
-  .composite(layers).png().toFile(out);
+// An explicit .png() would override the extension, so a .jpg sheet needs .jpeg() to really be JPEG.
+const sheet = sharp({ create: { width: sheetW, height: GAP + pieces.length * rowH, channels: 3, background: "#121212" } })
+  .composite(layers);
+await (/\.jpe?g$/i.test(out) ? sheet.jpeg({ quality: 90 }) : sheet.png()).toFile(out);
 console.log("wrote", out);

@@ -3,6 +3,7 @@
 # Usage: scripts/refs/higgsfield-refs.sh <id>
 #   P1 pieces: meadow_base road_straight tree_hero_oak
 #   P2 MVP families: road_bends river river_road_bridge beach ocean house_cluster forest meadow_props
+#   P2 agents: vehicles (sedan, van, pickup)
 set -euo pipefail
 id="$1"; out="assets-source/refs/$id"; mkdir -p "$out"
 style="stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
@@ -12,6 +13,9 @@ road="6 m wide two-lane asphalt country road, faded dashed white centre line, lo
 water="clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed"
 cut="the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap"
 topstyle="stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, soil strata visible on the front side walls"
+# Vehicles are recoloured per instance at runtime (PRD §6), so the reference paint is a plain neutral base.
+car="the whole body painted one plain neutral light grey satin paint with no stripes, decals or two-tone, clearly separate dark-tinted window glass, black rubber tyres on simple silver-grey wheels, satin chrome and dark grey trim on the bumpers, grille, window surrounds and door handles, clear headlights at the front and red taillights wrapping around the rear corners, plain unbadged bodywork with no logos, emblems or lettering anywhere, timeless modern-classic European styling with softly rounded edges and slightly chunky friendly proportions, realistic scale-model detail"
+alone="standing alone on the plain grey studio floor with a soft contact shadow, the whole vehicle centred in frame, seen from the front-left"
 case "$id" in
   meadow_base) prompts=(
     "A single hexagonal terrain tile, 32 m across, lush meadow grass cap with gentle undulation, sparse wildflowers, visible layered soil strata on the hexagon side walls (topsoil, clay, gravel), $style"
@@ -47,6 +51,10 @@ case "$id" in
   meadow_props) prompts=(
     "One corner fragment of a hexagonal meadow diorama tile with $strata, on a plain neutral grey studio backdrop: lush meadow grass with scattered wildflower clumps (white daisies, yellow buttercups, purple clover, blue cornflowers), each clump about 1 m across with small flower heads in natural proportion to the grass, and weathered grey granite rocks from 0.5 m to 2 m with lichen patches, partly sunk into the turf with grass growing around their bases, photoreal PBR materials, $style"
     "Close-up of meadow scatter on a diorama tile on a plain neutral grey studio backdrop: small realistic wildflower heads of white daisies, yellow buttercups, purple clover and blue cornflowers among dense meadow grass, each flower head about the width of a few grass blades, and a weathered lichen-spotted granite rock half sunk into the turf with grass around its base, photoreal PBR materials, $style") ;;
+  vehicles) prompts=(
+    "A single compact four-door sedan car, about 4.2 m long, a softly rounded three-box shape with a short bonnet, short overhangs, slightly oversized wheels pushed out to the corners, four doors with side windows and a short separate boot, a plain grille of smooth horizontal slats with a blank centre and no emblem, $car, $alone, $style"
+    "A single small panel van, about 4.4 m long, a short sloping bonnet and a two-seat cab with windows only in the two front doors, a tall boxy cargo body behind the cab with solid painted side panels, a sliding side door and twin rear doors, $car, $alone, $style"
+    "A single compact pickup truck with a single cab, about 4.5 m long with a normal wheelbase and believable real-world proportions, only slightly chunky and never cartoonish, a short bonnet and a two-door cab with one row of seats. Behind the cab sits a clean rectangular open cargo box taking up nearly half the truck's length, empty and uncovered, its flat floor sunk well below the tops of its painted side walls, and a closed upright tailgate at the back, a plain grille of smooth horizontal slats with a blank centre and no emblem, $car, $alone, $style") ;;
   *) echo "unknown piece $id" >&2; exit 2 ;;
 esac
 entries=()
