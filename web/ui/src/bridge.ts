@@ -63,6 +63,7 @@ export type Command =
   | { cmd: "scenario"; name: string }
   | { cmd: "tilt"; on: boolean | null; strength: number | null }
   | { cmd: "dump_state"; name: string }
+  | { cmd: "set_tier"; tier: "low" | "medium" | "high" | "ultra" }
   | { cmd: "set_reduced_motion"; on: boolean }
   | { cmd: "exit" }
   | { cmd: "select_tile"; id: string }
@@ -275,6 +276,7 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   scenario: keys<CommandOf<"scenario">>({ name: true }),
   tilt: keys<CommandOf<"tilt">>({ on: true, strength: true }),
   dump_state: keys<CommandOf<"dump_state">>({ name: true }),
+  set_tier: keys<CommandOf<"set_tier">>({ tier: true }),
   set_reduced_motion: keys<CommandOf<"set_reduced_motion">>({ on: true }),
   exit: keys<CommandOf<"exit">>({}),
   select_tile: keys<CommandOf<"select_tile">>({ id: true }),

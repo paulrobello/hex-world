@@ -26,6 +26,9 @@ const gpuArgs = process.env.PW_GPU === "swiftshader"
   ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
   : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 const fail = (m) => { console.error("FAIL:", m); process.exitCode = 1; };
+// Cases whose expectations are written for High pin it: without a `tier` key the tier is
+// auto-detected, and the web warm-up probe may step it down on a loaded host.
+const pinHigh = (q) => (/[?&]tier=/.test(q) ? q : q + "&tier=high");
 // Handle-let aliases the shim rewrites per KitMaterial fragment module (Bevy's PBR input composed in),
 // asserted by its `masks_texture` global (markedModuleProbe). Usually one module; two when a pipeline
 // compiled before the IBL loaded is specialized again after it.
@@ -132,6 +135,47 @@ await withPage(gpuArgs, async (page, errors) => {
   if (errors.some((e) => /panic|unreachable/i.test(e))) fail("panic on bad scenario");
 });
 
+// 2c. Quality tier (PRD §9.2): with no `tier` key it is detected from the adapter's limits and
+// features plus the warm-up probe, and published with its reason; `set_tier` changes it at runtime.
+// The detected value depends on the machine and its load, so only the shape is asserted.
+// `gpu_timing=on` publishes per-pass GPU times when the adapter has timestamp-query.
+await withPage(gpuArgs, async (page, errors) => {
+  await page.goto(base + "?scenario=single&gpu_timing=on");
+  await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
+  const t = (await page.evaluate(() => window.hexWorld.state())).tier;
+  const tiers = ["low", "medium", "high"];
+  if (!t || !tiers.includes(t.tier) || !["detected", "probe"].includes(t.source) || !t.reason
+    || !tiers.includes(t.detected?.tier) || t.adapter?.web !== true || typeof t.probe?.median_ms !== "number")
+    fail("auto tier state: " + JSON.stringify(t));
+  console.log(`tier: ${t?.tier} (${t?.source}): ${t?.reason}; adapter ${JSON.stringify(t?.adapter)}`);
+  const gpuOk = await page.waitForFunction(() => {
+    const g = window.hexWorld.diag().gpu;
+    return g && (g.supported === false || g.frames >= 30);
+  }, null, { timeout: 30_000, polling: 250 }).then(() => true, () => false);
+  const d = await page.evaluate(() => window.hexWorld.diag());
+  if (!gpuOk || d.gpu?.enabled !== true) fail("gpu_timing diag: " + JSON.stringify(d.gpu));
+  else if (d.gpu.supported && !(d.gpu.passes?.opaque && d.gpu.total?.p50 >= 0)) fail("gpu passes missing: " + JSON.stringify(d.gpu));
+  else console.log(`gpu_timing: supported=${d.gpu.supported} frames=${d.gpu.frames} rejected=${d.gpu.rejected_non_monotonic} ` +
+    `total=${JSON.stringify(d.gpu.total)} (unguarded functional run, not a measurement)`);
+  if (d.stall?.histogram?.length !== 8) fail("stall histogram: " + JSON.stringify(d.stall));
+  await page.evaluate(() => window.hexWorld.cmd(JSON.stringify({ cmd: "set_tier", tier: "low" })));
+  const lowOk = await page.waitForFunction(() => {
+    const s = window.hexWorld.state();
+    return s.tier?.tier === "low" && s.tier?.source === "runtime" && !(s.diag?.post ?? []).includes("ssao");
+  }, null, { timeout: 30_000, polling: 250 }).then(() => true, () => false);
+  if (!lowOk) fail("set_tier low: " + JSON.stringify((await page.evaluate(() => window.hexWorld.state())).tier));
+  if (errors.some((e) => /panic|unreachable/i.test(e))) fail("panic around set_tier: " + errors.join(" | "));
+});
+
+// 2d. An explicit `tier` key wins over detection; detection is still reported.
+await withPage(gpuArgs, async (page) => {
+  await page.goto(base + "?scenario=single&tier=medium");
+  await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
+  const t = (await page.evaluate(() => window.hexWorld.state())).tier;
+  if (t?.tier !== "medium" || t?.source !== "explicit" || !t?.detected?.tier || t?.probe !== null)
+    fail("explicit tier state: " + JSON.stringify(t));
+});
+
 // 3. No GPU → unsupported page.
 await withPage(["--disable-gpu"], async (page) => {
   await page.goto(base);
@@ -205,7 +249,7 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
     if (clamp !== null) await page.addInitScript(clampSampledTextures, clamp);
     await page.addInitScript(countSampledTextures);
     if (aliases !== null) await page.addInitScript(markedModuleProbe, "masks_texture");
-    await page.goto(base + query);
+    await page.goto(base + pinHigh(query));
     await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
     const deadline = Date.now() + 30_000;
     while (spawned === null && Date.now() < deadline) await page.waitForTimeout(100);
@@ -286,7 +330,7 @@ for (const [query, aliases, clamp] of [["?scenario=water&post=full", null, WEBGP
     if (clamp !== null) await page.addInitScript(clampSampledTextures, clamp);
     await page.addInitScript(countSampledTextures);
     if (aliases !== null) await page.addInitScript(markedModuleProbe, "water_noise_texture");
-    await page.goto(base + query);
+    await page.goto(base + pinHigh(query));
     await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
     // Wait (bounded) for both pipelines composed with the IBL, then let compilation settle.
     const deadline = Date.now() + 60_000;
@@ -342,7 +386,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     });
     await page.addInitScript(clampSampledTextures, clamp);
     await page.addInitScript(countSampledTextures);
-    await page.goto(base + query);
+    await page.goto(base + pinHigh(query));
     const tag = `water_kit ${query} (clamped ${clamp})`;
     // A pipeline layout over the limit is a device validation error that stops the app before READY:
     // report what the probe saw instead of throwing.
@@ -399,7 +443,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
   await withPage(gpuArgs, async (page) => {
     await page.addInitScript(clampSampledTextures, clamp);
     await page.addInitScript(countSampledTextures);
-    await page.goto(base + query);
+    await page.goto(base + pinHigh(query));
     const tag = `play water ${query} (clamped ${clamp})`;
     if (!(await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 }).then(() => true, () => false))) {
       const s = await page.evaluate(() => window.__sampledTextures);
@@ -478,7 +522,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     const held = new Promise((r) => { release = r; });
     await page.route(/\/assets\/kit\/p1\/(forest_base|tree_forest|tree_hero_oak|materials\/litter|materials\/bark)\//,
       async (route) => { await held; await route.continue(); });
-    await page.goto(base + "?scenario=play");
+    await page.goto(base + "?scenario=play&tier=high");
     if (!(await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 }).then(() => true, () => false))) {
       fail(`${tag}: never ready`);
       release();

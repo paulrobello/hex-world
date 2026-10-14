@@ -50,7 +50,7 @@ for (const c of configs.filter((c) => !onlyConfigs || onlyConfigs.includes(c.id)
   }
 const query = (req) => `?scenario=gate2000&view=${req.view}&layout=${req.layout}&post=${req.post}` +
   `&shadows=${req.shadows}&shadow_casters=${req.shadow_casters}&cascades=${req.cascades}` +
-  `&shadow_dist=${req.shadow_dist}` + (req.chunk ? `&chunk=${req.chunk}` : "");
+  `&shadow_dist=${req.shadow_dist}&tier=high` + (req.chunk ? `&chunk=${req.chunk}` : "");
 
 const only = process.env.MATRIX_ONLY; // "web" | "native" to run one half
 const result = { date: new Date().toISOString(), budget_p95_ms: 16.6, viewport: "2560x1440",
@@ -193,7 +193,7 @@ async function runWeb() {
 
 function runNativeRow(req, run) {
   const dump = `target/perf-matrix-${req.id}-${req.view}.json`;
-  const args = ["-l", nativeBin, "--scenario", "gate2000", "--diag", "--present", "immediate",
+  const args = ["-l", nativeBin, "--scenario", "gate2000", "--tier", "high", "--diag", "--present", "immediate",
     "--size", "2560x1440", "--exit-after-seconds", "20", "--dump-state", dump,
     "--view", req.view, "--layout", req.layout, "--post", req.post, "--shadows", req.shadows,
     "--shadow_casters", req.shadow_casters, "--cascades", String(req.cascades),

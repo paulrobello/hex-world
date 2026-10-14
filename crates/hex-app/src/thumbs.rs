@@ -61,6 +61,8 @@ pub fn force_flags(f: &mut Flags) {
     f.exit_after_frames = None;
     f.exit_after_secs = None;
     f.screenshot_after_secs = None;
+    // Thumbnails are committed assets: the tier stays High unless a `--tier` key names one.
+    f.tier_explicit = true;
 }
 
 /// World-edge sockets of `def` placed at `rotation`.

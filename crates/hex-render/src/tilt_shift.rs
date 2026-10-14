@@ -200,10 +200,17 @@ impl Plugin for TiltShiftPlugin {
             .add_systems(Render, prepare_pipelines.in_set(RenderSystems::Prepare))
             .add_systems(
                 Core3d,
-                tilt_shift.before(bloom).in_set(Core3dSystems::PostProcess),
+                tilt_shift
+                    .before(bloom)
+                    .in_set(Core3dSystems::PostProcess)
+                    .in_set(TiltShiftPass),
             );
     }
 }
+
+/// The tilt-shift render system, for ordering against it (`gpu_timing` markers).
+#[derive(SystemSet, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct TiltShiftPass;
 
 /// `T` toggles the effect at runtime.
 fn toggle_key(keys: Option<Res<ButtonInput<KeyCode>>>, mut settings: ResMut<TiltShiftSettings>) {

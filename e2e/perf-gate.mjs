@@ -35,7 +35,7 @@ const measureView = async (view) => {
   const page = await browser.newPage({ viewport: { width: 2560, height: 1440 }, deviceScaleFactor: 1 });
   page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text())) errors.push(`[${view}] ${m.text()}`); });
   page.on("pageerror", (e) => errors.push(`[${view}] ${e}`));
-  await page.goto(base + `?scenario=gate2000&view=${view}&fps=${fpsOverlay}`);
+  await page.goto(base + `?scenario=gate2000&view=${view}&fps=${fpsOverlay}&tier=high`);
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 120_000 });
   if (!gpu) {
     gpu = await page.evaluate(async () => {

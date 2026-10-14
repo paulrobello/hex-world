@@ -1,12 +1,16 @@
 //! Frame-time percentiles and render-mode facts for the engine gate (PRD P0).
-use std::sync::{
-    Mutex,
-    atomic::{AtomicBool, Ordering},
+use std::{
+    collections::VecDeque,
+    sync::{
+        Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
 };
 
 use bevy::{
     anti_alias::taa::TemporalAntiAliasing,
     core_pipeline::{core_3d::Opaque3d, prepass::Opaque3dPrepass},
+    diagnostic::FrameCount,
     light::CascadeShadowConfig,
     pbr::{LightEntity, Shadow, SsaoPipelineId},
     post_process::{bloom::Bloom, dof::DepthOfField},
@@ -26,6 +30,13 @@ use crate::scene::{Chunk, Lod, SceneFacts, Tile, Tris, Vehicle};
 const RING: usize = 600;
 /// A frame slower than this missed a 60 Hz presentation (counted as dropped).
 const DROPPED_MS: f32 = 25.0;
+/// Upper bucket edges (ms) of the frame-time histogram; the last bucket is open.
+pub const HISTOGRAM_MS: [f32; 7] = [8.33, 16.7, 20.0, 25.0, 33.3, 50.0, 100.0];
+/// Stall events (frames over `DROPPED_MS` inside the window) kept for the tail report.
+const TAIL_KEEP: usize = 32;
+/// Frames either side of a stall searched for its GPU sample and pipeline compiles (readbacks land
+/// late and the render world runs a frame behind natively).
+const TAIL_JOIN: u32 = 3;
 
 /// Frame on which `hex-app` flips READY. Frame times are sampled only after it, so the
 /// percentile window never includes load or scene-build frames.
@@ -122,6 +133,84 @@ impl FrameStats {
         }
         self.samples.iter().sum::<f32>() / self.samples.len() as f32
     }
+
+    /// Frames per `HISTOGRAM_MS` bucket (`< edge`), plus the open bucket at the end.
+    pub fn histogram(&self) -> [usize; HISTOGRAM_MS.len() + 1] {
+        let mut h = [0; HISTOGRAM_MS.len() + 1];
+        for &s in &self.samples {
+            let i = HISTOGRAM_MS
+                .iter()
+                .position(|&e| s < e)
+                .unwrap_or(HISTOGRAM_MS.len());
+            h[i] += 1;
+        }
+        h
+    }
+}
+
+/// A frame over `DROPPED_MS` inside the measured window.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Stall {
+    /// Bevy `FrameCount` when it was sampled (the key GPU samples carry).
+    pub frame: u32,
+    pub ms: f32,
+}
+
+/// Render-world pipeline compiles still waiting, by `FrameCount` (the last 64 frames).
+static WAITING_PIPELINES: Mutex<VecDeque<(u32, u32)>> = Mutex::new(VecDeque::new());
+
+fn waiting_near(frame: u32) -> u32 {
+    WAITING_PIPELINES
+        .lock()
+        .unwrap()
+        .iter()
+        .filter(|(f, _)| f.abs_diff(frame) <= TAIL_JOIN)
+        .map(|(_, w)| *w)
+        .max()
+        .unwrap_or(0)
+}
+
+/// The `stall` object: the window's histogram and each recent stall joined to the GPU sample of
+/// the frames around it (when `gpu_timing` is on) and to pipeline compiles in flight.
+pub fn stall_json(stats: &FrameStats, tail: &VecDeque<Stall>) -> serde_json::Value {
+    let h = stats.histogram();
+    let mut edges: Vec<String> = HISTOGRAM_MS.iter().map(|e| format!("<{e}")).collect();
+    edges.push(format!(">={}", HISTOGRAM_MS[HISTOGRAM_MS.len() - 1]));
+    let events: Vec<serde_json::Value> = tail
+        .iter()
+        .map(|s| {
+            let gpu = crate::gpu_timing::frames_in(
+                s.frame.saturating_sub(TAIL_JOIN)..=s.frame + TAIL_JOIN,
+            );
+            let worst = gpu.iter().max_by(|a, b| a.total_ms.total_cmp(&b.total_ms));
+            serde_json::json!({
+                "frame": s.frame,
+                "ms": (f64::from(s.ms) * 100.0).round() / 100.0,
+                "pipelines_waiting": waiting_near(s.frame),
+                "gpu_max_ms": worst.map(|g| (f64::from(g.total_ms) * 100.0).round() / 100.0),
+                "gpu_top": worst.and_then(|g| g.segments.iter().max_by(|a, b| a.1.total_cmp(&b.1)))
+                    .map(|(n, ms)| serde_json::json!([n, (f64::from(*ms) * 100.0).round() / 100.0])),
+            })
+        })
+        .collect();
+    serde_json::json!({
+        "threshold_ms": DROPPED_MS,
+        "histogram": edges.iter().zip(h).map(|(e, n)| serde_json::json!([e, n])).collect::<Vec<_>>(),
+        "over_25ms": stats.over(DROPPED_MS),
+        "tail": events,
+    })
+}
+
+/// `base` (a JSON object) with `extra`'s fields appended.
+pub fn merge_json(base: &str, extra: &serde_json::Value) -> String {
+    let extra = extra.to_string();
+    match (
+        base.strip_suffix('}'),
+        extra.strip_prefix('{').filter(|e| e.len() > 1),
+    ) {
+        (Some(b), Some(e)) => format!("{b},{e}"),
+        _ => base.to_owned(),
+    }
 }
 
 #[derive(Resource, Default)]
@@ -134,6 +223,7 @@ struct DiagState {
     stats: FrameStats,
     frames: u32,
     census: VisibleCensus,
+    stalls: VecDeque<Stall>,
 }
 
 /// Facts about the render setup that the engine gate must log (PRD P0).
@@ -250,7 +340,15 @@ fn probe_render_modes(
     cache: Res<PipelineCache>,
     preprocessing: Option<Res<GpuPreprocessingSupport>>,
     adapter: Res<RenderAdapterInfo>,
+    frame: Res<FrameCount>,
 ) {
+    {
+        let mut w = WAITING_PIPELINES.lock().unwrap();
+        if w.len() == 64 {
+            w.pop_front();
+        }
+        w.push_back((frame.0, cache.waiting_pipelines().count() as u32));
+    }
     let ssao = ssao_views
         .iter()
         .any(|id| cache.get_compute_pipeline(id.0).is_some());
@@ -324,10 +422,26 @@ fn sample(
     lights: Query<(&DirectionalLight, &CascadeShadowConfig)>,
     instanced: Option<Res<crate::instanced::InstancedScene>>,
     config: Option<Res<crate::workload::GateConfig>>,
+    (frame, gpu_timing): (Res<FrameCount>, Option<Res<crate::gpu_timing::GpuTiming>>),
 ) {
     st.frames += 1;
     if in_window(st.frames) {
-        st.stats.push(time.delta_secs() * 1000.0);
+        let ms = time.delta_secs() * 1000.0;
+        st.stats.push(ms);
+        // Stalls follow the 600-frame window, like the percentiles.
+        while st
+            .stalls
+            .front()
+            .is_some_and(|s| s.frame + RING as u32 <= frame.0)
+        {
+            st.stalls.pop_front();
+        }
+        if ms > DROPPED_MS {
+            if st.stalls.len() == TAIL_KEEP {
+                st.stalls.pop_front();
+            }
+            st.stalls.push_back(Stall { frame: frame.0, ms });
+        }
     }
     if st.frames.is_multiple_of(30) && census_allowed(st.frames) {
         let mut pairs = std::collections::HashSet::new();
@@ -441,6 +555,11 @@ fn sample(
             st.frames,
             WINDOW_START_FRAME
         );
+        let extra = serde_json::json!({
+            "gpu": crate::gpu_timing::diag_json(gpu_timing.is_some_and(|g| g.enabled)),
+            "stall": stall_json(&st.stats, &st.stalls),
+        });
+        snap.json = merge_json(&snap.json, &extra);
     }
 }
 
@@ -483,6 +602,35 @@ mod tests {
         assert_eq!(s.max(), 100.0);
         assert_eq!(s.over(25.0), 75);
         assert_eq!(FrameStats::default().max(), 0.0);
+    }
+
+    #[test]
+    fn histogram_buckets_and_stall_json_parse() {
+        let mut s = FrameStats::default();
+        for ms in [4.0, 8.0, 10.0, 16.0, 18.0, 24.0, 30.0, 40.0, 60.0, 125.0] {
+            s.push(ms);
+        }
+        assert_eq!(s.histogram(), [2, 2, 1, 1, 1, 1, 1, 1]);
+        let mut tail = VecDeque::new();
+        tail.push_back(Stall {
+            frame: 400,
+            ms: 125.0,
+        });
+        let j = stall_json(&s, &tail);
+        assert_eq!(j["over_25ms"], 4);
+        assert_eq!(j["histogram"][7][0], ">=100");
+        assert_eq!(j["tail"][0]["frame"], 400);
+        assert!(j["tail"][0]["gpu_max_ms"].is_null());
+    }
+
+    #[test]
+    fn merged_snapshot_is_valid_json() {
+        let extra = serde_json::json!({ "gpu": crate::gpu_timing::diag_json(false), "stall": { "over_25ms": 0 } });
+        let m = merge_json("{\"p95\":3.70,\"adapter\":\"Apple M4 Max\"}", &extra);
+        let v: serde_json::Value = serde_json::from_str(&m).unwrap();
+        assert_eq!(v["p95"], 3.7);
+        assert_eq!(v["gpu"]["enabled"], false);
+        assert_eq!(merge_json("{}", &serde_json::json!({})), "{}");
     }
 
     #[test]

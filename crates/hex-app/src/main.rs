@@ -107,6 +107,8 @@ fn main() {
             view: flags.view,
             config: flags.gate,
             fps: !flags.fps_off,
+            tier_explicit: flags.tier_explicit,
+            gpu_timing: flags.gpu_timing,
         })
         .add_plugins(sim::SimPlugin)
         .insert_resource(game)

@@ -63,6 +63,11 @@ pub enum Command {
     DumpState {
         name: String,
     },
+    /// Quality tier at runtime (`low`, `medium`, `high`, `ultra`): rebuilds the scene at the new
+    /// tier with the camera kept (`hex_render::tier`). The future Settings UI sends this.
+    SetTier {
+        tier: String,
+    },
     /// Reduced motion (`prefers-reduced-motion` or the Settings override, sent by the overlay):
     /// the staged rise and every affordance transition become instant cuts, with no breathing,
     /// dust or camera shake.
@@ -257,6 +262,15 @@ pub fn run_commands(
             }
         }
         Command::DumpState { name } => dump_state(&name),
+        Command::SetTier { tier } => match hex_render::post::QualityTier::parse(&tier) {
+            Some(t) => hex_render::tier::set_tier(
+                &mut commands,
+                t,
+                hex_render::tier::TierSource::Runtime,
+                "set_tier command".into(),
+            ),
+            None => warn!("set_tier command: unknown tier '{tier}', skipped"),
+        },
         Command::SetReducedMotion { on } => reduced.0 = on,
         Command::Photo {
             dof,
@@ -352,9 +366,10 @@ pub fn publish_state(
     sim: Res<CarSim>,
     (rises, reduced, packs): (Res<PlayRises>, Res<ReducedMotion>, Option<Res<PlayPacks>>),
     views: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
-    (boids, scatter): (
+    (boids, scatter, tier): (
         Option<Res<hex_render::boids::BoidReport>>,
         Option<Res<hex_render::play::scatter::ScatterReport>>,
+        Res<hex_render::tier::TierChoice>,
     ),
     (photo, session, exports, paused): (
         Res<PhotoSettings>,
@@ -395,6 +410,7 @@ pub fn publish_state(
         "events_pending": bridge::EVENTS.lock().unwrap().len(),
         "gpu": gpu,
         "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps },
+        "tier": tier.json(),
         "photo": crate::photo::state_json(&photo, &session, &exports, paused.0, sim.ticks(), gpu_limits.as_ref()),
         "frames": frames.0,
         "seed": flags.0.seed,
@@ -451,12 +467,14 @@ mod tests {
         let s = r#"[{"cmd":"camera","pos":[0,90,90],"look_at":[0,0,0]},
                     {"cmd":"wait","frames":30},{"cmd":"screenshot","name":"a"},
                     {"cmd":"scenario","name":"gate2000"},{"cmd":"dump_state","name":"s"},{"cmd":"exit"},
-                    {"cmd":"tilt","on":false,"strength":0.5},
+                    {"cmd":"tilt","on":false,"strength":0.5},{"cmd":"set_tier","tier":"low"},
                     {"cmd":"photo","dof":"manual","focus":12.5},{"cmd":"photo_export","scale":4,"name":"p"}]"#;
         let c = parse_script(s).unwrap();
-        assert_eq!(c.len(), 9);
+        assert_eq!(c.len(), 10);
+        assert_eq!(c[7], Command::SetTier { tier: "low".into() });
+        assert_eq!(c[7].action(), None);
         assert_eq!(
-            c[7],
+            c[8],
             Command::Photo {
                 dof: Some(Dof::Manual),
                 focus: Some(12.5),
@@ -468,7 +486,7 @@ mod tests {
             }
         );
         assert_eq!(
-            c[8],
+            c[9],
             Command::PhotoExport {
                 scale: 4,
                 name: "p".into()

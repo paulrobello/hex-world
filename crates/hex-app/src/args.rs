@@ -56,6 +56,10 @@ pub struct Flags {
     pub clock_fixed: bool,
     /// Native only: render the tile thumbnails and exit (`thumbs::force_flags` sets the rest).
     pub thumbs: bool,
+    /// A valid `tier` key was given: it wins over auto-detection (`hex_render::tier`).
+    pub tier_explicit: bool,
+    /// `gpu_timing=on`: per-pass GPU timestamps in the diag output (`hex_render::gpu_timing`).
+    pub gpu_timing: bool,
     /// `photo-export=1|2|4`: once ready, export a photo-mode PNG at that scale, named
     /// `photo-<n>x` (natively `target/shots/photo-<n>x.png`).
     pub photo_export: Option<u32>,
@@ -225,9 +229,14 @@ pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Fl
                 v,
                 &mut warnings,
             ),
-            "tier" => set_or_warn(
-                &mut f.gate.tier,
-                hex_render::post::QualityTier::parse(v),
+            "tier" => {
+                let t = hex_render::post::QualityTier::parse(v);
+                f.tier_explicit |= t.is_some();
+                set_or_warn(&mut f.gate.tier, t, k, v, &mut warnings);
+            }
+            "gpu_timing" => set_or_warn(
+                &mut f.gpu_timing,
+                hex_render::parse_shadows(v),
                 k,
                 v,
                 &mut warnings,
@@ -321,6 +330,7 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "tilt",
         "tilt_strength",
         "tier",
+        "gpu_timing",
         "water_clock",
         "clock",
         "photo-export",
@@ -389,6 +399,26 @@ mod tests {
         assert_eq!(f.gate.tier, hex_render::post::QualityTier::High);
         assert!(!f.gate.water_fixed);
         assert_eq!(w.len(), 2);
+    }
+
+    #[test]
+    fn tier_key_is_explicit_only_when_valid() {
+        let (f, _) = flags_from_pairs(&[]);
+        assert!(!f.tier_explicit, "no key: auto-detect");
+        let (f, _) = flags_from_pairs(&p(&[("tier", "high")]));
+        assert!(f.tier_explicit, "even the default value, when named, wins");
+        let (f, w) = flags_from_pairs(&p(&[("tier", "epic")]));
+        assert!(!f.tier_explicit && w.len() == 1);
+    }
+
+    #[test]
+    fn gpu_timing_key() {
+        let (f, w) = flags_from_pairs(&[]);
+        assert!(!f.gpu_timing && w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("gpu_timing", "on")]));
+        assert!(f.gpu_timing && w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("gpu_timing", "yes")]));
+        assert!(!f.gpu_timing && w.len() == 1);
     }
 
     #[test]

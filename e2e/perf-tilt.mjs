@@ -44,7 +44,7 @@ async function webSampler() {
       if (m.type() === "error" || BAD_TEXT.test(m.text())) errors.push(m.text());
     });
     page.on("pageerror", (e) => errors.push(String(e)));
-    await page.goto(base + `?scenario=kit&fps=off&tilt=${tilt}`);
+    await page.goto(base + `?scenario=kit&fps=off&tilt=${tilt}&tier=high`);
     await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 120_000 });
     const t0 = Date.now();
     while (!spawned && Date.now() - t0 < 60_000) await page.waitForTimeout(100);
@@ -77,7 +77,7 @@ async function nativeSampler() {
   };
   const nativeOnce = async (tilt) => {
     const out = join(dir, `state-${n++}.json`);
-    const args =["--scenario", "kit", "--size", `${W}x${H}`, "--present", "immediate", "--fps", "off", "--diag", "1",
+    const args =["--scenario", "kit", "--tier", "high", "--size", `${W}x${H}`, "--present", "immediate", "--fps", "off", "--diag", "1",
       "--tilt", tilt, "--exit-after-seconds", "25", "--dump-state", out];
     const code = await new Promise((res) => spawn(target, args, { stdio: "ignore" }).on("exit", res));
     if (code !== 0) throw new Error(`native exit ${code}`);

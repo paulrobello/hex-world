@@ -39,13 +39,18 @@ impl BoidBudget {
         fish_per_water_tile: 12,
     };
 
-    /// The tier hook. PRD §7.2 sets only the High caps so far, so every tier gets them until the
-    /// per-tier caps are decided.
+    /// The caps per tier: PRD §9.2's agent caps (Low 25%, Medium 50%, High and Ultra 100%) applied to
+    /// the High budget. The per-water-tile fish density stays, so only the caps shrink.
     pub fn for_tier(tier: QualityTier) -> BoidBudget {
-        match tier {
-            QualityTier::Low | QualityTier::Medium | QualityTier::High | QualityTier::Ultra => {
-                Self::HIGH
-            }
+        let percent = match tier {
+            QualityTier::Low => 25,
+            QualityTier::Medium => 50,
+            QualityTier::High | QualityTier::Ultra => 100,
+        };
+        BoidBudget {
+            total: Self::HIGH.total * percent / 100,
+            fish_max: Self::HIGH.fish_max * percent / 100,
+            ..Self::HIGH
         }
     }
 
@@ -1049,15 +1054,14 @@ mod tests {
     }
 
     #[test]
-    fn budget_is_high_on_every_tier_and_fish_scale_with_water() {
-        for t in [
-            QualityTier::Low,
-            QualityTier::Medium,
-            QualityTier::High,
-            QualityTier::Ultra,
-        ] {
-            assert_eq!(BoidBudget::for_tier(t), BoidBudget::HIGH);
-        }
+    fn budget_follows_the_tier_agent_caps_and_fish_scale_with_water() {
+        assert_eq!(BoidBudget::for_tier(QualityTier::High), BoidBudget::HIGH);
+        assert_eq!(BoidBudget::for_tier(QualityTier::Ultra), BoidBudget::HIGH);
+        let m = BoidBudget::for_tier(QualityTier::Medium);
+        assert_eq!((m.total, m.fish_max, m.fish_per_water_tile), (500, 150, 12));
+        let l = BoidBudget::for_tier(QualityTier::Low);
+        assert_eq!((l.total, l.fish_max, l.fish_per_water_tile), (250, 75, 12));
+        assert_eq!(l.split(100), (175, 75), "Low caps fish at 75");
         let b = BoidBudget::HIGH;
         assert_eq!(
             b.split(0),

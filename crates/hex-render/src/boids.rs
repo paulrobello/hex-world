@@ -296,6 +296,32 @@ fn storage<T: bytemuck::NoUninit>(
     buffers.add(b)
 }
 
+/// Resizes the flock for a new budget (a tier change): new buffers and mesh, and a fresh plan on the
+/// next frame. The caller rebuilds the scene, which spawns the flock from the new `BoidAssets`.
+pub fn set_budget(world: &mut World, budget: BoidBudget) {
+    let Some(mut state) = world.get_resource_mut::<BoidState>() else {
+        return;
+    };
+    if state.plan.budget == budget {
+        return;
+    }
+    state.plan.budget = budget;
+    state.scenario = None;
+    if let Err(e) = world.run_system_cached_with(init_boids_with, budget.total) {
+        warn!("boids: resize to {} failed: {e}", budget.total);
+    }
+}
+
+fn init_boids_with(
+    In(count): In<u32>,
+    commands: Commands,
+    meshes: ResMut<Assets<Mesh>>,
+    buffers: ResMut<Assets<ShaderBuffer>>,
+    materials: ResMut<Assets<BoidMaterial>>,
+) {
+    init_boids(count, commands, meshes, buffers, materials);
+}
+
 fn init_boids(
     count: u32,
     mut commands: Commands,

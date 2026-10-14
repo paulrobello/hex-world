@@ -356,6 +356,9 @@
     "set_reduced_motion": [
       "on"
     ],
+    "set_tier": [
+      "tier"
+    ],
     "set_tool": [
       "mode"
     ],

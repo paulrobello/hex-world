@@ -7,6 +7,7 @@ pub mod cars;
 mod chunks;
 pub mod diag;
 pub mod fps;
+pub mod gpu_timing;
 pub mod hooks;
 pub mod instanced;
 pub mod kit_material;
@@ -16,6 +17,7 @@ pub mod lookdev;
 pub mod play;
 pub mod post;
 mod scene;
+pub mod tier;
 pub mod tilt_shift;
 pub mod water;
 pub mod workload;
@@ -128,6 +130,10 @@ pub struct HexRenderPlugin {
     pub config: GateConfig,
     /// Initial FPS counter state (`fps=on|off`).
     pub fps: bool,
+    /// `config.tier` came from a `tier` key, so detection reports but never applies.
+    pub tier_explicit: bool,
+    /// `gpu_timing=on`: per-pass GPU timestamps (`gpu_timing`).
+    pub gpu_timing: bool,
 }
 
 impl Plugin for HexRenderPlugin {
@@ -145,6 +151,13 @@ impl Plugin for HexRenderPlugin {
                     budget: boids::BoidBudget::for_tier(self.config.tier),
                 },
                 fps::FpsPlugin { visible: self.fps },
+                tier::TierPlugin {
+                    tier: self.config.tier,
+                    explicit: self.tier_explicit,
+                },
+                gpu_timing::GpuTimingPlugin {
+                    enabled: self.gpu_timing,
+                },
                 instanced::InstancedPlugin,
                 MaterialPlugin::<kit_material::KitMaterial>::default(),
                 tilt_shift::TiltShiftPlugin,

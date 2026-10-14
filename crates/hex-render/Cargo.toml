@@ -9,6 +9,10 @@ publish.workspace = true
 hex-core = { path = "../hex-core" }
 hex-assets = { path = "../hex-assets", features = ["bevy"] }
 bytemuck = { version = "1", features = ["derive"] }
+# Bevy 0.20's own wgpu, for the GPU timestamp query set and pass timestamp writes (`gpu_timing`),
+# which `bevy::render::render_resource` does not re-export.
+wgpu = { version = "=30.0.1", default-features = false }
+serde_json = "1"
 # No `bluenoise_texture`: it binds a blue-noise texture in every mesh pipeline's view bind group
 # (read only by contact shadows, SSR and runtime env-map filtering, none used here), and with it the
 # kit forward pipeline needs 17 sampled textures in a refracting-water view, over WebGPU's default 16
