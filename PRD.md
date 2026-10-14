@@ -496,17 +496,17 @@ Goal: one kit family through the full pipeline at final quality.
 Goal: the polished, playable core loop with D12 content.
 
 - [ ] All MVP tiles (§5.4) are built through the pipeline and approved.
-- [ ] Placement: ghost preview, rotation, edge glow, legal-slot inventory filter, auto-rotate.
-- [ ] Staged rise animation (§4.4), including below-surface features, skippable.
+- [x] Placement: ghost preview, rotation, edge glow, legal-slot inventory filter, auto-rotate. (Ghost, frontier slots, edge glow and socket key marks in play (`72133c8`); the Legend sheet lists fitting tiles first and dims the rest (`5950073`); R and auto-rotate step only through distinct legal orientations and keep the chosen one per tile (`93542a6`). Driven end to end by `make ui-e2e`.)
+- [x] Staged rise animation (§4.4), including below-surface features, skippable. (`72133c8`: column, cap, edges with water filling channels, props, then agents over 2.0 s; placing again fast-forwards, undo and bulldoze mid-rise are safe, reduced motion cuts to the end. `docs/checkpoints/rise/`.)
 - [ ] Road network stitching. Cars route between houses across tile boundaries, pulling out of and parking in per-house spots (§7.1).
 - [ ] GPU boids: birds roosting in forests, and fish schooling in ocean and river water, sharing one boid budget.
 - [ ] Water: river flow and ocean waves with shore foam, meeting the §9.1 hero-water quality bar.
-- [ ] A gate sums the initial download (wasm + IBL + core pieces + sets, one texture family) and fails above 30 MB; hero assets stream after first interaction. (The gate runs in `make checkall-ci`: 22.4 MiB gated on ASTC, 2026-10-13. Still open: hero pieces load eagerly at runtime, and the PNG fallback is 32.4 MiB.)
+- [x] A gate sums the initial download (wasm + IBL + core pieces + sets, one texture family) and fails above 30 MB; hero assets stream after first interaction. (`make checkall-ci` counts the core pack only: 19.47 MiB on ASTC with every MVP family merged, 2026-10-14. Kit families stream by biome pack after the first interaction, with placeholders until a pack lands (`0ca5adb`, `docs/checkpoints/streaming/`). The PNG fallback is report only.)
 - [x] The owner approves the water look in a dedicated `water` scenario. Shots cover the ocean, a river, a beach and a tile seam, captured at rest and in motion. (Approved 2026-10-13, including underwater cut faces on exposed edges: `--scenario water`, `docs/checkpoints/water/`.)
 - [ ] Spatial ambience with the focus mix. Placement and UI SFX. At least 3 Suno music cues mastered and crossfading.
-- [ ] The owner approves UI mockups (every screen and key interaction state, with motion) before UI implementation starts (§4.7).
+- [x] The owner approves UI mockups (every screen and key interaction state, with motion) before UI implementation starts (§4.7). (Approved 2026-10-13: `design/ui/legend/direction.md`, the full pass in `review.html`.)
 - [ ] The shipped UI meets the §4.7 quality bar, and the owner signs it off in the running build.
-- [ ] Undo/redo and bulldoze with the connectivity rule.
+- [x] Undo/redo and bulldoze with the connectivity rule. (hex-core world history of at least 100 steps and the split-refusing bulldoze, with unit tests; the HUD's undo, redo and bulldoze, including a refused split, are driven by `make ui-e2e`.)
 - [x] Water tiles and kit pieces render in one view within 16 sampled textures per stage. (Fixed 2026-10-13 by dropping Bevy's unused `bluenoise_texture` view binding: kit forward is exactly 16 next to refracting water. Gated by `make web-smoke` case `water_kit`, which clamps the device to 16 and fails at 17. ADR 0002.)
 - [ ] GPU timestamp queries attribute frame cost, and the >25 ms stall tail is measured and fixed or accepted with evidence (ADR 0001 carry-over).
 - [ ] IndexedDB slots, autosave, `.hexworld` export and import.
