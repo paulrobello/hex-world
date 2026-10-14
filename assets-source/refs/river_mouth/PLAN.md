@@ -50,7 +50,7 @@ Every slot reuses an existing tileable set (grass, plaster, gravel, soil) or is 
 - Where s ≤ -8 (the grass reach, which includes the whole edge-3 ring), `h_s = h` exactly, with `w = 4.33` and 1.55 m of depth. The edge-3 ring therefore matches `river_straight`.
 - Across the sand, `w` grows to 5.41 at the waterline, which is a 5.0 m water half-width times 1.0825. That gives the 10 m mouth from the "Width evidence" section of the water contract (the look-dev river widens from 6 m to 10 m).
 - Over the same stretch the depth shallows smoothly to the shelf depth, 0.36 m at s = 3. The channel then runs out onto the shelf instead of cutting a trench into the sea.
-- Wherever the channel and fan bed sit below the coast profile, they take the `river_bed` slot, not `beach_wet`. The wet-band shader reads `s` back from the bed height (`coast_shore`), and that is wrong inside the channel.
+- Wherever the channel and fan bed sit below the coast profile, they take the `river_bed` slot, not `beach_wet`. The wet-band shader reads `s` back from the bed height (`coast_shore`), and that is wrong inside the channel. Revised 2026-10-14 (owner: the bed colour must blend into the sand): the fan's banks above the water near the crease take `beach_sand` / `beach_wet`, and COLOR_0.a fades their band to 0 before the bed weight reaches the gravel seam, so the band shows only where it meets the coast's (water contract §3a).
 - The fan's top edge stays at least 1 m inside beach edges 2 and 5, so their rings stay exact.
 - Tolerances are as in §2 and §3 of the contract: ±0.03 m where the water is shallower than 2.5 m.
 

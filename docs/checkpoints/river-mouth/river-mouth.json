@@ -96,6 +96,9 @@
   {"cmd": "camera", "pos": [96, 9, 6], "look_at": [88, -2.2, 2]},
   {"cmd": "wait", "frames": 30},
   {"cmd": "screenshot", "name": "river-mouth-11-fish-at-mouth"},
+  {"cmd": "camera", "pos": [93, 4.5, 15], "look_at": [82, -1.2, 3]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "river-mouth-12-fan-sand-oblique"},
   {"cmd": "wait", "frames": 30},
   {"cmd": "exit"}
 ]

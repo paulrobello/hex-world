@@ -39,13 +39,25 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
         // pbr_input sampled the tile textures at UV0; base color, roughness, metallic and N are
         // all replaced here from the world-space samples (the prepass does the same for N).
         let f = kit_common::tile_frame(in.world_normal, in.world_position.xyz);
-        let albedo = textureSample(pbr_bindings::base_color_texture, pbr_bindings::base_color_sampler, f.uv);
+        var albedo = textureSample(pbr_bindings::base_color_texture, pbr_bindings::base_color_sampler, f.uv);
         let orm = textureSample(pbr_bindings::metallic_roughness_texture, pbr_bindings::metallic_roughness_sampler, f.uv);
         let factor = pbr_bindings::material.base_color;
-        pbr_input.material.base_color = vec4(factor.rgb * albedo.rgb, factor.a);
+        var tint = vec3(1.0);
+        var n = kit_common::tiled_normal(f);
+        // COLOR_0 on a tileable slot (the river mouth fan, scripts/blender/kit/_mouth.py): rgb scales
+        // the slot tint and a is the detail weight, so slots of different sets can meet at one colour.
+        // At a = 0 the set shows its mean (the top mip of the same texture, no added binding) and no
+        // normal relief. The bound set must carry a full mip chain (the BC7 and ASTC families do).
+        @if(VERTEX_COLORS) {
+            tint = in.color.rgb;
+            let mean = textureSampleLevel(pbr_bindings::base_color_texture, pbr_bindings::base_color_sampler, f.uv, 16.0);
+            albedo = vec4(mix(mean.rgb, albedo.rgb, in.color.a), albedo.a);
+            n = normalize(mix(f.N, n, in.color.a));
+        }
+        pbr_input.material.base_color = vec4(factor.rgb * tint * albedo.rgb, factor.a);
         pbr_input.material.perceptual_roughness = orm.g;
         pbr_input.material.metallic = orm.b;
-        pbr_input.N = kit_common::tiled_normal(f);
+        pbr_input.N = n;
     }
 
     // Live wet band on coast-bed sand (FLAG_WET_BAND, docs/kit/water-contract.md §3): the look-dev
@@ -61,6 +73,9 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
         let damp = 1.0 - smoothstep(0.0, 0.32 + 0.08 * water_common::value_noise(wp.xz / 7.0), y);
         let soaked = 1.0 - smoothstep(reach - 0.01, reach + 0.05, y);
         shore_wet = clamp(max(damp * 0.75, soaked), 0.0, 1.0) * step(-0.02, y) + step(y, -0.02);
+        @if(VERTEX_COLORS) {
+            shore_wet *= in.color.a;  // the detail weight fades the live band too (mouth fan banks)
+        }
         let c = pbr_input.material.base_color;
         pbr_input.material.base_color = vec4(c.rgb * mix(1.0, 0.55, shore_wet), c.a);
         pbr_input.material.perceptual_roughness = mix(pbr_input.material.perceptual_roughness, 0.18, shore_wet * step(-0.02, y));

@@ -15,6 +15,15 @@
     6.5,
     7.5
   ],
+  "fanColour": {
+    "bedWeightRampM": 2.0,
+    "color0Vertices": {
+      "beach_sand": 507,
+      "beach_wet": 324,
+      "river_bed": 1006
+    },
+    "seam": 0.8
+  },
   "hand": "l",
   "jointDeltaM": 0.0017,
   "lod2MaxRatio": 0.2,
@@ -76,7 +85,7 @@
       "wetMaxM": 0.0269
     }
   ],
-  "reason": "analytic masks (snow above water, wetness by channel and s; AO 1): no bake",
+  "reason": "analytic masks (snow above water; wetness by s on the coast, by height in the channel, blended to the bed's 0.9 by the fan's bed weight; AO 1): no bake",
   "receiverSignature": "a511b3c25d321ae227764fb3d0d33371558c90fae1f6c4e1fd71186378f2a085",
   "rowsS": [
     -8.0,

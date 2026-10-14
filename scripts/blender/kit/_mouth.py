@@ -41,9 +41,11 @@ edges 0<->1, 2<->5, 3<->4 and keeps s) before triangulating; heights, normals an
 `_mouth_profile` with hand "l", and refinement reruns there. The ring is composed natively for
 edge 4 and asserted equal, as a set, to the reflected right-handed ring.
 """
+import json
 import math
 import os
 import pathlib
+import struct
 import sys
 
 import bmesh
@@ -81,6 +83,26 @@ LOD2_RATIO = 0.20  # lane-cut ceiling (_river.LANE_CUT_LOD2_RATIO)
 GRASS, SAND, WET, SEABED, SKIRT = _beach.SLOTS
 BED = _river.BED
 SLOTS = (GRASS, SAND, WET, SEABED, SKIRT, BED)
+
+# Fan colour (owner, 2026-10-14: the bed's dark colour must blend into the sand). Per-face slots cannot
+# blend, so COLOR_0 on the river_bed, beach_sand and beach_wet primitives multiplies the slot tint
+# toward one target colour field, and its alpha is the detail weight (kit_material.wesl: 0 shows the
+# set's mean colour with no relief and no live wet band). Linear means of the sets' albedo PNGs
+# (assets/kit/p1/materials/<set>/; the shader reads the same mean from the KTX2 top mip) and the
+# manifest tints: change either and rebuild.
+GRAVEL_MEAN = np.array((0.2562, 0.2238, 0.1752))
+PLASTER_MEAN = np.array((0.7027, 0.6453, 0.5389))
+SAND_TINT = np.array((1.0, 0.95, 0.8))  # manifest beach_sand and beach_wet
+SEABED_TINT = np.array((1.5, 1.46, 1.26))  # manifest beach_seabed
+BED_TINT = np.array((0.78, 0.66, 0.5))  # manifest river_bed on every river piece
+# The mouth's river_bed slot tint (manifest): gravel at the sand's mean colour, so COLOR_0.rgb is in
+# [0, 1] for every target (gltf-validator) and inland it is BED_TINT / BED_SLOT_TINT (unchanged look).
+BED_SLOT_TINT = np.array((2.743, 2.74, 2.461))
+SAND_COL = PLASTER_MEAN * SAND_TINT
+SEABED_COL = GRAVEL_MEAN * SEABED_TINT
+BED_COL = GRAVEL_MEAN * BED_TINT
+WB_G1 = 2.0  # depth under the coast (m) over which the fan's bed weight ramps from 0 to 1
+WB_SEAM = 0.8  # fan faces above water with less bed weight are plaster (sand, wet), the rest gravel
 
 
 def reflect(p):
@@ -127,6 +149,38 @@ def np_height(hand, X, Y):
     bank = ss(0.7 * w, w + 2.5, D)
     ch = WATER + np.minimum(MP.LAND, bed + (MP.LAND - bed) * bank)
     return np.minimum(co, ch), ch, co, S
+
+
+def np_ss(a, b, x):
+    t = np.clip((np.asarray(x, dtype=np.float64) - a) / (b - a), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+def bed_weight(hand, X, Y):
+    """(w, bed, s): w = 1 where the river bed's own colour shows, 0 on the coast and the crease. In the
+    fan it ramps with the channel's depth under the coast (C1 at the crease); the ramp is 0.45 m at
+    s = -8 so every bed point under GRASS_Z there is w = 1, and inland of s = -9 it is 1."""
+    h, ch, co, s = np_height(hand, np.asarray(X, dtype=np.float64), np.asarray(Y, dtype=np.float64))
+    g1 = 0.45 + (WB_G1 - 0.45) * np_ss(MP.BEACH_TOP_S, -4.0, s)
+    w = np_ss(0.0, 1.0, np.maximum(co - ch, 0.0) / g1)
+    return np.maximum(w, 1.0 - np_ss(-9.0, MP.BEACH_TOP_S, s)), h, s
+
+
+def fan_color(hand, slot, X, Y, Z):
+    """COLOR_0 (n, 4) of a cap primitive's vertices: rgb = target / slot mean (both slots' means are
+    SAND_COL), a = detail weight. Target = the bed colour blended by w toward the coast's colour at that
+    point: sand above the water, seabed under it (the coast's own slots there)."""
+    w, _h, _s = bed_weight(hand, X, Y)
+    under = np.asarray(Z) < WATER
+    if slot == BED:
+        ref = np.where(under[:, None], SEABED_COL, SAND_COL)
+        a = np.where(under, 1.0, np_ss(WB_SEAM, 0.95, w))
+    else:
+        ref = np.broadcast_to(SAND_COL, (len(w), 3))
+        a = 1.0 - np_ss(0.5, WB_SEAM, w)
+    target = ref + (BED_COL - ref) * w[:, None]
+    rgb = target / (GRAVEL_MEAN * BED_SLOT_TINT if slot == BED else SAND_COL)
+    return np.concatenate([rgb, a[:, None]], axis=1)
 
 
 # --- ring and domain -------------------------------------------------------------------------------
@@ -542,9 +596,16 @@ def loop_normal(hand, x, y, z, channel_side):
 
 
 def slot_of(hand, x, y):
+    """Inland the river's slots; in the fan (s > -8) gravel under the water and where the bed weight
+    reaches WB_SEAM, and the coast's plaster slots by height on the banks between that seam and the
+    crease, so the crease joins like slots (gravel to seabed, plaster to sand) and COLOR_0 blends."""
     h, ch, co, s = prof(hand, x, y)
     if ch < co - 1e-6:
-        return GRASS if s <= MP.BEACH_TOP_S and h >= _river.GRASS_Z else BED
+        if s <= MP.BEACH_TOP_S:
+            return GRASS if h >= _river.GRASS_Z else BED
+        if h < WATER or float(bed_weight(hand, x, y)[0]) >= WB_SEAM:
+            return BED
+        return WET if h < _beach.WET_TOP_Y else SAND
     return _beach.slot_of("straight", x, y)
 
 
@@ -677,9 +738,75 @@ def masks(hand, out, piece, size=MASK_SIZE):
     xs, ys = np.meshgrid(c, c)
     h, ch, co, s = np_height(hand, xs, ys)
     snow = np.where(h >= WATER, 1.0, 0.0).ravel().astype(np.float32)
-    wet = np.where(ch < co - 1e-4, 0.9,
-                   np.where(s < _beach.WET_TOP_S, 0.7, np.where(s < 0.0, 1.0, 0.0))).ravel().astype(np.float32)
+    # The coast's rule by s; in the channel the same rule by height, blended to the bed's 0.9 by the
+    # fan's bed weight (no step at the crease).
+    coast = np.where(s < _beach.WET_TOP_S, 0.7, np.where(s < 0.0, 1.0, 0.0))
+    bank = np.where(h >= _beach.WET_TOP_Y, 0.7, np.where(h >= WATER, 1.0, 0.0))
+    w = bed_weight(hand, xs, ys)[0]
+    wet = np.where(ch < co - 1e-4, bank + (0.9 - bank) * w, coast).ravel().astype(np.float32)
     return bake.make_masks(size, snow, wet, 0.0, None, str(out / f"{piece}.masks.png"))
+
+
+def add_color0(path, hand):
+    """Appends COLOR_0 (FLOAT VEC4, `fan_color`) to the river_bed, beach_sand and beach_wet primitives
+    of every LOD in the exported GLB (runtime (x, y, z) is Blender (x, -z, y)). Border and joint-row
+    vertices must keep the look of their neighbour pieces: rgb 1 and a 1 on plaster, the river's own
+    tint and a 1 on gravel. Returns {slot: vertex count}."""
+    data = pathlib.Path(path).read_bytes()
+    jlen = struct.unpack_from("<I", data, 12)[0]
+    j = json.loads(data[20:20 + jlen])
+    boff = 20 + jlen
+    blen = struct.unpack_from("<I", data, boff)[0]
+    blob = bytearray(data[boff + 8:boff + 8 + blen])
+    for n in j["nodes"]:
+        if "mesh" not in n and "children" not in n:
+            continue  # sockets
+        assert not any(k in n for k in ("matrix", "rotation", "scale")) and all(
+            abs(v) < 1e-9 for v in n.get("translation", (0, 0, 0))), f"{path}: node {n.get('name')} is transformed"
+    mats = [m["name"] for m in j["materials"]]
+    acc, views = j["accessors"], j["bufferViews"]
+    counts = {}
+    for mesh in j["meshes"]:
+        if "_lod" not in mesh.get("name", ""):
+            continue
+        for prim in mesh["primitives"]:
+            slot = mats[prim["material"]]
+            if slot not in (BED, SAND, WET):
+                continue
+            a = acc[prim["attributes"]["POSITION"]]
+            bv = views[a["bufferView"]]
+            start = bv.get("byteOffset", 0) + a.get("byteOffset", 0)
+            assert bv.get("byteStride", 12) == 12 and a["componentType"] == 5126
+            p = np.frombuffer(bytes(blob[start:start + 12 * a["count"]]), "<f4").reshape(-1, 3).astype(np.float64)
+            X, Y, Z = p[:, 0], -p[:, 2], p[:, 1]
+            col = fan_color(hand, slot, X, Y, Z)
+            assert np.all(col >= -1e-9) and np.all(col <= 1.0 + 1e-9), (slot, col.min(), col.max())
+            col = np.clip(col, 0.0, 1.0)
+            fixed = np.abs(np.array([hexgeo.dist_to_border(x, y) for x, y in zip(X, Y)])) < 1e-4
+            if slot == BED:
+                lxy = np.array([hexgeo.rotate_xy((x, y), -lane_of(hand)) for x, y in zip(X, Y)])
+                fixed |= (np.abs(lxy[:, 0] - _river.JOINT_X) < 1e-4) & (np.abs(lxy[:, 1]) <= _river.BANK_TOP + 1e-4)
+            want = (BED_TINT / BED_SLOT_TINT) if slot == BED else np.ones(3)
+            if fixed.any():
+                err = np.abs(col[fixed, :3] - want).max()
+                assert err < 2e-3 and np.all(col[fixed, 3] > 1.0 - 1e-6), f"{slot}: seam vertex colour off by {err}"
+            while len(blob) % 4:
+                blob.append(0)
+            vals = np.round(col, 6).astype("<f4").tobytes()
+            views.append({"buffer": 0, "byteOffset": len(blob), "byteLength": len(vals), "target": 34962})
+            blob += vals
+            acc.append({"bufferView": len(views) - 1, "componentType": 5126, "count": a["count"], "type": "VEC4"})
+            prim["attributes"]["COLOR_0"] = len(acc) - 1
+            counts[slot] = counts.get(slot, 0) + int(a["count"])
+    while len(blob) % 4:
+        blob.append(0)
+    j["buffers"] = [{"byteLength": len(blob)}]
+    js = json.dumps(j, separators=(",", ":")).encode()
+    js += b" " * (-len(js) % 4)
+    total = 12 + 8 + len(js) + 8 + len(blob)
+    pathlib.Path(path).write_bytes(struct.pack("<III", 0x46546C67, 2, total) + struct.pack("<II", len(js), 0x4E4F534A)
+                                   + js + struct.pack("<II", len(blob), 0x004E4942) + bytes(blob))
+    return counts
 
 
 def check_np(hand):
@@ -752,12 +879,16 @@ def build_base(piece, hand, generator, params=PARAMS, skirt_rows=SKIRT_ROWS):
     if not skip_bake:
         masks(hand, out, piece)
     export.export_glb(root, str(out / f"{piece}.glb"))
+    tinted = add_color0(out / f"{piece}.glb", hand)
+    print(f"{piece}: COLOR_0 on {tinted}")
     export.write_export_report(str(out / "export-report.json"), root, piece, generator)
     bake.write_bake_report(str(out / "bake-report.json"), receiverSignature=bake.receiver_signature([lods[0]]),
                            device="none", samples=0, marginPx=0,
                            channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}},
-                           reason="analytic masks (snow above water, wetness by channel and s; AO 1): no bake",
+                           reason="analytic masks (snow above water; wetness by s on the coast, by height in the "
+                                  "channel, blended to the bed's 0.9 by the fan's bed weight; AO 1): no bake",
                            texelDensityPxPerM=texel, profileErrorM=errs, hand=hand, jointDeltaM=round(jd, 4),
                            rowsS=_beach.ROWS_S, extraRingS=list(_beach.EXTRA_S), lodTris=tris,
+                           fanColour={"bedWeightRampM": WB_G1, "seam": WB_SEAM, "color0Vertices": tinted},
                            lod2MaxRatio=LOD2_RATIO, lodParams=[list(p) for p in params], skipped=skip_bake)
     return root, lods

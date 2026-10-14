@@ -504,7 +504,7 @@ shots-coast:
 # docs/checkpoints/river-mouth/river-mouth.json (a spring-to-sea chain through each mouth
 # handedness, the fan and foam, the spring pool, River and Beach edge seams, fish at the mouth) at
 # 1600x1000 with tilt-shift off and fixed clocks, then copies JPEG stills and the state dump.
-RIVER_MOUTH_SHOTS = river-mouth-01-chain-right river-mouth-02-chain-mirrored river-mouth-03-fan-right river-mouth-04-fan-foam-topdown river-mouth-05-fan-mirrored river-mouth-06-spring-pool river-mouth-07-seam-river-edge river-mouth-08-seam-river-edge-bend river-mouth-09-seam-beach-edge5 river-mouth-10-seam-beach-edge2 river-mouth-11-fish-at-mouth
+RIVER_MOUTH_SHOTS = river-mouth-01-chain-right river-mouth-02-chain-mirrored river-mouth-03-fan-right river-mouth-04-fan-foam-topdown river-mouth-05-fan-mirrored river-mouth-06-spring-pool river-mouth-07-seam-river-edge river-mouth-08-seam-river-edge-bend river-mouth-09-seam-beach-edge5 river-mouth-10-seam-beach-edge2 river-mouth-11-fish-at-mouth river-mouth-12-fan-sand-oblique
 RIVER_MOUTH_DOCS = docs/checkpoints/river-mouth
 shots-river-mouth:
 	mkdir -p target/shots $(RIVER_MOUTH_DOCS)

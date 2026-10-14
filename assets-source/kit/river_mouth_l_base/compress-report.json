@@ -1,6 +1,6 @@
 {
   "name": "river_mouth_l_base",
-  "date": "2026-10-14T20:09:38.128Z",
+  "date": "2026-10-14T22:57:10.694Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 26569,
-      "sha256": "ca61a28dade361099c19170ff499651619f904ced2711b45c701c4929089e26d"
+      "bytes": 54875,
+      "sha256": "ccfbf025b39e8eb71629da746c1430793d3f1ac5c937a52a3a9e5b1f59ee3d49"
     },
     {
       "channel": "masks",
@@ -59,8 +59,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 27177,
-      "sha256": "5778d47e8839ce7d561d7c7d18f31f638262ab0ca21167df5adb23fe52397d3a"
+      "bytes": 55664,
+      "sha256": "cd58af30b7f1eea0b015ce61403230dfaf1e1464340f2048ec6dfe164d8c5410"
     },
     {
       "channel": "masks",
@@ -68,21 +68,21 @@
       "path": "assets/kit/p1/river_mouth_l_base/river_mouth_l_base.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 32005,
-      "sha256": "c21ebdb8e37113f5a5080747797221afaff155e70370251b6a25e918d4238453"
+      "bytes": 69938,
+      "sha256": "fadf66b1a7aacd598ccfb5b5c2fc1e7c8584e90f1e3f02808440d2cb0e864842"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 26569,
-      "astc": 27177
+      "bc7": 54875,
+      "astc": 55664
     },
-    "glbBytes": 157372
+    "glbBytes": 174808
   },
   "glb": {
-    "bytes": 157372,
-    "sha256": "90fa10786552f5ebe8085f969c7c989ce48be237b75bf01861fa9e4c29d34f29"
+    "bytes": 174808,
+    "sha256": "3d0aee551e6247419bbfb2f963db7c87326a3be16e35e259727d1a551282802a"
   }
 }

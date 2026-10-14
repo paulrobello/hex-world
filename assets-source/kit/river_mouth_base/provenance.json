@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_mouth.py",
-      "sha256": "de95627fb197d8eca03f071fc32e9ac359f0d75604034168e7d3f0e29dadb2af"
+      "sha256": "8f483995d63a78759b590760e15f6bd3983091b6400413ed2ff74e94426408f2"
     },
     {
       "path": "scripts/blender/kit/_mouth_profile.py",
@@ -52,6 +52,15 @@
       6.5,
       7.5
     ],
+    "fanColour": {
+      "bedWeightRampM": 2,
+      "color0Vertices": {
+        "beach_sand": 506,
+        "beach_wet": 324,
+        "river_bed": 1006
+      },
+      "seam": 0.8
+    },
     "hand": "r",
     "jointDeltaM": 0.0017,
     "lod2MaxRatio": 0.2,
@@ -113,7 +122,7 @@
         "wetMaxM": 0.0269
       }
     ],
-    "reason": "analytic masks (snow above water, wetness by channel and s; AO 1): no bake",
+    "reason": "analytic masks (snow above water; wetness by s on the coast, by height in the channel, blended to the bed's 0.9 by the fan's bed weight; AO 1): no bake",
     "receiverSignature": "45e2a548ab01871b1f5c64fb1de3f86c3f3611d76557f5dd9aece46aa14a9bd2",
     "rowsS": [
       -8,
@@ -198,10 +207,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 19454,
-        "astc": 19857
+        "bc7": 44569,
+        "astc": 45545
       },
-      "glbBytes": 153140
+      "glbBytes": 170128
     },
     "textureEncodes": [
       {
@@ -212,8 +221,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 19454,
-        "sha256": "8671fbb9737de9fffb5c5ea2f789321367c5588668646ef1e9cf66d13e771def"
+        "bytes": 44569,
+        "sha256": "f6febdeaed60f0b0c1743125acd3c4f1620ecd3adeac34a8f7e41c6fc8004286"
       },
       {
         "channel": "masks",
@@ -223,8 +232,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 19857,
-        "sha256": "5e6e52b8b35c85565609841747f2117ab564c3b29e76ec751a9fb646670ca9bf"
+        "bytes": 45545,
+        "sha256": "be9ec3707537f795de2c00863fd5a6d47bc50ee8c5a155fc73d7e7b17569185a"
       },
       {
         "channel": "masks",
@@ -232,31 +241,31 @@
         "path": "assets/kit/p1/river_mouth_base/river_mouth_base.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 28476,
-        "sha256": "f49b86220f590f0bf32284da15a78fa43b2a842df540b513ff093ce013954393"
+        "bytes": 61828,
+        "sha256": "fc214100cdd45a645785feb727fe939dbe426837ce194c6723e8c0a926497361"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_mouth_base/river_mouth_base.glb",
-      "sha256": "e01a7727828b9c13bde7d55c8456613288ced4aff9b7ce62813d0f2ee78e5b4e",
-      "bytes": 153140
+      "sha256": "778f6555c81cca744cd31a5bac75c8c2004f9d6d04b2ac8f27d24884435f4eec",
+      "bytes": 170128
     },
     {
       "path": "assets/kit/p1/river_mouth_base/river_mouth_base.masks.bc7.ktx2",
-      "sha256": "8671fbb9737de9fffb5c5ea2f789321367c5588668646ef1e9cf66d13e771def",
-      "bytes": 19454
+      "sha256": "f6febdeaed60f0b0c1743125acd3c4f1620ecd3adeac34a8f7e41c6fc8004286",
+      "bytes": 44569
     },
     {
       "path": "assets/kit/p1/river_mouth_base/river_mouth_base.masks.astc.ktx2",
-      "sha256": "5e6e52b8b35c85565609841747f2117ab564c3b29e76ec751a9fb646670ca9bf",
-      "bytes": 19857
+      "sha256": "be9ec3707537f795de2c00863fd5a6d47bc50ee8c5a155fc73d7e7b17569185a",
+      "bytes": 45545
     },
     {
       "path": "assets/kit/p1/river_mouth_base/river_mouth_base.masks.png",
-      "sha256": "f49b86220f590f0bf32284da15a78fa43b2a842df540b513ff093ce013954393",
-      "bytes": 28476
+      "sha256": "fc214100cdd45a645785feb727fe939dbe426837ce194c6723e8c0a926497361",
+      "bytes": 61828
     }
   ],
   "references": [
@@ -291,7 +300,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T20:14:30.607Z",
+    "date": "2026-10-14T22:58:21.337Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -317,6 +326,13 @@
       "status": "pending",
       "requested": "2026-10-14",
       "notes": "Pending owner review; not an approval. New piece: the bed of the right-handed river mouth (River on edge 3): the straight beach's coast profile with the river channel carved in and fanned to the shelf (water contract §3a). Review the six-view renders in assets-source/kit/river_mouth_base/renders/ and river-mouth-03, -04, -08, -09 and -10. In-engine shots in docs/checkpoints/river-mouth/. The controller records the owner's decision."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "fan-colour-blend",
+      "notes": "Pending owner review; not an approval. Owner feedback 2026-10-14 (the mouth colouring must blend where it meets the sand): the fan's bed colour now blends into the sand and the seabed through COLOR_0 (_mouth.fan_color, kit_material.wesl detail weight); the fan's banks above the water are the coast's plaster slots. Geometry and tri counts unchanged. Review river-mouth-03, -04 and -12 in docs/checkpoints/river-mouth/."
     }
   ]
 }

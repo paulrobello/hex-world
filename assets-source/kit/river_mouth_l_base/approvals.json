@@ -4,5 +4,12 @@
     "status": "pending",
     "requested": "2026-10-14",
     "notes": "Pending owner review; not an approval. New piece: the bed of the mirrored river mouth (River on edge 4), authored mirrored. Review the six-view renders in assets-source/kit/river_mouth_l_base/renders/ and river-mouth-02, -05 and -07. In-engine shots in docs/checkpoints/river-mouth/. The controller records the owner's decision."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-14",
+    "revision": "fan-colour-blend",
+    "notes": "Pending owner review; not an approval. Owner feedback 2026-10-14 (the mouth colouring must blend where it meets the sand): the fan's bed colour now blends into the sand and the seabed through COLOR_0 (_mouth.fan_color, kit_material.wesl detail weight); the fan's banks above the water are the coast's plaster slots. Geometry and tri counts unchanged. Review river-mouth-05-fan-mirrored in docs/checkpoints/river-mouth/."
   }
 ]
