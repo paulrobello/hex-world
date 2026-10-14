@@ -227,6 +227,7 @@ About 10 types. The exact variants are frozen at the start of P2.
 - **Assembly.** At placement the runtime resolves the tile definition into a list of kit-piece instances. Static pieces are batched into per-chunk GPU instance buffers.
 - **Seam continuity.** Kit pieces snap to a shared edge contract (lane offsets, edge heights, a vertex ring at the hex border), and the terrain cap's normals are blended at the hex border so seams don't show.
 - **Variety.** Each kit piece has 2–4 variants, and props get a per-instance seed for hue, scale and rotation jitter.
+- **Runtime recolour (owner, 2026-10-13).** Vehicles, starting with the car, are recoloured at runtime from one model and one texture set. The model marks its paintable surfaces in a mask that needs no extra texture: a vertex-colour channel, or a reserved region of its existing atlas. Glass, tyres, lights and trim stay unpainted. Each instance carries its own paint colour, picked from a curated palette by the instance seed, as per-instance data that keeps GPU instancing intact, so it never needs one material per colour.
 
 ## 7. Living world
 
@@ -240,7 +241,7 @@ About 10 types. The exact variants are frozen at the start of P2.
 
 | Agent | Behavior | Phase |
 |---|---|---|
-| Car | Routes between destination nodes on the road graph (A* over a cached graph) and follows lane splines. Starts and ends in a house's parking spot (§7.1). Spawn rate scales with connected destinations. | P2 |
+| Car | Routes between destination nodes on the road graph (A* over a cached graph) and follows lane splines. Starts and ends in a house's parking spot (§7.1). One model recoloured per instance at runtime (§6). Spawn rate scales with connected destinations. | P2 |
 | Bird | Boids flocking over the whole map, roosting in forest tiles. Runs on GPU compute. | P2 |
 | Boat | Drifts on ocean tiles and travels connected rivers. | P3 |
 | Train | Routes between stations on the rail graph. Multi-car consists that cross tile boundaries. | P3 |
