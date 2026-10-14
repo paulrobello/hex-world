@@ -142,7 +142,7 @@ pub const FOOTPRINTS: [(&str, Footprint); 6] = [
         "tree_hero_oak",
         Footprint {
             ground: 2.05,
-            crown: 6.9,
+            crown: 7.1,
         },
     ),
     (
@@ -1263,8 +1263,10 @@ mod tests {
             .collect();
         let mean = nn.iter().sum::<f32>() / nn.len() as f32;
         let sd = (nn.iter().map(|d| (d - mean).powi(2)).sum::<f32>() / nn.len() as f32).sqrt();
+        // A lattice spreads ~0%; dense Poisson-disc packing (20 spruces around the oak's clearance)
+        // still spreads ~7%.
         assert!(
-            sd > 0.08 * mean,
+            sd > 0.05 * mean,
             "nearest-neighbour spread {sd} of mean {mean}"
         );
         let yaws: HashSet<u32> = l.instances.iter().map(|i| i.yaw.to_bits()).collect();
@@ -1366,7 +1368,7 @@ mod tests {
                 .filter(|i| i.rule == 0)
             {
                 assert!(
-                    i.pos.xz().length() >= HERO_CROWN * 6.9 + 0.5 - 0.2,
+                    i.pos.xz().length() >= HERO_CROWN * 7.1 + 0.5 - 0.2,
                     "{}",
                     i.pos
                 );

@@ -24,8 +24,15 @@ import _tree
 PIECE = _tree.PIECE
 SEED = _tree.SEED
 R0, DOME_WIDE, DOME_TOP, DOME_BASE, SECTORS = _tree.R0, _tree.DOME_WIDE, _tree.DOME_TOP, _tree.DOME_BASE, _tree.SECTORS
-SHELL_COLUMNS = 7  # per sector: 21 around the dome
-SHELL_PHIS = (-0.75, -0.15, 0.35, 0.8, 1.2)  # ring latitudes (rad), poles added
+# Shell rings as (normal elevation psi in degrees, columns per sector), poles added. Rings sit at
+# equal steps of the dome's NORMAL angle, not of latitude: the flattened ellipsoid turns 90 degrees
+# within 0.8 m at its rim, so equal latitudes left 46-48 degree silhouette corners there. Columns
+# taper toward the poles, where a column spans cos(psi) less normal angle, keeping every facet near
+# a 15-20 degree normal step; the rings within +-36 degrees are the dome rims.
+SHELL_RINGS = ((-67.5, 3), (-45, 4), (-22.5, 7), (0, 7), (22.5, 7), (45, 5), (67.5, 3))
+SHELL_COLUMNS = tuple(c for _, c in SHELL_RINGS)
+SHELL_PHIS = tuple(round(math.atan((DOME_TOP if p >= 0 else DOME_BASE) / DOME_WIDE * math.tan(math.radians(p))), 4)
+                   for p, _ in SHELL_RINGS)  # ring latitudes (rad) on the master ellipsoid
 CLUMP_ATTR = "oak_clump"  # point attribute on shell vertices: the clump index (float)
 
 
@@ -147,21 +154,27 @@ def dome_sector(name: str) -> bpy.types.Object:
     """One 1/SECTORS sector of the closed low-poly R0 shell on the smooth master ellipsoid, poles
     included, outward winding. UV-unwrap it, then `_tree.replicate_sectors` to close the shell."""
     span = 2 * math.pi / SECTORS
-    verts, faces = [], []
-    for phi in SHELL_PHIS:
-        for j in range(SHELL_COLUMNS + 1):
-            verts.append(tuple(master_point(span * j / SHELL_COLUMNS, phi)))
-    w = SHELL_COLUMNS + 1
-    for i in range(len(SHELL_PHIS) - 1):
-        for j in range(SHELL_COLUMNS):
-            a = i * w + j
-            faces.append([a, a + 1, a + 1 + w, a + w])
+    verts, faces, rings = [], [], []
+    for phi, cols in zip(SHELL_PHIS, SHELL_COLUMNS):
+        rings.append(list(range(len(verts), len(verts) + cols + 1)))
+        verts += [tuple(master_point(span * j / cols, phi)) for j in range(cols + 1)]
+    # Bands between rings of different column counts: zip by theta (equal counts give quad pairs).
+    for lo, hi in zip(rings, rings[1:]):
+        cl, ch, i, j = len(lo) - 1, len(hi) - 1, 0, 0
+        while i < cl or j < ch:
+            if j >= ch or (i < cl and (i + 1) * ch <= (j + 1) * cl):
+                faces.append([lo[i], lo[i + 1], hi[j]])
+                i += 1
+            else:
+                faces.append([lo[i], hi[j + 1], hi[j]])
+                j += 1
     bottom, top = len(verts), len(verts) + 1
     verts += [tuple(master_point(0, -math.pi / 2)), tuple(master_point(0, math.pi / 2))]
-    last = (len(SHELL_PHIS) - 1) * w
-    for j in range(SHELL_COLUMNS):
-        faces.append([j + 1, j, bottom])
-        faces.append([last + j, last + j + 1, top])
+    first, last = rings[0], rings[-1]
+    for j in range(len(first) - 1):
+        faces.append([first[j + 1], first[j], bottom])
+    for j in range(len(last) - 1):
+        faces.append([last[j], last[j + 1], top])
     mesh = bpy.data.meshes.new(name)
     mesh.from_pydata(verts, [], faces)
     for p in mesh.polygons:

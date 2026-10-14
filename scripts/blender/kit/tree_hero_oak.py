@@ -37,10 +37,11 @@ SHELL_CAGE, SHELL_RAY = 0.45, 0.9  # canopy: clears leaves stacked up to ~0.25 m
 # AO ray lengths: crevice scale. The world default (10 m) lets limbs 4 m up darken the whole trunk.
 AO_DIST, SHELL_AO_DIST = 0.35, 0.3
 CANOPY_MAT = f"{PIECE}_canopy"
-ROOT_SIDES, ROOT_STEP, LIMB_SIDES, LIMB_STEP = 5, 1.1, 5, 1.6  # P2: heavier roots, visible limbs
+ROOT_SIDES, ROOT_STEP, LIMB_SIDES, LIMB_STEP = 5, 1.3, 5, 1.6  # P2: heavier roots, visible limbs
 GROUND_CULL_Z = -0.27  # below the meadow relief's floor (-0.25 m, meadow_base.relief)
 BARK_FILLS = (0.6, 0.55, 0.5, 0.45, 0.4)  # packed share of the bark column tried, tightest first
 SHELL_PACK_MARGIN = 0.008  # UV fraction between canopy and bark islands: 16 atlas and masks texels
+SHELL_UV_ANGLE = 1.0  # smart-project angle (rad) for the 7-ring sector: canopy median 259 px/m (1.152 gave 250)
 CANOPY_SNOW, WETNESS, NIGHT = 0.85, 0.5, 0.0  # masks R scale, G, B (trees do not glow at night)
 out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])
 skip_bake = os.environ.get("HEXW_SKIP_BAKE") == "1"
@@ -131,10 +132,11 @@ limbs = [b for b in skel if b["level"] == 1]
 twigs = [b for b in skel if b["level"] == 2]
 groups = ((trunk, 0, 6, 0.6), (roots, 0, ROOT_SIDES, ROOT_STEP), (limbs, 1, LIMB_SIDES, LIMB_STEP),
           (twigs, 2, 4, 1.5))
+bark_sides = {b["id"]: n for bs, _, n, _ in groups for b in bs}
 parts = [_tree.tube_mesh(f"bark_{i}", bs, {lv: n}, {lv: st}) for i, (bs, lv, n, st) in enumerate(groups)]
 bark_low = geom.join(parts, "bark_low")
 faces_before = len(bark_low.data.polygons)
-culled = _tree.cull_buried(bark_low, skel, {b["id"]: n for bs, _, n, _ in groups for b in bs})
+culled = _tree.cull_buried(bark_low, skel, bark_sides)
 culled_crown = _tree.cull_inside_crown(bark_low, crown)
 culled_ground = _oak.cull_below(bark_low, GROUND_CULL_Z)
 print(f"{PIECE}: culled {culled} buried, {culled_crown} in-crown and {culled_ground} underground "
@@ -162,7 +164,13 @@ _tree.bark_wind_uv(bark_low)  # TEXCOORD_1 after the atlas pack, so UVMap stays 
 # sectors reuse its UVs, and the SECTORS-fold master bakes identically into every sector).
 # The canopy slot samples masks at raw UV0, so its islands pack around the locked bark islands.
 shell = _oak.dome_sector("shell_base")
-uv.atlas_unwrap([shell], margin=0.01)
+scene.select_only([shell])
+shell.data.uv_layers.new(name="UVMap")
+bpy.ops.object.mode_set(mode="EDIT")
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.uv.smart_project(angle_limit=SHELL_UV_ANGLE, island_margin=0.01, area_weight=0.2)
+bpy.ops.uv.pack_islands(rotate=True, margin=0.01)
+bpy.ops.object.mode_set(mode="OBJECT")
 shell_vmax = pack_below_strip(shell, rotate=True, scale=True, margin=SHELL_PACK_MARGIN, locked=[bark_low],
                               margin_method="FRACTION")
 _tree.replicate_sectors(shell)
@@ -276,7 +284,7 @@ bake._write(MASK_SIZE, mk.reshape(-1, 4), masks_path)
 if not skip_bake:
     bake_stats["barkAo"] = stats(ao[bark_isl])
     # Texels inside another branch's low tube are never seen (partly buried receiver faces).
-    _, bark_hidden = _oak.hidden_texels(bark_low, skel, {b["id"]: n for bs, _, n, _ in groups for b in bs},
+    _, bark_hidden = _oak.hidden_texels(bark_low, skel, bark_sides,
                                         MASK_SIZE)
     bake_stats["barkAoVisible"] = stats(ao[bark_isl & ~bark_hidden])
     bake_stats["barkAoVisible"]["hiddenTexels"] = int((bark_isl & bark_hidden).sum())

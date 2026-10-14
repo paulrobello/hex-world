@@ -5,12 +5,12 @@
   "blendRef": {
     "store": "local:assets-source/blend",
     "key": "tree_hero_oak/tree_hero_oak_high.blend",
-    "sha256": "adfb21a59601ae707b971193a1f9815647a61529dd91690acd15b3173dba384a",
-    "bytes": 16983400
+    "sha256": "25c52ec7c966eb470c221f71c26237e67141a818151908d39db22b9b85550fab",
+    "bytes": 16983632
   },
   "generator": {
     "path": "scripts/blender/kit/tree_hero_oak.py",
-    "sha256": "3675d6918b3249583270a15feaf5a7b7e54a9eaee29179030acb08593f076017"
+    "sha256": "186e763895c64e386dddfdb29a3c5432f8568c057990ebec3d8e7548d05b8a05"
   },
   "generatorDeps": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "path": "scripts/blender/kit/_oak.py",
-      "sha256": "5f0adbf47114bb51f96610078a9aa45ef951f4724f2a4dc5057ecb1f40b0051c"
+      "sha256": "6edd0b4acd736fbc52cf62a374b16b8e6fec65bc5d62cce0365eb60b7eed3fd5"
     },
     {
       "path": "scripts/blender/kit/_tree.py",
@@ -41,30 +41,30 @@
     "aoDistanceM": 0.35,
     "bakeStats": {
       "barkAo": {
-        "mean": 0.6453673243522644,
+        "mean": 0.677649974822998,
         "min": 0,
         "p01": 0,
         "p05": 0.0941176563501358,
-        "texels": 557033
+        "texels": 561666
       },
       "barkAoVisible": {
-        "hiddenTexels": 141510,
-        "mean": 0.7206494808197021,
+        "hiddenTexels": 144547,
+        "mean": 0.7579220533370972,
         "min": 0,
         "p01": 0.062745101749897,
-        "p05": 0.250980406999588,
-        "texels": 415523
+        "p05": 0.2823529541492462,
+        "texels": 417119
       },
       "canopyAo": {
-        "mean": 0.7283946871757507,
+        "mean": 0.7284345030784607,
         "min": 0,
         "p01": 0.250980406999588,
         "p05": 0.3764706254005432,
-        "texels": 1127286
+        "texels": 1098044
       },
       "canopyMasks": {
         "aMin": 1,
-        "snowMean": 0.6473426818847656
+        "snowMean": 0.6473999619483948
       },
       "leafAlphaCoverageByMip": [
         0.5651,
@@ -81,8 +81,8 @@
     },
     "barkTile": {
       "aoTexelDensityPxPerM": {
-        "max": 68.40358227140801,
-        "median": 58.978309496901446,
+        "max": 68.40355297981746,
+        "median": 58.97812079293793,
         "min": 33.30671172318635
       },
       "set": "bark",
@@ -91,7 +91,7 @@
     },
     "blend": {
       "key": "tree_hero_oak/tree_hero_oak_high.blend",
-      "sha256": "adfb21a59601ae707b971193a1f9815647a61529dd91690acd15b3173dba384a",
+      "sha256": "25c52ec7c966eb470c221f71c26237e67141a818151908d39db22b9b85550fab",
       "store": "local:assets-source/blend"
     },
     "blender": "5.2.2 LTS",
@@ -100,18 +100,28 @@
       "aoDistanceM": 0.3,
       "cageExtrusionM": 0.45,
       "clumps": 11,
-      "columnsPerSector": 7,
+      "columnsPerSector": [
+        3,
+        4,
+        7,
+        7,
+        7,
+        5,
+        3
+      ],
       "culledHiddenFaces": {
-        "culled": 417,
-        "of": 2310
+        "culled": 461,
+        "of": 2376
       },
       "maxRayDistanceM": 0.9,
       "ringLatitudes": [
-        -0.75,
-        -0.15,
-        0.35,
-        0.8,
-        1.2
+        -0.6985,
+        -0.3347,
+        -0.1431,
+        0,
+        0.3135,
+        0.664,
+        1.084
       ],
       "sectors": 3
     },
@@ -134,27 +144,27 @@
       }
     },
     "culledReceiverFaces": {
-      "buried": 89,
+      "buried": 85,
       "inCrown": 59,
-      "of": 681,
+      "of": 651,
       "underground": 10
     },
-    "device": "METAL",
+    "device": "CPU",
     "marginPx": 8,
     "maxRayDistanceM": 0.5,
-    "receiverSignature": "faf0ec828b549c618c7f87a60b794bf801af9ccf0bd17468d277e30d5bf5627b",
+    "receiverSignature": "2acb7fa84e0b72e8ec407e88372d9dfb3d298f8658f4fb2bf7e03e2d60713cf5",
     "samples": 32,
     "skipped": false,
     "texelDensityPxPerM": {
       "tree_hero_oak_bark": {
-        "max": 615.6322404426721,
-        "median": 530.804785472113,
+        "max": 615.6319768183571,
+        "median": 530.8030871364414,
         "min": 299.7604055086772
       },
       "tree_hero_oak_canopy": {
-        "max": 362.77954905267256,
-        "median": 267.3572498370272,
-        "min": 200.70099072164882
+        "max": 381.4691629687563,
+        "median": 258.7077443169594,
+        "min": 187.53334225060115
       },
       "tree_hero_oak_leaves": {
         "max": 455.9372145398271,
@@ -166,18 +176,18 @@
   "lods": [
     {
       "lod": 0,
-      "tris": 2988,
+      "tris": 2956,
       "ratio": 1
     },
     {
       "lod": 1,
-      "tris": 1476,
-      "ratio": 0.4939759036144578
+      "tris": 1460,
+      "ratio": 0.4939106901217862
     },
     {
       "lod": 2,
-      "tris": 439,
-      "ratio": 0.1469210174029451
+      "tris": 432,
+      "ratio": 0.14614343707713126
     }
   ],
   "collider": {
@@ -187,14 +197,14 @@
   "pivot": "hex_center",
   "texelDensityPxPerM": {
     "tree_hero_oak_bark": {
-      "max": 615.6322404426721,
-      "median": 530.804785472113,
+      "max": 615.6319768183571,
+      "median": 530.8030871364414,
       "min": 299.7604055086772
     },
     "tree_hero_oak_canopy": {
-      "max": 362.77954905267256,
-      "median": 267.3572498370272,
-      "min": 200.70099072164882
+      "max": 381.4691629687563,
+      "median": 258.7077443169594,
+      "min": 187.53334225060115
     },
     "tree_hero_oak_leaves": {
       "max": 455.9372145398271,
@@ -208,10 +218,10 @@
       "class": "hero",
       "ktxMax": 11500000,
       "ktxBytes": {
-        "bc7": 4951142,
-        "astc": 4968779
+        "bc7": 4876747,
+        "astc": 4902104
       },
-      "glbBytes": 247524
+      "glbBytes": 251568
     },
     "textureEncodes": [
       {
@@ -222,8 +232,8 @@
         "transfer": "srgb",
         "vkFormat": 146,
         "levels": 12,
-        "bytes": 874137,
-        "sha256": "5a125374ba0a512fcde3d344e65b5c9839e9866a6680964fdd04e67dc0cc05f0"
+        "bytes": 873689,
+        "sha256": "381153669a75c8da639bb9228c6aefa8b8b4b7fdf36b803716b08ce3881f49dc"
       },
       {
         "channel": "albedo",
@@ -233,8 +243,8 @@
         "transfer": "srgb",
         "vkFormat": 158,
         "levels": 12,
-        "bytes": 876448,
-        "sha256": "0d1b823ffb6ea7b090f31abc24f11c91bae31976fa243726759f267d087ae977"
+        "bytes": 877332,
+        "sha256": "5ec6ec417281be580ee7e6c0ba4dc2f3d240d5701e1e0d89057013e40854b009"
       },
       {
         "channel": "albedo",
@@ -242,8 +252,8 @@
         "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.albedo.png",
         "format": "PNG",
         "transfer": "srgb",
-        "bytes": 1121481,
-        "sha256": "f16138f74ead3c9b47662e3eca0bb30271e10065189f0bd9769c517c9de083f9"
+        "bytes": 1123095,
+        "sha256": "793ac08d4a63a23526d1db16cc8c1529dce32988b1b3ae8d93f3c8e64993f768"
       },
       {
         "channel": "masks",
@@ -253,8 +263,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 12,
-        "bytes": 1332985,
-        "sha256": "95886e2a4234e0fa035586407660da0f3c654a03ff29f925aa600e624ec20d9e"
+        "bytes": 1303256,
+        "sha256": "f4a8991582339cde5171c8379ebbc5afa2b3286a7fcbd9207f5fd3f9a7aebfec"
       },
       {
         "channel": "masks",
@@ -264,8 +274,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 12,
-        "bytes": 1311362,
-        "sha256": "17035715de97ebdebb794195c79c26261b58a11a443b65ea611a9763595d908e"
+        "bytes": 1288155,
+        "sha256": "acfc74a934e30527423a41373602fa7e5a373c0a118ce83bca18a32a62a9d856"
       },
       {
         "channel": "masks",
@@ -273,8 +283,8 @@
         "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 1982670,
-        "sha256": "fb0f590c3eb693aea4b467eb77961a4b82089e392dce1c98095c2758546d3eec"
+        "bytes": 1950066,
+        "sha256": "c8da7f9a0a7c1dc4603379e9fe717bef349a136974e537922705e37756d25d4d"
       },
       {
         "channel": "normal",
@@ -284,8 +294,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 12,
-        "bytes": 1585456,
-        "sha256": "81b1867cd5935d74b0a9f8bb6b5dcfe225e5a243ec9f98a170d0a1c7193cdd51"
+        "bytes": 1556576,
+        "sha256": "ffd6ba0a85a9bc7763d9e9af3b66c5956b79d3ca861b1490df76aa201355d473"
       },
       {
         "channel": "normal",
@@ -295,8 +305,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 12,
-        "bytes": 1587677,
-        "sha256": "04b3565894505f6eefb2cdb84d053df348d14d58751bb39173e7860ab35e0fc1"
+        "bytes": 1558974,
+        "sha256": "40612553586918fe04299e7611ce5284fc34cf65068f21d726313b19c0d120a0"
       },
       {
         "channel": "normal",
@@ -304,8 +314,8 @@
         "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.normal.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 2388172,
-        "sha256": "c062289c5047481b1d330769bc2d8fbccdc20b65619fa5cb4ab52ea4accb8fec"
+        "bytes": 2348302,
+        "sha256": "d8d2f5d7e23505d359f9efafddb20b97edfe0782304dbeadba3098ccff32f152"
       },
       {
         "channel": "orm",
@@ -315,8 +325,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 12,
-        "bytes": 1158564,
-        "sha256": "5415a385b3d268ca352ddaa2610d7467d1c91f4c4dfa8c2388047a9592c15688"
+        "bytes": 1143226,
+        "sha256": "b542bd0c9096c8ded8fa31173cb3198de7ee9474da9108cf2b107dc3bd90bf1d"
       },
       {
         "channel": "orm",
@@ -326,8 +336,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 12,
-        "bytes": 1193292,
-        "sha256": "db9942ae710583ad64c3db8a28120e93122bc74455b5d2188e821ccc0713392e"
+        "bytes": 1177643,
+        "sha256": "79e5f42e8beac164146a0661eaf0791efcd9d80b620992e09e73733e7a9b29d8"
       },
       {
         "channel": "orm",
@@ -335,76 +345,76 @@
         "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.orm.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 1581571,
-        "sha256": "0835069fbfc5162261ddea2fa657baed6632448fcb80b52a8ff47bfdaf7516ad"
+        "bytes": 1561548,
+        "sha256": "4d542217d9342069923ddda25c17317939bd76c579f98c5aebffcd96dedb79e3"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.glb",
-      "sha256": "67c43ed19bb2faee31768c3593fa323f02ccb9741eb30eab9158fd894eda7986",
-      "bytes": 247524
+      "sha256": "0697530572d6ddfff2ad28e7e91db15fef81576b813858755dad3ff254ff8d28",
+      "bytes": 251568
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.albedo.bc7.ktx2",
-      "sha256": "5a125374ba0a512fcde3d344e65b5c9839e9866a6680964fdd04e67dc0cc05f0",
-      "bytes": 874137
+      "sha256": "381153669a75c8da639bb9228c6aefa8b8b4b7fdf36b803716b08ce3881f49dc",
+      "bytes": 873689
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.albedo.astc.ktx2",
-      "sha256": "0d1b823ffb6ea7b090f31abc24f11c91bae31976fa243726759f267d087ae977",
-      "bytes": 876448
+      "sha256": "5ec6ec417281be580ee7e6c0ba4dc2f3d240d5701e1e0d89057013e40854b009",
+      "bytes": 877332
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.albedo.png",
-      "sha256": "f16138f74ead3c9b47662e3eca0bb30271e10065189f0bd9769c517c9de083f9",
-      "bytes": 1121481
+      "sha256": "793ac08d4a63a23526d1db16cc8c1529dce32988b1b3ae8d93f3c8e64993f768",
+      "bytes": 1123095
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.masks.bc7.ktx2",
-      "sha256": "95886e2a4234e0fa035586407660da0f3c654a03ff29f925aa600e624ec20d9e",
-      "bytes": 1332985
+      "sha256": "f4a8991582339cde5171c8379ebbc5afa2b3286a7fcbd9207f5fd3f9a7aebfec",
+      "bytes": 1303256
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.masks.astc.ktx2",
-      "sha256": "17035715de97ebdebb794195c79c26261b58a11a443b65ea611a9763595d908e",
-      "bytes": 1311362
+      "sha256": "acfc74a934e30527423a41373602fa7e5a373c0a118ce83bca18a32a62a9d856",
+      "bytes": 1288155
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.masks.png",
-      "sha256": "fb0f590c3eb693aea4b467eb77961a4b82089e392dce1c98095c2758546d3eec",
-      "bytes": 1982670
+      "sha256": "c8da7f9a0a7c1dc4603379e9fe717bef349a136974e537922705e37756d25d4d",
+      "bytes": 1950066
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.normal.bc7.ktx2",
-      "sha256": "81b1867cd5935d74b0a9f8bb6b5dcfe225e5a243ec9f98a170d0a1c7193cdd51",
-      "bytes": 1585456
+      "sha256": "ffd6ba0a85a9bc7763d9e9af3b66c5956b79d3ca861b1490df76aa201355d473",
+      "bytes": 1556576
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.normal.astc.ktx2",
-      "sha256": "04b3565894505f6eefb2cdb84d053df348d14d58751bb39173e7860ab35e0fc1",
-      "bytes": 1587677
+      "sha256": "40612553586918fe04299e7611ce5284fc34cf65068f21d726313b19c0d120a0",
+      "bytes": 1558974
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.normal.png",
-      "sha256": "c062289c5047481b1d330769bc2d8fbccdc20b65619fa5cb4ab52ea4accb8fec",
-      "bytes": 2388172
+      "sha256": "d8d2f5d7e23505d359f9efafddb20b97edfe0782304dbeadba3098ccff32f152",
+      "bytes": 2348302
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.orm.bc7.ktx2",
-      "sha256": "5415a385b3d268ca352ddaa2610d7467d1c91f4c4dfa8c2388047a9592c15688",
-      "bytes": 1158564
+      "sha256": "b542bd0c9096c8ded8fa31173cb3198de7ee9474da9108cf2b107dc3bd90bf1d",
+      "bytes": 1143226
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.orm.astc.ktx2",
-      "sha256": "db9942ae710583ad64c3db8a28120e93122bc74455b5d2188e821ccc0713392e",
-      "bytes": 1193292
+      "sha256": "79e5f42e8beac164146a0661eaf0791efcd9d80b620992e09e73733e7a9b29d8",
+      "bytes": 1177643
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.orm.png",
-      "sha256": "0835069fbfc5162261ddea2fa657baed6632448fcb80b52a8ff47bfdaf7516ad",
-      "bytes": 1581571
+      "sha256": "4d542217d9342069923ddda25c17317939bd76c579f98c5aebffcd96dedb79e3",
+      "bytes": 1561548
     }
   ],
   "references": [
@@ -430,7 +440,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T05:24:06.851Z",
+    "date": "2026-10-14T08:55:05.211Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -448,6 +458,13 @@
         "assets-source/refs/tree_hero_oak/ref-1.jpg"
       ],
       "notes": "ref-1 approved. ref-2 not approved. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "p3-rims-bark-ao",
+      "requested": "2026-10-14",
+      "notes": "Pending owner re-approval; not an approval. P2 polish round 2: dome shell rings placed at equal steps of the normal angle (7 rings, 3/4/7/7/7/5/3 columns per sector) so the rims no longer show 46-48 degree corners; roots at a 1.3 m ring step and a 4-column underside ring pay for it (LOD0 2,956 tris). Bark high-poly ridges 0.07 -> 0.025 m (live/07_p3_bark_relief.py): bark AO mean 0.645 -> 0.678 over all texels, 0.721 -> 0.758 over visible texels. Review assets-source/kit/tree_hero_oak/renders/p3_sheet.jpg (p2 left, p3 right) and the p3_*.jpg stills. The controller records the owner's decision."
     }
   ]
 }

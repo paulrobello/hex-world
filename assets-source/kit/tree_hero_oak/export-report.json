@@ -3,7 +3,7 @@
   "budgetClass": "hero",
   "generator": {
     "path": "scripts/blender/kit/tree_hero_oak.py",
-    "sha256": "3675d6918b3249583270a15feaf5a7b7e54a9eaee29179030acb08593f076017"
+    "sha256": "186e763895c64e386dddfdb29a3c5432f8568c057990ebec3d8e7548d05b8a05"
   },
   "generatorDeps": [
     {
@@ -12,7 +12,7 @@
     },
     {
       "path": "scripts/blender/kit/_oak.py",
-      "sha256": "5f0adbf47114bb51f96610078a9aa45ef951f4724f2a4dc5057ecb1f40b0051c"
+      "sha256": "6edd0b4acd736fbc52cf62a374b16b8e6fec65bc5d62cce0365eb60b7eed3fd5"
     },
     {
       "path": "scripts/blender/kit/_tree.py",
@@ -20,9 +20,9 @@
     }
   ],
   "lodTris": {
-    "tree_hero_oak_lod0": 2988,
-    "tree_hero_oak_lod1": 1476,
-    "tree_hero_oak_lod2": 439
+    "tree_hero_oak_lod0": 2956,
+    "tree_hero_oak_lod1": 1460,
+    "tree_hero_oak_lod2": 432
   },
   "nodes": [
     "tree_hero_oak",

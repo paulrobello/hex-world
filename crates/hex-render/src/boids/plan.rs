@@ -165,14 +165,14 @@ fn dome_point(c: [f32; 3], r: f32, azimuth: f32, elevation: f32) -> Vec3 {
 /// outward direction). Chosen against the GLB's canopy shell (`oak_perches_sit_on_the_canopy`):
 /// each lies on a dome no higher dome covers. Twelve, the forest's bird `max`.
 const OAK_PERCHES: [(usize, f32, f32); 12] = [
-    (0, 45.0, 0.0),
+    (0, 48.0, 0.0),
     (1, 45.0, 0.0),
     (2, 45.0, -0.6),
     (3, 45.0, -0.6),
-    (4, 45.0, -0.6),
+    (4, 45.0, -0.3),
     (5, 65.0, 0.0),
-    (6, 35.0, 0.0),
-    (7, 45.0, 0.6),
+    (6, 28.0, 0.0),
+    (7, 38.0, 0.6),
     (8, 45.0, 0.0),
     (9, 65.0, 1.2),
     (9, 65.0, -0.6),
