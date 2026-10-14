@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::axial::Axial;
 use crate::catalog::{START_TILE, TileCatalog};
-use crate::tile::{TileDef, opposite_edge};
+use crate::tile::{EdgePieces, KitRef, TileDef, opposite_edge};
 
 /// Undo depth (PRD §4.2 requires at least 100). Older actions are dropped first.
 pub const HISTORY_DEPTH: usize = 128;
@@ -415,6 +415,83 @@ impl World {
             }
         }
         seen.len() == self.tiles.len() - 1
+    }
+}
+
+/// Pair edge pieces of the tile at `cell`, by local edge (decision D3, `data/sockets.ron`
+/// `pair_edge_pieces`). `at(cell)` is the definition and rotation of the tile placed there. An edge
+/// gets a piece when the (own socket, neighbour socket) pair across it has an entry; its corner
+/// flags say whether the local edges either side carry the same pair. A tile that lists its edge
+/// pieces explicitly gets none.
+pub fn pair_edge_pieces<'a>(
+    catalog: &'a TileCatalog,
+    cell: Axial,
+    at: impl Fn(Axial) -> Option<(&'a TileDef, u8)>,
+) -> [Option<KitRef>; 6] {
+    let Some((def, rot)) = at(cell) else {
+        return Default::default();
+    };
+    if def.edge_pieces != EdgePieces::Derived {
+        return Default::default();
+    }
+    let sockets = catalog.sockets();
+    let pair = |e: u8| {
+        let world = (e + rot) % 6;
+        let (n, nrot) = at(cell.neighbor(world))?;
+        Some((
+            def.edges[e as usize].kind,
+            n.edge(opposite_edge(world), nrot).kind,
+        ))
+    };
+    std::array::from_fn(|e| {
+        let e = e as u8;
+        let (own, neighbour) = pair(e)?;
+        sockets.pair_entry(own, neighbour)?;
+        let same = |k: u8| pair(k % 6) == Some((own, neighbour));
+        sockets.pair_edge_piece(own, neighbour, e, same(e + 5), same(e + 1))
+    })
+}
+
+/// Resolved pair edge pieces of every placed cell. An edge's pair and its corner flags read only
+/// its own tile and the cells across its edges, so a change at a cell (place, bulldoze, undo,
+/// redo) can change the pieces of that cell and its six neighbours only: [`PairPieces::update`]
+/// re-evaluates exactly those.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct PairPieces {
+    cells: BTreeMap<Axial, [Option<KitRef>; 6]>,
+}
+
+impl PairPieces {
+    pub fn get(&self, cell: Axial) -> Option<&[Option<KitRef>; 6]> {
+        self.cells.get(&cell)
+    }
+
+    /// Re-evaluates every cell in `changed` and its six neighbours against `at` (see
+    /// [`pair_edge_pieces`]). Returns the cells whose pieces changed (a cell gaining or losing its
+    /// tile counts as changed).
+    pub fn update<'a>(
+        &mut self,
+        catalog: &'a TileCatalog,
+        changed: impl IntoIterator<Item = Axial>,
+        at: impl Fn(Axial) -> Option<(&'a TileDef, u8)>,
+    ) -> BTreeSet<Axial> {
+        let mut dirty = BTreeSet::new();
+        for c in changed {
+            dirty.insert(c);
+            dirty.extend((0..6).map(|e| c.neighbor(e)));
+        }
+        let mut out = BTreeSet::new();
+        for c in dirty {
+            let new = at(c).map(|_| pair_edge_pieces(catalog, c, &at));
+            if new.as_ref() != self.cells.get(&c) {
+                out.insert(c);
+                match new {
+                    Some(p) => self.cells.insert(c, p),
+                    None => self.cells.remove(&c),
+                };
+            }
+        }
+        out
     }
 }
 
@@ -983,5 +1060,119 @@ mod tests {
         assert_eq!(cell_seed(1, EAST), cell_seed(1, EAST));
         assert_ne!(cell_seed(1, EAST), cell_seed(2, EAST));
         assert_ne!(cell_seed(1, EAST), cell_seed(1, Axial::new(0, 1)));
+    }
+
+    /// Re-evaluates the pair pieces around `changed` and checks the incremental cache against a
+    /// full evaluation of every placed cell. Returns the cells whose pieces changed.
+    fn pairs_after(
+        w: &World,
+        c: &TileCatalog,
+        cache: &mut PairPieces,
+        changed: Axial,
+    ) -> BTreeSet<Axial> {
+        let at = |cell: Axial| {
+            w.tile(cell)
+                .and_then(|t| Some((c.get(&t.def)?, t.rotation)))
+        };
+        let out = cache.update(c, [changed], at);
+        let mut full = PairPieces::default();
+        full.update(c, w.tiles().keys().copied().collect::<Vec<_>>(), at);
+        assert_eq!(
+            *cache, full,
+            "incremental pair pieces differ from a full evaluation"
+        );
+        out
+    }
+
+    fn piece(cache: &PairPieces, cell: Axial, local: usize) -> Option<&str> {
+        cache.get(cell)?[local].as_ref().map(KitRef::as_str)
+    }
+
+    /// Two forests east of the start meadow: EAST (rotation 0) and FAR = EAST's edge-0 neighbour
+    /// (rotation 1, so its world edge 3 is its local edge 2 and its base variant is e2).
+    const FAR: Axial = Axial { q: 2, r: 0 };
+
+    fn two_forests() -> (World, TileCatalog, PairPieces) {
+        let c = catalog();
+        let mut w = World::new(1);
+        let mut cache = PairPieces::default();
+        pairs_after(&w, &c, &mut cache, Axial::ORIGIN);
+        w.place(&c, EAST, "forest", 0).unwrap();
+        pairs_after(&w, &c, &mut cache, EAST);
+        assert!(
+            cache.get(EAST).unwrap().iter().all(Option::is_none),
+            "forest beside meadow"
+        );
+        (w, c, cache)
+    }
+
+    #[test]
+    fn placing_a_forest_beside_a_forest_gives_both_their_edge_variants() {
+        let (mut w, c, mut cache) = two_forests();
+        w.place(&c, FAR, "forest", 1).unwrap();
+        let changed = pairs_after(&w, &c, &mut cache, FAR);
+        assert_eq!(changed, BTreeSet::from([EAST, FAR]));
+        assert_eq!(piece(&cache, EAST, 0), Some("forest_forest_edge_e0"));
+        assert_eq!(piece(&cache, FAR, 2), Some("forest_forest_edge_e2"));
+        let count = |cell| cache.get(cell).unwrap().iter().flatten().count();
+        assert_eq!((count(EAST), count(FAR)), (1, 1));
+    }
+
+    #[test]
+    fn bulldozing_a_forest_takes_the_neighbours_edge_piece_away() {
+        let (mut w, c, mut cache) = two_forests();
+        w.place(&c, FAR, "forest", 1).unwrap();
+        pairs_after(&w, &c, &mut cache, FAR);
+        w.bulldoze(FAR).unwrap();
+        let changed = pairs_after(&w, &c, &mut cache, FAR);
+        assert_eq!(changed, BTreeSet::from([EAST, FAR]));
+        assert_eq!(piece(&cache, EAST, 0), None);
+        assert!(cache.get(FAR).is_none());
+    }
+
+    #[test]
+    fn undo_and_redo_re_evaluate_the_cell_and_its_neighbours() {
+        let (mut w, c, mut cache) = two_forests();
+        w.place(&c, FAR, "forest", 1).unwrap();
+        pairs_after(&w, &c, &mut cache, FAR);
+        // Undo the place: the edge piece goes; redo it: the piece comes back.
+        assert!(w.undo());
+        assert_eq!(
+            pairs_after(&w, &c, &mut cache, FAR),
+            BTreeSet::from([EAST, FAR])
+        );
+        assert_eq!(piece(&cache, EAST, 0), None);
+        assert!(w.redo());
+        assert_eq!(
+            pairs_after(&w, &c, &mut cache, FAR),
+            BTreeSet::from([EAST, FAR])
+        );
+        assert_eq!(piece(&cache, EAST, 0), Some("forest_forest_edge_e0"));
+        // Bulldoze, then undo the bulldoze (the tile returns) and redo it (it goes again).
+        w.bulldoze(FAR).unwrap();
+        pairs_after(&w, &c, &mut cache, FAR);
+        assert!(w.undo());
+        pairs_after(&w, &c, &mut cache, FAR);
+        assert_eq!(piece(&cache, FAR, 2), Some("forest_forest_edge_e2"));
+        assert!(w.redo());
+        pairs_after(&w, &c, &mut cache, FAR);
+        assert_eq!(piece(&cache, EAST, 0), None);
+    }
+
+    #[test]
+    fn a_third_forest_only_touches_its_own_seams() {
+        let (mut w, c, mut cache) = two_forests();
+        w.place(&c, FAR, "forest", 1).unwrap();
+        pairs_after(&w, &c, &mut cache, FAR);
+        // EAST edge-5 neighbour (2, -1) touches EAST (its world edge 2) and FAR (world edge 1).
+        let third = EAST.neighbor(5);
+        w.place(&c, third, "forest", 3).unwrap();
+        let changed = pairs_after(&w, &c, &mut cache, third);
+        assert_eq!(changed, BTreeSet::from([EAST, FAR, third]));
+        assert_eq!(piece(&cache, EAST, 5), Some("forest_forest_edge_e5"));
+        // third (rotation 3): world edge 2 faces EAST (local 5), world edge 1 faces FAR (local 4).
+        assert_eq!(piece(&cache, third, 5), Some("forest_forest_edge_e5"));
+        assert_eq!(piece(&cache, third, 4), Some("forest_forest_edge_e4"));
+        assert_eq!(cache.get(third).unwrap().iter().flatten().count(), 2);
     }
 }

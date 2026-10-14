@@ -1,0 +1,245 @@
+{
+  "pieceId": "forest_forest_edge_e3",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/forest_forest_edge_e3.py",
+    "sha256": "5213265a76284c857c6d2e24114161b9efb0ba96a7e88b9b5dbfb362c110b309"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_forest_edge.py",
+      "sha256": "c3f6ca7079e143854a568cb9ef799aeeb5b43a147a0284593e7d90394ab61f29"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 1,
+    "baseEdge": 3,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "clearancePerLod": [
+      {
+        "maxFloatOverFloorM": 0.02,
+        "meanFloatOverFloorM": 0.02,
+        "minClearanceOverRimLod1M": -0.0275,
+        "minClearanceOverRimM": 0.02
+      },
+      {
+        "maxFloatOverFloorM": 0.02,
+        "meanFloatOverFloorM": 0.02,
+        "minClearanceOverRimLod0M": 0.0007,
+        "minClearanceOverRimLod2M": -0.0275,
+        "minClearanceOverRimM": 0.02
+      },
+      {
+        "maxFloatOverFloorM": 0.02,
+        "meanFloatOverFloorM": 0.02,
+        "minClearanceOverRimLod1M": -0.009,
+        "minClearanceOverRimM": 0.02
+      }
+    ],
+    "depthM": 6,
+    "device": "CPU",
+    "diveM": 0.06,
+    "epsM": 0.02,
+    "extM": 0.6,
+    "forestBaseSignature": "5054f7c4d19e1d8a1afd8b53e4efd9062bc708d0d931408f8f26f23b01ec4680",
+    "marginPx": 12,
+    "maskStats": {
+      "mean": 0.09610085934400558,
+      "min": 0,
+      "p01": 0,
+      "p05": 0,
+      "texels": 216658
+    },
+    "receiverSignature": "ea65631284aa65b2bbf99535649025b7fb92d1ea61f4ecbd8358f2cc986cff40",
+    "samples": 64,
+    "skipped": false,
+    "taper": [
+      false,
+      false
+    ],
+    "texelDensityPxPerM": {
+      "max": 15.999960389811617,
+      "median": 15.99356331589027,
+      "min": 15.715804848299918
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 960,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 233,
+      "ratio": 0.24270833333333333
+    },
+    {
+      "lod": 2,
+      "tris": 103,
+      "ratio": 0.10729166666666666
+    }
+  ],
+  "collider": {
+    "node": "forest_forest_edge_e3_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "baseEdge": 3,
+        "edge": 0,
+        "kind": "forest",
+        "offset": 0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0,
+        0
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 15.999960389811617,
+    "median": 15.99356331589027,
+    "min": 15.715804848299918
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 7601,
+        "astc": 7477
+      },
+      "glbBytes": 39236
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/forest_forest_edge_e3/forest_forest_edge_e3.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 7601,
+        "sha256": "83f2113715186d4af15c71bf233fd27f3e1375b4d14d247e36c347a4aafb8553"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/forest_forest_edge_e3/forest_forest_edge_e3.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 7477,
+        "sha256": "71d2d79dada60d5cf50e5a3c43115e7be0e8d99e4222438f9c60c964c561b9ed"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/forest_forest_edge_e3/forest_forest_edge_e3.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 9871,
+        "sha256": "cd902bda0dd176be68059556b4df4703af337994d4553907ff72d23c5f9dbb65"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/forest_forest_edge_e3/forest_forest_edge_e3.glb",
+      "sha256": "b1d95f4088c4e6886af1e8e56bd5b468949c8de99740e5112afe5d1b766a5109",
+      "bytes": 39236
+    },
+    {
+      "path": "assets/kit/p1/forest_forest_edge_e3/forest_forest_edge_e3.masks.bc7.ktx2",
+      "sha256": "83f2113715186d4af15c71bf233fd27f3e1375b4d14d247e36c347a4aafb8553",
+      "bytes": 7601
+    },
+    {
+      "path": "assets/kit/p1/forest_forest_edge_e3/forest_forest_edge_e3.masks.astc.ktx2",
+      "sha256": "71d2d79dada60d5cf50e5a3c43115e7be0e8d99e4222438f9c60c964c561b9ed",
+      "bytes": 7477
+    },
+    {
+      "path": "assets/kit/p1/forest_forest_edge_e3/forest_forest_edge_e3.masks.png",
+      "sha256": "cd902bda0dd176be68059556b4df4703af337994d4553907ff72d23c5f9dbb65",
+      "bytes": 9871
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/forest/ref-1.jpg",
+      "sha256": "91bec450432eaf9da8debc4f88820bc7da6b4fbbb17c6586e22f0ae1afc09ac6",
+      "sourceSha256": "3c9aa8f425d216ab897c74a17ba4d998a008fa7b0672024f9988a8813201e31d",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "23f27fd1-0218-42b6-92c4-0d22142c11e5",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), covered by a dense mixed forest: a few broad rounded oaks among many tall spruce conifers with dark green needle tiers, undergrowth of ferns, shrubs and saplings, a fallen mossy log and leaf litter on the forest floor, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/forest/ref-2.jpg",
+      "sha256": "fd5b8a1ebb2c3df56a73f28095a39d07c6c7e303dfcdb79e34d4e05ce9164734",
+      "sourceSha256": "394bbf09c7fab300ef2e4e781ee047384e0bbdba2b6015750bfebdef5ae88ec8",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e3e4f64b-d10d-4a10-b22a-0fe15b9fee0e",
+      "prompt": "Close-up of a stylized-real spruce conifer and the forest undergrowth on a diorama tile: rough flaky bark, layered tiers of needle clusters, ferns, low shrubs, moss and leaf litter at the trunk base, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T06:28:04.309Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/forest/ref-1.jpg",
+        "assets-source/refs/forest/ref-2.jpg"
+      ],
+      "notes": "Approved: spruce among oaks, ferns, fallen log. ref-2 sits on a square fragment; tiles are hexagonal. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "notes": "Not approved. One of six per-edge variants (coordinator decision D3) built for the owner's request 'forest approved, create needed edge pieces'; awaiting owner review of assets-source/kit/forest_forest_edge/stills/. The controller replaces this entry when the owner rules."
+    }
+  ]
+}

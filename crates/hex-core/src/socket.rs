@@ -1,6 +1,6 @@
 //! Edge sockets and the socket compatibility table (PRD §5.2, plan F2/F3, owner O1).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
@@ -106,6 +106,71 @@ impl EdgeSocket {
     }
 }
 
+/// How a pair edge piece ends at a tile corner whose next edge is not the same pair.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum PairCorners {
+    /// The piece ends on its corner rays whatever the next edges are (option O-a).
+    #[default]
+    Straight,
+    /// The piece tapers into the base's own outline beside an edge that is not the same pair
+    /// (option O-b): one more variant per combination of the two corner flags, named `_t<p><n>`.
+    Taper,
+}
+
+/// An edge piece chosen by the (own socket, neighbour socket) pair at an edge, for seams whose
+/// look depends on both sides (forest floor across a Forest/Forest seam, decision D3).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PairEdgePiece {
+    pub own: SocketKind,
+    pub neighbour: SocketKind,
+    /// The piece id, or the family stem when `per_base_edge` or `Taper` add suffixes.
+    pub piece: String,
+    /// One variant per local edge k of the tile's base (`<piece>_e<k>`): for a base that is not
+    /// 60-degree symmetric, each variant matches its own edge's slice of the base.
+    #[serde(default)]
+    pub per_base_edge: bool,
+    #[serde(default)]
+    pub corners: PairCorners,
+}
+
+impl PairEdgePiece {
+    /// The piece for local edge `local_edge`, given whether the previous (`local_edge - 1`) and
+    /// next (`local_edge + 1`) edges of the tile carry the same pair. `Straight` ignores the flags.
+    pub fn name(&self, local_edge: u8, prev_same: bool, next_same: bool) -> KitRef {
+        let mut id = self.piece.clone();
+        if self.per_base_edge {
+            id.push_str(&format!("_e{}", local_edge % 6));
+        }
+        if self.corners == PairCorners::Taper && !(prev_same && next_same) {
+            id.push_str(&format!("_t{}{}", prev_same as u8, next_same as u8));
+        }
+        KitRef(id)
+    }
+
+    /// Every piece id this entry can name.
+    pub fn names(&self) -> BTreeSet<KitRef> {
+        let edges: &[u8] = if self.per_base_edge {
+            &[0, 1, 2, 3, 4, 5]
+        } else {
+            &[0]
+        };
+        let flags: &[bool] = if self.corners == PairCorners::Taper {
+            &[false, true]
+        } else {
+            &[true]
+        };
+        let mut out = BTreeSet::new();
+        for &e in edges {
+            for &p in flags {
+                for &n in flags {
+                    out.insert(self.name(e, p, n));
+                }
+            }
+        }
+        out
+    }
+}
+
 /// `data/sockets.ron` as authored.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct SocketTableFile {
@@ -119,6 +184,10 @@ pub struct SocketTableFile {
     /// Kinds whose edges carry a land [`Side`] and meet only the opposite side (owner O1).
     #[serde(default)]
     pub directional: Vec<SocketKind>,
+    /// Edge pieces chosen by the socket pair across an edge (decision D3), placed in addition to
+    /// the single-kind `edge_pieces`. Each pair must be compatible and listed once.
+    #[serde(default)]
+    pub pair_edge_pieces: Vec<PairEdgePiece>,
 }
 
 /// A validated, symmetric socket compatibility table.
@@ -133,6 +202,7 @@ pub enum SocketTableError {
     MissingKind(SocketKind),
     Asymmetric(SocketKind, SocketKind),
     BadLane(SocketKind),
+    BadPair(SocketKind, SocketKind),
 }
 
 impl fmt::Display for SocketTableError {
@@ -147,6 +217,10 @@ impl fmt::Display for SocketTableError {
                 )
             }
             SocketTableError::BadLane(k) => write!(f, "sockets.ron: {k:?} lane width must be > 0"),
+            SocketTableError::BadPair(a, b) => write!(
+                f,
+                "sockets.ron: pair edge piece {a:?}/{b:?} is listed twice, never meets or has no piece"
+            ),
         }
     }
 }
@@ -183,6 +257,16 @@ impl SocketTable {
         for (&kind, lane) in &file.lanes {
             if lane.width <= 0.0 || !lane.width.is_finite() || !lane.offset.is_finite() {
                 return Err(SocketTableError::BadLane(kind));
+            }
+        }
+        let mut pairs = BTreeSet::new();
+        for p in &file.pair_edge_pieces {
+            let meets = file
+                .compatible
+                .get(&p.own)
+                .is_some_and(|k| k.contains(&p.neighbour));
+            if !meets || p.piece.is_empty() || !pairs.insert((p.own, p.neighbour)) {
+                return Err(SocketTableError::BadPair(p.own, p.neighbour));
             }
         }
         Ok(Self { file })
@@ -230,6 +314,39 @@ impl SocketTable {
     /// The edge piece derived for an edge of `kind`.
     pub fn edge_piece(&self, kind: SocketKind) -> Option<&KitRef> {
         self.file.edge_pieces.get(&kind)
+    }
+
+    /// The pair entry for an edge whose own socket is `own` and whose neighbour's is `neighbour`.
+    pub fn pair_entry(&self, own: SocketKind, neighbour: SocketKind) -> Option<&PairEdgePiece> {
+        self.file
+            .pair_edge_pieces
+            .iter()
+            .find(|p| p.own == own && p.neighbour == neighbour)
+    }
+
+    /// The pair edge piece for local edge `local_edge` of a tile (decision D3): the entry for
+    /// (`own`, `neighbour`) names the family, the base's local edge picks the variant, and the
+    /// corner flags (`prev_same`, `next_same`: whether local edges `local_edge - 1` and
+    /// `local_edge + 1` carry the same pair) pick a taper variant under [`PairCorners::Taper`].
+    pub fn pair_edge_piece(
+        &self,
+        own: SocketKind,
+        neighbour: SocketKind,
+        local_edge: u8,
+        prev_same: bool,
+        next_same: bool,
+    ) -> Option<KitRef> {
+        self.pair_entry(own, neighbour)
+            .map(|p| p.name(local_edge, prev_same, next_same))
+    }
+
+    /// Every piece id the pair entries can name (the data validator checks each one).
+    pub fn pair_piece_names(&self) -> BTreeSet<KitRef> {
+        self.file
+            .pair_edge_pieces
+            .iter()
+            .flat_map(PairEdgePiece::names)
+            .collect()
     }
 
     pub fn file(&self) -> &SocketTableFile {
@@ -462,5 +579,62 @@ mod tests {
     fn edge_socket_defaults_to_flat_height_zero_without_lane() {
         let e: EdgeSocket = ron::from_str("(kind: Grass)").unwrap();
         assert_eq!(e, EdgeSocket::new(Grass));
+    }
+
+    #[test]
+    fn pair_resolver_names_the_variant_by_base_edge() {
+        let t = table();
+        for k in 0..6u8 {
+            assert_eq!(
+                t.pair_edge_piece(Forest, Forest, k, false, true),
+                Some(KitRef(format!("forest_forest_edge_e{k}")))
+            );
+        }
+        assert_eq!(t.pair_edge_piece(Forest, Grass, 0, true, true), None);
+        assert_eq!(t.pair_edge_piece(Grass, Forest, 0, true, true), None);
+        assert_eq!(t.pair_piece_names().len(), 6);
+    }
+
+    #[test]
+    fn taper_corners_name_a_variant_per_flag_pair() {
+        let p = PairEdgePiece {
+            own: Forest,
+            neighbour: Forest,
+            piece: "f".into(),
+            per_base_edge: true,
+            corners: PairCorners::Taper,
+        };
+        assert_eq!(p.name(2, true, true).as_str(), "f_e2");
+        assert_eq!(p.name(2, false, true).as_str(), "f_e2_t01");
+        assert_eq!(p.name(2, true, false).as_str(), "f_e2_t10");
+        assert_eq!(p.name(2, false, false).as_str(), "f_e2_t00");
+        assert_eq!(p.names().len(), 24);
+        let plain = PairEdgePiece {
+            per_base_edge: false,
+            corners: PairCorners::Straight,
+            ..p
+        };
+        assert_eq!(plain.name(4, false, false).as_str(), "f");
+        assert_eq!(plain.names().len(), 1);
+    }
+
+    #[test]
+    fn pair_entries_must_meet_and_be_unique() {
+        let mut file = table().file().clone();
+        let entry = file.pair_edge_pieces[0].clone();
+        file.pair_edge_pieces.push(entry.clone());
+        assert_eq!(
+            SocketTable::new(file.clone()),
+            Err(SocketTableError::BadPair(Forest, Forest))
+        );
+        file.pair_edge_pieces = vec![PairEdgePiece {
+            own: Forest,
+            neighbour: Ocean,
+            ..entry
+        }];
+        assert_eq!(
+            SocketTable::new(file),
+            Err(SocketTableError::BadPair(Forest, Ocean))
+        );
     }
 }

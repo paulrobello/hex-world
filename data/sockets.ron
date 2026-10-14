@@ -21,6 +21,15 @@
         Road: "road_straight_edge",
         River: "river_edge",
     },
+    // Decision D3: pieces chosen by the socket pair across an edge, placed in addition to
+    // `edge_pieces`. forest_base keeps a grass rim (it joins meadow without a joint), so a
+    // Forest/Forest seam lays litter over each tile's half of the rim. forest_base is not
+    // 60-degree symmetric, so `per_base_edge` picks the variant for the base's local edge k
+    // (`forest_forest_edge_e<k>`). `corners: Straight` is option O-a; `Taper` (O-b, owner choice
+    // pending) would add `_t<p><n>` variants wherever an adjacent edge is not the same pair.
+    pair_edge_pieces: [
+        (own: Forest, neighbour: Forest, piece: "forest_forest_edge", per_base_edge: true, corners: Straight),
+    ],
     // Owner O1: a beach edge's ground runs from grass height at its land end to the seabed at its
     // sea end. Each beach edge names its land side, looking out across the edge from its own tile
     // (`land: Some(Right)` puts the land at the corner shared with the next edge clockwise), and

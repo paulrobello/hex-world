@@ -2728,3 +2728,146 @@ fn texel_density_is_checked_per_material() {
     );
     assert!(uv0_texture_px(&k, &p, "fixture_cap", &p.slots["fixture_cap"]).is_none());
 }
+
+/// A mesh's triangles in the runtime XZ plane: ([x, y, z] corners, slot name).
+fn triangles(m: &gltf::Mesh, buffers: &[gltf::buffer::Data]) -> Vec<([[f32; 3]; 3], String)> {
+    let mut out = vec![];
+    for prim in m.primitives() {
+        let name = prim.material().name().unwrap_or_default().to_string();
+        let r = prim.reader(|b| Some(&buffers[b.index()]));
+        let pos: Vec<[f32; 3]> = r.read_positions().map(|i| i.collect()).unwrap_or_default();
+        let idx: Vec<u32> = r
+            .read_indices()
+            .map(|i| i.into_u32().collect())
+            .unwrap_or_default();
+        for &[a, b, c] in idx.as_chunks::<3>().0 {
+            out.push((
+                [pos[a as usize], pos[b as usize], pos[c as usize]],
+                name.clone(),
+            ));
+        }
+    }
+    out
+}
+
+/// Height and slot of the topmost upward triangle over runtime (x, z), if any.
+fn surface_at(tris: &[([[f32; 3]; 3], String)], x: f32, z: f32) -> Option<(f32, &str)> {
+    let mut best: Option<(f32, &str)> = None;
+    for (t, name) in tris {
+        let [a, b, c] = *t;
+        let d = (b[0] - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (b[2] - a[2]);
+        if d.abs() < 1e-9 {
+            continue; // vertical (skirt) or degenerate
+        }
+        let u = ((x - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (z - a[2])) / d;
+        let v = ((b[0] - a[0]) * (z - a[2]) - (x - a[0]) * (b[2] - a[2])) / d;
+        if u < -1e-5 || v < -1e-5 || u + v > 1.0 + 1e-5 {
+            continue;
+        }
+        let y = a[1] + u * (b[1] - a[1]) + v * (c[1] - a[1]);
+        if best.is_none_or(|(h, _)| y > h) {
+            best = Some((y, name.as_str()));
+        }
+    }
+    best
+}
+
+/// forest_forest_edge_e<k> over forest_base (scripts/blender/kit/_forest_edge.py): variant k sits at
+/// the base's local edge k, so over its slice core (inside both corner rays, before the inner dive at
+/// 5.5 m) it must clear that wedge's cap, in the same LOD, wherever the cap shows its grass rim or
+/// mossy band, and float no more than 3 cm over its litter floor (no hump). Each variant sees only
+/// its own wedge: the cap is rotated by the runtime placement of edge k.
+fn forest_edge_clearance(kit: &Kit, k: u8) -> Vec<String> {
+    let id = format!("forest_forest_edge_e{k}");
+    let find = |id: &str| kit.manifest.pieces.iter().find(|p| p.id == id);
+    let (Some(edge), Some(base)) = (find(&id), find("forest_base")) else {
+        return vec![format!("{id} or forest_base missing from the manifest")];
+    };
+    let (Ok((ed, eb, _)), Ok((bd, bb, _))) = (plain(kit, edge), plain(kit, base)) else {
+        return vec![format!("{id} / forest_base: GLB did not load")];
+    };
+    let grass = |s: &str| s == "forest_base_rim" || s == "forest_base_edge";
+    let tan30 = 30f32.to_radians().tan();
+    let (s, c) = (60.0 * k as f32).to_radians().sin_cos();
+    let mut e = vec![];
+    for lod in 0..3 {
+        let (Some(em), Some(bm)) = (
+            mesh_named(&ed, &format!("{id}_lod{lod}")),
+            mesh_named(&bd, &format!("forest_base_lod{lod}")),
+        ) else {
+            e.push(format!("{id} / forest_base: LOD{lod} mesh missing"));
+            continue;
+        };
+        let (et, bt) = (triangles(&em, &eb), triangles(&bm, &bb));
+        let (mut worst, mut float) = (f32::MAX, f32::MIN);
+        for i in 0..55 {
+            let x = APOTHEM - 0.05 - 0.1 * i as f32;
+            for j in -90..=90 {
+                let z = 0.1 * j as f32;
+                if z.abs() > x * tan30 - 0.02 {
+                    continue;
+                }
+                let Some((over, _)) = surface_at(&et, x, z) else {
+                    e.push(format!("{id} LOD{lod}: hole at ({x}, {z})"));
+                    continue;
+                };
+                let Some((h, slot)) = surface_at(&bt, x * c - z * s, x * s + z * c) else {
+                    continue;
+                };
+                if grass(slot) {
+                    worst = worst.min(over - h);
+                } else {
+                    float = float.max(over - h);
+                }
+            }
+        }
+        if worst == f32::MAX {
+            e.push(format!("{id} LOD{lod}: no forest_base rim under the slice"));
+        } else if worst < 0.002 {
+            e.push(format!(
+                "{id} LOD{lod}: {worst:.4} m over forest_base's rim (needs >= 0.002)"
+            ));
+        }
+        if float > 0.03 {
+            e.push(format!(
+                "{id} LOD{lod}: floats {float:.4} m over forest_base's floor (hump; at most 0.03)"
+            ));
+        }
+    }
+    e
+}
+
+/// Each forest edge variant hides its own wedge's grass rim in every LOD with no hump over the
+/// floor, and every variant has the same border section (the 17 edge-0 ring points at one height),
+/// so a neighbour meets it whatever its own variant is.
+#[test]
+fn forest_edge_covers_the_base_rim() {
+    let k = kits()
+        .into_iter()
+        .find(|k| {
+            k.manifest
+                .pieces
+                .iter()
+                .any(|p| p.id == "forest_forest_edge_e0")
+        })
+        .expect("runtime kit holds forest_forest_edge_e0");
+    let mut e = vec![];
+    let mut first: Option<Vec<(i64, i64)>> = None;
+    for v in 0..6u8 {
+        e.extend(forest_edge_clearance(&k, v));
+        let id = format!("forest_forest_edge_e{v}");
+        let p = k.manifest.pieces.iter().find(|p| p.id == id).unwrap();
+        assert_eq!(edge_kind(&k, p).as_deref(), Some("forest"), "{id}");
+        for sec in lod_sections(&k, p, APOTHEM) {
+            assert_eq!(sec.len(), 17, "{id} border section {sec:?}");
+            assert!(sec.iter().all(|&(y, _)| y == sec[0].0), "{id} {sec:?}");
+            let want = first.get_or_insert_with(|| sec.clone());
+            assert!(
+                same_section(&sec, want),
+                "{id}: border section differs from e0's"
+            );
+        }
+    }
+    fail(e);
+    assert_eq!(check_center_edge_joint(&k), Vec::<String>::new());
+}

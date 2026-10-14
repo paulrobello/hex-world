@@ -1,0 +1,58 @@
+{
+  "aoDistanceM": 1.0,
+  "baseEdge": 1,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "clearancePerLod": [
+    {
+      "maxFloatOverFloorM": 0.02,
+      "meanFloatOverFloorM": 0.02,
+      "minClearanceOverRimLod1M": -0.0267,
+      "minClearanceOverRimM": 0.02
+    },
+    {
+      "maxFloatOverFloorM": 0.02,
+      "meanFloatOverFloorM": 0.02,
+      "minClearanceOverRimLod0M": -0.0015,
+      "minClearanceOverRimLod2M": -0.029,
+      "minClearanceOverRimM": 0.02
+    },
+    {
+      "maxFloatOverFloorM": 0.02,
+      "meanFloatOverFloorM": 0.02,
+      "minClearanceOverRimLod1M": 0.0012,
+      "minClearanceOverRimM": 0.02
+    }
+  ],
+  "depthM": 6.0,
+  "device": "CPU",
+  "diveM": 0.06,
+  "epsM": 0.02,
+  "extM": 0.6,
+  "forestBaseSignature": "5054f7c4d19e1d8a1afd8b53e4efd9062bc708d0d931408f8f26f23b01ec4680",
+  "marginPx": 12,
+  "maskStats": {
+    "mean": 0.10928039252758026,
+    "min": 0.0,
+    "p01": 0.0,
+    "p05": 0.0,
+    "texels": 216658
+  },
+  "receiverSignature": "c24b42b3c4eae8e79410ad19f44d47dfd1a23b4e5851c57b89d67d70c0e87a9a",
+  "samples": 64,
+  "skipped": false,
+  "taper": [
+    false,
+    false
+  ],
+  "texelDensityPxPerM": {
+    "max": 15.99999806212521,
+    "median": 15.98863111107547,
+    "min": 15.773122492221576
+  }
+}

@@ -6,7 +6,7 @@
 //! plays its staged rise ([`rise`], PRD §4.4) and a removed one sinks. The slot ring, the ghost, its
 //! edge glow and socket key marks, and the bulldoze outlines are the Legend in-world affordances
 //! ([`affordances`], `design/ui/legend/in-world.md`).
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use bevy::{
     asset::RenderAssetUsages,
@@ -17,7 +17,8 @@ use bevy::{
 };
 use hex_assets::{parse_manifest, select_family};
 use hex_core::{
-    Axial, Biome, EdgeStatus, HEX_RADIUS, LEVEL_STEP, SocketKind, TileCatalog, TileDef, hex_prism,
+    Axial, Biome, EdgeStatus, HEX_RADIUS, LEVEL_STEP, PairPieces, SocketKind, TileCatalog, TileDef,
+    hex_prism,
 };
 
 pub mod affordances;
@@ -96,6 +97,11 @@ pub struct PlayTileRoot;
 pub struct PlaySpawned {
     tiles: HashMap<Axial, (PlayTile, Entity)>,
     rebuild: bool,
+    /// Pair edge pieces (`data/sockets.ron` `pair_edge_pieces`, decision D3) resolved per cell,
+    /// and the entities drawing them under each tile root. They depend on the neighbours, so a
+    /// change at a cell re-evaluates it and its six neighbours ([`PairPieces::update`]).
+    pairs: PairPieces,
+    pair_entities: HashMap<Axial, Vec<Entity>>,
     /// Pieces built since the last sync: tiles drawing them swap to the kit look in place.
     refresh: HashSet<String>,
 }
@@ -413,9 +419,19 @@ fn spawn_kit(
     t: Transform,
     rise: Option<(Axial, RiseRole)>,
 ) -> bool {
-    let Some(parts) = kit.get(piece) else {
-        return false;
-    };
+    spawn_kit_parts(p, kit, piece, t, rise).is_some()
+}
+
+/// [`spawn_kit`], returning the spawned part entities (`None` when the piece is not in the kit).
+fn spawn_kit_parts(
+    p: &mut ChildSpawnerCommands,
+    kit: &HashMap<String, Vec<KitPart>>,
+    piece: &str,
+    t: Transform,
+    rise: Option<(Axial, RiseRole)>,
+) -> Option<Vec<Entity>> {
+    let parts = kit.get(piece)?;
+    let mut out = vec![];
     for part in parts {
         let mut e = p.spawn((
             Mesh3d(part.mesh.clone()),
@@ -427,8 +443,43 @@ fn spawn_kit(
         if let Some((cell, role)) = rise {
             e.insert(RisePart::new(cell, role, t));
         }
+        out.push(e.id());
     }
-    true
+    Some(out)
+}
+
+/// Re-draws the pair edge pieces of `cells` under their tile roots. Each piece is authored for
+/// edge 0 and placed at its local edge; the root already carries the tile's rotation. A tile new
+/// to the view rises its pieces with its edges; a neighbour's update draws them at rest.
+fn respawn_pairs(
+    commands: &mut Commands,
+    spawned: &mut PlaySpawned,
+    kit: &HashMap<String, Vec<KitPart>>,
+    cells: &BTreeSet<Axial>,
+    rising: &BTreeSet<Axial>,
+) {
+    for &cell in cells {
+        for e in spawned.pair_entities.remove(&cell).unwrap_or_default() {
+            commands.entity(e).try_despawn();
+        }
+        let (Some((_, root)), Some(pieces)) = (spawned.tiles.get(&cell), spawned.pairs.get(cell))
+        else {
+            continue;
+        };
+        let rise = rising.contains(&cell).then_some((cell, RiseRole::Edge));
+        let mut ids = vec![];
+        commands.entity(*root).with_children(|p| {
+            for (e, piece) in pieces.iter().enumerate() {
+                if let Some(piece) = piece {
+                    let t = Transform::from_rotation(piece_rotation(e as u8));
+                    ids.extend(
+                        spawn_kit_parts(p, kit, piece.as_str(), t, rise).unwrap_or_default(),
+                    );
+                }
+            }
+        });
+        spawned.pair_entities.insert(cell, ids);
+    }
 }
 
 /// Child transform for something authored on edge 0, moved to local edge `e` at `along` metres
@@ -672,6 +723,8 @@ pub fn sync(
         }
         rises.reset(view.tiles.iter().map(|t| t.cell), &mut commands);
         spawned.rebuild = false;
+        spawned.pairs = PairPieces::default();
+        spawned.pair_entities.clear();
         spawned.refresh.clear();
     }
     let mut released: HashMap<Axial, Vec<Entity>> = HashMap::new();
@@ -697,10 +750,12 @@ pub fn sync(
     let mut out = vec![];
     let want: HashMap<Axial, &PlayTile> = view.tiles.iter().map(|t| (t.cell, t)).collect();
     let mut gone = vec![];
+    let mut changed: BTreeSet<Axial> = BTreeSet::new();
     spawned.tiles.retain(|cell, (t, e)| match want.get(cell) {
         Some(w) if *w == t => true,
         Some(_) => {
             commands.entity(*e).try_despawn();
+            changed.insert(*cell);
             false
         }
         None => {
@@ -709,6 +764,7 @@ pub fn sync(
         }
     });
     gone.sort_by_key(|(c, ..)| (c.q, c.r));
+    changed.extend(gone.iter().map(|(c, ..)| *c));
     for (cell, tile, root) in gone {
         let mut entities = vec![root];
         entities.extend(released.remove(&cell).unwrap_or_default());
@@ -720,6 +776,7 @@ pub fn sync(
         }
     }
     let refresh = std::mem::take(&mut spawned.refresh);
+    let mut refreshed: BTreeSet<Axial> = BTreeSet::new();
     for (cell, (t, root)) in spawned.tiles.iter().filter(|_| !refresh.is_empty()) {
         let Some(def) = catalog.0.get(&t.tile) else {
             continue;
@@ -732,6 +789,14 @@ pub fn sync(
                 .entity(*root)
                 .despawn_children()
                 .with_children(|p| tile_children(p, &plain, kit, &catalog.0, def, *cell));
+            refreshed.insert(*cell);
+        }
+        let pairs_arrived = spawned
+            .pairs
+            .get(*cell)
+            .is_some_and(|ps| ps.iter().flatten().any(|p| refresh.contains(p.as_str())));
+        if pairs_arrived {
+            refreshed.insert(*cell);
         }
     }
     let added: Vec<&PlayTile> = view
@@ -742,6 +807,7 @@ pub fn sync(
     if !rebuild && !added.is_empty() {
         rises.fast_forward(&mut out);
     }
+    let added_cells: BTreeSet<Axial> = added.iter().map(|t| t.cell).collect();
     for t in added {
         rises.cancel_sink(t.cell, &mut commands);
         let e = spawn_tile(&mut commands, &plain, kit, &catalog.0, t);
@@ -751,6 +817,23 @@ pub fn sync(
             None => rises.rest(t.cell),
         }
     }
+    changed.extend(added_cells.iter().copied());
+    let at = |cell: Axial| {
+        want.get(&cell)
+            .and_then(|t| Some((catalog.0.get(&t.tile)?, t.rotation)))
+    };
+    let mut redraw = spawned.pairs.update(&catalog.0, changed, at);
+    // A tile drawn afresh, or whose children a pack refresh rebuilt, has none of its pair pieces
+    // yet, even where the resolution did not change; a pair piece whose pack just arrived swaps
+    // from nothing to the kit in place.
+    redraw.extend(added_cells.iter().copied());
+    redraw.extend(refreshed);
+    let rising = if rebuild {
+        BTreeSet::new()
+    } else {
+        added_cells
+    };
+    respawn_pairs(&mut commands, &mut spawned, kit, &redraw, &rising);
     cues.write_batch(out);
 }
 

@@ -1,0 +1,44 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/forest_forest_edge_e1.py",
+    "sha256": "5bbacaccbce50d5c48a825e04c7114f756ecc7270991c2f74d869c1997849903"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_forest_edge.py",
+      "sha256": "c3f6ca7079e143854a568cb9ef799aeeb5b43a147a0284593e7d90394ab61f29"
+    }
+  ],
+  "lodTris": {
+    "forest_forest_edge_e1_lod0": 951,
+    "forest_forest_edge_e1_lod1": 233,
+    "forest_forest_edge_e1_lod2": 122
+  },
+  "nodes": [
+    "forest_forest_edge_e1",
+    "forest_forest_edge_e1_collider",
+    "forest_forest_edge_e1_lod0",
+    "forest_forest_edge_e1_lod1",
+    "forest_forest_edge_e1_lod2",
+    "socket-lane-0"
+  ],
+  "pieceId": "forest_forest_edge_e1",
+  "sockets": [
+    {
+      "extras": {
+        "baseEdge": 1,
+        "edge": 0,
+        "kind": "forest",
+        "offset": 0.0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

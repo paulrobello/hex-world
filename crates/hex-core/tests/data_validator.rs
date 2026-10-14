@@ -175,9 +175,13 @@ fn every_kit_ref_is_built_or_pending() {
     let c = catalog();
     let built = manifest_piece_ids();
     let pending = pending();
+    // Pair edge pieces are generated names (`data/sockets.ron` `pair_edge_pieces`): every name an
+    // entry can produce must be built or pending, not just the ones a current tile reaches.
+    let pairs = c.sockets().pair_piece_names();
     let missing: Vec<&str> = c
         .kit_refs()
         .into_iter()
+        .chain(pairs.iter())
         .map(|r| r.as_str())
         .filter(|id| !built.contains(*id) && !pending.contains(id))
         .collect();
@@ -188,10 +192,33 @@ fn every_kit_ref_is_built_or_pending() {
 }
 
 #[test]
+fn pair_edge_piece_names_are_checked() {
+    let names = catalog().sockets().pair_piece_names();
+    let built = manifest_piece_ids();
+    assert!(
+        !names.is_empty(),
+        "data/sockets.ron has no pair_edge_pieces"
+    );
+    for k in 0..6 {
+        let id = format!("forest_forest_edge_e{k}");
+        assert!(
+            names.iter().any(|n| n.as_str() == id) && built.contains(&id),
+            "{id}"
+        );
+    }
+}
+
+#[test]
 fn pending_list_is_honest() {
     let c = catalog();
     let built = manifest_piece_ids();
-    let referenced: BTreeSet<&str> = c.kit_refs().into_iter().map(|r| r.as_str()).collect();
+    let pairs = c.sockets().pair_piece_names();
+    let referenced: BTreeSet<&str> = c
+        .kit_refs()
+        .into_iter()
+        .chain(pairs.iter())
+        .map(|r| r.as_str())
+        .collect();
     let p = pending();
     let mut seen: BTreeSet<&str> = BTreeSet::new();
     for piece in &p.pieces {
