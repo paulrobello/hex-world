@@ -237,6 +237,56 @@ No change limited to the walls gets close while ACES stays. They would need 10 t
 
 **D5. The coast corner bases get a 20% LOD2 ceiling, like the river bases (D1).** The Headland and Bay sit at about 18%. 15% was reachable only by padding LOD0 to about 3,950 triangles, which spends triangles where nobody sees them.
 
-## Status
+## Overnight summary
 
-See the bottom section, "Overnight summary", which I update as the last streams land.
+Twenty-two feature merges landed on local main overnight. Each was gated on its own branch, and main was re-gated after each batch with four checks:
+- `make checkall-ci`, with the initial download at 19.7 MiB against the 30 MiB budget
+- `make kit-check`
+- `make ui-e2e` (HUD, persistence, audio)
+- `make web-smoke`, with every 16-texture case green
+
+Nothing is pushed.
+
+**Kit**
+- River family; beach family (straight, Headland, Bay); forest-forest edges. Every MVP tile now draws built pieces, and the pending list is empty.
+- The O4 skirt.
+- Cars (sedan, van, pickup) with runtime paint, and house parking.
+- Oak polish, round 2.
+- Masks for the 21 prop slots that lacked them.
+
+**Engine**
+- Directional beach sockets and biome-pack streaming.
+- Boids: birds roost, fish school.
+- Prop scatter.
+- The §9.4 atmosphere hooks.
+- Quality tiers, GPU pass timing, and the 2,000-tile measurement under the load guard.
+
+**UI and web**
+- The Legend HUD overlay, plus follow-ups: the unsupported page, the play default, CI UI checks, and the rotation fixes.
+- The audio layer.
+- Photo mode.
+- Save slots with autosave and `.hexworld` import and export.
+
+**References:** fish and birds, and seven P3 families.
+
+**Fixes found along the way:**
+- A flaky compat-shim smoke check.
+- A ui-e2e race under high load.
+- e2e writing into tracked captures.
+- The size gate counting a tile the web default no longer loads.
+- The thumbnail camera clipping tall spruces.
+- A helper-name clash in the kit gate.
+
+**PRD P2 checklist:** 14 of 20 boxes are checked, with evidence in each line. The 6 open:
+1. MVP tiles approved (you).
+2. The hero-water bar: foam and the live wet band are partial.
+3. Music: your Suno cues.
+4. Shipped-UI sign-off (you).
+5. The web stall tail.
+6. Tilt-shift, pending a re-measure on the merged build.
+
+**Board:** every card that waits on you is set to blocked, pointing at its item here. New backlog cards:
+- the web stall tail
+- the Settings sheet (graphics tier and audio)
+- a perf re-run on the merged build
+- the live wet band on kit beaches
