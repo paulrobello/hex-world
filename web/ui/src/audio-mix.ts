@@ -15,19 +15,22 @@ export function biomeOf(id: string, edges: readonly string[]): Biome {
   return "meadow";
 }
 
-/** The positional loop each biome's tiles carry (§8.1). Town murmur has no mastered cue yet. */
+/**
+ * The positional loop each biome's tiles carry (§8.1). Town murmur has no mastered cue yet. Meadow and forest
+ * have no loop: they sound only through the occasional one-shots below.
+ */
 export const EMITTER_CUE: Record<Biome, string | null> = {
   meadow: null,
-  forest: "forest-birdsong",
+  forest: null,
   river: "river-babble",
   coast: "surf",
   town: "town-murmur",
 };
 
-/** The non-positional bed per biome, weighted by its share of the view. Meadow is the main bed. */
+/** The non-positional bed per biome, weighted by its share of the view. Only river and coast carry one. */
 export const BED_CUE: Record<Biome, { cue: string; level: number } | null> = {
-  meadow: { cue: "meadow-bed", level: 0.6 },
-  forest: { cue: "forest-birdsong", level: 0.25 },
+  meadow: null,
+  forest: null,
   river: { cue: "river-babble", level: 0.25 },
   coast: { cue: "surf", level: 0.3 },
   town: null,
@@ -137,33 +140,96 @@ export function pickEmitters(cands: readonly Candidate[], voiced: ReadonlySet<st
   return out;
 }
 
-// ---------- Occasional bees (meadow-bees) ----------
+// ---------- Occasional one-shots (meadow bees, forest birds and leaves) ----------
 
-export const BEE_CUE = "meadow-bees";
-/** Seconds between bee swarms, drawn uniformly. */
-export const BEE_DELAY_S: readonly [number, number] = [45, 120];
-/** A swarm plays only at a flower tile within this many hex steps of the focus. */
-export const BEE_RANGE_STEPS = 3;
-/** The swarm's level before the focus mix: a quiet, passing one-shot. */
-export const BEE_LEVEL = 0.35;
 /** The scatter piece that makes a meadow tile a flower tile (data/tiles/*.ron `props.scatter`). */
 export const FLOWER_PIECE = "wildflower_clump";
 
 export const isFlowerTile = (biome: Biome, scatter: readonly string[]): boolean =>
   biome === "meadow" && scatter.includes(FLOWER_PIECE);
 
-export const beeDelay = (rand: () => number): number => BEE_DELAY_S[0] + rand() * (BEE_DELAY_S[1] - BEE_DELAY_S[0]);
+const isForestTile = (biome: Biome): boolean => biome === "forest";
 
-export interface FlowerTile {
+/** One row of the occasional one-shot scheduler. */
+export interface OneShotRow {
+  name: string;
+  /** The pool whose variants it plays, resolved from the manifest by `resolveOneShot`. */
+  pool: string;
+  /** Which tile defs it may play at, from the def's biome and scatter. */
+  tile: (biome: Biome, scatter: readonly string[]) => boolean;
+  /** Seconds between plays, drawn uniformly. */
+  delay: readonly [number, number];
+  /** It plays only at a matching tile within this many hex steps of the focus. */
+  rangeSteps: number;
+  /** Its level before the focus mix. */
+  level: number;
+}
+
+export const ONE_SHOTS: readonly OneShotRow[] = [
+  { name: "bees", pool: "meadow-bees", tile: isFlowerTile, delay: [45, 120], rangeSteps: 3, level: 0.35 },
+  { name: "forest-birds", pool: "forest-birds", tile: isForestTile, delay: [12, 40], rangeSteps: 3, level: 0.4 },
+  { name: "forest-leaves", pool: "forest-leaves", tile: isForestTile, delay: [20, 60], rangeSteps: 3, level: 0.3 },
+];
+
+/** The catalog defs a row may play at. */
+export function oneShotDefs(
+  row: OneShotRow,
+  tiles: readonly { id: string; edges: readonly string[]; scatter: readonly string[] }[],
+): Set<string> {
+  return new Set(tiles.filter((t) => row.tile(biomeOf(t.id, t.edges), t.scatter)).map((t) => t.id));
+}
+
+export interface ResolvedOneShot {
+  pool: string;
+  /** Cue ids in manifest order. */
+  variants: string[];
+  row: OneShotRow | null;
+}
+
+/**
+ * A row name, pool or cue id against the manifest's cues: a pool's variants are the cues whose `pool` is it,
+ * else the one cue with that id (which keeps its own pool, if any). Null when nothing matches.
+ */
+export function resolveOneShot(
+  name: string,
+  cues: readonly { id: string; pool?: string }[],
+  rows: readonly OneShotRow[] = ONE_SHOTS,
+): ResolvedOneShot | null {
+  const pool = rows.find((r) => r.name === name)?.pool ?? name;
+  const rowOf = (p: string) => rows.find((r) => r.pool === p) ?? null;
+  const variants = cues.filter((c) => c.pool === pool).map((c) => c.id);
+  if (variants.length > 0) return { pool, variants, row: rowOf(pool) };
+  const cue = cues.find((c) => c.id === pool);
+  if (!cue) return null;
+  const own = cue.pool ?? cue.id;
+  return { pool: own, variants: [cue.id], row: rowOf(own) };
+}
+
+/** A variant at random, never `last` again while the pool has another; null for an empty pool. */
+export function pickVariant(variants: readonly string[], last: string | null, rand: () => number): string | null {
+  const pool = variants.length > 1 ? variants.filter((v) => v !== last) : variants;
+  if (pool.length <= 1) return pool[0] ?? null;
+  return pool[Math.min(pool.length - 1, Math.floor(rand() * pool.length))]!;
+}
+
+export const oneShotDelay = (row: OneShotRow, rand: () => number): number =>
+  row.delay[0] + rand() * (row.delay[1] - row.delay[0]);
+
+export interface OneShotTile {
   q: number;
   r: number;
   x: number;
   z: number;
 }
 
-/** A flower tile in range of the focus, drawn at random weighted by the focus mix; null when none is in range. */
-export function pickBeeTile(tiles: readonly FlowerTile[], v: View, rand: () => number): FlowerTile | null {
-  const range = BEE_RANGE_STEPS * v.radius * Math.sqrt(3);
+/** A matching tile in range of the focus, drawn at random weighted by the focus mix; null when none is in range. */
+export function pickOneShotTile(
+  row: OneShotRow,
+  tiles: readonly OneShotTile[],
+  v: View,
+  rand: () => number,
+): OneShotTile | null {
+  const range = row.rangeSteps * v.radius * Math.sqrt(3);
   const near = tiles
     .map((t) => ({ t, d: Math.hypot(t.x - v.focus[0], t.z - v.focus[2]) }))
     .filter(({ d }) => d <= range)
@@ -178,48 +244,80 @@ export function pickBeeTile(tiles: readonly FlowerTile[], v: View, rand: () => n
   return near.at(-1)?.t ?? null;
 }
 
-/** Why a due swarm may not play, or null when it may. */
-export type BeeGate = "muted" | "ambience-off" | "not-loaded" | "no-flower-tile" | null;
+/** The matching tile nearest the focus, at any distance; null when there is none. */
+export function nearestOneShotTile(tiles: readonly OneShotTile[], focus: View["focus"]): OneShotTile | null {
+  let best: OneShotTile | null = null;
+  let bestD = Number.POSITIVE_INFINITY;
+  for (const t of tiles) {
+    const d = Math.hypot(t.x - focus[0], t.z - focus[2]);
+    if (d < bestD) [best, bestD] = [t, d];
+  }
+  return best;
+}
 
-export function beeGate(o: { muted: boolean; master: number; ambience: number; loaded: boolean }): BeeGate {
+/** Why a due one-shot may not play, or null when it may. */
+export type OneShotGate = "muted" | "ambience-off" | "not-loaded" | "no-tile" | null;
+
+export function oneShotGate(o: { muted: boolean; master: number; ambience: number; loaded: boolean }): OneShotGate {
   if (o.muted || o.master <= 0) return "muted";
   if (o.ambience <= 0) return "ambience-off";
   if (!o.loaded) return "not-loaded";
   return null;
 }
 
-export interface BeeState {
-  /** Audio-clock seconds when the next swarm is due; null until the first step. */
+export interface OneShotState {
+  /** Audio-clock seconds when the next play is due; null until the first step. */
   nextAt: number | null;
   lastAt: number | null;
   lastTile: { q: number; r: number } | null;
+  /** The variant played last, so the next pick avoids it. */
+  lastCue: string | null;
   plays: number;
-  /** Why the last due swarm was skipped, or null when it played. */
-  gatedBy: BeeGate;
+  /** Why the last due play was skipped, or null when it played. */
+  gatedBy: OneShotGate;
 }
 
-export const beeIdle = (): BeeState => ({ nextAt: null, lastAt: null, lastTile: null, plays: 0, gatedBy: null });
+export const oneShotIdle = (): OneShotState => ({
+  nextAt: null,
+  lastAt: null,
+  lastTile: null,
+  lastCue: null,
+  plays: 0,
+  gatedBy: null,
+});
 
 /**
- * One scheduler step at audio time `now`. When a swarm is due it plays at a picked tile unless gated; either
- * way the next one is drawn 45–120 s later, so a gated swarm is skipped rather than queued.
+ * One scheduler step at audio time `now`. When a play is due it sounds a variant (from the decoded `variants`)
+ * at a picked tile unless gated; either way the next one is drawn from the row's delay, so a gated play is
+ * skipped rather than queued.
  */
-export function beeStep(
-  st: BeeState,
+export function oneShotStep(
+  row: OneShotRow,
+  st: OneShotState,
   now: number,
-  gate: BeeGate,
-  pick: () => FlowerTile | null,
+  gate: OneShotGate,
+  pick: () => OneShotTile | null,
+  variants: readonly string[],
   rand: () => number,
-): { state: BeeState; play: FlowerTile | null } {
-  if (st.nextAt === null) return { state: { ...st, nextAt: now + beeDelay(rand) }, play: null };
+): { state: OneShotState; play: { tile: OneShotTile; cue: string } | null } {
+  if (st.nextAt === null) return { state: { ...st, nextAt: now + oneShotDelay(row, rand) }, play: null };
   if (now < st.nextAt) return { state: st, play: null };
-  const next = now + beeDelay(rand);
+  const next = now + oneShotDelay(row, rand);
   if (gate) return { state: { ...st, nextAt: next, gatedBy: gate }, play: null };
   const tile = pick();
-  if (!tile) return { state: { ...st, nextAt: next, gatedBy: "no-flower-tile" }, play: null };
+  if (!tile) return { state: { ...st, nextAt: next, gatedBy: "no-tile" }, play: null };
+  const cue = pickVariant(variants, st.lastCue, rand);
+  if (!cue) return { state: { ...st, nextAt: next, gatedBy: "not-loaded" }, play: null };
   return {
-    state: { nextAt: next, lastAt: now, lastTile: { q: tile.q, r: tile.r }, plays: st.plays + 1, gatedBy: null },
-    play: tile,
+    state: {
+      nextAt: next,
+      lastAt: now,
+      lastTile: { q: tile.q, r: tile.r },
+      lastCue: cue,
+      plays: st.plays + 1,
+      gatedBy: null,
+    },
+    play: { tile, cue },
   };
 }
 

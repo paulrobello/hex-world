@@ -11,8 +11,11 @@ For each cue in <root>/assets-source/audio/cues.json:
     passes the wrap-step, head-to-tail level and interior-dropout checks;
   - stereo cues survive a mono fold (side energy under mid energy);
   - provenance is complete and its source, generation-record and runtime hashes match the files;
-  - the decoded size of every cue the runtime decodes (Web Audio float32 at 48 kHz) fits the budget.
-A music cue with no source yet is reported as pending, not failed. Exits 1 on any failure.
+  - the decoded size of every cue the runtime decodes (Web Audio float32 at 48 kHz) fits the budget;
+  - one-shot pool variants (`pool`): the floor criterion of audio_lib.floor_report, on both decodes.
+    meadow-bees has no pool and is exempt: it is an excerpt of a continuous hum by design.
+A music cue with no source yet is reported as pending, not failed. A `retired` cue is skipped and must
+not be in the manifest. Exits 1 on any failure.
 """
 
 from __future__ import annotations
@@ -119,6 +122,14 @@ def check_cue(layout: A.Layout, reg: dict, cue: dict, manifest: dict, rows: list
                 seam = f"wrap {report['wrapStep']:.4f}/{report['stepP999']:.4f} head {report['headDb']} tail {report['tailDb']}"
                 for problem in report["problems"]:
                     fail(f"{ext} loop: {problem}")
+        if cue.get("pool"):
+            fades = cue.get("cut") or {}
+            fl = A.floor_report(path, fades.get("fadeInSeconds", 0.0), fades.get("fadeOutSeconds", 0.0))
+            b = fl["floorBandPct"]
+            seam = (f"floor -{fl['floorBelowPeakDb']} dB under peak, <1.5k {b['below1500']}% "
+                    f"1.5-9k {b['1500to9k']}% >9k {b['above9k']}%")
+            for problem in fl["problems"]:
+                fail(f"{ext} floor: {problem}")
         if ch == 2:
             side = A.side_ratio_db(samples)
             if side > 0:
@@ -146,6 +157,10 @@ def main() -> int:
     decoded = streamed = 0
     runtime_bytes = 0
     for cue in reg["cues"]:
+        if cue.get("retired"):
+            if cue["id"] in manifest:
+                failures.append(f"{cue['id']}: retired but still listed in assets/audio/manifest.json")
+            continue
         n = check_cue(layout, reg, cue, manifest, rows, failures)
         decoded += max(n, 0)
         streamed += max(-n, 0)

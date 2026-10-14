@@ -55,6 +55,20 @@ async function gapless(btn) {
     btn.textContent = 'Needs http: python3 -m http.server (repo root)';
   }
 }
+const lastVariant = {};
+function randomVariant(btn, pool) {
+  const players = [...document.querySelectorAll(`[data-pool="${pool}"] audio`)];
+  if (!players.length) return;
+  for (const a of document.querySelectorAll('audio')) a.pause();
+  let i = Math.floor(Math.random() * players.length);
+  if (players.length > 1 && i === lastVariant[pool]) i = (i + 1 + Math.floor(Math.random() * (players.length - 1))) % players.length;
+  lastVariant[pool] = i;
+  const a = players[i];
+  a.currentTime = 0;
+  a.play();
+  const label = document.querySelector(`[data-now="${pool}"]`);
+  if (label) label.textContent = 'playing ' + a.closest('.card').querySelector('h3').textContent;
+}
 """
 
 
@@ -64,8 +78,9 @@ def write(layout: A.Layout, reg: dict) -> None:
     rel_runtime = os.path.relpath(layout.runtime, out.parent)
     by_class: dict[str, list[str]] = {c: [] for c in CLASS_ORDER}
     for entry in manifest["cues"]:
-        by_class[entry["class"]].append(card(layout, entry, rel_runtime))
-    sections = ab_sections(layout, manifest, rel_runtime) + "".join(
+        if not entry.get("pool"):
+            by_class[entry["class"]].append(card(layout, entry, rel_runtime))
+    sections = pool_sections(layout, reg, manifest, rel_runtime) + ab_sections(layout, manifest, rel_runtime) + "".join(
         f"<h2>{CLASS_TITLE[c]}</h2><div class=grid>{''.join(cards)}</div>" for c, cards in by_class.items() if cards)
     log_path = layout.source / "generation-log.json"
     attempts = len(json.loads(log_path.read_text())["attempts"]) if log_path.exists() else 0
@@ -83,6 +98,46 @@ Serve the repo root over http (<code>python3 -m http.server</code>) for the gapl
 </main><script>{SCRIPT}</script></body></html>
 """
     out.write_text(doc)
+
+
+POOL_NOTE = {
+    "forest-birds": ("Single birdsong phrases cut from the paid forest-birdsong take (attempt 15), whose birds the owner "
+                     "liked. Each cut is high-passed at 2.8 kHz and low-passed at 9.5 kHz (two 2-pole stages each, so the "
+                     "50 Hz-multiple hum comb and the hiss over 9 kHz go), then gated between notes. The game plays one at "
+                     "a forest tile near the focus every 12-40 s."),
+    "forest-leaves": ("Short leaf rustles, one ElevenLabs take each, high-passed at 250 Hz and gated so each settles to "
+                      "silence. The game plays one at a forest tile near the focus every 20-60 s."),
+}
+
+
+def floor_nums(prov: dict) -> str:
+    """The floor criterion per runtime file (audio_lib.floor_report, recorded by make audio-master)."""
+    spans = []
+    for r in prov.get("runtime", []):
+        fl = r.get("floor")
+        if not fl:
+            continue
+        b = fl["floorBandPct"]
+        ok = "pass" if not fl["problems"] else "FAIL"
+        spans.append(f"<span>{r['path'].rsplit('.', 1)[1]} floor <b>{fl['floorBelowPeakDb']} dB</b> under peak ({ok}), "
+                     f"&lt;1.5k {b['below1500']}% · 1.5–9k {b['1500to9k']}% · &gt;9k {b['above9k']}%</span>")
+    return f"<div class=nums>{''.join(spans)}</div>" if spans else ""
+
+
+def pool_sections(layout: A.Layout, reg: dict, manifest: dict, rel_runtime: str) -> str:
+    """One-shot pools, listed first: each variant with its floor numbers, and a random-variant player."""
+    out = []
+    pools = list(dict.fromkeys(e["pool"] for e in manifest["cues"] if e.get("pool")))
+    for pool in pools:
+        group = [e for e in manifest["cues"] if e.get("pool") == pool]
+        out.append(f"<h2>New one-shot pool: {html.escape(pool)} ({len(group)} variants)</h2>"
+                   f"<p class=lead>{html.escape(POOL_NOTE.get(pool, ''))} The floor numbers are the owner's 2026-10-14 "
+                   "criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p>"
+                   f"<p><button onclick=\"randomVariant(this, '{html.escape(pool)}')\">Play a random variant</button> "
+                   f"<span class=meta data-now='{html.escape(pool)}'></span></p>"
+                   f"<div class=grid data-pool='{html.escape(pool)}'>"
+                   + "".join(card(layout, e, rel_runtime) for e in group) + "</div>")
+    return "".join(out)
 
 
 def previous_card(layout: A.Layout, cue_id: str) -> str:
@@ -103,6 +158,8 @@ def ab_sections(layout: A.Layout, manifest: dict, rel_runtime: str) -> str:
     by_id = {e["id"]: e for e in manifest["cues"] + manifest.get("candidates", [])}
     out = []
     for cue in reg["cues"]:
+        if cue.get("retired"):
+            continue
         prev = previous_card(layout, cue["id"])
         if prev and cue["id"] in by_id:
             note = cue.get("filter") and f"New: re-mastered with the filter {html.escape(json.dumps(cue['filter']))}."
@@ -126,7 +183,7 @@ def ab_sections(layout: A.Layout, manifest: dict, rel_runtime: str) -> str:
                 out.append(f"<h3>Round {rnd} ({label})</h3>" + (f"<p class=lead>{html.escape(note)}</p>" if note else ""))
             out.append("<div class=grid>" + "".join(card(layout, e, rel_runtime, cue_by_id.get(e["id"])) for e in group)
                        + "</div>")
-    new = [by_id[c["id"]] for c in reg["cues"] if c.get("cut") and c["id"] in by_id]
+    new = [by_id[c["id"]] for c in reg["cues"] if c.get("cut") and not c.get("pool") and c["id"] in by_id]
     if new:
         out.append("<h2>New occasional one-shots</h2><div class=grid>"
                    + "".join(card(layout, e, rel_runtime) for e in new) + "</div>")
@@ -188,7 +245,7 @@ def card(layout: A.Layout, entry: dict, rel_runtime: str, cue: dict | None = Non
 <span>m4a <b>{m4a['integrated']:.1f}</b> / <b>{m4a['truePeak']:.1f}</b></span>
 <span>source <b>{prov['loudness']['before']['integrated']:.1f} LUFS</b></span>
 <span>runtime <b>{kb:.0f} KB</b></span></div>
-<p class=meta>{html.escape(limiter)}</p>{dev}{screening(cue)}
+<p class=meta>{html.escape(limiter)}</p>{dev}{floor_nums(prov)}{screening(cue)}
 <details><summary>Prompt and generation</summary><p>{html.escape(prompt)}</p>{influence}
 <p>{html.escape(prov['provider']['name'])} · {html.escape(prov['provider']['model'])} · attempt {prov['generation'].get('attempt')} ·
 id <code>{html.escape(str(prov['generation']['id']))}</code> · <a href="{html.escape(source_rel)}">source</a></p></details>

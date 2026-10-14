@@ -1,0 +1,43 @@
+{
+  "cueId": "forest-leaves-3",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording of leaves stirring in a short, gentle breath of wind: a soft, airy, shimmering rustle through a leafy canopy that swells slowly and then fades gently away to complete silence. Studio-quiet background, with silence before and after the rustle.",
+  "parameters": {
+    "text": "Close, isolated recording of leaves stirring in a short, gentle breath of wind: a soft, airy, shimmering rustle through a leafy canopy that swells slowly and then fades gently away to complete silence. Studio-quiet background, with silence before and after the rustle.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 4,
+    "prompt_influence": 0.6
+  },
+  "generationId": "c335387047218cc179f2fc5d903ebf93",
+  "responseHeaders": {
+    "date": "Wed, 14 Oct 2026 17:19:38 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "40",
+    "content-length": "65244",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "c335387047218cc179f2fc5d903ebf93",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-14T17:19:39+00:00",
+  "attempt": 30,
+  "creditsCharged": 40,
+  "sourceFile": "forest-leaves-3.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}

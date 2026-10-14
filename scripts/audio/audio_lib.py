@@ -187,6 +187,69 @@ def loop_report(mono: array.array, start: int, end: int) -> dict:
             "tailDb": round(tail, 1), "minWindowDb": round(min(levels), 1), "problems": problems}
 
 
+FLOOR_WINDOW_S = 0.05
+FLOOR_PERCENTILE = 10
+FLOOR_MIN_DB_BELOW_PEAK = 40.0
+FLOOR_HISS_PCT = 50.0
+FLOOR_INAUDIBLE_DB = 60.0
+FLOOR_BANDS = {"below1500": "lowpass=f=1500:poles=2,lowpass=f=1500:poles=2",
+               "above9k": "highpass=f=9000:poles=2,highpass=f=9000:poles=2"}
+
+
+def decode_mono_filtered(path: Path, chain: str) -> array.array:
+    """Mono (amplitude fold) 48 kHz decode through an ffmpeg -af chain."""
+    have = probe(path)["channels"]
+    af = (downmix(have, 1) + "," if have != 1 else "") + chain
+    out = run(["ffmpeg", "-nostdin", "-v", "error", "-i", str(path), "-af", af, "-ar", str(RATE), "-f", "f32le",
+               "-acodec", "pcm_f32le", "-"])
+    if out.returncode != 0 or out.stderr.strip():
+        raise RuntimeError(f"{path}: filtered decode errors: {out.stderr.decode().strip()}")
+    samples = array.array("f")
+    samples.frombytes(out.stdout)
+    return samples
+
+
+def floor_report(path: Path, head_s: float = 0.0, tail_s: float = 0.0) -> dict:
+    """The noise floor of a one-shot against its loudest moment (the floor criterion, owner 2026-10-14).
+
+    Levels are RMS of consecutive FLOOR_WINDOW_S windows of the mono fold. The peak is the loudest window.
+    The floor is the FLOOR_PERCENTILE-th percentile window of the interior, which leaves out `head_s` and
+    `tail_s` (a cut's fades ramp to digital silence and would pass any floor). The floor windows (those at
+    or under that percentile) are split by band: under 1.5 kHz, 1.5-9 kHz and over 9 kHz (4-pole filters).
+    It fails when the floor sits less than FLOOR_MIN_DB_BELOW_PEAK under the peak, or when it is a hiss:
+    FLOOR_HISS_PCT or more of its power over 9 kHz while it is still within FLOOR_INAUDIBLE_DB of the peak.
+    """
+    full, _ = decode(path, 1)
+    win = int(FLOOR_WINDOW_S * RATE)
+    levels = window_db(full, win)
+    n = len(levels)
+    head, tail = math.ceil(head_s / FLOOR_WINDOW_S - 1e-9), math.ceil(tail_s / FLOOR_WINDOW_S - 1e-9)
+    interior = list(range(head, n - tail)) or list(range(n))
+    ranked = sorted(levels[i] for i in interior)
+    floor_db = ranked[min(len(ranked) - 1, int(len(ranked) * FLOOR_PERCENTILE / 100))]
+    quiet = [i for i in interior if levels[i] <= floor_db]
+
+    def energy(samples: array.array) -> float:
+        return sum(samples[j] * samples[j] for i in quiet for j in range(i * win, min((i + 1) * win, len(samples))))
+
+    total = energy(full)
+    pct = {k: (100 * energy(decode_mono_filtered(path, chain)) / total if total > 0 else 0.0)
+           for k, chain in FLOOR_BANDS.items()}
+    mid = max(0.0, 100 - pct["below1500"] - pct["above9k"])
+    peak = max(levels)
+    below = peak - floor_db
+    problems = []
+    if below < FLOOR_MIN_DB_BELOW_PEAK:
+        problems.append(f"floor {floor_db:.1f} dB is only {below:.1f} dB under the {peak:.1f} dB peak window "
+                        f"(needs {FLOOR_MIN_DB_BELOW_PEAK:.0f})")
+    if pct["above9k"] >= FLOOR_HISS_PCT and below < FLOOR_INAUDIBLE_DB:
+        problems.append(f"floor is a hiss: {pct['above9k']:.0f}% of its power is over 9 kHz")
+    return {"peakWindowDb": round(peak, 1), "floorDb": round(floor_db, 1), "floorBelowPeakDb": round(below, 1),
+            "floorBandPct": {"below1500": round(pct["below1500"], 1), "1500to9k": round(mid, 1),
+                             "above9k": round(pct["above9k"], 1)},
+            "interiorWindows": len(interior), "problems": problems}
+
+
 def side_ratio_db(samples: array.array) -> float:
     """Side-to-mid energy of interleaved stereo in dB. Above 0 dB a mono fold loses over half its power."""
     mid = side = 0.0

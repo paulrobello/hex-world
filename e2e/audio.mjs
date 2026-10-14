@@ -44,6 +44,7 @@ page.on("request", (r) => { if (r.url().includes("/assets/audio/")) audioRequest
 const audio = () => page.evaluate(() => window.hexWorld.audio.state());
 const play = () => page.evaluate(() => window.hexWorld.state().play);
 const save = (name, v) => writeFileSync(`${out}/${name}.json`, JSON.stringify(v, null, 1));
+const playCue = (name) => page.evaluate((n) => window.hexWorld.audio.play(n), name);
 async function until(fn, what, ms = 10_000) {
   const deadline = Date.now() + ms;
   for (;;) {
@@ -89,11 +90,13 @@ try {
   save("loaded", a);
   check(a.format === "webm", `Opus/WebM picked in Chromium (${a.format})`);
   check(a.sampleRate === 48000, `context at the mastering rate (${a.sampleRate})`);
-  check(a.cues.loaded.length === 12, `12 decoded cues loaded (${a.cues.loaded.join(", ")})`);
+  const manifest = JSON.parse(readFileSync(join(dist, "assets/audio/manifest.json"), "utf8"));
+  const decodeCues = manifest.cues.filter((c) => c.status === "mastered" && c.playback === "decode" && c.files?.webm);
+  check(a.cues.loaded.length === decodeCues.length,
+    `${decodeCues.length} decoded cues loaded (${a.cues.loaded.join(", ")})`);
   check(a.cues.failed.length === 0 && a.cues.skipped.length === 0, `no failed or skipped cues ${JSON.stringify([a.cues.failed, a.cues.skipped])}`);
   // Gapless: each loop decodes in Chromium to exactly its manifest loop length, so the loop points
   // the runtime sets are the seam make audio-check verified on the ffmpeg decode.
-  const manifest = JSON.parse(readFileSync(join(dist, "assets/audio/manifest.json"), "utf8"));
   for (const c of manifest.cues.filter((c) => c.loop && c.status === "mastered"))
     check(a.cues.frames[c.id] === c.loop.endSample,
       `${c.id} decodes to its loop length (${a.cues.frames[c.id]} frames, manifest ${c.loop.endSample})`);
@@ -101,12 +104,27 @@ try {
   check(a.music.tracks === 0 && a.music.current === null, "no music mastered: the playlist idles");
   check(JSON.stringify(a.missingEmitters) === '["town-murmur"]', `only town murmur missing (${a.missingEmitters})`);
   check(audioRequests.every((u) => !/\.m4a$/.test(u)), "no m4a fetched when WebM plays");
-  await until(async () => ((await audio()).bed.find((b) => b.cue === "meadow-bed")?.gain ?? 0) > 0.3, "meadow bed up for the start meadow");
-  await until(async () => (await audio()).outputRms > 1e-4, "the bed reaches the output");
-  // The occasional bee swarm is armed 45-120 s out, with the start meadow as a flower tile.
+  // The start meadow has no bed: an on-demand forest-birds play is what reaches the output. The start world
+  // has no forest tile, so it may play non-positional (at null).
+  const birds = manifest.cues.filter((c) => c.pool === "forest-birds").map((c) => c.id);
+  let t0 = Date.now();
+  const played = await playCue("forest-birds");
+  check(birds.includes(played.played) && played.pool === "forest-birds"
+    && (played.at === null || (Number.isInteger(played.at.q) && Number.isInteger(played.at.r))),
+    `play("forest-birds") plays one of its variants ${JSON.stringify(played)}`);
+  await until(async () => (await audio()).outputRms > 1e-4, "the on-demand birds reach the output", 2000 - (Date.now() - t0));
   a = await audio();
+  save("play", { result: played, state: a });
+  check(a.oneShots?.["forest-birds"]?.lastCue === played.played && a.oneShots["forest-birds"].plays === 1,
+    `the on-demand play counts in its row ${JSON.stringify(a.oneShots?.["forest-birds"])}`);
+  const unknown = await playCue("no-such-cue");
+  check(unknown.played === null && unknown.reason === "unknown-cue", `play("no-such-cue") is refused ${JSON.stringify(unknown)}`);
+  // The occasional bee swarm is armed 45-120 s out, with the start meadow as a flower tile; the forest
+  // birds and leaves are armed too.
   check(a.bees?.cue === "meadow-bees" && a.bees.nextAt > a.currentTime && a.bees.nextAt <= a.currentTime + 120
     && a.bees.flowerTiles >= 1 && a.bees.plays === 0, `meadow-bees armed ${JSON.stringify(a.bees)}`);
+  for (const name of ["forest-birds", "forest-leaves"])
+    check(a.oneShots?.[name]?.nextAt > a.currentTime, `${name} armed ${JSON.stringify(a.oneShots?.[name])}`);
 
   // Placement and UI cues from the manifest's event lists.
   await page.evaluate(() => window.hexWorld.selectTile("road_straight"));
@@ -205,7 +223,11 @@ try {
   a = await audio();
   check(a.outputRms < 1e-5 && a.masterGain < 1e-4, `still silent after the reload (rms ${a.outputRms})`);
   await page.evaluate(() => window.hexWorld.audio.setMuted(false));
-  await until(async () => (await audio()).outputRms > 1e-4, "unmute brings the output back");
+  // A play, so the check doesn't hang on what the restored world and camera happen to make audible.
+  t0 = Date.now();
+  const back = await playCue("forest-birds");
+  check(back.played !== null, `play after unmute ${JSON.stringify(back)}`);
+  await until(async () => (await audio()).outputRms > 1e-4, "unmute brings the output back", 2000 - (Date.now() - t0));
 } catch (e) {
   fail(String(e?.stack ?? e));
 } finally {

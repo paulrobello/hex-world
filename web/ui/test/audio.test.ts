@@ -5,17 +5,16 @@ import { test } from "node:test";
 import manifestJson from "../../../assets/audio/manifest.json" with { type: "json" };
 import { type Cue, type Manifest, busOf, eventCues, pickFormat, planDecode, playable } from "../src/audio-cues.ts";
 import {
-  BEE_CUE,
-  BEE_DELAY_S,
-  type FlowerTile,
+  BED_CUE,
+  EMITTER_CUE,
   type Mix,
+  MUSIC_OPTS,
+  ONE_SHOTS,
+  type OneShotRow,
+  type OneShotTile,
   type PlacedTile,
   type View,
   attenuation,
-  beeDelay,
-  beeGate,
-  beeIdle,
-  beeStep,
   bedGains,
   biomeMix,
   biomeOf,
@@ -24,12 +23,19 @@ import {
   emptyMix,
   focusWeight,
   isFlowerTile,
-  MUSIC_OPTS,
   musicGains,
   musicIdle,
   musicStep,
-  pickBeeTile,
+  nearestOneShotTile,
+  oneShotDefs,
+  oneShotDelay,
+  oneShotGate,
+  oneShotIdle,
+  oneShotStep,
   pickEmitters,
+  pickOneShotTile,
+  pickVariant,
+  resolveOneShot,
 } from "../src/audio-mix.ts";
 import schema from "../src/bridge-schema.json" with { type: "json" };
 
@@ -168,9 +174,20 @@ test("biome mix in view sums to one and falls back to the whole world", () => {
   const away = biomeMix(tiles, { camera: [-9000, 40, 0], focus: [-9000, 0, 0], zoom: 30, radius: R });
   close(away.meadow, 1 / 3);
   assert.deepEqual(biomeMix([], viewAt(0, 0, 30)), emptyMix());
-  const beds = bedGains({ ...emptyMix(), meadow: 0.5, coast: 0.5 });
-  assert.ok((beds.get("meadow-bed") ?? 0) > (beds.get("surf") ?? 0));
-  assert.equal(beds.get("forest-birdsong"), 0);
+});
+
+test("beds and loop emitters: river and coast only; meadow and forest are quiet between one-shots", () => {
+  assert.equal(BED_CUE.meadow, null);
+  assert.equal(BED_CUE.forest, null);
+  assert.equal(EMITTER_CUE.meadow, null);
+  assert.equal(EMITTER_CUE.forest, null);
+  assert.equal(EMITTER_CUE.river, "river-babble");
+  assert.equal(EMITTER_CUE.coast, "surf");
+  const beds = bedGains({ ...emptyMix(), meadow: 0.4, forest: 0.2, river: 0.2, coast: 0.2 });
+  assert.deepEqual([...beds.keys()].sort(), ["river-babble", "surf"]);
+  close(beds.get("river-babble")!, 0.25 * 0.2);
+  close(beds.get("surf")!, 0.3 * 0.2);
+  assert.equal(bedGains({ ...emptyMix(), meadow: 1 }).get("surf"), 0, "an all-meadow view has no bed");
 });
 
 test("emitter voices: loudest per cue, a floor, and a bias to keep current voices", () => {
@@ -228,29 +245,90 @@ test("cues without a mood never join the playlist; losing every cue fades out", 
   close(musicGains(st, 50 + MUSIC_OPTS.fade).get("meadow-day")!, 0);
 });
 
-// ---------- Occasional bees ----------
+// ---------- Occasional one-shots (bees, forest birds and leaves) ----------
 
 const seq = (...xs: number[]) => {
   let i = 0;
   return () => xs[i++ % xs.length]!;
 };
+/** mulberry32: a repeatable stream for the long random runs. */
+const seeded = (seed: number) => () => {
+  seed = (seed + 0x6d2b79f5) >>> 0;
+  let t = seed;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+const noDraw = () => {
+  throw new Error("drew a random number");
+};
+const rowNamed = (name: string): OneShotRow => ONE_SHOTS.find((r) => r.name === name)!;
+const BEES = rowNamed("bees");
+const BIRDS = rowNamed("forest-birds");
+const LEAVES = rowNamed("forest-leaves");
 const flowerView: View = { camera: [0, 30, 20], focus: [0, 0, 0], zoom: 30, radius: R };
-const flower = (q: number, r: number): FlowerTile => {
+const cell = (q: number, r: number): OneShotTile => {
   const [x, z] = cellWorld(q, r, R);
   return { q, r, x, z };
 };
 
 test("meadow-bees ships as a decoded ambience one-shot; review candidates never reach the game", () => {
-  const bees = manifest.cues.find((c) => c.id === BEE_CUE);
+  const bees = manifest.cues.find((c) => c.id === BEES.pool);
   assert.ok(bees && bees.status === "mastered" && !bees.loop && bees.playback === "decode");
   assert.equal(busOf(bees), "ambience");
+  assert.deepEqual(resolveOneShot(BEES.pool, manifest.cues)?.variants, [BEES.pool], "a one-variant pool");
   const cands = (manifestJson as unknown as { candidates?: Cue[] }).candidates ?? [];
-  assert.deepEqual(
-    cands.map((c) => c.id),
-    ["meadow-bed-a", "meadow-bed-b", "meadow-bed-c", "meadow-bed-d"],
-  );
   const ids = new Set(playable(manifest.cues, "webm").map((c) => c.id));
   for (const c of cands) assert.ok(!ids.has(c.id), `${c.id} is not playable`);
+});
+
+test("the retired forest-birdsong and meadow-bed loops are gone from the manifest", () => {
+  const ids = manifest.cues.map((c) => c.id);
+  assert.ok(!ids.includes("forest-birdsong"), "forest-birdsong retired");
+  assert.ok(!ids.includes("meadow-bed"), "meadow-bed retired");
+});
+
+test("forest birds and leaves ship as pools of decoded ambience one-shots", () => {
+  for (const pool of [BIRDS.pool, LEAVES.pool]) {
+    const variants = manifest.cues.filter((c) => c.pool === pool);
+    assert.ok(variants.length >= 1, `${pool} has variants`);
+    assert.deepEqual(
+      resolveOneShot(pool, manifest.cues)?.variants,
+      variants.map((c) => c.id),
+    );
+    for (const c of variants) {
+      assert.ok(c.status === "mastered" && !c.loop && c.playback === "decode", `${c.id} is a decoded one-shot`);
+      assert.equal(busOf(c), "ambience", `${c.id} plays on the ambience bus`);
+    }
+  }
+});
+
+test("one-shot rows: bees at flower tiles, forest birds and leaves at forest tiles", () => {
+  assert.deepEqual(
+    ONE_SHOTS.map((r) => [r.name, r.pool, r.delay, r.rangeSteps, r.level]),
+    [
+      ["bees", "meadow-bees", [45, 120], 3, 0.35],
+      ["forest-birds", "forest-birds", [12, 40], 3, 0.4],
+      ["forest-leaves", "forest-leaves", [20, 60], 3, 0.3],
+    ],
+  );
+  assert.ok(oneShotDefs(BEES, schema.catalog.tiles).has("meadow"));
+  for (const row of [BIRDS, LEAVES]) {
+    const defs = oneShotDefs(row, schema.catalog.tiles);
+    assert.ok(defs.has("forest"), `${row.name} plays at forest`);
+    for (const t of schema.catalog.tiles.filter((t) => defs.has(t.id)))
+      assert.equal(biomeOf(t.id, t.edges), "forest", `${row.name} def ${t.id}`);
+    for (const id of [
+      "meadow",
+      "road_straight",
+      "river_straight",
+      "river_road_bridge",
+      "beach",
+      "ocean",
+      "house_cluster",
+    ])
+      assert.ok(!defs.has(id), `${row.name} never plays at ${id}`);
+  }
 });
 
 test("flower tiles: meadow defs whose scatter carries wildflowers", () => {
@@ -260,76 +338,206 @@ test("flower tiles: meadow defs whose scatter carries wildflowers", () => {
   assert.equal(isFlowerTile("meadow", ["rock_small"]), false);
 });
 
-test("bee delay spans 45-120 s", () => {
-  assert.equal(
-    beeDelay(() => 0),
-    BEE_DELAY_S[0],
-  );
+test("one-shot delays span each row's range", () => {
+  for (const [row, lo, hi] of [
+    [BEES, 45, 120],
+    [BIRDS, 12, 40],
+    [LEAVES, 20, 60],
+  ] as const) {
+    assert.equal(
+      oneShotDelay(row, () => 0),
+      lo,
+    );
+    close(
+      oneShotDelay(row, () => 0.999999),
+      hi,
+      1e-3,
+    );
+  }
   close(
-    beeDelay(() => 0.999999),
-    BEE_DELAY_S[1],
-    1e-3,
-  );
-  close(
-    beeDelay(() => 0.5),
+    oneShotDelay(BEES, () => 0.5),
     82.5,
   );
 });
 
 test("bee tile: only flower tiles within three hex steps of the focus, weighted by the focus mix", () => {
-  const near = flower(1, 0);
-  const far = flower(6, 0);
+  const near = cell(1, 0);
+  const far = cell(6, 0);
   assert.equal(
-    pickBeeTile([far], flowerView, () => 0.5),
+    pickOneShotTile(BEES, [far], flowerView, () => 0.5),
     null,
   );
   assert.equal(
-    pickBeeTile([], flowerView, () => 0.5),
+    pickOneShotTile(BEES, [], flowerView, () => 0.5),
     null,
   );
   assert.deepEqual(
-    pickBeeTile([near, far], flowerView, () => 0.99),
+    pickOneShotTile(BEES, [near, far], flowerView, () => 0.99),
     near,
   );
   // The focus tile outweighs a ring-two tile, so a low draw lands on it.
-  const centre = flower(0, 0);
+  const centre = cell(0, 0);
   assert.deepEqual(
-    pickBeeTile([centre, flower(2, 0)], flowerView, () => 0.1),
+    pickOneShotTile(BEES, [centre, cell(2, 0)], flowerView, () => 0.1),
     centre,
   );
 });
 
-test("bee gate: mute, a silent master or ambience bus, and an unloaded cue each hold the swarm", () => {
+test("forest rows pick only forest tiles within three hex steps of the focus", () => {
+  const placed = [
+    { id: "forest", ...cell(1, 0) },
+    { id: "forest", ...cell(2, 1) },
+    { id: "forest", ...cell(4, -1) },
+    { id: "meadow", ...cell(0, 0) },
+    { id: "river_straight", ...cell(-1, 0) },
+  ];
+  // A wide view, so the focus weight leaves both in-range forest tiles likely.
+  const wide: View = { camera: [0, 240, 180], focus: [0, 0, 0], zoom: 300, radius: R };
+  for (const row of [BIRDS, LEAVES]) {
+    const defs = oneShotDefs(row, schema.catalog.tiles);
+    const tiles = placed.filter((t) => defs.has(t.id)).map(({ q, r, x, z }) => ({ q, r, x, z }));
+    assert.equal(tiles.length, 3, "the three forest tiles match");
+    const rand = seeded(7);
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      const t = pickOneShotTile(row, tiles, wide, rand)!;
+      seen.add(`${t.q},${t.r}`);
+    }
+    assert.deepEqual([...seen].sort(), ["1,0", "2,1"], "never the meadow, the river or the forest four steps out");
+  }
+});
+
+test("variants: never the same one twice in a row while the pool has another", () => {
+  const pool = ["a", "b", "c", "d"];
+  const rand = seeded(42);
+  let last: string | null = null;
+  const seen = new Set<string>();
+  for (let i = 0; i < 500; i++) {
+    const v: string = pickVariant(pool, last, rand)!;
+    assert.notEqual(v, last);
+    seen.add(v);
+    last = v;
+  }
+  assert.deepEqual([...seen].sort(), pool, "every variant plays");
+  assert.equal(pickVariant(["a", "b"], "a", noDraw), "b", "two variants alternate without a draw");
+  // A one-variant pool draws nothing, so the bee schedule's delays stay where they were.
+  assert.equal(pickVariant(["meadow-bees"], "meadow-bees", noDraw), "meadow-bees");
+  assert.equal(pickVariant([], null, noDraw), null);
+});
+
+test("one-shot gate: mute, a silent master or ambience bus, and no decoded variant each hold the play", () => {
   const on = { muted: false, master: 0.8, ambience: 0.7, loaded: true };
-  assert.equal(beeGate(on), null);
-  assert.equal(beeGate({ ...on, muted: true }), "muted");
-  assert.equal(beeGate({ ...on, master: 0 }), "muted");
-  assert.equal(beeGate({ ...on, ambience: 0 }), "ambience-off");
-  assert.equal(beeGate({ ...on, loaded: false }), "not-loaded");
+  assert.equal(oneShotGate(on), null);
+  assert.equal(oneShotGate({ ...on, muted: true }), "muted");
+  assert.equal(oneShotGate({ ...on, master: 0 }), "muted");
+  assert.equal(oneShotGate({ ...on, ambience: 0 }), "ambience-off");
+  assert.equal(oneShotGate({ ...on, loaded: false }), "not-loaded");
+  assert.deepEqual(oneShotIdle(), {
+    nextAt: null,
+    lastAt: null,
+    lastTile: null,
+    lastCue: null,
+    plays: 0,
+    gatedBy: null,
+  });
+  const armed = { ...oneShotIdle(), nextAt: 20 };
+  const empty = oneShotStep(
+    BIRDS,
+    armed,
+    20,
+    null,
+    () => cell(1, 0),
+    [],
+    () => 0,
+  );
+  assert.equal(empty.play, null);
+  assert.equal(empty.state.gatedBy, "not-loaded");
 });
 
 test("bee schedule: first step arms, a due swarm plays once, a gated or tileless one is skipped and re-armed", () => {
-  const tile = flower(0, 1);
+  const tile = cell(0, 1);
+  const bees = [BEES.pool];
   const rand = seq(0, 0.5, 1 - 1e-9, 0);
-  let { state, play } = beeStep(beeIdle(), 10, null, () => tile, rand);
+  let { state, play } = oneShotStep(BEES, oneShotIdle(), 10, null, () => tile, bees, rand);
   assert.equal(play, null);
   assert.equal(state.nextAt, 55);
-  ({ state, play } = beeStep(state, 54.9, null, () => tile, rand));
+  ({ state, play } = oneShotStep(BEES, state, 54.9, null, () => tile, bees, rand));
   assert.equal(play, null);
-  ({ state, play } = beeStep(state, 55, null, () => tile, rand));
-  assert.deepEqual(play, tile);
+  ({ state, play } = oneShotStep(BEES, state, 55, null, () => tile, bees, rand));
+  assert.deepEqual(play, { tile, cue: "meadow-bees" });
   assert.deepEqual(
-    { plays: state.plays, lastAt: state.lastAt, lastTile: state.lastTile, gatedBy: state.gatedBy },
-    { plays: 1, lastAt: 55, lastTile: { q: 0, r: 1 }, gatedBy: null },
+    {
+      plays: state.plays,
+      lastAt: state.lastAt,
+      lastTile: state.lastTile,
+      lastCue: state.lastCue,
+      gatedBy: state.gatedBy,
+    },
+    { plays: 1, lastAt: 55, lastTile: { q: 0, r: 1 }, lastCue: "meadow-bees", gatedBy: null },
   );
   assert.equal(state.nextAt, 55 + 82.5);
-  ({ state, play } = beeStep(state, 200, "muted", () => tile, rand));
+  ({ state, play } = oneShotStep(BEES, state, 200, "muted", () => tile, bees, rand));
   assert.equal(play, null);
   assert.equal(state.gatedBy, "muted");
   assert.equal(state.plays, 1);
   close(state.nextAt!, 320, 1e-3);
-  ({ state, play } = beeStep(state, 400, null, () => null, rand));
+  ({ state, play } = oneShotStep(BEES, state, 400, null, () => null, bees, rand));
   assert.equal(play, null);
-  assert.equal(state.gatedBy, "no-flower-tile");
+  assert.equal(state.gatedBy, "no-tile");
   assert.equal(state.nextAt, 445);
+});
+
+test("forest birds schedule: each due play is a new variant, recorded with the count", () => {
+  const variants = ["forest-birds-1", "forest-birds-2", "forest-birds-3"];
+  const rand = seeded(3);
+  const tile = cell(1, 0);
+  let st = oneShotStep(BIRDS, oneShotIdle(), 0, null, () => tile, variants, rand).state;
+  assert.ok(st.nextAt! >= 12 && st.nextAt! <= 40, `armed 12-40 s out (${st.nextAt})`);
+  let prev: string | null = null;
+  for (let i = 1; i <= 50; i++) {
+    const due = st.nextAt!;
+    const step = oneShotStep(BIRDS, st, due, null, () => tile, variants, rand);
+    assert.ok(step.play && variants.includes(step.play.cue));
+    assert.notEqual(step.play.cue, prev);
+    assert.equal(step.state.lastCue, step.play.cue);
+    assert.equal(step.state.plays, i);
+    const gap = step.state.nextAt! - due;
+    assert.ok(gap >= 12 && gap <= 40, `next play 12-40 s later (${gap})`);
+    prev = step.play.cue;
+    st = step.state;
+  }
+});
+
+test("on demand: a pool resolves to its variants in manifest order, a cue id to itself, an unknown name to null", () => {
+  const cues = [
+    { id: "ui-select" },
+    { id: "forest-birds-2", pool: "forest-birds" },
+    { id: "forest-leaves-1", pool: "forest-leaves" },
+    { id: "forest-birds-1", pool: "forest-birds" },
+    { id: "meadow-bees" },
+  ];
+  assert.deepEqual(resolveOneShot("forest-birds", cues), {
+    pool: "forest-birds",
+    variants: ["forest-birds-2", "forest-birds-1"],
+    row: BIRDS,
+  });
+  const bees = { pool: "meadow-bees", variants: ["meadow-bees"], row: BEES };
+  assert.deepEqual(resolveOneShot("meadow-bees", cues), bees);
+  assert.deepEqual(resolveOneShot("bees", cues), bees, "a row name plays its pool");
+  assert.deepEqual(resolveOneShot("forest-birds-1", cues), {
+    pool: "forest-birds",
+    variants: ["forest-birds-1"],
+    row: BIRDS,
+  });
+  assert.deepEqual(resolveOneShot("ui-select", cues), { pool: "ui-select", variants: ["ui-select"], row: null });
+  assert.equal(resolveOneShot("no-such-cue", cues), null);
+  assert.equal(resolveOneShot("forest-birds", []), null);
+});
+
+test("on demand: the matching tile nearest the focus, at any distance", () => {
+  const far = cell(8, 0);
+  const near = cell(-5, 1);
+  assert.deepEqual(nearestOneShotTile([far, near], flowerView.focus), near);
+  assert.deepEqual(nearestOneShotTile([far], flowerView.focus), far, "out of the scheduler's range still counts");
+  assert.equal(nearestOneShotTile([], flowerView.focus), null);
 });

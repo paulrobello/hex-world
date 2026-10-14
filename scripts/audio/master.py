@@ -7,7 +7,9 @@ Per cue in <root>/assets-source/audio/cues.json (PRD §8, §11.3, §11.4):
   1. Decode the untouched source to 48 kHz float at the cue's channel count (amplitude fold). A cue
      with `sourceCue` masters another cue's source (a picked review candidate). A per-cue `filter`
      (high-pass and a harmonic notch comb, for a provider hum) runs next, with circular context on
-     loops so the wrap stays continuous. A per-cue `cut` takes a faded excerpt as a one-shot.
+     loops so the wrap stays continuous. A per-cue `cut` takes a faded excerpt as a one-shot, and a
+     per-cue `gate` then expands everything under a threshold set relative to the excerpt's loudest
+     50 ms window downward, so the noise between and after the calls drops away.
   2. One-shots: trim leading and trailing silence, keeping the attack and decay, never below 0.5 s.
      Loops: a sample-seamless source (ElevenLabs loop mode) is rotated so head and tail sit at the
      same level; any other loop (music) is repaired by folding the tail over the head.
@@ -19,6 +21,8 @@ Per cue in <root>/assets-source/audio/cues.json (PRD §8, §11.3, §11.4):
   5. Encode Opus in WebM and AAC in m4a (bit-exact, no metadata), measure both, and write
      <cue>/provenance.json, assets/audio/manifest.json and assets-source/audio/review.html.
 A music cue with no source yet is listed as pending; an ElevenLabs cue without one is an error.
+A `retired` cue is skipped: it stays in cues.json only so its source and generation record can still be
+named by `sourceCue`.
 """
 
 from __future__ import annotations
@@ -133,13 +137,18 @@ def crossfade_loop(samples: array.array, channels: int, seconds: float) -> tuple
 
 
 def filter_chain(spec: dict) -> str:
-    """ffmpeg -af chain for a cues.json `filter`: optional high-pass, then a notch at each harmonic.
+    """ffmpeg -af chain for a cues.json `filter`: optional high-pass and low-pass, then a notch at each harmonic.
 
-    {"highpassHz": 150, "harmonicNotch": {"fundamentalHz": 200, "harmonics": 48, "widthHz": 6}}
+    {"highpassHz": 150, "lowpassHz": 9500, "stages": 2,
+     "harmonicNotch": {"fundamentalHz": 200, "harmonics": 48, "widthHz": 6}}
+    `stages` repeats each 2-pole pass (12 dB/octave per stage).
     """
     parts = []
+    stages = int(spec.get("stages", 1))
     if spec.get("highpassHz"):
-        parts.append(f"highpass=f={spec['highpassHz']}:poles=2")
+        parts += [f"highpass=f={spec['highpassHz']}:poles=2"] * stages
+    if spec.get("lowpassHz"):
+        parts += [f"lowpass=f={spec['lowpassHz']}:poles=2"] * stages
     notch = spec.get("harmonicNotch") or []
     done: set[float] = set()
     for series in notch if isinstance(notch, list) else [notch]:
@@ -194,6 +203,42 @@ def cut(samples: array.array, channels: int, spec: dict) -> tuple[array.array, d
         for c in range(channels):
             out[(n - 1 - i) * channels + c] *= g
     return out, {"step": "cut", **spec, "frames": n}
+
+
+def gate(samples: array.array, channels: int, spec: dict) -> tuple[array.array, dict]:
+    """Downward expander on a one-shot: {thresholdDbBelowPeak, ratio, rangeDb, attackMs, releaseMs}.
+
+    The threshold sits `thresholdDbBelowPeak` under the loudest FLOOR_WINDOW_S RMS window of the input,
+    so it follows the take rather than an absolute level. Under it the gain falls by (ratio - 1) dB per dB,
+    at most `rangeDb`; the gain opens with `attackMs` and closes with `releaseMs` (one-pole, in dB).
+    """
+    mono = A.mono_fold(samples, channels)
+    frames = len(mono)
+    peak_db = max(A.window_db(mono, int(A.FLOOR_WINDOW_S * A.RATE)))
+    thr_db = peak_db - float(spec["thresholdDbBelowPeak"])
+    ratio, floor_db = float(spec["ratio"]), -float(spec["rangeDb"])
+    det = int(0.01 * A.RATE)
+    sq = [0.0] * (frames + 1)
+    for i, v in enumerate(mono):
+        sq[i + 1] = sq[i] + v * v
+    up = math.exp(-1 / (float(spec["attackMs"]) / 1000 * A.RATE))
+    down = math.exp(-1 / (float(spec["releaseMs"]) / 1000 * A.RATE))
+    out = array.array("f", samples)
+    g = floor_db
+    closed = 0
+    for f in range(frames):
+        lo, hi = max(0, f - det // 2), min(frames, f + det // 2 + 1)
+        rms = math.sqrt(max(sq[hi] - sq[lo], 0.0) / (hi - lo))
+        env_db = 20 * math.log10(rms) if rms > 1e-9 else -180.0
+        want = 0.0 if env_db >= thr_db else max(floor_db, (env_db - thr_db) * (ratio - 1))
+        coef = up if want > g else down
+        g = want + (g - want) * coef
+        closed += want < 0
+        lin = 10 ** (g / 20)
+        for c in range(channels):
+            out[f * channels + c] *= lin
+    return out, {"step": "gate", **spec, "peakWindowDb": round(peak_db, 2), "thresholdDb": round(thr_db, 2),
+                 "closedPct": round(100 * closed / max(frames, 1), 1)}
 
 
 def limit(layout: A.Layout, name: str, samples: array.array, channels: int, gain_db: float,
@@ -362,6 +407,9 @@ def master_cue(layout: A.Layout, reg: dict, cue: dict, tools: dict, script_hashe
     else:
         samples, info = cut(samples, channels, cue["cut"]) if cue.get("cut") else trim_oneshot(samples, channels)
         steps.append(info)
+        if cue.get("gate"):
+            samples, info = gate(samples, channels, cue["gate"])
+            steps.append(info)
         samples, info = level(layout, cue, samples, channels, target, ceiling)
         steps.append(info)
     samples, info = settle(layout, cue["id"], samples, channels, target, ceiling)
@@ -390,6 +438,9 @@ def master_cue(layout: A.Layout, reg: dict, cue: dict, tools: dict, script_hashe
             runtime.append({**A.file_record(layout, out), "codec": info["codec"], "bitrate": bitrate,
                             "channels": info["channels"], "sampleRate": A.RATE, "durationSeconds": info["durationSeconds"],
                             "decodedFrames": len(decoded) // channels, "loudness": A.loudness(out),
+                            **({"floor": A.floor_report(out, (cue.get("cut") or {}).get("fadeInSeconds", 0.0),
+                                                        (cue.get("cut") or {}).get("fadeOutSeconds", 0.0))}
+                               if cue.get("pool") else {}),
                             "command": " ".join(a if " " not in a else f"'{a}'" for a in args).replace(str(layout.root) + "/", "")})
         worst = max(r["loudness"]["truePeak"] for r in runtime)
         over = worst - (contract - ENCODE_MARGIN_DB)
@@ -431,6 +482,7 @@ def master_cue(layout: A.Layout, reg: dict, cue: dict, tools: dict, script_hashe
                       "rights": "owner attestation, PRD D21", "owner": "pending"},
     }
     prov_path = layout.cue_dir(cue) / "provenance.json"
+    prov_path.parent.mkdir(parents=True, exist_ok=True)
     prov_path.write_text(json.dumps(prov, indent=2) + "\n")
     lim = next((s for s in steps if s["step"] == "loudness"), {})
     mode = lim.get("mode", "")
@@ -443,6 +495,7 @@ def master_cue(layout: A.Layout, reg: dict, cue: dict, tools: dict, script_hashe
     return {"id": cue["id"], "kind": cue["kind"], "class": cue["class"],
             "status": "candidate" if cue.get("candidateFor") else "mastered",
             **({"candidateFor": cue["candidateFor"]} if cue.get("candidateFor") else {}),
+            **({"pool": cue["pool"]} if cue.get("pool") else {}),
             "events": cue["events"], "playback": cue.get("playback") or cls["playback"], "channels": channels, "loop": loop,
             "durationSeconds": round(frames / A.RATE, 6), "decodedBytes": frames * channels * 4,
             "targetLufs": target,
@@ -467,6 +520,8 @@ def main() -> int:
     old = {c["id"]: c for c in prev.get("cues", []) + prev.get("candidates", [])}
     entries, errors = [], []
     for cue in reg["cues"]:
+        if cue.get("retired"):
+            continue
         if args.cue and cue["id"] not in args.cue:
             if cue["id"] in old:
                 entries.append(old[cue["id"]])

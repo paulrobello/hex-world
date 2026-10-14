@@ -19,6 +19,10 @@ decoded to 48 kHz and folded to mono by amplitude, then measured four ways:
              join one event, and three or more events in a take read as birds. Calibrated 2026-10-14 on
              the round-one meadow-bed sources, whose prompts asked for birds (a 9, b 13, c 11 events),
              against surf and white noise (0 each). Tonal water bubbles (river-babble) also trip it.
+  floor      one-shots only (--floor): the floor criterion shared with make audio-check
+             (audio_lib.floor_report): the quietest interior 50 ms windows against the loudest, and the
+             floor's band split under 1.5 kHz, 1.5-9 kHz and over 9 kHz. A file named after a cues.json cue
+             with a `cut` leaves that cut's fades out of the interior.
 --selftest runs the measures on synthetic controls with known answers and exits non-zero on a miss.
 """
 
@@ -28,8 +32,11 @@ import argparse
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 import numpy as np
+
+import audio_lib as A
 
 RATE = 48000
 BIRD_BAND = (2000.0, 6000.0)
@@ -114,6 +121,14 @@ def birds(x: np.ndarray) -> dict:
             "birds": events >= 3}
 
 
+def floor(path: str) -> dict:
+    """The make audio-check floor criterion on one file; a cue's `cut` fades are left out of the interior."""
+    stem = Path(path).stem
+    cue = next((c for c in A.Layout(A.REPO).registry()["cues"] if c["id"] == stem), None)
+    cut = (cue or {}).get("cut") or {}
+    return A.floor_report(Path(path), cut.get("fadeInSeconds", 0.0), cut.get("fadeOutSeconds", 0.0))
+
+
 def screen(x: np.ndarray) -> dict:
     return {"band": band(x), "level": level(x), "tones": tones(x), "birds": birds(x)}
 
@@ -151,12 +166,15 @@ def main() -> int:
     parser.add_argument("files", nargs="*")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--selftest", action="store_true")
+    parser.add_argument("--floor", action="store_true", help="also measure the one-shot floor criterion")
     args = parser.parse_args()
     if args.selftest:
         return selftest()
     out = {}
     for path in args.files:
         out[path] = screen(decode(path))
+        if args.floor:
+            out[path]["floor"] = floor(path)
         if not args.json:
             r = out[path]
             b, lv, tn, bd = r["band"], r["level"], r["tones"], r["birds"]
@@ -164,6 +182,10 @@ def main() -> int:
                   f"  (300-8k vs full {b['midVsFullDb']} dB)\n  level spread {lv['spreadDb']} dB, deepest dip "
                   f"{lv['deepestDipDb']} dB at {lv['dipAtSeconds']} s\n  tones 200 Hz series {tn['series200HzDb']}"
                   f"\n        others {tn['otherPeaks']}\n  birds {bd}")
+            if args.floor:
+                fl = r["floor"]
+                print(f"  floor {fl['floorBelowPeakDb']} dB under the peak window, bands {fl['floorBandPct']}"
+                      f"  {'; '.join(fl['problems']) or 'pass'}")
     if args.json:
         print(json.dumps(out, indent=2))
     return 0

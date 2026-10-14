@@ -5,7 +5,8 @@
   "masterTruePeak": -2.0,
   "lufsTolerance": 1.0,
   "decodedBudgetBytes": 96000000,
-  "generationCap": 27,
+  "generationCap": 30,
+  "generationCapNote": "Owner, 2026-10-14: the forest and meadow loop beds were retired and the forests got one-shot pools. The cap was raised from 27 by at most 10 for short non-loop ElevenLabs forest-leaves takes (forest-birds takes were allowed only if every cut from the paid forest-birdsong take failed the floor criterion; none did). Three leaf takes were spent (attempts 28-30, 40 credits each), so the cap is set to the 30 attempts logged.",
   "classes": {
     "music": {
       "lufs": -18,
@@ -227,7 +228,9 @@
           "harmonics": 48,
           "widthHz": 6
         }
-      }
+      },
+      "retired": true,
+      "retiredNote": "Owner, 2026-10-14: retired from the game ('not every tile type needs a constant ambient sound'); the loop beds carried a hum comb and broadband hiss the owner heard as noise. Kept in the registry for provenance and as the sourceCue of the forest-birds cuts."
     },
     {
       "id": "meadow-bed",
@@ -241,7 +244,9 @@
       "bitrates": {
         "webm": "96k"
       },
-      "sourceCue": "meadow-bed-d"
+      "sourceCue": "meadow-bed-d",
+      "retired": true,
+      "retiredNote": "Owner, 2026-10-14: retired from the game ('not every tile type needs a constant ambient sound'); the loop beds carried a hum comb and broadband hiss the owner heard as noise. Kept in the registry for provenance and as the sourceCue of the forest-birds cuts."
     },
     {
       "id": "meadow-bed-a",
@@ -283,7 +288,9 @@
           "birdChirpEvents": 9,
           "birds": true
         }
-      }
+      },
+      "retired": true,
+      "retiredNote": "Owner, 2026-10-14: retired from the game ('not every tile type needs a constant ambient sound'); the loop beds carried a hum comb and broadband hiss the owner heard as noise. Kept in the registry for provenance and as the sourceCue of the forest-birds cuts."
     },
     {
       "id": "meadow-bed-b",
@@ -325,7 +332,9 @@
           "birdChirpEvents": 13,
           "birds": true
         }
-      }
+      },
+      "retired": true,
+      "retiredNote": "Owner, 2026-10-14: retired from the game ('not every tile type needs a constant ambient sound'); the loop beds carried a hum comb and broadband hiss the owner heard as noise. Kept in the registry for provenance and as the sourceCue of the forest-birds cuts."
     },
     {
       "id": "meadow-bed-c",
@@ -366,7 +375,9 @@
           "birdChirpEvents": 11,
           "birds": true
         }
-      }
+      },
+      "retired": true,
+      "retiredNote": "Owner, 2026-10-14: retired from the game ('not every tile type needs a constant ambient sound'); the loop beds carried a hum comb and broadband hiss the owner heard as noise. Kept in the registry for provenance and as the sourceCue of the forest-birds cuts."
     },
     {
       "id": "meadow-bed-d",
@@ -404,7 +415,9 @@
           "birdChirpEvents": 0,
           "birds": false
         }
-      }
+      },
+      "retired": true,
+      "retiredNote": "Owner, 2026-10-14: retired from the game ('not every tile type needs a constant ambient sound'); the loop beds carried a hum comb and broadband hiss the owner heard as noise. Kept in the registry for provenance and as the sourceCue of the forest-birds cuts."
     },
     {
       "id": "meadow-bees",
@@ -433,6 +446,240 @@
         "durationSeconds": 30,
         "promptInfluence": 0.5,
         "loop": true
+      }
+    },
+    {
+      "id": "forest-birds-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "forest-birds",
+      "use": "One birdsong phrase of the forest-birds pool: positional at a forest tile near the camera focus at random intervals, or on demand (hexWorld.audio.play). Cut from the paid forest-birdsong take (attempt 15).",
+      "events": [],
+      "provider": "elevenlabs",
+      "sourceCue": "forest-birdsong",
+      "cut": {
+        "startSeconds": 10.0,
+        "seconds": 2.0,
+        "fadeInSeconds": 0.15,
+        "fadeOutSeconds": 0.4
+      },
+      "filter": {
+        "highpassHz": 2800,
+        "lowpassHz": 9500,
+        "stages": 2
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 12,
+        "ratio": 10,
+        "rangeDb": 45,
+        "attackMs": 3,
+        "releaseMs": 120
+      }
+    },
+    {
+      "id": "forest-birds-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "forest-birds",
+      "use": "One birdsong phrase of the forest-birds pool: positional at a forest tile near the camera focus at random intervals, or on demand (hexWorld.audio.play). Cut from the paid forest-birdsong take (attempt 15).",
+      "events": [],
+      "provider": "elevenlabs",
+      "sourceCue": "forest-birdsong",
+      "cut": {
+        "startSeconds": 26.1,
+        "seconds": 1.9,
+        "fadeInSeconds": 0.15,
+        "fadeOutSeconds": 0.4
+      },
+      "filter": {
+        "highpassHz": 2800,
+        "lowpassHz": 9500,
+        "stages": 2
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 12,
+        "ratio": 10,
+        "rangeDb": 45,
+        "attackMs": 3,
+        "releaseMs": 120
+      }
+    },
+    {
+      "id": "forest-birds-3",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "forest-birds",
+      "use": "One birdsong phrase of the forest-birds pool: positional at a forest tile near the camera focus at random intervals, or on demand (hexWorld.audio.play). Cut from the paid forest-birdsong take (attempt 15).",
+      "events": [],
+      "provider": "elevenlabs",
+      "sourceCue": "forest-birdsong",
+      "cut": {
+        "startSeconds": 20.5,
+        "seconds": 2.1,
+        "fadeInSeconds": 0.15,
+        "fadeOutSeconds": 0.4
+      },
+      "filter": {
+        "highpassHz": 2800,
+        "lowpassHz": 9500,
+        "stages": 2
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 10,
+        "ratio": 10,
+        "rangeDb": 45,
+        "attackMs": 3,
+        "releaseMs": 120
+      }
+    },
+    {
+      "id": "forest-birds-4",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "forest-birds",
+      "use": "One birdsong phrase of the forest-birds pool: positional at a forest tile near the camera focus at random intervals, or on demand (hexWorld.audio.play). Cut from the paid forest-birdsong take (attempt 15).",
+      "events": [],
+      "provider": "elevenlabs",
+      "sourceCue": "forest-birdsong",
+      "cut": {
+        "startSeconds": 12.3,
+        "seconds": 2.6,
+        "fadeInSeconds": 0.15,
+        "fadeOutSeconds": 0.4
+      },
+      "filter": {
+        "highpassHz": 2800,
+        "lowpassHz": 9500,
+        "stages": 2
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 10,
+        "ratio": 10,
+        "rangeDb": 45,
+        "attackMs": 3,
+        "releaseMs": 120
+      }
+    },
+    {
+      "id": "forest-birds-5",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "forest-birds",
+      "use": "One birdsong phrase of the forest-birds pool: positional at a forest tile near the camera focus at random intervals, or on demand (hexWorld.audio.play). Cut from the paid forest-birdsong take (attempt 15).",
+      "events": [],
+      "provider": "elevenlabs",
+      "sourceCue": "forest-birdsong",
+      "cut": {
+        "startSeconds": 28.0,
+        "seconds": 1.95,
+        "fadeInSeconds": 0.15,
+        "fadeOutSeconds": 0.4
+      },
+      "filter": {
+        "highpassHz": 2800,
+        "lowpassHz": 9500,
+        "stages": 2
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 10,
+        "ratio": 10,
+        "rangeDb": 45,
+        "attackMs": 3,
+        "releaseMs": 120
+      }
+    },
+    {
+      "id": "forest-leaves-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "forest-leaves",
+      "use": "One leaf rustle of the forest-leaves pool: positional at a forest tile near the camera focus at random intervals, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of one soft gust of wind passing through the leaves of a single small tree: a gentle, papery rustle of dry leaves that swells for about two seconds and settles back into complete silence. Studio-quiet background, with silence before and after the rustle.",
+        "durationSeconds": 4,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 250,
+        "lowpassHz": 12000
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 30,
+        "ratio": 3,
+        "rangeDb": 45,
+        "attackMs": 5,
+        "releaseMs": 250
+      }
+    },
+    {
+      "id": "forest-leaves-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "forest-leaves",
+      "use": "One leaf rustle of the forest-leaves pool: positional at a forest tile near the camera focus at random intervals, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a light breeze catching one leafy branch: a quick, soft flutter of leaves that rises, shimmers briefly and falls away into complete silence within about two seconds. Studio-quiet background, with silence before and after the flutter.",
+        "durationSeconds": 4,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 250,
+        "lowpassHz": 12000
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 30,
+        "ratio": 3,
+        "rangeDb": 45,
+        "attackMs": 5,
+        "releaseMs": 250
+      }
+    },
+    {
+      "id": "forest-leaves-3",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "forest-leaves",
+      "use": "One leaf rustle of the forest-leaves pool: positional at a forest tile near the camera focus at random intervals, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of leaves stirring in a short, gentle breath of wind: a soft, airy, shimmering rustle through a leafy canopy that swells slowly and then fades gently away to complete silence. Studio-quiet background, with silence before and after the rustle.",
+        "durationSeconds": 4,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 250,
+        "lowpassHz": 12000
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 30,
+        "ratio": 3,
+        "rangeDb": 45,
+        "attackMs": 5,
+        "releaseMs": 250
       }
     },
     {

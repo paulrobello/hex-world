@@ -1,0 +1,226 @@
+{
+  "cueId": "forest-leaves-1",
+  "kind": "ambience",
+  "class": "sfx",
+  "version": 1,
+  "use": "One leaf rustle of the forest-leaves pool: positional at a forest tile near the camera focus at random intervals, or on demand (hexWorld.audio.play).",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Close, isolated recording of one soft gust of wind passing through the leaves of a single small tree: a gentle, papery rustle of dry leaves that swells for about two seconds and settles back into complete silence. Studio-quiet background, with silence before and after the rustle.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Close, isolated recording of one soft gust of wind passing through the leaves of a single small tree: a gentle, papery rustle of dry leaves that swells for about two seconds and settles back into complete silence. Studio-quiet background, with silence before and after the rustle.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 4,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "95ed4fc8321b3e52865fb8cdc9e1d432",
+    "generatedAt": "2026-10-14T17:17:25+00:00",
+    "attempt": 28,
+    "creditsCharged": 40,
+    "record": {
+      "path": "assets-source/audio/ambience/forest-leaves-1/generation.json",
+      "sha256": "b0b6b83f51bd040d363e0de350a2392394e864ec0bb8ad4885bedb49dcec904f",
+      "bytes": 2084
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/forest-leaves-1/forest-leaves-1.mp3",
+    "sha256": "dcbd9951cd956178cac036ed333e2be7ca2d08d8d16453db08f36f3c753f69e7",
+    "bytes": 65244,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 4.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -36.3,
+      "lra": 0.6,
+      "truePeak": -23.2
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 0.5,
+      "truePeak": -3.2
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.0,
+        "lra": 0.6,
+        "truePeak": -3.0
+      },
+      "m4a": {
+        "integrated": -16.2,
+        "lra": 0.5,
+        "truePeak": -3.1
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 250,
+        "lowpassHz": 12000
+      },
+      "chain": "highpass=f=250:poles=2,lowpass=f=12000:poles=2",
+      "circularPadFrames": 0
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 4174,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "gate",
+      "thresholdDbBelowPeak": 30,
+      "ratio": 3,
+      "rangeDb": 45,
+      "attackMs": 5,
+      "releaseMs": 250,
+      "peakWindowDb": -36.42,
+      "thresholdDb": -66.42,
+      "closedPct": 27.9
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -37.0,
+        "lra": 0.5,
+        "truePeak": -24.2
+      },
+      "targetLufs": -16.0,
+      "gainDb": 21.0,
+      "requiredPeakReductionDb": 0.0,
+      "mode": "linear"
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.0
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/forest-leaves-1.wav",
+    "sha256": "53f2c6254d9f0e7b37b4f2c5e1dc0478d1c32648767e6be0356ae50e50b2a39a",
+    "frames": 187826,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/forest-leaves-1.webm",
+      "sha256": "1acd8e6db216c0fef1e7ec71e8f1f61cfdd0d2c4c2bbe50a9bd33a5fef57e0cf",
+      "bytes": 29606,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 3.921,
+      "decodedFrames": 187826,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.6,
+        "truePeak": -3.0
+      },
+      "floor": {
+        "peakWindowDb": -15.4,
+        "floorDb": -88.0,
+        "floorBelowPeakDb": 72.6,
+        "floorBandPct": {
+          "below1500": 61.8,
+          "1500to9k": 35.5,
+          "above9k": 2.7
+        },
+        "interiorWindows": 78,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/forest-leaves-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/forest-leaves-1.webm"
+    },
+    {
+      "path": "assets/audio/ambience/forest-leaves-1.m4a",
+      "sha256": "fe0362f2be44eceefb8b78259974e9810e4e830d228b384e4b6b9f896c92f418",
+      "bytes": 76844,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 3.913,
+      "decodedFrames": 187826,
+      "loudness": {
+        "integrated": -16.2,
+        "lra": 0.5,
+        "truePeak": -3.1
+      },
+      "floor": {
+        "peakWindowDb": -15.5,
+        "floorDb": -87.9,
+        "floorBelowPeakDb": 72.3,
+        "floorBandPct": {
+          "below1500": 61.1,
+          "1500to9k": 36.2,
+          "above9k": 2.6
+        },
+        "interiorWindows": 78,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/forest-leaves-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/forest-leaves-1.m4a"
+    }
+  ],
+  "decodedBytes": 751304,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "d606306d171f87705f6a139f9f0cb7741e5e12128b14e4a5c2c4cfd7be90b9f1",
+      "scripts/audio/master.py": "3e8714aab26f173d0aefe62787925342167c1b2dd87fbca273cb023807be26c1",
+      "scripts/audio/review.py": "a05fa0a054c1e7d434d3cad01290318afa52d9801d7da304d591949022b41be6"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

@@ -26,6 +26,8 @@ export interface Cue {
   class: string;
   status: string;
   events: string[];
+  /** The occasional one-shot pool this cue is one variant of (`forest-birds`, `forest-leaves`). */
+  pool?: string;
   playback?: "decode" | "stream";
   channels?: number;
   loop?: LoopPoints | null;

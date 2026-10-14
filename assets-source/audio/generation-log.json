@@ -1,5 +1,6 @@
 {
-  "cap": 27,
+  "cap": 30,
+  "capNote": "Owner, 2026-10-14: the forest and meadow loop beds were retired and the forests got one-shot pools. The cap was raised from 27 by at most 10 for short non-loop ElevenLabs forest-leaves takes (forest-birds takes were allowed only if every cut from the paid forest-birdsong take failed the floor criterion; none did). Three leaf takes were spent (attempts 28-30, 40 credits each), so the cap is set to the 30 attempts logged.",
   "attempts": [
     {
       "n": 1,
@@ -378,6 +379,48 @@
       "creditsCharged": 301,
       "subscriptionDelta": 0,
       "file": "assets-source/audio/ambience/meadow-bed-f/meadow-bed-f.mp3"
+    },
+    {
+      "n": 28,
+      "cueId": "forest-leaves-1",
+      "requestedAt": "2026-10-14T17:17:25+00:00",
+      "reason": "first take",
+      "creditsBefore": 11058,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "95ed4fc8321b3e52865fb8cdc9e1d432",
+      "creditsAfter": 11058,
+      "creditsCharged": 40,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/forest-leaves-1/forest-leaves-1.mp3"
+    },
+    {
+      "n": 29,
+      "cueId": "forest-leaves-2",
+      "requestedAt": "2026-10-14T17:19:18+00:00",
+      "reason": "first take",
+      "creditsBefore": 11098,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "8c0a900a09f35752cc112c6791c0e695",
+      "creditsAfter": 11098,
+      "creditsCharged": 40,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/forest-leaves-2/forest-leaves-2.mp3"
+    },
+    {
+      "n": 30,
+      "cueId": "forest-leaves-3",
+      "requestedAt": "2026-10-14T17:19:39+00:00",
+      "reason": "first take",
+      "creditsBefore": 11098,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "c335387047218cc179f2fc5d903ebf93",
+      "creditsAfter": 11098,
+      "creditsCharged": 40,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/forest-leaves-3/forest-leaves-3.mp3"
     }
   ]
 }

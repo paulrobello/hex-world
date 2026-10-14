@@ -17,19 +17,14 @@ import {
 import {
   type Biome,
   BED_CUE,
-  BEE_CUE,
-  BEE_LEVEL,
-  type BeeState,
-  type FlowerTile,
-  beeGate,
-  beeIdle,
-  beeStep,
-  isFlowerTile,
-  pickBeeTile,
   type Candidate,
   EMITTER_CUE,
   type Mix,
   type MusicState,
+  ONE_SHOTS,
+  type OneShotGate,
+  type OneShotState,
+  type OneShotTile,
   type PlacedTile,
   type View,
   bedGains,
@@ -41,7 +36,15 @@ import {
   musicGains,
   musicIdle,
   musicStep,
+  nearestOneShotTile,
+  oneShotDefs,
+  oneShotGate,
+  oneShotIdle,
+  oneShotStep,
   pickEmitters,
+  pickOneShotTile,
+  pickVariant,
+  resolveOneShot,
 } from "./audio-mix.ts";
 import type { GameEvent, PlayState, State } from "./bridge.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
@@ -62,10 +65,8 @@ const SETTLE_TIMEOUT_S = 4;
 const WAIT_FOR_STAGE: Record<string, string> = { "place-thunk": "settled" };
 const RADIUS: number = schema.catalog.hex_radius;
 const BIOME_OF = new Map<string, Biome>(schema.catalog.tiles.map((t) => [t.id, biomeOf(t.id, t.edges)]));
-/** Tile defs whose scatter carries wildflowers: where the occasional bee swarm may play. */
-const FLOWER_DEFS = new Set(
-  schema.catalog.tiles.filter((t) => isFlowerTile(biomeOf(t.id, t.edges), t.scatter)).map((t) => t.id),
-);
+/** Per one-shot row, the tile defs it may play at. */
+const ONE_SHOT_DEFS = new Map(ONE_SHOTS.map((row) => [row.name, oneShotDefs(row, schema.catalog.tiles)]));
 
 export interface Volumes {
   master: number;
@@ -171,14 +172,31 @@ export interface AudioDebug {
   recent: Fired[];
   outputRms: number;
   /** The occasional meadow-bees one-shot: schedule, last play and why the last due swarm was skipped. */
-  bees: BeeState & { cue: string; flowerTiles: number };
+  bees: {
+    cue: string;
+    nextAt: number | null;
+    lastAt: number | null;
+    lastTile: { q: number; r: number } | null;
+    plays: number;
+    gatedBy: OneShotGate;
+    flowerTiles: number;
+  };
+  /** Every occasional one-shot row by name: its pool's variants, schedule, last play and matching tiles in play. */
+  oneShots: Record<string, OneShotState & { pool: string; variants: string[]; tiles: number }>;
 }
+
+/** What `audio.play(name)` did: the variant played and where, or why nothing played. */
+export type PlayResult =
+  | { played: string; pool: string; at: { q: number; r: number } | null }
+  | { played: null; reason: "muted" | "not-loaded" | "unknown-cue" | "no-context" };
 
 export interface AudioApi {
   state(): AudioDebug;
   setMuted(on: boolean): void;
   /** Sets a bus level (0–1); master when `bus` is omitted. */
   setVolume(v: number, bus?: VolumeKey): void;
+  /** Plays a one-shot pool, row or single cue now, at the matching tile nearest the focus when there is one. */
+  play(name: string): PlayResult;
 }
 
 const round = (v: number, n = 4): number => Math.round(v * 10 ** n) / 10 ** n;
@@ -204,8 +222,11 @@ export class GameAudio {
   private byEvent = new Map<string, string[]>();
   private emitters = new Map<string, Voice>();
   private candidates: Candidate[] = [];
-  private bees: BeeState = beeIdle();
-  private flowers: FlowerTile[] = [];
+  private oneShots = new Map<string, OneShotState>(ONE_SHOTS.map((row) => [row.name, oneShotIdle()]));
+  /** Per row, its pool's variants from the manifest, in manifest order. */
+  private variants = new Map<string, string[]>();
+  /** Per row, the matching tiles in play at the last update. */
+  private oneShotTiles = new Map<string, OneShotTile[]>();
   private beds = new Map<string, Voice>();
   private bedLevels = new Map<string, number>();
   private tracks = new Map<string, Track>();
@@ -230,6 +251,7 @@ export class GameAudio {
       state: () => this.debug(),
       setMuted: (on) => this.setMuted(on),
       setVolume: (v, bus) => this.setVolume(v, bus),
+      play: (name) => this.playNamed(name),
     };
   }
 
@@ -282,6 +304,7 @@ export class GameAudio {
       if (!res.ok) throw new Error(`manifest HTTP ${res.status}`);
       const m = (await res.json()) as Manifest;
       this.manifest = m;
+      for (const row of ONE_SHOTS) this.variants.set(row.name, resolveOneShot(row.pool, m.cues)?.variants ?? []);
       const probe = document.createElement("audio");
       this.format = pickFormat(m.formats, (mime) => probe.canPlayType(mime));
       if (!this.format) throw new Error("no playable audio format");
@@ -491,13 +514,14 @@ export class GameAudio {
     this.listener(ctx, cam.pos, cam.forward);
 
     const placed: PlacedTile[] = [];
-    const flowers: FlowerTile[] = [];
+    const oneShotTiles = new Map<string, OneShotTile[]>(ONE_SHOTS.map((row) => [row.name, []]));
     const cands: Candidate[] = [];
     for (const t of play.tiles) {
       const [x, z] = cellWorld(t.q, t.r, RADIUS);
       const biome = BIOME_OF.get(t.tile) ?? "meadow";
       placed.push({ x, z, biome });
-      if (FLOWER_DEFS.has(t.tile)) flowers.push({ q: t.q, r: t.r, x, z });
+      for (const row of ONE_SHOTS)
+        if (ONE_SHOT_DEFS.get(row.name)?.has(t.tile)) oneShotTiles.get(row.name)!.push({ q: t.q, r: t.r, x, z });
       const cue = EMITTER_CUE[biome];
       if (cue && this.buffers.has(cue)) cands.push({ key: `${cue}@${key(t.q, t.r)}`, cue, gain: emitterGain(x, z, v) });
     }
@@ -506,8 +530,8 @@ export class GameAudio {
     this.updateEmitters(ctx, cands);
     this.updateBeds(ctx);
     this.updateMusic(ctx);
-    this.flowers = flowers;
-    this.updateBees(ctx, flowers, v);
+    this.oneShotTiles = oneShotTiles;
+    this.updateOneShots(ctx, v);
     for (const [k, p] of this.pending)
       if (ctx.currentTime > p.deadline) {
         this.pending.delete(k);
@@ -594,20 +618,71 @@ export class GameAudio {
     }
   }
 
-  /** The occasional swarm: due every 45–120 s, at a flower tile near the focus, quiet and under the focus mix. */
-  private updateBees(ctx: AudioContext, flowers: readonly FlowerTile[], v: View): void {
+  /** The decoded variants of a row's pool: a variant that failed to decode never blocks the others. */
+  private loadedVariants(row: string): string[] {
+    return (this.variants.get(row) ?? []).filter((id) => this.buffers.has(id));
+  }
+
+  /** The occasional one-shots: each row due at its own interval, at a matching tile near the focus, under the focus mix. */
+  private updateOneShots(ctx: AudioContext, v: View): void {
     const { muted, volumes } = this.settings;
-    const gate = beeGate({
-      muted,
-      master: volumes.master,
-      ambience: volumes.ambience,
-      loaded: this.buffers.has(BEE_CUE),
-    });
-    const step = beeStep(this.bees, ctx.currentTime, gate, () => pickBeeTile(flowers, v, Math.random), Math.random);
-    this.bees = step.state;
-    // Not recorded in `recent`: a swarm is ambience, and the event-cue history stays deterministic for tests.
-    if (step.play)
-      this.play(BEE_CUE, "bees", step.play, 1, BEE_LEVEL * emitterGain(step.play.x, step.play.z, v), false);
+    for (const row of ONE_SHOTS) {
+      const variants = this.loadedVariants(row.name);
+      const tiles = this.oneShotTiles.get(row.name) ?? [];
+      const gate = oneShotGate({
+        muted,
+        master: volumes.master,
+        ambience: volumes.ambience,
+        loaded: variants.length > 0,
+      });
+      const st = this.oneShots.get(row.name) ?? oneShotIdle();
+      const step = oneShotStep(
+        row,
+        st,
+        ctx.currentTime,
+        gate,
+        () => pickOneShotTile(row, tiles, v, Math.random),
+        variants,
+        Math.random,
+      );
+      this.oneShots.set(row.name, step.state);
+      // Not recorded in `recent`: a one-shot is ambience, and the event-cue history stays deterministic for tests.
+      if (step.play) {
+        const { tile, cue } = step.play;
+        this.play(cue, row.name, tile, 1, row.level * emitterGain(tile.x, tile.z, v), false);
+      }
+    }
+  }
+
+  /** `audio.play(name)`: a pool, row or cue now, sharing the row's last-variant memory and play count. */
+  private playNamed(name: string): PlayResult {
+    const ctx = this.ctx;
+    if (!ctx) return { played: null, reason: "no-context" };
+    if (this.settings.muted || this.settings.volumes.master <= 0) return { played: null, reason: "muted" };
+    if (ctx.state !== "running" || !this.manifest) return { played: null, reason: "not-loaded" };
+    const res = resolveOneShot(name, this.manifest.cues);
+    if (!res) return { played: null, reason: "unknown-cue" };
+    const st = res.row ? (this.oneShots.get(res.row.name) ?? oneShotIdle()) : null;
+    const cue = pickVariant(
+      res.variants.filter((id) => this.buffers.has(id)),
+      st?.lastCue ?? null,
+      Math.random,
+    );
+    if (!cue) return { played: null, reason: "not-loaded" };
+    const v = this.view;
+    const tile = res.row && v ? nearestOneShotTile(this.oneShotTiles.get(res.row.name) ?? [], v.focus) : null;
+    const level = res.row ? res.row.level * (tile && v ? emitterGain(tile.x, tile.z, v) : 1) : 1;
+    const at = tile && { q: tile.q, r: tile.r };
+    this.play(cue, "play", at, 1, level, false);
+    if (res.row && st)
+      this.oneShots.set(res.row.name, {
+        ...st,
+        lastAt: ctx.currentTime,
+        lastTile: at,
+        lastCue: cue,
+        plays: st.plays + 1,
+      });
+    return { played: cue, pool: res.pool, at };
   }
 
   private updateBeds(ctx: AudioContext): void {
@@ -669,7 +744,7 @@ export class GameAudio {
     this.beds.clear();
     for (const tr of this.tracks.values()) tr.el.pause();
     this.music = musicIdle();
-    this.bees = beeIdle();
+    this.oneShots = new Map(ONE_SHOTS.map((row) => [row.name, oneShotIdle()]));
     this.pending.clear();
   }
 
@@ -697,6 +772,23 @@ export class GameAudio {
     const wanted = new Set(Object.values(EMITTER_CUE).filter((c): c is string => !!c));
     for (const b of Object.values(BED_CUE)) if (b) wanted.add(b.cue);
     const last = this.recent.at(-1) ?? null;
+    const at = (t: number | null) => (t === null ? null : round(t, 3));
+    const oneShots: AudioDebug["oneShots"] = {};
+    for (const row of ONE_SHOTS) {
+      const st = this.oneShots.get(row.name) ?? oneShotIdle();
+      oneShots[row.name] = {
+        pool: row.pool,
+        variants: [...(this.variants.get(row.name) ?? [])],
+        nextAt: at(st.nextAt),
+        lastAt: at(st.lastAt),
+        lastTile: st.lastTile && { ...st.lastTile },
+        lastCue: st.lastCue,
+        plays: st.plays,
+        gatedBy: st.gatedBy,
+        tiles: this.oneShotTiles.get(row.name)?.length ?? 0,
+      };
+    }
+    const bees = oneShots.bees!;
     return {
       context: ctx?.state ?? "none",
       sampleRate: ctx?.sampleRate ?? null,
@@ -733,13 +825,15 @@ export class GameAudio {
       recent: this.recent.map((f) => ({ ...f })),
       outputRms: round(this.rms(), 6),
       bees: {
-        cue: BEE_CUE,
-        ...this.bees,
-        nextAt: this.bees.nextAt === null ? null : round(this.bees.nextAt, 3),
-        lastAt: this.bees.lastAt === null ? null : round(this.bees.lastAt, 3),
-        lastTile: this.bees.lastTile && { ...this.bees.lastTile },
-        flowerTiles: this.flowers.length,
+        cue: bees.pool,
+        nextAt: bees.nextAt,
+        lastAt: bees.lastAt,
+        lastTile: bees.lastTile,
+        plays: bees.plays,
+        gatedBy: bees.gatedBy,
+        flowerTiles: bees.tiles,
       },
+      oneShots,
     };
   }
 }

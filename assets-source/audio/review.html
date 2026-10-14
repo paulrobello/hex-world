@@ -28,75 +28,111 @@ button { font:inherit; font-size:13px; padding:6px 10px; border-radius:6px; bord
 measured on the WebM by <code>make audio-master</code>. Loop cues have a gapless Web Audio player that loops at the
 manifest loop points, as the game will; the plain player's <code>loop</code> attribute can gap between repeats in some browsers.
 Serve the repo root over http (<code>python3 -m http.server</code>) for the gapless player.</p>
-<p class=lead>Generation attempts logged: 27 of 27. Approvals pending: creative and owner.</p>
-<h2>A/B: forest-birdsong, previous against new</h2><p class=lead>New: re-mastered with the filter {&quot;highpassHz&quot;: 150, &quot;harmonicNotch&quot;: {&quot;fundamentalHz&quot;: 200, &quot;harmonics&quot;: 48, &quot;widthHz&quot;: 6}}.</p><div class=grid><div class=card><h3>forest-birdsong (previous)</h3>
-<p class=meta>The runtime file before this re-master, for comparison only.</p>
-<audio controls preload=none loop><source src="candidates/forest-birdsong-previous.webm" type="audio/webm; codecs=opus"><source src="candidates/forest-birdsong-previous.m4a" type="audio/mp4"></audio>
-<button onclick=gapless(this) data-src='candidates/forest-birdsong-previous.webm'>Gapless loop (Web Audio)</button></div><div class=card><h3>forest-birdsong</h3>
+<p class=lead>Generation attempts logged: 30 of 30. Approvals pending: creative and owner.</p>
+<h2>New one-shot pool: forest-birds (5 variants)</h2><p class=lead>Single birdsong phrases cut from the paid forest-birdsong take (attempt 15), whose birds the owner liked. Each cut is high-passed at 2.8 kHz and low-passed at 9.5 kHz (two 2-pole stages each, so the 50 Hz-multiple hum comb and the hiss over 9 kHz go), then gated between notes. The game plays one at a forest tile near the focus every 12-40 s. The floor numbers are the owner's 2026-10-14 criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p><p><button onclick="randomVariant(this, 'forest-birds')">Play a random variant</button> <span class=meta data-now='forest-birds'></span></p><div class=grid data-pool='forest-birds'><div class=card><h3>forest-birds-1</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
-<audio controls preload=none loop><source src="../../assets/audio/ambience/forest-birdsong.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/forest-birdsong.m4a" type="audio/mp4"></audio>
-<button onclick=gapless(this) data-src='../../assets/audio/ambience/forest-birdsong.webm' data-start=0 data-end=1440000 data-rate=48000>Gapless loop (Web Audio)</button>
-<div class=nums><span>length <b>30.00 s</b></span>
-<span>WebM <b>-16.5 LUFS</b> / <b>-1.2 dBTP</b></span>
-<span>m4a <b>-16.5</b> / <b>-1.9</b></span>
+<audio controls preload=none><source src="../../assets/audio/ambience/forest-birds-1.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/forest-birds-1.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>2.00 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-2.4 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.4</b></span>
 <span>source <b>-55.8 LUFS</b></span>
-<span>runtime <b>580 KB</b></span></div>
-<p class=meta>limited 13.9 dB on 2.4% of 20 ms windows</p>
+<span>runtime <b>52 KB</b></span></div>
+<p class=meta>limited 0.1 dB on 1.0% of 20 ms windows</p><div class=nums><span>webm floor <b>71.1 dB</b> under peak (pass), &lt;1.5k 0.1% · 1.5–9k 93.6% · &gt;9k 6.3%</span><span>m4a floor <b>71.2 dB</b> under peak (pass), &lt;1.5k 0.1% · 1.5–9k 93.6% · &gt;9k 6.3%</span></div>
 <details><summary>Prompt and generation</summary><p>Soft distant forest ambience: a steady gentle rustle of leaves in a light breeze, with faint far-away songbirds softly blended into the background, no close or loud bird calls, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.</p><p>prompt influence 0.5</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 15 ·
 id <code>3b4a7f3da416919006f2ff6c39ad2560</code> · <a href="ambience/forest-birdsong/forest-birdsong.mp3">source</a></p></details>
-</div></div><h2>Candidates for meadow-bed</h2><p class=lead>Pick one. Until then the game's <code>meadow-bed</code> masters <b>meadow-bed-d</b> (cues.json <code>sourceCue</code>). Candidates are not shipped or loaded by the game.</p><h3>Round 2 (new round)</h3><p class=lead>Owner, 2026-10-14: none of a-c; &#x27;go for something like gentle wind blowing grass&#x27;. Six takes were generated (attempts 22-27) and screened before mastering; only d passed the birds, hum and level screens. e and f were each retaken once and failed again, and g was discarded (level dips, a 200 Hz hum, low rumble, birds; see generation-log.json and each cue&#x27;s rejected/ records). d&#x27;s power still sits mostly above 8 kHz, as a-c&#x27;s did, but its 1-6 kHz band is 8 to 13 dB stronger than theirs. Its WebM is 96 kbps: at the 64 kbps loop default, Opus overshot the true peak by 3.3 dB and the trim left it at -18.7 LUFS.</p><div class=grid><div class=card><h3>meadow-bed-d</h3>
+</div><div class=card><h3>forest-birds-2</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
-<audio controls preload=none loop><source src="../../assets-source/audio/candidates/meadow-bed-d.webm" type="audio/webm; codecs=opus"><source src="../../assets-source/audio/candidates/meadow-bed-d.m4a" type="audio/mp4"></audio>
-<button onclick=gapless(this) data-src='../../assets-source/audio/candidates/meadow-bed-d.webm' data-start=0 data-end=1440000 data-rate=48000>Gapless loop (Web Audio)</button>
-<div class=nums><span>length <b>30.00 s</b></span>
-<span>WebM <b>-16.0 LUFS</b> / <b>-1.6 dBTP</b></span>
-<span>m4a <b>-16.2</b> / <b>-1.6</b></span>
-<span>source <b>-39.1 LUFS</b></span>
-<span>runtime <b>688 KB</b></span></div>
-<p class=meta>limited 4.6 dB on 1.9% of 20 ms windows</p><div class=nums><span>300 Hz–8 kHz <b>23.6%</b></span><span>&lt;300 Hz <b>1.8%</b></span><span>&gt;8 kHz <b>74.6%</b></span><span>1–6 kHz vs full <b>-10.6 dB</b></span><span>deepest dip <b>3.4 dB</b> (spread 9.4)</span><span>200 Hz series <b>+6.0 dB</b>, other tones none</span><span>birds <b>no</b> (0 chirp events)</span></div><p class=meta>Screened on the raw provider source, before any filter (scripts/audio/screen.py). Filter: none: no tone 10 dB or more over the floor.</p>
-<details><summary>Prompt and generation</summary><p>Close, detailed recording of a gentle summer breeze blowing through long dry grass: a soft, airy, continuous rustle and hiss of thin grass blades brushing together, with slow gentle swells that rise and settle smoothly. Calm, open and warm, even level throughout, continuous with no build or fade. Only wind and grass, nothing else.</p><p>prompt influence 0.5</p>
-<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 22 ·
-id <code>09ba9be4f0de8aa2b4e115a68378bb89</code> · <a href="ambience/meadow-bed-d/meadow-bed-d.mp3">source</a></p></details>
-</div></div><h3>Round 1 (earlier round)</h3><p class=lead>Rejected by the owner 2026-10-14 (&#x27;i dont like any of the new meadow clips&#x27;). The later screen found birdsong in all three, a volume dip in b and low wind rumble in c.</p><div class=grid><div class=card><h3>meadow-bed-a</h3>
+<audio controls preload=none><source src="../../assets/audio/ambience/forest-birds-2.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/forest-birds-2.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>1.90 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-2.1 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.2</b></span>
+<span>source <b>-55.8 LUFS</b></span>
+<span>runtime <b>49 KB</b></span></div>
+<p class=meta>limited 1.5 dB on 2.1% of 20 ms windows</p><div class=nums><span>webm floor <b>70.5 dB</b> under peak (pass), &lt;1.5k 0.1% · 1.5–9k 91.5% · &gt;9k 8.4%</span><span>m4a floor <b>70.5 dB</b> under peak (pass), &lt;1.5k 0.1% · 1.5–9k 91.6% · &gt;9k 8.4%</span></div>
+<details><summary>Prompt and generation</summary><p>Soft distant forest ambience: a steady gentle rustle of leaves in a light breeze, with faint far-away songbirds softly blended into the background, no close or loud bird calls, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.</p><p>prompt influence 0.5</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 15 ·
+id <code>3b4a7f3da416919006f2ff6c39ad2560</code> · <a href="ambience/forest-birdsong/forest-birdsong.mp3">source</a></p></details>
+</div><div class=card><h3>forest-birds-3</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
-<audio controls preload=none loop><source src="../../assets-source/audio/candidates/meadow-bed-a.webm" type="audio/webm; codecs=opus"><source src="../../assets-source/audio/candidates/meadow-bed-a.m4a" type="audio/mp4"></audio>
-<button onclick=gapless(this) data-src='../../assets-source/audio/candidates/meadow-bed-a.webm' data-start=0 data-end=1440000 data-rate=48000>Gapless loop (Web Audio)</button>
-<div class=nums><span>length <b>30.00 s</b></span>
-<span>WebM <b>-16.8 LUFS</b> / <b>-2.3 dBTP</b></span>
-<span>m4a <b>-16.9</b> / <b>-2.7</b></span>
-<span>source <b>-22.0 LUFS</b></span>
-<span>runtime <b>659 KB</b></span></div>
-<p class=meta>limited 3.3 dB on 2.6% of 20 ms windows</p><div class=nums><span>300 Hz–8 kHz <b>2.9%</b></span><span>&lt;300 Hz <b>0.0%</b></span><span>&gt;8 kHz <b>97.1%</b></span><span>1–6 kHz vs full <b>-23.8 dB</b></span><span>deepest dip <b>4.0 dB</b> (spread 6.5)</span><span>200 Hz series <b>+6.7 dB</b>, other tones none</span><span>birds <b>yes</b> (9 chirp events)</span></div><p class=meta>Screened on the raw provider source, before any filter (scripts/audio/screen.py).</p>
-<details><summary>Prompt and generation</summary><p>Gentle summer meadow ambience: a soft steady breeze moving through long dry grass with a light, airy, continuous rustle of grass blades, and a skylark singing high and far away now and then. Calm, open and even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.</p><p>prompt influence 0.5</p>
-<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 19 ·
-id <code>096effb254ccd09941daf654c5648f50</code> · <a href="ambience/meadow-bed-a/meadow-bed-a.mp3">source</a></p></details>
-</div><div class=card><h3>meadow-bed-b</h3>
+<audio controls preload=none><source src="../../assets/audio/ambience/forest-birds-3.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/forest-birds-3.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>2.10 s</b></span>
+<span>WebM <b>-16.4 LUFS</b> / <b>-1.3 dBTP</b></span>
+<span>m4a <b>-16.5</b> / <b>-2.2</b></span>
+<span>source <b>-55.8 LUFS</b></span>
+<span>runtime <b>63 KB</b></span></div>
+<p class=meta>limited 5.9 dB on 6.7% of 20 ms windows</p><div class=nums><span>webm floor <b>49.7 dB</b> under peak (pass), &lt;1.5k 0.2% · 1.5–9k 92.3% · &gt;9k 7.5%</span><span>m4a floor <b>49.5 dB</b> under peak (pass), &lt;1.5k 0.2% · 1.5–9k 92.4% · &gt;9k 7.5%</span></div>
+<details><summary>Prompt and generation</summary><p>Soft distant forest ambience: a steady gentle rustle of leaves in a light breeze, with faint far-away songbirds softly blended into the background, no close or loud bird calls, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.</p><p>prompt influence 0.5</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 15 ·
+id <code>3b4a7f3da416919006f2ff6c39ad2560</code> · <a href="ambience/forest-birdsong/forest-birdsong.mp3">source</a></p></details>
+</div><div class=card><h3>forest-birds-4</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
-<audio controls preload=none loop><source src="../../assets-source/audio/candidates/meadow-bed-b.webm" type="audio/webm; codecs=opus"><source src="../../assets-source/audio/candidates/meadow-bed-b.m4a" type="audio/mp4"></audio>
-<button onclick=gapless(this) data-src='../../assets-source/audio/candidates/meadow-bed-b.webm' data-start=0 data-end=1440000 data-rate=48000>Gapless loop (Web Audio)</button>
-<div class=nums><span>length <b>30.00 s</b></span>
-<span>WebM <b>-16.0 LUFS</b> / <b>-3.3 dBTP</b></span>
-<span>m4a <b>-16.1</b> / <b>-3.6</b></span>
-<span>source <b>-16.4 LUFS</b></span>
-<span>runtime <b>590 KB</b></span></div>
-<p class=meta>linear</p><div class=nums><span>300 Hz–8 kHz <b>23.5%</b></span><span>&lt;300 Hz <b>0.0%</b></span><span>&gt;8 kHz <b>76.5%</b></span><span>1–6 kHz vs full <b>-18.4 dB</b></span><span>deepest dip <b>11.8 dB</b> (spread 13.9)</span><span>200 Hz series <b>+10.9 dB</b>, other tones none</span><span>birds <b>yes</b> (13 chirp events)</span></div><p class=meta>Screened on the raw provider source, before any filter (scripts/audio/screen.py).</p>
-<details><summary>Prompt and generation</summary><p>Open grassland on a calm sunny afternoon: a warm breeze sighing softly through tall grass, a light dry rustle that rises and settles gently, and a few small songbirds chirping sparsely in the distance. Even level throughout, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.</p><p>prompt influence 0.6</p>
-<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 20 ·
-id <code>747395c61db56b9cc696680e94762339</code> · <a href="ambience/meadow-bed-b/meadow-bed-b.mp3">source</a></p></details>
-</div><div class=card><h3>meadow-bed-c</h3>
+<audio controls preload=none><source src="../../assets/audio/ambience/forest-birds-4.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/forest-birds-4.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>2.60 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-1.2 dBTP</b></span>
+<span>m4a <b>-16.1</b> / <b>-2.1</b></span>
+<span>source <b>-55.8 LUFS</b></span>
+<span>runtime <b>76 KB</b></span></div>
+<p class=meta>limited 4.2 dB on 3.8% of 20 ms windows</p><div class=nums><span>webm floor <b>43.5 dB</b> under peak (pass), &lt;1.5k 0.1% · 1.5–9k 91.4% · &gt;9k 8.5%</span><span>m4a floor <b>43.6 dB</b> under peak (pass), &lt;1.5k 0.1% · 1.5–9k 91.3% · &gt;9k 8.6%</span></div>
+<details><summary>Prompt and generation</summary><p>Soft distant forest ambience: a steady gentle rustle of leaves in a light breeze, with faint far-away songbirds softly blended into the background, no close or loud bird calls, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.</p><p>prompt influence 0.5</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 15 ·
+id <code>3b4a7f3da416919006f2ff6c39ad2560</code> · <a href="ambience/forest-birdsong/forest-birdsong.mp3">source</a></p></details>
+</div><div class=card><h3>forest-birds-5</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
-<audio controls preload=none loop><source src="../../assets-source/audio/candidates/meadow-bed-c.webm" type="audio/webm; codecs=opus"><source src="../../assets-source/audio/candidates/meadow-bed-c.m4a" type="audio/mp4"></audio>
-<button onclick=gapless(this) data-src='../../assets-source/audio/candidates/meadow-bed-c.webm' data-start=0 data-end=1440000 data-rate=48000>Gapless loop (Web Audio)</button>
-<div class=nums><span>length <b>30.00 s</b></span>
-<span>WebM <b>-17.0 LUFS</b> / <b>-2.2 dBTP</b></span>
-<span>m4a <b>-17.0</b> / <b>-1.5</b></span>
-<span>source <b>-47.2 LUFS</b></span>
-<span>runtime <b>582 KB</b></span></div>
-<p class=meta>limited 5.0 dB on 17.5% of 20 ms windows</p><div class=nums><span>300 Hz–8 kHz <b>4.8%</b></span><span>&lt;300 Hz <b>94.2%</b></span><span>&gt;8 kHz <b>0.9%</b></span><span>1–6 kHz vs full <b>-22.1 dB</b></span><span>deepest dip <b>2.1 dB</b> (spread 3.4)</span><span>200 Hz series <b>+3.2 dB</b>, other tones none</span><span>birds <b>yes</b> (11 chirp events)</span></div><p class=meta>Screened on the raw provider source, before any filter (scripts/audio/screen.py).</p>
-<details><summary>Prompt and generation</summary><p>Quiet pastoral meadow: light wind brushing through long grass and wildflowers with a soft, intermittent rustle, and faint distant birdsong, a skylark and a blackbird far across the field. Peaceful and airy, even level, continuous with no build or fade. Natural sound only: no buzzing, no bees, no flies, no insects, no crickets, no hum, no drone, no low wind rumble, no voices, no music.</p><p>prompt influence 0.4</p>
-<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 21 ·
-id <code>33cc29b5d059799864ba3f1c67fee0c2</code> · <a href="ambience/meadow-bed-c/meadow-bed-c.mp3">source</a></p></details>
+<audio controls preload=none><source src="../../assets/audio/ambience/forest-birds-5.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/forest-birds-5.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>1.95 s</b></span>
+<span>WebM <b>-15.9 LUFS</b> / <b>-1.4 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.3</b></span>
+<span>source <b>-55.8 LUFS</b></span>
+<span>runtime <b>54 KB</b></span></div>
+<p class=meta>limited 0.9 dB on 2.1% of 20 ms windows</p><div class=nums><span>webm floor <b>59.4 dB</b> under peak (pass), &lt;1.5k 0.1% · 1.5–9k 89.4% · &gt;9k 10.6%</span><span>m4a floor <b>59.5 dB</b> under peak (pass), &lt;1.5k 0.1% · 1.5–9k 89.5% · &gt;9k 10.5%</span></div>
+<details><summary>Prompt and generation</summary><p>Soft distant forest ambience: a steady gentle rustle of leaves in a light breeze, with faint far-away songbirds softly blended into the background, no close or loud bird calls, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.</p><p>prompt influence 0.5</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 15 ·
+id <code>3b4a7f3da416919006f2ff6c39ad2560</code> · <a href="ambience/forest-birdsong/forest-birdsong.mp3">source</a></p></details>
+</div></div><h2>New one-shot pool: forest-leaves (3 variants)</h2><p class=lead>Short leaf rustles, one ElevenLabs take each, high-passed at 250 Hz and gated so each settles to silence. The game plays one at a forest tile near the focus every 20-60 s. The floor numbers are the owner's 2026-10-14 criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p><p><button onclick="randomVariant(this, 'forest-leaves')">Play a random variant</button> <span class=meta data-now='forest-leaves'></span></p><div class=grid data-pool='forest-leaves'><div class=card><h3>forest-leaves-1</h3>
+<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/forest-leaves-1.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/forest-leaves-1.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>3.91 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-3.0 dBTP</b></span>
+<span>m4a <b>-16.2</b> / <b>-3.1</b></span>
+<span>source <b>-36.3 LUFS</b></span>
+<span>runtime <b>104 KB</b></span></div>
+<p class=meta>linear</p><div class=nums><span>webm floor <b>72.6 dB</b> under peak (pass), &lt;1.5k 61.8% · 1.5–9k 35.5% · &gt;9k 2.7%</span><span>m4a floor <b>72.3 dB</b> under peak (pass), &lt;1.5k 61.1% · 1.5–9k 36.2% · &gt;9k 2.6%</span></div>
+<details><summary>Prompt and generation</summary><p>Close, isolated recording of one soft gust of wind passing through the leaves of a single small tree: a gentle, papery rustle of dry leaves that swells for about two seconds and settles back into complete silence. Studio-quiet background, with silence before and after the rustle.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 28 ·
+id <code>95ed4fc8321b3e52865fb8cdc9e1d432</code> · <a href="ambience/forest-leaves-1/forest-leaves-1.mp3">source</a></p></details>
+</div><div class=card><h3>forest-leaves-2</h3>
+<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/forest-leaves-2.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/forest-leaves-2.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>4.00 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-1.4 dBTP</b></span>
+<span>m4a <b>-16.2</b> / <b>-1.9</b></span>
+<span>source <b>-33.8 LUFS</b></span>
+<span>runtime <b>103 KB</b></span></div>
+<p class=meta>limited 6.1 dB on 4.0% of 20 ms windows</p><div class=nums><span>webm floor <b>67.8 dB</b> under peak (pass), &lt;1.5k 66.3% · 1.5–9k 30.3% · &gt;9k 3.4%</span><span>m4a floor <b>67.9 dB</b> under peak (pass), &lt;1.5k 65.6% · 1.5–9k 31.0% · &gt;9k 3.4%</span></div>
+<details><summary>Prompt and generation</summary><p>Close, isolated recording of a light breeze catching one leafy branch: a quick, soft flutter of leaves that rises, shimmers briefly and falls away into complete silence within about two seconds. Studio-quiet background, with silence before and after the flutter.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 29 ·
+id <code>8c0a900a09f35752cc112c6791c0e695</code> · <a href="ambience/forest-leaves-2/forest-leaves-2.mp3">source</a></p></details>
+</div><div class=card><h3>forest-leaves-3</h3>
+<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/forest-leaves-3.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/forest-leaves-3.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>4.00 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-1.5 dBTP</b></span>
+<span>m4a <b>-16.1</b> / <b>-2.2</b></span>
+<span>source <b>-43.1 LUFS</b></span>
+<span>runtime <b>116 KB</b></span></div>
+<p class=meta>limited 2.3 dB on 3.5% of 20 ms windows</p><div class=nums><span>webm floor <b>42.2 dB</b> under peak (pass), &lt;1.5k 38.8% · 1.5–9k 47.5% · &gt;9k 13.7%</span><span>m4a floor <b>42.2 dB</b> under peak (pass), &lt;1.5k 39.0% · 1.5–9k 47.4% · &gt;9k 13.6%</span></div>
+<details><summary>Prompt and generation</summary><p>Close, isolated recording of leaves stirring in a short, gentle breath of wind: a soft, airy, shimmering rustle through a leafy canopy that swells slowly and then fades gently away to complete silence. Studio-quiet background, with silence before and after the rustle.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 30 ·
+id <code>c335387047218cc179f2fc5d903ebf93</code> · <a href="ambience/forest-leaves-3/forest-leaves-3.mp3">source</a></p></details>
 </div></div><h2>New occasional one-shots</h2><div class=grid><div class=card><h3>meadow-bees</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
 <audio controls preload=none><source src="../../assets/audio/ambience/meadow-bees.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/meadow-bees.m4a" type="audio/mp4"></audio>
@@ -240,32 +276,6 @@ id <code>cddb73b1e1f0b9495cd555b12e706cb0</code> · <a href="ambience/river-babb
 <details><summary>Prompt and generation</summary><p>Continuous gentle ocean surf on a sandy beach: soft overlapping waves washing in and out over a constant background wash of foam and water, no silent gaps between waves, calm, even level throughout, continuous with no build or fade. Natural sound only: no seagulls, no wind gusts, no voices, no music.</p><p>prompt influence 0.4</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 12 ·
 id <code>a9d796e22d5247e0ad004e3daa5ebf03</code> · <a href="ambience/surf/surf.mp3">source</a></p></details>
-</div><div class=card><h3>forest-birdsong</h3>
-<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
-<audio controls preload=none loop><source src="../../assets/audio/ambience/forest-birdsong.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/forest-birdsong.m4a" type="audio/mp4"></audio>
-<button onclick=gapless(this) data-src='../../assets/audio/ambience/forest-birdsong.webm' data-start=0 data-end=1440000 data-rate=48000>Gapless loop (Web Audio)</button>
-<div class=nums><span>length <b>30.00 s</b></span>
-<span>WebM <b>-16.5 LUFS</b> / <b>-1.2 dBTP</b></span>
-<span>m4a <b>-16.5</b> / <b>-1.9</b></span>
-<span>source <b>-55.8 LUFS</b></span>
-<span>runtime <b>580 KB</b></span></div>
-<p class=meta>limited 13.9 dB on 2.4% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Soft distant forest ambience: a steady gentle rustle of leaves in a light breeze, with faint far-away songbirds softly blended into the background, no close or loud bird calls, even level throughout, continuous with no build or fade. Natural sound only: no crows, no woodpecker, no voices, no music.</p><p>prompt influence 0.5</p>
-<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 15 ·
-id <code>3b4a7f3da416919006f2ff6c39ad2560</code> · <a href="ambience/forest-birdsong/forest-birdsong.mp3">source</a></p></details>
-</div><div class=card><h3>meadow-bed</h3>
-<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
-<audio controls preload=none loop><source src="../../assets/audio/ambience/meadow-bed.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/meadow-bed.m4a" type="audio/mp4"></audio>
-<button onclick=gapless(this) data-src='../../assets/audio/ambience/meadow-bed.webm' data-start=0 data-end=1440000 data-rate=48000>Gapless loop (Web Audio)</button>
-<div class=nums><span>length <b>30.00 s</b></span>
-<span>WebM <b>-16.0 LUFS</b> / <b>-1.6 dBTP</b></span>
-<span>m4a <b>-16.2</b> / <b>-1.6</b></span>
-<span>source <b>-39.1 LUFS</b></span>
-<span>runtime <b>688 KB</b></span></div>
-<p class=meta>limited 4.6 dB on 1.9% of 20 ms windows</p>
-<details><summary>Prompt and generation</summary><p>Close, detailed recording of a gentle summer breeze blowing through long dry grass: a soft, airy, continuous rustle and hiss of thin grass blades brushing together, with slow gentle swells that rise and settle smoothly. Calm, open and warm, even level throughout, continuous with no build or fade. Only wind and grass, nothing else.</p><p>prompt influence 0.5</p>
-<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 22 ·
-id <code>09ba9be4f0de8aa2b4e115a68378bb89</code> · <a href="ambience/meadow-bed-d/meadow-bed-d.mp3">source</a></p></details>
 </div></div><h2>Music (−18 LUFS)</h2><div class=grid><div class=card><h3>meadow-day</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/meadow-day.md</code>, then run make audio-master.</p></div><div class=card><h3>coast-breeze</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/coast-breeze.md</code>, then run make audio-master.</p></div><div class=card><h3>hearth-town</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/hearth-town.md</code>, then run make audio-master.</p></div><div class=card><h3>photo-mode</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/photo-mode.md</code>, then run make audio-master.</p></div><div class=card><h3>title-theme</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/title-theme.md</code>, then run make audio-master.</p></div><div class=card><h3>discovery-stinger</h3><p class=meta>music · events: none (continuous emitter or bed)</p><p class=pending>No source yet. Generate it in Suno from <code>audio/music/prompts/discovery-stinger.md</code>, then run make audio-master.</p></div></div>
 </main><script>
 let ctx = null, playing = null;
@@ -282,5 +292,19 @@ async function gapless(btn) {
   } catch (e) {
     btn.textContent = 'Needs http: python3 -m http.server (repo root)';
   }
+}
+const lastVariant = {};
+function randomVariant(btn, pool) {
+  const players = [...document.querySelectorAll(`[data-pool="${pool}"] audio`)];
+  if (!players.length) return;
+  for (const a of document.querySelectorAll('audio')) a.pause();
+  let i = Math.floor(Math.random() * players.length);
+  if (players.length > 1 && i === lastVariant[pool]) i = (i + 1 + Math.floor(Math.random() * (players.length - 1))) % players.length;
+  lastVariant[pool] = i;
+  const a = players[i];
+  a.currentTime = 0;
+  a.play();
+  const label = document.querySelector(`[data-now="${pool}"]`);
+  if (label) label.textContent = 'playing ' + a.closest('.card').querySelector('h3').textContent;
 }
 </script></body></html>
