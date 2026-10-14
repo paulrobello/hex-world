@@ -73,6 +73,14 @@ The full island is `docs/checkpoints/coast/coast-01..08.jpg`.
 
 **D5. The coast corner bases get a 20% LOD2 ceiling, like the river bases (D1).** The Headland and Bay sit at about 18%. 15% was reachable only by padding LOD0 to about 3,950 triangles, which spends triangles where nobody sees them.
 
+**A12. Fish and bird references (reference gate; nothing is modeled yet).** Sheets: `assets-source/refs/fish/sheet.jpg` and `assets-source/refs/birds/sheet.jpg`.
+- **Fish:** ref-1 is a single ocean fish in profile, ref-2 a school seen from above over sand, and ref-3 the same body in an ocean palette and a river palette.
+- **Birds:** ref-1 is a gliding songbird in profile, ref-2 five seen from above with their shadows, and ref-3 three roosting on an oak branch.
+
+Approve or reject per ref. Two choices go with it:
+- **Q5. Fish body.** Ref-1 leans cartoon, with a big eye. Ref-3 is a stylized-real trout shape, closer to the house style. I recommend ref-3's body, with both of its palettes.
+- **Q6. Bird size.** Starling-sized was the agent's choice, since the PRD gives none. Also, in birds ref-2 the centre bird is upside down and the feather tips would have to live in the texture at 100–200 triangles. Use ref-2 for flock layout only.
+
 ## Questions
 
 **Q1. Save label.** The HUD bar says "Not saved" because no autosave exists yet. The brief said "Saved". I recommend keeping "Not saved" until autosave lands, so the label tells the truth.
