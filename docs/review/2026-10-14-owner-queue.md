@@ -225,7 +225,13 @@ No change limited to the walls gets close while ACES stays. They would need 10 t
 - **Alternative:** a re-baked noon IBL with lit ground. Untested, and unlikely to be enough under ACES alone.
 - Or keep ACES and accept black shaded walls.
 
-**F2. The web build has a stall tail.** 6–19 of every 600 frames take longer than 25 ms (30–67 ms each). They are evenly spaced every 24–50 frames, and no shader compile happens near them. Native shows none. The next step is a Chrome trace. This blocks the PRD item "the >25 ms stall tail is measured and fixed or accepted"; it is now measured, but not yet fixed or accepted.
+**F2. The web stall tail is explained.** It is Chrome's WebGPU backlog when frames are uncapped. The page makes a frame in about 2.4 ms while Chrome's GPU process needs about 2.5 ms per frame, so around 109 submits pile up. About every 50 frames the compositor's buffer swap blocks for 48–67 ms, and the next frame waits behind it. At a normal 60 Hz display rate there are none.
+- **Evidence:** `docs/perf/stall-tail/README.md`. The trace rules out garbage collection, wasm memory growth, the HUD, state polling and audio.
+- **Fix:** an opt-in limit, `?frame_latency=3`, removes the uncapped tail (0 frames over 25 ms per 600), at a cost of about 0.4 ms mean.
+- **Re-run on the merged build, under the load guard:** native tilt-on p95 is 12.1–13.3 ms, and the web is 3.6–4.2 ms. A 208-tile water and scatter world runs web p95 8.6–9.3 ms with no stalls.
+- **Native:** a small new tail appeared, 2–5 frames over 25 ms in 5 of 12 runs. It is not yet investigated.
+
+**Q7. Accept the uncapped-only web tail, or turn the frame-latency limit on by default?** I recommend turning it on by default: it is harmless at 60 Hz and removes the tail on fast GPUs with high-refresh or uncapped displays.
 
 ## Decisions I made overnight (override any)
 
