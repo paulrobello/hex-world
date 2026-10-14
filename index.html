@@ -8,7 +8,22 @@
       content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; connect-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:"
     />
     <title>Hex World</title>
-    <link rel="icon" href="data:," />
+    <meta name="description" content="A browser world-building game on hex tiles. Pick a tile, rotate it until its edges match its neighbours, and grow a living diorama." />
+    <meta name="theme-color" content="#12273a" />
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="/web/brand/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/web/brand/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/web/brand/apple-touch-icon.png" />
+    <link rel="manifest" href="/web/brand/site.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hex-world.pardev.net/" />
+    <meta property="og:title" content="Hex World" />
+    <meta property="og:description" content="A browser world-building game on hex tiles. Pick a tile, match its edges, and watch the world come alive." />
+    <meta property="og:image" content="https://hex-world.pardev.net/web/brand/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Hex World: a floating hex-tile island with a river running into the sea." />
+    <meta name="twitter:card" content="summary_large_image" />
     <style>
       html, body { margin: 0; height: 100%; background: #1d2126; overflow: hidden; }
       canvas#hex-world { display: block; width: 100%; height: 100%; outline: none; }
@@ -28,6 +43,7 @@
     <link data-trunk rel="copy-dir" href="web" />
     <link data-trunk rel="copy-dir" href="assets" />
     <link data-trunk rel="copy-file" href="CNAME" />
+    <link data-trunk rel="copy-file" href="favicon.ico" />
   </head>
   <body>
     <canvas id="hex-world"></canvas>

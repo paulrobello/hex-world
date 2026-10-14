@@ -1,4 +1,4 @@
-.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play
+.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play brand
 
 fmt:
 	cargo fmt --all
@@ -165,6 +165,11 @@ web-size:
 initial-download:
 	@test -d dist || $(MAKE) --no-print-directory build-web
 	node scripts/size/initial-download.mjs dist
+
+# App icons, favicon.ico, manifest icons, social share image and the concept sheet, rebuilt
+# byte-identically from design/brand/ sources. Needs resvg 0.48.1 (brew install resvg).
+brand:
+	node scripts/brand/build.mjs
 
 web-smoke: build-web
 	cd e2e && npm ci --no-audit --no-fund

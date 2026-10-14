@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>Hex World: Legend Glyph</title>
+  <rect width="512" height="512" rx="112" fill="#12273a"/>
+  <polygon points="425.7,158 425.7,354 256,452 86.3,354 86.3,158 256,60" fill="#9cc464"/>
+  <line x1="425.7" y1="256" x2="256" y2="256" stroke="#4aa3df" stroke-width="64"/>
+  <line x1="86.3" y1="256" x2="256" y2="256" stroke="#4aa3df" stroke-width="64"/>
+  <line x1="340.9" y1="403" x2="256" y2="256" stroke="#e2683c" stroke-width="40"/>
+  <line x1="171.2" y1="109" x2="256" y2="256" stroke="#e2683c" stroke-width="40"/>
+  <rect x="216" y="216" width="80" height="80" rx="10" fill="#e3c27a" transform="rotate(-30 256 256)"/>
+  <line x1="413.6" y1="165" x2="413.6" y2="347" stroke="#4aa3df" stroke-width="28" stroke-linecap="round"/>
+  <line x1="413.6" y1="347" x2="256" y2="438" stroke="#e2683c" stroke-width="28" stroke-linecap="round"/>
+  <line x1="256" y1="438" x2="98.4" y2="347" stroke="#3f8a4f" stroke-width="28" stroke-linecap="round"/>
+  <line x1="98.4" y1="347" x2="98.4" y2="165" stroke="#4aa3df" stroke-width="28" stroke-linecap="round"/>
+  <line x1="98.4" y1="165" x2="256" y2="74" stroke="#e2683c" stroke-width="28" stroke-linecap="round"/>
+  <line x1="256" y1="74" x2="413.6" y2="165" stroke="#3f8a4f" stroke-width="28" stroke-linecap="round"/>
+</svg>

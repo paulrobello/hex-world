@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>Hex World: Socket Key</title>
+  <rect width="512" height="512" rx="112" fill="#12273a"/>
+  <polygon points="370.3,190 370.3,322 256,388 141.7,322 141.7,190 256,124" fill="#19344c"/>
+  <g stroke="#12273a" stroke-width="12" stroke-linejoin="round">
+    <polygon points="429.2,156 429.2,356 370.3,322 370.3,190" fill="#e3c27a"/>
+    <polygon points="429.2,356 256,456 256,388 370.3,322" fill="#9cc464"/>
+    <polygon points="256,456 82.8,356 141.7,322 256,388" fill="#3f8a4f"/>
+    <polygon points="82.8,356 82.8,156 141.7,190 141.7,322" fill="#2d6fb0"/>
+    <polygon points="82.8,156 256,56 256,124 141.7,190" fill="#4aa3df"/>
+    <polygon points="256,56 429.2,156 370.3,190 256,124" fill="#e2683c"/>
+  </g>
+  <polygon points="294.1,234 294.1,278 256,300 217.9,278 217.9,234 256,212" fill="#c62e68"/>
+</svg>

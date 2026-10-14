@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>Hex World</title>
+  <rect width="512" height="512" fill="#12273a"/>
+  <polygon points="358.9,196.6 358.9,315.4 256,374.8 153.1,315.4 153.1,196.6 256,137.2" fill="#19344c"/>
+  <g stroke="#12273a" stroke-width="12" stroke-linejoin="round">
+    <polygon points="411.9,166 411.9,346 358.9,315.4 358.9,196.6" fill="#e3c27a"/>
+    <polygon points="411.9,346 256,436 256,374.8 358.9,315.4" fill="#9cc464"/>
+    <polygon points="256,436 100.1,346 153.1,315.4 256,374.8" fill="#3f8a4f"/>
+    <polygon points="100.1,346 100.1,166 153.1,196.6 153.1,315.4" fill="#2d6fb0"/>
+    <polygon points="100.1,166 256,76 256,137.2 153.1,196.6" fill="#4aa3df"/>
+    <polygon points="256,76 411.9,166 358.9,196.6 256,137.2" fill="#e2683c"/>
+  </g>
+  <polygon points="290.3,236.2 290.3,275.8 256,295.6 221.7,275.8 221.7,236.2 256,216.4" fill="#c62e68"/>
+</svg>

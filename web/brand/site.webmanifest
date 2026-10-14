@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "Hex World",
+  "short_name": "Hex World",
+  "description": "A browser world-building game on hex tiles. Pick a tile, rotate it until its edges match its neighbours, and grow a living diorama.",
+  "lang": "en",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "theme_color": "#12273a",
+  "background_color": "#12273a",
+  "categories": ["games"],
+  "icons": [
+    { "src": "/web/brand/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/web/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/web/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/web/brand/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/web/brand/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
