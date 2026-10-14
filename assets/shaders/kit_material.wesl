@@ -98,6 +98,15 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
         pbr_input = hooks::surface(pbr_input, hooks::NO_MASKS, kit_common::kit.snow, kit_common::kit.wetness * (1.0 - shore_wet), kit_common::kit.night);
     }
 
+    // Canopy gaps (tree_hero_oak bakes roughness 1.0 on the dark dome between its baked leaves): the
+    // shell is smooth there and SSAO cannot see the leaf depth, so F0 0.04 still drew a sky sheen at
+    // roughness 1. Bevy reads F0 below 0.02 as baked specular occlusion (no Fresnel, no IBL specular),
+    // so unique foliage fades reflectance to 0 over roughness 0.95-1.0, after snow and rain lowered
+    // it. No other foliage slot reaches 0.95 (slot roughness <= 0.9, unique foliage ORM G <= 0.88).
+    if ((kit_common::kit.flags & kit_common::FLAG_FOLIAGE) != 0u && !kit_common::tileable()) {
+        pbr_input.material.reflectance *= 1.0 - smoothstep(0.95, 1.0, pbr_input.material.perceptual_roughness);
+    }
+
     pbr_input.material.base_color = alpha_discard(pbr_input.material.flags, pbr_input.material.alpha_cutoff, pbr_input.material.base_color);
     var out: FragmentOutput;
 @if(PREPASS_PIPELINE) {

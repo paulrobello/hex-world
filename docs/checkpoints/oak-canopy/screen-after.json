@@ -1,0 +1,212 @@
+{
+ "closeup-sun": {
+  "gapPixels": 248109,
+  "leafPixels": 676054,
+  "gapBefore": {
+   "srgbMean": [
+    67,
+    87,
+    57
+   ],
+   "luminance": 0.0868,
+   "saturation": 0.342
+  },
+  "gapAfter": {
+   "srgbMean": [
+    39,
+    60,
+    23
+   ],
+   "luminance": 0.0421,
+   "saturation": 0.628
+  },
+  "leafBefore": {
+   "srgbMean": [
+    94,
+    120,
+    60
+   ],
+   "luminance": 0.1665,
+   "saturation": 0.499
+  },
+  "leafAfter": {
+   "srgbMean": [
+    94,
+    120,
+    60
+   ],
+   "luminance": 0.1664,
+   "saturation": 0.5
+  },
+  "meanLuminanceBefore": 0.1177,
+  "meanLuminanceAfter": 0.1105
+ },
+ "closeup-shade": {
+  "gapPixels": 48374,
+  "leafPixels": 155783,
+  "gapBefore": {
+   "srgbMean": [
+    67,
+    72,
+    65
+   ],
+   "luminance": 0.079,
+   "saturation": 0.127
+  },
+  "gapAfter": {
+   "srgbMean": [
+    29,
+    37,
+    25
+   ],
+   "luminance": 0.0312,
+   "saturation": 0.486
+  },
+  "leafBefore": {
+   "srgbMean": [
+    96,
+    120,
+    74
+   ],
+   "luminance": 0.1679,
+   "saturation": 0.384
+  },
+  "leafAfter": {
+   "srgbMean": [
+    96,
+    120,
+    74
+   ],
+   "luminance": 0.1679,
+   "saturation": 0.384
+  },
+  "meanLuminanceBefore": 0.0443,
+  "meanLuminanceAfter": 0.0426
+ },
+ "closeup-grazing": {
+  "gapPixels": 243772,
+  "leafPixels": 469886,
+  "gapBefore": {
+   "srgbMean": [
+    64,
+    85,
+    52
+   ],
+   "luminance": 0.0819,
+   "saturation": 0.387
+  },
+  "gapAfter": {
+   "srgbMean": [
+    41,
+    61,
+    25
+   ],
+   "luminance": 0.0451,
+   "saturation": 0.618
+  },
+  "leafBefore": {
+   "srgbMean": [
+    96,
+    123,
+    63
+   ],
+   "luminance": 0.1756,
+   "saturation": 0.497
+  },
+  "leafAfter": {
+   "srgbMean": [
+    96,
+    123,
+    63
+   ],
+   "luminance": 0.1755,
+   "saturation": 0.498
+  },
+  "meanLuminanceBefore": 0.0942,
+  "meanLuminanceAfter": 0.0884
+ },
+ "play": {
+  "gapPixels": 57318,
+  "leafPixels": 196485,
+  "gapBefore": {
+   "srgbMean": [
+    75,
+    95,
+    59
+   ],
+   "luminance": 0.1086,
+   "saturation": 0.39
+  },
+  "gapAfter": {
+   "srgbMean": [
+    57,
+    77,
+    37
+   ],
+   "luminance": 0.0749,
+   "saturation": 0.54
+  },
+  "leafBefore": {
+   "srgbMean": [
+    92,
+    120,
+    63
+   ],
+   "luminance": 0.1663,
+   "saturation": 0.484
+  },
+  "leafAfter": {
+   "srgbMean": [
+    92,
+    120,
+    63
+   ],
+   "luminance": 0.1662,
+   "saturation": 0.484
+  },
+  "meanLuminanceBefore": 0.0489,
+  "meanLuminanceAfter": 0.0476
+ },
+ "play-far": {
+  "gapPixels": 12011,
+  "leafPixels": 12624,
+  "gapBefore": {
+   "srgbMean": [
+    102,
+    119,
+    87
+   ],
+   "luminance": 0.1882,
+   "saturation": 0.308
+  },
+  "gapAfter": {
+   "srgbMean": [
+    75,
+    92,
+    58
+   ],
+   "luminance": 0.1135,
+   "saturation": 0.392
+  },
+  "leafBefore": {
+   "srgbMean": [
+    91,
+    116,
+    63
+   ],
+   "luminance": 0.1545,
+   "saturation": 0.463
+  },
+  "leafAfter": {
+   "srgbMean": [
+    91,
+    116,
+    63
+   ],
+   "luminance": 0.1544,
+   "saturation": 0.461
+  },
+  "meanLuminanceBefore": 0.1139,
+  "meanLuminanceAfter": 0.1132
+ }
+}

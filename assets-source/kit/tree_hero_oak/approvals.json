@@ -12,5 +12,12 @@
     "gate": "piece",
     "status": "approved",
     "notes": "A3: round 2 approved against ref-1; no third pass. docs/review/2026-10-14-walkthrough.html"
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "p4-canopy-gaps",
+    "requested": "2026-10-14",
+    "notes": "Pending owner re-approval of the canopy gap darkening; not an approval. Owner request 2026-10-14 (canopy close-up): make the space between the leaves not shiny and darker. The dark dome showing between the baked leaves on the canopy shell now has 0.5x linear albedo and roughness 1.0 (was the flat 0.62 fill shared with the leaves), and the kit shader fades F0 to 0 on unique foliage above roughness 0.95 (only these gap texels reach it), so no sky sheen remains there. Leaf texels, geometry, UVs, LODs and the fringe cards are unchanged. Review docs/checkpoints/oak-canopy/ (before and after close-ups and play views, maps-before.json and maps-after.json). The controller records the owner's decision."
   }
 ]

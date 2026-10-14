@@ -1,0 +1,30 @@
+[
+  {"cmd": "select_tile", "id": "meadow"},
+  {"cmd": "place", "q": 1, "r": -1},
+  {"cmd": "select_tile", "id": "oak"},
+  {"cmd": "place", "q": 0, "r": -1},
+  {"cmd": "hover", "q": 9, "r": -9},
+  {"cmd": "wait", "frames": 240},
+  {"cmd": "dump_state", "name": "oak-canopy-state"},
+
+  {"cmd": "camera", "pos": [-7.9, 5.6, -17.8], "look_at": [-11.17, 5.0, -21.06]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "oak-canopy-closeup-sun"},
+
+  {"cmd": "camera", "pos": [-22.5, 5.5, -27.5], "look_at": [-17.68, 5.0, -24.57]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "oak-canopy-closeup-shade"},
+
+  {"cmd": "camera", "pos": [-4.0, 7.8, -21.0], "look_at": [-9.65, 6.8, -24.95]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "oak-canopy-closeup-grazing"},
+
+  {"cmd": "camera", "pos": [-1, 17, -8], "look_at": [-14.5, 7, -25]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "oak-canopy-play"},
+
+  {"cmd": "camera", "pos": [-13.86, 45, 16], "look_at": [-13.86, 4, -24]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "oak-canopy-play-far"},
+  {"cmd": "exit"}
+]

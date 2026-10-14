@@ -3,7 +3,7 @@
   "budgetClass": "hero",
   "generator": {
     "path": "scripts/blender/kit/tree_hero_oak.py",
-    "sha256": "186e763895c64e386dddfdb29a3c5432f8568c057990ebec3d8e7548d05b8a05"
+    "sha256": "348de06f594da38f0efe2be011faaa7312cf86df3ef9f5dfc91ebf74b2275ebb"
   },
   "generatorDeps": [
     {

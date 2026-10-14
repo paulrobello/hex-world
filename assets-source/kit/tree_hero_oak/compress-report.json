@@ -1,6 +1,6 @@
 {
   "name": "tree_hero_oak",
-  "date": "2026-10-14T08:52:48.931Z",
+  "date": "2026-10-14T20:12:18.212Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "srgb",
       "vkFormat": 146,
       "levels": 12,
-      "bytes": 873689,
-      "sha256": "381153669a75c8da639bb9228c6aefa8b8b4b7fdf36b803716b08ce3881f49dc"
+      "bytes": 876067,
+      "sha256": "f9f94ff2ee6ee4ad188efb8a11804d3e922a6649f955a1d8be867683386b43b8"
     },
     {
       "channel": "albedo",
@@ -59,8 +59,8 @@
       "transfer": "srgb",
       "vkFormat": 158,
       "levels": 12,
-      "bytes": 877332,
-      "sha256": "5ec6ec417281be580ee7e6c0ba4dc2f3d240d5701e1e0d89057013e40854b009"
+      "bytes": 878167,
+      "sha256": "f7bb6ac3fdf5bd7700971ec4d262a2dfa532d996c6cef55279a4ce95b7efdb27"
     },
     {
       "channel": "albedo",
@@ -68,8 +68,8 @@
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.albedo.png",
       "format": "PNG",
       "transfer": "srgb",
-      "bytes": 1123095,
-      "sha256": "793ac08d4a63a23526d1db16cc8c1529dce32988b1b3ae8d93f3c8e64993f768"
+      "bytes": 1126810,
+      "sha256": "4343ca48e416a298cb15fe539d06533ec4ab23a6856a4a0aa25a6aba84761aa8"
     },
     {
       "channel": "masks",
@@ -141,8 +141,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 12,
-      "bytes": 1143226,
-      "sha256": "b542bd0c9096c8ded8fa31173cb3198de7ee9474da9108cf2b107dc3bd90bf1d"
+      "bytes": 1202834,
+      "sha256": "cfb6d49c6ffab5135fb3ca7c3505c39868cf7546fd1358a754a1c65c2f5d2118"
     },
     {
       "channel": "orm",
@@ -152,8 +152,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 12,
-      "bytes": 1177643,
-      "sha256": "79e5f42e8beac164146a0661eaf0791efcd9d80b620992e09e73733e7a9b29d8"
+      "bytes": 1240535,
+      "sha256": "fdc4bee2d22c8885430d41e5aae58db03e6b8359e0502d431b0a971cb1797bbb"
     },
     {
       "channel": "orm",
@@ -161,16 +161,16 @@
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.orm.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 1561548,
-      "sha256": "4d542217d9342069923ddda25c17317939bd76c579f98c5aebffcd96dedb79e3"
+      "bytes": 1595637,
+      "sha256": "0c09c6160785ab05bf54c0a05fd528b11b5e6ceb141159cb9520ae339aa52038"
     }
   ],
   "budgets": {
     "class": "hero",
     "ktxMax": 11500000,
     "ktxBytes": {
-      "bc7": 4876747,
-      "astc": 4902104
+      "bc7": 4938733,
+      "astc": 4965831
     },
     "glbBytes": 251568
   },

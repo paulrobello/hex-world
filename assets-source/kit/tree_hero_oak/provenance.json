@@ -10,7 +10,7 @@
   },
   "generator": {
     "path": "scripts/blender/kit/tree_hero_oak.py",
-    "sha256": "186e763895c64e386dddfdb29a3c5432f8568c057990ebec3d8e7548d05b8a05"
+    "sha256": "348de06f594da38f0efe2be011faaa7312cf86df3ef9f5dfc91ebf74b2275ebb"
   },
   "generatorDeps": [
     {
@@ -61,6 +61,16 @@
         "p01": 0.250980406999588,
         "p05": 0.3764706254005432,
         "texels": 1098044
+      },
+      "canopyGaps": {
+        "albedoScaleLinear": 0.5,
+        "albedoSrgbMean": [
+          0.07749991118907928,
+          0.15106534957885742,
+          0.039062801748514175
+        ],
+        "roughness": 1,
+        "share": 0.28783272801454224
       },
       "canopyMasks": {
         "aMin": 1,
@@ -218,8 +228,8 @@
       "class": "hero",
       "ktxMax": 11500000,
       "ktxBytes": {
-        "bc7": 4876747,
-        "astc": 4902104
+        "bc7": 4938733,
+        "astc": 4965831
       },
       "glbBytes": 251568
     },
@@ -232,8 +242,8 @@
         "transfer": "srgb",
         "vkFormat": 146,
         "levels": 12,
-        "bytes": 873689,
-        "sha256": "381153669a75c8da639bb9228c6aefa8b8b4b7fdf36b803716b08ce3881f49dc"
+        "bytes": 876067,
+        "sha256": "f9f94ff2ee6ee4ad188efb8a11804d3e922a6649f955a1d8be867683386b43b8"
       },
       {
         "channel": "albedo",
@@ -243,8 +253,8 @@
         "transfer": "srgb",
         "vkFormat": 158,
         "levels": 12,
-        "bytes": 877332,
-        "sha256": "5ec6ec417281be580ee7e6c0ba4dc2f3d240d5701e1e0d89057013e40854b009"
+        "bytes": 878167,
+        "sha256": "f7bb6ac3fdf5bd7700971ec4d262a2dfa532d996c6cef55279a4ce95b7efdb27"
       },
       {
         "channel": "albedo",
@@ -252,8 +262,8 @@
         "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.albedo.png",
         "format": "PNG",
         "transfer": "srgb",
-        "bytes": 1123095,
-        "sha256": "793ac08d4a63a23526d1db16cc8c1529dce32988b1b3ae8d93f3c8e64993f768"
+        "bytes": 1126810,
+        "sha256": "4343ca48e416a298cb15fe539d06533ec4ab23a6856a4a0aa25a6aba84761aa8"
       },
       {
         "channel": "masks",
@@ -325,8 +335,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 12,
-        "bytes": 1143226,
-        "sha256": "b542bd0c9096c8ded8fa31173cb3198de7ee9474da9108cf2b107dc3bd90bf1d"
+        "bytes": 1202834,
+        "sha256": "cfb6d49c6ffab5135fb3ca7c3505c39868cf7546fd1358a754a1c65c2f5d2118"
       },
       {
         "channel": "orm",
@@ -336,8 +346,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 12,
-        "bytes": 1177643,
-        "sha256": "79e5f42e8beac164146a0661eaf0791efcd9d80b620992e09e73733e7a9b29d8"
+        "bytes": 1240535,
+        "sha256": "fdc4bee2d22c8885430d41e5aae58db03e6b8359e0502d431b0a971cb1797bbb"
       },
       {
         "channel": "orm",
@@ -345,8 +355,8 @@
         "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.orm.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 1561548,
-        "sha256": "4d542217d9342069923ddda25c17317939bd76c579f98c5aebffcd96dedb79e3"
+        "bytes": 1595637,
+        "sha256": "0c09c6160785ab05bf54c0a05fd528b11b5e6ceb141159cb9520ae339aa52038"
       }
     ]
   },
@@ -358,18 +368,18 @@
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.albedo.bc7.ktx2",
-      "sha256": "381153669a75c8da639bb9228c6aefa8b8b4b7fdf36b803716b08ce3881f49dc",
-      "bytes": 873689
+      "sha256": "f9f94ff2ee6ee4ad188efb8a11804d3e922a6649f955a1d8be867683386b43b8",
+      "bytes": 876067
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.albedo.astc.ktx2",
-      "sha256": "5ec6ec417281be580ee7e6c0ba4dc2f3d240d5701e1e0d89057013e40854b009",
-      "bytes": 877332
+      "sha256": "f7bb6ac3fdf5bd7700971ec4d262a2dfa532d996c6cef55279a4ce95b7efdb27",
+      "bytes": 878167
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.albedo.png",
-      "sha256": "793ac08d4a63a23526d1db16cc8c1529dce32988b1b3ae8d93f3c8e64993f768",
-      "bytes": 1123095
+      "sha256": "4343ca48e416a298cb15fe539d06533ec4ab23a6856a4a0aa25a6aba84761aa8",
+      "bytes": 1126810
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.masks.bc7.ktx2",
@@ -403,18 +413,18 @@
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.orm.bc7.ktx2",
-      "sha256": "b542bd0c9096c8ded8fa31173cb3198de7ee9474da9108cf2b107dc3bd90bf1d",
-      "bytes": 1143226
+      "sha256": "cfb6d49c6ffab5135fb3ca7c3505c39868cf7546fd1358a754a1c65c2f5d2118",
+      "bytes": 1202834
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.orm.astc.ktx2",
-      "sha256": "79e5f42e8beac164146a0661eaf0791efcd9d80b620992e09e73733e7a9b29d8",
-      "bytes": 1177643
+      "sha256": "fdc4bee2d22c8885430d41e5aae58db03e6b8359e0502d431b0a971cb1797bbb",
+      "bytes": 1240535
     },
     {
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.orm.png",
-      "sha256": "4d542217d9342069923ddda25c17317939bd76c579f98c5aebffcd96dedb79e3",
-      "bytes": 1561548
+      "sha256": "0c09c6160785ab05bf54c0a05fd528b11b5e6ceb141159cb9520ae339aa52038",
+      "bytes": 1595637
     }
   ],
   "references": [
@@ -440,7 +450,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T08:55:05.211Z",
+    "date": "2026-10-14T20:18:29.242Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -472,6 +482,13 @@
       "gate": "piece",
       "status": "approved",
       "notes": "A3: round 2 approved against ref-1; no third pass. docs/review/2026-10-14-walkthrough.html"
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "p4-canopy-gaps",
+      "requested": "2026-10-14",
+      "notes": "Pending owner re-approval of the canopy gap darkening; not an approval. Owner request 2026-10-14 (canopy close-up): make the space between the leaves not shiny and darker. The dark dome showing between the baked leaves on the canopy shell now has 0.5x linear albedo and roughness 1.0 (was the flat 0.62 fill shared with the leaves), and the kit shader fades F0 to 0 on unique foliage above roughness 0.95 (only these gap texels reach it), so no sky sheen remains there. Leaf texels, geometry, UVs, LODs and the fringe cards are unchanged. Review docs/checkpoints/oak-canopy/ (before and after close-ups and play views, maps-before.json and maps-after.json). The controller records the owner's decision."
     }
   ]
 }

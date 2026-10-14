@@ -43,6 +43,13 @@ BARK_FILLS = (0.6, 0.55, 0.5, 0.45, 0.4)  # packed share of the bark column trie
 SHELL_PACK_MARGIN = 0.008  # UV fraction between canopy and bark islands: 16 atlas and masks texels
 SHELL_UV_ANGLE = 1.0  # smart-project angle (rad) for the 7-ring sector: canopy median 259 px/m (1.152 gave 250)
 CANOPY_SNOW, WETNESS, NIGHT = 0.85, 0.5, 0.0  # masks R scale, G, B (trees do not glow at night)
+# Canopy gaps (owner, 2026-10-14: the space between the leaves read shiny and pale): shell texels
+# showing the dark dome under the baked leaves (`_oak.canopy_high`'s under tone, GAP_TONE sRGB; every
+# leaf tone is >= 0.145 from it by max channel) take GAP_ALBEDO x their linear albedo and roughness
+# GAP_ROUGH. The weight ramps 1 -> 0 over GAP_RAMP (max-channel distance), so a leaf-edge texel
+# darkens only by its dome share and leaf texels stay byte-identical.
+GAP_TONE = np.array([0x1F, 0x38, 0x12], np.float32) / 255
+GAP_RAMP, GAP_ALBEDO, GAP_ROUGH = (0.01, 0.14), 0.5, 1.0
 out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])
 skip_bake = os.environ.get("HEXW_SKIP_BAKE") == "1"
 
@@ -291,6 +298,28 @@ if not skip_bake:
     bake_stats["canopyAo"] = stats(orm[..., 0][canopy_isl_atlas])
     bake_stats["canopyMasks"] = {"aMin": float(mk[..., 3][canopy_isl].min()),
                                  "snowMean": float(mk[..., 0][canopy_isl].mean())}
+
+
+def srgb_to_lin(c):
+    return np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+
+
+def lin_to_srgb(c):
+    return np.where(c <= 0.0031308, c * 12.92, 1.055 * np.maximum(c, 0.0031308) ** (1 / 2.4) - 0.055)
+
+
+# Canopy gaps: the shell islands plus their bake gutter, so bilinear and mip taps at a rim match.
+gap_zone = dilate(canopy_isl_atlas, MARGIN)
+gap_w = np.where(gap_zone, np.clip((GAP_RAMP[1] - np.abs(albedo[..., :3] - GAP_TONE).max(-1))
+                                   / (GAP_RAMP[1] - GAP_RAMP[0]), 0.0, 1.0), 0.0).astype(np.float32)
+gap_lin = srgb_to_lin(albedo[..., :3]) - (gap_w * (1.0 - GAP_ALBEDO))[..., None] * srgb_to_lin(GAP_TONE)
+albedo[..., :3] = np.where(gap_w[..., None] > 0, lin_to_srgb(np.clip(gap_lin, 0.0, 1.0)), albedo[..., :3])
+orm[..., 1] += gap_w * (GAP_ROUGH - orm[..., 1])
+if not skip_bake:
+    gap_texels = canopy_isl_atlas & (gap_w > 0.5)
+    bake_stats["canopyGaps"] = {"share": float(gap_texels.sum() / canopy_isl_atlas.sum()),
+                                "albedoScaleLinear": GAP_ALBEDO, "roughness": GAP_ROUGH,
+                                "albedoSrgbMean": [float(x) for x in albedo[..., :3][gap_texels].mean(0)]}
 albedo[-strip_px:] = leaf_alb
 normal[-strip_px:, :, :3] = leaf_nrm
 orm[-strip_px:, :, 0] = 1.0
