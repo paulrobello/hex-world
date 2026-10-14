@@ -8,10 +8,18 @@ Everything below waits on you. Work kept going overnight on everything that did 
 
 **A2. River family (6 pieces: edge, straight, bend, bridge).** Merged as `4509640`. In-play shots, re-taken on main with the final bend mesh and the O4 skirts: `assets-source/kit/river_edge/shots/engine-01..09.jpg` (overview, the straight-to-bend and bend-to-bridge seams, the river mouth, the bridge arch, the bend, LOD1, LOD2). The bend's LOD2 uses a 20% triangle ceiling instead of 15% (decision D1).
 
-**A3. Hero oak polish.** `assets-source/kit/tree_hero_oak/renders/p2_*.jpg`. Three of the six criteria are met: canopy masks (snow on the domes), limbs and roots, and the LOD2 silhouette. The other three need you:
-- Bark AO mean is 0.645 over all bark (0.721 on visible bark) against a 0.75 target. Accept the shortfall, or ask for another pass.
-- Dome smoothness at 8 m is improved, but the 3-fold bake repeat is still faintly visible on a single dome (`p2_dome8m-none.jpg`).
-- Your overall approval against ref-1.
+**A3. Hero oak polish (round 2 done overnight).** Sheet: `assets-source/kit/tree_hero_oak/renders/p3_sheet.jpg`, with round 1 on the left and round 2 on the right. Rim crops are in `p3_rims-crop.jpg`.
+
+**Bark AO:**
+- Visible bark AO is now 0.758, meeting the 0.75 target.
+- Measured over all texels it is 0.678. That is a shortfall I am explaining rather than hiding: 27% of the bark surface is buried inside other tubes and cannot be removed within the 3,000-triangle budget.
+
+**Dome rims:**
+- They now use rings at equal steps of surface angle. The top dome and most rims read round.
+- One small corner remains on a lower dome in the sharp view.
+- The dome undersides look faceted from below (12 columns), which paid for the rim rings.
+
+**Your call:** accept, ask for a third pass, or approve the oak against ref-1. It still needs your re-approval.
 
 **A4. Social share image.** `web/brand/og-image.png`, 1200x630, taken from the in-engine water overview. The B1 Lit icon is already approved, so this is the last open item on the icons card.
 
@@ -140,6 +148,21 @@ Q1 is now settled: the bar says "Autosave off" and "Saved", but the Worlds sheet
 - **Windmill:** mound (ref-3) or flat tile (ref-1)? Tarred black or white? Should the fantail animate as well as the sails?
 - **Bakery:** road through the tile or a stub? Its own tile, or a pad inside a house cluster?
 - **All P3 tiles:** use the O4 cutaway skirt (recommended).
+
+**A18. Prop scatter in play.** `docs/checkpoints/scatter/scatter-01..07.jpg`: overview, forest cluster, meadow, a forest beside a road and a river, a forest close-up, and the rise ripple.
+
+**What changed:**
+- A forest tile now draws 20 spruces and rocks around its oak.
+- A meadow draws about 27 wildflower clumps and 2 rocks.
+- Placement is seeded, so a world always looks the same, including after undo or a reload.
+- Nothing lands on roads, river beds and banks, house pads, beaches or water.
+
+**Cost:** a 20-tile world is 392 instances and 256–298 draw batches, inside the 500 budget, and the texture limit of 16 holds.
+
+**Look calls for you:**
+- **Seam strip:** where two forests meet, a strip without trees runs along the seam. Filling it would make a tile's trees depend on its neighbours.
+- **Flowers:** meadow flowers sit evenly spaced. Clustered drifts would need a rule.
+- **Gulls:** the placeholder gulls read large and white above the trees. See A12/A13.
 
 ## Questions
 
