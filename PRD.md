@@ -225,7 +225,7 @@ About 10 types. The exact variants are frozen at the start of P2.
 
 ## 6. Modular asset kit (D11)
 
-- **Bases** are the hex column (side skirt with visible soil strata) plus a terrain cap per biome and height. One base mesh per biome is shared through instancing.
+- **Bases** are the hex column (side skirt in the owner's O4 "cutaway" look, 2026-10-13: a grass lip over root-dark topsoil that darkens to a near-black foot, no bright strata bands) plus a terrain cap per biome and height. One base mesh per biome is shared through instancing.
 - **Edge pieces** are 6 per tile, chosen by socket: road stub, river mouth, coast transition, grass blend, and later cliff and ramp pieces. They are authored for edge 0 and rotated at runtime.
 - **Center pieces** are junctions, bends, building pads, lake bowls and river beds. Below-surface geometry (river beds, crater bowls, coast shelves) belongs to the center or edge piece, and the hex column is cut to fit it.
 - **Props** are trees, rocks, fences, houses, windmills, lamps and so on. They are placed by seeded scatter rules (density, exclusion masks around lanes) plus fixed hero placements.
