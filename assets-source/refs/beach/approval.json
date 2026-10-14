@@ -1,0 +1,10 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-13",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/beach/ref-1.jpg",
+    "assets-source/refs/beach/ref-2.jpg"
+  ],
+  "notes": "Approved: grass, dry sand, wet band, surf foam, water column on the cut side. Reviewed from assets-source/refs/contact-sheet.png in chat."
+}

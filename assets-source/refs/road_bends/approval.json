@@ -1,0 +1,11 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-13",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/road_bends/ref-1.jpg",
+    "assets-source/refs/road_bends/ref-2.jpg",
+    "assets-source/refs/road_bends/ref-3.jpg"
+  ],
+  "notes": "Approved for the road look (asphalt, kerbs, verges, dashed centre line, soil strata). ref-1 (sharp 60 degree bend) has its road ends one side too far apart; bend geometry follows the _road.py lane contract, not the image. ref-2 wide 120 degree bend and ref-3 Y junction approved as drawn. Reviewed from assets-source/refs/contact-sheet.png in chat."
+}
