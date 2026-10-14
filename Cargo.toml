@@ -43,5 +43,8 @@ opt-level = 3
 [profile.wasm-release.package.hex-assets]
 opt-level = 3
 
+[profile.wasm-release.package.hex-sim]
+opt-level = 3
+
 [profile.wasm-release.package.hex-app]
 opt-level = 3
