@@ -358,5 +358,68 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
   });
 }
 
+// 8. Water tiles in play (P2 W3c, crates/hex-render/src/water/tiles.rs): the play camera always
+// carries the water camera components (depth prepass, screen-space transmission at High), and placed
+// river, beach and ocean tiles draw with the water and terrain materials next to the kit pieces. With
+// the device clamped to WebGPU's default 16 the kit forward pipeline must bind the transmission
+// texture at exactly 16, and the water pipelines must match the water scenario's High counts.
+{
+  const clamp = WEBGPU_DEFAULT_SAMPLED;
+  const query = "?scenario=play&post=full";
+  await withPage(gpuArgs, async (page) => {
+    await page.addInitScript(clampSampledTextures, clamp);
+    await page.addInitScript(countSampledTextures);
+    await page.goto(base + query);
+    const tag = `play water ${query} (clamped ${clamp})`;
+    if (!(await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 }).then(() => true, () => false))) {
+      const s = await page.evaluate(() => window.__sampledTextures);
+      fail(`${tag}: never ready; sampled textures per stage max ${s?.max}, kit pipelines ${JSON.stringify(s?.kit)}`);
+      return;
+    }
+    // The first tiles of docs/checkpoints/water-play/water-play.json: a river straight and bend west
+    // of the start meadow, a beach and an ocean east of it.
+    await page.evaluate(() => {
+      const h = window.hexWorld;
+      h.selectTile("river_straight"); h.placeTile(-1, 0);
+      h.selectTile("river_bend"); h.placeTile(-1, 1);
+      h.selectTile("beach"); h.placeTile(1, 0);
+      h.selectTile("ocean"); h.placeTile(2, 0);
+    });
+    const deadline = Date.now() + 90_000;
+    while (Date.now() < deadline && !(await page.evaluate(() => {
+      const s = window.__sampledTextures ?? {};
+      return window.hexWorld.state().tiles === 5 &&
+        (s.kit ?? []).some((k) => k.pass === "forward" && k.ibl && k.transmission) && (s.kit ?? []).some((k) => k.pass === "prepass") &&
+        (s.water ?? []).some((k) => k.pass === "water" && k.ibl) && (s.water ?? []).some((k) => k.pass === "terrain" && k.ibl);
+    }))) await page.waitForTimeout(200);
+    await page.waitForTimeout(1_500);
+    const { sampled, limit, state } = await page.evaluate(() => ({
+      sampled: window.__sampledTextures, limit: window.__deviceSampledLimit, state: window.hexWorld.state() }));
+    console.log(`${tag}: tiles ${state.tiles}; sampled textures per stage max ${sampled?.max}, kit pipelines ` +
+      `${JSON.stringify(sampled?.kit)}, water pipelines ${JSON.stringify(sampled?.water)}; state.gpu ${JSON.stringify(state.gpu)}`);
+    if (state.scenario !== "Play" || state.tiles !== 5) fail(`${tag}: state scenario ${state.scenario}, tiles ${state.tiles}`);
+    for (const pass of ["forward", "prepass"]) {
+      const got = (sampled?.kit ?? []).filter((k) => k.pass === pass && (pass === "prepass" || k.ibl));
+      if (!got.length) fail(`${tag}: no kit ${pass} pipeline was created`);
+      else if (!got.every((k) => k.sampled === KIT_SAMPLED_WITH_WATER[pass]))
+        fail(`${tag}: kit ${pass} pipeline uses ${got.map((k) => k.sampled)} sampled textures, expected ${KIT_SAMPLED_WITH_WATER[pass]}`);
+      if (pass === "forward" && !got.every((k) => k.transmission))
+        fail(`${tag}: kit forward pipeline layout lacks the view transmission texture: ${JSON.stringify(got)}`);
+    }
+    for (const pass of ["water", "terrain"]) {
+      const got = (sampled?.water ?? []).filter((k) => k.pass === pass && k.ibl);
+      if (!got.length) fail(`${tag}: no IBL ${pass} pipeline was created`);
+      else if (!got.every((k) => k.sampled === WATER_SAMPLED.high[pass]))
+        fail(`${tag}: ${pass} pipeline uses ${got.map((k) => k.sampled)} sampled textures, expected ${WATER_SAMPLED.high[pass]}`);
+      if (pass === "water" && !got.every((k) => k.transmission))
+        fail(`${tag}: water shader not composed with the transmission texture: ${JSON.stringify(got)}`);
+    }
+    if (limit !== clamp) fail(`${tag}: device limit ${limit}, expected ${clamp}`);
+    if (state.gpu?.maxSampledTexturesPerShaderStage !== clamp) fail(`${tag}: hexWorld.state().gpu ${JSON.stringify(state.gpu)}`);
+    if (!(sampled?.max <= clamp)) fail(`${tag}: a pipeline layout uses ${sampled?.max} sampled textures`);
+    await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-play-water.png" });
+  });
+}
+
 server.close();
 console.log(process.exitCode ? "smoke FAILED" : "smoke OK");

@@ -24,6 +24,7 @@ use crate::{
     kit_material::{KitMaterial, build_material, slot_requests},
     kit_scene::{MANIFEST, piece_rotation},
     scene::lod_range,
+    water,
     workload::GateConfig,
 };
 
@@ -268,6 +269,7 @@ pub fn setup(
         rebuild: true,
         ..default()
     });
+    commands.insert_resource(water::tiles::PlayWater::default());
     Transform::from_xyz(14.0, 95.0, 125.0).looking_at(Vec3::new(14.0, 0.0, 16.0), Vec3::Y)
 }
 
@@ -481,7 +483,14 @@ fn tile_children(
             SceneEntity,
         ));
     };
-    if !spawn_kit(p, kit, def.base.as_str(), Transform::IDENTITY) {
+    let center_kit = def
+        .center
+        .as_ref()
+        .is_some_and(|c| kit.contains_key(c.as_str()));
+    // Water tiles without their centre piece get the placeholder bed and the water surface from
+    // `water::tiles` instead of a base and river strips; road strips stay as the bridge deck.
+    let water_bed = !center_kit && water::tiles::water_kind(def, 0).is_some();
+    if !water_bed && !spawn_kit(p, kit, def.base.as_str(), Transform::IDENTITY) {
         plain_mesh(
             p,
             &plain.prism,
@@ -492,14 +501,11 @@ fn tile_children(
     let lanes: Vec<(u8, SocketKind)> = (0..6u8)
         .filter_map(|e| {
             let s = &def.edges[e as usize];
-            (s.lane.is_some() && matches!(s.kind, SocketKind::Road | SocketKind::River))
+            (s.lane.is_some()
+                && (s.kind == SocketKind::Road || (s.kind == SocketKind::River && !water_bed)))
                 .then_some((e, s.kind))
         })
         .collect();
-    let center_kit = def
-        .center
-        .as_ref()
-        .is_some_and(|c| kit.contains_key(c.as_str()));
     if center_kit {
         let center = def.center.as_ref().expect("checked above");
         spawn_kit(p, kit, center.as_str(), Transform::IDENTITY);
@@ -527,7 +533,9 @@ fn tile_children(
                 on_edge(e, APOTHEM / 2.0, 0.05),
             );
         }
-        if let Some(&(_, kind)) = lanes.first() {
+        if water_bed {
+            // No hub in the channel: the road strips meet over the water.
+        } else if let Some(&(_, kind)) = lanes.first() {
             plain_mesh(
                 p,
                 &plain.hub,
@@ -639,8 +647,20 @@ fn spawn_overlay(
     out
 }
 
+/// Play's water hooks (`water::tiles`): the water entities, the water clock, and the camera.
+type WaterHooks<'w, 's> = (
+    Option<ResMut<'w, water::tiles::PlayWater>>,
+    Option<Res<'w, water::WaterClock>>,
+    Query<'w, 's, Entity, (With<Camera3d>, Without<water::tiles::PlayWaterCamera>)>,
+    ResMut<'w, Assets<Mesh>>,
+    ResMut<'w, Assets<Image>>,
+    ResMut<'w, Assets<water::WaterMaterial>>,
+    ResMut<'w, Assets<water::TerrainMaterial>>,
+);
+
 /// Spawns and despawns tile entities to match the view, and rebuilds the overlay when it changes.
-/// Tiles wait for the kit so a tile never swaps from placeholder to kit piece mid-game.
+/// Tiles wait for the kit so a tile never swaps from placeholder to kit piece mid-game. Water
+/// tiles also get their surfaces, cut faces and placeholder beds (`water::tiles::sync`).
 pub fn sync(
     mut commands: Commands,
     active: Res<ActiveScenario>,
@@ -649,10 +669,23 @@ pub fn sync(
     plain: Option<Res<PlainAssets>>,
     kit: Option<Res<PlayKit>>,
     catalog: Res<PlayCatalog>,
+    config: Res<GateConfig>,
+    (water, clock, cameras, mut meshes, mut images, mut water_mats, mut terrain_mats): WaterHooks,
 ) {
     let (Scenario::Play, Some(mut spawned), Some(plain)) = (active.0, spawned, plain) else {
         return;
     };
+    // The play camera and clock get what water needs as soon as the scenario is up (`setup` only
+    // adds them for the look-dev scenarios), so the first water tile changes no pipeline.
+    for cam in &cameras {
+        water::tiles::prepare_camera(&mut commands.entity(cam), config.tier);
+    }
+    if clock.is_none() {
+        commands.insert_resource(water::WaterClock {
+            t: 0.0,
+            fixed: config.water_fixed,
+        });
+    }
     if !view.is_changed() && !spawned.rebuild {
         return;
     }
@@ -664,11 +697,29 @@ pub fn sync(
     let Some(PlayKit::Ready(kit)) = kit.as_deref() else {
         return;
     };
-    if spawned.rebuild {
+    let rebuild = spawned.rebuild;
+    if rebuild {
         for (_, (_, e)) in spawned.tiles.drain() {
             commands.entity(e).try_despawn();
         }
         spawned.rebuild = false;
+    }
+    if let Some(mut water) = water {
+        water::tiles::sync(
+            &mut commands,
+            &mut water,
+            water::tiles::WaterAssets {
+                meshes: &mut meshes,
+                images: &mut images,
+                water_mats: &mut water_mats,
+                terrain_mats: &mut terrain_mats,
+            },
+            config.tier,
+            &view.tiles,
+            &catalog.0,
+            |id| kit.contains_key(id),
+            rebuild,
+        );
     }
     let want: HashMap<Axial, &PlayTile> = view.tiles.iter().map(|t| (t.cell, t)).collect();
     spawned.tiles.retain(|cell, (t, e)| {

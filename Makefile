@@ -1,4 +1,4 @@
-.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest
+.PHONY: fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play
 
 fmt:
 	cargo fmt --all
@@ -349,3 +349,26 @@ audio-check:
 # a clicking loop seam and a phase-cancelling stereo cue each make audio-check exit non-zero.
 audio-check-selftest:
 	python3 scripts/audio/selftest.py
+
+# Water tiles in play (P2 W3c): runs docs/checkpoints/water-play/water-play.json (a coast and a
+# river chain, cut faces, bulldoze/undo/redo) at 1600x1000 with tilt-shift off and a fixed water
+# clock, copies JPEG stills and state dumps next to it, then a 3 s motion clip per view in VIEWS of
+# motion.mjs (90 frames, 960x600) encoded to MP4.
+WATER_PLAY_SHOTS = water-play-01-overview water-play-02-coast water-play-03-river water-play-04-seam-river water-play-05-seam-bridge water-play-06-seam-coast water-play-07-seam-ocean water-play-08-edge-ocean water-play-09-edge-river water-play-10-before-bulldoze water-play-11-bulldozed water-play-12-undo water-play-13-redo
+WATER_PLAY_VIEWS = coast seam-river seam-coast edge-ocean
+WATER_PLAY_DOCS = docs/checkpoints/water-play
+shots-water-play:
+	mkdir -p target/shots $(WATER_PLAY_DOCS)
+	rm -f target/shots/water-play-*.png target/shots/water-play-*.json
+	cargo run -p hex-app --release -- --scenario play --script $(WATER_PLAY_DOCS)/water-play.json --size 1600x1000 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
+	@for n in $(WATER_PLAY_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(WATER_PLAY_DOCS)/$$n.jpg || exit 1; done
+	cp target/shots/water-play-state*.json $(WATER_PLAY_DOCS)/
+	node $(WATER_PLAY_DOCS)/motion.mjs target/shots/water-play-motion-script.json
+	cargo run -p hex-app --release -- --scenario play --script target/shots/water-play-motion-script.json --size 960x600 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
+	@for v in $(WATER_PLAY_VIEWS); do \
+	  test -s target/shots/water-play-motion-$$v-089.png || { echo "missing water-play-motion-$$v frames"; exit 1; }; \
+	  ffmpeg -loglevel error -y -framerate 30 -i target/shots/water-play-motion-$$v-%03d.png -c:v libx264 -pix_fmt yuv420p -crf 22 $(WATER_PLAY_DOCS)/water-play-motion-$$v.mp4 || exit 1; \
+	done
+	rm -f target/shots/water-play-motion-*.png
+	@echo "wrote $(WATER_PLAY_DOCS)/"

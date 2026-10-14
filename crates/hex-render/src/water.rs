@@ -7,6 +7,9 @@
 //! function of world position, and per-vertex inputs (flow, depth, shore distance) are computed
 //! from world position too.
 //!
+//! The mesh builders take a [`WaterField`], the world-space description they sample: [`Lookdev`]
+//! is this patch's hand-laid scene, and [`tiles`] builds one per placed water tile in `play`.
+//!
 //! Both materials are custom `Material`s, not `ExtendedMaterial<StandardMaterial, _>`: the
 //! StandardMaterial layout binds its texture slots even when unused, and they keep their own
 //! material group to one texture. Refracting tiers put `ScreenSpaceTransmission` on the camera,
@@ -31,15 +34,18 @@ use hex_core::{Axial, HEX_RADIUS};
 
 use crate::{SceneEntity, post::QualityTier};
 
+pub mod tiles;
+
 pub const WATER_SHADER: &str = "shaders/water.wesl";
 pub const TERRAIN_SHADER: &str = "shaders/water_terrain.wesl";
 
 /// Water surface height (m).
 pub const SEA_LEVEL: f32 = 0.0;
-/// Grass plateau height (m).
-const LAND: f32 = 1.4;
+/// Grass plateau height above the water (m). The terrain shader's grass line (0.82-1.08 m above
+/// the water) and wet band (0.32-0.40 m) are tuned to it.
+pub const LAND: f32 = 1.4;
 /// Hex grid subdivisions per sector edge: 0.5 m vertex spacing at the 16 m radius.
-const GRID: u32 = 32;
+pub const GRID: u32 = 32;
 /// Peak shoreline surge (m); shared with the terrain's wet band through the shader library.
 pub const WASH_AMP: f32 = 0.22;
 
@@ -90,7 +96,7 @@ fn river_half_width(along: f32) -> f32 {
 }
 
 /// Peak surface speed on the river's centre line (m/s).
-const RIVER_SPEED: f32 = 1.1;
+pub const RIVER_SPEED: f32 = 1.1;
 
 #[derive(Clone, Copy, Debug)]
 pub struct RiverSample {
@@ -153,16 +159,42 @@ pub fn river_sample(p: Vec2) -> RiverSample {
     best
 }
 
-fn smoothstep(e0: f32, e1: f32, x: f32) -> f32 {
+pub(crate) fn smoothstep(e0: f32, e1: f32, x: f32) -> f32 {
     let t = ((x - e0) / (e1 - e0)).clamp(0.0, 1.0);
     t * t * (3.0 - 2.0 * t)
+}
+
+/// Cuts a river channel into ground height `h` (relative to the water surface) at `dist` from the
+/// centre line: a parabolic bed 1.55 m below the water on the centre line (1.5 m bowl plus 0.05 m),
+/// blended back to `h` by a bank running from `0.7 w` to `w + 2.5` m. Never raises the ground.
+pub fn carve(h: f32, dist: f32, w: f32) -> f32 {
+    let bed = -1.5 * (1.0 - (dist / w).powi(2)).max(0.0) - 0.05;
+    let bank = smoothstep(w * 0.7, w + 2.5, dist);
+    let carved = bed + (h - bed) * bank;
+    if carved < h { carved } else { h }
+}
+
+/// River inputs at `dist` from the centre line of a channel cut with half-width `w`: the river
+/// weight (1 in the channel, gone 3 m past `w`) and the surface speed (m/s).
+pub fn river_flow(dist: f32, w: f32) -> (f32, f32) {
+    let river = 1.0 - smoothstep(w, w + 3.0, dist);
+    let speed = RIVER_SPEED * (1.0 - (dist / (w + 1.0)).powi(2)).max(0.0);
+    (river, speed)
+}
+
+/// Terrain COLOR (land, river, shore distance, 1) from the river distance past the channel's
+/// half-width and the shore distance.
+pub fn terrain_color(past_channel: f32, shore: f32) -> [f32; 4] {
+    let river = 1.0 - smoothstep(4.0, 9.0, past_channel);
+    let beach = (1.0 - river) * (1.0 - smoothstep(-14.0, -9.0, shore));
+    [1.0 - beach - river, river, shore, 1.0]
 }
 
 /// Terrain height (m) at world (x, z): grass plateau, beach slope, shelving sea bed, and the
 /// river channel carved through them.
 pub fn height(x: f32, z: f32) -> f32 {
     let d = shore_distance(x, z);
-    let mut h = if d < -12.0 {
+    let h = if d < -12.0 {
         LAND + 0.12 * ((x * 0.21).sin() * (z * 0.17).cos()) * smoothstep(-12.0, -22.0, d)
     } else if d < 0.0 {
         // Beach: LAND over 12 m, flattening into the plateau.
@@ -174,14 +206,7 @@ pub fn height(x: f32, z: f32) -> f32 {
         (-0.96 - 0.26 * (d - 8.0)).max(-6.0)
     };
     let r = river_sample(Vec2::new(x, z));
-    let w = river_half_width(r.along);
-    let bed = -1.5 * (1.0 - (r.dist / w).powi(2)).max(0.0) - 0.05;
-    let bank = smoothstep(w * 0.7, w + 2.5, r.dist);
-    let carved = bed + (h - bed) * bank;
-    if carved < h {
-        h = carved;
-    }
-    h
+    carve(h, r.dist, river_half_width(r.along))
 }
 
 /// Per-vertex water inputs, all functions of world position.
@@ -202,14 +227,50 @@ pub fn water_sample(x: f32, z: f32) -> WaterSample {
     let r = river_sample(p);
     let w = river_half_width(r.along);
     let shore = shore_distance(x, z);
+    let (in_channel, speed) = river_flow(r.dist, w);
     // The river becomes sea over the 14 m past the coast.
-    let river = (1.0 - smoothstep(w, w + 3.0, r.dist)) * (1.0 - smoothstep(-2.0, 12.0, shore));
-    let speed = RIVER_SPEED * (1.0 - (r.dist / (w + 1.0)).powi(2)).max(0.0);
+    let river = in_channel * (1.0 - smoothstep(-2.0, 12.0, shore));
     WaterSample {
         flow: r.tangent * speed * river,
         river,
         depth: (SEA_LEVEL - height(x, z)).max(0.0),
         shore,
+    }
+}
+
+/// The world a set of water meshes samples, everything a function of world XZ so neighbouring
+/// meshes agree wherever they share a point.
+pub trait WaterField {
+    /// Rest height of the water surface (m).
+    fn level(&self) -> f32;
+    /// Terrain (bed) height (m).
+    fn height(&self, x: f32, z: f32) -> f32;
+    /// Per-vertex water inputs.
+    fn water(&self, x: f32, z: f32) -> WaterSample;
+    /// Terrain vertex COLOR: (land, river, shore distance, 1).
+    fn terrain(&self, x: f32, z: f32) -> [f32; 4];
+}
+
+/// The look-dev patch: [`height`], [`water_sample`] and the prototype's river and coast.
+pub struct Lookdev;
+
+impl WaterField for Lookdev {
+    fn level(&self) -> f32 {
+        SEA_LEVEL
+    }
+
+    fn height(&self, x: f32, z: f32) -> f32 {
+        height(x, z)
+    }
+
+    fn water(&self, x: f32, z: f32) -> WaterSample {
+        water_sample(x, z)
+    }
+
+    fn terrain(&self, x: f32, z: f32) -> [f32; 4] {
+        let s = water_sample(x, z);
+        let r = river_sample(Vec2::new(x, z));
+        terrain_color(r.dist - river_half_width(r.along), s.shore)
     }
 }
 
@@ -257,21 +318,23 @@ pub fn hex_grid(n: u32, radius: f32) -> (Vec<Vec3>, Vec<u32>) {
     (pos, idx)
 }
 
-fn cell_transform(cell: Axial, rot: u8) -> Transform {
+pub(crate) fn cell_transform(cell: Axial, rot: u8) -> Transform {
     let [x, z] = cell.to_world(HEX_RADIUS);
     Transform::from_xyz(x, 0.0, z).with_rotation(crate::kit_scene::piece_rotation(rot))
 }
 
-/// One cell's water surface in cell-local space: COLOR carries (flow.x, flow.z, river, depth) and
-/// UV_0 carries (shore distance, 0 = surface), sampled at the vertex's world position.
-pub fn water_mesh(cell: Axial, rot: u8) -> Mesh {
+/// One cell's water surface in cell-local space at the field's level: COLOR carries (flow.x,
+/// flow.z, river, depth) and UV_0 carries (shore distance, 0 = surface), sampled at the vertex's
+/// world position.
+pub fn surface_mesh(field: &impl WaterField, cell: Axial, rot: u8) -> Mesh {
     let (local, idx) = hex_grid(GRID, HEX_RADIUS);
     let t = cell_transform(cell, rot);
+    let level = field.level();
     let mut colors = Vec::with_capacity(local.len());
     let mut uvs = Vec::with_capacity(local.len());
     for p in &local {
         let w = t.transform_point(*p);
-        let s = water_sample(w.x, w.z);
+        let s = field.water(w.x, w.z);
         colors.push([s.flow.x, s.flow.y, s.river, s.depth]);
         uvs.push([s.shore, 0.0]);
     }
@@ -282,8 +345,64 @@ pub fn water_mesh(cell: Axial, rot: u8) -> Mesh {
     )
     .with_inserted_attribute(
         Mesh::ATTRIBUTE_POSITION,
-        local.iter().map(|p| p.to_array()).collect::<Vec<_>>(),
+        local
+            .iter()
+            .map(|p| p.with_y(level).to_array())
+            .collect::<Vec<_>>(),
     )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 1.0, 0.0]; n])
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, colors)
+    .with_inserted_indices(Indices::U32(idx))
+}
+
+/// The look-dev patch's surface for one cell.
+pub fn water_mesh(cell: Axial, rot: u8) -> Mesh {
+    surface_mesh(&Lookdev, cell, rot)
+}
+
+/// A water strip at the field's level, positions relative to `origin` (world XZ, unrotated). Each
+/// row is a centre point and a unit lateral axis in world XZ; the strip spans `half` metres either
+/// side in `cols` steps. Attributes as in [`surface_mesh`]. River surfaces use it: a row on a tile
+/// edge lies along that edge, so two strips meeting there share their end rows' points.
+pub fn ribbon_mesh(
+    field: &impl WaterField,
+    origin: Vec2,
+    rows: &[(Vec2, Vec2)],
+    half: f32,
+    cols: u32,
+) -> Mesh {
+    let level = field.level();
+    let (mut pos, mut colors, mut uvs, mut idx) = (vec![], vec![], vec![], vec![]);
+    for &(c, lat) in rows {
+        for j in 0..=cols {
+            let w = c + lat * (half * (2.0 * j as f32 / cols as f32 - 1.0));
+            let s = field.water(w.x, w.y);
+            pos.push([w.x - origin.x, level, w.y - origin.y]);
+            colors.push([s.flow.x, s.flow.y, s.river, s.depth]);
+            uvs.push([s.shore, 0.0]);
+        }
+    }
+    let stride = cols + 1;
+    for i in 0..rows.len().saturating_sub(1) as u32 {
+        for j in 0..cols {
+            let (a, b) = (i * stride + j, i * stride + j + 1);
+            let (c, d) = (a + stride, b + stride);
+            for mut t in [[a, c, b], [b, c, d]] {
+                let [p0, p1, p2] = t.map(|k| Vec3::from(pos[k as usize]));
+                if (p1 - p0).cross(p2 - p0).y < 0.0 {
+                    t.swap(1, 2);
+                }
+                idx.extend(t);
+            }
+        }
+    }
+    let n = pos.len();
+    Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::default(),
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, pos)
     .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 1.0, 0.0]; n])
     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
     .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, colors)
@@ -298,28 +417,28 @@ pub fn exposed_edges(cell: Axial) -> Vec<u8> {
         .collect()
 }
 
-/// UV_0.y offset marking a skirt vertex; the terrain height there is `uv.y - SKIRT_TAG`.
+/// UV_0.y offset marking a skirt vertex; the terrain height there is `uv.y - SKIRT_TAG`. The
+/// shader tells skirt from surface by `uv.y > 0.5`, so beds must stay above -9.5 m.
 pub const SKIRT_TAG: f32 = 10.0;
 
-/// The cut faces of the water volume on `cell`'s exposed edges, in cell-centred (unrotated) space:
-/// one quad strip per edge from the rest surface (y = SEA_LEVEL: displaced in the vertex stage
-/// exactly like the surface rim it shares positions with) down to the bed (left in place). Every
-/// water feature crossing the edge (sea, beach shallows, river channel) gets its cross-section; the
-/// shader discards wherever the face is below the terrain, so it never pokes out of a bank. UV_0
-/// carries (shore distance, SKIRT_TAG + terrain height). `None` when every edge has a water
-/// neighbour.
-pub fn skirt_mesh(cell: Axial) -> Option<Mesh> {
-    let edges = exposed_edges(cell);
+/// The cut faces of the water volume on `edges` of `cell` (world edges), in cell-centred
+/// (unrotated) space: one quad strip per edge from the rest surface (the field's level: displaced
+/// in the vertex stage exactly like the surface rim it shares positions with) down to the bed (left
+/// in place). Every water feature crossing the edge (sea, beach shallows, river channel) gets its
+/// cross-section; the shader discards wherever the face is below the terrain, so it never pokes
+/// out of a bank. UV_0 carries (shore distance, SKIRT_TAG + terrain height). `None` without edges.
+pub fn skirt_mesh_for(field: &impl WaterField, cell: Axial, edges: &[u8]) -> Option<Mesh> {
     if edges.is_empty() {
         return None;
     }
+    let level = field.level();
     let [cx, cz] = cell.to_world(HEX_RADIUS);
     let corner = |deg: f32| {
         let a = deg.to_radians();
         Vec3::new(HEX_RADIUS * a.cos(), 0.0, HEX_RADIUS * a.sin())
     };
     let (mut pos, mut nrm, mut uvs, mut col, mut idx) = (vec![], vec![], vec![], vec![], vec![]);
-    for k in edges {
+    for &k in edges {
         let mid = 60.0 * k as f32;
         let (ca, cb) = (corner(mid - 30.0), corner(mid + 30.0));
         let out = ((ca + cb) * 0.5).normalize();
@@ -327,9 +446,9 @@ pub fn skirt_mesh(cell: Axial) -> Option<Mesh> {
         for i in 0..=GRID {
             let p = ca.lerp(cb, i as f32 / GRID as f32);
             let (wx, wz) = (p.x + cx, p.z + cz);
-            let s = water_sample(wx, wz);
-            let ground = height(wx, wz);
-            for y in [SEA_LEVEL, ground.min(SEA_LEVEL)] {
+            let s = field.water(wx, wz);
+            let ground = field.height(wx, wz);
+            for y in [level, ground.min(level)] {
                 pos.push([p.x, y, p.z]);
                 nrm.push(out.to_array());
                 uvs.push([s.shore, SKIRT_TAG + ground]);
@@ -368,39 +487,37 @@ pub fn skirt_mesh(cell: Axial) -> Option<Mesh> {
     )
 }
 
-fn height_normal(x: f32, z: f32) -> Vec3 {
+/// The look-dev patch's cut faces for `cell`'s outer edges.
+pub fn skirt_mesh(cell: Axial) -> Option<Mesh> {
+    skirt_mesh_for(&Lookdev, cell, &exposed_edges(cell))
+}
+
+fn height_normal(field: &impl WaterField, x: f32, z: f32) -> Vec3 {
     let e = 0.25;
-    let dx = height(x + e, z) - height(x - e, z);
-    let dz = height(x, z + e) - height(x, z - e);
+    let dx = field.height(x + e, z) - field.height(x - e, z);
+    let dz = field.height(x, z + e) - field.height(x, z - e);
     Vec3::new(-dx, 2.0 * e, -dz).normalize()
 }
 
 /// Skirt depth below sea level for the patch's outer walls (m).
 const SKIRT_FLOOR: f32 = -7.0;
 
-/// One cell's terrain in cell-local space, heights and normals from the world heightfield, plus a
-/// vertical skirt on every edge (hidden where a neighbour exists). COLOR carries (beach, river,
-/// shore distance, 1).
-pub fn terrain_mesh(cell: Axial, rot: u8) -> Mesh {
+/// One cell's terrain in cell-local space, heights and normals from the field, plus a vertical
+/// skirt on every edge down to `floor` (hidden where a neighbour exists). COLOR carries
+/// [`WaterField::terrain`] with w = 1 on the cap and 0 on the skirt.
+pub fn terrain_mesh_for(field: &impl WaterField, cell: Axial, rot: u8, floor: f32) -> Mesh {
     let (mut local, mut idx) = hex_grid(GRID, HEX_RADIUS);
     let t = cell_transform(cell, rot);
     let inv = t.rotation.inverse();
     let mut normals = Vec::with_capacity(local.len());
     let mut colors = Vec::with_capacity(local.len());
-    let attrs = |w: Vec3| {
-        let s = water_sample(w.x, w.z);
-        let r = river_sample(Vec2::new(w.x, w.z));
-        let river = 1.0 - smoothstep(4.0, 9.0, r.dist - river_half_width(r.along));
-        let beach = (1.0 - river) * (1.0 - smoothstep(-14.0, -9.0, s.shore));
-        [1.0 - beach - river, river, s.shore, 1.0]
-    };
     for p in local.iter_mut() {
         let w = t.transform_point(*p);
-        p.y = height(w.x, w.z);
-        normals.push((inv * height_normal(w.x, w.z)).to_array());
-        colors.push(attrs(w));
+        p.y = field.height(w.x, w.z);
+        normals.push((inv * height_normal(field, w.x, w.z)).to_array());
+        colors.push(field.terrain(w.x, w.z));
     }
-    // Skirt: the hex rim's top vertices down to SKIRT_FLOOR, with outward normals.
+    // Skirt: the hex rim's top vertices down to `floor`, with outward normals.
     let corner = |i: u32| {
         let a = (30.0 + 60.0 * i as f32).to_radians();
         Vec3::new(HEX_RADIUS * a.cos(), 0.0, HEX_RADIUS * a.sin())
@@ -412,18 +529,18 @@ pub fn terrain_mesh(cell: Axial, rot: u8) -> Mesh {
             let a = ca.lerp(cb, k as f32 / GRID as f32);
             let b = ca.lerp(cb, (k + 1) as f32 / GRID as f32);
             let (wa, wb) = (t.transform_point(a), t.transform_point(b));
-            let ha = height(wa.x, wa.z);
-            let hb = height(wb.x, wb.z);
+            let ha = field.height(wa.x, wa.z);
+            let hb = field.height(wb.x, wb.z);
             let base = local.len() as u32;
             for (p, w) in [
                 (a.with_y(ha), wa),
                 (b.with_y(hb), wb),
-                (b.with_y(SKIRT_FLOOR), wb),
-                (a.with_y(SKIRT_FLOOR), wa),
+                (b.with_y(floor), wb),
+                (a.with_y(floor), wa),
             ] {
                 local.push(p);
                 normals.push(out.to_array());
-                let mut c = attrs(w);
+                let mut c = field.terrain(w.x, w.z);
                 c[3] = 0.0;
                 colors.push(c);
             }
@@ -451,6 +568,11 @@ pub fn terrain_mesh(cell: Axial, rot: u8) -> Mesh {
     .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
     .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, colors)
     .with_inserted_indices(Indices::U32(idx))
+}
+
+/// The look-dev patch's terrain for one cell, walls down to [`SKIRT_FLOOR`].
+pub fn terrain_mesh(cell: Axial, rot: u8) -> Mesh {
+    terrain_mesh_for(&Lookdev, cell, rot, SKIRT_FLOOR)
 }
 
 /// Gerstner wave count per tier (the shader loops `wave_count` times in both stages).
@@ -721,21 +843,21 @@ pub const FIXED_STEP: f32 = 1.0 / 30.0;
 #[derive(Component)]
 pub struct WaterSurface;
 
-/// Spawns the look-dev patch; `setup` calls it for `Scenario::Water` and `Scenario::WaterKit`.
-pub fn spawn(
-    commands: &mut Commands,
-    meshes: &mut Assets<Mesh>,
+/// The water and placeholder-terrain materials for a water surface at `level`, sharing one noise
+/// texture.
+pub fn materials(
     images: &mut Assets<Image>,
     water_mats: &mut Assets<WaterMaterial>,
     terrain_mats: &mut Assets<TerrainMaterial>,
     tier: QualityTier,
-) {
+    level: f32,
+) -> (Handle<WaterMaterial>, Handle<TerrainMaterial>) {
     let noise = images.add(noise_image());
     let water = water_mats.add(WaterMaterial {
         params: WaterParams {
             water_time: 0.0,
             wave_count: wave_count(tier),
-            sea_level: SEA_LEVEL,
+            sea_level: level,
             wash_amp: WASH_AMP,
         },
         noise: noise.clone(),
@@ -745,11 +867,24 @@ pub fn spawn(
         params: TerrainParams {
             terrain_time: 0.0,
             wash_amp: WASH_AMP,
-            sea_level: SEA_LEVEL,
+            sea_level: level,
             _pad: 0.0,
         },
         noise,
     });
+    (water, terrain)
+}
+
+/// Spawns the look-dev patch; `setup` calls it for `Scenario::Water` and `Scenario::WaterKit`.
+pub fn spawn(
+    commands: &mut Commands,
+    meshes: &mut Assets<Mesh>,
+    images: &mut Assets<Image>,
+    water_mats: &mut Assets<WaterMaterial>,
+    terrain_mats: &mut Assets<TerrainMaterial>,
+    tier: QualityTier,
+) {
+    let (water, terrain) = materials(images, water_mats, terrain_mats, tier, SEA_LEVEL);
     for (cell, rot) in layout() {
         let t = cell_transform(cell, rot);
         commands.spawn((
@@ -1014,6 +1149,31 @@ mod tests {
             gradient_noise(8.3, 0.7, 8, 1),
         );
         assert!((a.0 - b.0).abs() < 1e-5 && (a.1 - b.1).abs() < 1e-4);
+    }
+
+    #[test]
+    fn lookdev_meshes_hash() {
+        use std::hash::{Hash, Hasher};
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        let mut eat = |m: &Mesh| {
+            for (_, v) in m.attributes() {
+                for b in v.get_bytes() {
+                    b.hash(&mut h);
+                }
+            }
+            if let Some(Indices::U32(i)) = m.indices() {
+                i.hash(&mut h);
+            }
+        };
+        for (cell, rot) in layout() {
+            eat(&water_mesh(cell, rot));
+            eat(&terrain_mesh(cell, rot));
+            if let Some(s) = skirt_mesh(cell) {
+                eat(&s);
+            }
+        }
+        // Recorded before the field refactor: the look-dev meshes are bit-identical.
+        assert_eq!(h.finish(), 0x8d2d_d2e1_d1c7_899f);
     }
 
     #[test]
