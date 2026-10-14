@@ -131,6 +131,16 @@ Two choices to confirm:
 
 Q1 is now settled: the bar says "Autosave off" and "Saved", but the Worlds sheet still uses the mockup's "Not saved" for the off state.
 
+**A17. P3 references (reference gate only; nothing is modeled).** Sheets are at `assets-source/refs/<id>/sheet.jpg` for rail, rail_station, train, farm, farm_animals, windmill and bakery: 17 refs for 38 credits. Questions to answer with the approvals:
+- **Rail:** standard gauge or wider so it reads at play distance? Single track? Bends across one or two edges? Is a 60° rail-road level crossing with four field gates OK (ref-3 drew it near 90°, which a hex cannot do)?
+- **Station:** a side platform about 20 m long, or an island platform? Is the ref-1 shelter the house style?
+- **Train:** steam tank engine, as drawn, or diesel? Which parts take the runtime colour? Always two carriages?
+- **Farm:** pitched or gambrel barn roof? Red board or the cottage brick and timber? Which crop? Which edge sockets?
+- **Animals:** which cow breed, horned or not? Black-faced sheep? Is ref-2's smooth form the low-poly target?
+- **Windmill:** mound (ref-3) or flat tile (ref-1)? Tarred black or white? Should the fantail animate as well as the sails?
+- **Bakery:** road through the tile or a stub? Its own tile, or a pad inside a house cluster?
+- **All P3 tiles:** use the O4 cutaway skirt (recommended).
+
 ## Questions
 
 **Q1. Save label (resolved).** Autosave now exists, so the bar shows "Saved" as the brief asked, plus "Saving…" and "Autosave off". See A16.
