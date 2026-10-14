@@ -1,0 +1,77 @@
+{
+  "aoDistanceM": 0.3,
+  "bakeStats": {
+    "barkAo": {
+      "mean": 0.8502881526947021,
+      "min": 0.6748235821723938,
+      "p01": 0.7200000286102295,
+      "p05": 0.7200000286102295,
+      "texels": 4099
+    },
+    "needleAlphaCoverageByMip": [
+      0.5608,
+      0.5635,
+      0.5694,
+      0.5691,
+      0.5676,
+      0.5666,
+      0.5909,
+      0.6,
+      0.625,
+      1.0
+    ]
+  },
+  "barkTile": {
+    "aoTexelDensityPxPerM": {
+      "max": 16.373732067512208,
+      "median": 16.372488572501897,
+      "min": 9.367530060836605
+    },
+    "set": "bark",
+    "tileUvScale": 32.0,
+    "uvPerM": 0.015625
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.12,
+  "cards": {
+    "filler": 150,
+    "frondTiles": 2,
+    "main": 150
+  },
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 1024
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 8,
+  "maxRayDistanceM": 0.3,
+  "receiverSignature": "f5c11cc72dfdea9ee6585c289df3f4269a7522638a872a39144622b334954a2c",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "tree_forest_bark": {
+      "max": 523.9594261603906,
+      "median": 523.9196343200607,
+      "min": 299.7609619467714
+    },
+    "tree_forest_needles": {
+      "max": 5307.240132507924,
+      "median": 481.8944040331713,
+      "min": 202.62000467834451
+    }
+  }
+}

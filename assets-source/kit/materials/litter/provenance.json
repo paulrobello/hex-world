@@ -1,0 +1,218 @@
+{
+  "setId": "litter",
+  "kind": "tileable",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/mat_litter.py",
+    "sha256": "f3f7fb47c4fc111ea31ab12e12a9d51d3d5d131741b02ba759b8651ddf1a3206"
+  },
+  "generatorDeps": [],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "device": "numpy",
+    "generator": "scripts/blender/kit/mat_litter.py",
+    "generatorDeps": [],
+    "generatorSha256": "f3f7fb47c4fc111ea31ab12e12a9d51d3d5d131741b02ba759b8651ddf1a3206",
+    "method": "numpy-drawn",
+    "samples": 0,
+    "set": "litter",
+    "size": 1024,
+    "stats": {
+      "albedoMeanSrgb": [
+        0.3026,
+        0.2215,
+        0.1208
+      ],
+      "mirrorCorrelation": {
+        "flipU": 0.0164,
+        "flipV": 0.0003
+      },
+      "mossCover": 0.1647,
+      "roughMean": 0.8249
+    },
+    "tileM": 2
+  },
+  "bakeReport": {
+    "path": "assets-source/kit/materials/litter/bake-report.json",
+    "sha256": "8d29439b7e86523fe62f61ca827ced82567039ea6d09c6415647a1851d664dca",
+    "bytes": 526
+  },
+  "compressReport": {
+    "path": "assets-source/kit/materials/litter/compress-report.json",
+    "sha256": "15eb189c0c0bf3b950a881474b8671b4607b4a81fa2b219757b1dd3e2b8a2101",
+    "bytes": 3888
+  },
+  "compression": {
+    "budgets": {
+      "class": "tileable",
+      "ktxMax": 3600000,
+      "ktxBytes": {
+        "bc7": 2444974,
+        "astc": 2477026
+      }
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/materials/litter/litter.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 1039971,
+        "sha256": "5703b0f510f62648325415ebaeb00c8205c7644ae94dc6bea1227280327fc6ab"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/materials/litter/litter.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 1053821,
+        "sha256": "90e2b3a37da7f88a248e10839db2d6805817b5aefedae75f898509980482143b"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/materials/litter/litter.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 1990380,
+        "sha256": "eb44e3fb48ddcfb4690607ea1e86a5f6fa6fe7a0b874a588a6225f0387e4c676"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/materials/litter/litter.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 983748,
+        "sha256": "7e3ad2d904e5bf9eecc548ccedbd449db717f02c492f1735bdb6c79a85885a89"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/materials/litter/litter.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 995386,
+        "sha256": "58ae6ac78885994db1d222fad795a3da77a07f955aa777e7c7ebf5abab3de296"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/materials/litter/litter.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 2007989,
+        "sha256": "99e86822e46863e65d3aaeebfd154560de615fc20c2b97be1ffc5eb7ba6dc087"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/materials/litter/litter.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 421255,
+        "sha256": "528d38d8f02aebfd9ec3c6c80b7841602766ee9d1a77b037ca58d3bfe6472e41"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/materials/litter/litter.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 427819,
+        "sha256": "d2b25c8b35632fddc99c8cd8df05558a651d714046afb67a5df39500e07e6254"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/materials/litter/litter.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 463524,
+        "sha256": "f384c1718af311131ab687771089344bf21ebb4a7eae9d6928a73f4119616c4e"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/materials/litter/litter.albedo.bc7.ktx2",
+      "sha256": "5703b0f510f62648325415ebaeb00c8205c7644ae94dc6bea1227280327fc6ab",
+      "bytes": 1039971
+    },
+    {
+      "path": "assets/kit/p1/materials/litter/litter.albedo.astc.ktx2",
+      "sha256": "90e2b3a37da7f88a248e10839db2d6805817b5aefedae75f898509980482143b",
+      "bytes": 1053821
+    },
+    {
+      "path": "assets/kit/p1/materials/litter/litter.albedo.png",
+      "sha256": "eb44e3fb48ddcfb4690607ea1e86a5f6fa6fe7a0b874a588a6225f0387e4c676",
+      "bytes": 1990380
+    },
+    {
+      "path": "assets/kit/p1/materials/litter/litter.normal.bc7.ktx2",
+      "sha256": "7e3ad2d904e5bf9eecc548ccedbd449db717f02c492f1735bdb6c79a85885a89",
+      "bytes": 983748
+    },
+    {
+      "path": "assets/kit/p1/materials/litter/litter.normal.astc.ktx2",
+      "sha256": "58ae6ac78885994db1d222fad795a3da77a07f955aa777e7c7ebf5abab3de296",
+      "bytes": 995386
+    },
+    {
+      "path": "assets/kit/p1/materials/litter/litter.normal.png",
+      "sha256": "99e86822e46863e65d3aaeebfd154560de615fc20c2b97be1ffc5eb7ba6dc087",
+      "bytes": 2007989
+    },
+    {
+      "path": "assets/kit/p1/materials/litter/litter.orm.bc7.ktx2",
+      "sha256": "528d38d8f02aebfd9ec3c6c80b7841602766ee9d1a77b037ca58d3bfe6472e41",
+      "bytes": 421255
+    },
+    {
+      "path": "assets/kit/p1/materials/litter/litter.orm.astc.ktx2",
+      "sha256": "d2b25c8b35632fddc99c8cd8df05558a651d714046afb67a5df39500e07e6254",
+      "bytes": 427819
+    },
+    {
+      "path": "assets/kit/p1/materials/litter/litter.orm.png",
+      "sha256": "f384c1718af311131ab687771089344bf21ebb4a7eae9d6928a73f4119616c4e",
+      "bytes": 463524
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T04:12:06.108Z",
+    "checks": [
+      "kit-compress tileable budget",
+      "kit_gate textures"
+    ]
+  }
+}

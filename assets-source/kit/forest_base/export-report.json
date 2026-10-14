@@ -1,0 +1,107 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/forest_base.py",
+    "sha256": "817e872afddf1a6a8e118c42b246f4fd91664c2c6566e43ffde6779b22d27e16"
+  },
+  "generatorDeps": [],
+  "lodTris": {
+    "forest_base_lod0": 3192,
+    "forest_base_lod1": 1194,
+    "forest_base_lod2": 452
+  },
+  "nodes": [
+    "anchor-prop-0",
+    "anchor-prop-1",
+    "anchor-prop-2",
+    "anchor-prop-3",
+    "anchor-prop-4",
+    "anchor-prop-5",
+    "forest_base",
+    "forest_base_collider",
+    "forest_base_lod0",
+    "forest_base_lod1",
+    "forest_base_lod2"
+  ],
+  "pieceId": "forest_base",
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        8.404267311096191,
+        -0.058680202811956406,
+        -3.781740665435791
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        0.567604660987854,
+        -0.10355708748102188,
+        -5.040384292602539
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        -8.244088172912598,
+        -0.13714390993118286,
+        -3.4856982231140137
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-3",
+      "position": [
+        -4.624881267547607,
+        -0.0967523604631424,
+        2.8934972286224365
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-4",
+      "position": [
+        0.371222585439682,
+        -0.05484785884618759,
+        9.023956298828125
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-5",
+      "position": [
+        5.55700159072876,
+        -0.08690247684717178,
+        2.063502550125122
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

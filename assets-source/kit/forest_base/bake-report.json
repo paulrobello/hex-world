@@ -1,0 +1,45 @@
+{
+  "blender": "5.2.2 LTS",
+  "capFacesPerSlot": [
+    [
+      635,
+      496,
+      1293
+    ],
+    [
+      243,
+      218,
+      349
+    ],
+    [
+      140,
+      76,
+      44
+    ]
+  ],
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 12,
+  "maskStats": {
+    "mean": 0.9993999004364014,
+    "min": 0.9686275124549866,
+    "p01": 0.9843137860298157,
+    "snowMin": 0.7490196228027344,
+    "texels": 632404,
+    "wetMax": 0.8509804606437683,
+    "wetMin": 0.5176470875740051
+  },
+  "receiverSignature": "5054f7c4d19e1d8a1afd8b53e4efd9062bc708d0d931408f8f26f23b01ec4680",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 32.00000953044415,
+    "median": 31.99067718323261,
+    "min": 31.743868070566712
+  }
+}

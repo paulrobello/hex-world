@@ -1,0 +1,22 @@
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 5cf49e8..03da501 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -84,6 +84,17 @@ pub fn kit_layout() -> Vec<Placement> {
+     v.push(hero("house_cottage", -1, 0, [-0.5, -7.0], 90.0));
+     v.push(hero("house_cottage", -1, 0, [-0.5, 7.0], 270.0));
+     v.push(hero("house_twostorey", -1, 0, [-7.5, 0.0], 0.0));
++    // SCRATCH (forest shots, not committed): forest tile (1, 1) beside meadow (0, 1) with the hero oak
++    // at its centre and 20 seeded spruces; a second forest tile (1, 2) for the forest-forest seam.
++    v.push(place("forest_base", 1, 1, 0));
++    v.push(hero("tree_hero_oak", 1, 1, [0.0, 0.0], 0.0));
++    for (at, yaw) in [([-0.9, -8.8], 180.0), ([-4.1, 6.3], 27.0), ([-4.0, 11.5], 109.0), ([7.2, -3.7], 334.0), ([-6.9, -9.6], 334.0), ([-11.3, 3.5], 131.0), ([-8.9, -2.9], 289.0), ([10.7, 0.2], 187.0), ([2.9, 12.3], 106.0), ([6.1, -9.2], 138.0), ([10.5, 7.9], 311.0), ([6.1, 3.9], 87.0), ([10.6, -7.1], 229.0), ([-10.5, 8.1], 126.0), ([-0.6, -14.0], 230.0), ([-4.3, -5.3], 40.0), ([1.0, 6.9], 307.0), ([-6.8, 1.8], 38.0), ([-11.7, -7.1], 182.0), ([5.5, 8.5], 30.0)] {
++        v.push(hero("tree_forest", 1, 1, at, yaw));
++    }
++    v.push(place("forest_base", 1, 2, 2));
++    for (at, yaw) in [([6.2, 3.3], 93.0), ([9.1, -2.8], 131.0), ([-0.6, 1.4], 279.0), ([2.3, -8.1], 346.0), ([-0.8, 6.3], 341.0), ([4.0, 11.6], 140.0), ([-11.3, 0.8], 203.0), ([-8.7, 4.9], 21.0), ([-7.5, -8.8], 216.0), ([12.0, 2.0], 154.0), ([-1.8, 11.3], 82.0), ([-4.9, -2.0], 183.0), ([-3.3, -6.8], 328.0), ([10.2, 6.8], 87.0), ([-6.4, 10.3], 110.0), ([-10.4, -4.9], 198.0), ([3.9, -2.0], 179.0), ([10.8, -7.5], 68.0)] {
++        v.push(hero("tree_forest", 1, 2, at, yaw));
++    }
+     v
+ }
+ 

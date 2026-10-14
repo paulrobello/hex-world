@@ -1,0 +1,283 @@
+{
+  "pieceId": "forest_base",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/forest_base.py",
+    "sha256": "817e872afddf1a6a8e118c42b246f4fd91664c2c6566e43ffde6779b22d27e16"
+  },
+  "generatorDeps": [],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "capFacesPerSlot": [
+      [
+        635,
+        496,
+        1293
+      ],
+      [
+        243,
+        218,
+        349
+      ],
+      [
+        140,
+        76,
+        44
+      ]
+    ],
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "marginPx": 12,
+    "maskStats": {
+      "mean": 0.9993999004364014,
+      "min": 0.9686275124549866,
+      "p01": 0.9843137860298157,
+      "snowMin": 0.7490196228027344,
+      "texels": 632404,
+      "wetMax": 0.8509804606437683,
+      "wetMin": 0.5176470875740051
+    },
+    "receiverSignature": "5054f7c4d19e1d8a1afd8b53e4efd9062bc708d0d931408f8f26f23b01ec4680",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 32.00000953044415,
+      "median": 31.99067718323261,
+      "min": 31.743868070566712
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 3192,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 1194,
+      "ratio": 0.37406015037593987
+    },
+    {
+      "lod": 2,
+      "tris": 452,
+      "ratio": 0.14160401002506265
+    }
+  ],
+  "collider": {
+    "node": "forest_base_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        8.404267311096191,
+        -0.058680202811956406,
+        -3.781740665435791
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        0.567604660987854,
+        -0.10355708748102188,
+        -5.040384292602539
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        -8.244088172912598,
+        -0.13714390993118286,
+        -3.4856982231140137
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-3",
+      "position": [
+        -4.624881267547607,
+        -0.0967523604631424,
+        2.8934972286224365
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-4",
+      "position": [
+        0.371222585439682,
+        -0.05484785884618759,
+        9.023956298828125
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-5",
+      "position": [
+        5.55700159072876,
+        -0.08690247684717178,
+        2.063502550125122
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 32.00000953044415,
+    "median": 31.99067718323261,
+    "min": 31.743868070566712
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 211227,
+        "astc": 217152
+      },
+      "glbBytes": 122056
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/forest_base/forest_base.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 211227,
+        "sha256": "0522ef8f8b479561af6f0cfc43844df5ff7cdc573b3a97424a1a7128624e7fe7"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/forest_base/forest_base.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 217152,
+        "sha256": "e962c9a28ced9ba98cd507c9bcd731a8514704f3bbbd8185bbb2777b53d3f5a1"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/forest_base/forest_base.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 304600,
+        "sha256": "d4424cad5f0114badff5cf5e8d4b9a17a67e6171541eaf9e5dfd6af149a2f137"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/forest_base/forest_base.glb",
+      "sha256": "87f129ea6729c60977e2361be12d80a5c3afa703592f03f51c5adf5c8422b5fe",
+      "bytes": 122056
+    },
+    {
+      "path": "assets/kit/p1/forest_base/forest_base.masks.bc7.ktx2",
+      "sha256": "0522ef8f8b479561af6f0cfc43844df5ff7cdc573b3a97424a1a7128624e7fe7",
+      "bytes": 211227
+    },
+    {
+      "path": "assets/kit/p1/forest_base/forest_base.masks.astc.ktx2",
+      "sha256": "e962c9a28ced9ba98cd507c9bcd731a8514704f3bbbd8185bbb2777b53d3f5a1",
+      "bytes": 217152
+    },
+    {
+      "path": "assets/kit/p1/forest_base/forest_base.masks.png",
+      "sha256": "d4424cad5f0114badff5cf5e8d4b9a17a67e6171541eaf9e5dfd6af149a2f137",
+      "bytes": 304600
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/forest/ref-1.jpg",
+      "sha256": "91bec450432eaf9da8debc4f88820bc7da6b4fbbb17c6586e22f0ae1afc09ac6",
+      "sourceSha256": "3c9aa8f425d216ab897c74a17ba4d998a008fa7b0672024f9988a8813201e31d",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "23f27fd1-0218-42b6-92c4-0d22142c11e5",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), covered by a dense mixed forest: a few broad rounded oaks among many tall spruce conifers with dark green needle tiers, undergrowth of ferns, shrubs and saplings, a fallen mossy log and leaf litter on the forest floor, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/forest/ref-2.jpg",
+      "sha256": "fd5b8a1ebb2c3df56a73f28095a39d07c6c7e303dfcdb79e34d4e05ce9164734",
+      "sourceSha256": "394bbf09c7fab300ef2e4e781ee047384e0bbdba2b6015750bfebdef5ae88ec8",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e3e4f64b-d10d-4a10-b22a-0fe15b9fee0e",
+      "prompt": "Close-up of a stylized-real spruce conifer and the forest undergrowth on a diorama tile: rough flaky bark, layered tiers of needle clusters, ferns, low shrubs, moss and leaf litter at the trunk base, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-14T04:13:50.020Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/forest/ref-1.jpg",
+        "assets-source/refs/forest/ref-2.jpg"
+      ],
+      "notes": "Approved: spruce among oaks, ferns, fallen log. ref-2 sits on a square fragment; tiles are hexagonal. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    }
+  ]
+}

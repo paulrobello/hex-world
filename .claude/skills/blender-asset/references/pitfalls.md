@@ -43,11 +43,16 @@ Known Blender, bake, export and KTX2 traps, from the asset-pipeline research and
 - **A sliced 4D Voronoi F1 reads as polka dots.** The torus surface cuts 4D cells off-centre, so F1 distance thresholds give sparse round discs, and the cells come out about 5x larger than 1 / scale suggests. For packed stones (gravel), shape them from `DISTANCE_TO_EDGE` and colour them from an F1 node with the same scale (same cells); measure the stone size on the 2×2 tile (gravel: Voronoi 40 is about 2 cm).
 - **Judge the 2×2 tile at 1:1 before compressing.** Tight Voronoi tuft cells read as polka dots at 512 px/m. Voronoi suits sparse features (clover, pebbles); turf needs soft, high-distortion noise blades.
 - **Vertically banded sets** (soil strata) must line their bands up with the wall mapping (`project.md`, "Textures").
+- **Sets made of shapes (leaf litter, pebbles) draw better in numpy.** `kit/mat_litter.py` stamps every element with wrap-around indices and builds noise as FFT band-limited white noise, so the tile is periodic by construction (mirror correlation about 0.02) and writes the maps with `bake.write_png`. Judge it tiled 8x8 at game scale as well as the 2x2 at 1:1: elements pasted on top of everything (moss blobs) read as camouflage, so lay soft cover as a ground layer the elements partly cover.
+
+## Biome bases
+- **A biome cap must be grass at the border.** Tileable layers sample in world space, so a slot change at the hex border (a tint or another set) is a straight line against the meadow. Split one cap mesh into slots per face along wavy contours inside the rim (`kit/forest_base.py`: untinted `grass` rim identical to `meadow_base_cap`, a tinted transition band, then the biome set), give each contour its own CDT points in every LOD (drop lattice points within about half a spacing of it, or the boundary zigzags), and assert that every border-touching cap face is the rim slot. Two such bases side by side then show a grass strip between their floors; the fix is a socket-chosen edge piece (PRD §6), not the base.
 
 ## Leaves, foliage and LODs
 - **Alpha coverage below 0.5 collapses with mips.** A 4D Voronoi sliced at a fixed W gave sparse round blobs (11% opaque), and the alphaCutoff 0.5 canopy vanished from mip 7 on. Keep leaf-strip coverage at or above about 0.55 at mip 0 and measure it per mip (`gates.md`).
 - **Shader nodes cannot draw a lobed leaf.** Draw leaf tiles in numpy (`_leaves.py`: lobed outline, midrib, per-leaf tone, folded normal) and write them straight into the atlas strip; the live session loads the same arrays so the showcase and the engine match.
 - **Leaf cards decimate badly.** Build LOD1/LOD2 from a card subset scaled up to hold coverage (`card_subset`), and decimate only the bark.
+- **Conifer fronds (`kit/_forest.py`).** Thin needles alone measure about 0.27 coverage: draw a shadowed frond body (alpha 1) under the needles to hold 0.55+ down the chain. A card-only crown reads as plates around sky: put a small, near-black inner cone (a colour + masks slot, no texture, so no texel-density cost) inside it, and fold the cards so their sides hang. Regenerate LODs from the branch list with fewer segments, but keep at least 2 segments per card: with only root and tip rows the fringe's median wind U lands on the boundary between the trunk's sway and 1.
 - **Normals in a card's plane give zero tangents.** MikkTSpace returns a zero tangent and gltf-validator fails `kit-compress` (`ACCESSOR_VECTOR3_NON_UNIT`). Blend part of the card's face normal back into authored foliage normals (`project.md`, "Foliage normals").
 - **Unweighted per-face medians are skewed by face count.** `uv.measure_texel_density` takes an unweighted per-face median, so many small leaf cards hid bark at 108 px/m behind a 270 px/m pooled median. The gate is per material for this reason; still read per-slot numbers when tuning.
 - Never decimate a border-ring piece; regenerate it.
@@ -82,6 +87,7 @@ Known Blender, bake, export and KTX2 traps, from the asset-pipeline research and
 
 ## Look-dev and engine shots
 - **Look-dev parity.** Blender's view transform does not match Bevy's tonemapper. The 6-view Blender renders are evidence only; approval happens in engine.
+- **The 6-view render is untextured.** The GLB embeds no images, so alpha cards render as solid quads and a tileable slot as its flat colour. Judge foliage from a headless EEVEE still that binds the staged maps (alpha clip, the set at the slot's `tileUvScale` and tint), then in engine.
 - **Shadow acne in an in-engine shot is a renderer issue first.** Grazing-angle kerb walls showed sawtooth acne that a `--shadows off` shot removed entirely; the fix was in the kit's shadow settings, not the asset.
 - **Tileable layers are sampled in world space** (`kit_material.wesl`), so neighbours line up under rotation. The exception is a slot with `tileUvScale` (tree bark), which samples its set on UV0 (`project.md`).
 

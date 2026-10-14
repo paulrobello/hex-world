@@ -1,0 +1,25 @@
+{
+  "blender": "5.2.2 LTS",
+  "device": "numpy",
+  "generator": "scripts/blender/kit/mat_litter.py",
+  "generatorDeps": [],
+  "generatorSha256": "f3f7fb47c4fc111ea31ab12e12a9d51d3d5d131741b02ba759b8651ddf1a3206",
+  "method": "numpy-drawn",
+  "samples": 0,
+  "set": "litter",
+  "size": 1024,
+  "stats": {
+    "albedoMeanSrgb": [
+      0.3026,
+      0.2215,
+      0.1208
+    ],
+    "mirrorCorrelation": {
+      "flipU": 0.0164,
+      "flipV": 0.0003
+    },
+    "mossCover": 0.1647,
+    "roughMean": 0.8249
+  },
+  "tileM": 2.0
+}
