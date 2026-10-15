@@ -34,12 +34,12 @@
   {"cmd": "wait", "frames": 30},
   {"cmd": "screenshot", "name": "fp-03-forest"},
   {"cmd": "walk_to", "x": -27.7, "z": 3.0, "heading": 300, "pitch": 2},
-  {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 8, "jog": false},
+  {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 4, "sprint": false},
   {"cmd": "wait", "frames": 500},
   {"cmd": "dump_state", "name": "fp-03-forest-walked"},
 
   {"cmd": "walk_to", "x": -34.6, "z": 20.0, "heading": 240, "pitch": -6},
-  {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 6, "jog": false},
+  {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 3, "sprint": false},
   {"cmd": "wait", "frames": 400},
   {"cmd": "walk_look", "heading": 205, "pitch": -8},
   {"cmd": "wait", "frames": 10},
@@ -47,7 +47,7 @@
   {"cmd": "dump_state", "name": "fp-04-river-bank"},
 
   {"cmd": "walk_to", "x": -36.4, "z": -21.0, "heading": 300, "pitch": -4},
-  {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 10, "jog": false},
+  {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 5, "sprint": false},
   {"cmd": "wait", "frames": 640},
   {"cmd": "walk_look", "heading": 25, "pitch": -7},
   {"cmd": "wait", "frames": 10},
@@ -55,7 +55,7 @@
   {"cmd": "dump_state", "name": "fp-05-beach"},
 
   {"cmd": "walk_to", "x": 2.0, "z": 6.0, "heading": 180, "pitch": -24},
-  {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 8, "jog": true},
+  {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 5, "sprint": true},
   {"cmd": "wait", "frames": 500},
   {"cmd": "screenshot", "name": "fp-06-map-edge"},
   {"cmd": "dump_state", "name": "fp-06-map-edge"},

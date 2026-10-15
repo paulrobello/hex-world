@@ -111,7 +111,8 @@ export type Command =
   | { cmd: "new_world" }
   | { cmd: "walk"; on: boolean | null; pointer_lock: boolean | null }
   | { cmd: "walk_to"; x: number; z: number; heading: number | null; pitch: number | null }
-  | { cmd: "walk_step"; forward: number; right: number; seconds: number; jog: boolean | null }
+  | { cmd: "walk_step"; forward: number; right: number; seconds: number; sprint: boolean | null }
+  | { cmd: "set_walk_speed"; speed: number }
   | { cmd: "walk_look"; heading: number | null; pitch: number | null };
 
 export type GameEvent =
@@ -285,6 +286,10 @@ export interface WalkState {
   /** Seconds left of a scripted `walk_step`. */
   step_left: number | null;
   pointer_lock: boolean;
+  /** The walk speed setting (m/s, 2.8 to 8), reported whether walk mode is on or not. */
+  walk_speed: number;
+  /** Shift's speed: always twice `walk_speed`. */
+  sprint_speed: number;
 }
 
 /** `state().tilt`: the game camera's tilt-shift (PRD §9.1). */
@@ -436,7 +441,8 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   new_world: keys<CommandOf<"new_world">>({}),
   walk: keys<CommandOf<"walk">>({ on: true, pointer_lock: true }),
   walk_to: keys<CommandOf<"walk_to">>({ x: true, z: true, heading: true, pitch: true }),
-  walk_step: keys<CommandOf<"walk_step">>({ forward: true, right: true, seconds: true, jog: true }),
+  walk_step: keys<CommandOf<"walk_step">>({ forward: true, right: true, seconds: true, sprint: true }),
+  set_walk_speed: keys<CommandOf<"set_walk_speed">>({ speed: true }),
   walk_look: keys<CommandOf<"walk_look">>({ heading: true, pitch: true }),
 };
 
@@ -546,6 +552,8 @@ export const STATE_FIELDS = {
     distance: true,
     step_left: true,
     pointer_lock: true,
+    walk_speed: true,
+    sprint_speed: true,
   }),
   grade: keys<GradeState>({ name: true, default: true, presets: true }),
   grade_preset: keys<GradePreset>({ name: true, detail: true }),

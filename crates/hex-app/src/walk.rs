@@ -1,5 +1,5 @@
 //! First-person walk mode (PRD P8, D14): the walker stands on the kit ground at eye height, walks
-//! with WASD (Shift jogs), looks with the mouse and hops with Space, and is stopped by buildings,
+//! with WASD (Shift sprints), looks with the mouse and hops with Space, and is stopped by buildings,
 //! trunks, rocks, deep water and the map edge (`hex_render::walk`). The world keeps running.
 //!
 //! Enter and exit follow `GameState::walk_mode`, so the F key, Esc, the HUD button and the `walk`
@@ -21,9 +21,11 @@ use crate::game::GameState;
 
 /// Eye height above the feet (m).
 pub const EYE_HEIGHT: f32 = 1.7;
-/// Walking and jogging speeds (m/s).
-pub const WALK_SPEED: f32 = 1.4;
-pub const JOG_SPEED: f32 = 3.5;
+/// The walk speed setting's default and lowest value, and its highest (m/s); owner 2026-10-14.
+pub const WALK_SPEED: f32 = 2.8;
+pub const WALK_SPEED_MAX: f32 = 8.0;
+/// Shift sprints at this many times the walk speed, whatever the setting.
+pub const SPRINT_FACTOR: f32 = 2.0;
 /// Vertical field of view while walking (degrees); leaving restores the orbit camera's.
 pub const WALK_FOV_DEG: f32 = 60.0;
 /// Mouse look rate (radians per pixel) and the pitch limit short of straight up or down.
@@ -38,6 +40,38 @@ const GRAVITY: f32 = 9.81;
 pub const WALK_TO_SNAP: f32 = 4.0;
 /// The pitch the walker enters at (radians, slightly down).
 const ENTRY_PITCH: f32 = -0.08;
+
+/// The walk speed setting (m/s), always within [`WALK_SPEED`]..=[`WALK_SPEED_MAX`]. It is per
+/// viewer (the overlay keeps it in localStorage), not part of the world save.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct WalkSpeed(f32);
+
+impl Default for WalkSpeed {
+    fn default() -> Self {
+        Self(WALK_SPEED)
+    }
+}
+
+impl WalkSpeed {
+    /// `v` clamped to the setting's range; `None` for a value that is not finite.
+    pub fn new(v: f32) -> Option<Self> {
+        v.is_finite()
+            .then(|| Self(v.clamp(WALK_SPEED, WALK_SPEED_MAX)))
+    }
+
+    pub fn walk(self) -> f32 {
+        self.0
+    }
+
+    pub fn sprint(self) -> f32 {
+        self.0 * SPRINT_FACTOR
+    }
+
+    /// The speed for a stride: sprinting or walking.
+    pub fn of(self, sprint: bool) -> f32 {
+        if sprint { self.sprint() } else { self.walk() }
+    }
+}
 
 /// The orbit camera as walk mode found it.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -67,7 +101,7 @@ pub enum WalkRequest {
         forward: f32,
         right: f32,
         seconds: f32,
-        jog: bool,
+        sprint: bool,
     },
 }
 
@@ -91,8 +125,10 @@ pub struct WalkSession {
     /// The page holds the pointer lock (the HUD tells the engine): mouse motion looks with no button.
     pub pointer_lock: bool,
     pub requests: VecDeque<WalkRequest>,
-    /// A scripted walk in progress: direction (right, forward), jog, game seconds left.
+    /// A scripted walk in progress: direction (right, forward), sprint, game seconds left.
     pub script: Option<(Vec2, bool, f32)>,
+    /// The walk speed setting; the keys and scripted walks read it every frame.
+    pub speed: WalkSpeed,
     /// This frame's input: ground offset (right, forward) in metres, look in pixels, a hop.
     pub stride: Vec2,
     pub look: Vec2,
@@ -180,6 +216,13 @@ fn stand_at(ground: &WalkGround, w: &mut Walker, p: Vec2) -> Result<(), Blocked>
     Ok(())
 }
 
+/// One frame of a scripted walk toward `dir` (right, forward) at `speed` m/s with `left` game
+/// seconds to go: the ground offset for this frame and the seconds left after it.
+pub fn scripted_stride(dir: Vec2, speed: f32, left: f32, dt: f32) -> (Vec2, f32) {
+    let t = dt.min(left);
+    (dir.normalize_or_zero() * speed * t, left - t)
+}
+
 /// One frame of walking: look, the scripted or keyed stride through the ground, the hop and the
 /// eased eye. Returns the metres moved.
 pub fn advance(s: &mut WalkSession, ground: &WalkGround, dt: f32) -> f32 {
@@ -187,12 +230,11 @@ pub fn advance(s: &mut WalkSession, ground: &WalkGround, dt: f32) -> f32 {
     w.yaw -= s.look.x * LOOK_RAD_PER_PX;
     w.pitch = (w.pitch - s.look.y * LOOK_RAD_PER_PX).clamp(-MAX_PITCH, MAX_PITCH);
     let mut stride = s.stride;
-    if let Some((dir, jog, left)) = s.script.as_mut() {
-        let t = dt.min(*left);
-        let speed = if *jog { JOG_SPEED } else { WALK_SPEED };
-        stride += dir.normalize_or_zero() * speed * t;
-        *left -= t;
-        if *left <= 1e-6 {
+    if let Some((dir, sprint, left)) = s.script.as_mut() {
+        let (d, rest) = scripted_stride(*dir, s.speed.of(*sprint), *left, dt);
+        stride += d;
+        *left = rest;
+        if rest <= 1e-6 {
             s.script = None;
         }
     }
@@ -325,11 +367,11 @@ pub fn sync(
                 forward,
                 right,
                 seconds,
-                jog,
+                sprint,
             } => {
                 s.script = (seconds > 0.0 && seconds.is_finite()).then_some((
                     Vec2::new(right, forward),
-                    jog,
+                    sprint,
                     seconds,
                 ));
             }
@@ -364,7 +406,8 @@ fn round(v: f32) -> f64 {
 }
 
 /// `state().walk`: whether walk mode is on, the feet, eye, heading and pitch, the ground under
-/// the feet, the tile there, the water depth, what stopped the latest move, and the scripted walk.
+/// the feet, the tile there, the water depth, what stopped the latest move, the scripted walk, and
+/// the walk and sprint speeds (reported whether walk mode is on or not).
 pub fn state_json(s: &WalkSession, ground: &WalkGround) -> Value {
     let on = s.saved.is_some();
     let w = &s.walker;
@@ -387,6 +430,8 @@ pub fn state_json(s: &WalkSession, ground: &WalkGround) -> Value {
         "distance": round(s.distance),
         "step_left": s.script.filter(|_| on).map(|(_, _, left)| round(left)),
         "pointer_lock": on && s.pointer_lock,
+        "walk_speed": round(s.speed.walk()),
+        "sprint_speed": round(s.speed.sprint()),
     })
 }
 
@@ -453,5 +498,63 @@ mod tests {
             advance(&mut s, &ground, 1.0 / 60.0);
         }
         assert!(s.script.is_none(), "the step ends after its seconds");
+    }
+
+    /// Walks a scripted step frame by frame at 60 Hz and returns the metres covered.
+    fn scripted_metres(speed: WalkSpeed, sprint: bool, seconds: f32) -> f32 {
+        let (mut left, mut metres) = (seconds, 0.0);
+        while left > 1e-6 {
+            let (d, rest) = scripted_stride(Vec2::Y, speed.of(sprint), left, 1.0 / 60.0);
+            metres += d.length();
+            left = rest;
+        }
+        metres
+    }
+
+    #[test]
+    fn a_scripted_step_covers_speed_times_seconds_and_sprint_is_twice_walk() {
+        let default = WalkSpeed::default();
+        assert_eq!(default.walk(), 2.8);
+        assert_eq!(default.sprint(), 5.6);
+        assert!((scripted_metres(default, false, 1.0) - 2.8).abs() < 1e-4);
+        assert!((scripted_metres(default, true, 1.0) - 5.6).abs() < 1e-4);
+        let set = WalkSpeed::new(5.0).unwrap();
+        assert!((scripted_metres(set, false, 2.0) - 10.0).abs() < 1e-3);
+        assert!((scripted_metres(set, true, 0.5) - 5.0).abs() < 1e-4);
+        for v in [2.8, 4.3, 8.0] {
+            let s = WalkSpeed::new(v).unwrap();
+            assert_eq!(
+                s.sprint(),
+                2.0 * s.walk(),
+                "sprint is always twice walk at {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_walk_speed_setting_clamps_to_its_range() {
+        assert_eq!(WalkSpeed::new(1.0).unwrap().walk(), WALK_SPEED);
+        assert_eq!(WalkSpeed::new(20.0).unwrap().walk(), WALK_SPEED_MAX);
+        assert_eq!(WalkSpeed::new(6.5).unwrap().walk(), 6.5);
+        assert_eq!(WalkSpeed::new(f32::NAN), None);
+        assert_eq!(WalkSpeed::new(f32::INFINITY), None);
+    }
+
+    #[test]
+    fn the_state_reports_the_walk_and_sprint_speeds_while_off() {
+        let ground = WalkGround::default();
+        let mut s = WalkSession::default();
+        let v = state_json(&s, &ground);
+        assert_eq!(
+            (v["on"].clone(), v["walk_speed"].clone()),
+            (json!(false), json!(2.8))
+        );
+        assert_eq!(v["sprint_speed"], json!(5.6));
+        s.speed = WalkSpeed::new(7.25).unwrap();
+        let v = state_json(&s, &ground);
+        assert_eq!(
+            (v["walk_speed"].clone(), v["sprint_speed"].clone()),
+            (json!(7.25), json!(14.5))
+        );
     }
 }

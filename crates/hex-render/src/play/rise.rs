@@ -686,14 +686,29 @@ impl Layer {
         let v = ((t - self.hold) / (self.end - self.hold)).clamp(0.0, 1.0);
         self.alpha * (1.0 - v) * (1.0 - v)
     }
+
+    /// The same fade `time` times as long: at `time * t` it is where this one is at `t`.
+    fn slowed(self, time: f32) -> Layer {
+        Layer {
+            hold: self.hold * time,
+            end: self.end * time,
+            ..self
+        }
+    }
 }
 
 /// The rise and undo puffs' colour.
 const PUFF_RGB: [f32; 3] = [0.66, 0.58, 0.46];
 
-/// The bulldoze cloud's layers: a darker low swell over the hex, a lighter billow from the rim and
-/// the centre that thins sooner as it rises, and dark debris bits.
-const CLOUD_LAYERS: [Layer; 3] = [
+/// The bulldoze cloud's size and duration against the first look's, which [`CLOUD_BASE_LAYERS`]
+/// and [`cloud_base`] spell out: 80% of each (owner, 2026-10-14). Every phase scales with the
+/// duration, so the envelope keeps its shape.
+const CLOUD_SIZE: f32 = 0.8;
+const CLOUD_TIME: f32 = 0.8;
+
+/// The bulldoze cloud's layers at the first look's timing: a darker low swell over the hex, a
+/// lighter billow from the rim and the centre that thins sooner as it rises, and dark debris bits.
+const CLOUD_BASE_LAYERS: [Layer; 3] = [
     Layer {
         rgb: [0.54, 0.45, 0.34],
         alpha: 0.42,
@@ -724,6 +739,11 @@ const CLOUD_DEBRIS: u32 = 18;
 /// Particles in one bulldoze cloud.
 pub const CLOUD_PARTICLES: u32 = CLOUD_SWELL + CLOUD_RIM + CLOUD_COLUMN + CLOUD_DEBRIS;
 
+/// The bulldoze cloud's layers as drawn: [`CLOUD_BASE_LAYERS`] at [`CLOUD_TIME`] of their duration.
+fn cloud_layers() -> [Layer; 3] {
+    CLOUD_BASE_LAYERS.map(|l| l.slowed(CLOUD_TIME))
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct Particle {
     origin: Vec3,
@@ -749,6 +769,26 @@ struct Particle {
 }
 
 impl Particle {
+    /// The same motion `size` times as large about `centre` and `time` times as long: at `time * t`
+    /// it stands at `centre + size * (self.at(t) - centre)` (the ground clamp aside) with `size`
+    /// times the radius.
+    fn scaled(self, centre: Vec3, size: f32, time: f32) -> Particle {
+        let speed = size / time;
+        Particle {
+            origin: centre + (self.origin - centre) * size,
+            vel: self.vel * speed,
+            drag: self.drag / time,
+            lift: self.lift * speed,
+            gravity: self.gravity * speed / time,
+            size: (self.size.0 * size, self.size.1 * size),
+            grow: self.grow * time,
+            shrink: self.shrink,
+            life: self.life * time,
+            layer: self.layer,
+            spin: self.spin / time,
+        }
+    }
+
     fn at(&self, t: f32) -> Vec3 {
         let throw = self.vel * (1.0 - (-self.drag * t).exp()) / self.drag;
         let mut p = self.origin + throw + Vec3::Y * (self.lift * t - 0.5 * self.gravity * t * t);
@@ -849,9 +889,20 @@ fn particles(cell: Axial, n: u32, strength: f32) -> Vec<Particle> {
         .collect()
 }
 
-/// The bulldoze cloud at `cell`: a low swell across the whole hex, a billow thrown out past the
-/// rim and up from the centre, and debris bits tossed up that fall back. Deterministic per cell.
+/// The bulldoze cloud at `cell` as drawn: [`cloud_base`] at [`CLOUD_SIZE`] the size about the
+/// cell's centre on the ground and [`CLOUD_TIME`] the duration. Deterministic per cell.
 fn cloud(cell: Axial) -> Vec<Particle> {
+    let [cx, cz] = cell.to_world(HEX_RADIUS);
+    let centre = Vec3::new(cx, 0.0, cz);
+    cloud_base(cell)
+        .into_iter()
+        .map(|p| p.scaled(centre, CLOUD_SIZE, CLOUD_TIME))
+        .collect()
+}
+
+/// The bulldoze cloud's first look at `cell`: a low swell across the whole hex, a billow thrown
+/// out past the rim and up from the centre, and debris bits tossed up that fall back.
+fn cloud_base(cell: Axial) -> Vec<Particle> {
     use std::f32::consts::TAU;
     let [cx, cz] = cell.to_world(HEX_RADIUS);
     let centre = Vec3::new(cx, 0.0, cz);
@@ -966,7 +1017,7 @@ pub fn dust(
                 }],
                 particles(m.cell, n, strength),
             ),
-            Dust::Cloud => (CLOUD_LAYERS.to_vec(), cloud(m.cell)),
+            Dust::Cloud => (cloud_layers().to_vec(), cloud(m.cell)),
         };
         let layers: Vec<(Handle<StandardMaterial>, Layer)> = layers
             .into_iter()
@@ -1314,28 +1365,66 @@ mod tests {
         assert!(top > 6.0, "billows several metres up: {top}");
         let reach = dust
             .iter()
-            .map(|p| flat(p.at(1.0)) + p.radius(1.0))
+            .map(|p| flat(p.at(0.8)) + p.radius(0.8))
             .fold(0.0, f32::max);
-        assert!(reach > HEX_RADIUS + 3.0, "spreads past the rim: {reach}");
-        let life = dust.iter().map(|p| p.life).fold(0.0, f32::max);
+        assert!(reach > HEX_RADIUS + 1.5, "spreads past the rim: {reach}");
+        let life = ps.iter().map(|p| p.life).fold(0.0, f32::max);
+        assert!(life <= 2.24 + 1e-4, "clear by 2.24 s: {life}");
         assert!(
-            (BULLDOZE_SINK_SECONDS + 1.6..BULLDOZE_SINK_SECONDS + 2.4).contains(&life),
-            "lingers about 2 s after the tile is gone: {life}"
+            (BULLDOZE_SINK_SECONDS + 1.2..BULLDOZE_SINK_SECONDS + 1.6).contains(&life),
+            "lingers about 1.5 s after the tile is gone: {life}"
         );
+        let layers = cloud_layers();
         let debris: Vec<&Particle> = ps.iter().filter(|p| p.layer == 2).collect();
-        assert!(
-            !debris.is_empty()
-                && debris
-                    .iter()
-                    .all(|p| CLOUD_LAYERS[p.layer].shape == Shape::Chunk)
-        );
+        assert!(!debris.is_empty() && debris.iter().all(|p| layers[p.layer].shape == Shape::Chunk));
         assert!(
             debris.iter().all(|p| p.at(p.life).y < 0.1),
             "debris falls back"
         );
-        let thin = CLOUD_LAYERS[1].alpha_at(2.0) / CLOUD_LAYERS[1].alpha;
-        assert!(thin < CLOUD_LAYERS[0].alpha_at(2.0) / CLOUD_LAYERS[0].alpha);
-        assert!(CLOUD_LAYERS.iter().all(|l| l.alpha_at(l.end) == 0.0));
+        let thin = layers[1].alpha_at(1.6) / layers[1].alpha;
+        assert!(thin < layers[0].alpha_at(1.6) / layers[0].alpha);
+        assert!(layers.iter().all(|l| l.alpha_at(l.end) == 0.0));
+    }
+
+    /// Owner 2026-10-14: "reduce dust size and duration by 20%". The drawn cloud is the first look
+    /// at 80% of its size about the cell's centre and 80% of its duration, every phase included.
+    #[test]
+    fn the_cloud_is_the_first_look_at_80_percent_size_and_duration() {
+        let cell = Axial::new(2, -1);
+        let [cx, cz] = cell.to_world(HEX_RADIUS);
+        let centre = Vec3::new(cx, 0.0, cz);
+        let (base, drawn) = (cloud_base(cell), cloud(cell));
+        assert_eq!(base.len(), drawn.len());
+        for (b, d) in base.iter().zip(&drawn) {
+            assert!(
+                (d.life - 0.8 * b.life).abs() < 1e-5,
+                "{} {}",
+                d.life,
+                b.life
+            );
+            for tau in [0.0, 0.1, 0.4, 0.9, 1.5, b.life] {
+                let t = 0.8 * tau;
+                let want = centre + (b.at(tau) - centre) * 0.8;
+                let got = d.at(t);
+                assert!(
+                    (got.xz() - want.xz()).length() < 1e-3
+                        && (got.y - want.y.max(0.05)).abs() < 1e-3,
+                    "at {t} s: {got} against {want}"
+                );
+                assert!(
+                    (d.radius(t) - (0.8 * b.radius(tau)).max(1e-3)).abs() < 1e-4,
+                    "radius at {t} s"
+                );
+            }
+        }
+        for (b, d) in CLOUD_BASE_LAYERS.iter().zip(cloud_layers()) {
+            assert_eq!((d.rgb, d.alpha, d.shape), (b.rgb, b.alpha, b.shape));
+            for tau in [0.0, 0.5, 1.0, 1.7, 2.3, 2.7] {
+                assert!((d.alpha_at(0.8 * tau) - b.alpha_at(tau)).abs() < 1e-5);
+            }
+        }
+        let life = |ps: &[Particle]| ps.iter().map(|p| p.life).fold(0.0, f32::max);
+        assert!((life(&drawn) - 0.8 * life(&base)).abs() < 1e-5);
     }
 
     /// Entities the dust system spawns for one cue.

@@ -636,8 +636,9 @@ try {
 
   // First-person walk (PRD P8): the bar's Walk button enters at eye level on the ground nearest the
   // camera focus and the HUD steps aside for the walk hint; W held on the real keyboard walks and
-  // the walker stays on land; a scripted walk_step walks for exactly its seconds; F leaves with the
-  // orbit camera exactly where it was.
+  // the walker stays on land; a scripted walk_step walks for exactly its seconds at 2.8 m/s; a
+  // changed walk speed applies at once and a sprint is twice it; F leaves with the orbit camera
+  // exactly where it was.
   await until(async () => !(await page.locator(".hud.is-hidden").count()), "the play HUD is back before walking");
   const orbitWalk = (await st()).camera;
   await page.focus("canvas#hex-world");
@@ -662,14 +663,25 @@ try {
   await page.keyboard.up("w");
   const w1 = await until(async () => { const w = (await st()).walk; return !w.moving && w; }, "the walker stops when W is released");
   const walked = Math.hypot(w1.feet[0] - w0.feet[0], w1.feet[2] - w0.feet[2]);
-  check(walked > 0.8 && walked < 3.5, `W walks ${walked.toFixed(2)} m in 1.2 s (1.4 m/s)`);
+  check(walked > 1.6 && walked < 7, `W walks ${walked.toFixed(2)} m in 1.2 s (2.8 m/s)`);
   check(w1.tile !== null && w1.ground !== null && w1.water_depth <= 0.6, `still on land: ${w1.tile}, water ${w1.water_depth} m`);
   await shot("walk-1-first-person");
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "walk_look", heading: null, pitch: 0 }));
   const d0 = w1.distance;
-  await page.evaluate(() => window.hexWorld.cmd({ cmd: "walk_step", forward: -1, right: 0, seconds: 1, jog: false }));
+  check(w1.walk_speed === 2.8 && w1.sprint_speed === 5.6, `walk ${w1.walk_speed} m/s, sprint ${w1.sprint_speed} m/s by default`);
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "walk_step", forward: -1, right: 0, seconds: 1, sprint: false }));
   const w2 = await until(async () => { const w = (await st()).walk; return w.step_left === null && w.distance > d0 && w; }, "walk_step ends");
-  check(w2.blocked !== null || Math.abs(w2.distance - d0 - 1.4) < 0.05, `walk_step walks 1 s: ${(w2.distance - d0).toFixed(3)} m (blocked: ${w2.blocked})`);
+  check(w2.blocked !== null || Math.abs(w2.distance - d0 - 2.8) < 0.05, `walk_step walks 1 s: ${(w2.distance - d0).toFixed(3)} m (blocked: ${w2.blocked})`);
+  // The walk speed applies at once while walking, and a sprint covers twice the walk.
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_walk_speed", speed: 4 }));
+  await until(async () => (await st()).walk.walk_speed === 4, "set_walk_speed applies while walking");
+  check((await st()).walk.sprint_speed === 8, "sprint follows at twice the walk speed");
+  const d1 = w2.distance;
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "walk_step", forward: 1, right: 0, seconds: 0.5, sprint: true }));
+  const w3 = await until(async () => { const w = (await st()).walk; return w.step_left === null && w.distance > d1 && w; }, "the sprint step ends");
+  check(w3.blocked !== null || Math.abs(w3.distance - d1 - 4) < 0.05, `a 0.5 s sprint at 4 m/s walks ${(w3.distance - d1).toFixed(3)} m (blocked: ${w3.blocked})`);
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_walk_speed", speed: 2.8 }));
+  await until(async () => (await st()).walk.walk_speed === 2.8, "the walk speed goes back to 2.8");
   await key("f");
   await until(async () => { const s = await st(); return !s.play.walk_mode && !s.walk.on; }, "F leaves walk mode");
   await until(async () => !(await page.locator(".hud.is-hidden").count()), "the play HUD is back after walking");
@@ -898,6 +910,32 @@ try {
   await key("ArrowDown");
   await until(async () => (await grade()).name === "rich-2", "ArrowDown picks Rich 2 again");
 
+  // Walk speed (Settings → World, owner 2026-10-14): the slider sets state().walk live with sprint at
+  // twice it, the bridge command clamps to 2.8..8 and the slider follows the engine, and the choice is
+  // kept per viewer in localStorage (hexWorld.walkSpeed), checked after the reload below.
+  const walkSt = async () => (await st()).walk;
+  const speedOut = ".sheet--settings .field--slider:has(input[aria-label='Walk speed']) output";
+  check((await walkSt()).walk_speed === 2.8, `the walk speed starts at 2.8 m/s (${(await walkSt()).walk_speed})`);
+  await page.locator("#settings-tab-world").click();
+  await until(async () => page.locator("#settings-tab-world[aria-selected=true]").count(), "the World tab opens");
+  await until(async () => (await text(speedOut)) === "2.8 m/s", "the Walk speed slider reads 2.8 m/s");
+  await setRange("Walk speed", 5);
+  await until(async () => (await walkSt()).walk_speed === 5, "the Walk speed slider sets state().walk.walk_speed");
+  const ws = await walkSt();
+  check(ws.walk_speed === 5 && ws.sprint_speed === 10, `the slider sets walk ${ws.walk_speed} m/s, sprint ${ws.sprint_speed} m/s`);
+  check((await text(speedOut)) === "5.0 m/s", `the slider reads ${await text(speedOut)}`);
+  check(await page.evaluate(() => localStorage.getItem("hexWorld.walkSpeed")) === "5", "the walk speed is stored for this viewer");
+  await page.locator("input[aria-label='Walk speed']").scrollIntoViewIfNeeded();
+  await shot("s9-7-settings-walk-speed");
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_walk_speed", speed: 20 }));
+  await until(async () => (await walkSt()).walk_speed === 8, "set_walk_speed 20 clamps to 8");
+  check((await walkSt()).sprint_speed === 16, "and sprint to 16");
+  await until(async () => (await text(speedOut)) === "8.0 m/s", "the slider follows the engine to 8.0 m/s");
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_walk_speed", speed: 1 }));
+  await until(async () => (await walkSt()).walk_speed === 2.8, "set_walk_speed 1 clamps to 2.8");
+  await setRange("Walk speed", 5);
+  await until(async () => (await walkSt()).walk_speed === 5, "the slider sets 5 m/s again");
+
   // Reload: the stored grade is sent once the overlay starts, and the row shows it.
   await page.reload({ waitUntil: "commit" });
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
@@ -908,6 +946,10 @@ try {
   await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens after the reload");
   await until(async () => page.locator(".tier[data-grade=rich-2][aria-checked=true]").count(), "the Rich 2 row is checked after the reload");
   check(await page.locator(".tier[data-grade=rich-2][aria-checked=true]").count() === 1, "the Rich 2 row is checked after the reload");
+  await until(async () => (await walkSt())?.walk_speed === 5, "the stored walk speed holds over a reload", 15_000);
+  check((await walkSt()).sprint_speed === 10, `sprint is ${(await walkSt()).sprint_speed} m/s after the reload`);
+  await page.locator("#settings-tab-world").click();
+  await until(async () => (await text(speedOut)) === "5.0 m/s", "the Walk speed slider reads 5.0 m/s after the reload");
 
   // ?grade= in the address wins over the stored choice and leaves it stored.
   await page.goto(base + "?scenario=play&tilt=off&fps=off&grade=aces", { waitUntil: "commit" });

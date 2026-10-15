@@ -12,15 +12,16 @@ jpg() {
 }
 
 jpg "$shots/dust-bulldoze-before.png" "$out/dust-1-before.jpg"
-jpg "$shots/dust-bulldoze-f020.png" "$out/dust-2-mid-cloud.jpg"
-jpg "$shots/dust-bulldoze-f100.png" "$out/dust-3-thinning.jpg"
+jpg "$shots/dust-bulldoze-f016.png" "$out/dust-2-mid-cloud.jpg"
+jpg "$shots/dust-bulldoze-f080.png" "$out/dust-3-thinning.jpg"
 jpg "$shots/dust-bulldoze-f199.png" "$out/dust-4-after.jpg"
 jpg "$shots/dust-undo-f012.png" "$out/dust-undo-puff.jpg"
 jpg "$shots/dust-reduced-motion.png" "$out/dust-reduced-motion.jpg"
 
-# Stage sheet: before, then 0.17 0.50 0.83 1.33 2.00 s after the bulldoze, left to right, top to bottom.
+# Stage sheet: before, then 0.13 0.40 0.67 1.07 1.60 s after the bulldoze, left to right, top to
+# bottom: the same phases of the cloud as the first look's 0.17 to 2.00 s, at 80% of its duration.
 args=(-i "$shots/dust-bulldoze-before.png")
-for f in 010 030 050 080 120; do
+for f in 008 024 040 064 096; do
   test -s "$shots/dust-bulldoze-f$f.png" || { echo "missing dust-bulldoze-f$f.png"; exit 1; }
   args+=(-i "$shots/dust-bulldoze-f$f.png")
 done

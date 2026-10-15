@@ -20,7 +20,7 @@ use crate::game::GameState;
 use crate::persist::{PersistQueue, SavedSettings};
 use crate::photo::{Dof, PhotoExports, PhotoPatch, PhotoSession, PhotoSettings};
 use crate::sim::CarSim;
-use crate::walk::{WalkRequest, WalkSession};
+use crate::walk::{WalkRequest, WalkSession, WalkSpeed};
 use crate::{FrameCount, RunFlags, bridge, capture};
 
 /// `rotate` direction: `cw` is R (clockwise viewed from above), `ccw` is Shift+R.
@@ -184,12 +184,19 @@ pub enum Command {
         pitch: Option<f32>,
     },
     /// Walk mode: walk as if the keys were held for `seconds` of game time, `forward` and `right`
-    /// in -1..1 (`jog` at jogging speed), through the same collision as the keys.
+    /// in -1..1 (`sprint` at twice the walk speed), through the same collision as the keys. `jog`
+    /// is the field's old name, still accepted.
     WalkStep {
         forward: f32,
         right: f32,
         seconds: f32,
-        jog: Option<bool>,
+        #[serde(alias = "jog")]
+        sprint: Option<bool>,
+    },
+    /// The walk speed setting in m/s, clamped to 2.8..=8.0 (sprint is always twice it). Applies at
+    /// once, also mid-walk. The Settings sheet's World tab sends it and keeps it per viewer.
+    SetWalkSpeed {
+        speed: f32,
     },
     /// Walk mode: look toward `heading` and `pitch` (degrees); either may be omitted.
     WalkLook {
@@ -403,13 +410,17 @@ pub fn run_commands(
             forward,
             right,
             seconds,
-            jog,
+            sprint,
         } => walk.requests.push_back(WalkRequest::Step {
             forward,
             right,
             seconds,
-            jog: jog.unwrap_or(false),
+            sprint: sprint.unwrap_or(false),
         }),
+        Command::SetWalkSpeed { speed } => match WalkSpeed::new(speed) {
+            Some(s) => walk.speed = s,
+            None => warn!("set_walk_speed command: speed {speed} is not a number, skipped"),
+        },
         Command::WalkLook { heading, pitch } => walk
             .requests
             .push_back(WalkRequest::Look { heading, pitch }),
@@ -652,6 +663,28 @@ mod tests {
         );
         assert_eq!(c[1], Command::Wait { frames: 30 });
         assert_eq!(c[5], Command::Exit);
+    }
+
+    #[test]
+    fn parses_walk_step_sprint_with_the_old_jog_name_and_the_walk_speed() {
+        let c = parse_script(
+            r#"[{"cmd":"walk_step","forward":1,"right":0,"seconds":2,"sprint":true},
+                {"cmd":"walk_step","forward":1,"right":0,"seconds":2,"jog":true},
+                {"cmd":"walk_step","forward":-1,"right":0,"seconds":1},
+                {"cmd":"set_walk_speed","speed":4.5}]"#,
+        )
+        .unwrap();
+        let step = |sprint| Command::WalkStep {
+            forward: 1.0,
+            right: 0.0,
+            seconds: 2.0,
+            sprint,
+        };
+        assert_eq!(c[0], step(Some(true)));
+        assert_eq!(c[1], step(Some(true)), "the old field name still parses");
+        assert!(matches!(c[2], Command::WalkStep { sprint: None, .. }));
+        assert_eq!(c[3], Command::SetWalkSpeed { speed: 4.5 });
+        assert_eq!(c[3].action(), None);
     }
 
     #[test]

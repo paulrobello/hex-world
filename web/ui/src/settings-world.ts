@@ -1,10 +1,42 @@
-// The Settings sheet's World tab: Start over clears the world on screen back to the start tile in
-// place (Persistence.startOver: same name, same slot, no undo history), after an inline confirm in
-// the Worlds sheet's delete style. Esc or Cancel closes the confirm and focus returns to the button.
+// The Settings sheet's World tab. Walk: the walk speed slider (owner, 2026-10-14), live through
+// `set_walk_speed`, following `state().walk` and kept per viewer in localStorage. Start over clears
+// the world on screen back to the start tile in place (Persistence.startOver: same name, same slot,
+// no undo history), after an inline confirm in the Worlds sheet's delete style. Esc or Cancel closes
+// the confirm and focus returns to the button.
+import type { WalkState } from "./bridge.ts";
 import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { Persistence } from "./persist.ts";
+import {
+  clampWalkSpeed,
+  SPRINT_FACTOR,
+  speedLabel,
+  storedWalkSpeed,
+  WALK_SPEED_KEY,
+  WALK_SPEED_MAX,
+  WALK_SPEED_MIN,
+  WALK_SPEED_STEP,
+  walkSpeedCommand,
+  walkSpeedPct,
+} from "./walk-speed.ts";
 import { plural } from "./words.ts";
+
+/** The viewer's stored walk speed, or null without one or without storage. */
+export function loadWalkSpeed(): number | null {
+  try {
+    return storedWalkSpeed(localStorage.getItem(WALK_SPEED_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function saveWalkSpeed(v: number): void {
+  try {
+    localStorage.setItem(WALK_SPEED_KEY, String(v));
+  } catch {
+    /* Storage refused: the speed holds until the page closes. */
+  }
+}
 
 export class WorldPanel {
   readonly el: HTMLElement;
@@ -15,9 +47,31 @@ export class WorldPanel {
   private readonly confirm: HTMLElement;
   private readonly confirmText: Text;
   private readonly cancel: HTMLButtonElement;
+  private readonly speed: HTMLInputElement;
+  private readonly speedOut: HTMLOutputElement;
+  private readonly sprintHint: HTMLElement;
   private sig = "";
+  private walkSig = "";
 
-  constructor() {
+  /** `send` takes the `set_walk_speed` command for the engine. */
+  constructor(send: (c: ReturnType<typeof walkSpeedCommand>) => void) {
+    this.speed = h("input", {
+      type: "range",
+      min: WALK_SPEED_MIN,
+      max: WALK_SPEED_MAX,
+      step: WALK_SPEED_STEP,
+      value: WALK_SPEED_MIN,
+      "aria-label": "Walk speed",
+    });
+    this.speedOut = h("output", { class: "field__value" });
+    this.sprintHint = h("span", { class: "field__hint" });
+    this.speed.addEventListener("input", () => {
+      const v = clampWalkSpeed(Number(this.speed.value));
+      this.paintSpeed(v, v * SPRINT_FACTOR);
+      send(walkSpeedCommand(v));
+      saveWalkSpeed(v);
+    });
+    this.paintSpeed(WALK_SPEED_MIN, WALK_SPEED_MIN * SPRINT_FACTOR);
     this.name = h("span", { class: "field__label" }, "This world");
     this.hint = h("span", { class: "field__hint" });
     this.trigger = h(
@@ -54,6 +108,15 @@ export class WorldPanel {
     this.el = h(
       "div",
       { class: "panel", role: "tabpanel", hidden: true },
+      h("h2", { class: "section-h" }, "Walk"),
+      h(
+        "label",
+        { class: "field field--slider" },
+        h("span", { class: "field__label" }, "Walk speed"),
+        this.speedOut,
+        this.speed,
+        this.sprintHint,
+      ),
       h("h2", { class: "section-h" }, "Start over"),
       h("div", { class: "field" }, this.name, this.trigger, this.hint),
       this.confirm,
@@ -90,6 +153,23 @@ export class WorldPanel {
   /** The sheet closed or the tab changed: the confirm never waits hidden. */
   reset(): void {
     this.confirm.hidden = true;
+  }
+
+  /** Follows the engine's walk speed (a script or the startup value may set it), except while the
+   * slider has focus. Cheap to call every frame. */
+  renderWalk(walk: WalkState | undefined): void {
+    if (!walk || document.activeElement === this.speed) return;
+    const sig = `${walk.walk_speed}|${walk.sprint_speed}`;
+    if (sig === this.walkSig) return;
+    this.walkSig = sig;
+    this.speed.value = String(walk.walk_speed);
+    this.paintSpeed(walk.walk_speed, walk.sprint_speed);
+  }
+
+  private paintSpeed(walk: number, sprint: number): void {
+    this.speed.style.setProperty("--pct", `${walkSpeedPct(walk)}%`);
+    this.speedOut.textContent = speedLabel(walk);
+    this.sprintHint.textContent = `Shift sprints at twice this: ${speedLabel(sprint)}. Applies at once.`;
   }
 
   /** Repaints the name and tile count when they change. Cheap to call every frame. */

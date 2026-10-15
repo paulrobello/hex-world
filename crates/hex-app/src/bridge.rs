@@ -249,7 +249,8 @@ mod schema {
         r#"{"cmd":"new_world"}"#,
         r#"{"cmd":"walk","on":true,"pointer_lock":false}"#,
         r#"{"cmd":"walk_to","x":4,"z":-2,"heading":90,"pitch":-5}"#,
-        r#"{"cmd":"walk_step","forward":1,"right":0,"seconds":2,"jog":false}"#,
+        r#"{"cmd":"walk_step","forward":1,"right":0,"seconds":2,"sprint":false}"#,
+        r#"{"cmd":"set_walk_speed","speed":4.2}"#,
         r#"{"cmd":"walk_look","heading":180,"pitch":0}"#,
     ];
 
@@ -287,6 +288,7 @@ mod schema {
             Command::Walk { .. } => "walk",
             Command::WalkTo { .. } => "walk_to",
             Command::WalkStep { .. } => "walk_step",
+            Command::SetWalkSpeed { .. } => "set_walk_speed",
             Command::WalkLook { .. } => "walk_look",
         }
     }

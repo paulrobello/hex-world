@@ -203,10 +203,14 @@ pub fn map_photo_input(f: &InputFrame) -> Vec<Action> {
     out
 }
 
-/// Walk mode's bindings (PRD P8): F or Esc leaves, WASD or the arrows walk (Shift jogs), Space
-/// hops, and the mouse looks while a button is held or the page holds the pointer lock. Nothing
-/// places, rotates or opens a panel.
-pub fn map_walk_input(f: &InputFrame, pointer_lock: bool) -> Vec<Action> {
+/// Walk mode's bindings (PRD P8): F or Esc leaves, WASD or the arrows walk at the `speed` setting
+/// (Shift sprints at twice it), Space hops, and the mouse looks while a button is held or the page
+/// holds the pointer lock. Nothing places, rotates or opens a panel.
+pub fn map_walk_input(
+    f: &InputFrame,
+    pointer_lock: bool,
+    speed: crate::walk::WalkSpeed,
+) -> Vec<Action> {
     let mut out = vec![];
     let ctrl = f.ctrl_or_cmd();
     if f.pressed(KeyCode::KeyF) && !ctrl {
@@ -238,13 +242,8 @@ pub fn map_walk_input(f: &InputFrame, pointer_lock: bool) -> Vec<Action> {
                 &[KeyCode::KeyS, KeyCode::ArrowDown],
             ),
         );
-        let speed = if f.shift() {
-            crate::walk::JOG_SPEED
-        } else {
-            crate::walk::WALK_SPEED
-        };
         if dir != Vec2::ZERO {
-            out.push(Action::Stride(dir.normalize() * speed * f.dt));
+            out.push(Action::Stride(dir.normalize() * speed.of(f.shift()) * f.dt));
         }
     }
     out
@@ -376,7 +375,9 @@ pub fn read_input(
         queue.0.extend(map_photo_input(&frame));
     } else if game.walk_mode {
         *rotate_wheel = 0.0;
-        queue.0.extend(map_walk_input(&frame, walk.pointer_lock));
+        queue
+            .0
+            .extend(map_walk_input(&frame, walk.pointer_lock, walk.speed));
     } else {
         queue.0.extend(map_input(&frame, &mut rotate_wheel));
     }
@@ -411,7 +412,10 @@ mod tests {
     }
 
     #[test]
-    fn walk_mode_walks_jogs_hops_looks_and_leaves() {
+    fn walk_mode_walks_sprints_hops_looks_and_leaves() {
+        use crate::walk::WalkSpeed;
+        let map_walk_input =
+            |f: &InputFrame, lock: bool| map_walk_input(f, lock, WalkSpeed::default());
         let f = InputFrame {
             held: vec![KeyCode::KeyW],
             dt: 0.5,
@@ -419,19 +423,29 @@ mod tests {
         };
         assert_eq!(
             map_walk_input(&f, false),
-            [Action::Stride(Vec2::new(
-                0.0,
-                crate::walk::WALK_SPEED * 0.5
-            ))]
+            [Action::Stride(Vec2::new(0.0, 2.8 * 0.5))],
+            "W walks at the default 2.8 m/s"
         );
-        let jog = InputFrame {
+        let sprint = InputFrame {
             held: vec![KeyCode::KeyD, KeyCode::ShiftLeft],
             dt: 1.0,
             ..default()
         };
         assert_eq!(
-            map_walk_input(&jog, false),
-            [Action::Stride(Vec2::new(crate::walk::JOG_SPEED, 0.0))]
+            map_walk_input(&sprint, false),
+            [Action::Stride(Vec2::new(5.6, 0.0))],
+            "Shift sprints at twice the walk speed"
+        );
+        let set = WalkSpeed::new(6.0).unwrap();
+        assert_eq!(
+            super::map_walk_input(&f, false, set),
+            [Action::Stride(Vec2::new(0.0, 3.0))],
+            "the setting changes the walk"
+        );
+        assert_eq!(
+            super::map_walk_input(&sprint, false, set),
+            [Action::Stride(Vec2::new(12.0, 0.0))],
+            "and the sprint stays twice it"
         );
         let press = |k| InputFrame {
             just_pressed: vec![k],

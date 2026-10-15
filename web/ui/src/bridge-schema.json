@@ -479,6 +479,9 @@
     "set_tool": [
       "mode"
     ],
+    "set_walk_speed": [
+      "speed"
+    ],
     "tilt": [
       "on",
       "strength"
@@ -501,9 +504,9 @@
     ],
     "walk_step": [
       "forward",
-      "jog",
       "right",
-      "seconds"
+      "seconds",
+      "sprint"
     ],
     "walk_to": [
       "heading",
@@ -781,8 +784,10 @@
       "on",
       "pitch",
       "pointer_lock",
+      "sprint_speed",
       "step_left",
       "tile",
+      "walk_speed",
       "water_depth"
     ]
   }

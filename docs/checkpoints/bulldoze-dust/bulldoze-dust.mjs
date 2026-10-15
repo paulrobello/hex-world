@@ -6,7 +6,8 @@
 // usage: node docs/checkpoints/bulldoze-dust/bulldoze-dust.mjs <out.json>
 import { writeFileSync } from "node:fs";
 
-// Frames captured after the bulldoze: the 0.7 s sink, the cloud's ~2 s linger and a clear tail.
+// Frames captured after the bulldoze: the 0.7 s sink, the cloud's ~1.5 s linger (clear by 2.24 s)
+// and a clear tail.
 export const FRAMES = 200;
 const R = 16;
 const centre = (q, r) => [R * Math.sqrt(3) * (q + r / 2), R * 1.5 * r];

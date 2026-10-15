@@ -131,7 +131,7 @@ Placing another tile fast-forwards any tiles that are still animating to their e
 | Bulldoze tool | B |
 | Inventory | Tab |
 | Photo mode | P |
-| Walk (first person, P8) | F; WASD walk, Shift jogs, Space hops, the mouse looks; F or Esc leaves |
+| Walk (first person, P8) | F; WASD walk, Shift sprints, Space hops, the mouse looks; F or Esc leaves |
 | Hide UI | H |
 | Move focus between panels | F6 |
 | Photo mode camera | WASD fly, Q / E down and up |
@@ -552,7 +552,7 @@ Goal: the polished, playable core loop with D12 content.
 
 ### P8 — First-person stroll and drive
 
-- [x] A walk controller using the per-tile colliders (owner, 2026-10-14: "add a first person mode so i can walk around the map"). F or the bar's Walk button enters at eye level (1.7 m) on the ground nearest the camera focus; WASD walks at 1.4 m/s, Shift jogs at 3.5 m/s, Space hops, and the mouse looks (the pointer lock on the web). The walker follows the kit ground (the topmost LOD0 surface of each tile's ground pieces), is stopped by the house, oak, spruce and rock colliders, by water deeper than 0.6 m and by the map edge, and leaving restores the orbit camera. Evidence: `crates/hex-render/src/walk.rs` tests (ground on meadow, road, beach and river banks; a house wall on a turned tile; tree trunks; the shoreline and the map edge), the `make ui-e2e` walk steps, and the eye-level stills in [`docs/checkpoints/first-person/`](docs/checkpoints/first-person/) (`make shots-first-person`). Controls and commands: [`docs/agent-operability.md`](docs/agent-operability.md#walk-mode).
+- [x] A walk controller using the per-tile colliders (owner, 2026-10-14: "add a first person mode so i can walk around the map"). F or the bar's Walk button enters at eye level (1.7 m) on the ground nearest the camera focus; WASD walks at 2.8 m/s, Shift sprints at twice the walk speed (5.6 m/s), Space hops, and the mouse looks (the pointer lock on the web). The walker follows the kit ground (the topmost LOD0 surface of each tile's ground pieces), is stopped by the house, oak, spruce and rock colliders, by water deeper than 0.6 m and by the map edge, and leaving restores the orbit camera. The walk speed is a per-viewer setting from 2.8 to 8.0 m/s, the Walk speed slider in the Settings sheet's World tab, and sprint is always twice it (owner, 2026-10-14: "double walk and sprint speed, always keep sprint double walk and add a walk speed setting with minimum at the new double speed"). Evidence: `crates/hex-render/src/walk.rs` tests (ground on meadow, road, beach and river banks; a house wall on a turned tile; tree trunks; the shoreline and the map edge), the `make ui-e2e` walk steps, and the eye-level stills in [`docs/checkpoints/first-person/`](docs/checkpoints/first-person/) (`make shots-first-person`). Controls and commands: [`docs/agent-operability.md`](docs/agent-operability.md#walk-mode).
 - [ ] A drive mode on the road network.
 - [ ] Close-range LOD0 and texture quality pass verified in first person.
 

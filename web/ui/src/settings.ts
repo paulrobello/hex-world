@@ -5,7 +5,7 @@
 // commands. Audio reads and writes `hexWorld.audio`, which keeps the levels per viewer in
 // localStorage; the colour grade and the grass density are kept per viewer the same way, outside
 // the world save. Grass reads `state().grass` and writes `set_grass`; it draws on High and Ultra only.
-// The World tab (settings-world.ts) holds Start over.
+// The World tab (settings-world.ts) holds the walk speed and Start over.
 import type { AudioApi } from "./audio.ts";
 import type {
   GradeName,
@@ -16,6 +16,7 @@ import type {
   QualityChoice,
   TierState,
   TiltState,
+  WalkState,
 } from "./bridge.ts";
 import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
@@ -103,7 +104,7 @@ export class Settings {
   private readonly strengthField: HTMLElement;
   private readonly volumes = new Map<Channel, Slider>();
   private readonly mute: HTMLButtonElement;
-  private readonly world = new WorldPanel();
+  private readonly world = new WorldPanel((c) => this.hw.cmd(c));
   private shown = false;
   private tiltSig = "";
   private tierSig = "";
@@ -347,9 +348,18 @@ export class Settings {
     return this.shown && this.world.escape();
   }
 
-  render(tilt: TiltState | undefined, tier: TierState | undefined, grade?: GradeState, grass?: GrassState): void {
+  render(
+    tilt: TiltState | undefined,
+    tier: TierState | undefined,
+    grade?: GradeState,
+    grass?: GrassState,
+    walk?: WalkState,
+  ): void {
     if (!this.shown) return;
-    if (this.tab === "world") this.world.render();
+    if (this.tab === "world") {
+      this.world.render();
+      this.world.renderWalk(walk);
+    }
     this.renderTier(tier);
     this.renderGrade(grade);
     this.renderGrass(grass, tier);

@@ -34,7 +34,7 @@ export class Walk {
           h("kbd", {}, "WASD"),
           " walk · ",
           h("kbd", {}, "Shift"),
-          " jog · ",
+          " sprint · ",
           h("kbd", {}, "Space"),
           " hop",
         ),

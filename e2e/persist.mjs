@@ -342,7 +342,7 @@ try {
     await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens");
     await page.locator("#settings-tab-world").click();
     await until(async () => page.locator("#settings-world:not([hidden])").count(), "the World tab shows");
-    check((await text("#settings-world .field__label")) === "Riverside", "the World tab names the current world");
+    check((await text("#settings-world .field:has([data-act=start-over]) .field__label")) === "Riverside", "the World tab names the current world");
     await page.mouse.move(700, 450);
     await page.evaluate(() => document.activeElement?.blur());
     await page.waitForTimeout(250);
@@ -403,6 +403,8 @@ try {
     await page.keyboard.press("End");
     await until(async () => page.locator("#settings-tab-world[aria-selected=true]").count(), "End on the tab strip selects the World tab");
     check((await page.evaluate(() => document.activeElement?.id)) === "settings-tab-world", "focus follows to the World tab");
+    await page.keyboard.press("Tab");
+    check((await page.evaluate(() => document.activeElement?.getAttribute("aria-label"))) === "Walk speed", "Tab reaches the Walk speed slider first");
     await page.keyboard.press("Tab");
     check((await focused()) === "start-over", "Tab reaches Start over");
     await page.keyboard.press("Enter");
