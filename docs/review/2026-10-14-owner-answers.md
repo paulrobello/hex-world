@@ -130,3 +130,11 @@ Owner's notes, verbatim: "there is no visual or ghost of the selected tile when 
 - **Grass:** double the density at every setting, then make density a slider (0-150% of the new Normal); adopt small-world's thick-grass techniques (crossed blades, clump height noise, per-blade colour).
 - **Cache busting:** hash all resources so they cache bust when updated.
 - **Camera:** save the camera (orbit or walker) at regular intervals so a reload puts the viewer back.
+
+## Round 16 (owner, 2026-10-14)
+
+- **Hero oak:** "oak tree looks good" after playing 87e627b: the trunk without the root collar and the 1.2x size are approved (p5-trunk-scale; the canopy gaps, p4, were approved in round 14 R4).
+- **O1 bark streaks:** leave them (the shared bark set's own fissure plates, also on tree_forest).
+- **O2 root creases:** leave them (no welded root flare).
+- **Wildflowers:** "the wild flowers have no grass around them". Grass now grows in among a flower clump up to a 0.2 m centre instead of keeping the clump's whole 0.9 m footprint bare.
+- **Photo mode:** add click to set the focal point for the tilt-shift option. In progress.

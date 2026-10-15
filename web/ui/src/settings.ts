@@ -4,13 +4,13 @@
 // and a loaded save show here too, and writes through the `set_tier`, `tilt` and `set_grade`
 // commands. Audio reads and writes `hexWorld.audio`, which keeps the levels per viewer in
 // localStorage; the colour grade and the grass density are kept per viewer the same way, outside
-// the world save. Grass reads `state().grass` and writes `set_grass`; it draws on High and Ultra only.
+// the world save. The Grass density slider reads `state().grass` and writes `set_grass` (at most every
+// 150 ms while dragging, and on release); grass draws on High and Ultra only.
 // The World tab (settings-world.ts) holds the walk speed and Start over.
 import type { AudioApi } from "./audio.ts";
 import type {
   GradeName,
   GradeState,
-  GrassDensity,
   GrassState,
   HexWorld,
   QualityChoice,
@@ -28,14 +28,17 @@ import {
   type Channel,
   GRADE_KEY,
   GRASS_KEY,
+  GRASS_SLIDER,
   gradeCommand,
   gradeView,
   grassCommand,
   grassView,
+  storedGrass,
   percent,
   qualityView,
   roveIndex,
   selectedQuality,
+  throttle,
   tierCommand,
 } from "./settings-model.ts";
 import { WorldPanel } from "./settings-world.ts";
@@ -57,18 +60,27 @@ function saveGrade(g: GradeName): void {
   }
 }
 
-/** The viewer's stored grass density, or null without one or without storage. */
+/**
+ * The viewer's stored grass density, or null without one or without storage. A stepped choice from
+ * before the slider (`off`, `sparse`, `normal`, `lush`) is rewritten as its percent (0, 50, 100, 150).
+ */
 export function loadGrass(): string | null {
   try {
-    return localStorage.getItem(GRASS_KEY);
+    const stored = localStorage.getItem(GRASS_KEY);
+    const pct = storedGrass(stored);
+    if (pct != null && stored !== String(pct)) {
+      localStorage.setItem(GRASS_KEY, String(pct));
+      return String(pct);
+    }
+    return stored;
   } catch {
     return null;
   }
 }
 
-function saveGrass(d: GrassDensity): void {
+function saveGrass(pct: number): void {
   try {
-    localStorage.setItem(GRASS_KEY, d);
+    localStorage.setItem(GRASS_KEY, String(pct));
   } catch {
     /* Storage refused: the density holds until the page closes. */
   }
@@ -78,6 +90,8 @@ type Tab = "graphics" | "audio" | "world";
 
 /** A tier pick waits this long for `state().tier` to follow before the row shows the engine's answer again. */
 const PICK_HOLD_MS = 3000;
+/** A grass slider drag sends `set_grass` at most this often, so tile meshes never rebuild every frame. */
+const GRASS_SEND_MS = 150;
 
 interface Slider {
   input: HTMLInputElement;
@@ -113,12 +127,14 @@ export class Settings {
   private gradeSig = "";
   private grade: GradeState | undefined;
   private gradePick: { id: GradeName; until: number } | null = null;
-  private readonly grassList: HTMLUListElement;
+  private readonly grassInput: HTMLInputElement;
+  private readonly grassOut: HTMLOutputElement;
+  private readonly grassField: HTMLElement;
   private readonly grassHint: HTMLElement;
+  private readonly grassSend: { push: (pct: number) => void; flush: () => void };
   private grassSig = "";
-  private grass: GrassState | undefined;
   private grassOn = false;
-  private grassPick: { id: GrassDensity; until: number } | null = null;
+  private grassPick: { pct: number; until: number } | null = null;
   private readonly rebuild: Rebuild;
 
   constructor(hw: HexWorld, audio: AudioApi | null, onClose: () => void, onChange: () => void, rebuild: Rebuild) {
@@ -192,13 +208,38 @@ export class Settings {
     );
 
     // ---------- Graphics: Grass ----------
-    this.grassList = h("ul", { class: "tiers", role: "radiogroup", "aria-label": "Grass" });
-    this.grassList.addEventListener("click", (e) => {
-      const li = (e.target as Element).closest<HTMLElement>(".tier");
-      if (li) this.pickGrass(li.dataset.grass as GrassDensity);
+    this.grassInput = h("input", {
+      type: "range",
+      min: GRASS_SLIDER.min,
+      max: GRASS_SLIDER.max,
+      step: GRASS_SLIDER.step,
+      "aria-label": "Grass density",
     });
-    this.grassList.addEventListener("keydown", (e) =>
-      this.radioKey(e, this.grassList, "grass", (id) => this.pickGrass(id as GrassDensity)),
+    this.grassOut = h("output", { class: "field__value" });
+    this.grassSend = throttle((pct) => this.hw.cmd(grassCommand(pct)), GRASS_SEND_MS);
+    // A drag swaps the blades live, throttled; the release sends the last value and keeps it for this
+    // viewer. It never queues an autosave.
+    this.grassInput.addEventListener("input", () => {
+      if (!this.grassOn) return;
+      const pct = Number(this.grassInput.value);
+      paint(this.grassInput, this.grassOut);
+      this.grassPick = { pct, until: performance.now() + PICK_HOLD_MS };
+      this.grassSend.push(pct);
+    });
+    this.grassInput.addEventListener("change", () => {
+      if (!this.grassOn) return;
+      const pct = Number(this.grassInput.value);
+      this.grassSend.push(pct);
+      this.grassSend.flush();
+      saveGrass(pct);
+    });
+    this.grassField = h(
+      "label",
+      { class: "field field--slider" },
+      h("span", { class: "field__label" }, "Grass density"),
+      this.grassOut,
+      this.grassInput,
+      h("span", { class: "field__hint" }, "100% is the meadow as tuned. 0% turns grass off; 150% costs the most."),
     );
     this.grassHint = h("p", { class: "tier-reason", hidden: true }, "High and Ultra only.");
     const graphics = h(
@@ -220,7 +261,7 @@ export class Settings {
       this.gradeHead,
       this.gradeList,
       h("h2", { class: "section-h" }, "Grass"),
-      this.grassList,
+      this.grassField,
       this.grassHint,
     );
 
@@ -482,56 +523,23 @@ export class Settings {
   }
 
   private renderGrass(grass: GrassState | undefined, tier: TierState | undefined): void {
-    this.grass = grass;
     const pick = this.grassPick;
-    if (pick && (grass?.density === pick.id || performance.now() > pick.until)) this.grassPick = null;
-    const v = grassView(grass, tier, this.grassPick?.id ?? null);
+    if (pick && (grassView(grass, tier).value === pick.pct || performance.now() > pick.until)) this.grassPick = null;
+    const v = grassView(grass, tier, this.grassPick?.pct ?? null);
     this.grassOn = v.enabled;
     const sig = JSON.stringify(v);
     if (sig === this.grassSig) return;
     this.grassSig = sig;
-    const focused = (document.activeElement as HTMLElement | null)?.dataset?.grass;
-    this.grassList.replaceChildren(
-      ...v.rows.map((r) => {
-        const on = r.id === v.selected;
-        return h(
-          "li",
-          {
-            class: "tier",
-            role: "radio",
-            tabindex: on && v.enabled ? 0 : -1,
-            "aria-checked": String(on),
-            "aria-disabled": String(!v.enabled),
-            "data-grass": r.id,
-          },
-          h("span", { class: "radio", "aria-hidden": "true" }),
-          h("b", {}, r.name),
-          h("small", {}, r.detail),
-        );
-      }),
-    );
+    if (document.activeElement !== this.grassInput || !v.enabled)
+      this.grassInput.value = String(v.value ?? GRASS_SLIDER.normal);
+    this.grassInput.disabled = !v.enabled;
+    this.grassField.classList.toggle("is-disabled", !v.enabled);
     this.grassHint.hidden = v.enabled;
-    if (focused) this.grassList.querySelector<HTMLElement>(`[data-grass="${focused}"]`)?.focus({ preventScroll: true });
-  }
-
-  /** A density pick swaps the blades live and is kept for this viewer; it never queues an autosave. */
-  private pickGrass(id: GrassDensity): void {
-    if (!this.grassOn) return;
-    const now = this.grassPick?.id ?? this.grass?.density;
-    if (id === now) return;
-    this.grassPick = { id, until: performance.now() + PICK_HOLD_MS };
-    this.hw.cmd(grassCommand(id));
-    saveGrass(id);
-    this.renderGrass(this.grass, this.tier);
+    paint(this.grassInput, this.grassOut);
   }
 
   /** Space and Enter pick the focused row; arrows, Home and End move along the radio list and pick. */
-  private radioKey(
-    e: KeyboardEvent,
-    list: HTMLElement,
-    attr: "tier" | "grade" | "grass",
-    pick: (id: string) => void,
-  ): void {
+  private radioKey(e: KeyboardEvent, list: HTMLElement, attr: "tier" | "grade", pick: (id: string) => void): void {
     const rows = [...list.querySelectorAll<HTMLElement>(".tier")];
     const i = rows.indexOf(document.activeElement as HTMLElement);
     if (i < 0) return;
@@ -550,8 +558,10 @@ export class Settings {
   }
 }
 
-/** The slider's filled track and its percent readout. */
+/** The slider's filled track (its share of the range) and its percent readout. */
 function paint(input: HTMLInputElement, out: HTMLOutputElement): void {
-  input.style.setProperty("--pct", `${input.value}%`);
+  const min = Number(input.min || 0);
+  const max = Number(input.max || 100);
+  input.style.setProperty("--pct", `${((Number(input.value) - min) / (max - min)) * 100}%`);
   out.textContent = `${input.value}%`;
 }

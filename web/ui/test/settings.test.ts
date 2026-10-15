@@ -1,7 +1,7 @@
 // The Settings sheet's model: which quality row is selected from `state().tier`, the rows offered,
 // the detected tier with its reason, the Ultra note, roving keys, the audio channel table, and the
 // colour grade rows with the startup choice between the stored grade and the page address, and the
-// grass density rows the same way (disabled below High).
+// grass density slider the same way (disabled below High, stepped choices migrating to percents).
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { GradeState, GrassState, TierState } from "../src/bridge.ts";
@@ -9,9 +9,13 @@ import {
   CHANNELS,
   GRADE_KEY,
   GRASS_KEY,
+  GRASS_SLIDER,
   grassCommand,
+  grassPercent,
   grassView,
   startupGrass,
+  storedGrass,
+  throttle,
   autoTier,
   gradeCommand,
   gradeView,
@@ -205,27 +209,60 @@ test("colour grade at startup: the stored choice, unless the address names one o
   assert.equal(isGrade(undefined), false);
 });
 
-test("grass: four rows Off to Lush, the engine's density checked, disabled below High", () => {
-  const g = { density: "normal" } as GrassState;
+test("grass: a 0-150% slider in 5% steps, the engine's share shown, disabled below High", () => {
+  assert.deepEqual(GRASS_SLIDER, { min: 0, max: 150, step: 5, normal: 100 });
+  const g = { density: 1 } as GrassState;
   const v = grassView(g, tier());
-  assert.deepEqual(
-    v.rows.map((r) => r.id),
-    ["off", "sparse", "normal", "lush"],
-  );
-  assert.equal(v.selected, "normal");
+  assert.equal(v.value, 100);
   assert.equal(v.enabled, true);
+  assert.equal(grassView({ density: 1.35 } as GrassState, tier()).value, 135);
   assert.equal(grassView(g, tier({ tier: "ultra" })).enabled, true);
   assert.equal(grassView(g, tier({ tier: "medium" })).enabled, false, "Medium draws no grass");
   assert.equal(grassView(g, tier({ tier: "low" })).enabled, false, "Low draws no grass");
-  assert.equal(grassView(g, tier(), "lush").selected, "lush", "a pending pick shows until the engine follows");
-  assert.equal(grassView(undefined, undefined).selected, null);
-  assert.deepEqual(grassCommand("sparse"), { cmd: "set_grass", density: "sparse" });
+  assert.equal(grassView(g, tier(), 150).value, 150, "a pending value shows until the engine follows");
+  assert.equal(grassView(undefined, undefined).value, null);
+  assert.deepEqual(grassCommand(55), { cmd: "set_grass", density: 0.55 });
+  assert.deepEqual(grassCommand(0), { cmd: "set_grass", density: 0 });
+  assert.deepEqual(grassCommand(400), { cmd: "set_grass", density: 1.5 }, "clamped to the slider");
+  assert.equal(grassPercent(97), 95);
+  assert.equal(grassPercent(-3), 0);
 });
 
-test("grass at startup: the stored density, unless the address names one or it is unknown", () => {
-  assert.equal(startupGrass("", "lush"), "lush");
-  assert.equal(startupGrass("?scenario=play&grass=sparse", "lush"), null, "?grass= wins for the visit");
+test("grass at startup: the stored percent, a stepped choice migrated, unless the address names one", () => {
+  assert.equal(startupGrass("", "150"), 150);
+  assert.equal(startupGrass("", "0"), 0, "0% is a stored choice (off), not a missing one");
+  assert.equal(startupGrass("?scenario=play&grass=0.5", "150"), null, "?grass= wins for the visit");
   assert.equal(startupGrass("", null), null);
   assert.equal(startupGrass("", "thick"), null, "a stale name never reaches the engine");
+  // The stepped choice the slider replaced: off 0, sparse 50, normal 100, lush 150.
+  assert.deepEqual(
+    ["off", "sparse", "normal", "lush"].map((s) => storedGrass(s)),
+    [0, 50, 100, 150],
+  );
+  assert.equal(storedGrass("120"), 120);
+  assert.equal(storedGrass("-5"), null);
   assert.equal(GRASS_KEY, "hexWorld.grass");
+});
+
+test("grass slider sends at most every 150 ms while dragging and the last value on release", () => {
+  let t = 0;
+  const sent: number[] = [];
+  const s = throttle(
+    (v) => sent.push(v),
+    150,
+    () => t,
+  );
+  s.push(100);
+  s.push(105);
+  s.push(110);
+  assert.deepEqual(sent, [100], "the first move goes at once, the rest wait");
+  t = 200;
+  s.push(115);
+  assert.deepEqual(sent, [100, 115]);
+  t = 250;
+  s.push(120);
+  s.flush();
+  assert.deepEqual(sent, [100, 115, 120], "release sends the last value at once");
+  s.flush();
+  assert.deepEqual(sent, [100, 115, 120], "nothing pending, nothing sent");
 });

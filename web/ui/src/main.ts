@@ -77,7 +77,7 @@ function run(root: HTMLElement, hw: Bridge): void {
   if (grade) hw.cmd(gradeCommand(grade));
   // The viewer's grass density, the same way: a `grass` key in the address wins for the visit.
   const grass = startupGrass(location.search, loadGrass());
-  if (grass) hw.cmd(grassCommand(grass));
+  if (grass != null) hw.cmd(grassCommand(grass));
   // The viewer's walk speed, sent only when one is stored (the engine starts at its default).
   const walkSpeed = loadWalkSpeed();
   if (walkSpeed != null) hw.cmd(walkSpeedCommand(walkSpeed));

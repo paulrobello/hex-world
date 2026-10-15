@@ -959,33 +959,40 @@ try {
   check((await grade()).name === "aces", `?grade=aces wins over the stored grade (${(await grade()).name})`);
   check(await page.evaluate(() => localStorage.getItem("hexWorld.grade")) === "rich-2", "and the stored choice stays rich-2");
 
-  // Grass (Settings → Graphics): Off, Sparse, Normal and Lush through set_grass, live with no rebuild,
-  // kept per viewer in localStorage (hexWorld.grass) outside the world save; ?grass= wins for the
-  // visit. Grass draws on High and Ultra only, so below them the rows are disabled with a hint.
+  // Grass (Settings → Graphics): the Grass density slider, 0-150% of Normal in 5% steps, through
+  // set_grass (the share), live with no rebuild, kept per viewer in localStorage (hexWorld.grass, the
+  // percent) outside the world save; a stored stepped choice migrates (sparse 50); ?grass= wins for
+  // the visit. Grass draws on High and Ultra only, so below them the slider is disabled with a hint.
   const grass = async () => (await st()).grass;
-  check((await grass())?.density === "normal", `grass starts at Normal (${(await grass())?.density})`);
+  const slider = page.locator("input[aria-label='Grass density']");
+  check((await grass())?.density === 1, `grass starts at 100% (${(await grass())?.density})`);
+  check((await grass())?.per_m2 === 28, `100% is 28 blades per m² (${(await grass())?.per_m2})`);
   await page.locator(".tool[data-action=settings]").click();
   await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens for grass");
-  await page.locator(".tiers[aria-label='Grass']").scrollIntoViewIfNeeded();
-  const grassRows = await page.locator(".tiers[aria-label='Grass'] .tier").evaluateAll((els) => els.map((e) => e.dataset.grass));
-  check(JSON.stringify(grassRows) === JSON.stringify(["off", "sparse", "normal", "lush"]), `four Grass rows (${grassRows.join(", ")})`);
+  await slider.scrollIntoViewIfNeeded();
+  const range = await slider.evaluate((e) => [e.min, e.max, e.step, e.value]);
+  check(JSON.stringify(range) === JSON.stringify(["0", "150", "5", "100"]), `a 0-150% slider in 5% steps at 100% (${range})`);
   // Grass needs High or Ultra; a busy host can make the warm-up probe step the page down, so pin High.
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_tier", tier: "high" }));
-  await until(async () => (await st()).tier?.tier === "high", "High for the grass rows", 30_000);
-  await until(async () => (await page.locator(".tier[data-grass][aria-disabled=false]").count()) === 4, "every Grass row is enabled on High");
-  check(await page.locator(".tier[data-grass=normal][aria-checked=true]").count() === 1, "the Normal row is checked");
-  await page.locator(".tier[data-grass=lush]").click();
-  await until(async () => (await grass()).density === "lush", "picking Lush sets state().grass");
-  check(await page.locator(".tier[data-grass=lush][aria-checked=true]").count() === 1, "the Lush row is checked");
-  check(await page.evaluate(() => localStorage.getItem("hexWorld.grass")) === "lush", "the density is stored for this viewer");
+  await until(async () => (await st()).tier?.tier === "high", "High for the grass slider", 30_000);
+  await until(async () => !(await slider.isDisabled()), "the Grass slider is enabled on High");
+  await slider.fill("150");
+  await until(async () => (await grass()).density === 1.5, "the slider at 150% sets state().grass");
+  check((await grass()).per_m2 === 42, `150% is 42 blades per m² (${(await grass()).per_m2})`);
+  check((await page.locator(".field--slider:has(input[aria-label='Grass density']) output").textContent()) === "150%", "the readout says 150%");
+  await until(async () => (await page.evaluate(() => localStorage.getItem("hexWorld.grass"))) === "150", "the density is stored for this viewer");
   await shot("s9-7-settings-grass");
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_tier", tier: "medium" }));
-  await until(async () => (await st()).tier?.tier === "medium", "Medium for the disabled grass rows", 30_000);
-  await until(async () => (await page.locator(".tier[data-grass][aria-disabled=true]").count()) === 4, "every Grass row is disabled on Medium");
-  check(await page.locator(".tiers[aria-label='Grass'] + .tier-reason:not([hidden])").count() === 1, "the High and Ultra hint shows");
-  await page.locator(".tier[data-grass=off]").click({ force: true });
+  await until(async () => (await st()).tier?.tier === "medium", "Medium for the disabled grass slider", 30_000);
+  await until(async () => slider.isDisabled(), "the Grass slider is disabled on Medium");
+  check(await page.locator(".field--slider:has(input[aria-label='Grass density']) + .tier-reason:not([hidden])").count() === 1, "the High and Ultra hint shows");
+  await slider.evaluate((e) => {
+    e.value = "0";
+    e.dispatchEvent(new Event("input", { bubbles: true }));
+    e.dispatchEvent(new Event("change", { bubbles: true }));
+  });
   await page.waitForTimeout(300);
-  check((await grass()).density === "lush", "a disabled row does not change the density");
+  check((await grass()).density === 1.5, "a disabled slider does not change the density");
   check((await grass()).status === "tier", `grass reports the tier as the reason (${(await grass()).status})`);
   await shot("s9-8-settings-grass-medium");
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_tier", tier: "auto" }));
@@ -994,18 +1001,25 @@ try {
   await page.reload({ waitUntil: "commit" });
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
   await until(async () => (await play())?.tiles != null, "play is back after the grass reload", 30_000);
-  await until(async () => (await grass())?.density === "lush", "the stored density holds over a reload", 15_000);
-  check((await grass())?.density === "lush", `state().grass reports ${(await grass())?.density} after the reload`);
-  await page.goto(base + "?scenario=play&tilt=off&fps=off&grade=aces&grass=sparse", { waitUntil: "commit" });
+  await until(async () => (await grass())?.density === 1.5, "the stored density holds over a reload", 15_000);
+  check((await grass())?.density === 1.5, `state().grass reports ${(await grass())?.density} after the reload`);
+  await page.goto(base + "?scenario=play&tilt=off&fps=off&grade=aces&grass=35%25", { waitUntil: "commit" });
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
-  await until(async () => (await play())?.tiles != null, "play is back with ?grass=sparse", 30_000);
+  await until(async () => (await play())?.tiles != null, "play is back with ?grass=35%", 30_000);
   await page.waitForTimeout(1000);
-  check((await grass()).density === "sparse", `?grass=sparse wins over the stored density (${(await grass()).density})`);
-  check(await page.evaluate(() => localStorage.getItem("hexWorld.grass")) === "lush", "and the stored choice stays lush");
+  check((await grass()).density === 0.35, `?grass=35% wins over the stored density (${(await grass()).density})`);
+  check(await page.evaluate(() => localStorage.getItem("hexWorld.grass")) === "150", "and the stored choice stays 150");
+  // A stored stepped choice from before the slider migrates to its percent (sparse is 50%).
+  await page.evaluate(() => localStorage.setItem("hexWorld.grass", "sparse"));
+  await page.goto(base + "?scenario=play&tilt=off&fps=off&grade=aces", { waitUntil: "commit" });
+  await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
+  await until(async () => (await play())?.tiles != null, "play is back after the stored sparse", 30_000);
+  await until(async () => (await grass())?.density === 0.5, "a stored sparse sets 50%", 15_000);
+  check(await page.evaluate(() => localStorage.getItem("hexWorld.grass")) === "50", "and is stored as 50");
   // Swaying blades would raise the grade captures' frame-to-frame noise floor below; a command leaves
   // the stored density alone.
-  await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_grass", density: "off" }));
-  await until(async () => (await grass()).density === "off", "grass off for the grade captures");
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_grass", density: 0 }));
+  await until(async () => (await grass()).density === 0, "grass off for the grade captures");
 
   // The grade reaches the WebGPU frame: engine captures (canvas only, no HUD) at one camera under
   // tony, aces, rich-2 and tony again. Agents and water move between frames, so tony against tony is

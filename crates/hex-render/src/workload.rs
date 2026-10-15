@@ -105,8 +105,8 @@ pub fn parse_shadows(s: &str) -> Option<bool> {
     }
 }
 
-/// `grass=off|sparse|normal|lush` (`on` is normal): grass blade density in play where the tier
-/// allows them (`play::grass`).
+/// `grass=<share>|<percent>%|off|sparse|normal|lush` (`on` is normal): grass blade density in play
+/// where the tier allows them (`play::grass::Density::parse`).
 pub fn parse_grass(s: &str) -> Option<crate::play::grass::Density> {
     crate::play::grass::Density::parse(s)
 }
@@ -337,8 +337,8 @@ pub struct GateConfig {
     pub tier: crate::post::QualityTier,
     /// Water scenario only: advance water time by a fixed 1/30 s per frame (motion captures).
     pub water_fixed: bool,
-    /// `grass=off|sparse|normal|lush`: grass blade density near the camera in play, on the High
-    /// and Ultra tiers (`play::grass`); `set_grass` changes it live.
+    /// `grass=<share>|<percent>%|off|sparse|normal|lush`: grass blade density near the camera in
+    /// play, on the High and Ultra tiers (`play::grass`); `set_grass` changes it live.
     pub grass: crate::play::grass::Density,
 }
 
@@ -363,7 +363,7 @@ impl Default for GateConfig {
             tilt_strength: TiltStrength(100),
             tier: crate::post::QualityTier::High,
             water_fixed: false,
-            grass: crate::play::grass::Density::Normal,
+            grass: crate::play::grass::Density::NORMAL,
         }
     }
 }

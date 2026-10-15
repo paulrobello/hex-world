@@ -1,5 +1,6 @@
 //! Grass blades on grass-covered ground near the camera (owner request 2026-10-14: a grass shader
-//! for the high detail LOD), High and Ultra tiers only, toggled by `grass=on|off`.
+//! for the high detail LOD), High and Ultra tiers only, at the [`Density`] of the `grass` key,
+//! `set_grass` and the Settings → Graphics → Grass density slider (0-150% of [`DENSITY`]).
 //!
 //! - **Ground.** Blades grow on the topmost LOD0 surface of a tile's ground pieces (scatter's
 //!   [`Surface`], from [`PlayScatter::ground`]) where its slot is a grass slot: a manifest slot whose
@@ -10,29 +11,37 @@
 //!   banks and dune grass that should carry blades. Roads, sand, river beds and pads are not grass
 //!   slots, so they never do.
 //! - **Exclusions.** Scatter's footprints: no blade within a hero prop's ground footprint (houses,
-//!   the oak's trunk) or a scatter instance's (rocks, spruce trunks, flower clumps, every planned
-//!   instance of the tile's layout, so a late pack never moves the grass), nor below the water level
+//!   the oak's trunk) or a scatter instance's (rocks, spruce trunks, every planned instance of the
+//!   tile's layout, so a late pack never moves the grass; flower clumps keep only their centre
+//!   clear, [`GROWS_THROUGH`], so grass grows in among them), nor below the water level
 //!   ([`WATER_MARGIN`]). The hex border is not an exclusion (scatter's border gap keeps crowns and
 //!   footprints inside the hex, which would thin grass into a seam): the border has no width, each
 //!   tile owns the blades on its side of it, and its jittered grid keeps the density up to the edge,
 //!   so two grass tiles read as one field.
-//! - **Placement.** A jittered grid at [`DENSITY`] blades per m² of grass ground (thinned per slot
-//!   by its [`Style`]), seeded from `cell_seed(world seed, cell)` with its own salt, so a tile always
-//!   grows the same blades and scatter's stream is untouched. Arithmetic and `sqrt` only, so native
-//!   and wasm agree.
+//! - **Placement.** A jittered grid at [`LUSH`] times [`DENSITY`] blades per m² of grass ground
+//!   (thinned per slot by its [`Style`]), seeded from `cell_seed(world seed, cell)` with its own
+//!   salt, so a tile always grows the same blades and scatter's stream is untouched. Every tile
+//!   seeds this 150% set once; a density draws the blades whose `keep` is under its share of it, so
+//!   every lower value is a subset of every higher one and a slider move only rebuilds meshes, never
+//!   the scene. Each blade has a random scale ([`SCALE`]), yaw, lean and tilt, and a hue and
+//!   lightness [`jitter`]. Arithmetic and `sqrt` only, so native and wasm agree.
 //! - **Drawing.** One mesh per tile, a [`GrassGroup`] child of the tile root: it rises and sinks with
 //!   the tile and goes with it on bulldoze, undo, replace and Start over, and the ghost never draws
-//!   it. Every vertex of a blade carries the blade's root; `grass_common.wesl` poses it in the vertex
-//!   stage (the shared wind of `wind.wesl`, bent by the square of the height along the blade) and
+//!   it. A blade is two crossed tapered planes ([`BLADE_VERTS`]), so it holds a silhouette from any
+//!   side. Every vertex of a blade carries the blade's root; `grass_common.wesl` poses it in the
+//!   vertex stage (a world-space clump noise on the height, the shared wind of `wind.wesl`, bent by
+//!   the square of the height along the blade) and
 //!   shrinks it to nothing by [`FADE_END`] m from the camera, after thinning it by rank from
 //!   [`THIN_START`]. Only tiles within [`BUILD_RADIUS`] of the camera hold a mesh, at most
-//!   [`BUILDS_PER_FRAME`] new ones a frame, nearest first; beyond [`DROP_RADIUS`] they are dropped.
+//!   [`BUILDS_PER_FRAME`] new or swapped ones a frame within [`BUILD_BUDGET_MS`], nearest first;
+//!   beyond [`DROP_RADIUS`] they are dropped.
 //! - **Material.** [`GrassMaterial`] binds one uniform and no texture: the pipeline samples only the
 //!   view's textures, fewer than the kit forward pipeline. Blades write the depth, normal and motion
 //!   prepass (tilt-shift, refraction, SSAO and TAA see them), receive shadows and cast none.
 //! - **Colour.** A blade's base colour is its slot's tint times the grass set's mean linear albedo
-//!   ([`GRASS_ALBEDO_MEAN`]), so blades blend into the ground at the root; the shader lightens the
-//!   tip and takes the §9.4 season tint from the entity's `MeshTag`.
+//!   ([`GRASS_ALBEDO_MEAN`]) with its jitter, so blades blend into the ground at the root; the
+//!   shader mixes toward a lighter, less saturated tip and takes the §9.4 season tint from the
+//!   entity's `MeshTag`.
 use std::{
     collections::{BTreeMap, HashMap},
     sync::Arc,
@@ -67,8 +76,9 @@ pub const PREPASS_SHADER: &str = "shaders/grass_prepass.wesl";
 /// Mean linear albedo of the `grass` tileable set (`p1/materials/grass/grass.albedo.png`, sRGB
 /// decoded per texel, as the GPU samples it). `albedo_mean_matches_the_png` holds it to the file.
 pub const GRASS_ALBEDO_MEAN: [f32; 3] = [0.0993, 0.2135, 0.0310];
-/// Blades per m² of grass ground at [`Density::Normal`], before a slot's own thinning.
-pub const DENSITY: f32 = 14.0;
+/// Blades per m² of grass ground at [`Density::NORMAL`], before a slot's own thinning (owner
+/// 2026-10-14: doubled from 14).
+pub const DENSITY: f32 = 28.0;
 /// Camera distance (m) where blades start to thin by rank, and where only [`THIN_KEEP`] are left.
 pub const THIN_START: f32 = 16.0;
 pub const THIN_END: f32 = 46.0;
@@ -80,74 +90,98 @@ pub const FADE_END: f32 = 58.0;
 /// they drop it.
 pub const BUILD_RADIUS: f32 = FADE_END + 2.0;
 pub const DROP_RADIUS: f32 = BUILD_RADIUS + 12.0;
-/// New tile meshes per frame, nearest first.
+/// New or swapped tile meshes per frame, nearest first, and the frame's build time (ms) after which
+/// no further one starts (the first always does), so a slider drag never hitches a frame.
 pub const BUILDS_PER_FRAME: usize = 3;
+pub const BUILD_BUDGET_MS: f32 = 4.0;
 /// Scale on the shared wind's push for grass.
 pub const WIND_SCALE: f32 = 1.0;
 /// Blades keep this far (m) above the water level (`water::tiles::WATER_Y`).
 pub const WATER_MARGIN: f32 = 0.3;
 /// Gap (m) between a blade's root and a prop's ground footprint.
 pub const PROP_GAP: f32 = 0.05;
+/// Soft scatter pieces grass grows in among (owner 2026-10-14: wildflowers had a bare ring around
+/// them), with the radius (m, before the instance's scale) of the dense centre it keeps clear.
+pub const GROWS_THROUGH: &[(&str, f32)] = &[("wildflower_clump", 0.2)];
 const SALT: u64 = 0x6A55_B1AD_E5C0_FFEE;
-/// Vertices per blade: two at the root, two at mid height, one at the tip.
-pub const BLADE_VERTS: usize = 5;
-const BLADE_TRIS: [u16; 9] = [0, 1, 2, 2, 1, 3, 2, 3, 4];
+/// Vertices per blade: two crossed planes (an X from above, so the blade holds a silhouette from any
+/// side), each two at the root, two at mid height (the 1 - t² taper) and one at the tip.
+pub const BLADE_VERTS: usize = 10;
+const BLADE_TRIS: [u16; 18] = [0, 1, 2, 2, 1, 3, 2, 3, 4, 5, 6, 7, 7, 6, 8, 7, 8, 9];
+/// Triangles per blade.
+pub const BLADE_TRIANGLES: usize = BLADE_TRIS.len() / 3;
+/// Per-blade random scale on height and width, and per-blade hue (turns) and lightness jitter.
+const SCALE: [f32; 2] = [0.7, 1.4];
+const HUE_JITTER: f32 = 0.04;
+const LIGHT_JITTER: f32 = 0.05;
 
-/// The grass density (Settings → Graphics → Grass, the `grass` key, `set_grass`) as a share of
-/// [`DENSITY`]. Every tile seeds the Lush set once; a density draws the blades whose `keep` is under
-/// its share of Lush, so Sparse is a subset of Normal and Normal of Lush, and a change only rebuilds
-/// meshes from the cached set (never the scene).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
-pub enum Density {
-    Off,
-    Sparse,
-    #[default]
-    Normal,
-    Lush,
+/// The grass density (Settings → Graphics → Grass density, the `grass` key, `set_grass`) in whole
+/// percent of [`DENSITY`]: 0 is off, 100 Normal, 150 the most ([`LUSH`]). Every tile seeds the Lush
+/// set once; a density draws the blades whose `keep` is under its share of Lush, so every lower value
+/// draws a subset of every higher one and a change only rebuilds meshes from the cached set (never
+/// the scene).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct Density(u8);
+
+impl Default for Density {
+    fn default() -> Self {
+        Density::NORMAL
+    }
 }
 
 impl Density {
-    pub const ALL: [Density; 4] = [
-        Density::Off,
-        Density::Sparse,
-        Density::Normal,
-        Density::Lush,
-    ];
+    pub const OFF: Density = Density(0);
+    pub const NORMAL: Density = Density(100);
+    pub const MAX: Density = Density(150);
+    /// The stepped levels the slider replaced, kept as `grass` aliases: name and percent.
+    pub const ALIASES: [(&'static str, u8); 4] =
+        [("off", 0), ("sparse", 50), ("normal", 100), ("lush", 150)];
 
-    pub fn name(self) -> &'static str {
-        match self {
-            Density::Off => "off",
-            Density::Sparse => "sparse",
-            Density::Normal => "normal",
-            Density::Lush => "lush",
-        }
+    /// A share of [`DENSITY`], clamped to 0..=[`LUSH`] and rounded to whole percent; `None` when it
+    /// is not finite.
+    pub fn from_share(share: f32) -> Option<Density> {
+        share
+            .is_finite()
+            .then(|| Density((share.clamp(0.0, LUSH) * 100.0).round() as u8))
     }
 
-    /// `off|sparse|normal|lush`; `on` is Normal.
+    /// A share (`1.2`), a percentage (`120%`), or an alias (`off|sparse|normal|lush`, `on` is
+    /// Normal). Out-of-range numbers clamp.
     pub fn parse(s: &str) -> Option<Density> {
-        match s {
-            "on" => Some(Density::Normal),
-            _ => Density::ALL.into_iter().find(|d| d.name() == s),
+        let s = s.trim();
+        if s == "on" {
+            return Some(Density::NORMAL);
         }
+        if let Some((_, p)) = Self::ALIASES.iter().find(|(n, _)| *n == s) {
+            return Some(Density(*p));
+        }
+        let (num, scale) = match s.strip_suffix('%') {
+            Some(p) => (p.trim(), 0.01),
+            None => (s, 1.0),
+        };
+        Density::from_share(num.parse::<f32>().ok()? * scale)
+    }
+
+    pub fn percent(self) -> u8 {
+        self.0
     }
 
     /// Share of [`DENSITY`].
-    pub fn factor(self) -> f32 {
-        match self {
-            Density::Off => 0.0,
-            Density::Sparse => 0.5,
-            Density::Normal => 1.0,
-            Density::Lush => LUSH,
-        }
+    pub fn share(self) -> f32 {
+        f32::from(self.0) / 100.0
+    }
+
+    pub fn is_off(self) -> bool {
+        self.0 == 0
     }
 
     /// Whether a blade with this `keep` draws at this density.
     pub fn draws(self, keep: f32) -> bool {
-        keep * LUSH < self.factor()
+        keep * LUSH * 100.0 < f32::from(self.0)
     }
 }
 
-/// The Lush share of [`DENSITY`]: the seeded set every density draws from.
+/// The Lush share of [`DENSITY`]: the seeded set every density draws from, and the slider's top.
 pub const LUSH: f32 = 1.5;
 
 /// How blades grow on one kind of grass slot.
@@ -155,9 +189,10 @@ pub const LUSH: f32 = 1.5;
 pub struct Style {
     /// Share of [`DENSITY`] kept.
     pub density: f32,
-    /// Blade height range (m).
+    /// Blade height range (m), before the per-blade [`SCALE`] and the shader's clump noise.
     pub height: [f32; 2],
-    /// Blade width at the root (m).
+    /// Blade width at the root (m), before the per-blade [`SCALE`]: about 0.3 of the height, so the
+    /// crossed pair reads chunky (owner 2026-10-14, after small-world's grass).
     pub width: [f32; 2],
 }
 
@@ -166,30 +201,66 @@ pub fn style(slot: &str) -> Style {
     match slot {
         "road_verge" => Style {
             density: 0.9,
-            height: [0.12, 0.24],
-            width: [0.05, 0.08],
+            height: [0.1, 0.18],
+            width: [0.035, 0.055],
         },
         "beach_grass" => Style {
             density: 0.55,
-            height: [0.3, 0.62],
-            width: [0.04, 0.07],
+            height: [0.26, 0.5],
+            width: [0.045, 0.075],
         },
         "river_grass" => Style {
             density: 0.85,
-            height: [0.24, 0.5],
-            width: [0.05, 0.08],
+            height: [0.2, 0.38],
+            width: [0.06, 0.1],
         },
         s if s.starts_with("forest_base") => Style {
             density: 0.75,
-            height: [0.18, 0.38],
-            width: [0.05, 0.08],
+            height: [0.15, 0.3],
+            width: [0.05, 0.085],
         },
         _ => Style {
             density: 1.0,
-            height: [0.22, 0.5],
-            width: [0.04, 0.075],
+            height: [0.2, 0.36],
+            width: [0.07, 0.11],
         },
     }
+}
+
+/// Shifts a linear colour's hue (turns) and lightness in a gamma-2 space close to sRGB, with
+/// arithmetic and `sqrt` only so native and wasm agree.
+pub fn jitter(c: [f32; 3], dh: f32, dl: f32) -> [f32; 3] {
+    let [r, g, b] = c.map(|x| x.max(0.0).sqrt());
+    let (hi, lo) = (r.max(g).max(b), r.min(g).min(b));
+    let l = 0.5 * (hi + lo);
+    let d = hi - lo;
+    let (h, s) = if d <= 1e-6 {
+        (0.0, 0.0)
+    } else {
+        let s = (d / (1.0 - (2.0 * l - 1.0).abs()).max(1e-6)).min(1.0);
+        let h = if hi == r {
+            ((g - b) / d).rem_euclid(6.0)
+        } else if hi == g {
+            (b - r) / d + 2.0
+        } else {
+            (r - g) / d + 4.0
+        };
+        (h / 6.0, s)
+    };
+    let h = (h + dh).rem_euclid(1.0) * 6.0;
+    let l = (l + dl).clamp(0.0, 1.0);
+    let chroma = (1.0 - (2.0 * l - 1.0).abs()) * s;
+    let x = chroma * (1.0 - (h.rem_euclid(2.0) - 1.0).abs());
+    let (r, g, b) = match h as u32 {
+        0 => (chroma, x, 0.0),
+        1 => (x, chroma, 0.0),
+        2 => (0.0, chroma, x),
+        3 => (0.0, x, chroma),
+        4 => (x, 0.0, chroma),
+        _ => (chroma, 0.0, x),
+    };
+    let m = l - 0.5 * chroma;
+    [r + m, g + m, b + m].map(|v| v * v)
 }
 
 /// The grass slots of a tile's ground pieces with their linear tint.
@@ -271,10 +342,11 @@ pub fn exclusions(def: &TileDef, instances: &[Instance], pieces: &[String]) -> V
         .collect();
     out.extend(instances.iter().filter_map(|i| {
         let piece = pieces.get(i.rule as usize)?;
-        Some((
-            i.pos.xz(),
-            scatter::footprint(piece).ground * i.scale + PROP_GAP,
-        ))
+        let radius = GROWS_THROUGH
+            .iter()
+            .find(|(id, _)| *id == piece.as_str())
+            .map_or_else(|| scatter::footprint(piece).ground, |(_, core)| *core);
+        Some((i.pos.xz(), radius * i.scale + PROP_GAP))
     }));
     out
 }
@@ -299,7 +371,7 @@ pub fn layout(
     for j in 0..n {
         for i in 0..n {
             // Every grid point draws the same numbers whether or not it grows a blade.
-            let r = [(); 10].map(|_| rng.unit());
+            let r = [(); 11].map(|_| rng.unit());
             let p = Vec2::new(
                 -HEX_RADIUS + (i as f32 + r[0]) * step,
                 -HEX_RADIUS + (j as f32 + r[1]) * step,
@@ -325,19 +397,19 @@ pub fn layout(
             if r[2] >= st.density {
                 continue;
             }
-            let shade = 0.82 + 0.3 * r[6];
-            let warm = 1.0 + 0.16 * (r[7] - 0.5);
+            let scale = lerp(SCALE, r[10]);
+            let base = [0, 1, 2].map(|k| tint[k] * GRASS_ALBEDO_MEAN[k]);
             out.blades.push(Blade {
                 root: Vec3::new(p.x, y, p.y),
                 yaw_deg: ((r[3] * 360.0) as u16).min(359),
                 rank: 0.9 * r[4],
-                height: lerp(st.height, r[5]),
-                width: lerp(st.width, r[8]),
-                color: [
-                    tint[0] * GRASS_ALBEDO_MEAN[0] * shade * warm,
-                    tint[1] * GRASS_ALBEDO_MEAN[1] * shade,
-                    tint[2] * GRASS_ALBEDO_MEAN[2] * shade / warm,
-                ],
+                height: lerp(st.height, r[5]) * scale,
+                width: lerp(st.width, r[8]) * scale,
+                color: jitter(
+                    base,
+                    HUE_JITTER * (2.0 * r[6] - 1.0),
+                    LIGHT_JITTER * (2.0 * r[7] - 1.0),
+                ),
                 keep: r[9],
             });
         }
@@ -367,17 +439,20 @@ pub fn blade_mesh(layout: &GrassLayout, density: Density) -> Option<(Mesh, Aabb,
     for b in &blades {
         let w = 0.5 * b.width;
         let packed = f32::from(b.yaw_deg) + b.rank;
-        for (across, along) in [
-            (-w, 0.0),
-            (w, 0.0),
-            (-0.6 * w, 0.5),
-            (0.6 * w, 0.5),
-            (0.0, 1.0),
-        ] {
-            pos.push(b.root.to_array());
-            col.push(b.color);
-            uv0.push([across, along]);
-            uv1.push([packed, b.height]);
+        // The second plane carries the height negated: grass_common turns it 90° about the root.
+        for height in [b.height, -b.height] {
+            for (across, along) in [
+                (-w, 0.0),
+                (w, 0.0),
+                (-0.75 * w, 0.5),
+                (0.75 * w, 0.5),
+                (0.0, 1.0),
+            ] {
+                pos.push(b.root.to_array());
+                col.push(b.color);
+                uv0.push([across, along]);
+                uv1.push([packed, height]);
+            }
         }
         lo = lo.min(b.root);
         hi = hi.max(b.root);
@@ -405,18 +480,27 @@ pub fn blade_mesh(layout: &GrassLayout, density: Density) -> Option<(Mesh, Aabb,
     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uv0)
     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_1, uv1)
     .with_inserted_indices(indices);
-    // The pose bends a tip at most 1.1 heights sideways and the patch noise grows blades by 1.3.
-    let reach = 1.3 * tallest;
+    // The pose bends a tip at most 1.1 heights sideways, the clump noise grows blades by up to 1.45
+    // and far blades widen by up to 2.5.
+    let reach = 1.45 * tallest;
+    let side = 1.2 * reach + 0.2;
     let aabb = Aabb::from_min_max(
-        lo - Vec3::new(1.2 * reach, 0.0, 1.2 * reach),
-        hi + Vec3::new(1.2 * reach, reach, 1.2 * reach),
+        lo - Vec3::new(side, 0.0, side),
+        hi + Vec3::new(side, reach, side),
     );
     Some((mesh, aabb, blades.len()))
 }
 
-/// Bytes the GPU holds for a mesh of `blades` blades (vertices and indices).
+/// Bytes the GPU holds for one tile's mesh of `blades` blades: 40-byte vertices, and 16-bit indices
+/// up to 65,536 vertices, 32-bit beyond.
 pub fn mesh_bytes(blades: usize) -> usize {
-    blades * BLADE_VERTS * (12 + 12 + 8 + 8) + blades * BLADE_TRIS.len() * 2
+    let verts = blades * BLADE_VERTS;
+    let index = if verts <= usize::from(u16::MAX) + 1 {
+        2
+    } else {
+        4
+    };
+    verts * (12 + 12 + 8 + 8) + blades * BLADE_TRIS.len() * index
 }
 
 #[derive(Clone, Copy, Debug, Default, ShaderType, Reflect)]
@@ -513,6 +597,9 @@ pub struct PlayGrass {
     built: HashMap<Entity, Built>,
     /// The slowest single tile build (seeded set and mesh, ms) in the latest frame that built one.
     last_build_ms: f32,
+    /// The slowest single density swap (mesh only, from the cached set, ms) in the latest frame
+    /// that swapped one.
+    last_swap_ms: f32,
 }
 
 /// `state().grass` as JSON.
@@ -521,7 +608,7 @@ pub struct GrassReport(pub String);
 
 /// Why grass draws or not: the density, the tier, the scenario.
 pub fn status(active: Scenario, config: &GateConfig) -> &'static str {
-    if config.grass == Density::Off {
+    if config.grass.is_off() {
         "off"
     } else if !matches!(config.tier, QualityTier::High | QualityTier::Ultra) {
         "tier"
@@ -532,14 +619,18 @@ pub fn status(active: Scenario, config: &GateConfig) -> &'static str {
     }
 }
 
-/// `state().grass`: the density and why it draws or not, live groups and blades, the tuning, and a
-/// row per tile holding a mesh.
+/// `state().grass`: the density (share of [`DENSITY`]) and why it draws or not, live groups, blades,
+/// triangles and mesh bytes, the tuning, and a row per tile holding a mesh.
 pub fn report(state: &PlayGrass, density: Density, status: &str, groups: usize) -> String {
     let build_ms = (state.last_build_ms * 100.0).round() / 100.0;
+    let swap_ms = (state.last_swap_ms * 100.0).round() / 100.0;
     let mut rows: BTreeMap<(i32, i32), String> = BTreeMap::new();
-    let mut blades = 0usize;
+    let (mut blades, mut bytes) = (0usize, 0usize);
     for b in state.built.values() {
         blades += b.blades;
+        if b.group.is_some() {
+            bytes += mesh_bytes(b.blades);
+        }
         rows.insert(
             (b.cell.q, b.cell.r),
             format!(
@@ -555,10 +646,10 @@ pub fn report(state: &PlayGrass, density: Density, status: &str, groups: usize) 
     }
     let rows: Vec<String> = rows.into_values().collect();
     format!(
-        "{{\"density\":\"{}\",\"status\":\"{status}\",\"groups\":{groups},\"blades\":{blades},\"mesh_bytes\":{},\"per_m2\":{},\"thin\":[{THIN_START},{THIN_END},{THIN_KEEP}],\"fade\":[{FADE_START},{FADE_END}],\"build_radius\":{BUILD_RADIUS},\"last_build_ms\":{build_ms},\"tiles\":[{}]}}",
-        density.name(),
-        mesh_bytes(blades),
-        DENSITY * density.factor(),
+        "{{\"density\":{},\"status\":\"{status}\",\"groups\":{groups},\"blades\":{blades},\"triangles\":{},\"mesh_bytes\":{bytes},\"per_m2\":{},\"thin\":[{THIN_START},{THIN_END},{THIN_KEEP}],\"fade\":[{FADE_START},{FADE_END}],\"build_radius\":{BUILD_RADIUS},\"last_build_ms\":{build_ms},\"last_swap_ms\":{swap_ms},\"tiles\":[{}]}}",
+        f64::from(density.percent()) / 100.0,
+        blades * BLADE_TRIANGLES,
+        f64::from(DENSITY) * f64::from(density.percent()) / 100.0,
         rows.join(",")
     )
 }
@@ -706,6 +797,11 @@ pub fn sync(
         keep
     });
     let mut builds = 0;
+    let frame = bevy::platform::time::Instant::now();
+    let spent = |builds: usize| {
+        builds >= BUILDS_PER_FRAME
+            || (builds > 0 && frame.elapsed().as_secs_f32() * 1000.0 >= BUILD_BUDGET_MS)
+    };
     // Density changes first, nearest first: the old mesh stays until its replacement is spawned.
     let mut swaps: Vec<(f32, Entity)> = state
         .built
@@ -714,7 +810,12 @@ pub fn sync(
         .map(|(root, b)| (reach(b.cell), *root))
         .collect();
     swaps.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
-    for (_, root) in swaps.into_iter().take(BUILDS_PER_FRAME) {
+    let mut slowest_swap: Option<f32> = None;
+    for (_, root) in swaps {
+        if spent(builds) {
+            break;
+        }
+        let started = bevy::platform::time::Instant::now();
         let b = state.built.get_mut(&root).expect("listed above");
         let (group, n) = spawn_group(
             &mut commands,
@@ -729,6 +830,11 @@ pub fn sync(
         }
         (b.group, b.blades, b.density) = (group, n, density);
         builds += 1;
+        let ms = started.elapsed().as_secs_f32() * 1000.0;
+        slowest_swap = Some(slowest_swap.map_or(ms, |m: f32| m.max(ms)));
+    }
+    if let Some(ms) = slowest_swap {
+        state.last_swap_ms = ms;
     }
     let mut todo: Vec<(f32, Entity, Axial, Key)> = wanted
         .iter()
@@ -742,7 +848,7 @@ pub fn sync(
     });
     let mut slowest: Option<f32> = None;
     for (_, root, cell, key) in todo {
-        if builds >= BUILDS_PER_FRAME || density == Density::Off {
+        if spent(builds) || density.is_off() {
             break;
         }
         let Some(def) = catalog.0.get(&key.tile) else {
@@ -833,7 +939,18 @@ mod tests {
 
     #[test]
     fn mesh_bytes_count_vertices_and_indices() {
-        assert_eq!(mesh_bytes(1), 5 * 40 + 9 * 2);
+        assert_eq!(mesh_bytes(1), 10 * 40 + 18 * 2);
+        assert_eq!(BLADE_TRIANGLES, 6, "two crossed planes of three triangles");
+        assert_eq!(
+            mesh_bytes(6553),
+            65_530 * 40 + 6553 * 18 * 2,
+            "16-bit indices"
+        );
+        assert_eq!(
+            mesh_bytes(6554),
+            65_540 * 40 + 6554 * 18 * 4,
+            "32-bit past 65,536 vertices"
+        );
         let l = GrassLayout {
             blades: vec![
                 Blade {
@@ -849,15 +966,41 @@ mod tests {
             ],
             area_m2: 1.0,
         };
-        let (mesh, aabb, n) = blade_mesh(&l, Density::Lush).unwrap();
+        let (mesh, aabb, n) = blade_mesh(&l, Density::MAX).unwrap();
         assert_eq!(n, 3);
         assert!(
-            blade_mesh(&l, Density::Sparse).is_none(),
-            "keep 0.5 is over Sparse's third"
+            blade_mesh(&l, Density::parse("sparse").unwrap()).is_none(),
+            "keep 0.5 is over 50%'s third of Lush"
         );
-        assert_eq!(mesh.count_vertices(), 15);
-        assert_eq!(mesh.indices().unwrap().len(), 27);
+        assert!(blade_mesh(&l, Density::parse("76%").unwrap()).is_some());
+        assert_eq!(mesh.count_vertices(), 30);
+        assert_eq!(mesh.indices().unwrap().len(), 54);
         assert!(aabb.half_extents.y > 0.0);
+        // The second plane of each blade carries the height negated (grass_common turns it 90°).
+        let Some(bevy::mesh::VertexAttributeValues::Float32x2(uv1)) =
+            mesh.attribute(Mesh::ATTRIBUTE_UV_1)
+        else {
+            panic!("UV_1 is Float32x2");
+        };
+        assert!(uv1[..5].iter().all(|v| v[1] == 0.3));
+        assert!(uv1[5..10].iter().all(|v| v[1] == -0.3));
+    }
+
+    #[test]
+    fn jitter_shifts_hue_and_lightness_only_as_asked() {
+        let c = [0.0993, 0.2135, 0.0310];
+        let same = jitter(c, 0.0, 0.0);
+        for k in 0..3 {
+            assert!((same[k] - c[k]).abs() < 1e-5, "{same:?} against {c:?}");
+        }
+        let light = jitter(c, 0.0, 0.05);
+        let dark = jitter(c, 0.0, -0.05);
+        assert!((0..3).all(|k| light[k] > c[k] && dark[k] < c[k]));
+        let warm = jitter(c, -0.04, 0.0);
+        assert!(
+            warm[0] / warm[1] > c[0] / c[1],
+            "a negative hue shift turns green toward yellow"
+        );
     }
 
     #[test]
@@ -944,7 +1087,7 @@ mod tests {
             let normal: Vec<&Blade> = l
                 .blades
                 .iter()
-                .filter(|b| Density::Normal.draws(b.keep))
+                .filter(|b| Density::NORMAL.draws(b.keep))
                 .collect();
             let count = |lo: f32, hi: f32| {
                 normal
@@ -965,19 +1108,87 @@ mod tests {
         }
     }
 
+    /// Owner feedback 2026-10-14: wildflowers stood in a bare ring. Grass grows in among a flower
+    /// clump up to its small centre, while a rock keeps its whole footprint clear.
     #[test]
-    fn densities_parse_and_nest() {
-        for d in Density::ALL {
-            assert_eq!(Density::parse(d.name()), Some(d));
-        }
-        assert_eq!(Density::parse("on"), Some(Density::Normal));
-        assert_eq!(Density::parse("thick"), None);
-        assert_eq!(Density::default(), Density::Normal);
+    fn grass_grows_among_flowers_but_not_under_rocks() {
+        let c = TileCatalog::builtin().unwrap();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let def = c.get("meadow").unwrap();
+        let slots = grass_slots(&m, def, &c);
+        let pieces = vec!["wildflower_clump".to_string(), "rock_small".to_string()];
+        let at = |rule: u8, x: f32| Instance {
+            rule,
+            pos: Vec3::new(x, 0.0, 0.0),
+            yaw: 0.0,
+            scale: 1.0,
+            order: rule,
+        };
+        let ex = exclusions(def, &[at(0, -4.0), at(1, 4.0)], &pieces);
+        let [.., flower, rock] = ex.as_slice() else {
+            unreachable!()
+        };
+        assert_eq!(flower.1, 0.2 + PROP_GAP);
+        assert_eq!(rock.1, scatter::footprint("rock_small").ground + PROP_GAP);
+        let l = layout(1, &meadow_surface(), &slots, &ex);
+        let around = |centre: Vec2, lo: f32, hi: f32| {
+            l.blades
+                .iter()
+                .filter(|b| (lo..hi).contains(&b.root.xz().distance(centre)))
+                .count()
+        };
+        assert!(
+            around(flower.0, flower.1, 0.9) > 0,
+            "no grass among the flowers"
+        );
+        assert_eq!(around(rock.0, 0.0, rock.1), 0, "grass under the rock");
+    }
+
+    #[test]
+    fn densities_parse_shares_percentages_and_aliases() {
+        let p = |s: &str| Density::parse(s).map(Density::percent);
+        // The stepped levels the slider replaced: off 0, sparse 50, normal 100, lush 150.
+        assert_eq!(p("off"), Some(0));
+        assert_eq!(p("sparse"), Some(50));
+        assert_eq!(p("normal"), Some(100));
+        assert_eq!(p("on"), Some(100));
+        assert_eq!(p("lush"), Some(150));
+        assert_eq!(p("1.2"), Some(120));
+        assert_eq!(p("0.55"), Some(55));
+        assert_eq!(p("120%"), Some(120));
+        assert_eq!(p("35 %"), Some(35));
+        assert_eq!(p("0"), Some(0));
+        // Out of range clamps; a bare number is the share, so 100 is the top, not 100%.
+        assert_eq!(p("100"), Some(150));
+        assert_eq!(p("200%"), Some(150));
+        assert_eq!(p("-1"), Some(0));
+        assert_eq!(p("thick"), None);
+        assert_eq!(p("NaN"), None);
+        assert_eq!(p("inf"), None);
+        assert_eq!(Density::from_share(f32::NAN), None);
+        assert_eq!(Density::from_share(2.0), Some(Density::MAX));
+        assert_eq!(Density::default(), Density::NORMAL);
+        assert_eq!(Density::NORMAL.share(), 1.0);
+        assert!(Density::OFF.is_off() && !Density::from_share(0.01).unwrap().is_off());
+    }
+
+    /// Every lower density draws a subset of every higher one, so a slider move only rebuilds
+    /// meshes from the seeded Lush set; 0 draws nothing and 150% everything.
+    #[test]
+    fn continuous_densities_nest() {
+        let all: Vec<Density> = (0..=150)
+            .map(|p| Density::from_share(p as f32 / 100.0).unwrap())
+            .collect();
+        assert_eq!(
+            all.iter().map(|d| d.percent()).collect::<Vec<_>>(),
+            (0..=150).collect::<Vec<u8>>()
+        );
         let mut rng = Rng(7);
-        for _ in 0..10_000 {
-            let k = rng.unit();
-            assert!(!Density::Off.draws(k));
-            for w in Density::ALL.windows(2) {
+        let keeps: Vec<f32> = (0..5_000).map(|_| rng.unit()).collect();
+        for &k in &keeps {
+            assert!(!Density::OFF.draws(k));
+            assert!(Density::MAX.draws(k));
+            for w in all.windows(2) {
                 assert!(
                     !w[0].draws(k) || w[1].draws(k),
                     "{:?} draws a blade {:?} does not",
@@ -985,8 +1196,10 @@ mod tests {
                     w[1]
                 );
             }
-            assert!(Density::Lush.draws(k));
         }
+        // The drawn share tracks the slider: 100% draws two thirds of the Lush set.
+        let normal = keeps.iter().filter(|&&k| Density::NORMAL.draws(k)).count() as f32;
+        assert!((normal / keeps.len() as f32 - 2.0 / 3.0).abs() < 0.02);
     }
 
     #[test]
@@ -997,7 +1210,7 @@ mod tests {
         c.tier = QualityTier::Medium;
         assert_eq!(status(Scenario::Play, &c), "tier");
         c.tier = QualityTier::Ultra;
-        c.grass = Density::Off;
+        c.grass = Density::OFF;
         assert_eq!(status(Scenario::Play, &c), "off");
     }
 }

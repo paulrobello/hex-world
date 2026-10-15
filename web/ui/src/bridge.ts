@@ -17,9 +17,12 @@ export type QualityChoice = "auto" | TierName;
 /** The named looks (tone mapper, exposure and grading), in the engine's display order (`hex_render::Grade::ALL`). */
 export const GRADES = ["aces", "tony", "rich-1", "rich-2", "rich-3"] as const;
 export type GradeName = (typeof GRADES)[number];
-/** Grass densities, Off to Lush (`hex_render::play::grass::Density::ALL`). */
+/**
+ * The stepped grass levels the density slider replaced, Off to Lush, still accepted by `?grass=` /
+ * `--grass` (`hex_render::play::grass::Density::ALIASES`).
+ */
 export const GRASS = ["off", "sparse", "normal", "lush"] as const;
-export type GrassDensity = (typeof GRASS)[number];
+export type GrassAlias = (typeof GRASS)[number];
 /** Where the tier in force came from (`docs/agent-operability.md`, "Quality tier"). */
 export type TierSource = "default" | "explicit" | "detected" | "probe" | "runtime";
 
@@ -80,7 +83,8 @@ export type Command =
   | { cmd: "dump_state"; name: string }
   | { cmd: "set_tier"; tier: QualityChoice }
   | { cmd: "set_grade"; grade: GradeName }
-  | { cmd: "set_grass"; density: GrassDensity }
+  /** `density`: share of the Normal density, 0 (off) to 1.5; the engine clamps it and rounds to whole percent. */
+  | { cmd: "set_grass"; density: number }
   | { cmd: "set_reduced_motion"; on: boolean }
   | { cmd: "exit" }
   | { cmd: "select_tile"; id: string }
@@ -345,17 +349,22 @@ export interface GrassTile {
 
 /** `state().grass`: the density, why grass draws or not (`on`, `off`, `tier`, `scenario`), and its meshes. */
 export interface GrassState {
-  density: GrassDensity;
+  /** Share of the Normal density, 0 to 1.5, in whole percent steps. */
+  density: number;
   status: "on" | "off" | "tier" | "scenario";
   groups: number;
   blades: number;
+  triangles: number;
   mesh_bytes: number;
+  /** Blades per m² of grass ground at this density, before a slot's own thinning. */
   per_m2: number;
   thin: number[];
   fade: number[];
   build_radius: number;
   /** The slowest single tile build (seeded set and mesh, ms) in the latest frame that built one. */
   last_build_ms: number;
+  /** The slowest single density swap (mesh only, from the cached set, ms) in the latest frame that swapped one. */
+  last_swap_ms: number;
   tiles: GrassTile[];
 }
 
@@ -562,12 +571,14 @@ export const STATE_FIELDS = {
     status: true,
     groups: true,
     blades: true,
+    triangles: true,
     mesh_bytes: true,
     per_m2: true,
     thin: true,
     fade: true,
     build_radius: true,
     last_build_ms: true,
+    last_swap_ms: true,
     tiles: true,
   }),
 };

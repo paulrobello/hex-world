@@ -697,11 +697,13 @@
       "fade",
       "groups",
       "last_build_ms",
+      "last_swap_ms",
       "mesh_bytes",
       "per_m2",
       "status",
       "thin",
-      "tiles"
+      "tiles",
+      "triangles"
     ],
     "hovered_kind": [
       "empty",

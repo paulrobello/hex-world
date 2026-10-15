@@ -72,7 +72,8 @@ async function webRun(arm) {
     const d = await page.evaluate(() => window.hexWorld.diag());
     const st = await page.evaluate(() => window.hexWorld.state());
     if (st.tier?.tier !== "high") throw new Error(`tier ${st.tier?.tier}, expected high`);
-    if (st.grass?.density !== arm) throw new Error(`grass density ${st.grass?.density}, expected ${arm}`);
+    const share = { off: 0, sparse: 0.5, normal: 1, lush: 1.5 }[arm] ?? Number(arm);
+    if (st.grass?.density !== share) throw new Error(`grass density ${st.grass?.density}, expected ${share} (${arm})`);
     const n = st.play?.tiles?.length;
     if (n !== world.tiles.length) throw new Error(`world has ${n} tiles, expected ${world.tiles.length}`);
     const grass = { status: st.grass.status, groups: st.grass.groups, blades: st.grass.blades, mesh_bytes: st.grass.mesh_bytes };

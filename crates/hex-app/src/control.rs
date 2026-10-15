@@ -76,11 +76,12 @@ pub enum Command {
     SetGrade {
         grade: String,
     },
-    /// Grass density at runtime (`off`, `sparse`, `normal`, `lush`; `hex_render::play::grass`):
-    /// each tile's blade mesh swaps from its seeded set with no scene rebuild. The Settings sheet
-    /// sends this; the overlay keeps the choice per viewer, not in the world save.
+    /// Grass density at runtime as a share of the Normal density (0 off, 1 Normal, 1.5 the most;
+    /// clamped, rounded to whole percent; `hex_render::play::grass`): each tile's blade mesh swaps
+    /// from its seeded set with no scene rebuild. The Settings sheet's slider sends this; the
+    /// overlay keeps the choice per viewer, not in the world save.
     SetGrass {
-        density: String,
+        density: f32,
     },
     /// Reduced motion (`prefers-reduced-motion` or the Settings override, sent by the overlay):
     /// the staged rise and every affordance transition become instant cuts, with no breathing,
@@ -365,12 +366,14 @@ pub fn run_commands(
             }),
             None => warn!("set_grade command: unknown grade '{grade}', skipped"),
         },
-        Command::SetGrass { density } => match hex_render::play::grass::Density::parse(&density) {
-            Some(d) => commands.queue(move |w: &mut World| {
-                w.resource_mut::<hex_render::GateConfig>().grass = d;
-            }),
-            None => warn!("set_grass command: unknown density '{density}', skipped"),
-        },
+        Command::SetGrass { density } => {
+            match hex_render::play::grass::Density::from_share(density) {
+                Some(d) => commands.queue(move |w: &mut World| {
+                    w.resource_mut::<hex_render::GateConfig>().grass = d;
+                }),
+                None => warn!("set_grass command: density {density} is not a number, skipped"),
+            }
+        }
         Command::SetReducedMotion { on } => reduced.0 = on,
         Command::Photo {
             dof,

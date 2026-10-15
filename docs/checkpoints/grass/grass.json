@@ -391,7 +391,7 @@
 },
 {
 "cmd": "set_grass",
-"density": "sparse"
+"density": 0.5
 },
 {
 "cmd": "wait",
@@ -424,7 +424,7 @@
 },
 {
 "cmd": "set_grass",
-"density": "lush"
+"density": 1.5
 },
 {
 "cmd": "wait",
@@ -457,7 +457,7 @@
 },
 {
 "cmd": "set_grass",
-"density": "normal"
+"density": 1.0
 },
 {
 "cmd": "wait",

@@ -7,7 +7,7 @@ import {
   GRASS,
   type GradeName,
   type GradeState,
-  type GrassDensity,
+  type GrassAlias,
   type GrassState,
   type QualityChoice,
   type TierName,
@@ -171,57 +171,93 @@ export function startupGrade(search: string, stored: string | null): GradeName |
   return isGrade(stored) ? stored : null;
 }
 
-/** The viewer's grass density in localStorage; it is not part of the world save. */
+/** The viewer's grass density in localStorage (whole percent of Normal); it is not part of the world save. */
 export const GRASS_KEY = "hexWorld.grass";
 
-export interface GrassRow {
-  id: GrassDensity;
-  name: string;
-  detail: string;
+/** The Grass density slider: percent of the Normal density (28 blades per m²), 0 is off. */
+export const GRASS_SLIDER = { min: 0, max: 150, step: 5, normal: 100 } as const;
+
+/** The stepped choice the slider replaced, as the percent a stored value migrates to. */
+export const GRASS_ALIAS_PERCENT: Record<GrassAlias, number> = { off: 0, sparse: 50, normal: 100, lush: 150 };
+
+/** A slider percent clamped to the range and snapped to its step. */
+export function grassPercent(v: number): number {
+  const { min, max, step } = GRASS_SLIDER;
+  return Math.min(max, Math.max(min, Math.round(v / step) * step));
 }
 
-export const GRASS_ROWS: GrassRow[] = [
-  { id: "off", name: "Off", detail: "Bare ground textures only." },
-  { id: "sparse", name: "Sparse", detail: "Half the blades." },
-  { id: "normal", name: "Normal", detail: "The meadow as tuned." },
-  { id: "lush", name: "Lush", detail: "One and a half times the blades. Costs the most." },
-];
+/**
+ * The stored density as a slider percent: a whole number, or a stepped choice from before the
+ * slider (off 0, sparse 50, normal 100, lush 150). Null without one, or for anything else.
+ */
+export function storedGrass(stored: string | null): number | null {
+  if (stored == null) return null;
+  if ((GRASS as readonly string[]).includes(stored)) return GRASS_ALIAS_PERCENT[stored as GrassAlias];
+  if (!/^\d+(\.\d+)?$/.test(stored.trim())) return null;
+  return grassPercent(Number(stored));
+}
 
 export interface GrassView {
-  /** The checked row: a pending pick until `state().grass.density` follows, else the engine's. */
-  selected: GrassDensity | null;
-  /** Grass draws only on High and Ultra: the rows are disabled below. */
+  /** The slider percent: a pending value until `state().grass.density` follows, else the engine's. */
+  value: number | null;
+  /** Grass draws only on High and Ultra: the slider is disabled below. */
   enabled: boolean;
-  rows: GrassRow[];
 }
 
 export function grassView(
   g: GrassState | undefined,
   tier: TierState | undefined,
-  pick: GrassDensity | null = null,
+  pick: number | null = null,
 ): GrassView {
   return {
-    selected: pick ?? g?.density ?? null,
+    value: pick ?? (g ? Math.round(g.density * 100) : null),
     enabled: tier?.tier === "high" || tier?.tier === "ultra",
-    rows: GRASS_ROWS,
   };
 }
 
-export const grassCommand = (density: GrassDensity): { cmd: "set_grass"; density: GrassDensity } => ({
+/** `set_grass` for a slider percent: the engine takes the share of Normal. */
+export const grassCommand = (pct: number): { cmd: "set_grass"; density: number } => ({
   cmd: "set_grass",
-  density,
+  density: grassPercent(pct) / 100,
 });
 
-export const isGrass = (v: string | null | undefined): v is GrassDensity =>
-  (GRASS as readonly string[]).includes(v ?? "");
-
 /**
- * The density to send at startup: the stored choice, unless the page address names one (`?grass=`
- * is read by the engine itself and wins) or the stored value is not a known density.
+ * The density to send at startup, as a slider percent: the stored choice (a stepped one migrates),
+ * unless the page address names one (`?grass=` is read by the engine itself and wins) or the
+ * stored value is unreadable.
  */
-export function startupGrass(search: string, stored: string | null): GrassDensity | null {
+export function startupGrass(search: string, stored: string | null): number | null {
   if (new URLSearchParams(search).has("grass")) return null;
-  return isGrass(stored) ? stored : null;
+  return storedGrass(stored);
+}
+
+/** Sends at most once per `ms` while a slider drags; `flush` sends the last value at once (on release). */
+export function throttle(
+  send: (v: number) => void,
+  ms: number,
+  now: () => number = () => performance.now(),
+): { push: (v: number) => void; flush: () => void } {
+  let last = Number.NEGATIVE_INFINITY;
+  let pending: number | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const fire = (): void => {
+    if (timer) clearTimeout(timer);
+    timer = null;
+    if (pending == null) return;
+    const v = pending;
+    pending = null;
+    last = now();
+    send(v);
+  };
+  return {
+    push(v: number): void {
+      pending = v;
+      const wait = last + ms - now();
+      if (wait <= 0) fire();
+      else timer ??= setTimeout(fire, wait);
+    },
+    flush: fire,
+  };
 }
 
 /** Arrow keys over a roving group of `n` items (tabs, tier radios): the index to move to, or null. */

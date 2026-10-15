@@ -19,10 +19,14 @@ import hex_render::{grass_common as gc, hooks};
 @if(SCREEN_SPACE_AMBIENT_OCCLUSION)
 import bevy_pbr::ssao::utils::ssao_multibounce;
 
-// Root shade (grass shading its own base), the tip's lift, and how much a gust lightens the bent
-// blades so gusts read as rolling bands.
+// Root shade (grass shading its own base); the tip colour, lighter and less saturated than the
+// blade's (TIP_DESAT toward its luminance, then TIP_LIFT), mixed in linearly to TIP_MIX at the tip
+// (owner 2026-10-14, after small-world's grass); and how much a gust lightens the bent blades so
+// gusts read as rolling bands.
 const ROOT_SHADE: f32 = 0.78;
-const TIP_LIFT: vec3<f32> = vec3(1.4, 1.36, 1.0);
+const TIP_DESAT: f32 = 0.3;
+const TIP_LIFT: vec3<f32> = vec3(1.8, 1.8, 1.6);
+const TIP_MIX: f32 = 0.85;
 const GUST_LIFT: f32 = 0.6;
 const ROUGHNESS: f32 = 0.78;
 const REFLECTANCE: f32 = 0.3;
@@ -64,8 +68,9 @@ fn fragment(in: GrassOut) -> FragmentOutput {
     let a = in.along_gust.x;
     // Shade like the ground the blade stands on, tilted by the blade's bend.
     let n = normalize(mix(vec3(0.0, 1.0, 0.0), normalize(in.world_normal), 0.35));
+    let tip = mix(in.color, vec3(dot(in.color, vec3(0.2126, 0.7152, 0.0722))), TIP_DESAT) * TIP_LIFT;
     var c = in.color * mix(ROOT_SHADE, 1.0, smoothstep(0.0, 0.6, a));
-    c = mix(c, c * TIP_LIFT, a * a) * (1.0 + GUST_LIFT * in.along_gust.y * (0.35 + 0.65 * a));
+    c = mix(c, tip, TIP_MIX * a) * (1.0 + GUST_LIFT * in.along_gust.y * (0.35 + 0.65 * a));
     // §9.4 foliage seasonal tint by the entity's MeshTag; 0 (every MVP tile) skips it.
     let season = mesh_functions::get_tag(in.instance_index);
     if (season != 0u) {
