@@ -4,10 +4,10 @@ This is the orchestrator session for P2+ work: parallel worktree agents, verifie
 
 ## State
 
-- Branch `main`, **about 60 commits ahead of `origin/main` (`git rev-list --count origin/main..main`), nothing pushed**. Pushing needs Paul's approval every time.
+- Branch `main`. Pushed to `origin/main` through `2b150eb` on 2026-10-15 with Paul's approval; later local commits (check with `git rev-list --count origin/main..main`) are unpushed. Every push needs Paul's approval.
 - The working tree is clean apart from an untracked `.claude/launch.json` (leave it). No other worktrees are active, and no agents or background runs are going.
 - The play build (`dist/`, port 8094) was rebuilt from `main` after the last merge.
-- CI on GitHub is red until the next push. The fix for the old macOS-only hash test is local (`0a6dc22`).
+- CI is green: run 38804731279 (push of `2b150eb`) passed every job, including both test legs (ubuntu-latest and macos-latest), and deployed to Pages.
 
 ## Standing rules from the owner (still in force)
 
@@ -22,7 +22,7 @@ This is the orchestrator session for P2+ work: parallel worktree agents, verifie
 ## Unfinished work
 
 ### Waiting on Paul (decisions and approvals)
-1. **Push approval.** 61 local commits. After pushing, watch the run (`gh run watch <id> --exit-status`). The CI is new (see "Unresolved issues").
+1. **Push approval** for anything committed after `2b150eb`. After a push, watch the run with `gh run watch <id> --exit-status`.
 2. **Windmill kit piece**, card `01a13d667322`: owner review of the renders in `docs/checkpoints/windmill/`. The windmill *tile* is already merged and closed.
 3. **Prop variants and single wildflowers**, card `01a13d666eea`: owner review in play.
 4. **Colour grade preset**, card `01a13c085851` criterion 4: the owner picks one, then the kit and water evidence is re-shot (card `01a13ba24e9e`, including the A4 share image for the favicon/PWA card `01a1385abd81`).
@@ -54,10 +54,7 @@ This is the orchestrator session for P2+ work: parallel worktree agents, verifie
 
 ## Unresolved issues
 
-- **New CI is unproven** (`11522df`). It has one job per concern (fmt, ui, lint, typecheck, test, web, deploy), a test matrix of ubuntu-latest and macos-latest, and a `workflow_dispatch` `os-scope` input to run one OS. On the first push, watch:
-  - The **macOS test leg**, which has never run in CI.
-  - **`water::tests::lookdev_meshes_fingerprint`** on Linux. It checks structure exactly (names, lengths, indices) and float sums within 1e-5. If the *structure* hash fails on Linux, a float decision flipped a triangulation. Make that part tolerant too, then verify with a dispatch run scoped to that OS (`gh workflow run CI -f os-scope=ubuntu-latest`).
-  - Card `01a13ba39cb2` closes when every job is green.
+- **CI shape** (`11522df`): one job per concern (fmt, ui, lint, typecheck, test, web, deploy), a test matrix of ubuntu-latest and macos-latest, and a `workflow_dispatch` `os-scope` input to re-run one OS (`gh workflow run CI -f os-scope=macos-latest`). First run green on 2026-10-15. GitHub notes that `ubuntu-latest` moves to Ubuntu 26 from October 19, 2026; if the apt step or a test breaks after that, pin `ubuntu-24.04` or update the package list.
 - **The Ubuntu Parallels VM's disk is full** (62 GB, 0 free), so local Linux checks are impossible until space is freed. Don't delete VM files without Paul's approval.
 - **Thumbs:** captures are not reproducible run to run (water and grass animate), so `make thumbs` dirties `assets/thumbs/` for water, beach and some land tiles. Restore them with `git checkout HEAD -- assets/thumbs docs/checkpoints/thumbs` unless you intend to commit them.
 - **perf-grass on MiniMac** builds slowly. It now completes with the `993c6d6` wait, but runs take about 25 minutes for 3 arms.
@@ -83,7 +80,7 @@ This is the orchestrator session for P2+ work: parallel worktree agents, verifie
 ## Next steps
 
 1. Run `kanban item list --project hex-world --open` as `KANBAN_ACTOR=hex-world-p2-orchestrator`, and read the owner queue before choosing work.
-2. Ask Paul for push approval, then watch the new CI. Fix the first-run issues (the macOS leg, the Linux fingerprint) with scoped dispatch runs.
+2. Before any push, run `make checkall-ci` and a gitleaks scan of the unpushed range (`gitleaks git --log-opts="origin/main..main"`), ask Paul, then watch the CI run to green.
 3. When Paul gives the go-ahead for new work, start with the large-play-world regression bisect (card `01a14028862a`). It is the biggest perf gap and has a concrete lead.
 4. Integration flow for any agent branch:
    1. `git merge main` into the branch.
