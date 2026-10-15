@@ -559,7 +559,9 @@ try {
   const nearRow = nearT.y / vp.height;
   check(Math.abs(pNear.focus_row - nearRow) < 0.01, `the band moves to the clicked row (${pNear.focus_row} vs ${nearRow.toFixed(3)})`);
   check(pNear.focus !== p0.focus, `the focus moves from ${p0.focus} m to ${pNear.focus} m`);
-  check((await sliderFocus()) === String(Math.round(pNear.focus)), `the slider follows (${await sliderFocus()} m)`);
+  const nearSlider = String(Math.round(pNear.focus));
+  await until(async () => (await sliderFocus()) === nearSlider, `the slider follows to ${nearSlider} m (shows ${await sliderFocus()})`);
+  check((await sliderFocus()) === nearSlider, `the slider follows (${nearSlider} m)`);
   await until(async () => page.locator(".focus-mark.is-shown").count(), "a ring marks where the click focused");
   await shot("s8-2-photo-click-focus-near");
   await page.mouse.click(farT.x, farT.y);
@@ -567,7 +569,9 @@ try {
   const pFar = (await st()).photo;
   check(Math.abs(pFar.focus_row - farT.y / vp.height) < 0.01, `the band follows to the far row (${pFar.focus_row})`);
   check(pFar.focus > pNear.focus + 1, `the far tile focuses farther (${pFar.focus} m > ${pNear.focus} m)`);
-  check((await sliderFocus()) === String(Math.round(pFar.focus)), "the slider follows again");
+  const farSlider = String(Math.round(pFar.focus));
+  await until(async () => (await sliderFocus()) === farSlider, `the slider follows again to ${farSlider} m`);
+  check((await sliderFocus()) === farSlider, "the slider follows again");
   await shot("s8-2-photo-click-focus-far");
   await page.mouse.move(nearT.x, nearT.y);
   await page.mouse.down();
