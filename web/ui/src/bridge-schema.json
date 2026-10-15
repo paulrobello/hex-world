@@ -697,6 +697,7 @@
       "density",
       "fade",
       "groups",
+      "instances",
       "last_build_ms",
       "last_swap_ms",
       "mesh_bytes",
@@ -704,7 +705,8 @@
       "status",
       "thin",
       "tiles",
-      "triangles"
+      "triangles",
+      "uploads"
     ],
     "hovered_kind": [
       "empty",

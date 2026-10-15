@@ -56,7 +56,7 @@ export function countSampledTextures() {
       waterModules.set(mod, { pass: /\bwave_count\b/.test(code) ? "water" : "terrain", ibl: /diffuse_environment_map/.test(code),
         transmission: /view_transmission_texture/.test(code) });
     if (/\bfocus_uv_y\b/.test(code)) tiltModules.add(mod);
-    // Grass blades (crates/hex-render/src/play/grass.rs): both stages import grass_common's uniform.
+    // Grass blades (crates/hex-render/src/play/grass.rs, play/grass_gpu.rs): both stages import grass_common's uniforms.
     if (/thin_keep/.test(code))
       grassModules.set(mod, { ibl: /diffuse_environment_map/.test(code), forward: /apply_pbr_lighting/.test(code) });
     if (/\bboid_verts\b/.test(code))
@@ -92,7 +92,7 @@ export function countSampledTextures() {
       if (!stats.water.some((k) => k.pass === w.pass && k.sampled === sampled && k.ibl === w.ibl && k.transmission === w.transmission))
         stats.water.push({ ...w, sampled });
     }
-    // The grass prepass pairs its own vertex stage with Bevy's default prepass fragment.
+    // The grass prepass pairs its own vertex stage with its own fragment (Bevy's default prepass outputs).
     const gm = desc?.vertex?.module && grassModules.get(desc.vertex.module);
     if (gm) {
       const sampled = perLayout.get(desc.layout) ?? null;

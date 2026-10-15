@@ -1,18 +1,18 @@
-// Grass blades, forward pass (crates/hex-render/src/play/grass.rs). Custom Material: one uniform
-// (binding 100, hex_render::grass_common) and no texture, so the pipeline samples only the view's
-// textures. The pose is grass_common::pose, shared with grass_prepass.wesl; the position output is
-// @invariant so this pass meets the prepass depth exactly. NORMAL carries the blade's base colour
-// (the ground slot's tint times its grass set's mean albedo, linear), which the fragment darkens at
-// the root and lightens toward the tip.
+// Grass blades, forward pass (crates/hex-render/src/play/grass.rs, instanced by
+// play/grass_gpu.rs): the shared blade mesh's corner at location 0 and the blade's instance record
+// at 1-4. Group 2 holds two uniforms (hex_render::grass_common) and no texture, so the pipeline
+// samples only the view's textures. The pose is grass_common::pose, shared with
+// grass_prepass.wesl; the position output is @invariant so this pass meets the prepass depth
+// exactly. The instance colour is the blade's base colour (the ground slot's tint times its grass
+// set's mean albedo, linear), which the fragment darkens at the root and lightens toward the tip.
 import bevy_pbr::render::{
-    mesh_functions,
-    mesh_bindings::mesh,
     mesh_view_bindings as vb,
     view_transformations::position_world_to_clip,
     forward_io::FragmentOutput,
     pbr_types,
     pbr_functions,
     pbr_lighting as lighting,
+    mesh_types::MESH_FLAGS_SHADOW_RECEIVER_BIT,
 };
 import hex_render::{grass_common as gc, hooks};
 
@@ -32,11 +32,11 @@ const ROUGHNESS: f32 = 0.78;
 const REFLECTANCE: f32 = 0.3;
 
 struct Vertex {
-    @builtin(instance_index) instance_index: u32,
-    @location(0) position: vec3<f32>,
-    @location(1) color: vec3<f32>,
-    @location(2) blade: vec2<f32>,
-    @location(3) shape: vec2<f32>,
+    @location(0) corner: vec3<f32>,
+    @location(1) root: vec3<f32>,
+    @location(2) yaw_rank: f32,
+    @location(3) size: vec2<f32>,
+    @location(4) color: vec4<f32>,
 }
 
 struct GrassOut {
@@ -46,20 +46,20 @@ struct GrassOut {
     @location(2) color: vec3<f32>,
     // Height fraction along the blade, gust level.
     @location(3) along_gust: vec2<f32>,
-    @location(4) @interpolate(flat) instance_index: u32,
+    @location(4) @interpolate(flat) season: u32,
 }
 
 @vertex
 fn vertex(v: Vertex) -> GrassOut {
     var out: GrassOut;
-    let model = mesh_functions::get_world_from_local(v.instance_index);
-    let p = gc::pose(model, v.position, v.blade, v.shape, vb::view.world_position, gc::grass.time);
+    let b = gc::blade(v.corner, v.yaw_rank, v.size);
+    let p = gc::pose(gc::tile.world_from_local, v.root, b.blade, b.shape, vb::view.world_position, gc::grass.time);
     out.position = position_world_to_clip(p.world);
     out.world_position = vec4(p.world, 1.0);
     out.world_normal = p.normal;
-    out.color = v.color;
-    out.along_gust = vec2(v.blade.y, p.gust);
-    out.instance_index = v.instance_index;
+    out.color = v.color.rgb;
+    out.along_gust = vec2(b.blade.y, p.gust);
+    out.season = gc::tile.tag;
     return out;
 }
 
@@ -71,14 +71,13 @@ fn fragment(in: GrassOut) -> FragmentOutput {
     let tip = mix(in.color, vec3(dot(in.color, vec3(0.2126, 0.7152, 0.0722))), TIP_DESAT) * TIP_LIFT;
     var c = in.color * mix(ROOT_SHADE, 1.0, smoothstep(0.0, 0.6, a));
     c = mix(c, tip, TIP_MIX * a) * (1.0 + GUST_LIFT * in.along_gust.y * (0.35 + 0.65 * a));
-    // §9.4 foliage seasonal tint by the entity's MeshTag; 0 (every MVP tile) skips it.
-    let season = mesh_functions::get_tag(in.instance_index);
-    if (season != 0u) {
-        c *= hooks::season_tint(season);
+    // §9.4 foliage seasonal tint by the group's MeshTag; 0 (every MVP tile) skips it.
+    if (in.season != 0u) {
+        c *= hooks::season_tint(in.season);
     }
 
     var pbr = pbr_types::pbr_input_new();
-    pbr.flags = mesh[in.instance_index].flags;
+    pbr.flags = MESH_FLAGS_SHADOW_RECEIVER_BIT;
     pbr.is_orthographic = vb::view.clip_from_view[3].w == 1.0;
     pbr.V = pbr_functions::calculate_view(in.world_position, pbr.is_orthographic);
     pbr.frag_coord = in.position;

@@ -24,6 +24,7 @@ use hex_core::{
 pub mod affordances;
 pub mod ghost;
 pub mod grass;
+pub mod grass_gpu;
 pub mod packs;
 pub mod rise;
 pub mod scatter;

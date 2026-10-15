@@ -1,13 +1,17 @@
-// `hex_render::grass_common`: the grass blade pose shared by assets/shaders/grass.wesl (forward) and
-// grass_prepass.wesl (depth, normal and motion prepass), so both passes place every vertex with the
-// same expressions (crates/hex-render/src/play/grass.rs). Embedded like kit_common.
+// `hex_render::grass_common`: the grass blade bindings, instance unpacking and pose shared by
+// assets/shaders/grass.wesl (forward) and grass_prepass.wesl (depth, normal and motion prepass), so
+// both passes place every vertex with the same expressions (crates/hex-render/src/play/grass.rs,
+// instanced by play/grass_gpu.rs). Embedded like kit_common.
 //
-// A blade's vertices all carry its root (POSITION, tile-local), so the wind is sampled once per
-// blade at the root and the root never moves: the bend grows with the square of the height along
-// the blade. UV_0 is (half-width offset across the blade in m, height fraction along it), UV_1 is
-// (yaw in whole degrees + thinning rank in [0, 0.9), blade height in m). A blade is two crossed
-// planes: the second carries its height negated and spans the blade's facing instead of its right
-// axis. Both planes share the root, lean, tilt and bend, so their tips meet.
+// Instanced: the shared blade mesh's vertex is a corner (offset across in widths, height fraction
+// along, plane 0 or 1) and the instance is the blade (root, tile-local; yaw in whole degrees +
+// thinning rank in [0, 0.9); height and width in m; colour). `blade` turns them into the pose's
+// inputs: every corner of a blade carries its root, so the wind is sampled once per blade at the
+// root and the root never moves: the bend grows with the square of the height along the blade.
+// `blade` is (half-width offset across the blade in m, height fraction along it), `shape` is (yaw +
+// rank, blade height in m). A blade is two crossed planes: the second carries its height negated
+// and spans the blade's facing instead of its right axis. Both planes share the root, lean, tilt
+// and bend, so their tips meet.
 import hex_render::wind;
 
 struct GrassParams {
@@ -21,7 +25,24 @@ struct GrassParams {
     wind_scale: f32,
 }
 
-@group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> grass: GrassParams;
+// One tile's group: its transform now and one frame ago, and its season tag (0 is summer).
+struct GrassTile {
+    world_from_local: mat4x4<f32>,
+    previous_world_from_local: mat4x4<f32>,
+    tag: u32,
+}
+
+@group(2) @binding(0) var<uniform> grass: GrassParams;
+@group(2) @binding(1) var<uniform> tile: GrassTile;
+
+struct Blade {
+    blade: vec2<f32>,
+    shape: vec2<f32>,
+}
+
+fn blade(corner: vec3<f32>, yaw_rank: f32, size: vec2<f32>) -> Blade {
+    return Blade(vec2(corner.x * size.y, corner.y), vec2(yaw_rank, select(size.x, -size.x, corner.z > 0.5)));
+}
 
 struct Pose {
     world: vec3<f32>,

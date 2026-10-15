@@ -22,26 +22,30 @@
 //!   (thinned per slot by its [`Style`]), seeded from `cell_seed(world seed, cell)` with its own
 //!   salt, so a tile always grows the same blades and scatter's stream is untouched. Every tile
 //!   seeds this 150% set once; a density draws the blades whose `keep` is under its share of it, so
-//!   every lower value is a subset of every higher one and a slider move only rebuilds meshes, never
-//!   the scene. Each blade has a random scale ([`SCALE`]), yaw, lean and tilt, and a hue and
-//!   lightness [`jitter`]. Arithmetic and `sqrt` only, so native and wasm agree.
-//! - **Drawing.** One mesh per tile, a [`GrassGroup`] child of the tile root: it rises and sinks with
-//!   the tile and goes with it on bulldoze, undo, replace and Start over, and the ghost never draws
-//!   it. A blade is two crossed tapered planes ([`BLADE_VERTS`]), so it holds a silhouette from any
-//!   side. Every vertex of a blade carries the blade's root; `grass_common.wesl` poses it in the
-//!   vertex stage (a world-space clump noise on the height, the shared wind of `wind.wesl`, bent by
-//!   the square of the height along the blade) and
+//!   every lower value is a subset of every higher one and a slider move only changes how many
+//!   instances draw, never the scene. Each blade has a random scale ([`SCALE`]), yaw, lean and tilt,
+//!   and a hue and lightness [`jitter`]. Arithmetic and `sqrt` only, so native and wasm agree.
+//! - **Drawing.** GPU instancing ([`super::grass_gpu`]): one shared blade mesh ([`BLADE_CORNERS`],
+//!   two crossed tapered planes, so a blade holds a silhouette from any side) and, per tile, one
+//!   instance buffer of 32-byte [`GpuBlade`] records holding the tile's whole Lush set ordered by
+//!   `keep`, uploaded once. A density draws a prefix of that buffer ([`GrassInstances::drawn`]), so
+//!   a slider move changes only the instance count: no mesh is rebuilt and nothing is re-uploaded.
+//!   The tile's [`GrassGroup`] is a child of the tile root: it rises and sinks with the tile and goes
+//!   with it on bulldoze, undo, replace and Start over, and the ghost never draws it.
+//!   `grass_common.wesl` poses each blade in the vertex stage (a world-space clump noise on the
+//!   height, the shared wind of `wind.wesl`, bent by the square of the height along the blade) and
 //!   shrinks it to nothing by [`FADE_END`] m from the camera, after thinning it by rank from
-//!   [`THIN_START`]. Only tiles within [`BUILD_RADIUS`] of the camera hold a mesh, at most
-//!   [`BUILDS_PER_FRAME`] new or swapped ones a frame within [`BUILD_BUDGET_MS`], nearest first;
-//!   beyond [`DROP_RADIUS`] they are dropped.
-//! - **Material.** [`GrassMaterial`] binds one uniform and no texture: the pipeline samples only the
-//!   view's textures, fewer than the kit forward pipeline. Blades write the depth, normal and motion
+//!   [`THIN_START`]. Only tiles within [`BUILD_RADIUS`] of the camera hold a group, at most
+//!   [`BUILDS_PER_FRAME`] new ones a frame within [`BUILD_BUDGET_MS`], nearest first; beyond
+//!   [`DROP_RADIUS`] they are dropped.
+//! - **Pipelines.** Group 2 binds two uniforms (the wind clock and tuning, and per tile its
+//!   transform now and one frame ago) and no texture: the pipelines sample only the view's
+//!   textures, fewer than the kit forward pipeline. Blades write the depth, normal and motion
 //!   prepass (tilt-shift, refraction, SSAO and TAA see them), receive shadows and cast none.
 //! - **Colour.** A blade's base colour is its slot's tint times the grass set's mean linear albedo
 //!   ([`GRASS_ALBEDO_MEAN`]) with its jitter, so blades blend into the ground at the root; the
 //!   shader mixes toward a lighter, less saturated tip and takes the §9.4 season tint from the
-//!   entity's `MeshTag`.
+//!   group's `MeshTag`.
 use std::{
     collections::{BTreeMap, HashMap},
     sync::Arc,
@@ -49,17 +53,13 @@ use std::{
 
 use bevy::{
     asset::RenderAssetUsages,
-    camera::{primitives::Aabb, visibility::NoAutoAabb},
+    camera::primitives::Aabb,
     gltf::{Gltf, GltfMesh},
-    light::NotShadowCaster,
-    mesh::{Indices, MeshVertexBufferLayoutRef, PrimitiveTopology},
-    pbr::{MaterialPipeline, MaterialPipelineKey},
+    mesh::{Indices, PrimitiveTopology},
     prelude::*,
-    render::render_resource::{
-        AsBindGroup, RenderPipelineDescriptor, ShaderType, SpecializedMeshPipelineError,
-    },
-    shader::ShaderRef,
+    render::{render_resource::ShaderType, sync_world::SyncToRenderWorld},
 };
+use bytemuck::{Pod, Zeroable};
 use hex_assets::KitManifest;
 use hex_core::{Axial, HEX_RADIUS, TileCatalog, TileDef, cell_seed};
 
@@ -69,9 +69,6 @@ use super::{
     scatter::{self, Instance, PlayScatter, Rng, ScatterLayouts, Surface},
 };
 use crate::{ActiveScenario, Scenario, SceneEntity, post::QualityTier, workload::GateConfig};
-
-pub const SHADER: &str = "shaders/grass.wesl";
-pub const PREPASS_SHADER: &str = "shaders/grass_prepass.wesl";
 
 /// Mean linear albedo of the `grass` tileable set (`p1/materials/grass/grass.albedo.png`, sRGB
 /// decoded per texel, as the GPU samples it). `albedo_mean_matches_the_png` holds it to the file.
@@ -90,8 +87,8 @@ pub const FADE_END: f32 = 58.0;
 /// they drop it.
 pub const BUILD_RADIUS: f32 = FADE_END + 2.0;
 pub const DROP_RADIUS: f32 = BUILD_RADIUS + 12.0;
-/// New or swapped tile meshes per frame, nearest first, and the frame's build time (ms) after which
-/// no further one starts (the first always does), so a slider drag never hitches a frame.
+/// New tile groups per frame, nearest first, and the frame's build time (ms) after which no further
+/// one starts (the first always does), so walking into new tiles never hitches a frame.
 pub const BUILDS_PER_FRAME: usize = 3;
 pub const BUILD_BUDGET_MS: f32 = 4.0;
 /// Scale on the shared wind's push for grass.
@@ -104,12 +101,27 @@ pub const PROP_GAP: f32 = 0.05;
 /// them), with the radius (m, before the instance's scale) of the dense centre it keeps clear.
 pub const GROWS_THROUGH: &[(&str, f32)] = &[("wildflower_clump", 0.2)];
 const SALT: u64 = 0x6A55_B1AD_E5C0_FFEE;
-/// Vertices per blade: two crossed planes (an X from above, so the blade holds a silhouette from any
-/// side), each two at the root, two at mid height (the 1 - t² taper) and one at the tip.
-pub const BLADE_VERTS: usize = 10;
-const BLADE_TRIS: [u16; 18] = [0, 1, 2, 2, 1, 3, 2, 3, 4, 5, 6, 7, 7, 6, 8, 7, 8, 9];
+/// The shared blade mesh: two crossed planes (an X from above, so the blade holds a silhouette from
+/// any side), each two corners at the root, two at mid height (the 1 - t² taper) and one at the tip,
+/// as (offset across in widths, height fraction along, plane). `grass_common` turns the second
+/// plane 90° about the root.
+pub const BLADE_CORNERS: [[f32; 3]; 10] = [
+    [-0.5, 0.0, 0.0],
+    [0.5, 0.0, 0.0],
+    [-0.375, 0.5, 0.0],
+    [0.375, 0.5, 0.0],
+    [0.0, 1.0, 0.0],
+    [-0.5, 0.0, 1.0],
+    [0.5, 0.0, 1.0],
+    [-0.375, 0.5, 1.0],
+    [0.375, 0.5, 1.0],
+    [0.0, 1.0, 1.0],
+];
+pub const BLADE_INDICES: [u16; 18] = [0, 1, 2, 2, 1, 3, 2, 3, 4, 5, 6, 7, 7, 6, 8, 7, 8, 9];
 /// Triangles per blade.
-pub const BLADE_TRIANGLES: usize = BLADE_TRIS.len() / 3;
+pub const BLADE_TRIANGLES: usize = BLADE_INDICES.len() / 3;
+/// GPU bytes of the shared blade mesh: 12-byte corners and 16-bit indices.
+pub const BLADE_MESH_BYTES: usize = BLADE_CORNERS.len() * 12 + BLADE_INDICES.len() * 2;
 /// Per-blade random scale on height and width, and per-blade hue (turns) and lightness jitter.
 const SCALE: [f32; 2] = [0.7, 1.4];
 const HUE_JITTER: f32 = 0.04;
@@ -118,8 +130,8 @@ const LIGHT_JITTER: f32 = 0.05;
 /// The grass density (Settings → Graphics → Grass density, the `grass` key, `set_grass`) in whole
 /// percent of [`DENSITY`]: 0 is off, 100 Normal, 150 the most ([`LUSH`]). Every tile seeds the Lush
 /// set once; a density draws the blades whose `keep` is under its share of Lush, so every lower value
-/// draws a subset of every higher one and a change only rebuilds meshes from the cached set (never
-/// the scene).
+/// draws a subset of every higher one and a change only changes each group's drawn instance count
+/// (never the scene, never an upload).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Density(u8);
 
@@ -418,89 +430,90 @@ pub fn layout(
     out
 }
 
-/// The mesh of the blades a density draws (render world only), its bounds with room for the bend,
-/// and its blade count; `None` when it draws none.
-pub fn blade_mesh(layout: &GrassLayout, density: Density) -> Option<(Mesh, Aabb, usize)> {
-    let blades: Vec<&Blade> = layout
-        .blades
-        .iter()
-        .filter(|b| density.draws(b.keep))
-        .collect();
-    if blades.is_empty() {
-        return None;
-    }
-    let n = blades.len() * BLADE_VERTS;
-    let mut pos = Vec::with_capacity(n);
-    let mut col = Vec::with_capacity(n);
-    let mut uv0 = Vec::with_capacity(n);
-    let mut uv1 = Vec::with_capacity(n);
-    let (mut lo, mut hi) = (Vec3::splat(f32::MAX), Vec3::splat(f32::MIN));
-    let mut tallest: f32 = 0.0;
-    for b in &blades {
-        let w = 0.5 * b.width;
-        let packed = f32::from(b.yaw_deg) + b.rank;
-        // The second plane carries the height negated: grass_common turns it 90° about the root.
-        for height in [b.height, -b.height] {
-            for (across, along) in [
-                (-w, 0.0),
-                (w, 0.0),
-                (-0.75 * w, 0.5),
-                (0.75 * w, 0.5),
-                (0.0, 1.0),
-            ] {
-                pos.push(b.root.to_array());
-                col.push(b.color);
-                uv0.push([across, along]);
-                uv1.push([packed, height]);
-            }
-        }
-        lo = lo.min(b.root);
-        hi = hi.max(b.root);
-        tallest = tallest.max(b.height);
-    }
-    let indices = if n <= usize::from(u16::MAX) + 1 {
-        Indices::U16(
-            (0..blades.len())
-                .flat_map(|k| BLADE_TRIS.map(|t| (k * BLADE_VERTS) as u16 + t))
-                .collect(),
-        )
-    } else {
-        Indices::U32(
-            (0..blades.len())
-                .flat_map(|k| BLADE_TRIS.map(|t| (k * BLADE_VERTS) as u32 + u32::from(t)))
-                .collect(),
-        )
-    };
-    let mesh = Mesh::new(
+/// The shared blade mesh (render world only): [`BLADE_CORNERS`] as its positions.
+pub fn blade_mesh() -> Mesh {
+    Mesh::new(
         PrimitiveTopology::TriangleList,
         RenderAssetUsages::RENDER_WORLD,
     )
-    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, pos)
-    .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, col)
-    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uv0)
-    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_1, uv1)
-    .with_inserted_indices(indices);
-    // The pose bends a tip at most 1.1 heights sideways, the clump noise grows blades by up to 1.45
-    // and far blades widen by up to 2.5.
-    let reach = 1.45 * tallest;
-    let side = 1.2 * reach + 0.2;
-    let aabb = Aabb::from_min_max(
-        lo - Vec3::new(side, 0.0, side),
-        hi + Vec3::new(side, reach, side),
-    );
-    Some((mesh, aabb, blades.len()))
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, BLADE_CORNERS.to_vec())
+    .with_inserted_indices(Indices::U16(BLADE_INDICES.to_vec()))
 }
 
-/// Bytes the GPU holds for one tile's mesh of `blades` blades: 40-byte vertices, and 16-bit indices
-/// up to 65,536 vertices, 32-bit beyond.
-pub fn mesh_bytes(blades: usize) -> usize {
-    let verts = blades * BLADE_VERTS;
-    let index = if verts <= usize::from(u16::MAX) + 1 {
-        2
-    } else {
-        4
-    };
-    verts * (12 + 12 + 8 + 8) + blades * BLADE_TRIS.len() * index
+/// One blade's instance record (32 bytes), tile-local.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+pub struct GpuBlade {
+    pub root: [f32; 3],
+    /// Yaw in whole degrees plus the thinning rank in [0, 0.9).
+    pub yaw_rank: f32,
+    /// Height and root width (m).
+    pub size: [f32; 2],
+    /// Linear base colour as unorm16 (each channel is under 1), alpha 0.
+    pub color: [u16; 4],
+}
+
+/// GPU bytes per blade instance.
+pub const BLADE_BYTES: usize = size_of::<GpuBlade>();
+
+/// A tile's Lush set as GPU instances, ordered by `keep` (ties by generation order) so the blades
+/// any density draws are a prefix, and their bounds with room for the bend.
+#[derive(Debug)]
+pub struct GrassInstances {
+    pub blades: Vec<GpuBlade>,
+    /// Each blade's `keep`, ascending.
+    keeps: Vec<f32>,
+    pub aabb: Aabb,
+}
+
+impl GrassInstances {
+    /// `None` when the layout has no blade.
+    pub fn new(layout: &GrassLayout) -> Option<Self> {
+        if layout.blades.is_empty() {
+            return None;
+        }
+        let mut order: Vec<&Blade> = layout.blades.iter().collect();
+        order.sort_by(|a, b| a.keep.total_cmp(&b.keep));
+        let unorm = |c: f32| (c.clamp(0.0, 1.0) * 65535.0).round() as u16;
+        let blades = order
+            .iter()
+            .map(|b| GpuBlade {
+                root: b.root.to_array(),
+                yaw_rank: f32::from(b.yaw_deg) + b.rank,
+                size: [b.height, b.width],
+                color: [unorm(b.color[0]), unorm(b.color[1]), unorm(b.color[2]), 0],
+            })
+            .collect();
+        let (mut lo, mut hi) = (Vec3::splat(f32::MAX), Vec3::splat(f32::MIN));
+        let mut tallest: f32 = 0.0;
+        for b in &layout.blades {
+            lo = lo.min(b.root);
+            hi = hi.max(b.root);
+            tallest = tallest.max(b.height);
+        }
+        // The pose bends a tip at most 1.1 heights sideways, the clump noise grows blades by up to
+        // 1.45 and far blades widen by up to 2.5.
+        let reach = 1.45 * tallest;
+        let side = 1.2 * reach + 0.2;
+        Some(Self {
+            blades,
+            keeps: order.iter().map(|b| b.keep).collect(),
+            aabb: Aabb::from_min_max(
+                lo - Vec3::new(side, 0.0, side),
+                hi + Vec3::new(side, reach, side),
+            ),
+        })
+    }
+
+    /// How many blades `density` draws: the prefix whose `keep` it draws.
+    pub fn drawn(&self, density: Density) -> u32 {
+        self.keeps.partition_point(|&k| density.draws(k)) as u32
+    }
+
+    /// GPU bytes of the instance buffer.
+    pub fn bytes(&self) -> usize {
+        self.blades.len() * BLADE_BYTES
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, ShaderType, Reflect)]
@@ -532,45 +545,17 @@ impl GrassParams {
     }
 }
 
-/// One uniform, no texture (see the module docs for the sampled-texture budget).
-#[derive(Asset, AsBindGroup, Reflect, Debug, Clone)]
-pub struct GrassMaterial {
-    #[uniform(100)]
-    pub params: GrassParams,
+/// The wind clock and tuning every group draws with this frame (extracted to the render world).
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct GrassClock(pub GrassParams);
+
+/// The entity drawing one tile's blades, a child of the tile root: its instances (uploaded once)
+/// and how many of them the density draws.
+#[derive(Component, Clone)]
+pub struct GrassGroup {
+    pub instances: Arc<GrassInstances>,
+    pub drawn: u32,
 }
-
-impl Material for GrassMaterial {
-    fn vertex_shader() -> ShaderRef {
-        SHADER.into()
-    }
-
-    fn fragment_shader() -> ShaderRef {
-        SHADER.into()
-    }
-
-    fn prepass_vertex_shader() -> ShaderRef {
-        PREPASS_SHADER.into()
-    }
-
-    fn enable_shadows() -> bool {
-        false
-    }
-
-    /// Blades are single quads seen from both sides.
-    fn specialize(
-        _pipeline: &MaterialPipeline,
-        descriptor: &mut RenderPipelineDescriptor,
-        _layout: &MeshVertexBufferLayoutRef,
-        _key: MaterialPipelineKey<Self>,
-    ) -> Result<(), SpecializedMeshPipelineError> {
-        descriptor.primitive.cull_mode = None;
-        Ok(())
-    }
-}
-
-/// The entity drawing one tile's blades, a child of the tile root.
-#[derive(Component)]
-pub struct GrassGroup;
 
 #[derive(Clone, Debug, PartialEq)]
 struct Key {
@@ -581,24 +566,26 @@ struct Key {
 struct Built {
     key: Key,
     cell: Axial,
-    /// The tile's Lush set, kept so a density change only rebuilds the mesh.
+    /// The tile's Lush set, kept so a density change only changes the drawn count.
     layout: Arc<GrassLayout>,
-    density: Density,
-    /// `None` when the density draws no blade on the tile (no grass ground).
-    group: Option<Entity>,
+    /// The group and its instances; `None` when the tile has no blade (no grass ground).
+    group: Option<(Entity, Arc<GrassInstances>)>,
+    /// Blades drawn at the current density.
     blades: usize,
 }
 
-/// The shared material, the grass slots per tile id and the group drawn under each tile root.
+/// The grass slots per tile id and the group drawn under each tile root.
 #[derive(Resource, Default)]
 pub struct PlayGrass {
-    material: Option<Handle<GrassMaterial>>,
     slots: HashMap<String, Arc<HashMap<String, [f32; 3]>>>,
     built: HashMap<Entity, Built>,
-    /// The slowest single tile build (seeded set and mesh, ms) in the latest frame that built one.
+    /// The density the groups' drawn counts are set for.
+    density: Option<Density>,
+    /// The slowest single tile build (seeded set and instances, ms) in the latest frame that built
+    /// one.
     last_build_ms: f32,
-    /// The slowest single density swap (mesh only, from the cached set, ms) in the latest frame
-    /// that swapped one.
+    /// The slowest single density change (a group's drawn count, ms) in the latest frame that
+    /// changed one.
     last_swap_ms: f32,
 }
 
@@ -619,17 +606,19 @@ pub fn status(active: Scenario, config: &GateConfig) -> &'static str {
     }
 }
 
-/// `state().grass`: the density (share of [`DENSITY`]) and why it draws or not, live groups, blades,
-/// triangles and mesh bytes, the tuning, and a row per tile holding a mesh.
+/// `state().grass`: the density (share of [`DENSITY`]) and why it draws or not, live groups, drawn
+/// blades and triangles, the instances held on the GPU and their bytes with the shared blade mesh,
+/// instance buffers uploaded since start, the tuning, and a row per tile holding a group.
 pub fn report(state: &PlayGrass, density: Density, status: &str, groups: usize) -> String {
     let build_ms = (state.last_build_ms * 100.0).round() / 100.0;
     let swap_ms = (state.last_swap_ms * 100.0).round() / 100.0;
     let mut rows: BTreeMap<(i32, i32), String> = BTreeMap::new();
-    let (mut blades, mut bytes) = (0usize, 0usize);
+    let (mut blades, mut instances, mut bytes) = (0usize, 0usize, 0usize);
     for b in state.built.values() {
         blades += b.blades;
-        if b.group.is_some() {
-            bytes += mesh_bytes(b.blades);
+        if let Some((_, i)) = &b.group {
+            instances += i.blades.len();
+            bytes += i.bytes();
         }
         rows.insert(
             (b.cell.q, b.cell.r),
@@ -645,47 +634,49 @@ pub fn report(state: &PlayGrass, density: Density, status: &str, groups: usize) 
         );
     }
     let rows: Vec<String> = rows.into_values().collect();
+    if instances > 0 {
+        bytes += BLADE_MESH_BYTES;
+    }
     format!(
-        "{{\"density\":{},\"status\":\"{status}\",\"groups\":{groups},\"blades\":{blades},\"triangles\":{},\"mesh_bytes\":{bytes},\"per_m2\":{},\"thin\":[{THIN_START},{THIN_END},{THIN_KEEP}],\"fade\":[{FADE_START},{FADE_END}],\"build_radius\":{BUILD_RADIUS},\"last_build_ms\":{build_ms},\"last_swap_ms\":{swap_ms},\"tiles\":[{}]}}",
+        "{{\"density\":{},\"status\":\"{status}\",\"groups\":{groups},\"blades\":{blades},\"triangles\":{},\"instances\":{instances},\"mesh_bytes\":{bytes},\"uploads\":{},\"per_m2\":{},\"thin\":[{THIN_START},{THIN_END},{THIN_KEEP}],\"fade\":[{FADE_START},{FADE_END}],\"build_radius\":{BUILD_RADIUS},\"last_build_ms\":{build_ms},\"last_swap_ms\":{swap_ms},\"tiles\":[{}]}}",
         f64::from(density.percent()) / 100.0,
         blades * BLADE_TRIANGLES,
+        super::grass_gpu::uploads(),
         f64::from(DENSITY) * f64::from(density.percent()) / 100.0,
         rows.join(",")
     )
 }
 
-/// Spawns the group drawing `layout` at `density` under `root`.
+/// Spawns the group drawing `layout` at `density` under `root`; `None` when it has no blade.
 fn spawn_group(
     commands: &mut Commands,
-    meshes: &mut Assets<Mesh>,
-    material: &Handle<GrassMaterial>,
     root: Entity,
     layout: &GrassLayout,
     density: Density,
-) -> (Option<Entity>, usize) {
-    let Some((mesh, aabb, n)) = blade_mesh(layout, density) else {
+) -> (Option<(Entity, Arc<GrassInstances>)>, usize) {
+    let Some(instances) = GrassInstances::new(layout).map(Arc::new) else {
         return (None, 0);
     };
+    let drawn = instances.drawn(density);
     let group = commands
         .spawn((
-            GrassGroup,
-            Mesh3d(meshes.add(mesh)),
-            MeshMaterial3d(material.clone()),
+            GrassGroup {
+                instances: instances.clone(),
+                drawn,
+            },
             Transform::IDENTITY,
-            aabb,
-            NoAutoAabb,
-            NotShadowCaster,
+            Visibility::Inherited,
+            SyncToRenderWorld::default(),
             SceneEntity,
         ))
         .id();
     commands.entity(root).add_child(group);
-    (Some(group), n)
+    (Some((group, instances)), drawn as usize)
 }
 
-/// After `scatter::sync`: keeps a blade mesh under every drawn tile root near the camera at the
-/// current density, drops the far ones, and keeps the wind clock and the report current. A density
-/// change swaps each mesh in place from the tile's cached Lush set, nearest first, so no tile is
-/// bare between the two.
+/// After `scatter::sync`: keeps a blade group under every drawn tile root near the camera, drops
+/// the far ones, sets every group's drawn count for the current density (no rebuild, no upload),
+/// and keeps the wind clock and the report current.
 #[allow(clippy::too_many_arguments)]
 pub fn sync(
     mut commands: Commands,
@@ -701,25 +692,21 @@ pub fn sync(
         Option<Res<PlayPacks>>,
         Res<PlayCatalog>,
     ),
-    (gltfs, gltf_meshes, mut meshes): (
-        Res<Assets<Gltf>>,
-        Res<Assets<GltfMesh>>,
-        ResMut<Assets<Mesh>>,
-    ),
+    (gltfs, gltf_meshes, meshes): (Res<Assets<Gltf>>, Res<Assets<GltfMesh>>, Res<Assets<Mesh>>),
     (mut ground, layouts, mut state, mut out): (
         ResMut<PlayScatter>,
         Res<ScatterLayouts>,
         ResMut<PlayGrass>,
         ResMut<GrassReport>,
     ),
-    mut materials: ResMut<Assets<GrassMaterial>>,
+    mut clock: ResMut<GrassClock>,
     cameras: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
-    groups: Query<(), With<GrassGroup>>,
+    mut groups: Query<&mut GrassGroup>,
 ) {
     let status = status(active.0, &config);
     let density = config.grass;
     let state = &mut *state;
-    // Off keeps each tile's seeded set (its group despawned) so turning grass back on swaps meshes
+    // Off keeps each tile's group at a drawn count of 0, so turning grass back on changes counts
     // only; Off never seeds a new tile.
     let drawable = matches!(status, "on" | "off")
         && active.0 == Scenario::Play
@@ -729,7 +716,7 @@ pub fn sync(
         .and(spawned.as_deref().zip(kit.as_deref()).zip(packs.as_deref()));
     let Some(((spawned, PlayKit::Ready(kit)), packs)) = ready else {
         for (_, b) in state.built.drain() {
-            if let Some(g) = b.group {
+            if let Some((g, _)) = b.group {
                 commands.entity(g).try_despawn();
             }
         }
@@ -740,23 +727,10 @@ pub fn sync(
         return;
     };
     let t = time.elapsed_secs_wrapped();
-    let params = GrassParams {
+    clock.0 = GrassParams {
         time: t,
         prev_time: t - time.delta_secs(),
         ..GrassParams::new()
-    };
-    let material = match &state.material {
-        Some(h) => {
-            if let Some(mut m) = materials.get_mut(h) {
-                m.params = params;
-            }
-            h.clone()
-        }
-        None => {
-            let h = materials.add(GrassMaterial { params });
-            state.material = Some(h.clone());
-            h
-        }
     };
     let camera = cameras
         .iter()
@@ -790,52 +764,39 @@ pub fn sync(
         };
         let keep = *key == b.key
             && reach(*cell) <= DROP_RADIUS
-            && b.group.is_none_or(|g| groups.contains(g));
-        if !keep && let Some(g) = b.group {
+            && b.group.as_ref().is_none_or(|(g, _)| groups.contains(*g));
+        if !keep && let Some((g, _)) = b.group {
             commands.entity(g).try_despawn();
         }
         keep
     });
+    // A density change sets every group's drawn count at once: the instances are already on the GPU.
+    if state.density != Some(density) {
+        state.density = Some(density);
+        let mut slowest_swap: Option<f32> = None;
+        for b in state.built.values_mut() {
+            let started = bevy::platform::time::Instant::now();
+            let Some((g, instances)) = &b.group else {
+                continue;
+            };
+            let drawn = instances.drawn(density);
+            if let Ok(mut group) = groups.get_mut(*g) {
+                group.drawn = drawn;
+            }
+            b.blades = drawn as usize;
+            let ms = started.elapsed().as_secs_f32() * 1000.0;
+            slowest_swap = Some(slowest_swap.map_or(ms, |m: f32| m.max(ms)));
+        }
+        if let Some(ms) = slowest_swap {
+            state.last_swap_ms = ms;
+        }
+    }
     let mut builds = 0;
     let frame = bevy::platform::time::Instant::now();
     let spent = |builds: usize| {
         builds >= BUILDS_PER_FRAME
             || (builds > 0 && frame.elapsed().as_secs_f32() * 1000.0 >= BUILD_BUDGET_MS)
     };
-    // Density changes first, nearest first: the old mesh stays until its replacement is spawned.
-    let mut swaps: Vec<(f32, Entity)> = state
-        .built
-        .iter()
-        .filter(|(_, b)| b.density != density)
-        .map(|(root, b)| (reach(b.cell), *root))
-        .collect();
-    swaps.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
-    let mut slowest_swap: Option<f32> = None;
-    for (_, root) in swaps {
-        if spent(builds) {
-            break;
-        }
-        let started = bevy::platform::time::Instant::now();
-        let b = state.built.get_mut(&root).expect("listed above");
-        let (group, n) = spawn_group(
-            &mut commands,
-            &mut meshes,
-            &material,
-            root,
-            &b.layout,
-            density,
-        );
-        if let Some(g) = b.group {
-            commands.entity(g).try_despawn();
-        }
-        (b.group, b.blades, b.density) = (group, n, density);
-        builds += 1;
-        let ms = started.elapsed().as_secs_f32() * 1000.0;
-        slowest_swap = Some(slowest_swap.map_or(ms, |m: f32| m.max(ms)));
-    }
-    if let Some(ms) = slowest_swap {
-        state.last_swap_ms = ms;
-    }
     let mut todo: Vec<(f32, Entity, Axial, Key)> = wanted
         .iter()
         .filter(|(root, _)| !state.built.contains_key(root))
@@ -876,7 +837,7 @@ pub fn sync(
         let excluded = exclusions(def, &instances, &pieces);
         let started = bevy::platform::time::Instant::now();
         let l = Arc::new(layout(key.seed, &prepared.surface, &slots, &excluded));
-        let (group, blades) = spawn_group(&mut commands, &mut meshes, &material, root, &l, density);
+        let (group, blades) = spawn_group(&mut commands, root, &l, density);
         let ms = started.elapsed().as_secs_f32() * 1000.0;
         slowest = Some(slowest.map_or(ms, |m: f32| m.max(ms)));
         builds += 1;
@@ -886,7 +847,6 @@ pub fn sync(
                 key,
                 cell,
                 layout: l,
-                density,
                 group,
                 blades,
             },
@@ -938,52 +898,74 @@ mod tests {
     }
 
     #[test]
-    fn mesh_bytes_count_vertices_and_indices() {
-        assert_eq!(mesh_bytes(1), 10 * 40 + 18 * 2);
+    fn one_shared_blade_mesh_and_32_byte_instances() {
         assert_eq!(BLADE_TRIANGLES, 6, "two crossed planes of three triangles");
-        assert_eq!(
-            mesh_bytes(6553),
-            65_530 * 40 + 6553 * 18 * 2,
-            "16-bit indices"
-        );
-        assert_eq!(
-            mesh_bytes(6554),
-            65_540 * 40 + 6554 * 18 * 4,
-            "32-bit past 65,536 vertices"
-        );
+        assert_eq!(BLADE_MESH_BYTES, 10 * 12 + 18 * 2);
+        assert_eq!(BLADE_BYTES, 32);
+        let mesh = blade_mesh();
+        assert_eq!(mesh.count_vertices(), 10);
+        assert_eq!(mesh.indices().unwrap().len(), 18);
+        // The second plane's corners mirror the first's: grass_common turns it 90° about the root.
+        for k in 0..5 {
+            let [a, b] = [BLADE_CORNERS[k], BLADE_CORNERS[k + 5]];
+            assert_eq!((a[0], a[1], a[2], b[2]), (b[0], b[1], 0.0, 1.0));
+        }
+        let blade = |keep: f32, color: [f32; 3]| Blade {
+            root: Vec3::new(keep, 0.1, -keep),
+            yaw_deg: 10,
+            rank: 0.5,
+            height: 0.3,
+            width: 0.06,
+            color,
+            keep,
+        };
         let l = GrassLayout {
             blades: vec![
-                Blade {
-                    root: Vec3::ZERO,
-                    yaw_deg: 10,
-                    rank: 0.5,
-                    height: 0.3,
-                    width: 0.06,
-                    color: [0.1, 0.2, 0.03],
-                    keep: 0.5,
-                };
-                3
+                blade(0.5, [0.1, 0.2, 0.03]),
+                blade(0.1, [0.0, 0.5, 1.0]),
+                blade(0.9, [0.1, 0.2, 0.03]),
             ],
             area_m2: 1.0,
         };
-        let (mesh, aabb, n) = blade_mesh(&l, Density::MAX).unwrap();
-        assert_eq!(n, 3);
-        assert!(
-            blade_mesh(&l, Density::parse("sparse").unwrap()).is_none(),
-            "keep 0.5 is over 50%'s third of Lush"
+        let i = GrassInstances::new(&l).unwrap();
+        assert!(GrassInstances::new(&GrassLayout::default()).is_none());
+        assert_eq!(i.bytes(), 3 * 32);
+        // Ordered by keep: every density draws a prefix.
+        assert_eq!(
+            i.blades.iter().map(|b| b.root[0]).collect::<Vec<_>>(),
+            [0.1, 0.5, 0.9]
         );
-        assert!(blade_mesh(&l, Density::parse("76%").unwrap()).is_some());
-        assert_eq!(mesh.count_vertices(), 30);
-        assert_eq!(mesh.indices().unwrap().len(), 54);
-        assert!(aabb.half_extents.y > 0.0);
-        // The second plane of each blade carries the height negated (grass_common turns it 90°).
-        let Some(bevy::mesh::VertexAttributeValues::Float32x2(uv1)) =
-            mesh.attribute(Mesh::ATTRIBUTE_UV_1)
-        else {
-            panic!("UV_1 is Float32x2");
-        };
-        assert!(uv1[..5].iter().all(|v| v[1] == 0.3));
-        assert!(uv1[5..10].iter().all(|v| v[1] == -0.3));
+        assert_eq!(i.drawn(Density::OFF), 0);
+        assert_eq!(i.drawn(Density::parse("sparse").unwrap()), 1, "0.5 > 1/3");
+        assert_eq!(i.drawn(Density::parse("76%").unwrap()), 2);
+        assert_eq!(i.drawn(Density::MAX), 3);
+        let b = i.blades[0];
+        assert_eq!(b.yaw_rank, 10.5);
+        assert_eq!(b.size, [0.3, 0.06]);
+        assert_eq!(b.color, [0, 32768, 65535, 0]);
+        assert!(i.aabb.half_extents.y > 0.0);
+    }
+
+    /// Every grass slot's blade colour fits unorm16 without clamping, and the instances draw the
+    /// same blades a density drew as a mesh: those whose `keep` it draws.
+    #[test]
+    fn instances_draw_each_densitys_blades() {
+        let c = TileCatalog::builtin().unwrap();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let slots = grass_slots(&m, c.get("meadow").unwrap(), &c);
+        let l = layout(1, &meadow_surface(), &slots, &[]);
+        assert!(
+            l.blades
+                .iter()
+                .all(|b| b.color.iter().all(|&x| (0.0..1.0).contains(&x)))
+        );
+        let i = GrassInstances::new(&l).unwrap();
+        assert_eq!(i.blades.len(), l.blades.len());
+        for p in [1, 35, 50, 99, 100, 101, 149, 150] {
+            let d = Density::from_share(p as f32 / 100.0).unwrap();
+            let want = l.blades.iter().filter(|b| d.draws(b.keep)).count();
+            assert_eq!(i.drawn(d) as usize, want, "{p}%");
+        }
     }
 
     #[test]
@@ -1172,8 +1154,8 @@ mod tests {
         assert!(Density::OFF.is_off() && !Density::from_share(0.01).unwrap().is_off());
     }
 
-    /// Every lower density draws a subset of every higher one, so a slider move only rebuilds
-    /// meshes from the seeded Lush set; 0 draws nothing and 150% everything.
+    /// Every lower density draws a subset of every higher one, so a slider move only changes how
+    /// many of the seeded Lush set's instances draw; 0 draws nothing and 150% everything.
     #[test]
     fn continuous_densities_nest() {
         let all: Vec<Density> = (0..=150)

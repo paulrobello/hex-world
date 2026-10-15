@@ -364,7 +364,7 @@ export interface GradeState {
   presets: GradePreset[];
 }
 
-/** One tile holding a blade mesh in `state().grass.tiles`. */
+/** One tile holding a blade group in `state().grass.tiles`. */
 export interface GrassTile {
   q: number;
   r: number;
@@ -374,23 +374,29 @@ export interface GrassTile {
   layout: string;
 }
 
-/** `state().grass`: the density, why grass draws or not (`on`, `off`, `tier`, `scenario`), and its meshes. */
+/** `state().grass`: the density, why grass draws or not (`on`, `off`, `tier`, `scenario`), and its instanced groups. */
 export interface GrassState {
   /** Share of the Normal density, 0 to 1.5, in whole percent steps. */
   density: number;
   status: "on" | "off" | "tier" | "scenario";
   groups: number;
+  /** Blades drawn at this density (each group's instance count). */
   blades: number;
   triangles: number;
+  /** Blades held in the GPU instance buffers: each group's whole 150% set. */
+  instances: number;
+  /** GPU bytes: the shared blade mesh and every group's instance buffer. */
   mesh_bytes: number;
+  /** Instance buffers uploaded since start: one per new group, none on a density change. */
+  uploads: number;
   /** Blades per m² of grass ground at this density, before a slot's own thinning. */
   per_m2: number;
   thin: number[];
   fade: number[];
   build_radius: number;
-  /** The slowest single tile build (seeded set and mesh, ms) in the latest frame that built one. */
+  /** The slowest single tile build (seeded set and instances, ms) in the latest frame that built one. */
   last_build_ms: number;
-  /** The slowest single density swap (mesh only, from the cached set, ms) in the latest frame that swapped one. */
+  /** The slowest single density change (a group's drawn count, ms) in the latest frame that changed one. */
   last_swap_ms: number;
   tiles: GrassTile[];
 }
@@ -611,7 +617,9 @@ export const STATE_FIELDS = {
     groups: true,
     blades: true,
     triangles: true,
+    instances: true,
     mesh_bytes: true,
+    uploads: true,
     per_m2: true,
     thin: true,
     fade: true,

@@ -176,7 +176,7 @@ impl Plugin for HexRenderPlugin {
                 MaterialPlugin::<water::TerrainMaterial>::default(),
                 MaterialPlugin::<play::affordances::AffordanceMaterial>::default(),
                 MaterialPlugin::<play::ghost::GhostMaterial>::default(),
-                MaterialPlugin::<play::grass::GrassMaterial>::default(),
+                play::grass_gpu::GrassGpuPlugin,
                 hooks::HooksPlugin {
                     hooks: self.config.kit_hooks,
                 },

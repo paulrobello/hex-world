@@ -576,7 +576,7 @@ const SHADER_EXEMPT: &[(&str, &str)] = &[
     ),
     (
         "crates/hex-render/src/grass_common.wesl",
-        "library: the grass blade pose and uniform, no surface",
+        "library: the grass blade bindings, instance unpacking and pose, no surface",
     ),
     (
         "crates/hex-render/src/wind.wesl",

@@ -1106,7 +1106,7 @@ try {
   await until(async () => (await walkSt()).walk_speed === 5, "the Walk speed slider sets state().walk.walk_speed");
   const ws = await walkSt();
   check(ws.walk_speed === 5 && ws.sprint_speed === 10, `the slider sets walk ${ws.walk_speed} m/s, sprint ${ws.sprint_speed} m/s`);
-  check((await text(speedOut)) === "5.0 m/s", `the slider reads ${await text(speedOut)}`);
+  await until(async () => (await text(speedOut)) === "5.0 m/s", "the Walk speed slider reads 5.0 m/s");
   check(await page.evaluate(() => localStorage.getItem("hexWorld.walkSpeed")) === "5", "the walk speed is stored for this viewer");
   await page.locator("input[aria-label='Walk speed']").scrollIntoViewIfNeeded();
   await shot("s9-7-settings-walk-speed");
@@ -1159,8 +1159,30 @@ try {
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_tier", tier: "high" }));
   await until(async () => (await st()).tier?.tier === "high", "High for the grass slider", 30_000);
   await until(async () => !(await slider.isDisabled()), "the Grass slider is enabled on High");
+  // Instanced grass (crates/hex-render/src/play/grass_gpu.rs): over the start meadow every group's
+  // whole 150% set is already on the GPU, so the slider move only grows the drawn instance count:
+  // no buffer is uploaded and no group is rebuilt.
+  const view = (await st()).camera;
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "camera", pos: [6, 6, 16], look_at: [0, 0, 0] }));
+  await until(async () => (await grass())?.groups > 0, "grass groups over the start meadow", 30_000);
+  let settled = await grass();
+  await until(async () => {
+    await page.waitForTimeout(500);
+    const g = await grass();
+    const same = g.groups === settled.groups && g.uploads === settled.uploads;
+    settled = g;
+    return same;
+  }, "the grass groups settle", 30_000);
+  const at100 = await grass();
   await slider.fill("150");
   await until(async () => (await grass()).density === 1.5, "the slider at 150% sets state().grass");
+  const at150 = await grass();
+  check(at150.uploads === at100.uploads && at150.groups === at100.groups && at150.instances === at100.instances,
+    `the slider move uploads nothing (uploads ${at100.uploads} -> ${at150.uploads}, groups ${at100.groups} -> ${at150.groups})`);
+  check(at150.blades > at100.blades && at150.blades <= at150.instances,
+    `the slider move draws more of the held instances (${at100.blades} -> ${at150.blades} of ${at150.instances})`);
+  await page.evaluate((v) => window.hexWorld.cmd({ cmd: "camera", pos: v.pos,
+    look_at: v.pos.map((p, i) => p + v.forward[i]) }), view);
   check((await grass()).per_m2 === 42, `150% is 42 blades per m² (${(await grass()).per_m2})`);
   check((await page.locator(".field--slider:has(input[aria-label='Grass density']) output").textContent()) === "150%", "the readout says 150%");
   await until(async () => (await page.evaluate(() => localStorage.getItem("hexWorld.grass"))) === "150", "the density is stored for this viewer");
