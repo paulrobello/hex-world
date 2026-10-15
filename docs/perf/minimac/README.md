@@ -15,3 +15,7 @@ Runs copy `dist/`, `e2e/` and `web/ui/src/` to `~/perf/hex-world` on MiniMac, ru
 - base: p50 4.2 to 4.3, p95 30.5 to 32.2, max 250 ms, 72 and 106 frames over 25 ms per 600.
 - fl3, which is the bare-URL default: p50 9.7 to 11.7, p95 30.1 to 30.6, max 41.5 to 42.6 ms, 277 and 273 frames over 25 ms per 600.
 - This GPU is the bottleneck on gate2000 at 2560x1440. The frame-latency limit removes the 250 ms stalls but turns many short frames into 25 to 40 ms ones. On the M4 Max the same comparison gives 1 and 1 frames over 25 ms with fl3 against 5 and 5 with base.
+
+## 2026-10-15, main 993c6d6 (world-build fix)
+
+`p2-grass-normal-3runs-2026-10-15.json`: grass normal, 3 rounds, with the 993c6d6 wait. All 3 runs built the full 2,066-tile world: p95 59.9, 66.7 and 64.0 ms (load 1.7 to 6.5).
