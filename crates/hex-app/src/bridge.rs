@@ -115,6 +115,12 @@ mod exports {
         }
     }
 
+    /// Commands `hex_world_cmd` took that no frame has drained into the command queue yet.
+    #[wasm_bindgen]
+    pub fn hex_world_inbox_len() -> usize {
+        control::INBOX.lock().unwrap().len()
+    }
+
     /// Queues a screenshot behind any pending commands; poll `hex_world_take_shot` for the result.
     #[wasm_bindgen]
     pub fn hex_world_screenshot(name: String) {

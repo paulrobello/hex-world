@@ -70,9 +70,12 @@
           for (var i = 0; i < watchers.length; i++) watchers[i](batch);
         }
         // events_pending counts what events() would return: the wasm queue plus the pumped JS queue.
+        // queued counts every command not yet run: the engine's queue (as of the last frame) plus the
+        // commands cmd() took since, which the next frame drains into it.
         function state() {
           var s = JSON.parse(w.hex_world_state_json());
           if (typeof s.events_pending === "number") s.events_pending += queued.length;
+          if (typeof s.queued === "number") s.queued += w.hex_world_inbox_len();
           return s;
         }
         window.hexWorld = {

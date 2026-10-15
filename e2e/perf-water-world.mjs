@@ -15,6 +15,7 @@ import { extname, join } from "node:path";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { waterWorldScript } from "./water-world.mjs";
+import { buildWorld } from "./build-world.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const nativeBin = process.argv[3] ?? "target/release/hex-world";
@@ -74,9 +75,7 @@ async function webRun(tilt) {
       return i ? [i.vendor, i.architecture, i.description].join(" | ") : null;
     });
     if (!adapter || /swiftshader/i.test(adapter)) throw new Error("no hardware WebGPU adapter: " + adapter);
-    await page.evaluate((s) => window.hexWorld.cmd(s), world.script);
-    await page.waitForFunction(() => { const s = window.hexWorld.state(); return s.queued === 0 && !s.play?.rising?.length; },
-      null, { timeout: 300_000, polling: 250 });
+    await buildWorld(page, world.script, world.tiles.length, 300_000);
     const f0 = await page.evaluate(() => window.hexWorld.diag().frames);
     await page.waitForFunction((f) => window.hexWorld.diag().frames >= f, f0 + SETTLE_FRAMES, { timeout: 240_000, polling: 250 });
     const d = await page.evaluate(() => window.hexWorld.diag());
