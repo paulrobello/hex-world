@@ -21,6 +21,7 @@ import {
   tileMap,
 } from "./rules.ts";
 import { Photo } from "./photo.ts";
+import { DebugHud } from "./debug.ts";
 import { Settings } from "./settings.ts";
 import { Sheet } from "./sheet.ts";
 import { Walk } from "./walk.ts";
@@ -75,6 +76,7 @@ export class Hud {
   private readonly canvas: HTMLCanvasElement | null;
   private readonly photo: Photo;
   private readonly settings: Settings;
+  private readonly debugHud = new DebugHud();
   private readonly rebuild = new Rebuild();
   private readonly walk: Walk;
 
@@ -144,7 +146,7 @@ export class Hud {
       () => this.persist?.settingsChanged(),
       this.rebuild,
     );
-    this.root.append(this.settings.el, this.rebuild.el);
+    this.root.append(this.debugHud.labels, this.debugHud.perf, this.settings.el, this.rebuild.el);
     document.body.append(this.photo.root);
     this.walk = new Walk(hw, this.canvas);
     document.body.append(this.walk.root);
@@ -384,7 +386,8 @@ export class Hud {
     this.photo.render(st.photo_mode, state.photo);
     this.walk.render(st.walk_mode);
     this.root.classList.toggle("is-walking", st.walk_mode);
-    this.settings.render(state.tilt, state.tier, state.grade, state.grass, state.walk);
+    this.settings.render(state.tilt, state.tier, state.grade, state.grass, state.walk, state.debug);
+    this.debugHud.render(this.hw, state, st);
     this.root.classList.toggle("is-photo", st.photo_mode);
     const prev = this.st;
     this.st = st;

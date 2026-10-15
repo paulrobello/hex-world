@@ -400,8 +400,11 @@ try {
     await page.locator(".tool[data-action=settings]").click();
     await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens at 1280 × 720");
     check((await page.evaluate(() => document.activeElement?.id)) === "settings-tab-graphics", "focus lands on the Graphics tab after the reload");
+    // End selects the last tab (Debug); one step left is World.
     await page.keyboard.press("End");
-    await until(async () => page.locator("#settings-tab-world[aria-selected=true]").count(), "End on the tab strip selects the World tab");
+    await until(async () => page.locator("#settings-tab-debug[aria-selected=true]").count(), "End on the tab strip selects the last tab, Debug");
+    await page.keyboard.press("ArrowLeft");
+    await until(async () => page.locator("#settings-tab-world[aria-selected=true]").count(), "ArrowLeft from Debug selects the World tab");
     check((await page.evaluate(() => document.activeElement?.id)) === "settings-tab-world", "focus follows to the World tab");
     await page.keyboard.press("Tab");
     check((await page.evaluate(() => document.activeElement?.getAttribute("aria-label"))) === "Walk speed", "Tab reaches the Walk speed slider first");

@@ -159,6 +159,11 @@ impl CarSim {
         events
     }
 
+    /// The road or river routing graph as last mirrored.
+    pub fn network(&self, kind: hex_core::NetworkKind) -> &hex_sim::network::Network {
+        self.sim.network(kind)
+    }
+
     pub fn ticks(&self) -> u64 {
         self.ticks
     }
@@ -221,6 +226,44 @@ fn car_event(id: u64, cell: Axial, pos: [f32; 2], parked: bool) -> GameEvent {
 /// Mirrors the world into the sim whenever the game state or a rise changed (after
 /// `game::apply_actions` and the play systems). In the play scenario a placed tile waits for its
 /// rise's agents stage ([`CarSim::mirror_gated`]).
+/// The `networks` debug overlay: every road and river link's centerline in its socket colour, each
+/// node as a small ring, and destinations (car spawns and sinks) as a larger one. Gated by a run
+/// condition, so it does nothing while the overlay is off.
+pub fn draw_networks(
+    sim: Res<CarSim>,
+    mut gizmos: Gizmos<hex_render::debug::DebugGizmos>,
+    mut report: ResMut<hex_render::debug::DebugReport>,
+) {
+    use hex_core::{NetworkKind, SocketKind};
+    use hex_render::debug::{LINE_Y, ring};
+    report.work += 1;
+    let y = LINE_Y + 0.15;
+    for (kind, socket) in [
+        (NetworkKind::Road, SocketKind::Road),
+        (NetworkKind::River, SocketKind::River),
+    ] {
+        let [r, g, b] = hex_render::play::affordances::socket_rgb(socket);
+        let color = Color::srgb_u8(r, g, b);
+        let net = sim.network(kind);
+        for (_, link) in net.links() {
+            gizmos.linestrip(
+                link.points().iter().map(|p| Vec3::new(p[0], y, p[1])),
+                color,
+            );
+        }
+        for (_, node) in net.nodes() {
+            let p = node.pos();
+            let big = node.destination().is_some();
+            ring(
+                &mut gizmos,
+                Vec3::new(p[0], y, p[1]),
+                if big { 2.2 } else { 0.9 },
+                if big { Color::WHITE } else { color },
+            );
+        }
+    }
+}
+
 pub fn mirror_world(
     game: Res<GameState>,
     active: Res<ActiveScenario>,

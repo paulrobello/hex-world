@@ -252,6 +252,7 @@ mod schema {
         r#"{"cmd":"walk_step","forward":1,"right":0,"seconds":2,"sprint":false}"#,
         r#"{"cmd":"set_walk_speed","speed":4.2}"#,
         r#"{"cmd":"walk_look","heading":180,"pitch":0}"#,
+        r#"{"cmd":"debug","lod_tint":true,"force_lod":"auto","perf":true,"grid":false,"sockets":false,"colliders":false,"scatter":false,"networks":false}"#,
     ];
 
     /// Exhaustive on purpose: a new command fails to compile here until it has a sample above.
@@ -290,6 +291,7 @@ mod schema {
             Command::WalkStep { .. } => "walk_step",
             Command::SetWalkSpeed { .. } => "set_walk_speed",
             Command::WalkLook { .. } => "walk_look",
+            Command::Debug { .. } => "debug",
         }
     }
 

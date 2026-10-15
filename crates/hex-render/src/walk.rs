@@ -622,6 +622,11 @@ impl WalkGround {
     }
 
     /// No drawn tile is ground yet (another scenario, or the kit still loading).
+    /// Every collider footprint, for the debug overlay.
+    pub fn obstacles(&self) -> impl Iterator<Item = &Obstacle> {
+        self.obstacles.values().flatten()
+    }
+
     pub fn is_empty(&self) -> bool {
         self.cells.is_empty()
     }

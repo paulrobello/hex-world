@@ -26,6 +26,9 @@ colors:
   socket-river: "rgb(74 163 223)"
   socket-beach: "rgb(227 194 122)"
   socket-ocean: "rgb(45 111 176)"
+  lod-0: "rgb(253 231 37)"
+  lod-1: "rgb(33 145 140)"
+  lod-2: "rgb(68 1 84)"
 typography:
   headline:
     fontFamily: "Manrope, system-ui, sans-serif"
@@ -231,6 +234,9 @@ A dark survey-blue paper with ink in three strengths, one magenta for selection,
 ### Tertiary: the six socket colours
 - **Grass** (`socket-grass`), **Forest** (`socket-forest`), **Road** (`socket-road`), **River** (`socket-river`), **Beach** (`socket-beach`) and **Ocean** (`socket-ocean`). In CSS these are `--k-G`, `--k-F`, `--k-R`, `--k-V`, `--k-B` and `--k-O`. They drive the tile glyph edges and fill, the row socket hex, the slot key's edge marks, the Worlds mix strip, the loading hex key, the ghost's road and river lanes, and the in-world socket key marks.
 
+### Debug data: the LOD levels
+- **LOD 0**, **LOD 1** and **LOD 2** (`lod-0`, `lod-1`, `lod-2`; `--lod-0` to `--lod-2`): three viridis stops ordered by lightness, so the levels separate without hue. They are the engine's LOD tint and appear only in the Settings Debug tab's LOD key, each beside its level name, distance band and drawn count. Developer overlays only; never chrome.
+
 ### Neutral
 - **Survey Blue** (`sheet`): every panel. That covers the bar, sheet, toast, ghost tag and stream chip.
 - **Survey Blue, Raised** (`sheet-2`): rows on hover and selection, the key, notes, buttons, and hovered tools.
@@ -288,6 +294,8 @@ Spacing uses a six-step scale: 4, 8, 12, 16, 20 and 28 px. Tight gaps of 2 and 3
 Every tool, button and row is at least 44 px tall, except the small button, which is 36 px. Touch arrives in P7 and keeps these targets.
 
 **The Narrow-Desktop Rule (1400 px).** At 1400 px wide or less, key caps leave the bar and live only in tooltips, tools tighten to 9 px of side padding, the bar's rules to 4 px of margin and the world name to 128 px, the Tiles sheet narrows to 340 px, and the row socket hex narrows to 28 px. The bar and sheet never meet, and the ghost area stays clear (shot `s12-narrow-1280x720`).
+
+**Performance corner** (developer overlay, Settings Debug tab): a `sheet` panel with `shadow-1` below the bar, top left at the bar's left edge, 12 px under it. It ignores the pointer and hides with H. The grid overlay's axial labels sit under every HUD panel.
 
 **The F6 Escape Rule.** Tab belongs to the sheet: it opens and closes Tiles. So F6, and Shift+F6 to go back, moves focus between `[data-region]` landmarks (bar, sheet, toast), skipping closed ones. The sheet foot and the Settings key table both state it.
 

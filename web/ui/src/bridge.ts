@@ -128,7 +128,47 @@ export type Command =
   | { cmd: "walk_to"; x: number; z: number; heading: number | null; pitch: number | null }
   | { cmd: "walk_step"; forward: number; right: number; seconds: number; sprint: boolean | null }
   | { cmd: "set_walk_speed"; speed: number }
-  | { cmd: "walk_look"; heading: number | null; pitch: number | null };
+  | { cmd: "walk_look"; heading: number | null; pitch: number | null }
+  /** Developer overlays: each switch given is set, omitted ones keep theirs. Never saved. */
+  | {
+      cmd: "debug";
+      lod_tint?: boolean | null;
+      force_lod?: ForceLod | null;
+      perf?: boolean | null;
+      grid?: boolean | null;
+      sockets?: boolean | null;
+      colliders?: boolean | null;
+      scatter?: boolean | null;
+      networks?: boolean | null;
+    };
+
+/** Force LOD: `auto` keeps the distance bands; a level pins every kit piece to it. */
+export type ForceLod = "auto" | "0" | "1" | "2";
+
+/** `state().debug`: the overlay switches, drawn LOD parts per level and the frame sampler. */
+export interface DebugState {
+  lod_tint: boolean;
+  force_lod: ForceLod;
+  perf: boolean;
+  grid: boolean;
+  sockets: boolean;
+  colliders: boolean;
+  scatter: boolean;
+  networks: boolean;
+  /** Drawn LOD-tagged parts and their triangles per level (updated while LOD tint, Force LOD or perf is on). */
+  lod: { by_lod: [number, number, number]; tris_by_lod: [number, number, number] };
+  /** Over the last second (updated while perf is on). */
+  frame: { fps: number; mean_ms: number; worst_ms: number; entities: number };
+  /** Overlay system runs since start: stays 0 while every overlay is off. */
+  work: number;
+}
+
+/** The parts of `state().diag` the performance readout shows. */
+export interface DiagGpu {
+  enabled: boolean;
+  passes?: Record<string, { mean: number }>;
+  total?: { mean: number };
+}
 
 export type GameEvent =
   | { type: "tilePlaced"; q: number; r: number; tile: string; rotation: number }
@@ -434,6 +474,8 @@ export interface State {
   pack_waiting?: { q: number; r: number; tile: string; packs: string[] }[] | null;
   /** Every kit pack's status. */
   packs?: Record<string, "idle" | "loading" | "ready"> | null;
+  debug?: DebugState;
+  diag?: { gpu?: DiagGpu } | null;
 }
 
 export type Rect = [left: number, top: number, right: number, bottom: number];
@@ -514,6 +556,16 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   walk_step: keys<CommandOf<"walk_step">>({ forward: true, right: true, seconds: true, sprint: true }),
   set_walk_speed: keys<CommandOf<"set_walk_speed">>({ speed: true }),
   walk_look: keys<CommandOf<"walk_look">>({ heading: true, pitch: true }),
+  debug: keys<CommandOf<"debug">>({
+    lod_tint: true,
+    force_lod: true,
+    perf: true,
+    grid: true,
+    sockets: true,
+    colliders: true,
+    scatter: true,
+    networks: true,
+  }),
 };
 
 export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {

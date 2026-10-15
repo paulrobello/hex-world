@@ -67,6 +67,9 @@ pub struct Flags {
     pub load: Option<String>,
     /// Native only: `.hexworld` file written with the world on exit.
     pub save: Option<String>,
+    /// `debug=lod,perf,grid,sockets,colliders,lod2`: developer overlays on from the start (never
+    /// persisted; `hex_render::debug`).
+    pub debug: hex_render::debug::DebugOverlays,
 }
 
 /// `"1280x800"` -> `Some((1280, 800))`; zero or malformed sizes are rejected.
@@ -280,6 +283,13 @@ pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Fl
                 &mut warnings,
             ),
             "present" => set_or_warn(&mut f.present, Present::parse(v), k, v, &mut warnings),
+            "debug" => {
+                let (d, unknown) = hex_render::debug::DebugOverlays::parse_list(v);
+                f.debug = d;
+                for u in unknown {
+                    warnings.push(format!("unknown debug overlay '{u}'"));
+                }
+            }
             "photo-export" => match v.parse::<u32>() {
                 Ok(n) if crate::photo::EXPORT_SCALES.contains(&n) => f.photo_export = Some(n),
                 _ => warnings.push(format!("bad photo-export '{v}', expected 1, 2 or 4")),
@@ -354,6 +364,7 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "clock",
         "grass",
         "photo-export",
+        "debug",
     ]
     .iter()
     .filter_map(|k| params.get(k).map(|v| (k.to_string(), v)))
@@ -429,6 +440,19 @@ mod tests {
         assert!(f.tier_explicit, "even the default value, when named, wins");
         let (f, w) = flags_from_pairs(&p(&[("tier", "epic")]));
         assert!(!f.tier_explicit && w.len() == 1);
+    }
+
+    #[test]
+    fn debug_key() {
+        let (f, w) = flags_from_pairs(&[]);
+        assert_eq!(f.debug, hex_render::debug::DebugOverlays::default());
+        assert!(w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("debug", "grid,lod,lod1,perf")]));
+        assert!(f.debug.grid && f.debug.lod_tint && f.debug.perf && !f.debug.sockets);
+        assert_eq!(f.debug.force_lod, Some(1));
+        assert!(w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("debug", "sockets,wireframe")]));
+        assert!(f.debug.sockets && w.len() == 1, "{w:?}");
     }
 
     #[test]

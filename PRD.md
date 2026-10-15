@@ -163,11 +163,12 @@ The player-facing UI (D18 overlay) is held to a hero standard, like water:
 
 ### 4.8 Settings
 
-The Settings sheet (Legend S9, owner deviations accepted as A21 on 2026-10-14) has three tabs. The mockup's Controls tab is not built.
+The Settings sheet (Legend S9, owner deviations accepted as A21 on 2026-10-14) has four tabs. The mockup's Controls tab is not built.
 
 - **Graphics.** Quality: Auto, Low, Medium, High, and Ultra where detection lands on High (§9.2). A quality change rebuilds the scene behind a loading panel ("Changing quality") that takes the pointer and the keys until the new tier has drawn (owner report, 2026-10-14). Tilt-shift: a switch, off by default, and a strength slider (§9.1). Colour grade: the named grades, `rich-3` by default (§9.1). Grass density: 0–150% of Normal in 5% steps, 100% by default, drawn on High and Ultra only (§9.1).
 - **Audio.** Mute and five levels: master 80%, music 55%, effects 75%, interface 50%, and ambience 10% (owner, 2026-10-14).
 - **World.** Walk speed: 2.8–8.0 m/s in 0.1 m/s steps, 2.8 m/s by default (§15 P8). Start over: after a confirm, it clears the current world to the start tile in place, keeping its name and save slot (owner, 2026-10-14).
+- **Debug.** Developer overlays, all off by default and never saved (owner request, 2026-10-14): LOD tint with its key and drawn counts, Force LOD (Auto, 0, 1, 2), a performance corner, the hex grid with axial labels, edge sockets, walk colliders, scatter footprints with their grass exclusion discs, and the road and river routing graph. Also driven by the `debug` command and `--debug` / `?debug=` ([`docs/agent-operability.md`](docs/agent-operability.md#debug-overlays)).
 
 Audio levels, the colour grade, the grass density and the walk speed are kept per viewer in `localStorage`, outside the world save. Quality and the tilt-shift choice travel with the save (§12.2). A save also carries the volumes, but loading it does not apply them (owner decision A16).
 

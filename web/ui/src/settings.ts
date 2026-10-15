@@ -8,7 +8,9 @@
 // 150 ms while dragging, and on release); grass draws on High and Ultra only.
 // The World tab (settings-world.ts) holds the walk speed and Start over.
 import type { AudioApi } from "./audio.ts";
+import { DebugPanel } from "./debug.ts";
 import type {
+  DebugState,
   GradeName,
   GradeState,
   GrassState,
@@ -87,7 +89,7 @@ function saveGrass(pct: number): void {
   }
 }
 
-type Tab = "graphics" | "audio" | "world";
+type Tab = "graphics" | "audio" | "world" | "debug";
 
 /** A tier pick waits this long for `state().tier` to follow before the row shows the engine's answer again. */
 const PICK_HOLD_MS = 3000;
@@ -120,6 +122,7 @@ export class Settings {
   private readonly volumes = new Map<Channel, Slider>();
   private readonly mute: HTMLButtonElement;
   private readonly world = new WorldPanel((c) => this.hw.cmd(c));
+  private readonly debug: DebugPanel;
   private shown = false;
   private tiltSig = "";
   private tierSig = "";
@@ -143,6 +146,7 @@ export class Settings {
     this.audio = audio;
     this.changed = onChange;
     this.rebuild = rebuild;
+    this.debug = new DebugPanel(hw);
     const close = h(
       "button",
       { class: "sheet__close", type: "button", "aria-label": "Close settings", "data-tip": "Close|Esc" },
@@ -305,6 +309,7 @@ export class Settings {
       ["graphics", "Graphics", graphics],
       ["audio", "Audio", audioPanel],
       ["world", "World", this.world.el],
+      ["debug", "Debug", this.debug.el],
     ] as const) {
       const btn = h("button", {
         type: "button",
@@ -334,7 +339,7 @@ export class Settings {
       { class: "sheet sheet--wide sheet--settings is-closed", "data-region": "settings", "aria-label": "Settings" },
       h("header", { class: "sheet__head" }, h("h1", {}, "Settings"), close),
       strip,
-      h("div", { class: "sheet__body" }, graphics, audioPanel, this.world.el),
+      h("div", { class: "sheet__body" }, graphics, audioPanel, this.world.el, this.debug.el),
     );
     this.el.toggleAttribute("inert", true);
     // Tab walks this sheet's own controls (the Hud leaves Tab to it while focus is inside), wrapping.
@@ -391,8 +396,10 @@ export class Settings {
     grade?: GradeState,
     grass?: GrassState,
     walk?: WalkState,
+    debug?: DebugState,
   ): void {
     if (!this.shown) return;
+    if (this.tab === "debug") this.debug.render(debug);
     if (this.tab === "world") {
       this.world.render();
       this.world.renderWalk(walk);

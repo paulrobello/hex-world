@@ -212,6 +212,19 @@ pub enum Command {
         heading: Option<f32>,
         pitch: Option<f32>,
     },
+    /// Developer overlays (`hex_render::debug`; the Settings Debug tab sends this): each switch
+    /// given turns its overlay on or off, omitted ones keep theirs. `force_lod` is `auto`, `0`, `1`
+    /// or `2`. Never saved; `state().debug` reports them.
+    Debug {
+        lod_tint: Option<bool>,
+        force_lod: Option<String>,
+        perf: Option<bool>,
+        grid: Option<bool>,
+        sockets: Option<bool>,
+        colliders: Option<bool>,
+        scatter: Option<bool>,
+        networks: Option<bool>,
+    },
 }
 
 impl Command {
@@ -297,6 +310,7 @@ pub fn run_commands(
     ),
     (mut persist, mut saved): (ResMut<PersistQueue>, ResMut<SavedSettings>),
     mut walk: ResMut<WalkSession>,
+    mut debug: ResMut<hex_render::debug::DebugOverlays>,
 ) {
     queue.items.extend(INBOX.lock().unwrap().drain(..));
     if !*bridge::READY.lock().unwrap() {
@@ -460,7 +474,53 @@ pub fn run_commands(
         Command::WalkLook { heading, pitch } => walk
             .requests
             .push_back(WalkRequest::Look { heading, pitch }),
+        Command::Debug {
+            lod_tint,
+            force_lod,
+            perf,
+            grid,
+            sockets,
+            colliders,
+            scatter,
+            networks,
+        } => apply_debug(
+            &mut debug,
+            [
+                ("lod", lod_tint),
+                ("perf", perf),
+                ("grid", grid),
+                ("sockets", sockets),
+                ("colliders", colliders),
+                ("scatter", scatter),
+                ("networks", networks),
+            ],
+            force_lod.as_deref(),
+        ),
         _ => unreachable!("play commands return through `action`"),
+    }
+}
+
+/// The `debug` command: switches given are set, the rest keep theirs. The resource changes only when
+/// a switch differs, so the overlays' change-driven systems do not rerun for a no-op.
+fn apply_debug(
+    debug: &mut ResMut<hex_render::debug::DebugOverlays>,
+    switches: [(&str, Option<bool>); 7],
+    force_lod: Option<&str>,
+) {
+    let mut next = **debug;
+    for (name, on) in switches {
+        if let Some(on) = on {
+            next.set(name, on);
+        }
+    }
+    if let Some(f) = force_lod {
+        match hex_render::debug::DebugOverlays::parse_force(f) {
+            Some(level) => next.force_lod = level,
+            None => warn!("debug command: force_lod '{f}' is not auto, 0, 1 or 2, skipped"),
+        }
+    }
+    if next != **debug {
+        **debug = next;
     }
 }
 
@@ -581,7 +641,12 @@ pub fn publish_state(
         Res<hex_render::AgentsPaused>,
         Option<Res<hex_render::AssetLoadFailures>>,
     ),
-    (walk, walk_ground): (Res<WalkSession>, Res<hex_render::walk::WalkGround>),
+    (walk, walk_ground, debug, debug_report): (
+        Res<WalkSession>,
+        Res<hex_render::walk::WalkGround>,
+        Res<hex_render::debug::DebugOverlays>,
+        Res<hex_render::debug::DebugReport>,
+    ),
     (fx, fx_cams): (
         Res<crate::photo_fx::PhotoFxSettings>,
         Query<(), (With<hex_render::photo_fx::PhotoFx>, With<Camera3d>)>,
@@ -664,6 +729,7 @@ pub fn publish_state(
             .and_then(|s| serde_json::from_str::<serde_json::Value>(&s.0).ok()),
         "grass": grass.and_then(|g| serde_json::from_str::<serde_json::Value>(&g.0).ok()),
         "assets": { "failed": kit_failures.map(|f| f.list()).unwrap_or_default() },
+        "debug": debug.json(&debug_report),
     });
     *bridge::STATE_JSON.lock().unwrap() = state.to_string();
 }
@@ -869,6 +935,28 @@ mod tests {
         assert!((a.distance - b.distance).abs() < 1e-3);
         extend_play_orbit(&mut p, None);
         assert!(p["orbit"].is_null());
+    }
+
+    #[test]
+    fn parses_the_debug_command_with_omitted_switches() {
+        let c =
+            parse_script(r#"[{"cmd":"debug","lod_tint":true,"force_lod":"2"},{"cmd":"debug"}]"#)
+                .unwrap();
+        assert_eq!(
+            c[0],
+            Command::Debug {
+                lod_tint: Some(true),
+                force_lod: Some("2".into()),
+                perf: None,
+                grid: None,
+                sockets: None,
+                colliders: None,
+                scatter: None,
+                networks: None,
+            }
+        );
+        assert_eq!(c[0].action(), None);
+        assert!(matches!(c[1], Command::Debug { lod_tint: None, .. }));
     }
 
     #[test]

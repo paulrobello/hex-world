@@ -37,7 +37,7 @@ use crate::{
     ActiveScenario, Scenario, SceneEntity,
     kit_material::{KitMaterial, build_material, slot_requests},
     kit_scene::{KitRotor, MANIFEST, piece_rotation, rotor_phase},
-    scene::lod_range,
+    scene::{Lod, lod_range},
     water,
     workload::GateConfig,
 };
@@ -527,6 +527,7 @@ fn spawn_kit_parts(
                     phase: rotor_phase(hub),
                 },
                 lod_range(part.lod),
+                Lod(part.lod as u8),
                 SceneEntity,
                 ChildOf(body),
             ));
@@ -538,6 +539,7 @@ fn spawn_kit_parts(
             MeshMaterial3d(part.material.clone()),
             t,
             lod_range(part.lod),
+            Lod(part.lod as u8),
             SceneEntity,
         ));
         if let Some((cell, role)) = rise {

@@ -5,6 +5,7 @@ pub mod boids;
 pub mod car_material;
 pub mod cars;
 mod chunks;
+pub mod debug;
 pub mod diag;
 pub mod fps;
 pub mod gpu_timing;
@@ -182,7 +183,7 @@ impl Plugin for HexRenderPlugin {
                     hooks: self.config.kit_hooks,
                 },
             ))
-            .add_plugins(photo_fx::PhotoFxPlugin)
+            .add_plugins((photo_fx::PhotoFxPlugin, debug::DebugPlugin))
             .init_resource::<AgentsPaused>()
             .init_resource::<play::PlayView>()
             .init_resource::<play::PlayCatalog>()

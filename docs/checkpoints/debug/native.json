@@ -1,0 +1,21 @@
+[
+  {"cmd": "select_tile", "id": "windmill"},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "select_tile", "id": "meadow"},
+  {"cmd": "place", "q": 1, "r": -1},
+  {"cmd": "place", "q": 2, "r": -1},
+  {"cmd": "place", "q": 0, "r": 1},
+  {"cmd": "select_tile", "id": "oak"},
+  {"cmd": "place", "q": 2, "r": 0},
+  {"cmd": "hover", "q": 6, "r": -6},
+  {"cmd": "camera", "pos": [-4, 26, 50], "look_at": [27.7, 7, 0]},
+  {"cmd": "debug", "lod_tint": true, "grid": true, "sockets": true, "colliders": true, "scatter": true, "networks": true},
+  {"cmd": "wait", "frames": 300},
+  {"cmd": "screenshot", "name": "dbg-native-all"},
+  {"cmd": "dump_state", "name": "dbg-native-state"},
+  {"cmd": "debug", "grid": false, "sockets": false, "colliders": false, "scatter": false, "networks": false, "force_lod": "2"},
+  {"cmd": "wait", "frames": 120},
+  {"cmd": "screenshot", "name": "dbg-native-lod2"},
+  {"cmd": "dump_state", "name": "dbg-native-lod2-state"},
+  {"cmd": "exit"}
+]

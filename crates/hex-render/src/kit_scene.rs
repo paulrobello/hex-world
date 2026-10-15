@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use crate::{
     SceneEntity,
     kit_material::{KitMaterial, build_material, slot_requests},
-    scene::lod_range,
+    scene::{Lod, lod_range},
     workload::{GateConfig, KitSource},
 };
 
@@ -400,6 +400,7 @@ pub fn finish_kit(
                     MeshMaterial3d(mat),
                     t,
                     lod_range(lod),
+                    Lod(lod as u8),
                     SceneEntity,
                 ));
                 if let Some(r) = rotor {

@@ -441,6 +441,16 @@
       "look_at",
       "pos"
     ],
+    "debug": [
+      "colliders",
+      "force_lod",
+      "grid",
+      "lod_tint",
+      "networks",
+      "perf",
+      "scatter",
+      "sockets"
+    ],
     "dump_state": [
       "name"
     ],

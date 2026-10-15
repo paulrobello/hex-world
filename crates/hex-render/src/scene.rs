@@ -26,7 +26,9 @@ pub struct SceneEntity;
 #[derive(Component)]
 pub struct Tile;
 
-/// LOD level of one rendered piece entity; `Lod(0)` entities count the logical pieces.
+/// LOD level of one rendered LOD part: gate pieces and chunk meshes, play kit pieces and pair
+/// edges, car parts and the kit scenario's pieces. `diag` counts the visible ones per level and the
+/// debug overlays (`crate::debug`) tint and pin them.
 #[derive(Component, Clone, Copy)]
 pub struct Lod(pub u8);
 

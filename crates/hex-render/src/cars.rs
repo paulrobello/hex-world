@@ -32,7 +32,7 @@ use crate::{
     kit_material::slot_requests,
     kit_scene::MANIFEST,
     play::packs::{PackState, PlayPacks},
-    scene::lod_range,
+    scene::{Lod, lod_range},
     workload::GateConfig,
 };
 
@@ -454,6 +454,7 @@ pub fn sync(
                                 MeshMaterial3d(part.material.clone()),
                                 tag.clone(),
                                 lod_range(part.lod),
+                                Lod(part.lod as u8),
                             ));
                         }
                     });

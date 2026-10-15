@@ -389,6 +389,27 @@
           "#aeccea",
           "#e3edf8"
         ]
+      },
+      "lod-0": {
+        "role": "tertiary",
+        "displayName": "LOD 0",
+        "canonical": "rgb(253 231 37)",
+        "cssVar": "--lod-0",
+        "note": "Debug data only: the engine's LOD tint (hex_render::debug::LOD_TINTS, viridis stops ordered by lightness) and its key in the Settings Debug tab."
+      },
+      "lod-1": {
+        "role": "tertiary",
+        "displayName": "LOD 1",
+        "canonical": "rgb(33 145 140)",
+        "cssVar": "--lod-1",
+        "note": "Debug data only: the engine's LOD tint (hex_render::debug::LOD_TINTS, viridis stops ordered by lightness) and its key in the Settings Debug tab."
+      },
+      "lod-2": {
+        "role": "tertiary",
+        "displayName": "LOD 2",
+        "canonical": "rgb(68 1 84)",
+        "cssVar": "--lod-2",
+        "note": "Debug data only: the engine's LOD tint (hex_render::debug::LOD_TINTS, viridis stops ordered by lightness) and its key in the Settings Debug tab."
       }
     },
     "typographyMeta": {

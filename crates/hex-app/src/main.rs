@@ -123,6 +123,7 @@ fn main() {
         .insert_resource(game)
         .insert_resource(cars)
         .insert_resource(hex_render::boids::BoidSeed(flags.seed))
+        .insert_resource(flags.debug)
         .insert_resource(RunFlags(flags))
         .insert_resource(queue)
         .init_resource::<actions::ActionQueue>()
@@ -162,7 +163,13 @@ fn main() {
             )
                 .chain(),
         )
-        .add_systems(Last, (control::dump_state_on_exit, persist::save_on_exit));
+        .add_systems(Last, (control::dump_state_on_exit, persist::save_on_exit))
+        .add_systems(
+            Update,
+            sim::draw_networks
+                .after(sim::publish_cars)
+                .run_if(|d: Res<hex_render::debug::DebugOverlays>| d.networks),
+        );
 
     #[cfg(not(target_arch = "wasm32"))]
     if app.world().resource::<RunFlags>().0.thumbs {
