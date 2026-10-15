@@ -705,6 +705,9 @@ const PUFF_RGB: [f32; 3] = [0.66, 0.58, 0.46];
 /// duration, so the envelope keeps its shape.
 const CLOUD_SIZE: f32 = 0.8;
 const CLOUD_TIME: f32 = 0.8;
+/// Each puff's full-grown radius against the scaled first look's: the circles were still too big
+/// at 80% (owner, 2026-10-14: "reduce the largest size by 20%").
+const CLOUD_PEAK: f32 = 0.8;
 
 /// The bulldoze cloud's layers at the first look's timing: a darker low swell over the hex, a
 /// lighter billow from the rim and the centre that thins sooner as it rises, and dark debris bits.
@@ -794,6 +797,12 @@ impl Particle {
         let mut p = self.origin + throw + Vec3::Y * (self.lift * t - 0.5 * self.gravity * t * t);
         p.y = p.y.max(0.05);
         p
+    }
+
+    /// The same particle with its full-grown radius `k` times as large (never below its start).
+    fn peaked(mut self, k: f32) -> Particle {
+        self.size.1 = (self.size.1 * k).max(self.size.0);
+        self
     }
 
     fn radius(&self, t: f32) -> f32 {
@@ -896,7 +905,7 @@ fn cloud(cell: Axial) -> Vec<Particle> {
     let centre = Vec3::new(cx, 0.0, cz);
     cloud_base(cell)
         .into_iter()
-        .map(|p| p.scaled(centre, CLOUD_SIZE, CLOUD_TIME))
+        .map(|p| p.scaled(centre, CLOUD_SIZE, CLOUD_TIME).peaked(CLOUD_PEAK))
         .collect()
 }
 
@@ -1367,7 +1376,8 @@ mod tests {
             .iter()
             .map(|p| flat(p.at(0.8)) + p.radius(0.8))
             .fold(0.0, f32::max);
-        assert!(reach > HEX_RADIUS + 1.5, "spreads past the rim: {reach}");
+        // About 1.1 m past the rim since the owner's 20% cut of the full-grown puffs (was 1.5 m).
+        assert!(reach > HEX_RADIUS + 1.0, "spreads past the rim: {reach}");
         let life = ps.iter().map(|p| p.life).fold(0.0, f32::max);
         assert!(life <= 2.24 + 1e-4, "clear by 2.24 s: {life}");
         assert!(
@@ -1387,13 +1397,24 @@ mod tests {
     }
 
     /// Owner 2026-10-14: "reduce dust size and duration by 20%". The drawn cloud is the first look
-    /// at 80% of its size about the cell's centre and 80% of its duration, every phase included.
+    /// at 80% of its size about the cell's centre and 80% of its duration, every phase included, with
+    /// each puff's full-grown radius cut by [`CLOUD_PEAK`] on top ("reduce the largest size by 20%").
     #[test]
     fn the_cloud_is_the_first_look_at_80_percent_size_and_duration() {
         let cell = Axial::new(2, -1);
         let [cx, cz] = cell.to_world(HEX_RADIUS);
         let centre = Vec3::new(cx, 0.0, cz);
-        let (base, drawn) = (cloud_base(cell), cloud(cell));
+        let base: Vec<Particle> = cloud_base(cell)
+            .into_iter()
+            .map(|p| {
+                let s = p.scaled(centre, CLOUD_SIZE, 1.0).peaked(CLOUD_PEAK);
+                Particle {
+                    size: (p.size.0, s.size.1 / CLOUD_SIZE),
+                    ..p
+                }
+            })
+            .collect();
+        let drawn = cloud(cell);
         assert_eq!(base.len(), drawn.len());
         for (b, d) in base.iter().zip(&drawn) {
             assert!(
