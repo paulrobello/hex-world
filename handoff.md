@@ -4,7 +4,7 @@ This is the orchestrator session for P2+ work: parallel worktree agents, verifie
 
 ## State
 
-- Branch `main` at the commit that adds this file, **62 commits ahead of `origin/main`, nothing pushed**. Pushing needs Paul's approval every time.
+- Branch `main`, **about 60 commits ahead of `origin/main` (`git rev-list --count origin/main..main`), nothing pushed**. Pushing needs Paul's approval every time.
 - The working tree is clean apart from an untracked `.claude/launch.json` (leave it). No other worktrees are active, and no agents or background runs are going.
 - The play build (`dist/`, port 8094) was rebuilt from `main` after the last merge.
 - CI on GitHub is red until the next push. The fix for the old macOS-only hash test is local (`0a6dc22`).
