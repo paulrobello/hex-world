@@ -38,7 +38,8 @@ export function countSampledTextures() {
   const tiltModules = new WeakSet();
   const waterModules = new WeakMap();
   const boidModules = new WeakMap();
-  const stats = { max: 0, layouts: [], kit: [], tilt: [], water: [], boid: [] };
+  const grassModules = new WeakMap();
+  const stats = { max: 0, layouts: [], kit: [], tilt: [], water: [], boid: [], grass: [] };
   window.__sampledTextures = stats;
   const csm = GPUDevice.prototype.createShaderModule;
   GPUDevice.prototype.createShaderModule = function (desc) {
@@ -55,6 +56,9 @@ export function countSampledTextures() {
       waterModules.set(mod, { pass: /\bwave_count\b/.test(code) ? "water" : "terrain", ibl: /diffuse_environment_map/.test(code),
         transmission: /view_transmission_texture/.test(code) });
     if (/\bfocus_uv_y\b/.test(code)) tiltModules.add(mod);
+    // Grass blades (crates/hex-render/src/play/grass.rs): both stages import grass_common's uniform.
+    if (/thin_keep/.test(code))
+      grassModules.set(mod, { ibl: /diffuse_environment_map/.test(code), forward: /apply_pbr_lighting/.test(code) });
     if (/\bboid_verts\b/.test(code))
       boidModules.set(mod, { ibl: /diffuse_environment_map/.test(code), transmission: /view_transmission_texture/.test(code) });
     return mod;
@@ -87,6 +91,15 @@ export function countSampledTextures() {
       const sampled = perLayout.get(desc.layout) ?? null;
       if (!stats.water.some((k) => k.pass === w.pass && k.sampled === sampled && k.ibl === w.ibl && k.transmission === w.transmission))
         stats.water.push({ ...w, sampled });
+    }
+    // The grass prepass pairs its own vertex stage with Bevy's default prepass fragment.
+    const gm = desc?.vertex?.module && grassModules.get(desc.vertex.module);
+    if (gm) {
+      const sampled = perLayout.get(desc.layout) ?? null;
+      const pass = desc?.fragment?.module && grassModules.get(desc.fragment.module)?.forward ? "forward" : "prepass";
+      const transmission = ((perLayoutGroups.get(desc.layout) ?? [])[0] ?? []).includes(24);
+      if (!stats.grass.some((k) => k.pass === pass && k.sampled === sampled && k.ibl === gm.ibl && k.transmission === transmission))
+        stats.grass.push({ pass, sampled, ibl: gm.ibl, transmission });
     }
     const bm = desc?.fragment?.module && boidModules.get(desc.fragment.module);
     if (bm) {

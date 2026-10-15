@@ -28,8 +28,8 @@ pub use hex_assets::bevy::{KitLoadFailures, MeshoptGlbPlugin};
 pub use scene::{SceneEntity, TILE_HEIGHT, Tile, Vehicle, setup as setup_scene};
 pub use workload::{
     Ev100, GATE, GateConfig, GateView, GateWorkload, KitHooks, KitSource, Layout, PostMode,
-    ShadowCasters, TiltMode, TiltStrength, Tonemap, parse_cascades, parse_chunk, parse_ibl,
-    parse_shadow_dist, parse_shadows,
+    ShadowCasters, TiltMode, TiltStrength, Tonemap, parse_cascades, parse_chunk, parse_grass,
+    parse_ibl, parse_shadow_dist, parse_shadows,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -144,6 +144,8 @@ impl Plugin for HexRenderPlugin {
         bevy::shader::load_shader_library!(app, "kit_common.wesl");
         bevy::shader::load_shader_library!(app, "water_common.wesl");
         bevy::shader::load_shader_library!(app, "hooks.wesl");
+        bevy::shader::load_shader_library!(app, "wind.wesl");
+        bevy::shader::load_shader_library!(app, "grass_common.wesl");
         app.insert_resource(ActiveScenario(self.scenario))
             .insert_resource(ClearColor(if grade::graded(self.scenario) {
                 self.config.grade.backdrop()
@@ -173,6 +175,7 @@ impl Plugin for HexRenderPlugin {
                 MaterialPlugin::<water::TerrainMaterial>::default(),
                 MaterialPlugin::<play::affordances::AffordanceMaterial>::default(),
                 MaterialPlugin::<play::ghost::GhostMaterial>::default(),
+                MaterialPlugin::<play::grass::GrassMaterial>::default(),
                 hooks::HooksPlugin {
                     hooks: self.config.kit_hooks,
                 },
@@ -191,6 +194,8 @@ impl Plugin for HexRenderPlugin {
             .init_resource::<play::scatter::PlayScatter>()
             .init_resource::<play::scatter::ScatterLayouts>()
             .init_resource::<play::scatter::ScatterReport>()
+            .init_resource::<play::grass::PlayGrass>()
+            .init_resource::<play::grass::GrassReport>()
             .add_message::<play::rise::RiseMessage>()
             .add_systems(Startup, scene::setup)
             .add_systems(
@@ -205,6 +210,7 @@ impl Plugin for HexRenderPlugin {
                     play::finish_kit,
                     play::sync,
                     play::scatter::sync,
+                    play::grass::sync,
                     play::rise::advance,
                     play::rise::animate,
                     play::rise::sink,

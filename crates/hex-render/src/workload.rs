@@ -105,6 +105,12 @@ pub fn parse_shadows(s: &str) -> Option<bool> {
     }
 }
 
+/// `grass=off|sparse|normal|lush` (`on` is normal): grass blade density in play where the tier
+/// allows them (`play::grass`).
+pub fn parse_grass(s: &str) -> Option<crate::play::grass::Density> {
+    crate::play::grass::Density::parse(s)
+}
+
 /// `ibl=on|off`: the noon environment map on the kit camera (D5).
 pub fn parse_ibl(s: &str) -> Option<bool> {
     parse_shadows(s)
@@ -331,6 +337,9 @@ pub struct GateConfig {
     pub tier: crate::post::QualityTier,
     /// Water scenario only: advance water time by a fixed 1/30 s per frame (motion captures).
     pub water_fixed: bool,
+    /// `grass=off|sparse|normal|lush`: grass blade density near the camera in play, on the High
+    /// and Ultra tiers (`play::grass`); `set_grass` changes it live.
+    pub grass: crate::play::grass::Density,
 }
 
 impl Default for GateConfig {
@@ -354,6 +363,7 @@ impl Default for GateConfig {
             tilt_strength: TiltStrength(100),
             tier: crate::post::QualityTier::High,
             water_fixed: false,
+            grass: crate::play::grass::Density::Normal,
         }
     }
 }

@@ -250,6 +250,13 @@ pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Fl
                 v,
                 &mut warnings,
             ),
+            "grass" => set_or_warn(
+                &mut f.gate.grass,
+                hex_render::parse_grass(v),
+                k,
+                v,
+                &mut warnings,
+            ),
             "water_clock" => set_or_warn(
                 &mut f.gate.water_fixed,
                 match v.as_str() {
@@ -345,6 +352,7 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "gpu_timing",
         "water_clock",
         "clock",
+        "grass",
         "photo-export",
     ]
     .iter()

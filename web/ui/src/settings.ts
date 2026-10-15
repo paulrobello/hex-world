@@ -1,12 +1,22 @@
 // Settings (S9, design/ui/legend/settings.html): the Graphics tab (Quality, S9.1, Tilt-shift, S9.4,
-// and Colour grade) and the Audio tab (S9.5). The Controls tab is not built. Graphics reads
+// Colour grade and Grass) and the Audio tab (S9.5). The Controls tab is not built. Graphics reads
 // `state().tier`, `state().tilt` and `state().grade` every frame while open, so the T key, scripts
 // and a loaded save show here too, and writes through the `set_tier`, `tilt` and `set_grade`
 // commands. Audio reads and writes `hexWorld.audio`, which keeps the levels per viewer in
-// localStorage; the colour grade is kept per viewer the same way, outside the world save.
+// localStorage; the colour grade and the grass density are kept per viewer the same way, outside
+// the world save. Grass reads `state().grass` and writes `set_grass`; it draws on High and Ultra only.
 // The World tab (settings-world.ts) holds Start over.
 import type { AudioApi } from "./audio.ts";
-import type { GradeName, GradeState, HexWorld, QualityChoice, TierState, TiltState } from "./bridge.ts";
+import type {
+  GradeName,
+  GradeState,
+  GrassDensity,
+  GrassState,
+  HexWorld,
+  QualityChoice,
+  TierState,
+  TiltState,
+} from "./bridge.ts";
 import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { Rebuild } from "./loading.ts";
@@ -16,8 +26,11 @@ import {
   CHANNELS,
   type Channel,
   GRADE_KEY,
+  GRASS_KEY,
   gradeCommand,
   gradeView,
+  grassCommand,
+  grassView,
   percent,
   qualityView,
   roveIndex,
@@ -40,6 +53,23 @@ function saveGrade(g: GradeName): void {
     localStorage.setItem(GRADE_KEY, g);
   } catch {
     /* Storage refused: the grade holds until the page closes. */
+  }
+}
+
+/** The viewer's stored grass density, or null without one or without storage. */
+export function loadGrass(): string | null {
+  try {
+    return localStorage.getItem(GRASS_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveGrass(d: GrassDensity): void {
+  try {
+    localStorage.setItem(GRASS_KEY, d);
+  } catch {
+    /* Storage refused: the density holds until the page closes. */
   }
 }
 
@@ -82,6 +112,12 @@ export class Settings {
   private gradeSig = "";
   private grade: GradeState | undefined;
   private gradePick: { id: GradeName; until: number } | null = null;
+  private readonly grassList: HTMLUListElement;
+  private readonly grassHint: HTMLElement;
+  private grassSig = "";
+  private grass: GrassState | undefined;
+  private grassOn = false;
+  private grassPick: { id: GrassDensity; until: number } | null = null;
   private readonly rebuild: Rebuild;
 
   constructor(hw: HexWorld, audio: AudioApi | null, onClose: () => void, onChange: () => void, rebuild: Rebuild) {
@@ -153,6 +189,17 @@ export class Settings {
     this.gradeList.addEventListener("keydown", (e) =>
       this.radioKey(e, this.gradeList, "grade", (id) => this.pickGrade(id as GradeName)),
     );
+
+    // ---------- Graphics: Grass ----------
+    this.grassList = h("ul", { class: "tiers", role: "radiogroup", "aria-label": "Grass" });
+    this.grassList.addEventListener("click", (e) => {
+      const li = (e.target as Element).closest<HTMLElement>(".tier");
+      if (li) this.pickGrass(li.dataset.grass as GrassDensity);
+    });
+    this.grassList.addEventListener("keydown", (e) =>
+      this.radioKey(e, this.grassList, "grass", (id) => this.pickGrass(id as GrassDensity)),
+    );
+    this.grassHint = h("p", { class: "tier-reason", hidden: true }, "High and Ultra only.");
     const graphics = h(
       "div",
       { class: "panel", role: "tabpanel" },
@@ -171,6 +218,9 @@ export class Settings {
       this.strengthField,
       this.gradeHead,
       this.gradeList,
+      h("h2", { class: "section-h" }, "Grass"),
+      this.grassList,
+      this.grassHint,
     );
 
     // ---------- Audio ----------
@@ -277,6 +327,7 @@ export class Settings {
     this.tiltSig = "";
     this.tierSig = "";
     this.gradeSig = "";
+    this.grassSig = "";
     this.syncAudio();
     this.tabs.get(this.tab)!.btn.focus({ preventScroll: true });
   }
@@ -296,11 +347,12 @@ export class Settings {
     return this.shown && this.world.escape();
   }
 
-  render(tilt: TiltState | undefined, tier: TierState | undefined, grade?: GradeState): void {
+  render(tilt: TiltState | undefined, tier: TierState | undefined, grade?: GradeState, grass?: GrassState): void {
     if (!this.shown) return;
     if (this.tab === "world") this.world.render();
     this.renderTier(tier);
     this.renderGrade(grade);
+    this.renderGrass(grass, tier);
     if (!tilt) return;
     const sig = `${tilt.enabled}|${tilt.strength}`;
     if (sig === this.tiltSig) return;
@@ -419,8 +471,57 @@ export class Settings {
     this.renderGrade(this.grade);
   }
 
+  private renderGrass(grass: GrassState | undefined, tier: TierState | undefined): void {
+    this.grass = grass;
+    const pick = this.grassPick;
+    if (pick && (grass?.density === pick.id || performance.now() > pick.until)) this.grassPick = null;
+    const v = grassView(grass, tier, this.grassPick?.id ?? null);
+    this.grassOn = v.enabled;
+    const sig = JSON.stringify(v);
+    if (sig === this.grassSig) return;
+    this.grassSig = sig;
+    const focused = (document.activeElement as HTMLElement | null)?.dataset?.grass;
+    this.grassList.replaceChildren(
+      ...v.rows.map((r) => {
+        const on = r.id === v.selected;
+        return h(
+          "li",
+          {
+            class: "tier",
+            role: "radio",
+            tabindex: on && v.enabled ? 0 : -1,
+            "aria-checked": String(on),
+            "aria-disabled": String(!v.enabled),
+            "data-grass": r.id,
+          },
+          h("span", { class: "radio", "aria-hidden": "true" }),
+          h("b", {}, r.name),
+          h("small", {}, r.detail),
+        );
+      }),
+    );
+    this.grassHint.hidden = v.enabled;
+    if (focused) this.grassList.querySelector<HTMLElement>(`[data-grass="${focused}"]`)?.focus({ preventScroll: true });
+  }
+
+  /** A density pick swaps the blades live and is kept for this viewer; it never queues an autosave. */
+  private pickGrass(id: GrassDensity): void {
+    if (!this.grassOn) return;
+    const now = this.grassPick?.id ?? this.grass?.density;
+    if (id === now) return;
+    this.grassPick = { id, until: performance.now() + PICK_HOLD_MS };
+    this.hw.cmd(grassCommand(id));
+    saveGrass(id);
+    this.renderGrass(this.grass, this.tier);
+  }
+
   /** Space and Enter pick the focused row; arrows, Home and End move along the radio list and pick. */
-  private radioKey(e: KeyboardEvent, list: HTMLElement, attr: "tier" | "grade", pick: (id: string) => void): void {
+  private radioKey(
+    e: KeyboardEvent,
+    list: HTMLElement,
+    attr: "tier" | "grade" | "grass",
+    pick: (id: string) => void,
+  ): void {
     const rows = [...list.querySelectorAll<HTMLElement>(".tier")];
     const i = rows.indexOf(document.activeElement as HTMLElement);
     if (i < 0) return;

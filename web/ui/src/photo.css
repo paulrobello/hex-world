@@ -65,6 +65,8 @@
 .tier small { grid-column: 2 / -1; margin-top: -4px; font-size: var(--fs-2); color: var(--ink-3); }
 .tier .tag { font-size: var(--fs-1); font-weight: 700; color: var(--ink-2); }
 .tier .tag--detected { padding: 2px 6px; border-radius: 3px; background: rgb(255 255 255 / .08); }
+.tier[aria-disabled=true] { cursor: default; opacity: .55; }
+.tier[aria-disabled=true]:hover:not([aria-checked=true]) { background: transparent; }
 .tier-reason { margin: 8px 10px 0; font-size: var(--fs-2); color: var(--ink-3); overflow-wrap: anywhere; }
 
 /* ---------- Photo mode: its own overlay root, so the play HUD's hide never takes it ---------- */

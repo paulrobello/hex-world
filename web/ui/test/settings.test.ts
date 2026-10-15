@@ -1,12 +1,17 @@
 // The Settings sheet's model: which quality row is selected from `state().tier`, the rows offered,
 // the detected tier with its reason, the Ultra note, roving keys, the audio channel table, and the
-// colour grade rows with the startup choice between the stored grade and the page address.
+// colour grade rows with the startup choice between the stored grade and the page address, and the
+// grass density rows the same way (disabled below High).
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { GradeState, TierState } from "../src/bridge.ts";
+import type { GradeState, GrassState, TierState } from "../src/bridge.ts";
 import {
   CHANNELS,
   GRADE_KEY,
+  GRASS_KEY,
+  grassCommand,
+  grassView,
+  startupGrass,
   autoTier,
   gradeCommand,
   gradeView,
@@ -198,4 +203,29 @@ test("colour grade at startup: the stored choice, unless the address names one o
   assert.equal(GRADE_KEY, "hexWorld.grade");
   assert.equal(isGrade("rich-3"), true);
   assert.equal(isGrade(undefined), false);
+});
+
+test("grass: four rows Off to Lush, the engine's density checked, disabled below High", () => {
+  const g = { density: "normal" } as GrassState;
+  const v = grassView(g, tier());
+  assert.deepEqual(
+    v.rows.map((r) => r.id),
+    ["off", "sparse", "normal", "lush"],
+  );
+  assert.equal(v.selected, "normal");
+  assert.equal(v.enabled, true);
+  assert.equal(grassView(g, tier({ tier: "ultra" })).enabled, true);
+  assert.equal(grassView(g, tier({ tier: "medium" })).enabled, false, "Medium draws no grass");
+  assert.equal(grassView(g, tier({ tier: "low" })).enabled, false, "Low draws no grass");
+  assert.equal(grassView(g, tier(), "lush").selected, "lush", "a pending pick shows until the engine follows");
+  assert.equal(grassView(undefined, undefined).selected, null);
+  assert.deepEqual(grassCommand("sparse"), { cmd: "set_grass", density: "sparse" });
+});
+
+test("grass at startup: the stored density, unless the address names one or it is unknown", () => {
+  assert.equal(startupGrass("", "lush"), "lush");
+  assert.equal(startupGrass("?scenario=play&grass=sparse", "lush"), null, "?grass= wins for the visit");
+  assert.equal(startupGrass("", null), null);
+  assert.equal(startupGrass("", "thick"), null, "a stale name never reaches the engine");
+  assert.equal(GRASS_KEY, "hexWorld.grass");
 });

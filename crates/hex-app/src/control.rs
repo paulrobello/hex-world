@@ -76,6 +76,12 @@ pub enum Command {
     SetGrade {
         grade: String,
     },
+    /// Grass density at runtime (`off`, `sparse`, `normal`, `lush`; `hex_render::play::grass`):
+    /// each tile's blade mesh swaps from its seeded set with no scene rebuild. The Settings sheet
+    /// sends this; the overlay keeps the choice per viewer, not in the world save.
+    SetGrass {
+        density: String,
+    },
     /// Reduced motion (`prefers-reduced-motion` or the Settings override, sent by the overlay):
     /// the staged rise and every affordance transition become instant cuts, with no breathing,
     /// dust or camera shake.
@@ -352,6 +358,12 @@ pub fn run_commands(
             }),
             None => warn!("set_grade command: unknown grade '{grade}', skipped"),
         },
+        Command::SetGrass { density } => match hex_render::play::grass::Density::parse(&density) {
+            Some(d) => commands.queue(move |w: &mut World| {
+                w.resource_mut::<hex_render::GateConfig>().grass = d;
+            }),
+            None => warn!("set_grass command: unknown density '{density}', skipped"),
+        },
         Command::SetReducedMotion { on } => reduced.0 = on,
         Command::Photo {
             dof,
@@ -492,11 +504,12 @@ pub fn publish_state(
         Option<Res<hex_render::play::ghost::GhostDrawn>>,
     ),
     views: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
-    (boids, scatter, tier, ghost_report): (
+    (boids, scatter, tier, ghost_report, grass): (
         Option<Res<hex_render::boids::BoidReport>>,
         Option<Res<hex_render::play::scatter::ScatterReport>>,
         Res<hex_render::tier::TierChoice>,
         Option<Res<hex_render::play::ghost::GhostReport>>,
+        Option<Res<hex_render::play::grass::GrassReport>>,
     ),
     (photo, session, exports, paused, kit_failures): (
         Res<PhotoSettings>,
@@ -567,6 +580,7 @@ pub fn publish_state(
         "boids": boids.and_then(|b| serde_json::from_str::<serde_json::Value>(&b.0).ok()),
         "scatter": scatter.filter(|_| play)
             .and_then(|s| serde_json::from_str::<serde_json::Value>(&s.0).ok()),
+        "grass": grass.and_then(|g| serde_json::from_str::<serde_json::Value>(&g.0).ok()),
         "assets": { "failed": kit_failures.map(|f| f.list()).unwrap_or_default() },
     });
     *bridge::STATE_JSON.lock().unwrap() = state.to_string();

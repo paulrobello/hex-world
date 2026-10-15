@@ -17,6 +17,9 @@ export type QualityChoice = "auto" | TierName;
 /** The named looks (tone mapper, exposure and grading), in the engine's display order (`hex_render::Grade::ALL`). */
 export const GRADES = ["aces", "tony", "rich-1", "rich-2", "rich-3"] as const;
 export type GradeName = (typeof GRADES)[number];
+/** Grass densities, Off to Lush (`hex_render::play::grass::Density::ALL`). */
+export const GRASS = ["off", "sparse", "normal", "lush"] as const;
+export type GrassDensity = (typeof GRASS)[number];
 /** Where the tier in force came from (`docs/agent-operability.md`, "Quality tier"). */
 export type TierSource = "default" | "explicit" | "detected" | "probe" | "runtime";
 
@@ -77,6 +80,7 @@ export type Command =
   | { cmd: "dump_state"; name: string }
   | { cmd: "set_tier"; tier: QualityChoice }
   | { cmd: "set_grade"; grade: GradeName }
+  | { cmd: "set_grass"; density: GrassDensity }
   | { cmd: "set_reduced_motion"; on: boolean }
   | { cmd: "exit" }
   | { cmd: "select_tile"; id: string }
@@ -324,6 +328,32 @@ export interface GradeState {
   presets: GradePreset[];
 }
 
+/** One tile holding a blade mesh in `state().grass.tiles`. */
+export interface GrassTile {
+  q: number;
+  r: number;
+  tile: string;
+  blades: number;
+  area_m2: number;
+  layout: string;
+}
+
+/** `state().grass`: the density, why grass draws or not (`on`, `off`, `tier`, `scenario`), and its meshes. */
+export interface GrassState {
+  density: GrassDensity;
+  status: "on" | "off" | "tier" | "scenario";
+  groups: number;
+  blades: number;
+  mesh_bytes: number;
+  per_m2: number;
+  thin: number[];
+  fade: number[];
+  build_radius: number;
+  /** The slowest single tile build (seeded set and mesh, ms) in the latest frame that built one. */
+  last_build_ms: number;
+  tiles: GrassTile[];
+}
+
 /** `hexWorld.state()`: only the fields the overlay reads; the rest are documented in docs/agent-operability.md. */
 export interface State {
   scenario?: string;
@@ -333,6 +363,7 @@ export interface State {
   tilt?: TiltState;
   tier?: TierState;
   grade?: GradeState;
+  grass?: GrassState;
   /** The game camera: position and unit forward vector in world metres. */
   camera?: { pos: Vec3; forward: Vec3 } | null;
 }
@@ -375,6 +406,7 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   dump_state: keys<CommandOf<"dump_state">>({ name: true }),
   set_tier: keys<CommandOf<"set_tier">>({ tier: true }),
   set_grade: keys<CommandOf<"set_grade">>({ grade: true }),
+  set_grass: keys<CommandOf<"set_grass">>({ density: true }),
   set_reduced_motion: keys<CommandOf<"set_reduced_motion">>({ on: true }),
   exit: keys<CommandOf<"exit">>({}),
   select_tile: keys<CommandOf<"select_tile">>({ id: true }),
@@ -443,6 +475,7 @@ export const ENUMS = {
   dof: keys<Record<Dof, true>>({ off: true, tilt: true, manual: true }),
   // Display order, not sorted: the schema lists the presets as the engine shows them.
   grade: [...GRADES],
+  grass: [...GRASS],
 };
 
 export const STATE_FIELDS = {
@@ -516,4 +549,17 @@ export const STATE_FIELDS = {
   }),
   grade: keys<GradeState>({ name: true, default: true, presets: true }),
   grade_preset: keys<GradePreset>({ name: true, detail: true }),
+  grass: keys<GrassState>({
+    density: true,
+    status: true,
+    groups: true,
+    blades: true,
+    mesh_bytes: true,
+    per_m2: true,
+    thin: true,
+    fade: true,
+    build_radius: true,
+    last_build_ms: true,
+    tiles: true,
+  }),
 };

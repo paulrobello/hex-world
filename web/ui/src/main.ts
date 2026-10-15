@@ -7,8 +7,8 @@ import { Hud } from "./hud.ts";
 import { sprite } from "./icons.ts";
 import { Loading } from "./loading.ts";
 import { Persistence } from "./persist.ts";
-import { loadGrade } from "./settings.ts";
-import { gradeCommand, startupGrade, tierBusy } from "./settings-model.ts";
+import { loadGrade, loadGrass } from "./settings.ts";
+import { gradeCommand, grassCommand, startupGrade, startupGrass, tierBusy } from "./settings-model.ts";
 import { idbFactory, openSlots } from "./slots.ts";
 
 type Bridge = HexWorld & { audio?: AudioApi };
@@ -73,6 +73,9 @@ function run(root: HTMLElement, hw: Bridge): void {
   // The viewer's colour grade; a `grade` key in the address wins and leaves the stored choice alone.
   const grade = startupGrade(location.search, loadGrade());
   if (grade) hw.cmd(gradeCommand(grade));
+  // The viewer's grass density, the same way: a `grass` key in the address wins for the visit.
+  const grass = startupGrass(location.search, loadGrass());
+  if (grass) hw.cmd(grassCommand(grass));
   let hud: Hud | null = null;
   let persist: Persistence | null = null;
   hw.watchEvents((batch) => {

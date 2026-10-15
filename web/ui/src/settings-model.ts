@@ -4,8 +4,11 @@
 // targets. The colour grade rows take their descriptions from the engine.
 import {
   GRADES,
+  GRASS,
   type GradeName,
   type GradeState,
+  type GrassDensity,
+  type GrassState,
   type QualityChoice,
   type TierName,
   type TierState,
@@ -166,6 +169,59 @@ export const isGrade = (v: string | null | undefined): v is GradeName =>
 export function startupGrade(search: string, stored: string | null): GradeName | null {
   if (new URLSearchParams(search).has("grade")) return null;
   return isGrade(stored) ? stored : null;
+}
+
+/** The viewer's grass density in localStorage; it is not part of the world save. */
+export const GRASS_KEY = "hexWorld.grass";
+
+export interface GrassRow {
+  id: GrassDensity;
+  name: string;
+  detail: string;
+}
+
+export const GRASS_ROWS: GrassRow[] = [
+  { id: "off", name: "Off", detail: "Bare ground textures only." },
+  { id: "sparse", name: "Sparse", detail: "Half the blades." },
+  { id: "normal", name: "Normal", detail: "The meadow as tuned." },
+  { id: "lush", name: "Lush", detail: "One and a half times the blades. Costs the most." },
+];
+
+export interface GrassView {
+  /** The checked row: a pending pick until `state().grass.density` follows, else the engine's. */
+  selected: GrassDensity | null;
+  /** Grass draws only on High and Ultra: the rows are disabled below. */
+  enabled: boolean;
+  rows: GrassRow[];
+}
+
+export function grassView(
+  g: GrassState | undefined,
+  tier: TierState | undefined,
+  pick: GrassDensity | null = null,
+): GrassView {
+  return {
+    selected: pick ?? g?.density ?? null,
+    enabled: tier?.tier === "high" || tier?.tier === "ultra",
+    rows: GRASS_ROWS,
+  };
+}
+
+export const grassCommand = (density: GrassDensity): { cmd: "set_grass"; density: GrassDensity } => ({
+  cmd: "set_grass",
+  density,
+});
+
+export const isGrass = (v: string | null | undefined): v is GrassDensity =>
+  (GRASS as readonly string[]).includes(v ?? "");
+
+/**
+ * The density to send at startup: the stored choice, unless the page address names one (`?grass=`
+ * is read by the engine itself and wins) or the stored value is not a known density.
+ */
+export function startupGrass(search: string, stored: string | null): GrassDensity | null {
+  if (new URLSearchParams(search).has("grass")) return null;
+  return isGrass(stored) ? stored : null;
 }
 
 /** Arrow keys over a roving group of `n` items (tabs, tier radios): the index to move to, or null. */

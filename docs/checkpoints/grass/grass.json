@@ -1,0 +1,568 @@
+[
+{
+"cmd": "camera",
+"pos": [
+20,
+160,
+150
+],
+"look_at": [
+20,
+0,
+-5
+]
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "select_tile",
+"id": "forest"
+},
+{
+"cmd": "place",
+"q": 1,
+"r": 0
+},
+{
+"cmd": "select_tile",
+"id": "oak"
+},
+{
+"cmd": "place",
+"q": 2,
+"r": 0
+},
+{
+"cmd": "select_tile",
+"id": "forest"
+},
+{
+"cmd": "place",
+"q": 1,
+"r": -1
+},
+{
+"cmd": "place",
+"q": 2,
+"r": -1
+},
+{
+"cmd": "select_tile",
+"id": "oak"
+},
+{
+"cmd": "place",
+"q": 3,
+"r": -1
+},
+{
+"cmd": "select_tile",
+"id": "forest"
+},
+{
+"cmd": "place",
+"q": 3,
+"r": 0
+},
+{
+"cmd": "place",
+"q": 0,
+"r": -1
+},
+{
+"cmd": "select_tile",
+"id": "meadow"
+},
+{
+"cmd": "place",
+"q": -1,
+"r": 0
+},
+{
+"cmd": "select_tile",
+"id": "river_straight"
+},
+{
+"cmd": "place",
+"q": -1,
+"r": -1
+},
+{
+"cmd": "select_tile",
+"id": "road_straight"
+},
+{
+"cmd": "place",
+"q": 1,
+"r": -2
+},
+{
+"cmd": "place",
+"q": 2,
+"r": -2
+},
+{
+"cmd": "select_tile",
+"id": "house_cluster"
+},
+{
+"cmd": "place",
+"q": 3,
+"r": -2
+},
+{
+"cmd": "select_tile",
+"id": "meadow"
+},
+{
+"cmd": "place",
+"q": -1,
+"r": 1
+},
+{
+"cmd": "place",
+"q": 0,
+"r": 1
+},
+{
+"cmd": "place",
+"q": 1,
+"r": 1
+},
+{
+"cmd": "place",
+"q": 0,
+"r": 2
+},
+{
+"cmd": "place",
+"q": -1,
+"r": 2
+},
+{
+"cmd": "select_tile",
+"id": "forest"
+},
+{
+"cmd": "place",
+"q": 2,
+"r": 1
+},
+{
+"cmd": "hover",
+"q": 9,
+"r": -9
+},
+{
+"cmd": "toggle",
+"what": "photo"
+},
+{
+"cmd": "photo",
+"dof": "off",
+"pause_agents": false
+},
+{
+"cmd": "wait",
+"frames": 300
+},
+{
+"cmd": "camera",
+"pos": [
+22,
+7,
+42
+],
+"look_at": [
+14,
+0,
+24
+]
+},
+{
+"cmd": "wait",
+"frames": 40
+},
+{
+"cmd": "screenshot",
+"name": "grass-01-meadow"
+},
+{
+"cmd": "camera",
+"pos": [
+52,
+6,
+36
+],
+"look_at": [
+66,
+0,
+22
+]
+},
+{
+"cmd": "wait",
+"frames": 40
+},
+{
+"cmd": "screenshot",
+"name": "grass-02-forest"
+},
+{
+"cmd": "camera",
+"pos": [
+14,
+7,
+-34
+],
+"look_at": [
+14,
+0,
+-48
+]
+},
+{
+"cmd": "wait",
+"frames": 40
+},
+{
+"cmd": "screenshot",
+"name": "grass-03-road-verge"
+},
+{
+"cmd": "camera",
+"pos": [
+-28,
+7,
+-12
+],
+"look_at": [
+-41.6,
+0,
+-24
+]
+},
+{
+"cmd": "wait",
+"frames": 40
+},
+{
+"cmd": "screenshot",
+"name": "grass-04-river-bank"
+},
+{
+"cmd": "camera",
+"pos": [
+20.8,
+7,
+37.5
+],
+"look_at": [
+20.8,
+0,
+36
+]
+},
+{
+"cmd": "wait",
+"frames": 40
+},
+{
+"cmd": "screenshot",
+"name": "grass-11-border-meadow"
+},
+{
+"cmd": "camera",
+"pos": [
+55.4,
+7,
+25.5
+],
+"look_at": [
+55.4,
+0,
+24
+]
+},
+{
+"cmd": "wait",
+"frames": 40
+},
+{
+"cmd": "screenshot",
+"name": "grass-12-border-forest"
+},
+{
+"cmd": "camera",
+"pos": [
+2,
+1.7,
+40
+],
+"look_at": [
+14,
+1.0,
+22
+]
+},
+{
+"cmd": "wait",
+"frames": 40
+},
+{
+"cmd": "screenshot",
+"name": "grass-05-eye"
+},
+{
+"cmd": "dump_state",
+"name": "grass-state-05-eye"
+},
+{
+"cmd": "camera",
+"pos": [
+14,
+16,
+64
+],
+"look_at": [
+14,
+0,
+18
+]
+},
+{
+"cmd": "wait",
+"frames": 40
+},
+{
+"cmd": "screenshot",
+"name": "grass-07-midzoom"
+},
+{
+"cmd": "camera",
+"pos": [
+14,
+4,
+54
+],
+"look_at": [
+14,
+0.5,
+28
+]
+},
+{
+"cmd": "wait",
+"frames": 40
+},
+{
+"cmd": "screenshot",
+"name": "grass-08-gust-1"
+},
+{
+"cmd": "wait",
+"frames": 75
+},
+{
+"cmd": "screenshot",
+"name": "grass-08-gust-2"
+},
+{
+"cmd": "wait",
+"frames": 75
+},
+{
+"cmd": "screenshot",
+"name": "grass-08-gust-3"
+},
+{
+"cmd": "wait",
+"frames": 75
+},
+{
+"cmd": "screenshot",
+"name": "grass-08-gust-4"
+},
+{
+"cmd": "dump_state",
+"name": "grass-state-08-gust"
+},
+{
+"cmd": "set_grass",
+"density": "sparse"
+},
+{
+"cmd": "wait",
+"frames": 20
+},
+{
+"cmd": "camera",
+"pos": [
+2,
+1.7,
+40
+],
+"look_at": [
+14,
+1.0,
+22
+]
+},
+{
+"cmd": "wait",
+"frames": 10
+},
+{
+"cmd": "screenshot",
+"name": "grass-10-eye-sparse"
+},
+{
+"cmd": "dump_state",
+"name": "grass-state-10-sparse"
+},
+{
+"cmd": "set_grass",
+"density": "lush"
+},
+{
+"cmd": "wait",
+"frames": 20
+},
+{
+"cmd": "camera",
+"pos": [
+2,
+1.7,
+40
+],
+"look_at": [
+14,
+1.0,
+22
+]
+},
+{
+"cmd": "wait",
+"frames": 10
+},
+{
+"cmd": "screenshot",
+"name": "grass-10-eye-lush"
+},
+{
+"cmd": "dump_state",
+"name": "grass-state-10-lush"
+},
+{
+"cmd": "set_grass",
+"density": "normal"
+},
+{
+"cmd": "wait",
+"frames": 20
+},
+{
+"cmd": "set_tier",
+"tier": "low"
+},
+{
+"cmd": "wait",
+"frames": 90
+},
+{
+"cmd": "camera",
+"pos": [
+2,
+1.7,
+40
+],
+"look_at": [
+14,
+1.0,
+22
+]
+},
+{
+"cmd": "wait",
+"frames": 40
+},
+{
+"cmd": "screenshot",
+"name": "grass-09-low"
+},
+{
+"cmd": "dump_state",
+"name": "grass-state-09-low"
+},
+{
+"cmd": "set_tier",
+"tier": "high"
+},
+{
+"cmd": "wait",
+"frames": 90
+},
+{
+"cmd": "toggle",
+"what": "photo"
+},
+{
+"cmd": "camera",
+"pos": [
+22,
+7,
+42
+],
+"look_at": [
+14,
+0,
+24
+]
+},
+{
+"cmd": "select_tile",
+"id": "meadow"
+},
+{
+"cmd": "place",
+"q": 1,
+"r": 2
+},
+{
+"cmd": "wait",
+"frames": 150
+},
+{
+"cmd": "dump_state",
+"name": "grass-state-11-placed"
+},
+{
+"cmd": "bulldoze",
+"q": 1,
+"r": 2
+},
+{
+"cmd": "wait",
+"frames": 240
+},
+{
+"cmd": "dump_state",
+"name": "grass-state-12-bulldozed"
+},
+{
+"cmd": "new_world"
+},
+{
+"cmd": "wait",
+"frames": 60
+},
+{
+"cmd": "dump_state",
+"name": "grass-state-13-start-over"
+},
+{
+"cmd": "exit"
+}
+]

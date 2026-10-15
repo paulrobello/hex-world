@@ -467,6 +467,9 @@
     "set_grade": [
       "grade"
     ],
+    "set_grass": [
+      "density"
+    ],
     "set_reduced_motion": [
       "on"
     ],
@@ -526,6 +529,12 @@
       "rich-1",
       "rich-2",
       "rich-3"
+    ],
+    "grass": [
+      "off",
+      "sparse",
+      "normal",
+      "lush"
     ],
     "spin": [
       "ccw",
@@ -677,6 +686,19 @@
     "grade_preset": [
       "detail",
       "name"
+    ],
+    "grass": [
+      "blades",
+      "build_radius",
+      "density",
+      "fade",
+      "groups",
+      "last_build_ms",
+      "mesh_bytes",
+      "per_m2",
+      "status",
+      "thin",
+      "tiles"
     ],
     "hovered_kind": [
       "empty",

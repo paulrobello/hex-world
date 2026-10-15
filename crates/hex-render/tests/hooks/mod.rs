@@ -513,6 +513,7 @@ const HOOKED: &[(&str, &[Need])] = &[
         "assets/shaders/water.wesl",
         &[Need::Freeze, Need::TimeOfDay],
     ),
+    ("assets/shaders/grass.wesl", &[Need::TimeOfDay]),
     ("crates/hex-render/src/hooks.wesl", &[Need::Library]),
 ];
 
@@ -554,6 +555,18 @@ const SHADER_EXEMPT: &[(&str, &str)] = &[
     (
         "crates/hex-render/src/water_common.wesl",
         "library: wave functions, no surface",
+    ),
+    (
+        "assets/shaders/grass_prepass.wesl",
+        "depth/normal/motion prepass of the grass blades: the hooks change colour, not depth or normals",
+    ),
+    (
+        "crates/hex-render/src/grass_common.wesl",
+        "library: the grass blade pose and uniform, no surface",
+    ),
+    (
+        "crates/hex-render/src/wind.wesl",
+        "library: the shared wind field, no surface",
     ),
 ];
 

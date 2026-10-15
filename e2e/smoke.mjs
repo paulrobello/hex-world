@@ -50,6 +50,9 @@ const KIT_SAMPLED_WITH_WATER = { forward: KIT_SAMPLED.ibl.forward + 1, prepass: 
 // Measured fragment-stage sampled textures of the water scenario's pipelines with post=full and the
 // IBL. The view layout sets them: High adds SSAO (its texture and the normal prepass), refracting
 // tiers (High, Medium) add the transmission texture; each material binds one texture.
+// Measured fragment-stage sampled textures of the grass pipelines in play beside refracting water: the
+// view's textures alone (the material binds none), below the kit forward's 16.
+const GRASS_SAMPLED_WITH_WATER = { forward: 9, prepass: 0 };
 const WATER_SAMPLED = { high: { water: 10, terrain: 10 }, medium: { water: 8, terrain: 8 }, low: { water: 7, terrain: 7 } };
 // Handle-let aliases per rewritten module in a water scenario run: neither water shader composes
 // StandardMaterial's PBR input (the marker probe checks the water module keeps none), but the boid
@@ -519,10 +522,30 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     console.log(`${tag}: ghost ${JSON.stringify(ghost)}`);
     if (ghost.meshes !== true || ghost.at?.q !== -2 || ghost.at?.r !== 0)
       fail(`${tag}: the ghost at (-2, 0) is not drawn with its meshes: ${JSON.stringify(ghost)}`);
+    // Grass blades (crates/hex-render/src/play/grass.rs, one uniform and no texture) near a low camera
+    // over the start meadow beside refracting water: their forward and prepass pipelines are created
+    // under the same clamp and sample only the view's textures.
+    await page.evaluate(() => window.hexWorld.cmd({ cmd: "camera", pos: [6, 6, 16], look_at: [0, 0, 0] }));
+    const grassBy = Date.now() + 30_000;
+    while (Date.now() < grassBy && !(await page.evaluate(() => {
+      const g = window.hexWorld.state().grass;
+      const s = window.__sampledTextures?.grass ?? [];
+      return g?.groups > 0 && s.some((k) => k.pass === "forward" && k.ibl) && s.some((k) => k.pass === "prepass");
+    }))) await page.waitForTimeout(200);
+    await page.waitForTimeout(1_000);
     const { sampled, limit, state } = await page.evaluate(() => ({
       sampled: window.__sampledTextures, limit: window.__deviceSampledLimit, state: window.hexWorld.state() }));
     console.log(`${tag}: tiles ${state.tiles}; sampled textures per stage max ${sampled?.max}, kit pipelines ` +
       `${JSON.stringify(sampled?.kit)}, water pipelines ${JSON.stringify(sampled?.water)}; state.gpu ${JSON.stringify(state.gpu)}`);
+    console.log(`${tag}: grass ${JSON.stringify({ status: state.grass?.status, groups: state.grass?.groups, blades: state.grass?.blades })}, ` +
+      `grass pipelines ${JSON.stringify(sampled?.grass)}`);
+    if (!(state.grass?.groups > 0)) fail(`${tag}: no grass mesh near the camera: ${JSON.stringify(state.grass)}`);
+    for (const pass of ["forward", "prepass"]) {
+      const got = (sampled?.grass ?? []).filter((k) => k.pass === pass && (pass === "prepass" || k.ibl));
+      if (!got.length) fail(`${tag}: no grass ${pass} pipeline was created`);
+      else if (!got.every((k) => k.sampled === GRASS_SAMPLED_WITH_WATER[pass]))
+        fail(`${tag}: grass ${pass} pipeline uses ${got.map((k) => k.sampled)} sampled textures, expected ${GRASS_SAMPLED_WITH_WATER[pass]}`);
+    }
     if (state.scenario !== "Play" || state.tiles !== 5) fail(`${tag}: state scenario ${state.scenario}, tiles ${state.tiles}`);
     // Birds over the start world and fish in the river and ocean tiles: the boid forward pipeline
     // beside refracting water binds the transmission texture, at exactly 16.

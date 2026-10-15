@@ -227,6 +227,7 @@ mod schema {
         r#"{"cmd":"dump_state","name":"s"}"#,
         r#"{"cmd":"set_tier","tier":"low"}"#,
         r#"{"cmd":"set_grade","grade":"rich-1"}"#,
+        r#"{"cmd":"set_grass","density":"lush"}"#,
         r#"{"cmd":"set_reduced_motion","on":true}"#,
         r#"{"cmd":"exit"}"#,
         r#"{"cmd":"select_tile","id":"meadow"}"#,
@@ -263,6 +264,7 @@ mod schema {
             Command::DumpState { .. } => "dump_state",
             Command::SetTier { .. } => "set_tier",
             Command::SetGrade { .. } => "set_grade",
+            Command::SetGrass { .. } => "set_grass",
             Command::SetReducedMotion { .. } => "set_reduced_motion",
             Command::Exit => "exit",
             Command::SelectTile { .. } => "select_tile",
@@ -521,6 +523,13 @@ mod schema {
             None,
         );
         let grade = crate::control::grade_json(hex_render::Grade::default());
+        let grass: Value = serde_json::from_str(&hex_render::play::grass::report(
+            &Default::default(),
+            Default::default(),
+            "on",
+            0,
+        ))
+        .unwrap();
         let walk = crate::walk::state_json(
             &crate::walk::WalkSession::default(),
             &hex_render::walk::WalkGround::default(),
@@ -528,6 +537,7 @@ mod schema {
         json!({
             "walk": keys(&walk),
             "grade": keys(&grade),
+            "grass": keys(&grass),
             "grade_preset": keys(&grade["presets"][0]),
             "play": keys(&place),
             "ghost": keys(&place["ghost"]),
@@ -651,6 +661,7 @@ mod schema {
                 "dof": serde_variants::<crate::photo::Dof>(r#""__none__""#),
                 "edge_status": edge_status_names(),
                 "grade": hex_render::Grade::ALL.iter().map(|g| g.name()).collect::<Vec<_>>(),
+                "grass": hex_render::play::grass::Density::ALL.iter().map(|d| d.name()).collect::<Vec<_>>(),
             },
             "state": play_shapes(),
             "catalog": catalog(&c),

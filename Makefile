@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-first-person
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person
 
 fmt:
 	cargo fmt --all
@@ -380,6 +380,14 @@ perf-water-world: build-web
 	cd e2e && npm ci --no-audit --no-fund
 	caffeinate -d -u node e2e/perf-water-world.mjs dist target/release/hex-world
 
+# Grass cost (crates/hex-render/src/play/grass.rs): e2e/perf-grass.mjs builds the ~2,000-tile play
+# water world (radius 26) at 2560x1440 on High and reads uncapped GPU Chromium from a low camera over
+# the start meadows with grass off, normal and lush, every run inside the host-load guard; writes
+# docs/perf/p2-grass.json (PERF_OUT, GRASS_ROUNDS, GRASS_RADIUS, GRASS_ARMS).
+perf-grass: build-web
+	cd e2e && npm ci --no-audit --no-fund
+	caffeinate -d -u node e2e/perf-grass.mjs dist
+
 # Play scenario checkpoint (P2 placement loop): runs the scripted proof docs/checkpoints/play/play.json
 # at 1280x800 with tilt-shift off, then copies JPEG stills and the state dumps next to it.
 PLAY_SHOTS = play-01-start play-02-ghost-road play-03-placed play-04-illegal-ghost play-05-undo play-06-redo play-07-bulldoze-leaf play-08-bulldoze-bridge
@@ -550,6 +558,26 @@ shots-boids:
 	cp target/shots/boids-*.json $(BOIDS_DOCS)/
 	node $(BOIDS_DOCS)/check.mjs $(BOIDS_DOCS)
 	@echo "wrote $(BOIDS_DOCS)/"
+
+# Grass checkpoint (crates/hex-render/src/play/grass.rs): docs/checkpoints/grass/grass.json on the
+# scatter checkpoint's world at 1280x800, High, rich-3, fixed clocks and tilt-shift off: meadow,
+# forest margin, road verge and river bank close-ups, straight down across two tile borders, an eye-level view, a mid-zoom showing the fade,
+# a gust over the meadows in four frames 1.25 s apart, Low (no grass), then the place, bulldoze and
+# Start over dumps; grass-off.json repeats the eye-level view with --grass off. A GPU capture:
+# check the host load is at or below 15 first.
+GRASS_SHOTS = grass-01-meadow grass-02-forest grass-03-road-verge grass-04-river-bank grass-05-eye grass-06-eye-off grass-07-midzoom grass-08-gust-1 grass-08-gust-2 grass-08-gust-3 grass-08-gust-4 grass-09-low grass-10-eye-sparse grass-10-eye-lush grass-11-border-meadow grass-12-border-forest
+GRASS_DOCS = docs/checkpoints/grass
+GRASS_RUN = caffeinate -d -u cargo run -p hex-app --release -- --scenario play --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed --tier high --grade rich-3
+
+shots-grass:
+	mkdir -p target/shots $(GRASS_DOCS)
+	rm -f target/shots/grass-*.png target/shots/grass-*.json
+	$(GRASS_RUN) --script $(GRASS_DOCS)/grass.json $(ARGS)
+	$(GRASS_RUN) --script $(GRASS_DOCS)/grass-off.json --grass off $(ARGS)
+	@for n in $(GRASS_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(GRASS_DOCS)/$$n.jpg || exit 1; done
+	cp target/shots/grass-state-*.json $(GRASS_DOCS)/
+	@echo "wrote $(GRASS_DOCS)/"
 
 # Scatter checkpoint (PRD §5.3, crates/hex-render/src/play/scatter.rs): runs
 # docs/checkpoints/scatter/scatter.json at 1600x1000 with tilt-shift off and fixed clocks (a cluster
