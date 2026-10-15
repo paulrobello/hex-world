@@ -15,7 +15,7 @@
     },
     {
       "path": "scripts/blender/kit/_mouth_dress.py",
-      "sha256": "437ec622d57200d95b74c1f127e2a76eb1b6e6ca9c5623f5408cb89cf1ed1615"
+      "sha256": "d97a8dbc854f45fd88f85968fbca74bd23a0e4176a77a733ac3fdc756b3b1fa2"
     },
     {
       "path": "scripts/blender/kit/_mouth_profile.py",
@@ -27,7 +27,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "0d53eca52a3aece787acd7349e09c47cfdebf19530c145aef47e824ebddc1fac"
+      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
     }
   ],
   "lodTris": {

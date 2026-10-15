@@ -180,6 +180,12 @@ pub struct Slot {
     /// darkens and glosses where the swash runs up, as on the look-dev's placeholder bed.
     #[serde(default)]
     pub wet_band: bool,
+    /// Sways in the shared wind (PRD §9.1 foliage sway): the amplitude in metres per unit of wind
+    /// push, read with the mesh's TEXCOORD_1 (`wind`: U sway weight, V phase). A tree piece leans
+    /// from its trunk base by height and flexes its branches by U; any other piece bends by U².
+    /// Every slot of one plant takes the same value so its parts move together.
+    #[serde(default)]
+    pub wind: Option<f32>,
 }
 
 #[derive(Deserialize, Debug, Clone)]

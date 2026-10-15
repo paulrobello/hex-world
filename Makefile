@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind
 
 fmt:
 	cargo fmt --all
@@ -283,6 +283,13 @@ web-shots: build-web
 # The kit scenario's shots. ARGS / QUERY pass kit keys, e.g. ARGS="--kit_src fixture" and
 # QUERY="kit_src=fixture" for the gate fixture.
 KIT_SHOTS = kit-overview kit-seam-closeup kit-tree kit-tree-under kit-tree-game kit-lod1 kit-lod2
+# Foliage wind evidence (PRD §9.1): fixed-clock frame pairs of a pine forest, the hero oak, its
+# shadow, a river reed bed and wildflowers, with a difference image per pair, into
+# docs/checkpoints/foliage-wind/ (shoot.sh).
+shots-foliage-wind:
+	cargo build -p hex-app --release
+	docs/checkpoints/foliage-wind/shoot.sh target/release/hex-world
+
 shots-kit:
 	mkdir -p target/shots
 	rm -f target/shots/kit-*.png

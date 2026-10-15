@@ -14,7 +14,7 @@ struct KitParams {
     night: f32,
     water_time: f32,
     wash_amp: f32,
-    _pad0: f32,
+    wind_amp: f32,
 }
 
 const FLAG_TILEABLE: u32 = 1u;
@@ -23,6 +23,10 @@ const FLAG_MASKS: u32 = 2u;
 const FLAG_FOLIAGE: u32 = 4u;
 // Coast-bed sand: the live swash wet band (kit_material.wesl), on the water's clock in `water_time`.
 const FLAG_WET_BAND: u32 = 8u;
+// Sways in the wind (hex_render::foliage_wind, in the vertex stage of every pass) with amplitude
+// `wind_amp`: a tree leans from its base by height and flexes by TEXCOORD_1 U, a plant bends by U².
+const FLAG_WIND_TREE: u32 = 16u;
+const FLAG_WIND_PLANT: u32 = 32u;
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> kit: KitParams;
 

@@ -16,11 +16,13 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderType},
     shader::ShaderRef,
 };
-use hex_assets::{Channel, KitManifest, PieceEntry, Slot, TextureFamily, map_file};
+use hex_assets::{Channel, KitManifest, PieceEntry, PieceKind, Slot, TextureFamily, map_file};
 
 use crate::workload::KitHooks;
 
 pub const SHADER: &str = "shaders/kit_material.wesl";
+/// Forward vertex stage: Bevy's mesh vertex plus the foliage wind (`foliage_wind.wesl`).
+pub const VERTEX_SHADER: &str = "shaders/kit_vertex.wesl";
 /// Writes the tileable slots' world-space tiled normal into the normal prepass (SSAO reads it);
 /// other slots keep StandardMaterial's prepass. Shares `kit_common.wesl` with `SHADER`.
 pub const PREPASS_SHADER: &str = "shaders/kit_prepass.wesl";
@@ -31,6 +33,11 @@ pub const FLAG_FOLIAGE: u32 = 4;
 /// Coast-bed sand (`Slot::wet_band`): the live swash wet band of the look-dev's placeholder bed,
 /// on the water surface's clock (`water::tick`).
 pub const FLAG_WET_BAND: u32 = 8;
+/// Sways as part of a tree (`Slot::wind` on a tree piece): leans from the trunk base by height and
+/// flexes its branches by TEXCOORD_1 U (`foliage_wind.wesl`), in the vertex stage of every pass.
+pub const FLAG_WIND_TREE: u32 = 16;
+/// Sways as a plant (`Slot::wind` on any other piece): bends by TEXCOORD_1 U squared.
+pub const FLAG_WIND_PLANT: u32 = 32;
 
 pub type KitMaterial = ExtendedMaterial<StandardMaterial, KitExt>;
 
@@ -45,7 +52,8 @@ pub struct KitParams {
     pub water_time: f32,
     /// Swash amplitude (m) of the wet band (`water::WASH_AMP`); 0 on other slots.
     pub wash_amp: f32,
-    pub _pad0: f32,
+    /// Wind amplitude (m per unit wind push, `Slot::wind`); 0 on still slots.
+    pub wind_amp: f32,
 }
 
 #[derive(Asset, AsBindGroup, Reflect, Debug, Clone, Default)]
@@ -58,6 +66,16 @@ pub struct KitExt {
 }
 
 impl MaterialExtension for KitExt {
+    fn vertex_shader() -> ShaderRef {
+        VERTEX_SHADER.into()
+    }
+
+    /// The same shader as the prepass fragment: one module, so depth, normals, motion vectors
+    /// and every shadow cascade displace each vertex with the forward pass's expressions.
+    fn prepass_vertex_shader() -> ShaderRef {
+        PREPASS_SHADER.into()
+    }
+
     fn fragment_shader() -> ShaderRef {
         SHADER.into()
     }
@@ -86,6 +104,8 @@ pub struct SlotRequests {
     pub foliage: bool,
     /// Takes the live wet band (`Slot::wet_band`).
     pub wet_band: bool,
+    /// Sways in the wind: (amplitude, tree profile) from `Slot::wind` and the piece kind.
+    pub wind: Option<(f32, bool)>,
 }
 
 fn req(stem: &str, ch: Channel, family: TextureFamily, repeat: bool) -> MapRequest {
@@ -112,6 +132,7 @@ pub fn slot_requests(
     let mut out = SlotRequests {
         foliage: crate::hooks::is_foliage(p, slot),
         wet_band: slot.wet_band,
+        wind: slot.wind.map(|a| (a, p.kind == PieceKind::Tree)),
         ..default()
     };
     if slot.masks {
@@ -181,6 +202,11 @@ pub fn params_for(r: &SlotRequests, hooks: KitHooks) -> KitParams {
     if r.wet_band {
         flags |= FLAG_WET_BAND;
     }
+    match r.wind {
+        Some((_, true)) => flags |= FLAG_WIND_TREE,
+        Some((_, false)) => flags |= FLAG_WIND_PLANT,
+        None => {}
+    }
     let [snow, wetness, night] = crate::hooks::surface_hooks(hooks);
     KitParams {
         tile_inv_m: r.tile.as_ref().map_or(0.0, |t| t.1),
@@ -193,6 +219,7 @@ pub fn params_for(r: &SlotRequests, hooks: KitHooks) -> KitParams {
         } else {
             0.0
         },
+        wind_amp: r.wind.map_or(0.0, |(a, _)| a),
         ..default()
     }
 }
@@ -482,6 +509,52 @@ mod tests {
         assert_eq!(uv_transform_for(&r), Affine2::from_scale(Vec2::splat(16.0)));
         let world = slot_requests(&m, p, &p.slots["b_tree"], TextureFamily::Bc7).unwrap();
         assert_eq!(uv_transform_for(&world), Affine2::IDENTITY);
+    }
+
+    /// A `wind` slot sways with its amplitude: the tree profile on a tree piece, the plant profile
+    /// elsewhere; every other slot stays still. The flags match kit_common.wesl.
+    #[test]
+    fn wind_slot_flags_follow_the_piece_kind() {
+        let windy = M.replace(
+            r#""b_tree":{"unique":true}"#,
+            r#""b_tree":{"unique":true,"wind":0.4}"#,
+        );
+        let m = parse_manifest(&windy).unwrap();
+        let p = &m.pieces[0];
+        let k = params_for(
+            &slot_requests(&m, p, &p.slots["b_tree"], TextureFamily::Bc7).unwrap(),
+            KitHooks::None,
+        );
+        assert_eq!(
+            (k.flags & (FLAG_WIND_TREE | FLAG_WIND_PLANT), k.wind_amp),
+            (FLAG_WIND_PLANT, 0.4)
+        );
+        let cap = params_for(
+            &slot_requests(&m, p, &p.slots["b_cap"], TextureFamily::Bc7).unwrap(),
+            KitHooks::None,
+        );
+        assert_eq!(
+            (cap.flags & (FLAG_WIND_TREE | FLAG_WIND_PLANT), cap.wind_amp),
+            (0, 0.0)
+        );
+        let tree = windy.replace(r#""kind":"base""#, r#""kind":"tree""#);
+        let m = parse_manifest(&tree).unwrap();
+        let p = &m.pieces[0];
+        let r = slot_requests(&m, p, &p.slots["b_tree"], TextureFamily::Bc7).unwrap();
+        assert_eq!(
+            params_for(&r, KitHooks::None).flags & (FLAG_WIND_TREE | FLAG_WIND_PLANT),
+            FLAG_WIND_TREE
+        );
+        let common = include_str!("kit_common.wesl");
+        for (name, v) in [
+            ("FLAG_WIND_TREE", FLAG_WIND_TREE),
+            ("FLAG_WIND_PLANT", FLAG_WIND_PLANT),
+        ] {
+            assert!(
+                common.contains(&format!("const {name}: u32 = {v}u;")),
+                "{name}"
+            );
+        }
     }
 
     /// The WGSL struct is eight scalars: the Rust side must stay 32 bytes.

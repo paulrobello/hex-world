@@ -11,5 +11,12 @@
     "requested": "2026-10-14",
     "revision": "close-up reeds and cattails",
     "notes": "Pending owner re-approval; not an approval. Rebuilt for the owner's 2026-10-14 note \"cat tails need more close up detail\" (eye-level walk mode): LOD0 reed blades only (the mouth pieces have no cattail slot, so their clumps stay headless). Blades are curved strap leaves with rows along the length, a twist, a taper, a shallow V (folded midrib) on the upper side and a flat back sheet on its own vertices, smooth-shaded with a sharp midrib; the longest blade of a clump bends over near its tip, and clumps vary in height, lean and blade count. Stones, placements, slots, the planar UV0 mapping and the masks map are unchanged; LOD1 keeps four flat triangles per clump along LOD0 blades and LOD2 has no reeds, as before. Tris LOD0/1/2 836/380/108 -> 1040/380/108 (the river dressing props' LOD0 ceiling, raised from the prop kind's 1,500 to 2,500 by the owner on 2026-10-14 (\"Raise to 2,500\")). Review docs/checkpoints/cattails/ (cattails-before-*.jpg against cattails-after-*.jpg, and clump-{before,after}-{front,back}-lit.jpg). The controller records the owner's decision. Earlier entries stay as history."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-14",
+    "revision": "plant wind attribute",
+    "notes": "Pending owner re-approval; not an approval. Rebuilt only to add the plant wind attribute for the owner's 2026-10-14 request (\"cattails and wild flowers should be effected by wind also\"): UV map `wind` (glTF TEXCOORD_1, FLOAT) on every LOD, U = 0 at each reed blade's and cattail stalk's own base rising to a * sqrt(H / 2 m) at its tip (a the fraction along the plant, H its length; head and spike ride the stalk), V a seeded phase per blade or stalk, 0 on stones and banks. Geometry, slots, UV0 and the masks map are unchanged: tris LOD0/1/2 1040/380/108. The manifest gives the reed, cattail and (for the cattail spikes) stone slots `wind`, and the kit vertex shaders sway them with the grass's gusts. Review docs/checkpoints/foliage-wind/ (reeds-t*.jpg). Earlier entries stay as history."
   }
 ]

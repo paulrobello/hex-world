@@ -370,6 +370,7 @@ def build(piece, generator):
     lods = []
     for li, group in enumerate(parts):
         body = geom.join(group, f"{piece}_lod{li}")
+        print(f"{piece}_lod{li}: wind U max {_river_dress.wind_uv(body):.3f}")
         body.data.set_sharp_from_angle(angle=math.radians(30.0))
         _road.verge_normals_up(body)
         body.parent = root

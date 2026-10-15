@@ -231,6 +231,71 @@ fn wind_verts(p: &PieceEntry, m: &gltf::Mesh, buffers: &[gltf::buffer::Data]) ->
     out
 }
 
+/// One primitive of a LOD for the foliage wind gate: its slot name, the slot's `wind` amplitude
+/// (None for a still slot) and its TEXCOORD_1 (None when the primitive has none).
+type WindPrim = (String, Option<f32>, Option<Vec<[f32; 2]>>);
+
+fn wind_prims(p: &PieceEntry, m: &gltf::Mesh, buffers: &[gltf::buffer::Data]) -> Vec<WindPrim> {
+    m.primitives()
+        .map(|prim| {
+            let r = prim.reader(|b| Some(&buffers[b.index()]));
+            let name = prim.material().name().unwrap_or_default().to_string();
+            let amp = p.slots.get(&name).and_then(|s| s.wind);
+            (
+                name,
+                amp,
+                r.read_tex_coords(1).map(|uv| uv.into_f32().collect()),
+            )
+        })
+        .collect()
+}
+
+/// Max wind amplitude (m per unit push) a slot may declare: past it the shader's bend reads as a
+/// gale on the strongest gusts (push about 0.8).
+const WIND_AMP_MAX: f32 = 1.0;
+
+/// Foliage wind contract (`Slot::wind`, `foliage_wind.wesl`): a wind slot's amplitude is in
+/// (0, WIND_AMP_MAX] and the same on every wind slot of the piece (its parts move together); every
+/// primitive of a wind slot, in every LOD, carries TEXCOORD_1 with U and V in [0, 1], so
+/// `kit-compress` and the LODs kept it; and LOD0's wind slots sway somewhere (U > 0).
+fn wind_slot_errors(id: &str, lod: usize, prims: &[WindPrim]) -> Vec<String> {
+    let mut e = vec![];
+    let amps: Vec<f32> = prims.iter().filter_map(|(_, a, _)| *a).collect();
+    if let Some(a) = amps.iter().find(|a| !(**a > 0.0 && **a <= WIND_AMP_MAX)) {
+        e.push(format!(
+            "{id}: wind amplitude {a} outside (0, {WIND_AMP_MAX}]"
+        ));
+    }
+    if amps.windows(2).any(|w| w[0] != w[1]) {
+        e.push(format!("{id}: wind slots differ in amplitude {amps:?}"));
+    }
+    let mut max_u = 0.0f32;
+    for (slot, amp, uv) in prims {
+        if amp.is_none() {
+            continue;
+        }
+        let Some(uv) = uv else {
+            e.push(format!(
+                "{id}: {id}_lod{lod} wind slot {slot} has no TEXCOORD_1 (wind)"
+            ));
+            continue;
+        };
+        if uv
+            .iter()
+            .any(|w| w.iter().any(|x| !(0.0..=1.0).contains(x)))
+        {
+            e.push(format!("{id}: {id}_lod{lod} {slot} wind UV outside [0, 1]"));
+        }
+        max_u = uv.iter().fold(max_u, |m, w| m.max(w[0]));
+    }
+    if lod == 0 && !amps.is_empty() && max_u <= 0.0 {
+        e.push(format!(
+            "{id}: {id}_lod0 wind slots never sway (U = 0 everywhere)"
+        ));
+    }
+    e
+}
+
 /// One primitive of a car LOD for the paint-mask gate: its material name and COLOR_0 (None when
 /// the primitive has none).
 type PaintPrim = (String, Option<Vec<[f32; 4]>>);
@@ -602,6 +667,11 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
                     &wind_verts(p, m, &buffers),
                 ));
             }
+        }
+    }
+    for (i, m) in lods.iter().enumerate() {
+        if let Some(m) = m {
+            e.extend(wind_slot_errors(&p.id, i, &wind_prims(p, m, &buffers)));
         }
     }
     if p.id.starts_with("car_") {
@@ -3218,6 +3288,35 @@ fn tree_wind_uv_contract() {
         .collect();
     let e = wind_errors("t", "t_lod0", &bare);
     assert!(e.iter().any(|m| m.contains("(0 fringe vertices)")), "{e:?}");
+}
+
+#[test]
+fn wind_slots_carry_their_attribute() {
+    let prim =
+        |slot: &str, amp: Option<f32>, uv: Option<Vec<[f32; 2]>>| (slot.to_string(), amp, uv);
+    let ok = [
+        prim("reed", Some(0.5), Some(vec![[0.0, 0.3], [0.8, 0.3]])),
+        prim("stone", Some(0.5), Some(vec![[0.0, 1.0]])),
+        prim("lily", None, None),
+    ];
+    assert_eq!(wind_slot_errors("r", 0, &ok), Vec::<String>::new());
+    let missing = [prim("reed", Some(0.5), None)];
+    assert_eq!(
+        wind_slot_errors("r", 1, &missing),
+        vec!["r: r_lod1 wind slot reed has no TEXCOORD_1 (wind)".to_string()]
+    );
+    let out = [prim("reed", Some(0.5), Some(vec![[1.2, 0.0]]))];
+    assert!(wind_slot_errors("r", 0, &out)[0].contains("outside [0, 1]"));
+    let still = [prim("reed", Some(0.5), Some(vec![[0.0, 0.5]]))];
+    assert!(wind_slot_errors("r", 0, &still)[0].contains("never sway"));
+    assert!(wind_slot_errors("r", 2, &still).is_empty());
+    let mixed = [
+        prim("reed", Some(0.5), Some(vec![[0.5, 0.5]])),
+        prim("stone", Some(0.4), Some(vec![[0.0, 0.5]])),
+    ];
+    assert!(wind_slot_errors("r", 0, &mixed)[0].contains("differ in amplitude"));
+    let gale = [prim("reed", Some(2.0), Some(vec![[0.5, 0.5]]))];
+    assert!(wind_slot_errors("r", 0, &gale)[0].contains("outside (0, 1]"));
 }
 
 /// Two 1 m² quads (four triangles) whose UV0 covers `uv_side`² each.

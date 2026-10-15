@@ -524,6 +524,14 @@ const SHADER_EXEMPT: &[(&str, &str)] = &[
         "depth/normal prepass of the kit material: the hooks change colour, not depth or normals",
     ),
     (
+        "assets/shaders/kit_vertex.wesl",
+        "vertex stage of the kit material (foliage wind): the hooks change colour, not position",
+    ),
+    (
+        "crates/hex-render/src/foliage_wind.wesl",
+        "vertex displacement library (foliage wind): no surface",
+    ),
+    (
         "assets/shaders/water_terrain.wesl",
         "placeholder bed, drawn only while a water tile's base piece is missing from the kit (water contract)",
     ),

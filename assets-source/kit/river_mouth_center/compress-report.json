@@ -1,6 +1,6 @@
 {
   "name": "river_mouth_center",
-  "date": "2026-10-15T00:20:16.462Z",
+  "date": "2026-10-15T01:55:21.214Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 7315,
       "astc": 7478
     },
-    "glbBytes": 112848
+    "glbBytes": 119632
   },
   "glb": {
-    "bytes": 112848,
-    "sha256": "ebe6a448a6b1af0230817f56183760f473376e4138c75b938b9a9a7116198f55"
+    "bytes": 119632,
+    "sha256": "5e08d6b1f8c6384421cf1f2367310c14a655dcb31eac3e27dade76f7d149e2fa"
   }
 }

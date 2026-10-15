@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "0d53eca52a3aece787acd7349e09c47cfdebf19530c145aef47e824ebddc1fac"
+      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
     }
   ],
   "authoringAgent": {
@@ -56,7 +56,7 @@
       "snow": 1
     },
     "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
-    "receiverSignature": "1db2bb945e0bd0c16f9590360b91c7ee569d3fc536f57886b758c8b281900822",
+    "receiverSignature": "37c93d737e26be9b935c846e9161163ae3ef193cdc963c34e5a7670d63fb0426",
     "samples": 0,
     "skipped": true
   },
@@ -92,7 +92,7 @@
         "bc7": 4689,
         "astc": 4888
       },
-      "glbBytes": 179596
+      "glbBytes": 193684
     },
     "textureEncodes": [
       {
@@ -131,8 +131,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_bend_center/river_bend_center.glb",
-      "sha256": "8d1a47d023ffcfa25135c3f0b8f1d7178a30b0e412bae56bdc5ab1f25c887cdf",
-      "bytes": 179596
+      "sha256": "1f4ef9d8cdf55f5c49e63d00e537e14a58535cdb0f4a59c60181516d9a3c698c",
+      "bytes": 193684
     },
     {
       "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.bc7.ktx2",
@@ -173,7 +173,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-15T00:21:30.371Z",
+    "date": "2026-10-15T01:59:50.797Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -213,6 +213,13 @@
       "requested": "2026-10-14",
       "revision": "close-up reeds and cattails",
       "notes": "Pending owner re-approval; not an approval. Rebuilt for the owner's 2026-10-14 note \"cat tails need more close up detail\" (eye-level walk mode): LOD0 reed blades and cattails: a 3-sided stalk, a closed 6-sided seed head (flat bottom cap, slight taper, rounded top) and a short pale spike (river_stone slot). Blades are curved strap leaves with rows along the length, a twist, a taper, a shallow V (folded midrib) on the upper side and a flat back sheet on its own vertices, smooth-shaded with a sharp midrib; the longest blade of a clump bends over near its tip, and clumps vary in height, lean and blade count. Stones, placements, slots, the planar UV0 mapping and the masks map are unchanged; LOD1 keeps four flat triangles per clump along LOD0 blades and LOD2 has no reeds, as before. Tris LOD0/1/2 860/320/120 -> 2363/320/120 (the river dressing props' LOD0 ceiling, raised from the prop kind's 1,500 to 2,500 by the owner on 2026-10-14 (\"Raise to 2,500\")). Cattail heads on LOD0: 30 before, 33 now (two to four per clump, 31 tris each). Review docs/checkpoints/cattails/ (cattails-before-*.jpg against cattails-after-*.jpg, and clump-{before,after}-{front,back}-lit.jpg). The controller records the owner's decision. Earlier entries stay as history."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "plant wind attribute",
+      "notes": "Pending owner re-approval; not an approval. Rebuilt only to add the plant wind attribute for the owner's 2026-10-14 request (\"cattails and wild flowers should be effected by wind also\"): UV map `wind` (glTF TEXCOORD_1, FLOAT) on every LOD, U = 0 at each reed blade's and cattail stalk's own base rising to a * sqrt(H / 2 m) at its tip (a the fraction along the plant, H its length; head and spike ride the stalk), V a seeded phase per blade or stalk, 0 on stones and banks. Geometry, slots, UV0 and the masks map are unchanged: tris LOD0/1/2 2363/320/120. The manifest gives the reed, cattail and (for the cattail spikes) stone slots `wind`, and the kit vertex shaders sway them with the grass's gusts. Review docs/checkpoints/foliage-wind/ (reeds-t*.jpg). Earlier entries stay as history."
     }
   ]
 }

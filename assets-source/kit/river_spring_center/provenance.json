@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/river_spring_center.py",
-    "sha256": "3d02fade03dfdf06bf076fee7d37492f94df05bfe850eeeb3c9ef64d60f74407"
+    "sha256": "ffe511d185f0303d0360976c54fce04fa554406545c4f220f62a35478068e07f"
   },
   "generatorDeps": [
     {
@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "0d53eca52a3aece787acd7349e09c47cfdebf19530c145aef47e824ebddc1fac"
+      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
     },
     {
       "path": "scripts/blender/kit/_spring.py",
@@ -66,7 +66,7 @@
       "snow": "0 under water, 1 elsewhere"
     },
     "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
-    "receiverSignature": "3409497c155af6dd304c3bad17031ae4fffabee180af54d8b051b2348d5181bc",
+    "receiverSignature": "d874633824c5b6b4e08cee8bb6ea849a694032dfe0c5f24b3d57c57147b0b980",
     "samples": 0,
     "skipped": true
   },
@@ -102,7 +102,7 @@
         "bc7": 4535,
         "astc": 4231
       },
-      "glbBytes": 170100
+      "glbBytes": 185168
     },
     "textureEncodes": [
       {
@@ -141,8 +141,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_spring_center/river_spring_center.glb",
-      "sha256": "b16afb2de39fa6ea710442f5bbc903683e2f2f442b4f890d6819cb595324dc18",
-      "bytes": 170100
+      "sha256": "b54f7860c54ed03a5862fc5eab99c93b9748ebe189ea568f7c068c38f544cd28",
+      "bytes": 185168
     },
     {
       "path": "assets/kit/p1/river_spring_center/river_spring_center.masks.bc7.ktx2",
@@ -192,7 +192,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-15T00:21:42.435Z",
+    "date": "2026-10-15T01:59:55.409Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -225,6 +225,13 @@
       "requested": "2026-10-14",
       "revision": "close-up reeds and cattails",
       "notes": "Pending owner re-approval; not an approval. Rebuilt for the owner's 2026-10-14 note \"cat tails need more close up detail\" (eye-level walk mode): LOD0 reed blades and cattails: a 3-sided stalk, a closed 6-sided seed head (flat bottom cap, slight taper, rounded top) and a short pale spike (river_stone slot). Blades are curved strap leaves with rows along the length, a twist, a taper, a shallow V (folded midrib) on the upper side and a flat back sheet on its own vertices, smooth-shaded with a sharp midrib; the longest blade of a clump bends over near its tip, and clumps vary in height, lean and blade count. Stones, placements, slots, the planar UV0 mapping and the masks map are unchanged; LOD1 keeps four flat triangles per clump along LOD0 blades and LOD2 has no reeds, as before. Tris LOD0/1/2 770/298/100 -> 2180/298/100 (the river dressing props' LOD0 ceiling, raised from the prop kind's 1,500 to 2,500 by the owner on 2026-10-14 (\"Raise to 2,500\")). Cattail heads on LOD0: 30 before, 30 now (two to four per clump, 31 tris each). Review docs/checkpoints/cattails/ (cattails-before-*.jpg against cattails-after-*.jpg, and clump-{before,after}-{front,back}-lit.jpg). The controller records the owner's decision. Earlier entries stay as history."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "plant wind attribute",
+      "notes": "Pending owner re-approval; not an approval. Rebuilt only to add the plant wind attribute for the owner's 2026-10-14 request (\"cattails and wild flowers should be effected by wind also\"): UV map `wind` (glTF TEXCOORD_1, FLOAT) on every LOD, U = 0 at each reed blade's and cattail stalk's own base rising to a * sqrt(H / 2 m) at its tip (a the fraction along the plant, H its length; head and spike ride the stalk), V a seeded phase per blade or stalk, 0 on stones and banks. Geometry, slots, UV0 and the masks map are unchanged: tris LOD0/1/2 2180/298/100. The manifest gives the reed, cattail and (for the cattail spikes) stone slots `wind`, and the kit vertex shaders sway them with the grass's gusts. Review docs/checkpoints/foliage-wind/ (reeds-t*.jpg). Earlier entries stay as history."
     }
   ]
 }

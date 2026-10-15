@@ -1,6 +1,6 @@
 {
   "name": "river_straight_center",
-  "date": "2026-10-15T00:20:14.667Z",
+  "date": "2026-10-15T01:55:19.997Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 1001,
       "astc": 970
     },
-    "glbBytes": 173652
+    "glbBytes": 187092
   },
   "glb": {
-    "bytes": 173652,
-    "sha256": "efb253a9fe6834b7968ffa8c8407f20f6074360c08e28187b37d299bedab761b"
+    "bytes": 187092,
+    "sha256": "4953bfde897a31ad0989001ace22dd03b3e297a1c48d79b116ef19e9b85dda8d"
   }
 }

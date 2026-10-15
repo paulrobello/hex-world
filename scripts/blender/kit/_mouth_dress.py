@@ -341,6 +341,7 @@ def build(piece, hand, generator):
         for name in DRESS_SLOTS:
             o.data.materials.append(mats[name])
         uv.planar_cap_uv(o)
+        print(f"{piece}_lod{li}: wind U max {_river_dress.wind_uv(o):.3f}")
         o.parent = root
         lods.append(o)
     tris = [geom.tri_count(o) for o in lods]

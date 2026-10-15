@@ -146,6 +146,7 @@ impl Plugin for HexRenderPlugin {
         bevy::shader::load_shader_library!(app, "hooks.wesl");
         bevy::shader::load_shader_library!(app, "wind.wesl");
         bevy::shader::load_shader_library!(app, "grass_common.wesl");
+        bevy::shader::load_shader_library!(app, "foliage_wind.wesl");
         app.insert_resource(ActiveScenario(self.scenario))
             .insert_resource(ClearColor(if grade::graded(self.scenario) {
                 self.config.grade.backdrop()

@@ -1,6 +1,6 @@
 {
   "name": "river_road_bridge_center",
-  "date": "2026-10-15T00:20:15.607Z",
+  "date": "2026-10-15T01:55:22.398Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 26343,
       "astc": 25956
     },
-    "glbBytes": 147416
+    "glbBytes": 163572
   },
   "glb": {
-    "bytes": 147416,
-    "sha256": "87f14e404f4726112bbb601f104b7f1091e6f25bd57060b74b6b895d5cb2548d"
+    "bytes": 163572,
+    "sha256": "1bf4bc5fc74de958802a4b961b03127c7817021dbfcc8cdb6186f642b11d9a69"
   }
 }

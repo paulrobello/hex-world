@@ -92,6 +92,13 @@ BURY = 0.07  # blades and stalks start this far below the anchor's ground height
 HERO_ROWS = (0.0, 0.5, 0.76, 0.9)  # bending-over blade: rows by arc length, then the tip
 TALL_ROWS = (0.0, 0.45, 0.76)
 FILL_ROWS = (0.0, 0.55)
+# Plant wind (TEXCOORD_1, UV map `wind`, project.md "Plant wind data"): U = a * sqrt(H / WIND_REF_M),
+# capped at 1, where a is the fraction along the plant (0 at its own base, 1 at its tip) and H its
+# length, so the shader's U² bend moves each tip in proportion to its height, as the grass does; V =
+# a phase per blade or stalk. Stones, banks and lily pads stay 0. bmesh vertex layers carry it until
+# `wind_uv` writes the UV map on the finished LOD.
+WIND_REF_M = 2.0
+WIND_U, WIND_V = "dress_wind_u", "dress_wind_v"
 SPIKE_LAYER = "river_spike"  # bmesh face int layer: 1 on spike faces, which take the stone slot
 
 
@@ -106,6 +113,56 @@ def _cross(a, b):
 def _unit(a):
     n = math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
     return (a[0] / n, a[1] / n, a[2] / n)
+
+
+def wind_layers(bm):
+    lay = bm.verts.layers.float
+    return lay.get(WIND_U) or lay.new(WIND_U), lay.get(WIND_V) or lay.new(WIND_V)
+
+
+def wind_scale(length):
+    return min(1.0, math.sqrt(max(length, 0.0) / WIND_REF_M))
+
+
+def wind_phase(seed, k):
+    """A phase in [0, 1) per (seed, k), from an integer hash: the plan's own random stream stays
+    untouched, so the geometry is unchanged."""
+    h = (seed * 0x9E3779B1 + (k + 1) * 0x85EBCA77) & 0xFFFFFFFF
+    h ^= h >> 15
+    h = (h * 0x2C1B3C6D) & 0xFFFFFFFF
+    h ^= h >> 12
+    return (h & 0xFFFFFF) / float(1 << 24)
+
+
+def _set_wind(bm, verts, u, v):
+    lu, lv = wind_layers(bm)
+    for vert in verts:
+        vert[lu], vert[lv] = u, v
+
+
+def wind_uv(obj):
+    """The vertex layers (0 where a part had none, such as a joined bridge) as UV map `wind`
+    (TEXCOORD_1) after UVMap, which stays first and active; then drops the layers' attributes."""
+    me = obj.data
+    assert [u.name for u in me.uv_layers] == ["UVMap"], [u.name for u in me.uv_layers]
+    n = len(me.vertices)
+    cols = []
+    for name in (WIND_U, WIND_V):
+        vals = [0.0] * n
+        if name in me.attributes:
+            me.attributes[name].data.foreach_get("value", vals)
+            me.attributes.remove(me.attributes[name])
+        cols.append(vals)
+    vi = [0] * len(me.loops)
+    me.loops.foreach_get("vertex_index", vi)
+    wl = me.uv_layers.new(name="wind")
+    wl.data.foreach_set("uv", [c for i in vi for c in (cols[0][i], cols[1][i])])
+    me.uv_layers.active = me.uv_layers["UVMap"]
+    me.uv_layers["UVMap"].active_render = True
+    assert [u.name for u in me.uv_layers] == ["UVMap", "wind"]
+    us = cols[0]
+    assert all(0.0 <= u <= 1.0 for u in us) and min(us) == 0.0, (min(us), max(us))
+    return max(us)
 
 
 def _centreline(base, az, length, th0, th1, power, steps=48):
@@ -143,9 +200,10 @@ def _blade_line(anchor, base, az, length, th0, th1, power):
     return line
 
 
-def _blade(bm, line, az, rows, hw0, twist, fold):
+def _blade(bm, line, az, rows, hw0, twist, fold, wind=(0.0, 0.0)):
     """One blade on `line` with a row of edge points at each arc length in `rows`, then the tip.
-    `fold`: the V upper side (left half, midrib, right half), else one flat strip."""
+    `fold`: the V upper side (left half, midrib, right half), else one flat strip. `wind` = (U at
+    the tip, phase): each row takes U = s times the tip's."""
     p0 = (-math.sin(az), math.cos(az), 0.0)
     front, back = [], []
     for s in rows:
@@ -159,8 +217,10 @@ def _blade(bm, line, az, rows, hw0, twist, fold):
         mid = _add(c, up, -FOLD * hw)
         front.append([bm.verts.new(left)] + ([bm.verts.new(mid)] if fold else []) + [bm.verts.new(right)])
         back.append([bm.verts.new(left), bm.verts.new(right)])
+        _set_wind(bm, front[-1] + back[-1], s * wind[0], wind[1])
     tip = line[-1][1]
     tf, tb = bm.verts.new(tip), bm.verts.new(tip)
+    _set_wind(bm, (tf, tb), wind[0], wind[1])
     faces, sharp = [], []
     for i in range(len(rows) - 1):
         a, b = front[i], front[i + 1]
@@ -248,38 +308,64 @@ def _reed_clump(bm, at, seed, lod, heads):
     callers' slot ranges hold); LOD1 four flat back-to-back triangles along the first four LOD0
     blades (every plan has at least four). Returns the cattail tops."""
     blades, stalks = _plan(at, seed, heads)
+    wind_layers(bm)  # before any vertex: adding a layer invalidates the BMVert references held below
+    # Blade length: the centre line's arc length (`_centreline` samples it evenly).
+    winds = [(wind_scale(math.dist(line[0][1], line[1][1]) * (len(line) - 1)), wind_phase(seed, k))
+             for k, (_kind, _az, line, _hw, _tw) in enumerate(blades)]
     if lod > 0:
         tris = []
         for _kind, az, line, hw, _tw in blades:
             p = (-math.sin(az), math.cos(az), 0.0)
             b = line[0][1]
             tris.append((_add(b, p, 1.6 * hw), _add(b, p, -1.6 * hw), _sample(line, 0.85)[0]))
-        for co in tris[:4]:
-            bm.faces.new([bm.verts.new(c) for c in co])
-            bm.faces.new([bm.verts.new(c) for c in reversed(co)])
+        for co, (u, v) in zip(tris[:4], winds):
+            for cs in (co, tuple(reversed(co))):
+                vs = [bm.verts.new(c) for c in cs]
+                bm.faces.new(vs)
+                _set_wind(bm, [x for x, c in zip(vs, cs) if c is not co[2]], 0.0, v)
+                _set_wind(bm, [x for x, c in zip(vs, cs) if c is co[2]], 0.85 * u, v)
         return []
     rows = {"hero": HERO_ROWS, "tall": TALL_ROWS, "fill": FILL_ROWS}
-    for kind, az, line, hw, tw in blades:
-        _blade(bm, line, az, rows[kind], hw, tw, kind != "fill")
+    for (kind, az, line, hw, tw), w in zip(blades, winds):
+        _blade(bm, line, az, rows[kind], hw, tw, kind != "fill", w)
     tops = []
-    for base, axis, hs, hl, rad, sl, ph in stalks:
-        _tube(bm, [_ring(base, axis, 0.0075, 3, ph), _ring(_add(base, axis, hs + 0.04), axis, 0.0065, 3, ph)])
-        tops.append((_add(base, axis, hs), axis, hl, rad, sl, ph))
+    for k, (base, axis, hs, hl, rad, sl, ph) in enumerate(stalks):
+        total = hs + hl + sl
+        wind = (wind_scale(total) / total, wind_phase(seed, 100 + k), base)
+        rings = [_ring(base, axis, 0.0075, 3, ph), _ring(_add(base, axis, hs + 0.04), axis, 0.0065, 3, ph)]
+        n = len(bm.verts)
+        _tube(bm, rings)
+        bm.verts.ensure_lookup_table()
+        _wind_along(bm, bm.verts[n:], axis, wind)
+        tops.append((_add(base, axis, hs), axis, hl, rad, sl, ph, wind))
     return tops
+
+
+def _wind_along(bm, verts, axis, wind):
+    """A stalk's wind: U from the distance along its axis above its base (`wind` = (U per metre,
+    phase, base)), so the stalk, head and spike bend as one."""
+    per_m, v, base = wind
+    lu, lv = wind_layers(bm)
+    for vert in verts:
+        d = sum((vert.co[i] - base[i]) * axis[i] for i in range(3))
+        vert[lu], vert[lv] = min(1.0, max(0.0, d * per_m)), v
 
 
 def _cattail(bm, top):
     """A seed head on its stalk: 6 sides, a flat bottom cap, tapering to 0.82 of the radius and
     rounding to an apex on top (smooth normals round the bottom edge too), then a pale 3-sided
     spike (stone slot, tagged in SPIKE_LAYER) out of the apex: 6 + 22 + 3 triangles with the stalk."""
-    bottom, axis, hl, rad, sl, ph = top
+    bottom, axis, hl, rad, sl, ph, wind = top
     layer = bm.faces.layers.int.get(SPIKE_LAYER) or bm.faces.layers.int.new(SPIKE_LAYER)
+    n = len(bm.verts)
     rings = [_ring(bottom, axis, rad, 6, ph), _ring(_add(bottom, axis, hl - 0.7 * rad), axis, 0.82 * rad, 6, ph)]
     _tube(bm, rings, close_bottom=True, apex_top=_add(bottom, axis, hl))
     spike = _tube(bm, [_ring(_add(bottom, axis, hl - 0.02), axis, 0.0055, 3, ph)],
                   apex_top=_add(bottom, axis, hl + sl))
     for f in spike:
         f[layer] = 1
+    bm.verts.ensure_lookup_table()
+    _wind_along(bm, bm.verts[n:], axis, wind)
 
 
 def retag_spikes(bm, stone_index):
@@ -361,6 +447,7 @@ def build_dressing(piece, layout, generator, per_side=14, skip=None, extra=None)
             uv.planar_cap_uv(q)
         body = geom.join(parts, f"{piece}_lod{li}") if len(parts) > 1 else o
         body.name = body.data.name = f"{piece}_lod{li}"
+        print(f"{piece}_lod{li}: wind U max {wind_uv(body):.3f}")
         body.parent = root
         lods.append(body)
     tris = [geom.tri_count(o) for o in lods]

@@ -27,7 +27,7 @@
     "snow": 1.0
   },
   "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
-  "receiverSignature": "1db2bb945e0bd0c16f9590360b91c7ee569d3fc536f57886b758c8b281900822",
+  "receiverSignature": "37c93d737e26be9b935c846e9161163ae3ef193cdc963c34e5a7670d63fb0426",
   "samples": 0,
   "skipped": true
 }

@@ -166,6 +166,7 @@ def build():
                 for k in p.loop_indices:
                     layer[k].uv = LILY_UV
         assert sum(1 for p in o.data.polygons if p.material_index == lily_idx) == lily_faces
+        print(f"{PIECE}_lod{li}: wind U max {_river_dress.wind_uv(o):.3f}")
         o.parent = root
         lods.append(o)
     tris = [geom.tri_count(o) for o in lods]

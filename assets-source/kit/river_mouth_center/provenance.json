@@ -17,7 +17,7 @@
     },
     {
       "path": "scripts/blender/kit/_mouth_dress.py",
-      "sha256": "437ec622d57200d95b74c1f127e2a76eb1b6e6ca9c5623f5408cb89cf1ed1615"
+      "sha256": "d97a8dbc854f45fd88f85968fbca74bd23a0e4176a77a733ac3fdc756b3b1fa2"
     },
     {
       "path": "scripts/blender/kit/_mouth_profile.py",
@@ -29,7 +29,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "0d53eca52a3aece787acd7349e09c47cfdebf19530c145aef47e824ebddc1fac"
+      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
     }
   ],
   "authoringAgent": {
@@ -81,7 +81,7 @@
       "snow": "1 on dry bed, 0 under the water"
     },
     "reason": "no Cycles bake: the masks are an analytic field of the mouth bed on the planar UV0",
-    "receiverSignature": "5ce1b278a1b20027ed2edd83c6afebc8f74e5a89efb642926fa1cffb850f8746",
+    "receiverSignature": "afc05127fcfd3c4f4cdbc1785195788ea1ac55fd5f5e54f8e072bddd09946d7e",
     "samples": 0,
     "skipped": true
   },
@@ -117,7 +117,7 @@
         "bc7": 7315,
         "astc": 7478
       },
-      "glbBytes": 112848
+      "glbBytes": 119632
     },
     "textureEncodes": [
       {
@@ -156,8 +156,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_mouth_center/river_mouth_center.glb",
-      "sha256": "ebe6a448a6b1af0230817f56183760f473376e4138c75b938b9a9a7116198f55",
-      "bytes": 112848
+      "sha256": "5e08d6b1f8c6384421cf1f2367310c14a655dcb31eac3e27dade76f7d149e2fa",
+      "bytes": 119632
     },
     {
       "path": "assets/kit/p1/river_mouth_center/river_mouth_center.masks.bc7.ktx2",
@@ -207,7 +207,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-15T00:21:36.755Z",
+    "date": "2026-10-15T01:59:59.459Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -240,6 +240,13 @@
       "requested": "2026-10-14",
       "revision": "close-up reeds and cattails",
       "notes": "Pending owner re-approval; not an approval. Rebuilt for the owner's 2026-10-14 note \"cat tails need more close up detail\" (eye-level walk mode): LOD0 reed blades only (the mouth pieces have no cattail slot, so their clumps stay headless). Blades are curved strap leaves with rows along the length, a twist, a taper, a shallow V (folded midrib) on the upper side and a flat back sheet on its own vertices, smooth-shaded with a sharp midrib; the longest blade of a clump bends over near its tip, and clumps vary in height, lean and blade count. Stones, placements, slots, the planar UV0 mapping and the masks map are unchanged; LOD1 keeps four flat triangles per clump along LOD0 blades and LOD2 has no reeds, as before. Tris LOD0/1/2 836/380/108 -> 1040/380/108 (the river dressing props' LOD0 ceiling, raised from the prop kind's 1,500 to 2,500 by the owner on 2026-10-14 (\"Raise to 2,500\")). Review docs/checkpoints/cattails/ (cattails-before-*.jpg against cattails-after-*.jpg, and clump-{before,after}-{front,back}-lit.jpg). The controller records the owner's decision. Earlier entries stay as history."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "plant wind attribute",
+      "notes": "Pending owner re-approval; not an approval. Rebuilt only to add the plant wind attribute for the owner's 2026-10-14 request (\"cattails and wild flowers should be effected by wind also\"): UV map `wind` (glTF TEXCOORD_1, FLOAT) on every LOD, U = 0 at each reed blade's and cattail stalk's own base rising to a * sqrt(H / 2 m) at its tip (a the fraction along the plant, H its length; head and spike ride the stalk), V a seeded phase per blade or stalk, 0 on stones and banks. Geometry, slots, UV0 and the masks map are unchanged: tris LOD0/1/2 1040/380/108. The manifest gives the reed, cattail and (for the cattail spikes) stone slots `wind`, and the kit vertex shaders sway them with the grass's gusts. Review docs/checkpoints/foliage-wind/ (reeds-t*.jpg). Earlier entries stay as history."
     }
   ]
 }

@@ -13,11 +13,11 @@
     },
     {
       "path": "scripts/blender/kit/_river_bridge.py",
-      "sha256": "c98ac19d16dadb71bd5927917217f36f7abedad8deda3e401a9b36b50c2f0602"
+      "sha256": "452d3c15752a5b9b887ecb6193edbf3021293a3610c56209bcbcc9d062ede976"
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "0d53eca52a3aece787acd7349e09c47cfdebf19530c145aef47e824ebddc1fac"
+      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
     },
     {
       "path": "scripts/blender/kit/_road.py",
@@ -152,7 +152,7 @@
         "bc7": 26343,
         "astc": 25956
       },
-      "glbBytes": 147416
+      "glbBytes": 163572
     },
     "textureEncodes": [
       {
@@ -191,8 +191,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.glb",
-      "sha256": "87f14e404f4726112bbb601f104b7f1091e6f25bd57060b74b6b895d5cb2548d",
-      "bytes": 147416
+      "sha256": "1bf4bc5fc74de958802a4b961b03127c7817021dbfcc8cdb6186f642b11d9a69",
+      "bytes": 163572
     },
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.bc7.ktx2",
@@ -233,7 +233,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-15T00:21:33.875Z",
+    "date": "2026-10-15T02:00:08.978Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -280,6 +280,13 @@
       "requested": "2026-10-14",
       "revision": "close-up reeds and cattails",
       "notes": "Pending owner re-approval; not an approval. Rebuilt for the owner's 2026-10-14 note \"cat tails need more close up detail\" (eye-level walk mode): LOD0 reed blades and cattails: a 3-sided stalk, a closed 6-sided seed head (flat bottom cap, slight taper, rounded top) and a short pale spike (river_stone slot). Blades are curved strap leaves with rows along the length, a twist, a taper, a shallow V (folded midrib) on the upper side and a flat back sheet on its own vertices, smooth-shaded with a sharp midrib; the longest blade of a clump bends over near its tip, and clumps vary in height, lean and blade count. Stones, placements, slots and the planar UV0 mapping are unchanged; in the masks map only the dressing's footprint and its halo were rewritten for the new blades, and the road's baked texels and their mips are unchanged (`dress_masks` asserts both); LOD1 keeps four flat triangles per clump along LOD0 blades and LOD2 has no reeds, as before. Tris LOD0/1/2 920/396/120 -> 1766/396/120 (kind center, 4,000, unchanged). Cattail heads on LOD0: 18 before, 18 now (two to four per clump, 31 tris each). Review docs/checkpoints/cattails/ (cattails-before-*.jpg against cattails-after-*.jpg, and clump-{before,after}-{front,back}-lit.jpg). The controller records the owner's decision. Earlier entries stay as history."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "plant wind attribute",
+      "notes": "Pending owner re-approval; not an approval. Rebuilt only to add the plant wind attribute for the owner's 2026-10-14 request (\"cattails and wild flowers should be effected by wind also\"): UV map `wind` (glTF TEXCOORD_1, FLOAT) on every LOD, U = 0 at each reed blade's and cattail stalk's own base rising to a * sqrt(H / 2 m) at its tip (a the fraction along the plant, H its length; head and spike ride the stalk), V a seeded phase per blade or stalk, 0 on stones and banks. Geometry, slots, UV0 and the masks map are unchanged: tris LOD0/1/2 1766/396/120. The manifest gives the reed, cattail and (for the cattail spikes) stone slots `wind`, and the kit vertex shaders sway them with the grass's gusts. Review docs/checkpoints/foliage-wind/ (reeds-t*.jpg). Earlier entries stay as history."
     }
   ]
 }

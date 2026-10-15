@@ -1,0 +1,11 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 120 },
+  { "cmd": "camera", "pos": [-10.5, 1.3, 33.0], "look_at": [-14.5, 0.1, 28.0] },
+  { "cmd": "wait", "frames": 30 },
+  { "cmd": "screenshot", "name": "foliage-flowers-t1" },
+  { "cmd": "wait", "frames": 50 },
+  { "cmd": "screenshot", "name": "foliage-flowers-t2" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]
