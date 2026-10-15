@@ -55,6 +55,7 @@ export function glyph(def: TileDef): SVGElement {
     ] as const)
       g.append(s("circle", { class: "g-tree", cx: x, cy: y, r: 7 }));
   if (def.id === "oak") g.append(s("circle", { class: "g-tree", cx: C, cy: C, r: 15 }));
+  if (def.id === "windmill") g.append(s("circle", { class: "g-house", cx: C, cy: C, r: 8 }));
   if (def.id === "house_cluster")
     for (const [x, y] of [
       [44, 44],

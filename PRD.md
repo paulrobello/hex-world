@@ -67,7 +67,7 @@ Decisions made during the brainstorm. Codes are stable and referenced throughout
 | Code | Assumption |
 |---|---|
 | A1 | The world's first tile is grass/meadow. |
-| A2 | Farm (with animals), windmill and rail/trains are not in the MVP. They ship in P3 alongside recipes. |
+| A2 | Farm (with animals), windmill and rail/trains are not in the MVP. They ship in P3 alongside recipes. Exception: the windmill tile is in the inventory ahead of P3 (owner request, 2026-10-14), with no recipe yet. |
 | A3 | No WASM threads (TC1). Heavy simulation runs in a dedicated Web Worker running a second WASM instance, or on the GPU. |
 | A4 | High-poly `.blend` files and bake intermediates are kept out of git. Scripted pieces are rebuilt from their generators, and interactive hero `.blend` files live in the local, gitignored blend store, referenced by SHA-256 (external storage deferred in P1, §11.6). Only runtime derivatives are committed. |
 | A5 | Resolved, see D21. |
@@ -227,13 +227,14 @@ A build-time validator checks every tile definition: socket and lane consistency
 
 ### 5.4 MVP tile list (D12)
 
-About 10 types. The exact variants are frozen at the start of P2. With the owner's additions (pine and oak, the coast corners, the river spring and both river mouths) 18 types ship in `data/tiles/`, each one's edge kinds frozen by `crates/hex-core/tests/data_validator.rs`.
+About 10 types. The exact variants are frozen at the start of P2. With the owner's additions (pine and oak, the coast corners, the river spring and both river mouths) and the windmill ahead of P3, 19 types ship in `data/tiles/`, each one's edge kinds frozen by `crates/hex-core/tests/data_validator.rs`.
 
 | # | Tile | Notes |
 |---|---|---|
 | 1 | Meadow | The starting tile. Grass on all edges, with seeded wildflower drifts (clustered from seeded noise, owner A18), rock scatter, and about 40 single wildflowers spread one by one across the grass, their density varied gently by seeded noise (owner, 2026-10-14). |
 | 2 | Pine forest | Forest on all edges: about 20 scattered spruces and rocks on leaf litter, no oak (owner U3, 2026-10-14). Id `forest`, so older saves load as pine forests. |
 | 2a | Oak | Forest on all edges: the hero oak on the forest base's litter and grass rim, with rocks and a few flowers. The bird roost (owner U3). Mixes freely with the pine forest through the forest-forest edge pieces. The oak is 1.2× its first build (13.3 m tall, crown 8.5 m), with no collar where the trunk meets the root flare (owner, approved 2026-10-14). |
+| 2b | Windmill | Grass on all edges: the white tower windmill (P3 piece, refs A17) on the meadow base, its sails turning at 4 rpm in play, with a light drift of wildflowers and a few rocks kept clear of the tower. In the inventory ahead of P3 (owner request, 2026-10-14); no recipe uses it yet. The tower blocks the walker as a building. |
 | 3 | House cluster | Grass edges plus 1 road edge, with 3 houses (two cottages and a two-storey) and 3 parking spots. A car destination. |
 | 4 | Road straight | Road on opposite edges. The road tiles' grass carries a sparse spread of single wildflowers, clear of the road. |
 | 5 | Road bend | Road on edges 60° or 120° apart. |
@@ -569,7 +570,7 @@ Goal: one kit family through the full pipeline at final quality.
 
 Goal: the polished, playable core loop with D12 content.
 
-- [ ] All MVP tiles (§5.4) are built through the pipeline and approved. (All 18 tiles draw built pieces, and `data/pending-pieces.ron` is empty. In `assets-source/kit/*/approvals.json` every piece of the meadow, pine forest, oak, the three beach tiles and ocean is owner-approved. Still open, 2026-10-14: `river_edge`, `river_straight_base` and `river_bend_base` carry no piece approval record (the owner approved the river family's shape, seams and LODs as A2); the straight, bend and bridge centres were rebuilt with the wind bend weight in `9ddb35f` and are pending; the spring's and both river mouths' bases and centres have never been approved as pieces (the owner approved the mouth fan blend, R1, and the mouth grass line, round 15); and the road pieces and `house_pad` still read pending although the owner approved their verge fix in round 14 (R6).)
+- [ ] All MVP tiles (§5.4) are built through the pipeline and approved. (All 19 tiles draw built pieces (the windmill tile, ahead of P3, included; its piece approval is still pending), and `data/pending-pieces.ron` is empty. In `assets-source/kit/*/approvals.json` every piece of the meadow, pine forest, oak, the three beach tiles and ocean is owner-approved. Still open, 2026-10-14: `river_edge`, `river_straight_base` and `river_bend_base` carry no piece approval record (the owner approved the river family's shape, seams and LODs as A2); the straight, bend and bridge centres were rebuilt with the wind bend weight in `9ddb35f` and are pending; the spring's and both river mouths' bases and centres have never been approved as pieces (the owner approved the mouth fan blend, R1, and the mouth grass line, round 15); and the road pieces and `house_pad` still read pending although the owner approved their verge fix in round 14 (R6).)
 - [x] Placement: ghost preview, rotation, edge glow, legal-slot inventory filter, auto-rotate. (Ghost, frontier slots, edge glow and socket key marks in play (`72133c8`); the Legend sheet lists fitting tiles first and dims the rest (`5950073`); R and auto-rotate step only through distinct legal orientations and keep the chosen one per tile (`93542a6`). Driven end to end by `make ui-e2e`. Owner follow-ups 2026-10-14: the ghost is a see-through preview of the real tile with its own socket colours on the outline, and slot pinning (`4464dfb`); the ghost draws its seeded scatter and its coast layout (`55d22d7`); Shift-click quick place and Ctrl/Cmd-click replace (`d27a627`, save format v3).)
 - [x] Staged rise animation (§4.4), including below-surface features, skippable. (`72133c8`: column, cap, edges with water filling channels, props, then agents over 2.0 s; placing again fast-forwards, undo and bulldoze mid-rise are safe, reduced motion cuts to the end. `docs/checkpoints/rise/`.)
 - [x] Road network stitching. Cars route between houses across tile boundaries, pulling out of and parking in per-house spots (§7.1). (hex-sim stitches lane endpoints into one road graph and routes cars with A* at a 20 Hz tick; each house owns a car that reverses out of its `anchor-park-<n>` spot and noses into a free one at its destination (`a62c1cc`, `docs/checkpoints/parking/`). Kit cars in three body types with runtime paint (`3dfc734`).)
@@ -594,11 +595,11 @@ Goal: the polished, playable core loop with D12 content.
 ### P3 — Progression and farm/rail content
 
 - [ ] Recipe system, recipe book with hints, discovery moment, creative-mode toggle.
-- [ ] Farm (animals), windmill, rail straight/bend/junction, station, bakery, and at least 6 recipes.
+- [ ] Farm (animals), windmill, rail straight/bend/junction, station, bakery, and at least 6 recipes. (The windmill piece is built, `e5ef3c9`, and the windmill tile is in the inventory ahead of the recipes, owner request 2026-10-14: sails turning in play, `docs/checkpoints/windmill/windmill-play.jpg`.)
 - [ ] Trains route between stations across tile boundaries. Farm animals wander within their farm. Boats on ocean and rivers.
 - [ ] Bridges and level crossings where rail meets road or river.
 
-P3 references are owner-approved (A17, 2026-10-14, `assets-source/refs/<id>/approval.json`), and nothing is modelled yet. The decisions: rail slightly wider than standard gauge, single track, bending across adjacent edges (60°), with a 60° level crossing and field gates; a side-platform station about 20 m long with the ref-1 shelter; a steam tank engine with runtime body colour and two carriages; a pitched-roof red board barn with wheat; hornless brown-and-white cows and black-faced sheep in ref-2's smooth form; a white windmill on a flat tile with animated sails and a still fantail; the bakery as its own tile with a road through it; and the O4 skirt on every P3 tile.
+P3 references are owner-approved (A17, 2026-10-14, `assets-source/refs/<id>/approval.json`). Only the windmill is modelled so far. The decisions: rail slightly wider than standard gauge, single track, bending across adjacent edges (60°), with a 60° level crossing and field gates; a side-platform station about 20 m long with the ref-1 shelter; a steam tank engine with runtime body colour and two carriages; a pitched-roof red board barn with wheat; hornless brown-and-white cows and black-faced sheep in ref-2's smooth form; a white windmill on a flat tile with animated sails and a still fantail; the bakery as its own tile with a road through it; and the O4 skirt on every P3 tile.
 
 ### P4 — Elevation
 

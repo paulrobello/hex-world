@@ -43,12 +43,13 @@ fn manifest_piece_ids() -> BTreeSet<String> {
         .collect()
 }
 
-/// Plan F1 with the owner O1 coast corners and the U3 oak split from the forest (PRD §5.4): edges
-/// 0..5 for each MVP tile.
-const F1: [(&str, [SocketKind; 6]); 18] = [
+/// Plan F1 with the owner O1 coast corners, the U3 oak split from the forest and the windmill ahead
+/// of P3 (PRD §5.4): edges 0..5 for each inventory tile.
+const F1: [(&str, [SocketKind; 6]); 19] = [
     ("meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("forest", [Forest, Forest, Forest, Forest, Forest, Forest]),
     ("oak", [Forest, Forest, Forest, Forest, Forest, Forest]),
+    ("windmill", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("house_cluster", [Road, Grass, Grass, Grass, Grass, Grass]),
     ("road_straight", [Road, Grass, Grass, Road, Grass, Grass]),
     ("road_bend_120", [Road, Grass, Road, Grass, Grass, Grass]),

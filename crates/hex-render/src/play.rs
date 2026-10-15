@@ -10,12 +10,12 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 
 use bevy::{
     asset::RenderAssetUsages,
-    gltf::{Gltf, GltfMesh},
+    gltf::{Gltf, GltfMesh, GltfNode},
     mesh::{Indices, PrimitiveTopology},
     prelude::*,
     render::{renderer::RenderDevice, settings::WgpuFeatures},
 };
-use hex_assets::{parse_manifest, select_family};
+use hex_assets::{parse_manifest, rotor_mesh_name, select_family};
 use hex_core::{
     Axial, Biome, EdgeStatus, HEX_RADIUS, LEVEL_STEP, PairPieces, SocketKind, TileCatalog, TileDef,
     hex_prism,
@@ -36,7 +36,7 @@ use rise::{PlayRises, PropKind, ReducedMotion, RiseMessage, RisePart, RiseRole};
 use crate::{
     ActiveScenario, Scenario, SceneEntity,
     kit_material::{KitMaterial, build_material, slot_requests},
-    kit_scene::{MANIFEST, piece_rotation},
+    kit_scene::{KitRotor, MANIFEST, piece_rotation, rotor_phase},
     scene::lod_range,
     water,
     workload::GateConfig,
@@ -159,6 +159,9 @@ pub struct KitPart {
     material: Handle<KitMaterial>,
     /// Its manifest material slot (`beach_sand`, `river_bed`, ...).
     pub(crate) slot: String,
+    /// A rotor part (PRD §7.2): the `<id>_rotor_lod<n>` node's rest transform in the piece frame. It
+    /// draws there under its LOD's body and turns about its local X ([`KitRotor`]).
+    pub(crate) rotor: Option<Transform>,
 }
 
 /// The built kit pieces. `Loading` holds pieces of packs that arrived before core; `Ready` is
@@ -335,9 +338,10 @@ pub fn finish_kit(
     view: Res<PlayView>,
     catalog: Res<PlayCatalog>,
     server: Res<AssetServer>,
-    (gltfs, gltf_meshes, mut materials): (
+    (gltfs, gltf_meshes, gltf_nodes, mut materials): (
         Res<Assets<Gltf>>,
         Res<Assets<GltfMesh>>,
+        Res<Assets<GltfNode>>,
         ResMut<Assets<KitMaterial>>,
     ),
     config: Res<GateConfig>,
@@ -363,7 +367,7 @@ pub fn finish_kit(
                 &id,
                 packs,
                 &server,
-                (&gltfs, &gltf_meshes, &mut materials),
+                (&gltfs, &gltf_meshes, &gltf_nodes, &mut materials),
                 config.kit_hooks,
             );
             if parts.is_empty() {
@@ -395,12 +399,18 @@ pub fn finish_kit(
     }
 }
 
-/// One loaded piece's parts by LOD, with a material per manifest slot.
+/// One loaded piece's parts by LOD, with a material per manifest slot, and each LOD's rotor (the
+/// node lookup of `kit_scene::finish_kit`) after its body.
 fn build_piece(
     id: &str,
     packs: &PlayPacks,
     server: &AssetServer,
-    (gltfs, gltf_meshes, materials): (&Assets<Gltf>, &Assets<GltfMesh>, &mut Assets<KitMaterial>),
+    (gltfs, gltf_meshes, gltf_nodes, materials): (
+        &Assets<Gltf>,
+        &Assets<GltfMesh>,
+        &Assets<GltfNode>,
+        &mut Assets<KitMaterial>,
+    ),
     hooks: crate::workload::KitHooks,
 ) -> Vec<KitPart> {
     let (manifest, family) = (&packs.manifest, packs.family);
@@ -426,7 +436,19 @@ fn build_piece(
         else {
             continue;
         };
-        for prim in &gm.primitives {
+        let rotor = g
+            .named_nodes
+            .get(rotor_mesh_name(id, lod).as_str())
+            .and_then(|h| gltf_nodes.get(h))
+            .and_then(|node| {
+                let rm = node.mesh.as_ref().and_then(|h| gltf_meshes.get(h))?;
+                Some((rm, node.transform))
+            });
+        let bodies = gm.primitives.iter().map(|prim| (prim, None));
+        let rotors = rotor
+            .into_iter()
+            .flat_map(|(rm, t)| rm.primitives.iter().map(move |prim| (prim, Some(t))));
+        for (prim, rotor) in bodies.chain(rotors) {
             let slot_name = prim
                 .material
                 .as_ref()
@@ -456,6 +478,7 @@ fn build_piece(
                     mesh: prim.mesh.clone(),
                     material,
                     slot: slot_name,
+                    rotor,
                 });
             }
         }
@@ -474,6 +497,10 @@ fn spawn_kit(
 }
 
 /// [`spawn_kit`], returning the spawned part entities (`None` when the piece is not in the kit).
+///
+/// A rotor part spawns as a child of its LOD's first body part, at its node transform, so it rides
+/// the hero's placement and rise (scale and visibility) and [`crate::kit_scene::spin_rotors`] turns
+/// it in its parent's frame. Its phase comes from the cell and where its hub stands on the tile.
 fn spawn_kit_parts(
     p: &mut ChildSpawnerCommands,
     kit: &HashMap<String, Vec<KitPart>>,
@@ -483,7 +510,29 @@ fn spawn_kit_parts(
 ) -> Option<Vec<Entity>> {
     let parts = kit.get(piece)?;
     let mut out = vec![];
+    let mut bodies: [Option<Entity>; 3] = [None; 3];
     for part in parts {
+        if let Some(rest) = part.rotor {
+            let Some(body) = bodies.get(part.lod).copied().flatten() else {
+                continue;
+            };
+            let [x, z] = rise.map_or([0.0; 2], |(cell, _)| cell.to_world(HEX_RADIUS));
+            let hub = Vec3::new(x, 0.0, z) + (t * rest).translation;
+            let e = p.commands_mut().spawn((
+                Mesh3d(part.mesh.clone()),
+                MeshMaterial3d(part.material.clone()),
+                rest,
+                KitRotor {
+                    base: rest,
+                    phase: rotor_phase(hub),
+                },
+                lod_range(part.lod),
+                SceneEntity,
+                ChildOf(body),
+            ));
+            out.push(e.id());
+            continue;
+        }
         let mut e = p.spawn((
             Mesh3d(part.mesh.clone()),
             MeshMaterial3d(part.material.clone()),
@@ -493,6 +542,9 @@ fn spawn_kit_parts(
         ));
         if let Some((cell, role)) = rise {
             e.insert(RisePart::new(cell, role, t));
+        }
+        if let Some(b) = bodies.get_mut(part.lod) {
+            b.get_or_insert(e.id());
         }
         out.push(e.id());
     }
@@ -1049,10 +1101,63 @@ mod tests {
         }
     }
 
+    /// A hero's rotor (the windmill's sails) spawns under its LOD's body at its node transform with
+    /// a [`KitRotor`] and no rise part of its own, so the rise moves it with the tower and
+    /// `spin_rotors` alone writes its transform.
+    #[test]
+    fn a_hero_rotor_spawns_under_its_lod_body() {
+        let rest = Transform::from_xyz(1.0, 9.0, 0.0);
+        let part = |lod: usize, rotor: Option<Transform>| KitPart {
+            lod,
+            mesh: Handle::default(),
+            material: Handle::default(),
+            slot: "windmill_sail".into(),
+            rotor,
+        };
+        let kit = HashMap::from([(
+            "windmill".to_owned(),
+            vec![
+                part(0, None),
+                part(0, Some(rest)),
+                part(1, None),
+                part(1, Some(rest)),
+            ],
+        )]);
+        let cell = Axial::new(1, 0);
+        let role = RiseRole::Prop {
+            order: 0,
+            count: 1,
+            kind: PropKind::Building { floors: 2 },
+        };
+        let t = Transform::from_rotation(Quat::from_rotation_y(-120f32.to_radians()));
+        let mut world = World::new();
+        let root = world.spawn_empty().id();
+        world.commands().entity(root).with_children(|p| {
+            let ids = spawn_kit_parts(p, &kit, "windmill", t, Some((cell, role))).unwrap();
+            assert_eq!(ids.len(), 4);
+        });
+        world.flush();
+        let mut rotors = world.query::<(&KitRotor, &Transform, &ChildOf, Has<RisePart>)>();
+        let found: Vec<_> = rotors
+            .iter(&world)
+            .map(|(r, tf, c, rises)| (*r, *tf, c.parent(), rises))
+            .collect();
+        assert_eq!(found.len(), 2, "one rotor per LOD");
+        for (r, tf, parent, rises) in &found {
+            assert_eq!((r.base, *tf), (rest, rest));
+            assert!(!rises, "the rotor rides its body's rise");
+            assert_ne!(*parent, root);
+            let body = world.entity(*parent);
+            assert!(body.contains::<RisePart>() && !body.contains::<KitRotor>());
+        }
+        assert_ne!(found[0].2, found[1].2, "each LOD's rotor has its own body");
+        assert_eq!(found[0].0.phase, found[1].0.phase, "one hub, one phase");
+    }
+
     #[test]
     fn every_mvp_tile_resolves_and_biomes_index() {
         let c = PlayCatalog::default();
-        assert_eq!(c.0.tiles().len(), 18);
+        assert_eq!(c.0.tiles().len(), 19);
         let biomes: std::collections::BTreeSet<_> =
             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
         assert_eq!(biomes.len(), 4);

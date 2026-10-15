@@ -503,6 +503,28 @@ try {
   await key("Escape");
   await until(async () => !(await play()).pinned, "Esc unpins");
 
+  // The windmill tile (owner request, 2026-10-14) is in the Tiles sheet with its baked thumbnail and
+  // places next to grass edges; its placement is undone so the world below is unchanged.
+  check(await page.locator(".row[data-tile=windmill]").count() > 0, "the Tiles sheet lists the windmill");
+  const millThumb = await page.locator(".row[data-tile=windmill] img.row__thumb").first().getAttribute("src");
+  check(millThumb?.includes("windmill-r0.webp"), `the windmill row shows its thumbnail (${millThumb})`);
+  check((await text(".row[data-tile=windmill]")).includes("Windmill"), "the windmill row is named Windmill");
+  const millAt = [-1, 1];
+  check(!tileAt(await play(), ...millAt), "(-1, 1) is free for the windmill");
+  await page.evaluate(() => window.hexWorld.selectTile("windmill"));
+  await until(async () => (await play()).selected === "windmill", "Windmill selected");
+  await events();
+  const millBefore = (await play()).tiles.length;
+  await page.evaluate(([q, r]) => window.hexWorld.placeTile(q, r), millAt);
+  await until(async () => tileAt(await play(), ...millAt)?.tile === "windmill", "the windmill is placed at (-1, 1) beside the meadows");
+  check((await play()).tiles.length === millBefore + 1, "placing the windmill adds one tile");
+  check((await events()).some((e) => e.type === "tilePlaced" && same(e, ...millAt) && e.tile === "windmill"), "tilePlaced names the windmill");
+  await page.waitForTimeout(2600);
+  await placementShot("windmill-placed");
+  await key("ControlOrMeta+z");
+  await until(async () => !tileAt(await play(), ...millAt), "undo removes the windmill");
+  check((await play()).tiles.length === millBefore, "the windmill undo restores the tile count");
+
   // S8 photo mode (PRD §4.6): P enters (the HUD hides, agents pause), WASD and E fly the free camera,
   // the panel changes DOF, a 2× PNG exports through the offscreen target and downloads, then P leaves
   // (HUD back, agents running, the orbit camera exactly where it was).

@@ -1,0 +1,26 @@
+// The windmill (P3 piece, refs owner-approved under A17) on meadow_base's grass, ahead of the P3
+// recipes. Grass edges, so it mixes freely with meadows; a light drift of wildflowers and a few
+// rocks keep clear of the tower by scatter's hero footprint (the trunk only, the sails turn overhead).
+// Its sails face +x at yaw 0; yaw 120 turns them toward the play camera, as in the kit scenario.
+(
+    id: "windmill",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    props: (
+        scatter: [
+            (piece: "wildflower_clump", density: 1.2, drift: true),
+            (piece: "rock_small", density: 0.3),
+        ],
+        hero: [
+            (piece: "windmill", at: (0.0, 0.0), yaw_deg: 120.0),
+        ],
+    ),
+)

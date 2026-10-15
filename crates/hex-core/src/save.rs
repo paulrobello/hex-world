@@ -1006,6 +1006,31 @@ mod tests {
         assert_eq!(b.tile(WEST), None, "the bulldoze was redone last");
     }
 
+    /// The windmill tile (P3 piece, in the inventory ahead of P3) saves and loads like any tile:
+    /// its id, rotation and the history that placed it.
+    #[test]
+    fn a_placed_windmill_round_trips() {
+        let c = catalog();
+        let mut w = World::new(9);
+        w.place(&c, EAST, "windmill", 3).unwrap();
+        w.place(&c, WEST, "meadow", 0).unwrap();
+        let save = SaveData {
+            world: w,
+            unlocks: BTreeSet::new(),
+            camera: camera(),
+            settings: settings(),
+        };
+        let back = decode(&save.encode()).unwrap();
+        assert_eq!(back, save);
+        let mill = back.world.tile(EAST).unwrap();
+        assert_eq!((mill.def.as_str(), mill.rotation), ("windmill", 3));
+        let mut w = back.world.clone();
+        assert!(w.undo() && w.undo(), "both placements undo after the load");
+        assert_eq!(w.tile(EAST), None);
+        assert!(w.redo());
+        assert_eq!(w.tile(EAST).unwrap().def, "windmill");
+    }
+
     #[test]
     fn a_fresh_world_round_trips() {
         let save = SaveData {

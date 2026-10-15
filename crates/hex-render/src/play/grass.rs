@@ -1136,6 +1136,27 @@ mod tests {
         assert_eq!(around(rock.0, 0.0, rock.1), 0, "grass under the rock");
     }
 
+    /// The windmill tile's grass keeps clear of the tower (its trunk footprint) and still grows
+    /// right up to it.
+    #[test]
+    fn grass_clears_the_windmill_tower() {
+        let c = TileCatalog::builtin().unwrap();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let def = c.get("windmill").unwrap();
+        let ex = exclusions(def, &[], &[]);
+        let tower = scatter::footprint("windmill").ground + PROP_GAP;
+        assert_eq!(ex, vec![(Vec2::ZERO, tower)]);
+        let l = layout(1, &meadow_surface(), &grass_slots(&m, def, &c), &ex);
+        let within = |lo: f32, hi: f32| {
+            l.blades
+                .iter()
+                .filter(|b| (lo..hi).contains(&b.root.xz().length()))
+                .count()
+        };
+        assert_eq!(within(0.0, tower), 0, "grass inside the tower");
+        assert!(within(tower, tower + 1.0) > 0, "no grass at the tower foot");
+    }
+
     #[test]
     fn densities_parse_shares_percentages_and_aliases() {
         let p = |s: &str| Density::parse(s).map(Density::percent);

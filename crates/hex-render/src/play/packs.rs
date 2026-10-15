@@ -379,6 +379,8 @@ mod tests {
             need("house_cluster"),
             BTreeSet::from([CORE_PACK, "village"])
         );
+        // The windmill stands on the core meadow base; its piece streams with the village.
+        assert_eq!(need("windmill"), BTreeSet::from([CORE_PACK, "village"]));
         assert_eq!(need("ocean"), BTreeSet::from(["water"]));
         assert_eq!(need("river_bend"), BTreeSet::from(["water"]));
         // The bridge's road lanes use the core edge piece.

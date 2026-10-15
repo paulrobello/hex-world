@@ -253,8 +253,9 @@ pub fn start_kit(
 /// Rotor speed (PRD §7.2: windmill sails turn as a rigid transform): a steady, slow 4 rpm.
 pub const ROTOR_RPM: f64 = 4.0;
 
-/// A spinning part of a kit instance: the rotor node's rest transform in the world (placement, then
-/// the node's own transform) and its phase. It turns about its local +X axis.
+/// A spinning part of a kit instance: the rotor node's rest transform in its parent's frame (the
+/// world here: placement, then the node's own transform; in play the hero's body part, so the node's
+/// own transform) and its phase. It turns about its local +X axis.
 #[derive(Component, Clone, Copy, Debug, PartialEq)]
 pub struct KitRotor {
     pub base: Transform,

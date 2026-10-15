@@ -1466,8 +1466,15 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 18, "every MVP tile ran");
-        for id in ["forest", "oak", "meadow", "road_straight", "house_cluster"] {
+        assert_eq!(counts.len(), 19, "every inventory tile ran");
+        for id in [
+            "forest",
+            "oak",
+            "windmill",
+            "meadow",
+            "road_straight",
+            "house_cluster",
+        ] {
             assert!(counts[id] > 0, "{id} scatters: {counts:?}");
         }
         for id in [

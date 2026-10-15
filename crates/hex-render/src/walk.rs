@@ -10,9 +10,10 @@
 //!   ([`PlayWaiting`]) are not ground at all.
 //! - **Water.** On a tile with water (`water::tiles::water_kind`) the surface is [`WATER_Y`]: the
 //!   walker wades where the bed is at most [`MAX_WADE`] under it and stops at that contour.
-//! - **Obstacles.** Houses, the hero oak, spruces and rocks block the walker by their collider
-//!   (`<piece>_collider` in the kit GLB) as a convex footprint on the ground, placed with the hero
-//!   or scatter instance's transform under the tile's rest transform. Wildflowers do not block.
+//! - **Obstacles.** Houses, the windmill, the hero oak, spruces and rocks block the walker by their
+//!   collider (`<piece>_collider` in the kit GLB) as a convex footprint on the ground, placed with
+//!   the hero or scatter instance's transform under the tile's rest transform. Wildflowers do not
+//!   block.
 //! - **Props to look at.** Photo mode's click to focus ([`WalkGround::pick_prop`]) hits the same
 //!   drawn obstacle instances as volumes: the collider footprint extruded from the collider's foot
 //!   to the top of the piece's non-foliage LOD0 mesh, and for trees a crown of stacked cylinders
@@ -897,6 +898,35 @@ mod tests {
         );
         let reach = hull.iter().map(|p| p.length()).fold(0.0, f32::max);
         assert!((2.5..3.2).contains(&reach), "trunk reach {reach}");
+    }
+
+    /// A placed windmill tile stops the walker at its tower, from every side and through its turn.
+    #[test]
+    fn a_placed_windmill_tile_blocks_at_the_tower() {
+        let mut tested = 0;
+        for rotation in [0, 3] {
+            let g = world(&[(0, 0, "windmill", rotation)]);
+            for k in 0..6 {
+                let a = (60.0 * k as f32 + 30.0).to_radians();
+                let start = Vec2::new(a.cos(), a.sin()) * 8.0;
+                if g.stand(start).is_err() {
+                    continue;
+                }
+                let s = walk(&g, start, -start, 8.0);
+                let at = s.pos.xz().length();
+                if s.blocked == Some(Blocked::Obstacle("rock_small".into())) {
+                    continue;
+                }
+                assert_eq!(
+                    s.blocked,
+                    Some(Blocked::Obstacle("windmill".into())),
+                    "r{rotation} side {k}: stopped at {at} m"
+                );
+                assert!((2.4..3.6).contains(&at), "r{rotation} side {k}: {at} m out");
+                tested += 1;
+            }
+        }
+        assert!(tested >= 8, "only {tested} approaches reached the tower");
     }
 
     fn catalog() -> TileCatalog {

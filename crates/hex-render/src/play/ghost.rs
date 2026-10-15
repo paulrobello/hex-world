@@ -583,7 +583,7 @@ fn spawn(
                 .flatten()
                 .filter(|_| ground)
                 .unwrap_or(role);
-            (p.mesh.clone(), t, role)
+            (p.mesh.clone(), t * p.rotor.unwrap_or_default(), role)
         })
     });
     let water = water.map(|(mesh, role)| (mesh, Transform::IDENTITY, role));
