@@ -1209,20 +1209,39 @@ mod tests {
         assert!((a.0 - b.0).abs() < 1e-5 && (a.1 - b.1).abs() < 1e-4);
     }
 
-    // Bit-exact: the meshes' f32 trig comes from the platform libm, so this hash only holds on macOS (CI's Linux differs).
-    #[cfg(target_os = "macos")]
+    // The meshes' f32 trig comes from the platform libm, which differs by OS and version in the last
+    // bits, so floats are checked as per-attribute sums within a relative tolerance and everything
+    // else (attribute names, lengths, non-float data, indices) exactly.
     #[test]
-    fn lookdev_meshes_hash() {
+    fn lookdev_meshes_fingerprint() {
+        use bevy::mesh::VertexAttributeValues as V;
+        use std::collections::BTreeMap;
         use std::hash::{Hash, Hasher};
-        let mut h = std::collections::hash_map::DefaultHasher::new();
+        let mut shape = std::collections::hash_map::DefaultHasher::new();
+        // Per float attribute: sum, sum of squares, sum of magnitudes, position-weighted sum.
+        let mut sums: BTreeMap<&str, [f64; 4]> = BTreeMap::new();
         let mut eat = |m: &Mesh| {
-            for (_, v) in m.attributes() {
-                for b in v.get_bytes() {
-                    b.hash(&mut h);
+            for (a, v) in m.attributes() {
+                a.name.hash(&mut shape);
+                v.len().hash(&mut shape);
+                if !matches!(
+                    v,
+                    V::Float32(_) | V::Float32x2(_) | V::Float32x3(_) | V::Float32x4(_)
+                ) {
+                    v.get_bytes().hash(&mut shape);
+                    continue;
+                }
+                let s = sums.entry(a.name).or_default();
+                for (i, c) in v.get_bytes().as_chunks::<4>().0.iter().enumerate() {
+                    let x = f64::from(f32::from_le_bytes(*c));
+                    s[0] += x;
+                    s[1] += x * x;
+                    s[2] += x.abs();
+                    s[3] += (i % 7 + 1) as f64 * x;
                 }
             }
             if let Some(Indices::U32(i)) = m.indices() {
-                i.hash(&mut h);
+                i.hash(&mut shape);
             }
         };
         for (cell, rot) in layout() {
@@ -1232,8 +1251,68 @@ mod tests {
                 eat(&s);
             }
         }
-        // Recorded before the field refactor: the look-dev meshes are bit-identical.
-        assert_eq!(h.finish(), 0x8d2d_d2e1_d1c7_899f);
+        // Recorded on macOS from the meshes the old bit-exact hash (0x8d2d_d2e1_d1c7_899f) pinned.
+        assert_eq!(
+            shape.finish(),
+            0xfeb3_2c27_f462_f763,
+            "mesh structure changed"
+        );
+        let want: [(&str, [f64; 4]); 4] = [
+            (
+                "Vertex_Color",
+                [
+                    -182182.72189814324,
+                    56052113.95172395,
+                    1578868.2136322095,
+                    -728508.2079136982,
+                ],
+            ),
+            (
+                "Vertex_Normal",
+                [
+                    81215.29094168528,
+                    91716.00113939933,
+                    99667.12622056948,
+                    324738.35702649,
+                ],
+            ),
+            (
+                "Vertex_Position",
+                [
+                    -89167.15304436398,
+                    11813898.78045414,
+                    1353038.9415944687,
+                    -353259.45026260597,
+                ],
+            ),
+            (
+                "Vertex_Uv",
+                [
+                    -272427.15112400055,
+                    48165257.726459414,
+                    1231765.1692934036,
+                    -1089507.5775465965,
+                ],
+            ),
+        ];
+        assert_eq!(
+            sums.keys().copied().collect::<Vec<_>>(),
+            want.map(|(k, _)| k)
+        );
+        for (k, w) in want {
+            let g = sums[k];
+            // Each sum is held to 1e-5 of its own magnitude: a last-bit libm difference moves it by
+            // under 1e-6, any real change to the meshes by far more.
+            for (i, scale) in [(0, w[2]), (1, w[1]), (2, w[2]), (3, 7.0 * w[2])] {
+                let tol = 1e-5 * scale;
+                assert!(
+                    (g[i] - w[i]).abs() <= tol,
+                    "{k} sum {i}: {} vs {} (tolerance {tol})",
+                    g[i],
+                    w[i]
+                );
+            }
+        }
     }
 
     #[test]
