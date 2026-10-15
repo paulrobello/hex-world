@@ -1638,17 +1638,6 @@ fn budget_class(p: &PieceEntry) -> Result<BudgetClass, String> {
         ));
     }
     class_allowed(&p.id, p.kind, class)?;
-    // The provenance must record the class the maps were actually compressed under.
-    if let Some(prov) = std::fs::read_to_string(repo().join(&p.provenance))
-        .ok()
-        .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
-        && prov["compression"]["budgets"]["class"] != name
-    {
-        return Err(format!(
-            "{}: provenance budget class {} != compress report {name} (re-run kit-provenance)",
-            p.id, prov["compression"]["budgets"]["class"]
-        ));
-    }
     Ok(class)
 }
 
@@ -2009,6 +1998,19 @@ fn check_provenance(kit: &Kit, p: &PieceEntry) -> Vec<String> {
         e.push(format!("{}: validation.pass is not true", p.id));
     }
     e.extend(encode_errors(&p.id, &v["compression"]["textureEncodes"]));
+    // The provenance must record the class the maps were actually compressed under. A provenance
+    // check, so `make kit-provenance` (which skips them until it writes) never needs an early write.
+    let report = path.with_file_name("compress-report.json");
+    if let Some(r) = std::fs::read_to_string(&report)
+        .ok()
+        .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
+        && v["compression"]["budgets"]["class"] != r["budgets"]["class"]
+    {
+        e.push(format!(
+            "{}: provenance budget class {} != compress report {} (re-run kit-provenance)",
+            p.id, v["compression"]["budgets"]["class"], r["budgets"]["class"]
+        ));
+    }
     let listed: BTreeSet<&str> = v["derivedFiles"]
         .as_array()
         .into_iter()
@@ -2654,7 +2656,7 @@ fn gate_catches_budget_overrun_and_stale_budget_class() {
 
 #[test]
 fn gate_rejects_self_declared_budget_class() {
-    let (_, p) = fixture();
+    let (k, p) = fixture();
     let tmp = temp("selfclass");
     let src = repo()
         .join(&p.provenance)
@@ -2688,8 +2690,16 @@ fn gate_rejects_self_declared_budget_class() {
             .unwrap();
     prov["compression"]["budgets"]["class"] = "hero".into();
     std::fs::write(tmp.join("provenance.json"), prov.to_string()).unwrap();
-    let err = budget_class(&q).unwrap_err();
-    assert!(err.contains("provenance budget class"), "{err}");
+    assert_eq!(
+        budget_class(&q),
+        Ok(BudgetClass::Piece),
+        "a provenance check only"
+    );
+    let e = check_provenance(&k, &q);
+    assert!(
+        e.iter().any(|m| m.contains("provenance budget class")),
+        "{e:?}"
+    );
 }
 
 #[test]

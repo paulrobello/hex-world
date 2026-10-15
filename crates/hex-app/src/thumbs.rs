@@ -46,9 +46,11 @@ const WARM_FRAMES: u32 = 30;
 const SETTLE_FRAMES: u32 = 20;
 /// Frames held after the request, so the capture never sees the next tile.
 const HOLD_FRAMES: u32 = 3;
-/// Extra captures of a tile whose frame came back all black before the run keeps the black frame
-/// (and the build step fails on it).
-const BLANK_RETRIES: u32 = 3;
+/// How long a tile whose frame came back all black is captured again before the run stops with
+/// exit 1 (so `make thumbs` fails before the build step). Wall time, not frames: under host load
+/// the GPU can return black frames for several seconds, across several shots in a row. Stopping
+/// at the first expired shot bounds a run on a GPU that never draws to one wait.
+const BLANK_WAIT: std::time::Duration = std::time::Duration::from_secs(60);
 
 /// The thumbnail mode's fixed render settings: the play scenario with no post stack, tilt-shift
 /// or FPS counter, the fixed clock, and the supersampled window.
@@ -127,7 +129,16 @@ struct ThumbRun {
     stage: usize,
     stage_frame: u32,
     blank: std::sync::Arc<std::sync::atomic::AtomicBool>,
-    retries: u32,
+    /// When the current shot first came back black, and how many black frames since.
+    blank_since: Option<std::time::Instant>,
+    blanks: u32,
+    /// The pending capture stores a black frame: [`BLANK_WAIT`] ran out.
+    keep_black: bool,
+}
+
+/// A capture keeps a black frame only once the shot has been black for [`BLANK_WAIT`].
+fn keep_black(blank_since: Option<std::time::Instant>, now: std::time::Instant) -> bool {
+    blank_since.is_some_and(|t| now.duration_since(t) >= BLANK_WAIT)
 }
 
 impl ThumbRun {
@@ -153,7 +164,9 @@ impl ThumbRun {
             stage: 0,
             stage_frame: 0,
             blank: Default::default(),
-            retries: 0,
+            blank_since: None,
+            blanks: 0,
+            keep_black: false,
         }
     }
 }
@@ -256,7 +269,9 @@ fn drive(
         stage,
         stage_frame,
         blank,
-        retries,
+        blank_since,
+        blanks,
+        keep_black: keep,
         ..
     } = &mut *run;
     let Some(s) = stages.get(*stage) else {
@@ -284,23 +299,33 @@ fn drive(
         Some(name) => {
             if *stage_frame == SETTLE_FRAMES {
                 blank.store(false, std::sync::atomic::Ordering::SeqCst);
-                let keep_black = *retries >= BLANK_RETRIES;
-                capture::request_unless_blank(&mut commands, name, blank.clone(), keep_black);
+                *keep = keep_black(*blank_since, std::time::Instant::now());
+                capture::request_unless_blank(&mut commands, name, blank.clone(), *keep);
             }
             SETTLE_FRAMES + HOLD_FRAMES
         }
     };
     // A shot stage moves on only once its capture is encoded, so a blank frame can be retaken.
     if *stage_frame >= last && (s.shot.is_none() || capture::pending() == 0) {
-        if s.shot.is_some()
-            && blank.swap(false, std::sync::atomic::Ordering::SeqCst)
-            && *retries < BLANK_RETRIES
-        {
-            *retries += 1;
+        if s.shot.is_some() && blank.swap(false, std::sync::atomic::Ordering::SeqCst) && !*keep {
+            blank_since.get_or_insert_with(std::time::Instant::now);
+            *blanks += 1;
             *stage_frame = 0;
             return;
         }
-        *retries = 0;
+        if let (Some(t), Some(name)) = (blank_since.take(), &s.shot) {
+            let waited = t.elapsed().as_secs_f32();
+            if *keep {
+                error!("thumbs: {name} still black after {waited:.1} s ({blanks} blank frames)");
+                std::process::exit(1);
+            } else {
+                info!(
+                    "thumbs: {name} rendered after {waited:.1} s waiting through {blanks} blank frame(s)"
+                );
+            }
+        }
+        *blanks = 0;
+        *keep = false;
         *stage += 1;
         *stage_frame = 0;
     }
@@ -312,6 +337,18 @@ mod tests {
 
     fn catalog() -> TileCatalog {
         TileCatalog::builtin().unwrap()
+    }
+
+    #[test]
+    fn a_black_frame_is_kept_only_after_the_wait() {
+        let now = std::time::Instant::now();
+        assert!(
+            !keep_black(None, now),
+            "the first capture never keeps black"
+        );
+        assert!(!keep_black(Some(now), now));
+        assert!(!keep_black(Some(now), now + BLANK_WAIT / 2));
+        assert!(keep_black(Some(now), now + BLANK_WAIT));
     }
 
     #[test]

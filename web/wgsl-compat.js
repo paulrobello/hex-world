@@ -9,7 +9,8 @@
   var mode = new URLSearchParams(location.search).get("wgsl_compat");
   var feats = navigator.gpu.wgslLanguageFeatures;
   var native = !!(feats && feats.has("texture_and_sampler_let"));
-  var stats = { active: false, native: native, modules: 0, rewritten: 0, aliases: 0, unhandled: 0, ms: 0 };
+  // perModule: the alias count of each rewritten module, in creation order (e2e/smoke.mjs checks each).
+  var stats = { active: false, native: native, modules: 0, rewritten: 0, aliases: 0, perModule: [], unhandled: 0, ms: 0 };
   window.__wgslCompat = stats;
   if (mode === "0" || (native && mode !== "1")) return;
   stats.active = true;
@@ -113,6 +114,7 @@
       if (r.aliases) {
         stats.rewritten++;
         stats.aliases += r.aliases;
+        stats.perModule.push(r.aliases);
         var copy = {};
         for (var k in desc) copy[k] = desc[k];
         copy.code = r.code;

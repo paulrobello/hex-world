@@ -83,6 +83,11 @@ fn main() {
             args::Present::Immediate => PresentMode::Immediate,
             args::Present::NoVsync => PresentMode::AutoNoVsync,
         };
+        // Thumbnails capture the window, and on macOS a window fully behind another app's window
+        // captures all black: the small thumbnail window opens behind the active app, so it floats.
+        if flags.thumbs {
+            window.window_level = bevy::window::WindowLevel::AlwaysOnTop;
+        }
     }
 
     let game = game::GameState::new(flags.seed);

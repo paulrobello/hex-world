@@ -234,8 +234,10 @@ await withPage(["--disable-gpu"], async (page) => {
 // 4. Forced WGSL compat shim (web/wgsl-compat.js, the Safari path): Tint must accept every rewritten module.
 // Exact per-module alias counts pin Bevy 0.20's PBR fragment shader (8 handle lets); a Bevy bump that changes
 // them must be re-checked in Safari. A pipeline compiled before the IBL loads is specialized again after it,
-// so the same fragment can be rewritten twice under host load: the check is per rewritten module.
-const compatOk = (c, perModule) => c?.active && c.rewritten >= 1 && c.aliases === perModule * c.rewritten;
+// so the same fragment can be rewritten twice under host load: the shim records each rewritten module's
+// alias count (perModule), and every one must match exactly, however many modules a run rewrites.
+const compatOk = (c, perModule) => c?.active && c.rewritten >= 1 && c.perModule?.length === c.rewritten &&
+  c.perModule.every((n) => n === perModule) && c.aliases === perModule * c.rewritten;
 for (const [query, aliases] of [["?wgsl_compat=1&scenario=single", 8],
   ["?wgsl_compat=1&scenario=gate2000&view=closeup&layout=instanced", 8]]) {
   await withPage(gpuArgs, async (page) => {

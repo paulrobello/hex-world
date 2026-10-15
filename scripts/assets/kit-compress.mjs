@@ -1,7 +1,8 @@
 // Stage -> runtime: meshopt GLB (FLOAT attributes, D7) + per-channel UASTC -> BC7/ASTC KTX2 (zstd) + PNG.
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { copyFile, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { NodeIO } from "@gltf-transform/core";
 import { EXTMeshoptCompression } from "@gltf-transform/extensions";
@@ -89,10 +90,15 @@ export async function encodeMap(png, channel, outStem) {
 
 // budgetClass is a KTX_BUDGETS key: "piece" (unique maps, default), "tileable" (a shared material set)
 // or "hero". Output goes to a sibling temp dir that replaces outDir only after every budget passes,
-// so a failed run leaves outDir and the report untouched.
-export async function compressDir({ stageDir, outDir, reportPath, name, budgetClass = "piece", budgets = KTX_BUDGETS }) {
+// so a failed run leaves outDir and the report untouched. A piece stage (piece, the default) must
+// hold the GLB and export report kit-build writes: without the GLB the swap would replace the
+// shipped GLB with nothing. Material sets have neither.
+export async function compressDir({ stageDir, outDir, reportPath, name, budgetClass = "piece", budgets = KTX_BUDGETS, piece = true }) {
   const ktxMax = budgets[budgetClass];
   if (ktxMax === undefined) throw new Error(`${name}: unknown budget class "${budgetClass}" (${Object.keys(budgets)})`);
+  const shown = stageDir.startsWith(ROOT + sep) ? relative(ROOT, stageDir) : stageDir;
+  for (const f of piece ? [`${name}.glb`, "export-report.json"] : [])
+    if (!existsSync(join(stageDir, f))) throw new Error(`${name}: stage ${shown} has no ${f}; re-run make kit-build PIECE=${name}`);
   const work = `${outDir}.tmp-${process.pid}`;
   await rm(work, { recursive: true, force: true });
   try {
@@ -152,8 +158,14 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     const exp = await readFile(join(stageDir, "export-report.json"), "utf8").then(JSON.parse, () => ({}));
     budgetClass = exp.budgetClass ?? (kind === "material" ? "tileable" : "piece");
   }
-  const rep = await compressDir({ name, budgetClass, stageDir,
-    outDir: resolve(ROOT, opt("out", `assets/kit/p1/${sub}`)),
-    reportPath: resolve(ROOT, opt("report", `assets-source/kit/${sub}/compress-report.json`)) });
+  let rep;
+  try {
+    rep = await compressDir({ name, budgetClass, stageDir, piece: kind === "piece",
+      outDir: resolve(ROOT, opt("out", `assets/kit/p1/${sub}`)),
+      reportPath: resolve(ROOT, opt("report", `assets-source/kit/${sub}/compress-report.json`)) });
+  } catch (e) {
+    console.error(`kit-compress: ${e.message}`);
+    process.exit(1);
+  }
   console.log(`${name} [${rep.budgets.class}]: glb ${rep.glb?.bytes ?? "-"} B, ktx bc7 ${rep.budgets.ktxBytes.bc7} B, astc ${rep.budgets.ktxBytes.astc} B`);
 }

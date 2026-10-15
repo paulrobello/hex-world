@@ -8,6 +8,7 @@
   {"cmd": "dump_state", "name": "ffe-packs-early"},
   {"cmd": "hover", "q": 9, "r": -9},
   {"cmd": "toggle", "what": "photo"},
+  {"cmd": "photo", "dof": "off", "pause_agents": false},
   {"cmd": "wait", "frames": 900},
   {"cmd": "dump_state", "name": "ffe-packs-ready"},
   {"cmd": "camera", "pos": [41.6, 40, 34], "look_at": [41.6, 0, 0]},

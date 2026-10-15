@@ -1,5 +1,6 @@
 // node --test scripts/assets/kit-provenance.test.mjs (run by make kit-compress-test). Node builtins only.
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
@@ -9,6 +10,9 @@ import { assembleProvenance } from "./kit-provenance.mjs";
 import { sha256 } from "./kit-lib.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const CLI = join(dirname(fileURLToPath(import.meta.url)), "kit-provenance.mjs");
+const cli = (opts, ...args) => spawnSync(process.execPath, [CLI, opts.id, "--source", opts.source, "--runtime", opts.runtime,
+  "--refs", opts.refs, ...args], { encoding: "utf8" });
 
 async function stage({ approval = true, maskTransfer = "linear", inManifest = true } = {}) {
   const dir = await mkdtemp(join(tmpdir(), "kitprov-"));
@@ -202,6 +206,65 @@ test("material mode refuses an albedo recorded as linear (R6)", async () => {
   const { dir, opts } = await stageMaterial({ albedoTransfer: "linear" });
   try {
     await assert.rejects(assembleProvenance(opts), /albedo bc7 transfer linear, expected srgb/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+// make kit-provenance once ran with no target/kit-stage/<id>/: kit_render.py failed, but the first
+// kit-provenance.mjs call had already replaced a passing provenance.json with validation.pass false.
+test("a missing build stage is refused before provenance.json is touched", async () => {
+  const { dir, opts } = await stage();
+  try {
+    const out = join(opts.source, "provenance.json");
+    await writeFile(out, JSON.stringify({ pieceId: "pc", validation: { pass: true } }) + "\n");
+    const before = await readFile(out);
+    const st = join(dir, "kit-stage/pc");
+    await assert.rejects(assembleProvenance({ ...opts, stage: st }),
+      (e) => e.message.includes(`build stage ${st} has no pc.glb`) && e.message.includes("run make kit-build PIECE=pc first"));
+    await mkdir(st, { recursive: true });
+    await writeFile(join(st, "pc.glb"), "glb-bytes");
+    await assert.rejects(assembleProvenance({ ...opts, stage: st }), /has no export-report\.json; run make kit-build PIECE=pc/);
+    assert.deepEqual(await readFile(out), before);
+    // The Makefile's calls, check and validated: one line on stderr, a non-zero exit, no write.
+    const missing = join(dir, "kit-stage/none");
+    for (const args of [["--check"], ["--validated", "a,b"]]) {
+      const r = cli(opts, "--stage", missing, ...args);
+      assert.equal(r.status, 1, r.stderr);
+      assert.equal(r.stderr.trim(), `kit-provenance: pc: build stage ${missing} has no pc.glb; run make kit-build PIECE=pc first`);
+      assert.deepEqual(await readFile(out), before);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("--check verifies everything and writes nothing; only the validated run writes", async () => {
+  const { dir, gen, opts } = await stage();
+  try {
+    const out = join(opts.source, "provenance.json");
+    await writeFile(out, "committed\n");
+    const before = await readFile(out);
+    const st = join(dir, "kit-stage/pc");
+    await mkdir(st, { recursive: true });
+    await writeFile(join(st, "pc.glb"), "glb-bytes");
+    await writeFile(join(st, "export-report.json"), "{}");
+    assert.equal((await assembleProvenance({ ...opts, stage: st, check: true })).validation.pass, true);
+    assert.deepEqual(await readFile(out), before);
+    const ok = cli(opts, "--stage", st, "--check");
+    assert.equal(ok.status, 0, ok.stderr);
+    assert.match(ok.stdout, /^checked pc: .*provenance\.json not written/);
+    assert.deepEqual(await readFile(out), before);
+    // A failed check (a generator edited after the build) exits non-zero and leaves the file alone too.
+    await writeFile(gen, "edited");
+    const stale = cli(opts, "--stage", st, "--check");
+    assert.equal(stale.status, 1);
+    assert.match(stale.stderr, /^kit-provenance: pc: .*pc\.py changed since the build/);
+    assert.deepEqual(await readFile(out), before);
+    await writeFile(gen, "generator-bytes");
+    const done = cli(opts, "--stage", st, "--validated", "a,b");
+    assert.equal(done.status, 0, done.stderr);
+    assert.equal(JSON.parse(await readFile(out, "utf8")).validation.pass, true);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

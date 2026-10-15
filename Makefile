@@ -38,7 +38,7 @@ ui-lint: $(UI_NPM)
 	cd $(UI) && ./node_modules/.bin/biome check .
 
 ui-test:
-	node --test "$(UI)/test/*.test.ts" "scripts/web/*.test.mjs"
+	node --test "$(UI)/test/*.test.ts" "scripts/web/*.test.mjs" scripts/assets/kit-provenance.test.mjs
 
 ui-check: ui-typecheck ui-lint ui-test ui-build
 
@@ -170,7 +170,8 @@ lookdev-ibl: fetch-hdri
 kit-check:
 	cargo test -p hex-render --test kit_gate
 
-# Writes provenance with validation.pass only after every non-provenance gate passes.
+# Writes provenance once, with validation.pass, after every non-provenance gate passes. The first call
+# only checks (--check writes nothing) and refuses a missing build stage, which kit_render.py needs.
 # ROUTE=interactive defaults BLEND to the piece's .blend in the main checkout's store (owner O2,
 # scripts/blender/lib/paths.py; HEXW_BLEND_STORE overrides). Scripted pieces get no blendRef.
 BLEND_STORE = $(shell python3 scripts/blender/lib/paths.py store)
@@ -180,17 +181,17 @@ kit-provenance:
 	@test -n "$(PIECE)" || { echo "usage: make kit-provenance PIECE=<id> [REFS=assets-source/refs/<ref>] [ROUTE=interactive [BLEND=path]]"; exit 2; }
 	@if [ "$(ROUTE)" = interactive ] && [ ! -f "$(KIT_BLEND)" ]; then \
 	  echo "kit-provenance: ROUTE=interactive needs the piece's .blend, got '$(KIT_BLEND)' (BLEND=, or python3 scripts/blender/lib/paths.py blend $(PIECE))"; exit 2; fi
-	node scripts/assets/kit-provenance.mjs $(PIECE) $(KIT_PROV_ARGS)
+	node scripts/assets/kit-provenance.mjs $(PIECE) $(KIT_PROV_ARGS) --stage target/kit-stage/$(PIECE) --check
 	cargo test -p hex-render --test kit_gate -- --skip provenance
 	$(BLENDER_RUN) -P scripts/blender/kit_render.py -- $(PIECE)
-	node scripts/assets/kit-provenance.mjs $(PIECE) $(KIT_PROV_ARGS) \
+	node scripts/assets/kit-provenance.mjs $(PIECE) $(KIT_PROV_ARGS) --stage target/kit-stage/$(PIECE) \
 	  --validated "kit_gate geometry,kit_gate textures,kit_gate bevy reimport,blender reimport sockets,six-view render"
 
 # Provenance for a tileable set: assets-source/kit/materials/<set>/provenance.json.
 # The set must be in assets/kit/manifest.json "materials" before validation.pass is stamped.
 kit-material-provenance:
 	@test -n "$(SET)" || { echo "usage: make kit-material-provenance SET=<set>"; exit 2; }
-	node scripts/assets/kit-provenance.mjs $(SET) --material
+	node scripts/assets/kit-provenance.mjs $(SET) --material --check
 	cargo test -p hex-render --test kit_gate ktx2_color_space_mips_and_budgets
 	node scripts/assets/kit-provenance.mjs $(SET) --material --validated "kit-compress tileable budget,kit_gate textures"
 
@@ -256,7 +257,7 @@ run-diag:
 shots:
 	mkdir -p target/shots
 	rm -f target/shots/gallery-*.png target/shots/gallery-*.json
-	cargo run -p hex-app --release -- --script scripts/shots/gallery.json --size 1280x800 --seed 1 --fps off
+	cargo run -p hex-app --release -- --script scripts/shots/gallery.json --size 1280x800 --seed 1 --fps off --tilt off
 	@for n in single single-low gate-strategic gate-closeup gate-flock; do test -s target/shots/gallery-$$n.png || { echo "missing gallery-$$n.png"; exit 1; }; done
 	@echo "wrote target/shots/gallery-*.png"
 
@@ -264,7 +265,7 @@ shots-chunks:
 	mkdir -p target/shots
 	rm -f target/shots/gallery-chunks-*.png target/shots/gallery-chunks-*.json
 	sed 's/"gallery-/"gallery-chunks-/' scripts/shots/gallery.json > target/shots/gallery-chunks-script.json
-	cargo run -p hex-app --release -- --script target/shots/gallery-chunks-script.json --size 1280x800 --seed 1 --fps off --layout chunks
+	cargo run -p hex-app --release -- --script target/shots/gallery-chunks-script.json --size 1280x800 --seed 1 --fps off --tilt off --layout chunks
 	@for n in single single-low gate-strategic gate-closeup gate-flock; do test -s target/shots/gallery-chunks-$$n.png || { echo "missing gallery-chunks-$$n.png"; exit 1; }; done
 	@echo "wrote target/shots/gallery-chunks-*.png (layout=chunks)"
 
@@ -272,7 +273,7 @@ shots-instanced:
 	mkdir -p target/shots
 	rm -f target/shots/gallery-instanced-*.png target/shots/gallery-instanced-*.json
 	sed 's/"gallery-/"gallery-instanced-/' scripts/shots/gallery.json > target/shots/gallery-instanced-script.json
-	cargo run -p hex-app --release -- --script target/shots/gallery-instanced-script.json --size 1280x800 --seed 1 --fps off --layout instanced
+	cargo run -p hex-app --release -- --script target/shots/gallery-instanced-script.json --size 1280x800 --seed 1 --fps off --tilt off --layout instanced
 	@for n in single single-low gate-strategic gate-closeup gate-flock; do test -s target/shots/gallery-instanced-$$n.png || { echo "missing gallery-instanced-$$n.png"; exit 1; }; done
 	@echo "wrote target/shots/gallery-instanced-*.png (layout=instanced)"
 
@@ -295,7 +296,7 @@ shots-foliage-wind:
 shots-kit:
 	mkdir -p target/shots
 	rm -f target/shots/kit-*.png
-	cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off $(ARGS)
+	cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --tilt off $(ARGS)
 	@for n in $(KIT_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; done
 	@echo "wrote target/shots/kit-*.png"
 
@@ -307,7 +308,7 @@ shots-lookdev:
 	@mkdir -p $(LOOKDEV_OUT)
 	@for t in agx tony aces; do \
 	  rm -f target/shots/kit-*.png; \
-	  cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --grade tony --tonemap $$t $(ARGS) || exit 1; \
+	  cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --tilt off --grade tony --tonemap $$t $(ARGS) || exit 1; \
 	  for n in kit-overview kit-seam-closeup kit-tree; do cp target/shots/$$n.png $(LOOKDEV_OUT)/lookdev-$$t-$$n.png || exit 1; done; \
 	done
 	@echo "wrote $(LOOKDEV_OUT)/lookdev-{agx,tony,aces}-*.png"

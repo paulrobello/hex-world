@@ -1,8 +1,10 @@
 // Assembles assets-source/kit/<id>/provenance.json from stage reports (brief §(d), PRD §11.4).
 // Usage: node scripts/assets/kit-provenance.mjs <id> [--source dir] [--runtime dir] [--route scripted|interactive]
-//        [--refs assets-source/refs/<ref-id>] [--blend path.blend [--blend-store dir]] [--validated "<check list>"]
-//        node scripts/assets/kit-provenance.mjs <set> --material [--source dir] [--runtime dir] [--validated "<list>"]
+//        [--refs assets-source/refs/<ref-id>] [--blend path.blend [--blend-store dir]] [--stage dir]
+//        [--validated "<check list>"] [--check]
+//        node scripts/assets/kit-provenance.mjs <set> --material [--source dir] [--runtime dir] [--validated "<list>"] [--check]
 // Material mode (tileable sets) writes assets-source/kit/materials/<set>/provenance.json.
+// --check assembles and verifies everything but writes nothing; --stage refuses a missing build stage.
 // Paths resolve against the repo root, so absolute paths work too. Imports node builtins and kit-lib only.
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
@@ -39,9 +41,19 @@ async function checkSources(id, generator, deps) {
   }
 }
 
+// kit_render.py re-imports the staged GLB against the staged export report, so both must exist
+// before make kit-provenance writes anything (a missing stage once replaced a passing record).
+function checkStage(id, stage) {
+  const dir = resolve(ROOT, stage);
+  const shown = dir.startsWith(ROOT + sep) ? relative(ROOT, dir) : dir;
+  for (const f of [`${id}.glb`, "export-report.json"])
+    if (!existsSync(join(dir, f)))
+      throw new Error(`${id}: build stage ${shown} has no ${f}; run make kit-build PIECE=${id} first`);
+}
+
 // A tileable set: generator and helper hashes as built, bake and compress reports, and every
 // shipped encode. The set belongs to no piece, so it carries no references or approvals.
-async function assembleMaterial({ id, source, runtime, validated }) {
+async function assembleMaterial({ id, source, runtime, validated, check }) {
   const src = resolve(ROOT, source ?? `assets-source/kit/materials/${id}`);
   const rt = resolve(ROOT, runtime ?? "assets/kit");
   if (validated && !((await read(join(rt, "manifest.json"))).materials ?? {})[id])
@@ -64,12 +76,14 @@ async function assembleMaterial({ id, source, runtime, validated }) {
     derivedFiles: derived, license: "MIT (original work, Hex World repo)",
     validation: validated ? { pass: true, date: new Date().toISOString(), checks: validated.split(",") } : { pass: false },
   };
-  await writeFile(join(src, "provenance.json"), JSON.stringify(prov, null, 2) + "\n");
+  if (!check) await writeFile(join(src, "provenance.json"), JSON.stringify(prov, null, 2) + "\n");
   return prov;
 }
 
-export async function assembleProvenance({ id, material = false, source, runtime, route = "scripted", refs, blend, blendStore, validated }) {
-  if (material) return assembleMaterial({ id, source, runtime, validated });
+export async function assembleProvenance({ id, material = false, source, runtime, route = "scripted", refs, blend, blendStore, validated,
+  stage, check = false }) {
+  if (material) return assembleMaterial({ id, source, runtime, validated, check });
+  if (stage) checkStage(id, stage);
   const src = resolve(ROOT, source ?? `assets-source/kit/${id}`);
   const rt = resolve(ROOT, runtime ?? "assets/kit");
   // validation.pass is only meaningful once kit_gate can see the piece, i.e. once it is in the manifest.
@@ -122,7 +136,7 @@ export async function assembleProvenance({ id, material = false, source, runtime
     validation: validated ? { pass: true, date: new Date().toISOString(), checks: validated.split(",") } : { pass: false },
     approvals,
   };
-  await writeFile(join(src, "provenance.json"), JSON.stringify(prov, null, 2) + "\n");
+  if (!check) await writeFile(join(src, "provenance.json"), JSON.stringify(prov, null, 2) + "\n");
   return prov;
 }
 
@@ -130,12 +144,18 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [id, ...rest] = process.argv.slice(2);
   const opt = (k) => { const i = rest.indexOf(`--${k}`); return i >= 0 ? rest[i + 1] : undefined; };
   if (!id || id.startsWith("--")) {
-    console.error("usage: kit-provenance.mjs <id> [--material] [--source d --runtime d --route r --refs d --blend f --blend-store d --validated list]");
+    console.error("usage: kit-provenance.mjs <id> [--material] [--source d --runtime d --route r --refs d --blend f --blend-store d --stage d --validated list --check]");
     process.exit(2);
   }
-  const material = rest.includes("--material");
+  const material = rest.includes("--material"), check = rest.includes("--check");
   const source = opt("source") ?? (material ? `assets-source/kit/materials/${id}` : `assets-source/kit/${id}`);
-  const prov = await assembleProvenance({ id, material, source, runtime: opt("runtime"), route: opt("route"), blendStore: opt("blend-store"),
-    refs: opt("refs"), blend: opt("blend"), validated: opt("validated") });
-  console.log(`wrote ${relative(ROOT, resolve(ROOT, source, "provenance.json"))} (validation.pass=${prov.validation.pass})`);
+  const out = relative(ROOT, resolve(ROOT, source, "provenance.json"));
+  try {
+    const prov = await assembleProvenance({ id, material, source, runtime: opt("runtime"), route: opt("route"), blendStore: opt("blend-store"),
+      refs: opt("refs"), blend: opt("blend"), stage: opt("stage"), validated: opt("validated"), check });
+    console.log(check ? `checked ${id}: ${out} not written` : `wrote ${out} (validation.pass=${prov.validation.pass})`);
+  } catch (e) {
+    console.error(`kit-provenance: ${e.message}`);
+    process.exit(1);
+  }
 }

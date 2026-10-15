@@ -1,9 +1,11 @@
 // Local-only (needs tools/ktx-4.4.2): node --test scripts/assets/kit-compress.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Document, NodeIO } from "@gltf-transform/core";
 import sharp from "sharp";
 import { compressDir, decodeUastc, encodeMap, encodeUastc } from "./kit-compress.mjs";
@@ -20,6 +22,7 @@ async function stage(dir) {
     .setAttribute("TEXCOORD_0", tri(3, "VEC2", new Float32Array([0, 0, 1, 0, 0, 1])));
   doc.createScene().addChild(doc.createNode("t").setMesh(doc.createMesh("t_lod0").addPrimitive(prim)));
   await new NodeIO().write(join(dir, "t.glb"), doc);
+  await writeFile(join(dir, "export-report.json"), "{}");
   const px = Buffer.alloc(64 * 64 * 4, 128);
   for (const ch of ["albedo", "normal", "masks"])
     await sharp(px, { raw: { width: 64, height: 64, channels: 4 } }).png().toFile(join(dir, `t.${ch}.png`));
@@ -97,4 +100,39 @@ test("an over-budget piece throws and leaves outDir and the report untouched", a
 
 test("KTX budgets are the owner's per-class values (mirrored by kit_manifest.rs)", () => {
   assert.deepEqual(KTX_BUDGETS, { piece: 1_500_000, tileable: 3_600_000, hero: 11_500_000 });
+});
+
+// A kit-build that failed before its export left PNGs but no GLB; kit-compress printed "glb - B",
+// exited 0 and swapped a GLB-less dir over the runtime piece, deleting the shipped GLB.
+test("a piece stage without its GLB or export report fails before touching outDir", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "kitc-"));
+  await stage(dir);
+  const out = join(dir, "out"), rep = join(dir, "rep.json");
+  await mkdir(out);
+  await writeFile(join(out, "t.glb"), "shipped-glb");
+  await writeFile(join(out, "t.albedo.png"), "shipped-png");
+  const snapshot = async () => Promise.all((await readdir(out)).sort().map(async (f) => [f, await readFile(join(out, f))]));
+  const before = await snapshot();
+  const cli = join(dirname(fileURLToPath(import.meta.url)), "kit-compress.mjs");
+  for (const missing of ["t.glb", "export-report.json"]) {
+    const kept = await readFile(join(dir, missing));
+    await rm(join(dir, missing));
+    const msg = `t: stage ${dir} has no ${missing}; re-run make kit-build PIECE=t`;
+    await assert.rejects(compressDir({ stageDir: dir, outDir: out, reportPath: rep, name: "t" }), (e) => e.message === msg);
+    const r = spawnSync(process.execPath, [cli, "piece", "t", "--stage", dir, "--out", out, "--report", rep], { encoding: "utf8" });
+    assert.equal(r.status, 1, r.stdout);
+    assert.equal(r.stderr.trim(), `kit-compress: ${msg}`);
+    assert.doesNotMatch(r.stdout, /glb - B/);
+    assert.deepEqual(await snapshot(), before, `outDir changed with ${missing} missing`);
+    assert.deepEqual((await readdir(dir)).filter((f) => f.startsWith("out.tmp")), []);
+    await assert.rejects(readFile(rep), /ENOENT/);
+    await writeFile(join(dir, missing), kept);
+  }
+  // Material mode is unaffected: a set's stage has no GLB or export report, and its maps compress.
+  await rm(join(dir, "t.glb"));
+  await rm(join(dir, "export-report.json"));
+  const mat = await compressDir({ stageDir: dir, outDir: join(dir, "mat"), reportPath: join(dir, "mat.json"), name: "t",
+    budgetClass: "tileable", piece: false });
+  assert.equal(mat.glb, undefined);
+  assert.equal(mat.textureEncodes.length, 9);
 });
