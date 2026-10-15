@@ -88,7 +88,7 @@ Trees carry per-vertex wind data for a later vertex-shader wind pass (PRD §9.1,
 
 ## Tools and pins
 - Blender 5.2.x at `BLENDER ?= /Applications/Blender.app/Contents/MacOS/Blender`. The make variable `BLENDER_RUN` expands to `"$(BLENDER)" -b --factory-startup --python-exit-code 1`.
-- KTX-Software 4.4.2 from `make fetch-tools` (`. tools/ktx-env.sh` puts `ktx` on PATH).
+- KTX-Software 4.4.2 from `make fetch-tools`. `make kit-compress` and `make kit-material` find `ktx` themselves. To run it by hand in a worktree, prefix the absolute paths, because the worktree hook refuses `. tools/ktx-env.sh`: `PATH=/abs/worktree/tools/ktx-4.4.2/KTX-Software-4.4.2-Darwin-arm64-tools.pkg/Payload/usr/local/bin:$PATH DYLD_LIBRARY_PATH=/abs/worktree/tools/ktx-4.4.2/KTX-Software-4.4.2-Darwin-arm64-library.pkg/Payload/usr/local/lib ktx …`. The main checkout has no `tools/` or `scripts/assets/node_modules` to copy; the first `make kit-compress` installs both.
 - One gltf-transform pin, in `scripts/assets/package.json`: `@gltf-transform/{core,extensions,functions,cli}@4.3.0`, plus `gltf-validator` 2.0.0-dev.3.10, `meshoptimizer` 0.25.0 and `sharp` 0.34.4. Install with `cd scripts/assets && npm ci --no-audit --no-fund`. Run the CLI from that directory with `npx --no-install gltf-transform …`, never a global install.
 - **Node dependency resolution.** Only `scripts/assets/` has a `node_modules`. ESM ignores `NODE_PATH`, so a script outside `scripts/assets/` (for example `scripts/refs/*.mjs`) loads a pinned dependency with:
 
@@ -97,3 +97,10 @@ Trees carry per-vertex wind data for a later vertex-shader wind pass (PRD §9.1,
   const require = createRequire(new URL("../assets/package.json", import.meta.url));
   const sharp = require("sharp");
   ```
+
+## Fast loops and runtime couplings
+- Iterate geometry with `HEXW_SKIP_BAKE=1 make kit-build PIECE=<id>` (seconds, no Cycles; 26 generators and helpers honour it). Bake only when the geometry is settled. Print per-LOD tris, profile errors and texel densities before each assert, so a failing build still shows its numbers.
+- Size LODs from the floor formula in `gates.md` (the ring, skirt and joint cost divided by the ratio ceiling: 15%, or 20% for lane-cut and coast-arc bases) before the first build. Trial builds against the ratio asserts cost 8-19 builds a piece in past runs.
+- The release binary is `target/release/hex-world` (package `hex-app`): `cargo build -p hex-app --release`, then `./target/release/hex-world --script <file.json> …`.
+- The kit scenario compiles `assets/kit/manifest.json` in (`include_str!`), so add the manifest entry and layout placement before building for shots.
+- Runtime code tied to a piece's geometry, to re-test after a size, canopy or footprint change: bird perches (`crates/hex-render/src/boids/plan.rs`: `OAK_SCALE`, `PERCH_PIECES`, test `oak_perches_sit_on_the_canopy`), scatter footprints (`play/scatter.rs`: `FOOTPRINTS`, `CROWN_OVERHANG`), walk obstacles (`walk.rs`: `OBSTACLES`), and kit layout prop heights (`kit_scene.rs`: `MEADOW_PROPS`, from `meadow_base.relief()`). Run `cargo test -p hex-render --lib -- boids scatter walk kit_scene` after such a change.
