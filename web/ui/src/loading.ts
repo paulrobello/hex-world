@@ -1,9 +1,12 @@
 // Loading (S1): the app icon, a hex key that fills in the six map colours as the stages finish, the
 // current stage, the bytes actually downloaded (Resource Timing), and a failure panel with Retry.
 // There is no byte-level progress for Trunk's wasm fetch, so the bar sweeps instead of inventing one.
+// The same panel shows over the world while a quality change is rebuilt and drawn (`Rebuild`).
+import type { TierName, TierState } from "./bridge.ts";
 import { h, s } from "./dom.ts";
 import { KIND_CLASS, hexPoints } from "./glyph.ts";
 import { icon } from "./icons.ts";
+import { TIER_NAME, tierBusy } from "./settings-model.ts";
 
 type Stage = "engine" | "renderer";
 const STAGES: { id: Stage; name: string; label: string }[] = [
@@ -161,5 +164,101 @@ export class Loading {
     this.bar.classList.remove("is-indeterminate");
     this.fail.querySelector("p")!.replaceChildren(h("b", {}, what), detail);
     this.fail.hidden = false;
+  }
+}
+
+/** The loading layer's hex key with every map colour on, as it draws once the world is ready. */
+function hexKey(): SVGElement {
+  const v = (i: number): [number, number] => {
+    const a = ((-30 + 60 * i) * Math.PI) / 180;
+    return [50 + 40 * Math.cos(a), 50 + 40 * Math.sin(a)];
+  };
+  const done = s("g", { class: "done" });
+  (["Grass", "Forest", "Road", "River", "Beach", "Ocean"] as const).forEach((k, e) => {
+    const [x1, y1] = v(e + 4);
+    const [x2, y2] = v(e + 5);
+    done.append(s("line", { class: `${KIND_CLASS[k]} is-on`, x1, y1, x2, y2 }));
+  });
+  return s(
+    "svg",
+    { class: "load__hex", viewBox: "0 0 100 100", "aria-hidden": "true" },
+    s("polygon", { class: "track", points: hexPoints(40) }),
+    done,
+  );
+}
+
+/**
+ * The quality-change layer: the loading panel over the dimmed world while a tier change is rebuilt
+ * and drawn, catching the pointer (the Hud swallows key presses while it is up). The rebuild frame
+ * and the browser's pipeline compiles after it paint nothing, so a pick shows the layer first and
+ * sends `set_tier` two frames later, once it is on screen. A change the overlay did not send (a
+ * loaded save's quality) shows it from `state().tier` once that rebuild has started.
+ */
+export class Rebuild {
+  readonly el: HTMLElement;
+  private readonly stage: HTMLElement;
+  private shown = false;
+  private arming = false;
+  /** `state().tier.requests` when our `set_tier` went out; null when we sent none. */
+  private sentAt: number | null = null;
+
+  constructor() {
+    this.stage = h("b", {});
+    this.el = h(
+      "div",
+      { class: "rebuild", role: "status", "aria-live": "polite", hidden: true },
+      h(
+        "div",
+        { class: "load__panel" },
+        h(
+          "div",
+          { class: "load__head" },
+          hexKey(),
+          h(
+            "div",
+            {},
+            h("h1", {}, "Changing quality"),
+            h("p", { class: "load__stage" }, this.stage, h("span", {}, "Preparing shaders")),
+          ),
+        ),
+        h("span", { class: "progress is-indeterminate", "aria-hidden": "true" }, h("i")),
+      ),
+    );
+  }
+
+  get active(): boolean {
+    return this.shown;
+  }
+
+  /** Shows the layer for a change to `tier`, waits two frames so it is painted, then sends. */
+  begin(tier: TierName | null, requests: () => number, send: () => void): void {
+    if (this.shown) return;
+    this.show(tier);
+    this.arming = true;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        this.sentAt = requests();
+        this.arming = false;
+        send();
+      }),
+    );
+  }
+
+  /** Every frame: up while our request is unhandled or a rebuilt tier is not yet drawn. */
+  render(t: TierState | undefined): void {
+    if (this.arming) return;
+    const busy = tierBusy(t, this.sentAt);
+    if (busy && !this.shown) this.show(t?.tier ?? null);
+    else if (!busy && this.shown) {
+      this.shown = false;
+      this.sentAt = null;
+      this.el.hidden = true;
+    }
+  }
+
+  private show(tier: TierName | null): void {
+    this.shown = true;
+    this.stage.textContent = tier ? `Switching to ${TIER_NAME[tier]}` : "Switching";
+    this.el.hidden = false;
   }
 }

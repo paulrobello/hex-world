@@ -8,7 +8,7 @@ import { sprite } from "./icons.ts";
 import { Loading } from "./loading.ts";
 import { Persistence } from "./persist.ts";
 import { loadGrade } from "./settings.ts";
-import { gradeCommand, startupGrade } from "./settings-model.ts";
+import { gradeCommand, startupGrade, tierBusy } from "./settings-model.ts";
 import { idbFactory, openSlots } from "./slots.ts";
 
 type Bridge = HexWorld & { audio?: AudioApi };
@@ -47,8 +47,9 @@ function boot(): void {
     loading.show("renderer");
     waitReady(hw);
   };
+  // A tier change before READY (detection, or the warm-up probe stepping down) is drawn first.
   const waitReady = (hw: HexWorld) => {
-    if (!hw.ready()) {
+    if (!hw.ready() || tierBusy(hw.state().tier, null)) {
       if (performance.now() - t0 > START_TIMEOUT_MS)
         return loading.failed("The renderer did not start", "This graphics adapter may have stopped. Retry once.");
       return void requestAnimationFrame(() => waitReady(hw));

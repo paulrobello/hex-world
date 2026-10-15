@@ -99,6 +99,16 @@ export function qualityView(t: TierState | undefined): QualityView {
   return { selected, autoTier: auto, rows, reason, caution };
 }
 
+/**
+ * Whether the tier-change layer stays up: the request sent after `sentAt` requests is not handled
+ * yet, or a change (ours, a loaded save's quality, the warm-up probe) is rebuilt but not yet drawn.
+ * A no-op request clears it as soon as it is handled.
+ */
+export function tierBusy(t: TierState | undefined, sentAt: number | null): boolean {
+  if (sentAt != null && (t?.requests ?? 0) <= sentAt) return true;
+  return !!t && t.drawn !== t.changes;
+}
+
 /** The `set_tier` value for a row: Auto goes back to detection. */
 export const tierCommand = (id: QualityChoice): { cmd: "set_tier"; tier: QualityChoice } => ({
   cmd: "set_tier",

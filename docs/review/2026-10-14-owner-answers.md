@@ -111,3 +111,15 @@ Owner's notes, verbatim: "there is no visual or ghost of the selected tile when 
 - **River fish visibility:** leave as shipped. Fish read clearly close up, are borderline at 50 m and cannot be identified from the 145 m opening camera. No further brightening or growth beyond 30%.
 - **Grass:** blades on High and Ultra near the camera, with wind built from several noise layers (large travelling gusts, medium patches, small flutter). In progress.
 - **River mouth fan:** "the river mouth coloring needs to be blended more where it meets the sand". In progress.
+
+## Round 14: play review (owner, 2026-10-14)
+
+- **Cattail budget:** raise the LOD0 limit to 2,500 triangles for the river dressing centres only (straight, bend, spring, both mouths, bridge), so about 30 detailed heads per tile come back. LOD1 and LOD2 unchanged.
+- **R1 river mouth fan blend:** looks good (approved).
+- **R3 bulldoze dust:** reduce size and duration by 20%.
+- **R4 oak:** canopy looks good; the trunk looks odd (collar where the trunk meets the root flare); make the tree 20% bigger.
+- **R5 birds and fish:** look good (approved, including the fish seam).
+- **R6 road verge:** looks good (approved).
+- **R7 HUD (A8):** looks good (signed off).
+- **R9 car sounds:** sound good; single-variant start and drive pools accepted.
+- **Walk mode:** double walk and sprint speed; sprint always double walk; add a walk speed setting with its minimum at the new doubled speed.

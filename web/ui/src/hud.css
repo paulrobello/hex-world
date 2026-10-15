@@ -208,7 +208,11 @@
 .load__hex .done line.is-on { stroke-dashoffset: 0; }
 .load__hex .fill { fill: var(--k-G); opacity: 0; transition: opacity var(--t-slow) var(--ease); }
 .load.is-ready .load__hex .fill { opacity: 1; }
-.load h1 { margin: 0; font-size: var(--fs-5); font-weight: 800; letter-spacing: -.015em; }
+.load h1, .rebuild h1 { margin: 0; font-size: var(--fs-5); font-weight: 800; letter-spacing: -.015em; }
+/* A quality change: the loading panel over the dimmed world, catching the pointer until it is drawn.
+   No fade in: the frame painted before the rebuild may be the last one shown for seconds. */
+.rebuild { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: rgb(14 15 16 / .55); pointer-events: auto; cursor: progress; }
+.rebuild .load__panel { padding-bottom: 6px; }
 .load__stage { display: flex; justify-content: space-between; gap: 12px; margin: 4px 0 0; font-size: var(--fs-3); color: var(--ink-2); }
 .load__stage b { font-weight: 700; color: var(--ink); }
 .progress { position: relative; display: block; height: 6px; margin: 18px 0 14px; border-radius: 3px; background: var(--track); overflow: hidden; }

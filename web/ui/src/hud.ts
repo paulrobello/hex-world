@@ -5,6 +5,7 @@ import type { AudioApi } from "./audio.ts";
 import type { Cell, Command, GameEvent, HexWorld, PlayState, Rect, State } from "./bridge.ts";
 import { h, isMac, reduceMotion, retrigger, s } from "./dom.ts";
 import { icon } from "./icons.ts";
+import { Rebuild } from "./loading.ts";
 import { type Note, type Persistence, stateWords } from "./persist.ts";
 import {
   TILES,
@@ -74,6 +75,7 @@ export class Hud {
   private readonly canvas: HTMLCanvasElement | null;
   private readonly photo: Photo;
   private readonly settings: Settings;
+  private readonly rebuild = new Rebuild();
   private readonly walk: Walk;
 
   private st: PlayState | null = null;
@@ -140,8 +142,9 @@ export class Hud {
       audio,
       () => this.toggleSettings(),
       () => this.persist?.settingsChanged(),
+      this.rebuild,
     );
-    this.root.append(this.settings.el);
+    this.root.append(this.settings.el, this.rebuild.el);
     document.body.append(this.photo.root);
     this.walk = new Walk(hw, this.canvas);
     document.body.append(this.walk.root);
@@ -377,6 +380,7 @@ export class Hud {
   }
 
   render(st: PlayState, state: State = {}): void {
+    this.rebuild.render(state.tier);
     this.photo.render(st.photo_mode, state.photo);
     this.walk.render(st.walk_mode);
     this.root.classList.toggle("is-walking", st.walk_mode);
@@ -785,7 +789,7 @@ export class Hud {
       (e) => {
         if (!e.ctrlKey && !e.metaKey) return;
         e.preventDefault();
-        if (this.st?.ghost) this.rotate(e.deltaY > 0);
+        if (this.st?.ghost && !this.rebuild.active) this.rotate(e.deltaY > 0);
       },
       { passive: false },
     );
@@ -849,6 +853,13 @@ export class Hud {
   }
 
   private onKey(e: KeyboardEvent): void {
+    // A quality change in flight holds every key press from the world and the HUD; releases pass,
+    // so a camera key held into it does not stick.
+    if (this.rebuild.active) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return;
+    }
     const st = this.st;
     if (!st || e.altKey) return;
     // Typing (a world name) keeps every key, game keys included.

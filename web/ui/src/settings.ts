@@ -9,8 +9,10 @@ import type { AudioApi } from "./audio.ts";
 import type { GradeName, GradeState, HexWorld, QualityChoice, TierState, TiltState } from "./bridge.ts";
 import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
+import type { Rebuild } from "./loading.ts";
 import type { Persistence } from "./persist.ts";
 import {
+  autoTier,
   CHANNELS,
   type Channel,
   GRADE_KEY,
@@ -80,11 +82,13 @@ export class Settings {
   private gradeSig = "";
   private grade: GradeState | undefined;
   private gradePick: { id: GradeName; until: number } | null = null;
+  private readonly rebuild: Rebuild;
 
-  constructor(hw: HexWorld, audio: AudioApi | null, onClose: () => void, onChange: () => void) {
+  constructor(hw: HexWorld, audio: AudioApi | null, onClose: () => void, onChange: () => void, rebuild: Rebuild) {
     this.hw = hw;
     this.audio = audio;
     this.changed = onChange;
+    this.rebuild = rebuild;
     const close = h(
       "button",
       { class: "sheet__close", type: "button", "aria-label": "Close settings", "data-tip": "Close|Esc" },
@@ -362,12 +366,20 @@ export class Settings {
     this.cautionBody.textContent = v.caution?.body ?? "";
   }
 
+  /** The quality-change layer goes up first and `set_tier` follows once it is painted (`Rebuild`). */
   private pickTier(id: QualityChoice): void {
+    if (this.rebuild.active) return;
     const now = this.pick?.id ?? selectedQuality(this.tier);
     if (id === now) return;
     this.pick = { id, until: performance.now() + PICK_HOLD_MS };
-    this.hw.cmd(tierCommand(id));
-    this.changed();
+    this.rebuild.begin(
+      id === "auto" ? autoTier(this.tier) : id,
+      () => this.hw.state().tier?.requests ?? 0,
+      () => {
+        this.hw.cmd(tierCommand(id));
+        this.changed();
+      },
+    );
     this.renderTier(this.tier);
   }
 

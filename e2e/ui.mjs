@@ -709,13 +709,50 @@ try {
   await page.evaluate(() => document.activeElement?.blur()); // the mockup states carry no focus ring
   await shot("s9-1-settings-graphics");
 
+  // The quality-change layer (owner report 2026-10-14): a per-frame record of the layer and
+  // state().tier, so the checks read what each frame showed rather than timing.
+  const recordRebuild = () => page.evaluate(() => {
+    const rec = { rows: [], on: true };
+    window.__rebuildRec = rec;
+    const layer = document.querySelector(".rebuild");
+    const canvas = document.querySelector("canvas#hex-world");
+    const step = () => {
+      if (!rec.on) return;
+      const t = window.hexWorld.state().tier;
+      const b = canvas.getBoundingClientRect();
+      const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+      rec.rows.push({ shown: !!layer && !layer.hidden, covered: !!hit?.closest(".rebuild"), requests: t.requests,
+        changes: t.changes, drawn: t.drawn, rebuilding: t.rebuilding });
+      requestAnimationFrame(step);
+    };
+    step();
+  });
+  /** After a pick sent at `t0` (state().tier before the click): the layer was up before the engine took
+   *  the request, never down while it rebuilt, covered the world while up, and cleared once drawn. */
+  async function checkRebuild(what, t0, target, noop = false) {
+    await until(async () => { const t = (await st()).tier; return t.requests > t0.requests && !t.rebuilding
+      && (await page.locator(".rebuild:not([hidden])").count()) === 0; }, `${what}: the change is drawn and the layer clears`, 30_000);
+    const rows = await page.evaluate(() => { window.__rebuildRec.on = false; return window.__rebuildRec.rows; });
+    check(rows.some((x) => x.shown && x.requests === t0.requests), `${what}: the layer is up before the engine takes the request`);
+    check(!rows.some((x) => x.rebuilding && !x.shown), `${what}: the layer never clears while the engine is rebuilding`);
+    check(rows.filter((x) => x.shown).every((x) => x.covered), `${what}: while up, the layer covers the world`);
+    const t = (await st()).tier;
+    check(t.tier === target && t.drawn === t.changes, `${what}: ${target} is drawn (changes ${t.changes}, drawn ${t.drawn})`);
+    if (noop) check(t.changes === t0.changes && !rows.some((x) => x.rebuilding), `${what}: a no-op rebuilds nothing and still clears`);
+    else check(t.changes === t0.changes + 1 && rows.some((x) => x.rebuilding), `${what}: one rebuild, reported while it ran`);
+  }
+  /** Waits for a change the checks above do not follow. */
+  const drawn = (what) => until(async () => !(await st()).tier.rebuilding
+    && (await page.locator(".rebuild:not([hidden])").count()) === 0, `${what}: drawn and the layer clears`, 30_000);
+
   // Picking Low: state().tier follows, the scene rebuilds around the same camera, world and HUD
   // state, and the player's tilt-shift (on, 0.6) outlives the tier's default (off on Low).
   const beforeTier = await st();
+  await recordRebuild();
   await page.locator(".tier[data-tier=low]").click();
   await until(async () => { const t = (await st()).tier; return t.tier === "low" && t.source === "runtime"; }, "picking Low sets state().tier");
   check(await page.locator(".tier[data-tier=low][aria-checked=true]").count() === 1, "the Low row is checked");
-  await page.waitForTimeout(500);
+  await checkRebuild("Low", beforeTier.tier, "low");
   const afterTier = await st();
   check(afterTier.camera.pos.every((v, i) => Math.abs(v - beforeTier.camera.pos[i]) < 1e-3), "the camera keeps its position");
   check(afterTier.camera.forward.every((v, i) => Math.abs(v - beforeTier.camera.forward[i]) < 1e-3), "and its heading");
@@ -726,10 +763,30 @@ try {
   check(afterTier.tilt.enabled === true && Math.abs(afterTier.tilt.strength - 0.6) < 1e-6, "the player's tilt-shift survives the tier change");
   check(afterTier.tilt.taps === 8, `tilt-shift takes Low's tap count (${afterTier.tilt.taps})`);
 
+  // The layer over the live world (docs/checkpoints/tier-change): a `wait` queued ahead holds the
+  // engine's take of the request, since a frame captured during the pipeline compiles is not painted.
+  // A key pressed under it reaches neither the HUD nor the game.
+  const beforeMedium = await st();
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "wait", frames: 90 }));
+  await recordRebuild();
+  await page.locator(".tier[data-tier=medium]").click();
+  await until(async () => page.locator(".rebuild:not([hidden])").count(), "the layer goes up at once");
+  check((await text(".rebuild .load__stage b")) === "Switching to Medium", "the layer names the tier");
+  await shot("s9-3-settings-tier-changing");
+  await key("b");
+  await page.mouse.move(700, 450);
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0, 120);
+  await page.keyboard.up("Control");
+  await checkRebuild("Medium", beforeMedium.tier, "medium");
+  check((await play()).tool === beforeMedium.play.tool, "B pressed under the layer did not reach the game");
+  check((await play()).rotation === beforeMedium.play.rotation, "Ctrl+wheel over the layer did not turn the ghost");
+
   // Ultra, where detection lands on High: the caution note (S9.2).
   if (await page.locator(".tier[data-tier=ultra]").count()) {
     await page.locator(".tier[data-tier=ultra]").click();
     await until(async () => (await st()).tier.tier === "ultra", "picking Ultra sets the tier");
+    await drawn("Ultra");
     await until(async () => page.locator(".sheet--settings .note--caution:not([hidden])").count(), "the Ultra note shows");
     await page.waitForTimeout(300);
     await shot("s9-2-settings-tier-up");
@@ -740,6 +797,15 @@ try {
   await key("Home");
   await until(async () => { const t = (await st()).tier; return t.source === tier0.source && t.tier === tier0.tier; }, "Home picks Auto: the detected tier is back");
   check(await page.evaluate(() => document.activeElement?.dataset.tier === "auto"), "focus follows to the Auto row");
+  await drawn("Auto");
+  // Picking the tier Auto already uses is a no-op: the request is handled, nothing rebuilds, the layer clears.
+  const beforeSame = await st();
+  await recordRebuild();
+  await page.locator(`.tier[data-tier=${autoUses}]`).click();
+  await checkRebuild(`${autoUses} again`, beforeSame.tier, autoUses, true);
+  await page.locator(".tier[data-tier=auto]").click();
+  await until(async () => (await st()).tier.source === tier0.source, "and Auto again");
+  await drawn("Auto again");
   await tiltSwitch.click();
   await until(async () => (await st()).tilt.enabled === false, "and tilt-shift off again");
   await page.waitForTimeout(300);

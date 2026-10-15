@@ -104,6 +104,11 @@ impl PlaySpawned {
         }
         self.rebuild
     }
+
+    /// A redraw is queued that the next sync has not spawned yet.
+    pub fn redraw_pending(&self) -> bool {
+        self.rebuild
+    }
 }
 
 /// Tile definitions the view's ids resolve against (the embedded catalog `hex-app` also uses).

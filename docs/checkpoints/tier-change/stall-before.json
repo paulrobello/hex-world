@@ -1,0 +1,160 @@
+{
+  "when": "2026-10-15T00:09:58.082Z",
+  "radius": 8,
+  "window_ms": 6000,
+  "guard": true,
+  "summary": {
+    "high>medium": {
+      "runs": 2,
+      "stall_ms": 483.6,
+      "longest_frame_ms": 376.2,
+      "slow_frames": 2,
+      "rebuild_settled_ms": null,
+      "settled_after_stall_ms": null,
+      "indicator_shown_ms": null,
+      "indicator_hidden_after_stall_ms": null,
+      "max_load": 13.64
+    },
+    "medium>high": {
+      "runs": 1,
+      "stall_ms": 220.2,
+      "longest_frame_ms": 150.4,
+      "slow_frames": 2,
+      "rebuild_settled_ms": null,
+      "settled_after_stall_ms": null,
+      "indicator_shown_ms": null,
+      "indicator_hidden_after_stall_ms": null,
+      "max_load": 13.64
+    }
+  },
+  "rows": [
+    {
+      "round": 0,
+      "step": "high>medium",
+      "tiles": 208,
+      "renderer": "apple metal-3",
+      "stall_ms": 483.6,
+      "first_frame_ms": 6.2,
+      "longest_frame_ms": 376.2,
+      "slow_frames": 2,
+      "over_50ms": 2,
+      "slow_frame_ms": [
+        376.2,
+        101.2
+      ],
+      "slow_sum_ms": 477.4,
+      "frames_in_window": 334,
+      "tier_followed_ms": 382.4,
+      "rebuild_settled_ms": null,
+      "settled_after_stall_ms": null,
+      "indicator_shown_ms": null,
+      "indicator_hidden_ms": null,
+      "indicator_hidden_after_stall_ms": null,
+      "engine_tail": [
+        {
+          "frame": 9,
+          "ms": 250,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 10,
+          "ms": 105.8,
+          "pipelines_waiting": 0
+        }
+      ],
+      "requests": [],
+      "load_before": 13.61,
+      "load_after": 13.64,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "step": "medium>high",
+      "tiles": 208,
+      "renderer": "apple metal-3",
+      "stall_ms": 220.2,
+      "first_frame_ms": 6.7,
+      "longest_frame_ms": 150.4,
+      "slow_frames": 2,
+      "over_50ms": 2,
+      "slow_frame_ms": [
+        150.4,
+        63.1
+      ],
+      "slow_sum_ms": 213.5,
+      "frames_in_window": 350,
+      "tier_followed_ms": 157.1,
+      "rebuild_settled_ms": null,
+      "settled_after_stall_ms": null,
+      "indicator_shown_ms": null,
+      "indicator_hidden_ms": null,
+      "indicator_hidden_after_stall_ms": null,
+      "engine_tail": [
+        {
+          "frame": 15,
+          "ms": 156.9,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 16,
+          "ms": 64.1,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 23,
+          "ms": 33,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 115,
+          "ms": 33.5,
+          "pipelines_waiting": 0
+        }
+      ],
+      "requests": [],
+      "load_before": 13.64,
+      "load_after": 12.99,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "step": "high>medium",
+      "tiles": 208,
+      "renderer": "apple metal-3",
+      "stall_ms": 212.3,
+      "first_frame_ms": 6.6,
+      "longest_frame_ms": 143.7,
+      "slow_frames": 2,
+      "over_50ms": 2,
+      "slow_frame_ms": [
+        143.7,
+        62
+      ],
+      "slow_sum_ms": 205.7,
+      "frames_in_window": 351,
+      "tier_followed_ms": 150.3,
+      "rebuild_settled_ms": null,
+      "settled_after_stall_ms": null,
+      "indicator_shown_ms": null,
+      "indicator_hidden_ms": null,
+      "indicator_hidden_after_stall_ms": null,
+      "engine_tail": [
+        {
+          "frame": 5,
+          "ms": 150,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 6,
+          "ms": 62.9,
+          "pipelines_waiting": 0
+        }
+      ],
+      "requests": [],
+      "load_before": 12.99,
+      "load_after": 12.51,
+      "load_discarded": 0
+    }
+  ],
+  "errors": []
+}

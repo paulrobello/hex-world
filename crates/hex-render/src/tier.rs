@@ -3,18 +3,36 @@
 //! web the browser masks the adapter (`BrowserWebGpu | Other`, no name), so the rules read limits
 //! and features, then a warm-up frame-time probe may step the tier down once before READY.
 //! Detection never picks Ultra, the opt-in tier. A tier change rebuilds the scene through the same
-//! path as the `scenario` command and keeps the camera where it was.
+//! path as the `scenario` command and keeps the camera where it was. Most of a first change to a
+//! tier is the browser compiling that tier's pipelines after the rebuild frame, so the change counts
+//! as drawn only once the GPU has finished a frame drawn with the rebuilt scene ([`mark_drawn`]).
+use std::sync::atomic::{AtomicU32, AtomicU64, AtomicUsize, Ordering};
+
 use bevy::{
+    diagnostic::FrameCount,
     prelude::*,
-    render::renderer::{RenderAdapterInfo, RenderDevice},
+    render::{
+        Render, RenderApp, RenderSystems,
+        render_resource::PipelineCache,
+        renderer::{RenderAdapterInfo, RenderDevice, RenderQueue},
+    },
 };
 
 use crate::{
     SceneEntity,
+    play::PlaySpawned,
     post::QualityTier,
     tilt_shift::{TiltPinned, TiltShiftSettings, kept_tilt},
     workload::GateConfig,
 };
+
+/// The rebuild the render world waits on: `(generation << 32) | frame`, the generation being
+/// `TierChoice::changes` and the frame the main world's `FrameCount` once the scene had spawned.
+static ARMED: AtomicU64 = AtomicU64::new(0);
+/// The latest generation whose frame finished on the GPU.
+static DRAWN: AtomicU32 = AtomicU32::new(0);
+/// Render pipelines in the cache when the latest completion callback was registered.
+static PIPELINES: AtomicUsize = AtomicUsize::new(0);
 
 /// Frames whose real delta feeds the web warm-up probe. It decides on the last one, ten frames
 /// before READY (`diag::READY_FRAME`), so a step down rebuilds the scene before harnesses act.
@@ -280,6 +298,11 @@ pub struct TierChoice {
     pub probe: Option<ProbeResult>,
     /// Tier changes applied since startup (scene rebuilds).
     pub changes: u32,
+    /// The latest change whose rebuilt scene the GPU has finished drawing; behind `changes` while a
+    /// rebuild is in flight.
+    pub drawn: u32,
+    /// Quality requests handled (`set_tier` and a loaded save's quality), no-ops included.
+    pub requests: u32,
 }
 
 impl TierChoice {
@@ -315,7 +338,15 @@ impl TierChoice {
             })),
             "adapter": self.adapter.as_ref().map(AdapterFacts::json),
             "changes": self.changes,
+            "drawn": self.drawn,
+            "requests": self.requests,
+            "rebuilding": self.rebuilding(),
         })
+    }
+
+    /// A tier change has rebuilt the scene and the GPU has not yet finished a frame of it.
+    pub fn rebuilding(&self) -> bool {
+        self.drawn != self.changes
     }
 }
 
@@ -366,6 +397,7 @@ pub fn request(
     from_save: bool,
 ) {
     commands.queue(move |world: &mut World| {
+        world.resource_mut::<TierChoice>().requests += 1;
         let choice = world.resource::<TierChoice>();
         let undetected = choice.detected.is_none();
         match resolve(choice, want, reason, from_save) {
@@ -415,6 +447,8 @@ fn apply_tier(world: &mut World, tier: QualityTier, source: TierSource, reason: 
     crate::boids::set_budget(world, crate::boids::BoidBudget::for_tier(tier));
     if let Err(e) = world.run_system_cached(crate::scene::setup) {
         warn!("tier: scene rebuild failed: {e}");
+        let mut choice = world.resource_mut::<TierChoice>();
+        choice.drawn = choice.changes;
         return;
     }
     // The rebuild resets tilt-shift to the new tier's default; a player's own choice outlives it.
@@ -490,6 +524,70 @@ fn detect_tier(
     }
 }
 
+/// Settles a rebuild once the render world reports its frame done on the GPU, and arms the render
+/// world once the rebuilt scene has spawned (play redraws its tiles in the sync after the rebuild).
+fn track_rebuild(
+    mut choice: ResMut<TierChoice>,
+    frame: Res<FrameCount>,
+    active: Res<crate::ActiveScenario>,
+    spawned: Option<Res<PlaySpawned>>,
+) {
+    if !choice.rebuilding() {
+        return;
+    }
+    let generation = choice.changes;
+    if DRAWN.load(Ordering::Acquire) >= generation {
+        choice.drawn = generation;
+        return;
+    }
+    if active.0 == crate::Scenario::Play && spawned.is_some_and(|s| s.redraw_pending()) {
+        return;
+    }
+    if (ARMED.load(Ordering::Acquire) >> 32) as u32 != generation {
+        ARMED.store(
+            (u64::from(generation) << 32) | u64::from(frame.0),
+            Ordering::Release,
+        );
+    }
+}
+
+/// Render world, after the frame's submit: once the armed rebuild's scene has been drawn with no
+/// pipeline left to create, asks the GPU to report when that frame's work is done. On WebGPU that
+/// cannot happen before the browser has compiled the pipelines the frame uses. New pipelines in a
+/// later frame void the pending report and a new one is asked for.
+fn mark_drawn(
+    queue: Option<Res<RenderQueue>>,
+    cache: Res<PipelineCache>,
+    frame: Res<FrameCount>,
+    mut asked: Local<(u32, usize)>,
+) {
+    let armed = ARMED.load(Ordering::Acquire);
+    let (generation, at) = ((armed >> 32) as u32, armed as u32);
+    if generation == 0 || DRAWN.load(Ordering::Acquire) >= generation {
+        return;
+    }
+    // The render world's `FrameCount` runs one ahead of the main world's `Update`, so `at + 1`
+    // extracted the spawned scene; the frame after it also draws materials prepared a frame late.
+    if frame.0 <= at.wrapping_add(1) || cache.waiting_pipelines().next().is_some() {
+        return;
+    }
+    let pipelines = cache.pipelines().count();
+    PIPELINES.store(pipelines, Ordering::Release);
+    if *asked == (generation, pipelines) {
+        return;
+    }
+    *asked = (generation, pipelines);
+    let done = move || {
+        if PIPELINES.load(Ordering::Acquire) == pipelines {
+            DRAWN.fetch_max(generation, Ordering::AcqRel);
+        }
+    };
+    match queue {
+        Some(q) => q.on_submitted_work_done(done),
+        None => done(),
+    }
+}
+
 pub struct TierPlugin {
     pub tier: QualityTier,
     pub explicit: bool,
@@ -498,7 +596,10 @@ pub struct TierPlugin {
 impl Plugin for TierPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(TierChoice::new(self.tier, self.explicit))
-            .add_systems(Update, detect_tier);
+            .add_systems(Update, (detect_tier, track_rebuild));
+        if let Some(render_app) = app.get_sub_app_mut(RenderApp) {
+            render_app.add_systems(Render, mark_drawn.in_set(RenderSystems::Cleanup));
+        }
     }
 }
 
@@ -694,5 +795,20 @@ mod tests {
         assert_eq!(j["tier"], "medium");
         assert_eq!(j["source"], "explicit");
         assert!(j["adapter"].is_null() && j["probe"].is_null());
+        assert_eq!(
+            (j["requests"].as_u64(), j["rebuilding"].as_bool()),
+            (Some(0), Some(false))
+        );
+    }
+
+    #[test]
+    fn a_change_is_rebuilding_until_drawn() {
+        let mut c = TierChoice::new(High, false);
+        c.changes = 2;
+        c.drawn = 1;
+        assert!(c.rebuilding());
+        assert_eq!(c.json()["rebuilding"], true);
+        c.drawn = 2;
+        assert!(!c.rebuilding());
     }
 }

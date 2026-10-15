@@ -145,12 +145,16 @@ try {
         el.dispatchEvent(new Event("input", { bubbles: true }));
         el.dispatchEvent(new Event("change", { bubbles: true }));
       }, v);
+    // A quality change holds the input under its layer until the engine reports the new tier drawn.
+    const drawn = (what) => until(async () => !(await st()).tier.rebuilding
+      && (await page.locator(".rebuild:not([hidden])").count()) === 0, `${what}: drawn and the layer clears`, 30_000);
     await until(async () => (await text(".bar__world")).includes("Saved"), "settled before the settings change");
     await page.locator(".tool[data-action=settings]").click();
     await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens");
     const detected = (await st()).tier;
     await page.locator(".tier[data-tier=low]").click();
     await until(async () => { const t = (await st()).tier; return t.tier === "low" && t.source === "runtime"; }, "Low picked");
+    await drawn("Low");
     await page.locator(".sheet--settings .switch[aria-label='Tilt-shift']").click();
     await until(async () => (await st()).tilt.enabled, "tilt-shift on (the page runs tilt=off)");
     await setRange("Tilt-shift strength", 35);
@@ -164,6 +168,7 @@ try {
     await page.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.state().play, null, { timeout: 90_000 });
     await until(async () => (await play()).tiles.length === 6, "the world resumes after the reload");
     await until(async () => { const t = (await st()).tier; return t.tier === "low" && t.reason === "loaded save"; }, "the loaded save applies its quality (Low)");
+    await drawn("the resumed save's Low");
     const s = await st();
     check(s.tier.detected?.tier === detected.detected?.tier, `detection still reports ${s.tier.detected?.tier}`);
     check(s.tilt.enabled === true && Math.abs(s.tilt.strength - 0.35) < 1e-6, `the save's tilt-shift holds through the tier rebuild (${s.tilt.enabled}, ${s.tilt.strength})`);
@@ -186,6 +191,7 @@ try {
     await page.locator("#settings-tab-graphics").click();
     await page.locator(".tier[data-tier=auto]").click();
     await until(async () => { const t = (await st()).tier; return t.tier === detected.tier && t.source === detected.source; }, "Auto returns to the detected tier");
+    await drawn("Auto");
     await page.locator(".sheet--settings .switch[aria-label='Tilt-shift']").click();
     await until(async () => !(await st()).tilt.enabled, "tilt-shift off");
     await page.keyboard.press("Escape");

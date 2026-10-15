@@ -299,7 +299,14 @@ export interface TierState {
   detected: { tier: TierName; reason: string } | null;
   /** The web warm-up probe; null natively, for explicit tiers and before it decides. */
   probe: { median_ms: number; kept: number; hitches: number; tier: TierName; reason: string } | null;
+  /** Tier changes applied since startup (scene rebuilds). */
   changes: number;
+  /** The latest change the GPU has finished drawing; behind `changes` while a rebuild is in flight. */
+  drawn: number;
+  /** Quality requests the engine has handled (`set_tier`, a loaded save's quality), no-ops included. */
+  requests: number;
+  /** `drawn !== changes`. */
+  rebuilding: boolean;
 }
 
 /** One look preset as `state().grade.presets` lists it. */

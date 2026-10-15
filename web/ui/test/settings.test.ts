@@ -16,6 +16,7 @@ import {
   qualityView,
   roveIndex,
   selectedQuality,
+  tierBusy,
   tierCommand,
   ultraAllowed,
 } from "../src/settings-model.ts";
@@ -30,9 +31,27 @@ function tier(over: Partial<TierState> = {}): TierState {
     detected: { tier: "high", reason: WEB_HIGH },
     probe: { median_ms: 8.34, kept: 60, hitches: 0, tier: "high", reason: "warm-up median 8.3 ms <= 25 ms" },
     changes: 1,
+    drawn: 1,
+    requests: 0,
+    rebuilding: false,
     ...over,
   };
 }
+
+test("the tier-change layer holds until the request is handled and its rebuild is drawn", () => {
+  assert.equal(tierBusy(undefined, null), false);
+  assert.equal(tierBusy(tier(), null), false);
+  // Sent at 3 requests: up until the engine has handled it.
+  assert.equal(tierBusy(tier({ requests: 3 }), 3), true);
+  assert.equal(tierBusy(undefined, 3), true);
+  // Handled and rebuilding (changes ahead of drawn), then drawn.
+  assert.equal(tierBusy(tier({ requests: 4, changes: 2, drawn: 1 }), 3), true);
+  assert.equal(tierBusy(tier({ requests: 4, changes: 2, drawn: 2 }), 3), false);
+  // A no-op request (same tier) moves only the request count.
+  assert.equal(tierBusy(tier({ requests: 4 }), 3), false);
+  // A rebuild nobody here asked for (a loaded save, the probe) also holds it.
+  assert.equal(tierBusy(tier({ changes: 3, drawn: 2 }), null), true);
+});
 
 test("Auto is selected while detection owns the tier; a picked or keyed tier selects its row", () => {
   assert.equal(selectedQuality(undefined), "auto");
