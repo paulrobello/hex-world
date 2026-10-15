@@ -115,13 +115,13 @@ def build():
     root = scene.empty(PIECE)
     mats = {s: materials.pbr_material(s, materials.srgb(c), r) for s, (c, r) in COLORS.items()}
     stones, granite, reeds, lilies = placements()
-    plan = (  # per LOD: stream stones, granite, reeds (blades, cattails), lilies
-        (stones, granite, reeds, 9, True, lilies),
-        (stones[:4], granite[:8], reeds[::2], 4, False, lilies[:3]),
-        ([], granite[:5], [], 0, False, []),
+    plan = (  # per LOD: stream stones, granite, reeds (cattails), lilies
+        (stones, granite, reeds, True, lilies),
+        (stones[:4], granite[:8], reeds[::2], False, lilies[:3]),
+        ([], granite[:5], [], False, []),
     )
     lods = []
-    for li, (st, gr, rd, blades, heads, ly) in enumerate(plan):
+    for li, (st, gr, rd, heads, ly) in enumerate(plan):
         bm = bmesh.new()
         spans = []
 
@@ -136,7 +136,7 @@ def build():
         mark(REED)
         tops = []
         for at, seed in rd:
-            tops += _river_dress._reed_clump(bm, at, seed, blades, heads)
+            tops += _river_dress._reed_clump(bm, at, seed, li, heads)
         mark(CATTAIL)
         for t in tops:
             _river_dress._cattail(bm, t)
@@ -147,7 +147,9 @@ def build():
         bm.faces.ensure_lookup_table()
         for fi, f in enumerate(bm.faces):
             f.material_index = [m for start, m in spans if start <= fi][-1]
-            f.smooth = False
+            if SLOTS[f.material_index] not in (REED, CATTAIL):
+                f.smooth = False
+        _river_dress.retag_spikes(bm, SLOTS.index(STONE))
         lily_faces = len(bm.faces) - lily_from
         bmesh.ops.triangulate(bm, faces=bm.faces)
         mesh = bpy.data.meshes.new(f"{PIECE}_lod{li}")
@@ -168,7 +170,7 @@ def build():
         lods.append(o)
     tris = [geom.tri_count(o) for o in lods]
     print(f"{PIECE}: tris per LOD {tris}")
-    assert tris[0] <= 860 and tris[1] <= 320 and tris[2] <= 120, tris
+    assert tris[0] <= _river_dress.LOD0_MAX and tris[1] <= 320 and tris[2] <= 120, tris
     assert tris[1] <= 0.5 * tris[0] and tris[2] <= 0.15 * tris[0], tris
     col = collider.collider_from(lods[2], "box", f"{PIECE}_collider")
     col.parent = root

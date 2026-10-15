@@ -11,11 +11,11 @@
     },
     {
       "path": "scripts/blender/kit/_river_bridge.py",
-      "sha256": "617369feeb569f41501c1a4e61fbea0e672b9419a180191b5c25497e6e94135e"
+      "sha256": "c98ac19d16dadb71bd5927917217f36f7abedad8deda3e401a9b36b50c2f0602"
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "07b9c48ac86817ccb7c5d0286a4613ac38175e632b9d893c7b3f65702a140e1c"
+      "sha256": "0d53eca52a3aece787acd7349e09c47cfdebf19530c145aef47e824ebddc1fac"
     },
     {
       "path": "scripts/blender/kit/_road.py",
@@ -23,7 +23,7 @@
     }
   ],
   "lodTris": {
-    "river_road_bridge_center_lod0": 920,
+    "river_road_bridge_center_lod0": 1766,
     "river_road_bridge_center_lod1": 396,
     "river_road_bridge_center_lod2": 120
   },

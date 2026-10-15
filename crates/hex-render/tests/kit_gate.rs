@@ -550,12 +550,9 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
         return vec![format!("{}: mesh {}_lod0 missing", p.id, p.id)];
     };
     let t0 = tris(lod0);
-    if t0 > p.kind.lod0_budget() {
-        e.push(format!(
-            "{}: LOD0 {t0} tris > {}",
-            p.id,
-            p.kind.lod0_budget()
-        ));
+    let budget = lod0_budget(p);
+    if t0 > budget {
+        e.push(format!("{}: LOD0 {t0} tris > {budget}", p.id));
     }
     for (i, max) in [(1, LOD1_MAX_RATIO), (2, lod2_max_ratio(kit, p))] {
         match &lods[i] {
@@ -933,6 +930,28 @@ fn tile_lane_kinds(id: &str) -> BTreeMap<u8, String> {
 /// skirt fix about 300 tris, and the river bend's arc needs 16 rows to stay inside the water
 /// contract tolerance at LOD2 (owner, 2026-10-13).
 const LANE_CUT_LOD2_MAX_RATIO: f32 = 0.20;
+
+/// LOD0 ceiling of the river dressing props, whose reed clumps and cattails are modelled for close-up
+/// and eye-level views: owner approval 2026-10-14, "Raise to 2,500". Every other prop keeps
+/// `PieceKind::Prop`'s 1,500, and the LOD1/LOD2 ratio ceilings are unchanged.
+/// (river_road_bridge_center carries the same clumps as a `center` under its kind's 4,000.)
+const RIVER_DRESSING_LOD0_MAX: usize = 2_500;
+const RIVER_DRESSING_PROPS: [&str; 5] = [
+    "river_straight_center",
+    "river_bend_center",
+    "river_spring_center",
+    "river_mouth_center",
+    "river_mouth_l_center",
+];
+
+/// A piece's LOD0 triangle ceiling: its kind's, or `RIVER_DRESSING_LOD0_MAX` for a river dressing prop.
+fn lod0_budget(p: &PieceEntry) -> usize {
+    if p.kind == PieceKind::Prop && RIVER_DRESSING_PROPS.contains(&p.id.as_str()) {
+        RIVER_DRESSING_LOD0_MAX
+    } else {
+        p.kind.lod0_budget()
+    }
+}
 
 /// LOD2's ratio ceiling: `LANE_CUT_LOD2_MAX_RATIO` for a lane-cut base, `LOD2_MAX_RATIO` otherwise.
 fn lod2_max_ratio(kit: &Kit, p: &PieceEntry) -> f32 {
@@ -2913,6 +2932,33 @@ fn lane_cut_bases_get_the_wider_lod2_ceiling() {
         ratio > LOD2_MAX_RATIO && ratio <= LANE_CUT_LOD2_MAX_RATIO,
         "{ratio}"
     );
+}
+
+/// The 2,500-tri LOD0 ceiling reaches the river dressing props only: every listed id is a prop in
+/// the runtime kit, other props keep 1,500 and other kinds keep their own.
+#[test]
+fn river_dressing_lod0_budget_is_scoped_to_its_props() {
+    let k = kits()
+        .into_iter()
+        .find(|k| {
+            k.manifest
+                .pieces
+                .iter()
+                .any(|p| p.id == "river_straight_center")
+        })
+        .expect("runtime kit holds river_straight_center");
+    let piece = |id: &str| k.manifest.pieces.iter().find(|p| p.id == id).unwrap();
+    for id in RIVER_DRESSING_PROPS {
+        assert_eq!(piece(id).kind, PieceKind::Prop, "{id}");
+        assert_eq!(lod0_budget(piece(id)), RIVER_DRESSING_LOD0_MAX, "{id}");
+    }
+    for p in &k.manifest.pieces {
+        if !RIVER_DRESSING_PROPS.contains(&p.id.as_str()) {
+            assert_eq!(lod0_budget(p), p.kind.lod0_budget(), "{}", p.id);
+        }
+    }
+    assert_eq!(lod0_budget(piece("ocean_center")), 1_500);
+    assert_eq!(lod0_budget(piece("river_road_bridge_center")), 4_000);
 }
 
 /// Joints are scoped by network kind: the river pieces meet river_edge at its inner end, the road

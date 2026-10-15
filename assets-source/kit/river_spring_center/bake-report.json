@@ -13,7 +13,7 @@
     "reedClumps": 10,
     "streamStones": 10,
     "tris": [
-      770,
+      2180,
       298,
       100
     ]
@@ -33,7 +33,7 @@
     "snow": "0 under water, 1 elsewhere"
   },
   "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
-  "receiverSignature": "e21db9581a24cca0a7bbd7cf7da66966c7409d73a15929c2d042751d5b48a322",
+  "receiverSignature": "3409497c155af6dd304c3bad17031ae4fffabee180af54d8b051b2348d5181bc",
   "samples": 0,
   "skipped": true
 }

@@ -357,7 +357,7 @@ Every MVP asset and shader carries these from the start:
 | Total deployed site at the full game | ≤600 MB (TC2) |
 | Kit piece LOD0 | ≤4k tris typical, ≤12k for hero pieces (landmarks, volcano) |
 | LOD1 / LOD2 | ≤50% / ≤15% of LOD0 |
-| Prop LOD0 | ≤1.5k tris (trees ≤3k, with leaf cards) |
+| Prop LOD0 | ≤1.5k tris (trees ≤3k, with leaf cards; the river dressing centres ≤2.5k for close-up reeds and cattails, owner 2026-10-14) |
 | Textures | ≤2k per kit-piece atlas (KTX2) |
 | Per-GLB size | ≤2 MB |
 | Audio decoded in memory | ≤96 MB |

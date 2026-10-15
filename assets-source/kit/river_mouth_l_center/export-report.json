@@ -15,7 +15,7 @@
     },
     {
       "path": "scripts/blender/kit/_mouth_dress.py",
-      "sha256": "131bdb7be69b508c5c3396a0859b8faee64e2d73dbf931e4ffd6b08296031b6b"
+      "sha256": "437ec622d57200d95b74c1f127e2a76eb1b6e6ca9c5623f5408cb89cf1ed1615"
     },
     {
       "path": "scripts/blender/kit/_mouth_profile.py",
@@ -27,11 +27,11 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "07b9c48ac86817ccb7c5d0286a4613ac38175e632b9d893c7b3f65702a140e1c"
+      "sha256": "0d53eca52a3aece787acd7349e09c47cfdebf19530c145aef47e824ebddc1fac"
     }
   ],
   "lodTris": {
-    "river_mouth_l_center_lod0": 836,
+    "river_mouth_l_center_lod0": 1040,
     "river_mouth_l_center_lod1": 380,
     "river_mouth_l_center_lod2": 108
   },

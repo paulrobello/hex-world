@@ -11,7 +11,7 @@
     },
     {
       "path": "scripts/blender/kit/_mouth.py",
-      "sha256": "8f483995d63a78759b590760e15f6bd3983091b6400413ed2ff74e94426408f2"
+      "sha256": "b4daaa0b26bc5b2e4d50d34c989b23dace1d0e004d9b2ec6a28df2b9a1094349"
     },
     {
       "path": "scripts/blender/kit/_mouth_profile.py",
@@ -23,9 +23,9 @@
     }
   ],
   "lodTris": {
-    "river_mouth_l_base_lod0": 3592,
-    "river_mouth_l_base_lod1": 1488,
-    "river_mouth_l_base_lod2": 709
+    "river_mouth_l_base_lod0": 3600,
+    "river_mouth_l_base_lod1": 1494,
+    "river_mouth_l_base_lod2": 715
   },
   "nodes": [
     "river_mouth_l_base",

@@ -1,6 +1,6 @@
 {
   "name": "river_bend_center",
-  "date": "2026-10-14T08:33:00.599Z",
+  "date": "2026-10-15T00:20:15.047Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 4689,
       "astc": 4888
     },
-    "glbBytes": 106812
+    "glbBytes": 179596
   },
   "glb": {
-    "bytes": 106812,
-    "sha256": "b808307a243cd83e8a2316268c6a1b39e556ac9a56e74a895c208cd6826285bd"
+    "bytes": 179596,
+    "sha256": "8d1a47d023ffcfa25135c3f0b8f1d7178a30b0e412bae56bdc5ab1f25c887cdf"
   }
 }

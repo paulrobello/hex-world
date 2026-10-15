@@ -17,7 +17,7 @@
     },
     {
       "path": "scripts/blender/kit/_mouth_dress.py",
-      "sha256": "131bdb7be69b508c5c3396a0859b8faee64e2d73dbf931e4ffd6b08296031b6b"
+      "sha256": "437ec622d57200d95b74c1f127e2a76eb1b6e6ca9c5623f5408cb89cf1ed1615"
     },
     {
       "path": "scripts/blender/kit/_mouth_profile.py",
@@ -29,7 +29,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "07b9c48ac86817ccb7c5d0286a4613ac38175e632b9d893c7b3f65702a140e1c"
+      "sha256": "0d53eca52a3aece787acd7349e09c47cfdebf19530c145aef47e824ebddc1fac"
     }
   ],
   "authoringAgent": {
@@ -64,7 +64,7 @@
       "reedsEdge5Bank": 3,
       "stones": 12,
       "tris": [
-        836,
+        1040,
         380,
         108
       ],
@@ -81,25 +81,25 @@
       "snow": "1 on dry bed, 0 under the water"
     },
     "reason": "no Cycles bake: the masks are an analytic field of the mouth bed on the planar UV0",
-    "receiverSignature": "1f5b6267bcaaf672a89179e905d429deb2ce49e5e62d131eec11e608687cc1d0",
+    "receiverSignature": "5ce1b278a1b20027ed2edd83c6afebc8f74e5a89efb642926fa1cffb850f8746",
     "samples": 0,
     "skipped": true
   },
   "lods": [
     {
       "lod": 0,
-      "tris": 836,
+      "tris": 1040,
       "ratio": 1
     },
     {
       "lod": 1,
       "tris": 380,
-      "ratio": 0.45454545454545453
+      "ratio": 0.36538461538461536
     },
     {
       "lod": 2,
       "tris": 108,
-      "ratio": 0.1291866028708134
+      "ratio": 0.10384615384615385
     }
   ],
   "collider": {
@@ -117,7 +117,7 @@
         "bc7": 7315,
         "astc": 7478
       },
-      "glbBytes": 101992
+      "glbBytes": 112848
     },
     "textureEncodes": [
       {
@@ -156,8 +156,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_mouth_center/river_mouth_center.glb",
-      "sha256": "30571741c2ba3a99cd41a7f3a4e7c37110def9caa0e6dfd4f1bc66b3edbd07d9",
-      "bytes": 101992
+      "sha256": "ebe6a448a6b1af0230817f56183760f473376e4138c75b938b9a9a7116198f55",
+      "bytes": 112848
     },
     {
       "path": "assets/kit/p1/river_mouth_center/river_mouth_center.masks.bc7.ktx2",
@@ -207,7 +207,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T20:01:10.419Z",
+    "date": "2026-10-15T00:21:36.755Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -233,6 +233,13 @@
       "status": "pending",
       "requested": "2026-10-14",
       "notes": "Pending owner review; not an approval. New piece: dune grass, driftwood and pebbles on the sand shoulders, bank stones and reeds on the channel (right-handed mouth). Review the six-view renders in assets-source/kit/river_mouth_center/renders/ and river-mouth-03. In-engine shots in docs/checkpoints/river-mouth/. The controller records the owner's decision."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "close-up reeds and cattails",
+      "notes": "Pending owner re-approval; not an approval. Rebuilt for the owner's 2026-10-14 note \"cat tails need more close up detail\" (eye-level walk mode): LOD0 reed blades only (the mouth pieces have no cattail slot, so their clumps stay headless). Blades are curved strap leaves with rows along the length, a twist, a taper, a shallow V (folded midrib) on the upper side and a flat back sheet on its own vertices, smooth-shaded with a sharp midrib; the longest blade of a clump bends over near its tip, and clumps vary in height, lean and blade count. Stones, placements, slots, the planar UV0 mapping and the masks map are unchanged; LOD1 keeps four flat triangles per clump along LOD0 blades and LOD2 has no reeds, as before. Tris LOD0/1/2 836/380/108 -> 1040/380/108 (the river dressing props' LOD0 ceiling, raised from the prop kind's 1,500 to 2,500 by the owner on 2026-10-14 (\"Raise to 2,500\")). Review docs/checkpoints/cattails/ (cattails-before-*.jpg against cattails-after-*.jpg, and clump-{before,after}-{front,back}-lit.jpg). The controller records the owner's decision. Earlier entries stay as history."
     }
   ]
 }

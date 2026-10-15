@@ -99,6 +99,18 @@
   {"cmd": "camera", "pos": [93, 4.5, 15], "look_at": [82, -1.2, 3]},
   {"cmd": "wait", "frames": 30},
   {"cmd": "screenshot", "name": "river-mouth-12-fan-sand-oblique"},
+  {"cmd": "camera", "pos": [75.0, 3.5, 3.0], "look_at": [76.3, -0.5, -5.8]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "river-mouth-13-grass-line-right-long"},
+  {"cmd": "camera", "pos": [74.5, 3.0, -1.0], "look_at": [70.8, -0.5, 5.8]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "river-mouth-14-grass-line-right-short"},
+  {"cmd": "camera", "pos": [-81.9, 3.5, 6.9], "look_at": [-75.0, -0.5, 2.9]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "river-mouth-15-grass-line-mirrored-long"},
+  {"cmd": "camera", "pos": [-76.5, 3.0, 10.6], "look_at": [-81.7, -0.5, 13.6]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "river-mouth-16-grass-line-mirrored-short"},
   {"cmd": "wait", "frames": 30},
   {"cmd": "exit"}
 ]

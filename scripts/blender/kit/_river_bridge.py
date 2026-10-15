@@ -199,14 +199,16 @@ def dressing(name, lod, rnd_seed):
     n_stone = len(bm.faces)
     tops = []
     for at, seed in (reeds, reeds[::2], [])[lod]:
-        tops += _river_dress._reed_clump(bm, at, seed, 9 if lod == 0 else 4, lod == 0)
+        tops += _river_dress._reed_clump(bm, at, seed, lod, lod == 0)
     n_reed = len(bm.faces)
     for top in tops:
         _river_dress._cattail(bm, top)
     bm.faces.ensure_lookup_table()
     for fi, f in enumerate(bm.faces):
         f.material_index = 0 if fi < n_stone else (1 if fi < n_reed else 2)
-        f.smooth = False
+        if fi < n_stone:
+            f.smooth = False
+    _river_dress.retag_spikes(bm, 0)
     bmesh.ops.triangulate(bm, faces=bm.faces)
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)

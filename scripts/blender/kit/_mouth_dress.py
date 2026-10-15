@@ -302,11 +302,11 @@ def build(piece, hand, generator):
     }
     print(f"{piece}: {counts}")
     plan = (
-        {"log": (8, 3), "stones": stones, "reeds": reeds, "reed_blades": 7, "tufts": tufts, "blades": 7,
+        {"log": (8, 3), "stones": stones, "reeds": reeds, "tufts": tufts, "blades": 7,
          "pebbles": pebbles},
-        {"log": (6, 2), "stones": stones[: len(stones) // 2], "reeds": reeds[::2], "reed_blades": 4,
+        {"log": (6, 2), "stones": stones[: len(stones) // 2], "reeds": reeds[::2],
          "tufts": tufts[::2], "blades": 4, "pebbles": pebbles[: len(pebbles) // 2]},
-        {"log": (5, 1), "stones": stones[:3], "reeds": [], "reed_blades": 0, "tufts": [], "blades": 0,
+        {"log": (5, 1), "stones": stones[:3], "reeds": [], "tufts": [], "blades": 0,
          "pebbles": []},
     )
     lods = []
@@ -326,11 +326,12 @@ def build(piece, hand, generator):
             _river_dress._stone(bm, (x, y, ground(x, y) + 0.03), p["size"], p["seed"])
         spans.append(len(bm.faces))
         for _k, x, y, p in pl["reeds"]:
-            _river_dress._reed_clump(bm, (x, y, ground(x, y)), p["seed"], pl["reed_blades"], False)
+            _river_dress._reed_clump(bm, (x, y, ground(x, y)), p["seed"], li, False)
         bm.faces.ensure_lookup_table()
         for fi, f in enumerate(bm.faces):
             f.material_index = next((si for si, end in enumerate(spans) if fi < end), len(spans))
-            f.smooth = DRESS_SLOTS[f.material_index] in (WOOD, PEBBLE)
+            if DRESS_SLOTS[f.material_index] != REED:
+                f.smooth = DRESS_SLOTS[f.material_index] in (WOOD, PEBBLE)
         bmesh.ops.recalc_face_normals(bm, faces=[f for f in bm.faces if DRESS_SLOTS[f.material_index] in (WOOD, PEBBLE)])
         bmesh.ops.triangulate(bm, faces=bm.faces)
         mesh = bpy.data.meshes.new(f"{piece}_lod{li}")
@@ -344,7 +345,7 @@ def build(piece, hand, generator):
         lods.append(o)
     tris = [geom.tri_count(o) for o in lods]
     print(f"{piece}: tris per LOD {tris}")
-    assert tris[0] <= 860 and tris[1] <= 388 and tris[2] <= 120, tris
+    assert tris[0] <= _river_dress.LOD0_MAX and tris[1] <= 388 and tris[2] <= 120, tris
     assert tris[1] <= 0.5 * tris[0] and tris[2] <= 0.15 * tris[0], tris
     (lx, ly), (ux, uy) = mp.axis(hand)
     for o in lods:

@@ -13,11 +13,11 @@
     },
     {
       "path": "scripts/blender/kit/_river_bridge.py",
-      "sha256": "617369feeb569f41501c1a4e61fbea0e672b9419a180191b5c25497e6e94135e"
+      "sha256": "c98ac19d16dadb71bd5927917217f36f7abedad8deda3e401a9b36b50c2f0602"
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "07b9c48ac86817ccb7c5d0286a4613ac38175e632b9d893c7b3f65702a140e1c"
+      "sha256": "0d53eca52a3aece787acd7349e09c47cfdebf19530c145aef47e824ebddc1fac"
     },
     {
       "path": "scripts/blender/kit/_road.py",
@@ -57,8 +57,8 @@
     },
     "marginPx": 12,
     "maskStats": {
-      "dressTexels": 3751,
-      "haloTexels": 33090,
+      "dressTexels": 3848,
+      "haloTexels": 33342,
       "roadTexels": 28290,
       "stoneTexels": 256
     },
@@ -88,18 +88,18 @@
   "lods": [
     {
       "lod": 0,
-      "tris": 920,
+      "tris": 1766,
       "ratio": 1
     },
     {
       "lod": 1,
       "tris": 396,
-      "ratio": 0.43043478260869567
+      "ratio": 0.22423556058890148
     },
     {
       "lod": 2,
       "tris": 120,
-      "ratio": 0.13043478260869565
+      "ratio": 0.06795016987542468
     }
   ],
   "collider": {
@@ -149,10 +149,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 26462,
-        "astc": 26035
+        "bc7": 26343,
+        "astc": 25956
       },
-      "glbBytes": 102000
+      "glbBytes": 147416
     },
     "textureEncodes": [
       {
@@ -163,8 +163,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 26462,
-        "sha256": "b735f3ae2398c54a8e78d69d5d1e343cf01ed9553ec1d05086ba4e3c405643ee"
+        "bytes": 26343,
+        "sha256": "be7564faf10a3fc29d4b0ff74d9a391c9aebc8b3c554aebf92aa7e0ff5cbb6df"
       },
       {
         "channel": "masks",
@@ -174,8 +174,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 26035,
-        "sha256": "8592d43b010b5a5d35ac5ef2a112bd056f3febde0b34b3c8632d88e33ff46e14"
+        "bytes": 25956,
+        "sha256": "3a96295da1fe0e591309ae0e215b732ba639261607e45fdc7f06668464cf1743"
       },
       {
         "channel": "masks",
@@ -183,31 +183,31 @@
         "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 34443,
-        "sha256": "59a3be0c5be38d042d98e0120a9a708553cda22fd88d814f58e4f3ea72fa5966"
+        "bytes": 34523,
+        "sha256": "ae4cb2c7177e82ec9026f02e654b3bce828cf63c1884823da7eb861755dbf54e"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.glb",
-      "sha256": "f0b84d3fbf6c6fd5efebce78c4bee32a5591660facb3b7d6aea2cf2c35c807ca",
-      "bytes": 102000
+      "sha256": "87f14e404f4726112bbb601f104b7f1091e6f25bd57060b74b6b895d5cb2548d",
+      "bytes": 147416
     },
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.bc7.ktx2",
-      "sha256": "b735f3ae2398c54a8e78d69d5d1e343cf01ed9553ec1d05086ba4e3c405643ee",
-      "bytes": 26462
+      "sha256": "be7564faf10a3fc29d4b0ff74d9a391c9aebc8b3c554aebf92aa7e0ff5cbb6df",
+      "bytes": 26343
     },
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.astc.ktx2",
-      "sha256": "8592d43b010b5a5d35ac5ef2a112bd056f3febde0b34b3c8632d88e33ff46e14",
-      "bytes": 26035
+      "sha256": "3a96295da1fe0e591309ae0e215b732ba639261607e45fdc7f06668464cf1743",
+      "bytes": 25956
     },
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.png",
-      "sha256": "59a3be0c5be38d042d98e0120a9a708553cda22fd88d814f58e4f3ea72fa5966",
-      "bytes": 34443
+      "sha256": "ae4cb2c7177e82ec9026f02e654b3bce828cf63c1884823da7eb861755dbf54e",
+      "bytes": 34523
     }
   ],
   "references": [
@@ -233,7 +233,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T19:14:19.368Z",
+    "date": "2026-10-15T00:21:33.875Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -273,6 +273,13 @@
       "requested": "2026-10-14",
       "revision": "verge sink normals",
       "notes": "Pending owner seam re-approval; not an approval. Rebuilt for the owner's 2026-10-14 road-verge bug (a dark strip in the meadow beside the road): every road_verge loop, the 31-degree verge sink slope included, now carries a +Z custom normal (_road.verge_normals_up), so the slope shades like the flat meadow grass on both sun sides. Positions, the shared PROFILE, LODs, UVs, sockets and the masks bake are unchanged (masks PNG and KTX2 byte-identical). In play the shade-side band went from 0.536 to 1.014 of the adjacent meadow's mean luminance and the sun-side band from 1.115 to 1.035. Review docs/checkpoints/road-verge/road-verge-{before,after}-*.jpg and road-verge-{before,after}-crop4x-{sun,shade}.png. Its road bed was flat-shaded; the verge faces are now smooth with the +Z normal, the asphalt and kerb stay flat. The controller records the owner's decision. Earlier entries stay as history."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "close-up reeds and cattails",
+      "notes": "Pending owner re-approval; not an approval. Rebuilt for the owner's 2026-10-14 note \"cat tails need more close up detail\" (eye-level walk mode): LOD0 reed blades and cattails: a 3-sided stalk, a closed 6-sided seed head (flat bottom cap, slight taper, rounded top) and a short pale spike (river_stone slot). Blades are curved strap leaves with rows along the length, a twist, a taper, a shallow V (folded midrib) on the upper side and a flat back sheet on its own vertices, smooth-shaded with a sharp midrib; the longest blade of a clump bends over near its tip, and clumps vary in height, lean and blade count. Stones, placements, slots and the planar UV0 mapping are unchanged; in the masks map only the dressing's footprint and its halo were rewritten for the new blades, and the road's baked texels and their mips are unchanged (`dress_masks` asserts both); LOD1 keeps four flat triangles per clump along LOD0 blades and LOD2 has no reeds, as before. Tris LOD0/1/2 920/396/120 -> 1766/396/120 (kind center, 4,000, unchanged). Cattail heads on LOD0: 18 before, 18 now (two to four per clump, 31 tris each). Review docs/checkpoints/cattails/ (cattails-before-*.jpg against cattails-after-*.jpg, and clump-{before,after}-{front,back}-lit.jpg). The controller records the owner's decision. Earlier entries stay as history."
     }
   ]
 }

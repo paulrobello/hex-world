@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "07b9c48ac86817ccb7c5d0286a4613ac38175e632b9d893c7b3f65702a140e1c"
+      "sha256": "0d53eca52a3aece787acd7349e09c47cfdebf19530c145aef47e824ebddc1fac"
     }
   ],
   "authoringAgent": {
@@ -40,7 +40,7 @@
       "reedClumps": 10,
       "stones": 28,
       "tris": [
-        860,
+        2363,
         320,
         120
       ]
@@ -56,25 +56,25 @@
       "snow": 1
     },
     "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
-    "receiverSignature": "6cabfe2df531d067b3938fa3938b3fa0f32fb61c0d5f98a7c87fd81d3e016eb2",
+    "receiverSignature": "1db2bb945e0bd0c16f9590360b91c7ee569d3fc536f57886b758c8b281900822",
     "samples": 0,
     "skipped": true
   },
   "lods": [
     {
       "lod": 0,
-      "tris": 860,
+      "tris": 2363,
       "ratio": 1
     },
     {
       "lod": 1,
       "tris": 320,
-      "ratio": 0.37209302325581395
+      "ratio": 0.13542107490478206
     },
     {
       "lod": 2,
       "tris": 120,
-      "ratio": 0.13953488372093023
+      "ratio": 0.05078290308929327
     }
   ],
   "collider": {
@@ -92,7 +92,7 @@
         "bc7": 4689,
         "astc": 4888
       },
-      "glbBytes": 106812
+      "glbBytes": 179596
     },
     "textureEncodes": [
       {
@@ -131,8 +131,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_bend_center/river_bend_center.glb",
-      "sha256": "b808307a243cd83e8a2316268c6a1b39e556ac9a56e74a895c208cd6826285bd",
-      "bytes": 106812
+      "sha256": "8d1a47d023ffcfa25135c3f0b8f1d7178a30b0e412bae56bdc5ab1f25c887cdf",
+      "bytes": 179596
     },
     {
       "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.bc7.ktx2",
@@ -173,7 +173,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T09:00:09.404Z",
+    "date": "2026-10-15T00:21:30.371Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -197,7 +197,7 @@
       "gate": "piece",
       "status": "pending",
       "requested": "2026-10-14",
-      "revision": "\u00a79.4 hook masks",
+      "revision": "§9.4 hook masks",
       "notes": "Pending owner re-approval: a masks map (R 1, G porosity 1.0 at the waterline to 0.8 up the bank, B 0, A 1) bound to river_stone, river_reed and river_cattail; the reeds and cattails take the foliage season tint. The GLB is byte-identical, and A = 1 keeps the slots' AO as before (none). At the MVP values, outside each frame's run-to-run noise, at most 54 of 1.6 M isolated pixels differ, by at most 6 levels of 255 in the static frames (up to 23 beside moving agents in the coast checkpoint frames), with no visible change; the one static frame with zero run-to-run noise (the straight coast) shows 6 such pixels, caused by binding the map, while the masked shader math is an identity at those values. Review masks-river-bend and masks-far, *-before.jpg against *-after.jpg, in docs/checkpoints/hooks/masks-{none,snow,wet,night,autumn}/. Earlier entries stay as history."
     },
     {
@@ -206,6 +206,13 @@
       "gate": "piece",
       "status": "approved",
       "notes": "A15: re-approved after the prop-mask rebuild (no change at MVP values). A2: shape, seams and LODs approved; colour re-checked on the TonyMcMapface re-shoot (Q4). docs/review/2026-10-14-walkthrough.html"
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "close-up reeds and cattails",
+      "notes": "Pending owner re-approval; not an approval. Rebuilt for the owner's 2026-10-14 note \"cat tails need more close up detail\" (eye-level walk mode): LOD0 reed blades and cattails: a 3-sided stalk, a closed 6-sided seed head (flat bottom cap, slight taper, rounded top) and a short pale spike (river_stone slot). Blades are curved strap leaves with rows along the length, a twist, a taper, a shallow V (folded midrib) on the upper side and a flat back sheet on its own vertices, smooth-shaded with a sharp midrib; the longest blade of a clump bends over near its tip, and clumps vary in height, lean and blade count. Stones, placements, slots, the planar UV0 mapping and the masks map are unchanged; LOD1 keeps four flat triangles per clump along LOD0 blades and LOD2 has no reeds, as before. Tris LOD0/1/2 860/320/120 -> 2363/320/120 (the river dressing props' LOD0 ceiling, raised from the prop kind's 1,500 to 2,500 by the owner on 2026-10-14 (\"Raise to 2,500\")). Cattail heads on LOD0: 30 before, 33 now (two to four per clump, 31 tris each). Review docs/checkpoints/cattails/ (cattails-before-*.jpg against cattails-after-*.jpg, and clump-{before,after}-{front,back}-lit.jpg). The controller records the owner's decision. Earlier entries stay as history."
     }
   ]
 }

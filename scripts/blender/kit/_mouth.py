@@ -25,6 +25,10 @@ Interior (one continuous cap per LOD, constrained Delaunay, every vertex on the 
   river_edge joint offsets inland, snapped to the joint row) as constraint polylines: the profile
   depends only on s and d / w, so the long thin triangles between them follow the channel and need
   points only where s changes the profile;
+- the grass line on both banks (`grass_lines`, owner 2026-10-14): river_straight's grass row
+  (5.366 m from the centre line) from the joint to the row s = -8, then along that row to the crease,
+  filleted on the long bank; every grass slot edge lies on it (`in_grass`), and the slot rule is the
+  same on both sides of s = -8, so the hand-over has no notch or step;
 - per-LOD seeds (row spacing, a lattice), points closer than NEAR to another point or constraint
   dropped (plan slivers give zero tangents), then deterministic refinement: the worst interior
   sample of every face over tolerance is inserted and the CDT rerun until every sample is inside.
@@ -336,11 +340,89 @@ Q_D = tuple(_river.OFFS[14 + i] for i in (0, 2, 4, 6, 8, 10, 12))  # 0 .. 5.85 m
 NEAR = 0.03  # minimum plan distance between an interior point and another point or constraint
 LINE_GAP = 0.02  # q-lines and the parabola-end lines stop where the channel is this far under the coast
 S_START = -14.6  # below the lowest s inside the domain's channel (the joint row's y > 0 end)
+# The grass line (owner, 2026-10-14: the grass edge along the bank was a sawtooth with a notch at
+# s = -8). river_straight and the river_edge stub put their grass/bed edge on the offset row just
+# under the GRASS_Z contour (5.42 m), OFFS[25] = 5.366 m, so the mouth's inland line starts on that
+# joint vertex and stays at that distance. It ends where it meets the coast's own grass/sand line,
+# the row s = -8, and runs along that row to the crease, where the coast row takes over. On the long
+# bank (y > 0, the turn is 60 degrees) a fillet tangent to both lines ends on the outer q-line's s = -8
+# vertex (5.854 m, so no constraint crosses it); on the short bank (y < 0) the line runs along the
+# row to that q-line vertex and on to the next joint vertex seaward of the row.
+D_GRASS = _river.OFFS[14 + 11]
+
+
+def grass_lines(tol):
+    """The two grass-line polylines of the right-handed mouth (Blender (x, y)), long bank first,
+    with the fillet sampled to chord error tol. Every slot edge between grass and the bank lies on
+    them (`in_grass`)."""
+    joint = [(x, y) for x, y, _z in ring("r") if abs(x + _river.JOINT_X) < 1e-6]
+
+    def jv(y):
+        return min(joint, key=lambda p: abs(p[1] - y))
+    q = Q_D[-1] / MP.W_IN
+
+    def q_vertex(sg):  # the outer q-line's s = -8 vertex, the same expression as in `inputs_r`
+        return row_at(MP.BEACH_TOP_S, sg * q * MP.width(MP.BEACH_TOP_S) / ROW_DIR[1])
+    lines = []
+    # Long bank: joint -> T1 on the inland line, fillet T1 -> Q, row s = -8 from Q to the crease.
+    j, qv = jv(D_GRASS), q_vertex(1)
+    p = row_at(MP.BEACH_TOP_S, D_GRASS / ROW_DIR[1])  # the corner the fillet replaces
+    t_len = math.dist(p, qv)
+    r = t_len * math.tan(math.radians(60.0))  # the grass side's corner is 120 degrees
+    t1 = (p[0] - t_len, p[1])
+    o = (t1[0], t1[1] + r)
+    assert abs(math.dist(o, qv) - r) < 1e-9 and abs(math.dist(j, t1) - (t1[0] - j[0])) < 1e-9, (o, qv, r)
+    a0 = math.atan2(t1[1] - o[1], t1[0] - o[0])
+    a1 = math.atan2(qv[1] - o[1], qv[0] - o[0])
+    n = max(2, math.ceil(abs(a1 - a0) / (2.0 * math.acos(1.0 - tol / r))))
+    arc = [(o[0] + r * math.cos(a0 + (a1 - a0) * i / n), o[1] + r * math.sin(a0 + (a1 - a0) * i / n))
+           for i in range(1, n)]
+    crease = row_at(MP.BEACH_TOP_S, crease_t(MP.BEACH_TOP_S, 1))
+    lines.append([j, t1] + arc + [qv, crease])
+    # Short bank: joint -> the row, along the row to the q-line vertex, on to the joint vertex seaward
+    # of where the row meets the joint (a ring vertex: nothing may split the joint row).
+    j2, qv2 = jv(-D_GRASS), q_vertex(-1)
+    p2 = row_at(MP.BEACH_TOP_S, -D_GRASS / ROW_DIR[1])
+    v = min((pt for pt in joint if pt[1] < 0 and MP.seaward(*pt) > MP.BEACH_TOP_S), key=lambda pt: MP.seaward(*pt))
+    lines.append([j2, p2, qv2, v])
+    return lines
+
+
+def grass_polys(lines):
+    """Closed polygons of the grass side of each grass line (r frame), closed well outside the cap."""
+    (long_, short) = lines
+    far = (long_[-1][0] + 30.0 * ROW_DIR[0], long_[-1][1] + 30.0 * ROW_DIR[1])
+    return [[(-40.0, long_[0][1])] + long_ + [far, (-40.0, 40.0)],
+            short + [(-40.0, short[-1][1]), (-40.0, short[0][1])]]
+
+
+def in_poly(p, poly):
+    x, y = p
+    inside_ = False
+    for (ax, ay), (bx, by) in zip(poly, poly[1:] + poly[:1]):
+        if (ay > y) != (by > y) and x < ax + (y - ay) * (bx - ax) / (by - ay):
+            inside_ = not inside_
+    return inside_
+
+
+def in_grass(hand, x, y, lines):
+    """Whether (x, y) lies on the grass side of the hand's own grass lines (`build_points`)."""
+    if hand == "l":
+        lines = [[reflect(q) for q in ln] for ln in lines]
+        x, y = reflect((x, y))
+    return any(in_poly((x, y), poly) for poly in grass_polys(lines))
 
 
 def inputs_r(max_seg, spacing, step, tol, depth, qstep):
-    """Right-handed interior points and constraint segments (Blender (x, y) pairs)."""
+    """Right-handed interior points and constraint segments (Blender (x, y) pairs), the crease points
+    and the grass lines."""
     pts, segs = [], []
+    # Twice the polyline tolerance: the fillet's chord error is a slot edge, not a height, and LOD0
+    # (3,600) and the LOD2 ceiling (20% of LOD0) leave room for 3, 2 and 2 fillet segments.
+    grass = grass_lines(2.0 * tol)
+    for ln in grass:
+        pts += ln
+        segs += list(zip(ln, ln[1:]))
     # Coast rows of constant s, cut where the channel sets the bed; the cut ends come from crease_t,
     # the same function as the crease polylines, so rows end exactly on crease vertices.
     for s in _beach.ROWS_S:
@@ -408,7 +490,7 @@ def inputs_r(max_seg, spacing, step, tol, depth, qstep):
             g = gap("r", x, y)
             if g < -1e-6 or s < MP.BEACH_TOP_S - spacing * 0.5 or s > MP.DROP_END_S + spacing * 0.5:
                 pts.append((x, y))
-    return pts, segs, crease
+    return pts, segs, crease, grass
 
 
 # --- cap ---------------------------------------------------------------------------------------------
@@ -531,18 +613,26 @@ def clean(hand, pts, segs, ring_keys, crease_keys):
 
 
 def build_points(hand, params):
-    """The refined 2D input of one LOD: (loop, interior points, constraint segments)."""
-    pts, segs, crease = inputs_r(*params)
+    """The refined 2D input of one LOD: (loop, verts, faces, worst errors, iterations, Steiner
+    vertices, grass lines in the hand's own frame)."""
+    pts, segs, crease, grass = inputs_r(*params)
     if hand == "l":
         pts = [reflect(p) for p in pts]
         segs = [(reflect(a), reflect(b)) for a, b in segs]
         crease = [reflect(p) for p in crease]
+        grass = [[reflect(p) for p in ln] for ln in grass]
     loop = ring(hand)
     if hand == "l":
         mine = {key(x, y) for x, y, _ in loop}
         mirrored = {key(*reflect((x, y))) for x, y, _ in ring("r")}
         assert mine == mirrored, f"mirror ring mismatch: {len(mine ^ mirrored)} points"
-    pts, segs = clean(hand, pts, segs, {key(x, y) for x, y, _ in loop}, {key(*q) for q in crease})
+    gkeys = {key(*q) for ln in grass for q in ln}
+    pts, segs = clean(hand, pts, segs, {key(x, y) for x, y, _ in loop}, {key(*q) for q in crease} | gkeys)
+    kept = {key(*q) for q in pts} | {key(x, y) for x, y, _ in loop}
+    kept_segs = {frozenset((key(*a), key(*b))) for a, b in segs}
+    for ln in grass:
+        for a, b in zip(ln, ln[1:]):
+            assert key(*a) in kept and frozenset((key(*a), key(*b))) in kept_segs, f"{hand}: grass segment {a}-{b} dropped"
     for it in range(60):
         verts, faces, steiner = triangulate(hand, loop, pts, segs)
         per_face, worst = face_errors(hand, verts, faces)
@@ -550,7 +640,7 @@ def build_points(hand, params):
         bad = [r for r, p in per_face if r > REFINE and p is None]
         assert not bad, f"{hand}: {len(bad)} faces over tolerance with no insertable sample"
         if not new:
-            return loop, verts, faces, worst, it, steiner
+            return loop, verts, faces, worst, it, steiner, grass
         if os.environ.get("HEXW_MOUTH_DEBUG"):
             top = max(per_face, key=lambda t: t[0])
             print(f"  {hand} iter {it}: faces {len(faces)}, failing {len(new)}, worst {top[0]:.3f} at {top[1]}, {worst}")
@@ -595,14 +685,16 @@ def loop_normal(hand, x, y, z, channel_side):
     return tuple(Vector((-gx, -gy, 1.0)).normalized())
 
 
-def slot_of(hand, x, y):
-    """Inland the river's slots; in the fan (s > -8) gravel under the water and where the bed weight
-    reaches WB_SEAM, and the coast's plaster slots by height on the banks between that seam and the
-    crease, so the crease joins like slots (gravel to seabed, plaster to sand) and COLOR_0 blends."""
-    h, ch, co, s = prof(hand, x, y)
+def slot_of(hand, x, y, grass):
+    """In the channel: grass on the grass side of the LOD's own grass lines (constraints, so no face
+    crosses them); elsewhere gravel under the water and where the bed weight reaches WB_SEAM (all of
+    the inland bed, where the weight is 1), and the coast's plaster slots by height on the fan's banks
+    between that seam and the crease, so the crease joins like slots (gravel to seabed, plaster to
+    sand) and COLOR_0 blends. One rule on both sides of s = -8: the hand-over has no step."""
+    h, ch, co, _s = prof(hand, x, y)
     if ch < co - 1e-6:
-        if s <= MP.BEACH_TOP_S:
-            return GRASS if h >= _river.GRASS_Z else BED
+        if in_grass(hand, x, y, grass):
+            return GRASS
         if h < WATER or float(bed_weight(hand, x, y)[0]) >= WB_SEAM:
             return BED
         return WET if h < _beach.WET_TOP_Y else SAND
@@ -610,7 +702,7 @@ def slot_of(hand, x, y):
 
 
 def cap(name, hand, params, mats):
-    loop, verts, faces, worst, iters, steiner = build_points(hand, params)
+    loop, verts, faces, worst, iters, steiner, grass = build_points(hand, params)
     mesh = bpy.data.meshes.new(name)
     mesh.from_pydata(verts, [], faces)
     mesh.validate(clean_customdata=False)
@@ -620,7 +712,7 @@ def cap(name, hand, params, mats):
         obj.data.materials.append(mats[nm])
     for p in obj.data.polygons:
         p.use_smooth = True
-        p.material_index = SLOTS.index(slot_of(hand, p.center.x, p.center.y))
+        p.material_index = SLOTS.index(slot_of(hand, p.center.x, p.center.y, grass))
     side = [gap(hand, p.center.x, p.center.y) < -1e-9 for p in obj.data.polygons]
     normals = [None] * len(obj.data.loops)
     for p in obj.data.polygons:

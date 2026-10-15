@@ -11,5 +11,12 @@
     "requested": "2026-10-14",
     "revision": "fan-colour-blend",
     "notes": "Pending owner review; not an approval. Owner feedback 2026-10-14 (the mouth colouring must blend where it meets the sand): the fan's bed colour now blends into the sand and the seabed through COLOR_0 (_mouth.fan_color, kit_material.wesl detail weight); the fan's banks above the water are the coast's plaster slots. Geometry and tri counts unchanged. Review river-mouth-05-fan-mirrored in docs/checkpoints/river-mouth/."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-14",
+    "revision": "grass-line",
+    "notes": "Pending owner review; not an approval. Owner feedback 2026-10-14 (artifacts where the river mouth meets the grass): the grass edge along both banks is now a constraint polyline in every LOD (_mouth.grass_lines: river_straight's grass row to s = -8, then along s = -8 to the crease, filleted on the long bank), with one slot rule across s = -8. Tris [3600, 1494, 715] (was [3592, 1488, 709]). Review river-mouth-15 and -16 and grass-line-slots-river_mouth_l_base.png in docs/checkpoints/river-mouth/."
   }
 ]

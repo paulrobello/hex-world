@@ -18,9 +18,9 @@
   "fanColour": {
     "bedWeightRampM": 2.0,
     "color0Vertices": {
-      "beach_sand": 506,
+      "beach_sand": 508,
       "beach_wet": 324,
-      "river_bed": 1006
+      "river_bed": 1010
     },
     "seam": 0.8
   },
@@ -54,14 +54,14 @@
     ]
   ],
   "lodTris": [
-    3592,
-    1488,
-    709
+    3600,
+    1494,
+    715
   ],
   "marginPx": 0,
   "profileErrorM": [
     {
-      "channelDryMaxM": 0.0459,
+      "channelDryMaxM": 0.0539,
       "coastDryMaxM": 0.0081,
       "deepMaxM": 0.0151,
       "refineIterations": 2,
@@ -86,7 +86,7 @@
     }
   ],
   "reason": "analytic masks (snow above water; wetness by s on the coast, by height in the channel, blended to the bed's 0.9 by the fan's bed weight; AO 1): no bake",
-  "receiverSignature": "45e2a548ab01871b1f5c64fb1de3f86c3f3611d76557f5dd9aece46aa14a9bd2",
+  "receiverSignature": "9c19221f8bc77d4705b5c9f388df1c651091ade6b0e2c9181c766c242ef8d24f",
   "rowsS": [
     -8.0,
     -7.0,
@@ -116,7 +116,7 @@
   "skipped": false,
   "texelDensityPxPerM": {
     "max": 32.0002161742152,
-    "median": 31.552852637382426,
+    "median": 31.55284069866465,
     "min": 22.8978489748444
   }
 }

@@ -11,7 +11,7 @@
     "reedClumps": 10,
     "stones": 28,
     "tris": [
-      860,
+      2239,
       320,
       120
     ]
@@ -27,7 +27,7 @@
     "snow": 1.0
   },
   "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
-  "receiverSignature": "0334319331662f6a6d161f90e36ad41590d803e186ecad57a0b47c1622424a64",
+  "receiverSignature": "50893e8a2e8141c8df033a5f007df1f5d4b7f6860c14e0497faf65960e216cbf",
   "samples": 0,
   "skipped": true
 }

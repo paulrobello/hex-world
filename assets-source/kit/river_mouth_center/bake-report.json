@@ -19,7 +19,7 @@
     "reedsEdge5Bank": 3,
     "stones": 12,
     "tris": [
-      836,
+      1040,
       380,
       108
     ],
@@ -36,7 +36,7 @@
     "snow": "1 on dry bed, 0 under the water"
   },
   "reason": "no Cycles bake: the masks are an analytic field of the mouth bed on the planar UV0",
-  "receiverSignature": "1f5b6267bcaaf672a89179e905d429deb2ce49e5e62d131eec11e608687cc1d0",
+  "receiverSignature": "5ce1b278a1b20027ed2edd83c6afebc8f74e5a89efb642926fa1cffb850f8746",
   "samples": 0,
   "skipped": true
 }
