@@ -422,14 +422,20 @@
     ],
     "new_world": [],
     "photo": [
+      "aberration",
       "aperture",
       "dof",
       "exposure",
+      "filter",
+      "filter_strength",
       "focus",
       "focus_at",
       "fov",
+      "grain",
       "pause_agents",
-      "roll"
+      "roll",
+      "vignette",
+      "vignette_softness"
     ],
     "photo_export": [
       "name",
@@ -539,6 +545,11 @@
       "sparse",
       "normal",
       "lush"
+    ],
+    "photo_filter": [
+      "mono",
+      "normal",
+      "sepia"
     ],
     "spin": [
       "ccw",
@@ -726,11 +737,14 @@
       "yaw"
     ],
     "photo": [
+      "aberration",
       "agents_paused",
       "aperture",
       "dof",
       "exporting",
       "exposure",
+      "filter",
+      "filter_strength",
       "focus",
       "focus_hit",
       "focus_misses",
@@ -738,11 +752,15 @@
       "focus_point",
       "focus_row",
       "fov",
+      "fx_active",
+      "grain",
       "max_texture",
       "on",
       "pause_agents",
       "roll",
-      "sim_ticks"
+      "sim_ticks",
+      "vignette",
+      "vignette_softness"
     ],
     "play": [
       "bulldoze",

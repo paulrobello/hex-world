@@ -10,6 +10,8 @@ export type EdgeStatus = "Compatible" | "Incompatible" | "Neutral";
 export type HoveredKind = "tile" | "slot" | "empty";
 /** Photo mode's depth of field: off, the tilt-shift kernel, or the lens (manual). */
 export type Dof = "off" | "tilt" | "manual";
+/** Photo mode's colour filter: none, black and white, or sepia. */
+export type PhotoFilter = "normal" | "mono" | "sepia";
 /** Quality tiers (PRD §9.2). */
 export type TierName = "low" | "medium" | "high" | "ultra";
 /** A quality choice: a tier, or `auto` (the detected tier). The save stores it. */
@@ -108,6 +110,12 @@ export type Command =
       fov?: number | null;
       roll?: number | null;
       pause_agents?: boolean | null;
+      filter?: PhotoFilter | null;
+      filter_strength?: number | null;
+      vignette?: number | null;
+      vignette_softness?: number | null;
+      grain?: number | null;
+      aberration?: number | null;
       /** A click on the scene, `[x, y]` across the viewport from its top left (0..1): Tilt and
        * Manual focus on the surface under it; with DOF off it does nothing. */
       focus_at?: [number, number] | null;
@@ -288,6 +296,15 @@ export interface PhotoState {
   exporting: PhotoExportJob | null;
   /** The GPU's largest texture side, which caps the export size; null before the renderer starts. */
   max_texture: number | null;
+  /** Effects: the colour filter and its strength, then the amounts, each 0 to 1. */
+  filter: PhotoFilter;
+  filter_strength: number;
+  vignette: number;
+  vignette_softness: number;
+  grain: number;
+  aberration: number;
+  /** Whether the camera carries the effects pass this frame (photo mode on and an effect set). */
+  fx_active: boolean;
 }
 
 /** Why the walker's latest move stopped. */
@@ -480,6 +497,12 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
     fov: true,
     roll: true,
     pause_agents: true,
+    filter: true,
+    filter_strength: true,
+    vignette: true,
+    vignette_softness: true,
+    grain: true,
+    aberration: true,
     focus_at: true,
   }),
   photo_export: keys<CommandOf<"photo_export">>({ scale: true, name: true }),
@@ -526,6 +549,7 @@ export const ENUMS = {
   toggle: keys<Record<ToggleTarget, true>>({ bulldoze: true, inventory: true, photo: true }),
   edge_status: keys<Record<EdgeStatus, true>>({ Compatible: true, Incompatible: true, Neutral: true }),
   dof: keys<Record<Dof, true>>({ off: true, tilt: true, manual: true }),
+  photo_filter: keys<Record<PhotoFilter, true>>({ normal: true, mono: true, sepia: true }),
   // Display order, not sorted: the schema lists the presets as the engine shows them.
   grade: [...GRADES],
   grass: [...GRASS],
@@ -588,6 +612,13 @@ export const STATE_FIELDS = {
     sim_ticks: true,
     exporting: true,
     max_texture: true,
+    filter: true,
+    filter_strength: true,
+    vignette: true,
+    vignette_softness: true,
+    grain: true,
+    aberration: true,
+    fx_active: true,
   }),
   walk: keys<WalkState>({
     on: true,

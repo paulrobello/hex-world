@@ -15,6 +15,7 @@ pub mod kit_material;
 mod kit_scene;
 mod kit_test;
 pub mod lookdev;
+pub mod photo_fx;
 pub mod play;
 pub mod post;
 mod scene;
@@ -181,6 +182,7 @@ impl Plugin for HexRenderPlugin {
                     hooks: self.config.kit_hooks,
                 },
             ))
+            .add_plugins(photo_fx::PhotoFxPlugin)
             .init_resource::<AgentsPaused>()
             .init_resource::<play::PlayView>()
             .init_resource::<play::PlayCatalog>()

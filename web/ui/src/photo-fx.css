@@ -1,0 +1,7 @@
+/* ---------- Photo mode Effects section (owner, 2026-10-14): heading row with Reset effects ---------- */
+.photo-fx .fx-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; }
+.photo-fx .fx-head .section-h { margin: 0; }
+.photo-fx .fx-head .fx-reset { min-height: 30px; margin-right: -8px; padding: 0 8px; }
+.photo-fx .fx-reset:disabled { cursor: default; opacity: .45; }
+.photo-fx .fx-reset:disabled:hover { background: transparent; color: var(--ink-2); }
+.photo-fx > .seg { margin: 6px 0 2px; }

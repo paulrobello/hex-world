@@ -1,4 +1,4 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind
+.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind
 
 fmt:
 	cargo fmt --all
@@ -48,12 +48,14 @@ ui-schema:
 	HEXW_UPDATE_SCHEMA=1 cargo test -p hex-app bridge::schema::schema_matches_web_ui
 
 # Local only (GPU Chromium, never CI): drives the HUD with real keyboard and mouse on the built site,
-# asserts through hexWorld.state() and writes e2e/test-results/ui/<mockup state>.jpg, then e2e/persist.mjs
+# asserts through hexWorld.state() and writes e2e/test-results/ui/<mockup state>.jpg, then e2e/photo-fx.mjs
+# (photo effects from the panel, measured in exported PNGs; e2e/test-results/photo-fx/), then e2e/persist.mjs
 # (autosave, reload, export, import, storage blocked; e2e/test-results/persistence/, or PERSIST_OUT), then runs the
 # audio checks (audio-e2e).
 ui-e2e: build-web
 	cd e2e && npm ci --no-audit --no-fund
 	node e2e/ui.mjs dist
+	node e2e/photo-fx.mjs dist
 	node e2e/persist.mjs dist
 	node e2e/audio.mjs dist
 
@@ -469,6 +471,21 @@ shots-photo:
 	@python3 -c 'import json,sys; t=json.load(open("target/shots/photo-09-tree-click.json"))["photo"]; ok=t["focus_hit"]=="tree" and abs(t["focus"]-36.1)<=0.02*36.1; print("tree click:", t["focus_hit"], t["focus"], "m (expected 36.1 m, the oak mesh)"); sys.exit(0 if ok else 1)' || { echo "the tree click missed the oak"; exit 1; }
 	cp target/shots/photo-*.json $(PHOTO_DOCS)/
 	@echo "wrote $(PHOTO_DOCS)/"
+
+# Photo-mode effects checkpoint (owner, 2026-10-14): runs docs/checkpoints/photo/photo-fx.json at
+# 1280x800 like shots-photo: one still per effect (none, black and white, sepia, vignette, grain,
+# chromatic aberration), a combined look, its 2x export, the game camera after leaving photo mode,
+# and state dumps. scripts/photo-fx-check.py asserts each effect and writes photo-fx-measure.json.
+PHOTO_FX_SHOTS = photo-fx-00-none photo-fx-01-mono photo-fx-02-sepia photo-fx-03-vignette photo-fx-04-grain photo-fx-05-aberration photo-fx-06-combined photo-fx-07-export-2x photo-fx-08-exit-orbit
+shots-photo-fx:
+	mkdir -p target/shots $(PHOTO_DOCS)
+	rm -f target/shots/photo-fx-*.png target/shots/photo-fx-*.json
+	cargo run -p hex-app --release -- --scenario play --script $(PHOTO_DOCS)/photo-fx.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
+	@for n in $(PHOTO_FX_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(PHOTO_DOCS)/$$n.jpg || exit 1; done
+	python3 scripts/photo-fx-check.py
+	cp target/shots/photo-fx-*.json $(PHOTO_DOCS)/
+	@echo "wrote $(PHOTO_DOCS)/photo-fx-*"
 
 # Audio pipeline (PRD §8, assets-source/audio/README.md). Needs python3 and ffmpeg with libopus.
 # Masters every cue in assets-source/audio/cues.json that has a source; CUE=<id> masters one.

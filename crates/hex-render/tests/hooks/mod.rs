@@ -563,6 +563,10 @@ const SHADER_EXEMPT: &[(&str, &str)] = &[
     ),
     ("assets/shaders/tilt_shift.wesl", "post pass: no surface"),
     (
+        "assets/shaders/photo_fx.wesl",
+        "photo-mode post pass: no surface",
+    ),
+    (
         "crates/hex-render/src/kit_common.wesl",
         "library: tiling frame and the kit uniform; its flags are checked with kit_material",
     ),

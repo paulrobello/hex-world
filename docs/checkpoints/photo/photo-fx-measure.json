@@ -1,0 +1,94 @@
+{
+  "shots": {
+    "photo-fx-00-none": {
+      "size": "1280x800",
+      "mean": 0.1523,
+      "saturation": 0.1787,
+      "corner_over_centre": 0.1649
+    },
+    "photo-fx-01-mono": {
+      "size": "1280x800",
+      "mean": 0.182,
+      "saturation": 0.0,
+      "corner_over_centre": 0.1256
+    },
+    "photo-fx-02-sepia": {
+      "size": "1280x800",
+      "mean": 0.1674,
+      "saturation": 0.3378,
+      "corner_over_centre": 0.1166
+    },
+    "photo-fx-03-vignette": {
+      "size": "1280x800",
+      "mean": 0.1267,
+      "saturation": 0.1923,
+      "corner_over_centre": 0.0245
+    },
+    "photo-fx-04-grain": {
+      "size": "1280x800",
+      "mean": 0.1532,
+      "saturation": 0.1925,
+      "corner_over_centre": 0.1669
+    },
+    "photo-fx-05-aberration": {
+      "size": "1280x800",
+      "mean": 0.1528,
+      "saturation": 0.2199,
+      "corner_over_centre": 0.1656
+    },
+    "photo-fx-06-combined": {
+      "size": "1280x800",
+      "mean": 0.1417,
+      "saturation": 0.3054,
+      "corner_over_centre": 0.0393
+    },
+    "photo-fx-07-export-2x": {
+      "size": "2560x1600",
+      "mean": 0.1394,
+      "saturation": 0.3068,
+      "corner_over_centre": 0.0396
+    },
+    "photo-fx-08-exit-orbit": {
+      "size": "1280x800",
+      "mean": 0.1352,
+      "saturation": 0.1518,
+      "corner_over_centre": 0.2561
+    }
+  },
+  "rmse_vs_none": {
+    "photo-fx-04-grain": 0.0370564,
+    "photo-fx-05-aberration": 0.040946
+  },
+  "state": {
+    "photo-fx-06-combined": {
+      "on": true,
+      "filter": "sepia",
+      "filter_strength": 0.8,
+      "vignette": 0.6,
+      "vignette_softness": 0.6,
+      "grain": 0.35,
+      "aberration": 0.4,
+      "fx_active": true
+    },
+    "photo-fx-08-exit": {
+      "on": false,
+      "filter": "sepia",
+      "filter_strength": 0.8,
+      "vignette": 0.6,
+      "vignette_softness": 0.6,
+      "grain": 0.35,
+      "aberration": 0.4,
+      "fx_active": false
+    },
+    "photo-fx-09-reenter": {
+      "on": true,
+      "filter": "sepia",
+      "filter_strength": 0.8,
+      "vignette": 0.6,
+      "vignette_softness": 0.6,
+      "grain": 0.35,
+      "aberration": 0.4,
+      "fx_active": true
+    }
+  }
+}

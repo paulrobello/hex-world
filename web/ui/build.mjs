@@ -53,7 +53,9 @@ await esbuild.build({
   logLevel: "warning",
 });
 
-const styles = ["src/hud.css", "src/photo.css"].map((f) => readFileSync(join(here, f), "utf8")).join("\n");
+const styles = ["src/hud.css", "src/photo.css", "src/photo-fx.css"]
+  .map((f) => readFileSync(join(here, f), "utf8"))
+  .join("\n");
 const css = await esbuild.transform(tokensCss() + styles, {
   loader: "css",
   minify: true,

@@ -12,6 +12,7 @@ mod control;
 mod game;
 mod persist;
 mod photo;
+mod photo_fx;
 mod sim;
 #[cfg(not(target_arch = "wasm32"))]
 mod thumbs;
@@ -125,6 +126,7 @@ fn main() {
         .init_resource::<photo::PhotoSettings>()
         .init_resource::<photo::PhotoSession>()
         .init_resource::<photo::PhotoExports>()
+        .init_resource::<photo_fx::PhotoFxSettings>()
         .init_resource::<photo::PhotoFocus>()
         .init_resource::<persist::PersistQueue>()
         .init_resource::<persist::SavedSettings>()
@@ -142,6 +144,7 @@ fn main() {
                 photo::focus_pick,
                 walk::sync,
                 photo::run_exports,
+                photo_fx::sync,
                 persist::run,
                 persist::keep_latest,
                 request_selected_packs,

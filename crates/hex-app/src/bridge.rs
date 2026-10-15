@@ -242,7 +242,7 @@ mod schema {
         r#"{"cmd":"bulldoze","q":1,"r":0}"#,
         r#"{"cmd":"set_tool","mode":"bulldoze"}"#,
         r#"{"cmd":"toggle","what":"inventory"}"#,
-        r#"{"cmd":"photo","dof":"tilt","focus":64,"aperture":2.8,"exposure":0.3,"fov":50,"roll":0,"pause_agents":true,"focus_at":[0.5,0.62]}"#,
+        r#"{"cmd":"photo","dof":"tilt","focus":64,"aperture":2.8,"exposure":0.3,"fov":50,"roll":0,"pause_agents":true,"filter":"mono","filter_strength":1,"vignette":0.5,"vignette_softness":0.5,"grain":0.2,"aberration":0.1,"focus_at":[0.5,0.62]}"#,
         r#"{"cmd":"photo_export","scale":2,"name":"hex-world"}"#,
         r#"{"cmd":"save","tag":"autosave","path":null,"volumes":{"master":0.8,"music":0.55,"sfx":0.75,"ambience":0.7,"ui":0.5}}"#,
         r#"{"cmd":"load","path":null}"#,
@@ -517,7 +517,7 @@ mod schema {
         g.apply(Action::SetTool(Tool::Bulldoze));
         g.apply(Action::Hover(Some(Axial::new(1, 0))));
         let bulldoze = g.state_json();
-        let photo = crate::photo::state_json(
+        let mut photo = crate::photo::state_json(
             &crate::photo::PhotoSettings::default(),
             &crate::photo::PhotoSession::default(),
             &crate::photo::PhotoExports::default(),
@@ -530,6 +530,7 @@ mod schema {
             0,
             None,
         );
+        crate::photo_fx::extend_state(&mut photo, &Default::default(), false);
         let grade = crate::control::grade_json(hex_render::Grade::default());
         let grass: Value = serde_json::from_str(&hex_render::play::grass::report(
             &Default::default(),
@@ -668,6 +669,7 @@ mod schema {
                 "spin": serde_variants::<Spin>(r#""__none__""#),
                 "toggle": serde_variants::<Toggle>(r#""__none__""#),
                 "dof": serde_variants::<crate::photo::Dof>(r#""__none__""#),
+                "photo_filter": serde_variants::<crate::photo_fx::PhotoFilter>(r#""__none__""#),
                 "edge_status": edge_status_names(),
                 "grade": hex_render::Grade::ALL.iter().map(|g| g.name()).collect::<Vec<_>>(),
                 "grass": hex_render::play::grass::Density::ALIASES.iter().map(|(n, _)| *n).collect::<Vec<_>>(),

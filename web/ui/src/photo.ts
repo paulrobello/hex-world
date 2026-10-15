@@ -6,6 +6,7 @@
 import type { Dof, GameEvent, HexWorld, PhotoState } from "./bridge.ts";
 import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
+import { PhotoFxSection } from "./photo-fx.ts";
 import { ClickDetector, FOCUS_MAX, FOCUS_MIN, focusAt, focusSliderValue } from "./photo-focus.ts";
 
 const STOPS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22];
@@ -29,14 +30,14 @@ const today = (): string => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 };
 
-interface Slider {
+export interface Slider {
   input: HTMLInputElement;
   out: HTMLOutputElement;
   field: HTMLElement;
 }
 
 /** A labelled range field (Legend slider): label and value on one line, the track below. */
-function slider(label: string, min: number, max: number, step: number, fmt: (v: number) => string): Slider {
+export function slider(label: string, min: number, max: number, step: number, fmt: (v: number) => string): Slider {
   const input = h("input", { type: "range", min, max, step, "aria-label": label });
   const out = h("output", { class: "field__value" });
   const field = h("label", { class: "field field--slider" }, h("span", { class: "field__label" }, label), out, input);
@@ -50,14 +51,14 @@ function slider(label: string, min: number, max: number, step: number, fmt: (v: 
   return { input, out, field };
 }
 
-function setSlider(s: Slider, v: number): void {
+export function setSlider(s: Slider, v: number): void {
   s.input.value = String(v);
   (s.input as HTMLInputElement & { paint?: () => void }).paint?.();
 }
 
 /** A segmented radio group (Legend seg); `pick` fires with the chosen value. An option with `off`
  * is disabled, with `off` as its reason, and the arrow keys pass over it. */
-function seg<T extends string>(
+export function seg<T extends string>(
   label: string,
   options: { value: T; text: string; sub?: string; off?: string | undefined }[],
   pick: (v: T) => void,
@@ -117,6 +118,7 @@ export class Photo {
   private readonly fov: Slider;
   private readonly roll: Slider;
   private readonly pause: HTMLButtonElement;
+  private readonly fx: PhotoFxSection;
   private readonly file: HTMLElement;
   private readonly size: HTMLElement;
   private readonly exportBox: HTMLElement;
@@ -209,6 +211,8 @@ export class Photo {
     this.exposure.input.addEventListener("input", () => this.send({ exposure: Number(this.exposure.input.value) }));
     this.fov.input.addEventListener("input", () => this.send({ fov: Number(this.fov.input.value) }));
     this.roll.input.addEventListener("input", () => this.send({ roll: Number(this.roll.input.value) }));
+
+    this.fx = new PhotoFxSection((patch) => this.send(patch));
 
     // World.
     this.pause = h("button", {
@@ -303,6 +307,7 @@ export class Photo {
         this.exposure.field,
         this.fov.field,
         this.roll.field,
+        this.fx.el,
         h("h2", { class: "section-h" }, "World"),
         h("div", { class: "field" }, h("span", { class: "field__label" }, "Pause cars and birds"), this.pause),
         h(
@@ -448,6 +453,7 @@ export class Photo {
     setSlider(this.fov, Math.round(p.fov));
     setSlider(this.roll, Math.round(p.roll));
     this.pause.setAttribute("aria-checked", String(p.pause_agents));
+    this.fx.pull(p);
   }
 
   private syncDofFields(v: Dof): void {

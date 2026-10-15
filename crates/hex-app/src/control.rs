@@ -136,7 +136,9 @@ pub enum Command {
     },
     /// Photo-mode panel values (PRD §4.6), each clamped to its slider; omitted fields keep theirs.
     /// `dof` is `off`, `tilt` (the tilt-shift kernel) or `manual`; `focus` is metres, `aperture`
-    /// an f-number, `exposure` stops brighter, `fov` and `roll` degrees. `focus_at` is a click on the
+    /// an f-number, `exposure` stops brighter, `fov` and `roll` degrees. The effect fields
+    /// (`filter`, `filter_strength`, `vignette`, `vignette_softness`, `grain`, `aberration`) are
+    /// `crate::photo_fx::PhotoFxPatch`. `focus_at` is a click on the
     /// scene, `[x, y]` across the viewport from its top left (0..1): Tilt and Manual focus on the
     /// surface under it (Tilt also moves its band to that row); with DOF off it does nothing, and a
     /// click on the sky keeps the focus. It resolves after the other fields of the same command.
@@ -148,6 +150,8 @@ pub enum Command {
         fov: Option<f32>,
         roll: Option<f32>,
         pause_agents: Option<bool>,
+        #[serde(flatten)]
+        fx: crate::photo_fx::PhotoFxPatch,
         focus_at: Option<[f32; 2]>,
     },
     /// Renders the game camera offscreen at `scale` (1, 2 or 4) times the window's logical size and
@@ -306,6 +310,12 @@ pub fn run_commands(
         return;
     };
     info!("command: {cmd:?}");
+    if let Command::Photo { fx, .. } = cmd {
+        commands.queue(move |w: &mut World| {
+            w.resource_mut::<crate::photo_fx::PhotoFxSettings>()
+                .apply(&fx)
+        });
+    }
     if let Command::Walk {
         pointer_lock: Some(lock),
         ..
@@ -392,6 +402,7 @@ pub fn run_commands(
             roll,
             pause_agents,
             focus_at,
+            ..
         } => {
             photo.apply(&PhotoPatch {
                 dof,
@@ -571,6 +582,10 @@ pub fn publish_state(
         Option<Res<hex_render::AssetLoadFailures>>,
     ),
     (walk, walk_ground): (Res<WalkSession>, Res<hex_render::walk::WalkGround>),
+    (fx, fx_cams): (
+        Res<crate::photo_fx::PhotoFxSettings>,
+        Query<(), (With<hex_render::photo_fx::PhotoFx>, With<Camera3d>)>,
+    ),
 ) {
     *bridge::VIEW.lock().unwrap() = views.iter().find(|(c, _)| c.is_active).and_then(|(c, gt)| {
         Some(bridge::View {
@@ -604,6 +619,16 @@ pub fn publish_state(
         extend_play_orbit(&mut p, orbit.as_ref());
         p
     });
+    let mut photo_state = crate::photo::state_json(
+        &photo,
+        &session,
+        &exports,
+        &photo_focus,
+        paused.0,
+        sim.ticks(),
+        gpu_limits.as_ref(),
+    );
+    crate::photo_fx::extend_state(&mut photo_state, &fx, !fx_cams.is_empty());
     let state = serde_json::json!({
         "scenario": format!("{:?}", active.0),
         "tiles": if play { game.world.tiles().len() } else { active.0.tile_count(kit_src) },
@@ -613,7 +638,7 @@ pub fn publish_state(
         "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps, "chosen": tilt_chosen.0 },
         "tier": tier.json(),
         "grade": grade,
-        "photo": crate::photo::state_json(&photo, &session, &exports, &photo_focus, paused.0, sim.ticks(), gpu_limits.as_ref()),
+        "photo": photo_state,
         "walk": crate::walk::state_json(&walk, &walk_ground),
         "frames": frames.0,
         "seed": flags.0.seed,
@@ -691,6 +716,7 @@ mod tests {
                 fov: None,
                 roll: None,
                 pause_agents: None,
+                fx: Default::default(),
                 focus_at: Some([0.25, 0.75]),
             }
         );
