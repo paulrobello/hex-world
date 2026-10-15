@@ -1,64 +1,131 @@
 name: CI
 
+# One job per gate concern, composing the same targets as `make checkall` / `make checkall-ci`.
+# Platform-independent checks run once on ubuntu; only `test` carries the OS matrix, which
+# `workflow_dispatch` can scope to one OS (os-scope) to verify a platform-specific fix.
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
+    inputs:
+      os-scope:
+        description: "Runner scope for the test matrix; 'all' runs every OS."
+        type: choice
+        default: all
+        options: [all, ubuntu-latest, macos-latest]
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   CARGO_TERM_COLOR: always
   TRUNK_VERSION: v0.21.14
 
 jobs:
-  check:
+  scope:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 5
+    outputs:
+      os-matrix: ${{ steps.os-scope.outputs.os-matrix }}
     steps:
-      - uses: actions/checkout@v7
-      - name: Install system deps
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
-      - name: Install Rust
+      - name: Resolve os scope
+        id: os-scope
+        env:
+          SCOPE: ${{ github.event.inputs.os-scope }}
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt,clippy
-          rustup target add wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-      - uses: actions/setup-node@v7
+          case "$SCOPE" in
+            ubuntu-latest|macos-latest) MATRIX="[\"$SCOPE\"]" ;;
+            ""|all) MATRIX='["ubuntu-latest", "macos-latest"]' ;;
+            *) echo "unknown os-scope: $SCOPE" >&2; exit 1 ;;
+          esac
+          echo "os-matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "os-matrix=$MATRIX"
+
+  fmt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal --component rustfmt
+      - run: make fmt-check
+
+  # The HUD overlay (web/ui): typecheck, lint, unit tests and the esbuild bundle; npm ci runs via the
+  # lockfile stamp target.
+  ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           cache: npm
           cache-dependency-path: web/ui/package-lock.json
-      - run: make fmt-check
-      # The HUD overlay (web/ui): typecheck, lint, unit tests and the esbuild bundle; npm ci runs via
-      # the lockfile stamp target.
       - run: make ui-check
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal --component clippy
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - run: make lint
-        timeout-minutes: 25
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup target add wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - run: make typecheck
-        timeout-minutes: 25
-      - name: Test
-        timeout-minutes: 50
-        run: make test
+
+  test:
+    needs: [scope]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(needs.scope.outputs.os-matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install system deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - run: make test
 
   web:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Rust
         run: |
           rustup toolchain install stable --profile minimal
           rustup target add wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: wasm
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           cache: npm
@@ -72,15 +139,16 @@ jobs:
       - name: Install UI dependencies
         run: make web/ui/node_modules/.npm-ci.stamp
       - run: make web-size
-      - uses: actions/upload-pages-artifact@v5
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         with:
           path: dist
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [check, web]
+    needs: [fmt, ui, lint, typecheck, test, web]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write
@@ -89,4 +157,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
