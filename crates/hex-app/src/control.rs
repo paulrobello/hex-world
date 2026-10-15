@@ -530,7 +530,7 @@ pub fn publish_state(
         Res<PhotoSession>,
         Res<PhotoExports>,
         Res<hex_render::AgentsPaused>,
-        Option<Res<hex_render::KitLoadFailures>>,
+        Option<Res<hex_render::AssetLoadFailures>>,
     ),
     (walk, walk_ground): (Res<WalkSession>, Res<hex_render::walk::WalkGround>),
 ) {

@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
+import { TRUNK_HASHED, contentHash } from "../scripts/web/version-dist.mjs";
 import { clampSampledTextures, countSampledTextures, markedModuleProbe } from "./webgpu-probes.mjs";
 
 const dist = process.argv[2] ?? "dist";
@@ -108,9 +109,10 @@ await withPage(gpuArgs, async (page, errors) => {
   const kit = new Map();
   page.on("console", (m) => { if (/texture family/i.test(m.text())) console.log("app:", m.text()); });
   page.on("requestfinished", async (r) => {
-    if (!r.url().includes("/assets/kit/")) return;
+    const path = new URL(r.url()).pathname;
+    if (!path.includes("/assets/kit/")) return;
     const t = r.timing(), size = (await r.sizes()).responseBodySize;
-    kit.set(r.url().split("/").pop(), { ms: Math.round(t.responseEnd), bytes: size });
+    kit.set(path.split("/").pop(), { ms: Math.round(t.responseEnd), bytes: size });
   });
   await page.goto(base + "?scenario=single");
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 60_000 });
@@ -216,7 +218,7 @@ await withPage(gpuArgs, async (page) => {
 // 3. No GPU → unsupported page.
 await withPage(["--disable-gpu"], async (page) => {
   await page.goto(base);
-  await page.waitForURL(/unsupported\.html$/, { timeout: 15_000 }).catch(() => fail("no redirect without GPU"));
+  await page.waitForURL(/unsupported\.html(\?v=[0-9a-f]+)?$/, { timeout: 15_000 }).catch(() => fail("no redirect without GPU"));
   if (!(await page.locator("#unsupported").count())) fail("unsupported page content missing");
   // The Legend S11 page: one visible headline, the app icon and Manrope loaded under the page CSP.
   await page.waitForLoadState("networkidle");
@@ -278,7 +280,7 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
     let spawned = null;
     const iblStatus = new Map();
     page.on("response", (r) => {
-      const m = /\/ibl\/(noon\.(?:specular|diffuse)\.ktx2)$/.exec(r.url());
+      const m = /\/ibl\/(noon\.(?:specular|diffuse)\.ktx2)$/.exec(new URL(r.url()).pathname);
       if (m) iblStatus.set(m[1], r.status());
     });
     page.on("console", (m) => {
@@ -703,14 +705,21 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
 // boids drawn, the forest pack ready and nothing in `assets.failed`. Then the boid piece is reset on
 // every request: it gives up after the first request and three retries, names the file in an error
 // and in `assets.failed`, and the flock degrades to `boids.pieces = "failed"` as before.
+// Shaders load through the default source, which the web reads through the same retrying reader: the
+// boid compute shader's first request is reset alongside them and the compute pass must still come up
+// (`boids.dispatched` > 0); reset on every request it gives up and is named as `shaders/boids_compute.wgsl`.
 {
   const BIRD = "p1/bird_starling/bird_starling.glb";
   const FOREST = "p1/forest_base/forest_base.glb";
+  const SHADER = "shaders/boids_compute.wgsl";
   const ATTEMPTS = 4;
   // Bevy's own error for the failed load, which does not name the file (the web reader's message).
   const BEVY_LOAD_ERROR = /I\/O error while loading asset: Failed to fetch path/;
-  const kitUrl = (m) => m.location()?.url ?? "";
-  const dropped = (paths) => (m) => m.text().startsWith("Failed to load resource") && paths.some((p) => kitUrl(m).endsWith(`/assets/kit/${p}`));
+  // Request URLs carry ?v=<hash> (scripts/web/version-dist.mjs): match on the path.
+  const urlPath = (u) => { try { return new URL(u).pathname; } catch { return ""; } };
+  const site = (p) => (p.startsWith("shaders/") ? `/assets/${p}` : `/assets/kit/${p}`);
+  const at = (p) => (url) => url.pathname === site(p);
+  const dropped = (paths) => (m) => m.text().startsWith("Failed to load resource") && paths.some((p) => urlPath(m.location()?.url ?? "") === site(p));
   const play = async (page, tag) => {
     await page.goto(base + "?scenario=play&tier=high");
     const ok = await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 }).then(() => true, () => false);
@@ -727,8 +736,8 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
   await withPage(gpuArgs, async (page) => {
     const tag = "kit-retry";
     const hits = new Map();
-    for (const path of [BIRD, FOREST]) {
-      await page.route(`**/assets/kit/${path}`, async (route) => {
+    for (const path of [BIRD, FOREST, SHADER]) {
+      await page.route(at(path), async (route) => {
         const n = (hits.get(path) ?? 0) + 1;
         hits.set(path, n);
         if (n === 1) await route.abort("connectionreset");
@@ -737,21 +746,23 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     }
     if (!(await play(page, tag))) return;
     await page.evaluate(() => { window.hexWorld.events(); window.hexWorld.selectTile("forest"); });
-    const s = await until(page, (s) => s.packs?.forest === "ready" && ["ready", "failed"].includes(s.boids?.pieces), 60_000);
-    const counts = Object.fromEntries([BIRD, FOREST].map((p) => [p, hits.get(p) ?? 0]));
-    if (counts[BIRD] !== 2 || counts[FOREST] !== 2) fail(`${tag}: each reset file should be requested twice: ${JSON.stringify(counts)}`);
+    const s = await until(page, (s) => s.packs?.forest === "ready" && ["ready", "failed"].includes(s.boids?.pieces) && s.boids?.dispatched > 0, 60_000);
+    const counts = Object.fromEntries([BIRD, FOREST, SHADER].map((p) => [p, hits.get(p) ?? 0]));
+    if (Object.values(counts).some((n) => n !== 2)) fail(`${tag}: each reset file should be requested twice: ${JSON.stringify(counts)}`);
     if (s.boids?.pieces !== "ready") fail(`${tag}: boids.pieces ${s.boids?.pieces} after a reset boid piece request`);
+    if (!(s.boids?.dispatched > 0)) fail(`${tag}: the boid compute pass never ran after a reset shader request (dispatched ${s.boids?.dispatched})`);
     if (s.packs?.forest !== "ready" || s.packs?.core !== "ready") fail(`${tag}: packs ${JSON.stringify(s.packs)}`);
     if (!Array.isArray(s.assets?.failed) || s.assets.failed.length) fail(`${tag}: assets.failed ${JSON.stringify(s.assets)}`);
-    console.log(`${tag}: requests ${JSON.stringify(counts)}; boids.pieces ${s.boids?.pieces}, packs core ${s.packs?.core} forest ${s.packs?.forest}, assets.failed ${JSON.stringify(s.assets?.failed)}`);
-  }, dropped([BIRD, FOREST]));
+    console.log(`${tag}: requests ${JSON.stringify(counts)}; boids.pieces ${s.boids?.pieces}, boids.dispatched ${s.boids?.dispatched}, ` +
+      `packs core ${s.packs?.core} forest ${s.packs?.forest}, assets.failed ${JSON.stringify(s.assets?.failed)}`);
+  }, dropped([BIRD, FOREST, SHADER]));
 
   await withPage(gpuArgs, async (page) => {
     const tag = "kit-give-up";
     let hits = 0;
     const gaveUp = [];
     page.on("console", (m) => { if (m.text().includes("ERROR") && m.text().includes(`kit://${BIRD}`)) gaveUp.push(m.text()); });
-    await page.route(`**/assets/kit/${BIRD}`, async (route) => { hits++; await route.abort("connectionreset"); });
+    await page.route(at(BIRD), async (route) => { hits++; await route.abort("connectionreset"); });
     const t0 = Date.now();
     if (!(await play(page, tag))) return;
     const s = await until(page, (s) => s.boids?.pieces === "failed" && s.assets?.failed?.length, 30_000);
@@ -764,6 +775,120 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     console.log(`${tag}: ${hits} requests, gave up within ${secs} s of load; boids.pieces ${s.boids?.pieces}, assets.failed ${JSON.stringify(s.assets?.failed)}; ` +
       `errors naming the file: ${gaveUp.length} (${gaveUp.map((t) => t.replace(/%c/g, "").slice(0, 120)).join(" | ")})`);
   }, (m) => dropped([BIRD])(m) || m.text().includes(BIRD) || BEVY_LOAD_ERROR.test(m.text()));
+
+  await withPage(gpuArgs, async (page) => {
+    const tag = "shader-give-up";
+    let hits = 0;
+    const gaveUp = [];
+    page.on("console", (m) => { if (m.text().includes("ERROR") && m.text().includes(SHADER)) gaveUp.push(m.text()); });
+    await page.route(at(SHADER), async (route) => { hits++; await route.abort("connectionreset"); });
+    if (!(await play(page, tag))) return;
+    const s = await until(page, (s) => s.assets?.failed?.length, 30_000);
+    await page.waitForTimeout(1_000);
+    const after = await page.evaluate(() => window.hexWorld.state());
+    if (hits !== ATTEMPTS) fail(`${tag}: ${hits} requests for ${SHADER}, expected ${ATTEMPTS} (the first and three retries)`);
+    if (JSON.stringify(after.assets?.failed) !== JSON.stringify([SHADER])) fail(`${tag}: assets.failed ${JSON.stringify(after.assets)}`);
+    if (after.boids?.dispatched !== 0) fail(`${tag}: boids dispatched ${after.boids?.dispatched} without their compute shader`);
+    if (!gaveUp.some((t) => /giving up/.test(t))) fail(`${tag}: no give-up error naming ${SHADER}: ${JSON.stringify(gaveUp)}`);
+    console.log(`${tag}: ${hits} requests; assets.failed ${JSON.stringify(after.assets?.failed)}, boids.dispatched ${after.boids?.dispatched}, ` +
+      `the game still runs (frames ${after.frames}, first seen failed at ${s.frames}); errors naming the file: ${gaveUp.length}`);
+  }, (m) => dropped([SHADER])(m) || m.text().includes(SHADER) || BEVY_LOAD_ERROR.test(m.text()));
+}
+
+// 11. Cache busting (scripts/web/version-dist.mjs): every same-origin request a full play load makes
+// (HUD, scripts, fonts, thumbnails, shaders, every kit pack, the IBL, audio after a gesture and the
+// streamed music) carries ?v=<hash> equal to the served file's content hash, except the page itself and
+// Trunk's own hashed glue and wasm. References headless Chromium never fetches (favicons, the web
+// manifest and its icons) are checked in the built files instead.
+{
+  const hashOf = new Map();
+  const fileHash = async (p) => {
+    if (!hashOf.has(p)) hashOf.set(p, contentHash(await readFile(join(dist, p))));
+    return hashOf.get(p);
+  };
+  const origin = new URL(base).origin;
+  const kind = (p) => {
+    if (p.startsWith("assets/kit/p1/ibl/")) return "ibl";
+    if (p.startsWith("assets/kit/")) return `kit ${p.endsWith(".glb") ? "glb" : p.replace(/^.*?\.((bc7|astc)\.ktx2|png)$/, "$1")}`;
+    if (p.startsWith("assets/shaders/")) return "shader";
+    if (p.startsWith("assets/thumbs/")) return "thumbnail";
+    if (p === "assets/audio/manifest.json") return "audio manifest";
+    if (p.startsWith("assets/audio/music/")) return "music (streamed)";
+    if (p.startsWith("assets/audio/")) return "audio cue";
+    if (p.startsWith("web/ui/fonts/")) return "font";
+    if (p.startsWith("web/ui/")) return `hud ${p.split(".").pop()}`;
+    if (p.startsWith("web/brand/") || p === "favicon.ico") return "icon";
+    return p;
+  };
+  await withPage(gpuArgs, async (page) => {
+    const tag = "versions";
+    const seen = [];
+    page.on("request", (r) => { const u = new URL(r.url()); if (u.origin === origin) seen.push(u); });
+    await page.goto(base + "?scenario=play&tier=high&tilt=on");
+    if (!(await page.waitForFunction(() => window.hexWorld?.ready() === true && window.hexWorld.audio, null, { timeout: 90_000 }).then(() => true, () => false))) {
+      fail(`${tag}: never ready`);
+      return;
+    }
+    // A gesture starts audio (cues decode, the start meadow's music streams); a selection and placements
+    // start background streaming of every pack and draw water.
+    await page.locator(".bar__world").click();
+    await page.evaluate(() => {
+      const h = window.hexWorld;
+      h.selectTile("river_straight"); h.placeTile(-1, 0);
+      h.selectTile("beach"); h.placeTile(1, 0);
+      h.selectTile("oak");
+    });
+    const deadline = Date.now() + 90_000;
+    let s, a;
+    const packIds = [...new Set(JSON.parse(await readFile(join(dist, "assets/kit/manifest.json"), "utf8")).pieces.map((p) => p.pack))];
+    while (Date.now() < deadline) {
+      [s, a] = await page.evaluate(() => [window.hexWorld.state(), window.hexWorld.audio.state()]);
+      const music = seen.some((u) => u.pathname.startsWith("/assets/audio/music/"));
+      if (packIds.every((k) => s.packs?.[k] === "ready") && a.loading === "done" && music) break;
+      await page.waitForTimeout(250);
+    }
+    if (!packIds.every((k) => s.packs?.[k] === "ready")) fail(`${tag}: packs never all ready: ${JSON.stringify(s.packs)}`);
+    if (a?.loading !== "done") fail(`${tag}: audio never loaded: ${a?.loading} ${a?.error ?? ""}`);
+    await page.waitForTimeout(1_000);
+    const counts = {};
+    const bad = [];
+    const trunk = [];
+    for (const u of seen) {
+      const p = decodeURIComponent(u.pathname).replace(/^\//, "");
+      if (p === "" || p === "index.html") continue;
+      if (TRUNK_HASHED.test(p)) { trunk.push(p); continue; }
+      const v = u.searchParams.get("v");
+      const want = await fileHash(p).catch(() => null);
+      if (!v || v !== want) bad.push(`${u.pathname}${u.search} (content ${want ?? "missing"})`);
+      counts[kind(p)] = (counts[kind(p)] ?? 0) + 1;
+    }
+    if (bad.length) fail(`${tag}: ${bad.length} requests without their content hash: ${bad.join(", ")}`);
+    for (const k of ["kit glb", "ibl", "shader", "thumbnail", "audio manifest", "audio cue", "music (streamed)", "hud js", "hud css", "font"])
+      if (!counts[k]) fail(`${tag}: no ${k} request recorded`);
+    console.log(`${tag}: ${seen.length} same-origin requests, ${seen.length - bad.length - trunk.length} versioned and matching, ` +
+      `${trunk.length} Trunk-hashed (${[...new Set(trunk)].join(", ")}), ${bad.length} bad; by kind ${JSON.stringify(counts)}`);
+  });
+
+  // Built files: every same-origin reference in the shipped HTML, CSS and web manifest is versioned and
+  // current, and index.html inlines the map before its first script.
+  const html = await readFile(join(dist, "index.html"), "utf8");
+  const map = JSON.parse(/window\.__HEX_HASHES=(\{.*?\});/.exec(html)?.[1] ?? "null");
+  if (!map || html.indexOf("hex-hashes") > html.indexOf("<script src=")) fail("versions: index.html lacks the hash map before its first script");
+  let refs = 0;
+  for (const [file, base] of [["index.html", ""], ["web/unsupported.html", "web/"], ["web/ui/hud.css", "web/ui/"], ["web/brand/site.webmanifest", "web/brand/"]]) {
+    const text = await readFile(join(dist, file), "utf8");
+    for (const m of text.matchAll(/(?:href|src)="([^"#]+)"|"src":\s*"([^"]+)"|url\(([^)]+)\)|replace\("([^"]+)"\)/g)) {
+      const ref = m[1] ?? m[2] ?? m[3] ?? m[4];
+      if (/^[a-z]+:|^\/\//i.test(ref) || ref === "../") continue;
+      const [path, query] = ref.split("?");
+      const p = path.startsWith("/") ? path.slice(1) : join(base, path);
+      if (TRUNK_HASHED.test(p)) continue;
+      refs++;
+      const want = await fileHash(p).catch(() => null);
+      if (query !== `v=${want}` || map?.[p] !== want) fail(`versions: ${file} references ${ref}, content ${want}, map ${map?.[p]}`);
+    }
+  }
+  console.log(`versions: index.html map has ${Object.keys(map ?? {}).length} files; ${refs} references in the built HTML, CSS and web manifest checked`);
 }
 
 server.close();

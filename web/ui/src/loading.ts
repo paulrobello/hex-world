@@ -7,6 +7,7 @@ import { h, s } from "./dom.ts";
 import { KIND_CLASS, hexPoints } from "./glyph.ts";
 import { icon } from "./icons.ts";
 import { TIER_NAME, tierBusy } from "./settings-model.ts";
+import { versioned } from "./versioned.ts";
 
 type Stage = "engine" | "renderer";
 const STAGES: { id: Stage; name: string; label: string }[] = [
@@ -80,7 +81,7 @@ export class Loading {
       h(
         "div",
         { class: "load__panel" },
-        h("img", { class: "load__icon", src: "web/brand/icon-192.png", alt: "", width: 64, height: 64 }),
+        h("img", { class: "load__icon", src: versioned("web/brand/icon-192.png"), alt: "", width: 64, height: 64 }),
         h(
           "div",
           { class: "load__head" },

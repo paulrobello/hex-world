@@ -127,7 +127,7 @@ async function run(name, arm, trace = null) {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
     const errors = [];
     page.on("pageerror", (e) => errors.push(String(e)));
-    if (arm.hud === false) await page.route("**/web/ui/hud.js", (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: "" }));
+    if (arm.hud === false) await page.route((u) => u.pathname.endsWith("/web/ui/hud.js"), (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: "" }));
     if (arm.hooks) await page.addInitScript(HOOKS);
     if (arm.limit) await page.addInitScript(LIMITER, arm.limit);
     const q = new URLSearchParams({ ...KEYS, ...(arm.keys ?? {}) });

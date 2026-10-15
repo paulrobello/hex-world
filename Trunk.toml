@@ -16,3 +16,11 @@ ignore = ["web/ui/dist", "web/ui/node_modules"]
 stage = "pre_build"
 command = "make"
 command_arguments = ["--no-print-directory", "ui-build"]
+
+# Cache busting (scripts/web/version-dist.mjs): every staged file gets a content hash, inlined into
+# index.html as window.__HEX_HASHES, and every URL the page fetches carries it as ?v=<hash>. Runs on
+# the staging dir ($TRUNK_STAGING_DIR) before Trunk moves it to dist.
+[[hooks]]
+stage = "post_build"
+command = "node"
+command_arguments = ["scripts/web/version-dist.mjs"]

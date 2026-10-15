@@ -38,7 +38,7 @@ ui-lint: $(UI_NPM)
 	cd $(UI) && ./node_modules/.bin/biome check .
 
 ui-test:
-	node --test "$(UI)/test/*.test.ts"
+	node --test "$(UI)/test/*.test.ts" "scripts/web/*.test.mjs"
 
 ui-check: ui-typecheck ui-lint ui-test ui-build
 

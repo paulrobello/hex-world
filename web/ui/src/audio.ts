@@ -61,6 +61,7 @@ import {
 } from "./audio-mix.ts";
 import type { CarInfo, GameEvent, PlayState, State } from "./bridge.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
+import { versioned } from "./versioned.ts";
 
 const BASE = "assets/audio/";
 const STORE_KEY = "hexWorld.audio";
@@ -346,7 +347,7 @@ export class GameAudio {
   private async load(ctx: AudioContext): Promise<void> {
     this.loading = "manifest";
     try {
-      const res = await fetch(`${BASE}manifest.json`);
+      const res = await fetch(versioned(`${BASE}manifest.json`));
       if (!res.ok) throw new Error(`manifest HTTP ${res.status}`);
       const m = (await res.json()) as Manifest;
       this.manifest = m;
@@ -380,7 +381,7 @@ export class GameAudio {
     const file = this.format && c.files?.[this.format];
     if (!file) return;
     try {
-      const res = await fetch(BASE + file.path);
+      const res = await fetch(versioned(BASE + file.path));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const buf = await ctx.decodeAudioData(await res.arrayBuffer());
       const bytes = buf.length * buf.numberOfChannels * 4;
@@ -852,7 +853,7 @@ export class GameAudio {
     const file = this.format && this.cues.get(id)?.files?.[this.format];
     if (!file) return null;
     const el = document.createElement("audio");
-    el.src = BASE + file.path;
+    el.src = versioned(BASE + file.path);
     el.loop = true;
     el.preload = "auto";
     const gain = ctx.createGain();

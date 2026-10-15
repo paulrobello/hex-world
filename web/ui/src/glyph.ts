@@ -3,6 +3,7 @@
 import type { SocketKind } from "./bridge.ts";
 import { h, s } from "./dom.ts";
 import type { TileDef } from "./rules.ts";
+import { versioned } from "./versioned.ts";
 
 declare const HEXW_THUMBS: { tiles: Record<string, string[]>; size: [number, number] } | null;
 export const THUMBS = typeof HEXW_THUMBS === "undefined" ? null : HEXW_THUMBS;
@@ -95,7 +96,7 @@ export function socketHex(def: TileDef): SVGElement {
 /** The thumbnail URL for a tile at rotation k, or null without baked thumbnails. */
 export function thumbUrl(id: string, k: number): string | null {
   const file = THUMBS?.tiles[id]?.[((k % 6) + 6) % 6];
-  return file ? `assets/thumbs/${file}` : null;
+  return file ? versioned(`assets/thumbs/${file}`) : null;
 }
 
 /** A row picture that can turn: an <img> swapped per rotation, or a glyph rotated in CSS. */

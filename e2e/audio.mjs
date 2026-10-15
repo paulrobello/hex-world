@@ -39,7 +39,8 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text())) errors.push(m.text()); });
 let audioRequests = [];
-page.on("request", (r) => { if (r.url().includes("/assets/audio/")) audioRequests.push(r.url()); });
+// Paths only: fetches carry a content-hash query (?v=, scripts/web/version-dist.mjs).
+page.on("request", (r) => { const p = new URL(r.url()).pathname; if (p.includes("/assets/audio/")) audioRequests.push(p); });
 
 const audio = () => page.evaluate(() => window.hexWorld.audio.state());
 const play = () => page.evaluate(() => window.hexWorld.state().play);
