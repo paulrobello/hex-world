@@ -867,6 +867,8 @@ export class Hud {
     if (target?.closest?.("input:not([type=range]), textarea, [contenteditable=true]")) return;
     // Inside Settings, Tab walks its controls and Enter, Space and arrows act on them; Esc still closes.
     if (this.settings.holds(target) && /^(Tab|Enter| |Arrow\w+|Home|End|PageUp|PageDown)$/.test(e.key)) return;
+    // An open select's list (the colour grade) takes every key: Esc closes it, letters type ahead.
+    if (this.settings.holds(target) && target?.closest?.("[role=listbox]")) return;
     const mod = e.ctrlKey || e.metaKey;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     const take = () => {

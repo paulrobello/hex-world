@@ -69,6 +69,32 @@
 .tier[aria-disabled=true]:hover:not([aria-checked=true]) { background: transparent; }
 .tier-reason { margin: 8px 10px 0; font-size: var(--fs-2); color: var(--ink-3); overflow-wrap: anywhere; }
 
+/* Colour grade (owner 2026-10-14): a compact select. Closed, the current look on one raised line;
+   open, a list in the Worlds menu's material (sheet-3, shadow-2) with every look and its description.
+   The list is fixed to the viewport (select.ts places it), so the sheet's scroll never clips it. */
+.select { margin: 4px 0 0; }
+.select__btn { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 10px 0 12px; border: 0; border-radius: var(--r-control); background: var(--sheet-2); text-align: left; cursor: pointer; transition: background var(--t-fast) var(--ease); }
+.select__btn:hover, .select.is-open .select__btn { background: var(--sheet-3); }
+.select__value { display: flex; align-items: baseline; gap: 8px; flex: 1; min-width: 0; }
+.select__value b { flex: none; font-weight: 700; font-size: var(--fs-3); }
+.select__value small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-2); font-weight: 600; color: var(--ink-2); }
+.select__chev { width: 18px; height: 18px; color: var(--ink-2); transition: transform var(--t-fast) var(--ease); }
+.select.is-open .select__chev { transform: rotate(180deg); }
+.select__list { position: fixed; z-index: 3; display: grid; align-content: start; gap: 2px; margin: 0; padding: 4px; list-style: none; overflow-y: auto; overscroll-behavior: contain; background: var(--sheet-3); border-radius: var(--r); box-shadow: var(--shadow-2); scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / .2) transparent; animation: select-drop var(--t-fast) var(--ease); }
+.select.is-up .select__list { animation-name: panel-in; }
+/* The list's focus shows on its highlighted option: a ring from the keyboard, a quiet fill under a pointer. */
+.hud .select__list:focus-visible { outline: none; }
+/* Names line up with the button's, and the current option's check with its chevron. */
+.select__opt { display: grid; grid-template-columns: 1fr auto 18px; gap: 1px 10px; align-items: center; min-height: 44px; padding: 7px 8px 7px 10px; border-radius: var(--r-control); cursor: pointer; user-select: none; transition: background var(--t-fast) var(--ease); }
+.select__opt.is-active { background: rgb(255 255 255 / .08); }
+.select__list.is-keys .select__opt.is-active { box-shadow: inset 0 0 0 var(--focus-width) var(--focus-ring); }
+.select__opt b { grid-column: 1; font-weight: 700; font-size: var(--fs-3); }
+.select__opt .tag { grid-column: 2; font-size: var(--fs-1); font-weight: 700; color: var(--ink-2); }
+.select__mark { grid-column: 3; width: 18px; height: 18px; color: var(--ink); stroke-width: 2.2; visibility: hidden; }
+.select__opt[aria-selected=true] .select__mark { visibility: visible; }
+.select__opt small { grid-column: 1 / 3; font-size: var(--fs-2); font-weight: 600; line-height: 1.35; color: var(--ink-2); }
+@keyframes select-drop { from { opacity: 0; transform: translateY(-4px); } }
+
 /* ---------- Photo mode: its own overlay root, so the play HUD's hide never takes it ---------- */
 .photo-ui.is-off { display: none; }
 .photo-ui > .focus-band, .photo-ui > .focus-mark { pointer-events: none; }

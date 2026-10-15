@@ -22,6 +22,7 @@ import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { Rebuild } from "./loading.ts";
 import type { Persistence } from "./persist.ts";
+import { Select } from "./select.ts";
 import {
   autoTier,
   CHANNELS,
@@ -111,7 +112,7 @@ export class Settings {
   private readonly cautionTitle: HTMLElement;
   private readonly cautionBody: HTMLElement;
   private readonly gradeHead: HTMLElement;
-  private readonly gradeList: HTMLUListElement;
+  private readonly gradeSelect: Select;
   private readonly toggle: HTMLButtonElement;
   private readonly strength: HTMLInputElement;
   private readonly out: HTMLOutputElement;
@@ -155,9 +156,7 @@ export class Settings {
       const li = (e.target as Element).closest<HTMLElement>(".tier");
       if (li) this.pickTier(li.dataset.tier as QualityChoice);
     });
-    this.tierList.addEventListener("keydown", (e) =>
-      this.radioKey(e, this.tierList, "tier", (id) => this.pickTier(id as QualityChoice)),
-    );
+    this.tierList.addEventListener("keydown", (e) => this.radioKey(e, (id) => this.pickTier(id as QualityChoice)));
     this.tierReason = h("p", { class: "tier-reason" });
     this.cautionTitle = h("b");
     this.cautionBody = h("span");
@@ -197,15 +196,11 @@ export class Settings {
     );
 
     // ---------- Graphics: Colour grade ----------
-    this.gradeHead = h("h2", { class: "section-h", hidden: true }, "Colour grade");
-    this.gradeList = h("ul", { class: "tiers", role: "radiogroup", "aria-label": "Colour grade", hidden: true });
-    this.gradeList.addEventListener("click", (e) => {
-      const li = (e.target as Element).closest<HTMLElement>(".tier");
-      if (li) this.pickGrade(li.dataset.grade as GradeName);
-    });
-    this.gradeList.addEventListener("keydown", (e) =>
-      this.radioKey(e, this.gradeList, "grade", (id) => this.pickGrade(id as GradeName)),
-    );
+    // One compact select (owner 2026-10-14): the current look closed, every look with its
+    // description open.
+    this.gradeHead = h("h2", { class: "section-h", id: "grade-h", hidden: true }, "Colour grade");
+    this.gradeSelect = new Select("grade", "grade-h", (id) => this.pickGrade(id as GradeName));
+    this.gradeSelect.el.hidden = true;
 
     // ---------- Graphics: Grass ----------
     this.grassInput = h("input", {
@@ -259,7 +254,7 @@ export class Settings {
       ),
       this.strengthField,
       this.gradeHead,
-      this.gradeList,
+      this.gradeSelect.el,
       h("h2", { class: "section-h" }, "Grass"),
       this.grassField,
       this.grassHint,
@@ -362,6 +357,7 @@ export class Settings {
 
   set open(v: boolean) {
     this.shown = v;
+    this.gradeSelect.close(false);
     this.el.classList.toggle("is-closed", !v);
     this.el.toggleAttribute("inert", !v);
     this.world.reset();
@@ -384,9 +380,9 @@ export class Settings {
     this.world.attach(p);
   }
 
-  /** Esc: an open Start over confirm closes first. Returns whether it used the key. */
+  /** Esc: an open colour grade list or Start over confirm closes first. Returns whether it used the key. */
   escape(): boolean {
-    return this.shown && this.world.escape();
+    return this.shown && (this.gradeSelect.close() || this.world.escape());
   }
 
   render(
@@ -417,6 +413,7 @@ export class Settings {
 
   private select(id: Tab): void {
     this.tab = id;
+    this.gradeSelect.close(false);
     for (const [k, { btn, panel }] of this.tabs) {
       btn.setAttribute("aria-selected", String(k === id));
       btn.tabIndex = k === id ? 0 : -1;
@@ -494,22 +491,8 @@ export class Settings {
     const sig = JSON.stringify(v);
     if (sig === this.gradeSig) return;
     this.gradeSig = sig;
-    const focused = (document.activeElement as HTMLElement | null)?.dataset?.grade;
-    this.gradeList.replaceChildren(
-      ...v.rows.map((r) => {
-        const on = r.id === v.selected;
-        return h(
-          "li",
-          { class: "tier", role: "radio", tabindex: on ? 0 : -1, "aria-checked": String(on), "data-grade": r.id },
-          h("span", { class: "radio", "aria-hidden": "true" }),
-          h("b", {}, r.name),
-          r.tag ? h("span", { class: "tag" }, r.tag) : null,
-          h("small", {}, r.detail),
-        );
-      }),
-    );
-    this.gradeHead.hidden = this.gradeList.hidden = v.rows.length === 0;
-    if (focused) this.gradeList.querySelector<HTMLElement>(`[data-grade="${focused}"]`)?.focus({ preventScroll: true });
+    this.gradeSelect.update(v.rows, v.selected);
+    this.gradeHead.hidden = this.gradeSelect.el.hidden = v.rows.length === 0;
   }
 
   /** A grade pick switches the look live and is kept for this viewer; it never queues an autosave. */
@@ -538,23 +521,23 @@ export class Settings {
     paint(this.grassInput, this.grassOut);
   }
 
-  /** Space and Enter pick the focused row; arrows, Home and End move along the radio list and pick. */
-  private radioKey(e: KeyboardEvent, list: HTMLElement, attr: "tier" | "grade", pick: (id: string) => void): void {
-    const rows = [...list.querySelectorAll<HTMLElement>(".tier")];
+  /** Space and Enter pick the focused quality row; arrows, Home and End move along the radio list and pick. */
+  private radioKey(e: KeyboardEvent, pick: (id: string) => void): void {
+    const rows = [...this.tierList.querySelectorAll<HTMLElement>(".tier")];
     const i = rows.indexOf(document.activeElement as HTMLElement);
     if (i < 0) return;
     if (e.key === " " || e.key === "Enter") {
       e.preventDefault();
-      pick(rows[i]!.dataset[attr]!);
+      pick(rows[i]!.dataset.tier!);
       return;
     }
     const n = roveIndex(i, rows.length, e.key, "y");
     if (n == null) return;
     e.preventDefault();
-    const id = rows[n]!.dataset[attr]!;
+    const id = rows[n]!.dataset.tier!;
     rows[n]!.focus();
     pick(id);
-    list.querySelector<HTMLElement>(`[data-${attr}="${id}"]`)?.focus();
+    this.tierList.querySelector<HTMLElement>(`[data-tier="${id}"]`)?.focus();
   }
 }
 

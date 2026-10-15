@@ -933,42 +933,165 @@ try {
   check(bar.x + bar.width < sheet.x, `bar (right ${Math.round(bar.x + bar.width)}) clears the sheet (left ${Math.round(sheet.x)}) at 1280 px`);
   await shot("s12-narrow-1280x720");
 
-  // Colour grade (Settings → Graphics): a row per engine preset; a pick switches the look live and is
-  // kept per viewer in localStorage (hexWorld.grade), outside the world save, so it holds over a reload.
+  // Colour grade (Settings → Graphics, owner 2026-10-14): a compact select. Closed, one button shows
+  // the current look; open, a listbox offers one option per engine preset with its description. A pick
+  // switches the look live and is kept per viewer in localStorage (hexWorld.grade), outside the world
+  // save, so it holds over a reload; a scripted set_grade shows in the control, open or closed.
   await page.setViewportSize({ width: 1440, height: 900 });
   const grade = async () => (await st()).grade;
+  const gradeBtn = page.locator(".select[data-select=grade] .select__btn");
+  const gradeList = page.locator(".select[data-select=grade] [role=listbox]");
+  const gradeOpt = (id) => page.locator(`.select[data-select=grade] [role=option][data-value=${id}]`);
+  const gradeOpen = async () => (await gradeBtn.getAttribute("aria-expanded")) === "true" && (await gradeList.isVisible());
+  const gradeActive = () => gradeList.getAttribute("aria-activedescendant");
+  const focusOnGradeBtn = () => page.evaluate(() => document.activeElement?.id === "grade-select");
+  /** The list's 120 ms fade-in has finished, so a capture shows it opaque even on a busy host. */
+  const gradeSettled = () => gradeList.evaluate((l) => Promise.all(l.getAnimations().map((a) => a.finished)));
+  /** The open list sits inside the viewport and on top of everything at its corners. */
+  const gradeListInView = () => page.evaluate(() => {
+    const list = document.querySelector(".select[data-select=grade] [role=listbox]");
+    const r = list.getBoundingClientRect();
+    const hit = (x, y) => list.contains(document.elementFromPoint(x, y));
+    return {
+      inside: r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight && r.height > 40,
+      onTop: hit(r.left + 6, r.top + 6) && hit(r.right - 6, r.bottom - 6),
+      rect: [r.left, r.top, r.width, r.height].map(Math.round).join(","),
+    };
+  });
   check((await grade())?.name === "rich-3", `the grade starts at the default rich-3 (${(await grade())?.name})`);
   check((await grade())?.default === "rich-3", `state().grade.default is rich-3 (${(await grade())?.default})`);
   await page.locator(".tool[data-action=settings]").click();
   await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens for the colour grade");
   await page.locator("#settings-tab-graphics").click();
   await until(async () => page.locator("#settings-tab-graphics[aria-selected=true]").count(), "the Graphics tab is back");
-  const presets = (await grade()).presets.map((p) => p.name);
-  const rowIds = await page.locator(".tiers[aria-label='Colour grade'] .tier").evaluateAll((els) => els.map((e) => e.dataset.grade));
-  check(JSON.stringify(rowIds) === JSON.stringify(presets), `one Colour grade row per engine preset (${rowIds.join(", ")})`);
-  check((await text(".tier[data-grade=rich-2] small")) === (await grade()).presets.find((p) => p.name === "rich-2").detail, "the row shows the engine's description");
-  check(await page.locator(".tier[data-grade=rich-3][aria-checked=true]").count() === 1, "the Rich 3 row is checked");
-  const tags = await page.locator(".tiers[aria-label='Colour grade'] .tier").evaluateAll((els) =>
-    els.map((e) => [e.dataset.grade, e.querySelector(".tag")?.textContent ?? null]).filter(([, t]) => t));
-  check(JSON.stringify(tags) === JSON.stringify([["rich-3", "Default"]]), `only the Rich 3 row is labelled Default (${JSON.stringify(tags)})`);
-  await page.locator(".tier[data-grade=rich-2]").scrollIntoViewIfNeeded();
-  await page.locator(".tier[data-grade=rich-2]").click();
-  await until(async () => (await grade()).name === "rich-2", "picking Rich 2 sets state().grade");
-  check((await grade()).name === "rich-2", "a click on Rich 2 sets state().grade to rich-2");
-  check(await page.locator(".tier[data-grade=rich-2][aria-checked=true]").count() === 1, "the Rich 2 row is checked");
-  check(await page.evaluate(() => localStorage.getItem("hexWorld.grade")) === "rich-2", "the pick is stored for this viewer");
-  await page.mouse.move(700, 450);
-  await page.waitForTimeout(300);
+  const presets = (await grade()).presets;
+  await gradeBtn.scrollIntoViewIfNeeded();
+  const closedH = (await gradeBtn.boundingBox()).height;
+  check(closedH >= 44 && closedH <= 48, `the closed Colour grade control is one ${Math.round(closedH)} px line, a 44 px target`);
+  check((await gradeBtn.getAttribute("aria-haspopup")) === "listbox", "the button announces a listbox");
+  check((await gradeBtn.getAttribute("aria-expanded")) === "false", "the list starts closed");
+  check((await text("#grade-select-name")) === "Rich 3", `the button shows Rich 3 (${await text("#grade-select-name")})`);
+  check((await gradeBtn.textContent()).includes(presets.find((p) => p.name === "rich-3").detail), "with its description");
   await page.evaluate(() => document.activeElement?.blur());
-  await page.locator(".tiers[aria-label='Colour grade']").scrollIntoViewIfNeeded();
+  await page.mouse.move(700, 450);
+  await shot("s9-6-settings-colour-grade-closed");
+
+  // A click opens the list: one option per engine preset with the engine's description, Rich 3 marked.
+  await gradeBtn.click();
+  await until(gradeOpen, "a click opens the Colour grade list");
+  check(await page.evaluate(() => document.activeElement?.getAttribute("role") === "listbox"), "focus moves into the list");
+  const opts = await page.locator(".select[data-select=grade] [role=option]").evaluateAll((els) =>
+    els.map((e) => ({ id: e.dataset.value, name: e.querySelector("b").textContent, detail: e.querySelector("small").textContent,
+      tag: e.querySelector(".tag")?.textContent ?? null, on: e.getAttribute("aria-selected") })));
+  check(JSON.stringify(opts.map((o) => o.id)) === JSON.stringify(presets.map((p) => p.name)), `one option per engine preset (${opts.map((o) => o.id).join(", ")})`);
+  check(opts.every((o) => o.detail === presets.find((p) => p.name === o.id).detail), "every option shows the engine's description");
+  check(JSON.stringify(opts.filter((o) => o.on === "true").map((o) => o.id)) === '["rich-3"]', "Rich 3 is the one marked option");
+  check(JSON.stringify(opts.filter((o) => o.tag).map((o) => [o.id, o.tag])) === '[["rich-3","Default"]]', "only Rich 3 is labelled Default");
+  check((await gradeActive()) === "grade-opt-rich-3", "the current option is highlighted on open");
+  const inView = await gradeListInView();
+  check(inView.inside && inView.onTop, `the open list (${inView.rect}) sits inside the viewport, unclipped`);
+  await page.mouse.move(700, 450);
+  await gradeSettled();
+  await page.waitForTimeout(150);
   await shot("s9-6-settings-colour-grade");
-  // Keyboard: ArrowUp from Rich 2 moves to Rich 1 and picks it.
-  await page.locator(".tier[data-grade=rich-2]").focus();
-  await key("ArrowUp");
-  await until(async () => (await grade()).name === "rich-1", "ArrowUp picks Rich 1");
-  check(await page.evaluate(() => document.activeElement?.dataset.grade === "rich-1"), "focus follows to the Rich 1 row");
+  await gradeOpt("rich-2").click();
+  await until(async () => (await grade()).name === "rich-2", "a click on Rich 2 sets state().grade");
+  check(!(await gradeOpen()), "the pick closes the list");
+  check(await focusOnGradeBtn(), "focus returns to the button");
+  check((await text("#grade-select-name")) === "Rich 2", "the button shows Rich 2");
+  check(await page.evaluate(() => localStorage.getItem("hexWorld.grade")) === "rich-2", "the pick is stored for this viewer");
+
+  // Keyboard: Down opens on the current option, Up moves the highlight without picking, Enter picks.
   await key("ArrowDown");
-  await until(async () => (await grade()).name === "rich-2", "ArrowDown picks Rich 2 again");
+  await until(gradeOpen, "ArrowDown on the button opens the list");
+  check((await gradeActive()) === "grade-opt-rich-2", "on the current option");
+  await key("ArrowUp");
+  check((await gradeActive()) === "grade-opt-rich-1", "ArrowUp highlights Rich 1");
+  await page.waitForTimeout(250);
+  check((await grade()).name === "rich-2", "moving the highlight picks nothing");
+  await key("Enter");
+  await until(async () => (await grade()).name === "rich-1", "Enter picks Rich 1");
+  check(!(await gradeOpen()) && (await focusOnGradeBtn()), "Enter closes the list and focus returns to the button");
+  // Esc closes with no change and leaves Settings open.
+  await key("Enter");
+  await until(gradeOpen, "Enter on the button opens the list");
+  await key("End");
+  check((await gradeActive()) === "grade-opt-rich-3", "End highlights the last option");
+  await key("Home");
+  check((await gradeActive()) === "grade-opt-aces", "Home highlights the first");
+  await key("Escape");
+  await until(async () => !(await gradeOpen()), "Esc closes the list");
+  check(await page.locator(".sheet--settings:not(.is-closed)").count() === 1, "Esc on the list leaves Settings open");
+  check((await grade()).name === "rich-1" && (await page.evaluate(() => localStorage.getItem("hexWorld.grade"))) === "rich-1", "Esc changes nothing");
+  check(await focusOnGradeBtn(), "focus returns to the button after Esc");
+  // Type-ahead by name: T is Tony, R steps through the Rich looks; Space picks, and the list stays shut.
+  const toolBefore = (await play()).tool;
+  await key("ArrowDown");
+  await until(gradeOpen, "the list opens for type-ahead");
+  await page.keyboard.type("t");
+  check((await gradeActive()) === "grade-opt-tony", `T highlights Tony (${await gradeActive()})`);
+  await page.waitForTimeout(700);
+  await page.keyboard.type("r");
+  check((await gradeActive()) === "grade-opt-rich-1", `R highlights Rich 1 (${await gradeActive()})`);
+  await page.keyboard.type("r");
+  check((await gradeActive()) === "grade-opt-rich-2", `R again highlights Rich 2 (${await gradeActive()})`);
+  check((await play()).tool === toolBefore && (await gradeOpen()), "typed letters stay in the list (no game keys)");
+  await page.waitForTimeout(700);
+  await key(" ");
+  await until(async () => (await grade()).name === "rich-2", "Space picks Rich 2");
+  await page.waitForTimeout(250);
+  check(!(await gradeOpen()), "Space closes the list and its release does not reopen it");
+
+  // A script changes the grade while the list is open: the mark and the button follow, the list stays.
+  await gradeBtn.click();
+  await until(gradeOpen, "the list opens for a scripted change");
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_grade", grade: "aces" }));
+  await until(async () => (await gradeOpt("aces").getAttribute("aria-selected")) === "true", "a scripted set_grade moves the mark while the list is open");
+  check((await gradeOpt("rich-2").getAttribute("aria-selected")) === "false", "and only one option is marked");
+  check((await text("#grade-select-name")) === "ACES", "the button follows the script");
+  check(await gradeOpen(), "the list stays open");
+  check(await page.evaluate(() => localStorage.getItem("hexWorld.grade")) === "rich-2", "a script's grade is not stored");
+  // A click outside closes it with no change; so does changing tab.
+  await page.locator(".sheet--settings .sheet__head h1").click();
+  await until(async () => !(await gradeOpen()), "a click outside closes the list");
+  check((await grade()).name === "aces", "with no change");
+  await gradeBtn.click();
+  await until(gradeOpen, "the list opens before a tab change");
+  await page.locator("#settings-tab-audio").click();
+  await until(async () => !(await gradeOpen()), "changing tab closes the list");
+  await page.locator("#settings-tab-graphics").click();
+  await gradeBtn.click();
+  await until(gradeOpen, "the list opens to pick Rich 2 again");
+  await gradeOpt("rich-2").click();
+  await until(async () => (await grade()).name === "rich-2", "Rich 2 again for the reload");
+
+  // Short windows and phone width: the open list stays inside the viewport and on top, scrolling
+  // when it is taller than the room.
+  for (const [w, hgt] of [[1440, 560], [375, 667]]) {
+    await page.setViewportSize({ width: w, height: hgt });
+    await page.waitForTimeout(400);
+    await gradeBtn.scrollIntoViewIfNeeded();
+    await gradeBtn.click();
+    await until(gradeOpen, `the list opens at ${w}×${hgt}`);
+    const v = await gradeListInView();
+    check(v.inside && v.onTop, `at ${w}×${hgt} the open list (${v.rect}) sits inside the viewport, unclipped`);
+    await page.mouse.move(2, 2);
+    await gradeSettled();
+    await page.waitForTimeout(150);
+    await shot(`s9-6-settings-colour-grade-${w}x${hgt}`);
+    await key("Escape");
+    await until(async () => !(await gradeOpen()), `Esc closes the list at ${w}×${hgt}`);
+  }
+  // Scrolling the sheet moves the button out from under the list, so the list closes.
+  await gradeBtn.click();
+  await until(gradeOpen, "the list opens before a sheet scroll");
+  await page.evaluate(() => {
+    const b = document.querySelector(".sheet--settings .sheet__body");
+    b.scrollTop = b.scrollTop > 40 ? b.scrollTop - 40 : b.scrollTop + 40;
+  });
+  await until(async () => !(await gradeOpen()), "scrolling the sheet closes the list");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.waitForTimeout(300);
 
   // Walk speed (Settings → World, owner 2026-10-14): the slider sets state().walk live with sprint at
   // twice it, the bridge command clamps to 2.8..8 and the slider follows the engine, and the choice is
@@ -996,7 +1119,7 @@ try {
   await setRange("Walk speed", 5);
   await until(async () => (await walkSt()).walk_speed === 5, "the slider sets 5 m/s again");
 
-  // Reload: the stored grade is sent once the overlay starts, and the row shows it.
+  // Reload: the stored grade is sent once the overlay starts, and the Colour grade button shows it.
   await page.reload({ waitUntil: "commit" });
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
   await until(async () => (await play())?.tiles != null, "play is back after the reload", 30_000);
@@ -1004,8 +1127,8 @@ try {
   check((await grade())?.name === "rich-2", `state().grade reports ${(await grade())?.name} after the reload`);
   await page.locator(".tool[data-action=settings]").click();
   await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens after the reload");
-  await until(async () => page.locator(".tier[data-grade=rich-2][aria-checked=true]").count(), "the Rich 2 row is checked after the reload");
-  check(await page.locator(".tier[data-grade=rich-2][aria-checked=true]").count() === 1, "the Rich 2 row is checked after the reload");
+  await until(async () => (await text("#grade-select-name")) === "Rich 2", "the Colour grade button shows Rich 2 after the reload");
+  check((await gradeOpt("rich-2").getAttribute("aria-selected")) === "true", "Rich 2 is the marked option after the reload");
   await until(async () => (await walkSt())?.walk_speed === 5, "the stored walk speed holds over a reload", 15_000);
   check((await walkSt()).sprint_speed === 10, `sprint is ${(await walkSt()).sprint_speed} m/s after the reload`);
   await page.locator("#settings-tab-world").click();
