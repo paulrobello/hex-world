@@ -616,6 +616,7 @@ P3 references are owner-approved (A17, 2026-10-14, `assets-source/refs/<id>/appr
 ### P6 — Content breadth
 
 - [ ] Factories, volcano (with an eruption signature moment), craters, mountains, desert, tundra, swamp, towns with pedestrians, harbors, and more.
+- [ ] Lighthouse: a coastal tile with a lighthouse whose light beam sweeps around, animated as a rotating lamp and beam that reads at dusk and night (owner, 2026-10-14).
 - [ ] A goal of 100+ tile types from the kit, with recipes covering every non-starter type.
 
 ### P7 — Mobile and tablet
