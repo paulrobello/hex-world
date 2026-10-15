@@ -799,8 +799,9 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
 
 // 11. Cache busting (scripts/web/version-dist.mjs): every same-origin request a full play load makes
 // (HUD, scripts, fonts, thumbnails, shaders, every kit pack, the IBL, audio after a gesture and the
-// streamed music) carries ?v=<hash> equal to the served file's content hash, except the page itself and
-// Trunk's own hashed glue and wasm. References headless Chromium never fetches (favicons, the web
+// streamed music) carries ?v=<hash> equal to the served file's content hash, except the page itself, the
+// build id the HUD polls (version.json, fetched with its own cache-busting query) and Trunk's own hashed
+// glue and wasm. References headless Chromium never fetches (favicons, the web
 // manifest and its icons) are checked in the built files instead.
 {
   const hashOf = new Map();
@@ -857,7 +858,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     const trunk = [];
     for (const u of seen) {
       const p = decodeURIComponent(u.pathname).replace(/^\//, "");
-      if (p === "" || p === "index.html") continue;
+      if (p === "" || p === "index.html" || p === "version.json") continue;
       if (TRUNK_HASHED.test(p)) { trunk.push(p); continue; }
       const v = u.searchParams.get("v");
       const want = await fileHash(p).catch(() => null);

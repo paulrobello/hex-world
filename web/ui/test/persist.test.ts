@@ -387,6 +387,31 @@ test("page hide writes a pending autosave at once, from the engine's last frame"
   assert.equal(p.flushNow(), false, "a second hide has nothing left to write");
 });
 
+test("settle before a reload: a pending autosave is written and awaited, an unanswered save times out", async () => {
+  const store = new MemoryBackend();
+  const { host, p } = setup(store);
+  await p.start();
+  assert.equal(await p.settle(), true, "nothing pending settles at once");
+  p.observe([tile(0, 0, "meadow"), tile(1, 0, "meadow")]);
+  p.onEvents([placed]);
+  assert.equal(await p.settle(), true, "the debounced autosave is written before settle resolves");
+  assert.equal((await store.list())[0]?.tiles, 2);
+  assert.equal(p.state, "saved");
+
+  // The engine cannot encode at once: settle waits for the queued save's `saved` event.
+  host.saveNow = () => null;
+  p.onEvents([placed]);
+  setTimeout(() => p.onEvents(host.savedEvents().slice(-1)), 120);
+  assert.equal(await p.settle(), true, "the queued save landed while settle waited");
+  assert.equal(p.state, "saved");
+  p.onEvents([placed]);
+  assert.equal(await p.settle(150), false, "a save that never answers runs the wait out");
+
+  const off = setup(null).p;
+  await off.start();
+  assert.equal(await off.settle(), false, "storage off has nothing to settle into");
+});
+
 test("storage off: autosave never runs, the bar reads Autosave off, a caution toast offers Export", async () => {
   const { host, notes, p } = setup(null);
   await p.start();

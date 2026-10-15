@@ -52,7 +52,9 @@ ui-schema:
 # (photo effects from the panel, measured in exported PNGs; e2e/test-results/photo-fx/), then e2e/persist.mjs
 # (autosave, reload, export, import, storage blocked; e2e/test-results/persistence/, or PERSIST_OUT), then runs the
 # audio checks (audio-e2e), then e2e/debug.mjs (the Settings Debug tab and every developer overlay;
-# e2e/test-results/debug/, or DEBUG_OUT=docs/checkpoints/debug for the committed shots).
+# e2e/test-results/debug/, or DEBUG_OUT=docs/checkpoints/debug for the committed shots), then e2e/version.mjs
+# (the new-version note: a swapped version.json, Reload saving first and loading the new build;
+# e2e/test-results/version/, or VERSION_OUT=docs/checkpoints/version-check for the committed shots).
 ui-e2e: build-web
 	cd e2e && npm ci --no-audit --no-fund
 	node e2e/ui.mjs dist
@@ -60,6 +62,7 @@ ui-e2e: build-web
 	node e2e/persist.mjs dist
 	node e2e/audio.mjs dist
 	node e2e/debug.mjs dist
+	node e2e/version.mjs dist
 
 # Local only: the web audio layer (PRD §8) read through hexWorld.audio.state(): nothing loads before a
 # gesture, the context runs after one, events fire their cues, the focus mix, and mute. Writes

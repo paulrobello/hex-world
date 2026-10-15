@@ -39,6 +39,8 @@ function site() {
 
 const read = (dir, p) => readFileSync(join(dir, p), "utf8");
 const pageMap = (dir) => JSON.parse(/window\.__HEX_HASHES=(\{.*?\});/.exec(read(dir, "index.html"))[1]);
+const pageBuild = (dir) => /window\.__HEX_BUILD="([0-9a-f]+)";/.exec(read(dir, "index.html"))?.[1];
+const fileBuild = (dir) => JSON.parse(read(dir, "version.json")).id;
 
 test("every site file but the page, CNAME and Trunk's hashed outputs gets its content hash", () => {
   const dir = site();
@@ -135,5 +137,59 @@ test("rerunning on a copy of a versioned site is a no-op", () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
     rmSync(copy, { recursive: true, force: true });
+  }
+});
+
+test("the build id is inlined beside the map and written to version.json, which is never in the map", () => {
+  const a = site();
+  const b = site();
+  try {
+    const map = versionDist(a);
+    const id = fileBuild(a);
+    assert.match(id, /^[0-9a-f]{10}$/);
+    assert.equal(pageBuild(a), id);
+    assert.equal(read(a, "version.json"), `{"id":"${id}"}\n`);
+    assert.ok(!("version.json" in map) && !("version.json" in pageMap(a)));
+    // A rerun sees the version.json the first run wrote and writes the same bytes everywhere.
+    const page = read(a, "index.html");
+    assert.deepEqual(versionDist(a), map);
+    assert.equal(read(a, "index.html"), page);
+    assert.equal(fileBuild(a), id);
+    assert.equal((read(a, "index.html").match(/__HEX_BUILD/g) ?? []).length, 1);
+    // A separate build of the same sources gets the same id.
+    versionDist(b);
+    assert.equal(fileBuild(b), id);
+  } finally {
+    rmSync(a, { recursive: true, force: true });
+    rmSync(b, { recursive: true, force: true });
+  }
+});
+
+test("the build id changes when any site file, Trunk's output or the page changes", () => {
+  const base = site();
+  try {
+    versionDist(base);
+    const id = fileBuild(base);
+    const edits = {
+      asset: (d) => writeFileSync(join(d, "assets/kit/p1/b/b.glb"), "glb-b, rebuilt"),
+      trunk: (d) => {
+        rmSync(join(d, "hex-world-0123456789abcdef_bg.wasm"));
+        writeFileSync(join(d, "hex-world-fedcba9876543210_bg.wasm"), "\0asm2");
+      },
+      page: (d) => writeFileSync(join(d, "index.html"), read(d, "index.html").replace("<head>", "<head><title>t</title>")),
+    };
+    for (const [what, edit] of Object.entries(edits)) {
+      const d = site();
+      try {
+        edit(d);
+        versionDist(d);
+        assert.notEqual(fileBuild(d), id, `${what} edit kept the id`);
+        assert.equal(pageBuild(d), fileBuild(d));
+      } finally {
+        rmSync(d, { recursive: true, force: true });
+      }
+    }
+  } finally {
+    rmSync(base, { recursive: true, force: true });
   }
 });

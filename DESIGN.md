@@ -343,6 +343,7 @@ Icons are a single authored set on a 24 px grid with a 1.8 px round-capped strok
 
 ### Toast
 - A margin note at bottom left on `sheet`: an icon, text over an optional 13 px sub line, and an optional action button on `sheet-2`. It rises 8 px and fades in, dismisses after 4 s, and pauses while hovered. One toast shows at a time and updates in place, with a count pill for repeats ("2 Undone"). The icon carries tone: `bad` or `ok`.
+- **Update note:** the toast's persistent variant for a newer deployed build: the `retry` icon, "New version available" over a sub line that says the world is saved first (or, in `caution`, that autosave is off and reloading loses it), and a Reload action. It sits above the toast at 84 px from the bottom, never times out, and hides with the HUD (H, photo and walk modes).
 
 ### Tag
 - **Ghost tag:** sits beside the ghost or the bulldoze target. It names the tile and rotation and gives fit text in `ok` or `bad`. A refusal sets the headline over the reason in `bad` and adds an inset `bad` ring.

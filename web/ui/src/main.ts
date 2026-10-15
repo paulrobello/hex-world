@@ -12,6 +12,7 @@ import { loadGrade, loadGrass } from "./settings.ts";
 import { gradeCommand, grassCommand, startupGrade, startupGrass, tierBusy } from "./settings-model.ts";
 import { loadWalkSpeed } from "./settings-world.ts";
 import { idbFactory, openSlots } from "./slots.ts";
+import { UpdateNote, watchVersion } from "./version-check.ts";
 import { walkSpeedCommand } from "./walk-speed.ts";
 
 type Bridge = HexWorld & {
@@ -88,6 +89,8 @@ function run(root: HTMLElement, hw: Bridge): void {
   if (walkSpeed != null) hw.cmd(walkSpeedCommand(walkSpeed));
   let hud: Hud | null = null;
   let persist: Persistence | null = null;
+  // A newer deployed build offers a reload, which writes the world first (checked in play only).
+  const update = new UpdateNote(root, () => persist);
   // This viewer's camera per saved world (localStorage), outside the world save and its history.
   const camera = new CameraKeeper(hw, { storage: localPoseStorage });
   hw.cameraRestore = () => ({ ready: persist?.ready ?? false, ...camera.status() });
@@ -102,7 +105,10 @@ function run(root: HTMLElement, hw: Bridge): void {
         volumes: () => busVolumes(audio.api().state().volumes),
         download,
         notify: (n) => h.note(n),
-        changed: () => h.syncWorld(),
+        changed: () => {
+          h.syncWorld();
+          update.sync();
+        },
         opened: (id) => camera.begin(id),
         switching: () => camera.flush(),
         removed: (id) => camera.forget(id),
@@ -139,6 +145,7 @@ function run(root: HTMLElement, hw: Bridge): void {
     if (!hud) {
       hud = new Hud(root, hw, hw.audio ?? null);
       startPersistence(hud);
+      watchVersion(update);
     }
     persist?.observe(play.tiles);
     camera.tick(persist?.ready && persist.current.stored ? persist.current.id : null, state);

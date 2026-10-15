@@ -260,6 +260,26 @@ export class Persistence {
     return true;
   }
 
+  /**
+   * Before a reload (a newer build is live): writes a pending autosave now and waits until no
+   * autosave is queued, asked of the engine or being written, for at most `ms`. True once nothing
+   * is left to write; false with storage off or when the wait ran out.
+   */
+  async settle(ms = 4000): Promise<boolean> {
+    if (!this.store) return false;
+    if (!this.ready) return true;
+    this.flushNow();
+    const until = Date.now() + ms;
+    while (this.unwritten() && Date.now() < until) await new Promise((r) => setTimeout(r, 25));
+    return this.store !== null && !this.unwritten();
+  }
+
+  private unwritten(): boolean {
+    return (
+      this.debounce.pending || this.writing > 0 || [...this.pending.values()].some((p) => p.purpose === "autosave")
+    );
+  }
+
   private autosave(): void {
     if (this.store) this.requestSave(this.current, "autosave");
   }

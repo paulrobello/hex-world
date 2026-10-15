@@ -11,6 +11,11 @@
 //   index.html as `window.__HEX_HASHES`, the first script in <head>, so it is as fresh as the HTML and
 //   costs no request. The wasm (crates/hex-assets/src/bevy.rs) and the HUD (web/ui/src/versioned.ts)
 //   version their fetches from it. index.html itself is never versioned and must not be long-cached.
+// - The build id (owner request 2026-10-15) hashes the map, Trunk's hashed names and index.html (with
+//   the map script left out), so it changes exactly when the site's bytes do. It is inlined beside the
+//   map as `window.__HEX_BUILD` and written to version.json (`{"id":"<id>"}`), which the HUD polls
+//   (web/ui/src/version-check.ts) to offer a reload once a newer build is live. version.json is never
+//   versioned and never in the map.
 //
 // Idempotent: existing `?v=` suffixes and the map script are replaced, so a second run on the same
 // files writes the same bytes. Runs as Trunk's post_build hook (Trunk.toml) on the staging dir, so
@@ -22,8 +27,8 @@ import { join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const HASH_LEN = 10;
-/** Files never put in the map: the page itself (fetched fresh) and the Pages domain file. */
-const UNVERSIONED = new Set(["index.html", "CNAME"]);
+/** Files never put in the map: the page and the build id (both fetched fresh) and the Pages domain file. */
+const UNVERSIONED = new Set(["index.html", "CNAME", "version.json"]);
 /** Trunk's filehash outputs at the site root, already content-addressed by name. */
 export const TRUNK_HASHED = /^[^/]+-[0-9a-f]{16}(_bg\.wasm|\.js|\.css)$/;
 /** Text files whose references to site files are versioned. */
@@ -51,6 +56,11 @@ function resolveRef(from, ref) {
   if (/^[a-z][a-z0-9+.-]*:/i.test(ref) || ref.startsWith("//")) return null;
   const p = ref.startsWith("/") ? ref.slice(1) : posix.normalize(posix.join(posix.dirname(from), ref));
   return p.startsWith("..") || p === "." ? null : p;
+}
+
+/** The build id: the map, Trunk's hashed names and the page without its map script. */
+export function buildId(map, trunkFiles, html) {
+  return contentHash(Buffer.from(JSON.stringify([map, [...trunkFiles].sort(), html]), "utf8"));
 }
 
 /** Versions `dir` in place and returns the map it inlined into index.html (sorted keys). */
@@ -87,8 +97,12 @@ export function versionDist(dir) {
     const html = rewrite("index.html").replace(MAP_SCRIPT, "");
     const at = html.indexOf("<script");
     if (at < 0) throw new Error("version-dist: index.html has no <script> to put the hash map before");
-    const script = `<script id="hex-hashes">window.__HEX_HASHES=${JSON.stringify(map)};</script>\n    `;
+    const id = buildId(map, files.filter((f) => TRUNK_HASHED.test(f)), html);
+    const script =
+      `<script id="hex-hashes">window.__HEX_HASHES=${JSON.stringify(map)};` +
+      `window.__HEX_BUILD=${JSON.stringify(id)};</script>\n    `;
     writeFileSync(join(dir, "index.html"), html.slice(0, at) + script + html.slice(at));
+    writeFileSync(join(dir, "version.json"), `${JSON.stringify({ id })}\n`);
   }
   return map;
 }
