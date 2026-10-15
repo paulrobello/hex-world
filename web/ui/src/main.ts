@@ -2,6 +2,7 @@
 // play scenario is up. Other scenarios (gates, look-dev) get no HUD and are polled once a second.
 import { type AudioApi, GameAudio } from "./audio.ts";
 import type { HexWorld, Volumes } from "./bridge.ts";
+import { CameraKeeper, type RestoreStatus, localPoseStorage } from "./camera-pose.ts";
 import { h } from "./dom.ts";
 import { Hud } from "./hud.ts";
 import { sprite } from "./icons.ts";
@@ -13,7 +14,11 @@ import { loadWalkSpeed } from "./settings-world.ts";
 import { idbFactory, openSlots } from "./slots.ts";
 import { walkSpeedCommand } from "./walk-speed.ts";
 
-type Bridge = HexWorld & { audio?: AudioApi };
+type Bridge = HexWorld & {
+  audio?: AudioApi;
+  /** The viewer's camera restore: `ready` once the start-up resume has settled (scripts wait for `ready && !restoring`). */
+  cameraRestore?: () => RestoreStatus & { ready: boolean };
+};
 
 declare global {
   interface Window {
@@ -83,6 +88,9 @@ function run(root: HTMLElement, hw: Bridge): void {
   if (walkSpeed != null) hw.cmd(walkSpeedCommand(walkSpeed));
   let hud: Hud | null = null;
   let persist: Persistence | null = null;
+  // This viewer's camera per saved world (localStorage), outside the world save and its history.
+  const camera = new CameraKeeper(hw, { storage: localPoseStorage });
+  hw.cameraRestore = () => ({ ready: persist?.ready ?? false, ...camera.status() });
   hw.watchEvents((batch) => {
     hud?.onEvents(batch);
     audio.onEvents(batch);
@@ -95,16 +103,27 @@ function run(root: HTMLElement, hw: Bridge): void {
         download,
         notify: (n) => h.note(n),
         changed: () => h.syncWorld(),
+        opened: (id) => camera.begin(id),
+        switching: () => camera.flush(),
+        removed: (id) => camera.forget(id),
       });
       h.attach(persist);
-      void persist.start();
+      const p = persist;
+      void p.start().then(() => {
+        if (p.storageOn) camera.keepOnly(p.slots.map((s) => s.id));
+      });
     });
   };
-  // Leaving or hiding the page writes a pending autosave at once (best effort in pagehide).
+  // Leaving or hiding the page writes a pending autosave at once (best effort in pagehide), and the camera.
   addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") persist?.flushNow();
+    if (document.visibilityState !== "hidden") return;
+    persist?.flushNow();
+    camera.flush();
   });
-  addEventListener("pagehide", () => persist?.flushNow());
+  addEventListener("pagehide", () => {
+    persist?.flushNow();
+    camera.flush();
+  });
   const tick = () => {
     // Pump before reading state, so the state is at least as new as the events it explains.
     hw.pumpEvents();
@@ -122,6 +141,7 @@ function run(root: HTMLElement, hw: Bridge): void {
       startPersistence(hud);
     }
     persist?.observe(play.tiles);
+    camera.tick(persist?.ready && persist.current.stored ? persist.current.id : null, state);
     root.classList.remove("is-off");
     hud.render(play, state);
     requestAnimationFrame(tick);

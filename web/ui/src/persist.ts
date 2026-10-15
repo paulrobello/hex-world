@@ -51,6 +51,12 @@ export interface PersistOptions {
   notify?: (n: Note) => void;
   /** Called whenever the name, the save state or the slot list changes. */
   changed?: () => void;
+  /** A stored world was opened (the start-up resume or a Load) and is on screen: put its viewer's camera back. */
+  opened?: (id: string) => void;
+  /** The world on screen is about to be replaced or cleared: record its viewer's camera first. */
+  switching?: () => void;
+  /** A stored world was deleted. */
+  removed?: (id: string) => void;
 }
 
 /** The world on screen: its slot id, its name, and whether its slot exists in storage yet. */
@@ -63,6 +69,8 @@ export interface CurrentWorld {
 interface Switch extends CurrentWorld {
   /** Write the slot as soon as the world is up (an import). */
   saveNow: boolean;
+  /** A stored world opened (resume or Load): its viewer's camera comes back once it is up. */
+  opened?: boolean;
 }
 
 interface PendingSave {
@@ -233,6 +241,7 @@ export class Persistence {
 
   /** Queues any pending autosave now, ahead of whatever is sent next (a world switch). */
   flush(): void {
+    this.opts.switching?.();
     this.debounce.flush();
   }
 
@@ -359,6 +368,7 @@ export class Persistence {
     }
     this.ready = true;
     this.setState(this.store ? "saved" : "off");
+    if (sw.opened) this.opts.opened?.(sw.id);
     // An import is written as soon as the HUD has seen its tiles (the debounce outlasts a frame).
     if (sw.saveNow && this.store) {
       this.setState("saving");
@@ -397,7 +407,7 @@ export class Persistence {
       this.opts.notify?.({ text: `${meta.name} can't be opened`, sub: w.text, icon: "alert", tone: "bad" });
       return false;
     }
-    this.switches.push({ id: meta.id, name: meta.name, stored: true, saveNow: false });
+    this.switches.push({ id: meta.id, name: meta.name, stored: true, saveNow: false, opened: true });
     return true;
   }
 
@@ -533,6 +543,7 @@ export class Persistence {
       return false;
     }
     this.slots = this.slots.filter((s) => s.id !== id);
+    this.opts.removed?.(id);
     this.changed();
     return true;
   }

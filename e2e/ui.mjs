@@ -1030,7 +1030,12 @@ try {
     await until(async () => (await grade()).name === g, `the frame grade is ${g}`);
     return page.evaluate((n) => window.hexWorld.screenshot(n, 60_000), name);
   };
+  // The reloads above resume the world and put this viewer's camera back (hexWorld.cameraRestore);
+  // set the capture camera only once that has finished, and wait until the camera is there.
+  await until(() => page.evaluate(() => { const r = window.hexWorld.cameraRestore?.(); return !r || (r.ready && !r.restoring); }),
+    "the camera restore after the reloads has finished", 30_000);
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "camera", pos: [18, 22, 26], look_at: [0, 0, 0] }));
+  await until(async () => (await st()).camera?.pos.every((v, i) => Math.abs(v - [18, 22, 26][i]) < 0.01), "the capture camera is set");
   const frames = [
     await capture("tony", "grade-tony-a"),
     await capture("aces", "grade-aces"),

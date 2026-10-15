@@ -427,6 +427,175 @@ try {
   }
   await ctx.close();
 
+  // ---------- The viewer's camera per world (owner request 2026-10-14) ----------
+  // A camera move with no edit, walk mode, and two worlds each keep their own camera across a reload
+  // or a switch, from localStorage (hexWorld.camera) rather than the world save; camera moves add no
+  // history and no autosave. A fresh context, so IndexedDB and localStorage start empty.
+  {
+    const cctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const cp = await open(cctx);
+    const c = helpers(cp);
+    const st = () => cp.evaluate(() => window.hexWorld.state());
+    const orbit = async () => (await c.play()).orbit;
+    const poses = () => cp.evaluate(() => JSON.parse(localStorage.getItem("hexWorld.camera") ?? "{}"));
+    const slotStamps = () => cp.evaluate(() => new Promise((resolve, reject) => {
+      const req = indexedDB.open("hex-world");
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => {
+        const all = req.result.transaction("slots").objectStore("slots").getAll();
+        all.onerror = () => reject(all.error);
+        all.onsuccess = () => {
+          resolve(Object.fromEntries(all.result.map((m) => [m.name, m.updatedAt])));
+          req.result.close();
+        };
+      };
+    }));
+    const wrap = (a, b) => { const d = Math.abs(a - b) % (2 * Math.PI); return Math.min(d, 2 * Math.PI - d); };
+    const sameOrbit = (a, b) => !!a && !!b && a.focus.every((v, i) => Math.abs(v - b.focus[i]) < 0.02)
+      && wrap(a.yaw, b.yaw) < 1e-3 && Math.abs(a.pitch - b.pitch) < 1e-3 && Math.abs(a.distance - b.distance) < 0.05;
+    const fmt = (o) => o ? `focus ${o.focus.map((v) => v.toFixed(2))} yaw ${o.yaw.toFixed(4)} pitch ${o.pitch.toFixed(4)} zoom ${o.distance.toFixed(2)}` : "none";
+    const reload = async () => {
+      await cp.reload();
+      await cp.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.state().play, null, { timeout: 90_000 });
+    };
+    // Sets the orbit camera through the bridge (pos on the orbit, looking at its focus).
+    const fly = async (focus, yaw, pitch, distance) => {
+      await cp.evaluate(([f, y, p, d]) => window.hexWorld.cmd({
+        cmd: "camera",
+        pos: [f[0] + Math.cos(p) * Math.sin(y) * d, f[1] + Math.sin(p) * d, f[2] + Math.cos(p) * Math.cos(y) * d],
+        look_at: f,
+      }), [focus, yaw, pitch, distance]);
+      const want = { focus, yaw, pitch, distance };
+      await c.until(async () => sameOrbit(await orbit(), want), `the camera reaches ${fmt(want)}`);
+      return orbit();
+    };
+
+    await c.boot();
+    await cp.evaluate(() => { const h = window.hexWorld; h.selectTile("meadow"); h.placeTile(1, 0); });
+    await c.until(async () => (await c.play()).tiles.length === 2, "camera: a tile placed so World 1 has a slot");
+    await c.until(async () => (await slotStamps())["World 1"], "camera: World 1's slot is written");
+    await c.until(async () => (await c.text(".bar__world")).includes("Saved"), "camera: World 1 is autosaved");
+    const hist = await c.play();
+    const stamps = await slotStamps();
+
+    // An orbit move with no edit survives a reload.
+    const a = await fly([18, 0, -6], -2.2, 0.62, 95);
+    await cp.waitForTimeout(3000);
+    const after = await c.play();
+    check(after.can_undo === hist.can_undo && after.can_redo === hist.can_redo, "a camera move adds no undo or redo entry");
+    check((await c.text(".bar__world")).includes("Saved"), "a camera move starts no autosave");
+    check(JSON.stringify(await slotStamps()) === JSON.stringify(stamps), "a camera move writes no world save");
+    const stored = Object.values(await poses());
+    check(stored.length === 1 && sameOrbit(stored[0].orbit, a) && stored[0].walk === null, `the pose is stored per viewer within 3 s (${fmt(stored[0]?.orbit)})`);
+    await reload();
+    await c.until(async () => sameOrbit(await orbit(), a), `after a reload the orbit camera is back (${fmt(a)})`, 20_000);
+    const restored = (want) => c.until(async () => (await cp.evaluate(() => window.hexWorld.cameraRestore())).outcome === want, `hexWorld.cameraRestore() reports ${want}`, 20_000);
+    await restored("orbit");
+    console.log(`  orbit after reload: ${fmt(await orbit())}`);
+    await cp.waitForTimeout(500);
+    await c.shot("camera-orbit-after-reload");
+
+    // Walk mode: the walker's feet, heading and pitch survive a reload, behind the click-to-look hint.
+    await cp.evaluate(() => window.hexWorld.cmd({ cmd: "walk", on: true, pointer_lock: null }));
+    await c.until(async () => (await st()).walk?.on, "walk mode on");
+    await cp.evaluate(() => {
+      const h = window.hexWorld;
+      h.cmd({ cmd: "walk_to", x: 30, z: 4, heading: 250, pitch: -7 });
+      h.cmd({ cmd: "walk_step", forward: 1, right: 0.3, seconds: 1.2, jog: false });
+    });
+    await c.until(async () => { const w = (await st()).walk; return w?.on && w.distance > 0.5 && w.step_left === null; }, "the walker walks somewhere");
+    await cp.evaluate(() => window.hexWorld.cmd({ cmd: "walk_look", heading: 237.5, pitch: 4.25 }));
+    await c.until(async () => Math.abs((await st()).walk.heading - 237.5) < 1e-2, "and looks around");
+    const walked = (await st()).walk;
+    await cp.waitForTimeout(3000);
+    const wpose = Object.values(await poses())[0];
+    check(!!wpose?.walk && sameOrbit(wpose.orbit, a), `the stored pose holds the walker over the orbit camera (${JSON.stringify(wpose?.walk)})`);
+    await reload();
+    const near = (w) => !!w?.on && w.feet && Math.hypot(w.feet[0] - walked.feet[0], w.feet[2] - walked.feet[2]) < 0.05;
+    await c.until(async () => near((await st()).walk), `after a reload walk mode resumes at the feet [${walked.feet}]`, 25_000);
+    await restored("walk");
+    const back = (await st()).walk;
+    check(Math.abs(back.heading - walked.heading) < 0.05 && Math.abs(back.pitch - walked.pitch) < 0.05,
+      `heading and pitch restored (${back.heading}, ${back.pitch}; were ${walked.heading}, ${walked.pitch})`);
+    check(!back.pointer_lock, "no pointer lock without a gesture");
+    await c.until(async () => (await cp.locator(".walk-ui:not(.is-off)").count()) === 1, "the walk hint shows");
+    check((await c.text(".walk-hint")).includes("Click to look around"), "the hint says Click to look around");
+    await cp.waitForTimeout(500);
+    await c.shot("camera-walk-after-reload");
+    await cp.evaluate(() => window.hexWorld.cmd({ cmd: "walk", on: false, pointer_lock: null }));
+    await c.until(async () => !(await st()).walk?.on, "walk mode off");
+    await c.until(async () => sameOrbit(await orbit(), a), "leaving walk mode returns to the saved orbit camera");
+
+    // Two worlds: each keeps its own camera across a switch.
+    const one = await fly([-12, 0, 20], 0.9, 1.1, 210);
+    await cp.locator(".bar__world").click();
+    await c.until(async () => worldsOpen(cp), "camera: the Worlds sheet opens");
+    await cp.locator(".sheet--worlds [data-act=new]").click();
+    await c.until(async () => (await c.play()).tiles.length === 1 && (await c.text(".bar__world")).includes("World 2"), "camera: New world opens World 2");
+    await cp.keyboard.press("Escape");
+    await c.until(async () => !(await worldsOpen(cp)), "camera: Esc closes the Worlds sheet");
+    await cp.evaluate(() => { const h = window.hexWorld; h.selectTile("forest"); h.placeTile(0, 1); });
+    await c.until(async () => (await c.text(".bar__world")).replace(/\s+/g, " ").includes("World 2 2 tiles · Saved"), "camera: World 2 is autosaved");
+    const two = await fly([25, 0, 30], -0.4, 0.35, 60);
+    await cp.waitForTimeout(2500);
+    check(Object.keys(await poses()).length === 2, "one stored pose per world");
+    const loadWorld = async (name, other) => {
+      await cp.locator(".bar__world").click();
+      await c.until(async () => worldsOpen(cp), `the Worlds sheet opens to load ${name}`);
+      await c.until(async () => cp.locator(".slot-row", { hasText: name }).count(), `${name} is listed`);
+      await cp.locator(".slot-row", { hasText: name }).locator("[data-act=load]").click();
+      await c.until(async () => { const b = await c.text(".bar__world"); return b.includes(name) && !b.includes(other); }, `Load switches to ${name}`);
+      await cp.keyboard.press("Escape");
+    };
+    await loadWorld("World 1", "World 2");
+    await c.until(async () => sameOrbit(await orbit(), one), `World 1 comes back with its own camera (${fmt(one)})`, 20_000);
+    await loadWorld("World 2", "World 1");
+    await c.until(async () => sameOrbit(await orbit(), two), `World 2 comes back with its own camera (${fmt(two)})`, 20_000);
+    await cp.waitForTimeout(400);
+    await c.shot("camera-second-world");
+
+    // A stored walker on a tile that is no longer there (bulldozed, off the map) is not restored:
+    // the camera stays in orbit at the saved focus. World 2 is the most recent, so a reload resumes it.
+    const twoId = Object.entries(await poses()).find(([, p]) => sameOrbit(p.orbit, two))?.[0];
+    check(!!twoId, "World 2's pose is stored");
+    await cp.evaluate((id) => {
+      const all = JSON.parse(localStorage.getItem("hexWorld.camera") ?? "{}");
+      all[id].walk = { feet: [400, 0, 400], heading: 90, pitch: 0, cell: { q: 12, r: 6 } };
+      localStorage.setItem("hexWorld.camera", JSON.stringify(all));
+    }, twoId);
+    await reload();
+    await c.until(async () => (await c.text(".bar__world")).includes("World 2"), "the reload resumes World 2");
+    await c.until(async () => sameOrbit(await orbit(), two), "a walker on a missing tile falls back to the saved orbit", 20_000);
+    await restored("fallback");
+    await cp.waitForTimeout(3000);
+    check(!(await st()).walk?.on, "walk mode stays off");
+    check((await poses())[twoId]?.walk === null, "and the orbit pose replaces the stale walker");
+    await cctx.close();
+  }
+
+  // A blocked localStorage: the game loads and resumes its world with no stored camera.
+  {
+    const lctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await lctx.addInitScript(() => {
+      Object.defineProperty(window, "localStorage", {
+        configurable: true,
+        get() { throw new DOMException("The operation is insecure.", "SecurityError"); },
+      });
+    });
+    const lp = await open(lctx);
+    const l = helpers(lp);
+    await l.boot();
+    await lp.evaluate(() => { const h = window.hexWorld; h.selectTile("meadow"); h.placeTile(1, 0); });
+    await l.until(async () => (await l.text(".bar__world")).includes("Saved"), "localStorage blocked: the world autosaves");
+    await lp.evaluate(() => window.hexWorld.cmd({ cmd: "camera", pos: [60, 80, 60], look_at: [10, 0, 0] }));
+    await lp.waitForTimeout(2500);
+    await lp.reload();
+    await lp.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.state().play, null, { timeout: 90_000 });
+    await l.until(async () => (await l.play()).tiles.length === 2, "localStorage blocked: the game loads and resumes its world");
+    check((await l.text(".bar__world")).includes("World 1"), "localStorage blocked: the HUD runs");
+    await lctx.close();
+  }
+
   // ---------- Storage blocked: the game plays on and the bar says autosave is off ----------
   const blocked = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   await blocked.addInitScript(() => {

@@ -485,6 +485,21 @@ pub fn extend_play_view(play: &mut serde_json::Value, camera: Option<&Transform>
     map.insert("zoom".into(), zoom);
 }
 
+/// Adds `orbit` to the `play` state: the orbit camera's pose as a save stores it (`focus` in metres,
+/// `yaw` and `pitch` in radians, `distance` in metres), unrounded, so the overlay can put the camera
+/// back exactly with `camera`. While walking or in photo mode it is the orbit camera that leaving
+/// returns to. `null` without a camera.
+pub fn extend_play_orbit(play: &mut serde_json::Value, orbit: Option<&Transform>) {
+    let serde_json::Value::Object(map) = play else {
+        return;
+    };
+    let pose = orbit.map(|t| {
+        let c = crate::persist::camera_state(t);
+        serde_json::json!({ "focus": c.focus, "yaw": c.yaw, "pitch": c.pitch, "distance": c.distance })
+    });
+    map.insert("orbit".into(), pose.unwrap_or(serde_json::Value::Null));
+}
+
 /// `state().grade`: the active look preset, the default one, and every preset with its one-line
 /// description.
 pub fn grade_json(active: hex_render::Grade) -> serde_json::Value {
@@ -559,6 +574,11 @@ pub fn publish_state(
         extend_play_rise(&mut p, rises.report(), reduced.0);
         extend_play_view(&mut p, cameras.iter().next());
         crate::walk::extend_play_view(&mut p, &walk);
+        let orbit = walk
+            .orbit()
+            .or(session.saved.map(|s| s.transform))
+            .or(cameras.iter().next().copied());
+        extend_play_orbit(&mut p, orbit.as_ref());
         p
     });
     let state = serde_json::json!({
@@ -764,6 +784,41 @@ mod tests {
         assert_eq!(p["zoom"], serde_json::json!(100.0));
         extend_play_view(&mut p, None);
         assert!(p["focus"].is_null() && p["zoom"].is_null());
+    }
+
+    /// The overlay restores a viewer's camera by sending `camera` with `pos` on the orbit and
+    /// `look_at` at its focus, computed from `play.orbit`: that must give back the same pose.
+    #[test]
+    fn play_orbit_round_trips_through_the_camera_command() {
+        let t = crate::camera::place(Vec3::new(-40.0, 0.0, 25.0), -2.1, 0.6, 333.0);
+        let mut p = serde_json::json!({});
+        extend_play_orbit(&mut p, Some(&t));
+        let o = &p["orbit"];
+        let f = |v: &serde_json::Value| v.as_f64().unwrap();
+        let (yaw, pitch, dist) = (f(&o["yaw"]), f(&o["pitch"]), f(&o["distance"]));
+        let focus: Vec<f64> = o["focus"].as_array().unwrap().iter().map(f).collect();
+        assert!(
+            (yaw + 2.1).abs() < 1e-4 && (pitch - 0.6).abs() < 1e-4 && (dist - 333.0).abs() < 1e-2
+        );
+        let pos = [
+            focus[0] + pitch.cos() * yaw.sin() * dist,
+            focus[1] + pitch.sin() * dist,
+            focus[2] + pitch.cos() * yaw.cos() * dist,
+        ];
+        let cmd = serde_json::json!([{ "cmd": "camera", "pos": pos, "look_at": focus }]);
+        let Command::Camera { pos, look_at } = parse_script(&cmd.to_string()).unwrap()[0] else {
+            panic!("not a camera command");
+        };
+        let back = Transform::from_translation(pos.into()).looking_at(look_at.into(), Vec3::Y);
+        let (a, b) = (
+            crate::persist::camera_state(&t),
+            crate::persist::camera_state(&back),
+        );
+        assert!((Vec3::from_array(a.focus) - Vec3::from_array(b.focus)).length() < 1e-3);
+        assert!((a.yaw - b.yaw).abs() < 1e-5 && (a.pitch - b.pitch).abs() < 1e-5);
+        assert!((a.distance - b.distance).abs() < 1e-3);
+        extend_play_orbit(&mut p, None);
+        assert!(p["orbit"].is_null());
     }
 
     #[test]

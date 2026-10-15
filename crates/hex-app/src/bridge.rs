@@ -513,6 +513,7 @@ mod schema {
         crate::control::extend_play_rise(&mut place, rising, false);
         let view = Transform::from_xyz(0.0, 60.0, 80.0).looking_at(Vec3::ZERO, Vec3::Y);
         crate::control::extend_play_view(&mut place, Some(&view));
+        crate::control::extend_play_orbit(&mut place, Some(&view));
         g.apply(Action::SetTool(Tool::Bulldoze));
         g.apply(Action::Hover(Some(Axial::new(1, 0))));
         let bulldoze = g.state_json();
@@ -547,6 +548,7 @@ mod schema {
             "last_result": keys(&place["last_result"]),
             "tile": keys(&place["tiles"][0]),
             "rising": keys(&place["rising"][0]),
+            "orbit": keys(&place["orbit"]),
             "cell": keys(&place["hovered"]),
             "hovered_kind": ["empty", "slot", "tile"],
             "photo": keys(&photo),

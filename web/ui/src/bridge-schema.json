@@ -716,6 +716,12 @@
       "ok",
       "reason"
     ],
+    "orbit": [
+      "distance",
+      "focus",
+      "pitch",
+      "yaw"
+    ],
     "photo": [
       "agents_paused",
       "aperture",
@@ -745,6 +751,7 @@
       "inventory",
       "inventory_open",
       "last_result",
+      "orbit",
       "parked_cars",
       "photo_mode",
       "pinned",

@@ -230,6 +230,20 @@ export interface PlayState {
   focus: Vec3 | null;
   /** The camera's distance from `focus` in metres (§4.5 zoom range 12 to 2,500). */
   zoom: number | null;
+  /** The orbit camera's pose, unrounded (while walking or in photo mode, the one leaving returns to); null without a camera. */
+  orbit: OrbitPose | null;
+}
+
+/** `play.orbit`: the orbit camera as a save stores it. `camera` with `pos` on the orbit and `look_at` at `focus` puts it back. */
+export interface OrbitPose {
+  /** The ground point the camera orbits, world metres. */
+  focus: Vec3;
+  /** Radians about +Y, from +Z toward +X: the camera sits at focus + (cos pitch sin yaw, sin pitch, cos pitch cos yaw) × distance. */
+  yaw: number;
+  /** Radians above the ground plane. */
+  pitch: number;
+  /** Metres from `focus`. */
+  distance: number;
 }
 
 /** A photo export in flight: its name, scale and PNG size in pixels. */
@@ -380,6 +394,10 @@ export interface State {
   grass?: GrassState;
   /** The game camera: position and unit forward vector in world metres. */
   camera?: { pos: Vec3; forward: Vec3 } | null;
+  /** Placed tiles hidden until their kit packs arrive (they are not walkable ground yet). */
+  pack_waiting?: { q: number; r: number; tile: string; packs: string[] }[] | null;
+  /** Every kit pack's status. */
+  packs?: Record<string, "idle" | "loading" | "ready"> | null;
 }
 
 export type Rect = [left: number, top: number, right: number, bottom: number];
@@ -522,7 +540,9 @@ export const STATE_FIELDS = {
     reduced_motion: true,
     focus: true,
     zoom: true,
+    orbit: true,
   }),
+  orbit: keys<OrbitPose>({ focus: true, yaw: true, pitch: true, distance: true }),
   ghost: keys<Ghost>({ q: true, r: true, tile: true, rotation: true, valid: true, legal_rotations: true, edges: true }),
   bulldoze: keys<BulldozeTarget>({ q: true, r: true, allowed: true, reason: true }),
   last_result: keys<ActionResult>({ action: true, ok: true, cell: true, reason: true }),
