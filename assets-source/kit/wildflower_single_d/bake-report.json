@@ -1,0 +1,85 @@
+{
+  "bakeStats": {
+    "alphaCoverageByMip": {
+      "side_0": [
+        0.1765,
+        0.1648,
+        0.1677,
+        0.1631,
+        0.1484,
+        0.125,
+        0.0,
+        0.0
+      ],
+      "side_1": [
+        0.1755,
+        0.1655,
+        0.1694,
+        0.1621,
+        0.1445,
+        0.1406,
+        0.0,
+        0.0
+      ],
+      "top_0": [
+        0.3039,
+        0.3004,
+        0.3013,
+        0.3057,
+        0.3008,
+        0.2812,
+        0.25,
+        0.0,
+        0.0
+      ],
+      "top_1": [
+        0.3154,
+        0.3129,
+        0.3115,
+        0.3154,
+        0.3164,
+        0.2969,
+        0.25,
+        0.0,
+        0.0
+      ]
+    },
+    "alphaCutoff": 0.5
+  },
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 512
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 64
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "none (numpy-drawn tiles, no Cycles bake)",
+  "extentZ": [
+    -0.05000000074505806,
+    0.699999988079071
+  ],
+  "heightM": 0.7,
+  "marginPx": 0,
+  "receiverSignature": "8af647f9dd0c045ad87caf9a036fd5f9d8e85ac00c9e0f228909aced88cd9e3f",
+  "samples": 0,
+  "sinkM": 0.05,
+  "skipped": false,
+  "species": "clover",
+  "texelDensityPxPerM": {
+    "max": 980.7692530802783,
+    "median": 679.3304061156913,
+    "min": 679.3303791215257
+  }
+}

@@ -361,7 +361,7 @@ fn ghost_scatter<'a>(
         .instances
         .iter()
         .filter_map(|i| {
-            let piece = def.props.scatter.get(i.rule as usize)?.piece.as_str();
+            let piece = i.piece(def.props.scatter.get(i.rule as usize)?.piece.as_str());
             let role = if piece.contains("tree") {
                 Role::Tree
             } else {
@@ -410,7 +410,7 @@ pub fn sync(
                     .props
                     .scatter
                     .iter()
-                    .map(|r| in_kit(r.piece.as_str()))
+                    .map(|r| scatter::group(r.piece.as_str()).all(&in_kit))
                     .collect(),
             })
         });
@@ -651,6 +651,7 @@ mod tests {
             yaw: x,
             scale: 1.1,
             order: 0,
+            variant: 0,
         };
         let layout = Layout {
             instances: vec![inst(0, 1.0), inst(1, 2.0), inst(0, 3.0)],

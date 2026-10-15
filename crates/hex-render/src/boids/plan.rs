@@ -188,6 +188,20 @@ const DOME_TOP: f32 = 0.9;
 /// `tree_forest`'s spire top and its crown radius at 10 m (`_forest.HEIGHT`, `crown_r(10.0)`).
 const SPRUCE_TOP: f32 = 16.0;
 const SPRUCE_R10: f32 = 1.8;
+/// The spruce variants' spire tops and a crown ring (height, radius), from their `_spruce` shapes
+/// (`HEIGHT` less 0.2 m, `crown_r` at about 0.6 of the height): `tree_forest_b`, `tree_forest_c`.
+const SPRUCE_B: (f32, f32, f32) = (20.3, 13.0, 1.5);
+const SPRUCE_C: (f32, f32, f32) = (8.0, 5.0, 1.35);
+
+/// A spruce's perches: its spire top and three points on a crown ring.
+fn spruce_perches(top: f32, ring_y: f32, ring_r: f32) -> Vec<Vec3> {
+    let mut v = vec![Vec3::new(0.0, top, 0.0)];
+    v.extend((0..3).map(|k| {
+        let a = (120.0 * k as f32 + 30.0).to_radians();
+        Vec3::new(a.cos() * ring_r, ring_y, a.sin() * ring_r)
+    }));
+    v
+}
 
 /// A point on an oak clump's dome at `azimuth` and `elevation` (radians, Blender frame), returned
 /// in the runtime frame (glTF Y up: Blender (x, y, z) is (x, z, -y)).
@@ -238,14 +252,9 @@ pub fn canopy_perches(piece: &str) -> Vec<Vec3> {
                     + Vec3::Y * (lift * OAK_SCALE)
             })
             .collect(),
-        "tree_forest" => {
-            let mut v = vec![Vec3::new(0.0, SPRUCE_TOP, 0.0)];
-            v.extend((0..3).map(|k| {
-                let a = (120.0 * k as f32 + 30.0).to_radians();
-                Vec3::new(a.cos() * SPRUCE_R10, 10.0, a.sin() * SPRUCE_R10)
-            }));
-            v
-        }
+        "tree_forest" => spruce_perches(SPRUCE_TOP, 10.0, SPRUCE_R10),
+        "tree_forest_b" => spruce_perches(SPRUCE_B.0, SPRUCE_B.1, SPRUCE_B.2),
+        "tree_forest_c" => spruce_perches(SPRUCE_C.0, SPRUCE_C.1, SPRUCE_C.2),
         _ => vec![],
     }
 }
@@ -296,7 +305,12 @@ pub struct Roost {
 }
 
 /// Tree pieces with canopy perches: what [`BoidPlan::set_world`] watches arrive in the kit.
-pub const PERCH_PIECES: [&str; 2] = ["tree_hero_oak", "tree_forest"];
+pub const PERCH_PIECES: [&str; 4] = [
+    "tree_hero_oak",
+    "tree_forest",
+    "tree_forest_b",
+    "tree_forest_c",
+];
 
 /// Bird roosts of the placed tiles from their hero trees alone ([`roosts_with`], no scatter).
 pub fn roosts(

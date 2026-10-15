@@ -1,0 +1,416 @@
+{
+  "pieceId": "tree_forest_c",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/tree_forest_c.py",
+    "sha256": "9a3bfc5bbe8c0c327d41adfad8bf9ea6ffd21653489a0c020df2897434ab8db0"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_forest.py",
+      "sha256": "70af5de2175c0c1d733cfb72c3befcb400e586fe051507e96cf41b81e145c3b1"
+    },
+    {
+      "path": "scripts/blender/kit/_leaves.py",
+      "sha256": "d732efec23b5b9a52dca841bfc97f70fb9ab604b8f039eb6029fffaabb2ccf4a"
+    },
+    {
+      "path": "scripts/blender/kit/_spruce.py",
+      "sha256": "fd09a53c0febad8acdf0948abf2d37cb6fb7352de326491544bb0fd2075e9db5"
+    },
+    {
+      "path": "scripts/blender/kit/_tree.py",
+      "sha256": "037e8be778813c929864130240aa65e05042c153b8c386d3920566b6867d81ce"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.3,
+    "bakeStats": {
+      "barkAo": {
+        "mean": 0.8442947864532471,
+        "min": 0.697411835193634,
+        "p01": 0.697411835193634,
+        "p05": 0.7200000286102295,
+        "texels": 1158
+      },
+      "needleAlphaCoverageByMip": [
+        0.5608,
+        0.5635,
+        0.5694,
+        0.5691,
+        0.5676,
+        0.5666,
+        0.5909,
+        0.6,
+        0.625,
+        1
+      ]
+    },
+    "barkTile": {
+      "aoTexelDensityPxPerM": {
+        "max": 16.374772765732164,
+        "median": 16.372183276042886,
+        "min": 9.367528296714337
+      },
+      "set": "bark",
+      "tileUvScale": 32,
+      "uvPerM": 0.015625
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.12,
+    "cards": {
+      "filler": 86,
+      "frondTiles": 2,
+      "main": 86
+    },
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 1024
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "marginPx": 8,
+    "maxRayDistanceM": 0.3,
+    "receiverSignature": "1ab7da12e423cc1ecd632ede4f7f1c72d2036dba5d11112b2ec56446d8b1dfa0",
+    "samples": 32,
+    "shape": {
+      "HEIGHT": 8.2,
+      "RMAX": 2.25,
+      "TRUNK_R0": 0.14,
+      "TRUNK_R1": 0.025,
+      "WHORLS": 15,
+      "Z0": 1.55,
+      "ZTOP": 7.3,
+      "flare": 0.08,
+      "original": "tree_forest"
+    },
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "tree_forest_c_bark": {
+        "max": 523.9927285034292,
+        "median": 523.9098648333724,
+        "min": 299.7609054948588
+      },
+      "tree_forest_c_needles": {
+        "max": 5288.575420291992,
+        "median": 647.7578566470702,
+        "min": 297.46909939740146
+      }
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1600,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 792,
+      "ratio": 0.495
+    },
+    {
+      "lod": 2,
+      "tris": 164,
+      "ratio": 0.1025
+    }
+  ],
+  "collider": {
+    "node": "tree_forest_c_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "tree_forest_c_bark": {
+      "max": 523.9927285034292,
+      "median": 523.9098648333724,
+      "min": 299.7609054948588
+    },
+    "tree_forest_c_needles": {
+      "max": 5288.575420291992,
+      "median": 647.7578566470702,
+      "min": 297.46909939740146
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 1311719,
+        "astc": 1297386
+      },
+      "glbBytes": 221556
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 471880,
+        "sha256": "09af653aa39679c898a17bbbe4aa6ad49a6db5d866edd59f3f34282b073256a2"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 471786,
+        "sha256": "b1665d6260807b87f3dc8ac6d2eca7d87e23b593bd84bc7a3ac88291f7795bf7"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 966082,
+        "sha256": "4fd30764b56857f340ca94dd03443ff311f972d38a5a706fb0a055d8f4ba69b6"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 7630,
+        "sha256": "178117440679dd3e616d28df47a6b9b1aa436e71903e786a1ed8e2e6fb3eb6e8"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 7439,
+        "sha256": "a83e760fdf748464f7e81ccb55ffcf7eed3cf7cfa09aa7ea5be406b5200af978"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 24735,
+        "sha256": "94068840d944564ad2962e5419b7cc9a794cf12d43887a21209a0b3c4c698805"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 509072,
+        "sha256": "67ba030873b738a8bb05f1df4199f4682f03a26e9a12da749b0b9eb09c7463bc"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 497317,
+        "sha256": "29ce5cf779c75014a36eafb7c7f7af633ce3724a5e36a11e121d395895adc8a5"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 1036879,
+        "sha256": "54381f4a606ec4fd04147e0a7acd5852da2cfde825a0d461657d9b935cd7124a"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 323137,
+        "sha256": "e37ad8f97739305ad46f3f1247039f3c7a8f7bb31d6c009d09d2f213c2e0f208"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 320844,
+        "sha256": "280744817426ef2daf04adbf9efe0090df587a75abe4fc24f2ae0a81344129a7"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/tree_forest_c/tree_forest_c.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 524214,
+        "sha256": "1030b2256e10b61b241b42cf2a79aac7ff23969707d54d44bac1c97300d9b3b7"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.glb",
+      "sha256": "d09a294da6ecd4d947921da19d354d7d261f2612a0d4961a8bf8b82e0d36bcea",
+      "bytes": 221556
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.albedo.bc7.ktx2",
+      "sha256": "09af653aa39679c898a17bbbe4aa6ad49a6db5d866edd59f3f34282b073256a2",
+      "bytes": 471880
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.albedo.astc.ktx2",
+      "sha256": "b1665d6260807b87f3dc8ac6d2eca7d87e23b593bd84bc7a3ac88291f7795bf7",
+      "bytes": 471786
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.albedo.png",
+      "sha256": "4fd30764b56857f340ca94dd03443ff311f972d38a5a706fb0a055d8f4ba69b6",
+      "bytes": 966082
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.masks.bc7.ktx2",
+      "sha256": "178117440679dd3e616d28df47a6b9b1aa436e71903e786a1ed8e2e6fb3eb6e8",
+      "bytes": 7630
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.masks.astc.ktx2",
+      "sha256": "a83e760fdf748464f7e81ccb55ffcf7eed3cf7cfa09aa7ea5be406b5200af978",
+      "bytes": 7439
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.masks.png",
+      "sha256": "94068840d944564ad2962e5419b7cc9a794cf12d43887a21209a0b3c4c698805",
+      "bytes": 24735
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.normal.bc7.ktx2",
+      "sha256": "67ba030873b738a8bb05f1df4199f4682f03a26e9a12da749b0b9eb09c7463bc",
+      "bytes": 509072
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.normal.astc.ktx2",
+      "sha256": "29ce5cf779c75014a36eafb7c7f7af633ce3724a5e36a11e121d395895adc8a5",
+      "bytes": 497317
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.normal.png",
+      "sha256": "54381f4a606ec4fd04147e0a7acd5852da2cfde825a0d461657d9b935cd7124a",
+      "bytes": 1036879
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.orm.bc7.ktx2",
+      "sha256": "e37ad8f97739305ad46f3f1247039f3c7a8f7bb31d6c009d09d2f213c2e0f208",
+      "bytes": 323137
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.orm.astc.ktx2",
+      "sha256": "280744817426ef2daf04adbf9efe0090df587a75abe4fc24f2ae0a81344129a7",
+      "bytes": 320844
+    },
+    {
+      "path": "assets/kit/p1/tree_forest_c/tree_forest_c.orm.png",
+      "sha256": "1030b2256e10b61b241b42cf2a79aac7ff23969707d54d44bac1c97300d9b3b7",
+      "bytes": 524214
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/forest/ref-1.jpg",
+      "sha256": "91bec450432eaf9da8debc4f88820bc7da6b4fbbb17c6586e22f0ae1afc09ac6",
+      "sourceSha256": "3c9aa8f425d216ab897c74a17ba4d998a008fa7b0672024f9988a8813201e31d",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "23f27fd1-0218-42b6-92c4-0d22142c11e5",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), covered by a dense mixed forest: a few broad rounded oaks among many tall spruce conifers with dark green needle tiers, undergrowth of ferns, shrubs and saplings, a fallen mossy log and leaf litter on the forest floor, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/forest/ref-2.jpg",
+      "sha256": "fd5b8a1ebb2c3df56a73f28095a39d07c6c7e303dfcdb79e34d4e05ce9164734",
+      "sourceSha256": "394bbf09c7fab300ef2e4e781ee047384e0bbdba2b6015750bfebdef5ae88ec8",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e3e4f64b-d10d-4a10-b22a-0fe15b9fee0e",
+      "prompt": "Close-up of a stylized-real spruce conifer and the forest undergrowth on a diorama tile: rough flaky bark, layered tiers of needle clusters, ferns, low shrubs, moss and leaf litter at the trunk base, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-15T03:00:38.857Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/forest/ref-1.jpg",
+        "assets-source/refs/forest/ref-2.jpg"
+      ],
+      "notes": "Approved: spruce among oaks, ferns, fallen log. ref-2 sits on a square fragment; tiles are hexagonal. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "new variant: young short spruce",
+      "notes": "Pending owner approval; not an approval. New PRD §6 variety piece: tree_forest's species, bark set and needle tiles; 8.2 m broad young cone. Review assets-source/kit/tree_forest_c/renders/ and the in-play shots in docs/checkpoints/prop-variants/. The controller records the owner's decision."
+    }
+  ]
+}

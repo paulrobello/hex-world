@@ -15,6 +15,15 @@
 //!   of its ground where the tile's seeded value noise ([`drift_noise`]) is highest, so its
 //!   instances gather in a few clustered drifts. The noise is tile-local and seeded from the tile
 //!   alone, so a tile needs no neighbour to scatter and redraws identically.
+//! - **Variants.** A rule names a piece; each instance draws one piece of its group ([`VARIANTS`]:
+//!   the piece and its `_b`, `_c`, … variants, PRD §6 Variety), picked by [`pick_variant`] from a
+//!   hash of the tile seed, the rule and the instance's place in it, so the dart stream is
+//!   untouched and the same seed draws the same mix. The rule's ground mask and spacing keep the
+//!   group's largest footprint clear ([`group_footprint`]); each instance stands and clears others
+//!   by its own. A rule draws once every piece of its group is in the kit.
+//! - **Vary.** A rule with `vary` (the meadow's single wildflowers) spreads evenly but keeps a dart
+//!   with probability 1 - vary × (1 - [`vary_noise`]), so its density varies gently over the cap
+//!   while its count stays exact.
 //! - **Ground.** An instance stands only on its piece's floor slots ([`floor_slots`]) of the topmost
 //!   LOD0 surface of the tile's base, centre and lane edge pieces, sampled the way the kit gate's
 //!   `surface_at` does: trees on `forest_base_floor` (the litter), rocks and wildflowers on either
@@ -94,11 +103,89 @@ const BUCKETS: usize = 33;
 /// The slots a scatter piece may stand on (the topmost LOD0 surface under its whole footprint).
 /// A piece not listed has none, so it is never placed.
 pub fn floor_slots(piece: &str) -> &'static [&'static str] {
-    match piece {
+    match family(piece) {
         "tree_forest" => &["forest_base_floor"],
         "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
+        "wildflower_single" => &["meadow_base_cap"],
         _ => &[],
     }
+}
+
+/// Variants of a scatter piece (PRD §6 Variety), after the piece itself: a rule names the first
+/// and each of its instances draws one of the group, picked by [`pick_variant`].
+pub const VARIANTS: [(&str, &[&str]); 4] = [
+    ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
+    ("rock_small", &["rock_small_b", "rock_small_c"]),
+    (
+        "wildflower_clump",
+        &["wildflower_clump_b", "wildflower_clump_c"],
+    ),
+    (
+        "wildflower_single",
+        &[
+            "wildflower_single_b",
+            "wildflower_single_c",
+            "wildflower_single_d",
+        ],
+    ),
+];
+
+fn extra_variants(piece: &str) -> &'static [&'static str] {
+    VARIANTS
+        .iter()
+        .find(|(id, _)| *id == piece)
+        .map_or(&[], |(_, v)| *v)
+}
+
+/// The piece a rule naming `piece` draws as variant `v` (0 is `piece` itself).
+pub fn variant_piece(piece: &str, v: u8) -> &str {
+    match v {
+        0 => piece,
+        _ => extra_variants(piece)
+            .get(usize::from(v) - 1)
+            .copied()
+            .unwrap_or(piece),
+    }
+}
+
+/// `piece` and its variants.
+pub fn group(piece: &str) -> impl Iterator<Item = &str> {
+    std::iter::once(piece).chain(extra_variants(piece).iter().copied())
+}
+
+/// The piece a variant belongs to (itself when it is not a variant).
+pub fn family(piece: &str) -> &str {
+    VARIANTS
+        .iter()
+        .find(|(_, v)| v.contains(&piece))
+        .map_or(piece, |(id, _)| *id)
+}
+
+/// The largest ground and crown reach over `piece`'s group: what a rule's ground mask and spacing
+/// keep clear, so any variant fits wherever the rule may place one.
+pub fn group_footprint(piece: &str) -> Footprint {
+    group(piece).map(footprint).fold(
+        Footprint {
+            ground: 0.0,
+            crown: 0.0,
+        },
+        |a, f| Footprint {
+            ground: a.ground.max(f.ground),
+            crown: a.crown.max(f.crown),
+        },
+    )
+}
+
+/// The variant of the `n`-th instance placed by rule `rule` on a tile with seed `seed`, among
+/// `count`: a hash of its own, so picking it never moves the placement stream's darts, and the
+/// same seed always draws the same mix.
+pub fn pick_variant(seed: u64, rule: usize, n: u32, count: usize) -> u8 {
+    if count <= 1 {
+        return 0;
+    }
+    let key = ((rule as u64) << 32) | u64::from(n);
+    let mut r = Rng(seed ^ 0x7A21_C3E9_55B0_4D1F ^ key.wrapping_mul(0x9E37_79B9_7F4A_7C15));
+    r.below(count) as u8
 }
 
 /// Slots no scatter may stand on whatever [`floor_slots`] says: roads, river beds and banks,
@@ -127,12 +214,26 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 7] = [
+pub const FOOTPRINTS: [(&str, Footprint); 17] = [
     (
         "tree_forest",
         Footprint {
             ground: 0.51,
             crown: 4.1,
+        },
+    ),
+    (
+        "tree_forest_b",
+        Footprint {
+            ground: 0.6,
+            crown: 3.2,
+        },
+    ),
+    (
+        "tree_forest_c",
+        Footprint {
+            ground: 0.27,
+            crown: 2.85,
         },
     ),
     (
@@ -143,9 +244,65 @@ pub const FOOTPRINTS: [(&str, Footprint); 7] = [
         },
     ),
     (
+        "rock_small_b",
+        Footprint {
+            ground: 1.03,
+            crown: 0.0,
+        },
+    ),
+    (
+        "rock_small_c",
+        Footprint {
+            ground: 1.07,
+            crown: 0.0,
+        },
+    ),
+    (
         "wildflower_clump",
         Footprint {
             ground: 0.9,
+            crown: 0.0,
+        },
+    ),
+    (
+        "wildflower_clump_b",
+        Footprint {
+            ground: 0.96,
+            crown: 0.0,
+        },
+    ),
+    (
+        "wildflower_clump_c",
+        Footprint {
+            ground: 0.96,
+            crown: 0.0,
+        },
+    ),
+    (
+        "wildflower_single",
+        Footprint {
+            ground: 0.25,
+            crown: 0.0,
+        },
+    ),
+    (
+        "wildflower_single_b",
+        Footprint {
+            ground: 0.25,
+            crown: 0.0,
+        },
+    ),
+    (
+        "wildflower_single_c",
+        Footprint {
+            ground: 0.25,
+            crown: 0.0,
+        },
+    ),
+    (
+        "wildflower_single_d",
+        Footprint {
+            ground: 0.25,
             crown: 0.0,
         },
     ),
@@ -441,7 +598,7 @@ fn mask(
     rule: &ScatterRule,
 ) -> Mask {
     let piece = rule.piece.as_str();
-    let fp = footprint(piece);
+    let fp = group_footprint(piece);
     let floors = floor_slots(piece);
     let ok_slot: Vec<bool> = surface
         .slots
@@ -538,9 +695,16 @@ pub struct Instance {
     pub scale: f32,
     /// Rank by distance from the tile centre: the rise grows instances in this order.
     pub order: u8,
+    /// Which piece of its rule's group it draws ([`variant_piece`]; 0 is the rule's own piece).
+    pub variant: u8,
 }
 
 impl Instance {
+    /// The piece it draws, for a rule naming `rule_piece`.
+    pub fn piece<'a>(&self, rule_piece: &'a str) -> &'a str {
+        variant_piece(rule_piece, self.variant)
+    }
+
     pub fn rotation(&self) -> Quat {
         Quat::from_rotation_y(self.yaw)
     }
@@ -575,7 +739,7 @@ impl Layout {
         let mut h: u64 = 0xCBF2_9CE4_8422_2325;
         for i in &self.instances {
             let words = [
-                u32::from(i.rule),
+                u32::from(i.rule) | (u32::from(i.variant) << 8),
                 i.pos.x.to_bits(),
                 i.pos.y.to_bits(),
                 i.pos.z.to_bits(),
@@ -637,6 +801,15 @@ pub fn drift_noise(seed: u64, p: Vec2) -> f32 {
         / 1.35
 }
 
+/// The noise a `vary` rule thins its even spread by (`ScatterRule::vary`), in [0, 1]: the drift
+/// noise on a seed of its own (single flowers do not just follow the clumps' drifts), stretched
+/// by a smoothstep over its middle, where the two smoothed octaves spend most of their values.
+pub fn vary_noise(seed: u64, p: Vec2) -> f32 {
+    let n = drift_noise(seed.rotate_left(29) ^ 0x51F1_E5A3_0C77_9B2D, p);
+    let t = ((n - 0.3) / 0.4).clamp(0.0, 1.0);
+    t * t * (3.0 - 2.0 * t)
+}
+
 /// The cells of `mask` a drift rule grows on: the [`DRIFT_SHARE`] with the highest drift noise.
 fn drift_cells(seed: u64, mask: &Mask) -> Vec<u32> {
     let mut scored: Vec<(f32, u32)> = mask
@@ -686,7 +859,8 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
     let mut placed: Vec<(Vec2, f32, usize)> = vec![];
     for (ri, rule) in def.props.scatter.iter().enumerate() {
         let piece = rule.piece.as_str();
-        let fp = footprint(piece);
+        let fp = group_footprint(piece);
+        let variants = group(piece).count();
         let mask = &ground.masks[ri];
         let want = (rule.density.max(0.0) * CAP_AREA / 100.0 + rng.unit()).floor() as u32;
         out.planned.push(want);
@@ -709,39 +883,46 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
         }
         let jitter = scale_jitter(fp);
         let floors = floor_slots(piece);
+        let vary = rule.vary.clamp(0.0, 1.0);
         let mut n = 0;
         for _ in 0..ATTEMPTS * want + 64 {
             if n == want {
                 break;
             }
+            let variant = pick_variant(seed, ri, n, variants);
+            let reach = footprint(variant_piece(piece, variant)).ground;
             let k = cells[rng.below(cells.len())] as usize;
             let p = Vec2::new(
                 cell_centre(k % CELLS) + (rng.unit() - 0.5) * RASTER,
                 cell_centre(k / CELLS) + (rng.unit() - 0.5) * RASTER,
             );
+            if vary > 0.0 && rng.unit() > 1.0 - vary * (1.0 - vary_noise(seed, p)) {
+                continue;
+            }
             let clear = placed.iter().all(|&(q, g, r)| {
                 let d = p.distance(q);
                 if r == ri {
                     d >= spacing
                 } else {
-                    d >= g + fp.ground
+                    d >= g + reach
                 }
             });
             if !clear {
                 continue;
             }
-            let Some(y) = stand(&ground.surface, p, floors, fp.ground) else {
+            let Some(y) = stand(&ground.surface, p, floors, reach) else {
                 continue;
             };
             let yaw = rng.unit() * TAU;
             let scale = 1.0 + jitter * (2.0 * rng.unit() - 1.0);
-            placed.push((p, fp.ground, ri));
+            placed.push((p, reach, ri));
             out.instances.push(Instance {
                 rule: ri as u8,
                 pos: Vec3::new(p.x, y, p.y),
                 yaw,
                 scale,
                 order: 0,
+                variant,
             });
             n += 1;
         }
@@ -817,6 +998,13 @@ pub struct TileScatter {
     pub pieces: Vec<String>,
 }
 
+impl TileScatter {
+    /// The piece instance `i` draws: its rule's piece or one of its variants.
+    pub fn piece_of(&self, i: &Instance) -> &str {
+        i.piece(self.pieces[i.rule as usize].as_str())
+    }
+}
+
 /// The scatter of every drawn tile, for the boids' roosts; `revision` changes with it.
 #[derive(Resource, Default)]
 pub struct ScatterLayouts {
@@ -832,7 +1020,7 @@ impl ScatterLayouts {
                 .instances
                 .iter()
                 .filter(|i| t.drawn[i.rule as usize])
-                .map(move |i| (*c, t.pieces[i.rule as usize].as_str(), i))
+                .map(move |i| (*c, t.piece_of(i), i))
         })
     }
 }
@@ -900,7 +1088,7 @@ fn spawn_group(
                 count,
                 kind: PropKind::Tree,
             };
-            let piece = def.props.scatter[inst.rule as usize].piece.as_str();
+            let piece = inst.piece(def.props.scatter[inst.rule as usize].piece.as_str());
             spawn_kit_parts(p, kit, piece, inst.transform(), Some((cell, role)));
         }
     });
@@ -928,8 +1116,11 @@ fn report(
     for (c, t) in tiles {
         let l = &t.layout;
         let drawn = |i: usize| if t.drawn[i] { l.placed(i) } else { 0 };
-        for (i, p) in t.pieces.iter().enumerate() {
-            *drawn_by_piece.entry(p.as_str()).or_default() += drawn(i);
+        for p in &t.pieces {
+            drawn_by_piece.entry(p.as_str()).or_default();
+        }
+        for i in l.instances.iter().filter(|i| t.drawn[i.rule as usize]) {
+            *drawn_by_piece.entry(t.piece_of(i)).or_default() += 1;
         }
         placed_total += l.instances.len();
         rows.push(format!(
@@ -1038,7 +1229,7 @@ pub fn sync(
             .props
             .scatter
             .iter()
-            .map(|r| kit.contains_key(r.piece.as_str()))
+            .map(|r| group(r.piece.as_str()).all(|p| kit.contains_key(p)))
             .collect();
         let key = Key {
             tile: def.id.clone(),
@@ -1159,6 +1350,7 @@ mod tests {
             density,
             lane_clearance: 0.0,
             drift: false,
+            vary: 0.0,
         }
     }
 
@@ -1227,8 +1419,8 @@ mod tests {
                     for inst in &l.instances {
                         let r = &def.props.scatter[inst.rule as usize];
                         let piece = r.piece.as_str();
-                        let fp = footprint(piece);
-                        let floors = floor_slots(piece);
+                        let fp = footprint(inst.piece(piece));
+                        let floors = floor_slots(inst.piece(piece));
                         let mut probes = vec![Vec3::ZERO];
                         probes.extend(
                             ring16()
@@ -1322,7 +1514,7 @@ mod tests {
                     );
                     assert!((n as f32 - want).abs() < 1.0, "{id}: {n} vs {want}");
                     sums[ri] += n;
-                    let fp = footprint(r.piece.as_str());
+                    let fp = group_footprint(r.piece.as_str());
                     let pts: Vec<Vec2> = l
                         .instances
                         .iter()
@@ -1425,6 +1617,85 @@ mod tests {
         w.bulldoze(cell).unwrap();
         assert!(w.undo());
         assert_eq!(scatter(&w), first, "undo of a bulldoze");
+    }
+
+    /// PRD §6 Variety: a rule's instances draw every piece of its group over a few tiles, the same
+    /// seed draws the same mix, and every variant is a known piece of its family with a footprint.
+    #[test]
+    fn instances_draw_every_variant_of_their_rule() {
+        let c = catalog();
+        for (id, rule) in [("forest", 0), ("forest", 1), ("meadow", 0), ("meadow", 2)] {
+            let def = c.get(id).unwrap();
+            let g = prepared(def).unwrap();
+            let piece = def.props.scatter[rule].piece.as_str();
+            let mut seen = std::collections::BTreeSet::new();
+            for seed in 0..12u64 {
+                let l = layout(def, seed, &g);
+                assert_eq!(l, layout(def, seed, &g), "{id}: same seed");
+                for i in l.instances.iter().filter(|i| i.rule as usize == rule) {
+                    seen.insert(i.piece(piece).to_owned());
+                }
+            }
+            let want: std::collections::BTreeSet<String> =
+                group(piece).map(str::to_owned).collect();
+            assert_eq!(seen, want, "{id} {piece}");
+        }
+        for (id, variants) in VARIANTS {
+            for v in variants {
+                assert_eq!(family(v), id);
+                assert!(
+                    FOOTPRINTS.iter().any(|(f, _)| f == v),
+                    "{v} has no footprint"
+                );
+                assert_eq!(floor_slots(v), floor_slots(id));
+            }
+        }
+    }
+
+    /// A `vary` rule (the meadow's single wildflowers) stands where its seeded noise is high more
+    /// often than its ground does on average, so the field's density varies gently, never in a grid.
+    #[test]
+    fn single_flowers_thin_by_their_seeded_noise() {
+        let c = catalog();
+        let def = c.get("meadow").unwrap();
+        let (ri, r) = def
+            .props
+            .scatter
+            .iter()
+            .enumerate()
+            .find(|(_, r)| r.piece.as_str() == "wildflower_single")
+            .unwrap();
+        assert!(r.vary > 0.0 && !r.drift);
+        let g = prepared(def).unwrap();
+        let (mut at, mut ground) = (0.0, 0.0);
+        for seed in 0..16u64 {
+            let l = layout(def, seed, &g);
+            let pts: Vec<Vec2> = l
+                .instances
+                .iter()
+                .filter(|i| i.rule as usize == ri)
+                .map(|i| i.pos.xz())
+                .collect();
+            assert_eq!(pts.len() as u32, l.planned[ri]);
+            at += pts.iter().map(|p| vary_noise(seed, *p)).sum::<f32>() / pts.len() as f32;
+            let cells = &g.masks[ri].cells;
+            ground += cells
+                .iter()
+                .map(|&k| {
+                    let k = k as usize;
+                    vary_noise(
+                        seed,
+                        Vec2::new(cell_centre(k % CELLS), cell_centre(k / CELLS)),
+                    )
+                })
+                .sum::<f32>()
+                / cells.len() as f32;
+        }
+        let (at, ground) = (at / 16.0, ground / 16.0);
+        assert!(
+            at > ground + 0.03,
+            "noise at flowers {at} vs ground {ground}"
+        );
     }
 
     /// The footprint table matches the kit: ground reach is the collider's, crown reach the widest

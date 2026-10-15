@@ -99,7 +99,16 @@ pub const WATER_MARGIN: f32 = 0.3;
 pub const PROP_GAP: f32 = 0.05;
 /// Soft scatter pieces grass grows in among (owner 2026-10-14: wildflowers had a bare ring around
 /// them), with the radius (m, before the instance's scale) of the dense centre it keeps clear.
-pub const GROWS_THROUGH: &[(&str, f32)] = &[("wildflower_clump", 0.2)];
+/// Single-stem wildflowers keep no centre: grass grows right up to the stem.
+pub const GROWS_THROUGH: &[(&str, f32)] = &[
+    ("wildflower_clump", 0.2),
+    ("wildflower_clump_b", 0.2),
+    ("wildflower_clump_c", 0.2),
+    ("wildflower_single", 0.0),
+    ("wildflower_single_b", 0.0),
+    ("wildflower_single_c", 0.0),
+    ("wildflower_single_d", 0.0),
+];
 const SALT: u64 = 0x6A55_B1AD_E5C0_FFEE;
 /// The shared blade mesh: two crossed planes (an X from above, so the blade holds a silhouette from
 /// any side), each two corners at the root, two at mid height (the 1 - t² taper) and one at the tip,
@@ -353,10 +362,10 @@ pub fn exclusions(def: &TileDef, instances: &[Instance], pieces: &[String]) -> V
         })
         .collect();
     out.extend(instances.iter().filter_map(|i| {
-        let piece = pieces.get(i.rule as usize)?;
+        let piece = i.piece(pieces.get(i.rule as usize)?);
         let radius = GROWS_THROUGH
             .iter()
-            .find(|(id, _)| *id == piece.as_str())
+            .find(|(id, _)| *id == piece)
             .map_or_else(|| scatter::footprint(piece).ground, |(_, core)| *core);
         Some((i.pos.xz(), radius * i.scale + PROP_GAP))
     }));
@@ -1105,6 +1114,7 @@ mod tests {
             yaw: 0.0,
             scale: 1.0,
             order: rule,
+            variant: 0,
         };
         let ex = exclusions(def, &[at(0, -4.0), at(1, 4.0)], &pieces);
         let [.., flower, rock] = ex.as_slice() else {

@@ -52,14 +52,19 @@ pub const MAX_WADE: f32 = 0.6;
 pub const MAX_STEP: f32 = 0.4;
 /// Longest sub-step (m) a move is checked in.
 const SUBSTEP: f32 = 0.1;
-/// Pieces whose collider blocks the walker. Wildflowers and the ground pieces do not.
-pub const OBSTACLES: [&str; 6] = [
+/// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
+/// pieces do not.
+pub const OBSTACLES: [&str; 10] = [
     "house_cottage",
     "house_twostorey",
     "windmill",
     "tree_hero_oak",
     "tree_forest",
+    "tree_forest_b",
+    "tree_forest_c",
     "rock_small",
+    "rock_small_b",
+    "rock_small_c",
 ];
 
 /// Why a move stopped.
@@ -548,7 +553,7 @@ impl WalkGround {
             if let Some(s) = scatter.get(&t.cell).filter(|s| s.tile == t.tile) {
                 for inst in &s.layout.instances {
                     let rule = inst.rule as usize;
-                    let piece = s.pieces[rule].as_str();
+                    let piece = s.piece_of(inst);
                     if s.drawn[rule] && OBSTACLES.contains(&piece) {
                         let (sh, t) = (shape(piece), root * inst.transform());
                         obs.push(Obstacle {
@@ -1111,7 +1116,7 @@ mod tests {
         let g = world(&[(0, 0, "forest", 0), (1, 0, "meadow", 0)]);
         let trees: Vec<&Obstacle> = g.obstacles[&Axial::ORIGIN]
             .iter()
-            .filter(|o| o.piece == "tree_forest")
+            .filter(|o| o.piece.starts_with("tree_forest"))
             .collect();
         assert!(trees.len() > 10, "{} spruces", trees.len());
         // Walk at a trunk from 3 m away along a line no other obstacle crosses.
@@ -1127,7 +1132,7 @@ mod tests {
                     continue;
                 }
                 let s = walk(&g, start, c - start, 3.0);
-                if s.blocked != Some(Blocked::Obstacle("tree_forest".into())) {
+                if s.blocked != Some(Blocked::Obstacle(t.piece.clone())) {
                     continue;
                 }
                 let d = s.pos.xz().distance(c);
@@ -1148,8 +1153,12 @@ mod tests {
     #[test]
     fn water_and_the_map_edge_stop_the_walker() {
         let g = world(&[(0, 0, "meadow", 0), (0, 1, "beach", 0), (1, 1, "ocean", 0)]);
-        // The map edge: walk east off the lone meadow row.
-        let s = walk(&g, centre(0, 0), Vec2::X, 30.0);
+        // The map edge: walk east off the lone meadow row, on a line no scattered rock crosses.
+        let s = [0.0, 2.0, -2.0, 4.0, -4.0]
+            .into_iter()
+            .map(|dz| walk(&g, centre(0, 0) + Vec2::new(0.0, dz), Vec2::X, 30.0))
+            .find(|s| !matches!(s.blocked, Some(Blocked::Obstacle(_))))
+            .expect("a line east that no rock crosses");
         assert_eq!(s.blocked, Some(Blocked::Edge));
         let apothem = HEX_RADIUS * 3f32.sqrt() / 2.0;
         let x = s.pos.x - centre(0, 0).x;

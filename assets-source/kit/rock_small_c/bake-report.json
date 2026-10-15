@@ -1,0 +1,113 @@
+{
+  "aoDistanceM": 0.25,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.3926757276058197,
+      "min": 0.2222222536802292,
+      "p01": 0.24836604297161102,
+      "p05": 0.30849674344062805,
+      "texels": 630027
+    },
+    "ao": {
+      "mean": 0.7981802821159363,
+      "min": 0.0,
+      "p01": 0.1882353127002716,
+      "p05": 0.3137255012989044,
+      "texels": 630027
+    },
+    "mossFraction": 0.06636699696997113,
+    "normalMissFraction": 0.0,
+    "roughness": {
+      "mean": 0.8458831906318665,
+      "min": 0.7215686440467834,
+      "p01": 0.7215686440467834,
+      "p05": 0.7215686440467834,
+      "texels": 630027
+    }
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.04,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "CPU",
+  "extentZ": [
+    -0.31998807191848755,
+    0.2168981283903122
+  ],
+  "marginPx": 8,
+  "maxRayDistanceM": 0.1,
+  "receiverSignature": "fc94e3dd4e63094831e8354ba6cfd5dd5dc1dbcf73be43c9a89232208ac2149f",
+  "samples": 32,
+  "skipped": false,
+  "stones": [
+    {
+      "centre": [
+        0.05,
+        0.03,
+        -0.04
+      ],
+      "semi": [
+        0.52,
+        0.4,
+        0.3
+      ]
+    },
+    {
+      "centre": [
+        -0.64,
+        0.32,
+        -0.05
+      ],
+      "semi": [
+        0.32,
+        0.26,
+        0.26
+      ]
+    },
+    {
+      "centre": [
+        0.46,
+        -0.58,
+        -0.06
+      ],
+      "semi": [
+        0.28,
+        0.22,
+        0.24
+      ]
+    },
+    {
+      "centre": [
+        -0.3,
+        -0.56,
+        -0.05
+      ],
+      "semi": [
+        0.2,
+        0.16,
+        0.2
+      ]
+    }
+  ],
+  "texelDensityPxPerM": {
+    "max": 467.6032365032548,
+    "median": 426.48673909471376,
+    "min": 349.1557129141591
+  }
+}

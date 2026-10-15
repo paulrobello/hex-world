@@ -1,0 +1,9 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-14",
+    "revision": "new variant: young short spruce",
+    "notes": "Pending owner approval; not an approval. New PRD \u00a76 variety piece: tree_forest's species, bark set and needle tiles; 8.2 m broad young cone. Review assets-source/kit/tree_forest_c/renders/ and the in-play shots in docs/checkpoints/prop-variants/. The controller records the owner's decision."
+  }
+]

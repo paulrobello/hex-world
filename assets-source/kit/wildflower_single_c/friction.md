@@ -1,0 +1,5 @@
+# wildflower_single_c friction
+
+- 2026-10-14: the approved original's generator and its `_*.py` helpers are hashed by its provenance, so a variant cannot import a monolithic generator or edit its helper. The variant pipeline lives in a new family helper (`_spruce.py`, `_rock.py`, `_flowers.py`, `_single.py`) that reuses the frozen helpers' functions and copies only the monolithic steps. 5 min. Folded into project.md (Props, variants).
+- 2026-10-14: a `json.dump` of assets/kit/manifest.json reflowed the hand-formatted file (2,000 changed lines); the entries went in as text instead. 3 min. Folded into pitfalls.md (Coordinate frame and export).
+- 2026-10-14: the first single stems (0.32-0.55 m, square 256 px side tiles on 0.24 x 0.5 m cards) vanished in the play shots: the chunky meadow grass is about 0.35 m (up to 0.7 m), and a square tile on a tall card stretched every head into a vertical sliver. Rebuilt at 0.7-0.95 m with 128 x 512 px side tiles at the card's own aspect (heads drawn round, about 0.15 m across) and a 0.26 m head card at the side head's height. 15 min. Folded into pitfalls.md (Leaves, foliage and LODs).

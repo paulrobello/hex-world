@@ -1,0 +1,81 @@
+{
+  "world": "docs/checkpoints/prop-variants/variants.json, seed 1, 19 tiles (7 meadow, 6 forest, 2 oak, 2 road_straight, river, house_cluster)",
+  "before": {
+    "build": "main 9ddb35f (git archive), same script",
+    "scatterInstances": 345,
+    "scatterEntities": 1755,
+    "scatterMeshMaterialPairs": 15,
+    "drawnByPiece": {
+      "rock_small": 28,
+      "tree_forest": 120,
+      "wildflower_clump": 197
+    },
+    "perTile": {
+      "meadow": {
+        "rock_small": 2,
+        "wildflower_clump": 26
+      },
+      "forest": {
+        "rock_small": 1,
+        "tree_forest": 20
+      },
+      "oak": {
+        "rock_small": 4,
+        "wildflower_clump": 6
+      }
+    },
+    "opaqueMultidrawSets": [
+      61,
+      61,
+      61,
+      65,
+      56
+    ]
+  },
+  "after": {
+    "scatterInstances": 667,
+    "scatterEntities": 2721,
+    "scatterMeshMaterialPairs": 57,
+    "drawnByPiece": {
+      "rock_small": 12,
+      "rock_small_b": 8,
+      "rock_small_c": 11,
+      "tree_forest": 50,
+      "tree_forest_b": 39,
+      "tree_forest_c": 31,
+      "wildflower_clump": 61,
+      "wildflower_clump_b": 77,
+      "wildflower_clump_c": 59,
+      "wildflower_single": 75,
+      "wildflower_single_b": 85,
+      "wildflower_single_c": 80,
+      "wildflower_single_d": 79
+    },
+    "perTile": {
+      "meadow": {
+        "rock_small": 2,
+        "wildflower_clump": 26,
+        "wildflower_single": 40
+      },
+      "forest": {
+        "rock_small": 1,
+        "tree_forest": 20
+      },
+      "road_straight": {
+        "wildflower_single": 20
+      },
+      "oak": {
+        "rock_small": 4,
+        "wildflower_clump": 6
+      }
+    },
+    "opaqueMultidrawSets": [
+      67,
+      67,
+      67,
+      69,
+      60
+    ]
+  },
+  "note": "opaqueMultidrawSets: the cars census's opaque-phase multidraw batch sets for the whole scene at the same five points of the script. The clumps and single flowers are alpha-tested and draw in the alpha-mask phase, which that census does not count; scatterMeshMaterialPairs bounds their instanced batches per pass (12 of the 42 new pairs are the four single flowers' three LODs)."
+}

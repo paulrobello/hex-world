@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/rock_small_b.py",
+    "sha256": "fae716324a66ac4c1b134ff1303a5c41402250751f7dd6d28df5cc83db706401"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    }
+  ],
+  "lodTris": {
+    "rock_small_b_lod0": 1372,
+    "rock_small_b_lod1": 604,
+    "rock_small_b_lod2": 173
+  },
+  "nodes": [
+    "rock_small_b",
+    "rock_small_b_collider",
+    "rock_small_b_lod0",
+    "rock_small_b_lod1",
+    "rock_small_b_lod2"
+  ],
+  "pieceId": "rock_small_b",
+  "sockets": []
+}

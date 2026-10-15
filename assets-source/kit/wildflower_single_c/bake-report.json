@@ -1,0 +1,85 @@
+{
+  "bakeStats": {
+    "alphaCoverageByMip": {
+      "side_0": [
+        0.1373,
+        0.1273,
+        0.1294,
+        0.126,
+        0.1172,
+        0.1094,
+        0.0,
+        0.0
+      ],
+      "side_1": [
+        0.1575,
+        0.1458,
+        0.1494,
+        0.1484,
+        0.1289,
+        0.1406,
+        0.0,
+        0.0
+      ],
+      "top_0": [
+        0.224,
+        0.2195,
+        0.2217,
+        0.2207,
+        0.2227,
+        0.2188,
+        0.25,
+        0.0,
+        0.0
+      ],
+      "top_1": [
+        0.2329,
+        0.228,
+        0.23,
+        0.2344,
+        0.2344,
+        0.2031,
+        0.25,
+        0.0,
+        0.0
+      ]
+    },
+    "alphaCutoff": 0.5
+  },
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 512
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 64
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "none (numpy-drawn tiles, no Cycles bake)",
+  "extentZ": [
+    -0.05000000074505806,
+    0.949999988079071
+  ],
+  "heightM": 0.95,
+  "marginPx": 0,
+  "receiverSignature": "56ab3ae95ce7d29cbfae25faab4e8bce41fc84eac3935da99d89d32daf409ac6",
+  "samples": 0,
+  "sinkM": 0.05,
+  "skipped": false,
+  "species": "cornflower",
+  "texelDensityPxPerM": {
+    "max": 980.7692530802783,
+    "median": 509.49777674903584,
+    "min": 509.49777674903584
+  }
+}

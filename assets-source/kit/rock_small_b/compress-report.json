@@ -1,0 +1,181 @@
+{
+  "name": "rock_small_b",
+  "date": "2026-10-15T02:48:04.582Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 744987,
+      "sha256": "cfb93c69426ab69fbf880780dce7ce43d9ff63e53f6a687eaa199d61dac1cb6a"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 772644,
+      "sha256": "6814f3f04716ff1c6cc6cbe2ba5f019e7529a78c4d230223b91a2f0dded199c6"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 1283994,
+      "sha256": "68e234eca1a521e880d805636111faa14565e40d57e92e1bba1f38e23446f3cd"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 18459,
+      "sha256": "ec61c0f093063452fadbe9d056da98cd2e4b1d4ad823c91f06bea9ce0b90e5e3"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 18465,
+      "sha256": "db336196c996321f746974ee3ca5bf9a8c2098daa349fad1c2d5cdbaace1f8a6"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 23222,
+      "sha256": "11eac5fdc8de404897c3242ba649971cbc48f063fe503af08783f6f7a3a9a1ed"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 153822,
+      "sha256": "ac9e30f58971fa0a2ea829d9b40e72c22c6c1209345f94a5b18a739bfc712be7"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 158631,
+      "sha256": "97dd166dbc2ffc8ef225b8b52bb46dadb703e4cb89c2ac3f1a311db8ef56afa0"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 261108,
+      "sha256": "cbb1ec36980b0e6bb222da5fa9938a0c6440904ae82e640ffa64854c1d4bce44"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 140942,
+      "sha256": "5cc34f7d49247e49b2b746699b7800543c3ef526b6fc6d1ec516e94e26b1c19a"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 145667,
+      "sha256": "ca9e547c3ea7956817ce7ff5a99c249e716fc73036898db83cf43bf3c1b61a2b"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 213837,
+      "sha256": "0d3d814b28b5ee488990ff5dc183c7b1e4bbe10606f3edd39669022a0f60c909"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 1058210,
+      "astc": 1095407
+    },
+    "glbBytes": 92336
+  },
+  "glb": {
+    "bytes": 92336,
+    "sha256": "254f9b706d071089ba440ea687f973014c04d9a226e6dbf4b7ef10171ac477ee"
+  }
+}

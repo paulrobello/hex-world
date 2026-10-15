@@ -15,6 +15,7 @@
         scatter: [
             (piece: "wildflower_clump", density: 4.0, drift: true),
             (piece: "rock_small", density: 0.3),
+            (piece: "wildflower_single", density: 6.0, vary: 0.8),
         ],
     ),
 )

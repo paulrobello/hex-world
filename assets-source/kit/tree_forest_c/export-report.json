@@ -1,0 +1,40 @@
+{
+  "blender": "5.2.2 LTS",
+  "budgetClass": "piece",
+  "generator": {
+    "path": "scripts/blender/kit/tree_forest_c.py",
+    "sha256": "9a3bfc5bbe8c0c327d41adfad8bf9ea6ffd21653489a0c020df2897434ab8db0"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_forest.py",
+      "sha256": "70af5de2175c0c1d733cfb72c3befcb400e586fe051507e96cf41b81e145c3b1"
+    },
+    {
+      "path": "scripts/blender/kit/_leaves.py",
+      "sha256": "d732efec23b5b9a52dca841bfc97f70fb9ab604b8f039eb6029fffaabb2ccf4a"
+    },
+    {
+      "path": "scripts/blender/kit/_spruce.py",
+      "sha256": "fd09a53c0febad8acdf0948abf2d37cb6fb7352de326491544bb0fd2075e9db5"
+    },
+    {
+      "path": "scripts/blender/kit/_tree.py",
+      "sha256": "037e8be778813c929864130240aa65e05042c153b8c386d3920566b6867d81ce"
+    }
+  ],
+  "lodTris": {
+    "tree_forest_c_lod0": 1600,
+    "tree_forest_c_lod1": 792,
+    "tree_forest_c_lod2": 164
+  },
+  "nodes": [
+    "tree_forest_c",
+    "tree_forest_c_collider",
+    "tree_forest_c_lod0",
+    "tree_forest_c_lod1",
+    "tree_forest_c_lod2"
+  ],
+  "pieceId": "tree_forest_c",
+  "sockets": []
+}

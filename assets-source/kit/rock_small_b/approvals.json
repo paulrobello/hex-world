@@ -1,0 +1,9 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-14",
+    "revision": "new variant: large boulder",
+    "notes": "Pending owner approval; not an approval. New PRD \u00a76 variety piece: rock_small's granite, moss and lichen; 1.9 x 1.6 m, 0.7 m proud. Review assets-source/kit/rock_small_b/renders/ and the in-play shots in docs/checkpoints/prop-variants/. The controller records the owner's decision."
+  }
+]

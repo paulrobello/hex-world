@@ -20,4 +20,9 @@
         (kind: Road, from: Edge(2), to: Node("junction")),
         (kind: Road, from: Edge(4), to: Node("junction")),
     ],
+    props: (
+        scatter: [
+            (piece: "wildflower_single", density: 3.0, vary: 0.8),
+        ],
+    ),
 )

@@ -18,4 +18,9 @@
     networks: [
         (kind: Road, from: Edge(0), to: Edge(2), points: [(6.000, 0.000), (4.195, 0.158), (2.446, 0.627), (0.804, 1.392), (-0.680, 2.431), (-1.961, 3.712), (-3.000, 5.196)]),
     ],
+    props: (
+        scatter: [
+            (piece: "wildflower_single", density: 3.0, vary: 0.8),
+        ],
+    ),
 )

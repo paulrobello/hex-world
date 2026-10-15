@@ -70,6 +70,11 @@ pub struct ScatterRule {
     /// Grow in clustered drifts from the tile's seeded noise instead of spreading evenly.
     #[serde(default)]
     pub drift: bool,
+    /// Spread evenly but thinned by the tile's seeded noise, in [0, 1]: a placement is kept with
+    /// probability 1 - vary * (1 - noise), so the density varies gently over the cap while the
+    /// count stays `density`. 0 (the default) is an even spread.
+    #[serde(default)]
+    pub vary: f32,
 }
 
 /// A prop at a fixed tile-local position.

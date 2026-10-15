@@ -1,0 +1,386 @@
+{
+  "pieceId": "rock_small_b",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/rock_small_b.py",
+    "sha256": "fae716324a66ac4c1b134ff1303a5c41402250751f7dd6d28df5cc83db706401"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.25,
+    "bakeStats": {
+      "albedoLuma": {
+        "mean": 0.4784153401851654,
+        "min": 0.2222222536802292,
+        "p01": 0.2692810595035553,
+        "p05": 0.3189542591571808,
+        "texels": 671041
+      },
+      "ao": {
+        "mean": 0.9123104214668274,
+        "min": 0.2196078598499298,
+        "p01": 0.4392157196998596,
+        "p05": 0.5607843399047852,
+        "texels": 671041
+      },
+      "mossFraction": 0.1042127083143951,
+      "normalMissFraction": 0,
+      "roughness": {
+        "mean": 0.792621910572052,
+        "min": 0.7215686440467834,
+        "p01": 0.7215686440467834,
+        "p05": 0.7215686440467834,
+        "texels": 671041
+      }
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.04,
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 256
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "CPU",
+    "extentZ": [
+      -0.3117283582687378,
+      0.7113863825798035
+    ],
+    "marginPx": 8,
+    "maxRayDistanceM": 0.1,
+    "receiverSignature": "b46731c428cb23a099ad953523584b195f08ea3eaeb77c88902715a2a7cddccb",
+    "samples": 32,
+    "skipped": false,
+    "stones": [
+      {
+        "centre": [
+          0,
+          0,
+          0.1
+        ],
+        "semi": [
+          0.95,
+          0.78,
+          0.68
+        ]
+      }
+    ],
+    "texelDensityPxPerM": {
+      "max": 394.74080640267834,
+      "median": 365.3815424557192,
+      "min": 263.98949866422464
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1372,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 604,
+      "ratio": 0.4402332361516035
+    },
+    {
+      "lod": 2,
+      "tris": 173,
+      "ratio": 0.1260932944606414
+    }
+  ],
+  "collider": {
+    "node": "rock_small_b_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 394.74080640267834,
+    "median": 365.3815424557192,
+    "min": 263.98949866422464
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 1058210,
+        "astc": 1095407
+      },
+      "glbBytes": 92336
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 744987,
+        "sha256": "cfb93c69426ab69fbf880780dce7ce43d9ff63e53f6a687eaa199d61dac1cb6a"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 772644,
+        "sha256": "6814f3f04716ff1c6cc6cbe2ba5f019e7529a78c4d230223b91a2f0dded199c6"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 1283994,
+        "sha256": "68e234eca1a521e880d805636111faa14565e40d57e92e1bba1f38e23446f3cd"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 9,
+        "bytes": 18459,
+        "sha256": "ec61c0f093063452fadbe9d056da98cd2e4b1d4ad823c91f06bea9ce0b90e5e3"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 9,
+        "bytes": 18465,
+        "sha256": "db336196c996321f746974ee3ca5bf9a8c2098daa349fad1c2d5cdbaace1f8a6"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 23222,
+        "sha256": "11eac5fdc8de404897c3242ba649971cbc48f063fe503af08783f6f7a3a9a1ed"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 153822,
+        "sha256": "ac9e30f58971fa0a2ea829d9b40e72c22c6c1209345f94a5b18a739bfc712be7"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 158631,
+        "sha256": "97dd166dbc2ffc8ef225b8b52bb46dadb703e4cb89c2ac3f1a311db8ef56afa0"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 261108,
+        "sha256": "cbb1ec36980b0e6bb222da5fa9938a0c6440904ae82e640ffa64854c1d4bce44"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 140942,
+        "sha256": "5cc34f7d49247e49b2b746699b7800543c3ef526b6fc6d1ec516e94e26b1c19a"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 145667,
+        "sha256": "ca9e547c3ea7956817ce7ff5a99c249e716fc73036898db83cf43bf3c1b61a2b"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/rock_small_b/rock_small_b.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 213837,
+        "sha256": "0d3d814b28b5ee488990ff5dc183c7b1e4bbe10606f3edd39669022a0f60c909"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.glb",
+      "sha256": "254f9b706d071089ba440ea687f973014c04d9a226e6dbf4b7ef10171ac477ee",
+      "bytes": 92336
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.albedo.bc7.ktx2",
+      "sha256": "cfb93c69426ab69fbf880780dce7ce43d9ff63e53f6a687eaa199d61dac1cb6a",
+      "bytes": 744987
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.albedo.astc.ktx2",
+      "sha256": "6814f3f04716ff1c6cc6cbe2ba5f019e7529a78c4d230223b91a2f0dded199c6",
+      "bytes": 772644
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.albedo.png",
+      "sha256": "68e234eca1a521e880d805636111faa14565e40d57e92e1bba1f38e23446f3cd",
+      "bytes": 1283994
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.masks.bc7.ktx2",
+      "sha256": "ec61c0f093063452fadbe9d056da98cd2e4b1d4ad823c91f06bea9ce0b90e5e3",
+      "bytes": 18459
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.masks.astc.ktx2",
+      "sha256": "db336196c996321f746974ee3ca5bf9a8c2098daa349fad1c2d5cdbaace1f8a6",
+      "bytes": 18465
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.masks.png",
+      "sha256": "11eac5fdc8de404897c3242ba649971cbc48f063fe503af08783f6f7a3a9a1ed",
+      "bytes": 23222
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.normal.bc7.ktx2",
+      "sha256": "ac9e30f58971fa0a2ea829d9b40e72c22c6c1209345f94a5b18a739bfc712be7",
+      "bytes": 153822
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.normal.astc.ktx2",
+      "sha256": "97dd166dbc2ffc8ef225b8b52bb46dadb703e4cb89c2ac3f1a311db8ef56afa0",
+      "bytes": 158631
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.normal.png",
+      "sha256": "cbb1ec36980b0e6bb222da5fa9938a0c6440904ae82e640ffa64854c1d4bce44",
+      "bytes": 261108
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.orm.bc7.ktx2",
+      "sha256": "5cc34f7d49247e49b2b746699b7800543c3ef526b6fc6d1ec516e94e26b1c19a",
+      "bytes": 140942
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.orm.astc.ktx2",
+      "sha256": "ca9e547c3ea7956817ce7ff5a99c249e716fc73036898db83cf43bf3c1b61a2b",
+      "bytes": 145667
+    },
+    {
+      "path": "assets/kit/p1/rock_small_b/rock_small_b.orm.png",
+      "sha256": "0d3d814b28b5ee488990ff5dc183c7b1e4bbe10606f3edd39669022a0f60c909",
+      "bytes": 213837
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/meadow_props/ref-1.jpg",
+      "sha256": "0535e4734cf2ba3ba741900479bcbe4c008a80e7477f6b8c2aa42b9d0d3eaef1",
+      "sourceSha256": "c79a4fcbf5ea869afacc1143fd160fdd3711972bcfe0a74100e34a0d4ae8bf06",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "2934df2e-4775-4157-b978-3c202a1c70b6",
+      "prompt": "One corner fragment of a hexagonal meadow diorama tile with layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), on a plain neutral grey studio backdrop: lush meadow grass with scattered wildflower clumps (white daisies, yellow buttercups, purple clover, blue cornflowers), each clump about 1 m across with small flower heads in natural proportion to the grass, and weathered grey granite rocks from 0.5 m to 2 m with lichen patches, partly sunk into the turf with grass growing around their bases, photoreal PBR materials, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/meadow_props/ref-2.jpg",
+      "sha256": "1002b656ae16d98c7773f749d169b6cf96f7ab5ea5af0ce7888e7378dce2e24e",
+      "sourceSha256": "33ec5b47bf7c88b3e9137425b361ec4a9895b785570fd2aa5f8a402192baaced",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "b9d9e080-7c7e-4824-9697-eb77270f183e",
+      "prompt": "Close-up of meadow scatter on a diorama tile on a plain neutral grey studio backdrop: small realistic wildflower heads of white daisies, yellow buttercups, purple clover and blue cornflowers among dense meadow grass, each flower head about the width of a few grass blades, and a weathered lichen-spotted granite rock half sunk into the turf with grass around its base, photoreal PBR materials, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-15T03:00:43.996Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/meadow_props/ref-1.jpg",
+        "assets-source/refs/meadow_props/ref-2.jpg"
+      ],
+      "notes": "Approved: wildflower clumps (same species and colours) and rocks partly buried in the turf. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "new variant: large boulder",
+      "notes": "Pending owner approval; not an approval. New PRD §6 variety piece: rock_small's granite, moss and lichen; 1.9 x 1.6 m, 0.7 m proud. Review assets-source/kit/rock_small_b/renders/ and the in-play shots in docs/checkpoints/prop-variants/. The controller records the owner's decision."
+    }
+  ]
+}

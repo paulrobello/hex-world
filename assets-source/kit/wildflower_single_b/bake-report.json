@@ -1,0 +1,85 @@
+{
+  "bakeStats": {
+    "alphaCoverageByMip": {
+      "side_0": [
+        0.1596,
+        0.1514,
+        0.155,
+        0.1367,
+        0.1211,
+        0.125,
+        0.0,
+        0.0
+      ],
+      "side_1": [
+        0.1488,
+        0.1375,
+        0.1396,
+        0.1416,
+        0.1289,
+        0.125,
+        0.0,
+        0.0
+      ],
+      "top_0": [
+        0.2257,
+        0.2225,
+        0.2229,
+        0.2217,
+        0.2188,
+        0.2188,
+        0.25,
+        0.0,
+        0.0
+      ],
+      "top_1": [
+        0.2196,
+        0.2153,
+        0.2151,
+        0.2178,
+        0.2227,
+        0.2031,
+        0.25,
+        0.0,
+        0.0
+      ]
+    },
+    "alphaCutoff": 0.5
+  },
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 512
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 64
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "none (numpy-drawn tiles, no Cycles bake)",
+  "extentZ": [
+    -0.05000000074505806,
+    0.8999999761581421
+  ],
+  "heightM": 0.9,
+  "marginPx": 0,
+  "receiverSignature": "4a3a4d6cbac4104141cc61bfba2de0d878b3025eafe55a8bf4b62e57c2aee8ef",
+  "samples": 0,
+  "sinkM": 0.05,
+  "skipped": false,
+  "species": "buttercup",
+  "texelDensityPxPerM": {
+    "max": 980.7692530802783,
+    "median": 536.3134738487215,
+    "min": 536.3134738487215
+  }
+}

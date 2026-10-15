@@ -1,0 +1,548 @@
+{
+  "pieceId": "wildflower_clump_c",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/wildflower_clump_c.py",
+    "sha256": "91282708b79fd7e9cf47ffef0f58321b1b7614ead026d431f4d83e80a9a9cb55"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_flowers.py",
+      "sha256": "be88f719f3d8174d1a47cec3c3100f72c8dd56197ac01bc53f5bb14cb66f72b0"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "bakeStats": {
+      "alphaCoverageByMip": {
+        "atlas": [
+          0.4837,
+          0.4588,
+          0.4738,
+          0.4836,
+          0.4839,
+          0.4697,
+          0.4922,
+          0.4062,
+          0.4375,
+          0.5,
+          0
+        ],
+        "top_grass_0": [
+          0.3404,
+          0.3301,
+          0.3357,
+          0.334,
+          0.3281,
+          0.3438,
+          0.25,
+          0,
+          0
+        ],
+        "top_grass_1": [
+          0.3528,
+          0.3418,
+          0.3477,
+          0.3496,
+          0.3477,
+          0.3438,
+          0.25,
+          0,
+          0
+        ],
+        "top_grass_2": [
+          0.3465,
+          0.3372,
+          0.3403,
+          0.3496,
+          0.3438,
+          0.3594,
+          0.25,
+          0,
+          0
+        ],
+        "tuft_clover_0": [
+          0.4956,
+          0.4712,
+          0.4832,
+          0.499,
+          0.4727,
+          0.4688,
+          0.4375,
+          0.5,
+          0
+        ],
+        "tuft_clover_1": [
+          0.5636,
+          0.541,
+          0.5586,
+          0.5625,
+          0.5742,
+          0.5312,
+          0.625,
+          0.5,
+          1
+        ],
+        "tuft_clover_2": [
+          0.5412,
+          0.5193,
+          0.532,
+          0.5508,
+          0.5586,
+          0.5312,
+          0.5625,
+          0.5,
+          1
+        ],
+        "tuft_clover_3": [
+          0.543,
+          0.522,
+          0.5361,
+          0.5479,
+          0.5664,
+          0.5,
+          0.5625,
+          0.5,
+          1
+        ],
+        "tuft_cornflower_0": [
+          0.55,
+          0.5225,
+          0.5413,
+          0.5527,
+          0.5703,
+          0.5,
+          0.625,
+          0.5,
+          1
+        ],
+        "tuft_cornflower_1": [
+          0.5162,
+          0.4896,
+          0.5061,
+          0.5234,
+          0.5312,
+          0.5156,
+          0.5,
+          0.5,
+          1
+        ],
+        "tuft_cornflower_2": [
+          0.511,
+          0.4813,
+          0.5051,
+          0.5127,
+          0.5039,
+          0.5,
+          0.5625,
+          0.5,
+          1
+        ],
+        "tuft_cornflower_3": [
+          0.54,
+          0.5107,
+          0.5293,
+          0.5449,
+          0.5547,
+          0.5469,
+          0.5625,
+          0.5,
+          1
+        ],
+        "tuft_grass_0": [
+          0.4849,
+          0.4543,
+          0.4695,
+          0.4805,
+          0.4727,
+          0.5,
+          0.5625,
+          0.5,
+          0
+        ],
+        "tuft_grass_1": [
+          0.4978,
+          0.4644,
+          0.4878,
+          0.4834,
+          0.4961,
+          0.4688,
+          0.5625,
+          0.5,
+          0
+        ],
+        "tuft_grass_2": [
+          0.4851,
+          0.451,
+          0.4709,
+          0.4795,
+          0.4609,
+          0.4688,
+          0.5,
+          0.5,
+          0
+        ],
+        "tuft_grass_3": [
+          0.4776,
+          0.4431,
+          0.46,
+          0.4814,
+          0.4727,
+          0.4688,
+          0.5,
+          0.5,
+          0
+        ],
+        "tuft_grass_4": [
+          0.4935,
+          0.4614,
+          0.478,
+          0.4854,
+          0.4883,
+          0.4688,
+          0.5625,
+          0.5,
+          0
+        ]
+      },
+      "alphaCutoff": 0.5
+    },
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 64
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "none (numpy-drawn tiles, no Cycles bake)",
+    "extentZ": [
+      -0.07000000029802322,
+      0.4355865716934204
+    ],
+    "marginPx": 0,
+    "receiverSignature": "b2adbd66aac68f932550bdbb5345a0200fe218f9aa28f3a0542571a6504968c6",
+    "samples": 0,
+    "sinkM": 0.07,
+    "skipped": true,
+    "species": [
+      "cornflower",
+      "clover"
+    ],
+    "texelDensityPxPerM": {
+      "max": 772.219257319549,
+      "median": 650.492285026668,
+      "min": 427.0325589220003
+    },
+    "tufts": 32
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 582,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 198,
+      "ratio": 0.3402061855670103
+    },
+    {
+      "lod": 2,
+      "tris": 30,
+      "ratio": 0.05154639175257732
+    }
+  ],
+  "collider": {
+    "node": "wildflower_clump_c_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 772.219257319549,
+    "median": 650.492285026668,
+    "min": 427.0325589220003
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 1070769,
+        "astc": 1080589
+      },
+      "glbBytes": 55372
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 758168,
+        "sha256": "bded09e9d5d33008ebf42141f4449c91a3fafac97e872c5d1e68a4538175c5d4"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 754976,
+        "sha256": "d2fe15384101c677fb54add1c6634fe1c56500b2ef6c948912dfc5b4fd756d09"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 1081321,
+        "sha256": "9d122a3ec0317a7effd4034747850f7f13937bad378821078c965df14e9372be"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 7,
+        "bytes": 583,
+        "sha256": "fd833c72639788d9e2148f36327302d51022319a0e4c5451927a1f9eb093a11c"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 7,
+        "bytes": 583,
+        "sha256": "7ce35269c237129244edbdc5e81ab107d94f91b82c4d933a5248459ba2231380"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 379,
+        "sha256": "c35c5e420520274e2f7e29888350b46741abc046fbcff01f9c712b9076db76a4"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 184545,
+        "sha256": "9a0207927faa06c59c6275fca5a66cf8e1f461eba9bc2826b6513d6fb9a80292"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 189798,
+        "sha256": "6b4b8f53b511aabf4f1c19f4d24e5404c659c91a52d719fc3e15133da8d11dd7"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 313717,
+        "sha256": "4f16da69cb383f3ce4d17133fa4a7fd5ba757dc84f7551a5cfa5ab80851d438a"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 127473,
+        "sha256": "646bf3b0d6f44f8c64a1ee5d5c071d93a736ce4b83d1d827f990af33300e531c"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 135232,
+        "sha256": "8ad9957cf8b077944ee8430234d7c175257c510ebb12cd4c50f46123c3531d8b"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 84883,
+        "sha256": "c414562ddbf313fbc6fafa76d8b105edfc58aff3136fc1d7df3194c7b149c125"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.glb",
+      "sha256": "fd4710ecbfd1362007402e01a07b7aaf7a7522df801cfc6d22be18fbfe2c3f41",
+      "bytes": 55372
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.albedo.bc7.ktx2",
+      "sha256": "bded09e9d5d33008ebf42141f4449c91a3fafac97e872c5d1e68a4538175c5d4",
+      "bytes": 758168
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.albedo.astc.ktx2",
+      "sha256": "d2fe15384101c677fb54add1c6634fe1c56500b2ef6c948912dfc5b4fd756d09",
+      "bytes": 754976
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.albedo.png",
+      "sha256": "9d122a3ec0317a7effd4034747850f7f13937bad378821078c965df14e9372be",
+      "bytes": 1081321
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.masks.bc7.ktx2",
+      "sha256": "fd833c72639788d9e2148f36327302d51022319a0e4c5451927a1f9eb093a11c",
+      "bytes": 583
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.masks.astc.ktx2",
+      "sha256": "7ce35269c237129244edbdc5e81ab107d94f91b82c4d933a5248459ba2231380",
+      "bytes": 583
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.masks.png",
+      "sha256": "c35c5e420520274e2f7e29888350b46741abc046fbcff01f9c712b9076db76a4",
+      "bytes": 379
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.normal.bc7.ktx2",
+      "sha256": "9a0207927faa06c59c6275fca5a66cf8e1f461eba9bc2826b6513d6fb9a80292",
+      "bytes": 184545
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.normal.astc.ktx2",
+      "sha256": "6b4b8f53b511aabf4f1c19f4d24e5404c659c91a52d719fc3e15133da8d11dd7",
+      "bytes": 189798
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.normal.png",
+      "sha256": "4f16da69cb383f3ce4d17133fa4a7fd5ba757dc84f7551a5cfa5ab80851d438a",
+      "bytes": 313717
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.orm.bc7.ktx2",
+      "sha256": "646bf3b0d6f44f8c64a1ee5d5c071d93a736ce4b83d1d827f990af33300e531c",
+      "bytes": 127473
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.orm.astc.ktx2",
+      "sha256": "8ad9957cf8b077944ee8430234d7c175257c510ebb12cd4c50f46123c3531d8b",
+      "bytes": 135232
+    },
+    {
+      "path": "assets/kit/p1/wildflower_clump_c/wildflower_clump_c.orm.png",
+      "sha256": "c414562ddbf313fbc6fafa76d8b105edfc58aff3136fc1d7df3194c7b149c125",
+      "bytes": 84883
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/meadow_props/ref-1.jpg",
+      "sha256": "0535e4734cf2ba3ba741900479bcbe4c008a80e7477f6b8c2aa42b9d0d3eaef1",
+      "sourceSha256": "c79a4fcbf5ea869afacc1143fd160fdd3711972bcfe0a74100e34a0d4ae8bf06",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "2934df2e-4775-4157-b978-3c202a1c70b6",
+      "prompt": "One corner fragment of a hexagonal meadow diorama tile with layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), on a plain neutral grey studio backdrop: lush meadow grass with scattered wildflower clumps (white daisies, yellow buttercups, purple clover, blue cornflowers), each clump about 1 m across with small flower heads in natural proportion to the grass, and weathered grey granite rocks from 0.5 m to 2 m with lichen patches, partly sunk into the turf with grass growing around their bases, photoreal PBR materials, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/meadow_props/ref-2.jpg",
+      "sha256": "1002b656ae16d98c7773f749d169b6cf96f7ab5ea5af0ce7888e7378dce2e24e",
+      "sourceSha256": "33ec5b47bf7c88b3e9137425b361ec4a9895b785570fd2aa5f8a402192baaced",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "b9d9e080-7c7e-4824-9697-eb77270f183e",
+      "prompt": "Close-up of meadow scatter on a diorama tile on a plain neutral grey studio backdrop: small realistic wildflower heads of white daisies, yellow buttercups, purple clover and blue cornflowers among dense meadow grass, each flower head about the width of a few grass blades, and a weathered lichen-spotted granite rock half sunk into the turf with grass around its base, photoreal PBR materials, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-15T03:00:53.307Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/meadow_props/ref-1.jpg",
+        "assets-source/refs/meadow_props/ref-2.jpg"
+      ],
+      "notes": "Approved: wildflower clumps (same species and colours) and rocks partly buried in the turf. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "revision": "new variant: blue/purple clump",
+      "notes": "Pending owner approval; not an approval. New PRD §6 variety piece: wildflower_clump's clump with cornflowers and clover. Review assets-source/kit/wildflower_clump_c/renders/ and the in-play shots in docs/checkpoints/prop-variants/. The controller records the owner's decision."
+    }
+  ]
+}

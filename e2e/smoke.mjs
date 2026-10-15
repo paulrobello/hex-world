@@ -606,7 +606,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     });
     let release;
     const held = new Promise((r) => { release = r; });
-    await page.route(/\/assets\/kit\/p1\/(forest_base|tree_forest|tree_hero_oak|materials\/litter|materials\/bark)\//,
+    await page.route(/\/assets\/kit\/p1\/(forest_base|tree_forest(_[a-z])?|tree_hero_oak|materials\/litter|materials\/bark)\//,
       async (route) => { await held; await route.continue(); });
     await page.goto(base + "?scenario=play&tier=high");
     if (!(await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 }).then(() => true, () => false))) {
