@@ -1,0 +1,31 @@
+[
+  {"cmd": "select_tile", "id": "meadow"},
+  {"cmd": "place", "q": 1, "r": -1},
+  {"cmd": "select_tile", "id": "oak"},
+  {"cmd": "place", "q": 0, "r": -1},
+  {"cmd": "hover", "q": 9, "r": -9},
+  {"cmd": "wait", "frames": 240},
+  {"cmd": "dump_state", "name": "oak-trunk-state"},
+
+  {"cmd": "camera", "pos": [-10.86, 1.1, -21.8], "look_at": [-13.86, 1.6, -24.0]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "oak-trunk-closeup-sun"},
+
+  {"cmd": "camera", "pos": [-17.0, 1.1, -26.2], "look_at": [-13.86, 1.6, -24.0]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "oak-trunk-closeup-shade"},
+
+  {"cmd": "camera", "pos": [-6.2, 1.7, -19.0], "look_at": [-13.86, 3.2, -24.0]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "oak-trunk-eye"},
+
+  {"cmd": "camera", "pos": [-1, 17, -8], "look_at": [-14.5, 7, -25]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "oak-trunk-play"},
+
+  {"cmd": "camera", "pos": [-13.86, 45, 16], "look_at": [-13.86, 4, -24]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "oak-trunk-play-far"},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "exit"}
+]

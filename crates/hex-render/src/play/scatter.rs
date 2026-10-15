@@ -152,8 +152,8 @@ pub const FOOTPRINTS: [(&str, Footprint); 6] = [
     (
         "tree_hero_oak",
         Footprint {
-            ground: 2.05,
-            crown: 7.1,
+            ground: 2.5,
+            crown: 8.55,
         },
     ),
     (

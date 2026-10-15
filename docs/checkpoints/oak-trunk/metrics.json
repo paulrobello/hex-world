@@ -1,0 +1,42 @@
+{
+  "piece": "tree_hero_oak",
+  "revision": "p5-trunk-scale",
+  "before": "main 374b1f6 (P4 canopy gaps)",
+  "scale": 1.2,
+  "dimensionsM": {
+    "heightYmax": { "before": 11.078, "after": 13.294 },
+    "crownReachMaxOverLods": { "before": 7.059, "after": 8.471 },
+    "colliderReach": { "before": 2.040, "after": 2.448 },
+    "colliderHeight": { "before": 3.600, "after": 4.320 },
+    "lowestVertexY": { "before": -0.936, "after": -1.124 }
+  },
+  "lodTris": {
+    "before": { "lod0": 2956, "lod1": 1460, "lod2": 434, "lod0BarkCanopyFringe": [887, 1915, 154] },
+    "after": { "lod0": 2927, "lod1": 1445, "lod2": 430, "lod0BarkCanopyFringe": [858, 1915, 154] }
+  },
+  "texelDensityMedianPxPerM": {
+    "before": { "bark": 530.8, "canopy": 258.7, "leaves": 391.6, "barkAoMasks": 59.0 },
+    "after": { "bark": 512.1, "canopy": 275.3, "leaves": 326.3, "barkAoMasks": 31.6 }
+  },
+  "barkUvAnisotropyBelow2p6mAt1x": {
+    "before": { "faces": 543, "p50": 1.311, "p95": 3.075, "max": 3.199 },
+    "after": { "faces": 514, "p50": 1.196, "p95": 1.594, "max": 1.880 }
+  },
+  "barkAoVisibleMean": { "before": 0.758, "after": 0.762 },
+  "canopyBake": {
+    "aoMean": { "before": 0.728, "after": 0.728 },
+    "gapShare": { "before": 0.288, "after": 0.284 },
+    "canopyUvAreaShareOfAtlas": { "before": 0.262, "after": 0.437 }
+  },
+  "canopyGeometryVsBefore": "canopy-compare.json: canopy and leaf primitives at every LOD match the P4 ones divided by 1.2 within 5.4e-7 m, normals within 2.2e-4, wind UV identical",
+  "ktx2Bytes": { "bc7": { "before": 4938733, "after": 6020562 }, "astc": { "after": 6073984 }, "heroBudget": 11500000 },
+  "scatterFootprint": { "ground": { "before": 2.05, "after": 2.5 }, "crown": { "before": 7.1, "after": 8.55 } },
+  "borderRule": "the hero oak stands at the tile centre: crown 8.47 m against the 13.86 m apothem (border_reach for the oak footprint 6.31 m >= 0); no placement change",
+  "manifestBarkTileUvScale": { "before": 18.0, "after": 32.4 },
+  "inGameShots": {
+    "script": "shoot.sh <before|after> <stage dir>: before = main 374b1f6's release binary and kit, after = this branch's",
+    "loadGuard": "bounded 15-minute wait (17:54-18:09, readings every 20 s) for 1-minute load <= 15 never reached it (lowest 26.6 at 18:04; other sessions); run once each, as briefed",
+    "load1": { "beforeStart": 156.83, "beforeEnd": 165.08, "afterStart": 147.60, "afterEnd": 113.24 },
+    "frameMeansRgb": "no black frames (closeup-shade mean ~17, the darkest)"
+  }
+}

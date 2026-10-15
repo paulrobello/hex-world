@@ -19,5 +19,12 @@
     "revision": "p4-canopy-gaps",
     "requested": "2026-10-14",
     "notes": "Pending owner re-approval of the canopy gap darkening; not an approval. Owner request 2026-10-14 (canopy close-up): make the space between the leaves not shiny and darker. The dark dome showing between the baked leaves on the canopy shell now has 0.5x linear albedo and roughness 1.0 (was the flat 0.62 fill shared with the leaves), and the kit shader fades F0 to 0 on unique foliage above roughness 0.95 (only these gap texels reach it), so no sky sheen remains there. Leaf texels, geometry, UVs, LODs and the fringe cards are unchanged. Review docs/checkpoints/oak-canopy/ (before and after close-ups and play views, maps-before.json and maps-after.json). The controller records the owner's decision."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "p5-trunk-scale",
+    "requested": "2026-10-14",
+    "notes": "Pending owner re-approval; not an approval. Owner request 2026-10-14 (trunk close-up): the trunk looks a bit odd, and make the tree 20% bigger. Trunk: the eight roots now start buried on their strand's centreline at 1.0-1.8 m (spread per root) and leave it at a slant into a concave flare, so no ring of root start caps forms a collar at 1.6 m; bark normals within 0.3 m of a junction follow the smooth union of the two tubes, and bark below 0.3 m leans toward up so the roots run into the ground; the bark UV is metric on the low-poly surface (chord U, mean-column V), flare anisotropy p95 3.07 -> 1.59; the bark high poly is built in the generator, smooth, so the AO carries no z-elongated ridge streaks. Open for the owner: the long dark vertical streaks still on the trunk are the shared bark set's own fissure plates (mat_bark.py stretches its cells 5.5x along the grain; tree_forest uses the same set), not changed here; and the roots are still separate tubes meeting the strands along diagonal creases (no welded or swept flare). Size: every LOD and the collider are 1.2x about the trunk base (height 11.08 -> 13.29 m, crown reach 7.06 -> 8.47 m); bark tileUvScale 18 -> 32.4 keeps the bark set at 512 px/m. Canopy content (master dome, leaves, gap darkening) is unchanged, re-baked into one minimum-stretch island per sector so the 1.2x canopy keeps 275 px/m (gate 256). Review docs/checkpoints/oak-trunk/. The controller records the owner's decision."
   }
 ]

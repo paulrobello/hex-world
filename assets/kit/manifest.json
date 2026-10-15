@@ -75,7 +75,7 @@
       "maps": { "masks": "p1/road_junction_center/road_junction_center.masks" } },
     { "id": "tree_hero_oak", "pack": "hero", "kind": "tree", "glb": "p1/tree_hero_oak/tree_hero_oak.glb",
       "provenance": "assets-source/kit/tree_hero_oak/provenance.json",
-      "slots": { "tree_hero_oak_bark": { "tileable": "bark", "tileUvScale": 18.0, "masks": true },
+      "slots": { "tree_hero_oak_bark": { "tileable": "bark", "tileUvScale": 32.4, "masks": true },
                  "tree_hero_oak_canopy": { "unique": true, "masks": true },
                  "tree_hero_oak_leaves": { "unique": true, "masks": true, "alphaCutoff": 0.5 } },
       "maps": { "albedo": "p1/tree_hero_oak/tree_hero_oak.albedo", "normal": "p1/tree_hero_oak/tree_hero_oak.normal",

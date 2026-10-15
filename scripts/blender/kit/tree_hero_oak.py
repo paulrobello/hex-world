@@ -10,7 +10,9 @@ Three materials on one UV0 (owner: solid-dome canopy; P2 polish in `_oak`):
   (its AO is ORM.R), R snow capacity follows the canopy AO, G wetness.
 - Bark: the tileable `bark` set mapped on UV0 (metres x BARK_UV_PER_M, `tileUvScale`); its AO is in
   masks.A, on the same UV0, never overlapping the canopy islands.
-- Fringe leaves: alpha cards on the unique strip v >= LEAF_V0 (`_leaves`), masks.A = 1 there."""
+- Fringe leaves: alpha cards on the unique strip v >= LEAF_V0 (`_leaves`), masks.A = 1 there.
+
+Built and baked at 1x; every LOD and the collider ship at SCALE (1.2x, owner 2026-10-14)."""
 import math
 import os
 import pathlib
@@ -22,6 +24,8 @@ import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from mathutils import Matrix  # noqa: E402
+
 from lib import bake, collider, export, geom, lod, paths, scene, uv  # noqa: E402
 import _leaves  # noqa: E402
 import _oak  # noqa: E402
@@ -29,8 +33,14 @@ import _tree  # noqa: E402
 
 PIECE, ATLAS, MASK_SIZE = "tree_hero_oak", 2048, 2048
 BARK_SET_PX, BARK_TILE_M = 1024, 2.0  # the `bark` tileable set (scripts/blender/kit/mat_bark.py)
-BARK_UV_PER_M = 1 / 36  # atlas UV per metre of bark: AO at MASK_SIZE / 36 = 57 px/m
-TILE_UV_SCALE = 1 / (BARK_UV_PER_M * BARK_TILE_M)  # manifest tree_hero_oak_bark.tileUvScale = 12
+# Owner 2026-10-14: the whole tree 20% bigger. Everything is built and baked at 1x (the canopy
+# master, the crown layout and the leaf cards in the .blend are 1x), and every LOD and the collider
+# are scaled by SCALE about the trunk base just before export.
+SCALE = 1.2
+# Atlas UV per 1x metre of bark: AO at MASK_SIZE / 54 / SCALE = 32 px/m. The bark column stays
+# narrow (u < ~0.14), so the canopy islands keep >= 256 px/m on the 1.2x crown.
+BARK_UV_PER_M = 1 / 54
+TILE_UV_SCALE = SCALE / (BARK_UV_PER_M * BARK_TILE_M)  # manifest tree_hero_oak_bark.tileUvScale = 32.4
 BLEND = pathlib.Path(os.environ.get("HEXW_BLEND") or paths.blend_path(PIECE))  # main-checkout store (O2)
 CAGE, MAX_RAY, MARGIN, SAMPLES = 0.25, 0.5, 8, 32  # bark: cage clears the 6-sided receiver
 SHELL_CAGE, SHELL_RAY = 0.45, 0.9  # canopy: clears leaves stacked up to ~0.25 m off the dome
@@ -41,7 +51,11 @@ ROOT_SIDES, ROOT_STEP, LIMB_SIDES, LIMB_STEP = 5, 1.3, 5, 1.6  # P2: heavier roo
 GROUND_CULL_Z = -0.27  # below the meadow relief's floor (-0.25 m, meadow_base.relief)
 BARK_FILLS = (0.6, 0.55, 0.5, 0.45, 0.4)  # packed share of the bark column tried, tightest first
 SHELL_PACK_MARGIN = 0.008  # UV fraction between canopy and bark islands: 16 atlas and masks texels
-SHELL_UV_ANGLE = 1.0  # smart-project angle (rad) for the 7-ring sector: canopy median 259 px/m (1.152 gave 250)
+# The sector unwraps as one island (minimum stretch, seams only on its two meridians); smart project
+# at 1.0 rad split it into four islands that packed to 0.27 of the atlas, too little for 1.2x.
+SHELL_UNWRAP = "MINIMUM_STRETCH"
+# Level >= 1 branches (limbs, secondaries) as approved: the leaf and shell wind follow them.
+LIMBS_SHA = "3b99db408e81160de6809d552d2b5623920967c2f2d57be6b64f3282b36a8c3a"
 CANOPY_SNOW, WETNESS, NIGHT = 0.85, 0.5, 0.0  # masks R scale, G, B (trees do not glow at night)
 # Canopy gaps (owner, 2026-10-14: the space between the leaves read shiny and pale): shell texels
 # showing the dark dome under the baked leaves (`_oak.canopy_high`'s under tone, GAP_TONE sRGB; every
@@ -57,21 +71,27 @@ bpy.ops.wm.open_mainfile(filepath=str(BLEND))
 scn = bpy.data.scenes[PIECE]
 assert bpy.context.scene == scn, bpy.context.scene
 bpy.context.preferences.filepaths.save_version = 0
-HIGH_NAMES = (f"{PIECE}_bark_high", f"{PIECE}_leaves_high", f"{PIECE}_canopy_high")
+HIGH_NAMES = (f"{PIECE}_leaves_high", f"{PIECE}_canopy_high")
 # The showcase rig (lights, camera, ground, canopy instances) is not a bake input and never enters
 # the export root.
 for o in list(scn.objects):
     if o.name not in HIGH_NAMES:
         bpy.data.objects.remove(o, do_unlink=True)
 bpy.context.view_layer.update()
-bark_high, leaves_high, canopy_high = (bpy.data.objects[n] for n in HIGH_NAMES)
+leaves_high, canopy_high = (bpy.data.objects[n] for n in HIGH_NAMES)
 canopy_high.hide_render = False  # hidden in the live showcase (instances show it), a bake source here
 canopy_high.hide_set(False)
 bark_mat, leaf_mat = bpy.data.materials[f"{PIECE}_bark"], bpy.data.materials[f"{PIECE}_leaves"]
 canopy_mat = bpy.data.materials.get(CANOPY_MAT) or bpy.data.materials.new(CANOPY_MAT)
 skel = _oak.skeleton()
 crown = _tree.layout()
-assert _tree.skeleton_sha(skel) == scn["tho_skeleton_sha"], "skeleton code changed since the .blend was saved"
+# The .blend's leaf cards and canopy master depend on the crown layout only. The roots changed in the
+# trunk pass, so the bark high poly is built here from the current skeleton (the .blend's P3 bark
+# high poly is not read), smooth: the tileable set carries the fissures, the bake only macro AO.
+assert _tree.skeleton_sha([b for b in skel if b["level"] >= 1]) == LIMBS_SHA, "limbs changed"
+bark_high = _tree.tube_mesh(f"{PIECE}_bark_high_gen", skel, {0: 40, 1: 28, 2: 16, 3: 10},
+                            {0: 0.025, 1: 0.04, 2: 0.05, 3: 0.05})
+bark_high.data.materials.append(bark_mat)
 
 
 def _set_pins(mesh, value):
@@ -89,17 +109,20 @@ def uv_area(obj):
     return total
 
 
-def pack_below_strip(obj, rotate, scale, margin, locked=(), margin_method="SCALED", right=1.0, check=True):
-    """Pack obj's UVMap islands into u < right, v < LEAF_V0, around locked placeholders over the
-    leaf strip (and over u >= right) and around the (already packed, unchanged) islands of the
-    `locked` objects. Returns the islands' v max, or None (check=False) when they do not fit."""
+def pack_below_strip(obj, rotate, scale, margin, locked=(), margin_method="SCALED", right=1.0, check=True,
+                     left=0.0):
+    """Pack obj's UVMap islands into left < u < right, v < LEAF_V0, around locked placeholders over
+    the leaf strip (and over u >= right and u <= left) and around the (already packed, unchanged)
+    islands of the `locked` objects. Returns the islands' v max, or None (check=False) when they do
+    not fit."""
     keep = []
     for lo in locked:
         a = np.empty(len(lo.data.loops) * 2)
         lo.data.uv_layers["UVMap"].data.foreach_get("uv", a)
         keep.append(a)
         _set_pins(lo.data, True)
-    rects = [(0.0, _tree.LEAF_V0, 1.0, 1.0)] + ([(right, 0.0, 1.0, _tree.LEAF_V0)] if right < 1.0 else [])
+    rects = ([(0.0, _tree.LEAF_V0, 1.0, 1.0)] + ([(right, 0.0, 1.0, _tree.LEAF_V0)] if right < 1.0 else [])
+             + ([(0.0, 0.0, left, _tree.LEAF_V0)] if left > 0.0 else []))
     ph_mesh = bpy.data.meshes.new("leaf_strip_placeholder")
     ph_mesh.from_pydata([(x, y, -90) for _ in rects for x, y in ((0, 0), (1, 0), (1, 1), (0, 1))], [],
                         [[4 * i, 4 * i + 1, 4 * i + 2, 4 * i + 3] for i in range(len(rects))])
@@ -126,7 +149,8 @@ def pack_below_strip(obj, rotate, scale, margin, locked=(), margin_method="SCALE
     a = np.empty(len(obj.data.loops) * 2)
     obj.data.uv_layers["UVMap"].data.foreach_get("uv", a)
     vmax = float(a[1::2].max())
-    fits = vmax < _tree.LEAF_V0 and a.min() >= 0.0 and float(a[0::2].max()) <= right and a.max() <= 1.0
+    fits = (vmax < _tree.LEAF_V0 and a.min() >= 0.0 and float(a[0::2].max()) <= right and a.max() <= 1.0
+            and float(a[0::2].min()) >= left)
     assert fits or not check, (obj.name, a.min(), vmax, a.max())
     return vmax if fits else None
 
@@ -141,6 +165,8 @@ groups = ((trunk, 0, 6, 0.6), (roots, 0, ROOT_SIDES, ROOT_STEP), (limbs, 1, LIMB
           (twigs, 2, 4, 1.5))
 bark_sides = {b["id"]: n for bs, _, n, _ in groups for b in bs}
 parts = [_tree.tube_mesh(f"bark_{i}", bs, {lv: n}, {lv: st}) for i, (bs, lv, n, st) in enumerate(groups)]
+for part, (bs, _, n, st) in zip(parts, groups):
+    _oak.metric_tube_uv(part, bs, n, st)
 bark_low = geom.join(parts, "bark_low")
 faces_before = len(bark_low.data.polygons)
 culled = _tree.cull_buried(bark_low, skel, bark_sides)
@@ -158,28 +184,38 @@ me.uv_layers["UVMap"].data.foreach_set("uv", bv * BARK_UV_PER_M)
 # The bark packs into a left column (BARK_FILLS), so the canopy islands get one large, near-square
 # free block beside it instead of the gaps between scattered bark islands.
 bark_area = uv_area(bark_low)
-for fill in BARK_FILLS:  # the narrowest column the unscaled islands fit in (deterministic packer)
-    bark_right = min(1.0, bark_area / fill / _tree.LEAF_V0)
-    bark_vmax = pack_below_strip(bark_low, rotate=False, scale=False, margin=0.003, right=bark_right, check=False)
-    if bark_vmax is not None:
-        break
-assert bark_vmax is not None, f"bark islands (UV area {bark_area:.4f}) fit no column"
-print(f"{PIECE}: bark UV area {bark_area:.4f}, column u < {bark_right:.4f} (fill {fill})")
-_tree.bark_wind_uv(bark_low)  # TEXCOORD_1 after the atlas pack, so UVMap stays first and active
 
-# Canopy shell: one sector unwrapped and packed below the strip, then closed by rotation (the other
-# sectors reuse its UVs, and the SECTORS-fold master bakes identically into every sector).
-# The canopy slot samples masks at raw UV0, so its islands pack around the locked bark islands.
+# Canopy shell: one sector unwrapped (one island) and packed below the strip, then closed by rotation
+# (the other sectors reuse its UVs, and the SECTORS-fold master bakes identically into every sector).
+# The canopy slot samples masks at raw UV0, so its island packs beside the bark column, never on it.
 shell = _oak.dome_sector("shell_base")
 scene.select_only([shell])
 shell.data.uv_layers.new(name="UVMap")
 bpy.ops.object.mode_set(mode="EDIT")
 bpy.ops.mesh.select_all(action="SELECT")
-bpy.ops.uv.smart_project(angle_limit=SHELL_UV_ANGLE, island_margin=0.01, area_weight=0.2)
+bpy.ops.uv.unwrap(method=SHELL_UNWRAP, margin=0.01)
 bpy.ops.uv.pack_islands(rotate=True, margin=0.01)
 bpy.ops.object.mode_set(mode="OBJECT")
-shell_vmax = pack_below_strip(shell, rotate=True, scale=True, margin=SHELL_PACK_MARGIN, locked=[bark_low],
-                              margin_method="FRACTION")
+shell_uv = np.empty(len(shell.data.loops) * 2)
+shell.data.uv_layers["UVMap"].data.foreach_get("uv", shell_uv)
+# The narrowest bark column (BARK_FILLS, tightest first) that the unscaled bark islands fit in and
+# that the scaled shell island then fits beside, packed against a placeholder over the whole column
+# (with the bark islands locked instead, the packer overran the strip with the one large island).
+shell_vmax = None
+for fill in BARK_FILLS:
+    bark_right = min(1.0, bark_area / fill / _tree.LEAF_V0)
+    bark_vmax = pack_below_strip(bark_low, rotate=False, scale=False, margin=0.003, right=bark_right, check=False)
+    if bark_vmax is None:
+        continue
+    shell.data.uv_layers["UVMap"].data.foreach_set("uv", shell_uv)
+    shell_vmax = pack_below_strip(shell, rotate=True, scale=True, margin=SHELL_PACK_MARGIN,
+                                  margin_method="FRACTION", check=False, left=bark_right + SHELL_PACK_MARGIN)
+    if shell_vmax is not None:
+        break
+assert shell_vmax is not None, f"bark islands (UV area {bark_area:.4f}) and the shell fit no column"
+print(f"{PIECE}: bark UV area {bark_area:.4f}, column u < {bark_right:.4f} (fill {fill}), shell UV area "
+      f"{uv_area(shell):.4f}")
+_tree.bark_wind_uv(bark_low)  # TEXCOORD_1 after the atlas pack, so UVMap stays first and active
 _tree.replicate_sectors(shell)
 shell.data.materials.append(canopy_mat)
 lod.triangulate(shell)
@@ -430,12 +466,52 @@ col = collider.collider_from(csrc, "hull", f"{PIECE}_collider")
 bpy.data.objects.remove(csrc, do_unlink=True)
 assert len(col.data.vertices) <= 64, len(col.data.vertices)
 
+
+
+def at_scale(d):
+    """A 1x texel-density measurement on the SCALE-d export (uniform scale: px/m divides by it)."""
+    return {k: v / SCALE for k, v in d.items()}
+
+
 # Texel density per material (owner ruling): bark against its tileable set through tileUvScale,
-# canopy and fringe against the unique atlas. Each median must reach 256 px/m on its own.
-texel = {f"{PIECE}_bark": uv.measure_texel_density(bark_low, TILE_UV_SCALE * BARK_SET_PX),
-         CANOPY_MAT: uv.measure_texel_density(canopy_low, ATLAS),
-         f"{PIECE}_leaves": uv.measure_texel_density(leaves_low, ATLAS)}
-ao_density = uv.measure_texel_density(bark_low, MASK_SIZE)
+# canopy and fringe against the unique atlas. Each median must reach 256 px/m on its own, measured
+# at the exported scale.
+texel = {f"{PIECE}_bark": at_scale(uv.measure_texel_density(bark_low, TILE_UV_SCALE * BARK_SET_PX)),
+         CANOPY_MAT: at_scale(uv.measure_texel_density(canopy_low, ATLAS)),
+         f"{PIECE}_leaves": at_scale(uv.measure_texel_density(leaves_low, ATLAS))}
+ao_density = at_scale(uv.measure_texel_density(bark_low, MASK_SIZE))
+
+
+def uv_stretch(obj, material, z_max):
+    """Bark UV anisotropy per triangle (largest over smallest singular value of the 3D -> UV map,
+    1 = undistorted) on `material` faces whose lowest vertex is below z_max: p50, p95 and max."""
+    me, vals = obj.data, []
+    uvd = me.uv_layers["UVMap"].data
+    idx = {i for i, m in enumerate(me.materials) if m and m.name == material}
+    for poly in me.polygons:
+        if poly.material_index not in idx:
+            continue
+        li = list(poly.loop_indices)
+        q = [np.array(me.vertices[me.loops[i].vertex_index].co[:]) for i in li]
+        if min(v[2] for v in q) >= z_max:
+            continue
+        t = [np.array(uvd[i].uv[:]) for i in li]
+        e1, e2 = q[1] - q[0], q[2] - q[0]
+        n = np.cross(e1, e2)
+        if np.linalg.norm(n) < 1e-10:
+            continue
+        ax = e1 / np.linalg.norm(e1)
+        ay = np.cross(n / np.linalg.norm(n), ax)
+        x = np.array([[e1 @ ax, e2 @ ax], [e1 @ ay, e2 @ ay]])
+        u = np.column_stack([t[1] - t[0], t[2] - t[0]])
+        if abs(np.linalg.det(x)) < 1e-12 or abs(np.linalg.det(u)) < 1e-14:
+            continue
+        sv = np.linalg.svd(u @ np.linalg.inv(x), compute_uv=False)
+        vals.append(float(sv[0] / sv[1]))
+    vals = np.array(vals)
+    return {"faces": int(vals.size), "p50": float(np.percentile(vals, 50)), "p95": float(np.percentile(vals, 95)),
+            "max": float(vals.max())}
+
 
 # LODs: canopy shells decimate; fringe keeps card subsets; bark takes the rest of each budget.
 lods = []
@@ -451,6 +527,8 @@ for i, (b, lv) in enumerate(((bark_low, leaves_low), (bark1, leaves1), (bark2, l
     _tree.clamp_wind_uv(o)
     _oak.shell_normals(o, CANOPY_MAT, crown)  # smooth domes at every LOD, then bent by the next call
     _tree.set_canopy_normals(o, leaf_mat.name, CANOPY_MAT)
+    joined = _oak.junction_normals(o, skel, bark_mat.name)
+    print(f"{PIECE}: lod{i} junction/ground normals on {joined} bark vertices")
     lods.append(o)
 for src in shell_srcs:
     bpy.data.objects.remove(src, do_unlink=True)
@@ -461,6 +539,17 @@ print(f"{PIECE}: tris per LOD {tris} (LOD0 bark/canopy/fringe {parts0}), texel {
       f"bark AO texels {ao_density}, bark v max {bark_vmax:.4f}, shell v max {shell_vmax:.4f}")
 for name, t in texel.items():
     assert t["median"] >= 256, (name, t)
+stretch = uv_stretch(lods[0], bark_mat.name, 2.6)
+print(f"{PIECE}: bark UV stretch below 2.6 m (1x) {stretch}")
+# 1.2x: scale every LOD and the collider about the trunk base, keeping each corner normal.
+for o in (*lods, col):
+    keep = [tuple(c.vector) for c in o.data.corner_normals]
+    o.data.transform(Matrix.Scale(SCALE, 4))
+    if o is not col:
+        o.data.normals_split_custom_set(keep)
+    o.data.update()
+    after = [tuple(c.vector) for c in o.data.corner_normals]
+    assert max(max(abs(a - b) for a, b in zip(u, v)) for u, v in zip(keep, after)) < 1e-4, o.name
 sig = bake.receiver_signature([lods[0]])
 
 root = scene.empty(PIECE)
@@ -471,6 +560,7 @@ export.export_glb(root, str(out / f"{PIECE}.glb"))
 export.write_export_report(str(out / "export-report.json"), root, PIECE, __file__, budget_class="hero")
 bake.write_bake_report(str(out / "bake-report.json"), receiverSignature=sig, samples=SAMPLES, marginPx=MARGIN,
                        cageExtrusionM=CAGE, maxRayDistanceM=MAX_RAY, texelDensityPxPerM=texel,
+                       scale=SCALE, barkUvStretch=stretch,
                        canopyShell={"cageExtrusionM": SHELL_CAGE, "maxRayDistanceM": SHELL_RAY,
                                     "aoDistanceM": SHELL_AO_DIST, "sectors": _tree.SECTORS,
                                     "clumps": len(crown), "columnsPerSector": _oak.SHELL_COLUMNS,

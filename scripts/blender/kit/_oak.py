@@ -8,7 +8,11 @@ hash as generatorDeps, so they stay byte-frozen). Blender frame, Z up, trunk bas
   non-symmetric lumps in geometry (`clump_lump`). Shell normals are the lumped surface's analytic
   normals per clump (`shell_normals`), so decimated LODs shade as smooth domes, not facets.
 - Shell faces wholly inside a neighbouring clump are culled (`cull_shell_hidden`) to pay for a
-  denser shell ring, which keeps dome silhouettes round at an 8 m close-up."""
+  denser shell ring, which keeps dome silhouettes round at an 8 m close-up.
+- Trunk pass (owner, 2026-10-14): roots start buried in their strand and leave it at spread heights
+  into a concave flare (no collar of root start caps), junction and ground normals come from the
+  tubes' smooth union (`junction_normals`), and the bark UV is metric on the low-poly surface
+  (`metric_tube_uv`)."""
 from __future__ import annotations
 
 import math
@@ -34,6 +38,35 @@ SHELL_COLUMNS = tuple(c for _, c in SHELL_RINGS)
 SHELL_PHIS = tuple(round(math.atan((DOME_TOP if p >= 0 else DOME_BASE) / DOME_WIDE * math.tan(math.radians(p))), 4)
                    for p, _ in SHELL_RINGS)  # ring latitudes (rad) on the master ellipsoid
 CLUMP_ATTR = "oak_clump"  # point attribute on shell vertices: the clump index (float)
+# Roots (trunk pass): start heights on the strand centreline (spread per root, so the roots leave
+# the strands at different heights and no ring of root tops forms a collar), tip depth (below the
+# meadow relief's -0.25 m floor, so the tips run into the ground), the outward power (> 1: a root
+# first runs down along its strand, then out, a concave flare) and the radius rising from a buried
+# start to a buttress peak at ROOT_T_PEAK of the root's length. Up to 1.8 m the strands are at
+# least 0.44 m thick, so a 0.32 m start ring sits inside their 6-sided receiver (inscribed 0.38 m).
+ROOT_Z0, ROOT_TIP_Z, ROOT_OUT_POW = (1.0, 1.8), -0.35, 1.5
+ROOT_R_START, ROOT_R_PEAK, ROOT_T_PEAK = 0.32, 0.46, 0.22
+# Junction normals (`junction_normals`): smooth-union blend radius (m) between two branches, and the
+# ground lean: bark at GROUND_Z1 and below bends toward up, by GROUND_W at GROUND_Z0.
+JUNCTION_BLEND = 0.3
+GROUND_Z0, GROUND_Z1, GROUND_W = -0.1, 0.3, 0.6
+
+
+def _smoothstep(x: float) -> float:
+    x = min(1.0, max(0.0, x))
+    return x * x * (3 - 2 * x)
+
+
+def _strand_point(i: int, t: float) -> Vector:
+    """Centreline of trunk strand i at parameter t in [0, 1] (z from -0.3 to 3.7 m)."""
+    a = 2 * math.pi * i / 3 + 3.6 * t
+    r = 0.36 + 0.95 * (1 - t) ** 3
+    lean = 0.2 * math.sin(math.pi * t * 0.9)
+    return Vector((r * math.cos(a) + lean, r * math.sin(a) + 0.1 * lean, -0.3 + 4.0 * t))
+
+
+def _strand_radius(t: float) -> float:
+    return 0.5 * (1 - 0.3 * t) + 0.32 * (1 - t) ** 4
 
 
 def skeleton(seed: str = SEED) -> list[dict]:
@@ -42,28 +75,31 @@ def skeleton(seed: str = SEED) -> list[dict]:
     crown = _tree.layout(seed)
     out: list[dict] = []
     for i in range(3):  # trunk strands: as `_tree.skeleton` (owner-approved twist)
-        pts, radii = [], []
-        for k in range(41):
-            t = k / 40
-            a = 2 * math.pi * i / 3 + 3.6 * t
-            r = 0.36 + 0.95 * (1 - t) ** 3
-            lean = 0.2 * math.sin(math.pi * t * 0.9)
-            pts.append(Vector((r * math.cos(a) + lean, r * math.sin(a) + 0.1 * lean, -0.3 + 4.0 * t)))
-            radii.append(0.5 * (1 - 0.3 * t) + 0.32 * (1 - t) ** 4)
+        pts = [_strand_point(i, k / 40) for k in range(41)]
+        radii = [_strand_radius(k / 40) for k in range(41)]
         out.append({"level": 0, "points": pts, "radii": radii, "sway": (0.0, _tree.SWAY_TRUNK)})
-    # Surface roots, heavier than P1 (ref-1): they leave the strands higher, stay thick for longer,
-    # reach further and sink below the meadow only at the tip.
+    # Surface roots (trunk pass, owner 2026-10-14: no collar where the trunk meets the flare). Each
+    # root starts on the centreline of the strand nearest its heading, ROOT_Z0 up and thinner than
+    # that strand's inscribed tube, so its start ring and cap are buried (and culled); it leaves the
+    # strand's surface at a slant, swells into a buttress outside it and sinks below the ground at
+    # the tip. Same rng draws as P2, so the limbs and their wind are unchanged.
     for i in range(8):
         a = 2 * math.pi * (i + rng.uniform(-0.25, 0.25)) / 8
         reach = rng.uniform(2.4, 3.2) * 1.15
-        pts = []
+        z0 = ROOT_Z0[0] + (ROOT_Z0[1] - ROOT_Z0[0]) * _tree.hash01(f"root_z0:{i}")
+        ts = (z0 + 0.3) / 4.0
+        s = min((_strand_point(j, ts) for j in range(3)),
+                key=lambda p: abs(math.remainder(math.atan2(p.y, p.x) - a, 2 * math.pi)))
+        pts, radii = [], []
         for k in range(21):
             t = k / 20
-            r = 0.5 + (reach - 0.5) * t ** 1.05
             w = 0.18 * math.sin(3 * t + i)
-            pts.append(Vector((r * math.cos(a + w), r * math.sin(a + w), 1.6 * (1 - t) ** 2.0 - 0.22 * t)))
-        out.append({"level": 0, "points": _tree._smooth(pts), "radii": _tree._lerp_radius(0.7, 0.13, 21, 0.6),
-                    "sway": (0.0, 0.0)})
+            e = Vector((reach * math.cos(a + w), reach * math.sin(a + w)))
+            h = s.xy + (e - s.xy) * t ** ROOT_OUT_POW
+            pts.append(Vector((h.x, h.y, z0 * (1 - t) ** 2.0 + ROOT_TIP_Z * t)))
+            rise = ROOT_R_START + (ROOT_R_PEAK - ROOT_R_START) * _smoothstep(t / ROOT_T_PEAK)
+            radii.append(min(rise, 0.13 + (ROOT_R_PEAK + 0.06 - 0.13) * (1 - t) ** 0.6))
+        out.append({"level": 0, "points": _tree._smooth(pts), "radii": radii, "sway": (0.0, 0.0)})
     # Limbs leave the trunk at 2.6-3.0 m and run out nearly level before rising into their clump,
     # so their length shows under the crown; thicker than P1.
     limbs = []
@@ -443,3 +479,137 @@ def leaf_cards(name: str, crown: list[dict], seed: str = SEED,
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.scene.collection.objects.link(obj)
     return obj
+
+
+def _segments(skel: list[dict]):
+    """Every branch's tube segments as numpy arrays (a, b, ra, rb) and each branch's first index."""
+    import numpy as np
+
+    a, b, ra, rb, start = [], [], [], [], []
+    for br in skel:
+        start.append(len(a))
+        for i in range(len(br["points"]) - 1):
+            a.append(tuple(br["points"][i]))
+            b.append(tuple(br["points"][i + 1]))
+            ra.append(br["radii"][i])
+            rb.append(br["radii"][i + 1])
+    return (np.asarray(a), np.asarray(b), np.asarray(ra), np.asarray(rb), np.asarray(start))
+
+
+def _two_nearest(p, segs):
+    """Per point: the two smallest per-branch tube distances (|p - axis| - radius), ascending."""
+    import numpy as np
+
+    a, b, ra, rb, start = segs
+    ab = b - a
+    ll = np.maximum((ab * ab).sum(1), 1e-12)
+    out = np.empty((len(p), 2))
+    for s in range(0, len(p), 256):
+        q = p[s:s + 256, None, :]
+        t = np.clip(((q - a[None]) * ab[None]).sum(2) / ll[None], 0.0, 1.0)
+        d = np.linalg.norm(q - (a[None] + t[..., None] * ab[None]), axis=2) - (ra[None] + (rb - ra)[None] * t)
+        per = np.minimum.reduceat(d, start, axis=1)
+        per.sort(axis=1)
+        out[s:s + 256] = per[:, :2]
+    return out
+
+
+def junction_normals(obj: bpy.types.Object, skel: list[dict], material: str, blend: float = JUNCTION_BLEND) -> int:
+    """Custom normals on the `material` (bark) corners where two branches meet: the gradient of the
+    polynomial smooth union (radius `blend`) of the two nearest branches' tube distance fields, at
+    every vertex where the second branch's surface lies within `blend` of the first. Both tubes'
+    vertices at a junction read the same field, so the join shades as one surface instead of a
+    crease. Bark low on the ground leans toward up (GROUND_*), so the roots run into the ground.
+    Every other corner keeps its normal. Returns the number of vertices changed."""
+    import numpy as np
+
+    mesh = obj.data
+    idx = {i for i, m in enumerate(mesh.materials) if m and m.name == material}
+    verts = sorted({vi for p in mesh.polygons if p.material_index in idx for vi in p.vertices})
+    if not verts:
+        return 0
+    co = np.empty(len(mesh.vertices) * 3)
+    mesh.vertices.foreach_get("co", co)
+    p = co.reshape(-1, 3)[verts]
+    segs = _segments(skel)
+
+    def field(q):
+        d = _two_nearest(q, segs)
+        h = np.maximum(blend - np.abs(d[:, 0] - d[:, 1]), 0.0) / blend
+        return d[:, 0] - h * h * blend / 4, d
+
+    _, d = field(p)
+    near = (d[:, 1] - d[:, 0]) < blend
+    e = 0.004
+    grad = np.stack([(field(p + o)[0] - field(p - o)[0]) / (2 * e)
+                     for o in (np.array([e, 0, 0]), np.array([0, e, 0]), np.array([0, 0, e]))], 1)
+    grad /= np.maximum(np.linalg.norm(grad, axis=1, keepdims=True), 1e-9)
+    cur = np.array([tuple(c.vector) for c in mesh.corner_normals])
+    vnorm = {}
+    w = np.clip((GROUND_Z1 - p[:, 2]) / (GROUND_Z1 - GROUND_Z0), 0.0, 1.0) * GROUND_W
+    for k, vi in enumerate(verts):
+        if near[k] or w[k] > 0:
+            vnorm[vi] = (grad[k] if near[k] else None, w[k])
+    out = cur.copy()
+    for poly in mesh.polygons:
+        if poly.material_index not in idx:
+            continue
+        for li in poly.loop_indices:
+            hit = vnorm.get(mesh.loops[li].vertex_index)
+            if hit is None:
+                continue
+            g, wk = hit
+            n = g if g is not None else cur[li]
+            n = n * (1 - wk) + np.array([0.0, 0.0, 1.0]) * wk
+            out[li] = n / np.linalg.norm(n)
+    mesh.normals_split_custom_set([tuple(n) for n in out])
+    mesh.update()
+    return len(vnorm)
+
+
+def metric_tube_uv(obj: bpy.types.Object, skel: list[dict], sides: int, step: float) -> None:
+    """Re-lay `_tree.tube_mesh`'s UVMap so it is metric on the low-poly surface itself (trunk pass:
+    the bark read as stretched streaks). U steps by each ring's chord (2 r sin(pi / sides), the true
+    edge length, not the arc), and V advances per ring by the mean length of that ring step's column
+    edges, not the axis length; V stays common to a ring, so ring edges stay level in UV (a V per
+    column sheared them). The tip and start-cap apexes sit their own 3D distance past the ring. One
+    tube_mesh call for `skel` with one level's sides and step."""
+    import numpy as np
+
+    mesh = obj.data
+    co = np.empty(len(mesh.vertices) * 3)
+    mesh.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    uvd = mesh.uv_layers["UVMap"].data
+    polys = mesh.polygons
+    vbase = fbase = 0
+    for b in skel:
+        pts, radii, _ = _tree._resample(b["points"], b["radii"], step)
+        rings, ns = len(pts), sides
+        q = co[vbase:vbase + rings * ns].reshape(rings, ns, 3)
+        tip, start = co[vbase + rings * ns], co[vbase + rings * ns + 1]
+        v = np.concatenate([[0.0], np.cumsum(np.linalg.norm(q[1:] - q[:-1], axis=2).mean(1))])
+        chord = 2 * np.asarray(radii) * math.sin(math.pi / ns)
+
+        def uv(i: int, k: float) -> tuple[float, float]:
+            return ((k - ns / 2) * chord[i], v[i])
+
+        for i in range(rings - 1):
+            for k in range(ns):
+                corners = (uv(i, k), uv(i, k + 1), uv(i + 1, k + 1), uv(i + 1, k))
+                for li, c in zip(polys[fbase + i * ns + k].loop_indices, corners):
+                    uvd[li].uv = c
+        f, last = fbase + (rings - 1) * ns, rings - 1
+        for k in range(ns):
+            mid = (q[last, k] + q[last, (k + 1) % ns]) / 2
+            apex = ((k + 0.5 - ns / 2) * chord[last], v[last] + float(np.linalg.norm(tip - mid)))
+            for li, c in zip(polys[f + k].loop_indices, (uv(last, k), uv(last, k + 1), apex)):
+                uvd[li].uv = c
+        for k in range(ns):
+            mid = (q[0, k] + q[0, (k + 1) % ns]) / 2
+            apex = ((k + 0.5 - ns / 2) * chord[0], -float(np.linalg.norm(start - mid)))
+            for li, c in zip(polys[f + ns + k].loop_indices, (uv(0, k + 1), uv(0, k), apex)):
+                uvd[li].uv = c
+        vbase += rings * ns + 2
+        fbase += (rings - 1) * ns + 2 * ns
+    assert vbase == len(mesh.vertices) and fbase == len(mesh.polygons), (obj.name, vbase, fbase)

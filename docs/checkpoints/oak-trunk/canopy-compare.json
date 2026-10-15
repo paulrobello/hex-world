@@ -1,0 +1,56 @@
+{
+  "tree_hero_oak_lod0/tree_hero_oak_leaves": {
+    "vertices": [
+      363,
+      362
+    ],
+    "posMaxDiffM": 5.331201577973843e-07,
+    "normalMaxDiff": 0.00013622641563415527,
+    "windMaxDiff": 0.0
+  },
+  "tree_hero_oak_lod0/tree_hero_oak_canopy": {
+    "vertices": [
+      1888,
+      1306
+    ],
+    "posMaxDiffM": 5.331201577973843e-07,
+    "normalMaxDiff": 0.0002110302448272705,
+    "windMaxDiff": 0.0
+  },
+  "tree_hero_oak_lod1/tree_hero_oak_leaves": {
+    "vertices": [
+      231,
+      231
+    ],
+    "posMaxDiffM": 4.805480102731963e-07,
+    "normalMaxDiff": 0.00013637542724609375,
+    "windMaxDiff": 0.0
+  },
+  "tree_hero_oak_lod1/tree_hero_oak_canopy": {
+    "vertices": [
+      958,
+      573
+    ],
+    "posMaxDiffM": 5.331201577973843e-07,
+    "normalMaxDiff": 0.00020173192024230957,
+    "windMaxDiff": 0.0
+  },
+  "tree_hero_oak_lod2/tree_hero_oak_leaves": {
+    "vertices": [
+      117,
+      117
+    ],
+    "posMaxDiffM": 4.76837158203125e-07,
+    "normalMaxDiff": 0.00013646483421325684,
+    "windMaxDiff": 0.0
+  },
+  "tree_hero_oak_lod2/tree_hero_oak_canopy": {
+    "vertices": [
+      492,
+      262
+    ],
+    "posMaxDiffM": 5.331201577973843e-07,
+    "normalMaxDiff": 0.00021092593669891357,
+    "windMaxDiff": 0.0
+  }
+}

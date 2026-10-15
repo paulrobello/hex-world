@@ -123,3 +123,10 @@ Owner's notes, verbatim: "there is no visual or ghost of the selected tile when 
 - **R7 HUD (A8):** looks good (signed off).
 - **R9 car sounds:** sound good; single-variant start and drive pools accepted.
 - **Walk mode:** double walk and sprint speed; sprint always double walk; add a walk speed setting with its minimum at the new doubled speed.
+
+## Round 15 (owner, 2026-10-14)
+
+- **River mouth grass line:** looks good (approved, a36663b).
+- **Grass:** double the density at every setting, then make density a slider (0-150% of the new Normal); adopt small-world's thick-grass techniques (crossed blades, clump height noise, per-blade colour).
+- **Cache busting:** hash all resources so they cache bust when updated.
+- **Camera:** save the camera (orbit or walker) at regular intervals so a reload puts the viewer back.

@@ -178,6 +178,10 @@ const OAK_CLUMPS: [([f32; 3], f32, u8); 11] = [
     ([-0.722, 0.419, 8.824], 1.908, 2),
     ([0.516, -0.574, 9.324], 1.949, 2),
 ];
+/// The oak GLB is built at `OAK_SCALE` times the layout above (owner 2026-10-14: the tree 20% bigger;
+/// `SCALE` in scripts/blender/kit/tree_hero_oak.py, applied to every LOD about the trunk base), so
+/// clump centres, radii and the perch lifts scale by it.
+const OAK_SCALE: f32 = 1.2;
 /// `_tree.DOME_WIDE` and `_tree.DOME_TOP`: the master dome's horizontal and upper vertical scale.
 const DOME_WIDE: f32 = 1.15;
 const DOME_TOP: f32 = 0.9;
@@ -200,8 +204,9 @@ fn dome_point(c: [f32; 3], r: f32, azimuth: f32, elevation: f32) -> Vec3 {
 /// mid-slope (owner, 2026-10-14: at [`PERCH_MIN_ELEVATION`] or above the dome tilts at most about
 /// 20 degrees, so a level bird sits on it). Only the domes of clumps 2, 3, 5, 9 and 10 have open
 /// tops; the others' tops lie under a higher dome. Twelve, the forest's bird `max`, at least
-/// about 0.6 m apart. The last field lifts the dome point (the canopy shell) to the top of the
-/// foliage there, leaf cards included, measured against the GLB by the same test.
+/// about 0.6 m apart. The last field (1x metres, scaled by [`OAK_SCALE`]) lifts the dome point
+/// (the canopy shell) to the top of the foliage there, leaf cards included, measured against the
+/// GLB by the same test.
 const OAK_PERCHES: [(usize, f32, f32, f32); 12] = [
     (10, 80.0, 0.0, 0.04),
     (10, 72.0, 1.2, 0.04),
@@ -213,7 +218,7 @@ const OAK_PERCHES: [(usize, f32, f32, f32); 12] = [
     (5, 72.0, 0.3, 0.04),
     (2, 68.0, -0.3, 0.07),
     (2, 68.0, 0.9, 0.09),
-    (3, 68.0, -0.3, 0.0),
+    (3, 68.0, -0.3, -0.05),
     (3, 68.0, 0.9, 0.07),
 ];
 /// The lowest perch elevation on an oak dome (degrees): the dome's normal tilts about 20 degrees
@@ -228,7 +233,9 @@ pub fn canopy_perches(piece: &str) -> Vec<Vec3> {
             .iter()
             .map(|&(k, el, daz, lift)| {
                 let (c, r, _) = OAK_CLUMPS[k];
-                dome_point(c, r, c[1].atan2(c[0]) + daz, el.to_radians()) + Vec3::Y * lift
+                let c = c.map(|x| x * OAK_SCALE);
+                dome_point(c, r * OAK_SCALE, c[1].atan2(c[0]) + daz, el.to_radians())
+                    + Vec3::Y * (lift * OAK_SCALE)
             })
             .collect(),
         "tree_forest" => {
@@ -1600,8 +1607,14 @@ mod tests {
         assert!(r.iter().all(|x| x.cell == Axial::new(1, 0)));
         let centre = Vec2::from(Axial::new(1, 0).to_world(HEX_RADIUS));
         for x in &r {
-            assert!(x.pos.xz().distance(centre) < 8.0, "{x:?} over the oak");
-            assert!(x.pos.y > 5.0 && x.pos.y < 12.0, "{x:?} in the canopy");
+            assert!(
+                x.pos.xz().distance(centre) < 8.0 * OAK_SCALE,
+                "{x:?} over the oak"
+            );
+            assert!(
+                x.pos.y > 5.0 * OAK_SCALE && x.pos.y < 12.0 * OAK_SCALE,
+                "{x:?} in the canopy"
+            );
         }
         // The roosts turn with the tile.
         let r0 = roosts(&[tile(1, 0, "oak", 0)], &c, &|_| true);
@@ -1798,7 +1811,11 @@ mod tests {
                 .iter()
                 .map(|v| v.distance(p))
                 .fold(f32::MAX, f32::min);
-            assert!(near < 0.5, "perch {p} is {near} m from the canopy shell");
+            // Shell vertices are spaced at the tree's scale, so the nearest one is too.
+            assert!(
+                near < 0.5 * OAK_SCALE,
+                "perch {p} is {near} m from the canopy shell"
+            );
             let above = canopy
                 .iter()
                 .filter(|v| v.xz().distance(p.xz()) < 0.8)
