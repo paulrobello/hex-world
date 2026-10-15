@@ -71,7 +71,7 @@
 
 /* ---------- Photo mode: its own overlay root, so the play HUD's hide never takes it ---------- */
 .photo-ui.is-off { display: none; }
-.photo-ui > .focus-band { pointer-events: none; }
+.photo-ui > .focus-band, .photo-ui > .focus-mark { pointer-events: none; }
 .pbar { gap: 2px; animation: pbar-in var(--t-slow) var(--ease); }
 .pbar__title { display: flex; align-items: center; gap: 8px; margin: 0 8px; font-weight: 800; font-size: var(--fs-4); }
 .pbar__title .ic { width: 22px; height: 22px; color: var(--pick); }
@@ -105,6 +105,11 @@
 .focus-band { position: fixed; left: 0; right: 380px; top: 50%; height: 0; border-top: 1.5px dashed rgb(238 243 246 / .7); opacity: 0; transition: opacity var(--t) var(--ease); }
 .focus-band span { position: absolute; left: 24px; top: -30px; padding: 4px 8px; border-radius: var(--r-control); background: var(--sheet); font-size: var(--fs-2); font-weight: 700; }
 .focus-band.is-shown { opacity: 1; }
+/* Where a click focused: a ring that settles onto the point and fades (photo-focus.ts). */
+.focus-mark { position: fixed; width: 28px; height: 28px; margin: -14px 0 0 -14px; border: 2px solid rgb(238 243 246 / .9); border-radius: 50%; box-shadow: 0 0 0 1px rgb(0 0 0 / .35); opacity: 0; }
+.focus-mark.is-shown { animation: focus-mark 1.2s var(--ease) forwards; }
+@keyframes focus-mark { 0% { opacity: 0; transform: scale(1.8); } 15% { opacity: 1; transform: scale(1); } 70% { opacity: 1; } 100% { opacity: 0; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { @keyframes focus-mark { 0%, 70% { opacity: 1; } 100% { opacity: 0; } } }
 
 .photo-ui .toast small { font-size: var(--fs-2); color: var(--ink-2); }
 .toast--ok .ic { color: var(--ok); }

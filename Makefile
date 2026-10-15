@@ -438,11 +438,16 @@ shots-cars:
 
 # Photo mode checkpoint (PRD §4.6): runs docs/checkpoints/photo/photo.json at 1280x800 with the
 # game camera's tilt-shift off and `--clock fixed`: enter (tilt preset), a manual-DOF close-up and
-# the same shot with DOF off, the tilt preset with roll and exposure, a 4x offscreen export
-# (5120x3200), then exit back to the orbit camera. Copies JPEG stills, the state dumps, the export's
-# PNG size and mean, and the DOF-vs-off RMSE (fails at or below 0.004, a lens that did nothing) to
-# the folder; the full-size PNG stays in target/shots.
-PHOTO_SHOTS = photo-01-enter-tilt photo-02-dof-closeup photo-02-dof-off-closeup photo-03-tilt-roll-exposure photo-04-export-4x photo-05-exit-orbit
+# the same shot with DOF off, the tilt preset with roll and exposure, one framing click-focused near
+# (`focus_at` low on the screen) then far (high on it), a 4x offscreen export (5120x3200), then exit
+# back to the orbit camera. Copies JPEG stills, the state dumps, the export's PNG size and mean, and
+# the DOF-vs-off RMSE (fails at or below 0.004, a lens that did nothing) to the folder, and fails
+# unless the far click focuses farther, higher on the screen, and changes the image. Then, level at
+# eye height 40 m south of a hero oak, focused at 150 m and after a click on the crown's middle
+# (photo-08/09): fails unless the click hits the tree within 2% of 36.1 m, the view depth of the
+# oak's LOD0 mesh along that ray (hex-render walk test `the_tree_click_shot_meets_the_oak_mesh_at_36_m`).
+# The full-size PNG stays in target/shots.
+PHOTO_SHOTS = photo-01-enter-tilt photo-02-dof-closeup photo-02-dof-off-closeup photo-03-tilt-roll-exposure photo-06-click-focus-near photo-07-click-focus-far photo-08-tree-before photo-09-tree-click photo-04-export-4x photo-05-exit-orbit
 PHOTO_DOCS = docs/checkpoints/photo
 shots-photo:
 	mkdir -p target/shots $(PHOTO_DOCS)
@@ -457,6 +462,11 @@ shots-photo:
 	@r=$$(magick compare -metric RMSE target/shots/photo-02-dof-closeup.png target/shots/photo-02-dof-off-closeup.png null: 2>&1 | sed -E 's/.*\(([0-9.e-]+)\).*/\1/'); \
 	  awk -v r="$$r" 'BEGIN { exit !(r > 0.004) }' || { echo "manual DOF changed nothing (RMSE $$r)"; exit 1; }; \
 	  echo "{\"dof_vs_off_rmse\": $$r}" > $(PHOTO_DOCS)/photo-02-dof-rmse.json; echo "manual DOF vs off: RMSE $$r"
+	@r=$$(magick compare -metric RMSE target/shots/photo-06-click-focus-near.png target/shots/photo-07-click-focus-far.png null: 2>&1 | sed -E 's/.*\(([0-9.e-]+)\).*/\1/'); \
+	  awk -v r="$$r" 'BEGIN { exit !(r > 0.004) }' || { echo "click focus near vs far changed nothing (RMSE $$r)"; exit 1; }; \
+	  echo "click focus near vs far: RMSE $$r"
+	@python3 -c 'import json,sys; n,f=(json.load(open(f"target/shots/photo-0{i}-click-focus-{w}.json"))["photo"] for i,w in ((6,"near"),(7,"far"))); ok=n["focus_picks"]==1 and f["focus_picks"]==2 and n["focus_row"]==0.85 and f["focus_row"]==0.22 and n["focus"]<f["focus"]; print("click focus near", n["focus"], "m at row", n["focus_row"], "far", f["focus"], "m at row", f["focus_row"]); sys.exit(0 if ok else 1)' || { echo "click focus state is wrong"; exit 1; }
+	@python3 -c 'import json,sys; t=json.load(open("target/shots/photo-09-tree-click.json"))["photo"]; ok=t["focus_hit"]=="tree" and abs(t["focus"]-36.1)<=0.02*36.1; print("tree click:", t["focus_hit"], t["focus"], "m (expected 36.1 m, the oak mesh)"); sys.exit(0 if ok else 1)' || { echo "the tree click missed the oak"; exit 1; }
 	cp target/shots/photo-*.json $(PHOTO_DOCS)/
 	@echo "wrote $(PHOTO_DOCS)/"
 

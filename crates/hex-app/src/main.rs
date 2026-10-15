@@ -125,6 +125,7 @@ fn main() {
         .init_resource::<photo::PhotoSettings>()
         .init_resource::<photo::PhotoSession>()
         .init_resource::<photo::PhotoExports>()
+        .init_resource::<photo::PhotoFocus>()
         .init_resource::<persist::PersistQueue>()
         .init_resource::<persist::SavedSettings>()
         .init_resource::<hex_render::play::packs::PackRequests>()
@@ -138,6 +139,7 @@ fn main() {
                 control::run_commands,
                 game::apply_actions,
                 photo::sync,
+                photo::focus_pick,
                 walk::sync,
                 photo::run_exports,
                 persist::run,

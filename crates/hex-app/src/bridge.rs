@@ -242,7 +242,7 @@ mod schema {
         r#"{"cmd":"bulldoze","q":1,"r":0}"#,
         r#"{"cmd":"set_tool","mode":"bulldoze"}"#,
         r#"{"cmd":"toggle","what":"inventory"}"#,
-        r#"{"cmd":"photo","dof":"tilt","focus":64,"aperture":2.8,"exposure":0.3,"fov":50,"roll":0,"pause_agents":true}"#,
+        r#"{"cmd":"photo","dof":"tilt","focus":64,"aperture":2.8,"exposure":0.3,"fov":50,"roll":0,"pause_agents":true,"focus_at":[0.5,0.62]}"#,
         r#"{"cmd":"photo_export","scale":2,"name":"hex-world"}"#,
         r#"{"cmd":"save","tag":"autosave","path":null,"volumes":{"master":0.8,"music":0.55,"sfx":0.75,"ambience":0.7,"ui":0.5}}"#,
         r#"{"cmd":"load","path":null}"#,
@@ -521,6 +521,11 @@ mod schema {
             &crate::photo::PhotoSettings::default(),
             &crate::photo::PhotoSession::default(),
             &crate::photo::PhotoExports::default(),
+            &crate::photo::PhotoFocus {
+                point: Some(Vec3::ZERO),
+                hit: Some("tree"),
+                ..Default::default()
+            },
             false,
             0,
             None,

@@ -1,10 +1,12 @@
 // Photo mode (S8, PRD §4.6): the photo bar with free-camera keys, the Photo sheet (depth of field,
 // camera, world) and PNG export. It lives in its own overlay root, so the play HUD hiding for photo
 // mode never takes it along, and H hides only this root. Every change goes to the engine as a
-// `photo` or `photo_export` command; the engine owns the camera.
+// `photo` or `photo_export` command; the engine owns the camera. A click on the scene focuses Tilt
+// and Manual on the surface under it (photo-focus.ts tells it from the drag that looks around).
 import type { Dof, GameEvent, HexWorld, PhotoState } from "./bridge.ts";
 import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
+import { ClickDetector, FOCUS_MAX, FOCUS_MIN, focusAt, focusSliderValue } from "./photo-focus.ts";
 
 const STOPS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22];
 const SCALES = [1, 2, 4] as const;
@@ -104,6 +106,8 @@ export class Photo {
   private readonly canvas: HTMLCanvasElement | null;
   private readonly band: HTMLElement;
   private readonly bandLabel: HTMLElement;
+  private readonly mark: HTMLElement;
+  private readonly clicks = new ClickDetector();
   private readonly toast: HTMLElement;
   private readonly dof: ReturnType<typeof seg<Dof>>;
   private readonly scale: ReturnType<typeof seg<`${Scale}`>>;
@@ -126,6 +130,12 @@ export class Photo {
   private job: { name: string; scale: Scale; file: string; cancelled: boolean } | null = null;
   private failedScale: Scale | null = null;
   private bandTimer = 0;
+  private dofNow: Dof = "tilt";
+  /** The band's row from the engine, and its count of landed clicks when last seen. */
+  private row = 0.5;
+  private picks = 0;
+  /** Where the last click sent to the engine was, for the marker once it lands. */
+  private clickedAt: { x: number; y: number } | null = null;
   private toastTimer = 0;
   private maxTexture = 8192;
 
@@ -160,8 +170,10 @@ export class Photo {
         "p",
         { class: "pbar__keys" },
         h("span", {}, "Drag to look"),
+        h("span", {}, "Click to focus"),
         h("span", {}, h("kbd", {}, "W"), h("kbd", {}, "A"), h("kbd", {}, "S"), h("kbd", {}, "D"), " fly"),
         h("span", {}, h("kbd", {}, "Q"), h("kbd", {}, "E"), " down, up"),
+        h("span", {}, h("kbd", {}, "C"), " save PNG"),
       ),
       h("span", { class: "bar__rule", "aria-hidden": "true" }),
       hide,
@@ -181,7 +193,7 @@ export class Photo {
         this.syncDofFields(v);
       },
     );
-    this.focus = slider("Focus distance", 2, 400, 1, (v) => `${v} m`);
+    this.focus = slider("Focus distance", FOCUS_MIN, FOCUS_MAX, 1, (v) => `${v} m`);
     this.aperture = slider("Aperture", 0, STOPS.length - 1, 1, (v) => stopLabel(STOPS[v] ?? 2.8));
     this.exposure = slider("Exposure", -2, 2, 0.1, (v) => `${signed(v, 1, "")} EV`);
     this.fov = slider("Field of view", 20, 90, 1, (v) => `${v}°`);
@@ -308,10 +320,30 @@ export class Photo {
     this.band = h("div", { class: "focus-band", "aria-hidden": "true" });
     this.bandLabel = h("span", {});
     this.band.append(this.bandLabel);
+    this.mark = h("div", { class: "focus-mark", "aria-hidden": "true" });
     this.toast = h("div", { class: "toast", role: "status", "aria-live": "polite" });
     const showUi = h("button", { class: "show-ui", type: "button" }, icon("eye"), "Show UI ", h("kbd", {}, "H"));
     showUi.addEventListener("click", () => this.setHidden(false));
-    this.root.append(this.band, bar, sheet, this.toast, showUi);
+    this.root.append(this.band, this.mark, bar, sheet, this.toast, showUi);
+
+    // Click to focus: only presses on the canvas count, so the panel and bar (which take their own
+    // pointer events above it) never refocus. A drag still looks around in the engine.
+    const c = this.canvas;
+    if (c) {
+      const sample = (e: PointerEvent) => ({ x: e.clientX, y: e.clientY, t: e.timeStamp, button: e.button });
+      c.addEventListener("pointerdown", (e) => {
+        if (this.on) this.clicks.press(sample(e));
+      });
+      c.addEventListener("pointermove", (e) => this.clicks.move(sample(e)));
+      c.addEventListener("pointercancel", () => this.clicks.cancel());
+      c.addEventListener("pointerup", (e) => {
+        if (!this.clicks.release(sample(e)) || !this.on || this.dofNow === "off") return;
+        const uv = focusAt(e.clientX, e.clientY, c.getBoundingClientRect());
+        if (!uv) return;
+        this.clickedAt = { x: e.clientX, y: e.clientY };
+        this.send({ focus_at: uv });
+      });
+    }
 
     // A mouse drag on a slider hands keyboard focus back to the canvas, so WASD keeps flying;
     // keyboard users keep focus on the slider and step it with the arrows.
@@ -331,6 +363,8 @@ export class Photo {
       this.hidden = false;
       this.pull(photo);
       this.paintExport();
+      this.picks = photo.focus_picks;
+      this.row = photo.focus_row;
       this.root.classList.remove("is-off", "is-hidden");
       this.root.removeAttribute("aria-hidden");
     } else if (!on && this.on) {
@@ -338,6 +372,15 @@ export class Photo {
       this.root.classList.add("is-off");
       this.root.setAttribute("aria-hidden", "true");
       this.band.classList.remove("is-shown");
+      this.mark.classList.remove("is-shown");
+      this.clicks.cancel();
+    } else if (this.on && photo && photo.focus_picks !== this.picks) {
+      // A click landed: the slider follows the engine's depth, the band its row.
+      this.picks = photo.focus_picks;
+      this.row = photo.focus_row;
+      setSlider(this.focus, focusSliderValue(photo.focus));
+      this.showBand();
+      this.showMark();
     }
   }
 
@@ -369,6 +412,11 @@ export class Photo {
       if (!e.repeat) this.setHidden(!this.hidden);
       return true;
     }
+    // Saves a PNG at the chosen resolution, also while H hides the photo UI (owner 2026-10-14).
+    if (k === "c") {
+      if (!e.repeat) this.export(this.chosen);
+      return true;
+    }
     // Game keys are inert here; WASD, Q and E fly the camera in the engine.
     return k === "r" || k === "b" || k === "Tab" || k === "Enter" || /^[0-9=-]$/.test(k);
   }
@@ -390,7 +438,7 @@ export class Photo {
   private pull(p: PhotoState): void {
     this.dof.set(p.dof);
     this.syncDofFields(p.dof);
-    setSlider(this.focus, Math.round(Math.min(400, Math.max(2, p.focus))));
+    setSlider(this.focus, focusSliderValue(p.focus));
     const stop = STOPS.reduce(
       (best, f, i) => (Math.abs(f - p.aperture) < Math.abs(STOPS[best]! - p.aperture) ? i : best),
       0,
@@ -403,6 +451,7 @@ export class Photo {
   }
 
   private syncDofFields(v: Dof): void {
+    this.dofNow = v;
     for (const s of [this.focus, this.aperture]) {
       s.field.classList.toggle("is-disabled", v === "off");
       s.input.disabled = v === "off";
@@ -411,9 +460,23 @@ export class Photo {
 
   private showBand(): void {
     this.bandLabel.textContent = `Focus ${this.focus.input.value} m`;
+    // The band preview sits on the engine's band row (the canvas fills the viewport).
+    this.band.style.top = `${this.row * 100}%`;
     this.band.classList.add("is-shown");
     clearTimeout(this.bandTimer);
     this.bandTimer = window.setTimeout(() => this.band.classList.remove("is-shown"), BAND_MS);
+  }
+
+  /** A ring where the last click focused, fading out. It is overlay DOM, so no PNG export has it. */
+  private showMark(): void {
+    const at = this.clickedAt;
+    this.clickedAt = null;
+    if (!at) return;
+    this.mark.style.left = `${at.x}px`;
+    this.mark.style.top = `${at.y}px`;
+    this.mark.classList.remove("is-shown");
+    void this.mark.offsetWidth;
+    this.mark.classList.add("is-shown");
   }
 
   private sizeFor(scale: Scale): [number, number] {

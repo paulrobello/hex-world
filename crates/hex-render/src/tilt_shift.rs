@@ -179,15 +179,22 @@ pub fn build_uniform(
 pub struct TiltOverride {
     /// View-space distance of the sharp band (m).
     pub focus_m: f32,
+    /// The band's screen row, 0 at the top: 0.5 on the optical axis, or the row a click focused on.
+    pub focus_uv_y: f32,
     /// 0..=1, applied without the zoom fade so close-ups blur too.
     pub strength: f32,
 }
 
-/// Uniform for the photo preset: the band sits on the optical axis (screen centre).
+/// Uniform for the photo preset: the band sits on the row the panel chose (the screen centre
+/// unless a click focused elsewhere).
 pub fn build_override_uniform(o: &TiltOverride, taps: u32, near: f32) -> Option<TiltShift> {
     let amount = o.strength.clamp(0.0, 1.0);
     (amount > 0.01).then_some(TiltShift {
-        focus_uv_y: 0.5,
+        focus_uv_y: if o.focus_uv_y.is_finite() {
+            o.focus_uv_y.clamp(0.0, 1.0)
+        } else {
+            0.5
+        },
         band_half: BAND_HALF,
         focus_depth: o.focus_m.max(0.5),
         near,
@@ -519,6 +526,7 @@ mod tests {
     fn photo_override_ignores_zoom_and_the_player_toggle() {
         let o = TiltOverride {
             focus_m: 6.0,
+            focus_uv_y: 0.5,
             strength: 0.5,
         };
         // A 6 m close-up is below ZOOM_OFF_M, where the game camera's effect is off.
@@ -527,6 +535,33 @@ mod tests {
         assert!((u.max_radius - MAX_RADIUS * 0.5).abs() < 1e-6);
         let off = TiltOverride { strength: 0.0, ..o };
         assert!(build_override_uniform(&off, 16, 0.1).is_none());
+    }
+
+    #[test]
+    fn photo_override_puts_the_band_on_the_clicked_row() {
+        let o = TiltOverride {
+            focus_m: 30.0,
+            focus_uv_y: 0.8,
+            strength: 1.0,
+        };
+        let u = build_override_uniform(&o, 16, 0.1).unwrap();
+        assert_eq!((u.focus_uv_y, u.focus_depth), (0.8, 30.0));
+        let below = TiltOverride {
+            focus_uv_y: 1.4,
+            ..o
+        };
+        assert_eq!(
+            build_override_uniform(&below, 16, 0.1).unwrap().focus_uv_y,
+            1.0
+        );
+        let bad = TiltOverride {
+            focus_uv_y: f32::NAN,
+            ..o
+        };
+        assert_eq!(
+            build_override_uniform(&bad, 16, 0.1).unwrap().focus_uv_y,
+            0.5
+        );
     }
 
     #[test]

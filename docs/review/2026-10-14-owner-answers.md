@@ -138,3 +138,14 @@ Owner's notes, verbatim: "there is no visual or ghost of the selected tile when 
 - **O2 root creases:** leave them (no welded root flare).
 - **Wildflowers:** "the wild flowers have no grass around them". Grass now grows in among a flower clump up to a 0.2 m centre instead of keeping the clump's whole 0.9 m footprint bare.
 - **Photo mode:** add click to set the focal point for the tilt-shift option. In progress.
+
+## Round 17 (owner, 2026-10-14, after playing a1084fc)
+
+- **Bulldoze dust:** "the dust particles / circles are still really big reduce the largest size by 20%". Each puff's full-grown radius is cut by a further 20%.
+- **Cattails and reeds:** look good (approved, a36663b).
+- **River spring and river mouth (R2):** look good (approved).
+- **Grass slider:** works well.
+- **Foliage sway:** looks good (approved, 9ddb35f).
+- **Photo mode:** add a hotkey to take the photo, because the UI is sometimes hidden (C saves a PNG at the chosen resolution, also with H hiding the UI). Dragging the Focus distance slider releases a click focus (the band returns to the screen centre).
+- **Photo export (A14):** no flash when clicking Save PNG; the exported image looks good (approved).
+- **Social share image (R8):** re-take it, framed like the owner's play screenshot (house cluster with road, a river bend around the oak from a spring pool, pine forest behind, meadows and a beach in front).

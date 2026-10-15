@@ -18,7 +18,7 @@ use serde::Deserialize;
 use crate::actions::{Action, ActionQueue, Tool};
 use crate::game::GameState;
 use crate::persist::{PersistQueue, SavedSettings};
-use crate::photo::{Dof, PhotoExports, PhotoPatch, PhotoSession, PhotoSettings};
+use crate::photo::{Dof, PhotoExports, PhotoFocus, PhotoPatch, PhotoSession, PhotoSettings};
 use crate::sim::CarSim;
 use crate::walk::{WalkRequest, WalkSession, WalkSpeed};
 use crate::{FrameCount, RunFlags, bridge, capture};
@@ -136,7 +136,10 @@ pub enum Command {
     },
     /// Photo-mode panel values (PRD §4.6), each clamped to its slider; omitted fields keep theirs.
     /// `dof` is `off`, `tilt` (the tilt-shift kernel) or `manual`; `focus` is metres, `aperture`
-    /// an f-number, `exposure` stops brighter, `fov` and `roll` degrees.
+    /// an f-number, `exposure` stops brighter, `fov` and `roll` degrees. `focus_at` is a click on the
+    /// scene, `[x, y]` across the viewport from its top left (0..1): Tilt and Manual focus on the
+    /// surface under it (Tilt also moves its band to that row); with DOF off it does nothing, and a
+    /// click on the sky keeps the focus. It resolves after the other fields of the same command.
     Photo {
         dof: Option<Dof>,
         focus: Option<f32>,
@@ -145,6 +148,7 @@ pub enum Command {
         fov: Option<f32>,
         roll: Option<f32>,
         pause_agents: Option<bool>,
+        focus_at: Option<[f32; 2]>,
     },
     /// Renders the game camera offscreen at `scale` (1, 2 or 4) times the window's logical size and
     /// saves a PNG: `target/shots/<name>.png` natively, `hexWorld.takeShot(name)` on the web. Ends
@@ -282,7 +286,11 @@ pub fn run_commands(
     (mut tilt, mut pinned): (ResMut<TiltShiftSettings>, ResMut<TiltPinned>),
     mut actions: ResMut<ActionQueue>,
     mut reduced: ResMut<ReducedMotion>,
-    (mut photo, mut exports): (ResMut<PhotoSettings>, ResMut<PhotoExports>),
+    (mut photo, mut exports, mut photo_focus): (
+        ResMut<PhotoSettings>,
+        ResMut<PhotoExports>,
+        ResMut<PhotoFocus>,
+    ),
     (mut persist, mut saved): (ResMut<PersistQueue>, ResMut<SavedSettings>),
     mut walk: ResMut<WalkSession>,
 ) {
@@ -383,15 +391,29 @@ pub fn run_commands(
             fov,
             roll,
             pause_agents,
-        } => photo.apply(&PhotoPatch {
-            dof,
-            focus,
-            aperture,
-            exposure,
-            fov,
-            roll,
-            pause_agents,
-        }),
+            focus_at,
+        } => {
+            photo.apply(&PhotoPatch {
+                dof,
+                focus,
+                aperture,
+                exposure,
+                fov,
+                roll,
+                pause_agents,
+            });
+            match focus_at.map(Vec2::from) {
+                Some(uv)
+                    if uv.is_finite()
+                        && uv.cmpge(Vec2::ZERO).all()
+                        && uv.cmple(Vec2::ONE).all() =>
+                {
+                    photo_focus.request = Some(uv);
+                }
+                Some(uv) => warn!("photo command: focus_at {uv} is outside 0..1, skipped"),
+                None => {}
+            }
+        }
         Command::PhotoExport { scale, name } => exports.push(scale, name),
         Command::Exit => exit.0 = true,
         c @ (Command::Save { .. } | Command::Load { .. } | Command::NewWorld) => {
@@ -540,10 +562,11 @@ pub fn publish_state(
         Option<Res<hex_render::play::ghost::GhostReport>>,
         Option<Res<hex_render::play::grass::GrassReport>>,
     ),
-    (photo, session, exports, paused, kit_failures): (
+    (photo, session, exports, photo_focus, paused, kit_failures): (
         Res<PhotoSettings>,
         Res<PhotoSession>,
         Res<PhotoExports>,
+        Res<PhotoFocus>,
         Res<hex_render::AgentsPaused>,
         Option<Res<hex_render::AssetLoadFailures>>,
     ),
@@ -590,7 +613,7 @@ pub fn publish_state(
         "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps, "chosen": tilt_chosen.0 },
         "tier": tier.json(),
         "grade": grade,
-        "photo": crate::photo::state_json(&photo, &session, &exports, paused.0, sim.ticks(), gpu_limits.as_ref()),
+        "photo": crate::photo::state_json(&photo, &session, &exports, &photo_focus, paused.0, sim.ticks(), gpu_limits.as_ref()),
         "walk": crate::walk::state_json(&walk, &walk_ground),
         "frames": frames.0,
         "seed": flags.0.seed,
@@ -653,7 +676,7 @@ mod tests {
                     {"cmd":"wait","frames":30},{"cmd":"screenshot","name":"a"},
                     {"cmd":"scenario","name":"gate2000"},{"cmd":"dump_state","name":"s"},{"cmd":"exit"},
                     {"cmd":"tilt","on":false,"strength":0.5},{"cmd":"set_tier","tier":"low"},
-                    {"cmd":"photo","dof":"manual","focus":12.5},{"cmd":"photo_export","scale":4,"name":"p"}]"#;
+                    {"cmd":"photo","dof":"manual","focus":12.5,"focus_at":[0.25,0.75]},{"cmd":"photo_export","scale":4,"name":"p"}]"#;
         let c = parse_script(s).unwrap();
         assert_eq!(c.len(), 10);
         assert_eq!(c[7], Command::SetTier { tier: "low".into() });
@@ -668,6 +691,7 @@ mod tests {
                 fov: None,
                 roll: None,
                 pause_agents: None,
+                focus_at: Some([0.25, 0.75]),
             }
         );
         assert_eq!(

@@ -385,6 +385,7 @@ pub fn sync(
     // Tilt-shift is off in first person whatever the setting: a zero-strength override.
     let off = TiltOverride {
         focus_m: 1.0,
+        focus_uv_y: 0.5,
         strength: 0.0,
     };
     if tilt.as_deref() != Some(&off) {

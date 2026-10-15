@@ -147,7 +147,7 @@ Every action routes through an input-action layer, so touch gestures (P7) and a 
 ### 4.6 Photo mode (MVP)
 
 - A free camera that is detached from the orbit constraints.
-- Depth of field (focus distance and aperture, with a tilt-shift preset), exposure, FOV and roll.
+- Depth of field (focus distance and aperture, with a tilt-shift preset), exposure, FOV and roll. A click on the scene focuses on the surface under it (ground, water, or the nearest house, tree including its crown, or rock); with the tilt-shift preset the sharp band also moves to the clicked row, and dragging the Focus distance slider returns it to the screen centre. C saves a PNG at the chosen resolution, also while the photo UI is hidden (owner requests, 2026-10-14).
 - Hide UI, pause agents, and set the time of day once day/night exists (P5). Until then the panel shows the time-of-day slider disabled at Noon.
 - Export PNG at 1×, 2× or 4× resolution through an offscreen render target (the web build offers up to 2× until 4× is tested for GPU memory there).
 

@@ -108,6 +108,9 @@ export type Command =
       fov?: number | null;
       roll?: number | null;
       pause_agents?: boolean | null;
+      /** A click on the scene, `[x, y]` across the viewport from its top left (0..1): Tilt and
+       * Manual focus on the surface under it; with DOF off it does nothing. */
+      focus_at?: [number, number] | null;
     }
   | { cmd: "photo_export"; scale: 1 | 2 | 4; name: string }
   | { cmd: "save"; tag: string | null; path: string | null; volumes: Volumes | null }
@@ -258,8 +261,18 @@ export interface PhotoExportJob {
 export interface PhotoState {
   on: boolean;
   dof: Dof;
-  /** Metres. */
+  /** Metres: the view depth in focus. */
   focus: number;
+  /** The tilt-shift band's screen row, 0 at the top: 0.5 until a click focuses on another row. */
+  focus_row: number;
+  /** Clicks that landed on a surface and refocused; the overlay syncs its slider when it moves. */
+  focus_picks: number;
+  /** Clicks that met nothing (the sky, past the map) and kept the focus. */
+  focus_misses: number;
+  /** The world point the last landed click focused on. */
+  focus_point: [number, number, number] | null;
+  /** What that point is on; null before any click landed. */
+  focus_hit: "ground" | "water" | "building" | "tree" | "rock" | null;
   /** f-number. */
   aperture: number;
   /** Stops brighter than the game camera. */
@@ -461,6 +474,7 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
     fov: true,
     roll: true,
     pause_agents: true,
+    focus_at: true,
   }),
   photo_export: keys<CommandOf<"photo_export">>({ scale: true, name: true }),
   save: keys<CommandOf<"save">>({ tag: true, path: true, volumes: true }),
@@ -554,6 +568,11 @@ export const STATE_FIELDS = {
     on: true,
     dof: true,
     focus: true,
+    focus_row: true,
+    focus_picks: true,
+    focus_misses: true,
+    focus_point: true,
+    focus_hit: true,
     aperture: true,
     exposure: true,
     fov: true,

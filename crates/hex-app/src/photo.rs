@@ -3,7 +3,10 @@
 //! through an offscreen render target.
 //!
 //! Enter and exit follow `GameState::photo_mode`, so the P key, Esc, the `toggle` command and the
-//! overlay share one snapshot and one restore. Photo mode changes the projection, the exposure, the
+//! overlay share one snapshot and one restore. A click on the scene (the overlay's `focus_at`) focuses
+//! Tilt and Manual on the surface under it: [`focus_pick`] marches the view ray over the walk ground
+//! (`hex_render::walk::WalkGround`, the kit ground and water tops) and tests the drawn props
+//! (houses, trees with their crowns, rocks) on the CPU, and takes the nearest. Photo mode changes the projection, the exposure, the
 //! tilt-shift override and, for Manual DOF only, Bevy's `DepthOfField` post pass. It adds no
 //! prepass, so no kit or water pipeline gains a binding: kit forward sits at exactly WebGPU's 16
 //! sampled textures beside refracting water (ADR 0002).
@@ -15,7 +18,11 @@ use bevy::post_process::dof::DepthOfField;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages};
 use bevy::window::PrimaryWindow;
-use hex_render::{AgentsPaused, GpuLimits, tilt_shift::TiltOverride};
+use hex_render::{
+    AgentsPaused, GpuLimits,
+    tilt_shift::TiltOverride,
+    walk::{WalkGround, prop_kind},
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -58,7 +65,11 @@ pub const EXPORT_WARM_FRAMES: u32 = 8;
 #[derive(Resource, Clone, Copy, Debug, PartialEq)]
 pub struct PhotoSettings {
     pub dof: Dof,
+    /// View-space depth of the focus (m).
     pub focus_m: f32,
+    /// The tilt-shift band's screen row, 0 at the top: 0.5 (the optical axis) until a click
+    /// focuses on another row.
+    pub focus_row: f32,
     /// f-number.
     pub aperture: f32,
     /// Stops added to the camera's exposure (positive is brighter).
@@ -73,6 +84,7 @@ impl Default for PhotoSettings {
         Self {
             dof: Dof::Tilt,
             focus_m: 64.0,
+            focus_row: 0.5,
             aperture: 2.8,
             exposure_ev: 0.0,
             fov_deg: 45.0,
@@ -106,6 +118,11 @@ impl PhotoSettings {
             self.dof = d;
         }
         clamp_finite(p.focus, FOCUS_M, &mut self.focus_m);
+        // The Focus distance slider takes the focus back from a click (owner 2026-10-14): the band
+        // returns to the screen centre. A `focus_at` in the same command resolves after this.
+        if p.focus.is_some() {
+            self.focus_row = 0.5;
+        }
         clamp_finite(p.aperture, APERTURE_F, &mut self.aperture);
         clamp_finite(p.exposure, EXPOSURE_EV, &mut self.exposure_ev);
         clamp_finite(p.fov, FOV_DEG, &mut self.fov_deg);
@@ -176,6 +193,7 @@ pub fn aperture_strength(f: f32) -> f32 {
 pub fn on_enter(s: &mut PhotoSettings, snap: &CameraSnapshot) {
     let t = &snap.transform;
     s.focus_m = t.translation.distance(focus(t)).clamp(FOCUS_M.0, FOCUS_M.1);
+    s.focus_row = 0.5;
     s.fov_deg = snap.fov.to_degrees().clamp(FOV_DEG.0, FOV_DEG.1);
     s.roll_deg = 0.0;
     s.exposure_ev = 0.0;
@@ -212,6 +230,7 @@ pub fn look(
         lens,
         tilt: (s.dof == Dof::Tilt).then(|| TiltOverride {
             focus_m: s.focus_m,
+            focus_uv_y: s.focus_row,
             strength: aperture_strength(s.aperture),
         }),
     }
@@ -302,6 +321,149 @@ pub fn sync(
         (None, None) => {}
     }
     paused.0 = settings.pause_agents;
+}
+
+/// The world ray through normalised screen point `uv` (0..1, origin top left) of a perspective
+/// camera at `t` with vertical `fov` (radians) and `aspect` (width over height). Built from the
+/// transform, since `Camera::viewport_to_world` reads matrices a frame behind `sync`.
+pub fn view_ray(t: &Transform, fov: f32, aspect: f32, uv: Vec2) -> Ray3d {
+    let k = (fov * 0.5).tan();
+    let dir = Vec3::new(
+        (2.0 * uv.x - 1.0) * k * aspect,
+        (1.0 - 2.0 * uv.y) * k,
+        -1.0,
+    );
+    Ray3d::new(
+        t.translation,
+        Dir3::new(t.rotation * dir).unwrap_or(t.forward()),
+    )
+}
+
+/// Where `ray` first comes down onto the surface `top` (a height at world XZ, `None` where nothing
+/// is drawn) within `max` metres, or `None`. Steps grow with distance (1 %, at least 10 cm) and the
+/// crossing is refined by bisection; a ray that starts under the surface counts only once it is out.
+pub fn march(ray: Ray3d, max: f32, top: impl Fn(Vec2) -> Option<f32>) -> Option<Vec3> {
+    let under = |t: f32| {
+        let p = ray.get_point(t);
+        top(p.xz()).is_some_and(|h| p.y <= h)
+    };
+    let mut prev = 0.05;
+    let mut above = !under(prev);
+    while prev < max {
+        let t = (prev + (prev * 0.01).max(0.1)).min(max);
+        if under(t) {
+            if above {
+                let (mut lo, mut hi) = (prev, t);
+                for _ in 0..24 {
+                    let mid = 0.5 * (lo + hi);
+                    if under(mid) {
+                        hi = mid;
+                    } else {
+                        lo = mid;
+                    }
+                }
+                return Some(ray.get_point(hi));
+            }
+        } else {
+            above = true;
+        }
+        prev = t;
+    }
+    None
+}
+
+/// The first surface under normalised screen point `uv` for a camera at `t`, out to the far end of
+/// the focus range, and what it is: the walk ground's visible top (`ground` or `water`) or the
+/// nearer drawn prop (`building`, `tree` or `rock`, `WalkGround::pick_prop`). Where no ground is
+/// built (another scenario, or the kit still loading) it is the plane y = 0.
+pub fn pick_point(
+    t: &Transform,
+    fov: f32,
+    aspect: f32,
+    uv: Vec2,
+    ground: Option<&WalkGround>,
+) -> Option<(Vec3, &'static str)> {
+    let ray = view_ray(t, fov, aspect, uv);
+    // Out to where the view depth reaches the far end of the focus range.
+    let max = FOCUS_M.1 / ray.direction.dot(*t.forward()).max(0.05);
+    let Some(g) = ground.filter(|g| !g.is_empty()) else {
+        return march(ray, max, |_| Some(0.0)).map(|p| (p, "ground"));
+    };
+    let land = march(ray, max, |p| g.top(p)).map(|p| {
+        let kind = if g.water_depth(p.xz()) > 0.0 {
+            "water"
+        } else {
+            "ground"
+        };
+        (p.distance(ray.origin), p, kind)
+    });
+    let prop = g
+        .pick_prop(ray, max)
+        .map(|(d, piece)| (d, ray.get_point(d), prop_kind(piece)));
+    land.into_iter()
+        .chain(prop)
+        .min_by(|a, b| a.0.total_cmp(&b.0))
+        .map(|(_, p, kind)| (p, kind))
+}
+
+/// View-space depth of world point `p` from a camera at `t`: what the tilt-shift band and the lens
+/// focus on (both read view z, not distance along the ray).
+pub fn view_depth(t: &Transform, p: Vec3) -> f32 {
+    (p - t.translation).dot(*t.forward())
+}
+
+/// Click-to-focus: the pending request from the `photo` command's `focus_at` and what the last
+/// one found, for the state JSON.
+#[derive(Resource, Default, Debug)]
+pub struct PhotoFocus {
+    pub request: Option<Vec2>,
+    /// Clicks that landed on a surface and refocused.
+    pub picks: u64,
+    /// Clicks that met nothing (the sky, past the map) and kept the focus.
+    pub misses: u64,
+    /// The surface point the last landed click focused on.
+    pub point: Option<Vec3>,
+    /// What that point is on: `ground`, `water`, `building`, `tree` or `rock`.
+    pub hit: Option<&'static str>,
+}
+
+/// Focuses on the surface under a pending click (after `sync`, so the free camera's rotation and
+/// FOV are this frame's). Tilt moves the band to the clicked row and both Tilt and Manual take the
+/// point's view depth; with DOF off, or outside photo mode, the click does nothing.
+pub fn focus_pick(
+    session: Res<PhotoSession>,
+    mut focus: ResMut<PhotoFocus>,
+    mut settings: ResMut<PhotoSettings>,
+    ground: Option<Res<WalkGround>>,
+    cams: Query<(&Transform, &Projection), With<Camera3d>>,
+) {
+    let Some(uv) = focus.request.take() else {
+        return;
+    };
+    if session.saved.is_none() || settings.dof == Dof::Off {
+        info!("photo focus_at {uv}: ignored (photo mode off or DOF off)");
+        return;
+    }
+    let Some((t, Projection::Perspective(p))) = cams.iter().next() else {
+        return;
+    };
+    match pick_point(t, p.fov, p.aspect_ratio, uv, ground.as_deref()) {
+        Some((hit, kind)) => {
+            settings.focus_m = view_depth(t, hit).clamp(FOCUS_M.0, FOCUS_M.1);
+            settings.focus_row = uv.y;
+            focus.picks += 1;
+            focus.point = Some(hit);
+            focus.hit = Some(kind);
+            info!(
+                "photo focus_at {uv}: {kind} at {hit}, {:.2} m",
+                settings.focus_m
+            );
+        }
+        None => {
+            focus.misses += 1;
+            info!("photo focus_at {uv}: nothing under the pointer, focus kept");
+        }
+    }
 }
 
 /// Brings the camera's `DepthOfField` to `want`: written in place, inserted, or removed. It is a
@@ -496,6 +658,7 @@ pub fn state_json(
     s: &PhotoSettings,
     session: &PhotoSession,
     exports: &PhotoExports,
+    focus: &PhotoFocus,
     paused: bool,
     sim_ticks: u64,
     limits: Option<&GpuLimits>,
@@ -505,6 +668,11 @@ pub fn state_json(
         "on": session.saved.is_some(),
         "dof": s.dof,
         "focus": r(s.focus_m),
+        "focus_row": (f64::from(s.focus_row) * 1000.0).round() / 1000.0,
+        "focus_picks": focus.picks,
+        "focus_misses": focus.misses,
+        "focus_point": focus.point.map(|p| [r(p.x), r(p.y), r(p.z)]),
+        "focus_hit": focus.hit,
         "aperture": r(s.aperture),
         "exposure": r(s.exposure_ev),
         "fov": r(s.fov_deg),
@@ -746,6 +914,177 @@ mod tests {
         // Esc outside photo mode does nothing.
         act(&mut app, Action::ExitPhoto);
         assert!(!app.world().resource::<GameState>().photo_mode);
+    }
+
+    fn cam45() -> Transform {
+        Transform::from_xyz(0.0, 40.0, 60.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y)
+    }
+
+    #[test]
+    fn a_centre_click_on_flat_ground_focuses_where_entering_does() {
+        let t = cam45();
+        let (hit, kind) = pick_point(&t, 45f32.to_radians(), 1.6, Vec2::splat(0.5), None).unwrap();
+        assert_eq!(kind, "ground");
+        assert!(hit.distance(focus(&t)) < 0.05, "{hit} vs {}", focus(&t));
+        assert!((view_depth(&t, hit) - t.translation.distance(focus(&t))).abs() < 0.05);
+    }
+
+    #[test]
+    fn an_off_centre_click_focuses_at_view_depth_not_ray_length() {
+        let t = cam45();
+        let (fov, aspect) = (45f32.to_radians(), 1.6);
+        // Lower right: nearer ground than the centre, and off the optical axis.
+        let uv = Vec2::new(0.85, 0.8);
+        let hit = pick_point(&t, fov, aspect, uv, None).unwrap().0;
+        assert!(hit.y.abs() < 1e-3, "on the plane: {hit}");
+        let depth = view_depth(&t, hit);
+        let along = hit.distance(t.translation);
+        assert!(
+            depth < along - 0.5,
+            "view depth {depth} is shorter than the ray {along}"
+        );
+        assert!(depth < view_depth(&t, focus(&t)), "a lower row is nearer");
+        // The hit projects back onto the clicked pixel.
+        let v = t.compute_affine().inverse().transform_point3(hit);
+        let k = (fov * 0.5).tan();
+        let back = Vec2::new(
+            (v.x / -v.z / (k * aspect) + 1.0) * 0.5,
+            (1.0 - v.y / -v.z / k) * 0.5,
+        );
+        assert!(back.distance(uv) < 1e-3, "{back} vs {uv}");
+        // Roll turns the ray with the view.
+        let rolled = Transform {
+            rotation: t.rotation * Quat::from_rotation_z(0.3),
+            ..t
+        };
+        let r = pick_point(&rolled, fov, aspect, uv, None).unwrap().0;
+        assert!(
+            r.distance(hit) > 1.0,
+            "the rolled view's pixel lands elsewhere"
+        );
+    }
+
+    #[test]
+    fn a_click_above_the_horizon_misses() {
+        let t = Transform::from_xyz(0.0, 10.0, 0.0).looking_to(Vec3::NEG_Z, Vec3::Y);
+        let fov = 45f32.to_radians();
+        assert!(pick_point(&t, fov, 1.6, Vec2::new(0.5, 0.2), None).is_none());
+        let below = pick_point(&t, fov, 1.6, Vec2::new(0.5, 0.9), None)
+            .unwrap()
+            .0;
+        assert!(view_depth(&t, below) > 10.0);
+    }
+
+    #[test]
+    fn the_march_meets_a_raised_surface_and_skips_gaps() {
+        let ray = Ray3d::new(
+            Vec3::new(0.0, 10.0, 0.0),
+            Dir3::new(Vec3::new(1.0, -0.2, 0.0)).unwrap(),
+        );
+        // A 7 m block between x = 20 and 30 over flat ground, nothing drawn past x = 60.
+        let top = |p: Vec2| match p.x {
+            x if (20.0..30.0).contains(&x) => Some(7.0),
+            x if x < 60.0 => Some(0.0),
+            _ => None,
+        };
+        let hit = march(ray, 500.0, top).unwrap();
+        assert!(
+            (hit.x - 20.0).abs() < 0.05 && (hit.y - 6.0).abs() < 0.05,
+            "the block's near face: {hit}"
+        );
+        let past = Ray3d::new(
+            Vec3::new(0.0, 20.0, 0.0),
+            Dir3::new(Vec3::new(1.0, -0.2, 0.0)).unwrap(),
+        );
+        assert!(
+            march(past, 500.0, top).is_none(),
+            "lands past the drawn ground"
+        );
+        // A camera under the surface (in a wall) looks out before it can land.
+        let inside = Ray3d::new(
+            Vec3::new(25.0, 2.0, 0.0),
+            Dir3::new(Vec3::new(1.0, 0.05, 0.0)).unwrap(),
+        );
+        let out = Ray3d::new(
+            Vec3::new(25.0, 2.0, 0.0),
+            Dir3::new(Vec3::new(1.0, -0.1, 0.0)).unwrap(),
+        );
+        assert!(march(inside, 25.0, top).is_none());
+        assert!(march(out, 100.0, top).is_some_and(|h| h.x > 30.0));
+    }
+
+    fn click(app: &mut App, uv: [f32; 2]) {
+        app.world_mut().resource_mut::<PhotoFocus>().request = Some(Vec2::from(uv));
+        app.world_mut().run_system_once(focus_pick).unwrap();
+        app.world_mut().run_system_once(sync).unwrap();
+    }
+
+    #[test]
+    fn a_click_moves_the_tilt_band_and_focus_and_off_ignores_it() {
+        let mut app = app();
+        app.init_resource::<PhotoFocus>();
+        act(&mut app, Action::TogglePhoto);
+        let entered = *app.world().resource::<PhotoSettings>();
+        assert_eq!(entered.focus_row, 0.5);
+        click(&mut app, [0.5, 0.85]);
+        let near = *app.world().resource::<PhotoSettings>();
+        assert_eq!(near.focus_row, 0.85);
+        assert!(
+            near.focus_m < entered.focus_m,
+            "{} < {}",
+            near.focus_m,
+            entered.focus_m
+        );
+        let o = *app.world().resource::<TiltOverride>();
+        assert_eq!((o.focus_uv_y, o.focus_m), (0.85, near.focus_m));
+        assert_eq!(app.world().resource::<PhotoFocus>().picks, 1);
+        click(&mut app, [0.5, 0.2]);
+        let far = *app.world().resource::<PhotoSettings>();
+        assert!(far.focus_m > entered.focus_m && far.focus_row == 0.2);
+        // The Focus distance slider takes the focus back: the band returns to the centre.
+        let mut s = far;
+        s.apply(&PhotoPatch {
+            focus: Some(30.0),
+            ..Default::default()
+        });
+        assert_eq!((s.focus_m, s.focus_row), (30.0, 0.5));
+        // A click on the sky keeps the focus.
+        act(&mut app, Action::Look(Vec2::new(0.0, -400.0)));
+        click(&mut app, [0.5, 0.0]);
+        let f = app.world().resource::<PhotoFocus>();
+        assert_eq!((f.picks, f.misses), (2, 1));
+        assert_eq!(*app.world().resource::<PhotoSettings>(), far);
+        act(&mut app, Action::Look(Vec2::new(0.0, 400.0)));
+        // Manual takes the depth (the lens has no band).
+        app.world_mut()
+            .resource_mut::<PhotoSettings>()
+            .apply(&PhotoPatch {
+                dof: Some(Dof::Manual),
+                ..default()
+            });
+        click(&mut app, [0.3, 0.7]);
+        let m = *app.world().resource::<PhotoSettings>();
+        assert!(m.focus_m < far.focus_m);
+        let lens = camera(&mut app).3;
+        assert_eq!(lens.focal_distance, m.focus_m);
+        // Off: the click does nothing.
+        app.world_mut()
+            .resource_mut::<PhotoSettings>()
+            .apply(&PhotoPatch {
+                dof: Some(Dof::Off),
+                ..default()
+            });
+        click(&mut app, [0.5, 0.85]);
+        assert_eq!(app.world().resource::<PhotoSettings>().focus_m, m.focus_m);
+        assert_eq!(app.world().resource::<PhotoFocus>().picks, 3);
+        // Leaving and entering again puts the band back on the optical axis.
+        act(&mut app, Action::TogglePhoto);
+        act(&mut app, Action::TogglePhoto);
+        assert_eq!(app.world().resource::<PhotoSettings>().focus_row, 0.5);
+        // Outside photo mode a click does nothing.
+        act(&mut app, Action::TogglePhoto);
+        click(&mut app, [0.5, 0.85]);
+        assert_eq!(app.world().resource::<PhotoFocus>().picks, 3);
     }
 
     #[test]

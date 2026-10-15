@@ -534,6 +534,53 @@ try {
   check(moved > 1, `WASD/E flew the free camera ${moved.toFixed(1)} m`);
   check(flown.pos[1] > orbit.pos[1], "E rises");
 
+  // Click to focus (owner 2026-10-14): a click on a near tile, then a far one, moves the tilt-shift
+  // band to the clicked row and the focus to that surface, and the slider follows. A drag looks
+  // around without refocusing, and a click on the panel never reaches the scene.
+  check((await st()).photo.dof === "tilt", "photo mode enters with the tilt-shift preset");
+  const vp = page.viewportSize();
+  const targets = await page.evaluate(() => window.hexWorld.state().play.tiles
+    .map((t) => window.hexWorld.cellRect(t.q, t.r))
+    .filter(Boolean)
+    .map(([x0, y0, x1, y1]) => ({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, h: y1 - y0 })));
+  const onScene = targets.filter((p) => p.x > 60 && p.x < vp.width - 440 && p.y > 120 && p.y < vp.height - 120);
+  check(onScene.length >= 1, `${onScene.length} tiles to click on screen`);
+  // The lowest tile's near half and the highest tile's far half, so even one row of tiles gives two
+  // depths (a hex spans its whole box height down its middle).
+  const lowest = onScene.reduce((a, b) => (b.y > a.y ? b : a));
+  const highest = onScene.reduce((a, b) => (b.y < a.y ? b : a));
+  const nearT = { x: lowest.x, y: lowest.y + 0.25 * lowest.h };
+  const farT = { x: highest.x, y: highest.y - 0.25 * highest.h };
+  const sliderFocus = () => page.locator(".sheet--photo input[aria-label='Focus distance']").inputValue();
+  const p0 = (await st()).photo;
+  await page.mouse.click(nearT.x, nearT.y);
+  await until(async () => (await st()).photo.focus_picks === p0.focus_picks + 1, "a click on a near tile focuses");
+  const pNear = (await st()).photo;
+  const nearRow = nearT.y / vp.height;
+  check(Math.abs(pNear.focus_row - nearRow) < 0.01, `the band moves to the clicked row (${pNear.focus_row} vs ${nearRow.toFixed(3)})`);
+  check(pNear.focus !== p0.focus, `the focus moves from ${p0.focus} m to ${pNear.focus} m`);
+  check((await sliderFocus()) === String(Math.round(pNear.focus)), `the slider follows (${await sliderFocus()} m)`);
+  await until(async () => page.locator(".focus-mark.is-shown").count(), "a ring marks where the click focused");
+  await shot("s8-2-photo-click-focus-near");
+  await page.mouse.click(farT.x, farT.y);
+  await until(async () => (await st()).photo.focus_picks === p0.focus_picks + 2, "a click on a far tile focuses");
+  const pFar = (await st()).photo;
+  check(Math.abs(pFar.focus_row - farT.y / vp.height) < 0.01, `the band follows to the far row (${pFar.focus_row})`);
+  check(pFar.focus > pNear.focus + 1, `the far tile focuses farther (${pFar.focus} m > ${pNear.focus} m)`);
+  check((await sliderFocus()) === String(Math.round(pFar.focus)), "the slider follows again");
+  await shot("s8-2-photo-click-focus-far");
+  await page.mouse.move(nearT.x, nearT.y);
+  await page.mouse.down();
+  await page.mouse.move(nearT.x + 40, nearT.y + 10, { steps: 6 });
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+  const pDrag = (await st()).photo;
+  check(pDrag.focus_picks === pFar.focus_picks && pDrag.focus === pFar.focus, "a 40 px drag looks without refocusing");
+  await page.locator(".sheet--photo .section-h").first().click();
+  await page.waitForTimeout(400);
+  check((await st()).photo.focus_picks === pFar.focus_picks, "a click on the panel does not refocus");
+  await page.focus("canvas#hex-world");
+
   await page.locator(".sheet--photo .seg[aria-label='Depth of field'] button[data-value=manual]").click();
   await until(async () => (await st()).photo.dof === "manual", "DOF switches to manual");
   await page.locator(".sheet--photo input[aria-label='Focus distance']").evaluate((el) => {
@@ -611,6 +658,19 @@ try {
   const pngW = head.readUInt32BE(16);
   const pngH = head.readUInt32BE(20);
   check(head.toString("latin1", 1, 4) === "PNG" && pngW === 2880 && pngH === 1800, `2× export is a ${pngW} × ${pngH} PNG (want 2880 × 1800)`);
+  // Owner 2026-10-14: C saves a PNG, also while H hides the photo UI.
+  await until(async () => !(await st()).photo.exporting, "the export is done before the C key");
+  await page.focus("canvas#hex-world");
+  await key("h");
+  await until(async () => page.locator(".photo-ui.is-hidden").count(), "H hides the photo UI before C");
+  const hotkeyP = page.waitForEvent("download", { timeout: 90_000 });
+  await key("c");
+  const hotkeyPng = `${out}/photo-export-hotkey.png`;
+  await (await hotkeyP).saveAs(hotkeyPng);
+  const hk = readFileSync(hotkeyPng);
+  check(hk.toString("latin1", 1, 4) === "PNG" && hk.readUInt32BE(16) === 2880, "C saves a 2× PNG with the photo UI hidden");
+  await key("h");
+  await until(async () => !(await page.locator(".photo-ui.is-hidden").count()), "H shows the photo UI after C");
   check(/^hex-world-\d{4}-\d\d-\d\d\.png$/.test(download.suggestedFilename()), `download named ${download.suggestedFilename()}`);
   await until(async () => /Saved hex-world-/.test(await text(".photo-ui .toast.is-shown")), "Saved toast (S8.6)");
   await shot("s8-6-photo-saved");
