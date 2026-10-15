@@ -1,0 +1,88 @@
+{
+  "name": "windmill",
+  "date": "2026-10-15T02:48:42.749Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/windmill/windmill.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 241985,
+      "sha256": "e8a7c2253185f25626ca5a662b4a85fa58e31b04f22f88e7394aafe33886bdc4"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/windmill/windmill.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 230062,
+      "sha256": "df63a0b1d8148289bd853d0918621423a0becdc07d678ec2ff8b2a4f8d00a803"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/windmill/windmill.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 372132,
+      "sha256": "9464bd81a2ae4f446c4c09b840373c72bf835f0ca009187146978d0b33c07793"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 241985,
+      "astc": 230062
+    },
+    "glbBytes": 133488
+  },
+  "glb": {
+    "bytes": 133488,
+    "sha256": "b64a26597fdecb467e0fa0fee541f70c136306773dff0ef56e23a39c894d9bea"
+  }
+}

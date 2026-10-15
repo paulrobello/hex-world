@@ -127,7 +127,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 6] = [
+pub const FOOTPRINTS: [(&str, Footprint); 7] = [
     (
         "tree_forest",
         Footprint {
@@ -167,6 +167,14 @@ pub const FOOTPRINTS: [(&str, Footprint); 6] = [
         "house_twostorey",
         Footprint {
             ground: 4.75,
+            crown: 0.0,
+        },
+    ),
+    // The tower trunk only: the sails turn overhead, from 3.7 m up.
+    (
+        "windmill",
+        Footprint {
+            ground: 2.9,
             crown: 0.0,
         },
     ),

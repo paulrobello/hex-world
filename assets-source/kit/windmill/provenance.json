@@ -1,0 +1,233 @@
+{
+  "pieceId": "windmill",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/windmill.py",
+    "sha256": "5a6465cde1e9d71f0a868a98be13a28c0cce5632d9dea912f7cc3c5c688a77f9"
+  },
+  "generatorDeps": [],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.6,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "marginPx": 4,
+    "maskStats": {
+      "aoMean": 0.7688384652137756,
+      "aoP05": 0.13725490868091583,
+      "coverage": 0.37302398681640625,
+      "nightTexels": 2334
+    },
+    "masksDensityPxPerM": {
+      "windmill_lod0": {
+        "max": 13.598193081455943,
+        "median": 13.590181665819077,
+        "min": 10.951597952361078
+      },
+      "windmill_lod1": {
+        "max": 13.59790384746317,
+        "median": 13.407743882041933,
+        "min": 11.390891479886623
+      },
+      "windmill_lod2": {
+        "max": 13.597938369107824,
+        "median": 11.442333079031135,
+        "min": 9.625333188179859
+      },
+      "windmill_rotor_lod0": {
+        "max": 13.59834865823937,
+        "median": 13.597897721018747,
+        "min": 11.30191075403058
+      },
+      "windmill_rotor_lod1": {
+        "max": 13.598283641409347,
+        "median": 13.597812352939188,
+        "min": 9.588137313243712
+      },
+      "windmill_rotor_lod2": {
+        "max": 13.597982184802706,
+        "median": 13.59793477595985,
+        "min": 13.597826219450589
+      }
+    },
+    "receiverSignature": "f6d6753ffab506ad8d128135d5b41a43cece25b90d701c3dd246a65f1f1c10ab",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 13.598193081455943,
+      "median": 13.590181665819077,
+      "min": 10.951597952361078
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1138,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 534,
+      "ratio": 0.46924428822495606
+    },
+    {
+      "lod": 2,
+      "tris": 132,
+      "ratio": 0.11599297012302284
+    }
+  ],
+  "collider": {
+    "node": "windmill_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 13.598193081455943,
+    "median": 13.590181665819077,
+    "min": 10.951597952361078
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 241985,
+        "astc": 230062
+      },
+      "glbBytes": 133488
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/windmill/windmill.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 241985,
+        "sha256": "e8a7c2253185f25626ca5a662b4a85fa58e31b04f22f88e7394aafe33886bdc4"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/windmill/windmill.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 230062,
+        "sha256": "df63a0b1d8148289bd853d0918621423a0becdc07d678ec2ff8b2a4f8d00a803"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/windmill/windmill.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 372132,
+        "sha256": "9464bd81a2ae4f446c4c09b840373c72bf835f0ca009187146978d0b33c07793"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/windmill/windmill.glb",
+      "sha256": "b64a26597fdecb467e0fa0fee541f70c136306773dff0ef56e23a39c894d9bea",
+      "bytes": 133488
+    },
+    {
+      "path": "assets/kit/p1/windmill/windmill.masks.bc7.ktx2",
+      "sha256": "e8a7c2253185f25626ca5a662b4a85fa58e31b04f22f88e7394aafe33886bdc4",
+      "bytes": 241985
+    },
+    {
+      "path": "assets/kit/p1/windmill/windmill.masks.astc.ktx2",
+      "sha256": "df63a0b1d8148289bd853d0918621423a0becdc07d678ec2ff8b2a4f8d00a803",
+      "bytes": 230062
+    },
+    {
+      "path": "assets/kit/p1/windmill/windmill.masks.png",
+      "sha256": "9464bd81a2ae4f446c4c09b840373c72bf835f0ca009187146978d0b33c07793",
+      "bytes": 372132
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/windmill/ref-1.jpg",
+      "sha256": "606eb3772dbe35a31ad4f7cc8c47365fc921d8381136f60dd473587b63397cc6",
+      "sourceSha256": "a66a3e6373bd1981b3bd3b658035529fc84963656b7f8b5277807b2137055874",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "dfe343a8-3808-4d7f-853d-64fba82e3b4d",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, its lush meadow grass cap rising into a low rounded grassy mound in the middle, crowned by a traditional English tower windmill about 18 m tall: a gently tapering round tower of black-tarred brick with small white-framed windows and a timber door at its foot, a white boat-shaped timber cap, four large white sails in an X made of open timber lattice frames with shutters, and a small eight-bladed fantail wheel on a frame at the back of the cap. A gravel path winds up the mound to the door, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/windmill/ref-2.jpg",
+      "sha256": "22aa513310f5c64e1aa90102c26a0ca1438f1e1fe7e13d0a51ab64da6042eec5",
+      "sourceSha256": "58eead75d5328a359c6d76b2635e103ce6132f67d053582aac9e74fc52c54824",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "a6a0da56-b288-498e-bf84-60fec4be39eb",
+      "prompt": "Close-up of the top of a traditional English tower windmill: the black-tarred brick tower top, a white boat-shaped timber cap with a gallery rail, the hub where four large white sails meet, each sail an open timber lattice frame with rows of shutters, and a small eight-bladed white fantail wheel on a frame behind the cap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/windmill/ref-3.jpg",
+      "sha256": "e3fb7f26c0d798b05128e15cc4778938c4947a27f76eeb625b0aa4ee52a3d567",
+      "sourceSha256": "9e4d24f419ae7af0692de9b8be7860ae508c4b79de082b62557b8f87368f0032",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "61a0d5b3-e89e-4b4c-9f0d-ae4acdcbcef6",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. The whole lush meadow grass cap swells up into one broad smooth grassy hill that rises from the tile edges to a rounded top about 4 m higher in the middle, like an upturned saucer, and a traditional English tower windmill about 18 m tall stands on the very top of the hill: a gently tapering round tower of black-tarred brick with small white-framed windows and a timber door at its foot, a white boat-shaped timber cap, four large white sails in an X made of open timber lattice frames with shutters, and a small eight-bladed fantail wheel on a frame at the back of the cap. A gravel path climbs the slope of the hill to the door, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-15T02:58:16.065Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/windmill/ref-1.jpg",
+        "assets-source/refs/windmill/ref-2.jpg",
+        "assets-source/refs/windmill/ref-3.jpg"
+      ],
+      "notes": "A flat tile for now (P4 brings elevation); white; the sails animate and the fantail stays still. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-14",
+      "notes": "Pending owner review; not an approval. Review from the six-view renders in assets-source/kit/windmill/renders/ and the kit-scenario shots in docs/checkpoints/windmill/ (windmill-t1 and windmill-t2 one second apart: the sails turn 24°; windmill-closeup; windmill-context). White tower per the A17 answer (the refs draw it black), flat tile, still fantail. The controller records the owner's decision."
+    }
+  ]
+}

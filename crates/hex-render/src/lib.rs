@@ -230,6 +230,7 @@ impl Plugin for HexRenderPlugin {
                     kit_test::spawn_when_ready,
                     kit_scene::start_kit,
                     kit_scene::finish_kit,
+                    kit_scene::spin_rotors,
                     record_gpu_limits,
                     water::tick,
                 ),
@@ -263,9 +264,10 @@ mod tests {
             .collect();
         cells.sort();
         cells.dedup();
-        assert_eq!(cells.len(), 11);
+        // 11 cells plus the windmill's meadow on the water patch's free cell (3, -1).
+        assert_eq!(cells.len(), 12);
         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
-        // Review M5: the fixture source lays out 3 cells, not the runtime family's 11.
+        // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
         // Both kit sources lay out cells that are already water-patch cells.

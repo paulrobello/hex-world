@@ -502,12 +502,12 @@ fn uv0_texture_px(
 fn check_texel_density(
     kit: &Kit,
     p: &PieceEntry,
-    lod0: &gltf::Mesh,
+    lod0: &[&gltf::Mesh],
     buffers: &[gltf::buffer::Data],
 ) -> Vec<String> {
     let mut per: std::collections::BTreeMap<String, Vec<f32>> = Default::default();
     let mut e = vec![];
-    for prim in lod0.primitives() {
+    for prim in lod0.iter().flat_map(|m| m.primitives()) {
         let Some(name) = prim.material().name() else {
             e.push(format!(
                 "{}: a LOD0 primitive has no named material (no manifest slot)",
@@ -609,28 +609,27 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
         ));
     }
     let lods: Vec<_> = (0..3)
-        .map(|i| mesh_named(&doc, &format!("{}_lod{i}", p.id)))
+        .map(|i| mesh_named(&doc, &lod_mesh_name(&p.id, i)))
         .collect();
     let Some(lod0) = &lods[0] else {
         return vec![format!("{}: mesh {}_lod0 missing", p.id, p.id)];
     };
-    let t0 = tris(lod0);
-    let budget = lod0_budget(p);
-    if t0 > budget {
-        e.push(format!("{}: LOD0 {t0} tris > {budget}", p.id));
-    }
-    for (i, max) in [(1, LOD1_MAX_RATIO), (2, lod2_max_ratio(kit, p))] {
-        match &lods[i] {
-            None => e.push(format!("{}: mesh {}_lod{i} missing", p.id, p.id)),
-            Some(m) if tris(m) as f32 > max * t0 as f32 => e.push(format!(
-                "{}: LOD{i} {} tris > {max} x LOD0 {t0}",
-                p.id,
-                tris(m)
-            )),
-            _ => {}
-        }
-    }
-    for m in lods.iter().flatten() {
+    let rotors: Vec<_> = (0..3)
+        .map(|i| mesh_named(&doc, &rotor_mesh_name(&p.id, i)))
+        .collect();
+    e.extend(rotor_errors(&p.id, &rotors, &buffers));
+    let lod_tris = [0, 1, 2].map(|i| {
+        lods[i]
+            .as_ref()
+            .map(|m| tris(m) + rotors[i].as_ref().map_or(0, tris))
+    });
+    e.extend(lod_budget_errors(
+        &p.id,
+        lod_tris,
+        lod0_budget(p),
+        lod2_max_ratio(kit, p),
+    ));
+    for m in lods.iter().chain(&rotors).flatten() {
         for prim in m.primitives() {
             if prim.get(&gltf::Semantic::Tangents).is_none() {
                 e.push(format!(
@@ -657,7 +656,8 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
             }
         }
     }
-    e.extend(check_texel_density(kit, p, lod0, &buffers));
+    let lod0_parts: Vec<_> = std::iter::once(lod0).chain(&rotors[0]).collect();
+    e.extend(check_texel_density(kit, p, &lod0_parts, &buffers));
     if p.kind == PieceKind::Tree {
         for (i, m) in lods.iter().enumerate() {
             if let Some(m) = m {
@@ -1021,6 +1021,78 @@ fn lod0_budget(p: &PieceEntry) -> usize {
     } else {
         p.kind.lod0_budget()
     }
+}
+
+/// LOD triangle budget errors. `lod_tris[i]` is LOD i's body plus its rotor (`None`: the LOD mesh is
+/// missing).
+fn lod_budget_errors(
+    id: &str,
+    lod_tris: [Option<usize>; 3],
+    lod0_max: usize,
+    lod2_max_ratio: f32,
+) -> Vec<String> {
+    let mut e = vec![];
+    let Some(t0) = lod_tris[0] else {
+        return vec![format!("{id}: mesh {id}_lod0 missing")];
+    };
+    if t0 > lod0_max {
+        e.push(format!("{id}: LOD0 {t0} tris > {lod0_max}"));
+    }
+    for (i, max) in [(1, LOD1_MAX_RATIO), (2, lod2_max_ratio)] {
+        match lod_tris[i] {
+            None => e.push(format!("{id}: mesh {id}_lod{i} missing")),
+            Some(t) if t as f32 > max * t0 as f32 => {
+                e.push(format!("{id}: LOD{i} {t} tris > {max} x LOD0 {t0}"))
+            }
+            _ => {}
+        }
+    }
+    e
+}
+
+/// Largest distance (m) a rotor mesh's vertex centroid may sit off its local X axis: further off,
+/// it wobbles as it turns.
+const ROTOR_AXLE_TOL: f32 = 0.01;
+
+/// A rotor is in every LOD or none, and each is centred on its local X axis.
+fn rotor_errors(
+    id: &str,
+    rotors: &[Option<gltf::Mesh>],
+    buffers: &[gltf::buffer::Data],
+) -> Vec<String> {
+    if rotors.iter().all(Option::is_none) {
+        return vec![];
+    }
+    let mut e = vec![];
+    for (i, r) in rotors.iter().enumerate() {
+        match r {
+            None => e.push(format!(
+                "{id}: mesh {} missing (a rotor is in every LOD)",
+                rotor_mesh_name(id, i)
+            )),
+            Some(m) => {
+                let pos: Vec<[f32; 3]> =
+                    positions(m, buffers).into_iter().map(|(p, _)| p).collect();
+                let off = axle_offset(&pos);
+                if off > ROTOR_AXLE_TOL {
+                    e.push(format!(
+                        "{id}: {} is {off:.3} m off its local X axis (> {ROTOR_AXLE_TOL})",
+                        rotor_mesh_name(id, i)
+                    ));
+                }
+            }
+        }
+    }
+    e
+}
+
+/// Distance of the vertex centroid from the X axis, in the YZ plane.
+fn axle_offset(pos: &[[f32; 3]]) -> f32 {
+    let n = pos.len().max(1) as f32;
+    let (y, z) = pos
+        .iter()
+        .fold((0.0, 0.0), |(y, z), p| (y + p[1] / n, z + p[2] / n));
+    y.hypot(z)
 }
 
 /// LOD2's ratio ceiling: `LANE_CUT_LOD2_MAX_RATIO` for a lane-cut base, `LOD2_MAX_RATIO` otherwise.
@@ -2145,13 +2217,39 @@ fn check_bevy(kit: &Kit) -> Vec<String> {
             }
         }
         for lod in 0..3 {
-            if !g
-                .named_meshes
-                .contains_key(format!("{id}_lod{lod}").as_str())
-            {
+            if !g.named_meshes.contains_key(lod_mesh_name(id, lod).as_str()) {
                 e.push(format!(
                     "{id}: bevy mesh {id}_lod{lod} missing (runtime looks meshes up by name)"
                 ));
+            }
+        }
+        // A rotor (PRD §7.2): the runtime spins node `<id>_rotor_lod<n>` (its transform, then local
+        // X) and draws its mesh, so each node must carry that mesh and say what it is.
+        if (0..3).any(|lod| {
+            g.named_nodes
+                .contains_key(rotor_mesh_name(id, lod).as_str())
+        }) {
+            for lod in 0..3 {
+                let name = rotor_mesh_name(id, lod);
+                let Some(n) = g.named_nodes.get(name.as_str()).and_then(|h| nodes.get(h)) else {
+                    e.push(format!(
+                        "{id}: bevy node {name} missing (a rotor is in every LOD)"
+                    ));
+                    continue;
+                };
+                if n.mesh.is_none() || n.mesh.as_ref() != g.named_meshes.get(name.as_str()) {
+                    e.push(format!("{id}: bevy node {name} does not carry mesh {name}"));
+                }
+                let kind = n
+                    .extras
+                    .as_ref()
+                    .and_then(|x| serde_json::from_str::<serde_json::Value>(&x.value).ok())
+                    .and_then(|v| v.get("kind").and_then(|k| k.as_str()).map(str::to_owned));
+                if kind.as_deref() != Some("rotor") {
+                    e.push(format!(
+                        "{id}: {name} extras.kind is {kind:?}, not \"rotor\""
+                    ));
+                }
             }
         }
         for (name, nh) in &g.named_nodes {
@@ -3029,6 +3127,54 @@ fn river_dressing_lod0_budget_is_scoped_to_its_props() {
     }
     assert_eq!(lod0_budget(piece("ocean_center")), 1_500);
     assert_eq!(lod0_budget(piece("river_road_bridge_center")), 4_000);
+}
+
+/// A rotor's triangles count toward its LOD (PRD §7.2): the windmill's LODs are its body plus its
+/// rotor, so a LOD0 ceiling that the body alone meets fails once the rotor counts, and a rotor
+/// that drags a coarse LOD over its ratio fails too.
+#[test]
+fn rotor_tris_count_toward_the_lod_budget() {
+    let k = kits().pop().unwrap();
+    let p = k
+        .manifest
+        .pieces
+        .iter()
+        .find(|p| p.id == "windmill")
+        .expect("runtime kit holds the windmill");
+    let (doc, buffers, _) = plain(&k, p).unwrap();
+    let body = |i| tris(&mesh_named(&doc, &lod_mesh_name(&p.id, i)).unwrap());
+    let rotors: Vec<_> = (0..3)
+        .map(|i| mesh_named(&doc, &rotor_mesh_name(&p.id, i)))
+        .collect();
+    let rotor = |i: usize| tris(rotors[i].as_ref().unwrap());
+    assert!(rotor(0) > 0 && rotor(1) > 0 && rotor(2) > 0);
+    assert_eq!(rotor_errors(&p.id, &rotors, &buffers), Vec::<String>::new());
+    let t = [0, 1, 2].map(|i| Some(body(i) + rotor(i)));
+    assert_eq!(
+        lod_budget_errors(&p.id, t, lod0_budget(p), LOD2_MAX_RATIO),
+        Vec::<String>::new()
+    );
+    let e = lod_budget_errors(&p.id, t, body(0), LOD2_MAX_RATIO);
+    assert!(e.iter().any(|m| m.contains("LOD0")), "{e:?}");
+    let heavy = [t[0], t[1], Some(body(2) + t[0].unwrap())];
+    let e = lod_budget_errors(&p.id, heavy, lod0_budget(p), LOD2_MAX_RATIO);
+    assert!(e.iter().any(|m| m.contains("LOD2")), "{e:?}");
+    // A rotor in only some LODs, or off its axle, fails.
+    let partial = [rotors[0].clone(), None, rotors[2].clone()];
+    assert!(
+        rotor_errors(&p.id, &partial, &buffers)
+            .iter()
+            .any(|m| m.contains("windmill_rotor_lod1 missing"))
+    );
+    assert!(
+        axle_offset(&[
+            [0.0, 1.0, 0.0],
+            [0.0, -1.0, 0.0],
+            [3.0, 0.0, 2.0],
+            [-1.0, 0.0, -2.0]
+        ]) < 1e-6
+    );
+    assert!(axle_offset(&[[0.0, 1.0, 0.0], [0.0, -0.9, 0.0]]) > ROTOR_AXLE_TOL);
 }
 
 /// Joints are scoped by network kind: the river pieces meet river_edge at its inner end, the road

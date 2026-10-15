@@ -259,14 +259,20 @@ fn slot_samples(
     let bytes = std::fs::read(kit.root.join(&p.glb)).map_err(|e| format!("{}: {e}", p.id))?;
     let plain = rewrite_glb(&bytes).map_err(|e| format!("{}: {e}", p.id))?;
     let (doc, buffers, _) = gltf::import_slice(&plain).map_err(|e| format!("{}: {e}", p.id))?;
-    let mesh_name = format!("{}_lod{lod}", p.id);
+    let mesh_name = lod_mesh_name(&p.id, lod);
     let mesh = doc
         .meshes()
         .find(|m| m.name() == Some(mesh_name.as_str()))
         .ok_or_else(|| format!("{}: mesh {mesh_name} missing", p.id))?;
+    // A LOD's rotor (if any) draws beside it and samples the same masks atlas.
+    let rotor_name = rotor_mesh_name(&p.id, lod);
+    let rotor = doc.meshes().find(|m| m.name() == Some(rotor_name.as_str()));
     let (w, h, px) = masks;
     let mut out: Vec<(String, Vec<[f32; 4]>)> = vec![];
-    for prim in mesh.primitives() {
+    for prim in std::iter::once(mesh)
+        .chain(rotor)
+        .flat_map(|m| m.primitives())
+    {
         let name = prim.material().name().unwrap_or_default().to_string();
         let r = prim.reader(|b| Some(&buffers[b.index()]));
         let Some(uv) = r.read_tex_coords(0) else {

@@ -1,0 +1,58 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.7688384652137756,
+    "aoP05": 0.13725490868091583,
+    "coverage": 0.37302398681640625,
+    "nightTexels": 2334
+  },
+  "masksDensityPxPerM": {
+    "windmill_lod0": {
+      "max": 13.598193081455943,
+      "median": 13.590181665819077,
+      "min": 10.951597952361078
+    },
+    "windmill_lod1": {
+      "max": 13.59790384746317,
+      "median": 13.407743882041933,
+      "min": 11.390891479886623
+    },
+    "windmill_lod2": {
+      "max": 13.597938369107824,
+      "median": 11.442333079031135,
+      "min": 9.625333188179859
+    },
+    "windmill_rotor_lod0": {
+      "max": 13.59834865823937,
+      "median": 13.597897721018747,
+      "min": 11.30191075403058
+    },
+    "windmill_rotor_lod1": {
+      "max": 13.598283641409347,
+      "median": 13.597812352939188,
+      "min": 9.588137313243712
+    },
+    "windmill_rotor_lod2": {
+      "max": 13.597982184802706,
+      "median": 13.59793477595985,
+      "min": 13.597826219450589
+    }
+  },
+  "receiverSignature": "f6d6753ffab506ad8d128135d5b41a43cece25b90d701c3dd246a65f1f1c10ab",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 13.598193081455943,
+    "median": 13.590181665819077,
+    "min": 10.951597952361078
+  }
+}

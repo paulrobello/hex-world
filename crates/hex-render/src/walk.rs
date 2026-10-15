@@ -53,9 +53,10 @@ pub const MAX_STEP: f32 = 0.4;
 /// Longest sub-step (m) a move is checked in.
 const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers and the ground pieces do not.
-pub const OBSTACLES: [&str; 5] = [
+pub const OBSTACLES: [&str; 6] = [
     "house_cottage",
     "house_twostorey",
+    "windmill",
     "tree_hero_oak",
     "tree_forest",
     "rock_small",
@@ -81,7 +82,7 @@ impl Blocked {
             Blocked::Edge => "edge",
             Blocked::Water => "water",
             Blocked::Steep => "steep",
-            Blocked::Obstacle(p) if p.starts_with("house") => "building",
+            Blocked::Obstacle(p) if p.starts_with("house") || p == "windmill" => "building",
             Blocked::Obstacle(p) if p.starts_with("tree") => "tree",
             Blocked::Obstacle(_) => "rock",
         }
@@ -877,6 +878,21 @@ mod tests {
     };
 
     type Tris = Option<Vec<(Tri, String)>>;
+
+    /// The windmill's trunk collider blocks the walker as a building, the sails do not reach it.
+    #[test]
+    fn windmill_blocks_as_a_building() {
+        assert_eq!(Blocked::Obstacle("windmill".into()).reason(), "building");
+        let hull = hull(
+            &mesh_tris("windmill", "collider")
+                .unwrap()
+                .iter()
+                .flat_map(|(t, _)| t.iter().map(|p| Vec2::new(p[0], p[2])))
+                .collect::<Vec<_>>(),
+        );
+        let reach = hull.iter().map(|p| p.length()).fold(0.0, f32::max);
+        assert!((2.5..3.2).contains(&reach), "trunk reach {reach}");
+    }
 
     fn catalog() -> TileCatalog {
         TileCatalog::builtin().unwrap()

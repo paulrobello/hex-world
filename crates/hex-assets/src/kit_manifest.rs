@@ -22,6 +22,19 @@ pub const LOD1_MAX_RATIO: f32 = 0.5;
 pub const LOD2_MAX_RATIO: f32 = 0.15;
 pub const APOTHEM: f32 = hex_core_apothem();
 
+/// The mesh (and node) of LOD `lod` of piece `id`; the runtime looks meshes up by this name.
+pub fn lod_mesh_name(id: &str, lod: usize) -> String {
+    format!("{id}_lod{lod}")
+}
+
+/// The rotor of LOD `lod` of piece `id` (PRD §7.2: animated props turn as rigid transforms), a
+/// node and mesh of this name beside the LOD. Its mesh is authored in the node's frame, round the
+/// node's local +X axis, so turning the node about local +X spins it in place. A piece with a rotor
+/// has one in every LOD, and each LOD's budget counts its body plus its rotor.
+pub fn rotor_mesh_name(id: &str, lod: usize) -> String {
+    format!("{id}_rotor_lod{lod}")
+}
+
 const fn hex_core_apothem() -> f32 {
     16.0 * 0.866_025_4
 }

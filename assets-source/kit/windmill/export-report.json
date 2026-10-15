@@ -1,0 +1,46 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/windmill.py",
+    "sha256": "5a6465cde1e9d71f0a868a98be13a28c0cce5632d9dea912f7cc3c5c688a77f9"
+  },
+  "generatorDeps": [],
+  "lodTris": {
+    "windmill_lod0": 1138,
+    "windmill_lod1": 534,
+    "windmill_lod2": 132
+  },
+  "nodes": [
+    "windmill",
+    "windmill_collider",
+    "windmill_lod0",
+    "windmill_lod1",
+    "windmill_lod2",
+    "windmill_rotor_lod0",
+    "windmill_rotor_lod1",
+    "windmill_rotor_lod2"
+  ],
+  "partTris": {
+    "windmill_lod0": 612,
+    "windmill_lod1": 258,
+    "windmill_lod2": 100,
+    "windmill_rotor_lod0": 526,
+    "windmill_rotor_lod1": 276,
+    "windmill_rotor_lod2": 32
+  },
+  "pieceId": "windmill",
+  "rotor": {
+    "axisLocal": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "nodes": [
+      "windmill_rotor_lod0",
+      "windmill_rotor_lod1",
+      "windmill_rotor_lod2"
+    ],
+    "tiltDeg": 10.0
+  },
+  "sockets": []
+}
