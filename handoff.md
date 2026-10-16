@@ -72,7 +72,7 @@ This is the orchestrator session for P2+ work: parallel worktree agents, verifie
 - Owner review: `docs/review/2026-10-14-owner-queue.md`, `docs/review/2026-10-14-owner-answers.md`.
 - Asset pipeline: `.claude/skills/blender-asset/` (SKILL.md, `references/dispatch.md` for briefing asset agents, `references/project.md`, `references/stages.md`).
 - New this session:
-  - `web/ui/src/debug.ts` and `crates/hex-render/src/debug.rs` (Debug tab)
+  - `web/ui/src/debug.ts` and `crates/hex-play/src/debug.rs` (Debug tab)
   - `web/ui/src/version-check.ts` and `scripts/web/version-dist.mjs` (new-version check, `dist/version.json`)
   - `data/tiles/windmill.ron` (windmill tile)
 - Auto-memory: `~/.claude/projects/-Users-probello-Repos-hex-world/memory/MEMORY.md`.

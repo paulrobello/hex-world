@@ -186,7 +186,7 @@ lookdev-ibl: fetch-hdri
 
 # The kit gate alone. checkall already runs it through `test` (cargo test --workspace).
 kit-check:
-	cargo test -p hex-render --test kit_gate
+	cargo test -p hex-play --test kit_gate
 
 # Writes provenance once, with validation.pass, after every non-provenance gate passes. The first call
 # only checks (--check writes nothing) and refuses a missing build stage, which kit_render.py needs.
@@ -200,7 +200,7 @@ kit-provenance:
 	@if [ "$(ROUTE)" = interactive ] && [ ! -f "$(KIT_BLEND)" ]; then \
 	  echo "kit-provenance: ROUTE=interactive needs the piece's .blend, got '$(KIT_BLEND)' (BLEND=, or python3 scripts/blender/lib/paths.py blend $(PIECE))"; exit 2; fi
 	node scripts/assets/kit-provenance.mjs $(PIECE) $(KIT_PROV_ARGS) --stage target/kit-stage/$(PIECE) --check
-	cargo test -p hex-render --test kit_gate -- --skip provenance
+	cargo test -p hex-play --test kit_gate -- --skip provenance
 	$(BLENDER_RUN) -P scripts/blender/kit_render.py -- $(PIECE)
 	node scripts/assets/kit-provenance.mjs $(PIECE) $(KIT_PROV_ARGS) --stage target/kit-stage/$(PIECE) \
 	  --validated "kit_gate geometry,kit_gate textures,kit_gate bevy reimport,blender reimport sockets,six-view render"
@@ -210,7 +210,7 @@ kit-provenance:
 kit-material-provenance:
 	@test -n "$(SET)" || { echo "usage: make kit-material-provenance SET=<set>"; exit 2; }
 	node scripts/assets/kit-provenance.mjs $(SET) --material --check
-	cargo test -p hex-render --test kit_gate ktx2_color_space_mips_and_budgets
+	cargo test -p hex-play --test kit_gate ktx2_color_space_mips_and_budgets
 	node scripts/assets/kit-provenance.mjs $(SET) --material --validated "kit-compress tileable budget,kit_gate textures"
 
 ref-bevy:
@@ -407,7 +407,7 @@ perf-water-world: build-web
 	cd e2e && npm ci --no-audit --no-fund
 	caffeinate -d -u node e2e/perf-water-world.mjs dist target/release/hex-world
 
-# Grass cost (crates/hex-render/src/play/grass.rs): e2e/perf-grass.mjs builds the ~2,000-tile play
+# Grass cost (crates/hex-play/src/play/grass.rs): e2e/perf-grass.mjs builds the ~2,000-tile play
 # water world (radius 26) at 2560x1440 on High and reads uncapped GPU Chromium from a low camera over
 # the start meadows with grass off, normal and lush, every run inside the host-load guard; writes
 # docs/perf/p2-grass.json (PERF_OUT, GRASS_ROUNDS, GRASS_RADIUS, GRASS_ARMS).
@@ -481,7 +481,7 @@ shots-cars:
 # unless the far click focuses farther, higher on the screen, and changes the image. Then, level at
 # eye height 40 m south of a hero oak, focused at 150 m and after a click on the crown's middle
 # (photo-08/09): fails unless the click hits the tree within 2% of 36.1 m, the view depth of the
-# oak's LOD0 mesh along that ray (hex-render walk test `the_tree_click_shot_meets_the_oak_mesh_at_36_m`).
+# oak's LOD0 mesh along that ray (hex-play walk test `the_tree_click_shot_meets_the_oak_mesh_at_36_m`).
 # The full-size PNG stays in target/shots.
 PHOTO_SHOTS = photo-01-enter-tilt photo-02-dof-closeup photo-02-dof-off-closeup photo-03-tilt-roll-exposure photo-06-click-focus-near photo-07-click-focus-far photo-08-tree-before photo-09-tree-click photo-04-export-4x photo-05-exit-orbit
 PHOTO_DOCS = docs/checkpoints/photo
@@ -599,7 +599,7 @@ shots-wet-band:
 	ffmpeg -loglevel error -y -framerate 30 -i target/shots/wet-band-motion-%03d.png -vf scale=960:-2 -c:v libx264 -pix_fmt yuv420p -crf 22 $(WET_BAND_DOCS)/wet-band-motion.mp4
 	@echo "wrote $(WET_BAND_DOCS)/"
 
-# Boids checkpoint (PRD §7.2, crates/hex-render/src/boids.rs): runs docs/checkpoints/boids/boids.json
+# Boids checkpoint (PRD §7.2, crates/hex-play/src/boids.rs): runs docs/checkpoints/boids/boids.json
 # at 1600x1000 with tilt-shift off and fixed clocks (the single start tile with no birds; a river
 # chain, a coast closing on ten ocean tiles, ten meadows and two oak tiles; the flock overhead, birds
 # roosting on an oak with a 16-degree close-up of the folded starlings on the canopy, fish through the
@@ -620,7 +620,7 @@ shots-boids:
 	node $(BOIDS_DOCS)/check.mjs $(BOIDS_DOCS)
 	@echo "wrote $(BOIDS_DOCS)/"
 
-# Grass checkpoint (crates/hex-render/src/play/grass.rs): docs/checkpoints/grass/grass.json on the
+# Grass checkpoint (crates/hex-play/src/play/grass.rs): docs/checkpoints/grass/grass.json on the
 # scatter checkpoint's world at 1280x800, High, rich-3, fixed clocks and tilt-shift off: meadow,
 # forest margin, road verge and river bank close-ups, straight down across two tile borders, an eye-level view, a mid-zoom showing the fade,
 # a gust over the meadows in four frames 1.25 s apart, Low (no grass), then the place, bulldoze and
@@ -639,7 +639,7 @@ shots-grass:
 	cp target/shots/grass-state-*.json $(GRASS_DOCS)/
 	@echo "wrote $(GRASS_DOCS)/"
 
-# Scatter checkpoint (PRD §5.3, crates/hex-render/src/play/scatter.rs): runs
+# Scatter checkpoint (PRD §5.3, crates/hex-play/src/play/scatter.rs): runs
 # docs/checkpoints/scatter/scatter.json at 1600x1000 with tilt-shift off and fixed clocks (a cluster
 # of pine forests and oak tiles with their junctions, meadows with flower drifts, a forest between a
 # road and a river, a house cluster; then a forest rising,
