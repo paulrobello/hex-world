@@ -69,6 +69,14 @@ The exact ARM64 release binary and runtime assets are transferred. Native uses t
 
 Native and smaller-radius runs remain queued behind uncontaminated web rounds and trace, and the same browser-contention/load conditions. Candidate ceiling worlds are radius 18 (997 tiles), 20 (1,231), 22 (1,484), with 8 and 12 available if needed to bracket 16.6 ms. A proposed ceiling needs measured bracketing points and owner acceptance. None is claimed yet.
 
+## MiniMac assessment cutoff (12:22 PDT)
+
+The MiniMac attempt sequence did not produce an accepted clean row. The later strict scripted round0 was rejected for one human Chrome sample at21.7% CPU (load2.687 to3.641). Strict round1 was rejected for recurring par-factory automated GPU overlap (load3.641 to5.498). These error-only rows are preserved in `web-radius26-rejected.json`, not under an acceptance-implying filename. The single authorized exact-save retry and native attempt remained deferred behind foreign automated GPU work.
+
+The retry-only guard version2 permits isolated human Chrome CPU spikes, rejects five consecutive one-second samples at or above20%, and still rejects any foreign automated/native GPU overlap. Its rows must identify `exact-save-retry-v2-five-consecutive`. No rejected attempt is relabeled as accepted.
+
+Canonical M4 Max measurements continued separately after host recovery. Expensive Cargo/clippy/WASM verification is intentionally deferred until all canonical web/native/ceiling measurements finish, to avoid creating measurement load. Syntax and diff checks passed before deployment, and full gates were green before the timing series. The final guard change will be committed and the full gates rerun after the measurements.
+
 ## Criterion assessment
 
 1. **Chrome trace: met for diagnostic attribution.** Live trace, verified-symbol CPU profile, parsed ranking and hardware GPU total are recorded. Contention during construction is labeled, and absolute trace timings are excluded from budget evidence.
