@@ -903,72 +903,15 @@ pub fn sync(
     }
     let mut out = vec![];
     let want: HashMap<Axial, &PlayTile> = view.tiles.iter().map(|t| (t.cell, t)).collect();
-    let mut gone = vec![];
-    // A cell whose tile changed in place (a replace, or its undo or redo): the old tile sinks
-    // without dust and the new one rises once it is down.
-    let mut swapped = vec![];
-    let mut changed: BTreeSet<Axial> = BTreeSet::new();
-    spawned.tiles.retain(|cell, (t, e)| match want.get(cell) {
-        Some(w) if *w == t => true,
-        Some(_) => {
-            swapped.push((*cell, t.tile.clone(), *e));
-            changed.insert(*cell);
-            false
-        }
-        None => {
-            gone.push((*cell, t.tile.clone(), *e));
-            false
-        }
-    });
-    gone.sort_by_key(|(c, ..)| (c.q, c.r));
-    changed.extend(gone.iter().map(|(c, ..)| *c));
-    for c in &changed {
-        spawned.hidden.remove(c);
-    }
-    for (cell, tile, root) in gone {
-        let mut entities = vec![root];
-        entities.extend(released.remove(&cell).unwrap_or_default());
-        let kind = if view.bulldozed == Some(cell) {
-            rise::SinkKind::Bulldoze
-        } else {
-            rise::SinkKind::Undo
-        };
-        rises.remove(
-            cell,
-            &tile,
-            kind,
-            entities,
-            reduced.0,
-            &mut commands,
-            &mut out,
-        );
-    }
-    let swapped_cells: HashSet<Axial> = swapped.iter().map(|(c, ..)| *c).collect();
-    for (cell, tile, root) in swapped {
-        let mut entities = vec![root];
-        entities.extend(released.remove(&cell).unwrap_or_default());
-        // The new tile's rise poses every part of this cell; the sinking tile's parts leave it.
-        for &e in &entities {
-            commands.entity(e).try_remove::<RisePart>();
-            for d in children.iter_descendants(e) {
-                commands.entity(d).try_remove::<RisePart>();
-            }
-        }
-        rises.remove(
-            cell,
-            &tile,
-            rise::SinkKind::Replace,
-            entities,
-            reduced.0,
-            &mut commands,
-            &mut out,
-        );
-    }
-    for (_, es) in released {
-        for e in es {
-            commands.entity(e).try_despawn();
-        }
-    }
+    let (mut changed, swapped_cells) = sync_spans::remove_tiles(
+        &mut commands,
+        &mut spawned,
+        &view,
+        &want,
+        &mut released,
+        &children,
+        (&mut rises, reduced.0, &mut out),
+    );
     let (refreshed, shown) = sync_spans::refresh_tiles(
         &mut commands,
         &mut spawned,
@@ -1042,6 +985,77 @@ pub fn sync(
 
 mod sync_spans {
     use super::*;
+
+    pub(super) fn remove_tiles(
+        commands: &mut Commands,
+        spawned: &mut PlaySpawned,
+        view: &PlayView,
+        want: &HashMap<Axial, &PlayTile>,
+        released: &mut HashMap<Axial, Vec<Entity>>,
+        children: &Query<&Children>,
+        animation: (&mut PlayRises, bool, &mut Vec<RiseMessage>),
+    ) -> (BTreeSet<Axial>, HashSet<Axial>) {
+        let (rises, reduced, out) = animation;
+        let mut gone = vec![];
+        // A cell whose tile changed in place (a replace, or its undo or redo): the old tile sinks
+        // without dust and the new one rises once it is down.
+        let mut swapped = vec![];
+        let mut changed: BTreeSet<Axial> = BTreeSet::new();
+        spawned.tiles.retain(|cell, (t, e)| match want.get(cell) {
+            Some(w) if *w == t => true,
+            Some(_) => {
+                swapped.push((*cell, t.tile.clone(), *e));
+                changed.insert(*cell);
+                false
+            }
+            None => {
+                gone.push((*cell, t.tile.clone(), *e));
+                false
+            }
+        });
+        gone.sort_by_key(|(c, ..)| (c.q, c.r));
+        changed.extend(gone.iter().map(|(c, ..)| *c));
+        for c in &changed {
+            spawned.hidden.remove(c);
+        }
+        for (cell, tile, root) in gone {
+            let mut entities = vec![root];
+            entities.extend(released.remove(&cell).unwrap_or_default());
+            let kind = if view.bulldozed == Some(cell) {
+                rise::SinkKind::Bulldoze
+            } else {
+                rise::SinkKind::Undo
+            };
+            rises.remove(cell, &tile, kind, entities, reduced, commands, out);
+        }
+        let swapped_cells: HashSet<Axial> = swapped.iter().map(|(c, ..)| *c).collect();
+        for (cell, tile, root) in swapped {
+            let mut entities = vec![root];
+            entities.extend(released.remove(&cell).unwrap_or_default());
+            // The new tile's rise poses every part of this cell; the sinking tile's parts leave it.
+            for &e in &entities {
+                commands.entity(e).try_remove::<RisePart>();
+                for d in children.iter_descendants(e) {
+                    commands.entity(d).try_remove::<RisePart>();
+                }
+            }
+            rises.remove(
+                cell,
+                &tile,
+                rise::SinkKind::Replace,
+                entities,
+                reduced,
+                commands,
+                out,
+            );
+        }
+        for (_, es) in std::mem::take(released) {
+            for e in es {
+                commands.entity(e).try_despawn();
+            }
+        }
+        (changed, swapped_cells)
+    }
 
     #[allow(clippy::too_many_arguments)]
     pub(super) fn refresh_tiles(
