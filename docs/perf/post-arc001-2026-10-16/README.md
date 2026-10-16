@@ -37,8 +37,9 @@ The rejected MiniMac observations show that the publication fix's frame-time ben
 | Round | p50 | p95 | Mean | Max | Load before | Load after | GPU exclusivity |
 |---|---:|---:|---:|---:|---:|---:|---|
 | 0 | 48.9 | 50.8 | 49.01 | 55.8 | 10.064 | 8.583 | Accepted: 36 one-second checks, peak human Chrome13.9%, no violations |
+| 1 | 46.7 | 48.8 | 46.72 | 51.8 | 8.583 | 7.272 | Accepted: 34 one-second checks, peak human Chrome7.5%, no violations |
 
-Round0 p95 is 7.64% below the canonical pre-fix55.0ms, and mean is7.18% below52.8ms. This is a modest improvement, not a16.6ms pass. Human desktop Chrome was present but idle, with no automated GPU contention. Round1 remains in progress.
+The two clean p95 values improve7.64% and11.27% from the canonical pre-fix55.0ms. Mean improves7.18% and11.52% from52.8ms. This is a modest improvement, not a16.6ms pass. Both runs used the full scripted recipe and strict human-spike guard. Human desktop Chrome was present but idle, with no automated GPU contention.
 
 ## Trace attribution
 
@@ -65,7 +66,7 @@ The release WASM has no names section. `wasm-symbols.json` safely restores funct
 
 ## Native and ceiling measurements
 
-The exact ARM64 release binary and runtime assets are transferred. Native uses the saved 2,066-tile world, same camera, High, grass off, tilt off, 2560x1440, scale 1, immediate presentation and a full 600-frame ring. Native play can still pace to 60 Hz, so a paced p95 must not be described as CPU render cost.
+Canonical native evidence is in `local-native/native.json`, `native-state.json`, `native.log` and `native-script.json`. MacDaddy Apple M4 Max, 16 CPU /40 GPU cores, Metal, exact saved2,066-tile world validated in `state.play.tiles`,0rising, same camera, High, grassoff, tiltoff,2560x1440,scale1, immediate presentation,600samples. Frame p50=16.42, p95=20.24, mean=16.07, max=61.33ms, host load7.016 before and7.577 after. Strict exclusivity21samples, human Chrome peak8.2%, no violations. Native play remains approximately60Hz paced despite immediate presentation, so this p95 is not pure CPU/GPU rendering cost. `diag.tiles` is0forplay, so `play_tiles` records the validated2,066 count separately.
 
 Native and smaller-radius runs remain queued behind uncontaminated web rounds and trace, and the same browser-contention/load conditions. Candidate ceiling worlds are radius 18 (997 tiles), 20 (1,231), 22 (1,484), with 8 and 12 available if needed to bracket 16.6 ms. A proposed ceiling needs measured bracketing points and owner acceptance. None is claimed yet.
 
@@ -81,6 +82,6 @@ Canonical M4 Max measurements continued separately after host recovery. Expensiv
 
 1. **Chrome trace: met for diagnostic attribution.** Live trace, verified-symbol CPU profile, parsed ranking and hardware GPU total are recorded. Contention during construction is labeled, and absolute trace timings are excluded from budget evidence.
 2. **Two guarded <=16.6 ms rounds or owner-accepted ceiling: blocked on host quiescence.** The two observed post-fix attempts are rejected. No ceiling accepted or criteria checked.
-3. **Exact-world native measurement: blocked on host quiescence.** Binary and exact-save methodology are ready, but no accepted native timing exists yet.
+3. **Exact-world native measurement: met.** Canonical Metal run validates2,066playtiles and the exact camera/settings. p95=20.24ms, load7.016to7.577. Native pacing caveat is recorded.
 
 Board handling was limited to the requested move to `in_progress`. No criteria were checked, no card was completed, and nothing was pushed.
