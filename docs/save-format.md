@@ -103,6 +103,12 @@ Some fields are deliberately not checked:
 - Per-cell seeds are not compared with `cell_seed`, so a later feature can reroll a tile without a format change.
 - Unlock ids are not checked against the catalog, because P3 defines what they name.
 
+## Import threat model
+
+A `.hexworld` file is untrusted data, not executable code. Imports run locally in the importing browser tab, with no server-side save processing. The decoder rejects files larger than 16 MiB before parsing and limits undo plus redo to 128 actions. The 16 MiB limit caps encoded input, not total runtime memory: decoded tile maps and validation copies require additional memory.
+
+`validate_history` replays every accepted history action and validates the resulting world after each step, including connectivity. A hostile file within those limits can therefore consume substantial CPU and make the importer's own tab unresponsive. This local denial of service is an accepted risk for the current single-player, user-initiated import flow. It does not consume a shared service's resources or execute code from the save. A user can close the affected tab to stop the import. No additional replay-work cap is imposed, so legitimate large-world saves retain the existing validation behavior. Reassess this decision before adding automatic imports or shared/server-side save processing.
+
 ## Migrations
 
 **The rule: every format change bumps the version and adds a fixture.** Never edit an existing `vN` wire module or an existing fixture.
