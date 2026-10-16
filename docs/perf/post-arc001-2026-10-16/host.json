@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-16T18:05:19.974Z",
+  "hostname": "MacDaddy",
+  "platform": "darwin",
+  "release": "27.0.0",
+  "arch": "arm64",
+  "cpus": [
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max",
+    "Apple M4 Max"
+  ],
+  "memory_bytes": 137438953472,
+  "source_revision": "e67ba43",
+  "baseline": {
+    "revision": "a7cb76a",
+    "p50": 52.5,
+    "p95": 55,
+    "mean": 52.8,
+    "max": 58.8,
+    "load_before": 7.8,
+    "load_after": 11.3
+  }
+}

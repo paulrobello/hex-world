@@ -1,0 +1,27 @@
+{
+  "host": "MiniMac Apple M4, 10 CPU and 10 GPU cores",
+  "source_revision": "e67ba43",
+  "profile_duration_ms": 2392.906,
+  "interpretation": "Diagnostic ranking only. Automated par-factory contention overlapped world construction and the trace window. Process log captures exact conditions. Not clean budget evidence.",
+  "load_before": 4.27587890625,
+  "load_after": 5.625,
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "browser": "Chromium 153.0.8010.12, headless GPU uncapped, channel chromium",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+  "categories": [
+    {"name":"directional-light mesh visibility", "sampled_ms":355.368,"profile_percent":14.85},
+    {"name":"calculate_bounds", "sampled_ms":244.011,"profile_percent":10.20},
+    {"name":"CPU visibility culling", "sampled_ms":230.757,"profile_percent":9.64},
+    {"name":"queue_material_meshes", "sampled_ms":181.642,"profile_percent":7.59},
+    {"name":"scatter::sync", "sampled_ms":149.412,"profile_percent":6.24},
+    {"name":"extract_meshes_for_gpu_building", "sampled_ms":69.070,"profile_percent":2.89},
+    {"name":"publish_state", "sampled_ms":8.558,"profile_percent":0.36},
+    {"name":"serde_json", "sampled_ms":6.736,"profile_percent":0.28}
+  ],
+  "method": "Walk parent ancestry of every CPU sample, symbolize only byte-identical WASM function indexes, count each category at most once per sample. Categories can overlap. Never sum inclusive wrappers or recursive sort frames.",
+  "gpu_total_ms": {"mean":22.91,"p50":22.89,"p95":24.92,"max":26.85},
+  "gpu_note": "Instrumented hardware timestamps. Web pass split is known unreliable and not interpreted. CPU and GPU overlap, so totals cannot be added.",
+  "main_thread_note": "77 animation callbacks include both HUD and engine callbacks, so callback median 0.502ms is not engine frame time. Engine callbacks reach 53.911ms. Main thread spent 1989.4ms in FireAnimationFrame over the ~2-second trace.",
+  "conclusion": "Per-entity visibility, bounds and render preparation now dominate. Revision-gated publication accounts for only 0.36% of sampled profile ancestry. No code-level fix implemented in this measurement branch."
+}

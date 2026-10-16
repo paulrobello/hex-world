@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-16T19:36:41.235Z",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "fps": "off",
+    "seed": "1",
+    "tilt": "off"
+  },
+  "camera": {
+    "cmd": "camera",
+    "pos": [
+      10,
+      12,
+      40
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  },
+  "world": {
+    "generator": "e2e/water-world.mjs waterWorldScript(22)",
+    "tiles": 1484,
+    "counts": {
+      "meadow": 212,
+      "river_straight": 243,
+      "forest": 119,
+      "beach": 149,
+      "river_bend": 17,
+      "beach_inner": 13,
+      "beach_outer": 23,
+      "house_cluster": 56,
+      "road_straight": 75,
+      "ocean": 577
+    }
+  },
+  "budget_p95_ms": 16.6,
+  "load_limit": 15,
+  "rounds": 1,
+  "arms": [
+    "off"
+  ],
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "channel": "chromium",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit --enable-webgpu-developer-features"
+  },
+  "rows": [
+    {
+      "round": 0,
+      "platform": "web",
+      "arm": "off",
+      "error": "page.waitForFunction: Target crashed ",
+      "load_before": 11.5869140625,
+      "load_after": 9.2392578125,
+      "load_discarded": 0
+    }
+  ],
+  "summary": {}
+}

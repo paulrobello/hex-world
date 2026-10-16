@@ -1,0 +1,123 @@
+{
+  "source": "docs/perf/minimac/p2-grass-2026-10-15.json",
+  "host": "MiniMac",
+  "chip": "Apple M4",
+  "cpu_cores": 10,
+  "gpu_cores": 10,
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "channel": "chromium",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit --enable-webgpu-developer-features"
+  },
+  "rows": [
+    {
+      "round": 1,
+      "platform": "web",
+      "arm": "off",
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "settled_at_frame": 4500,
+      "grass": {
+        "status": "off",
+        "groups": 0,
+        "blades": 0,
+        "mesh_bytes": 0
+      },
+      "p50": 54.1,
+      "p95": 56.6,
+      "p99": 59.6,
+      "mean": 54.45,
+      "max": 68.3,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 5220,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 928841728,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            600
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          54.3,
+          54.3,
+          56.1,
+          54.1,
+          55.3,
+          56.1,
+          55.1,
+          55.2,
+          55.2,
+          54,
+          54.6,
+          52.5,
+          56,
+          53.6,
+          58.8,
+          59.9,
+          56.6,
+          57.8,
+          55.5,
+          58.6,
+          55.9,
+          56,
+          55.1,
+          55.3,
+          56.2,
+          54,
+          54.7,
+          54.5,
+          56.4,
+          54.6,
+          54.6,
+          53.7
+        ]
+      },
+      "console_errors": [],
+      "load_before": 3.9794921875,
+      "load_after": 4.9189453125,
+      "load_discarded": 0
+    }
+  ]
+}

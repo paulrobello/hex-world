@@ -1,0 +1,1 @@
+[{"cmd":"camera","pos":[10,12,40],"look_at":[0,0,0]},{"cmd":"wait","frames":1000},{"cmd":"exit"}]

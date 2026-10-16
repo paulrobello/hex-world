@@ -1,0 +1,40 @@
+{
+  "host": "MacDaddy Apple M4 Max 16CPU/40GPU",
+  "points": [
+    {
+      "radius": 18,
+      "tiles": 997,
+      "p95": 41.3,
+      "load_before": 14.1396484375,
+      "load_after": 9.6005859375
+    },
+    {
+      "radius": 20,
+      "tiles": 1231,
+      "p95": 33.6,
+      "load_before": 9.6005859375,
+      "load_after": 11.5869140625
+    },
+    {
+      "radius": 26,
+      "tiles": 2066,
+      "p95": 50.8,
+      "load_before": 10.064453125,
+      "load_after": 8.58349609375
+    },
+    {
+      "radius": 26,
+      "tiles": 2066,
+      "p95": 48.8,
+      "load_before": 8.58349609375,
+      "load_after": 7.2724609375
+    }
+  ],
+  "method": "ordinary least squares p95_ms = intercept + slope * tile_count",
+  "intercept_ms": 25.137423930203237,
+  "slope_ms_per_tile": 0.011627406333205512,
+  "extrapolated_crossing_tiles": -734.2500713871233,
+  "bracketed": false,
+  "validated_ceiling_tiles": null,
+  "assessment": "All measured worlds fail16.6ms. Smaller radii are nonmonotonic, so tile count alone is not a reliable predictor. Fit is descriptive, not an accepted ceiling. Negative crossing indicates this fit has no positive feasible tile count, not that no small world can meet budget."
+}

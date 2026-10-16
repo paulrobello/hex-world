@@ -1,0 +1,9 @@
+{
+  "source_revision": "e67ba43",
+  "build_id": "a6e0e284a2",
+  "wasm_file": "hex-world-629139733223f8a0_bg.wasm",
+  "wasm_sha256": "9cf1cf71ebdfd71755480dc1e7ffde44e08aa277da4c2d3ca83e05dfab10db79",
+  "wasm_bytes": 26399387,
+  "name_section_bytes": [],
+  "native_sha256": "def99c4aa12bc0130209de8c20336c639aa949af856726d65bdd59296415e9f0"
+}
