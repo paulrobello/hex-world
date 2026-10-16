@@ -3,7 +3,7 @@
 Known Blender, bake, export and KTX2 traps, from the asset-pipeline research and the P1 friction logs (`assets-source/kit/*/friction.md`).
 
 ## Blender and its API
-- **Blender exits 0 on script errors.** Always pass `--python-exit-code 1` (vault `Tools/blender-script-failures-exit-zero.md`, `~/.claude/guides/blender-mcp.md`).
+- **Blender exits 0 on script errors.** Always pass `--python-exit-code 1` (external vault note `Tools/blender-script-failures-exit-zero.md`, external local guide `~/.claude/guides/blender-mcp.md`).
 - **Blender 5.2 API drift.**
   - Use `BLENDER_EEVEE`, not `BLENDER_EEVEE_NEXT`.
   - Leave `export_loglevel` unset.
@@ -27,7 +27,7 @@ Known Blender, bake, export and KTX2 traps, from the asset-pipeline research and
 - Set `use_clear` only on the first group. Keep `use_pass_direct` and `use_pass_indirect` off.
 - Image colorspace must be sRGB for base color and emission and Non-Color for everything else.
 - Metal kernels recompile per channel, so `kernel_optimization_level = "OFF"`. The bake device defaults to CPU; `lib.bake.setup_cycles` reads `HEXW_BAKE_DEVICE`.
-- `margin=0` leaves no gutter and mips bleed. Use about 8-12 px, with two masks where preservation matters (vault `Patterns/bounded-gutter-texture-bake-preservation.md`). Tileable sets are the exception: a wrapping tile has no gutter.
+- `margin=0` leaves no gutter and mips bleed. Use about 8-12 px, with two masks where preservation matters (external vault note `Patterns/bounded-gutter-texture-bake-preservation.md`). Tileable sets are the exception: a wrapping tile has no gutter.
 - **Other meshes darken AO bakes.** A mesh 0.4 m above the cap took the fixture's AO from about 1.0 to 0.001. `lib.bake.bake_to` hides every mesh that is neither `low` nor in `highs` for the bake, so LOD1/LOD2 and colliders may exist before baking. Do not bypass `bake_to` with a raw `bpy.ops.object.bake`.
 - **Set the world AO distance before an AO bake.** The default is 10 m, so on a tree every limb and strand above darkened the bark (mean 0.55, a quarter of texels at 0). Set `scene.world.light_settings.distance` to the scale of the local relief (the oak: 0.35 m bark, 0.3 m canopy shell) and record it as `aoDistanceM` in the bake report. `scene.reset_scene` leaves no world, so a scripted piece creates one first (`scn.world = scn.world or bpy.data.worlds.new(piece)`); the oak gets its world from its `.blend`.
 - **Buried receiver faces bake to 0.** Faces inside other geometry (intertwined trunk strands, root and limb starts) have no sky. Delete them from the receiver before the bake (`_tree.cull_buried`, `cull_inside_crown`).
@@ -124,7 +124,7 @@ Known Blender, bake, export and KTX2 traps, from the asset-pipeline research and
 ## KTX2
 - KTX-Software 4.4.2 `ktx create --encode` accepts only `basis-lz` or `uastc`, so BC7 is reachable only by transcoding (`ktx transcode --target bc7`). The pipeline encodes one UASTC q4 source (RDO, zstd 18) and transcodes it to BC7 and ASTC, so both families carry identical content. Encode ASTC directly only if a measured PSNR shortfall demands it.
 - Normals may use `--target bc5` (two channels). Bevy's two-component normal reconstruction for BC5 is unverified here.
-- Mips: albedo must be averaged in linear light and normals renormalized at each level (vault packing note).
+- Mips: albedo must be averaged in linear light and normals renormalized at each level (external vault packing note).
 - UASTC RDO barely helps size. Detailed 1024² maps land at 0.90-1.25 B per base pixel including mips, against a raw 1.33, so resolution is the only real budget lever (`docs/perf/p1-texture-budget-probe.md`).
 - PNG input carries no transfer function. `ktx create --format R8G8B8A8_UNORM` without `--assign-tf linear` assumes sRGB and silently applies a lossy sRGB-to-linear conversion. `encodeMap` always passes `--assign-tf`, and `--normalize` is rejected for sRGB formats. The runtime decides a PNG's colour space from the channel name.
 

@@ -31,17 +31,23 @@ pub enum EdgeStatus {
     Neutral,
 }
 
+/// Direction for cycling through distinct legal tile orientations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum RotateDir {
     Forward,
     Back,
 }
 
+/// A placement refusal. Failed placements leave the world and history unchanged.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum PlaceError {
+    /// The target cell already holds a tile.
     Occupied,
+    /// The empty target cell touches no placed tile.
     NotAdjacent,
+    /// The requested definition id is absent from the catalog.
     UnknownTile(String),
+    /// The requested rotation is outside `0..6`.
     BadRotation(u8),
     /// World edges whose neighbor socket does not fit.
     Incompatible(Vec<u8>),
@@ -61,10 +67,14 @@ impl fmt::Display for PlaceError {
 
 impl std::error::Error for PlaceError {}
 
+/// A removal refusal: the remaining world must stay nonempty and connected.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BulldozeError {
+    /// The target cell holds no tile.
     Empty,
+    /// Removing the only tile would leave the world empty.
     LastTile,
+    /// Removing this tile would split the remaining tiles into disconnected groups.
     WouldDisconnect,
 }
 
@@ -80,10 +90,14 @@ impl fmt::Display for BulldozeError {
 
 impl std::error::Error for BulldozeError {}
 
+/// A replacement refusal. Failed or unchanged replacements record no history entry.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ReplaceError {
+    /// The target cell holds no tile.
     Empty,
+    /// The requested definition id is absent from the catalog.
     UnknownTile(String),
+    /// The requested rotation is outside `0..6`.
     BadRotation(u8),
     /// World edges whose neighbor socket does not fit.
     Incompatible(Vec<u8>),
@@ -189,14 +203,17 @@ impl World {
         (&self.history.undo, &self.history.redo)
     }
 
+    /// The world seed from which placed tiles derive deterministic seeds.
     pub fn seed(&self) -> u64 {
         self.seed
     }
 
+    /// Placed tiles ordered by axial coordinate.
     pub fn tiles(&self) -> &BTreeMap<Axial, PlacedTile> {
         &self.tiles
     }
 
+    /// The tile at `cell`, or `None` when the cell is empty.
     pub fn tile(&self, cell: Axial) -> Option<&PlacedTile> {
         self.tiles.get(&cell)
     }
@@ -444,6 +461,7 @@ impl World {
         Ok(())
     }
 
+    /// Removes and returns a tile as one undoable action, preserving a nonempty connected world.
     pub fn bulldoze(&mut self, cell: Axial) -> Result<PlacedTile, BulldozeError> {
         self.can_bulldoze(cell)?;
         let tile = self
@@ -457,10 +475,12 @@ impl World {
         Ok(tile)
     }
 
+    /// Whether an action remains in the bounded undo history.
     pub fn can_undo(&self) -> bool {
         !self.history.undo.is_empty()
     }
 
+    /// Whether an undone action can be reapplied; a new edit clears this stack.
     pub fn can_redo(&self) -> bool {
         !self.history.redo.is_empty()
     }

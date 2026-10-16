@@ -19,6 +19,7 @@ pub enum SocketKind {
 }
 
 impl SocketKind {
+    /// Every socket kind, in declaration order.
     pub const ALL: [SocketKind; 6] = [
         SocketKind::Grass,
         SocketKind::Forest,
@@ -61,6 +62,7 @@ pub enum Side {
 }
 
 impl Side {
+    /// The land side seen from the neighboring tile across a seam.
     pub fn opposite(self) -> Side {
         match self {
             Side::Left => Side::Right,
@@ -95,6 +97,7 @@ pub struct EdgeSocket {
 }
 
 impl EdgeSocket {
+    /// A flat, height-zero socket without a lane or directional land side.
     pub fn new(kind: SocketKind) -> Self {
         Self {
             kind,
@@ -196,6 +199,7 @@ pub struct SocketTable {
     file: SocketTableFile,
 }
 
+/// A parse or invariant failure in the authored socket table.
 #[derive(Clone, Debug, PartialEq)]
 pub enum SocketTableError {
     Parse(String),
@@ -231,12 +235,14 @@ impl std::error::Error for SocketTableError {}
 pub const SOCKETS_RON: &str = include_str!("../../../data/sockets.ron");
 
 impl SocketTable {
+    /// Parses RON and validates compatibility, lanes and pair-piece entries.
     pub fn from_ron(text: &str) -> Result<Self, SocketTableError> {
         let file: SocketTableFile =
             ron::from_str(text).map_err(|e| SocketTableError::Parse(e.to_string()))?;
         Self::new(file)
     }
 
+    /// Validates complete symmetric kind entries, finite positive-width lanes and unique legal pairs.
     pub fn new(file: SocketTableFile) -> Result<Self, SocketTableError> {
         for kind in SocketKind::ALL {
             if !file.compatible.contains_key(&kind) {
@@ -272,10 +278,12 @@ impl SocketTable {
         Ok(Self { file })
     }
 
+    /// Loads and validates the embedded `data/sockets.ron`.
     pub fn builtin() -> Result<Self, SocketTableError> {
         Self::from_ron(SOCKETS_RON)
     }
 
+    /// Whether the kind pair is allowed, without checking lane, land-side or height descriptors.
     pub fn kinds_compatible(&self, a: SocketKind, b: SocketKind) -> bool {
         self.file
             .compatible
@@ -349,6 +357,7 @@ impl SocketTable {
             .collect()
     }
 
+    /// The authored table backing this validated instance.
     pub fn file(&self) -> &SocketTableFile {
         &self.file
     }

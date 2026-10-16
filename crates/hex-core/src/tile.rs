@@ -16,6 +16,7 @@ use crate::socket::{EdgeSocket, SocketKind, SocketTable};
 pub struct KitRef(pub String);
 
 impl KitRef {
+    /// The kit piece id without allocating.
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -42,6 +43,7 @@ pub fn opposite_edge(edge: u8) -> u8 {
     (edge % 6 + 3) % 6
 }
 
+/// Terrain classification authored on a tile definition.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Biome {
     Grass,
@@ -86,6 +88,7 @@ pub struct HeroProp {
     pub yaw_deg: f32,
 }
 
+/// Seeded scatter rules and fixed hero props authored for a tile.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct PropScatter {
     #[serde(default)]
@@ -94,6 +97,7 @@ pub struct PropScatter {
     pub hero: Vec<HeroProp>,
 }
 
+/// Road or river connectivity carried by a network segment.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum NetworkKind {
     Road,
@@ -194,6 +198,7 @@ pub struct AudioEmitter {
     pub radius: f32,
 }
 
+/// Agent family a tile contributes through its spawn rules.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AgentKind {
     Car,

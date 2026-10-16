@@ -2,6 +2,8 @@
 
 Hex World can be driven, observed, screenshotted and exited from the command line, natively and in the browser, with no OS screen-recording permission and no human. Screenshots are captured inside the app with Bevy's `Screenshot::primary_window()`, so they need only a window the app itself opens.
 
+HUD path convention: `web/ui/hud.js` and `web/ui/hud.css` below are **built-site URLs**, not source files. Edit `web/ui/src/` (TypeScript and CSS); `web/ui/build.mjs` bundles it into `web/ui/dist/`, which Trunk copies into the site's `web/ui/`.
+
 ## Native CLI flags
 
 Flags take the form `--name value`. A bare `--name` means `1`. Bad values log a warning and fall back to the default.
@@ -42,12 +44,80 @@ Flags take the form `--name value`. A bare `--name` means `1`. Bad values log a 
 | `--cascades <n>` | Directional shadow cascades: `2`, `3` or `4` (default) | `--cascades 3` |
 | `--shadow_dist <m>` | Cascade maximum distance in whole metres, above the 120 m first-cascade bound. Default `2000` | `--shadow_dist 800` |
 | `--post <name>` | `full` (default: TAA, SSAO, bloom, DOF) or `none` (all four off, MSAA stays off) | `--post none` |
-| `--fps <on\|off>` | On-screen FPS counter (`60 fps | 16.4 ms | p95 17.1`, top-right, Bevy UI text). Default `on`; the **F3** key toggles it at runtime. It is a persistent UI entity, not a `SceneEntity`, so `scenario` commands keep it. The galleries (`make shots`, `make shots-chunks`, `make web-shots`) pass `off`; the perf gate leaves it on | `--fps off` |
+| `--fps <on\|off>` | On-screen FPS counter (`60 fps \| 16.4 ms \| p95 17.1`, top-right, Bevy UI text). Default `on`; the **F3** key toggles it at runtime. It is a persistent UI entity, not a `SceneEntity`, so `scenario` commands keep it. The galleries (`make shots`, `make shots-chunks`, `make web-shots`) pass `off`; the perf gate leaves it on | `--fps off` |
 | `--debug <list>` | Developer overlays on from the start, a comma list of `lod` (LOD tint), `lod0`, `lod1` or `lod2` (Force LOD), `perf`, `grid`, `sockets`, `colliders`, `scatter` and `networks`. Unknown names warn. Never persisted, so a load without the flag starts with every overlay off. See [Debug overlays](#debug-overlays) | `--debug grid,lod,lod2` |
 | `--shadows <on\|off>` | Directional-light shadow maps (`cascades` cascades). Default `on` | `--shadows off` |
 | `--present <mode>` | Native only. `fifo` (default, vsync), `immediate`, or `novsync` (Bevy `AutoNoVsync`: immediate, else mailbox, else fifo). Use `novsync` for uncapped frame times | `--present novsync` |
 
 Every exit path waits until pending screenshots have been written. The gate keys (`layout`, `chunk`, `post`, `shadows`, `shadow_casters`, `cascades`, `shadow_dist`, `kit_hooks`, `kit_src`, `tonemap`, `grade`, `ibl`, `ev100`, `tilt`, `tilt_strength`, `tier`, `water_clock`, `grass`) are read on every scene build, so a `scenario` command keeps them. Unknown values warn and fall back to the default.
+
+## Environment variables
+
+These are process environment variables, not URL parameters. Unset means the variable is absent. The source column names the consumer (paths are relative to the repository root). Cargo-provided build variables such as `CARGO_MANIFEST_DIR` are not game tunables. Make arguments such as `BLENDER`, `PIECE` and `*_DOCS` are Make variables, not additional runtime environment settings.
+
+### Engine, schema and asset tooling
+
+| Name | Applies to | Default | Effect / source |
+|---|---|---|---|
+| `HEXW_UPDATE_SCHEMA` | Rust bridge contract test | Unset | Any present value rewrites the generated UI schema and rules fixture; use `make ui-schema`. `crates/hex-app/src/bridge.rs` |
+| `HEXW_PACK_HOLD_FRAMES` | Native streamed kit packs | `0` | Delay non-core fetches by this many frames for waiting-state evidence; ignored on WASM. Pack-loading implementation (`play/packs.rs`). |
+| `HEXW_GPU_TIMING_DEBUG` | GPU timestamp readback | Unset | Any present value logs raw stamps every 200 frames. `crates/hex-render/src/gpu_timing.rs` |
+| `HEXW_FORCE_FAIL` | Blender runner self-test | Unset | `1` forces the failure used by `make blender-test-selfcheck`. `scripts/blender/tests/test_runner_selfcheck.py` |
+| `HEXW_BAKE_DEVICE` | Blender Cycles bakes | `CPU` | Requested bake device when not explicitly supplied by the caller. `scripts/blender/lib/bake.py` |
+| `HEXW_SKIP_BAKE` | Kit generators | Unset | `1` skips expensive bakes for geometry/determinism staging, not a complete asset release. For example `scripts/blender/kit/meadow_base.py`. |
+| `HEXW_BLEND_STORE` | Blender source lookup | Main checkout's `assets-source/blend` | Override the shared source-store root. `scripts/blender/lib/paths.py` |
+| `HEXW_BLEND` | Hero oak generator | Store's `tree_hero_oak` blend path | Override the input `.blend`. `scripts/blender/kit/tree_hero_oak.py` |
+| `HEXW_MOUTH_DEBUG` | Mouth mesh generator | Unset | A nonempty value logs mesh-refinement diagnostics. `scripts/blender/kit/_mouth.py` |
+| `HEX_MUSIC_STORE` | Audio source lookup | This checkout's `assets-source/audio/music`, then the main checkout's | Override the first music source-store root. `scripts/audio/audio_lib.py` |
+| `INITIAL_DOWNLOAD_BUDGET_BYTES` | Initial-download gate | `31457280` (30 MiB) | Positive integer byte budget, primarily for gate self-tests. `scripts/size/initial-download.mjs` |
+| `TRUNK_STAGING_DIR` | Web URL versioning | `dist` if no positional path | Trunk supplies its staging path to the post-build hook. `scripts/web/version-dist.mjs` |
+| `PATH`, `DYLD_LIBRARY_PATH` | Local KTX tool subprocesses | Inherited host values | `scripts/fetch-ktx.sh` writes `tools/ktx-env.sh` to prepend the downloaded executable/library paths; `scripts/assets/kit-compress.mjs` sets its KTX subprocess paths itself. |
+
+### Local browser and performance harnesses
+
+Keep host load at most 15 before and after timing runs. Overrides are diagnostic controls, not permission to accept overloaded samples or software-renderer timings as GPU baselines.
+
+| Name | Applies to | Default | Effect / source |
+|---|---|---|---|
+| `PW_GPU` | Browser scripts that read it (for example `e2e/smoke.mjs`) | Hardware GPU | `swiftshader` explicitly opts into software rendering; leave unset for normal evidence. |
+| `PERF_LOAD_LIMIT` | Shared performance load guard | `15` | Maximum 1-minute host load. `e2e/perf-load.mjs` |
+| `PERF_LOAD_WAIT_MIN` | Shared performance load guard | `10` | Maximum minutes waiting for acceptable load. `e2e/perf-load.mjs` |
+| `PERF_FPS` | Engine perf gate | `on` | `off` hides the FPS overlay. `e2e/perf-gate.mjs` |
+| `PERF_OUT` | Perf scripts | Per script | JSON path: `docs/perf/p0-engine-gate.json` (`e2e/perf-gate.mjs`), `docs/perf/p2-tilt-shift-<mode>.json` (`e2e/perf-tilt.mjs`), `docs/perf/p2-water.json` (`e2e/perf-water.mjs`), `docs/perf/p2-passes.json` (`e2e/perf-passes.mjs`), `docs/perf/p2-water-world.json` (`e2e/perf-water-world.mjs`), `docs/perf/p2-grass.json` (`e2e/perf-grass.mjs`). |
+| `MATRIX_PACED` | `e2e/perf-matrix.mjs` | Unset (uncapped) | `1` keeps browser pacing. |
+| `MATRIX_OUT` | `e2e/perf-matrix.mjs` | `docs/perf/p0-gate-matrix.json` | Matrix JSON output path. |
+| `MATRIX_RUNS` | `e2e/perf-matrix.mjs` | `3` | Runs per configuration. |
+| `MATRIX_CONFIGS` | `e2e/perf-matrix.mjs` | `entities-full,instanced-full,instanced-tuned,instanced-bare` | Comma-separated configuration selection. |
+| `MATRIX_ONLY` | `e2e/perf-matrix.mjs` | Unset (both) | Select `web` or `native`. |
+| `WATER_TIERS` | `e2e/perf-water.mjs` | `high,low` | Comma-separated quality tiers. |
+| `WATER_ONLY` | `e2e/perf-water.mjs` | Unset (both) | Select `web` or `native`. |
+| `WW_ROUNDS` | `e2e/perf-water-world.mjs` | `2` | Rounds per water-world arm. |
+| `WW_ONLY` | `e2e/perf-water-world.mjs` | Unset (both) | Select `web` or `native`. |
+| `GRASS_ROUNDS` | `e2e/perf-grass.mjs` | `2` | Rounds per grass arm. |
+| `GRASS_RADIUS` | `e2e/perf-grass.mjs` | `26` | Generated water-world radius. |
+| `GRASS_ARMS` | `e2e/perf-grass.mjs` | `off,normal,lush` | Comma-separated density arms. |
+| `PASSES_ONLY` | `e2e/perf-passes.mjs` | Unset (both) | Select `web` or `native`. |
+| `PASSES_ROUNDS` | `e2e/perf-passes.mjs` | `3` | Rounds per post-pass arm. |
+| `PASSES_VIEW` | `e2e/perf-passes.mjs` | `strategic` | Camera view, also accepts `closeup`. |
+| `PASSES_WEB_TIMING` | `e2e/perf-passes.mjs` | Unset (off) | `on` includes opt-in web GPU-timing arms. |
+| `PROBE_ROUNDS` | `e2e/stall-probe.mjs` | `2` | Rounds per stall-probe arm. |
+| `PROBE_ARMS` | `e2e/stall-probe.mjs` | All keys in its `ARMS` table | Comma-separated probe selection. |
+| `PROBE_TRACE` | `e2e/stall-probe.mjs` | Unset | Trace output path; when set, runs an extra traced arm. |
+| `PROBE_TRACE_ARM` | `e2e/stall-probe.mjs` | `base` | Arm used for the extra trace. |
+| `PROBE_TRACE_MS` | `e2e/stall-probe.mjs` | `1000` | Trace window in milliseconds. |
+| `PROBE_TRACE_CATS` | `e2e/stall-probe.mjs` | Its `TRACE_CATS` list (timeline, V8, WASM, Viz, GPU/WebGPU, toplevel) | Override comma-separated Chrome trace categories. |
+| `TIER_STEPS` | `e2e/tier-stall.mjs` | `high>medium,medium>high,high>medium` | Comma-separated tier transitions. |
+| `TIER_WORLD` | `e2e/tier-stall.mjs` | `8` | Generated world radius. |
+| `TIER_ROUNDS` | `e2e/tier-stall.mjs` | `2` | Transition rounds. |
+| `TIER_WINDOW_MS` | `e2e/tier-stall.mjs` | `6000` | Measurement window in milliseconds. |
+| `TIER_LOAD_GUARD` | `e2e/tier-stall.mjs` | Enabled | `0` disables its guard for diagnostics only. |
+| `TIER_VIA` | `e2e/tier-stall.mjs` | `cmd` | Transition through bridge commands or the script's UI path. |
+| `TIER_TRACE` | `e2e/tier-stall.mjs` | Unset | Chrome trace path for the first round. |
+| `PERSIST_OUT` | `e2e/persist.mjs` | `e2e/test-results/persistence` | Evidence directory. |
+| `DEBUG_OUT` | `e2e/debug.mjs` | `e2e/test-results/debug` | Evidence directory. |
+| `VERSION_OUT` | `e2e/version.mjs` | `e2e/test-results/version` | Evidence directory. |
+| `PLACEMENT_OUT` | `e2e/ui.mjs` | `e2e/test-results/placement` | Placement evidence directory. |
+| `GHOST_OUT` | `e2e/ghost-shots.mjs` | `docs/checkpoints/ghost` | Ghost evidence directory. |
 
 ## Web query parameters
 
@@ -139,7 +209,7 @@ The play commands parse into the same input actions as their key and mouse bindi
 | `make run ARGS="..."` | Native release run with arbitrary flags, e.g. `make run ARGS="--scenario gate2000"` |
 | `make shot` / `make run-shot` | Native `--shot single`, writes `target/shots/single.png` |
 | `make perf-gate` | Uncapped GPU Chromium at 2560x1440, gate2000 in both views, each measured over a full 600-frame post-READY window; writes `docs/perf/p0-engine-gate.json` (what ran, beside the budgets). It measures the superseded `entities` layout by default (`GateConfig::default()`); the shipping-layout gate is the `perf-matrix` web rows run with `MATRIX_ONLY=web MATRIX_CONFIGS=instanced-tuned,instanced-mid600,instanced-mid1200,instanced-full`, as used in `docs/decisions/0001-engine.md`. Exits 1 on a budget miss, missing SSAO, a short window or a console error |
-| `make perf-matrix` | Diagnosis matrix (Task 14): four configs (entities full, instanced full, instanced `shadow_casters=large` + 3 cascades, instanced with shadows and post off) × two views, on web (uncapped GPU Chromium, a fresh browser per run) and native (`--present immediate`, 20 s, 2560x1440). Each config runs `MATRIX_RUNS` times (default 3) round-robin. `MATRIX_CONFIGS` selects configs, including the middle shadow settings `instanced-mid600` and `instanced-mid1200` (all casters, 3 cascades, `shadow_dist` 600 or 1200 m) that are not run by default. `MATRIX_ONLY=web|native` runs one platform. `MATRIX_PACED=1` keeps vsync on. `MATRIX_OUT` redirects the JSON. Writes `docs/perf/p0-gate-matrix.json` after every run: raw `rows` plus a `summary` with median and min–max p50/p95 per config, and `vsync_like_runs` (p50 within 0.3 ms of 16.67 or 8.33 ms); a run that crashes or echoes a different config is recorded, not dropped |
+| `make perf-matrix` | Diagnosis matrix (Task 14): four configs (entities full, instanced full, instanced `shadow_casters=large` + 3 cascades, instanced with shadows and post off) × two views, on web (uncapped GPU Chromium, a fresh browser per run) and native (`--present immediate`, 20 s, 2560x1440). Each config runs `MATRIX_RUNS` times (default 3) round-robin. `MATRIX_CONFIGS` selects configs, including the middle shadow settings `instanced-mid600` and `instanced-mid1200` (all casters, 3 cascades, `shadow_dist` 600 or 1200 m) that are not run by default. `MATRIX_ONLY=web\|native` runs one platform. `MATRIX_PACED=1` keeps vsync on. `MATRIX_OUT` redirects the JSON. Writes `docs/perf/p0-gate-matrix.json` after every run: raw `rows` plus a `summary` with median and min–max p50/p95 per config, and `vsync_like_runs` (p50 within 0.3 ms of 16.67 or 8.33 ms); a run that crashes or echoes a different config is recorded, not dropped |
 | `make shots-chunks` | The native gallery with `--layout chunks`, writes `target/shots/gallery-chunks-*.png` beside the entities gallery |
 | `make shots-instanced` | The native gallery with `--layout instanced`, writes `target/shots/gallery-instanced-*.png` |
 | `make run-diag` | Native gate2000 with `--diag`, writes and prints `target/state.json` |
@@ -362,7 +432,7 @@ Natively each event is also logged as `event: {...}`.
 
 ### UI overlay (web/ui)
 
-The player HUD is the Legend direction (mockups in `design/ui/legend/`, the system in the root `DESIGN.md` with its sidecar `.impeccable/design.json`, PRD D18 and §4.7) in vanilla TypeScript, an HTML layer over the canvas that changes the game only through bridge commands. `index.html` loads `web/ui/hud.css` and `web/ui/hud.js` and copies `web/` piecewise (`brand/`, `unsupported.html` and its backdrop `unsupported.jpg`, `wgsl-compat.js`, and `web/ui/dist` as `web/ui/`), so the overlay's sources and tooling never ship.
+The player HUD is the Legend direction (mockups in `design/ui/legend/`, the system in the root `DESIGN.md` with its sidecar `.impeccable/design.json`, PRD D18 and §4.7) in vanilla TypeScript, an HTML layer over the canvas that changes the game only through bridge commands. `index.html` loads the built-site URLs `web/ui/hud.css` and `web/ui/hud.js` (sources in `web/ui/src/`, generated bundles in `web/ui/dist/`) and copies `web/` piecewise (`brand/`, `unsupported.html` and its backdrop `unsupported.jpg`, `wgsl-compat.js`, and `web/ui/dist` as `web/ui/`), so the overlay's sources and tooling never ship.
 
 - **Unsupported page.** The WebGPU gate in `index.html` sends a browser without WebGPU, or without an adapter, to `web/unsupported.html`, the Legend S11 page. It carries the same CSP as `index.html`, takes its tokens, Manrope face and buttons from `web/ui/hud.css`, shows the app icon over a water capture (`web/unsupported.jpg`), and reads without script as the no-WebGPU variant. A small inline script (the CSP allows inline script) shows the adapter variant when `navigator.gpu` exists and names the browser and OS in the status line. `web/ui/build.mjs` emits the colour, shadow, motion (120 / 180 / 240 ms) and focus-ring tokens from the sidecar in front of `hud.css`; the type, spacing and radius scales sit at the top of `hud.css`.
 
