@@ -25,7 +25,7 @@ use hex_assets::{PieceEntry, PieceKind, Slot};
 
 use crate::{
     ActiveScenario, Scenario,
-    lookdev::{IBL_INTENSITY, KIT_SUN_DIR},
+    lighting::{IBL_INTENSITY, KIT_SUN_DIR},
     water::WaterMaterial,
     workload::{GateConfig, KitHooks},
 };
@@ -275,7 +275,7 @@ mod tests {
     fn noon_is_the_lookdev_rig() {
         let a = atmosphere(NOON);
         assert_eq!(a.sun_dir, KIT_SUN_DIR.normalize());
-        let shine = crate::lookdev::sun_transform().forward().as_vec3();
+        let shine = crate::lighting::sun_transform().forward().as_vec3();
         assert!(shine.dot(-a.sun_dir) > 0.9999);
         assert_eq!(a.sun_lux, NOON_SUN_LUX);
         assert_eq!(a.sun_color, Color::WHITE);

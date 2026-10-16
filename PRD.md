@@ -261,7 +261,7 @@ About 10 types. The exact variants are frozen at the start of P2. With the owner
   - Built so far: the play world spawns each tile's pieces as entities under the tile root and relies on Bevy's automatic instancing (a 20-tile world draws 256–298 batches). The per-chunk instance buffers (`crates/hex-render/src/instanced.rs`, `layout=instanced`) run only in the `gate2000` perf scenario.
 - **Seam continuity.** Kit pieces snap to a shared edge contract (lane offsets, edge heights, a vertex ring at the hex border), and the terrain cap's normals are blended at the hex border so seams don't show.
 - **Variety.** Each kit piece has 2–4 variants, and props get a per-instance seed for hue, scale and rotation jitter.
-  - Built so far: the scattered props ship three variants each, `tree_forest` with a tall slender `_b` and a young short `_c`, `rock_small` with a boulder `_b` and a low flat cluster `_c`, and `wildflower_clump` with a yellow and white `_b` and a blue and purple `_c`; the single-stem wildflowers come as four pieces (daisy, buttercup, cornflower, clover). A tile rule names the first piece and each instance draws one piece of its group from a hash of the tile seed (`crates/hex-render/src/play/scatter.rs` `VARIANTS`), so a seed always draws the same world. Scatter also gives each instance a seeded yaw and a scale jitter (±12% for trees, ±15% otherwise), with no hue jitter. Every other kit piece ships one variant. The new pieces await the owner's look approval (`docs/checkpoints/prop-variants/`).
+  - Built so far: the scattered props ship three variants each, `tree_forest` with a tall slender `_b` and a young short `_c`, `rock_small` with a boulder `_b` and a low flat cluster `_c`, and `wildflower_clump` with a yellow and white `_b` and a blue and purple `_c`; the single-stem wildflowers come as four pieces (daisy, buttercup, cornflower, clover). A tile rule names the first piece and each instance draws one piece of its group from a hash of the tile seed (`crates/hex-play/src/play/scatter.rs` `VARIANTS`), so a seed always draws the same world. Scatter also gives each instance a seeded yaw and a scale jitter (±12% for trees, ±15% otherwise), with no hue jitter. Every other kit piece ships one variant. The new pieces await the owner's look approval (`docs/checkpoints/prop-variants/`).
 - **Runtime recolour (owner, 2026-10-13).** Vehicles, starting with the car, are recoloured at runtime from one model and one texture set. The model marks its paintable surfaces in a mask that needs no extra texture: a vertex-colour channel, or a reserved region of its existing atlas. Glass, tyres, lights and trim stay unpainted. Each instance carries its own paint colour, picked from a curated palette by the instance seed, as per-instance data that keeps GPU instancing intact, so it never needs one material per colour.
   - Built (`3dfc734`): the sedan, van and pickup mark paint in vertex colour alpha, and each car carries its colour from a 12-colour palette as a per-entity `MeshTag`, so every car of a type and LOD draws in one batch.
 
@@ -373,7 +373,7 @@ The deterministic simulation core (grid, sockets, networks, pathing, agents) run
 
 The tier is auto-detected on first run from adapter info and a short benchmark, and the player can override it.
 
-As built (2026-10-14; `tier.rs`, `post.rs`, `water.rs` and `boids/plan.rs` in `crates/hex-render/src/`):
+As built (2026-10-14; `hex-play/src/tier.rs` and `hex-play/src/boids/plan.rs`, plus `hex-render/src/post.rs` and `hex-render/src/water.rs`, under `crates/`):
 
 | Tier | Resolution scale | Shadows | AO | Water | Boids (fish at most) | Grass | Tilt-shift taps |
 |---|---|---|---|---|---|---|---|
@@ -488,7 +488,9 @@ P1 (owner, 2026-10-13): external storage deferred. `.blend` sources and bake int
 crates/
   hex-core/      # grid, sockets, tile defs, placement rules, undo, save model (no GPU deps; native-testable)
   hex-sim/       # networks, pathing, agents, recipes (deterministic, fixed tick)
-  hex-render/    # Bevy render plugins: materials, custom nodes (water, VAT, boids), post config, photo mode
+  hex-render/    # Bevy renderer primitives: materials, water, post effects, lighting
+  hex-play-state/ # Shared presentation data, no renderer or play dependency
+  hex-play/      # Play presentation, boids, cars, walking, tier coordination; optional gate tooling
   hex-assets/    # meshopt GLB loader, KTX2 family selection, kit manifest, streaming
   hex-app/       # Bevy app + plugins, wasm entry, input actions, JS bridge (wasm-bindgen)
 web/             # Trunk-served web shell; web/ui: the TypeScript HUD overlay (esbuild, no Vite), audio layer and IndexedDB saves; unsupported-browser page, frame-latency limit
@@ -496,7 +498,7 @@ data/            # tile/socket/recipe RON, validated at build
 scripts/         # blender, audio, manifest, deploy
 ```
 
-- `hex-core` has no Bevy dependency. `hex-sim` depends only on `bevy_ecs`, so it survives a fallback to the custom wgpu route (D2). As built, `hex-sim` depends only on `hex-core`, with no Bevy at all, and recipes are not in it yet (P3). Both compile natively and are covered by `cargo test`. Rendering is isolated in `hex-render`.
+- `hex-core` has no Bevy dependency. `hex-sim` depends only on `bevy_ecs`, so it survives a fallback to the custom wgpu route (D2). As built, `hex-sim` depends only on `hex-core`, with no Bevy at all, and recipes are not in it yet (P3). Both compile natively and are covered by `cargo test`. Rendering primitives are isolated in `hex-render`; play presentation and its runtime consumers live in `hex-play`, with shared presentation data in `hex-play-state`.
 - A native desktop build of `hex-app` (Bevy on Metal) is kept working for fast iteration, profiling and screenshot tests.
 - Reusable local prior art: `hexx` hex math and the WFC generator from `~/Repos/nurbles`; the Trunk build, WebGPU gate, Pages deploy and browser smoke test from `~/Repos/suck-it-up`; the headless Blender build/validate/promote scripts from `~/Repos/the-cube`.
 - The JS bridge is a typed command/event API (`placeTile`, `rotateGhost`, `undo`, events such as `tilePlaced`, `recipeUnlocked`, `audioEmitterUpdate`), with TypeScript types generated from Rust.
@@ -628,7 +630,7 @@ P3 references are owner-approved (A17, 2026-10-14, `assets-source/refs/<id>/appr
 
 ### P8 — First-person stroll and drive
 
-- [x] A walk controller using the per-tile colliders (owner, 2026-10-14: "add a first person mode so i can walk around the map"). F or the bar's Walk button enters at eye level (1.7 m) on the ground nearest the camera focus; WASD walks at 2.8 m/s, Shift sprints at twice the walk speed (5.6 m/s), Space hops, and the mouse looks (the pointer lock on the web). The walker follows the kit ground (the topmost LOD0 surface of each tile's ground pieces), is stopped by the house, oak, spruce and rock colliders, by water deeper than 0.6 m and by the map edge, and leaving restores the orbit camera. The walk speed is a per-viewer setting from 2.8 to 8.0 m/s, the Walk speed slider in the Settings sheet's World tab, and sprint is always twice it (owner, 2026-10-14: "double walk and sprint speed, always keep sprint double walk and add a walk speed setting with minimum at the new double speed"). Evidence: `crates/hex-render/src/walk.rs` tests (ground on meadow, road, beach and river banks; a house wall on a turned tile; tree trunks; the shoreline and the map edge), the `make ui-e2e` walk steps, and the eye-level stills in [`docs/checkpoints/first-person/`](docs/checkpoints/first-person/) (`make shots-first-person`). Controls and commands: [`docs/agent-operability.md`](docs/agent-operability.md#walk-mode).
+- [x] A walk controller using the per-tile colliders (owner, 2026-10-14: "add a first person mode so i can walk around the map"). F or the bar's Walk button enters at eye level (1.7 m) on the ground nearest the camera focus; WASD walks at 2.8 m/s, Shift sprints at twice the walk speed (5.6 m/s), Space hops, and the mouse looks (the pointer lock on the web). The walker follows the kit ground (the topmost LOD0 surface of each tile's ground pieces), is stopped by the house, oak, spruce and rock colliders, by water deeper than 0.6 m and by the map edge, and leaving restores the orbit camera. The walk speed is a per-viewer setting from 2.8 to 8.0 m/s, the Walk speed slider in the Settings sheet's World tab, and sprint is always twice it (owner, 2026-10-14: "double walk and sprint speed, always keep sprint double walk and add a walk speed setting with minimum at the new double speed"). Evidence: `crates/hex-play/src/walk.rs` tests (ground on meadow, road, beach and river banks; a house wall on a turned tile; tree trunks; the shoreline and the map edge), the `make ui-e2e` walk steps, and the eye-level stills in [`docs/checkpoints/first-person/`](docs/checkpoints/first-person/) (`make shots-first-person`). Controls and commands: [`docs/agent-operability.md`](docs/agent-operability.md#walk-mode).
 - [ ] A drive mode on the road network.
 - [ ] Close-range LOD0 and texture quality pass verified in first person.
 

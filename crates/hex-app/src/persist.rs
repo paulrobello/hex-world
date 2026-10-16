@@ -405,7 +405,7 @@ pub fn run(
             settings: Some(_), ..
         } = &event
         {
-            hex_render::tier::request(
+            hex_play::tier::request(
                 &mut commands,
                 quality_tier(saved.quality),
                 "loaded save".into(),
@@ -1090,7 +1090,7 @@ mod tests {
             .init_resource::<SavedSettings>()
             .init_resource::<TiltShiftSettings>()
             .init_resource::<TiltPinned>()
-            .init_resource::<hex_render::tier::TierChoice>()
+            .init_resource::<hex_play::tier::TierChoice>()
             .insert_resource(crate::RunFlags(Default::default()));
         let orbit = Transform::from_xyz(0.0, 60.0, 80.0).looking_at(Vec3::ZERO, Vec3::Y);
         let fov = PerspectiveProjection::default().fov;
@@ -1183,7 +1183,7 @@ mod tests {
             .init_resource::<SavedSettings>()
             .init_resource::<TiltShiftSettings>()
             .init_resource::<TiltPinned>()
-            .init_resource::<hex_render::tier::TierChoice>()
+            .init_resource::<hex_play::tier::TierChoice>()
             .insert_resource(crate::RunFlags(Default::default()));
         app.world_mut().spawn((
             Camera3d::default(),

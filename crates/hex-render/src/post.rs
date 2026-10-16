@@ -66,3 +66,23 @@ pub(crate) fn specialize_target(
     );
     Ok(())
 }
+
+impl QualityTier {
+    pub fn name(self) -> &'static str {
+        match self {
+            QualityTier::Low => "low",
+            QualityTier::Medium => "medium",
+            QualityTier::High => "high",
+            QualityTier::Ultra => "ultra",
+        }
+    }
+
+    /// One tier lower; Low stays Low.
+    pub fn lower(self) -> QualityTier {
+        match self {
+            QualityTier::Low | QualityTier::Medium => QualityTier::Low,
+            QualityTier::High => QualityTier::Medium,
+            QualityTier::Ultra => QualityTier::High,
+        }
+    }
+}

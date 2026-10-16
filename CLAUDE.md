@@ -44,7 +44,9 @@ Workspace (crates/, dependency order):
 - `hex-core` — grid math (axial coords), sockets, tile definitions, placement rules, undo/redo, save encode/decode. No Bevy, no GPU deps; native-testable.
 - `hex-sim` — networks (roads/rivers), car routing, fixed-tick simulation. Depends only on hex-core.
 - `hex-assets` — kit manifest parsing, meshopt GLB loading, KTX2 texture-family selection (BC7/ASTC/PNG by GPU). Bevy behind a feature flag.
-- `hex-render` — all Bevy render plugins: kit material and scene, water tiles, grass, boids, cars, tilt-shift and photo post passes, quality tiers, GPU timing, debug overlays, play-scenario affordances/ghost/rise. Embedded WESL shader libraries (`wind.wesl`, `grass_common.wesl`).
+- `hex-play-state` — shared Bevy presentation data (view, kit/spawn state, grass density, rise components), with no renderer or play dependency.
+- `hex-render` — Bevy rendering primitives: materials, kit scene, water primitives, lighting, tilt-shift and photo post passes. Embedded WESL shader libraries (`wind.wesl`, `grass_common.wesl`). Benchmark geometry and instancing require `gate-tools`.
+- `hex-play` — play presentation (affordances/ghost/rise/scatter/grass), play-water adapter, boids, cars, walking and tier coordination. Diagnostics, GPU timing and overlays require `gate-tools`, explicitly enabled by `hex-app`. See ADR 0003.
 - `hex-app` — the Bevy app: scenario wiring, input actions, camera, persistence, the wasm JS bridge (`bridge.rs`). Entry for both native and web.
 
 Key cross-cutting flows:

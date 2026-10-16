@@ -136,74 +136,7 @@ const SCALE: [f32; 2] = [0.7, 1.4];
 const HUE_JITTER: f32 = 0.04;
 const LIGHT_JITTER: f32 = 0.05;
 
-/// The grass density (Settings → Graphics → Grass density, the `grass` key, `set_grass`) in whole
-/// percent of [`DENSITY`]: 0 is off, 100 Normal, 150 the most ([`LUSH`]). Every tile seeds the Lush
-/// set once; a density draws the blades whose `keep` is under its share of Lush, so every lower value
-/// draws a subset of every higher one and a change only changes each group's drawn instance count
-/// (never the scene, never an upload).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct Density(u8);
-
-impl Default for Density {
-    fn default() -> Self {
-        Density::NORMAL
-    }
-}
-
-impl Density {
-    pub const OFF: Density = Density(0);
-    pub const NORMAL: Density = Density(100);
-    pub const MAX: Density = Density(150);
-    /// The stepped levels the slider replaced, kept as `grass` aliases: name and percent.
-    pub const ALIASES: [(&'static str, u8); 4] =
-        [("off", 0), ("sparse", 50), ("normal", 100), ("lush", 150)];
-
-    /// A share of [`DENSITY`], clamped to 0..=[`LUSH`] and rounded to whole percent; `None` when it
-    /// is not finite.
-    pub fn from_share(share: f32) -> Option<Density> {
-        share
-            .is_finite()
-            .then(|| Density((share.clamp(0.0, LUSH) * 100.0).round() as u8))
-    }
-
-    /// A share (`1.2`), a percentage (`120%`), or an alias (`off|sparse|normal|lush`, `on` is
-    /// Normal). Out-of-range numbers clamp.
-    pub fn parse(s: &str) -> Option<Density> {
-        let s = s.trim();
-        if s == "on" {
-            return Some(Density::NORMAL);
-        }
-        if let Some((_, p)) = Self::ALIASES.iter().find(|(n, _)| *n == s) {
-            return Some(Density(*p));
-        }
-        let (num, scale) = match s.strip_suffix('%') {
-            Some(p) => (p.trim(), 0.01),
-            None => (s, 1.0),
-        };
-        Density::from_share(num.parse::<f32>().ok()? * scale)
-    }
-
-    pub fn percent(self) -> u8 {
-        self.0
-    }
-
-    /// Share of [`DENSITY`].
-    pub fn share(self) -> f32 {
-        f32::from(self.0) / 100.0
-    }
-
-    pub fn is_off(self) -> bool {
-        self.0 == 0
-    }
-
-    /// Whether a blade with this `keep` draws at this density.
-    pub fn draws(self, keep: f32) -> bool {
-        keep * LUSH * 100.0 < f32::from(self.0)
-    }
-}
-
-/// The Lush share of [`DENSITY`]: the seeded set every density draws from, and the slider's top.
-pub const LUSH: f32 = 1.5;
+pub use hex_play_state::{Density, LUSH};
 
 /// How blades grow on one kind of grass slot.
 #[derive(Clone, Copy, Debug, PartialEq)]

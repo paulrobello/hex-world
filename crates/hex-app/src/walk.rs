@@ -1,6 +1,6 @@
 //! First-person walk mode (PRD P8, D14): the walker stands on the kit ground at eye height, walks
 //! with WASD (Shift sprints), looks with the mouse and hops with Space, and is stopped by buildings,
-//! trunks, rocks, deep water and the map edge (`hex_render::walk`). The world keeps running.
+//! trunks, rocks, deep water and the map edge (`hex_play::walk`). The world keeps running.
 //!
 //! Enter and exit follow `GameState::walk_mode`, so the F key, Esc, the HUD button and the `walk`
 //! command share one snapshot: entering takes the orbit camera's transform and FOV, leaving writes
@@ -8,7 +8,7 @@
 use std::collections::VecDeque;
 
 use bevy::prelude::*;
-use hex_render::{
+use hex_play::{
     play::PlaySystems,
     tilt_shift::TiltOverride,
     walk::{Blocked, WalkGround},
@@ -454,7 +454,7 @@ impl Plugin for WalkPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WalkSession>()
             .init_resource::<WalkGround>()
-            .add_systems(Update, hex_render::walk::sync.after(PlaySystems));
+            .add_systems(Update, hex_play::walk::sync.after(PlaySystems));
     }
 }
 

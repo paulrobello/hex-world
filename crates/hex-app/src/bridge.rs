@@ -692,7 +692,7 @@ mod schema {
         );
         crate::photo_fx::extend_state(&mut photo, &Default::default(), false);
         let grade = crate::control::grade_json(hex_render::Grade::default());
-        let grass: Value = serde_json::from_str(&hex_render::play::grass::report(
+        let grass: Value = serde_json::from_str(&hex_play::play::grass::report(
             &Default::default(),
             Default::default(),
             "on",
@@ -701,7 +701,7 @@ mod schema {
         .unwrap();
         let walk = crate::walk::state_json(
             &crate::walk::WalkSession::default(),
-            &hex_render::walk::WalkGround::default(),
+            &hex_play::walk::WalkGround::default(),
         );
         json!({
             "walk": keys(&walk),
@@ -832,7 +832,7 @@ mod schema {
                 "photo_filter": serde_variants::<crate::photo_fx::PhotoFilter>(r#""__none__""#),
                 "edge_status": edge_status_names(),
                 "grade": hex_render::Grade::ALL.iter().map(|g| g.name()).collect::<Vec<_>>(),
-                "grass": hex_render::play::grass::Density::ALIASES.iter().map(|(n, _)| *n).collect::<Vec<_>>(),
+                "grass": hex_play::play::grass::Density::ALIASES.iter().map(|(n, _)| *n).collect::<Vec<_>>(),
             },
             "state": play_shapes(),
             "catalog": catalog(&c),

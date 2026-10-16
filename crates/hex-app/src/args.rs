@@ -56,9 +56,9 @@ pub struct Flags {
     pub clock_fixed: bool,
     /// Native only: render the tile thumbnails and exit (`thumbs::force_flags` sets the rest).
     pub thumbs: bool,
-    /// A valid `tier` key was given: it wins over auto-detection (`hex_render::tier`).
+    /// A valid `tier` key was given: it wins over auto-detection (`hex_play::tier`).
     pub tier_explicit: bool,
-    /// `gpu_timing=on`: per-pass GPU timestamps in the diag output (`hex_render::gpu_timing`).
+    /// `gpu_timing=on`: per-pass GPU timestamps in the diag output (`hex_play::gpu_timing`).
     pub gpu_timing: bool,
     /// `photo-export=1|2|4`: once ready, export a photo-mode PNG at that scale, named
     /// `photo-<n>x` (natively `target/shots/photo-<n>x.png`).
@@ -68,8 +68,8 @@ pub struct Flags {
     /// Native only: `.hexworld` file written with the world on exit.
     pub save: Option<String>,
     /// `debug=lod,perf,grid,sockets,colliders,lod2`: developer overlays on from the start (never
-    /// persisted; `hex_render::debug`).
-    pub debug: hex_render::debug::DebugOverlays,
+    /// persisted; `hex_play::debug`).
+    pub debug: hex_play::debug::DebugOverlays,
 }
 
 /// `"1280x800"` -> `Some((1280, 800))`; zero or malformed sizes are rejected.
@@ -391,7 +391,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
         )
     }),
     ("debug", |state, _k, v| {
-        let (d, unknown) = hex_render::debug::DebugOverlays::parse_list(v);
+        let (d, unknown) = hex_play::debug::DebugOverlays::parse_list(v);
         state.f.debug = d;
         for u in unknown {
             state.warnings.push(format!("unknown debug overlay '{u}'"));
@@ -541,7 +541,7 @@ mod tests {
     #[test]
     fn debug_key() {
         let (f, w) = flags_from_pairs(&[]);
-        assert_eq!(f.debug, hex_render::debug::DebugOverlays::default());
+        assert_eq!(f.debug, hex_play::debug::DebugOverlays::default());
         assert!(w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("debug", "grid,lod,lod1,perf")]));
         assert!(f.debug.grid && f.debug.lod_tint && f.debug.perf && !f.debug.sockets);

@@ -3047,6 +3047,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "hex-core",
+ "hex-play",
  "hex-render",
  "hex-sim",
  "image",
@@ -3084,6 +3085,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "hex-play"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bytemuck",
+ "gltf",
+ "hex-assets",
+ "hex-core",
+ "hex-play-state",
+ "hex-render",
+ "serde_json",
+ "sha2",
+ "wgpu",
+]
+
+[[package]]
+name = "hex-play-state"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "hex-core",
+]
+
+[[package]]
 name = "hex-render"
 version = "0.1.0"
 dependencies = [
@@ -3092,9 +3117,9 @@ dependencies = [
  "gltf",
  "hex-assets",
  "hex-core",
+ "hex-play-state",
  "serde_json",
  "sha2",
- "wgpu",
 ]
 
 [[package]]

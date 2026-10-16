@@ -82,7 +82,7 @@ impl Grade {
     pub fn ev100(self) -> f32 {
         match self {
             Grade::Aces | Grade::Rich3 => 12.5,
-            Grade::Tony | Grade::Rich1 | Grade::Rich2 => crate::lookdev::KIT_EV100,
+            Grade::Tony | Grade::Rich1 | Grade::Rich2 => crate::lighting::KIT_EV100,
         }
     }
 
@@ -133,8 +133,8 @@ impl Grade {
     pub fn backdrop(self) -> Color {
         match self {
             Grade::Aces => ACES_BACKDROP,
-            Grade::Tony | Grade::Rich1 => crate::lookdev::BACKDROP,
-            // `lookdev::BACKDROP` before rich-2's contrast curve.
+            Grade::Tony | Grade::Rich1 => crate::lighting::BACKDROP,
+            // `lighting::BACKDROP` before rich-2's contrast curve.
             Grade::Rich2 => Color::linear_rgb(0.0046, 0.0047, 0.0058),
             Grade::Rich3 => Color::linear_rgb(0.0110, 0.0118, 0.0142),
         }
@@ -169,7 +169,7 @@ pub fn apply(world: &mut World, grade: Grade) -> f32 {
     for e in cams {
         let mut ent = world.entity_mut(e);
         ent.insert((
-            crate::lookdev::tonemapping(grade.tonemap()),
+            crate::lighting::tonemapping(grade.tonemap()),
             grade.grading(),
         ));
         if let Some(mut x) = ent.get_mut::<Exposure>() {
@@ -183,8 +183,8 @@ pub fn apply(world: &mut World, grade: Grade) -> f32 {
 /// The grade's camera components, inserted by `scene::setup`.
 pub fn camera_bundle(config: &GateConfig) -> (Tonemapping, Exposure, ColorGrading) {
     (
-        crate::lookdev::tonemapping(config.tonemap),
-        crate::lookdev::exposure(config.ev100),
+        crate::lighting::tonemapping(config.tonemap),
+        crate::lighting::exposure(config.ev100),
         config.grade.grading(),
     )
 }
@@ -217,10 +217,10 @@ mod tests {
         assert_eq!(Grade::Rich3.grading().midtones.lift, 0.0);
         assert_eq!(
             (Grade::Tony.tonemap(), Grade::Tony.ev100()),
-            (Tonemap::TonyMcMapface, crate::lookdev::KIT_EV100)
+            (Tonemap::TonyMcMapface, crate::lighting::KIT_EV100)
         );
         assert_eq!(Grade::Tony.grading(), ColorGrading::default());
-        assert_eq!(Grade::Tony.backdrop(), crate::lookdev::BACKDROP);
+        assert_eq!(Grade::Tony.backdrop(), crate::lighting::BACKDROP);
         assert_eq!(
             (Grade::Aces.tonemap(), Grade::Aces.ev100()),
             (Tonemap::AcesFitted, 12.5)

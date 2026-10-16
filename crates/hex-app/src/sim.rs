@@ -1,11 +1,11 @@
 //! Cars in the play scenario (PRD §7.2): a [`hex_sim::Simulation`] mirrored from the game world,
-//! ticked at a fixed 20 Hz in `FixedUpdate` and drawn by `hex_render::cars` at the poses
+//! ticked at a fixed 20 Hz in `FixedUpdate` and drawn by `hex_play::cars` at the poses
 //! interpolated with the fixed clock's overstep.
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 use hex_core::{Axial, PlacedTile, TileCatalog, World};
-use hex_render::{
+use hex_play::{
     ActiveScenario, AgentsPaused, Scenario,
     cars::{CarKind, CarPose, CarsView},
     play::{PlaySystems, rise::PlayRises},
@@ -231,18 +231,18 @@ fn car_event(id: u64, cell: Axial, pos: [f32; 2], parked: bool) -> GameEvent {
 /// condition, so it does nothing while the overlay is off.
 pub fn draw_networks(
     sim: Res<CarSim>,
-    mut gizmos: Gizmos<hex_render::debug::DebugGizmos>,
-    mut report: ResMut<hex_render::debug::DebugReport>,
+    mut gizmos: Gizmos<hex_play::debug::DebugGizmos>,
+    mut report: ResMut<hex_play::debug::DebugReport>,
 ) {
     use hex_core::{NetworkKind, SocketKind};
-    use hex_render::debug::{LINE_Y, ring};
+    use hex_play::debug::{LINE_Y, ring};
     report.work += 1;
     let y = LINE_Y + 0.15;
     for (kind, socket) in [
         (NetworkKind::Road, SocketKind::Road),
         (NetworkKind::River, SocketKind::River),
     ] {
-        let [r, g, b] = hex_render::play::affordances::socket_rgb(socket);
+        let [r, g, b] = hex_play::play::affordances::socket_rgb(socket);
         let color = Color::srgb_u8(r, g, b);
         let net = sim.network(kind);
         for (_, link) in net.links() {

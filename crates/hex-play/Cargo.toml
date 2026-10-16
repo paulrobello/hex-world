@@ -1,0 +1,50 @@
+[package]
+name = "hex-play"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+default = []
+gate-tools = ["hex-render/gate-tools"]
+
+[dependencies]
+hex-render = { path = "../hex-render" }
+hex-play-state = { path = "../hex-play-state" }
+hex-core = { path = "../hex-core" }
+hex-assets = { path = "../hex-assets", features = ["bevy"] }
+bytemuck = { version = "1", features = ["derive"] }
+# Bevy 0.20's own wgpu, for the GPU timestamp query set and pass timestamp writes (`gpu_timing`),
+# which `bevy::render::render_resource` does not re-export.
+wgpu = { version = "=30.0.1", default-features = false }
+serde_json = "1"
+# No `bluenoise_texture`: it binds a blue-noise texture in every mesh pipeline's view bind group
+# (read only by contact shadows, SSR and runtime env-map filtering, none used here), and with it the
+# kit forward pipeline needs 17 sampled textures in a refracting-water view, over WebGPU's default 16
+# (`water_kit` smoke case). `3d_bevy_render` still brings `ktx2` and `zstd_rust`.
+bevy = { workspace = true, features = [
+    "3d_bevy_render",
+    "ui_bevy_render",
+    "default_app",
+    "std",
+    "bevy_winit",
+    "multi_threaded",
+    "default_font",
+] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+bevy = { workspace = true, features = ["x11", "wayland"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+bevy = { workspace = true, features = ["web", "webgpu"] }
+
+# Render extraction and ECS queries mirror Bevy pipeline interfaces.
+[lints.clippy]
+type_complexity = "allow"
+too_many_arguments = "allow"
+
+[dev-dependencies]
+gltf = { version = "1", features = ["extras"] }
+serde_json = "1"
+sha2 = "0.10"

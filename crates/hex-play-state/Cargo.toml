@@ -1,0 +1,9 @@
+[package]
+name = "hex-play-state"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+[dependencies]
+hex-core = { path = "../hex-core" }
+bevy = { workspace = true, features = ["std", "3d_bevy_render"] }

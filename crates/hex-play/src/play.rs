@@ -17,8 +17,7 @@ use bevy::{
 };
 use hex_assets::{parse_manifest, rotor_mesh_name, select_family};
 use hex_core::{
-    Axial, Biome, EdgeStatus, HEX_RADIUS, LEVEL_STEP, PairPieces, SocketKind, TileCatalog, TileDef,
-    hex_prism,
+    Axial, Biome, HEX_RADIUS, LEVEL_STEP, PairPieces, SocketKind, TileCatalog, TileDef, hex_prism,
 };
 
 pub mod affordances;
@@ -46,134 +45,11 @@ use crate::{
 
 const APOTHEM: f32 = HEX_RADIUS * 0.866_025_4;
 
-/// The play systems (kit loading, the view sync, the rise and the affordances), in order. `hex-app`
-/// orders its view writer before this set and the car mirror after it.
-#[derive(SystemSet, Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct PlaySystems;
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct PlayTile {
-    pub cell: Axial,
-    pub tile: String,
-    pub rotation: u8,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct PlayGhost {
-    pub cell: Axial,
-    pub tile: String,
-    pub rotation: u8,
-    /// Status per world edge 0..6.
-    pub edges: [EdgeStatus; 6],
-    /// False when the tile does not fit here at this rotation.
-    pub valid: bool,
-    /// The ghost sits on a pinned slot (U4) rather than under the pointer.
-    pub pinned: bool,
-}
-
-/// What the play scenario draws, written by `hex-app` when the game changes.
-#[derive(Resource, Clone, Debug, Default, PartialEq)]
-pub struct PlayView {
-    pub tiles: Vec<PlayTile>,
-    pub frontier: Vec<Axial>,
-    pub ghost: Option<PlayGhost>,
-    /// A free slot under the pointer while another slot is pinned: a click there pins it.
-    pub pointer_slot: Option<Axial>,
-    /// A placed tile under the pointer with the place tool, outside photo mode: a faint rim marks it.
-    pub pointer_tile: Option<Axial>,
-    /// Bulldoze tool: the hovered tile and whether removing it is allowed.
-    pub bulldoze: Option<(Axial, bool)>,
-    /// The bulldoze tool is active (the slot ring hides).
-    pub bulldoze_mode: bool,
-    /// The cell the latest world change bulldozed: when its tile leaves the view it sinks inside a
-    /// dust cloud ([`rise::SinkKind::Bulldoze`]) rather than with the undo puff.
-    pub bulldozed: Option<Axial>,
-    /// Refused placements and bulldozes so far; each new one pulses the refused highlight.
-    pub refusals: u32,
-    /// Bumped when the world is replaced wholesale (a loaded save, a new world): the next sync
-    /// redraws every tile settled, water filled and agents ready, with no rise, sink or cue.
-    /// Placements in the new world rise as usual.
-    pub epoch: u64,
-    /// The world seed: each tile scatters from it and its cell ([`scatter`]).
-    pub world_seed: u64,
-}
-
-impl PlaySpawned {
-    /// Whether this sync redraws every tile at rest: a scenario switch or core arriving set
-    /// `rebuild`, and a new view epoch (a replaced world) sets it here.
-    fn rebuild_for(&mut self, epoch: u64) -> bool {
-        if self.epoch != epoch {
-            self.epoch = epoch;
-            self.rebuild = true;
-        }
-        self.rebuild
-    }
-
-    /// A redraw is queued that the next sync has not spawned yet.
-    pub fn redraw_pending(&self) -> bool {
-        self.rebuild
-    }
-}
-
-/// Tile definitions the view's ids resolve against (the embedded catalog `hex-app` also uses).
-#[derive(Resource)]
-pub struct PlayCatalog(pub TileCatalog);
-
-impl Default for PlayCatalog {
-    fn default() -> Self {
-        Self(TileCatalog::builtin().expect("the embedded catalog is validated by hex-core"))
-    }
-}
-
-/// Root of one placed tile's entities.
-#[derive(Component)]
-pub struct PlayTileRoot;
-
-/// Entities spawned for the current view. `setup` replaces it on every switch into the scenario,
-/// since the switch despawned the previous scene.
-#[derive(Resource, Default)]
-pub struct PlaySpawned {
-    tiles: HashMap<Axial, (PlayTile, Entity)>,
-    rebuild: bool,
-    /// Pair edge pieces (`data/sockets.ron` `pair_edge_pieces`, decision D3) resolved per cell,
-    /// and the entities drawing them under each tile root. They depend on the neighbours, so a
-    /// change at a cell re-evaluates it and its six neighbours ([`PairPieces::update`]).
-    pairs: PairPieces,
-    pair_entities: HashMap<Axial, Vec<Entity>>,
-    /// The view epoch the spawned tiles belong to.
-    epoch: u64,
-    /// Pieces built since the last sync: tiles drawing them swap to the kit look in place.
-    refresh: HashSet<String>,
-    /// Placed tiles hidden until every pack they draw from arrives (owner decision A10), with
-    /// whether they rise on arrival (a placement) or appear at rest (a rebuild or loaded world).
-    hidden: HashMap<Axial, bool>,
-}
-
-/// Placed tiles hidden until their pack arrives, sorted by cell: the empty slot shows a soft
-/// pulsing outline instead ([`affordances`]).
-#[derive(Resource, Clone, Debug, Default, PartialEq)]
-pub struct PlayWaiting(pub Vec<Axial>);
-
-#[derive(Clone)]
-pub struct KitPart {
-    pub(crate) lod: usize,
-    pub(crate) mesh: Handle<Mesh>,
-    material: Handle<KitMaterial>,
-    /// Its manifest material slot (`beach_sand`, `river_bed`, ...).
-    pub(crate) slot: String,
-    /// A rotor part (PRD §7.2): the `<id>_rotor_lod<n>` node's rest transform in the piece frame. It
-    /// draws there under its LOD's body and turns about its local X ([`KitRotor`]).
-    pub(crate) rotor: Option<Transform>,
-}
-
-/// The built kit pieces. `Loading` holds pieces of packs that arrived before core; `Ready` is
-/// core and every pack since ([`packs`]). A piece missing from the manifest (pending, plan F4),
-/// failing to load, or in a pack still streaming has no entry and draws as a placeholder.
-#[derive(Resource)]
-pub enum PlayKit {
-    Loading(HashMap<String, Vec<KitPart>>),
-    Ready(HashMap<String, Vec<KitPart>>),
-}
+pub use hex_play_state::{
+    PlayCatalog, PlayGhost, PlaySpawned, PlaySystems, PlayTile, PlayTileRoot, PlayView, PlayWaiting,
+};
+pub type KitPart = hex_play_state::KitPart<KitMaterial>;
+pub type PlayKit = hex_play_state::PlayKit<KitMaterial>;
 
 #[derive(Resource)]
 pub struct PlainAssets {
