@@ -293,26 +293,55 @@ impl CommandQueue {
 #[derive(Resource, Default)]
 pub struct ExitRequest(pub bool);
 
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct CommandPhoto<'w> {
+    photo: ResMut<'w, PhotoSettings>,
+    exports: ResMut<'w, PhotoExports>,
+    focus: ResMut<'w, PhotoFocus>,
+}
+
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct CommandSettings<'w> {
+    tilt: ResMut<'w, TiltShiftSettings>,
+    pinned: ResMut<'w, TiltPinned>,
+    reduced: ResMut<'w, ReducedMotion>,
+    persist: ResMut<'w, PersistQueue>,
+    saved: ResMut<'w, SavedSettings>,
+    walk: ResMut<'w, WalkSession>,
+    debug: ResMut<'w, hex_render::debug::DebugOverlays>,
+}
+
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct CommandScene<'w, 's> {
+    cameras: Query<'w, 's, &'static mut Transform, With<Camera3d>>,
+    scene: Query<'w, 's, Entity, With<SceneEntity>>,
+}
+
 /// Runs one command per frame once the scene is ready. Bad commands are logged and skipped.
-#[allow(clippy::too_many_arguments)]
 pub fn run_commands(
     mut commands: Commands,
     mut queue: ResMut<CommandQueue>,
     mut exit: ResMut<ExitRequest>,
-    mut cameras: Query<&mut Transform, With<Camera3d>>,
-    scene: Query<Entity, With<SceneEntity>>,
-    (mut tilt, mut pinned): (ResMut<TiltShiftSettings>, ResMut<TiltPinned>),
+    scene: CommandScene,
     mut actions: ResMut<ActionQueue>,
-    mut reduced: ResMut<ReducedMotion>,
-    (mut photo, mut exports, mut photo_focus): (
-        ResMut<PhotoSettings>,
-        ResMut<PhotoExports>,
-        ResMut<PhotoFocus>,
-    ),
-    (mut persist, mut saved): (ResMut<PersistQueue>, ResMut<SavedSettings>),
-    mut walk: ResMut<WalkSession>,
-    mut debug: ResMut<hex_render::debug::DebugOverlays>,
+    capture: CommandPhoto,
+    settings: CommandSettings,
 ) {
+    let CommandScene { mut cameras, scene } = scene;
+    let CommandPhoto {
+        mut photo,
+        mut exports,
+        focus: mut photo_focus,
+    } = capture;
+    let CommandSettings {
+        mut tilt,
+        mut pinned,
+        mut reduced,
+        mut persist,
+        mut saved,
+        mut walk,
+        mut debug,
+    } = settings;
     queue.items.extend(INBOX.lock().unwrap().drain(..));
     if !*bridge::READY.lock().unwrap() {
         return;
@@ -325,23 +354,6 @@ pub fn run_commands(
         return;
     };
     info!("command: {cmd:?}");
-    if let Command::Photo { fx, .. } = cmd {
-        commands.queue(move |w: &mut World| {
-            w.resource_mut::<crate::photo_fx::PhotoFxSettings>()
-                .apply(&fx)
-        });
-    }
-    if let Command::Walk {
-        pointer_lock: Some(lock),
-        ..
-    } = cmd
-    {
-        walk.pointer_lock = lock;
-    }
-    if let Some(a) = cmd.action() {
-        actions.0.push_back(a);
-        return;
-    }
     match cmd {
         Command::Camera { pos, look_at } => {
             let t = Transform::from_translation(pos.into()).looking_at(look_at.into(), Vec3::Y);
@@ -417,9 +429,12 @@ pub fn run_commands(
             roll,
             pause_agents,
             focus_at,
-            ..
-        } => {
-            photo.apply(&PhotoPatch {
+            fx,
+        } => apply_photo_command(
+            &mut commands,
+            &mut photo,
+            &mut photo_focus,
+            PhotoPatch {
                 dof,
                 focus,
                 aperture,
@@ -427,25 +442,23 @@ pub fn run_commands(
                 fov,
                 roll,
                 pause_agents,
-            });
-            match focus_at.map(Vec2::from) {
-                Some(uv)
-                    if uv.is_finite()
-                        && uv.cmpge(Vec2::ZERO).all()
-                        && uv.cmple(Vec2::ONE).all() =>
-                {
-                    photo_focus.request = Some(uv);
-                }
-                Some(uv) => warn!("photo command: focus_at {uv} is outside 0..1, skipped"),
-                None => {}
-            }
-        }
+            },
+            fx,
+            focus_at,
+        ),
         Command::PhotoExport { scale, name } => exports.push(scale, name),
         Command::Exit => exit.0 = true,
         c @ (Command::Save { .. } | Command::Load { .. } | Command::NewWorld) => {
             persist.0.push_back(c)
         }
-        Command::Walk { .. } => {}
+        Command::Walk { on, pointer_lock } => {
+            if let Some(lock) = pointer_lock {
+                walk.pointer_lock = lock;
+            }
+            if let Some(on) = on {
+                actions.0.push_back(Action::SetWalk(on));
+            }
+        }
         Command::WalkTo {
             x,
             z,
@@ -497,7 +510,44 @@ pub fn run_commands(
             ],
             force_lod.as_deref(),
         ),
-        _ => unreachable!("play commands return through `action`"),
+        c @ (Command::SelectTile { .. }
+        | Command::Hover { .. }
+        | Command::Rotate { .. }
+        | Command::Place { .. }
+        | Command::Pin { .. }
+        | Command::Unpin
+        | Command::Replace { .. }
+        | Command::Undo
+        | Command::Redo
+        | Command::Bulldoze { .. }
+        | Command::SetTool { .. }
+        | Command::Toggle { .. }) => {
+            actions
+                .0
+                .push_back(c.action().expect("play command has an action"));
+        }
+    }
+}
+
+fn apply_photo_command(
+    commands: &mut Commands,
+    photo: &mut PhotoSettings,
+    photo_focus: &mut PhotoFocus,
+    patch: PhotoPatch,
+    fx: crate::photo_fx::PhotoFxPatch,
+    focus_at: Option<[f32; 2]>,
+) {
+    commands.queue(move |w: &mut World| {
+        w.resource_mut::<crate::photo_fx::PhotoFxSettings>()
+            .apply(&fx)
+    });
+    photo.apply(&patch);
+    match focus_at.map(Vec2::from) {
+        Some(uv) if uv.is_finite() && uv.cmpge(Vec2::ZERO).all() && uv.cmple(Vec2::ONE).all() => {
+            photo_focus.request = Some(uv);
+        }
+        Some(uv) => warn!("photo command: focus_at {uv} is outside 0..1, skipped"),
+        None => {}
     }
 }
 
