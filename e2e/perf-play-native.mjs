@@ -40,7 +40,7 @@ const result = await guarded(async () => {
   return { platform: "native", args, exclusivity, viewport: "2560x1440", device_scale_factor: 1,
     tiles: state.play.tiles.length, tier: state.tier, camera: state.camera, grass: state.grass, tilt: state.tilt,
     pacing_note: "Play may impose 60 Hz despite immediate presentation. Pacing is not CPU/GPU render cost.",
-    ...state.diag };
+    ...state.diag, play_tiles: state.play.tiles.length };
 }, "native exact 2066-tile play world");
 await writeFile(join(output, "native.json"), JSON.stringify(result, null, 2) + "\n");
 console.log(JSON.stringify(result, null, 2));
