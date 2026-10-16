@@ -892,16 +892,12 @@ export class Hud {
     };
     // Photo mode owns P, Esc and H and swallows the game keys; with a modifier nothing acts (no undo).
     if (st.photo_mode || this.photo.active) {
-      if (!mod && this.photo.key(e)) take();
+      if (this.photo.key(e)) take();
       return;
     }
     // Walk mode owns F and Esc and swallows the game keys; WASD, the arrows, Shift and Space walk in the engine.
     if (st.walk_mode || this.walk.on) {
-      if (mod) return;
-      if (k === "f" || k === "Escape") {
-        take();
-        if (!e.repeat) this.walk.set(false);
-      } else if (/^(r|b|p|h|Tab|F6|Enter|[0-9=-])$/.test(e.code === "Tab" ? "Tab" : k)) take();
+      if (this.walk.key(e)) take();
       return;
     }
     if (mod) {
@@ -911,12 +907,12 @@ export class Hud {
       }
       return;
     }
+    if (this.sheet.handleKey(e)) {
+      take();
+      return;
+    }
     const onRow = (e.target as Element).closest?.(".row");
     switch (e.code === "Tab" ? "Tab" : k) {
-      case "Tab":
-        take();
-        this.toggleSheet();
-        return;
       case "F6":
         take();
         this.cycleFocus(e.shiftKey);
@@ -963,11 +959,6 @@ export class Hud {
         return;
       default:
         break;
-    }
-    if (/^[0-9=-]$/.test(k)) {
-      take();
-      const id = /^[1-9]$/.test(k) ? this.sheet.numbered[Number(k) - 1] : undefined;
-      if (id) this.selectTile(id);
     }
   }
 

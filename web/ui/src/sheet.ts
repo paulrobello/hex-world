@@ -60,10 +60,27 @@ export class Sheet {
   /** Tile ids in "Fits here" order, for the 1–9 keys. */
   numbered: string[] = [];
 
+  private readonly onSelect: (id: string) => void;
+  private readonly onClose: () => void;
   private readonly onGoto: (c: Cell) => void;
+
+  /** Owns inventory visibility and numbered selection in build mode. */
+  handleKey(e: KeyboardEvent): boolean {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (e.code === "Tab") {
+      this.onClose();
+      return true;
+    }
+    if (!/^[0-9=-]$/.test(k)) return false;
+    const id = /^[1-9]$/.test(k) ? this.numbered[Number(k) - 1] : undefined;
+    if (id) this.onSelect(id);
+    return true;
+  }
 
   constructor(onSelect: (id: string) => void, onClose: () => void, onGoto: (c: Cell) => void) {
     this.onGoto = onGoto;
+    this.onSelect = onSelect;
+    this.onClose = onClose;
     this.key = h("div", { class: "key" });
     this.fitLabel = h("span", {}, "All tiles");
     this.fitCount = h("span", { class: "group__count" });

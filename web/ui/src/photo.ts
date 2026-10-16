@@ -408,6 +408,7 @@ export class Photo {
 
   /** Keys while photo mode is on. Returns true when the key was taken. */
   key(e: KeyboardEvent): boolean {
+    if (e.ctrlKey || e.metaKey) return false;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     if (k === "p" || k === "Escape") {
       if (!e.repeat) this.exit();

@@ -74,6 +74,17 @@ export class Walk {
     else if (this.locked) document.exitPointerLock();
   }
 
+  /** Owns walk exit and suppresses build keys, leaving movement to the engine. */
+  key(e: KeyboardEvent): boolean {
+    if (e.ctrlKey || e.metaKey) return false;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k === "f" || k === "Escape") {
+      if (!e.repeat) this.set(false);
+      return true;
+    }
+    return /^(r|b|p|h|Tab|F6|Enter|[0-9=-])$/.test(e.code === "Tab" ? "Tab" : k);
+  }
+
   private lock(): void {
     const c = this.canvas as (HTMLCanvasElement & { requestPointerLock(): Promise<void> | undefined }) | null;
     if (!c?.requestPointerLock) return;
