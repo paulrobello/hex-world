@@ -26,6 +26,8 @@ pub mod ghost;
 pub mod grass;
 pub mod grass_gpu;
 pub mod packs;
+mod plugins;
+pub use plugins::PlayPlugin;
 pub mod rise;
 pub mod scatter;
 
