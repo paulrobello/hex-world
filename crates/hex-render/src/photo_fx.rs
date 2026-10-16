@@ -219,14 +219,7 @@ impl Specializer<RenderPipeline> for FxSpecializer {
         key: Self::Key,
         descriptor: &mut RenderPipelineDescriptor,
     ) -> Result<Canonical<Self::Key>, BevyError> {
-        descriptor.fragment_mut()?.set_target(
-            0,
-            ColorTargetState {
-                format: key.target_format,
-                blend: None,
-                write_mask: ColorWrites::ALL,
-            },
-        );
+        crate::post::specialize_target(descriptor, key.target_format)?;
         Ok(key)
     }
 }

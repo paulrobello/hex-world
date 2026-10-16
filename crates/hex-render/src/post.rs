@@ -50,3 +50,19 @@ pub fn camera_ssao(tier: QualityTier) -> Option<ScreenSpaceAmbientOcclusion> {
     matches!(tier, QualityTier::High | QualityTier::Ultra)
         .then(ScreenSpaceAmbientOcclusion::default)
 }
+
+pub(crate) fn specialize_target(
+    descriptor: &mut bevy::render::render_resource::RenderPipelineDescriptor,
+    format: bevy::render::render_resource::TextureFormat,
+) -> Result<(), BevyError> {
+    use bevy::render::render_resource::{ColorTargetState, ColorWrites};
+    descriptor.fragment_mut()?.set_target(
+        0,
+        ColorTargetState {
+            format,
+            blend: None,
+            write_mask: ColorWrites::ALL,
+        },
+    );
+    Ok(())
+}
