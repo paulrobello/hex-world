@@ -59,7 +59,25 @@ def trunk_skeleton(flare: float) -> list[dict]:
     return [{"id": 0, "level": 0, "points": pts, "radii": radii, "sway": (0.0, F.TRUNK_SWAY)}]
 
 
-from _shared import island_texels
+def island_texels(obj, size):
+    """obj's UV0 islands rasterized at texel centres (bool size x size, Blender pixel order)."""
+    island = np.zeros((size, size), bool)
+    uvd = obj.data.uv_layers["UVMap"].data
+    for poly in obj.data.polygons:
+        loops = list(poly.loop_indices)
+        for k in range(1, len(loops) - 1):
+            tri = np.array([uvd[loops[0]].uv[:], uvd[loops[k]].uv[:], uvd[loops[k + 1]].uv[:]]) * size
+            lo_, hi_ = np.floor(tri.min(0)).astype(int), np.ceil(tri.max(0)).astype(int)
+            xs, ys = np.meshgrid(np.arange(lo_[0], hi_[0]) + 0.5, np.arange(lo_[1], hi_[1]) + 0.5)
+            (ax, ay), (bx, by), (cx, cy) = tri
+            d = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+            if abs(d) < 1e-12:
+                continue
+            l1 = ((by - cy) * (xs - cx) + (cx - bx) * (ys - cy)) / d
+            l2 = ((cy - ay) * (xs - cx) + (ax - cx) * (ys - cy)) / d
+            inside = (l1 >= 0) & (l2 >= 0) & (l1 + l2 <= 1)
+            island[ys[inside].astype(int).clip(0, size - 1), xs[inside].astype(int).clip(0, size - 1)] = True
+    return island
 
 
 def build(piece: str, out: pathlib.Path, generator: str, *, shape: dict, flare: float, bark_uv_per_m: float,
