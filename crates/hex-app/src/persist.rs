@@ -350,6 +350,7 @@ pub fn handle(
 ///
 /// Loading a world or starting a new one exits photo mode. `photo::sync` runs before this system
 /// and restores the snapshot's transform on exit, so the snapshot takes the new world's camera.
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     mut commands: Commands,
     mut queue: ResMut<PersistQueue>,

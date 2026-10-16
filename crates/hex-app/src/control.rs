@@ -294,6 +294,7 @@ impl CommandQueue {
 pub struct ExitRequest(pub bool);
 
 /// Runs one command per frame once the scene is ready. Bad commands are logged and skipped.
+#[allow(clippy::too_many_arguments)]
 pub fn run_commands(
     mut commands: Commands,
     mut queue: ResMut<CommandQueue>,
@@ -607,52 +608,107 @@ pub fn grade_json(active: hex_render::Grade) -> serde_json::Value {
     })
 }
 
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct GameSnapshot<'w> {
+    flags: Res<'w, RunFlags>,
+    frames: Res<'w, FrameCount>,
+    active: Res<'w, ActiveScenario>,
+    queue: Res<'w, CommandQueue>,
+    game: Res<'w, GameState>,
+}
+
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct AgentSnapshot<'w> {
+    sim: Res<'w, CarSim>,
+    boids: Option<Res<'w, hex_render::boids::BoidReport>>,
+    paused: Res<'w, hex_render::AgentsPaused>,
+}
+
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct PresentationSnapshot<'w> {
+    config: Option<Res<'w, hex_render::GateConfig>>,
+    gpu: Option<Res<'w, hex_render::GpuLimits>>,
+    tilt: Res<'w, TiltShiftSettings>,
+    tilt_chosen: Res<'w, TiltPinned>,
+    rises: Res<'w, PlayRises>,
+    reduced: Res<'w, ReducedMotion>,
+    packs: Option<Res<'w, PlayPacks>>,
+    ghost_drawn: Option<Res<'w, hex_render::play::ghost::GhostDrawn>>,
+    scatter: Option<Res<'w, hex_render::play::scatter::ScatterReport>>,
+    tier: Res<'w, hex_render::tier::TierChoice>,
+    ghost_report: Option<Res<'w, hex_render::play::ghost::GhostReport>>,
+    grass: Option<Res<'w, hex_render::play::grass::GrassReport>>,
+    kit_failures: Option<Res<'w, hex_render::AssetLoadFailures>>,
+    walk: Res<'w, WalkSession>,
+    walk_ground: Res<'w, hex_render::walk::WalkGround>,
+    debug: Res<'w, hex_render::debug::DebugOverlays>,
+    debug_report: Res<'w, hex_render::debug::DebugReport>,
+}
+
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct CaptureSnapshot<'w> {
+    photo: Res<'w, PhotoSettings>,
+    session: Res<'w, PhotoSession>,
+    exports: Res<'w, PhotoExports>,
+    photo_focus: Res<'w, PhotoFocus>,
+    fx: Res<'w, crate::photo_fx::PhotoFxSettings>,
+}
+
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct SnapshotCameras<'w, 's> {
+    cameras: Query<'w, 's, &'static Transform, With<Camera3d>>,
+    views: Query<'w, 's, (&'static Camera, &'static GlobalTransform), With<Camera3d>>,
+    fx_cams: Query<'w, 's, (), (With<hex_render::photo_fx::PhotoFx>, With<Camera3d>)>,
+}
+
 /// Publishes the state read by `hexWorld.state()`/`dumpState()` and `--dump-state`.
 pub fn publish_state(
-    flags: Res<RunFlags>,
-    frames: Res<FrameCount>,
-    active: Res<ActiveScenario>,
-    queue: Res<CommandQueue>,
-    cameras: Query<&Transform, With<Camera3d>>,
-    config: Option<Res<hex_render::GateConfig>>,
-    gpu: Option<Res<hex_render::GpuLimits>>,
-    (tilt, tilt_chosen): (Res<TiltShiftSettings>, Res<TiltPinned>),
-    game: Res<GameState>,
-    sim: Res<CarSim>,
-    (rises, reduced, packs, ghost_drawn): (
-        Res<PlayRises>,
-        Res<ReducedMotion>,
-        Option<Res<PlayPacks>>,
-        Option<Res<hex_render::play::ghost::GhostDrawn>>,
-    ),
-    views: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
-    (boids, scatter, tier, ghost_report, grass): (
-        Option<Res<hex_render::boids::BoidReport>>,
-        Option<Res<hex_render::play::scatter::ScatterReport>>,
-        Res<hex_render::tier::TierChoice>,
-        Option<Res<hex_render::play::ghost::GhostReport>>,
-        Option<Res<hex_render::play::grass::GrassReport>>,
-    ),
-    (photo, session, exports, photo_focus, paused, kit_failures): (
-        Res<PhotoSettings>,
-        Res<PhotoSession>,
-        Res<PhotoExports>,
-        Res<PhotoFocus>,
-        Res<hex_render::AgentsPaused>,
-        Option<Res<hex_render::AssetLoadFailures>>,
-    ),
-    (walk, walk_ground, debug, debug_report): (
-        Res<WalkSession>,
-        Res<hex_render::walk::WalkGround>,
-        Res<hex_render::debug::DebugOverlays>,
-        Res<hex_render::debug::DebugReport>,
-    ),
-    (fx, fx_cams, mut published): (
-        Res<crate::photo_fx::PhotoFxSettings>,
-        Query<(), (With<hex_render::photo_fx::PhotoFx>, With<Camera3d>)>,
-        Local<Option<(u64, u64, bool)>>,
-    ),
+    game_snapshot: GameSnapshot,
+    agents: AgentSnapshot,
+    presentation: PresentationSnapshot,
+    capture: CaptureSnapshot,
+    camera_snapshot: SnapshotCameras,
+    mut published: Local<Option<(u64, u64, bool)>>,
 ) {
+    let SnapshotCameras {
+        cameras,
+        views,
+        fx_cams,
+    } = camera_snapshot;
+    let GameSnapshot {
+        flags,
+        frames,
+        active,
+        queue,
+        game,
+    } = game_snapshot;
+    let AgentSnapshot { sim, boids, paused } = agents;
+    let PresentationSnapshot {
+        config,
+        gpu,
+        tilt,
+        tilt_chosen,
+        rises,
+        reduced,
+        packs,
+        ghost_drawn,
+        scatter,
+        tier,
+        ghost_report,
+        grass,
+        kit_failures,
+        walk,
+        walk_ground,
+        debug,
+        debug_report,
+    } = presentation;
+    let CaptureSnapshot {
+        photo,
+        session,
+        exports,
+        photo_focus,
+        fx,
+    } = capture;
     *bridge::VIEW.lock().unwrap() = views.iter().find(|(c, _)| c.is_active).and_then(|(c, gt)| {
         Some(bridge::View {
             clip_from_world: c.clip_from_view() * gt.to_matrix().inverse(),

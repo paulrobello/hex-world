@@ -251,6 +251,7 @@ type PhotoCamera<'a> = (
 
 /// Enters and leaves photo mode on `GameState::photo_mode` edges and applies the panel while it is
 /// on (after `game::apply_actions`, which moves the free camera).
+#[allow(clippy::too_many_arguments)]
 pub fn sync(
     mut commands: Commands,
     game: Res<GameState>,
