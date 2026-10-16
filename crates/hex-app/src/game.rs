@@ -361,167 +361,36 @@ impl GameState {
             | Action::Stride(_)
             | Action::WalkLook(_)
             | Action::Hop => vec![],
-            Action::ToggleWalk => self.apply_inner(Action::SetWalk(!self.walk_mode)),
-            Action::ExitWalk => self.apply_inner(Action::SetWalk(false)),
-            Action::SetWalk(on) => {
-                if on == self.walk_mode {
-                    return vec![];
-                }
-                if on && self.photo_mode {
-                    return self.refuse("walk", "leave photo mode first".into());
-                }
-                let mut events = if on { self.set_pin(None) } else { vec![] };
-                self.walk_mode = on;
-                self.result("walk", None, None);
-                events.push(GameEvent::WalkModeToggled { on });
-                events
-            }
-            Action::Hover(cell) => {
-                if cell == self.hovered {
-                    return vec![];
-                }
-                self.hovered = cell;
-                if self.pinned.is_none() {
-                    self.resnap(true);
-                }
-                vec![GameEvent::HoverChanged { cell }]
-            }
-            Action::SelectTile(id) => {
-                if self.catalog.get(&id).is_none() {
-                    return self.refuse("select_tile", format!("unknown tile {id:?}"));
-                }
-                self.selected = id.clone();
-                self.resnap(true);
-                self.result("select_tile", None, None);
-                vec![GameEvent::TileSelected { tile: id }]
-            }
+            Action::ToggleWalk => self.set_walk(!self.walk_mode),
+            Action::ExitWalk => self.set_walk(false),
+            Action::SetWalk(on) => self.set_walk(on),
+            Action::Hover(cell) => self.hover(cell),
+            Action::SelectTile(id) => self.select_tile(id),
             Action::SelectNth(n) => match self.catalog.tiles().get(n) {
                 Some(def) => {
                     let id = def.id.clone();
-                    self.apply_inner(Action::SelectTile(id))
+                    self.select_tile(id)
                 }
                 None => self.refuse("select_tile", format!("no inventory tile {}", n + 1)),
             },
-            Action::Rotate(dir) => {
-                let cycled = self.target_slot().and_then(|cell| {
-                    self.world.cycle_rotation(
-                        &self.catalog,
-                        cell,
-                        self.selected_def(),
-                        self.rotation,
-                        dir,
-                    )
-                });
-                // No legal rotation: still turn one step, so the edge markers show why.
-                self.rotation = cycled.unwrap_or(match dir {
-                    RotateDir::Forward => (self.rotation + 1) % 6,
-                    RotateDir::Back => (self.rotation + 5) % 6,
-                });
-                self.chosen_rotation
-                    .insert(self.selected.clone(), self.rotation);
-                let valid = self.ghost().is_some_and(|g| g.3);
-                self.result("rotate", self.target_slot().or(self.hovered), None);
-                vec![GameEvent::GhostRotated {
-                    rotation: self.rotation,
-                    valid,
-                }]
-            }
-            Action::Primary => match (self.tool, self.hovered) {
-                (Tool::Place, _) if self.pinned.is_some() => self.click_while_pinned(),
-                (_, None) => self.refuse("primary", "no cell hovered".into()),
-                (Tool::Place, Some(cell)) if self.world.is_slot(cell) => self.pin(cell),
-                (Tool::Place, Some(cell)) => self.place(cell),
-                (Tool::Bulldoze, Some(cell)) => self.bulldoze(cell),
-            },
-            Action::QuickPlace => match self.hovered {
-                Some(cell) if self.tool == Tool::Place && self.world.is_slot(cell) => {
-                    self.quick_place(cell)
-                }
-                _ => self.apply_inner(Action::Primary),
-            },
+            Action::Rotate(dir) => self.rotate(dir),
+            Action::Primary => self.primary(),
+            Action::QuickPlace => self.quick_place_action(),
             Action::QuickReplace => match self.hovered {
                 Some(cell) => self.replace(cell),
                 None => self.refuse("replace", "no cell hovered".into()),
             },
             Action::Replace(cell) => self.replace(cell),
-            Action::Place(cell) => {
-                let mut events = self.set_pin(None);
-                events.extend(self.apply_inner(Action::Hover(Some(cell))));
-                events.extend(self.place(cell));
-                events
-            }
-            Action::Pin(cell) => {
-                if self.tool != Tool::Place || self.photo_mode || !self.world.is_slot(cell) {
-                    return self.refuse(
-                        "pin",
-                        format!("({}, {}) is not a free slot", cell.q, cell.r),
-                    );
-                }
-                self.pin(cell)
-            }
-            Action::Unpin => {
-                let events = self.set_pin(None);
-                self.result("unpin", None, None);
-                events
-            }
-            Action::Escape => {
-                if self.pinned.is_some() {
-                    self.apply_inner(Action::Unpin)
-                } else {
-                    self.apply_inner(Action::ExitPhoto)
-                }
-            }
+            Action::Place(cell) => self.place_at(cell),
+            Action::Pin(cell) => self.pin_action(cell),
+            Action::Unpin => self.unpin(),
+            Action::Escape => self.escape(),
             Action::Bulldoze(cell) => self.bulldoze(cell),
-            Action::Undo => {
-                if !self.world.undo() {
-                    return self.refuse("undo", "nothing to undo".into());
-                }
-                let mut events = vec![GameEvent::Undone];
-                self.last_bulldoze = None;
-                events.extend(self.drop_stale_pin());
-                self.resnap(false);
-                self.world_rev += 1;
-                self.result("undo", None, None);
-                events
-            }
-            Action::Redo => {
-                if !self.world.redo() {
-                    return self.refuse("redo", "nothing to redo".into());
-                }
-                let mut events = vec![GameEvent::Redone];
-                self.last_bulldoze = None;
-                events.extend(self.drop_stale_pin());
-                self.resnap(false);
-                self.world_rev += 1;
-                self.result("redo", None, None);
-                events
-            }
-            Action::ToggleBulldoze => {
-                let mode = match self.tool {
-                    Tool::Place => Tool::Bulldoze,
-                    Tool::Bulldoze => Tool::Place,
-                };
-                self.apply_inner(Action::SetTool(mode))
-            }
-            Action::SetTool(mode) => {
-                let mut events = if mode == Tool::Place {
-                    vec![]
-                } else {
-                    self.set_pin(None)
-                };
-                self.tool = mode;
-                self.resnap(false);
-                self.result("set_tool", None, None);
-                events.push(GameEvent::ToolChanged { mode });
-                events
-            }
-            Action::ToggleInventory => {
-                self.inventory_open = !self.inventory_open;
-                self.result("toggle_inventory", None, None);
-                vec![GameEvent::InventoryToggled {
-                    open: self.inventory_open,
-                }]
-            }
+            Action::Undo => self.undo(),
+            Action::Redo => self.redo(),
+            Action::ToggleBulldoze => self.toggle_bulldoze(),
+            Action::SetTool(mode) => self.set_tool(mode),
+            Action::ToggleInventory => self.toggle_inventory(),
             Action::ExitPhoto if !self.photo_mode => vec![],
             Action::TogglePhoto | Action::ExitPhoto => {
                 let mut events = if self.photo_mode {
@@ -539,6 +408,166 @@ impl GameState {
         }
     }
 
+    fn set_walk(&mut self, on: bool) -> Vec<GameEvent> {
+        if on == self.walk_mode {
+            return vec![];
+        }
+        if on && self.photo_mode {
+            return self.refuse("walk", "leave photo mode first".into());
+        }
+        let mut events = if on { self.set_pin(None) } else { vec![] };
+        self.walk_mode = on;
+        self.result("walk", None, None);
+        events.push(GameEvent::WalkModeToggled { on });
+        events
+    }
+
+    fn hover(&mut self, cell: Option<Axial>) -> Vec<GameEvent> {
+        if cell == self.hovered {
+            return vec![];
+        }
+        self.hovered = cell;
+        if self.pinned.is_none() {
+            self.resnap(true);
+        }
+        vec![GameEvent::HoverChanged { cell }]
+    }
+
+    fn select_tile(&mut self, id: String) -> Vec<GameEvent> {
+        if self.catalog.get(&id).is_none() {
+            return self.refuse("select_tile", format!("unknown tile {id:?}"));
+        }
+        self.selected = id.clone();
+        self.resnap(true);
+        self.result("select_tile", None, None);
+        vec![GameEvent::TileSelected { tile: id }]
+    }
+
+    fn rotate(&mut self, dir: RotateDir) -> Vec<GameEvent> {
+        let cycled = self.target_slot().and_then(|cell| {
+            self.world
+                .cycle_rotation(&self.catalog, cell, self.selected_def(), self.rotation, dir)
+        });
+        // No legal rotation: still turn one step, so the edge markers show why.
+        self.rotation = cycled.unwrap_or(match dir {
+            RotateDir::Forward => (self.rotation + 1) % 6,
+            RotateDir::Back => (self.rotation + 5) % 6,
+        });
+        self.chosen_rotation
+            .insert(self.selected.clone(), self.rotation);
+        let valid = self.ghost().is_some_and(|g| g.3);
+        self.result("rotate", self.target_slot().or(self.hovered), None);
+        vec![GameEvent::GhostRotated {
+            rotation: self.rotation,
+            valid,
+        }]
+    }
+
+    fn place_at(&mut self, cell: Axial) -> Vec<GameEvent> {
+        let mut events = self.set_pin(None);
+        events.extend(self.hover(Some(cell)));
+        events.extend(self.place(cell));
+        events
+    }
+
+    fn pin_action(&mut self, cell: Axial) -> Vec<GameEvent> {
+        if self.tool != Tool::Place || self.photo_mode || !self.world.is_slot(cell) {
+            return self.refuse(
+                "pin",
+                format!("({}, {}) is not a free slot", cell.q, cell.r),
+            );
+        }
+        self.pin(cell)
+    }
+
+    fn unpin(&mut self) -> Vec<GameEvent> {
+        let events = self.set_pin(None);
+        self.result("unpin", None, None);
+        events
+    }
+
+    fn escape(&mut self) -> Vec<GameEvent> {
+        if self.pinned.is_some() {
+            self.unpin()
+        } else {
+            self.apply_inner(Action::ExitPhoto)
+        }
+    }
+
+    fn undo(&mut self) -> Vec<GameEvent> {
+        if !self.world.undo() {
+            return self.refuse("undo", "nothing to undo".into());
+        }
+        let mut events = vec![GameEvent::Undone];
+        self.last_bulldoze = None;
+        events.extend(self.drop_stale_pin());
+        self.resnap(false);
+        self.world_rev += 1;
+        self.result("undo", None, None);
+        events
+    }
+
+    fn redo(&mut self) -> Vec<GameEvent> {
+        if !self.world.redo() {
+            return self.refuse("redo", "nothing to redo".into());
+        }
+        let mut events = vec![GameEvent::Redone];
+        self.last_bulldoze = None;
+        events.extend(self.drop_stale_pin());
+        self.resnap(false);
+        self.world_rev += 1;
+        self.result("redo", None, None);
+        events
+    }
+
+    fn toggle_bulldoze(&mut self) -> Vec<GameEvent> {
+        let mode = match self.tool {
+            Tool::Place => Tool::Bulldoze,
+            Tool::Bulldoze => Tool::Place,
+        };
+        self.set_tool(mode)
+    }
+
+    fn set_tool(&mut self, mode: Tool) -> Vec<GameEvent> {
+        let mut events = if mode == Tool::Place {
+            vec![]
+        } else {
+            self.set_pin(None)
+        };
+        self.tool = mode;
+        self.resnap(false);
+        self.result("set_tool", None, None);
+        events.push(GameEvent::ToolChanged { mode });
+        events
+    }
+
+    fn toggle_inventory(&mut self) -> Vec<GameEvent> {
+        self.inventory_open = !self.inventory_open;
+        self.result("toggle_inventory", None, None);
+        vec![GameEvent::InventoryToggled {
+            open: self.inventory_open,
+        }]
+    }
+
+    fn primary(&mut self) -> Vec<GameEvent> {
+        match (self.tool, self.hovered) {
+            (Tool::Place, _) if self.pinned.is_some() => self.click_while_pinned(),
+            (_, None) => self.refuse("primary", "no cell hovered".into()),
+            (Tool::Place, Some(cell)) if self.world.is_slot(cell) => self.pin(cell),
+            (Tool::Place, Some(cell)) => self.place(cell),
+            (Tool::Bulldoze, Some(cell)) => self.bulldoze(cell),
+        }
+    }
+
+    fn quick_place_action(&mut self) -> Vec<GameEvent> {
+        match self.hovered {
+            Some(cell) if self.tool == Tool::Place && self.world.is_slot(cell) => {
+                self.quick_place(cell)
+            }
+            _ => self.primary(),
+        }
+    }
+
     /// Pins `cell` (a free slot) so the ghost and the sheet stay there.
     fn pin(&mut self, cell: Axial) -> Vec<GameEvent> {
         let events = self.set_pin(Some(cell));
@@ -552,7 +581,7 @@ impl GameState {
         match self.hovered {
             Some(cell) if Some(cell) == self.pinned => self.place(cell),
             Some(cell) if self.world.is_slot(cell) => self.pin(cell),
-            _ => self.apply_inner(Action::Unpin),
+            _ => self.unpin(),
         }
     }
 

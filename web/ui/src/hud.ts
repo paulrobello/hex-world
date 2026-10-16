@@ -52,6 +52,18 @@ function storeSet(k: string, v: string): void {
   }
 }
 
+function isTypingTarget(target: HTMLElement | null): boolean {
+  return !!target?.closest?.("input:not([type=range]), textarea, [contenteditable=true]");
+}
+
+function settingsOwnsControlKey(settings: Settings, target: HTMLElement | null, key: string): boolean {
+  return settings.holds(target) && /^(Tab|Enter| |Arrow\w+|Home|End|PageUp|PageDown)$/.test(key);
+}
+
+function settingsOwnsListKey(settings: Settings, target: HTMLElement | null): boolean {
+  return settings.holds(target) && !!target?.closest?.("[role=listbox]");
+}
+
 interface Tool {
   btn: HTMLButtonElement;
 }
@@ -867,11 +879,11 @@ export class Hud {
     if (!st || e.altKey) return;
     // Typing (a world name) keeps every key, game keys included.
     const target = e.target as HTMLElement | null;
-    if (target?.closest?.("input:not([type=range]), textarea, [contenteditable=true]")) return;
+    if (isTypingTarget(target)) return;
     // Inside Settings, Tab walks its controls and Enter, Space and arrows act on them; Esc still closes.
-    if (this.settings.holds(target) && /^(Tab|Enter| |Arrow\w+|Home|End|PageUp|PageDown)$/.test(e.key)) return;
+    if (settingsOwnsControlKey(this.settings, target, e.key)) return;
     // An open select's list (the colour grade) takes every key: Esc closes it, letters type ahead.
-    if (this.settings.holds(target) && target?.closest?.("[role=listbox]")) return;
+    if (settingsOwnsListKey(this.settings, target)) return;
     const mod = e.ctrlKey || e.metaKey;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     const take = () => {

@@ -91,68 +91,7 @@ pub fn rewrite_glb(bytes: &[u8]) -> Result<Cow<'_, [u8]>, GlbError> {
         let view = view
             .as_object_mut()
             .ok_or_else(|| GlbError::BadJson("bufferView is not an object".into()))?;
-        let ext = match view.get("extensions").and_then(|e| e.get(EXT)) {
-            None => None,
-            Some(e) => Some(
-                e.as_object()
-                    .ok_or_else(|| GlbError::BadJson(format!("{EXT} is not an object")))?,
-            ),
-        };
-        let data: Vec<u8> = if let Some(ext) = ext {
-            if usize_field(ext, "buffer")?.unwrap_or(0) != 0 {
-                return Err(GlbError::Decode(
-                    "compressed data outside the GLB BIN".into(),
-                ));
-            }
-            let mode = Mode::parse(ext.get("mode").and_then(Value::as_str).unwrap_or(""))
-                .map_err(|e| GlbError::Decode(format!("mode: {e:?}")))?;
-            let filter = Filter::parse(ext.get("filter").and_then(Value::as_str).unwrap_or("NONE"))
-                .map_err(|e| GlbError::Decode(format!("filter: {e:?}")))?;
-            let layout = BufferView::new(
-                mode,
-                filter,
-                required(ext, "count")?,
-                required(ext, "byteStride")?,
-            )
-            .map_err(|e| GlbError::Decode(format!("layout: {e:?}")))?;
-            layout
-                .validate_parent(
-                    required(view, "byteLength")?,
-                    usize_field(view, "byteStride")?,
-                )
-                .map_err(|e| GlbError::Decode(format!("parent view: {e:?}")))?;
-            check_cap(out_bin.len(), layout.byte_length())?;
-            let src = slice(
-                bin,
-                usize_field(ext, "byteOffset")?.unwrap_or(0),
-                required(ext, "byteLength")?,
-                "compressed view",
-            )?;
-            let decoded = layout
-                .decode(src, &mut workspace)
-                .map_err(|e| GlbError::Decode(format!("{e:?}")))?;
-            let exts = view.get_mut("extensions").and_then(Value::as_object_mut);
-            if exts.is_some_and(|o| {
-                o.remove(EXT);
-                o.is_empty()
-            }) {
-                view.remove("extensions");
-            }
-            decoded
-        } else {
-            if usize_field(view, "buffer")?.unwrap_or(0) != 0 {
-                return Err(GlbError::Decode("plain view outside the GLB BIN".into()));
-            }
-            let len = required(view, "byteLength")?;
-            check_cap(out_bin.len(), len)?;
-            slice(
-                bin,
-                usize_field(view, "byteOffset")?.unwrap_or(0),
-                len,
-                "view",
-            )?
-            .to_vec()
-        };
+        let data = decode_view(view, bin, out_bin.len(), &mut workspace)?;
         while !out_bin.len().is_multiple_of(4) {
             out_bin.push(0);
         }
@@ -176,6 +115,77 @@ pub fn rewrite_glb(bytes: &[u8]) -> Result<Cow<'_, [u8]>, GlbError> {
         }
     }
     Ok(Cow::Owned(write_glb(&json, &out_bin)?))
+}
+
+fn decode_view(
+    view: &mut Map<String, Value>,
+    bin: &[u8],
+    out_len: usize,
+    workspace: &mut Workspace,
+) -> Result<Vec<u8>, GlbError> {
+    let ext = match view.get("extensions").and_then(|e| e.get(EXT)) {
+        None => None,
+        Some(e) => Some(
+            e.as_object()
+                .ok_or_else(|| GlbError::BadJson(format!("{EXT} is not an object")))?,
+        ),
+    };
+    let data: Vec<u8> = if let Some(ext) = ext {
+        if usize_field(ext, "buffer")?.unwrap_or(0) != 0 {
+            return Err(GlbError::Decode(
+                "compressed data outside the GLB BIN".into(),
+            ));
+        }
+        let mode = Mode::parse(ext.get("mode").and_then(Value::as_str).unwrap_or(""))
+            .map_err(|e| GlbError::Decode(format!("mode: {e:?}")))?;
+        let filter = Filter::parse(ext.get("filter").and_then(Value::as_str).unwrap_or("NONE"))
+            .map_err(|e| GlbError::Decode(format!("filter: {e:?}")))?;
+        let layout = BufferView::new(
+            mode,
+            filter,
+            required(ext, "count")?,
+            required(ext, "byteStride")?,
+        )
+        .map_err(|e| GlbError::Decode(format!("layout: {e:?}")))?;
+        layout
+            .validate_parent(
+                required(view, "byteLength")?,
+                usize_field(view, "byteStride")?,
+            )
+            .map_err(|e| GlbError::Decode(format!("parent view: {e:?}")))?;
+        check_cap(out_len, layout.byte_length())?;
+        let src = slice(
+            bin,
+            usize_field(ext, "byteOffset")?.unwrap_or(0),
+            required(ext, "byteLength")?,
+            "compressed view",
+        )?;
+        let decoded = layout
+            .decode(src, workspace)
+            .map_err(|e| GlbError::Decode(format!("{e:?}")))?;
+        let exts = view.get_mut("extensions").and_then(Value::as_object_mut);
+        if exts.is_some_and(|o| {
+            o.remove(EXT);
+            o.is_empty()
+        }) {
+            view.remove("extensions");
+        }
+        decoded
+    } else {
+        if usize_field(view, "buffer")?.unwrap_or(0) != 0 {
+            return Err(GlbError::Decode("plain view outside the GLB BIN".into()));
+        }
+        let len = required(view, "byteLength")?;
+        check_cap(out_len, len)?;
+        slice(
+            bin,
+            usize_field(view, "byteOffset")?.unwrap_or(0),
+            len,
+            "view",
+        )?
+        .to_vec()
+    };
+    Ok(data)
 }
 
 fn check_cap(so_far: usize, add: usize) -> Result<(), GlbError> {

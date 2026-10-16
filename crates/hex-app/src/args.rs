@@ -107,207 +107,303 @@ pub fn flags_from_pairs(pairs: &[(String, String)]) -> (Flags, Vec<String>) {
 
 /// [`flags_from_pairs`] with an explicit fallback scenario.
 pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Flags, Vec<String>) {
-    let mut f = Flags {
-        scenario: default,
-        ..Flags::default()
+    let mut state = FlagParser {
+        f: Flags {
+            scenario: default,
+            ..Flags::default()
+        },
+        warnings: vec![],
+        grade: None,
+        tonemap_set: false,
+        ev100_set: false,
     };
-    let mut warnings = vec![];
-    // `tonemap` and `ev100` override the grade's own values whatever the key order.
-    let (mut grade, mut tonemap_set, mut ev100_set) = (None, false, false);
     for (k, v) in pairs {
-        match k.as_str() {
-            "shot" | "scenario" => {
-                match Scenario::parse(v) {
-                    Some(s) => f.scenario = s,
-                    None => warnings.push(format!("unknown scenario '{v}', using default")),
-                }
-                if k == "shot" && Scenario::parse(v).is_some() {
-                    f.shot = Some(v.clone());
-                }
-            }
-            "view" => match GateView::parse(v) {
-                Some(view) => f.view = view,
-                None => warnings.push(format!("unknown view '{v}', using default")),
-            },
-            "diag" => f.diag = v != "0",
-            "exit-after" => match v.parse() {
-                Ok(n) => f.exit_after_frames = Some(n),
-                Err(_) => warnings.push(format!("bad exit-after '{v}'")),
-            },
-            "script" => f.script = Some(v.clone()),
-            "thumbs" => f.thumbs = v != "0",
-            "dump-state" => f.dump_state = Some(v.clone()),
-            "load" => f.load = Some(v.clone()),
-            "save" => f.save = Some(v.clone()),
-            "screenshot-after" => f.screenshot_after_secs = parse_secs(k, v, &mut warnings),
-            "exit-after-seconds" => f.exit_after_secs = parse_secs(k, v, &mut warnings),
-            "size" => match parse_size(v) {
-                Some(s) => f.size = Some(s),
-                None => warnings.push(format!("bad size '{v}', expected WxH")),
-            },
-            "seed" => match v.parse() {
-                Ok(n) => f.seed = n,
-                Err(_) => warnings.push(format!("bad seed '{v}'")),
-            },
-            "no-anim" => f.no_anim = v != "0",
-            "fps" => match v.as_str() {
-                "on" => f.fps_off = false,
-                "off" => f.fps_off = true,
-                _ => warnings.push(format!("unknown fps '{v}', using default")),
-            },
-            "layout" => set_or_warn(&mut f.gate.layout, Layout::parse(v), k, v, &mut warnings),
-            "post" => set_or_warn(&mut f.gate.post, PostMode::parse(v), k, v, &mut warnings),
-            "shadows" => set_or_warn(
-                &mut f.gate.shadows,
-                hex_render::parse_shadows(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "chunk" => set_or_warn(
-                &mut f.gate.chunk,
-                hex_render::parse_chunk(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "shadow_casters" => set_or_warn(
-                &mut f.gate.shadow_casters,
-                ShadowCasters::parse(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "cascades" => set_or_warn(
-                &mut f.gate.cascades,
-                hex_render::parse_cascades(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "shadow_dist" => set_or_warn(
-                &mut f.gate.shadow_dist,
-                hex_render::parse_shadow_dist(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "kit_hooks" => set_or_warn(
-                &mut f.gate.kit_hooks,
-                hex_render::KitHooks::parse(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "kit_src" => set_or_warn(
-                &mut f.gate.kit_src,
-                hex_render::KitSource::parse(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "tonemap" => {
-                let t = hex_render::Tonemap::parse(v);
-                tonemap_set |= t.is_some();
-                set_or_warn(&mut f.gate.tonemap, t, k, v, &mut warnings);
-            }
-            "grade" => match hex_render::Grade::parse(v) {
-                Some(g) => grade = Some(g),
-                None => warnings.push(format!("unknown grade '{v}', using default")),
-            },
-            "ibl" => set_or_warn(
-                &mut f.gate.ibl,
-                hex_render::parse_ibl(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "ev100" => {
-                let e = hex_render::Ev100::parse(v);
-                ev100_set |= e.is_some();
-                set_or_warn(&mut f.gate.ev100, e, k, v, &mut warnings);
-            }
-            "tilt" => set_or_warn(
-                &mut f.gate.tilt,
-                hex_render::TiltMode::parse(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "tier" => {
-                let t = hex_render::post::QualityTier::parse(v);
-                f.tier_explicit |= t.is_some();
-                set_or_warn(&mut f.gate.tier, t, k, v, &mut warnings);
-            }
-            "gpu_timing" => set_or_warn(
-                &mut f.gpu_timing,
-                hex_render::parse_shadows(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "tilt_strength" => set_or_warn(
-                &mut f.gate.tilt_strength,
-                hex_render::TiltStrength::parse(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "grass" => set_or_warn(
-                &mut f.gate.grass,
-                hex_render::parse_grass(v),
-                k,
-                v,
-                &mut warnings,
-            ),
-            "water_clock" => set_or_warn(
-                &mut f.gate.water_fixed,
-                match v.as_str() {
-                    "fixed" => Some(true),
-                    "real" => Some(false),
-                    _ => None,
-                },
-                k,
-                v,
-                &mut warnings,
-            ),
-            "clock" => set_or_warn(
-                &mut f.clock_fixed,
-                match v.as_str() {
-                    "fixed" => Some(true),
-                    "real" => Some(false),
-                    _ => None,
-                },
-                k,
-                v,
-                &mut warnings,
-            ),
-            "present" => set_or_warn(&mut f.present, Present::parse(v), k, v, &mut warnings),
-            "debug" => {
-                let (d, unknown) = hex_render::debug::DebugOverlays::parse_list(v);
-                f.debug = d;
-                for u in unknown {
-                    warnings.push(format!("unknown debug overlay '{u}'"));
-                }
-            }
-            "photo-export" => match v.parse::<u32>() {
-                Ok(n) if crate::photo::EXPORT_SCALES.contains(&n) => f.photo_export = Some(n),
-                _ => warnings.push(format!("bad photo-export '{v}', expected 1, 2 or 4")),
-            },
-            _ => {}
+        if let Some((_, handler)) = FLAG_HANDLERS.iter().find(|(key, _)| *key == k) {
+            handler(&mut state, k, v);
         }
     }
-    if let Some(g) = grade {
-        f.gate.grade = g;
-        if !tonemap_set {
-            f.gate.tonemap = g.tonemap();
+    // Explicit tonemap and exposure override the grade regardless of key order.
+    if let Some(g) = state.grade {
+        state.f.gate.grade = g;
+        if !state.tonemap_set {
+            state.f.gate.tonemap = g.tonemap();
         }
-        if !ev100_set {
-            f.gate.ev100 = hex_render::Ev100::from_f32(g.ev100());
+        if !state.ev100_set {
+            state.f.gate.ev100 = hex_render::Ev100::from_f32(g.ev100());
         }
     }
-    (f, warnings)
+    (state.f, state.warnings)
 }
+
+struct FlagParser {
+    f: Flags,
+    warnings: Vec<String>,
+    grade: Option<hex_render::Grade>,
+    tonemap_set: bool,
+    ev100_set: bool,
+}
+
+type FlagHandler = fn(&mut FlagParser, &String, &String);
+
+const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
+    ("shot", |state, k, v| {
+        match Scenario::parse(v) {
+            Some(s) => state.f.scenario = s,
+            None => state
+                .warnings
+                .push(format!("unknown scenario '{v}', using default")),
+        }
+        if k == "shot" && Scenario::parse(v).is_some() {
+            state.f.shot = Some(v.clone());
+        }
+    }),
+    ("scenario", |state, k, v| {
+        match Scenario::parse(v) {
+            Some(s) => state.f.scenario = s,
+            None => state
+                .warnings
+                .push(format!("unknown scenario '{v}', using default")),
+        }
+        if k == "shot" && Scenario::parse(v).is_some() {
+            state.f.shot = Some(v.clone());
+        }
+    }),
+    ("view", |state, _k, v| match GateView::parse(v) {
+        Some(view) => state.f.view = view,
+        None => state
+            .warnings
+            .push(format!("unknown view '{v}', using default")),
+    }),
+    ("diag", |state, _k, v| state.f.diag = v != "0"),
+    ("exit-after", |state, _k, v| match v.parse() {
+        Ok(n) => state.f.exit_after_frames = Some(n),
+        Err(_) => state.warnings.push(format!("bad exit-after '{v}'")),
+    }),
+    ("script", |state, _k, v| state.f.script = Some(v.clone())),
+    ("thumbs", |state, _k, v| state.f.thumbs = v != "0"),
+    ("dump-state", |state, _k, v| {
+        state.f.dump_state = Some(v.clone())
+    }),
+    ("load", |state, _k, v| state.f.load = Some(v.clone())),
+    ("save", |state, _k, v| state.f.save = Some(v.clone())),
+    ("screenshot-after", |state, k, v| {
+        state.f.screenshot_after_secs = parse_secs(k, v, &mut state.warnings)
+    }),
+    ("exit-after-seconds", |state, k, v| {
+        state.f.exit_after_secs = parse_secs(k, v, &mut state.warnings)
+    }),
+    ("size", |state, _k, v| match parse_size(v) {
+        Some(s) => state.f.size = Some(s),
+        None => state.warnings.push(format!("bad size '{v}', expected WxH")),
+    }),
+    ("seed", |state, _k, v| match v.parse() {
+        Ok(n) => state.f.seed = n,
+        Err(_) => state.warnings.push(format!("bad seed '{v}'")),
+    }),
+    ("no-anim", |state, _k, v| state.f.no_anim = v != "0"),
+    ("fps", |state, _k, v| match v.as_str() {
+        "on" => state.f.fps_off = false,
+        "off" => state.f.fps_off = true,
+        _ => state
+            .warnings
+            .push(format!("unknown fps '{v}', using default")),
+    }),
+    ("layout", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.layout,
+            Layout::parse(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("post", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.post,
+            PostMode::parse(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("shadows", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.shadows,
+            hex_render::parse_shadows(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("chunk", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.chunk,
+            hex_render::parse_chunk(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("shadow_casters", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.shadow_casters,
+            ShadowCasters::parse(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("cascades", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.cascades,
+            hex_render::parse_cascades(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("shadow_dist", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.shadow_dist,
+            hex_render::parse_shadow_dist(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("kit_hooks", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.kit_hooks,
+            hex_render::KitHooks::parse(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("kit_src", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.kit_src,
+            hex_render::KitSource::parse(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("tonemap", |state, k, v| {
+        let t = hex_render::Tonemap::parse(v);
+        state.tonemap_set |= t.is_some();
+        set_or_warn(&mut state.f.gate.tonemap, t, k, v, &mut state.warnings);
+    }),
+    ("grade", |state, _k, v| match hex_render::Grade::parse(v) {
+        Some(g) => state.grade = Some(g),
+        None => state
+            .warnings
+            .push(format!("unknown grade '{v}', using default")),
+    }),
+    ("ibl", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.ibl,
+            hex_render::parse_ibl(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("ev100", |state, k, v| {
+        let e = hex_render::Ev100::parse(v);
+        state.ev100_set |= e.is_some();
+        set_or_warn(&mut state.f.gate.ev100, e, k, v, &mut state.warnings);
+    }),
+    ("tilt", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.tilt,
+            hex_render::TiltMode::parse(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("tier", |state, k, v| {
+        let t = hex_render::post::QualityTier::parse(v);
+        state.f.tier_explicit |= t.is_some();
+        set_or_warn(&mut state.f.gate.tier, t, k, v, &mut state.warnings);
+    }),
+    ("gpu_timing", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gpu_timing,
+            hex_render::parse_shadows(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("tilt_strength", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.tilt_strength,
+            hex_render::TiltStrength::parse(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("grass", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.grass,
+            hex_render::parse_grass(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("water_clock", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.water_fixed,
+            match v.as_str() {
+                "fixed" => Some(true),
+                "real" => Some(false),
+                _ => None,
+            },
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("clock", |state, k, v| {
+        set_or_warn(
+            &mut state.f.clock_fixed,
+            match v.as_str() {
+                "fixed" => Some(true),
+                "real" => Some(false),
+                _ => None,
+            },
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("present", |state, k, v| {
+        set_or_warn(
+            &mut state.f.present,
+            Present::parse(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    ("debug", |state, _k, v| {
+        let (d, unknown) = hex_render::debug::DebugOverlays::parse_list(v);
+        state.f.debug = d;
+        for u in unknown {
+            state.warnings.push(format!("unknown debug overlay '{u}'"));
+        }
+    }),
+    ("photo-export", |state, _k, v| match v.parse::<u32>() {
+        Ok(n) if crate::photo::EXPORT_SCALES.contains(&n) => state.f.photo_export = Some(n),
+        _ => state
+            .warnings
+            .push(format!("bad photo-export '{v}', expected 1, 2 or 4")),
+    }),
+];
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn native_pairs() -> Vec<(String, String)> {

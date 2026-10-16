@@ -969,56 +969,17 @@ pub fn sync(
             commands.entity(e).try_despawn();
         }
     }
-    let refresh = std::mem::take(&mut spawned.refresh);
-    let mut refreshed: BTreeSet<Axial> = BTreeSet::new();
-    let mut shown: BTreeSet<Axial> = BTreeSet::new();
-    for cell in arrived {
-        let (Some(rise), Some((t, root))) =
-            (spawned.hidden.remove(&cell), spawned.tiles.get(&cell))
-        else {
-            continue;
-        };
-        let Some(def) = catalog.0.get(&t.tile) else {
-            continue;
-        };
-        commands
-            .entity(*root)
-            .insert(Visibility::Inherited)
-            .despawn_children()
-            .with_children(|p| tile_children(p, &plain, kit, &catalog.0, def, cell));
-        if rise {
-            rises.begin(cell, &t.tile, &def.rise, reduced.0, &mut out);
-        } else {
-            rises.rest(cell);
-        }
-        refreshed.insert(cell);
-        shown.insert(cell);
-    }
-    for (cell, (t, root)) in spawned.tiles.iter().filter(|_| !refresh.is_empty()) {
-        if shown.contains(cell) || spawned.hidden.contains_key(cell) {
-            continue;
-        }
-        let Some(def) = catalog.0.get(&t.tile) else {
-            continue;
-        };
-        if packs::drawn_pieces(def, &catalog.0)
-            .iter()
-            .any(|p| refresh.contains(*p))
-        {
-            commands
-                .entity(*root)
-                .despawn_children()
-                .with_children(|p| tile_children(p, &plain, kit, &catalog.0, def, *cell));
-            refreshed.insert(*cell);
-        }
-        let pairs_arrived = spawned
-            .pairs
-            .get(*cell)
-            .is_some_and(|ps| ps.iter().flatten().any(|p| refresh.contains(p.as_str())));
-        if pairs_arrived {
-            refreshed.insert(*cell);
-        }
-    }
+    let (refreshed, shown) = sync_spans::refresh_tiles(
+        &mut commands,
+        &mut spawned,
+        &plain,
+        kit,
+        &catalog.0,
+        arrived,
+        &mut rises,
+        reduced.0,
+        &mut out,
+    );
     let added: Vec<&PlayTile> = view
         .tiles
         .iter()
@@ -1076,6 +1037,75 @@ pub fn sync(
         && w.0 != now
     {
         w.0 = now;
+    }
+}
+
+mod sync_spans {
+    use super::*;
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn refresh_tiles(
+        commands: &mut Commands,
+        spawned: &mut PlaySpawned,
+        plain: &PlainAssets,
+        kit: &HashMap<String, Vec<KitPart>>,
+        catalog: &TileCatalog,
+        arrived: Vec<Axial>,
+        rises: &mut PlayRises,
+        reduced: bool,
+        out: &mut Vec<RiseMessage>,
+    ) -> (BTreeSet<Axial>, BTreeSet<Axial>) {
+        let refresh = std::mem::take(&mut spawned.refresh);
+        let mut refreshed: BTreeSet<Axial> = BTreeSet::new();
+        let mut shown: BTreeSet<Axial> = BTreeSet::new();
+        for cell in arrived {
+            let (Some(rise), Some((t, root))) =
+                (spawned.hidden.remove(&cell), spawned.tiles.get(&cell))
+            else {
+                continue;
+            };
+            let Some(def) = catalog.get(&t.tile) else {
+                continue;
+            };
+            commands
+                .entity(*root)
+                .insert(Visibility::Inherited)
+                .despawn_children()
+                .with_children(|p| tile_children(p, plain, kit, catalog, def, cell));
+            if rise {
+                rises.begin(cell, &t.tile, &def.rise, reduced, out);
+            } else {
+                rises.rest(cell);
+            }
+            refreshed.insert(cell);
+            shown.insert(cell);
+        }
+        for (cell, (t, root)) in spawned.tiles.iter().filter(|_| !refresh.is_empty()) {
+            if shown.contains(cell) || spawned.hidden.contains_key(cell) {
+                continue;
+            }
+            let Some(def) = catalog.get(&t.tile) else {
+                continue;
+            };
+            if packs::drawn_pieces(def, catalog)
+                .iter()
+                .any(|p| refresh.contains(*p))
+            {
+                commands
+                    .entity(*root)
+                    .despawn_children()
+                    .with_children(|p| tile_children(p, plain, kit, catalog, def, *cell));
+                refreshed.insert(*cell);
+            }
+            let pairs_arrived = spawned
+                .pairs
+                .get(*cell)
+                .is_some_and(|ps| ps.iter().flatten().any(|p| refresh.contains(p.as_str())));
+            if pairs_arrived {
+                refreshed.insert(*cell);
+            }
+        }
+        (refreshed, shown)
     }
 }
 
