@@ -7,23 +7,11 @@ import { h, isMac, reduceMotion, retrigger, s } from "./dom.ts";
 import { icon } from "./icons.ts";
 import { Rebuild } from "./loading.ts";
 import { type Note, type Persistence, stateWords } from "./persist.ts";
-import {
-  TILES,
-  type TileMap,
-  cellKey,
-  cutOff,
-  diffTiles,
-  fit,
-  isSlot,
-  needsAt,
-  rotationReadout,
-  tileDef,
-  tileMap,
-} from "./rules.ts";
+import { type TileMap, cellKey, cutOff, diffTiles, fit, needsAt, rotationReadout, tileDef, tileMap } from "./rules.ts";
 import { Photo } from "./photo.ts";
 import { DebugHud } from "./debug.ts";
 import { Settings } from "./settings.ts";
-import { Sheet } from "./sheet.ts";
+import { SheetController } from "./sheet-controller.ts";
 import { Walk } from "./walk.ts";
 import { actionText, bulldozeRefusal, plural, tileName } from "./words.ts";
 import { Worlds } from "./worlds.ts";
@@ -70,7 +58,7 @@ interface Tool {
 
 export class Hud {
   private readonly root: HTMLElement;
-  private readonly sheet: Sheet;
+  private readonly inventory: SheetController;
   private readonly tools = new Map<string, Tool>();
   private readonly tiles: HTMLElement;
   private readonly worldBtn: HTMLButtonElement;
@@ -96,16 +84,8 @@ export class Hud {
   private pending: GameEvent[] = [];
   private map: TileMap = new Map();
   private tilesRev = 0;
-  private sheetSlot: Cell | null = null;
-  private turns = 0;
-  private sheetSig = "";
-  private open = true;
-  private synced = false;
-  private engineOpen: boolean | null = null;
   private hidden = false;
   private pointerOff = true;
-  /** The overlay has re-sent `hover` for the sheet's slot since the pointer left the canvas. */
-  private hoverResent = false;
   private lastRotate = 0;
   private placed: { cell: Cell; text: string; until: number } | null = null;
   private refusal: { cell: Cell; tile: string; text: string; until: number } | null = null;
@@ -121,10 +101,10 @@ export class Hud {
     this.hw = hw;
     this.root = host;
     this.canvas = document.querySelector<HTMLCanvasElement>("canvas#hex-world");
-    this.sheet = new Sheet(
+    this.inventory = new SheetController(
+      (command) => this.cmd(command),
       (id) => this.selectTile(id),
-      () => this.toggleSheet(),
-      (c) => this.gotoSlot(c),
+      () => this.fire("inventory"),
     );
     this.tiles = h("span", {}, "1 tile");
     this.worldName = h("b", {}, "World");
@@ -140,7 +120,7 @@ export class Hud {
     showUi.addEventListener("click", () => this.setHidden(false));
     this.root.append(
       this.bar(),
-      this.sheet.el,
+      this.inventory.sheet.el,
       this.tag,
       this.toast,
       this.live,
@@ -177,11 +157,7 @@ export class Hud {
   }
 
   private toggleSheet(): void {
-    this.open = !this.open;
-    this.sheet.open = this.open;
-    this.engineOpen = this.open;
-    this.cmd({ cmd: "toggle", what: "inventory" });
-    this.fire("inventory");
+    this.inventory.toggle();
   }
 
   private rotate(back: boolean): void {
@@ -189,18 +165,9 @@ export class Hud {
     if (!st) return;
     this.fire("rotate");
     // One press, one engine step: the engine skips rotations that repeat an orientation (PRD §4.7 Q6).
-    this.turns += back ? -1 : 1;
+    this.inventory.turns += back ? -1 : 1;
     this.cmd({ cmd: "rotate", dir: back ? "ccw" : "cw" });
     this.advanceHint("rotate");
-  }
-
-  private gotoSlot(c: Cell): void {
-    this.sheetSlot = c;
-    this.hoverResent = true;
-    this.cmd([
-      { cmd: "hover", q: c.q, r: c.r },
-      { cmd: "pin", q: c.q, r: c.r },
-    ]);
   }
 
   // ---------- Worlds: autosave, saved worlds and files (S10) ----------
@@ -367,7 +334,7 @@ export class Hud {
     const t = (a: string) => this.tools.get(a)!.btn;
     t("place").classList.toggle("is-active", st.tool === "place");
     t("bulldoze").classList.toggle("is-active", st.tool === "bulldoze");
-    t("inventory").classList.toggle("is-on", this.open);
+    t("inventory").classList.toggle("is-on", this.inventory.open);
     for (const [a, can, none] of [
       ["undo", st.can_undo, "Nothing to undo"],
       ["redo", st.can_redo, "Nothing to redo"],
@@ -407,18 +374,6 @@ export class Hud {
     this.pending = [];
     const now = performance.now();
 
-    if (!this.synced) {
-      // The sheet opens by default (owner, 2026-10-13); the engine's flag starts closed.
-      this.synced = true;
-      this.engineOpen = st.inventory_open;
-      if (!st.inventory_open) this.cmd({ cmd: "toggle", what: "inventory" });
-      this.sheet.open = true;
-    } else if (st.inventory_open !== this.engineOpen) {
-      this.engineOpen = st.inventory_open;
-      this.open = st.inventory_open;
-      this.sheet.open = this.open;
-    }
-
     const changed =
       !prev ||
       prev.tiles.length !== st.tiles.length ||
@@ -438,52 +393,14 @@ export class Hud {
     }
     for (const e of events) this.onEvent(e, before, now);
 
-    // The sheet's slot is the engine's pinned slot; unpinned, it sticks to the last slot pointed at
-    // until another slot, Esc or a placement.
-    if (st.pinned) {
-      if (!sameCell(st.pinned, this.sheetSlot)) {
-        this.sheetSlot = st.pinned;
-        this.turns = 0;
-      }
-    } else if (
-      st.tool === "place" &&
-      st.hovered_kind === "slot" &&
-      st.hovered &&
-      !sameCell(st.hovered, this.sheetSlot)
-    ) {
-      this.sheetSlot = st.hovered;
-      this.turns = 0;
-      this.hoverResent = false;
-      this.advanceHint("hover");
-    }
-    if (this.sheetSlot && !isSlot(this.sheetSlot, this.map)) this.sheetSlot = null;
-    this.resendHover(st);
+    if (this.inventory.sync(st, this.map, this.pointerOff)) this.advanceHint("hover");
 
     this.syncBar(st);
     this.syncWorld();
-    this.renderSheet(st);
+    this.inventory.render(st, this.map, this.tilesRev);
     this.renderTag(st, now);
     this.root.classList.toggle("is-hidden", this.hidden || st.photo_mode || st.walk_mode);
     this.renderHint(st);
-  }
-
-  /**
-   * Keeps the engine hovering the sheet's slot while the pointer is off the canvas, so R works there.
-   * A pinned slot needs no hover: the engine holds the ghost there and `hovered` follows the pointer.
-   */
-  private resendHover(st: PlayState): void {
-    if (
-      st.pinned ||
-      st.walk_mode ||
-      !this.pointerOff ||
-      this.hoverResent ||
-      !this.sheetSlot ||
-      st.tool !== "place" ||
-      st.hovered
-    )
-      return;
-    this.hoverResent = true;
-    this.cmd({ cmd: "hover", q: this.sheetSlot.q, r: this.sheetSlot.r });
   }
 
   private onEvent(e: GameEvent, before: TileMap, now: number): void {
@@ -540,10 +457,10 @@ export class Hud {
         break;
       case "loaded":
         // A different world: nothing pointed at, placed or refused carries over.
-        this.sheetSlot = null;
+        this.inventory.slot = null;
         this.placed = null;
         this.refusal = null;
-        this.turns = 0;
+        this.inventory.turns = 0;
         break;
       default:
         break;
@@ -552,39 +469,6 @@ export class Hud {
 
   private say(msg: string): void {
     this.live.textContent = msg;
-  }
-
-  // ---------- Sheet ----------
-  private renderSheet(st: PlayState): void {
-    const slot = this.sheetSlot;
-    const ghostRotation = st.ghost && sameCell(st.ghost, slot) ? st.ghost.rotation : null;
-    const sig = [this.tilesRev, slot && cellKey(slot), st.selected, ghostRotation, st.tool, this.turns].join("|");
-    if (sig === this.sheetSig) return;
-    this.sheetSig = sig;
-    const needs = slot ? needsAt(slot, this.map) : null;
-    let nearest: { cell: Cell; fits: number } | null = null;
-    if (slot && needs && !TILES.some((d) => fit(d, needs).ok)) nearest = this.nearestFittingSlot(st, slot);
-    this.sheet.render({
-      slot: slot && needs ? { cell: slot, needs } : null,
-      selected: st.selected,
-      ghostRotation,
-      turns: this.turns,
-      bulldoze: st.tool === "bulldoze",
-      nearest,
-    });
-  }
-
-  private nearestFittingSlot(st: PlayState, from: Cell): { cell: Cell; fits: number } | null {
-    let best: { cell: Cell; fits: number; d: number } | null = null;
-    for (const c of st.frontier) {
-      if (sameCell(c, from)) continue;
-      const d = (Math.abs(c.q - from.q) + Math.abs(c.r - from.r) + Math.abs(c.q + c.r - from.q - from.r)) / 2;
-      if (best && d >= best.d) continue;
-      const needs = needsAt(c, this.map);
-      const fits = TILES.filter((t) => fit(t, needs).ok).length;
-      if (fits) best = { cell: c, fits, d };
-    }
-    return best && { cell: best.cell, fits: best.fits };
   }
 
   // ---------- Tag beside the ghost or the bulldoze target ----------
@@ -678,7 +562,7 @@ export class Hud {
     const [l, t, r, b] = rect;
     const w = this.tag.offsetWidth;
     const hgt = this.tag.offsetHeight;
-    const panel = this.worlds?.open ? this.worlds.el : this.open ? this.sheet.el : null;
+    const panel = this.worlds?.open ? this.worlds.el : this.inventory.open ? this.inventory.sheet.el : null;
     const limit = innerWidth - (panel && !this.hidden ? panel.offsetWidth + 40 : 20);
     let x = r + 14;
     let y = (t + b) / 2 - hgt / 2;
@@ -826,7 +710,7 @@ export class Hud {
     });
     this.canvas?.addEventListener("pointerenter", () => {
       this.pointerOff = false;
-      this.hoverResent = false;
+      this.inventory.hoverResent = false;
     });
     // Tooltips: name and key after 350 ms of hover, at once on keyboard focus.
     this.root.addEventListener("pointerover", (e) => {
@@ -907,7 +791,7 @@ export class Hud {
       }
       return;
     }
-    if (this.sheet.handleKey(e)) {
+    if (this.inventory.sheet.handleKey(e)) {
       take();
       return;
     }
@@ -949,7 +833,7 @@ export class Hud {
           if (!this.settings.escape()) this.toggleSettings();
         } else if (st.tool === "bulldoze") this.cmd({ cmd: "set_tool", mode: "place" });
         else if (this.hidden) this.setHidden(false);
-        else this.sheetSlot = null;
+        else this.inventory.slot = null;
         return;
       case "Enter":
         if (onRow || (e.target as Element).closest?.("button")) return;
