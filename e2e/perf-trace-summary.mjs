@@ -59,6 +59,9 @@ for (const e of events) {
 const profile = JSON.parse(await readFile(input + ".cpuprofile", "utf8"));
 const profileNodes = new Map(profile.nodes.map((n) => [n.id, n]));
 const sampled = new Map();
+const parents = new Map();
+for (const node of profile.nodes) for (const child of node.children ?? []) parents.set(child, node.id);
+const inclusive = new Map();
 for (let i = 0; i < (profile.samples ?? []).length; i++) {
   const node = profileNodes.get(profile.samples[i]);
   const name = symbolize(node?.callFrame?.functionName ?? "unknown");
@@ -66,12 +69,21 @@ for (let i = 0; i < (profile.samples ?? []).length; i++) {
   row.samples++;
   row.sampled_ms += (profile.timeDeltas?.[i] ?? 0) / 1000;
   sampled.set(name, row);
+  let ancestor = node;
+  const seen = new Set();
+  while (ancestor && !seen.has(ancestor.id)) {
+    seen.add(ancestor.id);
+    const label = symbolize(ancestor.callFrame?.functionName ?? "unknown");
+    inclusive.set(label, (inclusive.get(label) ?? 0) + (profile.timeDeltas?.[i] ?? 0) / 1000);
+    ancestor = profileNodes.get(parents.get(ancestor.id));
+  }
 }
 const callbacks = spans.filter((e) => e.name === "FireAnimationFrame").map((e) => e.dur / 1000).sort((a, b) => a - b);
 const quantile = (p) => callbacks[Math.min(callbacks.length - 1, Math.floor(p * callbacks.length))] ?? null;
 const summary = { input, events: events.length, callback_ms: { count: callbacks.length, p50: quantile(0.5), p95: quantile(0.95), max: quantile(1) },
   cpu_profile_duration_ms: (profile.endTime - profile.startTime) / 1000,
-  cpu_profile_leaf: [...sampled.values()].sort((a, b) => b.sampled_ms - a.sampled_ms).slice(0, 60), notes: [
+  cpu_profile_leaf: [...sampled.values()].sort((a, b) => b.sampled_ms - a.sampled_ms).slice(0, 60),
+  cpu_profile_inclusive: [...inclusive].sort((a, b) => b[1] - a[1]).slice(0, 120).map(([name, sampled_ms]) => ({ name, sampled_ms })), notes: [
   "Event totals are inclusive, nested, and overlap. Never sum them as frame time.",
   "GPU-process host events are command encoding/service time, not hardware execution time.",
   "CPU profiler leaf samples name WASM functions only when symbols survive release build.",
