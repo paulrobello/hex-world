@@ -1,0 +1,51 @@
+# Post-ARC-001 play-world measurement
+
+Source engine revision: `e67ba43` (2026-10-16). Build ID `a6e0e284a2`. No engine or workspace files changed in this measurement branch. See `build.json` for exact web/native hashes.
+
+## Hosts and acceptance policy
+
+The canonical MacDaddy host (Apple M4 Max, 16 CPU cores) remained above the absolute 1-minute load limit of 15. Observed values ranged from 93.53 to 503.53 during setup. No local timing sample was accepted. `load-wait.jsonl` preserves the wait evidence.
+
+The coordinator authorized the standing secondary perf host: MiniMac, Apple M4, 10 CPU cores (4 performance and 6 efficiency), 10 GPU cores, 32 GiB RAM. MiniMac measurements are a separate baseline, not substituted into the M4 Max series. `minimac-host.json` records the actual host.
+
+Every budget run requires host load <=15 immediately before and after, with overloaded samples discarded. Additionally, foreign automated Chromium jobs must be absent. Human desktop Chrome may remain only while its process-tree summed CPU stays below 20% of one core, checked every second. Accepted evidence must say: **human desktop Chrome present but idle; no automated GPU contention**. A CPU-load pass alone does not establish GPU exclusivity.
+
+## Exact workload
+
+`waterWorldScript(26)` from `e2e/water-world.mjs`: 2,066 tiles, including 838 ocean, 347 river_straight, 271 meadow, 200 beach, 142 forest, 123 road_straight, 81 house_cluster, 28 beach_outer, 21 river_bend and 15 beach_inner. Play scenario, High, seed 1, grass off, tilt off, 2560x1440, DPR 1. Camera `[10,12,40]`, looking at `[0,0,0]`. HUD live. Chromium headless GPU, channel `chromium`, ANGLE Metal, GPU enabled, blocklist ignored, vsync and frame limit disabled. The shipped default frame-latency limit remains unchanged.
+
+Each web diagnostic is a rolling 600-frame window read after 700 settled frames. Renderer must be `ANGLE Metal Renderer: Apple M4`, not SwiftShader. The exact browser-built world is saved for native comparison.
+
+## Prior baseline and rejected attempts
+
+All rows below are MiniMac Apple M4, 10 CPU / 10 GPU cores, 2560x1440, DPR 1, hardware GPU Chromium headless and uncapped. Times are milliseconds. The accepted historical baseline was Chromium 153 with WebGPU adapter `Apple M4`. New rejected attempts explicitly confirmed Chromium `153.0.8010.12` and renderer `ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)`.
+
+| Run | p50 | p95 | Mean | Max | Load before | Load after | Assessment |
+|---|---:|---:|---:|---:|---:|---:|---|
+| 2026-10-15 pre-fix MiniMac | 54.1 | 56.6 | 54.45 | 68.3 | 3.979 | 4.919 | Accepted historical same-host baseline |
+| Post-fix attempt 0 | 52.2 | 55.4 | 52.11 | 62.3 | 7.142 | 6.975 | Rejected: concurrent the-cube automated GPU work |
+| Post-fix attempt 1 | 52.6 | 63.9 | 54.17 | 104.5 | 6.975 | 11.743 | Rejected: concurrent automated GPU work |
+
+The separate 2026-10-15 M4 Max baseline was p50 52.5, p95 55.0, mean 52.8 and max 58.8 ms, load 7.8 to 11.3. That is context only, not the comparator for MiniMac's new series.
+
+The rejected MiniMac observations show that the publication fix's frame-time benefit is either small or masked by contention. They do not establish a clean post-fix p95, a validated speedup, or the <=16.6 ms target. The contaminated p95 is not a mathematical upper bound on an unobserved clean run.
+
+## Trace attribution
+
+Diagnostic trace capture is in progress. It is deliberately labeled as captured while the host had recurring par-factory automated GPU contention. The accompanying one-second process log determines the exact overlap. Absolute trace-arm timings are not budget evidence.
+
+The release WASM has no names section. `wasm-symbols.json` safely restores function names for CPU profiles: all non-custom sections of the symbol-preserving optimizer output match the shipped release byte-for-byte (SHA-256 checked). The symbol build uses the same wasm-bindgen 0.2.129 output and system wasm-opt 133 with `-Oz -g`. No code-level profiling changes were made. CPU sample ancestry and leaf samples are separate from inclusive, overlapping Chrome event totals. GPU-process host time is not hardware GPU execution time. The separate diagnostic arm enables timestamp queries for the GPU total, not the unreliable web pass split.
+
+## Native and ceiling measurements
+
+The exact ARM64 release binary and runtime assets are transferred. Native uses the saved 2,066-tile world, same camera, High, grass off, tilt off, 2560x1440, scale 1, immediate presentation and a full 600-frame ring. Native play can still pace to 60 Hz, so a paced p95 must not be described as CPU render cost.
+
+Native and smaller-radius runs remain queued behind uncontaminated web rounds and trace, and the same browser-contention/load conditions. Candidate ceiling worlds are radius 18 (997 tiles), 20 (1,231), 22 (1,484), with 8 and 12 available if needed to bracket 16.6 ms. A proposed ceiling needs measured bracketing points and owner acceptance. None is claimed yet.
+
+## Criterion assessment
+
+1. **Chrome trace: pending.** Live trace and symbolized summary are queued. Any contended capture will support CPU cost ranking only, with its limitations stated.
+2. **Two guarded <=16.6 ms rounds or owner-accepted ceiling: blocked on host quiescence.** The two observed post-fix attempts are rejected. No ceiling accepted or criteria checked.
+3. **Exact-world native measurement: blocked on host quiescence.** Binary and exact-save methodology are ready, but no accepted native timing exists yet.
+
+Board handling was limited to the requested move to `in_progress`. No criteria were checked, no card was completed, and nothing was pushed.
