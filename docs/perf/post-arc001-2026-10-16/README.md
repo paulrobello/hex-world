@@ -4,7 +4,7 @@ Source engine revision: `e67ba43` (2026-10-16). Build ID `a6e0e284a2`. No engine
 
 ## Hosts and acceptance policy
 
-The canonical MacDaddy host (Apple M4 Max, 16 CPU cores) remained above the absolute 1-minute load limit of 15. Observed values ranged from 93.53 to 503.53 during setup. No local timing sample was accepted. `load-wait.jsonl` preserves the wait evidence.
+The canonical MacDaddy host (Apple M4 Max, 16 CPU cores) initially exceeded the absolute 1-minute load limit of 15. Observed values ranged from 93.53 to 503.53 during setup. `load-wait.jsonl` preserves this evidence. The host later recovered: two consecutive samples 60 seconds apart were 13.270 and 13.097, recorded in `local-load-stability.json`. Canonical measurements then began with the normal per-run load and browser-contention guards.
 
 The coordinator authorized the standing secondary perf host: MiniMac, Apple M4, 10 CPU cores (4 performance and 6 efficiency), 10 GPU cores, 32 GiB RAM. MiniMac measurements are a separate baseline, not substituted into the M4 Max series. `minimac-host.json` records the actual host.
 
@@ -29,6 +29,16 @@ All rows below are MiniMac Apple M4, 10 CPU / 10 GPU cores, 2560x1440, DPR 1, ha
 The separate 2026-10-15 M4 Max baseline was p50 52.5, p95 55.0, mean 52.8 and max 58.8 ms, load 7.8 to 11.3. That is context only, not the comparator for MiniMac's new series.
 
 The rejected MiniMac observations show that the publication fix's frame-time benefit is either small or masked by contention. They do not establish a clean post-fix p95, a validated speedup, or the <=16.6 ms target. The contaminated p95 is not a mathematical upper bound on an unobserved clean run.
+
+## Canonical M4 Max result
+
+`local-radius26-valid.json`, MacDaddy Apple M4 Max, 16 CPU cores, 40 GPU cores, Chromium153.0.8010.12 headless GPU/uncapped, ANGLE Metal Apple M4 Max, 2560x1440, DPR1, exact scripted radius26 world:
+
+| Round | p50 | p95 | Mean | Max | Load before | Load after | GPU exclusivity |
+|---|---:|---:|---:|---:|---:|---:|---|
+| 0 | 48.9 | 50.8 | 49.01 | 55.8 | 10.064 | 8.583 | Accepted: 36 one-second checks, peak human Chrome13.9%, no violations |
+
+Round0 p95 is 7.64% below the canonical pre-fix55.0ms, and mean is7.18% below52.8ms. This is a modest improvement, not a16.6ms pass. Human desktop Chrome was present but idle, with no automated GPU contention. Round1 remains in progress.
 
 ## Trace attribution
 
