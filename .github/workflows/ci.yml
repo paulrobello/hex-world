@@ -132,7 +132,9 @@ jobs:
           cache-dependency-path: web/ui/package-lock.json
       - name: Install trunk
         run: |
-          curl -fsSL "https://github.com/trunk-rs/trunk/releases/download/${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" | sudo tar -xz -C /usr/local/bin
+          curl -fsSL "https://github.com/trunk-rs/trunk/releases/download/${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" -o "$RUNNER_TEMP/trunk.tar.gz"
+          echo "f2b4680cd239693a646a2795e4633c625328d7b2a044fbe749fa3a2fe9e7036b  $RUNNER_TEMP/trunk.tar.gz" | sha256sum --check --strict
+          sudo tar -xzf "$RUNNER_TEMP/trunk.tar.gz" -C /usr/local/bin
           trunk --version
       # Trunk's pre_build hook runs `make ui-build`; install the overlay's tools first (the stamp
       # target runs npm ci once, so the hook does not reinstall).
