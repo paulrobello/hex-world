@@ -78,12 +78,18 @@ pub const PENDING_PIECES_RON: &str = include_str!("../../../data/pending-pieces.
 /// The tile every new world starts with at the origin (A1).
 pub const START_TILE: &str = "meadow";
 
+/// A socket-table, tile parsing, identity or validation failure while loading a catalog.
 #[derive(Clone, Debug, PartialEq)]
 pub enum CatalogError {
+    /// The socket table could not be parsed or validated.
     Sockets(SocketTableError),
+    /// A tile file is not valid RON for a tile definition.
     Parse { file: String, error: String },
+    /// A tile definition id differs from its file stem.
     IdMismatch { file: String, id: String },
+    /// Two definitions declare the same tile id.
     DuplicateId(String),
+    /// Collected tile validation issues.
     Invalid(Vec<String>),
 }
 
@@ -151,6 +157,7 @@ impl TileCatalog {
         Self::from_ron(crate::socket::SOCKETS_RON, &BUILTIN_TILES)
     }
 
+    /// Looks up a definition by id, or returns `None` when absent.
     pub fn get(&self, id: &str) -> Option<&TileDef> {
         self.tiles.iter().find(|t| t.id == id)
     }
@@ -160,6 +167,7 @@ impl TileCatalog {
         &self.tiles
     }
 
+    /// The validated socket table used by this catalog.
     pub fn sockets(&self) -> &SocketTable {
         &self.sockets
     }
@@ -190,14 +198,17 @@ pub struct PendingPieces {
 }
 
 impl PendingPieces {
+    /// Parses the pending-piece delivery list from RON.
     pub fn from_ron(text: &str) -> Result<Self, String> {
         ron::from_str(text).map_err(|e| format!("pending-pieces.ron: {e}"))
     }
 
+    /// Loads the embedded pending-piece delivery list.
     pub fn builtin() -> Result<Self, String> {
         Self::from_ron(PENDING_PIECES_RON)
     }
 
+    /// Whether a kit piece id is still listed as pending.
     pub fn contains(&self, id: &str) -> bool {
         self.pieces.iter().any(|p| p.id.as_str() == id)
     }

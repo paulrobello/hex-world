@@ -1,5 +1,6 @@
 //! Pointy-top axial hex coordinates. Edge 0 faces east (+x); edges run clockwise viewed from +Y.
 
+/// Pointy-top hex circumradius in meters.
 pub const HEX_RADIUS: f32 = 16.0;
 
 /// Height of one elevation level in meters (PRD §5.1, frozen in P1 with HEX_RADIUS; D8).
@@ -18,8 +19,10 @@ pub struct Axial {
 const DIRS: [(i32, i32); 6] = [(1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1)];
 
 impl Axial {
+    /// The cell at axial coordinates `(0, 0)`.
     pub const ORIGIN: Axial = Axial { q: 0, r: 0 };
 
+    /// Constructs an axial coordinate without range validation.
     pub const fn new(q: i32, r: i32) -> Self {
         Self { q, r }
     }
@@ -31,11 +34,13 @@ impl Axial {
         [radius * 3f32.sqrt() * (q + r / 2.0), radius * 1.5 * r]
     }
 
+    /// Adjacent cell across `edge`, modulo six clockwise from east; addition must fit in `i32`.
     pub fn neighbor(self, edge: u8) -> Axial {
         let (dq, dr) = DIRS[(edge % 6) as usize];
         Axial::new(self.q + dq, self.r + dr)
     }
 
+    /// Minimum hex steps to `other`; coordinate arithmetic must fit in `i32`.
     pub fn distance(self, other: Axial) -> i32 {
         let dq = self.q - other.q;
         let dr = self.r - other.r;
@@ -43,6 +48,7 @@ impl Axial {
     }
 }
 
+/// Cells in the center and rings through `radius`: `1 + 3r(r + 1)`, which must fit in `usize`.
 pub fn ring_capacity(radius: u32) -> usize {
     let n = radius as usize;
     1 + 3 * n * (n + 1)
