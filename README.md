@@ -14,6 +14,10 @@ Agents and scripts can drive, screenshot and inspect the game natively and on th
 - **P2 prototypes already on main:** the hero-water look-dev scenario (`--scenario water`) and the tilt-shift post pass (`--tilt`), both owner-approved.
 - **Next: P2 MVP vertical slice.** Scope and open checkboxes in `PRD.md` §15 P2; the UI quality bar is §4.7 and needs owner-approved mockups before any UI is built.
 
+## Change history
+
+There is no separate release changelog. Use `git log --oneline` for merged changes and `PRD.md` §15 for phase completion and remaining scope. Keep the phase checkboxes current when a phase lands, and describe each change in its commit subject. The deployed content-hash build id identifies a build, not a semantic release version.
+
 ## Prerequisites
 
 For running and checking the game:
