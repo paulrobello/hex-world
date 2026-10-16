@@ -1,4 +1,9 @@
-.PHONY: ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play
+.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play
+
+clean:
+	rm -rf dist target/kit-stage
+	@for dir in web/ui scripts/assets target; do \
+	  if test -d "$$dir"; then find "$$dir" -type f -name '*.stamp' -delete; fi; done
 
 fmt:
 	cargo fmt --all
@@ -249,11 +254,11 @@ run:
 shot:
 	mkdir -p target/shots
 	rm -f target/shots/single.png
-	cargo run -p hex-app --release -- --shot single --exit-after 180
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --shot single --exit-after 180
 	@test -s target/shots/single.png && echo "wrote target/shots/single.png"
 
 run-shot:
-	cargo run -p hex-app --release -- --shot single --exit-after 180
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --shot single --exit-after 180
 
 run-diag:
 	cargo run -p hex-app --release -- --scenario gate2000 --diag --dump-state target/state.json --exit-after-seconds 10
@@ -262,7 +267,7 @@ run-diag:
 shots:
 	mkdir -p target/shots
 	rm -f target/shots/gallery-*.png target/shots/gallery-*.json
-	cargo run -p hex-app --release -- --script scripts/shots/gallery.json --size 1280x800 --seed 1 --fps off --tilt off
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --script scripts/shots/gallery.json --size 1280x800 --seed 1 --fps off --tilt off
 	@for n in single single-low gate-strategic gate-closeup gate-flock; do test -s target/shots/gallery-$$n.png || { echo "missing gallery-$$n.png"; exit 1; }; done
 	@echo "wrote target/shots/gallery-*.png"
 
@@ -270,7 +275,7 @@ shots-chunks:
 	mkdir -p target/shots
 	rm -f target/shots/gallery-chunks-*.png target/shots/gallery-chunks-*.json
 	sed 's/"gallery-/"gallery-chunks-/' scripts/shots/gallery.json > target/shots/gallery-chunks-script.json
-	cargo run -p hex-app --release -- --script target/shots/gallery-chunks-script.json --size 1280x800 --seed 1 --fps off --tilt off --layout chunks
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --script target/shots/gallery-chunks-script.json --size 1280x800 --seed 1 --fps off --tilt off --layout chunks
 	@for n in single single-low gate-strategic gate-closeup gate-flock; do test -s target/shots/gallery-chunks-$$n.png || { echo "missing gallery-chunks-$$n.png"; exit 1; }; done
 	@echo "wrote target/shots/gallery-chunks-*.png (layout=chunks)"
 
@@ -278,7 +283,7 @@ shots-instanced:
 	mkdir -p target/shots
 	rm -f target/shots/gallery-instanced-*.png target/shots/gallery-instanced-*.json
 	sed 's/"gallery-/"gallery-instanced-/' scripts/shots/gallery.json > target/shots/gallery-instanced-script.json
-	cargo run -p hex-app --release -- --script target/shots/gallery-instanced-script.json --size 1280x800 --seed 1 --fps off --tilt off --layout instanced
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --script target/shots/gallery-instanced-script.json --size 1280x800 --seed 1 --fps off --tilt off --layout instanced
 	@for n in single single-low gate-strategic gate-closeup gate-flock; do test -s target/shots/gallery-instanced-$$n.png || { echo "missing gallery-instanced-$$n.png"; exit 1; }; done
 	@echo "wrote target/shots/gallery-instanced-*.png (layout=instanced)"
 
@@ -296,12 +301,12 @@ KIT_SHOTS = kit-overview kit-seam-closeup kit-tree kit-tree-under kit-tree-game 
 # docs/checkpoints/foliage-wind/ (shoot.sh).
 shots-foliage-wind:
 	cargo build -p hex-app --release
-	docs/checkpoints/foliage-wind/shoot.sh target/release/hex-world
+	caffeinate -d -u docs/checkpoints/foliage-wind/shoot.sh target/release/hex-world
 
 shots-kit:
 	mkdir -p target/shots
 	rm -f target/shots/kit-*.png
-	cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --tilt off $(ARGS)
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --tilt off $(ARGS)
 	@for n in $(KIT_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; done
 	@echo "wrote target/shots/kit-*.png"
 
@@ -313,7 +318,7 @@ shots-lookdev:
 	@mkdir -p $(LOOKDEV_OUT)
 	@for t in agx tony aces; do \
 	  rm -f target/shots/kit-*.png; \
-	  cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --tilt off --grade tony --tonemap $$t $(ARGS) || exit 1; \
+	  bash scripts/shots/run.sh cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --tilt off --grade tony --tonemap $$t $(ARGS) || exit 1; \
 	  for n in kit-overview kit-seam-closeup kit-tree; do cp target/shots/$$n.png $(LOOKDEV_OUT)/lookdev-$$t-$$n.png || exit 1; done; \
 	done
 	@echo "wrote $(LOOKDEV_OUT)/lookdev-{agx,tony,aces}-*.png"
@@ -326,7 +331,7 @@ shots-tilt:
 	@mkdir -p target/shots $(TILT_OUT)
 	@for m in off on; do \
 	  rm -f target/shots/tilt-*.png; \
-	  cargo run -p hex-app --release -- --script scripts/shots/tilt.json --size 1600x1000 --seed 1 --fps off --tilt $$m $(ARGS) || exit 1; \
+	  bash scripts/shots/run.sh cargo run -p hex-app --release -- --script scripts/shots/tilt.json --size 1600x1000 --seed 1 --fps off --tilt $$m $(ARGS) || exit 1; \
 	  for n in $(TILT_VIEWS); do test -s target/shots/tilt-$$n.png || { echo "missing tilt-$$n.png"; exit 1; }; cp target/shots/tilt-$$n.png $(TILT_OUT)/tilt-$$m-$$n.png; done; \
 	done
 	@echo "wrote $(TILT_OUT)/tilt-{off,on}-*.png"
@@ -357,11 +362,10 @@ WATER_DOCS = docs/checkpoints/water
 shots-water:
 	mkdir -p target/shots $(WATER_DOCS)
 	rm -f target/shots/water-*.png
-	cargo run -p hex-app --release -- --script scripts/shots/water.json --size 1600x1000 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
-	@for n in $(WATER_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(WATER_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --script scripts/shots/water.json --size 1600x1000 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(WATER_DOCS) $(WATER_SHOTS)
 	node scripts/shots/water-motion.mjs target/shots/water-motion-script.json
-	cargo run -p hex-app --release -- --script target/shots/water-motion-script.json --size 960x600 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --script target/shots/water-motion-script.json --size 960x600 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
 	@for v in $(WATER_VIEWS); do \
 	  test -s target/shots/water-motion-$$v-089.png || { echo "missing water-motion-$$v frames"; exit 1; }; \
 	  ffmpeg -loglevel error -y -framerate 30 -i target/shots/water-motion-$$v-%03d.png -c:v libx264 -pix_fmt yuv420p -crf 22 $(WATER_DOCS)/water-motion-$$v.mp4 || exit 1; \
@@ -410,9 +414,8 @@ PLAY_DOCS = docs/checkpoints/play
 shots-play:
 	mkdir -p target/shots $(PLAY_DOCS)
 	rm -f target/shots/play-*.png target/shots/play-*.json
-	cargo run -p hex-app --release -- --scenario play --script $(PLAY_DOCS)/play.json --size 1280x800 --seed 1 --fps off --tilt off $(ARGS)
-	@for n in $(PLAY_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(PLAY_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(PLAY_DOCS)/play.json --size 1280x800 --seed 1 --fps off --tilt off $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(PLAY_DOCS) $(PLAY_SHOTS)
 	cp target/shots/play-*.json $(PLAY_DOCS)/
 	@echo "wrote $(PLAY_DOCS)/"
 
@@ -426,7 +429,7 @@ WINDMILL_DOCS = docs/checkpoints/windmill
 shots-windmill-play:
 	mkdir -p target/shots $(WINDMILL_DOCS)
 	rm -f target/shots/windmill-play*.png target/shots/windmill-play-state.json target/shots/windmill-walk-*
-	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(WINDMILL_DOCS)/windmill-play.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(WINDMILL_DOCS)/windmill-play.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
 	@for n in $(WINDMILL_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
 	  m=$$(magick target/shots/$$n.png -format '%[fx:mean]' info:); \
 	  awk -v m="$$m" 'BEGIN { exit !(m < 0.02) }' && { echo "$$n.png is black (mean $$m): idle display or high load, run again"; exit 1; }; \
@@ -443,9 +446,8 @@ FP_DOCS = docs/checkpoints/first-person
 shots-first-person:
 	mkdir -p target/shots $(FP_DOCS)
 	rm -f target/shots/fp-*.png target/shots/fp-*.json
-	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(FP_DOCS)/first-person.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	@for n in $(FP_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(FP_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(FP_DOCS)/first-person.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(FP_DOCS) $(FP_SHOTS)
 	cp target/shots/fp-*.json $(FP_DOCS)/
 	@echo "wrote $(FP_DOCS)/"
 
@@ -457,9 +459,8 @@ CARS_DOCS = docs/checkpoints/cars
 shots-cars:
 	mkdir -p target/shots $(CARS_DOCS)
 	rm -f target/shots/cars-*.png target/shots/cars-*.json
-	cargo run -p hex-app --release -- --scenario play --script $(CARS_DOCS)/cars.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
-	@for n in $(CARS_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(CARS_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(CARS_DOCS)/cars.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(CARS_DOCS) $(CARS_SHOTS)
 	cp target/shots/cars-*.json $(CARS_DOCS)/
 	@echo "wrote $(CARS_DOCS)/"
 
@@ -479,9 +480,8 @@ PHOTO_DOCS = docs/checkpoints/photo
 shots-photo:
 	mkdir -p target/shots $(PHOTO_DOCS)
 	rm -f target/shots/photo-*.png target/shots/photo-*.json
-	cargo run -p hex-app --release -- --scenario play --script $(PHOTO_DOCS)/photo.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
-	@for n in $(PHOTO_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(PHOTO_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(PHOTO_DOCS)/photo.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(PHOTO_DOCS) $(PHOTO_SHOTS)
 	magick identify -format '{"png": "%f", "width": %w, "height": %h, "mean": %[fx:mean]}\n' target/shots/photo-04-export-4x.png > $(PHOTO_DOCS)/photo-04-export-4x.size.json
 	@grep -q '"width": 5120, "height": 3200' $(PHOTO_DOCS)/photo-04-export-4x.size.json || { echo "4x export is not 5120x3200"; cat $(PHOTO_DOCS)/photo-04-export-4x.size.json; exit 1; }
 	@for n in $(PHOTO_SHOTS); do m=$$(magick target/shots/$$n.png -format '%[fx:mean]' info:); \
@@ -505,9 +505,8 @@ PHOTO_FX_SHOTS = photo-fx-00-none photo-fx-01-mono photo-fx-02-sepia photo-fx-03
 shots-photo-fx:
 	mkdir -p target/shots $(PHOTO_DOCS)
 	rm -f target/shots/photo-fx-*.png target/shots/photo-fx-*.json
-	cargo run -p hex-app --release -- --scenario play --script $(PHOTO_DOCS)/photo-fx.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
-	@for n in $(PHOTO_FX_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(PHOTO_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(PHOTO_DOCS)/photo-fx.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(PHOTO_DOCS) $(PHOTO_FX_SHOTS)
 	python3 scripts/photo-fx-check.py
 	cp target/shots/photo-fx-*.json $(PHOTO_DOCS)/
 	@echo "wrote $(PHOTO_DOCS)/photo-fx-*"
@@ -536,12 +535,11 @@ WATER_PLAY_DOCS = docs/checkpoints/water-play
 shots-water-play:
 	mkdir -p target/shots $(WATER_PLAY_DOCS)
 	rm -f target/shots/water-play-*.png target/shots/water-play-*.json
-	cargo run -p hex-app --release -- --scenario play --script $(WATER_PLAY_DOCS)/water-play.json --size 1600x1000 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
-	@for n in $(WATER_PLAY_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(WATER_PLAY_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(WATER_PLAY_DOCS)/water-play.json --size 1600x1000 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(WATER_PLAY_DOCS) $(WATER_PLAY_SHOTS)
 	cp target/shots/water-play-state*.json $(WATER_PLAY_DOCS)/
 	node $(WATER_PLAY_DOCS)/motion.mjs target/shots/water-play-motion-script.json
-	cargo run -p hex-app --release -- --scenario play --script target/shots/water-play-motion-script.json --size 960x600 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script target/shots/water-play-motion-script.json --size 960x600 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
 	@for v in $(WATER_PLAY_VIEWS); do \
 	  test -s target/shots/water-play-motion-$$v-089.png || { echo "missing water-play-motion-$$v frames"; exit 1; }; \
 	  ffmpeg -loglevel error -y -framerate 30 -i target/shots/water-play-motion-$$v-%03d.png -c:v libx264 -pix_fmt yuv420p -crf 22 $(WATER_PLAY_DOCS)/water-play-motion-$$v.mp4 || exit 1; \
@@ -561,9 +559,8 @@ COAST_DOCS = docs/checkpoints/coast
 shots-coast:
 	mkdir -p target/shots $(COAST_DOCS)
 	rm -f target/shots/coast-*.png target/shots/coast-*.json
-	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(COAST_DOCS)/coast.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	@for n in $(COAST_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(COAST_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(COAST_DOCS)/coast.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(COAST_DOCS) $(COAST_SHOTS)
 	cp target/shots/coast-*.json $(COAST_DOCS)/
 	@echo "wrote $(COAST_DOCS)/"
 
@@ -576,9 +573,8 @@ RIVER_MOUTH_DOCS = docs/checkpoints/river-mouth
 shots-river-mouth:
 	mkdir -p target/shots $(RIVER_MOUTH_DOCS)
 	rm -f target/shots/river-mouth-*.png target/shots/river-mouth-*.json
-	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(RIVER_MOUTH_DOCS)/river-mouth.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	@for n in $(RIVER_MOUTH_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(RIVER_MOUTH_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(RIVER_MOUTH_DOCS)/river-mouth.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(RIVER_MOUTH_DOCS) $(RIVER_MOUTH_SHOTS)
 	cp target/shots/river-mouth-state.json $(RIVER_MOUTH_DOCS)/
 	@echo "wrote $(RIVER_MOUTH_DOCS)/"
 
@@ -589,9 +585,8 @@ WET_BAND_DOCS = docs/checkpoints/wet-band
 shots-wet-band:
 	mkdir -p target/shots $(WET_BAND_DOCS)
 	rm -f target/shots/wet-band-*.png
-	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(WET_BAND_DOCS)/wet-band.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	@for n in $(WET_BAND_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(WET_BAND_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(WET_BAND_DOCS)/wet-band.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(WET_BAND_DOCS) $(WET_BAND_SHOTS)
 	@test -s target/shots/wet-band-motion-149.png || { echo "missing wet-band-motion frames"; exit 1; }
 	ffmpeg -loglevel error -y -framerate 30 -i target/shots/wet-band-motion-%03d.png -vf scale=960:-2 -c:v libx264 -pix_fmt yuv420p -crf 22 $(WET_BAND_DOCS)/wet-band-motion.mp4
 	@echo "wrote $(WET_BAND_DOCS)/"
@@ -611,9 +606,8 @@ BOIDS_DOCS = docs/checkpoints/boids
 shots-boids:
 	mkdir -p target/shots $(BOIDS_DOCS)
 	rm -f target/shots/boids-*.png target/shots/boids-*.json
-	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(BOIDS_DOCS)/boids.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	@for n in $(BOIDS_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(BOIDS_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(BOIDS_DOCS)/boids.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(BOIDS_DOCS) $(BOIDS_SHOTS)
 	cp target/shots/boids-*.json $(BOIDS_DOCS)/
 	node $(BOIDS_DOCS)/check.mjs $(BOIDS_DOCS)
 	@echo "wrote $(BOIDS_DOCS)/"
@@ -626,15 +620,14 @@ shots-boids:
 # check the host load is at or below 15 first.
 GRASS_SHOTS = grass-01-meadow grass-02-forest grass-03-road-verge grass-04-river-bank grass-05-eye grass-06-eye-off grass-07-midzoom grass-08-gust-1 grass-08-gust-2 grass-08-gust-3 grass-08-gust-4 grass-09-low grass-10-eye-sparse grass-10-eye-lush grass-11-border-meadow grass-12-border-forest
 GRASS_DOCS = docs/checkpoints/grass
-GRASS_RUN = caffeinate -d -u cargo run -p hex-app --release -- --scenario play --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed --tier high --grade rich-3
+GRASS_RUN = bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed --tier high --grade rich-3
 
 shots-grass:
 	mkdir -p target/shots $(GRASS_DOCS)
 	rm -f target/shots/grass-*.png target/shots/grass-*.json
 	$(GRASS_RUN) --script $(GRASS_DOCS)/grass.json $(ARGS)
 	$(GRASS_RUN) --script $(GRASS_DOCS)/grass-off.json --grass off $(ARGS)
-	@for n in $(GRASS_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(GRASS_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh --jpegs $(GRASS_DOCS) $(GRASS_SHOTS)
 	cp target/shots/grass-state-*.json $(GRASS_DOCS)/
 	@echo "wrote $(GRASS_DOCS)/"
 
@@ -651,10 +644,9 @@ SCATTER_DOCS = docs/checkpoints/scatter
 shots-scatter:
 	mkdir -p target/shots $(SCATTER_DOCS)
 	rm -f target/shots/scatter-*.png target/shots/scatter-*.json
-	caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	HEXW_PACK_HOLD_FRAMES=120 caffeinate -d -u cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter-stream.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
-	@for n in $(SCATTER_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(SCATTER_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	HEXW_PACK_HOLD_FRAMES=120 bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter-stream.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(SCATTER_DOCS) $(SCATTER_SHOTS)
 	cp target/shots/scatter-*.json $(SCATTER_DOCS)/
 	node $(SCATTER_DOCS)/check.mjs $(SCATTER_DOCS)
 	@echo "wrote $(SCATTER_DOCS)/"
@@ -671,7 +663,7 @@ web-scatter: build-web
 # through the play path at 4x (crates/hex-app/src/thumbs.rs), then keyed, downsampled to 96 px and
 # encoded into assets/thumbs/ with the contact sheet in docs/checkpoints/thumbs/. Needs uv.
 thumbs:
-	cargo run -p hex-app --release -- --thumbs
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --thumbs
 	uv run --script scripts/thumbs/build.py
 
 # Staged rise and Legend affordances (PRD §4.4, design/ui/legend/in-world.md): runs the script that
@@ -683,7 +675,7 @@ shots-rise:
 	mkdir -p target/shots $(RISE_DOCS)
 	rm -f target/shots/rise-*.png target/shots/rise-*.json target/shots/aff-*.png target/shots/aff-*.json
 	node $(RISE_DOCS)/rise.mjs target/shots/rise-script.json
-	cargo run -p hex-app --release -- --scenario play --script target/shots/rise-script.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script target/shots/rise-script.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
 	bash $(RISE_DOCS)/encode.sh
 	rm -f target/shots/rise-*-f*.png
 
@@ -696,6 +688,6 @@ shots-bulldoze-dust:
 	mkdir -p target/shots $(DUST_DOCS)
 	rm -f target/shots/dust-*.png target/shots/dust-*.json
 	node $(DUST_DOCS)/bulldoze-dust.mjs target/shots/dust-script.json
-	cargo run -p hex-app --release -- --scenario play --script target/shots/dust-script.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script target/shots/dust-script.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
 	bash $(DUST_DOCS)/encode.sh
 	rm -f target/shots/dust-*-f*.png
