@@ -2,6 +2,9 @@
   "name": "hex-world-ui",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
   "description": "The Legend HUD overlay (PRD D18, §4.7): TypeScript over the game canvas, bundled by esbuild into web/ui/dist.",
   "scripts": {
     "build": "node build.mjs",
