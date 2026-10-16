@@ -199,24 +199,31 @@ mod exports {
 
     #[wasm_bindgen]
     pub fn hex_world_ready() -> bool {
-        *super::READY.lock().unwrap()
+        *super::READY.lock().unwrap_or_else(|p| p.into_inner())
     }
 
     #[wasm_bindgen]
     pub fn hex_world_state_json() -> String {
-        super::STATE_JSON.lock().unwrap().take_patch()
+        super::STATE_JSON
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .take_patch()
     }
 
     #[wasm_bindgen]
     pub fn hex_world_diag_json() -> String {
-        let s = super::DIAG_JSON.lock().unwrap();
+        let s = super::DIAG_JSON.lock().unwrap_or_else(|p| p.into_inner());
         if s.is_empty() { "{}".into() } else { s.clone() }
     }
 
     /// Drains the game event queue as a JSON array (`[]` when empty).
     #[wasm_bindgen]
     pub fn hex_world_events() -> String {
-        let drained: Vec<String> = super::EVENTS.lock().unwrap().drain(..).collect();
+        let drained: Vec<String> = super::EVENTS
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .drain(..)
+            .collect();
         format!("[{}]", drained.join(","))
     }
 
@@ -224,7 +231,7 @@ mod exports {
     /// camera exists or when the cell is behind it.
     #[wasm_bindgen]
     pub fn hex_world_cell_rect(q: i32, r: i32) -> String {
-        let view = *super::VIEW.lock().unwrap();
+        let view = *super::VIEW.lock().unwrap_or_else(|p| p.into_inner());
         match view.and_then(|v| super::cell_rect(&v, hex_core::Axial::new(q, r))) {
             Some(r) => format!("[{},{},{},{}]", r[0], r[1], r[2], r[3]),
             None => "null".into(),
@@ -241,7 +248,10 @@ mod exports {
         };
         match parsed {
             Ok(cmds) => {
-                control::INBOX.lock().unwrap().extend(cmds);
+                control::INBOX
+                    .lock()
+                    .unwrap_or_else(|p| p.into_inner())
+                    .extend(cmds);
                 true
             }
             Err(e) => {
@@ -254,13 +264,19 @@ mod exports {
     /// Commands `hex_world_cmd` took that no frame has drained into the command queue yet.
     #[wasm_bindgen]
     pub fn hex_world_inbox_len() -> usize {
-        control::INBOX.lock().unwrap().len()
+        control::INBOX
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .len()
     }
 
     /// Queues a screenshot behind any pending commands; poll `hex_world_take_shot` for the result.
     #[wasm_bindgen]
     pub fn hex_world_screenshot(name: String) {
-        capture::SHOTS.lock().unwrap().retain(|(n, _)| *n != name);
+        capture::SHOTS
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .retain(|(n, _)| *n != name);
         control::INBOX
             .lock()
             .unwrap()
@@ -270,7 +286,7 @@ mod exports {
     /// Removes and returns the PNG data URL for `name` once the capture has landed.
     #[wasm_bindgen]
     pub fn hex_world_take_shot(name: String) -> Option<String> {
-        let mut shots = capture::SHOTS.lock().unwrap();
+        let mut shots = capture::SHOTS.lock().unwrap_or_else(|p| p.into_inner());
         let i = shots.iter().position(|(n, _)| *n == name)?;
         Some(shots.remove(i).1)
     }
