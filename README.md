@@ -14,6 +14,42 @@ Agents and scripts can drive, screenshot and inspect the game natively and on th
 - **P2 prototypes already on main:** the hero-water look-dev scenario (`--scenario water`) and the tilt-shift post pass (`--tilt`), both owner-approved.
 - **Next: P2 MVP vertical slice.** Scope and open checkboxes in `PRD.md` §15 P2; the UI quality bar is §4.7 and needs owner-approved mockups before any UI is built.
 
+## Prerequisites
+
+For running and checking the game:
+
+- Rust **stable**, with `rustfmt`, `clippy` and the `wasm32-unknown-unknown` target.
+- [Trunk](https://trunkrs.dev/) **0.21.14** (the version used by CI).
+- Node.js **22.18+** (native TypeScript stripping) and npm. CI uses **Node 24**.
+- `make`, Git and a WebGPU-capable browser. On Linux, the native build also needs the system libraries installed in `.github/workflows/ci.yml`: `libasound2-dev`, `libudev-dev`, `libwayland-dev`, `libxkbcommon-dev`.
+
+Asset authoring is optional for playing or running the normal gates. Install its tools separately:
+
+| Work | Tools |
+|------|-------|
+| Kit generation | Blender (the pipeline uses 5.2); `BLENDER=/path/to/blender` overrides the Makefile's macOS app path. |
+| Kit texture compression | KTX-Software **4.4.2**. `make fetch-tools` downloads and extracts **only this tool**, locally under `tools/`, on macOS ARM64, and writes `tools/ktx-env.sh`. Other platforms need their own KTX installation. |
+| Audio mastering and checkpoint images/video | Python 3, ffmpeg/ffprobe (including `libopus` for audio and `libx264` for video), and ImageMagick (`magick`). |
+| Tile thumbnails | [uv](https://docs.astral.sh/uv/) and Python **3.11+**. `make thumbs` uses uv to install the script's pinned **Pillow 12.2.0** dependency. |
+| Brand rebuilds | **resvg 0.48.1** (`brew install resvg` on macOS, then verify the version). |
+
+## Getting started
+
+From a fresh checkout:
+
+```sh
+git clone https://github.com/paulrobello/hex-world.git
+cd hex-world
+rustup toolchain install stable --component rustfmt --component clippy
+rustup target add wasm32-unknown-unknown
+cargo install trunk --version 0.21.14 --locked
+trunk serve
+```
+
+Open http://127.0.0.1:8094. Trunk watches and rebuilds the game; its pre-build hook runs `make ui-build`, which installs the pinned UI npm dependencies when needed. The committed runtime assets are enough to play without Blender or KTX tools.
+
+Run `make checkall` for the fast gate (Rust formatting, Clippy, native/WASM checks, workspace tests and UI checks). `make checkall-ci` adds the release web build and size budgets. For native iteration use `make run ARGS="--scenario play"`; for a static release web build use `make build-web`.
+
 ## Where to start
 
 - Product plan and phase checklists: `PRD.md` (§15 is the phase list).
