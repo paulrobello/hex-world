@@ -8,6 +8,48 @@
     "max": 53.911
   },
   "cpu_profile_duration_ms": 2392.906,
+  "category_ancestry": [
+    {
+      "name": "check_dir_light_mesh_visibility",
+      "sampled_ms": 355.36799999999977,
+      "percent": 14.850896775719555
+    },
+    {
+      "name": "calculate_bounds",
+      "sampled_ms": 244.01099999999985,
+      "percent": 10.19726641999309
+    },
+    {
+      "name": "check_visibility_cpu_culling",
+      "sampled_ms": 230.75699999999998,
+      "percent": 9.64337922174962
+    },
+    {
+      "name": "queue_material_meshes",
+      "sampled_ms": 181.64199999999994,
+      "percent": 7.590853965847381
+    },
+    {
+      "name": "scatter::sync",
+      "sampled_ms": 149.41200000000003,
+      "percent": 6.243956093553196
+    },
+    {
+      "name": "extract_meshes_for_gpu_building",
+      "sampled_ms": 69.07,
+      "percent": 2.8864485274390215
+    },
+    {
+      "name": "publish_state",
+      "sampled_ms": 8.558,
+      "percent": 0.35764045892316704
+    },
+    {
+      "name": "serde_json",
+      "sampled_ms": 6.736,
+      "percent": 0.28149872999608005
+    }
+  ],
   "cpu_profile_leaf": [
     {
       "name": "<bevy_ecs[b550b07ab87db6ea]::system::function_system::FunctionSystem<fn(bevy_ecs[b550b07ab87db6ea]::system::commands::Commands, bevy_ecs[b550b07ab87db6ea]::change_detection::params::Res<bevy_asset[7322df60e5dc5b3c]::assets::Assets<bevy_mesh[afc39d302867de59]::mesh::Mesh>>, bevy_ecs[b550b07ab87db6ea]::system::query::Query<(bevy_ecs[b550b07ab87db6ea]::entity::Entity, &bevy_mesh[afc39d302867de59]::components::Mesh3d), (bevy_ecs[b550b07ab87db6ea]::query::filter::Without<bevy_camera[56fc83ad153824fb]::primitives::Aabb>, bevy_ecs[b550b07ab87db6ea]::query::filter::Without<bevy_camera[56fc83ad153824fb]::visibility::NoFrustumCulling>, bevy_ecs[b550b07ab87db6ea]::query::filter::Without<bevy_camera[56fc83ad153824fb]::visibility::NoAutoAabb>)>, bevy_ecs[b550b07ab87db6ea]::system::query::Query<(&bevy_mesh[afc39d302867de59]::components::Mesh3d, &mut bevy_camera[56fc83ad153824fb]::primitives::Aabb), (bevy_ecs[b550b07ab87db6ea]::query::filter::Or<(bevy_asset[7322df60e5dc5b3c]::asset_changed::AssetChanged<bevy_mesh[afc39d302867de59]::components::Mesh3d>, bevy_ecs[b550b07ab87db6ea]::query::filter::Changed<bevy_mesh[afc39d302867de59]::components::Mesh3d>)>, bevy_ecs[b550b07ab87db6ea]::query::filter::Without<bevy_camera[56fc83ad153824fb]::visibility::NoFrustumCulling>, bevy_ecs[b550b07ab87db6ea]::query::filter::Without<bevy_camera[56fc83ad153824fb]::visibility::NoAutoAabb>)>), (), (), bevy_camera[56fc83ad153824fb]::visibility::calculate_bounds> as bevy_ecs[b550b07ab87db6ea]::system::system::System>::run_unsafe",

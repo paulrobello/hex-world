@@ -62,6 +62,9 @@ const sampled = new Map();
 const parents = new Map();
 for (const node of profile.nodes) for (const child of node.children ?? []) parents.set(child, node.id);
 const inclusive = new Map();
+const categories = ["check_dir_light_mesh_visibility", "calculate_bounds", "check_visibility_cpu_culling",
+  "queue_material_meshes", "scatter::sync", "extract_meshes_for_gpu_building", "publish_state", "serde_json"];
+const categoryMs = new Map(categories.map((name) => [name, 0]));
 for (let i = 0; i < (profile.samples ?? []).length; i++) {
   const node = profileNodes.get(profile.samples[i]);
   const name = symbolize(node?.callFrame?.functionName ?? "unknown");
@@ -71,17 +74,23 @@ for (let i = 0; i < (profile.samples ?? []).length; i++) {
   sampled.set(name, row);
   let ancestor = node;
   const seen = new Set();
+  const matchedCategories = new Set();
   while (ancestor && !seen.has(ancestor.id)) {
     seen.add(ancestor.id);
     const label = symbolize(ancestor.callFrame?.functionName ?? "unknown");
     inclusive.set(label, (inclusive.get(label) ?? 0) + (profile.timeDeltas?.[i] ?? 0) / 1000);
+    for (const category of categories) if (label.includes(category)) matchedCategories.add(category);
     ancestor = profileNodes.get(parents.get(ancestor.id));
   }
+  for (const category of matchedCategories)
+    categoryMs.set(category, categoryMs.get(category) + (profile.timeDeltas?.[i] ?? 0) / 1000);
 }
 const callbacks = spans.filter((e) => e.name === "FireAnimationFrame").map((e) => e.dur / 1000).sort((a, b) => a - b);
 const quantile = (p) => callbacks[Math.min(callbacks.length - 1, Math.floor(p * callbacks.length))] ?? null;
 const summary = { input, events: events.length, callback_ms: { count: callbacks.length, p50: quantile(0.5), p95: quantile(0.95), max: quantile(1) },
   cpu_profile_duration_ms: (profile.endTime - profile.startTime) / 1000,
+  category_ancestry: [...categoryMs].map(([name, sampled_ms]) => ({ name, sampled_ms,
+    percent: 100_000 * sampled_ms / (profile.endTime - profile.startTime) })),
   cpu_profile_leaf: [...sampled.values()].sort((a, b) => b.sampled_ms - a.sampled_ms).slice(0, 60),
   cpu_profile_inclusive: [...inclusive].sort((a, b) => b[1] - a[1]).slice(0, 120).map(([name, sampled_ms]) => ({ name, sampled_ms })), notes: [
   "Event totals are inclusive, nested, and overlap. Never sum them as frame time.",
