@@ -392,19 +392,29 @@ impl GameState {
             Action::SetTool(mode) => self.set_tool(mode),
             Action::ToggleInventory => self.toggle_inventory(),
             Action::ExitPhoto if !self.photo_mode => vec![],
-            Action::TogglePhoto | Action::ExitPhoto => {
-                let mut events = if self.photo_mode {
-                    vec![]
-                } else {
-                    self.set_pin(None)
-                };
-                self.photo_mode = !self.photo_mode;
-                self.result("toggle_photo", None, None);
-                events.push(GameEvent::PhotoModeToggled {
-                    on: self.photo_mode,
-                });
-                events
-            }
+            Action::TogglePhoto | Action::ExitPhoto => self.toggle_photo(),
+        }
+    }
+
+    fn toggle_photo(&mut self) -> Vec<GameEvent> {
+        let mut events = if self.photo_mode {
+            vec![]
+        } else {
+            self.set_pin(None)
+        };
+        self.photo_mode = !self.photo_mode;
+        self.result("toggle_photo", None, None);
+        events.push(GameEvent::PhotoModeToggled {
+            on: self.photo_mode,
+        });
+        events
+    }
+
+    fn exit_photo(&mut self) -> Vec<GameEvent> {
+        if self.photo_mode {
+            self.toggle_photo()
+        } else {
+            vec![]
         }
     }
 
@@ -490,7 +500,7 @@ impl GameState {
         if self.pinned.is_some() {
             self.unpin()
         } else {
-            self.apply_inner(Action::ExitPhoto)
+            self.exit_photo()
         }
     }
 
@@ -550,6 +560,9 @@ impl GameState {
     }
 
     fn primary(&mut self) -> Vec<GameEvent> {
+        if self.walk_mode {
+            return self.refuse("primary", "leave walk mode first".into());
+        }
         match (self.tool, self.hovered) {
             (Tool::Place, _) if self.pinned.is_some() => self.click_while_pinned(),
             (_, None) => self.refuse("primary", "no cell hovered".into()),
@@ -949,6 +962,19 @@ mod tests {
     fn place(g: &mut GameState, id: &str, cell: Axial) -> Vec<GameEvent> {
         g.apply(Action::SelectTile(id.into()));
         g.apply(Action::Place(cell))
+    }
+
+    #[test]
+    fn quick_place_fallback_preserves_the_primary_walk_guard() {
+        let mut g = game();
+        g.apply(Action::SetWalk(true));
+        assert_eq!(
+            g.apply(Action::QuickPlace),
+            vec![GameEvent::ActionRefused {
+                action: "primary",
+                reason: "leave walk mode first".into(),
+            }]
+        );
     }
 
     #[test]
