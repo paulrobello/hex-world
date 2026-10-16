@@ -89,3 +89,26 @@ Cleanup: the local measurement Chromium exited. Foreign processes were never ter
 3. **Exact-world native measurement: met.** Canonical Metal run validates2,066playtiles and the exact camera/settings. p95=20.24ms, load7.016to7.577. Native pacing caveat is recorded.
 
 Board handling was limited to the requested move to `in_progress`. No criteria were checked, no card was completed, and nothing was pushed.
+## Ceiling refinement after host recovery (2026-10-16)
+
+The follow-up used the original measured engine, not the newer follow-up worktree build. Main-checkout `dist/` was verified byte-identical: build `a6e0e284a2`, WASM SHA-256 `9cf1cf71ebdfd71755480dc1e7ffde44e08aa277da4c2d3ca83e05dfab10db79`. No rebuild or tracked repository edit occurred during this follow-up.
+
+Host: MacDaddy Apple M4 Max, 16 CPU / 40 GPU cores. Chromium153.0.8010.12, headless GPU, channel `chromium`, ANGLE Metal Apple M4 Max, uncapped,2560x1440,DPR1,play,High,seed1,grassoff,tiltoff,camera[10,12,40]lookingat[0,0,0]. Every world was rebuilt with the original waterWorldScript recipe and read after700settledframes with600timing samples. Strict single-sample human-Chrome guard was unchanged.
+
+A fresh stability pair preceded the series:1-minute host load7.461914 at13:27:39.733PDT and8.291992 at13:28:39.736PDT,60.003seconds apart. Immediate and post-run host loads had to remain<=15. Foreign automated GPU work was prohibited. Human desktop Chrome was present but idle during accepted windows.
+
+| Radius | Tiles | p50ms | p95ms | Meanms | Maxms | Load before | Load after | Assessment |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+|22|1,484|—|—|—|—|8.320313|13.056641|Rejected: human Chrome reached24.6%CPU at one strict sample. No retry.|
+|14|610|19.8|21.1|20.08|68.3|14.624023|9.072754|Accepted. Human Chrome peak9.1%,zero violations. One earlier post-load20.77sample discarded.|
+|12|453|18.2|20.0|19.39|74.7|9.072754|7.682617|Accepted. Human Chrome peak7.7%,zero violations.|
+
+All accepted rows report Chromium153.0.8010.12,ANGLEMetalAppleM4Max,matching buildID,grassdensity0,High,zero rising tiles,andzero console errors. The rejected radius22point is excluded from the fit.
+
+Refitting all accepted rows (two radius26rounds plus radii18,20,14,12) gives:
+
+`p95_ms = 13.871761881 + 0.01783233581 * tiles`
+
+The global ordinary-least-squares extrapolation reaches16.6ms at approximately153tiles. This is **not a measured or validated ceiling**: the smallest measured world is453tiles and still has p9520.0ms, so no accepted point lies below16.6ms and no crossing is bracketed. The997-tile world being slower than1,231tiles also demonstrates nonmonotonic composition/visibility cost. The extrapolated153tile count is descriptive guidance for a future probe, not owner acceptance or proof that153tiles will meet budget.
+
+Criterion2remainsopen: the original2,066tile target fails and no owner-approved ceiling exists. The additional low-end measurements strengthen the conclusion that reducing the world to several hundred tiles is still insufficient for the16.6ms target at these settings. No additional radius attempts were made. The browser exited and the tracked worktree remained clean. The orchestrator owns committing these scratchpad artifacts and updating the repository report.
