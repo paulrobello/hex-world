@@ -348,8 +348,12 @@ pub struct PlayRises {
 }
 
 impl PlayRises {
-    /// Whether the tile at `cell` has reached its agents stage (drawn and past the stage start, or
-    /// settled). False for a cell not drawn yet.
+    /// Whether a drawn tile has completed every rise stage.
+    pub(crate) fn settled_cell(&self, cell: Axial) -> bool {
+        matches!(self.cells.get(&cell), Some(None))
+    }
+
+    /// Whether a drawn tile has reached the agents stage, including settled tiles.
     pub fn agents_ready(&self, cell: Axial) -> bool {
         match self.cells.get(&cell) {
             None => false,

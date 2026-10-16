@@ -26,7 +26,7 @@ The no-game-rules contract remains: play renders a view written by `hex-app`. Pl
 
 ## Tooling and runtime lighting
 
-Both new presentation build surfaces default to no tooling. `hex-render/gate-tools` compiles benchmark geometry, static chunk merging, the gate-only instance pipeline and single-tile kit fixture helper. `hex-play/gate-tools` enables that renderer feature plus diagnostics, the FPS display, developer overlays and per-pass GPU timing. `hex-app` explicitly opts in so existing CLI and browser developer controls remain available with unchanged behavior.
+Both new presentation build surfaces default to no tooling. `hex-render/gate-tools` compiles benchmark geometry, the gate-only instance pipeline and single-tile kit fixture helper. Chunk partitioning and kit mesh baking are normal renderer primitives used by settled play presentation. `hex-play/gate-tools` enables that renderer feature plus diagnostics, the FPS display, developer overlays and per-pass GPU timing. `hex-app` explicitly opts in so existing CLI and browser developer controls remain available with unchanged behavior.
 
 The old `lookdev` module is production lighting, not capture tooling: play uses its environment, exposure, backdrop and sunlight. It is named `lighting` now, with a compatibility `lookdev` re-export. It remains in default builds to preserve play appearance. Native capture orchestration already belongs to `hex-app` and stays there.
 

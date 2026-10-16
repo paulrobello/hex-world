@@ -47,7 +47,20 @@ impl Plugin for PlayPlugin {
 struct TilesPlugin;
 impl Plugin for TilesPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<PlayView>()
+        app.init_resource::<super::chunks::PlayChunks>()
+            .add_systems(
+                Update,
+                super::chunks::restore
+                    .after(PlaySet::Kit)
+                    .before(PlaySet::Tiles),
+            )
+            .add_systems(
+                Update,
+                super::chunks::settle
+                    .after(PlaySet::Rise)
+                    .in_set(PlaySystems),
+            )
+            .init_resource::<PlayView>()
             .init_resource::<PlayCatalog>()
             .add_systems(
                 Update,

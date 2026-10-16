@@ -66,6 +66,13 @@ fn vertex(vertex_no_morph: Vertex) -> KitVertexOutput {
     var vertex = uncompressed_vertex_no_morph;
 
     let mesh_world_from_local = mesh_functions::get_world_from_local(vertex_no_morph.instance_index);
+    var wind_origin = mesh_world_from_local[3].xyz;
+@if(VERTEX_COLORS) {
+    if (vertex.color.a < 0.0) {
+        wind_origin = vertex.color.xyz;
+        vertex.color = vec4(1.0);
+    }
+}
 
 @if(SKINNED)
     var world_from_local = skinning::skin_model(
@@ -90,7 +97,7 @@ fn vertex(vertex_no_morph: Vertex) -> KitVertexOutput {
     let wind = kit_common::kit.flags & (kit_common::FLAG_WIND_TREE | kit_common::FLAG_WIND_PLANT);
     if (wind != 0u) {
         out.world_position = vec4(out.world_position.xyz + foliage_wind::offset(
-            out.world_position.xyz, mesh_world_from_local[3].xyz, vertex.uv_b, kit_common::kit.wind_amp,
+            out.world_position.xyz, wind_origin, vertex.uv_b, kit_common::kit.wind_amp,
             wind == kit_common::FLAG_WIND_TREE, globals.time), 1.0);
     }
 }

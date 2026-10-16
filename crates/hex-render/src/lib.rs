@@ -2,8 +2,7 @@
 use bevy::prelude::*;
 
 pub mod car_material;
-#[cfg(feature = "gate-tools")]
-mod chunks;
+pub mod chunks;
 pub mod grade;
 pub mod hooks;
 #[cfg(feature = "gate-tools")]

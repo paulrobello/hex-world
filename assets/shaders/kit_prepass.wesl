@@ -118,6 +118,13 @@ fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
     var vertex = uncompressed_vertex_no_morph;
 
     let mesh_world_from_local = mesh_functions::get_world_from_local(vertex_no_morph.instance_index);
+    var wind_origin = mesh_world_from_local[3].xyz;
+@if(VERTEX_COLORS) {
+    if (vertex.color.a < 0.0) {
+        wind_origin = vertex.color.xyz;
+        vertex.color = vec4(1.0);
+    }
+}
 
 @if(SKINNED)
     var world_from_local = skinning::skin_model(
@@ -131,7 +138,7 @@ fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
     out.world_position = mesh_functions::mesh_position_local_to_world(world_from_local, vec4<f32>(vertex.position, 1.0));
 @if(VERTEX_UVS_B)
     out.world_position = vec4(out.world_position.xyz + wind_offset(
-        out.world_position.xyz, mesh_world_from_local[3].xyz, vertex.uv_b, prepass_globals.time), 1.0);
+        out.world_position.xyz, wind_origin, vertex.uv_b, prepass_globals.time), 1.0);
     out.position = position_world_to_clip(out.world_position.xyz);
 @if(UNCLIPPED_DEPTH_ORTHO_EMULATION) {
     out.unclipped_depth = out.position.z;
@@ -188,7 +195,12 @@ fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
         vec4<f32>(prev_vertex.position, 1.0)
     );
 @if(VERTEX_UVS_B) {
-    let prev_origin = mesh_functions::get_previous_world_from_local(vertex_no_morph.instance_index)[3].xyz;
+    var prev_origin = mesh_functions::get_previous_world_from_local(vertex_no_morph.instance_index)[3].xyz;
+@if(VERTEX_COLORS) {
+    if (vertex_no_morph.color.a < 0.0) {
+        prev_origin = wind_origin;
+    }
+}
     out.previous_world_position = vec4(out.previous_world_position.xyz + wind_offset(
         out.previous_world_position.xyz, prev_origin, vertex.uv_b,
         prepass_globals.time - prepass_globals.delta_time), 1.0);

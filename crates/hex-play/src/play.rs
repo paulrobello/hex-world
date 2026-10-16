@@ -21,6 +21,7 @@ use hex_core::{
 };
 
 pub mod affordances;
+mod chunks;
 pub mod ghost;
 pub mod grass;
 pub mod grass_gpu;
@@ -147,6 +148,7 @@ pub fn setup(
     materials: &mut Assets<StandardMaterial>,
 ) -> Transform {
     commands.insert_resource(PlainAssets::new(meshes, materials));
+    commands.insert_resource(chunks::PlayChunks::default());
     commands.insert_resource(PlaySpawned {
         rebuild: true,
         ..default()
@@ -719,7 +721,7 @@ pub fn sync(
             fixed: config.water_fixed,
         });
     }
-    if !spawned.rebuild_for(view.epoch)
+    if !spawned.bypass_change_detection().rebuild_for(view.epoch)
         && !view.is_changed()
         && spawned.refresh.is_empty()
         && arrived.is_empty()
