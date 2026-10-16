@@ -1,7 +1,12 @@
 // Chrome trace event totals are inclusive and overlap. CPU samples are counted separately.
 // Usage: node e2e/perf-trace-summary.mjs <trace.json> <summary.json>
 import { readFile, writeFile } from "node:fs/promises";
-const [input, output] = process.argv.slice(2);
+const [input, output, symbolsPath] = process.argv.slice(2);
+const symbolMap = symbolsPath ? JSON.parse(await readFile(symbolsPath, "utf8")) : null;
+const symbolize = (name) => {
+  const match = /wasm-function\[(\d+)\]/.exec(name ?? "");
+  return match && symbolMap?.matched ? symbolMap.names[match[1]] ?? name : name;
+};
 const raw = JSON.parse(await readFile(input, "utf8"));
 const events = raw.traceEvents ?? raw;
 const threads = new Map();
@@ -56,7 +61,7 @@ const profileNodes = new Map(profile.nodes.map((n) => [n.id, n]));
 const sampled = new Map();
 for (let i = 0; i < (profile.samples ?? []).length; i++) {
   const node = profileNodes.get(profile.samples[i]);
-  const name = node?.callFrame?.functionName ?? "unknown";
+  const name = symbolize(node?.callFrame?.functionName ?? "unknown");
   const row = sampled.get(name) ?? { name, samples: 0, sampled_ms: 0 };
   row.samples++;
   row.sampled_ms += (profile.timeDeltas?.[i] ?? 0) / 1000;
