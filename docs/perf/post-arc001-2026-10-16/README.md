@@ -32,7 +32,24 @@ The rejected MiniMac observations show that the publication fix's frame-time ben
 
 ## Trace attribution
 
-Diagnostic trace capture is in progress. It is deliberately labeled as captured while the host had recurring par-factory automated GPU contention. The accompanying one-second process log determines the exact overlap. Absolute trace-arm timings are not budget evidence.
+`contended-trace.json` captures the live 2,066-tile world, grass off, with `contended-trace.json.cpuprofile`, `contended-trace-summary.json`, `trace-costs.json` and a one-second `contended-processes.jsonl`. It is deliberately labeled **captured under par-factory GPU contention during world construction**. Absolute trace-arm timings are not budget evidence. MiniMac load was 4.276 before and 5.625 after. Diagnostic frame times were p50 50.3, p95 52.6, mean 50.45 and max 59.0 ms on the same Chromium153/M4 renderer, viewport and device scale stated above.
+
+CPU ancestry over the 2,392.906 ms sampled profile names these dominant costs (each category counted at most once per sample):
+
+| CPU category | Sampled ms | Profile share |
+|---|---:|---:|
+| Directional-light mesh visibility | 355.368 | 14.85% |
+| Bounds calculation | 244.011 | 10.20% |
+| CPU visibility culling | 230.757 | 9.64% |
+| Material mesh queueing | 181.642 | 7.59% |
+| Play scatter synchronization | 149.412 | 6.24% |
+| Mesh extraction for GPU building | 69.070 | 2.89% |
+| State publication | 8.558 | 0.36% |
+| JSON work | 6.736 | 0.28% |
+
+The revision gate removed publication from the dominant costs. Remaining CPU work is per-entity visibility/bounds and render preparation. These inclusive categories may overlap and must not be summed with one another. Generic recursive scheduler/sort wrapper totals in the raw summary also overlap.
+
+The instrumented hardware GPU total was mean 22.91, p50 22.89, p95 24.92 and max 26.85 ms (same diagnostic arm, load 4.276 to 5.625). CPU and GPU overlap, so their totals are not additive. Chrome's GPU service thread also spent 1,402.477 ms in `IOSurfaceImageBacking::WaitForCommandsToBeScheduled::Dawn`, a host-side wait rather than GPU execution time. Both CPU work and the base M4 GPU's instrumented cost exceed the 16.6 ms target. A clean measurement is still required.
 
 The release WASM has no names section. `wasm-symbols.json` safely restores function names for CPU profiles: all non-custom sections of the symbol-preserving optimizer output match the shipped release byte-for-byte (SHA-256 checked). The symbol build uses the same wasm-bindgen 0.2.129 output and system wasm-opt 133 with `-Oz -g`. No code-level profiling changes were made. CPU sample ancestry and leaf samples are separate from inclusive, overlapping Chrome event totals. GPU-process host time is not hardware GPU execution time. The separate diagnostic arm enables timestamp queries for the GPU total, not the unreliable web pass split.
 
@@ -44,7 +61,7 @@ Native and smaller-radius runs remain queued behind uncontaminated web rounds an
 
 ## Criterion assessment
 
-1. **Chrome trace: pending.** Live trace and symbolized summary are queued. Any contended capture will support CPU cost ranking only, with its limitations stated.
+1. **Chrome trace: met for diagnostic attribution.** Live trace, verified-symbol CPU profile, parsed ranking and hardware GPU total are recorded. Contention during construction is labeled, and absolute trace timings are excluded from budget evidence.
 2. **Two guarded <=16.6 ms rounds or owner-accepted ceiling: blocked on host quiescence.** The two observed post-fix attempts are rejected. No ceiling accepted or criteria checked.
 3. **Exact-world native measurement: blocked on host quiescence.** Binary and exact-save methodology are ready, but no accepted native timing exists yet.
 

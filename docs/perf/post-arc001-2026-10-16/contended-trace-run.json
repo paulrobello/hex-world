@@ -1,0 +1,801 @@
+{
+  "date": "2026-10-16T18:38:11.255Z",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "fps": "off",
+    "seed": "1",
+    "tilt": "off",
+    "gpu_timing": "on"
+  },
+  "camera": {
+    "cmd": "camera",
+    "pos": [
+      10,
+      12,
+      40
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  },
+  "world": {
+    "generator": "e2e/water-world.mjs waterWorldScript(26)",
+    "tiles": 2066,
+    "counts": {
+      "meadow": 271,
+      "river_straight": 347,
+      "forest": 142,
+      "beach": 200,
+      "river_bend": 21,
+      "beach_inner": 15,
+      "beach_outer": 28,
+      "house_cluster": 81,
+      "road_straight": 123,
+      "ocean": 838
+    }
+  },
+  "budget_p95_ms": 16.6,
+  "load_limit": 15,
+  "rounds": 1,
+  "arms": [
+    "off"
+  ],
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "channel": "chromium",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit --enable-webgpu-developer-features"
+  },
+  "rows": [
+    {
+      "round": 0,
+      "platform": "web",
+      "arm": "off",
+      "exclusivity": null,
+      "build_id": "a6e0e284a2",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": {
+        "path": "docs/perf/post-arc001-2026-10-16/contended-trace.json",
+        "events": 18916,
+        "frames": [
+          5220,
+          5250
+        ],
+        "instrumented": true
+      },
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 4500,
+      "grass": {
+        "status": "off",
+        "groups": 0,
+        "blades": 0,
+        "mesh_bytes": 0
+      },
+      "p50": 50.3,
+      "p95": 52.6,
+      "p99": 55.7,
+      "mean": 50.45,
+      "max": 59,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 5220,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 888471552,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            213
+          ],
+          [
+            "<100",
+            387
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          48.8,
+          49.7,
+          52.4,
+          49.5,
+          50.4,
+          50.1,
+          50.3,
+          49.9,
+          49.3,
+          49.2,
+          49.5,
+          49.3,
+          50.1,
+          50.4,
+          49.5,
+          49.2,
+          50.3,
+          49.9,
+          50.4,
+          50,
+          49.8,
+          49.6,
+          49.8,
+          50,
+          49.8,
+          50.4,
+          49.6,
+          50.6,
+          50.9,
+          50.4,
+          50,
+          50.1
+        ]
+      },
+      "gpu": {
+        "enabled": true,
+        "frames": 600,
+        "frames_total": 5216,
+        "passes": {
+          "opaque": {
+            "max": 0.23,
+            "mean": 0.02,
+            "p50": 0,
+            "p95": 0.08
+          },
+          "post": {
+            "max": 0.94,
+            "mean": 0.01,
+            "p50": 0.01,
+            "p95": 0.02
+          },
+          "prepass": {
+            "max": 21.14,
+            "mean": 14.66,
+            "p50": 14.23,
+            "p95": 18.33
+          },
+          "preprocess": {
+            "max": 0.86,
+            "mean": 0.27,
+            "p50": 0.26,
+            "p95": 0.35
+          },
+          "shadow": {
+            "max": 0.35,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.06
+          },
+          "ssao": {
+            "max": 11.08,
+            "mean": 7.84,
+            "p50": 7.88,
+            "p95": 9.83
+          },
+          "taa": {
+            "max": 0.21,
+            "mean": 0.02,
+            "p50": 0.01,
+            "p95": 0.05
+          },
+          "tilt_shift": {
+            "max": 0.12,
+            "mean": 0.01,
+            "p50": 0.01,
+            "p95": 0.02
+          },
+          "transmission": {
+            "max": 0.16,
+            "mean": 0.02,
+            "p50": 0,
+            "p95": 0.08
+          },
+          "transparent": {
+            "max": 0.6,
+            "mean": 0.05,
+            "p50": 0.06,
+            "p95": 0.12
+          }
+        },
+        "reason": "pass-boundary timestamps",
+        "rejected_non_monotonic": 0,
+        "spans": {
+          "opaque": "main opaque pass (opaque, alpha mask, skybox)",
+          "post": "bloom, depth of field and tonemapping (ends after tonemapping)",
+          "prepass": "depth/normal/motion prepass, depth downsample, late (occlusion) passes",
+          "preprocess": "GPU mesh preprocessing: uniform allocation, culling, indirect args",
+          "shadow": "early directional and point shadow passes",
+          "ssao": "after the Prepass set until MainPass: SSAO, main indirect args",
+          "taa": "EarlyPostProcess: TAA",
+          "tilt_shift": "tilt-shift pass",
+          "transmission": "main transmissive pass: screen copy plus refracting water (Medium and up)",
+          "transparent": "main transparent pass (alpha-blended water on Low) and other MainPass work"
+        },
+        "supported": true,
+        "tail_over_25ms": [
+          {
+            "frame": 4528,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 15.84,
+              "preprocess": 0.27,
+              "shadow": 0,
+              "ssao": 9.91,
+              "taa": 0.03,
+              "tilt_shift": 0.01,
+              "transmission": 0,
+              "transparent": 0.06
+            },
+            "total_ms": 26.14
+          },
+          {
+            "frame": 4530,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 17.5,
+              "preprocess": 0.27,
+              "shadow": 0,
+              "ssao": 8.71,
+              "taa": 0.01,
+              "tilt_shift": 0,
+              "transmission": 0.04,
+              "transparent": 0.05
+            },
+            "total_ms": 26.61
+          },
+          {
+            "frame": 4533,
+            "segments": {
+              "opaque": 0.08,
+              "post": 0,
+              "prepass": 20.8,
+              "preprocess": 0.26,
+              "shadow": 0.06,
+              "ssao": 4.26,
+              "taa": 0.02,
+              "tilt_shift": 0,
+              "transmission": 0,
+              "transparent": 0
+            },
+            "total_ms": 25.5
+          },
+          {
+            "frame": 4535,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 16.61,
+              "preprocess": 0.26,
+              "shadow": 0,
+              "ssao": 8.12,
+              "taa": 0,
+              "tilt_shift": 0,
+              "transmission": 0.03,
+              "transparent": 0.05
+            },
+            "total_ms": 25.1
+          },
+          {
+            "frame": 4724,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 16.64,
+              "preprocess": 0.27,
+              "shadow": 0,
+              "ssao": 8.61,
+              "taa": 0.03,
+              "tilt_shift": 0.01,
+              "transmission": 0,
+              "transparent": 0.06
+            },
+            "total_ms": 25.62
+          },
+          {
+            "frame": 4726,
+            "segments": {
+              "opaque": 0,
+              "post": 0.02,
+              "prepass": 20.23,
+              "preprocess": 0.26,
+              "shadow": 0,
+              "ssao": 4.8,
+              "taa": 0.03,
+              "tilt_shift": 0.01,
+              "transmission": 0,
+              "transparent": 0.08
+            },
+            "total_ms": 25.43
+          },
+          {
+            "frame": 4728,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 17.11,
+              "preprocess": 0.27,
+              "shadow": 0,
+              "ssao": 8.18,
+              "taa": 0.01,
+              "tilt_shift": 0.01,
+              "transmission": 0.03,
+              "transparent": 0.06
+            },
+            "total_ms": 25.68
+          },
+          {
+            "frame": 4739,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 18.47,
+              "preprocess": 0.27,
+              "shadow": 0.18,
+              "ssao": 5.95,
+              "taa": 0.01,
+              "tilt_shift": 0.01,
+              "transmission": 0.01,
+              "transparent": 0.1
+            },
+            "total_ms": 25.01
+          },
+          {
+            "frame": 4740,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 18.06,
+              "preprocess": 0.27,
+              "shadow": 0,
+              "ssao": 7.54,
+              "taa": 0.01,
+              "tilt_shift": 0.01,
+              "transmission": 0.07,
+              "transparent": 0.02
+            },
+            "total_ms": 25.99
+          },
+          {
+            "frame": 4741,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 18.67,
+              "preprocess": 0.28,
+              "shadow": 0,
+              "ssao": 6,
+              "taa": 0.01,
+              "tilt_shift": 0.01,
+              "transmission": 0.1,
+              "transparent": 0.01
+            },
+            "total_ms": 25.09
+          },
+          {
+            "frame": 4743,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 21.14,
+              "preprocess": 0.26,
+              "shadow": 0,
+              "ssao": 4.69,
+              "taa": 0.03,
+              "tilt_shift": 0.01,
+              "transmission": 0,
+              "transparent": 0.08
+            },
+            "total_ms": 26.22
+          },
+          {
+            "frame": 4747,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 18.33,
+              "preprocess": 0.27,
+              "shadow": 0,
+              "ssao": 6.87,
+              "taa": 0.01,
+              "tilt_shift": 0.01,
+              "transmission": 0.06,
+              "transparent": 0.01
+            },
+            "total_ms": 25.59
+          },
+          {
+            "frame": 4770,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 18.89,
+              "preprocess": 0.33,
+              "shadow": 0.02,
+              "ssao": 7.5,
+              "taa": 0.01,
+              "tilt_shift": 0.01,
+              "transmission": 0.07,
+              "transparent": 0.01
+            },
+            "total_ms": 26.85
+          },
+          {
+            "frame": 4774,
+            "segments": {
+              "opaque": 0,
+              "post": 0,
+              "prepass": 19.89,
+              "preprocess": 0.27,
+              "shadow": 0,
+              "ssao": 5.18,
+              "taa": 0.01,
+              "tilt_shift": 0.02,
+              "transmission": 0.08,
+              "transparent": 0.05
+            },
+            "total_ms": 25.51
+          },
+          {
+            "frame": 4776,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 19.91,
+              "preprocess": 0.29,
+              "shadow": 0,
+              "ssao": 5.82,
+              "taa": 0.04,
+              "tilt_shift": 0.01,
+              "transmission": 0,
+              "transparent": 0.07
+            },
+            "total_ms": 26.15
+          },
+          {
+            "frame": 4809,
+            "segments": {
+              "opaque": 0,
+              "post": 0,
+              "prepass": 17.46,
+              "preprocess": 0.28,
+              "shadow": 0.04,
+              "ssao": 8.15,
+              "taa": 0,
+              "tilt_shift": 0.01,
+              "transmission": 0.07,
+              "transparent": 0
+            },
+            "total_ms": 26.03
+          },
+          {
+            "frame": 4826,
+            "segments": {
+              "opaque": 0.01,
+              "post": 0.01,
+              "prepass": 18.23,
+              "preprocess": 0.27,
+              "shadow": 0,
+              "ssao": 7.16,
+              "taa": 0.01,
+              "tilt_shift": 0.02,
+              "transmission": 0.07,
+              "transparent": 0.02
+            },
+            "total_ms": 25.81
+          },
+          {
+            "frame": 4843,
+            "segments": {
+              "opaque": 0,
+              "post": 0.02,
+              "prepass": 19.61,
+              "preprocess": 0.26,
+              "shadow": 0.09,
+              "ssao": 5.23,
+              "taa": 0,
+              "tilt_shift": 0.04,
+              "transmission": 0.04,
+              "transparent": 0
+            },
+            "total_ms": 25.3
+          },
+          {
+            "frame": 4855,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 16.27,
+              "preprocess": 0.35,
+              "shadow": 0.23,
+              "ssao": 8.72,
+              "taa": 0.01,
+              "tilt_shift": 0.01,
+              "transmission": 0.04,
+              "transparent": 0.07
+            },
+            "total_ms": 25.7
+          },
+          {
+            "frame": 4863,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 20.03,
+              "preprocess": 0.25,
+              "shadow": 0,
+              "ssao": 4.92,
+              "taa": 0.01,
+              "tilt_shift": 0.01,
+              "transmission": 0.04,
+              "transparent": 0.07
+            },
+            "total_ms": 25.34
+          },
+          {
+            "frame": 4867,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 19.82,
+              "preprocess": 0.28,
+              "shadow": 0,
+              "ssao": 6.09,
+              "taa": 0,
+              "tilt_shift": 0.01,
+              "transmission": 0.08,
+              "transparent": 0
+            },
+            "total_ms": 26.31
+          },
+          {
+            "frame": 4949,
+            "segments": {
+              "opaque": 0,
+              "post": 0.02,
+              "prepass": 17.93,
+              "preprocess": 0.27,
+              "shadow": 0,
+              "ssao": 7.72,
+              "taa": 0,
+              "tilt_shift": 0.02,
+              "transmission": 0.06,
+              "transparent": 0.01
+            },
+            "total_ms": 26.01
+          },
+          {
+            "frame": 5005,
+            "segments": {
+              "opaque": 0,
+              "post": 0.94,
+              "prepass": 18.08,
+              "preprocess": 0.24,
+              "shadow": 0,
+              "ssao": 5.28,
+              "taa": 0,
+              "tilt_shift": 0.09,
+              "transmission": 0.03,
+              "transparent": 0.6
+            },
+            "total_ms": 25.27
+          },
+          {
+            "frame": 5012,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 20.2,
+              "preprocess": 0.26,
+              "shadow": 0,
+              "ssao": 4.85,
+              "taa": 0.03,
+              "tilt_shift": 0.01,
+              "transmission": 0,
+              "transparent": 0.08
+            },
+            "total_ms": 25.45
+          },
+          {
+            "frame": 5013,
+            "segments": {
+              "opaque": 0,
+              "post": 0,
+              "prepass": 18.67,
+              "preprocess": 0.27,
+              "shadow": 0,
+              "ssao": 6.4,
+              "taa": 0,
+              "tilt_shift": 0.02,
+              "transmission": 0.08,
+              "transparent": 0.01
+            },
+            "total_ms": 25.46
+          },
+          {
+            "frame": 5015,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 17.6,
+              "preprocess": 0.3,
+              "shadow": 0,
+              "ssao": 7.53,
+              "taa": 0,
+              "tilt_shift": 0.01,
+              "transmission": 0.09,
+              "transparent": 0.01
+            },
+            "total_ms": 25.56
+          },
+          {
+            "frame": 5016,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 17.78,
+              "preprocess": 0.33,
+              "shadow": 0,
+              "ssao": 7.65,
+              "taa": 0.01,
+              "tilt_shift": 0.01,
+              "transmission": 0.04,
+              "transparent": 0.11
+            },
+            "total_ms": 25.95
+          },
+          {
+            "frame": 5020,
+            "segments": {
+              "opaque": 0,
+              "post": 0.02,
+              "prepass": 18.7,
+              "preprocess": 0.28,
+              "shadow": 0,
+              "ssao": 6.05,
+              "taa": 0,
+              "tilt_shift": 0.01,
+              "transmission": 0.08,
+              "transparent": 0.01
+            },
+            "total_ms": 25.14
+          },
+          {
+            "frame": 5022,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 19.56,
+              "preprocess": 0.3,
+              "shadow": 0.01,
+              "ssao": 6.31,
+              "taa": 0.03,
+              "tilt_shift": 0.01,
+              "transmission": 0,
+              "transparent": 0.06
+            },
+            "total_ms": 26.28
+          },
+          {
+            "frame": 5035,
+            "segments": {
+              "opaque": 0,
+              "post": 0.01,
+              "prepass": 19.47,
+              "preprocess": 0.27,
+              "shadow": 0,
+              "ssao": 5.61,
+              "taa": 0,
+              "tilt_shift": 0.04,
+              "transmission": 0.07,
+              "transparent": 0
+            },
+            "total_ms": 25.48
+          },
+          {
+            "frame": 5067,
+            "segments": {
+              "opaque": 0,
+              "post": 0,
+              "prepass": 20.03,
+              "preprocess": 0.29,
+              "shadow": 0.01,
+              "ssao": 5.73,
+              "taa": 0,
+              "tilt_shift": 0.02,
+              "transmission": 0.08,
+              "transparent": 0
+            },
+            "total_ms": 26.17
+          },
+          {
+            "frame": 5141,
+            "segments": {
+              "opaque": 0.05,
+              "post": 0,
+              "prepass": 20.49,
+              "preprocess": 0.28,
+              "shadow": 0,
+              "ssao": 5.71,
+              "taa": 0.01,
+              "tilt_shift": 0,
+              "transmission": 0.01,
+              "transparent": 0.02
+            },
+            "total_ms": 26.57
+          }
+        ],
+        "timestamp_period_ns": 1,
+        "total": {
+          "max": 26.85,
+          "mean": 22.91,
+          "p50": 22.89,
+          "p95": 24.92
+        }
+      },
+      "console_errors": [],
+      "load_before": 4.27587890625,
+      "load_after": 5.625,
+      "load_discarded": 0
+    }
+  ],
+  "summary": {
+    "web_grass_off": {
+      "p95_median": 52.6,
+      "mean_median": 50.45,
+      "over_25ms_median": 600,
+      "pass": false,
+      "runs": 1
+    }
+  }
+}
