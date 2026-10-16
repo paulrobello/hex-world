@@ -43,7 +43,7 @@ All modules run under `blender -b --factory-startup --python-exit-code 1`. Gener
 - `compress.py` (a Node/shell step, not bpy): `encode_texture(png, channel)` (picks sRGB or linear), `uastc()`, `transcode(bc7|astc)`, `meshopt(glb)`, `validate()`, `budget()`.
 - `gate.py`: `reimport_check(glb)` (Blender side: names, sockets, bounds), `render_six_views()`, `seam_pair_render()`, `write_provenance()`.
 
-The Rust-side gate lives in `crates/hex-assets/tests/kit_gate.rs`. It loads every staged GLB through `MeshoptGlbReader` and bevy_gltf, then checks names, sockets, LOD ratios and the border ring.
+The Rust-side gate lives in `crates/hex-render/tests/kit_gate.rs`. It loads every staged GLB through `MeshoptGlbReader` and bevy_gltf, then checks names, sockets, LOD ratios and the border ring.
 
 ## (c) Gate checks and thresholds
 
