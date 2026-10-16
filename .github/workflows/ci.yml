@@ -94,6 +94,7 @@ jobs:
           rustup target add wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - run: make typecheck
+      - run: make check-wgpu
 
   test:
     needs: [scope]

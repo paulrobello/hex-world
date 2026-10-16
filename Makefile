@@ -21,6 +21,14 @@ typecheck:
 test:
 	cargo test --workspace
 
+.PHONY: check-wgpu
+# An unqualified inverse query fails if Cargo resolves more than one wgpu version.
+check-wgpu:
+	@tree=$$(cargo tree --locked -i wgpu --prefix none --depth 0) || exit 1; \
+	count=$$(printf '%s\n' "$$tree" | grep -c '^wgpu v'); \
+	test "$$count" = 1 || { echo "FAIL: expected one wgpu version, got $$count"; exit 1; }; \
+	printf 'single wgpu OK: %s\n' "$$tree"
+
 checkall: fmt-check lint typecheck test ui-check
 
 # UI overlay (web/ui, PRD D18 and §14): TypeScript bundled by esbuild into web/ui/dist, which Trunk
@@ -78,7 +86,7 @@ audio-e2e: build-web
 
 # initial-download runs after web-size, on the dist/ it just built (not a sibling prerequisite: under
 # make -j it would race web-size's rm -rf dist).
-checkall-ci: checkall web-size
+checkall-ci: checkall check-wgpu web-size
 	@$(MAKE) --no-print-directory initial-download
 
 fetch-tools:
