@@ -60,7 +60,11 @@ function resolveRef(from, ref) {
 
 /** The build id: the map, Trunk's hashed names and the page without its map script. */
 export function buildId(map, trunkFiles, html) {
-  return contentHash(Buffer.from(JSON.stringify([map, [...trunkFiles].sort(), html]), "utf8"));
+  // Generated CSP hashes include the map's build id, so exclude them from its own input.
+  const stableHtml = html.replace(/script-src\s+[^;"<>]+/g, (directive) =>
+    directive.replace(/\s+'sha256-[A-Za-z0-9+/=]+'/g, ""),
+  );
+  return contentHash(Buffer.from(JSON.stringify([map, [...trunkFiles].sort(), stableHtml]), "utf8"));
 }
 
 /** Versions `dir` in place and returns the map it inlined into index.html (sorted keys). */
@@ -101,7 +105,16 @@ export function versionDist(dir) {
     const script =
       `<script id="hex-hashes">window.__HEX_HASHES=${JSON.stringify(map)};` +
       `window.__HEX_BUILD=${JSON.stringify(id)};</script>\n    `;
-    writeFileSync(join(dir, "index.html"), html.slice(0, at) + script + html.slice(at));
+    const page = html.slice(0, at) + script + html.slice(at);
+    // Trunk's loader, rewritten URLs and the generated map must be hashed after their final bytes exist.
+    const scriptHashes = [...page.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+      .filter(([, attrs]) => !/\bsrc\s*=/i.test(attrs))
+      .map(([, , body]) => `'sha256-${createHash("sha256").update(body).digest("base64")}'`);
+    const secured = page.replace(/script-src\s+[^;"<>]+/g, (directive) => {
+      const sources = directive.replace(/\s+'(?:sha256-[A-Za-z0-9+/=]+|unsafe-inline)'/g, "");
+      return `${sources} ${[...new Set(scriptHashes)].join(" ")}`;
+    });
+    writeFileSync(join(dir, "index.html"), secured);
     writeFileSync(join(dir, "version.json"), `${JSON.stringify({ id })}\n`);
   }
   return map;

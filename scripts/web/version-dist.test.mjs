@@ -1,6 +1,7 @@
 // version-dist.mjs: deterministic content hashes, a changed file changes only its own version (and
 // the versions of files that reference it), references are rewritten, and a rerun is a no-op.
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -41,6 +42,30 @@ const read = (dir, p) => readFileSync(join(dir, p), "utf8");
 const pageMap = (dir) => JSON.parse(/window\.__HEX_HASHES=(\{.*?\});/.exec(read(dir, "index.html"))[1]);
 const pageBuild = (dir) => /window\.__HEX_BUILD="([0-9a-f]+)";/.exec(read(dir, "index.html"))?.[1];
 const fileBuild = (dir) => JSON.parse(read(dir, "version.json")).id;
+
+test("CSP hashes cover final inline bytes including Trunk's loader and the generated map", () => {
+  const dir = site();
+  try {
+    const policy = "default-src 'self'; script-src 'self' 'sha256-stale=' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none'; object-src 'none'";
+    writeFileSync(join(dir, "index.html"), read(dir, "index.html").replace("<head>",
+      `<head><meta http-equiv="Content-Security-Policy" content="${policy}" />`));
+    versionDist(dir);
+    const page = read(dir, "index.html");
+    const directive = /script-src ([^;"]+)/.exec(page)[1];
+    const scripts = [...page.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)]
+      .filter(([, attrs]) => !/\bsrc\s*=/.test(attrs));
+    assert.equal(scripts.length, 3);
+    assert.deepEqual([...directive.matchAll(/'sha256-[^']+'/g)].map(([hash]) => hash),
+      scripts.map(([, , body]) => `'sha256-${createHash("sha256").update(body).digest("base64")}'`));
+    assert.ok(directive.includes("'wasm-unsafe-eval'") && !directive.includes("'unsafe-inline'"));
+    assert.ok(page.includes("style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none'; object-src 'none'"));
+    assert.ok(page.indexOf('http-equiv="Content-Security-Policy"') < page.indexOf("<script"));
+    versionDist(dir);
+    assert.equal(read(dir, "index.html"), page, "CSP hashes do not make the build id recursive");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
 
 test("every site file but the page, CNAME and Trunk's hashed outputs gets its content hash", () => {
   const dir = site();
