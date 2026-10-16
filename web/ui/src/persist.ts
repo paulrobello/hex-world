@@ -10,14 +10,13 @@ import {
   type SlotBackend,
   type SlotMeta,
   byRecent,
-  cleanName,
-  fileName,
   mapOf,
   mixOf,
-  nameFromFile,
   newId,
-  nextName,
 } from "./slots.ts";
+
+import { PersistenceUx, type PersistenceUiHost } from "./persist-ux.ts";
+export { kb } from "./persist-ux.ts";
 
 export type SaveState = "saved" | "saving" | "off";
 
@@ -42,13 +41,11 @@ export interface PersistHost {
   saveNow(volumes: Volumes | null): Uint8Array | null;
 }
 
-export interface PersistOptions {
+export interface PersistOptions extends PersistenceUiHost {
   now?: () => number;
   debounceMs?: number;
   /** The audio layer's bus levels, sent with every save. */
   volumes?: () => Volumes | null;
-  download?: (name: string, bytes: Uint8Array) => void;
-  notify?: (n: Note) => void;
   /** Called whenever the name, the save state or the slot list changes. */
   changed?: () => void;
   /** A stored world was opened (the start-up resume or a Load) and is on screen: put its viewer's camera back. */
@@ -145,6 +142,7 @@ export class Persistence {
   private store: SlotBackend | null;
   private readonly host: PersistHost;
   private readonly opts: PersistOptions;
+  private readonly ux: PersistenceUx;
   private readonly now: () => number;
   private readonly debounce: Debouncer;
   private tiles: PlayTile[] = [];
@@ -158,9 +156,10 @@ export class Persistence {
     this.host = host;
     this.store = store;
     this.opts = opts;
+    this.ux = new PersistenceUx(opts);
     this.now = opts.now ?? Date.now;
     this.debounce = new Debouncer(opts.debounceMs ?? AUTOSAVE_MS, () => this.autosave());
-    this.current = { id: newId(this.now()), name: nextName([]), stored: false };
+    this.current = { id: newId(this.now()), name: this.ux.nextName([]), stored: false };
     this.state = store ? "saved" : "off";
   }
 
@@ -183,19 +182,12 @@ export class Persistence {
   async start(): Promise<void> {
     if (!this.store) {
       this.ready = true;
-      this.opts.notify?.({
-        text: "Autosave is off in this window",
-        sub: "This browser blocks storage here. Export keeps your world.",
-        icon: "alert",
-        tone: "caution",
-        action: "Export",
-        onAction: () => this.exportCurrent(),
-      });
+      this.ux.autosaveOff(false, () => this.exportCurrent());
       this.changed();
       return;
     }
     await this.refresh();
-    this.current = { id: newId(this.now()), name: nextName(this.slots.map((s) => s.name)), stored: false };
+    this.current = { id: newId(this.now()), name: this.ux.nextName(this.slots.map((s) => s.name)), stored: false };
     const last = this.slots[0];
     if (!last || !(await this.open(last, false))) this.ready = true;
     this.changed();
@@ -302,14 +294,7 @@ export class Persistence {
     const bytes = this.host.takeSave(tag);
     if (!bytes) return;
     if (p.purpose === "export") {
-      const name = fileName(p.world.name);
-      this.opts.download?.(name, bytes);
-      this.opts.notify?.({
-        text: `Exported ${name}`,
-        sub: `${kb(bytes.length)}, in your downloads`,
-        icon: "export",
-        tone: "ok",
-      });
+      this.ux.exported(p.world.name, bytes);
       return;
     }
     void this.write(p, bytes);
@@ -321,11 +306,9 @@ export class Persistence {
     const meta: SlotMeta = {
       id: p.world.id,
       name: p.world.name,
-      tiles: p.tiles.length,
+      ...this.ux.summary(p.tiles),
       updatedAt: p.purpose === "copy" ? this.stampBefore(this.savedAt ?? this.now()) : this.stamp(),
       bytes: bytes.length,
-      mix: mixOf(p.tiles),
-      map: mapOf(p.tiles),
     };
     this.writing++;
     try {
@@ -355,14 +338,7 @@ export class Persistence {
     this.store = null;
     this.debounce.cancel();
     this.setState("off");
-    this.opts.notify?.({
-      text: "Autosave stopped",
-      sub: "This browser refused to store the world. Export keeps it.",
-      icon: "alert",
-      tone: "caution",
-      action: "Export",
-      onAction: () => this.exportCurrent(),
-    });
+    this.ux.autosaveOff(true, () => this.exportCurrent());
   }
 
   /**
@@ -372,7 +348,7 @@ export class Persistence {
   private onLoaded(): void {
     const sw = this.switches.shift() ?? {
       id: newId(this.now()),
-      name: nextName(this.slots.map((s) => s.name)),
+      name: this.ux.nextName(this.slots.map((s) => s.name)),
       stored: false,
       saveNow: false,
     };
@@ -412,7 +388,7 @@ export class Persistence {
       bytes = null;
     }
     if (!bytes) {
-      this.opts.notify?.({
+      this.ux.notify({
         text: `Couldn't read ${meta.name}`,
         sub: "Its saved bytes are missing from this browser.",
         icon: "alert",
@@ -424,7 +400,7 @@ export class Persistence {
     const r = this.host.load(bytes);
     if (!r.ok) {
       const w = refusalText(r.code, r.reason);
-      this.opts.notify?.({ text: `${meta.name} can't be opened`, sub: w.text, icon: "alert", tone: "bad" });
+      this.ux.notify({ text: `${meta.name} can't be opened`, sub: w.text, icon: "alert", tone: "bad" });
       return false;
     }
     this.switches.push({ id: meta.id, name: meta.name, stored: true, saveNow: false, opened: true });
@@ -441,7 +417,7 @@ export class Persistence {
       bytes = null;
     }
     if (!meta || !bytes) {
-      this.opts.notify?.({
+      this.ux.notify({
         text: "Couldn't export that world",
         sub: "Its saved bytes are missing from this browser.",
         icon: "alert",
@@ -449,14 +425,7 @@ export class Persistence {
       });
       return;
     }
-    const name = fileName(meta.name);
-    this.opts.download?.(name, bytes);
-    this.opts.notify?.({
-      text: `Exported ${name}`,
-      sub: `${kb(bytes.length)}, in your downloads`,
-      icon: "export",
-      tone: "ok",
-    });
+    this.ux.exported(meta.name, bytes);
   }
 
   /** Copies the current world, or a stored one, to a new slot named "<name> copy". */
@@ -487,18 +456,23 @@ export class Persistence {
       this.upsert(copy);
       this.changed();
     }
-    this.opts.notify?.({ text: `Duplicated as ${name}`, icon: "check", tone: "ok" });
+    this.ux.notify({ text: `Duplicated as ${name}`, icon: "check", tone: "ok" });
   }
 
   notifyLoaded(name: string): void {
-    this.opts.notify?.({ text: `Loaded ${name}`, icon: "check", tone: "ok" });
+    this.ux.notify({ text: `Loaded ${name}`, icon: "check", tone: "ok" });
   }
 
   /** Starts a fresh world from the start tile under the next free name. */
   newWorld(): void {
     this.flush();
     this.host.cmd({ cmd: "new_world" });
-    this.switches.push({ id: newId(this.now()), name: nextName(this.allNames()), stored: false, saveNow: false });
+    this.switches.push({
+      id: newId(this.now()),
+      name: this.ux.nextName(this.allNames()),
+      stored: false,
+      saveNow: false,
+    });
   }
 
   /**
@@ -511,7 +485,7 @@ export class Persistence {
     this.flush();
     this.host.cmd({ cmd: "new_world" });
     this.switches.push({ ...this.current, saveNow: true });
-    this.opts.notify?.({ text: `Started ${this.current.name} over`, icon: "check", tone: "ok" });
+    this.ux.notify({ text: `Started ${this.current.name} over`, icon: "check", tone: "ok" });
     return true;
   }
 
@@ -521,12 +495,12 @@ export class Persistence {
     const r = this.host.load(bytes);
     if (!r.ok) {
       const w = refusalText(r.code, r.reason);
-      this.opts.notify?.({ text: w.text, sub: `${file}: ${w.sub}`, icon: "alert", tone: "bad" });
+      this.ux.notify({ text: w.text, sub: `${file}: ${w.sub}`, icon: "alert", tone: "bad" });
       return false;
     }
-    const name = this.unique(nameFromFile(file));
+    const name = this.ux.importName(file, this.allNames());
     this.switches.push({ id: newId(this.now()), name, stored: false, saveNow: true });
-    this.opts.notify?.({
+    this.ux.notify({
       text: `Imported ${name}`,
       sub: `${r.tiles} ${r.tiles === 1 ? "tile" : "tiles"}, opened as a new world`,
       icon: "check",
@@ -537,7 +511,7 @@ export class Persistence {
 
   /** Renames a world; an empty name keeps the old one. */
   async rename(id: string, raw: string): Promise<void> {
-    const name = cleanName(raw);
+    const name = this.ux.cleanName(raw);
     if (!name) return;
     if (id === this.current.id) this.current.name = name;
     const meta = this.slots.find((s) => s.id === id);
@@ -592,12 +566,7 @@ export class Persistence {
   }
 
   private unique(name: string): string {
-    const taken = new Set(this.allNames().map((n) => n.toLowerCase()));
-    if (!taken.has(name.toLowerCase())) return name;
-    for (let i = 2; ; i++) {
-      const n = `${name} ${i}`;
-      if (!taken.has(n.toLowerCase())) return n;
-    }
+    return this.ux.unique(name, this.allNames());
   }
 
   /** A copy sorts just under its source, so it never becomes the world the next start resumes. */
@@ -622,5 +591,3 @@ export class Persistence {
     this.opts.changed?.();
   }
 }
-
-export const kb = (n: number): string => (n < 1024 ? `${n} B` : `${Math.max(1, Math.round(n / 1024))} KB`);
