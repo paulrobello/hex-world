@@ -32,7 +32,7 @@ The rejected MiniMac observations show that the publication fix's frame-time ben
 
 ## Trace attribution
 
-`contended-trace.json` captures the live 2,066-tile world, grass off, with `contended-trace.json.cpuprofile`, `contended-trace-summary.json`, `trace-costs.json` and a one-second `contended-processes.jsonl`. It is deliberately labeled **captured under par-factory GPU contention during world construction**. Absolute trace-arm timings are not budget evidence. MiniMac load was 4.276 before and 5.625 after. Diagnostic frame times were p50 50.3, p95 52.6, mean 50.45 and max 59.0 ms on the same Chromium153/M4 renderer, viewport and device scale stated above.
+`contended-trace.json` captures the live 2,066-tile world, grass off, with `contended-trace.json.cpuprofile`, `contended-trace-summary.json`, `trace-costs.json` and a one-second `contended-processes.jsonl`. It is deliberately labeled **captured under par-factory GPU contention**, including the trace window: the final one-second process samples show a foreign GPU helper at 15–17% CPU and its renderer at 38–49%. Absolute trace-arm timings are not budget evidence. MiniMac load was 4.276 before and 5.625 after. Diagnostic frame times were p50 50.3, p95 52.6, mean 50.45 and max 59.0 ms on the same Chromium153/M4 renderer, viewport and device scale stated above.
 
 CPU ancestry over the 2,392.906 ms sampled profile names these dominant costs (each category counted at most once per sample):
 

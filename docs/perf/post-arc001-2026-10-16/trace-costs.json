@@ -2,7 +2,7 @@
   "host": "MiniMac Apple M4, 10 CPU and 10 GPU cores",
   "source_revision": "e67ba43",
   "profile_duration_ms": 2392.906,
-  "interpretation": "Diagnostic ranking only. Automated par-factory contention overlapped world construction. Process log captures exact conditions. Not clean budget evidence.",
+  "interpretation": "Diagnostic ranking only. Automated par-factory contention overlapped world construction and the trace window. Process log captures exact conditions. Not clean budget evidence.",
   "load_before": 4.27587890625,
   "load_after": 5.625,
   "viewport": "2560x1440",

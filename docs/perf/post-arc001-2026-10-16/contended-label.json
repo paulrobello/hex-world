@@ -1,5 +1,5 @@
 {
-  "label": "captured under par-factory GPU contention during world build; exact trace-window overlap in process log",
+  "label": "captured under par-factory GPU contention including trace window; foreign GPU helper 15-17% and renderer 38-49% CPU in final process samples",
   "budget_evidence": false,
   "ranking_only": true,
   "source_revision": "e67ba43",
