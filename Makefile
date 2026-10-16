@@ -1,12 +1,12 @@
 .PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play
 
+fmt:
+	cargo fmt --all
+
 clean:
 	rm -rf dist target/kit-stage
 	@for dir in web/ui scripts/assets target; do \
 	  if test -d "$$dir"; then find "$$dir" -type f -name '*.stamp' -delete; fi; done
-
-fmt:
-	cargo fmt --all
 
 fmt-check:
 	cargo fmt --all -- --check
@@ -43,7 +43,7 @@ ui-lint: $(UI_NPM)
 	cd $(UI) && ./node_modules/.bin/biome check .
 
 ui-test:
-	node --test "$(UI)/test/*.test.ts" "scripts/web/*.test.mjs" scripts/assets/kit-provenance.test.mjs
+	node --test "$(UI)/test/*.test.ts" "scripts/web/*.test.mjs" scripts/assets/kit-provenance.test.mjs scripts/shots/run.test.mjs
 
 ui-check: ui-typecheck ui-lint ui-test ui-build
 
@@ -301,7 +301,7 @@ KIT_SHOTS = kit-overview kit-seam-closeup kit-tree kit-tree-under kit-tree-game 
 # docs/checkpoints/foliage-wind/ (shoot.sh).
 shots-foliage-wind:
 	cargo build -p hex-app --release
-	caffeinate -d -u docs/checkpoints/foliage-wind/shoot.sh target/release/hex-world
+	bash scripts/shots/run.sh docs/checkpoints/foliage-wind/shoot.sh target/release/hex-world
 
 shots-kit:
 	mkdir -p target/shots

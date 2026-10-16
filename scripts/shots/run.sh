@@ -24,7 +24,13 @@ else
     marker=$(mktemp target/shots/.capture-XXXXXX)
     trap 'rm -f "$marker"' EXIT
     caffeinate -d -u "$@"
-    while IFS= read -r -d '' file; do check_frame "$file"; done < <(
-        find target/shots -name '*.png' -newer "$marker" -print0
-    )
+    frames=0
+    while IFS= read -r -d '' file; do
+        check_frame "$file"
+        frames=$((frames + 1))
+    done < <(find target/shots -name '*.png' -newer "$marker" -print0)
+    if [[ "$frames" == 0 ]]; then
+        printf 'capture produced no PNG frames\n' >&2
+        exit 1
+    fi
 fi
