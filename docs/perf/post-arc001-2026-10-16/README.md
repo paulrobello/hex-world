@@ -81,7 +81,7 @@ Canonical M4 Max measurements continued separately after host recovery. Expensiv
 ## Criterion assessment
 
 1. **Chrome trace: met for diagnostic attribution.** Live trace, verified-symbol CPU profile, parsed ranking and hardware GPU total are recorded. Contention during construction is labeled, and absolute trace timings are excluded from budget evidence.
-2. **Two guarded <=16.6 ms rounds or owner-accepted ceiling: blocked on host quiescence.** The two observed post-fix attempts are rejected. No ceiling accepted or criteria checked.
+2. **Target not met; ceiling evidence pending.** Two canonical clean rounds are accepted measurements, p9550.8 and48.8ms, both above16.6ms. The r18ceiling attempt was discarded twice because post-run load was27.94 and21.79 (>15). No ceiling has been accepted, and no card criterion was checked.
 3. **Exact-world native measurement: met.** Canonical Metal run validates2,066playtiles and the exact camera/settings. p95=20.24ms, load7.016to7.577. Native pacing caveat is recorded.
 
 Board handling was limited to the requested move to `in_progress`. No criteria were checked, no card was completed, and nothing was pushed.
