@@ -13,10 +13,10 @@ This is the orchestrator session for P2+ work: parallel worktree agents, verifie
 
 - Never push without Paul's approval. Commit locally, then rebuild with `make build-web` after every merge to `main`.
 - **No new asset-generation agents until Paul gives the all clear** (token budget). Tool fixes and non-asset features are allowed.
-- Blender is headless only, with no live Blender or MCP (`memory/blender-headless-only.md`).
+- Blender is headless only, with no live Blender or MCP (owner rule, 2026-10-13).
 - Tool bugs and flaky tests are high priority, never low.
 - Never record an owner approval yourself. Use pending entries in `docs/review/` and on cards only.
-- Perf numbers need host load at or below 15 before and after every run (the e2e perf scripts enforce it). MiniMac (base M4) is cleared for perf runs as a separate baseline; see `docs/perf/minimac/README.md` and `memory/minimac-perf-host.md`.
+- Perf numbers need host load at or below 15 before and after every run (the e2e perf scripts enforce it). MiniMac (base M4) is cleared for perf runs as a separate baseline; see `docs/perf/minimac/README.md` (keep its baseline separate from the M4 Max).
 - Paul said: "once the current batch of work is complete dont start any new work". The batch is complete. Start new work only when Paul asks.
 
 ## Unfinished work

@@ -8,7 +8,7 @@ Date: 2026-10-13. Scope: PRD §15 P1. One kit family goes through the full Blend
 2. **Mesh quantization is unsupported and P0 is not quantized.** bevy_gltf 0.20 marks `KHR_mesh_quantization` unsupported (`bevy_gltf-0.20.0/src/lib.rs:118`), and `crates/hex-assets/src/meshopt_glb.rs` has no dequantize path. An accessor dump of `assets/kit/p0/hex_test.glb` shows only `EXT_meshopt_compression`, with POSITION, NORMAL and TEXCOORD_0 all FLOAT (componentType 5126). The P0 criterion "meshopt-compressed, quantized GLB" (PRD §15 P0) therefore holds for compression but not for quantization. The `EncoderMethod.QUANTIZE` in `scripts/assets/build-p0-assets.mjs:56` is meshopt's encoder mode and does not quantize attributes. par-factory's `meshopt --quantize-position 16` (`compress-machine-models.sh:37`) would emit an extension Bevy rejects.
 3. **The reimport gate must use the real loader.** the-cube's `scripts/check-assets.ts:9,71` validates with three's GLTFLoader, which accepts both extensions above, so a direct port would pass files Bevy cannot load. The P1 reimport check has to be a Rust test that runs `MeshoptGlbReader` (`crates/hex-assets/src/bevy.rs`) and then bevy_gltf.
 4. **A unique bake cannot carry texel density at hex scale.** A 2k atlas over the 27.7 m flat-to-flat cap gives at most about 74 px/m (2048 / 27.7). After roughly 75% UV fill for a hex in a square, and before the skirt claims any space, that falls to 55-64 px/m. This is far below what close-ups and the P8 first-person view need. Bases and road surfaces need tileable or trim PBR materials for micro detail, plus a low-resolution unique bake for AO, the §9.4 hook masks and macro variation. The helper library therefore needs two paths: a selected-to-active bake path and a tileable-material path.
-5. **Every texture is currently encoded as sRGB.** `Makefile:31` hardcodes `--format R8G8B8A8_SRGB` for every texture. Normal, ORM and mask maps must be created UNORM with a linear transfer function. Otherwise they transcode to BC7_SRGB / ASTC_SRGB and sample wrongly. The par-factory packing lesson is primaries `srgb` for albedo and `none` for linear data (vault `Projects/deterministic-pbr-material-packing-pipeline.md`).
+5. **Every texture is currently encoded as sRGB.** `Makefile:31` hardcodes `--format R8G8B8A8_SRGB` for every texture. Normal, ORM and mask maps must be created UNORM with a linear transfer function. Otherwise they transcode to BC7_SRGB / ASTC_SRGB and sample wrongly. The par-factory packing lesson is primaries `srgb` for albedo and `none` for linear data (external vault note `Projects/deterministic-pbr-material-packing-pipeline.md`).
 
 ## (a) Reusable pieces
 
@@ -31,9 +31,9 @@ Date: 2026-10-13. Scope: PRD §15 P1. One kit family goes through the full Blend
 
 All modules run under `blender -b --factory-startup --python-exit-code 1`. Generators in `scripts/blender/kit/<piece-id>.py` import them.
 
-- `scene.py`: `reset_scene()`, `link()`, `empty()`, `collection()`, `set_units_metric()`, `apply_transforms(obj)` (apply before joining: vault `Patterns/blender-transform-identity-in-automated-glb-builds.md`).
+- `scene.py`: `reset_scene()`, `link()`, `empty()`, `collection()`, `set_units_metric()`, `apply_transforms(obj)` (apply before joining: external vault note `Patterns/blender-transform-identity-in-automated-glb-builds.md`).
 - `hexgeo.py`: `HEX_R = 16.0`, `LEVEL_STEP = 4.0` (mirroring `crates/hex-core/src/axial.rs:3`), `hex_corners(r)` (pointy-top, corners at 30° + 60°·k), `edge_midpoint(k)` and `edge_normal(k)` in the Blender frame, `border_ring(subdiv)`, `rotate_edge(obj, k)`, `lane_frame(edge, offset, width)`. Constants come from one source, either read from a generated JSON or asserted against the Rust values in a test.
-- `geom.py`: the the-cube bmesh primitives (`rounded_box`, `cylinder`, `lathe`, `prism`, `tube_path`, `merge`, `transform`, `solidify`), `tri_count()`, `weld(tol=0.001)`, `components()` (from vault `Patterns/glb/mesh-diagnosis-and-bounded-repair.md`).
+- `geom.py`: the the-cube bmesh primitives (`rounded_box`, `cylinder`, `lathe`, `prism`, `tube_path`, `merge`, `transform`, `solidify`), `tri_count()`, `weld(tol=0.001)`, `components()` (from external vault note `Patterns/glb/mesh-diagnosis-and-bounded-repair.md`).
 - `materials.py`: `srgb()`, `pbr_material()`, `tileable_material(set_id, world_scale_m)` (the tileable path), `mask_attribute(name)`.
 - `uv.py`: `atlas_unwrap(objs, margin)`, `set_texel_density(objs, px_per_m, atlas_px)`, `measure_texel_density(obj, atlas_px) -> (min, median, max)`.
 - `bake.py`: `bake_setup(device="CPU", samples=16)`, `bake_selected_to_active(high, low, channels, size, cage, max_ray, margin)`, `bake_emit_channel(material_input)` (base color, metallic, night emissive), `bake_ao()`, `bake_normal_tangent()`, `pack_orm(ao, rough, metal)`, `bake_hook_masks(low, size)` (writes `masks` RGBA: R = snow accumulation, G = wetness/porosity, B = night-emissive intensity, A = reserved), `receiver_signature(meshes)`, `write_bake_report()`.
@@ -64,13 +64,13 @@ The Rust-side gate lives in `crates/hex-assets/tests/kit_gate.rs`. It loads ever
 | Seam: lanes | road lane offset and width at edges 0 and 3 match `data/sockets.ron` | PRD §5.2 |
 | Seam: visual | two road tiles side by side, in-engine close-up, owner-approved | PRD §15 P1 |
 | Tangents | TANGENT present on every primitive | `astra_machine_common.py:1580-1584` |
-| Texture encoding | `ktx info`: sRGB transfer for base color and emissive only; linear for normal, ORM and masks; mip count = log2(size)+1 | finding 5; vault packing note |
+| Texture encoding | `ktx info`: sRGB transfer for base color and emissive only; linear for normal, ORM and masks; mip count = log2(size)+1 | finding 5; external vault packing note |
 | Alpha coverage (tree) | per-mip coverage within a set tolerance of mip 0 (tolerance to be chosen in P1) | — |
-| Determinism | double-run SHA identical for generator and GLB; bakes compared by hash on the same device only | vault transform-identity and packing notes |
+| Determinism | double-run SHA identical for generator and GLB; bakes compared by hash on the same device only | external vault transform-identity and packing notes |
 | Bake preservation | bake report lists device, ray distance, receiver signature, map SHAs; no directional lighting baked | `astra_machine_common.py:1592-1610` |
 | Reimport | Rust loader test plus Blender reimport (names, sockets, materials, ratios) | findings 2-3 |
 | Renders | 6-view render plus an in-engine `?shot=` screenshot | PRD §11.2 step 7 |
-| Blender failures | the run must use `--python-exit-code 1`, because Blender otherwise exits 0 on a traceback | vault `Tools/blender-script-failures-exit-zero.md` |
+| Blender failures | the run must use `--python-exit-code 1`, because Blender otherwise exits 0 on a traceback | external vault note `Tools/blender-script-failures-exit-zero.md` |
 
 ## (d) Provenance JSON fields
 
@@ -80,7 +80,7 @@ These merge PRD §11.4 with `~/Repos/par-factory/docs/specs/09-asset-pipeline.md
 
 ## (e) Known pitfalls and fixes
 
-- **Blender exits 0 on script errors.** Always pass `--python-exit-code 1` (vault `Tools/blender-script-failures-exit-zero.md`, `~/.claude/guides/blender-mcp.md:167-173`).
+- **Blender exits 0 on script errors.** Always pass `--python-exit-code 1` (external vault note `Tools/blender-script-failures-exit-zero.md`, external local guide `~/.claude/guides/blender-mcp.md:167-173`).
 - **Blender 5.2 API drift.**
   - Use `BLENDER_EEVEE`, not `BLENDER_EEVEE_NEXT` (`blender-mcp.md:120`).
   - Leave `export_loglevel` unset (`blender-mcp.md:134`).
@@ -96,15 +96,15 @@ These merge PRD §11.4 with `~/Repos/par-factory/docs/specs/09-asset-pipeline.md
   - Keep `use_pass_direct` and `use_pass_indirect` off (`:1332-1333`).
   - Image colorspace must be sRGB for base color and emission and Non-Color for everything else (`:1397`).
   - Metal kernels recompile per channel, so `kernel_optimization_level = "OFF"`. The bake device defaults to CPU through `ASTRA_BAKE_DEVICE` (`:1315-1327`).
-  - `margin=0` leaves no gutter and mips bleed. Use about 8-12 px, with two masks where preservation matters (vault `Patterns/bounded-gutter-texture-bake-preservation.md`).
+  - `margin=0` leaves no gutter and mips bleed. Use about 8-12 px, with two masks where preservation matters (external vault note `Patterns/bounded-gutter-texture-bake-preservation.md`).
   - Cage 0.055 m and max ray 0.14 m (`:1329-1330`) were tuned at machine scale. Re-derive them per piece for 32 m bases rather than copying them.
 - **Coordinate frame.**
   - Blender Z-up exports to glTF Y-up as glTF x = Blender x and glTF z = −Blender y (`the-cube/blender/lib.py:1-4`).
   - Runtime edge 0 faces +x, edges run clockwise viewed from +Y, and +z is south (`axial.rs:1,11`). In Blender's top view, edge k's outward normal is at −60°·k.
   - Use a hex-center pivot for every piece. Author edge pieces for edge 0 and rotate them at runtime (PRD §6).
-  - Apply transforms before joining. Check the result with root-relative positions on reimport, not in the viewport (vault `Patterns/par-factory-asset-pipeline-rules.md`).
+  - Apply transforms before joining. Check the result with root-relative positions on reimport, not in the viewport (external vault note `Patterns/par-factory-asset-pipeline-rules.md`).
 - **GLB export.**
-  - Each parentless root becomes one GLB in multi-root exports, so use one root per piece (vault rules note).
+  - Each parentless root becomes one GLB in multi-root exports, so use one root per piece (external vault rules note).
   - `export_extras=True` is needed to carry socket metadata.
   - Hidden-from-render objects can drop out of selected exports (`blender-mcp.md:232-233`). Keep the collider render-visible during export and hide it in the engine.
   - Export no images, because textures are separate files (finding 1).
@@ -114,7 +114,7 @@ These merge PRD §11.4 with `~/Repos/par-factory/docs/specs/09-asset-pipeline.md
   - Recommendation: keep the single UASTC source with `--uastc-quality 4`, `--uastc-rdo-l` 0.25-0.75 for normals, and `--zstd 18`. This gives one encode, two cheap transcodes and identical content across families.
   - Encode ASTC directly only if a measured PSNR shortfall on the P1 maps demands it.
   - Normals may use `--target bc5` (two channels). Bevy's two-component normal reconstruction for BC5 is unverified here.
-  - Mips: albedo must be averaged in linear light and normals renormalized at each level (vault packing note).
+  - Mips: albedo must be averaged in linear light and normals renormalized at each level (external vault packing note).
   - P0's 1024² BC7 + zstd file is 594,157 B, larger than its 371,810 B PNG (`assets/kit/p0/`). Measure in P1 how much UASTC RDO reduces transcoded BC7 size.
 - **Quantization.** Either keep FLOAT attributes, or add dequantization to `meshopt_glb.rs` before quantizing. If P1 quantizes, it must use one shared quantization volume, the hex bounds. With per-mesh bounds, the border vertices of neighbouring pieces snap to different grids and the seams crack.
 - **LOD seams.** `VisibilityRange` applies per chunk (`scene.rs:357`), so neighbouring tiles can sit at different LODs. Pin the border ring in every LOD and choose its subdivision so LOD2 can still reach 15%.
