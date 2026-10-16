@@ -2,6 +2,8 @@
 
 Hex World can be driven, observed, screenshotted and exited from the command line, natively and in the browser, with no OS screen-recording permission and no human. Screenshots are captured inside the app with Bevy's `Screenshot::primary_window()`, so they need only a window the app itself opens.
 
+HUD path convention: `web/ui/hud.js` and `web/ui/hud.css` below are **built-site URLs**, not source files. Edit `web/ui/src/` (TypeScript and CSS); `web/ui/build.mjs` bundles it into `web/ui/dist/`, which Trunk copies into the site's `web/ui/`.
+
 ## Native CLI flags
 
 Flags take the form `--name value`. A bare `--name` means `1`. Bad values log a warning and fall back to the default.
@@ -430,7 +432,7 @@ Natively each event is also logged as `event: {...}`.
 
 ### UI overlay (web/ui)
 
-The player HUD is the Legend direction (mockups in `design/ui/legend/`, the system in the root `DESIGN.md` with its sidecar `.impeccable/design.json`, PRD D18 and §4.7) in vanilla TypeScript, an HTML layer over the canvas that changes the game only through bridge commands. `index.html` loads `web/ui/hud.css` and `web/ui/hud.js` and copies `web/` piecewise (`brand/`, `unsupported.html` and its backdrop `unsupported.jpg`, `wgsl-compat.js`, and `web/ui/dist` as `web/ui/`), so the overlay's sources and tooling never ship.
+The player HUD is the Legend direction (mockups in `design/ui/legend/`, the system in the root `DESIGN.md` with its sidecar `.impeccable/design.json`, PRD D18 and §4.7) in vanilla TypeScript, an HTML layer over the canvas that changes the game only through bridge commands. `index.html` loads the built-site URLs `web/ui/hud.css` and `web/ui/hud.js` (sources in `web/ui/src/`, generated bundles in `web/ui/dist/`) and copies `web/` piecewise (`brand/`, `unsupported.html` and its backdrop `unsupported.jpg`, `wgsl-compat.js`, and `web/ui/dist` as `web/ui/`), so the overlay's sources and tooling never ship.
 
 - **Unsupported page.** The WebGPU gate in `index.html` sends a browser without WebGPU, or without an adapter, to `web/unsupported.html`, the Legend S11 page. It carries the same CSP as `index.html`, takes its tokens, Manrope face and buttons from `web/ui/hud.css`, shows the app icon over a water capture (`web/unsupported.jpg`), and reads without script as the no-WebGPU variant. A small inline script (the CSP allows inline script) shows the adapter variant when `navigator.gpu` exists and names the browser and OS in the status line. `web/ui/build.mjs` emits the colour, shadow, motion (120 / 180 / 240 ms) and focus-ring tokens from the sidecar in front of `hud.css`; the type, spacing and radius scales sit at the top of `hud.css`.
 
