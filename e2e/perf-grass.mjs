@@ -74,7 +74,16 @@ async function webRun(arm) {
       return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
     });
     if (!renderer || /swiftshader/i.test(renderer)) throw new Error("no hardware WebGL renderer: " + renderer);
-    await buildWorld(page, [...world.script, CAMERA], world.tiles.length);
+    if (process.env.GRASS_LOAD) {
+      const bytes = Array.from(await readFile(process.env.GRASS_LOAD));
+      const loaded = await page.evaluate((b) => window.hexWorld.load(new Uint8Array(b)), bytes);
+      if (!loaded.ok) throw new Error(`save load refused: ${JSON.stringify(loaded)}`);
+      await page.waitForFunction((n) => window.hexWorld.state().play?.tiles?.length === n,
+        world.tiles.length, { timeout: 120_000 });
+      await buildWorld(page, [CAMERA, { cmd: "wait", frames: 240 }], world.tiles.length);
+    } else {
+      await buildWorld(page, [...world.script, CAMERA], world.tiles.length);
+    }
     const finishExclusivity = process.env.PERF_EXCLUSIVE === "1" ? monitorBrowserExclusivity() : null;
     const f0 = await page.evaluate(() => window.hexWorld.diag().frames);
     await page.waitForFunction((f) => window.hexWorld.diag().frames >= f, f0 + SETTLE_FRAMES, { timeout: 240_000, polling: 250 });
@@ -118,7 +127,8 @@ async function webRun(arm) {
     const exclusivity = finishExclusivity?.() ?? null;
     const build_id = await page.evaluate(() => window.__HEX_BUILD ?? null);
     return { platform: "web", arm, exclusivity, build_id, browser_version: browser.version(), renderer, trace, webgpu_adapter: adapter, tiles: n,
-      camera: st.camera, rising: st.play?.rising?.length ?? 0, settled_at_frame: f0, grass, ...pick(d), gpu: d.gpu, console_errors: errors };
+      world_source: process.env.GRASS_LOAD ?? "script", camera: st.camera, rising: st.play?.rising?.length ?? 0,
+      settled_at_frame: f0, grass, ...pick(d), gpu: d.gpu, console_errors: errors };
   } finally {
     await browser.close();
   }
