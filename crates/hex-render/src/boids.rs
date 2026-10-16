@@ -713,32 +713,54 @@ fn sync_flock(
     }
 }
 
+#[derive(bevy::ecs::system::SystemParam)]
+struct BoidWorld<'w> {
+    time: Res<'w, Time>,
+    active: Res<'w, ActiveScenario>,
+    seed: Option<Res<'w, BoidSeed>>,
+    view: Res<'w, PlayView>,
+    catalog: Res<'w, PlayCatalog>,
+    rises: Res<'w, PlayRises>,
+    kit: Option<Res<'w, PlayKit>>,
+    scatter: Option<Res<'w, ScatterLayouts>>,
+    paused: Option<Res<'w, crate::AgentsPaused>>,
+    pieces: Option<Res<'w, BoidPieces>>,
+    track: Option<Res<'w, FishTrack>>,
+}
+
+#[derive(bevy::ecs::system::SystemParam)]
+struct BoidOutputs<'w> {
+    state: ResMut<'w, BoidState>,
+    sim: ResMut<'w, BoidSim>,
+    inputs: Option<ResMut<'w, BoidInputs>>,
+    buffers: ResMut<'w, Assets<ShaderBuffer>>,
+    report: ResMut<'w, BoidReport>,
+}
+
 /// The CPU side each frame: (re)starts the plan on a scenario switch, feeds it the placed tiles
 /// that reached their rise's agents stage and the tree pieces the kit draws, advances the roost
 /// waves, uploads what changed and fills the compute parameters and the report.
-#[allow(clippy::too_many_arguments)]
-fn plan_boids(
-    time: Res<Time>,
-    active: Res<ActiveScenario>,
-    seed: Option<Res<BoidSeed>>,
-    (view, catalog, rises, kit, scatter): (
-        Res<PlayView>,
-        Res<PlayCatalog>,
-        Res<PlayRises>,
-        Option<Res<PlayKit>>,
-        Option<Res<ScatterLayouts>>,
-    ),
-    mut state: ResMut<BoidState>,
-    mut sim: ResMut<BoidSim>,
-    inputs: Option<ResMut<BoidInputs>>,
-    mut buffers: ResMut<Assets<ShaderBuffer>>,
-    mut report: ResMut<BoidReport>,
-    (paused, pieces, track): (
-        Option<Res<crate::AgentsPaused>>,
-        Option<Res<BoidPieces>>,
-        Option<Res<FishTrack>>,
-    ),
-) {
+fn plan_boids(world: BoidWorld, outputs: BoidOutputs) {
+    let BoidWorld {
+        time,
+        active,
+        seed,
+        view,
+        catalog,
+        rises,
+        kit,
+        scatter,
+        paused,
+        pieces,
+        track,
+    } = world;
+    let BoidOutputs {
+        mut state,
+        mut sim,
+        inputs,
+        mut buffers,
+        mut report,
+    } = outputs;
     let Some(mut inputs) = inputs else {
         return;
     };
