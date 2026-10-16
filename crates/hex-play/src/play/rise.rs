@@ -280,46 +280,15 @@ pub fn floors_up(u: f32, floors: u8) -> f32 {
     (whole + ease_out_back((x - whole).min(1.0))) / k
 }
 
-/// How a part of a placed tile moves during its rise.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum RiseRole {
-    /// The tile root: the column and cap, and every child that has no role of its own.
-    Root,
-    /// A centre or edge piece (roads, lanes, pads): snaps in at the edges stage.
-    Edge,
-    /// A hero prop: grows at the props stage, `order` of `count`.
-    Prop {
-        order: u8,
-        count: u8,
-        kind: PropKind,
-    },
-    /// A water tile's placeholder bed: moves with the column.
-    Bed,
-    /// A water surface or cut face: moves with the column and fills at the edges stage.
-    Water,
+pub use hex_play_state::{PropKind, RisePart, RiseRole};
+
+pub trait RisePartPose {
+    fn at(&self, pose: &RisePose) -> (Transform, bool);
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum PropKind {
-    Tree,
-    Building { floors: u8 },
-}
-
-/// A tile part the rise animates, with its rest transform.
-#[derive(Component, Clone, Copy, Debug)]
-pub struct RisePart {
-    pub cell: Axial,
-    pub role: RiseRole,
-    pub rest: Transform,
-}
-
-impl RisePart {
-    pub fn new(cell: Axial, role: RiseRole, rest: Transform) -> Self {
-        Self { cell, role, rest }
-    }
-
+impl RisePartPose for RisePart {
     /// The transform and visibility of this part at `pose`.
-    pub fn at(&self, pose: &RisePose) -> (Transform, bool) {
+    fn at(&self, pose: &RisePose) -> (Transform, bool) {
         let mut t = self.rest;
         match self.role {
             RiseRole::Root | RiseRole::Bed => {

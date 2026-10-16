@@ -10,6 +10,7 @@ name = "hex-world"
 path = "src/main.rs"
 
 [dependencies]
+hex-play = { path = "../hex-play", features = ["gate-tools"] }
 hex-core = { path = "../hex-core" }
 hex-render = { path = "../hex-render" }
 hex-sim = { path = "../hex-sim" }

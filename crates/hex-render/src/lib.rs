@@ -1,28 +1,23 @@
 //! Hex World Bevy render plugins.
 use bevy::prelude::*;
 
-pub mod boids;
 pub mod car_material;
-pub mod cars;
+#[cfg(feature = "gate-tools")]
 mod chunks;
-pub mod debug;
-pub mod diag;
-pub mod fps;
-pub mod gpu_timing;
 pub mod grade;
 pub mod hooks;
+#[cfg(feature = "gate-tools")]
 pub mod instanced;
 pub mod kit_material;
-mod kit_scene;
+pub mod kit_scene;
+#[cfg(feature = "gate-tools")]
 mod kit_test;
-pub mod lookdev;
+pub mod lighting;
+pub use lighting as lookdev;
 pub mod photo_fx;
-pub mod play;
 pub mod post;
-mod scene;
-pub mod tier;
+pub mod scene;
 pub mod tilt_shift;
-pub mod walk;
 pub mod water;
 pub mod workload;
 pub use grade::Grade;
@@ -133,16 +128,13 @@ pub struct HexRenderPlugin {
     pub scenario: Scenario,
     pub view: GateView,
     pub config: GateConfig,
-    /// Initial FPS counter state (`fps=on|off`).
-    pub fps: bool,
-    /// `config.tier` came from a `tier` key, so detection reports but never applies.
-    pub tier_explicit: bool,
-    /// `gpu_timing=on`: per-pass GPU timestamps (`gpu_timing`).
-    pub gpu_timing: bool,
 }
 
 impl Plugin for HexRenderPlugin {
     fn build(&self, app: &mut App) {
+        #[cfg(feature = "gate-tools")]
+        app.add_plugins(instanced::InstancedPlugin)
+            .add_systems(Update, (kit_test::spawn_when_ready, scene::move_vehicles));
         bevy::shader::load_shader_library!(app, "kit_common.wesl");
         bevy::shader::load_shader_library!(app, "water_common.wesl");
         bevy::shader::load_shader_library!(app, "hooks.wesl");
@@ -153,25 +145,11 @@ impl Plugin for HexRenderPlugin {
             .insert_resource(ClearColor(if grade::graded(self.scenario) {
                 self.config.grade.backdrop()
             } else {
-                lookdev::BACKDROP
+                lighting::BACKDROP
             }))
             .insert_resource(ActiveView(self.view))
             .insert_resource(self.config)
             .add_plugins((
-                diag::DiagPlugin,
-                cars::CarsPlugin,
-                boids::BoidsPlugin {
-                    budget: boids::BoidBudget::for_tier(self.config.tier),
-                },
-                fps::FpsPlugin { visible: self.fps },
-                tier::TierPlugin {
-                    tier: self.config.tier,
-                    explicit: self.tier_explicit,
-                },
-                gpu_timing::GpuTimingPlugin {
-                    enabled: self.gpu_timing,
-                },
-                instanced::InstancedPlugin,
                 MaterialPlugin::<kit_material::KitMaterial>::default(),
                 tilt_shift::TiltShiftPlugin,
                 MaterialPlugin::<water::WaterMaterial>::default(),
@@ -180,15 +158,12 @@ impl Plugin for HexRenderPlugin {
                     hooks: self.config.kit_hooks,
                 },
             ))
-            .add_plugins((photo_fx::PhotoFxPlugin, debug::DebugPlugin))
+            .add_plugins(photo_fx::PhotoFxPlugin)
             .init_resource::<AgentsPaused>()
-            .add_plugins(play::PlayPlugin)
             .add_systems(Startup, scene::setup)
             .add_systems(
                 Update,
                 (
-                    scene::move_vehicles,
-                    kit_test::spawn_when_ready,
                     kit_scene::start_kit,
                     kit_scene::finish_kit,
                     kit_scene::spin_rotors,
@@ -238,3 +213,9 @@ mod tests {
         assert!(!Scenario::Kit.has_water());
     }
 }
+
+/// Scene lifecycle hook installed by hex-play before Startup and retained across scenario switches.
+#[derive(Resource, Clone, Copy)]
+pub struct PlaySceneSetup(
+    pub fn(&mut Commands, &mut Assets<Mesh>, &mut Assets<StandardMaterial>) -> Transform,
+);

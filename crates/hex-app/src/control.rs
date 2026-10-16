@@ -4,13 +4,12 @@ use std::sync::Mutex;
 
 use bevy::prelude::*;
 use hex_core::{Axial, RotateDir};
+use hex_play::play::{
+    packs::PlayPacks,
+    rise::{PlayRises, ReducedMotion},
+};
 use hex_render::{
-    ActiveScenario, Scenario, SceneEntity,
-    play::{
-        packs::PlayPacks,
-        rise::{PlayRises, ReducedMotion},
-    },
-    setup_scene,
+    ActiveScenario, Scenario, SceneEntity, setup_scene,
     tilt_shift::{TiltPinned, TiltShiftSettings},
 };
 use serde::Deserialize;
@@ -65,7 +64,7 @@ pub enum Command {
         name: String,
     },
     /// Quality tier at runtime (`auto`, `low`, `medium`, `high`, `ultra`): rebuilds the scene at the
-    /// new tier with the camera kept (`hex_render::tier`); `auto` returns to the detected tier. The
+    /// new tier with the camera kept (`hex_play::tier`); `auto` returns to the detected tier. The
     /// choice is the save's quality from then on. The Settings sheet sends this.
     SetTier {
         tier: String,
@@ -77,7 +76,7 @@ pub enum Command {
         grade: String,
     },
     /// Grass density at runtime as a share of the Normal density (0 off, 1 Normal, 1.5 the most;
-    /// clamped, rounded to whole percent; `hex_render::play::grass`): each tile's blade mesh swaps
+    /// clamped, rounded to whole percent; `hex_play::play::grass`): each tile's blade mesh swaps
     /// from its seeded set with no scene rebuild. The Settings sheet's slider sends this; the
     /// overlay keeps the choice per viewer, not in the world save.
     SetGrass {
@@ -212,7 +211,7 @@ pub enum Command {
         heading: Option<f32>,
         pitch: Option<f32>,
     },
-    /// Developer overlays (`hex_render::debug`; the Settings Debug tab sends this): each switch
+    /// Developer overlays (`hex_play::debug`; the Settings Debug tab sends this): each switch
     /// given turns its overlay on or off, omitted ones keep theirs. `force_lod` is `auto`, `0`, `1`
     /// or `2`. Never saved; `state().debug` reports them.
     Debug {
@@ -308,7 +307,7 @@ pub struct CommandSettings<'w> {
     persist: ResMut<'w, PersistQueue>,
     saved: ResMut<'w, SavedSettings>,
     walk: ResMut<'w, WalkSession>,
-    debug: ResMut<'w, hex_render::debug::DebugOverlays>,
+    debug: ResMut<'w, hex_play::debug::DebugOverlays>,
 }
 
 #[derive(bevy::ecs::system::SystemParam)]
@@ -392,7 +391,7 @@ pub fn run_commands(
         Command::SetTier { tier } => match crate::persist::quality_setting(&tier) {
             Some(q) => {
                 saved.quality = q;
-                hex_render::tier::request(
+                hex_play::tier::request(
                     &mut commands,
                     crate::persist::quality_tier(q),
                     "set_tier command".into(),
@@ -414,7 +413,7 @@ pub fn run_commands(
             None => warn!("set_grade command: unknown grade '{grade}', skipped"),
         },
         Command::SetGrass { density } => {
-            match hex_render::play::grass::Density::from_share(density) {
+            match hex_play::play::grass::Density::from_share(density) {
                 Some(d) => commands.queue(move |w: &mut World| {
                     w.resource_mut::<hex_render::GateConfig>().grass = d;
                 }),
@@ -556,7 +555,7 @@ fn apply_photo_command(
 /// The `debug` command: switches given are set, the rest keep theirs. The resource changes only when
 /// a switch differs, so the overlays' change-driven systems do not rerun for a no-op.
 fn apply_debug(
-    debug: &mut ResMut<hex_render::debug::DebugOverlays>,
+    debug: &mut ResMut<hex_play::debug::DebugOverlays>,
     switches: [(&str, Option<bool>); 7],
     force_lod: Option<&str>,
 ) {
@@ -567,7 +566,7 @@ fn apply_debug(
         }
     }
     if let Some(f) = force_lod {
-        match hex_render::debug::DebugOverlays::parse_force(f) {
+        match hex_play::debug::DebugOverlays::parse_force(f) {
             Some(level) => next.force_lod = level,
             None => warn!("debug command: force_lod '{f}' is not auto, 0, 1 or 2, skipped"),
         }
@@ -675,7 +674,7 @@ pub struct GameSnapshot<'w> {
 #[derive(bevy::ecs::system::SystemParam)]
 pub struct AgentSnapshot<'w> {
     sim: Res<'w, CarSim>,
-    boids: Option<Res<'w, hex_render::boids::BoidReport>>,
+    boids: Option<Res<'w, hex_play::boids::BoidReport>>,
     paused: Res<'w, hex_render::AgentsPaused>,
 }
 
@@ -688,16 +687,16 @@ pub struct PresentationSnapshot<'w> {
     rises: Res<'w, PlayRises>,
     reduced: Res<'w, ReducedMotion>,
     packs: Option<Res<'w, PlayPacks>>,
-    ghost_drawn: Option<Res<'w, hex_render::play::ghost::GhostDrawn>>,
-    scatter: Option<Res<'w, hex_render::play::scatter::ScatterReport>>,
-    tier: Res<'w, hex_render::tier::TierChoice>,
-    ghost_report: Option<Res<'w, hex_render::play::ghost::GhostReport>>,
-    grass: Option<Res<'w, hex_render::play::grass::GrassReport>>,
+    ghost_drawn: Option<Res<'w, hex_play::play::ghost::GhostDrawn>>,
+    scatter: Option<Res<'w, hex_play::play::scatter::ScatterReport>>,
+    tier: Res<'w, hex_play::tier::TierChoice>,
+    ghost_report: Option<Res<'w, hex_play::play::ghost::GhostReport>>,
+    grass: Option<Res<'w, hex_play::play::grass::GrassReport>>,
     kit_failures: Option<Res<'w, hex_render::AssetLoadFailures>>,
     walk: Res<'w, WalkSession>,
-    walk_ground: Res<'w, hex_render::walk::WalkGround>,
-    debug: Res<'w, hex_render::debug::DebugOverlays>,
-    debug_report: Res<'w, hex_render::debug::DebugReport>,
+    walk_ground: Res<'w, hex_play::walk::WalkGround>,
+    debug: Res<'w, hex_play::debug::DebugOverlays>,
+    debug_report: Res<'w, hex_play::debug::DebugReport>,
 }
 
 #[derive(bevy::ecs::system::SystemParam)]

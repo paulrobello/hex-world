@@ -44,26 +44,6 @@ pub const PROBE_MIN_SAMPLES: usize = 30;
 /// A warm-up median above this (under 40 fps on a small start scene) steps the tier down once.
 pub const PROBE_STEP_MS: f32 = 25.0;
 
-impl QualityTier {
-    pub fn name(self) -> &'static str {
-        match self {
-            QualityTier::Low => "low",
-            QualityTier::Medium => "medium",
-            QualityTier::High => "high",
-            QualityTier::Ultra => "ultra",
-        }
-    }
-
-    /// One tier lower; Low stays Low.
-    pub fn lower(self) -> QualityTier {
-        match self {
-            QualityTier::Low | QualityTier::Medium => QualityTier::Low,
-            QualityTier::High => QualityTier::Medium,
-            QualityTier::Ultra => QualityTier::High,
-        }
-    }
-}
-
 /// `wgpu::DeviceType`, owned so the rules stay testable without a device.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum DeviceKind {

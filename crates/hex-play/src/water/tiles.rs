@@ -6,6 +6,7 @@
 //! sockets, so they match across every legal seam, sampled at world positions. River centre lines
 //! come from the tile's network segments and from its connected river neighbours, so a point on a
 //! seam gets the same distance, flow and depth from both tiles.
+use hex_play_state::{PlayTile, RisePart, RiseRole};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use bevy::{
@@ -22,14 +23,7 @@ use super::{
     cell_transform, materials, ribbon_mesh, river_flow, skirt_mesh_for, smoothstep, surface_mesh,
     surface_mesh_where, terrain_color, terrain_mesh_for,
 };
-use crate::{
-    SceneEntity,
-    play::{
-        PlayTile,
-        rise::{RisePart, RiseRole},
-    },
-    post::QualityTier,
-};
+use crate::{SceneEntity, post::QualityTier};
 
 /// Water surface (m): [`LAND`] below the meadow cap's border ring at y = 0, the prototype's
 /// plateau-to-water drop, which the terrain shader's grass line and wet band are tuned to.
@@ -1072,7 +1066,7 @@ mod tests {
     /// (mirrored here) returns `s` on the beach slope and the shelf, where the band and swash live.
     #[test]
     fn wet_band_inverts_the_coast_profile() {
-        let src = include_str!("../water_common.wesl");
+        let src = include_str!("../../../hex-render/src/water_common.wesl");
         for (name, v) in [
             ("COAST_WATER_Y", WATER_Y),
             ("COAST_LAND", LAND),

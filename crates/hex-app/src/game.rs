@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, VecDeque};
 
 use bevy::prelude::*;
 use hex_core::{Axial, EdgeStatus, ReplaceError, RotateDir, TileCatalog, TileDef, World};
-use hex_render::{
+use hex_play::{
     ActiveScenario, Scenario,
     play::{PlayGhost, PlayTile, PlayView, rise::RiseMessage},
 };
@@ -834,7 +834,7 @@ impl GameState {
         })
     }
 
-    /// What `hex_render::play` draws.
+    /// What `hex_play::play` draws.
     pub fn view(&self) -> PlayView {
         PlayView {
             tiles: self
@@ -921,7 +921,7 @@ pub fn apply_actions(
     }
 }
 
-/// Publishes the renderer's rise cues as `riseStage` events (after `hex_render::play::PlaySystems`).
+/// Publishes the renderer's rise cues as `riseStage` events (after `hex_play::play::PlaySystems`).
 pub fn publish_rise_events(mut cues: MessageReader<RiseMessage>) {
     for m in cues.read() {
         publish_event(&GameEvent::RiseStage {

@@ -26,7 +26,7 @@ struct RunFlags(args::Flags);
 struct FrameCount(u32);
 
 /// READY flips here; diagnostics start their frame-time window on the next frame.
-const SHOT_FRAME: u32 = hex_render::diag::READY_FRAME;
+const SHOT_FRAME: u32 = hex_play::diag::READY_FRAME;
 
 fn main() {
     #[cfg(not(target_arch = "wasm32"))]
@@ -99,7 +99,7 @@ fn main() {
         app.insert_resource(bevy::time::TimeUpdateStrategy::ManualDuration(
             std::time::Duration::from_nanos(16_666_667),
         ))
-        .init_resource::<hex_render::boids::FishTrack>();
+        .init_resource::<hex_play::boids::FishTrack>();
     }
     // Asset sources must be registered before `AssetPlugin` (inside DefaultPlugins) builds.
     app.add_plugins(MeshoptGlbPlugin)
@@ -115,6 +115,8 @@ fn main() {
             scenario: flags.scenario,
             view: flags.view,
             config: flags.gate,
+        })
+        .add_plugins(hex_play::HexPlayPlugin {
             fps: !flags.fps_off,
             tier_explicit: flags.tier_explicit,
             gpu_timing: flags.gpu_timing,
@@ -123,12 +125,12 @@ fn main() {
         .add_plugins(walk::WalkPlugin)
         .insert_resource(game)
         .insert_resource(cars)
-        .insert_resource(hex_render::boids::BoidSeed(flags.seed))
+        .insert_resource(hex_play::boids::BoidSeed(flags.seed))
         .insert_resource(flags.debug)
         .insert_resource(RunFlags(flags))
         .insert_resource(queue)
         .init_resource::<FrameCount>()
-        .init_resource::<hex_render::play::packs::PackRequests>()
+        .init_resource::<hex_play::play::packs::PackRequests>()
         .add_plugins((
             app_plugins::ActionsPlugin,
             app_plugins::PhotoPlugin,
@@ -181,7 +183,7 @@ fn main() {
             Update,
             sim::draw_networks
                 .after(sim::publish_cars)
-                .run_if(|d: Res<hex_render::debug::DebugOverlays>| d.networks),
+                .run_if(|d: Res<hex_play::debug::DebugOverlays>| d.networks),
         );
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -249,7 +251,7 @@ fn frame_hooks(
 /// not change the render view until a slot is hovered).
 fn request_selected_packs(
     game: Res<game::GameState>,
-    mut requests: ResMut<hex_render::play::packs::PackRequests>,
+    mut requests: ResMut<hex_play::play::packs::PackRequests>,
 ) {
     if requests.selected.as_deref() != Some(game.selected.as_str()) {
         requests.selected = Some(game.selected.clone());
@@ -257,7 +259,7 @@ fn request_selected_packs(
 }
 
 /// Copies the diag snapshot read by `hexWorld.diag()` every 30 frames.
-fn publish_diag(frames: Res<FrameCount>, snap: Res<hex_render::diag::DiagSnapshot>) {
+fn publish_diag(frames: Res<FrameCount>, snap: Res<hex_play::diag::DiagSnapshot>) {
     if frames.0.is_multiple_of(30) && !snap.json.is_empty() {
         *bridge::DIAG_JSON.lock().unwrap() = snap.json.clone();
     }

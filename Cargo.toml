@@ -40,6 +40,12 @@ opt-level = 3
 [profile.wasm-release.package.hex-render]
 opt-level = 3
 
+[profile.wasm-release.package.hex-play]
+opt-level = 3
+
+[profile.wasm-release.package.hex-play-state]
+opt-level = 3
+
 [profile.wasm-release.package.hex-assets]
 opt-level = 3
 

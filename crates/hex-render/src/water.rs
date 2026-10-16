@@ -34,8 +34,6 @@ use hex_core::{Axial, HEX_RADIUS};
 
 use crate::{SceneEntity, post::QualityTier};
 
-pub mod tiles;
-
 pub const WATER_SHADER: &str = "shaders/water.wesl";
 pub const TERRAIN_SHADER: &str = "shaders/water_terrain.wesl";
 
@@ -159,7 +157,7 @@ pub fn river_sample(p: Vec2) -> RiverSample {
     best
 }
 
-pub(crate) fn smoothstep(e0: f32, e1: f32, x: f32) -> f32 {
+pub fn smoothstep(e0: f32, e1: f32, x: f32) -> f32 {
     let t = ((x - e0) / (e1 - e0)).clamp(0.0, 1.0);
     t * t * (3.0 - 2.0 * t)
 }
@@ -326,7 +324,7 @@ pub fn hex_grid(n: u32, radius: f32) -> (Vec<Vec3>, Vec<u32>) {
     (pos, idx)
 }
 
-pub(crate) fn cell_transform(cell: Axial, rot: u8) -> Transform {
+pub fn cell_transform(cell: Axial, rot: u8) -> Transform {
     let [x, z] = cell.to_world(HEX_RADIUS);
     Transform::from_xyz(x, 0.0, z).with_rotation(crate::kit_scene::piece_rotation(rot))
 }

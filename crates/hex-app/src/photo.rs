@@ -5,7 +5,7 @@
 //! Enter and exit follow `GameState::photo_mode`, so the P key, Esc, the `toggle` command and the
 //! overlay share one snapshot and one restore. A click on the scene (the overlay's `focus_at`) focuses
 //! Tilt and Manual on the surface under it: [`focus_pick`] marches the view ray over the walk ground
-//! (`hex_render::walk::WalkGround`, the kit ground and water tops) and tests the drawn props
+//! (`hex_play::walk::WalkGround`, the kit ground and water tops) and tests the drawn props
 //! (houses, trees with their crowns, rocks) on the CPU, and takes the nearest. Photo mode changes the projection, the exposure, the
 //! tilt-shift override and, for Manual DOF only, Bevy's `DepthOfField` post pass. It adds no
 //! prepass, so no kit or water pipeline gains a binding: kit forward sits at exactly WebGPU's 16
@@ -18,7 +18,7 @@ use bevy::post_process::dof::DepthOfField;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages};
 use bevy::window::PrimaryWindow;
-use hex_render::{
+use hex_play::{
     AgentsPaused, GpuLimits,
     tilt_shift::TiltOverride,
     walk::{WalkGround, prop_kind},

@@ -1,14 +1,14 @@
 //! `--thumbs`: renders the per-rotation tile thumbnails the Legend inventory shows (PRD §5.3).
 //!
 //! Each tile is drawn alone at the origin through the play scenario's own path: this module only
-//! writes [`PlayView`], and `hex_render::play` spawns the tile's kit pieces or placeholders, so the
+//! writes [`PlayView`], and `hex_play::play` spawns the tile's kit pieces or placeholders, so the
 //! thumbnails follow the game as kit pieces land. Rotations whose world-edge sockets equal an
 //! earlier rotation's reuse that image. The run writes raw frames against a key colour plus
 //! `plan.json` to [`RAW_DIR`]; `scripts/thumbs/build.py` keys, downsamples and encodes them.
 use bevy::prelude::*;
 use bevy::render::view::DebandDither;
 use hex_core::{Axial, EdgeSocket, TileCatalog, TileDef};
-use hex_render::play::{
+use hex_play::play::{
     PlayKit, PlayTile, PlayView,
     packs::{PackRequests, PlayPacks},
     rise::ReducedMotion,
@@ -202,7 +202,7 @@ impl Plugin for ThumbsPlugin {
                 Update,
                 (
                     stage_scene,
-                    drive.after(game::sync_view).before(hex_render::play::sync),
+                    drive.after(game::sync_view).before(hex_play::play::sync),
                 ),
             );
     }

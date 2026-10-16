@@ -10,7 +10,7 @@ use ::bevy::{
     world_serialization::WorldSerializationPlugin,
 };
 use hex_assets::*;
-use hex_render::water::tiles::{Coastline, Mouth, coast_height};
+use hex_play::water::tiles::{Coastline, Mouth, coast_height};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};

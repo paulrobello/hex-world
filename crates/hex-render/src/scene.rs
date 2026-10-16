@@ -1,19 +1,25 @@
+#[cfg(feature = "gate-tools")]
+use crate::{
+    chunks::{chunk_tiles, merge_by_material},
+    workload::{GATE, ShadowCasters, piece_material, unit_hash},
+};
+#[cfg(feature = "gate-tools")]
+use bevy::light::NotShadowCaster;
 use bevy::{
     asset::RenderAssetUsages,
     camera::visibility::VisibilityRange,
-    light::{CascadeShadowConfigBuilder, NotShadowCaster},
+    light::CascadeShadowConfigBuilder,
     mesh::{Indices, PrimitiveTopology},
     prelude::*,
 };
-use hex_core::{Axial, HEX_RADIUS, hex_prism, spiral};
+#[cfg(feature = "gate-tools")]
+use hex_core::spiral;
+use hex_core::{Axial, HEX_RADIUS, hex_prism};
 
 use crate::{
     ActiveScenario, ActiveView, Scenario,
-    chunks::{chunk_tiles, merge_by_material},
     post::{camera_post_bundle, camera_ssao},
-    workload::{
-        GATE, GateConfig, GateView, Layout, PostMode, ShadowCasters, piece_material, unit_hash,
-    },
+    workload::{GateConfig, GateView, Layout, PostMode},
 };
 
 pub const TILE_HEIGHT: f32 = 4.0;
@@ -58,6 +64,7 @@ pub struct Chunk {
 
 /// A moving agent on a circle: `pos = center + (cos(t·ω + phase), 0, sin(t·ω + phase))·r`.
 #[derive(Component)]
+#[cfg_attr(not(feature = "gate-tools"), allow(dead_code))]
 pub struct Vehicle {
     center: Vec3,
     radius: f32,
@@ -71,7 +78,7 @@ const LOD_FAR: f32 = 400.0;
 const LOD_BAND: f32 = 5.0;
 const LOD_END: f32 = 100_000.0;
 
-pub(crate) fn lod_range(lod: usize) -> VisibilityRange {
+pub fn lod_range(lod: usize) -> VisibilityRange {
     let near = LOD_NEAR - LOD_BAND..LOD_NEAR + LOD_BAND;
     let far = LOD_FAR - LOD_BAND..LOD_FAR + LOD_BAND;
     let (start_margin, end_margin) = match lod {
@@ -88,6 +95,7 @@ pub(crate) fn lod_range(lod: usize) -> VisibilityRange {
 
 /// Flat-shaded triangle soup with outward-facing winding.
 #[derive(Default)]
+#[cfg(feature = "gate-tools")]
 struct Builder {
     positions: Vec<[f32; 3]>,
     normals: Vec<[f32; 3]>,
@@ -95,6 +103,7 @@ struct Builder {
     indices: Vec<u32>,
 }
 
+#[cfg(feature = "gate-tools")]
 impl Builder {
     fn tri(&mut self, a: Vec3, b: Vec3, c: Vec3, outward: Vec3) {
         let n = (b - a).cross(c - a);
@@ -132,12 +141,14 @@ impl Builder {
     }
 }
 
+#[cfg(feature = "gate-tools")]
 fn corner(radius: f32, i: usize) -> Vec3 {
     let a = (30.0 + 60.0 * i as f32).to_radians();
     Vec3::new(radius * a.cos(), 0.0, radius * a.sin())
 }
 
 /// Hex prism with a subdivided top cap: `6n²` cap triangles plus `12n` side triangles.
+#[cfg(feature = "gate-tools")]
 pub fn base_mesh(rings: u32, radius: f32, height: f32) -> Mesh {
     let mut b = Builder::default();
     let top = Vec3::Y * height;
@@ -160,6 +171,7 @@ pub fn base_mesh(rings: u32, radius: f32, height: f32) -> Mesh {
 }
 
 /// Box strip subdivided along its length: `8·segments + 4` triangles.
+#[cfg(feature = "gate-tools")]
 pub fn edge_mesh(segments: u32) -> Mesh {
     let (l, w, h) = (HEX_RADIUS * 0.7, 1.4, 1.2);
     let o = Vec3::new(-l / 2.0, 0.0, -w / 2.0);
@@ -175,6 +187,7 @@ pub fn edge_mesh(segments: u32) -> Mesh {
 }
 
 /// Bevy's `ico(n)` has `20·(n+1)²` triangles.
+#[cfg(feature = "gate-tools")]
 pub fn sphere_mesh(subdivisions: u32, radius: f32) -> Mesh {
     Sphere::new(radius)
         .mesh()
@@ -182,6 +195,7 @@ pub fn sphere_mesh(subdivisions: u32, radius: f32) -> Mesh {
         .expect("icosphere subdivisions within limit")
 }
 
+#[cfg(feature = "gate-tools")]
 pub fn cylinder_mesh(resolution: u32, segments: u32) -> Mesh {
     Cylinder::new(0.6, 3.0)
         .mesh()
@@ -191,12 +205,18 @@ pub fn cylinder_mesh(resolution: u32, segments: u32) -> Mesh {
 }
 
 /// Per-LOD parameters: LOD1/LOD2 land at or below ~50% / ~15% of LOD0 (PRD §10).
+#[cfg(feature = "gate-tools")]
 const BASE_RINGS: [u32; 3] = [12, 8, 4];
+#[cfg(feature = "gate-tools")]
 const EDGE_SEGMENTS: [u32; 3] = [75, 37, 12];
+#[cfg(feature = "gate-tools")]
 const CENTER_ICO: [u32; 3] = [8, 5, 2];
+#[cfg(feature = "gate-tools")]
 const PROP_ICO: [u32; 3] = [5, 3, 1];
+#[cfg(feature = "gate-tools")]
 const PROP_CYL: [(u32, u32); 3] = [(40, 9), (20, 9), (12, 3)];
 
+#[cfg(feature = "gate-tools")]
 pub(crate) struct PieceMeshes {
     base: [Handle<Mesh>; 3],
     edge: [Handle<Mesh>; 3],
@@ -205,6 +225,7 @@ pub(crate) struct PieceMeshes {
     prop_cyl: [Handle<Mesh>; 3],
 }
 
+#[cfg(feature = "gate-tools")]
 impl PieceMeshes {
     /// The kit meshes in `instanced::KINDS` order: base, edge, center, prop sphere, prop cylinder.
     pub(crate) fn kinds(&self) -> [&[Handle<Mesh>; 3]; 5] {
@@ -233,6 +254,7 @@ impl PieceMeshes {
 }
 
 /// Gate material `i`; the instanced layout turns the same values into its palette.
+#[cfg(feature = "gate-tools")]
 pub(crate) fn gate_material(i: usize) -> StandardMaterial {
     let base_color = Color::hsl(i as f32 * 9.0, 0.45, 0.5);
     let emissive = if i % 10 == 3 {
@@ -249,6 +271,7 @@ pub(crate) fn gate_material(i: usize) -> StandardMaterial {
     }
 }
 
+#[cfg(feature = "gate-tools")]
 fn gate_materials(materials: &mut Assets<StandardMaterial>) -> Vec<Handle<StandardMaterial>> {
     (0..GATE.materials)
         .map(|i| materials.add(gate_material(i)))
@@ -257,11 +280,13 @@ fn gate_materials(materials: &mut Assets<StandardMaterial>) -> Vec<Handle<Standa
 
 /// Whether piece `pi` (index within its tile) at `lod` casts shadows under `casters`:
 /// `large` drops the 12 props (pieces 8..20) and every LOD2 piece.
+#[cfg(feature = "gate-tools")]
 pub(crate) fn casts_shadow(casters: ShadowCasters, pi: usize, lod: usize) -> bool {
     casters == ShadowCasters::All || (pi < 8 && lod < 2)
 }
 
 /// The 20 pieces of tile `ti` in tile-local space: base, 6 edges, center, 12 props.
+#[cfg(feature = "gate-tools")]
 pub(crate) fn tile_pieces(m: &PieceMeshes, ti: usize) -> Vec<(&[Handle<Mesh>; 3], Transform)> {
     let seed = ti as u64 * 1_000;
     // Varied column heights give SSAO and shadows real crevices to work on.
@@ -305,6 +330,7 @@ pub(crate) fn tile_pieces(m: &PieceMeshes, ti: usize) -> Vec<(&[Handle<Mesh>; 3]
 }
 
 /// LOD0 triangles of one tile as spawned, counted from the mesh assets.
+#[cfg(feature = "gate-tools")]
 fn tile_lod0_tris(pieces: &[(&[Handle<Mesh>; 3], Transform)], meshes: &Assets<Mesh>) -> usize {
     pieces
         .iter()
@@ -313,12 +339,14 @@ fn tile_lod0_tris(pieces: &[(&[Handle<Mesh>; 3], Transform)], meshes: &Assets<Me
         .sum()
 }
 
+#[cfg(feature = "gate-tools")]
 fn mesh_tris(meshes: &Assets<Mesh>, h: &Handle<Mesh>) -> u32 {
     meshes
         .get(h)
         .map_or(0, |m| m.indices().map_or(0, |i| i.len() / 3)) as u32
 }
 
+#[cfg(feature = "gate-tools")]
 fn spawn_gate(
     commands: &mut Commands,
     meshes: &mut Assets<Mesh>,
@@ -356,6 +384,7 @@ fn spawn_gate(
 
 /// Per chunk and LOD, one merged mesh per material, placed at the chunk centroid so
 /// `VisibilityRange` measures distance to the chunk rather than to the world origin.
+#[cfg(feature = "gate-tools")]
 fn spawn_gate_chunks(
     commands: &mut Commands,
     meshes: &mut Assets<Mesh>,
@@ -424,6 +453,7 @@ fn spawn_gate_chunks(
     chunks.len()
 }
 
+#[cfg(feature = "gate-tools")]
 fn spawn_gate_entities(
     commands: &mut Commands,
     meshes: &Assets<Mesh>,
@@ -467,6 +497,7 @@ fn spawn_gate_entities(
     }
 }
 
+#[cfg(feature = "gate-tools")]
 fn spawn_vehicles(
     commands: &mut Commands,
     meshes: &mut Assets<Mesh>,
@@ -493,6 +524,7 @@ fn spawn_vehicles(
     }
 }
 
+#[cfg(feature = "gate-tools")]
 pub fn move_vehicles(time: Res<Time>, mut q: Query<(&Vehicle, &mut Transform)>) {
     let t = time.elapsed_secs();
     for (v, mut tr) in &mut q {
@@ -556,10 +588,11 @@ pub fn gate_camera(view: GateView) -> Transform {
 pub fn setup(
     mut commands: Commands,
     scenario: Res<ActiveScenario>,
-    view: Res<ActiveView>,
+    _view: Res<ActiveView>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     config: Option<Res<GateConfig>>,
+    play_setup: Option<Res<crate::PlaySceneSetup>>,
     server: Res<AssetServer>,
     (mut images, mut water_mats, mut terrain_mats): (
         ResMut<Assets<Image>>,
@@ -582,28 +615,38 @@ pub fn setup(
     }
     let camera = match scenario.0 {
         Scenario::Single => {
+            #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::instanced::InstancedScene>();
             commands.remove_resource::<crate::kit_scene::KitPending>();
             commands.remove_resource::<crate::kit_scene::KitLoading>();
             spawn_single(&mut commands, &mut meshes, &mut materials);
+            #[cfg(feature = "gate-tools")]
             commands.insert_resource(crate::kit_test::KitTestPending);
             Transform::from_xyz(0.0, 63.0, 90.0).looking_at(Vec3::ZERO, Vec3::Y)
         }
+        #[cfg(feature = "gate-tools")]
         Scenario::Gate2000 => {
+            #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::kit_test::KitTestPending>();
             commands.remove_resource::<crate::kit_scene::KitPending>();
             commands.remove_resource::<crate::kit_scene::KitLoading>();
             spawn_gate(&mut commands, &mut meshes, &mut materials, config);
-            gate_camera(view.0)
+            gate_camera(_view.0)
         }
+        #[cfg(not(feature = "gate-tools"))]
+        Scenario::Gate2000 => panic!("gate2000 requires gate-tools"),
         Scenario::Kit => {
+            #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::instanced::InstancedScene>();
+            #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::kit_test::KitTestPending>();
             commands.insert_resource(crate::kit_scene::KitPending);
             Transform::from_xyz(14.0, 38.0, 62.0).looking_at(Vec3::new(14.0, 0.0, 0.0), Vec3::Y)
         }
         Scenario::Water | Scenario::WaterKit => {
+            #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::instanced::InstancedScene>();
+            #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::kit_test::KitTestPending>();
             if scenario.0 == Scenario::WaterKit {
                 commands.insert_resource(crate::kit_scene::KitPending);
@@ -622,11 +665,15 @@ pub fn setup(
             Transform::from_xyz(-8.0, 34.0, 62.0).looking_at(Vec3::new(14.0, 0.0, 0.0), Vec3::Y)
         }
         Scenario::Play => {
+            #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::instanced::InstancedScene>();
+            #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::kit_test::KitTestPending>();
             commands.remove_resource::<crate::kit_scene::KitPending>();
             commands.remove_resource::<crate::kit_scene::KitLoading>();
-            crate::play::setup(&mut commands, &mut meshes, &mut materials)
+            (play_setup
+                .expect("the play scenario requires HexPlayPlugin")
+                .0)(&mut commands, &mut meshes, &mut materials)
         }
     };
 
@@ -637,14 +684,14 @@ pub fn setup(
             ..default()
         },
         if kit {
-            crate::lookdev::sun_transform()
+            crate::lighting::sun_transform()
         } else {
             Transform::from_xyz(200.0, 400.0, 150.0).looking_at(Vec3::ZERO, Vec3::Y)
         },
         CascadeShadowConfigBuilder {
             num_cascades: config.cascades as usize,
             maximum_distance: config.shadow_dist as f32,
-            first_cascade_far_bound: crate::lookdev::first_cascade_far_bound(kit),
+            first_cascade_far_bound: crate::lighting::first_cascade_far_bound(kit),
             ..default()
         }
         .build(),
@@ -662,7 +709,7 @@ pub fn setup(
     commands.insert_resource(ClearColor(if kit {
         config.grade.backdrop()
     } else {
-        crate::lookdev::BACKDROP
+        crate::lighting::BACKDROP
     }));
     let mut cam = commands.spawn((Camera3d::default(), camera, Msaa::Off, SceneEntity));
     if water {
@@ -681,12 +728,12 @@ pub fn setup(
     if kit {
         cam.insert(crate::grade::camera_bundle(&config));
         if config.ibl {
-            cam.insert(crate::lookdev::environment(&server));
+            cam.insert(crate::lighting::environment(&server));
         }
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "gate-tools"))]
 mod tests {
     use super::*;
 
