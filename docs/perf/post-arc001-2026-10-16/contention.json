@@ -14,5 +14,16 @@
     "load_before": 7.14208984375,
     "load_after": 6.97509765625,
     "accepted": false
-  }
+  },
+  "tainted_round1": {
+    "p50_ms": 52.6,
+    "p95_ms": 63.9,
+    "mean_ms": 54.17,
+    "max_ms": 104.5,
+    "load_before": 6.97509765625,
+    "load_after": 11.74267578125,
+    "accepted": false
+  },
+  "subsequent_contention": "par-factory allocations experiment began 11:34:47 PDT, automated Chromium156 renderer and GPU work. Cube workers and own finite tainted run exited naturally by 11:36.",
+  "valid_policy": "No foreign automated browsers. Human desktop Chrome allowed only while its summed process-tree CPU stays below 20% of one core, sampled every second. Host load <=15 before and after."
 }
