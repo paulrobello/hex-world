@@ -1,0 +1,12 @@
+{
+  "source_revision": "e67ba43",
+  "checkall": "passed",
+  "checkall_ci": "passed on serialized rerun",
+  "initial_gate_failure": "Two local Trunk builds raced on dist/.stage/index.html. Reran after first completed, exit 0.",
+  "harness_syntax": "node --check passed",
+  "trace_parser_fixture": "complete and paired spans plus microseconds-to-milliseconds assertions passed",
+  "date": "2026-10-16T18:15:07.618Z",
+  "symbol_attribution": "89733 function names, all non-custom WASM sections SHA-256 identical after wasm-opt133 -Oz -g",
+  "final_gate": "make checkall and make checkall-ci passed after inclusive profiler change",
+  "host_escalation": "MiniMac used after coordinator confirmed local macOS daemon storm. No local timing accepted."
+}
