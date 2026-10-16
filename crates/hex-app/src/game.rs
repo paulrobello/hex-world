@@ -719,14 +719,35 @@ impl GameState {
         self.epoch += 1;
     }
 
-    /// The `play` object of the state JSON.
+    /// The `play` object of the state JSON, assembled whole for schema tests.
+    #[cfg(test)]
     pub fn state_json(&self) -> Value {
+        let mut state = self.state_fields_json();
+        state
+            .as_object_mut()
+            .unwrap()
+            .extend(self.world_state_json().as_object().unwrap().clone());
+        state
+    }
+
+    /// World-sized fields change only with `world_rev`, not when the pointer or selection moves.
+    pub fn world_state_json(&self) -> Value {
         let tiles: Vec<Value> = self
             .world
             .tiles()
             .iter()
             .map(|(c, t)| json!({ "q": c.q, "r": c.r, "tile": t.def, "rotation": t.rotation }))
             .collect();
+        json!({
+            "tiles": tiles,
+            "frontier": self.world.frontier(),
+            "can_undo": self.world.can_undo(),
+            "can_redo": self.world.can_redo(),
+        })
+    }
+
+    /// Selection, mode and placement feedback, independent of world-sized tile data.
+    pub fn state_fields_json(&self) -> Value {
         let hovered_kind = self.hovered.map(|c| {
             if self.world.tile(c).is_some() {
                 "tile"
@@ -760,16 +781,12 @@ impl GameState {
             "inventory_open": self.inventory_open,
             "photo_mode": self.photo_mode,
             "walk_mode": self.walk_mode,
-            "tiles": tiles,
-            "frontier": self.world.frontier(),
             "hovered": self.hovered,
             "hovered_kind": hovered_kind,
             "pinned": self.pinned,
             "ghost": ghost,
             "inventory": inventory,
             "bulldoze": bulldoze,
-            "can_undo": self.world.can_undo(),
-            "can_redo": self.world.can_redo(),
             "last_result": self.last,
             "recent_events": self.recent,
         })

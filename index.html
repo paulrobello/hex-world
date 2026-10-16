@@ -72,8 +72,18 @@
         // events_pending counts what events() would return: the wasm queue plus the pumped JS queue.
         // queued counts every command not yet run: the engine's queue (as of the last frame) plus the
         // commands cmd() took since, which the next frame drains into it.
+        var latestState = {};
         function state() {
-          var s = JSON.parse(w.hex_world_state_json());
+          var json = w.hex_world_state_json();
+          if (json) {
+            var patch = JSON.parse(json);
+            Object.assign(latestState, patch.state);
+            if (latestState.play && Object.keys(patch.play).length) {
+              latestState.play = Object.assign({}, latestState.play, patch.play);
+            }
+          }
+          // Queue counts are call-local overlays, never accumulated into the cached engine state.
+          var s = Object.assign({}, latestState);
           if (typeof s.events_pending === "number") s.events_pending += queued.length;
           if (typeof s.queued === "number") s.queued += w.hex_world_inbox_len();
           return s;

@@ -525,7 +525,7 @@ fn apply_debug(
 }
 
 fn dump_state(name: &str) {
-    let json = bridge::STATE_JSON.lock().unwrap().clone();
+    let json = bridge::STATE_JSON.lock().unwrap().snapshot();
     info!("dump_state {name}: {json}");
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -647,9 +647,10 @@ pub fn publish_state(
         Res<hex_render::debug::DebugOverlays>,
         Res<hex_render::debug::DebugReport>,
     ),
-    (fx, fx_cams): (
+    (fx, fx_cams, mut published): (
         Res<crate::photo_fx::PhotoFxSettings>,
         Query<(), (With<hex_render::photo_fx::PhotoFx>, With<Camera3d>)>,
+        Local<Option<(u64, u64, bool)>>,
     ),
 ) {
     *bridge::VIEW.lock().unwrap() = views.iter().find(|(c, _)| c.is_active).and_then(|(c, gt)| {
@@ -671,8 +672,25 @@ pub fn publish_state(
                             "maxTextureDimension2D": g.max_texture_dimension_2d })
     });
     let play = active.0 == Scenario::Play;
+    let mut publication = bridge::STATE_JSON.lock().unwrap();
+    publication.set("play", if play { "{}" } else { "null" }.into());
+    if play
+        && published.is_none_or(|(_, revision, was_play)| !was_play || revision != game.world_rev)
+    {
+        for (key, value) in game.world_state_json().as_object().unwrap() {
+            publication.set_play(key, value.to_string());
+        }
+    }
+    if play
+        && published.is_none_or(|(revision, _, was_play)| !was_play || revision != game.revision)
+    {
+        for (key, value) in game.state_fields_json().as_object().unwrap() {
+            publication.set_play(key, value.to_string());
+        }
+    }
+    *published = Some((game.revision, game.world_rev, play));
     let play_state = play.then(|| {
-        let mut p = game.state_json();
+        let mut p = serde_json::json!({});
         sim.extend_state(&mut p);
         extend_play_rise(&mut p, rises.report(), reduced.0);
         extend_play_view(&mut p, cameras.iter().next());
@@ -697,7 +715,6 @@ pub fn publish_state(
     let state = serde_json::json!({
         "scenario": format!("{:?}", active.0),
         "tiles": if play { game.world.tiles().len() } else { active.0.tile_count(kit_src) },
-        "play": play_state,
         "events_pending": bridge::EVENTS.lock().unwrap().len(),
         "gpu": gpu,
         "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps, "chosen": tilt_chosen.0 },
@@ -715,23 +732,39 @@ pub fn publish_state(
                 .collect::<serde_json::Map<_, _>>()
         }),
         "ghost_meshes": ghost_drawn.as_ref().filter(|_| play).map(|g| g.0),
-        "ghost": ghost_report.filter(|_| play)
-            .and_then(|g| serde_json::from_str::<serde_json::Value>(&g.0).ok()),
         "pack_waiting": packs.as_ref().filter(|_| play).map(|p| {
             p.waiting().iter().map(|(c, tile, packs)| {
                 serde_json::json!({ "q": c.q, "r": c.r, "tile": tile, "packs": packs })
             }).collect::<Vec<_>>()
         }),
-        "diag": serde_json::from_str::<serde_json::Value>(&bridge::DIAG_JSON.lock().unwrap())
-            .unwrap_or(serde_json::Value::Null),
-        "boids": boids.and_then(|b| serde_json::from_str::<serde_json::Value>(&b.0).ok()),
-        "scatter": scatter.filter(|_| play)
-            .and_then(|s| serde_json::from_str::<serde_json::Value>(&s.0).ok()),
-        "grass": grass.and_then(|g| serde_json::from_str::<serde_json::Value>(&g.0).ok()),
         "assets": { "failed": kit_failures.map(|f| f.list()).unwrap_or_default() },
         "debug": debug.json(&debug_report),
     });
-    *bridge::STATE_JSON.lock().unwrap() = state.to_string();
+    for (key, value) in state.as_object().unwrap() {
+        publication.set(key, value.to_string());
+    }
+    if let Some(play_state) = play_state {
+        for (key, value) in play_state.as_object().unwrap() {
+            publication.set_play(key, value.to_string());
+        }
+    }
+    // Reports are already valid JSON from their producers. Forward them verbatim, rather than
+    // parsing and serializing the same world-sized diagnostic arrays again.
+    for (key, report) in [
+        (
+            "ghost",
+            ghost_report.as_ref().filter(|_| play).map(|g| g.0.as_str()),
+        ),
+        ("boids", boids.as_ref().map(|b| b.0.as_str())),
+        (
+            "scatter",
+            scatter.as_ref().filter(|_| play).map(|s| s.0.as_str()),
+        ),
+        ("grass", grass.as_ref().map(|g| g.0.as_str())),
+        ("diag", Some(bridge::DIAG_JSON.lock().unwrap().as_str())),
+    ] {
+        publication.set_raw(key, report.filter(|s| !s.is_empty()).unwrap_or("null"));
+    }
 }
 
 pub fn exit_when_idle(exit: Res<ExitRequest>, mut out: MessageWriter<AppExit>) {
@@ -747,7 +780,7 @@ pub fn dump_state_on_exit(flags: Res<RunFlags>, mut exits: MessageReader<AppExit
     }
     #[cfg(not(target_arch = "wasm32"))]
     if let Some(path) = &flags.0.dump_state {
-        let json = bridge::STATE_JSON.lock().unwrap().clone();
+        let json = bridge::STATE_JSON.lock().unwrap().snapshot();
         match std::fs::write(path, json) {
             Ok(()) => info!("wrote {path}"),
             Err(e) => warn!("cannot write {path}: {e}"),

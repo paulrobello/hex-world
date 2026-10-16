@@ -8,8 +8,145 @@ use hex_core::{Axial, HEX_RADIUS};
 pub static READY: Mutex<bool> = Mutex::new(false);
 /// Game events as JSON objects, oldest first, drained by `hex_world_events` (`hexWorld.events()`).
 pub static EVENTS: Mutex<VecDeque<String>> = Mutex::new(VecDeque::new());
-pub static STATE_JSON: Mutex<String> = Mutex::new(String::new());
+pub static STATE_JSON: Mutex<StatePublication> = Mutex::new(StatePublication::new());
 pub static DIAG_JSON: Mutex<String> = Mutex::new(String::new());
+/// Serialized fields are retained once. The private wasm transport drains only changed fields,
+/// while native dumps assemble the complete public snapshot on demand.
+pub struct StatePublication {
+    state: std::collections::BTreeMap<String, String>,
+    play: std::collections::BTreeMap<String, String>,
+    dirty: std::collections::BTreeMap<String, String>,
+    dirty_play: std::collections::BTreeMap<String, String>,
+}
+
+impl StatePublication {
+    pub const fn new() -> Self {
+        Self {
+            state: std::collections::BTreeMap::new(),
+            play: std::collections::BTreeMap::new(),
+            dirty: std::collections::BTreeMap::new(),
+            dirty_play: std::collections::BTreeMap::new(),
+        }
+    }
+
+    pub fn set_raw(&mut self, key: &str, json: &str) {
+        if self.state.get(key).map(String::as_str) != Some(json) {
+            self.set(key, json.into());
+        }
+    }
+
+    pub fn set(&mut self, key: &str, json: String) {
+        if self.state.get(key) == Some(&json) {
+            return;
+        }
+        if key == "play" {
+            self.play.clear();
+            self.dirty_play.clear();
+        }
+        self.state.insert(key.into(), json.clone());
+        self.dirty.insert(key.into(), json);
+    }
+
+    pub fn set_play(&mut self, key: &str, json: String) {
+        if self.play.get(key) == Some(&json) {
+            return;
+        }
+        self.play.insert(key.into(), json.clone());
+        self.dirty_play.insert(key.into(), json);
+    }
+
+    fn object(fields: &std::collections::BTreeMap<String, String>) -> String {
+        let mut json = String::from("{");
+        for (i, (key, value)) in fields.iter().enumerate() {
+            if i > 0 {
+                json.push(',');
+            }
+            json.push_str(&serde_json::to_string(key).unwrap());
+            json.push(':');
+            json.push_str(value);
+        }
+        json.push('}');
+        json
+    }
+
+    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+    pub fn take_patch(&mut self) -> String {
+        if self.dirty.is_empty() && self.dirty_play.is_empty() {
+            return String::new();
+        }
+        let dirty = std::mem::take(&mut self.dirty);
+        let dirty_play = std::mem::take(&mut self.dirty_play);
+        format!(
+            "{{\"state\":{},\"play\":{}}}",
+            Self::object(&dirty),
+            Self::object(&dirty_play)
+        )
+    }
+
+    pub fn snapshot(&self) -> String {
+        let mut fields = self
+            .state
+            .iter()
+            .map(|(k, v)| {
+                let value = if k == "play" && v == "{}" {
+                    Self::object(&self.play)
+                } else {
+                    v.clone()
+                };
+                format!("{}:{value}", serde_json::to_string(k).unwrap())
+            })
+            .collect::<Vec<_>>();
+        fields.sort();
+        format!("{{{}}}", fields.join(","))
+    }
+}
+
+#[cfg(test)]
+mod publication_tests {
+    use super::StatePublication;
+    use serde_json::{Value, json};
+
+    #[test]
+    fn publication_coalesces_changes_and_keeps_a_full_native_snapshot() {
+        let mut state = StatePublication::new();
+        assert_eq!(state.take_patch(), "");
+        state.set("frames", "1".into());
+        state.set("play", "{}".into());
+        state.set_play("tiles", "[{\"q\":0}]".into());
+        state.set_play("focus", "[0,0,0]".into());
+        let first: Value = serde_json::from_str(&state.take_patch()).unwrap();
+        assert_eq!(first["play"]["tiles"], json!([{ "q": 0 }]));
+        assert_eq!(state.take_patch(), "");
+        state.set_play("tiles", "[{\"q\":0}]".into());
+        state.set_play("focus", "[1,0,0]".into());
+        state.set("frames", "2".into());
+        state.set("frames", "3".into());
+        let patch: Value = serde_json::from_str(&state.take_patch()).unwrap();
+        assert!(patch["play"].get("tiles").is_none());
+        assert_eq!(patch["play"]["focus"], json!([1, 0, 0]));
+        assert_eq!(patch["state"]["frames"], 3);
+        let full: Value = serde_json::from_str(&state.snapshot()).unwrap();
+        assert_eq!(full["play"]["tiles"], json!([{ "q": 0 }]));
+        assert_eq!(full["play"]["focus"], json!([1, 0, 0]));
+        assert_eq!(full["frames"], 3);
+    }
+
+    #[test]
+    fn scenario_changes_replace_play_instead_of_reviving_stale_fields() {
+        let mut state = StatePublication::new();
+        state.set("play", "{}".into());
+        state.set_play("tiles", "[]".into());
+        state.take_patch();
+        state.set("play", "null".into());
+        let full: Value = serde_json::from_str(&state.snapshot()).unwrap();
+        assert!(full["play"].is_null());
+        state.set("play", "{}".into());
+        state.set_play("tiles", "[]".into());
+        let patch: Value = serde_json::from_str(&state.take_patch()).unwrap();
+        assert_eq!(patch["play"]["tiles"], json!([]));
+    }
+}
+
 /// The game camera as of the last frame, for `hexWorld.cellRect` (the UI overlay's anchors).
 pub static VIEW: Mutex<Option<View>> = Mutex::new(None);
 
@@ -67,8 +204,7 @@ mod exports {
 
     #[wasm_bindgen]
     pub fn hex_world_state_json() -> String {
-        let s = super::STATE_JSON.lock().unwrap();
-        if s.is_empty() { "{}".into() } else { s.clone() }
+        super::STATE_JSON.lock().unwrap().take_patch()
     }
 
     #[wasm_bindgen]
