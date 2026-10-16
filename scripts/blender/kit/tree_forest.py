@@ -21,6 +21,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from lib import bake, collider, export, geom, lod, materials, scene, uv  # noqa: E402
 import _forest as F  # noqa: E402
+from _shared import island_texels  # noqa: E402
 import _tree  # noqa: E402
 
 PIECE, ATLAS, MASK_SIZE = F.PIECE, F.ATLAS, 1024
@@ -114,27 +115,6 @@ rows = np.linspace(0.0, 1.0, cv1 - cv0)[:, None]
 mk[cv0:cv1, cu0:cu1, 3] = 0.5 + 0.35 * rows  # the core: darker low in the crown, lighter up top
 mk[cv0:cv1, cu0:cu1, 0] = 0.6
 bake_stats = {"needleAlphaCoverageByMip": coverage}
-
-
-def island_texels(obj, size):
-    """obj's UV0 islands rasterized at texel centres (bool size x size, Blender pixel order)."""
-    island = np.zeros((size, size), bool)
-    uvd = obj.data.uv_layers["UVMap"].data
-    for poly in obj.data.polygons:
-        loops = list(poly.loop_indices)
-        for k in range(1, len(loops) - 1):
-            tri = np.array([uvd[loops[0]].uv[:], uvd[loops[k]].uv[:], uvd[loops[k + 1]].uv[:]]) * size
-            lo_, hi_ = np.floor(tri.min(0)).astype(int), np.ceil(tri.max(0)).astype(int)
-            xs, ys = np.meshgrid(np.arange(lo_[0], hi_[0]) + 0.5, np.arange(lo_[1], hi_[1]) + 0.5)
-            (ax, ay), (bx, by), (cx, cy) = tri
-            d = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
-            if abs(d) < 1e-12:
-                continue
-            l1 = ((by - cy) * (xs - cx) + (cx - bx) * (ys - cy)) / d
-            l2 = ((cy - ay) * (xs - cx) + (ax - cx) * (ys - cy)) / d
-            inside = (l1 >= 0) & (l2 >= 0) & (l1 + l2 <= 1)
-            island[ys[inside].astype(int).clip(0, size - 1), xs[inside].astype(int).clip(0, size - 1)] = True
-    return island
 
 
 trunk0 = lod_parts[0][0]

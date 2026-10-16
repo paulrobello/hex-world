@@ -3,7 +3,7 @@
   "budgetClass": "piece",
   "generator": {
     "path": "scripts/blender/kit/tree_forest.py",
-    "sha256": "4fd595ce7e9364a92b732a9845affb65fc7c68806d68a74b103bc4810a973a98"
+    "sha256": "ecef1176911f0d2daaf173ce9cb727cb59e51219cd2eb908953f125ecb78c84c"
   },
   "generatorDeps": [
     {
@@ -13,6 +13,10 @@
     {
       "path": "scripts/blender/kit/_leaves.py",
       "sha256": "d732efec23b5b9a52dca841bfc97f70fb9ab604b8f039eb6029fffaabb2ccf4a"
+    },
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
     },
     {
       "path": "scripts/blender/kit/_tree.py",

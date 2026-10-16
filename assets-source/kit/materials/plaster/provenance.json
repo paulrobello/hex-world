@@ -5,9 +5,14 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/mat_plaster.py",
-    "sha256": "08bcf85e1cad8309b6e5a44aa965c8e865da5c278e47b237b2d6112f07b8c009"
+    "sha256": "c03e330656fcf9d67e46fe51772eb622b2407b3e073f1b86652e878fd308d53e"
   },
-  "generatorDeps": [],
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
   "authoringAgent": {
     "harness": "claude-code",
     "model": "claude-opus-5-5"
@@ -23,8 +28,13 @@
     "blender": "5.2.2 LTS",
     "device": "CPU",
     "generator": "scripts/blender/kit/mat_plaster.py",
-    "generatorDeps": [],
-    "generatorSha256": "08bcf85e1cad8309b6e5a44aa965c8e865da5c278e47b237b2d6112f07b8c009",
+    "generatorDeps": [
+      {
+        "path": "scripts/blender/kit/_shared.py",
+        "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+      }
+    ],
+    "generatorSha256": "c03e330656fcf9d67e46fe51772eb622b2407b3e073f1b86652e878fd308d53e",
     "samples": 32,
     "set": "plaster",
     "size": 1024,
@@ -32,12 +42,12 @@
   },
   "bakeReport": {
     "path": "assets-source/kit/materials/plaster/bake-report.json",
-    "sha256": "7658e1799a6624cd18fd88e622cbe4adfe6d28c4b1a893d7389fee23018dbfe5",
-    "bytes": 282
+    "sha256": "50ca5473a83f50cb3b5388766486cc3745a47e441b8152094b637735687b8dca",
+    "bytes": 428
   },
   "compressReport": {
     "path": "assets-source/kit/materials/plaster/compress-report.json",
-    "sha256": "01c9d45a559827dfe39dda1fc6d73dc1a8b6775c18f07461c78d9f269ded7e40",
+    "sha256": "e6ae898821c4e3a6c57a7631861ec0f5c73bfc4fe624a558c3f0003bf013d2cd",
     "bytes": 3904
   },
   "compression": {
@@ -195,7 +205,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T03:34:23.206Z",
+    "date": "2026-10-16T18:17:51.381Z",
     "checks": [
       "kit-compress tileable budget",
       "kit_gate textures"

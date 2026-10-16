@@ -5,9 +5,14 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/mat_grass.py",
-    "sha256": "03a2278d0bf0e4c4f1352cf38171b95f531d84792729940c0d6a753b2bcdb59b"
+    "sha256": "dc68f68b532d16296f577bfacc796a6d0a6ece36291ce22bbf5cbe95b7115e22"
   },
-  "generatorDeps": [],
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
   "authoringAgent": {
     "harness": "claude-code",
     "model": "claude-opus-5-5"
@@ -23,7 +28,13 @@
     "blender": "5.2.2 LTS",
     "device": "CPU",
     "generator": "scripts/blender/kit/mat_grass.py",
-    "generatorSha256": "03a2278d0bf0e4c4f1352cf38171b95f531d84792729940c0d6a753b2bcdb59b",
+    "generatorDeps": [
+      {
+        "path": "scripts/blender/kit/_shared.py",
+        "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+      }
+    ],
+    "generatorSha256": "dc68f68b532d16296f577bfacc796a6d0a6ece36291ce22bbf5cbe95b7115e22",
     "samples": 32,
     "set": "grass",
     "size": 1024,
@@ -31,12 +42,12 @@
   },
   "bakeReport": {
     "path": "assets-source/kit/materials/grass/bake-report.json",
-    "sha256": "81352a840bc0b93190ab709af75c069615f85bbdd2309884a9aabed2cd041fd7",
-    "bytes": 255
+    "sha256": "642292e6c8285eef80e3f1ff2b8a1c08753f74a3e24667383cc201ed5c02984c",
+    "bytes": 424
   },
   "compressReport": {
     "path": "assets-source/kit/materials/grass/compress-report.json",
-    "sha256": "7b3b37a348c64fd7cbd065bdf2c7d1a50fb92657873bab705e47947bb4204650",
+    "sha256": "e928f858e7d10b24e68de2727f98cd1acfe6d75cceecfa631b97686753bea87a",
     "bytes": 3872
   },
   "compression": {
@@ -194,7 +205,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-13T17:37:23.138Z",
+    "date": "2026-10-16T18:17:49.759Z",
     "checks": [
       "kit-compress tileable budget",
       "kit_gate textures"

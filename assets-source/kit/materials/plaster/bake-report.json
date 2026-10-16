@@ -2,8 +2,13 @@
   "blender": "5.2.2 LTS",
   "device": "CPU",
   "generator": "scripts/blender/kit/mat_plaster.py",
-  "generatorDeps": [],
-  "generatorSha256": "08bcf85e1cad8309b6e5a44aa965c8e865da5c278e47b237b2d6112f07b8c009",
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
+  "generatorSha256": "c03e330656fcf9d67e46fe51772eb622b2407b3e073f1b86652e878fd308d53e",
   "samples": 32,
   "set": "plaster",
   "size": 1024,

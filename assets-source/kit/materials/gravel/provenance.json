@@ -5,9 +5,14 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/mat_gravel.py",
-    "sha256": "05b5b3e88e721444aaf5ae20bf9c4d56d72b028431092fa3c0a247862cb24de0"
+    "sha256": "3b5d7f45cfeeffa32a706222eb70c704c7d896f4d830978570d97bad93ca9d08"
   },
-  "generatorDeps": [],
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
   "authoringAgent": {
     "harness": "claude-code",
     "model": "claude-opus-5-5"
@@ -23,8 +28,13 @@
     "blender": "5.2.2 LTS",
     "device": "CPU",
     "generator": "scripts/blender/kit/mat_gravel.py",
-    "generatorDeps": [],
-    "generatorSha256": "05b5b3e88e721444aaf5ae20bf9c4d56d72b028431092fa3c0a247862cb24de0",
+    "generatorDeps": [
+      {
+        "path": "scripts/blender/kit/_shared.py",
+        "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+      }
+    ],
+    "generatorSha256": "3b5d7f45cfeeffa32a706222eb70c704c7d896f4d830978570d97bad93ca9d08",
     "samples": 32,
     "set": "gravel",
     "size": 1024,
@@ -32,12 +42,12 @@
   },
   "bakeReport": {
     "path": "assets-source/kit/materials/gravel/bake-report.json",
-    "sha256": "44a8a7f2423db6cf782ed046500f4436710fb26dedc5beecf6f345fe811df00d",
-    "bytes": 280
+    "sha256": "b480e4656e6516f28f37250880b5441e0fb81f055182f8172b70c37d150670ec",
+    "bytes": 426
   },
   "compressReport": {
     "path": "assets-source/kit/materials/gravel/compress-report.json",
-    "sha256": "b8ac62bc17b34c78fd605d6c1572b48d5370182b6ec8fb5b8e43db3a56effdd8",
+    "sha256": "296e4b0fb7ee476e7515f3841da2e24862245de6f1297177f12427dc1bcb9040",
     "bytes": 3888
   },
   "compression": {
@@ -195,7 +205,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T03:26:22.552Z",
+    "date": "2026-10-16T18:17:51.072Z",
     "checks": [
       "kit-compress tileable budget",
       "kit_gate textures"

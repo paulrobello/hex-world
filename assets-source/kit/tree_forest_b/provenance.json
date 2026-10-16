@@ -16,8 +16,12 @@
       "sha256": "d732efec23b5b9a52dca841bfc97f70fb9ab604b8f039eb6029fffaabb2ccf4a"
     },
     {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    },
+    {
       "path": "scripts/blender/kit/_spruce.py",
-      "sha256": "fd09a53c0febad8acdf0948abf2d37cb6fb7352de326491544bb0fd2075e9db5"
+      "sha256": "5d037a06fa902f1977baf9c593123855fd49071159e697ab9f8e1312bcd81263"
     },
     {
       "path": "scripts/blender/kit/_tree.py",
@@ -385,7 +389,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-15T02:57:12.297Z",
+    "date": "2026-10-16T18:17:57.053Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",

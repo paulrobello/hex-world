@@ -9,7 +9,9 @@ import random
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from lib import bake, export, materials, scene  # noqa: E402
+from _shared import make_math, make_ramp  # noqa: E402
 
 SET, SIZE, TILE_M = "plaster", 1024, 2.0
 GENERATOR = pathlib.Path(__file__).resolve()
@@ -20,6 +22,8 @@ bake.setup_cycles(samples=32)
 
 mat = materials.pbr_material(f"mat_{SET}", materials.srgb("#ddd6c8"), 0.88)
 nt = mat.node_tree
+math = make_math(nt)
+ramp = make_ramp(nt)
 bsdf = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
 vec, w = materials.torus_coords(nt, scale=TILE_M)
 
@@ -46,34 +50,6 @@ def voronoi(scale, feature="F1", randomness=1.0):
     nt.links.new(vec, n.inputs["Vector"])
     nt.links.new(w, n.inputs["W"])
     return n
-
-
-def math(op, a, b=None, clamp=False):
-    n = nt.nodes.new("ShaderNodeMath")
-    n.operation = op
-    n.use_clamp = clamp
-    for i, v in enumerate((a, b)):
-        if v is None:
-            continue
-        if isinstance(v, float):
-            n.inputs[i].default_value = v
-        else:
-            nt.links.new(v, n.inputs[i])
-    return n.outputs[0]
-
-
-def ramp(fac, stops):
-    n = nt.nodes.new("ShaderNodeValToRGB")
-    els = n.color_ramp.elements
-    while len(els) > len(stops):
-        els.remove(els[-1])
-    while len(els) < len(stops):
-        els.new(0.5)
-    for el, (pos, col) in zip(els, stops):
-        el.position = pos
-        el.color = col if isinstance(col, tuple) else materials.srgb(col)
-    nt.links.new(fac, n.inputs["Fac"])
-    return n.outputs["Color"]
 
 
 def mix(fac, a, b):

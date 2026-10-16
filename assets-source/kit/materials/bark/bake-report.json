@@ -2,7 +2,13 @@
   "blender": "5.2.2 LTS",
   "device": "CPU",
   "generator": "scripts/blender/kit/mat_bark.py",
-  "generatorSha256": "cc55b9c07d4e6d3a1e9266533004fd14a48c11f1383642d4b4ca2c31e045a55a",
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
+  "generatorSha256": "9e55ced5d6c6f561b03f6f6765a11e0d40eb8bf923a01416522d6412b81f4b77",
   "samples": 32,
   "set": "bark",
   "size": 1024,

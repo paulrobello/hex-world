@@ -2,8 +2,13 @@
   "blender": "5.2.2 LTS",
   "device": "CPU",
   "generator": "scripts/blender/kit/mat_soil.py",
-  "generatorDeps": [],
-  "generatorSha256": "c585df629045582c2dd7cf0901e95b01b3c3bfe2eca8267eedc0dd9ba75603af",
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
+  "generatorSha256": "33a03b1211d9fcae0afa6a68921bcde8d78992ff24514c52514ddcc7c995bc9e",
   "samples": 32,
   "set": "soil",
   "size": 1024,

@@ -5,9 +5,14 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/mat_bark.py",
-    "sha256": "cc55b9c07d4e6d3a1e9266533004fd14a48c11f1383642d4b4ca2c31e045a55a"
+    "sha256": "9e55ced5d6c6f561b03f6f6765a11e0d40eb8bf923a01416522d6412b81f4b77"
   },
-  "generatorDeps": [],
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
   "authoringAgent": {
     "harness": "claude-code",
     "model": "claude-opus-5-5"
@@ -23,7 +28,13 @@
     "blender": "5.2.2 LTS",
     "device": "CPU",
     "generator": "scripts/blender/kit/mat_bark.py",
-    "generatorSha256": "cc55b9c07d4e6d3a1e9266533004fd14a48c11f1383642d4b4ca2c31e045a55a",
+    "generatorDeps": [
+      {
+        "path": "scripts/blender/kit/_shared.py",
+        "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+      }
+    ],
+    "generatorSha256": "9e55ced5d6c6f561b03f6f6765a11e0d40eb8bf923a01416522d6412b81f4b77",
     "samples": 32,
     "set": "bark",
     "size": 1024,
@@ -31,12 +42,12 @@
   },
   "bakeReport": {
     "path": "assets-source/kit/materials/bark/bake-report.json",
-    "sha256": "0b052c315e18b06b25e077d7ca56ed8964400806d4c1e9491e0bb6b6e1fa6289",
-    "bytes": 253
+    "sha256": "4b97d0f7a44de8b30ea2617c7e71157850f76f1f8db506123d09d0629c6caffa",
+    "bytes": 422
   },
   "compressReport": {
     "path": "assets-source/kit/materials/bark/compress-report.json",
-    "sha256": "85fd124717a0c39ff5c6a781856bf86d49962572636ef40386d5ad3aec4e5d9a",
+    "sha256": "1d148b4102d3fb73eabb93b2b3476d485d278337be8c1dec43738fff60be3faa",
     "bytes": 3850
   },
   "compression": {
@@ -194,7 +205,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T00:08:38.766Z",
+    "date": "2026-10-16T18:17:50.756Z",
     "checks": [
       "kit-compress tileable budget",
       "kit_gate textures"

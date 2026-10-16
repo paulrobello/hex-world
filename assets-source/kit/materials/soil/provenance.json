@@ -5,9 +5,14 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/mat_soil.py",
-    "sha256": "c585df629045582c2dd7cf0901e95b01b3c3bfe2eca8267eedc0dd9ba75603af"
+    "sha256": "33a03b1211d9fcae0afa6a68921bcde8d78992ff24514c52514ddcc7c995bc9e"
   },
-  "generatorDeps": [],
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
   "authoringAgent": {
     "harness": "claude-code",
     "model": "claude-opus-5-5"
@@ -23,8 +28,13 @@
     "blender": "5.2.2 LTS",
     "device": "CPU",
     "generator": "scripts/blender/kit/mat_soil.py",
-    "generatorDeps": [],
-    "generatorSha256": "c585df629045582c2dd7cf0901e95b01b3c3bfe2eca8267eedc0dd9ba75603af",
+    "generatorDeps": [
+      {
+        "path": "scripts/blender/kit/_shared.py",
+        "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+      }
+    ],
+    "generatorSha256": "33a03b1211d9fcae0afa6a68921bcde8d78992ff24514c52514ddcc7c995bc9e",
     "samples": 32,
     "set": "soil",
     "size": 1024,
@@ -32,12 +42,12 @@
   },
   "bakeReport": {
     "path": "assets-source/kit/materials/soil/bake-report.json",
-    "sha256": "0b7c34a0bbbf9a92229c699f46c9aa54cb667e1b653c830a7662a769e1afbadd",
-    "bytes": 276
+    "sha256": "c6d2164fcdcf5163148a8fa49cdbf4fd17f0f9f10c3ad79c2135a5e8a67000bc",
+    "bytes": 422
   },
   "compressReport": {
     "path": "assets-source/kit/materials/soil/compress-report.json",
-    "sha256": "92d3d0d7d589f45c91e4456a8346b3caeddeff36105e98bcd7fb95a4d9ab62ea",
+    "sha256": "3f33e7985983651bd1d734d35710966c1450e8e3997535735e3bb6f9180a0080",
     "bytes": 3849
   },
   "compression": {
@@ -195,7 +205,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T05:34:35.360Z",
+    "date": "2026-10-16T18:17:50.081Z",
     "checks": [
       "kit-compress tileable budget",
       "kit_gate textures"

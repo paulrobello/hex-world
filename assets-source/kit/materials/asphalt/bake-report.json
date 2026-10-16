@@ -2,7 +2,13 @@
   "blender": "5.2.2 LTS",
   "device": "CPU",
   "generator": "scripts/blender/kit/mat_asphalt.py",
-  "generatorSha256": "dae28a9124109dfedb5ce58e2494ae9c8ca6fc9fe9b85147eef6e20d597db745",
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
+  "generatorSha256": "6886118ca8ddf02f96a50df7876bd80ba729c531895efb85561116ede2855764",
   "samples": 32,
   "set": "asphalt",
   "size": 1024,
