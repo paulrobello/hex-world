@@ -176,56 +176,14 @@ impl Plugin for HexRenderPlugin {
                 tilt_shift::TiltShiftPlugin,
                 MaterialPlugin::<water::WaterMaterial>::default(),
                 MaterialPlugin::<water::TerrainMaterial>::default(),
-                MaterialPlugin::<play::affordances::AffordanceMaterial>::default(),
-                MaterialPlugin::<play::ghost::GhostMaterial>::default(),
-                play::grass_gpu::GrassGpuPlugin,
                 hooks::HooksPlugin {
                     hooks: self.config.kit_hooks,
                 },
             ))
             .add_plugins((photo_fx::PhotoFxPlugin, debug::DebugPlugin))
             .init_resource::<AgentsPaused>()
-            .init_resource::<play::PlayView>()
-            .init_resource::<play::PlayCatalog>()
-            .init_resource::<play::rise::PlayRises>()
-            .init_resource::<play::rise::ReducedMotion>()
-            .init_resource::<play::rise::CameraShake>()
-            .init_resource::<play::rise::PlayDust>()
-            .init_resource::<play::affordances::Affordances>()
-            .init_resource::<play::ghost::GhostMeshes>()
-            .init_resource::<play::ghost::GhostDrawn>()
-            .init_resource::<play::ghost::GhostReport>()
-            .init_resource::<play::scatter::PlayScatter>()
-            .init_resource::<play::scatter::ScatterLayouts>()
-            .init_resource::<play::scatter::ScatterReport>()
-            .init_resource::<play::grass::PlayGrass>()
-            .init_resource::<play::grass::GrassReport>()
-            .add_message::<play::rise::RiseMessage>()
+            .add_plugins(play::PlayPlugin)
             .add_systems(Startup, scene::setup)
-            .add_systems(
-                PostUpdate,
-                play::rise::shake.before(bevy::transform::TransformSystems::Propagate),
-            )
-            .add_systems(First, play::rise::unshake)
-            .add_systems(
-                Update,
-                (
-                    play::start_kit,
-                    play::finish_kit,
-                    play::sync,
-                    play::scatter::sync,
-                    play::grass::sync,
-                    play::rise::advance,
-                    play::rise::animate,
-                    play::rise::sink,
-                    play::rise::dust,
-                    play::ghost::sync,
-                    play::affordances::sync,
-                    play::affordances::animate,
-                )
-                    .chain()
-                    .in_set(play::PlaySystems),
-            )
             .add_systems(
                 Update,
                 (

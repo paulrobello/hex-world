@@ -346,6 +346,7 @@ pub fn map_input(f: &InputFrame, rotate_wheel: &mut f32) -> Vec<Action> {
 }
 
 /// Reads this frame's keyboard and mouse into the action queue.
+#[allow(clippy::too_many_arguments)]
 pub fn read_input(
     keys: Res<ButtonInput<KeyCode>>,
     mouse: Res<ButtonInput<MouseButton>>,

@@ -4,6 +4,7 @@ use bevy::window::WindowResolution;
 use hex_render::{HexRenderPlugin, MeshoptGlbPlugin};
 
 mod actions;
+mod app_plugins;
 mod args;
 mod bridge;
 mod camera;
@@ -126,44 +127,56 @@ fn main() {
         .insert_resource(flags.debug)
         .insert_resource(RunFlags(flags))
         .insert_resource(queue)
-        .init_resource::<actions::ActionQueue>()
         .init_resource::<FrameCount>()
-        .init_resource::<control::ExitRequest>()
-        .init_resource::<photo::PhotoSettings>()
-        .init_resource::<photo::PhotoSession>()
-        .init_resource::<photo::PhotoExports>()
-        .init_resource::<photo_fx::PhotoFxSettings>()
-        .init_resource::<photo::PhotoFocus>()
-        .init_resource::<persist::PersistQueue>()
-        .init_resource::<persist::SavedSettings>()
         .init_resource::<hex_render::play::packs::PackRequests>()
-        .add_systems(
+        .add_plugins((
+            app_plugins::ActionsPlugin,
+            app_plugins::PhotoPlugin,
+            app_plugins::PhotoFxPlugin,
+            app_plugins::PersistPlugin,
+            app_plugins::ControlPlugin,
+        ))
+        .configure_sets(
             Update,
             (
-                frame_hooks,
-                timed_flags,
-                actions::read_input,
-                camera::pick_hover,
-                control::run_commands,
-                game::apply_actions,
-                photo::sync,
-                photo::focus_pick,
-                walk::sync,
-                photo::run_exports,
-                photo_fx::sync,
-                persist::run,
-                persist::keep_latest,
-                request_selected_packs,
-                game::sync_view,
-                sim::mirror_world,
-                sim::publish_cars,
-                control::publish_state,
-                publish_diag,
-                control::exit_when_idle,
+                app_plugins::AppSet::Frame,
+                app_plugins::AppSet::Flags,
+                app_plugins::AppSet::Input,
+                app_plugins::AppSet::Hover,
+                app_plugins::AppSet::Commands,
+                app_plugins::AppSet::Apply,
+                app_plugins::AppSet::Photo,
+                app_plugins::AppSet::Focus,
+                app_plugins::AppSet::Walk,
+                app_plugins::AppSet::Export,
+                app_plugins::AppSet::Effects,
+                app_plugins::AppSet::Persist,
+                app_plugins::AppSet::Latest,
+                app_plugins::AppSet::Packs,
+                app_plugins::AppSet::View,
+                app_plugins::AppSet::Mirror,
+                app_plugins::AppSet::Cars,
+                app_plugins::AppSet::State,
+                app_plugins::AppSet::Diagnostics,
+                app_plugins::AppSet::Exit,
             )
                 .chain(),
         )
-        .add_systems(Last, (control::dump_state_on_exit, persist::save_on_exit))
+        .add_systems(
+            Update,
+            (
+                frame_hooks.in_set(app_plugins::AppSet::Frame),
+                timed_flags.in_set(app_plugins::AppSet::Flags),
+                camera::pick_hover.in_set(app_plugins::AppSet::Hover),
+                game::apply_actions.in_set(app_plugins::AppSet::Apply),
+                walk::sync.in_set(app_plugins::AppSet::Walk),
+                request_selected_packs.in_set(app_plugins::AppSet::Packs),
+                game::sync_view.in_set(app_plugins::AppSet::View),
+                sim::mirror_world.in_set(app_plugins::AppSet::Mirror),
+                sim::publish_cars.in_set(app_plugins::AppSet::Cars),
+                publish_diag.in_set(app_plugins::AppSet::Diagnostics),
+            ),
+        )
         .add_systems(
             Update,
             sim::draw_networks
