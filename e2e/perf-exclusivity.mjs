@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 const browsers = () => execFileSync("ps", ["-Ao", "pid=,ppid=,pcpu=,comm="], { encoding: "utf8" }).split("\n")
   .map((line) => /^\s*(\d+)\s+(\d+)\s+([\d.]+)\s+(.+)$/.exec(line)).filter(Boolean)
   .map((m) => ({ pid: Number(m[1]), parent: Number(m[2]), cpu: Number(m[3]), command: m[4] }))
-  .filter((p) => /Chrome|Chromium/.test(p.command) && !/crashpad|ChatGPT for Chrome/.test(p.command));
+  .filter((p) => (/Chrome|Chromium/.test(p.command) && !/crashpad|ChatGPT for Chrome/.test(p.command)) || /(?:^|\/)hex-world$/.test(p.command));
 export function assertBrowserExclusivity() {
   const active = browsers();
   const owned = new Set([process.pid]);
