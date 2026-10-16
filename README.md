@@ -1,5 +1,7 @@
 # Hex World
 
+[![CI](https://github.com/paulrobello/hex-world/actions/workflows/ci.yml/badge.svg)](https://github.com/paulrobello/hex-world/actions/workflows/ci.yml)
+
 A browser world-building game on hexagon tiles, built with Rust, Bevy and WebGPU.
 Play: https://hex-world.pardev.net (requires a WebGPU browser).
 
@@ -61,3 +63,7 @@ Run `make checkall` for the fast gate (Rust formatting, Clippy, native/WASM chec
 - Gates: `make checkall` (fast), `make checkall-ci` (CI parity, run before any push), `make web-smoke` (local GPU browser, including the clamped 16-texture `water_kit` case), `make initial-download` (30 MiB first-load budget, also in `checkall-ci`), `make kit-check` (assets).
 - Past plans: `docs/superpowers/plans/`.
 - Brand: `make brand` rebuilds the favicon, app and manifest icons, share image and icon concept sheet from `design/brand/` (needs resvg 0.48.1).
+
+## License
+
+[MIT](LICENSE), copyright 2026 Paul Robello.
