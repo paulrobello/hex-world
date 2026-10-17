@@ -9,7 +9,7 @@ use hex_render::{
     scene::{Lod, lod_range},
 };
 
-use super::{KitMaterial, PlayKit, PlaySpawned, PlayView, RisePart, SceneEntity, rise::PlayRises};
+use super::{KitMaterial, PlaySpawned, PlayView, RisePart, SceneEntity, rise::PlayRises};
 
 #[derive(Clone)]
 struct Part {
@@ -35,6 +35,7 @@ pub(super) struct PlayChunks {
     draws: HashMap<Axial, Vec<Entity>>,
     dirty: HashSet<Axial>,
     scatter_draws: HashMap<Axial, usize>,
+    pending: bool,
 }
 
 #[derive(Component)]
@@ -45,13 +46,11 @@ pub(super) fn restore(
     mut commands: Commands,
     view: Res<PlayView>,
     spawned: Option<ResMut<PlaySpawned>>,
-    kit: Option<Res<PlayKit>>,
     mut chunks: ResMut<PlayChunks>,
     parents: Query<(), With<Transform>>,
 ) {
     let Some(mut spawned) = spawned else { return };
-    let refresh =
-        kit.is_some_and(|k| k.is_changed()) || spawned.rebuild || spawned.epoch != view.epoch;
+    let refresh = !spawned.refresh.is_empty() || spawned.rebuild || spawned.epoch != view.epoch;
     if !refresh && !view.is_changed() {
         return;
     }
@@ -136,38 +135,54 @@ pub(super) fn settle(
     if config.kit_hooks == hex_render::KitHooks::Autumn {
         return;
     }
-    if !spawned.is_changed() && !rises.is_changed() && chunks.dirty.is_empty() {
+    if spawned.is_changed() || rises.is_changed() {
+        chunks.pending = true;
+    }
+    // Continuous placements fast-forward earlier rises. Keep their meshes individual until the
+    // wave ends so each chunk merges once rather than once per placement.
+    let collect = chunks.pending && rises.rising().next().is_none();
+    if !collect && chunks.dirty.is_empty() {
+        if report.is_changed() {
+            update_report(&chunks, &mut report);
+        }
         return;
     }
-    let roots: HashMap<_, _> = spawned
-        .tiles
-        .iter()
-        .filter(|(c, _)| !spawned.hidden.contains_key(c) && rises.settled_cell(**c))
-        .map(|(c, (_, r))| (*r, *c))
-        .collect();
-    for (entity, mesh, material, local, rise, lod) in &parts {
+    let mut candidates = vec![];
+    if collect {
+        chunks.pending = false;
+        for (cell, (_, root)) in &spawned.tiles {
+            if spawned.hidden.contains_key(cell) || !rises.settled_cell(*cell) {
+                continue;
+            }
+            let Ok((transform, _)) = hierarchy.get(*root) else {
+                continue;
+            };
+            let mut stack = vec![(*root, *transform)];
+            while let Some((parent, world)) = stack.pop() {
+                let Ok(descendants) = children.get(parent) else {
+                    continue;
+                };
+                for entity in descendants.iter() {
+                    let Ok((local, _)) = hierarchy.get(entity) else {
+                        continue;
+                    };
+                    let world = world * *local;
+                    candidates.push((entity, parent, *root, *cell, world));
+                    stack.push((entity, world));
+                }
+            }
+        }
+    }
+    for (entity, parent, root, cell, world) in candidates {
+        let Ok((_, mesh, material, local, rise, lod)) = parts.get(entity) else {
+            continue;
+        };
         if children
             .get(entity)
             .is_ok_and(|cs| cs.iter().any(|e| rotors.contains(e)))
         {
             continue;
         }
-        let Ok((_, Some(parent))) = hierarchy.get(entity) else {
-            continue;
-        };
-        let mut ancestor = parent.parent();
-        let mut world = *local;
-        let mut found = None;
-        while let Ok((t, parent)) = hierarchy.get(ancestor) {
-            world = *t * world;
-            if let Some(cell) = roots.get(&ancestor) {
-                found = Some((ancestor, *cell));
-                break;
-            }
-            let Some(parent) = parent else { break };
-            ancestor = parent.parent();
-        }
-        let Some((root, cell)) = found else { continue };
         let Some(source) = meshes.get(&mesh.0) else {
             continue;
         };
@@ -185,14 +200,14 @@ pub(super) fn settle(
             .parts
             .push(Part {
                 entity,
-                parent: parent.parent(),
+                parent,
                 mesh: mesh.0.clone(),
                 material: material.0.clone(),
                 local: *local,
                 world,
                 rise: rise.copied(),
                 lod: lod.0,
-                scatter: scatter_groups.contains(parent.parent()),
+                scatter: scatter_groups.contains(parent),
             });
         chunks.dirty.insert(chunk_center(cell, 19));
         commands.entity(entity).try_despawn();
@@ -356,6 +371,63 @@ mod tests {
         let pair = app.world().resource::<PlaySpawned>().pair_entities[&Axial::ORIGIN][0];
         assert_ne!(pair, old_pair);
         assert!(app.world().entities().contains(root));
+    }
+
+    #[test]
+    fn settled_tiles_wait_for_the_rise_wave_and_merge_once() {
+        let (mut app, root, _) = app();
+        let other = Axial::new(1, 0);
+        app.world_mut().resource_mut::<PlayRises>().begin(
+            other,
+            "meadow",
+            &hex_core::RiseTimeline::default(),
+            false,
+            &mut vec![],
+        );
+        app.add_systems(Update, settle);
+        for _ in 0..4 {
+            app.update();
+            assert!(app.world().resource::<PlayChunks>().draws.is_empty());
+        }
+        app.world_mut().resource_mut::<PlayRises>().rest(other);
+        app.update();
+        let draw = app.world().resource::<PlayChunks>().draws[&Axial::ORIGIN][0];
+        assert_eq!(
+            app.world().resource::<PlayChunks>().tiles[&root]
+                .parts
+                .len(),
+            50
+        );
+        for _ in 0..4 {
+            app.update();
+            assert_eq!(
+                app.world().resource::<PlayChunks>().draws[&Axial::ORIGIN][0],
+                draw
+            );
+        }
+    }
+
+    #[test]
+    fn unchanged_kit_does_not_restore_settled_parts() {
+        let (mut app, root, _) = app();
+        app.insert_resource(super::super::PlayKit::Ready(HashMap::new()));
+        app.add_systems(First, restore);
+        app.add_systems(Update, settle);
+        app.update();
+        app.world_mut()
+            .resource_mut::<super::super::PlayKit>()
+            .set_changed();
+        app.update();
+        assert_eq!(
+            app.world().resource::<PlayChunks>().tiles[&root]
+                .parts
+                .len(),
+            50
+        );
+        assert_eq!(
+            app.world_mut().query::<&Mesh3d>().iter(app.world()).count(),
+            1
+        );
     }
 
     #[test]
