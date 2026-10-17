@@ -13,7 +13,8 @@ use hex_core::{Axial, HEX_RADIUS};
 use hex_render::{
     chunks::chunk_center,
     kit_instances::{
-        GpuKitInstance, KitChunk, KitInstanceSet, KitInstanceSetData, KitSlot, KitSlotDraw,
+        GpuKitInstance, KitChunk, KitGpuMeta, KitInstanceSet, KitInstanceSetData, KitSlot,
+        KitSlotDraw,
     },
     kit_scene::KitRotor,
     scene::{Lod, lod_range},
@@ -305,6 +306,9 @@ fn rebuild(
     let mut slot_of: HashMap<(u32, AssetId<KitMaterial>), usize> = HashMap::new();
     let mut per_chunk: Vec<(Vec3, Aabb, Vec<Range<u32>>)> = vec![];
     let mut local_bounds: HashMap<AssetId<Mesh>, (Vec3, Vec3)> = HashMap::new();
+    // One instance per placement: a family's three LOD parts share it, so the first LOD seen
+    // represents it and its siblings are dropped (the LOD draw picks the mesh, not the record).
+    let mut seen: HashSet<(u32, AssetId<KitMaterial>, Entity)> = HashSet::new();
     for (centre, tiles) in &grouped {
         let [x, z] = centre.to_world(HEX_RADIUS);
         let origin = Vec3::new(x, 0.0, z);
@@ -316,6 +320,9 @@ fn rebuild(
                 let Some((fid, _lod)) = families.family_of(part.mesh.id()) else {
                     continue;
                 };
+                if !seen.insert((fid, part.material.id(), part.parent)) {
+                    continue;
+                }
                 let (blo, bhi) = *local_bounds
                     .entry(part.mesh.id())
                     .or_insert_with(|| mesh_bounds(meshes.get(&part.mesh)));
@@ -347,6 +354,7 @@ fn rebuild(
     // Concatenate slot instances and derive the per-chunk ranges into the flat record buffer.
     let mut pieces: Vec<GpuKitInstance> = vec![];
     let mut out_slots: Vec<KitSlot> = vec![];
+    let mut meta: Vec<KitGpuMeta> = vec![];
     for (fid, material, instances) in &slots {
         let meshes3 = families.meshes_of(*fid);
         let tri = |h: Option<&Handle<Mesh>>| {
@@ -358,9 +366,13 @@ fn rebuild(
             tri(meshes3[1].as_ref()),
             tri(meshes3[2].as_ref()),
         ];
+        let mesh_ids = std::array::from_fn(|i| meshes3[i].as_ref().map(|h| h.id()));
+        for h in &meshes3 {
+            meta.push(gpu_meta(h.as_ref().and_then(|h| meshes.get(h))));
+        }
         pieces.extend(instances.iter().copied());
         out_slots.push(KitSlot {
-            mesh: meshes3.map(|h| h.as_ref().map(|h| h.id())),
+            mesh: mesh_ids,
             tris,
             material: material.id(),
             key: 0,
@@ -400,8 +412,50 @@ fn rebuild(
         pieces,
         slots: out_slots,
         chunks: out_chunks,
+        meta,
         version: 0,
     })));
+}
+
+/// A (slot, LOD) mesh's decompress metadata, mirroring the mesh uniform's `MeshMetadata`
+/// (`Mesh::final_aabb` and `final_uv_ranges` are what the allocator uploads).
+fn gpu_meta(mesh: Option<&Mesh>) -> KitGpuMeta {
+    const ZERO: KitGpuMeta = KitGpuMeta {
+        center: [0.0; 3],
+        _pad0: 0,
+        half: [0.0; 3],
+        _pad1: 0,
+        uv_a: [0.0; 4],
+        uv_b: [0.0; 4],
+    };
+    let Some(m) = mesh else {
+        return ZERO;
+    };
+    let (center, half, _uv) = match (m.final_aabb, m.final_uv_ranges) {
+        (Some(a), uv) => (
+            [a.center().x, a.center().y, a.center().z],
+            [a.half_size().x, a.half_size().y, a.half_size().z],
+            uv,
+        ),
+        (None, uv) => ([0.0; 3], [0.0; 3], uv),
+    };
+    let uv = m.final_uv_ranges;
+    let uv_a = match uv[0] {
+        Some(b) => [b.min.x, b.min.y, b.max.x - b.min.x, b.max.y - b.min.y],
+        None => [0.0, 0.0, 1.0, 1.0],
+    };
+    let uv_b = match uv[1] {
+        Some(b) => [b.min.x, b.min.y, b.max.x - b.min.x, b.max.y - b.min.y],
+        None => [0.0, 0.0, 1.0, 1.0],
+    };
+    KitGpuMeta {
+        center,
+        _pad0: 0,
+        half,
+        _pad1: 0,
+        uv_a,
+        uv_b,
+    }
 }
 
 /// A mesh's local position bounds (`None` mesh: origin).
@@ -466,25 +520,34 @@ mod tests {
             .init_resource::<Assets<Mesh>>()
             .init_resource::<hex_render::GateConfig>()
             .init_resource::<super::super::scatter::ScatterReport>();
-        let mesh = app
-            .world_mut()
-            .resource_mut::<Assets<Mesh>>()
-            .add(Cuboid::new(1.0, 2.0, 3.0));
-        app.insert_resource(KitFamilies {
-            family_of: HashMap::from([(mesh.id(), (0u32, 0u8))]),
-            meshes_of: HashMap::from([(0u32, [Some(mesh.clone()), None, None])]),
-        });
+        // One family per part, as in production: a family is one piece primitive across LODs,
+        // and one placement of it instances once. Distinct meshes, one family each.
+        let mut app_families = KitFamilies::default();
+        let mut handles: Vec<Handle<Mesh>> = vec![];
+        {
+            let mut meshes = app.world_mut().resource_mut::<Assets<Mesh>>();
+            for _ in 0..50 {
+                handles.push(meshes.add(Cuboid::new(1.0, 2.0, 3.0)));
+            }
+        }
+        for (i, h) in handles.iter().enumerate() {
+            app_families.family_of.insert(h.id(), (i as u32, 0));
+            app_families
+                .meshes_of
+                .insert(i as u32, [Some(h.clone()), None, None]);
+        }
+        app.insert_resource(app_families);
         let root = app
             .world_mut()
             .spawn((Transform::from_xyz(12.0, 0.0, 3.0), Visibility::Inherited))
             .id();
         let mut first = Entity::PLACEHOLDER;
-        for i in 0..50 {
+        for (i, h) in handles.iter().enumerate() {
             let local = Transform::from_xyz(i as f32, 0.0, 0.0);
             let id = app
                 .world_mut()
                 .spawn((
-                    Mesh3d(mesh.clone()),
+                    Mesh3d(h.clone()),
                     MeshMaterial3d::<KitMaterial>(Handle::default()),
                     local,
                     Lod(0),
@@ -532,7 +595,7 @@ mod tests {
         assert_eq!(set, 50);
         let chunks = app.world().resource::<PlayChunks>();
         assert_eq!(chunks.tiles[&root].parts.len(), 50);
-        assert_eq!(chunks.slot_entities.len(), 1);
+        assert_eq!(chunks.slot_entities.len(), 50);
         app.world_mut().resource_mut::<PlayView>().tiles.clear();
         app.add_systems(First, restore);
         app.update();

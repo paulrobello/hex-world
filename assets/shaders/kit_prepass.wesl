@@ -7,29 +7,36 @@
 // vectors is the offset at the previous frame's wind clock under the previous transform.
 //
 // Fragment:
-// Tileable slots write the world-space tiled normal from hex_render::kit_common, the same one the forward
-// pass lights with, so SSAO reads the normal the surface is shaded with. Every other slot keeps
-// Bevy 0.20's StandardMaterial prepass (bevy_pbr render/pbr_prepass.wesl, non-bindless and
+// Tileable slots write the world-space tiled normal from hex_render::kit_common, the same one the
+// forward pass lights with, so SSAO reads the normal the surface is shaded with. Every other slot
+// keeps Bevy 0.20's StandardMaterial prepass (bevy_pbr render/pbr_prepass.wesl, non-bindless and
 // non-meshlet only, which KitExt always is): alpha discard, geometric normal, unique normal map.
-import bevy_pbr::{
-    render::{
-        pbr_prepass_functions,
-        pbr_bindings,
-        pbr_types,
-        pbr_functions,
-        mesh_bindings::mesh,
-        mesh_view_bindings::view,
-    },
-    prepass::io as prepass_io,
-};
+//
+// `KIT_INSTANCED` swaps the entry point (same contract as kit_vertex.wesl): settled parts draw in
+// one call per (slot, LOD) through hex_render::kit_instances, so the per-mesh uniform and every
+// module that imports it (prepass::io) stay out of the composed shader. The instanced entry
+// decompresses against the per-slot metadata uniform; settled parts never move, so the previous
+// transform is the transform. Both branches share the `shade_kit_prepass_vertex` tail.
 import bevy_pbr::render::{
-    mesh_functions,
-    skinning,
-    morph,
-    morph::{morph_position, morph_normal, morph_tangent},
+    pbr_prepass_functions,
+    pbr_bindings,
+    pbr_types,
+    pbr_functions,
+    mesh_view_bindings::view,
     view_transformations::position_world_to_clip,
 };
+@if(!KIT_INSTANCED)
+import bevy_pbr::prepass::io as prepass_io;
+@if(!KIT_INSTANCED)
+import bevy_pbr::render::{mesh_functions, skinning};
+@if(!KIT_INSTANCED)
+import bevy_pbr::render::mesh_bindings::mesh;
+@if(!KIT_INSTANCED)
+import bevy_pbr::render::morph::{morph_position, morph_normal, morph_tangent};
+@if(!KIT_INSTANCED)
+import bevy_pbr::prepass::io::decompress_vertex;
 import bevy_render::globals::Globals;
+import bevy_render::utils;
 import hex_render::{kit_common, foliage_wind};
 @if(KIT_INSTANCED)
 import hex_render::kit_instances;
@@ -62,15 +69,92 @@ struct KitPrepassOutput {
     @location(9) @interpolate(flat) visibility_range_dither: i32,
 }
 
-@if(MORPH_TARGETS)
+// prepass_io's vertex types, mirrored locally (the instanced entry cannot import prepass::io).
+struct KitPrepassIn {
+    @builtin(instance_index) instance_index: u32,
+@if(VERTEX_POSITIONS_COMPRESSED)
+    @location(0) compressed_position: vec4<f32>,
+@else
+    @location(0) position: vec3<f32>,
+@if(VERTEX_UVS_A && VERTEX_UVS_A_COMPRESSED)
+    @location(1) compressed_uv: vec2<f32>,
+@if(VERTEX_UVS_A && !VERTEX_UVS_A_COMPRESSED)
+    @location(1) uv: vec2<f32>,
+@if(VERTEX_UVS_B && VERTEX_UVS_B_COMPRESSED)
+    @location(2) compressed_uv_b: vec2<f32>,
+@if(VERTEX_UVS_B && !VERTEX_UVS_B_COMPRESSED)
+    @location(2) uv_b: vec2<f32>,
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_NORMALS && VERTEX_NORMALS_COMPRESSED)
+    @location(3) compressed_normal: vec2<f32>,
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_NORMALS && !VERTEX_NORMALS_COMPRESSED)
+    @location(3) normal: vec3<f32>,
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_TANGENTS && VERTEX_TANGENTS_COMPRESSED)
+    @location(4) compressed_tangent: vec2<f32>,
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_TANGENTS && !VERTEX_TANGENTS_COMPRESSED)
+    @location(4) tangent: vec4<f32>,
+@if(VERTEX_COLORS)
+    @location(7) color: vec4<f32>,
+}
+
+struct KitPrepassUncompressed {
+    position: vec3<f32>,
+@if(VERTEX_UVS_A)
+    uv: vec2<f32>,
+@if(VERTEX_UVS_B)
+    uv_b: vec2<f32>,
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_NORMALS)
+    normal: vec3<f32>,
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_TANGENTS)
+    tangent: vec4<f32>,
+@if(VERTEX_COLORS)
+    color: vec4<f32>,
+}
+
+// prepass_io::FragmentOutput.
+struct KitFragmentOutput {
+@if(NORMAL_PREPASS)
+    @location(0) normal: vec4<f32>,
+@if(MOTION_VECTOR_PREPASS)
+    @location(1) motion_vector: vec2<f32>,
+@if(UNCLIPPED_DEPTH_ORTHO_EMULATION)
+    @builtin(frag_depth) frag_depth: f32,
+}
+
+// prepass_sample_color_and_alpha_discard over KitPrepassOutput (bevy's takes prepass_io's type).
+fn kit_prepass_sample_color_and_alpha_discard(in: KitPrepassOutput) {
+@if(MAY_DISCARD) {
+    var output_color: vec4<f32> = pbr_bindings::material.base_color;
+    let flags = pbr_bindings::material.flags;
+    let alpha_cutoff = pbr_bindings::material.alpha_cutoff;
+@if(VERTEX_UVS) {
+@if(STANDARD_MATERIAL_BASE_COLOR_UV_B)
+    var uv = in.uv_b;
+@else
+    var uv = in.uv;
+    let uv_transform = pbr_bindings::material.uv_transform;
+    uv = (uv_transform * vec3(uv, 1.0)).xy;
+    if (flags & pbr_types::STANDARD_MATERIAL_FLAGS_BASE_COLOR_TEXTURE_BIT) != 0u {
+        output_color = output_color * textureSampleBias(
+            pbr_bindings::base_color_texture,
+            pbr_bindings::base_color_sampler,
+            uv,
+            view.mip_bias
+        );
+    }
+}
+    pbr_prepass_functions::prepass_alpha_discard(flags, alpha_cutoff, output_color);
+}
+}
+
+@if(MORPH_TARGETS && !KIT_INSTANCED)
 fn morph_vertex(vertex_in: prepass_io::UncompressedVertex, instance_index: u32) -> prepass_io::UncompressedVertex {
     var vertex = vertex_in;
     let first_vertex = mesh[instance_index].first_vertex_index;
     let vertex_index = vertex.index - first_vertex;
     let morph_descriptor_index = mesh[instance_index].morph_descriptor_index;
-    let weight_count = morph::layer_count(morph_descriptor_index);
+    let weight_count = bevy_pbr::render::morph::layer_count(morph_descriptor_index);
     for (var i: u32 = 0u; i < weight_count; i ++) {
-        let weight = morph::weight_at(i, morph_descriptor_index);
+        let weight = bevy_pbr::render::morph::weight_at(i, morph_descriptor_index);
         if weight == 0.0 {
             continue;
         }
@@ -83,15 +167,15 @@ fn morph_vertex(vertex_in: prepass_io::UncompressedVertex, instance_index: u32) 
     return vertex;
 }
 
-@if(MORPH_TARGETS)
+@if(MORPH_TARGETS && !KIT_INSTANCED)
 fn morph_prev_vertex(vertex_in: prepass_io::UncompressedVertex, instance_index: u32) -> prepass_io::UncompressedVertex {
     var vertex = vertex_in;
     let first_vertex = mesh[instance_index].first_vertex_index;
     let vertex_index = vertex.index - first_vertex;
     let morph_descriptor_index = mesh[instance_index].morph_descriptor_index;
-    let weight_count = morph::layer_count(morph_descriptor_index);
+    let weight_count = bevy_pbr::render::morph::layer_count(morph_descriptor_index);
     for (var i: u32 = 0u; i < weight_count; i ++) {
-        let weight = morph::prev_weight_at(i, morph_descriptor_index);
+        let weight = bevy_pbr::render::morph::weight_at(i, morph_descriptor_index);
         if weight == 0.0 {
             continue;
         }
@@ -110,42 +194,20 @@ fn wind_offset(world: vec3<f32>, origin: vec3<f32>, sway: vec2<f32>, t: f32) -> 
     return foliage_wind::offset(world, origin, sway, kit_common::kit.wind_amp, wind == kit_common::FLAG_WIND_TREE, t);
 }
 
-@vertex
-fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
+// The shading tail both entries share: wind displacement, clip, varyings. Local
+// normal/tangent transforms (inverse-transpose) because bevy's mesh_functions helpers read the
+// per-mesh uniform, which the instanced path does not bind.
+fn shade_kit_prepass_vertex(
+    vertex: KitPrepassUncompressed,
+    world_from_local: mat4x4<f32>,
+    wind_origin: vec3<f32>,
+    tag: u32,
+) -> KitPrepassOutput {
     var out: KitPrepassOutput;
-    let uncompressed_vertex_no_morph = prepass_io::decompress_vertex(vertex_no_morph, vertex_no_morph.instance_index);
-@if(MORPH_TARGETS)
-    var vertex = morph_vertex(uncompressed_vertex_no_morph, vertex_no_morph.instance_index);
-@else
-    var vertex = uncompressed_vertex_no_morph;
+    let basis = mat3x3(world_from_local[0].xyz, world_from_local[1].xyz, world_from_local[2].xyz);
+    let normal_basis = kit_common::kit_normal_basis(basis);
 
-@if(KIT_INSTANCED) {
-    // One record per settled part from hex_render::kit_instances; no per-mesh uniform on this path.
-    let inst = kit_instances::kit_instance(vertex_no_morph.instance_index);
-    let mesh_world_from_local = kit_instances::kit_world_from_local(inst);
-    var wind_origin = inst.translation;
-}
-@else {
-    let mesh_world_from_local = mesh_functions::get_world_from_local(vertex_no_morph.instance_index);
-    var wind_origin = mesh_world_from_local[3].xyz;
-}
-@if(VERTEX_COLORS) {
-    if (vertex.color.a < 0.0) {
-        wind_origin = vertex.color.xyz;
-        vertex.color = vec4(1.0);
-    }
-}
-
-@if(SKINNED)
-    var world_from_local = skinning::skin_model(
-        vertex.joint_indices,
-        vertex.joint_weights,
-        vertex_no_morph.instance_index
-    );
-@else
-    var world_from_local = mesh_world_from_local;
-
-    out.world_position = mesh_functions::mesh_position_local_to_world(world_from_local, vec4<f32>(vertex.position, 1.0));
+    out.world_position = world_from_local * vec4<f32>(vertex.position, 1.0);
 @if(VERTEX_UVS_B)
     out.world_position = vec4(out.world_position.xyz + wind_offset(
         out.world_position.xyz, wind_origin, vertex.uv_b, prepass_globals.time), 1.0);
@@ -157,100 +219,106 @@ fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
 
 @if(VERTEX_UVS_A)
     out.uv = vertex.uv;
-
 @if(VERTEX_UVS_B)
     out.uv_b = vertex.uv_b;
 
 @if(NORMAL_PREPASS_OR_DEFERRED_PREPASS) {
-@if(VERTEX_NORMALS && SKINNED)
-    out.world_normal = skinning::skin_normals(world_from_local, vertex.normal);
-@elif(VERTEX_NORMALS)
-    out.world_normal = mesh_functions::mesh_normal_local_to_world(
-        vertex.normal,
-        vertex_no_morph.instance_index
-    );
-
+@if(VERTEX_NORMALS)
+    out.world_normal = normalize(normal_basis * vertex.normal);
 @if(VERTEX_TANGENTS)
-    out.world_tangent = mesh_functions::mesh_tangent_local_to_world(
-        world_from_local,
-        vertex.tangent,
-        vertex_no_morph.instance_index
-    );
+    out.world_tangent = vec4(normalize(basis * vertex.tangent.xyz), vertex.tangent.w);
 }
 
 @if(VERTEX_COLORS)
     out.color = vertex.color;
 
 @if(MOTION_VECTOR_PREPASS) {
-@if(MORPH_TARGETS && HAS_PREVIOUS_MORPH)
-    let prev_vertex = morph_prev_vertex(uncompressed_vertex_no_morph, vertex_no_morph.instance_index);
-@elif(MORPH_TARGETS)
-    let prev_vertex = uncompressed_vertex_no_morph;
-@else
-    let prev_vertex = uncompressed_vertex_no_morph;
-
-@if(SKINNED && HAS_PREVIOUS_SKIN)
-    let prev_model = skinning::skin_prev_model(
-        prev_vertex.joint_indices,
-        prev_vertex.joint_weights,
-        vertex_no_morph.instance_index
-    );
-@elif(SKINNED)
-    let prev_model = mesh_functions::get_previous_world_from_local(vertex_no_morph.instance_index);
-@else {
-    @if(KIT_INSTANCED) {
-    // Settled parts never move: the previous transform is the transform.
-    let prev_model = mesh_world_from_local;
-    }
-    @else {
-    let prev_model = mesh_functions::get_previous_world_from_local(vertex_no_morph.instance_index);
-    }
-}
-
-    out.previous_world_position = mesh_functions::mesh_position_local_to_world(
-        prev_model,
-        vec4<f32>(prev_vertex.position, 1.0)
-    );
+    // Settled parts never move: the previous position is the position.
+    let prev_world_position = world_from_local * vec4<f32>(vertex.position, 1.0);
+    var prev_origin = wind_origin;
+    var prev_sway = vec2(0.0);
 @if(VERTEX_UVS_B) {
-    @if(KIT_INSTANCED) {
-    var prev_origin = inst.translation;
-    }
-    @else {
-    var prev_origin = mesh_functions::get_previous_world_from_local(vertex_no_morph.instance_index)[3].xyz;
-    }
+    prev_sway = vertex.uv_b;
 @if(VERTEX_COLORS) {
-    if (vertex_no_morph.color.a < 0.0) {
+    if (vertex.color.a < 0.0) {
         prev_origin = wind_origin;
     }
 }
-    out.previous_world_position = vec4(out.previous_world_position.xyz + wind_offset(
-        out.previous_world_position.xyz, prev_origin, vertex.uv_b,
-        prepass_globals.time - prepass_globals.delta_time), 1.0);
 }
-}
-
-@if(VERTEX_OUTPUT_INSTANCE_INDEX) {
-    @if(KIT_INSTANCED) {
-    out.instance_index = inst.tag;
-    }
-    @else {
-    out.instance_index = vertex_no_morph.instance_index;
-    }
+    out.previous_world_position = vec4(prev_world_position.xyz + wind_offset(
+        prev_world_position.xyz, prev_origin, prev_sway, prepass_globals.time - prepass_globals.delta_time), 1.0);
 }
 
-@if(VISIBILITY_RANGE_DITHER)
-    out.visibility_range_dither = mesh_functions::get_visibility_range_dither_level(
-        vertex_no_morph.instance_index, mesh_world_from_local[3]);
+@if(VERTEX_OUTPUT_INSTANCE_INDEX)
+    out.instance_index = tag;
 
     return out;
+}
+
+@if(KIT_INSTANCED)
+@vertex
+fn vertex(v: KitPrepassIn) -> KitPrepassOutput {
+    // Decompress from kit_instances' per-slot metadata (mirrors prepass_io::decompress_vertex).
+    var vertex: KitPrepassUncompressed;
+@if(VERTEX_POSITIONS_COMPRESSED)
+    vertex.position = bevy_render::utils::decompress_vertex_position(v.compressed_position, kit_instances::kit_meta.center, kit_instances::kit_meta.half);
+@else
+    vertex.position = v.position;
+@if(VERTEX_UVS_A && VERTEX_UVS_A_COMPRESSED)
+    vertex.uv = bevy_render::utils::decompress_vertex_uv(v.compressed_uv, kit_instances::kit_meta.uv_a);
+@if(VERTEX_UVS_A && !VERTEX_UVS_A_COMPRESSED)
+    vertex.uv = v.uv;
+@if(VERTEX_UVS_B && VERTEX_UVS_B_COMPRESSED)
+    vertex.uv_b = bevy_render::utils::decompress_vertex_uv(v.compressed_uv_b, kit_instances::kit_meta.uv_b);
+@if(VERTEX_UVS_B && !VERTEX_UVS_B_COMPRESSED)
+    vertex.uv_b = v.uv_b;
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_NORMALS && VERTEX_NORMALS_COMPRESSED)
+    vertex.normal = bevy_render::utils::decompress_vertex_normal(v.compressed_normal);
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_NORMALS && !VERTEX_NORMALS_COMPRESSED)
+    vertex.normal = v.normal;
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_TANGENTS && VERTEX_TANGENTS_COMPRESSED)
+    vertex.tangent = bevy_render::utils::decompress_vertex_tangent(v.compressed_tangent);
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_TANGENTS && !VERTEX_TANGENTS_COMPRESSED)
+    vertex.tangent = v.tangent;
+@if(VERTEX_COLORS)
+    vertex.color = v.color;
+    let inst = kit_instances::kit_instance(v.instance_index);
+    return shade_kit_prepass_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag);
+}
+
+@if(!KIT_INSTANCED)
+@vertex
+fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
+    let uncompressed_vertex_no_morph = prepass_io::decompress_vertex(vertex_no_morph, vertex_no_morph.instance_index);
+@if(MORPH_TARGETS)
+    var vertex = morph_vertex(uncompressed_vertex_no_morph, vertex_no_morph.instance_index);
+@else
+    var vertex = uncompressed_vertex_no_morph;
+
+    let mesh_world_from_local = mesh_functions::get_world_from_local(vertex_no_morph.instance_index);
+    var wind_origin = mesh_world_from_local[3].xyz;
+
+    var local: KitPrepassUncompressed;
+    local.position = vertex.position;
+@if(VERTEX_UVS_A)
+    local.uv = vertex.uv;
+@if(VERTEX_UVS_B)
+    local.uv_b = vertex.uv_b;
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_NORMALS)
+    local.normal = vertex.normal;
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_TANGENTS)
+    local.tangent = vertex.tangent;
+@if(VERTEX_COLORS)
+    local.color = vertex.color;
+    return shade_kit_prepass_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index);
 }
 
 @if(PREPASS_FRAGMENT)
 @fragment
 fn fragment(
-    in: prepass_io::VertexOutput,
+    in: KitPrepassOutput,
     @builtin(front_facing) is_front: bool,
-) -> prepass_io::FragmentOutput {
+) -> KitFragmentOutput {
     let flags = pbr_bindings::material.flags;
     let uv_transform = pbr_bindings::material.uv_transform;
 
@@ -258,14 +326,14 @@ fn fragment(
     pbr_functions::visibility_range_dither(in.position, in.visibility_range_dither);
 
     // `slot_requests` rejects tileable + alpha_cutoff, so tileable slots never discard here.
-    pbr_prepass_functions::prepass_sample_color_and_alpha_discard(in);
+    kit_prepass_sample_color_and_alpha_discard(in);
 
-    var out: prepass_io::FragmentOutput;
+    var out: KitFragmentOutput;
 
 @if(UNCLIPPED_DEPTH_ORTHO_EMULATION)
     out.frag_depth = in.unclipped_depth;
 
-@if(NORMAL_PREPASS)
+@if(NORMAL_PREPASS) {
     if (kit_common::tileable()) {
         let f = kit_common::tile_frame(in.world_normal, in.world_position.xyz);
         out.normal = vec4(kit_common::tiled_normal(f) * 0.5 + vec3(0.5), 1.0);
@@ -303,6 +371,7 @@ fn fragment(
     } else {
         out.normal = vec4(in.world_normal * 0.5 + vec3(0.5), 1.0);
     }
+}
 
 @if(MOTION_VECTOR_PREPASS)
     out.motion_vector = pbr_prepass_functions::calculate_motion_vector(in.world_position, in.previous_world_position);
@@ -311,6 +380,6 @@ fn fragment(
 }
 @else
 @fragment
-fn fragment(in: prepass_io::VertexOutput) {
-    pbr_prepass_functions::prepass_sample_color_and_alpha_discard(in);
+fn fragment(in: KitPrepassOutput) {
+    kit_prepass_sample_color_and_alpha_discard(in);
 }

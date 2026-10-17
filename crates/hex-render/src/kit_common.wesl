@@ -34,6 +34,19 @@ fn tileable() -> bool {
     return (kit.flags & FLAG_TILEABLE) != 0u;
 }
 
+// The normal transform `transpose(inverse(m))`, via the adjugate (WGSL has no `inverse`):
+// for column-major columns a, b, c, the inverse's columns are cross(b,c), cross(c,a),
+// cross(a,b), all over det = dot(a, cross(b,c)).
+fn kit_normal_basis(m: mat3x3<f32>) -> mat3x3<f32> {
+    let a = m[0];
+    let b = m[1];
+    let c = m[2];
+    let r0 = cross(b, c);
+    let det = dot(a, r0);
+    let inv = mat3x3(r0 / det, cross(c, a) / det, cross(a, b) / det);
+    return transpose(inv);
+}
+
 // World-space tiling frame. A tileable set is bound in StandardMaterial's base_color / normal_map /
 // metallic_roughness slots and sampled at `uv`. Texture "up" is -Z on up-facing surfaces (the
 // Blender bake plane's +Y) and +Y on walls. Image rows run top-down, so v is negated. T, B, N match

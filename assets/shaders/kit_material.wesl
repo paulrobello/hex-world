@@ -3,12 +3,13 @@
 // and sampled at world-space UVs (crates/hex-render/src/kit_common.wesl), so the extension adds only one sampled texture
 // (masks). kit_prepass.wesl writes the same tiled normal into the normal prepass.
 import bevy_pbr::render::{
-    mesh_functions,
     pbr_bindings,
     pbr_types,
     pbr_fragment::pbr_input_from_standard_material,
     pbr_functions::alpha_discard,
 };
+@if(!KIT_INSTANCED)
+import bevy_pbr::render::mesh_functions;
 import hex_render::{kit_common, hooks, water_common};
 
 @if(PREPASS_PIPELINE)

@@ -46,7 +46,10 @@ use bevy::{
             RenderCommand, RenderCommandResult, SetItemPipeline, TrackedRenderPass,
             ViewBinnedRenderPhases,
         },
-        render_resource::{binding_types::storage_buffer_read_only_sized, *},
+        render_resource::{
+            binding_types::{storage_buffer_read_only_sized, uniform_buffer_sized},
+            *,
+        },
         renderer::{RenderDevice, RenderQueue},
         settings::WgpuFeatures,
         sync_world::MainEntity,
@@ -69,6 +72,19 @@ pub struct GpuKitInstance {
     pub tag: u32,
     pub scale: [f32; 3],
     pub _pad: u32,
+}
+
+/// One slot's mesh metadata (decompress AABB + UV ranges), matching `hex_render::kit_instances`'
+/// `KitMeshMeta` (64 bytes). One entry per (slot, LOD) draw, selected by a dynamic offset.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct KitGpuMeta {
+    pub center: [f32; 3],
+    pub _pad0: u32,
+    pub half: [f32; 3],
+    pub _pad1: u32,
+    pub uv_a: [f32; 4],
+    pub uv_b: [f32; 4],
 }
 
 /// Per-chunk culling data: the chunk hex centre, the world-space bounds of every instanced part
@@ -98,6 +114,8 @@ pub struct KitInstanceSetData {
     pub pieces: Vec<GpuKitInstance>,
     pub slots: Vec<KitSlot>,
     pub chunks: Vec<KitChunk>,
+    /// One `KitGpuMeta` per (slot, LOD) draw, in `slot * 3 + lod` order.
+    pub meta: Vec<KitGpuMeta>,
     pub version: u64,
 }
 
@@ -190,7 +208,9 @@ impl Plugin for KitInstancesPlugin {
             .init_resource::<SpecializedMeshPipelines<KitMainPipeline>>()
             .init_resource::<SpecializedMeshPipelines<KitPrepassPipeline>>()
             .add_render_command::<Opaque3d, DrawKitMain>()
+            .add_render_command::<AlphaMask3d, DrawKitMain>()
             .add_render_command::<Opaque3dPrepass, DrawKitPrepass>()
+            .add_render_command::<AlphaMask3dPrepass, DrawKitPrepass>()
             .add_render_command::<Shadow, DrawKitPrepass>()
             .add_systems(
                 Render,
@@ -208,6 +228,9 @@ impl Plugin for KitInstancesPlugin {
 struct KitGpu {
     scene: Option<Arc<KitInstanceSetData>>,
     pieces: Option<Buffer>,
+    meta: Option<Buffer>,
+    /// Byte stride between (slot, LOD) meta entries (device alignment).
+    meta_stride: u32,
     ids: RawBufferVec<u32>,
     bind_group: Option<BindGroup>,
     /// (view render entity, slot index `slot * 3 + lod`) -> instance range into `ids`.
@@ -219,6 +242,8 @@ impl Default for KitGpu {
         Self {
             scene: None,
             pieces: None,
+            meta: None,
+            meta_stride: 0,
             ids: RawBufferVec::new(BufferUsages::STORAGE),
             bind_group: None,
             draws: HashMap::default(),
@@ -449,7 +474,10 @@ impl SpecializedMeshPipeline for KitPrepassPipeline {
             defs.push("PREPASS_FRAGMENT".into());
         }
         let vertex_layout = layout.0.get_layout(&attributes)?;
-        let targets = prepass_target_descriptors(normal, motion, false);
+        let mut targets = prepass_target_descriptors(normal, motion, false);
+        if targets.iter().all(Option::is_none) {
+            targets.clear();
+        }
         let fragment_needed =
             !targets.is_empty() || emulate || mesh_key.contains(MeshPipelineKey::MAY_DISCARD);
         let fragment = fragment_needed.then(|| FragmentState {
@@ -546,6 +574,7 @@ fn prepare_kit(
             (
                 storage_buffer_read_only_sized(false, None),
                 storage_buffer_read_only_sized(false, None),
+                uniform_buffer_sized(true, Some(std::num::NonZeroU64::new(64).unwrap())),
             ),
         ),
     );
@@ -574,6 +603,20 @@ fn prepare_kit(
         contents: bytemuck::cast_slice(&scene.0.pieces),
         usage: BufferUsages::STORAGE,
     }));
+    // One metadata entry per (slot, LOD), padded to the device's dynamic-offset alignment.
+    let align = device.limits().min_uniform_buffer_offset_alignment as usize;
+    let stride = 64usize.max(align);
+    let mut bytes = vec![0u8; stride * scene.0.meta.len()];
+    for (i, m) in scene.0.meta.iter().enumerate() {
+        let src = bytemuck::bytes_of(m);
+        bytes[i * stride..i * stride + src.len()].copy_from_slice(src);
+    }
+    gpu.meta_stride = stride as u32;
+    gpu.meta = Some(device.create_buffer_with_data(&BufferInitDescriptor {
+        label: Some("kit_instances_meta"),
+        contents: &bytes,
+        usage: BufferUsages::UNIFORM,
+    }));
 }
 // ---------------------------------------------------------------------------------------------
 // Queue.
@@ -585,14 +628,35 @@ fn prepare_kit_bind_group(
     pipeline_cache: Res<PipelineCache>,
     device: Res<RenderDevice>,
 ) {
-    let (Some(pipeline), Some(pieces), Some(ids)) = (main, gpu.pieces.as_ref(), gpu.ids.buffer())
-    else {
+    let (Some(pipeline), Some(pieces), Some(ids), Some(meta)) = (
+        main,
+        gpu.pieces.as_ref(),
+        gpu.ids.buffer(),
+        gpu.meta.as_ref(),
+    ) else {
         return;
     };
     gpu.bind_group = Some(device.create_bind_group(
         "kit_instances_group2",
         &pipeline_cache.get_bind_group_layout(&pipeline.instances),
-        &BindGroupEntries::sequential((pieces.as_entire_binding(), ids.as_entire_binding())),
+        &[
+            BindGroupEntry {
+                binding: 0,
+                resource: pieces.as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 1,
+                resource: ids.as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 2,
+                resource: BindingResource::Buffer(BufferBinding {
+                    buffer: meta,
+                    offset: 0,
+                    size: Some(std::num::NonZeroU64::new(64).unwrap()),
+                }),
+            },
+        ],
     ));
 }
 // ---------------------------------------------------------------------------------------------
@@ -923,25 +987,30 @@ type DrawKitPrepass = (
     DrawKitInstances,
 );
 
-/// Binds the record + id buffers at group 2.
+/// Binds the record + id buffers and the draw's metadata entry at group 2.
 struct SetKitInstancesBindGroup;
 
 impl<P: PhaseItem> RenderCommand<P> for SetKitInstancesBindGroup {
     type Param = SRes<KitGpu>;
     type ViewQuery = ();
-    type ItemQuery = ();
+    type ItemQuery = Read<KitSlotDraw>;
 
     fn render<'w>(
         _item: &P,
         _view: (),
-        _item_query: Option<()>,
+        group: Option<&'w KitSlotDraw>,
         gpu: SystemParamItem<'w, '_, Self::Param>,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(bind_group) = gpu.into_inner().bind_group.as_ref() else {
+        let Some(group) = group else {
             return RenderCommandResult::Skip;
         };
-        pass.set_bind_group(2, bind_group, &[]);
+        let gpu = gpu.into_inner();
+        let Some(bind_group) = gpu.bind_group.as_ref() else {
+            return RenderCommandResult::Skip;
+        };
+        let offset = group.slot_index() as u32 * gpu.meta_stride;
+        pass.set_bind_group(2, bind_group, &[offset]);
         RenderCommandResult::Success
     }
 }
@@ -1052,6 +1121,7 @@ mod tests {
                 aabb: Aabb::from_min_max(Vec3::new(-2.0, -1.0, -2.0), Vec3::new(2.0, 1.0, 2.0)),
                 ranges: vec![Range { start: 0, end: 2 }],
             }],
+            meta: vec![],
             version: 1,
         };
         let (mut ids, mut seen) = (vec![], vec![]);

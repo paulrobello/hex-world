@@ -5,16 +5,26 @@
 // both outputs are @invariant so the forward depth meets the prepass depth. The wind clock is
 // `globals.time`, the `Time` the grass reads, which `--clock fixed` steps by 1/60 s per frame.
 // Pinned against upstream by crates/hex-render/tests/bevy_prepass_tripwire.rs.
+//
+// `KIT_INSTANCED` swaps the entry point: settled parts draw in one call per (slot, LOD) through
+// hex_render::kit_instances' record buffer, so the per-mesh uniform (`mesh`, and the forward_io
+// module that imports it) must stay out of the composed shader — wesl compiles imported modules
+// whole, and any `forward_io` import drags `mesh_bindings::mesh` into group 2. The instanced
+// entry decompresses against the per-slot metadata uniform instead. Both branches produce the
+// same `KitVertexOutput`; the shading tail is shared in `shade_kit_vertex`.
 import bevy_pbr::render::{
     mesh_functions,
     skinning,
     morph::{morph_position, morph_normal, morph_tangent},
-    forward_io::{Vertex, UncompressedVertex, decompress_vertex},
-    mesh_bindings::mesh,
     mesh_view_bindings::globals,
     view_transformations::position_world_to_clip,
 };
+@if(!KIT_INSTANCED)
+import bevy_pbr::render::forward_io::{Vertex, UncompressedVertex, decompress_vertex};
+@if(!KIT_INSTANCED)
+import bevy_pbr::render::mesh_bindings::mesh;
 import hex_render::{kit_common, foliage_wind};
+import bevy_render::utils;
 @if(KIT_INSTANCED)
 import hex_render::kit_instances;
 
@@ -37,7 +47,52 @@ struct KitVertexOutput {
     @location(7) @interpolate(flat) visibility_range_dither: i32,
 }
 
-@if(MORPH_TARGETS)
+// The decompressed vertex fields the shading tail needs. Under KIT_INSTANCED this stands in for
+// forward_io::UncompressedVertex (same def gates, local so forward_io stays out of the module);
+// the batched entry copies its decompressed vertex into it.
+struct KitUncompressed {
+@if(VERTEX_POSITIONS)
+    position: vec3<f32>,
+@if(VERTEX_NORMALS)
+    normal: vec3<f32>,
+@if(VERTEX_UVS_A)
+    uv: vec2<f32>,
+@if(VERTEX_UVS_B)
+    uv_b: vec2<f32>,
+@if(VERTEX_TANGENTS)
+    tangent: vec4<f32>,
+@if(VERTEX_COLORS)
+    color: vec4<f32>,
+}
+
+// forward_io::Vertex's layout, mirrored locally for the instanced entry.
+struct KitVertexIn {
+    @builtin(instance_index) instance_index: u32,
+@if(VERTEX_POSITIONS && VERTEX_POSITIONS_COMPRESSED)
+    @location(0) compressed_position: vec4<f32>,
+@if(VERTEX_POSITIONS && !VERTEX_POSITIONS_COMPRESSED)
+    @location(0) position: vec3<f32>,
+@if(VERTEX_NORMALS && VERTEX_NORMALS_COMPRESSED)
+    @location(1) compressed_normal: vec2<f32>,
+@if(VERTEX_NORMALS && !VERTEX_NORMALS_COMPRESSED)
+    @location(1) normal: vec3<f32>,
+@if(VERTEX_UVS_A && VERTEX_UVS_A_COMPRESSED)
+    @location(2) compressed_uv: vec2<f32>,
+@if(VERTEX_UVS_A && !VERTEX_UVS_A_COMPRESSED)
+    @location(2) uv: vec2<f32>,
+@if(VERTEX_UVS_B && VERTEX_UVS_B_COMPRESSED)
+    @location(3) compressed_uv_b: vec2<f32>,
+@if(VERTEX_UVS_B && !VERTEX_UVS_B_COMPRESSED)
+    @location(3) uv_b: vec2<f32>,
+@if(VERTEX_TANGENTS && VERTEX_TANGENTS_COMPRESSED)
+    @location(4) compressed_tangent: vec2<f32>,
+@if(VERTEX_TANGENTS && !VERTEX_TANGENTS_COMPRESSED)
+    @location(4) tangent: vec4<f32>,
+@if(VERTEX_COLORS)
+    @location(5) color: vec4<f32>,
+}
+
+@if(MORPH_TARGETS && !KIT_INSTANCED)
 fn morph_vertex(vertex_in: UncompressedVertex, instance_index: u32) -> UncompressedVertex {
     var vertex = vertex_in;
     let first_vertex = mesh[instance_index].first_vertex_index;
@@ -58,25 +113,17 @@ fn morph_vertex(vertex_in: UncompressedVertex, instance_index: u32) -> Uncompres
     return vertex;
 }
 
-@vertex
-fn vertex(vertex_no_morph: Vertex) -> KitVertexOutput {
+// The shading tail both entries share: normals, wind displacement, clip, varyings. Local
+// normal/tangent transforms (inverse-transpose) because bevy's mesh_functions helpers read the
+// per-mesh uniform, which the instanced path does not bind.
+fn shade_kit_vertex(
+    vertex: KitUncompressed,
+    world_from_local: mat4x4<f32>,
+    wind_origin_in: vec3<f32>,
+    tag: u32,
+) -> KitVertexOutput {
     var out: KitVertexOutput;
-    let uncompressed_vertex_no_morph = decompress_vertex(vertex_no_morph, vertex_no_morph.instance_index);
-@if(MORPH_TARGETS)
-    var vertex = morph_vertex(uncompressed_vertex_no_morph, vertex_no_morph.instance_index);
-@else
-    var vertex = uncompressed_vertex_no_morph;
-
-@if(KIT_INSTANCED) {
-    // One record per settled part from hex_render::kit_instances; no per-mesh uniform on this path.
-    let inst = kit_instances::kit_instance(vertex_no_morph.instance_index);
-    let mesh_world_from_local = kit_instances::kit_world_from_local(inst);
-    var wind_origin = inst.translation;
-}
-@else {
-    let mesh_world_from_local = mesh_functions::get_world_from_local(vertex_no_morph.instance_index);
-    var wind_origin = mesh_world_from_local[3].xyz;
-}
+    var wind_origin = wind_origin_in;
 @if(VERTEX_COLORS) {
     if (vertex.color.a < 0.0) {
         wind_origin = vertex.color.xyz;
@@ -84,25 +131,14 @@ fn vertex(vertex_no_morph: Vertex) -> KitVertexOutput {
     }
 }
 
-@if(SKINNED)
-    var world_from_local = skinning::skin_model(
-        vertex.joint_indices,
-        vertex.joint_weights,
-        vertex_no_morph.instance_index
-    );
-@else
-    var world_from_local = mesh_world_from_local;
+    let basis = mat3x3(world_from_local[0].xyz, world_from_local[1].xyz, world_from_local[2].xyz);
+    let normal_basis = kit_common::kit_normal_basis(basis);
 
-@if(VERTEX_NORMALS && SKINNED)
-    out.world_normal = skinning::skin_normals(world_from_local, vertex.normal);
-@if(VERTEX_NORMALS && !SKINNED)
-    out.world_normal = mesh_functions::mesh_normal_local_to_world(
-        vertex.normal,
-        vertex_no_morph.instance_index
-    );
+@if(VERTEX_NORMALS)
+    out.world_normal = normalize(normal_basis * vertex.normal);
 
 @if(VERTEX_POSITIONS) {
-    out.world_position = mesh_functions::mesh_position_local_to_world(world_from_local, vec4<f32>(vertex.position, 1.0));
+    out.world_position = world_from_local * vec4<f32>(vertex.position, 1.0);
 @if(VERTEX_UVS_B) {
     let wind = kit_common::kit.flags & (kit_common::FLAG_WIND_TREE | kit_common::FLAG_WIND_PLANT);
     if (wind != 0u) {
@@ -120,27 +156,72 @@ fn vertex(vertex_no_morph: Vertex) -> KitVertexOutput {
     out.uv_b = vertex.uv_b;
 
 @if(VERTEX_TANGENTS)
-    out.world_tangent = mesh_functions::mesh_tangent_local_to_world(
-        world_from_local,
-        vertex.tangent,
-        vertex_no_morph.instance_index
-    );
+    out.world_tangent = vec4(normalize(basis * vertex.tangent.xyz), vertex.tangent.w);
 
 @if(VERTEX_COLORS)
     out.color = vertex.color;
 
-@if(VERTEX_OUTPUT_INSTANCE_INDEX) {
-    @if(KIT_INSTANCED) {
-    out.instance_index = inst.tag;
-    }
-    @else {
-    out.instance_index = vertex_no_morph.instance_index;
-    }
-}
-
-@if(VISIBILITY_RANGE_DITHER)
-    out.visibility_range_dither = mesh_functions::get_visibility_range_dither_level(
-        vertex_no_morph.instance_index, mesh_world_from_local[3]);
+@if(VERTEX_OUTPUT_INSTANCE_INDEX)
+    out.instance_index = tag;
 
     return out;
+}
+
+@if(KIT_INSTANCED)
+@vertex
+fn vertex(vertex_no_morph: KitVertexIn) -> KitVertexOutput {
+    // Decompress from kit_instances' per-slot metadata (mirrors forward_io::decompress_vertex).
+    var vertex: KitUncompressed;
+@if(VERTEX_POSITIONS && VERTEX_POSITIONS_COMPRESSED)
+    vertex.position = bevy_render::utils::decompress_vertex_position(vertex_no_morph.compressed_position, kit_instances::kit_meta.center, kit_instances::kit_meta.half);
+@if(VERTEX_POSITIONS && !VERTEX_POSITIONS_COMPRESSED)
+    vertex.position = vertex_no_morph.position;
+@if(VERTEX_NORMALS && VERTEX_NORMALS_COMPRESSED)
+    vertex.normal = bevy_render::utils::decompress_vertex_normal(vertex_no_morph.compressed_normal);
+@if(VERTEX_NORMALS && !VERTEX_NORMALS_COMPRESSED)
+    vertex.normal = vertex_no_morph.normal;
+@if(VERTEX_UVS_A && VERTEX_UVS_A_COMPRESSED)
+    vertex.uv = bevy_render::utils::decompress_vertex_uv(vertex_no_morph.compressed_uv, kit_instances::kit_meta.uv_a);
+@if(VERTEX_UVS_A && !VERTEX_UVS_A_COMPRESSED)
+    vertex.uv = vertex_no_morph.uv;
+@if(VERTEX_UVS_B && VERTEX_UVS_B_COMPRESSED)
+    vertex.uv_b = bevy_render::utils::decompress_vertex_uv(vertex_no_morph.compressed_uv_b, kit_instances::kit_meta.uv_b);
+@if(VERTEX_UVS_B && !VERTEX_UVS_B_COMPRESSED)
+    vertex.uv_b = vertex_no_morph.uv_b;
+@if(VERTEX_TANGENTS && VERTEX_TANGENTS_COMPRESSED)
+    vertex.tangent = bevy_render::utils::decompress_vertex_tangent(vertex_no_morph.compressed_tangent);
+@if(VERTEX_TANGENTS && !VERTEX_TANGENTS_COMPRESSED)
+    vertex.tangent = vertex_no_morph.tangent;
+@if(VERTEX_COLORS)
+    vertex.color = vertex_no_morph.color;
+    let inst = kit_instances::kit_instance(vertex_no_morph.instance_index);
+    return shade_kit_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag);
+}
+
+@if(!KIT_INSTANCED)
+@vertex
+fn vertex(vertex_no_morph: Vertex) -> KitVertexOutput {
+    let uncompressed_vertex_no_morph = decompress_vertex(vertex_no_morph, vertex_no_morph.instance_index);
+@if(MORPH_TARGETS)
+    var vertex = morph_vertex(uncompressed_vertex_no_morph, vertex_no_morph.instance_index);
+@else
+    var vertex = uncompressed_vertex_no_morph;
+
+    let mesh_world_from_local = mesh_functions::get_world_from_local(vertex_no_morph.instance_index);
+    var wind_origin = mesh_world_from_local[3].xyz;
+
+    var local: KitUncompressed;
+@if(VERTEX_POSITIONS)
+    local.position = vertex.position;
+@if(VERTEX_NORMALS)
+    local.normal = vertex.normal;
+@if(VERTEX_UVS_A)
+    local.uv = vertex.uv;
+@if(VERTEX_UVS_B)
+    local.uv_b = vertex.uv_b;
+@if(VERTEX_TANGENTS)
+    local.tangent = vertex.tangent;
+@if(VERTEX_COLORS)
+    local.color = vertex.color;
+    return shade_kit_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index);
 }
