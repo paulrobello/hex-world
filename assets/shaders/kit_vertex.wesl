@@ -15,6 +15,8 @@ import bevy_pbr::render::{
     view_transformations::position_world_to_clip,
 };
 import hex_render::{kit_common, foliage_wind};
+@if(KIT_INSTANCED)
+import hex_render::kit_instances;
 
 // forward_io::VertexOutput's locations, with the position @invariant.
 struct KitVertexOutput {
@@ -65,8 +67,16 @@ fn vertex(vertex_no_morph: Vertex) -> KitVertexOutput {
 @else
     var vertex = uncompressed_vertex_no_morph;
 
+@if(KIT_INSTANCED) {
+    // One record per settled part from hex_render::kit_instances; no per-mesh uniform on this path.
+    let inst = kit_instances::kit_instance(vertex_no_morph.instance_index);
+    let mesh_world_from_local = kit_instances::kit_world_from_local(inst);
+    var wind_origin = inst.translation;
+}
+@else {
     let mesh_world_from_local = mesh_functions::get_world_from_local(vertex_no_morph.instance_index);
     var wind_origin = mesh_world_from_local[3].xyz;
+}
 @if(VERTEX_COLORS) {
     if (vertex.color.a < 0.0) {
         wind_origin = vertex.color.xyz;
@@ -119,8 +129,14 @@ fn vertex(vertex_no_morph: Vertex) -> KitVertexOutput {
 @if(VERTEX_COLORS)
     out.color = vertex.color;
 
-@if(VERTEX_OUTPUT_INSTANCE_INDEX)
+@if(VERTEX_OUTPUT_INSTANCE_INDEX) {
+    @if(KIT_INSTANCED) {
+    out.instance_index = inst.tag;
+    }
+    @else {
     out.instance_index = vertex_no_morph.instance_index;
+    }
+}
 
 @if(VISIBILITY_RANGE_DITHER)
     out.visibility_range_dither = mesh_functions::get_visibility_range_dither_level(

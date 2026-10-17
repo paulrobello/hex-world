@@ -31,6 +31,8 @@ import bevy_pbr::render::{
 };
 import bevy_render::globals::Globals;
 import hex_render::{kit_common, foliage_wind};
+@if(KIT_INSTANCED)
+import hex_render::kit_instances;
 
 // The prepass and shadow views bind Globals at 1 (bevy_pbr prepass/mod.rs view layouts); the main
 // pass's mesh_view_bindings::globals is at 11 and absent here.
@@ -117,8 +119,16 @@ fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
 @else
     var vertex = uncompressed_vertex_no_morph;
 
+@if(KIT_INSTANCED) {
+    // One record per settled part from hex_render::kit_instances; no per-mesh uniform on this path.
+    let inst = kit_instances::kit_instance(vertex_no_morph.instance_index);
+    let mesh_world_from_local = kit_instances::kit_world_from_local(inst);
+    var wind_origin = inst.translation;
+}
+@else {
     let mesh_world_from_local = mesh_functions::get_world_from_local(vertex_no_morph.instance_index);
     var wind_origin = mesh_world_from_local[3].xyz;
+}
 @if(VERTEX_COLORS) {
     if (vertex.color.a < 0.0) {
         wind_origin = vertex.color.xyz;
@@ -187,15 +197,27 @@ fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
     );
 @elif(SKINNED)
     let prev_model = mesh_functions::get_previous_world_from_local(vertex_no_morph.instance_index);
-@else
+@else {
+    @if(KIT_INSTANCED) {
+    // Settled parts never move: the previous transform is the transform.
+    let prev_model = mesh_world_from_local;
+    }
+    @else {
     let prev_model = mesh_functions::get_previous_world_from_local(vertex_no_morph.instance_index);
+    }
+}
 
     out.previous_world_position = mesh_functions::mesh_position_local_to_world(
         prev_model,
         vec4<f32>(prev_vertex.position, 1.0)
     );
 @if(VERTEX_UVS_B) {
+    @if(KIT_INSTANCED) {
+    var prev_origin = inst.translation;
+    }
+    @else {
     var prev_origin = mesh_functions::get_previous_world_from_local(vertex_no_morph.instance_index)[3].xyz;
+    }
 @if(VERTEX_COLORS) {
     if (vertex_no_morph.color.a < 0.0) {
         prev_origin = wind_origin;
@@ -207,8 +229,14 @@ fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
 }
 }
 
-@if(VERTEX_OUTPUT_INSTANCE_INDEX)
+@if(VERTEX_OUTPUT_INSTANCE_INDEX) {
+    @if(KIT_INSTANCED) {
+    out.instance_index = inst.tag;
+    }
+    @else {
     out.instance_index = vertex_no_morph.instance_index;
+    }
+}
 
 @if(VISIBILITY_RANGE_DITHER)
     out.visibility_range_dither = mesh_functions::get_visibility_range_dither_level(
@@ -243,11 +271,17 @@ fn fragment(
         out.normal = vec4(kit_common::tiled_normal(f) * 0.5 + vec3(0.5), 1.0);
     } else if (flags & pbr_types::STANDARD_MATERIAL_FLAGS_UNLIT_BIT) == 0u {
         let double_sided = (flags & pbr_types::STANDARD_MATERIAL_FLAGS_DOUBLE_SIDED_BIT) != 0u;
-        let mesh_flags = mesh[in.instance_index].flags;
         // Foliage keeps its front normal on back faces, as in kit_material.wesl.
         let foliage = (flags & pbr_types::STANDARD_MATERIAL_FLAGS_ALPHA_MODE_RESERVED_BITS)
             == pbr_types::STANDARD_MATERIAL_FLAGS_ALPHA_MODE_MASK;
+        @if(KIT_INSTANCED) {
+        // Records never mirror (positive determinant), so the winding's front is the front.
+        let is_logically_front = is_front || foliage;
+        }
+        @else {
+        let mesh_flags = mesh[in.instance_index].flags;
         let is_logically_front = pbr_functions::winding_corrected_front_facing(mesh_flags, is_front) || foliage;
+        }
         let world_normal = pbr_functions::prepare_world_normal(in.world_normal, double_sided, is_logically_front);
         var normal = world_normal;
 

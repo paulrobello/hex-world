@@ -85,7 +85,12 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
     // (every MVP instance) read 0 and skip it.
     @if(VERTEX_OUTPUT_INSTANCE_INDEX) {
     if ((kit_common::kit.flags & kit_common::FLAG_FOLIAGE) != 0u) {
+        @if(KIT_INSTANCED) {
+        let season = in.instance_index;
+        }
+        @else {
         let season = mesh_functions::get_tag(in.instance_index);
+        }
         if (season != 0u) {
             let c = pbr_input.material.base_color;
             pbr_input.material.base_color = vec4(c.rgb * hooks::season_tint(season), c.a);

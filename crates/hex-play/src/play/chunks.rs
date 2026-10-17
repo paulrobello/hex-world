@@ -1,15 +1,25 @@
-//! Settled kit parts share chunk meshes. Tile roots and scatter layout records remain authoritative.
-use std::collections::{HashMap, HashSet};
+//! Settled kit parts draw through GPU instance records. Tile roots and scatter layout records
+//! remain authoritative.
+use std::{
+    collections::{HashMap, HashSet},
+    ops::Range,
+    sync::Arc,
+};
 
+use bevy::camera::primitives::Aabb;
+use bevy::mesh::Indices;
 use bevy::prelude::*;
 use hex_core::{Axial, HEX_RADIUS};
 use hex_render::{
     chunks::chunk_center,
+    kit_instances::{
+        GpuKitInstance, KitChunk, KitInstanceSet, KitInstanceSetData, KitSlot, KitSlotDraw,
+    },
     kit_scene::KitRotor,
     scene::{Lod, lod_range},
 };
 
-use super::{KitMaterial, PlaySpawned, PlayView, RisePart, SceneEntity, rise::PlayRises};
+use super::{KitMaterial, KitPart, PlaySpawned, PlayView, RisePart, SceneEntity, rise::PlayRises};
 
 #[derive(Clone)]
 struct Part {
@@ -21,7 +31,6 @@ struct Part {
     world: Transform,
     rise: Option<RisePart>,
     lod: u8,
-    scatter: bool,
 }
 
 struct Tile {
@@ -32,15 +41,64 @@ struct Tile {
 #[derive(Resource, Default)]
 pub(super) struct PlayChunks {
     tiles: HashMap<Entity, Tile>,
-    draws: HashMap<Axial, Vec<Entity>>,
     dirty: HashSet<Axial>,
-    scatter_draws: HashMap<Axial, usize>,
     pending: bool,
+    /// The (slot, LOD) draw entities of the current instance set.
+    slot_entities: Vec<Entity>,
 }
 
-#[derive(Component)]
-pub(super) struct ChunkDraw;
+/// Maps every kit part mesh to its (family, LOD): a family is one piece body primitive across
+/// the three LODs, identified by (piece, material, ordinal within the LOD). Parts without an
+/// entry stay on the per-entity path.
+#[derive(Resource, Default)]
+pub(super) struct KitFamilies {
+    family_of: HashMap<AssetId<Mesh>, (u32, u8)>,
+    meshes_of: HashMap<u32, [Option<Handle<Mesh>>; 3]>,
+}
 
+impl KitFamilies {
+    #[allow(clippy::type_complexity)]
+    pub(super) fn build(pieces: &HashMap<String, Vec<KitPart>>) -> Self {
+        let mut out = Self::default();
+        let mut intern: HashMap<(String, AssetId<KitMaterial>, u32), u32> = HashMap::new();
+        let mut next: u32 = 0;
+        let mut ids: Vec<_> = pieces.keys().cloned().collect();
+        ids.sort();
+        for id in ids {
+            let mut per_lod_seen = [0u32; 3];
+            for part in &pieces[&id] {
+                if part.rotor.is_some() {
+                    continue;
+                }
+                let ord = per_lod_seen[part.lod];
+                per_lod_seen[part.lod] += 1;
+                let fid = *intern
+                    .entry((id.clone(), part.material.id(), ord))
+                    .or_insert_with(|| {
+                        let fid = next;
+                        next += 1;
+                        out.meshes_of.insert(fid, [None, None, None]);
+                        fid
+                    });
+                out.family_of.insert(part.mesh.id(), (fid, part.lod as u8));
+                out.meshes_of.get_mut(&fid).expect("inserted above")[part.lod] =
+                    Some(part.mesh.clone());
+            }
+        }
+        out
+    }
+
+    fn family_of(&self, mesh: AssetId<Mesh>) -> Option<(u32, u8)> {
+        self.family_of.get(&mesh).copied()
+    }
+
+    fn meshes_of(&self, family: u32) -> [Option<Handle<Mesh>>; 3] {
+        self.meshes_of
+            .get(&family)
+            .cloned()
+            .unwrap_or([None, None, None])
+    }
+}
 /// Restore the original hierarchy before the normal tile sync starts a sink or replaces children.
 pub(super) fn restore(
     mut commands: Commands,
@@ -112,10 +170,10 @@ pub(super) fn settle(
     spawned: Option<Res<PlaySpawned>>,
     rises: Res<PlayRises>,
     mut chunks: ResMut<PlayChunks>,
-    mut meshes: ResMut<Assets<Mesh>>,
+    meshes: Res<Assets<Mesh>>,
+    families: Option<Res<KitFamilies>>,
     config: Res<hex_render::GateConfig>,
     mut report: ResMut<super::scatter::ScatterReport>,
-    scatter_groups: Query<(), With<super::scatter::ScatterGroup>>,
     parts: Query<
         (
             Entity,
@@ -125,7 +183,7 @@ pub(super) fn settle(
             Option<&RisePart>,
             &Lod,
         ),
-        (Without<ChunkDraw>, Without<KitRotor>),
+        (Without<KitRotor>,),
     >,
     hierarchy: Query<(&Transform, Option<&ChildOf>)>,
     children: Query<&Children>,
@@ -183,11 +241,11 @@ pub(super) fn settle(
         {
             continue;
         }
-        let Some(source) = meshes.get(&mesh.0) else {
+        // Parts of a piece whose pack arrived without a full LOD family stay per-entity.
+        let Some(families) = families.as_ref() else {
             continue;
         };
-        // Kit source vertex colours must not be overwritten by the packed wind-origin channel.
-        if source.attribute(Mesh::ATTRIBUTE_COLOR).is_some() {
+        if families.family_of(mesh.0.id()).is_none() {
             continue;
         }
         chunks
@@ -207,64 +265,174 @@ pub(super) fn settle(
                 world,
                 rise: rise.copied(),
                 lod: lod.0,
-                scatter: scatter_groups.contains(parent),
             });
         chunks.dirty.insert(chunk_center(cell, 19));
         commands.entity(entity).try_despawn();
     }
-    let dirty = std::mem::take(&mut chunks.dirty);
-    for center in dirty {
-        for e in chunks.draws.remove(&center).unwrap_or_default() {
-            commands.entity(e).try_despawn();
-        }
-        let [x, z] = center.to_world(HEX_RADIUS);
+    if !chunks.dirty.is_empty() {
+        let families = families.as_ref().expect("families");
+        rebuild(&mut commands, &mut chunks, &meshes, families);
+    }
+    update_report(&chunks, &mut report);
+}
+
+/// Rebuilds the whole instance set from the cached parts and respawns the draw-slot entities.
+/// Settles are wave-batched, so this runs at most once per rise wave or tile change.
+fn rebuild(
+    commands: &mut Commands,
+    chunks: &mut PlayChunks,
+    meshes: &Assets<Mesh>,
+    families: &KitFamilies,
+) {
+    chunks.dirty.clear();
+    for e in chunks.slot_entities.drain(..) {
+        commands.entity(e).try_despawn();
+    }
+    // Tiles grouped by chunk, ordered by chunk centre so the set is deterministic, and slot
+    // instances ordered chunk-major so each chunk owns a contiguous per-slot range.
+    let mut grouped: Vec<(Axial, Vec<&Tile>)> = vec![];
+    let mut chunk_of: HashMap<Axial, usize> = HashMap::new();
+    for tile in chunks.tiles.values() {
+        let centre = chunk_center(tile.cell, 19);
+        let ci = *chunk_of.entry(centre).or_insert_with(|| {
+            grouped.push((centre, vec![]));
+            grouped.len() - 1
+        });
+        grouped[ci].1.push(tile);
+    }
+    grouped.sort_by_key(|(centre, _)| (centre.q, centre.r));
+    let mut slots: Vec<(u32, Handle<KitMaterial>, Vec<GpuKitInstance>)> = vec![];
+    let mut slot_of: HashMap<(u32, AssetId<KitMaterial>), usize> = HashMap::new();
+    let mut per_chunk: Vec<(Vec3, Aabb, Vec<Range<u32>>)> = vec![];
+    let mut local_bounds: HashMap<AssetId<Mesh>, (Vec3, Vec3)> = HashMap::new();
+    for (centre, tiles) in &grouped {
+        let [x, z] = centre.to_world(HEX_RADIUS);
         let origin = Vec3::new(x, 0.0, z);
-        let mut merged: HashMap<(AssetId<KitMaterial>, u8), (Handle<KitMaterial>, Mesh)> =
-            HashMap::new();
-        let mut scatter_keys = HashSet::new();
-        for part in chunks
-            .tiles
-            .values()
-            .filter(|t| chunk_center(t.cell, 19) == center)
-            .flat_map(|t| &t.parts)
-        {
-            let Some(source) = meshes.get(&part.mesh) else {
-                continue;
-            };
-            let mesh = hex_render::chunks::transformed_kit_mesh(source, part.world, origin);
-            let key = (part.material.id(), part.lod);
-            if part.scatter {
-                scatter_keys.insert(key);
-            }
-            if let Some((_, target)) = merged.get_mut(&key) {
-                target
-                    .merge(&mesh)
-                    .expect("kit parts of one material have compatible vertex layouts");
-            } else {
-                merged.insert(key, (part.material.clone(), mesh));
+        let mut ranges = vec![0..0u32; slots.len()];
+        let mut lo = Vec3::splat(f32::MAX);
+        let mut hi = Vec3::splat(f32::MIN);
+        for tile in tiles {
+            for part in &tile.parts {
+                let Some((fid, _lod)) = families.family_of(part.mesh.id()) else {
+                    continue;
+                };
+                let (blo, bhi) = *local_bounds
+                    .entry(part.mesh.id())
+                    .or_insert_with(|| mesh_bounds(meshes.get(&part.mesh)));
+                let (min, max) = bounds_of(&blo, &bhi, &part.world);
+                lo = lo.min(min);
+                hi = hi.max(max);
+                let si = *slot_of.entry((fid, part.material.id())).or_insert_with(|| {
+                    slots.push((fid, part.material.clone(), vec![]));
+                    ranges.resize(slots.len(), 0..0);
+                    slots.len() - 1
+                });
+                let start = slots[si].2.len() as u32;
+                slots[si].2.push(GpuKitInstance {
+                    rotation: part.world.rotation.to_array(),
+                    translation: (part.world.translation - origin).to_array(),
+                    tag: 0,
+                    scale: part.world.scale.to_array(),
+                    _pad: 0,
+                });
+                if ranges[si].is_empty() {
+                    ranges[si] = start..start + 1;
+                } else {
+                    ranges[si].end += 1;
+                }
             }
         }
-        let mut draws = vec![];
-        for ((_, lod), (material, mut mesh)) in merged {
-            mesh.asset_usage = bevy::asset::RenderAssetUsages::RENDER_WORLD;
-            draws.push(
+        per_chunk.push((origin, Aabb::from_min_max(lo, hi), ranges));
+    }
+    // Concatenate slot instances and derive the per-chunk ranges into the flat record buffer.
+    let mut pieces: Vec<GpuKitInstance> = vec![];
+    let mut out_slots: Vec<KitSlot> = vec![];
+    for (fid, material, instances) in &slots {
+        let meshes3 = families.meshes_of(*fid);
+        let tri = |h: Option<&Handle<Mesh>>| {
+            h.and_then(|h| meshes.get(h))
+                .map_or(0, |m| m.indices().map_or(0, Indices::len) as u32)
+        };
+        let tris = [
+            tri(meshes3[0].as_ref()),
+            tri(meshes3[1].as_ref()),
+            tri(meshes3[2].as_ref()),
+        ];
+        pieces.extend(instances.iter().copied());
+        out_slots.push(KitSlot {
+            mesh: meshes3.map(|h| h.as_ref().map(|h| h.id())),
+            tris,
+            material: material.id(),
+            key: 0,
+        });
+    }
+    let mut out_chunks: Vec<KitChunk> = vec![];
+    for (origin, aabb, ranges) in per_chunk {
+        out_chunks.push(KitChunk {
+            centre: origin,
+            aabb,
+            ranges,
+        });
+    }
+    let _count = slots.iter().map(|(_, _, i)| i.len()).sum::<usize>();
+    for (si, (fid, material, _)) in slots.iter().enumerate() {
+        let meshes3 = families.meshes_of(*fid);
+        for lod in 0..3u8 {
+            if meshes3[lod as usize].is_none() {
+                continue;
+            }
+            chunks.slot_entities.push(
                 commands
                     .spawn((
-                        ChunkDraw,
-                        Mesh3d(meshes.add(mesh)),
-                        MeshMaterial3d(material),
-                        Transform::from_translation(origin),
-                        Lod(lod),
-                        lod_range(lod as usize),
+                        KitSlotDraw {
+                            slot: si as u32,
+                            lod,
+                        },
+                        MeshMaterial3d(material.clone()),
+                        Visibility::Inherited,
                         SceneEntity,
                     ))
                     .id(),
             );
         }
-        chunks.draws.insert(center, draws);
-        chunks.scatter_draws.insert(center, scatter_keys.len());
     }
-    update_report(&chunks, &mut report);
+    commands.insert_resource(KitInstanceSet(Arc::new(KitInstanceSetData {
+        pieces,
+        slots: out_slots,
+        chunks: out_chunks,
+        version: 0,
+    })));
+}
+
+/// A mesh's local position bounds (`None` mesh: origin).
+fn mesh_bounds(mesh: Option<&Mesh>) -> (Vec3, Vec3) {
+    let Some(bevy::mesh::VertexAttributeValues::Float32x3(p)) =
+        mesh.and_then(|m| m.attribute(Mesh::ATTRIBUTE_POSITION))
+    else {
+        return (Vec3::ZERO, Vec3::ZERO);
+    };
+    let (lo, hi) = p.iter().fold(
+        (Vec3::splat(f32::MAX), Vec3::splat(f32::MIN)),
+        |(lo, hi), v| (lo.min(Vec3::from(*v)), hi.max(Vec3::from(*v))),
+    );
+    (lo, hi)
+}
+
+/// The world-space bounds of `mesh_bounds` transformed by `t` (all eight corners).
+fn bounds_of(lo: &Vec3, hi: &Vec3, t: &Transform) -> (Vec3, Vec3) {
+    let (mut out_lo, mut out_hi) = (Vec3::splat(f32::MAX), Vec3::splat(f32::MIN));
+    for i in 0..8 {
+        let s = Vec3::new(
+            if i & 1 == 0 { -1.0 } else { 1.0 },
+            if i & 2 == 0 { -1.0 } else { 1.0 },
+            if i & 4 == 0 { -1.0 } else { 1.0 },
+        );
+        let corner = *lo + (Vec3::ONE + s) * 0.5 * (*hi - *lo);
+        let p = t.transform_point(corner);
+        out_lo = out_lo.min(p);
+        out_hi = out_hi.max(p);
+    }
+    (out_lo, out_hi)
 }
 
 fn update_report(chunks: &PlayChunks, report: &mut super::scatter::ScatterReport) {
@@ -273,15 +441,10 @@ fn update_report(chunks: &PlayChunks, report: &mut super::scatter::ScatterReport
             .as_u64()
             .or_else(|| value["entities"].as_u64())
             .unwrap_or(0);
-        let merged_parts = chunks
-            .tiles
-            .values()
-            .flat_map(|t| &t.parts)
-            .filter(|p| p.scatter)
-            .count() as u64;
-        let draws = chunks.scatter_draws.values().sum::<usize>() as u64;
+        let instanced = chunks.tiles.values().flat_map(|t| &t.parts).count() as u64;
+        let draws = chunks.slot_entities.len() as u64;
         value["unbatched_entities"] = unbatched.into();
-        value["entities"] = (unbatched.saturating_sub(merged_parts) + draws).into();
+        value["entities"] = (unbatched.saturating_sub(instanced) + draws).into();
         let json = value.to_string();
         if report.0 != json {
             report.0 = json;
@@ -307,6 +470,10 @@ mod tests {
             .world_mut()
             .resource_mut::<Assets<Mesh>>()
             .add(Cuboid::new(1.0, 2.0, 3.0));
+        app.insert_resource(KitFamilies {
+            family_of: HashMap::from([(mesh.id(), (0u32, 0u8))]),
+            meshes_of: HashMap::from([(0u32, [Some(mesh.clone()), None, None])]),
+        });
         let root = app
             .world_mut()
             .spawn((Transform::from_xyz(12.0, 0.0, 3.0), Visibility::Inherited))
@@ -353,17 +520,19 @@ mod tests {
     }
 
     #[test]
-    fn settled_parts_merge_and_restore_before_removal_with_pair_ids_repaired() {
+    fn settled_parts_instance_and_restore_before_removal_with_pair_ids_repaired() {
         let (mut app, root, old_pair) = app();
         app.add_systems(Update, settle);
         app.update();
         assert_eq!(
             app.world_mut().query::<&Mesh3d>().iter(app.world()).count(),
-            1
+            0
         );
+        let set = app.world().resource::<KitInstanceSet>().0.pieces.len();
+        assert_eq!(set, 50);
         let chunks = app.world().resource::<PlayChunks>();
         assert_eq!(chunks.tiles[&root].parts.len(), 50);
-        assert_eq!(chunks.draws.len(), 1);
+        assert_eq!(chunks.slot_entities.len(), 1);
         app.world_mut().resource_mut::<PlayView>().tiles.clear();
         app.add_systems(First, restore);
         app.update();
@@ -374,7 +543,7 @@ mod tests {
     }
 
     #[test]
-    fn settled_tiles_wait_for_the_rise_wave_and_merge_once() {
+    fn settled_tiles_wait_for_the_rise_wave_and_settle_once() {
         let (mut app, root, _) = app();
         let other = Axial::new(1, 0);
         app.world_mut().resource_mut::<PlayRises>().begin(
@@ -387,11 +556,18 @@ mod tests {
         app.add_systems(Update, settle);
         for _ in 0..4 {
             app.update();
-            assert!(app.world().resource::<PlayChunks>().draws.is_empty());
+            assert!(
+                !app.world().is_resource_added::<KitInstanceSet>()
+                    && app
+                        .world()
+                        .get_resource::<KitInstanceSet>()
+                        .is_none_or(|s| s.0.pieces.is_empty())
+            );
         }
         app.world_mut().resource_mut::<PlayRises>().rest(other);
         app.update();
-        let draw = app.world().resource::<PlayChunks>().draws[&Axial::ORIGIN][0];
+        let set = app.world().resource::<KitInstanceSet>().0.pieces.len();
+        assert_eq!(set, 50);
         assert_eq!(
             app.world().resource::<PlayChunks>().tiles[&root]
                 .parts
@@ -400,10 +576,7 @@ mod tests {
         );
         for _ in 0..4 {
             app.update();
-            assert_eq!(
-                app.world().resource::<PlayChunks>().draws[&Axial::ORIGIN][0],
-                draw
-            );
+            assert_eq!(app.world().resource::<KitInstanceSet>().0.pieces.len(), 50);
         }
     }
 
@@ -424,10 +597,7 @@ mod tests {
                 .len(),
             50
         );
-        assert_eq!(
-            app.world_mut().query::<&Mesh3d>().iter(app.world()).count(),
-            1
-        );
+        assert_eq!(app.world().resource::<KitInstanceSet>().0.pieces.len(), 50);
     }
 
     #[test]
@@ -442,6 +612,11 @@ mod tests {
             app.world_mut().query::<&Mesh3d>().iter(app.world()).count(),
             50
         );
-        assert!(app.world().resource::<PlayChunks>().draws.is_empty());
+        assert!(
+            app.world()
+                .resource::<PlayChunks>()
+                .slot_entities
+                .is_empty()
+        );
     }
 }

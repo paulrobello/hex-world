@@ -212,6 +212,7 @@ pub fn start_kit(
 /// place on the tiles that draw them (`sync`).
 #[allow(clippy::too_many_arguments)]
 pub fn finish_kit(
+    mut commands: Commands,
     mut kit: Option<ResMut<PlayKit>>,
     mut packs: Option<ResMut<PlayPacks>>,
     spawned: Option<ResMut<PlaySpawned>>,
@@ -263,6 +264,7 @@ pub fn finish_kit(
         ids.sort();
         ids
     });
+    commands.insert_resource(chunks::KitFamilies::build(pieces));
     let mut spawned = spawned;
     if packs.core_ready()
         && let PlayKit::Loading(pieces) = &mut *kit

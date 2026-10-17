@@ -526,6 +526,10 @@ const HOOKED: &[(&str, &[Need])] = &[
 /// Shaders where the hooks are meaningless, with the reason.
 const SHADER_EXEMPT: &[(&str, &str)] = &[
     (
+        "crates/hex-render/src/kit_instances.wesl",
+        "instance-record library of the kit instanced path: transforms and ids, no surface",
+    ),
+    (
         "assets/shaders/kit_prepass.wesl",
         "depth/normal prepass of the kit material: the hooks change colour, not depth or normals",
     ),

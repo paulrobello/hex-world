@@ -7,6 +7,7 @@ pub mod grade;
 pub mod hooks;
 #[cfg(feature = "gate-tools")]
 pub mod instanced;
+pub mod kit_instances;
 pub mod kit_material;
 pub mod kit_scene;
 #[cfg(feature = "gate-tools")]
@@ -135,6 +136,7 @@ impl Plugin for HexRenderPlugin {
         app.add_plugins(instanced::InstancedPlugin)
             .add_systems(Update, (kit_test::spawn_when_ready, scene::move_vehicles));
         bevy::shader::load_shader_library!(app, "kit_common.wesl");
+        bevy::shader::load_shader_library!(app, "kit_instances.wesl");
         bevy::shader::load_shader_library!(app, "water_common.wesl");
         bevy::shader::load_shader_library!(app, "hooks.wesl");
         bevy::shader::load_shader_library!(app, "wind.wesl");
@@ -150,6 +152,7 @@ impl Plugin for HexRenderPlugin {
             .insert_resource(self.config)
             .add_plugins((
                 MaterialPlugin::<kit_material::KitMaterial>::default(),
+                kit_instances::KitInstancesPlugin,
                 tilt_shift::TiltShiftPlugin,
                 MaterialPlugin::<water::WaterMaterial>::default(),
                 MaterialPlugin::<water::TerrainMaterial>::default(),
