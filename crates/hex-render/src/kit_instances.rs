@@ -174,10 +174,10 @@ pub fn kit_view_ranges(
         for lod in 0..3usize {
             let first = ids.len() as u32;
             for &ci in &visible {
-                if lods[ci] == lod {
-                    if let Some(r) = set.chunks[ci].ranges.get(slot) {
-                        ids.extend(r.clone());
-                    }
+                if lods[ci] == lod
+                    && let Some(r) = set.chunks[ci].ranges.get(slot)
+                {
+                    ids.extend(r.clone());
                 }
             }
             let last = ids.len() as u32;
