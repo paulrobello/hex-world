@@ -175,9 +175,8 @@ pub fn kit_view_ranges(
             let first = ids.len() as u32;
             for &ci in &visible {
                 if lods[ci] == lod {
-                    let r = set.chunks[ci].ranges[slot].clone();
-                    if !r.is_empty() {
-                        ids.extend(r);
+                    if let Some(r) = set.chunks[ci].ranges.get(slot) {
+                        ids.extend(r.clone());
                     }
                 }
             }

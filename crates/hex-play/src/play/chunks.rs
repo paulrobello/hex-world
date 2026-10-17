@@ -351,6 +351,12 @@ fn rebuild(
         }
         per_chunk.push((origin, Aabb::from_min_max(lo, hi), ranges));
     }
+    // Chunks assembled before a slot exists have shorter range vectors; every chunk needs one
+    // range per slot (empty when the chunk holds none of it).
+    let slot_count = slots.len();
+    for (_, _, ranges) in &mut per_chunk {
+        ranges.resize(slot_count, 0..0);
+    }
     // Concatenate slot instances and derive the per-chunk ranges into the flat record buffer.
     let mut pieces: Vec<GpuKitInstance> = vec![];
     let mut out_slots: Vec<KitSlot> = vec![];
