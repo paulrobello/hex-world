@@ -84,7 +84,9 @@ A third clean run (owner-requested, peak desktop Chrome 0.2-0.5%, load 10-11) re
 19.1 exactly (round p50 17.1/17.7) — the ~2.5 ms gap is stable, not noise.
 Down from the pre-pivot 50.8/48.8 on the identical world; up slightly from the
 pre-fix measurement (18.3) within run-to-run noise on a busier host (load 10-14 vs
-9-12). The named remaining cost is unchanged: `renderer_extract`, ~4 ms/frame on web.
+9-12). Post-fix native runs the identical world at p50 14.5 / p95 16.64 uncapped:
+the render path is at budget, and the web gap is wasm/browser overhead (see the
+correction above).
 
 ## Files
 
