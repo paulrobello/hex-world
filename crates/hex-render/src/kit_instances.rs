@@ -27,9 +27,9 @@ use bevy::{
     math::Affine3A,
     pbr::{
         LightEntity, MATERIAL_BIND_GROUP_INDEX, MeshPipeline, MeshPipelineKey, PreparedMaterial,
-        PrepassPipeline, SetMaterialBindGroup, SetMeshViewBindGroup,
-        SetMeshViewBindingArrayBindGroup, SetPrepassViewBindGroup, SetPrepassViewEmptyBindGroup,
-        Shadow, ShadowBatchSetKey, ShadowBinKey, ViewKeyCache,
+        PrepassPipeline, SetMeshViewBindGroup, SetMeshViewBindingArrayBindGroup,
+        SetPrepassViewBindGroup, SetPrepassViewEmptyBindGroup, Shadow, ShadowBatchSetKey,
+        ShadowBinKey, ViewKeyCache,
     },
     prelude::*,
     render::{
@@ -38,6 +38,7 @@ use bevy::{
         erased_render_asset::ErasedRenderAssets,
         extract_component::{ExtractComponent, ExtractComponentPlugin},
         extract_resource::{ExtractResource, ExtractResourcePlugin},
+        material_bind_groups::MaterialBindGroupAllocators,
         mesh::allocator::{MeshAllocator, MeshSlabs},
         mesh::{MeshVertexBufferLayoutRef, RenderMesh, RenderMeshBufferInfo},
         render_asset::RenderAssets,
@@ -621,10 +622,14 @@ fn prepare_kit(
         shader: server.load(PREPASS_SHADER),
         depth_clip_control: device.features().contains(WgpuFeatures::DEPTH_CLIP_CONTROL),
     });
-    // The record buffer is rebuilt whenever the set swaps.
+    // The record buffer is rebuilt whenever the set swaps. The floor keeps the binding at or
+    // above the shader's runtime-array minimum on near-empty worlds (wgpu validates the bound
+    // size, and this app treats validation errors as fatal).
+    let mut records = bytemuck::cast_slice(&scene.0.pieces).to_vec();
+    records.resize(records.len().max(256), 0);
     gpu.pieces = Some(device.create_buffer_with_data(&BufferInitDescriptor {
         label: Some("kit_instances_records"),
-        contents: bytemuck::cast_slice(&scene.0.pieces),
+        contents: &records,
         usage: BufferUsages::STORAGE,
     }));
     // One metadata entry per (slot, LOD), padded to the device's dynamic-offset alignment.
@@ -999,7 +1004,7 @@ type DrawKitMain = (
     SetMeshViewBindGroup<0>,
     SetMeshViewBindingArrayBindGroup<1>,
     SetKitInstancesBindGroup,
-    SetMaterialBindGroup<MATERIAL_BIND_GROUP_INDEX>,
+    SetKitMaterialBindGroup,
     DrawKitInstances,
 );
 
@@ -1008,9 +1013,53 @@ type DrawKitPrepass = (
     SetPrepassViewBindGroup<0>,
     SetPrepassViewEmptyBindGroup<1>,
     SetKitInstancesBindGroup,
-    SetMaterialBindGroup<MATERIAL_BIND_GROUP_INDEX>,
+    SetKitMaterialBindGroup,
     DrawKitInstances,
 );
+
+/// Binds the slot's kit material at the material bind group. Bevy's `SetMaterialBindGroup` looks
+/// the material up in `RenderMaterialInstances`, which extraction only fills for `Mesh3d`
+/// entities; the kit draw slots have no `Mesh3d`, so it would Skip and — tuples abort on Skip —
+/// silently drop the whole draw.
+struct SetKitMaterialBindGroup;
+
+impl<P: PhaseItem> RenderCommand<P> for SetKitMaterialBindGroup {
+    type Param = (
+        SRes<KitGpu>,
+        SRes<ErasedRenderAssets<PreparedMaterial>>,
+        SRes<MaterialBindGroupAllocators>,
+    );
+    type ViewQuery = ();
+    type ItemQuery = Read<KitSlotDraw>;
+
+    fn render<'w>(
+        _item: &P,
+        _view: (),
+        group: Option<&'w KitSlotDraw>,
+        (gpu, materials, allocators): SystemParamItem<'w, '_, Self::Param>,
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        let (Some(group), Some(scene)) = (group, gpu.into_inner().scene.as_ref()) else {
+            return RenderCommandResult::Skip;
+        };
+        let Some(slot) = scene.slots.get(group.slot as usize) else {
+            return RenderCommandResult::Skip;
+        };
+        let (materials, allocators) = (materials.into_inner(), allocators.into_inner());
+        let Some(prepared) = materials.get(slot.material.untyped()) else {
+            return RenderCommandResult::Skip;
+        };
+        let Some(bind_group) = allocators
+            .get(&slot.material.untyped().type_id())
+            .and_then(|allocator| allocator.get(prepared.binding.group))
+            .and_then(|bind_group| bind_group.bind_group())
+        else {
+            return RenderCommandResult::Skip;
+        };
+        pass.set_bind_group(MATERIAL_BIND_GROUP_INDEX, bind_group, &[]);
+        RenderCommandResult::Success
+    }
+}
 
 /// Binds the record + id buffers and the draw's metadata entry at group 2.
 struct SetKitInstancesBindGroup;
