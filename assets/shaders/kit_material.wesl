@@ -71,9 +71,12 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
         let wp = in.world_position.xyz;
         let y = wp.y - water_common::COAST_WATER_Y;
         let reach = kit_common::kit.wash_amp * water_common::swash(water_common::coast_shore(y), kit_common::kit.water_time);
+        // Run-up holds only on faces flat enough to keep it: cliff walls and steep banks stay dry,
+        // so the band doesn't crawl up every exposed coast side (owner, 2026-10-18).
+        let hold = smoothstep(0.3, 0.6, in.world_normal.y);
         let damp = 1.0 - smoothstep(0.0, 0.32 + 0.08 * water_common::value_noise(wp.xz / 7.0), y);
         let soaked = 1.0 - smoothstep(reach - 0.01, reach + 0.05, y);
-        shore_wet = clamp(max(damp * 0.75, soaked), 0.0, 1.0) * step(-0.02, y) + step(y, -0.02);
+        shore_wet = hold * clamp(max(damp * 0.75, soaked), 0.0, 1.0) * step(-0.02, y) + step(y, -0.02);
         @if(VERTEX_COLORS) {
             shore_wet *= in.color.a;  // the detail weight fades the live band too (mouth fan banks)
         }
