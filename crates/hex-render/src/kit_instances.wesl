@@ -22,12 +22,15 @@ struct KitMeshMeta {
 }
 
 @group(2) @binding(0) var<storage, read> kit_instances: array<GpuKitInstance>;
-@group(2) @binding(1) var<storage, read> kit_ids: array<u32>;
-@group(2) @binding(2) var<uniform> kit_meta: KitMeshMeta;
+@group(2) @binding(1) var<uniform> kit_meta: KitMeshMeta;
 
-/// The record this draw's instance index refers to.
-fn kit_instance(i: u32) -> GpuKitInstance {
-    return kit_instances[kit_ids[i]];
+/// The record this draw's instance refers to. The record id arrives as an instanced
+/// vertex attribute (one u32 per instance, sliced per draw), because WebGPU's
+/// `instance_index` is 0-based per draw while Metal's `[[instance_id]]` includes the
+/// draw's instance start — an ids-storage lookup keyed on it reads the first slot's
+/// records on WebGPU.
+fn kit_instance(vid: u32) -> GpuKitInstance {
+    return kit_instances[vid];
 }
 
 /// `world = translation · rotation · scale` from a record.

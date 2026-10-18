@@ -65,8 +65,13 @@ struct KitUncompressed {
     color: vec4<f32>,
 }
 
-// forward_io::Vertex's layout, mirrored locally for the instanced entry.
+// forward_io::Vertex's layout, mirrored locally for the instanced entry. `kit_record` is
+// the instanced u32 (one per instance, sliced per draw) selecting the instance record —
+// see kit_instances.wesl for why it is not `instance_index`.
 struct KitVertexIn {
+@if(KIT_INSTANCED)
+    @location(6) kit_record: u32,
+@if(!KIT_INSTANCED)
     @builtin(instance_index) instance_index: u32,
 @if(VERTEX_POSITIONS && VERTEX_POSITIONS_COMPRESSED)
     @location(0) compressed_position: vec4<f32>,
@@ -194,7 +199,7 @@ fn vertex(vertex_no_morph: KitVertexIn) -> KitVertexOutput {
     vertex.tangent = vertex_no_morph.tangent;
 @if(VERTEX_COLORS)
     vertex.color = vertex_no_morph.color;
-    let inst = kit_instances::kit_instance(vertex_no_morph.instance_index);
+    let inst = kit_instances::kit_instance(vertex_no_morph.kit_record);
     return shade_kit_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag);
 }
 

@@ -71,6 +71,9 @@ struct KitPrepassOutput {
 
 // prepass_io's vertex types, mirrored locally (the instanced entry cannot import prepass::io).
 struct KitPrepassIn {
+@if(KIT_INSTANCED)
+    @location(6) kit_record: u32,
+@if(!KIT_INSTANCED)
     @builtin(instance_index) instance_index: u32,
 @if(VERTEX_POSITIONS_COMPRESSED)
     @location(0) compressed_position: vec4<f32>,
@@ -282,7 +285,7 @@ fn vertex(v: KitPrepassIn) -> KitPrepassOutput {
     vertex.tangent = v.tangent;
 @if(VERTEX_COLORS)
     vertex.color = v.color;
-    let inst = kit_instances::kit_instance(v.instance_index);
+    let inst = kit_instances::kit_instance(v.kit_record);
     return shade_kit_prepass_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag);
 }
 

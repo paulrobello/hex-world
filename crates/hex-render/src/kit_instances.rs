@@ -231,7 +231,10 @@ struct KitGpu {
     /// Byte stride between (slot, LOD) meta entries (device alignment).
     meta_stride: u32,
     ids: RawBufferVec<u32>,
-    bind_group: Option<BindGroup>,
+    // (`ids` holds the per-view record ids; it is bound as an instanced vertex buffer, not
+    // storage — see kit_instances.wesl for why.)
+    /// One static bind group per meta entry (no dynamic offsets).
+    bind_groups: Vec<BindGroup>,
     /// (view render entity, slot index `slot * 3 + lod`) -> instance range into `ids`.
     draws: HashMap<(Entity, usize), Range<u32>>,
 }
@@ -243,8 +246,8 @@ impl Default for KitGpu {
             pieces: None,
             meta: None,
             meta_stride: 0,
-            ids: RawBufferVec::new(BufferUsages::STORAGE),
-            bind_group: None,
+            ids: RawBufferVec::new(BufferUsages::VERTEX),
+            bind_groups: Vec::new(),
             draws: HashMap::default(),
         }
     }
@@ -371,6 +374,18 @@ impl SpecializedMeshPipeline for KitMainPipeline {
         f.entry_point = Some("fragment".into());
         d.layout[2] = self.instances.clone();
         d.layout.insert(3, self.material.clone());
+        // The instanced u32 record-id buffer: one u32 per instance, sliced per draw. Vertex
+        // attributes carry no instance-index semantics, so the record lookup cannot drift
+        // between Metal's absolute `[[instance_id]]` and WebGPU's 0-based `instance_index`.
+        let mut record = d.vertex.buffers[0].clone();
+        record.array_stride = 4;
+        record.step_mode = VertexStepMode::Instance;
+        let mut attr = record.attributes[0];
+        attr.format = VertexFormat::Uint32;
+        attr.offset = 0;
+        attr.shader_location = 6;
+        record.attributes = vec![attr];
+        d.vertex.buffers.push(record);
         d.primitive.cull_mode = cull_mode(key.mat);
         if let Some(ds) = d.depth_stencil.as_mut() {
             ds.bias.constant = depth_bias_of(key.mat);
@@ -502,7 +517,18 @@ impl SpecializedMeshPipeline for KitPrepassPipeline {
                 shader: self.shader.clone(),
                 shader_defs: defs,
                 entry_point: Some("vertex".into()),
-                buffers: vec![vertex_layout],
+                // Instanced u32 record-id buffer; see the main-pass specialize for why.
+                buffers: {
+                    let mut record = vertex_layout.clone();
+                    record.array_stride = 4;
+                    record.step_mode = VertexStepMode::Instance;
+                    let mut attr = record.attributes[0];
+                    attr.format = VertexFormat::Uint32;
+                    attr.offset = 0;
+                    attr.shader_location = 6;
+                    record.attributes = vec![attr];
+                    vec![vertex_layout, record]
+                },
                 ..default()
             },
             fragment,
@@ -572,8 +598,7 @@ fn prepare_kit(
             ShaderStages::VERTEX_FRAGMENT,
             (
                 storage_buffer_read_only_sized(false, None),
-                storage_buffer_read_only_sized(false, None),
-                uniform_buffer_sized(true, Some(std::num::NonZeroU64::new(64).unwrap())),
+                uniform_buffer_sized(false, Some(std::num::NonZeroU64::new(64).unwrap())),
             ),
         ),
     );
@@ -627,36 +652,37 @@ fn prepare_kit_bind_group(
     pipeline_cache: Res<PipelineCache>,
     device: Res<RenderDevice>,
 ) {
-    let (Some(pipeline), Some(pieces), Some(ids), Some(meta)) = (
-        main,
-        gpu.pieces.as_ref(),
-        gpu.ids.buffer(),
-        gpu.meta.as_ref(),
-    ) else {
+    let (Some(pipeline), Some(pieces), Some(meta)) = (main, gpu.pieces.as_ref(), gpu.meta.as_ref())
+    else {
         return;
     };
-    gpu.bind_group = Some(device.create_bind_group(
-        "kit_instances_group2",
-        &pipeline_cache.get_bind_group_layout(&pipeline.instances),
-        &[
+    let layout = pipeline_cache.get_bind_group_layout(&pipeline.instances);
+    let entries = |offset: u64| {
+        [
             BindGroupEntry {
                 binding: 0,
                 resource: pieces.as_entire_binding(),
             },
             BindGroupEntry {
                 binding: 1,
-                resource: ids.as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 2,
                 resource: BindingResource::Buffer(BufferBinding {
                     buffer: meta,
-                    offset: 0,
+                    offset,
                     size: Some(std::num::NonZeroU64::new(64).unwrap()),
                 }),
             },
-        ],
-    ));
+        ]
+    };
+    let count = (meta.size() / gpu.meta_stride as u64) as usize;
+    gpu.bind_groups = (0..count)
+        .map(|i| {
+            device.create_bind_group(
+                "kit_instances_group2",
+                &layout,
+                &entries(i as u64 * gpu.meta_stride as u64),
+            )
+        })
+        .collect();
 }
 // ---------------------------------------------------------------------------------------------
 // Queue.
@@ -1005,11 +1031,10 @@ impl<P: PhaseItem> RenderCommand<P> for SetKitInstancesBindGroup {
             return RenderCommandResult::Skip;
         };
         let gpu = gpu.into_inner();
-        let Some(bind_group) = gpu.bind_group.as_ref() else {
+        let Some(bind_group) = gpu.bind_groups.get(group.slot_index()) else {
             return RenderCommandResult::Skip;
         };
-        let offset = group.slot_index() as u32 * gpu.meta_stride;
-        pass.set_bind_group(2, bind_group, &[offset]);
+        pass.set_bind_group(2, bind_group, &[]);
         RenderCommandResult::Success
     }
 }
@@ -1038,20 +1063,29 @@ impl<P: PhaseItem> RenderCommand<P> for DrawKitInstances {
             meshes.into_inner(),
             allocator.into_inner(),
         );
-        let (Some(group), Some(scene), Some(_bind_group)) =
-            (group, gpu.scene.as_ref(), gpu.bind_group.as_ref())
-        else {
+        let (Some(group), Some(scene)) = (group, gpu.scene.as_ref()) else {
             return RenderCommandResult::Skip;
         };
         let Some(range) = gpu.draws.get(&(view, group.slot_index())) else {
             return RenderCommandResult::Skip;
         };
+        let instances = range.end - range.start;
         let id = scene.slots[group.slot as usize].mesh[group.lod as usize].expect("slotted mesh");
         let (Some(mesh), Some(vertices)) = (meshes.get(id), allocator.mesh_vertex_slice(&id))
         else {
             return RenderCommandResult::Skip;
         };
         pass.set_vertex_buffer(0, vertices.buffer.slice(..));
+        // The record ids for this draw as an instanced attribute: one u32 per instance,
+        // starting at 0 for every draw (WebGPU's instance_index is 0-based per draw; Metal's
+        // [[instance_id]] is absolute — attributes sidestep the divergence).
+        pass.set_vertex_buffer(
+            1,
+            gpu.ids
+                .buffer()
+                .expect("ids buffer")
+                .slice((range.start * 4) as u64..(range.end * 4) as u64),
+        );
         match &mesh.buffer_info {
             RenderMeshBufferInfo::Indexed {
                 index_format,
@@ -1064,11 +1098,11 @@ impl<P: PhaseItem> RenderCommand<P> for DrawKitInstances {
                 pass.draw_indexed(
                     indices.range.start..indices.range.start + count,
                     vertices.range.start as i32,
-                    range.clone(),
+                    0..instances,
                 );
             }
             RenderMeshBufferInfo::NonIndexed => {
-                pass.draw(vertices.range, range.clone());
+                pass.draw(vertices.range, 0..instances);
             }
         }
         RenderCommandResult::Success
