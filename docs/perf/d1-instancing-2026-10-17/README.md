@@ -20,9 +20,13 @@ cascades; bevy's material bind group is reused at group 3. `make checkall` and
   (`perf-exactsave-v2.json`). Budget 16.6 ms: **not met** — but 2.8× down from the
   pre-pivot 50.8/48.8 on the identical world, with a tight distribution.
 - Reproduced twice more (18.0/17.9). `over_25ms`: 4 then 0 frames.
-- Remaining cost named: `renderer_extract` — ~20% of frame CPU natively (972/4744 frame-work
-  samples), matching the web profile's largest anonymous function (23%, name stripped by
-  wasm-bindgen). ~4 ms/frame on web.
+- Correction (2026-10-18): the earlier "renderer_extract is the remaining cost" read was
+  wrong — the native samples under `renderer_extract` are 100% `pthread_cond_wait`
+  (frame-pacing idle), not compute, and the web block it was rank-matched to inherits
+  the error. Post-fix native on the identical world (`--load` the exact save, uncapped,
+  13,674 frames): **p50 14.5 / p95 16.64** — the render path is at budget natively; the
+  web p95 19.1 is ~2.5 ms of wasm/browser overhead on top. Native CPU is spread thin:
+  bevy's schedule executor ~20%, wgpu command encoding ~13%, no app system above 5%.
 
 ## Criterion 1 — per-entity systems (verified, checked on the card)
 
