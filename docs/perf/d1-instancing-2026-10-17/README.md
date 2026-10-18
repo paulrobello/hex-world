@@ -46,17 +46,44 @@ t+180 s and t+220 s, state dump `rising=0`, 13,124 frames):
 
 All far below the 5% bar (pre-pivot: 14.85 / 10.20 / 9.64%).
 
-## Web rendering regression (open)
+## Web rendering regression (resolved 2026-10-18)
 
-The instanced path renders **ground-family slots black on WebGPU**; native renders the same
-path correctly, and the pre-pivot dist renders the same world colored on web. Silent (no
-console or validation error). Not LOD-conditional; foliage slots render. ~2-min repro:
-radius-8 world, high + close cameras (see card notes). Root-cause hunting not started.
-Criterion 3's parity check needs a redo after the fix.
+Two bugs, both fixed at `3db37c7` + `bb64148`:
+
+1. **Bevy's `SetMaterialBindGroup` aborted every kit draw.** Bevy 0.20's RenderCommand
+   tuple impl short-circuits on `Skip`; the stock `SetMaterialBindGroup` reads
+   `RenderMaterialInstances`, which extraction only fills for `Mesh3d` entities, so it
+   Skipped for the mesh-less kit draw slots and silently dropped every kit-instanced
+   draw on **both backends, in every layout** (the "web-only black grounds" was a
+   misread — native never rendered the pivot tree's instanced path either; yesterday's
+   native evidence pre-dated the pivot). Fixed with `SetKitMaterialBindGroup`, which
+   binds the slot's material via the kit scene + `MaterialBindGroupAllocators`. The
+   records buffer also gained a 256-byte floor (wgpu validates the bound size against
+   the shader's runtime-array minimum, and this app treats validation errors as fatal).
+2. **Chunk ranges were within-slot, not flat.** `rebuild()` accumulated per-chunk
+   ranges as within-slot instance positions while the draw path indexes the flat
+   slot-major record array, so every slot after the first rendered at the first
+   records' positions and later-placed tiles went visually missing (the "black hex").
+   Fixed by lifting each slot's offset before the chunk set is published.
+
+Verified 2026-10-18: native parity shots (start world matches the committed reference;
+five-tile placed world renders fully with shadows); the full 2,066-tile world builds,
+settles and renders on WebGPU (river, forest, roads, cars); `make checkall` and
+`make checkall-ci` green at `bb64148`.
+
+## Criterion 2 after the fixes (canonical M4 Max, 2026-10-18)
+
+Exact-save world, 2 clean rounds, guard `exact-save-retry-v2-five-consecutive`,
+GPU-exclusive (one earlier attempt discarded by the guard for desktop Chrome activity):
+**grass=off p95 median 19.1 ms vs the 16.6 ms budget — not met** (`perf-exactsave-v2-postfix.json`).
+Down from the pre-pivot 50.8/48.8 on the identical world; up slightly from the
+pre-fix measurement (18.3) within run-to-run noise on a busier host (load 10-14 vs
+9-12). The named remaining cost is unchanged: `renderer_extract`, ~4 ms/frame on web.
 
 ## Files
 
-- `perf-exactsave-v2.json` — canonical measurement (2 clean rounds)
+- `perf-exactsave-v2.json` — canonical measurement (2 clean rounds, pre-fix)
+- `perf-exactsave-v2-postfix.json` — post-fix measurement (2 clean rounds, 2026-10-18)
 - `perf-trace-run.json` — traced run (second reproduction)
 - `perf-instanced-local.json` — the strict-guard attempt discarded for mid-run desktop
   Chrome activity (kept for the guard-behavior record)
