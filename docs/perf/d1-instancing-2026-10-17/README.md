@@ -76,6 +76,8 @@ settles and renders on WebGPU (river, forest, roads, cars); `make checkall` and
 Exact-save world, 2 clean rounds, guard `exact-save-retry-v2-five-consecutive`,
 GPU-exclusive (one earlier attempt discarded by the guard for desktop Chrome activity):
 **grass=off p95 median 19.1 ms vs the 16.6 ms budget — not met** (`perf-exactsave-v2-postfix.json`).
+A third clean run (owner-requested, peak desktop Chrome 0.2-0.5%, load 10-11) reproduced
+19.1 exactly (round p50 17.1/17.7) — the ~2.5 ms gap is stable, not noise.
 Down from the pre-pivot 50.8/48.8 on the identical world; up slightly from the
 pre-fix measurement (18.3) within run-to-run noise on a busier host (load 10-14 vs
 9-12). The named remaining cost is unchanged: `renderer_extract`, ~4 ms/frame on web.
