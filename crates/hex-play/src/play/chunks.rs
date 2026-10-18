@@ -357,6 +357,21 @@ fn rebuild(
     for (_, _, ranges) in &mut per_chunk {
         ranges.resize(slot_count, 0..0);
     }
+    // The ranges were accumulated as within-slot instance positions; the draw path indexes the
+    // flat record array (slot-major), so lift them by each slot's offset before publishing.
+    let mut offsets = vec![0u32; slot_count];
+    let mut acc = 0u32;
+    for (si, (_, _, instances)) in slots.iter().enumerate() {
+        offsets[si] = acc;
+        acc += instances.len() as u32;
+    }
+    for (_, _, ranges) in &mut per_chunk {
+        for (si, range) in ranges.iter_mut().enumerate() {
+            if range.start < range.end {
+                *range = offsets[si] + range.start..offsets[si] + range.end;
+            }
+        }
+    }
     // Concatenate slot instances and derive the per-chunk ranges into the flat record buffer.
     let mut pieces: Vec<GpuKitInstance> = vec![];
     let mut out_slots: Vec<KitSlot> = vec![];
