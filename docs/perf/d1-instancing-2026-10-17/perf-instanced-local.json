@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-17T22:31:11.296Z",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "fps": "off",
+    "seed": "1",
+    "tilt": "off"
+  },
+  "camera": {
+    "cmd": "camera",
+    "pos": [
+      10,
+      12,
+      40
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  },
+  "world": {
+    "generator": "e2e/water-world.mjs waterWorldScript(26)",
+    "tiles": 2066,
+    "counts": {
+      "meadow": 271,
+      "river_straight": 347,
+      "forest": 142,
+      "beach": 200,
+      "river_bend": 21,
+      "beach_inner": 15,
+      "beach_outer": 28,
+      "house_cluster": 81,
+      "road_straight": 123,
+      "ocean": 838
+    }
+  },
+  "budget_p95_ms": 16.6,
+  "load_limit": 15,
+  "rounds": 2,
+  "arms": [
+    "off"
+  ],
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "channel": "chromium",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit --enable-webgpu-developer-features"
+  },
+  "rows": [
+    {
+      "round": 0,
+      "platform": "web",
+      "arm": "off",
+      "error": "GPU contention during run: [\"Error: human desktop Chrome active: summed CPU 48% >=20%\",\"Error: human desktop Chrome active: summed CPU 21.3% >=20%\",\"Error: human desktop Chrome active: summed CPU 54.300000000000004% >=20%\",\"Error: human desktop Chrome active: summed CPU 24.500000000000004% >=20%\"]",
+      "load_before": 14.42822265625,
+      "load_after": 14.82763671875,
+      "load_discarded": 1
+    },
+    {
+      "round": 1,
+      "platform": "web",
+      "arm": "off",
+      "error": "GPU contention during run: [\"Error: human desktop Chrome active: summed CPU 25.7% >=20%\"]",
+      "load_before": 14.82763671875,
+      "load_after": 11.53466796875,
+      "load_discarded": 0
+    }
+  ],
+  "summary": {}
+}

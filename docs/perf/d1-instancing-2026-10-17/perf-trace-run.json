@@ -1,0 +1,779 @@
+{
+  "date": "2026-10-17T23:40:30.607Z",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "fps": "off",
+    "seed": "1",
+    "tilt": "off"
+  },
+  "camera": {
+    "cmd": "camera",
+    "pos": [
+      10,
+      12,
+      40
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  },
+  "world": {
+    "generator": "e2e/water-world.mjs waterWorldScript(26)",
+    "tiles": 2066,
+    "counts": {
+      "meadow": 271,
+      "river_straight": 347,
+      "forest": 142,
+      "beach": 200,
+      "river_bend": 21,
+      "beach_inner": 15,
+      "beach_outer": 28,
+      "house_cluster": 81,
+      "road_straight": 123,
+      "ocean": 838
+    }
+  },
+  "budget_p95_ms": 16.6,
+  "load_limit": 15,
+  "rounds": 2,
+  "arms": [
+    "off"
+  ],
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "channel": "chromium",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit --enable-webgpu-developer-features"
+  },
+  "rows": [
+    {
+      "round": 0,
+      "platform": "web",
+      "arm": "off",
+      "exclusivity": {
+        "guard_version": "exact-save-retry-v2-five-consecutive",
+        "interval_ms": 1000,
+        "samples": 18,
+        "peak_human_cpu_percent": 9,
+        "max_consecutive_human_spikes": 0,
+        "human_spikes": [],
+        "violations": 0,
+        "after": [
+          {
+            "pid": 45243,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 69819,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 76275,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 89729,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92234,
+            "parent": 1,
+            "cpu": 0.6,
+            "command": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+          },
+          {
+            "pid": 92286,
+            "parent": 92234,
+            "cpu": 0.6,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif).app/Contents/MacOS/Google Chrome Helper (Aperitif)"
+          },
+          {
+            "pid": 92287,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif).app/Contents/MacOS/Google Chrome Helper (Aperitif)"
+          },
+          {
+            "pid": 92289,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif).app/Contents/MacOS/Google Chrome Helper (Aperitif)"
+          },
+          {
+            "pid": 92298,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92299,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92300,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92301,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92303,
+            "parent": 92234,
+            "cpu": 0.1,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92306,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92309,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92337,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif).app/Contents/MacOS/Google Chrome Helper (Aperitif)"
+          },
+          {
+            "pid": 92344,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92350,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92911,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif).app/Contents/MacOS/Google Chrome Helper (Aperitif)"
+          },
+          {
+            "pid": 93082,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93093,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93116,
+            "parent": 92234,
+            "cpu": 2.1,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93178,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93207,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93226,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93232,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93266,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93267,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93285,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 95574,
+            "parent": 93035,
+            "cpu": 19.1,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
+          },
+          {
+            "pid": 95583,
+            "parent": 95574,
+            "cpu": 16.9,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper (GPU).app/Contents/MacOS/Google Chrome for Testing Helper (GPU)"
+          },
+          {
+            "pid": 95584,
+            "parent": 95574,
+            "cpu": 0,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper.app/Contents/MacOS/Google Chrome for Testing Helper"
+          },
+          {
+            "pid": 95585,
+            "parent": 95574,
+            "cpu": 0,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper.app/Contents/MacOS/Google Chrome for Testing Helper"
+          },
+          {
+            "pid": 95587,
+            "parent": 95574,
+            "cpu": 0,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper (Renderer).app/Contents/MacOS/Google Chrome for Testing Helper (Renderer)"
+          },
+          {
+            "pid": 95589,
+            "parent": 95574,
+            "cpu": 0,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper (Renderer).app/Contents/MacOS/Google Chrome for Testing Helper (Renderer)"
+          },
+          {
+            "pid": 95590,
+            "parent": 95574,
+            "cpu": 104.6,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper (Renderer).app/Contents/MacOS/Google Chrome for Testing Helper (Renderer)"
+          },
+          {
+            "pid": 96829,
+            "parent": 95574,
+            "cpu": 35.7,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper.app/Contents/MacOS/Google Chrome for Testing Helper"
+          }
+        ],
+        "human_cpu_percent": 3.4000000000000004,
+        "human_desktop_chrome_present": true,
+        "condition": "human desktop Chrome present but idle; no automated GPU contention",
+        "checked_at": "2026-10-17T23:41:13.073Z"
+      },
+      "build_id": "551c2e921e",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "trace": {
+        "path": "/private/tmp/claude-501/-Users-probello-Repos-hex-world/c9e84eab-d8d8-48a7-bf71-ab6d274abeaa/scratchpad/trace-exactsave.json",
+        "events": 40951,
+        "frames": [
+          870,
+          990
+        ],
+        "instrumented": true
+      },
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 150,
+      "grass": {
+        "status": "off",
+        "groups": 0,
+        "blades": 0,
+        "mesh_bytes": 0
+      },
+      "p50": 16.7,
+      "p95": 18,
+      "p99": 45.5,
+      "mean": 17.5,
+      "max": 60.6,
+      "dropped_over_25ms": 17,
+      "samples": 600,
+      "frames": 870,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1115619328,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            321
+          ],
+          [
+            "<20",
+            259
+          ],
+          [
+            "<25",
+            3
+          ],
+          [
+            "<33.3",
+            1
+          ],
+          [
+            "<50",
+            15
+          ],
+          [
+            "<100",
+            1
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 17,
+        "tail_ms": [
+          35,
+          45.5,
+          37.2,
+          26,
+          43.7,
+          46.4,
+          47.8,
+          44.6,
+          39.9,
+          41.4,
+          60.6,
+          34.1,
+          47.5,
+          45.9,
+          47.4,
+          41.4,
+          41
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 14.83984375,
+      "load_after": 12.9921875,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "web",
+      "arm": "off",
+      "exclusivity": {
+        "guard_version": "exact-save-retry-v2-five-consecutive",
+        "interval_ms": 1000,
+        "samples": 18,
+        "peak_human_cpu_percent": 33.5,
+        "max_consecutive_human_spikes": 1,
+        "human_spikes": [
+          {
+            "sample": 18,
+            "cpu": 33.5
+          }
+        ],
+        "violations": 0,
+        "after": [
+          {
+            "pid": 45243,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 69819,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 76275,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 89729,
+            "parent": 92234,
+            "cpu": 5.8,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92234,
+            "parent": 1,
+            "cpu": 41.6,
+            "command": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+          },
+          {
+            "pid": 92286,
+            "parent": 92234,
+            "cpu": 5.8,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif).app/Contents/MacOS/Google Chrome Helper (Aperitif)"
+          },
+          {
+            "pid": 92287,
+            "parent": 92234,
+            "cpu": 0.3,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif).app/Contents/MacOS/Google Chrome Helper (Aperitif)"
+          },
+          {
+            "pid": 92289,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif).app/Contents/MacOS/Google Chrome Helper (Aperitif)"
+          },
+          {
+            "pid": 92298,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92299,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92300,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92301,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92303,
+            "parent": 92234,
+            "cpu": 0.2,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92306,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92309,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92337,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif).app/Contents/MacOS/Google Chrome Helper (Aperitif)"
+          },
+          {
+            "pid": 92344,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92350,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 92911,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif).app/Contents/MacOS/Google Chrome Helper (Aperitif)"
+          },
+          {
+            "pid": 93082,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93093,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93116,
+            "parent": 92234,
+            "cpu": 0.1,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93178,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93207,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93226,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93232,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93266,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93267,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 93285,
+            "parent": 92234,
+            "cpu": 0,
+            "command": "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.82/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)"
+          },
+          {
+            "pid": 97079,
+            "parent": 93035,
+            "cpu": 19.7,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
+          },
+          {
+            "pid": 97150,
+            "parent": 97079,
+            "cpu": 16.6,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper (GPU).app/Contents/MacOS/Google Chrome for Testing Helper (GPU)"
+          },
+          {
+            "pid": 97152,
+            "parent": 97079,
+            "cpu": 0,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper.app/Contents/MacOS/Google Chrome for Testing Helper"
+          },
+          {
+            "pid": 97156,
+            "parent": 97079,
+            "cpu": 0,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper.app/Contents/MacOS/Google Chrome for Testing Helper"
+          },
+          {
+            "pid": 97158,
+            "parent": 97079,
+            "cpu": 0,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper (Renderer).app/Contents/MacOS/Google Chrome for Testing Helper (Renderer)"
+          },
+          {
+            "pid": 97161,
+            "parent": 97079,
+            "cpu": 0,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper (Renderer).app/Contents/MacOS/Google Chrome for Testing Helper (Renderer)"
+          },
+          {
+            "pid": 97162,
+            "parent": 97079,
+            "cpu": 104.8,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper (Renderer).app/Contents/MacOS/Google Chrome for Testing Helper (Renderer)"
+          },
+          {
+            "pid": 99197,
+            "parent": 97079,
+            "cpu": 36.2,
+            "command": "/Users/probello/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/153.0.8010.12/Helpers/Google Chrome for Testing Helper.app/Contents/MacOS/Google Chrome for Testing Helper"
+          }
+        ],
+        "human_cpu_percent": 53.8,
+        "human_desktop_chrome_present": true,
+        "condition": "human desktop Chrome present but idle; no automated GPU contention",
+        "checked_at": "2026-10-17T23:41:34.703Z"
+      },
+      "build_id": "551c2e921e",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "trace": {
+        "path": "/private/tmp/claude-501/-Users-probello-Repos-hex-world/c9e84eab-d8d8-48a7-bf71-ab6d274abeaa/scratchpad/trace-exactsave.json",
+        "events": 40263,
+        "frames": [
+          870,
+          960
+        ],
+        "instrumented": true
+      },
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 150,
+      "grass": {
+        "status": "off",
+        "groups": 0,
+        "blades": 0,
+        "mesh_bytes": 0
+      },
+      "p50": 16.9,
+      "p95": 17.9,
+      "p99": 18.2,
+      "mean": 16.96,
+      "max": 21.1,
+      "dropped_over_25ms": 0,
+      "samples": 600,
+      "frames": 870,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 Max | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1116340224,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            242
+          ],
+          [
+            "<20",
+            357
+          ],
+          [
+            "<25",
+            1
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            0
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 0,
+        "tail_ms": []
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 12.9921875,
+      "load_after": 11.64697265625,
+      "load_discarded": 0
+    }
+  ],
+  "summary": {
+    "web_grass_off": {
+      "p95_median": 18,
+      "mean_median": 17.5,
+      "over_25ms_median": 17,
+      "pass": false,
+      "runs": 2
+    }
+  }
+}
