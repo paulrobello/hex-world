@@ -228,7 +228,13 @@ impl Plugin for KitInstancesPlugin {
                 (
                     prepare_kit.in_set(RenderSystems::PrepareResources),
                     prepare_kit_bind_group.in_set(RenderSystems::PrepareBindGroups),
-                    queue_kit.in_set(RenderSystems::Queue),
+                    // The slot entities carry `MeshMaterial3d` only to resolve their bind group, so
+                    // bevy's own queue systems treat a material edited this frame (the wet band,
+                    // every frame) as a changed renderable and `remove` it from each phase. Queue
+                    // after them, or a removal can follow this frame's `add` and drop the slot.
+                    queue_kit
+                        .in_set(RenderSystems::Queue)
+                        .after(RenderSystems::QueueMeshes),
                 ),
             );
     }
