@@ -55,11 +55,12 @@ pub const MAX_STEP: f32 = 0.4;
 const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not.
-pub const OBSTACLES: [&str; 15] = [
+pub const OBSTACLES: [&str; 16] = [
     "house_cottage",
     "house_twostorey",
     "windmill",
     "barn_red",
+    "bakery_shop",
     "hay_bale_round",
     "hay_bale_stack",
     "animal_cow",
@@ -1040,6 +1041,69 @@ mod tests {
         assert!(s.pos.xz().distance(at) < 1.0, "{}", s.pos.xz().distance(at));
     }
 
+    /// Owner 2026-10-19 ("add the collider"): a bakery hero blocks the walker at its collider's
+    /// wall and reports `building`, and photo mode's click picks it. A fixture tile stands in for
+    /// the bakery tile.
+    #[test]
+    fn a_bakery_hero_blocks_the_walker_and_is_picked() {
+        let builtin = catalog();
+        let mut def = builtin.get("meadow").unwrap().clone();
+        def.id = "bakery_fixture".into();
+        def.props.scatter.clear();
+        def.props.hero = vec![hex_core::HeroProp {
+            piece: hex_core::KitRef::from("bakery_shop"),
+            at: [2.0, 1.0],
+            yaw_deg: 30.0,
+        }];
+        let mut tiles = builtin.tiles().to_vec();
+        tiles.push(def.clone());
+        let c = TileCatalog::new(builtin.sockets().clone(), tiles).unwrap();
+        let yaw = Quat::from_rotation_y(-def.props.hero[0].yaw_deg.to_radians());
+        let centre = Vec3::new(2.0, 0.0, 1.0);
+        let b = scatter::ground_box("bakery_shop").unwrap();
+        for rotation in [0, 2] {
+            let g = world_in(&c, &[(0, 0, "bakery_fixture", rotation)]);
+            let turn = piece_rotation(rotation);
+            let hull = &g.obstacles[&Axial::new(0, 0)][0];
+            assert_eq!(hull.piece, "bakery_shop");
+            let local = shape("bakery_shop").hull;
+            let lo = local.iter().fold(Vec2::MAX, |a, p| a.min(*p));
+            let hi = local.iter().fold(Vec2::MIN, |a, p| a.max(*p));
+            assert!(
+                lo.distance(Vec2::from(b.min)) < 0.01 && hi.distance(Vec2::from(b.max)) < 0.01,
+                "the collider hull {lo}..{hi}"
+            );
+            assert_eq!(hull.poly.len(), local.len(), "the collider hull, placed");
+            // The bakery's +x wall, `b.max[0]` out, from 8 m beyond it.
+            let side = (turn * yaw * Vec3::X).xz();
+            let at = (turn * centre).xz();
+            for along in [-2.0, 0.0, 2.0] {
+                let cross = (turn * yaw * Vec3::Z).xz() * along;
+                let s = walk(&g, at + side * 8.0 + cross, -side, 8.0);
+                assert_eq!(
+                    s.blocked,
+                    Some(Blocked::Obstacle("bakery_shop".into())),
+                    "r{rotation} at {along}"
+                );
+                assert_eq!(s.blocked.as_ref().map(Blocked::reason), Some("building"));
+                let out = (s.pos.xz() - at).dot(side);
+                assert!(
+                    (b.max[0]..b.max[0] + 0.6).contains(&out),
+                    "r{rotation} at {along}: stopped {out} m out"
+                );
+            }
+            let target = Vec3::new(at.x, 2.0, at.y);
+            let eye = target + Vec3::new(side.x, 0.0, side.y) * 30.0;
+            let (t, piece) = g.pick_prop(ray(eye, target - eye), 1000.0).unwrap();
+            assert_eq!((piece, prop_kind(piece)), ("bakery_shop", "building"));
+            assert!(
+                (30.0 - b.max[0] - 0.1..29.0).contains(&t),
+                "r{rotation}: hit {} m out",
+                30.0 - t
+            );
+        }
+    }
+
     fn catalog() -> TileCatalog {
         TileCatalog::builtin().unwrap()
     }
@@ -1106,7 +1170,10 @@ mod tests {
 
     /// A world of `tiles` with the real kit ground, colliders and seeded scatter.
     fn world(tiles: &[(i32, i32, &str, u8)]) -> WalkGround {
-        let c = catalog();
+        world_in(&catalog(), tiles)
+    }
+
+    fn world_in(c: &TileCatalog, tiles: &[(i32, i32, &str, u8)]) -> WalkGround {
         let play: Vec<PlayTile> = tiles
             .iter()
             .map(|&(q, r, tile, rotation)| PlayTile {
@@ -1121,7 +1188,7 @@ mod tests {
             if def.props.scatter.is_empty() {
                 continue;
             }
-            let prepared = prepare(def, &c, &mut |id| mesh_tris(id, "lod0")).unwrap();
+            let prepared = prepare(def, c, &mut |id| mesh_tris(id, "lod0")).unwrap();
             let seed = hex_core::cell_seed(1, t.cell);
             scatter.insert(
                 t.cell,
@@ -1141,7 +1208,7 @@ mod tests {
         }
         WalkGround::build(
             &play,
-            &c,
+            c,
             &[],
             &mut |d| surface(d),
             &mut |p| shape(p),
