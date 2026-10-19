@@ -44,3 +44,5 @@ too_many_arguments = "allow"
 gltf = { version = "1", features = ["extras"] }
 serde_json = "1"
 sha2 = "0.10"
+# Bevy 0.20's own wgpu, to run kit_common.wesl functions in a compute shader (tests/kit_normal_basis.rs).
+wgpu = { version = "=30.0.1", default-features = false, features = ["wgsl", "metal", "vulkan", "dx12"] }

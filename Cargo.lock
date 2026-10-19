@@ -3120,6 +3120,7 @@ dependencies = [
  "hex-play-state",
  "serde_json",
  "sha2",
+ "wgpu",
 ]
 
 [[package]]
