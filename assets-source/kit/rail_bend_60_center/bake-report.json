@@ -1,0 +1,79 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "none",
+  "lodTris": [
+    1456,
+    504,
+    152
+  ],
+  "marginPx": 0,
+  "masks": {
+    "ao": {
+      "crib": [
+        0.78,
+        0.95
+      ],
+      "shoulder": 0.95,
+      "sleeper_rail": 1.0
+    },
+    "night": 0.0,
+    "porosity": {
+      "ballast": 0.9,
+      "rail": 0.15,
+      "sleeper": 0.6
+    },
+    "snow": 1.0
+  },
+  "reason": "no Cycles bake: the masks are an analytic field of (along, across) on the planar UV0",
+  "receiverSignature": "3872b2c5368ce7090c455bbaeeee7a0928c93b3f7de540132799f5cb8446cbd8",
+  "samples": 0,
+  "section": {
+    "ballastTopM": 0.22,
+    "gaugeM": 1.6,
+    "laneWidthM": 3.5,
+    "railCentreM": 0.8400000000000001,
+    "railTopM": 0.45999999999999996,
+    "shoulderM": 1.75,
+    "sinkM": [
+      2.9,
+      -0.3
+    ],
+    "sleeper": {
+      "count": 24,
+      "lengthM": 2.6,
+      "pitchM": 0.7,
+      "topM": 0.3,
+      "widthM": 0.26
+    },
+    "toeM": [
+      2.5,
+      0.03
+    ]
+  },
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 16.000206020268216,
+    "median": 13.56504882079207,
+    "min": 0.8677867932889833
+  },
+  "trackPath": {
+    "arcLengthM": 16.755160819145562,
+    "centre": [
+      13.856406460551018,
+      -8.0
+    ],
+    "kind": "bend",
+    "lanes": [
+      0,
+      1
+    ],
+    "radiusM": 8.0,
+    "turnDeg": 120.0
+  }
+}
