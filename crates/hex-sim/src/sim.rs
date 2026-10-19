@@ -1,10 +1,12 @@
 //! The fixed-tick car simulation (PRD §7.1, §7.2): every house cluster's houses own cars that wait
 //! in its parking spots, pull out on seeded departures, follow A* routes on their lanes and park in
-//! a free spot at another cluster. Deterministic for a given seed and sequence of world edits.
+//! a free spot at another cluster or a shop. Shops own no cars; a visitor parks for
+//! [`SimConfig::shop_stay_seconds`] and drives home. Deterministic for a given seed and sequence of
+//! world edits.
 
 use std::collections::BTreeMap;
 
-use hex_core::{Axial, NetworkKind, TileCatalog, TileDef, World};
+use hex_core::{Axial, Destination, NetworkKind, TileCatalog, TileDef, World};
 
 use crate::geom::{self, LanePath, Pose, Vec2};
 use crate::network::{LinkId, Network, NodeId};
@@ -32,6 +34,8 @@ pub struct SimConfig {
     pub car_speed: f32,
     /// Right-hand distance from the road centerline in meters, clamped to [`MAX_LANE_OFFSET`].
     pub lane_offset: f32,
+    /// How long a visitor stays parked at a shop before it drives home, in seconds.
+    pub shop_stay_seconds: f32,
 }
 
 impl Default for SimConfig {
@@ -41,6 +45,7 @@ impl Default for SimConfig {
             spawn_per_destination_hz: 0.05,
             car_speed: 8.0,
             lane_offset: MAX_LANE_OFFSET,
+            shop_stay_seconds: 20.0,
         }
     }
 }
@@ -56,7 +61,7 @@ pub struct Home {
     pub house: u16,
 }
 
-/// Parking spot `index` (in [`TileDef::parking`] order) of the cluster tile at `cell`.
+/// Parking spot `index` (in [`TileDef::parking`] order) of the house cluster or shop at `cell`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SpotRef {
     pub cell: Axial,
@@ -70,9 +75,16 @@ pub struct ParkedCar {
     home: Home,
     spot: SpotRef,
     pose: Pose,
+    /// The tick the car parked on.
+    since: u64,
 }
 
 impl ParkedCar {
+    /// The tick the car parked on.
+    pub fn since(&self) -> u64 {
+        self.since
+    }
+
     pub fn id(&self) -> CarId {
         self.id
     }
@@ -257,11 +269,12 @@ struct Spot {
     taken: Option<CarId>,
 }
 
-/// A placed tile with parking: its spots and its car cap.
+/// A placed tile with parking: its spots and its car cap (0 at a shop, which owns no cars).
 #[derive(Clone, Debug)]
 struct Cluster {
     spots: Vec<Spot>,
     cap: usize,
+    shop: bool,
 }
 
 impl Cluster {
@@ -288,6 +301,7 @@ impl Cluster {
         Self {
             spots,
             cap: def.car_cap(),
+            shop: def.parking_destination() == Some(Destination::Shop),
         }
     }
 
@@ -406,8 +420,10 @@ impl Simulation {
                 home,
                 spot,
                 pose,
+                since: self.ticks,
             });
         }
+        self.send_visitors_home();
         self.spawn();
     }
 
@@ -686,7 +702,40 @@ impl Simulation {
                     home,
                     spot,
                     pose,
+                    since: self.ticks,
                 });
+            }
+        }
+    }
+
+    /// Sends every visitor whose shop stay is over home, or, when home is full or cut off, to the
+    /// first other connected house cluster with room in cell order. A visitor with nowhere to go
+    /// waits and tries again next tick.
+    fn send_visitors_home(&mut self) {
+        let stay = (self.config.shop_stay_seconds / TICK_SECONDS).round() as u64;
+        let due: Vec<ParkedCar> = self
+            .parked
+            .iter()
+            .filter(|c| {
+                self.ticks.saturating_sub(c.since) >= stay
+                    && self.clusters.get(&c.spot.cell).is_some_and(|k| k.shop)
+            })
+            .cloned()
+            .collect();
+        for car in due {
+            let home = car.home.cell;
+            let houses: Vec<Axial> = std::iter::once(home)
+                .chain(
+                    self.clusters
+                        .iter()
+                        .filter(|(c, k)| !k.shop && **c != home)
+                        .map(|(c, _)| *c),
+                )
+                .collect();
+            for cell in houses {
+                if self.depart(car.clone(), cell).is_some() {
+                    break;
+                }
             }
         }
     }
@@ -719,6 +768,7 @@ impl Simulation {
             let candidates: Vec<CarId> = self
                 .parked
                 .iter()
+                .filter(|c| !self.clusters[&c.spot.cell].shop)
                 .filter(|c| {
                     nodes
                         .iter()

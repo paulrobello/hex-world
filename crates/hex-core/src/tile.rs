@@ -124,7 +124,10 @@ pub enum Endpoint {
 /// Destination tag that agents route to (PRD §7.1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Destination {
+    /// Houses own the cars, which park there between trips.
     House,
+    /// A shop (the bakery) owns no cars: house cars visit, park for a short stay and leave.
+    Shop,
 }
 
 /// A named point inside the tile: a junction, or a tagged destination.
@@ -155,7 +158,8 @@ pub struct ParkPose {
     pub yaw_deg: f32,
 }
 
-/// A house's parking spot (PRD §7.1) and the short paths between it and the cluster's road node.
+/// A parking spot (PRD §7.1) at a house or a shop, and the short paths between it and the tile's
+/// road node.
 ///
 /// A car parks at `at` facing `yaw_deg`. It arrives forward from the node's inbound lane through
 /// `enter` into the spot. It leaves by reversing through `back` (the last pose is where it stops
@@ -164,9 +168,11 @@ pub struct ParkPose {
 /// tangents follow the poses' headings, so every pose sets the direction of travel there.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ParkingSpot {
-    /// `park-<house>`; the tile's centre piece carries a matching `anchor-park-<house>` socket.
+    /// `park-<n>`, n = the spot's index in [`TileDef::parking`]; the tile's centre piece carries a
+    /// matching `anchor-park-<n>` socket.
     pub id: String,
-    /// Index into [`PropScatter::hero`] of the house that owns this spot.
+    /// Index into [`PropScatter::hero`] of the building the spot serves: at a house destination,
+    /// the house that owns the spot's car.
     pub house: u16,
     /// The destination node in [`TileDef::nodes`] the paths join.
     pub node: String,
@@ -293,7 +299,7 @@ pub struct TileDef {
     pub nodes: Vec<NetworkNode>,
     #[serde(default)]
     pub networks: Vec<NetworkSegment>,
-    /// One spot per house that owns a car (PRD §7.1).
+    /// One spot per house that owns a car, or a shop's visitor spots (PRD §7.1).
     #[serde(default)]
     pub parking: Vec<ParkingSpot>,
     #[serde(default)]
@@ -445,42 +451,62 @@ impl TileDef {
         issues
     }
 
-    /// Parking rules (PRD §7.1): ids are `park-<house>` and unique, each names a house hero prop,
-    /// every spot's paths join a destination node at the end of a road segment (so the spot reaches
-    /// the road graph), every pose is finite, and the car cap fits the spots.
+    /// The destination kind the tile parks at: the kind of the node its first spot joins.
+    pub fn parking_destination(&self) -> Option<Destination> {
+        let spot = self.parking.first()?;
+        self.nodes.iter().find(|n| n.id == spot.node)?.destination
+    }
+
+    /// Parking rules (PRD §7.1): ids are `park-<index>` and unique, each names a hero prop (a house
+    /// at a house destination), every spot's paths join a destination node of one kind at the end
+    /// of a road segment (so the spot reaches the road graph), every pose is finite, and the car
+    /// cap fits: 1 up to the spots at houses, 0 at a shop, which owns no cars.
     fn validate_parking(&self, issue: &mut impl FnMut(String)) {
         if self.parking.is_empty() {
             return;
         }
+        let kind = self.parking_destination();
         let mut ids: BTreeSet<&str> = BTreeSet::new();
-        for spot in &self.parking {
+        for (i, spot) in self.parking.iter().enumerate() {
             let id = spot.id.as_str();
             if !ids.insert(id) {
                 issue(format!("parking spot {id:?} is declared twice"));
             }
-            if id != format!("park-{}", spot.house) {
+            if id != format!("park-{i}") {
                 issue(format!(
-                    "parking spot {id:?} must be named park-{} after its house",
-                    spot.house
+                    "parking spot {id:?} must be named park-{i} after its index"
                 ));
             }
             match self.props.hero.get(usize::from(spot.house)) {
-                Some(h) if h.piece.as_str().starts_with("house_") => {}
-                Some(h) => issue(format!(
-                    "parking spot {id:?} house {} is {:?}, not a house",
-                    spot.house, h.piece.0
-                )),
+                Some(h)
+                    if kind == Some(Destination::House)
+                        && !h.piece.as_str().starts_with("house_") =>
+                {
+                    issue(format!(
+                        "parking spot {id:?} house {} is {:?}, not a house",
+                        spot.house, h.piece.0
+                    ))
+                }
+                Some(_) => {}
                 None => issue(format!(
                     "parking spot {id:?} house {} is not a hero prop",
                     spot.house
                 )),
             }
-            let node = self.nodes.iter().find(|n| n.id == spot.node);
-            if node.is_none_or(|n| n.destination.is_none()) {
-                issue(format!(
+            match self
+                .nodes
+                .iter()
+                .find(|n| n.id == spot.node)
+                .and_then(|n| n.destination)
+            {
+                Some(d) if Some(d) != kind => issue(format!(
+                    "parking spot {id:?} joins a {d:?} node, but the tile parks at {kind:?}"
+                )),
+                Some(_) => {}
+                None => issue(format!(
                     "parking spot {id:?} joins {:?}, which is not a declared destination node",
                     spot.node
-                ));
+                )),
             }
             let end = Endpoint::Node(spot.node.clone());
             let on_road = self
@@ -503,11 +529,16 @@ impl TileDef {
             }
         }
         let cap = self.car_cap();
-        if cap == 0 || cap > self.parking.len() {
-            issue(format!(
+        match kind {
+            Some(Destination::Shop) if cap != 0 => {
+                issue(format!("car cap {cap} must be 0: a shop owns no cars"))
+            }
+            Some(Destination::Shop) => {}
+            _ if cap == 0 || cap > self.parking.len() => issue(format!(
                 "car cap {cap} must be between 1 and the {} parking spots",
                 self.parking.len()
-            ));
+            )),
+            _ => {}
         }
     }
 }
@@ -629,14 +660,25 @@ mod tests {
         assert!(issues[0].contains("cannot reach the road"), "{issues:?}");
     }
 
+    /// A one-shop tile: [`cluster`] with the bakery for the house, a Shop node and no cars.
+    fn shop() -> TileDef {
+        let mut t = cluster();
+        t.props.hero[0].piece = "bakery_shop".into();
+        t.nodes[0].destination = Some(Destination::Shop);
+        t.agents.clear();
+        t
+    }
+
     #[test]
-    fn parking_spot_ids_follow_their_house() {
+    fn parking_spot_ids_follow_their_index() {
         let mut t = cluster();
         t.parking[0].id = "spot".into();
         assert!(t.validate(&sockets())[0].contains("park-0"));
         let mut t = cluster();
-        t.parking[0].house = 3;
         t.parking[0].id = "park-3".into();
+        assert!(t.validate(&sockets())[0].contains("park-0 after its index"));
+        let mut t = cluster();
+        t.parking[0].house = 3;
         assert!(t.validate(&sockets())[0].contains("not a hero prop"));
         let mut t = cluster();
         t.props.hero[0].piece = "rock_small".into();
@@ -657,6 +699,44 @@ mod tests {
         assert!(t.validate(&sockets())[0].contains("car cap 2"));
         t.agents.clear();
         assert!(t.validate(&sockets())[0].contains("car cap 0"));
+    }
+
+    #[test]
+    fn a_shop_parks_visitors_and_owns_no_cars() {
+        let t = shop();
+        assert_eq!(t.parking_destination(), Some(Destination::Shop));
+        assert_eq!(t.validate(&sockets()), Vec::<String>::new());
+        let mut t = shop();
+        t.agents = cluster().agents;
+        assert!(t.validate(&sockets())[0].contains("a shop owns no cars"));
+        let mut t = shop();
+        t.parking[0].house = 1;
+        assert!(t.validate(&sockets())[0].contains("not a hero prop"));
+    }
+
+    #[test]
+    fn a_tile_parks_at_one_destination_kind() {
+        let mut t = cluster();
+        t.nodes.push(NetworkNode {
+            id: "shop".into(),
+            at: [8.0, 4.0],
+            destination: Some(Destination::Shop),
+        });
+        t.networks.push(NetworkSegment {
+            kind: NetworkKind::Road,
+            from: Endpoint::Node("home".into()),
+            to: Endpoint::Node("shop".into()),
+            points: vec![],
+        });
+        let mut spot = t.parking[0].clone();
+        spot.id = "park-1".into();
+        spot.node = "shop".into();
+        t.parking.push(spot);
+        let issues = t.validate(&sockets());
+        assert!(
+            issues.iter().any(|i| i.contains("joins a Shop node")),
+            "{issues:?}"
+        );
     }
 
     #[test]
