@@ -246,11 +246,11 @@
       "notes": "House family approved in chat from the 6-view renders and in-engine shots (docs/checkpoints/houses)."
     },
     {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-19",
       "gate": "piece",
-      "status": "pending",
-      "requested": "2026-10-19",
-      "revision": "masks fill (card 01a15544869e)",
-      "notes": "Pending owner review; not an approval. Masks only: the GLB is byte-identical to the approved one (geometry, UVs, tris 1198/498/68) and so are the six-view renders. 86 LOD0 and 36 LOD1 triangles sat on masks texels the bake never wrote (A = 0, R = 0: black, no snow); _house.fill_unbaked now writes their slot hooks and median AO into unwritten texels only, and the build asserts 0 per LOD (now 0/0/0 on the compressed GLB). Every texel under a triangle centre is unchanged (area-weighted A per slot identical at mips 0-3); masks density stays 15.21 px/m. Review docs/checkpoints/houses-masks-fill/sheet.jpg (textured EEVEE before/after from the same cameras, 3x zooms, centroid counts). In-engine shots wait for the yaw-lighting renderer fix (card 01a155602a2f). The controller records the owner's decision."
+      "notes": "Approved in chat (\"all approved\") from docs/review/2026-10-19-walkthrough.html item A5, in-engine shots re-taken on the fixed renderer (c15edd8).",
+      "revision": "masks fill (card 01a15544869e)"
     }
   ]
 }
