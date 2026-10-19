@@ -1,0 +1,4 @@
+# animal_sheep friction (P3, shared with animal_cow through `kit/_animals.py`; the shared entries live in `assets-source/kit/animal_cow/friction.md`)
+
+1. **The first sheep was leggy and boxy** against ref-2: the fleece sat 0.33 m off the ground with high superellipse exponents (2.5-2.6), so it read as a crate on stilts. Fix: lower and deepen the fleece barrel (bottom about 0.20 m), use exponents of 2.2-2.25, and give it a thick wool neck. Minutes lost: about 5 (one skip-bake build plus a still). No skill change: judging the shape from a textured still against the reference before the bake is already the rule.
+2. **The wool neck reads as a flat collar** where it leaves the fleece in the three-quarter still. It is left for owner review rather than spending more passes on it (see the open questions in the report). Minutes lost: 0.

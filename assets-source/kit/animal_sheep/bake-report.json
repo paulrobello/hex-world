@@ -1,0 +1,151 @@
+{
+  "animal": {
+    "frame": "runtime +z forward, +y up, +x the animal's left; pivot on the ground under the body centre",
+    "gaitPhase": {
+      "leg_bl": 0.5,
+      "leg_br": 0.0,
+      "leg_fl": 0.0,
+      "leg_fr": 0.5
+    },
+    "graze": "U = 0 and V > 0: rotate about the axis parallel to x through neckPivot, nose down, by theta x V (V = 0 on the plane through neckBase normal to neckPivot -> muzzleTip, 1 at the muzzle tip)",
+    "grazeDegToGround": 59.5,
+    "hipY": 0.42,
+    "hips": {
+      "leg_bl": [
+        0.13,
+        0.42,
+        -0.27
+      ],
+      "leg_br": [
+        -0.13,
+        0.42,
+        -0.27
+      ],
+      "leg_fl": [
+        0.13,
+        0.42,
+        0.25
+      ],
+      "leg_fr": [
+        -0.13,
+        0.42,
+        0.25
+      ]
+    },
+    "legCodes": {
+      "leg_bl": 0.625,
+      "leg_br": 0.875,
+      "leg_fl": 0.125,
+      "leg_fr": 0.375
+    },
+    "muzzleTip": [
+      0.0,
+      0.525,
+      0.705
+    ],
+    "neckBase": [
+      0.0,
+      0.6,
+      0.42
+    ],
+    "neckPivot": [
+      0.0,
+      0.5,
+      0.2
+    ],
+    "real": {
+      "muzzleToRumpM": 1.185,
+      "withersM": 0.78
+    },
+    "tc1": {
+      "u": "leg weight: 0 off the legs; on a leg (hipY - y) / hipY, 0 at the hip pivot height, 1 at the hoof",
+      "v": "where U > 0 the leg code (0.125 front-left, 0.375 front-right, 0.625 back-left, 0.875 back-right); where U = 0 the head weight, 0 on the body, tail and up to the neck pivot, rising along the neck to 1 at the muzzle tip (ears take their attachment's value)"
+    },
+    "vPoll": 0.2165,
+    "walk": "U > 0: rotate about the axis parallel to x through hips[leg] by swing(t + gaitPhase[leg]); every leg vertex sits below hipY, so U > 0 selects the leg and U can soften the hip"
+  },
+  "aoDistanceM": 0.2,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.7330554723739624,
+      "p05": 0.16406670212745667
+    },
+    "aoAllIslandTexels": {
+      "mean": 0.7901564240455627,
+      "p05": 0.0
+    },
+    "aoVisible": {
+      "mean": 0.9627547860145569,
+      "min": 0.0,
+      "p05": 0.8117647767066956,
+      "texels": 509848
+    },
+    "coverage": 0.6961688995361328,
+    "hiddenTexelFraction": 0.30156468754195287
+  },
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 128
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colourSource": "numpy paint from creature-frame position (no colour bake)",
+  "device": "CPU",
+  "lodTris": [
+    736,
+    306,
+    110
+  ],
+  "marginPx": 4,
+  "motionCheck": {
+    "lod0": {
+      "headVerts": 160,
+      "legVerts": {
+        "leg_bl": 47,
+        "leg_br": 47,
+        "leg_fl": 47,
+        "leg_fr": 47
+      }
+    },
+    "lod1": {
+      "headVerts": 82,
+      "legVerts": {
+        "leg_bl": 23,
+        "leg_br": 23,
+        "leg_fl": 23,
+        "leg_fr": 23
+      }
+    },
+    "lod2": {
+      "headVerts": 26,
+      "legVerts": {
+        "leg_bl": 14,
+        "leg_br": 14,
+        "leg_fl": 14,
+        "leg_fr": 14
+      }
+    }
+  },
+  "packScalePxPerM": 455.56,
+  "receiverSignature": "6d545f6af57ee71d94d3bc62f53ce651b87846f6d3b299fd831bcd8baf3f304c",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 1389.983999518152,
+    "median": 534.3328036644315,
+    "min": 346.02314711601105
+  }
+}

@@ -110,6 +110,15 @@ pub fn kit_layout() -> Vec<Placement> {
         y: -0.062,
         ..place("bakery_shop", 1, 0, 0)
     });
+    // Farm animals (P3) on the oak's meadow, in open sun on the oak's +x/+z side.
+    for (piece, offset, yaw_deg, y) in FARM_ANIMALS {
+        v.push(Placement {
+            offset,
+            yaw_deg,
+            y,
+            ..place(piece, 0, 1, 0)
+        });
+    }
     // house_cluster (data/tiles/house_cluster.ron) on the meadow at (-1, 0): its edge-0 road stub
     // meets road tile (0, 0)'s edge-3 stub, so the road runs on into the cluster's driveway.
     v.push(place("house_pad", -1, 0, 0));
@@ -167,6 +176,13 @@ const HAY_BALES: [(&str, [f32; 2], f32, f32); 3] = [
     ("hay_bale_round", [-2.0, 2.5], 20.0, -0.198),
     ("hay_bale_stack", [-9.5, 1.0], -15.0, -0.095),
     ("hay_bale_round", [-8.0, -4.5], 75.0, -0.129),
+];
+
+/// (piece, offset, yaw, relief height) of the farm animals on the oak's meadow (0, 1), base rotation 0.
+const FARM_ANIMALS: [(&str, [f32; 2], f32, f32); 3] = [
+    ("animal_cow", [7.0, 2.5], 70.0, -0.075),
+    ("animal_sheep", [3.5, 7.0], -30.0, -0.089),
+    ("animal_sheep", [2.0, 9.0], 140.0, -0.059),
 ];
 
 /// (piece, offset, rotation, relief height) of the meadow props in the kit layout.

@@ -391,4 +391,14 @@
       "provenance": "assets-source/kit/fish_trout/provenance.json",
       "slots": { "fish_trout_body": { "unique": true, "masks": true } },
       "maps": { "albedo": "p1/fish_trout/fish_trout.albedo", "normal": "p1/fish_trout/fish_trout.normal",
-                "orm": "p1/fish_trout/fish_trout.orm", "masks": "p1/fish_trout/fish_trout.masks" } } ] }
+                "orm": "p1/fish_trout/fish_trout.orm", "masks": "p1/fish_trout/fish_trout.masks" } },
+    { "id": "animal_cow", "pack": "props", "kind": "prop", "glb": "p1/animal_cow/animal_cow.glb",
+      "provenance": "assets-source/kit/animal_cow/provenance.json",
+      "slots": { "animal_cow_body": { "unique": true, "masks": true } },
+      "maps": { "albedo": "p1/animal_cow/animal_cow.albedo", "normal": "p1/animal_cow/animal_cow.normal",
+                "orm": "p1/animal_cow/animal_cow.orm", "masks": "p1/animal_cow/animal_cow.masks" } },
+    { "id": "animal_sheep", "pack": "props", "kind": "prop", "glb": "p1/animal_sheep/animal_sheep.glb",
+      "provenance": "assets-source/kit/animal_sheep/provenance.json",
+      "slots": { "animal_sheep_body": { "unique": true, "masks": true } },
+      "maps": { "albedo": "p1/animal_sheep/animal_sheep.albedo", "normal": "p1/animal_sheep/animal_sheep.normal",
+                "orm": "p1/animal_sheep/animal_sheep.orm", "masks": "p1/animal_sheep/animal_sheep.masks" } } ] }
