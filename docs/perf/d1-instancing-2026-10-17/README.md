@@ -88,6 +88,19 @@ pre-fix measurement (18.3) within run-to-run noise on a busier host (load 10-14 
 the render path is at budget, and the web gap is wasm/browser overhead (see the
 correction above).
 
+## Criterion 2 amendment (owner decision D1, 2026-10-18)
+
+The owner accepted the measured web number and amended the criterion: the 16.6 ms
+budget is held **natively** — met at p50 14.47 / p95 16.64 uncapped on the identical
+exact-save world — and the web p95 19.1 is accepted as wasm/browser platform
+overhead (three clean GPU-exclusive reproductions of 19.1). The residual levers were
+evaluated and rejected with evidence: shadow/post GPU tuning cannot move a CPU-bound
+frame (native p50 14.5 vs ≤11 ms serialized GPU; shadow cascades 4.48 ms of it), and
+the wasm build already ships `opt-level=3` + thin LTO with the tuned `wasm-release`
+profile dead config. The branch also carries `618e875`, the owner-reported wet-band
+crawl on cliff walls (the animated dark blotches on exposed coast sides), gated to
+flat shores in `kit_material.wesl`.
+
 ## Files
 
 - `perf-exactsave-v2.json` — canonical measurement (2 clean rounds, pre-fix)
