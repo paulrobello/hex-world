@@ -1,0 +1,61 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Owner Review 2026-10-19</title><style>
+:root{--bg:#f4f5f2;--card:#fff;--ink:#1c211e;--muted:#5b655f;--line:#d7dbd5;--accent:#2f6f4f;--rec:#eaf3ee;--q:#fff6df}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#121513;--card:#1b1f1d;--ink:#e6eae7;--muted:#a1aba5;--line:#2c3330;--accent:#7cc39c;--rec:#1d2b23;--q:#2a2516}}
+:root[data-theme=dark]{--bg:#121513;--card:#1b1f1d;--ink:#e6eae7;--muted:#a1aba5;--line:#2c3330;--accent:#7cc39c;--rec:#1d2b23;--q:#2a2516}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,sans-serif}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 80px}h1{font-size:22px;margin:0 0 6px}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 20px}nav a{font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+section{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin:0 0 18px;scroll-margin-top:12px}
+h2{font-size:18px;margin:0 0 8px}h2 span{color:var(--muted);font-weight:500}p{margin:6px 0;max-width:90ch}
+.rec{background:var(--rec);border-left:3px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0}
+ul.q{background:var(--q);border-radius:4px;padding:8px 12px 8px 30px;margin:10px 0}ul.q li{margin:4px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:10px;margin-top:10px}
+.wide{grid-template-columns:1fr}
+figure{margin:0}figure img{width:100%;border-radius:4px;border:1px solid var(--line);display:block}
+figcaption{font-size:12px;color:var(--muted);word-break:break-word;margin-top:3px}.top{font-size:13px;color:var(--muted)}
+code{font-size:13px}
+</style></head><body><main>
+<h1>Owner review, 2026-10-19</h1>
+<p class=top>Every in-engine shot below was re-taken after the lighting fix. Click an image for full size. Try the running build at <a href='http://127.0.0.1:8094/'>http://127.0.0.1:8094/</a>. Text version: <a href='2026-10-19-owner-queue.md'>2026-10-19-owner-queue.md</a>.</p>
+<nav><a href='#F1'>F1</a><a href='#A1'>A1</a><a href='#A2'>A2</a><a href='#A3'>A3</a><a href='#A4'>A4</a><a href='#A5'>A5</a><a href='#G1'>G1</a><a href='#P1'>P1</a></nav>
+<section id='F1'><h2>F1 Coast and river-mouth seams, rotated building walls (fixed)</h2>
+<p>Your report: hard lines at the hex edges in bay and headland water, and between river and river-mouth tiles. The bakery agent also found rotated cottages, the bakery and the barn with black sun-side walls.</p>
+<p>One cause (<code>c15edd8</code>): since 2026-10-17 (<code>ccfdafd</code>) the shader that turns surface normals with a tile had one transpose too many, so every piece placed at 60, 120, 240 or 300 degrees was lit as if mirrored. Tiles at 0 and 180 degrees were right, which is why the lines sat exactly on the edge between differently rotated tiles. A second bug (<code>79e44ab</code>) made the bay and headland wet sand vanish on the instanced path, leaving a dark trench.</p>
+<div class=rec><b>Recommendation:</b> Nothing to decide. Check in play that the coast and river mouths read smooth across tile edges.</div>
+<div class='grid'><figure><a href='../checkpoints/normal-basis-fix/headland-before.png' target=_blank><img src='../checkpoints/normal-basis-fix/headland-before.png' loading=lazy alt='headland: 10-14 reference vs main before the fix'></a><figcaption>headland: 10-14 reference vs main before the fix</figcaption></figure><figure><a href='../checkpoints/normal-basis-fix/headland-after.png' target=_blank><img src='../checkpoints/normal-basis-fix/headland-after.png' loading=lazy alt='headland: 10-14 reference vs main after the fix'></a><figcaption>headland: 10-14 reference vs main after the fix</figcaption></figure><figure><a href='../checkpoints/normal-basis-fix/river-seam-ref-main-fix.png' target=_blank><img src='../checkpoints/normal-basis-fix/river-seam-ref-main-fix.png' loading=lazy alt='river into mouth: 10-14 / broken / fixed (top to bottom)'></a><figcaption>river into mouth: 10-14 / broken / fixed (top to bottom)</figcaption></figure><figure><a href='../checkpoints/normal-basis-fix/bay-ref-main-fix.png' target=_blank><img src='../checkpoints/normal-basis-fix/bay-ref-main-fix.png' loading=lazy alt='bay: 10-14 / broken / fixed'></a><figcaption>bay: 10-14 / broken / fixed</figcaption></figure><figure><a href='../checkpoints/normal-basis-fix/house-cluster-before-after.jpg' target=_blank><img src='../checkpoints/normal-basis-fix/house-cluster-before-after.jpg' loading=lazy alt='house cluster, shadows off: before (left) and after (right)'></a><figcaption>house cluster, shadows off: before (left) and after (right)</figcaption></figure><figure><a href='../checkpoints/normal-basis-fix/bakery-before-after.jpg' target=_blank><img src='../checkpoints/normal-basis-fix/bakery-before-after.jpg' loading=lazy alt='bakery sun-side gable: before and after'></a><figcaption>bakery sun-side gable: before and after</figcaption></figure><figure><a href='../checkpoints/coast-wet-band-instanced/after-fix-headland-bay.png' target=_blank><img src='../checkpoints/coast-wet-band-instanced/after-fix-headland-bay.png' loading=lazy alt='wet band back on the instanced path (headland, bay)'></a><figcaption>wet band back on the instanced path (headland, bay)</figcaption></figure></div>
+</section>
+<section id='A1'><h2>A1 Hay bales <span>hay_bale_round, hay_bale_stack</span></h2>
+<p>Net-wrapped round bale (576 / 168 / 64 tris) and a five-bale twine stack (509 / 227 / 67). Shots re-taken on the fixed renderer.</p>
+<ul class=q><li>Q1. The square-bale straw is paler and cooler than ref-2&#x27;s gold. Warm it?</li><li>Q2. The round bale is net-wrapped as briefed; the references draw twine. Keep the net?</li><li>Q3. Do the shade sides read right now?</li></ul>
+<div class='grid'><figure><a href='../checkpoints/hay_bales/hay_bale_round-sheet.jpg' target=_blank><img src='../checkpoints/hay_bales/hay_bale_round-sheet.jpg' loading=lazy alt='round bale sheet'></a><figcaption>round bale sheet</figcaption></figure><figure><a href='../checkpoints/hay_bales/hay_bale_stack-sheet.jpg' target=_blank><img src='../checkpoints/hay_bales/hay_bale_stack-sheet.jpg' loading=lazy alt='stack sheet'></a><figcaption>stack sheet</figcaption></figure></div>
+</section>
+<section id='A2'><h2>A2 Red barn <span>barn_red</span></h2>
+<p>10 x 7 m, 45 degree slate roof, braced double doors, hayloft door (1054 / 280 / 58 tris). Shots re-taken on the fixed renderer: the sun side is now lit, and the back gable is a true shade side.</p>
+<ul class=q><li>Q4. Keep this red, or lift its value slightly?</li><li>Q5. Size right beside the houses, or smaller (8 x 6 m)?</li><li>Q6. Add the ref-1 lean-to shed or open doors?</li><li>Q7. Accept faint batten aliasing at eye level, or widen battens to 4 cm?</li></ul>
+<div class='grid wide'><figure><a href='../checkpoints/barn_red/sheet.jpg' target=_blank><img src='../checkpoints/barn_red/sheet.jpg' loading=lazy alt='barn sheet'></a><figcaption>barn sheet</figcaption></figure></div>
+</section>
+<section id='A3'><h2>A3 Bakery <span>bakery_shop</span></h2>
+<p>Timber-framed shop in the cottages' style, bread as colour bands and masks behind the bow window (1405 / 601 / 127 tris), on road tile (1, 0) facing the road. Shots re-taken on the fixed renderer, including the two shadows-off frames that first showed the bug.</p>
+<ul class=q><li>Q8. Roof: the references&#x27; darker brown, or the cottage&#x27;s orange tile?</li><li>Q9. Add flower boxes under the upper windows (about 95 tris)?</li><li>Q10. Bread as colour bands and masks, or some loaves as geometry?</li></ul>
+<div class='grid wide'><figure><a href='../checkpoints/bakery_shop/sheet.jpg' target=_blank><img src='../checkpoints/bakery_shop/sheet.jpg' loading=lazy alt='bakery sheet'></a><figcaption>bakery sheet</figcaption></figure></div>
+</section>
+<section id='A4'><h2>A4 Cow and sheep <span>animal_cow, animal_sheep</span></h2>
+<p>Hornless brown-and-white cow (1.45 m withers, 1058 / 468 / 148 tris) and black-faced sheep (0.78 m, 736 / 306 / 110). Static for now, with leg and head weights built in for a later wander and graze.</p>
+<ul class=q><li>Q11. The sheep&#x27;s wool neck reads as a flat collar where it leaves the fleece. Smooth it?</li><li>Q12. Scale is shown beside the oak and hay; want one beside a house?</li></ul>
+<div class='grid'><figure><a href='../checkpoints/farm_animals/animal_cow-sheet.jpg' target=_blank><img src='../checkpoints/farm_animals/animal_cow-sheet.jpg' loading=lazy alt='cow sheet'></a><figcaption>cow sheet</figcaption></figure><figure><a href='../checkpoints/farm_animals/animal_sheep-sheet.jpg' target=_blank><img src='../checkpoints/farm_animals/animal_sheep-sheet.jpg' loading=lazy alt='sheep sheet'></a><figcaption>sheep sheet</figcaption></figure></div>
+</section>
+<section id='A5'><h2>A5 Houses re-baked <span>house_cottage, house_twostorey</span></h2>
+<p>Thin faces (glazing bars, frame returns) had no baked shading data and drew black. Now 0 such triangles on every LOD; geometry unchanged. Before/after Blender stills, 3x zooms.</p>
+<div class=rec><b>Recommendation:</b> Approve if the after stills look right; the change only fills previously black slivers.</div>
+<div class='grid wide'><figure><a href='../checkpoints/houses-masks-fill/sheet.jpg' target=_blank><img src='../checkpoints/houses-masks-fill/sheet.jpg' loading=lazy alt='before / after sheet'></a><figcaption>before / after sheet</figcaption></figure></div>
+</section>
+<section id='G1'><h2>G1 Grass distance setting</h2>
+<p>Settings now has Grass distance: Near (today, default), Medium, Far, Very far. Far keeps full grass to about 80 m and some to 116 m. None of them show grass at the default ~158 m camera. Frame-time cost is not measured yet (host load was 106-215, MiniMac unreachable).</p>
+<ul class=q><li>Q13. Keep Very far before it is measured, or hide it until a perf run says it is affordable?</li><li>Q14. Should the default stay Near, or move to Medium once measured?</li></ul>
+<div class='grid'><figure><a href='../checkpoints/grass-distance/grass-distance-near-80m.jpg' target=_blank><img src='../checkpoints/grass-distance/grass-distance-near-80m.jpg' loading=lazy alt='Near, camera at 80 m'></a><figcaption>Near, camera at 80 m</figcaption></figure><figure><a href='../checkpoints/grass-distance/grass-distance-far-80m.jpg' target=_blank><img src='../checkpoints/grass-distance/grass-distance-far-80m.jpg' loading=lazy alt='Far, camera at 80 m'></a><figcaption>Far, camera at 80 m</figcaption></figure><figure><a href='../checkpoints/grass-distance/grass-distance-near-40m.jpg' target=_blank><img src='../checkpoints/grass-distance/grass-distance-near-40m.jpg' loading=lazy alt='Near, 40 m'></a><figcaption>Near, 40 m</figcaption></figure><figure><a href='../checkpoints/grass-distance/grass-distance-far-40m.jpg' target=_blank><img src='../checkpoints/grass-distance/grass-distance-far-40m.jpg' loading=lazy alt='Far, 40 m'></a><figcaption>Far, 40 m</figcaption></figure></div>
+</section>
+<section id='P1'><h2>P1 Push</h2>
+<p>Main holds the commits above plus the Dependabot fix (sharp 0.35.5, unused gltf-transform CLI removed; npm audit clean). <code>make checkall-ci</code> is green. The four Dependabot alerts close only after a push.</p>
+<ul class=q><li>Q15. Push now?</li></ul>
+</section>
+</main></body></html>

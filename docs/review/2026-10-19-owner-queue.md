@@ -21,12 +21,12 @@ Questions:
 - **Q7.** Accept faint batten aliasing at eye level, or widen battens to 4 cm?
 
 **A3. Bakery (`bakery_shop`), card `01a154f1ff2e`.** Merged as `d5fe285`. 1405 / 601 / 127 tris, on road tile (1, 0) facing the road.
-- Sheet: `docs/checkpoints/bakery_shop/sheet.jpg`. Its in-engine wall shading is wrong until card `01a155602a2f` (yawed pieces render unlit walls) lands; judge the EEVEE stills for colour.
+- Sheet: `docs/checkpoints/bakery_shop/sheet.jpg` (in-engine shots re-taken on the fixed renderer).
 - **Q8.** Roof: the references' darker brown, or the cottage's orange tile?
 - **Q9.** Add flower boxes under the upper windows (about 95 tris)?
 - **Q10.** Bread as colour bands and masks, or some loaves as geometry?
 
-**A2 and A3 note:** the barn's and bakery's near-black walls were mostly a renderer bug, fixed in `c15edd8` (rotated pieces had their normals mirrored since 2026-10-17). Their committed sheets predate the fix: look in game (`make run ARGS="--scenario kit"`) before answering Q4.
+**A2 and A3 note:** the barn's and bakery's near-black walls were mostly a renderer bug, fixed in `c15edd8` (rotated pieces had their normals mirrored since 2026-10-17). Every sheet's in-engine shots were re-taken on the fixed build; the walkthrough is `docs/review/2026-10-19-walkthrough.html`.
 
 **A4. Cow and sheep (`animal_cow`, `animal_sheep`), card `01a155261550`.** Merged as `c6b1598`. Cow 1.45 m withers (1058 / 468 / 148 tris), sheep 0.78 m (736 / 306 / 110). Static for now, with leg and head weights baked in for a later wander and graze.
 - Sheets: `docs/checkpoints/farm_animals/animal_cow-sheet.jpg`, `animal_sheep-sheet.jpg`.

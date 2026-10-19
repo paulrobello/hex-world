@@ -18,16 +18,16 @@ CELLS = [
     (DOCS / "eevee-three-quarter.jpg", "Blender EEVEE, textured + masks (evidence only)"),
     (DOCS / "eevee-front.jpg", "Blender EEVEE, shop front (bread = colour bands + masks)"),
     (DOCS / "eevee-night.jpg", "Blender EEVEE, night: masks B x 4 on the glass"),
-    (DOCS / "bakery-play.jpg", "in engine, play distance ~45 m, tilt off (walls: see yaw note)"),
-    (DOCS / "bakery-close-sun.jpg", "in engine, shop front ~6 m (dark: yaw shading defect)"),
-    (DOCS / "bakery-close-shade.jpg", "in engine, back and left gable ~8 m (yaw shading defect)"),
-    (DOCS / "bakery-eye.jpg", "in engine, eye level 1.7 m, 11 m out (yaw shading defect)"),
+    (DOCS / "bakery-play.jpg", "in engine, play distance ~45 m, tilt off"),
+    (DOCS / "bakery-close-sun.jpg", "in engine, shop front ~6 m (sun side)"),
+    (DOCS / "bakery-close-shade.jpg", "in engine, back and left gable ~8 m (shade side)"),
+    (DOCS / "bakery-eye.jpg", "in engine, eye level 1.7 m, 11 m out"),
     (DOCS / "bakery-scale.jpg", "in engine, scale: bakery (front right), house_cluster down the road"),
-    (DOCS / "yaw-bakery-plus-x.jpg", "shadows off: bakery +x gable (N.L 0.55) reads unlit, yaw 90"),
-    (DOCS / "yaw-cluster-plus-x.jpg", "shadows off: twostorey yaw 0 lit; cottages yaw 90/270 dark"),
+    (DOCS / "yaw-bakery-plus-x.jpg", "shadows off: bakery +x gable, yaw 90 (lit after c15edd8)"),
+    (DOCS / "yaw-cluster-plus-x.jpg", "shadows off: twostorey yaw 0 and cottages yaw 90/270 all lit"),
 ]
-NOTE = ("In-engine wall shading is not representative: pieces placed with a hero yaw (bakery 90, cottages 90/270) "
-        "shade their walls as if unrotated, while yaw-0 house_twostorey is lit (renderer finding, orchestrator).")
+NOTE = ("In-engine shots re-taken 2026-10-19 on the fixed renderer (c15edd8: rotated pieces' normals were "
+        "mirrored since 2026-10-17).")
 
 
 def cell(path: pathlib.Path, label: str) -> Image.Image:
