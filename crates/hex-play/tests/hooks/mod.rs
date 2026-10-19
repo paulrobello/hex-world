@@ -356,6 +356,7 @@ fn authored_masks_carry_snow_wetness_and_night_channels() {
 /// flag is checked against this list and never against itself.
 const PLANTS: &[(&str, &str)] = &[
     ("house_pad_hedge", "the house pads' clipped hedges"),
+    ("bakery_pad_hedge", "the bakery forecourt's clipped hedge"),
     ("beach_dunegrass", "dune-grass tufts on the beach tiles"),
     ("river_reed", "reed blades on the river banks"),
     ("river_cattail", "cattail seed heads on the reeds"),
