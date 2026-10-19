@@ -2,9 +2,16 @@
 
 ## State
 
-- Branch `main` @ `ab9a107` (forest instancing fix, squash-merged 2026-10-19). Paul approved push and deploy for it; see the session's final report for the CI run.
+- Branch `main` well ahead of `origin/main` (pushed through `bc3dea0`); count with `git log --oneline origin/main..main`. Nothing pushed since; waits on Paul. `make checkall-ci` green at `cc38bad`.
 - Working tree clean apart from an untracked `.claude/launch.json` (leave it). No worktrees, no background runs.
 - `dist/` rebuilt from `main` post-merge (`make build-web` green).
+
+## Landed 2026-10-19 (afternoon), all local
+- Render fixes: `c15edd8` kit normal basis returned inverse(m), mirroring normals of every piece not at 0/180 degrees since `ccfdafd` (owner's coast/river-mouth hex-edge lines and the black walls on yawed cottages/bakery/barn); `3a973ea` GPU test; `79e44ab` instanced kit draws queued after bevy's mesh queues (coast wet band vanished, water read the skirt as bed). House thumbnails regenerated `8148a31`.
+- New P3 pieces: hay bales `6cf5b97`, barn `ae8f5bf`, bakery `d5fe285`, cow and sheep `c6b1598`; houses re-baked `cc38bad` (unbaked masks texels). Reviews in `docs/review/2026-10-19-owner-queue.md` (A1-A5).
+- Features: grass distance setting `86a3195` (perf not measured: host load 106-215, MiniMac unreachable; command in the commit), FPS overlay hidden by default `649f068`.
+- Tooling: `scripts/worktree-bootstrap.sh`, export fails on non-unit normals/tangents, `lib/budgets.py`, stale generator hashes warn instead of fail (owner ruling), Dependabot fix `e30c9b2` (sharp 0.35.5, unused gltf-transform CLI dropped; alerts close after a push).
+- Grass "less lush" report: no regression found (identical blade counts pre-audit vs main); grass fades by 58 m and the default camera is ~158 m away.
 
 ## User feedback from Paul (2026-10-19, post-deploy)
 

@@ -26,6 +26,13 @@ Questions:
 - **Q9.** Add flower boxes under the upper windows (about 95 tris)?
 - **Q10.** Bread as colour bands and masks, or some loaves as geometry?
 
-**A2 and A3 note:** the barn's and bakery's near-black shade sides are at least partly a renderer regression (rotated pieces' walls lose their light). Re-check both after card `01a155602a2f`.
+**A2 and A3 note:** the barn's and bakery's near-black walls were mostly a renderer bug, fixed in `c15edd8` (rotated pieces had their normals mirrored since 2026-10-17). Their committed sheets predate the fix: look in game (`make run ARGS="--scenario kit"`) before answering Q4.
 
-Still to come in this batch: the cow and sheep.
+**A4. Cow and sheep (`animal_cow`, `animal_sheep`), card `01a155261550`.** Merged as `c6b1598`. Cow 1.45 m withers (1058 / 468 / 148 tris), sheep 0.78 m (736 / 306 / 110). Static for now, with leg and head weights baked in for a later wander and graze.
+- Sheets: `docs/checkpoints/farm_animals/animal_cow-sheet.jpg`, `animal_sheep-sheet.jpg`.
+- **Q11.** The sheep's wool neck reads as a flat collar where it leaves the fleece. Smooth it?
+- **Q12.** Scale shown beside the oak and hay; want one beside a house?
+
+**A5. Houses re-baked (`house_cottage`, `house_twostorey`), card `01a15544869e`.** Merged as `cc38bad`. Thin faces (glazing bars, frame returns) drew black; now they show their colour. Geometry unchanged. Before/after: `docs/checkpoints/houses-masks-fill/sheet.jpg`.
+
+**Also since 2026-10-17:** reviews of the forest fix, hay bales and barn were taken with the rotated-normals bug, so tiles at 60/120/240/300° looked darker or mis-lit in those shots.
