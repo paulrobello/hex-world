@@ -66,6 +66,13 @@ Hex frame shared by every kit generator. Constants are frozen (D8) and tested ag
 - `border_verts(obj, tol=1e-4) -> set`: world-space border-ring vertices at z = 0, rounded to 0.1 mm.
 - `assert_border_identical(objs, tol=1e-4)`: raises `AssertionError` unless every obj has exactly `objs[0]`'s non-empty ring.
 
+## budgets (no bpy; size LODs from these instead of trial builds)
+- `lod_budget(kind, piece_id="", lane_cut=False, coast_arc=False) -> (lod0_max, lod1_ratio, lod2_ratio)`: the ceilings `kit_gate` applies, with the river-dressing prop, lane-cut base and coast-arc base exceptions.
+- `lod_targets(lod0_tris, kind, ...) -> (lod1_max, lod2_max)`: the largest passing LOD1 and LOD2 for a LOD0.
+- `min_lod0(fixed_lod2_tris, kind, ...) -> int`: the `gates.md` LOD floor (LOD0 ≥ LOD2_min / ratio); raises `ValueError` when it exceeds the kind's LOD0 budget.
+- `check((t0, t1, t2), kind, piece_id="", ...)`: raises `AssertionError` listing every budget broken; use it in place of hand-written `tris[2] <= 0.15 * tris[0]` asserts.
+- Pinned to the Rust constants by `kit_gate::budgets_match_blender_lib`; `test_budgets` covers the helpers.
+
 ## collider
 - `collider_from(src, kind, name) -> Object`: kind in {"cap" (copy of src, e.g. LOD2), "hull" (convex hull), "box" (AABB)}, world space, triangulated, custom prop `collider = kind`. Name convention `<piece>_collider`. It stays render-visible for export; the engine hides it. Unknown kinds raise `ValueError`. "hull" de-duplicates the vertices `convex_hull` lists as both unused and interior before deleting them (`test_collider`).
 

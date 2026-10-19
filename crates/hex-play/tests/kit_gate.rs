@@ -2554,6 +2554,57 @@ fn budgets_match_kit_lib() {
     );
 }
 
+/// Generators size their LODs from `scripts/blender/lib/budgets.py`; it must carry the gate's numbers.
+#[test]
+fn budgets_match_blender_lib() {
+    let py = std::fs::read_to_string(repo().join("scripts/blender/lib/budgets.py")).unwrap();
+    let value = |name: &str| -> String {
+        let line = py
+            .lines()
+            .find(|l| l.starts_with(&format!("{name} = ")))
+            .unwrap_or_else(|| panic!("{name} not found in budgets.py"));
+        line[name.len() + 3..].trim().to_string()
+    };
+    let float = |name: &str| value(name).parse::<f32>().unwrap();
+    assert_eq!(float("LOD1_MAX_RATIO"), LOD1_MAX_RATIO);
+    assert_eq!(float("LOD2_MAX_RATIO"), LOD2_MAX_RATIO);
+    assert_eq!(float("LANE_CUT_LOD2_MAX_RATIO"), LANE_CUT_LOD2_MAX_RATIO);
+    assert_eq!(float("COAST_ARC_LOD2_MAX_RATIO"), COAST_ARC_LOD2_MAX_RATIO);
+    assert_eq!(
+        value("RIVER_DRESSING_LOD0_MAX").parse::<usize>().unwrap(),
+        RIVER_DRESSING_LOD0_MAX
+    );
+    let lod0 = value("LOD0_MAX");
+    for (name, kind) in [
+        ("base", PieceKind::Base),
+        ("edge", PieceKind::Edge),
+        ("center", PieceKind::Center),
+        ("hero", PieceKind::Hero),
+        ("prop", PieceKind::Prop),
+        ("tree", PieceKind::Tree),
+    ] {
+        let at = lod0
+            .find(&format!("\"{name}\": "))
+            .unwrap_or_else(|| panic!("LOD0_MAX lacks {name}: {lod0}"));
+        let n: usize = lod0[at + name.len() + 4..]
+            .chars()
+            .take_while(char::is_ascii_digit)
+            .collect::<String>()
+            .parse()
+            .unwrap();
+        assert_eq!(n, kind.lod0_budget(), "LOD0_MAX[{name}]");
+    }
+    assert_eq!(
+        lod0.matches(':').count(),
+        6,
+        "LOD0_MAX has a kind the gate lacks: {lod0}"
+    );
+    let start = py.find("RIVER_DRESSING_PROPS = (").unwrap();
+    let props = &py[start..start + py[start..].find(')').unwrap()];
+    let ids: Vec<&str> = props.split('"').skip(1).step_by(2).collect();
+    assert_eq!(ids, RIVER_DRESSING_PROPS);
+}
+
 // Negative cases: the gate must catch these (Review Focus 3 and 4).
 fn fixture() -> (Kit, PieceEntry) {
     let k = kits().remove(0);
