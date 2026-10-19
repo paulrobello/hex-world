@@ -74,6 +74,25 @@ class BakeExport(unittest.TestCase):
         self.assertAlmostEqual(pos["min"][1], -hexgeo.LEVEL_STEP, places=4)
         self.assertAlmostEqual(pos["max"][1], 0.0, places=4)
 
+    def test_export_rejects_zero_area_face_tangents(self):
+        # Collinear vertices: Blender exports zero-length tangents, which gltf-validator rejects in
+        # kit-compress (ACCESSOR_VECTOR3_NON_UNIT); export_glb must fail first, naming the mesh.
+        import bmesh
+
+        me = self.lods[0].data
+        bm = bmesh.new()
+        bm.from_mesh(me)
+        bm.verts.ensure_lookup_table()
+        a, b = bm.verts[0].co.copy(), bm.verts[1].co.copy()
+        face = bm.faces.new([bm.verts.new(co) for co in (a, (a + b) / 2, b)])
+        uvl = bm.loops.layers.uv.active
+        for loop, uv_ in zip(face.loops, ((0.1, 0.1), (0.2, 0.1), (0.1, 0.2))):
+            loop[uvl].uv = uv_
+        bm.to_mesh(me)
+        bm.free()
+        with self.assertRaisesRegex(ValueError, r"fixture_lod0 primitive \d+ TANGENT"):
+            export.export_glb(self.root, str(self.tmp / "degenerate.glb"))
+
     def test_export_is_deterministic(self):
         a, b = self.tmp / "a.glb", self.tmp / "b.glb"
         export.export_glb(self.root, str(a))

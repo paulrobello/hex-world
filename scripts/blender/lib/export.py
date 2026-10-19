@@ -2,8 +2,10 @@ import ast
 import json
 import math
 import pathlib
+import struct
 
 import bpy
+import numpy as np
 
 from . import bake, geom, hexgeo, scene
 
@@ -42,6 +44,39 @@ def export_glb(root, path):
         export_yup=True, export_apply=True, export_extras=True, export_tangents=True,
         export_normals=True, export_texcoords=True, export_cameras=False, export_lights=False,
         export_image_format="NONE", export_materials="EXPORT", export_animations=False)
+    check_unit_vectors(path)
+
+
+# gltf-validator (run by kit-compress) rejects NORMAL/TANGENT xyz whose length is off 1 by more than
+# this; zero-area faces export zero-length tangents, which used to surface only at kit-compress.
+UNIT_TOL = 0.00674  # gltf-validator 2.0.0-dev.3.10 ACCESSOR_VECTOR3_NON_UNIT threshold
+
+
+def check_unit_vectors(path):
+    """Raises ValueError naming every mesh primitive whose NORMAL or TANGENT xyz is not unit length."""
+    data = pathlib.Path(path).read_bytes()
+    n = struct.unpack_from("<I", data, 12)[0]
+    j = json.loads(data[20:20 + n])
+    bin_at = 20 + n + 8
+    bad = []
+    for m in j.get("meshes", []):
+        for pi, prim in enumerate(m["primitives"]):
+            for attr in ("NORMAL", "TANGENT"):
+                if attr not in prim["attributes"]:
+                    continue
+                a = j["accessors"][prim["attributes"][attr]]
+                bv = j["bufferViews"][a["bufferView"]]
+                width = 4 if a["type"] == "VEC4" else 3
+                stride = bv.get("byteStride", 4 * width) // 4
+                v = np.frombuffer(data, np.float32, (a["count"] - 1) * stride + width,
+                                  bin_at + bv.get("byteOffset", 0) + a.get("byteOffset", 0))
+                xyz = np.lib.stride_tricks.as_strided(v, (a["count"], 3), (stride * 4, 4))
+                off = np.abs(np.linalg.norm(xyz, axis=1) - 1.0) > UNIT_TOL
+                if off.any():
+                    bad.append(f"{m['name']} primitive {pi} {attr}: {int(off.sum())} of {a['count']} not unit "
+                               f"(first vertex {int(np.argmax(off))})")
+    if bad:
+        raise ValueError(f"{path}: non-unit vectors (zero-area or degenerate faces?): " + "; ".join(bad))
 
 
 def generator_deps(generator_path):
