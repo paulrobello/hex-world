@@ -15,16 +15,12 @@ that built it instead of starting a fresh one.
    the formula.
 3. **Base.** The main commit that holds every contract, skill section and helper the brief
    cites. Never cite a draft that is not on main.
-4. **Bootstrap.** One step per tool call:
+4. **Bootstrap.** Three calls:
    - `git merge --ff-only main`, then `git log --oneline -1` and confirm the SHA.
-   - `cp -cR /Users/probello/Repos/hex-world/target ./target` when no build is running in main,
-     then `cargo clean -p hex-core -p hex-assets`.
-   - `cp -cR` `web/ui/node_modules` and `e2e/node_modules` from main when the brief needs the
-     web gates.
-   - Main has no `tools/` or `scripts/assets/node_modules`: the first `make kit-compress`
-     installs both. Run `npm ci --prefix scripts/assets` only for `make refs` or the contact
-     sheet.
-   - Once the bootstrap script card lands, this whole step is one plain command.
+   - `bash scripts/worktree-bootstrap.sh` (add `--web` when the brief needs the e2e gates). It
+     clones main's `target/` copy-on-write and cleans `hex-core`/`hex-assets`, clones or installs
+     `web/ui`, `scripts/assets` (and `e2e`) node_modules, and installs the KTX tools. About 5 s;
+     a second run is a no-op. Start it only when no cargo build is running in main.
 5. **Ownership.** The files the agent owns: its generator, its `_<family>.py`,
    `assets-source/kit/<id>/` and `assets/kit/p1/<id>/`. The manifest entry, layout placement,
    `data/` edits, gate changes and proposed skill text go in the report for the orchestrator to

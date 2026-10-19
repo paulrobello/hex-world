@@ -20,6 +20,7 @@ make run ARGS="--scenario play"   # native release run; all flags in docs/agent-
 make build-web                    # Trunk release build into dist/
 trunk serve                       # dev server on 127.0.0.1:8094 (rebuilds live, includes HUD)
 python3 scripts/dev/serve.py 8094 dist   # static serve of dist/ (8095 serves the repo for review pages)
+bash scripts/worktree-bootstrap.sh [--web]   # fresh worktree: clone target/, node_modules, KTX tools from main
 
 make checkall                     # fast gate: fmt-check + clippy -D warnings + typecheck (native AND wasm32) + cargo test --workspace + ui-check
 make checkall-ci                  # push gate: checkall + web-size (12 MiB gzip wasm) + initial-download (30 MiB)
