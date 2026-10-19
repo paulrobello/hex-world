@@ -38,6 +38,9 @@ pub const FLAG_WET_BAND: u32 = 8;
 pub const FLAG_WIND_TREE: u32 = 16;
 /// Sways as a plant (`Slot::wind` on any other piece): bends by TEXCOORD_1 U squared.
 pub const FLAG_WIND_PLANT: u32 = 32;
+/// The coast seabed under the wet band (`Slot::wet_band_seabed`, with [`FLAG_WET_BAND`]): above the
+/// water at rest and in the shallow swash it takes the wet-sand look over its gravel.
+pub const FLAG_WET_SEABED: u32 = 64;
 
 pub type KitMaterial = ExtendedMaterial<StandardMaterial, KitExt>;
 
@@ -104,6 +107,8 @@ pub struct SlotRequests {
     pub foliage: bool,
     /// Takes the live wet band (`Slot::wet_band`).
     pub wet_band: bool,
+    /// The band's seabed side (`Slot::wet_band_seabed`).
+    pub wet_seabed: bool,
     /// Sways in the wind: (amplitude, tree profile) from `Slot::wind` and the piece kind.
     pub wind: Option<(f32, bool)>,
 }
@@ -132,6 +137,7 @@ pub fn slot_requests(
     let mut out = SlotRequests {
         foliage: crate::hooks::is_foliage(p, slot),
         wet_band: slot.wet_band,
+        wet_seabed: slot.wet_band && slot.wet_band_seabed,
         wind: slot.wind.map(|a| (a, p.kind == PieceKind::Tree)),
         ..default()
     };
@@ -201,6 +207,9 @@ pub fn params_for(r: &SlotRequests, hooks: KitHooks) -> KitParams {
     }
     if r.wet_band {
         flags |= FLAG_WET_BAND;
+    }
+    if r.wet_seabed {
+        flags |= FLAG_WET_SEABED;
     }
     match r.wind {
         Some((_, true)) => flags |= FLAG_WIND_TREE,
@@ -490,6 +499,53 @@ mod tests {
         assert_eq!(tree.wash_amp, 0.0);
         let common = include_str!("kit_common.wesl");
         assert!(common.contains(&format!("const FLAG_WET_BAND: u32 = {FLAG_WET_BAND}u;")));
+        assert!(common.contains(&format!("const FLAG_WET_SEABED: u32 = {FLAG_WET_SEABED}u;")));
+
+        // The seabed side takes the band and the seabed flag; `wetBandSeabed` alone does nothing.
+        let flags = |slot: &str| {
+            let m = parse_manifest(&M.replace(
+                r#""b_cap":{"tileable":"grass","masks":true}"#,
+                &format!(r#""b_cap":{{"tileable":"grass","masks":true,{slot}}}"#),
+            ))
+            .unwrap();
+            let p = &m.pieces[0];
+            params_for(
+                &slot_requests(&m, p, &p.slots["b_cap"], TextureFamily::Bc7).unwrap(),
+                KitHooks::None,
+            )
+            .flags
+                & (FLAG_WET_BAND | FLAG_WET_SEABED)
+        };
+        assert_eq!(
+            flags(r#""wetBand":true,"wetBandSeabed":true"#),
+            FLAG_WET_BAND | FLAG_WET_SEABED
+        );
+        assert_eq!(flags(r#""wetBandSeabed":true"#), 0);
+    }
+
+    /// Every coast seabed under a wet-band sand slot carries the band's seabed side, so the
+    /// retreating swash never bares a hard sand-to-gravel line (owner report 2026-10-19).
+    #[test]
+    fn coast_seabeds_take_the_wet_band_seabed_side() {
+        let m = parse_manifest(crate::kit_scene::MANIFEST).unwrap();
+        let mut checked = 0;
+        for p in m
+            .pieces
+            .iter()
+            .filter(|p| p.slots.values().any(|s| s.wet_band))
+        {
+            let bed = p
+                .slots
+                .get("beach_seabed")
+                .unwrap_or_else(|| panic!("{}: wet band without a beach_seabed slot", p.id));
+            assert!(
+                bed.wet_band && bed.wet_band_seabed,
+                "{}: beach_seabed lacks wetBand + wetBandSeabed",
+                p.id
+            );
+            checked += 1;
+        }
+        assert!(checked >= 5, "only {checked} coast pieces");
     }
 
     /// `kit_normal_basis` (kit_common.wesl) must be transpose(inverse(m)). Its adjugate vectors are

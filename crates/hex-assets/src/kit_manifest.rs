@@ -193,6 +193,11 @@ pub struct Slot {
     /// darkens and glosses where the swash runs up, as on the look-dev's placeholder bed.
     #[serde(default)]
     pub wet_band: bool,
+    /// The coast seabed under the wet band: where the swash pulls back above the water at rest it
+    /// reads as wet sand, fading to its own gravel with depth, so no hard sand-to-gravel line shows
+    /// at the waterline (owner report 2026-10-19). Only with `wet_band`.
+    #[serde(default)]
+    pub wet_band_seabed: bool,
     /// Sways in the shared wind (PRD §9.1 foliage sway): the amplitude in metres per unit of wind
     /// push, read with the mesh's TEXCOORD_1 (`wind`: U sway weight, V phase). A tree piece leans
     /// from its trunk base by height and flexes its branches by U; any other piece bends by U².

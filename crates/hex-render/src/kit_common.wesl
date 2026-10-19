@@ -27,6 +27,7 @@ const FLAG_WET_BAND: u32 = 8u;
 // `wind_amp`: a tree leans from its base by height and flexes by TEXCOORD_1 U, a plant bends by U².
 const FLAG_WIND_TREE: u32 = 16u;
 const FLAG_WIND_PLANT: u32 = 32u;
+const FLAG_WET_SEABED: u32 = 64u;
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> kit: KitParams;
 

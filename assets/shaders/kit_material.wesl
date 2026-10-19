@@ -27,6 +27,11 @@ import bevy_pbr::render::{
     pbr_functions::{apply_pbr_lighting, main_pass_post_lighting_processing},
 };
 
+// Dry sand's mean linear albedo (plaster set times the beach_sand tint) over the coast seabed's
+// (gravel set times the beach_seabed tint), per channel; kit_material.rs holds it to the PNGs and
+// the manifest.
+const DRY_SAND_OVER_SEABED: vec3<f32> = vec3(1.8285, 1.8762, 1.953);
+
 @group(constants::MATERIAL_BIND_GROUP) @binding(101) var masks_texture: texture_2d<f32>;
 @group(constants::MATERIAL_BIND_GROUP) @binding(102) var masks_sampler: sampler;
 
@@ -105,7 +110,23 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
         @if(VERTEX_COLORS) {
             shore_wet *= in.color.a;  // the detail weight fades the live band too (mouth fan banks)
         }
-        let c = pbr_input.material.base_color;
+        var c = pbr_input.material.base_color;
+        // The seabed slot starts at the water at rest (`_beach.py` `slot_of`), so the retreating
+        // swash bares its gravel next to dry sand. Above the water and in the shallows it takes the
+        // sand slot's dry tint instead, fading back to its gravel by 0.3 m deep, and then darkens
+        // like the sand: the shore reads as one wet sand from the run-up to the water.
+        if ((kit_common::kit.flags & kit_common::FLAG_WET_SEABED) != 0u) {
+            // The sample (gravel set times the slot tint) rescaled by dry sand's mean over the
+            // gravel set's: the bed keeps its grain at sand's colour and brightness. Below the
+            // shallows the bed is its own gravel, untouched, as before the band reached it.
+            // Wet sand is smooth: most of the gravel's grain goes to the set's mean (its top mip).
+            let to_gravel = smoothstep(-0.02, -0.3, y);
+            let tiled = kit_common::tile_frame(in.world_normal, wp);
+            let mean = textureSampleLevel(pbr_bindings::base_color_texture, pbr_bindings::base_color_sampler, tiled.uv, 16.0).rgb * pbr_bindings::material.base_color.rgb;
+            let smooth_bed = mix(mean, c.rgb, 0.3) * DRY_SAND_OVER_SEABED;
+            c = vec4(mix(smooth_bed, c.rgb, to_gravel), c.a);
+            shore_wet *= 1.0 - to_gravel;
+        }
         pbr_input.material.base_color = vec4(c.rgb * mix(1.0, 0.55, shore_wet), c.a);
         pbr_input.material.perceptual_roughness = mix(pbr_input.material.perceptual_roughness, 0.18, shore_wet * step(-0.02, y));
     }

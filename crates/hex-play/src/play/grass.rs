@@ -975,6 +975,84 @@ mod tests {
         );
     }
 
+    /// Linear per-channel mean of a tileable set's albedo PNG, as the GPU samples it.
+    fn set_mean(set: &str) -> [f64; 3] {
+        use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
+        let path = format!(
+            "{}/../../assets/kit/p1/materials/{set}/{set}.albedo.png",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        let img = Image::from_buffer(
+            &std::fs::read(path).unwrap(),
+            ImageType::Extension("png"),
+            CompressedImageFormats::NONE,
+            false,
+            ImageSampler::Default,
+            RenderAssetUsages::default(),
+        )
+        .unwrap();
+        let data = img.data.unwrap();
+        let lin = |c: u8| {
+            let c = f64::from(c) / 255.0;
+            if c <= 0.04045 {
+                c / 12.92
+            } else {
+                ((c + 0.055) / 1.055).powf(2.4)
+            }
+        };
+        let n = (data.len() / 4) as f64;
+        std::array::from_fn(|k| {
+            data.as_chunks::<4>()
+                .0
+                .iter()
+                .map(|p| lin(p[k]))
+                .sum::<f64>()
+                / n
+        })
+    }
+
+    /// `DRY_SAND_OVER_SEABED` in kit_material.wesl is dry sand's mean (plaster set times the
+    /// beach_sand tint) over the coast seabed's (gravel set times the beach_seabed tint), so the
+    /// bed the swash bares reads as the sand beside it.
+    #[test]
+    fn dry_sand_over_seabed_matches_the_sets_and_tints() {
+        let shader = include_str!("../../../../assets/shaders/kit_material.wesl");
+        let line = shader
+            .lines()
+            .find(|l| l.starts_with("const DRY_SAND_OVER_SEABED"))
+            .expect("constant");
+        let inside = &line[line.find("vec3(").unwrap() + 5..line.rfind(')').unwrap()];
+        let got: Vec<f64> = inside
+            .split(',')
+            .map(|v| v.trim().parse().unwrap())
+            .collect();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let beach = m.pieces.iter().find(|p| p.id == "beach_base").unwrap();
+        let tint = |slot: &str| beach.slots[slot].color.unwrap().map(f64::from);
+        let (sand, gravel) = (set_mean("plaster"), set_mean("gravel"));
+        let (st, gt) = (tint("beach_sand"), tint("beach_seabed"));
+        for k in 0..3 {
+            let want = sand[k] * st[k] / (gravel[k] * gt[k]);
+            assert!(
+                (got[k] - want).abs() < 2e-3,
+                "channel {k}: shader {} vs sets and tints {want:.4}",
+                got[k]
+            );
+        }
+        // Every coast base shares those tints.
+        for p in m
+            .pieces
+            .iter()
+            .filter(|p| p.slots.contains_key("beach_seabed"))
+        {
+            assert_eq!(
+                p.slots["beach_seabed"].color,
+                beach.slots["beach_seabed"].color
+            );
+            assert_eq!(p.slots["beach_sand"].color, beach.slots["beach_sand"].color);
+        }
+    }
+
     #[test]
     fn albedo_mean_matches_the_png() {
         use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
