@@ -20,4 +20,12 @@ Questions:
 - **Q6.** Add the ref-1 lean-to shed or open doors?
 - **Q7.** Accept faint batten aliasing at eye level, or widen battens to 4 cm?
 
-Still to come in this batch: the bakery shop, and the cow and sheep.
+**A3. Bakery (`bakery_shop`), card `01a154f1ff2e`.** Merged as `d5fe285`. 1405 / 601 / 127 tris, on road tile (1, 0) facing the road.
+- Sheet: `docs/checkpoints/bakery_shop/sheet.jpg`. Its in-engine wall shading is wrong until card `01a155602a2f` (yawed pieces render unlit walls) lands; judge the EEVEE stills for colour.
+- **Q8.** Roof: the references' darker brown, or the cottage's orange tile?
+- **Q9.** Add flower boxes under the upper windows (about 95 tris)?
+- **Q10.** Bread as colour bands and masks, or some loaves as geometry?
+
+**A2 and A3 note:** the barn's and bakery's near-black shade sides are at least partly a renderer regression (rotated pieces' walls lose their light). Re-check both after card `01a155602a2f`.
+
+Still to come in this batch: the cow and sheep.
