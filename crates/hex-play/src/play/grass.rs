@@ -10,8 +10,10 @@
 //!   `road_`, `river_` and `beach_` slot and every rim and edge band, which are exactly the verges,
 //!   banks and dune grass that should carry blades. Roads, sand, river beds and pads are not grass
 //!   slots, so they never do.
-//! - **Exclusions.** Scatter's footprints: no blade within a hero prop's ground footprint (houses,
-//!   the oak's trunk) or a scatter instance's (rocks, spruce trunks, every planned instance of the
+//! - **Exclusions.** Scatter's footprints: no blade within a hero prop's ground footprint (a
+//!   rectangular building's collider box turned by its yaw plus [`WALL_GAP`], so blades grow
+//!   along its long walls; a disc for the windmill's tower, the oak's trunk, bales and animals) or
+//!   a scatter instance's (rocks, spruce trunks, every planned instance of the
 //!   tile's layout, so a late pack never moves the grass; flower clumps keep only their centre
 //!   clear, [`GROWS_THROUGH`], so grass grows in among them), nor below the water level
 //!   ([`WATER_MARGIN`]). The hex border is not an exclusion (scatter's border gap keeps crowns and
@@ -102,6 +104,9 @@ pub const WIND_SCALE: f32 = 1.0;
 pub const WATER_MARGIN: f32 = 0.3;
 /// Gap (m) between a blade's root and a prop's ground footprint.
 pub const PROP_GAP: f32 = 0.05;
+/// Gap (m) between a blade's root and a rectangular building's wall ([`Clear::Box`]): a blade
+/// is up to 0.11 m wide at the root and leans, so it keeps clear of the wall's face.
+pub const WALL_GAP: f32 = 0.15;
 /// Soft scatter pieces grass grows in among (owner 2026-10-14: wildflowers had a bare ring around
 /// them), with the radius (m, before the instance's scale) of the dense centre it keeps clear.
 /// Single-stem wildflowers keep no centre: grass grows right up to the stem.
@@ -315,15 +320,77 @@ impl GrassLayout {
     }
 }
 
-/// Discs (centre, radius) no blade may root in: hero props and every scatter instance.
-pub fn exclusions(def: &TileDef, instances: &[Instance], pieces: &[String]) -> Vec<(Vec2, f32)> {
-    let mut out: Vec<(Vec2, f32)> = def
+/// Tile-local ground (x, z) no blade may root in.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Clear {
+    Disc {
+        centre: Vec2,
+        radius: f32,
+    },
+    /// A rectangle: its centre, its half extents along its own x and z, and its own +x axis (a
+    /// unit vector; its +z is `axis.perp()`).
+    Box {
+        centre: Vec2,
+        half: Vec2,
+        axis: Vec2,
+    },
+}
+
+impl Clear {
+    pub fn contains(&self, p: Vec2) -> bool {
+        match *self {
+            Clear::Disc { centre, radius } => p.distance_squared(centre) < radius * radius,
+            Clear::Box { centre, half, axis } => {
+                let d = p - centre;
+                d.dot(axis).abs() < half.x && d.dot(axis.perp()).abs() < half.y
+            }
+        }
+    }
+}
+
+/// `(cos, sin)` of `deg` degrees from `+`, `*`, `/` and `round` alone: `sin`/`cos` may differ by
+/// an ulp between native libm and wasm's, and a tile's blades must be the same on both.
+pub fn cos_sin_deg(deg: f32) -> Vec2 {
+    let d = deg.rem_euclid(360.0);
+    let q = (d / 90.0).round();
+    let x = (d - 90.0 * q) * (std::f32::consts::PI / 180.0);
+    let x2 = x * x;
+    let s = x * (1.0 - x2 / 6.0 * (1.0 - x2 / 20.0 * (1.0 - x2 / 42.0 * (1.0 - x2 / 72.0))));
+    let c = 1.0 - x2 / 2.0 * (1.0 - x2 / 12.0 * (1.0 - x2 / 30.0 * (1.0 - x2 / 56.0)));
+    match q as u8 % 4 {
+        0 => Vec2::new(c, s),
+        1 => Vec2::new(-s, c),
+        2 => Vec2::new(-c, -s),
+        _ => Vec2::new(s, -c),
+    }
+}
+
+/// Where no blade may root: hero props (a box over a rectangular building's collider,
+/// [`scatter::GROUND_BOXES`], else a disc of its ground reach) and every scatter instance.
+pub fn exclusions(def: &TileDef, instances: &[Instance], pieces: &[String]) -> Vec<Clear> {
+    let mut out: Vec<Clear> = def
         .props
         .hero
         .iter()
         .map(|h| {
-            let f = scatter::footprint(h.piece.as_str());
-            (Vec2::from(h.at), f.ground + PROP_GAP)
+            let at = Vec2::from(h.at);
+            let piece = h.piece.as_str();
+            let Some(b) = scatter::ground_box(piece) else {
+                return Clear::Disc {
+                    centre: at,
+                    radius: scatter::footprint(piece).ground + PROP_GAP,
+                };
+            };
+            // The hero's turn as walk and the kit scene place it: `Quat::from_rotation_y(-yaw)`
+            // takes the piece's +x to (cos, sin) in (x, z).
+            let axis = cos_sin_deg(h.yaw_deg);
+            let (min, max) = (Vec2::from(b.min), Vec2::from(b.max));
+            let mid = (min + max) / 2.0;
+            Clear::Box {
+                centre: at + axis * mid.x + axis.perp() * mid.y,
+                half: (max - min) / 2.0 + WALL_GAP,
+                axis,
+            }
         })
         .collect();
     out.extend(instances.iter().filter_map(|i| {
@@ -332,7 +399,10 @@ pub fn exclusions(def: &TileDef, instances: &[Instance], pieces: &[String]) -> V
             .iter()
             .find(|(id, _)| *id == piece)
             .map_or_else(|| scatter::footprint(piece).ground, |(_, core)| *core);
-        Some((i.pos.xz(), radius * i.scale + PROP_GAP))
+        Some(Clear::Disc {
+            centre: i.pos.xz(),
+            radius: radius * i.scale + PROP_GAP,
+        })
     }));
     out
 }
@@ -346,7 +416,7 @@ pub fn layout(
     seed: u64,
     surface: &Surface,
     slots: &HashMap<String, [f32; 3]>,
-    excluded: &[(Vec2, f32)],
+    excluded: &[Clear],
 ) -> GrassLayout {
     let mut rng = Rng(seed ^ SALT);
     let step = 1.0 / (DENSITY * LUSH).sqrt();
@@ -362,11 +432,7 @@ pub fn layout(
                 -HEX_RADIUS + (i as f32 + r[0]) * step,
                 -HEX_RADIUS + (j as f32 + r[1]) * step,
             );
-            if scatter::hex_reach(p) >= APOTHEM
-                || excluded
-                    .iter()
-                    .any(|(c, rad)| p.distance_squared(*c) < rad * rad)
-            {
+            if scatter::hex_reach(p) >= APOTHEM || excluded.iter().any(|c| c.contains(p)) {
                 continue;
             }
             let Some((y, slot)) = surface.at(p.x, p.y) else {
@@ -1179,6 +1245,7 @@ mod tests {
         let [.., flower, rock] = ex.as_slice() else {
             unreachable!()
         };
+        let (flower, rock) = (disc(flower), disc(rock));
         assert_eq!(flower.1, 0.2 + PROP_GAP);
         assert_eq!(rock.1, scatter::footprint("rock_small").ground + PROP_GAP);
         let l = layout(1, &meadow_surface(), &slots, &ex);
@@ -1204,7 +1271,13 @@ mod tests {
         let def = c.get("windmill").unwrap();
         let ex = exclusions(def, &[], &[]);
         let tower = scatter::footprint("windmill").ground + PROP_GAP;
-        assert_eq!(ex, vec![(Vec2::ZERO, tower)]);
+        assert_eq!(
+            ex,
+            vec![Clear::Disc {
+                centre: Vec2::ZERO,
+                radius: tower
+            }]
+        );
         let l = layout(1, &meadow_surface(), &grass_slots(&m, def, &c), &ex);
         let within = |lo: f32, hi: f32| {
             l.blades
@@ -1216,31 +1289,163 @@ mod tests {
         assert!(within(tower, tower + 1.0) > 0, "no grass at the tower foot");
     }
 
-    /// The farm tile's grass keeps clear of the barn, the bales and the animals (each hero's
-    /// footprint) and still grows right up to the barn.
-    #[test]
-    fn grass_clears_the_barn_and_the_farm_heroes() {
+    fn disc(c: &Clear) -> (Vec2, f32) {
+        match *c {
+            Clear::Disc { centre, radius } => (centre, radius),
+            Clear::Box { .. } => panic!("a box, not a disc: {c:?}"),
+        }
+    }
+
+    /// Mesh `<id>_<mesh>`'s triangles from the piece's kit GLB.
+    fn mesh_tris(id: &str, mesh: &str) -> Vec<scatter::Tri> {
+        let m = parse_manifest(MANIFEST).unwrap();
+        let e = m.pieces.iter().find(|p| p.id == id).unwrap();
+        let path = format!("{}/../../assets/kit/{}", env!("CARGO_MANIFEST_DIR"), e.glb);
+        let bytes = std::fs::read(path).unwrap();
+        let plain = hex_assets::rewrite_glb(&bytes).unwrap();
+        let (doc, buffers, _) = gltf::import_slice(&plain).unwrap();
+        let name = format!("{id}_{mesh}");
+        let mesh = doc.meshes().find(|m| m.name() == Some(&name)).unwrap();
+        let mut tris = vec![];
+        for prim in mesh.primitives() {
+            let r = prim.reader(|b| Some(&buffers[b.index()]));
+            let pos: Vec<[f32; 3]> = r.read_positions().unwrap().collect();
+            let idx: Vec<u32> = r.read_indices().unwrap().into_u32().collect();
+            tris.extend(
+                idx.as_chunks::<3>()
+                    .0
+                    .iter()
+                    .map(|t| t.map(|i| pos[i as usize])),
+            );
+        }
+        tris
+    }
+
+    /// A hero's kit collider on the tile's ground, placed as walk mode places it, and its own
+    /// +x and +z there.
+    fn placed_collider(h: &hex_core::HeroProp) -> (crate::walk::Obstacle, Vec2, Vec2) {
+        let piece = h.piece.as_str();
+        let turn = Quat::from_rotation_y(-h.yaw_deg.to_radians());
+        let at = Vec2::from(h.at);
+        let tris = mesh_tris(piece, "collider");
+        let pts: Vec<Vec2> = tris
+            .iter()
+            .flatten()
+            .map(|p| at + (turn * Vec3::new(p[0], 0.0, p[2])).xz())
+            .collect();
+        let obstacle = crate::walk::Obstacle {
+            piece: piece.to_owned(),
+            poly: crate::walk::hull(&pts),
+        };
+        (obstacle, (turn * Vec3::X).xz(), (turn * Vec3::Z).xz())
+    }
+
+    /// Every hero's grass on a meadow cap: no blade within 0.1 m of a box's collider (0.04 m of
+    /// a disc's), and for each rectangular building, the blades rooted in the band from
+    /// [`WALL_GAP`] to 0.6 m outside each long wall, over its middle (by wall).
+    fn hero_grass(def: &TileDef) -> Vec<(String, [usize; 2])> {
         let c = TileCatalog::builtin().unwrap();
         let m = parse_manifest(MANIFEST).unwrap();
-        let def = c.get("farm").unwrap();
         let ex = exclusions(def, &[], &[]);
-        assert_eq!(ex.len(), def.props.hero.len());
-        for (h, (at, r)) in def.props.hero.iter().zip(&ex) {
-            assert_eq!(*at, Vec2::from(h.at));
-            assert_eq!(*r, scatter::footprint(h.piece.as_str()).ground + PROP_GAP);
-        }
         let l = layout(1, &meadow_surface(), &grass_slots(&m, def, &c), &ex);
-        let around = |centre: Vec2, lo: f32, hi: f32| {
-            l.blades
-                .iter()
-                .filter(|b| (lo..hi).contains(&b.root.xz().distance(centre)))
-                .count()
-        };
-        for (h, (at, r)) in def.props.hero.iter().zip(&ex) {
-            assert_eq!(around(*at, 0.0, *r), 0, "grass inside {}", h.piece.as_str());
+        let mut bands = vec![];
+        for h in &def.props.hero {
+            let piece = h.piece.as_str();
+            let (collider, x, z) = placed_collider(h);
+            let boxed = scatter::ground_box(piece);
+            let gap = if boxed.is_some() { 0.1 } else { 0.04 };
+            for b in &l.blades {
+                assert!(
+                    !collider.hits(b.root.xz(), gap),
+                    "a blade at {} in {piece}",
+                    b.root.xz()
+                );
+            }
+            let Some(gb) = boxed else {
+                continue;
+            };
+            // Long walls run along the box's longer side.
+            let (min, max) = (Vec2::from(gb.min), Vec2::from(gb.max));
+            let (along, across, lo, hi, a0, a1) = if max.x - min.x > max.y - min.y {
+                (x, z, min.y, max.y, min.x, max.x)
+            } else {
+                (z, x, min.x, max.x, min.y, max.y)
+            };
+            let mut walls = [0; 2];
+            for b in &l.blades {
+                let d = b.root.xz() - Vec2::from(h.at);
+                let (u, v) = (d.dot(along), d.dot(across));
+                if u < a0 + 0.5 || u > a1 - 0.5 {
+                    continue;
+                }
+                if (lo - 0.6..lo - WALL_GAP).contains(&v) {
+                    walls[0] += 1;
+                } else if (hi + WALL_GAP..hi + 0.6).contains(&v) {
+                    walls[1] += 1;
+                }
+            }
+            bands.push((piece.to_owned(), walls));
         }
-        let (barn, reach) = ex[0];
-        assert!(around(barn, reach, reach + 1.0) > 0, "no grass at the barn");
+        bands
+    }
+
+    /// The farm tile's grass keeps clear of the barn, the bales and the animals (each hero's
+    /// footprint: a box over the barn's collider, discs for the rest), and grows within 0.6 m
+    /// of both of the barn's long walls (owner 2026-10-19: no bare band along them).
+    #[test]
+    fn grass_clears_the_barn_and_the_farm_heroes() {
+        let def = TileCatalog::builtin().unwrap().get("farm").unwrap().clone();
+        let ex = exclusions(&def, &[], &[]);
+        assert_eq!(ex.len(), def.props.hero.len());
+        for (h, c) in def.props.hero.iter().zip(&ex) {
+            if h.piece.as_str() == "barn_red" {
+                assert!(matches!(c, Clear::Box { .. }), "{c:?}");
+            } else {
+                assert_eq!(
+                    disc(c),
+                    (
+                        Vec2::from(h.at),
+                        scatter::footprint(h.piece.as_str()).ground + PROP_GAP
+                    )
+                );
+            }
+        }
+        let bands = hero_grass(&def);
+        println!("{bands:?}");
+        let [(barn, walls)] = bands.as_slice() else {
+            panic!("{bands:?}")
+        };
+        assert_eq!(barn, "barn_red");
+        assert!(walls.iter().all(|&n| n >= 50), "barn walls {walls:?}");
+    }
+
+    /// The houses clear their collider rectangle, turned by each one's yaw, and grass grows within
+    /// 0.6 m of every long wall.
+    #[test]
+    fn grass_grows_along_house_walls() {
+        let c = TileCatalog::builtin().unwrap();
+        let mut def = c.get("meadow").unwrap().clone();
+        def.props.hero = c.get("house_cluster").unwrap().props.hero.clone();
+        let bands = hero_grass(&def);
+        println!("{bands:?}");
+        assert_eq!(bands.len(), 3, "{bands:?}");
+        for (piece, walls) in &bands {
+            assert!(walls.iter().all(|&n| n >= 30), "{piece} walls {walls:?}");
+        }
+    }
+
+    /// The arithmetic `cos_sin_deg` agrees with std trig and with the hero's turn as walk places
+    /// it (`Quat::from_rotation_y(-yaw)` takes +x to (cos, sin)).
+    #[test]
+    fn cos_sin_deg_matches_trig_and_the_hero_turn() {
+        for k in -720..=720 {
+            let deg = k as f32 * 0.5;
+            let r = deg.to_radians();
+            let v = cos_sin_deg(deg);
+            assert!(v.distance(Vec2::new(r.cos(), r.sin())) < 1e-6, "{deg}: {v}");
+            let q = (Quat::from_rotation_y(-r) * Vec3::X).xz();
+            assert!(v.distance(q) < 1e-6, "{deg}: {v} against {q}");
+        }
     }
 
     #[test]

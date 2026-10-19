@@ -87,19 +87,13 @@ pub enum Blocked {
 }
 
 impl Blocked {
-    /// `building`, `tree`, `rock`, `water`, `edge` or `steep`.
+    /// A [`prop_kind`] for an obstacle, else `water`, `edge` or `steep`.
     pub fn reason(&self) -> &'static str {
         match self {
             Blocked::Edge => "edge",
             Blocked::Water => "water",
             Blocked::Steep => "steep",
-            Blocked::Obstacle(p)
-                if p.starts_with("house") || p == "windmill" || p == "barn_red" =>
-            {
-                "building"
-            }
-            Blocked::Obstacle(p) if p.starts_with("tree") => "tree",
-            Blocked::Obstacle(_) => "rock",
+            Blocked::Obstacle(p) => prop_kind(p),
         }
     }
 
@@ -389,11 +383,20 @@ impl PieceShape {
     }
 }
 
-/// `building`, `tree` or `rock`: what a click on `piece` reports.
+/// What a prop is to the player: `building`, `tree`, `hay`, `animal` or `rock`. Walk mode's
+/// [`Blocked::reason`] and photo mode's click to focus both report it.
 pub fn prop_kind(piece: &str) -> &'static str {
     match piece {
-        p if p.starts_with("house") || p == "barn_red" => "building",
+        p if p.starts_with("house")
+            || p.starts_with("barn")
+            || p == "windmill"
+            || p == "bakery_shop" =>
+        {
+            "building"
+        }
         p if p.starts_with("tree") => "tree",
+        p if p.starts_with("hay_") => "hay",
+        p if p.starts_with("animal_") => "animal",
         _ => "rock",
     }
 }
@@ -914,6 +917,39 @@ mod tests {
         assert!((2.5..3.2).contains(&reach), "trunk reach {reach}");
     }
 
+    /// Owner 2026-10-19 ("fix the labels"): bales are hay, the cow and sheep are animals, the
+    /// windmill and the bakery are buildings, and walking into a prop reports what a click on it
+    /// does. Only rocks report `rock`, so a new obstacle piece cannot fall through to it unnoticed.
+    #[test]
+    fn every_obstacle_reports_its_own_kind() {
+        for (piece, kind) in [
+            ("hay_bale_round", "hay"),
+            ("hay_bale_stack", "hay"),
+            ("animal_cow", "animal"),
+            ("animal_sheep", "animal"),
+            ("windmill", "building"),
+            ("bakery_shop", "building"),
+            ("barn_red", "building"),
+            ("house_cottage", "building"),
+            ("house_twostorey", "building"),
+            ("tree_hero_oak", "tree"),
+            ("tree_forest_b", "tree"),
+            ("rock_small", "rock"),
+            ("rock_small_c", "rock"),
+        ] {
+            assert_eq!(prop_kind(piece), kind, "{piece}");
+            assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");
+        }
+        for piece in OBSTACLES {
+            assert_eq!(
+                prop_kind(piece) == "rock",
+                piece.starts_with("rock_"),
+                "{piece} reports {}",
+                prop_kind(piece)
+            );
+        }
+    }
+
     /// A placed windmill tile stops the walker at its tower, from every side and through its turn.
     #[test]
     fn a_placed_windmill_tile_blocks_at_the_tower() {
@@ -1000,6 +1036,7 @@ mod tests {
         let g = world(&[(0, 0, "farm", 0)]);
         let s = walk(&g, at + side, -side, 4.0);
         assert_eq!(s.blocked, Some(Blocked::Obstacle("animal_cow".into())));
+        assert_eq!(s.blocked.as_ref().map(Blocked::reason), Some("animal"));
         assert!(s.pos.xz().distance(at) < 1.0, "{}", s.pos.xz().distance(at));
     }
 

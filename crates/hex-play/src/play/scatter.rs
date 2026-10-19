@@ -387,6 +387,54 @@ pub fn footprint(piece: &str) -> Footprint {
         .map_or(DEFAULT_FOOTPRINT, |(_, f)| *f)
 }
 
+/// A rectangular piece's collider bounds in its own frame (x, z), before its yaw.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct GroundBox {
+    pub min: [f32; 2],
+    pub max: [f32; 2],
+}
+
+/// The buildings whose collider is a rectangle (`ground_boxes_match_the_kit` checks them against
+/// the GLBs). Every other piece, the windmill's round tower included, is a disc of its
+/// [`Footprint::ground`].
+pub const GROUND_BOXES: [(&str, GroundBox); 4] = [
+    (
+        "house_cottage",
+        GroundBox {
+            min: [-2.5, -3.85],
+            max: [2.5, 3.45],
+        },
+    ),
+    (
+        "house_twostorey",
+        GroundBox {
+            min: [-2.8, -3.8],
+            max: [2.8, 4.25],
+        },
+    ),
+    (
+        "barn_red",
+        GroundBox {
+            min: [-5.3, -3.85],
+            max: [5.3, 3.85],
+        },
+    ),
+    (
+        "bakery_shop",
+        GroundBox {
+            min: [-2.8, -4.0],
+            max: [3.15, 4.0],
+        },
+    ),
+];
+
+pub fn ground_box(piece: &str) -> Option<GroundBox> {
+    GROUND_BOXES
+        .iter()
+        .find(|(id, _)| *id == piece)
+        .map(|(_, b)| *b)
+}
+
 /// Scale jitter (± fraction): trees vary less than rocks and flowers.
 fn scale_jitter(f: Footprint) -> f32 {
     if f.crown > 0.0 { 0.12 } else { 0.15 }
@@ -1768,6 +1816,35 @@ mod tests {
                     "{id} crown {crown}"
                 );
             }
+        }
+    }
+
+    /// Each [`GROUND_BOXES`] entry is its collider's bounds (to 1 cm) and the collider fills
+    /// them (a rectangle with at most chamfered corners), so a box clears no more than the piece.
+    #[test]
+    fn ground_boxes_match_the_kit() {
+        for (id, b) in GROUND_BOXES {
+            let pts: Vec<Vec2> = glb_mesh_tris(id, "collider")
+                .unwrap()
+                .iter()
+                .flat_map(|(t, _)| t.iter().map(|p| Vec2::new(p[0], p[2])))
+                .collect();
+            let lo = pts.iter().fold(Vec2::MAX, |a, p| a.min(*p));
+            let hi = pts.iter().fold(Vec2::MIN, |a, p| a.max(*p));
+            assert!(
+                lo.distance(Vec2::from(b.min)) < 0.01 && hi.distance(Vec2::from(b.max)) < 0.01,
+                "{id} collider bounds {lo}..{hi}"
+            );
+            let h = crate::walk::hull(&pts);
+            let area = (0..h.len())
+                .map(|i| h[i].perp_dot(h[(i + 1) % h.len()]))
+                .sum::<f32>()
+                / 2.0;
+            let size = hi - lo;
+            assert!(
+                area >= 0.95 * size.x * size.y,
+                "{id} fills {area} of its {size} box"
+            );
         }
     }
 

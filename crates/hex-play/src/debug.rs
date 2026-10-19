@@ -32,7 +32,7 @@ use crate::{
     play::{
         PlayCatalog, PlayView,
         affordances::socket_rgb,
-        grass::exclusions,
+        grass::{Clear, exclusions},
         scatter::{ScatterLayouts, footprint},
     },
     scene::{Lod, lod_range},
@@ -490,8 +490,8 @@ pub fn ring(gizmos: &mut Gizmos<DebugGizmos>, c: Vec3, radius: f32, color: Color
         .resolution(20);
 }
 
-/// Each drawn scatter instance's ground footprint (orange) and every disc no grass blade roots in
-/// (blue: scatter instances and hero props, `grass::exclusions`).
+/// Each drawn scatter instance's ground footprint (orange) and every disc or box no grass blade
+/// roots in (blue: scatter instances and hero props, `grass::exclusions`).
 fn draw_scatter(
     view: Res<PlayView>,
     catalog: Res<PlayCatalog>,
@@ -517,13 +517,26 @@ fn draw_scatter(
             let r = footprint(s.piece_of(i)).ground * i.scale;
             ring(&mut gizmos, world(i.pos) + Vec3::Y * LINE_Y, r, FOOTPRINT);
         }
-        for (p, r) in exclusions(def, &s.layout.instances, &s.pieces) {
-            ring(
-                &mut gizmos,
-                world(Vec3::new(p.x, LINE_Y, p.y)),
-                r,
-                GRASS_CLEAR,
-            );
+        for c in exclusions(def, &s.layout.instances, &s.pieces) {
+            match c {
+                Clear::Disc { centre, radius } => ring(
+                    &mut gizmos,
+                    world(Vec3::new(centre.x, LINE_Y, centre.y)),
+                    radius,
+                    GRASS_CLEAR,
+                ),
+                Clear::Box { centre, half, axis } => {
+                    let corner = |sx: f32, sz: f32| {
+                        let p = centre + axis * (sx * half.x) + axis.perp() * (sz * half.y);
+                        world(Vec3::new(p.x, LINE_Y, p.y))
+                    };
+                    gizmos.linestrip(
+                        [(-1., -1.), (1., -1.), (1., 1.), (-1., 1.), (-1., -1.)]
+                            .map(|(sx, sz)| corner(sx, sz)),
+                        GRASS_CLEAR,
+                    );
+                }
+            }
         }
     }
 }

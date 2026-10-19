@@ -375,7 +375,7 @@ pub fn march(ray: Ray3d, max: f32, top: impl Fn(Vec2) -> Option<f32>) -> Option<
 
 /// The first surface under normalised screen point `uv` for a camera at `t`, out to the far end of
 /// the focus range, and what it is: the walk ground's visible top (`ground` or `water`) or the
-/// nearer drawn prop (`building`, `tree` or `rock`, `WalkGround::pick_prop`). Where no ground is
+/// nearer drawn prop (its `walk::prop_kind`, `WalkGround::pick_prop`). Where no ground is
 /// built (another scenario, or the kit still loading) it is the plane y = 0.
 pub fn pick_point(
     t: &Transform,
@@ -424,7 +424,7 @@ pub struct PhotoFocus {
     pub misses: u64,
     /// The surface point the last landed click focused on.
     pub point: Option<Vec3>,
-    /// What that point is on: `ground`, `water`, `building`, `tree` or `rock`.
+    /// What that point is on: `ground`, `water` or a `walk::prop_kind`.
     pub hit: Option<&'static str>,
 }
 

@@ -328,7 +328,7 @@ export interface PhotoState {
   /** The world point the last landed click focused on. */
   focus_point: [number, number, number] | null;
   /** What that point is on; null before any click landed. */
-  focus_hit: "ground" | "water" | "building" | "tree" | "rock" | null;
+  focus_hit: "ground" | "water" | PropKind | null;
   /** f-number. */
   aperture: number;
   /** Stops brighter than the game camera. */
@@ -355,8 +355,11 @@ export interface PhotoState {
   fx_active: boolean;
 }
 
+/** What a prop is to the player (`walk::prop_kind`): walk blocks and photo focus hits report it. */
+export type PropKind = "building" | "tree" | "hay" | "animal" | "rock";
+
 /** Why the walker's latest move stopped. */
-export type WalkBlocked = "building" | "tree" | "rock" | "water" | "edge" | "steep";
+export type WalkBlocked = PropKind | "water" | "edge" | "steep";
 
 /** `state().walk`: first-person walk mode (PRD P8). Position fields are null while it is off. */
 export interface WalkState {
@@ -373,7 +376,7 @@ export interface WalkState {
   cell: Cell | null;
   tile: string | null;
   blocked: WalkBlocked | null;
-  /** The collider's kit piece when `blocked` is a building, tree or rock. */
+  /** The collider's kit piece when `blocked` is a prop kind. */
   blocked_by: string | null;
   moving: boolean;
   airborne: boolean;
