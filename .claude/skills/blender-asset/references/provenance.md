@@ -6,7 +6,7 @@ Every piece has `assets-source/kit/<piece>/provenance.json`, written by `make ki
 
 Missing provenance, `validation.pass != true`, or a `derivedFiles` hash that does not match the file on disk fails `make kit-check`.
 
-`generator` and `generatorDeps` are mandatory for every piece and tileable set, whatever the route. The gate re-hashes the generator and every helper, and requires `generatorDeps` to list exactly the `_*.py` siblings the generator imports (transitively); `scripts/blender/lib/` is out of scope. The assembler takes both from the build report (`export-report.json`, or a set's `bake-report.json`) and refuses when the report lacks `generatorDeps` or a file changed since the build. An interactive piece must carry `blendRef`, and its `sha256` must equal the bake report's `blend.sha256`.
+`generator` and `generatorDeps` are mandatory for every piece and tileable set, whatever the route. The gate re-hashes the generator and every helper and warns, without failing, when either changed since provenance (owner, 2026-10-19: "full edits are allowed even if it breaks hash"), and requires `generatorDeps` to list exactly the `_*.py` siblings the generator imports (transitively); `scripts/blender/lib/` is out of scope. The assembler takes both from the build report (`export-report.json`, or a set's `bake-report.json`) and refuses when the report lacks `generatorDeps` or a file changed since the build. An interactive piece must carry `blendRef`, and its `sha256` must equal the bake report's `blend.sha256`.
 
 ## Fixed values (Hex World)
 - `authoringAgent` is `{"harness": "claude-code", "model": "claude-opus-5-5"}` (R3).

@@ -1864,27 +1864,40 @@ fn scanned_generator_deps(generator: &Path) -> Result<BTreeSet<String>, String> 
 }
 
 /// Generator provenance, mandatory for every piece and set: `generator` {path, sha256}
-/// and `generatorDeps` [{path, sha256}] are present, every recorded hash matches the committed file
-/// (an edit to a generator or helper needs a rebuild and new provenance), and `generatorDeps` lists
-/// exactly the helpers the generator imports.
+/// and `generatorDeps` [{path, sha256}] are present, the files exist, and `generatorDeps` lists
+/// exactly the helpers the generator imports. A generator or helper edited since provenance is
+/// printed as a warning, not an error: owner ruling 2026-10-19, "full edits are allowed even if it
+/// breaks hash" (the piece is rebuilt and re-provenanced on its next revision).
 fn generator_errors(id: &str, v: &serde_json::Value) -> Vec<String> {
+    let (e, stale) = generator_check(id, v);
+    for s in stale {
+        eprintln!("warning: {s}");
+    }
+    e
+}
+
+/// `generator_errors`' (errors, stale-hash warnings).
+fn generator_check(id: &str, v: &serde_json::Value) -> (Vec<String>, Vec<String>) {
     let (Some(gen_rel), Some(gen_sha)) = (
         v["generator"]["path"].as_str(),
         v["generator"]["sha256"].as_str(),
     ) else {
-        return vec![format!("{id}: provenance lacks generator {{path, sha256}}")];
+        return (
+            vec![format!("{id}: provenance lacks generator {{path, sha256}}")],
+            vec![],
+        );
     };
-    let mut e = vec![];
+    let (mut e, mut stale) = (vec![], vec![]);
     match sha(&repo().join(gen_rel)) {
         None => e.push(format!("{id}: generator {gen_rel} missing")),
-        Some(h) if h != gen_sha => e.push(format!(
+        Some(h) if h != gen_sha => stale.push(format!(
             "{id}: generator {gen_rel} changed since provenance (stale; rebuild)"
         )),
         _ => {}
     }
     let Some(deps) = v["generatorDeps"].as_array() else {
         e.push(format!("{id}: provenance lacks generatorDeps"));
-        return e;
+        return (e, stale);
     };
     let mut listed = BTreeSet::new();
     for d in deps {
@@ -1892,7 +1905,7 @@ fn generator_errors(id: &str, v: &serde_json::Value) -> Vec<String> {
         listed.insert(repo_rel(&repo().join(rel)));
         match sha(&repo().join(rel)) {
             None => e.push(format!("{id}: generator dep {rel} missing")),
-            Some(h) if h != d["sha256"].as_str().unwrap_or_default() => e.push(format!(
+            Some(h) if h != d["sha256"].as_str().unwrap_or_default() => stale.push(format!(
                 "{id}: generator dep {rel} changed since provenance (stale; rebuild)"
             )),
             _ => {}
@@ -1911,7 +1924,7 @@ fn generator_errors(id: &str, v: &serde_json::Value) -> Vec<String> {
             }
         }
     }
-    e
+    (e, stale)
 }
 
 /// `route` is scripted or interactive. An interactive piece references its high-poly `.blend` in
@@ -2902,8 +2915,8 @@ fn gate_catches_missing_file_and_stale_provenance() {
 }
 
 /// The generator and every `_*.py` helper it imports (transitively) are
-/// recorded and re-hashed, so editing either without a rebuild and new provenance fails the gate,
-/// and a provenance that omits an imported helper (or lists one no longer imported) fails too.
+/// recorded and re-hashed: editing either without a rebuild warns (owner ruling 2026-10-19), and a
+/// provenance that omits an imported helper (or lists one no longer imported) fails the gate.
 #[test]
 fn gate_requires_current_generator_and_complete_deps() {
     let dir = temp("gendep");
@@ -2927,13 +2940,21 @@ fn gate_requires_current_generator_and_complete_deps() {
         let e = generator_errors("g", v);
         assert!(e.iter().any(|m| m.contains(want)), "want {want:?} in {e:?}");
     };
+    // An edit since provenance warns and never fails (owner ruling 2026-10-19).
+    let warns = |v: &serde_json::Value, want: &str| {
+        let (e, stale) = generator_check("g", v);
+        assert_eq!(e, Vec::<String>::new(), "a stale hash must not be an error");
+        assert!(
+            stale.iter().any(|m| m.contains(want)),
+            "want {want:?} in {stale:?}"
+        );
+    };
     let mut v = good.clone();
     v["generator"]["sha256"] = "00".into();
-    has(&v, "gen.py changed since provenance (stale; rebuild)");
+    warns(&v, "gen.py changed since provenance (stale; rebuild)");
     let mut v = good.clone();
     v["generatorDeps"][1]["sha256"] = "00".into();
-    has(&v, "generator dep");
-    has(&v, "_deep.py changed since provenance");
+    warns(&v, "_deep.py changed since provenance");
     let mut v = good.clone();
     v.as_object_mut().unwrap().remove("generatorDeps");
     has(&v, "provenance lacks generatorDeps");

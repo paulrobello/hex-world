@@ -184,9 +184,11 @@ lookdev-ibl: fetch-hdri
 	$(BLENDER_RUN) -P scripts/blender/lookdev_ibl.py -- assets-source/hdri/kloofendal_48d_partly_cloudy_puresky_2k.hdr
 	. tools/ktx-env.sh && ktx validate assets/kit/p1/ibl/noon.specular.ktx2 && ktx validate assets/kit/p1/ibl/noon.diffuse.ktx2
 
-# The kit gate alone. checkall already runs it through `test` (cargo test --workspace).
+# The kit gate alone. checkall already runs it through `test` (cargo test --workspace). The second run
+# prints the stale-generator warnings (edits since provenance warn, never fail: owner 2026-10-19).
 kit-check:
 	cargo test -p hex-play --test kit_gate
+	@cargo test -q -p hex-play --test kit_gate -- provenance_complete --nocapture 2>&1 | grep '^warning: ' || true
 
 # Writes provenance once, with validation.pass, after every non-provenance gate passes. The first call
 # only checks (--check writes nothing) and refuses a missing build stage, which kit_render.py needs.
