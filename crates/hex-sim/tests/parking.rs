@@ -342,7 +342,7 @@ fn bulldozing_a_cluster_removes_its_cars_and_undo_restores_them() {
 // Clearance: obstacles of house_cluster in tile-local (x, z) meters, as min/max boxes. Houses from
 // the house pieces' footprints at their hero placements (data/tiles/house_cluster.ron); doorsteps
 // and hedges from scripts/blender/kit/house_pad.py (DOORSTEPS, HEDGES with HEDGE_W 0.65).
-const OBSTACLES: [(&str, [f32; 4]); 12] = [
+const HOUSE_CLUSTER: [(&str, [f32; 4]); 12] = [
     ("cottage 0", [-3.7, -9.2, 2.7, -4.8]),
     ("cottage 1", [-3.7, 4.8, 2.7, 9.2]),
     ("two-storey", [-10.0, -3.6, -5.0, 3.6]),
@@ -357,6 +357,31 @@ const OBSTACLES: [(&str, [f32; 4]); 12] = [
     ("garden hedge +", [-11.6, 4.67, -5.7, 5.33]),
 ];
 const CAR: [f32; 2] = [5.4, 2.0];
+
+/// The clearance obstacles of every destination tile with parking (PRD §7.1). A new parking tile
+/// must declare its buildings, kerbs and hedges here and get a sweep below.
+fn obstacles(tile: &str) -> Option<&'static [(&'static str, [f32; 4])]> {
+    match tile {
+        "house_cluster" => Some(&HOUSE_CLUSTER),
+        _ => None,
+    }
+}
+
+/// Every catalog tile with parking declares its clearance obstacles, so its parking paths are
+/// swept like house_cluster's.
+#[test]
+fn every_parking_tile_declares_its_clearance_obstacles() {
+    let missing: Vec<String> = catalog()
+        .tiles()
+        .iter()
+        .filter(|d| !d.parking.is_empty() && obstacles(&d.id).is_none())
+        .map(|d| d.id.clone())
+        .collect();
+    assert!(
+        missing.is_empty(),
+        "parking tiles without clearance obstacles: {missing:?}"
+    );
+}
 
 fn corners(pos: Vec2, dir: Vec2) -> [Vec2; 4] {
     let r = [-dir[1], dir[0]];
@@ -398,9 +423,16 @@ fn to_local(p: Vec2, cell: Axial, rotation: u8) -> Vec2 {
 
 #[test]
 fn parking_paths_clear_houses_hedges_and_other_spots() {
-    let mut scene = Scene::with(11, busy(), &house_chain());
-    let rotation = |cell: Axial| if cell == A { 0 } else { 3 };
-    let def = scene.catalog.get("house_cluster").unwrap().clone();
+    let scene = Scene::with(11, busy(), &house_chain());
+    sweep(scene, "house_cluster", |cell| if cell == A { 0 } else { 3 });
+}
+
+/// Drives `scene` for 6000 ticks and checks every trip's path, near each end's `tile`, keeps a
+/// pickup-sized car clear of the tile's obstacles and of every other spot, and that every spot saw
+/// both a departure and an arrival. `rotation` gives each `tile` cell's placed rotation.
+fn sweep(mut scene: Scene, tile: &str, rotation: impl Fn(Axial) -> u8) {
+    let def = scene.catalog.get(tile).unwrap().clone();
+    let obstacles = obstacles(tile).expect("declared above");
     let spot_boxes: Vec<[Vec2; 4]> = def
         .parking
         .iter()
@@ -431,8 +463,8 @@ fn parking_paths_clear_houses_hedges_and_other_spots() {
                     let p = to_local(pose.pos, end.cell, r);
                     let dir = geom::rotate(pose.dir, (6 - r) % 6);
                     let c = corners(p, dir);
-                    for (name, b) in OBSTACLES {
-                        assert!(!overlaps(&c, b), "car at {p:?} facing {dir:?} hits {name}");
+                    for (name, b) in obstacles {
+                        assert!(!overlaps(&c, *b), "car at {p:?} facing {dir:?} hits {name}");
                     }
                     for (i, s) in spot_boxes.iter().enumerate() {
                         if i == own {
@@ -455,10 +487,7 @@ fn parking_paths_clear_houses_hedges_and_other_spots() {
             }
         }
     }
-    assert_eq!(
-        froms,
-        BTreeSet::from([0, 1, 2]),
-        "departures from every spot"
-    );
-    assert_eq!(tos, BTreeSet::from([0, 1, 2]), "arrivals in every spot");
+    let all: BTreeSet<usize> = (0..def.parking.len()).collect();
+    assert_eq!(froms, all, "{tile}: departures from every spot");
+    assert_eq!(tos, all, "{tile}: arrivals in every spot");
 }

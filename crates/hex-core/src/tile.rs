@@ -430,6 +430,7 @@ impl TileDef {
             }
         }
 
+        self.validate_destinations(&mut issue);
         self.validate_parking(&mut issue);
 
         let total = self.rise.total();
@@ -449,6 +450,60 @@ impl TileDef {
         }
 
         issues
+    }
+
+    /// Destination rules (PRD §7.1): cars arrive at and leave from parking spots, so every
+    /// destination node has at least one spot joining it, and at least one road edge of the tile
+    /// reaches it through the tile's own road segments (a destination with no road from an edge
+    /// can never be connected to another).
+    fn validate_destinations(&self, issue: &mut impl FnMut(String)) {
+        for node in self.nodes.iter().filter(|n| n.destination.is_some()) {
+            let kind = node.destination.expect("filtered");
+            if !self.parking.iter().any(|s| s.node == node.id) {
+                issue(format!(
+                    "{kind:?} destination {:?} has no parking spot: a car has nowhere to stop",
+                    node.id
+                ));
+            }
+            if !self.road_edge_reaches(&node.id) {
+                issue(format!(
+                    "{kind:?} destination {:?} is not reached by a road from any edge",
+                    node.id
+                ));
+            }
+        }
+    }
+
+    /// Whether some road lane edge connects to node `id` through the tile's road segments.
+    fn road_edge_reaches(&self, id: &str) -> bool {
+        let roads: Vec<&NetworkSegment> = self
+            .networks
+            .iter()
+            .filter(|s| s.kind == NetworkKind::Road)
+            .collect();
+        let mut seen: std::collections::HashSet<&Endpoint> = std::collections::HashSet::new();
+        let start = Endpoint::Node(id.to_owned());
+        let mut stack: Vec<&Endpoint> = vec![];
+        for seg in &roads {
+            for (a, b) in [(&seg.from, &seg.to), (&seg.to, &seg.from)] {
+                if *a == start && seen.insert(b) {
+                    stack.push(b);
+                }
+            }
+        }
+        while let Some(end) = stack.pop() {
+            if matches!(end, Endpoint::Edge(_)) {
+                return true;
+            }
+            for seg in &roads {
+                for (a, b) in [(&seg.from, &seg.to), (&seg.to, &seg.from)] {
+                    if a == end && seen.insert(b) {
+                        stack.push(b);
+                    }
+                }
+            }
+        }
+        false
     }
 
     /// The destination kind the tile parks at: the kind of the node its first spot joins.
@@ -656,8 +711,17 @@ mod tests {
         t.networks.clear();
         t.edges[0] = EdgeSocket::new(Grass);
         let issues = t.validate(&sockets());
-        assert_eq!(issues.len(), 1, "{issues:?}");
-        assert!(issues[0].contains("cannot reach the road"), "{issues:?}");
+        assert_eq!(issues.len(), 2, "{issues:?}");
+        assert!(
+            issues.iter().any(|i| i.contains("cannot reach the road")),
+            "{issues:?}"
+        );
+        assert!(
+            issues
+                .iter()
+                .any(|i| i.contains("not reached by a road from any edge")),
+            "{issues:?}"
+        );
     }
 
     /// A one-shop tile: [`cluster`] with the bakery for the house, a Shop node and no cars.
@@ -712,6 +776,77 @@ mod tests {
         let mut t = shop();
         t.parking[0].house = 1;
         assert!(t.validate(&sockets())[0].contains("not a hero prop"));
+    }
+
+    /// PRD §7.1: a destination tile needs a road from an edge to its node and a spot to stop in.
+    #[test]
+    fn a_destination_needs_parking_and_a_road_from_an_edge() {
+        for t in [cluster(), shop()] {
+            let kind = t.nodes[0].destination.unwrap();
+            let mut no_spot = t.clone();
+            no_spot.parking.clear();
+            no_spot.agents.clear();
+            let issues = no_spot.validate(&sockets());
+            assert!(
+                issues.iter().any(|i| i.contains("has no parking spot")),
+                "{kind:?}: {issues:?}"
+            );
+
+            // The node hangs off a second node with no road to any edge.
+            let mut island = t.clone();
+            island.nodes.push(NetworkNode {
+                id: "yard".into(),
+                at: [0.0, 6.0],
+                destination: None,
+            });
+            island.networks[0].from = Endpoint::Node("yard".into());
+            island.edges[0] = EdgeSocket::new(Grass);
+            let issues = island.validate(&sockets());
+            assert!(
+                issues
+                    .iter()
+                    .any(|i| i.contains("not reached by a road from any edge")),
+                "{kind:?}: {issues:?}"
+            );
+        }
+    }
+
+    /// A destination reached through a junction node (a road through the tile with a spur into a
+    /// forecourt, as the bakery tile lays out) is reached from an edge.
+    #[test]
+    fn a_destination_on_a_spur_is_reached_through_its_junction() {
+        let mut t = shop();
+        t.edges[3] = EdgeSocket {
+            lane: road_lane(),
+            ..EdgeSocket::new(Road)
+        };
+        t.nodes.push(NetworkNode {
+            id: "j".into(),
+            at: [0.0, 0.0],
+            destination: None,
+        });
+        t.nodes[0].at = [0.0, -8.0];
+        t.networks = vec![
+            NetworkSegment {
+                kind: NetworkKind::Road,
+                from: Endpoint::Edge(0),
+                to: Endpoint::Node("j".into()),
+                points: vec![],
+            },
+            NetworkSegment {
+                kind: NetworkKind::Road,
+                from: Endpoint::Node("j".into()),
+                to: Endpoint::Edge(3),
+                points: vec![],
+            },
+            NetworkSegment {
+                kind: NetworkKind::Road,
+                from: Endpoint::Node("j".into()),
+                to: Endpoint::Node("home".into()),
+                points: vec![],
+            },
+        ];
+        assert_eq!(t.validate(&sockets()), Vec::<String>::new());
     }
 
     #[test]
