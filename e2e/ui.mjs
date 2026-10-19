@@ -525,6 +525,28 @@ try {
   await until(async () => !tileAt(await play(), ...millAt), "undo removes the windmill");
   check((await play()).tiles.length === millBefore, "the windmill undo restores the tile count");
 
+  // The farm tile (owner request, 2026-10-19: barn, hay and static animals ahead of P3) is in the
+  // Tiles sheet with its baked thumbnail and places in the slot the windmill's undo freed; undone too.
+  check(await page.locator(".row[data-tile=farm]").count() > 0, "the Tiles sheet lists the farm");
+  const farmThumb = await page.locator(".row[data-tile=farm] img.row__thumb").first().getAttribute("src");
+  check(farmThumb?.includes("farm-r0.webp"), `the farm row shows its thumbnail (${farmThumb})`);
+  check((await text(".row[data-tile=farm]")).includes("Farm"), "the farm row is named Farm");
+  const farmAt = millAt;
+  check(!tileAt(await play(), ...farmAt), "(-1, 1) is free for the farm");
+  await page.evaluate(() => window.hexWorld.selectTile("farm"));
+  await until(async () => (await play()).selected === "farm", "Farm selected");
+  await events();
+  const farmBefore = (await play()).tiles.length;
+  await page.evaluate(([q, r]) => window.hexWorld.placeTile(q, r), farmAt);
+  await until(async () => tileAt(await play(), ...farmAt)?.tile === "farm", "the farm is placed at (-1, 1) beside the meadows");
+  check((await play()).tiles.length === farmBefore + 1, "placing the farm adds one tile");
+  check((await events()).some((e) => e.type === "tilePlaced" && same(e, ...farmAt) && e.tile === "farm"), "tilePlaced names the farm");
+  await page.waitForTimeout(2600);
+  await placementShot("farm-placed");
+  await key("ControlOrMeta+z");
+  await until(async () => !tileAt(await play(), ...farmAt), "undo removes the farm");
+  check((await play()).tiles.length === farmBefore, "the farm undo restores the tile count");
+
   // S8 photo mode (PRD §4.6): P enters (the HUD hides, agents pause), WASD and E fly the free camera,
   // the panel changes DOF, a 2× PNG exports through the offscreen target and downloads, then P leaves
   // (HUD back, agents running, the orbit camera exactly where it was).

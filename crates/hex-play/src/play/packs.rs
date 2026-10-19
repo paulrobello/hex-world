@@ -381,6 +381,11 @@ mod tests {
         );
         // The windmill stands on the core meadow base; its piece streams with the village.
         assert_eq!(need("windmill"), BTreeSet::from([CORE_PACK, "village"]));
+        // The farm's barn streams with the village, its bales and animals with the props.
+        assert_eq!(
+            need("farm"),
+            BTreeSet::from([CORE_PACK, "props", "village"])
+        );
         assert_eq!(need("ocean"), BTreeSet::from(["water"]));
         assert_eq!(need("river_bend"), BTreeSet::from(["water"]));
         // The bridge's road lanes use the core edge piece.

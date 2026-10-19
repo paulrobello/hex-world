@@ -1,4 +1,4 @@
-.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play
+.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play
 
 fmt:
 	cargo fmt --all
@@ -447,6 +447,24 @@ shots-windmill-play:
 	@for n in $(WINDMILL_SHOTS); do ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(WINDMILL_DOCS)/$$n.jpg || exit 1; done
 	cp target/shots/windmill-play-state.json target/shots/windmill-walk-state.json $(WINDMILL_DOCS)/
 	@echo "wrote $(WINDMILL_DOCS)/"
+
+# Farm tile in play: docs/checkpoints/farm/farm-play.json places the farm tile among meadows, shoots
+# it at play distance, then close-ups of the barn and hay and of the animals, an eye-level walk view
+# across the pasture to the barn, and a walk into the barn's front wall with its block dumped.
+# 1280x800, tilt-shift off and `--clock fixed`. A black still fails the target, as for the windmill.
+FARM_SHOTS = farm-play farm-barn farm-animals farm-walk-eye farm-walk-blocked
+FARM_DOCS = docs/checkpoints/farm
+shots-farm-play:
+	mkdir -p target/shots $(FARM_DOCS)
+	rm -f target/shots/farm-*.png target/shots/farm-*.json
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(FARM_DOCS)/farm-play.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	@for n in $(FARM_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  m=$$(magick target/shots/$$n.png -format '%[fx:mean]' info:); \
+	  awk -v m="$$m" 'BEGIN { exit !(m < 0.02) }' && { echo "$$n.png is black (mean $$m): idle display or high load, run again"; exit 1; }; \
+	  true; done
+	@for n in $(FARM_SHOTS); do ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(FARM_DOCS)/$$n.jpg || exit 1; done
+	cp target/shots/farm-play-state.json target/shots/farm-walk-state.json $(FARM_DOCS)/
+	@echo "wrote $(FARM_DOCS)/"
 
 # First-person walk checkpoint (PRD P8): builds a village street, a forest, a river, a beach and
 # an ocean with docs/checkpoints/first-person/first-person.json, walks them at eye level at

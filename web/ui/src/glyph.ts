@@ -56,6 +56,10 @@ export function glyph(def: TileDef): SVGElement {
       g.append(s("circle", { class: "g-tree", cx: x, cy: y, r: 7 }));
   if (def.id === "oak") g.append(s("circle", { class: "g-tree", cx: C, cy: C, r: 15 }));
   if (def.id === "windmill") g.append(s("circle", { class: "g-house", cx: C, cy: C, r: 8 }));
+  if (def.id === "farm")
+    g.append(
+      s("rect", { class: "g-house", x: 54, y: 24, width: 16, height: 11, rx: 1.5, transform: "rotate(30 62 29.5)" }),
+    );
   if (def.id === "house_cluster")
     for (const [x, y] of [
       [44, 44],

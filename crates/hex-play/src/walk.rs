@@ -10,10 +10,10 @@
 //!   ([`PlayWaiting`]) are not ground at all.
 //! - **Water.** On a tile with water (`water::tiles::water_kind`) the surface is [`WATER_Y`]: the
 //!   walker wades where the bed is at most [`MAX_WADE`] under it and stops at that contour.
-//! - **Obstacles.** Houses, the windmill, the hero oak, spruces and rocks block the walker by their
-//!   collider (`<piece>_collider` in the kit GLB) as a convex footprint on the ground, placed with
-//!   the hero or scatter instance's transform under the tile's rest transform. Wildflowers do not
-//!   block.
+//! - **Obstacles.** Houses, the windmill, the barn, the hero oak, spruces, rocks and the farm's hay
+//!   bales and (static) animals block the walker by their collider (`<piece>_collider` in the kit
+//!   GLB) as a convex footprint on the ground, placed with the hero or scatter instance's transform
+//!   under the tile's rest transform. Wildflowers do not block.
 //! - **Props to look at.** Photo mode's click to focus ([`WalkGround::pick_prop`]) hits the same
 //!   drawn obstacle instances as volumes: the collider footprint extruded from the collider's foot
 //!   to the top of the piece's non-foliage LOD0 mesh, and for trees a crown of stacked cylinders
@@ -55,10 +55,15 @@ pub const MAX_STEP: f32 = 0.4;
 const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not.
-pub const OBSTACLES: [&str; 10] = [
+pub const OBSTACLES: [&str; 15] = [
     "house_cottage",
     "house_twostorey",
     "windmill",
+    "barn_red",
+    "hay_bale_round",
+    "hay_bale_stack",
+    "animal_cow",
+    "animal_sheep",
     "tree_hero_oak",
     "tree_forest",
     "tree_forest_b",
@@ -88,7 +93,11 @@ impl Blocked {
             Blocked::Edge => "edge",
             Blocked::Water => "water",
             Blocked::Steep => "steep",
-            Blocked::Obstacle(p) if p.starts_with("house") || p == "windmill" => "building",
+            Blocked::Obstacle(p)
+                if p.starts_with("house") || p == "windmill" || p == "barn_red" =>
+            {
+                "building"
+            }
             Blocked::Obstacle(p) if p.starts_with("tree") => "tree",
             Blocked::Obstacle(_) => "rock",
         }
@@ -383,7 +392,7 @@ impl PieceShape {
 /// `building`, `tree` or `rock`: what a click on `piece` reports.
 pub fn prop_kind(piece: &str) -> &'static str {
     match piece {
-        p if p.starts_with("house") => "building",
+        p if p.starts_with("house") || p == "barn_red" => "building",
         p if p.starts_with("tree") => "tree",
         _ => "rock",
     }
@@ -932,6 +941,66 @@ mod tests {
             }
         }
         assert!(tested >= 8, "only {tested} approaches reached the tower");
+    }
+
+    /// A placed farm tile stops the walker at the barn's front wall as a building, through the
+    /// tile's turn, and its static animals and bales block too.
+    #[test]
+    fn a_placed_farm_tile_blocks_at_the_barn() {
+        assert_eq!(Blocked::Obstacle("barn_red".into()).reason(), "building");
+        assert_eq!(prop_kind("barn_red"), "building");
+        let def = catalog().get("farm").unwrap().clone();
+        let barn = def
+            .props
+            .hero
+            .iter()
+            .find(|h| h.piece.as_str() == "barn_red")
+            .unwrap();
+        let yaw = Quat::from_rotation_y(-barn.yaw_deg.to_radians());
+        let centre = Vec3::new(barn.at[0], 0.0, barn.at[1]);
+        // The barn's long front wall faces its local +z, 3.85 m out (collider half depth).
+        let mut tested = 0;
+        for rotation in [0, 3] {
+            let g = world(&[(0, 0, "farm", rotation)]);
+            let turn = piece_rotation(rotation);
+            let front = (turn * yaw * Vec3::Z).xz();
+            for along in [-3.0, 0.0, 3.0] {
+                let local = centre + yaw * Vec3::new(along, 0.0, 8.0);
+                let start = (turn * local).xz();
+                if g.stand(start).is_err() {
+                    continue;
+                }
+                let s = walk(&g, start, -front, 8.0);
+                if s.blocked == Some(Blocked::Obstacle("rock_small".into())) {
+                    continue;
+                }
+                let out = (s.pos.xz() - (turn * centre).xz()).dot(front);
+                assert_eq!(
+                    s.blocked,
+                    Some(Blocked::Obstacle("barn_red".into())),
+                    "r{rotation} at {along}: stopped {out} m out"
+                );
+                assert!(
+                    (3.8..4.4).contains(&out),
+                    "r{rotation} at {along}: {out} m out"
+                );
+                tested += 1;
+            }
+        }
+        assert!(tested >= 4, "only {tested} approaches reached the barn");
+        // The cow stands in the pasture: walking at its flank from 4 m stops against it.
+        let cow = def
+            .props
+            .hero
+            .iter()
+            .find(|h| h.piece.as_str() == "animal_cow")
+            .unwrap();
+        let at = Vec2::from(cow.at);
+        let side = (Quat::from_rotation_y(-cow.yaw_deg.to_radians()) * Vec3::X).xz() * 4.0;
+        let g = world(&[(0, 0, "farm", 0)]);
+        let s = walk(&g, at + side, -side, 4.0);
+        assert_eq!(s.blocked, Some(Blocked::Obstacle("animal_cow".into())));
+        assert!(s.pos.xz().distance(at) < 1.0, "{}", s.pos.xz().distance(at));
     }
 
     fn catalog() -> TileCatalog {

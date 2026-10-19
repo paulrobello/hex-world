@@ -1216,6 +1216,33 @@ mod tests {
         assert!(within(tower, tower + 1.0) > 0, "no grass at the tower foot");
     }
 
+    /// The farm tile's grass keeps clear of the barn, the bales and the animals (each hero's
+    /// footprint) and still grows right up to the barn.
+    #[test]
+    fn grass_clears_the_barn_and_the_farm_heroes() {
+        let c = TileCatalog::builtin().unwrap();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let def = c.get("farm").unwrap();
+        let ex = exclusions(def, &[], &[]);
+        assert_eq!(ex.len(), def.props.hero.len());
+        for (h, (at, r)) in def.props.hero.iter().zip(&ex) {
+            assert_eq!(*at, Vec2::from(h.at));
+            assert_eq!(*r, scatter::footprint(h.piece.as_str()).ground + PROP_GAP);
+        }
+        let l = layout(1, &meadow_surface(), &grass_slots(&m, def, &c), &ex);
+        let around = |centre: Vec2, lo: f32, hi: f32| {
+            l.blades
+                .iter()
+                .filter(|b| (lo..hi).contains(&b.root.xz().distance(centre)))
+                .count()
+        };
+        for (h, (at, r)) in def.props.hero.iter().zip(&ex) {
+            assert_eq!(around(*at, 0.0, *r), 0, "grass inside {}", h.piece.as_str());
+        }
+        let (barn, reach) = ex[0];
+        assert!(around(barn, reach, reach + 1.0) > 0, "no grass at the barn");
+    }
+
     #[test]
     fn densities_parse_shares_percentages_and_aliases() {
         let p = |s: &str| Density::parse(s).map(Density::percent);

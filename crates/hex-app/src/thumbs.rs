@@ -370,6 +370,7 @@ mod tests {
             ("forest", 1),
             ("oak", 1),
             ("windmill", 1),
+            ("farm", 1),
             ("house_cluster", 6),
             ("road_straight", 3),
             ("road_bend_120", 6),
@@ -389,7 +390,7 @@ mod tests {
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 19 + 76);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 20 + 77);
     }
 
     #[test]

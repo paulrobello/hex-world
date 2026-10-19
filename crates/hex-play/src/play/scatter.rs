@@ -214,7 +214,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 17] = [
+pub const FOOTPRINTS: [(&str, Footprint); 22] = [
     (
         "tree_forest",
         Footprint {
@@ -332,6 +332,43 @@ pub const FOOTPRINTS: [(&str, Footprint); 17] = [
         "windmill",
         Footprint {
             ground: 2.9,
+            crown: 0.0,
+        },
+    ),
+    // The farm tile's heroes: the barn (10 x 7 m, so its reach is its corner) and the static
+    // bales and animals.
+    (
+        "barn_red",
+        Footprint {
+            ground: 6.6,
+            crown: 0.0,
+        },
+    ),
+    (
+        "hay_bale_round",
+        Footprint {
+            ground: 0.9,
+            crown: 0.0,
+        },
+    ),
+    (
+        "hay_bale_stack",
+        Footprint {
+            ground: 0.9,
+            crown: 0.0,
+        },
+    ),
+    (
+        "animal_cow",
+        Footprint {
+            ground: 1.5,
+            crown: 0.0,
+        },
+    ),
+    (
+        "animal_sheep",
+        Footprint {
+            ground: 0.8,
             crown: 0.0,
         },
     ),
@@ -1466,11 +1503,12 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 19, "every inventory tile ran");
+        assert_eq!(counts.len(), 20, "every inventory tile ran");
         for id in [
             "forest",
             "oak",
             "windmill",
+            "farm",
             "meadow",
             "road_straight",
             "house_cluster",

@@ -1085,7 +1085,7 @@ mod tests {
     #[test]
     fn every_mvp_tile_resolves_and_biomes_index() {
         let c = PlayCatalog::default();
-        assert_eq!(c.0.tiles().len(), 19);
+        assert_eq!(c.0.tiles().len(), 20);
         let biomes: std::collections::BTreeSet<_> =
             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
         assert_eq!(biomes.len(), 4);

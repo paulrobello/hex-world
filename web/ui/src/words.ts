@@ -9,6 +9,7 @@ export const TILE_NAMES: Record<string, string> = {
   forest: "Pine forest",
   oak: "Oak",
   windmill: "Windmill",
+  farm: "Farm",
   house_cluster: "House cluster",
   road_straight: "Road straight",
   road_bend_120: "Road bend 120°",

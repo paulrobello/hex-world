@@ -124,6 +124,29 @@
       },
       {
         "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "id": "farm",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "scatter": [
+          "wildflower_clump",
+          "rock_small"
+        ]
+      },
+      {
+        "edges": [
           "Road",
           "Grass",
           "Grass",

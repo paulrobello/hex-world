@@ -1,0 +1,36 @@
+// The farm (P3 pieces, refs owner-approved under A17) on meadow_base's grass, ahead of the P3
+// recipes (owner request, 2026-10-19). Grass edges, so it mixes freely with meadows. The red barn
+// stands along edge 5 with its back corner 0.5 m inside the border, its doors (local +x) turned
+// toward the hay; the bales and the animals stand where the meadow relief
+// (`relief()` in scripts/blender/kit/meadow_base.py) is flattest, so no bale floats and no hoof
+// floats more than 2 cm (the hero props stand at y = 0). The animals stand still until P3's wander.
+// No wheat: there is no wheat piece yet. A light drift of wildflowers and a few rocks keep clear of
+// every hero by scatter's footprints.
+(
+    id: "farm",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    props: (
+        scatter: [
+            (piece: "wildflower_clump", density: 1.2, drift: true),
+            (piece: "rock_small", density: 0.3),
+        ],
+        hero: [
+            (piece: "barn_red", at: (4.75, -8.227), yaw_deg: 30.0),
+            (piece: "hay_bale_stack", at: (8.9, -2.4), yaw_deg: 30.0),
+            (piece: "hay_bale_round", at: (7.5, -0.4), yaw_deg: 15.0),
+            (piece: "hay_bale_round", at: (10.4, -1.4), yaw_deg: 30.0),
+            (piece: "animal_cow", at: (0.25, 8.25), yaw_deg: 255.0),
+            (piece: "animal_sheep", at: (-0.5, 10.75), yaw_deg: 45.0),
+            (piece: "animal_sheep", at: (-2.25, 11.25), yaw_deg: 345.0),
+        ],
+    ),
+)
