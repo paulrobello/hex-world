@@ -13,7 +13,8 @@
 //! - **Exclusions.** Scatter's footprints: no blade within a hero prop's ground footprint (a
 //!   rectangular building's collider box turned by its yaw plus [`WALL_GAP`], so blades grow
 //!   along its long walls; a disc for the windmill's tower, the oak's trunk, bales and animals) or
-//!   a scatter instance's (rocks, spruce trunks, every planned instance of the
+//!   a scatter instance's (a box over a rock's base outline, [`ROCK_BASES`], so blades come right
+//!   up to the stone; spruce trunks; every planned instance of the
 //!   tile's layout, so a late pack never moves the grass; flower clumps keep only their centre
 //!   clear, [`GROWS_THROUGH`], so grass grows in among them), nor below the water level
 //!   ([`WATER_MARGIN`]). The hex border is not an exclusion (scatter's border gap keeps crowns and
@@ -118,6 +119,65 @@ pub const GROWS_THROUGH: &[(&str, f32)] = &[
     ("wildflower_single_b", 0.0),
     ("wildflower_single_c", 0.0),
     ("wildflower_single_d", 0.0),
+];
+/// A rock's base outline where it meets the ground (owner 2026-10-19: grass stopped short of the
+/// stone, held off by its spacing footprint): a convex 12-gon, counter-clockwise in the piece's
+/// own (x, z) before its yaw and scale, around the y = 0 slice of its LOD0 and collider.
+pub type RockBase = [[f32; 2]; 12];
+
+/// `rock_bases_match_the_kit` checks these against the GLBs (to 2 cm).
+pub const ROCK_BASES: [(&str, RockBase); 3] = [
+    (
+        "rock_small",
+        [
+            [-0.487, 0.151],
+            [-0.465, -0.051],
+            [-0.413, -0.188],
+            [-0.333, -0.291],
+            [-0.127, -0.469],
+            [0.282, -0.359],
+            [0.341, -0.31],
+            [0.529, 0.058],
+            [0.378, 0.308],
+            [0.263, 0.429],
+            [-0.33, 0.351],
+            [-0.449, 0.237],
+        ],
+    ),
+    (
+        "rock_small_b",
+        [
+            [-0.959, 0.139],
+            [-0.77, -0.237],
+            [-0.543, -0.533],
+            [0.016, -0.79],
+            [0.16, -0.751],
+            [0.666, -0.419],
+            [0.846, -0.137],
+            [0.605, 0.42],
+            [0.405, 0.731],
+            [0.269, 0.76],
+            [0.095, 0.743],
+            [-0.894, 0.344],
+        ],
+    ),
+    (
+        "rock_small_c",
+        [
+            [-0.86, -0.244],
+            [-0.84, -0.443],
+            [-0.574, -0.538],
+            [-0.14, -0.445],
+            [0.249, -0.328],
+            [0.461, -0.143],
+            [0.563, 0.208],
+            [0.63, 0.597],
+            [0.569, 0.775],
+            [-0.315, 0.7],
+            [-0.392, 0.671],
+            [-0.829, -0.138],
+        ],
+    ),
 ];
 const SALT: u64 = 0x6A55_B1AD_E5C0_FFEE;
 /// The shared blade mesh: two crossed planes (an X from above, so the blade holds a silhouette from
@@ -334,6 +394,14 @@ pub enum Clear {
         half: Vec2,
         axis: Vec2,
     },
+    /// A rock's base ([`ROCK_BASES`]) at `centre`, its own +x along `axis`, scaled by `scale`,
+    /// grown outward by [`PROP_GAP`].
+    Rock {
+        centre: Vec2,
+        axis: Vec2,
+        scale: f32,
+        outline: &'static RockBase,
+    },
 }
 
 impl Clear {
@@ -343,6 +411,21 @@ impl Clear {
             Clear::Box { centre, half, axis } => {
                 let d = p - centre;
                 d.dot(axis).abs() < half.x && d.dot(axis.perp()).abs() < half.y
+            }
+            Clear::Rock {
+                centre,
+                axis,
+                scale,
+                outline,
+            } => {
+                let d = p - centre;
+                let q = Vec2::new(d.dot(axis), d.dot(axis.perp())) / scale;
+                let gap = PROP_GAP / scale;
+                (0..outline.len()).all(|k| {
+                    let a = Vec2::from(outline[k]);
+                    let e = Vec2::from(outline[(k + 1) % outline.len()]) - a;
+                    e.perp_dot(q - a) > -gap * e.length()
+                })
             }
         }
     }
@@ -366,7 +449,8 @@ pub fn cos_sin_deg(deg: f32) -> Vec2 {
 }
 
 /// Where no blade may root: hero props (a box over a rectangular building's collider,
-/// [`scatter::GROUND_BOXES`], else a disc of its ground reach) and every scatter instance.
+/// [`scatter::GROUND_BOXES`], else a disc of its ground reach) and every scatter instance (a box
+/// over a rock's base, [`ROCK_BASES`], else a disc).
 pub fn exclusions(def: &TileDef, instances: &[Instance], pieces: &[String]) -> Vec<Clear> {
     let mut out: Vec<Clear> = def
         .props
@@ -395,6 +479,15 @@ pub fn exclusions(def: &TileDef, instances: &[Instance], pieces: &[String]) -> V
         .collect();
     out.extend(instances.iter().filter_map(|i| {
         let piece = i.piece(pieces.get(i.rule as usize)?);
+        if let Some((_, outline)) = ROCK_BASES.iter().find(|(id, _)| *id == piece) {
+            // `Instance::rotation` (`Quat::from_rotation_y(yaw)`) takes +x to (cos, -sin) in (x, z).
+            return Some(Clear::Rock {
+                centre: i.pos.xz(),
+                axis: cos_sin_deg(-i.yaw.to_degrees()),
+                scale: i.scale,
+                outline,
+            });
+        }
         let radius = GROWS_THROUGH
             .iter()
             .find(|(id, _)| *id == piece)
@@ -1225,7 +1318,7 @@ mod tests {
     }
 
     /// Owner feedback 2026-10-14: wildflowers stood in a bare ring. Grass grows in among a flower
-    /// clump up to its small centre, while a rock keeps its whole footprint clear.
+    /// clump up to its small centre, while a rock keeps its base clear.
     #[test]
     fn grass_grows_among_flowers_but_not_under_rocks() {
         let c = TileCatalog::builtin().unwrap();
@@ -1241,13 +1334,14 @@ mod tests {
             order: rule,
             variant: 0,
         };
-        let ex = exclusions(def, &[at(0, -4.0), at(1, 4.0)], &pieces);
+        let rock_at = at(1, 4.0);
+        let ex = exclusions(def, &[at(0, -4.0), rock_at.clone()], &pieces);
         let [.., flower, rock] = ex.as_slice() else {
             unreachable!()
         };
-        let (flower, rock) = (disc(flower), disc(rock));
+        let flower = disc(flower);
         assert_eq!(flower.1, 0.2 + PROP_GAP);
-        assert_eq!(rock.1, scatter::footprint("rock_small").ground + PROP_GAP);
+        assert!(matches!(rock, Clear::Rock { .. }), "{rock:?}");
         let l = layout(1, &meadow_surface(), &slots, &ex);
         let around = |centre: Vec2, lo: f32, hi: f32| {
             l.blades
@@ -1259,7 +1353,141 @@ mod tests {
             around(flower.0, flower.1, 0.9) > 0,
             "no grass among the flowers"
         );
-        assert_eq!(around(rock.0, 0.0, rock.1), 0, "grass under the rock");
+        let base = placed_base("rock_small", &rock_at);
+        assert!(
+            !l.blades.iter().any(|b| inside(&base, b.root.xz())),
+            "grass under the rock"
+        );
+    }
+
+    /// The y = 0 slice of a piece's LOD0 and collider: where it meets the ground.
+    fn ground_slice(id: &str) -> Vec<Vec2> {
+        let mut tris = mesh_tris(id, "lod0");
+        tris.extend(mesh_tris(id, "collider"));
+        let mut out = vec![];
+        for t in &tris {
+            for k in 0..3 {
+                let (a, b) = (t[k], t[(k + 1) % 3]);
+                if a[1] != b[1] && a[1] * b[1] <= 0.0 {
+                    let s = a[1] / (a[1] - b[1]);
+                    out.push(Vec2::new(
+                        a[0] + (b[0] - a[0]) * s,
+                        a[2] + (b[2] - a[2]) * s,
+                    ));
+                }
+            }
+        }
+        out
+    }
+
+    /// A scatter rock's ground outline (a counter-clockwise hull) placed by its instance.
+    fn placed_base(id: &str, i: &Instance) -> Vec<Vec2> {
+        let t = i.transform();
+        let pts: Vec<Vec2> = ground_slice(id)
+            .iter()
+            .map(|p| t.transform_point(Vec3::new(p.x, 0.0, p.y)).xz())
+            .collect();
+        crate::walk::hull(&pts)
+    }
+
+    fn inside(hull: &[Vec2], p: Vec2) -> bool {
+        (0..hull.len()).all(|k| (hull[(k + 1) % hull.len()] - hull[k]).perp_dot(p - hull[k]) > 0.0)
+    }
+
+    fn outline_distance(hull: &[Vec2], p: Vec2) -> f32 {
+        (0..hull.len())
+            .map(|k| {
+                let (a, b) = (hull[k], hull[(k + 1) % hull.len()]);
+                let t = ((p - a).dot(b - a) / (b - a).length_squared()).clamp(0.0, 1.0);
+                p.distance(a + (b - a) * t)
+            })
+            .fold(f32::MAX, f32::min)
+    }
+
+    /// Each [`ROCK_BASES`] outline is convex and counter-clockwise, holds its rock's ground slice
+    /// (to 1 mm), and every side lies within 2 cm of the slice's hull, so it clears no more than
+    /// the stone's base.
+    #[test]
+    fn rock_bases_match_the_kit() {
+        for (id, outline) in &ROCK_BASES {
+            let poly: Vec<Vec2> = outline.iter().map(|p| Vec2::from(*p)).collect();
+            let slice = ground_slice(id);
+            let hull = crate::walk::hull(&slice);
+            for k in 0..poly.len() {
+                let a = poly[k];
+                let e = (poly[(k + 1) % poly.len()] - a).normalize();
+                let turn = e.perp_dot(poly[(k + 2) % poly.len()] - a);
+                assert!(turn > 0.0, "{id} outline not convex and CCW at {k}");
+                let reach = slice
+                    .iter()
+                    .map(|p| e.perp_dot(*p - a))
+                    .fold(f32::MAX, f32::min);
+                assert!(reach > -0.001, "{id} slice outside side {k} by {}", -reach);
+                let touch = hull
+                    .iter()
+                    .map(|p| e.perp_dot(*p - a))
+                    .fold(f32::MAX, f32::min);
+                assert!(touch < 0.02, "{id} side {k} stands {touch} m off the stone");
+            }
+        }
+    }
+
+    /// Owner 2026-10-19: grass comes right up to each rock and only where the stone sits is bare:
+    /// no blade roots inside its base outline, every blade the open field grows more than
+    /// [`PROP_GAP`] + 2 cm (the outline's fit) off the stone still grows, and blades stand within
+    /// 0.15 m of it.
+    #[test]
+    fn grass_grows_right_up_to_each_rock() {
+        let c = TileCatalog::builtin().unwrap();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let def = c.get("meadow").unwrap();
+        let slots = grass_slots(&m, def, &c);
+        let pieces = vec!["rock_small".to_string()];
+        let rocks: Vec<Instance> = (0..3u8)
+            .map(|v| Instance {
+                rule: 0,
+                pos: Vec3::new(4.0 * f32::from(v) - 4.0, 0.0, 3.0),
+                yaw: 0.7 + f32::from(v),
+                scale: 1.1,
+                order: v,
+                variant: v,
+            })
+            .collect();
+        let ex = exclusions(def, &rocks, &pieces);
+        let surface = meadow_surface();
+        let l = layout(1, &surface, &slots, &ex);
+        let grown: std::collections::HashSet<[u32; 2]> = l
+            .blades
+            .iter()
+            .map(|b| [b.root.x.to_bits(), b.root.z.to_bits()])
+            .collect();
+        let open = layout(1, &surface, &slots, &[]);
+        for i in &rocks {
+            let id = i.piece("rock_small");
+            let base = placed_base(id, i);
+            let mut near = 0;
+            for b in &l.blades {
+                let p = b.root.xz();
+                assert!(
+                    !inside(&base, p),
+                    "{id}: a blade roots under the stone at {p}"
+                );
+                if outline_distance(&base, p) < 0.15 {
+                    near += 1;
+                }
+            }
+            assert!(near >= 10, "{id}: {near} blades within 0.15 m of the stone");
+            for b in &open.blades {
+                let p = b.root.xz();
+                let d = outline_distance(&base, p);
+                if !inside(&base, p) && d > PROP_GAP * i.scale + 0.02 && d < 0.5 {
+                    assert!(
+                        grown.contains(&[b.root.x.to_bits(), b.root.z.to_bits()]),
+                        "{id}: the blade {d:.3} m off the stone at {p} was cleared"
+                    );
+                }
+            }
+        }
     }
 
     /// The windmill tile's grass keeps clear of the tower (its trunk footprint) and still grows
@@ -1292,7 +1520,7 @@ mod tests {
     fn disc(c: &Clear) -> (Vec2, f32) {
         match *c {
             Clear::Disc { centre, radius } => (centre, radius),
-            Clear::Box { .. } => panic!("a box, not a disc: {c:?}"),
+            Clear::Box { .. } | Clear::Rock { .. } => panic!("not a disc: {c:?}"),
         }
     }
 

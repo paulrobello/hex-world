@@ -536,6 +536,19 @@ fn draw_scatter(
                         GRASS_CLEAR,
                     );
                 }
+                Clear::Rock {
+                    centre,
+                    axis,
+                    scale,
+                    outline,
+                } => {
+                    let at = |k: usize| {
+                        let [x, z] = outline[k % outline.len()];
+                        let p = centre + (axis * x + axis.perp() * z) * scale;
+                        world(Vec3::new(p.x, LINE_Y, p.y))
+                    };
+                    gizmos.linestrip((0..=outline.len()).map(at), GRASS_CLEAR);
+                }
             }
         }
     }
