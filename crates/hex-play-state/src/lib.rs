@@ -200,6 +200,59 @@ impl Density {
 /// The Lush share of the normal blade count: the seeded set every density draws from, and the slider's top.
 pub const LUSH: f32 = 1.5;
 
+/// The grass draw distance (Settings → Graphics → Grass distance, the `grass_distance` key,
+/// `set_grass_distance`, owner request 2026-10-19) in hundredths of a multiplier on every grass
+/// distance (thinning, fade, build and drop radii): 100 is Near, the tuning grass shipped with, and
+/// the default.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct GrassDistance(u16);
+
+impl Default for GrassDistance {
+    fn default() -> Self {
+        GrassDistance::NEAR
+    }
+}
+
+impl GrassDistance {
+    pub const NEAR: GrassDistance = GrassDistance(100);
+    pub const MAX: GrassDistance = GrassDistance(300);
+    /// The named stops the Settings slider offers, nearest first: name and hundredths.
+    pub const ALIASES: [(&'static str, u16); 4] = [
+        ("near", 100),
+        ("medium", 150),
+        ("far", 200),
+        ("very-far", 300),
+    ];
+
+    /// A multiplier clamped to Near..=[`Self::MAX`] and rounded to hundredths; `None` when it is
+    /// not finite.
+    pub fn from_scale(scale: f32) -> Option<GrassDistance> {
+        let (lo, hi) = (Self::NEAR.scale(), Self::MAX.scale());
+        scale
+            .is_finite()
+            .then(|| GrassDistance((scale.clamp(lo, hi) * 100.0).round() as u16))
+    }
+
+    /// A stop name (`near|medium|far|very-far`) or a multiplier (`2`, `1.5`). Out-of-range numbers
+    /// clamp.
+    pub fn parse(s: &str) -> Option<GrassDistance> {
+        let s = s.trim();
+        if let Some((_, h)) = Self::ALIASES.iter().find(|(n, _)| *n == s) {
+            return Some(GrassDistance(*h));
+        }
+        GrassDistance::from_scale(s.parse::<f32>().ok()?)
+    }
+
+    pub fn hundredths(self) -> u16 {
+        self.0
+    }
+
+    /// The multiplier on every grass distance.
+    pub fn scale(self) -> f32 {
+        f32::from(self.0) / 100.0
+    }
+}
+
 /// How a part of a placed tile moves during its rise.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum RiseRole {

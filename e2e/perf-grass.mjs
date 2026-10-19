@@ -9,7 +9,8 @@
 // world and draws no grass; this is the play world of that size.
 // Local only. usage: node e2e/perf-grass.mjs <dist>
 //   PERF_OUT (default docs/perf/p2-grass.json), GRASS_ROUNDS (default 2), GRASS_RADIUS (default 26),
-//   GRASS_ARMS (default off,normal,lush), GRASS_TRACE (optional Chrome trace + CPU profile path),
+//   GRASS_ARMS (default off,normal,lush), GRASS_DISTANCES (default near; e.g. near,far runs every arm
+//   at each grass_distance stop), GRASS_CAMERA (optional "x,y,z,lx,ly,lz"), GRASS_TRACE (optional Chrome trace + CPU profile path),
 //   GRASS_GPU_TIMING=on (diagnostic only, not budget runs), GRASS_SAVE (optional exact-world save)
 import { chromium } from "playwright";
 import { createServer } from "node:http";
@@ -25,11 +26,18 @@ const dist = process.argv[2] ?? "dist";
 const OUT = process.env.PERF_OUT ?? "docs/perf/p2-grass.json";
 const ROUNDS = Number(process.env.GRASS_ROUNDS ?? 2);
 const RADIUS = Number(process.env.GRASS_RADIUS ?? 26);
-const ARMS = (process.env.GRASS_ARMS ?? "off,normal,lush").split(",");
+// GRASS_DISTANCES (default near): each density arm runs at each grass_distance stop, arm `normal@far`.
+const DISTANCES = (process.env.GRASS_DISTANCES ?? "near").split(",");
+const ARMS = (process.env.GRASS_ARMS ?? "off,normal,lush").split(",")
+  .flatMap((a) => DISTANCES.map((d) => (DISTANCES.length > 1 || d !== "near" ? `${a}@${d}` : a)));
 const W = 2560, H = 1440;
 const SETTLE_FRAMES = 700;
 const world = waterWorldScript(RADIUS);
-const CAMERA = { cmd: "camera", pos: [10, 12, 40], look_at: [0, 0, 0] };
+// GRASS_CAMERA (optional "x,y,z,lx,ly,lz") overrides the low close-up, e.g. a mid-zoom pose.
+const cam = process.env.GRASS_CAMERA?.split(",").map(Number);
+const CAMERA = cam ? { cmd: "camera", pos: cam.slice(0, 3), look_at: cam.slice(3, 6) }
+  : { cmd: "camera", pos: [10, 12, 40], look_at: [0, 0, 0] };
+const DISTANCE_SCALE = { near: 1, medium: 1.5, far: 2, "very-far": 3 };
 const KEYS = { scenario: "play", tier: "high", fps: "off", seed: "1", tilt: "off",
   ...(process.env.GRASS_GPU_TIMING === "on" ? { gpu_timing: "on" } : {}) };
 
@@ -52,7 +60,8 @@ const pick = (d) => ({ p50: d.p50, p95: d.p95, p99: d.p99, mean: d.mean, max: d.
   adapter: d.adapter, wasm_memory_bytes: d.wasm_memory_bytes, visible_tris: d.visible_tris,
   stall: d.stall && { histogram: d.stall.histogram, over_25ms: d.stall.over_25ms, tail_ms: d.stall.tail.map((s) => s.ms) } });
 
-async function webRun(arm) {
+async function webRun(armKey) {
+  const [arm, distance = "near"] = armKey.split("@");
   const browser = await chromium.launch({ channel: "chromium", headless: true,
     args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
       "--disable-gpu-vsync", "--disable-frame-rate-limit", "--enable-webgpu-developer-features"] });
@@ -61,7 +70,7 @@ async function webRun(arm) {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
     page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text())) errors.push(m.text()); });
     page.on("pageerror", (e) => errors.push(String(e)));
-    await page.goto(base + "?" + new URLSearchParams({ ...KEYS, grass: arm }));
+    await page.goto(base + "?" + new URLSearchParams({ ...KEYS, grass: arm, grass_distance: distance }));
     await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 120_000 });
     const adapter = await page.evaluate(async () => {
       const i = (await navigator.gpu.requestAdapter())?.info;
@@ -92,11 +101,14 @@ async function webRun(arm) {
     if (st.tier?.tier !== "high") throw new Error(`tier ${st.tier?.tier}, expected high`);
     const share = { off: 0, sparse: 0.5, normal: 1, lush: 1.5 }[arm] ?? Number(arm);
     if (st.grass?.density !== share) throw new Error(`grass density ${st.grass?.density}, expected ${share} (${arm})`);
+    const scale = DISTANCE_SCALE[distance] ?? Number(distance);
+    if (st.grass?.distance !== scale) throw new Error(`grass distance ${st.grass?.distance}, expected ${scale} (${distance})`);
     const n = st.play?.tiles?.length;
     if (n !== world.tiles.length) throw new Error(`world has ${n} tiles, expected ${world.tiles.length}`);
     if (st.tilt?.enabled || st.play?.rising?.length) throw new Error("world must be settled with tilt off");
     if (d.samples !== 600) throw new Error(`incomplete diagnostic window: ${d.samples}`);
-    const grass = { status: st.grass.status, groups: st.grass.groups, blades: st.grass.blades, mesh_bytes: st.grass.mesh_bytes };
+    const grass = { status: st.grass.status, distance: st.grass.distance, groups: st.grass.groups, blades: st.grass.blades,
+      instances: st.grass.instances, mesh_bytes: st.grass.mesh_bytes };
     let trace = null;
     if (process.env.GRASS_TRACE) {
       const cdp = await page.context().newCDPSession(page);
@@ -126,7 +138,7 @@ async function webRun(arm) {
     }
     const exclusivity = finishExclusivity?.() ?? null;
     const build_id = await page.evaluate(() => window.__HEX_BUILD ?? null);
-    return { platform: "web", arm, exclusivity, build_id, browser_version: browser.version(), renderer, trace, webgpu_adapter: adapter, tiles: n,
+    return { platform: "web", arm: armKey, exclusivity, build_id, browser_version: browser.version(), renderer, trace, webgpu_adapter: adapter, tiles: n,
       world_source: process.env.GRASS_LOAD ?? "script", camera: st.camera, rising: st.play?.rising?.length ?? 0,
       settled_at_frame: f0, grass, ...pick(d), gpu: d.gpu, console_errors: errors };
   } finally {

@@ -37,7 +37,10 @@
 //!   shrinks it to nothing by [`FADE_END`] m from the camera, after thinning it by rank from
 //!   [`THIN_START`]. Only tiles within [`BUILD_RADIUS`] of the camera hold a group, at most
 //!   [`BUILDS_PER_FRAME`] new ones a frame within [`BUILD_BUDGET_MS`], nearest first; beyond
-//!   [`DROP_RADIUS`] they are dropped.
+//!   [`DROP_RADIUS`] they are dropped. Those are the Near distances: the [`GrassDistance`]
+//!   (`grass_distance`, `set_grass_distance`, Settings → Graphics → Grass distance) multiplies all
+//!   six ([`Distances`]), so a farther stop builds the newly reached tiles under the same per-frame
+//!   budget and a nearer one drops the tiles past its drop radius.
 //! - **Pipelines.** Group 2 binds two uniforms (the wind clock and tuning, and per tile its
 //!   transform now and one frame ago) and no texture: the pipelines sample only the view's
 //!   textures, fewer than the kit forward pipeline. Blades write the depth, normal and motion
@@ -76,7 +79,9 @@ pub const GRASS_ALBEDO_MEAN: [f32; 3] = [0.0993, 0.2135, 0.0310];
 /// Blades per m² of grass ground at [`Density::NORMAL`], before a slot's own thinning (owner
 /// 2026-10-14: doubled from 14).
 pub const DENSITY: f32 = 28.0;
-/// Camera distance (m) where blades start to thin by rank, and where only [`THIN_KEEP`] are left.
+/// Camera distance (m) where blades start to thin by rank, and where only [`THIN_KEEP`] are left,
+/// at [`GrassDistance::NEAR`]: every grass distance here is the Near value, scaled at runtime by
+/// the `grass_distance` key ([`Distances`]).
 pub const THIN_START: f32 = 16.0;
 pub const THIN_END: f32 = 46.0;
 pub const THIN_KEEP: f32 = 0.35;
@@ -136,7 +141,34 @@ const SCALE: [f32; 2] = [0.7, 1.4];
 const HUE_JITTER: f32 = 0.04;
 const LIGHT_JITTER: f32 = 0.05;
 
-pub use hex_play_state::{Density, LUSH};
+pub use hex_play_state::{Density, GrassDistance, LUSH};
+
+/// The grass distances (m) in use at a [`GrassDistance`]: the Near constants times its multiplier.
+/// The shader reads the thinning and fade from [`GrassParams`], `sync` the build and drop radii, so
+/// both always draw with the same values.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Distances {
+    pub thin_start: f32,
+    pub thin_end: f32,
+    pub fade_start: f32,
+    pub fade_end: f32,
+    pub build_radius: f32,
+    pub drop_radius: f32,
+}
+
+impl Distances {
+    pub fn new(distance: GrassDistance) -> Self {
+        let s = distance.scale();
+        Self {
+            thin_start: THIN_START * s,
+            thin_end: THIN_END * s,
+            fade_start: FADE_START * s,
+            fade_end: FADE_END * s,
+            build_radius: BUILD_RADIUS * s,
+            drop_radius: DROP_RADIUS * s,
+        }
+    }
+}
 
 /// How blades grow on one kind of grass slot.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -473,14 +505,14 @@ pub struct GrassParams {
 }
 
 impl GrassParams {
-    fn new() -> Self {
+    fn new(d: Distances) -> Self {
         Self {
             time: 0.0,
             prev_time: 0.0,
-            fade_start: FADE_START,
-            fade_end: FADE_END,
-            thin_start: THIN_START,
-            thin_end: THIN_END,
+            fade_start: d.fade_start,
+            fade_end: d.fade_end,
+            thin_start: d.thin_start,
+            thin_end: d.thin_end,
             thin_keep: THIN_KEEP,
             wind_scale: WIND_SCALE,
         }
@@ -548,10 +580,18 @@ pub fn status(active: Scenario, config: &GateConfig) -> &'static str {
     }
 }
 
-/// `state().grass`: the density (share of [`DENSITY`]) and why it draws or not, live groups, drawn
-/// blades and triangles, the instances held on the GPU and their bytes with the shared blade mesh,
-/// instance buffers uploaded since start, the tuning, and a row per tile holding a group.
-pub fn report(state: &PlayGrass, density: Density, status: &str, groups: usize) -> String {
+/// `state().grass`: the density (share of [`DENSITY`]), the distance multiplier, and why it draws or
+/// not, live groups, drawn blades and triangles, the instances held on the GPU and their bytes with
+/// the shared blade mesh, instance buffers uploaded since start, the tuning at that distance, and a
+/// row per tile holding a group.
+pub fn report(
+    state: &PlayGrass,
+    density: Density,
+    distance: GrassDistance,
+    status: &str,
+    groups: usize,
+) -> String {
+    let d = Distances::new(distance);
     let build_ms = (state.last_build_ms * 100.0).round() / 100.0;
     let swap_ms = (state.last_swap_ms * 100.0).round() / 100.0;
     let mut rows: BTreeMap<(i32, i32), String> = BTreeMap::new();
@@ -580,11 +620,17 @@ pub fn report(state: &PlayGrass, density: Density, status: &str, groups: usize) 
         bytes += BLADE_MESH_BYTES;
     }
     format!(
-        "{{\"density\":{},\"status\":\"{status}\",\"groups\":{groups},\"blades\":{blades},\"triangles\":{},\"instances\":{instances},\"mesh_bytes\":{bytes},\"uploads\":{},\"per_m2\":{},\"thin\":[{THIN_START},{THIN_END},{THIN_KEEP}],\"fade\":[{FADE_START},{FADE_END}],\"build_radius\":{BUILD_RADIUS},\"last_build_ms\":{build_ms},\"last_swap_ms\":{swap_ms},\"tiles\":[{}]}}",
+        "{{\"density\":{},\"distance\":{},\"status\":\"{status}\",\"groups\":{groups},\"blades\":{blades},\"triangles\":{},\"instances\":{instances},\"mesh_bytes\":{bytes},\"uploads\":{},\"per_m2\":{},\"thin\":[{},{},{THIN_KEEP}],\"fade\":[{},{}],\"build_radius\":{},\"last_build_ms\":{build_ms},\"last_swap_ms\":{swap_ms},\"tiles\":[{}]}}",
         f64::from(density.percent()) / 100.0,
+        f64::from(distance.hundredths()) / 100.0,
         blades * BLADE_TRIANGLES,
         super::grass_gpu::uploads(),
         f64::from(DENSITY) * f64::from(density.percent()) / 100.0,
+        d.thin_start,
+        d.thin_end,
+        d.fade_start,
+        d.fade_end,
+        d.build_radius,
         rows.join(",")
     )
 }
@@ -647,6 +693,8 @@ pub fn sync(
 ) {
     let status = status(active.0, &config);
     let density = config.grass;
+    let distance = config.grass_distance;
+    let reach_m = Distances::new(distance);
     let state = &mut *state;
     // Off keeps each tile's group at a drawn count of 0, so turning grass back on changes counts
     // only; Off never seeds a new tile.
@@ -662,7 +710,7 @@ pub fn sync(
                 commands.entity(g).try_despawn();
             }
         }
-        let json = report(state, density, status, groups.iter().count());
+        let json = report(state, density, distance, status, groups.iter().count());
         if out.0 != json {
             out.0 = json;
         }
@@ -672,7 +720,7 @@ pub fn sync(
     clock.0 = GrassParams {
         time: t,
         prev_time: t - time.delta_secs(),
-        ..GrassParams::new()
+        ..GrassParams::new(reach_m)
     };
     let camera = cameras
         .iter()
@@ -705,7 +753,7 @@ pub fn sync(
             return false;
         };
         let keep = *key == b.key
-            && reach(*cell) <= DROP_RADIUS
+            && reach(*cell) <= reach_m.drop_radius
             && b.group.as_ref().is_none_or(|(g, _)| groups.contains(*g));
         if !keep && let Some((g, _)) = b.group {
             commands.entity(g).try_despawn();
@@ -743,7 +791,7 @@ pub fn sync(
         .iter()
         .filter(|(root, _)| !state.built.contains_key(root))
         .map(|(root, (cell, key))| (reach(*cell), *root, *cell, key.clone()))
-        .filter(|(d, ..)| *d <= BUILD_RADIUS)
+        .filter(|(d, ..)| *d <= reach_m.build_radius)
         .collect();
     todo.sort_by(|a, b| {
         a.0.total_cmp(&b.0)
@@ -797,7 +845,7 @@ pub fn sync(
     if let Some(ms) = slowest {
         state.last_build_ms = ms;
     }
-    let json = report(state, density, status, groups.iter().count());
+    let json = report(state, density, distance, status, groups.iter().count());
     if out.0 != json {
         out.0 = json;
     }
@@ -1146,6 +1194,71 @@ mod tests {
         // The drawn share tracks the slider: 100% draws two thirds of the Lush set.
         let normal = keeps.iter().filter(|&&k| Density::NORMAL.draws(k)).count() as f32;
         assert!((normal / keeps.len() as f32 - 2.0 / 3.0).abs() < 0.02);
+    }
+
+    /// Near reproduces the shipped tuning bit for bit; every stop scales the six distances (never
+    /// the kept share) and keeps fade end < build radius < drop radius.
+    #[test]
+    fn distances_scale_from_the_near_tuning() {
+        let near = Distances::new(GrassDistance::NEAR);
+        assert_eq!(
+            near,
+            Distances {
+                thin_start: THIN_START,
+                thin_end: THIN_END,
+                fade_start: FADE_START,
+                fade_end: FADE_END,
+                build_radius: BUILD_RADIUS,
+                drop_radius: DROP_RADIUS,
+            }
+        );
+        assert_eq!(GrassDistance::default(), GrassDistance::NEAR);
+        let p = GrassParams::new(near);
+        assert_eq!(
+            (
+                p.thin_start,
+                p.thin_end,
+                p.thin_keep,
+                p.fade_start,
+                p.fade_end
+            ),
+            (THIN_START, THIN_END, THIN_KEEP, FADE_START, FADE_END)
+        );
+        for (name, h) in GrassDistance::ALIASES {
+            let g = GrassDistance::parse(name).unwrap();
+            assert_eq!(g.hundredths(), h);
+            let d = Distances::new(g);
+            let s = g.scale();
+            assert_eq!(d.fade_end, FADE_END * s, "{name}");
+            assert_eq!(d.thin_end, THIN_END * s, "{name}");
+            assert_eq!(d.drop_radius, DROP_RADIUS * s, "{name}");
+            assert!(d.thin_start < d.thin_end, "{name}");
+            assert!(d.fade_start < d.fade_end, "{name}");
+            assert!(d.fade_end < d.build_radius, "{name}");
+            assert!(d.build_radius < d.drop_radius, "{name}");
+            assert_eq!(GrassParams::new(d).thin_keep, THIN_KEEP, "{name}");
+        }
+        let far = Distances::new(GrassDistance::parse("far").unwrap());
+        assert_eq!(
+            (far.fade_start, far.fade_end, far.thin_end),
+            (68.0, 116.0, 92.0)
+        );
+    }
+
+    #[test]
+    fn grass_distances_parse_stops_and_multipliers() {
+        let p = |s: &str| GrassDistance::parse(s).map(GrassDistance::hundredths);
+        assert_eq!(p("near"), Some(100));
+        assert_eq!(p("medium"), Some(150));
+        assert_eq!(p("far"), Some(200));
+        assert_eq!(p("very-far"), Some(300));
+        assert_eq!(p("2"), Some(200));
+        assert_eq!(p(" 1.25 "), Some(125));
+        assert_eq!(p("0.5"), Some(100), "never nearer than the shipped tuning");
+        assert_eq!(p("9"), Some(300));
+        assert_eq!(p("NaN"), None);
+        assert_eq!(p("farther"), None);
+        assert_eq!(GrassDistance::from_scale(f32::INFINITY), None);
     }
 
     #[test]

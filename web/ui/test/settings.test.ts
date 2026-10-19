@@ -8,12 +8,17 @@ import type { GradeState, GrassState, TierState } from "../src/bridge.ts";
 import {
   CHANNELS,
   GRADE_KEY,
+  GRASS_DISTANCE_KEY,
+  GRASS_DISTANCE_STOPS,
   GRASS_KEY,
   GRASS_SLIDER,
   grassCommand,
+  grassDistanceCommand,
+  grassDistanceView,
   grassPercent,
   grassView,
   startupGrass,
+  startupGrassDistance,
   storedGrass,
   throttle,
   autoTier,
@@ -242,6 +247,41 @@ test("grass at startup: the stored percent, a stepped choice migrated, unless th
   assert.equal(storedGrass("120"), 120);
   assert.equal(storedGrass("-5"), null);
   assert.equal(GRASS_KEY, "hexWorld.grass");
+});
+
+test("grass distance: four named stops, the engine's multiplier shown, disabled below High", () => {
+  assert.deepEqual(
+    GRASS_DISTANCE_STOPS.map((s) => [s.id, s.name, s.scale]),
+    [
+      ["near", "Near", 1],
+      ["medium", "Medium", 1.5],
+      ["far", "Far", 2],
+      ["very-far", "Very far", 3],
+    ],
+  );
+  const g = { distance: 1 } as GrassState;
+  assert.deepEqual(grassDistanceView(g, tier()), { index: 0, name: "Near", enabled: true });
+  assert.equal(grassDistanceView({ distance: 2 } as GrassState, tier()).index, 2);
+  assert.equal(
+    grassDistanceView({ distance: 1.3 } as GrassState, tier()).name,
+    "Medium",
+    "a scripted value shows its nearest stop",
+  );
+  assert.equal(grassDistanceView(g, tier({ tier: "medium" })).enabled, false, "Medium draws no grass");
+  assert.equal(grassDistanceView(g, tier(), 3).name, "Very far", "a pending stop shows until the engine follows");
+  assert.equal(grassDistanceView(undefined, undefined).index, 0, "Near before the engine reports");
+  assert.deepEqual(grassDistanceCommand("far"), { cmd: "set_grass_distance", scale: 2 });
+  assert.deepEqual(grassDistanceCommand("near"), { cmd: "set_grass_distance", scale: 1 });
+  assert.equal(GRASS_DISTANCE_KEY, "hexWorld.grassDistance");
+});
+
+test("grass distance at startup: the stored stop, unless the address names one or it is unknown", () => {
+  assert.equal(startupGrassDistance("", "far"), "far");
+  assert.equal(startupGrassDistance("", "near"), "near");
+  assert.equal(startupGrassDistance("?grass_distance=2", "far"), null, "?grass_distance= wins for the visit");
+  assert.equal(startupGrassDistance("", null), null);
+  assert.equal(startupGrassDistance("", "farther"), null, "a stale name never reaches the engine");
+  assert.equal(startupGrassDistance("", "2"), null, "only stop names are stored");
 });
 
 test("grass slider sends at most every 150 ms while dragging and the last value on release", () => {

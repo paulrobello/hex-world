@@ -26,7 +26,7 @@ pub use scene::{SceneEntity, TILE_HEIGHT, Tile, Vehicle, setup as setup_scene};
 pub use workload::{
     Ev100, GATE, GateConfig, GateView, GateWorkload, KitHooks, KitSource, Layout, PostMode,
     ShadowCasters, TiltMode, TiltStrength, Tonemap, parse_cascades, parse_chunk, parse_grass,
-    parse_ibl, parse_shadow_dist, parse_shadows,
+    parse_grass_distance, parse_ibl, parse_shadow_dist, parse_shadows,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]

@@ -111,6 +111,12 @@ pub fn parse_grass(s: &str) -> Option<hex_play_state::Density> {
     hex_play_state::Density::parse(s)
 }
 
+/// `grass_distance=<near|medium|far|very-far|multiplier>`: how far grass draws
+/// (`hex_play_state::GrassDistance::parse`).
+pub fn parse_grass_distance(s: &str) -> Option<hex_play_state::GrassDistance> {
+    hex_play_state::GrassDistance::parse(s)
+}
+
 /// `ibl=on|off`: the noon environment map on the kit camera (D5).
 pub fn parse_ibl(s: &str) -> Option<bool> {
     parse_shadows(s)
@@ -340,6 +346,9 @@ pub struct GateConfig {
     /// `grass=<share>|<percent>%|off|sparse|normal|lush`: grass blade density near the camera in
     /// play, on the High and Ultra tiers (`play::grass`); `set_grass` changes it live.
     pub grass: hex_play_state::Density,
+    /// `grass_distance=<near|medium|far|very-far|multiplier>`: how far grass draws
+    /// (`play::grass::Distances`); `set_grass_distance` changes it live.
+    pub grass_distance: hex_play_state::GrassDistance,
 }
 
 impl Default for GateConfig {
@@ -364,6 +373,7 @@ impl Default for GateConfig {
             tier: crate::post::QualityTier::High,
             water_fixed: false,
             grass: hex_play_state::Density::NORMAL,
+            grass_distance: hex_play_state::GrassDistance::NEAR,
         }
     }
 }

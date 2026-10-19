@@ -519,6 +519,9 @@
     "set_grass": [
       "density"
     ],
+    "set_grass_distance": [
+      "scale"
+    ],
     "set_reduced_motion": [
       "on"
     ],
@@ -587,6 +590,12 @@
       "sparse",
       "normal",
       "lush"
+    ],
+    "grass_distance": [
+      "near",
+      "medium",
+      "far",
+      "very-far"
     ],
     "photo_filter": [
       "mono",
@@ -748,6 +757,7 @@
       "blades",
       "build_radius",
       "density",
+      "distance",
       "fade",
       "groups",
       "instances",

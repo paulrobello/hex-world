@@ -82,6 +82,14 @@ pub enum Command {
     SetGrass {
         density: f32,
     },
+    /// Grass draw distance at runtime as a multiplier on the Near tuning (1 Near, 1.5 Medium, 2 Far,
+    /// 3 Very far; clamped to 1..=3, rounded to hundredths; `hex_play::play::grass::Distances`):
+    /// the shader's thinning and fade move at once, tiles newly in reach build their groups under
+    /// the per-frame build budget and tiles past the drop radius drop theirs. The Settings sheet's
+    /// Grass distance slider sends this; the overlay keeps the choice per viewer.
+    SetGrassDistance {
+        scale: f32,
+    },
     /// Reduced motion (`prefers-reduced-motion` or the Settings override, sent by the overlay):
     /// the staged rise and every affordance transition become instant cuts, with no breathing,
     /// dust or camera shake.
@@ -418,6 +426,16 @@ pub fn run_commands(
                     w.resource_mut::<hex_render::GateConfig>().grass = d;
                 }),
                 None => warn!("set_grass command: density {density} is not a number, skipped"),
+            }
+        }
+        Command::SetGrassDistance { scale } => {
+            match hex_play::play::grass::GrassDistance::from_scale(scale) {
+                Some(d) => commands.queue(move |w: &mut World| {
+                    w.resource_mut::<hex_render::GateConfig>().grass_distance = d;
+                }),
+                None => {
+                    warn!("set_grass_distance command: scale {scale} is not a number, skipped")
+                }
             }
         }
         Command::SetReducedMotion { on } => reduced.0 = on,

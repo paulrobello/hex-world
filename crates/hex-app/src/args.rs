@@ -356,6 +356,25 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
             &mut state.warnings,
         )
     }),
+    ("grass_distance", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.grass_distance,
+            hex_render::parse_grass_distance(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    // The hyphenated spelling, natively (`--grass-distance far`).
+    ("grass-distance", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.grass_distance,
+            hex_render::parse_grass_distance(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
     ("water_clock", |state, k, v| {
         set_or_warn(
             &mut state.f.gate.water_fixed,
@@ -460,6 +479,7 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "water_clock",
         "clock",
         "grass",
+        "grass_distance",
         "photo-export",
         "debug",
     ]
@@ -489,6 +509,22 @@ mod tests {
         assert!(!f.fps_on && w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("fps", "maybe")]));
         assert!(!f.fps_on);
+        assert_eq!(w.len(), 1);
+    }
+
+    #[test]
+    fn grass_distance_flag() {
+        let (f, w) = flags_from_pairs(&[]);
+        assert_eq!(f.gate.grass_distance.hundredths(), 100, "Near by default");
+        assert!(w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("grass_distance", "far")]));
+        assert_eq!(f.gate.grass_distance.hundredths(), 200);
+        assert!(w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("grass-distance", "1.5")]));
+        assert_eq!(f.gate.grass_distance.hundredths(), 150);
+        assert!(w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("grass_distance", "farther")]));
+        assert_eq!(f.gate.grass_distance.hundredths(), 100);
         assert_eq!(w.len(), 1);
     }
 

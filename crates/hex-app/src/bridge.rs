@@ -386,6 +386,7 @@ mod schema {
         r#"{"cmd":"set_tier","tier":"low"}"#,
         r#"{"cmd":"set_grade","grade":"rich-1"}"#,
         r#"{"cmd":"set_grass","density":1.2}"#,
+        r#"{"cmd":"set_grass_distance","scale":2}"#,
         r#"{"cmd":"set_reduced_motion","on":true}"#,
         r#"{"cmd":"exit"}"#,
         r#"{"cmd":"select_tile","id":"meadow"}"#,
@@ -425,6 +426,7 @@ mod schema {
             Command::SetTier { .. } => "set_tier",
             Command::SetGrade { .. } => "set_grade",
             Command::SetGrass { .. } => "set_grass",
+            Command::SetGrassDistance { .. } => "set_grass_distance",
             Command::SetReducedMotion { .. } => "set_reduced_motion",
             Command::Exit => "exit",
             Command::SelectTile { .. } => "select_tile",
@@ -695,6 +697,7 @@ mod schema {
         let grass: Value = serde_json::from_str(&hex_play::play::grass::report(
             &Default::default(),
             Default::default(),
+            Default::default(),
             "on",
             0,
         ))
@@ -833,6 +836,7 @@ mod schema {
                 "edge_status": edge_status_names(),
                 "grade": hex_render::Grade::ALL.iter().map(|g| g.name()).collect::<Vec<_>>(),
                 "grass": hex_play::play::grass::Density::ALIASES.iter().map(|(n, _)| *n).collect::<Vec<_>>(),
+                "grass_distance": hex_play::play::grass::GrassDistance::ALIASES.iter().map(|(n, _)| *n).collect::<Vec<_>>(),
             },
             "state": play_shapes(),
             "catalog": catalog(&c),

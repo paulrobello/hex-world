@@ -25,6 +25,12 @@ export type GradeName = (typeof GRADES)[number];
  */
 export const GRASS = ["off", "sparse", "normal", "lush"] as const;
 export type GrassAlias = (typeof GRASS)[number];
+/**
+ * The grass distance stops, nearest first, also accepted by `?grass_distance=` / `--grass_distance`
+ * (`hex_play_state::GrassDistance::ALIASES`): multipliers 1, 1.5, 2 and 3 on the Near tuning.
+ */
+export const GRASS_DISTANCE = ["near", "medium", "far", "very-far"] as const;
+export type GrassDistanceName = (typeof GRASS_DISTANCE)[number];
 /** Where the tier in force came from (`docs/agent-operability.md`, "Quality tier"). */
 export type TierSource = "default" | "explicit" | "detected" | "probe" | "runtime";
 
@@ -87,6 +93,8 @@ export type Command =
   | { cmd: "set_grade"; grade: GradeName }
   /** `density`: share of the Normal density, 0 (off) to 1.5; the engine clamps it and rounds to whole percent. */
   | { cmd: "set_grass"; density: number }
+  /** `scale`: multiplier on every grass distance, 1 (Near) to 3; the engine clamps it and rounds to hundredths. */
+  | { cmd: "set_grass_distance"; scale: number }
   | { cmd: "set_reduced_motion"; on: boolean }
   | { cmd: "exit" }
   | { cmd: "select_tile"; id: string }
@@ -435,6 +443,8 @@ export interface GrassTile {
 export interface GrassState {
   /** Share of the Normal density, 0 to 1.5, in whole percent steps. */
   density: number;
+  /** Multiplier on every grass distance (`thin`, `fade`, `build_radius`), 1 (Near) to 3. */
+  distance: number;
   status: "on" | "off" | "tier" | "scenario";
   groups: number;
   /** Blades drawn at this density (each group's instance count). */
@@ -517,6 +527,7 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   set_tier: keys<CommandOf<"set_tier">>({ tier: true }),
   set_grade: keys<CommandOf<"set_grade">>({ grade: true }),
   set_grass: keys<CommandOf<"set_grass">>({ density: true }),
+  set_grass_distance: keys<CommandOf<"set_grass_distance">>({ scale: true }),
   set_reduced_motion: keys<CommandOf<"set_reduced_motion">>({ on: true }),
   exit: keys<CommandOf<"exit">>({}),
   select_tile: keys<CommandOf<"select_tile">>({ id: true }),
@@ -605,6 +616,7 @@ export const ENUMS = {
   // Display order, not sorted: the schema lists the presets as the engine shows them.
   grade: [...GRADES],
   grass: [...GRASS],
+  grass_distance: [...GRASS_DISTANCE],
 };
 
 export const STATE_FIELDS = {
@@ -696,6 +708,7 @@ export const STATE_FIELDS = {
   grade_preset: keys<GradePreset>({ name: true, detail: true }),
   grass: keys<GrassState>({
     density: true,
+    distance: true,
     status: true,
     groups: true,
     blades: true,

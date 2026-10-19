@@ -5,9 +5,11 @@
 import {
   GRADES,
   GRASS,
+  GRASS_DISTANCE,
   type GradeName,
   type GradeState,
   type GrassAlias,
+  type GrassDistanceName,
   type GrassState,
   type QualityChoice,
   type TierName,
@@ -229,6 +231,60 @@ export const grassCommand = (pct: number): { cmd: "set_grass"; density: number }
 export function startupGrass(search: string, stored: string | null): number | null {
   if (new URLSearchParams(search).has("grass")) return null;
   return storedGrass(stored);
+}
+
+/** The viewer's grass distance stop in localStorage (its name); it is not part of the world save. */
+export const GRASS_DISTANCE_KEY = "hexWorld.grassDistance";
+
+/** The Grass distance slider's stops, nearest first: the multiplier on every grass distance. */
+export const GRASS_DISTANCE_STOPS: readonly { id: GrassDistanceName; name: string; scale: number }[] = [
+  { id: "near", name: "Near", scale: 1 },
+  { id: "medium", name: "Medium", scale: 1.5 },
+  { id: "far", name: "Far", scale: 2 },
+  { id: "very-far", name: "Very far", scale: 3 },
+];
+
+export const isGrassDistance = (v: string | null | undefined): v is GrassDistanceName =>
+  (GRASS_DISTANCE as readonly string[]).includes(v ?? "");
+
+export interface GrassDistanceView {
+  /** The slider position: the stop nearest the pending multiplier, else the engine's. */
+  index: number;
+  name: string;
+  /** Grass draws only on High and Ultra: the slider is disabled below. */
+  enabled: boolean;
+}
+
+export function grassDistanceView(
+  g: GrassState | undefined,
+  tier: TierState | undefined,
+  pick: number | null = null,
+): GrassDistanceView {
+  const scale = pick ?? g?.distance ?? 1;
+  let index = 0;
+  GRASS_DISTANCE_STOPS.forEach((s, i) => {
+    if (Math.abs(s.scale - scale) < Math.abs(GRASS_DISTANCE_STOPS[index]!.scale - scale)) index = i;
+  });
+  return {
+    index,
+    name: GRASS_DISTANCE_STOPS[index]!.name,
+    enabled: tier?.tier === "high" || tier?.tier === "ultra",
+  };
+}
+
+/** `set_grass_distance` for a stop: the engine takes its multiplier. */
+export const grassDistanceCommand = (id: GrassDistanceName): { cmd: "set_grass_distance"; scale: number } => ({
+  cmd: "set_grass_distance",
+  scale: GRASS_DISTANCE_STOPS.find((s) => s.id === id)?.scale ?? 1,
+});
+
+/**
+ * The distance stop to send at startup: the stored one, unless the page address names one
+ * (`?grass_distance=` is read by the engine itself and wins) or the stored value is not a stop.
+ */
+export function startupGrassDistance(search: string, stored: string | null): GrassDistanceName | null {
+  if (new URLSearchParams(search).has("grass_distance")) return null;
+  return isGrassDistance(stored) ? stored : null;
 }
 
 /** Sends at most once per `ms` while a slider drags; `flush` sends the last value at once (on release). */

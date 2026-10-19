@@ -8,8 +8,16 @@ import { Hud } from "./hud.ts";
 import { sprite } from "./icons.ts";
 import { Loading } from "./loading.ts";
 import { Persistence } from "./persist.ts";
-import { loadGrade, loadGrass } from "./settings.ts";
-import { gradeCommand, grassCommand, startupGrade, startupGrass, tierBusy } from "./settings-model.ts";
+import { loadGrade, loadGrass, loadGrassDistance } from "./settings.ts";
+import {
+  gradeCommand,
+  grassCommand,
+  grassDistanceCommand,
+  startupGrade,
+  startupGrass,
+  startupGrassDistance,
+  tierBusy,
+} from "./settings-model.ts";
 import { loadWalkSpeed } from "./settings-world.ts";
 import { idbFactory, openSlots } from "./slots.ts";
 import { UpdateNote, watchVersion } from "./version-check.ts";
@@ -84,6 +92,9 @@ function run(root: HTMLElement, hw: Bridge): void {
   // The viewer's grass density, the same way: a `grass` key in the address wins for the visit.
   const grass = startupGrass(location.search, loadGrass());
   if (grass != null) hw.cmd(grassCommand(grass));
+  // And its grass distance: a `grass_distance` key in the address wins for the visit.
+  const grassDistance = startupGrassDistance(location.search, loadGrassDistance());
+  if (grassDistance) hw.cmd(grassDistanceCommand(grassDistance));
   // The viewer's walk speed, sent only when one is stored (the engine starts at its default).
   const walkSpeed = loadWalkSpeed();
   if (walkSpeed != null) hw.cmd(walkSpeedCommand(walkSpeed));

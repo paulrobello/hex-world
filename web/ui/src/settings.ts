@@ -5,7 +5,8 @@
 // commands. Audio reads and writes `hexWorld.audio`, which keeps the levels per viewer in
 // localStorage; the colour grade and the grass density are kept per viewer the same way, outside
 // the world save. The Grass density slider reads `state().grass` and writes `set_grass` (at most every
-// 150 ms while dragging, and on release); grass draws on High and Ultra only.
+// 150 ms while dragging, and on release); the Grass distance slider (Near, Medium, Far, Very far)
+// reads `state().grass.distance` and writes `set_grass_distance`; grass draws on High and Ultra only.
 // The World tab (settings-world.ts) holds the walk speed and Start over.
 import type { AudioApi } from "./audio.ts";
 import { DebugPanel } from "./debug.ts";
@@ -13,6 +14,7 @@ import type {
   DebugState,
   GradeName,
   GradeState,
+  GrassDistanceName,
   GrassState,
   HexWorld,
   QualityChoice,
@@ -30,11 +32,15 @@ import {
   CHANNELS,
   type Channel,
   GRADE_KEY,
+  GRASS_DISTANCE_KEY,
+  GRASS_DISTANCE_STOPS,
   GRASS_KEY,
   GRASS_SLIDER,
   gradeCommand,
   gradeView,
   grassCommand,
+  grassDistanceCommand,
+  grassDistanceView,
   grassView,
   storedGrass,
   percent,
@@ -78,6 +84,23 @@ export function loadGrass(): string | null {
     return stored;
   } catch {
     return null;
+  }
+}
+
+/** The viewer's stored grass distance stop, or null without one or without storage. */
+export function loadGrassDistance(): string | null {
+  try {
+    return localStorage.getItem(GRASS_DISTANCE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveGrassDistance(id: GrassDistanceName): void {
+  try {
+    localStorage.setItem(GRASS_DISTANCE_KEY, id);
+  } catch {
+    /* Storage refused: the distance holds until the page closes. */
   }
 }
 
@@ -139,6 +162,11 @@ export class Settings {
   private grassSig = "";
   private grassOn = false;
   private grassPick: { pct: number; until: number } | null = null;
+  private readonly distInput: HTMLInputElement;
+  private readonly distOut: HTMLOutputElement;
+  private readonly distField: HTMLElement;
+  private distSig = "";
+  private distPick: { scale: number; until: number } | null = null;
   private readonly rebuild: Rebuild;
 
   constructor(hw: HexWorld, audio: AudioApi | null, onClose: () => void, onChange: () => void, rebuild: Rebuild) {
@@ -240,6 +268,39 @@ export class Settings {
       this.grassInput,
       h("span", { class: "field__hint" }, "100% is the meadow as tuned. 0% turns grass off; 150% costs the most."),
     );
+    // Four stops on one slider, its readout the stop's name. Each move sends at once: a stop only moves
+    // the shader's fade and the build radius, and new tiles build under the engine's per-frame budget.
+    this.distInput = h("input", {
+      type: "range",
+      min: 0,
+      max: GRASS_DISTANCE_STOPS.length - 1,
+      step: 1,
+      "aria-label": "Grass distance",
+    });
+    this.distOut = h("output", { class: "field__value" });
+    this.distInput.addEventListener("input", () => {
+      if (!this.grassOn) return;
+      const stop = GRASS_DISTANCE_STOPS[Number(this.distInput.value)]!;
+      paintStop(this.distInput, this.distOut);
+      this.distPick = { scale: stop.scale, until: performance.now() + PICK_HOLD_MS };
+      this.hw.cmd(grassDistanceCommand(stop.id));
+    });
+    this.distInput.addEventListener("change", () => {
+      if (!this.grassOn) return;
+      saveGrassDistance(GRASS_DISTANCE_STOPS[Number(this.distInput.value)]!.id);
+    });
+    this.distField = h(
+      "label",
+      { class: "field field--slider" },
+      h("span", { class: "field__label" }, "Grass distance"),
+      this.distOut,
+      this.distInput,
+      h(
+        "span",
+        { class: "field__hint" },
+        "How far from the camera blades still draw. Near is the meadow as tuned; Very far costs the most.",
+      ),
+    );
     this.grassHint = h("p", { class: "tier-reason", hidden: true }, "High and Ultra only.");
     const graphics = h(
       "div",
@@ -261,6 +322,7 @@ export class Settings {
       this.gradeSelect.el,
       h("h2", { class: "section-h" }, "Grass"),
       this.grassField,
+      this.distField,
       this.grassHint,
     );
 
@@ -371,6 +433,7 @@ export class Settings {
     this.tierSig = "";
     this.gradeSig = "";
     this.grassSig = "";
+    this.distSig = "";
     this.syncAudio();
     this.tabs.get(this.tab)!.btn.focus({ preventScroll: true });
   }
@@ -407,6 +470,7 @@ export class Settings {
     this.renderTier(tier);
     this.renderGrade(grade);
     this.renderGrass(grass, tier);
+    this.renderGrassDistance(grass, tier);
     if (!tilt) return;
     const sig = `${tilt.enabled}|${tilt.strength}`;
     if (sig === this.tiltSig) return;
@@ -528,6 +592,19 @@ export class Settings {
     paint(this.grassInput, this.grassOut);
   }
 
+  private renderGrassDistance(grass: GrassState | undefined, tier: TierState | undefined): void {
+    const pick = this.distPick;
+    if (pick && (grass?.distance === pick.scale || performance.now() > pick.until)) this.distPick = null;
+    const v = grassDistanceView(grass, tier, this.distPick?.scale ?? null);
+    const sig = JSON.stringify(v);
+    if (sig === this.distSig) return;
+    this.distSig = sig;
+    if (document.activeElement !== this.distInput || !v.enabled) this.distInput.value = String(v.index);
+    this.distInput.disabled = !v.enabled;
+    this.distField.classList.toggle("is-disabled", !v.enabled);
+    paintStop(this.distInput, this.distOut);
+  }
+
   /** Space and Enter pick the focused quality row; arrows, Home and End move along the radio list and pick. */
   private radioKey(e: KeyboardEvent, pick: (id: string) => void): void {
     const rows = [...this.tierList.querySelectorAll<HTMLElement>(".tier")];
@@ -554,4 +631,14 @@ function paint(input: HTMLInputElement, out: HTMLOutputElement): void {
   const max = Number(input.max || 100);
   input.style.setProperty("--pct", `${((Number(input.value) - min) / (max - min)) * 100}%`);
   out.textContent = `${input.value}%`;
+}
+
+/** The grass distance slider's filled track and its stop name, also read out by screen readers. */
+function paintStop(input: HTMLInputElement, out: HTMLOutputElement): void {
+  const max = Number(input.max);
+  const i = Number(input.value);
+  input.style.setProperty("--pct", `${(i / max) * 100}%`);
+  const name = GRASS_DISTANCE_STOPS[i]?.name ?? "";
+  out.textContent = name;
+  input.setAttribute("aria-valuetext", name);
 }
