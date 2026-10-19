@@ -1,0 +1,277 @@
+{
+  "pieceId": "rail_straight_center",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/rail_straight_center.py",
+    "sha256": "37cbeadccdc251b647247f804633d04074658f6213aab164a9cdd60fab3aa354"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_rail.py",
+      "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "none",
+    "lodTris": [
+      704,
+      156,
+      38
+    ],
+    "marginPx": 0,
+    "masks": {
+      "ao": {
+        "crib": [
+          0.78,
+          0.95
+        ],
+        "shoulder": 0.95,
+        "sleeper_rail": 1
+      },
+      "night": 0,
+      "porosity": {
+        "ballast": 0.9,
+        "rail": 0.15,
+        "sleeper": 0.6
+      },
+      "snow": 1
+    },
+    "reason": "no Cycles bake: the masks are an analytic field of (along, across) on the planar UV0",
+    "receiverSignature": "73fdbac8121229b435aea0fee1a88a83e6fc9923ff9201745d72e58c91b87105",
+    "samples": 0,
+    "section": {
+      "ballastTopM": 0.22,
+      "gaugeM": 1.6,
+      "laneWidthM": 3.5,
+      "railCentreM": 0.8400000000000001,
+      "railTopM": 0.45999999999999996,
+      "shoulderM": 1.75,
+      "sinkM": [
+        2.9,
+        -0.3
+      ],
+      "sleeper": {
+        "count": 40,
+        "lengthM": 2.6,
+        "pitchM": 0.7,
+        "topM": 0.3,
+        "widthM": 0.26
+      },
+      "toeM": [
+        2.5,
+        0.03
+      ]
+    },
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 16.000053992461016,
+      "median": 4.047722083476135,
+      "min": 4.04701652320311
+    },
+    "trackPath": {
+      "kind": "straight",
+      "lanes": [
+        0,
+        3
+      ]
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 704,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 156,
+      "ratio": 0.2215909090909091
+    },
+    {
+      "lod": 2,
+      "tris": 38,
+      "ratio": 0.05397727272727273
+    }
+  ],
+  "collider": {
+    "node": "rail_straight_center_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "rail",
+        "offset": 0,
+        "width": 3.5
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0,
+        0
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "edge": 3,
+        "kind": "rail",
+        "offset": 0,
+        "width": 3.5
+      },
+      "name": "socket-lane-1",
+      "position": [
+        -13.856406211853027,
+        0,
+        1.6969203955408477e-15
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 16.000053992461016,
+    "median": 4.047722083476135,
+    "min": 4.04701652320311
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 5190,
+        "astc": 4812
+      },
+      "glbBytes": 47600
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/rail_straight_center/rail_straight_center.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 5190,
+        "sha256": "62a4d2e0b732b76948879ccfe834d1f9dc243a9967d7f5cd07a0c533d72099de"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/rail_straight_center/rail_straight_center.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 4812,
+        "sha256": "5f435e91b25dabcc6f52a6e509aba8e3ae6f0e48c912f2f5a65297a1c1511a29"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/rail_straight_center/rail_straight_center.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 7748,
+        "sha256": "c0b2976ba88a82efd6a04c47a45a31eebe371ec86c341816f9d6242875c2179b"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/rail_straight_center/rail_straight_center.glb",
+      "sha256": "37f08a9bd9aad91aad907c59604fa3d2d29aac3254b6b2dd68ac99b4559dc615",
+      "bytes": 47600
+    },
+    {
+      "path": "assets/kit/p1/rail_straight_center/rail_straight_center.masks.bc7.ktx2",
+      "sha256": "62a4d2e0b732b76948879ccfe834d1f9dc243a9967d7f5cd07a0c533d72099de",
+      "bytes": 5190
+    },
+    {
+      "path": "assets/kit/p1/rail_straight_center/rail_straight_center.masks.astc.ktx2",
+      "sha256": "5f435e91b25dabcc6f52a6e509aba8e3ae6f0e48c912f2f5a65297a1c1511a29",
+      "bytes": 4812
+    },
+    {
+      "path": "assets/kit/p1/rail_straight_center/rail_straight_center.masks.png",
+      "sha256": "c0b2976ba88a82efd6a04c47a45a31eebe371ec86c341816f9d6242875c2179b",
+      "bytes": 7748
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/rail/ref-1.jpg",
+      "sha256": "a3e659e233950ee1e4e97954af6b52707933d9573de657828ad1600640b34d76",
+      "sourceSha256": "c7ff694cfd2e9c07f3d989b24fce3444309f39d8a9dc142e35e6211d5c1d5dba",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "a3ecc1cd-578b-4d5b-ae59-f8e706ec58be",
+      "prompt": "Straight railway tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame, carrying a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders. Seen from above, the track runs straight from the middle of the bottom side across the centre of the tile to the middle of the top side, meeting both sides square-on, and the rest of the tile is open meadow grass, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/rail/ref-2.jpg",
+      "sha256": "67cd8442ec8d40de041ecb0facf9618e44fae798acceddb2e66861596a7265e5",
+      "sourceSha256": "9ed349406586e7a7b0d28d4f97518b4eede185ac0dfdee6c6345a859b34862ec",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "2fd58add-9ab6-4772-a8af-c7e134a1196e",
+      "prompt": "Gentle curve railway tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame, carrying a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders. Seen from above, the track starts at the middle of the bottom side and curves gently right in one smooth wide arc to end at the middle of the upper-right side. The lower-right side between the two track ends is grass, and the top side opposite the start is grass too, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/rail/ref-3.jpg",
+      "sha256": "102c3c8fcd7240942fc8fc343949425ead7415ac94e3dd20162ef880703821b2",
+      "sourceSha256": "196c418ceabb96915c1974c26a2ef1aa4e03261d4bb03ce02700172038e7e66b",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "ab9566ca-e571-45eb-a0e5-ff2f0ee400f0",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. A single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders runs straight between one pair of opposite flat edges, and a 6 m wide two-lane asphalt country road, faded dashed white centre line, low concrete kerbs, grass verges with tufts and small bushes runs straight between another pair of opposite flat edges and crosses the railway at 60 degrees on a level crossing, where the asphalt runs flush up to the rails over smooth timber crossing boards laid between them. Four plain white-painted timber field gates on stout white posts stand at the road edges, two on each side of the railway, swung open parallel to the track. The only things at the crossing are the gates and their posts, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-19T23:56:33.972Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/rail/ref-1.jpg",
+        "assets-source/refs/rail/ref-2.jpg",
+        "assets-source/refs/rail/ref-3.jpg"
+      ],
+      "notes": "Slightly wider than standard gauge so it reads at play distance; single track; bends across adjacent edges (60 degrees); a 60-degree rail-road level crossing with field gates. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/rail_straight_center.py",
+    "sha256": "37cbeadccdc251b647247f804633d04074658f6213aab164a9cdd60fab3aa354"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_rail.py",
+      "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
+    }
+  ],
+  "lodTris": {
+    "rail_straight_center_lod0": 704,
+    "rail_straight_center_lod1": 156,
+    "rail_straight_center_lod2": 38
+  },
+  "nodes": [
+    "rail_straight_center",
+    "rail_straight_center_collider",
+    "rail_straight_center_lod0",
+    "rail_straight_center_lod1",
+    "rail_straight_center_lod2",
+    "socket-lane-0",
+    "socket-lane-1"
+  ],
+  "pieceId": "rail_straight_center",
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "rail",
+        "offset": 0.0,
+        "width": 3.5
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "edge": 3,
+        "kind": "rail",
+        "offset": 0.0,
+        "width": 3.5
+      },
+      "name": "socket-lane-1",
+      "position": [
+        -13.856406211853027,
+        0.0,
+        1.6969203955408477e-15
+      ],
+      "yaw": 0.0
+    }
+  ]
+}
