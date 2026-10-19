@@ -1,0 +1,22 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/barn_red.py",
+    "sha256": "74f799de2028c61cd998472bf8a0ee2f55110997dfaba714a226f5e5b1ccea5c"
+  },
+  "generatorDeps": [],
+  "lodTris": {
+    "barn_red_lod0": 1054,
+    "barn_red_lod1": 280,
+    "barn_red_lod2": 58
+  },
+  "nodes": [
+    "barn_red",
+    "barn_red_collider",
+    "barn_red_lod0",
+    "barn_red_lod1",
+    "barn_red_lod2"
+  ],
+  "pieceId": "barn_red",
+  "sockets": []
+}

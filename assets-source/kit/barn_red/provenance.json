@@ -1,0 +1,203 @@
+{
+  "pieceId": "barn_red",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/barn_red.py",
+    "sha256": "74f799de2028c61cd998472bf8a0ee2f55110997dfaba714a226f5e5b1ccea5c"
+  },
+  "generatorDeps": [],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.6,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "marginPx": 4,
+    "maskStats": {
+      "aoMean": 0.8236875534057617,
+      "aoP05": 0.1725490242242813,
+      "coverage": 0.4817161560058594,
+      "filledTexels": 125223,
+      "nightTexels": 4237
+    },
+    "masksDensityPxPerM": {
+      "barn_red_lod0": {
+        "max": 12.870693350185496,
+        "median": 12.86866847237231,
+        "min": 10.820738487302622
+      },
+      "barn_red_lod1": {
+        "max": 12.86967802316037,
+        "median": 12.868622875616149,
+        "min": 10.820857160333764
+      },
+      "barn_red_lod2": {
+        "max": 12.868897502030666,
+        "median": 12.868724788795543,
+        "min": 10.821233476816074
+      }
+    },
+    "receiverSignature": "83f255d80992ce2a5f50856606394ee00eb1c69fa57df8dbb06baaaa88d548ab",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 12.870693350185496,
+      "median": 12.86866847237231,
+      "min": 10.820738487302622
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1054,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 280,
+      "ratio": 0.2656546489563567
+    },
+    {
+      "lod": 2,
+      "tris": 58,
+      "ratio": 0.05502846299810247
+    }
+  ],
+  "collider": {
+    "node": "barn_red_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 12.870693350185496,
+    "median": 12.86866847237231,
+    "min": 10.820738487302622
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 254886,
+        "astc": 242691
+      },
+      "glbBytes": 90816
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/barn_red/barn_red.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 254886,
+        "sha256": "e9660297967c97dff662a69b97591d093f11cde28285c117f3c08062c22056a1"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/barn_red/barn_red.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 242691,
+        "sha256": "e3f3e0be88ef46c0219054bd925259746cb845a4d7787020f65d80470f1cdd79"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/barn_red/barn_red.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 407891,
+        "sha256": "759f9a804e7b8d7c4b137bded2f61b4003af411a503ebab593f45911454b2097"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/barn_red/barn_red.glb",
+      "sha256": "001d22b1ac840053bbb9441981910050b4246cc2718569bc6630ecd5906993bd",
+      "bytes": 90816
+    },
+    {
+      "path": "assets/kit/p1/barn_red/barn_red.masks.bc7.ktx2",
+      "sha256": "e9660297967c97dff662a69b97591d093f11cde28285c117f3c08062c22056a1",
+      "bytes": 254886
+    },
+    {
+      "path": "assets/kit/p1/barn_red/barn_red.masks.astc.ktx2",
+      "sha256": "e3f3e0be88ef46c0219054bd925259746cb845a4d7787020f65d80470f1cdd79",
+      "bytes": 242691
+    },
+    {
+      "path": "assets/kit/p1/barn_red/barn_red.masks.png",
+      "sha256": "759f9a804e7b8d7c4b137bded2f61b4003af411a503ebab593f45911454b2097",
+      "bytes": 407891
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/farm/ref-1.jpg",
+      "sha256": "7b132f2ad6132d695724f9b2c3438e802af53a328d0f3d63f2cf67cb5aefa30f",
+      "sourceSha256": "2ff556655fd2278c8e3324e4d2d3f5593ecab8da40d71015e8703a4594a9f6cf",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "40cbcc37-2358-4b98-819a-d15f87abcdbc",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, laid out as a small farmyard. About half the tile is a field of neat parallel ploughed furrows of dark brown earth beside a few rows of young green crops. The other half holds a red-painted vertical-board timber barn with a steep dark slate roof and large double doors, a packed-earth yard with a few round hay bales and a small stack of rectangular hay bales, and a grassy paddock enclosed by a weathered post-and-rail timber fence, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/farm/ref-2.jpg",
+      "sha256": "5fd371d02c5f176152283bf2852d99d7e907fb597eba80e9a52bf1c5b1ac9746",
+      "sourceSha256": "a61bd9f1fcd9b3f128c99dd19afb64837da9c3eb8ee1c3b6e10cacdb975712ce",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "904395be-208c-4c55-a00f-a79d076f2d4c",
+      "prompt": "Close-up of a farmyard corner on a diorama tile: a red-painted vertical-board timber barn with a steep dark slate roof and open large double doors, a weathered post-and-rail timber fence, round and rectangular hay bales on a packed-earth yard scattered with loose straw, and the edge of a field of neat ploughed furrows, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-19T17:29:56.156Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/farm/ref-1.jpg",
+        "assets-source/refs/farm/ref-2.jpg"
+      ],
+      "notes": "Pitched barn roof; red board barn for contrast with the cottages; wheat crop. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    }
+  ]
+}

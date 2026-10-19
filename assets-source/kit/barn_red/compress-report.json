@@ -1,0 +1,88 @@
+{
+  "name": "barn_red",
+  "date": "2026-10-19T17:26:09.576Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/barn_red/barn_red.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 254886,
+      "sha256": "e9660297967c97dff662a69b97591d093f11cde28285c117f3c08062c22056a1"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/barn_red/barn_red.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 242691,
+      "sha256": "e3f3e0be88ef46c0219054bd925259746cb845a4d7787020f65d80470f1cdd79"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/barn_red/barn_red.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 407891,
+      "sha256": "759f9a804e7b8d7c4b137bded2f61b4003af411a503ebab593f45911454b2097"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 254886,
+      "astc": 242691
+    },
+    "glbBytes": 90816
+  },
+  "glb": {
+    "bytes": 90816,
+    "sha256": "001d22b1ac840053bbb9441981910050b4246cc2718569bc6630ecd5906993bd"
+  }
+}

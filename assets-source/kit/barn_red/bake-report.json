@@ -1,0 +1,44 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.8236875534057617,
+    "aoP05": 0.1725490242242813,
+    "coverage": 0.4817161560058594,
+    "filledTexels": 125223,
+    "nightTexels": 4237
+  },
+  "masksDensityPxPerM": {
+    "barn_red_lod0": {
+      "max": 12.870693350185496,
+      "median": 12.86866847237231,
+      "min": 10.820738487302622
+    },
+    "barn_red_lod1": {
+      "max": 12.86967802316037,
+      "median": 12.868622875616149,
+      "min": 10.820857160333764
+    },
+    "barn_red_lod2": {
+      "max": 12.868897502030666,
+      "median": 12.868724788795543,
+      "min": 10.821233476816074
+    }
+  },
+  "receiverSignature": "83f255d80992ce2a5f50856606394ee00eb1c69fa57df8dbb06baaaa88d548ab",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 12.870693350185496,
+    "median": 12.86866847237231,
+    "min": 10.820738487302622
+  }
+}

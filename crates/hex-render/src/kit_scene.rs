@@ -91,6 +91,15 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place(piece, 0, 1, 0)
         });
     }
+    // The farm barn (P3, refs A17) on the oak's meadow: its long side along edge 2, its back 0.5 m
+    // inside the border and its nearest corner 9.6 m from the oak (crown 8.55 m), on the meadow
+    // relief at its centre (`relief()` in scripts/blender/kit/meadow_base.py).
+    v.push(Placement {
+        offset: [-4.75, 8.227],
+        yaw_deg: 30.0,
+        y: -0.154,
+        ..place("barn_red", 0, 1, 0)
+    });
     // house_cluster (data/tiles/house_cluster.ron) on the meadow at (-1, 0): its edge-0 road stub
     // meets road tile (0, 0)'s edge-3 stub, so the road runs on into the cluster's driveway.
     v.push(place("house_pad", -1, 0, 0));
@@ -146,8 +155,8 @@ const WINDMILL_Y: f32 = -0.233;
 /// (piece, offset, yaw, relief height) of the hay bales on the oak's meadow (0, 1), base rotation 0.
 const HAY_BALES: [(&str, [f32; 2], f32, f32); 3] = [
     ("hay_bale_round", [-2.0, 2.5], 20.0, -0.198),
-    ("hay_bale_stack", [-5.5, 6.0], -15.0, -0.157),
-    ("hay_bale_round", [-6.5, 3.0], 75.0, -0.070),
+    ("hay_bale_stack", [-9.5, 1.0], -15.0, -0.095),
+    ("hay_bale_round", [-8.0, -4.5], 75.0, -0.129),
 ];
 
 /// (piece, offset, rotation, relief height) of the meadow props in the kit layout.
