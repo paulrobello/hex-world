@@ -492,6 +492,42 @@ mod tests {
         assert!(common.contains(&format!("const FLAG_WET_BAND: u32 = {FLAG_WET_BAND}u;")));
     }
 
+    /// `kit_normal_basis` (kit_common.wesl) must be transpose(inverse(m)). Its adjugate vectors are
+    /// the inverse's rows, so packing them as columns is already the answer; an extra transpose
+    /// (2026-10-17 to 10-19) lit every tile not at 0 or 180 degrees as if mirrored about Y.
+    #[test]
+    fn kit_normal_basis_is_the_inverse_transpose() {
+        use bevy::math::{Mat3, Vec3};
+        let common = include_str!("kit_common.wesl");
+        let body = &common[common.find("fn kit_normal_basis").unwrap()..];
+        let body = &body[..body.find("\n}").unwrap()];
+        assert!(
+            body.contains("return mat3x3(r0 / det, cross(c, a) / det, cross(a, b) / det);")
+                && !body.contains("transpose("),
+            "kit_normal_basis changed; update the CPU mirror below:\n{body}"
+        );
+        let basis = |m: Mat3| {
+            let (a, b, c) = (m.x_axis, m.y_axis, m.z_axis);
+            let r0 = b.cross(c);
+            let det = a.dot(r0);
+            Mat3::from_cols(r0 / det, c.cross(a) / det, a.cross(b) / det)
+        };
+        for deg in [60.0_f32, 120.0, 240.0, 300.0] {
+            let m = Mat3::from_rotation_y(deg.to_radians())
+                * Mat3::from_diagonal(Vec3::new(1.2, 0.8, 1.5));
+            let want = m.inverse().transpose();
+            let got = basis(m);
+            for (g, w) in got.to_cols_array().iter().zip(want.to_cols_array()) {
+                assert!((g - w).abs() < 1e-5, "yaw {deg}: {got:?} != {want:?}");
+            }
+            let n = (got * Vec3::X).normalize();
+            assert!(
+                n.dot(Mat3::from_rotation_y(deg.to_radians()) * Vec3::X) > 0.99,
+                "yaw {deg}: normal not rotated with the piece"
+            );
+        }
+    }
+
     /// Tree bark: a tileable set on UV0 (uv_transform scale) keeps masks on raw UV0 and must not
     /// take the world-space path (a vertical cylinder has no usable world-space tile frame).
     #[test]

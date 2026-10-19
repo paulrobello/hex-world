@@ -35,16 +35,16 @@ fn tileable() -> bool {
 }
 
 // The normal transform `transpose(inverse(m))`, via the adjugate (WGSL has no `inverse`):
-// for column-major columns a, b, c, the inverse's columns are cross(b,c), cross(c,a),
-// cross(a,b), all over det = dot(a, cross(b,c)).
+// for column-major columns a, b, c, the inverse's ROWS are cross(b,c), cross(c,a), cross(a,b),
+// all over det = dot(a, cross(b,c)); packed as columns they are already transpose(inverse(m)).
+// Transposing again yields inverse(m), which mirrors a yawed piece's normals about Y.
 fn kit_normal_basis(m: mat3x3<f32>) -> mat3x3<f32> {
     let a = m[0];
     let b = m[1];
     let c = m[2];
     let r0 = cross(b, c);
     let det = dot(a, r0);
-    let inv = mat3x3(r0 / det, cross(c, a) / det, cross(a, b) / det);
-    return transpose(inv);
+    return mat3x3(r0 / det, cross(c, a) / det, cross(a, b) / det);
 }
 
 // World-space tiling frame. A tileable set is bound in StandardMaterial's base_color / normal_map /
