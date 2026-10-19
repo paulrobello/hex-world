@@ -673,7 +673,7 @@ shots-scatter:
 	mkdir -p target/shots $(SCATTER_DOCS)
 	rm -f target/shots/scatter-*.png target/shots/scatter-*.json
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	HEXW_PACK_HOLD_FRAMES=120 bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter-stream.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
+	HEXW_PACK_HOLD_FRAMES=120 bash scripts/shots/run.sh --state-only cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter-stream.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
 	bash scripts/shots/run.sh --jpegs $(SCATTER_DOCS) $(SCATTER_SHOTS)
 	cp target/shots/scatter-*.json $(SCATTER_DOCS)/
 	node $(SCATTER_DOCS)/check.mjs $(SCATTER_DOCS)

@@ -11,6 +11,13 @@ check_frame() {
     }
 }
 
+# --state-only: the capture writes only state dumps; any PNG it does write is still checked.
+state_only=0
+if [[ "${1:-}" == --state-only ]]; then
+    state_only=1
+    shift
+fi
+
 if [[ "${1:-}" == --jpegs ]]; then
     out="$2"
     shift 2
@@ -29,7 +36,7 @@ else
         check_frame "$file"
         frames=$((frames + 1))
     done < <(find target/shots -name '*.png' -newer "$marker" -print0)
-    if [[ "$frames" == 0 ]]; then
+    if [[ "$frames" == 0 && "$state_only" == 0 ]]; then
         printf 'capture produced no PNG frames\n' >&2
         exit 1
     fi

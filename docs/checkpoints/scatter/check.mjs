@@ -1,5 +1,5 @@
 // Asserts the scatter checkpoint's state dumps (make shots-scatter): every pack landed before the
-// shots, each pine forest, oak tile and meadow scatters its planned count (the density per 100 m²
+// shots, each pine forest, oak tile, meadow and straight road scatters its planned count (the density per 100 m²
 // of cap times 665 m²) and draws all of it, nothing else scatters, only the oak tiles roost (12
 // each), the rising forest scatters, bulldoze takes its scatter and undo brings back the same
 // counts, and the 20-tile world stays inside the draw-call budget.
@@ -18,6 +18,7 @@ const DENSITY = {
   forest: { tree_forest: 3.0, rock_small: 0.2 },
   oak: { rock_small: 0.5, wildflower_clump: 0.9 },
   meadow: { wildflower_clump: 4.0, rock_small: 0.3 },
+  road_straight: { wildflower_single: 3.0 },
 };
 const key = (t) => `${t.q},${t.r}`;
 
@@ -27,7 +28,7 @@ check(placed.tiles === 19, "19 tiles placed (refused placements would be missing
 check(Object.values(placed.packs).every((v) => v === "ready"), "every pack ready", placed.packs);
 check((placed.pack_waiting ?? []).length === 0 && s.waiting.length === 0, "no tile waits on a pack or its ground", { packs: placed.pack_waiting, scatter: s.waiting });
 const scattering = placed.play.tiles.filter((t) => t.tile in DENSITY).map(key).sort();
-check(JSON.stringify(s.tiles.map(key).sort()) === JSON.stringify(scattering), "exactly the pine forests, oak tiles and meadows scatter", s.tiles.map((t) => `${t.tile}@${key(t)}`));
+check(JSON.stringify(s.tiles.map(key).sort()) === JSON.stringify(scattering), "exactly the pine forests, oak tiles, meadows and straight roads scatter", s.tiles.map((t) => `${t.tile}@${key(t)}`));
 for (const t of s.tiles) {
   for (const [piece, d] of Object.entries(DENSITY[t.tile])) {
     const want = (d * CAP) / 100;
