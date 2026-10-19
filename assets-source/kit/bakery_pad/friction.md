@@ -1,0 +1,11 @@
+# bakery_pad friction log
+
+Pass 1 (2026-10-19) ended before modelling: the time went to finding a parking layout, and no GLB was built.
+
+1. **I searched the parking layout on a grid before fixing the path topology.** Nine candidate layouts were grid-searched for about 70 minutes (single-cusp and capped two-pose back legs, coarse 0.35-0.8 m sampling) and none cleared. The failures came from two topology mistakes, not from the parameters:
+   - A car parked level with a neighbour must reverse straight about one car length before it swings. house_cluster reverses 5.4-7.0 m. The searches capped the straight run at 3 m.
+   - A node placed deep in the spur (zb -2.8 to -4) gives the leave leg no room to turn.
+
+   Fix: put the node near the mouth (zb = -2), reverse straight to the mouth, then swing the tail east onto the through road and drive a forward left into the outbound lane. Pick these poses by hand and check them at the sim's 0.1 m step (`layout/check.py`). The hand-picked layout `layout/d3.json` cleared every leg by at least 0.62 m in under 10 minutes. Minutes lost: about 70. Proposed skill text (`pitfalls.md`, new "Parking paths" entry): "Lay out a pad's parking by hand from house_cluster's pattern before any search. Put the node at or just inside the mouth, reverse straight about 1.2 car lengths, then swing onto the road. Check at 0.1 m with a SAT sweep that includes the kerbs at the joint planes, not only the buildings."
+2. **The worktree hook refused a `sed -i` edit of a scratch script** (a compound line). Fix: edit scratch files with the Edit tool. Minutes lost: 1. No skill change: SKILL.md "Worktree sessions" already says this.
+3. **The first relaxed clearance model ignored the road kerbs outside the T mouth.** `d3.json` cleared against the shop, the spots and the hex border, but `d4.json` adds the kerb strips beyond the apron (crude boxes that ignore the mouth fillets, so they are over-strict) and shows spot 1's enter and the leave legs cutting the mouth corners by up to 0.66 m. The spur mouth must be wide enough, or its fillets large enough, for those turns. That decides the mouth geometry, which in turn must keep every vertex off x = +6 and x = -6. Minutes lost: 5. Proposed skill text: as item 1 ("include the kerbs").
