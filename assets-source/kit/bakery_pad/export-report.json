@@ -1,0 +1,98 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/bakery_pad.py",
+    "sha256": "ac155b245cc3ab517c180b9d64f173c64e6019d4866251d153cbc84a0d47947d"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
+    },
+    {
+      "path": "scripts/blender/kit/_road_bend.py",
+      "sha256": "3600718e406beb143a5462ebfcc133e41d6fa38bb209ba7fe702ddc7c71cd041"
+    }
+  ],
+  "lodTris": {
+    "bakery_pad_lod0": 1181,
+    "bakery_pad_lod1": 461,
+    "bakery_pad_lod2": 124
+  },
+  "nodes": [
+    "anchor-park-0",
+    "anchor-park-1",
+    "bakery_pad",
+    "bakery_pad_collider",
+    "bakery_pad_lod0",
+    "bakery_pad_lod1",
+    "bakery_pad_lod2",
+    "socket-lane-0",
+    "socket-lane-3"
+  ],
+  "pieceId": "bakery_pad",
+  "sockets": [
+    {
+      "extras": {
+        "heading_deg": 270.0,
+        "house": 0,
+        "kind": "park",
+        "length": 5.4,
+        "width": 2.0
+      },
+      "name": "anchor-park-0",
+      "position": [
+        1.7999999523162842,
+        0.07999999821186066,
+        -8.800000190734863
+      ],
+      "yaw": 90.00000250447816
+    },
+    {
+      "extras": {
+        "heading_deg": 270.0,
+        "house": 0,
+        "kind": "park",
+        "length": 5.4,
+        "width": 2.0
+      },
+      "name": "anchor-park-1",
+      "position": [
+        4.5,
+        0.07999999821186066,
+        -8.600000381469727
+      ],
+      "yaw": 90.00000250447816
+    },
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "road",
+        "offset": 0.0,
+        "width": 6.0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "edge": 3,
+        "kind": "road",
+        "offset": 0.0,
+        "width": 6.0
+      },
+      "name": "socket-lane-3",
+      "position": [
+        -13.856406211853027,
+        0.0,
+        1.6969203955408477e-15
+      ],
+      "yaw": 0.0
+    }
+  ]
+}
