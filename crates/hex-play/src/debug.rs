@@ -23,6 +23,7 @@ use std::collections::{HashMap, VecDeque};
 
 use bevy::{camera::visibility::VisibilityRange, prelude::*};
 use hex_core::{Axial, HEX_RADIUS};
+use hex_render::kit_instances::KitLodDebug;
 
 use crate::{
     car_material::CarMaterial,
@@ -190,6 +191,7 @@ impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<DebugOverlays>()
             .init_resource::<DebugReport>()
+            .init_resource::<KitLodDebug>()
             .init_gizmo_group::<DebugGizmos>()
             .add_systems(Startup, setup)
             .add_systems(
@@ -206,6 +208,7 @@ impl Plugin for DebugPlugin {
                         d.is_changed() && (d.force_lod.is_some() || r.forced)
                     }),
                     force_new.run_if(|d: Res<DebugOverlays>| d.force_lod.is_some()),
+                    sync_kit_lod_debug.run_if(resource_changed::<DebugOverlays>),
                     count_lods.run_if(|d: Res<DebugOverlays>| d.counts_lods()),
                     sample_frames.run_if(|d: Res<DebugOverlays>| d.perf),
                     draw_grid.run_if(|d: Res<DebugOverlays>| d.grid),
@@ -310,6 +313,18 @@ fn force_new(
     report.work += 1;
     for (lod, mut range) in &mut parts {
         *range = range_for(lod.0, d.force_lod);
+    }
+}
+
+/// Settled kit parts draw instanced, with no per-part entity for the force or the tint to act
+/// on; the instanced path reads both from this resource instead.
+fn sync_kit_lod_debug(d: Res<DebugOverlays>, mut kit: ResMut<KitLodDebug>) {
+    let want = KitLodDebug {
+        force: d.force_lod,
+        tint: d.lod_tint,
+    };
+    if *kit != want {
+        *kit = want;
     }
 }
 
@@ -601,6 +616,14 @@ mod tests {
         app.update();
         let w = app.world();
         assert!(w.resource::<DebugReport>().work > 0);
+        // Settled kit parts draw instanced, with no entity to tint or force: they follow too.
+        assert_eq!(
+            *w.resource::<KitLodDebug>(),
+            KitLodDebug {
+                force: Some(2),
+                tint: true
+            }
+        );
         for (l, &e) in parts.iter().enumerate() {
             assert!(
                 w.get::<TintSaved<KitMaterial>>(e).is_some(),

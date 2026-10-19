@@ -8,6 +8,7 @@ use std::{
 
 use bevy::camera::primitives::Aabb;
 use bevy::mesh::Indices;
+use bevy::pbr::StandardMaterialKey;
 use bevy::prelude::*;
 use hex_core::{Axial, HEX_RADIUS};
 use hex_render::{
@@ -172,6 +173,7 @@ pub(super) fn settle(
     rises: Res<PlayRises>,
     mut chunks: ResMut<PlayChunks>,
     meshes: Res<Assets<Mesh>>,
+    materials: Res<Assets<KitMaterial>>,
     families: Option<Res<KitFamilies>>,
     config: Res<hex_render::GateConfig>,
     mut report: ResMut<super::scatter::ScatterReport>,
@@ -272,7 +274,7 @@ pub(super) fn settle(
     }
     if !chunks.dirty.is_empty() {
         let families = families.as_ref().expect("families");
-        rebuild(&mut commands, &mut chunks, &meshes, families);
+        rebuild(&mut commands, &mut chunks, &meshes, &materials, families);
     }
     update_report(&chunks, &mut report);
 }
@@ -283,6 +285,7 @@ fn rebuild(
     commands: &mut Commands,
     chunks: &mut PlayChunks,
     meshes: &Assets<Mesh>,
+    materials: &Assets<KitMaterial>,
     families: &KitFamilies,
 ) {
     chunks.dirty.clear();
@@ -308,7 +311,10 @@ fn rebuild(
     let mut local_bounds: HashMap<AssetId<Mesh>, (Vec3, Vec3)> = HashMap::new();
     // One instance per placement: a family's three LOD parts share it, so the first LOD seen
     // represents it and its siblings are dropped (the LOD draw picks the mesh, not the record).
-    let mut seen: HashSet<(u32, AssetId<KitMaterial>, Entity)> = HashSet::new();
+    // A placement is its parent plus its local transform: scatter puts every tree of a tile
+    // under one group entity, so the parent alone would collapse them into one record.
+    #[allow(clippy::type_complexity)]
+    let mut seen: HashSet<(u32, AssetId<KitMaterial>, Entity, [u32; 10])> = HashSet::new();
     for (centre, tiles) in &grouped {
         let [x, z] = centre.to_world(HEX_RADIUS);
         let origin = Vec3::new(x, 0.0, z);
@@ -320,7 +326,12 @@ fn rebuild(
                 let Some((fid, _lod)) = families.family_of(part.mesh.id()) else {
                     continue;
                 };
-                if !seen.insert((fid, part.material.id(), part.parent)) {
+                if !seen.insert((
+                    fid,
+                    part.material.id(),
+                    part.parent,
+                    placement_bits(&part.local),
+                )) {
                     continue;
                 }
                 let (blo, bhi) = *local_bounds
@@ -337,7 +348,9 @@ fn rebuild(
                 let start = slots[si].2.len() as u32;
                 slots[si].2.push(GpuKitInstance {
                     rotation: part.world.rotation.to_array(),
-                    translation: (part.world.translation - origin).to_array(),
+                    // World space: kit_instances.wesl builds world_from_local from the record
+                    // alone, with no chunk origin to add back.
+                    translation: part.world.translation.to_array(),
                     tag: 0,
                     scale: part.world.scale.to_array(),
                     _pad: 0,
@@ -396,7 +409,10 @@ fn rebuild(
             mesh: mesh_ids,
             tris,
             material: material.id(),
-            key: 0,
+            // The per-entity path's `StandardMaterialKey`: normal map, cull mode, depth bias.
+            key: materials
+                .get(material)
+                .map_or(0, |m| StandardMaterialKey::from(&m.base).bits()),
         });
     }
     let mut out_chunks: Vec<KitChunk> = vec![];
@@ -436,6 +452,12 @@ fn rebuild(
         meta,
         version: 0,
     })));
+}
+
+/// The exact bits of a part's local transform, identifying its placement under the parent.
+fn placement_bits(t: &Transform) -> [u32; 10] {
+    let (r, p, s) = (t.rotation.to_array(), t.translation, t.scale);
+    [p.x, p.y, p.z, r[0], r[1], r[2], r[3], s.x, s.y, s.z].map(f32::to_bits)
 }
 
 /// A (slot, LOD) mesh's decompress metadata, mirroring the mesh uniform's `MeshMetadata`
@@ -539,6 +561,7 @@ mod tests {
             .init_resource::<PlaySpawned>()
             .init_resource::<PlayRises>()
             .init_resource::<Assets<Mesh>>()
+            .init_resource::<Assets<KitMaterial>>()
             .init_resource::<hex_render::GateConfig>()
             .init_resource::<super::super::scatter::ScatterReport>();
         // One family per part, as in production: a family is one piece primitive across LODs,
@@ -682,6 +705,86 @@ mod tests {
             50
         );
         assert_eq!(app.world().resource::<KitInstanceSet>().0.pieces.len(), 50);
+    }
+
+    #[test]
+    fn placements_sharing_a_parent_each_keep_one_record() {
+        // Scatter spawns every tree of a tile under one group entity, each placement as one
+        // part per LOD at the same local transform: four placements, four records. The tile sits
+        // outside the origin chunk, so each record must still carry its world position.
+        let cell = Axial::new(12, -3);
+        let [cx, cz] = cell.to_world(HEX_RADIUS);
+        let mut app = App::new();
+        app.init_resource::<PlayChunks>()
+            .init_resource::<PlayView>()
+            .init_resource::<PlaySpawned>()
+            .init_resource::<PlayRises>()
+            .init_resource::<Assets<Mesh>>()
+            .init_resource::<Assets<KitMaterial>>()
+            .init_resource::<hex_render::GateConfig>()
+            .init_resource::<super::super::scatter::ScatterReport>();
+        let lods: [Handle<Mesh>; 3] = {
+            let mut meshes = app.world_mut().resource_mut::<Assets<Mesh>>();
+            std::array::from_fn(|_| meshes.add(Cuboid::new(1.0, 2.0, 3.0)))
+        };
+        let mut families = KitFamilies::default();
+        for (lod, h) in lods.iter().enumerate() {
+            families.family_of.insert(h.id(), (0, lod as u8));
+        }
+        families
+            .meshes_of
+            .insert(0, std::array::from_fn(|i| Some(lods[i].clone())));
+        app.insert_resource(families);
+        let root = app
+            .world_mut()
+            .spawn((Transform::from_xyz(cx, 0.0, cz), Visibility::Inherited))
+            .id();
+        let group = app
+            .world_mut()
+            .spawn((Transform::IDENTITY, Visibility::Inherited, ChildOf(root)))
+            .id();
+        for i in 0..4 {
+            let local = Transform::from_xyz(i as f32 * 3.0, 0.0, 1.0);
+            for (lod, h) in lods.iter().enumerate() {
+                app.world_mut().spawn((
+                    Mesh3d(h.clone()),
+                    MeshMaterial3d::<KitMaterial>(Handle::default()),
+                    local,
+                    Lod(lod as u8),
+                    RisePart::new(cell, RiseRole::Edge, local),
+                    ChildOf(group),
+                ));
+            }
+        }
+        let tile = PlayTile {
+            cell,
+            tile: "forest".into(),
+            rotation: 0,
+        };
+        app.world_mut()
+            .resource_mut::<PlayView>()
+            .tiles
+            .push(tile.clone());
+        app.world_mut()
+            .resource_mut::<PlaySpawned>()
+            .tiles
+            .insert(cell, (tile, root));
+        app.world_mut().resource_mut::<PlayRises>().rest(cell);
+        app.add_systems(Update, settle);
+        app.update();
+        let set = &app.world().resource::<KitInstanceSet>().0;
+        assert_eq!(set.pieces.len(), 4);
+        assert_eq!(set.chunks[0].ranges, vec![0..4]);
+        assert_ne!(set.chunks[0].centre, Vec3::ZERO, "outside the origin chunk");
+        let mut xs: Vec<[f32; 3]> = set.pieces.iter().map(|p| p.translation).collect();
+        xs.sort_by(|a, b| a[0].total_cmp(&b[0]));
+        for (i, t) in xs.iter().enumerate() {
+            let want = Vec3::new(cx + i as f32 * 3.0, 0.0, cz + 1.0);
+            assert!(
+                Vec3::from(*t).distance(want) < 1e-3,
+                "record {i} at {t:?}, want {want}"
+            );
+        }
     }
 
     #[test]

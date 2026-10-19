@@ -29,7 +29,7 @@ use bevy::{
         LightEntity, MATERIAL_BIND_GROUP_INDEX, MeshPipeline, MeshPipelineKey, PreparedMaterial,
         PrepassPipeline, SetMeshViewBindGroup, SetMeshViewBindingArrayBindGroup,
         SetPrepassViewBindGroup, SetPrepassViewEmptyBindGroup, Shadow, ShadowBatchSetKey,
-        ShadowBinKey, ViewKeyCache,
+        ShadowBinKey, ViewKeyCache, alpha_mode_pipeline_key,
     },
     prelude::*,
     render::{
@@ -139,6 +139,16 @@ impl KitSlotDraw {
     }
 }
 
+/// The debug LOD overlays for the instanced path, which has no per-part entities for the
+/// `VisibilityRange` force and the material-swap tint to act on: `force` pins every chunk to one
+/// LOD, `tint` paints each draw in its LOD's debug colour. hex-play mirrors its overlays here.
+#[derive(Resource, Clone, Copy, Debug, Default, PartialEq, ExtractResource)]
+#[extract_app(RenderApp)]
+pub struct KitLodDebug {
+    pub force: Option<u8>,
+    pub tint: bool,
+}
+
 /// Culling/LOD thresholds, mirroring the per-entity `VisibilityRange` bands (`scene::lod_range`).
 pub const LOD_NEAR: f32 = 150.0;
 pub const LOD_FAR: f32 = 400.0;
@@ -196,8 +206,9 @@ pub struct KitInstancesPlugin;
 
 impl Plugin for KitInstancesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
+        app.init_resource::<KitLodDebug>().add_plugins((
             ExtractResourcePlugin::<KitInstanceSet>::default(),
+            ExtractResourcePlugin::<KitLodDebug>::default(),
             ExtractComponentPlugin::<KitSlotDraw>::default(),
         ));
         let Some(render_app) = app.get_sub_app_mut(RenderApp) else {
@@ -231,6 +242,8 @@ struct KitGpu {
     meta: Option<Buffer>,
     /// Byte stride between (slot, LOD) meta entries (device alignment).
     meta_stride: u32,
+    /// The LOD tint the meta buffer was written with.
+    meta_tint: bool,
     ids: RawBufferVec<u32>,
     // (`ids` holds the per-view record ids; it is bound as an instanced vertex buffer, not
     // storage — see kit_instances.wesl for why.)
@@ -247,6 +260,7 @@ impl Default for KitGpu {
             pieces: None,
             meta: None,
             meta_stride: 0,
+            meta_tint: false,
             ids: RawBufferVec::new(BufferUsages::VERTEX),
             bind_groups: Vec::new(),
             draws: HashMap::default(),
@@ -575,12 +589,18 @@ fn prepare_kit(
     server: Res<AssetServer>,
     device: Res<RenderDevice>,
     materials: Option<Res<ErasedRenderAssets<PreparedMaterial>>>,
+    debug: Option<Res<KitLodDebug>>,
 ) {
     let Some(scene) = scene else {
         return;
     };
+    let tint = debug.is_some_and(|d| d.tint);
     let changed = gpu.scene.as_ref().is_none_or(|s| !Arc::ptr_eq(s, &scene.0));
     if !changed {
+        if tint != gpu.meta_tint && gpu.meta.is_some() {
+            gpu.meta = Some(meta_buffer(&device, &scene.0.meta, gpu.meta_stride, tint));
+            gpu.meta_tint = tint;
+        }
         return;
     }
     gpu.scene = Some(scene.0.clone());
@@ -633,19 +653,29 @@ fn prepare_kit(
         usage: BufferUsages::STORAGE,
     }));
     // One metadata entry per (slot, LOD), padded to the device's dynamic-offset alignment.
-    let align = device.limits().min_uniform_buffer_offset_alignment as usize;
-    let stride = 64usize.max(align);
-    let mut bytes = vec![0u8; stride * scene.0.meta.len()];
-    for (i, m) in scene.0.meta.iter().enumerate() {
-        let src = bytemuck::bytes_of(m);
+    let align = device.limits().min_uniform_buffer_offset_alignment;
+    gpu.meta_stride = 64u32.max(align);
+    gpu.meta = Some(meta_buffer(&device, &scene.0.meta, gpu.meta_stride, tint));
+    gpu.meta_tint = tint;
+}
+
+/// The (slot, LOD) metadata entries at `stride`. Entry `slot * 3 + lod` carries the debug LOD
+/// tint in its pad words: `_pad0` 1 when tinting, `_pad1` the LOD.
+fn meta_buffer(device: &RenderDevice, meta: &[KitGpuMeta], stride: u32, tint: bool) -> Buffer {
+    let stride = stride as usize;
+    let mut bytes = vec![0u8; stride * meta.len()];
+    for (i, m) in meta.iter().enumerate() {
+        let mut m = *m;
+        m._pad0 = u32::from(tint);
+        m._pad1 = (i % 3) as u32;
+        let src = bytemuck::bytes_of(&m);
         bytes[i * stride..i * stride + src.len()].copy_from_slice(src);
     }
-    gpu.meta_stride = stride as u32;
-    gpu.meta = Some(device.create_buffer_with_data(&BufferInitDescriptor {
+    device.create_buffer_with_data(&BufferInitDescriptor {
         label: Some("kit_instances_meta"),
         contents: &bytes,
         usage: BufferUsages::UNIFORM,
-    }));
+    })
 }
 // ---------------------------------------------------------------------------------------------
 // Queue.
@@ -707,10 +737,11 @@ fn queue_kit(
     render_meshes: Res<RenderAssets<RenderMesh>>,
     materials: Res<ErasedRenderAssets<PreparedMaterial>>,
     view_key_cache: Res<ViewKeyCache>,
-    (opaque_draw, mask_draw, prepass_draw, shadow_draw): (
+    (opaque_draw, mask_draw, prepass_draw, mask_prepass_draw, shadow_draw): (
         Res<DrawFunctions<Opaque3d>>,
         Res<DrawFunctions<AlphaMask3d>>,
         Res<DrawFunctions<Opaque3dPrepass>>,
+        Res<DrawFunctions<AlphaMask3dPrepass>>,
         Res<DrawFunctions<Shadow>>,
     ),
     (
@@ -728,7 +759,11 @@ fn queue_kit(
     ),
     cameras: Query<(Entity, &ExtractedView, &Msaa), With<ExtractedCamera>>,
     lights: Query<(Entity, &ExtractedView, &LightEntity)>,
-    (device, queue): (Res<RenderDevice>, Res<RenderQueue>),
+    (device, queue, debug): (
+        Res<RenderDevice>,
+        Res<RenderQueue>,
+        Option<Res<KitLodDebug>>,
+    ),
     mut gpu: ResMut<KitGpu>,
 ) {
     let (Some(scene), Some(main), Some(prepass)) = (scene, main, prepass) else {
@@ -736,7 +771,10 @@ fn queue_kit(
     };
     let draw_main = opaque_draw.read().id::<DrawKitMain>();
     let draw_mask = mask_draw.read().id::<DrawKitMain>();
+    // Draw-function ids index each phase's own registry: an `Opaque3dPrepass` id queued into
+    // `AlphaMask3dPrepass` names some other function there, and the masked slots never draw.
     let draw_prepass = prepass_draw.read().id::<DrawKitPrepass>();
+    let draw_mask_prepass = mask_prepass_draw.read().id::<DrawKitPrepass>();
     let draw_shadow = shadow_draw.read().id::<DrawKitPrepass>();
     // One queue-side record per (slot, LOD) draw: the render mesh for the key/topology and the
     // material's pipeline key bits.
@@ -764,7 +802,13 @@ fn queue_kit(
         let Some(prepared) = materials.get(slot.material.untyped()) else {
             continue;
         };
-        let bits = prepared.properties.mesh_pipeline_key_bits.downcast();
+        // As bevy's `queue_material_meshes` does: the alpha mode's key (MAY_DISCARD for Mask, so
+        // the alpha-cutoff foliage discards) is added per draw, not carried in the material bits.
+        let mut bits: MeshPipelineKey = prepared.properties.mesh_pipeline_key_bits.downcast();
+        bits.insert(alpha_mode_pipeline_key(
+            prepared.properties.alpha_mode,
+            &Msaa::Off,
+        ));
         draws.push(Draw {
             entity: e,
             main_entity: *me,
@@ -792,11 +836,13 @@ fn queue_kit(
         return;
     };
     // LOD is per chunk from the main camera, in every view (as `VisibilityRange` did per entity).
+    // A forced debug LOD pins every chunk, as it pins every per-entity part's range.
     let eye = camera.1.world_from_view.translation();
+    let force = debug.and_then(|d| d.force).map(|l| (l as usize).min(2));
     let lods: Vec<usize> = d
         .chunks
         .iter()
-        .map(|c| kit_chunk_lod(eye.distance(c.centre)))
+        .map(|c| force.unwrap_or_else(|| kit_chunk_lod(eye.distance(c.centre))))
         .collect();
     for (ve, view, msaa) in &cameras {
         let Some(&view_key) = view_key_cache.get(&view.retained_view_entity) else {
@@ -930,7 +976,7 @@ fn queue_kit(
                     phase.add(
                         OpaqueNoLightmap3dBatchSetKey {
                             pipeline,
-                            draw_function: draw_prepass,
+                            draw_function: draw_mask_prepass,
                             material_bind_group_index: None,
                             slabs: MeshSlabs::default(),
                         },

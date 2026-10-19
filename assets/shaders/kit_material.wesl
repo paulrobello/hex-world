@@ -10,6 +10,10 @@ import bevy_pbr::render::{
 };
 @if(!KIT_INSTANCED)
 import bevy_pbr::render::mesh_functions;
+@if(KIT_INSTANCED)
+import bevy_pbr::render::{mesh_types, pbr_functions};
+@if(KIT_INSTANCED)
+import hex_render::kit_instances;
 import hex_render::{kit_common, hooks, water_common};
 
 @if(PREPASS_PIPELINE)
@@ -35,6 +39,27 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
     let foliage = (flags & pbr_types::STANDARD_MATERIAL_FLAGS_ALPHA_MODE_RESERVED_BITS)
         == pbr_types::STANDARD_MATERIAL_FLAGS_ALPHA_MODE_MASK;
     var pbr_input = pbr_input_from_standard_material(in, is_front || foliage);
+    // The instanced path binds kit records where bevy's per-mesh uniform sits, so the mesh flags
+    // pbr_fragment read from `mesh[instance_index]` are record bytes. Restore what a kit entity
+    // gets (a shadow receiver with a positive-determinant transform: kit records never mirror)
+    // and redo the winding-dependent normal with them.
+    @if(KIT_INSTANCED) {
+    pbr_input.flags = mesh_types::MESH_FLAGS_SHADOW_RECEIVER_BIT
+        | mesh_types::MESH_FLAGS_SIGN_DETERMINANT_MODEL_3X3_BIT;
+    let double_sided = (flags & pbr_types::STANDARD_MATERIAL_FLAGS_DOUBLE_SIDED_BIT) != 0u;
+    pbr_input.world_normal = pbr_functions::prepare_world_normal(
+        in.world_normal,
+        double_sided,
+        is_front || foliage,
+    );
+    // Only a double-sided slot's N depends on the winding; single-sided pieces keep bevy's
+    // normal-mapped N.
+    @if(!LOAD_PREPASS_NORMALS) {
+    if (double_sided) {
+        pbr_input.N = normalize(pbr_input.world_normal);
+    }
+    }
+    }
 
     if (kit_common::tileable()) {
         // pbr_input sampled the tile textures at UV0; base color, roughness, metallic and N are
@@ -129,6 +154,22 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
     // it. No other foliage slot reaches 0.95 (slot roughness <= 0.9, unique foliage ORM G <= 0.88).
     if ((kit_common::kit.flags & kit_common::FLAG_FOLIAGE) != 0u && !kit_common::tileable()) {
         pbr_input.material.reflectance *= 1.0 - smoothstep(0.95, 1.0, pbr_input.material.perceptual_roughness);
+    }
+
+    // Debug LOD tint on the instanced path (kit_instances' meta pad words; the per-entity path
+    // swaps in a tint material instead). Colours are hex_play::debug::LOD_TINTS.
+    @if(KIT_INSTANCED) {
+    if (kit_instances::kit_meta._pad0 != 0u) {
+        var tint = vec3(0.266, 0.004, 0.330);
+        if (kit_instances::kit_meta._pad1 == 0u) {
+            tint = vec3(0.991, 0.906, 0.145);
+        } else if (kit_instances::kit_meta._pad1 == 1u) {
+            tint = vec3(0.129, 0.569, 0.549);
+        }
+        let lin = pow(tint, vec3(2.2));
+        pbr_input.material.base_color = vec4(lin, pbr_input.material.base_color.a);
+        pbr_input.material.emissive = vec4(lin * 0.25, pbr_input.material.emissive.a);
+    }
     }
 
     pbr_input.material.base_color = alpha_discard(pbr_input.material.flags, pbr_input.material.alpha_cutoff, pbr_input.material.base_color);
