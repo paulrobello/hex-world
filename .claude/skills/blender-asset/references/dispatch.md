@@ -2,7 +2,7 @@
 
 For the orchestrator. Every Blender asset agent gets a brief with these ten parts. Each part
 answers something past agents had to rediscover (review of 28 runs, 2026-10-14,
-`docs/review/2026-10-14-asset-agent-review.md`). Dispatch at high effort with
+`docs/review/2026-10-14-asset-agent-review.md`). Dispatch on Opus 5.5 at xhigh effort with
 `isolation: "worktree"`. When a revision follows owner feedback on a piece, resume the agent
 that built it instead of starting a fresh one.
 

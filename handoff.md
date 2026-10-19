@@ -16,7 +16,7 @@ Symptoms when placing a forest: the full tree set rises, then several trees disa
 ## Standing rules from the owner (still in force)
 
 - Never push without Paul's approval. Commit locally, then rebuild with `make build-web` after every merge to `main`.
-- No new asset-generation agents until Paul gives the all clear (token budget). Tool fixes and non-asset features are allowed.
+- Asset-generation agents are cleared again (Paul, 2026-10-19: "start creating more assets in blender"), on Opus 5.5 at xhigh effort.
 - Blender is headless only, no live Blender or MCP (owner rule, 2026-10-13).
 - Tool bugs and flaky tests are high priority, never low.
 - Never record an owner approval yourself. Use pending entries in `docs/review/` and on cards only.
