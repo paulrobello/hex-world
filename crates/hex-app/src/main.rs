@@ -117,7 +117,7 @@ fn main() {
             config: flags.gate,
         })
         .add_plugins(hex_play::HexPlayPlugin {
-            fps: !flags.fps_off,
+            fps: flags.fps_on,
             tier_explicit: flags.tier_explicit,
             gpu_timing: flags.gpu_timing,
         })

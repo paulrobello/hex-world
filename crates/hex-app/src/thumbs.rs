@@ -58,7 +58,7 @@ pub fn force_flags(f: &mut Flags) {
     f.scenario = Scenario::Play;
     f.gate.post = PostMode::None;
     f.gate.tilt = TiltMode::Off;
-    f.fps_off = true;
+    f.fps_on = false;
     f.clock_fixed = true;
     f.size = Some(RENDER_SIZE);
     f.shot = None;

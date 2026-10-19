@@ -48,8 +48,9 @@ pub struct Flags {
     pub size: Option<(u32, u32)>,
     pub seed: u64,
     pub no_anim: bool,
-    /// `fps=off` starts with the FPS counter hidden (default on; F3 toggles at runtime).
-    pub fps_off: bool,
+    /// `fps=on` starts with the FPS counter shown (default off since the Settings performance
+    /// readout, owner 2026-10-19; F3 toggles at runtime).
+    pub fps_on: bool,
     pub dump_state: Option<String>,
     /// `clock=fixed`: every Bevy clock advances exactly 1/60 s per frame, so the 20 Hz car tick
     /// lands on every third frame and scripted runs replay identically.
@@ -202,8 +203,8 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("no-anim", |state, _k, v| state.f.no_anim = v != "0"),
     ("fps", |state, _k, v| match v.as_str() {
-        "on" => state.f.fps_off = false,
-        "off" => state.f.fps_off = true,
+        "on" => state.f.fps_on = true,
+        "off" => state.f.fps_on = false,
         _ => state
             .warnings
             .push(format!("unknown fps '{v}', using default")),
@@ -481,13 +482,13 @@ mod tests {
     #[test]
     fn fps_flag() {
         let (f, w) = flags_from_pairs(&[]);
-        assert!(!f.fps_off && w.is_empty());
-        let (f, w) = flags_from_pairs(&p(&[("fps", "off")]));
-        assert!(f.fps_off && w.is_empty());
-        let (f, w) = flags_from_pairs(&p(&[("fps", "off"), ("fps", "on")]));
-        assert!(!f.fps_off && w.is_empty());
+        assert!(!f.fps_on && w.is_empty(), "hidden by default");
+        let (f, w) = flags_from_pairs(&p(&[("fps", "on")]));
+        assert!(f.fps_on && w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("fps", "on"), ("fps", "off")]));
+        assert!(!f.fps_on && w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("fps", "maybe")]));
-        assert!(!f.fps_off);
+        assert!(!f.fps_on);
         assert_eq!(w.len(), 1);
     }
 
