@@ -1,5 +1,7 @@
 # Owner review queue, 2026-10-19
 
+**Answered 2026-10-19: "all approved".** A1-A5 approved and recorded in each piece's provenance (`c02a9de`); G1 approved as shipped (Very far kept, default Near), its perf run still pending; pushed (`818fc91`, CI green, deployed). The questions below are kept as the record.
+
 New P3 kit pieces waiting on your look. Nothing here is approved; each piece is merged to main and visible in the kit scenario (`make run ARGS="--scenario kit"`), not yet in play.
 
 ## Approvals
