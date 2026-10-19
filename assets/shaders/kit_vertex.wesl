@@ -130,10 +130,14 @@ fn shade_kit_vertex(
     var out: KitVertexOutput;
     var wind_origin = wind_origin_in;
 @if(VERTEX_COLORS) {
-    if (vertex.color.a < 0.0) {
-        wind_origin = vertex.color.xyz;
-        vertex.color = vec4(1.0);
+    // COLOR_0.a below zero marks the wind origin (the foliage sway pivots there); the colour must
+    // then read as neutral white. WGSL parameters are immutable, so work on a copy.
+    var color = vertex.color;
+    if (color.a < 0.0) {
+        wind_origin = color.xyz;
+        color = vec4(1.0);
     }
+    out.color = color;
 }
 
     let basis = mat3x3(world_from_local[0].xyz, world_from_local[1].xyz, world_from_local[2].xyz);
@@ -162,9 +166,6 @@ fn shade_kit_vertex(
 
 @if(VERTEX_TANGENTS)
     out.world_tangent = vec4(normalize(basis * vertex.tangent.xyz), vertex.tangent.w);
-
-@if(VERTEX_COLORS)
-    out.color = vertex.color;
 
 @if(VERTEX_OUTPUT_INSTANCE_INDEX)
     out.instance_index = tag;
