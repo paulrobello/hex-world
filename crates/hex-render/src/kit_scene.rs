@@ -100,6 +100,16 @@ pub fn kit_layout() -> Vec<Placement> {
         y: -0.154,
         ..place("barn_red", 0, 1, 0)
     });
+    // The bakery (P3, refs A17) on road tile (1, 0), north of the road and facing it (yaw 90 turns
+    // its +x shop front to +z), its LOD0 front (the bread basket, 3.73 m) 0.27 m clear of the road
+    // profile (|z| <= 4.6 m), on the meadow relief at its centre (`relief()` in
+    // scripts/blender/kit/meadow_base.py).
+    v.push(Placement {
+        offset: [1.5, -8.6],
+        yaw_deg: 90.0,
+        y: -0.062,
+        ..place("bakery_shop", 1, 0, 0)
+    });
     // house_cluster (data/tiles/house_cluster.ron) on the meadow at (-1, 0): its edge-0 road stub
     // meets road tile (0, 0)'s edge-3 stub, so the road runs on into the cluster's driveway.
     v.push(place("house_pad", -1, 0, 0));

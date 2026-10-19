@@ -1,0 +1,88 @@
+{
+  "name": "bakery_shop",
+  "date": "2026-10-19T17:58:24.417Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/bakery_shop/bakery_shop.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 432649,
+      "sha256": "2d8a98644c371bd0fc43280fce843e6e1fb14e6329b3af9ab3debee8615a159f"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/bakery_shop/bakery_shop.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 406711,
+      "sha256": "c8015c077e00bb0846ccfb088e7fda9a2a8ebd74da16b3dc697d7bd3f80ecdeb"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/bakery_shop/bakery_shop.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 608377,
+      "sha256": "e94afb0ad764bc516bee00d6826d507a62da95246c60132a9e54c439fbd26b96"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 432649,
+      "astc": 406711
+    },
+    "glbBytes": 147260
+  },
+  "glb": {
+    "bytes": 147260,
+    "sha256": "c996e6eb4634e47ef81ac6191f4fc957a0af81775e864064d1f57a1f645524f8"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/bakery_shop.py",
+    "sha256": "603fe82641d2f7ae9d4dfc6de26299650ebe0ee8d0f96b4623402bd999029866"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "16bd62ae92924c7240876908b7d25047fd60d77df3fa69709fb40c8432a29079"
+    }
+  ],
+  "lodTris": {
+    "bakery_shop_lod0": 1405,
+    "bakery_shop_lod1": 601,
+    "bakery_shop_lod2": 127
+  },
+  "nodes": [
+    "bakery_shop",
+    "bakery_shop_collider",
+    "bakery_shop_lod0",
+    "bakery_shop_lod1",
+    "bakery_shop_lod2"
+  ],
+  "pieceId": "bakery_shop",
+  "sockets": []
+}

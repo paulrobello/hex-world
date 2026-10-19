@@ -1,0 +1,117 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "displayBoost": 2.5,
+  "lodUvScale": [
+    1.0,
+    0.55,
+    0.35
+  ],
+  "marginPx": 2,
+  "maskStats": {
+    "aoMean": 0.646996259689331,
+    "aoP05": 0.0,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "bread": 0.0,
+          "brick": 0.11,
+          "display_glass": 0.145,
+          "door": 0.0,
+          "frame": 0.0,
+          "glass": 0.251,
+          "loaf_glass": 0.149,
+          "roof": 0.0,
+          "stone": 0.0,
+          "timber": 0.0,
+          "walls": 0.0,
+          "wicker": 0.031
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "brick": 0.141,
+          "display_glass": 0.686,
+          "door": 0.0,
+          "frame": 0.0,
+          "glass": 0.906,
+          "loaf_glass": 0.812,
+          "roof": 0.0,
+          "stone": 0.0,
+          "timber": 0.0,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "brick": 0.267,
+          "door": 0.0,
+          "glass": 0.922,
+          "loaf_glass": 0.922,
+          "roof": 0.0,
+          "timber": 0.529,
+          "walls": 0.173
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.4482564926147461,
+    "filledTexels": 30792,
+    "loafTexels": 16590,
+    "nightTexels": 29049
+  },
+  "masksDensityBySlot": {
+    "lod0": {
+      "bread": 19.4,
+      "brick": 21.14,
+      "display_glass": 47.52,
+      "door": 21.14,
+      "frame": 21.14,
+      "glass": 21.14,
+      "loaf_glass": 47.52,
+      "roof": 19.66,
+      "stone": 21.14,
+      "timber": 21.14,
+      "walls": 21.14,
+      "wicker": 20.29
+    },
+    "lod1": {
+      "brick": 10.55,
+      "display_glass": 10.45,
+      "door": 10.55,
+      "frame": 10.55,
+      "glass": 10.55,
+      "loaf_glass": 10.45,
+      "roof": 10.6,
+      "stone": 10.55,
+      "timber": 10.55,
+      "walls": 10.55
+    },
+    "lod2": {
+      "brick": 7.4,
+      "door": 7.4,
+      "glass": 7.4,
+      "loaf_glass": 5.77,
+      "roof": 6.47,
+      "timber": 7.4,
+      "walls": 6.41
+    }
+  },
+  "receiverSignature": "fddb07b09f71f198a3cc65b0209df6148bb17e38b524d943f1bbe7804360cb66",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 52.84019071767396,
+    "median": 21.135856539291368,
+    "min": 17.91989943320439
+  }
+}
