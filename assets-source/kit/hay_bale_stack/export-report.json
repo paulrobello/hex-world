@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/hay_bale_stack.py",
+    "sha256": "f6e017d3e80c70d5c47b4f01038f4e1fa1cd4aa1bb56257b38f613d5d90788fb"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_hay.py",
+      "sha256": "62cc8bbf4110c002596b80e7a4b1763de89643b6680f22560554017bd827c8c5"
+    }
+  ],
+  "lodTris": {
+    "hay_bale_stack_lod0": 509,
+    "hay_bale_stack_lod1": 227,
+    "hay_bale_stack_lod2": 67
+  },
+  "nodes": [
+    "hay_bale_stack",
+    "hay_bale_stack_collider",
+    "hay_bale_stack_lod0",
+    "hay_bale_stack_lod1",
+    "hay_bale_stack_lod2"
+  ],
+  "pieceId": "hay_bale_stack",
+  "sockets": []
+}
