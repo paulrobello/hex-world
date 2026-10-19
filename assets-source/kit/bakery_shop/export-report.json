@@ -2,12 +2,12 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/bakery_shop.py",
-    "sha256": "603fe82641d2f7ae9d4dfc6de26299650ebe0ee8d0f96b4623402bd999029866"
+    "sha256": "578265a0624add6196ea00dd963cfcc92113adc6e489ad94bff03333359a2384"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_house.py",
-      "sha256": "16bd62ae92924c7240876908b7d25047fd60d77df3fa69709fb40c8432a29079"
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
     }
   ],
   "lodTris": {

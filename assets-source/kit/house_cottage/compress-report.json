@@ -1,6 +1,6 @@
 {
   "name": "house_cottage",
-  "date": "2026-10-14T03:45:32.204Z",
+  "date": "2026-10-19T18:43:36.078Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 342140,
-      "sha256": "e7844e7e03e49b199f095a9cfac652ef622829ed64cd9959bdb7e12eebe5fad8"
+      "bytes": 347365,
+      "sha256": "674db58ef80afe6a198c07849048b573851b65d39705c227aafd6b380a2392f5"
     },
     {
       "channel": "masks",
@@ -59,8 +59,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 323234,
-      "sha256": "5f25f603e59732fd8699308d185ccfbf28b682fcd604f5fb3e6aaca8c864e310"
+      "bytes": 327581,
+      "sha256": "847892e9998c10c2fdf3f809ea35c5a09d2d268c4c132ee1c164a24cb5bc16bf"
     },
     {
       "channel": "masks",
@@ -68,16 +68,16 @@
       "path": "assets/kit/p1/house_cottage/house_cottage.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 529993,
-      "sha256": "598388a0f0093db9d13fcb17a2fb9db0c579e6c9509af2a1e803482e61b25672"
+      "bytes": 532967,
+      "sha256": "3309320f90274b55d3183ab1c5756699fba6fd86eb60d9a3621ea7c899708f2a"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 342140,
-      "astc": 323234
+      "bc7": 347365,
+      "astc": 327581
     },
     "glbBytes": 100804
   },

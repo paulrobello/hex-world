@@ -1,0 +1,907 @@
+{
+ "piece": "house_twostorey",
+ "lods": [
+  {
+   "lod": 0,
+   "trisBefore": 1198,
+   "trisAfter": 1198,
+   "positionsBefore": 770,
+   "positionsAfter": 770,
+   "samePositions": true,
+   "mips": [
+    {
+     "walls": {
+      "before": 0.945,
+      "after": 0.945,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.763,
+      "after": 0.921,
+      "delta": 0.158,
+      "darkBefore": 0.158,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.634,
+      "after": 0.634,
+      "delta": 0,
+      "darkBefore": 0.035,
+      "darkAfter": 0.035
+     },
+     "frame": {
+      "before": 0.534,
+      "after": 0.608,
+      "delta": 0.074,
+      "darkBefore": 0.227,
+      "darkAfter": 0.09
+     },
+     "door": {
+      "before": 1,
+      "after": 1,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 0.953,
+      "after": 0.953,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.942,
+      "after": 0.942,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.77,
+      "after": 0.928,
+      "delta": 0.158,
+      "darkBefore": 0.158,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.628,
+      "after": 0.628,
+      "delta": 0,
+      "darkBefore": 0.023,
+      "darkAfter": 0.023
+     },
+     "frame": {
+      "before": 0.548,
+      "after": 0.622,
+      "delta": 0.074,
+      "darkBefore": 0.169,
+      "darkAfter": 0.033
+     },
+     "door": {
+      "before": 0.996,
+      "after": 0.996,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 0.96,
+      "after": 0.96,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.917,
+      "after": 0.917,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.748,
+      "after": 0.906,
+      "delta": 0.158,
+      "darkBefore": 0.158,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.635,
+      "after": 0.635,
+      "delta": 0,
+      "darkBefore": 0.014,
+      "darkAfter": 0.014
+     },
+     "frame": {
+      "before": 0.552,
+      "after": 0.626,
+      "delta": 0.074,
+      "darkBefore": 0.153,
+      "darkAfter": 0.016
+     },
+     "door": {
+      "before": 0.99,
+      "after": 0.99,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 0.954,
+      "after": 0.954,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.824,
+      "after": 0.824,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.673,
+      "after": 0.811,
+      "delta": 0.138,
+      "darkBefore": 0.158,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.553,
+      "after": 0.553,
+      "delta": 0,
+      "darkBefore": 0.004,
+      "darkAfter": 0.004
+     },
+     "frame": {
+      "before": 0.445,
+      "after": 0.509,
+      "delta": 0.064,
+      "darkBefore": 0.172,
+      "darkAfter": 0.036
+     },
+     "door": {
+      "before": 0.942,
+      "after": 0.942,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 0.876,
+      "after": 0.876,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    }
+   ],
+   "areaMips": [
+    {
+     "walls": {
+      "before": 0.551,
+      "after": 0.551,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.89,
+      "after": 0.89,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.813,
+      "after": 0.813,
+      "delta": 0
+     },
+     "frame": {
+      "before": 0.692,
+      "after": 0.692,
+      "delta": 0
+     },
+     "door": {
+      "before": 0.895,
+      "after": 0.895,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.901,
+      "after": 0.901,
+      "delta": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.551,
+      "after": 0.551,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.898,
+      "after": 0.898,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.813,
+      "after": 0.813,
+      "delta": 0
+     },
+     "frame": {
+      "before": 0.696,
+      "after": 0.696,
+      "delta": 0
+     },
+     "door": {
+      "before": 0.895,
+      "after": 0.895,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.893,
+      "after": 0.893,
+      "delta": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.551,
+      "after": 0.551,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.887,
+      "after": 0.887,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.813,
+      "after": 0.813,
+      "delta": 0
+     },
+     "frame": {
+      "before": 0.687,
+      "after": 0.687,
+      "delta": 0
+     },
+     "door": {
+      "before": 0.875,
+      "after": 0.875,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.872,
+      "after": 0.872,
+      "delta": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.548,
+      "after": 0.548,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.812,
+      "after": 0.812,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.779,
+      "after": 0.779,
+      "delta": 0
+     },
+     "frame": {
+      "before": 0.552,
+      "after": 0.552,
+      "delta": 0
+     },
+     "door": {
+      "before": 0.827,
+      "after": 0.827,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.783,
+      "after": 0.783,
+      "delta": 0
+     }
+    }
+   ]
+  },
+  {
+   "lod": 1,
+   "trisBefore": 498,
+   "trisAfter": 498,
+   "positionsBefore": 324,
+   "positionsAfter": 324,
+   "samePositions": true,
+   "mips": [
+    {
+     "walls": {
+      "before": 0.94,
+      "after": 0.94,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.969,
+      "after": 0.969,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.78,
+      "after": 0.78,
+      "delta": 0,
+      "darkBefore": 0.121,
+      "darkAfter": 0.121
+     },
+     "frame": {
+      "before": 0.609,
+      "after": 0.662,
+      "delta": 0.053,
+      "darkBefore": 0.123,
+      "darkAfter": 0.025
+     },
+     "door": {
+      "before": 0.992,
+      "after": 0.992,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 0.951,
+      "after": 0.951,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.94,
+      "after": 0.94,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.963,
+      "after": 0.963,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.77,
+      "after": 0.77,
+      "delta": 0,
+      "darkBefore": 0.069,
+      "darkAfter": 0.069
+     },
+     "frame": {
+      "before": 0.629,
+      "after": 0.682,
+      "delta": 0.053,
+      "darkBefore": 0.109,
+      "darkAfter": 0.011
+     },
+     "door": {
+      "before": 0.994,
+      "after": 0.994,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 0.96,
+      "after": 0.96,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.93,
+      "after": 0.93,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.934,
+      "after": 0.934,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.752,
+      "after": 0.752,
+      "delta": 0,
+      "darkBefore": 0.069,
+      "darkAfter": 0.069
+     },
+     "frame": {
+      "before": 0.636,
+      "after": 0.69,
+      "delta": 0.054,
+      "darkBefore": 0.109,
+      "darkAfter": 0.011
+     },
+     "door": {
+      "before": 0.996,
+      "after": 0.996,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 0.96,
+      "after": 0.96,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.832,
+      "after": 0.832,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.887,
+      "after": 0.887,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.702,
+      "after": 0.702,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "frame": {
+      "before": 0.513,
+      "after": 0.559,
+      "delta": 0.046,
+      "darkBefore": 0.112,
+      "darkAfter": 0.014
+     },
+     "door": {
+      "before": 0.995,
+      "after": 0.995,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 0.911,
+      "after": 0.911,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    }
+   ],
+   "areaMips": [
+    {
+     "walls": {
+      "before": 0.625,
+      "after": 0.625,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.924,
+      "after": 0.924,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.886,
+      "after": 0.886,
+      "delta": 0
+     },
+     "frame": {
+      "before": 0.735,
+      "after": 0.735,
+      "delta": 0
+     },
+     "door": {
+      "before": 0.931,
+      "after": 0.931,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.904,
+      "after": 0.904,
+      "delta": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.625,
+      "after": 0.625,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.924,
+      "after": 0.924,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.886,
+      "after": 0.886,
+      "delta": 0
+     },
+     "frame": {
+      "before": 0.746,
+      "after": 0.746,
+      "delta": 0
+     },
+     "door": {
+      "before": 0.931,
+      "after": 0.931,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.901,
+      "after": 0.901,
+      "delta": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.625,
+      "after": 0.625,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.922,
+      "after": 0.922,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.882,
+      "after": 0.882,
+      "delta": 0
+     },
+     "frame": {
+      "before": 0.739,
+      "after": 0.739,
+      "delta": 0
+     },
+     "door": {
+      "before": 0.919,
+      "after": 0.919,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.881,
+      "after": 0.881,
+      "delta": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.622,
+      "after": 0.622,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.921,
+      "after": 0.921,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.88,
+      "after": 0.88,
+      "delta": 0
+     },
+     "frame": {
+      "before": 0.581,
+      "after": 0.581,
+      "delta": 0
+     },
+     "door": {
+      "before": 0.796,
+      "after": 0.796,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.796,
+      "after": 0.796,
+      "delta": 0
+     }
+    }
+   ]
+  },
+  {
+   "lod": 2,
+   "trisBefore": 68,
+   "trisAfter": 68,
+   "positionsBefore": 86,
+   "positionsAfter": 86,
+   "samePositions": true,
+   "mips": [
+    {
+     "walls": {
+      "before": 0.962,
+      "after": 0.962,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.991,
+      "after": 0.991,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.92,
+      "after": 0.92,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "door": {
+      "before": 1,
+      "after": 1,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 1,
+      "after": 1,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.961,
+      "after": 0.961,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.983,
+      "after": 0.983,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.922,
+      "after": 0.922,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "door": {
+      "before": 1,
+      "after": 1,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 1,
+      "after": 1,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.967,
+      "after": 0.967,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.909,
+      "after": 0.909,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.907,
+      "after": 0.907,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "door": {
+      "before": 1,
+      "after": 1,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 1,
+      "after": 1,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.908,
+      "after": 0.908,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "roof": {
+      "before": 0.876,
+      "after": 0.876,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "stone": {
+      "before": 0.925,
+      "after": 0.925,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "door": {
+      "before": 1,
+      "after": 1,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     },
+     "glass": {
+      "before": 0.993,
+      "after": 0.993,
+      "delta": 0,
+      "darkBefore": 0,
+      "darkAfter": 0
+     }
+    }
+   ],
+   "areaMips": [
+    {
+     "walls": {
+      "before": 0.8,
+      "after": 0.8,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.935,
+      "after": 0.935,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.904,
+      "after": 0.904,
+      "delta": 0
+     },
+     "door": {
+      "before": 1,
+      "after": 1,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.997,
+      "after": 0.997,
+      "delta": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.8,
+      "after": 0.8,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.937,
+      "after": 0.937,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.904,
+      "after": 0.904,
+      "delta": 0
+     },
+     "door": {
+      "before": 1,
+      "after": 1,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.997,
+      "after": 0.997,
+      "delta": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.799,
+      "after": 0.799,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.932,
+      "after": 0.932,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.904,
+      "after": 0.904,
+      "delta": 0
+     },
+     "door": {
+      "before": 0.995,
+      "after": 0.995,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.991,
+      "after": 0.991,
+      "delta": 0
+     }
+    },
+    {
+     "walls": {
+      "before": 0.787,
+      "after": 0.787,
+      "delta": 0
+     },
+     "roof": {
+      "before": 0.932,
+      "after": 0.932,
+      "delta": 0
+     },
+     "stone": {
+      "before": 0.908,
+      "after": 0.908,
+      "delta": 0
+     },
+     "door": {
+      "before": 0.874,
+      "after": 0.874,
+      "delta": 0
+     },
+     "glass": {
+      "before": 0.9,
+      "after": 0.9,
+      "delta": 0
+     }
+    }
+   ]
+  }
+ ],
+ "worstMeanADelta": 0,
+ "worstAreaMeanADelta": 0
+}

@@ -23,7 +23,11 @@ All three LODs share one UV0 atlas, each with its own islands, and each LOD's AO
 baked onto its own islands (the first bake clears the image, later ones add to it). A nearest-face
 UV transfer from LOD0 was tried and failed: LOD faces whose corners sit on edges shared by two LOD0
 islands took UVs from different islands, stretched across the atlas, and lost their night glow
-(friction log)."""
+(friction log).
+
+Strips narrower than a texel (beam sides, tile-course butts, frame returns) cover no texel centre,
+so the bake skips them; `fill_unbaked` writes their slot's hooks and AO after the bake, and the build
+fails if any LOD triangle's UV centroid still samples an unbaked texel (`centroid_samples`)."""
 import math
 import os
 import pathlib
@@ -41,6 +45,12 @@ PLINTH_TOP, PLINTH_OUT = 0.32, 0.04
 MASK_SIZE = 1024
 SAMPLES = 64
 AO_DIST = 0.6
+# Atlas island margin (lib.uv.atlas_unwrap, about 12 px at 1024²) and the bake margin inside it. A
+# 6 px gap (pack_islands FRACTION 0.006, 2 px bake margin) raised the cottage from 18.2 to 22.2 px/m,
+# but its box-filtered mips 2-3 darkened thin frames and timbers by up to 0.08 in A as the unwritten
+# background bled into the islands (2026-10-19), so the houses keep these.
+UV_MARGIN = 0.012
+BAKE_MARGIN = 4
 # Linear albedo of the plaster set (mean of plaster.albedo.png), so Blender renders of tinted
 # tileable slots show the runtime colour: runtime = manifest colour x set albedo.
 PLASTER_LIN = 0.66
@@ -297,6 +307,82 @@ def build(spec, lod, slots, mats):
     return mesh.obj(f"{spec['piece']}_lod{lod}", mats)
 
 
+def fill_unbaked(px, lods, size, hooks, grow=4, reach=0.75):
+    """Masks texels the Cycles bake never wrote (G = 0: every slot's porosity is >= 0.05) under a
+    face take that face's slot hooks (`hooks[material_index]`) and its slot's median baked AO on that
+    LOD, then grow `grow` px into the unbaked background so box-filtered mips hold the values. Strips
+    narrower than a texel (beam sides, course butts, the plinth ledge) rasterize no texel centre, so the
+    bake and its margin skip them and they would draw with A = 0 (black, no snow). Each triangle is
+    rasterized conservatively (texel centres within `reach` px of it); baked texels are never
+    overwritten. From barn_red.py (2026-10-19). Returns (pixels, number of texels written)."""
+    img = px.reshape(size, size, 4).copy()
+    baked = img[:, :, 1] > 0.0
+    fill = np.zeros((size, size, 4), np.float32)
+    mark = np.zeros((size, size), bool)
+    for o in lods:
+        me = o.data
+        me.calc_loop_triangles()
+        uvl = me.uv_layers["UVMap"].data
+        tris = [(t.material_index, np.array([uvl[li].uv[:] for li in t.loops]) * size) for t in me.loop_triangles]
+        ao = {}
+        for mi, tri in tris:
+            x, y = np.clip(tri.mean(0).astype(int), 0, size - 1)
+            if baked[y, x]:
+                ao.setdefault(mi, []).append(img[y, x, 3])
+        lod_ao = float(np.median([a for v in ao.values() for a in v]))
+        for mi, tri in tris:
+            area2 = (tri[1, 0] - tri[0, 0]) * (tri[2, 1] - tri[0, 1]) - (tri[2, 0] - tri[0, 0]) * (tri[1, 1] - tri[0, 1])
+            if abs(area2) < 1e-12:
+                continue
+            lo = np.clip(np.floor(tri.min(0) - reach).astype(int), 0, size - 1)
+            hi = np.clip(np.ceil(tri.max(0) + reach).astype(int), 0, size - 1)
+            xs, ys = np.meshgrid(np.arange(lo[0], hi[0] + 1) + 0.5, np.arange(lo[1], hi[1] + 1) + 0.5)
+            inside = np.ones(xs.shape, bool)
+            for i in range(3):
+                a, b = tri[i], tri[(i + 1) % 3]
+                e = b - a
+                d = (e[0] * (ys - a[1]) - e[1] * (xs - a[0])) / np.hypot(*e) * np.sign(area2)
+                inside &= d >= -reach
+            iy, ix = ys[inside].astype(int), xs[inside].astype(int)
+            take = ~baked[iy, ix]
+            iy, ix = iy[take], ix[take]
+            a_slot = float(np.median(ao[mi])) if mi in ao else lod_ao
+            fill[iy, ix] = (*hooks[mi], a_slot)
+            mark[iy, ix] = True
+    for _ in range(grow):
+        grown = mark.copy()
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nb_mark = np.roll(mark, (dy, dx), (0, 1))
+            take = nb_mark & ~grown & ~baked
+            fill[take] = np.roll(fill, (dy, dx), (0, 1))[take]
+            grown |= take
+        mark = grown
+    img[mark] = fill[mark]
+    return img.reshape(-1, 4), int(mark.sum())
+
+
+def centroid_samples(lods, px, size, slots, piece):
+    """The masks at every LOD triangle's UV centroid (nearest texel, as the hooks gate samples):
+    per LOD, the number of triangles on unwritten texels (G = 0) and each slot's minimum A. The same
+    check runs on the compressed GLB in docs/checkpoints/houses-masks-fill/masks_centroids.mjs."""
+    img = px.reshape(size, size, 4)
+    out = {}
+    for i, o in enumerate(lods):
+        me = o.data
+        me.calc_loop_triangles()
+        uvl = me.uv_layers["UVMap"].data
+        unbaked, amin = 0, {}
+        for t in me.loop_triangles:
+            c = np.mean([uvl[li].uv[:] for li in t.loops], 0)
+            x, y = np.clip((c * size).astype(int), 0, size - 1)
+            v = img[y, x]
+            unbaked += int(v[1] <= 0.0)
+            n = slots[t.material_index][len(piece) + 1:]
+            amin[n] = round(min(amin.get(n, 1.0), float(v[3])), 3)
+        out[f"lod{i}"] = {"unbakedTris": unbaked, "minA": amin}
+    return out
+
+
 def build_piece(spec, generator):
     piece = spec["piece"]
     out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])
@@ -310,7 +396,9 @@ def build_piece(spec, generator):
         mats.append(materials.pbr_material(name, (*col, 1.0), rough))
     lods = [build(spec, i, slots, mats) for i in range(3)]
 
-    uv.atlas_unwrap(lods, margin=0.012)
+    uv.atlas_unwrap(lods, margin=UV_MARGIN)
+    density = {o.name: uv.measure_texel_density(o, MASK_SIZE) for o in lods}
+    print(f"{piece}: masks {MASK_SIZE}² density per LOD {density}")
     signature = bake.receiver_signature(lods)
     stats = None
     if not skip_bake:
@@ -319,10 +407,10 @@ def build_piece(spec, generator):
         scn.world = scn.world or bpy.data.worlds.new(piece)  # reset_scene leaves no world
         scn.world.light_settings.distance = AO_DIST
         ao = bake.new_image(f"{piece}.ao", MASK_SIZE, non_color=True)
-        # A 4 px margin stays inside the 12 px island spacing, so a later LOD's bake cannot spill onto
-        # an earlier LOD's islands.
+        # The bake margin stays inside half the island gap, so a later LOD's bake cannot spill onto an
+        # earlier LOD's islands.
         for i, o in enumerate(lods):
-            bake.bake_to(o, "AO", ao, margin=4, clear=i == 0)
+            bake.bake_to(o, "AO", ao, margin=BAKE_MARGIN, clear=i == 0)
         ao_png = bake.save_png(ao, str(out / f"{piece}.ao.tmp.png"))
         # Hooks through one EMIT bake: each material's base colour temporarily carries
         # (snow, porosity, night) and is restored afterwards.
@@ -331,7 +419,7 @@ def build_piece(spec, generator):
             m.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (*spec["hooks"][m.name], 1.0)
         hooks = bake.new_image(f"{piece}.hooks", MASK_SIZE, non_color=True)
         for i, o in enumerate(lods):
-            bake.bake_emit_input([], o, "Base Color", hooks, margin=4, clear=i == 0)
+            bake.bake_emit_input([], o, "Base Color", hooks, margin=BAKE_MARGIN, clear=i == 0)
         hooks_png = bake.save_png(hooks, str(out / f"{piece}.hooks.tmp.png"))
         for m in mats:
             m.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = keep[m.name]
@@ -340,11 +428,18 @@ def build_piece(spec, generator):
         os.remove(ao_png)
         os.remove(hooks_png)
         _, px = bake.load_png(masks_png)
+        px, filled = fill_unbaked(px, lods, MASK_SIZE, [spec["hooks"][n] for n in slots])
+        bake.write_png(MASK_SIZE, px, masks_png, non_color=True)
+        _, px = bake.load_png(masks_png)
         covered = px[:, 1] > 0.01  # every slot has porosity >= 0.05; empty texels stay 0
         a = px[covered, 3]
+        samples = centroid_samples(lods, px, MASK_SIZE, slots, piece)
         stats = {"aoMean": float(a.mean()) if a.size else None, "aoP05": float(np.percentile(a, 5)) if a.size else None,
-                 "nightTexels": int((px[:, 2] > 0.5).sum())}
+                 "nightTexels": int((px[:, 2] > 0.5).sum()), "coverage": float(covered.mean()),
+                 "filledTexels": filled, "centroids": samples}
         print(f"{piece}: masks {stats}")
+        bad = {k: v["unbakedTris"] for k, v in samples.items() if v["unbakedTris"]}
+        assert not bad, f"triangles on unbaked masks texels: {bad}"
 
     for i, o in enumerate(lods):
         o.data.shade_flat()
@@ -357,8 +452,8 @@ def build_piece(spec, generator):
     export.export_glb(root, str(out / f"{piece}.glb"))
     export.write_export_report(str(out / "export-report.json"), root, piece, generator)
     bake.write_bake_report(str(out / "bake-report.json"), receiverSignature=signature,
-                           device=os.environ.get("HEXW_BAKE_DEVICE", "CPU"), samples=SAMPLES, marginPx=4,
+                           device=os.environ.get("HEXW_BAKE_DEVICE", "CPU"), samples=SAMPLES, marginPx=BAKE_MARGIN,
                            aoDistanceM=AO_DIST, channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}},
-                           texelDensityPxPerM=uv.measure_texel_density(lods[0], MASK_SIZE),
-                           maskStats=stats, skipped=skip_bake)
+                           texelDensityPxPerM=density[f"{piece}_lod0"], masksDensityPxPerM=density,
+                           uvMargin=UV_MARGIN, maskStats=stats, skipped=skip_bake)
     return root, lods

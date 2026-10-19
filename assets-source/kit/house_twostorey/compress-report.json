@@ -1,6 +1,6 @@
 {
   "name": "house_twostorey",
-  "date": "2026-10-14T03:45:43.682Z",
+  "date": "2026-10-19T18:43:37.653Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 332772,
-      "sha256": "a4125e92f5d564efdc2ba2d469d91b97f8df20875e08d319d8d37aca616d195c"
+      "bytes": 338367,
+      "sha256": "5057f6a3cc2845c165bf93984ada9ae5cc42d1a67abe02ca8d3901e5560a00e4"
     },
     {
       "channel": "masks",
@@ -59,8 +59,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 316272,
-      "sha256": "3f87aa807bd7e225a28eb6fe3f87fcb8775382fdc68e1174a98f4957c5845b0e"
+      "bytes": 321430,
+      "sha256": "574c7d892f1fa0ed978244d2d86aa0a2362e7231d1c8577790c055872ff8a1a1"
     },
     {
       "channel": "masks",
@@ -68,16 +68,16 @@
       "path": "assets/kit/p1/house_twostorey/house_twostorey.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 515702,
-      "sha256": "9ad2caab1fa2ecc12b8c9c0b05d44e802a561d7d294a77c893004fa400febed8"
+      "bytes": 518115,
+      "sha256": "731a119e5a68baf479c210398d1e1ed25beb33fde4e65e364be2845d6b5b1b5d"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 332772,
-      "astc": 316272
+      "bc7": 338367,
+      "astc": 321430
     },
     "glbBytes": 101068
   },

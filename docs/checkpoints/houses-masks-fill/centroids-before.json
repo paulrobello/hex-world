@@ -1,0 +1,346 @@
+[
+ {
+  "piece": "house_cottage",
+  "masks": "1024x1024",
+  "unbakedTotal": 96,
+  "lods": {
+   "lod0": {
+    "tris": 1048,
+    "unbakedTris": 74,
+    "zeroATris": 270,
+    "unbakedAreaM2": 4.36,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 18.15
+     },
+     "roof": {
+      "tris": 236,
+      "unbaked": 20,
+      "zeroA": 32,
+      "minA": 0,
+      "density": 17.44
+     },
+     "stone": {
+      "tris": 102,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 18.15
+     },
+     "timber": {
+      "tris": 390,
+      "unbaked": 18,
+      "zeroA": 146,
+      "minA": 0,
+      "density": 18.15
+     },
+     "frame": {
+      "tris": 294,
+      "unbaked": 36,
+      "zeroA": 90,
+      "minA": 0,
+      "density": 18.15
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.98,
+      "density": 18.15
+     },
+     "glass": {
+      "tris": 14,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.31,
+      "density": 18.15
+     }
+    },
+    "densityPxPerM": {
+     "min": 15.29,
+     "median": 18.15,
+     "max": 18.15
+    }
+   },
+   "lod1": {
+    "tris": 436,
+    "unbakedTris": 22,
+    "zeroATris": 80,
+    "unbakedAreaM2": 0.97,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 18.15
+     },
+     "roof": {
+      "tris": 36,
+      "unbaked": 0,
+      "zeroA": 3,
+      "minA": 0,
+      "density": 17.72
+     },
+     "stone": {
+      "tris": 42,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 18.15
+     },
+     "timber": {
+      "tris": 160,
+      "unbaked": 12,
+      "zeroA": 60,
+      "minA": 0,
+      "density": 18.15
+     },
+     "frame": {
+      "tris": 174,
+      "unbaked": 10,
+      "zeroA": 15,
+      "minA": 0,
+      "density": 18.15
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 18.15
+     },
+     "glass": {
+      "tris": 12,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.97,
+      "density": 18.15
+     }
+    },
+    "densityPxPerM": {
+     "min": 15.52,
+     "median": 18.15,
+     "max": 18.15
+    }
+   },
+   "lod2": {
+    "tris": 54,
+    "unbakedTris": 0,
+    "zeroATris": 1,
+    "unbakedAreaM2": 0,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 18.15
+     },
+     "roof": {
+      "tris": 20,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.59,
+      "density": 18.15
+     },
+     "stone": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.69,
+      "density": 15.52
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 15.52
+     },
+     "glass": {
+      "tris": 12,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 15.52
+     }
+    },
+    "densityPxPerM": {
+     "min": 14.99,
+     "median": 18.15,
+     "max": 18.15
+    }
+   }
+  }
+ },
+ {
+  "piece": "house_twostorey",
+  "masks": "1024x1024",
+  "unbakedTotal": 122,
+  "lods": {
+   "lod0": {
+    "tris": 1198,
+    "unbakedTris": 86,
+    "zeroATris": 129,
+    "unbakedAreaM2": 4.68,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.84,
+      "density": 15.21
+     },
+     "roof": {
+      "tris": 228,
+      "unbaked": 36,
+      "zeroA": 36,
+      "minA": 0,
+      "density": 13.77
+     },
+     "stone": {
+      "tris": 564,
+      "unbaked": 0,
+      "zeroA": 14,
+      "minA": 0,
+      "density": 15.21
+     },
+     "frame": {
+      "tris": 366,
+      "unbaked": 50,
+      "zeroA": 79,
+      "minA": 0,
+      "density": 15.21
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 15.21
+     },
+     "glass": {
+      "tris": 28,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.19,
+      "density": 15.21
+     }
+    },
+    "densityPxPerM": {
+     "min": 12.79,
+     "median": 15.21,
+     "max": 15.21
+    }
+   },
+   "lod1": {
+    "tris": 498,
+    "unbakedTris": 36,
+    "zeroATris": 46,
+    "unbakedAreaM2": 1.02,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.84,
+      "density": 15.21
+     },
+     "roof": {
+      "tris": 36,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.78,
+      "density": 13.31
+     },
+     "stone": {
+      "tris": 58,
+      "unbaked": 0,
+      "zeroA": 6,
+      "minA": 0,
+      "density": 15.21
+     },
+     "frame": {
+      "tris": 366,
+      "unbaked": 36,
+      "zeroA": 40,
+      "minA": 0,
+      "density": 15.21
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.98,
+      "density": 15.21
+     },
+     "glass": {
+      "tris": 26,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.13,
+      "density": 15.21
+     }
+    },
+    "densityPxPerM": {
+     "min": 12.79,
+     "median": 15.21,
+     "max": 15.21
+    }
+   },
+   "lod2": {
+    "tris": 68,
+    "unbakedTris": 0,
+    "zeroATris": 0,
+    "unbakedAreaM2": 0,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.81,
+      "density": 15.21
+     },
+     "roof": {
+      "tris": 20,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.92,
+      "density": 13.31
+     },
+     "stone": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.7,
+      "density": 15.21
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 15.21
+     },
+     "glass": {
+      "tris": 26,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 15.21
+     }
+    },
+    "densityPxPerM": {
+     "min": 12.19,
+     "median": 15.21,
+     "max": 15.21
+    }
+   }
+  }
+ }
+]

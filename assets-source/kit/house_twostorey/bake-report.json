@@ -10,9 +10,62 @@
   "device": "CPU",
   "marginPx": 4,
   "maskStats": {
-    "aoMean": 0.7389177680015564,
+    "aoMean": 0.7468423843383789,
     "aoP05": 0.0,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "door": 1.0,
+          "frame": 0.0,
+          "glass": 0.188,
+          "roof": 0.235,
+          "stone": 0.0,
+          "walls": 0.843
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "door": 0.984,
+          "frame": 0.0,
+          "glass": 0.125,
+          "roof": 0.78,
+          "stone": 0.0,
+          "walls": 0.843
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "door": 1.0,
+          "glass": 1.0,
+          "roof": 0.922,
+          "stone": 0.702,
+          "walls": 0.812
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.4578685760498047,
+    "filledTexels": 32130,
     "nightTexels": 23501
+  },
+  "masksDensityPxPerM": {
+    "house_twostorey_lod0": {
+      "max": 15.208534516030602,
+      "median": 15.207481837447782,
+      "min": 12.78767727622936
+    },
+    "house_twostorey_lod1": {
+      "max": 15.208089137192529,
+      "median": 15.20742879685665,
+      "min": 12.78768663199178
+    },
+    "house_twostorey_lod2": {
+      "max": 15.207542406373982,
+      "median": 15.207518757000251,
+      "min": 12.192479509024128
+    }
   },
   "receiverSignature": "085b20c28e2b05d6f497c2a26e37c79adbf23cd7b6ac02107a7b59dbc058340e",
   "samples": 64,
@@ -21,5 +74,6 @@
     "max": 15.208534516030602,
     "median": 15.207481837447782,
     "min": 12.78767727622936
-  }
+  },
+  "uvMargin": 0.012
 }

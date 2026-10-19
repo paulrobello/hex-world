@@ -4,5 +4,12 @@
     "status": "pending",
     "requested": "2026-10-19",
     "notes": "Pending owner review; not an approval. Review from docs/checkpoints/bakery_shop/sheet.jpg (refs, textured EEVEE stills by day and night, in engine with tilt-shift off: play distance, sun-side and shade-side close-ups, eye level 1.7 m, scale beside house_cottage) and the six-view renders in assets-source/kit/bakery_shop/renders/. Building only (A17: its own tile with a road through it; the tile and forecourt are orchestrator work). The controller records the owner's decision."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-19",
+    "revision": "shared masks fill (card 01a15544869e)",
+    "notes": "Pending owner review; not an approval. Source-only change: fill_unbaked and centroid_samples moved from bakery_shop.py into the shared _house.py (same code and arguments), so the rebuilt GLB, masks PNG and both KTX2 files are byte-identical to the previous build and the look is unchanged; re-provenanced because _house.py's hash changed. The review above still stands."
   }
 ]

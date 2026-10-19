@@ -1,0 +1,595 @@
+[
+ {
+  "piece": "house_cottage",
+  "masks": "1024x1024",
+  "unbakedTotal": 0,
+  "lods": {
+   "lod0": {
+    "tris": 1048,
+    "unbakedTris": 0,
+    "zeroATris": 196,
+    "unbakedAreaM2": 0,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 18.15
+     },
+     "roof": {
+      "tris": 236,
+      "unbaked": 0,
+      "zeroA": 12,
+      "minA": 0,
+      "density": 17.44
+     },
+     "stone": {
+      "tris": 102,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 18.15
+     },
+     "timber": {
+      "tris": 390,
+      "unbaked": 0,
+      "zeroA": 128,
+      "minA": 0,
+      "density": 18.15
+     },
+     "frame": {
+      "tris": 294,
+      "unbaked": 0,
+      "zeroA": 54,
+      "minA": 0,
+      "density": 18.15
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.98,
+      "density": 18.15
+     },
+     "glass": {
+      "tris": 14,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.31,
+      "density": 18.15
+     }
+    },
+    "densityPxPerM": {
+     "min": 15.29,
+     "median": 18.15,
+     "max": 18.15
+    }
+   },
+   "lod1": {
+    "tris": 436,
+    "unbakedTris": 0,
+    "zeroATris": 58,
+    "unbakedAreaM2": 0,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 18.15
+     },
+     "roof": {
+      "tris": 36,
+      "unbaked": 0,
+      "zeroA": 3,
+      "minA": 0,
+      "density": 17.72
+     },
+     "stone": {
+      "tris": 42,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 18.15
+     },
+     "timber": {
+      "tris": 160,
+      "unbaked": 0,
+      "zeroA": 48,
+      "minA": 0,
+      "density": 18.15
+     },
+     "frame": {
+      "tris": 174,
+      "unbaked": 0,
+      "zeroA": 5,
+      "minA": 0,
+      "density": 18.15
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 18.15
+     },
+     "glass": {
+      "tris": 12,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.97,
+      "density": 18.15
+     }
+    },
+    "densityPxPerM": {
+     "min": 15.52,
+     "median": 18.15,
+     "max": 18.15
+    }
+   },
+   "lod2": {
+    "tris": 54,
+    "unbakedTris": 0,
+    "zeroATris": 1,
+    "unbakedAreaM2": 0,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 18.15
+     },
+     "roof": {
+      "tris": 20,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.59,
+      "density": 18.15
+     },
+     "stone": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.69,
+      "density": 15.52
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 15.52
+     },
+     "glass": {
+      "tris": 12,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 15.52
+     }
+    },
+    "densityPxPerM": {
+     "min": 14.99,
+     "median": 18.15,
+     "max": 18.15
+    }
+   }
+  }
+ },
+ {
+  "piece": "house_twostorey",
+  "masks": "1024x1024",
+  "unbakedTotal": 0,
+  "lods": {
+   "lod0": {
+    "tris": 1198,
+    "unbakedTris": 0,
+    "zeroATris": 43,
+    "unbakedAreaM2": 0,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.84,
+      "density": 15.21
+     },
+     "roof": {
+      "tris": 228,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.24,
+      "density": 13.77
+     },
+     "stone": {
+      "tris": 564,
+      "unbaked": 0,
+      "zeroA": 14,
+      "minA": 0,
+      "density": 15.21
+     },
+     "frame": {
+      "tris": 366,
+      "unbaked": 0,
+      "zeroA": 29,
+      "minA": 0,
+      "density": 15.21
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 15.21
+     },
+     "glass": {
+      "tris": 28,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.19,
+      "density": 15.21
+     }
+    },
+    "densityPxPerM": {
+     "min": 12.79,
+     "median": 15.21,
+     "max": 15.21
+    }
+   },
+   "lod1": {
+    "tris": 498,
+    "unbakedTris": 0,
+    "zeroATris": 10,
+    "unbakedAreaM2": 0,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.84,
+      "density": 15.21
+     },
+     "roof": {
+      "tris": 36,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.78,
+      "density": 13.31
+     },
+     "stone": {
+      "tris": 58,
+      "unbaked": 0,
+      "zeroA": 6,
+      "minA": 0,
+      "density": 15.21
+     },
+     "frame": {
+      "tris": 366,
+      "unbaked": 0,
+      "zeroA": 4,
+      "minA": 0,
+      "density": 15.21
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.98,
+      "density": 15.21
+     },
+     "glass": {
+      "tris": 26,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.13,
+      "density": 15.21
+     }
+    },
+    "densityPxPerM": {
+     "min": 12.79,
+     "median": 15.21,
+     "max": 15.21
+    }
+   },
+   "lod2": {
+    "tris": 68,
+    "unbakedTris": 0,
+    "zeroATris": 0,
+    "unbakedAreaM2": 0,
+    "bySlot": {
+     "walls": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.81,
+      "density": 15.21
+     },
+     "roof": {
+      "tris": 20,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.92,
+      "density": 13.31
+     },
+     "stone": {
+      "tris": 10,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.7,
+      "density": 15.21
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 15.21
+     },
+     "glass": {
+      "tris": 26,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 1,
+      "density": 15.21
+     }
+    },
+    "densityPxPerM": {
+     "min": 12.19,
+     "median": 15.21,
+     "max": 15.21
+    }
+   }
+  }
+ },
+ {
+  "piece": "bakery_shop",
+  "masks": "1024x1024",
+  "unbakedTotal": 0,
+  "lods": {
+   "lod0": {
+    "tris": 1405,
+    "unbakedTris": 0,
+    "zeroATris": 81,
+    "unbakedAreaM2": 0,
+    "bySlot": {
+     "walls": {
+      "tris": 31,
+      "unbaked": 0,
+      "zeroA": 13,
+      "minA": 0,
+      "density": 21.14
+     },
+     "roof": {
+      "tris": 402,
+      "unbaked": 0,
+      "zeroA": 32,
+      "minA": 0,
+      "density": 19.66
+     },
+     "brick": {
+      "tris": 68,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.11,
+      "density": 21.14
+     },
+     "stone": {
+      "tris": 30,
+      "unbaked": 0,
+      "zeroA": 3,
+      "minA": 0,
+      "density": 21.14
+     },
+     "timber": {
+      "tris": 426,
+      "unbaked": 0,
+      "zeroA": 16,
+      "minA": 0,
+      "density": 21.14
+     },
+     "frame": {
+      "tris": 314,
+      "unbaked": 0,
+      "zeroA": 15,
+      "minA": 0,
+      "density": 21.14
+     },
+     "door": {
+      "tris": 8,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 21.14
+     },
+     "glass": {
+      "tris": 18,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.25,
+      "density": 21.14
+     },
+     "display_glass": {
+      "tris": 24,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.15,
+      "density": 47.52
+     },
+     "loaf_glass": {
+      "tris": 24,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.15,
+      "density": 47.52
+     },
+     "wicker": {
+      "tris": 26,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.03,
+      "density": 20.29
+     },
+     "bread": {
+      "tris": 34,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 19.4
+     }
+    },
+    "densityPxPerM": {
+     "min": 17.92,
+     "median": 21.14,
+     "max": 52.84
+    }
+   },
+   "lod1": {
+    "tris": 601,
+    "unbakedTris": 0,
+    "zeroATris": 17,
+    "unbakedAreaM2": 0,
+    "bySlot": {
+     "walls": {
+      "tris": 31,
+      "unbaked": 0,
+      "zeroA": 7,
+      "minA": 0,
+      "density": 10.55
+     },
+     "roof": {
+      "tris": 84,
+      "unbaked": 0,
+      "zeroA": 5,
+      "minA": 0,
+      "density": 10.6
+     },
+     "brick": {
+      "tris": 68,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.14,
+      "density": 10.55
+     },
+     "stone": {
+      "tris": 30,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 10.55
+     },
+     "timber": {
+      "tris": 242,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 10.55
+     },
+     "frame": {
+      "tris": 78,
+      "unbaked": 0,
+      "zeroA": 2,
+      "minA": 0,
+      "density": 10.55
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 10.55
+     },
+     "glass": {
+      "tris": 18,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.91,
+      "density": 10.55
+     },
+     "display_glass": {
+      "tris": 24,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.69,
+      "density": 10.45
+     },
+     "loaf_glass": {
+      "tris": 24,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.81,
+      "density": 10.45
+     }
+    },
+    "densityPxPerM": {
+     "min": 8.69,
+     "median": 10.55,
+     "max": 11.63
+    }
+   },
+   "lod2": {
+    "tris": 127,
+    "unbakedTris": 0,
+    "zeroATris": 2,
+    "unbakedAreaM2": 0,
+    "bySlot": {
+     "walls": {
+      "tris": 31,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.17,
+      "density": 6.41
+     },
+     "roof": {
+      "tris": 48,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 6.47
+     },
+     "brick": {
+      "tris": 20,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.27,
+      "density": 7.4
+     },
+     "timber": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.53,
+      "density": 7.4
+     },
+     "door": {
+      "tris": 2,
+      "unbaked": 0,
+      "zeroA": 1,
+      "minA": 0,
+      "density": 7.4
+     },
+     "glass": {
+      "tris": 18,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.92,
+      "density": 7.4
+     },
+     "loaf_glass": {
+      "tris": 6,
+      "unbaked": 0,
+      "zeroA": 0,
+      "minA": 0.92,
+      "density": 5.77
+     }
+    },
+    "densityPxPerM": {
+     "min": 5.53,
+     "median": 6.47,
+     "max": 7.4
+    }
+   }
+  }
+ }
+]

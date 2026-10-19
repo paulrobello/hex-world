@@ -9,7 +9,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_house.py",
-      "sha256": "16bd62ae92924c7240876908b7d25047fd60d77df3fa69709fb40c8432a29079"
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
     }
   ],
   "authoringAgent": {
@@ -35,9 +35,64 @@
     "device": "CPU",
     "marginPx": 4,
     "maskStats": {
-      "aoMean": 0.6612706780433655,
+      "aoMean": 0.6634852290153503,
       "aoP05": 0,
+      "centroids": {
+        "lod0": {
+          "minA": {
+            "door": 0.984,
+            "frame": 0,
+            "glass": 0.314,
+            "roof": 0,
+            "stone": 0,
+            "timber": 0,
+            "walls": 0
+          },
+          "unbakedTris": 0
+        },
+        "lod1": {
+          "minA": {
+            "door": 1,
+            "frame": 0,
+            "glass": 0.969,
+            "roof": 0,
+            "stone": 0,
+            "timber": 0,
+            "walls": 0
+          },
+          "unbakedTris": 0
+        },
+        "lod2": {
+          "minA": {
+            "door": 1,
+            "glass": 1,
+            "roof": 0.592,
+            "stone": 0.686,
+            "walls": 0
+          },
+          "unbakedTris": 0
+        }
+      },
+      "coverage": 0.46851062774658203,
+      "filledTexels": 25477,
       "nightTexels": 10678
+    },
+    "masksDensityPxPerM": {
+      "house_cottage_lod0": {
+        "max": 18.15443178550314,
+        "median": 18.153383770859744,
+        "min": 15.28615710277757
+      },
+      "house_cottage_lod1": {
+        "max": 18.154073264034515,
+        "median": 18.15335979503416,
+        "min": 15.515074881407141
+      },
+      "house_cottage_lod2": {
+        "max": 18.153619916207568,
+        "median": 18.15241149787851,
+        "min": 14.99169356708247
+      }
     },
     "receiverSignature": "ee32a9597c768e3c056da851b6a8ab1a098c126a26f752ddf4a2dfbda5fb4840",
     "samples": 64,
@@ -46,7 +101,8 @@
       "max": 18.15443178550314,
       "median": 18.153383770859744,
       "min": 15.28615710277757
-    }
+    },
+    "uvMargin": 0.012
   },
   "lods": [
     {
@@ -81,8 +137,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 342140,
-        "astc": 323234
+        "bc7": 347365,
+        "astc": 327581
       },
       "glbBytes": 100804
     },
@@ -95,8 +151,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 342140,
-        "sha256": "e7844e7e03e49b199f095a9cfac652ef622829ed64cd9959bdb7e12eebe5fad8"
+        "bytes": 347365,
+        "sha256": "674db58ef80afe6a198c07849048b573851b65d39705c227aafd6b380a2392f5"
       },
       {
         "channel": "masks",
@@ -106,8 +162,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 323234,
-        "sha256": "5f25f603e59732fd8699308d185ccfbf28b682fcd604f5fb3e6aaca8c864e310"
+        "bytes": 327581,
+        "sha256": "847892e9998c10c2fdf3f809ea35c5a09d2d268c4c132ee1c164a24cb5bc16bf"
       },
       {
         "channel": "masks",
@@ -115,8 +171,8 @@
         "path": "assets/kit/p1/house_cottage/house_cottage.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 529993,
-        "sha256": "598388a0f0093db9d13fcb17a2fb9db0c579e6c9509af2a1e803482e61b25672"
+        "bytes": 532967,
+        "sha256": "3309320f90274b55d3183ab1c5756699fba6fd86eb60d9a3621ea7c899708f2a"
       }
     ]
   },
@@ -128,18 +184,18 @@
     },
     {
       "path": "assets/kit/p1/house_cottage/house_cottage.masks.bc7.ktx2",
-      "sha256": "e7844e7e03e49b199f095a9cfac652ef622829ed64cd9959bdb7e12eebe5fad8",
-      "bytes": 342140
+      "sha256": "674db58ef80afe6a198c07849048b573851b65d39705c227aafd6b380a2392f5",
+      "bytes": 347365
     },
     {
       "path": "assets/kit/p1/house_cottage/house_cottage.masks.astc.ktx2",
-      "sha256": "5f25f603e59732fd8699308d185ccfbf28b682fcd604f5fb3e6aaca8c864e310",
-      "bytes": 323234
+      "sha256": "847892e9998c10c2fdf3f809ea35c5a09d2d268c4c132ee1c164a24cb5bc16bf",
+      "bytes": 327581
     },
     {
       "path": "assets/kit/p1/house_cottage/house_cottage.masks.png",
-      "sha256": "598388a0f0093db9d13fcb17a2fb9db0c579e6c9509af2a1e803482e61b25672",
-      "bytes": 529993
+      "sha256": "3309320f90274b55d3183ab1c5756699fba6fd86eb60d9a3621ea7c899708f2a",
+      "bytes": 532967
     }
   ],
   "references": [
@@ -165,7 +221,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T03:45:57.917Z",
+    "date": "2026-10-19T18:45:36.572Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -190,6 +246,13 @@
       "when": "2026-10-13",
       "gate": "piece",
       "notes": "House family approved in chat from the 6-view renders and in-engine shots (docs/checkpoints/houses)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-19",
+      "revision": "masks fill (card 01a15544869e)",
+      "notes": "Pending owner review; not an approval. Masks only: the GLB is byte-identical to the approved one (geometry, UVs, tris 1048/436/54) and so are the six-view renders. 74 LOD0 and 22 LOD1 triangles sat on masks texels the bake never wrote (A = 0, R = 0: black, no snow); _house.fill_unbaked now writes their slot hooks and median AO into unwritten texels only, and the build asserts 0 per LOD (now 0/0/0 on the compressed GLB). Every texel under a triangle centre is unchanged (area-weighted A per slot identical at mips 0-3); masks density stays 18.15 px/m. Review docs/checkpoints/houses-masks-fill/sheet.jpg (textured EEVEE before/after from the same cameras, 3x zooms, centroid counts). In-engine shots wait for the yaw-lighting renderer fix (card 01a155602a2f). The controller records the owner's decision."
     }
   ]
 }

@@ -36,7 +36,8 @@ import bpy  # noqa: E402
 import numpy as np  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
 
-from _house import DROP, PLASTER_LIN, PLINTH_OUT, PLINTH_TOP, Z, Mesh, Wall, frame_matrix, roof_profile  # noqa: E402
+from _house import (DROP, PLASTER_LIN, PLINTH_OUT, PLINTH_TOP, Z, Mesh, Wall, centroid_samples,  # noqa: E402
+                    fill_unbaked, frame_matrix, roof_profile)
 from lib import bake, budgets, collider, export, geom, materials, scene, uv  # noqa: E402
 
 P = "bakery_shop"
@@ -586,80 +587,6 @@ def bay_arc(pos):
     return np.where(on_front, dy, np.sign(dy) * along_side)
 
 
-def fill_unbaked(px, lods, size, hooks, grow=4, reach=0.75):
-    """Masks texels the Cycles bake never wrote (G = 0: every slot's porosity is >= 0.05) under a
-    face take that face's slot hooks and its slot's median baked AO on that LOD, then grow `grow` px
-    into the unbaked background so box-filtered mips hold the values. Strips narrower than a texel
-    (beam sides, course butts, the plinth ledge) rasterize no texel centre, so the bake and its margin
-    skip them and they would draw with A = 0 (black, no snow). Each triangle is rasterized
-    conservatively (texel centres within `reach` px of it). Copied from barn_red.py (2026-10-19)."""
-    img = px.reshape(size, size, 4).copy()
-    baked = img[:, :, 1] > 0.0
-    fill = np.zeros((size, size, 4), np.float32)
-    mark = np.zeros((size, size), bool)
-    for o in lods:
-        me = o.data
-        me.calc_loop_triangles()
-        uvl = me.uv_layers["UVMap"].data
-        tris = [(t.material_index, np.array([uvl[li].uv[:] for li in t.loops]) * size) for t in me.loop_triangles]
-        ao = {}
-        for mi, tri in tris:
-            x, y = np.clip(tri.mean(0).astype(int), 0, size - 1)
-            if baked[y, x]:
-                ao.setdefault(mi, []).append(img[y, x, 3])
-        lod_ao = float(np.median([a for v in ao.values() for a in v]))
-        for mi, tri in tris:
-            area2 = (tri[1, 0] - tri[0, 0]) * (tri[2, 1] - tri[0, 1]) - (tri[2, 0] - tri[0, 0]) * (tri[1, 1] - tri[0, 1])
-            if abs(area2) < 1e-12:
-                continue
-            lo = np.clip(np.floor(tri.min(0) - reach).astype(int), 0, size - 1)
-            hi = np.clip(np.ceil(tri.max(0) + reach).astype(int), 0, size - 1)
-            xs, ys = np.meshgrid(np.arange(lo[0], hi[0] + 1) + 0.5, np.arange(lo[1], hi[1] + 1) + 0.5)
-            inside = np.ones(xs.shape, bool)
-            for i in range(3):
-                a, b = tri[i], tri[(i + 1) % 3]
-                e = b - a
-                d = (e[0] * (ys - a[1]) - e[1] * (xs - a[0])) / np.hypot(*e) * np.sign(area2)
-                inside &= d >= -reach
-            iy, ix = ys[inside].astype(int), xs[inside].astype(int)
-            take = ~baked[iy, ix]
-            iy, ix = iy[take], ix[take]
-            a_slot = float(np.median(ao[mi])) if mi in ao else lod_ao
-            fill[iy, ix] = (*hooks[mi], a_slot)
-            mark[iy, ix] = True
-    for _ in range(grow):
-        grown = mark.copy()
-        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            nb_mark = np.roll(mark, (dy, dx), (0, 1))
-            take = nb_mark & ~grown & ~baked
-            fill[take] = np.roll(fill, (dy, dx), (0, 1))[take]
-            grown |= take
-        mark = grown
-    img[mark] = fill[mark]
-    return img.reshape(-1, 4), int(mark.sum())
-
-
-def centroid_samples(lods, px, size, slots):
-    """The masks at every LOD triangle's UV centroid (nearest texel, as the hooks gate samples):
-    per LOD, the number of triangles on unwritten texels (G = 0) and each slot's minimum A."""
-    img = px.reshape(size, size, 4)
-    out = {}
-    for i, o in enumerate(lods):
-        me = o.data
-        me.calc_loop_triangles()
-        uvl = me.uv_layers["UVMap"].data
-        unbaked, amin = 0, {}
-        for t in me.loop_triangles:
-            c = np.mean([uvl[li].uv[:] for li in t.loops], 0)
-            x, y = np.clip((c * size).astype(int), 0, size - 1)
-            v = img[y, x]
-            unbaked += int(v[1] <= 0.0)
-            n = slots[t.material_index][len(P) + 1:]
-            amin[n] = round(min(amin.get(n, 1.0), float(v[3])), 3)
-        out[f"lod{i}"] = {"unbakedTris": unbaked, "minA": amin}
-    return out
-
-
 def main():
     out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])
     skip_bake = os.environ.get("HEXW_SKIP_BAKE") == "1"
@@ -719,7 +646,7 @@ def main():
         _, px = bake.load_png(masks_png)
         covered = px[:, 1] > 0.01  # every slot has porosity >= 0.05; empty texels stay 0
         av = px[covered, 3]
-        samples = centroid_samples(lods, px, MASK_SIZE, slots)
+        samples = centroid_samples(lods, px, MASK_SIZE, slots, P)
         stats = {"aoMean": float(av.mean()), "aoP05": float(np.percentile(av, 5)),
                  "nightTexels": int((px[:, 2] > 0.5).sum()), "coverage": float(covered.mean()),
                  "loafTexels": int(np.unique(idx).size), "filledTexels": filled, "centroids": samples}
