@@ -1238,7 +1238,7 @@ try {
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_tier", tier: "medium" }));
   await until(async () => (await st()).tier?.tier === "medium", "Medium for the disabled grass slider", 30_000);
   await until(async () => slider.isDisabled(), "the Grass slider is disabled on Medium");
-  check(await page.locator(".field--slider:has(input[aria-label='Grass density']) + .tier-reason:not([hidden])").count() === 1, "the High and Ultra hint shows");
+  check(await page.locator(".field--slider:has(input[aria-label='Grass density']) ~ .tier-reason:not([hidden])").count() === 1, "the High and Ultra hint shows");
   await slider.evaluate((e) => {
     e.value = "0";
     e.dispatchEvent(new Event("input", { bubbles: true }));
