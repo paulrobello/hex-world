@@ -1,0 +1,27 @@
+// The wheat field (P3 farm content, refs owner-approved under A17: "wheat crop") on meadow_base's
+// grass, ahead of the P3 recipes (owner request, 2026-10-19). Grass edges, so it mixes freely with
+// meadows and the farm. The centre piece covers a hexagon of apothem 10.8 m with ripe wheat in
+// parallel rows along the tile's x on ploughed earth, leaving a 3 m grass margin on every edge;
+// rows are 1.2 m apart, so neighbouring fields continue each other's rows. The wheat sways in the
+// wind and the walker walks through it (its cards are not ground, `scatter::NOT_GROUND`). A few
+// wildflowers and rocks stay on the grass margin: scatter only stands on meadow_base_cap.
+(
+    id: "wheat_field",
+    biome: Grass,
+    base: "meadow_base",
+    center: Some("wheat_field"),
+    edges: (
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    props: (
+        scatter: [
+            (piece: "wildflower_clump", density: 1.2, drift: true),
+            (piece: "rock_small", density: 0.2),
+        ],
+    ),
+)

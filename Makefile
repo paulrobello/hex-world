@@ -1,4 +1,4 @@
-.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play
+.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-wheat-play
 
 fmt:
 	cargo fmt --all
@@ -465,6 +465,26 @@ shots-farm-play:
 	@for n in $(FARM_SHOTS); do ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(FARM_DOCS)/$$n.jpg || exit 1; done
 	cp target/shots/farm-play-state.json target/shots/farm-walk-state.json $(FARM_DOCS)/
 	@echo "wrote $(FARM_DOCS)/"
+
+# Wheat field tile in play: docs/checkpoints/wheat_field/wheat-play.json places two wheat fields one
+# row apart (rows continue across the seam), the farm and meadows, and shoots play distance, the
+# seam to the grass neighbour and to the second field, sun-side and shade-side close-ups, a scale
+# shot across the wheat to the barn, an eye-level walk view, and a walk into the field with its
+# state dumped (`walk.blocked` null). 1280x800, tilt-shift off and `--clock fixed`. A black still
+# fails the target. `python3 docs/checkpoints/wheat_field/sheet.py` then builds the review sheet.
+WHEAT_SHOTS = wheat-play wheat-seam wheat-close-sun wheat-close-shade wheat-scale wheat-walk-eye wheat-walk-inside
+WHEAT_DOCS = docs/checkpoints/wheat_field
+shots-wheat-play:
+	mkdir -p target/shots $(WHEAT_DOCS)
+	rm -f target/shots/wheat-*.png target/shots/wheat-*.json
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(WHEAT_DOCS)/wheat-play.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	@for n in $(WHEAT_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
+	  m=$$(magick target/shots/$$n.png -format '%[fx:mean]' info:); \
+	  awk -v m="$$m" 'BEGIN { exit !(m < 0.02) }' && { echo "$$n.png is black (mean $$m): idle display or high load, run again"; exit 1; }; \
+	  true; done
+	@for n in $(WHEAT_SHOTS); do ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(WHEAT_DOCS)/$$n.jpg || exit 1; done
+	cp target/shots/wheat-play-state.json target/shots/wheat-walk-state.json $(WHEAT_DOCS)/
+	@echo "wrote $(WHEAT_DOCS)/"
 
 # First-person walk checkpoint (PRD P8): builds a village street, a forest, a river, a beach and
 # an ocean with docs/checkpoints/first-person/first-person.json, walks them at eye level at

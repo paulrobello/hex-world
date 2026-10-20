@@ -547,6 +547,28 @@ try {
   await until(async () => !tileAt(await play(), ...farmAt), "undo removes the farm");
   check((await play()).tiles.length === farmBefore, "the farm undo restores the tile count");
 
+  // The wheat field (owner request, 2026-10-19: ripe wheat in rows ahead of P3) is in the Tiles
+  // sheet with its baked thumbnail and places in the same freed slot; undone too.
+  check(await page.locator(".row[data-tile=wheat_field]").count() > 0, "the Tiles sheet lists the wheat field");
+  const wheatThumb = await page.locator(".row[data-tile=wheat_field] img.row__thumb").first().getAttribute("src");
+  check(wheatThumb?.includes("wheat_field-r0.webp"), `the wheat field row shows its thumbnail (${wheatThumb})`);
+  check((await text(".row[data-tile=wheat_field]")).includes("Wheat field"), "the wheat field row is named Wheat field");
+  const wheatAt = millAt;
+  check(!tileAt(await play(), ...wheatAt), "(-1, 1) is free for the wheat field");
+  await page.evaluate(() => window.hexWorld.selectTile("wheat_field"));
+  await until(async () => (await play()).selected === "wheat_field", "Wheat field selected");
+  await events();
+  const wheatBefore = (await play()).tiles.length;
+  await page.evaluate(([q, r]) => window.hexWorld.placeTile(q, r), wheatAt);
+  await until(async () => tileAt(await play(), ...wheatAt)?.tile === "wheat_field", "the wheat field is placed at (-1, 1) beside the meadows");
+  check((await play()).tiles.length === wheatBefore + 1, "placing the wheat field adds one tile");
+  check((await events()).some((e) => e.type === "tilePlaced" && same(e, ...wheatAt) && e.tile === "wheat_field"), "tilePlaced names the wheat field");
+  await page.waitForTimeout(2600);
+  await placementShot("wheat-field-placed");
+  await key("ControlOrMeta+z");
+  await until(async () => !tileAt(await play(), ...wheatAt), "undo removes the wheat field");
+  check((await play()).tiles.length === wheatBefore, "the wheat field undo restores the tile count");
+
   // S8 photo mode (PRD §4.6): P enters (the HUD hides, agents pause), WASD and E fly the free camera,
   // the panel changes DOF, a 2× PNG exports through the offscreen target and downloads, then P leaves
   // (HUD back, agents running, the orbit camera exactly where it was).

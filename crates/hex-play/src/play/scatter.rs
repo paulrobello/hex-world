@@ -455,13 +455,21 @@ fn bucket(v: f32) -> usize {
     (((v + EXTENT) / BUCKET).floor().max(0.0) as usize).min(BUCKETS - 1)
 }
 
+/// Slots of ground pieces that stand on the ground rather than being it: a crop's leaning row cards
+/// on a centre piece. Nothing stands on them and the walker walks through them.
+pub const NOT_GROUND: [&str; 1] = ["wheat_field_wheat"];
+
 impl Surface {
-    /// Vertical (skirt) and degenerate triangles carry no ground and are dropped.
+    /// Vertical (skirt) and degenerate triangles carry no ground and are dropped, as are the
+    /// [`NOT_GROUND`] slots.
     pub fn new(parts: impl IntoIterator<Item = (Tri, String)>) -> Self {
         let mut slots: Vec<String> = vec![];
         let mut tris = vec![];
         let mut buckets = vec![vec![]; BUCKETS * BUCKETS];
         for (t, name) in parts {
+            if NOT_GROUND.contains(&name.as_str()) {
+                continue;
+            }
             let [a, b, c] = t;
             let d = (b[0] - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (b[2] - a[2]);
             if d.abs() < 1e-9 {
@@ -1551,12 +1559,13 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 20, "every inventory tile ran");
+        assert_eq!(counts.len(), 21, "every inventory tile ran");
         for id in [
             "forest",
             "oak",
             "windmill",
             "farm",
+            "wheat_field",
             "meadow",
             "road_straight",
             "house_cluster",
@@ -1793,6 +1802,41 @@ mod tests {
 
     /// The footprint table matches the kit: ground reach is the collider's, crown reach the widest
     /// LOD's (within 0.1 m, never under).
+    /// The wheat field's ground (scatter, grass and the walker all stand on it) is its ploughed
+    /// earth inside the field and the meadow cap on the grass margin; the wheat cards are never
+    /// ground (`NOT_GROUND`), and the meadow cap never pokes through the earth.
+    #[test]
+    fn the_wheat_field_ground_is_its_earth_not_its_wheat() {
+        let def = catalog().get("wheat_field").unwrap().clone();
+        let g = prepared(&def).expect("wheat_field ground in the kit");
+        let field = |p: Vec2| (0..3).map(|e| p.dot(hex_dir(e)).abs()).fold(0.0, f32::max);
+        let (mut earth, mut cap) = (0, 0);
+        for j in -60..=60 {
+            for i in -60..=60 {
+                let p = Vec2::new(i as f32 * 0.25, j as f32 * 0.25);
+                let reach = field(p);
+                let Some((_, slot)) = g.surface.at(p.x, p.y) else {
+                    continue;
+                };
+                assert_ne!(slot, "wheat_field_wheat", "wheat is ground at {p}");
+                if reach < 10.3 {
+                    assert_eq!(slot, "wheat_field_soil", "at {p}");
+                    earth += 1;
+                } else if reach > 10.9 && reach < 13.5 {
+                    assert_eq!(slot, "meadow_base_cap", "at {p}");
+                    cap += 1;
+                }
+            }
+        }
+        assert!(earth > 4000 && cap > 1500, "{earth} {cap}");
+        // The wildflowers and rocks stand on the margin only.
+        let l = layout(&def, 1, &g);
+        assert!(!l.instances.is_empty());
+        for inst in &l.instances {
+            assert!(field(inst.pos.xz()) > 10.8, "{:?}", inst.pos);
+        }
+    }
+
     #[test]
     fn footprints_match_the_kit() {
         let reach = |tris: &[(Tri, String)]| {

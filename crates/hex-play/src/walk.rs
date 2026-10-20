@@ -13,7 +13,8 @@
 //! - **Obstacles.** Houses, the windmill, the barn, the hero oak, spruces, rocks and the farm's hay
 //!   bales and (static) animals block the walker by their collider (`<piece>_collider` in the kit
 //!   GLB) as a convex footprint on the ground, placed with the hero or scatter instance's transform
-//!   under the tile's rest transform. Wildflowers do not block.
+//!   under the tile's rest transform. Wildflowers do not block, and the wheat field's wheat is
+//!   neither ground nor obstacle (`scatter::NOT_GROUND`): the walker walks through it.
 //! - **Props to look at.** Photo mode's click to focus ([`WalkGround::pick_prop`]) hits the same
 //!   drawn obstacle instances as volumes: the collider footprint extruded from the collider's foot
 //!   to the top of the piece's non-foliage LOD0 mesh, and for trees a crown of stacked cylinders
@@ -1101,6 +1102,27 @@ mod tests {
                 "r{rotation}: hit {} m out",
                 30.0 - t
             );
+        }
+    }
+
+    /// The walker crosses a wheat field along and across its rows without being blocked or lifted
+    /// onto the wheat: it walks on the ploughed earth, within a furrow's depth of the meadow.
+    #[test]
+    fn the_walker_walks_through_a_wheat_field() {
+        let g = world(&[(0, 0, "wheat_field", 0)]);
+        for dir in [Vec2::X, Vec2::Y, Vec2::new(1.0, 1.0)] {
+            let from = -dir.normalize() * 11.5;
+            let s = walk(&g, from, dir, 23.0);
+            assert_eq!(s.blocked, None, "{dir}");
+            assert!(
+                (s.pos.xz() - (from + dir.normalize() * 23.0)).length() < 0.1,
+                "{dir}"
+            );
+            for k in 0..=46 {
+                let p = from + dir.normalize() * (k as f32 * 0.5);
+                let y = g.ground(p).unwrap();
+                assert!((-0.35..0.3).contains(&y), "{dir} at {p}: ground {y}");
+            }
         }
     }
 

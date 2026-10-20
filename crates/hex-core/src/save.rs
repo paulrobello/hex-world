@@ -1057,6 +1057,23 @@ mod tests {
         assert_eq!(w.tile(EAST).unwrap().def, "farm");
     }
 
+    /// The wheat field (in the inventory ahead of P3) saves and loads like any tile.
+    #[test]
+    fn a_placed_wheat_field_round_trips() {
+        let c = catalog();
+        let mut w = World::new(9);
+        w.place(&c, EAST, "wheat_field", 0).unwrap();
+        let save = SaveData {
+            world: w,
+            unlocks: BTreeSet::new(),
+            camera: camera(),
+            settings: settings(),
+        };
+        let back = decode(&save.encode()).unwrap();
+        assert_eq!(back, save);
+        assert_eq!(back.world.tile(EAST).unwrap().def, "wheat_field");
+    }
+
     #[test]
     fn a_fresh_world_round_trips() {
         let save = SaveData {

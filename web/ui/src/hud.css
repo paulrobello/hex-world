@@ -145,6 +145,7 @@
 .g-sand { fill: var(--k-B); }
 .g-tree { fill: color-mix(in oklab, var(--k-F) 70%, black); }
 .g-house { fill: var(--k-house); }
+.g-wheat { stroke: color-mix(in oklab, var(--k-B) 80%, rgb(200 150 40)); stroke-width: 5; stroke-linecap: round; }
 .g-bridge { fill: var(--k-R); stroke: var(--k-house); stroke-width: 2; }
 
 /* ---------- Tag beside the ghost or the bulldoze target ---------- */

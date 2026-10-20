@@ -60,6 +60,8 @@ export function glyph(def: TileDef): SVGElement {
     g.append(
       s("rect", { class: "g-house", x: 54, y: 24, width: 16, height: 11, rx: 1.5, transform: "rotate(30 62 29.5)" }),
     );
+  if (def.id === "wheat_field")
+    for (const y of [38, 46, 54, 62]) g.append(s("line", { class: "g-wheat", x1: 30, y1: y, x2: 70, y2: y }));
   if (def.id === "house_cluster")
     for (const [x, y] of [
       [44, 44],

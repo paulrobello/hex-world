@@ -10,14 +10,18 @@ use crate::socket::{SocketTable, SocketTableError};
 use crate::tile::{KitRef, TileDef};
 
 /// Every file in `data/tiles/`, as `(id, RON text)`, in inventory order (plan F1, with the owner O1
-/// coast corners after the straight beach, as PRD §5.4 lists them, and the windmill and the farm
-/// after the oak).
-pub const BUILTIN_TILES: [(&str, &str); 20] = [
+/// coast corners after the straight beach, as PRD §5.4 lists them, and the windmill, the farm and
+/// the wheat field after the oak).
+pub const BUILTIN_TILES: [(&str, &str); 21] = [
     ("meadow", include_str!("../../../data/tiles/meadow.ron")),
     ("forest", include_str!("../../../data/tiles/forest.ron")),
     ("oak", include_str!("../../../data/tiles/oak.ron")),
     ("windmill", include_str!("../../../data/tiles/windmill.ron")),
     ("farm", include_str!("../../../data/tiles/farm.ron")),
+    (
+        "wheat_field",
+        include_str!("../../../data/tiles/wheat_field.ron"),
+    ),
     (
         "house_cluster",
         include_str!("../../../data/tiles/house_cluster.ron"),
