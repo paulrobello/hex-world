@@ -386,6 +386,12 @@ mod tests {
             packs().manifest.piece_pack("house_longhouse"),
             Some("village")
         );
+        let oak = drawn_pieces(c.get("oak").unwrap(), &c);
+        assert!(
+            oak.contains("tree_hero_oak") && oak.contains("tree_hero_oak_b"),
+            "{oak:?}"
+        );
+        assert_eq!(packs().manifest.piece_pack("tree_hero_oak_b"), Some("hero"));
     }
 
     #[test]

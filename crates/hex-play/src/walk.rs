@@ -60,7 +60,7 @@ const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not. A sapling stops the walker at its stem, a shrub at its dense lower dome; ferns
 /// are walk-through.
-pub const OBSTACLES: [&str; 27] = [
+pub const OBSTACLES: [&str; 28] = [
     "house_cottage",
     "house_twostorey",
     "house_longhouse",
@@ -75,6 +75,7 @@ pub const OBSTACLES: [&str; 27] = [
     "animal_cow_b",
     "animal_sheep_b",
     "tree_hero_oak",
+    "tree_hero_oak_b",
     "tree_forest",
     "tree_forest_b",
     "tree_forest_c",
@@ -1067,6 +1068,7 @@ mod tests {
             ("house_longhouse", "building"),
             ("house_twostorey_b", "building"),
             ("tree_hero_oak", "tree"),
+            ("tree_hero_oak_b", "tree"),
             ("tree_forest_b", "tree"),
             ("rock_small", "rock"),
             ("rock_small_c", "rock"),
@@ -1781,7 +1783,7 @@ mod tests {
     #[test]
     fn a_click_picks_the_nearest_drawn_prop_and_its_kind() {
         let g = world(&[(0, 0, "oak", 0), (1, 0, "house_cluster", 0)]);
-        assert!(g.props.iter().any(|p| p.piece == "tree_hero_oak"));
+        assert!(g.props.iter().any(|p| p.piece.starts_with("tree_hero_oak")));
         assert!(
             g.props.iter().all(|p| p.piece != "wildflower_clump"),
             "flowers are not pickable"
@@ -1793,7 +1795,7 @@ mod tests {
         let (t, piece) = g.pick_prop(ray(eye, mid - eye), 1000.0).unwrap();
         // The hero oak, or a scattered oak standing in front of it.
         assert!(
-            ["tree_hero_oak", "tree_oak", "tree_oak_b"].contains(&piece),
+            ["tree_hero_oak", "tree_hero_oak_b", "tree_oak", "tree_oak_b"].contains(&piece),
             "{piece}"
         );
         assert_eq!(prop_kind(piece), "tree");

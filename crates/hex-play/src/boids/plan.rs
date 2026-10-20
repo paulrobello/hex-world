@@ -235,23 +235,59 @@ const OAK_PERCHES: [(usize, f32, f32, f32); 12] = [
     (3, 68.0, -0.3, -0.05),
     (3, 68.0, 0.9, 0.07),
 ];
+/// Canopy dome clumps of `tree_hero_oak_b` (`CLUMPS` in scripts/blender/kit/tree_hero_oak_b.py, 1x,
+/// Blender frame), as [`OAK_CLUMPS`]; the GLB ships at [`OAK_SCALE`] too.
+const OAK_B_CLUMPS: [([f32; 3], f32, u8); 10] = [
+    ([2.800, 0.200, 9.500], 2.000, 2),
+    ([3.700, 1.700, 7.700], 1.900, 1),
+    ([3.400, -1.400, 7.900], 1.900, 1),
+    ([4.400, 0.100, 5.900], 1.850, 0),
+    ([-3.000, 0.700, 7.300], 1.950, 2),
+    ([-3.900, -0.700, 5.900], 1.850, 1),
+    ([-3.000, 2.200, 5.500], 1.800, 0),
+    ([0.400, -4.600, 3.700], 1.850, 0),
+    ([-1.900, -3.900, 4.500], 1.750, 1),
+    ([2.400, -3.400, 5.000], 1.750, 1),
+];
+/// `tree_hero_oak_b`'s perches, as [`OAK_PERCHES`], on the open tops of its east and west lobes
+/// (clumps 0 and 4), the south shelf (7) and its two flanking domes (8, 9).
+const OAK_B_PERCHES: [(usize, f32, f32, f32); 12] = [
+    (0, 80.0, -0.3, 0.04),
+    (0, 80.0, 2.0, 0.02),
+    (0, 68.0, -1.2, 0.10),
+    (4, 80.0, -1.2, 0.04),
+    (4, 80.0, 2.0, 0.03),
+    (4, 72.0, 0.3, 0.02),
+    (7, 80.0, 0.0, 0.04),
+    (7, 80.0, 3.0, 0.03),
+    (8, 80.0, -1.2, 0.04),
+    (8, 80.0, 2.0, 0.03),
+    (8, 72.0, 0.3, 0.04),
+    (9, 72.0, -1.2, 0.03),
+];
 /// The lowest perch elevation on an oak dome (degrees): the dome's normal tilts about 20 degrees
 /// from vertical there.
 pub const PERCH_MIN_ELEVATION: f32 = 68.0;
+
+/// An oak's perches from its clump table and perch list, in the runtime frame at [`OAK_SCALE`].
+fn oak_perches(clumps: &[([f32; 3], f32, u8)], perches: &[(usize, f32, f32, f32)]) -> Vec<Vec3> {
+    perches
+        .iter()
+        .map(|&(k, el, daz, lift)| {
+            let (c, r, _) = clumps[k];
+            let c = c.map(|x| x * OAK_SCALE);
+            dome_point(c, r * OAK_SCALE, c[1].atan2(c[0]) + daz, el.to_radians())
+                + Vec3::Y * (lift * OAK_SCALE)
+        })
+        .collect()
+}
 
 /// Perch points on a tree piece's canopy, piece-local in the runtime frame (Y up, trunk base at
 /// the origin). Empty for a piece birds do not roost on.
 pub fn canopy_perches(piece: &str) -> Vec<Vec3> {
     match piece {
-        "tree_hero_oak" => OAK_PERCHES
-            .iter()
-            .map(|&(k, el, daz, lift)| {
-                let (c, r, _) = OAK_CLUMPS[k];
-                let c = c.map(|x| x * OAK_SCALE);
-                dome_point(c, r * OAK_SCALE, c[1].atan2(c[0]) + daz, el.to_radians())
-                    + Vec3::Y * (lift * OAK_SCALE)
-            })
-            .collect(),
+        "tree_hero_oak" => oak_perches(&OAK_CLUMPS, &OAK_PERCHES),
+        "tree_hero_oak_b" => oak_perches(&OAK_B_CLUMPS, &OAK_B_PERCHES),
         "tree_forest" => spruce_perches(SPRUCE_TOP, 10.0, SPRUCE_R10),
         "tree_forest_b" => spruce_perches(SPRUCE_B.0, SPRUCE_B.1, SPRUCE_B.2),
         "tree_forest_c" => spruce_perches(SPRUCE_C.0, SPRUCE_C.1, SPRUCE_C.2),
@@ -303,8 +339,9 @@ pub struct Roost {
 }
 
 /// Tree pieces with canopy perches: what [`BoidPlan::set_world`] watches arrive in the kit.
-pub const PERCH_PIECES: [&str; 4] = [
+pub const PERCH_PIECES: [&str; 5] = [
     "tree_hero_oak",
+    "tree_hero_oak_b",
     "tree_forest",
     "tree_forest_b",
     "tree_forest_c",
@@ -1745,27 +1782,39 @@ mod tests {
         assert!(!plan.set_world_all(&world, &c, 1.3));
     }
 
-    /// The oak perches sit on the GLB's canopy shell and are open from above.
+    /// The oak perches (both hero oaks) sit on the GLB's canopy shell and are open from above.
     #[test]
     fn oak_perches_sit_on_the_canopy() {
-        let root = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../assets/kit/p1/tree_hero_oak/tree_hero_oak.glb"
+        for (piece, list) in [
+            ("tree_hero_oak", &OAK_PERCHES),
+            ("tree_hero_oak_b", &OAK_B_PERCHES),
+        ] {
+            assert_eq!(canopy_perches(piece).len(), 12, "{piece}");
+            perches_sit_on_the_canopy(piece, list);
+        }
+    }
+
+    fn perches_sit_on_the_canopy(piece: &str, list: &[(usize, f32, f32, f32)]) {
+        let root = format!(
+            "{}/../../assets/kit/p1/{piece}/{piece}.glb",
+            env!("CARGO_MANIFEST_DIR")
         );
         let bytes = std::fs::read(root).unwrap();
         let plain = hex_assets::rewrite_glb(&bytes).unwrap();
         let (doc, buffers, _) = gltf::import_slice(&plain).unwrap();
+        let lod0 = format!("{piece}_lod0");
         let mesh = doc
             .meshes()
-            .find(|m| m.name() == Some("tree_hero_oak_lod0"))
+            .find(|m| m.name() == Some(lod0.as_str()))
             .unwrap();
+        let (canopy_mat, leaves_mat) = (format!("{piece}_canopy"), format!("{piece}_leaves"));
         let mut canopy: Vec<Vec3> = vec![];
         // Triangles of the canopy shell and the leaf cards.
         let mut tris: Vec<[Vec3; 3]> = vec![];
         for prim in mesh.primitives() {
             let shell = match prim.material().name() {
-                Some("tree_hero_oak_canopy") => true,
-                Some("tree_hero_oak_leaves") => false,
+                Some(m) if m == canopy_mat => true,
+                Some(m) if m == leaves_mat => false,
                 _ => continue,
             };
             let rd = prim.reader(|b| Some(&buffers[b.index()]));
@@ -1783,7 +1832,7 @@ mod tests {
         }
         assert!(canopy.len() > 100, "canopy primitive found");
         assert!(
-            OAK_PERCHES.iter().all(|p| p.1 >= PERCH_MIN_ELEVATION),
+            list.iter().all(|p| p.1 >= PERCH_MIN_ELEVATION),
             "a perch mid-slope"
         );
         // The highest foliage surface over XZ point `q`: a vertical line against every triangle.
@@ -1807,7 +1856,7 @@ mod tests {
         // is at the highest canopy-or-leaf surface under the folded bird (0.35 m around it: the
         // body is 0.79 m long at display scale), so the pivot-to-feet lift puts it on the leaves.
         let mut off = vec![];
-        for p in canopy_perches("tree_hero_oak") {
+        for p in canopy_perches(piece) {
             let top = (0..8)
                 .map(|k| Vec2::from_angle(k as f32 * std::f32::consts::FRAC_PI_4) * 0.35)
                 .chain([Vec2::ZERO])
@@ -1817,8 +1866,11 @@ mod tests {
                 off.push((p, p.y - top));
             }
         }
-        assert!(off.is_empty(), "perches off the foliage top: {off:?}");
-        for p in canopy_perches("tree_hero_oak") {
+        assert!(
+            off.is_empty(),
+            "{piece} perches off the foliage top: {off:?}"
+        );
+        for p in canopy_perches(piece) {
             let near = canopy
                 .iter()
                 .map(|v| v.distance(p))

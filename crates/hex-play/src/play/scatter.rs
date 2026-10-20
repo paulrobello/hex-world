@@ -219,7 +219,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 35] = [
+pub const FOOTPRINTS: [(&str, Footprint); 36] = [
     (
         "tree_forest",
         Footprint {
@@ -316,6 +316,13 @@ pub const FOOTPRINTS: [(&str, Footprint); 35] = [
         Footprint {
             ground: 2.5,
             crown: 8.55,
+        },
+    ),
+    (
+        "tree_hero_oak_b",
+        Footprint {
+            ground: 2.45,
+            crown: 8.45,
         },
     ),
     (
@@ -2100,21 +2107,26 @@ mod tests {
     }
 
     /// A hero variant stands inside the authored piece's ground box and reach, so the clearances
-    /// sized for the authored piece (hex-sim's parking boxes, the scatter masks) hold for it.
+    /// sized for the authored piece (hex-sim's parking boxes, the scatter masks) hold for it. A
+    /// round piece (a tree, no ground box) keeps inside its ground and crown reach.
     #[test]
     fn hero_variants_fit_inside_the_authored_piece() {
         for (piece, variants) in hex_core::HERO_VARIANTS {
-            let b = ground_box(piece).unwrap();
             for v in variants {
-                let vb = ground_box(v).unwrap();
-                assert!(
-                    vb.min[0] >= b.min[0]
-                        && vb.min[1] >= b.min[1]
-                        && vb.max[0] <= b.max[0]
-                        && vb.max[1] <= b.max[1],
-                    "{v} {vb:?} outside {piece} {b:?}"
-                );
+                if let Some(b) = ground_box(piece) {
+                    let vb = ground_box(v).unwrap();
+                    assert!(
+                        vb.min[0] >= b.min[0]
+                            && vb.min[1] >= b.min[1]
+                            && vb.max[0] <= b.max[0]
+                            && vb.max[1] <= b.max[1],
+                        "{v} {vb:?} outside {piece} {b:?}"
+                    );
+                } else {
+                    assert!(ground_box(v).is_none(), "{v} has a box, {piece} none");
+                }
                 assert!(footprint(v).ground <= footprint(piece).ground, "{v}");
+                assert!(footprint(v).crown <= footprint(piece).crown, "{v}");
             }
         }
     }

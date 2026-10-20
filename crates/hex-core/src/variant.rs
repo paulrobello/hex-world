@@ -7,9 +7,10 @@ use crate::{Axial, HeroProp, TileDef};
 
 /// Each authored hero piece with the variants a slot of it may draw instead. A new variant is one
 /// more id in its row; a new family is one more row.
-pub const HERO_VARIANTS: [(&str, &[&str]); 2] = [
+pub const HERO_VARIANTS: [(&str, &[&str]); 3] = [
     ("house_cottage", &["house_longhouse"]),
     ("house_twostorey", &["house_twostorey_b"]),
+    ("tree_hero_oak", &["tree_hero_oak_b"]),
 ];
 
 /// One slot in this many draws a variant (the rest keep the authored piece).
@@ -192,7 +193,29 @@ mod tests {
             }
         }
         assert_eq!(hero_variants("barn_red"), &[] as &[&str]);
-        assert_eq!(hero_variants("tree_hero_oak"), &[] as &[&str]);
+        assert_eq!(hero_variants("windmill"), &[] as &[&str]);
+    }
+
+    /// The oak tile's one hero slot draws the forked oak in about one cell in three, and the
+    /// origin (the thumbnail cell) keeps the authored hero oak.
+    #[test]
+    fn some_oak_tiles_draw_the_forked_oak() {
+        let c = TileCatalog::builtin().unwrap();
+        let def = c.get("oak").unwrap();
+        let (mut oak, mut forked) = (0, 0);
+        for cell in cells() {
+            match hero_piece(def, cell, 0) {
+                "tree_hero_oak" => oak += 1,
+                "tree_hero_oak_b" => forked += 1,
+                p => panic!("{p} at {cell:?}"),
+            }
+        }
+        let share = forked as f32 / (oak + forked) as f32;
+        assert!(
+            (0.28..0.39).contains(&share),
+            "tree_hero_oak_b share {share}"
+        );
+        assert_eq!(hero_piece(def, Axial::new(0, 0), 0), "tree_hero_oak");
     }
 
     #[test]
