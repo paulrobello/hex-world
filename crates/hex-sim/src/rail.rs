@@ -5,8 +5,8 @@
 //!   turnout's three segments meet at its toe node ([`hex_core::SwitchDef`]); a train running in on
 //!   the toe segment leaves on the leg the switch is set to, and from either leg it trails through
 //!   onto the toe segment. No route joins the two legs.
-//! - **Trains.** An engine and two carriages ([`CONSIST`]), [`TRAIN_LENGTH`] meters over the
-//!   buffers. A train follows the track, never a route: there are no stations yet, so at each facing
+//! - **Trains.** An engine, a carriage and a brake third ([`CONSIST`]), [`TRAIN_LENGTH`] meters
+//!   over the buffers. A train follows the track, never a route: there are no stations yet, so at each facing
 //!   toe it takes the leg the junction offers next, alternating between the two, and the switch is
 //!   thrown for it when it reserves the junction. At a line end (a seam facing an empty cell; rail
 //!   meets only rail, so a line can end nowhere else) it stops inside the last tile, waits
@@ -105,6 +105,9 @@ impl Leg {
 pub enum VehicleKind {
     Engine,
     Carriage,
+    /// The brake third (`train_carriage_b`): the guard's veranda and roof lookout at its rear, so it
+    /// runs last. Its length and axles are the carriage's.
+    BrakeCarriage,
 }
 
 /// A vehicle of the consist: its centre's distance from the engine end of the train and half its
@@ -116,7 +119,8 @@ pub struct VehicleSpec {
     pub half_wheelbase: f32,
 }
 
-/// The engine (8.94 m, axles ±2.0 m) and two carriages (7.14 m, axles ±1.5 m), 0.5 m apart.
+/// The engine (8.94 m, axles ±2.0 m), a carriage and the brake third last (both 7.14 m, axles
+/// ±1.5 m), 0.5 m apart.
 pub const CONSIST: [VehicleSpec; 3] = [
     VehicleSpec {
         kind: VehicleKind::Engine,
@@ -129,7 +133,7 @@ pub const CONSIST: [VehicleSpec; 3] = [
         half_wheelbase: 1.5,
     },
     VehicleSpec {
-        kind: VehicleKind::Carriage,
+        kind: VehicleKind::BrakeCarriage,
         centre: 20.65,
         half_wheelbase: 1.5,
     },

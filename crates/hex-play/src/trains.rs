@@ -2,8 +2,9 @@
 //! vehicle's interpolated pose into [`TrainsView`]; this module keeps one entity per vehicle in step
 //! with it.
 //!
-//! A train is the steam tank engine (`train_engine`) and two carriages (`train_carriage`), each
-//! standing on the rail top ([`RAIL_TOP_Y`], the same over the level crossing's
+//! A train is the steam tank engine (`train_engine`), a carriage (`train_carriage`) and the brake
+//! third last (`train_carriage_b`, the same length and axles as the carriage), each standing on the
+//! rail top ([`RAIL_TOP_Y`], the same over the level crossing's
 //! deck and the river bridge) and painted at runtime (PRD §6) like the cars: one model and one
 //! material per piece, the livery picked from [`LIVERIES`] by the train id and carried as a
 //! per-entity [`MeshTag`], so every vehicle of a piece and LOD draws in one instanced batch.
@@ -38,15 +39,23 @@ pub const RAIL_TOP_Y: f32 = 0.46;
 pub enum StockKind {
     Engine,
     Carriage,
+    /// The brake third, last in every train (`hex_sim::rail::CONSIST`): its veranda and roof
+    /// lookout at the piece's -x end, the train's tail.
+    BrakeCarriage,
 }
 
 impl StockKind {
-    pub const ALL: [StockKind; 2] = [StockKind::Engine, StockKind::Carriage];
+    pub const ALL: [StockKind; 3] = [
+        StockKind::Engine,
+        StockKind::Carriage,
+        StockKind::BrakeCarriage,
+    ];
 
     pub fn piece(self) -> &'static str {
         match self {
             StockKind::Engine => "train_engine",
             StockKind::Carriage => "train_carriage",
+            StockKind::BrakeCarriage => "train_carriage_b",
         }
     }
 }
@@ -116,7 +125,7 @@ impl Plugin for TrainsPlugin {
     }
 }
 
-/// Starts loading the two train pieces once the play scenario has requested the village pack.
+/// Starts loading the train pieces once the play scenario has requested the village pack.
 pub fn start_kit(
     mut kit: ResMut<TrainKit>,
     active: Res<ActiveScenario>,
@@ -390,6 +399,26 @@ mod tests {
         });
         assert_eq!(t.translation, Vec3::new(1.0, RAIL_TOP_Y, 2.0));
         assert!((t.rotation * Vec3::X - Vec3::Z).length() < 1e-5);
+    }
+
+    /// Both carriage designs share one envelope, so `hex_sim::rail::CONSIST` spaces them alike: the
+    /// same length over buffers, width, axles and wheels in their bake reports.
+    #[test]
+    fn the_carriage_designs_share_one_envelope() {
+        let geometry = |text: &str| -> serde_json::Value {
+            serde_json::from_str::<serde_json::Value>(text).unwrap()["geometry"].clone()
+        };
+        let a = geometry(include_str!(
+            "../../../assets-source/kit/train_carriage/bake-report.json"
+        ));
+        let b = geometry(include_str!(
+            "../../../assets-source/kit/train_carriage_b/bake-report.json"
+        ));
+        for key in ["lengthM", "widthM", "axlesX", "wheelRadiusM"] {
+            assert!(!a[key].is_null(), "{key}");
+            assert_eq!(a[key], b[key], "{key}");
+        }
+        assert_eq!(a["extent"]["x"], b["extent"]["x"], "buffer faces");
     }
 
     #[test]

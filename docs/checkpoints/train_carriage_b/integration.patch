@@ -1,0 +1,191 @@
+diff --git a/crates/hex-app/src/sim.rs b/crates/hex-app/src/sim.rs
+index c870731..019e6ca 100644
+--- a/crates/hex-app/src/sim.rs
++++ b/crates/hex-app/src/sim.rs
+@@ -395,6 +395,7 @@ pub fn publish_trains(
+                 kind: match v.kind {
+                     hex_sim::VehicleKind::Engine => StockKind::Engine,
+                     hex_sim::VehicleKind::Carriage => StockKind::Carriage,
++                    hex_sim::VehicleKind::BrakeCarriage => StockKind::BrakeCarriage,
+                 },
+                 pos: v.pose.pos,
+                 yaw: v.pose.yaw(),
+diff --git a/crates/hex-play/src/trains.rs b/crates/hex-play/src/trains.rs
+index 7b186db..362a75b 100644
+--- a/crates/hex-play/src/trains.rs
++++ b/crates/hex-play/src/trains.rs
+@@ -2,8 +2,9 @@
+ //! vehicle's interpolated pose into [`TrainsView`]; this module keeps one entity per vehicle in step
+ //! with it.
+ //!
+-//! A train is the steam tank engine (`train_engine`) and two carriages (`train_carriage`), each
+-//! standing on the rail top ([`RAIL_TOP_Y`], the same over the level crossing's
++//! A train is the steam tank engine (`train_engine`), a carriage (`train_carriage`) and the brake
++//! third last (`train_carriage_b`, the same length and axles as the carriage), each standing on the
++//! rail top ([`RAIL_TOP_Y`], the same over the level crossing's
+ //! deck and the river bridge) and painted at runtime (PRD §6) like the cars: one model and one
+ //! material per piece, the livery picked from [`LIVERIES`] by the train id and carried as a
+ //! per-entity [`MeshTag`], so every vehicle of a piece and LOD draws in one instanced batch.
+@@ -38,15 +39,23 @@ pub const RAIL_TOP_Y: f32 = 0.46;
+ pub enum StockKind {
+     Engine,
+     Carriage,
++    /// The brake third, last in every train (`hex_sim::rail::CONSIST`): its veranda and roof
++    /// lookout at the piece's -x end, the train's tail.
++    BrakeCarriage,
+ }
+ 
+ impl StockKind {
+-    pub const ALL: [StockKind; 2] = [StockKind::Engine, StockKind::Carriage];
++    pub const ALL: [StockKind; 3] = [
++        StockKind::Engine,
++        StockKind::Carriage,
++        StockKind::BrakeCarriage,
++    ];
+ 
+     pub fn piece(self) -> &'static str {
+         match self {
+             StockKind::Engine => "train_engine",
+             StockKind::Carriage => "train_carriage",
++            StockKind::BrakeCarriage => "train_carriage_b",
+         }
+     }
+ }
+@@ -116,7 +125,7 @@ impl Plugin for TrainsPlugin {
+     }
+ }
+ 
+-/// Starts loading the two train pieces once the play scenario has requested the village pack.
++/// Starts loading the train pieces once the play scenario has requested the village pack.
+ pub fn start_kit(
+     mut kit: ResMut<TrainKit>,
+     active: Res<ActiveScenario>,
+@@ -392,6 +401,26 @@ mod tests {
+         assert!((t.rotation * Vec3::X - Vec3::Z).length() < 1e-5);
+     }
+ 
++    /// Both carriage designs share one envelope, so `hex_sim::rail::CONSIST` spaces them alike: the
++    /// same length over buffers, width, axles and wheels in their bake reports.
++    #[test]
++    fn the_carriage_designs_share_one_envelope() {
++        let geometry = |text: &str| -> serde_json::Value {
++            serde_json::from_str::<serde_json::Value>(text).unwrap()["geometry"].clone()
++        };
++        let a = geometry(include_str!(
++            "../../../assets-source/kit/train_carriage/bake-report.json"
++        ));
++        let b = geometry(include_str!(
++            "../../../assets-source/kit/train_carriage_b/bake-report.json"
++        ));
++        for key in ["lengthM", "widthM", "axlesX", "wheelRadiusM"] {
++            assert!(!a[key].is_null(), "{key}");
++            assert_eq!(a[key], b[key], "{key}");
++        }
++        assert_eq!(a["extent"]["x"], b["extent"]["x"], "buffer faces");
++    }
++
+     #[test]
+     fn the_train_pieces_are_in_the_kit() {
+         let manifest = parse_manifest(MANIFEST).unwrap();
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 0c39e8d..69b99e9 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -487,11 +487,13 @@ const FOREST_FLOOR_VARIANTS: &[(&str, [f32; 2], f32, f32)] = &[
+ /// The rail top above the cap (`RAIL_TOP` in scripts/blender/kit/_rail.py), where a train's wheels stand.
+ const TRAIN_RAIL_TOP: f32 = 0.46;
+ 
+-/// (piece, offset, yaw) of the train consist on the rail bend at (1, 2), rot 2.
++/// (piece, offset, yaw) of the train consist on the rail bend at (1, 2), rot 2: the engine, a
++/// carriage and the brake third last (`hex_sim::rail::CONSIST`; the two carriage designs share one
++/// length and wheelbase, so the poses hold).
+ const TRAIN_ON_BEND: [(&str, [f32; 2], f32); 3] = [
+     ("train_engine", [9.490, 1.602], -34.3),
+     ("train_carriage", [6.041, 8.814], -95.9),
+-    ("train_carriage", [9.072, 15.713], -120.0),
++    ("train_carriage_b", [9.072, 15.713], -120.0),
+ ];
+ 
+ /// The station platform's paving above the cap (`H` in scripts/blender/kit/_station.py: rail top
+diff --git a/crates/hex-sim/src/rail.rs b/crates/hex-sim/src/rail.rs
+index 853f5d8..157d737 100644
+--- a/crates/hex-sim/src/rail.rs
++++ b/crates/hex-sim/src/rail.rs
+@@ -5,8 +5,8 @@
+ //!   turnout's three segments meet at its toe node ([`hex_core::SwitchDef`]); a train running in on
+ //!   the toe segment leaves on the leg the switch is set to, and from either leg it trails through
+ //!   onto the toe segment. No route joins the two legs.
+-//! - **Trains.** An engine and two carriages ([`CONSIST`]), [`TRAIN_LENGTH`] meters over the
+-//!   buffers. A train follows the track, never a route: there are no stations yet, so at each facing
++//! - **Trains.** An engine, a carriage and a brake third ([`CONSIST`]), [`TRAIN_LENGTH`] meters
++//!   over the buffers. A train follows the track, never a route: there are no stations yet, so at each facing
+ //!   toe it takes the leg the junction offers next, alternating between the two, and the switch is
+ //!   thrown for it when it reserves the junction. At a line end (a seam facing an empty cell; rail
+ //!   meets only rail, so a line can end nowhere else) it stops inside the last tile, waits
+@@ -105,6 +105,9 @@ impl Leg {
+ pub enum VehicleKind {
+     Engine,
+     Carriage,
++    /// The brake third (`train_carriage_b`): the guard's veranda and roof lookout at its rear, so it
++    /// runs last. Its length and axles are the carriage's.
++    BrakeCarriage,
+ }
+ 
+ /// A vehicle of the consist: its centre's distance from the engine end of the train and half its
+@@ -116,7 +119,8 @@ pub struct VehicleSpec {
+     pub half_wheelbase: f32,
+ }
+ 
+-/// The engine (8.94 m, axles ±2.0 m) and two carriages (7.14 m, axles ±1.5 m), 0.5 m apart.
++/// The engine (8.94 m, axles ±2.0 m), a carriage and the brake third last (both 7.14 m, axles
++/// ±1.5 m), 0.5 m apart.
+ pub const CONSIST: [VehicleSpec; 3] = [
+     VehicleSpec {
+         kind: VehicleKind::Engine,
+@@ -129,7 +133,7 @@ pub const CONSIST: [VehicleSpec; 3] = [
+         half_wheelbase: 1.5,
+     },
+     VehicleSpec {
+-        kind: VehicleKind::Carriage,
++        kind: VehicleKind::BrakeCarriage,
+         centre: 20.65,
+         half_wheelbase: 1.5,
+     },
+diff --git a/crates/hex-sim/tests/rail.rs b/crates/hex-sim/tests/rail.rs
+index e84230b..b431374 100644
+--- a/crates/hex-sim/tests/rail.rs
++++ b/crates/hex-sim/tests/rail.rs
+@@ -277,6 +277,33 @@ fn a_train_runs_back_from_a_line_end() {
+     );
+ }
+ 
++/// The brake third (its veranda and lookout at the train's tail) stays the vehicle farthest from
++/// the engine both ways, propelled as well as hauled.
++#[test]
++fn the_brake_third_runs_last_both_ways() {
++    let c = catalog();
++    let mut r = Railway::new();
++    for q in 0..3 {
++        place(&mut r, &c, Axial::new(q, 0), "rail_straight", 0);
++    }
++    run(&mut r, 1);
++    let mut checked = 0;
++    for _ in 0..90 * TICK_HZ {
++        r.tick();
++        let t = &r.trains()[0];
++        let vs = t.vehicles(1.0);
++        let at = |k: hex_sim::VehicleKind| vs.iter().find(|v| v.kind == k).unwrap().pose.pos;
++        let e = at(hex_sim::VehicleKind::Engine);
++        let (car, brake) = (
++            at(hex_sim::VehicleKind::Carriage),
++            at(hex_sim::VehicleKind::BrakeCarriage),
++        );
++        assert!(geom::dist(e, brake) > geom::dist(e, car) + 7.0);
++        checked += 1;
++    }
++    assert!(checked > 0 && r.trains()[0].reversals() >= 1);
++}
++
+ /// Trains are derived: a fresh simulation of the same world spawns the same trains in the same
+ /// places, so nothing about them needs saving.
+ #[test]

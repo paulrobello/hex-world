@@ -277,6 +277,33 @@ fn a_train_runs_back_from_a_line_end() {
     );
 }
 
+/// The brake third (its veranda and lookout at the train's tail) stays the vehicle farthest from
+/// the engine both ways, propelled as well as hauled.
+#[test]
+fn the_brake_third_runs_last_both_ways() {
+    let c = catalog();
+    let mut r = Railway::new();
+    for q in 0..3 {
+        place(&mut r, &c, Axial::new(q, 0), "rail_straight", 0);
+    }
+    run(&mut r, 1);
+    let mut checked = 0;
+    for _ in 0..90 * TICK_HZ {
+        r.tick();
+        let t = &r.trains()[0];
+        let vs = t.vehicles(1.0);
+        let at = |k: hex_sim::VehicleKind| vs.iter().find(|v| v.kind == k).unwrap().pose.pos;
+        let e = at(hex_sim::VehicleKind::Engine);
+        let (car, brake) = (
+            at(hex_sim::VehicleKind::Carriage),
+            at(hex_sim::VehicleKind::BrakeCarriage),
+        );
+        assert!(geom::dist(e, brake) > geom::dist(e, car) + 7.0);
+        checked += 1;
+    }
+    assert!(checked > 0 && r.trains()[0].reversals() >= 1);
+}
+
 /// Trains are derived: a fresh simulation of the same world spawns the same trains in the same
 /// places, so nothing about them needs saving.
 #[test]

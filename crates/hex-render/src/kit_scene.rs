@@ -487,11 +487,13 @@ const FOREST_FLOOR_VARIANTS: &[(&str, [f32; 2], f32, f32)] = &[
 /// The rail top above the cap (`RAIL_TOP` in scripts/blender/kit/_rail.py), where a train's wheels stand.
 const TRAIN_RAIL_TOP: f32 = 0.46;
 
-/// (piece, offset, yaw) of the train consist on the rail bend at (1, 2), rot 2.
+/// (piece, offset, yaw) of the train consist on the rail bend at (1, 2), rot 2: the engine, a
+/// carriage and the brake third last (`hex_sim::rail::CONSIST`; the two carriage designs share one
+/// length and wheelbase, so the poses hold).
 const TRAIN_ON_BEND: [(&str, [f32; 2], f32); 3] = [
     ("train_engine", [9.490, 1.602], -34.3),
     ("train_carriage", [6.041, 8.814], -95.9),
-    ("train_carriage", [9.072, 15.713], -120.0),
+    ("train_carriage_b", [9.072, 15.713], -120.0),
 ];
 
 /// The station platform's paving above the cap (`H` in scripts/blender/kit/_station.py: rail top

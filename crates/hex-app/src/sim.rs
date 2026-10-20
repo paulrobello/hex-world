@@ -395,6 +395,7 @@ pub fn publish_trains(
                 kind: match v.kind {
                     hex_sim::VehicleKind::Engine => StockKind::Engine,
                     hex_sim::VehicleKind::Carriage => StockKind::Carriage,
+                    hex_sim::VehicleKind::BrakeCarriage => StockKind::BrakeCarriage,
                 },
                 pos: v.pose.pos,
                 yaw: v.pose.yaw(),
