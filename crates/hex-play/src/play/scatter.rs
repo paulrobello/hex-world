@@ -1008,7 +1008,7 @@ pub fn lanes(def: &TileDef) -> Vec<(Vec<Vec2>, f32)> {
         .collect()
 }
 
-fn polyline_distance(p: Vec2, line: &[Vec2]) -> f32 {
+pub(crate) fn polyline_distance(p: Vec2, line: &[Vec2]) -> f32 {
     line.windows(2)
         .map(|w| {
             let (a, b) = (w[0], w[1]);

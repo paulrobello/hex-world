@@ -39,7 +39,7 @@ use bevy::{
     math::Affine3A,
     prelude::*,
 };
-use hex_core::{Axial, HEX_RADIUS, TileCatalog, TileDef};
+use hex_core::{Axial, HEX_RADIUS, NetworkKind, ParkPose, TileCatalog, TileDef};
 
 use crate::{
     ActiveScenario, Scenario,
@@ -154,6 +154,76 @@ struct CellGround {
     water: bool,
     /// River or spring water: deeper than [`MAX_WADE`] is crossed at that depth, not refused.
     ford: bool,
+    /// [`ride_max`] of the tile; `f32::MIN` for a placeholder.
+    ride_max: f32,
+}
+
+/// How far (m) from a road lane's centreline a car's wheels reach: the widest lane offset
+/// (`hex_sim::MAX_LANE_OFFSET`, 1.5 m) and rounded corners, short of the kerbs at 3 m.
+pub const ROAD_CORRIDOR: f32 = 2.5;
+/// How far (m) from the poses of a parking path a car's wheels reach.
+pub const PARKING_CORRIDOR: f32 = 2.0;
+/// Ground at most this far (m) above a car's floor is flat for it: lane paint and the crown.
+pub const RIDE_FLAT: f32 = 0.01;
+/// Spacing (m) of the samples [`ride_max`] takes.
+const RIDE_STEP: f32 = 0.25;
+/// Ground slots a car's wheels rest on: the road, and a level crossing's deck and rails. Kerbs,
+/// verges, driveway gravel, hedges and gate bars never lift a car.
+pub const CAR_GROUND: &[&str] = &[
+    "road_asphalt",
+    "road_paint",
+    "rail_crossing_deck",
+    "rail_head",
+    "rail_steel",
+];
+
+/// The highest [`CAR_GROUND`] on `def`'s car paths, tile frame: within [`ROAD_CORRIDOR`] of each
+/// road lane's centreline and [`PARKING_CORRIDOR`] of each parking path, sampled every 0.25 m.
+/// Built once per tile id (a few thousand surface samples); [`WalkGround::ride`] skips every tile
+/// whose paths stay flat.
+pub fn ride_max(def: &TileDef, surface: &Surface) -> f32 {
+    let mut paths: Vec<(Vec<Vec2>, f32)> = def
+        .networks
+        .iter()
+        .zip(scatter::lanes(def))
+        .filter(|(n, _)| n.kind == NetworkKind::Road)
+        .map(|(_, (line, _))| (line, ROAD_CORRIDOR))
+        .collect();
+    for spot in &def.parking {
+        let at = Vec2::from(spot.at);
+        let pts = |v: &[ParkPose]| v.iter().map(|p| Vec2::from(p.at)).collect::<Vec<_>>();
+        let mut into = pts(&spot.enter);
+        into.push(at);
+        for tail in [&spot.back, &spot.back_alt] {
+            let mut line = vec![at];
+            line.extend(pts(tail));
+            let mut leave = vec![*line.last().unwrap()];
+            leave.extend(pts(&spot.leave));
+            paths.push((line, PARKING_CORRIDOR));
+            paths.push((leave, PARKING_CORRIDOR));
+        }
+        paths.push((into, PARKING_CORRIDOR));
+    }
+    let mut top = f32::MIN;
+    for (line, r) in &paths {
+        let (lo, hi) = line.iter().fold((Vec2::MAX, Vec2::MIN), |(lo, hi), p| {
+            (lo.min(*p), hi.max(*p))
+        });
+        let (lo, hi) = (lo - Vec2::splat(*r), hi + Vec2::splat(*r));
+        let n = ((hi - lo) / RIDE_STEP).ceil().as_uvec2();
+        for j in 0..=n.y {
+            for i in 0..=n.x {
+                let p = lo + Vec2::new(i as f32, j as f32) * RIDE_STEP;
+                if scatter::polyline_distance(p, line) <= *r
+                    && let Some((h, slot)) = surface.at(p.x, p.y)
+                    && CAR_GROUND.contains(&slot)
+                {
+                    top = top.max(h);
+                }
+            }
+        }
+    }
+    top
 }
 
 /// A collider footprint in world XZ: a convex polygon.
@@ -671,13 +741,14 @@ fn place_hull(hull: &[Vec2], t: &Transform) -> Vec<Vec2> {
 
 impl WalkGround {
     /// Builds the ground of the drawn `tiles` (minus `hidden` ones). `surface_of` gives a tile
-    /// definition's ground surface (tile frame) or `None` for a placeholder; `shape_of` a piece's
-    /// collider footprint and pickable volume in its own frame; `scatter` the drawn scatter by cell.
+    /// definition's ground surface (tile frame) and its [`ride_max`], or `None` for a placeholder;
+    /// `shape_of` a piece's collider footprint and pickable volume in its own frame; `scatter` the
+    /// drawn scatter by cell.
     pub fn build(
         tiles: &[PlayTile],
         catalog: &TileCatalog,
         hidden: &[Axial],
-        surface_of: &mut dyn FnMut(&TileDef) -> Option<Arc<Surface>>,
+        surface_of: &mut dyn FnMut(&TileDef) -> Option<(Arc<Surface>, f32)>,
         shape_of: &mut dyn FnMut(&str) -> PieceShape,
         scatter: &BTreeMap<Axial, TileScatter>,
     ) -> Self {
@@ -694,13 +765,15 @@ impl WalkGround {
                 continue;
             };
             let [x, z] = t.cell.to_world(HEX_RADIUS);
+            let (surface, ride_max) = surface_of(def).unzip();
             out.cells.insert(
                 t.cell,
                 CellGround {
                     tile: t.tile.clone(),
                     centre: Vec2::new(x, z),
                     rotation: t.rotation,
-                    surface: surface_of(def),
+                    surface,
+                    ride_max: ride_max.unwrap_or(f32::MIN),
                     water: water_kind(def, t.rotation).is_some(),
                     ford: matches!(
                         water_kind(def, t.rotation),
@@ -783,6 +856,30 @@ impl WalkGround {
             return Err(Blocked::Water);
         }
         Ok(h)
+    }
+
+    /// Where a wheel rests at `p` when it never sinks below `floor` (cars: the road crown): the
+    /// higher of `floor` and the ground there when that is [`CAR_GROUND`]. A tile whose car paths never rise more than
+    /// [`RIDE_FLAT`] above `floor` ([`ride_max`], cached per tile id) answers `floor` after one
+    /// cell lookup: every flat road tile and the river road bridge. Only a tile with a ramp or a
+    /// raised deck searches its surface. Off the drawn tiles, `floor`.
+    pub fn ride(&self, p: Vec2, floor: f32) -> f32 {
+        let Some(g) = self.cells.get(&cell_at(p)) else {
+            return floor;
+        };
+        let Some(s) = g
+            .surface
+            .as_ref()
+            .filter(|_| g.ride_max > floor + RIDE_FLAT)
+        else {
+            return floor;
+        };
+        let d = p - g.centre;
+        let l = turn((6 - g.rotation % 6) % 6, [d.x, 0.0, d.y]);
+        match s.at(l[0], l[2]) {
+            Some((h, slot)) if CAR_GROUND.contains(&slot) => h.max(floor),
+            _ => floor,
+        }
     }
 
     /// The visible surface height at `p`: the water's surface over a water tile's bed, else the
@@ -946,11 +1043,11 @@ fn piece_shape(
     (s.hull.len() >= 3).then_some(s)
 }
 
-/// Surfaces by tile id and collider footprints by piece, kept across rebuilds, and what the
-/// ground was last built from.
+/// Surfaces (with their [`ride_max`]) by tile id and collider footprints by piece, kept across
+/// rebuilds, and what the ground was last built from.
 #[derive(Default)]
 pub struct WalkCache {
-    surfaces: HashMap<String, Arc<Surface>>,
+    surfaces: HashMap<String, (Arc<Surface>, f32)>,
     shapes: HashMap<String, PieceShape>,
     built: Option<BuiltFrom>,
 }
@@ -1012,7 +1109,7 @@ pub fn sync(
     let WalkCache {
         surfaces, shapes, ..
     } = &mut *cache;
-    let mut surface_of = |def: &TileDef| -> Option<Arc<Surface>> {
+    let mut surface_of = |def: &TileDef| -> Option<(Arc<Surface>, f32)> {
         if let Some(s) = surfaces.get(&def.id) {
             return Some(s.clone());
         }
@@ -1027,8 +1124,9 @@ pub fn sync(
             }
         }
         let s = Arc::new(Surface::new(all));
-        surfaces.insert(def.id.clone(), s.clone());
-        Some(s)
+        let ride = ride_max(def, &s);
+        surfaces.insert(def.id.clone(), (s.clone(), ride));
+        Some((s, ride))
     };
     let mut shape_of = |piece: &str| -> PieceShape {
         if let Some(h) = shapes.get(piece) {
@@ -1060,7 +1158,7 @@ pub fn sync(
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use std::sync::{Mutex, OnceLock};
 
     use hex_assets::parse_manifest;
@@ -1480,7 +1578,7 @@ mod tests {
         t
     }
 
-    fn surface(def: &TileDef) -> Option<Arc<Surface>> {
+    pub(crate) fn surface(def: &TileDef) -> Option<Arc<Surface>> {
         let mut all = vec![];
         for (id, k) in scatter::ground_pieces(def, &catalog()) {
             for (t, s) in mesh_tris(id, "lod0")? {
@@ -1500,11 +1598,11 @@ mod tests {
     }
 
     /// A world of `tiles` with the real kit ground, colliders and seeded scatter.
-    fn world(tiles: &[(i32, i32, &str, u8)]) -> WalkGround {
+    pub(crate) fn world(tiles: &[(i32, i32, &str, u8)]) -> WalkGround {
         world_in(&catalog(), tiles)
     }
 
-    fn world_in(c: &TileCatalog, tiles: &[(i32, i32, &str, u8)]) -> WalkGround {
+    pub(crate) fn world_in(c: &TileCatalog, tiles: &[(i32, i32, &str, u8)]) -> WalkGround {
         let play: Vec<PlayTile> = tiles
             .iter()
             .map(|&(q, r, tile, rotation)| PlayTile {
@@ -1541,7 +1639,7 @@ mod tests {
             &play,
             c,
             &[],
-            &mut |d| surface(d),
+            &mut |d| surface(d).map(|s| (s.clone(), ride_max(d, &s))),
             &mut |p| shape(p),
             &scatter,
         )

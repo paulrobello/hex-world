@@ -33,14 +33,22 @@ use crate::{
     kit_scene::MANIFEST,
     play::packs::{PackState, PlayPacks},
     scene::{Lod, lod_range},
+    walk::WalkGround,
     workload::GateConfig,
 };
 
 /// Placeholder car size in metres: length along +x (the driving direction), height, width.
 pub const CAR_SIZE: Vec3 = Vec3::new(4.2, 1.5, 1.8);
 
-/// Road crown height: `BED_TOP` 0.08 + `CROWN` 0.03 in `scripts/blender/kit/_road.py`.
+/// Road crown height: `BED_TOP` 0.08 + `CROWN` 0.03 in `scripts/blender/kit/_road.py`. The floor a
+/// car rides at: where the kit ground rises above it (a level crossing's ramps and deck, a raised
+/// bridge) the car follows the ground instead ([`grounded_transform`]).
 pub const ROAD_SURFACE_Y: f32 = 0.11;
+
+/// Half the length (m) of road a tyre rests on, either side of its axle: a wheel stands on the
+/// higher of two ground samples 8 cm apart, so it bridges the 6 cm flangeway beside a crossing's
+/// rail (`FLANGE` in `scripts/blender/kit/_rail_crossing.py`) instead of dropping into it.
+pub const TYRE_HALF_SPAN: f32 = 0.04;
 
 /// The three car body types (owner, 2026-10-13), one kit piece each.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -59,6 +67,16 @@ impl CarKind {
             CarKind::Sedan => "car_sedan",
             CarKind::Van => "car_van",
             CarKind::Pickup => "car_pickup",
+        }
+    }
+
+    /// Front and rear axle positions (m along +x from the origin): `axles` in
+    /// `scripts/blender/kit/car_<kind>.py`.
+    pub fn axles(self) -> (f32, f32) {
+        match self {
+            CarKind::Sedan => (1.27, -1.28),
+            CarKind::Van => (1.55, -1.45),
+            CarKind::Pickup => (1.45, -1.35),
         }
     }
 
@@ -397,18 +415,45 @@ pub fn car_transform(p: &CarPose) -> Transform {
         .with_rotation(Quat::from_rotation_y(-p.yaw))
 }
 
+/// A car standing on the ground `wheel_y` gives under world XZ, its +x along the heading: each
+/// axle rests on the higher ground its tyre spans ([`TYRE_HALF_SPAN`]) and the body pitches about
+/// its width so both axles touch, front and back. On level ground this is [`car_transform`].
+pub fn grounded_transform(p: &CarPose, wheel_y: impl Fn(Vec2) -> f32) -> Transform {
+    let (front, rear) = p.kind.axles();
+    let pos = Vec2::from(p.pos);
+    let dir = Vec2::new(p.yaw.cos(), p.yaw.sin());
+    let tyre = |x: f32| {
+        wheel_y(pos + dir * (x - TYRE_HALF_SPAN)).max(wheel_y(pos + dir * (x + TYRE_HALF_SPAN)))
+    };
+    let (hf, hr) = (tyre(front), tyre(rear));
+    // Pitching by asin(rise / wheelbase) lifts the front axle exactly by the rise.
+    let slope = (hf - hr) / (front - rear);
+    Transform::from_xyz(p.pos[0], hr - rear * slope, p.pos[1]).with_rotation(
+        Quat::from_rotation_y(-p.yaw) * Quat::from_rotation_z(slope.clamp(-1.0, 1.0).asin()),
+    )
+}
+
 /// Spawns, moves and despawns car entities to match [`CarsView`] by car id. Outside the play
 /// scenario every car entity goes. Cars are `SceneEntity`s, so a scenario switch also removes
 /// them, and this respawns whatever the view still holds. A kit car is a parent with the pose and
-/// one child per part (slot x LOD), every child tagged with the car's paint colour.
+/// one child per part (slot x LOD), every child tagged with the car's paint colour. Each car stands
+/// on the play ground ([`WalkGround::ride`], four lookups per car per frame) where `hex-app` keeps
+/// one, else on the road crown.
 pub fn sync(
     mut commands: Commands,
     active: Res<ActiveScenario>,
     view: Res<CarsView>,
     assets: Res<CarAssets>,
     kit: Res<CarKit>,
+    ground: Option<Res<WalkGround>>,
     mut cars: Query<(Entity, &PlayCar, &mut Transform, Has<CarPlaceholder>)>,
 ) {
+    let ride = |q: Vec2| {
+        ground
+            .as_ref()
+            .map_or(ROAD_SURFACE_Y, |g| g.ride(q, ROAD_SURFACE_Y))
+    };
+    let place = |p: &CarPose| grounded_transform(p, ride);
     let play = active.0 == Scenario::Play;
     let want: HashMap<u64, &CarPose> = if play {
         view.cars.iter().map(|c| (c.id, c)).collect()
@@ -429,7 +474,7 @@ pub fn sync(
                 .get(&car.0)
                 .is_some_and(|p| kit.is_some_and(|k| k.contains_key(&p.kind)));
         match want.get(&car.0) {
-            Some(p) if !upgrade && have.insert(car.0) => *t = car_transform(p),
+            Some(p) if !upgrade && have.insert(car.0) => *t = place(p),
             _ => commands.entity(e).try_despawn(),
         }
     }
@@ -441,12 +486,7 @@ pub fn sync(
             Some(parts) => {
                 let tag = MeshTag::new(paint_tag(paint_for(id)));
                 commands
-                    .spawn((
-                        PlayCar(id),
-                        car_transform(p),
-                        Visibility::default(),
-                        SceneEntity,
-                    ))
+                    .spawn((PlayCar(id), place(p), Visibility::default(), SceneEntity))
                     .with_children(|c| {
                         for part in parts {
                             c.spawn((
@@ -465,7 +505,7 @@ pub fn sync(
                     CarPlaceholder,
                     Mesh3d(assets.mesh.clone()),
                     MeshMaterial3d(assets.material.clone()),
-                    car_transform(p),
+                    place(p),
                     SceneEntity,
                 ));
             }
@@ -606,6 +646,232 @@ mod tests {
         // The first ten cars of a run already show at least six colours.
         let first: HashSet<_> = (0..10u64).map(paint_for).collect();
         assert!(first.len() >= 6, "{first:?}");
+    }
+
+    const CROSSING: &str = r#"(
+    id: "rail_road_crossing",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Grass),
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+    ),
+    center: Some("rail_road_crossing_center"),
+    networks: [
+        (kind: Road, from: Edge(1), to: Edge(4)),
+    ],
+)"#;
+
+    fn catalog_with_crossing() -> hex_core::TileCatalog {
+        let b = hex_core::TileCatalog::builtin().unwrap();
+        let c = hex_core::TileCatalog::from_ron(
+            hex_core::SOCKETS_RON,
+            &[("rail_road_crossing", CROSSING)],
+        )
+        .unwrap();
+        hex_core::TileCatalog::new(b.sockets().clone(), [b.tiles(), c.tiles()].concat()).unwrap()
+    }
+
+    /// The crossing deck's top, flush with the rail heads: `RAIL_TOP` in `_rail.py`.
+    const DECK_TOP: f32 = 0.46;
+    /// Widest lane offset a car drives at (`hex_sim::MAX_LANE_OFFSET`).
+    const LANE_OFFSET: f32 = 1.5;
+
+    fn road_lines(def: &hex_core::TileDef) -> Vec<Vec<Vec2>> {
+        def.networks
+            .iter()
+            .zip(crate::play::scatter::lanes(def))
+            .filter(|(n, _)| n.kind == hex_core::NetworkKind::Road)
+            .map(|(_, (line, _))| line)
+            .collect()
+    }
+
+    fn pose(kind: CarKind, pos: Vec2, dir: Vec2) -> CarPose {
+        CarPose {
+            id: 0,
+            kind,
+            pos: pos.into(),
+            yaw: dir.y.atan2(dir.x),
+        }
+    }
+
+    /// The crossing's road, edge 1 to edge 4 through the tile centre, both ways.
+    fn crossing_runs(c: &hex_core::TileCatalog) -> [(Vec2, Vec2); 2] {
+        let line = road_lines(c.get("rail_road_crossing").unwrap()).remove(0);
+        let (a, b) = (line[0], *line.last().unwrap());
+        [(a, b), (b, a)]
+    }
+
+    /// Criterion: a car over the level crossing's deck stands at the rail tops, level.
+    #[test]
+    fn a_car_on_the_crossing_deck_rides_at_the_rail_tops() {
+        let c = catalog_with_crossing();
+        let g = crate::walk::tests::world_in(&c, &[(0, 0, "rail_road_crossing", 0)]);
+        let mut ys = vec![];
+        for (from, to) in crossing_runs(&c) {
+            let d = (to - from).normalize();
+            for off in [-LANE_OFFSET, LANE_OFFSET] {
+                // Where the lane crosses the track's axis (tile z = 0), the middle of the deck.
+                let r = Vec2::new(-d.y, d.x) * off;
+                let at = r - d * (r.y / d.y);
+                for kind in CarKind::ALL {
+                    let t = grounded_transform(&pose(kind, at, d), |q| g.ride(q, ROAD_SURFACE_Y));
+                    assert!(
+                        (t.translation.y - DECK_TOP).abs() < 0.01,
+                        "{kind:?} at {at} offset {off}: y {}",
+                        t.translation.y
+                    );
+                    assert!((t.rotation * Vec3::X).y.abs() < 0.01, "{kind:?} pitched");
+                    ys.push(t.translation.y);
+                }
+            }
+        }
+        println!("cars over the crossing deck stand at {ys:.4?}");
+    }
+
+    /// Driving over the crossing, both axles stay on the road surface up the ramp, across the deck
+    /// (its flangeways bridged) and down; the body pitches to the grade and clears the crest.
+    #[test]
+    fn cars_ride_the_crossing_ramps_on_both_axles() {
+        let c = catalog_with_crossing();
+        let g = crate::walk::tests::world_in(&c, &[(0, 0, "rail_road_crossing", 0)]);
+        let ride = |q: Vec2| g.ride(q, ROAD_SURFACE_Y);
+        let (mut steepest, mut sag) = (0.0f32, f32::MIN);
+        for (from, to) in crossing_runs(&c) {
+            let d = (to - from).normalize();
+            for off in [-LANE_OFFSET, LANE_OFFSET] {
+                let r = Vec2::new(-d.y, d.x) * off;
+                for kind in CarKind::ALL {
+                    let (front, rear) = kind.axles();
+                    let (mut top, mut last) = (f32::MIN, None::<f32>);
+                    let n = (from.distance(to) / 0.05) as usize;
+                    for i in 0..=n {
+                        let at = from.lerp(to, i as f32 / n as f32) + r;
+                        let t = grounded_transform(&pose(kind, at, d), ride);
+                        let y = t.translation.y;
+                        assert!(y >= ROAD_SURFACE_Y - 1e-6, "{kind:?} at {at}: y {y}");
+                        if let Some(prev) = last {
+                            assert!(
+                                (y - prev).abs() < 0.02,
+                                "{kind:?} jumps at {at}: {prev}->{y}"
+                            );
+                        }
+                        last = Some(y);
+                        top = top.max(y);
+                        for axle in [front, rear] {
+                            let contact = t.transform_point(Vec3::new(axle, 0.0, 0.0));
+                            let tyre = d * TYRE_HALF_SPAN;
+                            let under = ride(contact.xz() - tyre).max(ride(contact.xz() + tyre));
+                            assert!(
+                                (contact.y - under).abs() < 0.01,
+                                "{kind:?} at {at}: axle {axle} at {} over ground {under}",
+                                contact.y
+                            );
+                        }
+                        steepest = steepest.max((t.rotation * Vec3::X).y.abs());
+                        // The ground under the body, front bumper to back, measured up from the
+                        // line the axles stand on: the sedan's sill is 0.30 m above it.
+                        for k in -21..=21 {
+                            let x = k as f32 * 0.1;
+                            let line = t.transform_point(Vec3::new(x, 0.0, 0.0));
+                            sag = sag.max(ride(line.xz()) - line.y);
+                        }
+                    }
+                    assert!((top - DECK_TOP).abs() < 0.01, "{kind:?} tops out at {top}");
+                }
+            }
+        }
+        println!(
+            "crossing: steepest pitch sin {steepest:.3}, ground above the wheel line {sag:.3} m"
+        );
+        assert!((0.05..0.25).contains(&steepest), "pitch {steepest}");
+        assert!(
+            sag < 0.2,
+            "the body would scrape: ground {sag} m above the wheel line"
+        );
+    }
+
+    /// Criterion: on every tile of the catalog (straight, bends, junction, the river road bridge,
+    /// house and shop driveways) a car stays at the road crown, and those tiles never search their
+    /// surface for it.
+    #[test]
+    fn cars_on_every_road_tile_stay_on_the_crown() {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let mut checked = vec![];
+        for def in c.tiles() {
+            let lines = road_lines(def);
+            if lines.is_empty() && def.parking.is_empty() {
+                continue;
+            }
+            let s = crate::walk::tests::surface(def).unwrap();
+            let top = crate::walk::ride_max(def, &s);
+            assert!(
+                top <= ROAD_SURFACE_Y + crate::walk::RIDE_FLAT,
+                "{}: car paths reach {top}",
+                def.id
+            );
+            checked.push(format!("{} {top:.3}", def.id));
+            let mut pts = vec![];
+            for line in &lines {
+                for w in line.windows(2) {
+                    let d = (w[1] - w[0]).normalize();
+                    let n = (w[0].distance(w[1]) / 0.25) as usize;
+                    for i in 0..=n {
+                        for k in -8..=8 {
+                            let side = Vec2::new(-d.y, d.x) * (k as f32 * 0.2);
+                            pts.push((w[0].lerp(w[1], i as f32 / n as f32) + side, d));
+                        }
+                    }
+                }
+            }
+            for spot in &def.parking {
+                for p in [spot.pose()]
+                    .iter()
+                    .chain(&spot.enter)
+                    .chain(&spot.back)
+                    .chain(&spot.back_alt)
+                    .chain(&spot.leave)
+                {
+                    let a = p.yaw_deg.to_radians();
+                    pts.push((Vec2::from(p.at), Vec2::new(a.cos(), a.sin())));
+                }
+            }
+            for rotation in [0u8, 1, 4] {
+                let g = crate::walk::tests::world_in(&c, &[(0, 0, def.id.as_str(), rotation)]);
+                for &(p, d) in &pts {
+                    let [x, _, z] = crate::play::scatter::turn(rotation, [p.x, 0.0, p.y]);
+                    let [dx, _, dz] = crate::play::scatter::turn(rotation, [d.x, 0.0, d.y]);
+                    let (p, d) = (Vec2::new(x, z), Vec2::new(dx, dz));
+                    assert_eq!(
+                        g.ride(p, ROAD_SURFACE_Y),
+                        ROAD_SURFACE_Y,
+                        "{} at {p}",
+                        def.id
+                    );
+                    for kind in CarKind::ALL {
+                        let car = pose(kind, p, d);
+                        let t = grounded_transform(&car, |q| g.ride(q, ROAD_SURFACE_Y));
+                        assert_eq!(t, car_transform(&car), "{} {kind:?} at {p}", def.id);
+                    }
+                }
+            }
+        }
+        println!("flat car paths (highest ground): {checked:?}");
+        for id in [
+            "road_straight",
+            "road_junction",
+            "river_road_bridge",
+            "house_cluster",
+        ] {
+            assert!(
+                checked.iter().any(|s| s.starts_with(id)),
+                "{id} not checked"
+            );
+        }
     }
 
     #[test]
