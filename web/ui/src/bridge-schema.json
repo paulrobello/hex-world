@@ -197,6 +197,26 @@
           "Grass",
           "Grass"
         ],
+        "id": "bakery",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "scatter": []
+      },
+      {
+        "edges": [
+          "Road",
+          "Grass",
+          "Grass",
+          "Road",
+          "Grass",
+          "Grass"
+        ],
         "id": "road_straight",
         "land": [
           null,

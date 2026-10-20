@@ -44,8 +44,8 @@ fn manifest_piece_ids() -> BTreeSet<String> {
 }
 
 /// Plan F1 with the owner O1 coast corners, the U3 oak split from the forest and the windmill, the
-/// farm and the wheat field ahead of P3 (PRD §5.4): edges 0..5 for each inventory tile.
-const F1: [(&str, [SocketKind; 6]); 21] = [
+/// farm, the wheat field and the bakery ahead of P3 (PRD §5.4): edges 0..5 for each inventory tile.
+const F1: [(&str, [SocketKind; 6]); 22] = [
     ("meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("forest", [Forest, Forest, Forest, Forest, Forest, Forest]),
     ("oak", [Forest, Forest, Forest, Forest, Forest, Forest]),
@@ -53,6 +53,7 @@ const F1: [(&str, [SocketKind; 6]); 21] = [
     ("farm", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("wheat_field", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("house_cluster", [Road, Grass, Grass, Grass, Grass, Grass]),
+    ("bakery", [Road, Grass, Grass, Road, Grass, Grass]),
     ("road_straight", [Road, Grass, Grass, Road, Grass, Grass]),
     ("road_bend_120", [Road, Grass, Road, Grass, Grass, Grass]),
     ("road_bend_60", [Road, Road, Grass, Grass, Grass, Grass]),

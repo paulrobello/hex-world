@@ -730,6 +730,7 @@ mod tests {
             ids(&w, EAST),
             [
                 "house_cluster",
+                "bakery",
                 "road_straight",
                 "road_bend_120",
                 "road_bend_60",

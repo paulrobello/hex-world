@@ -12,7 +12,7 @@ use crate::tile::{KitRef, TileDef};
 /// Every file in `data/tiles/`, as `(id, RON text)`, in inventory order (plan F1, with the owner O1
 /// coast corners after the straight beach, as PRD §5.4 lists them, and the windmill, the farm and
 /// the wheat field after the oak).
-pub const BUILTIN_TILES: [(&str, &str); 21] = [
+pub const BUILTIN_TILES: [(&str, &str); 22] = [
     ("meadow", include_str!("../../../data/tiles/meadow.ron")),
     ("forest", include_str!("../../../data/tiles/forest.ron")),
     ("oak", include_str!("../../../data/tiles/oak.ron")),
@@ -26,6 +26,7 @@ pub const BUILTIN_TILES: [(&str, &str); 21] = [
         "house_cluster",
         include_str!("../../../data/tiles/house_cluster.ron"),
     ),
+    ("bakery", include_str!("../../../data/tiles/bakery.ron")),
     (
         "road_straight",
         include_str!("../../../data/tiles/road_straight.ron"),

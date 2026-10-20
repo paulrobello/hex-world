@@ -12,6 +12,7 @@ export const TILE_NAMES: Record<string, string> = {
   farm: "Farm",
   wheat_field: "Wheat field",
   house_cluster: "House cluster",
+  bakery: "Bakery",
   road_straight: "Road straight",
   road_bend_120: "Road bend 120°",
   road_bend_60: "Road bend 60°",
