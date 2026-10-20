@@ -33,12 +33,12 @@ Landing recipe for future asset agents (the one used all session):
 
 ## Standing rules from the owner (still in force)
 
-- **Stop rule (2026-10-20):** "allow all current work to finish, dont start anything new". Start new work only when Paul asks.
+- The 2026-10-20 stop rule ("dont start anything new") was lifted by Paul's "continue work" the same day; normal throughput resumed.
 - Fix friction or defects of any scope found along the way, don't only file them (Paul, 2026-10-20: "you can do fixes to any scope needed").
 - Standing push approval when a batch is a significant addition or change, after `make checkall-ci` passes; watch CI after. Small or doc-only commits ride along with the next push. `make build-web` after every merge to `main`.
 - Standing approval to generate sounds for new items; the owner still approves each by ear.
 - Every asset brief carries the integration section (`.claude/skills/blender-asset/references/dispatch.md` part 11).
-- When asset work is active: at least 2 and at most 3 Blender agents at once, at high effort, in `isolation: "worktree"`. Each new piece reuses approved helpers through module globals from a new family file (never edit an approved helper), and its runtime changes come back as a verified `integration.patch` for the orchestrator to land.
+- When asset work is active: at least 2 and at most 3 Blender agents at once, on Opus 5.5 at xhigh effort, in `isolation: "worktree"`. Each new piece reuses approved helpers through module globals from a new family file (never edit an approved helper), and its runtime changes come back as a verified `integration.patch` for the orchestrator to land.
 - Blender headless only. Never record an owner approval yourself (pending entries only). Tool bugs and flaky tests are high priority. Perf numbers need host load ≤ 15 before and after.
 
 ## Waiting on Paul
