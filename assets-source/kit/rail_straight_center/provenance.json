@@ -252,7 +252,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-19T23:56:33.972Z",
+    "date": "2026-10-20T00:01:49.973Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -272,6 +272,12 @@
         "assets-source/refs/rail/ref-3.jpg"
       ],
       "notes": "Slightly wider than standard gauge so it reads at play distance; single track; bends across adjacent edges (60 degrees); a 60-degree rail-road level crossing with field gates. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-19",
+      "notes": "Pending owner review; not an approval. Review from the six-view renders in assets-source/kit/rail_straight_center/renders/ against assets-source/refs/rail/ref-1.jpg. Single track, 1.6 m gauge (A17: slightly wider than standard), runs edge midpoint to edge midpoint with no edge stub. In-engine review sheet (docs/checkpoints/rail/) not yet taken. The controller records the owner's decision."
     }
   ]
 }
