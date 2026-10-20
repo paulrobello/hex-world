@@ -1,0 +1,89 @@
+{
+  "bakeStats": {
+    "alphaCoverageByMip": {
+      "frond_0": [
+        0.298,
+        0.2896,
+        0.2949,
+        0.2972,
+        0.3125,
+        0.3406,
+        0.3125,
+        0.3125,
+        0.25
+      ],
+      "frond_1": [
+        0.2977,
+        0.2892,
+        0.2953,
+        0.3,
+        0.3051,
+        0.3375,
+        0.3375,
+        0.3125,
+        0.25
+      ],
+      "frond_2": [
+        0.2924,
+        0.2833,
+        0.2899,
+        0.2902,
+        0.3036,
+        0.325,
+        0.3375,
+        0.3125,
+        0.25
+      ],
+      "tiles": [
+        0.296,
+        0.2874,
+        0.2934,
+        0.2958,
+        0.307,
+        0.3196,
+        0.3208,
+        0.3214,
+        0.0833,
+        0.0
+      ]
+    },
+    "alphaCutoff": 0.5
+  },
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 64
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "coreRadiusM": 0.3,
+  "device": "none (numpy-drawn tiles, no Cycles bake)",
+  "extentZ": [
+    -0.11521298438310623,
+    0.7573655843734741
+  ],
+  "fronds": 22,
+  "marginPx": 0,
+  "reachM": 0.6574154922048122,
+  "receiverSignature": "4060fcae6fb159900f8572c10d43c3daa5e463f1dff5041e7b5e5390f06df3bb",
+  "samples": 0,
+  "sinkM": 0.08,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 1639.220252358818,
+    "median": 1236.6428436570495,
+    "min": 1030.7514818762163
+  }
+}

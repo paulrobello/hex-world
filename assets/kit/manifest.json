@@ -483,4 +483,14 @@
       "provenance": "assets-source/kit/animal_sheep/provenance.json",
       "slots": { "animal_sheep_body": { "unique": true, "masks": true } },
       "maps": { "albedo": "p1/animal_sheep/animal_sheep.albedo", "normal": "p1/animal_sheep/animal_sheep.normal",
-                "orm": "p1/animal_sheep/animal_sheep.orm", "masks": "p1/animal_sheep/animal_sheep.masks" } } ] }
+                "orm": "p1/animal_sheep/animal_sheep.orm", "masks": "p1/animal_sheep/animal_sheep.masks" } },
+    { "id": "fern_clump", "pack": "forest", "kind": "prop", "glb": "p1/fern_clump/fern_clump.glb",
+      "provenance": "assets-source/kit/fern_clump/provenance.json",
+      "slots": { "fern_clump_foliage": { "unique": true, "masks": true, "alphaCutoff": 0.5, "wind": 0.15 } },
+      "maps": { "albedo": "p1/fern_clump/fern_clump.albedo", "normal": "p1/fern_clump/fern_clump.normal",
+                "orm": "p1/fern_clump/fern_clump.orm", "masks": "p1/fern_clump/fern_clump.masks" } },
+    { "id": "log_fallen", "pack": "forest", "kind": "prop", "glb": "p1/log_fallen/log_fallen.glb",
+      "provenance": "assets-source/kit/log_fallen/provenance.json",
+      "slots": { "log_fallen_wood": { "unique": true, "masks": true } },
+      "maps": { "albedo": "p1/log_fallen/log_fallen.albedo", "normal": "p1/log_fallen/log_fallen.normal",
+                "orm": "p1/log_fallen/log_fallen.orm", "masks": "p1/log_fallen/log_fallen.masks" } } ] }

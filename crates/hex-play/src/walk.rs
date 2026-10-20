@@ -56,7 +56,7 @@ pub const MAX_STEP: f32 = 0.4;
 const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not.
-pub const OBSTACLES: [&str; 16] = [
+pub const OBSTACLES: [&str; 17] = [
     "house_cottage",
     "house_twostorey",
     "windmill",
@@ -73,6 +73,7 @@ pub const OBSTACLES: [&str; 16] = [
     "rock_small",
     "rock_small_b",
     "rock_small_c",
+    "log_fallen",
 ];
 
 /// Why a move stopped.
@@ -385,7 +386,7 @@ impl PieceShape {
     }
 }
 
-/// What a prop is to the player: `building`, `tree`, `hay`, `animal` or `rock`. Walk mode's
+/// What a prop is to the player: `building`, `tree`, `hay`, `animal`, `log` or `rock`. Walk mode's
 /// [`Blocked::reason`] and photo mode's click to focus both report it.
 pub fn prop_kind(piece: &str) -> &'static str {
     match piece {
@@ -399,6 +400,7 @@ pub fn prop_kind(piece: &str) -> &'static str {
         p if p.starts_with("tree") => "tree",
         p if p.starts_with("hay_") => "hay",
         p if p.starts_with("animal_") => "animal",
+        p if p.starts_with("log_") => "log",
         _ => "rock",
     }
 }
@@ -938,6 +940,7 @@ mod tests {
             ("tree_forest_b", "tree"),
             ("rock_small", "rock"),
             ("rock_small_c", "rock"),
+            ("log_fallen", "log"),
         ] {
             assert_eq!(prop_kind(piece), kind, "{piece}");
             assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");

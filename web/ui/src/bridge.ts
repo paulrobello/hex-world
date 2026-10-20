@@ -356,7 +356,7 @@ export interface PhotoState {
 }
 
 /** What a prop is to the player (`walk::prop_kind`): walk blocks and photo focus hits report it. */
-export type PropKind = "building" | "tree" | "hay" | "animal" | "rock";
+export type PropKind = "building" | "tree" | "hay" | "animal" | "log" | "rock";
 
 /** Why the walker's latest move stopped. */
 export type WalkBlocked = PropKind | "water" | "edge" | "steep";

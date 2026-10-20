@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/fern_clump.py",
+    "sha256": "8ab24dce8be606a08a8b306b68f031078facb8620c35547c73303d213720c4df"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_ferns.py",
+      "sha256": "1faaea4dd0eb1b3301444b4ad55100872d4516d6c1a27958989a5d6404a1a30c"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    }
+  ],
+  "lodTris": {
+    "fern_clump_lod0": 528,
+    "fern_clump_lod1": 176,
+    "fern_clump_lod2": 32
+  },
+  "nodes": [
+    "fern_clump",
+    "fern_clump_collider",
+    "fern_clump_lod0",
+    "fern_clump_lod1",
+    "fern_clump_lod2"
+  ],
+  "pieceId": "fern_clump",
+  "sockets": []
+}

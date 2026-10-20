@@ -1682,8 +1682,8 @@ mod tests {
             .collect();
         let forest = tiles.iter_mut().find(|(id, _)| *id == "forest").unwrap();
         forest.1 = forest.1.replace(
-            "(piece: \"rock_small\", density: 0.2),\n        ],",
-            "(piece: \"rock_small\", density: 0.2),\n        ],\n        \
+            "(piece: \"log_fallen\", density: 0.15),\n        ],",
+            "(piece: \"log_fallen\", density: 0.15),\n        ],\n        \
              hero: [(piece: \"tree_hero_oak\", at: (0.0, 0.0))],",
         );
         forest.1 = forest.1.replace(

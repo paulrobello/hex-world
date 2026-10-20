@@ -207,8 +207,38 @@ pub fn kit_layout() -> Vec<Placement> {
     v.push(place("rail_straight_center", -1, 4, 2));
     v.push(place("meadow_base", 1, 3, 0));
     v.push(place("rail_bend_60_center", 1, 3, 2));
+    // The forest floor (P3, refs approved 2026-10-13: "ferns, fallen log") on a forest at (-2, 1),
+    // west of the meadow props: spruces at the back, the fallen log in open sun in front, ferns
+    // around it and one tucked against a trunk, each on the litter at its spot (`relief()` in
+    // scripts/blender/kit/forest_base.py at Blender (x, -z)).
+    v.push(place("forest_base", -2, 1, 0));
+    for (piece, at, yaw_deg, y) in FOREST_FLOOR {
+        v.push(Placement {
+            y,
+            ..hero(piece, -2, 1, at, yaw_deg)
+        });
+    }
     v
 }
+
+/// (piece, offset, yaw, relief height) of the forest-floor showcase on the forest at (-2, 1), with a
+/// parked sedan beside the log for scale.
+const FOREST_FLOOR: [(&str, [f32; 2], f32, f32); 14] = [
+    ("tree_forest", [-6.5, -5.0], 0.0, -0.120),
+    ("tree_forest_b", [0.5, -7.5], 40.0, -0.109),
+    ("tree_forest_c", [-8.5, 2.5], 110.0, -0.107),
+    ("tree_forest", [4.5, -3.0], 200.0, -0.151),
+    ("log_fallen", [1.5, 3.0], -25.0, -0.096),
+    ("fern_clump", [-1.5, 1.5], 0.0, -0.153),
+    ("fern_clump", [0.0, 5.5], 60.0, -0.109),
+    ("fern_clump", [4.5, 1.0], 130.0, -0.101),
+    ("fern_clump", [-5.5, -2.5], 200.0, -0.102),
+    ("fern_clump", [-3.8, -5.6], 250.0, -0.146),
+    ("fern_clump", [2.4, -6.0], 310.0, -0.134),
+    ("fern_clump", [5.3, -2.6], 20.0, -0.131),
+    ("fern_clump", [-4.5, 4.5], 90.0, -0.109),
+    ("car_sedan", [7.0, 4.0], -25.0, -0.123),
+];
 
 /// The rail top above the cap (`RAIL_TOP` in scripts/blender/kit/_rail.py), where a train's wheels stand.
 const TRAIN_RAIL_TOP: f32 = 0.46;

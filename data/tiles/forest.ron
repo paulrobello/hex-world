@@ -1,4 +1,5 @@
-// The pine forest: dense spruce scatter and rocks, no oak (owner U3). Its id stays "forest" so
+// The pine forest: dense spruce scatter, rocks, drifts of ferns and now and then a fallen log, no
+// oak (owner U3). The ferns and log come after the spruces and rocks so those keep their spots. Its id stays "forest" so
 // saves, scenarios and the perf worlds keep loading as pine forests.
 (
     id: "forest",
@@ -16,6 +17,8 @@
         scatter: [
             (piece: "tree_forest", density: 3.0),
             (piece: "rock_small", density: 0.2),
+            (piece: "fern_clump", density: 1.2, drift: true),
+            (piece: "log_fallen", density: 0.15),
         ],
     ),
 )

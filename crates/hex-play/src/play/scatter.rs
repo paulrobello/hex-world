@@ -104,7 +104,7 @@ const BUCKETS: usize = 33;
 /// A piece not listed has none, so it is never placed.
 pub fn floor_slots(piece: &str) -> &'static [&'static str] {
     match family(piece) {
-        "tree_forest" => &["forest_base_floor"],
+        "tree_forest" | "fern_clump" | "log_fallen" => &["forest_base_floor"],
         "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
         "wildflower_single" => &["meadow_base_cap"],
         _ => &[],
@@ -214,7 +214,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 22] = [
+pub const FOOTPRINTS: [(&str, Footprint); 24] = [
     (
         "tree_forest",
         Footprint {
@@ -369,6 +369,20 @@ pub const FOOTPRINTS: [(&str, Footprint); 22] = [
         "animal_sheep",
         Footprint {
             ground: 0.8,
+            crown: 0.0,
+        },
+    ),
+    (
+        "fern_clump",
+        Footprint {
+            ground: 0.3,
+            crown: 0.0,
+        },
+    ),
+    (
+        "log_fallen",
+        Footprint {
+            ground: 1.9,
             crown: 0.0,
         },
     ),
@@ -1980,7 +1994,10 @@ mod tests {
                 .map(|r| r.piece.as_str().to_owned())
                 .collect()
         };
-        assert_eq!(pieces(pine), ["tree_forest", "rock_small"]);
+        assert_eq!(
+            pieces(pine),
+            ["tree_forest", "rock_small", "fern_clump", "log_fallen"]
+        );
         assert!(pine.props.hero.is_empty() && pine.agents.is_empty());
         assert_eq!(pieces(oak), ["rock_small", "wildflower_clump"]);
         assert_eq!(oak.props.hero.len(), 1);

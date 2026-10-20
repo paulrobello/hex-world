@@ -73,7 +73,9 @@
         ],
         "scatter": [
           "tree_forest",
-          "rock_small"
+          "rock_small",
+          "fern_clump",
+          "log_fallen"
         ]
       },
       {
