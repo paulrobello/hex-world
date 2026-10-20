@@ -2,7 +2,7 @@
 
 ## State
 
-- Branch `main` well ahead of `origin/main` (pushed through `bc3dea0`); count with `git log --oneline origin/main..main`. Nothing pushed since; waits on Paul. `make checkall-ci` green at `cc38bad`.
+- `main` pushed through `ce167a1` (CI run 39371992805); count unpushed with `git log --oneline origin/main..main`. Evening 2026-10-19 landed and pushed: farm, wheat field and bakery tiles, rail straight/bend, level crossing, junction, station platform and shelter, steam train. Runtime integration for rail is on cards (rail network `01a1579e911c`, station tile `01a157994d7a`, cars follow road height `01a1575a45d4`).
 - Working tree clean apart from an untracked `.claude/launch.json` (leave it). No worktrees, no background runs.
 - `dist/` rebuilt from `main` post-merge (`make build-web` green).
 
@@ -24,7 +24,9 @@ Symptoms when placing a forest: the full tree set rises, then several trees disa
 
 ## Standing rules from the owner (still in force)
 
-- Never push without Paul's approval. Commit locally, then rebuild with `make build-web` after every merge to `main`.
+- Standing push approval when a batch is a significant addition or change (Paul, 2026-10-19), after `make checkall-ci` passes; watch CI after. Small or doc-only commits wait to ride along. Rebuild with `make build-web` after every merge to `main`.
+- Standing approval to generate sounds for new items (Paul, 2026-10-19); the owner still approves each sound by ear on `assets-source/audio/review.html`.
+- Every asset brief carries an integration section (`.claude/skills/blender-asset/references/dispatch.md` part 11): runtime consequences are handled or filed before a piece is called done (Paul, 2026-10-19: "details like that should always be accounted for").
 - Asset-generation agents are cleared again (Paul, 2026-10-19: "start creating more assets in blender"), on Opus 5.5 at xhigh effort.
 - Blender is headless only, no live Blender or MCP (owner rule, 2026-10-13).
 - Tool bugs and flaky tests are high priority, never low.
