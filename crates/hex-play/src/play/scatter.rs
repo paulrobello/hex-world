@@ -150,7 +150,7 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
     ),
     ("bush_verge", &["bush_verge_b", "bush_verge_c"]),
     ("shrub_forest", &["shrub_forest_b", "shrub_forest_c"]),
-    ("sapling_spruce", &["sapling_spruce_b"]),
+    ("sapling_spruce", &["sapling_spruce_b", "sapling_spruce_c"]),
 ];
 
 fn extra_variants(piece: &str) -> &'static [&'static str] {
@@ -570,6 +570,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         Footprint {
             ground: 0.1,
             crown: 1.1,
+        },
+    ),
+    (
+        "sapling_spruce_c",
+        Footprint {
+            ground: 0.1,
+            crown: 1.0,
         },
     ),
     (

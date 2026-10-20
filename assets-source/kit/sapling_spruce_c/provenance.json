@@ -1,0 +1,431 @@
+{
+  "pieceId": "sapling_spruce_c",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/sapling_spruce_c.py",
+    "sha256": "9e4ee5510d034d01cd19a33db72c2db8808bb63f737df1a76070f80b5b51fec2"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_forest.py",
+      "sha256": "70af5de2175c0c1d733cfb72c3befcb400e586fe051507e96cf41b81e145c3b1"
+    },
+    {
+      "path": "scripts/blender/kit/_leaves.py",
+      "sha256": "d732efec23b5b9a52dca841bfc97f70fb9ab604b8f039eb6029fffaabb2ccf4a"
+    },
+    {
+      "path": "scripts/blender/kit/_sapling.py",
+      "sha256": "275ea63aaf535622d3ebf1b230443b2b9f329bf3e53ffda74631477972298e32"
+    },
+    {
+      "path": "scripts/blender/kit/_sapling_b.py",
+      "sha256": "5a183da1c8ba009eef4e3b694caf5a12d7192811ae77e9f05ee17b854c863ba0"
+    },
+    {
+      "path": "scripts/blender/kit/_sapling_c.py",
+      "sha256": "f23f32327ccb47b22b466afddfd6ed3b476b82f4710340cc029c288acadba3eb"
+    },
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    },
+    {
+      "path": "scripts/blender/kit/_spruce.py",
+      "sha256": "5d037a06fa902f1977baf9c593123855fd49071159e697ab9f8e1312bcd81263"
+    },
+    {
+      "path": "scripts/blender/kit/_tree.py",
+      "sha256": "037e8be778813c929864130240aa65e05042c153b8c386d3920566b6867d81ce"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.3,
+    "bakeStats": {
+      "barkAo": {
+        "mean": 0.8079663515090942,
+        "min": 0.697411835193634,
+        "p01": 0.697411835193634,
+        "p05": 0.7200000286102295,
+        "texels": 73
+      },
+      "needleAlphaCoverageByMip": [
+        0.5608,
+        0.5635,
+        0.5694,
+        0.5691,
+        0.5676,
+        0.5666,
+        0.5909,
+        0.6,
+        0.625,
+        1
+      ]
+    },
+    "barkTile": {
+      "aoTexelDensityPxPerM": {
+        "max": 16.705951315930015,
+        "median": 16.3762751932855,
+        "min": 9.3675309095037
+      },
+      "set": "bark",
+      "tileUvScale": 32,
+      "uvPerM": 0.015625
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.12,
+    "cards": {
+      "filler": 4,
+      "frondTiles": 2,
+      "main": 16
+    },
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 1024
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "marginPx": 8,
+    "maxRayDistanceM": 0.3,
+    "receiverSignature": "9edcb217c40ef85ed4102e9fa664fe516730aad641ff426ba027780d1bb618bd",
+    "samples": 32,
+    "shape": {
+      "HEIGHT": 2,
+      "RMAX": 0.15,
+      "TRUNK_R0": 0.03,
+      "TRUNK_R1": 0.009,
+      "WHORLS": 5,
+      "Z0": 1.1,
+      "ZTOP": 1.92,
+      "flare": 0.01,
+      "original": "tree_forest"
+    },
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "sapling_spruce_c_bark": {
+        "max": 534.5904421097605,
+        "median": 524.040806185136,
+        "min": 299.7609891041184
+      },
+      "sapling_spruce_c_needles": {
+        "max": 2659.4530986207965,
+        "median": 1371.3206649934432,
+        "min": 1043.311122753762
+      }
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 428,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 158,
+      "ratio": 0.3691588785046729
+    },
+    {
+      "lod": 2,
+      "tris": 56,
+      "ratio": 0.1308411214953271
+    }
+  ],
+  "collider": {
+    "node": "sapling_spruce_c_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "sapling_spruce_c_bark": {
+      "max": 534.5904421097605,
+      "median": 524.040806185136,
+      "min": 299.7609891041184
+    },
+    "sapling_spruce_c_needles": {
+      "max": 2659.4530986207965,
+      "median": 1371.3206649934432,
+      "min": 1043.311122753762
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 1309859,
+        "astc": 1295617
+      },
+      "glbBytes": 66188
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 471880,
+        "sha256": "09af653aa39679c898a17bbbe4aa6ad49a6db5d866edd59f3f34282b073256a2"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 471786,
+        "sha256": "b1665d6260807b87f3dc8ac6d2eca7d87e23b593bd84bc7a3ac88291f7795bf7"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 966082,
+        "sha256": "4fd30764b56857f340ca94dd03443ff311f972d38a5a706fb0a055d8f4ba69b6"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 5771,
+        "sha256": "87b44e3f7ad5025ef08566baca6899575fa2e02d1cc7fc656db9d668b188276f"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 5667,
+        "sha256": "a90b6481e7e05a4423901dc0109219fe17a778daf3a3567f64f01d90590e33b9"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 23740,
+        "sha256": "43273da3555d0536f22c6064d4f090a79afd1f6e47d04d1b51c819e0bceb4645"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 509072,
+        "sha256": "67ba030873b738a8bb05f1df4199f4682f03a26e9a12da749b0b9eb09c7463bc"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 497317,
+        "sha256": "29ce5cf779c75014a36eafb7c7f7af633ce3724a5e36a11e121d395895adc8a5"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 1036879,
+        "sha256": "54381f4a606ec4fd04147e0a7acd5852da2cfde825a0d461657d9b935cd7124a"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 323136,
+        "sha256": "199d487e83322bb3082dac183161b98a04c211a70a612ac6c8c3311b545789d2"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 320847,
+        "sha256": "9893c8a70364aed71847ff8703c8b876a44b6b58b310af0429930046f57812cf"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 524214,
+        "sha256": "1030b2256e10b61b241b42cf2a79aac7ff23969707d54d44bac1c97300d9b3b7"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.glb",
+      "sha256": "97a0575be3a47ef8c7af48d3f89c1be35d9466d1c69b2d2ef4ef2ce72e4dc22d",
+      "bytes": 66188
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.albedo.bc7.ktx2",
+      "sha256": "09af653aa39679c898a17bbbe4aa6ad49a6db5d866edd59f3f34282b073256a2",
+      "bytes": 471880
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.albedo.astc.ktx2",
+      "sha256": "b1665d6260807b87f3dc8ac6d2eca7d87e23b593bd84bc7a3ac88291f7795bf7",
+      "bytes": 471786
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.albedo.png",
+      "sha256": "4fd30764b56857f340ca94dd03443ff311f972d38a5a706fb0a055d8f4ba69b6",
+      "bytes": 966082
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.masks.bc7.ktx2",
+      "sha256": "87b44e3f7ad5025ef08566baca6899575fa2e02d1cc7fc656db9d668b188276f",
+      "bytes": 5771
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.masks.astc.ktx2",
+      "sha256": "a90b6481e7e05a4423901dc0109219fe17a778daf3a3567f64f01d90590e33b9",
+      "bytes": 5667
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.masks.png",
+      "sha256": "43273da3555d0536f22c6064d4f090a79afd1f6e47d04d1b51c819e0bceb4645",
+      "bytes": 23740
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.normal.bc7.ktx2",
+      "sha256": "67ba030873b738a8bb05f1df4199f4682f03a26e9a12da749b0b9eb09c7463bc",
+      "bytes": 509072
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.normal.astc.ktx2",
+      "sha256": "29ce5cf779c75014a36eafb7c7f7af633ce3724a5e36a11e121d395895adc8a5",
+      "bytes": 497317
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.normal.png",
+      "sha256": "54381f4a606ec4fd04147e0a7acd5852da2cfde825a0d461657d9b935cd7124a",
+      "bytes": 1036879
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.orm.bc7.ktx2",
+      "sha256": "199d487e83322bb3082dac183161b98a04c211a70a612ac6c8c3311b545789d2",
+      "bytes": 323136
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.orm.astc.ktx2",
+      "sha256": "9893c8a70364aed71847ff8703c8b876a44b6b58b310af0429930046f57812cf",
+      "bytes": 320847
+    },
+    {
+      "path": "assets/kit/p1/sapling_spruce_c/sapling_spruce_c.orm.png",
+      "sha256": "1030b2256e10b61b241b42cf2a79aac7ff23969707d54d44bac1c97300d9b3b7",
+      "bytes": 524214
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/forest/ref-1.jpg",
+      "sha256": "91bec450432eaf9da8debc4f88820bc7da6b4fbbb17c6586e22f0ae1afc09ac6",
+      "sourceSha256": "3c9aa8f425d216ab897c74a17ba4d998a008fa7b0672024f9988a8813201e31d",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "23f27fd1-0218-42b6-92c4-0d22142c11e5",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), covered by a dense mixed forest: a few broad rounded oaks among many tall spruce conifers with dark green needle tiers, undergrowth of ferns, shrubs and saplings, a fallen mossy log and leaf litter on the forest floor, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/forest/ref-2.jpg",
+      "sha256": "fd5b8a1ebb2c3df56a73f28095a39d07c6c7e303dfcdb79e34d4e05ce9164734",
+      "sourceSha256": "394bbf09c7fab300ef2e4e781ee047384e0bbdba2b6015750bfebdef5ae88ec8",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e3e4f64b-d10d-4a10-b22a-0fe15b9fee0e",
+      "prompt": "Close-up of a stylized-real spruce conifer and the forest undergrowth on a diorama tile: rough flaky bark, layered tiers of needle clusters, ferns, low shrubs, moss and leaf litter at the trunk base, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T18:33:05.988Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/forest/ref-1.jpg",
+        "assets-source/refs/forest/ref-2.jpg"
+      ],
+      "notes": "Approved: spruce among oaks, ferns, fallen log. ref-2 sits on a square fragment; tiles are hexagonal. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Review against assets-source/refs/forest (ref-1: 'undergrowth of ferns, shrubs and saplings'): sapling_spruce's third variant, a shade-suppressed young spruce, 2.0 m stem (leader tip 2.25 m), bare to 1.1 m and crooked 0.14 m to one side through the crown, five sparse level tiers of long narrow fronds (every other branch of each whorl, 16 main fronds against sapling_spruce's 30 and sapling_spruce_b's 35), nearly as wide at the top (0.6 m) as at the bottom (0.75 m), a thin leader and a thin dark heart; 1.9 m across. Same bark set, needle tiles and wind as its siblings; built on _spruce.build through _sapling.py, _sapling_b.py and _sapling_c.py. Collider reach 0.058 m and crown reach 0.947 m keep the sapling group's scatter footprint (0.1 / 1.1). Review sheet: docs/checkpoints/sapling_spruce_c/sheet.jpg (ref; textured EEVEE lineup with sapling_spruce, sapling_spruce_b, tree_forest_c and a 1.7 m figure; the kit undergrowth forest at (-3, 2); play shots with docs/checkpoints/sapling_spruce_c/integration.patch applied). The controller records the owner's decision."
+    }
+  ]
+}

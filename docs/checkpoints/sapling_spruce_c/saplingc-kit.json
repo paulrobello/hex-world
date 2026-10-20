@@ -1,0 +1,20 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 180 },
+  { "cmd": "camera", "pos": [-35.0, 28.0, 76.0], "look_at": [-55.4, 0.0, 48.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "saplingc-kit-play" },
+  { "cmd": "camera", "pos": [-46.6, 1.5, 47.2], "look_at": [-50.43, 1.05, 44.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "saplingc-kit-sun" },
+  { "cmd": "wait", "frames": 60 },
+  { "cmd": "screenshot", "name": "saplingc-kit-wind" },
+  { "cmd": "camera", "pos": [-54.2, 1.4, 40.6], "look_at": [-50.43, 1.05, 44.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "saplingc-kit-shade" },
+  { "cmd": "camera", "pos": [-45.5, 1.7, 52.5], "look_at": [-52.5, 1.2, 43.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "saplingc-kit-eye" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

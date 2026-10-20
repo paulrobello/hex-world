@@ -1,0 +1,56 @@
+{
+  "blender": "5.2.2 LTS",
+  "budgetClass": "piece",
+  "generator": {
+    "path": "scripts/blender/kit/sapling_spruce_c.py",
+    "sha256": "9e4ee5510d034d01cd19a33db72c2db8808bb63f737df1a76070f80b5b51fec2"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_forest.py",
+      "sha256": "70af5de2175c0c1d733cfb72c3befcb400e586fe051507e96cf41b81e145c3b1"
+    },
+    {
+      "path": "scripts/blender/kit/_leaves.py",
+      "sha256": "d732efec23b5b9a52dca841bfc97f70fb9ab604b8f039eb6029fffaabb2ccf4a"
+    },
+    {
+      "path": "scripts/blender/kit/_sapling.py",
+      "sha256": "275ea63aaf535622d3ebf1b230443b2b9f329bf3e53ffda74631477972298e32"
+    },
+    {
+      "path": "scripts/blender/kit/_sapling_b.py",
+      "sha256": "5a183da1c8ba009eef4e3b694caf5a12d7192811ae77e9f05ee17b854c863ba0"
+    },
+    {
+      "path": "scripts/blender/kit/_sapling_c.py",
+      "sha256": "f23f32327ccb47b22b466afddfd6ed3b476b82f4710340cc029c288acadba3eb"
+    },
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    },
+    {
+      "path": "scripts/blender/kit/_spruce.py",
+      "sha256": "5d037a06fa902f1977baf9c593123855fd49071159e697ab9f8e1312bcd81263"
+    },
+    {
+      "path": "scripts/blender/kit/_tree.py",
+      "sha256": "037e8be778813c929864130240aa65e05042c153b8c386d3920566b6867d81ce"
+    }
+  ],
+  "lodTris": {
+    "sapling_spruce_c_lod0": 428,
+    "sapling_spruce_c_lod1": 158,
+    "sapling_spruce_c_lod2": 56
+  },
+  "nodes": [
+    "sapling_spruce_c",
+    "sapling_spruce_c_collider",
+    "sapling_spruce_c_lod0",
+    "sapling_spruce_c_lod1",
+    "sapling_spruce_c_lod2"
+  ],
+  "pieceId": "sapling_spruce_c",
+  "sockets": []
+}

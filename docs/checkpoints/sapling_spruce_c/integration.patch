@@ -1,0 +1,60 @@
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index fe7e7d1..938ce53 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -150,7 +150,7 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
+     ),
+     ("bush_verge", &["bush_verge_b"]),
+     ("shrub_forest", &["shrub_forest_b"]),
+-    ("sapling_spruce", &["sapling_spruce_b"]),
++    ("sapling_spruce", &["sapling_spruce_b", "sapling_spruce_c"]),
+ ];
+ 
+ fn extra_variants(piece: &str) -> &'static [&'static str] {
+@@ -558,6 +558,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
+             crown: 1.1,
+         },
+     ),
++    (
++        "sapling_spruce_c",
++        Footprint {
++            ground: 0.1,
++            crown: 1.0,
++        },
++    ),
+     (
+         "bush_verge",
+         Footprint {
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index f52d79e..1572d47 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -101,6 +101,7 @@ pub const OBSTACLES: &[&str] = &[
+     "fence_paddock",
+     "sapling_spruce",
+     "sapling_spruce_b",
++    "sapling_spruce_c",
+     "shrub_forest",
+     "shrub_forest_b",
+     "bush_verge",
+@@ -1121,6 +1122,7 @@ mod tests {
+             ("fence_paddock", "fence"),
+             ("sapling_spruce", "tree"),
+             ("sapling_spruce_b", "tree"),
++            ("sapling_spruce_c", "tree"),
+             ("shrub_forest", "tree"),
+             ("shrub_forest_b", "tree"),
+             ("bush_verge", "tree"),
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index fe91a9a..3449743 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -421,7 +421,7 @@ const UNDERGROWTH: &[(&str, [f32; 2], f32, f32)] = &[
+     ("shrub_forest_b", [6.5, 0.5], 30.0, -0.091),
+     ("sapling_spruce_b", [0.0, 2.0], 0.0, -0.198),
+     ("sapling_spruce", [-2.5, 1.5], 140.0, -0.152),
+-    ("sapling_spruce", [5.0, -4.0], 260.0, -0.193),
++    ("sapling_spruce_c", [5.0, -4.0], 260.0, -0.193),
+     ("fern_clump", [-1.0, 5.5], 30.0, -0.112),
+     ("fern_clump", [2.5, 6.0], 200.0, -0.076),
+ ];

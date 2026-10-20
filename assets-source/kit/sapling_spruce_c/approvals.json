@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Review against assets-source/refs/forest (ref-1: 'undergrowth of ferns, shrubs and saplings'): sapling_spruce's third variant, a shade-suppressed young spruce, 2.0 m stem (leader tip 2.25 m), bare to 1.1 m and crooked 0.14 m to one side through the crown, five sparse level tiers of long narrow fronds (every other branch of each whorl, 16 main fronds against sapling_spruce's 30 and sapling_spruce_b's 35), nearly as wide at the top (0.6 m) as at the bottom (0.75 m), a thin leader and a thin dark heart; 1.9 m across. Same bark set, needle tiles and wind as its siblings; built on _spruce.build through _sapling.py, _sapling_b.py and _sapling_c.py. Collider reach 0.058 m and crown reach 0.947 m keep the sapling group's scatter footprint (0.1 / 1.1). Review sheet: docs/checkpoints/sapling_spruce_c/sheet.jpg (ref; textured EEVEE lineup with sapling_spruce, sapling_spruce_b, tree_forest_c and a 1.7 m figure; the kit undergrowth forest at (-3, 2); play shots with docs/checkpoints/sapling_spruce_c/integration.patch applied). The controller records the owner's decision."
+  }
+]
