@@ -149,7 +149,7 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
         ],
     ),
     ("bush_verge", &["bush_verge_b", "bush_verge_c"]),
-    ("shrub_forest", &["shrub_forest_b"]),
+    ("shrub_forest", &["shrub_forest_b", "shrub_forest_c"]),
     ("sapling_spruce", &["sapling_spruce_b"]),
 ];
 
@@ -548,6 +548,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         "shrub_forest_b",
         Footprint {
             ground: 0.56,
+            crown: 0.0,
+        },
+    ),
+    (
+        "shrub_forest_c",
+        Footprint {
+            ground: 0.70,
             crown: 0.0,
         },
     ),

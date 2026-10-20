@@ -1,0 +1,21 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 180 },
+  { "cmd": "camera", "pos": [-35.0, 28.0, 76.0], "look_at": [-53.0, 0.0, 48.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "shrubc-kit-play" },
+  { "cmd": "camera", "pos": [-44.5, 3.4, 57.5], "look_at": [-50.0, 0.6, 46.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "shrubc-kit-scale" },
+  { "cmd": "camera", "pos": [-42.9, 1.8, 49.5], "look_at": [-47.43, 0.5, 45.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "shrubc-kit-sun" },
+  { "cmd": "camera", "pos": [-50.0, 1.4, 40.3], "look_at": [-47.43, 0.5, 45.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "shrubc-kit-shade" },
+  { "cmd": "camera", "pos": [-42.5, 1.7, 51.0], "look_at": [-48.5, 0.7, 45.8] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "shrubc-kit-eye" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

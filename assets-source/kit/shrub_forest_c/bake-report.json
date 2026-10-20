@@ -1,0 +1,125 @@
+{
+  "bakeStats": {
+    "alphaCoverageByMip": {
+      "tile_0": [
+        0.5385,
+        0.5363,
+        0.5377,
+        0.5361,
+        0.5433,
+        0.5556,
+        0.6122,
+        0.7778,
+        1.0
+      ],
+      "tile_1": [
+        0.55,
+        0.5477,
+        0.5487,
+        0.5486,
+        0.5544,
+        0.5644,
+        0.6531,
+        0.8889,
+        1.0
+      ],
+      "tile_2": [
+        0.537,
+        0.5349,
+        0.5365,
+        0.5367,
+        0.5367,
+        0.5467,
+        0.5918,
+        0.7778,
+        1.0
+      ],
+      "tile_3": [
+        0.5423,
+        0.5403,
+        0.5408,
+        0.5419,
+        0.5444,
+        0.5422,
+        0.6122,
+        0.7778,
+        1.0
+      ],
+      "tiles": [
+        0.5419,
+        0.5398,
+        0.5409,
+        0.5408,
+        0.5447,
+        0.5522,
+        0.5333,
+        0.5918,
+        0.6667,
+        0.0
+      ]
+    },
+    "alphaCutoff": 0.5
+  },
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "coreRadiusM": 0.69,
+  "crown": {
+    "a": 0.8,
+    "b": 0.48,
+    "bumps": 7,
+    "card": 0.46,
+    "cushion": 0.05,
+    "cx": 0.0,
+    "cz": 0.38,
+    "hump": 0.2,
+    "inner": 20,
+    "lobes": 0.15,
+    "outer": 96,
+    "spread": 1.35,
+    "zmin": -0.6
+  },
+  "device": "none (numpy-drawn tiles, no Cycles bake)",
+  "extentZ": [
+    -0.11919275671243668,
+    1.1464446783065796
+  ],
+  "lowestLeafM": -0.11919275671243668,
+  "marginPx": 0,
+  "reachM": 1.2540942939887105,
+  "receiverSignature": "6e689b932307fb14d27e6ba47f8cc237b71591cabec2eb97a295151a2713fe8f",
+  "samples": 0,
+  "skipped": false,
+  "stem": {
+    "apex": 0.96,
+    "count": 8,
+    "r0": 0.017,
+    "r1": 0.008,
+    "reach": 1.06,
+    "sink": 0.08,
+    "tip_z": 0.26
+  },
+  "texelDensityPxPerM": {
+    "shrub_forest_c_leaves": {
+      "max": 2418.7139176060223,
+      "median": 1036.7853041760713,
+      "min": 888.8350966076841
+    }
+  }
+}

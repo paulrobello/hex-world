@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Review against assets-source/refs/forest (ref-1: 'undergrowth of ferns, shrubs and saplings'): shrub_forest's third variant, a bramble mound, 1.15 m tall at its highest lump (-0.12 to 1.15 m) and about 2.5 m across at its widest (reach 1.25 m, LOD0, from the GLB), a low lumpy mound of fresh yellow-green leaf-cluster cards with eight reddish arching canes that crest about the mound's top and hang their leafy tips past its rim, lighter than the hazel so it reads in spruce shade (Q60), no berries or flowers (Q61), plant wind data. Built on _shrub.build through _shrub_bramble.py (palette, lumpy mound card placer, Bezier canes with cards). Review sheet: docs/checkpoints/shrub_forest_c/sheet.jpg (ref; textured EEVEE lineup with shrub_forest, shrub_forest_b, sapling_spruce, fern_clump and a 1.7 m figure; kit and play shots with docs/checkpoints/shrub_forest_c/integration.patch applied). The controller records the owner's decision."
+  }
+]
