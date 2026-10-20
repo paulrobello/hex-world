@@ -518,7 +518,10 @@ fn bakery_visits_turn_smoothly() {
                 }
             }
         }
-        println!("rot {rot}: parking legs max {:.1} deg/tick, lane span max {lanes:.1} deg/tick", legs.0);
+        println!(
+            "rot {rot}: parking legs max {:.1} deg/tick, lane span max {lanes:.1} deg/tick",
+            legs.0
+        );
         assert!(seen.len() >= 4, "rot {rot}: {} bakery trips", seen.len());
         if legs.0 >= 20.0 {
             failures.push(format!(
@@ -565,7 +568,8 @@ fn sweep(mut scene: Scene, tile: &str, rotation: impl Fn(Axial) -> u8) {
                     (car.to_spot(), car.to_spot().index),
                 ] {
                     let on_tile = scene.world.tile(end.cell).is_some_and(|t| t.def == tile);
-                    if !on_tile || geom::dist(pose.pos, end.cell.to_world(HEX_RADIUS)) > HEX_RADIUS {
+                    if !on_tile || geom::dist(pose.pos, end.cell.to_world(HEX_RADIUS)) > HEX_RADIUS
+                    {
                         continue;
                     }
                     let r = rotation(end.cell);
