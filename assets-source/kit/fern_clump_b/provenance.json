@@ -1,0 +1,407 @@
+{
+  "pieceId": "fern_clump_b",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/fern_clump_b.py",
+    "sha256": "95b1d583dd715ab0f26ff1a5840c6824bcef67a6868f970074eb17ad7c843e51"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_ferns.py",
+      "sha256": "1faaea4dd0eb1b3301444b4ad55100872d4516d6c1a27958989a5d6404a1a30c"
+    },
+    {
+      "path": "scripts/blender/kit/_ferns_var.py",
+      "sha256": "30930965cca311f6919965cada355c27c859cf72e653c3f0343031bba6abe51b"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "bakeStats": {
+      "alphaCoverageByMip": {
+        "frond_0": [
+          0.3008,
+          0.2925,
+          0.2985,
+          0.3002,
+          0.3162,
+          0.3438,
+          0.3,
+          0.3125,
+          0.5
+        ],
+        "frond_1": [
+          0.296,
+          0.2876,
+          0.2939,
+          0.2946,
+          0.3058,
+          0.3344,
+          0.3375,
+          0.375,
+          0.5
+        ],
+        "frond_2": [
+          0.302,
+          0.2932,
+          0.3003,
+          0.3,
+          0.3132,
+          0.3406,
+          0.3625,
+          0.375,
+          0.25
+        ],
+        "tiles": [
+          0.2996,
+          0.2911,
+          0.2975,
+          0.2983,
+          0.3118,
+          0.3276,
+          0.3083,
+          0.3214,
+          0.1667,
+          0
+        ]
+      },
+      "alphaCutoff": 0.5
+    },
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 64
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "colliderReachM": 0.1950000057735735,
+    "colliderTopM": 0.3499999940395355,
+    "coreRadiusM": 0.195,
+    "device": "none (numpy-drawn tiles, no Cycles bake)",
+    "extentZ": [
+      -0.09217055886983871,
+      0.48330816626548767
+    ],
+    "fronds": 12,
+    "marginPx": 0,
+    "reachM": 0.33862909323844254,
+    "receiverSignature": "bc27e6466621fc15c22f304c236e374a3c729ae250f78b2b6b3d40117a4aaa09",
+    "samples": 0,
+    "sinkM": 0.08,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 2350.8127291393225,
+      "median": 1970.7600359710518,
+      "min": 1698.7265961681792
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 288,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 96,
+      "ratio": 0.3333333333333333
+    },
+    {
+      "lod": 2,
+      "tris": 16,
+      "ratio": 0.05555555555555555
+    }
+  ],
+  "collider": {
+    "node": "fern_clump_b_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 2350.8127291393225,
+    "median": 1970.7600359710518,
+    "min": 1698.7265961681792
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 746085,
+        "astc": 753822
+      },
+      "glbBytes": 52124
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 419367,
+        "sha256": "a3c197db72576b220df1b7a600a0a99320884dbd05d50ff7e9369fc69899693b"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 422263,
+        "sha256": "165119ad776523ccaedef06a95abf4c3374a261d1c394b3ed412599514adf7cf"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 634790,
+        "sha256": "ed3e0b935f1317a61da084f73d6ad0ed94194bcf4b91d84fb576940e20ce60a8"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 7,
+        "bytes": 583,
+        "sha256": "fd833c72639788d9e2148f36327302d51022319a0e4c5451927a1f9eb093a11c"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 7,
+        "bytes": 583,
+        "sha256": "7ce35269c237129244edbdc5e81ab107d94f91b82c4d933a5248459ba2231380"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 379,
+        "sha256": "c35c5e420520274e2f7e29888350b46741abc046fbcff01f9c712b9076db76a4"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 111539,
+        "sha256": "c7003bdfb67365d4da53d182e4c5444dac0494e32afab19f6a3dae1e83dd3719"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 111221,
+        "sha256": "8c78f946b41901b14b1c8211bf70a9c94571da5e7e3206ed512a867786427a04"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 173921,
+        "sha256": "023fa2a6ab5891c77df7588a7e6f1c82c19ce5acc784c3c1e8745c8f5ee98233"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 214596,
+        "sha256": "ed581c9382a22790bd6c139f1a462a3ef1156d13cbdc102720e30da7a1b38605"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 219755,
+        "sha256": "186617ba3428c67fc6be30be9ecf5cb4d142ae89af6fc6a7a6dd8148592a9530"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/fern_clump_b/fern_clump_b.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 318812,
+        "sha256": "31528c6964d801bf48510b5856cdbc553d8afb3e9b556a3e05ded2fb4b306b67"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.glb",
+      "sha256": "36f902414eef232161e84f0c321900cb7ed0758a38f2fdad8c1e0e4278873628",
+      "bytes": 52124
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.albedo.bc7.ktx2",
+      "sha256": "a3c197db72576b220df1b7a600a0a99320884dbd05d50ff7e9369fc69899693b",
+      "bytes": 419367
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.albedo.astc.ktx2",
+      "sha256": "165119ad776523ccaedef06a95abf4c3374a261d1c394b3ed412599514adf7cf",
+      "bytes": 422263
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.albedo.png",
+      "sha256": "ed3e0b935f1317a61da084f73d6ad0ed94194bcf4b91d84fb576940e20ce60a8",
+      "bytes": 634790
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.masks.bc7.ktx2",
+      "sha256": "fd833c72639788d9e2148f36327302d51022319a0e4c5451927a1f9eb093a11c",
+      "bytes": 583
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.masks.astc.ktx2",
+      "sha256": "7ce35269c237129244edbdc5e81ab107d94f91b82c4d933a5248459ba2231380",
+      "bytes": 583
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.masks.png",
+      "sha256": "c35c5e420520274e2f7e29888350b46741abc046fbcff01f9c712b9076db76a4",
+      "bytes": 379
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.normal.bc7.ktx2",
+      "sha256": "c7003bdfb67365d4da53d182e4c5444dac0494e32afab19f6a3dae1e83dd3719",
+      "bytes": 111539
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.normal.astc.ktx2",
+      "sha256": "8c78f946b41901b14b1c8211bf70a9c94571da5e7e3206ed512a867786427a04",
+      "bytes": 111221
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.normal.png",
+      "sha256": "023fa2a6ab5891c77df7588a7e6f1c82c19ce5acc784c3c1e8745c8f5ee98233",
+      "bytes": 173921
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.orm.bc7.ktx2",
+      "sha256": "ed581c9382a22790bd6c139f1a462a3ef1156d13cbdc102720e30da7a1b38605",
+      "bytes": 214596
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.orm.astc.ktx2",
+      "sha256": "186617ba3428c67fc6be30be9ecf5cb4d142ae89af6fc6a7a6dd8148592a9530",
+      "bytes": 219755
+    },
+    {
+      "path": "assets/kit/p1/fern_clump_b/fern_clump_b.orm.png",
+      "sha256": "31528c6964d801bf48510b5856cdbc553d8afb3e9b556a3e05ded2fb4b306b67",
+      "bytes": 318812
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/forest/ref-1.jpg",
+      "sha256": "91bec450432eaf9da8debc4f88820bc7da6b4fbbb17c6586e22f0ae1afc09ac6",
+      "sourceSha256": "3c9aa8f425d216ab897c74a17ba4d998a008fa7b0672024f9988a8813201e31d",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "23f27fd1-0218-42b6-92c4-0d22142c11e5",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), covered by a dense mixed forest: a few broad rounded oaks among many tall spruce conifers with dark green needle tiers, undergrowth of ferns, shrubs and saplings, a fallen mossy log and leaf litter on the forest floor, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/forest/ref-2.jpg",
+      "sha256": "fd5b8a1ebb2c3df56a73f28095a39d07c6c7e303dfcdb79e34d4e05ce9164734",
+      "sourceSha256": "394bbf09c7fab300ef2e4e781ee047384e0bbdba2b6015750bfebdef5ae88ec8",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e3e4f64b-d10d-4a10-b22a-0fe15b9fee0e",
+      "prompt": "Close-up of a stylized-real spruce conifer and the forest undergrowth on a diorama tile: rough flaky bark, layered tiers of needle clusters, ferns, low shrubs, moss and leaf litter at the trunk base, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T08:05:43.885Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/forest/ref-1.jpg",
+        "assets-source/refs/forest/ref-2.jpg"
+      ],
+      "notes": "Approved: spruce among oaks, ferns, fallen log. ref-2 sits on a square fragment; tiles are hexagonal. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Variant of fern_clump (PRD §6 Variety), against assets-source/refs/forest: a young fern, 12 fronds standing steep and bowing only at their tips, 0.48 m tall and about 0.7 m across, with fern_clump's frond tiles, palette, fold, sink and wind. Review sheet: docs/checkpoints/forest_floor_variants/sheet.jpg (refs, EEVEE beside fern_clump, in engine on the forest at (-3, 1): play distance, sun and shade close-ups, eye level). The controller records the owner's decision."
+    }
+  ]
+}

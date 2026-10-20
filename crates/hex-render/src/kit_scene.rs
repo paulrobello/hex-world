@@ -232,6 +232,16 @@ pub fn kit_layout() -> Vec<Placement> {
             ..hero(piece, -2, 1, at, yaw_deg)
         });
     }
+    // The forest-floor variants (PRD §6 Variety) on their own forest at (-3, 1), west of the
+    // originals' cell so nothing here shades it (the sun is at +x/+z): fern_clump_b and _c and
+    // log_fallen_b in open sun, with an original fern and log beside them and one spruce at the back.
+    v.push(place("forest_base", -3, 1, 0));
+    for (piece, at, yaw_deg, y) in FOREST_FLOOR_VARIANTS {
+        v.push(Placement {
+            y,
+            ..hero(piece, -3, 1, at, yaw_deg)
+        });
+    }
     // The scatter oaks (refs approved 2026-10-13: "spruce among oaks") on their own forest at
     // (-2, 2), south of the forest-floor showcase and out of its review cameras and shade, with a
     // spruce behind them for comparison, each on the litter at its spot (`relief()` in
@@ -307,6 +317,20 @@ const FOREST_FLOOR: [(&str, [f32; 2], f32, f32); 14] = [
     ("fern_clump", [5.3, -2.6], 20.0, -0.131),
     ("fern_clump", [-4.5, 4.5], 90.0, -0.109),
     ("car_sedan", [7.0, 4.0], -25.0, -0.123),
+];
+
+/// (piece, offset, yaw, relief height) of the forest-floor variants on the forest at (-3, 1), each on
+/// the litter at its spot (`relief()` in scripts/blender/kit/forest_base.py at Blender (x, -z)).
+const FOREST_FLOOR_VARIANTS: [(&str, [f32; 2], f32, f32); 9] = [
+    ("tree_forest", [-7.5, -5.0], 30.0, -0.141),
+    ("log_fallen", [-2.0, -3.0], -10.0, -0.124),
+    ("log_fallen_b", [0.5, 2.0], 20.0, -0.188),
+    ("fern_clump", [4.0, -2.5], 0.0, -0.137),
+    ("fern_clump_b", [2.8, 0.2], 45.0, -0.173),
+    ("fern_clump_b", [-3.2, 4.0], 160.0, -0.165),
+    ("fern_clump_b", [4.2, 4.8], 270.0, -0.103),
+    ("fern_clump_c", [-3.8, 0.4], 0.0, -0.135),
+    ("fern_clump_c", [1.0, 6.2], 120.0, -0.096),
 ];
 
 /// The rail top above the cap (`RAIL_TOP` in scripts/blender/kit/_rail.py), where a train's wheels stand.

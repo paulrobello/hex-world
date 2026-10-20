@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/log_fallen_b.py",
+    "sha256": "20a67b82238a27f973cffabd630f25e59ec72be30c67fc7829e64f73f6225288"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_log.py",
+      "sha256": "d44411f14e3a50e4f9680fd9b207a4f7873cfa0e96112e8fcff87e42ddb4c42b"
+    },
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
+  "lodTris": {
+    "log_fallen_b_lod0": 512,
+    "log_fallen_b_lod1": 205,
+    "log_fallen_b_lod2": 72
+  },
+  "nodes": [
+    "log_fallen_b",
+    "log_fallen_b_collider",
+    "log_fallen_b_lod0",
+    "log_fallen_b_lod1",
+    "log_fallen_b_lod2"
+  ],
+  "pieceId": "log_fallen_b",
+  "sockets": []
+}

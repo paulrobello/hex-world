@@ -113,9 +113,11 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
 
 /// Variants of a scatter piece (PRD §6 Variety), after the piece itself: a rule names the first
 /// and each of its instances draws one of the group, picked by [`pick_variant`].
-pub const VARIANTS: [(&str, &[&str]); 5] = [
+pub const VARIANTS: [(&str, &[&str]); 7] = [
     ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
     ("tree_oak", &["tree_oak_b"]),
+    ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
+    ("log_fallen", &["log_fallen_b"]),
     ("rock_small", &["rock_small_b", "rock_small_c"]),
     (
         "wildflower_clump",
@@ -215,7 +217,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 27] = [
+pub const FOOTPRINTS: [(&str, Footprint); 30] = [
     (
         "tree_forest",
         Footprint {
@@ -391,6 +393,27 @@ pub const FOOTPRINTS: [(&str, Footprint); 27] = [
         "log_fallen",
         Footprint {
             ground: 1.9,
+            crown: 0.0,
+        },
+    ),
+    (
+        "fern_clump_b",
+        Footprint {
+            ground: 0.2,
+            crown: 0.0,
+        },
+    ),
+    (
+        "fern_clump_c",
+        Footprint {
+            ground: 0.3,
+            crown: 0.0,
+        },
+    ),
+    (
+        "log_fallen_b",
+        Footprint {
+            ground: 1.31,
             crown: 0.0,
         },
     ),

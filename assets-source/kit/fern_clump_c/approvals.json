@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Variant of fern_clump (PRD §6 Variety), against assets-source/refs/forest ref-1 (the sprawling clumps around the log): a wide, low clump of three crowns grown together, 30 fronds leaning out low with tips arching down to the litter, 0.48 m tall and about 1.9 m across, with fern_clump's frond tiles, palette, fold, sink, wind and 0.3 m collider core. Review sheet: docs/checkpoints/forest_floor_variants/sheet.jpg (refs, EEVEE beside fern_clump, in engine on the forest at (-3, 1): play distance, sun and shade close-ups, eye level). The controller records the owner's decision."
+  }
+]

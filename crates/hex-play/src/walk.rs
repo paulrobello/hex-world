@@ -56,7 +56,7 @@ pub const MAX_STEP: f32 = 0.4;
 const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not.
-pub const OBSTACLES: [&str; 20] = [
+pub const OBSTACLES: [&str; 21] = [
     "house_cottage",
     "house_twostorey",
     "house_longhouse",
@@ -75,6 +75,7 @@ pub const OBSTACLES: [&str; 20] = [
     "rock_small_b",
     "rock_small_c",
     "log_fallen",
+    "log_fallen_b",
     "tree_oak",
     "tree_oak_b",
 ];
@@ -944,6 +945,7 @@ mod tests {
             ("rock_small", "rock"),
             ("rock_small_c", "rock"),
             ("log_fallen", "log"),
+            ("log_fallen_b", "log"),
         ] {
             assert_eq!(prop_kind(piece), kind, "{piece}");
             assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");

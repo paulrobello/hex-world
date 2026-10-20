@@ -1,0 +1,181 @@
+{
+  "name": "fern_clump_c",
+  "date": "2026-10-20T08:03:53.481Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 413406,
+      "sha256": "4988310925f6ea81a4bc5a72847df5a626ef66006c6a0e2c9d5212c81081f59a"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 415527,
+      "sha256": "8ffb0b0d6a1b23fb1148d05c9e1202416f32a7b015abe7e10e4e1b1e3173e2fe"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 632591,
+      "sha256": "018558fce88936badc6cdc773fd15c5a12b0f67e5d31b1fdbe79e5157f9f1338"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 7,
+      "bytes": 583,
+      "sha256": "fd833c72639788d9e2148f36327302d51022319a0e4c5451927a1f9eb093a11c"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 7,
+      "bytes": 583,
+      "sha256": "7ce35269c237129244edbdc5e81ab107d94f91b82c4d933a5248459ba2231380"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 379,
+      "sha256": "c35c5e420520274e2f7e29888350b46741abc046fbcff01f9c712b9076db76a4"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 112060,
+      "sha256": "ec3adcdd31535ed552304011cc7bef6fec38eee4393b74bb40c1e58ad4acd2b2"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 111880,
+      "sha256": "082eb2b7520d5559ecfb5d089298e29e54c365bf6cdcff1022f0771a7a1c9e3b"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 175292,
+      "sha256": "d5f4cf32f0dc90a485cc6b208eabc911d466fa0e5e0b50fa8b242abfedcc818d"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 216931,
+      "sha256": "d2f71ded3fa2c771da0c534500484ca0c4a39a1818913797ffa911c952936084"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 221834,
+      "sha256": "1feb1f74b477825a62c8e8f8c46e47e4be7ae2ed484dece8f101214bc5262624"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/fern_clump_c/fern_clump_c.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 319185,
+      "sha256": "9251f3ebf9d25a62579828fe2cb10fa24fbd66baa58f7c395e4436f0dd2ff56e"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 742980,
+      "astc": 749824
+    },
+    "glbBytes": 114240
+  },
+  "glb": {
+    "bytes": 114240,
+    "sha256": "26d546adae621ba84a7264d67b18ff730fd2fec190f01a31760df61b680cf718"
+  }
+}
