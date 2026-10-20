@@ -440,7 +440,7 @@ pub fn sync(
             } else {
                 scatter
                     .ground(def, &catalog.0, kit, &mut |id| {
-                        scatter::kit_tris(id, packs, assets)
+                        scatter::ground_tris(id, packs, assets)
                     })
                     .map(|g| scatter::layout(def, seed, &g))
             };

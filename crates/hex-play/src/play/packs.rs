@@ -75,6 +75,9 @@ pub struct PlayPacks {
     interacted: bool,
     hold_frames: u32,
     waiting: Vec<(Axial, String, Vec<&'static str>)>,
+    /// Pieces whose pack arrived without them (their GLB failed for good): they draw placeholders
+    /// for the session, and a tile's ground is built without them (`scatter::ground_tris`).
+    lost: BTreeSet<String>,
 }
 
 fn hold_frames() -> u32 {
@@ -123,7 +126,18 @@ impl PlayPacks {
             interacted: false,
             hold_frames: hold_frames(),
             waiting: vec![],
+            lost: BTreeSet::new(),
         }
+    }
+
+    /// Records a piece of an arrived pack that failed to build.
+    pub fn mark_lost(&mut self, id: &str) {
+        self.lost.insert(id.to_owned());
+    }
+
+    /// The piece's pack arrived without it.
+    pub fn lost(&self, id: &str) -> bool {
+        self.lost.contains(id)
     }
 
     pub fn state(&self, pack: &str) -> Option<PackState> {

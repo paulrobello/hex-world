@@ -984,7 +984,7 @@ pub fn sync(
             continue;
         };
         let Some(prepared) = ground.ground(def, &catalog.0, kit, &mut |id| {
-            scatter::kit_tris(id, packs, (&*gltfs, &*gltf_meshes, &*meshes))
+            scatter::ground_tris(id, packs, (&*gltfs, &*gltf_meshes, &*meshes))
         }) else {
             continue;
         };

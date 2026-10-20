@@ -1384,7 +1384,9 @@ pub struct PlayScatter {
 
 impl PlayScatter {
     /// The definition's prepared ground, built once its ground pieces are in the kit and shared by
-    /// every placed tile of that definition and the ghost.
+    /// every placed tile of that definition and the ghost. A piece outside the kit holds it back
+    /// only while `tris_of` has nothing for it: a piece lost for the session ([`ground_tris`])
+    /// adds no ground, and the rest still grows grass and scatter.
     pub(crate) fn ground(
         &mut self,
         def: &TileDef,
@@ -1394,7 +1396,7 @@ impl PlayScatter {
     ) -> Option<Arc<Prepared>> {
         if !ground_pieces(def, catalog)
             .iter()
-            .all(|(id, _)| kit.contains_key(*id))
+            .all(|(id, _)| kit.contains_key(*id) || tris_of(id).is_some())
         {
             return None;
         }
@@ -1478,6 +1480,16 @@ pub(crate) fn kit_tris(
         }
     }
     Some(out)
+}
+
+/// [`kit_tris`] for a tile's ground: a piece whose GLB failed for good (`PlayPacks::lost`) has
+/// none, so its tile's ground is built from the pieces that loaded.
+pub(crate) fn ground_tris(
+    id: &str,
+    packs: &PlayPacks,
+    assets: (&Assets<Gltf>, &Assets<GltfMesh>, &Assets<Mesh>),
+) -> Option<Vec<(Tri, String)>> {
+    kit_tris(id, packs, assets).or_else(|| packs.lost(id).then(Vec::new))
 }
 
 /// Spawns the drawn instances of `layout` under `root`, growing in the props stage of `cell`'s rise.
@@ -1635,9 +1647,9 @@ pub fn sync(
         else {
             continue;
         };
-        let Some(prepared) =
-            state.ground(def, &catalog.0, kit, &mut |id| kit_tris(id, &packs, assets))
-        else {
+        let Some(prepared) = state.ground(def, &catalog.0, kit, &mut |id| {
+            ground_tris(id, &packs, assets)
+        }) else {
             waiting.push((cell, def.id.clone()));
             continue;
         };
@@ -1773,6 +1785,37 @@ mod tests {
             drift: false,
             vary: 0.0,
         }
+    }
+
+    /// Owner report 2026-10-19: a river_straight drew its banks bare of grass until a hard reload.
+    /// A ground piece whose GLB failed for good (its pack ready, the piece never in the kit:
+    /// `ground_tris` gives it no triangles) must not hold the tile's ground back for the session;
+    /// a piece still streaming (`None`) still does.
+    #[test]
+    fn a_lost_ground_piece_does_not_hold_the_ground_back() {
+        let c = catalog();
+        let def = c.get("river_straight").unwrap();
+        let centre = "river_straight_center";
+        let kit: HashMap<String, Vec<KitPart>> = ground_pieces(def, &c)
+            .into_iter()
+            .filter(|(id, _)| *id != centre)
+            .map(|(id, _)| (id.to_string(), vec![]))
+            .collect();
+        let pending = PlayScatter::default().ground(def, &c, &kit, &mut |id| {
+            if id == centre { None } else { lod0(id) }
+        });
+        assert!(pending.is_none(), "a streaming centre waits");
+        let g = PlayScatter::default()
+            .ground(def, &c, &kit, &mut |id| {
+                if id == centre { Some(vec![]) } else { lod0(id) }
+            })
+            .expect("the centre failed for good: the base and edges still make the ground");
+        let m = parse_manifest(MANIFEST).unwrap();
+        let slots = crate::play::grass::grass_slots(&m, def, &c);
+        let blades = crate::play::grass::layout(7, &g.surface, &slots, &[])
+            .blades
+            .len();
+        assert!(blades > 5000, "{blades} blades on the banks");
     }
 
     #[test]

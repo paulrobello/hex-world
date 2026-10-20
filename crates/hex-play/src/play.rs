@@ -253,6 +253,7 @@ pub fn finish_kit(
             );
             if parts.is_empty() {
                 warn!("play: kit piece {id} failed to load, drawn as a placeholder");
+                packs.mark_lost(&id);
                 continue;
             }
             pieces.insert(id.clone(), parts);
