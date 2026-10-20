@@ -595,7 +595,8 @@ try {
   // Beach Curve (owner 2026-10-20): one Tiles sheet row for the headland and the bay. At a coast slot
   // both fit, R walks the headland's orientations then the bay's and the ghost switches tile with
   // it, and a click places the variant the ghost shows; undone so the world below is unchanged.
-  const curveOut = process.env.BEACH_CURVE_OUT ?? "docs/checkpoints/beach-curve";
+  // Committed owner captures refresh only on request (BEACH_CURVE_OUT=docs/checkpoints/beach-curve).
+  const curveOut = process.env.BEACH_CURVE_OUT ?? "e2e/test-results/beach-curve";
   mkdirSync(curveOut, { recursive: true });
   const curveShot = (name, clip) => page.screenshot({ path: `${curveOut}/${name}.jpg`, type: "jpeg", quality: 90, ...(clip ? { clip } : {}) });
   check(await page.locator(".row[data-tile=beach_curve]").count() === 1, "the Tiles sheet lists one Beach Curve row");
