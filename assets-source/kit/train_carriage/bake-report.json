@@ -1,0 +1,175 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "geometry": {
+    "arcCentreToMidpointM": 7.858116822750856,
+    "axlesX": [
+      1.5,
+      -1.5
+    ],
+    "bendR": 8.0,
+    "extent": {
+      "x": [
+        -3.569999933242798,
+        3.569999933242798
+      ],
+      "y": [
+        -1.4800000190734863,
+        1.4800000190734863
+      ],
+      "z": [
+        -0.03500000014901161,
+        3.7200000286102295
+      ]
+    },
+    "heightAboveRailM": 3.7200000286102295,
+    "lengthM": 7.139999866485596,
+    "maxOffTrackCentreOnBendM": [
+      1.8746064100745752,
+      1.8746064100745752,
+      1.8746064100745752
+    ],
+    "overhangM": [
+      2.069999933242798,
+      2.069999933242798
+    ],
+    "sagittaM": 0.14188317724914423,
+    "wheelRadiusM": 0.45,
+    "wheelbaseM": 3.0,
+    "widthM": 2.9600000381469727
+  },
+  "lodTris": [
+    832,
+    268,
+    48
+  ],
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.7408753633499146,
+    "aoP05": 0.1098039299249649,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "dark": 0.0,
+          "glass": 0.984,
+          "paint": 0.0,
+          "rim": 0.0,
+          "roof": 0.392,
+          "steel": 0.0,
+          "wheel": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "dark": 0.0,
+          "glass": 0.969,
+          "paint": 0.0,
+          "rim": 0.0,
+          "roof": 1.0,
+          "steel": 0.561,
+          "wheel": 0.031
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "dark": 0.937,
+          "glass": 1.0,
+          "paint": 0.0,
+          "roof": 1.0,
+          "wheel": 0.78
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.638737678527832,
+    "filledTexels": 4895,
+    "nightTexels": 24910
+  },
+  "masksDensityPxPerM": {
+    "train_carriage_lod0": {
+      "max": 35.35343970747444,
+      "median": 35.35204381467715,
+      "min": 29.727266539841782
+    },
+    "train_carriage_lod1": {
+      "max": 35.352496633126634,
+      "median": 35.352105687855016,
+      "min": 32.8986837219073
+    },
+    "train_carriage_lod2": {
+      "max": 35.35232650298651,
+      "median": 35.352154339418945,
+      "min": 34.61865778649836
+    }
+  },
+  "receiverSignature": "b6c36d6a965a62d8d626cdf4a0612b1c3571b72b6148722d2d26a9917b2b2b6a",
+  "samples": 64,
+  "skipped": false,
+  "surfaces": {
+    "brass": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#a8854f"
+    },
+    "coal": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#141414"
+    },
+    "dark": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#2c2d2f"
+    },
+    "glass": {
+      "paint": 0.0,
+      "slot": "glass",
+      "srgb": "#4a3f31"
+    },
+    "lamp": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#f4eedf"
+    },
+    "paint": {
+      "paint": 1.0,
+      "slot": "body",
+      "srgb": "#ffffff"
+    },
+    "rim": {
+      "paint": 0.0,
+      "slot": "tyre",
+      "srgb": "#55575a"
+    },
+    "roof": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#3b3d40"
+    },
+    "steel": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#8a8d90"
+    },
+    "wheel": {
+      "paint": 0.0,
+      "slot": "tyre",
+      "srgb": "#1c1c1d"
+    }
+  },
+  "texelDensityPxPerM": {
+    "max": 35.35343970747444,
+    "median": 35.35204381467715,
+    "min": 29.727266539841782
+  },
+  "uvMargin": 0.01
+}

@@ -171,8 +171,29 @@ pub fn kit_layout() -> Vec<Placement> {
     v.push(place("rail_straight_center", 0, 2, 0));
     v.push(place("meadow_base", 1, 2, 0));
     v.push(place("rail_bend_60_center", 1, 2, 2));
+    // The train (P3, refs A17) on the rail: the engine and two carriages on the 8 m bend at (1, 2),
+    // each with its outer axles on the track centreline and the inner buffers touching, wheels on the
+    // rail top. Poses from docs/checkpoints/train/consist.py (the bend's frame, rot 2).
+    for (piece, offset, yaw_deg) in TRAIN_ON_BEND {
+        v.push(Placement {
+            offset,
+            yaw_deg,
+            y: TRAIN_RAIL_TOP,
+            ..place(piece, 1, 2, 2)
+        });
+    }
     v
 }
+
+/// The rail top above the cap (`RAIL_TOP` in scripts/blender/kit/_rail.py), where a train's wheels stand.
+const TRAIN_RAIL_TOP: f32 = 0.46;
+
+/// (piece, offset, yaw) of the train consist on the rail bend at (1, 2), rot 2.
+const TRAIN_ON_BEND: [(&str, [f32; 2], f32); 3] = [
+    ("train_engine", [9.490, 1.602], -34.3),
+    ("train_carriage", [6.041, 8.814], -95.9),
+    ("train_carriage", [9.072, 15.713], -120.0),
+];
 
 /// The meadow relief at the cap's centre (`relief(0, 0)` in scripts/blender/kit/meadow_base.py), where
 /// the windmill stands.

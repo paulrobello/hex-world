@@ -1,0 +1,179 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "geometry": {
+    "arcCentreToMidpointM": 7.745966692414834,
+    "axlesX": [
+      2.0,
+      0.0,
+      -2.0
+    ],
+    "bendR": 8.0,
+    "extent": {
+      "x": [
+        -4.46999979019165,
+        4.46999979019165
+      ],
+      "y": [
+        -1.4199999570846558,
+        1.4199999570846558
+      ],
+      "z": [
+        -0.03500000014901161,
+        4.199999809265137
+      ]
+    },
+    "heightAboveRailM": 4.199999809265137,
+    "innerAxleOffRailOnBendM": -0.25403330758516596,
+    "lengthM": 8.9399995803833,
+    "maxOffTrackCentreOnBendM": [
+      2.018812749077444,
+      2.018812749077444,
+      2.018812749077444
+    ],
+    "overhangM": [
+      2.4699997901916504,
+      2.4699997901916504
+    ],
+    "sagittaM": 0.25403330758516596,
+    "wheelRadiusM": 0.62,
+    "wheelbaseM": 4.0,
+    "widthM": 2.8399999141693115
+  },
+  "lodTris": [
+    1140,
+    546,
+    158
+  ],
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.6556013822555542,
+    "aoP05": 0.027450982481241226,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "brass": 0.188,
+          "coal": 0.0,
+          "dark": 0.047,
+          "glass": 0.0,
+          "lamp": 0.408,
+          "paint": 0.0,
+          "rim": 0.0,
+          "steel": 0.0,
+          "wheel": 0.031
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "coal": 0.0,
+          "dark": 0.047,
+          "glass": 0.031,
+          "lamp": 0.047,
+          "paint": 0.0,
+          "rim": 0.0,
+          "steel": 0.314,
+          "wheel": 0.031
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "dark": 0.063,
+          "glass": 1.0,
+          "paint": 0.0,
+          "wheel": 0.765
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.45313549041748047,
+    "filledTexels": 4763,
+    "nightTexels": 10524
+  },
+  "masksDensityPxPerM": {
+    "train_engine_lod0": {
+      "max": 22.71832848217353,
+      "median": 22.714330666376867,
+      "min": 17.0598783901693
+    },
+    "train_engine_lod1": {
+      "max": 22.71685840696812,
+      "median": 22.71566649115136,
+      "min": 19.99155354987762
+    },
+    "train_engine_lod2": {
+      "max": 22.716470560715674,
+      "median": 22.716349664841257,
+      "min": 21.13991836601052
+    }
+  },
+  "receiverSignature": "8ea1458169c152b23d1ffeffcdc7a332fd5f574c3e5b2a7df4ddb282559dfb7f",
+  "samples": 64,
+  "skipped": false,
+  "surfaces": {
+    "brass": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#a8854f"
+    },
+    "coal": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#141414"
+    },
+    "dark": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#2c2d2f"
+    },
+    "glass": {
+      "paint": 0.0,
+      "slot": "glass",
+      "srgb": "#4a3f31"
+    },
+    "lamp": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#f4eedf"
+    },
+    "paint": {
+      "paint": 1.0,
+      "slot": "body",
+      "srgb": "#ffffff"
+    },
+    "rim": {
+      "paint": 0.0,
+      "slot": "tyre",
+      "srgb": "#55575a"
+    },
+    "roof": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#3b3d40"
+    },
+    "steel": {
+      "paint": 0.0,
+      "slot": "body",
+      "srgb": "#8a8d90"
+    },
+    "wheel": {
+      "paint": 0.0,
+      "slot": "tyre",
+      "srgb": "#1c1c1d"
+    }
+  },
+  "texelDensityPxPerM": {
+    "max": 22.71832848217353,
+    "median": 22.714330666376867,
+    "min": 17.0598783901693
+  },
+  "uvMargin": 0.01
+}

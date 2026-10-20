@@ -1,0 +1,357 @@
+{
+  "pieceId": "train_engine",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/train_engine.py",
+    "sha256": "7787b34f8924b2e5cb7b6bda85a837a8c2953cfeca41553bcc3efda51f51ef46"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_car.py",
+      "sha256": "6789f2ccfd3f05533b0a859e4a12ae22e224775a3c404816af55a6515c326166"
+    },
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    },
+    {
+      "path": "scripts/blender/kit/_train.py",
+      "sha256": "ba0dd592ac9f4b03fc286f63abb60d6c8f138c31de3273fcab7b91b8afdde601"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.6,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "geometry": {
+      "arcCentreToMidpointM": 7.745966692414834,
+      "axlesX": [
+        2,
+        0,
+        -2
+      ],
+      "bendR": 8,
+      "extent": {
+        "x": [
+          -4.46999979019165,
+          4.46999979019165
+        ],
+        "y": [
+          -1.4199999570846558,
+          1.4199999570846558
+        ],
+        "z": [
+          -0.03500000014901161,
+          4.199999809265137
+        ]
+      },
+      "heightAboveRailM": 4.199999809265137,
+      "innerAxleOffRailOnBendM": -0.25403330758516596,
+      "lengthM": 8.9399995803833,
+      "maxOffTrackCentreOnBendM": [
+        2.018812749077444,
+        2.018812749077444,
+        2.018812749077444
+      ],
+      "overhangM": [
+        2.4699997901916504,
+        2.4699997901916504
+      ],
+      "sagittaM": 0.25403330758516596,
+      "wheelRadiusM": 0.62,
+      "wheelbaseM": 4,
+      "widthM": 2.8399999141693115
+    },
+    "lodTris": [
+      1140,
+      546,
+      158
+    ],
+    "marginPx": 4,
+    "maskStats": {
+      "aoMean": 0.6556013822555542,
+      "aoP05": 0.027450982481241226,
+      "centroids": {
+        "lod0": {
+          "minA": {
+            "brass": 0.188,
+            "coal": 0,
+            "dark": 0.047,
+            "glass": 0,
+            "lamp": 0.408,
+            "paint": 0,
+            "rim": 0,
+            "steel": 0,
+            "wheel": 0.031
+          },
+          "unbakedTris": 0
+        },
+        "lod1": {
+          "minA": {
+            "coal": 0,
+            "dark": 0.047,
+            "glass": 0.031,
+            "lamp": 0.047,
+            "paint": 0,
+            "rim": 0,
+            "steel": 0.314,
+            "wheel": 0.031
+          },
+          "unbakedTris": 0
+        },
+        "lod2": {
+          "minA": {
+            "dark": 0.063,
+            "glass": 1,
+            "paint": 0,
+            "wheel": 0.765
+          },
+          "unbakedTris": 0
+        }
+      },
+      "coverage": 0.45313549041748047,
+      "filledTexels": 4763,
+      "nightTexels": 10524
+    },
+    "masksDensityPxPerM": {
+      "train_engine_lod0": {
+        "max": 22.71832848217353,
+        "median": 22.714330666376867,
+        "min": 17.0598783901693
+      },
+      "train_engine_lod1": {
+        "max": 22.71685840696812,
+        "median": 22.71566649115136,
+        "min": 19.99155354987762
+      },
+      "train_engine_lod2": {
+        "max": 22.716470560715674,
+        "median": 22.716349664841257,
+        "min": 21.13991836601052
+      }
+    },
+    "receiverSignature": "8ea1458169c152b23d1ffeffcdc7a332fd5f574c3e5b2a7df4ddb282559dfb7f",
+    "samples": 64,
+    "skipped": false,
+    "surfaces": {
+      "brass": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#a8854f"
+      },
+      "coal": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#141414"
+      },
+      "dark": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#2c2d2f"
+      },
+      "glass": {
+        "paint": 0,
+        "slot": "glass",
+        "srgb": "#4a3f31"
+      },
+      "lamp": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#f4eedf"
+      },
+      "paint": {
+        "paint": 1,
+        "slot": "body",
+        "srgb": "#ffffff"
+      },
+      "rim": {
+        "paint": 0,
+        "slot": "tyre",
+        "srgb": "#55575a"
+      },
+      "roof": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#3b3d40"
+      },
+      "steel": {
+        "paint": 0,
+        "slot": "body",
+        "srgb": "#8a8d90"
+      },
+      "wheel": {
+        "paint": 0,
+        "slot": "tyre",
+        "srgb": "#1c1c1d"
+      }
+    },
+    "texelDensityPxPerM": {
+      "max": 22.71832848217353,
+      "median": 22.714330666376867,
+      "min": 17.0598783901693
+    },
+    "uvMargin": 0.01
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1140,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 546,
+      "ratio": 0.4789473684210526
+    },
+    {
+      "lod": 2,
+      "tris": 158,
+      "ratio": 0.13859649122807016
+    }
+  ],
+  "collider": {
+    "node": "train_engine_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 22.71832848217353,
+    "median": 22.714330666376867,
+    "min": 17.0598783901693
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 354126,
+        "astc": 345015
+      },
+      "glbBytes": 93552
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/train_engine/train_engine.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 354126,
+        "sha256": "030ddfe0f8e590885cdab365d3bd397216febbc6e487afc5e70070ffe6a8181d"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/train_engine/train_engine.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 345015,
+        "sha256": "574b3d16f9686838323463e15364777660de78d68e85590fdaeac1569f6dacbf"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/train_engine/train_engine.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 506049,
+        "sha256": "17e5b29990256da4c6fc1a041db16ab859bce7b567e79b43f0ef9db8cf7a4bb4"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/train_engine/train_engine.glb",
+      "sha256": "6ebe0dfefe96cb406b1709d1257d1ba3cec1566506d39f75c10e1caa61bfc908",
+      "bytes": 93552
+    },
+    {
+      "path": "assets/kit/p1/train_engine/train_engine.masks.bc7.ktx2",
+      "sha256": "030ddfe0f8e590885cdab365d3bd397216febbc6e487afc5e70070ffe6a8181d",
+      "bytes": 354126
+    },
+    {
+      "path": "assets/kit/p1/train_engine/train_engine.masks.astc.ktx2",
+      "sha256": "574b3d16f9686838323463e15364777660de78d68e85590fdaeac1569f6dacbf",
+      "bytes": 345015
+    },
+    {
+      "path": "assets/kit/p1/train_engine/train_engine.masks.png",
+      "sha256": "17e5b29990256da4c6fc1a041db16ab859bce7b567e79b43f0ef9db8cf7a4bb4",
+      "bytes": 506049
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/train/ref-1.jpg",
+      "sha256": "a7dbfdea76da07397956684d19b6d23b97a28dbdd3fbea827db202b39e843c29",
+      "sourceSha256": "6e3eb2fc493126d9f0aa88d28d8de1bafcf39b54913fa8490524dd505a9148f7",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "d90f1b10-4680-42c0-8df8-09fb7ded8645",
+      "prompt": "A short passenger train made of a small six-wheeled branch-line steam tank locomotive with a short boiler, a plain round smokebox door with one central handle, a tall chimney, a rounded cab roof and side water tanks, coupled to two short passenger carriages, each with a row of square windows and panelled doors along each side and a gently curved roof, rounded chunky scale-model proportions with realistic detail, and the locomotive cab, boiler cladding and side tanks and both carriage bodies are all painted one plain neutral light grey satin paint, every painted panel smooth and unmarked with no lining, stripes, crests, numbers or lettering anywhere, a blank buffer beam, the smokebox, chimney, frames, buffers and carriage roofs in plain dark charcoal, black spoked wheels, clear window glass. The train stands on a short straight length of track with timber sleepers on grey ballast laid on the plain grey studio floor with a soft contact shadow, the whole train centred in frame and seen from the front-left with the locomotive nearest the camera, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/train/ref-2.jpg",
+      "sha256": "21ecee9f24f907950142f8755683491e7219a333b3f18e40cfdca738dbaff24a",
+      "sourceSha256": "051295f468f1a2c1cdb775458ee42f2bfda702a26fe3b122c2d2779c995c73e1",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "4213cd64-ed4e-413e-9435-711f18be4fb2",
+      "prompt": "An exact side elevation of a short passenger train made of a small six-wheeled branch-line steam tank locomotive with a short boiler, a plain round smokebox door with one central handle, a tall chimney, a rounded cab roof and side water tanks, coupled to two short passenger carriages, each with a row of square windows and panelled doors along each side and a gently curved roof, rounded chunky scale-model proportions with realistic detail, and the locomotive cab, boiler cladding and side tanks and both carriage bodies are all painted one plain neutral light grey satin paint, every painted panel smooth and unmarked with no lining, stripes, crests, numbers or lettering anywhere, a blank buffer beam, the smokebox, chimney, frames, buffers and carriage roofs in plain dark charcoal, black spoked wheels, clear window glass. The camera looks at the middle of the train at a perfect right angle to the track from far away through a long telephoto lens, level with the wheel axles, so the train reads as a flat side elevation with no front or end faces visible, the locomotive at the left facing left, and the near rail running as one straight horizontal line across the frame. The train stands on a short straight length of track with timber sleepers on grey ballast on the plain grey studio floor, the whole train filling the width of the frame, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T01:58:08.512Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/train/ref-1.jpg",
+        "assets-source/refs/train/ref-2.jpg"
+      ],
+      "notes": "Steam tank engine as drawn; runtime colour on the body, like the cars; two carriages. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-19",
+      "notes": "Pending owner review; not an approval. Steam tank engine (0-6-0) from assets-source/refs/train ref-1/ref-2 (A17: runtime colour on the body, like the cars). Body colour via COLOR_0 paint mask exactly as car_sedan/van/pickup. Sits on the rail pieces: wheel treads on the 0.46 m rail top, flanges inside the 1.6 m gauge. Review sheet: docs/checkpoints/train/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

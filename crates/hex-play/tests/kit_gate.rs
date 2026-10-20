@@ -674,7 +674,7 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
             e.extend(wind_slot_errors(&p.id, i, &wind_prims(p, m, &buffers)));
         }
     }
-    if p.id.starts_with("car_") {
+    if p.id.starts_with("car_") || p.id.starts_with("train_") {
         for (i, m) in lods.iter().enumerate() {
             if let Some(m) = m {
                 e.extend(paint_mask_errors(
