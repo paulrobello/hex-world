@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Variant of animal_sheep (PRD §6 Variety), against assets-source/refs/farm_animals (ref-3: the flock grazing): the adult black-faced sheep grazing, its head turned 22 deg nose down on a longer neck with the muzzle 1.5 cm above the grass 0.77 m ahead of the body centre, the sheep counterpart of animal_cow_b. Same stations, palette and paint as animal_sheep (painted at rest positions, so the wool hood, black face and legs match), 756 LOD0 tris. Review sheet: docs/checkpoints/animal_sheep_c/sheet.jpg (refs, EEVEE beside animal_sheep and animal_cow_b, head close-up, top view, LOD2; in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
+  }
+]

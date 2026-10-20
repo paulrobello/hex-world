@@ -36,6 +36,7 @@
             (piece: "animal_sheep", at: (-2.25, 11.25), yaw_deg: 345.0),
             (piece: "animal_cow_b", at: (0.5, 7.0), yaw_deg: 75.0),
             (piece: "animal_sheep_b", at: (-1.25, 9.625), yaw_deg: 30.0),
+            (piece: "animal_sheep_c", at: (-2.25, 9.625), yaw_deg: 210.0),
             (piece: "fence_paddock", at: (0.0, 0.0), yaw_deg: 0.0),
         ],
     ),

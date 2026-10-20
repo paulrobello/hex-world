@@ -1,0 +1,35 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/animal_sheep_c.py",
+    "sha256": "806d1ec912ab7a984080daa19630abde2fb4fd8852c851e87eae8f165ca1a362"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_animals.py",
+      "sha256": "deb6c7cbed087d76fad922ff380f1344fbff02ad81f1c60a82940828705e6ef6"
+    },
+    {
+      "path": "scripts/blender/kit/_animals_var.py",
+      "sha256": "eb953e4fe0f1b344c14a895b391e7f4760f01119898e4877f67174134c092a03"
+    },
+    {
+      "path": "scripts/blender/kit/_fauna.py",
+      "sha256": "184bf0e63afe49ef50c453dec9e881575ef56aa54303340258e74de61f5cd2f1"
+    }
+  ],
+  "lodTris": {
+    "animal_sheep_c_lod0": 756,
+    "animal_sheep_c_lod1": 306,
+    "animal_sheep_c_lod2": 108
+  },
+  "nodes": [
+    "animal_sheep_c",
+    "animal_sheep_c_collider",
+    "animal_sheep_c_lod0",
+    "animal_sheep_c_lod1",
+    "animal_sheep_c_lod2"
+  ],
+  "pieceId": "animal_sheep_c",
+  "sockets": []
+}

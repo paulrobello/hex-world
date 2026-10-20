@@ -1,0 +1,68 @@
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 5499974..eb4cfef 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -234,7 +234,7 @@ pub struct Footprint {
+ 
+ /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
+ /// the GLBs).
+-pub const FOOTPRINTS: [(&str, Footprint); 37] = [
++pub const FOOTPRINTS: [(&str, Footprint); 38] = [
+     (
+         "tree_forest",
+         Footprint {
+@@ -427,6 +427,13 @@ pub const FOOTPRINTS: [(&str, Footprint); 37] = [
+             crown: 0.0,
+         },
+     ),
++    (
++        "animal_sheep_c",
++        Footprint {
++            ground: 0.9,
++            crown: 0.0,
++        },
++    ),
+     (
+         "fern_clump",
+         Footprint {
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index e47a534..6146408 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -60,7 +60,7 @@ const SUBSTEP: f32 = 0.1;
+ /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
+ /// pieces do not. A sapling stops the walker at its stem, a shrub at its dense lower dome, a verge
+ /// bush at its clipped mass; ferns are walk-through.
+-pub const OBSTACLES: [&str; 29] = [
++pub const OBSTACLES: [&str; 30] = [
+     "house_cottage",
+     "house_twostorey",
+     "house_longhouse",
+@@ -74,6 +74,7 @@ pub const OBSTACLES: [&str; 29] = [
+     "animal_sheep",
+     "animal_cow_b",
+     "animal_sheep_b",
++    "animal_sheep_c",
+     "tree_hero_oak",
+     "tree_hero_oak_b",
+     "tree_forest",
+@@ -1065,6 +1066,7 @@ mod tests {
+             ("animal_sheep", "animal"),
+             ("animal_cow_b", "animal"),
+             ("animal_sheep_b", "animal"),
++            ("animal_sheep_c", "animal"),
+             ("windmill", "building"),
+             ("bakery_shop", "building"),
+             ("barn_red", "building"),
+diff --git a/data/tiles/farm.ron b/data/tiles/farm.ron
+index f9e9b1c..4c36509 100644
+--- a/data/tiles/farm.ron
++++ b/data/tiles/farm.ron
+@@ -33,6 +33,7 @@
+             (piece: "animal_sheep", at: (-2.25, 11.25), yaw_deg: 345.0),
+             (piece: "animal_cow_b", at: (0.5, 7.0), yaw_deg: 75.0),
+             (piece: "animal_sheep_b", at: (-1.25, 9.625), yaw_deg: 30.0),
++            (piece: "animal_sheep_c", at: (-2.25, 9.625), yaw_deg: 210.0),
+             (piece: "fence_paddock", at: (0.0, 0.0), yaw_deg: 0.0),
+         ],
+     ),

@@ -336,7 +336,8 @@ pub fn kit_layout() -> Vec<Placement> {
     }
     // The farm animal variants (PRD §6 Variety) on a second farm at (0, 5), east of the first: the
     // grazing cow animal_cow_b head to tail with animal_cow, and the lamb animal_sheep_b beside a
-    // ewe, each hoof within 2.3 cm of the meadow relief at y = 0 (option O2 proposed for farm.ron).
+    // ewe, each hoof within 2.3 cm of the meadow relief at y = 0 (option O2 proposed for farm.ron),
+    // and the grazing sheep animal_sheep_c west of the lamb, its worst hoof 2.8 cm above the relief.
     v.push(place("meadow_base", 0, 5, 0));
     for (piece, at, yaw_deg) in FARM_VARIANTS {
         v.push(hero(piece, 0, 5, at, yaw_deg));
@@ -362,8 +363,8 @@ const FARM_HAY_VARIANTS: [(&str, [f32; 2], f32); 5] = [
 ];
 
 /// (piece, at, yaw) of the farm-variants showcase on (0, 5): the farm's barn, fence and ewes, its cow
-/// moved beside the grazing cow, and the lamb.
-const FARM_VARIANTS: [(&str, [f32; 2], f32); 7] = [
+/// moved beside the grazing cow, the lamb, and the grazing sheep animal_sheep_c west of the lamb.
+const FARM_VARIANTS: [(&str, [f32; 2], f32); 8] = [
     ("fence_paddock", [0.0, 0.0], 0.0),
     ("barn_red", [4.75, -8.227], 30.0),
     ("animal_cow", [0.5, 8.125], 135.0),
@@ -371,6 +372,7 @@ const FARM_VARIANTS: [(&str, [f32; 2], f32); 7] = [
     ("animal_sheep", [-0.5, 10.75], 45.0),
     ("animal_sheep", [-2.25, 11.25], 345.0),
     ("animal_sheep_b", [-1.25, 9.625], 30.0),
+    ("animal_sheep_c", [-2.25, 9.625], 210.0),
 ];
 
 /// (piece, at, yaw) of the farm tile's heroes (data/tiles/farm.ron) plus the paddock fence at the

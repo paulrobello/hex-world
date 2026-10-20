@@ -60,7 +60,7 @@ const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not. A sapling stops the walker at its stem, a shrub at its dense lower dome, a verge
 /// bush at its clipped mass; ferns are walk-through.
-pub const OBSTACLES: [&str; 32] = [
+pub const OBSTACLES: [&str; 33] = [
     "house_cottage",
     "house_twostorey",
     "house_longhouse",
@@ -76,6 +76,7 @@ pub const OBSTACLES: [&str; 32] = [
     "animal_sheep",
     "animal_cow_b",
     "animal_sheep_b",
+    "animal_sheep_c",
     "tree_hero_oak",
     "tree_hero_oak_b",
     "tree_forest",
@@ -1070,6 +1071,7 @@ mod tests {
             ("animal_sheep", "animal"),
             ("animal_cow_b", "animal"),
             ("animal_sheep_b", "animal"),
+            ("animal_sheep_c", "animal"),
             ("windmill", "building"),
             ("bakery_shop", "building"),
             ("barn_red", "building"),
