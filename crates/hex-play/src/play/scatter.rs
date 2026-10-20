@@ -31,7 +31,8 @@
 //!   `surface_at` does: trees on `forest_base_floor` (the litter), rocks and wildflowers on either
 //!   that and `meadow_base_cap`. Its whole ground footprint must lie on that floor, so nothing
 //!   stands on a road, a river bed or bank, a house pad or driveway, a beach, a rim, a skirt or water
-//!   ([`excluded_slot`]). It keeps clear of hero props (a tree clears the oak's canopy; a fence,
+//!   ([`excluded_slot`]), except the beach dressing on the dry sand ([`BEACH_FLOOR`],
+//!   [`beach_band`]). It keeps clear of hero props (a tree clears the oak's canopy; a fence,
 //!   [`FENCES`], by its line, dropped after the darts so nothing else moves), of road and
 //!   river centrelines (`lane_clearance`, at least the lane's half width plus [`LANE_GAP`]) and of
 //!   the hex border (a crown overhangs it by at most [`CROWN_OVERHANG`]), and stands upright at the
@@ -69,6 +70,7 @@ use super::{
     rise::{PropKind, RiseRole},
     spawn_kit_parts,
 };
+use crate::water::tiles::{BEACH_TOP_S, Coastline};
 use crate::{ActiveScenario, Scenario, SceneEntity};
 
 /// Area of the hex cap in m² (pointy-top, circumradius [`HEX_RADIUS`]): what density counts per.
@@ -112,6 +114,7 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
         | "sapling_spruce" => &["forest_base_floor"],
         "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
         "wildflower_single" | "bush_verge" => &["meadow_base_cap"],
+        "beach_dunegrass" | "beach_driftwood" => &[BEACH_FLOOR],
         _ => &[],
     }
 }
@@ -134,6 +137,14 @@ pub const VERGE_BAND: f32 = 6.7;
 /// Variants of a scatter piece (PRD §6 Variety), after the piece itself: a rule names the first
 /// and each of its instances draws one of the group, picked by [`pick_variant`].
 pub const VARIANTS: &[(&str, &[&str])] = &[
+    (
+        "beach_driftwood",
+        &["beach_driftwood_b", "beach_driftwood_c"],
+    ),
+    (
+        "beach_dunegrass",
+        &["beach_dunegrass_b", "beach_dunegrass_c"],
+    ),
     ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
     ("tree_oak", &["tree_oak_b", "tree_oak_c"]),
     ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
@@ -280,6 +291,124 @@ pub fn excluded_slot(slot: &str) -> bool {
     PREFIXES.iter().any(|p| slot.starts_with(p)) || SUFFIXES.iter().any(|s| slot.ends_with(s))
 }
 
+// ---------------------------------------------------------------------------------------------
+// Beach dressing (owner D3, 2026-10-20): driftwood and marram clumps on the dry sand
+
+/// The one [`excluded_slot`] a piece may stand on when its [`floor_slots`] list it: the dry sand
+/// of the beach and river-mouth bases. The grass strip, damp band, seabed and every other
+/// `beach_` slot stay excluded.
+pub const BEACH_FLOOR: &str = "beach_sand";
+/// Top of the damp band in s (m seaward of the coastline): `_beach.WET_TOP_S`, where the bed
+/// stands 0.6 m above the water.
+pub const DAMP_TOP_S: f32 = -1.953;
+/// Beach dressing keeps its whole ground footprint this far (m) inside the hex border.
+pub const BEACH_BORDER: f32 = 1.5;
+/// Largest turn (rad) of a driftwood piece off the coast's direction (12°): the sand is level
+/// along the coast and slopes across it (up to about 0.24 on the dry band), so a log lying across
+/// the slope would float at one end.
+pub const DRIFT_YAW_JITTER: f32 = 0.21;
+
+/// Where on a coast tile a beach dressing piece stands, in s ([`Coastline::seaward`]) of its centre.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct BeachBand {
+    pub near: f32,
+    pub far: f32,
+    /// Seaward thinning: a dart at `near` is always kept, one at `far` with probability 1 - thin.
+    pub thin: f32,
+    /// Laid along the coast within [`DRIFT_YAW_JITTER`] (driftwood) instead of at a free yaw.
+    pub along: bool,
+}
+
+/// The band of a beach dressing piece (owner BD-Q2, BD-Q4). Marram clumps: from about one
+/// clump's width (1.2 m) seaward of the grass line (s = -8) to 2 m short of the damp band, densest
+/// at the grass and thinning seaward. Driftwood: the seaward dry sand, about 3 m short of the grass
+/// line to the damp band (its 1.45 m footprint keeps it off the damp band). `None` for every
+/// other piece.
+pub fn beach_band(piece: &str) -> Option<BeachBand> {
+    match family(piece) {
+        "beach_dunegrass" => Some(BeachBand {
+            near: BEACH_TOP_S + 1.2,
+            far: DAMP_TOP_S - 2.0,
+            thin: 0.75,
+            along: false,
+        }),
+        "beach_driftwood" => Some(BeachBand {
+            near: BEACH_TOP_S + 3.0,
+            far: DAMP_TOP_S - 0.5,
+            thin: 0.0,
+            along: true,
+        }),
+        _ => None,
+    }
+}
+
+/// Whether `slot`, under a footprint, is ground for a piece standing on `floors`: one of them and
+/// never an [`excluded_slot`] other than [`BEACH_FLOOR`].
+pub fn floor_ok(floors: &[&str], slot: &str) -> bool {
+    floors.contains(&slot) && (slot == BEACH_FLOOR || !excluded_slot(slot))
+}
+
+/// Whether a beach dressing centre at `p` (reach `reach`) lies outside its band: off the band's
+/// s range, within [`BEACH_BORDER`] of the border, or on a tile with no coastline.
+fn off_beach_band(band: BeachBand, coast: Option<Coastline>, p: Vec2, reach: f32) -> bool {
+    let Some(coast) = coast else {
+        return true;
+    };
+    let s = coast.seaward(p);
+    s < band.near || s > band.far || hex_reach(p) > APOTHEM - reach - BEACH_BORDER
+}
+
+/// The chance a beach dressing dart at `p` is kept ([`BeachBand::thin`]).
+fn beach_keep(band: BeachBand, coast: Coastline, p: Vec2) -> f32 {
+    let t = ((coast.seaward(p) - band.near) / (band.far - band.near)).clamp(0.0, 1.0);
+    1.0 - band.thin * t
+}
+
+/// An instance's yaw from its yaw draw `u` in [0, 1): free (`u` × TAU), or for a piece laid along
+/// the coast the coast's direction at `p`, either way round (u < 0.5 or not) and turned by up to
+/// [`DRIFT_YAW_JITTER`] (from the same draw, so the dart stream is unchanged).
+fn instance_yaw(band: Option<BeachBand>, coast: Option<Coastline>, p: Vec2, u: f32) -> f32 {
+    let (Some(band), Some(coast)) = (band, coast) else {
+        return u * TAU;
+    };
+    if !band.along {
+        return u * TAU;
+    }
+    let t = match coast {
+        Coastline::Straight { sea } => sea.perp(),
+        Coastline::Arc { centre, .. } => (p - centre).perp(),
+    };
+    let flip = if u < 0.5 { 0.0 } else { std::f32::consts::PI };
+    let jitter = ((u * 2.0).fract() * 2.0 - 1.0) * DRIFT_YAW_JITTER;
+    // Quat::from_rotation_y(yaw) turns the piece's +x to (cos yaw, -sin yaw) in (x, z).
+    portable_atan2(-t.y, t.x) + flip + jitter
+}
+
+/// `y.atan2(x)` from `+ - * /` alone (a degree-11 odd polynomial on [0, 1], max error
+/// about 2.4e-5 rad), so native and wasm lay a beach out bit for bit: libm's `atan2` may differ by an
+/// ulp between targets, which changes the layout fingerprint.
+fn portable_atan2(y: f32, x: f32) -> f32 {
+    use std::f32::consts::{FRAC_PI_2, PI};
+    let (ax, ay) = (x.abs(), y.abs());
+    if ax == 0.0 && ay == 0.0 {
+        return 0.0;
+    }
+    let a = ax.min(ay) / ax.max(ay);
+    let s = a * a;
+    let mut r = ((((-0.011_721_2 * s + 0.052_653_3) * s - 0.116_432_2) * s + 0.193_543_5) * s
+        - 0.332_623_9)
+        * s
+        * a
+        + a;
+    if ay > ax {
+        r = FRAC_PI_2 - r;
+    }
+    if x < 0.0 {
+        r = PI - r;
+    }
+    if y < 0.0 { -r } else { r }
+}
+
 /// Horizontal reach of a piece in metres: `ground` is its collider's (what it stands on and what
 /// others must not overlap) and `crown` its LOD0 canopy's (0 for low props).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -291,6 +420,48 @@ pub struct Footprint {
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
 pub const FOOTPRINTS: &[(&str, Footprint)] = &[
+    (
+        "beach_driftwood",
+        Footprint {
+            ground: 1.45,
+            crown: 0.0,
+        },
+    ),
+    (
+        "beach_driftwood_b",
+        Footprint {
+            ground: 1.03,
+            crown: 0.0,
+        },
+    ),
+    (
+        "beach_driftwood_c",
+        Footprint {
+            ground: 0.66,
+            crown: 0.0,
+        },
+    ),
+    (
+        "beach_dunegrass",
+        Footprint {
+            ground: 0.56,
+            crown: 0.0,
+        },
+    ),
+    (
+        "beach_dunegrass_b",
+        Footprint {
+            ground: 0.43,
+            crown: 0.0,
+        },
+    ),
+    (
+        "beach_dunegrass_c",
+        Footprint {
+            ground: 0.71,
+            crown: 0.0,
+        },
+    ),
     (
         "tree_forest",
         Footprint {
@@ -1173,11 +1344,8 @@ fn mask(
     let piece = rule.piece.as_str();
     let fp = group_footprint(piece);
     let floors = floor_slots(piece);
-    let ok_slot: Vec<bool> = surface
-        .slots
-        .iter()
-        .map(|s| floors.contains(&s.as_str()) && !excluded_slot(s))
-        .collect();
+    let ok_slot: Vec<bool> = surface.slots.iter().map(|s| floor_ok(floors, s)).collect();
+    let beach = beach_band(piece).map(|b| (b, Coastline::of(def, 0)));
     let on_floor = |k: usize| raster[k].is_some_and(|(_, s)| ok_slot[s as usize]);
     // The footprint, the half diagonal a dart may land from its cell centre, and the half diagonal
     // from a footprint point to the nearest sample. `stand` then checks the footprint exactly.
@@ -1218,6 +1386,7 @@ fn mask(
                 || heroes.iter().any(|(h, c)| p.distance(*h) < *c)
                 || lanes.iter().any(|(l, c)| polyline_distance(p, l) < *c)
                 || band.is_some_and(|b| lanes.iter().all(|(l, _)| polyline_distance(p, l) > b))
+                || beach.is_some_and(|(b, c)| off_beach_band(b, c, p, fp.ground))
             {
                 continue;
             }
@@ -1409,11 +1578,7 @@ fn drift_cells(seed: u64, mask: &Mask) -> Vec<u32> {
 
 /// Lowest surface height under the centre and a 0.3 m ring around `p`, if `p` stands on `floors`.
 fn stand(surface: &Surface, p: Vec2, floors: &[&str], reach: f32) -> Option<f32> {
-    let on_floor = |q: Vec2| {
-        surface
-            .at(q.x, q.y)
-            .filter(|(_, s)| floors.contains(s) && !excluded_slot(s))
-    };
+    let on_floor = |q: Vec2| surface.at(q.x, q.y).filter(|(_, s)| floor_ok(floors, s));
     let (h, _) = on_floor(p)?;
     // The footprint's rim and half-rim, exactly (the mask only eroded the sampled ground).
     let ring16 = ring16();
@@ -1436,6 +1601,7 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
     let mut out = Layout::default();
     // (centre, ground reach, rule) of everything placed so far.
     let mut placed: Vec<(Vec2, f32, usize)> = vec![];
+    let coast = Coastline::of(def, 0);
     for (ri, rule) in def.props.scatter.iter().enumerate() {
         let piece = rule.piece.as_str();
         let fp = group_footprint(piece);
@@ -1462,6 +1628,7 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
         let jitter = scale_jitter(fp);
         let floors = floor_slots(piece);
         let vary = rule.vary.clamp(0.0, 1.0);
+        let beach = beach_band(piece);
         let mut n = 0;
         for _ in 0..ATTEMPTS * want + 64 {
             if n == want {
@@ -1475,6 +1642,12 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
                 cell_centre(k / CELLS) + (rng.unit() - 0.5) * RASTER,
             );
             if vary > 0.0 && rng.unit() > 1.0 - vary * (1.0 - vary_noise(seed, p)) {
+                continue;
+            }
+            if let (Some(b), Some(c)) = (beach, coast)
+                && b.thin > 0.0
+                && rng.unit() > beach_keep(b, c, p)
+            {
                 continue;
             }
             let clear = placed.iter().all(|&(q, g, r)| {
@@ -1491,7 +1664,7 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
             let Some(y) = stand(&ground.surface, p, floors, reach) else {
                 continue;
             };
-            let yaw = rng.unit() * TAU;
+            let yaw = instance_yaw(beach, coast, p, rng.unit());
             let scale = 1.0 + jitter * (2.0 * rng.unit() - 1.0);
             placed.push((p, reach, ri));
             out.instances.push(Instance {
@@ -1885,6 +2058,20 @@ pub fn sync(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn portable_atan2_matches_atan2() {
+        let mut worst = 0.0f32;
+        for i in 0..3600 {
+            let a = i as f32 / 3600.0 * std::f32::consts::TAU;
+            for r in [0.01f32, 1.0, 37.5] {
+                let (y, x) = (a.sin() * r, a.cos() * r);
+                worst = worst.max((portable_atan2(y, x) - y.atan2(x)).abs());
+            }
+        }
+        assert!(worst < 5e-5, "worst {worst}");
+        assert_eq!(portable_atan2(0.0, 0.0), 0.0);
+    }
+
     use std::sync::{Mutex, OnceLock};
 
     use hex_assets::parse_manifest;
@@ -2068,7 +2255,7 @@ mod tests {
                                 panic!("{} k{k}: {piece} over no ground at {p}", def.id)
                             });
                             assert!(
-                                floors.contains(&slot) && !excluded_slot(slot),
+                                floor_ok(floors, slot),
                                 "{} k{k} seed {seed}: {piece} at {} over {slot}",
                                 def.id,
                                 inst.pos
@@ -2122,20 +2309,15 @@ mod tests {
             "meadow",
             "road_straight",
             "house_cluster",
-        ] {
-            assert!(counts[id] > 0, "{id} scatters: {counts:?}");
-        }
-        for id in [
-            "ocean",
-            "river_straight",
-            "river_bend",
-            "river_spring",
             "beach",
             "beach_inner",
             "beach_outer",
             "river_mouth",
             "river_mouth_l",
         ] {
+            assert!(counts[id] > 0, "{id} scatters: {counts:?}");
+        }
+        for id in ["ocean", "river_straight", "river_bend", "river_spring"] {
             assert_eq!(counts[id], 0, "{id} has no scatter floor: {counts:?}");
         }
     }
@@ -2536,6 +2718,101 @@ mod tests {
                 assert!(footprint(v).ground <= footprint(piece).ground, "{v}");
                 assert!(footprint(v).crown <= footprint(piece).crown, "{v}");
             }
+        }
+    }
+
+    /// Owner D3 (2026-10-20): on every coast tile the driftwood and marram clumps stand on the dry
+    /// sand inside their [`beach_band`], their whole footprint [`BEACH_BORDER`] inside the border
+    /// and clear of the river mouth's channel; every planned instance is placed, the driftwood lies
+    /// along the coast and the clumps thin seaward. Prints the mean count per tile.
+    #[test]
+    fn beach_dressing_stays_on_its_dry_sand_band() {
+        let c = catalog();
+        for id in [
+            "beach",
+            "beach_inner",
+            "beach_outer",
+            "river_mouth",
+            "river_mouth_l",
+        ] {
+            let def = c.get(id).unwrap();
+            let g = prepared(def).unwrap();
+            let coast = Coastline::of(def, 0).unwrap();
+            let lanes = lanes(def);
+            let (mut near, mut far) = (0usize, 0usize);
+            let mut per_rule = vec![0usize; def.props.scatter.len()];
+            let mut area = vec![];
+            let mut short = vec![];
+            let seeds = 24u64;
+            for seed in 0..seeds {
+                let l = layout(def, cell_seed(7, Axial::new(seed as i32, 0)), &g);
+                area.clone_from(&l.area);
+                for (ri, r) in def.props.scatter.iter().enumerate() {
+                    let piece = r.piece.as_str();
+                    assert!(beach_band(piece).is_some(), "{id}: {piece}");
+                    if l.placed(ri) as u32 != l.planned[ri] {
+                        short.push(format!(
+                            "{id} {piece}: {} of {}",
+                            l.placed(ri),
+                            l.planned[ri]
+                        ));
+                    }
+                    per_rule[ri] += l.placed(ri);
+                }
+                for inst in &l.instances {
+                    let r = &def.props.scatter[inst.rule as usize];
+                    let piece = r.piece.as_str();
+                    let band = beach_band(piece).unwrap();
+                    let fp = group_footprint(piece);
+                    let p = inst.pos.xz();
+                    let s = coast.seaward(p);
+                    assert!(
+                        s >= band.near - 0.2 && s <= band.far + 0.2,
+                        "{id}: {piece} at s {s}"
+                    );
+                    assert!(
+                        s + fp.ground <= DAMP_TOP_S + 0.2,
+                        "{id}: {piece} footprint on the damp band at s {s}"
+                    );
+                    assert!(
+                        hex_reach(p) <= APOTHEM - fp.ground - BEACH_BORDER + 0.2,
+                        "{id}: {piece} border"
+                    );
+                    for (line, half) in &lanes {
+                        let need = lane_clearance(r, *half, fp);
+                        assert!(
+                            polyline_distance(p, line) >= need - 0.2,
+                            "{id}: {piece} lane"
+                        );
+                    }
+                    if band.along {
+                        let t = match coast {
+                            Coastline::Straight { sea } => sea.perp(),
+                            Coastline::Arc { centre, .. } => (p - centre).perp(),
+                        }
+                        .normalize();
+                        let axis = Vec2::new(inst.yaw.cos(), -inst.yaw.sin());
+                        assert!(
+                            axis.dot(t).abs() >= DRIFT_YAW_JITTER.cos() - 1e-3,
+                            "{id}: {piece} lies across the coast"
+                        );
+                    } else if s < 0.5 * (band.near + band.far) {
+                        near += 1;
+                    } else {
+                        far += 1;
+                    }
+                }
+            }
+            assert!(
+                near > far,
+                "{id}: clumps thin seaward ({near} near, {far} far)"
+            );
+            let mean: Vec<f32> = per_rule.iter().map(|&n| n as f32 / seeds as f32).collect();
+            let pieces: Vec<&str> = def.props.scatter.iter().map(|r| r.piece.as_str()).collect();
+            println!(
+                "{id}: mean per tile {mean:?} for {pieces:?} on {area:?} m² ({near} near, {far} far)"
+            );
+            assert!(short.is_empty(), "shortfall: {short:?}");
         }
     }
 

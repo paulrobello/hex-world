@@ -239,6 +239,17 @@ pub fn kit_layout() -> Vec<Placement> {
         y: WINDMILL_Y,
         ..place("windmill_b", 4, -1, 0)
     });
+    // Beach dressing (owner D3, refs approved 2026-10-20) on a straight beach at (5, -1), east of
+    // windmill_b and outside the water patch: the three driftwood pieces along the coast on the dry
+    // sand, the three marram clumps landward of them near the grass line, as the scatter lays them.
+    v.push(place("beach_base", 5, -1, 0));
+    v.push(place("beach_center", 5, -1, 0));
+    for &(piece, at, yaw_deg, y) in BEACH_DRESSING {
+        v.push(Placement {
+            y,
+            ..hero(piece, 5, -1, at, yaw_deg)
+        });
+    }
     // Rail (P3, refs A17) on two meadows south of the oak: the straight on (0, 2) and the sharp
     // bend on (1, 2) at rot 2 (lanes on world edges 2 and 3), so the bend's edge-3 lane meets the
     // straight's edge-0 lane and its other end runs out to the open rim rather than the ocean.
@@ -583,6 +594,19 @@ const FARM_ANIMALS: &[(&str, [f32; 2], f32, f32)] = &[
     ("animal_cow", [7.0, 2.5], 70.0, -0.075),
     ("animal_sheep", [3.5, 7.0], -30.0, -0.089),
     ("animal_sheep", [2.0, 9.0], 140.0, -0.059),
+];
+
+/// (piece, at, yaw, height) of the beach dressing showcase on the straight beach at (5, -1). The
+/// tile's coast runs along (-0.5, 0.866) in (x, z) with s = 0.866 x + 0.5 z seaward (`Coastline`),
+/// so each spot is (s, u) along it and its height is the coast profile there (`coast_height(s)`,
+/// -1.4 + 1.4 t (2 - t) with t = s / -8). The driftwood lies along the coast (yaw 120 or 300).
+const BEACH_DRESSING: &[(&str, [f32; 2], f32, f32)] = &[
+    ("beach_driftwood", [-0.964, -6.33], 120.0, -0.35),
+    ("beach_driftwood_b", [-3.79, -1.03], 300.0, -0.386),
+    ("beach_driftwood_c", [-6.64, 3.1], 120.0, -0.316),
+    ("beach_dunegrass", [-4.13, -5.85], 0.0, -0.049),
+    ("beach_dunegrass_b", [-6.45, -0.84], 70.0, -0.088),
+    ("beach_dunegrass_c", [-7.89, 0.06], 200.0, -0.032),
 ];
 
 /// (piece, offset, rotation, relief height) of the meadow props in the kit layout.

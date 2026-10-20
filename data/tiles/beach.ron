@@ -14,4 +14,10 @@
         (kind: Beach, land: Some(Left)),
     ),
     center: Some("beach_center"),
+    props: (
+        scatter: [
+            (piece: "beach_driftwood", density: 0.452),
+            (piece: "beach_dunegrass", density: 1.805),
+        ],
+    ),
 )

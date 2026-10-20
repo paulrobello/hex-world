@@ -22,4 +22,10 @@
     networks: [
         (kind: River, from: Edge(3), to: Node("mouth")),
     ],
+    props: (
+        scatter: [
+            (piece: "beach_driftwood", density: 0.151, lane_clearance: 5.5),
+            (piece: "beach_dunegrass", density: 0.602, lane_clearance: 5.5),
+        ],
+    ),
 )

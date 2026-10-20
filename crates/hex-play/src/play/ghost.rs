@@ -735,7 +735,8 @@ mod tests {
     #[test]
     fn water_tile_slots_tint_by_their_ground() {
         assert_eq!(slot_role("beach_grass"), Some(Role::Grass));
-        assert_eq!(slot_role("beach_dunegrass"), Some(Role::Grass));
+        assert_eq!(slot_role("beach_dunegrass_foliage"), Some(Role::Grass));
+        assert_eq!(slot_role("beach_dunegrass_sand"), Some(Role::Sand));
         assert_eq!(slot_role("beach_sand"), Some(Role::Sand));
         assert_eq!(slot_role("beach_wet"), Some(Role::WetSand));
         assert_eq!(slot_role("beach_seabed"), Some(Role::Seabed));
@@ -743,7 +744,7 @@ mod tests {
         assert_eq!(slot_role("river_bed"), Some(Role::Seabed));
         assert_eq!(slot_role("river_stone"), Some(Role::Prop));
         assert_eq!(slot_role("beach_skirt"), None);
-        assert_eq!(slot_role("beach_driftwood"), None);
+        assert_eq!(slot_role("beach_driftwood_wood"), None);
     }
 
     /// The surface covers the hex where the tile's water is: all of the ocean, the seaward side of
