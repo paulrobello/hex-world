@@ -1,0 +1,9 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-20",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/rail_buffer_stop/ref-2.jpg"
+  ],
+  "notes": "D2: ref-2, the bent-rail stop. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+}

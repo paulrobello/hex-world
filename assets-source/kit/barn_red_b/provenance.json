@@ -278,6 +278,13 @@
       "requested": "2026-10-20",
       "revision": "first build",
       "notes": "Pending owner review; not an approval. First barn_red variant (PRD §6 Variety), against assets-source/refs/farm ref-1's lean-to (A17: pitched roof, red boards, dark slate): a lower red board-and-batten barn (ridge 6.05 m against barn_red's 7.8 m) whose 45° slate roof runs on past its yard-side wall as a 22° catslide over an open lean-to shed on four white posts with knee braces, a louvred cupola on the ridge, cross-braced double doors and a cross-braced hayloft door on the gable facing the hay. Inside barn_red's collider box (10.6 x 7.7 m) and LOD0 extents, so every farm-slot clearance holds. Review sheet: docs/checkpoints/barn_red_b/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A1 (the walker collider follows the closed walls; ridge and cupola perches to add)."
     }
   ]
 }

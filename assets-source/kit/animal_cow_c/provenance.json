@@ -856,6 +856,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Hero variant of animal_cow for the farm's standing cow slot (PRD §6 Variety, hex_core::HERO_VARIANTS, about one slot in three), against assets-source/refs/farm_animals (A17: hornless, brown and white, ref-2's smooth form): animal_cow's exact stations, pose and size in a polled-Hereford-like coat, deep red-brown with a white face and poll, white crest, dewlap, brisket, underline, socks and tail switch, red ears and eye patches. LOD0/LOD1 tris equal animal_cow's (1058, 468); LOD2 138 (animal_cow 148) with a four-station head and three-sided legs. Review sheet: docs/checkpoints/animal_cow_c/sheet.jpg (refs, EEVEE beside animal_cow and animal_cow_b, in play on a farm whose slot draws the variant: play distance, sun and shade close-ups, eye level). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A10 (with the LOD2 head fix)."
     }
   ]
 }

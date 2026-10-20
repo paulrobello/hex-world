@@ -1,0 +1,11 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-20",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/boat_rowing/ref-1.jpg",
+    "assets-source/refs/boat_rowing/ref-2.jpg",
+    "assets-source/refs/boat_rowing/ref-3.jpg"
+  ],
+  "notes": "D4 (BA1): approved. Moored and rowing routes on rivers; turns back at bridges; at most 3. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+}

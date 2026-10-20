@@ -348,6 +348,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Second carriage design, a four-wheeled brake third. No approved reference draws it: assets-source/refs/train ref-1 and ref-2 (A17: two carriages) show two identical passenger carriages, so this keeps the drawn carriage's body, curved roof, panelling, underframe and colours and changes only the tail end: a guard's compartment with double luggage doors, a raised roof lookout over it with windows all round (3.95 m above the rail top, under the engine's 4.2 m) and an open end veranda with corner posts and railings. Same envelope as train_carriage (7.14 m over buffers, axles at +-1.5 m, 2.96 m wide), so the consist spacing and every clearance are unchanged. Marshalled last in every train (engine, train_carriage, train_carriage_b) with the veranda at the tail: docs/checkpoints/train_carriage_b/integration.patch. Runtime colour via the COLOR_0 paint mask as the cars and train_carriage. Review sheet: docs/checkpoints/train_carriage_b/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A13 (approved as built; to mix per train)."
     }
   ]
 }

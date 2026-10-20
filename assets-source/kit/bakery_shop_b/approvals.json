@@ -5,5 +5,12 @@
     "requested": "2026-10-20",
     "revision": "first build",
     "notes": "Pending owner review; not an approval. First bakery_shop variant (PRD §6 Variety) after ref-1's twin front gables (assets-source/refs/bakery, A17): a timber-framed bakery with a hipped clay-tile roof on 3.5 m eaves (bakery_shop: a 50° gable on 4.4 m eaves with one jettied cross wing), two front gables with casements, a broad brick bread-oven stack with three pots astride the short ridge (bakery_shop: two external gable-end stacks), a flat shelved shop window under an oak fascia beam and one long clay-tile pentice over the window and the door, with bakery_shop's bench and bread basket. Inside bakery_shop's collider box and LOD0 extents, and below 2.7 m inside the parking test's bakery boxes plus one added shop-front box, so the bakery slot's clearances hold. Review sheet: docs/checkpoints/bakery_shop_b/sheet.jpg. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A2 (the back-left roof corner to pull in to 0.12 m)."
   }
 ]

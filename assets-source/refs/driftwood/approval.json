@@ -1,0 +1,10 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-20",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/driftwood/ref-1.jpg",
+    "assets-source/refs/driftwood/ref-2.jpg"
+  ],
+  "notes": "D3 (BD-A1): approved; replaces the beach centres' baked logs; about 3 per straight beach tile. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+}

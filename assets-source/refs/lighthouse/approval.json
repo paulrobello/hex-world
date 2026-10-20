@@ -1,0 +1,11 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-20",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/lighthouse/ref-1.jpg",
+    "assets-source/refs/lighthouse/ref-2.jpg",
+    "assets-source/refs/lighthouse/ref-3.jpg"
+  ],
+  "notes": "D4 (BA3): approved; the beam questions (D4-Q4, BQ10-BQ14) are still open. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+}

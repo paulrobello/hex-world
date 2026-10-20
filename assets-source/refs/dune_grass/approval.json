@@ -1,0 +1,10 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-20",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/dune_grass/ref-1.jpg",
+    "assets-source/refs/dune_grass/ref-2.jpg"
+  ],
+  "notes": "D3 (BD-A2): approved; replaces the baked tufts; 10-14 clumps per straight beach tile, each on its own low sand mound. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+}

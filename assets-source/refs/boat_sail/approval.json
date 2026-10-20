@@ -1,0 +1,10 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-20",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/boat_sail/ref-1.jpg",
+    "assets-source/refs/boat_sail/ref-2.jpg"
+  ],
+  "notes": "D4 (BA2): approved. Ocean and river mouths only; moored and sailing routes; at most 3. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+}

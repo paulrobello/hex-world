@@ -289,6 +289,13 @@
       "status": "pending",
       "revision": "first build",
       "notes": "Second house_twostorey variant (PRD §6 Variety, ref-1's middle house: rubble-stone ground floor, front cross gable), awaiting owner review of docs/checkpoints/house_twostorey_c/sheet.jpg (refs, textured EEVEE stills, the lineup beside house_twostorey and house_twostorey_b, in-engine play distance, sun and shade close-ups, eye level, walk eye level, scale with a parked car)."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A3."
     }
   ]
 }

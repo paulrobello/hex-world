@@ -5,5 +5,12 @@
     "requested": "2026-10-20",
     "revision": "new boid species: Atlantic mackerel",
     "notes": "Pending owner approval; not an approval. Second boid fish so sea water reads as a different species from the river trout: fish spawned in river and spring water draw fish_trout (its river palette), fish spawned in mouth, coast and ocean water draw fish_mackerel, the same spawn-water rule as the palettes and the schools. Form from the approved fish references (ref-3's stylized-real body, ref-2's school of dark blue-grey torpedoes); no approved reference shows a mackerel (teal back with dark wavy bars, silver flanks, white belly, two dorsal fins, five finlets above and below, deep fork): approve it from the sheet or ask for a mackerel reference. Owner question: with the mackerel in the sea, the approved ocean-palette trout (Q5) is no longer drawn in play; keep it that way, or bring it back (for example river mouths only, which would split the one sea school by species). Real size 0.40 m, drawn at the trout's x2, inside the trout's height so the confinement band is unchanged. Review docs/checkpoints/fish_mackerel/sheet.jpg and assets-source/kit/fish_mackerel/renders/vs_*.jpg. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A12 (approved from the sheet; sea fish to brighten)."
   }
 ]
