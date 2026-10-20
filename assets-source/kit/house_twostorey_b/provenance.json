@@ -1,0 +1,292 @@
+{
+  "pieceId": "house_twostorey_b",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/house_twostorey_b.py",
+    "sha256": "9aae6449e4f23347dcca12235a0a3a66b576b195b463cee0b01f881f8b4fc560"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    },
+    {
+      "path": "scripts/blender/kit/_house_jettied.py",
+      "sha256": "766e3b55947471a6e69e961c878174d3061c29a4f375126ee03b7e15fe0b60a2"
+    },
+    {
+      "path": "scripts/blender/kit/_house_longhouse.py",
+      "sha256": "c4e8805ae0750279370f70cde6c79cec36bf6d734e7c76e56b687c8f5c65a44b"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.6,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "marginPx": 4,
+    "maskStats": {
+      "aoMean": 0.6606765985488892,
+      "aoP05": 0,
+      "centroids": {
+        "lod0": {
+          "minA": {
+            "brick": 0,
+            "door": 1,
+            "frame": 0,
+            "glass": 0.529,
+            "roof": 0.047,
+            "stone": 0,
+            "timber": 0,
+            "walls": 0
+          },
+          "unbakedTris": 0
+        },
+        "lod1": {
+          "minA": {
+            "brick": 0,
+            "door": 1,
+            "frame": 0,
+            "glass": 0.984,
+            "roof": 0,
+            "stone": 0,
+            "timber": 0,
+            "walls": 0
+          },
+          "unbakedTris": 0
+        },
+        "lod2": {
+          "minA": {
+            "brick": 0.624,
+            "door": 1,
+            "glass": 1,
+            "roof": 0.125,
+            "timber": 0.655,
+            "walls": 0.031
+          },
+          "unbakedTris": 0
+        }
+      },
+      "coverage": 0.39083099365234375,
+      "filledTexels": 49518,
+      "nightTexels": 15532
+    },
+    "masksDensityBySlot": {
+      "lod0": {
+        "brick": 14.91,
+        "door": 14.91,
+        "frame": 14.91,
+        "glass": 14.91,
+        "roof": 12.78,
+        "stone": 14.91,
+        "timber": 14.91,
+        "walls": 14.91
+      },
+      "lod1": {
+        "brick": 12.75,
+        "door": 12.75,
+        "frame": 12.75,
+        "glass": 12.75,
+        "roof": 13.4,
+        "stone": 12.75,
+        "timber": 12.75,
+        "walls": 14.91
+      },
+      "lod2": {
+        "brick": 12.75,
+        "door": 12.75,
+        "glass": 12.75,
+        "roof": 14.9,
+        "timber": 12.53,
+        "walls": 14.91
+      }
+    },
+    "masksDensityPxPerM": {
+      "house_twostorey_b_lod0": {
+        "max": 14.908304430866895,
+        "median": 14.907581974158257,
+        "min": 12.61815951526151
+      },
+      "house_twostorey_b_lod1": {
+        "max": 14.908049992045827,
+        "median": 12.748965453158242,
+        "min": 12.306131957265922
+      },
+      "house_twostorey_b_lod2": {
+        "max": 14.90764075929845,
+        "median": 12.74889509666715,
+        "min": 12.311135123772567
+      }
+    },
+    "receiverSignature": "ea1d0de892f398429ffc575977a22f05bcb5063993b5e4ef0692720de9381297",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 14.908304430866895,
+      "median": 14.907581974158257,
+      "min": 12.61815951526151
+    },
+    "uvMargin": 0.012
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1192,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 523,
+      "ratio": 0.438758389261745
+    },
+    {
+      "lod": 2,
+      "tris": 82,
+      "ratio": 0.06879194630872483
+    }
+  ],
+  "collider": {
+    "node": "house_twostorey_b_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 14.908304430866895,
+    "median": 14.907581974158257,
+    "min": 12.61815951526151
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 315394,
+        "astc": 296915
+      },
+      "glbBytes": 107444
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/house_twostorey_b/house_twostorey_b.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 315394,
+        "sha256": "a7ff57b7558f25102a09d5e9b9c58f49738b1125ee92199772d1eed9b21735fe"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/house_twostorey_b/house_twostorey_b.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 296915,
+        "sha256": "db68d7b7187b1be6c8d7873cb125c0161b884c154f7f2afd97ac5ca5a2cfa43d"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/house_twostorey_b/house_twostorey_b.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 456226,
+        "sha256": "15030065cb24a8d71469b17644eff1cb964846c37d1f1180aad4d242a90bc43b"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/house_twostorey_b/house_twostorey_b.glb",
+      "sha256": "d2ac2c2873c83eb49f9b6d63a75b3026aca99a944a62ef523f0dd3f74f33ee93",
+      "bytes": 107444
+    },
+    {
+      "path": "assets/kit/p1/house_twostorey_b/house_twostorey_b.masks.bc7.ktx2",
+      "sha256": "a7ff57b7558f25102a09d5e9b9c58f49738b1125ee92199772d1eed9b21735fe",
+      "bytes": 315394
+    },
+    {
+      "path": "assets/kit/p1/house_twostorey_b/house_twostorey_b.masks.astc.ktx2",
+      "sha256": "db68d7b7187b1be6c8d7873cb125c0161b884c154f7f2afd97ac5ca5a2cfa43d",
+      "bytes": 296915
+    },
+    {
+      "path": "assets/kit/p1/house_twostorey_b/house_twostorey_b.masks.png",
+      "sha256": "15030065cb24a8d71469b17644eff1cb964846c37d1f1180aad4d242a90bc43b",
+      "bytes": 456226
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/house_cluster/ref-1.jpg",
+      "sha256": "99b42b6c4e28aff03bce328b31741cd433fc2c57df7545f3fd242952d502b58b",
+      "sourceSha256": "edbe02ef5c616667e08968fb3233de8a14e035356373a1d2c42fae69b0e26125",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "b55a6d3e-d7bf-4ab7-8176-691507ea9036",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), with a cluster of 3 small stylized-real rural houses (pitched clay-tile and slate roofs, rendered plaster and timber walls, chimneys, timber window frames) on a level gravel-and-paving pad, small gardens, low hedges and a picket fence, and a short asphalt driveway that leaves the pad and meets one flat edge of the tile square-on, where it joins a short stub of 6 m wide two-lane asphalt road with low kerbs and a faded dashed centre line, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/house_cluster/ref-2.jpg",
+      "sha256": "ca1a9994c8adba7a40be87bec53693cc62d9ef2779f5186a69b5784a4bf24c42",
+      "sourceSha256": "0d70d8f35debb193664fc98735985b7c463daa5a785244f953541017ac398316",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "94f3c6ca-f473-4f6c-9921-ba62d77810e7",
+      "prompt": "Close-up of one small stylized-real rural house on a diorama tile: weathered clay roof tiles, rendered plaster walls, timber window frames and front door, a chimney, a gravel path, a low hedge and a small garden, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T09:59:15.730Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/house_cluster/ref-1.jpg",
+        "assets-source/refs/house_cluster/ref-2.jpg"
+      ],
+      "notes": "Approved, including the timber-framed English cottage style (owner, in chat). Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "first build",
+      "notes": "New house_twostorey variant for house_cluster's house 2 slot (PRD §6 Variety): a jettied, hip-roofed timber-framed two-storey house, awaiting owner review of docs/checkpoints/house_twostorey_b/sheet.jpg (refs, textured EEVEE stills beside house_twostorey and house_longhouse, in-engine play distance in a cluster, sun and shade close-ups on the yawed copy, eye level 1.7 m, scale with a parked car)."
+    }
+  ]
+}

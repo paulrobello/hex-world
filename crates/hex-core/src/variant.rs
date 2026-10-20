@@ -7,7 +7,10 @@ use crate::{Axial, HeroProp, TileDef};
 
 /// Each authored hero piece with the variants a slot of it may draw instead. A new variant is one
 /// more id in its row; a new family is one more row.
-pub const HERO_VARIANTS: [(&str, &[&str]); 1] = [("house_cottage", &["house_longhouse"])];
+pub const HERO_VARIANTS: [(&str, &[&str]); 2] = [
+    ("house_cottage", &["house_longhouse"]),
+    ("house_twostorey", &["house_twostorey_b"]),
+];
 
 /// One slot in this many draws a variant (the rest keep the authored piece).
 pub const VARIANT_ONE_IN: u64 = 3;
@@ -156,11 +159,14 @@ mod tests {
         let c = TileCatalog::builtin().unwrap();
         let def = c.get("house_cluster").unwrap();
         let (mut cottage, mut longhouse) = (0, 0);
+        let (mut twostorey, mut twostorey_b) = (0, 0);
         for cell in cells() {
             for (i, (h, piece)) in def.hero_pieces(cell).enumerate() {
                 match (h.piece.as_str(), piece) {
                     ("house_cottage", "house_cottage") => cottage += 1,
                     ("house_cottage", "house_longhouse") => longhouse += 1,
+                    ("house_twostorey", "house_twostorey") => twostorey += 1,
+                    ("house_twostorey", "house_twostorey_b") => twostorey_b += 1,
                     (a, b) => assert_eq!(a, b, "slot {i} at {cell:?}"),
                 }
             }
@@ -168,6 +174,9 @@ mod tests {
         let share = longhouse as f32 / (cottage + longhouse) as f32;
         assert!((0.28..0.39).contains(&share), "longhouse share {share}");
         assert!(cottage > longhouse);
+        let share = twostorey_b as f32 / (twostorey + twostorey_b) as f32;
+        assert!((0.28..0.39).contains(&share), "twostorey_b share {share}");
+        assert!(twostorey > twostorey_b);
     }
 
     #[test]
@@ -182,7 +191,7 @@ mod tests {
                 }
             }
         }
-        assert_eq!(hero_variants("house_twostorey"), &[] as &[&str]);
+        assert_eq!(hero_variants("barn_red"), &[] as &[&str]);
         assert_eq!(hero_variants("tree_hero_oak"), &[] as &[&str]);
     }
 
@@ -199,7 +208,15 @@ mod tests {
         );
         assert_eq!(
             pick_piece("house_twostorey", cell, 1, VariantPick::FixedSlot(1)),
+            "house_twostorey_b"
+        );
+        assert_eq!(
+            pick_piece("house_twostorey", cell, 2, VariantPick::FixedSlot(1)),
             "house_twostorey"
+        );
+        assert_eq!(
+            pick_piece("barn_red", cell, 1, VariantPick::FixedSlot(1)),
+            "barn_red"
         );
         // Per cluster: every cottage slot of a cell agrees.
         for cell in cells() {

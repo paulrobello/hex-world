@@ -371,7 +371,12 @@ mod tests {
         let c = TileCatalog::builtin().unwrap();
         let def = c.get("house_cluster").unwrap();
         let drawn = drawn_pieces(def, &c);
-        for piece in ["house_cottage", "house_longhouse", "house_twostorey"] {
+        for piece in [
+            "house_cottage",
+            "house_longhouse",
+            "house_twostorey",
+            "house_twostorey_b",
+        ] {
             assert!(drawn.contains(piece), "{piece}: {drawn:?}");
         }
         for s in &def.props.scatter {

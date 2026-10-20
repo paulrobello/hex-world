@@ -218,7 +218,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 30] = [
+pub const FOOTPRINTS: [(&str, Footprint); 31] = [
     (
         "tree_forest",
         Footprint {
@@ -335,6 +335,13 @@ pub const FOOTPRINTS: [(&str, Footprint); 30] = [
         "house_longhouse",
         Footprint {
             ground: 4.21,
+            crown: 0.0,
+        },
+    ),
+    (
+        "house_twostorey_b",
+        Footprint {
+            ground: 4.66,
             crown: 0.0,
         },
     ),
@@ -457,7 +464,7 @@ pub struct GroundBox {
 /// The buildings whose collider is a rectangle (`ground_boxes_match_the_kit` checks them against
 /// the GLBs). Every other piece, the windmill's round tower included, is a disc of its
 /// [`Footprint::ground`].
-pub const GROUND_BOXES: [(&str, GroundBox); 5] = [
+pub const GROUND_BOXES: [(&str, GroundBox); 6] = [
     (
         "house_cottage",
         GroundBox {
@@ -477,6 +484,13 @@ pub const GROUND_BOXES: [(&str, GroundBox); 5] = [
         GroundBox {
             min: [-2.42, -3.35],
             max: [2.42, 3.44],
+        },
+    ),
+    (
+        "house_twostorey_b",
+        GroundBox {
+            min: [-2.75, -3.75],
+            max: [2.75, 3.75],
         },
     ),
     (

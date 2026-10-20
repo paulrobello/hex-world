@@ -623,9 +623,12 @@ mod tests {
                 "{} ghosts its base",
                 def.id
             );
-            for h in &def.props.hero {
+            // Each hero slot ghosts the piece it draws at the cell: the authored one or a variant.
+            for (i, h) in def.props.hero.iter().enumerate() {
                 assert!(
-                    pieces.iter().any(|(id, ..)| *id == h.piece.as_str()),
+                    pieces
+                        .iter()
+                        .any(|(id, ..)| def.hero_options(i).any(|o| o == *id)),
                     "{} ghosts hero {}",
                     def.id,
                     h.piece.as_str()

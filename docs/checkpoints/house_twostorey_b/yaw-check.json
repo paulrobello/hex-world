@@ -1,0 +1,12 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 150 },
+  { "cmd": "camera", "pos": [3.03, 2.4, -49.75], "look_at": [-3.03, 2.6, -52.25] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "yaw-twostorey_b-sun" },
+  { "cmd": "camera", "pos": [-27.71, 2.4, -3.5], "look_at": [-32.91, 2.6, 0.5] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "yaw-twostorey-sun" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

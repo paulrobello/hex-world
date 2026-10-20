@@ -140,8 +140,33 @@ pub fn kit_layout() -> Vec<Placement> {
         y: PARK_Y,
         ..hero("car_sedan", -1, -1, [-1.0, -2.6], 180.0)
     });
+    // The two-storey variant (house_twostorey_b) in a third house_cluster on (1, -2) at rot 1: its
+    // road stub (local edge 0, world edge 1) meets the Y junction's world-edge-4 stub on (1, -1). It
+    // stands in house 2's slot, its front turned to world yaw 60 toward the kit sun, between the two
+    // cottages, with a sedan parked in front of it at park-2 (`PARK` in house_pad.py).
+    v.push(place("meadow_base", 1, -2, 1));
+    v.push(place("house_pad", 1, -2, 1));
+    v.push(place("road_straight_edge", 1, -2, 1));
+    for (piece, at, yaw_deg) in [
+        ("house_cottage", [-0.5, -7.0], 90.0),
+        ("house_cottage", [-0.5, 7.0], 270.0),
+        ("house_twostorey_b", [-7.5, 0.0], 0.0),
+    ] {
+        v.push(Placement {
+            offset: at,
+            yaw_deg,
+            ..place(piece, 1, -2, 1)
+        });
+    }
+    v.push(Placement {
+        offset: [-1.0, 0.0],
+        yaw_deg: 180.0,
+        y: PARK_Y,
+        ..place("car_sedan", 1, -2, 1)
+    });
     // Road-family centre pieces on ring cells, each with its edge stubs. The wide bend on (0, -1)
-    // turns from world edge 3 (the longhouse cluster's road) to world edge 5 (the outer rim).
+    // turns from world edge 3 (the longhouse cluster's road) to world edge 5 (the twostorey_b
+    // cluster's grass on (1, -2)).
     v.push(place("road_bend_120_center", 0, -1, 3));
     v.push(place("road_straight_edge", 0, -1, 3));
     v.push(place("road_straight_edge", 0, -1, 5));
@@ -745,6 +770,34 @@ mod tests {
                 .any(|p| p.piece == "road_straight_edge" && p.cell == bend && p.rot == 3)
         );
         assert_eq!((lh.offset, lh.yaw_deg), ([-0.5, -7.0], 90.0));
+    }
+
+    #[test]
+    fn twostorey_b_cluster_meets_the_junction() {
+        // The third cluster's road stub (local edge 0, turned by rot) meets the Y junction's stub on
+        // that world edge's far side, and house_twostorey_b stands in house 2's slot of
+        // data/tiles/house_cluster.ron.
+        let l = kit_layout();
+        let h = l.iter().find(|p| p.piece == "house_twostorey_b").unwrap();
+        assert_eq!((h.offset, h.yaw_deg), ([-7.5, 0.0], 0.0));
+        assert!(
+            l.iter()
+                .any(|p| p.piece == "house_pad" && p.cell == h.cell && p.rot == h.rot)
+        );
+        assert!(
+            l.iter()
+                .any(|p| p.piece == "road_straight_edge" && p.cell == h.cell && p.rot == h.rot)
+        );
+        let j = h.cell.neighbor(h.rot);
+        assert!(
+            l.iter()
+                .any(|p| p.piece == "road_junction_center" && p.cell == j)
+        );
+        assert!(
+            l.iter().any(|p| p.piece == "road_straight_edge"
+                && p.cell == j
+                && p.rot == (h.rot + 3) % 6)
+        );
     }
 
     #[test]

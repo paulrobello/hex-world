@@ -59,10 +59,11 @@ pub const MAX_STEP: f32 = 0.4;
 const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not.
-pub const OBSTACLES: [&str; 22] = [
+pub const OBSTACLES: [&str; 23] = [
     "house_cottage",
     "house_twostorey",
     "house_longhouse",
+    "house_twostorey_b",
     "windmill",
     "barn_red",
     "bakery_shop",
@@ -1055,6 +1056,7 @@ mod tests {
             ("house_cottage", "building"),
             ("house_twostorey", "building"),
             ("house_longhouse", "building"),
+            ("house_twostorey_b", "building"),
             ("tree_hero_oak", "tree"),
             ("tree_forest_b", "tree"),
             ("rock_small", "rock"),
@@ -1506,7 +1508,8 @@ mod tests {
     }
 
     /// Walk blocks at the piece the cell draws: a cluster at (1, 0) draws the longhouse in house
-    /// 1's slot (`hex_core::hero_piece`), at the origin the cottage.
+    /// 1's slot (`hex_core::hero_piece`), at the origin the cottage; both draw house_twostorey_b in
+    /// house 2's slot, and (2, -1) keeps house_twostorey.
     #[test]
     fn walk_obstacles_are_the_drawn_hero_variant() {
         let pieces = |q, r| -> Vec<String> {
@@ -1519,11 +1522,15 @@ mod tests {
         };
         assert_eq!(
             pieces(0, 0),
-            ["house_cottage", "house_cottage", "house_twostorey"]
+            ["house_cottage", "house_cottage", "house_twostorey_b"]
         );
         assert_eq!(
             pieces(1, 0),
-            ["house_cottage", "house_longhouse", "house_twostorey"]
+            ["house_cottage", "house_longhouse", "house_twostorey_b"]
+        );
+        assert_eq!(
+            pieces(2, -1),
+            ["house_cottage", "house_cottage", "house_twostorey"]
         );
         // House 1 sits at (-0.5, 7.0): walk at its yard front from the pad.
         let g = world(&[(1, 0, "house_cluster", 0)]);
@@ -1536,31 +1543,38 @@ mod tests {
 
     #[test]
     fn a_house_wall_stops_the_walker_on_a_turned_tile() {
-        for rotation in [0u8, 2] {
-            let g = world(&[(0, 0, "house_cluster", rotation)]);
-            // The two-storey house stands at (-7.5, 0) in the tile frame: walk at it from the
-            // tile centre, through the tile's turn.
-            let house = Vec2::from({
-                let p = turn(rotation, [-7.5, 0.0, 0.0]);
-                [p[0], p[2]]
-            });
-            let start = house * (2.0 / 7.5);
-            assert!(g.stand(start).is_ok(), "r{rotation}: start on the pad");
-            let s = walk(&g, start, house - start, 8.0);
-            assert_eq!(
-                s.blocked,
-                Some(Blocked::Obstacle("house_twostorey".into())),
-                "r{rotation}"
-            );
-            let gone = s.pos.xz().distance(start);
-            assert!(
-                gone > 0.5 && gone < 5.0,
-                "r{rotation}: stopped {gone} m out, short of the house centre"
-            );
-            assert!(
-                g.obstacle(s.pos.xz()).is_none(),
-                "r{rotation}: never inside"
-            );
+        // The origin draws house_twostorey_b in house 2's slot, (2, -1) house_twostorey.
+        for (q, r, piece) in [(0, 0, "house_twostorey_b"), (2, -1, "house_twostorey")] {
+            for rotation in [0u8, 2] {
+                let g = world(&[(q, r, "house_cluster", rotation)]);
+                let c = centre(q, r);
+                // The two-storey house stands at (-7.5, 0) in the tile frame: walk at it from the
+                // tile centre, through the tile's turn.
+                let house = Vec2::from({
+                    let p = turn(rotation, [-7.5, 0.0, 0.0]);
+                    [p[0], p[2]]
+                });
+                let start = c + house * (2.0 / 7.5);
+                assert!(
+                    g.stand(start).is_ok(),
+                    "{piece} r{rotation}: start on the pad"
+                );
+                let s = walk(&g, start, c + house - start, 8.0);
+                assert_eq!(
+                    s.blocked,
+                    Some(Blocked::Obstacle(piece.into())),
+                    "r{rotation}"
+                );
+                let gone = s.pos.xz().distance(start);
+                assert!(
+                    gone > 0.5 && gone < 5.0,
+                    "{piece} r{rotation}: stopped {gone} m out, short of the house centre"
+                );
+                assert!(
+                    g.obstacle(s.pos.xz()).is_none(),
+                    "{piece} r{rotation}: never inside"
+                );
+            }
         }
     }
 

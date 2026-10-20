@@ -1,0 +1,114 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.6606765985488892,
+    "aoP05": 0.0,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "brick": 0.0,
+          "door": 1.0,
+          "frame": 0.0,
+          "glass": 0.529,
+          "roof": 0.047,
+          "stone": 0.0,
+          "timber": 0.0,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "brick": 0.0,
+          "door": 1.0,
+          "frame": 0.0,
+          "glass": 0.984,
+          "roof": 0.0,
+          "stone": 0.0,
+          "timber": 0.0,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "brick": 0.624,
+          "door": 1.0,
+          "glass": 1.0,
+          "roof": 0.125,
+          "timber": 0.655,
+          "walls": 0.031
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.39083099365234375,
+    "filledTexels": 49518,
+    "nightTexels": 15532
+  },
+  "masksDensityBySlot": {
+    "lod0": {
+      "brick": 14.91,
+      "door": 14.91,
+      "frame": 14.91,
+      "glass": 14.91,
+      "roof": 12.78,
+      "stone": 14.91,
+      "timber": 14.91,
+      "walls": 14.91
+    },
+    "lod1": {
+      "brick": 12.75,
+      "door": 12.75,
+      "frame": 12.75,
+      "glass": 12.75,
+      "roof": 13.4,
+      "stone": 12.75,
+      "timber": 12.75,
+      "walls": 14.91
+    },
+    "lod2": {
+      "brick": 12.75,
+      "door": 12.75,
+      "glass": 12.75,
+      "roof": 14.9,
+      "timber": 12.53,
+      "walls": 14.91
+    }
+  },
+  "masksDensityPxPerM": {
+    "house_twostorey_b_lod0": {
+      "max": 14.908304430866895,
+      "median": 14.907581974158257,
+      "min": 12.61815951526151
+    },
+    "house_twostorey_b_lod1": {
+      "max": 14.908049992045827,
+      "median": 12.748965453158242,
+      "min": 12.306131957265922
+    },
+    "house_twostorey_b_lod2": {
+      "max": 14.90764075929845,
+      "median": 12.74889509666715,
+      "min": 12.311135123772567
+    }
+  },
+  "receiverSignature": "ea1d0de892f398429ffc575977a22f05bcb5063993b5e4ef0692720de9381297",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 14.908304430866895,
+    "median": 14.907581974158257,
+    "min": 12.61815951526151
+  },
+  "uvMargin": 0.012
+}
