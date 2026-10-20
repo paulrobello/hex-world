@@ -38,7 +38,7 @@ check(river?.river === true && river.largest_group <= 5 && river.largest_group >
 check(coast?.river === false && coast.largest_group === coast.fish && coast.singles === 0, "coast fish: one school", coast);
 check(b.roosts === 24, "12 roosts on each oak tile (its oak's canopy)", b.roosts);
 check(b.dispatched === 1000, "the GPU pass ran every slot", b.dispatched);
-check(b.pieces === "ready", "the flock draws the bird_starling, bird_goldfinch and fish_trout kit pieces", b.pieces);
+check(b.pieces === "ready", "the flock draws the bird_starling, bird_goldfinch, fish_trout and fish_mackerel kit pieces", b.pieces);
 check(river?.river_palette === river?.fish && river?.fish > 0, "river fish take the river palette (owner Q5)", river);
 check(coast?.river_palette === 0 && coast?.fish > 0, "coast and ocean fish take the ocean palette", coast);
 

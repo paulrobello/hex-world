@@ -1,0 +1,181 @@
+{
+  "name": "fish_mackerel",
+  "date": "2026-10-20T20:05:25.278Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 10,
+      "bytes": 64108,
+      "sha256": "5a3385d6a093737323b27a3fc53dcb80f56fe1d36baae5647989dd989cb18dea"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 10,
+      "bytes": 63685,
+      "sha256": "eae366f66046fea94862ecf65c29dd03068ffe8a20d9f2f0d84b2c1a34703544"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 74730,
+      "sha256": "f94be9f1ce3ee71489cbc89c5047c73568b28d50ca7072b5b9a7391a8d415be8"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 8,
+      "bytes": 641,
+      "sha256": "101b02e6dc76c65b5f3c9b7875bb54a761d5d39d60ed7ae2daa731f592f76eff"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 8,
+      "bytes": 641,
+      "sha256": "4c750f9d764c2a0f87d63f126edfffc66319b95d3a0ed634726b435f230c29b8"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 709,
+      "sha256": "9789d24af00c5448c0a8ea586d9f46c6b7b52f52f256cd973a359ca440c48735"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 21957,
+      "sha256": "a05e2f77371de613e9da7e7fb8adfec43821223b022881f6132e147803d69e49"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 21972,
+      "sha256": "3ae9edd078648b58acb4664e5c446b399ee6f47963bd69ad25bfcd61ea99978c"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 33001,
+      "sha256": "6b6004bfb17336dbb17d560f31b38b44a63ca679929026baf4c9b2544f91d153"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 55691,
+      "sha256": "c7a0dfcdbad0f92d14958e096965e4ba0d4dca9e04fc23e09044233fbaa6e3aa"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 57495,
+      "sha256": "6bbd7e9a16d320e8c29d1722e78e498b37c1b54cdeb63526b350e9ea1885f693"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 61886,
+      "sha256": "4da2ac5bb07b09774ea2b454a2a40844e9510f189b629cd84b3e5b8bbe637328"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 142397,
+      "astc": 143793
+    },
+    "glbBytes": 21784
+  },
+  "glb": {
+    "bytes": 21784,
+    "sha256": "41ab89de314cfd3cd93b24aa75116046b89b58d7bc50dbb71743f9727598fccd"
+  }
+}

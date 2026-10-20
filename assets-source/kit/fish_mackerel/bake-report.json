@@ -1,0 +1,70 @@
+{
+  "aoDistanceM": 0.08,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.5896002650260925,
+      "p05": 0.17487581074237823
+    },
+    "ao": {
+      "mean": 0.9398918151855469,
+      "min": 0.0,
+      "p05": 0.6549019813537598,
+      "texels": 47850
+    },
+    "coverage": 0.18253326416015625
+  },
+  "blender": "5.2.2 LTS",
+  "boid": {
+    "form": "fish",
+    "frame": "runtime +z forward, +y up; pivot at the body centre on the length axis",
+    "realLengthM": 0.4,
+    "species": "mackerel",
+    "tc1": {
+      "u": "wag weight: 0 forward of z = 0.06, linear to 1 at the caudal fork tips (z = -0.20)",
+      "v": "0 (reserved)"
+    },
+    "variants": {
+      "ocean": [
+        0.0,
+        0.0
+      ],
+      "rule": "one palette: drawn for the ocean-palette (sea-spawned) fish only"
+    },
+    "wag": "x += U^2 * amplitude * sin(phase)",
+    "water": "sea"
+  },
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 512
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 128
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colourSource": "numpy paint (no colour bake)",
+  "device": "CPU",
+  "lodTris": [
+    240,
+    74,
+    30
+  ],
+  "marginPx": 4,
+  "receiverSignature": "914f2b66f65a9d61e575cf1f3e174328f33e5d504acac63461ffccfcf4f81b97",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 1375.841202479799,
+    "median": 1331.1998621813475,
+    "min": 1265.1420104006022
+  }
+}

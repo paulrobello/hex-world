@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/fish_mackerel.py",
+    "sha256": "cf7eece503d7058ec18d992b06619f290d083249eaed72e134cc90f3f647f6f5"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_fauna.py",
+      "sha256": "184bf0e63afe49ef50c453dec9e881575ef56aa54303340258e74de61f5cd2f1"
+    }
+  ],
+  "lodTris": {
+    "fish_mackerel_lod0": 240,
+    "fish_mackerel_lod1": 74,
+    "fish_mackerel_lod2": 30
+  },
+  "nodes": [
+    "fish_mackerel",
+    "fish_mackerel_collider",
+    "fish_mackerel_lod0",
+    "fish_mackerel_lod1",
+    "fish_mackerel_lod2"
+  ],
+  "pieceId": "fish_mackerel",
+  "sockets": []
+}

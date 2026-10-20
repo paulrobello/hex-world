@@ -12,9 +12,10 @@ Birds (root extras `form` "bird": bird_starling, bird_goldfinch): vs_ref1_glide.
 fold computed from TEXCOORD_1 with the contract in the generator's docstring (root extras `boid`); a
 bird other than the starling also gets vs_starling.jpg, itself beside the committed starling at real
 size (see `pair`). fish_trout: vs_ref3_palettes.jpg (ref-3 |
-the ocean palette above the river palette, profile, head to the left, as in the reference). Both also
-get play_distance.jpg: the piece rendered a few dozen px across and upscaled nearest-neighbour, as a
-silhouette and colour check at the size boids are drawn."""
+the ocean palette above the river palette, profile, head to the left, as in the reference). Another
+fish (fish_mackerel, one palette) gets vs_ref3_profile.jpg and vs_trout.jpg instead (see
+`fish_second`). All also get play_distance.jpg: the piece rendered a few dozen px across and upscaled
+nearest-neighbour, as a silhouette and colour check at the size boids are drawn."""
 import json
 import math
 import pathlib
@@ -253,6 +254,46 @@ def pair(lod0, base, w, extras):
     sheet([panel(TMP / "pair_glide.png"), panel(TMP / "pair_perch.png"), far], "vs_starling")
 
 
+TROUT = "fish_trout"
+
+
+def fish_second(lod0):
+    """A fish other than the trout (one palette, sea water: fish_mackerel): vs_ref3_profile.jpg (ref-3 |
+    profile, head to the left as in the reference | three-quarter from above), vs_trout.jpg (it above
+    fish_trout's river palette, the trout's look in play since the sea fish took the ocean water, both at
+    real size in profile | side by side from the strategic camera | both a few dozen px across) and
+    play_distance.jpg."""
+    lod0.data.materials.clear()
+    lod0.data.materials.append(material("sheet_fish"))
+    aim(cam, (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), 0.46)
+    render(TMP / "profile.png")
+    aim(cam, (0.0, 0.0, 0.0), (0.55, 0.35, 0.75), 0.46)
+    render(TMP / "above.png")
+    sheet([load(REPO / "assets-source" / "refs" / "fish" / "ref-3.jpg"), panel(TMP / "profile.png"),
+           panel(TMP / "above.png")], "vs_ref3_profile")
+    sheet([tiny(TMP / "far_top.png", (0.0, 0.0, 0.0), (0.3, 0.2, 1.0), 0.64),
+           tiny(TMP / "far_side.png", (0.0, 0.0, 0.0), (1.0, -0.2, 0.25), 0.64)], "play_distance")
+    kit = REPO / "assets" / "kit" / "p1" / TROUT
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=str(kit / f"{TROUT}.glb"))
+    new = [o for o in bpy.data.objects if o not in before]
+    troot = next(o for o in new if o.name == TROUT)
+    tlod0 = next(o for o in new if o.name.endswith("_lod0"))
+    for o in new:
+        if o.type == "MESH" and o is not tlod0:
+            o.hide_render = True
+    tlod0.data.materials.clear()
+    tlod0.data.materials.append(material("sheet_trout", (0.5, 0.0), piece=TROUT, maps=kit))
+    root.location, troot.location = (0.0, 0.0, 0.0), (0.0, 0.0, -0.17)
+    aim(cam, (0.0, 0.0, -0.085), (1.0, 0.0, 0.0), 0.52)
+    render(TMP / "pair_side.png")
+    root.location, troot.location = (0.07, 0.0, 0.0), (-0.07, 0.0, 0.0)
+    aim(cam, (0.0, 0.0, 0.0), (0.3, 0.2, 1.0), 0.52)
+    render(TMP / "pair_top.png")
+    far = tiny(TMP / "pair_far.png", (0.0, 0.0, 0.0), (0.3, 0.2, 1.0), 0.64)
+    sheet([panel(TMP / "pair_side.png"), panel(TMP / "pair_top.png"), far], "vs_trout")
+
+
 TMP.mkdir(parents=True, exist_ok=True)
 objs = gate.import_glb(str(STAGE / f"{PIECE}.glb"))
 root = next(o for o in objs if o.name == PIECE)
@@ -290,6 +331,8 @@ if extras.get("form") == "bird":
           "vs_ref3_perch")
     if PIECE != STARLING:
         pair(lod0, base, w, extras)
+elif PIECE != TROUT:
+    fish_second(lod0)
 else:
     lod0.data.materials.clear()
     lod0.data.materials.append(material("sheet_ocean"))

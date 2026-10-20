@@ -515,6 +515,25 @@ pub fn river_water(kind: &WaterKind) -> bool {
     matches!(kind, WaterKind::River | WaterKind::Spring(_))
 }
 
+/// Fish species the fish are drawn as (`boids::FISH`: 0 `fish_trout`, 1 `fish_mackerel`).
+pub const FISH_SPECIES: u32 = 2;
+
+/// The species of a fish spawned in water of `kind`: the trout in river and spring water, the
+/// mackerel in mouth, coast and ocean water. A fish's spawn water already decides its palette and
+/// its grouping (river groups, one sea school per region), so a school never mixes species and a
+/// trout that swims through a mouth into the sea stays a trout.
+pub fn fish_species(kind: &WaterKind) -> u32 {
+    u32::from(!river_water(kind))
+}
+
+/// The species of the fish spawned at `spawn` in `cells`: [`fish_species`] of its tile's water, the
+/// sea species outside every water tile (where the palette is the ocean's too).
+pub fn spawn_species(cells: &BTreeMap<Axial, CellWater>, spawn: Vec3) -> u32 {
+    cells
+        .get(&cell_at(spawn.xz()))
+        .map_or(1, |c| fish_species(&c.kind))
+}
+
 /// Distance from `local` (metres from the cell centre) to the segment of world edge `e`.
 fn edge_distance(local: Vec2, e: u8) -> f32 {
     let corner = |deg: f32| {
@@ -983,6 +1002,8 @@ pub struct BoidCounts {
     pub bird_slots: u32,
     pub leaving: u32,
     pub fish: u32,
+    /// `fish` by species ([`spawn_species`]).
+    pub fish_species: [u32; FISH_SPECIES as usize],
     pub roosts: u32,
     pub roosting: u32,
     pub settling: u32,
@@ -1434,6 +1455,15 @@ impl BoidPlan {
                 .filter(|s| s.kind == SlotKind::Leaving)
                 .count() as u32,
             fish: self.fish,
+            fish_species: std::array::from_fn(|s| {
+                self.slots
+                    .iter()
+                    .filter(|f| {
+                        f.kind == SlotKind::Fish
+                            && spawn_species(&self.water.cells, f.spawn) == s as u32
+                    })
+                    .count() as u32
+            }),
             roosts: self.roosts.len() as u32,
             roosting,
             settling,
@@ -2189,6 +2219,78 @@ mod tests {
         let r = &plan.counts(0.0).regions[0];
         assert!(r.river && r.river_fish == r.fish && r.river_largest_group <= RIVER_GROUP_MAX);
         assert_eq!(crate::boids::river_palettes(&plan), vec![r.fish]);
+    }
+
+    /// Two fish species by spawn water: the trout in river and spring water, the mackerel in the
+    /// mouth, coast and ocean water, by the test the palette and the grouping use, so river groups
+    /// are all trout and a sea school all mackerel. The same for a seed; the fish, the regions and
+    /// the schools are what they were without species.
+    #[test]
+    fn fish_species_follow_the_spawn_water() {
+        assert_eq!(fish_species(&WaterKind::River), 0);
+        assert_eq!(fish_species(&WaterKind::Spring(Vec2::ZERO)), 0);
+        assert_eq!(fish_species(&WaterKind::Ocean), 1);
+        let c = catalog();
+        let o = Axial::new(0, 0);
+        let (spring, mouth) = (o.neighbor(3), o.neighbor(0));
+        let sea = mouth.neighbor(0);
+        let joined = vec![
+            tile(spring.q, spring.r, "river_spring", 0),
+            tile(o.q, o.r, "river_straight", 0),
+            tile(mouth.q, mouth.r, "river_mouth", 0),
+            tile(sea.q, sea.r, "ocean", 0),
+            tile(sea.neighbor(1).q, sea.neighbor(1).r, "ocean", 0),
+            tile(sea.neighbor(5).q, sea.neighbor(5).r, "ocean", 0),
+        ];
+        for (name, world) in [("joined", joined), ("two regions", water_world())] {
+            for seed in 1..7u64 {
+                let mut a = BoidPlan::play(BoidBudget::HIGH, seed);
+                let mut b = BoidPlan::play(BoidBudget::HIGH, seed);
+                a.set_world_all(&world, &c, 0.0);
+                b.set_world_all(&world, &c, 0.0);
+                assert_eq!(a.slots, b.slots, "{name} seed {seed}: deterministic");
+                let first = a.birds as usize;
+                for (f, &k) in a.schools.iter().enumerate() {
+                    let p = a.slots[first + f].spawn;
+                    let s = spawn_species(&a.water.cells, p);
+                    assert_eq!(
+                        s,
+                        u32::from(k == 0),
+                        "{name} seed {seed} fish {f}: school {k}"
+                    );
+                    let palette = crate::boids::fish_palette(&a.water.cells, p);
+                    assert_eq!(
+                        palette > 0.0,
+                        s == 0,
+                        "{name} seed {seed} fish {f}: palette"
+                    );
+                }
+                let n = a.counts(0.0);
+                assert_eq!(
+                    n.fish_species.iter().sum::<u32>(),
+                    n.fish,
+                    "{name} seed {seed}"
+                );
+                let trout: u32 = crate::boids::river_palettes(&a).iter().sum();
+                assert_eq!(
+                    n.fish_species[0], trout,
+                    "{name} seed {seed}: trout are the river palette"
+                );
+                if name == "joined" {
+                    assert_eq!(
+                        n.fish_species,
+                        [24, 48],
+                        "seed {seed}: two river tiles of six"
+                    );
+                } else {
+                    let river: u32 = n.regions.iter().filter(|r| r.river).map(|r| r.fish).sum();
+                    assert!(
+                        river > 0 && n.fish_species == [river, n.fish - river],
+                        "{n:?}"
+                    );
+                }
+            }
+        }
     }
 
     #[test]

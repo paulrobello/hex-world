@@ -3,9 +3,11 @@
 //! The flock lives only on the GPU: a compute system in the `RenderGraph` schedule updates a
 //! `ShaderBuffer` before the cameras draw, and `BoidMaterial` reads the same buffer in its
 //! vertex shader to pose and place one kit piece per boid: a bird species per flock
-//! (`bird_starling` or `bird_goldfinch`, display x4, [`BIRDS`]) and `fish_trout` (display x2),
-//! each drawn from one merged copy of its LOD0 per slot it may hold, a bird species' copies over
-//! its own flocks' slots only ([`FormSlots`]; no per-boid LOD: the GPU moves the boids, so Bevy's
+//! (`bird_starling` or `bird_goldfinch`, display x4, [`BIRDS`]) and a fish species by spawn water
+//! (`fish_trout` in river water, `fish_mackerel` in the sea, display x2, [`FISH`]), each drawn
+//! from one merged copy of its LOD0 per slot it may hold, a bird species' copies over its own
+//! flocks' slots only, each fish species' over every fish slot, drawing only its own water's fish
+//! ([`FormSlots`], [`fish_form_draws`]; no per-boid LOD: the GPU moves the boids, so Bevy's
 //! visibility ranges never see them). The
 //! CPU half ([`plan`]) decides the budget split, where birds roost and when they launch, the
 //! water each fish school is confined to and each fish's palette; it uploads that as read-only
@@ -85,11 +87,57 @@ const MATERIAL_SHADER: &str = "shaders/boid_material.wesl";
 const WORKGROUP_SIZE: u32 = 64;
 /// Longest simulated step; the slow first frames would otherwise fling the flock apart.
 const MAX_DT: f32 = 1.0 / 30.0;
-/// The boid kit pieces (fish_trout and bird_starling owner-approved 2026-10-14) and their display
-/// scale over real size; every bird species draws at BIRD_SCALE.
-pub const FISH_PIECE: &str = "fish_trout";
+/// The boid kit pieces' display scale over real size (fish_trout and bird_starling owner-approved
+/// 2026-10-14): every bird species draws at BIRD_SCALE, every fish species at FISH_SCALE.
 pub const BIRD_SCALE: f32 = 4.0;
 pub const FISH_SCALE: f32 = 2.0;
+
+/// A fish piece and the fish it draws: those spawned in river water (`river`, the river palette,
+/// [`plan::river_water`]) or those spawned in sea water (mouth, coast and ocean tiles, the ocean
+/// palette). Every fish species shares the tail-wag contract ([`FISH_WAG`]) and the trout's height
+/// envelope, which the confinement band is built around (`plan::TROUT_TOP`, `plan::TROUT_BELLY`).
+#[derive(Clone, Copy, Debug)]
+pub struct FishPiece {
+    pub id: &'static str,
+    pub river: bool,
+}
+
+/// The fish species by index ([`plan::fish_species`]).
+pub const FISH: [FishPiece; plan::FISH_SPECIES as usize] = [
+    FishPiece {
+        id: "fish_trout",
+        river: true,
+    },
+    FishPiece {
+        id: "fish_mackerel",
+        river: false,
+    },
+];
+
+/// [`BoidForm::flags`]: the piece has a masks map (AO in A).
+pub const FLAG_MASKS: u32 = 1;
+/// [`BoidForm::flags`]: a fish form that draws the river-palette fish; without it a fish form draws
+/// the ocean-palette ones. Mirrors `FLAG_RIVER_FISH` in `boid_material.wesl`.
+pub const FLAG_RIVER_FISH: u32 = 2;
+
+/// Whether a fish form with `flags` draws the fish whose palette offset is `palette` (`Boid::anim`
+/// z, which the compute pass copies from the slot's `Ctl::look`), as `boid_material.wesl` decides:
+/// a fish's species follows its spawn water, as its palette does.
+pub fn fish_form_draws(flags: u32, palette: f32) -> bool {
+    (palette > RIVER_U * 0.5) == (flags & FLAG_RIVER_FISH != 0)
+}
+
+/// [`BoidForm::flags`] for a piece with or without a masks map, and the fish species it is, if any.
+pub fn form_flags(masks: bool, fish: Option<FishPiece>) -> u32 {
+    let mut flags = 0;
+    if masks {
+        flags |= FLAG_MASKS;
+    }
+    if fish.is_some_and(|f| f.river) {
+        flags |= FLAG_RIVER_FISH;
+    }
+    flags
+}
 
 /// A bird piece and its runtime contract, the `boid` object of its GLB root extras (checked by a
 /// test): the shoulder hinge line (x = +-hinge[0], y = hinge[1]), the perch fold (wing offset
@@ -259,7 +307,9 @@ impl FormSlots {
         }
     }
 
-    /// The fish: every slot from [`BoidAssets::fish_base`].
+    /// A fish species: every slot from [`BoidAssets::fish_base`]. A fish's species follows its spawn
+    /// water, which each world decides, so every fish species' mesh covers every fish slot and the
+    /// vertex shader draws only its own water's fish there ([`fish_form_draws`]).
     pub fn fish(budget: BoidBudget) -> Self {
         let base = BoidAssets::fish_base(budget);
         Self {
@@ -288,7 +338,7 @@ pub struct BoidForm {
     pub base: u32,
     /// Vertices per copy.
     pub boid_verts: u32,
-    /// 1: the piece has a masks map (AO in A).
+    /// [`FLAG_MASKS`], [`FLAG_RIVER_FISH`].
     pub flags: u32,
     pub scale: f32,
     /// Perched lift (m): the pivot's height over the feet at display scale.
@@ -365,7 +415,8 @@ pub struct BoidFormAssets {
 
 /// The flock's handles for the current budget, re-used each time the scene is (re)built, so a
 /// scenario switch neither duplicates nor leaks them. `forms` (each bird species in [`BIRDS`]
-/// order, then the fish) are built once the pieces have loaded; `generation` counts the builds, so
+/// order, then each fish species in [`FISH`] order) are built once the pieces have loaded;
+/// `generation` counts the builds, so
 /// [`sync_flock`] respawns the flock entities only when the handles change.
 #[derive(Resource, Clone)]
 pub struct BoidAssets {
@@ -384,11 +435,18 @@ impl BoidAssets {
     }
 }
 
+/// A boid piece's form: a bird species ([`BIRDS`] index) or a fish species ([`FISH`] index).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Form {
+    Bird(u32),
+    Fish(u32),
+}
+
 /// A piece the boids draw, loading: its GLB and its material without the boid binding, and the
-/// bird species it is (`None` for the fish).
+/// species it is.
 struct BoidPieceLoad {
     id: &'static str,
-    species: Option<u32>,
+    form: Form,
     glb: Handle<Gltf>,
     base: StandardMaterial,
     masks: Option<Handle<Image>>,
@@ -590,12 +648,12 @@ fn init_boids(
     });
 }
 
-/// The boid pieces in form order: each bird species ([`BIRDS`]) with its index, then the fish.
-fn boid_pieces() -> impl Iterator<Item = (&'static str, Option<u32>)> {
+/// The boid pieces in form order: each bird species ([`BIRDS`]), then each fish species ([`FISH`]).
+fn boid_pieces() -> impl Iterator<Item = (&'static str, Form)> {
     (0..)
         .zip(BIRDS)
-        .map(|(s, b)| (b.id, Some(s)))
-        .chain([(FISH_PIECE, None)])
+        .map(|(s, b)| (b.id, Form::Bird(s)))
+        .chain((0..).zip(FISH).map(|(s, f)| (f.id, Form::Fish(s))))
 }
 
 /// Requests the boid pieces ([`boid_pieces`]) once the render device has picked the texture family.
@@ -617,7 +675,7 @@ fn load_pieces(
     let mut state = PieceState::Loading;
     match hex_assets::parse_manifest(crate::kit_scene::MANIFEST) {
         Ok(m) => {
-            for (id, species) in boid_pieces() {
+            for (id, form) in boid_pieces() {
                 let entry = m.pieces.iter().find(|e| e.id == id);
                 let slot = entry.and_then(|e| e.slots.get(&format!("{id}_body")).map(|s| (e, s)));
                 let Some((entry, slot)) = slot else {
@@ -639,7 +697,7 @@ fn load_pieces(
                         base.cull_mode = None;
                         loads.push(BoidPieceLoad {
                             id,
-                            species,
+                            form,
                             glb: server.load(format!("kit://{}", entry.glb)),
                             base,
                             masks: km.extension.masks,
@@ -662,7 +720,8 @@ fn load_pieces(
 
 /// Once every piece has loaded, builds the forms for the current budget and the world seed: each
 /// bird species' mesh covers its own flocks' slots ([`FormSlots::bird`]; the stress flock is all
-/// birds), the fish mesh the slots from [`BoidAssets::fish_base`].
+/// birds), each fish species' mesh the slots from [`BoidAssets::fish_base`], flagged with the water
+/// whose fish it draws ([`FLAG_RIVER_FISH`]).
 #[allow(clippy::too_many_arguments)]
 fn build_forms(
     pieces: Option<ResMut<BoidPieces>>,
@@ -707,7 +766,10 @@ fn build_forms(
             .and_then(|h| gltf_meshes.get(h))
             .and_then(|gm| gm.primitives.first())
             .and_then(|p| meshes.get(&p.mesh));
-        let bird = l.species.map(|s| (s, BIRDS[s as usize]));
+        let (bird, fish) = match l.form {
+            Form::Bird(s) => (Some((s, BIRDS[s as usize])), None),
+            Form::Fish(s) => (None, Some(FISH[s as usize])),
+        };
         let slots = match bird {
             Some((s, _)) => FormSlots::bird(s, budget, seed),
             None => FormSlots::fish(budget),
@@ -728,7 +790,7 @@ fn build_forms(
             kind: u32::from(bird.is_none()),
             base: slots.base,
             boid_verts: verts,
-            flags: u32::from(l.masks.is_some()),
+            flags: form_flags(l.masks.is_some(), fish),
             scale: if bird.is_some() {
                 BIRD_SCALE
             } else {
@@ -761,7 +823,7 @@ fn build_forms(
             }),
         });
     }
-    if built.len() != BIRDS.len() + 1 {
+    if built.len() != BIRDS.len() + FISH.len() {
         return;
     }
     pieces.state = PieceState::Ready;
@@ -1156,7 +1218,8 @@ pub fn river_palettes(plan: &BoidPlan) -> Vec<u32> {
 /// The `boids` object of the published state. Per fish region, `river_fish`,
 /// `river_largest_group` and `river_singles` describe the fish spawned in its river water and
 /// `river_palette` counts the fish drawn with the river palette; `pieces` is the bird and fish
-/// pieces' load state; `species` is `birds` per bird species ([`BIRDS`] order).
+/// pieces' load state; `species` is `birds` per bird species ([`BIRDS`] order) and `fish_species`
+/// `fish` per fish species ([`FISH`] order).
 pub fn report_json(
     c: &BoidCounts,
     play: bool,
@@ -1186,7 +1249,7 @@ pub fn report_json(
         })
         .collect();
     format!(
-        "{{\"mode\":\"{}\",\"budget\":{},\"birds\":{},\"bird_slots\":{},\"leaving\":{},\"fish\":{},\"roosts\":{},\"roosting\":{},\"settling\":{},\"water_tiles\":{},\"fish_regions\":[{}],\"dispatched\":{dispatched},\"pieces\":\"{pieces}\",\"species\":[{}]}}",
+        "{{\"mode\":\"{}\",\"budget\":{},\"birds\":{},\"bird_slots\":{},\"leaving\":{},\"fish\":{},\"roosts\":{},\"roosting\":{},\"settling\":{},\"water_tiles\":{},\"fish_regions\":[{}],\"dispatched\":{dispatched},\"pieces\":\"{pieces}\",\"species\":[{}],\"fish_species\":[{}]}}",
         if play { "play" } else { "stress" },
         c.budget,
         c.birds,
@@ -1198,7 +1261,8 @@ pub fn report_json(
         c.settling,
         c.water_tiles,
         regions.join(","),
-        c.species.map(|n| n.to_string()).join(",")
+        c.species.map(|n| n.to_string()).join(","),
+        c.fish_species.map(|n| n.to_string()).join(",")
     )
 }
 
@@ -1447,10 +1511,90 @@ mod tests {
             assert!(close(&bird["fold"]["back"], b.fold_back), "{}", b.id);
             assert!(close(&bird["pivotToFeetM"], b.pivot_to_feet_m), "{}", b.id);
         }
-        let fish = extras(FISH_PIECE);
-        assert_eq!(fish["form"], "fish");
-        assert!(close(&fish["variants"]["river"][0], RIVER_U));
-        assert!(close(&fish["variants"]["ocean"][0], 0.0));
+        for f in FISH {
+            let fish = extras(f.id);
+            assert_eq!(fish["form"], "fish", "{}", f.id);
+            assert!(
+                close(&fish["realLengthM"], 0.40),
+                "{}: the trout's length",
+                f.id
+            );
+            assert!(close(&fish["variants"]["ocean"][0], 0.0), "{}", f.id);
+            // The river species carries the river palette; a sea species has one palette.
+            assert_eq!(fish["variants"].get("river").is_some(), f.river, "{}", f.id);
+            if f.river {
+                assert!(close(&fish["variants"]["river"][0], RIVER_U), "{}", f.id);
+            }
+        }
+    }
+
+    /// Every fish slot is drawn by exactly one fish form, the species of its spawn water
+    /// (`plan::spawn_species`), as the shader picks it from the palette offset; in a river joined
+    /// to the sea through a mouth and in separate river and sea regions, at several seeds. The
+    /// shader carries the flag values.
+    #[test]
+    fn fish_forms_draw_each_fish_once_in_its_spawn_waters_species() {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let t = |a: hex_core::Axial, id: &str| crate::play::PlayTile {
+            cell: a,
+            tile: id.into(),
+            rotation: 0,
+        };
+        let o = hex_core::Axial::new(0, 0);
+        let (s, m) = (o.neighbor(3), o.neighbor(0));
+        let joined = vec![
+            t(s, "river_spring"),
+            t(o, "river_straight"),
+            t(m, "river_mouth"),
+            t(m.neighbor(0), "ocean"),
+            t(m.neighbor(0).neighbor(1), "ocean"),
+        ];
+        let apart = vec![
+            t(hex_core::Axial::new(-3, 0), "river_straight"),
+            t(hex_core::Axial::new(-2, 0), "river_straight"),
+            t(hex_core::Axial::new(3, 0), "ocean"),
+            t(hex_core::Axial::new(4, 0), "ocean"),
+        ];
+        let flags: Vec<u32> = FISH.iter().map(|&f| form_flags(true, Some(f))).collect();
+        for world in [joined, apart] {
+            for seed in 1..5u64 {
+                let mut plan = BoidPlan::play(BoidBudget::HIGH, seed);
+                plan.set_world(&world, &c, &|_| true, 0.0);
+                let fish = FormSlots::fish(plan.budget);
+                let mut drawn = [0u32; plan::FISH_SPECIES as usize];
+                for (i, slot) in plan.slots.iter().enumerate() {
+                    if slot.kind != plan::SlotKind::Fish {
+                        continue;
+                    }
+                    assert!(
+                        (fish.slot(0)..=fish.slot(fish.copies - 1)).contains(&(i as u32)),
+                        "both fish meshes cover slot {i}"
+                    );
+                    let palette = fish_palette(&plan.water.cells, slot.spawn);
+                    let forms: Vec<usize> = (0..FISH.len())
+                        .filter(|&k| fish_form_draws(flags[k], palette))
+                        .collect();
+                    let species = plan::spawn_species(&plan.water.cells, slot.spawn);
+                    assert_eq!(forms, vec![species as usize], "seed {seed} slot {i}");
+                    drawn[species as usize] += 1;
+                }
+                let counts = plan.counts(0.0);
+                assert_eq!(drawn, counts.fish_species, "seed {seed}");
+                assert!(
+                    drawn.iter().all(|&n| n > 0),
+                    "seed {seed}: both species {drawn:?}"
+                );
+            }
+        }
+        let src = include_str!("../../../assets/shaders/boid_material.wesl");
+        for (name, want) in [
+            ("FLAG_MASKS", FLAG_MASKS),
+            ("FLAG_RIVER_FISH", FLAG_RIVER_FISH),
+        ] {
+            let line = format!("const {name}: u32 = {want}u;");
+            assert!(src.contains(&line), "boid_material.wesl lacks `{line}`");
+        }
+        assert!(src.contains(&format!("const RIVER_U: f32 = {RIVER_U:?};")));
     }
 
     /// A fish takes the river palette where it spawns in a river tile and the ocean palette on
@@ -1626,7 +1770,7 @@ mod tests {
         assert!(s.starts_with("{\"mode\":\"play\",\"budget\":1000,\"birds\":24,\"bird_slots\":750,\"leaving\":0,\"fish\":0,\"roosts\":12,\"roosting\":12"), "{s}");
         assert!(
             s.ends_with(
-                "\"fish_regions\":[],\"dispatched\":1000,\"pieces\":\"loading\",\"species\":[12,12]}"
+                "\"fish_regions\":[],\"dispatched\":1000,\"pieces\":\"loading\",\"species\":[12,12],\"fish_species\":[0,0]}"
             ),
             "{s}"
         );

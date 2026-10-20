@@ -1,6 +1,7 @@
 // Boid kit pieces (crates/hex-play/src/boids.rs): StandardMaterial + BoidExt (bindings 100-103).
 // The mesh holds one copy of a piece's LOD0 per boid slot the form may draw (a bird species,
-// bird_starling or bird_goldfinch, over its own flocks; or fish_trout); this vertex shader maps copy
+// bird_starling or bird_goldfinch, over its own flocks; a fish species, fish_trout or fish_mackerel,
+// over every fish slot, drawing only the fish of its spawn water); this vertex shader maps copy
 // k to its slot (boids::FormSlots::slot), reads that boid from the
 // buffer the compute pass writes (boids_compute.wgsl), poses the piece from TEXCOORD_1 by its
 // contract (the GLB root extras `boid`), scales it to its display size and places it there. The
@@ -35,6 +36,9 @@ struct BoidForm {
 
 const FORM_FISH: u32 = 1u;
 const FLAG_MASKS: u32 = 1u;
+// boids::FLAG_RIVER_FISH: a fish form that draws the river-palette fish (fish_trout); without it a
+// fish form draws the ocean-palette ones (fish_mackerel). boids::fish_form_draws mirrors the test.
+const FLAG_RIVER_FISH: u32 = 2u;
 // boids::RIVER_U: the river palette's half of the fish atlas. RIVER_LIFT brings its mean linear
 // luminance (0.29) to the ocean palette's (0.45).
 const RIVER_U: f32 = 0.5;
@@ -79,8 +83,11 @@ fn vertex(v: Vertex) -> VertexOutput {
     let b = boids[form.base + ((copy / form.flock) * form.stride + form.offset) * form.flock + copy % form.flock];
     let mode = b.vel.w;
     let fish_form = form.kind == FORM_FISH;
-    if (mode > IDLE - 0.5 || fish_form != (mode > SWIM - 0.5)) {
-        // An idle slot (boids_compute.wgsl), or a slot the other form draws: every vertex on one
+    // A fish's species follows its spawn water, as its palette offset (anim.z) does.
+    let river_fish = b.anim.z > RIVER_U * 0.5;
+    let other_fish = fish_form && river_fish != ((form.flags & FLAG_RIVER_FISH) != 0u);
+    if (mode > IDLE - 0.5 || fish_form != (mode > SWIM - 0.5) || other_fish) {
+        // An idle slot (boids_compute.wgsl), or a slot another form draws: every vertex on one
         // point, so nothing rasterizes.
         out.position = position_world_to_clip(b.pos.xyz);
         return out;
@@ -152,7 +159,7 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
     }
     }
     @if(VERTEX_UVS_A) {
-    if (form.kind == FORM_FISH && in.uv.x >= RIVER_U) {
+    if (form.kind == FORM_FISH && (form.flags & FLAG_RIVER_FISH) != 0u) {
         // The river palette under murky river water (owner, 2026-10-14: river fish were not
         // seen): lifted toward the ocean palette's brightness, hue kept.
         let c = pbr_input.material.base_color.rgb;

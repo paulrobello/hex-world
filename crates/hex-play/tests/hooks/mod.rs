@@ -189,6 +189,10 @@ const SUBMERGED: &[(&str, &str)] = &[
         "fish_trout_body",
         "fish_trout: a boid that only swims inside the water volume",
     ),
+    (
+        "fish_mackerel_body",
+        "fish_mackerel: a boid that only swims inside the water volume",
+    ),
 ];
 /// A slot named with this suffix is a light-bearing surface (house windows, car lamps): its
 /// piece's masks must carry night emission (B) on it.

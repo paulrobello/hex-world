@@ -1,0 +1,391 @@
+{
+  "pieceId": "fish_mackerel",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/fish_mackerel.py",
+    "sha256": "cf7eece503d7058ec18d992b06619f290d083249eaed72e134cc90f3f647f6f5"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_fauna.py",
+      "sha256": "184bf0e63afe49ef50c453dec9e881575ef56aa54303340258e74de61f5cd2f1"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.08,
+    "bakeStats": {
+      "albedoLuma": {
+        "mean": 0.5896002650260925,
+        "p05": 0.17487581074237823
+      },
+      "ao": {
+        "mean": 0.9398918151855469,
+        "min": 0,
+        "p05": 0.6549019813537598,
+        "texels": 47850
+      },
+      "coverage": 0.18253326416015625
+    },
+    "blender": "5.2.2 LTS",
+    "boid": {
+      "form": "fish",
+      "frame": "runtime +z forward, +y up; pivot at the body centre on the length axis",
+      "realLengthM": 0.4,
+      "species": "mackerel",
+      "tc1": {
+        "u": "wag weight: 0 forward of z = 0.06, linear to 1 at the caudal fork tips (z = -0.20)",
+        "v": "0 (reserved)"
+      },
+      "variants": {
+        "ocean": [
+          0,
+          0
+        ],
+        "rule": "one palette: drawn for the ocean-palette (sea-spawned) fish only"
+      },
+      "wag": "x += U^2 * amplitude * sin(phase)",
+      "water": "sea"
+    },
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 512
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 128
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "colourSource": "numpy paint (no colour bake)",
+    "device": "CPU",
+    "lodTris": [
+      240,
+      74,
+      30
+    ],
+    "marginPx": 4,
+    "receiverSignature": "914f2b66f65a9d61e575cf1f3e174328f33e5d504acac63461ffccfcf4f81b97",
+    "samples": 32,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 1375.841202479799,
+      "median": 1331.1998621813475,
+      "min": 1265.1420104006022
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 240,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 74,
+      "ratio": 0.30833333333333335
+    },
+    {
+      "lod": 2,
+      "tris": 30,
+      "ratio": 0.125
+    }
+  ],
+  "collider": {
+    "node": "fish_mackerel_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 1375.841202479799,
+    "median": 1331.1998621813475,
+    "min": 1265.1420104006022
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 142397,
+        "astc": 143793
+      },
+      "glbBytes": 21784
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 10,
+        "bytes": 64108,
+        "sha256": "5a3385d6a093737323b27a3fc53dcb80f56fe1d36baae5647989dd989cb18dea"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 10,
+        "bytes": 63685,
+        "sha256": "eae366f66046fea94862ecf65c29dd03068ffe8a20d9f2f0d84b2c1a34703544"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 74730,
+        "sha256": "f94be9f1ce3ee71489cbc89c5047c73568b28d50ca7072b5b9a7391a8d415be8"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 8,
+        "bytes": 641,
+        "sha256": "101b02e6dc76c65b5f3c9b7875bb54a761d5d39d60ed7ae2daa731f592f76eff"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 8,
+        "bytes": 641,
+        "sha256": "4c750f9d764c2a0f87d63f126edfffc66319b95d3a0ed634726b435f230c29b8"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 709,
+        "sha256": "9789d24af00c5448c0a8ea586d9f46c6b7b52f52f256cd973a359ca440c48735"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 21957,
+        "sha256": "a05e2f77371de613e9da7e7fb8adfec43821223b022881f6132e147803d69e49"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 21972,
+        "sha256": "3ae9edd078648b58acb4664e5c446b399ee6f47963bd69ad25bfcd61ea99978c"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 33001,
+        "sha256": "6b6004bfb17336dbb17d560f31b38b44a63ca679929026baf4c9b2544f91d153"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 55691,
+        "sha256": "c7a0dfcdbad0f92d14958e096965e4ba0d4dca9e04fc23e09044233fbaa6e3aa"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 57495,
+        "sha256": "6bbd7e9a16d320e8c29d1722e78e498b37c1b54cdeb63526b350e9ea1885f693"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/fish_mackerel/fish_mackerel.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 61886,
+        "sha256": "4da2ac5bb07b09774ea2b454a2a40844e9510f189b629cd84b3e5b8bbe637328"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.glb",
+      "sha256": "41ab89de314cfd3cd93b24aa75116046b89b58d7bc50dbb71743f9727598fccd",
+      "bytes": 21784
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.albedo.bc7.ktx2",
+      "sha256": "5a3385d6a093737323b27a3fc53dcb80f56fe1d36baae5647989dd989cb18dea",
+      "bytes": 64108
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.albedo.astc.ktx2",
+      "sha256": "eae366f66046fea94862ecf65c29dd03068ffe8a20d9f2f0d84b2c1a34703544",
+      "bytes": 63685
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.albedo.png",
+      "sha256": "f94be9f1ce3ee71489cbc89c5047c73568b28d50ca7072b5b9a7391a8d415be8",
+      "bytes": 74730
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.masks.bc7.ktx2",
+      "sha256": "101b02e6dc76c65b5f3c9b7875bb54a761d5d39d60ed7ae2daa731f592f76eff",
+      "bytes": 641
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.masks.astc.ktx2",
+      "sha256": "4c750f9d764c2a0f87d63f126edfffc66319b95d3a0ed634726b435f230c29b8",
+      "bytes": 641
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.masks.png",
+      "sha256": "9789d24af00c5448c0a8ea586d9f46c6b7b52f52f256cd973a359ca440c48735",
+      "bytes": 709
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.normal.bc7.ktx2",
+      "sha256": "a05e2f77371de613e9da7e7fb8adfec43821223b022881f6132e147803d69e49",
+      "bytes": 21957
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.normal.astc.ktx2",
+      "sha256": "3ae9edd078648b58acb4664e5c446b399ee6f47963bd69ad25bfcd61ea99978c",
+      "bytes": 21972
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.normal.png",
+      "sha256": "6b6004bfb17336dbb17d560f31b38b44a63ca679929026baf4c9b2544f91d153",
+      "bytes": 33001
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.orm.bc7.ktx2",
+      "sha256": "c7a0dfcdbad0f92d14958e096965e4ba0d4dca9e04fc23e09044233fbaa6e3aa",
+      "bytes": 55691
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.orm.astc.ktx2",
+      "sha256": "6bbd7e9a16d320e8c29d1722e78e498b37c1b54cdeb63526b350e9ea1885f693",
+      "bytes": 57495
+    },
+    {
+      "path": "assets/kit/p1/fish_mackerel/fish_mackerel.orm.png",
+      "sha256": "4da2ac5bb07b09774ea2b454a2a40844e9510f189b629cd84b3e5b8bbe637328",
+      "bytes": 61886
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/fish/ref-1.jpg",
+      "sha256": "bad584cb48ff6627e9d162eacd03e39eae08d622f39366401fc1f99a44840614",
+      "sourceSha256": "f3409f2c26aa4674e9ffb9df8a348072a962900d7d101859436d72ca6e77189c",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e65c2f9a-4ba1-40a7-beb6-65a3b822f3b7",
+      "prompt": "A single small ocean school fish about 0.4 m long with a simple streamlined torpedo-shaped body with a smooth rounded head, a large dark eye, a clean forked tail fin, one small triangular dorsal fin and small rounded pectoral fins, every fin a solid smooth rounded shape, the scales reading as a soft satin sheen over broad smooth colour areas, smooth sculpted forms like a quality scale model with a bold readable silhouette, coloured with a blue-grey back fading to bright silver sides and a white underside, shown alone floating in mid-air above the plain grey studio floor with a soft shadow below, the whole fish centred in frame and seen exactly side-on in profile with the head to the left, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/fish/ref-2.jpg",
+      "sha256": "a066cdc40c75b293b444f61c1536174cad4eec2abbd4a3014efdf9fce6fbc3f8",
+      "sourceSha256": "269625fce6a37feb1fac5293c5f6136c0e71508b5402f983197bf180e4b1b779",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "130a220e-8c8b-48f2-94fd-5faebab10fb7",
+      "prompt": "Looking straight down from directly above at open shallow sea water that runs out past every edge of the frame, the clear water tinted pale turquoise over a pale sandy floor with a few scattered pebbles, gentle sun glints on the surface and soft caustic light on the sand. A small school of about twelve small ocean fish swims together just under the surface, all heading the same way toward the top right of the frame in a loose teardrop-shaped group, each fish about 0.4 m long with a streamlined torpedo-shaped body, a clean forked tail fin and small rounded pectoral fins spread to the sides, coloured with a blue-grey back fading to bright silver sides and a white underside, every fish reading as a clear separate dark blue-grey torpedo silhouette with its forked tail, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun"
+    },
+    {
+      "path": "assets-source/refs/fish/ref-3.jpg",
+      "sha256": "9e0cd96106680ae99106f8c1533cff095ced27b7f6aaaff7f6e8c5d26db51715",
+      "sourceSha256": "07afa244139cc5946948b74f9c26d79c65f100e3d24b31c11e3b9dd4d4b4d9be",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "3ecd32e8-7d22-401e-ab0c-b75f37da3b23",
+      "prompt": "Two small fish with exactly the same body shape and size swim one above the other in the same direction, both about 0.4 m long with a simple streamlined torpedo-shaped body with a smooth rounded head, a large dark eye, a clean forked tail fin, one small triangular dorsal fin and small rounded pectoral fins, every fin a solid smooth rounded shape, the scales reading as a soft satin sheen over broad smooth colour areas, smooth sculpted forms like a quality scale model with a bold readable silhouette, both seen exactly side-on in profile with the head to the left, floating in mid-air in front of the plain grey studio backdrop with soft shadows on the floor below. The upper fish is coloured with a blue-grey back fading to bright silver sides and a white underside. The lower fish is coloured with an olive-brown back fading to golden-olive sides with a few faint dark spots, a pale cream underside and orange-red lower fins. The picture shows only the two fish on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T20:07:08.888Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/fish/ref-2.jpg",
+        "assets-source/refs/fish/ref-3.jpg"
+      ],
+      "rejected": [
+        "assets-source/refs/fish/ref-1.jpg"
+      ],
+      "notes": "Q5: model ref-3's stylized-real trout body with both its ocean and river palettes. ref-2 is approved for school layout only. ref-1's big-eyed cartoon fish is rejected. Reviewed in docs/review/2026-10-14-walkthrough.html (A12)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "revision": "new boid species: Atlantic mackerel",
+      "notes": "Pending owner approval; not an approval. Second boid fish so sea water reads as a different species from the river trout: fish spawned in river and spring water draw fish_trout (its river palette), fish spawned in mouth, coast and ocean water draw fish_mackerel, the same spawn-water rule as the palettes and the schools. Form from the approved fish references (ref-3's stylized-real body, ref-2's school of dark blue-grey torpedoes); no approved reference shows a mackerel (teal back with dark wavy bars, silver flanks, white belly, two dorsal fins, five finlets above and below, deep fork): approve it from the sheet or ask for a mackerel reference. Owner question: with the mackerel in the sea, the approved ocean-palette trout (Q5) is no longer drawn in play; keep it that way, or bring it back (for example river mouths only, which would split the one sea school by species). Real size 0.40 m, drawn at the trout's x2, inside the trout's height so the confinement band is unchanged. Review docs/checkpoints/fish_mackerel/sheet.jpg and assets-source/kit/fish_mackerel/renders/vs_*.jpg. The controller records the owner's decision."
+    }
+  ]
+}
