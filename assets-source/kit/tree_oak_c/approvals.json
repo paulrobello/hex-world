@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Review against assets-source/refs/forest (ref-1: broad oaks among the spruces): the third variant of tree_oak, an old, broad, low oak about 7.0 m tall with a 9.6 m crown (width / height about 1.4, against tree_oak's 1.0 and tree_oak_b's 0.85) of seven low domes, five middle domes and one top dome over a short, stout trunk that splits at about 2 m into seven heavy limbs running out nearly level; same bark set, canopy master, leaf tiles and wind data as tree_oak. Review sheet: docs/checkpoints/tree_oak_c/sheet.jpg. The controller records the owner's decision."
+  }
+]

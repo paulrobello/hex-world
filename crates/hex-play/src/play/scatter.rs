@@ -132,7 +132,7 @@ pub const VERGE_BAND: f32 = 6.7;
 /// and each of its instances draws one of the group, picked by [`pick_variant`].
 pub const VARIANTS: &[(&str, &[&str])] = &[
     ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
-    ("tree_oak", &["tree_oak_b"]),
+    ("tree_oak", &["tree_oak_b", "tree_oak_c"]),
     ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
     ("log_fallen", &["log_fallen_b", "log_fallen_c"]),
     ("rock_small", &["rock_small_b", "rock_small_c"]),
@@ -528,6 +528,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         Footprint {
             ground: 0.35,
             crown: 3.35,
+        },
+    ),
+    (
+        "tree_oak_c",
+        Footprint {
+            ground: 0.58,
+            crown: 4.81,
         },
     ),
     (

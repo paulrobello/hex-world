@@ -98,6 +98,7 @@ pub const OBSTACLES: &[&str] = &[
     "log_fallen_c",
     "tree_oak",
     "tree_oak_b",
+    "tree_oak_c",
     "fence_paddock",
     "sapling_spruce",
     "sapling_spruce_b",
@@ -1924,7 +1925,14 @@ mod tests {
         let (t, piece) = g.pick_prop(ray(eye, mid - eye), 1000.0).unwrap();
         // The hero oak, or a scattered oak standing in front of it.
         assert!(
-            ["tree_hero_oak", "tree_hero_oak_b", "tree_oak", "tree_oak_b"].contains(&piece),
+            [
+                "tree_hero_oak",
+                "tree_hero_oak_b",
+                "tree_oak",
+                "tree_oak_b",
+                "tree_oak_c"
+            ]
+            .contains(&piece),
             "{piece}"
         );
         assert_eq!(prop_kind(piece), "tree");
