@@ -1,0 +1,215 @@
+{
+  "cueId": "train-chuff-1",
+  "kind": "ambience",
+  "class": "sfx",
+  "version": 1,
+  "use": "A steam engine chuffing past, the train-chuff pool's one variant, a one-shot pass-by (not a loop). Mastered, not played: there is no rail tile or train in play yet. Plays only on demand (hexWorld.audio.play), non-positional.",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Close, isolated recording of a small steam locomotive passing by on a quiet country line: rhythmic chuffs of steam and the soft clatter of its wheels on the rail joints, coming in from silence, passing close and receding into silence, about five seconds in all. Studio-quiet background, with silence before and after the train.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Close, isolated recording of a small steam locomotive passing by on a quiet country line: rhythmic chuffs of steam and the soft clatter of its wheels on the rail joints, coming in from silence, passing close and receding into silence, about five seconds in all. Studio-quiet background, with silence before and after the train.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 6,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "7865e5b8fe865c4daf5c7bbfd44f6729",
+    "generatedAt": "2026-10-20T05:08:33+00:00",
+    "attempt": 52,
+    "creditsCharged": 60,
+    "record": {
+      "path": "assets-source/audio/ambience/train-chuff-1/generation.json",
+      "sha256": "58ae4000c40fc49218bdf780b1706706ad19e60b1d844b38afbf8d9542d72d28",
+      "bytes": 2174
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/train-chuff-1/train-chuff-1.mp3",
+    "sha256": "643023ae573ccf78ed7e6a96801cf77b4a03b68b743dd2a2de7ed9cbe4c4ff61",
+    "bytes": 97009,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 6.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -31.3,
+      "lra": 16.5,
+      "truePeak": -18.7
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 16.5,
+      "truePeak": -3.9
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.0,
+        "lra": 16.4,
+        "truePeak": -3.5
+      },
+      "m4a": {
+        "integrated": -16.1,
+        "lra": 16.5,
+        "truePeak": -3.8
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 50,
+        "stages": 2
+      },
+      "chain": "highpass=f=50:poles=2,highpass=f=50:poles=2",
+      "circularPadFrames": 0
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -31.3,
+        "lra": 16.5,
+        "truePeak": -19.4
+      },
+      "targetLufs": -16.0,
+      "gainDb": 15.3,
+      "requiredPeakReductionDb": 0.0,
+      "mode": "linear"
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.2
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/train-chuff-1.wav",
+    "sha256": "6e82845d2c84663626329e897c68a1e5bca369ad7ad01c0c06b0cef5fc97dc77",
+    "frames": 288000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/train-chuff-1.webm",
+      "sha256": "e8a0e08adac957a09c43aea3e0652b1d24081b39a324651cb420780b437a31ab",
+      "bytes": 41919,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 6.008,
+      "decodedFrames": 288000,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 16.4,
+        "truePeak": -3.5
+      },
+      "floor": {
+        "peakWindowDb": -15.9,
+        "floorDb": -65.9,
+        "floorBelowPeakDb": 50.1,
+        "floorBandPct": {
+          "below1500": 77.1,
+          "1500to9k": 20.2,
+          "above9k": 2.7
+        },
+        "interiorWindows": 120,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/train-chuff-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/train-chuff-1.webm"
+    },
+    {
+      "path": "assets/audio/ambience/train-chuff-1.m4a",
+      "sha256": "e1aeebfecd1dc0fbb4d03feb22d097f1beb9d111c2685892af7bd59902b28f8d",
+      "bytes": 109829,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 6.0,
+      "decodedFrames": 288000,
+      "loudness": {
+        "integrated": -16.1,
+        "lra": 16.5,
+        "truePeak": -3.8
+      },
+      "floor": {
+        "peakWindowDb": -16.0,
+        "floorDb": -65.9,
+        "floorBelowPeakDb": 49.9,
+        "floorBandPct": {
+          "below1500": 76.5,
+          "1500to9k": 20.8,
+          "above9k": 2.8
+        },
+        "interiorWindows": 120,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/train-chuff-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/train-chuff-1.m4a"
+    }
+  ],
+  "decodedBytes": 1152000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "bce93ae39ad1163524ac6756bf50a1fae8b59bccd9e7ca240a3bd741f177e054"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

@@ -17,6 +17,10 @@ import {
 import {
   type Biome,
   BED_CUE,
+  type BellRequest,
+  type BellState,
+  bellIdle,
+  bellStep,
   CAR_CUES,
   CAR_EVENT_KIND,
   type Candidate,
@@ -58,6 +62,7 @@ import {
   pickOneShotTile,
   pickVariant,
   resolveOneShot,
+  SHOP_BELL,
 } from "./audio-mix.ts";
 import type { CarInfo, GameEvent, PlayState, State } from "./bridge.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
@@ -221,6 +226,11 @@ export interface AudioDebug {
     pools: Record<string, string[]>;
     recent: { id: string; event: string; car: number; t: number; gain: number; rate: number }[];
   };
+  /**
+   * The shop bell a car's park at a bakery rings: its pool's variants, parks waiting for their bell, plays (on
+   * demand too), the last variant and spot, and why the last due bell was dropped. `shops` counts bakeries in play.
+   */
+  shopBell: Omit<BellState, "pending"> & { pool: string; variants: string[]; pending: number; shops: number };
 }
 
 /** What `audio.play(name)` did: the variant played and where, or why nothing played. */
@@ -282,6 +292,13 @@ export class GameAudio {
   private carNodes = new Map<number, { follow: GainNode; pan: PannerNode; kind: CarKind }>();
   private carRecent: AudioDebug["cars"]["recent"] = [];
   private carsInRange = 0;
+  private bell: BellState = bellIdle();
+  /** Parks drained since the last update, for the shop bell. */
+  private parks: Omit<BellRequest, "dueAt">[] = [];
+  /** The shop-bell pool's variants from the manifest, in manifest order. */
+  private bellVariants: string[] = [];
+  /** Shop tiles in play at the last update, by cell key. */
+  private shops = new Map<string, OneShotTile>();
   private recent: Fired[] = [];
   private fired = 0;
   private lastAt = 0;
@@ -354,6 +371,7 @@ export class GameAudio {
       for (const row of ONE_SHOTS) this.variants.set(row.name, resolveOneShot(row.pool, m.cues)?.variants ?? []);
       for (const { pool } of Object.values(CAR_CUES))
         this.carPools.set(pool, resolveOneShot(pool, m.cues, [])?.variants ?? []);
+      this.bellVariants = resolveOneShot(SHOP_BELL.pool, m.cues, [])?.variants ?? [];
       const probe = document.createElement("audio");
       this.format = pickFormat(m.formats, (mime) => probe.canPlayType(mime));
       if (!this.format) throw new Error("no playable audio format");
@@ -441,6 +459,7 @@ export class GameAudio {
       // Each trip event names one pool (CAR_CUES), never every variant its manifest cues list.
       if (e.type === "carPulledOut" || e.type === "carParked") {
         this.carEvents.push({ car: e.id, kind: CAR_EVENT_KIND[e.type]!, x: e.x, z: e.z, at: ctx.currentTime });
+        if (e.type === "carParked") this.parks.push({ q: e.q, r: e.r, x: e.x, z: e.z });
         continue;
       }
       const at = "q" in e && "r" in e ? { q: e.q, r: e.r } : null;
@@ -577,10 +596,12 @@ export class GameAudio {
     const placed: PlacedTile[] = [];
     const oneShotTiles = new Map<string, OneShotTile[]>(ONE_SHOTS.map((row) => [row.name, []]));
     const cands: Candidate[] = [];
+    this.shops.clear();
     for (const t of play.tiles) {
       const [x, z] = cellWorld(t.q, t.r, RADIUS);
       const biome = BIOME_OF.get(t.tile) ?? "meadow";
       placed.push({ x, z, biome });
+      if (t.tile === SHOP_BELL.tile) this.shops.set(key(t.q, t.r), { q: t.q, r: t.r, x, z });
       for (const row of ONE_SHOTS)
         if (ONE_SHOT_DEFS.get(row.name)?.has(t.tile)) oneShotTiles.get(row.name)!.push({ q: t.q, r: t.r, x, z });
       for (const cue of CUES_OF.get(t.tile) ?? [])
@@ -594,6 +615,7 @@ export class GameAudio {
     this.oneShotTiles = oneShotTiles;
     this.updateOneShots(ctx, v);
     this.updateCars(ctx, v, play.car_list, state.photo?.agents_paused === true);
+    this.updateBell(ctx, v);
     for (const [k, p] of this.pending)
       if (ctx.currentTime > p.deadline) {
         this.pending.delete(k);
@@ -783,6 +805,58 @@ export class GameAudio {
     if (this.carRecent.length > 16) this.carRecent.shift();
   }
 
+  /** The shop bell: a park at a bakery rings a bell at the spot a moment after its door, near the focus only. */
+  private updateBell(ctx: AudioContext, v: View): void {
+    const { muted, volumes } = this.settings;
+    const parks = this.parks;
+    this.parks = [];
+    const variants = this.bellVariants.filter((id) => this.buffers.has(id));
+    const gate = oneShotGate({
+      muted,
+      master: volumes.master,
+      ambience: volumes.ambience,
+      loaded: variants.length > 0,
+    });
+    const step = bellStep(
+      this.bell,
+      ctx.currentTime,
+      parks,
+      (q, r) => this.shops.has(key(q, r)),
+      v,
+      gate,
+      variants,
+      Math.random,
+    );
+    this.bell = step.state;
+    for (const p of step.play) this.playAt(p.cue, p.x, p.z, p.gain);
+  }
+
+  /** A one-shot at a world point (a parking spot rather than a tile centre), on its cue's bus. */
+  private playAt(id: string, x: number, z: number, gain: number): void {
+    const ctx = this.ctx;
+    const buf = this.buffers.get(id);
+    const cue = this.cues.get(id);
+    if (!ctx || !buf || !cue) return;
+    const t = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(gain, t + 0.005);
+    g.gain.setValueAtTime(gain, Math.max(t + 0.005, t + buf.duration - 0.012));
+    g.gain.linearRampToValueAtTime(0, t + buf.duration);
+    const pan = this.pannerAt(ctx, x, z);
+    src
+      .connect(g)
+      .connect(pan)
+      .connect(this.buses.get(busOf(cue))!);
+    src.start(t);
+    src.onended = () => {
+      g.disconnect();
+      pan.disconnect();
+    };
+  }
+
   /** `audio.play(name)`: a pool, row or cue now, sharing the row's last-variant memory and play count. */
   private playNamed(name: string): PlayResult {
     const ctx = this.ctx;
@@ -792,17 +866,22 @@ export class GameAudio {
     const res = resolveOneShot(name, this.manifest.cues);
     if (!res) return { played: null, reason: "unknown-cue" };
     const st = res.row ? (this.oneShots.get(res.row.name) ?? oneShotIdle()) : null;
+    const bell = res.pool === SHOP_BELL.pool;
     const cue = pickVariant(
       res.variants.filter((id) => this.buffers.has(id)),
-      st?.lastCue ?? null,
+      (bell ? this.bell.lastCue : st?.lastCue) ?? null,
       Math.random,
     );
     if (!cue) return { played: null, reason: "not-loaded" };
     const v = this.view;
-    const tile = res.row && v ? nearestOneShotTile(this.oneShotTiles.get(res.row.name) ?? [], v.focus) : null;
-    const level = res.row ? res.row.level * (tile && v ? emitterGain(tile.x, tile.z, v) : 1) : 1;
+    const tiles = bell ? [...this.shops.values()] : res.row ? (this.oneShotTiles.get(res.row.name) ?? []) : [];
+    const tile = v ? nearestOneShotTile(tiles, v.focus) : null;
+    const rowLevel = bell ? SHOP_BELL.level : res.row?.level;
+    const level = rowLevel !== undefined ? rowLevel * (tile && v ? emitterGain(tile.x, tile.z, v) : 1) : 1;
     const at = tile && { q: tile.q, r: tile.r };
     this.play(cue, "play", at, 1, level, false);
+    if (bell)
+      this.bell = { ...this.bell, lastAt: ctx.currentTime, lastTile: at, lastCue: cue, plays: this.bell.plays + 1 };
     if (res.row && st)
       this.oneShots.set(res.row.name, {
         ...st,
@@ -877,6 +956,8 @@ export class GameAudio {
     this.pending.clear();
     this.cars = carIdle();
     this.carEvents = [];
+    this.bell = bellIdle();
+    this.parks = [];
   }
 
   // ---------- Debug hook ----------
@@ -979,6 +1060,17 @@ export class GameAudio {
         inRange: this.carsInRange,
         pools: Object.fromEntries(this.carPools),
         recent: this.carRecent.map((f) => ({ ...f })),
+      },
+      shopBell: {
+        pool: SHOP_BELL.pool,
+        variants: [...this.bellVariants],
+        pending: this.bell.pending.length,
+        lastAt: at(this.bell.lastAt),
+        lastTile: this.bell.lastTile && { ...this.bell.lastTile },
+        lastCue: this.bell.lastCue,
+        plays: this.bell.plays,
+        gatedBy: this.bell.gatedBy,
+        shops: this.shops.size,
       },
     };
   }

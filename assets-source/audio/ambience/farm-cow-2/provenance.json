@@ -1,0 +1,215 @@
+{
+  "cueId": "farm-cow-2",
+  "kind": "ambience",
+  "class": "sfx",
+  "version": 1,
+  "use": "One cow moo of the farm-cow pool: positional at a farm tile within 3 hex steps of the camera focus, every 30-90 s at random, soft on the ambience bus, or on demand (hexWorld.audio.play).",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Close, isolated recording of a calm dairy cow lowing once across a quiet farmyard: a short, deep, contented moo with a gentle breathy end. Studio-quiet background, with silence before and after the cow.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Close, isolated recording of a calm dairy cow lowing once across a quiet farmyard: a short, deep, contented moo with a gentle breathy end. Studio-quiet background, with silence before and after the cow.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 3.5,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "5426b01b98f69089b822f0f45604bdaf",
+    "generatedAt": "2026-10-20T05:07:51+00:00",
+    "attempt": 41,
+    "creditsCharged": 35,
+    "record": {
+      "path": "assets-source/audio/ambience/farm-cow-2/generation.json",
+      "sha256": "6019d43adf45aacc2976c68890d69f9093fa724fbebf1e395c12ba37b9caf44c",
+      "bytes": 1920
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/farm-cow-2/farm-cow-2.mp3",
+    "sha256": "9134c9ef35cb0de95e917f76d4c50bd8b3dd3812a59fa25f2d693773caba27e7",
+    "bytes": 56885,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 3.48
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -9.4,
+      "lra": 0.0,
+      "truePeak": -0.2
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 0.0,
+      "truePeak": -5.3
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -5.3
+      },
+      "m4a": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -5.3
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 60,
+        "stages": 2
+      },
+      "chain": "highpass=f=60:poles=2,highpass=f=60:poles=2",
+      "circularPadFrames": 0
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 30,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -9.5,
+        "lra": 0.0,
+        "truePeak": 1.5
+      },
+      "targetLufs": -16.0,
+      "gainDb": -6.5,
+      "requiredPeakReductionDb": 0.0,
+      "mode": "linear"
+    },
+    {
+      "step": "settle",
+      "trimDb": -0.3
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/farm-cow-2.wav",
+    "sha256": "14061556cdb2cc243f451efac5bb84cf631c3426a6dbaa9daba5c45f61d83490",
+    "frames": 167010,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/farm-cow-2.webm",
+      "sha256": "f818fcf1f1a4827c647b30f687afd5959c6bc1e8dd44298c3fd113509f7df396",
+      "bytes": 26375,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 3.487,
+      "decodedFrames": 167010,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -5.3
+      },
+      "floor": {
+        "peakWindowDb": -12.3,
+        "floorDb": -75.6,
+        "floorBelowPeakDb": 63.3,
+        "floorBandPct": {
+          "below1500": 93.7,
+          "1500to9k": 4.7,
+          "above9k": 1.6
+        },
+        "interiorWindows": 69,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/farm-cow-2.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/farm-cow-2.webm"
+    },
+    {
+      "path": "assets/audio/ambience/farm-cow-2.m4a",
+      "sha256": "41cebd78b9b199ff73f6b18fa10589141a3e20207970ad0ba532271fdd306be2",
+      "bytes": 60922,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 3.4794,
+      "decodedFrames": 167010,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -5.3
+      },
+      "floor": {
+        "peakWindowDb": -12.4,
+        "floorDb": -75.6,
+        "floorBelowPeakDb": 63.2,
+        "floorBandPct": {
+          "below1500": 93.7,
+          "1500to9k": 4.8,
+          "above9k": 1.5
+        },
+        "interiorWindows": 69,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/farm-cow-2.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/farm-cow-2.m4a"
+    }
+  ],
+  "decodedBytes": 668040,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "bce93ae39ad1163524ac6756bf50a1fae8b59bccd9e7ca240a3bd741f177e054"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

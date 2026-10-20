@@ -5,8 +5,8 @@
   "masterTruePeak": -2.0,
   "lufsTolerance": 1.0,
   "decodedBudgetBytes": 96000000,
-  "generationCap": 39,
-  "generationCapNote": "Owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
+  "generationCap": 53,
+  "generationCapNote": "Owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
   "classes": {
     "music": {
       "lufs": -18,
@@ -863,6 +863,702 @@
         "rangeDb": 45,
         "attackMs": 50,
         "releaseMs": 150
+      }
+    },
+    {
+      "id": "farm-cow-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "farm-cow",
+      "use": "One cow moo of the farm-cow pool: positional at a farm tile within 3 hex steps of the camera focus, every 30-90 s at random, soft on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of one cow in a quiet field giving a single soft, low, mellow moo that rises and falls over about two seconds. Studio-quiet background, with silence before and after the moo.",
+        "durationSeconds": 3.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "stages": 2
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "high-pass 60 Hz, two stages: the moo sits under 300 Hz, so only sub-rumble goes",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 98.2,
+          "band300to8kPct": 1.8,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -36.6,
+          "levelDeepestDipDb": 45.2,
+          "levelSpreadDb": 50.9,
+          "tone200HzSeriesMaxDb": 20.1,
+          "otherTonalPeaks": [
+            {
+              "hz": 170,
+              "db": 22.3
+            },
+            {
+              "hz": 2900,
+              "db": 14.7
+            },
+            {
+              "hz": 3498,
+              "db": 14.5
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "rawFloorBelowPeakDb": 56.2
+        }
+      }
+    },
+    {
+      "id": "farm-cow-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "farm-cow",
+      "use": "One cow moo of the farm-cow pool: positional at a farm tile within 3 hex steps of the camera focus, every 30-90 s at random, soft on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a calm dairy cow lowing once across a quiet farmyard: a short, deep, contented moo with a gentle breathy end. Studio-quiet background, with silence before and after the cow.",
+        "durationSeconds": 3.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "stages": 2
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "high-pass 60 Hz, two stages",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 87.5,
+          "band300to8kPct": 12.5,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -13.0,
+          "levelDeepestDipDb": 28.3,
+          "levelSpreadDb": 38.5,
+          "tone200HzSeriesMaxDb": 11.5,
+          "otherTonalPeaks": [
+            {
+              "hz": 480,
+              "db": 12.9
+            },
+            {
+              "hz": 2449,
+              "db": 12.1
+            },
+            {
+              "hz": 2051,
+              "db": 11.4
+            }
+          ],
+          "birdChirpEvents": 3,
+          "birds": true,
+          "rawFloorBelowPeakDb": 45.0
+        }
+      }
+    },
+    {
+      "id": "farm-sheep-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "farm-sheep",
+      "use": "One sheep bleat of the farm-sheep pool: positional at a farm tile within 3 hex steps of the camera focus, every 30-90 s at random, soft on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of one sheep in a quiet meadow giving a single soft, wavering bleat, about one second long. Studio-quiet background, with silence before and after the bleat.",
+        "durationSeconds": 2.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 90,
+        "stages": 2
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "high-pass 90 Hz, two stages",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 2.2,
+          "band300to8kPct": 97.8,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -8.0,
+          "levelDeepestDipDb": 6.0,
+          "levelSpreadDb": 10.1,
+          "tone200HzSeriesMaxDb": 14.6,
+          "otherTonalPeaks": [
+            {
+              "hz": 686,
+              "db": 20.8
+            },
+            {
+              "hz": 1102,
+              "db": 17.2
+            },
+            {
+              "hz": 1652,
+              "db": 15.2
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "rawFloorBelowPeakDb": 17.1
+        }
+      }
+    },
+    {
+      "id": "farm-sheep-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "farm-sheep",
+      "use": "One sheep bleat of the farm-sheep pool: positional at a farm tile within 3 hex steps of the camera focus, every 30-90 s at random, soft on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a young lamb in a calm pasture bleating twice: two short, gentle, high calls a moment apart. Studio-quiet background, with silence before and after the lamb.",
+        "durationSeconds": 3,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 90,
+        "stages": 2
+      },
+      "cut": {
+        "startSeconds": 0.15,
+        "seconds": 2.85,
+        "fadeInSeconds": 0.05,
+        "fadeOutSeconds": 0.05
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "high-pass 90 Hz, two stages, and a cut from 0.15 s that keeps the take's own silent tail (the silence trim left no quiet interior: floor 19.3 dB under the peak)",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 0.1,
+          "band300to8kPct": 99.5,
+          "above8kPct": 0.3,
+          "band1to6kVsFullDb": -0.3,
+          "levelDeepestDipDb": 44.0,
+          "levelSpreadDb": 48.2,
+          "tone200HzSeriesMaxDb": 23.2,
+          "otherTonalPeaks": [
+            {
+              "hz": 1852,
+              "db": 16.2
+            },
+            {
+              "hz": 1471,
+              "db": 14.6
+            },
+            {
+              "hz": 2449,
+              "db": 13.9
+            }
+          ],
+          "birdChirpEvents": 2,
+          "birds": false,
+          "rawFloorBelowPeakDb": 67.8
+        }
+      }
+    },
+    {
+      "id": "windmill-creak-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "windmill-creak",
+      "use": "One slow wooden creak of the windmill-creak pool: positional at a windmill tile within 3 hex steps of the camera focus, every 25-70 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of an old wooden windmill turning slowly: one long, low creak of the heavy wooden shaft and timber gears groaning as the sails come round, about three seconds, settling back into silence. Studio-quiet background, with silence before and after the creak.",
+        "durationSeconds": 4.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "stages": 2
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "high-pass 60 Hz, two stages",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 67.2,
+          "band300to8kPct": 32.8,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -14.8,
+          "levelDeepestDipDb": 24.1,
+          "levelSpreadDb": 26.4,
+          "tone200HzSeriesMaxDb": 6.9,
+          "otherTonalPeaks": [
+            {
+              "hz": 170,
+              "db": 15.7
+            },
+            {
+              "hz": 439,
+              "db": 12.4
+            },
+            {
+              "hz": 5098,
+              "db": 11.6
+            }
+          ],
+          "birdChirpEvents": 6,
+          "birds": true,
+          "rawFloorBelowPeakDb": 40.8
+        }
+      }
+    },
+    {
+      "id": "windmill-creak-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "windmill-creak",
+      "use": "One slow wooden creak of the windmill-creak pool: positional at a windmill tile within 3 hex steps of the camera focus, every 25-70 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of the timber cap of a wooden windmill shifting in the wind: two slow, deep wooden creaks and a soft knock of the turning sail stocks, fading into silence. Studio-quiet background, with silence before and after the creaks.",
+        "durationSeconds": 4.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "stages": 2
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "high-pass 60 Hz, two stages",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 19.2,
+          "band300to8kPct": 80.0,
+          "above8kPct": 0.8,
+          "band1to6kVsFullDb": -4.9,
+          "levelDeepestDipDb": 23.5,
+          "levelSpreadDb": 30.3,
+          "tone200HzSeriesMaxDb": 12.9,
+          "otherTonalPeaks": [
+            {
+              "hz": 164,
+              "db": 19.8
+            },
+            {
+              "hz": 328,
+              "db": 11.4
+            },
+            {
+              "hz": 545,
+              "db": 11.3
+            }
+          ],
+          "birdChirpEvents": 8,
+          "birds": true,
+          "rawFloorBelowPeakDb": 37.0
+        }
+      }
+    },
+    {
+      "id": "wheat-rustle-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "wheat-rustle",
+      "use": "One dry wheat-ears rustle in a gust, of the wheat-rustle pool: positional at a wheat field tile within 3 hex steps of the camera focus, every 20-60 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a single sudden gust of wind sweeping through a small patch of ripe, dry wheat: a crisp, rustling swish of the wheat ears that rises quickly out of complete silence, peaks after about one second and dies away to complete silence within two seconds. Studio-quiet background, with silence before and after the gust.",
+        "durationSeconds": 3.5,
+        "promptInfluence": 0.75,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 250,
+        "lowpassHz": 12000
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 18,
+        "ratio": 4,
+        "rangeDb": 45,
+        "attackMs": 5,
+        "releaseMs": 250
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "250 Hz-12 kHz band, then a gate 18 dB under the peak window (attempt 53, the retake)",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 96.2,
+          "band300to8kPct": 2.7,
+          "above8kPct": 1.1,
+          "band1to6kVsFullDb": -22.5,
+          "levelDeepestDipDb": 17.8,
+          "levelSpreadDb": 23.5,
+          "tone200HzSeriesMaxDb": 12.6,
+          "otherTonalPeaks": [
+            {
+              "hz": 1852,
+              "db": 10.7
+            },
+            {
+              "hz": 7951,
+              "db": 10.5
+            },
+            {
+              "hz": 2900,
+              "db": 10.2
+            }
+          ],
+          "birdChirpEvents": 0,
+          "birds": false,
+          "rawFloorBelowPeakDb": 37.7
+        }
+      }
+    },
+    {
+      "id": "wheat-rustle-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "wheat-rustle",
+      "use": "One dry wheat-ears rustle in a gust, of the wheat-rustle pool: positional at a wheat field tile within 3 hex steps of the camera focus, every 20-60 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a light breeze sweeping across tall, dry wheat stalks: a crisp, dry swish of the heavy ears nodding together, rising and falling once over about two seconds, then complete silence. Studio-quiet background, with silence before and after the rustle.",
+        "durationSeconds": 4,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 250,
+        "lowpassHz": 12000
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 8,
+        "ratio": 6,
+        "rangeDb": 45,
+        "attackMs": 5,
+        "releaseMs": 250
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "250 Hz-12 kHz band, then a gate 8 dB under the peak window (ratio 6): the swell is only 13 dB over the rustle bed, so the gate closes 66% of the take; listen for chopping",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 6.6,
+          "band300to8kPct": 25.2,
+          "above8kPct": 68.2,
+          "band1to6kVsFullDb": -10.2,
+          "levelDeepestDipDb": 5.6,
+          "levelSpreadDb": 12.1,
+          "tone200HzSeriesMaxDb": 16.1,
+          "otherTonalPeaks": [],
+          "birdChirpEvents": 0,
+          "birds": false,
+          "rawFloorBelowPeakDb": 17.2
+        }
+      }
+    },
+    {
+      "id": "shop-bell-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "shop-bell",
+      "use": "One small shop-door bell of the shop-bell pool: positional at the parking spot when a car finishes parking at a bakery (a carParked whose cell holds a bakery tile), shortly after its door closes, within 3 hex steps of the camera focus, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a small brass bell on a spring above an old village shop door, jingling as the door opens: a bright, light ting-a-ling of a few quick strikes that rings out and fades to silence over about one and a half seconds. Studio-quiet background, with silence before and after the bell.",
+        "durationSeconds": 2.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 250,
+        "stages": 2
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "high-pass 250 Hz, two stages",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 0.0,
+          "band300to8kPct": 95.8,
+          "above8kPct": 4.2,
+          "band1to6kVsFullDb": -0.3,
+          "levelDeepestDipDb": 27.0,
+          "levelSpreadDb": 32.4,
+          "tone200HzSeriesMaxDb": 27.3,
+          "otherTonalPeaks": [
+            {
+              "hz": 7148,
+              "db": 12.7
+            },
+            {
+              "hz": 8748,
+              "db": 12.3
+            },
+            {
+              "hz": 7951,
+              "db": 12.2
+            }
+          ],
+          "birdChirpEvents": 3,
+          "birds": true,
+          "rawFloorBelowPeakDb": 52.7
+        }
+      }
+    },
+    {
+      "id": "shop-bell-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "shop-bell",
+      "use": "One small shop-door bell of the shop-bell pool: positional at the parking spot when a car finishes parking at a bakery (a carParked whose cell holds a bakery tile), shortly after its door closes, within 3 hex steps of the camera focus, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a little bakery's shop door opening: a soft, cheerful double jingle of a small hanging bell, its tinkling ring decaying gently into silence. Studio-quiet background, with silence before and after the bell.",
+        "durationSeconds": 2.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 250,
+        "stages": 2
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "high-pass 250 Hz, two stages",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 0.1,
+          "band300to8kPct": 4.1,
+          "above8kPct": 95.8,
+          "band1to6kVsFullDb": -14.5,
+          "levelDeepestDipDb": 22.3,
+          "levelSpreadDb": 26.7,
+          "tone200HzSeriesMaxDb": 16.6,
+          "otherTonalPeaks": [
+            {
+              "hz": 2449,
+              "db": 11.1
+            },
+            {
+              "hz": 4500,
+              "db": 11.0
+            },
+            {
+              "hz": 3498,
+              "db": 10.3
+            }
+          ],
+          "birdChirpEvents": 4,
+          "birds": true,
+          "rawFloorBelowPeakDb": 53.4
+        }
+      }
+    },
+    {
+      "id": "train-whistle-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "train-whistle",
+      "use": "One steam train whistle of the train-whistle pool. Mastered, not played: there is no rail tile or train in play yet. Plays only on demand (hexWorld.audio.play), non-positional.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a small old steam locomotive giving one clear, mellow whistle blast, a warm two-tone call about two seconds long, heard from a short distance, that ends cleanly into silence. Studio-quiet background, with silence before and after the whistle.",
+        "durationSeconds": 4,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 150,
+        "stages": 2
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "high-pass 150 Hz, two stages",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 0.0,
+          "band300to8kPct": 100.0,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -10.2,
+          "levelDeepestDipDb": 51.9,
+          "levelSpreadDb": 65.8,
+          "tone200HzSeriesMaxDb": 15.5,
+          "otherTonalPeaks": [
+            {
+              "hz": 10148,
+              "db": 15.0
+            },
+            {
+              "hz": 6750,
+              "db": 14.1
+            },
+            {
+              "hz": 10348,
+              "db": 14.0
+            }
+          ],
+          "birdChirpEvents": 2,
+          "birds": false,
+          "rawFloorBelowPeakDb": 69.8
+        }
+      }
+    },
+    {
+      "id": "train-whistle-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "train-whistle",
+      "use": "One steam train whistle of the train-whistle pool. Mastered, not played: there is no rail tile or train in play yet. Plays only on demand (hexWorld.audio.play), non-positional.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a little steam tank engine's whistle: one short, bright peep and then a longer, softer toot, ringing out across quiet countryside and fading into silence. Studio-quiet background, with silence before and after the whistle.",
+        "durationSeconds": 4,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 150,
+        "stages": 2
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "high-pass 150 Hz, two stages",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 0.0,
+          "band300to8kPct": 99.9,
+          "above8kPct": 0.1,
+          "band1to6kVsFullDb": -14.5,
+          "levelDeepestDipDb": 34.5,
+          "levelSpreadDb": 52.4,
+          "tone200HzSeriesMaxDb": 15.3,
+          "otherTonalPeaks": [
+            {
+              "hz": 879,
+              "db": 18.0
+            },
+            {
+              "hz": 855,
+              "db": 16.6
+            },
+            {
+              "hz": 7500,
+              "db": 14.9
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "rawFloorBelowPeakDb": 59.2
+        }
+      }
+    },
+    {
+      "id": "train-chuff-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "train-chuff",
+      "use": "A steam engine chuffing past, the train-chuff pool's one variant, a one-shot pass-by (not a loop). Mastered, not played: there is no rail tile or train in play yet. Plays only on demand (hexWorld.audio.play), non-positional.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a small steam locomotive passing by on a quiet country line: rhythmic chuffs of steam and the soft clatter of its wheels on the rail joints, coming in from silence, passing close and receding into silence, about five seconds in all. Studio-quiet background, with silence before and after the train.",
+        "durationSeconds": 6,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 50,
+        "stages": 2
+      },
+      "review": {
+        "round": 3,
+        "roundNote": "P3 items, owner 2026-10-19: \"you have standing approval to generate any new sounds needed for the new items\". Occasional one-shots for the farm (cow, sheep), windmill (creak), wheat field (rustle) and bakery (shop bell on a car's park), plus the train whistle and chuff, mastered but not played until rail exists. Fourteen ElevenLabs attempts (40-53, 520 credits). The birds detector fires on bells, whistles and moos; those are tonal calls, not birds.",
+        "filterApplied": "high-pass 50 Hz, two stages",
+        "screening": {
+          "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
+          "below300HzPct": 0.1,
+          "band300to8kPct": 28.9,
+          "above8kPct": 71.0,
+          "band1to6kVsFullDb": -6.5,
+          "levelDeepestDipDb": 5.8,
+          "levelSpreadDb": 22.4,
+          "tone200HzSeriesMaxDb": 18.2,
+          "otherTonalPeaks": [
+            {
+              "hz": 2449,
+              "db": 13.1
+            },
+            {
+              "hz": 1852,
+              "db": 12.8
+            },
+            {
+              "hz": 3949,
+              "db": 12.7
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "rawFloorBelowPeakDb": 23.8
+        }
       }
     },
     {

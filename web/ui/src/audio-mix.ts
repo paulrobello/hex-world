@@ -158,13 +158,19 @@ export const isFlowerTile = (biome: Biome, scatter: readonly string[]): boolean 
 
 const isForestTile = (biome: Biome): boolean => biome === "forest";
 
+/** A predicate for one tile def by id: farm, windmill and wheat field share the meadow biome and scatter. */
+const isTileId =
+  (want: string) =>
+  (_biome: Biome, _scatter: readonly string[], id: string): boolean =>
+    id === want;
+
 /** One row of the occasional one-shot scheduler. */
 export interface OneShotRow {
   name: string;
   /** The pool whose variants it plays, resolved from the manifest by `resolveOneShot`. */
   pool: string;
-  /** Which tile defs it may play at, from the def's biome and scatter. */
-  tile: (biome: Biome, scatter: readonly string[]) => boolean;
+  /** Which tile defs it may play at, from the def's biome, scatter and id. */
+  tile: (biome: Biome, scatter: readonly string[], id: string) => boolean;
   /** Seconds between plays, drawn uniformly. */
   delay: readonly [number, number];
   /** It plays only at a matching tile within this many hex steps of the focus. */
@@ -177,6 +183,24 @@ export const ONE_SHOTS: readonly OneShotRow[] = [
   { name: "bees", pool: "meadow-bees", tile: isFlowerTile, delay: [45, 120], rangeSteps: 3, level: 0.35 },
   { name: "forest-birds", pool: "forest-birds", tile: isForestTile, delay: [12, 40], rangeSteps: 3, level: 0.4 },
   { name: "forest-leaves", pool: "forest-leaves", tile: isForestTile, delay: [20, 60], rangeSteps: 3, level: 0.3 },
+  { name: "farm-cow", pool: "farm-cow", tile: isTileId("farm"), delay: [30, 90], rangeSteps: 3, level: 0.25 },
+  { name: "farm-sheep", pool: "farm-sheep", tile: isTileId("farm"), delay: [30, 90], rangeSteps: 3, level: 0.25 },
+  {
+    name: "windmill-creak",
+    pool: "windmill-creak",
+    tile: isTileId("windmill"),
+    delay: [25, 70],
+    rangeSteps: 3,
+    level: 0.3,
+  },
+  {
+    name: "wheat-rustle",
+    pool: "wheat-rustle",
+    tile: isTileId("wheat_field"),
+    delay: [20, 60],
+    rangeSteps: 3,
+    level: 0.3,
+  },
 ];
 
 /** The catalog defs a row may play at. */
@@ -184,7 +208,7 @@ export function oneShotDefs(
   row: OneShotRow,
   tiles: readonly { id: string; edges: readonly string[]; scatter: readonly string[] }[],
 ): Set<string> {
-  return new Set(tiles.filter((t) => row.tile(biomeOf(t.id, t.edges), t.scatter)).map((t) => t.id));
+  return new Set(tiles.filter((t) => row.tile(biomeOf(t.id, t.edges), t.scatter, t.id)).map((t) => t.id));
 }
 
 export interface ResolvedOneShot {
@@ -501,6 +525,105 @@ export function carStep(
       s.lastDriveAt = now;
     }
   }
+  return { state: s, play };
+}
+
+// ---------- Shop bell (P3 bakery) ----------
+
+/** The bell a car's visit rings at a shop: its pool, the tile def that is a shop, its level and its lag. */
+export const SHOP_BELL = {
+  pool: "shop-bell",
+  tile: "bakery",
+  level: 0.35,
+  /** Seconds after the park (and its door) before the shop door's bell rings. */
+  delayS: 1.2,
+} as const;
+
+/** A park at a shop, waiting for its bell. */
+export interface BellRequest {
+  q: number;
+  r: number;
+  x: number;
+  z: number;
+  /** Audio time the bell is due. */
+  dueAt: number;
+}
+
+export interface BellState {
+  pending: BellRequest[];
+  lastAt: number | null;
+  lastTile: { q: number; r: number } | null;
+  lastCue: string | null;
+  plays: number;
+  /** Why the last due bell was dropped, or null when it rang. */
+  gatedBy: OneShotGate | "out-of-range" | null;
+}
+
+export const bellIdle = (): BellState => ({
+  pending: [],
+  lastAt: null,
+  lastTile: null,
+  lastCue: null,
+  plays: 0,
+  gatedBy: null,
+});
+
+export interface BellPlay {
+  cue: string;
+  q: number;
+  r: number;
+  x: number;
+  z: number;
+  gain: number;
+}
+
+/**
+ * One bell step at audio time `now`. A park whose cell (the spot's owner) is a shop joins the queue, due
+ * SHOP_BELL.delayS later; any other park is ignored. A due bell rings a variant (never the last one again) at
+ * the spot under the focus mix, or is dropped when gated, out of range or too quiet.
+ */
+export function bellStep(
+  st: BellState,
+  now: number,
+  parks: readonly { q: number; r: number; x: number; z: number }[],
+  isShop: (q: number, r: number) => boolean,
+  v: View,
+  gate: OneShotGate,
+  variants: readonly string[],
+  rand: () => number,
+): { state: BellState; play: BellPlay[] } {
+  const s: BellState = {
+    ...st,
+    pending: [
+      ...st.pending,
+      ...parks.filter((p) => isShop(p.q, p.r)).map((p) => ({ ...p, dueAt: now + SHOP_BELL.delayS })),
+    ],
+  };
+  const play: BellPlay[] = [];
+  const waiting: BellRequest[] = [];
+  for (const b of s.pending) {
+    if (b.dueAt > now) {
+      waiting.push(b);
+      continue;
+    }
+    if (gate) {
+      s.gatedBy = gate;
+      continue;
+    }
+    if (!carInRange(b.x, b.z, v)) {
+      s.gatedBy = "out-of-range";
+      continue;
+    }
+    const gain = SHOP_BELL.level * emitterGain(b.x, b.z, v);
+    const cue = gain >= MIN_EMITTER_GAIN ? pickVariant(variants, s.lastCue, rand) : null;
+    if (!cue) {
+      s.gatedBy = variants.length === 0 ? "not-loaded" : "out-of-range";
+      continue;
+    }
+    Object.assign(s, { lastAt: now, lastTile: { q: b.q, r: b.r }, lastCue: cue, plays: s.plays + 1, gatedBy: null });
+    play.push({ cue, q: b.q, r: b.r, x: b.x, z: b.z, gain });
+  }
+  s.pending = waiting;
   return { state: s, play };
 }
 

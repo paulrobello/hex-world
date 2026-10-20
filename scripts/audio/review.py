@@ -119,6 +119,22 @@ POOL_NOTE = {
                   "70 Hz and gated so it settles to silence. Three car-drive-1 takes failed (see its retiredNote). The "
                   "game plays it once per trip at a driving car within 3 hex steps of the focus, the sound following "
                   "the car, at a rate varied by car id (about 5% either way) so passes differ."),
+    "farm-cow": ("A single soft moo, one ElevenLabs take each, high-passed at 60 Hz. The game plays one at a farm tile "
+                 "within 3 hex steps of the focus every 30-90 s, at level 0.25 on the ambience bus."),
+    "farm-sheep": ("A sheep or lamb bleat, one ElevenLabs take each, high-passed at 90 Hz. The game plays one at a farm "
+                   "tile within 3 hex steps of the focus every 30-90 s (its own timer, apart from the cow), at level 0.25."),
+    "windmill-creak": ("A slow wooden shaft and sail creak, one ElevenLabs take each, high-passed at 60 Hz. The game plays "
+                       "one at a windmill tile within 3 hex steps of the focus every 25-70 s, at level 0.3."),
+    "wheat-rustle": ("A dry wheat-ears rustle in one gust, band-passed 250 Hz-12 kHz and gated so it settles to silence. "
+                     "wheat-rustle-1 is the retake (attempt 53). The game plays one at a wheat field tile within 3 hex "
+                     "steps of the focus every 20-60 s, at level 0.3."),
+    "shop-bell": ("A small shop-door bell, one ElevenLabs take each, high-passed at 250 Hz. Not on a timer: the game rings "
+                  "one 1.2 s after a car parks at a bakery (its door closes first), at the spot, within 3 hex steps of "
+                  "the focus, at level 0.35."),
+    "train-whistle": ("A steam whistle, one ElevenLabs take each, high-passed at 150 Hz. Mastered, not played: there is no "
+                      "rail tile or train in play yet, so only hexWorld.audio.play('train-whistle') sounds it."),
+    "train-chuff": ("A steam engine chuffing past, one 6 s one-shot (not a loop), high-passed at 50 Hz. Mastered, not "
+                    "played: it waits for trains, which would carry it as the cars carry car-drive."),
 }
 
 
@@ -137,18 +153,33 @@ def floor_nums(prov: dict) -> str:
 
 
 def pool_sections(layout: A.Layout, reg: dict, manifest: dict, rel_runtime: str) -> str:
-    """One-shot pools, listed first: each variant with its floor numbers, and a random-variant player."""
+    """One-shot pools, listed first and newest review round first: each variant with its floor and screening
+    numbers and its use, and a random-variant player."""
     out = []
+    cue_by_id = {c["id"]: c for c in reg["cues"]}
+    rnd = lambda e: ((cue_by_id.get(e["id"]) or {}).get("review") or {}).get("round", 0)  # noqa: E731
     pools = list(dict.fromkeys(e["pool"] for e in manifest["cues"] if e.get("pool")))
-    for pool in pools:
+    pool_round = {p: max(rnd(e) for e in manifest["cues"] if e.get("pool") == p) for p in pools}
+    newest = max(pool_round.values(), default=0)
+    pools.sort(key=lambda p: -pool_round[p])
+    shown_earlier = False
+    for i, pool in enumerate(pools):
         group = [e for e in manifest["cues"] if e.get("pool") == pool]
-        out.append(f"<h2>New one-shot pool: {html.escape(pool)} ({len(group)} variants)</h2>"
+        is_new = bool(newest) and pool_round[pool] == newest
+        if is_new and i == 0:
+            note = next(((cue_by_id[e["id"]].get("review") or {}).get("roundNote") for e in group), "")
+            out.append(f"<h2>Round {newest}: new one-shot pools to audition</h2><p class=lead>{html.escape(note or '')}</p>")
+        if newest and not is_new and not shown_earlier:
+            out.append("<h2>Earlier one-shot pools</h2>")
+            shown_earlier = True
+        label = "New one-shot pool" if is_new else "One-shot pool"
+        out.append(f"<h2>{label}: {html.escape(pool)} ({len(group)} variants)</h2>"
                    f"<p class=lead>{html.escape(POOL_NOTE.get(pool, ''))} The floor numbers are the owner's 2026-10-14 "
                    "criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p>"
                    f"<p><button onclick=\"randomVariant(this, '{html.escape(pool)}')\">Play a random variant</button> "
                    f"<span class=meta data-now='{html.escape(pool)}'></span></p>"
                    f"<div class=grid data-pool='{html.escape(pool)}'>"
-                   + "".join(card(layout, e, rel_runtime) for e in group) + "</div>")
+                   + "".join(card(layout, e, rel_runtime, cue_by_id.get(e["id"])) for e in group) + "</div>")
     return "".join(out)
 
 
@@ -216,9 +247,18 @@ def screening(cue: dict | None) -> str:
             f"<span>1–6 kHz vs full <b>{s['band1to6kVsFullDb']} dB</b></span>"
             f"<span>deepest dip <b>{s['levelDeepestDipDb']} dB</b> (spread {s['levelSpreadDb']})</span>"
             f"<span>200 Hz series <b>+{s['tone200HzSeriesMaxDb']} dB</b>, other tones {html.escape(others)}</span>"
-            f"<span>birds <b>{'yes' if s['birds'] else 'no'}</b> ({s['birdChirpEvents']} chirp events)</span></div>"
+            f"<span>birds <b>{'yes' if s['birds'] else 'no'}</b> ({s['birdChirpEvents']} chirp events)</span>"
+            + (f"<span>raw floor <b>{s['rawFloorBelowPeakDb']} dB</b> under peak</span>" if "rawFloorBelowPeakDb" in s else "")
+            + "</div>"
             f"<p class=meta>Screened on the {html.escape(s['measuredOn'])}."
             + (f" Filter: {html.escape(filt)}." if filt else "") + "</p>")
+
+
+def use_line(cue: dict | None) -> str:
+    """A round-3-or-later review cue's use in the game (cues.json `use`), shown on its card."""
+    if not cue or ((cue.get("review") or {}).get("round") or 0) < 3:
+        return ""
+    return f"<p class=meta>Use: {html.escape(cue.get('use', ''))}</p>"
 
 
 def card(layout: A.Layout, entry: dict, rel_runtime: str, cue: dict | None = None) -> str:
@@ -264,7 +304,7 @@ def card(layout: A.Layout, entry: dict, rel_runtime: str, cue: dict | None = Non
 <span>m4a <b>{m4a['integrated']:.1f}</b> / <b>{m4a['truePeak']:.1f}</b></span>
 <span>source <b>{prov['loudness']['before']['integrated']:.1f} LUFS</b></span>
 <span>runtime <b>{kb:.0f} KB</b></span></div>
-<p class=meta>{html.escape(limiter)}</p>{dev}{floor_nums(prov)}{screening(cue)}
+<p class=meta>{html.escape(limiter)}</p>{dev}{floor_nums(prov)}{screening(cue)}{use_line(cue)}
 <details><summary>Prompt and generation</summary><p>{html.escape(prompt)}</p>{influence}
 <p>{html.escape(prov['provider']['name'])} · {html.escape(prov['provider']['model'])} · attempt {prov['generation'].get('attempt')} ·
 id <code>{html.escape(str(prov['generation']['id']))}</code> · {source_link}</p></details>

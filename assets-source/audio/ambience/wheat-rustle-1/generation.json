@@ -1,0 +1,43 @@
+{
+  "cueId": "wheat-rustle-1",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording of a single sudden gust of wind sweeping through a small patch of ripe, dry wheat: a crisp, rustling swish of the wheat ears that rises quickly out of complete silence, peaks after about one second and dies away to complete silence within two seconds. Studio-quiet background, with silence before and after the gust.",
+  "parameters": {
+    "text": "Close, isolated recording of a single sudden gust of wind sweeping through a small patch of ripe, dry wheat: a crisp, rustling swish of the wheat ears that rises quickly out of complete silence, peaks after about one second and dies away to complete silence within two seconds. Studio-quiet background, with silence before and after the gust.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 3.5,
+    "prompt_influence": 0.75
+  },
+  "generationId": "8298b9b851d0bdb0fa1e4f9e16883ee9",
+  "responseHeaders": {
+    "date": "Tue, 20 Oct 2026 05:10:35 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "35",
+    "content-length": "56885",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "8298b9b851d0bdb0fa1e4f9e16883ee9",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-20T05:10:36+00:00",
+  "attempt": 53,
+  "creditsCharged": 35,
+  "sourceFile": "wheat-rustle-1.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}

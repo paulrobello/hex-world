@@ -1,0 +1,43 @@
+{
+  "cueId": "train-chuff-1",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording of a small steam locomotive passing by on a quiet country line: rhythmic chuffs of steam and the soft clatter of its wheels on the rail joints, coming in from silence, passing close and receding into silence, about five seconds in all. Studio-quiet background, with silence before and after the train.",
+  "parameters": {
+    "text": "Close, isolated recording of a small steam locomotive passing by on a quiet country line: rhythmic chuffs of steam and the soft clatter of its wheels on the rail joints, coming in from silence, passing close and receding into silence, about five seconds in all. Studio-quiet background, with silence before and after the train.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 6,
+    "prompt_influence": 0.6
+  },
+  "generationId": "7865e5b8fe865c4daf5c7bbfd44f6729",
+  "responseHeaders": {
+    "date": "Tue, 20 Oct 2026 05:08:32 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "60",
+    "content-length": "97009",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "7865e5b8fe865c4daf5c7bbfd44f6729",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-20T05:08:33+00:00",
+  "attempt": 52,
+  "creditsCharged": 60,
+  "sourceFile": "train-chuff-1.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}

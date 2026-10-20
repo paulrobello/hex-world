@@ -1,0 +1,43 @@
+{
+  "cueId": "farm-sheep-2",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording of a young lamb in a calm pasture bleating twice: two short, gentle, high calls a moment apart. Studio-quiet background, with silence before and after the lamb.",
+  "parameters": {
+    "text": "Close, isolated recording of a young lamb in a calm pasture bleating twice: two short, gentle, high calls a moment apart. Studio-quiet background, with silence before and after the lamb.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 3,
+    "prompt_influence": 0.6
+  },
+  "generationId": "86fbaacaee7b73a18413dc73539cfe9c",
+  "responseHeaders": {
+    "date": "Tue, 20 Oct 2026 05:07:59 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "30",
+    "content-length": "48944",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "86fbaacaee7b73a18413dc73539cfe9c",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-20T05:07:59+00:00",
+  "attempt": 43,
+  "creditsCharged": 30,
+  "sourceFile": "farm-sheep-2.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}

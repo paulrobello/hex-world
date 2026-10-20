@@ -1,0 +1,235 @@
+{
+  "cueId": "wheat-rustle-1",
+  "kind": "ambience",
+  "class": "sfx",
+  "version": 1,
+  "use": "One dry wheat-ears rustle in a gust, of the wheat-rustle pool: positional at a wheat field tile within 3 hex steps of the camera focus, every 20-60 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Close, isolated recording of a single sudden gust of wind sweeping through a small patch of ripe, dry wheat: a crisp, rustling swish of the wheat ears that rises quickly out of complete silence, peaks after about one second and dies away to complete silence within two seconds. Studio-quiet background, with silence before and after the gust.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Close, isolated recording of a single sudden gust of wind sweeping through a small patch of ripe, dry wheat: a crisp, rustling swish of the wheat ears that rises quickly out of complete silence, peaks after about one second and dies away to complete silence within two seconds. Studio-quiet background, with silence before and after the gust.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 3.5,
+    "prompt_influence": 0.75
+  },
+  "generation": {
+    "id": "8298b9b851d0bdb0fa1e4f9e16883ee9",
+    "generatedAt": "2026-10-20T05:10:36+00:00",
+    "attempt": 53,
+    "creditsCharged": 35,
+    "record": {
+      "path": "assets-source/audio/ambience/wheat-rustle-1/generation.json",
+      "sha256": "6d4f992332c04602af53aaf75e79465fb278f781a554838afc9bd32b6728f5d9",
+      "bytes": 2209
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/wheat-rustle-1/wheat-rustle-1.mp3",
+    "sha256": "83ce2faadf771e494feea06110a929a5a5db5e9461108f886859101475d3dff3",
+    "bytes": 56885,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 3.48
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -54.7,
+      "lra": 0.3,
+      "truePeak": -22.3
+    },
+    "master": {
+      "integrated": -16.4,
+      "lra": 0.4,
+      "truePeak": -2.7
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.4,
+        "lra": 0.4,
+        "truePeak": -1.5
+      },
+      "m4a": {
+        "integrated": -16.5,
+        "lra": 0.4,
+        "truePeak": -2.6
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 250,
+        "lowpassHz": 12000
+      },
+      "chain": "highpass=f=250:poles=2,lowpass=f=12000:poles=2",
+      "circularPadFrames": 0
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "gate",
+      "thresholdDbBelowPeak": 18,
+      "ratio": 4,
+      "rangeDb": 45,
+      "attackMs": 5,
+      "releaseMs": 250,
+      "peakWindowDb": -54.04,
+      "thresholdDb": -72.04,
+      "closedPct": 46.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -60.6,
+        "lra": 0.3,
+        "truePeak": -41.6
+      },
+      "targetLufs": -16.0,
+      "gainDb": 44.6,
+      "requiredPeakReductionDb": 5.0,
+      "mode": "limited",
+      "limiterInputGainDb": 47.0,
+      "limiterPasses": 3,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 5.7
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.2
+    },
+    {
+      "step": "encode-overshoot-trim",
+      "encodedTruePeakDb": -0.8,
+      "trimDb": -0.4
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/wheat-rustle-1.wav",
+    "sha256": "77fb87d3ee3313219a2de109c2c0a3993ff3f8957f5c33416f41f568caa1ad7e",
+    "frames": 167040,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/wheat-rustle-1.webm",
+      "sha256": "285a5620aebb4b5f0c1c8a472714202d77c857a4eed0ec0b263235e76de328fb",
+      "bytes": 27083,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 3.488,
+      "decodedFrames": 167040,
+      "loudness": {
+        "integrated": -16.4,
+        "lra": 0.4,
+        "truePeak": -1.5
+      },
+      "floor": {
+        "peakWindowDb": -11.6,
+        "floorDb": -66.8,
+        "floorBelowPeakDb": 55.2,
+        "floorBandPct": {
+          "below1500": 61.9,
+          "1500to9k": 35.9,
+          "above9k": 2.2
+        },
+        "interiorWindows": 69,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/wheat-rustle-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/wheat-rustle-1.webm"
+    },
+    {
+      "path": "assets/audio/ambience/wheat-rustle-1.m4a",
+      "sha256": "7aa60fbca864adfdbbb163151b983947193accfe4cbc720e6d818766a9382730",
+      "bytes": 84594,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 3.48,
+      "decodedFrames": 167040,
+      "loudness": {
+        "integrated": -16.5,
+        "lra": 0.4,
+        "truePeak": -2.6
+      },
+      "floor": {
+        "peakWindowDb": -11.6,
+        "floorDb": -66.8,
+        "floorBelowPeakDb": 55.2,
+        "floorBandPct": {
+          "below1500": 62.0,
+          "1500to9k": 35.9,
+          "above9k": 2.2
+        },
+        "interiorWindows": 69,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/wheat-rustle-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/wheat-rustle-1.m4a"
+    }
+  ],
+  "decodedBytes": 668160,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "bce93ae39ad1163524ac6756bf50a1fae8b59bccd9e7ca240a3bd741f177e054"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

@@ -573,6 +573,357 @@
       "provenance": "assets-source/audio/ambience/car-drive-2/provenance.json"
     },
     {
+      "id": "farm-cow-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "farm-cow",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.668938,
+      "decodedBytes": 512436,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/farm-cow-1.webm",
+          "sha256": "2af0e49e69ac9855883af544a00f9e8f83c451852cdc8f040dead7b16af08918",
+          "bytes": 21232
+        },
+        "m4a": {
+          "path": "ambience/farm-cow-1.m4a",
+          "sha256": "b88f39729d7971cd027f75d04b0a536c5a06bbc91e755fbba7a4939a9bee74da",
+          "bytes": 47192
+        }
+      },
+      "provenance": "assets-source/audio/ambience/farm-cow-1/provenance.json"
+    },
+    {
+      "id": "farm-cow-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "farm-cow",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 3.479375,
+      "decodedBytes": 668040,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/farm-cow-2.webm",
+          "sha256": "f818fcf1f1a4827c647b30f687afd5959c6bc1e8dd44298c3fd113509f7df396",
+          "bytes": 26375
+        },
+        "m4a": {
+          "path": "ambience/farm-cow-2.m4a",
+          "sha256": "41cebd78b9b199ff73f6b18fa10589141a3e20207970ad0ba532271fdd306be2",
+          "bytes": 60922
+        }
+      },
+      "provenance": "assets-source/audio/ambience/farm-cow-2/provenance.json"
+    },
+    {
+      "id": "farm-sheep-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "farm-sheep",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.48,
+      "decodedBytes": 476160,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/farm-sheep-1.webm",
+          "sha256": "510e18ad0456acce79afff904b14c89019088ab3ec0ca6353efb9aedcb2af4f6",
+          "bytes": 22466
+        },
+        "m4a": {
+          "path": "ambience/farm-sheep-1.m4a",
+          "sha256": "de28c08a3f782e47767170d9c88187d186a8f013df3b047fd754811cf879df7d",
+          "bytes": 49032
+        }
+      },
+      "provenance": "assets-source/audio/ambience/farm-sheep-1/provenance.json"
+    },
+    {
+      "id": "farm-sheep-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "farm-sheep",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.85,
+      "decodedBytes": 547200,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/farm-sheep-2.webm",
+          "sha256": "177a515e65acae58e24d9ac0eb0113c04b8c5eaa8a1b7e199698740c7c53bd56",
+          "bytes": 25954
+        },
+        "m4a": {
+          "path": "ambience/farm-sheep-2.m4a",
+          "sha256": "c3741a1640018607b2f8c5ab60acd75538f0870daa86b0c78e5140072438079f",
+          "bytes": 54370
+        }
+      },
+      "provenance": "assets-source/audio/ambience/farm-sheep-2/provenance.json"
+    },
+    {
+      "id": "windmill-creak-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "windmill-creak",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 4.279354,
+      "decodedBytes": 821636,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/windmill-creak-1.webm",
+          "sha256": "937f1e1d352133f598c28957b4d650f30d1d27122793ff0c8d7c23a6291338a9",
+          "bytes": 33566
+        },
+        "m4a": {
+          "path": "ambience/windmill-creak-1.m4a",
+          "sha256": "1a305d84fd884d2296d5de960a70148092984c783c5ba934315835d7219911e2",
+          "bytes": 86334
+        }
+      },
+      "provenance": "assets-source/audio/ambience/windmill-creak-1/provenance.json"
+    },
+    {
+      "id": "windmill-creak-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "windmill-creak",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 3.824333,
+      "decodedBytes": 734272,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/windmill-creak-2.webm",
+          "sha256": "bc519cc687aaa29df1bfdfb284457f1478aeea2e80351446b68823cb39dc07bd",
+          "bytes": 39155
+        },
+        "m4a": {
+          "path": "ambience/windmill-creak-2.m4a",
+          "sha256": "d51bb25453d75aa2cb8a3fb46cb234ea8a3897b273645ba700f7c2df7db786bc",
+          "bytes": 86755
+        }
+      },
+      "provenance": "assets-source/audio/ambience/windmill-creak-2/provenance.json"
+    },
+    {
+      "id": "wheat-rustle-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "wheat-rustle",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 3.48,
+      "decodedBytes": 668160,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/wheat-rustle-1.webm",
+          "sha256": "285a5620aebb4b5f0c1c8a472714202d77c857a4eed0ec0b263235e76de328fb",
+          "bytes": 27083
+        },
+        "m4a": {
+          "path": "ambience/wheat-rustle-1.m4a",
+          "sha256": "7aa60fbca864adfdbbb163151b983947193accfe4cbc720e6d818766a9382730",
+          "bytes": 84594
+        }
+      },
+      "provenance": "assets-source/audio/ambience/wheat-rustle-1/provenance.json"
+    },
+    {
+      "id": "wheat-rustle-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "wheat-rustle",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 4.0,
+      "decodedBytes": 768000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/wheat-rustle-2.webm",
+          "sha256": "366ce5c94d46ffd38275a1768c36f6730b4117a96dea02f2524f8faaa79d47d1",
+          "bytes": 29786
+        },
+        "m4a": {
+          "path": "ambience/wheat-rustle-2.m4a",
+          "sha256": "2cef676dcecc95822b5363ca1a89878609c7947f26ac80b5c488d476b312ab15",
+          "bytes": 86540
+        }
+      },
+      "provenance": "assets-source/audio/ambience/wheat-rustle-2/provenance.json"
+    },
+    {
+      "id": "shop-bell-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "shop-bell",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.48,
+      "decodedBytes": 476160,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/shop-bell-1.webm",
+          "sha256": "247b2200ca4bd16c20dd25a297e3e15360be0f5e9d3b6e6f82d0ccebe25ca01b",
+          "bytes": 22628
+        },
+        "m4a": {
+          "path": "ambience/shop-bell-1.m4a",
+          "sha256": "526113c746e9c8f27e9d4ff8def3506a63f75c7f6ac0ce09b83e9e5c50737dca",
+          "bytes": 46031
+        }
+      },
+      "provenance": "assets-source/audio/ambience/shop-bell-1/provenance.json"
+    },
+    {
+      "id": "shop-bell-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "shop-bell",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.48,
+      "decodedBytes": 476160,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/shop-bell-2.webm",
+          "sha256": "e3e95901ed0cec8b5fa8cc5266362aa0d21ef9377d0e44ac9fcad91fdfbff774",
+          "bytes": 24376
+        },
+        "m4a": {
+          "path": "ambience/shop-bell-2.m4a",
+          "sha256": "9a2960ffe24194b8838704886973a99ebe670db3fda0c1fe8fc655a2b8b84aef",
+          "bytes": 48905
+        }
+      },
+      "provenance": "assets-source/audio/ambience/shop-bell-2/provenance.json"
+    },
+    {
+      "id": "train-whistle-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "train-whistle",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 4.0,
+      "decodedBytes": 768000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/train-whistle-1.webm",
+          "sha256": "4e2fc424e936041d5663998604d0da7962423ec2a4dc946055f33a36db118a2b",
+          "bytes": 30014
+        },
+        "m4a": {
+          "path": "ambience/train-whistle-1.m4a",
+          "sha256": "c5087f402bbc9bed147b888972c981a359dbcb8aab3b7833f4f7328704ec9efe",
+          "bytes": 69802
+        }
+      },
+      "provenance": "assets-source/audio/ambience/train-whistle-1/provenance.json"
+    },
+    {
+      "id": "train-whistle-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "train-whistle",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.267667,
+      "decodedBytes": 435392,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/train-whistle-2.webm",
+          "sha256": "e0d88f871f41c1050c1a025b576520903cdcce9a0ac1e1a3b2fe7d2900f9d368",
+          "bytes": 18722
+        },
+        "m4a": {
+          "path": "ambience/train-whistle-2.m4a",
+          "sha256": "4f3045fe2590fdf5d0d265579e1c54f82c6422ef5f7dbe9d202ba95a71f94f55",
+          "bytes": 42653
+        }
+      },
+      "provenance": "assets-source/audio/ambience/train-whistle-2/provenance.json"
+    },
+    {
+      "id": "train-chuff-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "train-chuff",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 6.0,
+      "decodedBytes": 1152000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/train-chuff-1.webm",
+          "sha256": "e8a0e08adac957a09c43aea3e0652b1d24081b39a324651cb420780b437a31ab",
+          "bytes": 41919
+        },
+        "m4a": {
+          "path": "ambience/train-chuff-1.m4a",
+          "sha256": "e1aeebfecd1dc0fbb4d03feb22d097f1beb9d111c2685892af7bd59902b28f8d",
+          "bytes": 109829
+        }
+      },
+      "provenance": "assets-source/audio/ambience/train-chuff-1/provenance.json"
+    },
+    {
       "id": "meadow-day",
       "kind": "music",
       "class": "music",

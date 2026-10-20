@@ -6,6 +6,8 @@ import manifestJson from "../../../assets/audio/manifest.json" with { type: "jso
 import { type Cue, type Manifest, busOf, eventCues, pickFormat, planDecode, playable } from "../src/audio-cues.ts";
 import {
   BED_CUE,
+  bellIdle,
+  bellStep,
   CAR_CUES,
   CAR_DRIVE_GAP_S,
   CAR_EVENT_WAIT_S,
@@ -22,6 +24,7 @@ import {
   type Mix,
   MUSIC_OPTS,
   ONE_SHOTS,
+  type OneShotGate,
   type OneShotRow,
   type OneShotTile,
   type PlacedTile,
@@ -50,6 +53,7 @@ import {
   pickOneShotTile,
   pickVariant,
   resolveOneShot,
+  SHOP_BELL,
 } from "../src/audio-mix.ts";
 import schema from "../src/bridge-schema.json" with { type: "json" };
 
@@ -362,6 +366,10 @@ test("one-shot rows: bees at flower tiles, forest birds and leaves at forest til
       ["bees", "meadow-bees", [45, 120], 3, 0.35],
       ["forest-birds", "forest-birds", [12, 40], 3, 0.4],
       ["forest-leaves", "forest-leaves", [20, 60], 3, 0.3],
+      ["farm-cow", "farm-cow", [30, 90], 3, 0.25],
+      ["farm-sheep", "farm-sheep", [30, 90], 3, 0.25],
+      ["windmill-creak", "windmill-creak", [25, 70], 3, 0.3],
+      ["wheat-rustle", "wheat-rustle", [20, 60], 3, 0.3],
     ],
   );
   assert.ok(oneShotDefs(BEES, schema.catalog.tiles).has("meadow"));
@@ -752,4 +760,107 @@ test("cars: each car keeps one rate within the spread", () => {
   assert.ok(rates.every((r) => Math.abs(r - 1) <= CAR_RATE_SPREAD + 1e-9));
   assert.equal(carRate(42), carRate(42));
   assert.ok(new Set(rates.map((r) => r.toFixed(3))).size > 50, "rates differ between cars");
+});
+
+// ---------- P3 items: farm, windmill, wheat field, bakery bell, train ----------
+const P3_ROWS: [string, string][] = [
+  ["farm-cow", "farm"],
+  ["farm-sheep", "farm"],
+  ["windmill-creak", "windmill"],
+  ["wheat-rustle", "wheat_field"],
+];
+
+test("P3 rows play only at their own tile def, not at meadows that share the biome and scatter", () => {
+  for (const [name, def] of P3_ROWS) {
+    const row = rowNamed(name);
+    assert.deepEqual([...oneShotDefs(row, schema.catalog.tiles)], [def], `${name} plays only at ${def}`);
+  }
+  for (const def of ["farm", "windmill", "wheat_field"]) {
+    const t = schema.catalog.tiles.find((x) => x.id === def)!;
+    assert.equal(biomeOf(t.id, t.edges), "meadow", `${def} is a meadow-biome tile`);
+  }
+  const tile = pickOneShotTile(rowNamed("farm-cow"), [cell(0, 0), cell(4, 0)], flowerView, () => 0.5);
+  assert.deepEqual(tile && [tile.q, tile.r], [0, 0], "a farm in range, not one four steps out");
+});
+
+test("P3 pools ship as decoded ambience one-shots; the train pools are mastered but in no row or event", () => {
+  const pools = [
+    "farm-cow",
+    "farm-sheep",
+    "windmill-creak",
+    "wheat-rustle",
+    "shop-bell",
+    "train-whistle",
+    "train-chuff",
+  ];
+  for (const pool of pools) {
+    const variants = manifest.cues.filter((c) => c.pool === pool);
+    assert.ok(variants.length >= 1, `${pool} has variants`);
+    for (const c of variants) {
+      assert.ok(c.status === "mastered" && !c.loop && c.playback === "decode", `${c.id} is a decoded one-shot`);
+      assert.equal(busOf(c), "ambience", `${c.id} plays on the ambience bus`);
+      assert.deepEqual(c.events, [], `${c.id} is routed by the runtime, not by an event list`);
+    }
+  }
+  for (const pool of ["train-whistle", "train-chuff", "shop-bell"])
+    assert.ok(!ONE_SHOTS.some((r) => r.pool === pool), `${pool} has no timer row`);
+  assert.equal(resolveOneShot("train-whistle", manifest.cues)?.row, null, "on demand only, non-positional");
+});
+
+const park = (q: number, r: number) => {
+  const [x, z] = cellWorld(q, r, R);
+  return { q, r, x: x + 1.8, z: z - 8.8 };
+};
+const bakeryAt = (cells: [number, number][]) => (q: number, r: number) => cells.some(([a, b]) => a === q && b === r);
+const BELLS = ["bell-a", "bell-b"];
+const ring = (
+  st: ReturnType<typeof bellIdle>,
+  now: number,
+  parks: ReturnType<typeof park>[] = [],
+  gate: OneShotGate = null,
+  shops: [number, number][] = [[1, 0]],
+) => bellStep(st, now, parks, bakeryAt(shops), carView, gate, BELLS, () => 0);
+
+test("shop bell: a park at a bakery rings after the door, at the spot; a park at a house does not", () => {
+  const r0 = ring(bellIdle(), 10, [park(1, 0), park(0, 1)]);
+  assert.equal(r0.play.length, 0, "not at once: the door closes first");
+  assert.equal(r0.state.pending.length, 1, "only the bakery park waits for a bell");
+  const early = ring(r0.state, 10 + SHOP_BELL.delayS - 0.1);
+  assert.equal(early.play.length, 0);
+  const due = ring(early.state, 10 + SHOP_BELL.delayS);
+  assert.equal(due.play.length, 1);
+  const p = due.play[0]!;
+  const { x, z } = park(1, 0);
+  assert.deepEqual([p.q, p.r, p.x, p.z], [1, 0, x, z]);
+  close(p.gain, SHOP_BELL.level * emitterGain(x, z, carView));
+  assert.equal(due.state.pending.length, 0);
+  assert.deepEqual(due.state.lastTile, { q: 1, r: 0 });
+  assert.equal(due.state.plays, 1);
+  assert.ok(
+    schema.catalog.tiles.some((t) => t.id === SHOP_BELL.tile),
+    "the bakery is a catalog tile",
+  );
+});
+
+test("shop bell: dropped when muted, with the ambience bus at 0 or out of range; never the same bell twice running", () => {
+  for (const gate of ["muted", "ambience-off"] as const) {
+    const r0 = ring(bellIdle(), 0, [park(1, 0)]);
+    const r1 = ring(r0.state, SHOP_BELL.delayS, [], gate);
+    assert.equal(r1.play.length, 0, gate);
+    assert.equal(r1.state.gatedBy, gate);
+    assert.equal(r1.state.pending.length, 0, `${gate}: dropped, not queued`);
+  }
+  const far = ring(bellIdle(), 0, [park(5, 0)], null, [[5, 0]]);
+  const farDue = ring(far.state, SHOP_BELL.delayS, [], null, [[5, 0]]);
+  assert.equal(farDue.play.length, 0);
+  assert.equal(farDue.state.gatedBy, "out-of-range");
+  let st = bellIdle();
+  const cues: string[] = [];
+  for (let i = 0; i < 6; i++) {
+    st = ring(st, i * 10, [park(1, 0)]).state;
+    const r = ring(st, i * 10 + SHOP_BELL.delayS);
+    st = r.state;
+    cues.push(r.play[0]!.cue);
+  }
+  for (let i = 1; i < cues.length; i++) assert.notEqual(cues[i], cues[i - 1], `bell ${i} repeats ${cues[i]}`);
 });
