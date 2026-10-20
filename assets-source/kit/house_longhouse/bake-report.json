@@ -1,0 +1,112 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.6556292176246643,
+    "aoP05": 0.0,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "brick": 0.0,
+          "door": 0.875,
+          "frame": 0.0,
+          "glass": 0.514,
+          "roof": 0.0,
+          "stone": 0.0,
+          "timber": 0.0,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "brick": 0.016,
+          "door": 1.0,
+          "frame": 0.0,
+          "glass": 0.969,
+          "roof": 0.0,
+          "stone": 0.0,
+          "timber": 0.0,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "brick": 0.624,
+          "door": 1.0,
+          "glass": 0.984,
+          "roof": 0.408,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.41569995880126953,
+    "filledTexels": 19441,
+    "nightTexels": 14243
+  },
+  "masksDensityBySlot": {
+    "lod0": {
+      "brick": 18.77,
+      "door": 18.77,
+      "frame": 18.77,
+      "glass": 18.77,
+      "roof": 17.31,
+      "stone": 18.77,
+      "timber": 18.77,
+      "walls": 18.77
+    },
+    "lod1": {
+      "brick": 18.77,
+      "door": 18.77,
+      "frame": 18.77,
+      "glass": 18.77,
+      "roof": 16.99,
+      "stone": 18.77,
+      "timber": 18.77,
+      "walls": 18.77
+    },
+    "lod2": {
+      "brick": 18.77,
+      "door": 18.77,
+      "glass": 18.77,
+      "roof": 16.99,
+      "walls": 18.77
+    }
+  },
+  "masksDensityPxPerM": {
+    "house_longhouse_lod0": {
+      "max": 18.771883977075532,
+      "median": 18.770892077752414,
+      "min": 16.134997688618085
+    },
+    "house_longhouse_lod1": {
+      "max": 18.771489381740373,
+      "median": 18.7708259126375,
+      "min": 16.420171969523363
+    },
+    "house_longhouse_lod2": {
+      "max": 18.77110242538927,
+      "median": 18.77097600864311,
+      "min": 14.216168782222127
+    }
+  },
+  "receiverSignature": "fe51078227b1cc6ec655dcc9d3e4f09166394fe1fc51719d3a81e5e4704f4fa1",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 18.771883977075532,
+    "median": 18.770892077752414,
+    "min": 16.134997688618085
+  },
+  "uvMargin": 0.012
+}

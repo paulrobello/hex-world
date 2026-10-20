@@ -126,8 +126,22 @@ pub fn kit_layout() -> Vec<Placement> {
     v.push(hero("house_cottage", -1, 0, [-0.5, -7.0], 90.0));
     v.push(hero("house_cottage", -1, 0, [-0.5, 7.0], 270.0));
     v.push(hero("house_twostorey", -1, 0, [-7.5, 0.0], 0.0));
+    // The third house variant (house_longhouse) in a second house_cluster on (-1, -1): its edge-0
+    // road stub meets the wide bend's world-edge-3 stub on (0, -1). The longhouse stands in house
+    // 0's slot (yawed 90, front toward the yard), the cottage and the two-storey in the others, and a
+    // sedan is parked at park-0 (`PARK` in scripts/blender/kit/house_pad.py), on the gravel.
+    v.push(place("meadow_base", -1, -1, 0));
+    v.push(place("house_pad", -1, -1, 0));
+    v.push(place("road_straight_edge", -1, -1, 0));
+    v.push(hero("house_longhouse", -1, -1, [-0.5, -7.0], 90.0));
+    v.push(hero("house_cottage", -1, -1, [-0.5, 7.0], 270.0));
+    v.push(hero("house_twostorey", -1, -1, [-7.5, 0.0], 0.0));
+    v.push(Placement {
+        y: PARK_Y,
+        ..hero("car_sedan", -1, -1, [-1.0, -2.6], 180.0)
+    });
     // Road-family centre pieces on ring cells, each with its edge stubs. The wide bend on (0, -1)
-    // turns from world edge 3 to world edge 5, both on the layout's outer rim.
+    // turns from world edge 3 (the longhouse cluster's road) to world edge 5 (the outer rim).
     v.push(place("road_bend_120_center", 0, -1, 3));
     v.push(place("road_straight_edge", 0, -1, 3));
     v.push(place("road_straight_edge", 0, -1, 5));
@@ -245,6 +259,10 @@ pub fn kit_layout() -> Vec<Placement> {
     }
     v
 }
+
+/// house_pad's gravel top (`YARD_Z` in scripts/blender/kit/house_pad.py), where a parked car's wheels
+/// stand.
+const PARK_Y: f32 = 0.05;
 
 /// (piece, offset) of the engine on the river rail bridge's arch and a carriage coupled behind it, in
 /// the bridge's frame (rot 1): the track runs along runtime (0.5, 0.866) there (`yaw_deg` 60), the
@@ -639,6 +657,32 @@ mod tests {
             l.iter()
                 .any(|p| p.piece == "road_straight_edge" && p.cell == pad.cell && p.rot == 0)
         );
+    }
+
+    #[test]
+    fn longhouse_cluster_meets_the_wide_bend() {
+        // The second cluster's edge-0 stub meets the wide bend's world-edge-3 stub on (0, -1), and the
+        // longhouse stands in a cottage slot of data/tiles/house_cluster.ron.
+        let l = kit_layout();
+        let lh = l.iter().find(|p| p.piece == "house_longhouse").unwrap();
+        assert!(
+            l.iter()
+                .any(|p| p.piece == "house_pad" && p.cell == lh.cell && p.rot == 0)
+        );
+        assert!(
+            l.iter()
+                .any(|p| p.piece == "road_straight_edge" && p.cell == lh.cell && p.rot == 0)
+        );
+        let bend = lh.cell.neighbor(0);
+        assert!(
+            l.iter()
+                .any(|p| p.piece == "road_bend_120_center" && p.cell == bend)
+        );
+        assert!(
+            l.iter()
+                .any(|p| p.piece == "road_straight_edge" && p.cell == bend && p.rot == 3)
+        );
+        assert_eq!((lh.offset, lh.yaw_deg), ([-0.5, -7.0], 90.0));
     }
 
     #[test]

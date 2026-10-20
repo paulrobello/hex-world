@@ -1,0 +1,286 @@
+{
+  "pieceId": "house_longhouse",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/house_longhouse.py",
+    "sha256": "06fb12c36a9d7753c75ae15ab2ba1161254023b0d79382af6e92bd83ce853ced"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    },
+    {
+      "path": "scripts/blender/kit/_house_longhouse.py",
+      "sha256": "c4e8805ae0750279370f70cde6c79cec36bf6d734e7c76e56b687c8f5c65a44b"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.6,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "marginPx": 4,
+    "maskStats": {
+      "aoMean": 0.6556292176246643,
+      "aoP05": 0,
+      "centroids": {
+        "lod0": {
+          "minA": {
+            "brick": 0,
+            "door": 0.875,
+            "frame": 0,
+            "glass": 0.514,
+            "roof": 0,
+            "stone": 0,
+            "timber": 0,
+            "walls": 0
+          },
+          "unbakedTris": 0
+        },
+        "lod1": {
+          "minA": {
+            "brick": 0.016,
+            "door": 1,
+            "frame": 0,
+            "glass": 0.969,
+            "roof": 0,
+            "stone": 0,
+            "timber": 0,
+            "walls": 0
+          },
+          "unbakedTris": 0
+        },
+        "lod2": {
+          "minA": {
+            "brick": 0.624,
+            "door": 1,
+            "glass": 0.984,
+            "roof": 0.408,
+            "walls": 0
+          },
+          "unbakedTris": 0
+        }
+      },
+      "coverage": 0.41569995880126953,
+      "filledTexels": 19441,
+      "nightTexels": 14243
+    },
+    "masksDensityBySlot": {
+      "lod0": {
+        "brick": 18.77,
+        "door": 18.77,
+        "frame": 18.77,
+        "glass": 18.77,
+        "roof": 17.31,
+        "stone": 18.77,
+        "timber": 18.77,
+        "walls": 18.77
+      },
+      "lod1": {
+        "brick": 18.77,
+        "door": 18.77,
+        "frame": 18.77,
+        "glass": 18.77,
+        "roof": 16.99,
+        "stone": 18.77,
+        "timber": 18.77,
+        "walls": 18.77
+      },
+      "lod2": {
+        "brick": 18.77,
+        "door": 18.77,
+        "glass": 18.77,
+        "roof": 16.99,
+        "walls": 18.77
+      }
+    },
+    "masksDensityPxPerM": {
+      "house_longhouse_lod0": {
+        "max": 18.771883977075532,
+        "median": 18.770892077752414,
+        "min": 16.134997688618085
+      },
+      "house_longhouse_lod1": {
+        "max": 18.771489381740373,
+        "median": 18.7708259126375,
+        "min": 16.420171969523363
+      },
+      "house_longhouse_lod2": {
+        "max": 18.77110242538927,
+        "median": 18.77097600864311,
+        "min": 14.216168782222127
+      }
+    },
+    "receiverSignature": "fe51078227b1cc6ec655dcc9d3e4f09166394fe1fc51719d3a81e5e4704f4fa1",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 18.771883977075532,
+      "median": 18.770892077752414,
+      "min": 16.134997688618085
+    },
+    "uvMargin": 0.012
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 973,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 414,
+      "ratio": 0.42548818088386436
+    },
+    {
+      "lod": 2,
+      "tris": 81,
+      "ratio": 0.08324768756423433
+    }
+  ],
+  "collider": {
+    "node": "house_longhouse_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 18.771883977075532,
+    "median": 18.770892077752414,
+    "min": 16.134997688618085
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 361882,
+        "astc": 341045
+      },
+      "glbBytes": 93980
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/house_longhouse/house_longhouse.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 361882,
+        "sha256": "4bb2dc601962aeffcb584486ea439144490bdb6fcdc1eaba5498f660efa6f2d9"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/house_longhouse/house_longhouse.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 341045,
+        "sha256": "893830810bdedab0464827c8ef57ad1e28c917f422295ef99b88d378f2ecd6c1"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/house_longhouse/house_longhouse.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 524035,
+        "sha256": "71043a8e652e5adfa56a531021f374c975a0ebf254f6aef522ec2aff07bc1a1f"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/house_longhouse/house_longhouse.glb",
+      "sha256": "129befa08a4fab7dc999f2264e2a66dc2a5a67ac26aded60a4b409ecc153bae9",
+      "bytes": 93980
+    },
+    {
+      "path": "assets/kit/p1/house_longhouse/house_longhouse.masks.bc7.ktx2",
+      "sha256": "4bb2dc601962aeffcb584486ea439144490bdb6fcdc1eaba5498f660efa6f2d9",
+      "bytes": 361882
+    },
+    {
+      "path": "assets/kit/p1/house_longhouse/house_longhouse.masks.astc.ktx2",
+      "sha256": "893830810bdedab0464827c8ef57ad1e28c917f422295ef99b88d378f2ecd6c1",
+      "bytes": 341045
+    },
+    {
+      "path": "assets/kit/p1/house_longhouse/house_longhouse.masks.png",
+      "sha256": "71043a8e652e5adfa56a531021f374c975a0ebf254f6aef522ec2aff07bc1a1f",
+      "bytes": 524035
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/house_cluster/ref-1.jpg",
+      "sha256": "99b42b6c4e28aff03bce328b31741cd433fc2c57df7545f3fd242952d502b58b",
+      "sourceSha256": "edbe02ef5c616667e08968fb3233de8a14e035356373a1d2c42fae69b0e26125",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "b55a6d3e-d7bf-4ab7-8176-691507ea9036",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), with a cluster of 3 small stylized-real rural houses (pitched clay-tile and slate roofs, rendered plaster and timber walls, chimneys, timber window frames) on a level gravel-and-paving pad, small gardens, low hedges and a picket fence, and a short asphalt driveway that leaves the pad and meets one flat edge of the tile square-on, where it joins a short stub of 6 m wide two-lane asphalt road with low kerbs and a faded dashed centre line, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/house_cluster/ref-2.jpg",
+      "sha256": "ca1a9994c8adba7a40be87bec53693cc62d9ef2779f5186a69b5784a4bf24c42",
+      "sourceSha256": "0d70d8f35debb193664fc98735985b7c463daa5a785244f953541017ac398316",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "94f3c6ca-f473-4f6c-9921-ba62d77810e7",
+      "prompt": "Close-up of one small stylized-real rural house on a diorama tile: weathered clay roof tiles, rendered plaster walls, timber window frames and front door, a chimney, a gravel path, a low hedge and a small garden, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T06:47:18.502Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/house_cluster/ref-1.jpg",
+        "assets-source/refs/house_cluster/ref-2.jpg"
+      ],
+      "notes": "Approved, including the timber-framed English cottage style (owner, in chat). Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "first build",
+      "notes": "New house_cluster variant (PRD §6 Variety), awaiting owner review of docs/checkpoints/house_longhouse/sheet.jpg (refs, textured EEVEE stills, the trio beside house_cottage and house_twostorey, in-engine play distance, sun and shade close-ups on the yawed copy, eye level, scale with a parked car)."
+    }
+  ]
+}
