@@ -1,0 +1,18 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 180 },
+  { "cmd": "camera", "pos": [6.0, 24.0, 116.0], "look_at": [28.0, -1.5, 144.0] },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "screenshot", "name": "boats-kit-play" },
+  { "cmd": "camera", "pos": [19.0, 3.5, 135.0], "look_at": [29.5, -1.6, 143.5] },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "screenshot", "name": "landing_stage-kit-channel" },
+  { "cmd": "camera", "pos": [27.6, 0.4, 147.6], "look_at": [31.0, -1.1, 142.2] },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "screenshot", "name": "landing_stage-kit-close-sun" },
+  { "cmd": "camera", "pos": [30.9, 0.75, 142.15], "look_at": [26.4, -1.2, 144.75] },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "screenshot", "name": "landing_stage-kit-eye" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

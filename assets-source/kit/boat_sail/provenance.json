@@ -1,0 +1,440 @@
+{
+  "pieceId": "boat_sail",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/boat_sail.py",
+    "sha256": "4bf5718760a18716b680f73f885debe1df13e2182455df204ec9fc2ebd34653f"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boat.py",
+      "sha256": "f95d20dab339bbf6b47680ceb56d88e03e832f3cc676ddb2cc3fe459e6c3871f"
+    },
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.5,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "geometry": {
+      "beamM": 1.8979461193084717,
+      "bow": "+x",
+      "draftM": 0.3199769854545593,
+      "hullLengthM": 5,
+      "hullXRange": [
+        -2.7699999809265137,
+        3.35317325592041
+      ],
+      "lengthOverallM": 6.125145196914673,
+      "mastTopM": 6,
+      "sheerMidshipM": 0.58,
+      "waterlineZ": 0
+    },
+    "marginPx": 4,
+    "maskStats": {
+      "aoMean": 0.8480243682861328,
+      "aoP05": 0.20000001788139343,
+      "centroids": {
+        "boat_sail_jib_lod0": {
+          "minA": {
+            "sail": 1
+          },
+          "unbakedTris": 0
+        },
+        "boat_sail_jib_lod1": {
+          "minA": {
+            "sail": 1
+          },
+          "unbakedTris": 0
+        },
+        "boat_sail_jib_lod2": {
+          "minA": {
+            "sail": 1
+          },
+          "unbakedTris": 0
+        },
+        "boat_sail_lod0": {
+          "minA": {
+            "band": 0.875,
+            "hull": 0,
+            "wicker": 0.188,
+            "wood": 0
+          },
+          "unbakedTris": 0
+        },
+        "boat_sail_lod1": {
+          "minA": {
+            "band": 0.984,
+            "hull": 0.157,
+            "wicker": 0.157,
+            "wood": 0
+          },
+          "unbakedTris": 0
+        },
+        "boat_sail_lod2": {
+          "minA": {
+            "band": 1,
+            "hull": 0.702,
+            "wood": 0.455
+          },
+          "unbakedTris": 0
+        },
+        "boat_sail_main_lod0": {
+          "minA": {
+            "sail": 1,
+            "wood": 0.188
+          },
+          "unbakedTris": 0
+        },
+        "boat_sail_main_lod1": {
+          "minA": {
+            "sail": 1,
+            "wood": 0.094
+          },
+          "unbakedTris": 0
+        },
+        "boat_sail_main_lod2": {
+          "minA": {
+            "sail": 1,
+            "wood": 0.561
+          },
+          "unbakedTris": 0
+        }
+      },
+      "coverage": 0.5385570526123047,
+      "filledTexels": 2714,
+      "nightTexels": 0
+    },
+    "masksDensityPxPerM": {
+      "boat_sail_jib_lod0": {
+        "max": 49.90882444822971,
+        "median": 49.908821473805034,
+        "min": 49.90881849938036
+      },
+      "boat_sail_jib_lod1": {
+        "max": 49.908822177716274,
+        "median": 49.90882213844001,
+        "min": 49.90882209916374
+      },
+      "boat_sail_jib_lod2": {
+        "max": 49.90882393833173,
+        "median": 49.908823058024,
+        "min": 49.908822177716274
+      },
+      "boat_sail_lod0": {
+        "max": 49.90673662522197,
+        "median": 48.68925144791729,
+        "min": 40.45081282882807
+      },
+      "boat_sail_lod1": {
+        "max": 49.90896610321844,
+        "median": 49.383981221434325,
+        "min": 41.173773987951336
+      },
+      "boat_sail_lod2": {
+        "max": 49.90741942844114,
+        "median": 45.04925267585461,
+        "min": 38.802633462526636
+      },
+      "boat_sail_main_lod0": {
+        "max": 49.90925247329789,
+        "median": 46.45355120785814,
+        "min": 42.283910875672966
+      },
+      "boat_sail_main_lod1": {
+        "max": 49.909121161007235,
+        "median": 49.90869808238047,
+        "min": 42.28422206685039
+      },
+      "boat_sail_main_lod2": {
+        "max": 49.90896300806199,
+        "median": 49.57624886786531,
+        "min": 48.27866597820734
+      }
+    },
+    "parts": {
+      "jib": {
+        "axisBlender": [
+          -0.5144957900047302,
+          0,
+          0.8574929237365723
+        ],
+        "axisLocal": [
+          0,
+          0,
+          1
+        ],
+        "kind": "sail",
+        "nodes": [
+          "boat_sail_jib_lod0",
+          "boat_sail_jib_lod1",
+          "boat_sail_jib_lod2"
+        ],
+        "pivotBlender": [
+          3.3500001430511475,
+          0,
+          1
+        ],
+        "swingDeg": 45
+      },
+      "main": {
+        "axisLocal": [
+          0,
+          0,
+          1
+        ],
+        "kind": "sail",
+        "nodes": [
+          "boat_sail_main_lod0",
+          "boat_sail_main_lod1",
+          "boat_sail_main_lod2"
+        ],
+        "pivotBlender": [
+          0.9,
+          0,
+          1.05
+        ],
+        "shroudBearingDeg": 85.82811364591124,
+        "swingDeg": 70
+      },
+      "sweeps": {
+        "boat_sail_jib_lod0": {
+          "minOverSheerM": 0.313,
+          "nearMastM": 0.284
+        },
+        "boat_sail_jib_lod1": {
+          "minOverSheerM": 0.313,
+          "nearMastM": 0.284
+        },
+        "boat_sail_jib_lod2": {
+          "minOverSheerM": 0.313,
+          "nearMastM": 0.284
+        },
+        "boat_sail_main_lod0": {
+          "minOverSheerM": 0.395,
+          "nearMastM": null
+        },
+        "boat_sail_main_lod1": {
+          "minOverSheerM": 0.4,
+          "nearMastM": null
+        },
+        "boat_sail_main_lod2": {
+          "minOverSheerM": 0.391,
+          "nearMastM": null
+        }
+      }
+    },
+    "receiverSignature": "bdf107a5d27b66e98e452c5bfaedf01d04f8c61e724f7b75648a91e398553ee9",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 49.90673662522197,
+      "median": 48.68925144791729,
+      "min": 40.45081282882807
+    },
+    "uvMargin": 0.01
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 884,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 359,
+      "ratio": 0.4061085972850679
+    },
+    {
+      "lod": 2,
+      "tris": 107,
+      "ratio": 0.12104072398190045
+    }
+  ],
+  "collider": {
+    "node": "boat_sail_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "kind": "helm"
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        -1.9500000476837158,
+        0.4000000059604645,
+        0
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "painter"
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        2.6500000953674316,
+        0.9200000166893005,
+        0
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "perch"
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        0.8999999761581421,
+        6,
+        0
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 49.90673662522197,
+    "median": 48.68925144791729,
+    "min": 40.45081282882807
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 265185,
+        "astc": 256174
+      },
+      "glbBytes": 95680
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/boat_sail/boat_sail.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 265185,
+        "sha256": "26f049e148ccd2b7473508d6fe2234bcff8a52c0b2d7c5ae07dc099d0b4dc5c2"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/boat_sail/boat_sail.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 256174,
+        "sha256": "36b73340670e6c16f7176ee0c4c9e95e8fb101b220bd9b4322ad6f005cf86ddb"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/boat_sail/boat_sail.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 387664,
+        "sha256": "2404524b7c9ce6226fff2591f0013977b626f91a58b82eae34e8d998e6bc1809"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/boat_sail/boat_sail.glb",
+      "sha256": "e10084a078674437a4d684d97825a7f70830a3af25db813d95ca27872ce9db02",
+      "bytes": 95680
+    },
+    {
+      "path": "assets/kit/p1/boat_sail/boat_sail.masks.bc7.ktx2",
+      "sha256": "26f049e148ccd2b7473508d6fe2234bcff8a52c0b2d7c5ae07dc099d0b4dc5c2",
+      "bytes": 265185
+    },
+    {
+      "path": "assets/kit/p1/boat_sail/boat_sail.masks.astc.ktx2",
+      "sha256": "36b73340670e6c16f7176ee0c4c9e95e8fb101b220bd9b4322ad6f005cf86ddb",
+      "bytes": 256174
+    },
+    {
+      "path": "assets/kit/p1/boat_sail/boat_sail.masks.png",
+      "sha256": "2404524b7c9ce6226fff2591f0013977b626f91a58b82eae34e8d998e6bc1809",
+      "bytes": 387664
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/boat_sail/ref-1.jpg",
+      "sha256": "da3acdd1e3c993a5caa2f96c330cf1aea979a7f3f112ed2e4c12ab13de592c97",
+      "sourceSha256": "14712d90819af9078f5ed47a8a47ade03af326bff6b75967661b649e156fbb57",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "0e7e0c73-5f33-4ae5-bedd-3e729f1ef4b1",
+      "prompt": "A single a small sturdy wooden open sailing fishing boat with a full rounded bow and a small square transom, the hull painted deep sea blue with one white band along the top plank and a varnished timber gunwale, a single timber mast carrying one plain red-ochre tan canvas gaff sail and a small tan jib at the bow, the sailcloth smooth and plain with only its seams showing, a varnished timber boom and tiller, a coil of rope and two wicker fish baskets in the open timber interior, the painted hull smooth and plain with a clean blank transom, standing upright alone on the plain grey studio floor with a soft contact shadow, the sail filled as if by a breeze, the whole boat with its mast and sail centred in frame and seen from the front-left at a three-quarter angle. The picture shows only the boat on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/boat_sail/ref-2.jpg",
+      "sha256": "e794ad803e90e46dcd6918861deda1197721a95a5e9ddb874cd08e2e99839d47",
+      "sourceSha256": "6fcfffa15cd38e8ed0de21482841ac589ecff6def59bd37eca7fd4087ba1c3a8",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "1e362aa8-86f6-46bc-a0f2-1c96a16d6548",
+      "prompt": "A single regular hexagonal deep ocean tile for a diorama with exactly six straight flat edges and six corners, centred in frame, 32 m across, flat-topped so one flat side faces the camera along the bottom of the frame, on a plain neutral grey studio backdrop. Open temperate sea with layered gentle waves, a few white foam flecks on crests, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. On every side the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. Near the middle of the tile sails one a small sturdy wooden open sailing fishing boat with a full rounded bow and a small square transom, the hull painted deep sea blue with one white band along the top plank and a varnished timber gunwale, a single timber mast carrying one plain red-ochre tan canvas gaff sail and a small tan jib at the bow, the sailcloth smooth and plain with only its seams showing, a varnished timber boom and tiller, a coil of rope and two wicker fish baskets in the open timber interior, the painted hull smooth and plain with a clean blank transom, about 5 m long with its mast about 6 m tall, so the hull is only about one sixth of the tile's width and the boat looks small against the open sea around it, its sail filled and the hull heeling slightly, with a short white foam wake trailing from its stern. Through the clear side walls a darker sandy seabed with scattered pebbles shows below. Stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T23:17:01.922Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/boat_sail/ref-1.jpg",
+        "assets-source/refs/boat_sail/ref-2.jpg"
+      ],
+      "notes": "D4 (BA2): approved. Ocean and river mouths only; moored and sailing routes; at most 3. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "revision": "first build",
+      "notes": "Pending owner review; not an approval. The P3 sailing fishing boat from assets-source/refs/boat_sail (D4, BA2 with the queue's lean on BQ6, BQ7, BQ9): a 5.0 m hull (6.1 m with bowsprit and rudder) by 1.9 m, deep blue with a white band under a varnished sheer strake, a varnished interior with frames, three thwarts, floorboards and two wicker fish baskets, a 6.0 m mast with shrouds and a forestay to a short bowsprit, a hung rudder and tiller, and tan (tanbark, ref-1's red-ochre) sails: one gaff mainsail with boom and gaff and one jib (BQ9), each its own node (boat_sail_main_lod<n> on the mast, boat_sail_jib_lod<n> on the forestay) so the runtime can swing them. The waterline is the origin plane; the keel draws 0.32 m. Ocean and river mouths only (BQ7). Review sheet: docs/checkpoints/boat_sail/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

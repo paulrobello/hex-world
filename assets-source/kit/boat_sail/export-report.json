@@ -1,0 +1,174 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/boat_sail.py",
+    "sha256": "4bf5718760a18716b680f73f885debe1df13e2182455df204ec9fc2ebd34653f"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boat.py",
+      "sha256": "f95d20dab339bbf6b47680ceb56d88e03e832f3cc676ddb2cc3fe459e6c3871f"
+    },
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    }
+  ],
+  "geometry": {
+    "beamM": 1.8979461193084717,
+    "bow": "+x",
+    "draftM": 0.3199769854545593,
+    "hullLengthM": 5.0,
+    "hullXRange": [
+      -2.7699999809265137,
+      3.35317325592041
+    ],
+    "lengthOverallM": 6.125145196914673,
+    "mastTopM": 6.0,
+    "sheerMidshipM": 0.58,
+    "waterlineZ": 0.0
+  },
+  "lodTris": {
+    "boat_sail_lod0": 884,
+    "boat_sail_lod1": 359,
+    "boat_sail_lod2": 107
+  },
+  "nodes": [
+    "anchor-prop-0",
+    "anchor-prop-1",
+    "anchor-prop-2",
+    "boat_sail",
+    "boat_sail_collider",
+    "boat_sail_jib_lod0",
+    "boat_sail_jib_lod1",
+    "boat_sail_jib_lod2",
+    "boat_sail_lod0",
+    "boat_sail_lod1",
+    "boat_sail_lod2",
+    "boat_sail_main_lod0",
+    "boat_sail_main_lod1",
+    "boat_sail_main_lod2"
+  ],
+  "partTris": {
+    "boat_sail_jib_lod0": 2,
+    "boat_sail_jib_lod1": 2,
+    "boat_sail_jib_lod2": 2,
+    "boat_sail_lod0": 846,
+    "boat_sail_lod1": 333,
+    "boat_sail_lod2": 94,
+    "boat_sail_main_lod0": 36,
+    "boat_sail_main_lod1": 24,
+    "boat_sail_main_lod2": 11
+  },
+  "parts": {
+    "jib": {
+      "axisBlender": [
+        -0.5144957900047302,
+        0.0,
+        0.8574929237365723
+      ],
+      "axisLocal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "sail",
+      "nodes": [
+        "boat_sail_jib_lod0",
+        "boat_sail_jib_lod1",
+        "boat_sail_jib_lod2"
+      ],
+      "pivotBlender": [
+        3.3500001430511475,
+        0.0,
+        1.0
+      ],
+      "swingDeg": 45.0
+    },
+    "main": {
+      "axisLocal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "sail",
+      "nodes": [
+        "boat_sail_main_lod0",
+        "boat_sail_main_lod1",
+        "boat_sail_main_lod2"
+      ],
+      "pivotBlender": [
+        0.9,
+        0.0,
+        1.05
+      ],
+      "shroudBearingDeg": 85.82811364591124,
+      "swingDeg": 70.0
+    },
+    "sweeps": {
+      "boat_sail_jib_lod0": {
+        "minOverSheerM": 0.313,
+        "nearMastM": 0.284
+      },
+      "boat_sail_jib_lod1": {
+        "minOverSheerM": 0.313,
+        "nearMastM": 0.284
+      },
+      "boat_sail_jib_lod2": {
+        "minOverSheerM": 0.313,
+        "nearMastM": 0.284
+      },
+      "boat_sail_main_lod0": {
+        "minOverSheerM": 0.395,
+        "nearMastM": null
+      },
+      "boat_sail_main_lod1": {
+        "minOverSheerM": 0.4,
+        "nearMastM": null
+      },
+      "boat_sail_main_lod2": {
+        "minOverSheerM": 0.391,
+        "nearMastM": null
+      }
+    }
+  },
+  "pieceId": "boat_sail",
+  "sockets": [
+    {
+      "extras": {
+        "kind": "helm"
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        -1.9500000476837158,
+        0.4000000059604645,
+        -0.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "painter"
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        2.6500000953674316,
+        0.9200000166893005,
+        -0.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "perch"
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        0.8999999761581421,
+        6.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

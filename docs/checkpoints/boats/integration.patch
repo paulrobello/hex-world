@@ -1,0 +1,287 @@
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index c7547b7..7c5a40a 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -376,6 +376,26 @@
+       "slots": { "coast_pebble": { "color": [0.105, 0.095, 0.08], "roughness": 0.45, "masks": true },
+                  "coast_rock": { "color": [0.17, 0.16, 0.14], "roughness": 0.6, "masks": true } },
+       "maps": { "masks": "p1/ocean_center/ocean_center.masks" } },
++    { "id": "boat_rowing", "pack": "water", "kind": "prop", "glb": "p1/boat_rowing/boat_rowing.glb",
++      "provenance": "assets-source/kit/boat_rowing/provenance.json",
++      "slots": { "boat_rowing_hull": { "color": [0.7, 0.69, 0.66], "roughness": 0.45, "masks": true },
++                 "boat_rowing_band": { "color": [0.016, 0.03, 0.1], "roughness": 0.4, "masks": true },
++                 "boat_rowing_wood": { "color": [0.5, 0.25, 0.07], "roughness": 0.35, "masks": true },
++                 "boat_rowing_bronze": { "color": [0.3, 0.17, 0.06], "roughness": 0.35, "masks": true } },
++      "maps": { "masks": "p1/boat_rowing/boat_rowing.masks" } },
++    { "id": "boat_sail", "pack": "water", "kind": "prop", "glb": "p1/boat_sail/boat_sail.glb",
++      "provenance": "assets-source/kit/boat_sail/provenance.json",
++      "slots": { "boat_sail_hull": { "color": [0.024, 0.07, 0.15], "roughness": 0.45, "masks": true },
++                 "boat_sail_band": { "color": [0.66, 0.65, 0.61], "roughness": 0.45, "masks": true },
++                 "boat_sail_wood": { "color": [0.45, 0.22, 0.07], "roughness": 0.4, "masks": true },
++                 "boat_sail_sail": { "color": [0.37, 0.12, 0.05], "roughness": 0.85, "masks": true },
++                 "boat_sail_wicker": { "color": [0.25, 0.15, 0.06], "roughness": 0.9, "masks": true } },
++      "maps": { "masks": "p1/boat_sail/boat_sail.masks" } },
++    { "id": "landing_stage", "pack": "water", "kind": "prop", "glb": "p1/landing_stage/landing_stage.glb",
++      "provenance": "assets-source/kit/landing_stage/provenance.json",
++      "slots": { "landing_stage_timber": { "color": [0.34, 0.3, 0.24], "roughness": 0.85, "masks": true },
++                 "landing_stage_post": { "color": [0.13, 0.105, 0.08], "roughness": 0.9, "masks": true } },
++      "maps": { "masks": "p1/landing_stage/landing_stage.masks" } },
+     { "id": "beach_base", "pack": "water", "kind": "base", "glb": "p1/beach_base/beach_base.glb",
+       "provenance": "assets-source/kit/beach_base/provenance.json",
+       "slots": { "beach_grass": { "tileable": "grass", "masks": true },
+diff --git a/crates/hex-assets/src/kit_manifest.rs b/crates/hex-assets/src/kit_manifest.rs
+index e3b1bb3..3069fcf 100644
+--- a/crates/hex-assets/src/kit_manifest.rs
++++ b/crates/hex-assets/src/kit_manifest.rs
+@@ -35,6 +35,24 @@ pub fn rotor_mesh_name(id: &str, lod: usize) -> String {
+     format!("{id}_rotor_lod{lod}")
+ }
+ 
++/// Animatable part `part` of LOD `lod` of piece `id` (a boat's oars and sails): a node and mesh of
++/// this name beside the LOD, authored in the node's frame on its pivot. Unlike a rotor it does not
++/// turn by itself: the kit scenario draws it at rest, and the runtime that owns the piece moves it.
++/// A piece with a part has it in every LOD, and each LOD's budget counts its parts.
++pub fn part_mesh_name(id: &str, part: &str, lod: usize) -> String {
++    format!("{id}_{part}_lod{lod}")
++}
++
++/// The part name when `name` is a part node or mesh of LOD `lod` of piece `id`: `<id>_<part>_lod<lod>`
++/// other than the LOD itself and its rotor.
++pub fn part_of<'a>(id: &str, lod: usize, name: &'a str) -> Option<&'a str> {
++    let part = name
++        .strip_prefix(id)?
++        .strip_prefix('_')?
++        .strip_suffix(format!("_lod{lod}").as_str())?;
++    (!part.is_empty() && part != "rotor").then_some(part)
++}
++
+ const fn hex_core_apothem() -> f32 {
+     16.0 * 0.866_025_4
+ }
+diff --git a/crates/hex-play/tests/hooks/mod.rs b/crates/hex-play/tests/hooks/mod.rs
+index a86326f..7a5f590 100644
+--- a/crates/hex-play/tests/hooks/mod.rs
++++ b/crates/hex-play/tests/hooks/mod.rs
+@@ -300,9 +300,14 @@ fn slot_triangles(
+     // A LOD's rotor (if any) draws beside it and samples the same masks atlas.
+     let rotor_name = rotor_mesh_name(&p.id, lod);
+     let rotor = doc.meshes().find(|m| m.name() == Some(rotor_name.as_str()));
++    // So do its animatable parts (oars, sails).
++    let parts = doc
++        .meshes()
++        .filter(|m| m.name().and_then(|n| part_of(&p.id, lod, n)).is_some());
+     let mut out: Vec<(String, Vec<[[f32; 2]; 3]>)> = vec![];
+     for prim in std::iter::once(mesh)
+         .chain(rotor)
++        .chain(parts)
+         .flat_map(|m| m.primitives())
+     {
+         let name = prim.material().name().unwrap_or_default().to_string();
+diff --git a/crates/hex-play/tests/kit_gate.rs b/crates/hex-play/tests/kit_gate.rs
+index e10dff2..a181b6d 100644
+--- a/crates/hex-play/tests/kit_gate.rs
++++ b/crates/hex-play/tests/kit_gate.rs
+@@ -624,10 +624,12 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
+         .map(|i| mesh_named(&doc, &rotor_mesh_name(&p.id, i)))
+         .collect();
+     e.extend(rotor_errors(&p.id, &rotors, &buffers));
++    let parts = part_meshes(&doc, &p.id);
++    e.extend(part_errors(&p.id, &parts));
+     let lod_tris = [0, 1, 2].map(|i| {
+-        lods[i]
+-            .as_ref()
+-            .map(|m| tris(m) + rotors[i].as_ref().map_or(0, tris))
++        lods[i].as_ref().map(|m| {
++            tris(m) + rotors[i].as_ref().map_or(0, tris) + parts[i].iter().map(tris).sum::<usize>()
++        })
+     });
+     e.extend(lod_budget_errors(
+         &p.id,
+@@ -635,7 +637,12 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
+         lod0_budget(p),
+         lod2_max_ratio(kit, p),
+     ));
+-    for m in lods.iter().chain(&rotors).flatten() {
++    for m in lods
++        .iter()
++        .chain(&rotors)
++        .flatten()
++        .chain(parts.iter().flatten())
++    {
+         for prim in m.primitives() {
+             if prim.get(&gltf::Semantic::Tangents).is_none() {
+                 e.push(format!(
+@@ -662,7 +669,10 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
+             }
+         }
+     }
+-    let lod0_parts: Vec<_> = std::iter::once(lod0).chain(&rotors[0]).collect();
++    let lod0_parts: Vec<_> = std::iter::once(lod0)
++        .chain(&rotors[0])
++        .chain(&parts[0])
++        .collect();
+     e.extend(check_texel_density(kit, p, &lod0_parts, &buffers));
+     if p.kind == PieceKind::Tree {
+         for (i, m) in lods.iter().enumerate() {
+@@ -1092,6 +1102,48 @@ fn rotor_errors(
+     e
+ }
+ 
++/// Each LOD's animatable parts (`<id>_<part>_lod<n>`: a boat's oars and sails), by name.
++fn part_meshes<'a>(doc: &'a gltf::Document, id: &str) -> [Vec<gltf::Mesh<'a>>; 3] {
++    [0, 1, 2].map(|lod| {
++        let mut v: Vec<_> = doc
++            .meshes()
++            .filter(|m| m.name().and_then(|n| part_of(id, lod, n)).is_some())
++            .collect();
++        v.sort_by_key(|m| m.name().map(str::to_owned));
++        v
++    })
++}
++
++/// A part is in every LOD or none (the runtime swaps a part with its LOD, as it does a rotor).
++fn part_errors(id: &str, parts: &[Vec<gltf::Mesh>; 3]) -> Vec<String> {
++    let names: Vec<BTreeSet<String>> = parts
++        .iter()
++        .enumerate()
++        .map(|(lod, ms)| {
++            ms.iter()
++                .filter_map(|m| {
++                    m.name()
++                        .and_then(|n| part_of(id, lod, n))
++                        .map(str::to_owned)
++                })
++                .collect()
++        })
++        .collect();
++    let all: BTreeSet<&String> = names.iter().flatten().collect();
++    let mut e = vec![];
++    for part in all {
++        for (lod, have) in names.iter().enumerate() {
++            if !have.contains(part) {
++                e.push(format!(
++                    "{id}: mesh {} missing (a part is in every LOD)",
++                    part_mesh_name(id, part, lod)
++                ));
++            }
++        }
++    }
++    e
++}
++
+ /// Distance of the vertex centroid from the X axis, in the YZ plane.
+ fn axle_offset(pos: &[[f32; 3]]) -> f32 {
+     let n = pos.len().max(1) as f32;
+@@ -3276,6 +3328,45 @@ fn rotor_tris_count_toward_the_lod_budget() {
+     assert!(axle_offset(&[[0.0, 1.0, 0.0], [0.0, -0.9, 0.0]]) > ROTOR_AXLE_TOL);
+ }
+ 
++/// An animatable part's triangles count toward its LOD like a rotor's (the rowing boat's oars, PRD
++/// §7.2), so a LOD0 ceiling the hull alone meets fails once the oars count, and a part missing from
++/// one LOD fails.
++#[test]
++fn part_tris_count_toward_the_lod_budget() {
++    let k = kits().pop().unwrap();
++    let p = k
++        .manifest
++        .pieces
++        .iter()
++        .find(|p| p.id == "boat_rowing")
++        .expect("runtime kit holds boat_rowing");
++    let (doc, _, _) = plain(&k, p).unwrap();
++    let parts = part_meshes(&doc, &p.id);
++    assert!(parts.iter().all(|v| v.len() == 2), "two oars in every LOD");
++    assert_eq!(part_errors(&p.id, &parts), Vec::<String>::new());
++    let body = |i| tris(&mesh_named(&doc, &lod_mesh_name(&p.id, i)).unwrap());
++    let t = [0, 1, 2].map(|i| Some(body(i) + parts[i].iter().map(tris).sum::<usize>()));
++    assert_eq!(
++        lod_budget_errors(&p.id, t, lod0_budget(p), LOD2_MAX_RATIO),
++        Vec::<String>::new()
++    );
++    let e = lod_budget_errors(&p.id, t, body(0), LOD2_MAX_RATIO);
++    assert!(e.iter().any(|m| m.contains("LOD0")), "{e:?}");
++    let partial = [parts[0].clone(), vec![], parts[2].clone()];
++    assert!(
++        part_errors(&p.id, &partial)
++            .iter()
++            .any(|m| m.contains("boat_rowing_oar_port_lod1 missing")),
++    );
++    assert_eq!(
++        part_of("boat_rowing", 1, "boat_rowing_oar_port_lod1"),
++        Some("oar_port")
++    );
++    assert_eq!(part_of("boat_rowing", 1, "boat_rowing_lod1"), None);
++    assert_eq!(part_of("boat_rowing", 0, "boat_rowing_oar_port_lod1"), None);
++    assert_eq!(part_of("windmill", 0, "windmill_rotor_lod0"), None);
++}
++
+ /// Joints are scoped by network kind: the river pieces meet river_edge at its inner end, the road
+ /// centres meet only the road edge pieces, and `same_section` absorbs one 0.1 mm unit.
+ #[test]
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index c19e582..eaddaf2 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -7,7 +7,8 @@ use bevy::{
+     render::{renderer::RenderDevice, settings::WgpuFeatures},
+ };
+ use hex_assets::{
+-    KitManifest, TextureFamily, lod_mesh_name, parse_manifest, rotor_mesh_name, select_family,
++    KitManifest, TextureFamily, lod_mesh_name, parse_manifest, part_of, rotor_mesh_name,
++    select_family,
+ };
+ use hex_core::{Axial, HEX_RADIUS};
+ use std::collections::HashMap;
+@@ -372,9 +373,33 @@ pub fn kit_layout() -> Vec<Placement> {
+     for &(piece, at, yaw_deg) in FARM_HAY_VARIANTS {
+         v.push(hero(piece, 1, 5, at, yaw_deg));
+     }
++    // Boats (P3, refs D4), each origin on its water at rest: the landing stage on the downstream
++    // river straight (-2, 6) (rot 1: the flow runs along (0.5, 0.866)) at the play water
++    // (`hex_play::water::tiles::WATER_Y`), its origin on the bank's waterline 4 m from the centre
++    // line and its +x toward it, with a rowing boat on the far half of the channel heading
++    // downstream (no water is drawn there: the posts show against the bed); on the ocean tiles of
++    // the water patch the sailing boat on (2, 0) and a second rowing boat on (1, 1), on the
++    // look-dev water at y = 0 that `water_kit` draws there.
++    for &(piece, q, r, at, yaw_deg, y) in BOATS {
++        v.push(Placement {
++            y,
++            ..hero(piece, q, r, at, yaw_deg)
++        });
++    }
+     v
+ }
+ 
++/// The play water at rest (`hex_play::water::tiles::WATER_Y`).
++const PLAY_WATER_Y: f32 = -crate::water::LAND;
++
++/// (piece, q, r, at, yaw, y) of the boats showcase.
++const BOATS: &[(&str, i32, i32, [f32; 2], f32, f32)] = &[
++    ("landing_stage", -2, 6, [3.464, -2.0], 150.0, PLAY_WATER_Y),
++    ("boat_rowing", -2, 6, [-1.299, 0.75], 60.0, PLAY_WATER_Y),
++    ("boat_sail", 2, 0, [0.0, 0.0], 200.0, 0.0),
++    ("boat_rowing", 1, 1, [-3.0, 2.0], 30.0, 0.0),
++];
++
+ /// (piece, at, yaw) of the hay-variants showcase on (1, 5): the farm's fence, the catslide barn
+ /// barn_red_b in the barn slot (barn_red stands in the same slot next door on (0, 5)), and the
+ /// variants in the farm's three hay slots (data/tiles/farm.ron).
+@@ -759,6 +784,18 @@ pub fn finish_kit(
+                 let phase = rotor_phase(base.translation);
+                 parts.push((rm, base, Some(KitRotor { base, phase })));
+             }
++            // Animatable parts (a boat's oars and sails) draw at rest at their node transforms; the
++            // runtime that owns the piece moves them.
++            for (name, h) in &g.named_nodes {
++                if part_of(p.piece, lod, name).is_none() {
++                    continue;
++                }
++                if let Some(node) = gltf_nodes.get(h)
++                    && let Some(pm) = node.mesh.as_ref().and_then(|h| gltf_meshes.get(h))
++                {
++                    parts.push((pm, place * node.transform, None));
++                }
++            }
+             for (prim, t, rotor) in parts
+                 .into_iter()
+                 .flat_map(|(gm, t, r)| gm.primitives.iter().map(move |prim| (prim, t, r)))

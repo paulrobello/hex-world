@@ -1,0 +1,407 @@
+{
+  "pieceId": "boat_rowing",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/boat_rowing.py",
+    "sha256": "39bf6bd3b6d4db634a3fe8b4c0121bc6ec978cfe1cf0d1b76a66e4c442a072b0"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boat.py",
+      "sha256": "f95d20dab339bbf6b47680ceb56d88e03e832f3cc676ddb2cc3fe459e6c3871f"
+    },
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.5,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "geometry": {
+      "beamM": 1.409935712814331,
+      "bow": "+x",
+      "draftM": 0.14998464286327362,
+      "heightM": 0.7208377718925476,
+      "lengthM": 3.570779800415039,
+      "seat": [
+        0.15,
+        0,
+        0.25
+      ],
+      "sheerMidshipM": 0.42,
+      "waterlineZ": 0
+    },
+    "marginPx": 4,
+    "maskStats": {
+      "aoMean": 0.7495033740997314,
+      "aoP05": 0.0313725508749485,
+      "centroids": {
+        "boat_rowing_lod0": {
+          "minA": {
+            "band": 0.875,
+            "bronze": 0.267,
+            "hull": 0,
+            "wood": 0
+          },
+          "unbakedTris": 0
+        },
+        "boat_rowing_lod1": {
+          "minA": {
+            "band": 0.969,
+            "bronze": 0.812,
+            "hull": 0,
+            "wood": 0
+          },
+          "unbakedTris": 0
+        },
+        "boat_rowing_lod2": {
+          "minA": {
+            "band": 1,
+            "hull": 0.969,
+            "wood": 0.376
+          },
+          "unbakedTris": 0
+        },
+        "boat_rowing_oar_port_lod0": {
+          "minA": {
+            "wood": 1
+          },
+          "unbakedTris": 0
+        },
+        "boat_rowing_oar_port_lod1": {
+          "minA": {
+            "wood": 1
+          },
+          "unbakedTris": 0
+        },
+        "boat_rowing_oar_port_lod2": {
+          "minA": {
+            "wood": 1
+          },
+          "unbakedTris": 0
+        },
+        "boat_rowing_oar_stbd_lod0": {
+          "minA": {
+            "wood": 0.969
+          },
+          "unbakedTris": 0
+        },
+        "boat_rowing_oar_stbd_lod1": {
+          "minA": {
+            "wood": 1
+          },
+          "unbakedTris": 0
+        },
+        "boat_rowing_oar_stbd_lod2": {
+          "minA": {
+            "wood": 1
+          },
+          "unbakedTris": 0
+        }
+      },
+      "coverage": 0.5439338684082031,
+      "filledTexels": 0,
+      "nightTexels": 0
+    },
+    "masksDensityPxPerM": {
+      "boat_rowing_lod0": {
+        "max": 103.72856405850256,
+        "median": 101.54144590985872,
+        "min": 85.37588038321293
+      },
+      "boat_rowing_lod1": {
+        "max": 103.72790303990377,
+        "median": 103.08581718722141,
+        "min": 85.05349222607099
+      },
+      "boat_rowing_lod2": {
+        "max": 103.72788323838614,
+        "median": 102.24174281809317,
+        "min": 83.13502515938069
+      },
+      "boat_rowing_oar_port_lod0": {
+        "max": 103.72771943016075,
+        "median": 103.72641504711606,
+        "min": 73.34451638542403
+      },
+      "boat_rowing_oar_port_lod1": {
+        "max": 103.72783633468119,
+        "median": 103.72762041669162,
+        "min": 103.7267957191182
+      },
+      "boat_rowing_oar_port_lod2": {
+        "max": 103.72823966386508,
+        "median": 103.7272388245091,
+        "min": 73.34598252086087
+      },
+      "boat_rowing_oar_stbd_lod0": {
+        "max": 103.72906187773627,
+        "median": 103.7269386429735,
+        "min": 73.34451647475235
+      },
+      "boat_rowing_oar_stbd_lod1": {
+        "max": 103.72771313611945,
+        "median": 103.72761376313699,
+        "min": 103.72717158700772
+      },
+      "boat_rowing_oar_stbd_lod2": {
+        "max": 103.72765614906555,
+        "median": 103.72716757601364,
+        "min": 73.34597938436767
+      }
+    },
+    "parts": {
+      "oars": {
+        "kind": "oar",
+        "lengthM": 2.37,
+        "loomDirLocal": {
+          "port": [
+            0,
+            0.9720693643765294,
+            -0.2346937383924212
+          ],
+          "stbd": [
+            0,
+            -0.9720693643765294,
+            -0.2346937383924212
+          ]
+        },
+        "lowestGripZ": 0.48395204544067383,
+        "nodes": [
+          "boat_rowing_oar_port_lod0",
+          "boat_rowing_oar_stbd_lod0",
+          "boat_rowing_oar_port_lod1",
+          "boat_rowing_oar_stbd_lod1",
+          "boat_rowing_oar_port_lod2",
+          "boat_rowing_oar_stbd_lod2"
+        ],
+        "outboardMarginM": 0.3042807245063863,
+        "pivotBlender": {
+          "port": [
+            -0.18000000715255737,
+            0.6849678754806519,
+            0.46071404218673706
+          ],
+          "stbd": [
+            -0.18000000715255737,
+            -0.6849678754806519,
+            0.46071404218673706
+          ]
+        },
+        "slopeDeg": 13.57357039422773,
+        "strokeDipDeg": 8,
+        "strokeYawDeg": 40,
+        "trailYawDeg": 80
+      }
+    },
+    "receiverSignature": "15fb500b382a5a27dad2971a30b664518fa9cfab7d59a8354b1e3a43b0bffdc3",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 103.72856405850256,
+      "median": 101.54144590985872,
+      "min": 85.37588038321293
+    },
+    "uvMargin": 0.01
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 914,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 328,
+      "ratio": 0.3588621444201313
+    },
+    {
+      "lod": 2,
+      "tris": 96,
+      "ratio": 0.1050328227571116
+    }
+  ],
+  "collider": {
+    "node": "boat_rowing_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "kind": "seat"
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        0.15000000596046448,
+        0.25,
+        0
+      ],
+      "yaw": -179.999991348578
+    },
+    {
+      "extras": {
+        "kind": "painter"
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        1.9049999713897705,
+        0.6399999856948853,
+        0
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 103.72856405850256,
+    "median": 101.54144590985872,
+    "min": 85.37588038321293
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 331030,
+        "astc": 320273
+      },
+      "glbBytes": 88128
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/boat_rowing/boat_rowing.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 331030,
+        "sha256": "3bbd0bbce119acc74fc97c4d3c96707ecd28810de78d02a75c5b4cf8c415efc8"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/boat_rowing/boat_rowing.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 320273,
+        "sha256": "154aa7cfcd05465a67b2e3a12a953f497d2a043a83ddb82aa57b458c01d8cb01"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/boat_rowing/boat_rowing.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 465321,
+        "sha256": "0016e1bb99cf6179863c6c9a9173bae1928274a89cea47546bd25fd29fbca744"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/boat_rowing/boat_rowing.glb",
+      "sha256": "384804aef33fde5377e22e61ffd40fa9d5e698275665ebdc8679549f59d517e2",
+      "bytes": 88128
+    },
+    {
+      "path": "assets/kit/p1/boat_rowing/boat_rowing.masks.bc7.ktx2",
+      "sha256": "3bbd0bbce119acc74fc97c4d3c96707ecd28810de78d02a75c5b4cf8c415efc8",
+      "bytes": 331030
+    },
+    {
+      "path": "assets/kit/p1/boat_rowing/boat_rowing.masks.astc.ktx2",
+      "sha256": "154aa7cfcd05465a67b2e3a12a953f497d2a043a83ddb82aa57b458c01d8cb01",
+      "bytes": 320273
+    },
+    {
+      "path": "assets/kit/p1/boat_rowing/boat_rowing.masks.png",
+      "sha256": "0016e1bb99cf6179863c6c9a9173bae1928274a89cea47546bd25fd29fbca744",
+      "bytes": 465321
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/boat_rowing/ref-1.jpg",
+      "sha256": "7bfda85157624872c8a26778126db04c5e4ba1597bda006d76e49c33709b3293",
+      "sourceSha256": "fa6f20aee5697d3fc5f60454137b89a00550de7170a7491ddc5347e065034e0d",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "d7fefb26-eaf8-492c-892c-d94cd5501371",
+      "prompt": "A single a small clinker-built wooden rowing boat of overlapping timber planks with a pointed bow and a narrow square transom, painted white outside with one dark blue band along the top plank, a varnished honey-coloured timber interior with two thwart seats and slatted floorboards, a pair of long timber oars resting in bronze rowlocks, the painted hull smooth and plain with a clean blank transom, sitting upright alone on the plain grey studio floor with a soft contact shadow, the whole boat centred in frame and seen from the front-left from a high three-quarter angle so the seats, floorboards and oars inside read clearly. The picture shows only the boat on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/boat_rowing/ref-2.jpg",
+      "sha256": "ce59b00892346edd6250672da29608e3ba0940a56db8a3db5c4708455bbfb697",
+      "sourceSha256": "227505a18d5af84b68a0078eea905a0b4e4cb2445ff6c7c0cbc7c33e24501b11",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "91e5feb0-b7ff-4614-bcdd-68bf332192b2",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. An 8 m wide river runs straight between two opposite flat edges in a channel sunk below the meadow surface between natural earthy banks with pebbles and reeds, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Close to one bank floats one a small clinker-built wooden rowing boat of overlapping timber planks with a pointed bow and a narrow square transom, painted white outside with one dark blue band along the top plank, a varnished honey-coloured timber interior with two thwart seats and slatted floorboards, a pair of long timber oars resting in bronze rowlocks, the painted hull smooth and plain with a clean blank transom, about 3.5 m long, so the boat is less than half the river's width and small against the tile, tied by a single rope to a short weathered timber landing stage of a few planks on posts at the water's edge. Where the river reaches the tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/boat_rowing/ref-3.jpg",
+      "sha256": "239099ab6c4951b33bcfd9bd006e2f0257ab930ce3fdb73249766a609ad2385d",
+      "sourceSha256": "636d8e77eb5e10237f521c9d21f85e2a4a7609a3dbe8694b7b081a2d39537d66",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "467f06bd-be7d-4eb2-ae7e-e8e0db43c6d6",
+      "prompt": "A single flat-sided hexagonal coast tile for a diorama, 32 m across. Ocean fills the side with two adjacent flat edges, lush meadow grass fills the two flat edges opposite them, and a curving sand shoreline runs across the tile from one flat edge to the opposite flat edge. Bands from land to sea: meadow grass, dry pale sand, a darker damp-sand band, a lacy white surf foam line, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. One a small clinker-built wooden rowing boat of overlapping timber planks with a pointed bow and a narrow square transom, painted white outside with one dark blue band along the top plank, a varnished honey-coloured timber interior with two thwart seats and slatted floorboards, a pair of long timber oars resting in bronze rowlocks, the painted hull smooth and plain with a clean blank transom, about 3.5 m long and small against the tile, is pulled up on the dry pale sand above the foam line, resting slightly tilted on its keel with its oars laid inside, a rope running from its bow to a short timber stake in the sand. Under the land, the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. On the ocean side, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, with the sand floor sloping down, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T23:16:53.941Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/boat_rowing/ref-1.jpg",
+        "assets-source/refs/boat_rowing/ref-2.jpg",
+        "assets-source/refs/boat_rowing/ref-3.jpg"
+      ],
+      "notes": "D4 (BA1): approved. Moored and rowing routes on rivers; turns back at bridges; at most 3. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "revision": "first build",
+      "notes": "Pending owner review; not an approval. The P3 rowing boat from assets-source/refs/boat_rowing (D4, BA1 with the queue's lean on BQ1, BQ2, BQ4): 3.57 m overall by 1.41 m, a smooth planked hull (BQ4) painted white with one dark blue band under a white sheer strake, a raked stem, a narrow square transom, a varnished interior with frames, two thwarts, stern sheets, slatted floorboards and a small foredeck, and two oars in bronze rowlocks as separate oar nodes pivoted on the rowlock pins (boat_rowing_oar_port_lod<n>, boat_rowing_oar_stbd_lod<n>) so the runtime can row them. No rower figure (no ref draws one; anchor-prop-0 marks the seat). The waterline is the origin plane; the keel draws 0.15 m and every inboard surface stays 3 cm above the water. Review sheet: docs/checkpoints/boat_rowing/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "name": "boat_sail",
+  "date": "2026-10-20T23:15:39.407Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/boat_sail/boat_sail.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 265185,
+      "sha256": "26f049e148ccd2b7473508d6fe2234bcff8a52c0b2d7c5ae07dc099d0b4dc5c2"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/boat_sail/boat_sail.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 256174,
+      "sha256": "36b73340670e6c16f7176ee0c4c9e95e8fb101b220bd9b4322ad6f005cf86ddb"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/boat_sail/boat_sail.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 387664,
+      "sha256": "2404524b7c9ce6226fff2591f0013977b626f91a58b82eae34e8d998e6bc1809"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 265185,
+      "astc": 256174
+    },
+    "glbBytes": 95680
+  },
+  "glb": {
+    "bytes": 95680,
+    "sha256": "e10084a078674437a4d684d97825a7f70830a3af25db813d95ca27872ce9db02"
+  }
+}

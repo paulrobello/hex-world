@@ -1,0 +1,197 @@
+{
+  "aoDistanceM": 0.5,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "geometry": {
+    "beamM": 1.409935712814331,
+    "bow": "+x",
+    "draftM": 0.14998464286327362,
+    "heightM": 0.7208377718925476,
+    "lengthM": 3.570779800415039,
+    "seat": [
+      0.15,
+      0.0,
+      0.25
+    ],
+    "sheerMidshipM": 0.42,
+    "waterlineZ": 0.0
+  },
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.7495033740997314,
+    "aoP05": 0.0313725508749485,
+    "centroids": {
+      "boat_rowing_lod0": {
+        "minA": {
+          "band": 0.875,
+          "bronze": 0.267,
+          "hull": 0.0,
+          "wood": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "boat_rowing_lod1": {
+        "minA": {
+          "band": 0.969,
+          "bronze": 0.812,
+          "hull": 0.0,
+          "wood": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "boat_rowing_lod2": {
+        "minA": {
+          "band": 1.0,
+          "hull": 0.969,
+          "wood": 0.376
+        },
+        "unbakedTris": 0
+      },
+      "boat_rowing_oar_port_lod0": {
+        "minA": {
+          "wood": 1.0
+        },
+        "unbakedTris": 0
+      },
+      "boat_rowing_oar_port_lod1": {
+        "minA": {
+          "wood": 1.0
+        },
+        "unbakedTris": 0
+      },
+      "boat_rowing_oar_port_lod2": {
+        "minA": {
+          "wood": 1.0
+        },
+        "unbakedTris": 0
+      },
+      "boat_rowing_oar_stbd_lod0": {
+        "minA": {
+          "wood": 0.969
+        },
+        "unbakedTris": 0
+      },
+      "boat_rowing_oar_stbd_lod1": {
+        "minA": {
+          "wood": 1.0
+        },
+        "unbakedTris": 0
+      },
+      "boat_rowing_oar_stbd_lod2": {
+        "minA": {
+          "wood": 1.0
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.5439338684082031,
+    "filledTexels": 0,
+    "nightTexels": 0
+  },
+  "masksDensityPxPerM": {
+    "boat_rowing_lod0": {
+      "max": 103.72856405850256,
+      "median": 101.54144590985872,
+      "min": 85.37588038321293
+    },
+    "boat_rowing_lod1": {
+      "max": 103.72790303990377,
+      "median": 103.08581718722141,
+      "min": 85.05349222607099
+    },
+    "boat_rowing_lod2": {
+      "max": 103.72788323838614,
+      "median": 102.24174281809317,
+      "min": 83.13502515938069
+    },
+    "boat_rowing_oar_port_lod0": {
+      "max": 103.72771943016075,
+      "median": 103.72641504711606,
+      "min": 73.34451638542403
+    },
+    "boat_rowing_oar_port_lod1": {
+      "max": 103.72783633468119,
+      "median": 103.72762041669162,
+      "min": 103.7267957191182
+    },
+    "boat_rowing_oar_port_lod2": {
+      "max": 103.72823966386508,
+      "median": 103.7272388245091,
+      "min": 73.34598252086087
+    },
+    "boat_rowing_oar_stbd_lod0": {
+      "max": 103.72906187773627,
+      "median": 103.7269386429735,
+      "min": 73.34451647475235
+    },
+    "boat_rowing_oar_stbd_lod1": {
+      "max": 103.72771313611945,
+      "median": 103.72761376313699,
+      "min": 103.72717158700772
+    },
+    "boat_rowing_oar_stbd_lod2": {
+      "max": 103.72765614906555,
+      "median": 103.72716757601364,
+      "min": 73.34597938436767
+    }
+  },
+  "parts": {
+    "oars": {
+      "kind": "oar",
+      "lengthM": 2.37,
+      "loomDirLocal": {
+        "port": [
+          0.0,
+          0.9720693643765294,
+          -0.2346937383924212
+        ],
+        "stbd": [
+          0.0,
+          -0.9720693643765294,
+          -0.2346937383924212
+        ]
+      },
+      "lowestGripZ": 0.48395204544067383,
+      "nodes": [
+        "boat_rowing_oar_port_lod0",
+        "boat_rowing_oar_stbd_lod0",
+        "boat_rowing_oar_port_lod1",
+        "boat_rowing_oar_stbd_lod1",
+        "boat_rowing_oar_port_lod2",
+        "boat_rowing_oar_stbd_lod2"
+      ],
+      "outboardMarginM": 0.3042807245063863,
+      "pivotBlender": {
+        "port": [
+          -0.18000000715255737,
+          0.6849678754806519,
+          0.46071404218673706
+        ],
+        "stbd": [
+          -0.18000000715255737,
+          -0.6849678754806519,
+          0.46071404218673706
+        ]
+      },
+      "slopeDeg": 13.57357039422773,
+      "strokeDipDeg": 8.0,
+      "strokeYawDeg": 40.0,
+      "trailYawDeg": 80.0
+    }
+  },
+  "receiverSignature": "15fb500b382a5a27dad2971a30b664518fa9cfab7d59a8354b1e3a43b0bffdc3",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 103.72856405850256,
+    "median": 101.54144590985872,
+    "min": 85.37588038321293
+  },
+  "uvMargin": 0.01
+}

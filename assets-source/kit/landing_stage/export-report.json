@@ -1,0 +1,103 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/landing_stage.py",
+    "sha256": "ba7d75d7bb0d01249f902aad5bb86f4dbfe20f38b685d2a50664208c88ee1c2f"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boat.py",
+      "sha256": "f95d20dab339bbf6b47680ceb56d88e03e832f3cc676ddb2cc3fe459e6c3871f"
+    },
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    }
+  ],
+  "geometry": {
+    "bankMeetsDeckD": 4.41,
+    "bankMeetsDeckX": -0.41,
+    "deckRuntimeY": -0.95,
+    "deckX": [
+      -0.75,
+      1.4
+    ],
+    "deckY": [
+      -1.4,
+      1.4
+    ],
+    "deckZ": 0.45,
+    "frame": "origin on the bank waterline, 4.0 m from the channel centre line; +x toward it; y along the flow",
+    "mooringD": 1.4649999999999999,
+    "mooringX": 2.535,
+    "outerEdgeD": 2.6,
+    "postFeetZ": {
+      "0.45,-1.25": -0.593,
+      "0.45,1.25": -0.593,
+      "1.3,-1.25": -1.117,
+      "1.3,0.0": -1.117,
+      "1.3,1.25": -1.117
+    },
+    "waterDepthAtMooringM": 1.3782919264596856,
+    "waterDepthAtOuterEdgeM": 1.009168271205244
+  },
+  "lodTris": {
+    "landing_stage_lod0": 250,
+    "landing_stage_lod1": 118,
+    "landing_stage_lod2": 20
+  },
+  "nodes": [
+    "anchor-prop-0",
+    "anchor-prop-1",
+    "anchor-prop-2",
+    "landing_stage",
+    "landing_stage_collider",
+    "landing_stage_lod0",
+    "landing_stage_lod1",
+    "landing_stage_lod2"
+  ],
+  "partTris": {
+    "landing_stage_lod0": 250,
+    "landing_stage_lod1": 118,
+    "landing_stage_lod2": 20
+  },
+  "pieceId": "landing_stage",
+  "sockets": [
+    {
+      "extras": {
+        "kind": "mooring"
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        2.5350000858306885,
+        0.0,
+        -0.0
+      ],
+      "yaw": 90.00000250447816
+    },
+    {
+      "extras": {
+        "kind": "bollard"
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        1.2999999523162842,
+        1.0,
+        -1.25
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "step"
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        -0.44999998807907104,
+        0.44999998807907104,
+        -0.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

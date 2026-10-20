@@ -1,0 +1,317 @@
+{
+  "pieceId": "landing_stage",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/landing_stage.py",
+    "sha256": "ba7d75d7bb0d01249f902aad5bb86f4dbfe20f38b685d2a50664208c88ee1c2f"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boat.py",
+      "sha256": "f95d20dab339bbf6b47680ceb56d88e03e832f3cc676ddb2cc3fe459e6c3871f"
+    },
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.5,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "geometry": {
+      "bankMeetsDeckD": 4.41,
+      "bankMeetsDeckX": -0.41,
+      "deckRuntimeY": -0.95,
+      "deckX": [
+        -0.75,
+        1.4
+      ],
+      "deckY": [
+        -1.4,
+        1.4
+      ],
+      "deckZ": 0.45,
+      "frame": "origin on the bank waterline, 4.0 m from the channel centre line; +x toward it; y along the flow",
+      "mooringD": 1.4649999999999999,
+      "mooringX": 2.535,
+      "outerEdgeD": 2.6,
+      "postFeetZ": {
+        "0.45,-1.25": -0.593,
+        "0.45,1.25": -0.593,
+        "1.3,-1.25": -1.117,
+        "1.3,0.0": -1.117,
+        "1.3,1.25": -1.117
+      },
+      "waterDepthAtMooringM": 1.3782919264596856,
+      "waterDepthAtOuterEdgeM": 1.009168271205244
+    },
+    "marginPx": 4,
+    "maskStats": {
+      "aoMean": 0.7432900667190552,
+      "aoP05": 0.02352941408753395,
+      "centroids": {
+        "landing_stage_lod0": {
+          "minA": {
+            "post": 0,
+            "timber": 0
+          },
+          "unbakedTris": 0
+        },
+        "landing_stage_lod1": {
+          "minA": {
+            "post": 0,
+            "timber": 0
+          },
+          "unbakedTris": 0
+        },
+        "landing_stage_lod2": {
+          "minA": {
+            "post": 0.686,
+            "timber": 1
+          },
+          "unbakedTris": 0
+        }
+      },
+      "coverage": 0.6041116714477539,
+      "filledTexels": 0,
+      "nightTexels": 0
+    },
+    "masksDensityPxPerM": {
+      "landing_stage_lod0": {
+        "max": 89.68331368767439,
+        "median": 89.68245562275499,
+        "min": 83.45857426366636
+      },
+      "landing_stage_lod1": {
+        "max": 89.68313458998225,
+        "median": 89.6824863668257,
+        "min": 89.68211797352986
+      },
+      "landing_stage_lod2": {
+        "max": 89.68310951344561,
+        "median": 89.03850174872127,
+        "min": 86.85335159407624
+      }
+    },
+    "receiverSignature": "4f99eaba78f853ce578f6d5964ad75d5c105b219e720ae15f0c3b52202487ec9",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 89.68331368767439,
+      "median": 89.68245562275499,
+      "min": 83.45857426366636
+    },
+    "uvMargin": 0.01
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 250,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 118,
+      "ratio": 0.472
+    },
+    {
+      "lod": 2,
+      "tris": 20,
+      "ratio": 0.08
+    }
+  ],
+  "collider": {
+    "node": "landing_stage_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "kind": "mooring"
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        2.5350000858306885,
+        0,
+        0
+      ],
+      "yaw": 90.00000250447816
+    },
+    {
+      "extras": {
+        "kind": "bollard"
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        1.2999999523162842,
+        1,
+        -1.25
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "step"
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        -0.44999998807907104,
+        0.44999998807907104,
+        0
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 89.68331368767439,
+    "median": 89.68245562275499,
+    "min": 83.45857426366636
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 292267,
+        "astc": 282511
+      },
+      "glbBytes": 29652
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/landing_stage/landing_stage.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 292267,
+        "sha256": "6a8345cfb0a090f71445930188e0a550dcb1892845f91328cc6009a086a0aa07"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/landing_stage/landing_stage.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 282511,
+        "sha256": "9cf095940c5c14ea338346442e3e8434b8047d533ad359ad5940c8bc8f2bb200"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/landing_stage/landing_stage.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 467841,
+        "sha256": "92a412f18102b187dd4638a180337fd2ab3e4ab7ed05b4fb1320a8ce4dd7952e"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/landing_stage/landing_stage.glb",
+      "sha256": "a509e998a9e987e12a8aaaa36a2ca050f3a3f1afc03daacb5fc1cfb923fdd4f0",
+      "bytes": 29652
+    },
+    {
+      "path": "assets/kit/p1/landing_stage/landing_stage.masks.bc7.ktx2",
+      "sha256": "6a8345cfb0a090f71445930188e0a550dcb1892845f91328cc6009a086a0aa07",
+      "bytes": 292267
+    },
+    {
+      "path": "assets/kit/p1/landing_stage/landing_stage.masks.astc.ktx2",
+      "sha256": "9cf095940c5c14ea338346442e3e8434b8047d533ad359ad5940c8bc8f2bb200",
+      "bytes": 282511
+    },
+    {
+      "path": "assets/kit/p1/landing_stage/landing_stage.masks.png",
+      "sha256": "92a412f18102b187dd4638a180337fd2ab3e4ab7ed05b4fb1320a8ce4dd7952e",
+      "bytes": 467841
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/boat_rowing/ref-1.jpg",
+      "sha256": "7bfda85157624872c8a26778126db04c5e4ba1597bda006d76e49c33709b3293",
+      "sourceSha256": "fa6f20aee5697d3fc5f60454137b89a00550de7170a7491ddc5347e065034e0d",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "d7fefb26-eaf8-492c-892c-d94cd5501371",
+      "prompt": "A single a small clinker-built wooden rowing boat of overlapping timber planks with a pointed bow and a narrow square transom, painted white outside with one dark blue band along the top plank, a varnished honey-coloured timber interior with two thwart seats and slatted floorboards, a pair of long timber oars resting in bronze rowlocks, the painted hull smooth and plain with a clean blank transom, sitting upright alone on the plain grey studio floor with a soft contact shadow, the whole boat centred in frame and seen from the front-left from a high three-quarter angle so the seats, floorboards and oars inside read clearly. The picture shows only the boat on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/boat_rowing/ref-2.jpg",
+      "sha256": "ce59b00892346edd6250672da29608e3ba0940a56db8a3db5c4708455bbfb697",
+      "sourceSha256": "227505a18d5af84b68a0078eea905a0b4e4cb2445ff6c7c0cbc7c33e24501b11",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "91e5feb0-b7ff-4614-bcdd-68bf332192b2",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. An 8 m wide river runs straight between two opposite flat edges in a channel sunk below the meadow surface between natural earthy banks with pebbles and reeds, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Close to one bank floats one a small clinker-built wooden rowing boat of overlapping timber planks with a pointed bow and a narrow square transom, painted white outside with one dark blue band along the top plank, a varnished honey-coloured timber interior with two thwart seats and slatted floorboards, a pair of long timber oars resting in bronze rowlocks, the painted hull smooth and plain with a clean blank transom, about 3.5 m long, so the boat is less than half the river's width and small against the tile, tied by a single rope to a short weathered timber landing stage of a few planks on posts at the water's edge. Where the river reaches the tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/boat_rowing/ref-3.jpg",
+      "sha256": "239099ab6c4951b33bcfd9bd006e2f0257ab930ce3fdb73249766a609ad2385d",
+      "sourceSha256": "636d8e77eb5e10237f521c9d21f85e2a4a7609a3dbe8694b7b081a2d39537d66",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "467f06bd-be7d-4eb2-ae7e-e8e0db43c6d6",
+      "prompt": "A single flat-sided hexagonal coast tile for a diorama, 32 m across. Ocean fills the side with two adjacent flat edges, lush meadow grass fills the two flat edges opposite them, and a curving sand shoreline runs across the tile from one flat edge to the opposite flat edge. Bands from land to sea: meadow grass, dry pale sand, a darker damp-sand band, a lacy white surf foam line, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. One a small clinker-built wooden rowing boat of overlapping timber planks with a pointed bow and a narrow square transom, painted white outside with one dark blue band along the top plank, a varnished honey-coloured timber interior with two thwart seats and slatted floorboards, a pair of long timber oars resting in bronze rowlocks, the painted hull smooth and plain with a clean blank transom, about 3.5 m long and small against the tile, is pulled up on the dry pale sand above the foam line, resting slightly tilted on its keel with its oars laid inside, a rope running from its bow to a short timber stake in the sand. Under the land, the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. On the ocean side, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, with the sand floor sloping down, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T23:26:41.312Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/boat_rowing/ref-1.jpg",
+        "assets-source/refs/boat_rowing/ref-2.jpg",
+        "assets-source/refs/boat_rowing/ref-3.jpg"
+      ],
+      "notes": "D4 (BA1): approved. Moored and rowing routes on rivers; turns back at bridges; at most 3. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "revision": "first build",
+      "notes": "Pending owner review; not an approval. The ref-2 landing stage as its own river-bank prop (assets-source/refs/boat_rowing ref-2, BQ5): a 2.15 m by 2.8 m deck of nine weathered planks 0.45 m over the water on three bearers, five dark posts (the three outer ones standing 0.55 m over the deck as bollards) set into the river bed of the water contract's straight profile, cross braces, a bank sill and a fender board where a rowing boat moors alongside. Its origin is the bank's waterline 4.0 m from the channel centre line with +x toward it. Review sheet: docs/checkpoints/landing_stage/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/boat_rowing.py",
+    "sha256": "39bf6bd3b6d4db634a3fe8b4c0121bc6ec978cfe1cf0d1b76a66e4c442a072b0"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boat.py",
+      "sha256": "f95d20dab339bbf6b47680ceb56d88e03e832f3cc676ddb2cc3fe459e6c3871f"
+    },
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    }
+  ],
+  "geometry": {
+    "beamM": 1.409935712814331,
+    "bow": "+x",
+    "draftM": 0.14998464286327362,
+    "heightM": 0.7208377718925476,
+    "lengthM": 3.570779800415039,
+    "seat": [
+      0.15,
+      0.0,
+      0.25
+    ],
+    "sheerMidshipM": 0.42,
+    "waterlineZ": 0.0
+  },
+  "lodTris": {
+    "boat_rowing_lod0": 914,
+    "boat_rowing_lod1": 328,
+    "boat_rowing_lod2": 96
+  },
+  "nodes": [
+    "anchor-prop-0",
+    "anchor-prop-1",
+    "boat_rowing",
+    "boat_rowing_collider",
+    "boat_rowing_lod0",
+    "boat_rowing_lod1",
+    "boat_rowing_lod2",
+    "boat_rowing_oar_port_lod0",
+    "boat_rowing_oar_port_lod1",
+    "boat_rowing_oar_port_lod2",
+    "boat_rowing_oar_stbd_lod0",
+    "boat_rowing_oar_stbd_lod1",
+    "boat_rowing_oar_stbd_lod2"
+  ],
+  "partTris": {
+    "boat_rowing_lod0": 842,
+    "boat_rowing_lod1": 300,
+    "boat_rowing_lod2": 76,
+    "boat_rowing_oar_port_lod0": 36,
+    "boat_rowing_oar_port_lod1": 14,
+    "boat_rowing_oar_port_lod2": 10,
+    "boat_rowing_oar_stbd_lod0": 36,
+    "boat_rowing_oar_stbd_lod1": 14,
+    "boat_rowing_oar_stbd_lod2": 10
+  },
+  "parts": {
+    "oars": {
+      "kind": "oar",
+      "lengthM": 2.37,
+      "loomDirLocal": {
+        "port": [
+          0.0,
+          0.9720693643765294,
+          -0.2346937383924212
+        ],
+        "stbd": [
+          0.0,
+          -0.9720693643765294,
+          -0.2346937383924212
+        ]
+      },
+      "lowestGripZ": 0.48395204544067383,
+      "nodes": [
+        "boat_rowing_oar_port_lod0",
+        "boat_rowing_oar_stbd_lod0",
+        "boat_rowing_oar_port_lod1",
+        "boat_rowing_oar_stbd_lod1",
+        "boat_rowing_oar_port_lod2",
+        "boat_rowing_oar_stbd_lod2"
+      ],
+      "outboardMarginM": 0.3042807245063863,
+      "pivotBlender": {
+        "port": [
+          -0.18000000715255737,
+          0.6849678754806519,
+          0.46071404218673706
+        ],
+        "stbd": [
+          -0.18000000715255737,
+          -0.6849678754806519,
+          0.46071404218673706
+        ]
+      },
+      "slopeDeg": 13.57357039422773,
+      "strokeDipDeg": 8.0,
+      "strokeYawDeg": 40.0,
+      "trailYawDeg": 80.0
+    }
+  },
+  "pieceId": "boat_rowing",
+  "sockets": [
+    {
+      "extras": {
+        "kind": "seat"
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        0.15000000596046448,
+        0.25,
+        -0.0
+      ],
+      "yaw": -179.999991348578
+    },
+    {
+      "extras": {
+        "kind": "painter"
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        1.9049999713897705,
+        0.6399999856948853,
+        -0.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

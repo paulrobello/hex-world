@@ -1,0 +1,95 @@
+{
+  "aoDistanceM": 0.5,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "geometry": {
+    "bankMeetsDeckD": 4.41,
+    "bankMeetsDeckX": -0.41,
+    "deckRuntimeY": -0.95,
+    "deckX": [
+      -0.75,
+      1.4
+    ],
+    "deckY": [
+      -1.4,
+      1.4
+    ],
+    "deckZ": 0.45,
+    "frame": "origin on the bank waterline, 4.0 m from the channel centre line; +x toward it; y along the flow",
+    "mooringD": 1.4649999999999999,
+    "mooringX": 2.535,
+    "outerEdgeD": 2.6,
+    "postFeetZ": {
+      "0.45,-1.25": -0.593,
+      "0.45,1.25": -0.593,
+      "1.3,-1.25": -1.117,
+      "1.3,0.0": -1.117,
+      "1.3,1.25": -1.117
+    },
+    "waterDepthAtMooringM": 1.3782919264596856,
+    "waterDepthAtOuterEdgeM": 1.009168271205244
+  },
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.7432900667190552,
+    "aoP05": 0.02352941408753395,
+    "centroids": {
+      "landing_stage_lod0": {
+        "minA": {
+          "post": 0.0,
+          "timber": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "landing_stage_lod1": {
+        "minA": {
+          "post": 0.0,
+          "timber": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "landing_stage_lod2": {
+        "minA": {
+          "post": 0.686,
+          "timber": 1.0
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.6041116714477539,
+    "filledTexels": 0,
+    "nightTexels": 0
+  },
+  "masksDensityPxPerM": {
+    "landing_stage_lod0": {
+      "max": 89.68331368767439,
+      "median": 89.68245562275499,
+      "min": 83.45857426366636
+    },
+    "landing_stage_lod1": {
+      "max": 89.68313458998225,
+      "median": 89.6824863668257,
+      "min": 89.68211797352986
+    },
+    "landing_stage_lod2": {
+      "max": 89.68310951344561,
+      "median": 89.03850174872127,
+      "min": 86.85335159407624
+    }
+  },
+  "receiverSignature": "4f99eaba78f853ce578f6d5964ad75d5c105b219e720ae15f0c3b52202487ec9",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 89.68331368767439,
+    "median": 89.68245562275499,
+    "min": 83.45857426366636
+  },
+  "uvMargin": 0.01
+}
