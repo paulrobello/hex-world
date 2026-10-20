@@ -1,0 +1,172 @@
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index 1cf8dc1..769e035 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -285,6 +285,21 @@
+                  "bakery_shop_wicker": { "color": [0.45, 0.3, 0.14], "roughness": 0.85, "masks": true },
+                  "bakery_shop_bread": { "color": [0.55, 0.27, 0.085], "roughness": 0.6, "masks": true } },
+       "maps": { "masks": "p1/bakery_shop/bakery_shop.masks" } },
++    { "id": "bakery_shop_b", "pack": "village", "kind": "prop", "glb": "p1/bakery_shop_b/bakery_shop_b.glb",
++      "provenance": "assets-source/kit/bakery_shop_b/provenance.json",
++      "slots": { "bakery_shop_b_walls": { "tileable": "plaster", "color": [1.0, 0.9, 0.66], "masks": true },
++                 "bakery_shop_b_roof": { "tileable": "plaster", "color": [0.24, 0.12, 0.08], "masks": true },
++                 "bakery_shop_b_brick": { "tileable": "plaster", "color": [0.44, 0.14, 0.08], "masks": true },
++                 "bakery_shop_b_stone": { "tileable": "plaster", "color": [0.45, 0.42, 0.37], "masks": true },
++                 "bakery_shop_b_timber": { "color": [0.07, 0.048, 0.033], "roughness": 0.8, "masks": true },
++                 "bakery_shop_b_frame": { "color": [0.12, 0.075, 0.042], "roughness": 0.75, "masks": true },
++                 "bakery_shop_b_door": { "color": [0.17, 0.105, 0.055], "roughness": 0.7, "masks": true },
++                 "bakery_shop_b_glass": { "color": [0.2, 0.16, 0.1], "roughness": 0.2, "masks": true },
++                 "bakery_shop_b_display_glass": { "color": [0.16, 0.1, 0.055], "roughness": 0.25, "masks": true },
++                 "bakery_shop_b_loaf_glass": { "color": [0.55, 0.29, 0.1], "roughness": 0.3, "masks": true },
++                 "bakery_shop_b_wicker": { "color": [0.45, 0.3, 0.14], "roughness": 0.85, "masks": true },
++                 "bakery_shop_b_bread": { "color": [0.55, 0.27, 0.085], "roughness": 0.6, "masks": true } },
++      "maps": { "masks": "p1/bakery_shop_b/bakery_shop_b.masks" } },
+     { "id": "rail_station_platform", "pack": "village", "kind": "prop", "glb": "p1/rail_station_platform/rail_station_platform.glb",
+       "provenance": "assets-source/kit/rail_station_platform/provenance.json",
+       "slots": { "rail_station_brick": { "tileable": "plaster", "color": [0.46, 0.17, 0.11], "masks": true },
+diff --git a/crates/hex-core/src/variant.rs b/crates/hex-core/src/variant.rs
+index 2e6f1ee..f7ab7ad 100644
+--- a/crates/hex-core/src/variant.rs
++++ b/crates/hex-core/src/variant.rs
+@@ -13,6 +13,7 @@ pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
+     ("tree_hero_oak", &["tree_hero_oak_b"]),
+     ("hay_bale_round", &["hay_bale_round_b"]),
+     ("hay_bale_stack", &["hay_bale_stack_b"]),
++    ("bakery_shop", &["bakery_shop_b"]),
+ ];
+ 
+ /// One slot in this many draws a variant (the rest keep the authored piece).
+@@ -261,6 +262,39 @@ mod tests {
+         assert_eq!(hero_piece(def, Axial::new(0, 0), 0), "tree_hero_oak");
+     }
+ 
++    /// The bakery tile's one hero slot draws the twin-gabled bakehouse in about one cell in three,
++    /// and the origin (the thumbnail cell) keeps the authored bakery_shop.
++    #[test]
++    fn some_bakery_tiles_draw_the_twin_gabled_bakehouse() {
++        let c = TileCatalog::builtin().unwrap();
++        let def = c.get("bakery").unwrap();
++        let (mut shop, mut shop_b) = (0, 0);
++        for cell in cells() {
++            match hero_piece(def, cell, 0) {
++                "bakery_shop" => shop += 1,
++                "bakery_shop_b" => shop_b += 1,
++                p => panic!("{p} at {cell:?}"),
++            }
++        }
++        let share = shop_b as f32 / (shop + shop_b) as f32;
++        assert!((0.28..0.39).contains(&share), "bakery_shop_b share {share}");
++        assert_eq!(hero_piece(def, Axial::ORIGIN, 0), "bakery_shop");
++    }
++
++    /// Prints the cells near the origin whose bakery slot draws bakery_shop_b (for checkpoint
++    /// scripts): `cargo test -p hex-core bakery_b_cells -- --nocapture --ignored`.
++    #[test]
++    #[ignore]
++    fn bakery_b_cells() {
++        let c = TileCatalog::builtin().unwrap();
++        let def = c.get("bakery").unwrap();
++        for cell in (-4..=4).flat_map(|q| (-4..=4).map(move |r| Axial::new(q, r))) {
++            if hero_piece(def, cell, 0) == "bakery_shop_b" {
++                println!("{} {}", cell.q, cell.r);
++            }
++        }
++    }
++
+     #[test]
+     fn every_pick_rule_draws_only_authored_pieces_or_their_variants() {
+         let cell = Axial::new(3, -2);
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 250a700..75f02b5 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -632,6 +632,13 @@ pub const GROUND_BOXES: &[(&str, GroundBox)] = &[
+             max: [3.15, 4.0],
+         },
+     ),
++    (
++        "bakery_shop_b",
++        GroundBox {
++            min: [-2.8, -3.8],
++            max: [3.115, 3.8],
++        },
++    ),
+ ];
+ 
+ pub fn ground_box(piece: &str) -> Option<GroundBox> {
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index c03dae7..80c3aca 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -73,6 +73,7 @@ pub const OBSTACLES: &[&str] = &[
+     "windmill",
+     "barn_red",
+     "bakery_shop",
++    "bakery_shop_b",
+     "hay_bale_round",
+     "hay_bale_stack",
+     "hay_bale_round_b",
+@@ -508,7 +509,8 @@ pub fn prop_kind(piece: &str) -> &'static str {
+         p if p.starts_with("house")
+             || p.starts_with("barn")
+             || p == "windmill"
+-            || p == "bakery_shop" =>
++            || p == "bakery_shop"
++            || p == "bakery_shop_b" =>
+         {
+             "building"
+         }
+@@ -1097,6 +1099,7 @@ mod tests {
+             ("animal_sheep_c", "animal"),
+             ("windmill", "building"),
+             ("bakery_shop", "building"),
++            ("bakery_shop_b", "building"),
+             ("barn_red", "building"),
+             ("house_cottage", "building"),
+             ("house_twostorey", "building"),
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 69f96e8..a22f588 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -110,6 +110,16 @@ pub fn kit_layout() -> Vec<Placement> {
+         y: -0.062,
+         ..place("bakery_shop", 1, 0, 0)
+     });
++    // Its hero variant, the twin-gabled bakehouse bakery_shop_b, across the road on the same tile,
++    // its shop front turned to +x toward the kit sun (yaw 0), its +y eave (runtime z 5.17) 0.57 m
++    // beyond the road profile (|z| <= 4.6 m) and its eave corners 0.58 m inside the border, on the
++    // meadow relief at its centre.
++    v.push(Placement {
++        offset: [1.5, 9.0],
++        yaw_deg: 0.0,
++        y: -0.04,
++        ..place("bakery_shop_b", 1, 0, 0)
++    });
+     // Verge bushes (road refs approved 2026-10-13, ref-1's "grass verges with tufts and small
+     // bushes") on road tile (0, 0): two on the sunny south verge and one on the north, each beyond
+     // the kerb and the verge sink (|z| 4.6) on the meadow relief at its spot (`relief()` in
+diff --git a/crates/hex-sim/tests/parking.rs b/crates/hex-sim/tests/parking.rs
+index 5e198c8..1c516c6 100644
+--- a/crates/hex-sim/tests/parking.rs
++++ b/crates/hex-sim/tests/parking.rs
+@@ -361,8 +361,10 @@ const HOUSE_CLUSTER: [(&str, [f32; 4]); 12] = [
+ // window and its basket, the bench, the doorstep), and from scripts/blender/kit/bakery_pad.py the
+ // through road's north kerb and verge either side of the forecourt mouth (MOUTH x -3.8 and 5.85, out
+ // to the sink at |z| 4.6), the forecourt edging (EDGE_W 0.12) on its east, north and stepped west
+-// sides, and the hedge north of it.
+-const BAKERY: [(&str, [f32; 4]); 15] = [
++// sides, and the hedge north of it. The slot's variant bakery_shop_b keeps every vertex below 2.7 m
++// inside these boxes plus its own shop front and pentice box (scripts/blender/kit/_bakery_b.py
++// ENVELOPE, asserted per LOD), so the sweep covers both pieces.
++const BAKERY: [(&str, [f32; 4]); 16] = [
+     ("shop body", [-7.66, -11.06, -0.54, -5.94]),
+     ("chimney west", [-8.2, -9.95, -7.6, -7.85]),
+     ("chimney east", [-0.6, -9.95, 0.0, -7.85]),
+@@ -371,6 +373,7 @@ const BAKERY: [(&str, [f32; 4]); 15] = [
+     ("bench", [-3.6, -5.86, -2.88, -5.54]),
+     ("doorstep", [-2.855, -6.0, -1.505, -5.56]),
+     ("door canopy", [-2.93, -6.0, -1.43, -5.2]),
++    ("variant shop front, pentice", [-7.55, -6.0, -0.65, -5.37]),
+     ("kerb and lawn west of the mouth", [-14.0, -6.0, -3.8, -3.0]),
+     ("kerb east of the mouth", [5.85, -4.6, 14.0, -3.0]),
+     ("edging east", [5.85, -12.12, 5.97, -4.6]),

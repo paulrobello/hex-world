@@ -74,6 +74,7 @@ pub const OBSTACLES: &[&str] = &[
     "barn_red",
     "barn_red_b",
     "bakery_shop",
+    "bakery_shop_b",
     "hay_bale_round",
     "hay_bale_stack",
     "hay_bale_round_b",
@@ -509,7 +510,8 @@ pub fn prop_kind(piece: &str) -> &'static str {
         p if p.starts_with("house")
             || p.starts_with("barn")
             || p == "windmill"
-            || p == "bakery_shop" =>
+            || p == "bakery_shop"
+            || p == "bakery_shop_b" =>
         {
             "building"
         }
@@ -1098,6 +1100,7 @@ mod tests {
             ("animal_sheep_c", "animal"),
             ("windmill", "building"),
             ("bakery_shop", "building"),
+            ("bakery_shop_b", "building"),
             ("barn_red", "building"),
             ("barn_red_b", "building"),
             ("house_cottage", "building"),

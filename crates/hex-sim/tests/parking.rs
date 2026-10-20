@@ -361,8 +361,10 @@ const HOUSE_CLUSTER: [(&str, [f32; 4]); 12] = [
 // window and its basket, the bench, the doorstep), and from scripts/blender/kit/bakery_pad.py the
 // through road's north kerb and verge either side of the forecourt mouth (MOUTH x -3.8 and 5.85, out
 // to the sink at |z| 4.6), the forecourt edging (EDGE_W 0.12) on its east, north and stepped west
-// sides, and the hedge north of it.
-const BAKERY: [(&str, [f32; 4]); 15] = [
+// sides, and the hedge north of it. The slot's variant bakery_shop_b keeps every vertex below 2.7 m
+// inside these boxes plus its own shop front and pentice box (scripts/blender/kit/_bakery_b.py
+// ENVELOPE, asserted per LOD), so the sweep covers both pieces.
+const BAKERY: [(&str, [f32; 4]); 16] = [
     ("shop body", [-7.66, -11.06, -0.54, -5.94]),
     ("chimney west", [-8.2, -9.95, -7.6, -7.85]),
     ("chimney east", [-0.6, -9.95, 0.0, -7.85]),
@@ -371,6 +373,7 @@ const BAKERY: [(&str, [f32; 4]); 15] = [
     ("bench", [-3.6, -5.86, -2.88, -5.54]),
     ("doorstep", [-2.855, -6.0, -1.505, -5.56]),
     ("door canopy", [-2.93, -6.0, -1.43, -5.2]),
+    ("variant shop front, pentice", [-7.55, -6.0, -0.65, -5.37]),
     ("kerb and lawn west of the mouth", [-14.0, -6.0, -3.8, -3.0]),
     ("kerb east of the mouth", [5.85, -4.6, 14.0, -3.0]),
     ("edging east", [5.85, -12.12, 5.97, -4.6]),

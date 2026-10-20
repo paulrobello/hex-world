@@ -647,6 +647,13 @@ pub const GROUND_BOXES: &[(&str, GroundBox)] = &[
             max: [3.15, 4.0],
         },
     ),
+    (
+        "bakery_shop_b",
+        GroundBox {
+            min: [-2.8, -3.8],
+            max: [3.115, 3.8],
+        },
+    ),
 ];
 
 pub fn ground_box(piece: &str) -> Option<GroundBox> {

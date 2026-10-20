@@ -14,6 +14,7 @@ pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
     ("hay_bale_round", &["hay_bale_round_b"]),
     ("hay_bale_stack", &["hay_bale_stack_b"]),
     ("barn_red", &["barn_red_b"]),
+    ("bakery_shop", &["bakery_shop_b"]),
 ];
 
 /// One slot in this many draws a variant (the rest keep the authored piece).
@@ -290,6 +291,39 @@ mod tests {
             "tree_hero_oak_b share {share}"
         );
         assert_eq!(hero_piece(def, Axial::new(0, 0), 0), "tree_hero_oak");
+    }
+
+    /// The bakery tile's one hero slot draws the twin-gabled bakehouse in about one cell in three,
+    /// and the origin (the thumbnail cell) keeps the authored bakery_shop.
+    #[test]
+    fn some_bakery_tiles_draw_the_twin_gabled_bakehouse() {
+        let c = TileCatalog::builtin().unwrap();
+        let def = c.get("bakery").unwrap();
+        let (mut shop, mut shop_b) = (0, 0);
+        for cell in cells() {
+            match hero_piece(def, cell, 0) {
+                "bakery_shop" => shop += 1,
+                "bakery_shop_b" => shop_b += 1,
+                p => panic!("{p} at {cell:?}"),
+            }
+        }
+        let share = shop_b as f32 / (shop + shop_b) as f32;
+        assert!((0.28..0.39).contains(&share), "bakery_shop_b share {share}");
+        assert_eq!(hero_piece(def, Axial::ORIGIN, 0), "bakery_shop");
+    }
+
+    /// Prints the cells near the origin whose bakery slot draws bakery_shop_b (for checkpoint
+    /// scripts): `cargo test -p hex-core bakery_b_cells -- --nocapture --ignored`.
+    #[test]
+    #[ignore]
+    fn bakery_b_cells() {
+        let c = TileCatalog::builtin().unwrap();
+        let def = c.get("bakery").unwrap();
+        for cell in (-4..=4).flat_map(|q| (-4..=4).map(move |r| Axial::new(q, r))) {
+            if hero_piece(def, cell, 0) == "bakery_shop_b" {
+                println!("{} {}", cell.q, cell.r);
+            }
+        }
     }
 
     #[test]

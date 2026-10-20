@@ -1,0 +1,128 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 2,
+  "maskStats": {
+    "aoMean": 0.5963767766952515,
+    "aoP05": 0.0,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "bread": 0.0,
+          "brick": 0.0,
+          "display_glass": 0.176,
+          "door": 0.0,
+          "frame": 0.0,
+          "glass": 0.094,
+          "loaf_glass": 0.149,
+          "roof": 0.0,
+          "stone": 0.0,
+          "timber": 0.0,
+          "walls": 0.0,
+          "wicker": 0.031
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "brick": 0.0,
+          "display_glass": 0.671,
+          "door": 0.0,
+          "frame": 0.0,
+          "glass": 0.655,
+          "loaf_glass": 0.843,
+          "roof": 0.0,
+          "stone": 0.608,
+          "timber": 0.0,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "brick": 0.345,
+          "door": 0.0,
+          "glass": 0.671,
+          "loaf_glass": 1.0,
+          "roof": 0.016,
+          "timber": 0.047,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.4233264923095703,
+    "filledTexels": 30296,
+    "nightTexels": 28049
+  },
+  "masksDensityBySlot": {
+    "lod0": {
+      "bread": 21.37,
+      "brick": 23.25,
+      "display_glass": 58.12,
+      "door": 23.25,
+      "frame": 23.25,
+      "glass": 23.25,
+      "loaf_glass": 58.12,
+      "roof": 20.74,
+      "stone": 23.25,
+      "timber": 23.25,
+      "walls": 23.25,
+      "wicker": 22.32
+    },
+    "lod1": {
+      "brick": 11.38,
+      "display_glass": 11.38,
+      "door": 11.38,
+      "frame": 11.48,
+      "glass": 11.38,
+      "loaf_glass": 11.38,
+      "roof": 11.76,
+      "stone": 11.25,
+      "timber": 11.48,
+      "walls": 11.38
+    },
+    "lod2": {
+      "brick": 7.24,
+      "door": 7.24,
+      "glass": 7.24,
+      "loaf_glass": 7.24,
+      "roof": 7.48,
+      "timber": 7.69,
+      "walls": 7.24
+    }
+  },
+  "masksDensityPxPerM": {
+    "bakery_shop_b_lod0": {
+      "max": 58.11548757088118,
+      "median": 23.245177078948423,
+      "min": 19.605975457099557
+    },
+    "bakery_shop_b_lod1": {
+      "max": 12.786179280859459,
+      "median": 11.376813950808312,
+      "min": 10.193463714425402
+    },
+    "bakery_shop_b_lod2": {
+      "max": 8.136502455695489,
+      "median": 7.239775271487794,
+      "min": 6.486670061388324
+    }
+  },
+  "receiverSignature": "220e1b6bf9ab3fc434046a35ea195b2f7d7906b0d1aa3390bf075b6e236d71f0",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 58.11548757088118,
+    "median": 23.245177078948423,
+    "min": 19.605975457099557
+  },
+  "uvMargin": 0.006
+}

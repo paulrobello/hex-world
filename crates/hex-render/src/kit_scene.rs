@@ -110,6 +110,16 @@ pub fn kit_layout() -> Vec<Placement> {
         y: -0.062,
         ..place("bakery_shop", 1, 0, 0)
     });
+    // Its hero variant, the twin-gabled bakehouse bakery_shop_b, across the road on the same tile,
+    // its shop front turned to +x toward the kit sun (yaw 0), its +y eave (runtime z 5.17) 0.57 m
+    // beyond the road profile (|z| <= 4.6 m) and its eave corners 0.58 m inside the border, on the
+    // meadow relief at its centre.
+    v.push(Placement {
+        offset: [1.5, 9.0],
+        yaw_deg: 0.0,
+        y: -0.04,
+        ..place("bakery_shop_b", 1, 0, 0)
+    });
     // Verge bushes (road refs approved 2026-10-13, ref-1's "grass verges with tufts and small
     // bushes") on road tile (0, 0): two on the sunny south verge and one on the north, each beyond
     // the kerb and the verge sink (|z| 4.6) on the meadow relief at its spot (`relief()` in

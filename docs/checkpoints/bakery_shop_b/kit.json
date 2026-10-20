@@ -1,0 +1,21 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 150 },
+  { "cmd": "camera", "pos": [62.0, 30.0, 40.0], "look_at": [29.2, 2.0, 1.0] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "bakery_b-kit-play" },
+  { "cmd": "camera", "pos": [29.2, 46.0, 1.5], "look_at": [29.2, 0.0, 0.2] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "bakery_b-kit-top" },
+  { "cmd": "camera", "pos": [37.2, 2.4, 11.8], "look_at": [31.0, 2.1, 9.0] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "bakery_b-kit-close-sun" },
+  { "cmd": "camera", "pos": [20.6, 3.0, 5.0], "look_at": [26.7, 3.0, 9.4] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "bakery_b-kit-close-shade" },
+  { "cmd": "camera", "pos": [46.0, 14.0, 6.0], "look_at": [0.0, 2.0, 0.0] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "bakery_b-kit-scale" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]
