@@ -1,0 +1,181 @@
+{
+  "name": "tree_hero_oak_c",
+  "date": "2026-10-20T19:46:30.176Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 12,
+      "bytes": 949305,
+      "sha256": "1142fde902e574dade0137d001b663260097c23777eeb10195a366d5b34456e8"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 12,
+      "bytes": 951008,
+      "sha256": "b9a194fe9d85daeac69d4fe128d6cf59133883450a4f7b49d79f240d39fe6974"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 1134052,
+      "sha256": "957d2568fabf476792088c464a30242aa3c249074bab6476b1a4dd4185da906b"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 12,
+      "bytes": 1298552,
+      "sha256": "30e38e876299519e628e42db8d6c2f1a2e3d807a362780ba402481f3a5ca0560"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 12,
+      "bytes": 1283406,
+      "sha256": "16e8ad67b9cdc41cc5d9d18db709339de0ce4ea5ade21c312ae5fa14aaf92112"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 1979779,
+      "sha256": "a9f8a89b49ac1ae0622afc8162c32b7b09acd3182a6fda4fe21d32a652ea1c8b"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 12,
+      "bytes": 1958439,
+      "sha256": "1290b65d1820df504c8a63227121a0c37de85229154d276af211ba7fbfdaa620"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 12,
+      "bytes": 1971882,
+      "sha256": "44b2821099b61182a35b3db6e9b19167b01d63abe8dfa7375757f9cfb66adae6"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 2891310,
+      "sha256": "85a754dd6a5255b2788aca37bd064e7d69167c9f4410290a2de9c55067f4f9e6"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 12,
+      "bytes": 1727174,
+      "sha256": "0d49da9ddf48eff86d70aa239f6efbd187b3e7d988405c1b43095f12c1cf043a"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 12,
+      "bytes": 1780661,
+      "sha256": "5b74324e22e6a5ad752e81f439893e8367fda02ea06e6ed6501b0327bfa7021d"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/tree_hero_oak_c/tree_hero_oak_c.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 2308819,
+      "sha256": "30599c1f6a1659f5eba1ea3a0155d6ebfd0efe3645c8ccc24bb1b930b3fb1564"
+    }
+  ],
+  "budgets": {
+    "class": "hero",
+    "ktxMax": 11500000,
+    "ktxBytes": {
+      "bc7": 5933470,
+      "astc": 5986957
+    },
+    "glbBytes": 173300
+  },
+  "glb": {
+    "bytes": 173300,
+    "sha256": "2d80230b4b7d05cb6a1600678ce63b012e29aec8b0480139fe2ddd19a66cb5ab"
+  }
+}
