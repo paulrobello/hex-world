@@ -1291,7 +1291,7 @@ mod tests {
         let n = picker.iter().position(|e| e.id == "beach_curve").unwrap();
         g.apply(Action::SelectNth(n));
         assert!(g.selected.starts_with("beach_"));
-        assert_eq!(picker[n + 1].id, "river_mouth");
+        assert_eq!(picker[n + 1].id, "river_mouths");
         // Picking the group on a bay-only slot shows the bay, but the fallback is not a choice: the
         // next slot where both fit shows the headland again.
         let mut g = game();

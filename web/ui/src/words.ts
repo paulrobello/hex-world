@@ -25,8 +25,9 @@ export const TILE_NAMES: Record<string, string> = {
   // One picker entry, the Beach Curve (owner, 2026-10-20): R turns it between the headland and the bay.
   beach_outer: "Beach Curve",
   beach_inner: "Beach Curve",
+  // One picker entry for both handednesses (owner, 2026-10-20): R flips it where the mirror fits.
   river_mouth: "River mouth",
-  river_mouth_l: "River mouth mirrored",
+  river_mouth_l: "River mouth",
   ocean: "Ocean",
 };
 

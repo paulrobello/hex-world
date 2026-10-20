@@ -138,14 +138,9 @@
         ]
       },
       {
-        "id": "river_mouth",
+        "id": "river_mouths",
         "tiles": [
-          "river_mouth"
-        ]
-      },
-      {
-        "id": "river_mouth_l",
-        "tiles": [
+          "river_mouth",
           "river_mouth_l"
         ]
       },

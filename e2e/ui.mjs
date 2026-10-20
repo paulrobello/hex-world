@@ -602,6 +602,10 @@ try {
   check(await page.locator(".row[data-tile=beach_outer], .row[data-tile=beach_inner]").count() === 0, "no separate headland or bay rows");
   check((await text(".row[data-tile=beach_curve] .row__name")) === "Beach Curve", "the row is named Beach Curve");
   check(!/Headland|\bBay\b/.test(await text(".sheet--tiles")), "the sheet never says Headland or Bay");
+  // The river mouth's two handednesses are one row too (owner 2026-10-20), cycled the same way.
+  check(await page.locator(".row[data-tile=river_mouths]").count() === 1, "the Tiles sheet lists one River mouth row");
+  check(await page.locator(".row[data-tile=river_mouth], .row[data-tile=river_mouth_l]").count() === 0, "no separate mouth rows");
+  check(!/River mouth mirrored/.test(await text(".sheet--tiles")), "the sheet never says River mouth mirrored");
   await page.locator(".row[data-tile=beach_curve]").click();
   await until(async () => ["beach_outer", "beach_inner"].includes((await play()).selected), "a click on Beach Curve selects a member");
   // A free slot on screen where both members fit, by the overlay's own fit rules.

@@ -83,7 +83,10 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
 /// tile ids in rotation order)`. The members stay separate tiles (saves, thumbnails, kit pieces and
 /// the sim see only them); R steps through every member's distinct legal orientations in turn, so
 /// the player switches between them by rotating. A group id never equals a tile id.
-pub const PICKER_GROUPS: &[(&str, &[&str])] = &[("beach_curve", &["beach_outer", "beach_inner"])];
+pub const PICKER_GROUPS: &[(&str, &[&str])] = &[
+    ("beach_curve", &["beach_outer", "beach_inner"]),
+    ("river_mouths", &["river_mouth", "river_mouth_l"]),
+];
 
 /// One Tiles sheet entry: a lone tile (`id` is its tile id) or a picker group.
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -349,9 +352,20 @@ mod tests {
         let i = ids.iter().position(|&id| id == "beach_curve").unwrap();
         assert_eq!(ids[i - 1], "beach");
         assert_eq!(p[i].tiles, ["beach_outer", "beach_inner"]);
-        assert_eq!(p.len(), c.tiles().len() - 1);
+        assert_eq!(p.len(), c.tiles().len() - 2);
         assert_eq!(c.siblings("beach_inner").len(), 2);
         assert_eq!(c.siblings("meadow").len(), 1);
+    }
+
+    #[test]
+    fn picker_lists_the_river_mouths_once_with_the_mirrored_mouth_second() {
+        let c = TileCatalog::builtin().unwrap();
+        let p = c.picker();
+        let ids: Vec<&str> = p.iter().map(|e| e.id.as_str()).collect();
+        assert!(!ids.contains(&"river_mouth") && !ids.contains(&"river_mouth_l"));
+        let i = ids.iter().position(|&id| id == "river_mouths").unwrap();
+        assert_eq!(p[i].tiles, ["river_mouth", "river_mouth_l"]);
+        assert_eq!(c.siblings("river_mouth_l").len(), 2);
     }
 
     #[test]

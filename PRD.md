@@ -249,7 +249,7 @@ About 10 types. The exact variants are frozen at the start of P2. With the owner
 | 10 | Beach | A straight coast: ocean, ocean, beach, grass, grass, beach. Surf foam. |
 | 10a | Beach outer corner | A headland: ocean, ocean, beach, grass, beach, ocean. The coast turns around a point of land (owner, O1). In the inventory with 10b as one entry, Beach Curve, that R turns between the two (owner, 2026-10-20). |
 | 10b | Beach inner corner | A bay: ocean, beach, grass, grass, grass, beach. The coast turns inward (owner, O1). The Beach Curve's other half (10a). |
-| 10c | River mouth | The straight beach with one land edge turned into River: ocean, ocean, beach, river, grass, beach. The channel fans out over the sand into the surf (owner, 2026-10-14). Both handednesses ship: `river_mouth` (River on edge 3) and `river_mouth_l` (River on edge 4), authored mirrored. |
+| 10c | River mouth | The straight beach with one land edge turned into River: ocean, ocean, beach, river, grass, beach. The channel fans out over the sand into the surf (owner, 2026-10-14). Both handednesses ship: `river_mouth` (River on edge 3) and `river_mouth_l` (River on edge 4), authored mirrored. In the inventory as one entry, River mouth, that R flips between the two handednesses where the mirror fits (owner, 2026-10-20), as the Beach Curve does. |
 | 11 | Ocean | Ocean on all edges. Deep water with a visible shelf below the surface. |
 
 ## 6. Modular asset kit (D11)

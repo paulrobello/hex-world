@@ -31,9 +31,23 @@ test("the picker lists one Beach Curve and neither the headland nor the bay", ()
   assert.ok(!names.includes("Headland") && !names.includes("Bay"));
   // In the straight beach's place, after it; every other tile is its own entry.
   assert.equal(ids[ids.indexOf("beach_curve") - 1], "beach");
-  assert.equal(PICKER.length, TILES.length - 1);
+  assert.equal(PICKER.length, TILES.length - 2);
   assert.equal(entryOf("beach_inner")!.id, "beach_curve");
   assert.equal(entryOf("meadow")!.id, "meadow");
+});
+
+test("the picker lists one River mouth for both handednesses", () => {
+  const ids = PICKER.map((e) => e.id);
+  assert.ok(!ids.includes("river_mouth") && !ids.includes("river_mouth_l"));
+  const mouth = PICKER.find((e) => e.id === "river_mouths")!;
+  assert.deepEqual(
+    mouth.tiles.map((t) => t.id),
+    ["river_mouth", "river_mouth_l"],
+  );
+  const names = PICKER.map((e) => tileName(e.tiles[0]!.id));
+  assert.equal(names.filter((n) => n === "River mouth").length, 1);
+  assert.ok(!names.includes("River mouth mirrored"));
+  assert.equal(entryOf("river_mouth_l")!.id, "river_mouths");
 });
 
 test("Beach Curve fits where either member fits and counts both members' turns", () => {
