@@ -666,6 +666,29 @@ mod tests {
         }
     }
 
+    /// A hero prop with a height stands at it in the ghost, as on the placed tile: the station
+    /// shelter sits 1.38 m up on its platform, not sunk into it.
+    #[test]
+    fn the_ghost_stands_hero_props_at_their_height() {
+        let c = PlayCatalog::default();
+        let def = c.0.get("rail_station").expect("rail_station tile");
+        let pieces = ghost_pieces(def, &c.0, Axial::ORIGIN, |_| true);
+        let lifted: Vec<_> = def.props.hero.iter().filter(|h| h.y != 0.0).collect();
+        assert!(!lifted.is_empty(), "the station has a raised hero");
+        for h in lifted {
+            let (_, t, _) = pieces
+                .iter()
+                .find(|(id, ..)| *id == h.piece.as_str())
+                .unwrap_or_else(|| panic!("{} ghosted", h.piece.as_str()));
+            assert_eq!(
+                t.translation,
+                Vec3::new(h.at[0], h.y, h.at[1]),
+                "{}",
+                h.piece.as_str()
+            );
+        }
+    }
+
     #[test]
     fn pieces_missing_from_the_kit_are_left_out() {
         let c = PlayCatalog::default();
