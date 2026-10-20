@@ -40,6 +40,21 @@ class GeomLod(unittest.TestCase):
             if loop.vertex_index in border:
                 self.assertGreater(mesh.corner_normals[li].vector.z, 0.999)
 
+    def test_cap_normals_follow_the_slope_and_stay_up_on_the_border(self):
+        cap = self.caps()[0]
+        geom.set_cap_normals(cap, lambda x, y: (0.1, -0.2))
+        mesh = cap.data
+        want = (-0.1, 0.2, 1.0)
+        s = math.sqrt(sum(c * c for c in want))
+        for li, loop in enumerate(mesh.loops):
+            v = mesh.vertices[loop.vertex_index].co
+            n = mesh.corner_normals[li].vector
+            if abs(hexgeo.dist_to_border(v.x, v.y)) < 1e-4:
+                self.assertGreater(n.z, 0.999)
+            else:
+                for got, w in zip(n, want):
+                    self.assertAlmostEqual(got, w / s, places=3)  # custom normals are stored quantized
+
     def test_skirt_outward_and_counted(self):
         ring = hexgeo.border_ring(4)
         s = geom.skirt("skirt", ring, hexgeo.LEVEL_STEP, 2)

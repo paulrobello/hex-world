@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/meadow_base.py",
-    "sha256": "05e33fe42a7144c8cc7639e66de7d6d24eba5aa386b4a14e0c7b486a031b6976"
+    "sha256": "4b9c3b979f9843397bf05639f85c70bb6ed366cb653cdd7fab4fa5cdc41a2c5f"
   },
   "generatorDeps": [],
   "authoringAgent": {
@@ -29,7 +29,7 @@
     "device": "CPU",
     "marginPx": 12,
     "maskStats": {
-      "mean": 0.9993626475334167,
+      "mean": 0.9993975162506104,
       "min": 0.9686275124549866,
       "p01": 0.9843137860298157,
       "snowMean": 1,
@@ -37,7 +37,7 @@
       "wetMax": 0.6980392336845398,
       "wetMin": 0.5098039507865906
     },
-    "receiverSignature": "3b9539f0065c28d29cf62398420935d9a9c3c537af34e4f94c055894c6a7b323",
+    "receiverSignature": "0690d6230a7d99645735c5f5d5f605aaaa49a026e3a06272a5a84b2c99dc191a",
     "samples": 64,
     "skipped": false,
     "texelDensityPxPerM": {
@@ -158,10 +158,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 235073,
-        "astc": 243545
+        "bc7": 232547,
+        "astc": 240625
       },
-      "glbBytes": 66772
+      "glbBytes": 68896
     },
     "textureEncodes": [
       {
@@ -172,8 +172,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 235073,
-        "sha256": "f9b4f8dfa7685724bfec438d683041171c77b53e24758ba7bb9d87d4fe5ee70e"
+        "bytes": 232547,
+        "sha256": "f86dd6ad9b8021d0f98d7bc69ac2a57de151a461f86e3eefec9ebe286c51bbed"
       },
       {
         "channel": "masks",
@@ -183,8 +183,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 243545,
-        "sha256": "8897f4c3ac5eaf7e245006e88992694251d07c6666edff67f179811afe928fdb"
+        "bytes": 240625,
+        "sha256": "16e9f1fe7a42270b763cf6b48e5d96029ae1764b43b3cd801194aab656f0ebc2"
       },
       {
         "channel": "masks",
@@ -192,31 +192,31 @@
         "path": "assets/kit/p1/meadow_base/meadow_base.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 318445,
-        "sha256": "296693b01fb7a31c9da153739248f6b130a4c971d7d596c9d7e57f80d5fe2689"
+        "bytes": 310411,
+        "sha256": "7c937f7331a12a01223972c1d002c6a8bd43b01b98438bd8f52f2770f0407730"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/meadow_base/meadow_base.glb",
-      "sha256": "313f084734ea98b6aa465918b986eccaa80752d2557bd44e2e62854a2470e1bb",
-      "bytes": 66772
+      "sha256": "48c33214d9d073106d6df333e41774b67efbbe1a0c26b7bf23c931510ed8de2f",
+      "bytes": 68896
     },
     {
       "path": "assets/kit/p1/meadow_base/meadow_base.masks.bc7.ktx2",
-      "sha256": "f9b4f8dfa7685724bfec438d683041171c77b53e24758ba7bb9d87d4fe5ee70e",
-      "bytes": 235073
+      "sha256": "f86dd6ad9b8021d0f98d7bc69ac2a57de151a461f86e3eefec9ebe286c51bbed",
+      "bytes": 232547
     },
     {
       "path": "assets/kit/p1/meadow_base/meadow_base.masks.astc.ktx2",
-      "sha256": "8897f4c3ac5eaf7e245006e88992694251d07c6666edff67f179811afe928fdb",
-      "bytes": 243545
+      "sha256": "16e9f1fe7a42270b763cf6b48e5d96029ae1764b43b3cd801194aab656f0ebc2",
+      "bytes": 240625
     },
     {
       "path": "assets/kit/p1/meadow_base/meadow_base.masks.png",
-      "sha256": "296693b01fb7a31c9da153739248f6b130a4c971d7d596c9d7e57f80d5fe2689",
-      "bytes": 318445
+      "sha256": "7c937f7331a12a01223972c1d002c6a8bd43b01b98438bd8f52f2770f0407730",
+      "bytes": 310411
     }
   ],
   "references": [
@@ -242,7 +242,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-13T18:44:28.927Z",
+    "date": "2026-10-20T16:18:04.313Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -273,6 +273,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "A1: re-approved on the O4 cutaway skirt (shape and soil set). Colour re-checked on the TonyMcMapface re-shoot with the lightened soil (Q4). docs/review/2026-10-14-walkthrough.html"
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-hump",
+      "requested": "2026-10-20",
+      "notes": "Re-export, geometry unchanged: the cap's custom normals now come from the relief's slope without the falloff's rise to the border ring, so the 0.11 m rise over the last 2 m no longer shades as a ridge along every tile border (owner, 2026-10-14). Review docs/checkpoints/terrain-hump/sheet.jpg (before/after orbit at noon and dusk, eye level, seams)."
     }
   ]
 }

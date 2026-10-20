@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/forest_base.py",
-    "sha256": "817e872afddf1a6a8e118c42b246f4fd91664c2c6566e43ffde6779b22d27e16"
+    "sha256": "9f8431de8a6c9dbba23bf6b38fc62114b42f778578a15cd585e14359d9828512"
   },
   "generatorDeps": [],
   "lodTris": {

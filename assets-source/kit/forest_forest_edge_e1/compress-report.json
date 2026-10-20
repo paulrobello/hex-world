@@ -1,6 +1,6 @@
 {
   "name": "forest_forest_edge_e1",
-  "date": "2026-10-14T06:27:34.480Z",
+  "date": "2026-10-20T16:16:35.777Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 8943,
-      "sha256": "d33641d874998730b6f3be2a46f10163ebce721e3562a965d993f3663ab95133"
+      "bytes": 9776,
+      "sha256": "92435f6a18fb38824830de9909fde77bbffcc0b3480ec1c31a63d02f06ddd14a"
     },
     {
       "channel": "masks",
@@ -59,8 +59,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 8815,
-      "sha256": "cc4b70347c2b84d84537b7bfebf0c6a46226c2acc6833d377e81320755250b68"
+      "bytes": 9630,
+      "sha256": "7df375908439104e00aebf497f346cc6e9405e7405d5da05cecda9d7bd352006"
     },
     {
       "channel": "masks",
@@ -68,21 +68,21 @@
       "path": "assets/kit/p1/forest_forest_edge_e1/forest_forest_edge_e1.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 11285,
-      "sha256": "4c377288e708d665dcb5304956f29f4105ea86397a19dc09b052cf5c79872f22"
+      "bytes": 13712,
+      "sha256": "6e7bfd864f70ae7d5eb0b3c88573175cc36461f2c9f40388490aa57efabe9c2f"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 8943,
-      "astc": 8815
+      "bc7": 9776,
+      "astc": 9630
     },
-    "glbBytes": 40320
+    "glbBytes": 40276
   },
   "glb": {
-    "bytes": 40320,
-    "sha256": "1ceb997c7a944526e3f4577dfa524b4c95ad11e36f29223645f08239fdc4f1f6"
+    "bytes": 40276,
+    "sha256": "dc32841bd320cd6020f535efb8cd2c8b8d4aeb57eac0838cb4527dc9c06428d7"
   }
 }

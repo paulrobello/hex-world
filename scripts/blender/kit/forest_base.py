@@ -65,6 +65,28 @@ def relief(x, y):
     return -falloff(x, y) * (0.15 * undulation(x, y) + 0.1 * mounds(x, y))
 
 
+def shade_slope(x, y):
+    """The slope the cap shades with (its custom normals): the swell and mounds' own slope under the
+    falloff, leaving out the falloff's rise to the border ring, which shaded as a ridge along every
+    tile border in side light (owner, 2026-10-14; as meadow_base). Copied in _forest_edge.py."""
+    f = falloff(x, y)
+    a, b, c = 0.31 * x + 1.7, 0.27 * y - 0.4, 0.53 * x - 0.45 * y + 0.9
+    dux = 0.5 * (0.6 * 0.31 * math.cos(a) * math.cos(b) + 0.4 * 0.53 * math.cos(c))
+    duy = 0.5 * (-0.6 * 0.27 * math.sin(a) * math.sin(b) - 0.4 * 0.45 * math.cos(c))
+    p, q, r, w = 0.9 * x + 0.3, 0.8 * y + 1.1, 1.3 * x - 1.1 * y + 2.0, 0.7 * x + 1.4 * y
+    dmx = 0.5 * (0.5 * 0.9 * math.cos(p) * math.sin(q)
+                 + 0.5 * (1.3 * math.cos(r) * math.cos(w) - 0.7 * math.sin(r) * math.sin(w)))
+    dmy = 0.5 * (0.5 * 0.8 * math.sin(p) * math.cos(q)
+                 + 0.5 * (-1.1 * math.cos(r) * math.cos(w) - 1.4 * math.sin(r) * math.sin(w)))
+    return -f * (0.15 * dux + 0.1 * dmx), -f * (0.15 * duy + 0.1 * dmy)
+
+
+for _x, _y in ((0.0, 0.0), (3.1, -4.2), (-6.5, 2.7)):  # falloff 1 here: the true slope of relief
+    _fd = ((relief(_x + 1e-5, _y) - relief(_x - 1e-5, _y)) / 2e-5,
+           (relief(_x, _y + 1e-5) - relief(_x, _y - 1e-5)) / 2e-5)
+    assert all(abs(p - q) < 1e-6 for p, q in zip(shade_slope(_x, _y), _fd)), (_x, _y, _fd)
+
+
 def contour(band, step):
     """Points at distance band(phi) from the border, about `step` m apart along the contour."""
     n = max(12, int(round(6 * 2 * hexgeo.HEX_R * 0.85 / step)))
@@ -101,7 +123,7 @@ for i, (spacing, cstep, rows) in enumerate(zip(SPACING, CONTOUR_STEP, SKIRT_ROWS
         if min(abs(d - band_rim(phi)), abs(d - band_floor(phi))) > 0.45 * (spacing or cstep):
             keep.append((x, y))
     cap = geom.cdt_cap(f"{PIECE}_lod{i}_cap", ring, keep + lines, relief)
-    geom.set_border_normals_up(cap)
+    geom.set_cap_normals(cap, shade_slope)
     uv.planar_cap_uv(cap)
     for m_ in slot_mats:
         cap.data.materials.append(m_)

@@ -2,8 +2,9 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/meadow_base.py",
-    "sha256": "05e33fe42a7144c8cc7639e66de7d6d24eba5aa386b4a14e0c7b486a031b6976"
+    "sha256": "4b9c3b979f9843397bf05639f85c70bb6ed366cb653cdd7fab4fa5cdc41a2c5f"
   },
+  "generatorDeps": [],
   "lodTris": {
     "meadow_base_lod0": 2604,
     "meadow_base_lod1": 900,

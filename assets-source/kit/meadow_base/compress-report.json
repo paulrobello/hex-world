@@ -1,6 +1,6 @@
 {
   "name": "meadow_base",
-  "date": "2026-10-13T17:37:15.152Z",
+  "date": "2026-10-20T16:16:16.698Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 235073,
-      "sha256": "f9b4f8dfa7685724bfec438d683041171c77b53e24758ba7bb9d87d4fe5ee70e"
+      "bytes": 232547,
+      "sha256": "f86dd6ad9b8021d0f98d7bc69ac2a57de151a461f86e3eefec9ebe286c51bbed"
     },
     {
       "channel": "masks",
@@ -59,8 +59,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 243545,
-      "sha256": "8897f4c3ac5eaf7e245006e88992694251d07c6666edff67f179811afe928fdb"
+      "bytes": 240625,
+      "sha256": "16e9f1fe7a42270b763cf6b48e5d96029ae1764b43b3cd801194aab656f0ebc2"
     },
     {
       "channel": "masks",
@@ -68,21 +68,21 @@
       "path": "assets/kit/p1/meadow_base/meadow_base.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 318445,
-      "sha256": "296693b01fb7a31c9da153739248f6b130a4c971d7d596c9d7e57f80d5fe2689"
+      "bytes": 310411,
+      "sha256": "7c937f7331a12a01223972c1d002c6a8bd43b01b98438bd8f52f2770f0407730"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 235073,
-      "astc": 243545
+      "bc7": 232547,
+      "astc": 240625
     },
-    "glbBytes": 66772
+    "glbBytes": 68896
   },
   "glb": {
-    "bytes": 66772,
-    "sha256": "313f084734ea98b6aa465918b986eccaa80752d2557bd44e2e62854a2470e1bb"
+    "bytes": 68896,
+    "sha256": "48c33214d9d073106d6df333e41774b67efbbe1a0c26b7bf23c931510ed8de2f"
   }
 }

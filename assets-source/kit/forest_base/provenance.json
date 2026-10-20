@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/forest_base.py",
-    "sha256": "817e872afddf1a6a8e118c42b246f4fd91664c2c6566e43ffde6779b22d27e16"
+    "sha256": "9f8431de8a6c9dbba23bf6b38fc62114b42f778578a15cd585e14359d9828512"
   },
   "generatorDeps": [],
   "authoringAgent": {
@@ -46,7 +46,7 @@
     "device": "CPU",
     "marginPx": 12,
     "maskStats": {
-      "mean": 0.9993999004364014,
+      "mean": 0.9993175864219666,
       "min": 0.9686275124549866,
       "p01": 0.9843137860298157,
       "snowMin": 0.7490196228027344,
@@ -54,7 +54,7 @@
       "wetMax": 0.8509804606437683,
       "wetMin": 0.5176470875740051
     },
-    "receiverSignature": "5054f7c4d19e1d8a1afd8b53e4efd9062bc708d0d931408f8f26f23b01ec4680",
+    "receiverSignature": "ffa2d8fc08f9f551e19249933c0358ca12a74f0fbcf0cbd2af8ba96d74487dae",
     "samples": 64,
     "skipped": false,
     "texelDensityPxPerM": {
@@ -175,10 +175,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 211227,
-        "astc": 217152
+        "bc7": 211897,
+        "astc": 217616
       },
-      "glbBytes": 122056
+      "glbBytes": 131960
     },
     "textureEncodes": [
       {
@@ -189,8 +189,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 211227,
-        "sha256": "0522ef8f8b479561af6f0cfc43844df5ff7cdc573b3a97424a1a7128624e7fe7"
+        "bytes": 211897,
+        "sha256": "c73644dd787fb29b7c54b2fe9e4eade899cc35c95abebc298cdf5345104bfe21"
       },
       {
         "channel": "masks",
@@ -200,8 +200,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 217152,
-        "sha256": "e962c9a28ced9ba98cd507c9bcd731a8514704f3bbbd8185bbb2777b53d3f5a1"
+        "bytes": 217616,
+        "sha256": "c0c25076b585815622226dc929a12aaab8392f633041d14c7775acf5614dd8c1"
       },
       {
         "channel": "masks",
@@ -209,31 +209,31 @@
         "path": "assets/kit/p1/forest_base/forest_base.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 304600,
-        "sha256": "d4424cad5f0114badff5cf5e8d4b9a17a67e6171541eaf9e5dfd6af149a2f137"
+        "bytes": 312774,
+        "sha256": "e71003359b61f7a24b3a5d9cd604c619552d53779c99c38276c20ebc9e8f0294"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/forest_base/forest_base.glb",
-      "sha256": "87f129ea6729c60977e2361be12d80a5c3afa703592f03f51c5adf5c8422b5fe",
-      "bytes": 122056
+      "sha256": "ebdf96839ccddff834413c78b9d9b84f850a356a83e46126f8f84d1b513736a4",
+      "bytes": 131960
     },
     {
       "path": "assets/kit/p1/forest_base/forest_base.masks.bc7.ktx2",
-      "sha256": "0522ef8f8b479561af6f0cfc43844df5ff7cdc573b3a97424a1a7128624e7fe7",
-      "bytes": 211227
+      "sha256": "c73644dd787fb29b7c54b2fe9e4eade899cc35c95abebc298cdf5345104bfe21",
+      "bytes": 211897
     },
     {
       "path": "assets/kit/p1/forest_base/forest_base.masks.astc.ktx2",
-      "sha256": "e962c9a28ced9ba98cd507c9bcd731a8514704f3bbbd8185bbb2777b53d3f5a1",
-      "bytes": 217152
+      "sha256": "c0c25076b585815622226dc929a12aaab8392f633041d14c7775acf5614dd8c1",
+      "bytes": 217616
     },
     {
       "path": "assets/kit/p1/forest_base/forest_base.masks.png",
-      "sha256": "d4424cad5f0114badff5cf5e8d4b9a17a67e6171541eaf9e5dfd6af149a2f137",
-      "bytes": 304600
+      "sha256": "e71003359b61f7a24b3a5d9cd604c619552d53779c99c38276c20ebc9e8f0294",
+      "bytes": 312774
     }
   ],
   "references": [
@@ -259,7 +259,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T04:13:50.020Z",
+    "date": "2026-10-20T16:18:07.696Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -291,6 +291,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "A1: re-approved on the O4 cutaway skirt (shape and soil set). Colour re-checked on the TonyMcMapface re-shoot with the lightened soil (Q4). docs/review/2026-10-14-walkthrough.html"
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-hump",
+      "requested": "2026-10-20",
+      "notes": "Re-export, geometry unchanged: the cap's custom normals now come from the relief's slope without the falloff's rise to the border ring (the meadow_base terrain-hump fix). Review docs/checkpoints/terrain-hump/sheet.jpg (forest field and meadow/forest seam)."
     }
   ]
 }

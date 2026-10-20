@@ -10,5 +10,14 @@
     "gate": "piece",
     "status": "approved",
     "notes": "A1: re-approved on the O4 cutaway skirt (shape and soil set). Colour re-checked on the TonyMcMapface re-shoot with the lightened soil (Q4). docs/review/2026-10-14-walkthrough.html"
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "terrain-hump",
+    "requested": "2026-10-20",
+    "notes": "Re-export, geometry unchanged: the cap's custom normals now come from the relief's slope without the falloff's rise to the border ring, so the 0.11 m rise over the last 2 m no longer shades as a ridge along every tile border (owner, 2026-10-14). Review docs/checkpoints/terrain-hump/sheet.jpg (before/after orbit at noon and dusk, eye level, seams)."
   }
 ]

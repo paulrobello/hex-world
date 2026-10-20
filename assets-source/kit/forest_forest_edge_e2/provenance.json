@@ -9,7 +9,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_forest_edge.py",
-      "sha256": "c3f6ca7079e143854a568cb9ef799aeeb5b43a147a0284593e7d90394ab61f29"
+      "sha256": "52984d41c2e3883c37994390954f7f2a554d15f5203054bf84c2c529d46f1e5a"
     }
   ],
   "authoringAgent": {
@@ -59,16 +59,16 @@
     "diveM": 0.06,
     "epsM": 0.02,
     "extM": 0.6,
-    "forestBaseSignature": "5054f7c4d19e1d8a1afd8b53e4efd9062bc708d0d931408f8f26f23b01ec4680",
+    "forestBaseSignature": "ffa2d8fc08f9f551e19249933c0358ca12a74f0fbcf0cbd2af8ba96d74487dae",
     "marginPx": 12,
     "maskStats": {
-      "mean": 0.10927967727184296,
+      "mean": 0.10924460738897324,
       "min": 0,
       "p01": 0,
       "p05": 0,
       "texels": 216658
     },
-    "receiverSignature": "5ff7eed045bd6b6bbb9fe0e5db8d46ba3a5b5fd636a41e8aecbd10e8b06b221d",
+    "receiverSignature": "3a7feda02049761d6734b45908952d5d4c422a6925e6d785b80db920524b4c96",
     "samples": 64,
     "skipped": false,
     "taper": [
@@ -130,10 +130,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 8851,
-        "astc": 8771
+        "bc7": 9594,
+        "astc": 9529
       },
-      "glbBytes": 39668
+      "glbBytes": 39676
     },
     "textureEncodes": [
       {
@@ -144,8 +144,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 8851,
-        "sha256": "1c8349f009a237d51d648bfcd30766a67e0d8457192a59d758640b71737ab4a6"
+        "bytes": 9594,
+        "sha256": "527c546595289d884d2026223a026631f03585383c3cc3f5988060ffc540aa44"
       },
       {
         "channel": "masks",
@@ -155,8 +155,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 8771,
-        "sha256": "25137481b9ffaf7afccdc8c6d59bf4568c3a94bfd32578900e72e49ceb91c56d"
+        "bytes": 9529,
+        "sha256": "e5b75adc768b6c46beb985b5f5b82719f28341ca93dc68c25499fcd17d29af60"
       },
       {
         "channel": "masks",
@@ -164,31 +164,31 @@
         "path": "assets/kit/p1/forest_forest_edge_e2/forest_forest_edge_e2.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 10952,
-        "sha256": "95e733f64b1f18be047074de58190f00206c092c06e92bffe55ee68f8e530b57"
+        "bytes": 13142,
+        "sha256": "7aeb03629b1edf2e2104b3b1f1d7b1ac249f034520a2e7fe4239d2a454faf183"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/forest_forest_edge_e2/forest_forest_edge_e2.glb",
-      "sha256": "8393696d40a9c0a14c67a6749876364cf47c87d0c36e2491daac903a78406617",
-      "bytes": 39668
+      "sha256": "18593d16fc40f224dae6151eb72b048c48885061bda6de3bce746dc9cbc545ad",
+      "bytes": 39676
     },
     {
       "path": "assets/kit/p1/forest_forest_edge_e2/forest_forest_edge_e2.masks.bc7.ktx2",
-      "sha256": "1c8349f009a237d51d648bfcd30766a67e0d8457192a59d758640b71737ab4a6",
-      "bytes": 8851
+      "sha256": "527c546595289d884d2026223a026631f03585383c3cc3f5988060ffc540aa44",
+      "bytes": 9594
     },
     {
       "path": "assets/kit/p1/forest_forest_edge_e2/forest_forest_edge_e2.masks.astc.ktx2",
-      "sha256": "25137481b9ffaf7afccdc8c6d59bf4568c3a94bfd32578900e72e49ceb91c56d",
-      "bytes": 8771
+      "sha256": "e5b75adc768b6c46beb985b5f5b82719f28341ca93dc68c25499fcd17d29af60",
+      "bytes": 9529
     },
     {
       "path": "assets/kit/p1/forest_forest_edge_e2/forest_forest_edge_e2.masks.png",
-      "sha256": "95e733f64b1f18be047074de58190f00206c092c06e92bffe55ee68f8e530b57",
-      "bytes": 10952
+      "sha256": "7aeb03629b1edf2e2104b3b1f1d7b1ac249f034520a2e7fe4239d2a454faf183",
+      "bytes": 13142
     }
   ],
   "references": [
@@ -214,7 +214,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T06:28:01.528Z",
+    "date": "2026-10-20T16:18:20.167Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -247,6 +247,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "A19: the six per-edge forest-forest pieces approved; Q3 corner look O-a now, O-b when forest moves into a streamed pack. docs/review/2026-10-14-walkthrough.html"
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-hump",
+      "requested": "2026-10-20",
+      "notes": "Re-export, geometry unchanged: the overlay's custom normals follow forest_base's new shading slope (no falloff rise at the border), so the forest/forest seam shades as the cap beside it. Review docs/checkpoints/terrain-hump/sheet.jpg (3x3 forest field)."
     }
   ]
 }

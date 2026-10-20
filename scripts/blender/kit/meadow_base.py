@@ -41,6 +41,24 @@ def relief(x, y):
     return -0.25 * falloff(x, y) * undulation(x, y)
 
 
+def shade_slope(x, y):
+    """The slope the cap shades with (its custom normals): the swell's own slope under the falloff,
+    -0.25 * falloff * grad(undulation), leaving out the falloff's rise to the border ring. That rise
+    (0.11 m over the last 2 m on both sides of every border) shaded as a ridge along each tile border
+    in side light (owner, 2026-10-14). 0 at the border, the true slope where the falloff is 1."""
+    f = falloff(x, y)
+    a, b, c = 0.31 * x + 1.7, 0.27 * y - 0.4, 0.53 * x - 0.45 * y + 0.9
+    dux = 0.5 * (0.6 * 0.31 * math.cos(a) * math.cos(b) + 0.4 * 0.53 * math.cos(c))
+    duy = 0.5 * (-0.6 * 0.27 * math.sin(a) * math.sin(b) - 0.4 * 0.45 * math.cos(c))
+    return -0.25 * f * dux, -0.25 * f * duy
+
+
+for _x, _y in ((0.0, 0.0), (3.1, -4.2), (-6.5, 2.7)):  # falloff 1 here: the true slope of relief
+    _fd = ((relief(_x + 1e-5, _y) - relief(_x - 1e-5, _y)) / 2e-5,
+           (relief(_x, _y + 1e-5) - relief(_x, _y - 1e-5)) / 2e-5)
+    assert all(abs(p - q) < 1e-6 for p, q in zip(shade_slope(_x, _y), _fd)), (_x, _y, _fd)
+
+
 root = scene.empty(PIECE)
 cap_mat = materials.pbr_material(f"{PIECE}_cap", materials.srgb("#4f7d32"), 0.9)
 skirt_mat = materials.pbr_material(f"{PIECE}_skirt", materials.srgb("#6b4a2f"), 0.95)
@@ -49,7 +67,7 @@ lods = []
 for i, (spacing, rows) in enumerate(zip(SPACING, SKIRT_ROWS)):
     interior = hexgeo.lattice_points(spacing, spacing * 0.5) if spacing else []
     cap = geom.cdt_cap(f"{PIECE}_lod{i}_cap", ring, interior, relief)
-    geom.set_border_normals_up(cap)
+    geom.set_cap_normals(cap, shade_slope)
     uv.planar_cap_uv(cap)
     cap.data.materials.append(cap_mat)
     sk = geom.skirt(f"{PIECE}_lod{i}_skirt", ring, hexgeo.LEVEL_STEP, rows)

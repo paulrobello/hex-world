@@ -26,7 +26,7 @@
   "device": "CPU",
   "marginPx": 12,
   "maskStats": {
-    "mean": 0.9993999004364014,
+    "mean": 0.9993175864219666,
     "min": 0.9686275124549866,
     "p01": 0.9843137860298157,
     "snowMin": 0.7490196228027344,
@@ -34,7 +34,7 @@
     "wetMax": 0.8509804606437683,
     "wetMin": 0.5176470875740051
   },
-  "receiverSignature": "5054f7c4d19e1d8a1afd8b53e4efd9062bc708d0d931408f8f26f23b01ec4680",
+  "receiverSignature": "ffa2d8fc08f9f551e19249933c0358ca12a74f0fbcf0cbd2af8ba96d74487dae",
   "samples": 64,
   "skipped": false,
   "texelDensityPxPerM": {

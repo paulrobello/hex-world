@@ -12,5 +12,14 @@
     "gate": "piece",
     "status": "approved",
     "notes": "A19: the six per-edge forest-forest pieces approved; Q3 corner look O-a now, O-b when forest moves into a streamed pack. docs/review/2026-10-14-walkthrough.html"
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "terrain-hump",
+    "requested": "2026-10-20",
+    "notes": "Re-export, geometry unchanged: the overlay's custom normals follow forest_base's new shading slope (no falloff rise at the border), so the forest/forest seam shades as the cap beside it. Review docs/checkpoints/terrain-hump/sheet.jpg (3x3 forest field)."
   }
 ]

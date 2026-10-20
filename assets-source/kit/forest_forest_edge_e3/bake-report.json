@@ -34,16 +34,16 @@
   "diveM": 0.06,
   "epsM": 0.02,
   "extM": 0.6,
-  "forestBaseSignature": "5054f7c4d19e1d8a1afd8b53e4efd9062bc708d0d931408f8f26f23b01ec4680",
+  "forestBaseSignature": "ffa2d8fc08f9f551e19249933c0358ca12a74f0fbcf0cbd2af8ba96d74487dae",
   "marginPx": 12,
   "maskStats": {
-    "mean": 0.09610085934400558,
+    "mean": 0.0960702896118164,
     "min": 0.0,
     "p01": 0.0,
     "p05": 0.0,
     "texels": 216658
   },
-  "receiverSignature": "ea65631284aa65b2bbf99535649025b7fb92d1ea61f4ecbd8358f2cc986cff40",
+  "receiverSignature": "65ad61ca2e1a41e0ead8bb59bf42e5931acf90b305b930641565ae2d75f8644c",
   "samples": 64,
   "skipped": false,
   "taper": [

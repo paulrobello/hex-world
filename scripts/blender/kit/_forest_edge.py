@@ -87,6 +87,21 @@ def relief(x, y):
     return -falloff(x, y) * (0.15 * undulation(x, y) + 0.1 * mounds(x, y))
 
 
+def shade_slope(x, y):
+    """forest_base's shading slope (its cap's custom normals): the relief's slope without the
+    falloff's rise to the border, which shaded as a ridge along every tile border (2026-10-20)."""
+    f = falloff(x, y)
+    a, b, c = 0.31 * x + 1.7, 0.27 * y - 0.4, 0.53 * x - 0.45 * y + 0.9
+    dux = 0.5 * (0.6 * 0.31 * math.cos(a) * math.cos(b) + 0.4 * 0.53 * math.cos(c))
+    duy = 0.5 * (-0.6 * 0.27 * math.sin(a) * math.sin(b) - 0.4 * 0.45 * math.cos(c))
+    p, q, r, w = 0.9 * x + 0.3, 0.8 * y + 1.1, 1.3 * x - 1.1 * y + 2.0, 0.7 * x + 1.4 * y
+    dmx = 0.5 * (0.5 * 0.9 * math.cos(p) * math.sin(q)
+                 + 0.5 * (1.3 * math.cos(r) * math.cos(w) - 0.7 * math.sin(r) * math.sin(w)))
+    dmy = 0.5 * (0.5 * 0.8 * math.sin(p) * math.cos(q)
+                 + 0.5 * (-1.1 * math.cos(r) * math.cos(w) - 1.4 * math.sin(r) * math.sin(w)))
+    return -f * (0.15 * dux + 0.1 * dmx), -f * (0.15 * duy + 0.1 * dmy)
+
+
 def contour(band, step):
     n = max(12, int(round(6 * 2 * hexgeo.HEX_R * 0.85 / step)))
     pts = []
@@ -116,7 +131,7 @@ def forest_base_lod(i):
         if min(abs(d - band_rim(phi)), abs(d - band_floor(phi))) > 0.45 * (spacing or cstep):
             keep.append((x, y))
     cap = geom.cdt_cap(f"{FB}_lod{i}_cap", ring, keep + lines, relief)
-    geom.set_border_normals_up(cap)
+    geom.set_cap_normals(cap, shade_slope)
     uv.planar_cap_uv(cap)
     sk = geom.skirt(f"{FB}_lod{i}_skirt", ring, hexgeo.LEVEL_STEP, rows)
     sk.data.uv_layers.new(name="UVMap")
@@ -205,9 +220,17 @@ def overlay_lod(name, base_obj, k, taper):
     return obj
 
 
-def set_normals(obj):
+def set_normals(obj, k):
+    """+Z on the border; elsewhere forest_base's shading slope under the point (`shade_slope` at the
+    base point, turned back into the piece frame), so the overlay shades as the cap beside it."""
     mesh = obj.data
-    normals = [(0.0, 0.0, 1.0) if abs(v.co.x - A) < 1e-5 else tuple(v.normal) for v in mesh.vertices]
+    normals = []
+    for v in mesh.vertices:
+        if abs(v.co.x - A) < 1e-5:
+            normals.append((0.0, 0.0, 1.0))
+            continue
+        sx, sy = hexgeo.rotate_xy(shade_slope(*base_local(v.co.x, v.co.y, k)), -k)
+        normals.append(tuple(Vector((-sx, -sy, 1.0)).normalized()))
     mesh.normals_split_custom_set_from_vertices(normals)
     mesh.update()
 
@@ -285,7 +308,7 @@ def build(piece, k, generator, taper=(False, False)):
     assert tris[0] <= 4000, tris
     checks = []
     for i, o in enumerate(lods):
-        set_normals(o)
+        set_normals(o, k)
         o.data.materials.append(floor)
         if any(taper):
             o.data.materials.append(moss)
