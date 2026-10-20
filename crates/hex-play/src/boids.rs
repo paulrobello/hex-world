@@ -2,9 +2,11 @@
 //!
 //! The flock lives only on the GPU: a compute system in the `RenderGraph` schedule updates a
 //! `ShaderBuffer` before the cameras draw, and `BoidMaterial` reads the same buffer in its
-//! vertex shader to pose and place one kit piece per boid: `bird_starling` (display x4) and
-//! `fish_trout` (display x2), each drawn from one merged copy of its LOD0 per slot it may hold
-//! (no per-boid LOD: the GPU moves the boids, so Bevy's visibility ranges never see them). The
+//! vertex shader to pose and place one kit piece per boid: a bird species per flock
+//! (`bird_starling` or `bird_goldfinch`, display x4, [`BIRDS`]) and `fish_trout` (display x2),
+//! each drawn from one merged copy of its LOD0 per slot it may hold, a bird species' copies over
+//! its own flocks' slots only ([`FormSlots`]; no per-boid LOD: the GPU moves the boids, so Bevy's
+//! visibility ranges never see them). The
 //! CPU half ([`plan`]) decides the budget split, where birds roost and when they launch, the
 //! water each fish school is confined to and each fish's palette; it uploads that as read-only
 //! buffers and never reads the flock back.
@@ -83,19 +85,45 @@ const MATERIAL_SHADER: &str = "shaders/boid_material.wesl";
 const WORKGROUP_SIZE: u32 = 64;
 /// Longest simulated step; the slow first frames would otherwise fling the flock apart.
 const MAX_DT: f32 = 1.0 / 30.0;
-/// The boid kit pieces (owner-approved 2026-10-14) and their display scale over real size.
-pub const BIRD_PIECE: &str = "bird_starling";
+/// The boid kit pieces (fish_trout and bird_starling owner-approved 2026-10-14) and their display
+/// scale over real size; every bird species draws at BIRD_SCALE.
 pub const FISH_PIECE: &str = "fish_trout";
 pub const BIRD_SCALE: f32 = 4.0;
 pub const FISH_SCALE: f32 = 2.0;
-/// The bird's runtime contract, the `boid` object of its GLB root extras (checked by a test): the
-/// shoulder hinge line (x = +-HINGE[0], y = HINGE[1]), the perch fold (wing offset scaled by
-/// FOLD_K, rolled FOLD_ROLL_DEG, moved FOLD_BACK * U back) and the pivot's height over the feet.
-pub const HINGE: [f32; 2] = [0.020, 0.014];
-pub const FOLD_K: f32 = 0.25;
-pub const FOLD_ROLL_DEG: f32 = -60.0;
-pub const FOLD_BACK: f32 = 0.015;
-pub const PIVOT_TO_FEET_M: f32 = 0.026;
+
+/// A bird piece and its runtime contract, the `boid` object of its GLB root extras (checked by a
+/// test): the shoulder hinge line (x = +-hinge[0], y = hinge[1]), the perch fold (wing offset
+/// scaled by fold_k, rolled fold_roll_deg, moved fold_back * U back) and the pivot's height over
+/// the feet. Every bird shares the flap and fold formulas in `boid_material.wesl`.
+#[derive(Clone, Copy, Debug)]
+pub struct BirdPiece {
+    pub id: &'static str,
+    pub hinge: [f32; 2],
+    pub fold_k: f32,
+    pub fold_roll_deg: f32,
+    pub fold_back: f32,
+    pub pivot_to_feet_m: f32,
+}
+
+/// The bird species by index ([`plan::flock_species`]).
+pub const BIRDS: [BirdPiece; plan::BIRD_SPECIES as usize] = [
+    BirdPiece {
+        id: "bird_starling",
+        hinge: [0.020, 0.014],
+        fold_k: 0.25,
+        fold_roll_deg: -60.0,
+        fold_back: 0.015,
+        pivot_to_feet_m: 0.026,
+    },
+    BirdPiece {
+        id: "bird_goldfinch",
+        hinge: [0.013, 0.0095],
+        fold_k: 0.25,
+        fold_roll_deg: -60.0,
+        fold_back: 0.010,
+        pivot_to_feet_m: 0.018,
+    },
+];
 /// Tail-wag amplitude (model m) at the caudal fork tips: x += U^2 * FISH_WAG * sin(phase).
 pub const FISH_WAG: f32 = 0.035;
 /// The river palette's U offset in the fish atlas (ocean in the left half, river in the right).
@@ -206,13 +234,57 @@ pub fn form_mesh(src: &Mesh, copies: u32) -> Option<Mesh> {
     )
 }
 
+/// The boid slots a form's mesh covers: copy `k` draws slot
+/// `base + ((k / flock) * stride + offset) * flock + k % flock` ([`Self::slot`], as
+/// `boid_material.wesl` maps it).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FormSlots {
+    pub base: u32,
+    pub copies: u32,
+    pub flock: u32,
+    pub stride: u32,
+    pub offset: u32,
+}
+
+impl FormSlots {
+    /// Bird species `species`: every slot of its flocks ([`plan::flock_species`]) in the budget, so
+    /// the two species' meshes together hold one copy per slot (the stress flock is all birds).
+    pub fn bird(species: u32, budget: BoidBudget, seed: u64) -> Self {
+        Self {
+            base: 0,
+            copies: plan::species_slots(species, seed, budget.total),
+            flock: plan::FLOCK_SIZE,
+            stride: plan::BIRD_SPECIES,
+            offset: plan::species_offset(species, seed),
+        }
+    }
+
+    /// The fish: every slot from [`BoidAssets::fish_base`].
+    pub fn fish(budget: BoidBudget) -> Self {
+        let base = BoidAssets::fish_base(budget);
+        Self {
+            base,
+            copies: budget.total - base,
+            flock: 1,
+            stride: 1,
+            offset: 0,
+        }
+    }
+
+    pub fn slot(&self, copy: u32) -> u32 {
+        self.base
+            + ((copy / self.flock) * self.stride + self.offset) * self.flock
+            + copy % self.flock
+    }
+}
+
 /// Which piece a [`BoidExt`] draws and how: the slots it covers, its display scale and the bird
 /// and fish contracts. Mirrors `BoidForm` in `boid_material.wesl`.
 #[derive(Clone, Copy, Debug, Default, ShaderType, Reflect)]
 pub struct BoidForm {
     /// 0 bird, 1 fish.
     pub kind: u32,
-    /// The first boid slot the mesh's copy 0 draws.
+    /// [`FormSlots::base`].
     pub base: u32,
     /// Vertices per copy.
     pub boid_verts: u32,
@@ -226,6 +298,10 @@ pub struct BoidForm {
     pub hinge: Vec2,
     pub fold_roll: f32,
     pub fold_back: f32,
+    /// [`FormSlots::flock`], [`FormSlots::stride`] and [`FormSlots::offset`].
+    pub flock: u32,
+    pub stride: u32,
+    pub offset: u32,
 }
 
 /// StandardMaterial (the piece's albedo, normal and ORM maps) + the boid buffer and pose: the
@@ -288,14 +364,14 @@ pub struct BoidFormAssets {
 }
 
 /// The flock's handles for the current budget, re-used each time the scene is (re)built, so a
-/// scenario switch neither duplicates nor leaks them. `forms` (bird, fish) are built once the
-/// pieces have loaded; `generation` counts the builds, so [`sync_flock`] respawns the flock
-/// entities only when the handles change.
+/// scenario switch neither duplicates nor leaks them. `forms` (each bird species in [`BIRDS`]
+/// order, then the fish) are built once the pieces have loaded; `generation` counts the builds, so
+/// [`sync_flock`] respawns the flock entities only when the handles change.
 #[derive(Resource, Clone)]
 pub struct BoidAssets {
     pub boids: Handle<ShaderBuffer>,
     pub budget: BoidBudget,
-    pub forms: Option<[BoidFormAssets; 2]>,
+    pub forms: Option<Vec<BoidFormAssets>>,
     pub generation: u64,
 }
 
@@ -308,16 +384,18 @@ impl BoidAssets {
     }
 }
 
-/// A piece the boids draw, loading: its GLB and its material without the boid binding.
+/// A piece the boids draw, loading: its GLB and its material without the boid binding, and the
+/// bird species it is (`None` for the fish).
 struct BoidPieceLoad {
     id: &'static str,
+    species: Option<u32>,
     glb: Handle<Gltf>,
     base: StandardMaterial,
     masks: Option<Handle<Image>>,
 }
 
-/// The boid pieces (bird, fish), requested from `kit://` once the render device picks the
-/// texture family, in every scenario. The flock flies from the first frame, so both are in the
+/// The boid pieces (the birds, the fish), requested from `kit://` once the render device picks
+/// the texture family, in every scenario. The flock flies from the first frame, so all are in the
 /// manifest's `core` pack: in play these are the same files (and handles) core fetches.
 #[derive(Resource)]
 pub struct BoidPieces {
@@ -512,7 +590,15 @@ fn init_boids(
     });
 }
 
-/// Requests the bird and fish pieces once the render device has picked the texture family.
+/// The boid pieces in form order: each bird species ([`BIRDS`]) with its index, then the fish.
+fn boid_pieces() -> impl Iterator<Item = (&'static str, Option<u32>)> {
+    (0..)
+        .zip(BIRDS)
+        .map(|(s, b)| (b.id, Some(s)))
+        .chain([(FISH_PIECE, None)])
+}
+
+/// Requests the boid pieces ([`boid_pieces`]) once the render device has picked the texture family.
 fn load_pieces(
     mut commands: Commands,
     pieces: Option<Res<BoidPieces>>,
@@ -531,7 +617,7 @@ fn load_pieces(
     let mut state = PieceState::Loading;
     match hex_assets::parse_manifest(crate::kit_scene::MANIFEST) {
         Ok(m) => {
-            for id in [BIRD_PIECE, FISH_PIECE] {
+            for (id, species) in boid_pieces() {
                 let entry = m.pieces.iter().find(|e| e.id == id);
                 let slot = entry.and_then(|e| e.slots.get(&format!("{id}_body")).map(|s| (e, s)));
                 let Some((entry, slot)) = slot else {
@@ -553,6 +639,7 @@ fn load_pieces(
                         base.cull_mode = None;
                         loads.push(BoidPieceLoad {
                             id,
+                            species,
                             glb: server.load(format!("kit://{}", entry.glb)),
                             base,
                             masks: km.extension.masks,
@@ -573,13 +660,14 @@ fn load_pieces(
     commands.insert_resource(BoidPieces { loads, state });
 }
 
-/// Once both pieces have loaded, builds the bird and fish forms for the current budget: the bird
-/// mesh covers every slot (the stress flock is all birds), the fish mesh the slots from
-/// [`BoidAssets::fish_base`].
+/// Once every piece has loaded, builds the forms for the current budget and the world seed: each
+/// bird species' mesh covers its own flocks' slots ([`FormSlots::bird`]; the stress flock is all
+/// birds), the fish mesh the slots from [`BoidAssets::fish_base`].
 #[allow(clippy::too_many_arguments)]
 fn build_forms(
     pieces: Option<ResMut<BoidPieces>>,
     assets: Option<ResMut<BoidAssets>>,
+    seed: Option<Res<BoidSeed>>,
     server: Res<AssetServer>,
     gltfs: Res<Assets<Gltf>>,
     gltf_meshes: Res<Assets<GltfMesh>>,
@@ -608,9 +696,10 @@ fn build_forms(
     {
         return;
     }
-    let total = assets.budget.total;
-    let fish_base = BoidAssets::fish_base(assets.budget);
+    let budget = assets.budget;
+    let seed = seed.map_or(1, |s| s.0);
     let mut built = vec![];
+    let mut drawn = vec![];
     for l in &pieces.loads {
         let lod0 = gltfs
             .get(&l.glb)
@@ -618,14 +707,13 @@ fn build_forms(
             .and_then(|h| gltf_meshes.get(h))
             .and_then(|gm| gm.primitives.first())
             .and_then(|p| meshes.get(&p.mesh));
-        let fish = l.id == FISH_PIECE;
-        let (base, copies) = if fish {
-            (fish_base, total - fish_base)
-        } else {
-            (0, total)
+        let bird = l.species.map(|s| (s, BIRDS[s as usize]));
+        let slots = match bird {
+            Some((s, _)) => FormSlots::bird(s, budget, seed),
+            None => FormSlots::fish(budget),
         };
         let Some((mesh, verts)) =
-            lod0.and_then(|m| Some((form_mesh(m, copies)?, m.count_vertices() as u32)))
+            lod0.and_then(|m| Some((form_mesh(m, slots.copies)?, m.count_vertices() as u32)))
         else {
             warn!(
                 "boids: {}_lod0 lacks positions, normals, UV0, UV1 or tangents; the flock is not drawn",
@@ -634,23 +722,33 @@ fn build_forms(
             pieces.state = PieceState::Failed;
             return;
         };
+        // The fish ignore the bird contract; they take the starling's numbers.
+        let b = bird.map_or(BIRDS[0], |(_, b)| b);
         let form = BoidForm {
-            kind: u32::from(fish),
-            base,
+            kind: u32::from(bird.is_none()),
+            base: slots.base,
             boid_verts: verts,
             flags: u32::from(l.masks.is_some()),
-            scale: if fish { FISH_SCALE } else { BIRD_SCALE },
-            lift: if fish {
-                0.0
+            scale: if bird.is_some() {
+                BIRD_SCALE
             } else {
-                PIVOT_TO_FEET_M * BIRD_SCALE
+                FISH_SCALE
+            },
+            lift: if bird.is_some() {
+                b.pivot_to_feet_m * BIRD_SCALE
+            } else {
+                0.0
             },
             wag: FISH_WAG,
-            fold_k: FOLD_K,
-            hinge: Vec2::from(HINGE),
-            fold_roll: FOLD_ROLL_DEG.to_radians(),
-            fold_back: FOLD_BACK,
+            fold_k: b.fold_k,
+            hinge: Vec2::from(b.hinge),
+            fold_roll: b.fold_roll_deg.to_radians(),
+            fold_back: b.fold_back,
+            flock: slots.flock,
+            stride: slots.stride,
+            offset: slots.offset,
         };
+        drawn.push(format!("{} x{}", l.id, slots.copies));
         built.push(BoidFormAssets {
             mesh: meshes.add(mesh),
             material: materials.add(BoidMaterial {
@@ -663,16 +761,17 @@ fn build_forms(
             }),
         });
     }
-    let Ok(forms) = <[BoidFormAssets; 2]>::try_from(built) else {
+    if built.len() != BIRDS.len() + 1 {
         return;
-    };
+    }
     pieces.state = PieceState::Ready;
     *next_generation += 1;
-    assets.forms = Some(forms);
+    assets.forms = Some(built);
     assets.generation = *next_generation;
     info!(
-        "boids: {BIRD_PIECE} x{total} and {FISH_PIECE} x{} (slots {fish_base}..) built",
-        total - fish_base
+        "boids: {} built (fish from slot {})",
+        drawn.join(", "),
+        BoidAssets::fish_base(budget)
     );
 }
 
@@ -1057,7 +1156,7 @@ pub fn river_palettes(plan: &BoidPlan) -> Vec<u32> {
 /// The `boids` object of the published state. Per fish region, `river_fish`,
 /// `river_largest_group` and `river_singles` describe the fish spawned in its river water and
 /// `river_palette` counts the fish drawn with the river palette; `pieces` is the bird and fish
-/// pieces' load state.
+/// pieces' load state; `species` is `birds` per bird species ([`BIRDS`] order).
 pub fn report_json(
     c: &BoidCounts,
     play: bool,
@@ -1087,7 +1186,7 @@ pub fn report_json(
         })
         .collect();
     format!(
-        "{{\"mode\":\"{}\",\"budget\":{},\"birds\":{},\"bird_slots\":{},\"leaving\":{},\"fish\":{},\"roosts\":{},\"roosting\":{},\"settling\":{},\"water_tiles\":{},\"fish_regions\":[{}],\"dispatched\":{dispatched},\"pieces\":\"{pieces}\"}}",
+        "{{\"mode\":\"{}\",\"budget\":{},\"birds\":{},\"bird_slots\":{},\"leaving\":{},\"fish\":{},\"roosts\":{},\"roosting\":{},\"settling\":{},\"water_tiles\":{},\"fish_regions\":[{}],\"dispatched\":{dispatched},\"pieces\":\"{pieces}\",\"species\":[{}]}}",
         if play { "play" } else { "stress" },
         c.budget,
         c.birds,
@@ -1098,7 +1197,8 @@ pub fn report_json(
         c.roosting,
         c.settling,
         c.water_tiles,
-        regions.join(",")
+        regions.join(","),
+        c.species.map(|n| n.to_string()).join(",")
     )
 }
 
@@ -1285,6 +1385,35 @@ mod tests {
         }
     }
 
+    /// The bird species' meshes hold one copy per slot between them, each slot in the species of
+    /// its flock, in slot order, at every tier and either seed phase; the fish mesh still covers
+    /// the slots from `fish_base`. Two bird draws (one per species) and one fish draw.
+    #[test]
+    fn bird_forms_draw_each_slot_once_in_its_flocks_species() {
+        for budget in [
+            BoidBudget::HIGH,
+            BoidBudget::for_tier(crate::post::QualityTier::Medium),
+            BoidBudget::for_tier(crate::post::QualityTier::Low),
+        ] {
+            for seed in 0..8u64 {
+                let mut drawn = vec![0u32; budget.total as usize];
+                for s in 0..plan::BIRD_SPECIES {
+                    let f = FormSlots::bird(s, budget, seed);
+                    let slots: Vec<u32> = (0..f.copies).map(|k| f.slot(k)).collect();
+                    assert!(slots.windows(2).all(|w| w[0] < w[1]), "{budget:?} {seed}");
+                    for slot in slots {
+                        assert_eq!(plan::flock_species(slot / plan::FLOCK_SIZE, seed), s);
+                        drawn[slot as usize] += 1;
+                    }
+                }
+                assert!(drawn.iter().all(|&n| n == 1), "{budget:?} seed {seed}");
+                let fish = FormSlots::fish(budget);
+                assert_eq!(fish.slot(0), BoidAssets::fish_base(budget));
+                assert_eq!(fish.slot(fish.copies - 1), budget.total - 1);
+            }
+        }
+    }
+
     /// The constants the shader poses the pieces with are the pieces' own contract (GLB root
     /// extras `boid`, written by scripts/blender/kit/_fauna.py).
     #[test]
@@ -1305,13 +1434,19 @@ mod tests {
         };
         let close =
             |v: &serde_json::Value, want: f32| (v.as_f64().unwrap() as f32 - want).abs() < 1e-6;
-        let bird = extras(BIRD_PIECE);
-        assert_eq!(bird["form"], "bird");
-        assert!(close(&bird["hinge"]["x"], HINGE[0]) && close(&bird["hinge"]["y"], HINGE[1]));
-        assert!(close(&bird["fold"]["k"], FOLD_K));
-        assert!(close(&bird["fold"]["rollDeg"], FOLD_ROLL_DEG));
-        assert!(close(&bird["fold"]["back"], FOLD_BACK));
-        assert!(close(&bird["pivotToFeetM"], PIVOT_TO_FEET_M));
+        for b in BIRDS {
+            let bird = extras(b.id);
+            assert_eq!(bird["form"], "bird", "{}", b.id);
+            assert!(
+                close(&bird["hinge"]["x"], b.hinge[0]) && close(&bird["hinge"]["y"], b.hinge[1]),
+                "{}",
+                b.id
+            );
+            assert!(close(&bird["fold"]["k"], b.fold_k), "{}", b.id);
+            assert!(close(&bird["fold"]["rollDeg"], b.fold_roll_deg), "{}", b.id);
+            assert!(close(&bird["fold"]["back"], b.fold_back), "{}", b.id);
+            assert!(close(&bird["pivotToFeetM"], b.pivot_to_feet_m), "{}", b.id);
+        }
         let fish = extras(FISH_PIECE);
         assert_eq!(fish["form"], "fish");
         assert!(close(&fish["variants"]["river"][0], RIVER_U));
@@ -1367,7 +1502,8 @@ mod tests {
         assert_eq!(std::mem::size_of::<Boid>(), 48);
         assert_eq!(std::mem::size_of::<Ctl>(), 48);
         assert_eq!(Params::min_size().get(), 64);
-        assert_eq!(BoidForm::min_size().get(), 48);
+        // 60 bytes of fields (the slot mapping's three u32s after fold_back), padded to 16.
+        assert_eq!(BoidForm::min_size().get(), 64);
     }
 
     /// Owner feedback (2026-10-14): a perched bird sits level and faces out from its tree, so the
@@ -1489,7 +1625,9 @@ mod tests {
         let s = report_json(&plan.counts(0.0), true, 1000, &[], "loading");
         assert!(s.starts_with("{\"mode\":\"play\",\"budget\":1000,\"birds\":24,\"bird_slots\":750,\"leaving\":0,\"fish\":0,\"roosts\":12,\"roosting\":12"), "{s}");
         assert!(
-            s.ends_with("\"fish_regions\":[],\"dispatched\":1000,\"pieces\":\"loading\"}"),
+            s.ends_with(
+                "\"fish_regions\":[],\"dispatched\":1000,\"pieces\":\"loading\",\"species\":[12,12]}"
+            ),
             "{s}"
         );
     }

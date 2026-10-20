@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/bird_goldfinch.py",
+    "sha256": "3fe4a1ba789673b187d9e72bc1afb8cb761cd6e67f247cb35f4900229229e9c8"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_fauna.py",
+      "sha256": "184bf0e63afe49ef50c453dec9e881575ef56aa54303340258e74de61f5cd2f1"
+    }
+  ],
+  "lodTris": {
+    "bird_goldfinch_lod0": 184,
+    "bird_goldfinch_lod1": 74,
+    "bird_goldfinch_lod2": 22
+  },
+  "nodes": [
+    "bird_goldfinch",
+    "bird_goldfinch_collider",
+    "bird_goldfinch_lod0",
+    "bird_goldfinch_lod1",
+    "bird_goldfinch_lod2"
+  ],
+  "pieceId": "bird_goldfinch",
+  "sockets": []
+}

@@ -72,8 +72,36 @@ pub const BIRD_PERCENT: u32 = 75;
 /// spawns together and roosts together, so an oak's 12 perches take one whole flock. Before U2
 /// every free bird cohered with every other within 22 m, so the sky held one cloud.
 pub const FLOCK_SIZE: u32 = 12;
+/// Bird species the flocks are drawn as (`boids::BIRDS`: 0 `bird_starling`, 1 `bird_goldfinch`).
+pub const BIRD_SPECIES: u32 = 2;
 /// Horizontal radius (m) a flock spawns within around its centre.
 pub const FLOCK_SPREAD: f32 = 6.0;
+
+/// The species of flock `flock` (slots `flock * FLOCK_SIZE ..`). Species go by whole flocks, not by
+/// bird: a flock coheres, roosts on one oak's 12 perches and launches as one, and a mixed flock reads
+/// as speckle at play distance. Flocks alternate from a seeded first species, so every world with two
+/// or more flocks shows both. The phase is a hash of the seed alone, apart from the spawn and heading
+/// streams, which are unchanged.
+pub fn flock_species(flock: u32, seed: u64) -> u32 {
+    (flock + species_phase(seed)) % BIRD_SPECIES
+}
+
+/// Flock 0's species for `seed`.
+pub fn species_phase(seed: u64) -> u32 {
+    (Rng(seed ^ 0x5BEC_1E5B_0F1A_C0C5).next_u64() % u64::from(BIRD_SPECIES)) as u32
+}
+
+/// The first flock of species `species`: its flocks are every [`BIRD_SPECIES`]th from there.
+pub fn species_offset(species: u32, seed: u64) -> u32 {
+    (species + BIRD_SPECIES - species_phase(seed)) % BIRD_SPECIES
+}
+
+/// The slots below `total` whose flock is species `species`.
+pub fn species_slots(species: u32, seed: u64, total: u32) -> u32 {
+    (0..total)
+        .filter(|&s| flock_species(s / FLOCK_SIZE, seed) == species)
+        .count() as u32
+}
 /// Land tiles (placed tiles without water: water tiles bring fish instead) per flock in play
 /// (owner, 2026-10-14: the bird count scales with the map, from none over the single start
 /// tile). Whole flocks only, up to the bird slots the tier leaves ([`BoidBudget::split`]).
@@ -950,6 +978,8 @@ pub struct BoidCounts {
     pub budget: u32,
     /// Birds in play ([`flying_birds`]), out of `bird_slots`; `leaving` birds are flying off.
     pub birds: u32,
+    /// `birds` by species ([`flock_species`]).
+    pub species: [u32; BIRD_SPECIES as usize],
     pub bird_slots: u32,
     pub leaving: u32,
     pub fish: u32,
@@ -1392,6 +1422,11 @@ impl BoidPlan {
         BoidCounts {
             budget: self.budget.total,
             birds: self.active,
+            species: std::array::from_fn(|s| {
+                (0..self.active)
+                    .filter(|&i| flock_species(i / FLOCK_SIZE, self.seed) == s as u32)
+                    .count() as u32
+            }),
             bird_slots: self.birds,
             leaving: self
                 .slots
@@ -1607,6 +1642,60 @@ mod tests {
             apart > birds.len() / size / 2,
             "flocks spread over the sky: {apart}"
         );
+    }
+
+    /// Two species by whole flocks (bird_starling, bird_goldfinch): the same for a seed, flocks
+    /// alternating so two flocks show both, the seed choosing which comes first, and an oak's
+    /// perches taken by one species; the budget, the flock count and the roosts as before.
+    #[test]
+    fn bird_species_alternate_by_flock_for_a_seed() {
+        let mut phases = BTreeSet::new();
+        for seed in 0..64u64 {
+            phases.insert(species_phase(seed));
+            for f in 0..100 {
+                assert_eq!(flock_species(f, seed), flock_species(f, seed));
+                assert_ne!(
+                    flock_species(f, seed),
+                    flock_species(f + 1, seed),
+                    "seed {seed}"
+                );
+                assert_eq!(flock_species(species_offset(f % 2, seed), seed), f % 2);
+            }
+            let per: u32 = (0..BIRD_SPECIES)
+                .map(|s| species_slots(s, seed, 1_000))
+                .sum();
+            assert_eq!(per, 1_000);
+        }
+        assert_eq!(phases.len(), 2, "the seed picks the first species");
+        let c = catalog();
+        for seed in [1u64, 2, 7] {
+            let mut plan = BoidPlan::play(BoidBudget::HIGH, seed);
+            let world = with_land(&[tile(0, 0, "meadow", 0), tile(1, 0, "oak", 0)], 8);
+            plan.set_world_all(&world, &c, 1.0);
+            plan.tick(1.0);
+            let n = plan.counts(1.0 + APPROACH);
+            assert_eq!(
+                (n.birds, n.bird_slots, n.roosts, n.roosting),
+                (24, 750, 12, 12)
+            );
+            assert_eq!(n.species, [12, 12], "seed {seed}: two flocks, one of each");
+            let perched: BTreeSet<u32> = (0..plan.slots.len() as u32)
+                .filter(|&i| plan.slots[i as usize].roost.is_some())
+                .map(|i| flock_species(i / FLOCK_SIZE, seed))
+                .collect();
+            assert_eq!(perched.len(), 1, "seed {seed}: one species on the oak");
+            let again = {
+                let mut p = BoidPlan::play(BoidBudget::HIGH, seed);
+                p.set_world_all(&world, &c, 1.0);
+                p.tick(1.0);
+                p.counts(1.0 + APPROACH)
+            };
+            assert_eq!(again, n, "seed {seed}: deterministic");
+        }
+        let mut plan = BoidPlan::play(BoidBudget::HIGH, 9);
+        plan.set_world_all(&with_land(&[tile(0, 0, "meadow", 0)], 400), &c, 0.0);
+        let n = plan.counts(0.0);
+        assert_eq!((n.birds, n.species), (744, [372, 372]), "High's 62 flocks");
     }
 
     #[test]

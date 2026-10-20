@@ -7,9 +7,11 @@ Principled material, renders EEVEE stills (Standard view transform, grey studio 
 writes side-by-side sheets beside the approved references as JPEG q85, at most 1024 px wide, into
 assets-source/kit/<piece>/renders/vs_*.jpg. Evidence only: the in-engine look is judged in engine.
 
-bird_starling: vs_ref1_glide.jpg (ref-1 | glide pose | flap-up pose) and vs_ref3_perch.jpg (ref-3 |
-perched pose, three-quarter and profile), the flap and fold computed from TEXCOORD_1 with the
-contract in the generator's docstring (root extras `boid`). fish_trout: vs_ref3_palettes.jpg (ref-3 |
+Birds (root extras `form` "bird": bird_starling, bird_goldfinch): vs_ref1_glide.jpg (ref-1 | glide pose
+| flap-up pose) and vs_ref3_perch.jpg (ref-3 | perched pose, three-quarter and profile), the flap and
+fold computed from TEXCOORD_1 with the contract in the generator's docstring (root extras `boid`); a
+bird other than the starling also gets vs_starling.jpg, itself beside the committed starling at real
+size (see `pair`). fish_trout: vs_ref3_palettes.jpg (ref-3 |
 the ocean palette above the river palette, profile, head to the left, as in the reference). Both also
 get play_distance.jpg: the piece rendered a few dozen px across and upscaled nearest-neighbour, as a
 silhouette and colour check at the size boids are drawn."""
@@ -33,7 +35,7 @@ TMP = REPO / "target" / "kit-renders" / PIECE / "sheet"
 PANEL = 512
 
 
-def material(name, uv_offset=(0.0, 0.0)):
+def material(name, uv_offset=(0.0, 0.0), piece=PIECE, maps=STAGE):
     m = bpy.data.materials.new(name)
     nt = m.node_tree
     N, L = nt.nodes, nt.links
@@ -45,7 +47,7 @@ def material(name, uv_offset=(0.0, 0.0)):
 
     def tex(ch, non_color):
         t = N.new("ShaderNodeTexImage")
-        t.image = bpy.data.images.load(str(STAGE / f"{PIECE}.{ch}.png"), check_existing=True)
+        t.image = bpy.data.images.load(str(maps / f"{piece}.{ch}.png"), check_existing=True)
         t.image.colorspace_settings.name = "Non-Color" if non_color else "sRGB"
         t.interpolation = "Cubic"
         L.new(mp.outputs["Vector"], t.inputs["Vector"])
@@ -211,6 +213,46 @@ def tiny(path, target, direction, scale):
     return np.repeat(np.repeat(a, k, 0), k, 1)
 
 
+STARLING = "bird_starling"
+
+
+def pair(lod0, base, w, extras):
+    """vs_starling.jpg for a second bird: it (right, or in front) beside bird_starling (its committed
+    GLB and maps), both at real size so at the one display scale the boids share: gliding seen from
+    the strategic camera, perched in profile with their feet on one line, and both a few dozen px
+    across. The glide is the shader's gliding angle (0.12 rad)."""
+    kit = REPO / "assets" / "kit" / "p1" / STARLING
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=str(kit / f"{STARLING}.glb"))
+    new = [o for o in bpy.data.objects if o not in before]
+    sroot = next(o for o in new if o.name == STARLING)
+    sextras = json.loads(sroot["boid"])
+    slod0 = next(o for o in new if o.name.endswith("_lod0"))
+    for o in new:
+        if o.type == "MESH" and o is not slod0:
+            o.hide_render = True
+    slod0.data.materials.clear()
+    slod0.data.materials.append(material("sheet_starling", piece=STARLING, maps=kit))
+    sbase = np.empty(len(slod0.data.vertices) * 3)
+    slod0.data.vertices.foreach_get("co", sbase)
+    sbase = sbase.reshape(-1, 3)
+    sw = motion(slod0)
+    pose(lod0, base, w, extras, "flap", 0.12)
+    pose(slod0, sbase, sw, sextras, "flap", 0.12)
+    root.location, sroot.location = (0.25, 0.0, 0.0), (-0.25, 0.0, 0.0)
+    top = (0.35, 0.25, 1.0)
+    far = tiny(TMP / "pair_far.png", (0.0, 0.0, 0.0), top, 1.28)
+    aim(cam, (0.0, 0.0, 0.0), top, 0.95)
+    render(TMP / "pair_glide.png")
+    pose(lod0, base, w, extras, "fold")
+    pose(slod0, sbase, sw, sextras, "fold")
+    root.location = (0.0, -0.13, extras["pivotToFeetM"])
+    sroot.location = (0.0, 0.11, sextras["pivotToFeetM"])
+    aim(cam, (0.0, -0.01, 0.03), (1.0, 0.0, 0.05), 0.42)
+    render(TMP / "pair_perch.png")
+    sheet([panel(TMP / "pair_glide.png"), panel(TMP / "pair_perch.png"), far], "vs_starling")
+
+
 TMP.mkdir(parents=True, exist_ok=True)
 objs = gate.import_glb(str(STAGE / f"{PIECE}.glb"))
 root = next(o for o in objs if o.name == PIECE)
@@ -221,7 +263,7 @@ for o in objs:
         o.hide_render = True
 cam = setup_scene()
 refs = REPO / "assets-source" / "refs"
-if PIECE == "bird_starling":
+if extras.get("form") == "bird":
     lod0.data.materials.clear()
     lod0.data.materials.append(material("sheet_bird"))
     base = np.empty(len(lod0.data.vertices) * 3)
@@ -246,6 +288,8 @@ if PIECE == "bird_starling":
     sheet([load(refs / "birds" / "ref-1.jpg"), panel(TMP / "glide.png"), panel(TMP / "flap.png")], "vs_ref1_glide")
     sheet([load(refs / "birds" / "ref-3.jpg"), panel(TMP / "perch.png"), panel(TMP / "perch_side.png")],
           "vs_ref3_perch")
+    if PIECE != STARLING:
+        pair(lod0, base, w, extras)
 else:
     lod0.data.materials.clear()
     lod0.data.materials.append(material("sheet_ocean"))

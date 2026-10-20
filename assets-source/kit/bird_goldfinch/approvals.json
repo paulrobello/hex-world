@@ -1,0 +1,9 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "revision": "new boid species: European goldfinch",
+    "notes": "Pending owner approval; not an approval. Second boid bird so flocks read as two species (play flocks alternate starling and goldfinch per flock, seeded). Form from the approved birds references (ref-1 glide, ref-3 roost); the goldfinch plumage (tan back, black wings with a broad yellow bar, red face, black cap, white cheeks) is in no approved reference image: approve it from the sheet or ask for a goldfinch reference. Real size 0.128 m long, 0.24 m span, drawn at the starling's x4. Review docs/checkpoints/bird_goldfinch/sheet.jpg and assets-source/kit/bird_goldfinch/renders/vs_*.jpg. The controller records the owner's decision."
+  }
+]

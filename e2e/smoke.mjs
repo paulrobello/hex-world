@@ -456,7 +456,10 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     checkBoids(tag, sampled, true, KIT_SAMPLED_WITH_WATER.forward, true);
     console.log(`${tag}: ${spawned} meshes; sampled textures per stage max ${sampled?.max}, kit pipelines ` +
       `${JSON.stringify(sampled?.kit)}, water pipelines ${JSON.stringify(sampled?.water)}; state.gpu ${JSON.stringify(state.gpu)}`);
-    if (state.scenario !== "WaterKit" || state.tiles !== 12) fail(`${tag}: state scenario ${state.scenario}, tiles ${state.tiles}`);
+    // The fixture lays out the water patch's 12 cells; the runtime kit adds its showcase blocks, whose
+    // exact count `tile_counts` in crates/hex-render/src/lib.rs pins (it grows with every block).
+    const tilesOk = query.includes("kit_src=fixture") ? state.tiles === 12 : state.tiles > 12;
+    if (state.scenario !== "WaterKit" || !tilesOk) fail(`${tag}: state scenario ${state.scenario}, tiles ${state.tiles}`);
     for (const pass of ["forward", "prepass"]) {
       const got = (sampled?.kit ?? []).filter((k) => k.pass === pass && (pass === "prepass" || k.ibl));
       if (!got.length) fail(`${tag}: no kit ${pass} pipeline was created`);

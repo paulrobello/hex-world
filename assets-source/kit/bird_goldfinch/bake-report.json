@@ -1,0 +1,77 @@
+{
+  "aoDistanceM": 0.08,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.4492325186729431,
+      "p05": 0.10608786344528198
+    },
+    "ao": {
+      "mean": 0.9280447959899902,
+      "min": 0.0,
+      "p05": 0.5921568870544434,
+      "texels": 90408
+    },
+    "coverage": 0.344879150390625
+  },
+  "blender": "5.2.2 LTS",
+  "boid": {
+    "flap": "U > 0: rotate (|x| - hingeX, y - hingeY) about the hinge line by sign(x) * theta",
+    "fold": {
+      "back": 0.01,
+      "k": 0.25,
+      "rollDeg": -60.0,
+      "rule": "U > 0: scale (|x| - hingeX, y - hingeY) by k, then flap it by rollDeg (down), z -= back * U"
+    },
+    "form": "bird",
+    "frame": "runtime +z forward, +y up; pivot at the body centre on the shoulder hinge line",
+    "hinge": {
+      "tailBaseZ": -0.027,
+      "tailTipZ": -0.072,
+      "tipX": 0.12,
+      "x": 0.013,
+      "y": 0.0095
+    },
+    "pivotToFeetM": 0.018,
+    "realLengthM": 0.128,
+    "realSpanM": 0.24,
+    "species": "goldfinch",
+    "tc1": {
+      "u": "wing weight: 0 body and tail, (|x| - hingeX) / (tipX - hingeX) on the wings",
+      "v": "tail weight: 0 at the tail base (z = -0.027), 1 at the tail tip (z = -0.072)"
+    }
+  },
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 512
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 128
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colourSource": "numpy paint (no colour bake)",
+  "device": "CPU",
+  "lodTris": [
+    184,
+    74,
+    22
+  ],
+  "marginPx": 4,
+  "receiverSignature": "b1e725122aaee371a82b481816addaffcd7f72c033d706258327249c36420b9a",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 2579.515221506391,
+    "median": 2529.145878188385,
+    "min": 1784.8045757661955
+  }
+}

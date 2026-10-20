@@ -1,6 +1,7 @@
-// Boid kit pieces (crates/hex-render/src/boids.rs): StandardMaterial + BoidExt (bindings 100-103).
-// The mesh holds one copy of a piece's LOD0 per boid slot the form may draw (bird_starling or
-// fish_trout); this vertex shader maps copy k to slot `form.base + k`, reads that boid from the
+// Boid kit pieces (crates/hex-play/src/boids.rs): StandardMaterial + BoidExt (bindings 100-103).
+// The mesh holds one copy of a piece's LOD0 per boid slot the form may draw (a bird species,
+// bird_starling or bird_goldfinch, over its own flocks; or fish_trout); this vertex shader maps copy
+// k to its slot (boids::FormSlots::slot), reads that boid from the
 // buffer the compute pass writes (boids_compute.wgsl), poses the piece from TEXCOORD_1 by its
 // contract (the GLB root extras `boid`), scales it to its display size and places it there. The
 // fragment shades it like a kit piece: StandardMaterial's maps at UV0, `masks` AO in A.
@@ -27,6 +28,9 @@ struct BoidForm {
     hinge: vec2<f32>,
     fold_roll: f32,
     fold_back: f32,
+    flock: u32,
+    stride: u32,
+    offset: u32,
 }
 
 const FORM_FISH: u32 = 1u;
@@ -69,7 +73,10 @@ fn vertex(v: Vertex) -> VertexOutput {
     var out: VertexOutput;
     // vertex_index includes the mesh's offset in Bevy's shared vertex slab.
     let local = v.vertex_index - mesh[v.instance_index].first_vertex_index;
-    let b = boids[form.base + local / form.boid_verts];
+    // A bird species' copies run over its own flocks' slots (stride flocks apart from the offset
+    // flock); the fish's are every slot from base (flock, stride 1, offset 0). boids::FormSlots::slot.
+    let copy = local / form.boid_verts;
+    let b = boids[form.base + ((copy / form.flock) * form.stride + form.offset) * form.flock + copy % form.flock];
     let mode = b.vel.w;
     let fish_form = form.kind == FORM_FISH;
     if (mode > IDLE - 0.5 || fish_form != (mode > SWIM - 0.5)) {

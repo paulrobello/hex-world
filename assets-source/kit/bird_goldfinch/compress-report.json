@@ -1,0 +1,181 @@
+{
+  "name": "bird_goldfinch",
+  "date": "2026-10-20T18:30:10.271Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 10,
+      "bytes": 76270,
+      "sha256": "09afaadf77b8a77e584e1853b391a8105628ec5ad4c8e0d62f1eb70a227c0a1f"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 10,
+      "bytes": 75792,
+      "sha256": "95c2ee1d372396458e837819edfcb027e5d9eb5169b718ef036b88bd1128d6c1"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 74705,
+      "sha256": "2ee3b759dff8a0059a8d2f6c3254439271d2279a71cc9c5498877212eee3cd0e"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 8,
+      "bytes": 3200,
+      "sha256": "fc8d635890322073b9c2c3132b627922408bce227bc6c6f0e067ee6dd74a6121"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 8,
+      "bytes": 3200,
+      "sha256": "1c0c1be080fa5d753a8041763259d3704144966b7fb06d07d2abcdb392b8c8ad"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 2398,
+      "sha256": "7929a35bc876c484b2f8a9c7de667328a8a54cb819979e777f3e070dbd35c91a"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 51480,
+      "sha256": "a3cee51c069f1fb7a9df4935eb8af4336a67ecad9c215b124ddb002ba48ac520"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 51895,
+      "sha256": "36fc390b92be51f7f1c32490037bdb45fdc30a3271efd2ff191eacf21f525b32"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 58281,
+      "sha256": "0e30572789ba1f0d30adce3f5c8a654ec7c59f507f1943eaab7f2d4f549c74fc"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 54161,
+      "sha256": "0705ee4a51b21629fd35d696362d997824bf77c08e2c19d3902497b22d6f8db1"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 56744,
+      "sha256": "aa45cebbea27aa4610d795364ad0d8400d21da66bd1504f6088d0be46ed697cb"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/bird_goldfinch/bird_goldfinch.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 71275,
+      "sha256": "5669251d8cc7e7fa4b69626e4bc0e65a43b385f5f44c6501ee64cd9d314ebac4"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 185111,
+      "astc": 187631
+    },
+    "glbBytes": 19716
+  },
+  "glb": {
+    "bytes": 19716,
+    "sha256": "7c55927e159dd42312c88850b8d840a1aed3241dade12e74cdcfd04eed5ad268"
+  }
+}
