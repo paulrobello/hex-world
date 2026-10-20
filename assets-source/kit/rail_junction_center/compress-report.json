@@ -1,0 +1,88 @@
+{
+  "name": "rail_junction_center",
+  "date": "2026-10-20T04:24:07.599Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/rail_junction_center/rail_junction_center.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 14570,
+      "sha256": "ac7944c652ffd774977128a91e7e2faf39fcb588ee2b9d661473e0d15fbc1021"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/rail_junction_center/rail_junction_center.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 13486,
+      "sha256": "86342a1d34e1502484eb8fef4f450f56cde260b5d4097432ffd26fc390cc0ad9"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/rail_junction_center/rail_junction_center.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 20105,
+      "sha256": "70af07e8115e7bdabec78e2cff38fe3f8dc6366267c20bd70d8888222d48b9c9"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 14570,
+      "astc": 13486
+    },
+    "glbBytes": 147656
+  },
+  "glb": {
+    "bytes": 147656,
+    "sha256": "01da58bf86d3c88f0bbf4bf4a0f678cd8910d2f0d9fc7b0fbe45027e8d63ddbf"
+  }
+}

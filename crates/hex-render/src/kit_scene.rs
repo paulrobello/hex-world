@@ -198,6 +198,15 @@ pub fn kit_layout() -> Vec<Placement> {
     v.push(place("rail_road_crossing_center", -1, 2, 0));
     v.push(place("road_straight_edge", -1, 2, 1));
     v.push(place("road_straight_edge", -1, 2, 4));
+    // The rail junction (P3, refs A17) on (0, 3) at rot 5 (lanes on world edges 5, 0 and 2): its toe
+    // meets the rail bend's free end at (1, 2), its straight runs on into a rail straight on (-1, 4)
+    // and its 8 m branch into a rail bend on (1, 3), so all three of its edges show a seam.
+    v.push(place("meadow_base", 0, 3, 0));
+    v.push(place("rail_junction_center", 0, 3, 5));
+    v.push(place("meadow_base", -1, 4, 0));
+    v.push(place("rail_straight_center", -1, 4, 2));
+    v.push(place("meadow_base", 1, 3, 0));
+    v.push(place("rail_bend_60_center", 1, 3, 2));
     v
 }
 
@@ -638,6 +647,34 @@ mod tests {
             assert!(
                 l.iter()
                     .any(|p| p.piece == "road_straight_edge" && p.cell == x.cell && p.rot == e)
+            );
+        }
+    }
+
+    #[test]
+    fn rail_junction_meets_rail_on_all_three_lanes() {
+        let l = kit_layout();
+        let j = *l
+            .iter()
+            .find(|p| p.piece == "rail_junction_center")
+            .unwrap();
+        // The junction's lanes are local edges 0 (toe), 1 (branch) and 3 (straight), turned by rot.
+        let rail_lanes = |p: &Placement| -> Vec<u8> {
+            let local: &[u8] = match p.piece {
+                "rail_straight_center" => &[0, 3],
+                "rail_bend_60_center" => &[0, 1],
+                "rail_junction_center" => &[0, 1, 3],
+                _ => &[],
+            };
+            local.iter().map(|e| (e + p.rot) % 6).collect()
+        };
+        for e in rail_lanes(&j) {
+            let n = j.cell.neighbor(e);
+            let back = (e + 3) % 6;
+            assert!(
+                l.iter()
+                    .any(|p| p.cell == n && rail_lanes(p).contains(&back)),
+                "junction lane on world edge {e} meets no rail lane at {n:?}"
             );
         }
     }

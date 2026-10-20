@@ -1,0 +1,80 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/rail_junction_center.py",
+    "sha256": "63e844ac6fc0783e4691fc089fab0fa2593e6bb12bc9ed3e19bc82eb8b7d5fe7"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_rail.py",
+      "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
+    },
+    {
+      "path": "scripts/blender/kit/_rail_junction.py",
+      "sha256": "d58bd698a0ce1d1331a5f408eb89da71b2e79d0271320959ec5b79f2cfb55974"
+    }
+  ],
+  "lodTris": {
+    "rail_junction_center_lod0": 2720,
+    "rail_junction_center_lod1": 1104,
+    "rail_junction_center_lod2": 235
+  },
+  "nodes": [
+    "rail_junction_center",
+    "rail_junction_center_collider",
+    "rail_junction_center_lod0",
+    "rail_junction_center_lod1",
+    "rail_junction_center_lod2",
+    "socket-lane-0",
+    "socket-lane-1",
+    "socket-lane-2"
+  ],
+  "pieceId": "rail_junction_center",
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "rail",
+        "offset": 0.0,
+        "width": 3.5
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "edge": 1,
+        "kind": "rail",
+        "offset": 0.0,
+        "width": 3.5
+      },
+      "name": "socket-lane-1",
+      "position": [
+        6.928203105926514,
+        0.0,
+        12.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "edge": 3,
+        "kind": "rail",
+        "offset": 0.0,
+        "width": 3.5
+      },
+      "name": "socket-lane-2",
+      "position": [
+        -13.856406211853027,
+        0.0,
+        1.6969203955408477e-15
+      ],
+      "yaw": 0.0
+    }
+  ]
+}
