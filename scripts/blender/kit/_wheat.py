@@ -39,6 +39,12 @@ def meadow_relief(x, y):
     return -0.25 * undulation(x, y)
 
 
+def _wrap_dx(dx, w):
+    """dx between a wrapped column and an unwrapped centre, brought into [-w/2, w/2): per-pixel
+    geometry (normal tilt) on a horizontally wrapping tile must not see the wrap's w-pixel jump."""
+    return (dx + w / 2) % w - w / 2
+
+
 def _stamp(img, mask_fn, x0, x1, y0, y1, w):
     """Calls mask_fn(xs, ys) on the window [x0, x1) x [y0, y1) of a w-wide wrapping image (x in pixel
     units, wrapped) and returns (rows, cols, mask) for the caller to write."""
@@ -111,7 +117,7 @@ def row_tile(w: int, h: int, card_w_m: float, card_h_m: float, sink_m: float, se
             f = np.clip((Y - ground) / max(y_ear0 - ground, 1), 0, 1)
             col = STALK_DARK + (STALK * (1 + 0.08 * tone) - STALK_DARK) * (0.35 + 0.65 * f)[..., None]
             col = np.broadcast_to(col * shade, sl[2].shape + (3,))
-            put(sl, None, np.clip(col, 0, 1), (sl[1] - x_at(Y) + 0.5) / half * 0.4, d)
+            put(sl, None, np.clip(col, 0, 1), np.clip(_wrap_dx(sl[1] + 0.5 - x_at(Y), w) / half, -1, 1) * 0.4, d)
         # The ear: a spindle tilted by `nod`, with grain rows across it.
         ax = xe + nod * ppm_x * 0.3
 
@@ -131,7 +137,7 @@ def row_tile(w: int, h: int, card_w_m: float, card_h_m: float, sink_m: float, se
             col = EAR + (EAR_LIGHT - EAR) * (0.25 + 0.5 * grain + 0.25 * tone)[..., None]
             col = np.broadcast_to(np.clip(col * (0.8 + 0.2 * d), 0, 1), m.shape + (3,))
             cx = xe + (ax - xe) * t
-            put(sl, None, col, np.clip((X - cx) / (ear_w * ppm_x * 0.5 + 0.4), -1, 1) * 0.55, d + 0.001)
+            put(sl, None, col, np.clip(_wrap_dx(X + 0.5 - cx, w) / (ear_w * ppm_x * 0.5 + 0.4), -1, 1) * 0.55, d + 0.001)
         # Awns: a few thin bristles above the ear (one pixel wide).
         for a in range(3):
             adx = rng.uniform(-0.02, 0.02) + nod * 0.3

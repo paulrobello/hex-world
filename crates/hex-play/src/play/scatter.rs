@@ -1829,6 +1829,26 @@ mod tests {
             }
         }
         assert!(earth > 4000 && cap > 1500, "{earth} {cap}");
+        // LOD1 and LOD2 draw from 150 m and 400 m, base and centre switching together (one
+        // origin): the meadow cap never pokes through the field's earth there either.
+        for lod in ["lod1", "lod2"] {
+            let mut all = vec![];
+            for (id, k) in ground_pieces(&def, &catalog()) {
+                for (t, s) in glb_mesh_tris(id, lod).unwrap() {
+                    all.push((t.map(|p| turn(k, p)), s));
+                }
+            }
+            let s = Surface::new(all);
+            for j in -40..=40 {
+                for i in -40..=40 {
+                    let p = Vec2::new(i as f32 * 0.25, j as f32 * 0.25);
+                    if field(p) < 10.3 {
+                        let (_, slot) = s.at(p.x, p.y).unwrap();
+                        assert_eq!(slot, "wheat_field_soil", "{lod} at {p}");
+                    }
+                }
+            }
+        }
         // The wildflowers and rocks stand on the margin only.
         let l = layout(&def, 1, &g);
         assert!(!l.instances.is_empty());

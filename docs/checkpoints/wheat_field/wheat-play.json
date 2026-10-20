@@ -19,6 +19,8 @@
   {"cmd": "camera", "pos": [30, 2.2, 6.5], "look_at": [27, 0.6, 0]},
   {"cmd": "wait", "frames": 30},
   {"cmd": "screenshot", "name": "wheat-close-sun"},
+  {"cmd": "wait", "frames": 60},
+  {"cmd": "screenshot", "name": "wheat-close-sun-1s"},
   {"cmd": "camera", "pos": [25, 2.2, -6.5], "look_at": [28, 0.6, 0]},
   {"cmd": "wait", "frames": 30},
   {"cmd": "screenshot", "name": "wheat-close-shade"},

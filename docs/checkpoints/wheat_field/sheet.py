@@ -19,6 +19,7 @@ CELLS = [
     (DOCS / "wheat-play.jpg", "in engine, play distance ~100 m, tilt off"),
     (DOCS / "wheat-seam.jpg", "in engine, seams: grass margin, next field"),
     (DOCS / "wheat-close-sun.jpg", "in engine, sun side, ~6 m"),
+    (DOCS / "wheat-close-sun-1s.jpg", "in engine, sun side 1 s later (wind sway)"),
     (DOCS / "wheat-close-shade.jpg", "in engine, shade side, ~6 m"),
     (DOCS / "wheat-scale.jpg", "in engine, scale: wheat to the farm's barn"),
     (DOCS / "wheat-walk-eye.jpg", "in engine, eye level 1.7 m (walk mode)"),

@@ -472,7 +472,7 @@ shots-farm-play:
 # shot across the wheat to the barn, an eye-level walk view, and a walk into the field with its
 # state dumped (`walk.blocked` null). 1280x800, tilt-shift off and `--clock fixed`. A black still
 # fails the target. `python3 docs/checkpoints/wheat_field/sheet.py` then builds the review sheet.
-WHEAT_SHOTS = wheat-play wheat-seam wheat-close-sun wheat-close-shade wheat-scale wheat-walk-eye wheat-walk-inside
+WHEAT_SHOTS = wheat-play wheat-seam wheat-close-sun wheat-close-sun-1s wheat-close-shade wheat-scale wheat-walk-eye wheat-walk-inside
 WHEAT_DOCS = docs/checkpoints/wheat_field
 shots-wheat-play:
 	mkdir -p target/shots $(WHEAT_DOCS)

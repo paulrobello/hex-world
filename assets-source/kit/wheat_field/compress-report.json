@@ -1,6 +1,6 @@
 {
   "name": "wheat_field",
-  "date": "2026-10-19T23:58:56.287Z",
+  "date": "2026-10-20T00:26:11.909Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -110,8 +110,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 197512,
-      "sha256": "55b624582226ab79eefca393f1461a745198a89575383f3513cf33d0803e4fec"
+      "bytes": 195934,
+      "sha256": "0b75bbeb753d3575bb6fe5cc4f7c7ee9be9cd3fea5932dfccbdfdfb761f54e0e"
     },
     {
       "channel": "normal",
@@ -121,8 +121,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 203239,
-      "sha256": "c4d211dc8c42942e970bd75fd3f979c92fb3abd701318c0c593684ca6bacc2d2"
+      "bytes": 201770,
+      "sha256": "bbf853150758004848a3ddb58decab3a5e6c34bb235875a0a67356438753707b"
     },
     {
       "channel": "normal",
@@ -130,8 +130,8 @@
       "path": "assets/kit/p1/wheat_field/wheat_field.normal.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 299789,
-      "sha256": "3053ed09052eccf35a1ff8372056a6d3aca403404078c87238a58b54bef19a31"
+      "bytes": 299607,
+      "sha256": "d83a0fde34853b20815dfd6d43a42ad15f543f291897f56a76238ae1b6993b9e"
     },
     {
       "channel": "orm",
@@ -169,8 +169,8 @@
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 960395,
-      "astc": 965324
+      "bc7": 958817,
+      "astc": 963855
     },
     "glbBytes": 96308
   },

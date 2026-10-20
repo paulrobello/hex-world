@@ -1,10 +1,9 @@
 [
   {
-    "who": "pending",
-    "when": "2026-10-19",
     "gate": "piece",
     "status": "pending",
+    "requested": "2026-10-19",
     "revision": "first build",
-    "notes": "New piece (owner request 2026-10-19, 'start an agent working on the wheat tile'): ripe wheat in rows on ploughed earth, centre of the Wheat field tile. Review docs/checkpoints/wheat_field/sheet.jpg."
+    "notes": "Pending owner review; not an approval. New piece (owner request 2026-10-19, 'start an agent working on the wheat tile'): ripe wheat in V-pair row cards with wind on tinted-gravel ploughed earth, the centre of the Wheat field tile. Review docs/checkpoints/wheat_field/sheet.jpg. The controller records the owner's decision."
   }
 ]

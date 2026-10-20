@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_wheat.py",
-      "sha256": "5346a3165b53287de7dbe2f7a8045894b6e53747466b581faec8478ee6aa9bcd"
+      "sha256": "5cd386167c2815dbc91f9eaf3a7e017b5c8e7387a3caa97ade6c963397c281dc"
     }
   ],
   "authoringAgent": {
@@ -162,8 +162,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 960395,
-        "astc": 965324
+        "bc7": 958817,
+        "astc": 963855
       },
       "glbBytes": 96308
     },
@@ -238,8 +238,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 197512,
-        "sha256": "55b624582226ab79eefca393f1461a745198a89575383f3513cf33d0803e4fec"
+        "bytes": 195934,
+        "sha256": "0b75bbeb753d3575bb6fe5cc4f7c7ee9be9cd3fea5932dfccbdfdfb761f54e0e"
       },
       {
         "channel": "normal",
@@ -249,8 +249,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 203239,
-        "sha256": "c4d211dc8c42942e970bd75fd3f979c92fb3abd701318c0c593684ca6bacc2d2"
+        "bytes": 201770,
+        "sha256": "bbf853150758004848a3ddb58decab3a5e6c34bb235875a0a67356438753707b"
       },
       {
         "channel": "normal",
@@ -258,8 +258,8 @@
         "path": "assets/kit/p1/wheat_field/wheat_field.normal.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 299789,
-        "sha256": "3053ed09052eccf35a1ff8372056a6d3aca403404078c87238a58b54bef19a31"
+        "bytes": 299607,
+        "sha256": "d83a0fde34853b20815dfd6d43a42ad15f543f291897f56a76238ae1b6993b9e"
       },
       {
         "channel": "orm",
@@ -332,18 +332,18 @@
     },
     {
       "path": "assets/kit/p1/wheat_field/wheat_field.normal.bc7.ktx2",
-      "sha256": "55b624582226ab79eefca393f1461a745198a89575383f3513cf33d0803e4fec",
-      "bytes": 197512
+      "sha256": "0b75bbeb753d3575bb6fe5cc4f7c7ee9be9cd3fea5932dfccbdfdfb761f54e0e",
+      "bytes": 195934
     },
     {
       "path": "assets/kit/p1/wheat_field/wheat_field.normal.astc.ktx2",
-      "sha256": "c4d211dc8c42942e970bd75fd3f979c92fb3abd701318c0c593684ca6bacc2d2",
-      "bytes": 203239
+      "sha256": "bbf853150758004848a3ddb58decab3a5e6c34bb235875a0a67356438753707b",
+      "bytes": 201770
     },
     {
       "path": "assets/kit/p1/wheat_field/wheat_field.normal.png",
-      "sha256": "3053ed09052eccf35a1ff8372056a6d3aca403404078c87238a58b54bef19a31",
-      "bytes": 299789
+      "sha256": "d83a0fde34853b20815dfd6d43a42ad15f543f291897f56a76238ae1b6993b9e",
+      "bytes": 299607
     },
     {
       "path": "assets/kit/p1/wheat_field/wheat_field.orm.bc7.ktx2",
@@ -384,7 +384,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T00:00:46.587Z",
+    "date": "2026-10-20T00:27:17.151Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -403,6 +403,13 @@
         "assets-source/refs/farm/ref-2.jpg"
       ],
       "notes": "Pitched barn roof; red board barn for contrast with the cottages; wheat crop. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-19",
+      "revision": "first build",
+      "notes": "Pending owner review; not an approval. New piece (owner request 2026-10-19, 'start an agent working on the wheat tile'): ripe wheat in V-pair row cards with wind on tinted-gravel ploughed earth, the centre of the Wheat field tile. Review docs/checkpoints/wheat_field/sheet.jpg. The controller records the owner's decision."
     }
   ]
 }
