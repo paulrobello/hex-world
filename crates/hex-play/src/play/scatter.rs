@@ -372,6 +372,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         },
     ),
     (
+        "house_twostorey_c",
+        Footprint {
+            ground: 4.64,
+            crown: 0.0,
+        },
+    ),
+    (
         "house_cottage_b",
         Footprint {
             ground: 4.21,
@@ -617,6 +624,13 @@ pub const GROUND_BOXES: &[(&str, GroundBox)] = &[
         GroundBox {
             min: [-2.75, -3.75],
             max: [2.75, 3.75],
+        },
+    ),
+    (
+        "house_twostorey_c",
+        GroundBox {
+            min: [-2.78, -3.7],
+            max: [2.7, 3.4],
         },
     ),
     (

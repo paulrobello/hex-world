@@ -69,6 +69,7 @@ pub const OBSTACLES: &[&str] = &[
     "house_twostorey",
     "house_longhouse",
     "house_twostorey_b",
+    "house_twostorey_c",
     "house_cottage_b",
     "windmill",
     "barn_red",
@@ -1107,6 +1108,7 @@ mod tests {
             ("house_twostorey", "building"),
             ("house_longhouse", "building"),
             ("house_twostorey_b", "building"),
+            ("house_twostorey_c", "building"),
             ("house_cottage_b", "building"),
             ("tree_hero_oak", "tree"),
             ("tree_hero_oak_b", "tree"),
@@ -1618,7 +1620,8 @@ mod tests {
 
     /// Walk blocks at the piece the cell draws: a cluster at (1, 0) draws house_cottage_b in house
     /// 1's slot (`hex_core::hero_piece`), at (-3, 0) the longhouse, at the origin the cottage; the
-    /// origin and (1, 0) draw house_twostorey_b in house 2's slot, and (2, -1) keeps house_twostorey.
+    /// origin and (1, 0) draw house_twostorey_c in house 2's slot, (-1, 1) house_twostorey_b, and
+    /// (2, -1) keeps house_twostorey.
     #[test]
     fn walk_obstacles_are_the_drawn_hero_variant() {
         let pieces = |q, r| -> Vec<String> {
@@ -1631,11 +1634,15 @@ mod tests {
         };
         assert_eq!(
             pieces(0, 0),
-            ["house_cottage", "house_cottage", "house_twostorey_b"]
+            ["house_cottage", "house_cottage", "house_twostorey_c"]
         );
         assert_eq!(
             pieces(1, 0),
-            ["house_cottage", "house_cottage_b", "house_twostorey_b"]
+            ["house_cottage", "house_cottage_b", "house_twostorey_c"]
+        );
+        assert_eq!(
+            pieces(-1, 1),
+            ["house_cottage", "house_longhouse", "house_twostorey_b"]
         );
         assert_eq!(
             pieces(-3, 0),
@@ -1658,8 +1665,13 @@ mod tests {
 
     #[test]
     fn a_house_wall_stops_the_walker_on_a_turned_tile() {
-        // The origin draws house_twostorey_b in house 2's slot, (2, -1) house_twostorey.
-        for (q, r, piece) in [(0, 0, "house_twostorey_b"), (2, -1, "house_twostorey")] {
+        // The origin draws house_twostorey_c in house 2's slot, (-1, 1) house_twostorey_b, (2, -1)
+        // house_twostorey.
+        for (q, r, piece) in [
+            (0, 0, "house_twostorey_c"),
+            (-1, 1, "house_twostorey_b"),
+            (2, -1, "house_twostorey"),
+        ] {
             for rotation in [0u8, 2] {
                 let g = world(&[(q, r, "house_cluster", rotation)]);
                 let c = centre(q, r);

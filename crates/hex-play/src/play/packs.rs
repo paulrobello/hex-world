@@ -391,6 +391,7 @@ mod tests {
             "house_cottage_b",
             "house_twostorey",
             "house_twostorey_b",
+            "house_twostorey_c",
         ] {
             assert!(drawn.contains(piece), "{piece}: {drawn:?}");
         }

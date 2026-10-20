@@ -1045,6 +1045,7 @@ mod tests {
         assert_eq!(floors("house_cottage_b"), 2);
         assert_eq!(floors("house_twostorey"), 3);
         assert_eq!(floors("house_twostorey_b"), 3);
+        assert_eq!(floors("house_twostorey_c"), 3);
         assert_eq!(floors("house_longhouse"), 1);
         assert_eq!(prop_kind("tree_hero_oak"), PropKind::Tree);
     }

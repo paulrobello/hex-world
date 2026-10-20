@@ -9,7 +9,10 @@ use crate::{Axial, HeroProp, TileDef};
 /// more id in its row; a new family is one more row.
 pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
     ("house_cottage", &["house_longhouse", "house_cottage_b"]),
-    ("house_twostorey", &["house_twostorey_b"]),
+    (
+        "house_twostorey",
+        &["house_twostorey_b", "house_twostorey_c"],
+    ),
     ("tree_hero_oak", &["tree_hero_oak_b"]),
     ("hay_bale_round", &["hay_bale_round_b"]),
     ("hay_bale_stack", &["hay_bale_stack_b"]),
@@ -164,7 +167,7 @@ mod tests {
         let c = TileCatalog::builtin().unwrap();
         let def = c.get("house_cluster").unwrap();
         let (mut cottage, mut longhouse, mut cottage_b) = (0, 0, 0);
-        let (mut twostorey, mut twostorey_b) = (0, 0);
+        let (mut twostorey, mut twostorey_b, mut twostorey_c) = (0, 0, 0);
         for cell in cells() {
             for (i, (h, piece)) in def.hero_pieces(cell).enumerate() {
                 match (h.piece.as_str(), piece) {
@@ -173,10 +176,15 @@ mod tests {
                     ("house_cottage", "house_cottage_b") => cottage_b += 1,
                     ("house_twostorey", "house_twostorey") => twostorey += 1,
                     ("house_twostorey", "house_twostorey_b") => twostorey_b += 1,
+                    ("house_twostorey", "house_twostorey_c") => twostorey_c += 1,
                     (a, b) => assert_eq!(a, b, "slot {i} at {cell:?}"),
                 }
             }
         }
+        println!(
+            "two-storey slot over {} cells: {twostorey} authored, {twostorey_b} _b, {twostorey_c} _c",
+            twostorey + twostorey_b + twostorey_c
+        );
         // About one cottage slot in three varies, split evenly between the two variants.
         let all = (cottage + longhouse + cottage_b) as f32;
         let share = (longhouse + cottage_b) as f32 / all;
@@ -188,9 +196,17 @@ mod tests {
             let share = v as f32 / all;
             assert!((0.13..0.2).contains(&share), "{n} share {share}");
         }
-        let share = twostorey_b as f32 / (twostorey + twostorey_b) as f32;
-        assert!((0.28..0.39).contains(&share), "twostorey_b share {share}");
-        assert!(twostorey > twostorey_b);
+        // The two-storey slot splits its one in three between _b and _c the same way.
+        let all = (twostorey + twostorey_b + twostorey_c) as f32;
+        let share = (twostorey_b + twostorey_c) as f32 / all;
+        assert!(
+            (0.28..0.39).contains(&share),
+            "two-storey variant share {share}"
+        );
+        for (n, v) in [("twostorey_b", twostorey_b), ("twostorey_c", twostorey_c)] {
+            let share = v as f32 / all;
+            assert!((0.13..0.2).contains(&share), "{n} share {share}");
+        }
     }
 
     /// The farm's hay slots draw their variants about one time in three, and the thumbnail cell

@@ -152,14 +152,14 @@ pub fn kit_layout() -> Vec<Placement> {
     // The cottage slots' variants in a second house_cluster on (-1, -1): its edge-0 road stub meets
     // the wide bend's world-edge-3 stub on (0, -1). house_longhouse stands in house 0's slot (yawed
     // 90, front toward the yard) and house_cottage_b in house 1's across the yard (yawed 270), the
-    // two-storey closes the yard, and sedans are parked at park-0 and park-1 (`PARK` in
-    // scripts/blender/kit/house_pad.py), on the gravel.
+    // cross-wing two-storey variant (house_twostorey_c) closes the yard, and sedans are parked at
+    // park-0 and park-1 (`PARK` in scripts/blender/kit/house_pad.py), on the gravel.
     v.push(place("meadow_base", -1, -1, 0));
     v.push(place("house_pad", -1, -1, 0));
     v.push(place("road_straight_edge", -1, -1, 0));
     v.push(hero("house_longhouse", -1, -1, [-0.5, -7.0], 90.0));
     v.push(hero("house_cottage_b", -1, -1, [-0.5, 7.0], 270.0));
-    v.push(hero("house_twostorey", -1, -1, [-7.5, 0.0], 0.0));
+    v.push(hero("house_twostorey_c", -1, -1, [-7.5, 0.0], 0.0));
     for z in [-2.6, 2.6] {
         v.push(Placement {
             y: PARK_Y,

@@ -1,0 +1,227 @@
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index 1cf8dc1..f946b6b 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -230,6 +230,18 @@
+                  "house_twostorey_b_door": { "color": [0.16, 0.1, 0.05], "roughness": 0.7, "masks": true },
+                  "house_twostorey_b_glass": { "color": [0.2, 0.16, 0.1], "roughness": 0.2, "masks": true } },
+       "maps": { "masks": "p1/house_twostorey_b/house_twostorey_b.masks" } },
++    { "id": "house_twostorey_c", "pack": "village", "kind": "prop", "glb": "p1/house_twostorey_c/house_twostorey_c.glb",
++      "provenance": "assets-source/kit/house_twostorey_c/provenance.json",
++      "slots": { "house_twostorey_c_walls": { "tileable": "plaster", "color": [0.97, 0.93, 0.8], "masks": true },
++                 "house_twostorey_c_rubble": { "tileable": "plaster", "color": [0.47, 0.43, 0.36], "masks": true },
++                 "house_twostorey_c_stone": { "tileable": "plaster", "color": [0.68, 0.63, 0.53], "masks": true },
++                 "house_twostorey_c_roof": { "tileable": "plaster", "color": [0.24, 0.2, 0.16], "masks": true },
++                 "house_twostorey_c_timber": { "color": [0.12, 0.075, 0.045], "roughness": 0.8, "masks": true },
++                 "house_twostorey_c_frame": { "color": [0.25, 0.31, 0.23], "roughness": 0.6, "masks": true },
++                 "house_twostorey_c_door": { "color": [0.26, 0.07, 0.05], "roughness": 0.6, "masks": true },
++                 "house_twostorey_c_glass": { "color": [0.2, 0.16, 0.1], "roughness": 0.2, "masks": true },
++                 "house_twostorey_c_pots": { "tileable": "plaster", "color": [0.5, 0.19, 0.095], "masks": true } },
++      "maps": { "masks": "p1/house_twostorey_c/house_twostorey_c.masks" } },
+     { "id": "house_cottage_b", "pack": "village", "kind": "prop", "glb": "p1/house_cottage_b/house_cottage_b.glb",
+       "provenance": "assets-source/kit/house_cottage_b/provenance.json",
+       "slots": { "house_cottage_b_walls": { "tileable": "plaster", "color": [0.98, 0.94, 0.84], "masks": true },
+diff --git a/crates/hex-core/src/variant.rs b/crates/hex-core/src/variant.rs
+index 2e6f1ee..29d99d5 100644
+--- a/crates/hex-core/src/variant.rs
++++ b/crates/hex-core/src/variant.rs
+@@ -9,7 +9,10 @@ use crate::{Axial, HeroProp, TileDef};
+ /// more id in its row; a new family is one more row.
+ pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
+     ("house_cottage", &["house_longhouse", "house_cottage_b"]),
+-    ("house_twostorey", &["house_twostorey_b"]),
++    (
++        "house_twostorey",
++        &["house_twostorey_b", "house_twostorey_c"],
++    ),
+     ("tree_hero_oak", &["tree_hero_oak_b"]),
+     ("hay_bale_round", &["hay_bale_round_b"]),
+     ("hay_bale_stack", &["hay_bale_stack_b"]),
+@@ -162,7 +165,7 @@ mod tests {
+         let c = TileCatalog::builtin().unwrap();
+         let def = c.get("house_cluster").unwrap();
+         let (mut cottage, mut longhouse, mut cottage_b) = (0, 0, 0);
+-        let (mut twostorey, mut twostorey_b) = (0, 0);
++        let (mut twostorey, mut twostorey_b, mut twostorey_c) = (0, 0, 0);
+         for cell in cells() {
+             for (i, (h, piece)) in def.hero_pieces(cell).enumerate() {
+                 match (h.piece.as_str(), piece) {
+@@ -171,10 +174,15 @@ mod tests {
+                     ("house_cottage", "house_cottage_b") => cottage_b += 1,
+                     ("house_twostorey", "house_twostorey") => twostorey += 1,
+                     ("house_twostorey", "house_twostorey_b") => twostorey_b += 1,
++                    ("house_twostorey", "house_twostorey_c") => twostorey_c += 1,
+                     (a, b) => assert_eq!(a, b, "slot {i} at {cell:?}"),
+                 }
+             }
+         }
++        println!(
++            "two-storey slot over {} cells: {twostorey} authored, {twostorey_b} _b, {twostorey_c} _c",
++            twostorey + twostorey_b + twostorey_c
++        );
+         // About one cottage slot in three varies, split evenly between the two variants.
+         let all = (cottage + longhouse + cottage_b) as f32;
+         let share = (longhouse + cottage_b) as f32 / all;
+@@ -186,9 +194,17 @@ mod tests {
+             let share = v as f32 / all;
+             assert!((0.13..0.2).contains(&share), "{n} share {share}");
+         }
+-        let share = twostorey_b as f32 / (twostorey + twostorey_b) as f32;
+-        assert!((0.28..0.39).contains(&share), "twostorey_b share {share}");
+-        assert!(twostorey > twostorey_b);
++        // The two-storey slot splits its one in three between _b and _c the same way.
++        let all = (twostorey + twostorey_b + twostorey_c) as f32;
++        let share = (twostorey_b + twostorey_c) as f32 / all;
++        assert!(
++            (0.28..0.39).contains(&share),
++            "two-storey variant share {share}"
++        );
++        for (n, v) in [("twostorey_b", twostorey_b), ("twostorey_c", twostorey_c)] {
++            let share = v as f32 / all;
++            assert!((0.13..0.2).contains(&share), "{n} share {share}");
++        }
+     }
+ 
+     /// The farm's hay slots draw their variants about one time in three, and the thumbnail cell
+diff --git a/crates/hex-play/src/play.rs b/crates/hex-play/src/play.rs
+index 904f818..076af8a 100644
+--- a/crates/hex-play/src/play.rs
++++ b/crates/hex-play/src/play.rs
+@@ -1045,6 +1045,7 @@ mod tests {
+         assert_eq!(floors("house_cottage_b"), 2);
+         assert_eq!(floors("house_twostorey"), 3);
+         assert_eq!(floors("house_twostorey_b"), 3);
++        assert_eq!(floors("house_twostorey_c"), 3);
+         assert_eq!(floors("house_longhouse"), 1);
+         assert_eq!(prop_kind("tree_hero_oak"), PropKind::Tree);
+     }
+diff --git a/crates/hex-play/src/play/packs.rs b/crates/hex-play/src/play/packs.rs
+index f1d0255..303c02f 100644
+--- a/crates/hex-play/src/play/packs.rs
++++ b/crates/hex-play/src/play/packs.rs
+@@ -391,6 +391,7 @@ mod tests {
+             "house_cottage_b",
+             "house_twostorey",
+             "house_twostorey_b",
++            "house_twostorey_c",
+         ] {
+             assert!(drawn.contains(piece), "{piece}: {drawn:?}");
+         }
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 250a700..f19596f 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -371,6 +371,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
+             crown: 0.0,
+         },
+     ),
++    (
++        "house_twostorey_c",
++        Footprint {
++            ground: 4.64,
++            crown: 0.0,
++        },
++    ),
+     (
+         "house_cottage_b",
+         Footprint {
+@@ -611,6 +618,13 @@ pub const GROUND_BOXES: &[(&str, GroundBox)] = &[
+             max: [2.75, 3.75],
+         },
+     ),
++    (
++        "house_twostorey_c",
++        GroundBox {
++            min: [-2.78, -3.7],
++            max: [2.7, 3.4],
++        },
++    ),
+     (
+         "house_cottage_b",
+         GroundBox {
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index c03dae7..5165c76 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -69,6 +69,7 @@ pub const OBSTACLES: &[&str] = &[
+     "house_twostorey",
+     "house_longhouse",
+     "house_twostorey_b",
++    "house_twostorey_c",
+     "house_cottage_b",
+     "windmill",
+     "barn_red",
+@@ -1102,6 +1103,7 @@ mod tests {
+             ("house_twostorey", "building"),
+             ("house_longhouse", "building"),
+             ("house_twostorey_b", "building"),
++            ("house_twostorey_c", "building"),
+             ("house_cottage_b", "building"),
+             ("tree_hero_oak", "tree"),
+             ("tree_hero_oak_b", "tree"),
+@@ -1569,7 +1571,8 @@ mod tests {
+ 
+     /// Walk blocks at the piece the cell draws: a cluster at (1, 0) draws house_cottage_b in house
+     /// 1's slot (`hex_core::hero_piece`), at (-3, 0) the longhouse, at the origin the cottage; the
+-    /// origin and (1, 0) draw house_twostorey_b in house 2's slot, and (2, -1) keeps house_twostorey.
++    /// origin and (1, 0) draw house_twostorey_c in house 2's slot, (-1, 1) house_twostorey_b, and
++    /// (2, -1) keeps house_twostorey.
+     #[test]
+     fn walk_obstacles_are_the_drawn_hero_variant() {
+         let pieces = |q, r| -> Vec<String> {
+@@ -1582,11 +1585,15 @@ mod tests {
+         };
+         assert_eq!(
+             pieces(0, 0),
+-            ["house_cottage", "house_cottage", "house_twostorey_b"]
++            ["house_cottage", "house_cottage", "house_twostorey_c"]
+         );
+         assert_eq!(
+             pieces(1, 0),
+-            ["house_cottage", "house_cottage_b", "house_twostorey_b"]
++            ["house_cottage", "house_cottage_b", "house_twostorey_c"]
++        );
++        assert_eq!(
++            pieces(-1, 1),
++            ["house_cottage", "house_longhouse", "house_twostorey_b"]
+         );
+         assert_eq!(
+             pieces(-3, 0),
+@@ -1609,8 +1616,13 @@ mod tests {
+ 
+     #[test]
+     fn a_house_wall_stops_the_walker_on_a_turned_tile() {
+-        // The origin draws house_twostorey_b in house 2's slot, (2, -1) house_twostorey.
+-        for (q, r, piece) in [(0, 0, "house_twostorey_b"), (2, -1, "house_twostorey")] {
++        // The origin draws house_twostorey_c in house 2's slot, (-1, 1) house_twostorey_b, (2, -1)
++        // house_twostorey.
++        for (q, r, piece) in [
++            (0, 0, "house_twostorey_c"),
++            (-1, 1, "house_twostorey_b"),
++            (2, -1, "house_twostorey"),
++        ] {
+             for rotation in [0u8, 2] {
+                 let g = world(&[(q, r, "house_cluster", rotation)]);
+                 let c = centre(q, r);
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 69f96e8..4bf115e 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -142,14 +142,14 @@ pub fn kit_layout() -> Vec<Placement> {
+     // The cottage slots' variants in a second house_cluster on (-1, -1): its edge-0 road stub meets
+     // the wide bend's world-edge-3 stub on (0, -1). house_longhouse stands in house 0's slot (yawed
+     // 90, front toward the yard) and house_cottage_b in house 1's across the yard (yawed 270), the
+-    // two-storey closes the yard, and sedans are parked at park-0 and park-1 (`PARK` in
+-    // scripts/blender/kit/house_pad.py), on the gravel.
++    // cross-wing two-storey variant (house_twostorey_c) closes the yard, and sedans are parked at
++    // park-0 and park-1 (`PARK` in scripts/blender/kit/house_pad.py), on the gravel.
+     v.push(place("meadow_base", -1, -1, 0));
+     v.push(place("house_pad", -1, -1, 0));
+     v.push(place("road_straight_edge", -1, -1, 0));
+     v.push(hero("house_longhouse", -1, -1, [-0.5, -7.0], 90.0));
+     v.push(hero("house_cottage_b", -1, -1, [-0.5, 7.0], 270.0));
+-    v.push(hero("house_twostorey", -1, -1, [-7.5, 0.0], 0.0));
++    v.push(hero("house_twostorey_c", -1, -1, [-7.5, 0.0], 0.0));
+     for z in [-2.6, 2.6] {
+         v.push(Placement {
+             y: PARK_Y,
