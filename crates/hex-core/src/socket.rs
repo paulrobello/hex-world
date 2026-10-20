@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::tile::KitRef;
 
-/// Terrain or feature type at a tile edge (PRD §5.2, MVP set).
+/// Terrain or feature type at a tile edge (PRD §5.2): the MVP set plus `Rail` (P3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum SocketKind {
     Grass,
@@ -16,17 +16,19 @@ pub enum SocketKind {
     River,
     Beach,
     Ocean,
+    Rail,
 }
 
 impl SocketKind {
     /// Every socket kind, in declaration order.
-    pub const ALL: [SocketKind; 6] = [
+    pub const ALL: [SocketKind; 7] = [
         SocketKind::Grass,
         SocketKind::Forest,
         SocketKind::Road,
         SocketKind::River,
         SocketKind::Beach,
         SocketKind::Ocean,
+        SocketKind::Rail,
     ];
 }
 
@@ -381,8 +383,9 @@ mod tests {
     use super::SocketKind::*;
     use super::*;
 
-    /// Plan F2 with owner O1 (beach never meets grass or ocean), as unordered pairs.
-    const F2_LEGAL: [(SocketKind, SocketKind); 7] = [
+    /// Plan F2 with owner O1 (beach never meets grass or ocean) and P3 rail (rail meets only rail,
+    /// as a road does: a line never dead-ends into an edge), as unordered pairs.
+    const F2_LEGAL: [(SocketKind, SocketKind); 8] = [
         (Grass, Grass),
         (Grass, Forest),
         (Forest, Forest),
@@ -390,6 +393,7 @@ mod tests {
         (River, River),
         (Beach, Beach),
         (Ocean, Ocean),
+        (Rail, Rail),
     ];
 
     fn table() -> SocketTable {
@@ -448,6 +452,19 @@ mod tests {
                 width: 8.0
             })
         );
+        // The rail pieces' `socket-lane-*` extras: the 3.5 m ballast lane, centred.
+        assert_eq!(
+            t.lane(Rail),
+            Some(LaneSpec {
+                offset: 0.0,
+                width: 3.5
+            })
+        );
+        assert_eq!(
+            t.edge_piece(Rail),
+            None,
+            "rail meets the border, no edge piece"
+        );
         for k in [Grass, Forest, Beach, Ocean] {
             assert_eq!(t.lane(k), None);
         }
@@ -497,7 +514,7 @@ mod tests {
     fn beach_never_meets_grass_or_ocean_on_either_side() {
         let t = table();
         for side in [Side::Left, Side::Right] {
-            for k in [Grass, Forest, Road, River, Ocean] {
+            for k in [Grass, Forest, Road, River, Ocean, Rail] {
                 let other = EdgeSocket {
                     land: Some(side.opposite()),
                     ..EdgeSocket::new(k)

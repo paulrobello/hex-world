@@ -69,6 +69,8 @@ pub fn socket_rgb(k: SocketKind) -> [u8; 3] {
         SocketKind::River => [74, 163, 223],
         SocketKind::Beach => [227, 194, 122],
         SocketKind::Ocean => [45, 111, 176],
+        // `socket-rail` (`--k-T`, .impeccable/design.json): a violet clear of the pick magenta.
+        SocketKind::Rail => [152, 128, 214],
     }
 }
 

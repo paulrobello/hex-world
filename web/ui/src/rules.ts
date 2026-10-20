@@ -146,6 +146,7 @@ export const KIND_NAME: Record<SocketKind, string> = {
   River: "River",
   Beach: "Beach",
   Ocean: "Ocean",
+  Rail: "Rail",
 };
 const lower = (k: SocketKind): string => KIND_NAME[k].toLowerCase();
 const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
@@ -157,7 +158,8 @@ const accepting = (n: SocketKind): SocketKind[] =>
 
 /** Why a tile cannot meet a socket kind at all. */
 function missing(n: SocketKind): string {
-  if (n === "River" || n === "Road" || n === "Beach") return `Needs a ${lower(n)} edge to meet the ${lower(n)}.`;
+  if (n === "River" || n === "Road" || n === "Rail" || n === "Beach")
+    return `Needs a ${lower(n)} edge to meet the ${lower(n)}.`;
   return `Needs ${listOr(accepting(n).map(lower))} to meet the ${n === "Ocean" ? "sea" : lower(n)}.`;
 }
 
@@ -167,8 +169,10 @@ const end = (k: SocketKind): string => (k === "Ocean" ? "the sea" : `the ${lower
 function clashPhrase(mine: SocketKind, theirs: SocketKind): string {
   if (mine === "Road") return `Its road would dead-end into the ${lower(theirs)}.`;
   if (mine === "River") return `Its river would run into the ${lower(theirs)}.`;
+  if (mine === "Rail") return `Its railway would dead-end into the ${lower(theirs)}.`;
   if (theirs === "Road") return `The road here would dead-end into its ${lower(mine)}.`;
   if (theirs === "River") return `The river here would run into its ${lower(mine)}.`;
+  if (theirs === "Rail") return `The railway here would dead-end into its ${lower(mine)}.`;
   // Beach meets only beach, with the land on opposite sides (owner O1): beach on beach is a side clash.
   if (mine === "Beach" && theirs === "Beach") return "The coast here runs the other way.";
   if (mine === "Beach") return `Its beach would end at ${end(theirs)}.`;
@@ -257,17 +261,19 @@ export function entrySummary(entry: PickerEntry): string {
   return summary({ ...first, edges: entry.tiles.flatMap((t) => t.edges) });
 }
 
-const LINE_ORDER: SocketKind[] = ["River", "Road", "Ocean", "Beach", "Forest", "Grass"];
+const LINE_ORDER: SocketKind[] = ["River", "Road", "Rail", "Ocean", "Beach", "Forest", "Grass"];
+/** Kinds that carry a lane: they meet only their own kind, so the key names them first. */
+const isLane = (k: SocketKind): boolean => k === "Road" || k === "River" || k === "Rail";
 
 /** What the slot key prints: lanes first ("River on one edge"), then what may sit beside them. */
 export function needLines(needs: Kinds): { kind: SocketKind; text: string }[] {
   const kinds = needs.filter((n): n is SocketKind => n != null);
   const uniq = LINE_ORDER.filter((k) => kinds.includes(k));
-  const hasLane = uniq.some((k) => k === "Road" || k === "River");
+  const hasLane = uniq.some(isLane);
   return uniq.map((n) => {
     const count = kinds.filter((x) => x === n).length;
     const where = count === 1 ? "on one edge" : `on ${count} edges`;
-    if (n === "Road" || n === "River") return { kind: n, text: `${KIND_NAME[n]} ${where}` };
+    if (isLane(n)) return { kind: n, text: `${KIND_NAME[n]} ${where}` };
     return { kind: n, text: `${cap(listOr(accepting(n).map(lower)))} ${hasLane ? "beside it" : where}` };
   });
 }
@@ -275,6 +281,7 @@ export function needLines(needs: Kinds): { kind: SocketKind; text: string }[] {
 const CARRY: Record<SocketKind, string> = {
   River: "a river",
   Road: "a road",
+  Rail: "a railway",
   Ocean: "the sea",
   Beach: "a beach",
   Forest: "forest",

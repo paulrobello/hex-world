@@ -15,6 +15,7 @@ export const KIND_CLASS: Record<SocketKind, string> = {
   River: "k-V",
   Beach: "k-B",
   Ocean: "k-O",
+  Rail: "k-T",
 };
 
 const R = 40;
@@ -72,12 +73,12 @@ export function glyph(def: TileDef): SVGElement {
       g.append(s("rect", { class: "g-house", x: x - 5, y: y - 5, width: 10, height: 10, rx: 1.5 }));
   for (let e = 0; e < 6; e++) {
     const k = def.edges[e]!;
-    if (k !== "Road" && k !== "River") continue;
+    if (k !== "Road" && k !== "River" && k !== "Rail") continue;
     const [x1, y1] = vertex(e);
     const [x2, y2] = vertex(e + 1);
     g.append(s("line", { class: `g-lane ${KIND_CLASS[k]}`, x1: (x1 + x2) / 2, y1: (y1 + y2) / 2, x2: C, y2: C }));
   }
-  if (def.edges.includes("Road") && def.edges.includes("River"))
+  if (new Set(def.edges.filter((k) => k === "Road" || k === "River" || k === "Rail")).size > 1)
     g.append(s("rect", { class: "g-bridge", x: C - 7, y: C - 7, width: 14, height: 14, rx: 2 }));
   for (let e = 0; e < 6; e++) {
     const [x1, y1] = vertex(e);

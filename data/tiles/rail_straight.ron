@@ -1,0 +1,24 @@
+// Single-track rail straight (P3, rail_straight_center): edge 0 to edge 3 through the centre, the
+// rail top 0.46 m over the meadow cap. Rail meets the hex border itself, so there is no edge piece.
+(
+    id: "rail_straight",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    center: Some("rail_straight_center"),
+    networks: [
+        (kind: Rail, from: Edge(0), to: Edge(3)),
+    ],
+    props: (
+        scatter: [
+            (piece: "wildflower_single", density: 3.0, vary: 0.8),
+        ],
+    ),
+)

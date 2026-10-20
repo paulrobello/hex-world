@@ -18,6 +18,7 @@ const KIND_WORD: Record<SocketKind, string> = {
   River: "river",
   Beach: "beach",
   Ocean: "ocean",
+  Rail: "rail",
 };
 
 /** A 6 px strip of socket-colour segments, each flexed by its edge count. */

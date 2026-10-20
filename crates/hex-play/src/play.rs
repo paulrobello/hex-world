@@ -60,7 +60,7 @@ pub struct PlainAssets {
     pad: Handle<Mesh>,
     block: Handle<Mesh>,
     biome: [Handle<StandardMaterial>; 4],
-    socket: [Handle<StandardMaterial>; 6],
+    socket: [Handle<StandardMaterial>; 7],
     block_mat: Handle<StandardMaterial>,
 }
 
@@ -134,6 +134,7 @@ impl PlainAssets {
                 Color::srgb(0.20, 0.55, 1.00),
                 Color::srgb(0.96, 0.86, 0.56),
                 Color::srgb(0.04, 0.18, 0.55),
+                Color::srgb(0.60, 0.50, 0.84),
             ]
             .map(|c| m(flat(c))),
             block_mat: m(lit(Color::srgb(0.80, 0.72, 0.60))),
@@ -1106,7 +1107,7 @@ mod tests {
     #[test]
     fn every_mvp_tile_resolves_and_biomes_index() {
         let c = PlayCatalog::default();
-        assert_eq!(c.0.tiles().len(), 22);
+        assert_eq!(c.0.tiles().len(), 27);
         let biomes: std::collections::BTreeSet<_> =
             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
         assert_eq!(biomes.len(), 4);

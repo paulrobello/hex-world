@@ -97,21 +97,44 @@ pub struct PropScatter {
     pub hero: Vec<HeroProp>,
 }
 
-/// Road or river connectivity carried by a network segment.
+/// Road, river or rail connectivity carried by a network segment.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum NetworkKind {
     Road,
     River,
+    Rail,
 }
 
 impl NetworkKind {
+    pub const ALL: [NetworkKind; 3] = [NetworkKind::Road, NetworkKind::River, NetworkKind::Rail];
+
     /// The socket kind whose lanes this network crosses.
     pub fn socket(self) -> SocketKind {
         match self {
             NetworkKind::Road => SocketKind::Road,
             NetworkKind::River => SocketKind::River,
+            NetworkKind::Rail => SocketKind::Rail,
         }
     }
+}
+
+/// A rail turnout (PRD §7.1, P3): three rail segments meet at its toe node. A train running in on
+/// the `toe` segment leaves on `straight` or `branch` as the switch is set; from either leg it
+/// trails through onto the toe segment. No route joins the two legs, so a train never turns back
+/// through the vee.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SwitchDef {
+    /// The node in [`TileDef::nodes`] where the three segments meet (the blade tips).
+    pub node: String,
+    /// Indices into [`TileDef::networks`]: the segment from the toe edge to `node`, and the two
+    /// legs from `node`.
+    pub toe: u16,
+    pub straight: u16,
+    pub branch: u16,
+    /// Distance in meters from the toe edge's border, along either leg, past which a train clears
+    /// a train on the other leg (`rail_junction_center` friction notes: the centrelines are 5.0 m
+    /// apart there). A waiting train stands beyond it.
+    pub fouling: f32,
 }
 
 /// End of a network segment: the lane on a local edge, or a node declared in [`TileDef::nodes`].
@@ -305,6 +328,9 @@ pub struct TileDef {
     pub nodes: Vec<NetworkNode>,
     #[serde(default)]
     pub networks: Vec<NetworkSegment>,
+    /// Rail turnouts at nodes where three rail segments meet.
+    #[serde(default)]
+    pub switches: Vec<SwitchDef>,
     /// One spot per house that owns a car, or a shop's visitor spots (PRD §7.1).
     #[serde(default)]
     pub parking: Vec<ParkingSpot>,
@@ -449,6 +475,7 @@ impl TileDef {
 
         self.validate_destinations(&mut issue);
         self.validate_parking(&mut issue);
+        self.validate_rail(&mut issue);
 
         let total = self.rise.total();
         if !RISE_SECONDS.contains(&total) {
@@ -467,6 +494,82 @@ impl TileDef {
         }
 
         issues
+    }
+
+    /// Rail rules (P3): a rail node joins two rail segments (a plain joint) or three at a declared
+    /// switch, whose toe segment runs from a rail lane edge to the node and whose legs leave it;
+    /// a switch names three distinct rail segments and a positive fouling distance.
+    fn validate_rail(&self, issue: &mut impl FnMut(String)) {
+        let rail = |i: u16| {
+            self.networks
+                .get(usize::from(i))
+                .filter(|s| s.kind == NetworkKind::Rail)
+        };
+        let mut switch_nodes: BTreeSet<&str> = BTreeSet::new();
+        for sw in &self.switches {
+            if !switch_nodes.insert(sw.node.as_str()) {
+                issue(format!("switch at {:?} is declared twice", sw.node));
+            }
+            let node = Endpoint::Node(sw.node.clone());
+            if sw.toe == sw.straight || sw.toe == sw.branch || sw.straight == sw.branch {
+                issue(format!(
+                    "switch at {:?} needs three distinct segments",
+                    sw.node
+                ));
+            }
+            for (role, i) in [
+                ("toe", sw.toe),
+                ("straight", sw.straight),
+                ("branch", sw.branch),
+            ] {
+                match rail(i) {
+                    Some(s) if s.from == node || s.to == node => {}
+                    Some(_) => issue(format!(
+                        "switch at {:?}: {role} segment {i} does not end at its node",
+                        sw.node
+                    )),
+                    None => issue(format!(
+                        "switch at {:?}: {role} segment {i} is not a rail segment",
+                        sw.node
+                    )),
+                }
+            }
+            if let Some(s) = rail(sw.toe) {
+                let other = if s.from == node { &s.to } else { &s.from };
+                if !matches!(other, Endpoint::Edge(_)) {
+                    issue(format!(
+                        "switch at {:?}: the toe segment must run from a lane edge",
+                        sw.node
+                    ));
+                }
+            }
+            if !(sw.fouling.is_finite() && sw.fouling > 0.0) {
+                issue(format!(
+                    "switch at {:?} needs a positive fouling distance",
+                    sw.node
+                ));
+            }
+        }
+        for node in &self.nodes {
+            let end = Endpoint::Node(node.id.clone());
+            let count = self
+                .networks
+                .iter()
+                .filter(|s| s.kind == NetworkKind::Rail && (s.from == end || s.to == end))
+                .count();
+            let switch = switch_nodes.contains(node.id.as_str());
+            match (count, switch) {
+                (0, false) | (2, false) | (3, true) => {}
+                (3, false) => issue(format!(
+                    "rail node {:?} joins 3 segments but is not a declared switch",
+                    node.id
+                )),
+                (n, _) => issue(format!(
+                    "rail node {:?} joins {n} segments; a joint needs 2, a switch 3",
+                    node.id
+                )),
+            }
+        }
     }
 
     /// Destination rules (PRD §7.1): cars arrive at and leave from parking spots, so every
@@ -655,6 +758,7 @@ mod tests {
                 to: Endpoint::Edge(1),
                 points: vec![[6.93, 4.0]],
             }],
+            switches: vec![],
             parking: vec![],
             emitters: vec![],
             agents: vec![],
@@ -1051,5 +1155,106 @@ mod tests {
         let text = ron::ser::to_string_pretty(&t, Default::default()).unwrap();
         let back: TileDef = ron::from_str(&text).unwrap();
         assert_eq!(back, t);
+    }
+
+    fn rail_lane() -> Option<LaneSpec> {
+        Some(LaneSpec {
+            offset: 0.0,
+            width: 3.5,
+        })
+    }
+
+    /// A turnout on edges 0 (toe), 3 (straight) and 1 (branch), as `rail_junction` lays it out.
+    fn turnout() -> TileDef {
+        let mut t = bend60();
+        t.edges = std::array::from_fn(|_| EdgeSocket::new(Grass));
+        for e in [0, 1, 3] {
+            t.edges[e] = EdgeSocket {
+                lane: rail_lane(),
+                ..EdgeSocket::new(Rail)
+            };
+        }
+        t.nodes = vec![NetworkNode {
+            id: "toe".into(),
+            at: [13.6, 0.0],
+            destination: None,
+        }];
+        let seg = |from, to| NetworkSegment {
+            kind: NetworkKind::Rail,
+            from,
+            to,
+            points: vec![],
+        };
+        t.networks = vec![
+            seg(Endpoint::Edge(0), Endpoint::Node("toe".into())),
+            seg(Endpoint::Node("toe".into()), Endpoint::Edge(3)),
+            seg(Endpoint::Node("toe".into()), Endpoint::Edge(1)),
+        ];
+        t.switches = vec![SwitchDef {
+            node: "toe".into(),
+            toe: 0,
+            straight: 1,
+            branch: 2,
+            fouling: 7.42,
+        }];
+        t
+    }
+
+    #[test]
+    fn a_declared_turnout_is_valid() {
+        assert_eq!(turnout().validate(&sockets()), Vec::<String>::new());
+    }
+
+    /// Three rail segments at a node without a switch would let a train turn through the vee.
+    #[test]
+    fn three_rail_segments_need_a_declared_switch() {
+        let mut t = turnout();
+        t.switches.clear();
+        let issues = t.validate(&sockets());
+        assert!(
+            issues.iter().any(|i| i.contains("not a declared switch")),
+            "{issues:?}"
+        );
+    }
+
+    #[test]
+    fn a_switch_names_three_distinct_rail_segments_at_its_node() {
+        let mut t = turnout();
+        t.switches[0].branch = 1;
+        assert!(
+            t.validate(&sockets())
+                .iter()
+                .any(|i| i.contains("three distinct"))
+        );
+        let mut t = turnout();
+        t.switches[0].fouling = 0.0;
+        assert!(
+            t.validate(&sockets())
+                .iter()
+                .any(|i| i.contains("positive fouling"))
+        );
+        let mut t = turnout();
+        t.switches[0].branch = 9;
+        assert!(
+            t.validate(&sockets())
+                .iter()
+                .any(|i| i.contains("not a rail segment"))
+        );
+    }
+
+    #[test]
+    fn a_rail_segment_needs_a_rail_lane_edge() {
+        let mut t = turnout();
+        t.edges[1] = EdgeSocket {
+            lane: road_lane(),
+            ..EdgeSocket::new(Road)
+        };
+        let issues = t.validate(&sockets());
+        assert!(
+            issues
+                .iter()
+                .any(|i| i.contains("is Rail but edge 1 is Road")),
+            "{issues:?}"
+        );
     }
 }

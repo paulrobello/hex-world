@@ -176,6 +176,7 @@ fn main() {
                 game::sync_view.in_set(app_plugins::AppSet::View),
                 sim::mirror_world.in_set(app_plugins::AppSet::Mirror),
                 sim::publish_cars.in_set(app_plugins::AppSet::Cars),
+                sim::publish_trains.in_set(app_plugins::AppSet::Cars),
                 publish_diag.in_set(app_plugins::AppSet::Diagnostics),
             ),
         )

@@ -39,7 +39,7 @@ export interface SlotBackend {
   remove(id: string): Promise<void>;
 }
 
-export const KIND_ORDER: SocketKind[] = ["Grass", "Forest", "Road", "River", "Beach", "Ocean"];
+export const KIND_ORDER: SocketKind[] = ["Grass", "Forest", "Road", "River", "Beach", "Ocean", "Rail"];
 
 export function mixOf(tiles: readonly PlayTile[]): Mix {
   const mix: Mix = {};

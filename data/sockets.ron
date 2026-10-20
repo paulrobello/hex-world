@@ -10,12 +10,19 @@
         // A coast never steps against grass or ocean: beach edges meet only beach edges.
         Beach: [Beach],
         Ocean: [Ocean],
+        // P3 rail meets only rail, as a road does: a line never dead-ends into an edge, so it ends
+        // only where the cell beyond is empty.
+        Rail: [Rail],
     },
     lanes: {
         // scripts/blender/kit/_road.py ROAD_WIDTH
         Road: (offset: 0.0, width: 6.0),
         // Water width. Provisional until the river asset family is modeled (F3).
         River: (offset: 0.0, width: 8.0),
+        // scripts/blender/kit/_rail.py: the 3.5 m ballast lane of every rail piece's socket-lane-*
+        // extras. The rail meets the hex border itself (one shared section), so Rail has no edge
+        // piece.
+        Rail: (offset: 0.0, width: 3.5),
     },
     edge_pieces: {
         Road: "road_straight_edge",

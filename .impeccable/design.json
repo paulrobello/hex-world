@@ -390,6 +390,22 @@
           "#e3edf8"
         ]
       },
+      "socket-rail": {
+        "role": "tertiary",
+        "displayName": "Rail",
+        "canonical": "rgb(152 128 214)",
+        "cssVar": "--k-T",
+        "tonalRamp": [
+          "#241a40",
+          "#3b2b6a",
+          "#523c93",
+          "#6a4fbd",
+          "#8669d4",
+          "#a690df",
+          "#c8b9ec",
+          "#ece6f9"
+        ]
+      },
       "lod-0": {
         "role": "tertiary",
         "displayName": "LOD 0",

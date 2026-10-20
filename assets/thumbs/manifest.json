@@ -116,6 +116,38 @@
       "road_junction-r0.webp",
       "road_junction-r1.webp"
     ],
+    "rail_straight": [
+      "rail_straight-r0.webp",
+      "rail_straight-r1.webp",
+      "rail_straight-r2.webp",
+      "rail_straight-r0.webp",
+      "rail_straight-r1.webp",
+      "rail_straight-r2.webp"
+    ],
+    "rail_bend_60": [
+      "rail_bend_60-r0.webp",
+      "rail_bend_60-r1.webp",
+      "rail_bend_60-r2.webp",
+      "rail_bend_60-r3.webp",
+      "rail_bend_60-r4.webp",
+      "rail_bend_60-r5.webp"
+    ],
+    "rail_junction": [
+      "rail_junction-r0.webp",
+      "rail_junction-r1.webp",
+      "rail_junction-r2.webp",
+      "rail_junction-r3.webp",
+      "rail_junction-r4.webp",
+      "rail_junction-r5.webp"
+    ],
+    "rail_road_crossing": [
+      "rail_road_crossing-r0.webp",
+      "rail_road_crossing-r1.webp",
+      "rail_road_crossing-r2.webp",
+      "rail_road_crossing-r0.webp",
+      "rail_road_crossing-r1.webp",
+      "rail_road_crossing-r2.webp"
+    ],
     "river_straight": [
       "river_straight-r0.webp",
       "river_straight-r1.webp",
@@ -139,6 +171,14 @@
       "river_road_bridge-r0.webp",
       "river_road_bridge-r1.webp",
       "river_road_bridge-r2.webp"
+    ],
+    "river_rail_bridge": [
+      "river_rail_bridge-r0.webp",
+      "river_rail_bridge-r1.webp",
+      "river_rail_bridge-r2.webp",
+      "river_rail_bridge-r0.webp",
+      "river_rail_bridge-r1.webp",
+      "river_rail_bridge-r2.webp"
     ],
     "river_spring": [
       "river_spring-r0.webp",

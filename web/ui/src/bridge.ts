@@ -2,7 +2,7 @@
 // (crates/hex-app/src/{control,game}.rs). The *_FIELDS tables are checked against
 // bridge-schema.json, which a Rust test regenerates from the real enums (make ui-schema).
 
-export type SocketKind = "Grass" | "Forest" | "Road" | "River" | "Beach" | "Ocean";
+export type SocketKind = "Grass" | "Forest" | "Road" | "River" | "Beach" | "Ocean" | "Rail";
 export type Tool = "place" | "bulldoze";
 export type Spin = "cw" | "ccw";
 export type ToggleTarget = "bulldoze" | "inventory" | "photo";
@@ -254,6 +254,23 @@ export interface CarInfo {
   z: number;
 }
 
+/** A train in `play.train_list` (P3): its sim id, front world XZ, speed and what it waits for. */
+export interface TrainInfo {
+  id: number;
+  x: number;
+  z: number;
+  speed: number;
+  waiting: "none" | "line_end" | "train" | "junction";
+}
+
+/** A rail junction in `play.junctions`: its cell, the leg its switch is set to and the legs facing trains took. */
+export interface JunctionInfo {
+  q: number;
+  r: number;
+  set: "straight" | "branch";
+  facing: ("straight" | "branch")[];
+}
+
 export interface PlayState {
   tool: Tool;
   selected: string;
@@ -283,6 +300,12 @@ export interface PlayState {
   car_list: CarInfo[];
   connected_destinations: number;
   spawn_rate_hz: number;
+  /** Trains running (P3). */
+  trains: number;
+  train_list: TrainInfo[];
+  junctions: JunctionInfo[];
+  /** Level crossings closed to cars while a train is near. */
+  closed_crossings: Cell[];
   rising: RisingTile[];
   reduced_motion: boolean;
   /** The ground point the camera orbits, in world metres, or null without a camera. */
@@ -356,7 +379,7 @@ export interface PhotoState {
 }
 
 /** What a prop is to the player (`walk::prop_kind`): walk blocks and photo focus hits report it. */
-export type PropKind = "building" | "tree" | "hay" | "animal" | "log" | "fence" | "rock";
+export type PropKind = "building" | "tree" | "hay" | "animal" | "log" | "fence" | "lever" | "rock";
 
 /** Why the walker's latest move stopped. */
 export type WalkBlocked = PropKind | "water" | "edge" | "steep";
@@ -647,6 +670,10 @@ export const STATE_FIELDS = {
     car_list: true,
     connected_destinations: true,
     spawn_rate_hz: true,
+    trains: true,
+    train_list: true,
+    junctions: true,
+    closed_crossings: true,
     rising: true,
     reduced_motion: true,
     focus: true,

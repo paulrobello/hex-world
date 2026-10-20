@@ -16,6 +16,9 @@
       "Ocean": [
         "Ocean"
       ],
+      "Rail": [
+        "Rail"
+      ],
       "River": [
         "River"
       ],
@@ -101,6 +104,30 @@
         ]
       },
       {
+        "id": "rail_straight",
+        "tiles": [
+          "rail_straight"
+        ]
+      },
+      {
+        "id": "rail_bend_60",
+        "tiles": [
+          "rail_bend_60"
+        ]
+      },
+      {
+        "id": "rail_junction",
+        "tiles": [
+          "rail_junction"
+        ]
+      },
+      {
+        "id": "rail_road_crossing",
+        "tiles": [
+          "rail_road_crossing"
+        ]
+      },
+      {
         "id": "river_straight",
         "tiles": [
           "river_straight"
@@ -116,6 +143,12 @@
         "id": "river_road_bridge",
         "tiles": [
           "river_road_bridge"
+        ]
+      },
+      {
+        "id": "river_rail_bridge",
+        "tiles": [
+          "river_rail_bridge"
         ]
       },
       {
@@ -443,6 +476,94 @@
       },
       {
         "edges": [
+          "Rail",
+          "Grass",
+          "Grass",
+          "Rail",
+          "Grass",
+          "Grass"
+        ],
+        "id": "rail_straight",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "scatter": [
+          "wildflower_single"
+        ]
+      },
+      {
+        "edges": [
+          "Rail",
+          "Rail",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "id": "rail_bend_60",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "scatter": [
+          "wildflower_single"
+        ]
+      },
+      {
+        "edges": [
+          "Rail",
+          "Rail",
+          "Grass",
+          "Rail",
+          "Grass",
+          "Grass"
+        ],
+        "id": "rail_junction",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "scatter": [
+          "wildflower_single"
+        ]
+      },
+      {
+        "edges": [
+          "Rail",
+          "Road",
+          "Grass",
+          "Rail",
+          "Road",
+          "Grass"
+        ],
+        "id": "rail_road_crossing",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "scatter": [
+          "wildflower_single"
+        ]
+      },
+      {
+        "edges": [
           "River",
           "Grass",
           "Grass",
@@ -494,6 +615,26 @@
         ],
         "heroes": false,
         "id": "river_road_bridge",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "scatter": []
+      },
+      {
+        "edges": [
+          "River",
+          "Rail",
+          "Grass",
+          "River",
+          "Rail",
+          "Grass"
+        ],
+        "id": "river_rail_bridge",
         "land": [
           null,
           null,
@@ -1041,6 +1182,7 @@
       "can_undo",
       "car_list",
       "cars",
+      "closed_crossings",
       "connected_destinations",
       "focus",
       "frontier",
@@ -1049,6 +1191,7 @@
       "hovered_kind",
       "inventory",
       "inventory_open",
+      "junctions",
       "last_result",
       "orbit",
       "parked_cars",
@@ -1062,6 +1205,8 @@
       "spawn_rate_hz",
       "tiles",
       "tool",
+      "train_list",
+      "trains",
       "walk_mode",
       "zoom"
     ],

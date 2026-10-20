@@ -44,6 +44,22 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
         include_str!("../../../data/tiles/road_junction.ron"),
     ),
     (
+        "rail_straight",
+        include_str!("../../../data/tiles/rail_straight.ron"),
+    ),
+    (
+        "rail_bend_60",
+        include_str!("../../../data/tiles/rail_bend_60.ron"),
+    ),
+    (
+        "rail_junction",
+        include_str!("../../../data/tiles/rail_junction.ron"),
+    ),
+    (
+        "rail_road_crossing",
+        include_str!("../../../data/tiles/rail_road_crossing.ron"),
+    ),
+    (
         "river_straight",
         include_str!("../../../data/tiles/river_straight.ron"),
     ),
@@ -54,6 +70,10 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
     (
         "river_road_bridge",
         include_str!("../../../data/tiles/river_road_bridge.ron"),
+    ),
+    (
+        "river_rail_bridge",
+        include_str!("../../../data/tiles/river_rail_bridge.ron"),
     ),
     (
         "river_spring",

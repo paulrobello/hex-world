@@ -1,0 +1,20 @@
+// The rail (edges 1-4) crosses the river (edges 0-3) at 60 degrees on a level stone arch
+// (P3, river_rail_bridge_center): the rail top stays at 0.46 m across the arch.
+(
+    id: "river_rail_bridge",
+    biome: Grass,
+    base: "river_straight_base",
+    edges: (
+        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
+        (kind: Grass),
+        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
+        (kind: Grass),
+    ),
+    center: Some("river_rail_bridge_center"),
+    networks: [
+        (kind: River, from: Edge(0), to: Edge(3)),
+        (kind: Rail, from: Edge(1), to: Edge(4)),
+    ],
+)

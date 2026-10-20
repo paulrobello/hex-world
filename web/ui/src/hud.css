@@ -133,6 +133,7 @@
 /* Socket colours as data: one class per kind (no inline styles under the CSP). */
 .k-G { --k: var(--k-G); } .k-F { --k: var(--k-F); } .k-R { --k: var(--k-R); }
 .k-V { --k: var(--k-V); } .k-B { --k: var(--k-B); } .k-O { --k: var(--k-O); }
+.k-T { --k: var(--k-T); }
 .key__list i { background: var(--k); }
 .key__edge, .glyph .g-edge { stroke: var(--k); }
 .glyph .g-fill { fill: var(--k); stroke: none; }

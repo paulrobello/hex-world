@@ -112,6 +112,22 @@ pub const OBSTACLES: &[&str] = &[
     "bush_verge_c",
 ];
 
+/// Parts of centre pieces that block the walker, as (centre piece, part, footprint corners in the
+/// tile frame). A centre's own collider is its whole bed, so a part that stands up from it gets a
+/// footprint here: the junction's point lever (`_rail_junction.py` `lever_parts`: the base timber
+/// 0.7 m in from edge 0, 2.6 m off the main line away from corner 0, and the lever leaning 0.45 m
+/// toward edge 3). The rails and sleepers are walkable ground.
+pub const CENTRE_OBSTACLES: &[(&str, &str, [[f32; 2]; 4])] = &[(
+    "rail_junction_center",
+    "rail_lever",
+    [
+        [12.69, -2.85],
+        [13.46, -2.85],
+        [13.46, -2.35],
+        [12.69, -2.35],
+    ],
+)];
+
 /// Why a move stopped.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Blocked {
@@ -579,7 +595,8 @@ impl PieceShape {
     }
 }
 
-/// What a prop is to the player: `building`, `tree`, `hay`, `animal`, `log`, `fence` or `rock`.
+/// What a prop is to the player: `building`, `tree`, `hay`, `animal`, `log`, `fence`, `lever` or
+/// `rock`.
 /// Walk mode's [`Blocked::reason`] and photo mode's click to focus both report it.
 pub fn prop_kind(piece: &str) -> &'static str {
     match piece {
@@ -602,6 +619,7 @@ pub fn prop_kind(piece: &str) -> &'static str {
         p if p.starts_with("animal_") => "animal",
         p if p.starts_with("log_") => "log",
         p if p.starts_with("fence") => "fence",
+        "rail_lever" => "lever",
         _ => "rock",
     }
 }
@@ -810,6 +828,15 @@ impl WalkGround {
                     if s.drawn[rule] && OBSTACLES.contains(&piece) {
                         place(piece, &shape(piece), &(root * inst.transform()));
                     }
+                }
+            }
+            for (centre, part, corners) in CENTRE_OBSTACLES {
+                if def.center.as_ref().is_some_and(|c| c.as_str() == *centre) {
+                    let poly: Vec<Vec2> = corners.iter().map(|c| Vec2::from(*c)).collect();
+                    obs.push(Obstacle {
+                        piece: (*part).to_owned(),
+                        poly: place_hull(&poly, &root),
+                    });
                 }
             }
             if !obs.is_empty() {
@@ -2192,5 +2219,80 @@ pub(crate) mod tests {
         // A focus off the map comes back to the tile.
         let far = g.nearest_stand(Vec2::new(200.0, 0.0)).unwrap();
         assert!(g.tile_at(far.xz()).is_some());
+    }
+
+    /// The junction's point lever footprint covers the lever's LOD0 geometry (the `rail_lever`
+    /// slot) and the base timber under it, in the tile frame.
+    #[test]
+    fn the_lever_footprint_covers_the_lever_geometry() {
+        let tris = mesh_tris("rail_junction_center", "lod0").expect("junction lod0");
+        let lever: Vec<Vec2> = tris
+            .iter()
+            .filter(|(_, s)| s == "rail_lever")
+            .flat_map(|(t, _)| t.iter().map(|p| Vec2::new(p[0], p[2])))
+            .collect();
+        assert!(!lever.is_empty(), "the junction draws a rail_lever slot");
+        let (_, _, corners) = CENTRE_OBSTACLES[0];
+        let (lo, hi) = (Vec2::from(corners[0]), Vec2::from(corners[2]));
+        for p in &lever {
+            assert!(
+                p.x >= lo.x - 0.05
+                    && p.x <= hi.x + 0.05
+                    && p.y >= lo.y - 0.05
+                    && p.y <= hi.y + 0.05,
+                "lever vertex {p} outside the footprint {lo}..{hi}"
+            );
+        }
+    }
+
+    /// Criterion 3 (walker): the junction lever blocks the walker at every rotation, reported as a
+    /// lever, while the track itself is walkable: across the straight, the bend and the junction's
+    /// legs the walker never meets a step it cannot climb.
+    #[test]
+    fn the_junction_lever_blocks_the_walker_and_the_track_is_ground() {
+        for rotation in 0..6u8 {
+            let g = world(&[(0, 0, "rail_junction", rotation)]);
+            let turn = Quat::from_rotation_y(-(f32::from(rotation)) * std::f32::consts::FRAC_PI_3);
+            let at = |x: f32, z: f32| (turn * Vec3::new(x, 0.0, z)).xz();
+            // From 3 m off the lever, walk at it.
+            let lever = at(13.07, -2.6);
+            let from = at(13.07, -6.0);
+            let s = walk(&g, from, lever - from, 4.0);
+            let b = s.blocked.expect("the lever stops the walker");
+            assert_eq!(b.piece(), Some("rail_lever"), "r{rotation}: {b:?}");
+            assert_eq!(b.reason(), "lever");
+            assert!(
+                s.pos.xz().distance(lever) > 0.3,
+                "r{rotation}: walked into the lever"
+            );
+        }
+        let g = world(&[
+            (0, 0, "rail_straight", 0),
+            (1, 0, "rail_bend_60", 0),
+            (-1, 0, "rail_junction", 0),
+        ]);
+        // Across the straight, the bend's arc and the junction's two legs past the lever.
+        for (start, dir, dist) in [
+            (centre(0, 0) + Vec2::new(0.0, -6.0), Vec2::Y, 12.0),
+            (
+                centre(1, 0) + Vec2::new(3.0, 1.0),
+                Vec2::new(1.0, 0.857),
+                8.0,
+            ),
+            (centre(-1, 0) + Vec2::new(-4.0, -6.0), Vec2::Y, 12.0),
+            (
+                centre(-1, 0) + Vec2::new(9.0, 6.0),
+                Vec2::new(-1.0, -0.4),
+                7.0,
+            ),
+        ] {
+            let s = walk(&g, start, dir, dist);
+            assert!(
+                s.blocked.is_none(),
+                "from {start} along {dir}: blocked by {:?} at {}",
+                s.blocked,
+                s.pos
+            );
+        }
     }
 }

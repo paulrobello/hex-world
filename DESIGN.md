@@ -232,7 +232,7 @@ A dark survey-blue paper with ink in three strengths, one magenta for selection,
 - **Survey Amber** (`caution`): "Not saved" and caution notes only.
 
 ### Tertiary: the six socket colours
-- **Grass** (`socket-grass`), **Forest** (`socket-forest`), **Road** (`socket-road`), **River** (`socket-river`), **Beach** (`socket-beach`) and **Ocean** (`socket-ocean`). In CSS these are `--k-G`, `--k-F`, `--k-R`, `--k-V`, `--k-B` and `--k-O`. They drive the tile glyph edges and fill, the row socket hex, the slot key's edge marks, the Worlds mix strip, the loading hex key, the ghost's road and river lanes, and the in-world socket key marks.
+- **Grass** (`socket-grass`), **Forest** (`socket-forest`), **Road** (`socket-road`), **River** (`socket-river`), **Beach** (`socket-beach`) and **Ocean** (`socket-ocean`), plus **Rail** (`socket-rail`, P3, a violet kept clear of the pick magenta). In CSS these are `--k-G`, `--k-F`, `--k-R`, `--k-V`, `--k-B`, `--k-O` and `--k-T`. They drive the tile glyph edges and fill, the row socket hex, the slot key's edge marks, the Worlds mix strip, the loading hex key, the ghost's road and river lanes, and the in-world socket key marks.
 
 ### Debug data: the LOD levels
 - **LOD 0**, **LOD 1** and **LOD 2** (`lod-0`, `lod-1`, `lod-2`; `--lod-0` to `--lod-2`): three viridis stops ordered by lightness, so the levels separate without hue. They are the engine's LOD tint and appear only in the Settings Debug tab's LOD key, each beside its level name, distance band and drawn count. Developer overlays only; never chrome.

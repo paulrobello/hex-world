@@ -9,6 +9,7 @@ use hex_play::{
     ActiveScenario, AgentsPaused, Scenario,
     cars::{CarKind, CarPose, CarsView},
     play::{PlaySystems, rise::PlayRises},
+    trains::{StockKind, StockPose, TrainsView},
 };
 use hex_sim::{SimConfig, Simulation, TICK_HZ};
 use serde_json::{Value, json};
@@ -52,6 +53,12 @@ pub struct SimStats {
     pub spawn_rate_hz: f32,
     /// Every driving car: id, trip phase and position (for scripted checkpoints).
     pub car_list: Vec<(u64, &'static str, [f32; 2])>,
+    /// Every train: id, front world XZ, speed (m/s) and what it waits for (P3).
+    pub train_list: Vec<(u64, [f32; 2], f32, String)>,
+    /// Every junction: cell, the leg its switch is set to and the legs facing trains took.
+    pub junctions: Vec<(Axial, &'static str, Vec<&'static str>)>,
+    /// Level crossings closed to cars.
+    pub closed_crossings: Vec<Axial>,
 }
 
 #[derive(Resource)]
@@ -180,6 +187,27 @@ impl CarSim {
                 .iter()
                 .map(|c| (c.id().0, c.phase().as_str(), c.pose_at(1.0).pos))
                 .collect(),
+            train_list: self
+                .sim
+                .rails()
+                .trains()
+                .iter()
+                .map(|t| (t.id().0, t.front(), t.speed(), blocker_name(t.blocker())))
+                .collect(),
+            junctions: self
+                .sim
+                .rails()
+                .junctions()
+                .iter()
+                .map(|j| {
+                    (
+                        j.cell(),
+                        j.set().as_str(),
+                        j.facing().iter().map(|l| l.as_str()).collect(),
+                    )
+                })
+                .collect(),
+            closed_crossings: self.sim.rails().closed_crossings(),
         };
     }
 
@@ -209,6 +237,52 @@ impl CarSim {
             json!(self.stats.connected_destinations),
         );
         map.insert("spawn_rate_hz".into(), json!(rate));
+        map.insert("trains".into(), json!(self.stats.train_list.len()));
+        map.insert(
+            "train_list".into(),
+            json!(
+                self.stats
+                    .train_list
+                    .iter()
+                    .map(|(id, p, v, b)| json!({
+                        "id": id, "x": round(p[0]), "z": round(p[1]), "speed": round(*v), "waiting": b
+                    }))
+                    .collect::<Vec<_>>()
+            ),
+        );
+        map.insert(
+            "junctions".into(),
+            json!(
+                self.stats
+                    .junctions
+                    .iter()
+                    .map(|(c, set, facing)| json!({
+                        "q": c.q, "r": c.r, "set": set, "facing": facing
+                    }))
+                    .collect::<Vec<_>>()
+            ),
+        );
+        map.insert(
+            "closed_crossings".into(),
+            json!(
+                self.stats
+                    .closed_crossings
+                    .iter()
+                    .map(|c| json!({"q": c.q, "r": c.r}))
+                    .collect::<Vec<_>>()
+            ),
+        );
+    }
+}
+
+/// What a train waits for, as the state JSON names it.
+fn blocker_name(b: hex_sim::rail::Blocker) -> String {
+    use hex_sim::rail::Blocker;
+    match b {
+        Blocker::Clear => "none".into(),
+        Blocker::LineEnd => "line_end".into(),
+        Blocker::Train(_) => "train".into(),
+        Blocker::Junction(_) => "junction".into(),
     }
 }
 
@@ -226,7 +300,7 @@ fn car_event(id: u64, cell: Axial, pos: [f32; 2], parked: bool) -> GameEvent {
 /// Mirrors the world into the sim whenever the game state or a rise changed (after
 /// `game::apply_actions` and the play systems). In the play scenario a placed tile waits for its
 /// rise's agents stage ([`CarSim::mirror_gated`]).
-/// The `networks` debug overlay: every road and river link's centerline in its socket colour, each
+/// The `networks` debug overlay: every road, river and rail link's centerline in its socket colour, each
 /// node as a small ring, and destinations (car spawns and sinks) as a larger one. Gated by a run
 /// condition, so it does nothing while the overlay is off.
 pub fn draw_networks(
@@ -241,6 +315,7 @@ pub fn draw_networks(
     for (kind, socket) in [
         (NetworkKind::Road, SocketKind::Road),
         (NetworkKind::River, SocketKind::River),
+        (NetworkKind::Rail, SocketKind::Rail),
     ] {
         let [r, g, b] = hex_play::play::affordances::socket_rgb(socket);
         let color = Color::srgb_u8(r, g, b);
@@ -295,6 +370,39 @@ pub fn tick(mut sim: ResMut<CarSim>, active: Res<ActiveScenario>, paused: Res<Ag
 /// from spot to spot, so the same entity parks, pulls out and parks again without popping. Paused,
 /// the poses stay as last written: the fixed clock's overstep keeps cycling, and interpolating with
 /// it would rock each car between two poses.
+/// Writes every train vehicle's pose between the last two ticks (as `publish_cars` does for the
+/// cars): each vehicle keeps its id (train id x 4 + place in the consist) for the train's life.
+pub fn publish_trains(
+    sim: Res<CarSim>,
+    fixed: Res<Time<Fixed>>,
+    paused: Res<AgentsPaused>,
+    mut view: ResMut<TrainsView>,
+) {
+    if paused.0 {
+        return;
+    }
+    let trains = sim.sim.rails().trains();
+    if trains.is_empty() && view.vehicles.is_empty() {
+        return;
+    }
+    let alpha = fixed.overstep_fraction();
+    view.vehicles.clear();
+    for t in trains {
+        for (k, v) in t.vehicles(alpha).into_iter().enumerate() {
+            view.vehicles.push(StockPose {
+                id: t.id().0 * 4 + k as u64,
+                train: t.id().0,
+                kind: match v.kind {
+                    hex_sim::VehicleKind::Engine => StockKind::Engine,
+                    hex_sim::VehicleKind::Carriage => StockKind::Carriage,
+                },
+                pos: v.pose.pos,
+                yaw: v.pose.yaw(),
+            });
+        }
+    }
+}
+
 pub fn publish_cars(
     sim: Res<CarSim>,
     fixed: Res<Time<Fixed>>,
@@ -370,7 +478,7 @@ mod tests {
     /// houses. Returns the number of connected house pairs.
     fn assert_matches_world(mirror: &CarSim, world: &World, catalog: &TileCatalog) -> usize {
         let fresh = Simulation::from_world(world, catalog, SimConfig::default());
-        for kind in [NetworkKind::Road, NetworkKind::River] {
+        for kind in NetworkKind::ALL {
             let (a, b) = (mirror.sim.network(kind), fresh.network(kind));
             assert_eq!(a.nodes().count(), b.nodes().count(), "{kind:?} nodes");
             assert_eq!(a.links().count(), b.links().count(), "{kind:?} links");
@@ -398,7 +506,10 @@ mod tests {
         connected
     }
 
-    const ROADS: [&str; 5] = [
+    const ROADS: [&str; 8] = [
+        "rail_straight",
+        "rail_bend_60",
+        "rail_junction",
         "road_straight",
         "road_bend_60",
         "road_bend_120",
@@ -622,5 +733,45 @@ mod tests {
         let undone = &dumps["cars-05-undo"];
         assert_eq!(undone.connected_destinations, 2);
         assert_eq!(undone.spawn_rate_hz, rate);
+    }
+
+    /// The rail evidence world (docs/checkpoints/rail/rail-play.json) replayed headlessly: every
+    /// placement lands at the rotation the layout needs (auto-rotate has one legal orientation for
+    /// each), and over ten simulated minutes the triangle loop's two trains throw the switch for
+    /// both of its routes. Every train ends up trailing round the loop, so the spur and its level
+    /// crossing see no train after the first laps: the crossing hold is hex-sim's crossing test.
+    #[test]
+    fn rail_checkpoint_layout_places_and_runs_two_trains_through_the_junction() {
+        let json = include_str!("../../../docs/checkpoints/rail/rail-play.json");
+        let mut g = GameState::new(1);
+        for c in parse_script(json).unwrap() {
+            if matches!(c, Command::Camera { .. }) {
+                break;
+            }
+            if let Some(a) = c.action() {
+                g.apply(a);
+            }
+        }
+        let rot = |q: i32, r: i32| {
+            g.world
+                .tile(Axial::new(q, r))
+                .map(|t| (t.def.clone(), t.rotation))
+        };
+        assert_eq!(rot(-1, -1), Some(("rail_junction".into(), 0)));
+        assert!(matches!(rot(-2, -1), Some((d, 0 | 3)) if d == "rail_road_crossing"));
+        assert_eq!(rot(2, -1), Some(("rail_bend_60".into(), 2)));
+        assert_eq!(rot(-1, 2), Some(("rail_bend_60".into(), 4)));
+        assert_eq!(rot(-2, 0), Some(("house_cluster".into(), 4)));
+        assert_eq!(g.world.tiles().len(), 14);
+        let mut sim = CarSim::new(&g.world, &g.catalog);
+        for _ in 0..600 * hex_sim::TICK_HZ {
+            sim.tick();
+        }
+        assert_eq!(sim.stats.train_list.len(), 2, "{:?}", sim.stats.train_list);
+        // On a loop with one turnout every train ends up trailing through it (the toe faces the
+        // loop), so here the switch is thrown for the trailing routes, spur to loop and loop to
+        // loop; the alternating facing routes are hex-sim's Y tests (tests/rail.rs).
+        let j = &sim.sim.rails().junctions()[0];
+        assert!(j.throws() >= 2, "the switch moved {} times", j.throws());
     }
 }

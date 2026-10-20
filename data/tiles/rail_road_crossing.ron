@@ -1,0 +1,27 @@
+// Rail/road level crossing at 60 degrees (P3, rail_road_crossing_center): the rail runs edge 0 to
+// edge 3, the road edge 1 to edge 4, over a plank deck at the rail top (0.46 m) with four field
+// gates standing open along the track. Cars wait at the crossing while a train is near it
+// (hex-sim rail).
+(
+    id: "rail_road_crossing",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+    ),
+    center: Some("rail_road_crossing_center"),
+    networks: [
+        (kind: Rail, from: Edge(0), to: Edge(3)),
+        (kind: Road, from: Edge(1), to: Edge(4)),
+    ],
+    props: (
+        scatter: [
+            (piece: "wildflower_single", density: 3.0, vary: 0.8),
+        ],
+    ),
+)

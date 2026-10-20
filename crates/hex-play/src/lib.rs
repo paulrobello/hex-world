@@ -16,6 +16,7 @@ pub mod fps;
 pub mod gpu_timing;
 pub mod play;
 pub mod tier;
+pub mod trains;
 pub mod walk;
 pub mod water;
 /// Installs play presentation after `HexRenderPlugin`, before the first schedule runs.
@@ -31,6 +32,7 @@ impl Plugin for HexPlayPlugin {
             .add_plugins((
                 play::PlayPlugin,
                 cars::CarsPlugin,
+                trains::TrainsPlugin,
                 boids::BoidsPlugin {
                     budget: boids::BoidBudget::for_tier(config.tier),
                 },

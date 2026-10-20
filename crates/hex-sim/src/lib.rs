@@ -8,11 +8,13 @@
 
 pub mod geom;
 pub mod network;
+pub mod rail;
 pub mod route;
 pub mod sim;
 
 pub use geom::Pose;
 pub use network::{Components, Link, LinkId, Network, Node, NodeId, NodeKey};
+pub use rail::{Railway, Train, TrainId, VehicleKind, VehiclePose};
 pub use route::Route;
 pub use sim::{
     Car, CarId, CarPhase, HIGH_TIER_CAR_CAP, Home, MAX_LANE_OFFSET, ParkedCar, SimConfig,

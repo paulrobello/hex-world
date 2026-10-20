@@ -124,6 +124,9 @@ pub struct Car {
     prev: f32,
     /// Distance along `path` now.
     s: f32,
+    /// Level crossings on the trip: the crossing cell and the distance along `path` where the car
+    /// holds while the crossing is closed (P3).
+    crossings: Vec<(Axial, f32)>,
 }
 
 impl Car {
@@ -193,6 +196,12 @@ impl Car {
     pub fn pose_at(&self, alpha: f32) -> Pose {
         let a = alpha.clamp(0.0, 1.0);
         self.pose_at_distance(self.prev + (self.s - self.prev) * a)
+    }
+
+    /// The level crossings on the trip: each crossing cell and the distance along the path where
+    /// the car holds while it is closed.
+    pub fn crossings(&self) -> &[(Axial, f32)] {
+        &self.crossings
     }
 
     pub fn arrived(&self) -> bool {
@@ -357,6 +366,7 @@ pub struct Simulation {
     rng: Rng,
     roads: Network,
     rivers: Network,
+    rails: crate::rail::Railway,
     clusters: BTreeMap<Axial, Cluster>,
     /// Driving cars in id order.
     cars: Vec<Car>,
@@ -379,6 +389,7 @@ impl Simulation {
             rng: Rng(seed),
             roads: Network::new(NetworkKind::Road),
             rivers: Network::new(NetworkKind::River),
+            rails: crate::rail::Railway::new(),
             clusters: BTreeMap::new(),
             cars: vec![],
             parked: vec![],
@@ -413,6 +424,7 @@ impl Simulation {
         self.drop_cars_on(cell);
         self.roads.insert_tile(cell, def, rotation);
         self.rivers.insert_tile(cell, def, rotation);
+        self.rails.insert_tile(cell, def, rotation);
         if !def.parking.is_empty() {
             self.clusters
                 .insert(cell, Cluster::new(cell, def, rotation));
@@ -427,14 +439,18 @@ impl Simulation {
         self.drop_cars_on(cell);
         self.roads.remove_tile(cell);
         self.rivers.remove_tile(cell);
+        self.rails.remove_tile(cell);
         self.refill();
     }
 
-    /// Advances one fixed tick of [`TICK_SECONDS`]: moves every driving car, parks the cars that
+    /// Advances one fixed tick of [`TICK_SECONDS`]: moves the trains (closing the level crossings
+    /// they near), then every driving car, holding short of a closed crossing; parks the cars that
     /// had already arrived (so the final approach still renders), then starts departures.
     pub fn tick(&mut self) {
         self.ticks += 1;
+        self.rails.tick();
         let step = self.config.car_speed * TICK_SECONDS;
+        let closed = self.rails.closed_crossings();
         let mut arrived = vec![];
         self.cars.retain_mut(|car| {
             if car.s >= car.path.length() {
@@ -442,7 +458,13 @@ impl Simulation {
                 return false;
             }
             car.prev = car.s;
-            car.s = (car.s + step).min(car.path.length());
+            let mut next = (car.s + step).min(car.path.length());
+            for &(cell, stop) in &car.crossings {
+                if closed.contains(&cell) && car.s <= stop + 1e-3 && next > stop {
+                    next = stop.max(car.s);
+                }
+            }
+            car.s = next;
             true
         });
         for (id, home, spot) in arrived {
@@ -497,10 +519,16 @@ impl Simulation {
         self.refused
     }
 
+    /// The rail network, its junctions, crossings and trains (P3).
+    pub fn rails(&self) -> &crate::rail::Railway {
+        &self.rails
+    }
+
     pub fn network(&self, kind: NetworkKind) -> &Network {
         match kind {
             NetworkKind::Road => &self.roads,
             NetworkKind::River => &self.rivers,
+            NetworkKind::Rail => self.rails.network(),
         }
     }
 
@@ -662,6 +690,19 @@ impl Simulation {
         let lane_end = geom::polyline_length(&points);
         points.extend(enter_pts.into_iter().skip(1));
 
+        // Where the trip crosses a railway: the car's centre holds CAR_CROSSING_STOP short of the
+        // crossing point while the crossing is closed.
+        let cells: std::collections::BTreeSet<Axial> = route.links.iter().map(|l| l.cell).collect();
+        let crossings: Vec<(Axial, f32)> = self
+            .rails
+            .crossings()
+            .iter()
+            .filter(|x| cells.contains(&x.cell()))
+            .filter_map(|x| {
+                let (d, s) = crate::rail::closest_distance(&points, x.at());
+                (d < 3.0).then_some((x.cell(), (s - crate::rail::CAR_CROSSING_STOP).max(0.0)))
+            })
+            .collect();
         let id = car.id;
         self.parked.retain(|c| c.id != id);
         if let Some(s) = self.spot_mut(car.spot) {
@@ -683,6 +724,7 @@ impl Simulation {
             lanes: (lane_start, lane_end),
             prev: 0.0,
             s: 0.0,
+            crossings,
         };
         let at = self.cars.partition_point(|c| c.id < id);
         self.cars.insert(at, new);

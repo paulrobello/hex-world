@@ -3300,9 +3300,10 @@ fn center_lanes_come_from_the_tiles() {
     assert_eq!(center_lanes("not_a_piece"), vec![0, 3]);
 }
 
-/// A lane-socketed centre that no tile names yet (the rail bend, ahead of its Rail socket and
-/// tile) is checked at the edges its own sockets declare, not the [0, 3] fallback, which would
-/// fail its lane-1 socket. Tile-named centres keep the tile's lanes.
+/// A lane-socketed centre is checked at the edges its tile gives it, which must equal the edges its
+/// own sockets declare. The rail bend was checked by its declared sockets while no tile named it
+/// (the [0, 3] fallback would fail its lane-1 socket); the `rail_bend_60` tile now names it, and
+/// the tile's lanes agree with the sockets. Tile-named centres keep the tile's lanes.
 #[test]
 fn untiled_lane_socket_centre_is_checked_at_its_declared_edges() {
     let k = kits()
@@ -3316,10 +3317,17 @@ fn untiled_lane_socket_centre_is_checked_at_its_declared_edges() {
         .expect("runtime kit holds rail_bend_60_center");
     let piece = |id: &str| k.manifest.pieces.iter().find(|p| p.id == id).unwrap();
     let bend = piece("rail_bend_60_center");
-    assert!(center_tile(&bend.id).is_none());
-    assert_eq!(center_lanes(&bend.id), vec![0, 3]);
+    assert!(
+        center_tile(&bend.id).is_some(),
+        "the rail_bend_60 tile names it"
+    );
+    assert_eq!(center_lanes(&bend.id), vec![0, 1]);
     assert_eq!(lane_socket_edges(&k, bend), BTreeSet::from([0, 1]));
     assert_eq!(joint_lanes(&k, bend), vec![0, 1]);
+    assert_eq!(
+        joint_lanes(&k, piece("rail_junction_center")),
+        vec![0, 1, 3]
+    );
     assert_eq!(joint_lanes(&k, piece("rail_straight_center")), vec![0, 3]);
     // Tile-named centres: the tile decides, declared sockets or not.
     assert_eq!(joint_lanes(&k, piece("house_pad")), vec![0]);

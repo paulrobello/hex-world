@@ -648,32 +648,9 @@ mod tests {
         assert!(first.len() >= 6, "{first:?}");
     }
 
-    const CROSSING: &str = r#"(
-    id: "rail_road_crossing",
-    biome: Grass,
-    base: "meadow_base",
-    edges: (
-        (kind: Grass),
-        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
-        (kind: Grass),
-        (kind: Grass),
-        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
-        (kind: Grass),
-    ),
-    center: Some("rail_road_crossing_center"),
-    networks: [
-        (kind: Road, from: Edge(1), to: Edge(4)),
-    ],
-)"#;
-
+    /// The builtin catalog, which carries the level crossing tile (`data/tiles/rail_road_crossing.ron`).
     fn catalog_with_crossing() -> hex_core::TileCatalog {
-        let b = hex_core::TileCatalog::builtin().unwrap();
-        let c = hex_core::TileCatalog::from_ron(
-            hex_core::SOCKETS_RON,
-            &[("rail_road_crossing", CROSSING)],
-        )
-        .unwrap();
-        hex_core::TileCatalog::new(b.sockets().clone(), [b.tiles(), c.tiles()].concat()).unwrap()
+        hex_core::TileCatalog::builtin().unwrap()
     }
 
     /// The crossing deck's top, flush with the rail heads: `RAIL_TOP` in `_rail.py`.
@@ -802,7 +779,8 @@ mod tests {
     fn cars_on_every_road_tile_stay_on_the_crown() {
         let c = hex_core::TileCatalog::builtin().unwrap();
         let mut checked = vec![];
-        for def in c.tiles() {
+        // The level crossing's raised deck is the deck tests' (`a_car_on_the_crossing_deck_...`).
+        for def in c.tiles().iter().filter(|d| d.id != "rail_road_crossing") {
             let lines = road_lines(def);
             if lines.is_empty() && def.parking.is_empty() {
                 continue;
