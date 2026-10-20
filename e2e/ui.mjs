@@ -568,6 +568,28 @@ try {
   await key("ControlOrMeta+z");
   await until(async () => !tileAt(await play(), ...wheatAt), "undo removes the wheat field");
   check((await play()).tiles.length === wheatBefore, "the wheat field undo restores the tile count");
+  // The bakery tile (owner A17: its own tile with a road through it and a forecourt where visitors
+  // park) is in the Tiles sheet with its baked thumbnail and places, auto-rotated with its grass
+  // edges to the meadows, in the slot the farm's undo freed; undone too.
+  check(await page.locator(".row[data-tile=bakery]").count() > 0, "the Tiles sheet lists the bakery");
+  const bakeryThumb = await page.locator(".row[data-tile=bakery] img.row__thumb").first().getAttribute("src");
+  check(/bakery-r[0-2]\.webp/.test(bakeryThumb ?? ""), `the bakery row shows its thumbnail (${bakeryThumb})`);
+  check((await text(".row[data-tile=bakery]")).includes("Bakery"), "the bakery row is named Bakery");
+  const bakeryAt = farmAt;
+  check(!tileAt(await play(), ...bakeryAt), "(-1, 1) is free for the bakery");
+  await page.evaluate(() => window.hexWorld.selectTile("bakery"));
+  await until(async () => (await play()).selected === "bakery", "Bakery selected");
+  await events();
+  const bakeryBefore = (await play()).tiles.length;
+  await page.evaluate(([q, r]) => window.hexWorld.placeTile(q, r), bakeryAt);
+  await until(async () => tileAt(await play(), ...bakeryAt)?.tile === "bakery", "the bakery is placed at (-1, 1) beside the meadows");
+  check((await play()).tiles.length === bakeryBefore + 1, "placing the bakery adds one tile");
+  check((await events()).some((e) => e.type === "tilePlaced" && same(e, ...bakeryAt) && e.tile === "bakery"), "tilePlaced names the bakery");
+  await page.waitForTimeout(2600);
+  await placementShot("bakery-placed");
+  await key("ControlOrMeta+z");
+  await until(async () => !tileAt(await play(), ...bakeryAt), "undo removes the bakery");
+  check((await play()).tiles.length === bakeryBefore, "the bakery undo restores the tile count");
 
   // S8 photo mode (PRD §4.6): P enters (the HUD hides, agents pause), WASD and E fly the free camera,
   // the panel changes DOF, a 2× PNG exports through the offscreen target and downloads, then P leaves

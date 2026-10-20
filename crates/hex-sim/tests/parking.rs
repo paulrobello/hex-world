@@ -356,6 +356,29 @@ const HOUSE_CLUSTER: [(&str, [f32; 4]); 12] = [
     ("garden hedge -", [-11.6, -5.33, -5.7, -4.67]),
     ("garden hedge +", [-11.6, 4.67, -5.7, 5.33]),
 ];
+// The bakery tile (data/tiles/bakery.ron) in tile-local (x, z): bakery_shop at (-4.1, -8.5) yaw 90 from
+// its LOD0 bounds (scripts/blender/kit/bakery_shop.py: body with plinth, gable chimneys, the bow
+// window and its basket, the bench, the doorstep), and from scripts/blender/kit/bakery_pad.py the
+// through road's north kerb and verge either side of the forecourt mouth (MOUTH x -3.8 and 5.85, out
+// to the sink at |z| 4.6), the forecourt edging (EDGE_W 0.12) on its east, north and stepped west
+// sides, and the hedge north of it.
+const BAKERY: [(&str, [f32; 4]); 15] = [
+    ("shop body", [-7.66, -11.06, -0.54, -5.94]),
+    ("chimney west", [-8.2, -9.95, -7.6, -7.85]),
+    ("chimney east", [-0.6, -9.95, 0.0, -7.85]),
+    ("bow window", [-7.05, -6.0, -4.05, -5.39]),
+    ("basket", [-6.53, -5.23, -6.07, -4.77]),
+    ("bench", [-3.6, -5.86, -2.88, -5.54]),
+    ("doorstep", [-2.855, -6.0, -1.505, -5.56]),
+    ("door canopy", [-2.93, -6.0, -1.43, -5.2]),
+    ("kerb and lawn west of the mouth", [-14.0, -6.0, -3.8, -3.0]),
+    ("kerb east of the mouth", [5.85, -4.6, 14.0, -3.0]),
+    ("edging east", [5.85, -12.12, 5.97, -4.6]),
+    ("edging north and hedge", [0.02, -12.88, 5.97, -12.0]),
+    ("edging west", [0.02, -12.12, 0.14, -7.45]),
+    ("edging west step", [-0.52, -7.57, 0.14, -7.45]),
+    ("edging west near", [-0.52, -7.57, -0.4, -6.0]),
+];
 const CAR: [f32; 2] = [5.4, 2.0];
 
 /// The clearance obstacles of every destination tile with parking (PRD §7.1). A new parking tile
@@ -363,6 +386,7 @@ const CAR: [f32; 2] = [5.4, 2.0];
 fn obstacles(tile: &str) -> Option<&'static [(&'static str, [f32; 4])]> {
     match tile {
         "house_cluster" => Some(&HOUSE_CLUSTER),
+        "bakery" => Some(&BAKERY),
         _ => None,
     }
 }
@@ -427,6 +451,85 @@ fn parking_paths_clear_houses_hedges_and_other_spots() {
     sweep(scene, "house_cluster", |cell| if cell == A { 0 } else { 3 });
 }
 
+/// A house cluster at A, a road_straight at (2, 0) and the bakery at B, turned `rot` sixths: at 0
+/// visitors arrive and leave through the bakery's edge 3, at 3 through its edge 0.
+fn bakery_chain(rot: u8) -> Vec<Edit> {
+    vec![
+        Edit::Place(A, "house_cluster", 0),
+        Edit::Place(Axial::new(2, 0), "road_straight", 0),
+        Edit::Place(B, "bakery", rot),
+    ]
+}
+
+#[test]
+fn bakery_parking_paths_clear_the_shop_kerbs_and_the_other_spot() {
+    for rot in [0, 3] {
+        let scene = Scene::with(11, busy(), &bakery_chain(rot));
+        sweep(scene, "bakery", |cell| if cell == B { rot } else { 0 });
+    }
+}
+
+/// On a bakery visit the facing never turns more than 20° in one tick on the parking legs (the
+/// enter curve, the reverse, its cusp and the swing onto the road), as
+/// `a_car_pulls_out_in_reverse_then_drives_forward` holds for a house trip. The lane span between
+/// them follows the road graph's polyline, which turns 90° in one step at the junction node "j"
+/// (`LanePath` has no corner rounding); it is measured, not asserted.
+///
+/// Ignored: fails today (rot 0: parking legs 54.6°/tick, lane span 116.8°/tick). The leave leg
+/// must end on the node's outbound lane start, which points back down the spur, so a car parked
+/// nose-in turns about 180° between the spot and that pose; no pose set inside the forecourt keeps
+/// both the clearance and 20°/tick (assets-source/kit/bakery_pad/friction.md). Needs a sim change
+/// (reverse-in arrival, or a leave leg that may join the lane past the node) or a longer spur.
+#[test]
+#[ignore = "bakery parking legs turn up to 55 deg per tick; see the doc comment"]
+fn bakery_visits_turn_smoothly() {
+    let mut failures = vec![];
+    for rot in [0, 3] {
+        let mut scene = Scene::with(11, busy(), &bakery_chain(rot));
+        let step = scene.sim.config().car_speed * TICK_SECONDS;
+        let mut seen = BTreeSet::new();
+        let (mut legs, mut lanes) = ((0.0f32, 0.0f32), 0.0f32);
+        for _ in 0..4000 {
+            scene.sim.tick();
+            for car in scene.sim.cars() {
+                if car.to_spot().cell != B && car.from_spot().cell != B {
+                    continue;
+                }
+                if !seen.insert((car.id(), car.from_spot(), car.to_spot())) {
+                    continue;
+                }
+                // Only the bakery's own legs: the pull-out when leaving it, the arrival when visiting.
+                let (l0, l1) = car.lane_span();
+                let (from_bakery, to_bakery) = (car.from_spot().cell == B, car.to_spot().cell == B);
+                let mut d = 0.0;
+                while d + step < car.path().length() {
+                    let turn = angle_between(
+                        car.pose_at_distance(d).dir,
+                        car.pose_at_distance(d + step).dir,
+                    );
+                    if (from_bakery && d + step < l0) || (to_bakery && d > l1) {
+                        if turn > legs.0 {
+                            legs = (turn, d);
+                        }
+                    } else if d + step >= l0 && d <= l1 {
+                        lanes = lanes.max(turn);
+                    }
+                    d += step;
+                }
+            }
+        }
+        println!("rot {rot}: parking legs max {:.1} deg/tick, lane span max {lanes:.1} deg/tick", legs.0);
+        assert!(seen.len() >= 4, "rot {rot}: {} bakery trips", seen.len());
+        if legs.0 >= 20.0 {
+            failures.push(format!(
+                "rot {rot}: facing turns {} deg in one tick at {} m",
+                legs.0, legs.1
+            ));
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
 /// Drives `scene` for 6000 ticks and checks every trip's path, near each end's `tile`, keeps a
 /// pickup-sized car clear of the tile's obstacles and of every other spot, and that every spot saw
 /// both a departure and an arrival. `rotation` gives each `tile` cell's placed rotation.
@@ -440,14 +543,19 @@ fn sweep(mut scene: Scene, tile: &str, rotation: impl Fn(Axial) -> u8) {
         .collect();
     let (mut froms, mut tos) = (BTreeSet::new(), BTreeSet::new());
     let mut seen = BTreeSet::new();
+    let is_tile = |w: &hex_core::World, cell: Axial| w.tile(cell).is_some_and(|t| t.def == tile);
     for _ in 0..6000 {
         scene.sim.tick();
         for car in scene.sim.cars() {
             if !seen.insert((car.id(), car.from_spot(), car.to_spot())) {
                 continue;
             }
-            froms.insert(car.from_spot().index);
-            tos.insert(car.to_spot().index);
+            if is_tile(&scene.world, car.from_spot().cell) {
+                froms.insert(car.from_spot().index);
+            }
+            if is_tile(&scene.world, car.to_spot().cell) {
+                tos.insert(car.to_spot().index);
+            }
             let mut d = 0.0;
             while d <= car.path().length() {
                 let pose = car.pose_at_distance(d);
@@ -456,7 +564,8 @@ fn sweep(mut scene: Scene, tile: &str, rotation: impl Fn(Axial) -> u8) {
                     (car.from_spot(), car.from_spot().index),
                     (car.to_spot(), car.to_spot().index),
                 ] {
-                    if geom::dist(pose.pos, end.cell.to_world(HEX_RADIUS)) > HEX_RADIUS {
+                    let on_tile = scene.world.tile(end.cell).is_some_and(|t| t.def == tile);
+                    if !on_tile || geom::dist(pose.pos, end.cell.to_world(HEX_RADIUS)) > HEX_RADIUS {
                         continue;
                     }
                     let r = rotation(end.cell);
