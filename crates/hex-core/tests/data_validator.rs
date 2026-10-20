@@ -103,7 +103,7 @@ fn every_tile_file_parses_and_is_embedded() {
 
 #[test]
 fn tile_ids_are_unique_and_rules_hold() {
-    let c = TileCatalog::from_ron(SOCKETS_RON, &BUILTIN_TILES).unwrap_or_else(|e| panic!("{e}"));
+    let c = TileCatalog::from_ron(SOCKETS_RON, BUILTIN_TILES).unwrap_or_else(|e| panic!("{e}"));
     let ids: BTreeSet<&str> = c.tiles().iter().map(|t| t.id.as_str()).collect();
     assert_eq!(ids.len(), c.tiles().len());
 }

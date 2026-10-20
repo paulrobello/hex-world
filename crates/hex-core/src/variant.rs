@@ -7,7 +7,7 @@ use crate::{Axial, HeroProp, TileDef};
 
 /// Each authored hero piece with the variants a slot of it may draw instead. A new variant is one
 /// more id in its row; a new family is one more row.
-pub const HERO_VARIANTS: [(&str, &[&str]); 5] = [
+pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
     ("house_cottage", &["house_longhouse"]),
     ("house_twostorey", &["house_twostorey_b"]),
     ("tree_hero_oak", &["tree_hero_oak_b"]),
@@ -288,7 +288,7 @@ mod tests {
     /// hold for every pick; a hay variant is still `hay_`, so walk reports it as hay.
     #[test]
     fn variants_keep_their_family() {
-        for (piece, variants) in HERO_VARIANTS {
+        for &(piece, variants) in HERO_VARIANTS {
             let family = piece.split('_').next().unwrap();
             for v in variants {
                 assert!(v.starts_with(&format!("{family}_")), "{v} of {piece}");

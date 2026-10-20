@@ -1006,7 +1006,7 @@ const LANE_CUT_LOD2_MAX_RATIO: f32 = 0.20;
 /// `PieceKind::Prop`'s 1,500, and the LOD1/LOD2 ratio ceilings are unchanged.
 /// (river_road_bridge_center carries the same clumps as a `center` under its kind's 4,000.)
 const RIVER_DRESSING_LOD0_MAX: usize = 2_500;
-const RIVER_DRESSING_PROPS: [&str; 5] = [
+const RIVER_DRESSING_PROPS: &[&str] = &[
     "river_straight_center",
     "river_bend_center",
     "river_spring_center",
@@ -3209,7 +3209,7 @@ fn river_dressing_lod0_budget_is_scoped_to_its_props() {
         })
         .expect("runtime kit holds river_straight_center");
     let piece = |id: &str| k.manifest.pieces.iter().find(|p| p.id == id).unwrap();
-    for id in RIVER_DRESSING_PROPS {
+    for &id in RIVER_DRESSING_PROPS {
         assert_eq!(piece(id).kind, PieceKind::Prop, "{id}");
         assert_eq!(lod0_budget(piece(id)), RIVER_DRESSING_LOD0_MAX, "{id}");
     }

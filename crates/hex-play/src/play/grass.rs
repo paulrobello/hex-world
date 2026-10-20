@@ -127,7 +127,7 @@ pub const GROWS_THROUGH: &[(&str, f32)] = &[
 pub type RockBase = [[f32; 2]; 12];
 
 /// `rock_bases_match_the_kit` checks these against the GLBs (to 2 cm).
-pub const ROCK_BASES: [(&str, RockBase); 3] = [
+pub const ROCK_BASES: &[(&str, RockBase)] = &[
     (
         "rock_small",
         [
@@ -1428,7 +1428,7 @@ mod tests {
     /// the stone's base.
     #[test]
     fn rock_bases_match_the_kit() {
-        for (id, outline) in &ROCK_BASES {
+        for (id, outline) in ROCK_BASES {
             let poly: Vec<Vec2> = outline.iter().map(|p| Vec2::from(*p)).collect();
             let slice = ground_slice(id);
             let hull = crate::walk::hull(&slice);

@@ -60,7 +60,7 @@ const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not. A sapling stops the walker at its stem, a shrub at its dense lower dome, a verge
 /// bush at its clipped mass; ferns are walk-through.
-pub const OBSTACLES: [&str; 35] = [
+pub const OBSTACLES: &[&str] = &[
     "house_cottage",
     "house_twostorey",
     "house_longhouse",
@@ -1099,7 +1099,7 @@ mod tests {
             assert_eq!(prop_kind(piece), kind, "{piece}");
             assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");
         }
-        for piece in OBSTACLES {
+        for &piece in OBSTACLES {
             assert_eq!(
                 prop_kind(piece) == "rock",
                 piece.starts_with("rock_"),
@@ -1113,7 +1113,7 @@ mod tests {
     /// obstacle is one part, so it keeps the whole collider's hull and body exactly as before.
     #[test]
     fn only_the_fence_collider_splits_into_parts() {
-        for piece in OBSTACLES {
+        for &piece in OBSTACLES {
             let s = shape(piece);
             if piece == "fence_paddock" {
                 assert_eq!(s.parts.len(), 6, "one part per run");

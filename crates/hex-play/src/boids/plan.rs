@@ -339,7 +339,7 @@ pub struct Roost {
 }
 
 /// Tree pieces with canopy perches: what [`BoidPlan::set_world`] watches arrive in the kit.
-pub const PERCH_PIECES: [&str; 5] = [
+pub const PERCH_PIECES: &[&str] = &[
     "tree_hero_oak",
     "tree_hero_oak_b",
     "tree_forest",

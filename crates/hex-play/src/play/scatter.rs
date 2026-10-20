@@ -130,7 +130,7 @@ pub const VERGE_BAND: f32 = 6.7;
 
 /// Variants of a scatter piece (PRD §6 Variety), after the piece itself: a rule names the first
 /// and each of its instances draws one of the group, picked by [`pick_variant`].
-pub const VARIANTS: [(&str, &[&str]); 10] = [
+pub const VARIANTS: &[(&str, &[&str])] = &[
     ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
     ("tree_oak", &["tree_oak_b"]),
     ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
@@ -237,7 +237,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 43] = [
+pub const FOOTPRINTS: &[(&str, Footprint)] = &[
     (
         "tree_forest",
         Footprint {
@@ -568,7 +568,7 @@ pub struct GroundBox {
 /// The buildings whose collider is a rectangle (`ground_boxes_match_the_kit` checks them against
 /// the GLBs). Every other piece, the windmill's round tower included, is a disc of its
 /// [`Footprint::ground`].
-pub const GROUND_BOXES: [(&str, GroundBox); 6] = [
+pub const GROUND_BOXES: &[(&str, GroundBox)] = &[
     (
         "house_cottage",
         GroundBox {
@@ -637,7 +637,7 @@ pub const FENCE_HALF: f32 = 0.2;
 
 /// The fence pieces (`fences_match_the_kit` checks them against the GLBs: one collider part per
 /// run, one LOD0 post per entry).
-pub const FENCES: [(&str, Fence); 1] = [(
+pub const FENCES: &[(&str, Fence)] = &[(
     "fence_paddock",
     Fence {
         line: &[
@@ -727,7 +727,7 @@ fn bucket(v: f32) -> usize {
 
 /// Slots of ground pieces that stand on the ground rather than being it: a crop's leaning row cards
 /// on a centre piece. Nothing stands on them and the walker walks through them.
-pub const NOT_GROUND: [&str; 1] = ["wheat_field_wheat"];
+pub const NOT_GROUND: &[&str] = &["wheat_field_wheat"];
 
 impl Surface {
     /// Vertical (skirt) and degenerate triangles carry no ground and are dropped, as are the
@@ -2061,7 +2061,7 @@ mod tests {
                 group(piece).map(str::to_owned).collect();
             assert_eq!(seen, want, "{id} {piece}");
         }
-        for (id, variants) in VARIANTS {
+        for &(id, variants) in VARIANTS {
             for v in variants {
                 assert_eq!(family(v), id);
                 assert!(
@@ -2181,7 +2181,7 @@ mod tests {
     /// round piece (a tree, no ground box) keeps inside its ground and crown reach.
     #[test]
     fn hero_variants_fit_inside_the_authored_piece() {
-        for (piece, variants) in hex_core::HERO_VARIANTS {
+        for &(piece, variants) in hex_core::HERO_VARIANTS {
             for v in variants {
                 // A building's ground box nests in the authored one's; a disc piece (the oak, the
                 // hay) has no box, only its reach.
@@ -2209,7 +2209,7 @@ mod tests {
                 .map(|p| Vec2::new(p[0], p[2]).length())
                 .fold(0.0, f32::max)
         };
-        for (id, f) in FOOTPRINTS {
+        for &(id, f) in FOOTPRINTS {
             let ground = reach(&glb_mesh_tris(id, "collider").unwrap());
             assert!(
                 f.ground >= ground && f.ground <= ground + 0.1,
@@ -2233,7 +2233,7 @@ mod tests {
     /// entry.
     #[test]
     fn fences_match_the_kit() {
-        for (id, f) in FENCES {
+        for &(id, f) in FENCES {
             assert!(
                 FOOTPRINTS.iter().all(|(p, _)| *p != id),
                 "{id} in FOOTPRINTS"
@@ -2352,7 +2352,7 @@ mod tests {
     /// them (a rectangle with at most chamfered corners), so a box clears no more than the piece.
     #[test]
     fn ground_boxes_match_the_kit() {
-        for (id, b) in GROUND_BOXES {
+        for &(id, b) in GROUND_BOXES {
             let pts: Vec<Vec2> = glb_mesh_tris(id, "collider")
                 .unwrap()
                 .iter()

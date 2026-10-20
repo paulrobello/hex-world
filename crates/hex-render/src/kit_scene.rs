@@ -83,7 +83,7 @@ pub fn kit_layout() -> Vec<Placement> {
         ..place("tree_hero_oak", 0, 1, 0)
     });
     // Farm hay bales (P3) on the oak's meadow, lifted onto the meadow relief at their spots.
-    for (piece, offset, yaw_deg, y) in HAY_BALES {
+    for &(piece, offset, yaw_deg, y) in HAY_BALES {
         v.push(Placement {
             offset,
             yaw_deg,
@@ -115,7 +115,7 @@ pub fn kit_layout() -> Vec<Placement> {
     // the kerb and the verge sink (|z| 4.6) on the meadow relief at its spot (`relief()` in
     // scripts/blender/kit/meadow_base.py at Blender (x, -z)); a shrub_forest beside them and a sedan
     // on the lane for scale.
-    for (piece, offset, yaw_deg, y) in VERGE_BUSHES {
+    for &(piece, offset, yaw_deg, y) in VERGE_BUSHES {
         v.push(Placement {
             offset,
             yaw_deg,
@@ -124,7 +124,7 @@ pub fn kit_layout() -> Vec<Placement> {
         });
     }
     // Farm animals (P3) on the oak's meadow, in open sun on the oak's +x/+z side.
-    for (piece, offset, yaw_deg, y) in FARM_ANIMALS {
+    for &(piece, offset, yaw_deg, y) in FARM_ANIMALS {
         v.push(Placement {
             offset,
             yaw_deg,
@@ -200,7 +200,7 @@ pub fn kit_layout() -> Vec<Placement> {
     }
     // Meadow props on the meadow at (-1, 1) (base rotation 4), each lifted onto the meadow relief at
     // its spot (`relief()` in scripts/blender/kit/meadow_base.py, evaluated in the base's frame).
-    for (piece, offset, rot, y) in MEADOW_PROPS {
+    for &(piece, offset, rot, y) in MEADOW_PROPS {
         v.push(Placement {
             offset,
             y,
@@ -264,7 +264,7 @@ pub fn kit_layout() -> Vec<Placement> {
     // around it and one tucked against a trunk, each on the litter at its spot (`relief()` in
     // scripts/blender/kit/forest_base.py at Blender (x, -z)).
     v.push(place("forest_base", -2, 1, 0));
-    for (piece, at, yaw_deg, y) in FOREST_FLOOR {
+    for &(piece, at, yaw_deg, y) in FOREST_FLOOR {
         v.push(Placement {
             y,
             ..hero(piece, -2, 1, at, yaw_deg)
@@ -274,7 +274,7 @@ pub fn kit_layout() -> Vec<Placement> {
     // originals' cell so nothing here shades it (the sun is at +x/+z): fern_clump_b and _c and
     // log_fallen_b in open sun, with an original fern and log beside them and one spruce at the back.
     v.push(place("forest_base", -3, 1, 0));
-    for (piece, at, yaw_deg, y) in FOREST_FLOOR_VARIANTS {
+    for &(piece, at, yaw_deg, y) in FOREST_FLOOR_VARIANTS {
         v.push(Placement {
             y,
             ..hero(piece, -3, 1, at, yaw_deg)
@@ -285,7 +285,7 @@ pub fn kit_layout() -> Vec<Placement> {
     // spruce behind them for comparison, each on the litter at its spot (`relief()` in
     // scripts/blender/kit/forest_base.py at Blender (x, -z)).
     v.push(place("forest_base", -2, 2, 0));
-    for (piece, at, yaw_deg, y) in OAK_GROVE {
+    for &(piece, at, yaw_deg, y) in OAK_GROVE {
         v.push(Placement {
             y,
             ..hero(piece, -2, 2, at, yaw_deg)
@@ -296,7 +296,7 @@ pub fn kit_layout() -> Vec<Placement> {
     // shrubs and saplings in open sun in front with a fern beside them, each on the litter at its
     // spot (`relief()` in scripts/blender/kit/forest_base.py at Blender (x, -z)).
     v.push(place("forest_base", -3, 2, 0));
-    for (piece, at, yaw_deg, y) in UNDERGROWTH {
+    for &(piece, at, yaw_deg, y) in UNDERGROWTH {
         v.push(Placement {
             y,
             ..hero(piece, -3, 2, at, yaw_deg)
@@ -331,7 +331,7 @@ pub fn kit_layout() -> Vec<Placement> {
     // of the river rail bridge; no lane of a neighbour runs onto it. The heroes stand at y = 0, as
     // play places them; the fence mesh carries the meadow relief itself.
     v.push(place("meadow_base", -1, 5, 0));
-    for (piece, at, yaw_deg) in FARM_HEROES {
+    for &(piece, at, yaw_deg) in FARM_HEROES {
         v.push(hero(piece, -1, 5, at, yaw_deg));
     }
     // The farm animal variants (PRD §6 Variety) on a second farm at (0, 5), east of the first: the
@@ -339,14 +339,14 @@ pub fn kit_layout() -> Vec<Placement> {
     // ewe, each hoof within 2.3 cm of the meadow relief at y = 0 (option O2 proposed for farm.ron),
     // and the grazing sheep animal_sheep_c west of the lamb, its worst hoof 2.8 cm above the relief.
     v.push(place("meadow_base", 0, 5, 0));
-    for (piece, at, yaw_deg) in FARM_VARIANTS {
+    for &(piece, at, yaw_deg) in FARM_VARIANTS {
         v.push(hero(piece, 0, 5, at, yaw_deg));
     }
     // The hay variants (PRD §6 Variety) on a third farm at (1, 5): hay_bale_stack_b in the farm's
     // stack slot and hay_bale_round_b in both round slots, as the hero variant resolver may draw
     // them, each standing on the meadow relief with no contact over it.
     v.push(place("meadow_base", 1, 5, 0));
-    for (piece, at, yaw_deg) in FARM_HAY_VARIANTS {
+    for &(piece, at, yaw_deg) in FARM_HAY_VARIANTS {
         v.push(hero(piece, 1, 5, at, yaw_deg));
     }
     v
@@ -354,7 +354,7 @@ pub fn kit_layout() -> Vec<Placement> {
 
 /// (piece, at, yaw) of the hay-variants showcase on (1, 5): the farm's barn and fence, and the
 /// variants in the farm's three hay slots (data/tiles/farm.ron).
-const FARM_HAY_VARIANTS: [(&str, [f32; 2], f32); 5] = [
+const FARM_HAY_VARIANTS: &[(&str, [f32; 2], f32)] = &[
     ("fence_paddock", [0.0, 0.0], 0.0),
     ("barn_red", [4.75, -8.227], 30.0),
     ("hay_bale_stack_b", [8.9, -2.4], 30.0),
@@ -364,7 +364,7 @@ const FARM_HAY_VARIANTS: [(&str, [f32; 2], f32); 5] = [
 
 /// (piece, at, yaw) of the farm-variants showcase on (0, 5): the farm's barn, fence and ewes, its cow
 /// moved beside the grazing cow, the lamb, and the grazing sheep animal_sheep_c west of the lamb.
-const FARM_VARIANTS: [(&str, [f32; 2], f32); 8] = [
+const FARM_VARIANTS: &[(&str, [f32; 2], f32)] = &[
     ("fence_paddock", [0.0, 0.0], 0.0),
     ("barn_red", [4.75, -8.227], 30.0),
     ("animal_cow", [0.5, 8.125], 135.0),
@@ -377,7 +377,7 @@ const FARM_VARIANTS: [(&str, [f32; 2], f32); 8] = [
 
 /// (piece, at, yaw) of the farm tile's heroes (data/tiles/farm.ron) plus the paddock fence at the
 /// tile centre.
-const FARM_HEROES: [(&str, [f32; 2], f32); 8] = [
+const FARM_HEROES: &[(&str, [f32; 2], f32)] = &[
     ("fence_paddock", [0.0, 0.0], 0.0),
     ("barn_red", [4.75, -8.227], 30.0),
     ("hay_bale_stack", [8.9, -2.4], 30.0),
@@ -389,7 +389,7 @@ const FARM_HEROES: [(&str, [f32; 2], f32); 8] = [
 ];
 
 /// (piece, offset, yaw, relief height) of the scatter-oak showcase on the forest at (-2, 2).
-const OAK_GROVE: [(&str, [f32; 2], f32, f32); 3] = [
+const OAK_GROVE: &[(&str, [f32; 2], f32, f32)] = &[
     ("tree_oak", [-4.0, 1.0], 0.0, -0.132),
     ("tree_oak_b", [5.0, 2.0], 70.0, -0.087),
     ("tree_forest", [0.5, -6.5], 150.0, -0.081),
@@ -397,7 +397,7 @@ const OAK_GROVE: [(&str, [f32; 2], f32, f32); 3] = [
 
 /// (piece, offset, yaw, relief height) of the forest undergrowth on the forest at (-3, 2), each on the
 /// litter at its spot (`relief()` in scripts/blender/kit/forest_base.py at Blender (x, -z)).
-const UNDERGROWTH: [(&str, [f32; 2], f32, f32); 11] = [
+const UNDERGROWTH: &[(&str, [f32; 2], f32, f32)] = &[
     ("tree_forest", [-6.5, -5.5], 0.0, -0.134),
     ("tree_forest_c", [-1.5, -6.5], 80.0, -0.128),
     ("shrub_forest", [2.5, -1.0], 0.0, -0.216),
@@ -425,7 +425,7 @@ const TRAIN_ON_RAIL_BRIDGE: [(&str, [f32; 2]); 2] = [
 
 /// (piece, offset, yaw, relief height) of the forest-floor showcase on the forest at (-2, 1), with a
 /// parked sedan beside the log for scale.
-const FOREST_FLOOR: [(&str, [f32; 2], f32, f32); 14] = [
+const FOREST_FLOOR: &[(&str, [f32; 2], f32, f32)] = &[
     ("tree_forest", [-6.5, -5.0], 0.0, -0.120),
     ("tree_forest_b", [0.5, -7.5], 40.0, -0.109),
     ("tree_forest_c", [-8.5, 2.5], 110.0, -0.107),
@@ -444,7 +444,7 @@ const FOREST_FLOOR: [(&str, [f32; 2], f32, f32); 14] = [
 
 /// (piece, offset, yaw, relief height) of the forest-floor variants on the forest at (-3, 1), each on
 /// the litter at its spot (`relief()` in scripts/blender/kit/forest_base.py at Blender (x, -z)).
-const FOREST_FLOOR_VARIANTS: [(&str, [f32; 2], f32, f32); 9] = [
+const FOREST_FLOOR_VARIANTS: &[(&str, [f32; 2], f32, f32)] = &[
     ("tree_forest", [-7.5, -5.0], 30.0, -0.141),
     ("log_fallen", [-2.0, -3.0], -10.0, -0.124),
     ("log_fallen_b", [0.5, 2.0], 20.0, -0.188),
@@ -478,7 +478,7 @@ const STATION_SHELTER_AT: [f32; 2] = [-0.3, -5.0];
 const WINDMILL_Y: f32 = -0.233;
 
 /// (piece, offset, yaw, relief height) of the hay bales on the oak's meadow (0, 1), base rotation 0.
-const HAY_BALES: [(&str, [f32; 2], f32, f32); 3] = [
+const HAY_BALES: &[(&str, [f32; 2], f32, f32)] = &[
     ("hay_bale_round", [-2.0, 2.5], 20.0, -0.198),
     ("hay_bale_stack", [-9.5, 1.0], -15.0, -0.095),
     ("hay_bale_round", [-8.0, -4.5], 75.0, -0.129),
@@ -487,7 +487,7 @@ const HAY_BALES: [(&str, [f32; 2], f32, f32); 3] = [
 /// (piece, offset, yaw, height) of the verge bushes on road tile (0, 0), base rotation 0, with a
 /// shrub_forest beside them and a sedan on the lane (`cars::ROAD_SURFACE_Y`) for comparison; the
 /// lighter bush_verge_b beside the south pair in open sun.
-const VERGE_BUSHES: [(&str, [f32; 2], f32, f32); 6] = [
+const VERGE_BUSHES: &[(&str, [f32; 2], f32, f32)] = &[
     ("bush_verge", [-5.0, 5.0], 0.0, -0.147),
     ("bush_verge", [3.5, 5.0], 140.0, -0.072),
     ("bush_verge", [0.5, -5.0], 250.0, -0.123),
@@ -497,14 +497,14 @@ const VERGE_BUSHES: [(&str, [f32; 2], f32, f32); 6] = [
 ];
 
 /// (piece, offset, yaw, relief height) of the farm animals on the oak's meadow (0, 1), base rotation 0.
-const FARM_ANIMALS: [(&str, [f32; 2], f32, f32); 3] = [
+const FARM_ANIMALS: &[(&str, [f32; 2], f32, f32)] = &[
     ("animal_cow", [7.0, 2.5], 70.0, -0.075),
     ("animal_sheep", [3.5, 7.0], -30.0, -0.089),
     ("animal_sheep", [2.0, 9.0], 140.0, -0.059),
 ];
 
 /// (piece, offset, rotation, relief height) of the meadow props in the kit layout.
-const MEADOW_PROPS: [(&str, [f32; 2], u8, f32); 15] = [
+const MEADOW_PROPS: &[(&str, [f32; 2], u8, f32)] = &[
     ("rock_small", [-6.0, 5.0], 0, -0.124),
     ("rock_small", [5.0, 6.0], 2, -0.083),
     ("rock_small", [-2.5, -7.0], 4, -0.151),
