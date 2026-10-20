@@ -77,6 +77,12 @@
             2,
             5
           ],
+          "rail_station": [
+            0,
+            2,
+            3,
+            5
+          ],
           "rail_straight": [
             0,
             2,
@@ -217,6 +223,10 @@
             0
           ],
           "rail_road_crossing": [],
+          "rail_station": [
+            0,
+            3
+          ],
           "rail_straight": [
             0,
             3
@@ -343,6 +353,12 @@
           "rail_road_crossing": [
             1,
             4
+          ],
+          "rail_station": [
+            1,
+            2,
+            4,
+            5
           ],
           "rail_straight": [
             1,
@@ -496,6 +512,12 @@
           "rail_road_crossing": [
             0,
             3
+          ],
+          "rail_station": [
+            0,
+            1,
+            3,
+            4
           ],
           "rail_straight": [
             0,
@@ -637,6 +659,10 @@
             3
           ],
           "rail_road_crossing": [],
+          "rail_station": [
+            0,
+            3
+          ],
           "rail_straight": [
             0,
             3
@@ -741,6 +767,7 @@
           ],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [
             1
@@ -855,6 +882,12 @@
             0,
             3
           ],
+          "rail_station": [
+            0,
+            1,
+            3,
+            4
+          ],
           "rail_straight": [
             0,
             1,
@@ -956,6 +989,7 @@
             0,
             3
           ],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [],
@@ -1008,6 +1042,7 @@
             0,
             3
           ],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [],
@@ -1112,6 +1147,12 @@
           "rail_road_crossing": [
             0,
             3
+          ],
+          "rail_station": [
+            0,
+            1,
+            3,
+            4
           ],
           "rail_straight": [
             0,
@@ -1253,6 +1294,10 @@
             4
           ],
           "rail_road_crossing": [],
+          "rail_station": [
+            1,
+            4
+          ],
           "rail_straight": [
             1,
             4
@@ -1380,6 +1425,12 @@
             1,
             4
           ],
+          "rail_station": [
+            1,
+            2,
+            4,
+            5
+          ],
           "rail_straight": [
             1,
             2,
@@ -1503,6 +1554,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [
             1,
@@ -1558,6 +1610,7 @@
             2,
             5
           ],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [],
@@ -1661,6 +1714,12 @@
           "rail_road_crossing": [
             1,
             4
+          ],
+          "rail_station": [
+            1,
+            2,
+            4,
+            5
           ],
           "rail_straight": [
             1,
@@ -1792,6 +1851,7 @@
           ],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [
             2
@@ -1893,6 +1953,10 @@
             5
           ],
           "rail_road_crossing": [],
+          "rail_station": [
+            2,
+            5
+          ],
           "rail_straight": [
             2,
             5
@@ -1968,6 +2032,7 @@
             2,
             5
           ],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [],
@@ -2070,6 +2135,12 @@
           ],
           "rail_road_crossing": [
             2,
+            5
+          ],
+          "rail_station": [
+            0,
+            2,
+            3,
             5
           ],
           "rail_straight": [
@@ -2225,6 +2296,12 @@
             1,
             4
           ],
+          "rail_station": [
+            1,
+            2,
+            4,
+            5
+          ],
           "rail_straight": [
             1,
             2,
@@ -2318,6 +2395,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [
             3,
@@ -2402,6 +2480,7 @@
           ],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [
             3
@@ -2460,6 +2539,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [],
@@ -2505,6 +2585,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -2598,6 +2679,12 @@
           ],
           "rail_road_crossing": [
             2,
+            5
+          ],
+          "rail_station": [
+            0,
+            2,
+            3,
             5
           ],
           "rail_straight": [
@@ -2709,6 +2796,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -2791,6 +2879,10 @@
             3
           ],
           "rail_road_crossing": [],
+          "rail_station": [
+            0,
+            3
+          ],
           "rail_straight": [
             0,
             3
@@ -2870,6 +2962,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -2915,6 +3008,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -2954,6 +3048,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -3003,6 +3098,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -3110,6 +3206,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [],
@@ -3178,6 +3275,7 @@
           ],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [
             1
@@ -3291,6 +3389,12 @@
           "rail_road_crossing": [
             0,
             3
+          ],
+          "rail_station": [
+            0,
+            1,
+            3,
+            4
           ],
           "rail_straight": [
             0,
@@ -3445,6 +3549,12 @@
             1,
             4
           ],
+          "rail_station": [
+            1,
+            2,
+            4,
+            5
+          ],
           "rail_straight": [
             1,
             2,
@@ -3598,6 +3708,12 @@
             0,
             3
           ],
+          "rail_station": [
+            0,
+            1,
+            3,
+            4
+          ],
           "rail_straight": [
             0,
             1,
@@ -3707,6 +3823,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -3789,6 +3906,10 @@
             0
           ],
           "rail_road_crossing": [],
+          "rail_station": [
+            0,
+            3
+          ],
           "rail_straight": [
             0,
             3
@@ -3868,6 +3989,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -3959,6 +4081,12 @@
           ],
           "rail_road_crossing": [
             2,
+            5
+          ],
+          "rail_station": [
+            0,
+            2,
+            3,
             5
           ],
           "rail_straight": [
@@ -4066,6 +4194,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4115,6 +4244,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4156,6 +4286,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4246,6 +4377,12 @@
           "rail_road_crossing": [
             1,
             4
+          ],
+          "rail_station": [
+            1,
+            2,
+            4,
+            5
           ],
           "rail_straight": [
             1,
@@ -4404,6 +4541,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4451,6 +4589,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4496,6 +4635,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4541,6 +4681,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4586,6 +4727,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4628,6 +4770,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [],
@@ -4673,6 +4816,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4724,6 +4868,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4771,6 +4916,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4816,6 +4962,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4865,6 +5012,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4912,6 +5060,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -4957,6 +5106,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -5002,6 +5152,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -5051,6 +5202,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -5098,6 +5250,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -5143,6 +5296,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -5185,6 +5339,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [],
@@ -5230,6 +5385,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -5277,6 +5433,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -5322,6 +5479,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -5371,6 +5529,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -5418,6 +5577,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [
@@ -5467,6 +5627,7 @@
           "rail_bend_60": [],
           "rail_junction": [],
           "rail_road_crossing": [],
+          "rail_station": [],
           "rail_straight": [],
           "river_bend": [],
           "river_mouth": [

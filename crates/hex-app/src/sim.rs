@@ -283,6 +283,7 @@ fn blocker_name(b: hex_sim::rail::Blocker) -> String {
         Blocker::LineEnd => "line_end".into(),
         Blocker::Train(_) => "train".into(),
         Blocker::Junction(_) => "junction".into(),
+        Blocker::Station(_) => "station".into(),
     }
 }
 

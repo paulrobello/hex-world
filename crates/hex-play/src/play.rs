@@ -631,7 +631,7 @@ fn tile_children(
     }
     let count = def.props.hero.len().min(u8::MAX as usize) as u8;
     for (i, (h, piece)) in def.hero_pieces(cell).enumerate() {
-        let t = Transform::from_xyz(h.at[0], 0.0, h.at[1])
+        let t = Transform::from_xyz(h.at[0], h.y, h.at[1])
             .with_rotation(Quat::from_rotation_y(-h.yaw_deg.to_radians()));
         let role = RiseRole::Prop {
             order: i.min(u8::MAX as usize) as u8,
@@ -1107,7 +1107,7 @@ mod tests {
     #[test]
     fn every_mvp_tile_resolves_and_biomes_index() {
         let c = PlayCatalog::default();
-        assert_eq!(c.0.tiles().len(), 27);
+        assert_eq!(c.0.tiles().len(), 28);
         let biomes: std::collections::BTreeSet<_> =
             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
         assert_eq!(biomes.len(), 4);

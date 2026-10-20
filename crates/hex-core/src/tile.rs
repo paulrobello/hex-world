@@ -86,6 +86,10 @@ pub struct HeroProp {
     pub at: [f32; 2],
     #[serde(default)]
     pub yaw_deg: f32,
+    /// Height of the piece's origin over the tile frame (m): 0 for a piece on the ground; a
+    /// station shelter stands on its platform's paving.
+    #[serde(default)]
+    pub y: f32,
 }
 
 /// Seeded scatter rules and fixed hero props authored for a tile.
@@ -135,6 +139,15 @@ pub struct SwitchDef {
     /// a train on the other leg (`rail_junction_center` friction notes: the centrelines are 5.0 m
     /// apart there). A waiting train stands beyond it.
     pub fouling: f32,
+}
+
+/// A station stop (P3): the platform's level section beside rail segment `segment`, as distances
+/// in meters along it from its `from` end. A train stops there with every axle of its consist on
+/// the level section, waits, and runs on.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct StopDef {
+    pub segment: u16,
+    pub level: [f32; 2],
 }
 
 /// End of a network segment: the lane on a local edge, or a node declared in [`TileDef::nodes`].
@@ -331,6 +344,9 @@ pub struct TileDef {
     /// Rail turnouts at nodes where three rail segments meet.
     #[serde(default)]
     pub switches: Vec<SwitchDef>,
+    /// Station stops on rail segments.
+    #[serde(default)]
+    pub stops: Vec<StopDef>,
     /// One spot per house that owns a car, or a shop's visitor spots (PRD §7.1).
     #[serde(default)]
     pub parking: Vec<ParkingSpot>,
@@ -550,6 +566,21 @@ impl TileDef {
                 ));
             }
         }
+        for (k, stop) in self.stops.iter().enumerate() {
+            if rail(stop.segment).is_none() {
+                issue(format!(
+                    "stop {k}: segment {} is not a rail segment",
+                    stop.segment
+                ));
+            }
+            let [a, b] = stop.level;
+            if !(a.is_finite() && b.is_finite() && 0.0 <= a && a < b) {
+                issue(format!(
+                    "stop {k} needs a level section 0 <= from < to, not {:?}",
+                    stop.level
+                ));
+            }
+        }
         for node in &self.nodes {
             let end = Endpoint::Node(node.id.clone());
             let count = self
@@ -759,6 +790,7 @@ mod tests {
                 points: vec![[6.93, 4.0]],
             }],
             switches: vec![],
+            stops: vec![],
             parking: vec![],
             emitters: vec![],
             agents: vec![],
@@ -775,6 +807,7 @@ mod tests {
             piece: "house_cottage".into(),
             at: [-2.0, 5.0],
             yaw_deg: 90.0,
+            y: 0.0,
         }];
         t.nodes = vec![NetworkNode {
             id: "home".into(),
@@ -1239,6 +1272,32 @@ mod tests {
             t.validate(&sockets())
                 .iter()
                 .any(|i| i.contains("not a rail segment"))
+        );
+    }
+
+    /// A stop names a rail segment and a level section that runs forward from its start.
+    #[test]
+    fn a_stop_names_a_rail_segment_and_a_forward_level_section() {
+        let mut t = turnout();
+        t.stops = vec![StopDef {
+            segment: 1,
+            level: [2.0, 12.0],
+        }];
+        assert_eq!(t.validate(&sockets()), Vec::<String>::new());
+        t.stops[0].segment = 9;
+        assert!(
+            t.validate(&sockets())
+                .iter()
+                .any(|i| i.contains("stop 0: segment 9 is not a rail segment"))
+        );
+        t.stops[0] = StopDef {
+            segment: 1,
+            level: [12.0, 2.0],
+        };
+        assert!(
+            t.validate(&sockets())
+                .iter()
+                .any(|i| i.contains("needs a level section"))
         );
     }
 

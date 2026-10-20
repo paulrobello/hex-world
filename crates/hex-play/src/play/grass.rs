@@ -1695,6 +1695,30 @@ mod tests {
         assert!(walls.iter().all(|&n| n >= 50), "barn_red_b walls {walls:?}");
     }
 
+    /// Station criterion 3: on a meadow cap everywhere, the platform's `GROUND_BOXES` box keeps
+    /// every blade off its whole footprint, ramps included (no blade within 0.1 m of its
+    /// collider), and so off the shelter standing on it; grass still grows along its back wall.
+    #[test]
+    fn grass_clears_the_station_platform() {
+        let def = TileCatalog::builtin()
+            .unwrap()
+            .get("rail_station")
+            .unwrap()
+            .clone();
+        let ex = exclusions(&def, Axial::ORIGIN, &[], &[]);
+        assert!(
+            matches!(ex[0], Clear::Box { .. }),
+            "the platform clears a box: {:?}",
+            ex[0]
+        );
+        let bands = hero_grass(&def, Axial::ORIGIN);
+        let [(platform, walls)] = bands.as_slice() else {
+            panic!("{bands:?}")
+        };
+        assert_eq!(platform, "rail_station_platform");
+        assert!(walls[0] >= 50, "back wall {walls:?}");
+    }
+
     /// The paddock fence clears a disc over each post (0.142 m, gate posts 0.163 m), not a disc
     /// of its whole reach at the tile centre: grass grows in the yard at (0, 0), under the rails
     /// mid-span, and never on a post.

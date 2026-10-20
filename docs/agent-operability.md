@@ -400,7 +400,7 @@ In the play scenario the state JSON's `tiles` is the world's tile count, and `pl
 | `connected_destinations` | Houses that can reach at least one other house by road |
 | `spawn_rate_hz` | Cars spawned per second while under the cap: `connected_destinations` × 0.05 |
 | `trains` | Trains running on the rail network (P3), derived from the rail graph, never saved |
-| `train_list` | Every train: `id`, its front's world `x`/`z`, `speed` (m/s) and `waiting` (`none`, `line_end`, `train` or `junction`) |
+| `train_list` | Every train: `id`, its front's world `x`/`z`, `speed` (m/s) and `waiting` (`none`, `line_end`, `train`, `junction` or `station`, standing at a station stop) |
 | `junctions` | Every rail junction: its cell `q`/`r`, the leg its switch is `set` to (`straight` or `branch`) and `facing`, the legs facing trains took there, oldest first (the last 16) |
 | `closed_crossings` | Level crossings closed to cars while a train is on the deck or within 30 m, as cells |
 | `rising` | Running rises: `[{q, r, tile, stage, t}]`, `stage` one of `column`, `cap`, `edges`, `props`, `agents`, `t` seconds since the placement |

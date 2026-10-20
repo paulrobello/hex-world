@@ -1,0 +1,36 @@
+// Rail station (P3, refs A17): the rail straight (edge 0 to edge 3, rail_straight_center) with a
+// side platform on its north side (runtime -z) and the ref-1 shelter standing on the paving. The
+// platform shares the straight's frame (scripts/blender/kit/_station.py), so it stands at the tile
+// origin unturned; it is walker and scatter ground (`hex-play` scatter::GROUND_PROPS), level at
+// 1.38 m for |x| <= 10 with a ramp at each end. The shelter's pivot is its footprint centre on the
+// paving (`SHELTER_AT`, `H`). Trains stop with every axle on the level section (`stops`: x from
+// +10 to -10 is 3.856 to 23.856 m along the segment from edge 0), wait and run on (hex-sim rail).
+(
+    id: "rail_station",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    center: Some("rail_straight_center"),
+    networks: [
+        (kind: Rail, from: Edge(0), to: Edge(3)),
+    ],
+    stops: [
+        (segment: 0, level: (3.856, 23.856)),
+    ],
+    props: (
+        scatter: [
+            (piece: "wildflower_single", density: 3.0, vary: 0.8),
+        ],
+        hero: [
+            (piece: "rail_station_platform", at: (0.0, 0.0)),
+            (piece: "rail_station_shelter", at: (-0.3, -5.0), y: 1.38),
+        ],
+    ),
+)

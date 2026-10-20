@@ -5,7 +5,8 @@
 //!
 //! - **Ground.** A tile's ground is [`scatter::Surface`] built from its base, centre and lane edge
 //!   pieces (`scatter::ground_pieces`), sampled in the tile frame: meadow cap, road, beach slope,
-//!   river banks and bed, the bridge deck. A tile whose ground pieces are outside the kit (a
+//!   river banks and bed, the bridge deck, and hero props that are ground (`scatter::GROUND_PROPS`:
+//!   the station platform's paving and ramps). A tile whose ground pieces are outside the kit (a
 //!   placeholder) stands at y = 0, the placeholder cap. Tiles hidden until their pack arrives
 //!   ([`PlayWaiting`]) are not ground at all.
 //! - **Water.** On a tile with water (`water::tiles::water_kind`) the surface is [`WATER_Y`]: the
@@ -14,9 +15,10 @@
 //!   2026-10-20: "allow walk mode to cross rivers"): over deeper water the feet hold at
 //!   [`MAX_WADE`] under the surface, so the walker crosses with its head above the water. The sea
 //!   (ocean, coast and river mouth tiles) still stops it.
-//! - **Obstacles.** Houses, the windmill, the barn, the hero oak, spruces, rocks and the farm's hay
-//!   bales and (static) animals block the walker by their collider (`<piece>_collider` in the kit
-//!   GLB) as a convex footprint on the ground, placed with the hero or scatter instance's transform
+//! - **Obstacles.** Houses, the windmill, the barn, the station shelter, the hero oak, spruces,
+//!   rocks and the farm's hay bales and (static) animals block the walker by their collider
+//!   (`<piece>_collider` in the kit GLB) as a convex footprint on the ground, placed with the hero
+//!   or scatter instance's transform (a hero's `y` lifts its volume, the shelter onto the paving)
 //!   under the tile's rest transform. A collider of disjoint parts (the paddock fence's six run
 //!   boxes, [`PieceShape::parts`]) blocks and is clicked part by part, so the walker enters the
 //!   paddock through its gate and stands inside it. Wildflowers do not block, and the wheat
@@ -111,6 +113,7 @@ pub const OBSTACLES: &[&str] = &[
     "bush_verge",
     "bush_verge_b",
     "bush_verge_c",
+    "rail_station_shelter",
 ];
 
 /// Parts of centre pieces that block the walker, as (centre piece, part, footprint corners in the
@@ -605,7 +608,8 @@ pub fn prop_kind(piece: &str) -> &'static str {
             || p.starts_with("barn")
             || p.starts_with("windmill")
             || p == "bakery_shop"
-            || p == "bakery_shop_b" =>
+            || p == "bakery_shop_b"
+            || p == "rail_station_shelter" =>
         {
             "building"
         }
@@ -817,7 +821,7 @@ impl WalkGround {
             };
             for (h, piece) in def.hero_pieces(t.cell) {
                 if OBSTACLES.contains(&piece) {
-                    let local = Transform::from_xyz(h.at[0], 0.0, h.at[1])
+                    let local = Transform::from_xyz(h.at[0], h.y, h.at[1])
                         .with_rotation(Quat::from_rotation_y(-h.yaw_deg.to_radians()));
                     place(piece, &shape(piece), &(root * local));
                 }
@@ -1493,6 +1497,7 @@ pub(crate) mod tests {
             piece: hex_core::KitRef::from("bakery_shop"),
             at: [2.0, 1.0],
             yaw_deg: 30.0,
+            y: 0.0,
         }];
         let mut tiles = builtin.tiles().to_vec();
         tiles.push(def.clone());
@@ -2294,6 +2299,103 @@ pub(crate) mod tests {
                 "from {start} along {dir}: blocked by {:?} at {}",
                 s.blocked,
                 s.pos
+            );
+        }
+    }
+
+    /// The station at the origin turned `rotation`, with a rail straight on each track edge, and
+    /// the map from the station's tile frame to world XZ.
+    fn station(rotation: u8) -> (WalkGround, impl Fn(f32, f32) -> Vec2) {
+        let [a, b] = [rotation, (rotation + 3) % 6].map(|e| Axial::ORIGIN.neighbor(e));
+        let g = world(&[
+            (0, 0, "rail_station", rotation),
+            (a.q, a.r, "rail_straight", rotation),
+            (b.q, b.r, "rail_straight", rotation),
+        ]);
+        let turn = Quat::from_rotation_y(-(f32::from(rotation)) * std::f32::consts::FRAC_PI_3);
+        (g, move |x: f32, z: f32| (turn * Vec3::new(x, 0.0, z)).xz())
+    }
+
+    /// Station criterion 1: the platform is walker ground. The walker stands on the paving at
+    /// 1.38 m, and walks in from each neighbouring straight, up the ramp, onto the level paving
+    /// (clear of the lamps, tubs, board and shelter); every ramp toe is a step it can climb, the
+    /// meadow at the border sitting within 0.03 m of the cap.
+    #[test]
+    fn the_walker_stands_on_the_platform_and_climbs_both_ramps() {
+        let def = catalog().get("rail_station").unwrap().clone();
+        let surface = surface(&def).unwrap();
+        assert_eq!(surface.at(0.0, -4.5).unwrap().1, "rail_station_paving");
+        for z in (0..50).map(|i| -6.75 + 0.1 * i as f32) {
+            for x in [13.3f32, -13.3] {
+                let toe = surface.at(x * 0.999, z).unwrap().0;
+                let meadow = surface.at(x * 1.002, z).unwrap().0;
+                assert!(
+                    toe - meadow <= MAX_STEP,
+                    "toe at ({x}, {z}): {toe} over {meadow}"
+                );
+            }
+        }
+        for rotation in [0, 2, 5] {
+            let (g, at) = station(rotation);
+            let paving = g.ground(at(0.0, -4.5)).unwrap();
+            assert!(
+                (paving - 1.38).abs() < 0.02,
+                "r{rotation}: paving at {paving}"
+            );
+            for side in [1.0f32, -1.0] {
+                let from = at(16.5 * side, -4.5);
+                let to = at(6.0 * side, -4.5);
+                let s = walk(&g, from, to - from, 10.5);
+                assert!(
+                    s.blocked.is_none() && s.pos.xz().distance(to) < 0.05,
+                    "r{rotation} side {side}: blocked by {:?} at {}",
+                    s.blocked,
+                    s.pos
+                );
+                assert!(
+                    (s.pos.y - 1.38).abs() < 0.02,
+                    "r{rotation} side {side}: feet at {}",
+                    s.pos.y
+                );
+            }
+        }
+    }
+
+    /// Station criterion 2: the shelter (on the paving, `HeroProp::y`) blocks the walker as a
+    /// building at every rotation, and photo mode's click picks it at the height it stands.
+    #[test]
+    fn the_station_shelter_blocks_as_a_building_and_is_picked() {
+        for rotation in [0, 1, 3] {
+            let (g, at) = station(rotation);
+            let from = at(-2.8, -2.4);
+            let s = walk(&g, from, at(-2.8, -6.0) - from, 2.0);
+            let b = s.blocked.expect("the shelter stops the walker");
+            assert_eq!(
+                b.piece(),
+                Some("rail_station_shelter"),
+                "r{rotation}: {b:?}"
+            );
+            assert_eq!(b.reason(), "building");
+            assert!(
+                (s.pos.y - 1.38).abs() < 0.02,
+                "r{rotation}: stopped on the paving"
+            );
+            // Level at paving eye height from across the track, at the room's front wall (z -3.6).
+            let eye = at(-2.8, 6.0);
+            let wall = at(-2.8, -5.0);
+            let o = Vec3::new(eye.x, 1.38 + 1.7, eye.y);
+            let (t, piece) = g
+                .pick_prop(ray(o, Vec3::new(wall.x, o.y, wall.y) - o), 100.0)
+                .expect("the shelter is pickable");
+            assert_eq!(piece, "rail_station_shelter", "r{rotation}");
+            assert_eq!(prop_kind(piece), "building");
+            assert!(t > 9.0 && t < 10.5, "r{rotation}: front wall at {t}");
+            // Above its ridge the ray meets nothing.
+            let high = Vec3::new(eye.x, 1.38 + 9.0, eye.y);
+            assert!(
+                g.pick_prop(ray(high, Vec3::new(wall.x, high.y, wall.y) - high), 100.0)
+                    .is_none(),
+                "r{rotation}: picked above the roof"
             );
         }
     }

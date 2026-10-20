@@ -6,12 +6,17 @@
 //!   the toe segment leaves on the leg the switch is set to, and from either leg it trails through
 //!   onto the toe segment. No route joins the two legs.
 //! - **Trains.** An engine, a carriage and a brake third ([`CONSIST`]), [`TRAIN_LENGTH`] meters
-//!   over the buffers. A train follows the track, never a route: there are no stations yet, so at each facing
-//!   toe it takes the leg the junction offers next, alternating between the two, and the switch is
-//!   thrown for it when it reserves the junction. At a line end (a seam facing an empty cell; rail
-//!   meets only rail, so a line can end nowhere else) it stops inside the last tile, waits
-//!   [`DWELL_SECONDS`] and runs back the other way, the tank engine propelling its carriages (a
-//!   push-pull "autotrain": tank engines work both ways without a turntable). On a loop it loops.
+//!   over the buffers. A train follows the track, never a route: at each facing toe it takes the
+//!   leg the junction offers next, alternating between the two, and the switch is thrown for it
+//!   when it reserves the junction. At a line end (a seam facing an empty cell; rail meets only
+//!   rail, so a line can end nowhere else) it stops inside the last tile, waits [`DWELL_SECONDS`]
+//!   and runs back the other way, the tank engine propelling its carriages (a push-pull
+//!   "autotrain": tank engines work both ways without a turntable). On a loop it loops.
+//! - **Stations.** A station tile's stop ([`hex_core::StopDef`]) is its platform's level section.
+//!   A train running toward one brakes to stand with its outer axles ([`axle_span`], from
+//!   [`CONSIST`], so a longer consist is centred the same way) centred on the section, waits
+//!   [`STATION_DWELL_SECONDS`], and runs on ([`Railway::departures`] names it that tick). It stops
+//!   once per pass: the stop re-arms when its body leaves the station's link or it reverses.
 //! - **Junctions.** A train may enter a junction's fouling zone (from the toe border to
 //!   [`hex_core::SwitchDef::fouling`] along both legs) only with the junction reserved, and the
 //!   switch moves only when a train reserves an empty zone, so it never moves under a train. A
@@ -51,6 +56,10 @@ pub const ZONE_MARGIN: f32 = 1.0;
 pub const END_MARGIN: f32 = 1.0;
 /// Wait at a line end before running back (s).
 pub const DWELL_SECONDS: f32 = 3.0;
+/// Wait at a station stop before running on (s).
+pub const STATION_DWELL_SECONDS: f32 = 8.0;
+/// How far (m) a stop target may lie behind the train's mark and still hold it there.
+const STOP_EPS: f32 = 0.05;
 /// Two trains stopped facing each other this long (s): the higher id runs back.
 pub const STUCK_SECONDS: f32 = 5.0;
 /// A train blocked this long by anything else runs back (s), so no layout deadlocks for good.
@@ -142,6 +151,17 @@ pub const CONSIST: [VehicleSpec; 3] = [
 /// Buffer to buffer (m).
 pub const TRAIN_LENGTH: f32 = 24.22;
 
+/// The consist's first and last axle, measured from the engine end of the train (m): every wheel
+/// of the train stands between them.
+pub fn axle_span() -> (f32, f32) {
+    CONSIST.iter().fold((f32::MAX, f32::MIN), |(lo, hi), v| {
+        (
+            lo.min(v.centre - v.half_wheelbase),
+            hi.max(v.centre + v.half_wheelbase),
+        )
+    })
+}
+
 /// A link travelled in one direction: `forward` runs from the link's `a` end to its `b` end.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Step {
@@ -164,6 +184,8 @@ pub enum Blocker {
     LineEnd,
     Train(TrainId),
     Junction(Axial),
+    /// Standing at the station stop on this cell.
+    Station(Axial),
 }
 
 /// A train on the track.
@@ -184,9 +206,18 @@ pub struct Train {
     /// Facing toes passed, as (junction cell, leg taken), oldest first; the last 16.
     routes: Vec<(Axial, Leg)>,
     reversals: u32,
+    /// The link of the stop this train last waited at, until it leaves that link or reverses.
+    served: Option<LinkId>,
+    /// Station stops made.
+    stops: u32,
 }
 
 impl Train {
+    /// Station stops this train has made (each counted when it leaves).
+    pub fn stops(&self) -> u32 {
+        self.stops
+    }
+
     pub fn id(&self) -> TrainId {
         self.id
     }
@@ -338,6 +369,30 @@ impl Crossing {
     }
 }
 
+/// A station stop: a platform's level section along one rail link.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Stop {
+    cell: Axial,
+    link: LinkId,
+    /// The level section in link coordinates (`a` end = 0).
+    level: (f32, f32),
+}
+
+impl Stop {
+    pub fn cell(&self) -> Axial {
+        self.cell
+    }
+
+    pub fn link(&self) -> LinkId {
+        self.link
+    }
+
+    /// The level section along the link from its `a` end (m).
+    pub fn level(&self) -> (f32, f32) {
+        self.level
+    }
+}
+
 /// A stretch of a link ahead of a train: from `from` to `to` in the link's own coordinates (`a`
 /// end = 0), starting `at` meters ahead of the train's front.
 #[derive(Clone, Copy, Debug)]
@@ -370,6 +425,9 @@ pub struct Railway {
     net: Network,
     junctions: Vec<Junction>,
     crossings: Vec<Crossing>,
+    stops: Vec<Stop>,
+    /// Trains that left a station stop on the last tick, with the stop's cell.
+    departures: Vec<(TrainId, Axial)>,
     trains: Vec<Train>,
     next_train: u64,
     /// The graph changed (or a line still wants a train): run the spawner on the next tick.
@@ -440,6 +498,8 @@ impl Railway {
             net: Network::new(NetworkKind::Rail),
             junctions: vec![],
             crossings: vec![],
+            stops: vec![],
+            departures: vec![],
             trains: vec![],
             next_train: 0,
             dirty: false,
@@ -466,6 +526,16 @@ impl Railway {
 
     pub fn crossings(&self) -> &[Crossing] {
         &self.crossings
+    }
+
+    pub fn stops(&self) -> &[Stop] {
+        &self.stops
+    }
+
+    /// Trains that left a station stop on the last tick, with the stop's cell (a departure
+    /// whistle's cue).
+    pub fn departures(&self) -> &[(TrainId, Axial)] {
+        &self.departures
     }
 
     /// Cells of the crossings closed to cars this tick.
@@ -531,6 +601,20 @@ impl Railway {
             }
         }
         self.crossings.sort_by_key(|c| (c.cell, c.rail));
+        for stop in &def.stops {
+            let link = LinkId {
+                cell,
+                segment: stop.segment,
+            };
+            if self.net.link(link).is_some() {
+                self.stops.push(Stop {
+                    cell,
+                    link,
+                    level: (stop.level[0], stop.level[1]),
+                });
+            }
+        }
+        self.stops.sort_by_key(|s| (s.cell, s.link));
     }
 
     /// Mirrors a bulldozed tile.
@@ -545,6 +629,7 @@ impl Railway {
     fn forget_cell(&mut self, cell: Axial) {
         self.junctions.retain(|j| j.cell != cell);
         self.crossings.retain(|c| c.cell != cell);
+        self.stops.retain(|s| s.cell != cell);
     }
 
     fn drop_trains_on(&mut self, cell: Axial) {
@@ -655,6 +740,37 @@ impl Railway {
         out
     }
 
+    /// Where the point `s` (link coordinates) of `link` lies along train `t`'s path, measured from
+    /// its front (m): ahead on `spans` (`Railway::ahead`) is positive, under the body negative.
+    /// `None` when it is on neither.
+    fn offset_of(&self, t: &Train, spans: &[Span], link: LinkId, s: f32) -> Option<f32> {
+        for sp in spans.iter().filter(|sp| sp.link == link) {
+            let (lo, hi) = if sp.forward() {
+                (sp.from, sp.to)
+            } else {
+                (sp.to, sp.from)
+            };
+            if (lo..=hi).contains(&s) {
+                return Some(sp.at + (s - sp.from).abs());
+            }
+        }
+        let net = self.net();
+        let mut behind = 0.0;
+        for (i, step) in t.steps.iter().enumerate() {
+            let len = link_of(net, step.link).length();
+            // The travel coordinate on this step nearest the front.
+            let near = if i == 0 { t.head } else { len };
+            if step.link == link {
+                let travel = if step.forward { s } else { len - s };
+                if travel <= near {
+                    return Some(-(behind + near - travel));
+                }
+            }
+            behind += near;
+        }
+        None
+    }
+
     /// The point `d` meters behind a train's front.
     fn point_behind(&self, t: &Train, d: f32) -> Vec2 {
         let net = self.net();
@@ -743,6 +859,7 @@ impl Railway {
     /// releases junctions the trains have left and updates the crossings.
     pub fn tick(&mut self) {
         self.ticks += 1;
+        self.departures.clear();
         if self.dirty || self.ticks.is_multiple_of(40) {
             self.spawn();
         }
@@ -796,6 +913,35 @@ impl Railway {
                         }
                     }
                 }
+            }
+        }
+        // Stations: brake to stand with the axles centred on the level section, unless this
+        // pass already waited there. Before the junctions, so none is reserved past a stop.
+        let t = &self.trains[i];
+        if let Some(l) = t.served
+            && !self.body(t).iter().any(|&(b, ..)| b == l)
+        {
+            self.trains[i].served = None;
+        }
+        let t = &self.trains[i];
+        let (lo, hi) = axle_span();
+        let mid = (lo + hi) / 2.0;
+        let behind = if t.engine_leads {
+            mid
+        } else {
+            TRAIN_LENGTH - mid
+        };
+        let mut stop_link = None;
+        for st in self.stops.iter().filter(|s| t.served != Some(s.link)) {
+            let centre = (st.level.0 + st.level.1) / 2.0;
+            let Some(at) = self.offset_of(t, &spans, st.link, centre) else {
+                continue;
+            };
+            let go = at + behind;
+            if go >= -STOP_EPS && go.max(0.0) < limit {
+                limit = go.max(0.0);
+                blocker = Blocker::Station(st.cell);
+                stop_link = Some(st.link);
             }
         }
         // Junctions: reserve the first zone ahead that this train does not hold, or stand short.
@@ -879,10 +1025,20 @@ impl Railway {
         }
         let dwell = (DWELL_SECONDS / TICK_SECONDS) as u32;
         let give_up = (GIVE_UP_SECONDS / TICK_SECONDS) as u32;
+        if let Blocker::Station(cell) = t.blocker
+            && t.stopped >= (STATION_DWELL_SECONDS / TICK_SECONDS) as u32
+        {
+            t.served = stop_link;
+            t.stops += 1;
+            t.blocker = Blocker::Clear;
+            t.stopped = 0;
+            self.departures.push((id, cell));
+            return;
+        }
         let reverse = match t.blocker {
             Blocker::LineEnd => t.stopped >= dwell,
             Blocker::Train(_) | Blocker::Junction(_) => t.stopped >= give_up,
-            Blocker::Clear => false,
+            Blocker::Clear | Blocker::Station(_) => false,
         };
         if reverse {
             self.reverse(i);
@@ -978,6 +1134,7 @@ impl Railway {
     fn reverse(&mut self, i: usize) {
         let mut t = turned(&self.net, &self.trains[i]);
         t.reversals += 1;
+        t.served = None;
         let poses = self.poses(&t);
         t.now = poses.clone();
         t.prev = poses;
@@ -1136,6 +1293,8 @@ impl Railway {
             now: vec![],
             routes: vec![],
             reversals: 0,
+            served: None,
+            stops: 0,
         };
         let mut need = length;
         loop {

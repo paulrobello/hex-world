@@ -752,6 +752,15 @@ pub const GROUND_BOXES: &[(&str, GroundBox)] = &[
             max: [3.115, 3.8],
         },
     ),
+    // The station platform's LOD2 box collider, ramps included (friction.md item 6): grass keeps
+    // clear of its whole footprint, the ramp toes too.
+    (
+        "rail_station_platform",
+        GroundBox {
+            min: [-13.3, -6.8],
+            max: [13.3, -1.66],
+        },
+    ),
 ];
 
 pub fn ground_box(piece: &str) -> Option<GroundBox> {
@@ -938,11 +947,25 @@ impl Surface {
     }
 }
 
+/// Hero props that are ground, not obstacles: the station platform, whose paving and ramps the
+/// walker stands on and scatter keeps off. Each stands at the tile origin at a whole hex turn
+/// (`ground_props_stand_at_the_origin_on_a_hex_turn`), so it joins the ground in the tile frame
+/// as a centre piece does.
+pub const GROUND_PROPS: &[&str] = &["rail_station_platform"];
+
 /// The ground pieces of a tile and their turn about +Y in the tile frame ([`turn`] steps, as
-/// `tile_children` draws them with `piece_rotation`): the base, and with a centre piece the centre
-/// and its lanes' edge pieces.
+/// `tile_children` draws them with `piece_rotation`): the base, with a centre piece the centre
+/// and its lanes' edge pieces, and its [`GROUND_PROPS`] heroes (a yaw of 60 k degrees is turn k).
 pub fn ground_pieces<'a>(def: &'a TileDef, catalog: &'a TileCatalog) -> Vec<(&'a str, u8)> {
     let mut v = vec![(def.base.as_str(), 0)];
+    for h in &def.props.hero {
+        if GROUND_PROPS.contains(&h.piece.as_str()) {
+            v.push((
+                h.piece.as_str(),
+                (h.yaw_deg / 60.0).round().rem_euclid(6.0) as u8,
+            ));
+        }
+    }
     if let Some(c) = &def.center {
         v.push((c.as_str(), 0));
         let pieces = def.edge_pieces(catalog.sockets());
@@ -2061,7 +2084,7 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 27, "every inventory tile ran");
+        assert_eq!(counts.len(), 28, "every inventory tile ran");
         for id in [
             "forest",
             "oak",
@@ -2586,6 +2609,56 @@ mod tests {
                 "{id} fills {area} of its {size} box"
             );
         }
+    }
+
+    /// A [`GROUND_PROPS`] hero joins the ground in the tile frame, so every one in the catalog
+    /// stands at the origin at a whole hex turn, unlifted.
+    #[test]
+    fn ground_props_stand_at_the_origin_on_a_hex_turn() {
+        let c = catalog();
+        let mut seen = 0;
+        for def in c.tiles() {
+            for h in &def.props.hero {
+                if GROUND_PROPS.contains(&h.piece.as_str()) {
+                    seen += 1;
+                    assert_eq!((h.at, h.y), ([0.0, 0.0], 0.0), "{}", def.id);
+                    assert_eq!(h.yaw_deg.rem_euclid(60.0), 0.0, "{}", def.id);
+                }
+            }
+        }
+        assert!(seen > 0, "the station tile carries its platform");
+    }
+
+    /// Station criterion 3 (scatter): the platform is the station tile's ground, so its
+    /// wildflowers keep off its whole footprint (its `GROUND_BOXES` box, ramps included) for
+    /// any seed: the paving is not their floor.
+    #[test]
+    fn station_scatter_keeps_off_the_platform() {
+        let c = catalog();
+        let def = c.get("rail_station").unwrap();
+        assert!(
+            ground_pieces(def, &c).contains(&("rail_station_platform", 0)),
+            "the platform is ground"
+        );
+        let b = ground_box("rail_station_platform").unwrap();
+        let g = prepared(def).unwrap();
+        let mut n = 0;
+        for seed in 0..16u64 {
+            for inst in &layout(def, seed, &g).instances {
+                n += 1;
+                let fp =
+                    footprint(inst.piece(def.props.scatter[inst.rule as usize].piece.as_str()));
+                let p = inst.pos.xz();
+                assert!(
+                    p.x < b.min[0] - fp.ground
+                        || p.x > b.max[0] + fp.ground
+                        || p.y < b.min[1] - fp.ground
+                        || p.y > b.max[1] + fp.ground,
+                    "seed {seed}: a flower at {p} on the platform"
+                );
+            }
+        }
+        assert!(n > 100, "{n} flowers over 16 seeds");
     }
 
     /// The sqrt-built directions and turns agree with the trig and `piece_rotation` the renderer
