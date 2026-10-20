@@ -392,7 +392,7 @@ mod tests {
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 22 + 80);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 22 + 81);
     }
 
     #[test]
