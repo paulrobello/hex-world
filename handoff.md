@@ -1,77 +1,72 @@
-# Hex World handoff (2026-10-19)
+# Hex World handoff (2026-10-20)
+
+Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE.md`, `PRD.md` §15 and `.claude/skills/blender-asset/SKILL.md` before any asset work.
 
 ## State
 
-- `main` pushed through `ce167a1` (CI run 39371992805); count unpushed with `git log --oneline origin/main..main`. Evening 2026-10-19 landed and pushed: farm, wheat field and bakery tiles, rail straight/bend, level crossing, junction, station platform and shelter, steam train. Runtime integration for rail is on cards (rail network `01a1579e911c`, station tile `01a157994d7a`, cars follow road height `01a1575a45d4`).
-- Working tree clean apart from an untracked `.claude/launch.json` (leave it). No worktrees, no background runs.
-- `dist/` rebuilt from `main` post-merge (`make build-web` green).
+- `main` pushed through `576760e`; every push on 2026-10-20 passed CI and auto-deployed to hex-world.pardev.net. Count unpushed with `git log --oneline origin/main..main`.
+- `dist/` rebuilt from `main` after every merge (`make build-web`).
+- Working tree clean apart from an untracked `.claude/launch.json` (leave it).
+- Work still running when this was written (the session lands each one, then stops; see "In flight" below for what to do if one is still open).
 
-## Landed 2026-10-19 (afternoon), all local
-- Render fixes: `c15edd8` kit normal basis returned inverse(m), mirroring normals of every piece not at 0/180 degrees since `ccfdafd` (owner's coast/river-mouth hex-edge lines and the black walls on yawed cottages/bakery/barn); `3a973ea` GPU test; `79e44ab` instanced kit draws queued after bevy's mesh queues (coast wet band vanished, water read the skirt as bed). House thumbnails regenerated `8148a31`.
-- New P3 pieces: hay bales `6cf5b97`, barn `ae8f5bf`, bakery `d5fe285`, cow and sheep `c6b1598`; houses re-baked `cc38bad` (unbaked masks texels). Reviews in `docs/review/2026-10-19-owner-queue.md` (A1-A5).
-- Farm tile (owner request 2026-10-19): `data/tiles/farm.ron` puts the approved barn, three hay bales, a cow and two sheep (static until P3's wander) on a meadow base in the Tiles list after the windmill; walk blocks at the barn, bales and animals; checkpoint `docs/checkpoints/farm/` (`make shots-farm-play`).
-- Wheat field tile (owner request 2026-10-19): new piece `wheat_field` (centre, kind prop, village pack; ripe wheat V-row cards with wind on tinted-gravel ploughed earth) and `data/tiles/wheat_field.ron` after the farm in the Tiles list; the wheat slot is not walk/scatter ground (`scatter::NOT_GROUND`), so the walker walks through it. Piece approval pending; review sheet `docs/checkpoints/wheat_field/sheet.jpg` (`make shots-wheat-play`).
-- Features: grass distance setting `86a3195` (perf not measured: host load 106-215, MiniMac unreachable; command in the commit), FPS overlay hidden by default `649f068`.
-- Tooling: `scripts/worktree-bootstrap.sh`, export fails on non-unit normals/tangents, `lib/budgets.py`, stale generator hashes warn instead of fail (owner ruling), Dependabot fix `e30c9b2` (sharp 0.35.5, unused gltf-transform CLI dropped; alerts close after a push).
-- Grass "less lush" report: no regression found (identical blade counts pre-audit vs main); grass fades by 58 m and the default camera is ~158 m away.
+## Landed 2026-10-19 evening to 2026-10-20 (all pushed)
 
-## User feedback from Paul (2026-10-19, post-deploy)
+Assets (every piece's owner approval is still **pending**; review sheets under `docs/checkpoints/<piece>/sheet.jpg`):
+- Rail: river rail bridge `d6eb22a` (plus the train, crossing, station, junction from 2026-10-19).
+- Houses: `house_longhouse` `de3bf7e`, `house_twostorey_b` `885458b`, drawn through the hero variant resolver `e24a97c` (`crates/hex-core/src/variant.rs` `HERO_VARIANTS`, about one slot in three).
+- Oak tile: scattered `tree_oak`/`tree_oak_b` `2b6919b`; hero variant `tree_hero_oak_b` `36aa4a4` (12 bird perches).
+- Pine forest floor: ferns and log `261dc10`, variants `4aadbfb`, shrub and sapling `8eafaac`, `shrub_forest_b` (holly) `9f7ae7c`, `sapling_spruce_b` `576760e`.
+- Farm: paddock fence in play `f865be6` (per-part walker colliders, post-only grass clears, line-clear scatter), grazing cow and lamb `ae8e404`, hay bale variants `2da86b8`, grazing sheep `12d0d8d`.
+- Roads: verge bushes `bush_verge` `b8ad8e6` and `bush_verge_b` `8c5ad9b` (verge band scatter, none on parking tiles).
+- Audio: 13 one-shot cues for farm, windmill, wheat, bakery and train `2f40c53` (owner approves by ear on `assets-source/audio/review.html`).
 
-- "no change all same rendering issues exist" — the forest-placement artifact is unchanged on the deployed fixed build.
-- "LOD level is also broken" — new information: LOD behavior is wrong alongside the artifact.
+## In flight at handoff (check each before starting anything)
 
-Symptoms when placing a forest: the full tree set rises, then several trees disappear; branches render as flat panels; strange blending; LOD level wrong while running the highest detail tier (ultra). The saved-world **crash** is fixed (root cause: WGSL parameter assignment in `shade_kit_vertex` killing the COLOR_0 def-variant; card `01a1528d8bb571d8901e46ea8b1e7614` done, vault note `~/ParsidionVault/Debugging/wgsl-parameter-assignment-breaks-only-its-def-variant.md`). The **artifact** is a separate, live regression — the earlier device-poisoning explanation did not hold.
+Agents ran in isolated worktrees under `.claude/worktrees/`. `git worktree list` shows any still present.
+1. **Piece tables as slices**, card `01a15994825570` (in progress): converts `OBSTACLES`, `FOOTPRINTS`, `VARIANTS`, `HERO_VARIANTS` and the kit layout tables from `[T; N]` to slices so parallel landings stop conflicting on the length line. Branch `worktree-agent-a24bd8c2545fe7a62`.
+2. **`log_fallen_c`**, a third fallen-log variant (Blender). Branch `worktree-agent-ad94838191ee02eb8`. Integration in its `docs/checkpoints/log_fallen_c/integration.patch`.
+3. **`house_cottage_b`**, a second cottage variant (Blender). Branch `worktree-agent-a71f694128230ad81`. Integration in `docs/checkpoints/house_cottage_b/integration.patch` (adds to `HERO_VARIANTS`).
+
+If a branch is still present in a new session, its agent did not finish or was not landed. Landing recipe (the one used all session):
+1. `git -C <worktree> merge main`, then `git apply --3way docs/checkpoints/<piece>/integration.patch`, resolve, `cargo test -p hex-play -p hex-render --lib`, commit on the branch.
+2. `caffeinate -d -u make thumbs` in the worktree; keep only the tiles the piece changes; discard the rest (water and grass animate).
+3. `make checkall-ci > log 2>&1; echo EXIT=$?`, then squash-merge into `main`, `make build-web`, remove the worktree (`git worktree unlock` first if a finished agent left it locked), delete the branch, push, watch CI with `gh run watch <id> --exit-status`.
 
 ## Standing rules from the owner (still in force)
 
-- Standing push approval when a batch is a significant addition or change (Paul, 2026-10-19), after `make checkall-ci` passes; watch CI after. Small or doc-only commits wait to ride along. Rebuild with `make build-web` after every merge to `main`.
-- Standing approval to generate sounds for new items (Paul, 2026-10-19); the owner still approves each sound by ear on `assets-source/audio/review.html`.
-- Every asset brief carries an integration section (`.claude/skills/blender-asset/references/dispatch.md` part 11): runtime consequences are handled or filed before a piece is called done (Paul, 2026-10-19: "details like that should always be accounted for").
-- Asset-generation agents are cleared again (Paul, 2026-10-19: "start creating more assets in blender"), on Opus 5.5 at xhigh effort.
-- Blender is headless only, no live Blender or MCP (owner rule, 2026-10-13).
-- Tool bugs and flaky tests are high priority, never low.
-- Never record an owner approval yourself. Use pending entries in `docs/review/` and on cards only.
-- Perf numbers need host 1-min load ≤ 15 before and after every run. MiniMac (base M4) is cleared for perf as a separate baseline; see `docs/perf/minimac/README.md`.
-- "once the current batch of work is complete dont start any new work" — start new work only when Paul asks.
+- **Stop rule (2026-10-20):** "allow all current work to finish, dont start anything new". Start new work only when Paul asks.
+- Fix friction or defects of any scope found along the way, don't only file them (Paul, 2026-10-20: "you can do fixes to any scope needed").
+- Standing push approval when a batch is a significant addition or change, after `make checkall-ci` passes; watch CI after. Small or doc-only commits ride along with the next push. `make build-web` after every merge to `main`.
+- Standing approval to generate sounds for new items; the owner still approves each by ear.
+- Every asset brief carries the integration section (`.claude/skills/blender-asset/references/dispatch.md` part 11).
+- When asset work is active: at least 2 and at most 3 Blender agents at once, at high effort, in `isolation: "worktree"`. Each new piece reuses approved helpers through module globals from a new family file (never edit an approved helper), and its runtime changes come back as a verified `integration.patch` for the orchestrator to land.
+- Blender headless only. Never record an owner approval yourself (pending entries only). Tool bugs and flaky tests are high priority. Perf numbers need host load ≤ 15 before and after.
 
-## Unfinished work
+## Waiting on Paul
 
-### Resolved 2026-10-19 — forest artifact + LOD, card `01a15485cb01756581d96017fea753d3` (done)
-Fixed in `ab9a107`; evidence and the five root causes in `docs/checkpoints/forest-instancing/README.md`. Bisect: `218097d` and `a434c5b` render correctly, the GPU-instancing pivot `c92a961` introduced it. The defects: parent-only placement dedupe (scatter groups every tree under one entity), chunk-relative record translation, slot material key 0 plus missing `MAY_DISCARD`, `pbr_fragment`'s `mesh[]` flags read aliasing the kit record buffer, and masked slots queued into `AlphaMask3dPrepass` with the `Opaque3dPrepass` draw-function id. Debug Force LOD and LOD tint now reach settled parts through `KitLodDebug`. Same-build instanced vs per-entity A/B matches on every tier. Owner re-check on the deployed site is pending.
+All pieces landed since 2026-10-19 await look approval (sheets in `docs/checkpoints/`). Open questions, numbered as asked in the session:
+- Station/rail: Q10 bogie or 4-wheel carriage; Q11 train palette; Q13 21% crossing ramp; Q14 gates open or closed; Q18 1.67 m unsupported branch run; Q19 mirrored turnout; Q20 red lever; Q27 bridge parapet height; Q28 provenance with several refs.
+- Audio: Q21 bees on farm tiles; Q22 wheat rustle sounds chopped; Q23 windmill creak floor; Q24 two variants alternating; Q45 lamb bleats higher.
+- Forest: Q25 log moss baked into bark; Q26 box spacing for long props; Q31 oaks on the pine tile; Q32 oak density; Q33 birds on scattered oaks; Q34 young fern wind; Q35 wide fern spacing; Q46 keep undergrowth out from under spruce crowns (59% of saplings within 2 m of a trunk); Q47 shrubs on the oak tile; Q48 shrubs report "shrub" not "tree"; Q60 holly too dark in shade; Q61 holly berries all year; Q62 relax `_spruce` height checks for a shorter sapling.
+- Houses: Q29 longhouse per slot or fixed slot; Q30 one box or two for the L-plan; Q40 house_cluster thumbnails show variants (done) or the canonical houses; Q41 flagstone apron under the jetty.
+- Oak: Q49 `_b` 0.27 m taller than the hero; Q50 random yaw for the oak tile hero.
+- Farm: Q36 close the paddock gate; Q37 tinted rails or wood grain; Q38 paddock south of the yard or round it; Q39 three rails or two; Q42 grazing cow placement (3.9 cm float kept) or move the original cow; Q43 and Q59 grass clear under grazing muzzles (shrink or offset the disc); Q44 lamb texture to 512; Q55 fix the round bale's sector seams; Q56 stack_b top bale crosswise or along; Q57 grazing sheep placement (2.8 cm) or move the lamb; Q58 narrower hood so the grazing sheep's black face shows from above.
+- Roads: Q51 shrink the 1024 shrub atlas (re-bakes `shrub_forest`); Q52 verge bush density (about 4 per straight tile); Q53 verge bushes on house/bakery tiles after parking-path clearance; Q54 verge bush variant mix.
+- Older queues: `docs/review/2026-10-19-owner-queue.md` (Q1-Q12) and `docs/review/2026-10-14-owner-queue.md`.
 
-### Waiting on Paul (decisions and approvals)
-1. Windmill kit piece, card `01a13d667322`: owner review of the renders in `docs/checkpoints/windmill/` (tile already merged).
-2. Prop variants and single wildflowers, card `01a13d666eea`: owner review in play.
-3. Colour grade preset, card `01a13c085851` criterion 4: owner picks one, then kit/water evidence re-shot (card `01a13ba24e9e`, A4 share image for favicon/PWA card `01a1385abd81`).
-4. Grass look, card `01a13c876aaf` criterion 6; bulldoze dust, card `01a13c03f90e` (puffs 20% smaller — check in play).
-5. DESIGN.md proposals from the debug tab (debug LOD colours, performance corner placement) and the new-version toast line.
-6. Older `docs/review/2026-10-14-owner-queue.md` items: music audition, assumptions pane, provenance hashes (card `01a13dd3c03f`), fish/bird refs (card `01a13942e556`).
+Earlier carry-over still open: windmill review (card `01a13d667322`), prop variants (card `01a13d666eea`), colour grade pick (card `01a13c085851`), grass look and bulldoze dust, DESIGN.md debug-tab proposals, forest re-check on the deployed site.
 
-### Blocked on conditions
-- web-smoke stress, card `01a139190115`: needs 3 consecutive `make web-smoke` passes at host load ABOVE 40 (one passed at 47).
-- Grass density slider, card `01a13d11e932` criterion 2: load-guarded drag measurement + blade/mesh/timing numbers at 100%/150%.
-- River mouth/spring tiles, card `01a13ba946e3`: waits on fish card `01a13c3a8c1f` criterion 1.
+## Filed follow-ups
 
-### Other open engineering
-- Large play worlds slow on web, card `01a14028862a` (high): criterion 2 open targeting `renderer_extract` (~20% of frame CPU). Its web p95 17.7/18.3 ms predates `ab9a107` (foliage now uses discard pipelines, opaque draws cull per material) — re-measure before claiming anything. Criterion 3 parity redo is now unblocked.
-- Dependencies, card `01a1547b6ac5747e967b94e245b57a6e` (high): 4 high Dependabot alerts (sharp ×3, braces) — dev/tooling npm deps; bump and confirm alerts clear.
-
-## Unresolved issues
-
-- No automated gate covers the instanced path visually: `make thumbs` renders single tiles and the e2e scatter check compares counts, not pixels. The same-build A/B used here (a temporary early return in `chunks::settle` keeping parts per-entity, then RMSE) is the reliable check; a committed play-path pixel gate would have caught all five defects.
-- Camera framing / thumbs runs are susceptible to GPU contention that the CPU load guard does not see; a clean-looking failure can be environmental — re-run isolated before diagnosing.
-
-## Next steps
-
-1. Paul re-checks forest placement and the Debug tab's LOD tint / Force LOD on the deployed site.
-2. Pivot card `01a14028862a`: fresh web/native parity shots for criterion 3, then a load-guarded re-measure of the web p95 on the post-fix build before working criterion 2.
+- Rail network (Rail socket, tiles, switch routing, junction lever), card `01a1579e911c`.
+- Station tile integration (platform walker ground, shelter obstacle, train stop), card `01a157994d7a`.
+- Cars follow road height (`ROAD_SURFACE_Y` is a fixed 0.11 m; the crossing deck is 0.46 m), card `01a1575a45d4`.
+- Large play worlds slow on web, card `01a14028862a` (high); Dependabot alerts, card `01a1547b6ac5747e967b94e245b57a6e` (high).
+- Known small items: the fence rises like a two-storey building (`play.rs`), `farm.ron`'s header comment is partly stale, walk-mode shots render a black sky (pre-existing on main), LOD2 dark neck patches on the grazing animals (draws past 400 m only).
 
 ## References
 
-- `docs/agent-operability.md` — every CLI flag, web query param, `window.hexWorld` bridge command, script commands (`select_tile`, `place`, `wait`, `camera`, `screenshot`, `save`), `--clock fixed --exit-after N`.
-- `crates/hex-render/src/kit_instances.rs` — `kit_view_ranges` (~160), `MATERIAL_DEFS`/`push_material_defs` (~262/301), `KitKey`/`specialize` (~330/347), mask binning (~846-876), `DrawKitInstances` (~1094).
-- `crates/hex-render/src/kit_material.rs` — `slot_requests` (126), `params_for` (191), `build_material` (257, AlphaMode::Mask → alpha_cutoff + double_sided).
-- `assets/shaders/kit_vertex.wesl`, `assets/shaders/kit_material.wesl`, `assets/shaders/kit_instances.wesl`.
-- `PRD.md` §15 phases, §10 budgets; `docs/kit/` water bed + shader-hooks contracts.
-- Vault: `~/ParsidionVault/Debugging/wgsl-parameter-assignment-breaks-only-its-def-variant.md` (the crash pattern + the log-grep verification recipe).
-- CI: `.github/workflows/ci.yml` (auto-deploy to Pages on main push); watch with `gh run watch <id> --exit-status`.
+- `docs/agent-operability.md`: CLI flags, web query params, `window.hexWorld` bridge, script commands, shot targets.
+- `.claude/skills/blender-asset/`: the asset pipeline; `references/dispatch.md` is the brief template (11 parts).
+- `crates/hex-core/src/variant.rs` (hero variants), `crates/hex-play/src/play/scatter.rs` (`VARIANTS`, `FOOTPRINTS`, `GROUND_BOXES`, `FENCES`, verge band), `crates/hex-play/src/walk.rs` (`OBSTACLES`, `prop_kind`, per-part colliders), `crates/hex-render/src/kit_scene.rs` (kit showcase layout; `tile_counts` in `lib.rs`).
+- CI: `.github/workflows/ci.yml` (auto-deploy to Pages on a `main` push).
