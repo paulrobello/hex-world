@@ -259,7 +259,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T00:01:57.133Z",
+    "date": "2026-10-20T00:10:11.346Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -284,7 +284,7 @@
       "gate": "piece",
       "status": "pending",
       "requested": "2026-10-19",
-      "notes": "Pending owner review; not an approval. Review from the six-view renders in assets-source/kit/rail_bend_60_center/renders/ (top.jpg shows the arc) against assets-source/refs/rail/ref-2.jpg. Bends across adjacent edges 0 and 1 (A17) on an 8 m arc about corner 0, meeting both borders square-on. In-engine review sheet (docs/checkpoints/rail/) not yet taken. The controller records the owner's decision."
+      "notes": "Pending owner review; not an approval. Review from the six-view renders in assets-source/kit/rail_bend_60_center/renders/ (top.jpg shows the arc) against assets-source/refs/rail/ref-2.jpg. Bends across adjacent edges 0 and 1 (A17) on an 8 m arc about corner 0, meeting both borders square-on. Review sheet: docs/checkpoints/rail/sheet.jpg (in-engine play distance, the straight/bend seam, sun and shade close-ups, eye level, scale beside the barn; EEVEE stills with a sedan and cottage). The controller records the owner's decision."
     }
   ]
 }

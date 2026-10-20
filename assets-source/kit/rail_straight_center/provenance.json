@@ -252,7 +252,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T00:01:49.973Z",
+    "date": "2026-10-20T00:10:04.055Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -277,7 +277,7 @@
       "gate": "piece",
       "status": "pending",
       "requested": "2026-10-19",
-      "notes": "Pending owner review; not an approval. Review from the six-view renders in assets-source/kit/rail_straight_center/renders/ against assets-source/refs/rail/ref-1.jpg. Single track, 1.6 m gauge (A17: slightly wider than standard), runs edge midpoint to edge midpoint with no edge stub. In-engine review sheet (docs/checkpoints/rail/) not yet taken. The controller records the owner's decision."
+      "notes": "Pending owner review; not an approval. Review from the six-view renders in assets-source/kit/rail_straight_center/renders/ against assets-source/refs/rail/ref-1.jpg. Single track, 1.6 m gauge (A17: slightly wider than standard), runs edge midpoint to edge midpoint with no edge stub. Review sheet: docs/checkpoints/rail/sheet.jpg (in-engine play distance, the straight/bend seam, sun and shade close-ups, eye level, scale beside the barn; EEVEE stills with a sedan and cottage). The controller records the owner's decision."
     }
   ]
 }
