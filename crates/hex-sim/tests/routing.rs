@@ -153,3 +153,34 @@ fn route_cache_follows_bulldoze_and_rebuild() {
     let restored = split.route(a, b).expect("re-placed arc reconnects");
     assert!((restored.length - short.length).abs() < 1e-3);
 }
+
+/// Every turn through a road_junction, at every rotation, keeps the car's facing within 20 degrees
+/// per tick on its rounded lane, sliding the tick window along the whole lane.
+#[test]
+fn junction_routes_turn_at_most_20_deg_per_tick() {
+    let cat = catalog();
+    let step = hex_sim::SimConfig::default().car_speed * hex_sim::TICK_SECONDS;
+    let offset = hex_sim::SimConfig::default().lane_offset;
+    let mut worst = 0.0f32;
+    for rot in 0..6u8 {
+        let mut net = Network::new(hex_core::NetworkKind::Road);
+        put(&mut net, &cat, Axial::ORIGIN, "road_junction", rot);
+        let arms: Vec<hex_sim::NodeId> = (0..6u8)
+            .filter_map(|e| net.seam_node(Axial::ORIGIN, e))
+            .collect();
+        assert_eq!(arms.len(), 3, "rot {rot}");
+        for &a in &arms {
+            for &b in &arms {
+                if a == b {
+                    continue;
+                }
+                let route = net.route(a, b).expect("one tile");
+                let lane = hex_sim::geom::LanePath::rounded(&route.centerline(&net), offset);
+                let turn = lane.max_turn_deg(step);
+                worst = worst.max(turn);
+                assert!(turn < 20.0, "rot {rot} {a:?} to {b:?}: {turn} deg per tick");
+            }
+        }
+    }
+    println!("junction worst {worst:.1} deg per tick");
+}

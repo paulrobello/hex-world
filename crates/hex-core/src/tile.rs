@@ -164,8 +164,12 @@ pub struct ParkPose {
 /// A car parks at `at` facing `yaw_deg`. It arrives forward from the node's inbound lane through
 /// `enter` into the spot. It leaves by reversing through `back` (the last pose is where it stops
 /// to change direction; empty means it pulls out forward), then drives forward through `leave` onto
-/// the node's outbound lane. Consecutive poses are joined by cubic Hermite curves whose end
-/// tangents follow the poses' headings, so every pose sets the direction of travel there.
+/// the node's outbound lane. A spot on a through road can also give `back_alt`, a reverse that
+/// swings the other way, for leaving in the other direction; the sim takes whichever reverse turns
+/// least. The sim joins and leaves the lane at the node when the turn there is gentle, else a
+/// little past the node (or before it, arriving), so the car does not turn on the spot. Consecutive
+/// poses are joined by cubic Hermite curves whose end tangents follow the poses' headings, so every
+/// pose sets the direction of travel there.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ParkingSpot {
     /// `park-<n>`, n = the spot's index in [`TileDef::parking`]; the tile's centre piece carries a
@@ -182,6 +186,8 @@ pub struct ParkingSpot {
     pub enter: Vec<ParkPose>,
     #[serde(default)]
     pub back: Vec<ParkPose>,
+    #[serde(default)]
+    pub back_alt: Vec<ParkPose>,
     #[serde(default)]
     pub leave: Vec<ParkPose>,
 }
@@ -683,6 +689,7 @@ mod tests {
                 at: [4.0, 0.0],
                 yaw_deg: 90.0,
             }],
+            back_alt: vec![],
             leave: vec![],
         }];
         t.agents = vec![AgentSpawnRule {

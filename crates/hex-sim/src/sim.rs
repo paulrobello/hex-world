@@ -237,6 +237,39 @@ impl CarPhase {
     }
 }
 
+/// The most a car's facing may turn in one tick on a parking leg, in degrees, with a margin under
+/// the 20° rule (PRD §7.1) for render-time sampling.
+const TURN_LIMIT_DEG: f32 = 18.0;
+
+/// Spacing of the candidate points where a parking leg may join or leave the lane, in meters.
+const JOIN_STEP: f32 = 0.5;
+
+/// Farthest a parking leg may join or leave the lane from the node, in meters, so the leg stays
+/// on the tile.
+const JOIN_REACH: f32 = 10.0;
+
+/// Meters of lane scored with a parking leg, so the turn where they meet counts too.
+const JOIN_TAIL: f32 = 2.0;
+
+/// The first candidate whose leg turns at most [`TURN_LIMIT_DEG`] per tick, else the one that
+/// turns least: `(turn, candidate, leg)`. `leg` scores a candidate as `(turn, leg)`.
+fn pick_join(
+    candidates: impl Iterator<Item = f32>,
+    mut leg: impl FnMut(f32) -> (f32, Vec<Vec2>),
+) -> Option<(f32, f32, Vec<Vec2>)> {
+    let mut best: Option<(f32, f32, Vec<Vec2>)> = None;
+    for c in candidates {
+        let (turn, pts) = leg(c);
+        if best.as_ref().is_none_or(|b| turn < b.0) {
+            best = Some((turn, c, pts));
+        }
+        if turn <= TURN_LIMIT_DEG {
+            break;
+        }
+    }
+    best
+}
+
 /// SplitMix64: small, fast and stable across releases, so seeds replay identically.
 #[derive(Clone, Debug)]
 struct Rng(u64);
@@ -263,6 +296,7 @@ struct Spot {
     pose: Pose,
     enter: Vec<Pose>,
     back: Vec<Pose>,
+    back_alt: Vec<Pose>,
     leave: Vec<Pose>,
     node: String,
     /// The car parked here or driving here.
@@ -293,6 +327,7 @@ impl Cluster {
                 pose: pose(s.pose()),
                 enter: s.enter.iter().copied().map(pose).collect(),
                 back: s.back.iter().copied().map(pose).collect(),
+                back_alt: s.back_alt.iter().copied().map(pose).collect(),
                 leave: s.leave.iter().copied().map(pose).collect(),
                 node: s.node.clone(),
                 taken: None,
@@ -557,36 +592,75 @@ impl Simulation {
         let to = SpotRef { cell, index };
         let (origin, destination) = (self.node_of(car.spot.cell)?, self.node_of(cell)?);
         let route = self.roads.route(origin, destination)?;
-        let lane = LanePath::new(&route.centerline(&self.roads), self.config.lane_offset);
-        let lane_pts = lane.points();
-        if lane_pts.len() < 2 {
+        let lane = LanePath::rounded(&route.centerline(&self.roads), self.config.lane_offset);
+        if lane.points().len() < 2 {
             return None;
         }
-        let out = lane.pose_at_distance(0.0);
-        let into = lane.pose_at_distance(lane.length());
         let (from, dest) = (self.spot(car.spot)?, self.spot(to)?);
-
-        let mut back = vec![from.pose];
-        back.extend(from.back.iter().copied());
-        let back_pts = if back.len() > 1 {
-            geom::hermite_leg(&back, true)
-        } else {
-            vec![from.pose.pos]
+        let step = self.config.car_speed * TICK_SECONDS;
+        let reach = (0.45 * lane.length()).min(JOIN_REACH);
+        let joins = || {
+            (0..)
+                .map(|i| i as f32 * JOIN_STEP)
+                .take_while(move |s| *s <= reach)
         };
-        let mut leave = vec![*back.last().expect("starts with the spot")];
-        leave.extend(from.leave.iter().copied());
-        leave.push(out);
-        let mut enter = vec![into];
-        enter.extend(dest.enter.iter().copied());
-        enter.push(dest.pose);
+
+        // Out of the spot: each reverse the spot gives, joining the lane at the first distance
+        // from the node that keeps the turn gentle (the node itself when it does).
+        let mut best: Option<(f32, Vec<Vec2>, Vec<Vec2>, f32)> = None;
+        let alts = std::iter::once(&from.back)
+            .chain((!from.back_alt.is_empty()).then_some(&from.back_alt));
+        for alt in alts {
+            let mut back = vec![from.pose];
+            back.extend(alt.iter().copied());
+            let back_pts = if back.len() > 1 {
+                geom::hermite_leg(&back, true)
+            } else {
+                vec![from.pose.pos]
+            };
+            let back_turn = LanePath::new(&back_pts, 0.0).max_turn_deg(step);
+            let mut leave = vec![*back.last().expect("starts with the spot")];
+            leave.extend(from.leave.iter().copied());
+            let pick = pick_join(joins(), |s| {
+                let mut poses = leave.clone();
+                poses.push(lane.pose_at_distance(s));
+                let leg = geom::hermite_leg(&poses, false);
+                let mut whole = leg.clone();
+                whole.extend(lane.slice(s, s + JOIN_TAIL).into_iter().skip(1));
+                let turn = LanePath::new(&whole, 0.0).max_turn_deg(step).max(back_turn);
+                (turn, leg)
+            });
+            if let Some((turn, s, leg)) = pick
+                && best
+                    .as_ref()
+                    .is_none_or(|b| b.0 > TURN_LIMIT_DEG && turn < b.0)
+            {
+                best = Some((turn, back_pts, leg, s));
+            }
+        }
+        let (_, back_pts, leave_pts, out) = best?;
+
+        // Into the spot: off the lane at the node. Leaving the lane earlier cuts the mouth corner
+        // into the kerbs at the bakery, which the enter poses are not laid out for.
+        let into = pick_join(std::iter::once(0.0), |e| {
+            let s = lane.length() - e;
+            let mut poses = vec![lane.pose_at_distance(s)];
+            poses.extend(dest.enter.iter().copied());
+            poses.push(dest.pose);
+            let leg = geom::hermite_leg(&poses, false);
+            let mut whole = lane.slice(s - JOIN_TAIL, s);
+            whole.extend(leg.iter().skip(1));
+            (LanePath::new(&whole, 0.0).max_turn_deg(step), leg)
+        });
+        let (_, e, enter_pts) = into?;
 
         let mut points: Vec<Vec2> = back_pts;
         let reverse = geom::polyline_length(&points);
-        points.extend(geom::hermite_leg(&leave, false).into_iter().skip(1));
+        points.extend(leave_pts.into_iter().skip(1));
         let lane_start = geom::polyline_length(&points);
-        points.extend(lane_pts.iter().skip(1));
+        points.extend(lane.slice(out, lane.length() - e).into_iter().skip(1));
         let lane_end = geom::polyline_length(&points);
-        points.extend(geom::hermite_leg(&enter, false).into_iter().skip(1));
+        points.extend(enter_pts.into_iter().skip(1));
 
         let id = car.id;
         self.parked.retain(|c| c.id != id);

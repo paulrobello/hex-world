@@ -469,19 +469,19 @@ fn bakery_parking_paths_clear_the_shop_kerbs_and_the_other_spot() {
     }
 }
 
-/// On a bakery visit the facing never turns more than 20° in one tick on the parking legs (the
-/// enter curve, the reverse, its cusp and the swing onto the road), as
-/// `a_car_pulls_out_in_reverse_then_drives_forward` holds for a house trip. The lane span between
-/// them follows the road graph's polyline, which turns 90° in one step at the junction node "j"
-/// (`LanePath` has no corner rounding); it is measured, not asserted.
+/// On a bakery visit the facing never turns more than 20° in one tick, as
+/// `a_car_pulls_out_in_reverse_then_drives_forward` holds for a house trip: not on the parking
+/// legs (the enter curve, the reverse, its cusp and the swing onto the road) and not on the lanes
+/// between them, which turn through the bakery's junction node "j". At rotation 0 visitors leave
+/// west (a right turn out, `back`), at 3 east (across the road, `back_alt`); both legs join the
+/// through lane past the node rather than turning about on the spur.
 ///
-/// Ignored: fails today (rot 0: parking legs 54.6°/tick, lane span 116.8°/tick). The leave leg
-/// must end on the node's outbound lane start, which points back down the spur, so a car parked
-/// nose-in turns about 180° between the spot and that pose; no pose set inside the forecourt keeps
-/// both the clearance and 20°/tick (assets-source/kit/bakery_pad/friction.md). Needs a sim change
-/// (reverse-in arrival, or a leave leg that may join the lane past the node) or a longer spur.
+/// Ignored: still fails (2026-10-20, after junction rounding and the leave-join search: rot 0 legs
+/// 20.3 deg/tick on the arrival, rot 3 legs 32.7 and lanes 39.8 on the spur's short inner corner).
+/// bakery.ron needs `back_alt` reverses and enter poses laid out for both directions, and arrivals
+/// that leave the lane before the node must clear the mouth kerbs.
 #[test]
-#[ignore = "bakery parking legs turn up to 55 deg per tick; see the doc comment"]
+#[ignore = "bakery legs still turn up to 33 deg per tick at rotation 3; see the doc comment"]
 fn bakery_visits_turn_smoothly() {
     let mut failures = vec![];
     for rot in [0, 3] {
@@ -528,6 +528,9 @@ fn bakery_visits_turn_smoothly() {
                 "rot {rot}: facing turns {} deg in one tick at {} m",
                 legs.0, legs.1
             ));
+        }
+        if lanes >= 20.0 {
+            failures.push(format!("rot {rot}: lanes turn {lanes} deg in one tick"));
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));

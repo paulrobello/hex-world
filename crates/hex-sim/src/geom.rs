@@ -234,38 +234,68 @@ impl LanePath {
     /// its two steps, so the path stays continuous through corners and never strays farther than
     /// `offset` from the centerline.
     pub fn new(centerline: &[Vec2], offset: f32) -> Self {
-        let mut line: Vec<Vec2> = Vec::with_capacity(centerline.len());
-        for &p in centerline {
-            if line.last().is_none_or(|&q| dist(p, q) > MIN_STEP) {
-                line.push(p);
+        let line = dedup(centerline);
+        Self::from_points(offset_points(&line, offset))
+    }
+
+    /// [`LanePath::new`] with every corner sharper than [`CORNER_MIN`] rounded by a circular arc
+    /// of radius at most [`CORNER_RADIUS`], as a car steers through a junction node. Each arc is
+    /// shrunk until it stays on its own side of `centerline`, between half of `offset` and
+    /// `offset` from it, so the rounded lane never leaves the band an unrounded one keeps to.
+    pub fn rounded(centerline: &[Vec2], offset: f32) -> Self {
+        let line = dedup(centerline);
+        let lane = offset_points(&line, offset);
+        let (lo, hi) = (0.5 * offset, offset + 1e-4);
+        let mut out: Vec<Vec2> = Vec::with_capacity(lane.len());
+        for i in 0..lane.len() {
+            let v = lane[i];
+            let (Some(&p), Some(&n)) =
+                (i.checked_sub(1).and_then(|j| lane.get(j)), lane.get(i + 1))
+            else {
+                out.push(v);
+                continue;
+            };
+            let (a, b) = (sub(v, p), sub(n, v));
+            let (la, lb) = (len(a), len(b));
+            let (a, b) = (scale(a, 1.0 / la), scale(b, 1.0 / lb));
+            let turn = dot(a, b).clamp(-1.0, 1.0).acos();
+            if turn < CORNER_MIN || turn > CORNER_MAX {
+                out.push(v);
+                continue;
+            }
+            // Half of a step shared with another vertex, all of an end step.
+            let avail = |l: f32, end: bool| if end { 0.95 * l } else { 0.5 * l };
+            let t_max = avail(la, i == 1).min(avail(lb, i + 2 == lane.len()));
+            let tan = (0.5 * turn).tan();
+            let mut r = CORNER_RADIUS.min(t_max / tan);
+            // The centerline steps around the corner; the arc cannot reach farther ones.
+            let near = &line[i.saturating_sub(2)..(i + 3).min(line.len())];
+            let arc = loop {
+                if r < 0.05 {
+                    break None;
+                }
+                let arc = fillet(v, a, b, turn, r * tan, r);
+                // Between samples too: the distance to a polyline is not convex along a chord.
+                let inside = arc.windows(2).all(|w| {
+                    [0.0, 0.25, 0.5, 0.75, 1.0].iter().all(|&t| {
+                        let d = distance_to_polyline(lerp(w[0], w[1], t), near);
+                        (lo..=hi).contains(&d)
+                    })
+                });
+                if inside {
+                    break Some(arc);
+                }
+                r *= 0.85;
+            };
+            match arc {
+                Some(arc) => out.extend(arc),
+                None => out.push(v),
             }
         }
-        let dirs: Vec<Vec2> = line
-            .windows(2)
-            .map(|w| {
-                let d = sub(w[1], w[0]);
-                scale(d, 1.0 / len(d))
-            })
-            .collect();
-        let points: Vec<Vec2> = (0..line.len())
-            .map(|i| {
-                let before = i.checked_sub(1).and_then(|j| dirs.get(j));
-                let normal = match (before, dirs.get(i)) {
-                    (Some(&a), Some(&b)) => {
-                        let sum = add(right_of(a), right_of(b));
-                        let l = len(sum);
-                        if l > 1e-3 {
-                            scale(sum, 1.0 / l)
-                        } else {
-                            right_of(b)
-                        }
-                    }
-                    (Some(&d), None) | (None, Some(&d)) => right_of(d),
-                    (None, None) => [0.0, 0.0],
-                };
-                add(line[i], scale(normal, offset))
-            })
-            .collect();
+        Self::from_points(out)
+    }
+
+    fn from_points(points: Vec<Vec2>) -> Self {
         let mut cum = Vec::with_capacity(points.len());
         let mut total = 0.0;
         for (i, p) in points.iter().enumerate() {
@@ -276,13 +306,117 @@ impl LanePath {
         }
         Self { points, cum }
     }
+}
 
+/// Corners turning less than this are left alone: arc samples turn at most [`ARC_STEP`].
+const CORNER_MIN: f32 = 1.5 * ARC_STEP;
+
+/// Corners sharper than this (a U-turn) are left alone.
+const CORNER_MAX: f32 = 170.0 * std::f32::consts::PI / 180.0;
+
+/// Largest radius of a rounded lane corner, in meters.
+pub const CORNER_RADIUS: f32 = 4.0;
+
+/// Largest angle one rounded-corner sample may span, in radians (2°).
+const FILLET_STEP: f32 = std::f32::consts::PI / 90.0;
+
+/// The arc of radius `r` replacing corner `v` between unit headings `a` (in) and `b` (out) that
+/// turn by `turn` radians, from `t` meters before `v` to `t` meters after it.
+fn fillet(v: Vec2, a: Vec2, b: Vec2, turn: f32, t: f32, r: f32) -> Vec<Vec2> {
+    let side = if cross(a, b) >= 0.0 { 1.0 } else { -1.0 };
+    let start = sub(v, scale(a, t));
+    // Unit normal of `a` toward the turn.
+    let normal = scale([-a[1], a[0]], side);
+    let center = add(start, scale(normal, r));
+    let rel = sub(start, center);
+    let steps = ((turn / FILLET_STEP).ceil() as usize).max(2);
+    (0..=steps)
+        .map(|k| {
+            let phi = side * turn * k as f32 / steps as f32;
+            let (s, c) = phi.sin_cos();
+            add(center, [rel[0] * c - rel[1] * s, rel[0] * s + rel[1] * c])
+        })
+        .collect()
+}
+
+/// `centerline` without steps shorter than [`MIN_STEP`].
+fn dedup(centerline: &[Vec2]) -> Vec<Vec2> {
+    let mut line: Vec<Vec2> = Vec::with_capacity(centerline.len());
+    for &p in centerline {
+        if line.last().is_none_or(|&q| dist(p, q) > MIN_STEP) {
+            line.push(p);
+        }
+    }
+    line
+}
+
+/// Every vertex of `line` moved `offset` along the average of the right normals of its two steps.
+fn offset_points(line: &[Vec2], offset: f32) -> Vec<Vec2> {
+    let dirs: Vec<Vec2> = line
+        .windows(2)
+        .map(|w| {
+            let d = sub(w[1], w[0]);
+            scale(d, 1.0 / len(d))
+        })
+        .collect();
+    (0..line.len())
+        .map(|i| {
+            let before = i.checked_sub(1).and_then(|j| dirs.get(j));
+            let normal = match (before, dirs.get(i)) {
+                (Some(&a), Some(&b)) => {
+                    let sum = add(right_of(a), right_of(b));
+                    let l = len(sum);
+                    if l > 1e-3 {
+                        scale(sum, 1.0 / l)
+                    } else {
+                        right_of(b)
+                    }
+                }
+                (Some(&d), None) | (None, Some(&d)) => right_of(d),
+                (None, None) => [0.0, 0.0],
+            };
+            add(line[i], scale(normal, offset))
+        })
+        .collect()
+}
+
+impl LanePath {
     pub fn length(&self) -> f32 {
         self.cum.last().copied().unwrap_or(0.0)
     }
 
     pub fn points(&self) -> &[Vec2] {
         &self.points
+    }
+
+    /// The path from `s0` to `s1` meters along it (clamped to its ends), as a polyline that starts
+    /// and ends at those distances.
+    pub fn slice(&self, s0: f32, s1: f32) -> Vec<Vec2> {
+        let (s0, s1) = (s0.clamp(0.0, self.length()), s1.clamp(0.0, self.length()));
+        let mut out = vec![self.pose_at_distance(s0).pos];
+        for (p, c) in self.points.iter().zip(&self.cum) {
+            if *c > s0 + MIN_STEP && *c < s1 - MIN_STEP {
+                out.push(*p);
+            }
+        }
+        out.push(self.pose_at_distance(s1).pos);
+        out
+    }
+
+    /// The largest heading change between any two poses `step` meters apart, in degrees, sliding
+    /// the pair along the path 5 cm at a time.
+    pub fn max_turn_deg(&self, step: f32) -> f32 {
+        let mut worst = 0.0f32;
+        let mut d = 0.0;
+        while d + step <= self.length() {
+            let (a, b) = (
+                self.pose_at_distance(d).dir,
+                self.pose_at_distance(d + step).dir,
+            );
+            worst = worst.max(dot(a, b).clamp(-1.0, 1.0).acos().to_degrees());
+            d += 0.05;
+        }
+        worst
     }
 
     /// The pose `s` meters along the path, clamped to its ends.
