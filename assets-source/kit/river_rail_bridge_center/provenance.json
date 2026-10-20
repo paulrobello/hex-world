@@ -1,0 +1,320 @@
+{
+  "pieceId": "river_rail_bridge_center",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/river_rail_bridge_center.py",
+    "sha256": "ebc6579d092cf1ae8e7b3a2e454b3c1eeda9925ee62acf23c27493743afe13cb"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_rail.py",
+      "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
+    },
+    {
+      "path": "scripts/blender/kit/_rail_bridge.py",
+      "sha256": "d4bb073ef3128ddbab18c52173eb7ffeb42afb84ca353b27746f43fbe5551131"
+    },
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    },
+    {
+      "path": "scripts/blender/kit/_river_bridge.py",
+      "sha256": "452d3c15752a5b9b887ecb6193edbf3021293a3610c56209bcbcc9d062ede976"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
+    },
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "bridge": {
+      "angleDeg": 60,
+      "archCrownZ": -0.44999999999999996,
+      "archHalfSpanM": 3.6,
+      "archRiseM": 1,
+      "ballastTopM": 0.22,
+      "causewayHalfWidthM": 2.9,
+      "crownOverWaterM": 0.95,
+      "deckZ": -0.31,
+      "gradePct": 0,
+      "minStoneClearanceFromTrackM": 2.5499998293381396,
+      "parapetHalfLengthAcrossRiverM": 5,
+      "parapetT": [
+        2.6,
+        2.9
+      ],
+      "parapetTopM": 1,
+      "pillarHalfM": 0.2,
+      "pillarTopM": 1.2,
+      "railLanes": [
+        1,
+        4
+      ],
+      "railTopM": 0.45999999999999996,
+      "riverLanes": [
+        0,
+        3
+      ],
+      "springZ": -1.45,
+      "sweptHalfWidthM": 2.5,
+      "trainHalfWidthM": 1.48,
+      "waterZ": -1.4
+    },
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "none",
+    "dressing": {
+      "reedClumps": 6,
+      "stones": 16
+    },
+    "lodTris": [
+      2188,
+      446,
+      124
+    ],
+    "marginPx": 0,
+    "masks": {
+      "ao": {
+        "crib": [
+          0.78,
+          0.95
+        ],
+        "other": 1,
+        "shoulder": 0.95
+      },
+      "night": 0,
+      "porosity": {
+        "ballast": 0.9,
+        "dressing": [
+          1,
+          0.8
+        ],
+        "rail": 0.15,
+        "sleeper": 0.6,
+        "stone": 0.8
+      },
+      "snow": 1,
+      "stoneBlockPx": 16,
+      "stoneUv": [
+        0.005,
+        0.005
+      ]
+    },
+    "reason": "no Cycles bake: the masks are an analytic field (the rail's crib field on the ballast band, the river dressing's porosity, the parked stone block)",
+    "receiverSignature": "e59ba49dc494e46410444afb97b080766533a571dd06f6621e6493f69d467512",
+    "samples": 0,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 16.000094263727934,
+      "median": 4.73072791694347,
+      "min": 2.4484970161449975
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 2188,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 446,
+      "ratio": 0.20383912248628885
+    },
+    {
+      "lod": 2,
+      "tris": 124,
+      "ratio": 0.056672760511883
+    }
+  ],
+  "collider": {
+    "node": "river_rail_bridge_center_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "edge": 1,
+        "kind": "rail",
+        "offset": 0,
+        "width": 3.5
+      },
+      "name": "socket-lane-0",
+      "position": [
+        6.928203105926514,
+        0,
+        12
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "edge": 4,
+        "kind": "rail",
+        "offset": 0,
+        "width": 3.5
+      },
+      "name": "socket-lane-1",
+      "position": [
+        -6.928203105926514,
+        0,
+        -12
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 16.000094263727934,
+    "median": 4.73072791694347,
+    "min": 2.4484970161449975
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 19740,
+        "astc": 19300
+      },
+      "glbBytes": 193968
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 19740,
+        "sha256": "26e1df82b673f22b5accb002361a1e3329192abb34e13938d305317c3a2ae5ad"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 19300,
+        "sha256": "a8e52da3677fe6673d89129c816d229122998de74d1ec9229d633b429bef72d7"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 33339,
+        "sha256": "263f1a576a23e3d2f9db744a0730d82f43348ceee94a69580b8a92b750c49a68"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.glb",
+      "sha256": "2a09595866da30d4f79bac19be8d5c059c1dfbc983b1d65e45a4741627c45065",
+      "bytes": 193968
+    },
+    {
+      "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.bc7.ktx2",
+      "sha256": "26e1df82b673f22b5accb002361a1e3329192abb34e13938d305317c3a2ae5ad",
+      "bytes": 19740
+    },
+    {
+      "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.astc.ktx2",
+      "sha256": "a8e52da3677fe6673d89129c816d229122998de74d1ec9229d633b429bef72d7",
+      "bytes": 19300
+    },
+    {
+      "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.png",
+      "sha256": "263f1a576a23e3d2f9db744a0730d82f43348ceee94a69580b8a92b750c49a68",
+      "bytes": 33339
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/rail/ref-1.jpg",
+      "sha256": "a3e659e233950ee1e4e97954af6b52707933d9573de657828ad1600640b34d76",
+      "sourceSha256": "c7ff694cfd2e9c07f3d989b24fce3444309f39d8a9dc142e35e6211d5c1d5dba",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "a3ecc1cd-578b-4d5b-ae59-f8e706ec58be",
+      "prompt": "Straight railway tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame, carrying a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders. Seen from above, the track runs straight from the middle of the bottom side across the centre of the tile to the middle of the top side, meeting both sides square-on, and the rest of the tile is open meadow grass, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/rail/ref-2.jpg",
+      "sha256": "67cd8442ec8d40de041ecb0facf9618e44fae798acceddb2e66861596a7265e5",
+      "sourceSha256": "9ed349406586e7a7b0d28d4f97518b4eede185ac0dfdee6c6345a859b34862ec",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "2fd58add-9ab6-4772-a8af-c7e134a1196e",
+      "prompt": "Gentle curve railway tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame, carrying a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders. Seen from above, the track starts at the middle of the bottom side and curves gently right in one smooth wide arc to end at the middle of the upper-right side. The lower-right side between the two track ends is grass, and the top side opposite the start is grass too, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/rail/ref-3.jpg",
+      "sha256": "102c3c8fcd7240942fc8fc343949425ead7415ac94e3dd20162ef880703821b2",
+      "sourceSha256": "196c418ceabb96915c1974c26a2ef1aa4e03261d4bb03ce02700172038e7e66b",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "ab9566ca-e571-45eb-a0e5-ff2f0ee400f0",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. A single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders runs straight between one pair of opposite flat edges, and a 6 m wide two-lane asphalt country road, faded dashed white centre line, low concrete kerbs, grass verges with tufts and small bushes runs straight between another pair of opposite flat edges and crosses the railway at 60 degrees on a level crossing, where the asphalt runs flush up to the rails over smooth timber crossing boards laid between them. Four plain white-painted timber field gates on stout white posts stand at the road edges, two on each side of the railway, swung open parallel to the track. The only things at the crossing are the gates and their posts, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T06:00:58.580Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/rail/ref-1.jpg",
+        "assets-source/refs/rail/ref-2.jpg",
+        "assets-source/refs/rail/ref-3.jpg"
+      ],
+      "notes": "Slightly wider than standard gauge so it reads at play distance; single track; bends across adjacent edges (60 degrees); a 60-degree rail-road level crossing with field gates. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-19",
+      "notes": "Pending owner review; not an approval. Review against assets-source/refs/river_road_bridge (approved stone arch at 60 degrees) and assets-source/refs/rail (A17, single track): rail_straight_center's track on edges 1 and 4, level at its 0.46 m rail top, across the straight river (edges 0 and 3) on the road bridge's stone arch narrowed to the ballast (causeway half-width 2.9 m), low stone parapets (top 1.0 m, 0.54 m above the rail top) 2.6 m from the track centre. Review sheet: docs/checkpoints/rail_bridge/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

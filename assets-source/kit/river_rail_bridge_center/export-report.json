@@ -1,0 +1,80 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_rail_bridge_center.py",
+    "sha256": "ebc6579d092cf1ae8e7b3a2e454b3c1eeda9925ee62acf23c27493743afe13cb"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_rail.py",
+      "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
+    },
+    {
+      "path": "scripts/blender/kit/_rail_bridge.py",
+      "sha256": "d4bb073ef3128ddbab18c52173eb7ffeb42afb84ca353b27746f43fbe5551131"
+    },
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+    },
+    {
+      "path": "scripts/blender/kit/_river_bridge.py",
+      "sha256": "452d3c15752a5b9b887ecb6193edbf3021293a3610c56209bcbcc9d062ede976"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
+    },
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
+    }
+  ],
+  "lodTris": {
+    "river_rail_bridge_center_lod0": 2188,
+    "river_rail_bridge_center_lod1": 446,
+    "river_rail_bridge_center_lod2": 124
+  },
+  "nodes": [
+    "river_rail_bridge_center",
+    "river_rail_bridge_center_collider",
+    "river_rail_bridge_center_lod0",
+    "river_rail_bridge_center_lod1",
+    "river_rail_bridge_center_lod2",
+    "socket-lane-0",
+    "socket-lane-1"
+  ],
+  "pieceId": "river_rail_bridge_center",
+  "sockets": [
+    {
+      "extras": {
+        "edge": 1,
+        "kind": "rail",
+        "offset": 0.0,
+        "width": 3.5
+      },
+      "name": "socket-lane-0",
+      "position": [
+        6.928203105926514,
+        0.0,
+        12.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "edge": 4,
+        "kind": "rail",
+        "offset": 0.0,
+        "width": 3.5
+      },
+      "name": "socket-lane-1",
+      "position": [
+        -6.928203105926514,
+        0.0,
+        -12.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

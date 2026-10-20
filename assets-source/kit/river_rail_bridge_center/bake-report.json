@@ -1,0 +1,89 @@
+{
+  "blender": "5.2.2 LTS",
+  "bridge": {
+    "angleDeg": 60.0,
+    "archCrownZ": -0.44999999999999996,
+    "archHalfSpanM": 3.6,
+    "archRiseM": 1.0,
+    "ballastTopM": 0.22,
+    "causewayHalfWidthM": 2.9,
+    "crownOverWaterM": 0.95,
+    "deckZ": -0.31,
+    "gradePct": 0.0,
+    "minStoneClearanceFromTrackM": 2.5499998293381396,
+    "parapetHalfLengthAcrossRiverM": 5.0,
+    "parapetT": [
+      2.6,
+      2.9
+    ],
+    "parapetTopM": 1.0,
+    "pillarHalfM": 0.2,
+    "pillarTopM": 1.2,
+    "railLanes": [
+      1,
+      4
+    ],
+    "railTopM": 0.45999999999999996,
+    "riverLanes": [
+      0,
+      3
+    ],
+    "springZ": -1.45,
+    "sweptHalfWidthM": 2.5,
+    "trainHalfWidthM": 1.48,
+    "waterZ": -1.4
+  },
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "none",
+  "dressing": {
+    "reedClumps": 6,
+    "stones": 16
+  },
+  "lodTris": [
+    2188,
+    446,
+    124
+  ],
+  "marginPx": 0,
+  "masks": {
+    "ao": {
+      "crib": [
+        0.78,
+        0.95
+      ],
+      "other": 1.0,
+      "shoulder": 0.95
+    },
+    "night": 0.0,
+    "porosity": {
+      "ballast": 0.9,
+      "dressing": [
+        1.0,
+        0.8
+      ],
+      "rail": 0.15,
+      "sleeper": 0.6,
+      "stone": 0.8
+    },
+    "snow": 1.0,
+    "stoneBlockPx": 16,
+    "stoneUv": [
+      0.005,
+      0.005
+    ]
+  },
+  "reason": "no Cycles bake: the masks are an analytic field (the rail's crib field on the ballast band, the river dressing's porosity, the parked stone block)",
+  "receiverSignature": "e59ba49dc494e46410444afb97b080766533a571dd06f6621e6493f69d467512",
+  "samples": 0,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 16.000094263727934,
+    "median": 4.73072791694347,
+    "min": 2.4484970161449975
+  }
+}

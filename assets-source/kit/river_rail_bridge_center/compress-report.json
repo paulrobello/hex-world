@@ -1,0 +1,88 @@
+{
+  "name": "river_rail_bridge_center",
+  "date": "2026-10-20T05:59:19.031Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 19740,
+      "sha256": "26e1df82b673f22b5accb002361a1e3329192abb34e13938d305317c3a2ae5ad"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 19300,
+      "sha256": "a8e52da3677fe6673d89129c816d229122998de74d1ec9229d633b429bef72d7"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 33339,
+      "sha256": "263f1a576a23e3d2f9db744a0730d82f43348ceee94a69580b8a92b750c49a68"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 19740,
+      "astc": 19300
+    },
+    "glbBytes": 193968
+  },
+  "glb": {
+    "bytes": 193968,
+    "sha256": "2a09595866da30d4f79bac19be8d5c059c1dfbc983b1d65e45a4741627c45065"
+  }
+}

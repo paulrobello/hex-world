@@ -218,8 +218,41 @@ pub fn kit_layout() -> Vec<Placement> {
             ..hero(piece, -2, 1, at, yaw_deg)
         });
     }
+    // The river rail bridge (P3) on (-2, 5) at rot 1 (rail on its local edges 1 and 4 = world 2 and
+    // 5, river on local 0 and 3 = world 1 and 4): the junction's straight on (-1, 4) runs into it
+    // across world edge 5 and a rail straight on (-3, 6) carries it on across world edge 2. It sits
+    // on river_straight_base with river_edge stubs, between river straights upstream on (-2, 4) and
+    // downstream on (-2, 6). The engine and a carriage stand on the deck at the rail top.
+    v.push(place("meadow_base", -3, 6, 0));
+    v.push(place("rail_straight_center", -3, 6, 2));
+    for (q, r, center) in [
+        (-2, 4, "river_straight_center"),
+        (-2, 5, "river_rail_bridge_center"),
+        (-2, 6, "river_straight_center"),
+    ] {
+        v.push(place("river_straight_base", q, r, 1));
+        v.push(place(center, q, r, 1));
+        v.push(place("river_edge", q, r, 1));
+        v.push(place("river_edge", q, r, 4));
+    }
+    for (piece, offset) in TRAIN_ON_RAIL_BRIDGE {
+        v.push(Placement {
+            offset,
+            yaw_deg: 60.0,
+            y: TRAIN_RAIL_TOP,
+            ..place(piece, -2, 5, 1)
+        });
+    }
     v
 }
+
+/// (piece, offset) of the engine on the river rail bridge's arch and a carriage coupled behind it, in
+/// the bridge's frame (rot 1): the track runs along runtime (0.5, 0.866) there (`yaw_deg` 60), the
+/// carriage 8.04 m back (half lengths 4.47 m + 3.57 m, buffers touching).
+const TRAIN_ON_RAIL_BRIDGE: [(&str, [f32; 2]); 2] = [
+    ("train_engine", [0.0, 0.0]),
+    ("train_carriage", [-4.02, -6.963]),
+];
 
 /// (piece, offset, yaw, relief height) of the forest-floor showcase on the forest at (-2, 1), with a
 /// parked sedan beside the log for scale.
@@ -705,6 +738,57 @@ mod tests {
                 l.iter()
                     .any(|p| p.cell == n && rail_lanes(p).contains(&back)),
                 "junction lane on world edge {e} meets no rail lane at {n:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn rail_bridge_meets_rail_and_river_on_its_lanes() {
+        let l = kit_layout();
+        let bridge = *l
+            .iter()
+            .find(|p| p.piece == "river_rail_bridge_center")
+            .unwrap();
+        // Rail lanes are the bridge's local edges 1 and 4: a rail straight meets each.
+        for k in [1, 4] {
+            let e = (k + bridge.rot) % 6;
+            let n = bridge.cell.neighbor(e);
+            assert!(
+                l.iter().any(|p| p.piece == "rail_straight_center"
+                    && p.cell == n
+                    && [p.rot % 6, (p.rot + 3) % 6].contains(&((e + 3) % 6))),
+                "bridge rail lane on world edge {e} meets no rail straight at {n:?}"
+            );
+        }
+        // River lanes are local 0 and 3: the bridge and its upstream and downstream neighbours each
+        // carry river_straight_base and river_edge stubs at the same rotation.
+        for c in [
+            bridge.cell,
+            bridge.cell.neighbor(bridge.rot),
+            bridge.cell.neighbor((bridge.rot + 3) % 6),
+        ] {
+            assert!(
+                l.iter().any(|p| p.piece == "river_straight_base"
+                    && p.cell == c
+                    && p.rot == bridge.rot)
+            );
+            for k in [0, 3] {
+                let e = (k + bridge.rot) % 6;
+                assert!(
+                    l.iter()
+                        .any(|p| p.piece == "river_edge" && p.cell == c && p.rot == e)
+                );
+            }
+        }
+        // No river cell shares its cell with another base.
+        for c in [
+            bridge.cell,
+            bridge.cell.neighbor(bridge.rot),
+            bridge.cell.neighbor((bridge.rot + 3) % 6),
+        ] {
+            assert!(
+                !l.iter()
+                    .any(|p| p.cell == c && matches!(p.piece, "meadow_base" | "forest_base"))
             );
         }
     }
