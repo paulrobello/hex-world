@@ -47,3 +47,9 @@ Paul answered `docs/review/2026-10-20-walkthrough.html` on 2026-10-20. Codes fol
 11. Brighter sea fish.
 12. Brake third mixed per train.
 13. Record the approvals above in each piece's `approvals.json` and in the refs' `approval.json`.
+
+## Later answers (2026-10-20, in chat)
+
+- **Farm animals:** F1 drive the leg and head motion data (in progress). F2 Q42 and Q57 closed: animals stand on the drawn ground, worst hoof 2.5 mm. F3 Q43 and Q59 closed: no grass clear under moving animals. F4 walking and grazing only, no run state. F5 the current liveliness stays.
+- **Boats:** Q2 flat sails are fine. Q3 no rower figure for now. Q4 ref-1's red-ochre tan on both sails. Q5 the sailing boat keeps seaward of the beach shelf (s about 3.6) on coast tiles.
+- **Defaults taken while waiting (override any):** buffer stop Q1 trains stop by body position on bends so buffers meet; Q2 a junction-end stop sits on the path a train takes; Q3 a stop beside a station ramp is fine. Boats Q1 water inside hulls on swell is fixed in the water pass by the boat runtime.
