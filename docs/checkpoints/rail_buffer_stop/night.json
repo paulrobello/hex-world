@@ -1,0 +1,34 @@
+[
+ {
+  "cmd": "scenario",
+  "name": "kit"
+ },
+ {
+  "cmd": "wait",
+  "frames": 120
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -2.67,
+   2.4,
+   153.03
+  ],
+  "look_at": [
+   -5.44,
+   1.9,
+   153.42
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bufstop-night"
+ },
+ {
+  "cmd": "exit"
+ }
+]

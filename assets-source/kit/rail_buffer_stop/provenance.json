@@ -1,0 +1,354 @@
+{
+  "pieceId": "rail_buffer_stop",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/rail_buffer_stop.py",
+    "sha256": "b9f7b1fedd7b300155d418b62fb66651fd73d86f1878eba03037797492689e40"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    },
+    {
+      "path": "scripts/blender/kit/_rail.py",
+      "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.6,
+    "aoOccluder": "straight track (_rail.track)",
+    "blender": "5.2.2 LTS",
+    "bufferStop": {
+      "beam": {
+        "x": [
+          0.45,
+          0.83
+        ],
+        "y": [
+          -1.35,
+          1.35
+        ],
+        "z": [
+          1.24,
+          1.78
+        ]
+      },
+      "braces": {
+        "angleDeg": 45,
+        "footX": [
+          1.955,
+          2.4
+        ],
+        "y": [
+          -0.8400000000000001,
+          0.8400000000000001
+        ]
+      },
+      "bufferCentres": {
+        "headRadius": 0.2,
+        "y": [
+          -0.85,
+          0.85
+        ],
+        "zAboveCap": 1.51,
+        "zAboveRailTop": 1.05
+      },
+      "bufferFaceX": 0,
+      "chordM": 2.24,
+      "lamp": {
+        "lensZ": 1.99,
+        "x": [
+          0.54,
+          0.74
+        ],
+        "zTop": 2.29
+      },
+      "legs": {
+        "footX": [
+          0.06,
+          0.26999999999999996
+        ],
+        "uprightX": [
+          0.56,
+          0.72
+        ],
+        "y": [
+          -0.8400000000000001,
+          0.8400000000000001
+        ]
+      },
+      "pivot": "track centreline at the buffer contact plane, cap level (z 0); +x toward the open edge",
+      "placementFit": {
+        "bend": {
+          "footRailErrorM": 0.0382,
+          "footRailErrorTangentM": 0.3899,
+          "minBorderDistM": 0.837,
+          "originBlender": [
+            10.467,
+            -0.7535
+          ],
+          "tangentYawDeg": 25.031,
+          "yawDeg": 17.045
+        },
+        "straight": {
+          "footRailErrorM": 0,
+          "footRailErrorTangentM": 0,
+          "minBorderDistM": 1.1,
+          "originBlender": [
+            10.3564,
+            0
+          ],
+          "tangentYawDeg": 0,
+          "yawDeg": 0
+        }
+      },
+      "stopInsideEdgeM": 3.5
+    },
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "colliderBoxBlender": {
+      "x": [
+        0,
+        2.488
+      ],
+      "y": [
+        -1.35,
+        1.35
+      ],
+      "z": [
+        0.46,
+        2.12
+      ]
+    },
+    "device": "CPU",
+    "lodTris": [
+      938,
+      298,
+      108
+    ],
+    "lodUvScale": [
+      1,
+      0.55,
+      0.35
+    ],
+    "marginPx": 2,
+    "maskStats": {
+      "aoMean": 0.7234140634536743,
+      "aoP05": 0.0313725508749485,
+      "centroids": {
+        "lod0": {
+          "minA": {
+            "glass": 0.314,
+            "paint": 0,
+            "steel": 0
+          },
+          "unbakedTris": 0
+        },
+        "lod1": {
+          "minA": {
+            "glass": 0.282,
+            "paint": 0,
+            "steel": 0
+          },
+          "unbakedTris": 0
+        },
+        "lod2": {
+          "minA": {
+            "glass": 0.953,
+            "paint": 0,
+            "steel": 0.502
+          },
+          "unbakedTris": 0
+        }
+      },
+      "coverage": 0.5604705810546875,
+      "filledTexels": 1779,
+      "nightTexels": 661
+    },
+    "masksDensityBySlot": {
+      "lod0": {
+        "glass": 81.3,
+        "paint": 83.37,
+        "steel": 83.37
+      },
+      "lod1": {
+        "glass": 44.26,
+        "paint": 45.85,
+        "steel": 45.85
+      },
+      "lod2": {
+        "glass": 29.18,
+        "paint": 29.18,
+        "steel": 29.18
+      }
+    },
+    "receiverSignature": "3d49bd826336a0cdc9451bad4767709e27a6cede29614f4bddc7858972d1acaf",
+    "samples": 64,
+    "skipped": false
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 938,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 298,
+      "ratio": 0.31769722814498935
+    },
+    {
+      "lod": 2,
+      "tris": 108,
+      "ratio": 0.11513859275053305
+    }
+  ],
+  "collider": {
+    "node": "rail_buffer_stop_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": null,
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 123888,
+        "astc": 119172
+      },
+      "glbBytes": 64632
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/rail_buffer_stop/rail_buffer_stop.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 123888,
+        "sha256": "b89d73a9c5614ca6de553a476d4ea01e828afbdf9b73da6577402b71d8824ccc"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/rail_buffer_stop/rail_buffer_stop.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 119172,
+        "sha256": "71dbc3c2cbf3361e4c9eee576b12a261986b6f0b5d358e56be2a8bcc1ac7c7fd"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/rail_buffer_stop/rail_buffer_stop.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 175774,
+        "sha256": "22b115fd92c7bf66a6eed0b1e99a93b39ec7b3ef760bdc506591cb4417fb512e"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/rail_buffer_stop/rail_buffer_stop.glb",
+      "sha256": "c1d6ba2a8e62f668e8c1792a77b958b9bcbc9cce8b33874e53b1d76e3636a42d",
+      "bytes": 64632
+    },
+    {
+      "path": "assets/kit/p1/rail_buffer_stop/rail_buffer_stop.masks.bc7.ktx2",
+      "sha256": "b89d73a9c5614ca6de553a476d4ea01e828afbdf9b73da6577402b71d8824ccc",
+      "bytes": 123888
+    },
+    {
+      "path": "assets/kit/p1/rail_buffer_stop/rail_buffer_stop.masks.astc.ktx2",
+      "sha256": "71dbc3c2cbf3361e4c9eee576b12a261986b6f0b5d358e56be2a8bcc1ac7c7fd",
+      "bytes": 119172
+    },
+    {
+      "path": "assets/kit/p1/rail_buffer_stop/rail_buffer_stop.masks.png",
+      "sha256": "22b115fd92c7bf66a6eed0b1e99a93b39ec7b3ef760bdc506591cb4417fb512e",
+      "bytes": 175774
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/rail_buffer_stop/ref-1.jpg",
+      "sha256": "3b9fe1866b1a385494f38105fdd1eb798ed760a895120b29981df8df291752d5",
+      "sourceSha256": "a2d1ebdf8bc24e9914de56f4e8ac9f6c52675003bab8f6751964d8c2f8f070b3",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "5985ee10-5414-42c9-a562-ad7303f6e3b4",
+      "prompt": "Line end railway tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame, carrying a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders. Seen from above, the track runs straight from the middle of the bottom side across the centre of the tile and ends just inside the middle of the top side at a traditional country railway buffer stop standing square across the track at the very end of the rails: a stout horizontal timber buffer beam painted bright red, two round sprung buffers with dark grey steel heads on its face looking back down the track, a small round red lamp on top of the beam, carried on a sturdy frame of old steel rails bent up from the running rails. The rest of the tile is open meadow grass, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/rail_buffer_stop/ref-2.jpg",
+      "sha256": "c03e3d513f2610e07a9fa815d5d74f57acb3e21bbec1ceb1d1c8c24b13d5ad7e",
+      "sourceSha256": "d7577cccff2a8c22da27327c82af9bd8e3785e8459f19019875389b8f108f224",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "d301d18e-47bb-4712-8d98-30ca1723ee1e",
+      "prompt": "A traditional country railway buffer stop at the very end of a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders. A stout horizontal timber buffer beam painted bright red stands square across the track, carrying two round sprung buffers with dark grey steel heads on its face that look back down the track, and a small round red lamp on a short post centred on top of the beam. The beam sits on a sturdy dark grey frame made from old steel rails that bend up out of the two running rails into upright legs and are braced back down at a slant to the sleepers behind the beam, bolted together with plain plates. The ballast runs right up to the stop and is heaped into a low grassy bank just behind it. The picture shows only the buffer stop and the end of the track on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/rail_buffer_stop/ref-3.jpg",
+      "sha256": "acbf158350e8cc72d0f89420b8af703977aaa5aab20300e88802d8d3732861d8",
+      "sourceSha256": "3429dfc142bafa90755a5dab9046d79e3454cf5d79ddc30689ad8ab0bdd11197",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "752936c1-d0e9-418c-adc5-b20961c34e83",
+      "prompt": "A simple country railway buffer stop at the very end of a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders, built from old timber sleepers: a low solid wall of heavy dark timber sleepers stacked flat one on another and held between stout upright timber posts stands square across the track, with a broad timber buffer beam painted bright red along its front carrying two round sprung buffers with dark grey steel heads that look back down the track, and a small round red and white target board on a short post on top. The rails run right up to the beam, and behind the wall the ballast is heaped into a low earth bank with grass growing over it. The picture shows only the buffer stop and the end of the track on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T23:15:47.380Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/rail_buffer_stop/ref-2.jpg"
+      ],
+      "notes": "D2: ref-2, the bent-rail stop. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Bent-rail buffer stop from assets-source/refs/rail_buffer_stop ref-2 (owner D2, 2026-10-20). Red beam (the rail family's lever red), two buffers at the train's buffer height and spacing (rail top + 1.05 m, 0.85 m either side), a red lamp with a night-lit lens, on legs and braces of the running rails' own section standing on the running rails. Buffer faces 3.5 m inside the open edge; placement contract in docs/checkpoints/rail_buffer_stop/runtime-notes.md. Review sheet: docs/checkpoints/rail_buffer_stop/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

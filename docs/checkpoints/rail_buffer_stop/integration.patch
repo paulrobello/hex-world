@@ -1,0 +1,98 @@
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index c7547b7..3ea0a50 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -367,6 +367,12 @@
+                  "rail_station_glass": { "color": [0.2, 0.16, 0.1], "roughness": 0.2, "masks": true },
+                  "rail_station_iron": { "color": [0.03, 0.03, 0.032], "roughness": 0.55, "masks": true } },
+       "maps": { "masks": "p1/rail_station_shelter/rail_station_shelter.masks" } },
++    { "id": "rail_buffer_stop", "pack": "village", "kind": "prop", "glb": "p1/rail_buffer_stop/rail_buffer_stop.glb",
++      "provenance": "assets-source/kit/rail_buffer_stop/provenance.json",
++      "slots": { "rail_buffer_stop_paint": { "color": [0.42, 0.045, 0.03], "roughness": 0.7, "masks": true },
++                 "rail_buffer_stop_steel": { "color": [0.05, 0.05, 0.055], "roughness": 0.55, "masks": true },
++                 "rail_buffer_stop_glass": { "color": [0.8, 0.05, 0.03], "roughness": 0.15, "masks": true } },
++      "maps": { "masks": "p1/rail_buffer_stop/rail_buffer_stop.masks" } },
+     { "id": "ocean_base", "pack": "water", "kind": "base", "glb": "p1/ocean_base/ocean_base.glb",
+       "provenance": "assets-source/kit/ocean_base/provenance.json",
+       "slots": { "coast_seabed": { "tileable": "gravel", "color": [1.5, 1.46, 1.26], "masks": true } },
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index c19e582..09508a9 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -349,6 +349,22 @@ pub fn kit_layout() -> Vec<Placement> {
+             ..place(piece, -2, 5, 1)
+         });
+     }
++    // Buffer stops (owner D2) at the layout's two open rail ends, local edge 0 of the straight on
++    // (-3, 6) and of the bend on (1, 3) (both rot 2, world edge 2, facing empty cells), each with the
++    // engine standing buffered up to it as hex-sim poses it.
++    for (q, r, stop, engine) in BUFFER_STOPS {
++        v.push(Placement {
++            offset: [stop[0], stop[1]],
++            yaw_deg: stop[2],
++            ..place("rail_buffer_stop", q, r, 2)
++        });
++        v.push(Placement {
++            offset: [engine[0], engine[1]],
++            yaw_deg: engine[2],
++            y: TRAIN_RAIL_TOP,
++            ..place("train_engine", q, r, 2)
++        });
++    }
+     // The farm (data/tiles/farm.ron) with its paddock fence (P3) on a meadow at (-1, 5), south-east
+     // of the river rail bridge; no lane of a neighbour runs onto it. The heroes stand at y = 0, as
+     // play places them; the fence mesh carries the meadow relief itself.
+@@ -487,6 +503,15 @@ const FOREST_FLOOR_VARIANTS: &[(&str, [f32; 2], f32, f32)] = &[
+ /// The rail top above the cap (`RAIL_TOP` in scripts/blender/kit/_rail.py), where a train's wheels stand.
+ const TRAIN_RAIL_TOP: f32 = 0.46;
+ 
++/// (q, r, stop [x, z, yaw], engine [x, z, yaw]) at the open local edge 0 of a rail straight and of a
++/// rail bend, both rot 2, in the rail piece's frame: the stop's buffer faces 3.5 m in along the track,
++/// and the engine's front buffers there with its axles on the track
++/// (docs/checkpoints/rail_buffer_stop/poses.py, runtime-notes.md). The stop stands at cap level.
++const BUFFER_STOPS: [(i32, i32, [f32; 3], [f32; 3]); 2] = [
++    (-3, 6, [10.356, 0.0, 0.0], [5.886, 0.0, 0.0]),
++    (1, 3, [10.467, 0.753, -17.05], [7.35, 3.788, -57.08]),
++];
++
+ /// (piece, offset, yaw) of the train consist on the rail bend at (1, 2), rot 2: the engine, a
+ /// carriage and the brake third last (`hex_sim::rail::CONSIST`; the two carriage designs share one
+ /// length and wheelbase, so the poses hold).
+@@ -1029,6 +1054,37 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn buffer_stops_stand_at_open_rail_ends() {
++        let l = kit_layout();
++        let stops: Vec<_> = l.iter().filter(|p| p.piece == "rail_buffer_stop").collect();
++        assert_eq!(stops.len(), 2);
++        for s in stops {
++            // The stop stands at its rail piece's local edge 0, which faces a cell with no rail.
++            let rail = l
++                .iter()
++                .find(|p| {
++                    p.cell == s.cell
++                        && p.rot == s.rot
++                        && matches!(p.piece, "rail_straight_center" | "rail_bend_60_center")
++                })
++                .unwrap_or_else(|| panic!("no rail piece under the stop at {:?}", s.cell));
++            let beyond = rail.cell.neighbor(rail.rot % 6);
++            assert!(
++                !l.iter()
++                    .any(|p| p.cell == beyond && p.piece.starts_with("rail_")),
++                "the stop at {:?} faces rail at {beyond:?}",
++                s.cell
++            );
++            assert!(
++                l.iter()
++                    .any(|p| p.piece == "train_engine" && p.cell == s.cell),
++                "no engine at the stop at {:?}",
++                s.cell
++            );
++        }
++    }
++
+     #[test]
+     fn rail_bridge_meets_rail_and_river_on_its_lanes() {
+         let l = kit_layout();

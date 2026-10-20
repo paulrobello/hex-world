@@ -1,0 +1,176 @@
+{
+  "aoDistanceM": 0.6,
+  "aoOccluder": "straight track (_rail.track)",
+  "blender": "5.2.2 LTS",
+  "bufferStop": {
+    "beam": {
+      "x": [
+        0.45,
+        0.83
+      ],
+      "y": [
+        -1.35,
+        1.35
+      ],
+      "z": [
+        1.24,
+        1.78
+      ]
+    },
+    "braces": {
+      "angleDeg": 45.0,
+      "footX": [
+        1.955,
+        2.4
+      ],
+      "y": [
+        -0.8400000000000001,
+        0.8400000000000001
+      ]
+    },
+    "bufferCentres": {
+      "headRadius": 0.2,
+      "y": [
+        -0.85,
+        0.85
+      ],
+      "zAboveCap": 1.51,
+      "zAboveRailTop": 1.05
+    },
+    "bufferFaceX": 0.0,
+    "chordM": 2.24,
+    "lamp": {
+      "lensZ": 1.99,
+      "x": [
+        0.54,
+        0.74
+      ],
+      "zTop": 2.29
+    },
+    "legs": {
+      "footX": [
+        0.06,
+        0.26999999999999996
+      ],
+      "uprightX": [
+        0.56,
+        0.72
+      ],
+      "y": [
+        -0.8400000000000001,
+        0.8400000000000001
+      ]
+    },
+    "pivot": "track centreline at the buffer contact plane, cap level (z 0); +x toward the open edge",
+    "placementFit": {
+      "bend": {
+        "footRailErrorM": 0.0382,
+        "footRailErrorTangentM": 0.3899,
+        "minBorderDistM": 0.837,
+        "originBlender": [
+          10.467,
+          -0.7535
+        ],
+        "tangentYawDeg": 25.031,
+        "yawDeg": 17.045
+      },
+      "straight": {
+        "footRailErrorM": 0.0,
+        "footRailErrorTangentM": 0.0,
+        "minBorderDistM": 1.1,
+        "originBlender": [
+          10.3564,
+          0.0
+        ],
+        "tangentYawDeg": 0.0,
+        "yawDeg": 0.0
+      }
+    },
+    "stopInsideEdgeM": 3.5
+  },
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colliderBoxBlender": {
+    "x": [
+      0.0,
+      2.488
+    ],
+    "y": [
+      -1.35,
+      1.35
+    ],
+    "z": [
+      0.46,
+      2.12
+    ]
+  },
+  "device": "CPU",
+  "lodTris": [
+    938,
+    298,
+    108
+  ],
+  "lodUvScale": [
+    1.0,
+    0.55,
+    0.35
+  ],
+  "marginPx": 2,
+  "maskStats": {
+    "aoMean": 0.7234140634536743,
+    "aoP05": 0.0313725508749485,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "glass": 0.314,
+          "paint": 0.0,
+          "steel": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "glass": 0.282,
+          "paint": 0.0,
+          "steel": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "glass": 0.953,
+          "paint": 0.0,
+          "steel": 0.502
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.5604705810546875,
+    "filledTexels": 1779,
+    "nightTexels": 661
+  },
+  "masksDensityBySlot": {
+    "lod0": {
+      "glass": 81.3,
+      "paint": 83.37,
+      "steel": 83.37
+    },
+    "lod1": {
+      "glass": 44.26,
+      "paint": 45.85,
+      "steel": 45.85
+    },
+    "lod2": {
+      "glass": 29.18,
+      "paint": 29.18,
+      "steel": 29.18
+    }
+  },
+  "receiverSignature": "3d49bd826336a0cdc9451bad4767709e27a6cede29614f4bddc7858972d1acaf",
+  "samples": 64,
+  "skipped": false
+}

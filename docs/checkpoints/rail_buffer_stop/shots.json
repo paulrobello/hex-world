@@ -1,0 +1,202 @@
+[
+ {
+  "cmd": "scenario",
+  "name": "kit"
+ },
+ {
+  "cmd": "wait",
+  "frames": 120
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -2.94,
+   24.0,
+   177.09
+  ],
+  "look_at": [
+   -4.06,
+   1.0,
+   151.03
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bufstop-straight-play"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -0.38,
+   2.3,
+   153.66
+  ],
+  "look_at": [
+   -5.48,
+   1.4,
+   153.49
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bufstop-straight-sun"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -10.34,
+   2.6,
+   156.91
+  ],
+  "look_at": [
+   -5.78,
+   1.0,
+   154.01
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bufstop-straight-rear"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -4.48,
+   7.5,
+   154.76
+  ],
+  "look_at": [
+   -5.78,
+   0.4,
+   154.01
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bufstop-straight-top"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -3.21,
+   1.7,
+   157.57
+  ],
+  "look_at": [
+   -5.18,
+   1.3,
+   152.97
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bufstop-eye"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   92.99,
+   24.0,
+   81.4
+  ],
+  "look_at": [
+   62.86,
+   1.0,
+   78.58
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bufstop-bend-play"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   68.19,
+   2.3,
+   79.94
+  ],
+  "look_at": [
+   63.26,
+   1.4,
+   81.27
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bufstop-bend-sun"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   59.62,
+   2.6,
+   85.98
+  ],
+  "look_at": [
+   63.13,
+   1.0,
+   81.86
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bufstop-bend-rear"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   64.59,
+   7.5,
+   82.19
+  ],
+  "look_at": [
+   63.13,
+   0.4,
+   81.86
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bufstop-bend-top"
+ },
+ {
+  "cmd": "exit"
+ }
+]

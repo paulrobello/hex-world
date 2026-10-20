@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Bent-rail buffer stop from assets-source/refs/rail_buffer_stop ref-2 (owner D2, 2026-10-20). Red beam (the rail family's lever red), two buffers at the train's buffer height and spacing (rail top + 1.05 m, 0.85 m either side), a red lamp with a night-lit lens, on legs and braces of the running rails' own section standing on the running rails. Buffer faces 3.5 m inside the open edge; placement contract in docs/checkpoints/rail_buffer_stop/runtime-notes.md. Review sheet: docs/checkpoints/rail_buffer_stop/sheet.jpg. The controller records the owner's decision."
+  }
+]
