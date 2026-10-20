@@ -424,8 +424,8 @@ mod tests {
         };
         assert_eq!(
             map_walk_input(&f, false),
-            [Action::Stride(Vec2::new(0.0, 2.8 * 0.5))],
-            "W walks at the default 2.8 m/s"
+            [Action::Stride(Vec2::new(0.0, 5.0 * 0.5))],
+            "W walks at the default 5.0 m/s"
         );
         let sprint = InputFrame {
             held: vec![KeyCode::KeyD, KeyCode::ShiftLeft],
@@ -434,7 +434,7 @@ mod tests {
         };
         assert_eq!(
             map_walk_input(&sprint, false),
-            [Action::Stride(Vec2::new(5.6, 0.0))],
+            [Action::Stride(Vec2::new(10.0, 0.0))],
             "Shift sprints at twice the walk speed"
         );
         let set = WalkSpeed::new(6.0).unwrap();

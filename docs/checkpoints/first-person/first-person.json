@@ -22,6 +22,7 @@
   {"cmd": "dump_state", "name": "fp-00-orbit"},
 
   {"cmd": "walk", "on": true, "pointer_lock": null},
+  {"cmd": "set_walk_speed", "speed": 2.8},
   {"cmd": "wait", "frames": 10},
   {"cmd": "dump_state", "name": "fp-01-entered"},
 
@@ -45,6 +46,14 @@
   {"cmd": "wait", "frames": 10},
   {"cmd": "screenshot", "name": "fp-04-river-bank"},
   {"cmd": "dump_state", "name": "fp-04-river-bank"},
+
+  {"cmd": "walk_look", "heading": 240, "pitch": -4},
+  {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 2.5, "sprint": false},
+  {"cmd": "wait", "frames": 330},
+  {"cmd": "walk_look", "heading": 45, "pitch": -6},
+  {"cmd": "wait", "frames": 10},
+  {"cmd": "screenshot", "name": "fp-04b-river-crossed"},
+  {"cmd": "dump_state", "name": "fp-04b-river-crossed"},
 
   {"cmd": "walk_to", "x": -36.4, "z": -21.0, "heading": 300, "pitch": -4},
   {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 5, "sprint": false},

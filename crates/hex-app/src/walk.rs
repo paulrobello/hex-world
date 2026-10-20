@@ -1,6 +1,7 @@
 //! First-person walk mode (PRD P8, D14): the walker stands on the kit ground at eye height, walks
 //! with WASD (Shift sprints), looks with the mouse and hops with Space, and is stopped by buildings,
-//! trunks, rocks, deep water and the map edge (`hex_play::walk`). The world keeps running.
+//! trunks, rocks, deep sea water and the map edge, and fords rivers (`hex_play::walk`). The world
+//! keeps running.
 //!
 //! Enter and exit follow `GameState::walk_mode`, so the F key, Esc, the HUD button and the `walk`
 //! command share one snapshot: entering takes the orbit camera's transform and FOV, leaving writes
@@ -21,9 +22,11 @@ use crate::game::GameState;
 
 /// Eye height above the feet (m).
 pub const EYE_HEIGHT: f32 = 1.7;
-/// The walk speed setting's default and lowest value, and its highest (m/s); owner 2026-10-14.
+/// The walk speed setting's lowest value and its highest (m/s); owner 2026-10-14.
 pub const WALK_SPEED: f32 = 2.8;
 pub const WALK_SPEED_MAX: f32 = 8.0;
+/// The walk speed setting's default (m/s); owner 2026-10-20.
+pub const WALK_SPEED_DEFAULT: f32 = 5.0;
 /// Shift sprints at this many times the walk speed, whatever the setting.
 pub const SPRINT_FACTOR: f32 = 2.0;
 /// Vertical field of view while walking (degrees); leaving restores the orbit camera's.
@@ -48,7 +51,7 @@ pub struct WalkSpeed(f32);
 
 impl Default for WalkSpeed {
     fn default() -> Self {
-        Self(WALK_SPEED)
+        Self(WALK_SPEED_DEFAULT)
     }
 }
 
@@ -515,10 +518,10 @@ mod tests {
     #[test]
     fn a_scripted_step_covers_speed_times_seconds_and_sprint_is_twice_walk() {
         let default = WalkSpeed::default();
-        assert_eq!(default.walk(), 2.8);
-        assert_eq!(default.sprint(), 5.6);
-        assert!((scripted_metres(default, false, 1.0) - 2.8).abs() < 1e-4);
-        assert!((scripted_metres(default, true, 1.0) - 5.6).abs() < 1e-4);
+        assert_eq!(default.walk(), 5.0);
+        assert_eq!(default.sprint(), 10.0);
+        assert!((scripted_metres(default, false, 1.0) - 5.0).abs() < 1e-4);
+        assert!((scripted_metres(default, true, 1.0) - 10.0).abs() < 1e-3);
         let set = WalkSpeed::new(5.0).unwrap();
         assert!((scripted_metres(set, false, 2.0) - 10.0).abs() < 1e-3);
         assert!((scripted_metres(set, true, 0.5) - 5.0).abs() < 1e-4);
@@ -548,9 +551,9 @@ mod tests {
         let v = state_json(&s, &ground);
         assert_eq!(
             (v["on"].clone(), v["walk_speed"].clone()),
-            (json!(false), json!(2.8))
+            (json!(false), json!(5.0))
         );
-        assert_eq!(v["sprint_speed"], json!(5.6));
+        assert_eq!(v["sprint_speed"], json!(10.0));
         s.speed = WalkSpeed::new(7.25).unwrap();
         let v = state_json(&s, &ground);
         assert_eq!(

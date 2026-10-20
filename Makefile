@@ -490,7 +490,7 @@ shots-wheat-play:
 # First-person walk checkpoint (PRD P8): builds a village street, a forest, a river, a beach and
 # an ocean with docs/checkpoints/first-person/first-person.json, walks them at eye level at
 # 1280x800 with tilt-shift off and `--clock fixed`, then copies JPEG stills and the state dumps.
-FP_SHOTS = fp-00-orbit fp-02-village-street fp-03-forest fp-04-river-bank fp-05-beach fp-06-map-edge fp-07-orbit-back
+FP_SHOTS = fp-00-orbit fp-02-village-street fp-03-forest fp-04-river-bank fp-04b-river-crossed fp-05-beach fp-06-map-edge fp-07-orbit-back
 FP_DOCS = docs/checkpoints/first-person
 shots-first-person:
 	mkdir -p target/shots $(FP_DOCS)

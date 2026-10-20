@@ -4,9 +4,11 @@
 
 /** The viewer's walk speed (m/s) in localStorage. */
 export const WALK_SPEED_KEY = "hexWorld.walkSpeed";
-/** The engine's range (m/s, `hex-app` `walk::WALK_SPEED` and `WALK_SPEED_MAX`); the default is the lowest. */
+/** The engine's range (m/s, `hex-app` `walk::WALK_SPEED` and `WALK_SPEED_MAX`). */
 export const WALK_SPEED_MIN = 2.8;
 export const WALK_SPEED_MAX = 8;
+/** The engine's default (m/s, `hex-app` `walk::WALK_SPEED_DEFAULT`; owner 2026-10-20). */
+export const WALK_SPEED_DEFAULT = 5;
 export const WALK_SPEED_STEP = 0.1;
 /** Shift sprints at this many times the walk speed, whatever the setting. */
 export const SPRINT_FACTOR = 2;

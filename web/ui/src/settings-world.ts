@@ -12,6 +12,7 @@ import {
   SPRINT_FACTOR,
   speedLabel,
   storedWalkSpeed,
+  WALK_SPEED_DEFAULT,
   WALK_SPEED_KEY,
   WALK_SPEED_MAX,
   WALK_SPEED_MIN,
@@ -60,7 +61,7 @@ export class WorldPanel {
       min: WALK_SPEED_MIN,
       max: WALK_SPEED_MAX,
       step: WALK_SPEED_STEP,
-      value: WALK_SPEED_MIN,
+      value: WALK_SPEED_DEFAULT,
       "aria-label": "Walk speed",
     });
     this.speedOut = h("output", { class: "field__value" });
@@ -71,7 +72,7 @@ export class WorldPanel {
       send(walkSpeedCommand(v));
       saveWalkSpeed(v);
     });
-    this.paintSpeed(WALK_SPEED_MIN, WALK_SPEED_MIN * SPRINT_FACTOR);
+    this.paintSpeed(WALK_SPEED_DEFAULT, WALK_SPEED_DEFAULT * SPRINT_FACTOR);
     this.name = h("span", { class: "field__label" }, "This world");
     this.hint = h("span", { class: "field__hint" });
     this.trigger = h(

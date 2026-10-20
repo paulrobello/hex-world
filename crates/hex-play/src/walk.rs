@@ -9,7 +9,11 @@
 //!   placeholder) stands at y = 0, the placeholder cap. Tiles hidden until their pack arrives
 //!   ([`PlayWaiting`]) are not ground at all.
 //! - **Water.** On a tile with water (`water::tiles::water_kind`) the surface is [`WATER_Y`]: the
-//!   walker wades where the bed is at most [`MAX_WADE`] under it and stops at that contour.
+//!   walker wades where the bed is at most [`MAX_WADE`] under it and stops at that contour. Rivers
+//!   and spring streams ([`WaterKind::River`], [`WaterKind::Spring`]) are fords instead (owner,
+//!   2026-10-20: "allow walk mode to cross rivers"): over deeper water the feet hold at
+//!   [`MAX_WADE`] under the surface, so the walker crosses with its head above the water. The sea
+//!   (ocean, coast and river mouth tiles) still stops it.
 //! - **Obstacles.** Houses, the windmill, the barn, the hero oak, spruces, rocks and the farm's hay
 //!   bales and (static) animals block the walker by their collider (`<piece>_collider` in the kit
 //!   GLB) as a convex footprint on the ground, placed with the hero or scatter instance's transform
@@ -46,7 +50,7 @@ use crate::{
         packs::PlayPacks,
         scatter::{self, ScatterLayouts, Surface, TileScatter, Tri, footprint, turn},
     },
-    water::tiles::{WATER_Y, water_kind},
+    water::tiles::{WATER_Y, WaterKind, water_kind},
 };
 
 /// The walker's body radius (m): how close its centre comes to a wall, a trunk or an edge.
@@ -141,6 +145,8 @@ struct CellGround {
     /// `None`: a placeholder tile, flat at y = 0.
     surface: Option<Arc<Surface>>,
     water: bool,
+    /// River or spring water: deeper than [`MAX_WADE`] is crossed at that depth, not refused.
+    ford: bool,
 }
 
 /// A collider footprint in world XZ: a convex polygon.
@@ -688,6 +694,10 @@ impl WalkGround {
                     rotation: t.rotation,
                     surface: surface_of(def),
                     water: water_kind(def, t.rotation).is_some(),
+                    ford: matches!(
+                        water_kind(def, t.rotation),
+                        Some(WaterKind::River | WaterKind::Spring(_))
+                    ),
                 },
             );
             let root = root_transform(t);
@@ -733,8 +743,9 @@ impl WalkGround {
         self.cells.get(&cell).map(|g| (cell, g.tile.as_str()))
     }
 
-    /// Ground height under `p` and the water depth over it, or why nothing stands there.
-    fn sample(&self, p: Vec2) -> Result<(f32, f32), Blocked> {
+    /// Ground height under `p`, the water depth over it and whether that water is a ford, or why
+    /// nothing stands there.
+    fn sample_ford(&self, p: Vec2) -> Result<(f32, f32, bool), Blocked> {
         let Some(g) = self.cells.get(&cell_at(p)) else {
             return Err(Blocked::Edge);
         };
@@ -745,14 +756,22 @@ impl WalkGround {
             None => 0.0,
         };
         let depth = if g.water { (WATER_Y - h).max(0.0) } else { 0.0 };
-        Ok((h, depth))
+        Ok((h, depth, g.ford))
     }
 
-    /// Ground height under `p` (the bed under shallow water), or why nothing stands there:
-    /// [`Blocked::Edge`] or [`Blocked::Water`].
+    /// Ground height under `p` and the water depth over it, or why nothing stands there.
+    fn sample(&self, p: Vec2) -> Result<(f32, f32), Blocked> {
+        self.sample_ford(p).map(|(h, depth, _)| (h, depth))
+    }
+
+    /// Where the feet stand at `p` (the bed under shallow water, [`MAX_WADE`] under the surface
+    /// in a deeper ford), or why nothing stands there: [`Blocked::Edge`] or [`Blocked::Water`].
     pub fn ground(&self, p: Vec2) -> Result<f32, Blocked> {
-        let (h, depth) = self.sample(p)?;
+        let (h, depth, ford) = self.sample_ford(p)?;
         if depth > MAX_WADE {
+            if ford {
+                return Ok(WATER_Y - MAX_WADE);
+            }
             return Err(Blocked::Water);
         }
         Ok(h)
@@ -1535,12 +1554,17 @@ mod tests {
         let lo = beach.iter().map(|b| b.1).fold(f32::MAX, f32::min);
         let hi = beach.iter().map(|b| b.1).fold(f32::MIN, f32::max);
         assert!(hi - lo > 0.8, "a beach slope: {beach:?}");
-        // River: the banks fall from the cap toward the channel, and the channel is deep water.
+        // River: the banks fall from the cap toward the channel, and the deep channel is a ford
+        // with the feet at wading depth.
         let c = centre(-1, 0);
         let bank_top = g.ground(c + Vec2::new(0.0, 10.0)).unwrap();
         let bank_low = g.ground(c + Vec2::new(0.0, 5.0)).unwrap();
         assert!(bank_top - bank_low > 0.3, "{bank_top} then {bank_low}");
-        assert_eq!(g.ground(c), Err(Blocked::Water), "the channel centre");
+        assert!(
+            g.water_depth(c) > MAX_WADE,
+            "the channel is deeper than a wade"
+        );
+        assert_eq!(g.ground(c), Ok(WATER_Y - MAX_WADE), "the channel centre");
     }
 
     /// Walk blocks at the piece the cell draws: a cluster at (1, 0) draws house_cottage_b in house
@@ -1696,7 +1720,7 @@ mod tests {
     }
 
     #[test]
-    fn a_river_bank_stops_the_walker_at_the_water() {
+    fn the_walker_fords_a_river_from_bank_to_bank() {
         let g = world(&[(0, 0, "river_straight", 1)]);
         let c = centre(0, 0);
         let across = (0..12)
@@ -1704,12 +1728,28 @@ mod tests {
                 let a = k as f32 * std::f32::consts::TAU / 12.0;
                 Vec2::new(a.cos(), a.sin())
             })
-            .find(|d| g.stand(c + 11.0 * *d).is_ok())
-            .expect("a bank");
-        let s = walk(&g, c + 11.0 * across, -across, 11.0);
-        assert_eq!(s.blocked, Some(Blocked::Water));
-        assert!(s.pos.xz().distance(c) > 2.0, "short of the channel");
-        assert!(s.pos.y < 0.0, "down the bank: {}", s.pos.y);
+            .find(|d| g.stand(c + 11.0 * *d).is_ok() && g.stand(c - 11.0 * *d).is_ok())
+            .expect("a line across, bank to bank");
+        let s = walk(&g, c + 11.0 * across, -across, 22.0);
+        assert_eq!(s.blocked, None, "nothing stops the crossing");
+        assert!(
+            s.pos.xz().distance(c - 11.0 * across) < 0.01,
+            "on the far bank: {}",
+            s.pos
+        );
+        // Every stride across holds the feet at most a wade under the surface.
+        let mut pos = Vec3::new(c.x + 11.0 * across.x, 0.0, c.y + 11.0 * across.y);
+        pos.y = g.ground(pos.xz()).unwrap();
+        for _ in 0..440 {
+            pos = g.step(pos, -across * 0.05).pos;
+            assert!(WATER_Y - pos.y <= MAX_WADE + 1e-4, "feet at {}", pos.y);
+        }
+    }
+
+    #[test]
+    fn the_sea_still_stops_the_walker() {
+        let g = world(&[(0, 0, "beach", 0), (1, 0, "ocean", 0)]);
+        assert_eq!(g.ground(centre(1, 0)), Err(Blocked::Water));
     }
 
     fn ray(o: Vec3, d: Vec3) -> Ray3d {
@@ -1953,7 +1993,11 @@ mod tests {
         let m = centre(0, 0) + Vec2::new(3.0, 2.0);
         assert_eq!(g.top(m), g.ground(m).ok(), "dry ground is its own top");
         let c = centre(-1, 0);
-        assert_eq!(g.ground(c), Err(Blocked::Water));
+        assert_eq!(
+            g.ground(c),
+            Ok(WATER_Y - MAX_WADE),
+            "a ford under the surface"
+        );
         assert_eq!(
             g.top(c),
             Some(WATER_Y),

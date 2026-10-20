@@ -7,6 +7,7 @@ import {
   SPRINT_FACTOR,
   speedLabel,
   storedWalkSpeed,
+  WALK_SPEED_DEFAULT,
   WALK_SPEED_KEY,
   WALK_SPEED_MAX,
   WALK_SPEED_MIN,
@@ -14,8 +15,9 @@ import {
   walkSpeedPct,
 } from "../src/walk-speed.ts";
 
-test("the range starts at the new default walk speed and sprint is twice it", () => {
+test("the range runs 2.8 to 8 m/s, the default is 5 and sprint is twice it", () => {
   assert.equal(WALK_SPEED_MIN, 2.8);
+  assert.equal(WALK_SPEED_DEFAULT, 5);
   assert.equal(WALK_SPEED_MAX, 8);
   assert.equal(SPRINT_FACTOR, 2);
   assert.equal(WALK_SPEED_KEY, "hexWorld.walkSpeed");
