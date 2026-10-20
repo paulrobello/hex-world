@@ -98,6 +98,18 @@ pub struct TrainsView {
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PlayStock(pub u64);
 
+/// One drawn part of a vehicle (a slot of a piece at one LOD).
+#[derive(Component, Clone, Copy, Debug)]
+pub struct StockPart;
+
+/// How the trains draw (`hexWorld.state().trains_draw`), as JSON: `vehicles`, `parts` (part
+/// entities), `visible_parts` (in any view this frame) and `batches`, the distinct mesh and
+/// material pairs among the visible parts, per LOD in `batches_by_lod`. Every vehicle of a piece
+/// shares one mesh per LOD and one material per slot and carries its livery as a [`MeshTag`], so
+/// the batches stay one per piece, LOD and slot however many trains run.
+#[derive(Resource, Clone, Debug, Default)]
+pub struct TrainReport(pub String);
+
 /// The train kit pieces, loaded with the village pack in the play scenario.
 #[derive(Resource, Default)]
 pub enum TrainKit {
@@ -117,10 +129,14 @@ impl Plugin for TrainsPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TrainsView>()
             .init_resource::<TrainKit>()
+            .init_resource::<TrainReport>()
             .add_systems(Update, (start_kit, finish_kit).chain())
             .add_systems(
                 PostUpdate,
-                sync.before(bevy::transform::TransformSystems::Propagate),
+                (
+                    sync.before(bevy::transform::TransformSystems::Propagate),
+                    report.after(bevy::camera::visibility::VisibilitySystems::CheckVisibility),
+                ),
             );
     }
 }
@@ -315,6 +331,7 @@ pub fn sync(
             .with_children(|c| {
                 for part in parts {
                     c.spawn((
+                        StockPart,
                         Mesh3d(part.mesh.clone()),
                         MeshMaterial3d(part.material.clone()),
                         tag.clone(),
@@ -324,6 +341,35 @@ pub fn sync(
                 }
             });
     }
+}
+
+/// Writes [`TrainReport`] from the parts' visibility this frame.
+pub fn report(
+    mut out: ResMut<TrainReport>,
+    stock: Query<(), With<PlayStock>>,
+    parts: Query<(&Mesh3d, &MeshMaterial3d<CarMaterial>, &ViewVisibility, &Lod), With<StockPart>>,
+) {
+    let vehicles = stock.iter().count();
+    if vehicles == 0 && out.0.is_empty() {
+        return;
+    }
+    let mut pairs: [HashSet<(AssetId<Mesh>, AssetId<CarMaterial>)>; 3] = Default::default();
+    let mut visible = 0;
+    for (mesh, material, vis, lod) in &parts {
+        if vis.get() {
+            visible += 1;
+            pairs[(lod.0 as usize).min(2)].insert((mesh.0.id(), material.0.id()));
+        }
+    }
+    let by_lod = pairs.each_ref().map(HashSet::len);
+    out.0 = format!(
+        "{{\"vehicles\":{vehicles},\"parts\":{},\"visible_parts\":{visible},\"batches\":{},\"batches_by_lod\":[{},{},{}]}}",
+        parts.iter().count(),
+        by_lod.iter().sum::<usize>(),
+        by_lod[0],
+        by_lod[1],
+        by_lod[2]
+    );
 }
 
 #[cfg(test)]

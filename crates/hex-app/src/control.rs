@@ -693,6 +693,7 @@ pub struct GameSnapshot<'w> {
 pub struct AgentSnapshot<'w> {
     sim: Res<'w, CarSim>,
     boids: Option<Res<'w, hex_play::boids::BoidReport>>,
+    trains: Option<Res<'w, hex_play::trains::TrainReport>>,
     paused: Res<'w, hex_render::AgentsPaused>,
 }
 
@@ -754,7 +755,12 @@ pub fn publish_state(
         queue,
         game,
     } = game_snapshot;
-    let AgentSnapshot { sim, boids, paused } = agents;
+    let AgentSnapshot {
+        sim,
+        boids,
+        trains,
+        paused,
+    } = agents;
     let PresentationSnapshot {
         config,
         gpu,
@@ -885,6 +891,10 @@ pub fn publish_state(
             ghost_report.as_ref().filter(|_| play).map(|g| g.0.as_str()),
         ),
         ("boids", boids.as_ref().map(|b| b.0.as_str())),
+        (
+            "trains_draw",
+            trains.as_ref().filter(|_| play).map(|t| t.0.as_str()),
+        ),
         (
             "scatter",
             scatter.as_ref().filter(|_| play).map(|s| s.0.as_str()),

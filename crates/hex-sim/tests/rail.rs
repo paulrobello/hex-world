@@ -198,6 +198,120 @@ fn trains_clear_each_other_at_the_junction_fouling_point() {
     assert!(waits > 0, "no train ever waited for the junction");
 }
 
+/// The way a train runs round a loop about the loop's centroid: +1 or -1 (the sign of the cross
+/// product of the engine's offset from the centroid and its heading, negated while it propels).
+fn sense(r: &Railway, t: &hex_sim::rail::Train) -> f32 {
+    let pts: Vec<[f32; 2]> = r
+        .network()
+        .links()
+        .flat_map(|(_, l)| l.points().to_vec())
+        .collect();
+    let n = pts.len() as f32;
+    let c = [
+        pts.iter().map(|p| p[0]).sum::<f32>() / n,
+        pts.iter().map(|p| p[1]).sum::<f32>() / n,
+    ];
+    // The engine faces the engine end; propelling, the train runs the other way.
+    let e = t.vehicles(1.0)[0].pose;
+    let o = geom::sub(e.pos, c);
+    let way = if t.engine_leads() { 1.0 } else { -1.0 };
+    way * (o[0] * e.dir[1] - o[1] * e.dir[0]).signum()
+}
+
+/// Every train spawned on a loop runs the same way round, from its first tick: the spawner walks
+/// the loop once and lays each train along that walk, whatever way each link was stitched.
+#[test]
+fn trains_spawned_on_a_loop_all_run_the_same_way_round() {
+    let c = catalog();
+    for n in [2, 3, 4, 5] {
+        let mut r = Railway::new();
+        for (cell, id, rot) in triangle(n) {
+            place(&mut r, &c, cell, id, rot);
+        }
+        r.tick();
+        assert!(
+            r.trains().len() >= 2,
+            "triangle({n}): {} trains",
+            r.trains().len()
+        );
+        let senses: Vec<f32> = r.trains().iter().map(|t| sense(&r, t)).collect();
+        assert!(
+            senses.iter().all(|s| *s == senses[0]),
+            "triangle({n}): trains run {senses:?} round"
+        );
+    }
+}
+
+/// Every vehicle faces the engine end of its train (the engine's smokebox is the kit piece's +x,
+/// `scripts/blender/kit/_train.py`), engine first in the consist, before and after the train runs
+/// back from a line end: the engine's heading points away from the first carriage and each
+/// carriage's toward the vehicle ahead of it.
+#[test]
+fn every_vehicle_faces_the_engine_end_before_and_after_a_reversal() {
+    let c = catalog();
+    let mut r = Railway::new();
+    y_layout(&mut r, &c);
+    let mut reversed = false;
+    for _ in 0..240 * TICK_HZ {
+        r.tick();
+        for t in r.trains() {
+            let v = t.vehicles(1.0);
+            assert_eq!(v[0].kind, hex_sim::VehicleKind::Engine);
+            for w in v.windows(2) {
+                let ahead = geom::sub(w[0].pose.pos, w[1].pose.pos);
+                for p in [w[0].pose, w[1].pose] {
+                    assert!(
+                        geom::dot(p.dir, ahead) > 0.0,
+                        "{:?} reversals {}: a vehicle faces away from the engine",
+                        t.id(),
+                        t.reversals()
+                    );
+                }
+            }
+            reversed |= t.reversals() > 0 && !t.engine_leads();
+        }
+    }
+    assert!(reversed, "a train ran back with the engine propelling");
+}
+
+/// Built side by side, the triangle's three sides are three stretches with a train each, laid
+/// along each side's own walk. When the corners close them into one loop, the trains running
+/// against the oldest turn round where they stand, so all three lap the same way and never meet.
+#[test]
+fn trains_on_stretches_closed_into_a_loop_turn_to_run_the_same_way_round() {
+    let c = catalog();
+    let mut r = Railway::new();
+    let tiles = triangle(2);
+    for (cell, id, rot) in tiles.iter().filter(|t| t.1 == "rail_straight") {
+        place(&mut r, &c, *cell, id, *rot);
+    }
+    run(&mut r, 2);
+    assert_eq!(r.trains().len(), 3, "a train on each side");
+    for (cell, id, rot) in tiles.iter().filter(|t| t.1 == "rail_bend_60") {
+        place(&mut r, &c, *cell, id, *rot);
+    }
+    r.tick();
+    let senses: Vec<f32> = r.trains().iter().map(|t| sense(&r, t)).collect();
+    assert!(
+        senses.iter().all(|s| *s == senses[0]),
+        "trains run {senses:?} round"
+    );
+    let before: Vec<u32> = r.trains().iter().map(|t| t.reversals()).collect();
+    for _ in 0..120 * TICK_HZ {
+        r.tick();
+        assert_apart(&r);
+    }
+    for (t, n) in r.trains().iter().zip(before) {
+        assert_eq!(
+            t.reversals(),
+            n,
+            "{:?} ran back after the loop closed",
+            t.id()
+        );
+        assert!(t.speed() > 5.0, "{:?} at {} m/s", t.id(), t.speed());
+    }
+}
+
 /// On a loop a train never stops: it laps the 216 m triangle at line speed.
 #[test]
 fn a_train_laps_a_loop_without_stopping() {
@@ -206,12 +320,11 @@ fn a_train_laps_a_loop_without_stopping() {
     for (cell, id, rot) in triangle(2) {
         place(&mut r, &c, cell, id, rot);
     }
-    // Two trains may spawn running opposite ways round; nose to nose, the higher id runs back once
-    // (STUCK_SECONDS), and from then on both lap the same way.
+    // Both trains spawn running the same way round, so neither ever runs back.
     run(&mut r, 60);
     assert_eq!(r.trains().len(), 2);
     let reversals: Vec<u32> = r.trains().iter().map(|t| t.reversals()).collect();
-    assert!(reversals.iter().sum::<u32>() <= 1, "{reversals:?}");
+    assert_eq!(reversals.iter().sum::<u32>(), 0, "{reversals:?}");
     for _ in 0..120 * TICK_HZ {
         r.tick();
         assert_apart(&r);

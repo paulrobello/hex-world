@@ -280,6 +280,12 @@ function expectScatter(shot, tile, pieces) {
   await page.waitForTimeout(1200);
   const s = await capture(page, "ghost-fallback", "house cluster while the village pack is held: outline and edge colours only");
   if (s.ghost_meshes !== false) fail(`fallback ghost drew meshes: ${JSON.stringify(s.ghost_meshes)}`);
+  // The rail pieces are village pieces too: a rail straight's ghost strokes its rail lanes meanwhile.
+  await page.evaluate(() => { const h = window.hexWorld; h.selectTile("rail_straight"); h.hover(1, 0); });
+  await page.waitForTimeout(600);
+  const rail = await capture(page, "ghost-fallback-rail", "rail straight while the village pack is held: rail lane strokes stand in for its meshes");
+  if (rail.ghost_meshes !== false) fail(`fallback rail ghost drew meshes: ${JSON.stringify(rail.ghost_meshes)}`);
+  await page.evaluate(() => { const h = window.hexWorld; h.selectTile("house_cluster"); h.hover(1, 0); });
   release();
   await until(page, () => window.hexWorld.state().ghost_meshes === true, "house ghost swaps to its meshes when the pack lands");
   await capture(page, "ghost-fallback-landed", "the same ghost once the village pack arrived");

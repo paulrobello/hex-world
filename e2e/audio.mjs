@@ -272,6 +272,33 @@ try {
   check(maxVoices <= 3, `never more than three car voices (${maxVoices})`);
   check(a.recent.every((f) => !f.id.startsWith("car-")), "car cues stay out of the event-cue history");
 
+  // Trains (P3): a new world with the rail checkpoint's loop round the start meadow. Each train's first move is a
+  // trainDeparted event, which blows train-whistle at its front; a moving train chuffs train-chuff where it runs.
+  await cmd({ cmd: "new_world" });
+  await until(async () => (await tiles()) === 1, "a new world for the trains");
+  await cmd({ cmd: "camera", pos: [18, 62, 78], look_at: [0, 0, 0] });
+  const rail = JSON.parse(readFileSync("docs/checkpoints/rail/rail-play.json", "utf8"));
+  // The loop's placements: from the first tile selection that places, to the next hover.
+  const start = rail.findIndex((c, i) => c.cmd === "select_tile" && rail[i + 1]?.cmd === "place");
+  await cmd(rail.slice(start, rail.findIndex((c, i) => i > start && c.cmd === "hover")));
+  const trainPools = Object.fromEntries(["train-whistle", "train-chuff"]
+    .map((p) => [p, manifest.cues.filter((c) => c.pool === p && c.status === "mastered").map((c) => c.id)]));
+  a = await audio();
+  check(JSON.stringify(a.trains.pools) === JSON.stringify(trainPools), `train pools from the manifest ${JSON.stringify(a.trains.pools)}`);
+  await until(async () => (await play()).trains >= 2, "the loop has its trains", 60_000);
+  const trainPlay = (event, pool, ms) => until(async () => {
+    const s = await audio();
+    return s.trains.recent.find((f) => f.event === event && trainPools[pool].includes(f.id)) ?? null;
+  }, `${event} plays ${pool}`, ms);
+  const whistled = await trainPlay("trainDeparted", "train-whistle", 30_000);
+  const chuffed = await trainPlay("trainMoving", "train-chuff", 30_000);
+  a = await audio();
+  save("trains", { whistled, chuffed, trains: a.trains, train_list: (await play()).train_list });
+  for (const f of [whistled, chuffed].filter(Boolean))
+    check(f.gain > 0 && f.gain <= 0.45, `${f.id} at focus-mix gain ${f.gain}`);
+  check(a.trains.voices.length <= 3, `never more than three train voices (${a.trains.voices.length})`);
+  check(a.recent.every((f) => !f.id.startsWith("train-")), "train cues stay out of the event-cue history");
+
   // Mute silences the output, and the setting persists for this viewer.
   await page.evaluate(() => window.hexWorld.audio.setMuted(true));
   await page.waitForTimeout(500);

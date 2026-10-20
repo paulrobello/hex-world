@@ -54,6 +54,15 @@ import {
   pickVariant,
   resolveOneShot,
   SHOP_BELL,
+  TRAIN_CUES,
+  TRAIN_EVENT_WAIT_S,
+  TRAIN_VOICES,
+  type MovingTrain,
+  type TrainRequest,
+  type TrainState,
+  trainIdle,
+  trainInRange,
+  trainStep,
 } from "../src/audio-mix.ts";
 import schema from "../src/bridge-schema.json" with { type: "json" };
 
@@ -863,4 +872,86 @@ test("shop bell: dropped when muted, with the ambience bus at 0 or out of range;
     cues.push(r.play[0]!.cue);
   }
   for (let i = 1; i < cues.length; i++) assert.notEqual(cues[i], cues[i - 1], `bell ${i} repeats ${cues[i]}`);
+});
+
+// ---------- Trains ----------
+const trainPools: Record<string, string[]> = {
+  "train-whistle": ["whistle-a", "whistle-b"],
+  "train-chuff": ["chuff-a"],
+};
+const trainVariants = (pool: string) => trainPools[pool] ?? [];
+const trainSeconds = (cue: string) => (cue.startsWith("whistle") ? 3 : 6);
+const departs = (train: number, q: number, r: number, at = 0): TrainRequest => {
+  const [x, z] = cellWorld(q, r, R);
+  return { train, x, z, at };
+};
+const running = (id: number, q: number, r: number, speed = 6): MovingTrain => {
+  const [x, z] = cellWorld(q, r, R);
+  return { id, x, z, speed };
+};
+const tstep = (st: TrainState, now: number, events: TrainRequest[] = [], trains: MovingTrain[] = [], paused = false) =>
+  trainStep(st, now, events, trains, carView, null, trainVariants, trainSeconds, () => 0.5, paused);
+
+test("trains: the manifest has the whistle and chuff pools the train cues name", () => {
+  const m = manifestJson as unknown as Manifest;
+  for (const { pool } of Object.values(TRAIN_CUES))
+    assert.ok(resolveOneShot(pool, m.cues, [])?.variants.length, `${pool} has mastered variants`);
+});
+
+test("trains: a departure whistles at the front in range, and a moving train chuffs where it is", () => {
+  const r = tstep(trainIdle(), 10, [departs(0, 1, 0, 10), departs(1, 6, 0, 10)], [running(0, 1, 0)]);
+  assert.deepEqual(
+    r.play.map((p) => [p.train, p.kind, p.cue]),
+    [
+      [0, "whistle", "whistle-b"],
+      [0, "chuff", "chuff-a"],
+    ],
+  );
+  const [x, z] = cellWorld(1, 0, R);
+  close(r.play[0]!.gain, TRAIN_CUES.whistle.level * emitterGain(x, z, carView));
+  close(r.play[1]!.gain, TRAIN_CUES.chuff.level * emitterGain(x, z, carView));
+  assert.equal(r.state.gatedBy, null);
+  assert.equal(r.state.pending.length, 0, "the far departure is dropped");
+  assert.ok(trainInRange(...cellWorld(4, 0, R), carView) && !trainInRange(...cellWorld(5, 0, R), carView));
+});
+
+test("trains: a chuff restarts while its train runs on, and a stopped or far train stays quiet", () => {
+  let st = tstep(trainIdle(), 0, [], [running(0, 0, 0)]).state;
+  assert.equal(st.plays, 1);
+  st = tstep(st, 3, [], [running(0, 1, 0)]).state;
+  assert.equal(st.plays, 1, "no second chuff while the first sounds");
+  const again = tstep(st, 6.5, [], [running(0, 2, 0)]);
+  assert.deepEqual(
+    again.play.map((p) => p.kind),
+    ["chuff"],
+    "the train still runs: it chuffs again",
+  );
+  assert.equal(tstep(trainIdle(), 0, [], [running(0, 0, 0, 0)]).play.length, 0, "standing");
+  assert.equal(tstep(trainIdle(), 0, [], [running(0, 6, 0)]).play.length, 0, "out of range");
+  assert.equal(tstep(trainIdle(), 0, [], [running(0, 0, 0)], true).play.length, 0, "paused");
+});
+
+test("trains: voices are capped, a departure waits for one, then is dropped", () => {
+  const busy = [running(0, 0, 0), running(1, 1, 0), running(2, -1, 0), running(3, 0, 1)];
+  const r = tstep(trainIdle(), 0, [departs(4, 0, 0, 0)], busy);
+  assert.equal(r.state.voices.length, TRAIN_VOICES);
+  assert.equal(r.play[0]!.kind, "whistle", "the departure goes first");
+  assert.equal(r.state.gatedBy, "cap");
+  const full = tstep(r.state, 1, [departs(5, 0, 0, 1)], busy);
+  assert.equal(full.play.length, 0);
+  assert.equal(full.state.pending.length, 1, "the new departure waits");
+  const late = tstep(full.state, 1 + TRAIN_EVENT_WAIT_S + 0.1, [], []);
+  assert.equal(late.state.pending.length, 0, "and is dropped after the wait");
+  const gated = trainStep(
+    trainIdle(),
+    0,
+    [departs(0, 0, 0)],
+    busy,
+    carView,
+    "muted",
+    trainVariants,
+    trainSeconds,
+    () => 0.5,
+  );
+  assert.deepEqual([gated.play.length, gated.state.gatedBy], [0, "muted"]);
 });

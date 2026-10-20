@@ -590,8 +590,13 @@ mod schema {
                 version: None,
             },
             GameEvent::WalkModeToggled { on: true },
+            GameEvent::TrainDeparted {
+                id: 1,
+                x: -27.71,
+                z: -24.0,
+            },
         ];
-        let mut seen = [false; 24];
+        let mut seen = [false; 25];
         for e in &samples {
             let i = match e {
                 GameEvent::TilePlaced { .. } => 0,
@@ -618,6 +623,7 @@ mod schema {
                 GameEvent::CarParked { .. } => 21,
                 GameEvent::TileReplaced { .. } => 22,
                 GameEvent::WalkModeToggled { .. } => 23,
+                GameEvent::TrainDeparted { .. } => 24,
             };
             seen[i] = true;
         }

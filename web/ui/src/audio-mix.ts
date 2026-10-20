@@ -528,6 +528,141 @@ export function carStep(
   return { state: s, play };
 }
 
+// ---------- Trains (P3 rail) ----------
+
+export type TrainKind = "whistle" | "chuff";
+
+/** The whistle a departure blows at the train's front, and the chuff that follows a moving train. */
+export const TRAIN_CUES: Record<TrainKind, CarCue> = {
+  whistle: { pool: "train-whistle", level: 0.45 },
+  chuff: { pool: "train-chuff", level: 0.3 },
+};
+/** Trains sound only within this many hex steps of the focus: a train is louder and longer than a car. */
+export const TRAIN_RANGE_STEPS = 4;
+/** Train voices sounding at once, whistles and chuffs together. */
+export const TRAIN_VOICES = 3;
+/** A departure waits this long for a voice, then it is dropped. */
+export const TRAIN_EVENT_WAIT_S = 2;
+/** A train chuffs while it runs at least this fast (m/s). */
+export const TRAIN_CHUFF_MIN_SPEED = 0.5;
+
+/** A departure waiting for its whistle. */
+export interface TrainRequest {
+  train: number;
+  x: number;
+  z: number;
+  /** Audio time the event arrived. */
+  at: number;
+}
+
+export interface TrainVoice {
+  train: number;
+  cue: string;
+  kind: TrainKind;
+  endsAt: number;
+}
+
+export interface TrainState {
+  voices: TrainVoice[];
+  pending: TrainRequest[];
+  lastCue: Record<string, string>;
+  plays: number;
+  gatedBy: OneShotGate | "out-of-range" | "cap" | null;
+}
+
+export const trainIdle = (): TrainState => ({ voices: [], pending: [], lastCue: {}, plays: 0, gatedBy: null });
+
+export function trainInRange(x: number, z: number, v: View): boolean {
+  return Math.hypot(x - v.focus[0], z - v.focus[2]) <= TRAIN_RANGE_STEPS * v.radius * Math.sqrt(3);
+}
+
+/** A train in `play.train_list`: its id, front XZ and speed. */
+export interface MovingTrain {
+  id: number;
+  x: number;
+  z: number;
+  speed: number;
+}
+
+export interface TrainPlay {
+  train: number;
+  kind: TrainKind;
+  cue: string;
+  x: number;
+  z: number;
+  gain: number;
+}
+
+/**
+ * One train step at audio time `now`. Departures join the queue and get a whistle at the train's front while
+ * fewer than TRAIN_VOICES sound and the front is in range; a departure older than TRAIN_EVENT_WAIT_S is dropped.
+ * Then each moving train in range, loudest first, without a chuff sounding gets one (a chuff that ends while its
+ * train still runs starts again on the next step, so a train lapping a loop keeps chuffing). A train has at most
+ * one voice of each kind. While `paused` the train list is frozen, so no chuff starts. A gated step drops the queue.
+ */
+export function trainStep(
+  st: TrainState,
+  now: number,
+  departures: readonly TrainRequest[],
+  trains: readonly MovingTrain[],
+  v: View,
+  gate: OneShotGate,
+  variants: (pool: string) => readonly string[],
+  seconds: (cue: string) => number,
+  rand: () => number,
+  paused = false,
+): { state: TrainState; play: TrainPlay[] } {
+  const s: TrainState = {
+    ...st,
+    voices: st.voices.filter((x) => x.endsAt > now),
+    pending: [...st.pending, ...departures].filter((e) => now - e.at <= TRAIN_EVENT_WAIT_S),
+    lastCue: { ...st.lastCue },
+  };
+  if (gate) return { state: { ...s, pending: [], gatedBy: gate }, play: [] };
+  const play: TrainPlay[] = [];
+  const voiced = (train: number, kind: TrainKind) => s.voices.some((x) => x.train === train && x.kind === kind);
+  const start = (train: number, kind: TrainKind, x: number, z: number): boolean => {
+    const row = TRAIN_CUES[kind];
+    const gain = row.level * emitterGain(x, z, v);
+    const cue = gain >= MIN_EMITTER_GAIN ? pickVariant(variants(row.pool), s.lastCue[row.pool] ?? null, rand) : null;
+    if (!cue) return false;
+    s.lastCue[row.pool] = cue;
+    s.voices.push({ train, cue, kind, endsAt: now + seconds(cue) });
+    s.plays++;
+    s.gatedBy = null;
+    play.push({ train, kind, cue, x, z, gain });
+    return true;
+  };
+  const waiting: TrainRequest[] = [];
+  for (const e of s.pending) {
+    if (!trainInRange(e.x, e.z, v)) {
+      s.gatedBy = "out-of-range";
+      continue;
+    }
+    if (voiced(e.train, "whistle")) continue;
+    if (s.voices.length >= TRAIN_VOICES) {
+      s.gatedBy = "cap";
+      waiting.push(e);
+      continue;
+    }
+    start(e.train, "whistle", e.x, e.z);
+  }
+  s.pending = waiting;
+  if (paused) return { state: s, play };
+  const chuffs = trains
+    .filter((t) => t.speed >= TRAIN_CHUFF_MIN_SPEED && !voiced(t.id, "chuff") && trainInRange(t.x, t.z, v))
+    .map((t) => ({ t, g: emitterGain(t.x, t.z, v) }))
+    .sort((a, b) => b.g - a.g);
+  for (const { t } of chuffs) {
+    if (s.voices.length >= TRAIN_VOICES) {
+      s.gatedBy = "cap";
+      break;
+    }
+    start(t.id, "chuff", t.x, t.z);
+  }
+  return { state: s, play };
+}
+
 // ---------- Shop bell (P3 bakery) ----------
 
 /** The bell a car's visit rings at a shop: its pool, the tile def that is a shop, its level and its lag. */

@@ -153,6 +153,13 @@ impl CarSim {
             .filter(|c| c.arrived())
             .map(|c| car_event(c.id().0, c.to_spot().cell, c.pose_at(1.0).pos, true))
             .collect();
+        let moving: BTreeMap<u64, bool> = self
+            .sim
+            .rails()
+            .trains()
+            .iter()
+            .map(|t| (t.id().0, t.speed() > 0.0))
+            .collect();
         self.sim.tick();
         self.ticks += 1;
         self.refresh();
@@ -162,6 +169,23 @@ impl CarSim {
                 .iter()
                 .filter(|c| c.distance() <= 0.0)
                 .map(|c| car_event(c.id().0, c.from_spot().cell, c.pose_at(0.0).pos, false)),
+        );
+        // A train spawned on this tick stood still before it, like one waiting at a stand.
+        let cm = |v: f32| (v * 100.0).round() / 100.0;
+        events.extend(
+            self.sim
+                .rails()
+                .trains()
+                .iter()
+                .filter(|t| t.speed() > 0.0 && moving.get(&t.id().0) != Some(&true))
+                .map(|t| {
+                    let p = t.front();
+                    GameEvent::TrainDeparted {
+                        id: t.id().0,
+                        x: cm(p[0]),
+                        z: cm(p[1]),
+                    }
+                }),
         );
         events
     }
@@ -737,43 +761,123 @@ mod tests {
         assert_eq!(undone.spawn_rate_hz, rate);
     }
 
-    /// The rail evidence world (docs/checkpoints/rail/rail-play.json) replayed headlessly: every
-    /// placement lands at the rotation the layout needs (auto-rotate has one legal orientation for
-    /// each), and over ten simulated minutes the triangle loop's two trains throw the switch for
-    /// both of its routes. Every train ends up trailing round the loop, so the spur and its level
-    /// crossing see no train after the first laps: the crossing hold is hex-sim's crossing test.
-    #[test]
-    fn rail_checkpoint_layout_places_and_runs_two_trains_through_the_junction() {
+    /// The two rail evidence worlds of docs/checkpoints/rail/rail-play.json, each replayed
+    /// headlessly up to the first camera move after its placements. Returns the loop world and the
+    /// Y world.
+    fn rail_checkpoint_worlds() -> (GameState, GameState) {
         let json = include_str!("../../../docs/checkpoints/rail/rail-play.json");
-        let mut g = GameState::new(1);
+        let (mut worlds, mut g) = (vec![], GameState::new(1));
+        let mut building = true;
         for c in parse_script(json).unwrap() {
-            if matches!(c, Command::Camera { .. }) {
-                break;
-            }
-            if let Some(a) = c.action() {
-                g.apply(a);
+            match c {
+                Command::NewWorld => {
+                    g = GameState::new(1);
+                    building = true;
+                }
+                Command::Camera { .. } if building && g.world.tiles().len() > 1 => {
+                    worlds.push(std::mem::replace(&mut g, GameState::new(1)));
+                    building = false;
+                }
+                c => {
+                    if let Some(a) = c.action().filter(|_| building) {
+                        g.apply(a);
+                    }
+                }
             }
         }
-        let rot = |q: i32, r: i32| {
-            g.world
-                .tile(Axial::new(q, r))
-                .map(|t| (t.def.clone(), t.rotation))
-        };
-        assert_eq!(rot(-1, -1), Some(("rail_junction".into(), 0)));
-        assert!(matches!(rot(-2, -1), Some((d, 0 | 3)) if d == "rail_road_crossing"));
-        assert_eq!(rot(2, -1), Some(("rail_bend_60".into(), 2)));
-        assert_eq!(rot(-1, 2), Some(("rail_bend_60".into(), 4)));
-        assert_eq!(rot(-2, 0), Some(("house_cluster".into(), 4)));
-        assert_eq!(g.world.tiles().len(), 14);
+        assert_eq!(worlds.len(), 2);
+        let y = worlds.pop().unwrap();
+        (worlds.pop().unwrap(), y)
+    }
+
+    fn rot(g: &GameState, q: i32, r: i32) -> Option<(String, u8)> {
+        g.world
+            .tile(Axial::new(q, r))
+            .map(|t| (t.def.to_string(), t.rotation))
+    }
+
+    /// The loop world: six straights and three bends close a 216 m triangle round the start meadow,
+    /// and its two trains lap it the same way round from the start, never running back.
+    #[test]
+    fn rail_checkpoint_loop_runs_two_trains_the_same_way_round() {
+        let (g, _) = rail_checkpoint_worlds();
+        assert_eq!(g.world.tiles().len(), 10);
+        assert_eq!(rot(&g, -1, -1), Some(("rail_bend_60".into(), 0)));
         let mut sim = CarSim::new(&g.world, &g.catalog);
-        for _ in 0..600 * hex_sim::TICK_HZ {
+        for _ in 0..180 * hex_sim::TICK_HZ {
             sim.tick();
         }
+        let trains = sim.sim.rails().trains();
+        assert_eq!(trains.len(), 2, "{:?}", sim.stats.train_list);
+        for t in trains {
+            assert_eq!(t.reversals(), 0, "{:?} ran back on the loop", t.id());
+            assert!(t.speed() > 5.0, "{:?} at {} m/s", t.id(), t.speed());
+        }
+    }
+
+    /// The Y world: every placement lands at the rotation the layout needs (auto-rotate has one
+    /// legal orientation for each), and over ten simulated minutes its two trains take both legs of
+    /// the turnout as facing moves, the branch train closes the level crossing, and a car on the
+    /// crossing road holds short of it while it is closed.
+    #[test]
+    fn rail_checkpoint_y_runs_trains_both_ways_and_holds_cars_at_the_crossing() {
+        let (_, g) = rail_checkpoint_worlds();
+        assert_eq!(g.world.tiles().len(), 13);
+        assert_eq!(rot(&g, 0, -1), Some(("rail_junction".into(), 3)));
+        assert!(matches!(rot(&g, 0, -3), Some((d, 1 | 4)) if d == "rail_road_crossing"));
+        assert!(matches!(rot(&g, 0, -2), Some((d, 1 | 4)) if d == "rail_straight"));
+        for (q, r) in [(-1, -2), (1, -4)] {
+            assert!(matches!(rot(&g, q, r), Some((d, _)) if d == "house_cluster"));
+        }
+        let mut sim = CarSim::new(&g.world, &g.catalog);
+        let (mut closed, mut held) = (0, 0);
+        let mut departed: BTreeMap<u64, u32> = BTreeMap::new();
+        for _ in 0..600 * hex_sim::TICK_HZ {
+            let before: BTreeMap<u64, f32> = sim
+                .sim
+                .cars()
+                .iter()
+                .map(|c| (c.id().0, c.distance()))
+                .collect();
+            for e in sim.tick() {
+                if let GameEvent::TrainDeparted { id, x, z } = e {
+                    let t = sim.sim.rails().trains().iter().find(|t| t.id().0 == id);
+                    let front = t.expect("a departing train").front();
+                    assert!((front[0] - x).abs() < 0.01 && (front[1] - z).abs() < 0.01);
+                    *departed.entry(id).or_insert(0) += 1;
+                }
+            }
+            let shut = !sim.stats.closed_crossings.is_empty();
+            closed += usize::from(shut);
+            for car in sim.sim.cars() {
+                let still = before.get(&car.id().0) == Some(&car.distance());
+                if shut
+                    && still
+                    && car
+                        .crossings()
+                        .iter()
+                        .any(|&(_, stop)| (car.distance() - stop).abs() < 1e-3)
+                {
+                    held += 1;
+                }
+            }
+        }
         assert_eq!(sim.stats.train_list.len(), 2, "{:?}", sim.stats.train_list);
-        // On a loop with one turnout every train ends up trailing through it (the toe faces the
-        // loop), so here the switch is thrown for the trailing routes, spur to loop and loop to
-        // loop; the alternating facing routes are hex-sim's Y tests (tests/rail.rs).
         let j = &sim.sim.rails().junctions()[0];
-        assert!(j.throws() >= 2, "the switch moved {} times", j.throws());
+        let facing: BTreeSet<&str> = j.facing().iter().map(|l| l.as_str()).collect();
+        assert_eq!(facing, BTreeSet::from(["branch", "straight"]), "{facing:?}");
+        assert!(closed > 0, "the crossing never closed");
+        assert!(held > 0, "no car held short of the closed crossing");
+        // Each train departs on its first move and again after every stand: a line end's dwell
+        // comes round every lap of its shuttle, so ten minutes give each several departures.
+        assert_eq!(departed.len(), 2, "{departed:?}");
+        for (id, n) in &departed {
+            let t = sim.sim.rails().trains().iter().find(|t| t.id().0 == *id);
+            let reversals = t.unwrap().reversals();
+            assert!(
+                *n >= 3 && *n > reversals,
+                "train {id}: {n} departures, {reversals} reversals"
+            );
+        }
     }
 }

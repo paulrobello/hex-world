@@ -6,14 +6,14 @@
 # replays identically: an overview after 30 s, then 30 close-ups of the deck 8 frames apart with a
 # state dump each (car positions under play.car_list). DECK and RAMP name the close-ups kept: a
 # pickup and a van level on the deck, and the two pitched on the ramps.
-# Needs a `rail_road_crossing` tile in the catalog; until the rail tiles land one was added locally
-# (data/tiles/rail_road_crossing.ron and a BUILTIN_TILES row, not committed).
+# Runs against the real `rail_road_crossing` tile (data/tiles/rail_road_crossing.ron). Its rail ends
+# face empty cells, so the stub has no train and the crossing stays open.
 # Usage: bash docs/checkpoints/rail_crossing/car-deck.sh (from the repo root).
 set -euo pipefail
 DOCS=docs/checkpoints/rail_crossing
 OUT=target/shots
 DECK=${DECK:-06}
-RAMP=${RAMP:-04}
+RAMP=${RAMP:-03}
 mkdir -p "$OUT"
 rm -f "$OUT"/car-deck-*.png "$OUT"/car-deck-*.json
 cargo build -p hex-app --release

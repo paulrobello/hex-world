@@ -515,6 +515,13 @@ fn tile_hover_parts(cell: Axial) -> Vec<PartSpec> {
     }]
 }
 
+/// The ghost's stand-in lane strokes by socket kind, with their widths in px.
+const LANE_STROKES: [(SocketKind, f32); 3] = [
+    (SocketKind::River, 22.0),
+    (SocketKind::Road, 18.0),
+    (SocketKind::Rail, 11.0),
+];
+
 fn ghost_parts(view: &PlayView, catalog: &TileCatalog, meshes: bool) -> Vec<PartSpec> {
     let Some(g) = &view.ghost else {
         return vec![];
@@ -542,9 +549,10 @@ fn ghost_parts(view: &PlayView, catalog: &TileCatalog, meshes: bool) -> Vec<Part
         },
     ];
     let def = catalog.get(&g.tile);
-    // Lane strokes stand in for the tile's meshes while its pack streams: river 22 px, road 18 px.
+    // Lane strokes stand in for the tile's meshes while its pack streams: river 22 px, road 18 px,
+    // rail 11 px (its 3.5 m ballast lane beside the road's 6 m).
     if let Some(def) = def.filter(|_| !meshes) {
-        for (kind, width) in [(SocketKind::River, 22.0), (SocketKind::Road, 18.0)] {
+        for (kind, width) in LANE_STROKES {
             let segs: Vec<_> = (0..6u8)
                 .filter(|&e| {
                     let s = &def.edges[e as usize];
@@ -1202,6 +1210,38 @@ mod tests {
         // A tile waiting for its pack keeps the waiting outline alone.
         let keys = shown(&place, &[east]);
         assert!(!keys.contains(&Key::TileHover(east)) && keys.contains(&Key::Waiting(east)));
+    }
+
+    /// While the village pack streams, a rail tile's ghost strokes its rail lanes (one per rail
+    /// edge, edge midpoint to centre, in the rail socket colour, 11 px); with its meshes drawn the
+    /// strokes go.
+    #[test]
+    fn the_ghost_strokes_rail_lanes_while_its_pack_streams() {
+        let catalog = TileCatalog::builtin().unwrap();
+        let ghost = |tile: &str| PlayView {
+            ghost: Some(PlayGhost {
+                cell: Axial::new(1, 0),
+                tile: tile.into(),
+                rotation: 0,
+                edges: [EdgeStatus::Neutral; 6],
+                valid: true,
+                pinned: false,
+            }),
+            ..default()
+        };
+        let rail = AffordanceParams::line(socket_rgb(SocketKind::Rail), 0.6, 11.0);
+        let strokes = |tile: &str, meshes: bool| -> Vec<usize> {
+            ghost_parts(&ghost(tile), &catalog, meshes)
+                .iter()
+                .filter(|p| p.params == rail && p.layer == 3.0)
+                .map(|p| p.mesh.count_vertices() / 4)
+                .collect()
+        };
+        assert_eq!(strokes("rail_straight", false), vec![2]);
+        assert_eq!(strokes("rail_junction", false), vec![3]);
+        assert_eq!(strokes("rail_road_crossing", false), vec![2]);
+        assert!(strokes("rail_straight", true).is_empty());
+        assert!(strokes("road_straight", false).is_empty());
     }
 
     #[test]

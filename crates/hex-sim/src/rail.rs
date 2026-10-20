@@ -29,9 +29,10 @@
 //! - **Spawning.** Trains are derived, never saved: on each tick after the graph changed, every
 //!   connected stretch of at least [`MIN_TRACK`] meters gets one train, plus one per further
 //!   [`TRACK_PER_TRAIN`], up to [`MAX_TRAINS`], placed where the whole train fits clear of others
-//!   and of junction zones. A world edit removes the trains standing on the edited cell.
+//!   and of junction zones, all running the same way along one walk of the stretch (on a loop they
+//!   lap the same way round). A world edit removes the trains standing on the edited cell.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use hex_core::{Axial, NetworkKind, TileDef};
 
@@ -1188,6 +1189,61 @@ impl Railway {
         out
     }
 
+    /// The links a train arriving at `node` on `from` may run on next: the switch's two legs from
+    /// the toe, the toe from either leg, and anywhere else every other link at the node.
+    fn onward(&self, node: NodeId, from: LinkId) -> Vec<LinkId> {
+        if let Some(j) = self.junction_at(node).map(|i| &self.junctions[i]) {
+            if from == j.toe {
+                vec![j.straight, j.branch]
+            } else {
+                vec![j.toe]
+            }
+        } else {
+            self.net()
+                .node(node)
+                .map(|n| n.links().iter().copied().filter(|&l| l != from).collect())
+                .unwrap_or_default()
+        }
+    }
+
+    /// A running direction for every link of the connected stretch holding `start.link` (`true`
+    /// from `a` to `b`), from one walk along it starting on `start`, so that trains laid that way
+    /// all run the same way: on a loop they all lap the same way round, whatever way each link was
+    /// stitched.
+    fn heading(&self, start: Step) -> BTreeMap<LinkId, bool> {
+        let net = self.net();
+        let mut out = BTreeMap::new();
+        out.insert(start.link, start.forward);
+        let mut stack = vec![start.link];
+        while let Some(l) = stack.pop() {
+            let (a, b) = link_of(net, l).ends();
+            let (exit, entry) = if out[&l] { (b, a) } else { (a, b) };
+            // Leaving `l` at its exit, the next link runs away from that node; arriving at its
+            // entry, the link before runs toward it.
+            for (node, leaving) in [(exit, true), (entry, false)] {
+                for m in self.onward(node, l) {
+                    let away = link_of(net, m).ends().0 == node;
+                    out.entry(m).or_insert_with(|| {
+                        stack.push(m);
+                        away == leaving
+                    });
+                }
+            }
+        }
+        out
+    }
+
+    /// Whether a connected stretch has no line end: every node of its links joins two or more.
+    fn closed(&self, links: &[LinkId]) -> bool {
+        let net = self.net();
+        links.iter().all(|&l| {
+            let (a, b) = link_of(net, l).ends();
+            [a, b]
+                .into_iter()
+                .all(|n| net.node(n).is_some_and(|n| n.links().len() >= 2))
+        })
+    }
+
     fn spawn(&mut self) {
         self.dirty = false;
         let lines = self.lines();
@@ -1198,29 +1254,49 @@ impl Railway {
             let want =
                 (1 + ((len - MIN_TRACK) / TRACK_PER_TRAIN) as usize).min(MAX_TRAINS_PER_LINE);
             let set: BTreeSet<LinkId> = links.iter().copied().collect();
-            let have = self
-                .trains
-                .iter()
-                .filter(|t| set.contains(&t.steps[0].link))
-                .count();
+            let on: Vec<usize> = (0..self.trains.len())
+                .filter(|&i| set.contains(&self.trains[i].steps[0].link))
+                .collect();
+            let have = on.len();
+            // The walk follows the oldest train already here, else starts forward on the first link.
+            let start = on.first().map_or(
+                Step {
+                    link: links[0],
+                    forward: true,
+                },
+                |&i| self.trains[i].steps[0],
+            );
+            let heading = self.heading(start);
+            // Stretches that each had a train can close into a loop with their trains running
+            // opposite ways round: on a line with no end, those running against the oldest turn
+            // round where they stand.
+            if self.closed(&links) {
+                for &i in &on {
+                    let s = self.trains[i].steps[0];
+                    if heading.get(&s.link).is_some_and(|&f| f != s.forward) {
+                        self.reverse(i);
+                    }
+                }
+            }
             for _ in have..want {
-                if self.trains.len() >= MAX_TRAINS || !self.spawn_on(&links) {
+                if self.trains.len() >= MAX_TRAINS || !self.spawn_on(&links, &heading) {
                     break;
                 }
             }
         }
     }
     /// Places a new train on the first link of `links` (in id order) where its whole body fits
-    /// clear of other trains and of every junction zone. Returns whether one was placed.
-    fn spawn_on(&mut self, links: &[LinkId]) -> bool {
+    /// clear of other trains and of every junction zone, running the way `heading` gives that
+    /// link. Returns whether one was placed.
+    fn spawn_on(&mut self, links: &[LinkId], heading: &BTreeMap<LinkId, bool>) -> bool {
         let id = TrainId(self.next_train);
         for &start in links {
             let step = Step {
                 link: start,
-                forward: true,
+                forward: heading.get(&start).copied().unwrap_or(true),
             };
-            // The tail just inside the link's `a` end, the front a train length on, with clear
-            // track for the gap at both ends.
+            // The tail just inside the link's end the train runs from, the front a train length
+            // on, with clear track for the gap at both ends.
             let Some(mut t) = self.lay(id, step, END_MARGIN, TRAIN_LENGTH + 2.0 * TRAIN_GAP) else {
                 continue;
             };

@@ -310,6 +310,12 @@ fn paint_prims(m: &gltf::Mesh, buffers: &[gltf::buffer::Data]) -> Vec<PaintPrim>
         .collect()
 }
 
+/// Pieces painted at runtime through `CarMaterial` (PRD §6): the cars and the train's rolling stock
+/// (`kit/_car.py`, `kit/_train.py`), each checked against the paint-mask contract below.
+fn runtime_painted(id: &str) -> bool {
+    id.starts_with("car_") || id.starts_with("train_")
+}
+
 /// Car runtime-recolour contract (PRD §6, `kit/_car.py`): COLOR_0 on every primitive of every LOD,
 /// rgb in [0, 1] (the unpainted surface colour), A a binary paint mask (0 or 1). The `<id>_body`
 /// slot carries paint, and the `<id>_glass` and `<id>_tyre` slots are never painted.
@@ -674,7 +680,7 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
             e.extend(wind_slot_errors(&p.id, i, &wind_prims(p, m, &buffers)));
         }
     }
-    if p.id.starts_with("car_") || p.id.starts_with("train_") {
+    if runtime_painted(&p.id) {
         for (i, m) in lods.iter().enumerate() {
             if let Some(m) = m {
                 e.extend(paint_mask_errors(
@@ -3556,6 +3562,43 @@ fn car_paint_mask_contract() {
         e.iter().any(|m| m.contains("c_glass has 1 painted")),
         "{e:?}"
     );
+}
+
+/// The train's rolling stock is painted like the cars (one livery per train, `hex_play::trains`), so
+/// the gate checks its paint masks: every primitive of every LOD of every `train_` piece carries a
+/// binary COLOR_0 mask, the body slot is painted somewhere and glass and tyres never are.
+#[test]
+fn train_pieces_pass_the_paint_mask_contract() {
+    assert!(runtime_painted("car_pickup") && runtime_painted("train_engine"));
+    assert!(!runtime_painted("rail_straight_center") && !runtime_painted("house_cottage"));
+    let k = kits()
+        .into_iter()
+        .find(|k| k.requires_refs)
+        .expect("the runtime kit");
+    let trains: Vec<_> = k
+        .manifest
+        .pieces
+        .iter()
+        .filter(|p| p.id.starts_with("train_"))
+        .collect();
+    assert!(trains.len() >= 2, "{} train pieces", trains.len());
+    let mut e = vec![];
+    for p in trains {
+        assert!(runtime_painted(&p.id));
+        let (doc, buffers, _) = plain(&k, p).unwrap();
+        for i in 0..3 {
+            let name = lod_mesh_name(&p.id, i);
+            let m = mesh_named(&doc, &name).unwrap_or_else(|| panic!("{name} missing"));
+            let prims = paint_prims(&m, &buffers);
+            assert!(
+                prims.iter().any(|(slot, c)| slot.ends_with("_body")
+                    && c.as_ref().is_some_and(|c| c.iter().any(|v| v[3] > 0.5))),
+                "{name}: no painted body vertex"
+            );
+            e.extend(paint_mask_errors(&p.id, &name, &prims));
+        }
+    }
+    fail(e);
 }
 
 #[test]

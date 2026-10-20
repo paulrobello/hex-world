@@ -63,8 +63,17 @@ import {
   pickVariant,
   resolveOneShot,
   SHOP_BELL,
+  TRAIN_CUES,
+  type TrainKind,
+  type TrainPlay,
+  type TrainRequest,
+  type TrainState,
+  type TrainVoice,
+  trainIdle,
+  trainInRange,
+  trainStep,
 } from "./audio-mix.ts";
-import type { CarInfo, GameEvent, PlayState, State } from "./bridge.ts";
+import type { CarInfo, GameEvent, PlayState, State, TrainInfo } from "./bridge.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
 import { versioned } from "./versioned.ts";
 
@@ -227,6 +236,21 @@ export interface AudioDebug {
     recent: { id: string; event: string; car: number; t: number; gain: number; rate: number }[];
   };
   /**
+   * Train cues: the voices sounding, departures waiting for a whistle, plays so far, the last variant per pool,
+   * why the last cue was held back, moving trains in range of the focus, each pool's variants, and the latest
+   * plays (`event` is trainDeparted for a whistle, trainMoving for a chuff).
+   */
+  trains: {
+    voices: TrainVoice[];
+    pending: number;
+    plays: number;
+    lastCue: Record<string, string>;
+    gatedBy: TrainState["gatedBy"];
+    inRange: number;
+    pools: Record<string, string[]>;
+    recent: { id: string; event: string; train: number; t: number; gain: number }[];
+  };
+  /**
    * The shop bell a car's park at a bakery rings: its pool's variants, parks waiting for their bell, plays (on
    * demand too), the last variant and spot, and why the last due bell was dropped. `shops` counts bakeries in play.
    */
@@ -292,6 +316,15 @@ export class GameAudio {
   private carNodes = new Map<number, { follow: GainNode; pan: PannerNode; kind: CarKind }>();
   private carRecent: AudioDebug["cars"]["recent"] = [];
   private carsInRange = 0;
+  private trains: TrainState = trainIdle();
+  /** Departures drained since the last update. */
+  private trainEvents: TrainRequest[] = [];
+  /** Per train pool, its variants from the manifest, in manifest order. */
+  private trainPools = new Map<string, string[]>();
+  /** The sounding train voices by `train:kind`: a chuff's follow gain and panner move with its train. */
+  private trainNodes = new Map<string, { follow: GainNode; pan: PannerNode; kind: TrainKind; train: number }>();
+  private trainRecent: AudioDebug["trains"]["recent"] = [];
+  private trainsInRange = 0;
   private bell: BellState = bellIdle();
   /** Parks drained since the last update, for the shop bell. */
   private parks: Omit<BellRequest, "dueAt">[] = [];
@@ -371,6 +404,8 @@ export class GameAudio {
       for (const row of ONE_SHOTS) this.variants.set(row.name, resolveOneShot(row.pool, m.cues)?.variants ?? []);
       for (const { pool } of Object.values(CAR_CUES))
         this.carPools.set(pool, resolveOneShot(pool, m.cues, [])?.variants ?? []);
+      for (const { pool } of Object.values(TRAIN_CUES))
+        this.trainPools.set(pool, resolveOneShot(pool, m.cues, [])?.variants ?? []);
       this.bellVariants = resolveOneShot(SHOP_BELL.pool, m.cues, [])?.variants ?? [];
       const probe = document.createElement("audio");
       this.format = pickFormat(m.formats, (mime) => probe.canPlayType(mime));
@@ -460,6 +495,10 @@ export class GameAudio {
       if (e.type === "carPulledOut" || e.type === "carParked") {
         this.carEvents.push({ car: e.id, kind: CAR_EVENT_KIND[e.type]!, x: e.x, z: e.z, at: ctx.currentTime });
         if (e.type === "carParked") this.parks.push({ q: e.q, r: e.r, x: e.x, z: e.z });
+        continue;
+      }
+      if (e.type === "trainDeparted") {
+        this.trainEvents.push({ train: e.id, x: e.x, z: e.z, at: ctx.currentTime });
         continue;
       }
       const at = "q" in e && "r" in e ? { q: e.q, r: e.r } : null;
@@ -615,6 +654,7 @@ export class GameAudio {
     this.oneShotTiles = oneShotTiles;
     this.updateOneShots(ctx, v);
     this.updateCars(ctx, v, play.car_list, state.photo?.agents_paused === true);
+    this.updateTrains(ctx, v, play.train_list, state.photo?.agents_paused === true);
     this.updateBell(ctx, v);
     for (const [k, p] of this.pending)
       if (ctx.currentTime > p.deadline) {
@@ -805,6 +845,74 @@ export class GameAudio {
     if (this.carRecent.length > 16) this.carRecent.shift();
   }
 
+  /** Train cues: a whistle at each departure, a chuff following each moving train, near the focus only. */
+  private updateTrains(ctx: AudioContext, v: View, trains: readonly TrainInfo[], paused: boolean): void {
+    const { muted, volumes } = this.settings;
+    const events = this.trainEvents;
+    this.trainEvents = [];
+    const gate = oneShotGate({ muted, master: volumes.master, ambience: volumes.ambience, loaded: true });
+    const step = trainStep(
+      this.trains,
+      ctx.currentTime,
+      events,
+      trains,
+      v,
+      gate,
+      (pool) => (this.trainPools.get(pool) ?? []).filter((id) => this.buffers.has(id)),
+      (cue) => this.buffers.get(cue)?.duration ?? 0,
+      Math.random,
+      paused,
+    );
+    this.trains = step.state;
+    this.trainsInRange = trains.filter((t) => t.speed > 0 && trainInRange(t.x, t.z, v)).length;
+    for (const p of step.play) this.playTrain(ctx, p);
+    const at = new Map(trains.map((t) => [t.id, t]));
+    for (const n of this.trainNodes.values()) {
+      const t = at.get(n.train);
+      if (!t || n.kind !== "chuff") continue;
+      n.pan.positionX.setTargetAtTime(t.x, ctx.currentTime, 0.05);
+      n.pan.positionZ.setTargetAtTime(t.z, ctx.currentTime, 0.05);
+      // A chuff fades with its train's speed, so a train braking to a stand goes quiet.
+      const pace = Math.min(1, t.speed / 6);
+      this.glide(n.follow.gain, TRAIN_CUES.chuff.level * emitterGain(t.x, t.z, v) * pace);
+    }
+  }
+
+  /** One train voice: the cue's own envelope, then a follow gain and a panner a chuff moves with its train. */
+  private playTrain(ctx: AudioContext, p: TrainPlay): void {
+    const buf = this.buffers.get(p.cue);
+    const cue = this.cues.get(p.cue);
+    if (!buf || !cue) return;
+    const t = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(1, t + 0.005);
+    env.gain.setValueAtTime(1, Math.max(t + 0.005, t + buf.duration - 0.012));
+    env.gain.linearRampToValueAtTime(0, t + buf.duration);
+    const follow = ctx.createGain();
+    follow.gain.value = p.gain;
+    const pan = this.pannerAt(ctx, p.x, p.z);
+    src
+      .connect(env)
+      .connect(follow)
+      .connect(pan)
+      .connect(this.buses.get(busOf(cue))!);
+    src.start(t);
+    const k = `${p.train}:${p.kind}`;
+    this.trainNodes.set(k, { follow, pan, kind: p.kind, train: p.train });
+    src.onended = () => {
+      env.disconnect();
+      follow.disconnect();
+      pan.disconnect();
+      if (this.trainNodes.get(k)?.follow === follow) this.trainNodes.delete(k);
+    };
+    const event = p.kind === "whistle" ? "trainDeparted" : "trainMoving";
+    this.trainRecent.push({ id: p.cue, event, train: p.train, t: round(t, 3), gain: round(p.gain) });
+    if (this.trainRecent.length > 16) this.trainRecent.shift();
+  }
+
   /** The shop bell: a park at a bakery rings a bell at the spot a moment after its door, near the focus only. */
   private updateBell(ctx: AudioContext, v: View): void {
     const { muted, volumes } = this.settings;
@@ -956,6 +1064,8 @@ export class GameAudio {
     this.pending.clear();
     this.cars = carIdle();
     this.carEvents = [];
+    this.trains = trainIdle();
+    this.trainEvents = [];
     this.bell = bellIdle();
     this.parks = [];
   }
@@ -1060,6 +1170,16 @@ export class GameAudio {
         inRange: this.carsInRange,
         pools: Object.fromEntries(this.carPools),
         recent: this.carRecent.map((f) => ({ ...f })),
+      },
+      trains: {
+        voices: this.trains.voices.map((x) => ({ ...x, endsAt: round(x.endsAt, 3) })),
+        pending: this.trains.pending.length,
+        plays: this.trains.plays,
+        lastCue: { ...this.trains.lastCue },
+        gatedBy: this.trains.gatedBy,
+        inRange: this.trainsInRange,
+        pools: Object.fromEntries(this.trainPools),
+        recent: this.trainRecent.map((f) => ({ ...f })),
       },
       shopBell: {
         pool: SHOP_BELL.pool,

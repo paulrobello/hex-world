@@ -1115,6 +1115,11 @@
     "toolChanged": [
       "mode"
     ],
+    "trainDeparted": [
+      "id",
+      "x",
+      "z"
+    ],
     "undone": [],
     "walkModeToggled": [
       "on"

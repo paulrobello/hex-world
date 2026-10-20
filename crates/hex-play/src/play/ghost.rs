@@ -339,7 +339,7 @@ fn ghost_pieces<'a>(
         }
     }
     for (h, piece) in def.hero_pieces(cell) {
-        let t = Transform::from_xyz(h.at[0], 0.0, h.at[1])
+        let t = Transform::from_xyz(h.at[0], h.y, h.at[1])
             .with_rotation(Quat::from_rotation_y(-h.yaw_deg.to_radians()));
         let role = if piece.contains("tree") {
             Role::Tree
