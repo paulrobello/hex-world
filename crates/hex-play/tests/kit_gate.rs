@@ -1568,10 +1568,22 @@ fn coast_profile_errors(
     (max, e)
 }
 
+/// The lane edges a centre piece is checked at: the tile's (`center_lanes`), or, while no tile
+/// names the piece yet (the P3 rail pieces ahead of their Rail socket), the edges its own
+/// `socket-lane-*` nodes declare. A piece with neither keeps the straight pair, edges 0 and 3.
+fn joint_lanes(kit: &Kit, c: &PieceEntry) -> Vec<u8> {
+    let declared = lane_socket_edges(kit, c);
+    if center_tile(&c.id).is_none() && !declared.is_empty() {
+        declared.iter().map(|&k| k as u8).collect()
+    } else {
+        center_lanes(&c.id)
+    }
+}
+
 /// Every centre piece against every edge piece of the same network kind, at each of its lane
-/// edges (`center_lanes`: the tile that names it as `center`) that the tile's base does not cut.
-/// A centre that declares `socket-lane-*` nodes (house_pad's driveway) must declare exactly those
-/// lane edges. Every lane-cut base is checked at its cut lanes.
+/// edges (`joint_lanes`: the tile that names it as `center`, else its declared lane sockets) that
+/// the tile's base does not cut. A centre that declares `socket-lane-*` nodes (house_pad's
+/// driveway) must declare exactly those lane edges. Every lane-cut base is checked at its cut lanes.
 fn check_center_edge_joint(kit: &Kit) -> Vec<String> {
     let mut e = vec![];
     for c in &kit.manifest.pieces {
@@ -1583,7 +1595,7 @@ fn check_center_edge_joint(kit: &Kit) -> Vec<String> {
             continue;
         }
         let owned = base_cut_lanes(kit, &c.id);
-        let lanes: Vec<u8> = center_lanes(&c.id)
+        let lanes: Vec<u8> = joint_lanes(kit, c)
             .into_iter()
             .filter(|k| !owned.contains(k))
             .collect();
@@ -3287,6 +3299,33 @@ fn center_lanes_come_from_the_tiles() {
     assert_eq!(center_lanes("road_bend_60_center"), vec![0, 1]);
     assert_eq!(center_lanes("road_junction_center"), vec![0, 2, 4]);
     assert_eq!(center_lanes("not_a_piece"), vec![0, 3]);
+}
+
+/// A lane-socketed centre that no tile names yet (the rail bend, ahead of its Rail socket and
+/// tile) is checked at the edges its own sockets declare, not the [0, 3] fallback, which would
+/// fail its lane-1 socket. Tile-named centres keep the tile's lanes.
+#[test]
+fn untiled_lane_socket_centre_is_checked_at_its_declared_edges() {
+    let k = kits()
+        .into_iter()
+        .find(|k| {
+            k.manifest
+                .pieces
+                .iter()
+                .any(|p| p.id == "rail_bend_60_center")
+        })
+        .expect("runtime kit holds rail_bend_60_center");
+    let piece = |id: &str| k.manifest.pieces.iter().find(|p| p.id == id).unwrap();
+    let bend = piece("rail_bend_60_center");
+    assert!(center_tile(&bend.id).is_none());
+    assert_eq!(center_lanes(&bend.id), vec![0, 3]);
+    assert_eq!(lane_socket_edges(&k, bend), BTreeSet::from([0, 1]));
+    assert_eq!(joint_lanes(&k, bend), vec![0, 1]);
+    assert_eq!(joint_lanes(&k, piece("rail_straight_center")), vec![0, 3]);
+    // Tile-named centres: the tile decides, declared sockets or not.
+    assert_eq!(joint_lanes(&k, piece("house_pad")), vec![0]);
+    assert_eq!(joint_lanes(&k, piece("road_bend_60_center")), vec![0, 1]);
+    assert_eq!(check_center_edge_joint(&k), Vec::<String>::new());
 }
 
 #[test]

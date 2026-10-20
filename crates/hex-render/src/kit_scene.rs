@@ -164,6 +164,13 @@ pub fn kit_layout() -> Vec<Placement> {
         y: WINDMILL_Y,
         ..place("windmill", 3, -1, 0)
     });
+    // Rail (P3, refs A17) on two meadows south of the oak: the straight on (0, 2) and the sharp
+    // bend on (1, 2) at rot 2 (lanes on world edges 2 and 3), so the bend's edge-3 lane meets the
+    // straight's edge-0 lane and its other end runs out to the open rim rather than the ocean.
+    v.push(place("meadow_base", 0, 2, 0));
+    v.push(place("rail_straight_center", 0, 2, 0));
+    v.push(place("meadow_base", 1, 2, 0));
+    v.push(place("rail_bend_60_center", 1, 2, 2));
     v
 }
 
@@ -561,6 +568,16 @@ mod tests {
             .collect();
         assert_eq!(roads.len(), 2);
         assert_eq!(roads[0].cell.neighbor(0), roads[1].cell);
+    }
+
+    #[test]
+    fn rail_straight_meets_the_bend() {
+        let l = kit_layout();
+        let at = |id: &str| *l.iter().find(|p| p.piece == id).unwrap();
+        let (s, b) = (at("rail_straight_center"), at("rail_bend_60_center"));
+        // The straight's lanes are local edges 0 and 3, the bend's 0 and 1, turned by rot.
+        assert_eq!(s.cell.neighbor(s.rot), b.cell);
+        assert_eq!((1 + b.rot) % 6, (s.rot + 3) % 6);
     }
 
     #[test]
