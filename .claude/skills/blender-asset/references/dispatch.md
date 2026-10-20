@@ -53,6 +53,8 @@ that built it instead of starting a fresh one.
 11. **Integration.** What the piece changes at runtime, each marked handled, not applicable, or
     needs work: car height and path (`ROAD_SURFACE_Y` is a constant 0.11 m), walker collider and
     `walk::prop_kind`, grass clear zones (`scatter::GROUND_BOXES`), boid perches, sim nodes and
-    clearances, thumbnails, the draw budget. The orchestrator fixes or files every "needs work"
+    clearances, thumbnails, the draw budget, and sound (does the item want an occasional
+    one-shot pool or an event cue? The orchestrator generates it under the owner's standing
+    approval of 2026-10-19, following `assets-source/audio/README.md`). The orchestrator fixes or files every "needs work"
     item before the piece is called done (owner, 2026-10-19: the crossing deck sat 0.35 m above
     the fixed car height and was found only after the build).
