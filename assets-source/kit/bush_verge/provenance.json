@@ -1,0 +1,437 @@
+{
+  "pieceId": "bush_verge",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/bush_verge.py",
+    "sha256": "5600131ea13aa8220066b7071a5898ee5d809495f9b80dab967493e24c50d7b9"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_shrub.py",
+      "sha256": "3341c8f954d7845267b0814115e563f59f1b408863b81dcd2c866062b3b1e6b6"
+    },
+    {
+      "path": "scripts/blender/kit/_verge_bush.py",
+      "sha256": "124f792a1966fe40c16c14a4b2b10416fa1ecb303e3969ae45a5d87b6f692504"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "bakeStats": {
+      "alphaCoverageByMip": {
+        "tile_0": [
+          0.5498,
+          0.5472,
+          0.5494,
+          0.5503,
+          0.5544,
+          0.5644,
+          0.6327,
+          0.8889,
+          1
+        ],
+        "tile_1": [
+          0.5484,
+          0.5459,
+          0.5476,
+          0.5475,
+          0.5544,
+          0.5644,
+          0.6327,
+          0.8889,
+          1
+        ],
+        "tile_2": [
+          0.5317,
+          0.5292,
+          0.5308,
+          0.5314,
+          0.5311,
+          0.5422,
+          0.5714,
+          0.7778,
+          1
+        ],
+        "tile_3": [
+          0.561,
+          0.559,
+          0.5602,
+          0.5633,
+          0.5644,
+          0.5644,
+          0.6122,
+          0.8889,
+          1
+        ],
+        "tiles": [
+          0.5477,
+          0.5453,
+          0.547,
+          0.5481,
+          0.5511,
+          0.5589,
+          0.5378,
+          0.6122,
+          0.6667,
+          0
+        ]
+      },
+      "alphaCutoff": 0.5
+    },
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 256
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "coreRadiusM": 0.48,
+    "crown": {
+      "a": 0.52,
+      "b": 0.44,
+      "card": 0.3,
+      "cushion": 0.04,
+      "cx": 0,
+      "cz": 0.42,
+      "inner": 34,
+      "outer": 130,
+      "spread": 1.05,
+      "zmin": -0.92
+    },
+    "device": "none (numpy-drawn tiles, no Cycles bake)",
+    "extentZ": [
+      -0.10208357125520706,
+      0.8836583495140076
+    ],
+    "lowestLeafM": -0.06722743809223175,
+    "marginPx": 0,
+    "reachM": 0.6285015176647093,
+    "receiverSignature": "60cd810a11bc157ec62b01ef588cd9f5aa0f2b699b01c829a990703357495b68",
+    "samples": 0,
+    "skipped": false,
+    "stem": {
+      "count": 3,
+      "length": 0.25,
+      "r0": 0.018,
+      "r1": 0.008,
+      "sink": 0.1
+    },
+    "texelDensityPxPerM": {
+      "bush_verge_leaves": {
+        "max": 1863.1294692126517,
+        "median": 1555.9733825727167,
+        "min": 1344.4042980267068
+      }
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1432,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 376,
+      "ratio": 0.26256983240223464
+    },
+    {
+      "lod": 2,
+      "tris": 160,
+      "ratio": 0.11173184357541899
+    }
+  ],
+  "collider": {
+    "node": "bush_verge_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "bush_verge_leaves": {
+      "max": 1863.1294692126517,
+      "median": 1555.9733825727167,
+      "min": 1344.4042980267068
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 837332,
+        "astc": 836031
+      },
+      "glbBytes": 212004
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/bush_verge/bush_verge.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 472577,
+        "sha256": "ee09591835b0bd4898c5ae1d1e3d6688508248af1c56ca3576fd1bd8ce604129"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/bush_verge/bush_verge.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 480308,
+        "sha256": "efce60a1b720b113b02607315cfb0cb619a2051e4e1223015b131c667b0c78fe"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/bush_verge/bush_verge.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 734859,
+        "sha256": "f297af4eab30ca8cf952a1dffda80d02c0add2a29285cb5fe952aa3f148de8be"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/bush_verge/bush_verge.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 9,
+        "bytes": 983,
+        "sha256": "69fd91df7db7bfba3bc11ae2a64f3c636aada28b5973f433939320a0c373d5af"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/bush_verge/bush_verge.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 9,
+        "bytes": 950,
+        "sha256": "bb5bd167ae6ce7e1b7050c4c6826b32d3a39410174d3404a8a30152cd5d85461"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/bush_verge/bush_verge.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 1881,
+        "sha256": "e8396d95acf06717aef5aefe18512c5a72e950183b888febfe8c9fc213b6ad09"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/bush_verge/bush_verge.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 150613,
+        "sha256": "480a221dc133c7eb8cb92fbdaf23188bae0f29635b3c156d4bb99db79c515632"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/bush_verge/bush_verge.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 149649,
+        "sha256": "c0755deea1b7fa86e7d9502e13a73fd03d078cb405c8c97f7d33c13f6b05eac5"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/bush_verge/bush_verge.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 268603,
+        "sha256": "de93fd896383c35ace15917ab523dccfe638ea20175eb28d2784f1476b5b2a4a"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/bush_verge/bush_verge.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 213159,
+        "sha256": "ff0989faaad9bdf9e4df711c92e929197419d8560cc78038474549029b2c47d7"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/bush_verge/bush_verge.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 205124,
+        "sha256": "5500123e588e19d4c55afc74bd383c10742d1650a293041cd3ba46de57f98cbd"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/bush_verge/bush_verge.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 126181,
+        "sha256": "2ca2fcd134905dcde0e8275a484b52a5cada9d052dab90fbbc95c2bc82adb03a"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.glb",
+      "sha256": "3c90876328cba753a16866285e863eb7ec1a1c9d2ed4421094de93400577278a",
+      "bytes": 212004
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.albedo.bc7.ktx2",
+      "sha256": "ee09591835b0bd4898c5ae1d1e3d6688508248af1c56ca3576fd1bd8ce604129",
+      "bytes": 472577
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.albedo.astc.ktx2",
+      "sha256": "efce60a1b720b113b02607315cfb0cb619a2051e4e1223015b131c667b0c78fe",
+      "bytes": 480308
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.albedo.png",
+      "sha256": "f297af4eab30ca8cf952a1dffda80d02c0add2a29285cb5fe952aa3f148de8be",
+      "bytes": 734859
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.masks.bc7.ktx2",
+      "sha256": "69fd91df7db7bfba3bc11ae2a64f3c636aada28b5973f433939320a0c373d5af",
+      "bytes": 983
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.masks.astc.ktx2",
+      "sha256": "bb5bd167ae6ce7e1b7050c4c6826b32d3a39410174d3404a8a30152cd5d85461",
+      "bytes": 950
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.masks.png",
+      "sha256": "e8396d95acf06717aef5aefe18512c5a72e950183b888febfe8c9fc213b6ad09",
+      "bytes": 1881
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.normal.bc7.ktx2",
+      "sha256": "480a221dc133c7eb8cb92fbdaf23188bae0f29635b3c156d4bb99db79c515632",
+      "bytes": 150613
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.normal.astc.ktx2",
+      "sha256": "c0755deea1b7fa86e7d9502e13a73fd03d078cb405c8c97f7d33c13f6b05eac5",
+      "bytes": 149649
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.normal.png",
+      "sha256": "de93fd896383c35ace15917ab523dccfe638ea20175eb28d2784f1476b5b2a4a",
+      "bytes": 268603
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.orm.bc7.ktx2",
+      "sha256": "ff0989faaad9bdf9e4df711c92e929197419d8560cc78038474549029b2c47d7",
+      "bytes": 213159
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.orm.astc.ktx2",
+      "sha256": "5500123e588e19d4c55afc74bd383c10742d1650a293041cd3ba46de57f98cbd",
+      "bytes": 205124
+    },
+    {
+      "path": "assets/kit/p1/bush_verge/bush_verge.orm.png",
+      "sha256": "2ca2fcd134905dcde0e8275a484b52a5cada9d052dab90fbbc95c2bc82adb03a",
+      "bytes": 126181
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/road_straight/ref-1.jpg",
+      "sha256": "50e69158a77b55057795a601c23f371db0ba6903aaa2b5000de9f986ec25de70",
+      "sourceSha256": "090dd4fd5be4c9db6e85829ec887b4ed2aac2a73f4b698458373d2e7b24cf1f0",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e87afc15-22e2-491e-8965-8fb7db92c39e",
+      "prompt": "A single hexagonal diorama tile with a straight two-lane asphalt country road crossing from one flat edge to the opposite flat edge, 6 m wide road, grass shoulders, faded centre line, low curbs, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/road_straight/ref-2.jpg",
+      "sha256": "c4923215bad5475f78a9fade60b0991185806b9c183b890209335478e7ecc9f2",
+      "sourceSha256": "17b7169cbf0916448219814410476498cf80e749efa3a0cd854b4745ef6c4799",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "6f4a663b-f6e2-4666-afca-3bbcdba36e44",
+      "prompt": "Two identical hexagonal road tiles placed edge to edge with the road continuing seamlessly across the joint, close-up at the seam, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T12:06:42.057Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/road_straight/ref-1.jpg"
+      ],
+      "notes": "ref-1: straight two-lane asphalt road, dashed centre line, kerbs, grass verges. ref-2 not approved. Kit requirement (owner: \"we will need bent road tiles so road can change direction\"): the road profile and the edge/center design must support bent and turning road pieces later. Bent pieces are not built in P1. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Review against assets-source/refs/road_straight (ref-1: 'grass verges with tufts and small bushes'): a small dense round verge bush, 0.88 m tall and 1.19 m across (LOD0), a compact dark box-green mass of numpy-drawn leaf-cluster cards running down to the grass, no stems showing, plant wind data. Built on _shrub.build (shrub_forest's family) through _verge_bush.py. Review sheet: docs/checkpoints/bush_verge/sheet.jpg (ref; textured EEVEE stills beside shrub_forest and a 1.7 m figure; the kit scenario's road tile (0, 0) with three bushes, shrub_forest and a sedan on the lane; play shots with docs/checkpoints/bush_verge/integration.patch applied: play distance, sun and shade close-ups, eye level 1.7 m in walk mode, a van on the road). The controller records the owner's decision."
+    }
+  ]
+}

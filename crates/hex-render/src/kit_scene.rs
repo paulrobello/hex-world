@@ -110,6 +110,19 @@ pub fn kit_layout() -> Vec<Placement> {
         y: -0.062,
         ..place("bakery_shop", 1, 0, 0)
     });
+    // Verge bushes (road refs approved 2026-10-13, ref-1's "grass verges with tufts and small
+    // bushes") on road tile (0, 0): two on the sunny south verge and one on the north, each beyond
+    // the kerb and the verge sink (|z| 4.6) on the meadow relief at its spot (`relief()` in
+    // scripts/blender/kit/meadow_base.py at Blender (x, -z)); a shrub_forest beside them and a sedan
+    // on the lane for scale.
+    for (piece, offset, yaw_deg, y) in VERGE_BUSHES {
+        v.push(Placement {
+            offset,
+            yaw_deg,
+            y,
+            ..place(piece, 0, 0, 0)
+        });
+    }
     // Farm animals (P3) on the oak's meadow, in open sun on the oak's +x/+z side.
     for (piece, offset, yaw_deg, y) in FARM_ANIMALS {
         v.push(Placement {
@@ -449,6 +462,16 @@ const HAY_BALES: [(&str, [f32; 2], f32, f32); 3] = [
     ("hay_bale_round", [-2.0, 2.5], 20.0, -0.198),
     ("hay_bale_stack", [-9.5, 1.0], -15.0, -0.095),
     ("hay_bale_round", [-8.0, -4.5], 75.0, -0.129),
+];
+
+/// (piece, offset, yaw, height) of the verge bushes on road tile (0, 0), base rotation 0, with a
+/// shrub_forest beside them and a sedan on the lane (`cars::ROAD_SURFACE_Y`) for comparison.
+const VERGE_BUSHES: [(&str, [f32; 2], f32, f32); 5] = [
+    ("bush_verge", [-5.0, 5.0], 0.0, -0.147),
+    ("bush_verge", [3.5, 5.0], 140.0, -0.072),
+    ("bush_verge", [0.5, -5.0], 250.0, -0.123),
+    ("shrub_forest", [-1.8, 6.3], 60.0, -0.108),
+    ("car_sedan", [0.5, 1.5], 0.0, 0.11),
 ];
 
 /// (piece, offset, yaw, relief height) of the farm animals on the oak's meadow (0, 1), base rotation 0.

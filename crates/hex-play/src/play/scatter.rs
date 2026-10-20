@@ -108,10 +108,25 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
         "tree_forest" | "tree_oak" | "fern_clump" | "log_fallen" | "shrub_forest"
         | "sapling_spruce" => &["forest_base_floor"],
         "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
-        "wildflower_single" => &["meadow_base_cap"],
+        "wildflower_single" | "bush_verge" => &["meadow_base_cap"],
         _ => &[],
     }
 }
+
+/// Farthest a verge piece's centre stands from the nearest road or river centreline (m): it keeps
+/// [`lane_clearance`] from every lane like any rule, and stays within this of one, so it lines the
+/// verge beyond the kerb (road half 3 m, kerb to 3.25 m, verge sink to 4.6 m) instead of spreading
+/// over the cap. `None` for every other piece.
+pub fn verge_band(piece: &str) -> Option<f32> {
+    match family(piece) {
+        "bush_verge" => Some(VERGE_BAND),
+        _ => None,
+    }
+}
+
+/// [`verge_band`]'s outer limit for the verge bushes: 3 m half width + [`LANE_GAP`] + the bush's
+/// 0.52 m ground reach puts the nearest centre at 4.52 m; the band runs about 2 m beyond it.
+pub const VERGE_BAND: f32 = 6.7;
 
 /// Variants of a scatter piece (PRD §6 Variety), after the piece itself: a rule names the first
 /// and each of its instances draws one of the group, picked by [`pick_variant`].
@@ -219,7 +234,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 36] = [
+pub const FOOTPRINTS: [(&str, Footprint); 37] = [
     (
         "tree_forest",
         Footprint {
@@ -473,6 +488,13 @@ pub const FOOTPRINTS: [(&str, Footprint); 36] = [
         Footprint {
             ground: 0.1,
             crown: 0.9,
+        },
+    ),
+    (
+        "bush_verge",
+        Footprint {
+            ground: 0.52,
+            crown: 0.0,
         },
     ),
 ];
@@ -945,6 +967,7 @@ fn mask(
         .into_iter()
         .map(|(line, half)| (line, lane_clearance(rule, half, fp)))
         .collect();
+    let band = verge_band(piece);
     let mut cells = vec![];
     for j in 0..CELLS {
         for i in 0..CELLS {
@@ -956,6 +979,7 @@ fn mask(
             if hex_reach(p) > border
                 || heroes.iter().any(|(h, c)| p.distance(*h) < *c)
                 || lanes.iter().any(|(l, c)| polyline_distance(p, l) < *c)
+                || band.is_some_and(|b| lanes.iter().all(|(l, _)| polyline_distance(p, l) > b))
             {
                 continue;
             }
@@ -2396,6 +2420,113 @@ mod tests {
             "saplings {placed:?} of {planned:?}"
         );
         assert!(planned[0] > 32 && planned[1] > 32, "{planned:?}");
+    }
+
+    /// Verge bushes (road ref-1's "grass verges with tufts and small bushes") come last on the four
+    /// road tiles without parking: the wildflowers keep their spots, every planned bush is placed,
+    /// and each bush's widest reach over its LODs (its leaves, wider than its collider; LOD2's
+    /// scaled-up cards reach furthest) at its scale stays beyond the kerb (3.25 m from the
+    /// centreline), never over asphalt, kerb or paint, with its centre inside the verge band, on
+    /// every seed.
+    #[test]
+    fn verge_bushes_line_the_road_beyond_the_kerb() {
+        const KERB_OUT: f32 = 3.25;
+        let leaves = (0..3)
+            .flat_map(|l| glb_mesh_tris("bush_verge", &format!("lod{l}")).unwrap())
+            .flat_map(|(t, _)| t)
+            .map(|p| Vec2::new(p[0], p[2]).length())
+            .fold(0.0, f32::max);
+        assert!(
+            (0.55..0.8).contains(&leaves),
+            "bush_verge widest LOD reach {leaves}"
+        );
+        let c = catalog();
+        for id in [
+            "road_straight",
+            "road_bend_60",
+            "road_bend_120",
+            "road_junction",
+        ] {
+            let def = c.get(id).unwrap();
+            let n = def.props.scatter.len();
+            assert_eq!(
+                def.props.scatter[n - 1].piece.as_str(),
+                "bush_verge",
+                "{id}"
+            );
+            let mut before = def.clone();
+            before.props.scatter.truncate(n - 1);
+            let g = prepared(def).unwrap();
+            let lanes = lanes(def);
+            let (mut planned, mut placed) = (0u32, 0usize);
+            for seed in 0..32u64 {
+                let l = layout(def, seed, &g);
+                let old = layout(&before, seed, &g);
+                let kept: Vec<_> = l
+                    .instances
+                    .iter()
+                    .filter(|i| usize::from(i.rule) < n - 1)
+                    .collect();
+                assert_eq!(kept.len(), old.instances.len(), "{id} seed {seed}");
+                for (a, b) in kept.iter().zip(&old.instances) {
+                    assert_eq!((a.rule, a.pos), (b.rule, b.pos), "{id} seed {seed}");
+                }
+                planned += l.planned[n - 1];
+                placed += l.placed(n - 1);
+                for i in l.instances.iter().filter(|i| usize::from(i.rule) == n - 1) {
+                    let p = i.pos.xz();
+                    let reach = leaves * i.scale;
+                    let d = lanes
+                        .iter()
+                        .map(|(line, _)| polyline_distance(p, line))
+                        .fold(f32::MAX, f32::min);
+                    assert!(
+                        d >= KERB_OUT + reach,
+                        "{id} seed {seed}: bush at {p} {d} m out"
+                    );
+                    // The band is tested on raster cell centres; a dart lands within half a cell.
+                    let jitter = RASTER * std::f32::consts::FRAC_1_SQRT_2;
+                    assert!(
+                        d <= VERGE_BAND + jitter,
+                        "{id} seed {seed}: bush at {p} {d} m out"
+                    );
+                    for q in std::iter::once(p).chain(ring16().iter().map(|r| p + reach * *r)) {
+                        let (_, slot) = g.surface.at(q.x, q.y).unwrap();
+                        assert!(
+                            !["road_asphalt", "road_kerb", "road_paint"].contains(&slot),
+                            "{id} seed {seed}: bush at {p} over {slot}"
+                        );
+                    }
+                    let (_, slot) = g.surface.at(p.x, p.y).unwrap();
+                    assert_eq!(slot, "meadow_base_cap", "{id} seed {seed}: bush at {p}");
+                }
+            }
+            assert_eq!(
+                placed, planned as usize,
+                "{id}: bushes {placed} of {planned}"
+            );
+            assert!(planned > 32, "{id}: {planned}");
+        }
+    }
+
+    /// No tile with parking carries verge bushes: hex-sim's parking sweep (tests/parking.rs) checks
+    /// only each tile's declared obstacle boxes, so a scattered bush could stand in a car's reverse
+    /// swing across the verge unseen. A parking tile needs its own bush slots cleared against the
+    /// sweep first.
+    #[test]
+    fn no_verge_bushes_on_parking_tiles() {
+        for def in catalog().tiles() {
+            if !def.parking.is_empty() {
+                assert!(
+                    def.props
+                        .scatter
+                        .iter()
+                        .all(|r| verge_band(r.piece.as_str()).is_none()),
+                    "{} has parking and verge bushes",
+                    def.id
+                );
+            }
+        }
     }
 
     /// The split (U3): the pine forest is spruces and rocks with no hero and no bird roost; the oak

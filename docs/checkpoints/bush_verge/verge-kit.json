@@ -1,0 +1,12 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 180 },
+  { "cmd": "camera", "pos": [2.0, 4.5, 15.0], "look_at": [-0.5, 0.5, 4.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "verge-kit-scale" },
+  { "cmd": "camera", "pos": [-9.0, 1.7, 9.0], "look_at": [2.0, 0.6, 4.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "verge-kit-eye" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

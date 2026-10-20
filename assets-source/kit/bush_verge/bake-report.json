@@ -1,0 +1,120 @@
+{
+  "bakeStats": {
+    "alphaCoverageByMip": {
+      "tile_0": [
+        0.5498,
+        0.5472,
+        0.5494,
+        0.5503,
+        0.5544,
+        0.5644,
+        0.6327,
+        0.8889,
+        1.0
+      ],
+      "tile_1": [
+        0.5484,
+        0.5459,
+        0.5476,
+        0.5475,
+        0.5544,
+        0.5644,
+        0.6327,
+        0.8889,
+        1.0
+      ],
+      "tile_2": [
+        0.5317,
+        0.5292,
+        0.5308,
+        0.5314,
+        0.5311,
+        0.5422,
+        0.5714,
+        0.7778,
+        1.0
+      ],
+      "tile_3": [
+        0.561,
+        0.559,
+        0.5602,
+        0.5633,
+        0.5644,
+        0.5644,
+        0.6122,
+        0.8889,
+        1.0
+      ],
+      "tiles": [
+        0.5477,
+        0.5453,
+        0.547,
+        0.5481,
+        0.5511,
+        0.5589,
+        0.5378,
+        0.6122,
+        0.6667,
+        0.0
+      ]
+    },
+    "alphaCutoff": 0.5
+  },
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "coreRadiusM": 0.48,
+  "crown": {
+    "a": 0.52,
+    "b": 0.44,
+    "card": 0.3,
+    "cushion": 0.04,
+    "cx": 0.0,
+    "cz": 0.42,
+    "inner": 34,
+    "outer": 130,
+    "spread": 1.05,
+    "zmin": -0.92
+  },
+  "device": "none (numpy-drawn tiles, no Cycles bake)",
+  "extentZ": [
+    -0.10208357125520706,
+    0.8836583495140076
+  ],
+  "lowestLeafM": -0.06722743809223175,
+  "marginPx": 0,
+  "reachM": 0.6285015176647093,
+  "receiverSignature": "60cd810a11bc157ec62b01ef588cd9f5aa0f2b699b01c829a990703357495b68",
+  "samples": 0,
+  "skipped": false,
+  "stem": {
+    "count": 3,
+    "length": 0.25,
+    "r0": 0.018,
+    "r1": 0.008,
+    "sink": 0.1
+  },
+  "texelDensityPxPerM": {
+    "bush_verge_leaves": {
+      "max": 1863.1294692126517,
+      "median": 1555.9733825727167,
+      "min": 1344.4042980267068
+    }
+  }
+}

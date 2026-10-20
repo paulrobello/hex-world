@@ -17,6 +17,7 @@
     props: (
         scatter: [
             (piece: "wildflower_single", density: 3.0, vary: 0.8),
+            (piece: "bush_verge", density: 0.6),
         ],
     ),
 )

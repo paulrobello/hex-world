@@ -58,9 +58,9 @@ pub const MAX_STEP: f32 = 0.4;
 /// Longest sub-step (m) a move is checked in.
 const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
-/// pieces do not. A sapling stops the walker at its stem, a shrub at its dense lower dome; ferns
-/// are walk-through.
-pub const OBSTACLES: [&str; 28] = [
+/// pieces do not. A sapling stops the walker at its stem, a shrub at its dense lower dome, a verge
+/// bush at its clipped mass; ferns are walk-through.
+pub const OBSTACLES: [&str; 29] = [
     "house_cottage",
     "house_twostorey",
     "house_longhouse",
@@ -89,6 +89,7 @@ pub const OBSTACLES: [&str; 28] = [
     "fence_paddock",
     "sapling_spruce",
     "shrub_forest",
+    "bush_verge",
 ];
 
 /// Why a move stopped.
@@ -497,7 +498,11 @@ pub fn prop_kind(piece: &str) -> &'static str {
         {
             "building"
         }
-        p if p.starts_with("tree") || p.starts_with("sapling_") || p.starts_with("shrub_") => {
+        p if p.starts_with("tree")
+            || p.starts_with("sapling_")
+            || p.starts_with("shrub_")
+            || p.starts_with("bush_") =>
+        {
             "tree"
         }
         p if p.starts_with("hay_") => "hay",
@@ -1077,6 +1082,7 @@ mod tests {
             ("fence_paddock", "fence"),
             ("sapling_spruce", "tree"),
             ("shrub_forest", "tree"),
+            ("bush_verge", "tree"),
         ] {
             assert_eq!(prop_kind(piece), kind, "{piece}");
             assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");
