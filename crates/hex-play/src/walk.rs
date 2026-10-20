@@ -21,7 +21,9 @@
 //!   or scatter instance's transform (a hero's `y` lifts its volume, the shelter onto the paving)
 //!   under the tile's rest transform. A collider of disjoint parts (the paddock fence's six run
 //!   boxes, [`PieceShape::parts`]) blocks and is clicked part by part, so the walker enters the
-//!   paddock through its gate and stands inside it. Wildflowers do not block, and the wheat
+//!   paddock through its gate and stands inside it. A part that stands outside its piece's
+//!   collider blocks by its own footprint ([`PIECE_POSTS`]: house_cottage_b's porch posts).
+//!   Wildflowers do not block, and the wheat
 //!   field's wheat is neither ground nor obstacle (`scatter::NOT_GROUND`): the walker walks
 //!   through it.
 //! - **Props to look at.** Photo mode's click to focus ([`WalkGround::pick_prop`]) hits the same
@@ -132,6 +134,22 @@ pub const CENTRE_OBSTACLES: &[(&str, &str, [[f32; 2]; 4])] = &[(
         [12.69, -2.35],
     ],
 )];
+
+/// Parts of obstacle pieces that stand outside the piece's collider, as (piece, footprint corners
+/// in the piece frame); they block the walker as the piece. house_cottage_b's box collider is its
+/// walls' (LOD2), so its porch posts get their own squares (`_house_slate.py` `porch`: 0.12 m oak
+/// posts whose outer face is 0.75 m out from the front wall at x 2.2, 0.54 m either side of the
+/// door), owner Q65. The walker still steps between them onto the doorstep.
+pub const PIECE_POSTS: &[(&str, [[f32; 2]; 4])] = &[
+    (
+        "house_cottage_b",
+        [[2.83, 0.48], [2.95, 0.48], [2.95, 0.60], [2.83, 0.60]],
+    ),
+    (
+        "house_cottage_b",
+        [[2.83, -0.60], [2.95, -0.60], [2.95, -0.48], [2.83, -0.48]],
+    ),
+];
 
 /// Why a move stopped.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -817,6 +835,13 @@ impl WalkGround {
                     out.props.extend(match part {
                         None => PickProp::new(piece, sh, t),
                         Some(i) => PickProp::new_part(piece, sh, t, i),
+                    });
+                }
+                for (_, corners) in PIECE_POSTS.iter().filter(|(p, _)| *p == piece) {
+                    let poly = hull(&corners.map(Vec2::from));
+                    obs.push(Obstacle {
+                        piece: piece.to_owned(),
+                        poly: place_hull(&poly, t),
                     });
                 }
             };
@@ -1779,9 +1804,16 @@ pub(crate) mod tests {
             pieces(0, 0),
             ["house_cottage", "house_cottage", "house_twostorey_c"]
         );
+        // house_cottage_b's collider and its two porch posts (`PIECE_POSTS`).
         assert_eq!(
             pieces(1, 0),
-            ["house_cottage", "house_cottage_b", "house_twostorey_c"]
+            [
+                "house_cottage",
+                "house_cottage_b",
+                "house_cottage_b",
+                "house_cottage_b",
+                "house_twostorey_c"
+            ]
         );
         assert_eq!(
             pieces(-1, 1),
@@ -1804,6 +1836,79 @@ pub(crate) mod tests {
             assert_eq!(s.blocked, Some(Blocked::Obstacle(piece.into())));
             assert_eq!(s.blocked.unwrap().reason(), "building");
         }
+    }
+
+    /// Each `PIECE_POSTS` square stands outside its piece's collider and holds the LOD0 timber
+    /// posts there: every timber vertex outside the collider below the porch's tie beam (the posts'
+    /// buried feet) lies in a square, and every square holds some. A rebuild that moves the posts
+    /// fails here.
+    #[test]
+    fn piece_posts_cover_the_posts_outside_the_collider() {
+        let pieces: Vec<&str> = PIECE_POSTS.iter().map(|(p, _)| *p).collect();
+        for &piece in &pieces {
+            assert!(OBSTACLES.contains(&piece), "{piece}");
+            let s = shape(piece);
+            let collider = Obstacle {
+                piece: piece.into(),
+                poly: s.hull.clone(),
+            };
+            let squares: Vec<Obstacle> = PIECE_POSTS
+                .iter()
+                .filter(|(p, _)| *p == piece)
+                .map(|(_, c)| Obstacle {
+                    piece: piece.into(),
+                    poly: hull(&c.map(Vec2::from)),
+                })
+                .collect();
+            let posts: Vec<Vec2> = mesh_tris(piece, "lod0")
+                .unwrap()
+                .iter()
+                .filter(|(_, slot)| slot.ends_with("_timber"))
+                .flat_map(|(t, _)| t.iter().copied())
+                .filter(|p| p[1] < 1.8)
+                .map(|p| Vec2::new(p[0], p[2]))
+                .filter(|p| !collider.hits(*p, 0.0))
+                .collect();
+            assert!(!posts.is_empty(), "{piece}: no timber outside the collider");
+            for p in &posts {
+                assert!(
+                    squares.iter().any(|q| q.hits(*p, 0.005)),
+                    "{piece}: post vertex {p} outside every square"
+                );
+            }
+            for q in &squares {
+                assert!(posts.iter().any(|p| q.hits(*p, 0.0)), "{q:?} holds no post");
+                assert!(
+                    q.poly.iter().all(|c| !collider.hits(*c, 0.0)),
+                    "{q:?} is inside the collider"
+                );
+            }
+        }
+    }
+
+    /// Owner Q65: house_cottage_b's porch posts stop the walker. The cluster at (1, 0) draws it in
+    /// house 1's slot at (-0.5, 7.0), yaw 270, door toward the tile centre: the posts stand at
+    /// x -1.04 and 0.04, z 4.11 (0.12 m square), the front wall's collider beyond them.
+    #[test]
+    fn the_cottage_b_porch_posts_block_the_walker() {
+        let g = world(&[(1, 0, "house_cluster", 0)]);
+        let c = centre(1, 0);
+        // At the east post from the pad: stopped a body radius short of its face (z 4.05).
+        let s = walk(&g, c + Vec2::new(0.04, 1.5), Vec2::Y, 4.0);
+        assert_eq!(s.blocked, Some(Blocked::Obstacle("house_cottage_b".into())));
+        assert_eq!(s.blocked.as_ref().map(Blocked::reason), Some("building"));
+        let z = s.pos.z - c.y;
+        assert!((3.70..3.80).contains(&z), "stopped at z {z}");
+        // From the side, under the porch roof's edge: stopped at the post's east face (x 0.10).
+        let s = walk(&g, c + Vec2::new(1.5, 4.11), -Vec2::X, 3.0);
+        assert_eq!(s.blocked, Some(Blocked::Obstacle("house_cottage_b".into())));
+        let x = s.pos.x - c.x;
+        assert!((0.35..0.45).contains(&x), "stopped at x {x}");
+        // Between the posts onto the doorstep: past the posts' line, stopped by the front wall.
+        let s = walk(&g, c + Vec2::new(-0.5, 1.5), Vec2::Y, 4.0);
+        assert_eq!(s.blocked, Some(Blocked::Obstacle("house_cottage_b".into())));
+        let z = s.pos.z - c.y;
+        assert!(z > 4.17, "under the porch to z {z}");
     }
 
     #[test]

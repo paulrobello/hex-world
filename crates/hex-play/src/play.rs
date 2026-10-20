@@ -511,13 +511,14 @@ fn spawn_tile(
 }
 
 /// A hero prop's growth: trees scale up, buildings rise a floor at a time (roof included). The
-/// single-storey longhouse rises in one step.
+/// single-storey longhouse and the low paddock fence rise in one step. The fence is not a tree:
+/// its origin is the tile centre, so a uniform scale would slide its runs in from the border.
 fn prop_kind(piece: &str) -> PropKind {
     if piece.contains("tree") {
         PropKind::Tree
     } else if piece.contains("twostorey") {
         PropKind::Building { floors: 3 }
-    } else if piece == "house_longhouse" {
+    } else if piece == "house_longhouse" || piece.starts_with("fence") {
         PropKind::Building { floors: 1 }
     } else {
         PropKind::Building { floors: 2 }
@@ -1035,7 +1036,7 @@ mod tests {
     }
 
     /// Houses rise a floor at a time: the cottage two steps (storey and roof), the two-storey
-    /// three, the single-storey longhouse one.
+    /// three, the single-storey longhouse and the paddock fence one.
     #[test]
     fn houses_rise_by_their_floors() {
         let floors = |p| match prop_kind(p) {
@@ -1048,6 +1049,7 @@ mod tests {
         assert_eq!(floors("house_twostorey_b"), 3);
         assert_eq!(floors("house_twostorey_c"), 3);
         assert_eq!(floors("house_longhouse"), 1);
+        assert_eq!(floors("fence_paddock"), 1, "a low fence rises in one step");
         assert_eq!(prop_kind("tree_hero_oak"), PropKind::Tree);
     }
 

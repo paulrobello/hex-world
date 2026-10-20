@@ -50,7 +50,7 @@ All pieces landed since 2026-10-19 await look approval (sheets in `docs/checkpoi
 - Houses: Q29 longhouse per slot or fixed slot; Q30 one box or two for the L-plan; Q40 house_cluster thumbnails show variants (done) or the canonical houses; Q41 flagstone apron under the jetty.
 - Oak: Q49 `_b` 0.27 m taller than the hero; Q50 random yaw for the oak tile hero.
 - Farm: Q36 close the paddock gate; Q37 tinted rails or wood grain; Q38 paddock south of the yard or round it; Q39 three rails or two; Q42 grazing cow placement (3.9 cm float kept) or move the original cow; Q43 and Q59 grass clear under grazing muzzles (shrink or offset the disc); Q44 lamb texture to 512; Q55 fix the round bale's sector seams; Q56 stack_b top bale crosswise or along; Q57 grazing sheep placement (2.8 cm) or move the lamb; Q58 narrower hood so the grazing sheep's black face shows from above.
-- Late: Q63 the third log changes the forest pick from 1-in-2 to 1-in-3, so logs, shrubs and saplings move on some seeds; Q64 existing worlds change look (about half the former longhouse cells now draw `house_cottage_b`); Q65 the walker passes through cottage porch posts.
+- Late: Q63 the third log changes the forest pick from 1-in-2 to 1-in-3, so logs, shrubs and saplings move on some seeds; Q64 existing worlds change look (about half the former longhouse cells now draw `house_cottage_b`); Q65 fixed: `house_cottage_b`'s porch posts block the walker (`walk.rs` `PIECE_POSTS`).
 - Roads: Q51 shrink the 1024 shrub atlas (re-bakes `shrub_forest`); Q52 verge bush density (about 4 per straight tile); Q53 verge bushes on house/bakery tiles after parking-path clearance; Q54 verge bush variant mix.
 - Older queues: `docs/review/2026-10-19-owner-queue.md` (Q1-Q12) and `docs/review/2026-10-14-owner-queue.md`.
 
@@ -62,7 +62,7 @@ Earlier carry-over still open: windmill review (card `01a13d667322`), prop varia
 - Station tile integration (platform walker ground, shelter obstacle, train stop), card `01a157994d7a`.
 - Cars follow road height (`ROAD_SURFACE_Y` is a fixed 0.11 m; the crossing deck is 0.46 m), card `01a1575a45d4`.
 - Large play worlds slow on web, card `01a14028862a` (high); Dependabot alerts, card `01a1547b6ac5747e967b94e245b57a6e` (high).
-- Known small items: the fence rises like a two-storey building (`play.rs`), `farm.ron`'s header comment is partly stale, walk-mode shots render a black sky (pre-existing on main), LOD2 dark neck patches on the grazing animals (draws past 400 m only).
+- Known small items: LOD2 dark neck patches on the grazing animals (draws past 400 m only).
 
 ## References
 

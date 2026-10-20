@@ -8,7 +8,10 @@
 //! them back exactly. Saves never see the walker: they take the snapshot's orbit camera.
 use std::collections::VecDeque;
 
-use bevy::prelude::*;
+use bevy::{
+    light::{EnvironmentMapLight, Skybox},
+    prelude::*,
+};
 use hex_play::{
     play::PlaySystems,
     tilt_shift::TiltOverride,
@@ -279,9 +282,22 @@ pub fn advance(s: &mut WalkSession, ground: &WalkGround, dt: f32) -> f32 {
     moved
 }
 
+/// The sky behind the walker: the cubemap that lights the scene (the IBL's specular map, whose
+/// sharpest mip is the HDRI) at the IBL's intensity and rotation, so its sun stands where the
+/// light comes from and it dims with the time of day. The orbit camera keeps the grade's dark
+/// backdrop (owner Q4); from eye height that backdrop filled everything above the horizon.
+pub fn walk_sky(env: &EnvironmentMapLight) -> Skybox {
+    Skybox {
+        image: Some(env.specular_map.clone()),
+        brightness: env.intensity,
+        rotation: env.rotation,
+    }
+}
+
 /// Enters and leaves walk mode on `GameState::walk_mode` edges and walks while it is on (after
-/// `game::apply_actions` and `photo::sync`).
-#[allow(clippy::too_many_arguments)]
+/// `game::apply_actions` and `photo::sync`). Walking puts [`walk_sky`] on the camera; leaving
+/// takes it off.
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn sync(
     mut commands: Commands,
     game: Res<GameState>,
@@ -289,9 +305,18 @@ pub fn sync(
     ground: Res<WalkGround>,
     time: Res<Time>,
     tilt: Option<Res<TiltOverride>>,
-    mut cams: Query<(&mut Transform, &mut Projection), With<Camera3d>>,
+    mut cams: Query<
+        (
+            Entity,
+            &mut Transform,
+            &mut Projection,
+            Option<&EnvironmentMapLight>,
+            Option<&mut Skybox>,
+        ),
+        With<Camera3d>,
+    >,
 ) {
-    let Some((mut t, mut proj)) = cams.iter_mut().next() else {
+    let Some((cam, mut t, mut proj, env, sky)) = cams.iter_mut().next() else {
         return;
     };
     match (game.walk_mode, session.saved) {
@@ -319,12 +344,18 @@ pub fn sync(
             if let Projection::Perspective(p) = &mut *proj {
                 p.fov = WALK_FOV_DEG.to_radians();
             }
+            if let Some(env) = env {
+                commands.entity(cam).insert(walk_sky(env));
+            }
             info!("walk mode: on at {start}");
         }
         (false, Some(snap)) => {
             *t = snap.transform;
             if let Projection::Perspective(p) = &mut *proj {
                 p.fov = snap.fov;
+            }
+            if sky.is_some() {
+                commands.entity(cam).remove::<Skybox>();
             }
             if tilt.is_some() {
                 commands.remove_resource::<TiltOverride>();
@@ -344,7 +375,15 @@ pub fn sync(
             (s.stride, s.look, s.hop) = (Vec2::ZERO, Vec2::ZERO, false);
             return;
         }
-        (true, Some(_)) => {}
+        (true, Some(_)) => match (env, sky) {
+            (Some(env), Some(mut sky)) if sky.brightness != env.intensity => {
+                sky.brightness = env.intensity;
+            }
+            (Some(env), None) => {
+                commands.entity(cam).insert(walk_sky(env));
+            }
+            _ => {}
+        },
     }
     let s = &mut *session;
     while let Some(r) = s.requests.pop_front() {
@@ -560,5 +599,47 @@ mod tests {
             (v["walk_speed"].clone(), v["sprint_speed"].clone()),
             (json!(7.25), json!(14.5))
         );
+    }
+
+    /// Walking puts the IBL's cubemap on the camera as the sky at the IBL's intensity, follows the
+    /// time of day's dimming, and leaving restores the orbit camera's backdrop (no sky).
+    #[test]
+    fn walking_shows_the_ibl_sky_and_leaving_takes_it_off() {
+        use bevy::ecs::system::RunSystemOnce;
+        let mut world = World::new();
+        world.insert_resource(GameState::new(1));
+        world.init_resource::<WalkSession>();
+        world.init_resource::<WalkGround>();
+        world.init_resource::<Time>();
+        let specular: Handle<Image> = Handle::default();
+        let cam = world
+            .spawn((
+                Camera3d::default(),
+                Transform::from_xyz(0.0, 60.0, 80.0).looking_at(Vec3::ZERO, Vec3::Y),
+                Projection::Perspective(PerspectiveProjection::default()),
+                EnvironmentMapLight {
+                    specular_map: specular.clone(),
+                    intensity: 1500.0,
+                    ..default()
+                },
+            ))
+            .id();
+        let run = |world: &mut World, walk: bool| {
+            world.resource_mut::<GameState>().walk_mode = walk;
+            world.run_system_once(sync).unwrap();
+        };
+        run(&mut world, false);
+        assert!(world.get::<Skybox>(cam).is_none(), "orbit: the backdrop");
+        run(&mut world, true);
+        let sky = world.get::<Skybox>(cam).expect("a sky while walking");
+        assert_eq!(sky.image.as_ref(), Some(&specular));
+        assert_eq!(sky.brightness, 1500.0);
+        assert_eq!(sky.rotation, Quat::IDENTITY);
+        // Dusk dims the IBL (`hooks::apply_time_of_day`); the sky follows.
+        world.get_mut::<EnvironmentMapLight>(cam).unwrap().intensity = 300.0;
+        run(&mut world, true);
+        assert_eq!(world.get::<Skybox>(cam).unwrap().brightness, 300.0);
+        run(&mut world, false);
+        assert!(world.get::<Skybox>(cam).is_none(), "orbit again: no sky");
     }
 }
