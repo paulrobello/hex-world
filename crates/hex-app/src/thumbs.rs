@@ -15,7 +15,7 @@ use hex_play::play::{
     rise::ReducedMotion,
 };
 use hex_render::{
-    PostMode, Scenario, TiltMode,
+    AgentsPaused, PostMode, Scenario, TiltMode,
     water::{FIXED_STEP, WaterClock},
 };
 
@@ -199,6 +199,9 @@ impl Plugin for ThumbsPlugin {
         // capture lands mid-rise (dust, a column still climbing past the frame edge).
         app.insert_resource(ClearColor(KEY))
             .insert_resource(ReducedMotion(true))
+            // The farm herd walks on the fixed tick, which runs every frame; a paused herd stands
+            // at its slots, so a farm thumbnail does not depend on which frame captured it.
+            .insert_resource(AgentsPaused(true))
             .insert_resource(ThumbRun::new(&catalog))
             .insert_resource(PackRequests {
                 all: true,
