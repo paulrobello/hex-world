@@ -1,8 +1,12 @@
 """Builds docs/review/2026-10-20-walkthrough.html: every item waiting on the owner after 2026-10-20.
 
-Run from the repo root: python3 docs/review/2026-10-20-walkthrough.py
-Image paths are relative to docs/review/. The build fails on a missing image.
+Run from the repo root: python3 docs/review/2026-10-20-walkthrough.py [--standalone OUT.html]
+Image paths are relative to docs/review/. The build fails on a missing image. --standalone embeds
+every image (downscaled to 1600 px JPEG) so the page works as a single attached file.
 """
+import base64
+import io
+import sys
 from html import escape
 from pathlib import Path
 
@@ -203,10 +207,27 @@ ul.links li{margin:4px 0}"""
 GROUPS = [("D", "Decisions that block work"), ("C", "Your requests: check they are right"), ("A", "New pieces waiting on your look")]
 
 
+STANDALONE = "--standalone" in sys.argv
+
+
+def src(path: str) -> str:
+    """The image URL: the relative path, or an embedded downscaled JPEG in standalone mode."""
+    if not STANDALONE:
+        return path
+    from PIL import Image
+
+    im = Image.open((OUT.parent / path).resolve()).convert("RGB")
+    im.thumbnail((1600, 1600))
+    buf = io.BytesIO()
+    im.save(buf, "JPEG", quality=82)
+    return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
 def section(sid, title, sub, summary, rec, qs, imgs):
     for path, _ in imgs:
         if not (OUT.parent / path).resolve().is_file():
             raise SystemExit(f"missing image for {sid}: {path}")
+    imgs = [(src(p), c) for p, c in imgs]
     h = [f"<section id='{sid}'><h2>{escape(sid)} {escape(title)} <span>{escape(sub)}</span></h2>", f"<p>{escape(summary)}</p>"]
     if rec:
         h.append(f"<div class=rec><b>Recommendation:</b> {escape(rec)}</div>")
@@ -236,8 +257,9 @@ def main() -> None:
         f"\n<h3>Older and other review pages</h3><section id='older'><p>{escape(OLDER)}</p><ul class=links>{links}</ul></section>\n"
         "</main></body></html>\n"
     )
-    OUT.write_text(html)
-    print(f"wrote {OUT.relative_to(ROOT)}: {len(SECTIONS)} sections")
+    out = Path(sys.argv[sys.argv.index("--standalone") + 1]) if STANDALONE else OUT
+    out.write_text(html)
+    print(f"wrote {out}: {len(SECTIONS)} sections, {out.stat().st_size // 1024} KiB")
 
 
 if __name__ == "__main__":
