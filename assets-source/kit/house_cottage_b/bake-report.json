@@ -1,0 +1,108 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.7476238012313843,
+    "aoP05": 0.01568627543747425,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "door": 0.671,
+          "glass": 0.592,
+          "pots": 0.529,
+          "roof": 0.0,
+          "stone": 0.0,
+          "timber": 0.0,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "door": 1.0,
+          "glass": 0.984,
+          "pots": 0.686,
+          "roof": 0.0,
+          "stone": 0.0,
+          "timber": 0.0,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "door": 1.0,
+          "glass": 0.969,
+          "roof": 0.984,
+          "stone": 0.471,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.49039745330810547,
+    "filledTexels": 18889,
+    "nightTexels": 11489
+  },
+  "masksDensityBySlot": {
+    "lod0": {
+      "door": 19.06,
+      "glass": 19.06,
+      "pots": 20.44,
+      "roof": 22.26,
+      "stone": 20.16,
+      "timber": 20.16,
+      "walls": 20.66
+    },
+    "lod1": {
+      "door": 18.14,
+      "glass": 18.14,
+      "pots": 19.48,
+      "roof": 22.14,
+      "stone": 19.48,
+      "timber": 19.48,
+      "walls": 20.2
+    },
+    "lod2": {
+      "door": 18.27,
+      "glass": 18.27,
+      "roof": 22.26,
+      "stone": 19.48,
+      "walls": 22.26
+    }
+  },
+  "masksDensityPxPerM": {
+    "house_cottage_b_lod0": {
+      "max": 22.259903065758543,
+      "median": 20.706176075874474,
+      "min": 18.130125481822585
+    },
+    "house_cottage_b_lod1": {
+      "max": 22.259047084336228,
+      "median": 19.48150871543244,
+      "min": 17.83151542336812
+    },
+    "house_cottage_b_lod2": {
+      "max": 22.258583045132415,
+      "median": 22.249218744935604,
+      "min": 18.266582052985832
+    }
+  },
+  "receiverSignature": "0fec71ea0c0848770701bebc4f57ccbc38e1fd6ac8d1abe8914a6c289bce3539",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 22.259903065758543,
+    "median": 20.706176075874474,
+    "min": 18.130125481822585
+  },
+  "uvMargin": 0.012
+}

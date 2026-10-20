@@ -1,0 +1,309 @@
+diff --git a/PRD.md b/PRD.md
+index cd2d705..ea8141e 100644
+--- a/PRD.md
++++ b/PRD.md
+@@ -263,7 +263,7 @@ About 10 types. The exact variants are frozen at the start of P2. With the owner
+   - Built so far: the play world spawns each tile's pieces as entities under the tile root and relies on Bevy's automatic instancing (a 20-tile world draws 256–298 batches). The per-chunk instance buffers (`crates/hex-render/src/instanced.rs`, `layout=instanced`) run only in the `gate2000` perf scenario.
+ - **Seam continuity.** Kit pieces snap to a shared edge contract (lane offsets, edge heights, a vertex ring at the hex border), and the terrain cap's normals are blended at the hex border so seams don't show.
+ - **Variety.** Each kit piece has 2–4 variants, and props get a per-instance seed for hue, scale and rotation jitter.
+-  - Built so far: the scattered props ship three variants each, `tree_forest` with a tall slender `_b` and a young short `_c`, `rock_small` with a boulder `_b` and a low flat cluster `_c`, and `wildflower_clump` with a yellow and white `_b` and a blue and purple `_c`; the single-stem wildflowers come as four pieces (daisy, buttercup, cornflower, clover). A tile rule names the first piece and each instance draws one piece of its group from a hash of the tile seed (`crates/hex-play/src/play/scatter.rs` `VARIANTS`), so a seed always draws the same world. Scatter also gives each instance a seeded yaw and a scale jitter (±12% for trees, ±15% otherwise), with no hue jitter. Hero props have variants: a `house_cottage` slot of a house cluster draws the single-storey L-plan `house_longhouse`, the `house_twostorey` slot the jettied, hip-roofed timber-framed `house_twostorey_b`, and the oak tile's hero slot the forked, east-leaning `tree_hero_oak_b`, each about one time in three, picked per slot from a hash of the cell and the slot index (`crates/hex-core/src/variant.rs` `HERO_VARIANTS`, `hero_piece`), so saves need no change and the ghost shows the same houses. The forest floor's `fern_clump` comes with a young upright `_b` and a wide low `_c`, and `log_fallen` with a short broken butt-end `_b`; the oak tile's scattered `tree_oak` with a younger, narrower `_b`. Every other kit piece ships one variant. The new pieces await the owner's look approval (`docs/checkpoints/prop-variants/`).
++  - Built so far: the scattered props ship three variants each, `tree_forest` with a tall slender `_b` and a young short `_c`, `rock_small` with a boulder `_b` and a low flat cluster `_c`, and `wildflower_clump` with a yellow and white `_b` and a blue and purple `_c`; the single-stem wildflowers come as four pieces (daisy, buttercup, cornflower, clover). A tile rule names the first piece and each instance draws one piece of its group from a hash of the tile seed (`crates/hex-play/src/play/scatter.rs` `VARIANTS`), so a seed always draws the same world. Scatter also gives each instance a seeded yaw and a scale jitter (±12% for trees, ±15% otherwise), with no hue jitter. Hero props have variants: a `house_cottage` slot of a house cluster draws the single-storey L-plan `house_longhouse` or the slate-roofed rendered `house_cottage_b` with its gabled porch (each about one time in six, splitting the one in three), the `house_twostorey` slot the jettied, hip-roofed timber-framed `house_twostorey_b`, and the oak tile's hero slot the forked, east-leaning `tree_hero_oak_b`, each about one time in three, picked per slot from a hash of the cell and the slot index (`crates/hex-core/src/variant.rs` `HERO_VARIANTS`, `hero_piece`), so saves need no change and the ghost shows the same houses. The forest floor's `fern_clump` comes with a young upright `_b` and a wide low `_c`, and `log_fallen` with a short broken butt-end `_b`; the oak tile's scattered `tree_oak` with a younger, narrower `_b`. Every other kit piece ships one variant. The new pieces await the owner's look approval (`docs/checkpoints/prop-variants/`).
+ - **Runtime recolour (owner, 2026-10-13).** Vehicles, starting with the car, are recoloured at runtime from one model and one texture set. The model marks its paintable surfaces in a mask that needs no extra texture: a vertex-colour channel, or a reserved region of its existing atlas. Glass, tyres, lights and trim stay unpainted. Each instance carries its own paint colour, picked from a curated palette by the instance seed, as per-instance data that keeps GPU instancing intact, so it never needs one material per colour.
+   - Built (`3dfc734`): the sedan, van and pickup mark paint in vertex colour alpha, and each car carries its colour from a 12-colour palette as a per-entity `MeshTag`, so every car of a type and LOD draws in one batch.
+ 
+diff --git a/crates/hex-core/src/variant.rs b/crates/hex-core/src/variant.rs
+index 14f5cf7..05ed2ac 100644
+--- a/crates/hex-core/src/variant.rs
++++ b/crates/hex-core/src/variant.rs
+@@ -8,7 +8,7 @@ use crate::{Axial, HeroProp, TileDef};
+ /// Each authored hero piece with the variants a slot of it may draw instead. A new variant is one
+ /// more id in its row; a new family is one more row.
+ pub const HERO_VARIANTS: [(&str, &[&str]); 5] = [
+-    ("house_cottage", &["house_longhouse"]),
++    ("house_cottage", &["house_longhouse", "house_cottage_b"]),
+     ("house_twostorey", &["house_twostorey_b"]),
+     ("tree_hero_oak", &["tree_hero_oak_b"]),
+     ("hay_bale_round", &["hay_bale_round_b"]),
+@@ -140,7 +140,7 @@ mod tests {
+         "house_cottage",
+         "house_cottage",
+         "house_cottage",
+-        "house_longhouse",
++        "house_cottage_b",
+         "house_cottage",
+     ];
+ 
+@@ -161,22 +161,31 @@ mod tests {
+     fn some_cottage_slots_draw_the_longhouse_and_most_keep_the_cottage() {
+         let c = TileCatalog::builtin().unwrap();
+         let def = c.get("house_cluster").unwrap();
+-        let (mut cottage, mut longhouse) = (0, 0);
++        let (mut cottage, mut longhouse, mut cottage_b) = (0, 0, 0);
+         let (mut twostorey, mut twostorey_b) = (0, 0);
+         for cell in cells() {
+             for (i, (h, piece)) in def.hero_pieces(cell).enumerate() {
+                 match (h.piece.as_str(), piece) {
+                     ("house_cottage", "house_cottage") => cottage += 1,
+                     ("house_cottage", "house_longhouse") => longhouse += 1,
++                    ("house_cottage", "house_cottage_b") => cottage_b += 1,
+                     ("house_twostorey", "house_twostorey") => twostorey += 1,
+                     ("house_twostorey", "house_twostorey_b") => twostorey_b += 1,
+                     (a, b) => assert_eq!(a, b, "slot {i} at {cell:?}"),
+                 }
+             }
+         }
+-        let share = longhouse as f32 / (cottage + longhouse) as f32;
+-        assert!((0.28..0.39).contains(&share), "longhouse share {share}");
+-        assert!(cottage > longhouse);
++        // About one cottage slot in three varies, split evenly between the two variants.
++        let all = (cottage + longhouse + cottage_b) as f32;
++        let share = (longhouse + cottage_b) as f32 / all;
++        assert!(
++            (0.28..0.39).contains(&share),
++            "cottage variant share {share}"
++        );
++        for (n, v) in [("longhouse", longhouse), ("cottage_b", cottage_b)] {
++            let share = v as f32 / all;
++            assert!((0.13..0.2).contains(&share), "{n} share {share}");
++        }
+         let share = twostorey_b as f32 / (twostorey + twostorey_b) as f32;
+         assert!((0.28..0.39).contains(&share), "twostorey_b share {share}");
+         assert!(twostorey > twostorey_b);
+diff --git a/crates/hex-play/src/play.rs b/crates/hex-play/src/play.rs
+index 03978e2..47dd7a9 100644
+--- a/crates/hex-play/src/play.rs
++++ b/crates/hex-play/src/play.rs
+@@ -1041,6 +1041,7 @@ mod tests {
+             PropKind::Tree => 0,
+         };
+         assert_eq!(floors("house_cottage"), 2);
++        assert_eq!(floors("house_cottage_b"), 2);
+         assert_eq!(floors("house_twostorey"), 3);
+         assert_eq!(floors("house_twostorey_b"), 3);
+         assert_eq!(floors("house_longhouse"), 1);
+diff --git a/crates/hex-play/src/play/ghost.rs b/crates/hex-play/src/play/ghost.rs
+index 3ae0bbe..ba05bdc 100644
+--- a/crates/hex-play/src/play/ghost.rs
++++ b/crates/hex-play/src/play/ghost.rs
+@@ -638,7 +638,8 @@ mod tests {
+     }
+ 
+     /// The ghost previews the hero variant the placed tile draws at that cell (`hero_piece`):
+-    /// house 1 of a cluster at (1, 0) is the longhouse, at the origin the cottage.
++    /// house 1 of a cluster at (1, 0) is house_cottage_b, at (-3, 0) the longhouse, at the origin
++    /// the cottage.
+     #[test]
+     fn the_ghost_shows_the_variant_the_cell_draws() {
+         let c = PlayCatalog::default();
+@@ -658,8 +659,11 @@ mod tests {
+             assert_eq!(heroes, drawn, "{cell:?}");
+         }
+         let at = |q, r| ghost_pieces(def, &c.0, Axial::new(q, r), |_| true);
+-        assert!(at(1, 0).iter().any(|(id, ..)| *id == "house_longhouse"));
+-        assert!(!at(0, 0).iter().any(|(id, ..)| *id == "house_longhouse"));
++        assert!(at(1, 0).iter().any(|(id, ..)| *id == "house_cottage_b"));
++        assert!(at(-3, 0).iter().any(|(id, ..)| *id == "house_longhouse"));
++        for v in ["house_longhouse", "house_cottage_b"] {
++            assert!(!at(0, 0).iter().any(|(id, ..)| *id == v), "{v}");
++        }
+     }
+ 
+     #[test]
+diff --git a/crates/hex-play/src/play/grass.rs b/crates/hex-play/src/play/grass.rs
+index b6ea6f1..6b5f875 100644
+--- a/crates/hex-play/src/play/grass.rs
++++ b/crates/hex-play/src/play/grass.rs
+@@ -1741,22 +1741,29 @@ mod tests {
+     }
+ 
+     /// The houses clear their collider rectangle, turned by each one's yaw, and grass grows within
+-    /// 0.6 m of every long wall: at the origin (both cottages) and at (1, 0), where house 1 draws
+-    /// the longhouse, so the exclusion box is the drawn piece's.
++    /// 0.6 m of every long wall: at the origin (both cottages), at (-3, 0), where house 1 draws
++    /// the longhouse, and at (1, 0), where it draws house_cottage_b, so the exclusion box is the
++    /// drawn piece's.
+     #[test]
+     fn grass_grows_along_house_walls() {
+         let c = TileCatalog::builtin().unwrap();
+         let mut def = c.get("meadow").unwrap().clone();
+         def.props.hero = c.get("house_cluster").unwrap().props.hero.clone();
+-        for (cell, longhouses) in [(Axial::ORIGIN, 0), (Axial::new(1, 0), 1)] {
++        for (cell, variant) in [
++            (Axial::ORIGIN, None),
++            (Axial::new(-3, 0), Some("house_longhouse")),
++            (Axial::new(1, 0), Some("house_cottage_b")),
++        ] {
+             let bands = hero_grass(&def, cell);
+             println!("{bands:?}");
+             assert_eq!(bands.len(), 3, "{bands:?}");
+-            assert_eq!(
+-                bands.iter().filter(|(p, _)| p == "house_longhouse").count(),
+-                longhouses,
+-                "{bands:?}"
+-            );
++            for v in ["house_longhouse", "house_cottage_b"] {
++                assert_eq!(
++                    bands.iter().filter(|(p, _)| p == v).count(),
++                    usize::from(variant == Some(v)),
++                    "{bands:?}"
++                );
++            }
+             for (piece, walls) in &bands {
+                 assert!(walls.iter().all(|&n| n >= 30), "{piece} walls {walls:?}");
+             }
+diff --git a/crates/hex-play/src/play/packs.rs b/crates/hex-play/src/play/packs.rs
+index 20aed32..c52414e 100644
+--- a/crates/hex-play/src/play/packs.rs
++++ b/crates/hex-play/src/play/packs.rs
+@@ -374,6 +374,7 @@ mod tests {
+         for piece in [
+             "house_cottage",
+             "house_longhouse",
++            "house_cottage_b",
+             "house_twostorey",
+             "house_twostorey_b",
+         ] {
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 9022f71..036ba66 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -235,7 +235,7 @@ pub struct Footprint {
+ 
+ /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
+ /// the GLBs).
+-pub const FOOTPRINTS: [(&str, Footprint); 41] = [
++pub const FOOTPRINTS: [(&str, Footprint); 42] = [
+     (
+         "tree_forest",
+         Footprint {
+@@ -369,6 +369,13 @@ pub const FOOTPRINTS: [(&str, Footprint); 41] = [
+             crown: 0.0,
+         },
+     ),
++    (
++        "house_cottage_b",
++        Footprint {
++            ground: 4.21,
++            crown: 0.0,
++        },
++    ),
+     // The tower trunk only: the sails turn overhead, from 3.7 m up.
+     (
+         "windmill",
+@@ -552,7 +559,7 @@ pub struct GroundBox {
+ /// The buildings whose collider is a rectangle (`ground_boxes_match_the_kit` checks them against
+ /// the GLBs). Every other piece, the windmill's round tower included, is a disc of its
+ /// [`Footprint::ground`].
+-pub const GROUND_BOXES: [(&str, GroundBox); 6] = [
++pub const GROUND_BOXES: [(&str, GroundBox); 7] = [
+     (
+         "house_cottage",
+         GroundBox {
+@@ -581,6 +588,13 @@ pub const GROUND_BOXES: [(&str, GroundBox); 6] = [
+             max: [2.75, 3.75],
+         },
+     ),
++    (
++        "house_cottage_b",
++        GroundBox {
++            min: [-2.5, -3.38],
++            max: [2.5, 3.38],
++        },
++    ),
+     (
+         "barn_red",
+         GroundBox {
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index 1d630dd..d3fd75e 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -60,11 +60,12 @@ const SUBSTEP: f32 = 0.1;
+ /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
+ /// pieces do not. A sapling stops the walker at its stem, a shrub at its dense lower dome, a verge
+ /// bush at its clipped mass; ferns are walk-through.
+-pub const OBSTACLES: [&str; 33] = [
++pub const OBSTACLES: [&str; 34] = [
+     "house_cottage",
+     "house_twostorey",
+     "house_longhouse",
+     "house_twostorey_b",
++    "house_cottage_b",
+     "windmill",
+     "barn_red",
+     "bakery_shop",
+@@ -1079,6 +1080,7 @@ mod tests {
+             ("house_twostorey", "building"),
+             ("house_longhouse", "building"),
+             ("house_twostorey_b", "building"),
++            ("house_cottage_b", "building"),
+             ("tree_hero_oak", "tree"),
+             ("tree_hero_oak_b", "tree"),
+             ("tree_forest_b", "tree"),
+@@ -1535,9 +1537,9 @@ mod tests {
+         assert_eq!(g.ground(c), Err(Blocked::Water), "the channel centre");
+     }
+ 
+-    /// Walk blocks at the piece the cell draws: a cluster at (1, 0) draws the longhouse in house
+-    /// 1's slot (`hex_core::hero_piece`), at the origin the cottage; both draw house_twostorey_b in
+-    /// house 2's slot, and (2, -1) keeps house_twostorey.
++    /// Walk blocks at the piece the cell draws: a cluster at (1, 0) draws house_cottage_b in house
++    /// 1's slot (`hex_core::hero_piece`), at (-3, 0) the longhouse, at the origin the cottage; the
++    /// origin and (1, 0) draw house_twostorey_b in house 2's slot, and (2, -1) keeps house_twostorey.
+     #[test]
+     fn walk_obstacles_are_the_drawn_hero_variant() {
+         let pieces = |q, r| -> Vec<String> {
+@@ -1554,19 +1556,25 @@ mod tests {
+         );
+         assert_eq!(
+             pieces(1, 0),
+-            ["house_cottage", "house_longhouse", "house_twostorey_b"]
++            ["house_cottage", "house_cottage_b", "house_twostorey_b"]
++        );
++        assert_eq!(
++            pieces(-3, 0),
++            ["house_cottage", "house_longhouse", "house_twostorey"]
+         );
+         assert_eq!(
+             pieces(2, -1),
+             ["house_cottage", "house_cottage", "house_twostorey"]
+         );
+         // House 1 sits at (-0.5, 7.0): walk at its yard front from the pad.
+-        let g = world(&[(1, 0, "house_cluster", 0)]);
+-        let c = centre(1, 0);
+-        let start = c + Vec2::new(-0.5, 1.5);
+-        let s = walk(&g, start, Vec2::new(0.0, 6.0), 8.0);
+-        assert_eq!(s.blocked, Some(Blocked::Obstacle("house_longhouse".into())));
+-        assert_eq!(s.blocked.unwrap().reason(), "building");
++        for (q, r, piece) in [(1, 0, "house_cottage_b"), (-3, 0, "house_longhouse")] {
++            let g = world(&[(q, r, "house_cluster", 0)]);
++            let c = centre(q, r);
++            let start = c + Vec2::new(-0.5, 1.5);
++            let s = walk(&g, start, Vec2::new(0.0, 6.0), 8.0);
++            assert_eq!(s.blocked, Some(Blocked::Obstacle(piece.into())));
++            assert_eq!(s.blocked.unwrap().reason(), "building");
++        }
+     }
+ 
+     #[test]
+diff --git a/docs/agent-operability.md b/docs/agent-operability.md
+index 48b3f04..3dacd26 100644
+--- a/docs/agent-operability.md
++++ b/docs/agent-operability.md
+@@ -287,7 +287,7 @@ Timing taken without this guard is not evidence.
+ 
+ `--scenario play` draws the game world held by `hex-app` (`crates/hex-app/src/game.rs`). It opens with one meadow at `(0, 0)` and follows the PRD §4.1–4.2 rules from `hex-core`. Tiles use kit pieces from `assets/kit/manifest.json` where the tile references them and the piece's pack has loaded (see [Kit streaming](#kit-streaming)), and plain placeholders otherwise: a coloured prism per biome, dark road and blue river strips meeting at a hub, and beige blocks for pending houses, pads and hero props.
+ 
+-Hero variants (PRD §6 Variety): a hero slot authored as a piece listed in `hex_core::HERO_VARIANTS` may draw one of its variants instead, picked by `hex_core::hero_piece(def, cell, slot)` from a SplitMix64 hash of the cell and the slot index. Today a `house_cottage` slot draws `house_longhouse` and the `house_twostorey` slot draws `house_twostorey_b` (jettied, hip-roofed), and the oak tile's `tree_hero_oak` slot draws `tree_hero_oak_b` (forked, east-leaning, a heavy low limb), each about one time in three (`VARIANT_ONE_IN`), so a house cluster shows two cottages, a cottage and a longhouse, or two longhouses beside a two-storey of either kind. The pick depends on the cell alone, so saves carry nothing for it and a ghost previews the same houses the placed tile draws. Every consumer of a hero piece resolves it through `TileDef::hero_pieces(cell)`: the drawn tile, the ghost, walk obstacles and photo picks, grass exclusions and bird perches. The pack loader and scatter masks, which are per tile and not per cell, take every option of a slot (`TileDef::hero_options`; scatter clears the widest). `hex_core::VARIANT_PICK` switches the rule to one pick per cluster (`PerCluster`) or a fixed slot (`FixedSlot(n)`). `cargo test -p hex-core longhouse_cells -- --ignored --nocapture` prints the picks near the origin. The thumbnail cell, the origin, draws both cottages and `house_twostorey_b`, and the authored `tree_hero_oak`. Evidence: `docs/checkpoints/house_longhouse/play.jpg` and `play-overview.jpg`, four clusters around the start meadow at (1, 0), (-1, 0), (0, -1) and (-1, 1), each with one longhouse, from `caffeinate -d -u target/release/hex-world --scenario play --script docs/checkpoints/house_longhouse/play.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed` (shots `target/shots/house-variants-*.png`, state `play-state.json`).
++Hero variants (PRD §6 Variety): a hero slot authored as a piece listed in `hex_core::HERO_VARIANTS` may draw one of its variants instead, picked by `hex_core::hero_piece(def, cell, slot)` from a SplitMix64 hash of the cell and the slot index. Today a `house_cottage` slot draws `house_longhouse` or `house_cottage_b` (slate roof, gabled porch, a stack at each gable), the `house_twostorey` slot draws `house_twostorey_b` (jettied, hip-roofed), and the oak tile's `tree_hero_oak` slot draws `tree_hero_oak_b` (forked, east-leaning, a heavy low limb), each slot varying about one time in three (`VARIANT_ONE_IN`); a slot with several variants splits that share evenly (`variants[(h / 3) % n]`), so a cottage slot keeps the cottage two times in three and draws each variant about one time in six, and a house cluster shows any two of the three cottage designs beside a two-storey of either kind. The pick depends on the cell alone, so saves carry nothing for it and a ghost previews the same houses the placed tile draws. Every consumer of a hero piece resolves it through `TileDef::hero_pieces(cell)`: the drawn tile, the ghost, walk obstacles and photo picks, grass exclusions and bird perches. The pack loader and scatter masks, which are per tile and not per cell, take every option of a slot (`TileDef::hero_options`; scatter clears the widest). `hex_core::VARIANT_PICK` switches the rule to one pick per cluster (`PerCluster`) or a fixed slot (`FixedSlot(n)`). `cargo test -p hex-core longhouse_cells -- --ignored --nocapture` prints the picks near the origin. The thumbnail cell, the origin, draws both cottages and `house_twostorey_b`, and the authored `tree_hero_oak`. Evidence: `docs/checkpoints/house_cottage_b/cottage_b-play-overview.jpg`, four clusters around the start meadow at (1, 0), (-1, 0), (0, -1) and (-1, 1); the first three draw `house_cottage_b` in one cottage slot and (-1, 1) draws `house_longhouse`, from `caffeinate -d -u target/release/hex-world --scenario play --script docs/checkpoints/house_cottage_b/play.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed`, which also takes a walk-mode eye-level shot in the (1, 0) yard (`cottage_b-walk-eye.jpg`). The older `docs/checkpoints/house_longhouse/play.jpg` and `play-overview.jpg` show the same four cells before `house_cottage_b` joined the row, each with one longhouse.
+ 
+ The in-world affordances are the Legend direction's (`design/ui/legend/in-world.md`, `crates/hex-play/src/play/affordances.rs`):
+ 
+@@ -336,7 +336,7 @@ Kit content loads by pack (PRD §10, `crates/hex-play/src/play/packs.rs`). Every
+ | `props` | rock_small, wildflower_clump, hay_bale_round, hay_bale_stack, animal_cow, animal_sheep | Scatter props (meadow, pine forest, oak, windmill and farm tile rocks and flowers) and the farm tile's bales and animals. Streamed first |
+ | `forest` | forest_base, tree_forest, tree_oak, fern_clump, log_fallen and their variants; litter, bark | The pine forest and oak tile base and the pine forest's spruce, ferns and fallen log |
+ | `hero` | tree_hero_oak, tree_hero_oak_b (budget class hero) | The oak tile's hero oak and its forked variant (also loads bark) |
+-| `village` | house_pad, house_cottage, house_twostorey, house_longhouse, house_twostorey_b, windmill, barn_red, fence_paddock, wheat_field; plaster | The house cluster (also loads gravel for the driveway), the windmill tile's windmill, the farm tile's barn and paddock fence, and the wheat field (also loads gravel for its earth) |
++| `village` | house_pad, house_cottage, house_twostorey, house_longhouse, house_twostorey_b, house_cottage_b, windmill, barn_red, fence_paddock, wheat_field; plaster | The house cluster (also loads gravel for the driveway), the windmill tile's windmill, the farm tile's barn and paddock fence, and the wheat field (also loads gravel for its earth) |
+ | `water` | ocean_base, ocean_center, river_edge, river_straight_base, river_straight_center, river_bend_base, river_bend_center, river_road_bridge_center, river_spring_base, river_spring_center, the beach family, river_mouth_base, river_mouth_center, river_mouth_l_base, river_mouth_l_center; gravel | Ocean and river pieces; gravel is their seabed and river bed (also loads plaster for the bridge stone) |
+ 
+ - **Core.** The play scenario requests `core` on entry and draws the world once it has loaded. A core piece may sample only core sets (`parse_manifest` rejects it otherwise), and `kit_gate` requires a pack on every runtime entry, core for everything the start tile draws, and no hero-class piece in core.

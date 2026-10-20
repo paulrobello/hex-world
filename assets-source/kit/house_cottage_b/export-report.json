@@ -1,0 +1,35 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/house_cottage_b.py",
+    "sha256": "32c46c7dd6414a2b57392044a943a2406dd00d575c700da17216dcdafa872794"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    },
+    {
+      "path": "scripts/blender/kit/_house_longhouse.py",
+      "sha256": "c4e8805ae0750279370f70cde6c79cec36bf6d734e7c76e56b687c8f5c65a44b"
+    },
+    {
+      "path": "scripts/blender/kit/_house_slate.py",
+      "sha256": "eb0588908913f219e149c6d069fbd9e4b3d52248f79dc421aedbde8177a93ae7"
+    }
+  ],
+  "lodTris": {
+    "house_cottage_b_lod0": 884,
+    "house_cottage_b_lod1": 296,
+    "house_cottage_b_lod2": 64
+  },
+  "nodes": [
+    "house_cottage_b",
+    "house_cottage_b_collider",
+    "house_cottage_b_lod0",
+    "house_cottage_b_lod1",
+    "house_cottage_b_lod2"
+  ],
+  "pieceId": "house_cottage_b",
+  "sockets": []
+}

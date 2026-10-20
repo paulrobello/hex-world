@@ -638,7 +638,8 @@ mod tests {
     }
 
     /// The ghost previews the hero variant the placed tile draws at that cell (`hero_piece`):
-    /// house 1 of a cluster at (1, 0) is the longhouse, at the origin the cottage.
+    /// house 1 of a cluster at (1, 0) is house_cottage_b, at (-3, 0) the longhouse, at the origin
+    /// the cottage.
     #[test]
     fn the_ghost_shows_the_variant_the_cell_draws() {
         let c = PlayCatalog::default();
@@ -658,8 +659,11 @@ mod tests {
             assert_eq!(heroes, drawn, "{cell:?}");
         }
         let at = |q, r| ghost_pieces(def, &c.0, Axial::new(q, r), |_| true);
-        assert!(at(1, 0).iter().any(|(id, ..)| *id == "house_longhouse"));
-        assert!(!at(0, 0).iter().any(|(id, ..)| *id == "house_longhouse"));
+        assert!(at(1, 0).iter().any(|(id, ..)| *id == "house_cottage_b"));
+        assert!(at(-3, 0).iter().any(|(id, ..)| *id == "house_longhouse"));
+        for v in ["house_longhouse", "house_cottage_b"] {
+            assert!(!at(0, 0).iter().any(|(id, ..)| *id == v), "{v}");
+        }
     }
 
     #[test]

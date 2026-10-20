@@ -139,20 +139,23 @@ pub fn kit_layout() -> Vec<Placement> {
     v.push(hero("house_cottage", -1, 0, [-0.5, -7.0], 90.0));
     v.push(hero("house_cottage", -1, 0, [-0.5, 7.0], 270.0));
     v.push(hero("house_twostorey", -1, 0, [-7.5, 0.0], 0.0));
-    // The third house variant (house_longhouse) in a second house_cluster on (-1, -1): its edge-0
-    // road stub meets the wide bend's world-edge-3 stub on (0, -1). The longhouse stands in house
-    // 0's slot (yawed 90, front toward the yard), the cottage and the two-storey in the others, and a
-    // sedan is parked at park-0 (`PARK` in scripts/blender/kit/house_pad.py), on the gravel.
+    // The cottage slots' variants in a second house_cluster on (-1, -1): its edge-0 road stub meets
+    // the wide bend's world-edge-3 stub on (0, -1). house_longhouse stands in house 0's slot (yawed
+    // 90, front toward the yard) and house_cottage_b in house 1's across the yard (yawed 270), the
+    // two-storey closes the yard, and sedans are parked at park-0 and park-1 (`PARK` in
+    // scripts/blender/kit/house_pad.py), on the gravel.
     v.push(place("meadow_base", -1, -1, 0));
     v.push(place("house_pad", -1, -1, 0));
     v.push(place("road_straight_edge", -1, -1, 0));
     v.push(hero("house_longhouse", -1, -1, [-0.5, -7.0], 90.0));
-    v.push(hero("house_cottage", -1, -1, [-0.5, 7.0], 270.0));
+    v.push(hero("house_cottage_b", -1, -1, [-0.5, 7.0], 270.0));
     v.push(hero("house_twostorey", -1, -1, [-7.5, 0.0], 0.0));
-    v.push(Placement {
-        y: PARK_Y,
-        ..hero("car_sedan", -1, -1, [-1.0, -2.6], 180.0)
-    });
+    for z in [-2.6, 2.6] {
+        v.push(Placement {
+            y: PARK_Y,
+            ..hero("car_sedan", -1, -1, [-1.0, z], 180.0)
+        });
+    }
     // The two-storey variant (house_twostorey_b) in a third house_cluster on (1, -2) at rot 1: its
     // road stub (local edge 0, world edge 1) meets the Y junction's world-edge-4 stub on (1, -1). It
     // stands in house 2's slot, its front turned to world yaw 60 toward the kit sun, between the two
@@ -862,6 +865,11 @@ mod tests {
                 .any(|p| p.piece == "road_straight_edge" && p.cell == bend && p.rot == 3)
         );
         assert_eq!((lh.offset, lh.yaw_deg), ([-0.5, -7.0], 90.0));
+        let cb = l.iter().find(|p| p.piece == "house_cottage_b").unwrap();
+        assert_eq!(
+            (cb.cell, cb.offset, cb.yaw_deg),
+            (lh.cell, [-0.5, 7.0], 270.0)
+        );
     }
 
     #[test]

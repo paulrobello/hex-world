@@ -8,7 +8,7 @@ use crate::{Axial, HeroProp, TileDef};
 /// Each authored hero piece with the variants a slot of it may draw instead. A new variant is one
 /// more id in its row; a new family is one more row.
 pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
-    ("house_cottage", &["house_longhouse"]),
+    ("house_cottage", &["house_longhouse", "house_cottage_b"]),
     ("house_twostorey", &["house_twostorey_b"]),
     ("tree_hero_oak", &["tree_hero_oak_b"]),
     ("hay_bale_round", &["hay_bale_round_b"]),
@@ -140,7 +140,7 @@ mod tests {
         "house_cottage",
         "house_cottage",
         "house_cottage",
-        "house_longhouse",
+        "house_cottage_b",
         "house_cottage",
     ];
 
@@ -161,22 +161,31 @@ mod tests {
     fn some_cottage_slots_draw_the_longhouse_and_most_keep_the_cottage() {
         let c = TileCatalog::builtin().unwrap();
         let def = c.get("house_cluster").unwrap();
-        let (mut cottage, mut longhouse) = (0, 0);
+        let (mut cottage, mut longhouse, mut cottage_b) = (0, 0, 0);
         let (mut twostorey, mut twostorey_b) = (0, 0);
         for cell in cells() {
             for (i, (h, piece)) in def.hero_pieces(cell).enumerate() {
                 match (h.piece.as_str(), piece) {
                     ("house_cottage", "house_cottage") => cottage += 1,
                     ("house_cottage", "house_longhouse") => longhouse += 1,
+                    ("house_cottage", "house_cottage_b") => cottage_b += 1,
                     ("house_twostorey", "house_twostorey") => twostorey += 1,
                     ("house_twostorey", "house_twostorey_b") => twostorey_b += 1,
                     (a, b) => assert_eq!(a, b, "slot {i} at {cell:?}"),
                 }
             }
         }
-        let share = longhouse as f32 / (cottage + longhouse) as f32;
-        assert!((0.28..0.39).contains(&share), "longhouse share {share}");
-        assert!(cottage > longhouse);
+        // About one cottage slot in three varies, split evenly between the two variants.
+        let all = (cottage + longhouse + cottage_b) as f32;
+        let share = (longhouse + cottage_b) as f32 / all;
+        assert!(
+            (0.28..0.39).contains(&share),
+            "cottage variant share {share}"
+        );
+        for (n, v) in [("longhouse", longhouse), ("cottage_b", cottage_b)] {
+            let share = v as f32 / all;
+            assert!((0.13..0.2).contains(&share), "{n} share {share}");
+        }
         let share = twostorey_b as f32 / (twostorey + twostorey_b) as f32;
         assert!((0.28..0.39).contains(&share), "twostorey_b share {share}");
         assert!(twostorey > twostorey_b);

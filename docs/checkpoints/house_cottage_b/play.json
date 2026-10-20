@@ -1,0 +1,17 @@
+[
+  {"cmd": "camera", "pos": [0, 70, 80], "look_at": [0, 0, 0]},
+  {"cmd": "select_tile", "id": "house_cluster"},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "place", "q": -1, "r": 0},
+  {"cmd": "place", "q": 0, "r": -1},
+  {"cmd": "place", "q": -1, "r": 1},
+  {"cmd": "dump_state", "name": "cottage_b-play-placed"},
+  {"cmd": "wait", "frames": 240},
+  {"cmd": "screenshot", "name": "cottage_b-play-overview"},
+  {"cmd": "walk", "on": true, "pointer_lock": null},
+  {"cmd": "walk_to", "x": 24.5, "z": -1.0, "heading": 160, "pitch": 4},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "cottage_b-walk-eye"},
+  {"cmd": "dump_state", "name": "cottage_b-walk-state"},
+  {"cmd": "exit"}
+]

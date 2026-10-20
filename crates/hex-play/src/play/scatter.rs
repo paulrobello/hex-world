@@ -371,6 +371,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
             crown: 0.0,
         },
     ),
+    (
+        "house_cottage_b",
+        Footprint {
+            ground: 4.21,
+            crown: 0.0,
+        },
+    ),
     // The tower trunk only: the sails turn overhead, from 3.7 m up.
     (
         "windmill",
@@ -602,6 +609,13 @@ pub const GROUND_BOXES: &[(&str, GroundBox)] = &[
         GroundBox {
             min: [-2.75, -3.75],
             max: [2.75, 3.75],
+        },
+    ),
+    (
+        "house_cottage_b",
+        GroundBox {
+            min: [-2.5, -3.38],
+            max: [2.5, 3.38],
         },
     ),
     (

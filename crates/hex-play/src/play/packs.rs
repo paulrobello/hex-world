@@ -374,6 +374,7 @@ mod tests {
         for piece in [
             "house_cottage",
             "house_longhouse",
+            "house_cottage_b",
             "house_twostorey",
             "house_twostorey_b",
         ] {

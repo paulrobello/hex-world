@@ -4,10 +4,10 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## State
 
-- `main` pushed through `576760e`; every push on 2026-10-20 passed CI and auto-deployed to hex-world.pardev.net. Count unpushed with `git log --oneline origin/main..main`.
+- `main` pushed and every 2026-10-20 push passed CI and auto-deployed to hex-world.pardev.net. Count unpushed with `git log --oneline origin/main..main`; check the last run with `gh run list -R paulrobello/hex-world --branch main --limit 1`.
 - `dist/` rebuilt from `main` after every merge (`make build-web`).
-- Working tree clean apart from an untracked `.claude/launch.json` (leave it).
-- Work still running when this was written (the session lands each one, then stops; see "In flight" below for what to do if one is still open).
+- Working tree clean apart from an untracked `.claude/launch.json` (leave it). No worktrees, no agents running.
+- Piece tables are slices now (`&[T]`), so a new asset adds a row without touching a length line.
 
 ## Landed 2026-10-19 evening to 2026-10-20 (all pushed)
 
@@ -15,19 +15,18 @@ Assets (every piece's owner approval is still **pending**; review sheets under `
 - Rail: river rail bridge `d6eb22a` (plus the train, crossing, station, junction from 2026-10-19).
 - Houses: `house_longhouse` `de3bf7e`, `house_twostorey_b` `885458b`, drawn through the hero variant resolver `e24a97c` (`crates/hex-core/src/variant.rs` `HERO_VARIANTS`, about one slot in three).
 - Oak tile: scattered `tree_oak`/`tree_oak_b` `2b6919b`; hero variant `tree_hero_oak_b` `36aa4a4` (12 bird perches).
-- Pine forest floor: ferns and log `261dc10`, variants `4aadbfb`, shrub and sapling `8eafaac`, `shrub_forest_b` (holly) `9f7ae7c`, `sapling_spruce_b` `576760e`.
+- Pine forest floor: ferns and log `261dc10`, variants `4aadbfb`, shrub and sapling `8eafaac`, `shrub_forest_b` (holly) `9f7ae7c`, `sapling_spruce_b` `576760e`, `log_fallen_c` (hollow log).
+- Houses (late): `house_cottage_b`, a slate-roofed rendered cottage with a gabled porch; the cottage slot now splits its one-in-three variant between the longhouse and `_b` (about 1/6 each).
+- Tooling: piece tables as slices (card `01a15994825570`).
 - Farm: paddock fence in play `f865be6` (per-part walker colliders, post-only grass clears, line-clear scatter), grazing cow and lamb `ae8e404`, hay bale variants `2da86b8`, grazing sheep `12d0d8d`.
 - Roads: verge bushes `bush_verge` `b8ad8e6` and `bush_verge_b` `8c5ad9b` (verge band scatter, none on parking tiles).
 - Audio: 13 one-shot cues for farm, windmill, wheat, bakery and train `2f40c53` (owner approves by ear on `assets-source/audio/review.html`).
 
-## In flight at handoff (check each before starting anything)
+## In flight at handoff
 
-Agents ran in isolated worktrees under `.claude/worktrees/`. `git worktree list` shows any still present.
-1. **Piece tables as slices**, card `01a15994825570` (in progress): converts `OBSTACLES`, `FOOTPRINTS`, `VARIANTS`, `HERO_VARIANTS` and the kit layout tables from `[T; N]` to slices so parallel landings stop conflicting on the length line. Branch `worktree-agent-a24bd8c2545fe7a62`.
-2. **`log_fallen_c`**, a third fallen-log variant (Blender). Branch `worktree-agent-ad94838191ee02eb8`. Integration in its `docs/checkpoints/log_fallen_c/integration.patch`.
-3. **`house_cottage_b`**, a second cottage variant (Blender). Branch `worktree-agent-a71f694128230ad81`. Integration in `docs/checkpoints/house_cottage_b/integration.patch` (adds to `HERO_VARIANTS`).
+Nothing. Every agent finished and landed: the piece tables are slices (card `01a15994825570` done), `log_fallen_c` and `house_cottage_b` are on main. `git worktree list` should show only the main checkout.
 
-If a branch is still present in a new session, its agent did not finish or was not landed. Landing recipe (the one used all session):
+Landing recipe for future asset agents (the one used all session):
 1. `git -C <worktree> merge main`, then `git apply --3way docs/checkpoints/<piece>/integration.patch`, resolve, `cargo test -p hex-play -p hex-render --lib`, commit on the branch.
 2. `caffeinate -d -u make thumbs` in the worktree; keep only the tiles the piece changes; discard the rest (water and grass animate).
 3. `make checkall-ci > log 2>&1; echo EXIT=$?`, then squash-merge into `main`, `make build-web`, remove the worktree (`git worktree unlock` first if a finished agent left it locked), delete the branch, push, watch CI with `gh run watch <id> --exit-status`.
@@ -51,6 +50,7 @@ All pieces landed since 2026-10-19 await look approval (sheets in `docs/checkpoi
 - Houses: Q29 longhouse per slot or fixed slot; Q30 one box or two for the L-plan; Q40 house_cluster thumbnails show variants (done) or the canonical houses; Q41 flagstone apron under the jetty.
 - Oak: Q49 `_b` 0.27 m taller than the hero; Q50 random yaw for the oak tile hero.
 - Farm: Q36 close the paddock gate; Q37 tinted rails or wood grain; Q38 paddock south of the yard or round it; Q39 three rails or two; Q42 grazing cow placement (3.9 cm float kept) or move the original cow; Q43 and Q59 grass clear under grazing muzzles (shrink or offset the disc); Q44 lamb texture to 512; Q55 fix the round bale's sector seams; Q56 stack_b top bale crosswise or along; Q57 grazing sheep placement (2.8 cm) or move the lamb; Q58 narrower hood so the grazing sheep's black face shows from above.
+- Late: Q63 the third log changes the forest pick from 1-in-2 to 1-in-3, so logs, shrubs and saplings move on some seeds; Q64 existing worlds change look (about half the former longhouse cells now draw `house_cottage_b`); Q65 the walker passes through cottage porch posts.
 - Roads: Q51 shrink the 1024 shrub atlas (re-bakes `shrub_forest`); Q52 verge bush density (about 4 per straight tile); Q53 verge bushes on house/bakery tiles after parking-path clearance; Q54 verge bush variant mix.
 - Older queues: `docs/review/2026-10-19-owner-queue.md` (Q1-Q12) and `docs/review/2026-10-14-owner-queue.md`.
 

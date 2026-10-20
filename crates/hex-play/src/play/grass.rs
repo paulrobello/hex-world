@@ -1741,22 +1741,29 @@ mod tests {
     }
 
     /// The houses clear their collider rectangle, turned by each one's yaw, and grass grows within
-    /// 0.6 m of every long wall: at the origin (both cottages) and at (1, 0), where house 1 draws
-    /// the longhouse, so the exclusion box is the drawn piece's.
+    /// 0.6 m of every long wall: at the origin (both cottages), at (-3, 0), where house 1 draws
+    /// the longhouse, and at (1, 0), where it draws house_cottage_b, so the exclusion box is the
+    /// drawn piece's.
     #[test]
     fn grass_grows_along_house_walls() {
         let c = TileCatalog::builtin().unwrap();
         let mut def = c.get("meadow").unwrap().clone();
         def.props.hero = c.get("house_cluster").unwrap().props.hero.clone();
-        for (cell, longhouses) in [(Axial::ORIGIN, 0), (Axial::new(1, 0), 1)] {
+        for (cell, variant) in [
+            (Axial::ORIGIN, None),
+            (Axial::new(-3, 0), Some("house_longhouse")),
+            (Axial::new(1, 0), Some("house_cottage_b")),
+        ] {
             let bands = hero_grass(&def, cell);
             println!("{bands:?}");
             assert_eq!(bands.len(), 3, "{bands:?}");
-            assert_eq!(
-                bands.iter().filter(|(p, _)| p == "house_longhouse").count(),
-                longhouses,
-                "{bands:?}"
-            );
+            for v in ["house_longhouse", "house_cottage_b"] {
+                assert_eq!(
+                    bands.iter().filter(|(p, _)| p == v).count(),
+                    usize::from(variant == Some(v)),
+                    "{bands:?}"
+                );
+            }
             for (piece, walls) in &bands {
                 assert!(walls.iter().all(|&n| n >= 30), "{piece} walls {walls:?}");
             }
