@@ -60,7 +60,9 @@ import {
   oneShotStep,
   pickEmitters,
   pickOneShotTile,
+  PLACE_SLOSH,
   pickVariant,
+  placementPool,
   resolveOneShot,
   SHOP_BELL,
   TRAIN_CUES,
@@ -94,6 +96,8 @@ const WAIT_FOR_STAGE: Record<string, string> = { "place-thunk": "settled" };
 const RADIUS: number = schema.catalog.hex_radius;
 const BIOME_OF = new Map<string, Biome>(schema.catalog.tiles.map((t) => [t.id, biomeOf(t.id, t.edges)]));
 const CUES_OF = new Map<string, string[]>(schema.catalog.tiles.map((t) => [t.id, emitterCues(t.id, t.edges)]));
+/** Per tile def, the extra pool its placement plays with the thunk: the slosh for water tiles. */
+const PLACE_POOL_OF = new Map(schema.catalog.tiles.map((t) => [t.id, placementPool(t.edges)]));
 /** Per one-shot row, the tile defs it may play at. */
 const ONE_SHOT_DEFS = new Map(ONE_SHOTS.map((row) => [row.name, oneShotDefs(row, schema.catalog.tiles)]));
 
@@ -169,6 +173,8 @@ interface Pending {
   deadline: number;
   /** Sinks at the cell to let pass: a replace sinks the old tile before the new one settles. */
   skipSinks: number;
+  /** A water tile's slosh variant, played with the thunk as the tile settles. */
+  slosh: string | null;
 }
 
 export interface AudioDebug {
@@ -255,6 +261,8 @@ export interface AudioDebug {
    * demand too), the last variant and spot, and why the last due bell was dropped. `shops` counts bakeries in play.
    */
   shopBell: Omit<BellState, "pending"> & { pool: string; variants: string[]; pending: number; shops: number };
+  /** The water slosh a placed water tile plays with the thunk: its pool's variants, plays and the last variant. */
+  placeSlosh: { pool: string; variants: string[]; plays: number; lastCue: string | null };
 }
 
 /** What `audio.play(name)` did: the variant played and where, or why nothing played. */
@@ -330,6 +338,11 @@ export class GameAudio {
   private parks: Omit<BellRequest, "dueAt">[] = [];
   /** The shop-bell pool's variants from the manifest, in manifest order. */
   private bellVariants: string[] = [];
+  /** The place-slosh pool's variants, and its plays and last variant. */
+  private sloshVariants: string[] = [];
+  private slosh = { plays: 0, lastCue: null as string | null };
+  /** The slosh last picked, at the event: several placements can wait for their settle at once. */
+  private sloshPicked: string | null = null;
   /** Shop tiles in play at the last update, by cell key. */
   private shops = new Map<string, OneShotTile>();
   private recent: Fired[] = [];
@@ -407,6 +420,7 @@ export class GameAudio {
       for (const { pool } of Object.values(TRAIN_CUES))
         this.trainPools.set(pool, resolveOneShot(pool, m.cues, [])?.variants ?? []);
       this.bellVariants = resolveOneShot(SHOP_BELL.pool, m.cues, [])?.variants ?? [];
+      this.sloshVariants = resolveOneShot(PLACE_SLOSH.pool, m.cues, [])?.variants ?? [];
       const probe = document.createElement("audio");
       this.format = pickFormat(m.formats, (mime) => probe.canPlayType(mime));
       if (!this.format) throw new Error("no playable audio format");
@@ -512,6 +526,7 @@ export class GameAudio {
             r: at.r,
             deadline: ctx.currentTime + SETTLE_TIMEOUT_S,
             skipSinks: e.type === "tileReplaced" ? 1 : 0,
+            slosh: "tile" in e && PLACE_POOL_OF.get(e.tile) ? this.pickSlosh() : null,
           });
           continue;
         }
@@ -529,8 +544,25 @@ export class GameAudio {
       else this.pending.delete(key(q, r));
     } else if (stage === WAIT_FOR_STAGE[p.id]) {
       this.pending.delete(key(q, r));
-      this.play(p.id, p.event, p, 1);
+      this.settle(p);
     }
+  }
+
+  /** A decoded slosh variant, never the last one twice in a row; null before the pool decodes. */
+  private pickSlosh(): string | null {
+    const ids = this.sloshVariants.filter((id) => this.buffers.has(id));
+    const id = pickVariant(ids, this.sloshPicked, Math.random);
+    if (id) this.sloshPicked = id;
+    return id;
+  }
+
+  /** The held thunk, and a water tile's slosh under it at a share of the placement level. */
+  private settle(p: Pending): void {
+    this.play(p.id, p.event, p, 1);
+    if (!p.slosh) return;
+    const level = this.view ? this.placementLevel(p.q, p.r, this.view) : 1;
+    this.play(p.slosh, p.event, p, 1, level * PLACE_SLOSH.level, false);
+    this.slosh = { plays: this.slosh.plays + 1, lastCue: p.slosh };
   }
 
   private play(
@@ -659,7 +691,7 @@ export class GameAudio {
     for (const [k, p] of this.pending)
       if (ctx.currentTime > p.deadline) {
         this.pending.delete(k);
-        this.play(p.id, p.event, p, 1);
+        this.settle(p);
       }
   }
 
@@ -975,9 +1007,10 @@ export class GameAudio {
     if (!res) return { played: null, reason: "unknown-cue" };
     const st = res.row ? (this.oneShots.get(res.row.name) ?? oneShotIdle()) : null;
     const bell = res.pool === SHOP_BELL.pool;
+    const slosh = res.pool === PLACE_SLOSH.pool;
     const cue = pickVariant(
       res.variants.filter((id) => this.buffers.has(id)),
-      (bell ? this.bell.lastCue : st?.lastCue) ?? null,
+      (bell ? this.bell.lastCue : slosh ? this.sloshPicked : st?.lastCue) ?? null,
       Math.random,
     );
     if (!cue) return { played: null, reason: "not-loaded" };
@@ -990,6 +1023,10 @@ export class GameAudio {
     this.play(cue, "play", at, 1, level, false);
     if (bell)
       this.bell = { ...this.bell, lastAt: ctx.currentTime, lastTile: at, lastCue: cue, plays: this.bell.plays + 1 };
+    if (slosh) {
+      this.sloshPicked = cue;
+      this.slosh = { plays: this.slosh.plays + 1, lastCue: cue };
+    }
     if (res.row && st)
       this.oneShots.set(res.row.name, {
         ...st,
@@ -1191,6 +1228,12 @@ export class GameAudio {
         plays: this.bell.plays,
         gatedBy: this.bell.gatedBy,
         shops: this.shops.size,
+      },
+      placeSlosh: {
+        pool: PLACE_SLOSH.pool,
+        variants: [...this.sloshVariants],
+        plays: this.slosh.plays,
+        lastCue: this.slosh.lastCue,
       },
     };
   }

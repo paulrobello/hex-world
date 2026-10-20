@@ -51,7 +51,9 @@ import {
   oneShotStep,
   pickEmitters,
   pickOneShotTile,
+  PLACE_SLOSH,
   pickVariant,
+  placementPool,
   resolveOneShot,
   SHOP_BELL,
   TRAIN_CUES,
@@ -814,6 +816,27 @@ test("P3 pools ship as decoded ambience one-shots; the train pools are mastered 
   for (const pool of ["train-whistle", "train-chuff", "shop-bell"])
     assert.ok(!ONE_SHOTS.some((r) => r.pool === pool), `${pool} has no timer row`);
   assert.equal(resolveOneShot("train-whistle", manifest.cues)?.row, null, "on demand only, non-positional");
+});
+
+test("placement: a water tile selects the slosh pool and a land tile does not", () => {
+  const edges = new Map(schema.catalog.tiles.map((t) => [t.id, t.edges]));
+  const poolOf = (id: string) => placementPool(edges.get(id)!);
+  const water = ["river_straight", "river_bend", "river_spring", "river_road_bridge", "river_rail_bridge"];
+  water.push("beach", "beach_outer", "beach_inner", "river_mouth", "river_mouth_l", "ocean");
+  for (const id of water) assert.equal(poolOf(id), PLACE_SLOSH.pool, `${id} sloshes`);
+  const land = ["meadow", "forest", "oak", "farm", "windmill", "wheat_field", "house_cluster", "bakery"];
+  land.push("road_straight", "road_bend_120", "road_bend_60", "road_junction");
+  land.push("rail_straight", "rail_bend_60", "rail_junction", "rail_station", "rail_road_crossing");
+  for (const id of land) assert.equal(poolOf(id), null, `${id} has no slosh`);
+  assert.equal(water.length + land.length, schema.catalog.tiles.length, "every catalog tile is classified");
+  const variants = manifest.cues.filter((c) => c.pool === PLACE_SLOSH.pool);
+  assert.ok(variants.length >= 2, "the slosh pool has variants");
+  for (const c of variants) {
+    assert.ok(c.status === "mastered" && !c.loop && c.playback === "decode", `${c.id} is a decoded one-shot`);
+    assert.equal(busOf(c), "effects", `${c.id} plays on the effects bus with the thunk`);
+    assert.deepEqual(c.events, [], `${c.id} is routed by the runtime, so a land placement never plays it`);
+  }
+  assert.ok(!ONE_SHOTS.some((r) => r.pool === PLACE_SLOSH.pool), "no timer row");
 });
 
 const park = (q: number, r: number) => {

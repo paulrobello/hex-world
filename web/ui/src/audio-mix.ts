@@ -663,6 +663,22 @@ export function trainStep(
   return { state: s, play };
 }
 
+// ---------- Placement slosh (water tiles) ----------
+
+/**
+ * The water slosh a placed water tile plays with the place-thunk as it settles (owner request, 2026-10-20):
+ * its pool and its level as a share of the thunk's placement level, so it sits under the thunk.
+ */
+export const PLACE_SLOSH = { pool: "place-slosh", level: 0.7 } as const;
+
+/** A tile def carries water when any edge is river, sea or beach: rivers, bridges, springs, coasts, the ocean. */
+export const isWaterTile = (edges: readonly string[]): boolean =>
+  edges.some((e) => e === "River" || e === "Ocean" || e === "Beach");
+
+/** The extra pool a placement of this tile def plays as it settles: the slosh for water, none on land. */
+export const placementPool = (edges: readonly string[]): string | null =>
+  isWaterTile(edges) ? PLACE_SLOSH.pool : null;
+
 // ---------- Shop bell (P3 bakery) ----------
 
 /** The bell a car's visit rings at a shop: its pool, the tile def that is a shop, its level and its lag. */

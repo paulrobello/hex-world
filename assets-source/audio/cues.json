@@ -5,8 +5,8 @@
   "masterTruePeak": -2.0,
   "lufsTolerance": 1.0,
   "decodedBudgetBytes": 96000000,
-  "generationCap": 53,
-  "generationCapNote": "Owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
+  "generationCap": 56,
+  "generationCapNote": "Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: the cap was raised from 53 by at most 6 for the place-slosh pool (three short one-shots, at most two attempts each). Three were spent (attempts 54-56, 60 credits), one first take per variant, all passing the floor criterion, so the cap is set to the 56 attempts logged. Before that, owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
   "classes": {
     "music": {
       "lufs": -18,
@@ -80,6 +80,166 @@
         "durationSeconds": 0.6,
         "promptInfluence": 0.6,
         "loop": false
+      }
+    },
+    {
+      "id": "place-slosh-1",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "place-slosh",
+      "use": "One water slosh of the place-slosh pool: positional at a newly placed water tile (River, Ocean or Beach edges) as it settles, with the place-thunk, on the effects bus, or on demand (hexWorld.audio.play). The runtime routes it (PLACE_SLOSH in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a small splash of water: a cupful of water tipped into a shallow stone pool, one soft rounded slosh that ripples and settles into stillness within about a second. Natural, gentle, close miniature scale. Studio-quiet background, with silence before and after the splash. No music, no hum, no voices.",
+        "durationSeconds": 2.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "lowpassHz": 9000,
+        "stages": 2
+      },
+      "review": {
+        "round": 4,
+        "roundNote": "Owner request 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: a pool of short water sloshes that plays with the place-thunk when a tile with River, Ocean or Beach edges settles. At most two ElevenLabs attempts per variant.",
+        "filterApplied": "high-pass 60 Hz and low-pass 9 kHz, two stages: the droplet tail would otherwise leave a hiss floor",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/place-slosh-1.webm (scripts/audio/screen.py --floor), after the filter; the birds detector fires on droplet transients, not birds",
+          "below300HzPct": 0.1,
+          "band300to8kPct": 98.9,
+          "above8kPct": 1.0,
+          "band1to6kVsFullDb": -2.1,
+          "levelDeepestDipDb": 9.0,
+          "levelSpreadDb": 11.8,
+          "tone200HzSeriesMaxDb": 14.6,
+          "otherTonalPeaks": [
+            {
+              "hz": 2900,
+              "db": 12.7
+            },
+            {
+              "hz": 1699,
+              "db": 10.6
+            }
+          ],
+          "birdChirpEvents": 2,
+          "birds": false,
+          "floorBelowPeakDb": 45.3,
+          "floorBandPct": {
+            "below1500": 81.0,
+            "1500to9k": 18.7,
+            "above9k": 0.4
+          }
+        }
+      }
+    },
+    {
+      "id": "place-slosh-2",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "place-slosh",
+      "use": "One water slosh of the place-slosh pool: positional at a newly placed water tile (River, Ocean or Beach edges) as it settles, with the place-thunk, on the effects bus, or on demand (hexWorld.audio.play). The runtime routes it (PLACE_SLOSH in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of water sloshing once in a shallow wooden basin as it is set down on a table: a soft swash and a few small lapping ripples settling to calm in about one second. Natural and gentle. Studio-quiet background, with silence before and after. No music, no hum, no dripping.",
+        "durationSeconds": 2.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "lowpassHz": 9000,
+        "stages": 2
+      },
+      "review": {
+        "round": 4,
+        "roundNote": "Owner request 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: a pool of short water sloshes that plays with the place-thunk when a tile with River, Ocean or Beach edges settles. At most two ElevenLabs attempts per variant.",
+        "filterApplied": "high-pass 60 Hz and low-pass 9 kHz, two stages: the droplet tail would otherwise leave a hiss floor",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/place-slosh-2.webm (scripts/audio/screen.py --floor), after the filter; the birds detector fires on droplet transients, not birds",
+          "below300HzPct": 6.9,
+          "band300to8kPct": 93.1,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -1.1,
+          "levelDeepestDipDb": 5.9,
+          "levelSpreadDb": 8.6,
+          "tone200HzSeriesMaxDb": 14.1,
+          "otherTonalPeaks": [
+            {
+              "hz": 3498,
+              "db": 14.0
+            },
+            {
+              "hz": 7148,
+              "db": 12.6
+            },
+            {
+              "hz": 11150,
+              "db": 11.9
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "floorBelowPeakDb": 45.7,
+          "floorBandPct": {
+            "below1500": 70.5,
+            "1500to9k": 29.0,
+            "above9k": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "place-slosh-3",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "place-slosh",
+      "use": "One water slosh of the place-slosh pool: positional at a newly placed water tile (River, Ocean or Beach edges) as it settles, with the place-thunk, on the effects bus, or on demand (hexWorld.audio.play). The runtime routes it (PLACE_SLOSH in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a little wave of water rolling into a shallow stream bed and settling: a brief soft gurgling slosh with a light ripple tail, about one second, fading to silence. Natural and gentle. Studio-quiet background, with silence before and after. No music, no hum.",
+        "durationSeconds": 2.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "lowpassHz": 9000,
+        "stages": 2
+      },
+      "review": {
+        "round": 4,
+        "roundNote": "Owner request 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: a pool of short water sloshes that plays with the place-thunk when a tile with River, Ocean or Beach edges settles. At most two ElevenLabs attempts per variant.",
+        "filterApplied": "high-pass 60 Hz and low-pass 9 kHz, two stages: the droplet tail would otherwise leave a hiss floor",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/place-slosh-3.webm (scripts/audio/screen.py --floor), after the filter; the birds detector fires on droplet transients, not birds",
+          "below300HzPct": 0.2,
+          "band300to8kPct": 99.8,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -7.2,
+          "levelDeepestDipDb": 14.1,
+          "levelSpreadDb": 17.2,
+          "tone200HzSeriesMaxDb": 16.7,
+          "otherTonalPeaks": [],
+          "birdChirpEvents": 8,
+          "birds": true,
+          "floorBelowPeakDb": 42.9,
+          "floorBandPct": {
+            "below1500": 60.5,
+            "1500to9k": 34.2,
+            "above9k": 5.3
+          }
+        }
       }
     },
     {

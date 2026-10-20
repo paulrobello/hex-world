@@ -191,6 +191,9 @@ try {
   a = await audio();
   check(a.lastCue?.id === "ui-bulldoze", `lastCue reports the latest cue (${a.lastCue?.id})`);
   save("events", a);
+  const sloshes = manifest.cues.filter((c) => c.pool === "place-slosh").map((c) => c.id);
+  check(sloshes.length >= 2 && JSON.stringify(a.placeSlosh?.variants) === JSON.stringify(sloshes)
+    && a.placeSlosh.plays === 0, `land placements play no slosh ${JSON.stringify(a.placeSlosh)}`);
 
   // A river of six straights heading west, away from the start meadow.
   const river = await page.evaluate(async () => {
@@ -216,6 +219,10 @@ try {
     return { cells };
   });
   check(river?.cells?.length === 6, `six river tiles placed ${JSON.stringify(river)}`);
+  await until(async () => (await audio()).placeSlosh?.plays >= 1, "a river tile sloshes as it settles", 6_000);
+  a = await audio();
+  check(sloshes.includes(a.placeSlosh.lastCue) && a.placeSlosh.plays <= river.cells.length,
+    `the water placements play slosh variants ${JSON.stringify(a.placeSlosh)}`);
   const near = river.cells[0];
   const end = river.cells.at(-1);
   const gainAt = (s, c) => s.emitters.find((e) => e.cue === "river-babble" && e.q === c.q && e.r === c.r)?.gain ?? 0;

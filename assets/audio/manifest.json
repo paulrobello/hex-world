@@ -65,6 +65,87 @@
       "provenance": "assets-source/audio/sfx/place-thunk/provenance.json"
     },
     {
+      "id": "place-slosh-1",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "place-slosh",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.0,
+      "decodedBytes": 384000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/place-slosh-1.webm",
+          "sha256": "8510bd8aed8df7d4f0047c2b100aa5565dfc7dac40599e964aafe83fbea17d40",
+          "bytes": 17200
+        },
+        "m4a": {
+          "path": "sfx/place-slosh-1.m4a",
+          "sha256": "727665273c8321a0bf46157a2f6e84be7c5c6376a75307c98ff16e3a8fec1264",
+          "bytes": 38364
+        }
+      },
+      "provenance": "assets-source/audio/sfx/place-slosh-1/provenance.json"
+    },
+    {
+      "id": "place-slosh-2",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "place-slosh",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.811875,
+      "decodedBytes": 347880,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/place-slosh-2.webm",
+          "sha256": "208a2af683f50417f6168cb4b9aed7f7d094921295de0abd4ee25daf9ac16f92",
+          "bytes": 15077
+        },
+        "m4a": {
+          "path": "sfx/place-slosh-2.m4a",
+          "sha256": "b69e6da0e6ed6d5778307e5794147154129985c7de38065b3b218a3346f5c6b8",
+          "bytes": 34116
+        }
+      },
+      "provenance": "assets-source/audio/sfx/place-slosh-2/provenance.json"
+    },
+    {
+      "id": "place-slosh-3",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "place-slosh",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.0,
+      "decodedBytes": 384000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/place-slosh-3.webm",
+          "sha256": "f91a22d8c7286fa3bcf03e09d94eb75b662fede8ba48788e8e9e68b94ed17345",
+          "bytes": 17389
+        },
+        "m4a": {
+          "path": "sfx/place-slosh-3.m4a",
+          "sha256": "e395fbb87348c817e0a5bcf7a824b248a867f9f59134f5e45d704cf93e3c3906",
+          "bytes": 38638
+        }
+      },
+      "provenance": "assets-source/audio/sfx/place-slosh-3/provenance.json"
+    },
+    {
       "id": "ui-select",
       "kind": "sfx",
       "class": "ui",

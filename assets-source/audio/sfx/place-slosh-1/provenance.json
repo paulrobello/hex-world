@@ -1,0 +1,225 @@
+{
+  "cueId": "place-slosh-1",
+  "kind": "sfx",
+  "class": "sfx",
+  "version": 1,
+  "use": "One water slosh of the place-slosh pool: positional at a newly placed water tile (River, Ocean or Beach edges) as it settles, with the place-thunk, on the effects bus, or on demand (hexWorld.audio.play). The runtime routes it (PLACE_SLOSH in web/ui/src/audio-mix.ts), so it lists no event.",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Close, isolated recording of a small splash of water: a cupful of water tipped into a shallow stone pool, one soft rounded slosh that ripples and settles into stillness within about a second. Natural, gentle, close miniature scale. Studio-quiet background, with silence before and after the splash. No music, no hum, no voices.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Close, isolated recording of a small splash of water: a cupful of water tipped into a shallow stone pool, one soft rounded slosh that ripples and settles into stillness within about a second. Natural, gentle, close miniature scale. Studio-quiet background, with silence before and after the splash. No music, no hum, no voices.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 2.0,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "dedc3bad5accab80dd0275a8b831ec8d",
+    "generatedAt": "2026-10-20T22:51:06+00:00",
+    "attempt": 54,
+    "creditsCharged": 20,
+    "record": {
+      "path": "assets-source/audio/sfx/place-slosh-1/generation.json",
+      "sha256": "7c265795987a6df1634a44b2bc801e56e8063320e1bc78f7ca617c28f83c4f1d",
+      "bytes": 2176
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/sfx/place-slosh-1/place-slosh-1.mp3",
+    "sha256": "6db5df0b2b6b04a51b4da3fdf79290b2986c40c97f0ad02569774701a0ac6426",
+    "bytes": 33061,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 2.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -37.0,
+      "lra": 0.0,
+      "truePeak": -13.4
+    },
+    "master": {
+      "integrated": -16.2,
+      "lra": 0.0,
+      "truePeak": -2.1
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.1,
+        "lra": 0.0,
+        "truePeak": -1.5
+      },
+      "m4a": {
+        "integrated": -16.2,
+        "lra": 0.0,
+        "truePeak": -1.8
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 60,
+        "lowpassHz": 9000,
+        "stages": 2
+      },
+      "chain": "highpass=f=60:poles=2,highpass=f=60:poles=2,lowpass=f=9000:poles=2,lowpass=f=9000:poles=2",
+      "circularPadFrames": 0
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -37.3,
+        "lra": 0.0,
+        "truePeak": -14.4
+      },
+      "targetLufs": -16.0,
+      "gainDb": 21.3,
+      "requiredPeakReductionDb": 8.9,
+      "mode": "limited",
+      "limiterInputGainDb": 28.8,
+      "limiterPasses": 4,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 8.0
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.5
+    },
+    {
+      "step": "encode-overshoot-trim",
+      "encodedTruePeakDb": -1.1,
+      "trimDb": -0.1
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/sfx/place-slosh-1.wav",
+    "sha256": "ff40f6fc9ecea3c04367edac5bb5ca2bc43cfec90033171cb985395744557cad",
+    "frames": 96000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/sfx/place-slosh-1.webm",
+      "sha256": "8510bd8aed8df7d4f0047c2b100aa5565dfc7dac40599e964aafe83fbea17d40",
+      "bytes": 17200,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 2.008,
+      "decodedFrames": 96000,
+      "loudness": {
+        "integrated": -16.1,
+        "lra": 0.0,
+        "truePeak": -1.5
+      },
+      "floor": {
+        "peakWindowDb": -9.6,
+        "floorDb": -55.0,
+        "floorBelowPeakDb": 45.3,
+        "floorBandPct": {
+          "below1500": 81.0,
+          "1500to9k": 18.7,
+          "above9k": 0.4
+        },
+        "interiorWindows": 40,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/place-slosh-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/sfx/place-slosh-1.webm"
+    },
+    {
+      "path": "assets/audio/sfx/place-slosh-1.m4a",
+      "sha256": "727665273c8321a0bf46157a2f6e84be7c5c6376a75307c98ff16e3a8fec1264",
+      "bytes": 38364,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 2.0,
+      "decodedFrames": 96000,
+      "loudness": {
+        "integrated": -16.2,
+        "lra": 0.0,
+        "truePeak": -1.8
+      },
+      "floor": {
+        "peakWindowDb": -9.6,
+        "floorDb": -55.1,
+        "floorBelowPeakDb": 45.4,
+        "floorBandPct": {
+          "below1500": 81.2,
+          "1500to9k": 18.4,
+          "above9k": 0.3
+        },
+        "interiorWindows": 40,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/place-slosh-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/sfx/place-slosh-1.m4a"
+    }
+  ],
+  "decodedBytes": 384000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "bce93ae39ad1163524ac6756bf50a1fae8b59bccd9e7ca240a3bd741f177e054"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}
