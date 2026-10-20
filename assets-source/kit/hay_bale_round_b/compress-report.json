@@ -1,0 +1,181 @@
+{
+  "name": "hay_bale_round_b",
+  "date": "2026-10-20T12:38:36.563Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 631926,
+      "sha256": "8ced5a1062ee04bde445adbdbcd352a8a52224615e5c99fabd93fc08fa4ac640"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 628759,
+      "sha256": "1d1d9e61065467cf60bd27b1dd6f3005244256eaa29216cdb4e279299890319a"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 1116252,
+      "sha256": "0bab3b938f9633304cba0086d721636b24ad9e230ae91c6ed3892ac3a55a3790"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 8,
+      "bytes": 641,
+      "sha256": "25c3f3301948dcd6defe95518e479121c3fa59327c5726e885fd9f66fc1b5c10"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 8,
+      "bytes": 641,
+      "sha256": "e37b930364f8a167708e0d8386b0c1489829539e27321d714c0320fc5e90c786"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 710,
+      "sha256": "0dd8d5b3f992b27d9cfce058d95365cfc87bd3dfd6480911b6ba97335e311c19"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 167316,
+      "sha256": "3c7360c8341c45ca4ee6a10458310350bc106bacbbf98a3b84999df0dc173d76"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 168436,
+      "sha256": "0a2bd8b1303555e596a1cb3d17bf1bac816e40e080556f3b48b0b06eed7fd4b1"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 294536,
+      "sha256": "64f3ec41353ed9d9db50ee7eece9f67e37184ec32aa687d14f7f57a8cf55ca4b"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 113442,
+      "sha256": "d2018402eac31094d05ea17d72e88ab8cae9f17d6c5accd093e01ae2c1fe413d"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 113359,
+      "sha256": "34e44596c43875a017d4fabc3f001dbb804dd6d1b51a8a1342ba2fb0c6d3ae08"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 196440,
+      "sha256": "b7a5b4682ed6fcb034a573b2245034c95826c20f064b727081517a4d504396f9"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 913325,
+      "astc": 911195
+    },
+    "glbBytes": 45908
+  },
+  "glb": {
+    "bytes": 45908,
+    "sha256": "85ed3e05d853a3c8b911aedc7d1c25a9d3a91654bfb9aa6b39425d2a87b415fd"
+  }
+}

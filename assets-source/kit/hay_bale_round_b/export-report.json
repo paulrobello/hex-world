@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/hay_bale_round_b.py",
+    "sha256": "28db657f49827674dd9913a011277212f52d60e0b988501ed8e9eecb9871a9c4"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_hay.py",
+      "sha256": "62cc8bbf4110c002596b80e7a4b1763de89643b6680f22560554017bd827c8c5"
+    },
+    {
+      "path": "scripts/blender/kit/_hay_var.py",
+      "sha256": "437d4b3a49940a8c00fe67e2857e2cb5ccdf48f885996101ead4f910c3a81a00"
+    }
+  ],
+  "lodTris": {
+    "hay_bale_round_b_lod0": 792,
+    "hay_bale_round_b_lod1": 240,
+    "hay_bale_round_b_lod2": 76
+  },
+  "nodes": [
+    "hay_bale_round_b",
+    "hay_bale_round_b_collider",
+    "hay_bale_round_b_lod0",
+    "hay_bale_round_b_lod1",
+    "hay_bale_round_b_lod2"
+  ],
+  "pieceId": "hay_bale_round_b",
+  "sockets": []
+}

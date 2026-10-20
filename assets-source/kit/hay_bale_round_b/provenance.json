@@ -1,0 +1,427 @@
+{
+  "pieceId": "hay_bale_round_b",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/hay_bale_round_b.py",
+    "sha256": "28db657f49827674dd9913a011277212f52d60e0b988501ed8e9eecb9871a9c4"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_hay.py",
+      "sha256": "62cc8bbf4110c002596b80e7a4b1763de89643b6680f22560554017bd827c8c5"
+    },
+    {
+      "path": "scripts/blender/kit/_hay_var.py",
+      "sha256": "437d4b3a49940a8c00fe67e2857e2cb5ccdf48f885996101ead4f910c3a81a00"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.3,
+    "apron": {
+      "rings": [
+        0.62,
+        0.8,
+        0.84,
+        "r_out 0.87..0.92"
+      ],
+      "slots": [
+        [
+          7.5,
+          -0.4,
+          15
+        ],
+        [
+          10.4,
+          -1.4,
+          30
+        ]
+      ]
+    },
+    "bakeStats": {
+      "albedoLuma": {
+        "mean": 0.47845497727394104,
+        "min": 0,
+        "p01": 0,
+        "p05": 0,
+        "texels": 660018
+      },
+      "ao": {
+        "mean": 0.8128208518028259,
+        "min": 0,
+        "p01": 0,
+        "p05": 0,
+        "texels": 660018
+      },
+      "islandFraction": 0.6294422149658203,
+      "normalMissFraction": 0,
+      "roughness": {
+        "mean": 0.7328448295593262,
+        "min": 0,
+        "p01": 0,
+        "p05": 0,
+        "texels": 660018
+      }
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.04,
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 128
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "colliderReachM": 0.8895012736320496,
+    "contactFloatM": {
+      "10.4,-1.4": -0.005,
+      "7.5,-0.4": -0.005
+    },
+    "device": "CPU",
+    "extentZ": [
+      -0.068511463701725,
+      1.065750002861023
+    ],
+    "marginPx": 8,
+    "maxRayDistanceM": 0.1,
+    "profile": {
+      "axial": 0.95,
+      "flatM": 0.04,
+      "footBulge": 0.045,
+      "halfWidthM": 0.6,
+      "leanM": 0.03,
+      "radiusM": 0.75,
+      "shoulderM": 0.15,
+      "sinkM": 0.06
+    },
+    "receiverSignature": "452923cce4b0e16684215d52c025c6fbc5b2dd89b41af2b46ffce9a000a4db6c",
+    "samples": 32,
+    "skipped": false,
+    "texelDensityPerLod": [
+      {
+        "max": 476.96962719523344,
+        "median": 418.1262804041953,
+        "min": 231.03245219815864
+      },
+      {
+        "max": 485.63186792266265,
+        "median": 427.70728645004044,
+        "min": 304.3188250731271
+      },
+      {
+        "max": 538.0544303315522,
+        "median": 431.0234267689438,
+        "min": 326.9413887554261
+      }
+    ],
+    "texelDensityPxPerM": {
+      "max": 476.96962719523344,
+      "median": 418.1262804041953,
+      "min": 231.03245219815864
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 792,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 240,
+      "ratio": 0.30303030303030304
+    },
+    {
+      "lod": 2,
+      "tris": 76,
+      "ratio": 0.09595959595959595
+    }
+  ],
+  "collider": {
+    "node": "hay_bale_round_b_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 476.96962719523344,
+    "median": 418.1262804041953,
+    "min": 231.03245219815864
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 913325,
+        "astc": 911195
+      },
+      "glbBytes": 45908
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 631926,
+        "sha256": "8ced5a1062ee04bde445adbdbcd352a8a52224615e5c99fabd93fc08fa4ac640"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 628759,
+        "sha256": "1d1d9e61065467cf60bd27b1dd6f3005244256eaa29216cdb4e279299890319a"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 1116252,
+        "sha256": "0bab3b938f9633304cba0086d721636b24ad9e230ae91c6ed3892ac3a55a3790"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 8,
+        "bytes": 641,
+        "sha256": "25c3f3301948dcd6defe95518e479121c3fa59327c5726e885fd9f66fc1b5c10"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 8,
+        "bytes": 641,
+        "sha256": "e37b930364f8a167708e0d8386b0c1489829539e27321d714c0320fc5e90c786"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 710,
+        "sha256": "0dd8d5b3f992b27d9cfce058d95365cfc87bd3dfd6480911b6ba97335e311c19"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 167316,
+        "sha256": "3c7360c8341c45ca4ee6a10458310350bc106bacbbf98a3b84999df0dc173d76"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 168436,
+        "sha256": "0a2bd8b1303555e596a1cb3d17bf1bac816e40e080556f3b48b0b06eed7fd4b1"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 294536,
+        "sha256": "64f3ec41353ed9d9db50ee7eece9f67e37184ec32aa687d14f7f57a8cf55ca4b"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 113442,
+        "sha256": "d2018402eac31094d05ea17d72e88ab8cae9f17d6c5accd093e01ae2c1fe413d"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 113359,
+        "sha256": "34e44596c43875a017d4fabc3f001dbb804dd6d1b51a8a1342ba2fb0c6d3ae08"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 196440,
+        "sha256": "b7a5b4682ed6fcb034a573b2245034c95826c20f064b727081517a4d504396f9"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.glb",
+      "sha256": "85ed3e05d853a3c8b911aedc7d1c25a9d3a91654bfb9aa6b39425d2a87b415fd",
+      "bytes": 45908
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.bc7.ktx2",
+      "sha256": "8ced5a1062ee04bde445adbdbcd352a8a52224615e5c99fabd93fc08fa4ac640",
+      "bytes": 631926
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.astc.ktx2",
+      "sha256": "1d1d9e61065467cf60bd27b1dd6f3005244256eaa29216cdb4e279299890319a",
+      "bytes": 628759
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.png",
+      "sha256": "0bab3b938f9633304cba0086d721636b24ad9e230ae91c6ed3892ac3a55a3790",
+      "bytes": 1116252
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.masks.bc7.ktx2",
+      "sha256": "25c3f3301948dcd6defe95518e479121c3fa59327c5726e885fd9f66fc1b5c10",
+      "bytes": 641
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.masks.astc.ktx2",
+      "sha256": "e37b930364f8a167708e0d8386b0c1489829539e27321d714c0320fc5e90c786",
+      "bytes": 641
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.masks.png",
+      "sha256": "0dd8d5b3f992b27d9cfce058d95365cfc87bd3dfd6480911b6ba97335e311c19",
+      "bytes": 710
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.bc7.ktx2",
+      "sha256": "3c7360c8341c45ca4ee6a10458310350bc106bacbbf98a3b84999df0dc173d76",
+      "bytes": 167316
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.astc.ktx2",
+      "sha256": "0a2bd8b1303555e596a1cb3d17bf1bac816e40e080556f3b48b0b06eed7fd4b1",
+      "bytes": 168436
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.png",
+      "sha256": "64f3ec41353ed9d9db50ee7eece9f67e37184ec32aa687d14f7f57a8cf55ca4b",
+      "bytes": 294536
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.bc7.ktx2",
+      "sha256": "d2018402eac31094d05ea17d72e88ab8cae9f17d6c5accd093e01ae2c1fe413d",
+      "bytes": 113442
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.astc.ktx2",
+      "sha256": "34e44596c43875a017d4fabc3f001dbb804dd6d1b51a8a1342ba2fb0c6d3ae08",
+      "bytes": 113359
+    },
+    {
+      "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.png",
+      "sha256": "b7a5b4682ed6fcb034a573b2245034c95826c20f064b727081517a4d504396f9",
+      "bytes": 196440
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/farm/ref-1.jpg",
+      "sha256": "7b132f2ad6132d695724f9b2c3438e802af53a328d0f3d63f2cf67cb5aefa30f",
+      "sourceSha256": "2ff556655fd2278c8e3324e4d2d3f5593ecab8da40d71015e8703a4594a9f6cf",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "40cbcc37-2358-4b98-819a-d15f87abcdbc",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, laid out as a small farmyard. About half the tile is a field of neat parallel ploughed furrows of dark brown earth beside a few rows of young green crops. The other half holds a red-painted vertical-board timber barn with a steep dark slate roof and large double doors, a packed-earth yard with a few round hay bales and a small stack of rectangular hay bales, and a grassy paddock enclosed by a weathered post-and-rail timber fence, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/farm/ref-2.jpg",
+      "sha256": "5fd371d02c5f176152283bf2852d99d7e907fb597eba80e9a52bf1c5b1ac9746",
+      "sourceSha256": "a61bd9f1fcd9b3f128c99dd19afb64837da9c3eb8ee1c3b6e10cacdb975712ce",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "904395be-208c-4c55-a00f-a79d076f2d4c",
+      "prompt": "Close-up of a farmyard corner on a diorama tile: a red-painted vertical-board timber barn with a steep dark slate roof and open large double doors, a weathered post-and-rail timber fence, round and rectangular hay bales on a packed-earth yard scattered with loose straw, and the edge of a field of neat ploughed furrows, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T12:40:14.874Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/farm/ref-1.jpg",
+        "assets-source/refs/farm/ref-2.jpg"
+      ],
+      "notes": "Pitched barn roof; red board barn for contrast with the cottages; wheat crop. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Variant of hay_bale_round (PRD §6 Variety), against assets-source/refs/farm (ref-1 and ref-2: round bales in a yard scattered with loose straw): the same net-wrapped bale, profile, straw and atlas layout stood on its flat end, settled (a flattened foot that bulges 4.5 cm, a 5% lower height, a 3 cm lean), with a ring of loose straw round its foot that drapes on the meadow relief of both of the farm's round-bale slots. 792 LOD0 tris. Review sheet: docs/checkpoints/hay_variants/sheet.jpg (refs, EEVEE beside hay_bale_round, in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
+    }
+  ]
+}

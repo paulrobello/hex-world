@@ -7,10 +7,12 @@ use crate::{Axial, HeroProp, TileDef};
 
 /// Each authored hero piece with the variants a slot of it may draw instead. A new variant is one
 /// more id in its row; a new family is one more row.
-pub const HERO_VARIANTS: [(&str, &[&str]); 3] = [
+pub const HERO_VARIANTS: [(&str, &[&str]); 5] = [
     ("house_cottage", &["house_longhouse"]),
     ("house_twostorey", &["house_twostorey_b"]),
     ("tree_hero_oak", &["tree_hero_oak_b"]),
+    ("hay_bale_round", &["hay_bale_round_b"]),
+    ("hay_bale_stack", &["hay_bale_stack_b"]),
 ];
 
 /// One slot in this many draws a variant (the rest keep the authored piece).
@@ -180,6 +182,38 @@ mod tests {
         assert!(twostorey > twostorey_b);
     }
 
+    /// The farm's hay slots draw their variants about one time in three, and the thumbnail cell
+    /// (the origin) draws hay_bale_round_b in the first round slot only.
+    #[test]
+    fn some_farm_hay_slots_draw_the_hay_variants() {
+        let c = TileCatalog::builtin().unwrap();
+        let def = c.get("farm").unwrap();
+        let (mut authored, mut variant) = (0, 0);
+        for cell in cells() {
+            for (h, piece) in def.hero_pieces(cell) {
+                match (h.piece.as_str(), piece) {
+                    ("hay_bale_round", "hay_bale_round_b")
+                    | ("hay_bale_stack", "hay_bale_stack_b") => variant += 1,
+                    (a, b) => {
+                        assert_eq!(a, b);
+                        authored += a.starts_with("hay_") as i32;
+                    }
+                }
+            }
+        }
+        let share = variant as f32 / (authored + variant) as f32;
+        assert!((0.28..0.39).contains(&share), "hay variant share {share}");
+        let origin: Vec<&str> = def
+            .hero_pieces(Axial::ORIGIN)
+            .map(|(_, p)| p)
+            .filter(|p| p.starts_with("hay_"))
+            .collect();
+        assert_eq!(
+            origin,
+            ["hay_bale_stack", "hay_bale_round_b", "hay_bale_round"]
+        );
+    }
+
     #[test]
     fn slots_without_variants_are_untouched() {
         let c = TileCatalog::builtin().unwrap();
@@ -251,7 +285,7 @@ mod tests {
     }
 
     /// A house variant is still a house, so parking (`house_` heroes) and walk's `building` kind
-    /// hold for every pick.
+    /// hold for every pick; a hay variant is still `hay_`, so walk reports it as hay.
     #[test]
     fn variants_keep_their_family() {
         for (piece, variants) in HERO_VARIANTS {

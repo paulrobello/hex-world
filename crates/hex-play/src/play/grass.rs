@@ -1648,12 +1648,13 @@ mod tests {
     fn grass_clears_the_barn_and_the_farm_heroes() {
         let def = TileCatalog::builtin().unwrap().get("farm").unwrap().clone();
         let ex = exclusions(&def, Axial::ORIGIN, &[], &[]);
+        // Each hero clears the piece it draws at the cell (the origin draws hay_bale_round_b in
+        // the first round slot, `hex_core::hero_piece`).
         let heroes: Vec<_> = def
-            .props
-            .hero
-            .iter()
-            .filter(|h| scatter::fence(h.piece.as_str()).is_none())
+            .hero_pieces(Axial::ORIGIN)
+            .filter(|(_, p)| scatter::fence(p).is_none())
             .collect();
+        assert!(heroes.iter().any(|(_, p)| *p == "hay_bale_round_b"));
         let posts: usize = def
             .props
             .hero
@@ -1663,15 +1664,15 @@ mod tests {
             .sum();
         assert_eq!(posts, 27, "the paddock's posts");
         assert_eq!(ex.len(), heroes.len() + posts);
-        for (h, c) in heroes.into_iter().zip(&ex) {
-            if h.piece.as_str() == "barn_red" {
+        for ((h, piece), c) in heroes.into_iter().zip(&ex) {
+            if piece == "barn_red" {
                 assert!(matches!(c, Clear::Box { .. }), "{c:?}");
             } else {
                 assert_eq!(
                     disc(c),
                     (
                         Vec2::from(h.at),
-                        scatter::footprint(h.piece.as_str()).ground + PROP_GAP
+                        scatter::footprint(piece).ground + PROP_GAP
                     )
                 );
             }

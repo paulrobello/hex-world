@@ -1,0 +1,115 @@
+{
+  "aoDistanceM": 0.3,
+  "apron": {
+    "rings": [
+      0.62,
+      0.8,
+      0.84,
+      "r_out 0.87..0.92"
+    ],
+    "slots": [
+      [
+        7.5,
+        -0.4,
+        15.0
+      ],
+      [
+        10.4,
+        -1.4,
+        30.0
+      ]
+    ]
+  },
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.47845497727394104,
+      "min": 0.0,
+      "p01": 0.0,
+      "p05": 0.0,
+      "texels": 660018
+    },
+    "ao": {
+      "mean": 0.8128208518028259,
+      "min": 0.0,
+      "p01": 0.0,
+      "p05": 0.0,
+      "texels": 660018
+    },
+    "islandFraction": 0.6294422149658203,
+    "normalMissFraction": 0.0,
+    "roughness": {
+      "mean": 0.7328448295593262,
+      "min": 0.0,
+      "p01": 0.0,
+      "p05": 0.0,
+      "texels": 660018
+    }
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.04,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 128
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colliderReachM": 0.8895012736320496,
+  "contactFloatM": {
+    "10.4,-1.4": -0.005,
+    "7.5,-0.4": -0.005
+  },
+  "device": "CPU",
+  "extentZ": [
+    -0.068511463701725,
+    1.065750002861023
+  ],
+  "marginPx": 8,
+  "maxRayDistanceM": 0.1,
+  "profile": {
+    "axial": 0.95,
+    "flatM": 0.04,
+    "footBulge": 0.045,
+    "halfWidthM": 0.6,
+    "leanM": 0.03,
+    "radiusM": 0.75,
+    "shoulderM": 0.15,
+    "sinkM": 0.06
+  },
+  "receiverSignature": "452923cce4b0e16684215d52c025c6fbc5b2dd89b41af2b46ffce9a000a4db6c",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPerLod": [
+    {
+      "max": 476.96962719523344,
+      "median": 418.1262804041953,
+      "min": 231.03245219815864
+    },
+    {
+      "max": 485.63186792266265,
+      "median": 427.70728645004044,
+      "min": 304.3188250731271
+    },
+    {
+      "max": 538.0544303315522,
+      "median": 431.0234267689438,
+      "min": 326.9413887554261
+    }
+  ],
+  "texelDensityPxPerM": {
+    "max": 476.96962719523344,
+    "median": 418.1262804041953,
+    "min": 231.03245219815864
+  }
+}

@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Variant of hay_bale_round (PRD §6 Variety), against assets-source/refs/farm (ref-1 and ref-2: round bales in a yard scattered with loose straw): the same net-wrapped bale, profile, straw and atlas layout stood on its flat end, settled (a flattened foot that bulges 4.5 cm, a 5% lower height, a 3 cm lean), with a ring of loose straw round its foot that drapes on the meadow relief of both of the farm's round-bale slots. 792 LOD0 tris. Review sheet: docs/checkpoints/hay_variants/sheet.jpg (refs, EEVEE beside hay_bale_round, in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
+  }
+]

@@ -235,7 +235,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 38] = [
+pub const FOOTPRINTS: [(&str, Footprint); 40] = [
     (
         "tree_forest",
         Footprint {
@@ -397,6 +397,21 @@ pub const FOOTPRINTS: [(&str, Footprint); 38] = [
         "hay_bale_stack",
         Footprint {
             ground: 0.9,
+            crown: 0.0,
+        },
+    ),
+    // The upright bale's reach is its loose straw's outer edge, which the grass must leave clear.
+    (
+        "hay_bale_round_b",
+        Footprint {
+            ground: 0.9,
+            crown: 0.0,
+        },
+    ),
+    (
+        "hay_bale_stack_b",
+        Footprint {
+            ground: 0.7,
             crown: 0.0,
         },
     ),
@@ -2145,8 +2160,10 @@ mod tests {
     fn hero_variants_fit_inside_the_authored_piece() {
         for (piece, variants) in hex_core::HERO_VARIANTS {
             for v in variants {
-                if let Some(b) = ground_box(piece) {
-                    let vb = ground_box(v).unwrap();
+                // A building's ground box nests in the authored one's; a disc piece (the oak, the
+                // hay) has no box, only its reach.
+                assert_eq!(ground_box(piece).is_some(), ground_box(v).is_some(), "{v}");
+                if let (Some(b), Some(vb)) = (ground_box(piece), ground_box(v)) {
                     assert!(
                         vb.min[0] >= b.min[0]
                             && vb.min[1] >= b.min[1]
@@ -2154,8 +2171,6 @@ mod tests {
                             && vb.max[1] <= b.max[1],
                         "{v} {vb:?} outside {piece} {b:?}"
                     );
-                } else {
-                    assert!(ground_box(v).is_none(), "{v} has a box, {piece} none");
                 }
                 assert!(footprint(v).ground <= footprint(piece).ground, "{v}");
                 assert!(footprint(v).crown <= footprint(piece).crown, "{v}");
