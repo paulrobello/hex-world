@@ -11,6 +11,8 @@ import { createServer } from "node:http";
 import { mkdirSync, readFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
+import { assertCsp } from "../scripts/web/csp-check.mjs";
+import { hashInlineScripts } from "../scripts/web/version-dist.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = process.env.VERSION_OUT ?? "e2e/test-results/version";
@@ -22,6 +24,18 @@ const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "applic
 const built = JSON.parse(readFileSync(join(dist, "version.json"), "utf8")).id;
 const page0 = readFileSync(join(dist, "index.html"), "utf8");
 if (!page0.includes(`window.__HEX_BUILD="${built}"`)) throw new Error(`index.html does not inline build ${built}`);
+assertCsp(page0, join(dist, "index.html"));
+/** index.html as build `id`. The build id lives in the hex-hashes inline script, so a new id changes that
+ * script's bytes and its CSP hash must be recomputed, as version-dist does for a real deploy. */
+const pages = new Map();
+function pageAs(id) {
+  if (!pages.has(id)) {
+    const page = id === built ? page0 : hashInlineScripts(page0.replace(`window.__HEX_BUILD="${built}"`, `window.__HEX_BUILD="${id}"`));
+    assertCsp(page, `index.html as build ${id}`);
+    pages.set(id, page);
+  }
+  return pages.get(id);
+}
 /** The deployed build: null serves dist as built; an id serves it as that id; "fail" answers version.json 503. */
 let live = null;
 const polls = [];
@@ -39,7 +53,7 @@ const server = createServer((req, res) => {
   }
   if (path === "/index.html") {
     res.writeHead(200, { "content-type": "text/html" });
-    res.end(page0.replace(`window.__HEX_BUILD="${built}"`, `window.__HEX_BUILD="${id}"`));
+    res.end(pageAs(id));
     return;
   }
   try {

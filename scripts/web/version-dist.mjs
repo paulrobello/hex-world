@@ -25,6 +25,7 @@ import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
+import { assertCsp } from "./csp-check.mjs";
 
 export const HASH_LEN = 10;
 /** Files never put in the map: the page and the build id (both fetched fresh) and the Pages domain file. */
@@ -67,6 +68,21 @@ export function buildId(map, trunkFiles, html) {
   return contentHash(Buffer.from(JSON.stringify([map, [...trunkFiles].sort(), stableHtml]), "utf8"));
 }
 
+/**
+ * `page` with every CSP script-src directive listing exactly the sha256 of each inline script it holds.
+ * Any page whose inline script bytes change after this (a rewrite, a swapped build id) must pass
+ * through it again, or the browser blocks that script.
+ */
+export function hashInlineScripts(page) {
+  const scriptHashes = [...page.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(([, attrs]) => !/\bsrc\s*=/i.test(attrs))
+    .map(([, , body]) => `'sha256-${createHash("sha256").update(body).digest("base64")}'`);
+  return page.replace(/script-src\s+[^;"<>]+/g, (directive) => {
+    const sources = directive.replace(/\s+'(?:sha256-[A-Za-z0-9+/=]+|unsafe-inline)'/g, "");
+    return `${sources} ${[...new Set(scriptHashes)].join(" ")}`;
+  });
+}
+
 /** Versions `dir` in place and returns the map it inlined into index.html (sorted keys). */
 export function versionDist(dir) {
   const files = listFiles(dir);
@@ -107,14 +123,7 @@ export function versionDist(dir) {
       `window.__HEX_BUILD=${JSON.stringify(id)};</script>\n    `;
     const page = html.slice(0, at) + script + html.slice(at);
     // Trunk's loader, rewritten URLs and the generated map must be hashed after their final bytes exist.
-    const scriptHashes = [...page.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
-      .filter(([, attrs]) => !/\bsrc\s*=/i.test(attrs))
-      .map(([, , body]) => `'sha256-${createHash("sha256").update(body).digest("base64")}'`);
-    const secured = page.replace(/script-src\s+[^;"<>]+/g, (directive) => {
-      const sources = directive.replace(/\s+'(?:sha256-[A-Za-z0-9+/=]+|unsafe-inline)'/g, "");
-      return `${sources} ${[...new Set(scriptHashes)].join(" ")}`;
-    });
-    writeFileSync(join(dir, "index.html"), secured);
+    writeFileSync(join(dir, "index.html"), hashInlineScripts(page));
     writeFileSync(join(dir, "version.json"), `${JSON.stringify({ id })}\n`);
   }
   return map;
@@ -123,5 +132,7 @@ export function versionDist(dir) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const dir = process.argv[2] ?? process.env.TRUNK_STAGING_DIR ?? "dist";
   const map = versionDist(dir);
-  console.log(`version-dist: ${Object.keys(map).length} files versioned in ${dir}`);
+  const page = join(dir, "index.html");
+  assertCsp(readFileSync(page, "utf8"), page);
+  console.log(`version-dist: ${Object.keys(map).length} files versioned in ${dir}, CSP covers every inline script`);
 }
