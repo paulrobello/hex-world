@@ -1,0 +1,104 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/rail_road_crossing_center.py",
+    "sha256": "01ff0d858f7d38966709517e32e9878c3bcd3b1476fab0a432ffe3c2aa5c3801"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_rail.py",
+      "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
+    },
+    {
+      "path": "scripts/blender/kit/_rail_crossing.py",
+      "sha256": "8e87321c51b873dcad9ba3e9242c4845637c50bb653c440658de9524bf62c06c"
+    },
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
+    },
+    {
+      "path": "scripts/blender/kit/_road_bend.py",
+      "sha256": "3600718e406beb143a5462ebfcc133e41d6fa38bb209ba7fe702ddc7c71cd041"
+    }
+  ],
+  "lodTris": {
+    "rail_road_crossing_center_lod0": 1640,
+    "rail_road_crossing_center_lod1": 732,
+    "rail_road_crossing_center_lod2": 186
+  },
+  "nodes": [
+    "rail_road_crossing_center",
+    "rail_road_crossing_center_collider",
+    "rail_road_crossing_center_lod0",
+    "rail_road_crossing_center_lod1",
+    "rail_road_crossing_center_lod2",
+    "socket-lane-0",
+    "socket-lane-1",
+    "socket-lane-2",
+    "socket-lane-3"
+  ],
+  "pieceId": "rail_road_crossing_center",
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "rail",
+        "offset": 0.0,
+        "width": 3.5
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "edge": 3,
+        "kind": "rail",
+        "offset": 0.0,
+        "width": 3.5
+      },
+      "name": "socket-lane-1",
+      "position": [
+        -13.856406211853027,
+        0.0,
+        1.6969203955408477e-15
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "edge": 1,
+        "kind": "road",
+        "offset": 0.0,
+        "width": 6.0
+      },
+      "name": "socket-lane-2",
+      "position": [
+        6.928203105926514,
+        0.0,
+        12.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "edge": 4,
+        "kind": "road",
+        "offset": 0.0,
+        "width": 6.0
+      },
+      "name": "socket-lane-3",
+      "position": [
+        -6.928203105926514,
+        0.0,
+        -12.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

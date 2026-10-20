@@ -3328,6 +3328,47 @@ fn untiled_lane_socket_centre_is_checked_at_its_declared_edges() {
     assert_eq!(check_center_edge_joint(&k), Vec::<String>::new());
 }
 
+/// A centre with two network kinds (the rail-road level crossing: rail lanes 0 and 3, road lanes 1
+/// and 4) is checked lane by lane against the edge pieces of each lane's own kind: its road lanes
+/// meet `road_straight_edge` at the r = 6 joint in every LOD, and its rail lanes, with no rail edge
+/// piece, are held by the generator's border-section check.
+#[test]
+fn mixed_kind_centre_checks_each_lane_against_its_own_kind() {
+    let k = kits()
+        .into_iter()
+        .find(|k| {
+            k.manifest
+                .pieces
+                .iter()
+                .any(|p| p.id == "rail_road_crossing_center")
+        })
+        .expect("runtime kit holds rail_road_crossing_center");
+    let piece = |id: &str| k.manifest.pieces.iter().find(|p| p.id == id).unwrap();
+    let x = piece("rail_road_crossing_center");
+    let kinds: BTreeMap<u64, String> = lane_sockets(&k, x)
+        .into_iter()
+        .map(|(e, (kind, _))| (e, kind))
+        .collect();
+    let want: BTreeMap<u64, String> = [(0, "rail"), (1, "road"), (3, "rail"), (4, "road")]
+        .into_iter()
+        .map(|(e, s)| (e, s.to_string()))
+        .collect();
+    assert_eq!(kinds, want);
+    assert_eq!(joint_lanes(&k, x), vec![0, 1, 3, 4]);
+    let road = piece("road_straight_edge");
+    let jx = joint_x(&k, road);
+    for lane in [1u8, 4] {
+        let secs = lane_sections(&k, x, jx, lane);
+        assert_eq!(secs.len(), 3);
+        assert!(secs.iter().all(|s| !s.is_empty()), "lane {lane}");
+        let center: Vec<Vec<_>> = secs.into_iter().map(|s| vec![s]).collect();
+        let edge = lod_sections(&k, road, jx);
+        assert!(joint_errors(&x.id, &[lane], &center, &edge).is_empty());
+    }
+    assert!(lane_joint_errors(&k, x, &[0, 3]).is_empty());
+    assert_eq!(check_center_edge_joint(&k), Vec::<String>::new());
+}
+
 #[test]
 fn edge_section_must_be_symmetric_and_lod_invariant() {
     let sym = vec![(0, -30_000), (0, 30_000), (800, 0)];

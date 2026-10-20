@@ -202,16 +202,16 @@ mod tests {
             .collect();
         cells.sort();
         cells.dedup();
-        // 11 cells plus the windmill's meadow on the water patch's free cell (3, -1), and the two
-        // rail meadows (0, 2) and (1, 2) south of the patch.
-        assert_eq!(cells.len(), 14);
+        // 11 cells plus the windmill's meadow on the water patch's free cell (3, -1), and the three
+        // rail meadows (-1, 2), (0, 2) and (1, 2) south of the patch.
+        assert_eq!(cells.len(), 15);
         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
         // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
-        // The fixture lays out water-patch cells only; the runtime kit adds the two rail meadows.
+        // The fixture lays out water-patch cells only; the runtime kit adds the three rail meadows.
         assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
-        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 14);
+        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 15);
         assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
         assert!(!Scenario::Kit.has_water());
     }

@@ -1,0 +1,78 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "crossing": {
+    "angleDeg": 60.0,
+    "deckHalfAcrossRoadM": 3.25,
+    "deckHalfAcrossTrackM": 1.35,
+    "deckTopM": 0.45999999999999996,
+    "flangewayM": 0.06,
+    "floorM": 0.39999999999999997,
+    "gates": {
+      "count": 4,
+      "hingeRoadOffsetM": 3.55,
+      "leafM": 3.0,
+      "lineAcrossTrackM": 3.075,
+      "state": "open, leaves along the track away from the road"
+    },
+    "kerbLipM": 0.02,
+    "railLanes": [
+      0,
+      3
+    ],
+    "rampGradeMax": {
+      "+0.0": 0.1182,
+      "+3.0": 0.2104,
+      "-3.0": 0.0923
+    },
+    "roadLanes": [
+      1,
+      4
+    ],
+    "sleepersKept": 32,
+    "sleepersUnderDeck": 8
+  },
+  "device": "none",
+  "lodTris": [
+    1640,
+    732,
+    186
+  ],
+  "marginPx": 0,
+  "masks": {
+    "ao": {
+      "crib": [
+        0.78,
+        0.95
+      ],
+      "flangeway": 0.4,
+      "other": 1.0,
+      "plankSeam": 0.6
+    },
+    "night": 0.0,
+    "porosity": {
+      "asphalt_kerb": 0.3,
+      "ballast": 0.9,
+      "deck": 0.5,
+      "gate": 0.4,
+      "rail": 0.15,
+      "sleeper": 0.6,
+      "verge": 0.7
+    },
+    "snow": 1.0
+  },
+  "reason": "no Cycles bake: the masks are an analytic field (the rail's crib field, road arms, deck, gates)",
+  "receiverSignature": "49d0aff5a92d3cada8182d5a2b88e5db21bdecf89165a29beb354a355e7fb8b2",
+  "samples": 0,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 16.014800133939794,
+    "median": 4.731083518801212,
+    "min": 4.04701652320311
+  }
+}

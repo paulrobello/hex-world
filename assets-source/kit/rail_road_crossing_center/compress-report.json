@@ -1,0 +1,88 @@
+{
+  "name": "rail_road_crossing_center",
+  "date": "2026-10-20T02:50:41.474Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/rail_road_crossing_center/rail_road_crossing_center.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 12692,
+      "sha256": "533830cd544bb3cf40767c3a142c3a5f919ebf1ca97acba6fcace3e5f3dd128d"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/rail_road_crossing_center/rail_road_crossing_center.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 12149,
+      "sha256": "ab5e53cc52dff3c9f879c40fa599a33e19c5890438f4be709ad94b5e96d517ad"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/rail_road_crossing_center/rail_road_crossing_center.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 10952,
+      "sha256": "0cb48fbcb44fa92360bdc3b17682d0f727d06e69afecae6ce6b657d14c76dd93"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 12692,
+      "astc": 12149
+    },
+    "glbBytes": 133728
+  },
+  "glb": {
+    "bytes": 133728,
+    "sha256": "a3db9d3dabd53d4e3567cce58f4d29ce16ec34a61afda646bab4fdb4f5b13279"
+  }
+}

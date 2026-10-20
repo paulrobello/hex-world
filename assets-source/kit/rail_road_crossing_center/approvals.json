@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-19",
+    "notes": "Pending owner review; not an approval. Review against assets-source/refs/rail/ref-3.jpg: rail_straight_center's track on edges 0 and 3 crossed at 60 degrees by the two-lane road on edges 1 and 4, timber deck panels flush with the rail heads between and beside the rails, four white field gates swung open parallel to the track (as ref-3). Review sheet: docs/checkpoints/rail_crossing/sheet.jpg (refs, textured EEVEE still, in engine at play distance, seams with the rail straight and a road stub, sun and shade close-ups of the deck and a gate, eye level, scale beside a car). The controller records the owner's decision."
+  }
+]

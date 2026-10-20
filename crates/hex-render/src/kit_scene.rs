@@ -182,6 +182,12 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place(piece, 1, 2, 2)
         });
     }
+    // The level crossing (P3, refs A17) west of the straight on (-1, 2): its rail lane on edge 0
+    // meets the straight's edge 3, and its road lanes on edges 1 and 4 carry road stubs.
+    v.push(place("meadow_base", -1, 2, 0));
+    v.push(place("rail_road_crossing_center", -1, 2, 0));
+    v.push(place("road_straight_edge", -1, 2, 1));
+    v.push(place("road_straight_edge", -1, 2, 4));
     v
 }
 
@@ -599,6 +605,24 @@ mod tests {
         // The straight's lanes are local edges 0 and 3, the bend's 0 and 1, turned by rot.
         assert_eq!(s.cell.neighbor(s.rot), b.cell);
         assert_eq!((1 + b.rot) % 6, (s.rot + 3) % 6);
+    }
+
+    #[test]
+    fn rail_crossing_continues_the_straight() {
+        let l = kit_layout();
+        let at = |id: &str| *l.iter().find(|p| p.piece == id).unwrap();
+        let (s, x) = (at("rail_straight_center"), at("rail_road_crossing_center"));
+        // The crossing's rail lane on its local edge 0 meets the straight's edge-3 lane.
+        assert_eq!(x.cell.neighbor(x.rot), s.cell);
+        assert_eq!(s.cell.neighbor((s.rot + 3) % 6), x.cell);
+        // Road stubs on the crossing's road lanes (local edges 1 and 4).
+        for k in [1, 4] {
+            let e = (k + x.rot) % 6;
+            assert!(
+                l.iter()
+                    .any(|p| p.piece == "road_straight_edge" && p.cell == x.cell && p.rot == e)
+            );
+        }
     }
 
     #[test]

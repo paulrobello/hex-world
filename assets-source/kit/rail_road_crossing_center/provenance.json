@@ -1,0 +1,331 @@
+{
+  "pieceId": "rail_road_crossing_center",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/rail_road_crossing_center.py",
+    "sha256": "01ff0d858f7d38966709517e32e9878c3bcd3b1476fab0a432ffe3c2aa5c3801"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_rail.py",
+      "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
+    },
+    {
+      "path": "scripts/blender/kit/_rail_crossing.py",
+      "sha256": "8e87321c51b873dcad9ba3e9242c4845637c50bb653c440658de9524bf62c06c"
+    },
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
+    },
+    {
+      "path": "scripts/blender/kit/_road_bend.py",
+      "sha256": "3600718e406beb143a5462ebfcc133e41d6fa38bb209ba7fe702ddc7c71cd041"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "crossing": {
+      "angleDeg": 60,
+      "deckHalfAcrossRoadM": 3.25,
+      "deckHalfAcrossTrackM": 1.35,
+      "deckTopM": 0.45999999999999996,
+      "flangewayM": 0.06,
+      "floorM": 0.39999999999999997,
+      "gates": {
+        "count": 4,
+        "hingeRoadOffsetM": 3.55,
+        "leafM": 3,
+        "lineAcrossTrackM": 3.075,
+        "state": "open, leaves along the track away from the road"
+      },
+      "kerbLipM": 0.02,
+      "railLanes": [
+        0,
+        3
+      ],
+      "rampGradeMax": {
+        "+0.0": 0.1182,
+        "+3.0": 0.2104,
+        "-3.0": 0.0923
+      },
+      "roadLanes": [
+        1,
+        4
+      ],
+      "sleepersKept": 32,
+      "sleepersUnderDeck": 8
+    },
+    "device": "none",
+    "lodTris": [
+      1640,
+      732,
+      186
+    ],
+    "marginPx": 0,
+    "masks": {
+      "ao": {
+        "crib": [
+          0.78,
+          0.95
+        ],
+        "flangeway": 0.4,
+        "other": 1,
+        "plankSeam": 0.6
+      },
+      "night": 0,
+      "porosity": {
+        "asphalt_kerb": 0.3,
+        "ballast": 0.9,
+        "deck": 0.5,
+        "gate": 0.4,
+        "rail": 0.15,
+        "sleeper": 0.6,
+        "verge": 0.7
+      },
+      "snow": 1
+    },
+    "reason": "no Cycles bake: the masks are an analytic field (the rail's crib field, road arms, deck, gates)",
+    "receiverSignature": "49d0aff5a92d3cada8182d5a2b88e5db21bdecf89165a29beb354a355e7fb8b2",
+    "samples": 0,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 16.014800133939794,
+      "median": 4.731083518801212,
+      "min": 4.04701652320311
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1640,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 732,
+      "ratio": 0.44634146341463415
+    },
+    {
+      "lod": 2,
+      "tris": 186,
+      "ratio": 0.11341463414634147
+    }
+  ],
+  "collider": {
+    "node": "rail_road_crossing_center_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "rail",
+        "offset": 0,
+        "width": 3.5
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0,
+        0
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "edge": 3,
+        "kind": "rail",
+        "offset": 0,
+        "width": 3.5
+      },
+      "name": "socket-lane-1",
+      "position": [
+        -13.856406211853027,
+        0,
+        1.6969203955408477e-15
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "edge": 1,
+        "kind": "road",
+        "offset": 0,
+        "width": 6
+      },
+      "name": "socket-lane-2",
+      "position": [
+        6.928203105926514,
+        0,
+        12
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "edge": 4,
+        "kind": "road",
+        "offset": 0,
+        "width": 6
+      },
+      "name": "socket-lane-3",
+      "position": [
+        -6.928203105926514,
+        0,
+        -12
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 16.014800133939794,
+    "median": 4.731083518801212,
+    "min": 4.04701652320311
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 12692,
+        "astc": 12149
+      },
+      "glbBytes": 133728
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/rail_road_crossing_center/rail_road_crossing_center.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 12692,
+        "sha256": "533830cd544bb3cf40767c3a142c3a5f919ebf1ca97acba6fcace3e5f3dd128d"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/rail_road_crossing_center/rail_road_crossing_center.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 12149,
+        "sha256": "ab5e53cc52dff3c9f879c40fa599a33e19c5890438f4be709ad94b5e96d517ad"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/rail_road_crossing_center/rail_road_crossing_center.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 10952,
+        "sha256": "0cb48fbcb44fa92360bdc3b17682d0f727d06e69afecae6ce6b657d14c76dd93"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/rail_road_crossing_center/rail_road_crossing_center.glb",
+      "sha256": "a3db9d3dabd53d4e3567cce58f4d29ce16ec34a61afda646bab4fdb4f5b13279",
+      "bytes": 133728
+    },
+    {
+      "path": "assets/kit/p1/rail_road_crossing_center/rail_road_crossing_center.masks.bc7.ktx2",
+      "sha256": "533830cd544bb3cf40767c3a142c3a5f919ebf1ca97acba6fcace3e5f3dd128d",
+      "bytes": 12692
+    },
+    {
+      "path": "assets/kit/p1/rail_road_crossing_center/rail_road_crossing_center.masks.astc.ktx2",
+      "sha256": "ab5e53cc52dff3c9f879c40fa599a33e19c5890438f4be709ad94b5e96d517ad",
+      "bytes": 12149
+    },
+    {
+      "path": "assets/kit/p1/rail_road_crossing_center/rail_road_crossing_center.masks.png",
+      "sha256": "0cb48fbcb44fa92360bdc3b17682d0f727d06e69afecae6ce6b657d14c76dd93",
+      "bytes": 10952
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/rail/ref-1.jpg",
+      "sha256": "a3e659e233950ee1e4e97954af6b52707933d9573de657828ad1600640b34d76",
+      "sourceSha256": "c7ff694cfd2e9c07f3d989b24fce3444309f39d8a9dc142e35e6211d5c1d5dba",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "a3ecc1cd-578b-4d5b-ae59-f8e706ec58be",
+      "prompt": "Straight railway tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame, carrying a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders. Seen from above, the track runs straight from the middle of the bottom side across the centre of the tile to the middle of the top side, meeting both sides square-on, and the rest of the tile is open meadow grass, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/rail/ref-2.jpg",
+      "sha256": "67cd8442ec8d40de041ecb0facf9618e44fae798acceddb2e66861596a7265e5",
+      "sourceSha256": "9ed349406586e7a7b0d28d4f97518b4eede185ac0dfdee6c6345a859b34862ec",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "2fd58add-9ab6-4772-a8af-c7e134a1196e",
+      "prompt": "Gentle curve railway tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame, carrying a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders. Seen from above, the track starts at the middle of the bottom side and curves gently right in one smooth wide arc to end at the middle of the upper-right side. The lower-right side between the two track ends is grass, and the top side opposite the start is grass too, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/rail/ref-3.jpg",
+      "sha256": "102c3c8fcd7240942fc8fc343949425ead7415ac94e3dd20162ef880703821b2",
+      "sourceSha256": "196c418ceabb96915c1974c26a2ef1aa4e03261d4bb03ce02700172038e7e66b",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "ab9566ca-e571-45eb-a0e5-ff2f0ee400f0",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. A single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders runs straight between one pair of opposite flat edges, and a 6 m wide two-lane asphalt country road, faded dashed white centre line, low concrete kerbs, grass verges with tufts and small bushes runs straight between another pair of opposite flat edges and crosses the railway at 60 degrees on a level crossing, where the asphalt runs flush up to the rails over smooth timber crossing boards laid between them. Four plain white-painted timber field gates on stout white posts stand at the road edges, two on each side of the railway, swung open parallel to the track. The only things at the crossing are the gates and their posts, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T02:51:01.891Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/rail/ref-1.jpg",
+        "assets-source/refs/rail/ref-2.jpg",
+        "assets-source/refs/rail/ref-3.jpg"
+      ],
+      "notes": "Slightly wider than standard gauge so it reads at play distance; single track; bends across adjacent edges (60 degrees); a 60-degree rail-road level crossing with field gates. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-19",
+      "notes": "Pending owner review; not an approval. Review against assets-source/refs/rail/ref-3.jpg: rail_straight_center's track on edges 0 and 3 crossed at 60 degrees by the two-lane road on edges 1 and 4, timber deck panels flush with the rail heads between and beside the rails, four white field gates swung open parallel to the track (as ref-3). Review sheet: docs/checkpoints/rail_crossing/sheet.jpg (refs, textured EEVEE still, in engine at play distance, seams with the rail straight and a road stub, sun and shade close-ups of the deck and a gate, eye level, scale beside a car). The controller records the owner's decision."
+    }
+  ]
+}
