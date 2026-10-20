@@ -1,0 +1,81 @@
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 92fac97..7410f51 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -134,7 +134,7 @@ pub const VARIANTS: [(&str, &[&str]); 10] = [
+     ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
+     ("tree_oak", &["tree_oak_b"]),
+     ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
+-    ("log_fallen", &["log_fallen_b"]),
++    ("log_fallen", &["log_fallen_b", "log_fallen_c"]),
+     ("rock_small", &["rock_small_b", "rock_small_c"]),
+     (
+         "wildflower_clump",
+@@ -237,7 +237,7 @@ pub struct Footprint {
+ 
+ /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
+ /// the GLBs).
+-pub const FOOTPRINTS: [(&str, Footprint); 43] = [
++pub const FOOTPRINTS: [(&str, Footprint); 44] = [
+     (
+         "tree_forest",
+         Footprint {
+@@ -487,6 +487,13 @@ pub const FOOTPRINTS: [(&str, Footprint); 43] = [
+             crown: 0.0,
+         },
+     ),
++    (
++        "log_fallen_c",
++        Footprint {
++            ground: 1.72,
++            crown: 0.0,
++        },
++    ),
+     (
+         "tree_oak",
+         Footprint {
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index 645ad67..40ede5d 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -60,7 +60,7 @@ const SUBSTEP: f32 = 0.1;
+ /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
+ /// pieces do not. A sapling stops the walker at its stem, a shrub at its dense lower dome, a verge
+ /// bush at its clipped mass; ferns are walk-through.
+-pub const OBSTACLES: [&str; 35] = [
++pub const OBSTACLES: [&str; 36] = [
+     "house_cottage",
+     "house_twostorey",
+     "house_longhouse",
+@@ -87,6 +87,7 @@ pub const OBSTACLES: [&str; 35] = [
+     "rock_small_c",
+     "log_fallen",
+     "log_fallen_b",
++    "log_fallen_c",
+     "tree_oak",
+     "tree_oak_b",
+     "fence_paddock",
+@@ -1088,6 +1089,7 @@ mod tests {
+             ("rock_small_c", "rock"),
+             ("log_fallen", "log"),
+             ("log_fallen_b", "log"),
++            ("log_fallen_c", "log"),
+             ("fence_paddock", "fence"),
+             ("sapling_spruce", "tree"),
+             ("sapling_spruce_b", "tree"),
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 15ebf17..3cd10ff 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -444,8 +444,10 @@ const FOREST_FLOOR: [(&str, [f32; 2], f32, f32); 14] = [
+ 
+ /// (piece, offset, yaw, relief height) of the forest-floor variants on the forest at (-3, 1), each on
+ /// the litter at its spot (`relief()` in scripts/blender/kit/forest_base.py at Blender (x, -z)).
+-const FOREST_FLOOR_VARIANTS: [(&str, [f32; 2], f32, f32); 9] = [
++const FOREST_FLOOR_VARIANTS: [(&str, [f32; 2], f32, f32); 10] = [
+     ("tree_forest", [-7.5, -5.0], 30.0, -0.141),
++    // In the spruce's shade (the sun is at +x/+z), so its albedo is reviewed under the canopy.
++    ("log_fallen_c", [-8.5, -6.0], 130.0, -0.121),
+     ("log_fallen", [-2.0, -3.0], -10.0, -0.124),
+     ("log_fallen_b", [0.5, 2.0], 20.0, -0.188),
+     ("fern_clump", [4.0, -2.5], 0.0, -0.137),

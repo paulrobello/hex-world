@@ -1,0 +1,22 @@
+[
+  {"cmd": "select_tile", "id": "forest"},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "place", "q": 1, "r": -1},
+  {"cmd": "place", "q": 2, "r": -1},
+  {"cmd": "place", "q": 2, "r": 0},
+  {"cmd": "place", "q": 1, "r": 1},
+  {"cmd": "place", "q": 0, "r": 1},
+  {"cmd": "hover", "q": 6, "r": -6},
+  {"cmd": "camera", "pos": [-2, 30, 46], "look_at": [27.7, 1, 0]},
+  {"cmd": "wait", "frames": 600},
+  {"cmd": "screenshot", "name": "logc-play"},
+  {"cmd": "dump_state", "name": "logc-play-state"},
+  {"cmd": "camera", "pos": [48.3, 0.8, -20.2], "look_at": [46.06, 0.25, -22.09]},
+  {"cmd": "wait", "frames": 20},
+  {"cmd": "screenshot", "name": "logc-play-sun"},
+  {"cmd": "camera", "pos": [42.5, 1.2, -25.5], "look_at": [46.06, 0.25, -22.09]},
+  {"cmd": "wait", "frames": 20},
+  {"cmd": "screenshot", "name": "logc-play-shade"},
+  {"cmd": "wait", "frames": 10},
+  {"cmd": "exit"}
+]

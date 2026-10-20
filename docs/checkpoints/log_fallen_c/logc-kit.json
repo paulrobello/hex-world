@@ -1,0 +1,21 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 180 },
+  { "cmd": "camera", "pos": [-93.0, 21.0, 1.0], "look_at": [-73.5, 0.0, 21.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "logc-kit-play" },
+  { "cmd": "camera", "pos": [-74.3, 0.9, 15.6], "look_at": [-77.8, 0.3, 18.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "logc-kit-sun" },
+  { "cmd": "camera", "pos": [-80.6, 1.0, 22.3], "look_at": [-78.8, 0.25, 19.3] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "logc-kit-mouth" },
+  { "cmd": "camera", "pos": [-81.5, 1.5, 15.0], "look_at": [-77.8, 0.3, 18.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "logc-kit-shade" },
+  { "cmd": "camera", "pos": [-84.0, 1.7, 23.5], "look_at": [-77.8, 0.4, 18.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "logc-kit-eye" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

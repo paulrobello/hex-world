@@ -446,6 +446,8 @@ const FOREST_FLOOR: &[(&str, [f32; 2], f32, f32)] = &[
 /// the litter at its spot (`relief()` in scripts/blender/kit/forest_base.py at Blender (x, -z)).
 const FOREST_FLOOR_VARIANTS: &[(&str, [f32; 2], f32, f32)] = &[
     ("tree_forest", [-7.5, -5.0], 30.0, -0.141),
+    // In the spruce's shade (the sun is at +x/+z), so its albedo is reviewed under the canopy.
+    ("log_fallen_c", [-8.5, -6.0], 130.0, -0.121),
     ("log_fallen", [-2.0, -3.0], -10.0, -0.124),
     ("log_fallen_b", [0.5, 2.0], 20.0, -0.188),
     ("fern_clump", [4.0, -2.5], 0.0, -0.137),
