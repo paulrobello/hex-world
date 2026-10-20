@@ -79,6 +79,20 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
     ("ocean", include_str!("../../../data/tiles/ocean.ron")),
 ];
 
+/// Picker groups (owner, 2026-10-20): tiles the Tiles sheet lists as one entry, `(group id, member
+/// tile ids in rotation order)`. The members stay separate tiles (saves, thumbnails, kit pieces and
+/// the sim see only them); R steps through every member's distinct legal orientations in turn, so
+/// the player switches between them by rotating. A group id never equals a tile id.
+pub const PICKER_GROUPS: &[(&str, &[&str])] = &[("beach_curve", &["beach_outer", "beach_inner"])];
+
+/// One Tiles sheet entry: a lone tile (`id` is its tile id) or a picker group.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct PickerEntry {
+    pub id: String,
+    /// Member tile ids in rotation order; one for a lone tile.
+    pub tiles: Vec<String>,
+}
+
 /// `data/pending-pieces.ron`.
 pub const PENDING_PIECES_RON: &str = include_str!("../../../data/pending-pieces.ron");
 
@@ -179,6 +193,52 @@ impl TileCatalog {
         &self.sockets
     }
 
+    /// The picker group `id` belongs to, when it is a member of one in this catalog.
+    pub fn group_of(&self, id: &str) -> Option<&'static str> {
+        PICKER_GROUPS
+            .iter()
+            .find(|(_, members)| members.contains(&id))
+            .map(|(g, _)| *g)
+    }
+
+    /// The members of picker group `group` present in this catalog, in rotation order (empty for an
+    /// unknown group).
+    pub fn group_members(&self, group: &str) -> Vec<&TileDef> {
+        PICKER_GROUPS
+            .iter()
+            .find(|(g, _)| *g == group)
+            .map(|(_, members)| members.iter().filter_map(|m| self.get(m)).collect())
+            .unwrap_or_default()
+    }
+
+    /// The tiles R cycles through with `id` selected: its group's members, or the tile alone.
+    pub fn siblings(&self, id: &str) -> Vec<&TileDef> {
+        match self.group_of(id) {
+            Some(g) => self.group_members(g),
+            None => self.get(id).into_iter().collect(),
+        }
+    }
+
+    /// The Tiles sheet entries in inventory order: each lone tile, and each group at its first
+    /// member's place.
+    pub fn picker(&self) -> Vec<PickerEntry> {
+        let mut out: Vec<PickerEntry> = vec![];
+        for t in &self.tiles {
+            match self.group_of(&t.id) {
+                Some(g) if out.iter().any(|e| e.id == g) => {}
+                Some(g) => out.push(PickerEntry {
+                    id: g.to_owned(),
+                    tiles: self.group_members(g).iter().map(|m| m.id.clone()).collect(),
+                }),
+                None => out.push(PickerEntry {
+                    id: t.id.clone(),
+                    tiles: vec![t.id.clone()],
+                }),
+            }
+        }
+        out
+    }
+
     /// Every kit piece referenced by any tile, sorted.
     pub fn kit_refs(&self) -> BTreeSet<&str> {
         self.tiles
@@ -264,6 +324,34 @@ mod tests {
             issues.iter().any(|i| i.contains("lane edge 3 has 0")),
             "{issues:?}"
         );
+    }
+
+    #[test]
+    fn picker_groups_are_well_formed() {
+        let c = TileCatalog::builtin().unwrap();
+        let mut seen: BTreeSet<&str> = BTreeSet::new();
+        for (g, members) in PICKER_GROUPS {
+            assert!(c.get(g).is_none(), "group id {g} is also a tile id");
+            assert!(members.len() >= 2, "group {g} has one member");
+            for m in *members {
+                assert!(c.get(m).is_some(), "group {g} member {m} is not a tile");
+                assert!(seen.insert(m), "{m} sits in two groups");
+            }
+        }
+    }
+
+    #[test]
+    fn picker_lists_beach_curve_once_in_the_headlands_place() {
+        let c = TileCatalog::builtin().unwrap();
+        let p = c.picker();
+        let ids: Vec<&str> = p.iter().map(|e| e.id.as_str()).collect();
+        assert!(!ids.contains(&"beach_outer") && !ids.contains(&"beach_inner"));
+        let i = ids.iter().position(|&id| id == "beach_curve").unwrap();
+        assert_eq!(ids[i - 1], "beach");
+        assert_eq!(p[i].tiles, ["beach_outer", "beach_inner"]);
+        assert_eq!(p.len(), c.tiles().len() - 1);
+        assert_eq!(c.siblings("beach_inner").len(), 2);
+        assert_eq!(c.siblings("meadow").len(), 1);
     }
 
     #[test]

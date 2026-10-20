@@ -171,6 +171,9 @@ pub struct GameState {
     /// The rotation the player last chose with R, per tile id. Hovering a slot or selecting the
     /// tile again restores it wherever it is legal, instead of snapping to the first legal one.
     pub chosen_rotation: BTreeMap<String, u8>,
+    /// The member the player last chose per picker group (selected by id, or turned to with R), so
+    /// a hover tries it first and only falls back to another member where it has no legal rotation.
+    pub chosen_variant: BTreeMap<String, String>,
     pub tool: Tool,
     pub hovered: Option<Axial>,
     /// The pinned slot: the ghost, its rotation and the inventory stay here while the pointer moves.
@@ -206,6 +209,7 @@ impl GameState {
             selected,
             rotation: 0,
             chosen_rotation: BTreeMap::new(),
+            chosen_variant: BTreeMap::new(),
             tool: Tool::Place,
             hovered: None,
             pinned: None,
@@ -265,22 +269,42 @@ impl GameState {
             .legal_rotations(&self.catalog, cell, self.selected_def())
     }
 
-    /// Auto-rotate (PRD §4.2): `snap` takes the selected tile's chosen rotation when it is legal
-    /// here, else the first legal rotation; otherwise the rotation is kept while it is still legal.
-    /// With no legal rotation the rotation is left as it is.
+    /// The tile and rotation the ghost snaps to on the free slot `cell` (PRD §4.2): the chosen
+    /// member of the selected tile's picker group (the selected tile itself when it has none) at
+    /// its chosen rotation where that is legal, else at its first legal rotation, else the next
+    /// member that fits, the same way. `None` when no member fits.
+    fn snap_at(&self, cell: Axial) -> Option<(String, u8)> {
+        let members = self.catalog.siblings(&self.selected);
+        // Not `selected`: a hover that fell back to another member must not make it the preference.
+        let preferred = self
+            .catalog
+            .group_of(&self.selected)
+            .and_then(|g| self.chosen_variant.get(g))
+            .or(members.first().map(|d| &d.id))
+            .unwrap_or(&self.selected);
+        let start = members.iter().position(|d| &d.id == preferred).unwrap_or(0);
+        let n = members.len();
+        (0..n).map(|i| members[(start + i) % n]).find_map(|d| {
+            let legal = self.world.legal_rotations(&self.catalog, cell, d);
+            self.chosen_rotation
+                .get(&d.id)
+                .copied()
+                .filter(|k| legal.contains(k))
+                .or_else(|| legal.first().copied())
+                .map(|k| (d.id.clone(), k))
+        })
+    }
+
+    /// Auto-rotate (PRD §4.2): `snap` takes [`GameState::snap_at`]; otherwise the tile and rotation
+    /// are kept while they are still legal. With nothing legal they are left as they are.
     fn resnap(&mut self, snap: bool) {
         let Some(cell) = self.target_slot() else {
             return;
         };
-        let legal = self.legal_here(cell);
-        let chosen = self
-            .chosen_rotation
-            .get(&self.selected)
-            .copied()
-            .filter(|k| legal.contains(k));
-        if (snap || !legal.contains(&self.rotation))
-            && let Some(k) = chosen.or_else(|| legal.first().copied())
+        if (snap || !self.legal_here(cell).contains(&self.rotation))
+            && let Some((tile, k)) = self.snap_at(cell)
         {
+            self.selected = tile;
             self.rotation = k;
         }
     }
@@ -366,9 +390,9 @@ impl GameState {
             Action::SetWalk(on) => self.set_walk(on),
             Action::Hover(cell) => self.hover(cell),
             Action::SelectTile(id) => self.select_tile(id),
-            Action::SelectNth(n) => match self.catalog.tiles().get(n) {
-                Some(def) => {
-                    let id = def.id.clone();
+            Action::SelectNth(n) => match self.catalog.picker().get(n) {
+                Some(entry) => {
+                    let id = entry.id.clone();
                     self.select_tile(id)
                 }
                 None => self.refuse("select_tile", format!("no inventory tile {}", n + 1)),
@@ -443,26 +467,60 @@ impl GameState {
         vec![GameEvent::HoverChanged { cell }]
     }
 
+    /// Selects a tile id, or a picker group id (the Tiles sheet's Beach Curve), which selects the
+    /// group's chosen member, else its first. Selecting a member by id makes it the chosen one.
     fn select_tile(&mut self, id: String) -> Vec<GameEvent> {
-        if self.catalog.get(&id).is_none() {
+        let tile = if self.catalog.get(&id).is_some() {
+            if let Some(g) = self.catalog.group_of(&id) {
+                self.chosen_variant.insert(g.to_owned(), id.clone());
+            }
+            id
+        } else if let Some(first) = self.catalog.group_members(&id).first() {
+            self.chosen_variant
+                .get(&id)
+                .cloned()
+                .unwrap_or_else(|| first.id.clone())
+        } else {
             return self.refuse("select_tile", format!("unknown tile {id:?}"));
-        }
-        self.selected = id.clone();
+        };
+        self.selected = tile;
         self.resnap(true);
         self.result("select_tile", None, None);
-        vec![GameEvent::TileSelected { tile: id }]
+        vec![GameEvent::TileSelected {
+            tile: self.selected.clone(),
+        }]
     }
 
     fn rotate(&mut self, dir: RotateDir) -> Vec<GameEvent> {
         let cycled = self.target_slot().and_then(|cell| {
+            let members = self.catalog.siblings(&self.selected);
             self.world
-                .cycle_rotation(&self.catalog, cell, self.selected_def(), self.rotation, dir)
+                .cycle_group(
+                    &self.catalog,
+                    cell,
+                    &members,
+                    (&self.selected, self.rotation),
+                    dir,
+                )
+                .map(|(d, k)| (d.id.clone(), k))
         });
         // No legal rotation: still turn one step, so the edge markers show why.
-        self.rotation = cycled.unwrap_or(match dir {
-            RotateDir::Forward => (self.rotation + 1) % 6,
-            RotateDir::Back => (self.rotation + 5) % 6,
-        });
+        match cycled {
+            Some((tile, k)) => {
+                self.selected = tile;
+                self.rotation = k;
+            }
+            None => {
+                self.rotation = match dir {
+                    RotateDir::Forward => (self.rotation + 1) % 6,
+                    RotateDir::Back => (self.rotation + 5) % 6,
+                }
+            }
+        }
+        if let Some(g) = self.catalog.group_of(&self.selected) {
+            self.chosen_variant
+                .insert(g.to_owned(), self.selected.clone());
+        }
         self.chosen_rotation
             .insert(self.selected.clone(), self.rotation);
         let valid = self.ghost().is_some_and(|g| g.3);
@@ -599,29 +657,24 @@ impl GameState {
     }
 
     fn place(&mut self, cell: Axial) -> Vec<GameEvent> {
-        self.place_with(cell, self.rotation)
+        self.place_with(cell, self.selected.clone(), self.rotation)
     }
 
-    /// The rotation the ghost would show on the free slot `cell`: the current one when the ghost
-    /// is there, else the selected tile's chosen rotation where legal, else the first legal one.
-    fn snap_rotation(&self, cell: Axial) -> u8 {
+    /// The tile and rotation the ghost would show on the free slot `cell`: the current ones when
+    /// the ghost is there, else [`GameState::snap_at`], else the current ones (refused there).
+    fn snap_rotation(&self, cell: Axial) -> (String, u8) {
         if self.target_slot() == Some(cell) {
-            return self.rotation;
+            return (self.selected.clone(), self.rotation);
         }
-        let legal = self.legal_here(cell);
-        self.chosen_rotation
-            .get(&self.selected)
-            .copied()
-            .filter(|k| legal.contains(k))
-            .or_else(|| legal.first().copied())
-            .unwrap_or(self.rotation)
+        self.snap_at(cell)
+            .unwrap_or_else(|| (self.selected.clone(), self.rotation))
     }
 
-    /// Shift+click on a free slot: places at once at the ghost's rotation for it. The pin, if it
-    /// is on another slot, stays.
+    /// Shift+click on a free slot: places at once at the ghost's tile and rotation for it. The
+    /// pin, if it is on another slot, stays.
     fn quick_place(&mut self, cell: Axial) -> Vec<GameEvent> {
-        let rotation = self.snap_rotation(cell);
-        self.place_with(cell, rotation)
+        let (tile, rotation) = self.snap_rotation(cell);
+        self.place_with(cell, tile, rotation)
     }
 
     /// Swaps the tile at `cell` for the selected tile (one undoable action). The ghost's rotation
@@ -634,15 +687,26 @@ impl GameState {
         if self.world.is_slot(cell) {
             return self.quick_place(cell);
         }
-        let tile = self.selected.clone();
-        let legal = self
-            .world
-            .replace_rotations(&self.catalog, cell, self.selected_def());
-        let rotation = if legal.contains(&self.rotation) {
-            self.rotation
-        } else {
-            legal.first().copied().unwrap_or(self.rotation)
-        };
+        // The selected tile first (at the ghost's rotation where it fits), then the rest of its
+        // picker group, so a Beach Curve replace takes whichever of headland and bay fits.
+        let members = self.catalog.siblings(&self.selected);
+        let start = members
+            .iter()
+            .position(|d| d.id == self.selected)
+            .unwrap_or(0);
+        let n = members.len();
+        let (tile, rotation) = (0..n)
+            .map(|i| members[(start + i) % n])
+            .find_map(|d| {
+                let legal = self.world.replace_rotations(&self.catalog, cell, d);
+                let k = if d.id == self.selected && legal.contains(&self.rotation) {
+                    Some(self.rotation)
+                } else {
+                    legal.first().copied()
+                };
+                k.map(|k| (d.id.clone(), k))
+            })
+            .unwrap_or_else(|| (self.selected.clone(), self.rotation));
         match self.world.replace(&self.catalog, cell, &tile, rotation) {
             Ok(old) => {
                 let mut events = vec![GameEvent::TileReplaced {
@@ -683,8 +747,7 @@ impl GameState {
         }
     }
 
-    fn place_with(&mut self, cell: Axial, rotation: u8) -> Vec<GameEvent> {
-        let tile = self.selected.clone();
+    fn place_with(&mut self, cell: Axial, tile: String, rotation: u8) -> Vec<GameEvent> {
         match self.world.place(&self.catalog, cell, &tile, rotation) {
             Ok(()) => {
                 let mut events = vec![GameEvent::TilePlaced {
@@ -755,6 +818,7 @@ impl GameState {
         self.recent.clear();
         self.recent.push_back(event);
         self.chosen_rotation.clear();
+        self.chosen_variant.clear();
         self.last_bulldoze = None;
         self.revision += 1;
         self.world_rev += 1;
@@ -1157,6 +1221,87 @@ mod tests {
             g.world.tile(ax(1, 0)).is_none(),
             "bulldozed the hovered tile"
         );
+    }
+
+    #[test]
+    fn beach_curve_rotates_between_headland_and_bay() {
+        let mut g = game();
+        g.apply(Action::SelectTile("beach_curve".into()));
+        assert_eq!(
+            g.selected, "beach_outer",
+            "the group selects its first member"
+        );
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        // East of the start meadow: one headland orientation, then three bay ones, then around.
+        let mut seen = vec![(g.selected.clone(), g.rotation)];
+        for _ in 0..4 {
+            g.apply(Action::Rotate(RotateDir::Forward));
+            assert!(g.ghost().unwrap().3, "every step is legal");
+            seen.push((g.selected.clone(), g.rotation));
+        }
+        let ids: Vec<&str> = seen.iter().map(|(t, _)| t.as_str()).collect();
+        assert_eq!(
+            ids,
+            [
+                "beach_outer",
+                "beach_inner",
+                "beach_inner",
+                "beach_inner",
+                "beach_outer"
+            ]
+        );
+        assert_eq!(seen[0], seen[4], "the fifth press wraps");
+        g.apply(Action::Rotate(RotateDir::Back));
+        assert_eq!((g.selected.as_str(), g.rotation), ("beach_inner", 5));
+        // The bay stays chosen: hovering off and back, or picking the group again, restores it.
+        g.apply(Action::Hover(None));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        assert_eq!((g.selected.as_str(), g.rotation), ("beach_inner", 5));
+        g.apply(Action::SelectTile("meadow".into()));
+        g.apply(Action::SelectTile("beach_curve".into()));
+        assert_eq!((g.selected.as_str(), g.rotation), ("beach_inner", 5));
+        // Placing places the variant the ghost shows.
+        g.apply(Action::Place(ax(1, 0)));
+        let t = g.world.tile(ax(1, 0)).unwrap();
+        assert_eq!((t.def.as_str(), t.rotation), ("beach_inner", 5));
+    }
+
+    #[test]
+    fn beach_curve_hover_switches_to_the_member_that_fits() {
+        let mut g = game();
+        place(&mut g, "meadow", ax(0, 1));
+        place(&mut g, "meadow", ax(1, 1));
+        g.apply(Action::SelectTile("beach_outer".into()));
+        // (1, 0) touches three meadows: only the bay wraps three grass edges.
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        assert_eq!(g.selected, "beach_inner");
+        assert!(g.ghost().unwrap().3);
+        // An explicit headland pick is still preferred where the headland fits.
+        g.apply(Action::Hover(Some(ax(-1, 0))));
+        assert_eq!(g.selected, "beach_outer");
+        // Shift+click on the three-meadow slot from elsewhere places the bay.
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        g.apply(Action::Hover(Some(ax(-1, 0))));
+        assert_eq!(g.selected, "beach_outer");
+        let ev = g.quick_place(ax(1, 0));
+        assert!(matches!(ev[0], GameEvent::TilePlaced { .. }), "{ev:?}");
+        assert_eq!(g.world.tile(ax(1, 0)).unwrap().def, "beach_inner");
+        // The number keys count picker entries: Beach Curve is one of them.
+        let picker = g.catalog.picker();
+        let n = picker.iter().position(|e| e.id == "beach_curve").unwrap();
+        g.apply(Action::SelectNth(n));
+        assert!(g.selected.starts_with("beach_"));
+        assert_eq!(picker[n + 1].id, "river_mouth");
+        // Picking the group on a bay-only slot shows the bay, but the fallback is not a choice: the
+        // next slot where both fit shows the headland again.
+        let mut g = game();
+        place(&mut g, "meadow", ax(0, 1));
+        place(&mut g, "meadow", ax(1, 1));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        g.apply(Action::SelectTile("beach_curve".into()));
+        assert_eq!(g.selected, "beach_inner");
+        g.apply(Action::Hover(Some(ax(-1, 0))));
+        assert_eq!(g.selected, "beach_outer");
     }
 
     #[test]

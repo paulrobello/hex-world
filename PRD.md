@@ -96,7 +96,7 @@ Decisions made during the brainstorm. Codes are stable and referenced throughout
 ### 4.2 Placement rules
 
 - A slot is legal if it is empty, adjacent to at least one placed tile, and at least one rotation of the chosen tile is compatible with every placed neighbor.
-- The inventory offers auto-rotate: when a slot is hovered, the ghost snaps to the first compatible rotation, and the player can cycle through the other legal rotations. As built, it snaps to the rotation the player last chose for that tile when that is legal there, and R steps only through distinct legal orientations.
+- The inventory offers auto-rotate: when a slot is hovered, the ghost snaps to the first compatible rotation, and the player can cycle through the other legal rotations. As built, it snaps to the rotation the player last chose for that tile when that is legal there, and R steps only through distinct legal orientations. The headland and the bay are one inventory entry, Beach Curve (owner, 2026-10-20): R steps through the headland's legal orientations, then the bay's, so rotating switches between them, and auto-rotate falls back to the other one where the chosen one has no legal rotation. They stay two tile types underneath (saves, thumbnails, kit pieces).
 - Undo (Ctrl/Cmd+Z) reverts placements, replacements and bulldozes in LIFO order. Redo is supported. The stack depth is at least 100 actions (128 in `hex-core`, `HISTORY_DEPTH`) and persists with the save.
 - Pin, quick place and replace (owner, 2026-10-14). A click on a free slot pins it, so the ghost, its rotation and the inventory's fit list stay on that slot while the pointer moves; a second click on it places, and Esc or a click elsewhere unpins. Shift+click places the selected tile at once, so a run of Shift-clicks places a run. Ctrl/Cmd+click on a placed tile replaces it with the selected tile when that fits its neighbours, as one undoable step: the old tile sinks with no dust and the new one rises. The same tile in the same orientation is a no-op.
 - Bulldoze removes a tile unless removing it would disconnect the world graph (checked with a flood fill) or it is the last tile left.
@@ -247,8 +247,8 @@ About 10 types. The exact variants are frozen at the start of P2. With the owner
 | 9 | River + road bridge | A road crossing a river: shows bridges and cross-network seams. |
 | 9a | River spring | River on one edge: a stream wells up from an 11 m pool inside the land (owner, 2026-10-14). The river flows away from it. |
 | 10 | Beach | A straight coast: ocean, ocean, beach, grass, grass, beach. Surf foam. |
-| 10a | Beach outer corner | A headland: ocean, ocean, beach, grass, beach, ocean. The coast turns around a point of land (owner, O1). |
-| 10b | Beach inner corner | A bay: ocean, beach, grass, grass, grass, beach. The coast turns inward (owner, O1). |
+| 10a | Beach outer corner | A headland: ocean, ocean, beach, grass, beach, ocean. The coast turns around a point of land (owner, O1). In the inventory with 10b as one entry, Beach Curve, that R turns between the two (owner, 2026-10-20). |
+| 10b | Beach inner corner | A bay: ocean, beach, grass, grass, grass, beach. The coast turns inward (owner, O1). The Beach Curve's other half (10a). |
 | 10c | River mouth | The straight beach with one land edge turned into River: ocean, ocean, beach, river, grass, beach. The channel fans out over the sand into the surf (owner, 2026-10-14). Both handednesses ship: `river_mouth` (River on edge 3) and `river_mouth_l` (River on edge 4), authored mirrored. |
 | 11 | Ocean | Ocean on all edges. Deep water with a visible shelf below the surface. |
 

@@ -7,6 +7,7 @@ import { createServer } from "node:http";
 import { mkdirSync, readFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
+import { PICKER, fitEntry, needsAt, tileMap } from "../web/ui/src/rules.ts";
 
 const dist = process.argv[2] ?? "dist";
 const out = "e2e/test-results/ui";
@@ -590,6 +591,86 @@ try {
   await key("ControlOrMeta+z");
   await until(async () => !tileAt(await play(), ...bakeryAt), "undo removes the bakery");
   check((await play()).tiles.length === bakeryBefore, "the bakery undo restores the tile count");
+
+  // Beach Curve (owner 2026-10-20): one Tiles sheet row for the headland and the bay. At a coast slot
+  // both fit, R walks the headland's orientations then the bay's and the ghost switches tile with
+  // it, and a click places the variant the ghost shows; undone so the world below is unchanged.
+  const curveOut = process.env.BEACH_CURVE_OUT ?? "docs/checkpoints/beach-curve";
+  mkdirSync(curveOut, { recursive: true });
+  const curveShot = (name, clip) => page.screenshot({ path: `${curveOut}/${name}.jpg`, type: "jpeg", quality: 90, ...(clip ? { clip } : {}) });
+  check(await page.locator(".row[data-tile=beach_curve]").count() === 1, "the Tiles sheet lists one Beach Curve row");
+  check(await page.locator(".row[data-tile=beach_outer], .row[data-tile=beach_inner]").count() === 0, "no separate headland or bay rows");
+  check((await text(".row[data-tile=beach_curve] .row__name")) === "Beach Curve", "the row is named Beach Curve");
+  check(!/Headland|\bBay\b/.test(await text(".sheet--tiles")), "the sheet never says Headland or Bay");
+  await page.locator(".row[data-tile=beach_curve]").click();
+  await until(async () => ["beach_outer", "beach_inner"].includes((await play()).selected), "a click on Beach Curve selects a member");
+  // A free slot on screen where both members fit, by the overlay's own fit rules.
+  const curveVp = page.viewportSize();
+  const curve = PICKER.find((e) => e.id === "beach_curve");
+  const curveWorld = await play();
+  let coast = null;
+  let count = 0;
+  for (const c of curveWorld.frontier) {
+    const b = await page.evaluate(([q, r]) => window.hexWorld.cellRect(q, r), [c.q, c.r]);
+    if (!b || b[0] < 40 || b[1] < 80 || b[2] > curveVp.width - 460 || b[3] > curveVp.height - 40) continue;
+    const f = fitEntry(curve, needsAt(c, tileMap(curveWorld.tiles)));
+    if (new Set(f.seq.map((t) => t.def.id)).size === 2) { coast = c; count = f.seq.length; break; }
+  }
+  check(!!coast, `a slot on screen fits both the headland and the bay (${JSON.stringify(coast)})`);
+  if (coast) {
+    await page.focus("canvas#hex-world");
+    await pointAt(coast.q, coast.r);
+    await until(async () => (await text(".ghost-tag")).includes("Beach Curve"), "the ghost tag names Beach Curve");
+    // The tag counts the headland and bay turns together, as the overlay's rules and hex-core do.
+    await until(async () => (await text(".ghost-tag")).includes(`Rotation 1 of ${count}`), `the tag reads Rotation 1 of ${count}`);
+    const seen = [];
+    const at = async () => { const g = (await play()).ghost; return g && `${g.tile}@${g.rotation}`; };
+    seen.push(await at());
+    for (let i = 0; i < count; i++) {
+      const prev = seen.at(-1);
+      await key("r");
+      await until(async () => (await at()) !== prev, `R press ${i + 1} turns the Beach Curve ghost`);
+      const g = (await play()).ghost;
+      check(g.valid, `R press ${i + 1} lands on a legal orientation (${g.tile} ${g.rotation})`);
+      seen.push(await at());
+    }
+    check(seen.at(-1) === seen[0], `the ${count}th press wraps to the first turn (${seen.join(", ")})`);
+    check(new Set(seen.slice(0, -1)).size === count, "each press shows a different turn");
+    check(seen.some((s) => s.startsWith("beach_outer@")) && seen.some((s) => s.startsWith("beach_inner@")), "R switches the ghost between the headland and the bay");
+    const [cx, cy] = await centre(coast.q, coast.r);
+    const [gx, gy] = [Math.max(0, cx - 260), Math.max(0, cy - 200)];
+    const ghostClip = { x: gx, y: gy, width: Math.min(520, curveVp.width - gx), height: Math.min(400, curveVp.height - gy) };
+    for (const tile of ["beach_outer", "beach_inner"]) {
+      for (let i = 0; i < count && !(await at()).startsWith(`${tile}@`); i++) {
+        const prev = await at();
+        await key("r");
+        await until(async () => (await at()) !== prev, `R turns toward ${tile}`);
+      }
+      await until(async () => (await page.evaluate(() => window.hexWorld.state().ghost_meshes)) === true, `${tile} ghost draws its kit meshes`);
+      await page.waitForTimeout(700);
+      await curveShot(`ghost-${tile === "beach_outer" ? "headland" : "bay"}`, ghostClip);
+      if (tile === "beach_inner") {
+        await page.locator(".row[data-tile=beach_curve]").scrollIntoViewIfNeeded();
+        const sheet = await page.locator(".sheet--tiles").boundingBox();
+        await curveShot("picker-beach-curve", sheet);
+      }
+    }
+    // Place the bay the ghost shows: a click pins, the next one places.
+    const shown = (await play()).ghost;
+    await events();
+    await pinHere(coast.q, coast.r);
+    await page.mouse.down();
+    await page.mouse.up();
+    await until(async () => tileAt(await play(), coast.q, coast.r), "Beach Curve placed");
+    const put = tileAt(await play(), coast.q, coast.r);
+    check(put?.tile === shown.tile && put?.rotation === shown.rotation, `the placed tile is the ghost's variant (${put?.tile} ${put?.rotation})`);
+    check((await events()).some((e) => e.type === "tilePlaced" && e.tile === "beach_inner"), "tilePlaced names beach_inner");
+    await until(async () => (await text(".ghost-tag")).includes("Placed Beach Curve"), "the tag says Placed Beach Curve");
+    await page.waitForTimeout(2600);
+    await curveShot("placed-bay", ghostClip);
+    await key("ControlOrMeta+z");
+    await until(async () => !tileAt(await play(), coast.q, coast.r), "undo removes the Beach Curve");
+  }
 
   // S8 photo mode (PRD §4.6): P enters (the HUD hides, agents pause), WASD and E fly the free camera,
   // the panel changes DOF, a 2× PNG exports through the offscreen target and downloads, then P leaves

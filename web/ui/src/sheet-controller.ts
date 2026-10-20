@@ -1,5 +1,5 @@
 import type { Cell, Command, PlayState } from "./bridge.ts";
-import { type TileMap, TILES, cellKey, fit, isSlot, needsAt } from "./rules.ts";
+import { PICKER, type TileMap, cellKey, fitEntry, isSlot, needsAt } from "./rules.ts";
 import { Sheet } from "./sheet.ts";
 
 const sameCell = (a: Cell | null | undefined, b: Cell | null | undefined): boolean =>
@@ -92,15 +92,26 @@ export class SheetController {
 
   render(st: PlayState, map: TileMap, tilesRevision: number): void {
     const slot = this.slot;
-    const ghostRotation = st.ghost && sameCell(st.ghost, slot) ? st.ghost.rotation : null;
-    const signature = [tilesRevision, slot && cellKey(slot), st.selected, ghostRotation, st.tool, this.turns].join("|");
+    const onSlot = st.ghost && sameCell(st.ghost, slot) ? st.ghost : null;
+    const ghostRotation = onSlot ? onSlot.rotation : null;
+    const ghostTile = onSlot ? onSlot.tile : null;
+    const signature = [
+      tilesRevision,
+      slot && cellKey(slot),
+      st.selected,
+      ghostTile,
+      ghostRotation,
+      st.tool,
+      this.turns,
+    ].join("|");
     if (signature === this.signature) return;
     this.signature = signature;
     const needs = slot ? needsAt(slot, map) : null;
-    const nearest = slot && needs && !TILES.some((d) => fit(d, needs).ok) ? this.nearest(st, slot, map) : null;
+    const nearest = slot && needs && !PICKER.some((e) => fitEntry(e, needs).ok) ? this.nearest(st, slot, map) : null;
     this.sheet.render({
       slot: slot && needs ? { cell: slot, needs } : null,
       selected: st.selected,
+      ghostTile,
       ghostRotation,
       turns: this.turns,
       bulldoze: st.tool === "bulldoze",
@@ -116,7 +127,7 @@ export class SheetController {
         (Math.abs(cell.q - from.q) + Math.abs(cell.r - from.r) + Math.abs(cell.q + cell.r - from.q - from.r)) / 2;
       if (best && d >= best.d) continue;
       const needs = needsAt(cell, map);
-      const fits = TILES.filter((tile) => fit(tile, needs).ok).length;
+      const fits = PICKER.filter((e) => fitEntry(e, needs).ok).length;
       if (fits) best = { cell, fits, d };
     }
     return best && { cell: best.cell, fits: best.fits };

@@ -22,8 +22,9 @@ export const TILE_NAMES: Record<string, string> = {
   river_road_bridge: "River bridge",
   river_spring: "River spring",
   beach: "Beach",
-  beach_outer: "Headland",
-  beach_inner: "Bay",
+  // One picker entry, the Beach Curve (owner, 2026-10-20): R turns it between the headland and the bay.
+  beach_outer: "Beach Curve",
+  beach_inner: "Beach Curve",
   river_mouth: "River mouth",
   river_mouth_l: "River mouth mirrored",
   ocean: "Ocean",

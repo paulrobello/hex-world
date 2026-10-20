@@ -5,35 +5,44 @@ import { h, isMac, reduceMotion, s } from "./dom.ts";
 import { KIND_CLASS, TilePicture, hexPoints, socketHex } from "./glyph.ts";
 import { icon } from "./icons.ts";
 import {
-  type Fit,
+  type EntryFit,
   type Kinds,
   type Needs,
-  TILES,
-  type TileDef,
-  fit,
-  fitMeta,
+  PICKER,
+  type PickerEntry,
+  type Turn,
+  entryMeta,
+  entrySummary,
+  fitEntry,
   needLines,
   nothingFitsWhy,
-  summary,
 } from "./rules.ts";
 import { tileName } from "./words.ts";
 
+/** One member's picture and socket hex; a group row shows the member its current turn is on. */
+interface Face {
+  pic: TilePicture;
+  hex: SVGElement;
+  /** The socket hex's turning group, rotated with `pic`. */
+  hexRot: SVGGElement;
+}
+
 interface Row {
-  def: TileDef;
+  entry: PickerEntry;
   li: HTMLLIElement;
   btn: HTMLButtonElement;
   meta: HTMLElement;
   num: HTMLElement;
-  pic: TilePicture;
-  /** The socket hex's turning group, rotated with `pic`. */
-  hexRot: SVGGElement;
+  faces: Map<string, Face>;
+  shown: string;
 }
 
 export interface SheetView {
   /** The slot the filter reads (sticky), with what its edges touch. */
   slot: { cell: Cell; needs: Needs } | null;
   selected: string;
-  /** The ghost's rotation when it sits on the sheet's slot. */
+  /** The ghost's tile and rotation when it sits on the sheet's slot. */
+  ghostTile: string | null;
   ghostRotation: number | null;
   /** R presses at this slot: every other fitting row turns in step, through its own distinct fits. */
   turns: number;
@@ -57,7 +66,7 @@ export class Sheet {
   private keySig = "";
   private slotKey = "";
   private readonly body: HTMLElement;
-  /** Tile ids in "Fits here" order, for the 1–9 keys. */
+  /** Picker entry ids in "Fits here" order, for the 1–9 keys. */
   numbered: string[] = [];
 
   private readonly onSelect: (id: string) => void;
@@ -132,24 +141,32 @@ export class Sheet {
       foot,
       mods,
     );
-    this.rows = TILES.map((def) => {
+    this.rows = PICKER.map((entry) => {
       const meta = h("span", { class: "row__meta" });
       const num = h("span", { class: "row__num", "aria-hidden": "true" });
-      const pic = new TilePicture(def);
-      const hex = socketHex(def);
-      const hexRot = hex.querySelector<SVGGElement>(".g-rot")!;
+      const faces = new Map<string, Face>();
+      const first = entry.tiles[0]!.id;
+      for (const def of entry.tiles) {
+        const pic = new TilePicture(def);
+        const hex = socketHex(def);
+        const hexRot = hex.querySelector<SVGGElement>(".g-rot")!;
+        pic.el.toggleAttribute("hidden", def.id !== first);
+        hex.toggleAttribute("hidden", def.id !== first);
+        faces.set(def.id, { pic, hex, hexRot });
+      }
+      const all = [...faces.values()];
       const btn = h(
         "button",
-        { class: "row", type: "button", "data-tile": def.id, "aria-pressed": "false" },
-        pic.el,
-        h("span", { class: "row__text" }, h("span", { class: "row__name" }, tileName(def.id)), meta),
-        hex,
+        { class: "row", type: "button", "data-tile": entry.id, "aria-pressed": "false" },
+        ...all.map((f) => f.pic.el),
+        h("span", { class: "row__text" }, h("span", { class: "row__name" }, tileName(first)), meta),
+        ...all.map((f) => f.hex),
         num,
       );
-      btn.addEventListener("click", () => onSelect(def.id));
+      btn.addEventListener("click", () => onSelect(entry.id));
       const li = h("li", {}, btn);
       this.fitList.append(li);
-      return { def, li, btn, meta, num, pic, hexRot };
+      return { entry, li, btn, meta, num, faces, shown: first };
     });
     this.el.addEventListener("keydown", (e) => {
       const row = (e.target as Element).closest?.(".row");
@@ -168,9 +185,9 @@ export class Sheet {
 
   render(v: SheetView): void {
     this.el.classList.toggle("is-inert", v.bulldoze);
-    const fits = new Map<string, Fit>();
-    for (const r of this.rows) if (v.slot) fits.set(r.def.id, fit(r.def, v.slot.needs));
-    const ok = (r: Row) => !v.slot || fits.get(r.def.id)!.ok;
+    const fits = new Map<string, EntryFit>();
+    for (const r of this.rows) if (v.slot) fits.set(r.entry.id, fitEntry(r.entry, v.slot.needs));
+    const ok = (r: Row) => !v.slot || fits.get(r.entry.id)!.ok;
     const fitting = this.rows.filter(ok);
     const off = this.rows.filter((r) => !ok(r));
     this.renderKey(v, fitting.length > 0);
@@ -181,38 +198,37 @@ export class Sheet {
       this.slotKey = slotKey;
       this.body.scrollTop = 0;
     }
-    const order = [...fitting.map((r) => `${r.def.id}+`), ...off.map((r) => `${r.def.id}-`)];
+    const order = [...fitting.map((r) => `${r.entry.id}+`), ...off.map((r) => `${r.entry.id}-`)];
     const moved = order.join() !== this.order.join();
     const before =
       moved && !reduceMotion() ? new Map(this.rows.map((r) => [r, r.li.getBoundingClientRect().top])) : null;
     for (const r of this.rows) {
-      const f = fits.get(r.def.id);
-      const selected = r.def.id === v.selected;
-      const meta = !v.slot ? summary(r.def) : f!.ok ? fitMeta(r.def, f!) : f!.why;
+      const f = fits.get(r.entry.id);
+      const selected = r.entry.tiles.some((t) => t.id === v.selected);
+      const name = tileName(r.entry.tiles[0]!.id);
+      const meta = !v.slot ? entrySummary(r.entry) : f!.ok ? entryMeta(r.entry, f!) : f!.why;
       if (r.meta.textContent !== meta) r.meta.textContent = meta;
       r.btn.setAttribute("aria-pressed", String(selected));
-      r.btn.setAttribute(
-        "aria-label",
-        `${tileName(r.def.id)}. ${v.slot && !f!.ok ? `Doesn't fit here. ${meta}` : meta}`,
-      );
-      // Fitting rows show the rotation the tile would take here; the selected one follows the ghost.
-      const k = !f
-        ? 0
+      r.btn.setAttribute("aria-label", `${name}. ${v.slot && !f!.ok ? `Doesn't fit here. ${meta}` : meta}`);
+      // Fitting rows show the tile and rotation they would take here; the selected one follows the
+      // ghost. A group row shows the member its turn is on.
+      const ghost = r.entry.tiles.find((t) => t.id === v.ghostTile);
+      const n = f?.seq.length ?? 0;
+      const turn: Turn = !f
+        ? { def: r.entry.tiles[0]!, k: 0 }
         : !f.ok
-          ? f.bestK
-          : selected && v.ghostRotation != null
-            ? v.ghostRotation
-            : f.distinct[((v.turns % f.distinct.length) + f.distinct.length) % f.distinct.length]!;
-      r.pic.show(k);
-      const turn = `rotate(${k * 60}deg)`;
-      if (r.hexRot.style.transform !== turn) r.hexRot.style.transform = turn;
+          ? f.best
+          : selected && ghost && v.ghostRotation != null
+            ? { def: ghost, k: v.ghostRotation }
+            : f.seq[((v.turns % n) + n) % n]!;
+      this.showFace(r, turn);
     }
     if (moved) {
       for (const r of fitting) this.fitList.append(r.li);
       for (const r of off) this.offList.append(r.li);
       this.order = order;
     }
-    this.numbered = fitting.map((r) => r.def.id);
+    this.numbered = fitting.map((r) => r.entry.id);
     fitting.forEach((r, i) => {
       r.num.textContent = i < 9 ? String(i + 1) : "";
     });
@@ -232,6 +248,20 @@ export class Sheet {
           });
       }
     }
+  }
+
+  private showFace(r: Row, t: Turn): void {
+    if (r.shown !== t.def.id) {
+      for (const [id, f] of r.faces) {
+        f.pic.el.toggleAttribute("hidden", id !== t.def.id);
+        f.hex.toggleAttribute("hidden", id !== t.def.id);
+      }
+      r.shown = t.def.id;
+    }
+    const face = r.faces.get(t.def.id)!;
+    face.pic.show(t.k);
+    const turn = `rotate(${t.k * 60}deg)`;
+    if (face.hexRot.style.transform !== turn) face.hexRot.style.transform = turn;
   }
 
   private renderKey(v: SheetView, anyFit: boolean): void {

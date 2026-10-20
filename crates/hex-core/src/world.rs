@@ -345,6 +345,63 @@ impl World {
             .map(|i| reps[i])
     }
 
+    /// What R steps through at `cell` for a picker entry (`members`, a group in rotation order or one
+    /// lone tile): each member's distinct legal orientations, member after member (owner,
+    /// 2026-10-20: the Beach Curve's headland orientations, then its bay ones).
+    pub fn group_orientations<'a>(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        members: &[&'a TileDef],
+    ) -> Vec<(&'a TileDef, u8)> {
+        members
+            .iter()
+            .flat_map(|&d| {
+                self.distinct_legal_rotations(catalog, cell, d)
+                    .into_iter()
+                    .map(move |k| (d, k))
+            })
+            .collect()
+    }
+
+    /// [`World::cycle_rotation`] across a picker entry's members: the next entry of
+    /// [`World::group_orientations`] after `(current tile, current rotation)` in `dir`, wrapping, so
+    /// a step may switch to another member. From an illegal `current` it is the current tile's next
+    /// legal orientation when it has one, else the first (or, backwards, the last) entry. `None`
+    /// when no member fits.
+    pub fn cycle_group<'a>(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        members: &[&'a TileDef],
+        current: (&str, u8),
+        dir: RotateDir,
+    ) -> Option<(&'a TileDef, u8)> {
+        let seq = self.group_orientations(catalog, cell, members);
+        let n = seq.len();
+        if n == 0 {
+            return None;
+        }
+        let (id, k) = current;
+        if let Some(i) = seq
+            .iter()
+            .position(|(d, r)| d.id == id && d.same_orientation(*r, k % 6))
+        {
+            return Some(match dir {
+                RotateDir::Forward => seq[(i + 1) % n],
+                RotateDir::Back => seq[(i + n - 1) % n],
+            });
+        }
+        let own = members.iter().find(|d| d.id == id).and_then(|&d| {
+            self.cycle_rotation(catalog, cell, d, k, dir)
+                .map(|r| (d, r))
+        });
+        own.or(Some(match dir {
+            RotateDir::Forward => seq[0],
+            RotateDir::Back => seq[n - 1],
+        }))
+    }
+
     /// Places `def_id` at `cell` if every touching edge is compatible (PRD §4.1 step 4).
     pub fn place(
         &mut self,
@@ -764,6 +821,83 @@ mod tests {
             w.distinct_legal_rotations(&c, EAST, def(&c, "ocean"))
                 .is_empty()
         );
+    }
+
+    #[test]
+    fn beach_curve_cycles_headland_then_bay_orientations() {
+        let c = catalog();
+        let w = World::new(1);
+        let members = c.group_members("beach_curve");
+        let ids: Vec<&str> = members.iter().map(|d| d.id.as_str()).collect();
+        assert_eq!(ids, ["beach_outer", "beach_inner"]);
+        // East of the start meadow only edge 3 touches grass: the headland fits one way, the bay
+        // three (any of its grass edges against the meadow).
+        let seq = w.group_orientations(&c, EAST, &members);
+        let got: Vec<(&str, u8)> = seq.iter().map(|(d, k)| (d.id.as_str(), *k)).collect();
+        assert_eq!(
+            got,
+            [
+                ("beach_outer", 0),
+                ("beach_inner", 0),
+                ("beach_inner", 1),
+                ("beach_inner", 5)
+            ]
+        );
+        for (d, k) in &seq {
+            assert!(w.fits(&c, EAST, d, *k), "{} {k} is illegal", d.id);
+        }
+        for (i, (a, ka)) in seq.iter().enumerate() {
+            for (b, kb) in &seq[i + 1..] {
+                assert!(a.id != b.id || !a.same_orientation(*ka, *kb), "repeat");
+            }
+        }
+        // R walks the sequence and wraps; Shift+R walks it back.
+        let mut cur = ("beach_outer".to_owned(), 0u8);
+        let mut walked = vec![];
+        for _ in 0..seq.len() {
+            let (d, k) = w
+                .cycle_group(&c, EAST, &members, (&cur.0, cur.1), RotateDir::Forward)
+                .unwrap();
+            cur = (d.id.clone(), k);
+            walked.push(cur.clone());
+        }
+        assert_eq!(walked.last().unwrap(), &("beach_outer".to_owned(), 0));
+        assert_eq!(walked[0], ("beach_inner".to_owned(), 0));
+        let back = w
+            .cycle_group(&c, EAST, &members, ("beach_outer", 0), RotateDir::Back)
+            .unwrap();
+        assert_eq!((back.0.id.as_str(), back.1), ("beach_inner", 5));
+        // From an illegal headland rotation: the headland's own next legal one.
+        let from_bad = w
+            .cycle_group(&c, EAST, &members, ("beach_outer", 3), RotateDir::Forward)
+            .unwrap();
+        assert_eq!((from_bad.0.id.as_str(), from_bad.1), ("beach_outer", 0));
+        // A lone tile cycles exactly as cycle_rotation does.
+        let road = def(&c, "road_straight");
+        for k in 0..6 {
+            assert_eq!(
+                w.cycle_group(&c, EAST, &[road], ("road_straight", k), RotateDir::Forward)
+                    .map(|(_, r)| r),
+                w.cycle_rotation(&c, EAST, road, k, RotateDir::Forward)
+            );
+        }
+    }
+
+    #[test]
+    fn beach_curve_switches_to_the_bay_where_only_the_bay_fits() {
+        let c = catalog();
+        let mut w = World::new(1);
+        w.place(&c, Axial::new(0, 1), "meadow", 0).unwrap();
+        w.place(&c, Axial::new(1, 1), "meadow", 0).unwrap();
+        let slot = Axial::new(1, 0);
+        let members = c.group_members("beach_curve");
+        let seq = w.group_orientations(&c, slot, &members);
+        assert!(!seq.is_empty());
+        assert!(seq.iter().all(|(d, _)| d.id == "beach_inner"), "{seq:?}");
+        let (d, _) = w
+            .cycle_group(&c, slot, &members, ("beach_outer", 0), RotateDir::Forward)
+            .unwrap();
+        assert_eq!(d.id, "beach_inner");
     }
 
     #[test]

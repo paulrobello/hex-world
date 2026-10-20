@@ -7,7 +7,20 @@ import { h, isMac, reduceMotion, retrigger, s } from "./dom.ts";
 import { icon } from "./icons.ts";
 import { Rebuild } from "./loading.ts";
 import { type Note, type Persistence, stateWords } from "./persist.ts";
-import { type TileMap, cellKey, cutOff, diffTiles, fit, needsAt, rotationReadout, tileDef, tileMap } from "./rules.ts";
+import {
+  type TileMap,
+  cellKey,
+  cutOff,
+  diffTiles,
+  entryOf,
+  entryReadout,
+  fit,
+  fitEntry,
+  needsAt,
+  rotationReadout,
+  tileDef,
+  tileMap,
+} from "./rules.ts";
 import { Photo } from "./photo.ts";
 import { DebugHud } from "./debug.ts";
 import { Settings } from "./settings.ts";
@@ -516,7 +529,12 @@ export class Hud {
       const f = def ? fit(def, needsAt(g, this.map)) : null;
       const name = tileName(g.tile);
       if (f?.ok && g.valid) {
-        const { index, count } = rotationReadout(def!, g.legal_rotations, g.rotation);
+        // A group (the Beach Curve) counts every member's orientations together, as R walks them.
+        const entry = entryOf(g.tile);
+        const { index, count } =
+          entry && entry.tiles.length > 1
+            ? entryReadout(fitEntry(entry, needsAt(g, this.map)), g.tile, g.rotation)
+            : rotationReadout(def!, g.legal_rotations, g.rotation);
         const text = count === 1 ? "Fits" : `Rotation ${index + 1} of ${count}`;
         const pinned = sameCell(st.pinned, g);
         sig = `ok|${cellKey(g)}|${g.tile}|${text}|${pinned}`;

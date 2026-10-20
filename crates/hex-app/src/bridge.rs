@@ -764,6 +764,7 @@ mod schema {
         json!({
             "start": hex_core::START_TILE,
             "tiles": tiles,
+            "picker": c.picker(),
             "compatible": compatible,
             "directional": directional,
             "hex_radius": HEX_RADIUS,

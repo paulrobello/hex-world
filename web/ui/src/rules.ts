@@ -29,6 +29,25 @@ const BY_ID = new Map(TILES.map((t) => [t.id, t]));
 
 export const tileDef = (id: string): TileDef | undefined => BY_ID.get(id);
 
+/**
+ * One Tiles sheet entry (hex-core `TileCatalog::picker`): a lone tile, or a picker group such as the
+ * Beach Curve, whose members R steps through in turn (owner, 2026-10-20). `id` is what `select_tile`
+ * takes: the tile id, or the group id.
+ */
+export interface PickerEntry {
+  id: string;
+  tiles: TileDef[];
+}
+
+export const PICKER: PickerEntry[] = schema.catalog.picker.map((e) => ({
+  id: e.id,
+  tiles: e.tiles.map((t) => BY_ID.get(t)!),
+}));
+const ENTRY_OF = new Map(PICKER.flatMap((e) => e.tiles.map((t) => [t.id, e] as const)));
+
+/** The picker entry a tile id is listed under. */
+export const entryOf = (id: string): PickerEntry | undefined => ENTRY_OF.get(id);
+
 /** Axial offsets per world edge: E, SE, SW, W, NW, NE (hex-core axial.rs). */
 const DIRS: ReadonlyArray<readonly [number, number]> = [
   [1, 0],
@@ -186,6 +205,52 @@ export function fit(def: TileDef, needs: Needs): Fit {
 export function fitMeta(def: TileDef, f: Fit): string {
   if (f.distinct.length === 1) return new Set(def.edges).size === 1 ? "Fits any way round" : "1 rotation fits";
   return `${f.distinct.length} rotations fit`;
+}
+
+/** A tile and a rotation: one step of what R walks through for a picker entry. */
+export interface Turn {
+  def: TileDef;
+  k: number;
+}
+
+export interface EntryFit {
+  /** Whether any member fits. */
+  ok: boolean;
+  /** Every member's distinct legal orientations, member after member (hex-core group_orientations). */
+  seq: Turn[];
+  /** Why no member fits, from the member with the fewest clashes; empty when one fits. */
+  why: string;
+  /** What an unfitting row shows: that member at its least-clashing rotation. */
+  best: Turn;
+}
+
+/** The fit of a picker entry: fitting when any member fits (the Legend's "Fits here" filter). */
+export function fitEntry(entry: PickerEntry, needs: Needs): EntryFit {
+  const fits = entry.tiles.map((def) => ({ def, f: fit(def, needs) }));
+  const seq = fits.flatMap(({ def, f }) => f.distinct.map((k) => ({ def, k })));
+  if (seq.length) return { ok: true, seq, why: "", best: seq[0]! };
+  const least = (def: TileDef, k: number) => clashes(def, k, needs).length;
+  const worst = fits.reduce((a, b) => (least(b.def, b.f.bestK) < least(a.def, a.f.bestK) ? b : a));
+  return { ok: false, seq, why: worst.f.why, best: { def: worst.def, k: worst.f.bestK } };
+}
+
+/** Row meta for a fitting entry, counting every member's distinct orientations together. */
+export function entryMeta(entry: PickerEntry, f: EntryFit): string {
+  const lone = entry.tiles.length === 1 ? entry.tiles[0]! : null;
+  if (f.seq.length === 1) return lone && new Set(lone.edges).size === 1 ? "Fits any way round" : "1 rotation fits";
+  return `${f.seq.length} rotations fit`;
+}
+
+/** Where the ghost's tile and rotation sit in an entry's sequence ("Rotation 4 of 5"). */
+export function entryReadout(f: EntryFit, tile: string, k: number): { index: number; count: number } {
+  const index = f.seq.findIndex((t) => t.def.id === tile && orientation(t.def, t.k) === orientation(t.def, k));
+  return { index: index < 0 ? 0 : index, count: f.seq.length };
+}
+
+/** Row meta with no slot pointed at, over every member's edges. */
+export function entrySummary(entry: PickerEntry): string {
+  const first = entry.tiles[0]!;
+  return summary({ ...first, edges: entry.tiles.flatMap((t) => t.edges) });
 }
 
 const LINE_ORDER: SocketKind[] = ["River", "Road", "Ocean", "Beach", "Forest", "Grass"];

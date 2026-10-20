@@ -27,6 +27,135 @@
       "Beach"
     ],
     "hex_radius": 16.0,
+    "picker": [
+      {
+        "id": "meadow",
+        "tiles": [
+          "meadow"
+        ]
+      },
+      {
+        "id": "forest",
+        "tiles": [
+          "forest"
+        ]
+      },
+      {
+        "id": "oak",
+        "tiles": [
+          "oak"
+        ]
+      },
+      {
+        "id": "windmill",
+        "tiles": [
+          "windmill"
+        ]
+      },
+      {
+        "id": "farm",
+        "tiles": [
+          "farm"
+        ]
+      },
+      {
+        "id": "wheat_field",
+        "tiles": [
+          "wheat_field"
+        ]
+      },
+      {
+        "id": "house_cluster",
+        "tiles": [
+          "house_cluster"
+        ]
+      },
+      {
+        "id": "bakery",
+        "tiles": [
+          "bakery"
+        ]
+      },
+      {
+        "id": "road_straight",
+        "tiles": [
+          "road_straight"
+        ]
+      },
+      {
+        "id": "road_bend_120",
+        "tiles": [
+          "road_bend_120"
+        ]
+      },
+      {
+        "id": "road_bend_60",
+        "tiles": [
+          "road_bend_60"
+        ]
+      },
+      {
+        "id": "road_junction",
+        "tiles": [
+          "road_junction"
+        ]
+      },
+      {
+        "id": "river_straight",
+        "tiles": [
+          "river_straight"
+        ]
+      },
+      {
+        "id": "river_bend",
+        "tiles": [
+          "river_bend"
+        ]
+      },
+      {
+        "id": "river_road_bridge",
+        "tiles": [
+          "river_road_bridge"
+        ]
+      },
+      {
+        "id": "river_spring",
+        "tiles": [
+          "river_spring"
+        ]
+      },
+      {
+        "id": "beach",
+        "tiles": [
+          "beach"
+        ]
+      },
+      {
+        "id": "beach_curve",
+        "tiles": [
+          "beach_outer",
+          "beach_inner"
+        ]
+      },
+      {
+        "id": "river_mouth",
+        "tiles": [
+          "river_mouth"
+        ]
+      },
+      {
+        "id": "river_mouth_l",
+        "tiles": [
+          "river_mouth_l"
+        ]
+      },
+      {
+        "id": "ocean",
+        "tiles": [
+          "ocean"
+        ]
+      }
+    ],
     "start": "meadow",
     "tiles": [
       {
