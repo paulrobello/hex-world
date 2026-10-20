@@ -28,7 +28,7 @@ Nothing. Every agent finished and landed: the piece tables are slices (card `01a
 
 Landing recipe for future asset agents (the one used all session):
 1. `git -C <worktree> merge main`, then `git apply --3way docs/checkpoints/<piece>/integration.patch`, resolve, `cargo test -p hex-play -p hex-render --lib`, commit on the branch.
-2. `caffeinate -d -u make thumbs` in the worktree; keep only the tiles the piece changes; discard the rest (water and grass animate).
+2. `caffeinate -d -u make thumbs` in the worktree; thumbs are byte-reproducible, so only the tiles the piece changes (and the contact sheet) should come out dirty, apart from an occasional one-pixel `road_bend_60` difference (restore it); any other dirtied thumbnail is a real render change to look at.
 3. `make checkall-ci > log 2>&1; echo EXIT=$?`, then squash-merge into `main`, `make build-web`, remove the worktree (`git worktree unlock` first if a finished agent left it locked), delete the branch, push, watch CI with `gh run watch <id> --exit-status`.
 
 ## Standing rules from the owner (still in force)

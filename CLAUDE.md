@@ -61,7 +61,7 @@ Key cross-cutting flows:
 ## Conventions and traps
 
 - `.blend` sources live only in the main checkout's gitignored `assets-source/blend/<piece-id>/` (worktrees share them; they are never committed). Generated kit artifacts under `assets/kit/` are committed and must pass the provenance gates.
-- `make thumbs` is not byte-reproducible run to run (water and grass animate): restore dirtied thumbnails with `git checkout HEAD -- assets/thumbs docs/checkpoints/thumbs` unless the change is intentional.
+- `make thumbs` is byte-reproducible: thumbs mode holds `Time` and the water clock at one fixed value for every capture, so a run dirties only the tiles whose look changed (plus the contact sheet). One known residual: about one run in four, four `road_bend_60` images differ by a single grass pixel (±3/255, a GPU draw-order tie, not time); restore those with `git checkout HEAD -- assets/thumbs/road_bend_60-*`. Any other dirtied thumbnail is a real render change.
 - Shaders: kit shaders live in `assets/shaders/*.wesl`; some shader libraries are embedded in hex-render source (`.wesl` files beside `.rs`). Safari 27 compat is handled at runtime by `web/wgsl-compat.js`.
 - Every merge to `main` is followed by `make build-web` (owner rule; `dist/` is the play build).
 - Pushing: Paul has granted a standing push approval for significant additions once `make checkall-ci` is green, with CI watched after; small or doc-only commits ride along with the next push. Check `handoff.md` "Standing rules" for whether it is still in force, otherwise queue commits locally.

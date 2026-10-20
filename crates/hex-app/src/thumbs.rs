@@ -5,6 +5,7 @@
 //! thumbnails follow the game as kit pieces land. Rotations whose world-edge sockets equal an
 //! earlier rotation's reuse that image. The run writes raw frames against a key colour plus
 //! `plan.json` to [`RAW_DIR`]; `scripts/thumbs/build.py` keys, downsamples and encodes them.
+use bevy::app::RunFixedMainLoopSystems;
 use bevy::prelude::*;
 use bevy::render::view::DebandDither;
 use hex_core::{Axial, EdgeSocket, TileCatalog, TileDef};
@@ -13,7 +14,10 @@ use hex_play::play::{
     packs::{PackRequests, PlayPacks},
     rise::ReducedMotion,
 };
-use hex_render::{PostMode, Scenario, TiltMode};
+use hex_render::{
+    PostMode, Scenario, TiltMode,
+    water::{FIXED_STEP, WaterClock},
+};
 
 use crate::{args::Flags, capture, control::ExitRequest, game};
 
@@ -37,8 +41,7 @@ const FOV_DEG: f32 = 20.0;
 const DISTANCE: f32 = 108.0;
 const LOOK_AT: Vec3 = Vec3::new(0.0, 3.5, 1.5);
 
-/// Frames before the first stage. Starting at a fixed frame keeps every capture on the same frame
-/// number from run to run, so `--clock fixed` time-driven materials match.
+/// Frames before the first stage.
 const START_FRAME: u32 = 240;
 /// Each tile is shown once before any capture, so pipelines compile and textures load first.
 const WARM_FRAMES: u32 = 30;
@@ -51,6 +54,15 @@ const HOLD_FRAMES: u32 = 3;
 /// the GPU can return black frames for several seconds, across several shots in a row. Stopping
 /// at the first expired shot bounds a run on a GPU that never draws to one wait.
 const BLANK_WAIT: std::time::Duration = std::time::Duration::from_secs(60);
+/// `Time` elapsed and water time held for every frame of the run, so wind, grass, rotors and
+/// water draw the same phase in every capture whatever frame it lands on: the frame a capture
+/// lands on depends on pack loading and screenshot readback, which take wall time.
+const PINNED_TIME: std::time::Duration = std::time::Duration::from_secs(10);
+const PINNED_WATER_T: f32 = 10.0;
+/// How long after the last capture the run may take to exit before the watchdog ends it with
+/// [`WATCHDOG_EXIT`]: a hung teardown fails `make thumbs` instead of blocking it.
+const EXIT_WATCHDOG: std::time::Duration = std::time::Duration::from_secs(20);
+const WATCHDOG_EXIT: i32 = 3;
 
 /// The thumbnail mode's fixed render settings: the play scenario with no post stack, tilt-shift
 /// or FPS counter, the fixed clock, and the supersampled window.
@@ -199,6 +211,10 @@ impl Plugin for ThumbsPlugin {
                 ..default()
             })
             .add_systems(
+                RunFixedMainLoop,
+                pin_clocks.in_set(RunFixedMainLoopSystems::AfterFixedMainLoop),
+            )
+            .add_systems(
                 Update,
                 (
                     stage_scene,
@@ -206,6 +222,40 @@ impl Plugin for ThumbsPlugin {
                 ),
             );
     }
+}
+
+/// `Time` held at [`PINNED_TIME`] with this frame's delta, after the fixed loop (which writes
+/// `Time` from `Time<Virtual>`), so `Update`, the render world's `globals.time` and everything
+/// after see it. `WaterClock` is set one step short of [`PINNED_WATER_T`], so `water::tick`
+/// lands on it this frame.
+fn pin_clocks(mut time: ResMut<Time>, clock: Option<ResMut<WaterClock>>) {
+    let step = time.delta();
+    let mut pinned = Time::<()>::default();
+    pinned.advance_by(PINNED_TIME.saturating_sub(step));
+    pinned.advance_by(step);
+    *time = pinned;
+    if let Some(mut clock) = clock {
+        let step = if clock.fixed {
+            FIXED_STEP
+        } else {
+            step.as_secs_f32()
+        };
+        clock.t = PINNED_WATER_T - step;
+    }
+}
+
+/// Ends the process with [`WATCHDOG_EXIT`] unless it exits within [`EXIT_WATCHDOG`]. A thread,
+/// not a system: a teardown that hangs may never run another frame.
+fn arm_exit_watchdog() {
+    std::thread::spawn(|| {
+        std::thread::sleep(EXIT_WATCHDOG);
+        eprintln!(
+            "hex-world: thumbs: every image is written but the app did not exit within {} s; \
+             exiting with {WATCHDOG_EXIT}",
+            EXIT_WATCHDOG.as_secs()
+        );
+        std::process::exit(WATCHDOG_EXIT);
+    });
 }
 
 /// Holds the thumbnail camera and the key clear colour and hides the GPU flock every frame.
@@ -254,7 +304,7 @@ fn drive(
     mut run: ResMut<ThumbRun>,
     (kit, packs): (Option<Res<PlayKit>>, Option<Res<PlayPacks>>),
     mut view: ResMut<PlayView>,
-    mut exit: ResMut<ExitRequest>,
+    (mut exit, mut app_exit): (ResMut<ExitRequest>, MessageWriter<AppExit>),
 ) {
     run.frame += 1;
     // Every pack, not just core: the thumbnails show each tile's kit look. No packs resource with a
@@ -279,7 +329,11 @@ fn drive(
             "thumbs: {} images in {RAW_DIR}",
             stages.iter().filter(|s| s.shot.is_some()).count()
         );
+        // The last capture is encoded (a shot stage waits for it), so exit this frame rather than
+        // through `exit_when_idle`, which is unordered against this system.
         exit.0 = true;
+        app_exit.write(AppExit::Success);
+        arm_exit_watchdog();
         return;
     };
     let want = PlayView {
@@ -337,6 +391,29 @@ mod tests {
 
     fn catalog() -> TileCatalog {
         TileCatalog::builtin().unwrap()
+    }
+
+    /// Every frame sees the same elapsed time and water time, with the frame's own delta, so a
+    /// capture's animation phase does not depend on which frame it lands on.
+    #[test]
+    fn clocks_hold_one_phase_every_frame() {
+        let step = std::time::Duration::from_nanos(16_666_667);
+        let mut app = App::new();
+        app.add_plugins(bevy::time::TimePlugin)
+            .insert_resource(bevy::time::TimeUpdateStrategy::ManualDuration(step))
+            .insert_resource(WaterClock::default())
+            .add_systems(
+                RunFixedMainLoop,
+                pin_clocks.in_set(RunFixedMainLoopSystems::AfterFixedMainLoop),
+            );
+        for _ in 0..5 {
+            app.update();
+            let time = app.world().resource::<Time>();
+            assert_eq!(time.elapsed(), PINNED_TIME);
+            assert!(time.delta() <= step);
+            let water = app.world().resource::<WaterClock>().t + time.delta_secs();
+            assert!((water - PINNED_WATER_T).abs() < 1e-5, "{water}");
+        }
     }
 
     #[test]
