@@ -1,0 +1,181 @@
+{
+  "name": "wheat_field",
+  "date": "2026-10-19T23:58:56.287Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/wheat_field/wheat_field.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 744123,
+      "sha256": "ad431a54eedb41f0889d7a51d4eb6608f0f40d2b21b902d1f4184ab9131fd9ec"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/wheat_field/wheat_field.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 743434,
+      "sha256": "e57275840690f1e1963b8bedb16c79d1f3fa8fa2a00116bda1e9cd8a35b8ea61"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/wheat_field/wheat_field.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 867737,
+      "sha256": "e196b8b6699d9527c7004efadf610a9196d41c4b1b70c0754fc37d754348716a"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/wheat_field/wheat_field.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 7,
+      "bytes": 583,
+      "sha256": "26b73ab8be8df383533970639ffaaeb2e36cdf19dd215415d41d3b8a79c20274"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/wheat_field/wheat_field.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 7,
+      "bytes": 583,
+      "sha256": "42c36177a9f2d85ab63a3b2961186c0fff5405a5d5b2fdad4eeb7c4b3c805676"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/wheat_field/wheat_field.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 378,
+      "sha256": "4a019d6d316571493778876a8b2d50b5d6869f0d4fd4e2519945b6b6a987fb19"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/wheat_field/wheat_field.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 197512,
+      "sha256": "55b624582226ab79eefca393f1461a745198a89575383f3513cf33d0803e4fec"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/wheat_field/wheat_field.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 203239,
+      "sha256": "c4d211dc8c42942e970bd75fd3f979c92fb3abd701318c0c593684ca6bacc2d2"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/wheat_field/wheat_field.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 299789,
+      "sha256": "3053ed09052eccf35a1ff8372056a6d3aca403404078c87238a58b54bef19a31"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/wheat_field/wheat_field.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 18177,
+      "sha256": "b31c94a826d3a1a6abaca9163c7c1c7e9b21513fd7552e8f7ccc339f06e8053e"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/wheat_field/wheat_field.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 18068,
+      "sha256": "8ff23dbf98b65072a2bdc162012b8454873237ed85e65eefd17c6c79b072ce92"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/wheat_field/wheat_field.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 23421,
+      "sha256": "211f8d7b4132187f89fdd19e48bd9ecaf71436069c4535e4426d2a4b19f24e7b"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 960395,
+      "astc": 965324
+    },
+    "glbBytes": 96308
+  },
+  "glb": {
+    "bytes": 96308,
+    "sha256": "63095f27d903e78245ffba1baa95145729aaa63d1a7dda44abafd7f83e22b49e"
+  }
+}

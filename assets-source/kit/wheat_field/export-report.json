@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/wheat_field.py",
+    "sha256": "125186993f9dee0bf4ed8e0911daf621557bd2ed737db224cb04459e1486d59a"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_wheat.py",
+      "sha256": "5346a3165b53287de7dbe2f7a8045894b6e53747466b581faec8478ee6aa9bcd"
+    }
+  ],
+  "lodTris": {
+    "wheat_field_lod0": 1172,
+    "wheat_field_lod1": 512,
+    "wheat_field_lod2": 96
+  },
+  "nodes": [
+    "wheat_field",
+    "wheat_field_collider",
+    "wheat_field_lod0",
+    "wheat_field_lod1",
+    "wheat_field_lod2"
+  ],
+  "pieceId": "wheat_field",
+  "sockets": []
+}

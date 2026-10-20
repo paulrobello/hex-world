@@ -1,0 +1,408 @@
+{
+  "pieceId": "wheat_field",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/wheat_field.py",
+    "sha256": "125186993f9dee0bf4ed8e0911daf621557bd2ed737db224cb04459e1486d59a"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_wheat.py",
+      "sha256": "5346a3165b53287de7dbe2f7a8045894b6e53747466b581faec8478ee6aa9bcd"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "bakeStats": {
+      "alphaCoverageByMip": {
+        "row0": [
+          0.9512,
+          0.9463,
+          0.953,
+          0.9676,
+          0.9658,
+          1,
+          1,
+          1,
+          1
+        ],
+        "row1": [
+          0.9492,
+          0.9443,
+          0.951,
+          0.9654,
+          0.9628,
+          1,
+          1,
+          1,
+          1
+        ],
+        "row2": [
+          0.9536,
+          0.9486,
+          0.9549,
+          0.9714,
+          0.9695,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "alphaCutoff": 0.5
+    },
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 64
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "none (numpy-drawn tiles, no Cycles bake)",
+    "earthLiftM": [
+      0.0142,
+      0.0562,
+      0
+    ],
+    "extentZ": [
+      -0.27407342195510864,
+      1.0670326948165894
+    ],
+    "field": {
+      "apothemM": 10.8,
+      "bankM": 0.35,
+      "pitchM": 1.2,
+      "rows": 20
+    },
+    "marginPx": 0,
+    "partTris": {
+      "lod0": {
+        "wheat_field_soil": 572,
+        "wheat_field_wheat": 600
+      },
+      "lod1": {
+        "wheat_field_soil": 240,
+        "wheat_field_wheat": 272
+      },
+      "lod2": {
+        "wheat_field_soil": 16,
+        "wheat_field_wheat": 80
+      }
+    },
+    "receiverSignature": "df00ad1183165cf15e81136dbe2a5cdfde34a643c30b566cf3ac8c3d3434b4fc",
+    "samples": 0,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "wheat_field_wheat": {
+        "max": 294.7,
+        "median": 283.7,
+        "min": 283.7
+      }
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1172,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 512,
+      "ratio": 0.43686006825938567
+    },
+    {
+      "lod": 2,
+      "tris": 96,
+      "ratio": 0.08191126279863481
+    }
+  ],
+  "collider": {
+    "node": "wheat_field_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "wheat_field_wheat": {
+      "max": 294.7,
+      "median": 283.7,
+      "min": 283.7
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 960395,
+        "astc": 965324
+      },
+      "glbBytes": 96308
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/wheat_field/wheat_field.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 744123,
+        "sha256": "ad431a54eedb41f0889d7a51d4eb6608f0f40d2b21b902d1f4184ab9131fd9ec"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/wheat_field/wheat_field.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 743434,
+        "sha256": "e57275840690f1e1963b8bedb16c79d1f3fa8fa2a00116bda1e9cd8a35b8ea61"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/wheat_field/wheat_field.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 867737,
+        "sha256": "e196b8b6699d9527c7004efadf610a9196d41c4b1b70c0754fc37d754348716a"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/wheat_field/wheat_field.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 7,
+        "bytes": 583,
+        "sha256": "26b73ab8be8df383533970639ffaaeb2e36cdf19dd215415d41d3b8a79c20274"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/wheat_field/wheat_field.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 7,
+        "bytes": 583,
+        "sha256": "42c36177a9f2d85ab63a3b2961186c0fff5405a5d5b2fdad4eeb7c4b3c805676"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/wheat_field/wheat_field.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 378,
+        "sha256": "4a019d6d316571493778876a8b2d50b5d6869f0d4fd4e2519945b6b6a987fb19"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/wheat_field/wheat_field.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 197512,
+        "sha256": "55b624582226ab79eefca393f1461a745198a89575383f3513cf33d0803e4fec"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/wheat_field/wheat_field.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 203239,
+        "sha256": "c4d211dc8c42942e970bd75fd3f979c92fb3abd701318c0c593684ca6bacc2d2"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/wheat_field/wheat_field.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 299789,
+        "sha256": "3053ed09052eccf35a1ff8372056a6d3aca403404078c87238a58b54bef19a31"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/wheat_field/wheat_field.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 18177,
+        "sha256": "b31c94a826d3a1a6abaca9163c7c1c7e9b21513fd7552e8f7ccc339f06e8053e"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/wheat_field/wheat_field.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 18068,
+        "sha256": "8ff23dbf98b65072a2bdc162012b8454873237ed85e65eefd17c6c79b072ce92"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/wheat_field/wheat_field.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 23421,
+        "sha256": "211f8d7b4132187f89fdd19e48bd9ecaf71436069c4535e4426d2a4b19f24e7b"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.glb",
+      "sha256": "63095f27d903e78245ffba1baa95145729aaa63d1a7dda44abafd7f83e22b49e",
+      "bytes": 96308
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.albedo.bc7.ktx2",
+      "sha256": "ad431a54eedb41f0889d7a51d4eb6608f0f40d2b21b902d1f4184ab9131fd9ec",
+      "bytes": 744123
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.albedo.astc.ktx2",
+      "sha256": "e57275840690f1e1963b8bedb16c79d1f3fa8fa2a00116bda1e9cd8a35b8ea61",
+      "bytes": 743434
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.albedo.png",
+      "sha256": "e196b8b6699d9527c7004efadf610a9196d41c4b1b70c0754fc37d754348716a",
+      "bytes": 867737
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.masks.bc7.ktx2",
+      "sha256": "26b73ab8be8df383533970639ffaaeb2e36cdf19dd215415d41d3b8a79c20274",
+      "bytes": 583
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.masks.astc.ktx2",
+      "sha256": "42c36177a9f2d85ab63a3b2961186c0fff5405a5d5b2fdad4eeb7c4b3c805676",
+      "bytes": 583
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.masks.png",
+      "sha256": "4a019d6d316571493778876a8b2d50b5d6869f0d4fd4e2519945b6b6a987fb19",
+      "bytes": 378
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.normal.bc7.ktx2",
+      "sha256": "55b624582226ab79eefca393f1461a745198a89575383f3513cf33d0803e4fec",
+      "bytes": 197512
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.normal.astc.ktx2",
+      "sha256": "c4d211dc8c42942e970bd75fd3f979c92fb3abd701318c0c593684ca6bacc2d2",
+      "bytes": 203239
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.normal.png",
+      "sha256": "3053ed09052eccf35a1ff8372056a6d3aca403404078c87238a58b54bef19a31",
+      "bytes": 299789
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.orm.bc7.ktx2",
+      "sha256": "b31c94a826d3a1a6abaca9163c7c1c7e9b21513fd7552e8f7ccc339f06e8053e",
+      "bytes": 18177
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.orm.astc.ktx2",
+      "sha256": "8ff23dbf98b65072a2bdc162012b8454873237ed85e65eefd17c6c79b072ce92",
+      "bytes": 18068
+    },
+    {
+      "path": "assets/kit/p1/wheat_field/wheat_field.orm.png",
+      "sha256": "211f8d7b4132187f89fdd19e48bd9ecaf71436069c4535e4426d2a4b19f24e7b",
+      "bytes": 23421
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/farm/ref-1.jpg",
+      "sha256": "7b132f2ad6132d695724f9b2c3438e802af53a328d0f3d63f2cf67cb5aefa30f",
+      "sourceSha256": "2ff556655fd2278c8e3324e4d2d3f5593ecab8da40d71015e8703a4594a9f6cf",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "40cbcc37-2358-4b98-819a-d15f87abcdbc",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, laid out as a small farmyard. About half the tile is a field of neat parallel ploughed furrows of dark brown earth beside a few rows of young green crops. The other half holds a red-painted vertical-board timber barn with a steep dark slate roof and large double doors, a packed-earth yard with a few round hay bales and a small stack of rectangular hay bales, and a grassy paddock enclosed by a weathered post-and-rail timber fence, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/farm/ref-2.jpg",
+      "sha256": "5fd371d02c5f176152283bf2852d99d7e907fb597eba80e9a52bf1c5b1ac9746",
+      "sourceSha256": "a61bd9f1fcd9b3f128c99dd19afb64837da9c3eb8ee1c3b6e10cacdb975712ce",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "904395be-208c-4c55-a00f-a79d076f2d4c",
+      "prompt": "Close-up of a farmyard corner on a diorama tile: a red-painted vertical-board timber barn with a steep dark slate roof and open large double doors, a weathered post-and-rail timber fence, round and rectangular hay bales on a packed-earth yard scattered with loose straw, and the edge of a field of neat ploughed furrows, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T00:00:46.587Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/farm/ref-1.jpg",
+        "assets-source/refs/farm/ref-2.jpg"
+      ],
+      "notes": "Pitched barn roof; red board barn for contrast with the cottages; wheat crop. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    }
+  ]
+}
