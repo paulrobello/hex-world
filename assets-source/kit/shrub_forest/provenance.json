@@ -1,0 +1,434 @@
+{
+  "pieceId": "shrub_forest",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/shrub_forest.py",
+    "sha256": "bfe34d93a4df0704ff65819f8b7f866c8c0981744d2a6e073a6b359a12c2653a"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_shrub.py",
+      "sha256": "3341c8f954d7845267b0814115e563f59f1b408863b81dcd2c866062b3b1e6b6"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "bakeStats": {
+      "alphaCoverageByMip": {
+        "tile_0": [
+          0.5352,
+          0.5327,
+          0.5347,
+          0.535,
+          0.5356,
+          0.5422,
+          0.5918,
+          0.6667,
+          1
+        ],
+        "tile_1": [
+          0.5501,
+          0.5479,
+          0.5498,
+          0.5497,
+          0.5522,
+          0.5511,
+          0.5918,
+          0.8889,
+          1
+        ],
+        "tile_2": [
+          0.5328,
+          0.5305,
+          0.5317,
+          0.5325,
+          0.5289,
+          0.52,
+          0.6122,
+          0.7778,
+          1
+        ],
+        "tile_3": [
+          0.5508,
+          0.5488,
+          0.5497,
+          0.5508,
+          0.5556,
+          0.5467,
+          0.6122,
+          0.8889,
+          1
+        ],
+        "tiles": [
+          0.5422,
+          0.54,
+          0.5415,
+          0.542,
+          0.5431,
+          0.54,
+          0.5289,
+          0.5714,
+          0.6667,
+          0
+        ]
+      },
+      "alphaCutoff": 0.5
+    },
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 256
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "coreRadiusM": 0.7,
+    "crown": {
+      "a": 0.8,
+      "b": 0.64,
+      "card": 0.5,
+      "cushion": 0.06,
+      "cx": 0,
+      "cz": 0.64,
+      "inner": 28,
+      "outer": 92,
+      "spread": 1.95,
+      "zmin": -0.9
+    },
+    "device": "none (numpy-drawn tiles, no Cycles bake)",
+    "extentZ": [
+      -0.0842084288597107,
+      1.333776831626892
+    ],
+    "lowestLeafM": 0.13736456632614136,
+    "marginPx": 0,
+    "reachM": 1.0314380641886485,
+    "receiverSignature": "6ab6657b6b80bdbcdc736fe4d1921325e00a39b35235200b2ca27bce8ddf23dd",
+    "samples": 0,
+    "skipped": false,
+    "stem": {
+      "count": 7,
+      "length": 0.8,
+      "r0": 0.022,
+      "r1": 0.008,
+      "sink": 0.08
+    },
+    "texelDensityPxPerM": {
+      "shrub_forest_leaves": {
+        "max": 1114.2817476022533,
+        "median": 939.389668974728,
+        "min": 818.2287816660678
+      }
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1240,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 352,
+      "ratio": 0.2838709677419355
+    },
+    {
+      "lod": 2,
+      "tris": 130,
+      "ratio": 0.10483870967741936
+    }
+  ],
+  "collider": {
+    "node": "shrub_forest_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "shrub_forest_leaves": {
+      "max": 1114.2817476022533,
+      "median": 939.389668974728,
+      "min": 818.2287816660678
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 890084,
+        "astc": 890420
+      },
+      "glbBytes": 168060
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 529917,
+        "sha256": "fa317642aabb9c2c02472b413502d02471efa9d1bcf55ab2c51599445d6a9090"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 539168,
+        "sha256": "0888ee04f541bad54906e7762183ef8272b44d014fe23edcfa6b2136c043d7da"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 802035,
+        "sha256": "145dacbf9915dc69c86552ae28ec8928d17d3aa2e4171267ad5e97c09fc2805b"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 9,
+        "bytes": 983,
+        "sha256": "69fd91df7db7bfba3bc11ae2a64f3c636aada28b5973f433939320a0c373d5af"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 9,
+        "bytes": 950,
+        "sha256": "bb5bd167ae6ce7e1b7050c4c6826b32d3a39410174d3404a8a30152cd5d85461"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 1881,
+        "sha256": "e8396d95acf06717aef5aefe18512c5a72e950183b888febfe8c9fc213b6ad09"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 148063,
+        "sha256": "42e0c441d953b5607abd9469af7e588d246ee3858b25622dbb45ea0d4f83caa2"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 147162,
+        "sha256": "64a9d97704cf5a5ea7066ed7f6fbea3583d1774c9d309723d094870a6cb45642"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 266132,
+        "sha256": "5d153f1590a4ee7d877700781cdad3bb589236e9fb56d6003385354a955f5490"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 211121,
+        "sha256": "a42eda79cad68c90eea5e096e158dd2acac6e0c3398cff46e3f82abe3a519002"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 203140,
+        "sha256": "637a52471487f8069d11afb27d5147473f672b6e152b07a122d7fd853cd4e7ab"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/shrub_forest/shrub_forest.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 125672,
+        "sha256": "1a42d97fdc0dbd2e926d952fe91bc18df379c56d281e2749af88eabc50088519"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.glb",
+      "sha256": "3ab90a03237493930239b3d81813c1a2393e47dc6d045eb89db2aed5b707131a",
+      "bytes": 168060
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.albedo.bc7.ktx2",
+      "sha256": "fa317642aabb9c2c02472b413502d02471efa9d1bcf55ab2c51599445d6a9090",
+      "bytes": 529917
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.albedo.astc.ktx2",
+      "sha256": "0888ee04f541bad54906e7762183ef8272b44d014fe23edcfa6b2136c043d7da",
+      "bytes": 539168
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.albedo.png",
+      "sha256": "145dacbf9915dc69c86552ae28ec8928d17d3aa2e4171267ad5e97c09fc2805b",
+      "bytes": 802035
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.masks.bc7.ktx2",
+      "sha256": "69fd91df7db7bfba3bc11ae2a64f3c636aada28b5973f433939320a0c373d5af",
+      "bytes": 983
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.masks.astc.ktx2",
+      "sha256": "bb5bd167ae6ce7e1b7050c4c6826b32d3a39410174d3404a8a30152cd5d85461",
+      "bytes": 950
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.masks.png",
+      "sha256": "e8396d95acf06717aef5aefe18512c5a72e950183b888febfe8c9fc213b6ad09",
+      "bytes": 1881
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.normal.bc7.ktx2",
+      "sha256": "42e0c441d953b5607abd9469af7e588d246ee3858b25622dbb45ea0d4f83caa2",
+      "bytes": 148063
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.normal.astc.ktx2",
+      "sha256": "64a9d97704cf5a5ea7066ed7f6fbea3583d1774c9d309723d094870a6cb45642",
+      "bytes": 147162
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.normal.png",
+      "sha256": "5d153f1590a4ee7d877700781cdad3bb589236e9fb56d6003385354a955f5490",
+      "bytes": 266132
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.orm.bc7.ktx2",
+      "sha256": "a42eda79cad68c90eea5e096e158dd2acac6e0c3398cff46e3f82abe3a519002",
+      "bytes": 211121
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.orm.astc.ktx2",
+      "sha256": "637a52471487f8069d11afb27d5147473f672b6e152b07a122d7fd853cd4e7ab",
+      "bytes": 203140
+    },
+    {
+      "path": "assets/kit/p1/shrub_forest/shrub_forest.orm.png",
+      "sha256": "1a42d97fdc0dbd2e926d952fe91bc18df379c56d281e2749af88eabc50088519",
+      "bytes": 125672
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/forest/ref-1.jpg",
+      "sha256": "91bec450432eaf9da8debc4f88820bc7da6b4fbbb17c6586e22f0ae1afc09ac6",
+      "sourceSha256": "3c9aa8f425d216ab897c74a17ba4d998a008fa7b0672024f9988a8813201e31d",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "23f27fd1-0218-42b6-92c4-0d22142c11e5",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), covered by a dense mixed forest: a few broad rounded oaks among many tall spruce conifers with dark green needle tiers, undergrowth of ferns, shrubs and saplings, a fallen mossy log and leaf litter on the forest floor, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/forest/ref-2.jpg",
+      "sha256": "fd5b8a1ebb2c3df56a73f28095a39d07c6c7e303dfcdb79e34d4e05ce9164734",
+      "sourceSha256": "394bbf09c7fab300ef2e4e781ee047384e0bbdba2b6015750bfebdef5ae88ec8",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e3e4f64b-d10d-4a10-b22a-0fe15b9fee0e",
+      "prompt": "Close-up of a stylized-real spruce conifer and the forest undergrowth on a diorama tile: rough flaky bark, layered tiers of needle clusters, ferns, low shrubs, moss and leaf litter at the trunk base, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T11:10:39.333Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/forest/ref-1.jpg",
+        "assets-source/refs/forest/ref-2.jpg"
+      ],
+      "notes": "Approved: spruce among oaks, ferns, fallen log. ref-2 sits on a square fragment; tiles are hexagonal. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Review against assets-source/refs/forest (ref-1: 'undergrowth of ferns, shrubs and saplings'): a low rounded hazel-like woodland shrub, 1.33 m tall and 2.06 m across, a dense dome of numpy-drawn ovate leaf-cluster cards over seven woody stems, plant wind data. Review sheet: docs/checkpoints/shrub_forest/sheet.jpg (refs, textured EEVEE stills, in engine on the undergrowth forest at (-3, 2): play distance, sun and shade close-ups, eye level 1.7 m, scale beside tree_forest, tree_forest_c and fern_clump). The controller records the owner's decision."
+    }
+  ]
+}

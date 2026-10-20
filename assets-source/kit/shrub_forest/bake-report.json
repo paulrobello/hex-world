@@ -1,0 +1,120 @@
+{
+  "bakeStats": {
+    "alphaCoverageByMip": {
+      "tile_0": [
+        0.5352,
+        0.5327,
+        0.5347,
+        0.535,
+        0.5356,
+        0.5422,
+        0.5918,
+        0.6667,
+        1.0
+      ],
+      "tile_1": [
+        0.5501,
+        0.5479,
+        0.5498,
+        0.5497,
+        0.5522,
+        0.5511,
+        0.5918,
+        0.8889,
+        1.0
+      ],
+      "tile_2": [
+        0.5328,
+        0.5305,
+        0.5317,
+        0.5325,
+        0.5289,
+        0.52,
+        0.6122,
+        0.7778,
+        1.0
+      ],
+      "tile_3": [
+        0.5508,
+        0.5488,
+        0.5497,
+        0.5508,
+        0.5556,
+        0.5467,
+        0.6122,
+        0.8889,
+        1.0
+      ],
+      "tiles": [
+        0.5422,
+        0.54,
+        0.5415,
+        0.542,
+        0.5431,
+        0.54,
+        0.5289,
+        0.5714,
+        0.6667,
+        0.0
+      ]
+    },
+    "alphaCutoff": 0.5
+  },
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "coreRadiusM": 0.7,
+  "crown": {
+    "a": 0.8,
+    "b": 0.64,
+    "card": 0.5,
+    "cushion": 0.06,
+    "cx": 0.0,
+    "cz": 0.64,
+    "inner": 28,
+    "outer": 92,
+    "spread": 1.95,
+    "zmin": -0.9
+  },
+  "device": "none (numpy-drawn tiles, no Cycles bake)",
+  "extentZ": [
+    -0.0842084288597107,
+    1.333776831626892
+  ],
+  "lowestLeafM": 0.13736456632614136,
+  "marginPx": 0,
+  "reachM": 1.0314380641886485,
+  "receiverSignature": "6ab6657b6b80bdbcdc736fe4d1921325e00a39b35235200b2ca27bce8ddf23dd",
+  "samples": 0,
+  "skipped": false,
+  "stem": {
+    "count": 7,
+    "length": 0.8,
+    "r0": 0.022,
+    "r1": 0.008,
+    "sink": 0.08
+  },
+  "texelDensityPxPerM": {
+    "shrub_forest_leaves": {
+      "max": 1114.2817476022533,
+      "median": 939.389668974728,
+      "min": 818.2287816660678
+    }
+  }
+}

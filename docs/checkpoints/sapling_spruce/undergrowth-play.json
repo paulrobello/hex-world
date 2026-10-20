@@ -1,0 +1,36 @@
+[
+  {"cmd": "select_tile", "id": "forest"},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "place", "q": 1, "r": -1},
+  {"cmd": "place", "q": 2, "r": -1},
+  {"cmd": "place", "q": 2, "r": 0},
+  {"cmd": "place", "q": 1, "r": 1},
+  {"cmd": "hover", "q": 6, "r": -6},
+  {"cmd": "camera", "pos": [-2, 30, 46], "look_at": [27.7, 1, 0]},
+  {"cmd": "wait", "frames": 600},
+  {"cmd": "screenshot", "name": "ugp-play"},
+  {"cmd": "dump_state", "name": "ugp-play-state"},
+
+  {"cmd": "walk", "on": true, "pointer_lock": null},
+  {"cmd": "walk_to", "x": 13.2, "z": 4.6, "heading": 50, "pitch": -6},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "ugp-walk-shrub"},
+  {"cmd": "walk_to", "x": 25.4, "z": 14.0, "heading": 25, "pitch": 4},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "screenshot", "name": "ugp-walk-sapling"},
+
+  {"cmd": "walk_to", "x": 22.8, "z": -1.59, "heading": 90, "pitch": 0},
+  {"cmd": "wait", "frames": 10},
+  {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 6, "sprint": false},
+  {"cmd": "wait", "frames": 200},
+  {"cmd": "dump_state", "name": "ugp-walk-shrub-blocked"},
+  {"cmd": "screenshot", "name": "ugp-walk-shrub-blocked"},
+
+  {"cmd": "walk_to", "x": 27.65, "z": 11.5, "heading": 0, "pitch": 0},
+  {"cmd": "wait", "frames": 10},
+  {"cmd": "walk_step", "forward": 1, "right": 0, "seconds": 6, "sprint": false},
+  {"cmd": "wait", "frames": 200},
+  {"cmd": "dump_state", "name": "ugp-walk-sapling-blocked"},
+  {"cmd": "wait", "frames": 10},
+  {"cmd": "exit"}
+]

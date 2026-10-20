@@ -75,7 +75,9 @@
           "tree_forest",
           "rock_small",
           "fern_clump",
-          "log_fallen"
+          "log_fallen",
+          "shrub_forest",
+          "sapling_spruce"
         ]
       },
       {

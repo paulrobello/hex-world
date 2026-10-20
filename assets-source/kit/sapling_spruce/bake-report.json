@@ -1,0 +1,88 @@
+{
+  "aoDistanceM": 0.3,
+  "bakeStats": {
+    "barkAo": {
+      "mean": 0.8008385300636292,
+      "min": 0.697411835193634,
+      "p01": 0.697411835193634,
+      "p05": 0.7200000286102295,
+      "texels": 95
+    },
+    "needleAlphaCoverageByMip": [
+      0.5608,
+      0.5635,
+      0.5694,
+      0.5691,
+      0.5676,
+      0.5666,
+      0.5909,
+      0.6,
+      0.625,
+      1.0
+    ]
+  },
+  "barkTile": {
+    "aoTexelDensityPxPerM": {
+      "max": 16.379322106198018,
+      "median": 16.37069139826758,
+      "min": 9.367524484615744
+    },
+    "set": "bark",
+    "tileUvScale": 32.0,
+    "uvPerM": 0.015625
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.12,
+  "cards": {
+    "filler": 15,
+    "frondTiles": 2,
+    "main": 30
+  },
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 1024
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 8,
+  "maxRayDistanceM": 0.3,
+  "receiverSignature": "30cb8e9b2989d5e72f626de6d4204cdf814501820a60647985e3c83fcfe029f1",
+  "samples": 32,
+  "shape": {
+    "HEIGHT": 2.2,
+    "RMAX": 0.62,
+    "TRUNK_R0": 0.035,
+    "TRUNK_R1": 0.01,
+    "WHORLS": 5,
+    "Z0": 0.85,
+    "ZTOP": 1.95,
+    "flare": 0.012,
+    "original": "tree_forest"
+  },
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "sapling_spruce_bark": {
+      "max": 524.1383073983366,
+      "median": 523.8621247445626,
+      "min": 299.7607835077038
+    },
+    "sapling_spruce_needles": {
+      "max": 7144.2132928829,
+      "median": 1985.5402542780437,
+      "min": 1096.6796632969217
+    }
+  }
+}

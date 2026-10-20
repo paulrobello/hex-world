@@ -278,6 +278,17 @@ pub fn kit_layout() -> Vec<Placement> {
             ..hero(piece, -2, 2, at, yaw_deg)
         });
     }
+    // The forest undergrowth (refs approved 2026-10-13, ref-1: "undergrowth of ferns, shrubs and
+    // saplings") on its own forest at (-3, 2), west of the oak grove: two spruces at the back, the
+    // shrubs and saplings in open sun in front with a fern beside them, each on the litter at its
+    // spot (`relief()` in scripts/blender/kit/forest_base.py at Blender (x, -z)).
+    v.push(place("forest_base", -3, 2, 0));
+    for (piece, at, yaw_deg, y) in UNDERGROWTH {
+        v.push(Placement {
+            y,
+            ..hero(piece, -3, 2, at, yaw_deg)
+        });
+    }
     // The river rail bridge (P3) on (-2, 5) at rot 1 (rail on its local edges 1 and 4 = world 2 and
     // 5, river on local 0 and 3 = world 1 and 4): the junction's straight on (-1, 4) runs into it
     // across world edge 5 and a rail straight on (-3, 6) carries it on across world edge 2. It sits
@@ -350,6 +361,21 @@ const OAK_GROVE: [(&str, [f32; 2], f32, f32); 3] = [
     ("tree_oak", [-4.0, 1.0], 0.0, -0.132),
     ("tree_oak_b", [5.0, 2.0], 70.0, -0.087),
     ("tree_forest", [0.5, -6.5], 150.0, -0.081),
+];
+
+/// (piece, offset, yaw, relief height) of the forest undergrowth on the forest at (-3, 2), each on the
+/// litter at its spot (`relief()` in scripts/blender/kit/forest_base.py at Blender (x, -z)).
+const UNDERGROWTH: [(&str, [f32; 2], f32, f32); 10] = [
+    ("tree_forest", [-6.5, -5.5], 0.0, -0.134),
+    ("tree_forest_c", [-1.5, -6.5], 80.0, -0.128),
+    ("shrub_forest", [2.5, -1.0], 0.0, -0.216),
+    ("shrub_forest", [-4.5, -1.5], 120.0, -0.133),
+    ("shrub_forest", [4.0, 3.5], 240.0, -0.127),
+    ("sapling_spruce", [0.0, 2.0], 0.0, -0.198),
+    ("sapling_spruce", [-2.5, 1.5], 140.0, -0.152),
+    ("sapling_spruce", [5.0, -4.0], 260.0, -0.193),
+    ("fern_clump", [-1.0, 5.5], 30.0, -0.112),
+    ("fern_clump", [2.5, 6.0], 200.0, -0.076),
 ];
 
 /// house_pad's gravel top (`YARD_Z` in scripts/blender/kit/house_pad.py), where a parked car's wheels

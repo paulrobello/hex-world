@@ -105,7 +105,8 @@ const BUCKETS: usize = 33;
 /// A piece not listed has none, so it is never placed.
 pub fn floor_slots(piece: &str) -> &'static [&'static str] {
     match family(piece) {
-        "tree_forest" | "tree_oak" | "fern_clump" | "log_fallen" => &["forest_base_floor"],
+        "tree_forest" | "tree_oak" | "fern_clump" | "log_fallen" | "shrub_forest"
+        | "sapling_spruce" => &["forest_base_floor"],
         "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
         "wildflower_single" => &["meadow_base_cap"],
         _ => &[],
@@ -218,7 +219,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 33] = [
+pub const FOOTPRINTS: [(&str, Footprint); 35] = [
     (
         "tree_forest",
         Footprint {
@@ -451,6 +452,20 @@ pub const FOOTPRINTS: [(&str, Footprint); 33] = [
         Footprint {
             ground: 0.35,
             crown: 3.35,
+        },
+    ),
+    (
+        "shrub_forest",
+        Footprint {
+            ground: 0.71,
+            crown: 0.0,
+        },
+    ),
+    (
+        "sapling_spruce",
+        Footprint {
+            ground: 0.1,
+            crown: 0.9,
         },
     ),
 ];
@@ -2325,6 +2340,52 @@ mod tests {
         }
     }
 
+    /// The pine forest's undergrowth (shrubs and saplings, forest ref-1) comes after its other rules:
+    /// the earlier rules' instances keep their spots, and the shrubs and saplings stand on the
+    /// litter with every planned instance placed.
+    #[test]
+    fn forest_undergrowth_keeps_the_earlier_spots() {
+        let c = catalog();
+        let pine = c.get("forest").unwrap();
+        let n = pine.props.scatter.len();
+        assert_eq!(pine.props.scatter[n - 2].piece.as_str(), "shrub_forest");
+        assert_eq!(pine.props.scatter[n - 1].piece.as_str(), "sapling_spruce");
+        let mut before = pine.clone();
+        before.props.scatter.truncate(n - 2);
+        let g = prepared(pine).unwrap();
+        let (mut planned, mut placed) = ([0u32; 2], [0usize; 2]);
+        for seed in 0..32 {
+            let l = layout(pine, seed, &g);
+            let old = layout(&before, seed, &g);
+            let kept: Vec<_> = l
+                .instances
+                .iter()
+                .filter(|i| usize::from(i.rule) < n - 2)
+                .collect();
+            assert_eq!(kept.len(), old.instances.len(), "seed {seed}");
+            for (a, b) in kept.iter().zip(&old.instances) {
+                assert_eq!((a.rule, a.pos), (b.rule, b.pos), "seed {seed}");
+            }
+            for k in 0..2 {
+                planned[k] += l.planned[n - 2 + k];
+                placed[k] += l.placed(n - 2 + k);
+            }
+            for i in l.instances.iter().filter(|i| usize::from(i.rule) >= n - 2) {
+                let (_, slot) = g.surface.at(i.pos.x, i.pos.z).unwrap();
+                assert_eq!(slot, "forest_base_floor", "undergrowth on the litter");
+            }
+        }
+        assert_eq!(
+            placed[0], planned[0] as usize,
+            "shrubs {placed:?} of {planned:?}"
+        );
+        assert_eq!(
+            placed[1], planned[1] as usize,
+            "saplings {placed:?} of {planned:?}"
+        );
+        assert!(planned[0] > 32 && planned[1] > 32, "{planned:?}");
+    }
+
     /// The split (U3): the pine forest is spruces and rocks with no hero and no bird roost; the oak
     /// tile is the hero oak, rocks and a few flowers on forest_base's litter, and the roost. Both
     /// have Forest on every edge.
@@ -2350,7 +2411,14 @@ mod tests {
         };
         assert_eq!(
             pieces(pine),
-            ["tree_forest", "rock_small", "fern_clump", "log_fallen"]
+            [
+                "tree_forest",
+                "rock_small",
+                "fern_clump",
+                "log_fallen",
+                "shrub_forest",
+                "sapling_spruce"
+            ]
         );
         assert!(pine.props.hero.is_empty() && pine.agents.is_empty());
         assert_eq!(pieces(oak), ["rock_small", "wildflower_clump", "tree_oak"]);

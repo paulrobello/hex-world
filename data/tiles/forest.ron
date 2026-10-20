@@ -1,5 +1,6 @@
-// The pine forest: dense spruce scatter, rocks, drifts of ferns and now and then a fallen log, no
-// oak (owner U3). The ferns and log come after the spruces and rocks so those keep their spots. Its id stays "forest" so
+// The pine forest: dense spruce scatter, rocks, drifts of ferns, now and then a fallen log, and an
+// undergrowth of shrubs and saplings, no oak (owner U3). Each later rule comes after the earlier
+// ones so those keep their spots. Its id stays "forest" so
 // saves, scenarios and the perf worlds keep loading as pine forests.
 (
     id: "forest",
@@ -19,6 +20,8 @@
             (piece: "rock_small", density: 0.2),
             (piece: "fern_clump", density: 1.2, drift: true),
             (piece: "log_fallen", density: 0.15),
+            (piece: "shrub_forest", density: 0.4),
+            (piece: "sapling_spruce", density: 0.3),
         ],
     ),
 )

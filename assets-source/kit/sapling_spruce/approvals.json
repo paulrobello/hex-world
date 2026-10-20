@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Review against assets-source/refs/forest (ref-1: 'undergrowth of ferns, shrubs and saplings'): a young Norway spruce about 2.2 m tall, a thin bare stem under five sparse needle tiers, tree_forest's bark set, needle tiles, core and wind data through _spruce.build (a baby of tree_forest). Review sheet: docs/checkpoints/sapling_spruce/sheet.jpg (refs, textured EEVEE stills, in engine on the undergrowth forest at (-3, 2): play distance, sun and shade close-ups, eye level 1.7 m, scale beside tree_forest, tree_forest_c and fern_clump). The controller records the owner's decision."
+  }
+]
