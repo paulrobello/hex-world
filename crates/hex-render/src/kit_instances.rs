@@ -43,9 +43,9 @@ use bevy::{
         mesh::{MeshVertexBufferLayoutRef, RenderMesh, RenderMeshBufferInfo},
         render_asset::RenderAssets,
         render_phase::{
-            AddRenderCommand, BinnedRenderPhaseType, DrawFunctions, InputUniformIndex, PhaseItem,
-            RenderCommand, RenderCommandResult, SetItemPipeline, TrackedRenderPass,
-            ViewBinnedRenderPhases,
+            AddRenderCommand, BinnedPhaseItem, BinnedRenderPhaseType, DrawFunctions,
+            InputUniformIndex, PhaseItem, RenderCommand, RenderCommandResult, SetItemPipeline,
+            TrackedRenderPass, ViewBinnedRenderPhases,
         },
         render_resource::{
             binding_types::{storage_buffer_read_only_sized, uniform_buffer_sized},
@@ -257,6 +257,9 @@ struct KitGpu {
     bind_groups: Vec<BindGroup>,
     /// (view render entity, slot index `slot * 3 + lod`) -> instance range into `ids`.
     draws: HashMap<(Entity, usize), Range<u32>>,
+    /// Slot draws binned last frame. Bevy's binned phases retain items across frames until
+    /// `remove`d, so each queue first unbins these or culled and despawned slots stay binned.
+    queued: Vec<MainEntity>,
 }
 
 impl Default for KitGpu {
@@ -270,6 +273,16 @@ impl Default for KitGpu {
             ids: RawBufferVec::new(BufferUsages::VERTEX),
             bind_groups: Vec::new(),
             draws: HashMap::default(),
+            queued: Vec::new(),
+        }
+    }
+}
+
+/// Removes `stale` from every view's `phases`.
+fn unqueue<BPI: BinnedPhaseItem>(phases: &mut ViewBinnedRenderPhases<BPI>, stale: &[MainEntity]) {
+    for phase in phases.values_mut() {
+        for &me in stale {
+            phase.remove(me);
         }
     }
 }
@@ -772,6 +785,12 @@ fn queue_kit(
     ),
     mut gpu: ResMut<KitGpu>,
 ) {
+    let stale = std::mem::take(&mut gpu.queued);
+    unqueue(&mut opaque_phases, &stale);
+    unqueue(&mut mask_phases, &stale);
+    unqueue(&mut prepass_phases, &stale);
+    unqueue(&mut mask_prepass_phases, &stale);
+    unqueue(&mut shadow_phases, &stale);
     let (Some(scene), Some(main), Some(prepass)) = (scene, main, prepass) else {
         return;
     };
@@ -1043,6 +1062,7 @@ fn queue_kit(
             );
         }
     }
+    gpu.queued = draws.iter().map(|dr| dr.main_entity).collect();
     if gpu.ids.is_empty() {
         gpu.ids.push(0);
     }
@@ -1213,6 +1233,66 @@ impl<P: PhaseItem> RenderCommand<P> for DrawKitInstances {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Binned phases keep last frame's items: a slot culled from a cascade (or despawned by a
+    /// rebuild) stays binned, and drawn as a skipped item, until it is removed from every view.
+    #[test]
+    fn unqueue_removes_last_frames_slots_from_every_view() {
+        use bevy::render::batching::gpu_preprocessing::GpuPreprocessingMode;
+        use bevy::{
+            asset::AssetIndex, material::labels::DrawFunctionId, render::view::RetainedViewEntity,
+        };
+        let mut phases = ViewBinnedRenderPhases::<Shadow>::default();
+        let views = [0, 1].map(|i| {
+            RetainedViewEntity::new(
+                MainEntity::from(Entity::from_raw_u32(100 + i).unwrap()),
+                None,
+                i,
+            )
+        });
+        let slots = [1, 2].map(|i| {
+            let e = Entity::from_raw_u32(i).unwrap();
+            (e, MainEntity::from(e))
+        });
+        for v in views {
+            phases.prepare_for_new_frame(v, GpuPreprocessingMode::Culling);
+            let phase = phases.get_mut(&v).unwrap();
+            for (i, s) in slots.into_iter().enumerate() {
+                phase.add(
+                    ShadowBatchSetKey {
+                        pipeline: CachedRenderPipelineId::INVALID,
+                        draw_function: DrawFunctionId(0),
+                        material_bind_group_index: None,
+                        slabs: MeshSlabs::default(),
+                    },
+                    ShadowBinKey {
+                        asset_id: AssetId::<Mesh>::from(AssetIndex::from_bits(i as u64)).untyped(),
+                    },
+                    s,
+                    InputUniformIndex::default(),
+                    BinnedRenderPhaseType::NonMesh,
+                );
+            }
+        }
+        let count = |phases: &ViewBinnedRenderPhases<Shadow>| -> Vec<usize> {
+            views
+                .iter()
+                .map(|v| {
+                    phases[v]
+                        .non_mesh_items
+                        .values()
+                        .map(|b| b.entities.len())
+                        .sum()
+                })
+                .collect()
+        };
+        assert_eq!(count(&phases), [2, 2]);
+        unqueue(&mut phases, &[slots[0].1]);
+        assert_eq!(count(&phases), [1, 1]);
+        unqueue(&mut phases, &[slots[1].1]);
+        assert_eq!(count(&phases), [0, 0]);
+        assert!(views.iter().all(|v| phases[v].is_empty()));
+    }
 
     #[test]
     fn chunk_lod_switches_at_150_and_400_m() {
