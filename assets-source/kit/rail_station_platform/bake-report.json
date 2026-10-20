@@ -1,0 +1,114 @@
+{
+  "aoDistanceM": 0.6,
+  "aoOccluder": "rail_station_shelter",
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "colliderBoxBlender": {
+    "x": [
+      -13.3,
+      13.3
+    ],
+    "y": [
+      1.66,
+      6.8
+    ],
+    "z": [
+      -0.35,
+      1.38
+    ]
+  },
+  "device": "CPU",
+  "lodUvScale": [
+    1.0,
+    0.55,
+    0.35
+  ],
+  "marginPx": 2,
+  "maskStats": {
+    "aoMean": 0.9283750057220459,
+    "aoP05": 0.529411792755127,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "board": 1.0,
+          "brick": 0.969,
+          "coping": 0.529,
+          "flowers": 0.78,
+          "glass": 0.0,
+          "iron": 0.0,
+          "paving": 0.545,
+          "timber": 0.392
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "brick": 0.969,
+          "coping": 0.529,
+          "glass": 1.0,
+          "iron": 0.0,
+          "paving": 0.561
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "brick": 1.0,
+          "coping": 1.0,
+          "paving": 0.576
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.5628643035888672,
+    "filledTexels": 830,
+    "nightTexels": 5699
+  },
+  "masksDensityBySlot": {
+    "lod0": {
+      "board": 39.84,
+      "brick": 39.84,
+      "coping": 39.84,
+      "flowers": 33.45,
+      "glass": 39.84,
+      "iron": 39.84,
+      "paving": 38.75,
+      "timber": 38.29
+    },
+    "lod1": {
+      "brick": 21.91,
+      "coping": 21.91,
+      "glass": 21.91,
+      "iron": 21.91,
+      "paving": 21.31
+    },
+    "lod2": {
+      "brick": 13.94,
+      "coping": 13.56,
+      "paving": 13.56
+    }
+  },
+  "platformUvScale": 0.4,
+  "receiverSignature": "7e148c1b42bebafb27e49238ba5a5955d3a0d9b5f66951221b2132f1c0705557",
+  "samples": 64,
+  "skipped": false,
+  "station": {
+    "carriageFootboardClearanceM": 0.18,
+    "copingEdgeOffsetM": 1.66,
+    "faceOffsetM": 1.8,
+    "levelLengthM": 20.0,
+    "overallLengthM": 26.6,
+    "platformTopAboveCapM": 1.38,
+    "platformTopAboveRailTopM": 0.92,
+    "shelterAtBlender": [
+      -0.30000000000000027,
+      5.0,
+      1.38
+    ]
+  }
+}

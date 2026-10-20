@@ -62,10 +62,13 @@ def _target(low, image):
         nt.nodes.active = node
 
 
-def bake_to(low, bake_type, image, highs=(), cage_extrusion=0.0, max_ray=0.0, margin=12, clear=True):
+def bake_to(low, bake_type, image, highs=(), cage_extrusion=0.0, max_ray=0.0, margin=12, clear=True,
+            occluders=()):
     """bake_type in {AO, NORMAL, ROUGHNESS, EMIT}. highs empty = bake the low mesh onto itself.
-    Every scene mesh other than `low` and `highs` (other LODs, colliders) is hide_render'd for the
-    bake and restored afterwards, so it cannot occlude AO or catch rays."""
+    Every scene mesh other than `low`, `highs` and `occluders` (other LODs, colliders) is
+    hide_render'd for the bake and restored afterwards, so it cannot occlude AO or catch rays.
+    `occluders` stay visible: a neighbouring piece that stands on or against this one at runtime
+    (rail_station_shelter on rail_station_platform) and must shade it."""
     _target(low, image)
     b = bpy.context.scene.render.bake
     b.use_selected_to_active = bool(highs)
@@ -73,7 +76,7 @@ def bake_to(low, bake_type, image, highs=(), cage_extrusion=0.0, max_ray=0.0, ma
     b.max_ray_distance = max_ray
     b.margin = margin
     b.use_clear = clear
-    keep = {low.name, *(h.name for h in highs)}
+    keep = {low.name, *(h.name for h in highs), *(o.name for o in occluders)}
     hidden = [o for o in bpy.context.scene.objects
               if o.type == "MESH" and o.name not in keep and not o.hide_render]
     for o in hidden:

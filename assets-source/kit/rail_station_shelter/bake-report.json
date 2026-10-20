@@ -1,0 +1,114 @@
+{
+  "aoDistanceM": 0.6,
+  "aoOccluder": "rail_station_platform",
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "colliderBoxBlender": {
+    "x": [
+      -4.4,
+      4.4
+    ],
+    "y": [
+      -1.85,
+      1.85
+    ],
+    "z": [
+      0.0,
+      4.661
+    ]
+  },
+  "device": "CPU",
+  "lodUvScale": [
+    1.0,
+    0.55,
+    0.35
+  ],
+  "marginPx": 2,
+  "maskStats": {
+    "aoMean": 0.6917746067047119,
+    "aoP05": 0.0,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "brick": 0.0,
+          "coping": 0.0,
+          "glass": 0.529,
+          "iron": 0.031,
+          "roof": 0.0,
+          "timber": 0.0,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "brick": 0.0,
+          "glass": 0.875,
+          "roof": 0.157,
+          "timber": 0.0,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "brick": 0.125,
+          "glass": 0.953,
+          "roof": 0.494,
+          "walls": 0.047
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.5452213287353516,
+    "filledTexels": 2829,
+    "nightTexels": 5700
+  },
+  "masksDensityBySlot": {
+    "lod0": {
+      "brick": 33.07,
+      "coping": 32.71,
+      "glass": 34.96,
+      "iron": 34.96,
+      "roof": 37.55,
+      "timber": 32.36,
+      "walls": 37.56
+    },
+    "lod1": {
+      "brick": 17.81,
+      "glass": 18.9,
+      "roof": 20.66,
+      "timber": 17.6,
+      "walls": 20.66
+    },
+    "lod2": {
+      "brick": 13.15,
+      "glass": 13.15,
+      "roof": 11.33,
+      "walls": 13.15
+    }
+  },
+  "platformUvScale": null,
+  "receiverSignature": "86302af178bda57edd033c70d44bd0bc00f8e75b33e51ab08bc65b97d69e1c6a",
+  "samples": 64,
+  "skipped": false,
+  "station": {
+    "carriageFootboardClearanceM": 0.18,
+    "copingEdgeOffsetM": 1.66,
+    "faceOffsetM": 1.8,
+    "levelLengthM": 20.0,
+    "overallLengthM": 26.6,
+    "platformTopAboveCapM": 1.38,
+    "platformTopAboveRailTopM": 0.92,
+    "shelterAtBlender": [
+      -0.30000000000000027,
+      5.0,
+      1.38
+    ]
+  }
+}

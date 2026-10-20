@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-19",
+    "notes": "Pending owner review; not an approval. Side platform from assets-source/refs/rail_station ref-1/ref-2 (A17: about 20 m), split from the shelter per owner Q16 (2026-10-19): 20 m level platform, 26.6 m with ramps, coping 1.66 m off the track centreline and 0.92 m above the rail top (owner Q15: keep), lamps, nameboard and flower tubs (rail_station_flowers takes the seasonal tint, Q17). Placed with rail_straight_center (same cell and rotation). Review sheet: docs/checkpoints/rail_station/sheet.jpg. The controller records the owner's decision."
+  }
+]

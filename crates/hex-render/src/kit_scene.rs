@@ -169,6 +169,16 @@ pub fn kit_layout() -> Vec<Placement> {
     // straight's edge-0 lane and its other end runs out to the open rim rather than the ocean.
     v.push(place("meadow_base", 0, 2, 0));
     v.push(place("rail_straight_center", 0, 2, 0));
+    // The station (P3, refs A17) beside that straight, in the straight's own frame (same cell and
+    // rotation): the platform on the north side (runtime -z), coping 1.66 m off the track centreline
+    // and 0.92 m above the rail top, and the shelter standing on its paving (scripts/blender/kit/
+    // _station.py: SHELTER_AT, H).
+    v.push(place("rail_station_platform", 0, 2, 0));
+    v.push(Placement {
+        offset: STATION_SHELTER_AT,
+        y: STATION_PLATFORM_TOP,
+        ..place("rail_station_shelter", 0, 2, 0)
+    });
     v.push(place("meadow_base", 1, 2, 0));
     v.push(place("rail_bend_60_center", 1, 2, 2));
     // The train (P3, refs A17) on the rail: the engine and two carriages on the 8 m bend at (1, 2),
@@ -200,6 +210,13 @@ const TRAIN_ON_BEND: [(&str, [f32; 2], f32); 3] = [
     ("train_carriage", [6.041, 8.814], -95.9),
     ("train_carriage", [9.072, 15.713], -120.0),
 ];
+
+/// The station platform's paving above the cap (`H` in scripts/blender/kit/_station.py: rail top
+/// 0.46 m + 0.92 m), where the shelter stands.
+const STATION_PLATFORM_TOP: f32 = 1.38;
+
+/// The shelter's pivot in the platform's runtime frame (x, z): `SHELTER_AT` (Blender (-0.3, 5.0)).
+const STATION_SHELTER_AT: [f32; 2] = [-0.3, -5.0];
 
 /// The meadow relief at the cap's centre (`relief(0, 0)` in scripts/blender/kit/meadow_base.py), where
 /// the windmill stands.

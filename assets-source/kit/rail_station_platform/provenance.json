@@ -1,0 +1,288 @@
+{
+  "pieceId": "rail_station_platform",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/rail_station_platform.py",
+    "sha256": "d4caac7409e13c72777f1923b9817423d0ffc0a80b721547dfd090eeaab1c0f3"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    },
+    {
+      "path": "scripts/blender/kit/_rail.py",
+      "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
+    },
+    {
+      "path": "scripts/blender/kit/_station.py",
+      "sha256": "75d4addddce6e39d609bb7b39851d2dd2104a5dae3834bde885f79f859056f42"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.6,
+    "aoOccluder": "rail_station_shelter",
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "colliderBoxBlender": {
+      "x": [
+        -13.3,
+        13.3
+      ],
+      "y": [
+        1.66,
+        6.8
+      ],
+      "z": [
+        -0.35,
+        1.38
+      ]
+    },
+    "device": "CPU",
+    "lodUvScale": [
+      1,
+      0.55,
+      0.35
+    ],
+    "marginPx": 2,
+    "maskStats": {
+      "aoMean": 0.9283750057220459,
+      "aoP05": 0.529411792755127,
+      "centroids": {
+        "lod0": {
+          "minA": {
+            "board": 1,
+            "brick": 0.969,
+            "coping": 0.529,
+            "flowers": 0.78,
+            "glass": 0,
+            "iron": 0,
+            "paving": 0.545,
+            "timber": 0.392
+          },
+          "unbakedTris": 0
+        },
+        "lod1": {
+          "minA": {
+            "brick": 0.969,
+            "coping": 0.529,
+            "glass": 1,
+            "iron": 0,
+            "paving": 0.561
+          },
+          "unbakedTris": 0
+        },
+        "lod2": {
+          "minA": {
+            "brick": 1,
+            "coping": 1,
+            "paving": 0.576
+          },
+          "unbakedTris": 0
+        }
+      },
+      "coverage": 0.5628643035888672,
+      "filledTexels": 830,
+      "nightTexels": 5699
+    },
+    "masksDensityBySlot": {
+      "lod0": {
+        "board": 39.84,
+        "brick": 39.84,
+        "coping": 39.84,
+        "flowers": 33.45,
+        "glass": 39.84,
+        "iron": 39.84,
+        "paving": 38.75,
+        "timber": 38.29
+      },
+      "lod1": {
+        "brick": 21.91,
+        "coping": 21.91,
+        "glass": 21.91,
+        "iron": 21.91,
+        "paving": 21.31
+      },
+      "lod2": {
+        "brick": 13.94,
+        "coping": 13.56,
+        "paving": 13.56
+      }
+    },
+    "platformUvScale": 0.4,
+    "receiverSignature": "7e148c1b42bebafb27e49238ba5a5955d3a0d9b5f66951221b2132f1c0705557",
+    "samples": 64,
+    "skipped": false,
+    "station": {
+      "carriageFootboardClearanceM": 0.18,
+      "copingEdgeOffsetM": 1.66,
+      "faceOffsetM": 1.8,
+      "levelLengthM": 20,
+      "overallLengthM": 26.6,
+      "platformTopAboveCapM": 1.38,
+      "platformTopAboveRailTopM": 0.92,
+      "shelterAtBlender": [
+        -0.30000000000000027,
+        5,
+        1.38
+      ]
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 244,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 116,
+      "ratio": 0.47540983606557374
+    },
+    {
+      "lod": 2,
+      "tris": 36,
+      "ratio": 0.14754098360655737
+    }
+  ],
+  "collider": {
+    "node": "rail_station_platform_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": null,
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 175739,
+        "astc": 170672
+      },
+      "glbBytes": 47648
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/rail_station_platform/rail_station_platform.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 175739,
+        "sha256": "d4c1f54a13787e2f583ffb887a708d0a1da33f7729fb3474cc46d646d69c4177"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/rail_station_platform/rail_station_platform.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 170672,
+        "sha256": "0788b819be7f341dc72c89f84f95598b6aa50883b45507ab72f5b8985dea8f38"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/rail_station_platform/rail_station_platform.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 252975,
+        "sha256": "390c7e0bca5ee2448647d6e4f6c4428077d160eab31857e2018798e218eeaf43"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/rail_station_platform/rail_station_platform.glb",
+      "sha256": "e7892d577740dacf471005658190ef234ea04269b539c8091efe3f0d79341b53",
+      "bytes": 47648
+    },
+    {
+      "path": "assets/kit/p1/rail_station_platform/rail_station_platform.masks.bc7.ktx2",
+      "sha256": "d4c1f54a13787e2f583ffb887a708d0a1da33f7729fb3474cc46d646d69c4177",
+      "bytes": 175739
+    },
+    {
+      "path": "assets/kit/p1/rail_station_platform/rail_station_platform.masks.astc.ktx2",
+      "sha256": "0788b819be7f341dc72c89f84f95598b6aa50883b45507ab72f5b8985dea8f38",
+      "bytes": 170672
+    },
+    {
+      "path": "assets/kit/p1/rail_station_platform/rail_station_platform.masks.png",
+      "sha256": "390c7e0bca5ee2448647d6e4f6c4428077d160eab31857e2018798e218eeaf43",
+      "bytes": 252975
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/rail_station/ref-1.jpg",
+      "sha256": "5039da01f0296b29578f3f2c3f97fe8ad976263df5e11dcd31557dda82bc4230",
+      "sourceSha256": "a2894da330886e43f87530845e34f581ed551c21285052c638adca99600ebb2f",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "55b781b6-e543-4cf1-b618-3102900a3a84",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. A single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders runs straight between two opposite flat edges. Alongside the track sits a short raised country platform about 20 m long with a stone-flag surface, a pale stone edge and a sloping ramp at each end. On it stands a small open-fronted waiting shelter with low red-brick walls below dark oak half-timbering over cream lime-plaster panels, a steep brown clay-tile roof with gables, tall red-brick chimneys with clay pots, and small-paned timber casement windows, its roof sweeping forward into a deep timber canopy over the platform on carved timber brackets, with a slatted timber bench under the canopy, one black cast-iron lamp post, two flower tubs and a white picket fence along the back of the platform. The only things on the platform are the shelter, the bench, the lamp post and the flower tubs, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/rail_station/ref-2.jpg",
+      "sha256": "3db22bf2948fbfc9f9842cd85760635f1163ec95db5c417c2b92856a56fb34c4",
+      "sourceSha256": "43ae7f6a1b7f71d7936023f69672b9e6d4779478e5dd4b4ff8cc5cd3cb452a16",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "9c7f7724-b06e-4f41-9c17-f87f1b1c9ce0",
+      "prompt": "Close-up of a small country railway waiting shelter on a short platform beside a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders: low red-brick walls below dark oak half-timbering over cream lime-plaster panels, a steep brown clay-tile roof with gables, tall red-brick chimneys with clay pots, and small-paned timber casement windows, its roof sweeping forward into a deep timber canopy on carved timber brackets, a slatted timber bench under the canopy, one black cast-iron lamp post, a stone-flag platform with a pale stone edge and one flower tub. The only things on the platform are the shelter, the bench, the lamp post and the flower tub, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T04:27:50.318Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/rail_station/ref-1.jpg",
+        "assets-source/refs/rail_station/ref-2.jpg"
+      ],
+      "notes": "A side platform of about 20 m; the ref-1 shelter is the house style. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-19",
+      "notes": "Pending owner review; not an approval. Side platform from assets-source/refs/rail_station ref-1/ref-2 (A17: about 20 m), split from the shelter per owner Q16 (2026-10-19): 20 m level platform, 26.6 m with ramps, coping 1.66 m off the track centreline and 0.92 m above the rail top (owner Q15: keep), lamps, nameboard and flower tubs (rail_station_flowers takes the seasonal tint, Q17). Placed with rail_straight_center (same cell and rotation). Review sheet: docs/checkpoints/rail_station/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

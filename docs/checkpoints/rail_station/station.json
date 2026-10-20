@@ -1,0 +1,21 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 150 },
+  { "cmd": "camera", "pos": [40.0, 40.0, 82.0], "look_at": [27.7, 0.0, 45.0] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "station-play" },
+  { "cmd": "camera", "pos": [34.0, 3.2, 37.5], "look_at": [28.5, 2.6, 43.4] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "station-close-shade" },
+  { "cmd": "camera", "pos": [22.0, 3.0, 51.5], "look_at": [27.0, 2.2, 45.0] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "station-close-sun" },
+  { "cmd": "camera", "pos": [38.5, 3.08, 45.2], "look_at": [17.0, 2.6, 46.6] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "station-eye" },
+  { "cmd": "camera", "pos": [33.0, 11.0, 64.0], "look_at": [27.0, 2.0, 46.0] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "station-scale" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

@@ -361,6 +361,10 @@ const PLANTS: &[(&str, &str)] = &[
     ("river_reed", "reed blades on the river banks"),
     ("river_cattail", "cattail seed heads on the reeds"),
     ("river_lily", "lily pads on the spring pool"),
+    (
+        "rail_station_flowers",
+        "flowers in the station platform's tubs",
+    ),
 ];
 
 /// The requirement, stated independently of `hooks::is_foliage`: every alpha-tested slot, every
