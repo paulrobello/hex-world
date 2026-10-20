@@ -204,6 +204,22 @@ pub struct Slot {
     /// Every slot of one plant takes the same value so its parts move together.
     #[serde(default)]
     pub wind: Option<f32>,
+    /// Seasonal blossom (PRD §9.4, `docs/kit/hooks-contract.md`): the piece's ORM A is 1 - blossom
+    /// coverage on this foliage slot, which the season hook turns to leaf outside spring and
+    /// summer. Only on a unique slot with the piece's ORM.
+    #[serde(default)]
+    pub blossom: Option<Blossom>,
+}
+
+/// A blossom slot's mean linear colours, from its bake report (`blossomHook`): out of season each
+/// texel shifts by its blossom coverage × (`leaf` - `flower`).
+#[derive(Deserialize, Debug, Clone, Copy, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct Blossom {
+    /// The leaves' mean colour.
+    pub leaf: [f32; 3],
+    /// The blossom texels' mean colour.
+    pub flower: [f32; 3],
 }
 
 #[derive(Deserialize, Debug, Clone)]

@@ -15,6 +15,9 @@ struct KitParams {
     water_time: f32,
     wash_amp: f32,
     wind_amp: f32,
+    // Linear leaf - flower colour of a FLAG_BLOSSOM slot (A 1): out of season a texel shifts by
+    // its blossom coverage times this.
+    blossom: vec4<f32>,
 }
 
 const FLAG_TILEABLE: u32 = 1u;
@@ -28,6 +31,9 @@ const FLAG_WET_BAND: u32 = 8u;
 const FLAG_WIND_TREE: u32 = 16u;
 const FLAG_WIND_PLANT: u32 = 32u;
 const FLAG_WET_SEABED: u32 = 64u;
+// Seasonal blossom: the unique ORM's A is 1 - blossom coverage; a season index that hides blossom
+// shifts it to leaf by `blossom` (kit_material.wesl, hooks.wesl `blossom_shown`).
+const FLAG_BLOSSOM: u32 = 128u;
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> kit: KitParams;
 

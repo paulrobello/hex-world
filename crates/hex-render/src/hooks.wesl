@@ -44,3 +44,11 @@ fn season_tint(index: u32) -> vec3<f32> {
         }
     }
 }
+
+// Seasonal blossom on a blossom slot (FLAG_BLOSSOM) by the same season index: shown in summer (0,
+// the MVP look) and hidden in every other season the index names (autumn 1 and 2 today; winter
+// when P5 adds it). P5's spring index joins summer here (owner, 2026-10-20: the hawthorn verge
+// bush does not blossom in autumn and winter).
+fn blossom_shown(index: u32) -> bool {
+    return index == 0u;
+}

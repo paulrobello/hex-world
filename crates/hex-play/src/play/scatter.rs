@@ -18,9 +18,10 @@
 //! - **Variants.** A rule names a piece; each instance draws one piece of its group ([`VARIANTS`]:
 //!   the piece and its `_b`, `_c`, … variants, PRD §6 Variety), picked by [`pick_variant`] from a
 //!   hash of the tile seed, the rule and the instance's place in it, so the dart stream is
-//!   untouched and the same seed draws the same mix. The rule's ground mask and spacing keep the
-//!   group's largest footprint clear ([`group_footprint`]); each instance stands and clears others
-//!   by its own. A rule draws once every piece of its group is in the kit.
+//!   untouched and the same seed draws the same mix. A group draws its pieces equally unless
+//!   [`VARIANT_WEIGHTS`] weighs them (the verge bushes favour `bush_verge`). The rule's ground
+//!   mask and spacing keep the group's largest footprint clear ([`group_footprint`]); each
+//!   instance stands and clears others by its own. A rule draws once every piece of its group is in the kit.
 //! - **Vary.** A rule with `vary` (the meadow's single wildflowers) spreads evenly but keeps a dart
 //!   with probability 1 - vary × (1 - [`vary_noise`]), so its density varies gently over the cap
 //!   while its count stays exact.
@@ -153,6 +154,18 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
     ("sapling_spruce", &["sapling_spruce_b", "sapling_spruce_c"]),
 ];
 
+/// Pick weights of a [`VARIANTS`] group, the piece first then its variants in order. A group not
+/// listed draws each piece equally. `bush_verge` stays the most common verge bush (owner,
+/// 2026-10-20): half the picks, a quarter each for `_b` and `_c`.
+pub const VARIANT_WEIGHTS: &[(&str, &[u32])] = &[("bush_verge", &[2, 1, 1])];
+
+fn variant_weights(piece: &str) -> Option<&'static [u32]> {
+    VARIANT_WEIGHTS
+        .iter()
+        .find(|(id, _)| *id == piece)
+        .map(|(_, w)| *w)
+}
+
 fn extra_variants(piece: &str) -> &'static [&'static str] {
     VARIANTS
         .iter()
@@ -199,16 +212,29 @@ pub fn group_footprint(piece: &str) -> Footprint {
     )
 }
 
-/// The variant of the `n`-th instance placed by rule `rule` on a tile with seed `seed`, among
-/// `count`: a hash of its own, so picking it never moves the placement stream's darts, and the
-/// same seed always draws the same mix.
-pub fn pick_variant(seed: u64, rule: usize, n: u32, count: usize) -> u8 {
+/// The variant of the `n`-th instance placed by rule `rule` (naming `piece`) on a tile with seed
+/// `seed`, among `piece`'s group: a hash of its own, so picking it never moves the placement
+/// stream's darts, and the same seed always draws the same mix. A group in [`VARIANT_WEIGHTS`]
+/// draws by its weights from the same hash; any other group draws each piece equally.
+pub fn pick_variant(piece: &str, seed: u64, rule: usize, n: u32) -> u8 {
+    let count = group(piece).count();
     if count <= 1 {
         return 0;
     }
     let key = ((rule as u64) << 32) | u64::from(n);
     let mut r = Rng(seed ^ 0x7A21_C3E9_55B0_4D1F ^ key.wrapping_mul(0x9E37_79B9_7F4A_7C15));
-    r.below(count) as u8
+    let Some(weights) = variant_weights(piece) else {
+        return r.below(count) as u8;
+    };
+    let total: u64 = weights.iter().map(|&w| u64::from(w)).sum();
+    let mut x = r.next() % total;
+    for (v, &w) in weights.iter().enumerate() {
+        if x < u64::from(w) {
+            return v as u8;
+        }
+        x -= u64::from(w);
+    }
+    unreachable!("x < total")
 }
 
 /// Slots no scatter may stand on whatever [`floor_slots`] says: roads, river beds and banks,
@@ -1341,7 +1367,6 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
     for (ri, rule) in def.props.scatter.iter().enumerate() {
         let piece = rule.piece.as_str();
         let fp = group_footprint(piece);
-        let variants = group(piece).count();
         let mask = &ground.masks[ri];
         let want = (rule.density.max(0.0) * CAP_AREA / 100.0 + rng.unit()).floor() as u32;
         out.planned.push(want);
@@ -1370,7 +1395,7 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
             if n == want {
                 break;
             }
-            let variant = pick_variant(seed, ri, n, variants);
+            let variant = pick_variant(piece, seed, ri, n);
             let reach = footprint(variant_piece(piece, variant)).ground;
             let k = cells[rng.below(cells.len())] as usize;
             let p = Vec2::new(
@@ -2208,6 +2233,28 @@ mod tests {
                 assert_eq!(floor_slots(v), floor_slots(id));
             }
         }
+    }
+
+    /// Weighted groups: every [`VARIANT_WEIGHTS`] entry names a group and weighs each of its
+    /// pieces above 0 (a new variant without a weight would never be drawn), and `bush_verge` is
+    /// the most common verge bush, about half the picks (owner, 2026-10-20).
+    #[test]
+    fn weighted_groups_draw_by_their_weights() {
+        for &(id, weights) in VARIANT_WEIGHTS {
+            assert_eq!(weights.len(), group(id).count(), "{id}: a weight per piece");
+            assert!(weights.iter().all(|&w| w > 0), "{id}: {weights:?}");
+        }
+        let mut counts = [0u32; 3];
+        for seed in 0..64u64 {
+            for n in 0..64 {
+                counts[usize::from(pick_variant("bush_verge", seed, 3, n))] += 1;
+            }
+        }
+        let total = counts.iter().sum::<u32>() as f32;
+        let share = counts.map(|c| c as f32 / total);
+        assert!((0.46..0.54).contains(&share[0]), "{share:?}");
+        assert!(share[1] > 0.2 && share[2] > 0.2, "{share:?}");
+        assert!(share[0] > share[1] + 0.15 && share[0] > share[2] + 0.15);
     }
 
     /// A `vary` rule (the meadow's single wildflowers) stands where its seeded noise is high more

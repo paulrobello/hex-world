@@ -289,7 +289,7 @@ About 10 types. The exact variants are frozen at the start of P2. With the owner
 | Bird | Boids flying in small flocks over the whole map, roosting on oak tiles. Runs on GPU compute. The count scales with the map: a flock of 12 per 4 land tiles, none over the start tile, flocks flying in and away as tiles are placed and bulldozed (owner, 2026-10-14). | P2 |
 | Fish | Schools that swim inside ocean and river water, visible through the clear surface. The same GPU boids pass as birds, confined to the water volume of connected water tiles and kept below the surface and above the bed (`docs/kit/water-contract.md`). They share the bird budget (owner, 2026-10-13). Fish skim a river mouth's shallow fan to pass between river and sea, and fish spawned in river water keep singles and small groups where a river joins the sea (owner, 2026-10-14). | P2 |
 | Boat | Drifts on ocean tiles and travels connected rivers. | P3 |
-| Train | Routes between stations on the rail graph. Multi-car consists that cross tile boundaries. As built ahead of the stations (2026-10-20): a steam tank engine and two carriages in one runtime livery per train, derived from the rail graph (one per connected stretch of 55 m or more, one more per 140 m, up to 12), following the track at up to 6 m/s on the fixed tick. A facing train takes the leg its junction offers next, alternating; at a line end it waits 3 s and runs back, the engine propelling; it reserves a junction's fouling zone before entering and stands beyond the fouling point while another train holds it (`hex-sim` `rail.rs`). | P3 |
+| Train | Routes between stations on the rail graph. Multi-car consists that cross tile boundaries. As built ahead of the stations (2026-10-20): a steam tank engine, a carriage and a brake third (`train_carriage_b`, last in the train) in one runtime livery per train, derived from the rail graph (one per connected stretch of 55 m or more, one more per 140 m, up to 12), following the track at up to 6 m/s on the fixed tick. A facing train takes the leg its junction offers next, alternating; at a line end it waits 3 s and runs back, the engine propelling; it reserves a junction's fouling zone before entering and stands beyond the fouling point while another train holds it (`hex-sim` `rail.rs`). | P3 |
 | Farm animals | Wander within their farm tile's bounds, using idle, graze and run states. | P3 |
 | Pedestrians | Walk sidewalk lanes in towns. | P6 |
 
@@ -412,7 +412,7 @@ Every MVP asset and shader carries these from the start:
 | Time-of-day uniform block driving sun, sky, fog and exposure | Day/night, with a fixed noon value in the MVP |
 | Water freeze parameter | Seasons: frozen rivers |
 
-Built: every hook is present and inert at the MVP values (noon, dry, summer, unfrozen), checked by the asset gate (`docs/kit/hooks-contract.md`). Time of day is a Rust resource fixed at noon rather than a uniform block. The `kit_hooks` key drives the masks for verification shots only.
+Built: every hook is present and inert at the MVP values (noon, dry, summer, unfrozen), checked by the asset gate (`docs/kit/hooks-contract.md`). Seasonal blossom rides the foliage season index: a blossom slot's ORM A is its blossom mask, hidden outside summer (`bush_verge_c`, owner 2026-10-20). Time of day is a Rust resource fixed at noon rather than a uniform block. The `kit_hooks` key drives the masks for verification shots only.
 
 ## 10. Performance and size budgets
 
@@ -623,6 +623,7 @@ P3 references are owner-approved (A17, 2026-10-14, `assets-source/refs/<id>/appr
 - [ ] Day/night cycle: sun and moon, sky model, emissive night lighting, vehicle headlights.
 - [ ] Weather: rain, snow, fog and storms with GPU particles, wetness and snow accumulation using the §9.4 masks.
 - [ ] Seasons: foliage tint, snow cover, frozen rivers. Adaptive music stems by mood and time of day.
+- [ ] Hawthorn verge bush blossom hidden in autumn and winter (owner, 2026-10-20). (The hook is in, inert today: `bush_verge_c`'s ORM A carries its blossom mask and the season index hides it outside summer, `docs/kit/hooks-contract.md`; P5 adds a spring index to `hooks.wesl` `blossom_shown` and drives the index.)
 - [ ] Wind that follows the season and the weather (owner, 2026-10-14: "vary the strength of the wind depending on season and or weather"; not needed now). Wind strength, gusts and direction change with the season and the weather instead of today's fixed constants. The shared `hex_render::wind` field (`crates/hex-render/src/wind.wesl`) already drives the grass and the foliage sway (trees, wildflowers, reeds, cattails), so its prevailing direction and layer amplitudes become inputs the season and weather set. Water ripples could later read the same field.
 
 ### P6 — Content breadth

@@ -9,6 +9,8 @@
 //!   default ([`masks_errors`], [`channel_errors`]), and the masks math in each lit kit shader and
 //!   in `hooks.wesl` `surface` ([`shader_errors`]);
 //! - foliage seasonal tint: [`foliage_errors`] through the runtime `slot_requests`/`params_for`;
+//! - seasonal blossom: [`blossom_errors_with`] against [`BLOSSOM`] and each piece's ORM A, and the
+//!   season branch in `kit_material.wesl` and `hooks.wesl` `blossom_shown` ([`shader_errors`]);
 //! - time of day: every hooked shader lights through Bevy's view (sun, IBL, exposure) and its post
 //!   pass (fog), driven by `hex_render::hooks::atmosphere`;
 //! - water freeze: `WaterParams::freeze` on both sides of the uniform ([`struct_errors`]) and in
@@ -27,7 +29,7 @@ use hex_render::{
     KitHooks,
     car_material::CarParams,
     hooks,
-    kit_material::{FLAG_FOLIAGE, FLAG_MASKS, KitParams, params_for, slot_requests},
+    kit_material::{FLAG_BLOSSOM, FLAG_FOLIAGE, FLAG_MASKS, KitParams, params_for, slot_requests},
     water::WaterParams,
 };
 use std::collections::BTreeSet;
@@ -260,6 +262,33 @@ fn slot_samples(
     masks: &(u32, u32, Vec<u8>),
     lod: usize,
 ) -> Result<Vec<(String, Vec<[f32; 4]>)>, String> {
+    let (w, h, px) = masks;
+    Ok(slot_triangles(kit, p, lod)?
+        .into_iter()
+        .map(|(name, tris)| {
+            let s = tris
+                .iter()
+                .map(|t| {
+                    let c = t
+                        .iter()
+                        .fold([0.0f32; 2], |a, v| [a[0] + v[0] / 3.0, a[1] + v[1] / 3.0]);
+                    let x = ((c[0].rem_euclid(1.0) * *w as f32) as u32).min(w - 1);
+                    let y = ((c[1].rem_euclid(1.0) * *h as f32) as u32).min(h - 1);
+                    let o = ((y * w + x) * 4) as usize;
+                    [0, 1, 2, 3].map(|k| px[o + k] as f32 / 255.0)
+                })
+                .collect();
+            (name, s)
+        })
+        .collect())
+}
+
+/// The UV0 triangles of each material in LOD `lod` (and its rotor, if any).
+fn slot_triangles(
+    kit: &Kit,
+    p: &PieceEntry,
+    lod: usize,
+) -> Result<Vec<(String, Vec<[[f32; 2]; 3]>)>, String> {
     let bytes = std::fs::read(kit.root.join(&p.glb)).map_err(|e| format!("{}: {e}", p.id))?;
     let plain = rewrite_glb(&bytes).map_err(|e| format!("{}: {e}", p.id))?;
     let (doc, buffers, _) = gltf::import_slice(&plain).map_err(|e| format!("{}: {e}", p.id))?;
@@ -271,8 +300,7 @@ fn slot_samples(
     // A LOD's rotor (if any) draws beside it and samples the same masks atlas.
     let rotor_name = rotor_mesh_name(&p.id, lod);
     let rotor = doc.meshes().find(|m| m.name() == Some(rotor_name.as_str()));
-    let (w, h, px) = masks;
-    let mut out: Vec<(String, Vec<[f32; 4]>)> = vec![];
+    let mut out: Vec<(String, Vec<[[f32; 2]; 3]>)> = vec![];
     for prim in std::iter::once(mesh)
         .chain(rotor)
         .flat_map(|m| m.primitives())
@@ -287,19 +315,12 @@ fn slot_samples(
             .read_indices()
             .map(|i| i.into_u32().collect())
             .unwrap_or_else(|| (0..uv.len() as u32).collect());
-        let mut s = vec![];
-        for t in idx.as_chunks::<3>().0 {
-            let c = t.iter().fold([0.0f32; 2], |a, &i| {
-                [
-                    a[0] + uv[i as usize][0] / 3.0,
-                    a[1] + uv[i as usize][1] / 3.0,
-                ]
-            });
-            let x = ((c[0].rem_euclid(1.0) * *w as f32) as u32).min(w - 1);
-            let y = ((c[1].rem_euclid(1.0) * *h as f32) as u32).min(h - 1);
-            let o = ((y * w + x) * 4) as usize;
-            s.push([0, 1, 2, 3].map(|k| px[o + k] as f32 / 255.0));
-        }
+        let s: Vec<[[f32; 2]; 3]> = idx
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .map(|t| t.map(|i| uv[i as usize]))
+            .collect();
         match out.iter_mut().find(|(n, _)| *n == name) {
             Some((_, v)) => v.extend(s),
             None => out.push((name, s)),
@@ -447,6 +468,203 @@ fn foliage_slots_take_the_per_instance_season_tint() {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Seasonal blossom (the unique ORM's A on a FLAG_BLOSSOM slot, under the season index).
+
+/// Slots that blossom (slot name, what it is). Each must take the blossom hook (the manifest's
+/// `"blossom"` leaf colour, so FLAG_BLOSSOM), and a slot that takes it must be listed, so the flag
+/// is checked against this list and never against itself.
+const BLOSSOM: &[(&str, &str)] = &[(
+    "bush_verge_c_leaves",
+    "bush_verge_c's hawthorn blossom: hidden in autumn and winter (owner, 2026-10-20)",
+)];
+
+/// Whether a texel inside one of `tris` (UV0) has ORM A below one half: blossom.
+fn blossom_inside(tris: &[[[f32; 2]; 3]], orm: &(u32, u32, Vec<u8>)) -> bool {
+    let (w, h, px) = orm;
+    tris.iter().any(|t| {
+        let p = t.map(|v| [v[0] * *w as f32, v[1] * *h as f32]);
+        let lo = |k: usize| p.iter().map(|v| v[k]).fold(f32::MAX, f32::min).max(0.0) as u32;
+        let hi = |k: usize, n: u32| {
+            (p.iter().map(|v| v[k]).fold(f32::MIN, f32::max).ceil() as u32).min(n)
+        };
+        let edge = |a: [f32; 2], b: [f32; 2], q: [f32; 2]| {
+            (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0])
+        };
+        let area = edge(p[0], p[1], p[2]);
+        (lo(1)..hi(1, *h)).any(|y| {
+            (lo(0)..hi(0, *w)).any(|x| {
+                let q = [x as f32 + 0.5, y as f32 + 0.5];
+                let e = [
+                    edge(p[1], p[2], q),
+                    edge(p[2], p[0], q),
+                    edge(p[0], p[1], q),
+                ];
+                let inside = e.iter().all(|&v| v * area >= 0.0);
+                inside && px[((y * w + x) * 4 + 3) as usize] < 128
+            })
+        })
+    })
+}
+
+/// [`BLOSSOM`]'s requirement against `list`, reading each piece's ORM through `orm` and adding
+/// the indices of the entries it matched to `used`: a listed slot takes FLAG_BLOSSOM, a flagged
+/// slot is listed, its leaf colour is a dark leaf, and its ORM A carries blossom inside its
+/// triangles in every LOD that draws it (LOD0 must).
+fn blossom_errors_with(
+    kit: &Kit,
+    m: &KitManifest,
+    list: &[(&str, &str)],
+    orm: &dyn Fn(&Kit, &PieceEntry) -> Result<(u32, u32, Vec<u8>), String>,
+    used: &mut BTreeSet<usize>,
+) -> Vec<String> {
+    let mut e = vec![];
+    for p in &m.pieces {
+        for (name, slot) in &p.slots {
+            let listed = list.iter().position(|(s, _)| s == name);
+            if let Some(i) = listed {
+                used.insert(i);
+            }
+            let k = match slot_requests(m, p, slot, TextureFamily::Png) {
+                Ok(r) => params_for(&r, KitHooks::None),
+                Err(err) => {
+                    e.push(err);
+                    continue;
+                }
+            };
+            let got = k.flags & FLAG_BLOSSOM != 0;
+            if listed.is_some() && !got {
+                e.push(format!(
+                    "{}: {name} blossoms but its material does not take the blossom hook (FLAG_BLOSSOM)",
+                    p.id
+                ));
+            }
+            if got && listed.is_none() {
+                e.push(format!(
+                    "{}: {name} takes the blossom hook but is not listed in BLOSSOM",
+                    p.id
+                ));
+            }
+            if !got {
+                continue;
+            }
+            let Some(b) = slot.blossom else {
+                continue;
+            };
+            let luma = |c: [f32; 3]| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+            let [lr, lg, lb] = b.leaf;
+            if !(0.0..0.25).contains(&luma(b.leaf)) || lg <= lr || lg <= lb {
+                e.push(format!(
+                    "{}: {name} blossom leaf colour {:?} is not a dark green leaf",
+                    p.id, b.leaf
+                ));
+            }
+            if luma(b.flower) <= luma(b.leaf) + 0.1 {
+                e.push(format!(
+                    "{}: {name} blossom flower colour {:?} is not brighter than its leaf",
+                    p.id, b.flower
+                ));
+            }
+            let shift = std::array::from_fn::<f32, 3, _>(|i| b.leaf[i] - b.flower[i]);
+            if k.blossom.truncate().to_array() != shift || k.blossom.w != 1.0 {
+                e.push(format!(
+                    "{}: {name} blossom uniform {:?} is not leaf - flower {shift:?}",
+                    p.id, k.blossom
+                ));
+            }
+            match bake_blossom(p) {
+                Some(r) if r == b => {}
+                r => e.push(format!(
+                    "{}: {name} blossom {b:?} differs from its bake report's blossomHook {r:?}",
+                    p.id
+                )),
+            }
+            let orm = match orm(kit, p) {
+                Ok(o) => o,
+                Err(err) => {
+                    e.push(err);
+                    continue;
+                }
+            };
+            for lod in 0..3 {
+                let tris = match slot_triangles(kit, p, lod) {
+                    Ok(t) => t,
+                    Err(err) => {
+                        e.push(err);
+                        continue;
+                    }
+                };
+                match tris.iter().find(|(n, _)| n == name) {
+                    None if lod == 0 => e.push(format!("{}: LOD0 does not draw {name}", p.id)),
+                    None => {}
+                    Some((_, t)) if !blossom_inside(t, &orm) => e.push(format!(
+                        "{} lod{lod}: {name} has no blossom in its ORM A (1 - blossom coverage)",
+                        p.id
+                    )),
+                    Some(_) => {}
+                }
+            }
+        }
+    }
+    e
+}
+
+/// The leaf and flower colours a piece's bake report records (`blossomHook`), beside its
+/// provenance.
+fn bake_blossom(p: &PieceEntry) -> Option<Blossom> {
+    let dir = Path::new(&p.provenance).parent()?;
+    let json = std::fs::read_to_string(repo().join(dir).join("bake-report.json")).ok()?;
+    let v: serde_json::Value = serde_json::from_str(&json).ok()?;
+    let rgb = |key: &str| -> Option<[f32; 3]> {
+        let a = v["blossomHook"][key].as_array()?;
+        let c: Vec<f32> = a
+            .iter()
+            .filter_map(|x| x.as_f64())
+            .map(|x| x as f32)
+            .collect();
+        c.try_into().ok()
+    };
+    Some(Blossom {
+        leaf: rgb("leafLinear")?,
+        flower: rgb("flowerLinear")?,
+    })
+}
+
+/// A piece's own ORM (PNG family).
+fn piece_orm(kit: &Kit, p: &PieceEntry) -> Result<(u32, u32, Vec<u8>), String> {
+    let stem = p
+        .maps
+        .get(&Channel::Orm)
+        .ok_or_else(|| format!("{}: no ORM map", p.id))?;
+    decode_masks(&kit.root.join(map_file(stem, TextureFamily::Png)))
+}
+
+/// A [`BLOSSOM`] entry that matched no slot in any manifest no longer applies.
+fn stale_blossom(list: &[(&str, &str)], used: &BTreeSet<usize>) -> Vec<String> {
+    list.iter()
+        .enumerate()
+        .filter(|(i, _)| !used.contains(i))
+        .map(|(_, (s, _))| format!("BLOSSOM {s}: no slot of that name; remove it"))
+        .collect()
+}
+
+#[test]
+fn blossom_slots_take_the_seasonal_blossom_hook() {
+    let mut e = vec![];
+    let mut used = BTreeSet::new();
+    for kit in kits() {
+        e.extend(blossom_errors_with(
+            &kit,
+            &kit.manifest,
+            BLOSSOM,
+            &piece_orm,
+            &mut used,
+        ));
+    }
+    e.extend(stale_blossom(BLOSSOM, &used));
+    fail(e);
+}
+
+// ---------------------------------------------------------------------------------------------
 // MVP values: every hook neutral in every material the manifests build.
 
 #[test]
@@ -500,6 +718,9 @@ enum Need {
     MasksDefault,
     /// The per-instance seasonal tint on foliage slots.
     Foliage,
+    /// Seasonal blossom on blossom slots: the ORM's A, covered by the leaf colour only inside the
+    /// season branch (so season 0, every MVP instance, keeps the blossom).
+    Blossom,
     /// Lit by the view's sun, IBL and exposure, and fogged by the post-lighting pass, which the
     /// time-of-day block drives (`hooks::atmosphere`).
     TimeOfDay,
@@ -517,6 +738,7 @@ const HOOKED: &[(&str, &[Need])] = &[
             Need::Masks,
             Need::MasksDefault,
             Need::Foliage,
+            Need::Blossom,
             Need::TimeOfDay,
         ],
     ),
@@ -644,6 +866,21 @@ fn need_errors(path: &str, src: &str, need: Need) -> Vec<String> {
             has("FLAG_FOLIAGE") && has("get_tag(in.instance_index)") && has("hooks::season_tint("),
             "the instance's MeshTag through hooks::season_tint on FLAG_FOLIAGE slots",
         ),
+        Need::Blossom => {
+            want(
+                has("FLAG_BLOSSOM") && has("pbr_bindings::metallic_roughness_sampler, in.uv).a"),
+                "the blossom mask (1 - the unique ORM's A) on FLAG_BLOSSOM slots",
+            );
+            let season = code.split_once("if (season != 0u) {").map(|(_, s)| s);
+            let hidden = season.and_then(|s| s.split_once("hooks::season_tint(season)"));
+            want(
+                hidden.is_some_and(|(b, _)| {
+                    b.contains("if (!hooks::blossom_shown(season)) {")
+                        && b.contains("c.rgb + blossom * kit_common::kit.blossom.rgb")
+                }),
+                "the leaf colour over the blossom only inside the season branch, before the tint",
+            );
+        }
         Need::TimeOfDay => want(
             has("apply_pbr_lighting(") && has("main_pass_post_lighting_processing("),
             "Bevy's view lighting (sun, IBL, exposure) and post-lighting fog",
@@ -682,6 +919,10 @@ fn need_errors(path: &str, src: &str, need: Need) -> Vec<String> {
                     "hooks::any_on",
                 ),
                 ("fn season_tint(index: u32)", "the season tint table"),
+                (
+                    "fn blossom_shown(index: u32) -> bool {\n    return index == 0u;",
+                    "blossom shown in summer (season 0), hidden in autumn and winter",
+                ),
             ] {
                 want(has(needle), what);
             }
@@ -816,7 +1057,7 @@ fn hook_uniform_blocks_match_their_shaders() {
             "crates/hex-render/src/kit_common.wesl",
             "KitParams",
             rust_fields(&KitParams::default()),
-            &["snow", "wetness", "night", "flags"][..],
+            &["snow", "wetness", "night", "flags", "blossom"][..],
         ),
         (
             "assets/shaders/car_material.wesl",
@@ -950,6 +1191,92 @@ fn gate_catches_foliage_without_the_season_tint() {
 }
 
 #[test]
+fn gate_catches_blossom_without_its_hook() {
+    let kit = kits().pop().unwrap();
+    let errors =
+        |m: &KitManifest,
+         list: &[(&str, &str)],
+         orm: &dyn Fn(&Kit, &PieceEntry) -> Result<(u32, u32, Vec<u8>), String>| {
+            let mut used = BTreeSet::new();
+            let mut e = blossom_errors_with(&kit, m, list, orm, &mut used);
+            e.extend(stale_blossom(list, &used));
+            e
+        };
+    // The listed slot without its leaf colour, and an unlisted slot with one.
+    let mut m = runtime_manifest();
+    let leaf = m
+        .pieces
+        .iter()
+        .find(|p| p.id == "bush_verge_c")
+        .unwrap()
+        .slots["bush_verge_c_leaves"]
+        .blossom;
+    assert!(leaf.is_some());
+    let set = |m: &mut KitManifest, piece: &str, name: &str, v: Option<Blossom>| {
+        let p = m.pieces.iter_mut().find(|p| p.id == piece).unwrap();
+        p.slots.get_mut(name).unwrap().blossom = v;
+    };
+    set(&mut m, "bush_verge_c", "bush_verge_c_leaves", None);
+    set(&mut m, "bush_verge", "bush_verge_leaves", leaf);
+    let e = errors(&m, BLOSSOM, &piece_orm);
+    assert!(
+        e.iter().any(|s| s.contains(
+            "bush_verge_c: bush_verge_c_leaves blossoms but its material does not take the blossom hook"
+        )) && e.iter().any(|s| s
+            .contains("bush_verge: bush_verge_leaves takes the blossom hook but is not listed")),
+        "{e:?}"
+    );
+    // An ORM whose A carries no blossom (as every other piece's), and a stale list entry.
+    let blank = |k: &Kit, p: &PieceEntry| {
+        piece_orm(k, p).map(|(w, h, mut px)| {
+            px.chunks_mut(4).for_each(|t| t[3] = 255);
+            (w, h, px)
+        })
+    };
+    let mut list = BLOSSOM.to_vec();
+    list.push(("no_such_blossom", "test"));
+    let e = errors(&runtime_manifest(), &list, &blank);
+    assert!(
+        e.iter()
+            .any(|s| s
+                .contains("bush_verge_c lod0: bush_verge_c_leaves has no blossom in its ORM A"))
+            && e.iter().any(|s| s.contains("BLOSSOM no_such_blossom")),
+        "{e:?}"
+    );
+    // A blossom slot without the piece's own ORM is refused at the material.
+    let mut m = runtime_manifest();
+    set(&mut m, "bush_verge_c", "bush_verge_c_stems", leaf);
+    let e = errors(&m, BLOSSOM, &piece_orm);
+    assert!(
+        e.iter()
+            .any(|s| s.contains("bush_verge_c: a blossom slot must be foliage")),
+        "{e:?}"
+    );
+    // A blossom leaf colour that is not a dark green leaf.
+    let mut m = runtime_manifest();
+    set(
+        &mut m,
+        "bush_verge_c",
+        "bush_verge_c_leaves",
+        Some(Blossom {
+            leaf: [0.9, 0.9, 0.8],
+            flower: [0.9, 0.9, 0.8],
+        }),
+    );
+    let e = errors(&m, BLOSSOM, &piece_orm);
+    assert!(
+        [
+            "is not a dark green leaf",
+            "is not brighter than its leaf",
+            "differs from its bake report"
+        ]
+        .iter()
+        .all(|w| e.iter().any(|s| s.contains(w))),
+        "{e:?}"
+    );
+}
+
+#[test]
 fn gate_catches_shaders_without_their_hooks() {
     let files = shader_files();
     let cut = |path: &'static str, from: &'static str, to: &'static str| {
@@ -963,7 +1290,25 @@ fn gate_catches_shaders_without_their_hooks() {
             }
         }
     };
-    let cases: [(&str, &str, &str, &str); 6] = [
+    let cases: [(&str, &str, &str, &str); 9] = [
+        (
+            "assets/shaders/kit_material.wesl",
+            "if (!hooks::blossom_shown(season)) {",
+            "if (false) {",
+            "Blossom",
+        ),
+        (
+            "assets/shaders/kit_material.wesl",
+            "pbr_bindings::metallic_roughness_sampler, in.uv).a",
+            "pbr_bindings::metallic_roughness_sampler, in.uv).g",
+            "Blossom",
+        ),
+        (
+            "crates/hex-render/src/hooks.wesl",
+            "return index == 0u;",
+            "return true;",
+            "Library",
+        ),
         (
             "assets/shaders/kit_material.wesl",
             "c0 * m.b * kit_common::kit.night * 4.0",

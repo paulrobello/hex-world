@@ -34,3 +34,13 @@
    few (each variant's own ground reach decides acceptance): measure it with a temporary `#[ignore]`
    layout dump before and after the `VARIANTS` edit, report the changed tiles and seeds, and say
    that the group's thumbnails (seed 0 at the origin) change, so `make thumbs` is due."
+5. **Hiding painted detail by mixing toward a base colour leaves outlines.** The seasonal blossom
+   hook (owner, 2026-10-20) first hid the blossom with `mix(albedo, leaf, w)`, `w` the filtered
+   blossom coverage from ORM A. Under `kit_hooks=autumn` every floret kept a cream-yellow rim:
+   where filtering blends blossom with leaf, the albedo is about `(1 - w) leaf + w flower`, and the
+   mix leaves `w (1 - w) flower` of it. Shifting instead, `albedo + w (leaf - flower)` with both
+   mean colours from the bake report, is exact for any filtered blend and keeps the florets'
+   shading as leaf texture (`docs/checkpoints/bush_verge_c/vergec-season-crop.jpg`). Lost: about 5
+   minutes (one rebuild, one render pair). Proposed skill text (project.md, "Hooks"): "A hook that
+   hides authored detail by a coverage mask subtracts the detail's mean contribution,
+   `c + w (base - detail)`; a mix toward the base leaves rims wherever mips blend the two."

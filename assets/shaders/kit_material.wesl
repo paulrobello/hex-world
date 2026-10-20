@@ -131,8 +131,20 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
         pbr_input.material.perceptual_roughness = mix(pbr_input.material.perceptual_roughness, 0.18, shore_wet * step(-0.02, y));
     }
 
+    // §9.4 seasonal blossom (FLAG_BLOSSOM, docs/kit/hooks-contract.md): the unique ORM's A is
+    // 1 - blossom coverage. Sampled here, in uniform control flow, and used only by a season that
+    // hides blossom.
+    var blossom = 0.0;
+    @if(VERTEX_UVS_A) {
+    if ((kit_common::kit.flags & kit_common::FLAG_BLOSSOM) != 0u) {
+        blossom = 1.0 - textureSample(pbr_bindings::metallic_roughness_texture, pbr_bindings::metallic_roughness_sampler, in.uv).a;
+    }
+    }
+
     // §9.4 foliage seasonal tint: the instance's MeshTag is its season index. Untagged instances
-    // (every MVP instance) read 0 and skip it.
+    // (every MVP instance) read 0 and skip it. Out of season, a blossom slot shifts each texel by
+    // its blossom coverage × (leaf - flower) before the tint, which also clears the blossom's share
+    // of texels that filtering blends with leaf.
     @if(VERTEX_OUTPUT_INSTANCE_INDEX) {
     if ((kit_common::kit.flags & kit_common::FLAG_FOLIAGE) != 0u) {
         @if(KIT_INSTANCED) {
@@ -142,7 +154,10 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
         let season = mesh_functions::get_tag(in.instance_index);
         }
         if (season != 0u) {
-            let c = pbr_input.material.base_color;
+            var c = pbr_input.material.base_color;
+            if (!hooks::blossom_shown(season)) {
+                c = vec4(max(c.rgb + blossom * kit_common::kit.blossom.rgb, vec3(0.0)), c.a);
+            }
             pbr_input.material.base_color = vec4(c.rgb * hooks::season_tint(season), c.a);
         }
     }

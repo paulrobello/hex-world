@@ -4,5 +4,11 @@
     "status": "pending",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Review against assets-source/refs/road_straight (ref-1: 'grass verges with tufts and small bushes'): bush_verge's third variant, a flowering hawthorn-like verge bush, 1.05 m tall and about 1.0 m across (LOD0), upright with an uneven sprayed outline, a deep fresh green mass of numpy-drawn leaf-cluster cards dotted with cream-white blossom corymbs (about 15% of the outer tiles' opaque texels), cards down to the grass, plant wind data. Built on _shrub.build through _verge_bush.py and _verge_bush_c.py. Review sheet: docs/checkpoints/bush_verge_c/sheet.jpg (ref; textured EEVEE lineup with shrub_forest, bush_verge, bush_verge_b and a 1.7 m figure; the three verge bushes close and far; the kit road tile (0, 0); play shots with docs/checkpoints/bush_verge_c/integration.patch applied). The controller records the owner's decision."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Seasonal blossom hook (owner 2026-10-20: 'should not blossom turning winter'): rebuilt with the ORM's A carrying 1 - blossom coverage (5.4% of the atlas), the leaves slot's manifest 'blossom' leaf and flower colours from the bake report's blossomHook. Albedo, normal, masks, the PNG ORM's RGB and the GLB are byte-identical to the previous build; the BC7/ASTC ORM re-encode with the new alpha, and kit_hooks=none renders with the old and new ORM KTX2s differ in at most 29 of 1.6 M pixels (run-to-run noise 11-21), so the summer (MVP) look is unchanged. Out of season (any season index but 0, here kit_hooks=autumn) the blossom turns to leaf before the autumn tint: docs/checkpoints/bush_verge_c/vergec-season-none.jpg, vergec-season-autumn.jpg and vergec-season-crop.jpg (kit scenario, vergec-kit.json sun camera). The controller records the owner's decision."
   }
 ]

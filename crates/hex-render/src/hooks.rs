@@ -9,6 +9,7 @@
 //! | Snow accumulation + up-facing coverage | masks.R × `snow` × smoothstep(N.y) |
 //! | Wetness/porosity | masks.G × `wetness` |
 //! | Foliage seasonal tint index | per-instance `MeshTag` on a `FLAG_FOLIAGE` slot |
+//! | Seasonal blossom | unique ORM.A (1 - blossom) on a `FLAG_BLOSSOM` slot, hidden by that tag outside summer |
 //! | Time-of-day block (sun, sky, fog, exposure) | [`TimeOfDay`] → [`atmosphere`], noon in the MVP |
 //! | Water freeze | `WaterParams::freeze` |
 //!

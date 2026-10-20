@@ -16,7 +16,9 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderType},
     shader::ShaderRef,
 };
-use hex_assets::{Channel, KitManifest, PieceEntry, PieceKind, Slot, TextureFamily, map_file};
+use hex_assets::{
+    Blossom, Channel, KitManifest, PieceEntry, PieceKind, Slot, TextureFamily, map_file,
+};
 
 use crate::workload::KitHooks;
 
@@ -41,6 +43,10 @@ pub const FLAG_WIND_PLANT: u32 = 32;
 /// The coast seabed under the wet band (`Slot::wet_band_seabed`, with [`FLAG_WET_BAND`]): above the
 /// water at rest and in the shallow swash it takes the wet-sand look over its gravel.
 pub const FLAG_WET_SEABED: u32 = 64;
+/// Seasonal blossom (`Slot::blossom`): the unique ORM's A is 1 - blossom coverage, and a season
+/// index that hides blossom shifts it to leaf by `KitParams::blossom` (`hooks.wesl`
+/// `blossom_shown`).
+pub const FLAG_BLOSSOM: u32 = 128;
 
 pub type KitMaterial = ExtendedMaterial<StandardMaterial, KitExt>;
 
@@ -57,6 +63,9 @@ pub struct KitParams {
     pub wash_amp: f32,
     /// Wind amplitude (m per unit wind push, `Slot::wind`); 0 on still slots.
     pub wind_amp: f32,
+    /// Linear leaf - flower colour (`Slot::blossom`, A 1): out of season a texel shifts by its
+    /// blossom coverage times this. 0 on other slots.
+    pub blossom: Vec4,
 }
 
 #[derive(Asset, AsBindGroup, Reflect, Debug, Clone, Default)]
@@ -111,6 +120,8 @@ pub struct SlotRequests {
     pub wet_seabed: bool,
     /// Sways in the wind: (amplitude, tree profile) from `Slot::wind` and the piece kind.
     pub wind: Option<(f32, bool)>,
+    /// Seasonal blossom: its leaf and flower colours (`Slot::blossom`).
+    pub blossom: Option<Blossom>,
 }
 
 fn req(stem: &str, ch: Channel, family: TextureFamily, repeat: bool) -> MapRequest {
@@ -139,6 +150,7 @@ pub fn slot_requests(
         wet_band: slot.wet_band,
         wet_seabed: slot.wet_band && slot.wet_band_seabed,
         wind: slot.wind.map(|a| (a, p.kind == PieceKind::Tree)),
+        blossom: slot.blossom,
         ..default()
     };
     if slot.masks {
@@ -170,6 +182,13 @@ pub fn slot_requests(
                 out.unique.push((ch, req(s, ch, family, false)));
             }
         }
+    }
+    if out.blossom.is_some() && (!out.foliage || out.unique.iter().all(|(c, _)| *c != Channel::Orm))
+    {
+        return Err(format!(
+            "{}: a blossom slot must be foliage with the piece's own ORM (its A is the blossom mask)",
+            p.id
+        ));
     }
     if out.tile.is_some() && slot.alpha_cutoff.is_some() {
         return Err(format!(
@@ -216,6 +235,9 @@ pub fn params_for(r: &SlotRequests, hooks: KitHooks) -> KitParams {
         Some((_, false)) => flags |= FLAG_WIND_PLANT,
         None => {}
     }
+    if r.blossom.is_some() {
+        flags |= FLAG_BLOSSOM;
+    }
     let [snow, wetness, night] = crate::hooks::surface_hooks(hooks);
     KitParams {
         tile_inv_m: r.tile.as_ref().map_or(0.0, |t| t.1),
@@ -229,6 +251,9 @@ pub fn params_for(r: &SlotRequests, hooks: KitHooks) -> KitParams {
             0.0
         },
         wind_amp: r.wind.map_or(0.0, |(a, _)| a),
+        blossom: r.blossom.map_or(Vec4::ZERO, |b| {
+            (Vec3::from(b.leaf) - Vec3::from(b.flower)).extend(1.0)
+        }),
         ..default()
     }
 }
@@ -641,6 +666,7 @@ mod tests {
         for (name, v) in [
             ("FLAG_WIND_TREE", FLAG_WIND_TREE),
             ("FLAG_WIND_PLANT", FLAG_WIND_PLANT),
+            ("FLAG_BLOSSOM", FLAG_BLOSSOM),
         ] {
             assert!(
                 common.contains(&format!("const {name}: u32 = {v}u;")),
@@ -649,9 +675,10 @@ mod tests {
         }
     }
 
-    /// The WGSL struct is eight scalars: the Rust side must stay 32 bytes.
+    /// The WGSL struct is eight scalars and the blossom vec4 (16-byte aligned at offset 32): the
+    /// Rust side must stay 48 bytes.
     #[test]
-    fn params_are_32_bytes() {
-        assert_eq!(KitParams::min_size().get(), 32);
+    fn params_are_48_bytes() {
+        assert_eq!(KitParams::min_size().get(), 48);
     }
 }

@@ -21,7 +21,7 @@
     },
     {
       "path": "scripts/blender/kit/_verge_bush_c.py",
-      "sha256": "57bffbdb315ae47c60b1b8c6afdda571b34b177d2b9097bfb68a7d020011eebc"
+      "sha256": "f03302d197be41614b4bda9827aacfbd75b88223732fe6251e9e3d3179816428"
     }
   ],
   "authoringAgent": {
@@ -98,6 +98,20 @@
       "alphaCutoff": 0.5
     },
     "blender": "5.2.2 LTS",
+    "blossomHook": {
+      "coverage": 0.054,
+      "flowerLinear": [
+        0.7457,
+        0.7017,
+        0.5759
+      ],
+      "leafLinear": [
+        0.0339,
+        0.0947,
+        0.0145
+      ],
+      "mask": "orm.a = 1 - blossom coverage"
+    },
     "blossomStats": {
       "tile_0": {
         "blossomFraction": 0.146,
@@ -237,8 +251,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 906496,
-        "astc": 897294
+        "bc7": 902883,
+        "astc": 893212
       },
       "glbBytes": 186388
     },
@@ -344,8 +358,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 226766,
-        "sha256": "da79f0fc71aecf0532961119b2baff250cb91a27e54b92665d90032a43c89c3a"
+        "bytes": 223153,
+        "sha256": "9ad0b2b9805f6ff7a4baba2f5cd9588f4993e27637489ce22c0549911885840d"
       },
       {
         "channel": "orm",
@@ -355,8 +369,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 218239,
-        "sha256": "231f1eb95e325998a65e610ddba6e5c81ff11943c488f1e7b10ce1b7d97fb318"
+        "bytes": 214157,
+        "sha256": "716f09a78d77b0fd9352cc2b3433555f3e56539cc106b4c14b336c530fac3db8"
       },
       {
         "channel": "orm",
@@ -364,8 +378,8 @@
         "path": "assets/kit/p1/bush_verge_c/bush_verge_c.orm.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 140909,
-        "sha256": "9d2031c492fa5b1fec147d9409f8851c5477aba4557fca995086b06dcb10d563"
+        "bytes": 141491,
+        "sha256": "9f42a8e982493ece9b3d39c286f3962d555dd9c1c308a525562eba435d50ecc8"
       }
     ]
   },
@@ -422,18 +436,18 @@
     },
     {
       "path": "assets/kit/p1/bush_verge_c/bush_verge_c.orm.bc7.ktx2",
-      "sha256": "da79f0fc71aecf0532961119b2baff250cb91a27e54b92665d90032a43c89c3a",
-      "bytes": 226766
+      "sha256": "9ad0b2b9805f6ff7a4baba2f5cd9588f4993e27637489ce22c0549911885840d",
+      "bytes": 223153
     },
     {
       "path": "assets/kit/p1/bush_verge_c/bush_verge_c.orm.astc.ktx2",
-      "sha256": "231f1eb95e325998a65e610ddba6e5c81ff11943c488f1e7b10ce1b7d97fb318",
-      "bytes": 218239
+      "sha256": "716f09a78d77b0fd9352cc2b3433555f3e56539cc106b4c14b336c530fac3db8",
+      "bytes": 214157
     },
     {
       "path": "assets/kit/p1/bush_verge_c/bush_verge_c.orm.png",
-      "sha256": "9d2031c492fa5b1fec147d9409f8851c5477aba4557fca995086b06dcb10d563",
-      "bytes": 140909
+      "sha256": "9f42a8e982493ece9b3d39c286f3962d555dd9c1c308a525562eba435d50ecc8",
+      "bytes": 141491
     }
   ],
   "references": [
@@ -459,7 +473,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T18:06:11.744Z",
+    "date": "2026-10-20T19:14:01.876Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -483,6 +497,12 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Review against assets-source/refs/road_straight (ref-1: 'grass verges with tufts and small bushes'): bush_verge's third variant, a flowering hawthorn-like verge bush, 1.05 m tall and about 1.0 m across (LOD0), upright with an uneven sprayed outline, a deep fresh green mass of numpy-drawn leaf-cluster cards dotted with cream-white blossom corymbs (about 15% of the outer tiles' opaque texels), cards down to the grass, plant wind data. Built on _shrub.build through _verge_bush.py and _verge_bush_c.py. Review sheet: docs/checkpoints/bush_verge_c/sheet.jpg (ref; textured EEVEE lineup with shrub_forest, bush_verge, bush_verge_b and a 1.7 m figure; the three verge bushes close and far; the kit road tile (0, 0); play shots with docs/checkpoints/bush_verge_c/integration.patch applied). The controller records the owner's decision."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Seasonal blossom hook (owner 2026-10-20: 'should not blossom turning winter'): rebuilt with the ORM's A carrying 1 - blossom coverage (5.4% of the atlas), the leaves slot's manifest 'blossom' leaf and flower colours from the bake report's blossomHook. Albedo, normal, masks, the PNG ORM's RGB and the GLB are byte-identical to the previous build; the BC7/ASTC ORM re-encode with the new alpha, and kit_hooks=none renders with the old and new ORM KTX2s differ in at most 29 of 1.6 M pixels (run-to-run noise 11-21), so the summer (MVP) look is unchanged. Out of season (any season index but 0, here kit_hooks=autumn) the blossom turns to leaf before the autumn tint: docs/checkpoints/bush_verge_c/vergec-season-none.jpg, vergec-season-autumn.jpg and vergec-season-crop.jpg (kit scenario, vergec-kit.json sun camera). The controller records the owner's decision."
     }
   ]
 }

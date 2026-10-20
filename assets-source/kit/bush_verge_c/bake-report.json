@@ -61,6 +61,20 @@
     "alphaCutoff": 0.5
   },
   "blender": "5.2.2 LTS",
+  "blossomHook": {
+    "coverage": 0.054,
+    "flowerLinear": [
+      0.7457,
+      0.7017,
+      0.5759
+    ],
+    "leafLinear": [
+      0.0339,
+      0.0947,
+      0.0145
+    ],
+    "mask": "orm.a = 1 - blossom coverage"
+  },
   "blossomStats": {
     "tile_0": {
       "blossomFraction": 0.146,

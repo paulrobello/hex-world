@@ -16,9 +16,19 @@ spray directions over the upper two thirds push the nearby cards outward, like a
 export stay the family's. `build` then records per-tile blossom fractions and the linear mean colour of each tile's opaque
 texels, with and without blossom, in the bake report (`blossomStats`): what a deep mip shows.
 
+Seasonal blossom hook (PRD §9.4, docs/kit/hooks-contract.md, owner 2026-10-20: no blossom in autumn
+and winter): the ORM map's A channel, which Bevy never reads and the family writes as 1, carries
+1 - blossom coverage, texel for texel with the painted florets (`blossom_orm`, wrapping
+`bake.write_png` for the ORM only). The manifest's `"blossom"` on the leaves slot holds the linear
+`leaf` colour (the tiles' mean leaf colour, `leafMeanLinear`) and `flower` colour (the blossom
+texels' mean, `blossomHook.flowerLinear`): out of season the hook shifts each texel by coverage x
+(leaf - flower), which also clears the blossom's share of texels filtering blends with leaf.
+Albedo, normal, masks, ORM RGB and the GLB are unchanged by the hook.
+
 Invariants this module relies on (asserted below, so a change to `_shrub` fails here, not in play):
 `_shrub.atlas` calls `cluster_tile` by global name with signature (px, seed, k, inner),
-`_shrub.build` calls `cards` by global name with signature (seed, crown), the 1024
+`_shrub.build` calls `cards` by global name with signature (seed, crown) and writes its maps
+through `bake.write_png`, the 1024
 atlas of four 480 px tiles with tile 3 as the inner tile, and `_verge_bush.build` takes every value
 as a keyword with no defaults (module globals do not reach default arguments)."""
 from __future__ import annotations
@@ -34,9 +44,12 @@ from mathutils import Vector
 
 import _shrub
 import _verge_bush
+from lib import bake
 
 assert "cluster_tile" in _shrub.atlas.__code__.co_names, "_shrub.atlas no longer looks cluster_tile up by name"
 assert "cards" in _shrub.build.__code__.co_names, "_shrub.build no longer looks cards up by name"
+assert {"bake", "write_png"} <= set(_shrub.build.__code__.co_names), "_shrub.build no longer writes through bake.write_png"
+assert _shrub.bake is bake, "_shrub and this module must share lib.bake"
 assert list(inspect.signature(_shrub.cluster_tile).parameters) == ["px", "seed", "k", "inner"], \
     inspect.signature(_shrub.cluster_tile)
 assert list(inspect.signature(_shrub.cards).parameters) == ["seed", "crown"], inspect.signature(_shrub.cards)
@@ -61,8 +74,11 @@ SPRAY_ZF = (-0.15, 0.8)  # elevation range (zf) of the spray directions: the upp
 
 _family_tile = _shrub.cluster_tile
 _family_cards = _shrub.cards
+_family_write_png = bake.write_png
 CLUSTERS: dict[int, int] = {}  # set by `build`: corymbs per outer tile
 STATS: dict[str, dict] = {}
+PAINTED: dict[int, np.ndarray] = {}  # blossom texels per outer tile, set by `blossom_tile`
+FLOWER: dict[int, tuple[np.ndarray, int]] = {}  # (linear RGB sum, count) of those texels
 
 
 def spray_cards(seed: str, crown: dict) -> list[dict]:
@@ -155,7 +171,25 @@ def blossom_tile(px: int, seed: str, k: int, inner: bool) -> tuple[np.ndarray, .
     opaque = rgba[..., 3] > 0.5
     STATS[f"tile_{k}"] = {"clusters": CLUSTERS[k], "blossomFraction": round(float(painted.sum() / opaque.sum()), 4),
                           "leafMeanLinear": leaf_mean, "meanLinear": _opaque_mean(rgba)}
+    PAINTED[k] = painted
+    FLOWER[k] = (_lin(rgba[..., :3][painted]).sum(axis=0), int(painted.sum()))
     return rgba, nrm, rough, ao
+
+
+def blossom_orm(size: int, rgba, path: str, non_color: bool = True):
+    """`bake.write_png`, with the ORM's A set to 1 - blossom coverage (the season hook's mask),
+    laid out as `_shrub.atlas` lays out the tiles. Every other map is written unchanged."""
+    if not path.endswith(".orm.png"):
+        return _family_write_png(size, rgba, path, non_color=non_color)
+    assert size == _shrub.ATLAS and sorted(PAINTED) == [k for k in range(_shrub.LEAF_TILES) if k != _shrub.INNER_TILE]
+    alpha = np.ones((size, size), np.float32)
+    for k, painted in PAINTED.items():
+        x0, y0 = _shrub.tile_origin(k)
+        alpha[y0:y0 + _shrub.TILE, x0:x0 + _shrub.TILE] = np.where(painted, 0.0, 1.0)
+    orm = np.ascontiguousarray(rgba, np.float32).reshape(-1, 4).copy()
+    assert np.all(orm[:, 3] == 1.0), "the family's ORM A is no longer 1"
+    orm[:, 3] = alpha.reshape(-1)
+    return _family_write_png(size, orm, path, non_color=non_color)
 
 
 def build(piece: str, out: pathlib.Path, generator: str, *, clusters: tuple[int, ...], **kw) -> None:
@@ -172,11 +206,22 @@ def build(piece: str, out: pathlib.Path, generator: str, *, clusters: tuple[int,
     assert stem["sink"] > climb, (stem, climb)
     CLUSTERS = dict(enumerate(clusters))
     STATS.clear()
+    PAINTED.clear()
+    FLOWER.clear()
     _shrub.cluster_tile = blossom_tile
     _shrub.cards = spray_cards
-    _verge_bush.build(piece, out, generator, **kw)
+    bake.write_png = blossom_orm
+    try:
+        _verge_bush.build(piece, out, generator, **kw)
+    finally:
+        bake.write_png = _family_write_png
     print(f"{piece}: blossom {STATS}")
     report = out / "bake-report.json"
     data = json.loads(report.read_text())
     data["blossomStats"] = STATS
+    leaf = np.mean([s["leafMeanLinear"] for s in STATS.values()], axis=0)
+    flower = sum(s for s, _ in FLOWER.values()) / sum(n for _, n in FLOWER.values())
+    data["blossomHook"] = {"mask": "orm.a = 1 - blossom coverage", "leafLinear": [round(float(v), 4) for v in leaf],
+                           "flowerLinear": [round(float(v), 4) for v in flower],
+                           "coverage": round(float(sum(p.sum() for p in PAINTED.values()) / _shrub.ATLAS ** 2), 4)}
     report.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
