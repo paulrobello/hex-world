@@ -1,6 +1,6 @@
 {
   "name": "animal_sheep_c",
-  "date": "2026-10-20T12:53:41.044Z",
+  "date": "2026-10-20T21:49:24.366Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -141,8 +141,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 104117,
-      "sha256": "d1eb01bc75433062d7bf0be011a3cd513eb27debcb316af4946a9e96a9a24fee"
+      "bytes": 77978,
+      "sha256": "247b8a9cd3cc3aa59d8cab21301e361eb5960a2f2c849f620fb79e96898a1cdc"
     },
     {
       "channel": "orm",
@@ -152,8 +152,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 106744,
-      "sha256": "d2532e1c99073ba7cd23cc24722fccaf0a02cf8835d99351a4f69d36bbf78376"
+      "bytes": 80037,
+      "sha256": "30e5b0b470f732ed57fa5bb90cb790a9991920679c8415df3a98199edd6d974b"
     },
     {
       "channel": "orm",
@@ -161,16 +161,16 @@
       "path": "assets/kit/p1/animal_sheep_c/animal_sheep_c.orm.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 134150,
-      "sha256": "af7f935186f0228a9ce129d88e46029d839c7cc3f75bd19ba785e5c15be2a83a"
+      "bytes": 96877,
+      "sha256": "c28ffc3a54e5a0688709b1a7795e156d2d093e95d8dedba3eb6c577ec5d4b701"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 583642,
-      "astc": 589946
+      "bc7": 557503,
+      "astc": 563239
     },
     "glbBytes": 49876
   },

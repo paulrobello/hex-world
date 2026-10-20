@@ -7,7 +7,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_animals.py",
-      "sha256": "deb6c7cbed087d76fad922ff380f1344fbff02ad81f1c60a82940828705e6ef6"
+      "sha256": "4bbb06309b392df35d771c105a068ace6716f626a051f99ee412764338308c7d"
     },
     {
       "path": "scripts/blender/kit/_animals_var.py",

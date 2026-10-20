@@ -16,7 +16,10 @@ islands are skyline-packed at one scale (the largest that fits) with a gutter.
 
 Maps are painted in numpy from each texel's creature-frame position (`_fauna.rasterize`), so colour
 patches run on across part junctions. Only AO is baked, by Cycles on LOD0 onto itself, into ORM.R
-(masks.A = 1, as on the fauna). Albedo 1024 px; normal and ORM box-filtered to 512 px; masks 128 px.
+(masks.A = 1, as on the fauna). Texels LOD0 buries inside another part bake to about 0, and the
+coarser LOD1/LOD2 polygons leave part of that band outside their host, so `fill_hidden_ao` gives them
+the near-junction AO of their own island; `lod_visible_ao` measures what each LOD shows (bake report
+`lodVisibleAo`). Albedo 1024 px; normal and ORM box-filtered to 512 px; masks 128 px.
 
 Motion data (TEXCOORD_1, Blender UV map `motion`, FLOAT VEC2 on every primitive of every LOD; the
 contract text lives in each generator's docstring): U is the leg weight, V the leg code where U > 0 and
@@ -389,9 +392,10 @@ def check_buried(spec, lods):
     assert not errs, "; ".join(errs)
 
 
-def hidden(spec, P, part):
+def hidden(spec, P, part, limit=0.97):
     """Samples buried inside another solid part (leg tops, the neck start, ear roots, the tail root),
-    for AO statistics over visible texels only."""
+    for AO statistics over visible texels only: superellipse value below `limit` in another part's
+    analytic field (1.0 = anywhere inside it)."""
     owner = {"body": [PART["body"]], "head": [PART["head"]], "neck": [PART["neck"]],
              "front_leg": [PART["leg_fl"], PART["leg_fr"]],
              "back_leg": [PART["leg_bl"], PART["leg_br"]], "ear": [PART["ear_l"], PART["ear_r"]],
@@ -411,9 +415,103 @@ def hidden(spec, P, part):
                 continue
             _, val, _, _ = p.local(Q[sl][t])
             sub = hid[sl]
-            sub[np.nonzero(t)[0][val < 0.97]] = True
+            sub[np.nonzero(t)[0][val < limit]] = True
             hid[sl] = sub
     return hid
+
+
+GROUPS = {"body": [PART["body"]], "neck": [PART["neck"]], "head": [PART["head"]],
+          "legs": [PART[k] for k in ("leg_fl", "leg_fr", "leg_bl", "leg_br")],
+          "ears": [PART["ear_l"], PART["ear_r"]], "tail": [PART["tail"]]}
+
+
+def _view_hits(obj, n_dirs=40, spacing=0.02):
+    """Surface points of obj seen from outside: orthographic rays from n_dirs directions (a Fibonacci
+    sphere above -9 degrees of elevation, where every view of a grazing animal sits) on a grid of
+    `spacing` m. Returns (UV0 per hit (k, 2), part id per hit), each hit standing for the same screen
+    area."""
+    from mathutils.bvhtree import BVHTree
+    me = obj.data
+    co = np.array([v.co[:] for v in me.vertices])
+    polys = [tuple(p.vertices) for p in me.polygons]
+    assert all(len(p) == 3 for p in polys), f"{obj.name}: not triangulated"
+    tri = np.array(polys)
+    uvd = me.uv_layers["UVMap"].data
+    tri_uv = np.array([[uvd[li].uv[:] for li in p.loop_indices] for p in me.polygons])
+    part = np.array([d.value for d in me.attributes["part"].data])
+    bvh = BVHTree.FromPolygons([Vector(c) for c in co], polys)
+    c = (co.min(0) + co.max(0)) / 2
+    R = float(np.linalg.norm(co - c, axis=1).max()) + 0.01
+    g = np.arange(-R, R + 1e-9, spacing)
+    locs, faces = [], []
+    k, found = 0, 0
+    while found < n_dirs:  # Fibonacci sphere, keeping directions above -9 degrees
+        zz = 1 - 2 * (k + 0.5) / (2 * n_dirs)
+        k += 1
+        if zz < -0.16:
+            continue
+        found += 1
+        r = math.sqrt(max(0.0, 1 - zz * zz))
+        th = k * math.pi * (3 - math.sqrt(5))
+        d = np.array([r * math.cos(th), r * math.sin(th), zz])
+        a = np.cross(d, (0.0, 0.0, 1.0) if abs(zz) < 0.9 else (1.0, 0.0, 0.0))
+        a /= np.linalg.norm(a)
+        b = np.cross(d, a)
+        ray = Vector(-d)
+        for s in g:
+            for t in g:
+                o = c + d * (R + 0.1) + a * s + b * t
+                hit, _, fi, _ = bvh.ray_cast(Vector(o), ray, 2 * R + 0.2)
+                if hit is not None:
+                    locs.append(hit[:])
+                    faces.append(fi)
+    locs, faces = np.array(locs), np.array(faces)
+    P = co[tri[faces]]
+    v0, v1, v2 = P[:, 1] - P[:, 0], P[:, 2] - P[:, 0], locs - P[:, 0]
+    d00, d01, d11 = (v0 * v0).sum(1), (v0 * v1).sum(1), (v1 * v1).sum(1)
+    d20, d21 = (v2 * v0).sum(1), (v2 * v1).sum(1)
+    den = np.maximum(d00 * d11 - d01 * d01, 1e-18)
+    w1 = (d11 * d20 - d01 * d21) / den
+    w2 = (d00 * d21 - d01 * d20) / den
+    bary = np.stack([1 - w1 - w2, w1, w2], 1)
+    uvs = (tri_uv[faces] * bary[:, :, None]).sum(1)
+    return uvs, part[faces]
+
+
+def _ao_stats(vals):
+    return {"hits": int(len(vals)), "mean": round(float(vals.mean()), 4),
+            "p05": round(float(np.percentile(vals, 5)), 4),
+            "dark": round(float((vals < 0.25).mean()), 5)}
+
+
+def lod_visible_ao(piece, maps, flags):
+    """Per LOD and part group, the AO a viewer sees: every outside view hit (`_view_hits`) samples each
+    map in `maps` ({label: (size, (size*size,) values in Blender pixel order)}) at its UV0. `dark` is
+    the fraction of hits below 0.25; for each {label: (ATLAS*ATLAS,) bool} in `flags`, the fraction of
+    the first map's dark hits whose 1024 px texel the mask holds."""
+    out = {}
+    for lv in range(3):
+        obj = bpy.data.objects[f"{piece}_lod{lv}"]
+        uvs, part = _view_hits(obj)
+        rep = {}
+        first = None
+        for label, (size, vals) in maps.items():
+            ix = np.clip((uvs * size).astype(np.int64), 0, size - 1)
+            v = vals[ix[:, 1] * size + ix[:, 0]]
+            if first is None:
+                first = v
+            rep[label] = {"all": _ao_stats(v)}
+            for gname, ids in GROUPS.items():
+                sel = np.isin(part, ids)
+                if sel.any():
+                    rep[label][gname] = _ao_stats(v[sel])
+        ix = np.clip((uvs * ATLAS).astype(np.int64), 0, ATLAS - 1)
+        dark = first < 0.25
+        for flag, mask in flags.items():
+            hid = mask[ix[:, 1] * ATLAS + ix[:, 0]]
+            rep[flag] = round(float(hid[dark].mean()), 4) if dark.any() else None
+        out[f"lod{lv}"] = rep
+    return out
 
 
 def _down(px, size, out, renormal=False):
@@ -427,6 +525,85 @@ def _down(px, size, out, renormal=False):
     return a.reshape(-1, 4).astype(np.float32)
 
 
+AO_FILL_ERODE = 6  # texels: seeds start this far from the buried region, past the junction crease
+AO_FILL_DARK = 0.2  # a texel inside another part's analytic surface that bakes below this is buried
+AO_FILL_CREASE = 12  # texels: dark crease texels this close to the buried set are filled too
+
+
+def _grid_shift(a, dy, dx, fill):
+    """a (ATLAS, ATLAS) shifted by (dy, dx) without wrapping: out[y, x] = a[y - dy, x - dx]."""
+    out = np.full_like(a, fill)
+    ys = slice(max(dy, 0), ATLAS + min(dy, 0))
+    yd = slice(max(-dy, 0), ATLAS + min(-dy, 0))
+    xs = slice(max(dx, 0), ATLAS + min(dx, 0))
+    xd = slice(max(-dx, 0), ATLAS + min(-dx, 0))
+    out[ys, xs] = a[yd, xd]
+    return out
+
+
+def _dilate(mask, n, within):
+    """mask (ATLAS, ATLAS) grown n texels (4-neighbour), kept inside `within`."""
+    out = mask.copy()
+    for _ in range(n):
+        grown = out.copy()
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            grown |= _grid_shift(out, dy, dx, False)
+        out = grown & within
+    return out
+
+
+def fill_hidden_ao(raw, cov, hid_t, part_t, erode=AO_FILL_ERODE):
+    """AO for the texels LOD0 buries inside another part (`hidden`), which bake to about 0. Every LOD
+    maps the same analytic UV0, and LOD1/LOD2 rebuild each part from fewer stations and ring sides, so
+    their inscribed polygons sit inside LOD0's surface and leave part of LOD0's buried band outside the
+    coarser host (the neck root, the head root and the leg tops): with AO 0 there those LODs draw
+    black patches at the junctions. Each buried texel takes the AO of the nearest visible texel of its
+    own island at least `erode` texels from the buried region (a 4-neighbour grow inside the part's
+    island), so the patch carries the near-junction shading instead of black; texels the grow cannot
+    reach take the island's visible median. `hid_t` is the set to fill (paint_maps adds the dark
+    junction crease to the buried texels); every other texel keeps its bake bit for bit. Returns
+    (ao, stats)."""
+    lab = -np.ones(ATLAS * ATLAS, np.int64)
+    for gi, ids in enumerate(GROUPS.values()):
+        lab[np.isin(part_t, ids) & cov] = gi
+    H = (hid_t & cov).reshape(ATLAS, ATLAS)
+    lab2 = lab.reshape(ATLAS, ATLAS)
+    seeds = (lab2 >= 0) & ~_dilate(H, erode, lab2 >= 0)
+    g = np.where(seeds, np.arange(ATLAS * ATLAS).reshape(ATLAS, ATLAS), -1)
+    while True:
+        todo = (g < 0) & (lab2 >= 0)
+        if not todo.any():
+            break
+        changed = False
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nb = _grid_shift(g, dy, dx, -1)
+            nl = _grid_shift(lab2, dy, dx, -1)
+            take = (g < 0) & (lab2 >= 0) & (nb >= 0) & (nl == lab2)
+            if take.any():
+                g[take] = nb[take]
+                changed = True
+        if not changed:
+            break
+    ao = raw.copy()
+    Hf, gf = H.ravel(), g.ravel()
+    reach = Hf & (gf >= 0)
+    # Brighten only: `hidden` is an analytic proxy and flags a few texels LOD0 does draw; those keep
+    # their bake wherever it is brighter than the grown value.
+    ao[reach] = np.maximum(raw[reach], raw[gf[reach]])
+    vis = cov & ~Hf
+    unreached = Hf & (gf < 0)
+    for gi in np.unique(lab[unreached]):
+        sel = unreached & (lab == gi)
+        own = vis & (lab == gi)
+        ao[sel] = np.maximum(raw[sel], np.median(raw[own if own.any() else vis]))
+    assert np.array_equal(ao[vis], raw[vis]), "AO fill changed a texel outside the fill set"
+    assert np.isfinite(ao).all() and (ao >= raw).all(), "AO fill must only brighten"
+    stats = {"erodeTexels": erode, "texels": int(Hf.sum()), "unreached": int(unreached.sum()),
+             "before": {"mean": round(float(raw[Hf].mean()), 4), "p05": round(float(np.percentile(raw[Hf], 5)), 4)},
+             "after": {"mean": round(float(ao[Hf].mean()), 4), "p05": round(float(np.percentile(ao[Hf], 5)), 4)}}
+    return ao, stats
+
+
 def paint_maps(lod0, spec, paint, out_dir, piece, skip_bake, ao_dist, sig):
     """Writes <piece>.{albedo (1024), normal (512), orm (512), masks (128)}.png. paint(P, part) ->
     dict(rgb sRGB, rough, metal, height m, snow, wet) per sample. Every texel outside the islands takes
@@ -436,10 +613,37 @@ def paint_maps(lod0, spec, paint, out_dir, piece, skip_bake, ao_dist, sig):
     cov = idx >= 0
     texel_of = np.zeros(len(P), np.int64)
     texel_of[idx[cov]] = np.nonzero(cov)[0]
+    hid = hidden(spec, P, part)
+    hid_t = np.zeros(ATLAS * ATLAS, bool)
+    hid_t[cov] = hid[idx[cov]]
+    part_t = -np.ones(ATLAS * ATLAS, np.int64)
+    part_t[cov] = part[idx[cov]]
     ao = np.ones(ATLAS * ATLAS, np.float32)
+    lod_ao = None
     if not skip_bake:
         fa.AO_DIST = ao_dist
-        ao = fa.bake_ao(lod0, ATLAS, out_dir, piece)
+        raw = fa.bake_ao(lod0, ATLAS, out_dir, piece)
+        # Also fill texels just inside another part's analytic surface (0.97 <= value < 1) that bake
+        # dark: LOD0's polygons sit inside the analytic host, so some of them are buried at LOD0 too.
+        inside_t = np.zeros(ATLAS * ATLAS, bool)
+        inside_t[cov] = hidden(spec, P, part, 1.0)[idx[cov]]
+        fill_t = hid_t | (inside_t & (raw < AO_FILL_DARK))
+        # And the junction crease: texels within AO_FILL_CREASE of that set that bake below
+        # AO_FILL_DARK. LOD0 draws them as a hairline at the junction (about 0.03% of what it shows);
+        # the coarser LODs move the junction, so the hairline crosses open surface there.
+        crease = _dilate(fill_t.reshape(ATLAS, ATLAS), AO_FILL_CREASE, cov.reshape(ATLAS, ATLAS)).ravel()
+        fill_t |= crease & (raw < AO_FILL_DARK)
+        # Not the tail: no LOD2 draws one, and a short tail buried in the fleece has no seeds of its
+        # own (animal_sheep_c), so a fill would flatten the shading LOD0 and LOD1 show on it.
+        fill_t &= ~np.isin(part_t, GROUPS["tail"])
+        ao, fill = fill_hidden_ao(raw, cov, fill_t, part_t)
+        np.savez_compressed(pathlib.Path(out_dir) / f"{piece}.aofill.npz", raw=raw, ao=ao, cov=cov,
+                            hid=hid_t, fill=fill_t, part=part_t)
+        maps = {"raw": (ATLAS, raw), "filled": (ATLAS, ao)}
+        committed = pathlib.Path(__file__).resolve().parents[3] / "assets/kit/p1" / piece / f"{piece}.orm.png"
+        if committed.exists():
+            maps["committed"] = (SMALL, bake.load_png(str(committed))[1][:, 0].copy())
+        lod_ao = lod_visible_ao(piece, maps, {"darkHidden": hid_t, "darkFilled": fill_t})
     out = paint(P, part)
     n_px = ATLAS * ATLAS
     tgt = np.arange(n_px)
@@ -461,9 +665,7 @@ def paint_maps(lod0, spec, paint, out_dir, piece, skip_bake, ao_dist, sig):
     down = lambda a: a.reshape(MASK_SIZE, f, MASK_SIZE, f).mean(axis=(1, 3)).ravel()  # noqa: E731
     bake.make_masks(MASK_SIZE, down(out["snow"][src]), down(out["wet"][src]), 0.0, None,
                     str(o / f"{piece}.masks.png"))
-    hid = hidden(spec, P, part)
-    vis = cov.copy()
-    vis[cov] = ~hid[idx[cov]]
+    vis = cov & ~hid_t
     lum = out["rgb"][idx[cov]].mean(1)
     stats = {"albedoLuma": {"mean": float(lum.mean()), "p05": float(np.percentile(lum, 5))},
              "coverage": float(cov.mean()), "hiddenTexelFraction": float(1 - vis.sum() / cov.sum())}
@@ -472,6 +674,8 @@ def paint_maps(lod0, spec, paint, out_dir, piece, skip_bake, ao_dist, sig):
         stats["aoVisible"] = {"texels": int(vis.sum()), "mean": float(av.mean()),
                               "p05": float(np.percentile(av, 5)), "min": float(av.min())}
         stats["aoAllIslandTexels"] = {"mean": float(ac.mean()), "p05": float(np.percentile(ac, 5))}
+        stats["hiddenAoFill"] = fill
+        stats["lodVisibleAo"] = lod_ao
     return stats
 
 

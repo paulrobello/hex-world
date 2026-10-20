@@ -1,6 +1,6 @@
 {
   "name": "animal_cow",
-  "date": "2026-10-19T18:28:24.060Z",
+  "date": "2026-10-20T21:48:34.655Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -141,8 +141,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 101211,
-      "sha256": "5060acab5fbb70e8406f8b21ff9357ce8911708282f6c76c0c15a6fa1c22742a"
+      "bytes": 91508,
+      "sha256": "7e820b5e8a1f91e2951ed68980370407d78a05287627c8fc6505701e1b071b05"
     },
     {
       "channel": "orm",
@@ -152,8 +152,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 107098,
-      "sha256": "7f28970315ee780c506e891fc0b2b3c71c540c8378d3395309f0305df8b20e01"
+      "bytes": 96663,
+      "sha256": "a92ac84c885a5a326b0d4ef9f00a61e25bfaebb60c0211a776fd8eaa9e5f4a21"
     },
     {
       "channel": "orm",
@@ -161,16 +161,16 @@
       "path": "assets/kit/p1/animal_cow/animal_cow.orm.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 142788,
-      "sha256": "42d4dd683f41c5c8d3e2bf5c6d797a40d0896c26f4b5611533e542a7cb38661a"
+      "bytes": 119466,
+      "sha256": "ab9556fcdf5818ffc46c60ae9cb0fd2f354f01e839abe86e3e2474e9ae971972"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 340908,
-      "astc": 341165
+      "bc7": 331205,
+      "astc": 330730
     },
     "glbBytes": 63104
   },

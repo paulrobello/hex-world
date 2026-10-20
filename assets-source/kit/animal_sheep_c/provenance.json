@@ -9,7 +9,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_animals.py",
-      "sha256": "deb6c7cbed087d76fad922ff380f1344fbff02ad81f1c60a82940828705e6ef6"
+      "sha256": "4bbb06309b392df35d771c105a068ace6716f626a051f99ee412764338308c7d"
     },
     {
       "path": "scripts/blender/kit/_animals_var.py",
@@ -110,17 +110,404 @@
         "p05": 0.16439250111579895
       },
       "aoAllIslandTexels": {
-        "mean": 0.7901493310928345,
-        "p05": 0.0313725508749485
+        "mean": 0.945060133934021,
+        "p05": 0.7490196228027344
       },
       "aoVisible": {
-        "mean": 0.9654155969619751,
-        "min": 0,
+        "mean": 0.9682730436325073,
+        "min": 0.2196078598499298,
         "p05": 0.8117647767066956,
         "texels": 507010
       },
       "coverage": 0.7189350128173828,
-      "hiddenTexelFraction": 0.32744628298698164
+      "hiddenAoFill": {
+        "after": {
+          "mean": 0.9151,
+          "p05": 0.749
+        },
+        "before": {
+          "mean": 0.4112,
+          "p05": 0
+        },
+        "erodeTexels": 6,
+        "texels": 231783,
+        "unreached": 0
+      },
+      "hiddenTexelFraction": 0.32744628298698164,
+      "lodVisibleAo": {
+        "lod0": {
+          "committed": {
+            "all": {
+              "dark": 0,
+              "hits": 59712,
+              "mean": 0.9894,
+              "p05": 0.9373
+            },
+            "body": {
+              "dark": 0,
+              "hits": 45497,
+              "mean": 0.9967,
+              "p05": 0.9843
+            },
+            "ears": {
+              "dark": 0,
+              "hits": 268,
+              "mean": 0.825,
+              "p05": 0.4631
+            },
+            "head": {
+              "dark": 0,
+              "hits": 2567,
+              "mean": 0.9857,
+              "p05": 0.9216
+            },
+            "legs": {
+              "dark": 0,
+              "hits": 4013,
+              "mean": 0.941,
+              "p05": 0.7725
+            },
+            "neck": {
+              "dark": 0,
+              "hits": 6324,
+              "mean": 0.9739,
+              "p05": 0.8745
+            },
+            "tail": {
+              "dark": 0,
+              "hits": 1043,
+              "mean": 1,
+              "p05": 1
+            }
+          },
+          "darkFilled": 0.9231,
+          "darkHidden": 0.7692,
+          "filled": {
+            "all": {
+              "dark": 0.00002,
+              "hits": 59712,
+              "mean": 0.9881,
+              "p05": 0.9373
+            },
+            "body": {
+              "dark": 0,
+              "hits": 45497,
+              "mean": 0.9967,
+              "p05": 0.9686
+            },
+            "ears": {
+              "dark": 0.00373,
+              "hits": 268,
+              "mean": 0.8247,
+              "p05": 0.4706
+            },
+            "head": {
+              "dark": 0,
+              "hits": 2567,
+              "mean": 0.9855,
+              "p05": 0.9059
+            },
+            "legs": {
+              "dark": 0,
+              "hits": 4013,
+              "mean": 0.9411,
+              "p05": 0.7804
+            },
+            "neck": {
+              "dark": 0,
+              "hits": 6324,
+              "mean": 0.974,
+              "p05": 0.8745
+            },
+            "tail": {
+              "dark": 0,
+              "hits": 1043,
+              "mean": 0.9311,
+              "p05": 0.6863
+            }
+          },
+          "raw": {
+            "all": {
+              "dark": 0.00022,
+              "hits": 59712,
+              "mean": 0.9859,
+              "p05": 0.9059
+            },
+            "body": {
+              "dark": 0.00009,
+              "hits": 45497,
+              "mean": 0.9942,
+              "p05": 0.9686
+            },
+            "ears": {
+              "dark": 0.00373,
+              "hits": 268,
+              "mean": 0.8205,
+              "p05": 0.4706
+            },
+            "head": {
+              "dark": 0,
+              "hits": 2567,
+              "mean": 0.9833,
+              "p05": 0.9059
+            },
+            "legs": {
+              "dark": 0.001,
+              "hits": 4013,
+              "mean": 0.939,
+              "p05": 0.7678
+            },
+            "neck": {
+              "dark": 0.00063,
+              "hits": 6324,
+              "mean": 0.9725,
+              "p05": 0.8745
+            },
+            "tail": {
+              "dark": 0,
+              "hits": 1043,
+              "mean": 0.9311,
+              "p05": 0.6863
+            }
+          }
+        },
+        "lod1": {
+          "committed": {
+            "all": {
+              "dark": 0,
+              "hits": 56289,
+              "mean": 0.9874,
+              "p05": 0.9216
+            },
+            "body": {
+              "dark": 0,
+              "hits": 42948,
+              "mean": 0.9966,
+              "p05": 0.9843
+            },
+            "ears": {
+              "dark": 0,
+              "hits": 262,
+              "mean": 0.7999,
+              "p05": 0.4706
+            },
+            "head": {
+              "dark": 0,
+              "hits": 2227,
+              "mean": 0.9894,
+              "p05": 0.9529
+            },
+            "legs": {
+              "dark": 0,
+              "hits": 4341,
+              "mean": 0.9305,
+              "p05": 0.7412
+            },
+            "neck": {
+              "dark": 0,
+              "hits": 5860,
+              "mean": 0.969,
+              "p05": 0.8431
+            },
+            "tail": {
+              "dark": 0,
+              "hits": 651,
+              "mean": 1,
+              "p05": 1
+            }
+          },
+          "darkFilled": 0.7574,
+          "darkHidden": 0.7433,
+          "filled": {
+            "all": {
+              "dark": 0.00609,
+              "hits": 56289,
+              "mean": 0.9809,
+              "p05": 0.9059
+            },
+            "body": {
+              "dark": 0.0074,
+              "hits": 42948,
+              "mean": 0.989,
+              "p05": 0.9686
+            },
+            "ears": {
+              "dark": 0,
+              "hits": 262,
+              "mean": 0.7977,
+              "p05": 0.4706
+            },
+            "head": {
+              "dark": 0.0009,
+              "hits": 2227,
+              "mean": 0.9877,
+              "p05": 0.9373
+            },
+            "legs": {
+              "dark": 0.00023,
+              "hits": 4341,
+              "mean": 0.9306,
+              "p05": 0.749
+            },
+            "neck": {
+              "dark": 0.00017,
+              "hits": 5860,
+              "mean": 0.9695,
+              "p05": 0.8431
+            },
+            "tail": {
+              "dark": 0.03226,
+              "hits": 651,
+              "mean": 0.9328,
+              "p05": 0.7176
+            }
+          },
+          "raw": {
+            "all": {
+              "dark": 0.02512,
+              "hits": 56289,
+              "mean": 0.9619,
+              "p05": 0.8431
+            },
+            "body": {
+              "dark": 0.01683,
+              "hits": 42948,
+              "mean": 0.9783,
+              "p05": 0.9569
+            },
+            "ears": {
+              "dark": 0.17176,
+              "hits": 262,
+              "mean": 0.6368,
+              "p05": 0
+            },
+            "head": {
+              "dark": 0.00763,
+              "hits": 2227,
+              "mean": 0.9816,
+              "p05": 0.9373
+            },
+            "legs": {
+              "dark": 0.06266,
+              "hits": 4341,
+              "mean": 0.8744,
+              "p05": 0.1569
+            },
+            "neck": {
+              "dark": 0.05734,
+              "hits": 5860,
+              "mean": 0.9169,
+              "p05": 0.0627
+            },
+            "tail": {
+              "dark": 0.03226,
+              "hits": 651,
+              "mean": 0.9328,
+              "p05": 0.7176
+            }
+          }
+        },
+        "lod2": {
+          "committed": {
+            "all": {
+              "dark": 0,
+              "hits": 53496,
+              "mean": 0.9861,
+              "p05": 0.9059
+            },
+            "body": {
+              "dark": 0,
+              "hits": 42969,
+              "mean": 0.9947,
+              "p05": 0.9686
+            },
+            "head": {
+              "dark": 0,
+              "hits": 2596,
+              "mean": 0.9808,
+              "p05": 0.9059
+            },
+            "legs": {
+              "dark": 0,
+              "hits": 4542,
+              "mean": 0.9197,
+              "p05": 0.7176
+            },
+            "neck": {
+              "dark": 0,
+              "hits": 3389,
+              "mean": 0.9705,
+              "p05": 0.8431
+            }
+          },
+          "darkFilled": 0.6013,
+          "darkHidden": 0.5891,
+          "filled": {
+            "all": {
+              "dark": 0.01649,
+              "hits": 53496,
+              "mean": 0.9702,
+              "p05": 0.8745
+            },
+            "body": {
+              "dark": 0.01771,
+              "hits": 42969,
+              "mean": 0.9775,
+              "p05": 0.9373
+            },
+            "head": {
+              "dark": 0.04661,
+              "hits": 2596,
+              "mean": 0.9388,
+              "p05": 0.7098
+            },
+            "legs": {
+              "dark": 0,
+              "hits": 4542,
+              "mean": 0.9188,
+              "p05": 0.7176
+            },
+            "neck": {
+              "dark": 0,
+              "hits": 3389,
+              "mean": 0.9706,
+              "p05": 0.8431
+            }
+          },
+          "raw": {
+            "all": {
+              "dark": 0.04135,
+              "hits": 53496,
+              "mean": 0.9467,
+              "p05": 0.7176
+            },
+            "body": {
+              "dark": 0.03907,
+              "hits": 42969,
+              "mean": 0.9569,
+              "p05": 0.8431
+            },
+            "head": {
+              "dark": 0.08783,
+              "hits": 2596,
+              "mean": 0.902,
+              "p05": 0.0314
+            },
+            "legs": {
+              "dark": 0.03985,
+              "hits": 4542,
+              "mean": 0.8816,
+              "p05": 0.4078
+            },
+            "neck": {
+              "dark": 0.03659,
+              "hits": 3389,
+              "mean": 0.9382,
+              "p05": 0.6549
+            }
+          }
+        }
+      }
     },
     "blender": "5.2.2 LTS",
     "channels": {
@@ -221,8 +608,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 583642,
-        "astc": 589946
+        "bc7": 557503,
+        "astc": 563239
       },
       "glbBytes": 49876
     },
@@ -328,8 +715,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 104117,
-        "sha256": "d1eb01bc75433062d7bf0be011a3cd513eb27debcb316af4946a9e96a9a24fee"
+        "bytes": 77978,
+        "sha256": "247b8a9cd3cc3aa59d8cab21301e361eb5960a2f2c849f620fb79e96898a1cdc"
       },
       {
         "channel": "orm",
@@ -339,8 +726,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 106744,
-        "sha256": "d2532e1c99073ba7cd23cc24722fccaf0a02cf8835d99351a4f69d36bbf78376"
+        "bytes": 80037,
+        "sha256": "30e5b0b470f732ed57fa5bb90cb790a9991920679c8415df3a98199edd6d974b"
       },
       {
         "channel": "orm",
@@ -348,8 +735,8 @@
         "path": "assets/kit/p1/animal_sheep_c/animal_sheep_c.orm.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 134150,
-        "sha256": "af7f935186f0228a9ce129d88e46029d839c7cc3f75bd19ba785e5c15be2a83a"
+        "bytes": 96877,
+        "sha256": "c28ffc3a54e5a0688709b1a7795e156d2d093e95d8dedba3eb6c577ec5d4b701"
       }
     ]
   },
@@ -406,18 +793,18 @@
     },
     {
       "path": "assets/kit/p1/animal_sheep_c/animal_sheep_c.orm.bc7.ktx2",
-      "sha256": "d1eb01bc75433062d7bf0be011a3cd513eb27debcb316af4946a9e96a9a24fee",
-      "bytes": 104117
+      "sha256": "247b8a9cd3cc3aa59d8cab21301e361eb5960a2f2c849f620fb79e96898a1cdc",
+      "bytes": 77978
     },
     {
       "path": "assets/kit/p1/animal_sheep_c/animal_sheep_c.orm.astc.ktx2",
-      "sha256": "d2532e1c99073ba7cd23cc24722fccaf0a02cf8835d99351a4f69d36bbf78376",
-      "bytes": 106744
+      "sha256": "30e5b0b470f732ed57fa5bb90cb790a9991920679c8415df3a98199edd6d974b",
+      "bytes": 80037
     },
     {
       "path": "assets/kit/p1/animal_sheep_c/animal_sheep_c.orm.png",
-      "sha256": "af7f935186f0228a9ce129d88e46029d839c7cc3f75bd19ba785e5c15be2a83a",
-      "bytes": 134150
+      "sha256": "c28ffc3a54e5a0688709b1a7795e156d2d093e95d8dedba3eb6c577ec5d4b701",
+      "bytes": 96877
     }
   ],
   "references": [
@@ -452,7 +839,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T12:57:40.638Z",
+    "date": "2026-10-20T21:50:52.577Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -478,6 +865,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Variant of animal_sheep (PRD §6 Variety), against assets-source/refs/farm_animals (ref-3: the flock grazing): the adult black-faced sheep grazing, its head turned 22 deg nose down on a longer neck with the muzzle 1.5 cm above the grass 0.77 m ahead of the body centre, the sheep counterpart of animal_cow_b. Same stations, palette and paint as animal_sheep (painted at rest positions, so the wool hood, black face and legs match), 756 LOD0 tris. Review sheet: docs/checkpoints/animal_sheep_c/sheet.jpg (refs, EEVEE beside animal_sheep and animal_cow_b, head close-up, top view, LOD2; in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod2-neck-fix",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Re-export with the LOD2 neck fix: _animals.fill_hidden_ao gives the texels LOD0 buries inside another part (neck root, head root, leg tops; they baked to AO 0) the near-junction AO of their own island, so LOD1 and LOD2, whose coarser polygons expose part of that band, no longer draw black patches at the neck and leg-top junctions. Geometry, albedo, normal and masks unchanged; texels LOD0 shows keep their AO bit for bit. Per-LOD visible AO in the bake report (bakeStats.lodVisibleAo). Review sheet: docs/checkpoints/animal-lod2-neck/sheet.jpg (in engine, Force LOD 2 and 0 from the same cameras, before and after). The controller records the owner's decision."
     }
   ]
 }
