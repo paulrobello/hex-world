@@ -4,7 +4,9 @@
 // and match-forest-ghost / match-forest-placed show a pine ghost and the same cell once placed: the
 // ghost's scatter layout fingerprint must equal the placed tile's. The beach, headland and bay
 // ghosts (two rotations each), the river ghosts and an ocean ghost tint their ground per material
-// slot and draw a flat water surface where the water goes. GPU Chromium on the built site; writes
+// slot and draw a flat water surface where the water goes. The windmill and farm ghosts (and every
+// tile with hero props) must reach a second rotation with R, since their heroes turn with the tile
+// even where every edge is grass (owner, 2026-10-20). GPU Chromium on the built site; writes
 // docs/checkpoints/ghost/*.jpg and ghost.json (what each capture shows, read from hexWorld.state()).
 // Run: node e2e/ghost-shots.mjs dist
 import { chromium } from "playwright";
@@ -36,6 +38,10 @@ let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const record = [];
 const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+
+/** Tiles with hero props (the bridge schema's catalog, from data/tiles/*.ron). */
+const HERO_TILES = new Set(JSON.parse(readFileSync(new URL("../web/ui/src/bridge-schema.json", import.meta.url), "utf8"))
+  .catalog.tiles.filter((t) => t.heroes).map((t) => t.id));
 
 /** Pointy-top axial to world metres (hex radius 16 m), as hex_core::Axial::to_world. */
 const world = (q, r) => [16 * Math.sqrt(3) * (q + r / 2), 16 * 1.5 * r];
@@ -109,8 +115,14 @@ async function ghostPair(page, tile, q0, r0, key) {
   await page.evaluate(() => window.hexWorld.rotateGhost("cw"));
   await page.waitForTimeout(300);
   const b = await capture(page, `${key}-b`, `${tile} at (${q}, ${r}) after R`);
-  if (a.ghost?.rotation === b.ghost?.rotation)
-    console.log(`${tile}: one distinct orientation at (${q}, ${r}); R keeps rotation ${a.ghost?.rotation}`);
+  // A tile with hero props turns them with it, so R always reaches another rotation (the windmill's
+  // sails, the farm's barn: owner, 2026-10-20).
+  if (a.ghost?.rotation === b.ghost?.rotation) {
+    if (HERO_TILES.has(tile)) fail(`${tile}: R keeps rotation ${a.ghost?.rotation} at (${q}, ${r}), but its hero props turn with it`);
+    else console.log(`${tile}: one distinct orientation at (${q}, ${r}); R keeps rotation ${a.ghost?.rotation}`);
+  }
+  if (HERO_TILES.has(tile) && !(a.ghost_report?.entities > 0 && b.ghost_report?.entities > 0))
+    fail(`${tile}: ghost meshes missing at a rotation: ${JSON.stringify([a.ghost_report, b.ghost_report])}`);
   if (a.ghost_meshes !== true) fail(`${tile}: ghost meshes not drawn`);
   return { ...a, b };
 }
@@ -179,6 +191,8 @@ function expectScatter(shot, tile, pieces) {
   expectScatter(await ghostPair(page, "forest", -1, -1, "ghost-forest"), "forest", ["tree_forest"]);
   expectScatter(await ghostPair(page, "oak", -1, -1, "ghost-oak"), "oak", ["rock_small"]);
   await ghostPair(page, "house_cluster", 1, -1, "ghost-house");
+  await ghostPair(page, "windmill", 0, -1, "ghost-windmill");
+  await ghostPair(page, "farm", 0, -1, "ghost-farm");
   expectWater(await ghostPair(page, "river_straight", -2, 1, "ghost-river"), "river_straight");
   // Fit: a road straight that continues the road at (1, 0). Clash: ocean against the meadow's grass.
   await page.evaluate(() => { const h = window.hexWorld; h.selectTile("road_straight"); h.hover(2, 0); });
@@ -218,7 +232,8 @@ function expectScatter(shot, tile, pieces) {
   console.log(`match-forest: ghost ${JSON.stringify({ rotation: g.ghost?.rotation, layout: gr?.layout, scatter: gr?.scatter })} placed ${JSON.stringify({ rotation: after.tile?.rotation, layout: after.row?.layout, drawn: after.row?.drawn })}`);
   if (after.tile?.rotation !== g.ghost?.rotation) fail(`placed rotation ${after.tile?.rotation} != ghost rotation ${g.ghost?.rotation}`);
   if (!gr?.layout || after.row?.layout !== gr.layout) fail(`placed layout ${after.row?.layout} != ghost layout ${gr?.layout}`);
-  if (JSON.stringify(after.row?.drawn) !== JSON.stringify(gr?.scatter)) fail(`placed scatter ${JSON.stringify(after.row?.drawn)} != ghost scatter ${JSON.stringify(gr?.scatter)}`);
+  const sorted = (o) => JSON.stringify(Object.entries(o ?? {}).sort(([a], [b]) => a.localeCompare(b)));
+  if (sorted(after.row?.drawn) !== sorted(gr?.scatter)) fail(`placed scatter ${JSON.stringify(after.row?.drawn)} != ghost scatter ${JSON.stringify(gr?.scatter)}`);
   if (placed.ghost_meshes !== false) fail(`a ghost still draws after placing: ${JSON.stringify(placed.ghost_report)}`);
   if (errors.length) fail(`console errors: ${errors.join(" | ")}`);
   await page.close();

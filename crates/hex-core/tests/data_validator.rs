@@ -328,17 +328,13 @@ fn every_tile_rotation_has_a_thumbnail() {
         for a in 0..6u8 {
             for b in a + 1..6 {
                 let same_image = files[a as usize] == files[b as usize];
-                let same_sockets = (0..6).all(|w| t.edge(w, a) == t.edge(w, b));
-                if same_image != same_sockets {
+                let same = t.same_orientation(a, b);
+                if same_image != same {
                     problems.push(format!(
-                        "{}: rotations {a} and {b} {} one image but {} world-edge sockets",
+                        "{}: rotations {a} and {b} {} one image but {} one orientation",
                         t.id,
                         if same_image { "share" } else { "do not share" },
-                        if same_sockets {
-                            "have equal"
-                        } else {
-                            "differ in"
-                        },
+                        if same { "are" } else { "are not" },
                     ));
                 }
             }

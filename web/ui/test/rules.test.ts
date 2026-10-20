@@ -81,6 +81,12 @@ test("rotation readout counts distinct orientations (the engine's R steps throug
   assert.deepEqual(rotationReadout(road, [1, 2, 4, 5], 2), { index: 1, count: 2 });
   // Every meadow rotation looks the same: one orientation, so the tag reads "Fits" with no R.
   assert.deepEqual(rotationReadout(def("meadow"), legalRotations(def("meadow"), slot), 0), { index: 0, count: 1 });
+  // The windmill's edges are all grass, but its sails turn with it: six orientations, as hex-core.
+  const mill = fit(def("windmill"), slot);
+  assert.deepEqual(mill.distinct, [0, 1, 2, 3, 4, 5]);
+  assert.equal(fitMeta(def("windmill"), mill), "6 rotations fit");
+  assert.deepEqual(rotationReadout(def("windmill"), mill.legal, 3), { index: 3, count: 6 });
+  assert.deepEqual(fit(def("bakery"), slot).distinct.length, fit(def("bakery"), slot).legal.length);
   // road_junction repeats every 120 degrees: legal 0, 2, 4 are one orientation; 1, 3, 5 another.
   const j = def("road_junction");
   assert.deepEqual(rotationReadout(j, [0, 2, 4], 4), { index: 0, count: 1 });

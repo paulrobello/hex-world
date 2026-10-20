@@ -16,12 +16,15 @@ export interface TileDef {
   edges: SocketKind[];
   /** The land side of each directional edge, null on the others (hex-core `EdgeSocket::land`). */
   land: (Side | null)[];
+  /** It has hero props, which turn with it: every rotation is its own orientation (hex-core `same_orientation`). */
+  heroes: boolean;
 }
 
 export const TILES: TileDef[] = schema.catalog.tiles.map((t) => ({
   id: t.id,
   edges: t.edges as SocketKind[],
   land: t.land as (Side | null)[],
+  heroes: t.heroes,
 }));
 export const START_TILE: string = schema.catalog.start;
 const COMPAT = schema.catalog.compatible as Record<SocketKind, SocketKind[]>;
@@ -75,8 +78,9 @@ export function rotatedLand(def: TileDef, k: number): (Side | null)[] {
   return [0, 1, 2, 3, 4, 5].map((w) => def.land[(w - k + 12) % 6]!);
 }
 
-/** Equal for two rotations exactly when their world-edge sockets are equal. */
-const orientation = (def: TileDef, k: number): string => `${rotated(def, k).join()}|${rotatedLand(def, k).join()}`;
+/** Equal for two rotations exactly when their world-edge sockets are equal and the tile has no hero props. */
+const orientation = (def: TileDef, k: number): string =>
+  def.heroes ? `${k % 6}` : `${rotated(def, k).join()}|${rotatedLand(def, k).join()}`;
 
 /**
  * Whether my edge may meet the edge it faces (hex-core `edges_compatible` for MVP edges): the kinds

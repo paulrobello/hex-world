@@ -823,6 +823,45 @@ mod tests {
         );
     }
 
+    /// A tile with hero props shows them turned at every rotation (the windmill's sails face a new
+    /// way, the farm's barn stands on another side), so R reaches all six even where every edge's
+    /// socket is equal (owner, 2026-10-20: the windmill ghost showed no rotation).
+    #[test]
+    fn hero_tiles_turn_through_every_rotation() {
+        let c = catalog();
+        let w = World::new(1);
+        let heroes: Vec<&TileDef> = c
+            .tiles()
+            .iter()
+            .filter(|d| !d.props.hero.is_empty())
+            .collect();
+        let ids: Vec<&str> = heroes.iter().map(|d| d.id.as_str()).collect();
+        for id in ["windmill", "farm", "oak", "bakery", "house_cluster"] {
+            assert!(ids.contains(&id), "{id} has hero props");
+        }
+        for d in heroes {
+            for a in 0..6u8 {
+                for b in a + 1..6 {
+                    assert!(!d.same_orientation(a, b), "{} r{a} and r{b}", d.id);
+                }
+            }
+            let legal = w.legal_rotations(&c, EAST, d);
+            assert_eq!(w.distinct_legal_rotations(&c, EAST, d), legal, "{}", d.id);
+            let mut k = legal[0];
+            for &want in legal[1..].iter().chain(&legal[..1]) {
+                k = w
+                    .cycle_rotation(&c, EAST, d, k, RotateDir::Forward)
+                    .unwrap();
+                assert_eq!(k, want, "{} steps through each legal rotation", d.id);
+            }
+        }
+        let windmill = def(&c, "windmill");
+        assert_eq!(
+            w.distinct_legal_rotations(&c, EAST, windmill),
+            vec![0, 1, 2, 3, 4, 5]
+        );
+    }
+
     #[test]
     fn beach_curve_cycles_headland_then_bay_orientations() {
         let c = catalog();

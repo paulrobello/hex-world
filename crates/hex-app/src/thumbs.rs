@@ -8,7 +8,7 @@
 use bevy::app::RunFixedMainLoopSystems;
 use bevy::prelude::*;
 use bevy::render::view::DebandDither;
-use hex_core::{Axial, EdgeSocket, TileCatalog, TileDef};
+use hex_core::{Axial, TileCatalog, TileDef};
 use hex_play::play::{
     PlayKit, PlayTile, PlayView,
     packs::{PackRequests, PlayPacks},
@@ -82,18 +82,12 @@ pub fn force_flags(f: &mut Flags) {
     f.tier_explicit = true;
 }
 
-/// World-edge sockets of `def` placed at `rotation`.
-fn signature(def: &TileDef, rotation: u8) -> [&EdgeSocket; 6] {
-    std::array::from_fn(|w| def.edge(w as u8, rotation))
-}
-
-/// For each rotation 0..6, the lowest rotation with the same world-edge sockets: the image it uses.
+/// For each rotation 0..6, the lowest rotation of the same orientation (equal world-edge sockets
+/// and no hero props, `TileDef::same_orientation`): the image it uses.
 pub fn canonical_rotations(def: &TileDef) -> [u8; 6] {
     std::array::from_fn(|k| {
         let k = k as u8;
-        (0..k)
-            .find(|&j| signature(def, j) == signature(def, k))
-            .unwrap_or(k)
+        (0..k).find(|&j| def.same_orientation(j, k)).unwrap_or(k)
     })
 }
 
@@ -436,7 +430,7 @@ mod tests {
     }
 
     #[test]
-    fn distinct_rotations_follow_socket_symmetry() {
+    fn distinct_rotations_follow_the_orientation() {
         let c = catalog();
         let distinct = |id: &str| {
             let canon = canonical_rotations(c.get(id).unwrap());
@@ -445,12 +439,12 @@ mod tests {
         let want = [
             ("meadow", 1),
             ("forest", 1),
-            ("oak", 1),
-            ("windmill", 1),
-            ("farm", 1),
+            ("oak", 6),
+            ("windmill", 6),
+            ("farm", 6),
             ("wheat_field", 1),
             ("house_cluster", 6),
-            ("bakery", 3),
+            ("bakery", 6),
             ("road_straight", 3),
             ("road_bend_120", 6),
             ("road_bend_60", 6),
@@ -469,17 +463,22 @@ mod tests {
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 22 + 81);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 22 + 99);
     }
 
     #[test]
-    fn a_shared_image_means_equal_world_sockets() {
+    fn a_shared_image_means_one_orientation() {
         for t in catalog().tiles() {
             let canon = canonical_rotations(t);
             for k in 0..6u8 {
                 let c = canon[k as usize];
                 assert!(c <= k);
-                assert_eq!(signature(t, c), signature(t, k), "{} r{k}", t.id);
+                assert!(t.same_orientation(c, k), "{} r{k}", t.id);
+                assert!(
+                    (0..6u8).all(|w| t.edge(w, c) == t.edge(w, k)),
+                    "{} r{k}: equal world-edge sockets",
+                    t.id
+                );
             }
         }
         let c = catalog();

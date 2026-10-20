@@ -162,6 +162,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": false,
         "id": "meadow",
         "land": [
           null,
@@ -186,6 +187,7 @@
           "Forest",
           "Forest"
         ],
+        "heroes": false,
         "id": "forest",
         "land": [
           null,
@@ -213,6 +215,7 @@
           "Forest",
           "Forest"
         ],
+        "heroes": true,
         "id": "oak",
         "land": [
           null,
@@ -237,6 +240,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": true,
         "id": "windmill",
         "land": [
           null,
@@ -260,6 +264,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": true,
         "id": "farm",
         "land": [
           null,
@@ -283,6 +288,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": false,
         "id": "wheat_field",
         "land": [
           null,
@@ -306,6 +312,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": true,
         "id": "house_cluster",
         "land": [
           null,
@@ -326,6 +333,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": true,
         "id": "bakery",
         "land": [
           null,
@@ -346,6 +354,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": false,
         "id": "road_straight",
         "land": [
           null,
@@ -369,6 +378,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": false,
         "id": "road_bend_120",
         "land": [
           null,
@@ -392,6 +402,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": false,
         "id": "road_bend_60",
         "land": [
           null,
@@ -415,6 +426,7 @@
           "Road",
           "Grass"
         ],
+        "heroes": false,
         "id": "road_junction",
         "land": [
           null,
@@ -438,6 +450,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": false,
         "id": "river_straight",
         "land": [
           null,
@@ -458,6 +471,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": false,
         "id": "river_bend",
         "land": [
           null,
@@ -478,6 +492,7 @@
           "Road",
           "Grass"
         ],
+        "heroes": false,
         "id": "river_road_bridge",
         "land": [
           null,
@@ -498,6 +513,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": false,
         "id": "river_spring",
         "land": [
           null,
@@ -518,6 +534,7 @@
           "Grass",
           "Beach"
         ],
+        "heroes": false,
         "id": "beach",
         "land": [
           null,
@@ -538,6 +555,7 @@
           "Beach",
           "Ocean"
         ],
+        "heroes": false,
         "id": "beach_outer",
         "land": [
           null,
@@ -558,6 +576,7 @@
           "Grass",
           "Beach"
         ],
+        "heroes": false,
         "id": "beach_inner",
         "land": [
           null,
@@ -578,6 +597,7 @@
           "Grass",
           "Beach"
         ],
+        "heroes": false,
         "id": "river_mouth",
         "land": [
           null,
@@ -598,6 +618,7 @@
           "River",
           "Beach"
         ],
+        "heroes": false,
         "id": "river_mouth_l",
         "land": [
           null,
@@ -618,6 +639,7 @@
           "Ocean",
           "Ocean"
         ],
+        "heroes": false,
         "id": "ocean",
         "land": [
           null,

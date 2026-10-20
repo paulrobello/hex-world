@@ -38,27 +38,27 @@
     ],
     "oak": [
       "oak-r0.webp",
-      "oak-r0.webp",
-      "oak-r0.webp",
-      "oak-r0.webp",
-      "oak-r0.webp",
-      "oak-r0.webp"
+      "oak-r1.webp",
+      "oak-r2.webp",
+      "oak-r3.webp",
+      "oak-r4.webp",
+      "oak-r5.webp"
     ],
     "windmill": [
       "windmill-r0.webp",
-      "windmill-r0.webp",
-      "windmill-r0.webp",
-      "windmill-r0.webp",
-      "windmill-r0.webp",
-      "windmill-r0.webp"
+      "windmill-r1.webp",
+      "windmill-r2.webp",
+      "windmill-r3.webp",
+      "windmill-r4.webp",
+      "windmill-r5.webp"
     ],
     "farm": [
       "farm-r0.webp",
-      "farm-r0.webp",
-      "farm-r0.webp",
-      "farm-r0.webp",
-      "farm-r0.webp",
-      "farm-r0.webp"
+      "farm-r1.webp",
+      "farm-r2.webp",
+      "farm-r3.webp",
+      "farm-r4.webp",
+      "farm-r5.webp"
     ],
     "wheat_field": [
       "wheat_field-r0.webp",
@@ -80,9 +80,9 @@
       "bakery-r0.webp",
       "bakery-r1.webp",
       "bakery-r2.webp",
-      "bakery-r0.webp",
-      "bakery-r1.webp",
-      "bakery-r2.webp"
+      "bakery-r3.webp",
+      "bakery-r4.webp",
+      "bakery-r5.webp"
     ],
     "road_straight": [
       "road_straight-r0.webp",

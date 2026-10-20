@@ -27,20 +27,21 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 31,
-   "layout": "e1804b5da9bdb8b5",
-   "mesh_material_pairs": 4,
    "q": 0,
    "r": -1,
-   "rotation": 0,
-   "scatter": {
-    "rock_small": 2,
-    "wildflower_clump": 27
-   },
-   "seed": "fbd912d21ced44a9",
    "tile": "meadow",
-   "tris": 20472,
-   "water_surface": false
+   "rotation": 0,
+   "seed": "fbd912d21ced44a9",
+   "layout": "e6db7f6c75137176",
+   "scatter": {
+    "wildflower_clump": 27,
+    "rock_small": 2,
+    "wildflower_single": 39
+   },
+   "water_surface": false,
+   "entities": 70,
+   "mesh_material_pairs": 11,
+   "tris": 21313
   }
  },
  {
@@ -71,20 +72,21 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 31,
-   "layout": "e1804b5da9bdb8b5",
-   "mesh_material_pairs": 4,
    "q": 0,
    "r": -1,
-   "rotation": 0,
-   "scatter": {
-    "rock_small": 2,
-    "wildflower_clump": 27
-   },
-   "seed": "fbd912d21ced44a9",
    "tile": "meadow",
-   "tris": 20472,
-   "water_surface": false
+   "rotation": 0,
+   "seed": "fbd912d21ced44a9",
+   "layout": "e6db7f6c75137176",
+   "scatter": {
+    "wildflower_clump": 27,
+    "rock_small": 2,
+    "wildflower_single": 39
+   },
+   "water_surface": false,
+   "entities": 70,
+   "mesh_material_pairs": 11,
+   "tris": 21313
   }
  },
  {
@@ -115,20 +117,24 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 65,
-   "layout": "5b383b0787533a51",
-   "mesh_material_pairs": 8,
    "q": -1,
    "r": -1,
-   "rotation": 0,
-   "scatter": {
-    "rock_small": 1,
-    "tree_forest": 20
-   },
-   "seed": "336503c6b835bec0",
    "tile": "forest",
-   "tris": 57789,
-   "water_surface": false
+   "rotation": 0,
+   "seed": "336503c6b835bec0",
+   "layout": "729a9198bc57cbd9",
+   "scatter": {
+    "tree_forest": 20,
+    "rock_small": 1,
+    "fern_clump": 8,
+    "log_fallen": 1,
+    "shrub_forest": 3,
+    "sapling_spruce": 2
+   },
+   "water_surface": false,
+   "entities": 86,
+   "mesh_material_pairs": 25,
+   "tris": 61216
   }
  },
  {
@@ -159,20 +165,24 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 65,
-   "layout": "5b383b0787533a51",
-   "mesh_material_pairs": 8,
    "q": -1,
    "r": -1,
-   "rotation": 0,
-   "scatter": {
-    "rock_small": 1,
-    "tree_forest": 20
-   },
-   "seed": "336503c6b835bec0",
    "tile": "forest",
-   "tris": 57789,
-   "water_surface": false
+   "rotation": 0,
+   "seed": "336503c6b835bec0",
+   "layout": "729a9198bc57cbd9",
+   "scatter": {
+    "tree_forest": 20,
+    "rock_small": 1,
+    "fern_clump": 8,
+    "log_fallen": 1,
+    "shrub_forest": 3,
+    "sapling_spruce": 2
+   },
+   "water_surface": false,
+   "entities": 86,
+   "mesh_material_pairs": 25,
+   "tris": 61216
   }
  },
  {
@@ -203,20 +213,21 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 17,
-   "layout": "69f1a58d3cf1ea71",
-   "mesh_material_pairs": 9,
    "q": -1,
    "r": -1,
+   "tile": "oak",
    "rotation": 0,
+   "seed": "336503c6b835bec0",
+   "layout": "78a7f52c2843c975",
    "scatter": {
     "rock_small": 4,
-    "wildflower_clump": 6
+    "wildflower_clump": 6,
+    "tree_oak": 2
    },
-   "seed": "336503c6b835bec0",
-   "tile": "oak",
-   "tris": 13948,
-   "water_surface": false
+   "water_surface": false,
+   "entities": 23,
+   "mesh_material_pairs": 17,
+   "tris": 18257
   }
  },
  {
@@ -241,26 +252,27 @@
    ],
    "q": -1,
    "r": -1,
-   "rotation": 0,
+   "rotation": 1,
    "tile": "oak",
    "valid": true
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 17,
-   "layout": "69f1a58d3cf1ea71",
-   "mesh_material_pairs": 9,
    "q": -1,
    "r": -1,
-   "rotation": 0,
+   "tile": "oak",
+   "rotation": 1,
+   "seed": "336503c6b835bec0",
+   "layout": "78a7f52c2843c975",
    "scatter": {
     "rock_small": 4,
-    "wildflower_clump": 6
+    "wildflower_clump": 6,
+    "tree_oak": 2
    },
-   "seed": "336503c6b835bec0",
-   "tile": "oak",
-   "tris": 13948,
-   "water_surface": false
+   "water_surface": false,
+   "entities": 23,
+   "mesh_material_pairs": 17,
+   "tris": 18257
   }
  },
  {
@@ -290,17 +302,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 34,
-   "layout": null,
-   "mesh_material_pairs": 27,
    "q": -2,
    "r": 0,
-   "rotation": 1,
-   "scatter": {},
-   "seed": "69b56a944dc675f0",
    "tile": "house_cluster",
-   "tris": 7920,
-   "water_surface": false
+   "rotation": 1,
+   "seed": "69b56a944dc675f0",
+   "layout": null,
+   "scatter": {},
+   "water_surface": false,
+   "entities": 34,
+   "mesh_material_pairs": 27,
+   "tris": 7920
   }
  },
  {
@@ -330,17 +342,193 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 34,
-   "layout": null,
-   "mesh_material_pairs": 27,
    "q": -2,
    "r": 0,
-   "rotation": 2,
-   "scatter": {},
-   "seed": "69b56a944dc675f0",
    "tile": "house_cluster",
-   "tris": 7920,
-   "water_surface": false
+   "rotation": 2,
+   "seed": "69b56a944dc675f0",
+   "layout": null,
+   "scatter": {},
+   "water_surface": false,
+   "entities": 34,
+   "mesh_material_pairs": 27,
+   "tris": 7920
+  }
+ },
+ {
+  "name": "ghost-windmill-a",
+  "note": "windmill at (0, -1)",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Compatible",
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "q": 0,
+   "r": -1,
+   "rotation": 0,
+   "tile": "windmill",
+   "valid": true
+  },
+  "ghost_meshes": true,
+  "ghost_report": {
+   "q": 0,
+   "r": -1,
+   "tile": "windmill",
+   "rotation": 0,
+   "seed": "fbd912d21ced44a9",
+   "layout": "4cebd15d7082f6f8",
+   "scatter": {
+    "wildflower_clump": 8,
+    "rock_small": 2
+   },
+   "water_surface": false,
+   "entities": 23,
+   "mesh_material_pairs": 18,
+   "tris": 10847
+  }
+ },
+ {
+  "name": "ghost-windmill-b",
+  "note": "windmill at (0, -1) after R",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Compatible",
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "q": 0,
+   "r": -1,
+   "rotation": 1,
+   "tile": "windmill",
+   "valid": true
+  },
+  "ghost_meshes": true,
+  "ghost_report": {
+   "q": 0,
+   "r": -1,
+   "tile": "windmill",
+   "rotation": 1,
+   "seed": "fbd912d21ced44a9",
+   "layout": "4cebd15d7082f6f8",
+   "scatter": {
+    "wildflower_clump": 8,
+    "rock_small": 2
+   },
+   "water_surface": false,
+   "entities": 23,
+   "mesh_material_pairs": 18,
+   "tris": 10847
+  }
+ },
+ {
+  "name": "ghost-farm-a",
+  "note": "farm at (0, -1)",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Compatible",
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "q": 0,
+   "r": -1,
+   "rotation": 0,
+   "tile": "farm",
+   "valid": true
+  },
+  "ghost_meshes": true,
+  "ghost_report": {
+   "q": 0,
+   "r": -1,
+   "tile": "farm",
+   "rotation": 0,
+   "seed": "fbd912d21ced44a9",
+   "layout": "4eb8074ef7404025",
+   "scatter": {
+    "wildflower_clump": 5,
+    "rock_small": 2
+   },
+   "water_surface": false,
+   "entities": 25,
+   "mesh_material_pairs": 21,
+   "tris": 17248
+  }
+ },
+ {
+  "name": "ghost-farm-b",
+  "note": "farm at (0, -1) after R",
+  "ghost": {
+   "edges": [
+    "Neutral",
+    "Compatible",
+    "Compatible",
+    "Neutral",
+    "Neutral",
+    "Neutral"
+   ],
+   "legal_rotations": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "q": 0,
+   "r": -1,
+   "rotation": 1,
+   "tile": "farm",
+   "valid": true
+  },
+  "ghost_meshes": true,
+  "ghost_report": {
+   "q": 0,
+   "r": -1,
+   "tile": "farm",
+   "rotation": 1,
+   "seed": "fbd912d21ced44a9",
+   "layout": "4eb8074ef7404025",
+   "scatter": {
+    "wildflower_clump": 5,
+    "rock_small": 2
+   },
+   "water_surface": false,
+   "entities": 25,
+   "mesh_material_pairs": 21,
+   "tris": 17248
   }
  },
  {
@@ -369,17 +557,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 13,
-   "layout": null,
-   "mesh_material_pairs": 10,
    "q": -2,
    "r": 0,
-   "rotation": 1,
-   "scatter": {},
-   "seed": "69b56a944dc675f0",
    "tile": "river_straight",
-   "tris": 6160,
-   "water_surface": true
+   "rotation": 1,
+   "seed": "69b56a944dc675f0",
+   "layout": null,
+   "scatter": {},
+   "water_surface": true,
+   "entities": 13,
+   "mesh_material_pairs": 10,
+   "tris": 7539
   }
  },
  {
@@ -408,17 +596,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 13,
-   "layout": null,
-   "mesh_material_pairs": 10,
    "q": -2,
    "r": 0,
-   "rotation": 2,
-   "scatter": {},
-   "seed": "69b56a944dc675f0",
    "tile": "river_straight",
-   "tris": 6160,
-   "water_surface": true
+   "rotation": 2,
+   "seed": "69b56a944dc675f0",
+   "layout": null,
+   "scatter": {},
+   "water_surface": true,
+   "entities": 13,
+   "mesh_material_pairs": 10,
+   "tris": 7539
   }
  },
  {
@@ -447,17 +635,20 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 14,
-   "layout": null,
-   "mesh_material_pairs": 10,
    "q": 2,
    "r": 0,
-   "rotation": 1,
-   "scatter": {},
-   "seed": "7dd6cfd7e3f8bcc2",
    "tile": "road_straight",
-   "tris": 3458,
-   "water_surface": false
+   "rotation": 1,
+   "seed": "7dd6cfd7e3f8bcc2",
+   "layout": "b2a2cf0126ca7eba",
+   "scatter": {
+    "wildflower_single": 20,
+    "bush_verge": 4
+   },
+   "water_surface": false,
+   "entities": 42,
+   "mesh_material_pairs": 18,
+   "tris": 7978
   }
  },
  {
@@ -481,17 +672,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 4,
-   "layout": null,
-   "mesh_material_pairs": 4,
    "q": 0,
    "r": 1,
-   "rotation": 1,
-   "scatter": {},
-   "seed": "e220a8397b1dcdaf",
    "tile": "ocean",
-   "tris": 4040,
-   "water_surface": true
+   "rotation": 1,
+   "seed": "e220a8397b1dcdaf",
+   "layout": null,
+   "scatter": {},
+   "water_surface": true,
+   "entities": 4,
+   "mesh_material_pairs": 4,
+   "tris": 4040
   }
  },
  {
@@ -520,17 +711,20 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 14,
-   "layout": null,
-   "mesh_material_pairs": 10,
    "q": 2,
    "r": 0,
-   "rotation": 1,
-   "scatter": {},
-   "seed": "7dd6cfd7e3f8bcc2",
    "tile": "road_straight",
-   "tris": 3458,
-   "water_surface": false
+   "rotation": 1,
+   "seed": "7dd6cfd7e3f8bcc2",
+   "layout": "b2a2cf0126ca7eba",
+   "scatter": {
+    "wildflower_single": 20,
+    "bush_verge": 4
+   },
+   "water_surface": false,
+   "entities": 42,
+   "mesh_material_pairs": 18,
+   "tris": 7978
   }
  },
  {
@@ -561,20 +755,24 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 65,
-   "layout": "17de1e59130fdc9b",
-   "mesh_material_pairs": 8,
    "q": -2,
    "r": 0,
-   "rotation": 0,
-   "scatter": {
-    "rock_small": 1,
-    "tree_forest": 20
-   },
-   "seed": "69b56a944dc675f0",
    "tile": "forest",
-   "tris": 57789,
-   "water_surface": false
+   "rotation": 0,
+   "seed": "69b56a944dc675f0",
+   "layout": "eb490eee33b3b565",
+   "scatter": {
+    "tree_forest": 20,
+    "rock_small": 1,
+    "fern_clump": 8,
+    "log_fallen": 1,
+    "shrub_forest": 3,
+    "sapling_spruce": 2
+   },
+   "water_surface": false,
+   "entities": 86,
+   "mesh_material_pairs": 26,
+   "tris": 61436
   }
  },
  {
@@ -589,17 +787,25 @@
   "note": "ghost vs placed at (-2, 0)",
   "ghost": {
    "rotation": 0,
-   "layout": "17de1e59130fdc9b",
+   "layout": "eb490eee33b3b565",
    "scatter": {
+    "tree_forest": 20,
     "rock_small": 1,
-    "tree_forest": 20
+    "fern_clump": 8,
+    "log_fallen": 1,
+    "shrub_forest": 3,
+    "sapling_spruce": 2
    }
   },
   "placed": {
    "rotation": 0,
-   "layout": "17de1e59130fdc9b",
+   "layout": "eb490eee33b3b565",
    "drawn": {
+    "fern_clump": 8,
+    "log_fallen": 1,
     "rock_small": 1,
+    "sapling_spruce": 2,
+    "shrub_forest": 3,
     "tree_forest": 20
    }
   }
@@ -628,17 +834,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 9,
-   "layout": null,
-   "mesh_material_pairs": 9,
    "q": -1,
    "r": 0,
-   "rotation": 2,
-   "scatter": {},
-   "seed": "fb53d1e184909ff7",
    "tile": "beach",
-   "tris": 4918,
-   "water_surface": true
+   "rotation": 2,
+   "seed": "fb53d1e184909ff7",
+   "layout": null,
+   "scatter": {},
+   "water_surface": true,
+   "entities": 9,
+   "mesh_material_pairs": 9,
+   "tris": 4918
   }
  },
  {
@@ -665,17 +871,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 9,
-   "layout": null,
-   "mesh_material_pairs": 9,
    "q": -1,
    "r": 1,
-   "rotation": 1,
-   "scatter": {},
-   "seed": "f6c438c9dc830f2d",
    "tile": "beach",
-   "tris": 4918,
-   "water_surface": true
+   "rotation": 1,
+   "seed": "f6c438c9dc830f2d",
+   "layout": null,
+   "scatter": {},
+   "water_surface": true,
+   "entities": 9,
+   "mesh_material_pairs": 9,
+   "tris": 4918
   }
  },
  {
@@ -701,17 +907,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 9,
-   "layout": null,
-   "mesh_material_pairs": 9,
    "q": -1,
    "r": 0,
-   "rotation": 3,
-   "scatter": {},
-   "seed": "fb53d1e184909ff7",
    "tile": "beach_outer",
-   "tris": 5117,
-   "water_surface": true
+   "rotation": 3,
+   "seed": "fb53d1e184909ff7",
+   "layout": null,
+   "scatter": {},
+   "water_surface": true,
+   "entities": 9,
+   "mesh_material_pairs": 9,
+   "tris": 5117
   }
  },
  {
@@ -737,17 +943,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 9,
-   "layout": null,
-   "mesh_material_pairs": 9,
    "q": -1,
    "r": 1,
-   "rotation": 2,
-   "scatter": {},
-   "seed": "f6c438c9dc830f2d",
    "tile": "beach_outer",
-   "tris": 5117,
-   "water_surface": true
+   "rotation": 2,
+   "seed": "f6c438c9dc830f2d",
+   "layout": null,
+   "scatter": {},
+   "water_surface": true,
+   "entities": 9,
+   "mesh_material_pairs": 9,
+   "tris": 5117
   }
  },
  {
@@ -775,17 +981,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 9,
-   "layout": null,
-   "mesh_material_pairs": 9,
    "q": -1,
    "r": 0,
-   "rotation": 2,
-   "scatter": {},
-   "seed": "fb53d1e184909ff7",
    "tile": "beach_inner",
-   "tris": 4617,
-   "water_surface": true
+   "rotation": 2,
+   "seed": "fb53d1e184909ff7",
+   "layout": null,
+   "scatter": {},
+   "water_surface": true,
+   "entities": 9,
+   "mesh_material_pairs": 9,
+   "tris": 4617
   }
  },
  {
@@ -813,17 +1019,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 9,
-   "layout": null,
-   "mesh_material_pairs": 9,
    "q": -1,
    "r": 1,
-   "rotation": 1,
-   "scatter": {},
-   "seed": "f6c438c9dc830f2d",
    "tile": "beach_inner",
-   "tris": 4617,
-   "water_surface": true
+   "rotation": 1,
+   "seed": "f6c438c9dc830f2d",
+   "layout": null,
+   "scatter": {},
+   "water_surface": true,
+   "entities": 9,
+   "mesh_material_pairs": 9,
+   "tris": 4617
   }
  },
  {
@@ -854,17 +1060,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 4,
-   "layout": null,
-   "mesh_material_pairs": 4,
    "q": -2,
    "r": 0,
-   "rotation": 0,
-   "scatter": {},
-   "seed": "69b56a944dc675f0",
    "tile": "ocean",
-   "tris": 4040,
-   "water_surface": true
+   "rotation": 0,
+   "seed": "69b56a944dc675f0",
+   "layout": null,
+   "scatter": {},
+   "water_surface": true,
+   "entities": 4,
+   "mesh_material_pairs": 4,
+   "tris": 4040
   }
  },
  {
@@ -922,17 +1128,17 @@
   },
   "ghost_meshes": true,
   "ghost_report": {
-   "entities": 34,
-   "layout": null,
-   "mesh_material_pairs": 27,
    "q": 1,
    "r": 0,
-   "rotation": 0,
-   "scatter": {},
-   "seed": "beeb67eaf1fc5e61",
    "tile": "house_cluster",
-   "tris": 7920,
-   "water_surface": false
+   "rotation": 0,
+   "seed": "beeb67eaf1fc5e61",
+   "layout": null,
+   "scatter": {},
+   "water_surface": false,
+   "entities": 37,
+   "mesh_material_pairs": 37,
+   "tris": 7863
   }
  }
 ]

@@ -742,6 +742,7 @@ mod schema {
                     "edges": t.edges.iter().map(|e| kind_name(e.kind)).collect::<Vec<_>>(),
                     "land": t.edges.iter().map(|e| serde_json::to_value(e.land).unwrap()).collect::<Vec<_>>(),
                     "scatter": t.props.scatter.iter().map(|s| s.piece.0.as_str()).collect::<Vec<_>>(),
+                    "heroes": !t.props.hero.is_empty(),
                 })
             })
             .collect();

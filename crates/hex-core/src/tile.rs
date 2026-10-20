@@ -326,7 +326,12 @@ impl TileDef {
 
     /// Whether rotations `a` and `b` give every world edge an equal socket (kind, lane, land side,
     /// height, profile): one orientation, as a symmetric tile turned by its symmetry (PRD §4.7 Q6).
+    /// A tile with hero props never is (unless `a` and `b` are one rotation): its heroes turn with
+    /// it, so each rotation looks different (owner, 2026-10-20: the windmill's sails, the farm's barn).
     pub fn same_orientation(&self, a: u8, b: u8) -> bool {
+        if !self.props.hero.is_empty() {
+            return a % 6 == b % 6;
+        }
         (0..6).all(|w| self.edge(w, a) == self.edge(w, b))
     }
 
