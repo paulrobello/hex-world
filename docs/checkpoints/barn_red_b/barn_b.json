@@ -1,0 +1,21 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 150 },
+  { "cmd": "camera", "pos": [136.75, 30.0, 151.77], "look_at": [101.75, 2.5, 111.77] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "barn_b-play" },
+  { "cmd": "camera", "pos": [110.7, 2.4, 120.12], "look_at": [106.7, 2.8, 113.19] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "barn_b-close-sun" },
+  { "cmd": "camera", "pos": [98.5, 2.0, 121.39], "look_at": [100.02, 1.6, 114.76] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "barn_b-close-shed" },
+  { "cmd": "camera", "pos": [93.67, 2.4, 102.78], "look_at": [97.42, 3.0, 109.27] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "barn_b-close-shade" },
+  { "cmd": "camera", "pos": [87.9, 16.0, 150.0], "look_at": [87.9, 3.0, 112.0] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "barn_b-scale" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

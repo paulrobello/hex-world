@@ -347,7 +347,8 @@ pub fn kit_layout() -> Vec<Placement> {
     }
     // The hay variants (PRD §6 Variety) on a third farm at (1, 5): hay_bale_stack_b in the farm's
     // stack slot and hay_bale_round_b in both round slots, as the hero variant resolver may draw
-    // them, each standing on the meadow relief with no contact over it.
+    // them, each standing on the meadow relief with no contact over it, beside barn_red_b in the
+    // barn slot.
     v.push(place("meadow_base", 1, 5, 0));
     for &(piece, at, yaw_deg) in FARM_HAY_VARIANTS {
         v.push(hero(piece, 1, 5, at, yaw_deg));
@@ -355,11 +356,12 @@ pub fn kit_layout() -> Vec<Placement> {
     v
 }
 
-/// (piece, at, yaw) of the hay-variants showcase on (1, 5): the farm's barn and fence, and the
+/// (piece, at, yaw) of the hay-variants showcase on (1, 5): the farm's fence, the catslide barn
+/// barn_red_b in the barn slot (barn_red stands in the same slot next door on (0, 5)), and the
 /// variants in the farm's three hay slots (data/tiles/farm.ron).
 const FARM_HAY_VARIANTS: &[(&str, [f32; 2], f32)] = &[
     ("fence_paddock", [0.0, 0.0], 0.0),
-    ("barn_red", [4.75, -8.227], 30.0),
+    ("barn_red_b", [4.75, -8.227], 30.0),
     ("hay_bale_stack_b", [8.9, -2.4], 30.0),
     ("hay_bale_round_b", [7.5, -0.4], 15.0),
     ("hay_bale_round_b", [10.4, -1.4], 30.0),

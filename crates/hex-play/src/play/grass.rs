@@ -1684,6 +1684,14 @@ mod tests {
         };
         assert_eq!(barn, "barn_red");
         assert!(walls.iter().all(|&n| n >= 50), "barn walls {walls:?}");
+        // At (0, 1) the barn slot draws barn_red_b (`hex_core::hero_piece`): its own box clears
+        // the grass, and grass grows along its closed wall and along its open shed's eave.
+        let bands = hero_grass(&def, Axial::new(0, 1));
+        let [(barn, walls)] = bands.as_slice() else {
+            panic!("{bands:?}")
+        };
+        assert_eq!(barn, "barn_red_b");
+        assert!(walls.iter().all(|&n| n >= 50), "barn_red_b walls {walls:?}");
     }
 
     /// The paddock fence clears a disc over each post (0.142 m, gate posts 0.163 m), not a disc

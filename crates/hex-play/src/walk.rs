@@ -72,6 +72,7 @@ pub const OBSTACLES: &[&str] = &[
     "house_cottage_b",
     "windmill",
     "barn_red",
+    "barn_red_b",
     "bakery_shop",
     "hay_bale_round",
     "hay_bale_stack",
@@ -1098,6 +1099,7 @@ mod tests {
             ("windmill", "building"),
             ("bakery_shop", "building"),
             ("barn_red", "building"),
+            ("barn_red_b", "building"),
             ("house_cottage", "building"),
             ("house_twostorey", "building"),
             ("house_longhouse", "building"),
@@ -1291,6 +1293,50 @@ mod tests {
         assert_eq!(s.blocked, Some(Blocked::Obstacle("animal_cow".into())));
         assert_eq!(s.blocked.as_ref().map(Blocked::reason), Some("animal"));
         assert!(s.pos.xz().distance(at) < 1.0, "{}", s.pos.xz().distance(at));
+    }
+
+    /// A farm at (0, 1) draws barn_red_b in the barn slot (`hex_core::hero_piece`): the walker
+    /// stops at its yard side, the open lean-to's front, as a building at the same collider box
+    /// as barn_red (3.85 m out).
+    #[test]
+    fn a_farm_drawing_barn_red_b_blocks_at_its_shed() {
+        let def = catalog().get("farm").unwrap().clone();
+        let cell = Axial::new(0, 1);
+        assert_eq!(hex_core::hero_piece(&def, cell, 0), "barn_red_b");
+        let barn = &def.props.hero[0];
+        let yaw = Quat::from_rotation_y(-barn.yaw_deg.to_radians());
+        let centre_local = Vec3::new(barn.at[0], 0.0, barn.at[1]);
+        let mut tested = 0;
+        for rotation in [0, 3] {
+            let g = world(&[(cell.q, cell.r, "farm", rotation)]);
+            let turn = piece_rotation(rotation);
+            let front = (turn * yaw * Vec3::Z).xz();
+            let at = (turn * centre_local).xz() + centre(cell.q, cell.r);
+            for along in [-3.0, 0.0, 3.0] {
+                let start = (turn * (centre_local + yaw * Vec3::new(along, 0.0, 8.0))).xz()
+                    + centre(cell.q, cell.r);
+                if g.stand(start).is_err() {
+                    continue;
+                }
+                let s = walk(&g, start, -front, 8.0);
+                if s.blocked == Some(Blocked::Obstacle("rock_small".into())) {
+                    continue;
+                }
+                let out = (s.pos.xz() - at).dot(front);
+                assert_eq!(
+                    s.blocked,
+                    Some(Blocked::Obstacle("barn_red_b".into())),
+                    "r{rotation} at {along}: stopped {out} m out"
+                );
+                assert_eq!(s.blocked.as_ref().map(Blocked::reason), Some("building"));
+                assert!(
+                    (3.8..4.4).contains(&out),
+                    "r{rotation} at {along}: {out} m out"
+                );
+                tested += 1;
+            }
+        }
+        assert!(tested >= 4, "only {tested} approaches reached the barn");
     }
 
     /// Owner 2026-10-19 ("add the collider"): a bakery hero blocks the walker at its collider's

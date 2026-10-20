@@ -13,6 +13,7 @@ pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
     ("tree_hero_oak", &["tree_hero_oak_b"]),
     ("hay_bale_round", &["hay_bale_round_b"]),
     ("hay_bale_stack", &["hay_bale_stack_b"]),
+    ("barn_red", &["barn_red_b"]),
 ];
 
 /// One slot in this many draws a variant (the rest keep the authored piece).
@@ -203,6 +204,7 @@ mod tests {
                 match (h.piece.as_str(), piece) {
                     ("hay_bale_round", "hay_bale_round_b")
                     | ("hay_bale_stack", "hay_bale_stack_b") => variant += 1,
+                    ("barn_red", "barn_red_b") => {}
                     (a, b) => {
                         assert_eq!(a, b);
                         authored += a.starts_with("hay_") as i32;
@@ -223,6 +225,36 @@ mod tests {
         );
     }
 
+    /// The farm's barn slot (hero 0) draws barn_red_b about one time in three and the thumbnail
+    /// cell (the origin) keeps barn_red. Each slot hashes (cell, slot) on its own, so the barn's
+    /// row moves no bale or animal (the hay test above pins their picks unchanged).
+    #[test]
+    fn some_farm_barn_slots_draw_barn_red_b() {
+        let c = TileCatalog::builtin().unwrap();
+        let def = c.get("farm").unwrap();
+        assert_eq!(def.props.hero[0].piece.as_str(), "barn_red");
+        let (mut barn, mut barn_b) = (0, 0);
+        for cell in cells() {
+            for (i, (h, piece)) in def.hero_pieces(cell).enumerate() {
+                match (h.piece.as_str(), piece) {
+                    ("barn_red", "barn_red") => barn += 1,
+                    ("barn_red", "barn_red_b") => barn_b += 1,
+                    (a, b) => assert!(
+                        i > 0 && (a == b || hero_variants(a).contains(&b)),
+                        "slot {i} at {cell:?}: {a} drew {b}"
+                    ),
+                }
+            }
+        }
+        let share = barn_b as f32 / (barn + barn_b) as f32;
+        assert!((0.28..0.39).contains(&share), "barn_red_b share {share}");
+        assert_eq!(hero_piece(def, Axial::ORIGIN, 0), "barn_red");
+        // Cells the checkpoint shots and the walk test use.
+        assert_eq!(hero_piece(def, Axial::new(0, 1), 0), "barn_red_b");
+        assert_eq!(hero_piece(def, Axial::new(-1, 0), 0), "barn_red_b");
+        assert_eq!(hero_piece(def, Axial::new(1, 0), 0), "barn_red");
+    }
+
     #[test]
     fn slots_without_variants_are_untouched() {
         let c = TileCatalog::builtin().unwrap();
@@ -235,7 +267,6 @@ mod tests {
                 }
             }
         }
-        assert_eq!(hero_variants("barn_red"), &[] as &[&str]);
         assert_eq!(hero_variants("windmill"), &[] as &[&str]);
     }
 
@@ -282,7 +313,15 @@ mod tests {
         );
         assert_eq!(
             pick_piece("barn_red", cell, 1, VariantPick::FixedSlot(1)),
+            "barn_red_b"
+        );
+        assert_eq!(
+            pick_piece("barn_red", cell, 0, VariantPick::FixedSlot(1)),
             "barn_red"
+        );
+        assert_eq!(
+            pick_piece("windmill", cell, 1, VariantPick::FixedSlot(1)),
+            "windmill"
         );
         // Per cluster: every cottage slot of a cell agrees.
         for cell in cells() {

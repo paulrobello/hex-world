@@ -1,0 +1,294 @@
+diff --git a/PRD.md b/PRD.md
+index b611e7a..c25a610 100644
+--- a/PRD.md
++++ b/PRD.md
+@@ -263,7 +263,7 @@ About 10 types. The exact variants are frozen at the start of P2. With the owner
+   - Built so far: the play world spawns each tile's pieces as entities under the tile root and relies on Bevy's automatic instancing (a 20-tile world draws 256–298 batches). The per-chunk instance buffers (`crates/hex-render/src/instanced.rs`, `layout=instanced`) run only in the `gate2000` perf scenario.
+ - **Seam continuity.** Kit pieces snap to a shared edge contract (lane offsets, edge heights, a vertex ring at the hex border), and the terrain cap's normals are blended at the hex border so seams don't show.
+ - **Variety.** Each kit piece has 2–4 variants, and props get a per-instance seed for hue, scale and rotation jitter.
+-  - Built so far: the scattered props ship three variants each, `tree_forest` with a tall slender `_b` and a young short `_c`, `rock_small` with a boulder `_b` and a low flat cluster `_c`, and `wildflower_clump` with a yellow and white `_b` and a blue and purple `_c`; the single-stem wildflowers come as four pieces (daisy, buttercup, cornflower, clover). A tile rule names the first piece and each instance draws one piece of its group from a hash of the tile seed (`crates/hex-play/src/play/scatter.rs` `VARIANTS`), so a seed always draws the same world. Scatter also gives each instance a seeded yaw and a scale jitter (±12% for trees, ±15% otherwise), with no hue jitter. Hero props have variants: a `house_cottage` slot of a house cluster draws the single-storey L-plan `house_longhouse` or the slate-roofed rendered `house_cottage_b` with its gabled porch (each about one time in six, splitting the one in three), the `house_twostorey` slot the jettied, hip-roofed timber-framed `house_twostorey_b`, the oak tile's hero slot the forked, east-leaning `tree_hero_oak_b`, and the farm's bale slots an upright `hay_bale_round_b` or a three-bale `hay_bale_stack_b`, each about one time in three, picked per slot from a hash of the cell and the slot index (`crates/hex-core/src/variant.rs` `HERO_VARIANTS`, `hero_piece`), so saves need no change and the ghost shows the same houses. The forest floor's `fern_clump` comes with a young upright `_b` and a wide low `_c`, and `log_fallen` with a short broken butt-end `_b` and an old hollow `_c`; the oak tile's scattered `tree_oak` with a younger, narrower `_b`; the forest undergrowth's `shrub_forest` (hazel) with a holly-like `_b` and `sapling_spruce` with a shorter, bushier `_b`; and the road verge's `bush_verge` with a smaller, lighter `_b`. The farm's static animals are separate heroes rather than variants: a grazing cow, a lamb and a grazing sheep stand beside the cow and two sheep. Every other kit piece ships one variant. The new pieces await the owner's look approval (`docs/checkpoints/prop-variants/`).
++  - Built so far: the scattered props ship three variants each, `tree_forest` with a tall slender `_b` and a young short `_c`, `rock_small` with a boulder `_b` and a low flat cluster `_c`, and `wildflower_clump` with a yellow and white `_b` and a blue and purple `_c`; the single-stem wildflowers come as four pieces (daisy, buttercup, cornflower, clover). A tile rule names the first piece and each instance draws one piece of its group from a hash of the tile seed (`crates/hex-play/src/play/scatter.rs` `VARIANTS`), so a seed always draws the same world. Scatter also gives each instance a seeded yaw and a scale jitter (±12% for trees, ±15% otherwise), with no hue jitter. Hero props have variants: a `house_cottage` slot of a house cluster draws the single-storey L-plan `house_longhouse` or the slate-roofed rendered `house_cottage_b` with its gabled porch (each about one time in six, splitting the one in three), the `house_twostorey` slot the jettied, hip-roofed timber-framed `house_twostorey_b`, the oak tile's hero slot the forked, east-leaning `tree_hero_oak_b`, the farm's bale slots an upright `hay_bale_round_b` or a three-bale `hay_bale_stack_b`, and the farm's barn slot the lower `barn_red_b`, whose roof runs on as a catslide over an open lean-to shed, with a cupola on its ridge, each about one time in three, picked per slot from a hash of the cell and the slot index (`crates/hex-core/src/variant.rs` `HERO_VARIANTS`, `hero_piece`), so saves need no change and the ghost shows the same houses. The forest floor's `fern_clump` comes with a young upright `_b` and a wide low `_c`, and `log_fallen` with a short broken butt-end `_b` and an old hollow `_c`; the oak tile's scattered `tree_oak` with a younger, narrower `_b`; the forest undergrowth's `shrub_forest` (hazel) with a holly-like `_b` and `sapling_spruce` with a shorter, bushier `_b`; and the road verge's `bush_verge` with a smaller, lighter `_b`. The farm's static animals are separate heroes rather than variants: a grazing cow, a lamb and a grazing sheep stand beside the cow and two sheep. Every other kit piece ships one variant. The new pieces await the owner's look approval (`docs/checkpoints/prop-variants/`).
+ - **Runtime recolour (owner, 2026-10-13).** Vehicles, starting with the car, are recoloured at runtime from one model and one texture set. The model marks its paintable surfaces in a mask that needs no extra texture: a vertex-colour channel, or a reserved region of its existing atlas. Glass, tyres, lights and trim stay unpainted. Each instance carries its own paint colour, picked from a curated palette by the instance seed, as per-instance data that keeps GPU instancing intact, so it never needs one material per colour.
+   - Built (`3dfc734`): the sedan, van and pickup mark paint in vertex colour alpha, and each car carries its colour from a 12-colour palette as a per-entity `MeshTag`, so every car of a type and LOD draws in one batch.
+ 
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index 1cf8dc1..de44a8b 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -260,6 +260,15 @@
+                  "barn_red_trim": { "color": [0.7, 0.69, 0.65], "roughness": 0.6, "masks": true },
+                  "barn_red_glass": { "color": [0.2, 0.16, 0.1], "roughness": 0.2, "masks": true } },
+       "maps": { "masks": "p1/barn_red/barn_red.masks" } },
++    { "id": "barn_red_b", "pack": "village", "kind": "prop", "glb": "p1/barn_red_b/barn_red_b.glb",
++      "provenance": "assets-source/kit/barn_red_b/provenance.json",
++      "slots": { "barn_red_b_walls": { "tileable": "plaster", "color": [0.45, 0.07, 0.045], "masks": true },
++                 "barn_red_b_door": { "tileable": "plaster", "color": [0.32, 0.055, 0.04], "masks": true },
++                 "barn_red_b_roof": { "tileable": "plaster", "color": [0.105, 0.11, 0.125], "masks": true },
++                 "barn_red_b_stone": { "tileable": "plaster", "color": [0.42, 0.39, 0.34], "masks": true },
++                 "barn_red_b_trim": { "color": [0.7, 0.69, 0.65], "roughness": 0.6, "masks": true },
++                 "barn_red_b_glass": { "color": [0.2, 0.16, 0.1], "roughness": 0.2, "masks": true } },
++      "maps": { "masks": "p1/barn_red_b/barn_red_b.masks" } },
+     { "id": "fence_paddock", "pack": "village", "kind": "prop", "glb": "p1/fence_paddock/fence_paddock.glb",
+       "provenance": "assets-source/kit/fence_paddock/provenance.json",
+       "slots": { "fence_paddock_timber": { "tileable": "plaster", "color": [0.25, 0.245, 0.255], "masks": true } },
+diff --git a/crates/hex-core/src/variant.rs b/crates/hex-core/src/variant.rs
+index 2e6f1ee..aaa5196 100644
+--- a/crates/hex-core/src/variant.rs
++++ b/crates/hex-core/src/variant.rs
+@@ -13,6 +13,7 @@ pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
+     ("tree_hero_oak", &["tree_hero_oak_b"]),
+     ("hay_bale_round", &["hay_bale_round_b"]),
+     ("hay_bale_stack", &["hay_bale_stack_b"]),
++    ("barn_red", &["barn_red_b"]),
+ ];
+ 
+ /// One slot in this many draws a variant (the rest keep the authored piece).
+@@ -203,6 +204,7 @@ mod tests {
+                 match (h.piece.as_str(), piece) {
+                     ("hay_bale_round", "hay_bale_round_b")
+                     | ("hay_bale_stack", "hay_bale_stack_b") => variant += 1,
++                    ("barn_red", "barn_red_b") => {}
+                     (a, b) => {
+                         assert_eq!(a, b);
+                         authored += a.starts_with("hay_") as i32;
+@@ -223,6 +225,36 @@ mod tests {
+         );
+     }
+ 
++    /// The farm's barn slot (hero 0) draws barn_red_b about one time in three and the thumbnail
++    /// cell (the origin) keeps barn_red. Each slot hashes (cell, slot) on its own, so the barn's
++    /// row moves no bale or animal (the hay test above pins their picks unchanged).
++    #[test]
++    fn some_farm_barn_slots_draw_barn_red_b() {
++        let c = TileCatalog::builtin().unwrap();
++        let def = c.get("farm").unwrap();
++        assert_eq!(def.props.hero[0].piece.as_str(), "barn_red");
++        let (mut barn, mut barn_b) = (0, 0);
++        for cell in cells() {
++            for (i, (h, piece)) in def.hero_pieces(cell).enumerate() {
++                match (h.piece.as_str(), piece) {
++                    ("barn_red", "barn_red") => barn += 1,
++                    ("barn_red", "barn_red_b") => barn_b += 1,
++                    (a, b) => assert!(
++                        i > 0 && (a == b || hero_variants(a).contains(&b)),
++                        "slot {i} at {cell:?}: {a} drew {b}"
++                    ),
++                }
++            }
++        }
++        let share = barn_b as f32 / (barn + barn_b) as f32;
++        assert!((0.28..0.39).contains(&share), "barn_red_b share {share}");
++        assert_eq!(hero_piece(def, Axial::ORIGIN, 0), "barn_red");
++        // Cells the checkpoint shots and the walk test use.
++        assert_eq!(hero_piece(def, Axial::new(0, 1), 0), "barn_red_b");
++        assert_eq!(hero_piece(def, Axial::new(-1, 0), 0), "barn_red_b");
++        assert_eq!(hero_piece(def, Axial::new(1, 0), 0), "barn_red");
++    }
++
+     #[test]
+     fn slots_without_variants_are_untouched() {
+         let c = TileCatalog::builtin().unwrap();
+@@ -235,7 +267,6 @@ mod tests {
+                 }
+             }
+         }
+-        assert_eq!(hero_variants("barn_red"), &[] as &[&str]);
+         assert_eq!(hero_variants("windmill"), &[] as &[&str]);
+     }
+ 
+@@ -282,8 +313,16 @@ mod tests {
+         );
+         assert_eq!(
+             pick_piece("barn_red", cell, 1, VariantPick::FixedSlot(1)),
++            "barn_red_b"
++        );
++        assert_eq!(
++            pick_piece("barn_red", cell, 0, VariantPick::FixedSlot(1)),
+             "barn_red"
+         );
++        assert_eq!(
++            pick_piece("windmill", cell, 1, VariantPick::FixedSlot(1)),
++            "windmill"
++        );
+         // Per cluster: every cottage slot of a cell agrees.
+         for cell in cells() {
+             assert_eq!(
+diff --git a/crates/hex-play/src/play/grass.rs b/crates/hex-play/src/play/grass.rs
+index 6b8da74..345b083 100644
+--- a/crates/hex-play/src/play/grass.rs
++++ b/crates/hex-play/src/play/grass.rs
+@@ -1684,6 +1684,14 @@ mod tests {
+         };
+         assert_eq!(barn, "barn_red");
+         assert!(walls.iter().all(|&n| n >= 50), "barn walls {walls:?}");
++        // At (0, 1) the barn slot draws barn_red_b (`hex_core::hero_piece`): its own box clears
++        // the grass, and grass grows along its closed wall and along its open shed's eave.
++        let bands = hero_grass(&def, Axial::new(0, 1));
++        let [(barn, walls)] = bands.as_slice() else {
++            panic!("{bands:?}")
++        };
++        assert_eq!(barn, "barn_red_b");
++        assert!(walls.iter().all(|&n| n >= 50), "barn_red_b walls {walls:?}");
+     }
+ 
+     /// The paddock fence clears a disc over each post (0.142 m, gate posts 0.163 m), not a disc
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index efd156a..e9e3549 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -395,6 +395,14 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
+             crown: 0.0,
+         },
+     ),
++    // The catslide barn: the same 10.6 x 7.7 m collider box as barn_red.
++    (
++        "barn_red_b",
++        Footprint {
++            ground: 6.6,
++            crown: 0.0,
++        },
++    ),
+     (
+         "hay_bale_round",
+         Footprint {
+@@ -625,6 +633,13 @@ pub const GROUND_BOXES: &[(&str, GroundBox)] = &[
+             max: [5.3, 3.85],
+         },
+     ),
++    (
++        "barn_red_b",
++        GroundBox {
++            min: [-5.3, -3.85],
++            max: [5.3, 3.85],
++        },
++    ),
+     (
+         "bakery_shop",
+         GroundBox {
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index c03dae7..6da9bae 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -72,6 +72,7 @@ pub const OBSTACLES: &[&str] = &[
+     "house_cottage_b",
+     "windmill",
+     "barn_red",
++    "barn_red_b",
+     "bakery_shop",
+     "hay_bale_round",
+     "hay_bale_stack",
+@@ -1098,6 +1099,7 @@ mod tests {
+             ("windmill", "building"),
+             ("bakery_shop", "building"),
+             ("barn_red", "building"),
++            ("barn_red_b", "building"),
+             ("house_cottage", "building"),
+             ("house_twostorey", "building"),
+             ("house_longhouse", "building"),
+@@ -1293,6 +1295,50 @@ mod tests {
+         assert!(s.pos.xz().distance(at) < 1.0, "{}", s.pos.xz().distance(at));
+     }
+ 
++    /// A farm at (0, 1) draws barn_red_b in the barn slot (`hex_core::hero_piece`): the walker
++    /// stops at its yard side, the open lean-to's front, as a building at the same collider box
++    /// as barn_red (3.85 m out).
++    #[test]
++    fn a_farm_drawing_barn_red_b_blocks_at_its_shed() {
++        let def = catalog().get("farm").unwrap().clone();
++        let cell = Axial::new(0, 1);
++        assert_eq!(hex_core::hero_piece(&def, cell, 0), "barn_red_b");
++        let barn = &def.props.hero[0];
++        let yaw = Quat::from_rotation_y(-barn.yaw_deg.to_radians());
++        let centre_local = Vec3::new(barn.at[0], 0.0, barn.at[1]);
++        let mut tested = 0;
++        for rotation in [0, 3] {
++            let g = world(&[(cell.q, cell.r, "farm", rotation)]);
++            let turn = piece_rotation(rotation);
++            let front = (turn * yaw * Vec3::Z).xz();
++            let at = (turn * centre_local).xz() + centre(cell.q, cell.r);
++            for along in [-3.0, 0.0, 3.0] {
++                let start = (turn * (centre_local + yaw * Vec3::new(along, 0.0, 8.0))).xz()
++                    + centre(cell.q, cell.r);
++                if g.stand(start).is_err() {
++                    continue;
++                }
++                let s = walk(&g, start, -front, 8.0);
++                if s.blocked == Some(Blocked::Obstacle("rock_small".into())) {
++                    continue;
++                }
++                let out = (s.pos.xz() - at).dot(front);
++                assert_eq!(
++                    s.blocked,
++                    Some(Blocked::Obstacle("barn_red_b".into())),
++                    "r{rotation} at {along}: stopped {out} m out"
++                );
++                assert_eq!(s.blocked.as_ref().map(Blocked::reason), Some("building"));
++                assert!(
++                    (3.8..4.4).contains(&out),
++                    "r{rotation} at {along}: {out} m out"
++                );
++                tested += 1;
++            }
++        }
++        assert!(tested >= 4, "only {tested} approaches reached the barn");
++    }
++
+     /// Owner 2026-10-19 ("add the collider"): a bakery hero blocks the walker at its collider's
+     /// wall and reports `building`, and photo mode's click picks it. A fixture tile stands in for
+     /// the bakery tile.
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 69f96e8..fbc3934 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -347,7 +347,8 @@ pub fn kit_layout() -> Vec<Placement> {
+     }
+     // The hay variants (PRD §6 Variety) on a third farm at (1, 5): hay_bale_stack_b in the farm's
+     // stack slot and hay_bale_round_b in both round slots, as the hero variant resolver may draw
+-    // them, each standing on the meadow relief with no contact over it.
++    // them, each standing on the meadow relief with no contact over it, beside barn_red_b in the
++    // barn slot.
+     v.push(place("meadow_base", 1, 5, 0));
+     for &(piece, at, yaw_deg) in FARM_HAY_VARIANTS {
+         v.push(hero(piece, 1, 5, at, yaw_deg));
+@@ -355,11 +356,12 @@ pub fn kit_layout() -> Vec<Placement> {
+     v
+ }
+ 
+-/// (piece, at, yaw) of the hay-variants showcase on (1, 5): the farm's barn and fence, and the
++/// (piece, at, yaw) of the hay-variants showcase on (1, 5): the farm's fence, the catslide barn
++/// barn_red_b in the barn slot (barn_red stands in the same slot next door on (0, 5)), and the
+ /// variants in the farm's three hay slots (data/tiles/farm.ron).
+ const FARM_HAY_VARIANTS: &[(&str, [f32; 2], f32)] = &[
+     ("fence_paddock", [0.0, 0.0], 0.0),
+-    ("barn_red", [4.75, -8.227], 30.0),
++    ("barn_red_b", [4.75, -8.227], 30.0),
+     ("hay_bale_stack_b", [8.9, -2.4], 30.0),
+     ("hay_bale_round_b", [7.5, -0.4], 15.0),
+     ("hay_bale_round_b", [10.4, -1.4], 30.0),
+diff --git a/data/tiles/farm.ron b/data/tiles/farm.ron
+index d9e3089..97d694f 100644
+--- a/data/tiles/farm.ron
++++ b/data/tiles/farm.ron
+@@ -5,7 +5,8 @@
+ // (`relief()` in scripts/blender/kit/meadow_base.py) is flattest, so no bale floats and no hoof
+ // floats more than 2 cm (the hero props stand at y = 0). A hay slot may draw its variant
+ // (hex_core::HERO_VARIANTS: hay_bale_round_b, hay_bale_stack_b), whose straw and foot are built on
+-// the relief of these slots. Do not reorder the heroes: the slot index picks the variant. The
++// the relief of these slots, and the barn slot may draw barn_red_b, which stands inside barn_red's
++// collider box. Do not reorder the heroes: the slot index picks the variant. The
+ // animals stand still until P3's wander.
+ // No wheat: there is no wheat piece yet. A light drift of wildflowers and a few rocks keep clear of
+ // every hero by scatter's footprints.
+diff --git a/docs/agent-operability.md b/docs/agent-operability.md
+index f53f050..0810df3 100644
+--- a/docs/agent-operability.md
++++ b/docs/agent-operability.md
+@@ -287,7 +287,7 @@ Timing taken without this guard is not evidence.
+ 
+ `--scenario play` draws the game world held by `hex-app` (`crates/hex-app/src/game.rs`). It opens with one meadow at `(0, 0)` and follows the PRD §4.1–4.2 rules from `hex-core`. Tiles use kit pieces from `assets/kit/manifest.json` where the tile references them and the piece's pack has loaded (see [Kit streaming](#kit-streaming)), and plain placeholders otherwise: a coloured prism per biome, dark road and blue river strips meeting at a hub, and beige blocks for pending houses, pads and hero props.
+ 
+-Hero variants (PRD §6 Variety): a hero slot authored as a piece listed in `hex_core::HERO_VARIANTS` may draw one of its variants instead, picked by `hex_core::hero_piece(def, cell, slot)` from a SplitMix64 hash of the cell and the slot index. Today a `house_cottage` slot draws `house_longhouse` or `house_cottage_b` (slate roof, gabled porch, a stack at each gable), the `house_twostorey` slot draws `house_twostorey_b` (jettied, hip-roofed), and the oak tile's `tree_hero_oak` slot draws `tree_hero_oak_b` (forked, east-leaning, a heavy low limb), each slot varying about one time in three (`VARIANT_ONE_IN`); a slot with several variants splits that share evenly (`variants[(h / 3) % n]`), so a cottage slot keeps the cottage two times in three and draws each variant about one time in six, and a house cluster shows any two of the three cottage designs beside a two-storey of either kind. The pick depends on the cell alone, so saves carry nothing for it and a ghost previews the same houses the placed tile draws. Every consumer of a hero piece resolves it through `TileDef::hero_pieces(cell)`: the drawn tile, the ghost, walk obstacles and photo picks, grass exclusions and bird perches. The pack loader and scatter masks, which are per tile and not per cell, take every option of a slot (`TileDef::hero_options`; scatter clears the widest). `hex_core::VARIANT_PICK` switches the rule to one pick per cluster (`PerCluster`) or a fixed slot (`FixedSlot(n)`). `cargo test -p hex-core longhouse_cells -- --ignored --nocapture` prints the picks near the origin. The thumbnail cell, the origin, draws both cottages and `house_twostorey_b`, and the authored `tree_hero_oak`. Evidence: `docs/checkpoints/house_cottage_b/cottage_b-play-overview.jpg`, four clusters around the start meadow at (1, 0), (-1, 0), (0, -1) and (-1, 1); the first three draw `house_cottage_b` in one cottage slot and (-1, 1) draws `house_longhouse`, from `caffeinate -d -u target/release/hex-world --scenario play --script docs/checkpoints/house_cottage_b/play.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed`, which also takes a walk-mode eye-level shot in the (1, 0) yard (`cottage_b-walk-eye.jpg`). The older `docs/checkpoints/house_longhouse/play.jpg` and `play-overview.jpg` show the same four cells before `house_cottage_b` joined the row, each with one longhouse.
++Hero variants (PRD §6 Variety): a hero slot authored as a piece listed in `hex_core::HERO_VARIANTS` may draw one of its variants instead, picked by `hex_core::hero_piece(def, cell, slot)` from a SplitMix64 hash of the cell and the slot index. Today a `house_cottage` slot draws `house_longhouse` or `house_cottage_b` (slate roof, gabled porch, a stack at each gable), the `house_twostorey` slot draws `house_twostorey_b` (jettied, hip-roofed), the oak tile's `tree_hero_oak` slot draws `tree_hero_oak_b` (forked, east-leaning, a heavy low limb), and the farm's `barn_red` slot draws `barn_red_b` (a catslide roof over an open lean-to shed, a ridge cupola; `docs/checkpoints/barn_red_b/`, play shots from `play.json` there with farms at (0, 1) and (-1, 0), which draw it, and (1, 0), which keeps `barn_red`), each slot varying about one time in three (`VARIANT_ONE_IN`); a slot with several variants splits that share evenly (`variants[(h / 3) % n]`), so a cottage slot keeps the cottage two times in three and draws each variant about one time in six, and a house cluster shows any two of the three cottage designs beside a two-storey of either kind. The pick depends on the cell alone, so saves carry nothing for it and a ghost previews the same houses the placed tile draws. Every consumer of a hero piece resolves it through `TileDef::hero_pieces(cell)`: the drawn tile, the ghost, walk obstacles and photo picks, grass exclusions and bird perches. The pack loader and scatter masks, which are per tile and not per cell, take every option of a slot (`TileDef::hero_options`; scatter clears the widest). `hex_core::VARIANT_PICK` switches the rule to one pick per cluster (`PerCluster`) or a fixed slot (`FixedSlot(n)`). `cargo test -p hex-core longhouse_cells -- --ignored --nocapture` prints the picks near the origin. The thumbnail cell, the origin, draws both cottages and `house_twostorey_b`, the authored `tree_hero_oak`, and the authored `barn_red`. Evidence: `docs/checkpoints/house_cottage_b/cottage_b-play-overview.jpg`, four clusters around the start meadow at (1, 0), (-1, 0), (0, -1) and (-1, 1); the first three draw `house_cottage_b` in one cottage slot and (-1, 1) draws `house_longhouse`, from `caffeinate -d -u target/release/hex-world --scenario play --script docs/checkpoints/house_cottage_b/play.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed`, which also takes a walk-mode eye-level shot in the (1, 0) yard (`cottage_b-walk-eye.jpg`). The older `docs/checkpoints/house_longhouse/play.jpg` and `play-overview.jpg` show the same four cells before `house_cottage_b` joined the row, each with one longhouse.
+ 
+ The in-world affordances are the Legend direction's (`design/ui/legend/in-world.md`, `crates/hex-play/src/play/affordances.rs`):
+ 

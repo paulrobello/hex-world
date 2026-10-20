@@ -1,0 +1,104 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.8069947957992554,
+    "aoP05": 0.18039216101169586,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "door": 0.125,
+          "glass": 0.937,
+          "roof": 0.0,
+          "stone": 0.094,
+          "trim": 0.031,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "door": 0.188,
+          "glass": 0.969,
+          "roof": 0.188,
+          "stone": 0.078,
+          "trim": 0.031,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "door": 1.0,
+          "glass": 1.0,
+          "roof": 0.22,
+          "trim": 0.031,
+          "walls": 0.0
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.42819690704345703,
+    "filledTexels": 92850,
+    "nightTexels": 4833
+  },
+  "masksDensityBySlot": {
+    "lod0": {
+      "door": 12.1,
+      "glass": 12.1,
+      "roof": 11.98,
+      "stone": 12.1,
+      "trim": 12.1,
+      "walls": 12.1
+    },
+    "lod1": {
+      "door": 12.1,
+      "glass": 12.1,
+      "roof": 12.05,
+      "stone": 12.1,
+      "trim": 12.1,
+      "walls": 12.1
+    },
+    "lod2": {
+      "door": 12.1,
+      "glass": 12.1,
+      "roof": 10.17,
+      "trim": 12.1,
+      "walls": 12.1
+    }
+  },
+  "masksDensityPxPerM": {
+    "barn_red_b_lod0": {
+      "max": 12.096414459450259,
+      "median": 12.095511471577137,
+      "min": 10.009338654397688
+    },
+    "barn_red_b_lod1": {
+      "max": 12.096110385358717,
+      "median": 12.095583123930144,
+      "min": 9.853432611364479
+    },
+    "barn_red_b_lod2": {
+      "max": 12.095721159969482,
+      "median": 12.095546725245669,
+      "min": 9.853236684171783
+    }
+  },
+  "receiverSignature": "a838cbfeec0df67d572b23abbc52bdb9870dd06e298ca6c76ca00f522bbc3e5d",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 12.096414459450259,
+    "median": 12.095511471577137,
+    "min": 10.009338654397688
+  },
+  "uvMargin": 0.012
+}

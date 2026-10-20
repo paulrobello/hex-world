@@ -395,6 +395,14 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
             crown: 0.0,
         },
     ),
+    // The catslide barn: the same 10.6 x 7.7 m collider box as barn_red.
+    (
+        "barn_red_b",
+        Footprint {
+            ground: 6.6,
+            crown: 0.0,
+        },
+    ),
     (
         "hay_bale_round",
         Footprint {
@@ -620,6 +628,13 @@ pub const GROUND_BOXES: &[(&str, GroundBox)] = &[
     ),
     (
         "barn_red",
+        GroundBox {
+            min: [-5.3, -3.85],
+            max: [5.3, 3.85],
+        },
+    ),
+    (
+        "barn_red_b",
         GroundBox {
             min: [-5.3, -3.85],
             max: [5.3, 3.85],
