@@ -147,6 +147,7 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
             "wildflower_single_b",
             "wildflower_single_c",
             "wildflower_single_d",
+            "wildflower_single_e",
         ],
     ),
     ("bush_verge", &["bush_verge_b", "bush_verge_c"]),
@@ -156,8 +157,13 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
 
 /// Pick weights of a [`VARIANTS`] group, the piece first then its variants in order. A group not
 /// listed draws each piece equally. `bush_verge` stays the most common verge bush (owner,
-/// 2026-10-20): half the picks, a quarter each for `_b` and `_c`.
-pub const VARIANT_WEIGHTS: &[(&str, &[u32])] = &[("bush_verge", &[2, 1, 1])];
+/// 2026-10-20): half the picks, a quarter each for `_b` and `_c`. The scarlet poppy
+/// `wildflower_single_e` is an accent among the single wildflowers, 1 pick in 10 (about 4 of a
+/// meadow's 40), because its red is the most saturated colour in the meadow.
+pub const VARIANT_WEIGHTS: &[(&str, &[u32])] = &[
+    ("bush_verge", &[2, 1, 1]),
+    ("wildflower_single", &[9, 9, 9, 9, 4]),
+];
 
 fn variant_weights(piece: &str) -> Option<&'static [u32]> {
     VARIANT_WEIGHTS
@@ -350,6 +356,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
     ),
     (
         "wildflower_single_d",
+        Footprint {
+            ground: 0.25,
+            crown: 0.0,
+        },
+    ),
+    (
+        "wildflower_single_e",
         Footprint {
             ground: 0.25,
             crown: 0.0,
@@ -2263,6 +2276,12 @@ mod tests {
         assert!((0.46..0.54).contains(&share[0]), "{share:?}");
         assert!(share[1] > 0.2 && share[2] > 0.2, "{share:?}");
         assert!(share[0] > share[1] + 0.15 && share[0] > share[2] + 0.15);
+        let poppies = (0..64u64)
+            .flat_map(|seed| (0..64).map(move |n| pick_variant("wildflower_single", seed, 0, n)))
+            .filter(|&v| variant_piece("wildflower_single", v) == "wildflower_single_e")
+            .count();
+        let share = poppies as f32 / 4096.0;
+        assert!((0.08..0.12).contains(&share), "poppy share {share}");
     }
 
     /// A `vary` rule (the meadow's single wildflowers) stands where its seeded noise is high more

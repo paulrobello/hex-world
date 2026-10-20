@@ -120,6 +120,7 @@ pub const GROWS_THROUGH: &[(&str, f32)] = &[
     ("wildflower_single_b", 0.0),
     ("wildflower_single_c", 0.0),
     ("wildflower_single_d", 0.0),
+    ("wildflower_single_e", 0.0),
 ];
 /// A rock's base outline where it meets the ground (owner 2026-10-19: grass stopped short of the
 /// stone, held off by its spacing footprint): a convex 12-gon, counter-clockwise in the piece's

@@ -552,6 +552,7 @@ const MEADOW_PROPS: &[(&str, [f32; 2], u8, f32)] = &[
     ("wildflower_clump", [-2.0, 3.0], 0, -0.138),
     ("wildflower_clump", [-8.5, 0.5], 5, -0.176),
     ("wildflower_clump", [2.0, 8.5], 1, -0.141),
+    ("wildflower_single_e", [2.5, 3.0], 0, -0.118),
 ];
 
 /// The gate fixture on the same seam as the road tiles, plus one rotated neighbour.

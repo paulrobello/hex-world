@@ -1,0 +1,9 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "revision": "new variant: single red field poppy",
+    "notes": "Pending owner approval; not an approval. New PRD §6 variety piece in the single-wildflower group: one scarlet four-petal cup with a dark centre on a hairy bowed stem, one nodding bud, lobed basal leaves, 0.8 m, 14/6/2 tris like its siblings. The meadow_props reference shows no poppy (the species comes from the brief). Review docs/checkpoints/wildflower_single_e/sheet.jpg and assets-source/kit/wildflower_single_e/renders/. The controller records the owner's decision."
+  }
+]

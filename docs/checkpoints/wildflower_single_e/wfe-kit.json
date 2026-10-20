@@ -1,0 +1,9 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 180 },
+  { "cmd": "camera", "pos": [-9.2, 1.1, 29.4], "look_at": [-11.36, 0.45, 27.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "wfe-kit-close" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

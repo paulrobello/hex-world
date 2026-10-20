@@ -1,0 +1,50 @@
+diff --git a/crates/hex-play/src/play/grass.rs b/crates/hex-play/src/play/grass.rs
+index eac61fb..f443894 100644
+--- a/crates/hex-play/src/play/grass.rs
++++ b/crates/hex-play/src/play/grass.rs
+@@ -120,6 +120,7 @@ pub const GROWS_THROUGH: &[(&str, f32)] = &[
+     ("wildflower_single_b", 0.0),
+     ("wildflower_single_c", 0.0),
+     ("wildflower_single_d", 0.0),
++    ("wildflower_single_e", 0.0),
+ ];
+ /// A rock's base outline where it meets the ground (owner 2026-10-19: grass stopped short of the
+ /// stone, held off by its spacing footprint): a convex 12-gon, counter-clockwise in the piece's
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 667d514..a1f57f1 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -146,6 +146,7 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
+             "wildflower_single_b",
+             "wildflower_single_c",
+             "wildflower_single_d",
++            "wildflower_single_e",
+         ],
+     ),
+     ("bush_verge", &["bush_verge_b", "bush_verge_c"]),
+@@ -329,6 +330,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
+             crown: 0.0,
+         },
+     ),
++    (
++        "wildflower_single_e",
++        Footprint {
++            ground: 0.25,
++            crown: 0.0,
++        },
++    ),
+     (
+         "tree_hero_oak",
+         Footprint {
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 0c39e8d..2e9d6ab 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -550,6 +550,7 @@ const MEADOW_PROPS: &[(&str, [f32; 2], u8, f32)] = &[
+     ("wildflower_clump", [-2.0, 3.0], 0, -0.138),
+     ("wildflower_clump", [-8.5, 0.5], 5, -0.176),
+     ("wildflower_clump", [2.0, 8.5], 1, -0.141),
++    ("wildflower_single_e", [2.5, 3.0], 0, -0.118),
+ ];
+ 
+ /// The gate fixture on the same seam as the road tiles, plus one rotated neighbour.

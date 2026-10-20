@@ -1,0 +1,16 @@
+[
+  {"cmd": "select_tile", "id": "meadow"},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "place", "q": 0, "r": 1},
+  {"cmd": "place", "q": -1, "r": 1},
+  {"cmd": "place", "q": -1, "r": 0},
+  {"cmd": "place", "q": 0, "r": -1},
+  {"cmd": "place", "q": 1, "r": -1},
+  {"cmd": "hover", "q": 6, "r": -6},
+  {"cmd": "camera", "pos": [0, 30, 44], "look_at": [0, 0, 2]},
+  {"cmd": "wait", "frames": 600},
+  {"cmd": "screenshot", "name": "wfe-uni-play"},
+  {"cmd": "dump_state", "name": "wfe-uni-play-state"},
+  {"cmd": "wait", "frames": 10},
+  {"cmd": "exit"}
+]

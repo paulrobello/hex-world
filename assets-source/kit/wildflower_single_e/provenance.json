@@ -1,0 +1,440 @@
+{
+  "pieceId": "wildflower_single_e",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/wildflower_single_e.py",
+    "sha256": "fc502ddf438fbc35f624c870aaa4c5888efe532759e7988e1121819df7abcc27"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_single.py",
+      "sha256": "d17f7af31d9b8eef29794f25882ccdfd72ea3c55266e0040803da551eace59a0"
+    },
+    {
+      "path": "scripts/blender/kit/_single_poppy.py",
+      "sha256": "9551e6a8bc1f02965c46b7cd3eca6ba8022d69512eef6d46637327b90cdd6cae"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "bakeStats": {
+      "alphaCoverageByMip": {
+        "side_0": [
+          0.1813,
+          0.1683,
+          0.1809,
+          0.1748,
+          0.1133,
+          0.1094,
+          0,
+          0
+        ],
+        "side_1": [
+          0.1624,
+          0.1541,
+          0.1614,
+          0.1602,
+          0.1562,
+          0.1094,
+          0,
+          0
+        ],
+        "top_0": [
+          0.2894,
+          0.2861,
+          0.2881,
+          0.2852,
+          0.2812,
+          0.2656,
+          0.25,
+          0,
+          0
+        ],
+        "top_1": [
+          0.3123,
+          0.3099,
+          0.3127,
+          0.3086,
+          0.293,
+          0.3125,
+          0.25,
+          0,
+          0
+        ]
+      },
+      "alphaCutoff": 0.5
+    },
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 512
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 64
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 256
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "none (numpy-drawn tiles, no Cycles bake)",
+    "extentZ": [
+      -0.05000000074505806,
+      0.800000011920929
+    ],
+    "heightM": 0.8,
+    "marginPx": 0,
+    "poppyStats": {
+      "budTile": 0,
+      "colliderReachM": 0.1923,
+      "tiles": {
+        "side_0": {
+          "opaqueMeanLinear": [
+            0.4287,
+            0.3596,
+            0.1398
+          ],
+          "scarletShare": 0.2572
+        },
+        "side_1": {
+          "opaqueMeanLinear": [
+            0.4239,
+            0.355,
+            0.1307
+          ],
+          "scarletShare": 0.2541
+        },
+        "top_0": {
+          "opaqueMeanLinear": [
+            0.6011,
+            0.1211,
+            0.0631
+          ],
+          "scarletShare": 0.8019
+        },
+        "top_1": {
+          "opaqueMeanLinear": [
+            0.6089,
+            0.1121,
+            0.0603
+          ],
+          "scarletShare": 0.8181
+        }
+      }
+    },
+    "receiverSignature": "2e61004c2a8785ef922ca5258981153c0b8997ad30fddcaf552faa3fb44d880c",
+    "samples": 0,
+    "sinkM": 0.05,
+    "skipped": false,
+    "species": "poppy",
+    "texelDensityPxPerM": {
+      "max": 980.7691449841319,
+      "median": 599.4091657131434,
+      "min": 599.4091369300979
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 14,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 6,
+      "ratio": 0.42857142857142855
+    },
+    {
+      "lod": 2,
+      "tris": 2,
+      "ratio": 0.14285714285714285
+    }
+  ],
+  "collider": {
+    "node": "wildflower_single_e_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 980.7691449841319,
+    "median": 599.4091657131434,
+    "min": 599.4091369300979
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 166981,
+        "astc": 167882
+      },
+      "glbBytes": 9840
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 10,
+        "bytes": 119698,
+        "sha256": "e4693a0853a0b63e15683f52ad3dfc37cfdbada0f66d853611d1081e7eaff6be"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 10,
+        "bytes": 118495,
+        "sha256": "6285fe469d4f57cf4c967cc26b4ae82d592e05d658a7ce2a3fe6e70da4186560"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 144459,
+        "sha256": "2a33eee6de69ecb79fbd73ac80c6a2328fc62e248be43eaeb82d5a45ff671729"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 7,
+        "bytes": 583,
+        "sha256": "fd833c72639788d9e2148f36327302d51022319a0e4c5451927a1f9eb093a11c"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 7,
+        "bytes": 583,
+        "sha256": "7ce35269c237129244edbdc5e81ab107d94f91b82c4d933a5248459ba2231380"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 379,
+        "sha256": "c35c5e420520274e2f7e29888350b46741abc046fbcff01f9c712b9076db76a4"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 9,
+        "bytes": 23998,
+        "sha256": "2e3008868246839becde2f77af26fd76c109fb6b7c3b354e2e4684ca1b97fa84"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 9,
+        "bytes": 24736,
+        "sha256": "21369bf48808d8505de4f8dc4903d92315e38f3fe405df8370270f08ba76af19"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 28413,
+        "sha256": "e2a1c1b87375c2fef24928c834f74fe85181b32a1c4111cf677cf62c7a85a789"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 22702,
+        "sha256": "ace29bb612a67de77df4f07bc3c78ee752e84b5a5eab462dcc1af31d96288f05"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 24068,
+        "sha256": "716b94e8c818310d5e55f5a924daf1cc31673b0220da795095c31acc1a7e16ca"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 18008,
+        "sha256": "72d8134b11d2b1aa55c570a687ed1dd43068f88fa2228a252cac4c295e017157"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.glb",
+      "sha256": "90caafae7c3a698ffece4a76afdcb3f5f17f1efc44cf637f16a60bdce3da9bf8",
+      "bytes": 9840
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.albedo.bc7.ktx2",
+      "sha256": "e4693a0853a0b63e15683f52ad3dfc37cfdbada0f66d853611d1081e7eaff6be",
+      "bytes": 119698
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.albedo.astc.ktx2",
+      "sha256": "6285fe469d4f57cf4c967cc26b4ae82d592e05d658a7ce2a3fe6e70da4186560",
+      "bytes": 118495
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.albedo.png",
+      "sha256": "2a33eee6de69ecb79fbd73ac80c6a2328fc62e248be43eaeb82d5a45ff671729",
+      "bytes": 144459
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.masks.bc7.ktx2",
+      "sha256": "fd833c72639788d9e2148f36327302d51022319a0e4c5451927a1f9eb093a11c",
+      "bytes": 583
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.masks.astc.ktx2",
+      "sha256": "7ce35269c237129244edbdc5e81ab107d94f91b82c4d933a5248459ba2231380",
+      "bytes": 583
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.masks.png",
+      "sha256": "c35c5e420520274e2f7e29888350b46741abc046fbcff01f9c712b9076db76a4",
+      "bytes": 379
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.normal.bc7.ktx2",
+      "sha256": "2e3008868246839becde2f77af26fd76c109fb6b7c3b354e2e4684ca1b97fa84",
+      "bytes": 23998
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.normal.astc.ktx2",
+      "sha256": "21369bf48808d8505de4f8dc4903d92315e38f3fe405df8370270f08ba76af19",
+      "bytes": 24736
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.normal.png",
+      "sha256": "e2a1c1b87375c2fef24928c834f74fe85181b32a1c4111cf677cf62c7a85a789",
+      "bytes": 28413
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.orm.bc7.ktx2",
+      "sha256": "ace29bb612a67de77df4f07bc3c78ee752e84b5a5eab462dcc1af31d96288f05",
+      "bytes": 22702
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.orm.astc.ktx2",
+      "sha256": "716b94e8c818310d5e55f5a924daf1cc31673b0220da795095c31acc1a7e16ca",
+      "bytes": 24068
+    },
+    {
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.orm.png",
+      "sha256": "72d8134b11d2b1aa55c570a687ed1dd43068f88fa2228a252cac4c295e017157",
+      "bytes": 18008
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/meadow_props/ref-1.jpg",
+      "sha256": "0535e4734cf2ba3ba741900479bcbe4c008a80e7477f6b8c2aa42b9d0d3eaef1",
+      "sourceSha256": "c79a4fcbf5ea869afacc1143fd160fdd3711972bcfe0a74100e34a0d4ae8bf06",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "2934df2e-4775-4157-b978-3c202a1c70b6",
+      "prompt": "One corner fragment of a hexagonal meadow diorama tile with layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), on a plain neutral grey studio backdrop: lush meadow grass with scattered wildflower clumps (white daisies, yellow buttercups, purple clover, blue cornflowers), each clump about 1 m across with small flower heads in natural proportion to the grass, and weathered grey granite rocks from 0.5 m to 2 m with lichen patches, partly sunk into the turf with grass growing around their bases, photoreal PBR materials, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/meadow_props/ref-2.jpg",
+      "sha256": "1002b656ae16d98c7773f749d169b6cf96f7ab5ea5af0ce7888e7378dce2e24e",
+      "sourceSha256": "33ec5b47bf7c88b3e9137425b361ec4a9895b785570fd2aa5f8a402192baaced",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "b9d9e080-7c7e-4824-9697-eb77270f183e",
+      "prompt": "Close-up of meadow scatter on a diorama tile on a plain neutral grey studio backdrop: small realistic wildflower heads of white daisies, yellow buttercups, purple clover and blue cornflowers among dense meadow grass, each flower head about the width of a few grass blades, and a weathered lichen-spotted granite rock half sunk into the turf with grass around its base, photoreal PBR materials, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T21:23:51.454Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/meadow_props/ref-1.jpg",
+        "assets-source/refs/meadow_props/ref-2.jpg"
+      ],
+      "notes": "Approved: wildflower clumps (same species and colours) and rocks partly buried in the turf. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "revision": "new variant: single red field poppy",
+      "notes": "Pending owner approval; not an approval. New PRD §6 variety piece in the single-wildflower group: one scarlet four-petal cup with a dark centre on a hairy bowed stem, one nodding bud, lobed basal leaves, 0.8 m, 14/6/2 tris like its siblings. The meadow_props reference shows no poppy (the species comes from the brief). Review docs/checkpoints/wildflower_single_e/sheet.jpg and assets-source/kit/wildflower_single_e/renders/. The controller records the owner's decision."
+    }
+  ]
+}

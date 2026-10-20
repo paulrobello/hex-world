@@ -1,0 +1,35 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/wildflower_single_e.py",
+    "sha256": "fc502ddf438fbc35f624c870aaa4c5888efe532759e7988e1121819df7abcc27"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_single.py",
+      "sha256": "d17f7af31d9b8eef29794f25882ccdfd72ea3c55266e0040803da551eace59a0"
+    },
+    {
+      "path": "scripts/blender/kit/_single_poppy.py",
+      "sha256": "9551e6a8bc1f02965c46b7cd3eca6ba8022d69512eef6d46637327b90cdd6cae"
+    }
+  ],
+  "lodTris": {
+    "wildflower_single_e_lod0": 14,
+    "wildflower_single_e_lod1": 6,
+    "wildflower_single_e_lod2": 2
+  },
+  "nodes": [
+    "wildflower_single_e",
+    "wildflower_single_e_collider",
+    "wildflower_single_e_lod0",
+    "wildflower_single_e_lod1",
+    "wildflower_single_e_lod2"
+  ],
+  "pieceId": "wildflower_single_e",
+  "sockets": []
+}

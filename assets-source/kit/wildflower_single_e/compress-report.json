@@ -1,0 +1,181 @@
+{
+  "name": "wildflower_single_e",
+  "date": "2026-10-20T21:23:17.045Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 10,
+      "bytes": 119698,
+      "sha256": "e4693a0853a0b63e15683f52ad3dfc37cfdbada0f66d853611d1081e7eaff6be"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 10,
+      "bytes": 118495,
+      "sha256": "6285fe469d4f57cf4c967cc26b4ae82d592e05d658a7ce2a3fe6e70da4186560"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 144459,
+      "sha256": "2a33eee6de69ecb79fbd73ac80c6a2328fc62e248be43eaeb82d5a45ff671729"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 7,
+      "bytes": 583,
+      "sha256": "fd833c72639788d9e2148f36327302d51022319a0e4c5451927a1f9eb093a11c"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 7,
+      "bytes": 583,
+      "sha256": "7ce35269c237129244edbdc5e81ab107d94f91b82c4d933a5248459ba2231380"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 379,
+      "sha256": "c35c5e420520274e2f7e29888350b46741abc046fbcff01f9c712b9076db76a4"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 23998,
+      "sha256": "2e3008868246839becde2f77af26fd76c109fb6b7c3b354e2e4684ca1b97fa84"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 24736,
+      "sha256": "21369bf48808d8505de4f8dc4903d92315e38f3fe405df8370270f08ba76af19"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 28413,
+      "sha256": "e2a1c1b87375c2fef24928c834f74fe85181b32a1c4111cf677cf62c7a85a789"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 22702,
+      "sha256": "ace29bb612a67de77df4f07bc3c78ee752e84b5a5eab462dcc1af31d96288f05"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 24068,
+      "sha256": "716b94e8c818310d5e55f5a924daf1cc31673b0220da795095c31acc1a7e16ca"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/wildflower_single_e/wildflower_single_e.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 18008,
+      "sha256": "72d8134b11d2b1aa55c570a687ed1dd43068f88fa2228a252cac4c295e017157"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 166981,
+      "astc": 167882
+    },
+    "glbBytes": 9840
+  },
+  "glb": {
+    "bytes": 9840,
+    "sha256": "90caafae7c3a698ffece4a76afdcb3f5f17f1efc44cf637f16a60bdce3da9bf8"
+  }
+}
