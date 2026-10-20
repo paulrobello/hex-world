@@ -12,7 +12,8 @@
 //!   slots, so they never do.
 //! - **Exclusions.** Scatter's footprints: no blade within a hero prop's ground footprint (a
 //!   rectangular building's collider box turned by its yaw plus [`WALL_GAP`], so blades grow
-//!   along its long walls; a disc for the windmill's tower, the oak's trunk, bales and animals) or
+//!   along its long walls; a disc for the windmill's tower, the oak's trunk, bales and animals;
+//!   a disc over each post of a fence, [`scatter::FENCES`], so blades grow under its rails) or
 //!   a scatter instance's (a box over a rock's base outline, [`ROCK_BASES`], so blades come right
 //!   up to the stone; spruce trunks; every planned instance of the
 //!   tile's layout, so a late pack never moves the grass; flower clumps keep only their centre
@@ -460,6 +461,7 @@ pub fn exclusions(
 ) -> Vec<Clear> {
     let mut out: Vec<Clear> = def
         .hero_pieces(cell)
+        .filter(|(_, piece)| scatter::fence(piece).is_none())
         .map(|(h, piece)| {
             let at = Vec2::from(h.at);
             let Some(b) = scatter::ground_box(piece) else {
@@ -480,6 +482,20 @@ pub fn exclusions(
             }
         })
         .collect();
+    // A hero fence clears only its posts (a disc over each square post's corners), so blades grow
+    // under the rails and across the yard it encloses.
+    for (h, piece) in def.hero_pieces(cell) {
+        let Some(f) = scatter::fence(piece) else {
+            continue;
+        };
+        let axis = cos_sin_deg(h.yaw_deg);
+        for (at, half) in f.posts {
+            out.push(Clear::Disc {
+                centre: Vec2::from(h.at) + axis * at[0] + axis.perp() * at[1],
+                radius: half * std::f32::consts::SQRT_2 + PROP_GAP,
+            });
+        }
+    }
     out.extend(instances.iter().filter_map(|i| {
         let piece = i.piece(pieces.get(i.rule as usize)?);
         if let Some((_, outline)) = ROCK_BASES.iter().find(|(id, _)| *id == piece) {
@@ -1580,7 +1596,12 @@ mod tests {
         let ex = exclusions(def, cell, &[], &[]);
         let l = layout(1, &meadow_surface(), &grass_slots(&m, def, &c), &ex);
         let mut bands = vec![];
-        for (h, piece) in def.hero_pieces(cell) {
+        // A fence's collider hull spans the yard it encloses; its posts are checked on their own
+        // (`grass_grows_under_the_paddock_fence`).
+        for (h, piece) in def
+            .hero_pieces(cell)
+            .filter(|(_, p)| scatter::fence(p).is_none())
+        {
             let (collider, x, z) = placed_collider(h, piece);
             let boxed = scatter::ground_box(piece);
             let gap = if boxed.is_some() { 0.1 } else { 0.04 };
@@ -1621,13 +1642,28 @@ mod tests {
 
     /// The farm tile's grass keeps clear of the barn, the bales and the animals (each hero's
     /// footprint: a box over the barn's collider, discs for the rest), and grows within 0.6 m
-    /// of both of the barn's long walls (owner 2026-10-19: no bare band along them).
+    /// of both of the barn's long walls (owner 2026-10-19: no bare band along them). The paddock
+    /// fence clears its posts alone, after the other heroes.
     #[test]
     fn grass_clears_the_barn_and_the_farm_heroes() {
         let def = TileCatalog::builtin().unwrap().get("farm").unwrap().clone();
         let ex = exclusions(&def, Axial::ORIGIN, &[], &[]);
-        assert_eq!(ex.len(), def.props.hero.len());
-        for (h, c) in def.props.hero.iter().zip(&ex) {
+        let heroes: Vec<_> = def
+            .props
+            .hero
+            .iter()
+            .filter(|h| scatter::fence(h.piece.as_str()).is_none())
+            .collect();
+        let posts: usize = def
+            .props
+            .hero
+            .iter()
+            .filter_map(|h| scatter::fence(h.piece.as_str()))
+            .map(|f| f.posts.len())
+            .sum();
+        assert_eq!(posts, 27, "the paddock's posts");
+        assert_eq!(ex.len(), heroes.len() + posts);
+        for (h, c) in heroes.into_iter().zip(&ex) {
             if h.piece.as_str() == "barn_red" {
                 assert!(matches!(c, Clear::Box { .. }), "{c:?}");
             } else {
@@ -1647,6 +1683,60 @@ mod tests {
         };
         assert_eq!(barn, "barn_red");
         assert!(walls.iter().all(|&n| n >= 50), "barn walls {walls:?}");
+    }
+
+    /// The paddock fence clears a disc over each post (0.142 m, gate posts 0.163 m), not a disc
+    /// of its whole reach at the tile centre: grass grows in the yard at (0, 0), under the rails
+    /// mid-span, and never on a post.
+    #[test]
+    fn grass_grows_under_the_paddock_fence() {
+        let c = TileCatalog::builtin().unwrap();
+        let def = c.get("farm").unwrap().clone();
+        let fence = scatter::fence("fence_paddock").unwrap();
+        let ex = exclusions(&def, Axial::ORIGIN, &[], &[]);
+        let discs: Vec<(Vec2, f32)> = ex
+            .iter()
+            .filter_map(|c| match *c {
+                Clear::Disc { centre, radius } => Some((centre, radius)),
+                _ => None,
+            })
+            .filter(|(c, _)| fence.posts.iter().any(|(at, _)| *c == Vec2::from(*at)))
+            .collect();
+        assert_eq!(discs.len(), 27);
+        for (at, half) in fence.posts {
+            let want = if *half > 0.07 { 0.163 } else { 0.142 };
+            let (_, r) = discs.iter().find(|(c, _)| *c == Vec2::from(*at)).unwrap();
+            assert!((r - want).abs() < 1e-3, "post at {at:?}: {r}");
+        }
+        assert!(
+            ex.iter().all(|c| !c.contains(Vec2::ZERO)),
+            "the yard centre is not cleared"
+        );
+        let m = parse_manifest(MANIFEST).unwrap();
+        let l = layout(1, &meadow_surface(), &grass_slots(&m, &def, &c), &ex);
+        let near = |p: Vec2, r: f32| {
+            l.blades
+                .iter()
+                .filter(|b| b.root.xz().distance(p) < r)
+                .count()
+        };
+        // The old disc at the tile centre (1.05 m radius, the default 1 m reach plus the gap):
+        // grown over at about the open meadow's density.
+        let centre = near(Vec2::ZERO, 1.0);
+        let open = near(Vec2::new(-4.0, -4.0), 1.0);
+        assert!(
+            centre * 2 > open && centre > 30,
+            "{centre} blades vs {open} in the open"
+        );
+        // Under the rails mid-span: the north run between its posts at x -5.504 and -3.253, and
+        // the north-west diagonal between (-8.171, 9.435) and (-6.128, 10.614).
+        for mid in [Vec2::new(-4.38, 2.5), Vec2::new(-7.15, 10.02)] {
+            assert!(near(mid, 0.3) > 0, "no grass under the rail at {mid}");
+        }
+        for (at, half) in fence.posts {
+            let r = half * std::f32::consts::SQRT_2;
+            assert_eq!(near(Vec2::from(*at), r), 0, "a blade in the post at {at:?}");
+        }
     }
 
     /// The houses clear their collider rectangle, turned by each one's yaw, and grass grows within

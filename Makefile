@@ -450,9 +450,10 @@ shots-windmill-play:
 
 # Farm tile in play: docs/checkpoints/farm/farm-play.json places the farm tile among meadows, shoots
 # it at play distance, then close-ups of the barn and hay and of the animals, an eye-level walk view
-# across the pasture to the barn, and a walk into the barn's front wall with its block dumped.
+# across the pasture to the barn, and a walk into the barn's front wall with its block dumped, then
+# walks into the paddock fence's north run (blocked as `fence`) and through its gate, each dumped.
 # 1280x800, tilt-shift off and `--clock fixed`. A black still fails the target, as for the windmill.
-FARM_SHOTS = farm-play farm-barn farm-animals farm-walk-eye farm-walk-blocked
+FARM_SHOTS = farm-play farm-barn farm-animals farm-walk-eye farm-walk-blocked farm-walk-fence farm-walk-gate
 FARM_DOCS = docs/checkpoints/farm
 shots-farm-play:
 	mkdir -p target/shots $(FARM_DOCS)
@@ -463,7 +464,7 @@ shots-farm-play:
 	  awk -v m="$$m" 'BEGIN { exit !(m < 0.02) }' && { echo "$$n.png is black (mean $$m): idle display or high load, run again"; exit 1; }; \
 	  true; done
 	@for n in $(FARM_SHOTS); do ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(FARM_DOCS)/$$n.jpg || exit 1; done
-	cp target/shots/farm-play-state.json target/shots/farm-walk-state.json $(FARM_DOCS)/
+	cp target/shots/farm-play-state.json target/shots/farm-walk-state.json target/shots/farm-walk-fence-state.json target/shots/farm-walk-gate-state.json $(FARM_DOCS)/
 	@echo "wrote $(FARM_DOCS)/"
 
 # Wheat field tile in play: docs/checkpoints/wheat_field/wheat-play.json places two wheat fields one

@@ -206,18 +206,18 @@ mod tests {
         // rail meadows (-1, 2), (0, 2) and (1, 2) south of the patch, the rail junction's three
         // (0, 3), (-1, 4) and (1, 3), the forest-floor showcase's forest (-2, 1) and its variants'
         // forest (-3, 1), the river rail bridge's four: the river (-2, 4), (-2, 5), (-2, 6) and the
-        // rail straight beyond (-3, 6), the longhouse cluster on (-1, -1), and the scatter oaks'
-        // forest (-2, 2).
-        assert_eq!(cells.len(), 26);
+        // rail straight beyond (-3, 6), the longhouse cluster on (-1, -1), the scatter oaks'
+        // forest (-2, 2), and the farm with its paddock fence on (-1, 5).
+        assert_eq!(cells.len(), 27);
         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
         // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
         // The fixture lays out water-patch cells only; the runtime kit adds the six rail meadows, the
         // forest-floor forest and its variants' forest, the river rail bridge's four cells, the
-        // longhouse cluster and the oaks' forest.
+        // longhouse cluster, the oaks' forest and the farm.
         assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
-        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 26);
+        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 27);
         assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
         assert!(!Scenario::Kit.has_water());
     }

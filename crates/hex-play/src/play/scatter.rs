@@ -29,7 +29,8 @@
 //!   `surface_at` does: trees on `forest_base_floor` (the litter), rocks and wildflowers on either
 //!   that and `meadow_base_cap`. Its whole ground footprint must lie on that floor, so nothing
 //!   stands on a road, a river bed or bank, a house pad or driveway, a beach, a rim, a skirt or water
-//!   ([`excluded_slot`]). It keeps clear of hero props (a tree clears the oak's canopy), of road and
+//!   ([`excluded_slot`]). It keeps clear of hero props (a tree clears the oak's canopy; a fence,
+//!   [`FENCES`], by its line, dropped after the darts so nothing else moves), of road and
 //!   river centrelines (`lane_clearance`, at least the lane's half width plus [`LANE_GAP`]) and of
 //!   the hex border (a crown overhangs it by at most [`CROWN_OVERHANG`]), and stands upright at the
 //!   surface height.
@@ -501,6 +502,91 @@ pub fn ground_box(piece: &str) -> Option<GroundBox> {
         .map(|(_, b)| *b)
 }
 
+/// A fence's layout in its own frame (x, z), from its `bake-report.json` `layout` block: the
+/// fence line (runs between consecutive points; the gap between the last and first point is the
+/// gate opening) and every post's centre and half width. A fence is a line, not a blob: it has no
+/// [`FOOTPRINTS`] entry (its collider's reach, 14.3 m, would clear the whole yard), and scatter,
+/// grass and walk's fallback treat it by these lines and posts instead.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Fence {
+    pub line: &'static [[f32; 2]],
+    pub posts: &'static [([f32; 2], f32)],
+}
+
+/// Half width (m) of a fence's runs for clearance: the rails' 0.12 m collider half width plus a
+/// lean and bend margin.
+pub const FENCE_HALF: f32 = 0.2;
+
+/// The fence pieces (`fences_match_the_kit` checks them against the GLBs: one collider part per
+/// run, one LOD0 post per entry).
+pub const FENCES: [(&str, Fence); 1] = [(
+    "fence_paddock",
+    Fence {
+        line: &[
+            [3.5, 2.5],
+            [-12.256, 2.5],
+            [-12.256, 7.076],
+            [0.0, 14.152],
+            [12.256, 7.076],
+            [12.256, 2.5],
+            [6.5, 2.5],
+        ],
+        posts: &[
+            ([3.5, 2.5], 0.08),
+            ([1.249, 2.5], 0.065),
+            ([-1.002, 2.5], 0.065),
+            ([-3.253, 2.5], 0.065),
+            ([-5.504, 2.5], 0.065),
+            ([-7.755, 2.5], 0.065),
+            ([-10.005, 2.5], 0.065),
+            ([-12.256, 2.5], 0.065),
+            ([-12.256, 4.788], 0.065),
+            ([-12.256, 7.076], 0.065),
+            ([-10.214, 8.256], 0.065),
+            ([-8.171, 9.435], 0.065),
+            ([-6.128, 10.614], 0.065),
+            ([-4.085, 11.794], 0.065),
+            ([-2.043, 12.973], 0.065),
+            ([0.0, 14.152], 0.065),
+            ([2.043, 12.973], 0.065),
+            ([4.085, 11.794], 0.065),
+            ([6.128, 10.614], 0.065),
+            ([8.171, 9.435], 0.065),
+            ([10.214, 8.256], 0.065),
+            ([12.256, 7.076], 0.065),
+            ([12.256, 4.788], 0.065),
+            ([12.256, 2.5], 0.065),
+            ([10.338, 2.5], 0.065),
+            ([8.419, 2.5], 0.065),
+            ([6.5, 2.5], 0.08),
+        ],
+    },
+)];
+
+pub fn fence(piece: &str) -> Option<Fence> {
+    FENCES.iter().find(|(id, _)| *id == piece).map(|(_, f)| *f)
+}
+
+/// The tile-local fence lines of `def`'s heroes: each hero fence's line turned by its yaw (as walk
+/// and play place it, `Quat::from_rotation_y(-yaw)`, which takes +x to (cos, sin) in (x, z)) and
+/// moved to its spot. The turn is `grass::cos_sin_deg`'s arithmetic, so native and wasm agree.
+pub fn fence_lines(def: &TileDef) -> Vec<Vec<Vec2>> {
+    def.props
+        .hero
+        .iter()
+        .filter_map(|h| {
+            let f = fence(h.piece.as_str())?;
+            let axis = super::grass::cos_sin_deg(h.yaw_deg);
+            Some(
+                f.line
+                    .iter()
+                    .map(|p| Vec2::from(h.at) + axis * p[0] + axis.perp() * p[1])
+                    .collect(),
+            )
+        })
+        .collect()
+}
+
 /// Scale jitter (± fraction): trees vary less than rocks and flowers.
 fn scale_jitter(f: Footprint) -> f32 {
     if f.crown > 0.0 { 0.12 } else { 0.15 }
@@ -753,6 +839,11 @@ pub fn hero_clearance(hero: Footprint, inst: Footprint) -> f32 {
     }
 }
 
+/// Least distance between a fence line and the centre of an instance of ground reach `reach`.
+pub fn fence_clearance(reach: f32) -> f32 {
+    FENCE_HALF + reach
+}
+
 /// Least distance between a lane's centreline and an instance's centre.
 pub fn lane_clearance(rule: &ScatterRule, half_width: f32, inst: Footprint) -> f32 {
     rule.lane_clearance.max(half_width) + LANE_GAP + inst.ground.max(inst.crown)
@@ -787,11 +878,14 @@ fn mask(
         .filter(|&(i, j)| ((i * i + j * j) as f32).sqrt() * RASTER <= r)
         .collect();
     let border = border_reach(fp);
+    // A fence hero is kept clear by its line after the darts (`layout`), not here: a mask change
+    // would reshuffle every dart of the tile, the ones far from the fence too.
     let heroes: Vec<(Vec2, f32)> = def
         .props
         .hero
         .iter()
         .enumerate()
+        .filter(|(_, h)| fence(h.piece.as_str()).is_none())
         .map(|(i, h)| {
             let c = hero_clearance(hero_footprint(def, i), fp);
             (Vec2::from(h.at), c)
@@ -1099,6 +1193,19 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
             });
             n += 1;
         }
+    }
+    // Hero fences: nothing stands on a fence line. Dropped after the darts, so every instance
+    // clear of the line keeps the place it has without the fence; a dropped one is not replaced,
+    // so a fenced tile may place fewer than planned.
+    let fences = fence_lines(def);
+    if !fences.is_empty() {
+        out.instances.retain(|i| {
+            let piece = i.piece(def.props.scatter[i.rule as usize].piece.as_str());
+            let need = fence_clearance(footprint(piece).ground * i.scale);
+            fences
+                .iter()
+                .all(|l| polyline_distance(i.pos.xz(), l) >= need)
+        });
     }
     let mut by_distance: Vec<usize> = (0..out.instances.len()).collect();
     by_distance.sort_by(|&a, &b| {
@@ -1623,9 +1730,18 @@ mod tests {
                         }
                         let p = inst.pos.xz();
                         assert!(hex_reach(p) <= border_reach(fp) + 0.2, "{} border", def.id);
-                        // Every piece a hero slot may draw at any cell is cleared.
+                        // Every piece a hero slot may draw at any cell is cleared, a fence by
+                        // its line.
+                        for line in fence_lines(&def) {
+                            let need = fence_clearance(fp.ground * inst.scale);
+                            assert!(
+                                polyline_distance(p, &line) >= need - 1e-4,
+                                "{} fence",
+                                def.id
+                            );
+                        }
                         for (i, h) in def.props.hero.iter().enumerate() {
-                            for piece in def.hero_options(i) {
+                            for piece in def.hero_options(i).filter(|p| fence(p).is_none()) {
                                 let need = hero_clearance(footprint(piece), fp);
                                 assert!(
                                     p.distance(Vec2::from(h.at)) >= need - 0.2,
@@ -1984,6 +2100,127 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// Each [`FENCES`] entry is its GLB: the collider has one disjoint box per run, each centred
+    /// on its run, and LOD0 has one post per entry, a square of that half width (its foot, buried
+    /// below y -0.3, leaning at most 0.022 rad) centred on the entry. A fence has no [`FOOTPRINTS`]
+    /// entry.
+    #[test]
+    fn fences_match_the_kit() {
+        for (id, f) in FENCES {
+            assert!(
+                FOOTPRINTS.iter().all(|(p, _)| *p != id),
+                "{id} in FOOTPRINTS"
+            );
+            let runs = f.line.len() - 1;
+            let walk = crate::walk::PieceShape::from_meshes(
+                id,
+                &glb_mesh_tris(id, "collider")
+                    .unwrap()
+                    .iter()
+                    .flat_map(|(t, _)| t.iter().map(|p| Vec3::from(*p)))
+                    .collect::<Vec<_>>(),
+                &[],
+            );
+            assert_eq!(walk.parts.len(), runs, "{id}: one collider part per run");
+            for w in f.line.windows(2) {
+                let (a, b) = (Vec2::from(w[0]), Vec2::from(w[1]));
+                let part = walk.parts.iter().find(|p| {
+                    let c = p.hull.iter().copied().sum::<Vec2>() / p.hull.len() as f32;
+                    polyline_distance(c, &[a, b]) < 0.2
+                });
+                assert!(part.is_some(), "{id}: no collider part on run {a}..{b}");
+            }
+            // The post feet: LOD0 corners below y -0.3, grouped by the nearest entry.
+            let feet: Vec<Vec2> = glb_mesh_tris(id, "lod0")
+                .unwrap()
+                .iter()
+                .flat_map(|(t, _)| t.iter())
+                .filter(|p| p[1] < -0.3)
+                .map(|p| Vec2::new(p[0], p[2]))
+                .collect();
+            let mut per: Vec<Vec<Vec2>> = vec![vec![]; f.posts.len()];
+            for q in &feet {
+                let (k, d) = f
+                    .posts
+                    .iter()
+                    .enumerate()
+                    .map(|(k, (at, _))| (k, q.distance(Vec2::from(*at))))
+                    .min_by(|a, b| a.1.total_cmp(&b.1))
+                    .unwrap();
+                assert!(d < 0.2, "{id}: a buried corner {q} off every post");
+                per[k].push(*q);
+            }
+            for ((at, half), pts) in f.posts.iter().zip(&mut per) {
+                // Each corner once (triangles repeat them).
+                pts.sort_by(|a, b| a.x.total_cmp(&b.x).then(a.y.total_cmp(&b.y)));
+                pts.dedup_by(|a, b| a.distance(*b) < 1e-3);
+                assert_eq!(
+                    pts.len(),
+                    4,
+                    "{id}: post at {at:?} is not a square: {pts:?}"
+                );
+                let c = pts.iter().copied().sum::<Vec2>() / pts.len() as f32;
+                // The foot is 0.3 m (DROP) below the ground, so a lean moves it under 1 cm.
+                assert!(
+                    c.distance(Vec2::from(*at)) < 0.02,
+                    "{id} post {at:?} at {c}: {pts:?}"
+                );
+                let r = pts.iter().map(|p| p.distance(c)).fold(0.0, f32::max);
+                assert!(
+                    (r - half * std::f32::consts::SQRT_2).abs() < 0.01,
+                    "{id} post {at:?}: corner reach {r}, half {half}"
+                );
+            }
+        }
+    }
+
+    /// The paddock fence moves no farm scatter that stands clear of its line: with and without the
+    /// fence hero, a seed lays out the same instances but those on the line, and none of those
+    /// left stands within the line's clearance. The fence drops some, so it does matter.
+    #[test]
+    fn the_farm_fence_moves_no_scatter_off_its_line() {
+        let c = catalog();
+        let fenced = c.get("farm").unwrap().clone();
+        let mut open = fenced.clone();
+        open.props
+            .hero
+            .retain(|h| fence(h.piece.as_str()).is_none());
+        assert_eq!(open.props.hero.len() + 1, fenced.props.hero.len());
+        let (gf, go) = (prepared(&fenced).unwrap(), prepared(&open).unwrap());
+        for (f, o) in gf.masks.iter().zip(&go.masks) {
+            assert_eq!(
+                (&f.cells, f.area),
+                (&o.cells, o.area),
+                "the fence leaves the masks alone"
+            );
+        }
+        let lines = fence_lines(&fenced);
+        let mut dropped = 0;
+        for seed in 0..16u64 {
+            let seed = cell_seed(1, Axial::new(seed as i32, 3 - seed as i32));
+            let (a, b) = (layout(&fenced, seed, &gf), layout(&open, seed, &go));
+            let clear = |i: &Instance| {
+                let piece = i.piece(fenced.props.scatter[i.rule as usize].piece.as_str());
+                let need = fence_clearance(footprint(piece).ground * i.scale);
+                lines
+                    .iter()
+                    .all(|l| polyline_distance(i.pos.xz(), l) >= need)
+            };
+            let kept: Vec<&Instance> = b.instances.iter().filter(|i| clear(i)).collect();
+            dropped += b.instances.len() - kept.len();
+            assert_eq!(a.instances.len(), kept.len(), "seed {seed}");
+            for (x, y) in a.instances.iter().zip(kept) {
+                assert_eq!(
+                    (x.rule, x.pos, x.yaw, x.scale, x.variant),
+                    (y.rule, y.pos, y.yaw, y.scale, y.variant),
+                    "seed {seed}"
+                );
+            }
+            assert_eq!(a.planned, b.planned);
+        }
+        assert!(dropped > 0, "no seed put a flower or rock on the line");
     }
 
     /// Each [`GROUND_BOXES`] entry is its collider's bounds (to 1 cm) and the collider fills

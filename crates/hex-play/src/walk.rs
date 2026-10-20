@@ -13,8 +13,11 @@
 //! - **Obstacles.** Houses, the windmill, the barn, the hero oak, spruces, rocks and the farm's hay
 //!   bales and (static) animals block the walker by their collider (`<piece>_collider` in the kit
 //!   GLB) as a convex footprint on the ground, placed with the hero or scatter instance's transform
-//!   under the tile's rest transform. Wildflowers do not block, and the wheat field's wheat is
-//!   neither ground nor obstacle (`scatter::NOT_GROUND`): the walker walks through it.
+//!   under the tile's rest transform. A collider of disjoint parts (the paddock fence's six run
+//!   boxes, [`PieceShape::parts`]) blocks and is clicked part by part, so the walker enters the
+//!   paddock through its gate and stands inside it. Wildflowers do not block, and the wheat
+//!   field's wheat is neither ground nor obstacle (`scatter::NOT_GROUND`): the walker walks
+//!   through it.
 //! - **Props to look at.** Photo mode's click to focus ([`WalkGround::pick_prop`]) hits the same
 //!   drawn obstacle instances as volumes: the collider footprint extruded from the collider's foot
 //!   to the top of the piece's non-foliage LOD0 mesh, and for trees a crown of stacked cylinders
@@ -56,7 +59,7 @@ pub const MAX_STEP: f32 = 0.4;
 const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not.
-pub const OBSTACLES: [&str; 21] = [
+pub const OBSTACLES: [&str; 22] = [
     "house_cottage",
     "house_twostorey",
     "house_longhouse",
@@ -78,6 +81,7 @@ pub const OBSTACLES: [&str; 21] = [
     "log_fallen_b",
     "tree_oak",
     "tree_oak_b",
+    "fence_paddock",
 ];
 
 /// Why a move stopped.
@@ -357,41 +361,126 @@ pub struct PieceShape {
     /// The LOD0 triangles: a ray that enters the body or crown lands on the first of them it
     /// crosses, or on the volume where it slips through a gap in the leaves.
     pub tris: Vec<Tri>,
+    /// A collider of several disjoint parts (the paddock fence's six run boxes): each part's own
+    /// footprint and body, which block and are clicked in place of `hull` and `body`. Empty for a
+    /// one-part collider.
+    pub parts: Vec<ColliderPart>,
+}
+
+/// One connected part of a collider: its convex footprint and its foot and top.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ColliderPart {
+    pub hull: Vec<Vec2>,
+    pub body: Option<(f32, f32)>,
+}
+
+/// The collider's triangles (`collider`, three corners each) grouped into parts that share a
+/// vertex position (to 1 mm). One group when the corners are not whole triangles.
+fn collider_parts(collider: &[Vec3]) -> Vec<Vec<Vec3>> {
+    let tris = collider.as_chunks::<3>().0;
+    if tris.is_empty() || !collider.len().is_multiple_of(3) {
+        return vec![collider.to_vec()];
+    }
+    fn root(up: &mut [usize], mut i: usize) -> usize {
+        while up[i] != i {
+            up[i] = up[up[i]];
+            i = up[i];
+        }
+        i
+    }
+    let mut up: Vec<usize> = (0..tris.len()).collect();
+    let mut first: HashMap<[i64; 3], usize> = HashMap::new();
+    for (i, t) in tris.iter().enumerate() {
+        for p in t {
+            let key = p.to_array().map(|v| (v * 1000.0).round() as i64);
+            let j = *first.entry(key).or_insert(i);
+            let (a, b) = (root(&mut up, i), root(&mut up, j));
+            up[a] = b;
+        }
+    }
+    let mut groups: BTreeMap<usize, Vec<Vec3>> = BTreeMap::new();
+    for (i, t) in tris.iter().enumerate() {
+        let r = root(&mut up, i);
+        groups.entry(r).or_default().extend(t);
+    }
+    groups.into_values().collect()
 }
 
 impl PieceShape {
-    /// From the collider's vertices and the LOD0 triangles with their slot names. On a piece with a
-    /// crown footprint (`scatter::footprint`), every LOD0 slot but `<piece>_bark` is foliage.
+    /// From the collider's triangle corners (three per triangle) and the LOD0 triangles with
+    /// their slot names. On a piece with a crown footprint (`scatter::footprint`), every LOD0 slot
+    /// but `<piece>_bark` is foliage. A collider of disjoint parts also gets each part's own
+    /// footprint and body ([`PieceShape::parts`]).
     pub fn from_meshes(piece: &str, collider: &[Vec3], lod0: &[(Tri, String)]) -> Self {
         let hull = hull(&collider.iter().map(|p| p.xz()).collect::<Vec<_>>());
         let crowned = footprint(piece).crown > 0.0;
         let foliage = |slot: &str| crowned && !slot.ends_with("_bark");
-        let foot = collider.iter().map(|p| p.y).fold(f32::INFINITY, f32::min);
+        let foot_of = |pts: &[Vec3]| pts.iter().map(|p| p.y).fold(f32::INFINITY, f32::min);
+        let foot = foot_of(collider);
         let top = lod0
             .iter()
             .filter(|(_, s)| !foliage(s))
             .flat_map(|(t, _)| t.iter().map(|p| p[1]))
             .chain(collider.iter().map(|p| p.y))
             .fold(f32::NEG_INFINITY, f32::max);
+        let groups = collider_parts(collider);
+        let parts = if groups.len() > 1 {
+            groups
+                .iter()
+                .map(|g| {
+                    let h = self::hull(&g.iter().map(|p| p.xz()).collect::<Vec<_>>());
+                    let (f, t) = (
+                        foot_of(g),
+                        g.iter().map(|p| p.y).fold(f32::NEG_INFINITY, f32::max),
+                    );
+                    ColliderPart {
+                        body: (h.len() >= 3 && f < t).then_some((f, t)),
+                        hull: h,
+                    }
+                })
+                .collect()
+        } else {
+            vec![]
+        };
         Self {
             body: (hull.len() >= 3 && foot < top).then_some((foot, top)),
             crown: Crown::fit(lod0.iter().filter(|(_, s)| foliage(s)).map(|(t, _)| t)),
             hull,
             tris: lod0.iter().map(|(t, _)| *t).collect(),
+            parts,
         }
     }
 
     /// A piece whose GLB is not loaded: the scatter ground reach as its footprint, nothing to click.
+    /// A fence (`scatter::fence`) blocks nothing until its collider arrives: a disc at its origin
+    /// would wall off the yard it encloses.
     pub fn fallback(piece: &str) -> Self {
         Self {
-            hull: fallback_hull(piece),
+            hull: if scatter::fence(piece).is_some() {
+                vec![]
+            } else {
+                fallback_hull(piece)
+            },
             ..default()
+        }
+    }
+
+    /// What blocks and is clicked: each part's footprint (`Some(part)`), or the whole collider's.
+    fn footprints(&self) -> Vec<(&[Vec2], Option<usize>)> {
+        if self.parts.is_empty() {
+            vec![(self.hull.as_slice(), None)]
+        } else {
+            self.parts
+                .iter()
+                .enumerate()
+                .map(|(i, p)| (p.hull.as_slice(), Some(i)))
+                .collect()
         }
     }
 }
 
-/// What a prop is to the player: `building`, `tree`, `hay`, `animal`, `log` or `rock`. Walk mode's
-/// [`Blocked::reason`] and photo mode's click to focus both report it.
+/// What a prop is to the player: `building`, `tree`, `hay`, `animal`, `log`, `fence` or `rock`.
+/// Walk mode's [`Blocked::reason`] and photo mode's click to focus both report it.
 pub fn prop_kind(piece: &str) -> &'static str {
     match piece {
         p if p.starts_with("house")
@@ -405,6 +494,7 @@ pub fn prop_kind(piece: &str) -> &'static str {
         p if p.starts_with("hay_") => "hay",
         p if p.starts_with("animal_") => "animal",
         p if p.starts_with("log_") => "log",
+        p if p.starts_with("fence") => "fence",
         _ => "rock",
     }
 }
@@ -417,6 +507,8 @@ pub struct PickProp {
     /// World to the piece's frame, and the placement's uniform scale.
     to_local: Affine3A,
     scale: f32,
+    /// One part of a multi-part collider ([`PieceShape::parts`]): its prism alone is the volume.
+    part: Option<usize>,
 }
 
 impl PickProp {
@@ -426,11 +518,26 @@ impl PickProp {
             shape: shape.clone(),
             to_local: t.compute_affine().inverse(),
             scale: t.scale.x,
+            part: None,
+        })
+    }
+
+    /// Part `part` of a multi-part collider, clicked as its own prism.
+    fn new_part(piece: &str, shape: &Arc<PieceShape>, t: &Transform, part: usize) -> Option<Self> {
+        shape.parts.get(part)?.body?;
+        Some(Self {
+            piece: piece.to_owned(),
+            shape: shape.clone(),
+            to_local: t.compute_affine().inverse(),
+            scale: t.scale.x,
+            part: Some(part),
         })
     }
 
     /// Where `ray` meets the prop (metres along the world ray): the first LOD0 triangle it
-    /// crosses once it enters the body or crown, else where it enters them.
+    /// crosses once it enters the body or crown, else where it enters them. A part of a
+    /// multi-part collider is where the ray enters its prism: the LOD0 mesh spans every part, so
+    /// its first triangle may lie on another.
     pub fn hit(&self, ray: Ray3d) -> Option<f32> {
         let d = self.to_local.transform_vector3(*ray.direction);
         let local = Ray3d::new(
@@ -438,6 +545,11 @@ impl PickProp {
             Dir3::new(d).ok()?,
         );
         let s = &self.shape;
+        if let Some(i) = self.part {
+            let p = &s.parts[i];
+            let (a, b) = p.body?;
+            return ray_prism(local, &p.hull, a, b).map(|t| t * self.scale);
+        }
         let body = s.body.and_then(|(a, b)| ray_prism(local, &s.hull, a, b));
         let crown = s.crown.as_ref().and_then(|c| c.hit(local));
         let volume = body.into_iter().chain(crown).reduce(f32::min)?;
@@ -558,16 +670,23 @@ impl WalkGround {
             );
             let root = root_transform(t);
             let mut obs = vec![];
+            let mut place = |piece: &str, sh: &Arc<PieceShape>, t: &Transform| {
+                for (poly, part) in sh.footprints() {
+                    obs.push(Obstacle {
+                        piece: piece.to_owned(),
+                        poly: place_hull(poly, t),
+                    });
+                    out.props.extend(match part {
+                        None => PickProp::new(piece, sh, t),
+                        Some(i) => PickProp::new_part(piece, sh, t, i),
+                    });
+                }
+            };
             for (h, piece) in def.hero_pieces(t.cell) {
                 if OBSTACLES.contains(&piece) {
                     let local = Transform::from_xyz(h.at[0], 0.0, h.at[1])
                         .with_rotation(Quat::from_rotation_y(-h.yaw_deg.to_radians()));
-                    let (sh, t) = (shape(piece), root * local);
-                    obs.push(Obstacle {
-                        piece: piece.to_owned(),
-                        poly: place_hull(&sh.hull, &t),
-                    });
-                    out.props.extend(PickProp::new(piece, &sh, &t));
+                    place(piece, &shape(piece), &(root * local));
                 }
             }
             if let Some(s) = scatter.get(&t.cell).filter(|s| s.tile == t.tile) {
@@ -575,12 +694,7 @@ impl WalkGround {
                     let rule = inst.rule as usize;
                     let piece = s.piece_of(inst);
                     if s.drawn[rule] && OBSTACLES.contains(&piece) {
-                        let (sh, t) = (shape(piece), root * inst.transform());
-                        obs.push(Obstacle {
-                            piece: piece.to_owned(),
-                            poly: place_hull(&sh.hull, &t),
-                        });
-                        out.props.extend(PickProp::new(piece, &sh, &t));
+                        place(piece, &shape(piece), &(root * inst.transform()));
                     }
                 }
             }
@@ -760,8 +874,8 @@ impl WalkGround {
     }
 }
 
-/// A loaded piece's shape: its `<id>_collider` vertices (footprint and foot) and LOD0 triangles
-/// (height and crown).
+/// A loaded piece's shape: its `<id>_collider` triangle corners (footprint, foot and parts) and
+/// LOD0 triangles (height and crown).
 fn piece_shape(
     id: &str,
     packs: &PlayPacks,
@@ -771,11 +885,12 @@ fn piece_shape(
     let gm = gltf_meshes.get(g.named_meshes.get(format!("{id}_collider").as_str())?)?;
     let mut pts = vec![];
     for prim in &gm.primitives {
-        let pos = meshes
-            .get(&prim.mesh)?
-            .attribute(Mesh::ATTRIBUTE_POSITION)?
-            .as_float3()?;
-        pts.extend(pos.iter().map(|p| Vec3::from(*p)));
+        let mesh = meshes.get(&prim.mesh)?;
+        let pos = mesh.attribute(Mesh::ATTRIBUTE_POSITION)?.as_float3()?;
+        match mesh.indices() {
+            Some(idx) => pts.extend(idx.iter().map(|i| Vec3::from(pos[i]))),
+            None => pts.extend(pos.iter().map(|p| Vec3::from(*p))),
+        }
     }
     let lod0 = scatter::kit_tris(id, packs, assets).unwrap_or_default();
     let s = PieceShape::from_meshes(id, &pts, &lod0);
@@ -946,6 +1061,7 @@ mod tests {
             ("rock_small_c", "rock"),
             ("log_fallen", "log"),
             ("log_fallen_b", "log"),
+            ("fence_paddock", "fence"),
         ] {
             assert_eq!(prop_kind(piece), kind, "{piece}");
             assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");
@@ -958,6 +1074,76 @@ mod tests {
                 prop_kind(piece)
             );
         }
+    }
+
+    /// Only the paddock fence's collider has disjoint parts (one box per run); every other
+    /// obstacle is one part, so it keeps the whole collider's hull and body exactly as before.
+    #[test]
+    fn only_the_fence_collider_splits_into_parts() {
+        for piece in OBSTACLES {
+            let s = shape(piece);
+            if piece == "fence_paddock" {
+                assert_eq!(s.parts.len(), 6, "one part per run");
+                for p in &s.parts {
+                    assert_eq!(p.hull.len(), 4, "a run box: {:?}", p.hull);
+                    let (foot, top) = p.body.unwrap();
+                    assert!(foot < -0.3 && (1.1..1.4).contains(&top), "{foot}..{top}");
+                }
+            } else {
+                assert!(s.parts.is_empty(), "{piece}: {} parts", s.parts.len());
+                assert_eq!(s.footprints(), vec![(s.hull.as_slice(), None)], "{piece}");
+            }
+        }
+        // The fallback blocks nothing for a fence, a disc for anything else.
+        assert!(PieceShape::fallback("fence_paddock").hull.is_empty());
+        assert_eq!(PieceShape::fallback("rock_small").hull.len(), 16);
+    }
+
+    /// The farm's paddock fence (tile frame, rotation 0): the walker passes through the 3 m gate
+    /// between x 3.5 and 6.5, stops at the north run (z 2.38 to 2.62) a body radius short and
+    /// reports `fence`, stands inside the paddock, and a click on a run picks the fence.
+    #[test]
+    fn the_paddock_fence_blocks_except_at_its_gate() {
+        let g = world(&[(0, 0, "farm", 0)]);
+        let fences: Vec<&Obstacle> = g.obstacles[&Axial::ORIGIN]
+            .iter()
+            .filter(|o| o.piece == "fence_paddock")
+            .collect();
+        assert_eq!(fences.len(), 6, "one obstacle per run");
+        let fence_at = |p: Vec2| fences.iter().any(|o| o.hits(p, BODY_RADIUS));
+        // Through the gate: no fence part on the line x = 5, z 0 to 5.
+        for k in 0..=50 {
+            let p = Vec2::new(5.0, k as f32 * 0.1);
+            assert!(!fence_at(p), "a fence part at {p}");
+        }
+        let s = walk(&g, Vec2::new(5.0, 0.0), Vec2::Y, 5.0);
+        assert_eq!(s.blocked, None, "through the gate");
+        assert!(s.pos.z > 4.9, "through the gate to {}", s.pos);
+        // Into the north run from the yard.
+        let s = walk(&g, Vec2::new(-5.0, 0.0), Vec2::Y, 5.0);
+        assert_eq!(s.blocked, Some(Blocked::Obstacle("fence_paddock".into())));
+        assert_eq!(s.blocked.as_ref().map(Blocked::reason), Some("fence"));
+        assert!(
+            (1.95..2.09).contains(&s.pos.z),
+            "stopped at z {} (x {})",
+            s.pos.z,
+            s.pos.x
+        );
+        // Inside the paddock.
+        let inside = Vec2::new(-5.0, 6.0);
+        assert!(!fence_at(inside));
+        assert!(g.stand(inside).is_ok(), "{:?}", g.stand(inside));
+        // A click on the north run, at rail height from the yard.
+        let eye = Vec3::new(-5.0, 0.8, -1.0);
+        let (t, piece) = g.pick_prop(ray(eye, Vec3::Z), 1000.0).unwrap();
+        assert_eq!((piece, prop_kind(piece)), ("fence_paddock", "fence"));
+        assert!((3.35..3.45).contains(&t), "hit {t} m out");
+        // Through the gate, at rail height, the first fence hit is the far north-east run's
+        // (z 11.27 at x 5).
+        let eye = Vec3::new(5.0, 0.8, -1.0);
+        let (t, piece) = g.pick_prop(ray(eye, Vec3::Z), 1000.0).unwrap();
+        assert_eq!(piece, "fence_paddock");
+        assert!((11.9..12.3).contains(&t), "hit {t} m out: through the gate");
     }
 
     /// A placed windmill tile stops the walker at its tower, from every side and through its turn.

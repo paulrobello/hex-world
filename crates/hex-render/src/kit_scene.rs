@@ -278,8 +278,28 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place(piece, -2, 5, 1)
         });
     }
+    // The farm (data/tiles/farm.ron) with its paddock fence (P3) on a meadow at (-1, 5), south-east
+    // of the river rail bridge; no lane of a neighbour runs onto it. The heroes stand at y = 0, as
+    // play places them; the fence mesh carries the meadow relief itself.
+    v.push(place("meadow_base", -1, 5, 0));
+    for (piece, at, yaw_deg) in FARM_HEROES {
+        v.push(hero(piece, -1, 5, at, yaw_deg));
+    }
     v
 }
+
+/// (piece, at, yaw) of the farm tile's heroes (data/tiles/farm.ron) plus the paddock fence at the
+/// tile centre.
+const FARM_HEROES: [(&str, [f32; 2], f32); 8] = [
+    ("fence_paddock", [0.0, 0.0], 0.0),
+    ("barn_red", [4.75, -8.227], 30.0),
+    ("hay_bale_stack", [8.9, -2.4], 30.0),
+    ("hay_bale_round", [7.5, -0.4], 15.0),
+    ("hay_bale_round", [10.4, -1.4], 30.0),
+    ("animal_cow", [0.25, 8.25], 255.0),
+    ("animal_sheep", [-0.5, 10.75], 45.0),
+    ("animal_sheep", [-2.25, 11.25], 345.0),
+];
 
 /// (piece, offset, yaw, relief height) of the scatter-oak showcase on the forest at (-2, 2).
 const OAK_GROVE: [(&str, [f32; 2], f32, f32); 3] = [

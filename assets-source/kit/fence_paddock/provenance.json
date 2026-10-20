@@ -1,0 +1,665 @@
+{
+  "pieceId": "fence_paddock",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/fence_paddock.py",
+    "sha256": "639b5fa311399b22886febb4f5d751d8a56d656f58ff497c8739265fd0bae39a"
+  },
+  "generatorDeps": [],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 64
+      }
+    },
+    "device": "none",
+    "layout": {
+      "colliderBoxes": [
+        [
+          [
+            3.62,
+            2.38
+          ],
+          [
+            -12.376,
+            2.38
+          ],
+          [
+            -12.376,
+            2.62
+          ],
+          [
+            3.62,
+            2.62
+          ]
+        ],
+        [
+          [
+            -12.376,
+            2.38
+          ],
+          [
+            -12.376,
+            7.196
+          ],
+          [
+            -12.136,
+            7.196
+          ],
+          [
+            -12.136,
+            2.38
+          ]
+        ],
+        [
+          [
+            -12.42,
+            7.12
+          ],
+          [
+            0.044,
+            14.316
+          ],
+          [
+            0.164,
+            14.109
+          ],
+          [
+            -12.3,
+            6.912
+          ]
+        ],
+        [
+          [
+            -0.044,
+            14.316
+          ],
+          [
+            12.42,
+            7.12
+          ],
+          [
+            12.3,
+            6.912
+          ],
+          [
+            -0.164,
+            14.109
+          ]
+        ],
+        [
+          [
+            12.376,
+            7.196
+          ],
+          [
+            12.376,
+            2.38
+          ],
+          [
+            12.136,
+            2.38
+          ],
+          [
+            12.136,
+            7.196
+          ]
+        ],
+        [
+          [
+            12.376,
+            2.38
+          ],
+          [
+            6.38,
+            2.38
+          ],
+          [
+            6.38,
+            2.785
+          ],
+          [
+            12.376,
+            2.785
+          ]
+        ]
+      ],
+      "fenceLine": [
+        [
+          3.5,
+          2.5
+        ],
+        [
+          -12.256406460551018,
+          2.5
+        ],
+        [
+          -12.256406460551018,
+          7.076239569296598
+        ],
+        [
+          0,
+          14.152479138593195
+        ],
+        [
+          12.256406460551018,
+          7.076239569296598
+        ],
+        [
+          12.256406460551018,
+          2.5
+        ],
+        [
+          6.5,
+          2.5
+        ]
+      ],
+      "frame": "runtime tile frame (x, z), hero at (0, 0) yaw 0, heights y",
+      "gate": {
+        "leaf": [
+          [
+            6.62,
+            2.69
+          ],
+          [
+            9.52,
+            2.69
+          ]
+        ],
+        "leafState": "open 180 degrees, against the inside of the north-east run",
+        "opening": [
+          [
+            3.5,
+            2.5
+          ],
+          [
+            6.5,
+            2.5
+          ]
+        ],
+        "widthM": 3
+      },
+      "paddockPolygon": [
+        [
+          -11.756,
+          3
+        ],
+        [
+          11.756,
+          3
+        ],
+        [
+          11.756,
+          6.788
+        ],
+        [
+          0,
+          13.575
+        ],
+        [
+          -11.756,
+          6.788
+        ]
+      ],
+      "posts": [
+        {
+          "at": [
+            3.5,
+            2.5
+          ],
+          "gate": true,
+          "ground": -0.104,
+          "half": 0.08,
+          "top": 1.281
+        },
+        {
+          "at": [
+            1.249,
+            2.5
+          ],
+          "gate": false,
+          "ground": -0.178,
+          "half": 0.065,
+          "top": 1.085
+        },
+        {
+          "at": [
+            -1.002,
+            2.5
+          ],
+          "gate": false,
+          "ground": -0.21,
+          "half": 0.065,
+          "top": 1.061
+        },
+        {
+          "at": [
+            -3.253,
+            2.5
+          ],
+          "gate": false,
+          "ground": -0.163,
+          "half": 0.065,
+          "top": 1.119
+        },
+        {
+          "at": [
+            -5.504,
+            2.5
+          ],
+          "gate": false,
+          "ground": -0.086,
+          "half": 0.065,
+          "top": 1.134
+        },
+        {
+          "at": [
+            -7.755,
+            2.5
+          ],
+          "gate": false,
+          "ground": -0.058,
+          "half": 0.065,
+          "top": 1.202
+        },
+        {
+          "at": [
+            -10.005,
+            2.5
+          ],
+          "gate": false,
+          "ground": -0.097,
+          "half": 0.065,
+          "top": 1.18
+        },
+        {
+          "at": [
+            -12.256,
+            2.5
+          ],
+          "gate": false,
+          "ground": -0.128,
+          "half": 0.065,
+          "top": 1.132
+        },
+        {
+          "at": [
+            -12.256,
+            4.788
+          ],
+          "gate": false,
+          "ground": -0.132,
+          "half": 0.065,
+          "top": 1.146
+        },
+        {
+          "at": [
+            -12.256,
+            7.076
+          ],
+          "gate": false,
+          "ground": -0.121,
+          "half": 0.065,
+          "top": 1.113
+        },
+        {
+          "at": [
+            -10.214,
+            8.256
+          ],
+          "gate": false,
+          "ground": -0.138,
+          "half": 0.065,
+          "top": 1.133
+        },
+        {
+          "at": [
+            -8.171,
+            9.435
+          ],
+          "gate": false,
+          "ground": -0.193,
+          "half": 0.065,
+          "top": 1.067
+        },
+        {
+          "at": [
+            -6.128,
+            10.614
+          ],
+          "gate": false,
+          "ground": -0.155,
+          "half": 0.065,
+          "top": 1.063
+        },
+        {
+          "at": [
+            -4.085,
+            11.794
+          ],
+          "gate": false,
+          "ground": -0.051,
+          "half": 0.065,
+          "top": 1.231
+        },
+        {
+          "at": [
+            -2.043,
+            12.973
+          ],
+          "gate": false,
+          "ground": -0.043,
+          "half": 0.065,
+          "top": 1.195
+        },
+        {
+          "at": [
+            0,
+            14.152
+          ],
+          "gate": false,
+          "ground": -0.118,
+          "half": 0.065,
+          "top": 1.118
+        },
+        {
+          "at": [
+            2.043,
+            12.973
+          ],
+          "gate": false,
+          "ground": -0.122,
+          "half": 0.065,
+          "top": 1.128
+        },
+        {
+          "at": [
+            4.085,
+            11.794
+          ],
+          "gate": false,
+          "ground": -0.14,
+          "half": 0.065,
+          "top": 1.083
+        },
+        {
+          "at": [
+            6.128,
+            10.614
+          ],
+          "gate": false,
+          "ground": -0.163,
+          "half": 0.065,
+          "top": 1.069
+        },
+        {
+          "at": [
+            8.171,
+            9.435
+          ],
+          "gate": false,
+          "ground": -0.168,
+          "half": 0.065,
+          "top": 1.089
+        },
+        {
+          "at": [
+            10.214,
+            8.256
+          ],
+          "gate": false,
+          "ground": -0.144,
+          "half": 0.065,
+          "top": 1.109
+        },
+        {
+          "at": [
+            12.256,
+            7.076
+          ],
+          "gate": false,
+          "ground": -0.103,
+          "half": 0.065,
+          "top": 1.163
+        },
+        {
+          "at": [
+            12.256,
+            4.788
+          ],
+          "gate": false,
+          "ground": -0.112,
+          "half": 0.065,
+          "top": 1.146
+        },
+        {
+          "at": [
+            12.256,
+            2.5
+          ],
+          "gate": false,
+          "ground": -0.125,
+          "half": 0.065,
+          "top": 1.146
+        },
+        {
+          "at": [
+            10.338,
+            2.5
+          ],
+          "gate": false,
+          "ground": -0.137,
+          "half": 0.065,
+          "top": 1.126
+        },
+        {
+          "at": [
+            8.419,
+            2.5
+          ],
+          "gate": false,
+          "ground": -0.102,
+          "half": 0.065,
+          "top": 1.12
+        },
+        {
+          "at": [
+            6.5,
+            2.5
+          ],
+          "gate": true,
+          "ground": -0.069,
+          "half": 0.08,
+          "top": 1.277
+        }
+      ]
+    },
+    "lodTris": [
+      1172,
+      568,
+      78
+    ],
+    "marginPx": 0,
+    "masks": {
+      "aoAtGround": 0.5870732817478379,
+      "aoAtRails": [
+        0.85216,
+        1,
+        1
+      ],
+      "aoMax": 1,
+      "aoMin": 0.5799999833106995,
+      "night": 0,
+      "porosity": 0.6,
+      "snow": 1
+    },
+    "reason": "no Cycles bake: masks is an analytic ramp in V (height above the ground)",
+    "receiverSignature": "fc3b62a12ec9665da2e0f2758656e83bef489de253c46b160b2ba1abd9f04334",
+    "samples": 0,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 7.807835572564564,
+      "median": 7.330976286512846,
+      "min": 0.19923627709426822
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1172,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 568,
+      "ratio": 0.48464163822525597
+    },
+    {
+      "lod": 2,
+      "tris": 78,
+      "ratio": 0.06655290102389079
+    }
+  ],
+  "collider": {
+    "node": "fence_paddock_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 7.807835572564564,
+    "median": 7.330976286512846,
+    "min": 0.19923627709426822
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 836,
+        "astc": 824
+      },
+      "glbBytes": 168624
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/fence_paddock/fence_paddock.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 7,
+        "bytes": 836,
+        "sha256": "975bda88871515ceca93e3c484ba6be3d3e38c92deea44ce35e2e7928f6d318f"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/fence_paddock/fence_paddock.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 7,
+        "bytes": 824,
+        "sha256": "59b7f5085e0d127e70b9e266c1e596754b92e41457933671d1e0c524750c96b8"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/fence_paddock/fence_paddock.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 416,
+        "sha256": "2a2a1272a8efa70084be80c9a30d3944f6451faaf982ec1f189163fa39cf7450"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/fence_paddock/fence_paddock.glb",
+      "sha256": "f99ef49ae731f60017006187be86c5d154e223903a8586c777f385eee423b8f8",
+      "bytes": 168624
+    },
+    {
+      "path": "assets/kit/p1/fence_paddock/fence_paddock.masks.bc7.ktx2",
+      "sha256": "975bda88871515ceca93e3c484ba6be3d3e38c92deea44ce35e2e7928f6d318f",
+      "bytes": 836
+    },
+    {
+      "path": "assets/kit/p1/fence_paddock/fence_paddock.masks.astc.ktx2",
+      "sha256": "59b7f5085e0d127e70b9e266c1e596754b92e41457933671d1e0c524750c96b8",
+      "bytes": 824
+    },
+    {
+      "path": "assets/kit/p1/fence_paddock/fence_paddock.masks.png",
+      "sha256": "2a2a1272a8efa70084be80c9a30d3944f6451faaf982ec1f189163fa39cf7450",
+      "bytes": 416
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/farm/ref-1.jpg",
+      "sha256": "7b132f2ad6132d695724f9b2c3438e802af53a328d0f3d63f2cf67cb5aefa30f",
+      "sourceSha256": "2ff556655fd2278c8e3324e4d2d3f5593ecab8da40d71015e8703a4594a9f6cf",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "40cbcc37-2358-4b98-819a-d15f87abcdbc",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, laid out as a small farmyard. About half the tile is a field of neat parallel ploughed furrows of dark brown earth beside a few rows of young green crops. The other half holds a red-painted vertical-board timber barn with a steep dark slate roof and large double doors, a packed-earth yard with a few round hay bales and a small stack of rectangular hay bales, and a grassy paddock enclosed by a weathered post-and-rail timber fence, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/farm/ref-2.jpg",
+      "sha256": "5fd371d02c5f176152283bf2852d99d7e907fb597eba80e9a52bf1c5b1ac9746",
+      "sourceSha256": "a61bd9f1fcd9b3f128c99dd19afb64837da9c3eb8ee1c3b6e10cacdb975712ce",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "904395be-208c-4c55-a00f-a79d076f2d4c",
+      "prompt": "Close-up of a farmyard corner on a diorama tile: a red-painted vertical-board timber barn with a steep dark slate roof and open large double doors, a weathered post-and-rail timber fence, round and rectangular hay bales on a packed-earth yard scattered with loose straw, and the edge of a field of neat ploughed furrows, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T09:01:19.467Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/farm/ref-1.jpg",
+        "assets-source/refs/farm/ref-2.jpg"
+      ],
+      "notes": "Pitched barn roof; red board barn for contrast with the cottages; wheat crop. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "revision": "first build",
+      "notes": "Pending owner review; not an approval. New piece (owner 2026-10-19, 'keep blender agents working on needed assets'): the farm's weathered grey post-and-rail paddock from refs/farm ref-1 and ref-2, one prop at the farm tile's centre with a 3 m gate toward the yard. Review docs/checkpoints/fence_paddock/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

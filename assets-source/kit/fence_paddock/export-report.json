@@ -1,0 +1,22 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/fence_paddock.py",
+    "sha256": "639b5fa311399b22886febb4f5d751d8a56d656f58ff497c8739265fd0bae39a"
+  },
+  "generatorDeps": [],
+  "lodTris": {
+    "fence_paddock_lod0": 1172,
+    "fence_paddock_lod1": 568,
+    "fence_paddock_lod2": 78
+  },
+  "nodes": [
+    "fence_paddock",
+    "fence_paddock_collider",
+    "fence_paddock_lod0",
+    "fence_paddock_lod1",
+    "fence_paddock_lod2"
+  ],
+  "pieceId": "fence_paddock",
+  "sockets": []
+}

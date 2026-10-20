@@ -1,0 +1,88 @@
+{
+  "name": "fence_paddock",
+  "date": "2026-10-20T08:47:38.466Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/fence_paddock/fence_paddock.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 7,
+      "bytes": 836,
+      "sha256": "975bda88871515ceca93e3c484ba6be3d3e38c92deea44ce35e2e7928f6d318f"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/fence_paddock/fence_paddock.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 7,
+      "bytes": 824,
+      "sha256": "59b7f5085e0d127e70b9e266c1e596754b92e41457933671d1e0c524750c96b8"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/fence_paddock/fence_paddock.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 416,
+      "sha256": "2a2a1272a8efa70084be80c9a30d3944f6451faaf982ec1f189163fa39cf7450"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 836,
+      "astc": 824
+    },
+    "glbBytes": 168624
+  },
+  "glb": {
+    "bytes": 168624,
+    "sha256": "f99ef49ae731f60017006187be86c5d154e223903a8586c777f385eee423b8f8"
+  }
+}
