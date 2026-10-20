@@ -18,5 +18,14 @@
     "requested": "2026-10-14",
     "revision": "grass-line",
     "notes": "Pending owner review; not an approval. Owner feedback 2026-10-14 (artifacts where the river mouth meets the grass): the grass edge along both banks is now a constraint polyline in every LOD (_mouth.grass_lines: river_straight's grass row to s = -8, then along s = -8 to the crease, filleted on the long bank), with one slot rule across s = -8. Tris [3600, 1494, 715] (was [3592, 1488, 709]). Review river-mouth-15 and -16 and grass-line-slots-river_mouth_l_base.png in docs/checkpoints/river-mouth/."
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "terrain-hump-water",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Rebuild only: a shared helper it imports (_river.py, or _spring.py) changed for the terrain-hump pass on the river bases. The GLB and every map are byte-identical to the approved build; provenance refreshed. Nothing to re-review visually."
   }
 ]

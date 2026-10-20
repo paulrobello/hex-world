@@ -1,6 +1,6 @@
 {
   "name": "river_bend_base",
-  "date": "2026-10-14T05:50:04.866Z",
+  "date": "2026-10-20T16:49:14.736Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 163228,
-      "sha256": "fae0a63f1eab597d7a59fd64abd6cd4de332c7c56cc92ad64154a6ae7bb28df6"
+      "bytes": 163118,
+      "sha256": "e258c200ab9c62acc7a4a07c8d76dcc4bbb53ef8306a2b39de31bd6b57edc747"
     },
     {
       "channel": "masks",
@@ -59,8 +59,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 159734,
-      "sha256": "dd11d85a8d9caa2c5375611fb37db75707f85b801a8c3dd0ddac39d7c985518c"
+      "bytes": 159443,
+      "sha256": "35d6e3fb6cec1c651da96ff5357a1fa17549dfd2f7a97c1d7711a946766b773e"
     },
     {
       "channel": "masks",
@@ -68,21 +68,21 @@
       "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 242387,
-      "sha256": "92719924887dec4f758d24b29deddf6a20a98838d96536f16a559b6c7e8280ab"
+      "bytes": 241870,
+      "sha256": "d039c3d2deedd01adfe603a7446e1fe75928c5992e960ebddee11bd3523af439"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 163228,
-      "astc": 159734
+      "bc7": 163118,
+      "astc": 159443
     },
-    "glbBytes": 128108
+    "glbBytes": 128952
   },
   "glb": {
-    "bytes": 128108,
-    "sha256": "0654ad92fc6b3a62631007dc5e7c2508c05e5cbc535588781045194d2cd01dea"
+    "bytes": 128952,
+    "sha256": "69ea2c9090f367800eeb4de660524a9d566a1d3c0e6c3ca696e5ec052308de80"
   }
 }

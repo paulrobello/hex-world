@@ -9,7 +9,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_river.py",
-      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
     }
   ],
   "authoringAgent": {
@@ -41,7 +41,7 @@
     "lod2MaxRatio": 0.2,
     "marginPx": 12,
     "maskStats": {
-      "mean": 0.9646078944206238,
+      "mean": 0.964612603187561,
       "min": 0,
       "p01": 0,
       "p05": 0.9058824181556702,
@@ -92,7 +92,7 @@
       6.342142857142858,
       6.83
     ],
-    "receiverSignature": "089e563e5824b6eb3323ea119589ddbfbb6ea8971a13f2eb0e350d95b3f14780",
+    "receiverSignature": "a98268e9409eec479f4ae4a2aead8a5669123f2a7e096bdedffb5f7f99091ff2",
     "samples": 64,
     "skipped": false,
     "texelDensityPxPerM": {
@@ -167,10 +167,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 155563,
-        "astc": 151543
+        "bc7": 153853,
+        "astc": 149908
       },
-      "glbBytes": 86740
+      "glbBytes": 87404
     },
     "textureEncodes": [
       {
@@ -181,8 +181,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 155563,
-        "sha256": "18b216a5490242465d943b1db87f7de6756a461051766fdef32e7e584485ba5f"
+        "bytes": 153853,
+        "sha256": "8931b4af9dbbc952e94cb1da554a2f3f056ea5f812842f5a0718949457729230"
       },
       {
         "channel": "masks",
@@ -192,8 +192,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 151543,
-        "sha256": "b7ee2f8c43499180140e59b6a0926b24595a5750239e6a0afddfc2643a829260"
+        "bytes": 149908,
+        "sha256": "6ea6363141d25fa89ba7592d436a506c52428613a9e5b01e5d3aee75c86bacd3"
       },
       {
         "channel": "masks",
@@ -201,31 +201,31 @@
         "path": "assets/kit/p1/river_straight_base/river_straight_base.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 262181,
-        "sha256": "26fdd2771c03dd35a4b542b6b758afb77f586cca41d9d4a4ae17cd42e0460062"
+        "bytes": 259773,
+        "sha256": "4e7967c2198a03603576306cfed5da2c1c41bb8bb2881359ec46a34dafc978e6"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_straight_base/river_straight_base.glb",
-      "sha256": "a0222c634b4e3c4be5c3604e29f5e69d6787c93685aba324d6e8089b9a3b80a4",
-      "bytes": 86740
+      "sha256": "3f9ca020fcdf7aa015f35b8405cadf2a76a25c2b4b7aa717d3aae8e401640d50",
+      "bytes": 87404
     },
     {
       "path": "assets/kit/p1/river_straight_base/river_straight_base.masks.bc7.ktx2",
-      "sha256": "18b216a5490242465d943b1db87f7de6756a461051766fdef32e7e584485ba5f",
-      "bytes": 155563
+      "sha256": "8931b4af9dbbc952e94cb1da554a2f3f056ea5f812842f5a0718949457729230",
+      "bytes": 153853
     },
     {
       "path": "assets/kit/p1/river_straight_base/river_straight_base.masks.astc.ktx2",
-      "sha256": "b7ee2f8c43499180140e59b6a0926b24595a5750239e6a0afddfc2643a829260",
-      "bytes": 151543
+      "sha256": "6ea6363141d25fa89ba7592d436a506c52428613a9e5b01e5d3aee75c86bacd3",
+      "bytes": 149908
     },
     {
       "path": "assets/kit/p1/river_straight_base/river_straight_base.masks.png",
-      "sha256": "26fdd2771c03dd35a4b542b6b758afb77f586cca41d9d4a4ae17cd42e0460062",
-      "bytes": 262181
+      "sha256": "4e7967c2198a03603576306cfed5da2c1c41bb8bb2881359ec46a34dafc978e6",
+      "bytes": 259773
     }
   ],
   "references": [
@@ -251,7 +251,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T05:50:29.036Z",
+    "date": "2026-10-20T16:51:30.317Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -270,6 +270,15 @@
         "assets-source/refs/river/ref-2.jpg"
       ],
       "notes": "Approved: channel cut below the meadow surface, natural banks, water column on the cut face. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-hump-water",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Re-export, geometry unchanged in every LOD (positions, UVs, triangles, ring, water profile, sockets): the meadow part of the cap now takes custom normals from the relief's slope without the border falloff's rise to the ring (_river.cap_shade_slope, geom.set_cap_normals), so the shallow bowl over the last 2 m no longer shades as a ridge along the tile border (owner, 2026-10-14; as meadow_base). The channel strip keeps its normals. Review docs/checkpoints/terrain-hump-water/sheet.jpg (before/after at noon and dusk, orbit, seams, eye level)."
     }
   ]
 }

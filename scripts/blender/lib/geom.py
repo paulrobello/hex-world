@@ -78,14 +78,19 @@ def set_border_normals_up(obj, tol=1e-4):
 
 def set_cap_normals(obj, slope_fn, tol=1e-4):
     """Custom normals from an analytic slope: normalize(-sx, -sy, 1) with (sx, sy) = slope_fn(x, y),
-    and +Z on the border ring as `set_border_normals_up`. The cap's faces must be smooth."""
+    and +Z on the border ring as `set_border_normals_up`. slope_fn may return None to keep the
+    vertex's own normal (a channel strip inside a meadow cap). The cap's faces must be smooth."""
     mesh = obj.data
     normals = []
     for v in mesh.vertices:
         if abs(hexgeo.dist_to_border(v.co.x, v.co.y)) < tol and abs(v.co.z) < tol:
             normals.append((0.0, 0.0, 1.0))
             continue
-        sx, sy = slope_fn(v.co.x, v.co.y)
+        slope = slope_fn(v.co.x, v.co.y)
+        if slope is None:
+            normals.append(tuple(v.normal))
+            continue
+        sx, sy = slope
         normals.append(tuple(Vector((-sx, -sy, 1.0)).normalized()))
     mesh.normals_split_custom_set_from_vertices(normals)
     mesh.update()

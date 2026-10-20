@@ -55,6 +55,21 @@ class GeomLod(unittest.TestCase):
                 for got, w in zip(n, want):
                     self.assertAlmostEqual(got, w / s, places=3)  # custom normals are stored quantized
 
+    def test_cap_normals_keep_the_vertex_normal_where_the_slope_is_declined(self):
+        cap = self.caps()[0]
+        own = [v.normal.copy() for v in cap.data.vertices]
+        geom.set_cap_normals(cap, lambda x, y: None if x < 0.0 else (0.0, 0.0))
+        mesh = cap.data
+        for li, loop in enumerate(mesh.loops):
+            v = mesh.vertices[loop.vertex_index].co
+            n = mesh.corner_normals[li].vector
+            if abs(hexgeo.dist_to_border(v.x, v.y)) < 1e-4:
+                self.assertGreater(n.z, 0.999)
+            elif v.x < 0.0:
+                self.assertGreater(n.dot(own[loop.vertex_index]), 0.99999)
+            else:
+                self.assertGreater(n.z, 0.99999)
+
     def test_skirt_outward_and_counted(self):
         ring = hexgeo.border_ring(4)
         s = geom.skirt("skirt", ring, hexgeo.LEVEL_STEP, 2)

@@ -92,6 +92,16 @@ def relief(x, y):
     return -RELIEF * fb * fc * _river.undulation(x, y)
 
 
+def bank_falloff(x, y):
+    return smoothstep(BANK_TOP, BANK_TOP + 2.0, seg_dist(x, y)) * smoothstep(POOL_TOP, POOL_TOP + 2.0, pool_r(x, y))
+
+
+# The cap's shading slope (`_river.cap_shade_slope`): `relief` without the border falloff's rise; the
+# stream and the pool bowl (inside either bank top) keep their own normals.
+shade_slope = _river.cap_shade_slope(RELIEF, lambda x, y: bank_falloff(x, y) * _river.undulation(x, y),
+                                     lambda x, y: seg_dist(x, y) <= BANK_TOP + 1e-6 or pool_r(x, y) <= POOL_TOP + 1e-6)
+
+
 def vertex_z(x, y):
     return bed_z(x, y) + relief(x, y)
 
@@ -106,6 +116,11 @@ def _check_bed():
         assert abs(carve(W_STREAM, d) - _river.profile_z(d)) < 1e-12, d
     for o in _river.OFFS:  # the edge-0 joint row is river_straight's
         assert abs(bed_z(JOINT_X, o) - _river.profile_z(o)) < 1e-12, o
+    e = 1e-5
+    for x, y in ((-8.0, 9.0), (4.0, -10.0), (-11.5, 0.0), (3.0, 7.9)):  # border falloff 1: the true slope
+        assert hexgeo.dist_to_border(x, y) >= 2.0 and shade_slope(x, y) is not None, (x, y)
+        fd = ((relief(x + e, y) - relief(x - e, y)) / (2 * e), (relief(x, y + e) - relief(x, y - e)) / (2 * e))
+        assert all(abs(p - q) < 1e-6 for p, q in zip(shade_slope(x, y), fd)), (x, y, fd)
 
 
 _check_bed()
@@ -327,7 +342,7 @@ def build_spring_base(piece, params, skirt_rows, generator):
     lods = []
     for i, (p, rows) in enumerate(zip(params, skirt_rows)):
         cap = spring_cap(f"{piece}_lod{i}_cap", p)
-        geom.set_border_normals_up(cap)
+        geom.set_cap_normals(cap, shade_slope)
         uv.planar_cap_uv(cap)
         sk = _river.open_skirt(f"{piece}_lod{i}_skirt", loop, LANES, hexgeo.LEVEL_STEP, rows)
         sk.data.uv_layers.new(name="UVMap")

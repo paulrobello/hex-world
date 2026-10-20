@@ -9,7 +9,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_river.py",
-      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
@@ -173,7 +173,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-15T01:59:50.797Z",
+    "date": "2026-10-20T16:51:52.640Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -220,6 +220,15 @@
       "requested": "2026-10-14",
       "revision": "plant wind attribute",
       "notes": "Pending owner re-approval; not an approval. Rebuilt only to add the plant wind attribute for the owner's 2026-10-14 request (\"cattails and wild flowers should be effected by wind also\"): UV map `wind` (glTF TEXCOORD_1, FLOAT) on every LOD, U = 0 at each reed blade's and cattail stalk's own base rising to a * sqrt(H / 2 m) at its tip (a the fraction along the plant, H its length; head and spike ride the stalk), V a seeded phase per blade or stalk, 0 on stones and banks. Geometry, slots, UV0 and the masks map are unchanged: tris LOD0/1/2 2363/320/120. The manifest gives the reed, cattail and (for the cattail spikes) stone slots `wind`, and the kit vertex shaders sway them with the grass's gusts. Review docs/checkpoints/foliage-wind/ (reeds-t*.jpg). Earlier entries stay as history."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-hump-water",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Rebuild only: a shared helper it imports (_river.py, or _spring.py) changed for the terrain-hump pass on the river bases. The GLB and every map are byte-identical to the approved build; provenance refreshed. Nothing to re-review visually."
     }
   ]
 }

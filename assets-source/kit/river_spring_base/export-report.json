@@ -7,11 +7,11 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_river.py",
-      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
     },
     {
       "path": "scripts/blender/kit/_spring.py",
-      "sha256": "7069bb5eeb5284e7ae5bc5b0e6280b93a07c979a689e82dfe7678650a7e4e85c"
+      "sha256": "b548707da2708223389671f561d9e76ad94971b7f3a9c2ca0133fc6a2075dcd6"
     }
   ],
   "lodTris": {

@@ -9,11 +9,11 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_river.py",
-      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
     },
     {
       "path": "scripts/blender/kit/_spring.py",
-      "sha256": "7069bb5eeb5284e7ae5bc5b0e6280b93a07c979a689e82dfe7678650a7e4e85c"
+      "sha256": "b548707da2708223389671f561d9e76ad94971b7f3a9c2ca0133fc6a2075dcd6"
     }
   ],
   "authoringAgent": {
@@ -63,7 +63,7 @@
     "lod2MaxRatio": 0.2,
     "marginPx": 12,
     "maskStats": {
-      "mean": 0.9735151529312134,
+      "mean": 0.9735199809074402,
       "min": 0,
       "p01": 0.8901961445808411,
       "p05": 0.9215686917304993,
@@ -100,7 +100,7 @@
       6.342142857142858,
       6.83
     ],
-    "receiverSignature": "a766ac2b78b2a1563836f1358e756722a32a6cc76ac41dde1965a2703f4568b0",
+    "receiverSignature": "fbcdd4074c71a6f07e6f3af4085919ce54509d2925ef8bbc39e7512747a3d294",
     "samples": 64,
     "skipped": false,
     "texelDensityPxPerM": {
@@ -159,10 +159,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 158688,
-        "astc": 155214
+        "bc7": 157706,
+        "astc": 154099
       },
-      "glbBytes": 123148
+      "glbBytes": 123044
     },
     "textureEncodes": [
       {
@@ -173,8 +173,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 158688,
-        "sha256": "46abf3964bb8df35c3b224fa1c4da37717f477b15d1560e93ab54c34bfcfbbbd"
+        "bytes": 157706,
+        "sha256": "0fd8bd1bf8f50535e6334c012cec5ca2e3b100cd4d74fbcdd91be0c367cfe281"
       },
       {
         "channel": "masks",
@@ -184,8 +184,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 155214,
-        "sha256": "eac90b2e9a7ada1e9ea2da2c684967800d2552c9873b0b57eeb27396a8e5957f"
+        "bytes": 154099,
+        "sha256": "cc86d7be3bcb97638560949d073e699bcb4f09c01b1dfe0f9f3572331828a9ff"
       },
       {
         "channel": "masks",
@@ -193,31 +193,31 @@
         "path": "assets/kit/p1/river_spring_base/river_spring_base.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 244264,
-        "sha256": "edcbef9d82a02b33e24aee86e08620cf532ca332a0d3755923f75adee21e4211"
+        "bytes": 242597,
+        "sha256": "9010cc860e41810d3dc5fafed84ea648d255ec50d7003c0813adb6f6ac05c3fa"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_spring_base/river_spring_base.glb",
-      "sha256": "a4a9c7e946a72818411811e0642867c911e835ae7cbcff61f451d233be886903",
-      "bytes": 123148
+      "sha256": "bd377f60f1e61b6d1d775124deb72991872530aa1d85d376d73cab885bd85efd",
+      "bytes": 123044
     },
     {
       "path": "assets/kit/p1/river_spring_base/river_spring_base.masks.bc7.ktx2",
-      "sha256": "46abf3964bb8df35c3b224fa1c4da37717f477b15d1560e93ab54c34bfcfbbbd",
-      "bytes": 158688
+      "sha256": "0fd8bd1bf8f50535e6334c012cec5ca2e3b100cd4d74fbcdd91be0c367cfe281",
+      "bytes": 157706
     },
     {
       "path": "assets/kit/p1/river_spring_base/river_spring_base.masks.astc.ktx2",
-      "sha256": "eac90b2e9a7ada1e9ea2da2c684967800d2552c9873b0b57eeb27396a8e5957f",
-      "bytes": 155214
+      "sha256": "cc86d7be3bcb97638560949d073e699bcb4f09c01b1dfe0f9f3572331828a9ff",
+      "bytes": 154099
     },
     {
       "path": "assets/kit/p1/river_spring_base/river_spring_base.masks.png",
-      "sha256": "edcbef9d82a02b33e24aee86e08620cf532ca332a0d3755923f75adee21e4211",
-      "bytes": 244264
+      "sha256": "9010cc860e41810d3dc5fafed84ea648d255ec50d7003c0813adb6f6ac05c3fa",
+      "bytes": 242597
     }
   ],
   "references": [
@@ -252,7 +252,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T19:59:15.825Z",
+    "date": "2026-10-20T16:51:38.460Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -278,6 +278,15 @@
       "status": "pending",
       "requested": "2026-10-14",
       "notes": "Pending owner review; not an approval. New piece: the spring tile's bed: an 11 m pool bowl 2 m behind the centre joined to the river channel out through edge 0 (water contract §3b). Review the six-view renders in assets-source/kit/river_spring_base/renders/ and river-mouth-06. In-engine shots in docs/checkpoints/river-mouth/. The controller records the owner's decision."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-hump-water",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Re-export, geometry unchanged in every LOD (positions, UVs, triangles, ring, water profile, sockets): the meadow part of the cap now takes custom normals from the relief's slope without the border falloff's rise to the ring (_river.cap_shade_slope, geom.set_cap_normals), so the shallow bowl over the last 2 m no longer shades as a ridge along the tile border (owner, 2026-10-14; as meadow_base). The channel strip keeps its normals. Review docs/checkpoints/terrain-hump-water/sheet.jpg (before/after at noon and dusk, orbit, seams, eye level)."
     }
   ]
 }

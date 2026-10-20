@@ -9,7 +9,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_river.py",
-      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
     }
   ],
   "authoringAgent": {
@@ -215,7 +215,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T05:50:26.396Z",
+    "date": "2026-10-20T16:51:41.379Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -234,6 +234,15 @@
         "assets-source/refs/river/ref-2.jpg"
       ],
       "notes": "Approved: channel cut below the meadow surface, natural banks, water column on the cut face. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-hump-water",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Rebuild only: a shared helper it imports (_river.py, or _spring.py) changed for the terrain-hump pass on the river bases. The GLB and every map are byte-identical to the approved build; provenance refreshed. Nothing to re-review visually."
     }
   ]
 }

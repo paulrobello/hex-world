@@ -103,6 +103,34 @@ def relief(x, y, d):
     return -RELIEF * fb * fc * undulation(x, y)
 
 
+def cap_shade_slope(depth, swell, in_channel):
+    """The slope a lane-cut base's meadow shades with (its custom normals, `geom.set_cap_normals`)
+    for a relief -depth * fb * swell(x, y), fb the border falloff smoothstep(0, 2, border distance):
+    -depth * fb * grad(swell), the falloff's rise to z = 0 over the last 2 m of the border left out.
+    That rise (a shallow bowl, 0.046 m on river_straight_base) shaded as a ridge along every tile
+    border in side light, as on meadow_base (owner, 2026-10-14). Returns None (keep the vertex's own
+    normal) where in_channel(x, y): the strip, banks and bed keep their shading."""
+    h = 1e-5
+
+    def slope(x, y):
+        if in_channel(x, y):
+            return None
+        fb = smoothstep(0.0, 2.0, hexgeo.dist_to_border(x, y))
+        return (-depth * fb * (swell(x + h, y) - swell(x - h, y)) / (2 * h),
+                -depth * fb * (swell(x, y + h) - swell(x, y - h)) / (2 * h))
+    return slope
+
+
+def shade_slope(layout):
+    """`cap_shade_slope` of `relief` on a channel-cut base: the bank-top falloff fc keeps its slope,
+    the strip keeps its own normals. The strip test allows 0.05 m past BANK_TOP because the bend's
+    straight joint rows end 0.016 m off the arc's offset; meadow points start half a lattice spacing
+    (at least 0.42 m) beyond the bank top."""
+    dist = LAYOUTS[layout]["dist"]
+    return cap_shade_slope(RELIEF, lambda x, y: smoothstep(BANK_TOP, BANK_TOP + 2.0, dist(x, y)) * undulation(x, y),
+                           lambda x, y: dist(x, y) <= BANK_TOP + 0.05)
+
+
 # --- centre lines ---------------------------------------------------------------------------------
 
 def dist_straight(x, y):
@@ -153,6 +181,23 @@ LAYOUTS = {
 }
 
 
+def _check_shade_slope():
+    """Where the border falloff is 1 (beyond 2 m of the border) the shading slope is the relief's
+    true slope, on the plain meadow and on the bank-top falloff."""
+    spots = {"straight": ((0.0, 9.5), (3.0, -11.0), (0.0, 7.8)), "bend": ((-4.0, 6.0), (0.0, 4.0))}
+    e = 1e-5
+    for layout, pts in spots.items():
+        dist, slope = LAYOUTS[layout]["dist"], shade_slope(layout)
+        z = lambda x, y: relief(x, y, dist(x, y))  # noqa: E731
+        for x, y in pts:
+            assert hexgeo.dist_to_border(x, y) >= 2.0 and dist(x, y) > BANK_TOP, (layout, x, y)
+            fd = ((z(x + e, y) - z(x - e, y)) / (2 * e), (z(x, y + e) - z(x, y - e)) / (2 * e))
+            assert all(abs(p - q) < 1e-6 for p, q in zip(slope(x, y), fd)), (layout, x, y, fd)
+
+
+_check_shade_slope()
+
+
 # --- the channel-cut base -------------------------------------------------------------------------
 
 def border_loop(lanes):
@@ -182,7 +227,8 @@ def channel_cap(name, layout, n_rows, spacing, inner=None):
     """One continuous surface: meadow cap (lattice at `spacing`, None for the ring only) plus the
     channel strip, triangulated together by constrained Delaunay inside the notched border loop.
     Strip vertices carry the exact profile at their offset; rows are constrained along their length,
-    and between neighbouring rows wherever both carry an offset. Meadow vertices carry `relief`."""
+    and between neighbouring rows wherever both carry an offset. Meadow vertices carry `relief`
+    (their normals come from `shade_slope`, set by the caller)."""
     lay = LAYOUTS[layout]
     loop = border_loop(lay["lanes"])
     rows = lay["rows"](n_rows, inner)
@@ -351,7 +397,7 @@ def build_base(piece, layout, n_rows, spacing, skirt_rows, generator, inner=(Non
     lods, caps = [], []
     for i, (n, sp, rows, offs) in enumerate(zip(n_rows, spacing, skirt_rows, inner)):
         cap = channel_cap(f"{piece}_lod{i}_cap", layout, n, sp, offs)
-        geom.set_border_normals_up(cap)
+        geom.set_cap_normals(cap, shade_slope(layout))
         uv.planar_cap_uv(cap)
         sk = open_skirt(f"{piece}_lod{i}_skirt", loop, lanes, hexgeo.LEVEL_STEP, rows)
         sk.data.uv_layers.new(name="UVMap")

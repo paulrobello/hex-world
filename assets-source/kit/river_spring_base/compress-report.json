@@ -1,6 +1,6 @@
 {
   "name": "river_spring_base",
-  "date": "2026-10-14T19:57:41.224Z",
+  "date": "2026-10-20T16:49:17.950Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 158688,
-      "sha256": "46abf3964bb8df35c3b224fa1c4da37717f477b15d1560e93ab54c34bfcfbbbd"
+      "bytes": 157706,
+      "sha256": "0fd8bd1bf8f50535e6334c012cec5ca2e3b100cd4d74fbcdd91be0c367cfe281"
     },
     {
       "channel": "masks",
@@ -59,8 +59,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 155214,
-      "sha256": "eac90b2e9a7ada1e9ea2da2c684967800d2552c9873b0b57eeb27396a8e5957f"
+      "bytes": 154099,
+      "sha256": "cc86d7be3bcb97638560949d073e699bcb4f09c01b1dfe0f9f3572331828a9ff"
     },
     {
       "channel": "masks",
@@ -68,21 +68,21 @@
       "path": "assets/kit/p1/river_spring_base/river_spring_base.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 244264,
-      "sha256": "edcbef9d82a02b33e24aee86e08620cf532ca332a0d3755923f75adee21e4211"
+      "bytes": 242597,
+      "sha256": "9010cc860e41810d3dc5fafed84ea648d255ec50d7003c0813adb6f6ac05c3fa"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 158688,
-      "astc": 155214
+      "bc7": 157706,
+      "astc": 154099
     },
-    "glbBytes": 123148
+    "glbBytes": 123044
   },
   "glb": {
-    "bytes": 123148,
-    "sha256": "a4a9c7e946a72818411811e0642867c911e835ae7cbcff61f451d233be886903"
+    "bytes": 123044,
+    "sha256": "bd377f60f1e61b6d1d775124deb72991872530aa1d85d376d73cab885bd85efd"
   }
 }

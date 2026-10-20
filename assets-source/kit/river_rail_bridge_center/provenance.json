@@ -17,7 +17,7 @@
     },
     {
       "path": "scripts/blender/kit/_river.py",
-      "sha256": "60300382d04da6930f025079fa5b1473602598e735c028d153211333cdc46d86"
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
     },
     {
       "path": "scripts/blender/kit/_river_bridge.py",
@@ -289,7 +289,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T06:00:58.580Z",
+    "date": "2026-10-20T16:51:46.969Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -315,6 +315,15 @@
       "status": "pending",
       "requested": "2026-10-19",
       "notes": "Pending owner review; not an approval. Review against assets-source/refs/river_road_bridge (approved stone arch at 60 degrees) and assets-source/refs/rail (A17, single track): rail_straight_center's track on edges 1 and 4, level at its 0.46 m rail top, across the straight river (edges 0 and 3) on the road bridge's stone arch narrowed to the ballast (causeway half-width 2.9 m), low stone parapets (top 1.0 m, 0.54 m above the rail top) 2.6 m from the track centre. Review sheet: docs/checkpoints/rail_bridge/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-hump-water",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Rebuild only: a shared helper it imports (_river.py, or _spring.py) changed for the terrain-hump pass on the river bases. The GLB and every map are byte-identical to the approved build; provenance refreshed. Nothing to re-review visually."
     }
   ]
 }

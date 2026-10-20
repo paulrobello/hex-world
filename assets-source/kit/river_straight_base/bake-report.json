@@ -16,7 +16,7 @@
   "lod2MaxRatio": 0.2,
   "marginPx": 12,
   "maskStats": {
-    "mean": 0.9646078944206238,
+    "mean": 0.964612603187561,
     "min": 0.0,
     "p01": 0.0,
     "p05": 0.9058824181556702,
@@ -67,7 +67,7 @@
     6.342142857142858,
     6.83
   ],
-  "receiverSignature": "089e563e5824b6eb3323ea119589ddbfbb6ea8971a13f2eb0e350d95b3f14780",
+  "receiverSignature": "a98268e9409eec479f4ae4a2aead8a5669123f2a7e096bdedffb5f7f99091ff2",
   "samples": 64,
   "skipped": false,
   "texelDensityPxPerM": {
