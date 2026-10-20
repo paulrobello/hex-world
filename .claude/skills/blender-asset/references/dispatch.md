@@ -50,3 +50,9 @@ that built it instead of starting a fresh one.
    the river-bend LOD2, the P3 references and the forest-edge corners.
 10. **Report.** Tris per LOD, sizes and texel densities per piece; each gate's exit code and
     tail; review-sheet paths; friction entries and proposed skill text; open owner questions.
+11. **Integration.** What the piece changes at runtime, each marked handled, not applicable, or
+    needs work: car height and path (`ROAD_SURFACE_Y` is a constant 0.11 m), walker collider and
+    `walk::prop_kind`, grass clear zones (`scatter::GROUND_BOXES`), boid perches, sim nodes and
+    clearances, thumbnails, the draw budget. The orchestrator fixes or files every "needs work"
+    item before the piece is called done (owner, 2026-10-19: the crossing deck sat 0.35 m above
+    the fixed car height and was found only after the build).
