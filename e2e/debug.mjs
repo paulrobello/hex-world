@@ -179,6 +179,16 @@ try {
   const nearText = await page.locator(".debug-perf").innerText();
   check(!/Grass blades\s+0\b/.test(nearText), `the perf corner counts drawn grass blades: ${nearText.replace(/\n/g, " | ")}`);
   await shot("debug-perf");
+  // Walk mode hides the HUD but not the perf corner (owner, 2026-10-20).
+  await cmd({ cmd: "walk", on: true, pointer_lock: null });
+  await until(async () => (await state()).walk?.on, "walk mode starts");
+  await until(async () => page.locator(".hud.is-hidden.is-walking").count(), "the HUD hides while walking");
+  await page.waitForTimeout(500);
+  const walkOpacity = await page.locator(".debug-perf").evaluate((el) => getComputedStyle(el).opacity);
+  check(walkOpacity === "1", `the perf corner stays visible in walk mode (opacity ${walkOpacity})`);
+  await shot("debug-perf-walk");
+  await cmd({ cmd: "walk", on: false, pointer_lock: null });
+  await until(async () => !(await state()).walk?.on, "walk mode ends");
   await cmd(CAMERA);
   await cmd({ cmd: "debug", ...OFF, grid: true });
   await until(async () => page.locator(".debug-labels:not([hidden]) .debug-label:not([hidden])").count(), "the grid labels show");

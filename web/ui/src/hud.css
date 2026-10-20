@@ -355,4 +355,5 @@
 .debug-labels[hidden] { display: none; }
 .debug-label { position: absolute; left: 0; top: 0; padding: 1px 5px; border-radius: var(--r-control); background: rgb(18 39 58 / .85); color: var(--ink); font-size: var(--fs-1); font-weight: 700; white-space: nowrap; }
 .debug-label--slot { color: var(--ink-2); font-weight: 600; }
-.hud.is-hidden .debug-perf, .hud.is-hidden .debug-labels { opacity: 0; }
+/* Walk mode hides the HUD but keeps the perf corner (owner, 2026-10-20); photo mode and Hide UI hide it. */
+.hud.is-hidden:not(.is-walking) .debug-perf, .hud.is-hidden .debug-labels { opacity: 0; }
