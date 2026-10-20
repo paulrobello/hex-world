@@ -46,3 +46,52 @@ Sheet: `docs/checkpoints/beach-dressing/refs-sheet.jpg`. The new refs are in the
 - **BD-Q2. Where does the dune grass grow?** The play grass already draws taller, sparser blades (0.26-0.5 m) on the beach's grass strip. The proposal keeps the clumps off that strip and off the grass line: they stand on the dry sand only, from a clump's width seaward of the grass line to about 2 m short of the damp band, densest near the grass and thinning toward the sea. Is that the band you want?
 - **BD-Q3. Sand mounds under the clumps?** The beach surface follows a fixed coast profile, so ref-2's hummocks cannot be in the beach tile itself. Each clump could carry its own low sand mound in the sand's colour, as in ref-1. Do you want the mounds?
 - **BD-Q4. How dense?** The proposal is about 3 driftwood pieces and 10-14 grass clumps on a straight beach tile, on the dry sand only. This is clear of the grass line, the damp band, the surf and the river-mouth channel, and keeps 1.5 m inside the tile border.
+## Boats and lighthouse references (reference gate)
+
+Higgsfield references for the P3 boats (PRD §7.2: "Drifts on ocean tiles and travels connected rivers") and the P6 lighthouse. Nothing here is approved and nothing is modelled. Modelling starts only after you approve the refs, and the controller writes each `assets-source/refs/<id>/approval.json`.
+
+- Sheet (all eight images): `docs/checkpoints/refs-boats-lighthouse/refs-sheet.jpg`.
+- Sources: `assets-source/refs/boat_rowing/`, `assets-source/refs/boat_sail/`, `assets-source/refs/lighthouse/` (each with `refs.json`, its prompts and hashes). Prompts are the new arms in `scripts/refs/higgsfield-refs.sh`.
+- Land walls use the O4 cutaway skirt, water walls use the approved water-column cut, as on every P3 tile.
+
+### Approvals
+
+**BA1. Rowing boat (`boat_rowing`), refs 1-3.**
+- ref-1: studio view. A white hull with one dark blue band, a varnished interior, two thwarts, slatted floorboards and two oars in bronze rowlocks.
+- ref-2: in place on a straight river tile, tied to a small timber landing stage.
+- ref-3: pulled up on the sand of a coast tile, roped to a stake.
+
+Questions:
+- **BQ1.** Size: about 3.5 m long and 1.4 m wide, so it sits in under half the 8 m river. Is that right, or should it be smaller?
+- **BQ2.** Colour: keep white with a blue band, or recolour per instance like cars and trains? Recolouring needs a plain neutral base, as the vehicle refs use.
+- **BQ3.** Where does it move? The options are fixed moorings only (landing stage, beach), rowing along connected rivers (animated oars), or both. Depth is no problem: river centre depth is 1.55 m (`docs/kit/water-contract.md`). Bridges are: the road and rail river bridges share one stone arch whose crown is only 0.95 m over the water and which springs at the waterline (`scripts/blender/kit/_river_bridge.py`, `_rail_bridge.py`). A rowing boat with a seated rower does not pass under it. River boats would need to stop at bridges (turn back or stay between them), or the bridges a taller arch.
+- **BQ4.** The ref-1 hull is smooth planked rather than the overlapping clinker the prompt asked for. Is smooth fine? It is cheaper to model.
+- **BQ5.** Should the ref-2 landing stage become its own kit prop (river bank), or only appear as part of a mooring tile?
+
+**BA2. Sailing fishing boat (`boat_sail`), refs 1-2.**
+- ref-1: studio view. A deep blue hull with a white band, red-ochre tan sails, rope coils and two wicker fish baskets.
+- ref-2: under sail on a deep ocean tile with a short wake (a re-roll; see note).
+
+Questions:
+- **BQ6.** Size: about 5 m long with a 6 m mast. Is that right against a 32 m tile?
+- **BQ7.** Should it be ocean only? Both river bridges clear only 0.95 m at the arch crown (BQ3), so a 6 m mast can never pass. Ocean only, plus the river mouth, is the simple rule.
+- **BQ8.** Where does it move? The options are wandering free across connected ocean tiles, sailing set routes (between moorings, or around the lighthouse), or anchored off a beach. And how many boats: one per N ocean tiles, sharing the vehicle cap?
+- **BQ9.** Rig and colour: ref-1 carries a mainsail and two headsails, ref-2 a main and one jib. Simplify to one gaff main and one jib? Keep tan sails and a blue hull, or use white sails?
+
+**BA3. Lighthouse coast tile (`lighthouse`), refs 1-3.**
+- ref-1: ocean on two adjacent edges, a granite headland, a white tower with one red band, a black gallery and glazed lamp room, and a slate-roofed keeper's cottage inside a low white wall.
+- ref-2: lamp-room close-up, showing the glazing bars, faceted lens, gallery on stone brackets and domed cap.
+- ref-3: dusk mood with the lamp lit, one warm beam over the sea and glowing cottage windows.
+
+Questions:
+- **BQ10.** Bands: one wide red band (ref-1), or several narrow bands (ref-2, ref-3)?
+- **BQ11.** ref-3 draws a different tower (a brick-red lower half and a red cap). Approve it for the beam and dusk lighting only, with ref-1 as the tower's look?
+- **BQ12.** Keep the keeper's cottage and wall? Height: about 20 m tower against the 18 m windmill. Is that right?
+- **BQ13.** Shore: ref-1 has a rocky shore in place of sand. Should its two ocean edges use the existing beach socket kind, so it joins ocean and beach tiles? Or is it a new rocky-coast edge?
+- **BQ14.** Beam timing: one rotating lamp and beam, about 10 s per turn, or faster? Warm white or cold white? The beam needs the P5 day/night cycle to read. Until then, should it show only under `--kit_hooks night`, or as a faint beam in daylight too?
+
+### Notes
+
+- **Rejected re-roll.** `boat_sail` ref-2's first image came back as an eight-sided tile with an oversized boat. It was re-rolled with a high 65° camera, "exactly six straight flat edges and six corners" and "the hull only about one sixth of the tile's width".
+- **Text check.** Every kept image was cropped at full resolution where text would land: each boat's hull, transom and sails in all five boat images, the lighthouse and cottage doors in ref-1 and ref-3, and the gallery in ref-2. None shows printed text, labels or numbers. The small mark on the bow of `boat_rowing` ref-2 is a metal fitting. Every tile outline is six-sided.
+
