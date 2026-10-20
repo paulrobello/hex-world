@@ -337,10 +337,28 @@ fn oak_perches(clumps: &[([f32; 3], f32, u8)], perches: &[(usize, f32, f32, f32)
         .collect()
 }
 
-/// Perch points on a tree piece's canopy, piece-local in the runtime frame (Y up, trunk base at
-/// the origin). Empty for a piece birds do not roost on.
+/// `barn_red_b`'s ridge cap (owner A1-Q3, 2026-10-20: ridge and cupola as bird perches), measured
+/// on its LOD0: the cap's apex line runs along x at z -1.25, 6.1424 m up, from the cupola's walls
+/// (|x| <= 0.62) to the bargeboards at x +-5.3.
+const BARN_B_RIDGE: (f32, f32) = (6.143, -1.25);
+/// Its ridge perches' x, 1 m apart either side of the cupola (a starling at 4x is 0.79 m long).
+const BARN_B_RIDGE_X: [f32; 10] = [-5.1, -4.1, -3.1, -2.1, -1.1, 1.1, 2.1, 3.1, 4.1, 5.1];
+/// The top of the finial over its cupola's cap (x 0, z -1.25), on the ridge line.
+const BARN_B_FINIAL: f32 = 7.85;
+
+/// `barn_red_b`'s perches: the finial over the cupola, then the ridge cap, piece-local.
+fn barn_b_perches() -> Vec<Vec3> {
+    let (y, z) = BARN_B_RIDGE;
+    std::iter::once(Vec3::new(0.0, BARN_B_FINIAL, z))
+        .chain(BARN_B_RIDGE_X.iter().map(|&x| Vec3::new(x, y, z)))
+        .collect()
+}
+
+/// Perch points on a tree piece's canopy or a building's roof, piece-local in the runtime frame
+/// (Y up, trunk base or the piece's origin at the origin). Empty for a piece birds do not roost on.
 pub fn canopy_perches(piece: &str) -> Vec<Vec3> {
     match piece {
+        "barn_red_b" => barn_b_perches(),
         "tree_hero_oak" => oak_perches(&OAK_CLUMPS, &OAK_PERCHES),
         "tree_hero_oak_b" => oak_perches(&OAK_B_CLUMPS, &OAK_B_PERCHES),
         "tree_hero_oak_c" => oak_perches(&OAK_C_CLUMPS, &OAK_C_PERCHES),
@@ -394,8 +412,9 @@ pub struct Roost {
     pub face: Vec3,
 }
 
-/// Tree pieces with canopy perches: what [`BoidPlan::set_world`] watches arrive in the kit.
+/// Pieces with perches ([`canopy_perches`]): what [`BoidPlan::set_world`] watches arrive in the kit.
 pub const PERCH_PIECES: &[&str] = &[
+    "barn_red_b",
     "tree_hero_oak",
     "tree_hero_oak_b",
     "tree_hero_oak_c",
@@ -1928,6 +1947,89 @@ mod tests {
         assert_eq!(plan.roosts.len(), 12);
         plan.set_scatter(1, || unreachable!("same revision"));
         assert!(!plan.set_world_all(&world, &c, 1.3));
+    }
+
+    /// `barn_red_b`'s perches (owner A1-Q3) sit on its roof: each within 2 cm above the top of its
+    /// LOD0 there, nothing of the barn above it, the ridge perches at least 1 m apart; a farm
+    /// drawing barn_red_b roosts the farm's Bird rule (11) on them, one drawing barn_red none.
+    #[test]
+    fn barn_red_b_perches_sit_on_its_roof() {
+        let root = format!(
+            "{}/../../assets/kit/p1/barn_red_b/barn_red_b.glb",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        let bytes = std::fs::read(root).unwrap();
+        let plain = hex_assets::rewrite_glb(&bytes).unwrap();
+        let (doc, buffers, _) = gltf::import_slice(&plain).unwrap();
+        let mesh = doc
+            .meshes()
+            .find(|m| m.name() == Some("barn_red_b_lod0"))
+            .unwrap();
+        let mut tris: Vec<[Vec3; 3]> = vec![];
+        for prim in mesh.primitives() {
+            let rd = prim.reader(|b| Some(&buffers[b.index()]));
+            let pos: Vec<Vec3> = rd.read_positions().unwrap().map(Vec3::from).collect();
+            let idx: Vec<u32> = rd.read_indices().unwrap().into_u32().collect();
+            tris.extend(
+                idx.as_chunks::<3>()
+                    .0
+                    .iter()
+                    .map(|t| [pos[t[0] as usize], pos[t[1] as usize], pos[t[2] as usize]]),
+            );
+        }
+        // The highest LOD0 surface over (x, z), barycentric in XZ.
+        let top = |x: f32, z: f32| -> Option<f32> {
+            tris.iter()
+                .filter_map(|[a, b, c]| {
+                    let d = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
+                    if d.abs() < 1e-9 {
+                        return None;
+                    }
+                    let l1 = ((b.z - c.z) * (x - c.x) + (c.x - b.x) * (z - c.z)) / d;
+                    let l2 = ((c.z - a.z) * (x - c.x) + (a.x - c.x) * (z - c.z)) / d;
+                    let l3 = 1.0 - l1 - l2;
+                    (l1.min(l2).min(l3) >= -1e-5).then_some(l1 * a.y + l2 * b.y + l3 * c.y)
+                })
+                .reduce(f32::max)
+        };
+        let perches = canopy_perches("barn_red_b");
+        assert_eq!(perches.len(), 11, "the finial and ten on the ridge");
+        for p in &perches {
+            let t = top(p.x, p.z).unwrap_or_else(|| panic!("{p} over the barn"));
+            assert!((0.0..0.02).contains(&(p.y - t)), "{p}: roof top {t}");
+        }
+        for w in BARN_B_RIDGE_X.windows(2) {
+            assert!(w[1] - w[0] >= 1.0 - 1e-4, "{w:?}");
+        }
+        assert!(
+            BARN_B_RIDGE_X
+                .iter()
+                .all(|x| x.abs() > 0.62 + 0.3 && x.abs() < 5.3)
+        );
+
+        let c = catalog();
+        let farm = c.get("farm").unwrap();
+        let rule = farm
+            .agents
+            .iter()
+            .find(|a| a.agent == AgentKind::Bird)
+            .unwrap();
+        assert_eq!(usize::from(rule.max), perches.len());
+        assert_eq!(
+            hex_core::hero_piece(farm, Axial::new(0, 1), 0),
+            "barn_red_b"
+        );
+        assert_eq!(hex_core::hero_piece(farm, Axial::new(1, 0), 0), "barn_red");
+        let r = roosts(&[tile(0, 1, "farm", 2)], &c, &|_| true);
+        assert_eq!(r.len(), 11, "the barn's perches");
+        let at = Vec2::from(Axial::new(0, 1).to_world(HEX_RADIUS));
+        assert!(
+            r.iter()
+                .all(|x| x.cell == Axial::new(0, 1) && x.pos.y > 6.0)
+        );
+        assert!(r.iter().all(|x| x.pos.xz().distance(at) < HEX_RADIUS));
+        assert!(roosts(&[tile(1, 0, "farm", 0)], &c, &|_| true).is_empty());
+        assert!(roosts(&[tile(0, 1, "farm", 0)], &c, &|p| p != "barn_red_b").is_empty());
     }
 
     /// The oak perches (every hero oak) sit on the GLB's canopy shell and are open from above.

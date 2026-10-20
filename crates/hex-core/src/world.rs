@@ -862,6 +862,44 @@ mod tests {
         );
     }
 
+    /// The wheat field's rows turn with it (owner D5, 2026-10-20: rows at 0, 60 and 120 degrees),
+    /// though every edge is grass; a half turn lays the rows on themselves, so rotations 3-5 are
+    /// 0-2 again and R steps 0, 1, 2 and back.
+    #[test]
+    fn wheat_field_turns_through_three_rotations() {
+        let c = catalog();
+        let w = World::new(1);
+        let wheat = def(&c, "wheat_field");
+        assert_eq!(wheat.orientation_period(), 3);
+        for a in 0..6u8 {
+            for b in 0..6u8 {
+                assert_eq!(wheat.same_orientation(a, b), a % 3 == b % 3, "r{a} r{b}");
+            }
+        }
+        assert_eq!(w.distinct_legal_rotations(&c, EAST, wheat), vec![0, 1, 2]);
+        let mut k = 0;
+        for want in [1, 2, 0, 1] {
+            k = w
+                .cycle_rotation(&c, EAST, wheat, k, RotateDir::Forward)
+                .unwrap();
+            assert_eq!(k, want);
+        }
+        assert_eq!(
+            w.cycle_rotation(&c, EAST, wheat, 4, RotateDir::Forward),
+            Some(2),
+            "r4 is r1's orientation"
+        );
+        let mut bad = wheat.clone();
+        bad.look_period = Some(4);
+        assert!(
+            bad.validate(c.sockets())
+                .iter()
+                .any(|m| m.contains("look_period 4 does not divide 6")),
+            "{:?}",
+            bad.validate(c.sockets())
+        );
+    }
+
     #[test]
     fn beach_curve_cycles_headland_then_bay_orientations() {
         let c = catalog();

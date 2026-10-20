@@ -358,6 +358,11 @@ pub struct TileDef {
     pub rise: RiseTimeline,
     #[serde(default)]
     pub unlock: Unlock,
+    /// The centre's look repeats every this many rotations, though its sockets may repeat sooner
+    /// (the wheat field's parallel rows, symmetric under a half turn: 3). `None` leaves the
+    /// sockets alone to decide ([`TileDef::orientation_period`]). Divides 6.
+    #[serde(default)]
+    pub look_period: Option<u8>,
 }
 
 impl TileDef {
@@ -368,13 +373,25 @@ impl TileDef {
 
     /// Whether rotations `a` and `b` give every world edge an equal socket (kind, lane, land side,
     /// height, profile): one orientation, as a symmetric tile turned by its symmetry (PRD §4.7 Q6).
-    /// A tile with hero props never is (unless `a` and `b` are one rotation): its heroes turn with
-    /// it, so each rotation looks different (owner, 2026-10-20: the windmill's sails, the farm's barn).
+    /// Nor do two rotations that are not a whole number of [`TileDef::orientation_period`]s apart:
+    /// a tile with hero props never is (unless `a` and `b` are one rotation), as its heroes turn
+    /// with it (owner, 2026-10-20: the windmill's sails, the farm's barn), and the wheat field is
+    /// only every third rotation, as its rows lie three ways.
     pub fn same_orientation(&self, a: u8, b: u8) -> bool {
+        (i16::from(a % 6) - i16::from(b % 6)) % i16::from(self.orientation_period()) == 0
+            && (0..6).all(|w| self.edge(w, a) == self.edge(w, b))
+    }
+
+    /// Rotations after which the tile's look repeats, whatever its sockets do: 6 with hero props
+    /// (they turn with the tile), the definition's `look_period` where it sets one (owner D5,
+    /// 2026-10-20: the wheat field's rows run three ways), else 1.
+    pub fn orientation_period(&self) -> u8 {
         if !self.props.hero.is_empty() {
-            return a % 6 == b % 6;
+            return 6;
         }
-        (0..6).all(|w| self.edge(w, a) == self.edge(w, b))
+        self.look_period
+            .filter(|p| matches!(p, 1 | 2 | 3 | 6))
+            .unwrap_or(1)
     }
 
     /// Edge pieces by local edge, resolving [`EdgePieces::Derived`] through the socket table.
@@ -492,6 +509,12 @@ impl TileDef {
         self.validate_destinations(&mut issue);
         self.validate_parking(&mut issue);
         self.validate_rail(&mut issue);
+
+        if let Some(p) = self.look_period
+            && !matches!(p, 1 | 2 | 3 | 6)
+        {
+            issue(format!("look_period {p} does not divide 6"));
+        }
 
         let total = self.rise.total();
         if !RISE_SECONDS.contains(&total) {
@@ -796,6 +819,7 @@ mod tests {
             agents: vec![],
             rise: RiseTimeline::default(),
             unlock: Unlock::Default,
+            look_period: None,
         }
     }
 

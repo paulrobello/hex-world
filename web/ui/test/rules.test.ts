@@ -87,6 +87,10 @@ test("rotation readout counts distinct orientations (the engine's R steps throug
   assert.equal(fitMeta(def("windmill"), mill), "6 rotations fit");
   assert.deepEqual(rotationReadout(def("windmill"), mill.legal, 3), { index: 3, count: 6 });
   assert.deepEqual(fit(def("bakery"), slot).distinct.length, fit(def("bakery"), slot).legal.length);
+  // The wheat field's rows turn with it and a half turn lays them on themselves: three orientations.
+  const wheat = fit(def("wheat_field"), slot);
+  assert.deepEqual(wheat.distinct, [0, 1, 2]);
+  assert.deepEqual(rotationReadout(def("wheat_field"), wheat.legal, 4), { index: 1, count: 3 });
   // road_junction repeats every 120 degrees: legal 0, 2, 4 are one orientation; 1, 3, 5 another.
   const j = def("road_junction");
   assert.deepEqual(rotationReadout(j, [0, 2, 4], 4), { index: 0, count: 1 });

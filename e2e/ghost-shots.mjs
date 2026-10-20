@@ -39,9 +39,12 @@ const fail = (m) => { console.error("FAIL:", m); failures++; };
 const record = [];
 const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
 
-/** Tiles with hero props (the bridge schema's catalog, from data/tiles/*.ron). */
+/**
+ * Tiles whose look turns with them (the bridge schema's catalog, from data/tiles/*.ron): an
+ * orientation period over 1, hex-core `orientation_period` (hero props 6, the wheat field 3).
+ */
 const HERO_TILES = new Set(JSON.parse(readFileSync(new URL("../web/ui/src/bridge-schema.json", import.meta.url), "utf8"))
-  .catalog.tiles.filter((t) => t.heroes).map((t) => t.id));
+  .catalog.tiles.filter((t) => t.period > 1).map((t) => t.id));
 
 /** Pointy-top axial to world metres (hex radius 16 m), as hex_core::Axial::to_world. */
 const world = (q, r) => [16 * Math.sqrt(3) * (q + r / 2), 16 * 1.5 * r];
@@ -118,7 +121,7 @@ async function ghostPair(page, tile, q0, r0, key) {
   // A tile with hero props turns them with it, so R always reaches another rotation (the windmill's
   // sails, the farm's barn: owner, 2026-10-20).
   if (a.ghost?.rotation === b.ghost?.rotation) {
-    if (HERO_TILES.has(tile)) fail(`${tile}: R keeps rotation ${a.ghost?.rotation} at (${q}, ${r}), but its hero props turn with it`);
+    if (HERO_TILES.has(tile)) fail(`${tile}: R keeps rotation ${a.ghost?.rotation} at (${q}, ${r}), but its look turns with it`);
     else console.log(`${tile}: one distinct orientation at (${q}, ${r}); R keeps rotation ${a.ghost?.rotation}`);
   }
   if (HERO_TILES.has(tile) && !(a.ghost_report?.entities > 0 && b.ghost_report?.entities > 0))

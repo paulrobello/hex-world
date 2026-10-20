@@ -16,15 +16,18 @@ export interface TileDef {
   edges: SocketKind[];
   /** The land side of each directional edge, null on the others (hex-core `EdgeSocket::land`). */
   land: (Side | null)[];
-  /** It has hero props, which turn with it: every rotation is its own orientation (hex-core `same_orientation`). */
-  heroes: boolean;
+  /**
+   * Rotations after which its look repeats (hex-core `orientation_period`): 6 with hero props, which
+   * turn with it, 3 for the wheat field's rows, 1 where the sockets alone decide (`same_orientation`).
+   */
+  period: number;
 }
 
 export const TILES: TileDef[] = schema.catalog.tiles.map((t) => ({
   id: t.id,
   edges: t.edges as SocketKind[],
   land: t.land as (Side | null)[],
-  heroes: t.heroes,
+  period: t.period,
 }));
 export const START_TILE: string = schema.catalog.start;
 const COMPAT = schema.catalog.compatible as Record<SocketKind, SocketKind[]>;
@@ -78,9 +81,9 @@ export function rotatedLand(def: TileDef, k: number): (Side | null)[] {
   return [0, 1, 2, 3, 4, 5].map((w) => def.land[(w - k + 12) % 6]!);
 }
 
-/** Equal for two rotations exactly when their world-edge sockets are equal and the tile has no hero props. */
+/** Equal for two rotations exactly when their world-edge sockets are equal and they are a whole number of periods apart. */
 const orientation = (def: TileDef, k: number): string =>
-  def.heroes ? `${k % 6}` : `${rotated(def, k).join()}|${rotatedLand(def, k).join()}`;
+  `${k % def.period}|${rotated(def, k).join()}|${rotatedLand(def, k).join()}`;
 
 /**
  * Whether my edge may meet the edge it faces (hex-core `edges_compatible` for MVP edges): the kinds

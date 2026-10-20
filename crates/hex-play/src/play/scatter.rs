@@ -19,7 +19,8 @@
 //!   the piece and its `_b`, `_c`, … variants, PRD §6 Variety), picked by [`pick_variant`] from a
 //!   hash of the tile seed, the rule and the instance's place in it, so the dart stream is
 //!   untouched and the same seed draws the same mix. A group draws its pieces equally unless
-//!   [`VARIANT_WEIGHTS`] weighs them (the verge bushes favour `bush_verge`). The rule's ground
+//!   [`VARIANT_WEIGHTS`] weighs them (the verge bushes favour `bush_verge`), or on a road or rail
+//!   tile [`VERGE_VARIANT_WEIGHTS`] (more poppies on the verges). The rule's ground
 //!   mask and spacing keep the group's largest footprint clear ([`group_footprint`]); each
 //!   instance stands and clears others by its own. A rule draws once every piece of its group is in the kit.
 //! - **Vary.** A rule with `vary` (the meadow's single wildflowers) spreads evenly but keeps a dart
@@ -58,7 +59,8 @@ use bevy::{
     prelude::*,
 };
 use hex_core::{
-    Axial, Endpoint, HEX_RADIUS, ScatterRule, SocketKind, TileCatalog, TileDef, cell_seed,
+    Axial, Endpoint, HEX_RADIUS, NetworkKind, ScatterRule, SocketKind, TileCatalog, TileDef,
+    cell_seed,
 };
 
 use super::{
@@ -165,11 +167,29 @@ pub const VARIANT_WEIGHTS: &[(&str, &[u32])] = &[
     ("wildflower_single", &[9, 9, 9, 9, 4]),
 ];
 
-fn variant_weights(piece: &str) -> Option<&'static [u32]> {
-    VARIANT_WEIGHTS
+/// Pick weights that replace [`VARIANT_WEIGHTS`] on a verge tile ([`verge_tile`]): the poppy is 1
+/// pick in 4 of a road or rail verge's single wildflowers (owner A9-Q4, 2026-10-20: more poppies
+/// on the verges, the meadow kept at 1 in 10). Every other tile and group keeps its weights, so
+/// it draws exactly as before.
+pub const VERGE_VARIANT_WEIGHTS: &[(&str, &[u32])] = &[("wildflower_single", &[3, 3, 3, 3, 4])];
+
+/// Whether `def` is a verge tile: it carries a road or rail lane, so its cap is the verge along it.
+pub fn verge_tile(def: &TileDef) -> bool {
+    def.networks
         .iter()
-        .find(|(id, _)| *id == piece)
-        .map(|(_, w)| *w)
+        .any(|n| matches!(n.kind, NetworkKind::Road | NetworkKind::Rail))
+}
+
+/// The pick weights of `piece`'s group on `def`: [`VERGE_VARIANT_WEIGHTS`] on a verge tile where it
+/// lists the group, else [`VARIANT_WEIGHTS`]; `None` draws each piece equally.
+pub fn variant_weights(def: &TileDef, piece: &str) -> Option<&'static [u32]> {
+    let find = |table: &'static [(&str, &[u32])]| {
+        table.iter().find(|(id, _)| *id == piece).map(|(_, w)| *w)
+    };
+    verge_tile(def)
+        .then(|| find(VERGE_VARIANT_WEIGHTS))
+        .flatten()
+        .or_else(|| find(VARIANT_WEIGHTS))
 }
 
 fn extra_variants(piece: &str) -> &'static [&'static str] {
@@ -218,18 +238,19 @@ pub fn group_footprint(piece: &str) -> Footprint {
     )
 }
 
-/// The variant of the `n`-th instance placed by rule `rule` (naming `piece`) on a tile with seed
-/// `seed`, among `piece`'s group: a hash of its own, so picking it never moves the placement
-/// stream's darts, and the same seed always draws the same mix. A group in [`VARIANT_WEIGHTS`]
-/// draws by its weights from the same hash; any other group draws each piece equally.
-pub fn pick_variant(piece: &str, seed: u64, rule: usize, n: u32) -> u8 {
+/// The variant of the `n`-th instance placed by rule `rule` (naming `piece`) on a tile `def` with
+/// seed `seed`, among `piece`'s group: a hash of its own, so picking it never moves the placement
+/// stream's darts, and the same seed always draws the same mix. A weighted group
+/// ([`variant_weights`]) draws by its weights on that tile from the same hash; any other group
+/// draws each piece equally.
+pub fn pick_variant(def: &TileDef, piece: &str, seed: u64, rule: usize, n: u32) -> u8 {
     let count = group(piece).count();
     if count <= 1 {
         return 0;
     }
     let key = ((rule as u64) << 32) | u64::from(n);
     let mut r = Rng(seed ^ 0x7A21_C3E9_55B0_4D1F ^ key.wrapping_mul(0x9E37_79B9_7F4A_7C15));
-    let Some(weights) = variant_weights(piece) else {
+    let Some(weights) = variant_weights(def, piece) else {
         return r.below(count) as u8;
     };
     let total: u64 = weights.iter().map(|&w| u64::from(w)).sum();
@@ -1446,7 +1467,7 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
             if n == want {
                 break;
             }
-            let variant = pick_variant(piece, seed, ri, n);
+            let variant = pick_variant(def, piece, seed, ri, n);
             let reach = footprint(variant_piece(piece, variant)).ground;
             let k = cells[rng.below(cells.len())] as usize;
             let p = Vec2::new(
@@ -2291,14 +2312,17 @@ mod tests {
     /// the most common verge bush, about half the picks (owner, 2026-10-20).
     #[test]
     fn weighted_groups_draw_by_their_weights() {
-        for &(id, weights) in VARIANT_WEIGHTS {
+        for &(id, weights) in VARIANT_WEIGHTS.iter().chain(VERGE_VARIANT_WEIGHTS) {
             assert_eq!(weights.len(), group(id).count(), "{id}: a weight per piece");
             assert!(weights.iter().all(|&w| w > 0), "{id}: {weights:?}");
         }
+        let c = catalog();
+        let meadow = c.get("meadow").unwrap();
+        let road = c.get("road_straight").unwrap();
         let mut counts = [0u32; 3];
         for seed in 0..64u64 {
             for n in 0..64 {
-                counts[usize::from(pick_variant("bush_verge", seed, 3, n))] += 1;
+                counts[usize::from(pick_variant(road, "bush_verge", seed, 3, n))] += 1;
             }
         }
         let total = counts.iter().sum::<u32>() as f32;
@@ -2306,12 +2330,85 @@ mod tests {
         assert!((0.46..0.54).contains(&share[0]), "{share:?}");
         assert!(share[1] > 0.2 && share[2] > 0.2, "{share:?}");
         assert!(share[0] > share[1] + 0.15 && share[0] > share[2] + 0.15);
-        let poppies = (0..64u64)
-            .flat_map(|seed| (0..64).map(move |n| pick_variant("wildflower_single", seed, 0, n)))
-            .filter(|&v| variant_piece("wildflower_single", v) == "wildflower_single_e")
-            .count();
-        let share = poppies as f32 / 4096.0;
-        assert!((0.08..0.12).contains(&share), "poppy share {share}");
+        let poppy_share = |def: &TileDef| {
+            let poppies = (0..64u64)
+                .flat_map(|seed| {
+                    (0..64).map(move |n| pick_variant(def, "wildflower_single", seed, 0, n))
+                })
+                .filter(|&v| variant_piece("wildflower_single", v) == "wildflower_single_e")
+                .count();
+            poppies as f32 / 4096.0
+        };
+        let share = poppy_share(meadow);
+        assert!((0.08..0.12).contains(&share), "meadow poppy share {share}");
+        let share = poppy_share(road);
+        assert!((0.22..0.28).contains(&share), "verge poppy share {share}");
+    }
+
+    /// More poppies on the road and rail verges (owner A9-Q4, 2026-10-20): every tile with a road
+    /// or rail lane and single wildflowers draws them by [`VERGE_VARIANT_WEIGHTS`], 1 poppy in 4;
+    /// every other tile keeps the meadow's 1 in 10, and the meadow draws exactly the picks it drew
+    /// before per-tile weights (a digest of 4096 picks under the old weights `[9, 9, 9, 9, 4]`).
+    #[test]
+    fn verges_draw_more_poppies_and_the_meadow_is_unchanged() {
+        let c = catalog();
+        let verges: Vec<&str> = c
+            .tiles()
+            .iter()
+            .filter(|d| {
+                d.props
+                    .scatter
+                    .iter()
+                    .any(|r| r.piece.as_str() == "wildflower_single")
+            })
+            .filter(|d| verge_tile(d))
+            .map(|d| d.id.as_str())
+            .collect();
+        for id in [
+            "road_straight",
+            "road_bend_60",
+            "road_bend_120",
+            "road_junction",
+            "rail_straight",
+            "rail_bend_60",
+            "rail_junction",
+            "rail_road_crossing",
+            "rail_station",
+        ] {
+            assert!(verges.contains(&id), "{id} is a verge tile: {verges:?}");
+        }
+        assert_eq!(verges.len(), 9, "{verges:?}");
+        for d in c.tiles() {
+            let want = if verge_tile(d) {
+                [3, 3, 3, 3, 4]
+            } else {
+                [9, 9, 9, 9, 4]
+            };
+            assert_eq!(
+                variant_weights(d, "wildflower_single"),
+                Some(&want[..]),
+                "{}",
+                d.id
+            );
+            assert_eq!(
+                variant_weights(d, "bush_verge"),
+                Some(&[2, 1, 1][..]),
+                "{}",
+                d.id
+            );
+        }
+        let meadow = c.get("meadow").unwrap();
+        let mut digest = 0u64;
+        for seed in 0..64u64 {
+            for n in 0..64 {
+                let v = pick_variant(meadow, "wildflower_single", seed, 0, n);
+                digest = digest.wrapping_mul(31).wrapping_add(u64::from(v));
+            }
+        }
+        assert_eq!(
+            digest, 8_349_994_037_374_194_218,
+            "the meadow's picks moved"
+        );
     }
 
     /// A `vary` rule (the meadow's single wildflowers) stands where its seeded noise is high more

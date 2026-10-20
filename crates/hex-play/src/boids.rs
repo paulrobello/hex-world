@@ -3,7 +3,7 @@
 //! The flock lives only on the GPU: a compute system in the `RenderGraph` schedule updates a
 //! `ShaderBuffer` before the cameras draw, and `BoidMaterial` reads the same buffer in its
 //! vertex shader to pose and place one kit piece per boid: a bird species per flock
-//! (`bird_starling` or `bird_goldfinch`, display x4, [`BIRDS`]) and a fish species by spawn water
+//! (`bird_starling` display x4 or `bird_goldfinch` x5, [`BIRDS`]) and a fish species by spawn water
 //! (`fish_trout` in river water, `fish_mackerel` in the sea, display x2, [`FISH`]), each drawn
 //! from one merged copy of its LOD0 per slot it may hold, a bird species' copies over its own
 //! flocks' slots only, each fish species' over every fish slot, drawing only its own water's fish
@@ -17,7 +17,7 @@
 //! back each frame to count fish crossing between river and sea water for the checkpoint dumps.
 //!
 //! In `play` the birds fly in small flocks over the world and roost in waves on the oak tiles' oak
-//! canopies (a tile's Bird rule; scattered spruces on such a tile would share its cap,
+//! canopies and on `barn_red_b`'s ridge and cupola (a tile's Bird rule; scattered spruces on such a tile would share its cap,
 //! `play::scatter`), and the fish school in the water volume of connected water tiles. A world
 //! without an oak keeps every bird in the air. Every other scenario keeps the P0 stress flock:
 //! every slot a bird over an 800 m square.
@@ -87,9 +87,8 @@ const MATERIAL_SHADER: &str = "shaders/boid_material.wesl";
 const WORKGROUP_SIZE: u32 = 64;
 /// Longest simulated step; the slow first frames would otherwise fling the flock apart.
 const MAX_DT: f32 = 1.0 / 30.0;
-/// The boid kit pieces' display scale over real size (fish_trout and bird_starling owner-approved
-/// 2026-10-14): every bird species draws at BIRD_SCALE, every fish species at FISH_SCALE.
-pub const BIRD_SCALE: f32 = 4.0;
+/// The fish kit pieces' display scale over real size (fish_trout owner-approved 2026-10-14): every
+/// fish species draws at FISH_SCALE. Each bird species has its own ([`BirdPiece::scale`]).
 pub const FISH_SCALE: f32 = 2.0;
 
 /// A fish piece and the fish it draws: those spawned in river water (`river`, the river palette,
@@ -151,6 +150,19 @@ pub struct BirdPiece {
     pub fold_roll_deg: f32,
     pub fold_back: f32,
     pub pivot_to_feet_m: f32,
+    /// Display scale over real size: the starling 4 (owner-approved 2026-10-14), the goldfinch 5
+    /// (owner A11-Q2, 2026-10-20: drawn at 5x), which still leaves it shorter and narrower than
+    /// the starling (0.64 m long and 1.20 m across against 0.79 m and 1.60 m), so it fits every
+    /// perch the starling does.
+    pub scale: f32,
+}
+
+impl BirdPiece {
+    /// How far a perched bird's pivot stands over its perch point at display scale: its feet on
+    /// the perch.
+    pub fn perch_lift(&self) -> f32 {
+        self.pivot_to_feet_m * self.scale
+    }
 }
 
 /// The bird species by index ([`plan::flock_species`]).
@@ -162,6 +174,7 @@ pub const BIRDS: [BirdPiece; plan::BIRD_SPECIES as usize] = [
         fold_roll_deg: -60.0,
         fold_back: 0.015,
         pivot_to_feet_m: 0.026,
+        scale: 4.0,
     },
     BirdPiece {
         id: "bird_goldfinch",
@@ -170,6 +183,7 @@ pub const BIRDS: [BirdPiece; plan::BIRD_SPECIES as usize] = [
         fold_roll_deg: -60.0,
         fold_back: 0.010,
         pivot_to_feet_m: 0.018,
+        scale: 5.0,
     },
 ];
 /// Tail-wag amplitude (model m) at the caudal fork tips: x += U^2 * FISH_WAG * sin(phase).
@@ -791,16 +805,8 @@ fn build_forms(
             base: slots.base,
             boid_verts: verts,
             flags: form_flags(l.masks.is_some(), fish),
-            scale: if bird.is_some() {
-                BIRD_SCALE
-            } else {
-                FISH_SCALE
-            },
-            lift: if bird.is_some() {
-                b.pivot_to_feet_m * BIRD_SCALE
-            } else {
-                0.0
-            },
+            scale: bird.map_or(FISH_SCALE, |(_, b)| b.scale),
+            lift: bird.map_or(0.0, |(_, b)| b.perch_lift()),
             wag: FISH_WAG,
             fold_k: b.fold_k,
             hinge: Vec2::from(b.hinge),
@@ -1476,6 +1482,55 @@ mod tests {
                 assert_eq!(fish.slot(fish.copies - 1), budget.total - 1);
             }
         }
+    }
+
+    /// The starling draws at 4x, the goldfinch at 5x (owner A11-Q2, 2026-10-20), each perched with
+    /// its own feet on the perch; at 5x the goldfinch is still shorter and narrower than the
+    /// starling at 4x (real sizes from the GLB extras), so every perch spaced for starlings fits it.
+    #[test]
+    fn each_bird_species_draws_at_its_own_scale() {
+        let by_id = |id: &str| BIRDS.iter().find(|b| b.id == id).copied().unwrap();
+        let (starling, goldfinch) = (by_id("bird_starling"), by_id("bird_goldfinch"));
+        assert_eq!(starling.scale, 4.0);
+        assert_eq!(goldfinch.scale, 5.0);
+        assert!((goldfinch.perch_lift() - 0.018 * 5.0).abs() < 1e-6);
+        assert!((starling.perch_lift() - 0.026 * 4.0).abs() < 1e-6);
+        // (real length, real span) in metres: `realLengthM` and `realSpanM`.
+        let (s, g) = ((0.197, 0.40), (0.128, 0.24));
+        assert!(g.0 * goldfinch.scale < s.0 * starling.scale);
+        assert!(g.1 * goldfinch.scale < s.1 * starling.scale);
+    }
+
+    /// Both fish species are lifted under water (owner A12-Q3, 2026-10-20: the mackerel read as a
+    /// dark navy silhouette): the river palette by RIVER_LIFT, the sea fish by SEA_LIFT, chosen by
+    /// the form's river flag. Captured on docs/checkpoints/fish_mackerel (lift-before-*.jpg): the
+    /// school's fish pixels from luma 71 to 127 over water at 126.
+    #[test]
+    fn sea_fish_are_lifted_like_river_fish() {
+        let src = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../assets/shaders/boid_material.wesl"),
+        )
+        .unwrap();
+        let constant = |name: &str| -> f32 {
+            let line = src
+                .lines()
+                .find(|l| l.starts_with(&format!("const {name}: f32 = ")))
+                .unwrap_or_else(|| panic!("{name} is declared"));
+            line.split('=')
+                .nth(1)
+                .unwrap()
+                .trim_end_matches(';')
+                .trim()
+                .parse()
+                .unwrap()
+        };
+        assert_eq!(constant("RIVER_LIFT"), 1.5);
+        assert_eq!(constant("SEA_LIFT"), 2.0);
+        assert!(
+            src.contains("select(SEA_LIFT, RIVER_LIFT, (form.flags & FLAG_RIVER_FISH) != 0u)"),
+            "every fish form is lifted, by its own water's factor"
+        );
     }
 
     /// The constants the shader poses the pieces with are the pieces' own contract (GLB root

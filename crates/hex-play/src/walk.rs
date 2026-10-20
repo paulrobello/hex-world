@@ -27,7 +27,9 @@
 //!   boxes, [`PieceShape::parts`]) blocks and is clicked part by part, so the walker enters the
 //!   paddock through its gate and stands inside it. A part that stands outside its piece's
 //!   collider blocks by its own footprint ([`PIECE_POSTS`]: house_cottage_b's porch posts).
-//!   Wildflowers do not block, and the wheat
+//!   `barn_red_b`'s parts are declared ([`DECLARED_PARTS`]): its closed walls and shed posts, so
+//!   the walker enters its open lean-to (the shed's roof is not clicked; a ray must enter a
+//!   part's prism). Wildflowers do not block, and the wheat
 //!   field's wheat is neither ground nor obstacle (`scatter::NOT_GROUND`): the walker walks
 //!   through it.
 //! - **Props to look at.** Photo mode's click to focus ([`WalkGround::pick_prop`]) hits the same
@@ -154,6 +156,37 @@ pub const PIECE_POSTS: &[(&str, [[f32; 2]; 4])] = &[
         [[2.83, -0.60], [2.95, -0.60], [2.95, -0.48], [2.83, -0.48]],
     ),
 ];
+
+/// Pieces whose walker collider is declared here as convex parts in the piece frame, in place of
+/// the GLB collider's one hull: (piece, parts as `[x min, x max, z min, z max, top]`), each part
+/// standing from the GLB collider's foot to its top. `barn_red_b`'s GLB collider is its LOD2 roof
+/// box, which walled off its open lean-to shed; its parts follow the closed walls instead (owner
+/// A1-Q1, 2026-10-20), so the walker enters the shed between the posts and stops at its back
+/// wall. Measured on its LOD0 (`_barn_b.py`, Blender (x, y) is (x, -z) here): the closed barn
+/// (gables at x +-5.0, plinth to +-5.05 and the door leaves to 5.08 on +x, the long wall's plinth
+/// at z -3.55, the shed's back wall at z 1.0; up to the cupola's finial), the shed's end walls
+/// (inner faces at x +-4.9 to the plinth, z 1.0..3.35, under the catslide at 3.6 m) and its four
+/// 0.2 m posts on the post line (x +-1.633 and +-4.9, z 3.35..3.55, to the plate at 2.65 m).
+pub const DECLARED_PARTS: &[(&str, &[[f32; 5]])] = &[(
+    "barn_red_b",
+    &[
+        [-5.05, 5.08, -3.55, 1.0, 7.85],
+        [4.9, 5.05, 1.0, 3.35, 3.6],
+        [-5.05, -4.9, 1.0, 3.35, 3.6],
+        [4.8, 5.0, 3.35, 3.55, 2.65],
+        [1.533, 1.733, 3.35, 3.55, 2.65],
+        [-1.733, -1.533, 3.35, 3.55, 2.65],
+        [-5.0, -4.8, 3.35, 3.55, 2.65],
+    ],
+)];
+
+/// [`DECLARED_PARTS`] of `piece`, if it has any.
+fn declared_parts(piece: &str) -> Option<&'static [[f32; 5]]> {
+    DECLARED_PARTS
+        .iter()
+        .find(|(id, _)| *id == piece)
+        .map(|(_, p)| *p)
+}
 
 /// Why a move stopped.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -504,9 +537,10 @@ pub struct PieceShape {
     /// The LOD0 triangles: a ray that enters the body or crown lands on the first of them it
     /// crosses, or on the volume where it slips through a gap in the leaves.
     pub tris: Vec<Tri>,
-    /// A collider of several disjoint parts (the paddock fence's six run boxes): each part's own
-    /// footprint and body, which block and are clicked in place of `hull` and `body`. Empty for a
-    /// one-part collider.
+    /// A collider of several disjoint parts (the paddock fence's six run boxes) or of parts
+    /// declared for the piece ([`DECLARED_PARTS`]: `barn_red_b`'s closed walls and posts): each
+    /// part's own footprint and body, which block and are clicked in place of `hull` and `body`.
+    /// Empty for a one-part collider.
     pub parts: Vec<ColliderPart>,
 }
 
@@ -567,7 +601,20 @@ impl PieceShape {
             .chain(collider.iter().map(|p| p.y))
             .fold(f32::NEG_INFINITY, f32::max);
         let groups = collider_parts(collider);
-        let parts = if groups.len() > 1 {
+        let parts = if let Some(declared) = declared_parts(piece) {
+            declared
+                .iter()
+                .map(|&[x0, x1, z0, z1, t]| ColliderPart {
+                    hull: self::hull(&[
+                        Vec2::new(x0, z0),
+                        Vec2::new(x1, z0),
+                        Vec2::new(x1, z1),
+                        Vec2::new(x0, z1),
+                    ]),
+                    body: (foot < t).then_some((foot, t)),
+                })
+                .collect()
+        } else if groups.len() > 1 {
             groups
                 .iter()
                 .map(|g| {
@@ -1371,13 +1418,25 @@ pub(crate) mod tests {
         }
     }
 
-    /// Only the paddock fence's collider has disjoint parts (one box per run); every other
-    /// obstacle is one part, so it keeps the whole collider's hull and body exactly as before.
+    /// Only the paddock fence's collider has disjoint parts (one box per run) and only
+    /// `barn_red_b` declares its own ([`DECLARED_PARTS`], seven); every other obstacle is one
+    /// part, so it keeps the whole collider's hull and body exactly as before.
     #[test]
     fn only_the_fence_collider_splits_into_parts() {
         for &piece in OBSTACLES {
             let s = shape(piece);
-            if piece == "fence_paddock" {
+            if piece == "barn_red_b" {
+                assert_eq!(
+                    s.parts.len(),
+                    7,
+                    "the closed barn, two shed end walls, four posts"
+                );
+                for p in &s.parts {
+                    assert_eq!(p.hull.len(), 4, "{:?}", p.hull);
+                    let (foot, top) = p.body.unwrap();
+                    assert!((foot + 0.35).abs() < 1e-3 && top > 2.6, "{foot}..{top}");
+                }
+            } else if piece == "fence_paddock" {
                 assert_eq!(s.parts.len(), 6, "one part per run");
                 for p in &s.parts {
                     assert_eq!(p.hull.len(), 4, "a run box: {:?}", p.hull);
@@ -1532,48 +1591,121 @@ pub(crate) mod tests {
         assert!(s.pos.xz().distance(at) < 1.0, "{}", s.pos.xz().distance(at));
     }
 
-    /// A farm at (0, 1) draws barn_red_b in the barn slot (`hex_core::hero_piece`): the walker
-    /// stops at its yard side, the open lean-to's front, as a building at the same collider box
-    /// as barn_red (3.85 m out).
+    /// A farm at (0, 1) draws barn_red_b in the barn slot (`hex_core::hero_piece`). Its collider
+    /// follows the closed walls (owner A1-Q1, 2026-10-20, [`DECLARED_PARTS`]): from the yard the
+    /// walker passes the post line into the open shed and stops at its back wall (1.0 m out from
+    /// the barn's centre, plus the body radius), a walk at a post stops at the post (3.55 m out),
+    /// and inside the shed the end walls stop it (inner faces 4.9 m from the centre), each as
+    /// barn_red_b, a building.
     #[test]
-    fn a_farm_drawing_barn_red_b_blocks_at_its_shed() {
+    fn a_farm_drawing_barn_red_b_lets_the_walker_into_its_shed() {
         let def = catalog().get("farm").unwrap().clone();
         let cell = Axial::new(0, 1);
         assert_eq!(hex_core::hero_piece(&def, cell, 0), "barn_red_b");
         let barn = &def.props.hero[0];
         let yaw = Quat::from_rotation_y(-barn.yaw_deg.to_radians());
         let centre_local = Vec3::new(barn.at[0], 0.0, barn.at[1]);
+        let blocked_by_barn = |s: &Step, what: &str| {
+            assert_eq!(
+                s.blocked,
+                Some(Blocked::Obstacle("barn_red_b".into())),
+                "{what}"
+            );
+            assert_eq!(s.blocked.as_ref().map(Blocked::reason), Some("building"));
+        };
         let mut tested = 0;
         for rotation in [0, 3] {
             let g = world(&[(cell.q, cell.r, "farm", rotation)]);
             let turn = piece_rotation(rotation);
-            let front = (turn * yaw * Vec3::Z).xz();
-            let at = (turn * centre_local).xz() + centre(cell.q, cell.r);
-            for along in [-3.0, 0.0, 3.0] {
-                let start = (turn * (centre_local + yaw * Vec3::new(along, 0.0, 8.0))).xz()
-                    + centre(cell.q, cell.r);
+            let at = |x: f32, z: f32| {
+                (turn * (centre_local + yaw * Vec3::new(x, 0.0, z))).xz() + centre(cell.q, cell.r)
+            };
+            let dir = |x: f32, z: f32| (turn * yaw * Vec3::new(x, 0.0, z)).xz();
+            let local = |p: Vec2| {
+                let d = p - at(0.0, 0.0);
+                Vec2::new(d.dot(dir(1.0, 0.0)), d.dot(dir(0.0, 1.0)))
+            };
+            for (along, stop) in [(-3.0, 1.3), (0.0, 1.3), (3.0, 1.3), (1.633, 3.85)] {
+                let start = at(along, 8.0);
                 if g.stand(start).is_err() {
                     continue;
                 }
-                let s = walk(&g, start, -front, 8.0);
+                let s = walk(&g, start, -dir(0.0, 1.0), 8.0);
                 if s.blocked == Some(Blocked::Obstacle("rock_small".into())) {
                     continue;
                 }
-                let out = (s.pos.xz() - at).dot(front);
-                assert_eq!(
-                    s.blocked,
-                    Some(Blocked::Obstacle("barn_red_b".into())),
-                    "r{rotation} at {along}: stopped {out} m out"
-                );
-                assert_eq!(s.blocked.as_ref().map(Blocked::reason), Some("building"));
+                let out = local(s.pos.xz()).y;
+                let what = format!("r{rotation} at {along}: stopped {out} m out");
+                blocked_by_barn(&s, &what);
                 assert!(
-                    (3.8..4.4).contains(&out),
-                    "r{rotation} at {along}: {out} m out"
+                    (stop - 0.1..stop + 0.1).contains(&out),
+                    "{what}, want {stop}"
                 );
                 tested += 1;
             }
+            for side in [1.0, -1.0] {
+                let s = walk(&g, at(0.0, 2.2), dir(side, 0.0), 6.0);
+                let x = local(s.pos.xz()).x;
+                let what = format!("r{rotation} in the shed toward {side}: stopped at x {x}");
+                blocked_by_barn(&s, &what);
+                assert!((4.5..4.7).contains(&(x * side)), "{what}");
+            }
         }
-        assert!(tested >= 4, "only {tested} approaches reached the barn");
+        assert!(tested >= 6, "only {tested} approaches reached the barn");
+    }
+
+    /// [`DECLARED_PARTS`] are `barn_red_b`'s own walls and posts: every part inside its GLB
+    /// collider box, the closed barn's yard face on the LOD0 wall at z 1.0, the shed end walls on
+    /// the LOD0 inner faces at x +-4.9, and each post's corners on its LOD0 trim box.
+    #[test]
+    fn barn_red_b_parts_match_its_glb() {
+        let collider = mesh_tris("barn_red_b", "collider").unwrap();
+        let lod0 = mesh_tris("barn_red_b", "lod0").unwrap();
+        let pts = |slot: &str| -> Vec<Vec3> {
+            lod0.iter()
+                .filter(|(_, s)| s == slot)
+                .flat_map(|(t, _)| t.iter().map(|p| Vec3::from(*p)))
+                .collect()
+        };
+        let (lo, hi) = collider
+            .iter()
+            .flat_map(|(t, _)| t.iter())
+            .fold((Vec3::MAX, Vec3::MIN), |(lo, hi), p| {
+                (lo.min(Vec3::from(*p)), hi.max(Vec3::from(*p)))
+            });
+        let parts = declared_parts("barn_red_b").unwrap();
+        for &[x0, x1, z0, z1, top] in parts {
+            assert!(
+                x0 >= lo.x && x1 <= hi.x && z0 >= lo.z && z1 <= hi.z,
+                "{x0}..{x1} {z0}..{z1}"
+            );
+            assert!(top <= hi.y + 0.4, "{top}");
+        }
+        let walls = pts("barn_red_b_walls");
+        let near = |v: &[Vec3], x: f32, z: f32| {
+            v.iter()
+                .any(|p| (p.x - x).abs() < 0.01 && (p.z - z).abs() < 0.01)
+        };
+        let [x0, x1, _, z1, _] = parts[0];
+        assert!(
+            near(&walls, -4.9, z1) && near(&walls, 4.9, z1),
+            "the shed's back wall at z {z1}"
+        );
+        assert!(x0 <= -5.0 && x1 >= 5.0, "the gables at x +-5.0");
+        for &[x0, x1, z0, z1, _] in &parts[1..3] {
+            let inner = if x0 > 0.0 { x0 } else { x1 };
+            assert!(
+                near(&walls, inner, z0) && near(&walls, inner, z1),
+                "end wall at x {inner}"
+            );
+        }
+        let trim = pts("barn_red_b_trim");
+        for &[x0, x1, z0, z1, _] in &parts[3..] {
+            assert!(
+                near(&trim, x0, z0) && near(&trim, x1, z1),
+                "post {x0}..{x1}"
+            );
+        }
     }
 
     /// Owner 2026-10-19 ("add the collider"): a bakery hero blocks the walker at its collider's

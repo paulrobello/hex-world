@@ -2,14 +2,18 @@
 // grass, ahead of the P3 recipes (owner request, 2026-10-19). Grass edges, so it mixes freely with
 // meadows and the farm. The centre piece covers a hexagon of apothem 10.8 m with ripe wheat in
 // parallel rows along the tile's x on ploughed earth, leaving a 3 m grass margin on every edge;
-// rows are 1.2 m apart, so neighbouring fields continue each other's rows. The wheat sways in the
+// rows are 1.2 m apart, so neighbouring fields of one orientation continue each other's rows. The wheat sways in the
 // wind and the walker walks through it (its cards are not ground, `scatter::NOT_GROUND`). A few
 // wildflowers and rocks stay on the grass margin: scatter only stands on meadow_base_cap.
+// The rows turn with the tile, so it has three orientations (owner D5, 2026-10-20: rows at 0, 60 and
+// 120 degrees), though its sockets are all grass; a half turn lays the rows on themselves, so
+// rotations 3-5 look as 0-2 (`look_period`, hex_core::TileDef::same_orientation).
 (
     id: "wheat_field",
     biome: Grass,
     base: "meadow_base",
     center: Some("wheat_field"),
+    look_period: Some(3),
     edges: (
         (kind: Grass),
         (kind: Grass),

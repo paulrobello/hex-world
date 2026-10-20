@@ -43,6 +43,10 @@ const FLAG_RIVER_FISH: u32 = 2u;
 // luminance (0.29) to the ocean palette's (0.45).
 const RIVER_U: f32 = 0.5;
 const RIVER_LIFT: f32 = 1.5;
+// SEA_LIFT: the sea fish's (fish_mackerel) dark dorsal palette, the side the camera sees
+// (linear luminance 0.077 over its up-facing faces), lifted the same way (owner A12-Q3, 2026-10-20:
+// it read as a dark navy silhouette under the sea).
+const SEA_LIFT: f32 = 2.0;
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> form: BoidForm;
 @group(constants::MATERIAL_BIND_GROUP) @binding(101) var boid_masks_texture: texture_2d<f32>;
@@ -159,11 +163,13 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
     }
     }
     @if(VERTEX_UVS_A) {
-    if (form.kind == FORM_FISH && (form.flags & FLAG_RIVER_FISH) != 0u) {
+    if (form.kind == FORM_FISH) {
         // The river palette under murky river water (owner, 2026-10-14: river fish were not
-        // seen): lifted toward the ocean palette's brightness, hue kept.
+        // seen): lifted toward the ocean palette's brightness, hue kept. The sea fish's dark back
+        // under the sea's water column likewise (SEA_LIFT).
+        let lift = select(SEA_LIFT, RIVER_LIFT, (form.flags & FLAG_RIVER_FISH) != 0u);
         let c = pbr_input.material.base_color.rgb;
-        pbr_input.material.base_color = vec4<f32>(min(c * RIVER_LIFT, vec3<f32>(1.0)), pbr_input.material.base_color.a);
+        pbr_input.material.base_color = vec4<f32>(min(c * lift, vec3<f32>(1.0)), pbr_input.material.base_color.a);
     }
     }
     pbr_input.material.base_color = alpha_discard(pbr_input.material.flags, pbr_input.material.alpha_cutoff, pbr_input.material.base_color);

@@ -48,4 +48,9 @@
             (piece: "fence_paddock", at: (0.0, 0.0), yaw_deg: 0.0),
         ],
     ),
+    // Birds roost on barn_red_b's ridge and cupola (owner A1-Q3, 2026-10-20; its 11 perches,
+    // hex_play::boids::plan::canopy_perches); a farm drawing barn_red has none.
+    agents: [
+        (agent: Bird, max: 11),
+    ],
 )

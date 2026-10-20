@@ -201,7 +201,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "meadow",
         "land": [
           null,
@@ -211,6 +210,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": [
           "wildflower_clump",
           "rock_small",
@@ -226,7 +226,6 @@
           "Forest",
           "Forest"
         ],
-        "heroes": false,
         "id": "forest",
         "land": [
           null,
@@ -236,6 +235,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": [
           "tree_forest",
           "rock_small",
@@ -254,7 +254,6 @@
           "Forest",
           "Forest"
         ],
-        "heroes": true,
         "id": "oak",
         "land": [
           null,
@@ -264,6 +263,7 @@
           null,
           null
         ],
+        "period": 6,
         "scatter": [
           "rock_small",
           "wildflower_clump",
@@ -279,7 +279,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": true,
         "id": "windmill",
         "land": [
           null,
@@ -289,6 +288,7 @@
           null,
           null
         ],
+        "period": 6,
         "scatter": [
           "wildflower_clump",
           "rock_small"
@@ -303,7 +303,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": true,
         "id": "farm",
         "land": [
           null,
@@ -313,6 +312,7 @@
           null,
           null
         ],
+        "period": 6,
         "scatter": [
           "wildflower_clump",
           "rock_small"
@@ -327,7 +327,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "wheat_field",
         "land": [
           null,
@@ -337,6 +336,7 @@
           null,
           null
         ],
+        "period": 3,
         "scatter": [
           "wildflower_clump",
           "rock_small"
@@ -351,7 +351,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": true,
         "id": "house_cluster",
         "land": [
           null,
@@ -361,6 +360,7 @@
           null,
           null
         ],
+        "period": 6,
         "scatter": []
       },
       {
@@ -372,7 +372,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": true,
         "id": "bakery",
         "land": [
           null,
@@ -382,6 +381,7 @@
           null,
           null
         ],
+        "period": 6,
         "scatter": []
       },
       {
@@ -393,7 +393,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "road_straight",
         "land": [
           null,
@@ -403,6 +402,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": [
           "wildflower_single",
           "bush_verge"
@@ -417,7 +417,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "road_bend_120",
         "land": [
           null,
@@ -427,6 +426,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": [
           "wildflower_single",
           "bush_verge"
@@ -441,7 +441,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "road_bend_60",
         "land": [
           null,
@@ -451,6 +450,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": [
           "wildflower_single",
           "bush_verge"
@@ -465,7 +465,6 @@
           "Road",
           "Grass"
         ],
-        "heroes": false,
         "id": "road_junction",
         "land": [
           null,
@@ -475,6 +474,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": [
           "wildflower_single",
           "bush_verge"
@@ -489,7 +489,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "rail_straight",
         "land": [
           null,
@@ -499,6 +498,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": [
           "wildflower_single"
         ]
@@ -512,7 +512,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "rail_bend_60",
         "land": [
           null,
@@ -522,6 +521,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": [
           "wildflower_single"
         ]
@@ -535,7 +535,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "rail_junction",
         "land": [
           null,
@@ -545,6 +544,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": [
           "wildflower_single"
         ]
@@ -558,7 +558,6 @@
           "Road",
           "Grass"
         ],
-        "heroes": false,
         "id": "rail_road_crossing",
         "land": [
           null,
@@ -568,6 +567,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": [
           "wildflower_single"
         ]
@@ -581,7 +581,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": true,
         "id": "rail_station",
         "land": [
           null,
@@ -591,6 +590,7 @@
           null,
           null
         ],
+        "period": 6,
         "scatter": [
           "wildflower_single"
         ]
@@ -604,7 +604,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "river_straight",
         "land": [
           null,
@@ -614,6 +613,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": []
       },
       {
@@ -625,7 +625,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "river_bend",
         "land": [
           null,
@@ -635,6 +634,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": []
       },
       {
@@ -646,7 +646,6 @@
           "Road",
           "Grass"
         ],
-        "heroes": false,
         "id": "river_road_bridge",
         "land": [
           null,
@@ -656,6 +655,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": []
       },
       {
@@ -667,7 +667,6 @@
           "Rail",
           "Grass"
         ],
-        "heroes": false,
         "id": "river_rail_bridge",
         "land": [
           null,
@@ -677,6 +676,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": []
       },
       {
@@ -688,7 +688,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "river_spring",
         "land": [
           null,
@@ -698,6 +697,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": []
       },
       {
@@ -709,7 +709,6 @@
           "Grass",
           "Beach"
         ],
-        "heroes": false,
         "id": "beach",
         "land": [
           null,
@@ -719,6 +718,7 @@
           null,
           "Left"
         ],
+        "period": 1,
         "scatter": []
       },
       {
@@ -730,7 +730,6 @@
           "Beach",
           "Ocean"
         ],
-        "heroes": false,
         "id": "beach_outer",
         "land": [
           null,
@@ -740,6 +739,7 @@
           "Left",
           null
         ],
+        "period": 1,
         "scatter": []
       },
       {
@@ -751,7 +751,6 @@
           "Grass",
           "Beach"
         ],
-        "heroes": false,
         "id": "beach_inner",
         "land": [
           null,
@@ -761,6 +760,7 @@
           null,
           "Left"
         ],
+        "period": 1,
         "scatter": []
       },
       {
@@ -772,7 +772,6 @@
           "Grass",
           "Beach"
         ],
-        "heroes": false,
         "id": "river_mouth",
         "land": [
           null,
@@ -782,6 +781,7 @@
           null,
           "Left"
         ],
+        "period": 1,
         "scatter": []
       },
       {
@@ -793,7 +793,6 @@
           "River",
           "Beach"
         ],
-        "heroes": false,
         "id": "river_mouth_l",
         "land": [
           null,
@@ -803,6 +802,7 @@
           null,
           "Left"
         ],
+        "period": 1,
         "scatter": []
       },
       {
@@ -814,7 +814,6 @@
           "Ocean",
           "Ocean"
         ],
-        "heroes": false,
         "id": "ocean",
         "land": [
           null,
@@ -824,6 +823,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": []
       }
     ]

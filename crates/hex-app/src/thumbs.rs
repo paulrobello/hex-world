@@ -82,8 +82,8 @@ pub fn force_flags(f: &mut Flags) {
     f.tier_explicit = true;
 }
 
-/// For each rotation 0..6, the lowest rotation of the same orientation (equal world-edge sockets
-/// and no hero props, `TileDef::same_orientation`): the image it uses.
+/// For each rotation 0..6, the lowest rotation of the same orientation (equal world-edge sockets,
+/// a whole number of look periods apart, `TileDef::same_orientation`): the image it uses.
 pub fn canonical_rotations(def: &TileDef) -> [u8; 6] {
     std::array::from_fn(|k| {
         let k = k as u8;
@@ -445,7 +445,7 @@ mod tests {
             ("oak", 6),
             ("windmill", 6),
             ("farm", 6),
-            ("wheat_field", 1),
+            ("wheat_field", 3),
             ("house_cluster", 6),
             ("bakery", 6),
             ("road_straight", 3),
@@ -472,7 +472,7 @@ mod tests {
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 28 + 126);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 28 + 128);
     }
 
     #[test]
@@ -493,6 +493,12 @@ mod tests {
         let c = catalog();
         let straight = canonical_rotations(c.get("road_straight").unwrap());
         assert_eq!(straight, [0, 1, 2, 0, 1, 2]);
+        let wheat = canonical_rotations(c.get("wheat_field").unwrap());
+        assert_eq!(
+            wheat,
+            [0, 1, 2, 0, 1, 2],
+            "rows at 0, 60 and 120 degrees (owner D5)"
+        );
     }
 
     #[test]
