@@ -10,6 +10,7 @@ pub mod cars;
 pub mod debug;
 #[cfg(feature = "gate-tools")]
 pub mod diag;
+pub mod farm;
 #[cfg(feature = "gate-tools")]
 pub mod fps;
 #[cfg(feature = "gate-tools")]
@@ -33,6 +34,7 @@ impl Plugin for HexPlayPlugin {
                 play::PlayPlugin,
                 cars::CarsPlugin,
                 trains::TrainsPlugin,
+                farm::FarmPlugin,
                 boids::BoidsPlugin {
                     budget: boids::BoidBudget::for_tier(config.tier),
                 },

@@ -631,6 +631,7 @@ fn tile_children(
         }
     }
     let count = def.props.hero.len().min(u8::MAX as usize) as u8;
+    let herd = crate::farm::herd_slots(def);
     for (i, (h, piece)) in def.hero_pieces(cell).enumerate() {
         let t = Transform::from_xyz(h.at[0], h.y, h.at[1])
             .with_rotation(Quat::from_rotation_y(-h.yaw_deg.to_radians()));
@@ -639,6 +640,23 @@ fn tile_children(
             count,
             kind: prop_kind(piece),
         };
+        if herd.contains(&i) && kit.contains_key(piece) {
+            // A wandering animal (`farm`): a parent at its slot that `farm::pose` moves, its
+            // parts under it at rest.
+            p.spawn((
+                crate::farm::HerdAnimal {
+                    cell,
+                    slot: i.min(u8::MAX as usize) as u8,
+                },
+                t,
+                Visibility::default(),
+                SceneEntity,
+            ))
+            .with_children(|c| {
+                spawn_kit(c, kit, piece, Transform::IDENTITY, Some((cell, role)));
+            });
+            continue;
+        }
         if !spawn_kit(p, kit, piece, t, Some((cell, role))) {
             plain_mesh(
                 p,

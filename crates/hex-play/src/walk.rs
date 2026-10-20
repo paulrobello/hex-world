@@ -16,10 +16,14 @@
 //!   [`MAX_WADE`] under the surface, so the walker crosses with its head above the water. The sea
 //!   (ocean, coast and river mouth tiles) still stops it.
 //! - **Obstacles.** Houses, the windmill, the barn, the station shelter, the hero oak, spruces,
-//!   rocks and the farm's hay bales and (static) animals block the walker by their collider
-//!   (`<piece>_collider` in the kit GLB) as a convex footprint on the ground, placed with the hero
+//!   rocks and the farm's hay
+//!   bales and (static) animals block the walker by their collider
+//!   (`<piece>_collider` in the kit
+//!   GLB) as a convex footprint on the ground, placed with the hero
 //!   or scatter instance's transform (a hero's `y` lifts its volume, the shelter onto the paving)
-//!   under the tile's rest transform. A collider of disjoint parts (the paddock fence's six run
+//!   under the tile's rest transform. The paddock's wandering animals (`farm`) block as `animal`
+//!   where they are drawn: `farm::pose` moves their footprints every frame
+//!   ([`WalkGround::pose_herd`]). A collider of disjoint parts (the paddock fence's six run
 //!   boxes, [`PieceShape::parts`]) blocks and is clicked part by part, so the walker enters the
 //!   paddock through its gate and stands inside it. A part that stands outside its piece's
 //!   collider blocks by its own footprint ([`PIECE_POSTS`]: house_cottage_b's porch posts).
@@ -726,8 +730,32 @@ pub struct WalkGround {
     obstacles: HashMap<Axial, Vec<Obstacle>>,
     /// The same obstacles as volumes for photo mode's click to focus.
     props: Vec<PickProp>,
+    /// The farm herds' animals (`farm`): they block and are clicked where they are drawn, so they
+    /// are kept apart from the static obstacles and moved by [`WalkGround::pose_herd`].
+    herd: Vec<HerdBody>,
     /// Bumped on every rebuild.
     pub revision: u64,
+}
+
+/// One wandering animal as walk mode sees it: its shape, its tile's rest transform, and its
+/// footprint and pickable volume at its latest drawn pose.
+#[derive(Clone)]
+struct HerdBody {
+    cell: Axial,
+    slot: usize,
+    piece: String,
+    shape: Arc<PieceShape>,
+    root: Transform,
+    obstacle: Obstacle,
+    pick: Option<PickProp>,
+}
+
+impl HerdBody {
+    fn place(&mut self, local: &Transform) {
+        let t = self.root * *local;
+        self.obstacle.poly = place_hull(&self.shape.hull, &t);
+        self.pick = PickProp::new(&self.piece, &self.shape, &t);
+    }
 }
 
 /// The convex hull of points (Andrew's monotone chain), counter-clockwise.
@@ -845,10 +873,28 @@ impl WalkGround {
                     });
                 }
             };
-            for (h, piece) in def.hero_pieces(t.cell) {
+            let herd = crate::farm::herd_slots(def);
+            for (slot, (h, piece)) in def.hero_pieces(t.cell).enumerate() {
                 if OBSTACLES.contains(&piece) {
                     let local = Transform::from_xyz(h.at[0], h.y, h.at[1])
                         .with_rotation(Quat::from_rotation_y(-h.yaw_deg.to_radians()));
+                    if herd.contains(&slot) {
+                        let mut b = HerdBody {
+                            cell: t.cell,
+                            slot,
+                            piece: piece.to_owned(),
+                            shape: shape(piece),
+                            root,
+                            obstacle: Obstacle {
+                                piece: piece.to_owned(),
+                                poly: vec![],
+                            },
+                            pick: None,
+                        };
+                        b.place(&local);
+                        out.herd.push(b);
+                        continue;
+                    }
                     place(piece, &shape(piece), &(root * local));
                 }
             }
@@ -954,6 +1000,7 @@ impl WalkGround {
     pub fn pick_prop(&self, ray: Ray3d, max: f32) -> Option<(f32, &str)> {
         self.props
             .iter()
+            .chain(self.herd.iter().filter_map(|b| b.pick.as_ref()))
             .filter_map(|p| p.hit(ray).map(|t| (t, p.piece.as_str())))
             .filter(|(t, _)| *t <= max)
             .min_by(|a, b| a.0.total_cmp(&b.0))
@@ -962,7 +1009,24 @@ impl WalkGround {
     /// No drawn tile is ground yet (another scenario, or the kit still loading).
     /// Every collider footprint, for the debug overlay.
     pub fn obstacles(&self) -> impl Iterator<Item = &Obstacle> {
-        self.obstacles.values().flatten()
+        self.obstacles
+            .values()
+            .flatten()
+            .chain(self.herd.iter().map(|b| &b.obstacle))
+    }
+
+    /// Moves the herd animals to their drawn poses: (cell, hero slot, transform under the tile
+    /// root). An animal not listed keeps its last pose.
+    pub fn pose_herd(&mut self, posed: &[(Axial, usize, Transform)]) {
+        for (cell, slot, local) in posed {
+            if let Some(b) = self
+                .herd
+                .iter_mut()
+                .find(|b| b.cell == *cell && b.slot == *slot)
+            {
+                b.place(local);
+            }
+        }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -981,6 +1045,7 @@ impl WalkGround {
             .chain((0..6).map(|e| cell.neighbor(e)))
             .filter_map(|c| self.obstacles.get(&c))
             .flatten()
+            .chain(self.herd.iter().map(|b| &b.obstacle))
             .find(|o| o.hits(p, BODY_RADIUS))
     }
 
@@ -1406,7 +1471,7 @@ pub(crate) mod tests {
     }
 
     /// A placed farm tile stops the walker at the barn's front wall as a building, through the
-    /// tile's turn, and its static animals and bales block too.
+    /// tile's turn, and its animals (at their slots before the herd ticks) and bales block too.
     #[test]
     fn a_placed_farm_tile_blocks_at_the_barn() {
         assert_eq!(Blocked::Obstacle("barn_red".into()).reason(), "building");
@@ -1611,7 +1676,7 @@ pub(crate) mod tests {
     }
 
     /// Triangles of mesh `<id>_<mesh>` with slot names, read once per mesh for the test binary.
-    fn mesh_tris(id: &str, mesh: &str) -> Tris {
+    pub(crate) fn mesh_tris(id: &str, mesh: &str) -> Tris {
         static CACHE: OnceLock<Mutex<HashMap<String, Tris>>> = OnceLock::new();
         let key = format!("{id}_{mesh}");
         let cache = CACHE.get_or_init(Default::default);

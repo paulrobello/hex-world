@@ -716,6 +716,7 @@ pub struct PresentationSnapshot<'w> {
     walk_ground: Res<'w, hex_play::walk::WalkGround>,
     debug: Res<'w, hex_play::debug::DebugOverlays>,
     debug_report: Res<'w, hex_play::debug::DebugReport>,
+    farm: Option<Res<'w, hex_play::farm::FarmHerds>>,
 }
 
 #[derive(bevy::ecs::system::SystemParam)]
@@ -779,6 +780,7 @@ pub fn publish_state(
         walk_ground,
         debug,
         debug_report,
+        farm,
     } = presentation;
     let CaptureSnapshot {
         photo,
@@ -830,6 +832,9 @@ pub fn publish_state(
         extend_play_rise(&mut p, rises.report(), reduced.0);
         extend_play_view(&mut p, cameras.iter().next());
         crate::walk::extend_play_view(&mut p, &walk);
+        if let Some(farm) = &farm {
+            p["farm"] = farm.state_json();
+        }
         let orbit = walk
             .orbit()
             .or(session.saved.map(|s| s.transform))

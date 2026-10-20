@@ -450,7 +450,8 @@ pub fn cos_sin_deg(deg: f32) -> Vec2 {
     }
 }
 
-/// Where no blade may root: hero props (a box over a rectangular building's collider,
+/// Where no blade may root: hero props other than the paddock's wandering animals
+/// (`farm::herd_slots`) (a box over a rectangular building's collider,
 /// [`scatter::GROUND_BOXES`], else a disc of its ground reach) and every scatter instance (a box
 /// over a rock's base, [`ROCK_BASES`], else a disc). Each hero is the piece its slot draws at
 /// `cell` (`hex_core::hero_piece`).
@@ -460,10 +461,14 @@ pub fn exclusions(
     instances: &[Instance],
     pieces: &[String],
 ) -> Vec<Clear> {
+    // The paddock's animals wander (`farm`): no clear under them, the blades draw through their
+    // hooves and muzzles wherever they graze, and their slots keep their grass.
+    let herd = crate::farm::herd_slots(def);
     let mut out: Vec<Clear> = def
         .hero_pieces(cell)
-        .filter(|(_, piece)| scatter::fence(piece).is_none())
-        .map(|(h, piece)| {
+        .enumerate()
+        .filter(|(i, (_, piece))| scatter::fence(piece).is_none() && !herd.contains(i))
+        .map(|(_, (h, piece))| {
             let at = Vec2::from(h.at);
             let Some(b) = scatter::ground_box(piece) else {
                 return Clear::Disc {
@@ -1598,10 +1603,12 @@ mod tests {
         let l = layout(1, &meadow_surface(), &grass_slots(&m, def, &c), &ex);
         let mut bands = vec![];
         // A fence's collider hull spans the yard it encloses; its posts are checked on their own
-        // (`grass_grows_under_the_paddock_fence`).
-        for (h, piece) in def
+        // (`grass_grows_under_the_paddock_fence`). Wandering animals clear nothing.
+        let herd = crate::farm::herd_slots(def);
+        for (_, (h, piece)) in def
             .hero_pieces(cell)
-            .filter(|(_, p)| scatter::fence(p).is_none())
+            .enumerate()
+            .filter(|(i, (_, p))| scatter::fence(p).is_none() && !herd.contains(i))
         {
             let (collider, x, z) = placed_collider(h, piece);
             let boxed = scatter::ground_box(piece);
@@ -1641,20 +1648,38 @@ mod tests {
         bands
     }
 
-    /// The farm tile's grass keeps clear of the barn, the bales and the animals (each hero's
-    /// footprint: a box over the barn's collider, discs for the rest), and grows within 0.6 m
-    /// of both of the barn's long walls (owner 2026-10-19: no bare band along them). The paddock
-    /// fence clears its posts alone, after the other heroes.
+    /// The farm tile's grass keeps clear of the barn and the bales (each hero's footprint: a box
+    /// over the barn's collider, discs for the rest), and grows within 0.6 m of both of the
+    /// barn's long walls (owner 2026-10-19: no bare band along them). The paddock fence clears
+    /// its posts alone, after the other heroes. The paddock's animals wander (`farm`), so they
+    /// clear nothing: grass grows at their slots.
     #[test]
     fn grass_clears_the_barn_and_the_farm_heroes() {
         let def = TileCatalog::builtin().unwrap().get("farm").unwrap().clone();
         let ex = exclusions(&def, Axial::ORIGIN, &[], &[]);
+        let herd = crate::farm::herd_slots(&def);
+        assert_eq!(herd.len(), 6, "the six animals wander");
         // Each hero clears the piece it draws at the cell (the origin draws hay_bale_round_b in
         // the first round slot, `hex_core::hero_piece`).
         let heroes: Vec<_> = def
             .hero_pieces(Axial::ORIGIN)
-            .filter(|(_, p)| scatter::fence(p).is_none())
+            .enumerate()
+            .filter(|(i, (_, p))| scatter::fence(p).is_none() && !herd.contains(i))
+            .map(|(_, h)| h)
             .collect();
+        let c = TileCatalog::builtin().unwrap();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let l = layout(1, &meadow_surface(), &grass_slots(&m, &def, &c), &ex);
+        for &i in &herd {
+            let h = &def.props.hero[i];
+            let (collider, _, _) = placed_collider(h, h.piece.as_str());
+            let under = l
+                .blades
+                .iter()
+                .filter(|b| collider.hits(b.root.xz(), 0.0))
+                .count();
+            assert!(under > 0, "no grass at the {} slot", h.piece.as_str());
+        }
         assert!(heroes.iter().any(|(_, p)| *p == "hay_bale_round_b"));
         let posts: usize = def
             .props

@@ -496,7 +496,20 @@ impl Plugin for WalkPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WalkSession>()
             .init_resource::<WalkGround>()
-            .add_systems(Update, hex_play::walk::sync.after(PlaySystems));
+            .add_systems(Update, hex_play::walk::sync.after(PlaySystems))
+            .add_systems(Update, publish_walker.after(sync));
+    }
+}
+
+/// The farm herds' walker (`hex_play::farm::WalkerAt`): the feet while walk mode is on, so an
+/// animal waits rather than walk into the walker.
+pub fn publish_walker(session: Res<WalkSession>, at: Option<ResMut<hex_play::farm::WalkerAt>>) {
+    let Some(mut at) = at else {
+        return;
+    };
+    let feet = session.saved.map(|_| session.walker.feet.xz());
+    if at.0 != feet {
+        at.0 = feet;
     }
 }
 

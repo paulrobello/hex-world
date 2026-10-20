@@ -1,4 +1,4 @@
-.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-wheat-play shots-rail-play
+.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play
 
 fmt:
 	cargo fmt --all
@@ -466,6 +466,20 @@ shots-farm-play:
 	@for n in $(FARM_SHOTS); do ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(FARM_DOCS)/$$n.jpg || exit 1; done
 	cp target/shots/farm-play-state.json target/shots/farm-walk-state.json target/shots/farm-walk-fence-state.json target/shots/farm-walk-gate-state.json $(FARM_DOCS)/
 	@echo "wrote $(FARM_DOCS)/"
+
+# Farm animals wandering (P3): docs/checkpoints/farm-wander/farm-wander.json places the farm among
+# meadows, shoots it at play distance, then a close pair 10 s apart (600 frames under `--clock
+# fixed`) with each `play.farm` dumped, an eye-level walk view inside the paddock, and a 20-tile
+# world with five farms whose state (`play.farm` counts, `diag` entities and draws) is dumped.
+FARM_WANDER_SHOTS = farm-wander-play farm-wander-a farm-wander-b farm-wander-walk-eye
+FARM_WANDER_DOCS = docs/checkpoints/farm-wander
+shots-farm-wander:
+	mkdir -p target/shots $(FARM_WANDER_DOCS)
+	rm -f target/shots/farm-wander-*.png target/shots/farm-wander-*.json
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(FARM_WANDER_DOCS)/farm-wander.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed --diag $(ARGS)
+	bash scripts/shots/run.sh --jpegs $(FARM_WANDER_DOCS) $(FARM_WANDER_SHOTS)
+	cp target/shots/farm-wander-a-state.json target/shots/farm-wander-b-state.json target/shots/farm-wander-walk-state.json target/shots/farm-wander-world-state.json $(FARM_WANDER_DOCS)/
+	@echo "wrote $(FARM_WANDER_DOCS)/"
 
 # Wheat field tile in play: docs/checkpoints/wheat_field/wheat-play.json places two wheat fields one
 # row apart (rows continue across the seam), the farm and meadows, and shoots play distance, the

@@ -404,6 +404,7 @@ In the play scenario the state JSON's `tiles` is the world's tile count, and `pl
 | `train_list` | Every train: `id`, its front's world `x`/`z`, `speed` (m/s) and `waiting` (`none`, `line_end`, `train`, `junction` or `station`, standing at a station stop) |
 | `junctions` | Every rail junction: its cell `q`/`r`, the leg its switch is `set` to (`straight` or `branch`) and `facing`, the legs facing trains took there, oldest first (the last 16) |
 | `closed_crossings` | Level crossings closed to cars while a train is on the deck or within 30 m, as cells |
+| `farm` | The farm herds (P3, `hex_play::farm`), re-derived from the view and never saved: `herds` (farm tiles with a herd), `animals`, and `list`, each animal's `cell` `[q, r]`, hero `slot`, `piece`, `state` (`walk`, `idle`, `graze`, or `wait` while the walker stands within 0.8 m of it) and world `pos` `[x, z]` (its body's middle) |
 | `rising` | Running rises: `[{q, r, tile, stage, t}]`, `stage` one of `column`, `cap`, `edges`, `props`, `agents`, `t` seconds since the placement |
 | `reduced_motion` | The `set_reduced_motion` flag |
 | `focus`, `zoom` | The ground point the camera orbits `[x, y, z]` and the camera's distance from it in metres, for the audio focus mix; `null` without a camera. In walk mode `focus` is the walker's feet and `zoom` the 1.7 m eye height, so the focus mix centres on the walker with a one-hex spread |

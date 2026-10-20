@@ -191,6 +191,7 @@ pub(super) fn settle(
     hierarchy: Query<(&Transform, Option<&ChildOf>)>,
     children: Query<&Children>,
     rotors: Query<(), With<KitRotor>>,
+    herd: Query<(), With<crate::farm::HerdAnimal>>,
 ) {
     let Some(spawned) = spawned else { return };
     if config.kit_hooks == hex_render::KitHooks::Autumn {
@@ -224,6 +225,10 @@ pub(super) fn settle(
                     continue;
                 };
                 for entity in descendants.iter() {
+                    // A wandering animal moves every frame: its parts stay on the per-entity path.
+                    if herd.contains(entity) {
+                        continue;
+                    }
                     let Ok((local, _)) = hierarchy.get(entity) else {
                         continue;
                     };

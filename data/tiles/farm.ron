@@ -2,14 +2,15 @@
 // recipes (owner request, 2026-10-19). Grass edges, so it mixes freely with meadows. The red barn
 // stands along edge 5 with its back corner 0.5 m inside the border, its doors (local +x) turned
 // toward the hay; the bales and the animals stand where the meadow relief
-// (`relief()` in scripts/blender/kit/meadow_base.py) is flattest (the hero props stand at y = 0):
-// no bale floats, and no hoof of the standing animals floats more than 2 cm. The grazing animals
-// keep the standing ones' spots and float more (animal_cow_b 3.9 cm, animal_sheep_c 2.8 cm; owner
-// Q42 and Q57 open). A hay slot may draw its variant (hex_core::HERO_VARIANTS: hay_bale_round_b,
-// hay_bale_stack_b), whose straw and foot are built on the relief of these slots, and the barn slot
-// may draw barn_red_b, which stands inside barn_red's collider box. Do not reorder the heroes: the
-// slot index picks the variant. The animals, standing (animal_cow, animal_sheep) and grazing
-// (animal_cow_b, animal_sheep_b, animal_sheep_c), stand still in the paddock until P3's wander.
+// (`relief()` in scripts/blender/kit/meadow_base.py) is flattest, so no bale floats (the hero props
+// stand at y = 0; the wandering animals stand on the drawn ground instead, worst hoof 2.5 mm). A hay
+// slot may draw its variant (hex_core::HERO_VARIANTS: hay_bale_round_b, hay_bale_stack_b), whose
+// straw and foot are built on the relief of these slots, and the barn slot may draw barn_red_b,
+// which stands inside barn_red's collider box. Do not reorder the heroes: the slot index picks the
+// variant. The animals inside the paddock fence, standing (animal_cow, animal_sheep) and grazing
+// (animal_cow_b, animal_sheep_b, animal_sheep_c), wander from these slots (hex_play::farm, P3):
+// each starts here and walks and grazes inside the fence on the drawn ground; the ghost keeps
+// these slots.
 // The paddock fence is the last hero, at the tile origin: three-rail runs round the animals with a
 // 3 m gate toward the yard. Its collider is one box per run, so the walker stops at the rails and
 // enters through the gate; grass clears only a disc at each post, and scatter drops the instances
