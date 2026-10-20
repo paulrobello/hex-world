@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Review against assets-source/refs/road_straight (ref-1: 'grass verges with tufts and small bushes'): bush_verge's third variant, a flowering hawthorn-like verge bush, 1.05 m tall and about 1.0 m across (LOD0), upright with an uneven sprayed outline, a deep fresh green mass of numpy-drawn leaf-cluster cards dotted with cream-white blossom corymbs (about 15% of the outer tiles' opaque texels), cards down to the grass, plant wind data. Built on _shrub.build through _verge_bush.py and _verge_bush_c.py. Review sheet: docs/checkpoints/bush_verge_c/sheet.jpg (ref; textured EEVEE lineup with shrub_forest, bush_verge, bush_verge_b and a 1.7 m figure; the three verge bushes close and far; the kit road tile (0, 0); play shots with docs/checkpoints/bush_verge_c/integration.patch applied). The controller records the owner's decision."
+  }
+]

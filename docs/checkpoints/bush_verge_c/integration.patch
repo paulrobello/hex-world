@@ -1,0 +1,104 @@
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index de44a8b..0ede2ac 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -467,6 +467,12 @@
+                  "bush_verge_b_stems": { "color": [0.09, 0.07, 0.04], "roughness": 0.85, "masks": true, "wind": 0.1 } },
+       "maps": { "albedo": "p1/bush_verge_b/bush_verge_b.albedo", "normal": "p1/bush_verge_b/bush_verge_b.normal",
+                 "orm": "p1/bush_verge_b/bush_verge_b.orm", "masks": "p1/bush_verge_b/bush_verge_b.masks" } },
++    { "id": "bush_verge_c", "pack": "props", "kind": "prop", "glb": "p1/bush_verge_c/bush_verge_c.glb",
++      "provenance": "assets-source/kit/bush_verge_c/provenance.json",
++      "slots": { "bush_verge_c_leaves": { "unique": true, "masks": true, "alphaCutoff": 0.5, "wind": 0.1 },
++                 "bush_verge_c_stems": { "color": [0.07, 0.05, 0.03], "roughness": 0.85, "masks": true, "wind": 0.1 } },
++      "maps": { "albedo": "p1/bush_verge_c/bush_verge_c.albedo", "normal": "p1/bush_verge_c/bush_verge_c.normal",
++                "orm": "p1/bush_verge_c/bush_verge_c.orm", "masks": "p1/bush_verge_c/bush_verge_c.masks" } },
+     { "id": "wildflower_single_b", "pack": "props", "kind": "prop", "glb": "p1/wildflower_single_b/wildflower_single_b.glb",
+       "provenance": "assets-source/kit/wildflower_single_b/provenance.json",
+       "slots": { "wildflower_single_b_foliage": { "unique": true, "masks": true, "alphaCutoff": 0.5, "wind": 0.15 } },
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 4668a3e..5f53d0c 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -148,7 +148,7 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
+             "wildflower_single_d",
+         ],
+     ),
+-    ("bush_verge", &["bush_verge_b"]),
++    ("bush_verge", &["bush_verge_b", "bush_verge_c"]),
+     ("shrub_forest", &["shrub_forest_b"]),
+     ("sapling_spruce", &["sapling_spruce_b"]),
+ ];
+@@ -565,6 +565,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
+             crown: 0.0,
+         },
+     ),
++    (
++        "bush_verge_c",
++        Footprint {
++            ground: 0.32,
++            crown: 0.0,
++        },
++    ),
+ ];
+ 
+ /// A piece missing from [`FOOTPRINTS`].
+@@ -2552,7 +2559,7 @@ mod tests {
+     /// and each bush's widest reach over its LODs (its leaves, wider than its collider; LOD2's
+     /// scaled-up cards reach furthest), taken per variant, at its scale stays beyond the kerb
+     /// (3.25 m from the centreline), never over asphalt, kerb or paint, with its centre inside the
+-    /// verge band, on every seed; both variants are drawn.
++    /// verge band, on every seed; every variant is drawn.
+     #[test]
+     fn verge_bushes_line_the_road_beyond_the_kerb() {
+         const KERB_OUT: f32 = 3.25;
+@@ -2574,6 +2581,10 @@ mod tests {
+             (0.4..0.6).contains(&leaves["bush_verge_b"]),
+             "widest LOD reach {leaves:?}"
+         );
++        assert!(
++            (0.5..0.7).contains(&leaves["bush_verge_c"]),
++            "widest LOD reach {leaves:?}"
++        );
+         let mut drawn = std::collections::BTreeSet::new();
+         let c = catalog();
+         for id in [
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index 6da9bae..6e2f293 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -103,6 +103,7 @@ pub const OBSTACLES: &[&str] = &[
+     "shrub_forest_b",
+     "bush_verge",
+     "bush_verge_b",
++    "bush_verge_c",
+ ];
+ 
+ /// Why a move stopped.
+@@ -1120,6 +1121,7 @@ mod tests {
+             ("shrub_forest_b", "tree"),
+             ("bush_verge", "tree"),
+             ("bush_verge_b", "tree"),
++            ("bush_verge_c", "tree"),
+         ] {
+             assert_eq!(prop_kind(piece), kind, "{piece}");
+             assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index fbc3934..c83f2f3 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -493,12 +493,14 @@ const HAY_BALES: &[(&str, [f32; 2], f32, f32)] = &[
+ 
+ /// (piece, offset, yaw, height) of the verge bushes on road tile (0, 0), base rotation 0, with a
+ /// shrub_forest beside them and a sedan on the lane (`cars::ROAD_SURFACE_Y`) for comparison; the
+-/// lighter bush_verge_b beside the south pair in open sun.
++/// lighter bush_verge_b beside the south pair and the flowering bush_verge_c east of them, all in
++/// open sun.
+ const VERGE_BUSHES: &[(&str, [f32; 2], f32, f32)] = &[
+     ("bush_verge", [-5.0, 5.0], 0.0, -0.147),
+     ("bush_verge", [3.5, 5.0], 140.0, -0.072),
+     ("bush_verge", [0.5, -5.0], 250.0, -0.123),
+     ("bush_verge_b", [1.9, 5.2], 30.0, -0.067),
++    ("bush_verge_c", [5.8, 5.6], 75.0, -0.144),
+     ("shrub_forest", [-1.8, 6.3], 60.0, -0.108),
+     ("car_sedan", [0.5, 1.5], 0.0, 0.11),
+ ];

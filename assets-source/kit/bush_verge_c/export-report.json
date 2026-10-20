@@ -1,0 +1,39 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/bush_verge_c.py",
+    "sha256": "88935319aa672bdc911c0e0e6e44113e42b3c7da6443dc5a61161c9bd17e4eae"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_shrub.py",
+      "sha256": "3341c8f954d7845267b0814115e563f59f1b408863b81dcd2c866062b3b1e6b6"
+    },
+    {
+      "path": "scripts/blender/kit/_verge_bush.py",
+      "sha256": "124f792a1966fe40c16c14a4b2b10416fa1ecb303e3969ae45a5d87b6f692504"
+    },
+    {
+      "path": "scripts/blender/kit/_verge_bush_c.py",
+      "sha256": "57bffbdb315ae47c60b1b8c6afdda571b34b177d2b9097bfb68a7d020011eebc"
+    }
+  ],
+  "lodTris": {
+    "bush_verge_c_lod0": 1256,
+    "bush_verge_c_lod1": 332,
+    "bush_verge_c_lod2": 138
+  },
+  "nodes": [
+    "bush_verge_c",
+    "bush_verge_c_collider",
+    "bush_verge_c_lod0",
+    "bush_verge_c_lod1",
+    "bush_verge_c_lod2"
+  ],
+  "pieceId": "bush_verge_c",
+  "sockets": []
+}

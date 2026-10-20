@@ -106,6 +106,7 @@ pub const OBSTACLES: &[&str] = &[
     "shrub_forest_b",
     "bush_verge",
     "bush_verge_b",
+    "bush_verge_c",
 ];
 
 /// Why a move stopped.
@@ -1126,6 +1127,7 @@ mod tests {
             ("shrub_forest_b", "tree"),
             ("bush_verge", "tree"),
             ("bush_verge_b", "tree"),
+            ("bush_verge_c", "tree"),
         ] {
             assert_eq!(prop_kind(piece), kind, "{piece}");
             assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");

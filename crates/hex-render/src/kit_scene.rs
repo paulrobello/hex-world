@@ -504,12 +504,14 @@ const HAY_BALES: &[(&str, [f32; 2], f32, f32)] = &[
 
 /// (piece, offset, yaw, height) of the verge bushes on road tile (0, 0), base rotation 0, with a
 /// shrub_forest beside them and a sedan on the lane (`cars::ROAD_SURFACE_Y`) for comparison; the
-/// lighter bush_verge_b beside the south pair in open sun.
+/// lighter bush_verge_b beside the south pair and the flowering bush_verge_c east of them, all in
+/// open sun.
 const VERGE_BUSHES: &[(&str, [f32; 2], f32, f32)] = &[
     ("bush_verge", [-5.0, 5.0], 0.0, -0.147),
     ("bush_verge", [3.5, 5.0], 140.0, -0.072),
     ("bush_verge", [0.5, -5.0], 250.0, -0.123),
     ("bush_verge_b", [1.9, 5.2], 30.0, -0.067),
+    ("bush_verge_c", [5.8, 5.6], 75.0, -0.144),
     ("shrub_forest", [-1.8, 6.3], 60.0, -0.108),
     ("car_sedan", [0.5, 1.5], 0.0, 0.11),
 ];

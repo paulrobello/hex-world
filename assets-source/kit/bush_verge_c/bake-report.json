@@ -1,0 +1,167 @@
+{
+  "bakeStats": {
+    "alphaCoverageByMip": {
+      "tile_0": [
+        0.5534,
+        0.5509,
+        0.5524,
+        0.555,
+        0.5633,
+        0.56,
+        0.6122,
+        0.8889,
+        1.0
+      ],
+      "tile_1": [
+        0.5355,
+        0.533,
+        0.5348,
+        0.5367,
+        0.5344,
+        0.5422,
+        0.6122,
+        0.8889,
+        1.0
+      ],
+      "tile_2": [
+        0.5376,
+        0.5348,
+        0.5367,
+        0.5375,
+        0.5456,
+        0.56,
+        0.6327,
+        0.7778,
+        1.0
+      ],
+      "tile_3": [
+        0.5329,
+        0.5305,
+        0.5315,
+        0.5339,
+        0.5333,
+        0.5378,
+        0.5714,
+        0.6667,
+        1.0
+      ],
+      "tiles": [
+        0.5399,
+        0.5373,
+        0.5389,
+        0.5408,
+        0.5442,
+        0.55,
+        0.5289,
+        0.6122,
+        0.6667,
+        0.0
+      ]
+    },
+    "alphaCutoff": 0.5
+  },
+  "blender": "5.2.2 LTS",
+  "blossomStats": {
+    "tile_0": {
+      "blossomFraction": 0.146,
+      "clusters": 7,
+      "leafMeanLinear": [
+        0.034,
+        0.0953,
+        0.0146
+      ],
+      "meanLinear": [
+        0.1377,
+        0.1837,
+        0.0964
+      ]
+    },
+    "tile_1": {
+      "blossomFraction": 0.1633,
+      "clusters": 6,
+      "leafMeanLinear": [
+        0.0338,
+        0.0949,
+        0.0145
+      ],
+      "meanLinear": [
+        0.1502,
+        0.1946,
+        0.1063
+      ]
+    },
+    "tile_2": {
+      "blossomFraction": 0.1442,
+      "clusters": 5,
+      "leafMeanLinear": [
+        0.0339,
+        0.0938,
+        0.0145
+      ],
+      "meanLinear": [
+        0.1363,
+        0.181,
+        0.0955
+      ]
+    }
+  },
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "coreRadiusM": 0.31,
+  "crown": {
+    "a": 0.4,
+    "b": 0.5,
+    "card": 0.28,
+    "cushion": 0.04,
+    "cx": 0.0,
+    "cz": 0.52,
+    "inner": 30,
+    "outer": 112,
+    "spray": 0.26,
+    "spray_width": 0.45,
+    "sprays": 5,
+    "spread": 1.05,
+    "zmin": -0.92
+  },
+  "device": "none (numpy-drawn tiles, no Cycles bake)",
+  "extentZ": [
+    -0.10359827429056168,
+    1.0471270084381104
+  ],
+  "lowestLeafM": -0.040287550538778305,
+  "marginPx": 0,
+  "reachM": 0.5832321371931468,
+  "receiverSignature": "d3a81787e38b9ad1daee6b67f90503bbc1ad3a33157b8117f9633ca94fe771f8",
+  "samples": 0,
+  "skipped": false,
+  "stem": {
+    "count": 3,
+    "length": 0.3,
+    "r0": 0.018,
+    "r1": 0.008,
+    "sink": 0.1
+  },
+  "texelDensityPxPerM": {
+    "bush_verge_c_leaves": {
+      "max": 1983.567553186793,
+      "median": 1654.2604040722829,
+      "min": 1432.7366075896857
+    }
+  }
+}

@@ -148,7 +148,7 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
             "wildflower_single_d",
         ],
     ),
-    ("bush_verge", &["bush_verge_b"]),
+    ("bush_verge", &["bush_verge_b", "bush_verge_c"]),
     ("shrub_forest", &["shrub_forest_b"]),
     ("sapling_spruce", &["sapling_spruce_b"]),
 ];
@@ -576,6 +576,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         "bush_verge_b",
         Footprint {
             ground: 0.3,
+            crown: 0.0,
+        },
+    ),
+    (
+        "bush_verge_c",
+        Footprint {
+            ground: 0.32,
             crown: 0.0,
         },
     ),
@@ -2580,7 +2587,7 @@ mod tests {
     /// and each bush's widest reach over its LODs (its leaves, wider than its collider; LOD2's
     /// scaled-up cards reach furthest), taken per variant, at its scale stays beyond the kerb
     /// (3.25 m from the centreline), never over asphalt, kerb or paint, with its centre inside the
-    /// verge band, on every seed; both variants are drawn.
+    /// verge band, on every seed; every variant is drawn.
     #[test]
     fn verge_bushes_line_the_road_beyond_the_kerb() {
         const KERB_OUT: f32 = 3.25;
@@ -2600,6 +2607,10 @@ mod tests {
         );
         assert!(
             (0.4..0.6).contains(&leaves["bush_verge_b"]),
+            "widest LOD reach {leaves:?}"
+        );
+        assert!(
+            (0.5..0.7).contains(&leaves["bush_verge_c"]),
             "widest LOD reach {leaves:?}"
         );
         let mut drawn = std::collections::BTreeSet::new();
