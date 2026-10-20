@@ -53,12 +53,28 @@ pub struct SimStats {
     pub spawn_rate_hz: f32,
     /// Every driving car: id, trip phase and position (for scripted checkpoints).
     pub car_list: Vec<(u64, &'static str, [f32; 2])>,
-    /// Every train: id, front world XZ, speed (m/s) and what it waits for (P3).
-    pub train_list: Vec<(u64, [f32; 2], f32, String)>,
+    /// Every train (P3).
+    pub train_list: Vec<TrainStat>,
     /// Every junction: cell, the leg its switch is set to and the legs facing trains took.
     pub junctions: Vec<(Axial, &'static str, Vec<&'static str>)>,
     /// Level crossings closed to cars.
     pub closed_crossings: Vec<Axial>,
+}
+
+/// A train as the state JSON reports it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TrainStat {
+    pub id: u64,
+    /// The front's world XZ.
+    pub front: [f32; 2],
+    /// m/s.
+    pub speed: f32,
+    /// What it waits for ([`blocker_name`]).
+    pub waiting: String,
+    /// The cell of the station it is heading for.
+    pub destination: Option<Axial>,
+    /// Meters of track along its route to that station's stop.
+    pub route: Option<f32>,
 }
 
 #[derive(Resource)]
@@ -232,7 +248,14 @@ impl CarSim {
                 .rails()
                 .trains()
                 .iter()
-                .map(|t| (t.id().0, t.front(), t.speed(), blocker_name(t.blocker())))
+                .map(|t| TrainStat {
+                    id: t.id().0,
+                    front: t.front(),
+                    speed: t.speed(),
+                    waiting: blocker_name(t.blocker()),
+                    destination: t.destination(),
+                    route: self.sim.rails().route_length(t),
+                })
                 .collect(),
             junctions: self
                 .sim
@@ -284,8 +307,11 @@ impl CarSim {
                 self.stats
                     .train_list
                     .iter()
-                    .map(|(id, p, v, b)| json!({
-                        "id": id, "x": round(p[0]), "z": round(p[1]), "speed": round(*v), "waiting": b
+                    .map(|t| json!({
+                        "id": t.id, "x": round(t.front[0]), "z": round(t.front[1]),
+                        "speed": round(t.speed), "waiting": t.waiting,
+                        "destination": t.destination.map(|c| json!({"q": c.q, "r": c.r})),
+                        "route": t.route.map(|m| (f64::from(m) * 10.0).round() / 10.0),
                     }))
                     .collect::<Vec<_>>()
             ),
@@ -948,6 +974,56 @@ mod tests {
                 *n >= 3 && *n > reversals,
                 "train {id}: {n} departures, {reversals} reversals"
             );
+        }
+    }
+
+    /// The routing evidence world of docs/checkpoints/rail-routing/play.json, replayed headlessly:
+    /// the turnout lands toe west with its branch north-west, the one train stands at each station
+    /// in turn with that station as its destination, and the state JSON names each train's
+    /// `destination` cell and `route` meters.
+    #[test]
+    fn rail_routing_checkpoint_stands_a_train_at_each_station_in_turn() {
+        let json = include_str!("../../../docs/checkpoints/rail-routing/play.json");
+        let mut g = GameState::new(1);
+        for c in parse_script(json).unwrap() {
+            if matches!(c, Command::Camera { .. }) {
+                break;
+            }
+            if let Some(a) = c.action() {
+                g.apply(a);
+            }
+        }
+        assert_eq!(g.world.tiles().len(), 6);
+        assert_eq!(rot(&g, 0, -1), Some(("rail_junction".into(), 3)));
+        assert!(matches!(rot(&g, 1, -1), Some((d, 0 | 3)) if d == "rail_station"));
+        assert!(matches!(rot(&g, 0, -2), Some((d, 1 | 4)) if d == "rail_station"));
+        let mut sim = CarSim::new(&g.world, &g.catalog);
+        let stations = [Axial::new(1, -1), Axial::new(0, -2)];
+        let mut stood: Vec<Axial> = vec![];
+        let mut keys_checked = false;
+        for _ in 0..400 * hex_sim::TICK_HZ {
+            sim.tick();
+            assert_eq!(sim.stats.train_list.len(), 1, "{:?}", sim.stats.train_list);
+            let t = &sim.stats.train_list[0];
+            if t.waiting == "station" {
+                let cell = t.destination.expect("a destination");
+                assert!(stations.contains(&cell), "{t:?}");
+                if stood.last() != Some(&cell) {
+                    stood.push(cell);
+                }
+            }
+            if !keys_checked && t.route.is_some() {
+                let mut play = json!({});
+                sim.extend_state(&mut play);
+                let s = &play["train_list"][0];
+                assert!(s["destination"]["q"].is_i64() && s["route"].is_f64(), "{s}");
+                keys_checked = true;
+            }
+        }
+        assert!(keys_checked);
+        assert!(stood.len() >= 4, "{stood:?}");
+        for w in stood.windows(2) {
+            assert_ne!(w[0], w[1], "{stood:?}");
         }
     }
 }

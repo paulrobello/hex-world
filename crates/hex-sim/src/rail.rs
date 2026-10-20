@@ -6,24 +6,39 @@
 //!   the toe segment leaves on the leg the switch is set to, and from either leg it trails through
 //!   onto the toe segment. No route joins the two legs.
 //! - **Trains.** An engine, a carriage and a brake third ([`CONSIST`]), [`TRAIN_LENGTH`] meters
-//!   over the buffers. A train follows the track, never a route: at each facing toe it takes the
-//!   leg the junction offers next, alternating between the two, and the switch is thrown for it
-//!   when it reserves the junction. At a line end (a seam facing an empty cell; rail meets only
-//!   rail, so a line can end nowhere else) it stops inside the last tile, waits [`DWELL_SECONDS`]
-//!   and runs back the other way, the tank engine propelling its carriages (a push-pull
-//!   "autotrain": tank engines work both ways without a turntable). On a loop it loops.
+//!   over the buffers. At a line end (a seam facing an empty cell; rail meets only rail, so a line
+//!   can end nowhere else) a train stops inside the last tile, waits [`DWELL_SECONDS`] and runs
+//!   back the other way, the tank engine propelling its carriages (a push-pull "autotrain": tank
+//!   engines work both ways without a turntable). On a loop it loops.
+//! - **Routing.** A train with a reachable station has a destination, one station stop, and a
+//!   route to it: an A* search over directed links ([`Railway::route_length`]). Its first
+//!   destination is the stop at a seeded index ([`Railway::with_seed`], mixed with the train id),
+//!   and on arriving it takes the next reachable stop in stop order, so it visits the stations in
+//!   turn. A route may turn the train round only where a train stands anyway: at a line end and at
+//!   a station stop, each turn costing [`REVERSE_COST`], and never at a station on a stretch with
+//!   no line end, so trains on a loop keep lapping the same way. At each facing toe the switch is
+//!   thrown to the leg its route needs when it reserves the junction. A train with no reachable
+//!   station follows the track as before: at each facing toe the leg the junction offers next,
+//!   alternating. Routes and destinations are derived, never saved: replanned on every world edit.
 //! - **Stations.** A station tile's stop ([`hex_core::StopDef`]) is its platform's level section.
 //!   A train running toward one brakes to stand with its outer axles ([`axle_span`], from
 //!   [`CONSIST`], so a longer consist is centred the same way) centred on the section, waits
 //!   [`STATION_DWELL_SECONDS`], and runs on ([`Railway::departures`] names it that tick). It stops
-//!   once per pass: the stop re-arms when its body leaves the station's link or it reverses.
+//!   at every station it passes, its destination or not, once per pass: the stop re-arms when its
+//!   body leaves the station's link or it reverses. Leaving a station it turns round there when
+//!   its route back is shorter by more than [`REVERSE_COST`].
 //! - **Junctions.** A train may enter a junction's fouling zone (from the toe border to
 //!   [`hex_core::SwitchDef::fouling`] along both legs) only with the junction reserved, and the
 //!   switch moves only when a train reserves an empty zone, so it never moves under a train. A
 //!   train that cannot reserve stands [`ZONE_MARGIN`] short of the zone: beyond the fouling point on
 //!   a leg, short of the toe border on the toe side.
 //! - **Spacing.** A train brakes to stand [`TRAIN_GAP`] behind any other train on its path. Two
-//!   trains stopped nose to nose for [`STUCK_SECONDS`] resolve it: the higher id runs back.
+//!   trains stopped nose to nose for [`STUCK_SECONDS`] resolve it: the one with more free track
+//!   behind it (the higher id on a tie) runs back and gives way, and a train blocked by anything
+//!   else for [`GIVE_UP_SECONDS`] does the same. Giving way it keeps its destination and replans,
+//!   which clears a shared stretch (a Y's toe arm) for the other; giving way a second time before
+//!   it arrives, it takes the nearest station by route from its new heading, so two trains that
+//!   can never pass (a single line) still each reach stations instead of turning each other back.
 //! - **Crossings.** A level crossing is closed while a train body is on its deck or a train's front
 //!   is within [`CROSSING_WARN`] of it, and cars hold short of a closed crossing ([`crate::Car`]).
 //! - **Spawning.** Trains are derived, never saved: on each tick after the graph changed, every
@@ -32,7 +47,8 @@
 //!   and of junction zones, all running the same way along one walk of the stretch (on a loop they
 //!   lap the same way round). A world edit removes the trains standing on the edited cell.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::cmp::Reverse;
+use std::collections::{BTreeMap, BTreeSet, BinaryHeap};
 
 use hex_core::{Axial, NetworkKind, TileDef};
 
@@ -61,7 +77,11 @@ pub const DWELL_SECONDS: f32 = 3.0;
 pub const STATION_DWELL_SECONDS: f32 = 8.0;
 /// How far (m) a stop target may lie behind the train's mark and still hold it there.
 const STOP_EPS: f32 = 0.05;
-/// Two trains stopped facing each other this long (s): the higher id runs back.
+/// What turning round costs a route (m of running): about a minute at line speed for the stand,
+/// the brake and the restart. Long enough that a train on a stretch with a line end turns at a
+/// station only to save real running.
+pub const REVERSE_COST: f32 = 360.0;
+/// Two trains stopped facing each other this long (s): one runs back.
 pub const STUCK_SECONDS: f32 = 5.0;
 /// A train blocked this long by anything else runs back (s), so no layout deadlocks for good.
 pub const GIVE_UP_SECONDS: f32 = 30.0;
@@ -211,9 +231,38 @@ pub struct Train {
     served: Option<LinkId>,
     /// Station stops made.
     stops: u32,
+    /// The link of the station stop this train is heading for.
+    dest: Option<LinkId>,
+    /// The planned path to `dest`, front link first (`route[0] == steps[0]` while it lines up); a
+    /// link repeated with its direction flipped is a turn round there.
+    route: Vec<Step>,
+    /// Destinations reached, oldest first (the last 16), as the stops' cells.
+    arrivals: Vec<Axial>,
+    /// Times this train gave way since it last reached a destination.
+    yields: u32,
 }
 
 impl Train {
+    /// The cell of the station stop this train is heading for, if any.
+    pub fn destination(&self) -> Option<Axial> {
+        self.dest.map(|l| l.cell)
+    }
+
+    /// The link of the station stop this train is heading for, if any.
+    pub fn destination_link(&self) -> Option<LinkId> {
+        self.dest
+    }
+
+    /// The planned path to the destination, front link first (empty without one).
+    pub fn route(&self) -> &[Step] {
+        &self.route
+    }
+
+    /// Destinations this train reached, oldest first (the last 16).
+    pub fn arrivals(&self) -> &[Axial] {
+        &self.arrivals
+    }
+
     /// Station stops this train has made (each counted when it leaves).
     pub fn stops(&self) -> u32 {
         self.stops
@@ -433,7 +482,30 @@ pub struct Railway {
     next_train: u64,
     /// The graph changed (or a line still wants a train): run the spawner on the next tick.
     dirty: bool,
+    /// The graph changed since the spawner last ran (a line may have closed into a loop).
+    changed: bool,
     ticks: u64,
+    /// The world seed: picks each train's first destination.
+    seed: u64,
+}
+
+/// How a train picks a new destination among the station stops.
+#[derive(Clone, Copy, Debug)]
+enum Pick {
+    /// The stop at a seeded index, or the first reachable after it in stop order.
+    First,
+    /// The first reachable stop after this one in stop order, this one last.
+    After(LinkId),
+    /// The reachable stop with the cheapest route.
+    Nearest,
+}
+
+/// SplitMix64's finaliser: a train's seeded start index among the stops.
+fn mix(seed: u64, id: u64) -> u64 {
+    let mut z = seed ^ id.wrapping_add(1).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    z ^ (z >> 31)
 }
 
 fn link_of(net: &Network, id: LinkId) -> &crate::network::Link {
@@ -495,6 +567,11 @@ impl Default for Railway {
 
 impl Railway {
     pub fn new() -> Self {
+        Self::with_seed(0)
+    }
+
+    /// An empty railway whose trains pick their first destinations from `seed` (the world seed).
+    pub fn with_seed(seed: u64) -> Self {
         Self {
             net: Network::new(NetworkKind::Rail),
             junctions: vec![],
@@ -504,7 +581,9 @@ impl Railway {
             trains: vec![],
             next_train: 0,
             dirty: false,
+            changed: false,
             ticks: 0,
+            seed,
         }
     }
 
@@ -560,6 +639,7 @@ impl Railway {
         self.forget_cell(cell);
         if self.net.insert_tile(cell, def, rotation) {
             self.dirty = true;
+            self.changed = true;
         }
         let net = &self.net;
         for sw in &def.switches {
@@ -616,6 +696,7 @@ impl Railway {
             }
         }
         self.stops.sort_by_key(|s| (s.cell, s.link));
+        self.replan_all();
     }
 
     /// Mirrors a bulldozed tile.
@@ -624,6 +705,18 @@ impl Railway {
         self.forget_cell(cell);
         if self.net.remove_tile(cell) {
             self.dirty = true;
+            self.changed = true;
+        }
+        self.replan_all();
+    }
+
+    /// After a world edit: every train replans to its destination, or picks another when the edit
+    /// removed it or cut it off, so no route names a link that is gone.
+    fn replan_all(&mut self) {
+        for i in 0..self.trains.len() {
+            self.trains[i].route.clear();
+            let pick = self.trains[i].dest.map_or(Pick::First, Pick::After);
+            self.route_on(i, pick);
         }
     }
 
@@ -653,26 +746,63 @@ impl Railway {
     }
 
     /// The link a train leaves `node` on, having arrived on `from`; `None` at a line end. At a
-    /// toe the holder follows the switch and anyone else plans on the junction's next leg.
-    fn next_step(&self, node: NodeId, from: LinkId, train: TrainId) -> Option<Step> {
+    /// toe the holder follows the switch, and anyone else plans on the leg its route wants
+    /// (`want`), else on the junction's next leg.
+    fn next_step(
+        &self,
+        node: NodeId,
+        from: LinkId,
+        train: TrainId,
+        want: Option<LinkId>,
+    ) -> Option<Step> {
         let net = self.net();
         let n = net.node(node)?;
         let link = if let Some(j) = self.junction_at(node).map(|i| &self.junctions[i]) {
             if from == j.toe {
-                let leg = if j.holder == Some(train) {
-                    j.set
+                if j.holder == Some(train) {
+                    j.leg(j.set)
                 } else {
-                    j.next
-                };
-                j.leg(leg)
+                    match want {
+                        Some(w) if j.leg_of(w).is_some() => w,
+                        _ => j.leg(j.next),
+                    }
+                }
             } else {
                 j.toe
             }
         } else {
-            *n.links().iter().find(|&&l| l != from)?
+            match want {
+                Some(w) if w != from && n.links().contains(&w) => w,
+                _ => *n.links().iter().find(|&&l| l != from)?,
+            }
         };
         let forward = link_of(net, link).ends().0 == node;
         Some(Step { link, forward })
+    }
+
+    /// Train `t`'s front step's index in its route, when the route lines up with it.
+    fn route_cursor(t: &Train) -> Option<usize> {
+        (t.route.first() == t.steps.first()).then_some(0)
+    }
+
+    /// The step train `t` takes after `step`, arriving at `node`: its route's next step while the
+    /// route lines up (`k`, `step`'s index in the route, follows along), else the track's choice.
+    fn follow(&self, t: &Train, node: NodeId, step: Step, k: &mut Option<usize>) -> Option<Step> {
+        let want = k
+            .and_then(|k| t.route.get(k + 1))
+            .filter(|s| s.link != step.link)
+            .map(|s| s.link);
+        let next = self.next_step(node, step.link, t.id, want)?;
+        *k = k
+            .filter(|&k| t.route.get(k + 1) == Some(&next))
+            .map(|k| k + 1);
+        Some(next)
+    }
+
+    /// The leg train `t`'s route takes after the toe link `toe`, if its route passes there.
+    fn route_after(t: &Train, toe: LinkId) -> Option<LinkId> {
+        let k = t.route.iter().position(|s| s.link == toe)?;
+        t.route.get(k + 1).map(|s| s.link).filter(|&l| l != toe)
     }
 
     /// The track ahead of a train's front, up to `dist` meters, and the distance to a line end if
@@ -681,6 +811,7 @@ impl Railway {
         let net = self.net();
         let mut spans = vec![];
         let mut step = t.steps[0];
+        let mut k = Self::route_cursor(t);
         let mut at = 0.0;
         let mut into = t.head;
         loop {
@@ -706,7 +837,7 @@ impl Railway {
             } else {
                 link.ends().0
             };
-            match self.next_step(node, step.link, t.id) {
+            match self.follow(t, node, step, &mut k) {
                 Some(next) => {
                     step = next;
                     into = 0.0;
@@ -848,6 +979,19 @@ impl Railway {
         })
     }
 
+    /// The legs of junction `j` whose part of the fouling zone train `t`'s body is on.
+    pub fn legs_under(&self, j: &Junction, t: &Train) -> Vec<Leg> {
+        let body = self.body(t);
+        [Leg::Straight, Leg::Branch]
+            .into_iter()
+            .filter(|&leg| {
+                let l = j.leg(leg);
+                self.zone_span(j, l)
+                    .is_some_and(|(lo, hi)| Self::overlaps(&body, l, lo, hi))
+            })
+            .collect()
+    }
+
     pub fn in_zone(&self, j: &Junction, t: &Train) -> bool {
         let body = self.body(t);
         [j.toe, j.straight, j.branch].into_iter().any(|l| {
@@ -947,7 +1091,13 @@ impl Railway {
         }
         // Junctions: reserve the first zone ahead that this train does not hold, or stand short.
         let mut seen: BTreeSet<usize> = BTreeSet::new();
-        for sp in &spans {
+        for (n, sp) in spans.iter().enumerate() {
+            // The leg this train plans on past a facing toe here: the span after it (its lookahead
+            // follows its route), else its route's, else none.
+            let planned = spans
+                .get(n + 1)
+                .map(|s| s.link)
+                .or_else(|| Self::route_after(&self.trains[i], sp.link));
             for k in 0..self.junctions.len() {
                 if seen.contains(&k) {
                     continue;
@@ -960,7 +1110,27 @@ impl Railway {
                     continue;
                 };
                 seen.insert(k);
-                if j.holder == Some(id) || d >= limit {
+                if j.holder == Some(id) {
+                    // Held from an earlier approach (round a balloon loop shorter than the
+                    // lookahead, or before a turn round): while the zone is clear of it, set the
+                    // switch for the way it comes now, so it never runs through one set against it.
+                    // Facing, its lookahead follows the switch it holds, so ask its route first.
+                    let leg = j.leg_of(sp.link).or_else(|| {
+                        Self::route_after(&self.trains[i], sp.link)
+                            .or(planned)
+                            .and_then(|l| j.leg_of(l))
+                    });
+                    if let Some(leg) = leg
+                        && leg != j.set
+                        && !self.in_zone(j, &self.trains[i])
+                    {
+                        let j = &mut self.junctions[k];
+                        j.set = leg;
+                        j.throws += 1;
+                    }
+                    continue;
+                }
+                if d >= limit {
                     continue;
                 }
                 if j.holder.is_none() && !self.zone_taken(j, id) {
@@ -969,7 +1139,7 @@ impl Railway {
                     let leg = match j.leg_of(sp.link) {
                         Some(trailing) => trailing,
                         None => {
-                            let leg = j.next;
+                            let leg = planned.and_then(|l| j.leg_of(l)).unwrap_or(j.next);
                             j.facing.push(leg);
                             if j.facing.len() > 16 {
                                 j.facing.remove(0);
@@ -1014,7 +1184,11 @@ impl Railway {
             .min(TRAIN_SPEED)
             .min((2.0 * BRAKE * limit).sqrt());
         let ds = (v * TICK_SECONDS).min(limit);
-        self.advance(i, ds);
+        if !self.advance(i, ds) {
+            // Off its route (a switch set another way under a holder, a stop it ran past): replan.
+            let pick = self.trains[i].dest.map_or(Pick::First, Pick::After);
+            self.route_on(i, pick);
+        }
         let t = &mut self.trains[i];
         t.speed = ds / TICK_SECONDS;
         if ds < 1e-4 {
@@ -1034,16 +1208,349 @@ impl Railway {
             t.blocker = Blocker::Clear;
             t.stopped = 0;
             self.departures.push((id, cell));
+            if let Some(stop) = stop_link {
+                self.depart(i, stop);
+            }
             return;
         }
-        let reverse = match t.blocker {
-            Blocker::LineEnd => t.stopped >= dwell,
-            Blocker::Train(_) | Blocker::Junction(_) => t.stopped >= give_up,
-            Blocker::Clear | Blocker::Station(_) => false,
-        };
-        if reverse {
-            self.reverse(i);
+        let (blocker, stopped) = (t.blocker, t.stopped);
+        match blocker {
+            Blocker::LineEnd if stopped >= dwell => {
+                self.reverse(i);
+                let pick = self.trains[i].dest.map_or(Pick::First, Pick::After);
+                self.route_on(i, pick);
+            }
+            Blocker::Train(_) | Blocker::Junction(_) if stopped >= give_up => {
+                self.give_way(i);
+            }
+            _ => {}
         }
+    }
+
+    /// Train `i` leaves the station stop on `stop`: at its destination it takes the next station
+    /// in turn, and it turns round here when its route back is shorter by more than
+    /// [`REVERSE_COST`] (never toward the stop it is leaving, nor on a stretch with no line end).
+    fn depart(&mut self, i: usize, stop: LinkId) {
+        let t = &self.trains[i];
+        let arrived = t.dest.is_none_or(|d| d == stop);
+        if arrived && t.dest.is_some() {
+            let t = &mut self.trains[i];
+            t.arrivals.push(stop.cell);
+            t.yields = 0;
+            if t.arrivals.len() > 16 {
+                t.arrivals.remove(0);
+            }
+        }
+        if arrived {
+            self.retarget(i, Pick::After(stop), Some(stop));
+        } else {
+            self.route_with_turn(i, Some(stop));
+        }
+    }
+
+    /// Train `i` turns round to give way (nose to nose, or blocked too long). The first time it
+    /// keeps its destination and replans, which clears a shared stretch for the other train to
+    /// pass; giving way again before it reaches its destination it takes the nearest station by
+    /// route from its new heading instead, so two trains that can never pass each other (a single
+    /// line) still each reach stations rather than turning each other back for good.
+    fn give_way(&mut self, i: usize) {
+        self.reverse(i);
+        let t = &mut self.trains[i];
+        t.yields += 1;
+        if t.yields >= 2 {
+            t.yields = 0;
+            self.retarget(i, Pick::Nearest, None);
+        } else {
+            let pick = t.dest.map_or(Pick::First, Pick::After);
+            self.route_on(i, pick);
+        }
+    }
+
+    /// Plans train `i`'s route to its destination as it heads, or picks a new destination with
+    /// `pick` when it has none or the destination is out of reach.
+    fn route_on(&mut self, i: usize, pick: Pick) {
+        let t = &self.trains[i];
+        let turns = !self.on_closed_line(t);
+        match t.dest.and_then(|d| self.plan(t.steps[0], t.head, d, turns)) {
+            Some((route, _)) => self.trains[i].route = route,
+            None => self.retarget(i, pick, None),
+        }
+    }
+
+    /// [`Railway::route_on`] for a train standing at the stop on `stop`, which may also turn round
+    /// there first.
+    fn route_with_turn(&mut self, i: usize, stop: Option<LinkId>) {
+        let t = &self.trains[i];
+        let Some(dest) = t.dest else {
+            return self.retarget(i, Pick::First, stop);
+        };
+        match self.best_plan(t, dest, stop) {
+            Some((_, route, turn)) => self.take(i, dest, route, turn, stop),
+            None => self.retarget(i, Pick::After(dest), stop),
+        }
+    }
+
+    /// Sets train `i`'s destination and route, turning it round first when `turn` (at the stop on
+    /// `stop`, which it then does not stop at again this pass).
+    fn take(&mut self, i: usize, dest: LinkId, route: Vec<Step>, turn: bool, stop: Option<LinkId>) {
+        if turn {
+            self.reverse(i);
+            self.trains[i].served = stop;
+        }
+        let t = &mut self.trains[i];
+        t.dest = Some(dest);
+        t.route = route;
+    }
+
+    /// Picks train `i`'s destination with `pick` among the reachable stops and plans its route;
+    /// with none reachable it has no destination and follows the track. Standing at the stop on
+    /// `stop`, it may turn round there toward any other stop.
+    fn retarget(&mut self, i: usize, pick: Pick, stop: Option<LinkId>) {
+        let n = self.stops.len();
+        let t = &self.trains[i];
+        let order: Vec<usize> = match pick {
+            _ if n == 0 => vec![],
+            Pick::First => {
+                let start = (mix(self.seed, t.id.0) % n as u64) as usize;
+                (0..n).map(|k| (start + k) % n).collect()
+            }
+            Pick::After(l) => match self.stops.iter().position(|s| s.link == l) {
+                Some(at) => (1..=n).map(|k| (at + k) % n).collect(),
+                None => {
+                    let start = (mix(self.seed, t.id.0) % n as u64) as usize;
+                    (0..n).map(|k| (start + k) % n).collect()
+                }
+            },
+            Pick::Nearest => (0..n).collect(),
+        };
+        let mut best: Option<(f32, LinkId, Vec<Step>, bool)> = None;
+        for k in order {
+            let dest = self.stops[k].link;
+            let Some((cost, route, turn)) = self.best_plan(t, dest, stop) else {
+                continue;
+            };
+            if best.as_ref().is_none_or(|b| cost < b.0) {
+                best = Some((cost, dest, route, turn));
+            }
+            if !matches!(pick, Pick::Nearest) {
+                break;
+            }
+        }
+        match best {
+            Some((_, dest, route, turn)) => self.take(i, dest, route, turn, stop),
+            None => {
+                let t = &mut self.trains[i];
+                t.dest = None;
+                t.route.clear();
+            }
+        }
+    }
+
+    /// Train `t`'s cheapest route to the stop on `dest`: (cost, route, turn round first). Standing
+    /// at the stop on `stop`, it may turn round there unless `dest` is that stop or the stretch has
+    /// no line end.
+    fn best_plan(
+        &self,
+        t: &Train,
+        dest: LinkId,
+        stop: Option<LinkId>,
+    ) -> Option<(f32, Vec<Step>, bool)> {
+        let turns = !self.on_closed_line(t);
+        let ahead = self
+            .plan(t.steps[0], t.head, dest, turns)
+            .map(|(r, c)| (c, r, false));
+        let back = (turns && stop.is_some_and(|s| s != dest))
+            .then(|| {
+                let b = turned(&self.net, t);
+                self.plan(b.steps[0], b.head, dest, turns)
+                    .map(|(r, c)| (c + REVERSE_COST, r, true))
+            })
+            .flatten();
+        match (ahead, back) {
+            (Some(a), Some(b)) => Some(if b.0 < a.0 { b } else { a }),
+            (a, b) => a.or(b),
+        }
+    }
+
+    /// Whether train `t` runs on a stretch with no line end (a loop, or loops joined).
+    fn on_closed_line(&self, t: &Train) -> bool {
+        let net = self.net();
+        let mut seen: BTreeSet<LinkId> = BTreeSet::new();
+        let mut stack = vec![t.steps[0].link];
+        seen.insert(t.steps[0].link);
+        while let Some(l) = stack.pop() {
+            let (a, b) = link_of(net, l).ends();
+            for n in [a, b] {
+                let Some(node) = net.node(n) else {
+                    return false;
+                };
+                if node.links().len() < 2 {
+                    return false;
+                }
+                for &m in node.links() {
+                    if seen.insert(m) {
+                        stack.push(m);
+                    }
+                }
+            }
+        }
+        true
+    }
+
+    /// A* over directed links from a front `head` meters along `start` to the stop on `dest`:
+    /// the route (front link first, ending on `dest`) and its cost in meters of running plus
+    /// [`REVERSE_COST`] per turn. A route turns round at a line end, and at a station stop other
+    /// than on the start link when `station_turns`; it arrives on entering `dest` from a node or
+    /// turning onto it at a line end, never by starting on it. Costs are whole millimetres and
+    /// ties break on the link order, so a plan is the same every run.
+    pub fn plan(
+        &self,
+        start: Step,
+        head: f32,
+        dest: LinkId,
+        station_turns: bool,
+    ) -> Option<(Vec<Step>, f32)> {
+        type Key = (LinkId, bool);
+        let net = self.net();
+        let stop = self.stops.iter().find(|s| s.link == dest)?;
+        let centre = (stop.level.0 + stop.level.1) / 2.0;
+        let dl = net.link(dest)?;
+        let dlen = dl.length();
+        let goals: Vec<Vec2> = [dl.ends().0, dl.ends().1]
+            .iter()
+            .filter_map(|&n| net.node(n).map(|n| n.pos()))
+            .collect();
+        let mm = |m: f32| (m.max(0.0) * 1000.0).round() as u64;
+        let len = |l: LinkId| link_of(net, l).length();
+        let exit = |k: Key| {
+            let (a, b) = link_of(net, k.0).ends();
+            if k.1 { b } else { a }
+        };
+        let h = |k: Key| {
+            let p = net.node(exit(k)).map_or([0.0, 0.0], |n| n.pos());
+            mm(goals
+                .iter()
+                .map(|&q| geom::dist(p, q))
+                .fold(f32::MAX, f32::min))
+        };
+        let stop_at: BTreeMap<LinkId, f32> = self
+            .stops
+            .iter()
+            .map(|s| (s.link, (s.level.0 + s.level.1) / 2.0))
+            .collect();
+        let first: Key = (start.link, start.forward);
+        let mut best: BTreeMap<Key, u64> = BTreeMap::new();
+        let mut from: BTreeMap<Key, Key> = BTreeMap::new();
+        // Entries (f, g, state); `None` is the goal.
+        let mut heap: BinaryHeap<Reverse<(u64, u64, Option<Key>)>> = BinaryHeap::new();
+        let g0 = mm(len(start.link) - head);
+        best.insert(first, g0);
+        heap.push(Reverse((g0 + h(first), g0, Some(first))));
+        let mut goal: Option<(u64, Key, bool)> = None;
+        while let Some(Reverse((_, g, k))) = heap.pop() {
+            let Some(k) = k else {
+                break;
+            };
+            if best.get(&k).is_some_and(|&b| b < g) {
+                continue;
+            }
+            let node = exit(k);
+            let onward = self.onward(node, k.0);
+            let mut next: Vec<(Key, u64)> = vec![];
+            let mut arrive = |cost: u64, turned: bool, heap: &mut BinaryHeap<_>| {
+                if goal.is_none_or(|(c, ..)| cost < c) {
+                    goal = Some((cost, k, turned));
+                    heap.push(Reverse((cost, cost, None)));
+                }
+            };
+            if onward.is_empty() {
+                // A line end: turn round and run back along the link.
+                let back = (k.0, !k.1);
+                if k.0 == dest {
+                    let to = if back.1 { centre } else { dlen - centre };
+                    arrive(g + mm(REVERSE_COST + to), true, &mut heap);
+                } else {
+                    next.push((back, g + mm(REVERSE_COST + len(k.0))));
+                }
+            }
+            for m in onward {
+                let fwd = link_of(net, m).ends().0 == node;
+                if m == dest {
+                    let to = if fwd { centre } else { dlen - centre };
+                    arrive(g + mm(to), false, &mut heap);
+                } else {
+                    next.push(((m, fwd), g + mm(len(m))));
+                }
+            }
+            if station_turns
+                && k.0 != start.link
+                && let Some(&c) = stop_at.get(&k.0)
+            {
+                // Turn round standing at the stop: back from the exit to the stop, then out the
+                // other end.
+                let l = len(k.0);
+                let (behind, out) = if k.1 { (l - c, c) } else { (c, l - c) };
+                let g2 = g.saturating_sub(mm(behind)) + mm(REVERSE_COST + out);
+                next.push(((k.0, !k.1), g2));
+            }
+            for (k2, g2) in next {
+                if best.get(&k2).is_none_or(|&b| g2 < b) {
+                    best.insert(k2, g2);
+                    from.insert(k2, k);
+                    heap.push(Reverse((g2 + h(k2), g2, Some(k2))));
+                }
+            }
+        }
+        let (cost, last, turned) = goal?;
+        let mut keys = vec![last];
+        let mut at = last;
+        while at != first {
+            at = *from.get(&at)?;
+            keys.push(at);
+        }
+        keys.reverse();
+        let mut route: Vec<Step> = keys
+            .into_iter()
+            .map(|(link, forward)| Step { link, forward })
+            .collect();
+        let end = if turned {
+            Step {
+                link: dest,
+                forward: !last.1,
+            }
+        } else {
+            Step {
+                link: dest,
+                forward: link_of(net, dest).ends().0 == exit(last),
+            }
+        };
+        route.push(end);
+        Some((route, cost as f32 / 1000.0))
+    }
+
+    /// Meters of track along train `t`'s route from its front to its destination's stop, or
+    /// `None` without a destination.
+    pub fn route_length(&self, t: &Train) -> Option<f32> {
+        let dest = t.dest?;
+        let stop = self.stops.iter().find(|s| s.link == dest)?;
+        let centre = (stop.level.0 + stop.level.1) / 2.0;
+        let net = self.net();
+        let n = t.route.len();
+        if n == 0 || t.route[0] != t.steps[0] {
+            return None;
+        }
+        let mut m = 0.0;
+        for (k, s) in t.route.iter().enumerate() {
+            let l = net.link(s.link)?.length();
+            let (from, to) = (if k == 0 { t.head } else { 0.0 }, l);
+            if k + 1 == n {
+                let c = if s.forward { centre } else { l - centre };
+                m += (c - from).max(0.0);
+            } else {
+                m += to - from;
+            }
+        }
+        Some(m)
     }
 
     /// Two trains stopped nose to nose: the higher id runs back.
@@ -1070,7 +1577,7 @@ impl Railway {
         }
         for id in back {
             if let Some(i) = self.trains.iter().position(|t| t.id == id) {
-                self.reverse(i);
+                self.give_way(i);
             }
         }
     }
@@ -1096,9 +1603,10 @@ impl Railway {
     }
 
     /// Moves train `i`'s front `ds` meters along the track and trims the links it has left.
-    fn advance(&mut self, i: usize, ds: f32) {
-        let id = self.trains[i].id;
+    /// Returns whether the train is still on its route (always, without one).
+    fn advance(&mut self, i: usize, ds: f32) -> bool {
         self.trains[i].head += ds;
+        let mut k = Self::route_cursor(&self.trains[i]);
         loop {
             let t = &self.trains[i];
             let step = t.steps[0];
@@ -1112,7 +1620,7 @@ impl Railway {
             } else {
                 link.ends().0
             };
-            let Some(next) = self.next_step(node, step.link, id) else {
+            let Some(next) = self.follow(t, node, step, &mut k) else {
                 self.trains[i].head = len;
                 break;
             };
@@ -1124,6 +1632,13 @@ impl Railway {
         let poses = self.poses(&self.trains[i]);
         let t = &mut self.trains[i];
         t.prev = std::mem::replace(&mut t.now, poses);
+        match k {
+            Some(k) => {
+                t.route.drain(..k);
+                true
+            }
+            None => t.dest.is_none(),
+        }
     }
 
     /// Drops the links behind train `i`'s tail.
@@ -1140,6 +1655,18 @@ impl Railway {
         t.now = poses.clone();
         t.prev = poses;
         self.trains[i] = t;
+        // A junction it held ahead was reserved for the way it no longer runs: let it go, so the
+        // switch is set again for its new path when it next reserves (one it stands in keeps).
+        let t = &self.trains[i];
+        let free: Vec<usize> = (0..self.junctions.len())
+            .filter(|&k| {
+                let j = &self.junctions[k];
+                j.holder == Some(t.id) && !self.in_zone(j, t)
+            })
+            .collect();
+        for k in free {
+            self.junctions[k].holder = None;
+        }
     }
 
     /// Free track behind train `t`: how far it could run back before a line end or another train.
@@ -1246,6 +1773,7 @@ impl Railway {
 
     fn spawn(&mut self) {
         self.dirty = false;
+        let changed = std::mem::take(&mut self.changed);
         let lines = self.lines();
         for (links, len) in lines {
             if self.trains.len() >= MAX_TRAINS || len < MIN_TRACK {
@@ -1269,12 +1797,15 @@ impl Railway {
             let heading = self.heading(start);
             // Stretches that each had a train can close into a loop with their trains running
             // opposite ways round: on a line with no end, those running against the oldest turn
-            // round where they stand.
-            if self.closed(&links) {
+            // round where they stand. Only after a graph change, so a train that turned round to
+            // give way keeps its new heading.
+            if changed && self.closed(&links) {
                 for &i in &on {
                     let s = self.trains[i].steps[0];
                     if heading.get(&s.link).is_some_and(|&f| f != s.forward) {
                         self.reverse(i);
+                        let pick = self.trains[i].dest.map_or(Pick::First, Pick::After);
+                        self.route_on(i, pick);
                     }
                 }
             }
@@ -1353,6 +1884,27 @@ impl Railway {
         Some(id)
     }
 
+    /// Sends train `id` to the station stop on `cell` and plans its route there, as it heads.
+    /// Returns whether the stop exists and is in reach. For scripted layouts and tests; trains
+    /// pick their own destinations.
+    pub fn send(&mut self, id: TrainId, cell: Axial) -> bool {
+        let Some(i) = self.trains.iter().position(|t| t.id == id) else {
+            return false;
+        };
+        let Some(dest) = self.stops.iter().find(|s| s.cell == cell).map(|s| s.link) else {
+            return false;
+        };
+        let t = &self.trains[i];
+        let turns = !self.on_closed_line(t);
+        match self.plan(t.steps[0], t.head, dest, turns) {
+            Some((route, _)) => {
+                self.take(i, dest, route, false, None);
+                true
+            }
+            None => false,
+        }
+    }
+
     /// A train at rest whose front starts `into` meters along `step` and walks `length` meters on
     /// (switches as set), or `None` when a line end comes first.
     fn lay(&self, id: TrainId, step: Step, into: f32, length: f32) -> Option<Train> {
@@ -1371,6 +1923,10 @@ impl Railway {
             reversals: 0,
             served: None,
             stops: 0,
+            dest: None,
+            route: vec![],
+            arrivals: vec![],
+            yields: 0,
         };
         let mut need = length;
         loop {
@@ -1383,7 +1939,7 @@ impl Railway {
             }
             need -= room;
             let node = if step.forward { l.ends().1 } else { l.ends().0 };
-            let next = self.next_step(node, step.link, id)?;
+            let next = self.next_step(node, step.link, id, None)?;
             t.steps.insert(0, next);
             t.head = 0.0;
         }
@@ -1396,6 +1952,7 @@ impl Railway {
         t.now = poses;
         self.trains.push(t);
         self.next_train += 1;
+        self.retarget(self.trains.len() - 1, Pick::First, None);
     }
 }
 
@@ -1452,6 +2009,7 @@ fn turned(net: &Network, t: &Train) -> Train {
         stopped: 0,
         blocker: Blocker::Clear,
         engine_leads: !t.engine_leads,
+        route: vec![],
         ..t.clone()
     };
     trim(net, &mut out);

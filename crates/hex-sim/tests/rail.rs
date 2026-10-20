@@ -466,19 +466,22 @@ fn a_world_edit_removes_the_trains_on_the_cell() {
     assert_apart(&r);
 }
 
-/// Random legal rail layouts: trains never overlap and none stays stopped for good.
+/// Random legal rail layouts with stations: trains never overlap, never share a junction's
+/// fouling zone or run on a leg with the switch set against them, and none stays stopped for good
+/// while routing between the stations.
 #[test]
 fn random_rail_layouts_keep_trains_apart_and_moving() {
     let c = catalog();
-    const RAIL: [&str; 5] = [
+    const RAIL: [&str; 6] = [
         "rail_straight",
         "rail_bend_60",
         "rail_junction",
+        "rail_station",
         "rail_straight",
         "rail_bend_60",
     ];
-    let mut trains_seen = 0;
-    for seed in 0..12u64 {
+    let (mut trains_seen, mut routed, mut arrivals) = (0, 0, 0);
+    for seed in 0..16u64 {
         let mut world = World::new(seed);
         let mut rng = seed.wrapping_mul(0x9E37_79B9_7F4A_7C15) | 1;
         let mut next = move |n: usize| {
@@ -508,6 +511,16 @@ fn random_rail_layouts_keep_trains_apart_and_moving() {
             sim.tick();
             let r = sim.rails();
             assert_apart(r);
+            for j in r.junctions() {
+                let inside: Vec<_> = r.trains().iter().filter(|t| r.in_zone(j, t)).collect();
+                assert!(inside.len() <= 1, "seed {seed} tick {tick}: two in a zone");
+                for t in inside {
+                    assert_eq!(j.holder(), Some(t.id()), "seed {seed} tick {tick}");
+                    for leg in r.legs_under(j, t) {
+                        assert_eq!(j.set(), leg, "seed {seed} tick {tick}: switch against");
+                    }
+                }
+            }
             for t in r.trains() {
                 let moved = last_moved.entry(t.id().0).or_insert(tick);
                 if t.speed() > 0.0 {
@@ -521,9 +534,18 @@ fn random_rail_layouts_keep_trains_apart_and_moving() {
                 );
             }
         }
-        trains_seen += sim.rails().trains().len();
+        let r = sim.rails();
+        trains_seen += r.trains().len();
+        routed += r
+            .trains()
+            .iter()
+            .filter(|t| t.destination().is_some())
+            .count();
+        arrivals += r.trains().iter().map(|t| t.arrivals().len()).sum::<usize>();
     }
     assert!(trains_seen >= 6, "{trains_seen} trains over all seeds");
+    assert!(routed >= 3, "{routed} trains with a destination");
+    assert!(arrivals >= 3, "{arrivals} arrivals over all seeds");
 }
 
 /// The level crossing (phase 4): a road between two house clusters crosses a five-tile line with a

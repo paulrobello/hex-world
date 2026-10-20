@@ -256,13 +256,19 @@ export interface CarInfo {
   z: number;
 }
 
-/** A train in `play.train_list` (P3): its sim id, front world XZ, speed and what it waits for. */
+/**
+ * A train in `play.train_list` (P3): its sim id, front world XZ, speed, what it waits for, the
+ * station cell it is heading for and the meters of track along its route to that station's stop
+ * (both `null` with no station in reach).
+ */
 export interface TrainInfo {
   id: number;
   x: number;
   z: number;
   speed: number;
-  waiting: "none" | "line_end" | "train" | "junction";
+  waiting: "none" | "line_end" | "train" | "junction" | "station";
+  destination: { q: number; r: number } | null;
+  route: number | null;
 }
 
 /** A rail junction in `play.junctions`: its cell, the leg its switch is set to and the legs facing trains took. */

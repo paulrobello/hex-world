@@ -389,7 +389,7 @@ impl Simulation {
             rng: Rng(seed),
             roads: Network::new(NetworkKind::Road),
             rivers: Network::new(NetworkKind::River),
-            rails: crate::rail::Railway::new(),
+            rails: crate::rail::Railway::with_seed(seed),
             clusters: BTreeMap::new(),
             cars: vec![],
             parked: vec![],

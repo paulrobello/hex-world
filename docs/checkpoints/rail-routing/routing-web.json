@@ -1,0 +1,50 @@
+{
+  "order": [
+    "east",
+    "north"
+  ],
+  "trains": {
+    "routing-overview": [
+      {
+        "destination": {
+          "q": 1,
+          "r": -1
+        },
+        "id": 0,
+        "route": 122.4,
+        "speed": 0.87,
+        "waiting": "none",
+        "x": -53.25,
+        "z": -24
+      }
+    ],
+    "routing-east": [
+      {
+        "destination": {
+          "q": 1,
+          "r": -1
+        },
+        "id": 0,
+        "route": 0,
+        "speed": 0,
+        "waiting": "station",
+        "x": 6.02,
+        "z": -24
+      }
+    ],
+    "routing-north": [
+      {
+        "destination": {
+          "q": 0,
+          "r": -2
+        },
+        "id": 0,
+        "route": 0,
+        "speed": 0,
+        "waiting": "station",
+        "x": -23.79,
+        "z": -41.21
+      }
+    ]
+  }
+}
