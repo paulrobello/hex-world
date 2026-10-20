@@ -302,10 +302,12 @@ pub fn tile_ready(
 }
 
 /// The kit pieces the tile draws at rest, with their local transforms and tint roles: the base,
-/// the centre and its lane edge pieces, and the hero props (`play::tile_children`'s kit path).
+/// the centre and its lane edge pieces, and the hero props (`play::tile_children`'s kit path), each
+/// hero the piece its slot draws at `cell`, so the preview shows the placed tile's variant.
 fn ghost_pieces<'a>(
     def: &'a TileDef,
     catalog: &'a TileCatalog,
+    cell: Axial,
     has: impl Fn(&str) -> bool,
 ) -> Vec<(&'a str, Transform, Role)> {
     let mut out = vec![];
@@ -336,15 +338,15 @@ fn ghost_pieces<'a>(
             }
         }
     }
-    for h in &def.props.hero {
+    for (h, piece) in def.hero_pieces(cell) {
         let t = Transform::from_xyz(h.at[0], 0.0, h.at[1])
             .with_rotation(Quat::from_rotation_y(-h.yaw_deg.to_radians()));
-        let role = if h.piece.as_str().contains("tree") {
+        let role = if piece.contains("tree") {
             Role::Tree
         } else {
             Role::Building
         };
-        out.push((h.piece.as_str(), t, role));
+        out.push((piece, t, role));
     }
     out.retain(|(id, ..)| has(id));
     out
@@ -442,7 +444,7 @@ pub fn sync(
                     })
                     .map(|g| scatter::layout(def, seed, &g))
             };
-            let mut pieces = ghost_pieces(def, &catalog.0, has);
+            let mut pieces = ghost_pieces(def, &catalog.0, sig.cell, has);
             if let Some(l) = &layout {
                 pieces.extend(ghost_scatter(def, l, has));
             }
@@ -615,7 +617,7 @@ mod tests {
     fn every_tile_ghosts_its_base_and_hero_props_from_the_catalog() {
         let c = PlayCatalog::default();
         for def in c.0.tiles() {
-            let pieces = ghost_pieces(def, &c.0, |_| true);
+            let pieces = ghost_pieces(def, &c.0, Axial::ORIGIN, |_| true);
             assert!(
                 pieces.iter().any(|(id, ..)| *id == def.base.as_str()),
                 "{} ghosts its base",
@@ -632,11 +634,36 @@ mod tests {
         }
     }
 
+    /// The ghost previews the hero variant the placed tile draws at that cell (`hero_piece`):
+    /// house 1 of a cluster at (1, 0) is the longhouse, at the origin the cottage.
+    #[test]
+    fn the_ghost_shows_the_variant_the_cell_draws() {
+        let c = PlayCatalog::default();
+        let def = c.0.get("house_cluster").unwrap();
+        for cell in [
+            Axial::ORIGIN,
+            Axial::new(1, 0),
+            Axial::new(2, -1),
+            Axial::new(-3, 2),
+        ] {
+            let heroes: Vec<&str> = ghost_pieces(def, &c.0, cell, |_| true)
+                .into_iter()
+                .filter(|(_, _, r)| *r == Role::Building)
+                .map(|(id, ..)| id)
+                .collect();
+            let drawn: Vec<&str> = def.hero_pieces(cell).map(|(_, p)| p).collect();
+            assert_eq!(heroes, drawn, "{cell:?}");
+        }
+        let at = |q, r| ghost_pieces(def, &c.0, Axial::new(q, r), |_| true);
+        assert!(at(1, 0).iter().any(|(id, ..)| *id == "house_longhouse"));
+        assert!(!at(0, 0).iter().any(|(id, ..)| *id == "house_longhouse"));
+    }
+
     #[test]
     fn pieces_missing_from_the_kit_are_left_out() {
         let c = PlayCatalog::default();
         let def = c.0.get("forest").expect("forest tile");
-        let pieces = ghost_pieces(def, &c.0, |id| id == def.base.as_str());
+        let pieces = ghost_pieces(def, &c.0, Axial::ORIGIN, |id| id == def.base.as_str());
         assert_eq!(pieces.len(), 1);
         assert_eq!(pieces[0].0, def.base.as_str());
     }

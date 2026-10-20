@@ -194,8 +194,7 @@ fn every_kit_ref_is_built_or_pending() {
     let missing: Vec<&str> = c
         .kit_refs()
         .into_iter()
-        .chain(pairs.iter())
-        .map(|r| r.as_str())
+        .chain(pairs.iter().map(|r| r.as_str()))
         .filter(|id| !built.contains(*id) && !pending.contains(id))
         .collect();
     assert!(
@@ -229,8 +228,7 @@ fn pending_list_is_honest() {
     let referenced: BTreeSet<&str> = c
         .kit_refs()
         .into_iter()
-        .chain(pairs.iter())
-        .map(|r| r.as_str())
+        .chain(pairs.iter().map(|r| r.as_str()))
         .collect();
     let p = pending();
     let mut seen: BTreeSet<&str> = BTreeSet::new();

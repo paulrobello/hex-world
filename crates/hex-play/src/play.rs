@@ -508,12 +508,15 @@ fn spawn_tile(
         .id()
 }
 
-/// A hero prop's growth: trees scale up, buildings rise a floor at a time (roof included).
+/// A hero prop's growth: trees scale up, buildings rise a floor at a time (roof included). The
+/// single-storey longhouse rises in one step.
 fn prop_kind(piece: &str) -> PropKind {
     if piece.contains("tree") {
         PropKind::Tree
     } else if piece.contains("twostorey") {
         PropKind::Building { floors: 3 }
+    } else if piece == "house_longhouse" {
+        PropKind::Building { floors: 1 }
     } else {
         PropKind::Building { floors: 2 }
     }
@@ -625,15 +628,15 @@ fn tile_children(
         }
     }
     let count = def.props.hero.len().min(u8::MAX as usize) as u8;
-    for (i, h) in def.props.hero.iter().enumerate() {
+    for (i, (h, piece)) in def.hero_pieces(cell).enumerate() {
         let t = Transform::from_xyz(h.at[0], 0.0, h.at[1])
             .with_rotation(Quat::from_rotation_y(-h.yaw_deg.to_radians()));
         let role = RiseRole::Prop {
             order: i.min(u8::MAX as usize) as u8,
             count,
-            kind: prop_kind(h.piece.as_str()),
+            kind: prop_kind(piece),
         };
-        if !spawn_kit(p, kit, h.piece.as_str(), t, Some((cell, role))) {
+        if !spawn_kit(p, kit, piece, t, Some((cell, role))) {
             plain_mesh(
                 p,
                 &plain.block,
@@ -1027,6 +1030,20 @@ mod tests {
             let want = Vec3::new(a.cos(), 0.0, a.sin()) * APOTHEM;
             assert!((t.translation - want).length() < 1e-3, "edge {e}");
         }
+    }
+
+    /// Houses rise a floor at a time: the cottage two steps (storey and roof), the two-storey
+    /// three, the single-storey longhouse one.
+    #[test]
+    fn houses_rise_by_their_floors() {
+        let floors = |p| match prop_kind(p) {
+            PropKind::Building { floors } => floors,
+            PropKind::Tree => 0,
+        };
+        assert_eq!(floors("house_cottage"), 2);
+        assert_eq!(floors("house_twostorey"), 3);
+        assert_eq!(floors("house_longhouse"), 1);
+        assert_eq!(prop_kind("tree_hero_oak"), PropKind::Tree);
     }
 
     /// A hero's rotor (the windmill's sails) spawns under its LOD's body at its node transform with

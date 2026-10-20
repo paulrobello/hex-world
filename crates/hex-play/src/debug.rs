@@ -517,7 +517,7 @@ fn draw_scatter(
             let r = footprint(s.piece_of(i)).ground * i.scale;
             ring(&mut gizmos, world(i.pos) + Vec3::Y * LINE_Y, r, FOOTPRINT);
         }
-        for c in exclusions(def, &s.layout.instances, &s.pieces) {
+        for c in exclusions(def, *cell, &s.layout.instances, &s.pieces) {
             match c {
                 Clear::Disc { centre, radius } => ring(
                     &mut gizmos,

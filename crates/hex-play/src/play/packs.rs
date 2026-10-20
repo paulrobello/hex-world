@@ -86,12 +86,12 @@ fn hold_frames() -> u32 {
 }
 
 /// Kit pieces a placed tile draws: base, centre, edge pieces and hero props. Scatter props are left
-/// out: they do not make a tile wait, and `scatter` draws them once their pack lands.
+/// out: they do not make a tile wait, and `scatter` draws them once their pack lands. A hero slot
+/// counts every variant it may draw (`TileDef::hero_options`), whichever its cell picks.
 pub fn drawn_pieces<'a>(def: &'a TileDef, catalog: &'a TileCatalog) -> BTreeSet<&'a str> {
     let scatter: BTreeSet<&str> = def.props.scatter.iter().map(|s| s.piece.as_str()).collect();
     def.kit_refs(catalog.sockets())
         .into_iter()
-        .map(|r| r.as_str())
         .filter(|r| !scatter.contains(r))
         .collect()
 }
@@ -362,6 +362,25 @@ mod tests {
 
     fn packs() -> PlayPacks {
         PlayPacks::new(parse_manifest(MANIFEST).unwrap(), TextureFamily::Png)
+    }
+
+    /// A house cluster loads every hero variant its slots may draw, so a cell that picks the
+    /// longhouse never draws a placeholder; scatter still stays out.
+    #[test]
+    fn drawn_pieces_include_every_hero_variant() {
+        let c = TileCatalog::builtin().unwrap();
+        let def = c.get("house_cluster").unwrap();
+        let drawn = drawn_pieces(def, &c);
+        for piece in ["house_cottage", "house_longhouse", "house_twostorey"] {
+            assert!(drawn.contains(piece), "{piece}: {drawn:?}");
+        }
+        for s in &def.props.scatter {
+            assert!(!drawn.contains(s.piece.as_str()), "{}", s.piece.as_str());
+        }
+        assert_eq!(
+            packs().manifest.piece_pack("house_longhouse"),
+            Some("village")
+        );
     }
 
     #[test]

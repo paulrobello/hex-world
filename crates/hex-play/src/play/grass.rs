@@ -450,15 +450,18 @@ pub fn cos_sin_deg(deg: f32) -> Vec2 {
 
 /// Where no blade may root: hero props (a box over a rectangular building's collider,
 /// [`scatter::GROUND_BOXES`], else a disc of its ground reach) and every scatter instance (a box
-/// over a rock's base, [`ROCK_BASES`], else a disc).
-pub fn exclusions(def: &TileDef, instances: &[Instance], pieces: &[String]) -> Vec<Clear> {
+/// over a rock's base, [`ROCK_BASES`], else a disc). Each hero is the piece its slot draws at
+/// `cell` (`hex_core::hero_piece`).
+pub fn exclusions(
+    def: &TileDef,
+    cell: Axial,
+    instances: &[Instance],
+    pieces: &[String],
+) -> Vec<Clear> {
     let mut out: Vec<Clear> = def
-        .props
-        .hero
-        .iter()
-        .map(|h| {
+        .hero_pieces(cell)
+        .map(|(h, piece)| {
             let at = Vec2::from(h.at);
-            let piece = h.piece.as_str();
             let Some(b) = scatter::ground_box(piece) else {
                 return Clear::Disc {
                     centre: at,
@@ -983,7 +986,7 @@ pub fn sync(
             .entry(def.id.clone())
             .or_insert_with(|| Arc::new(grass_slots(&packs.manifest, def, &catalog.0)))
             .clone();
-        let excluded = exclusions(def, &instances, &pieces);
+        let excluded = exclusions(def, cell, &instances, &pieces);
         let started = bevy::platform::time::Instant::now();
         let l = Arc::new(layout(key.seed, &prepared.surface, &slots, &excluded));
         let (group, blades) = spawn_group(&mut commands, root, &l, density);
@@ -1335,7 +1338,7 @@ mod tests {
             variant: 0,
         };
         let rock_at = at(1, 4.0);
-        let ex = exclusions(def, &[at(0, -4.0), rock_at.clone()], &pieces);
+        let ex = exclusions(def, Axial::ORIGIN, &[at(0, -4.0), rock_at.clone()], &pieces);
         let [.., flower, rock] = ex.as_slice() else {
             unreachable!()
         };
@@ -1453,7 +1456,7 @@ mod tests {
                 variant: v,
             })
             .collect();
-        let ex = exclusions(def, &rocks, &pieces);
+        let ex = exclusions(def, Axial::ORIGIN, &rocks, &pieces);
         let surface = meadow_surface();
         let l = layout(1, &surface, &slots, &ex);
         let grown: std::collections::HashSet<[u32; 2]> = l
@@ -1497,7 +1500,7 @@ mod tests {
         let c = TileCatalog::builtin().unwrap();
         let m = parse_manifest(MANIFEST).unwrap();
         let def = c.get("windmill").unwrap();
-        let ex = exclusions(def, &[], &[]);
+        let ex = exclusions(def, Axial::ORIGIN, &[], &[]);
         let tower = scatter::footprint("windmill").ground + PROP_GAP;
         assert_eq!(
             ex,
@@ -1551,8 +1554,7 @@ mod tests {
 
     /// A hero's kit collider on the tile's ground, placed as walk mode places it, and its own
     /// +x and +z there.
-    fn placed_collider(h: &hex_core::HeroProp) -> (crate::walk::Obstacle, Vec2, Vec2) {
-        let piece = h.piece.as_str();
+    fn placed_collider(h: &hex_core::HeroProp, piece: &str) -> (crate::walk::Obstacle, Vec2, Vec2) {
         let turn = Quat::from_rotation_y(-h.yaw_deg.to_radians());
         let at = Vec2::from(h.at);
         let tris = mesh_tris(piece, "collider");
@@ -1570,16 +1572,16 @@ mod tests {
 
     /// Every hero's grass on a meadow cap: no blade within 0.1 m of a box's collider (0.04 m of
     /// a disc's), and for each rectangular building, the blades rooted in the band from
-    /// [`WALL_GAP`] to 0.6 m outside each long wall, over its middle (by wall).
-    fn hero_grass(def: &TileDef) -> Vec<(String, [usize; 2])> {
+    /// [`WALL_GAP`] to 0.6 m outside each long wall, over its middle (by wall). Each hero is the
+    /// piece its slot draws at `cell`.
+    fn hero_grass(def: &TileDef, cell: Axial) -> Vec<(String, [usize; 2])> {
         let c = TileCatalog::builtin().unwrap();
         let m = parse_manifest(MANIFEST).unwrap();
-        let ex = exclusions(def, &[], &[]);
+        let ex = exclusions(def, cell, &[], &[]);
         let l = layout(1, &meadow_surface(), &grass_slots(&m, def, &c), &ex);
         let mut bands = vec![];
-        for h in &def.props.hero {
-            let piece = h.piece.as_str();
-            let (collider, x, z) = placed_collider(h);
+        for (h, piece) in def.hero_pieces(cell) {
+            let (collider, x, z) = placed_collider(h, piece);
             let boxed = scatter::ground_box(piece);
             let gap = if boxed.is_some() { 0.1 } else { 0.04 };
             for b in &l.blades {
@@ -1623,7 +1625,7 @@ mod tests {
     #[test]
     fn grass_clears_the_barn_and_the_farm_heroes() {
         let def = TileCatalog::builtin().unwrap().get("farm").unwrap().clone();
-        let ex = exclusions(&def, &[], &[]);
+        let ex = exclusions(&def, Axial::ORIGIN, &[], &[]);
         assert_eq!(ex.len(), def.props.hero.len());
         for (h, c) in def.props.hero.iter().zip(&ex) {
             if h.piece.as_str() == "barn_red" {
@@ -1638,7 +1640,7 @@ mod tests {
                 );
             }
         }
-        let bands = hero_grass(&def);
+        let bands = hero_grass(&def, Axial::ORIGIN);
         println!("{bands:?}");
         let [(barn, walls)] = bands.as_slice() else {
             panic!("{bands:?}")
@@ -1648,17 +1650,25 @@ mod tests {
     }
 
     /// The houses clear their collider rectangle, turned by each one's yaw, and grass grows within
-    /// 0.6 m of every long wall.
+    /// 0.6 m of every long wall: at the origin (both cottages) and at (1, 0), where house 1 draws
+    /// the longhouse, so the exclusion box is the drawn piece's.
     #[test]
     fn grass_grows_along_house_walls() {
         let c = TileCatalog::builtin().unwrap();
         let mut def = c.get("meadow").unwrap().clone();
         def.props.hero = c.get("house_cluster").unwrap().props.hero.clone();
-        let bands = hero_grass(&def);
-        println!("{bands:?}");
-        assert_eq!(bands.len(), 3, "{bands:?}");
-        for (piece, walls) in &bands {
-            assert!(walls.iter().all(|&n| n >= 30), "{piece} walls {walls:?}");
+        for (cell, longhouses) in [(Axial::ORIGIN, 0), (Axial::new(1, 0), 1)] {
+            let bands = hero_grass(&def, cell);
+            println!("{bands:?}");
+            assert_eq!(bands.len(), 3, "{bands:?}");
+            assert_eq!(
+                bands.iter().filter(|(p, _)| p == "house_longhouse").count(),
+                longhouses,
+                "{bands:?}"
+            );
+            for (piece, walls) in &bands {
+                assert!(walls.iter().all(|&n| n >= 30), "{piece} walls {walls:?}");
+            }
         }
     }
 

@@ -1375,7 +1375,8 @@ mod tests {
     #[test]
     fn perched_birds_face_level_and_out_from_their_tree() {
         let c = hex_core::TileCatalog::builtin().unwrap();
-        let tree = plan::tree_instances(c.get("oak").unwrap())[0].clone();
+        let tree =
+            plan::tree_instances(c.get("oak").unwrap(), hex_core::Axial::new(0, 0))[0].clone();
         let tiles = [crate::play::PlayTile {
             cell: hex_core::Axial::new(0, 0),
             tile: "oak".into(),

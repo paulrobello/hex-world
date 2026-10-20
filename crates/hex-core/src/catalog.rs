@@ -180,7 +180,7 @@ impl TileCatalog {
     }
 
     /// Every kit piece referenced by any tile, sorted.
-    pub fn kit_refs(&self) -> BTreeSet<&KitRef> {
+    pub fn kit_refs(&self) -> BTreeSet<&str> {
         self.tiles
             .iter()
             .flat_map(|t| t.kit_refs(&self.sockets))

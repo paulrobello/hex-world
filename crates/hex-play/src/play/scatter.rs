@@ -215,7 +215,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 26] = [
+pub const FOOTPRINTS: [(&str, Footprint); 27] = [
     (
         "tree_forest",
         Footprint {
@@ -328,6 +328,13 @@ pub const FOOTPRINTS: [(&str, Footprint); 26] = [
             crown: 0.0,
         },
     ),
+    (
+        "house_longhouse",
+        Footprint {
+            ground: 4.21,
+            crown: 0.0,
+        },
+    ),
     // The tower trunk only: the sails turn overhead, from 3.7 m up.
     (
         "windmill",
@@ -426,7 +433,7 @@ pub struct GroundBox {
 /// The buildings whose collider is a rectangle (`ground_boxes_match_the_kit` checks them against
 /// the GLBs). Every other piece, the windmill's round tower included, is a disc of its
 /// [`Footprint::ground`].
-pub const GROUND_BOXES: [(&str, GroundBox); 4] = [
+pub const GROUND_BOXES: [(&str, GroundBox); 5] = [
     (
         "house_cottage",
         GroundBox {
@@ -439,6 +446,13 @@ pub const GROUND_BOXES: [(&str, GroundBox); 4] = [
         GroundBox {
             min: [-2.8, -3.8],
             max: [2.8, 4.25],
+        },
+    ),
+    (
+        "house_longhouse",
+        GroundBox {
+            min: [-2.42, -3.35],
+            max: [2.42, 3.44],
         },
     ),
     (
@@ -693,6 +707,19 @@ fn polyline_distance(p: Vec2, line: &[Vec2]) -> f32 {
         .fold(f32::MAX, f32::min)
 }
 
+/// The footprint hero slot `slot` of `def` keeps clear: the widest of every piece it may draw
+/// (`TileDef::hero_options`). A tile's ground and masks are prepared once per tile id, not per
+/// cell, so they clear every variant a cell may pick.
+pub fn hero_footprint(def: &TileDef, slot: usize) -> Footprint {
+    def.hero_options(slot)
+        .map(footprint)
+        .reduce(|a, b| Footprint {
+            ground: a.ground.max(b.ground),
+            crown: a.crown.max(b.crown),
+        })
+        .unwrap_or(DEFAULT_FOOTPRINT)
+}
+
 /// Least distance between a hero prop's centre and an instance's.
 pub fn hero_clearance(hero: Footprint, inst: Footprint) -> f32 {
     let ground = hero.ground + inst.ground + HERO_GAP;
@@ -741,8 +768,9 @@ fn mask(
         .props
         .hero
         .iter()
-        .map(|h| {
-            let c = hero_clearance(footprint(h.piece.as_str()), fp);
+        .enumerate()
+        .map(|(i, h)| {
+            let c = hero_clearance(hero_footprint(def, i), fp);
             (Vec2::from(h.at), c)
         })
         .collect();
@@ -1572,13 +1600,16 @@ mod tests {
                         }
                         let p = inst.pos.xz();
                         assert!(hex_reach(p) <= border_reach(fp) + 0.2, "{} border", def.id);
-                        for h in &def.props.hero {
-                            let need = hero_clearance(footprint(h.piece.as_str()), fp);
-                            assert!(
-                                p.distance(Vec2::from(h.at)) >= need - 0.2,
-                                "{} hero",
-                                def.id
-                            );
+                        // Every piece a hero slot may draw at any cell is cleared.
+                        for (i, h) in def.props.hero.iter().enumerate() {
+                            for piece in def.hero_options(i) {
+                                let need = hero_clearance(footprint(piece), fp);
+                                assert!(
+                                    p.distance(Vec2::from(h.at)) >= need - 0.2,
+                                    "{} hero {piece}",
+                                    def.id
+                                );
+                            }
                         }
                         for (line, half) in &lanes {
                             let need = lane_clearance(r, *half, fp);
@@ -1883,6 +1914,26 @@ mod tests {
         assert!(!l.instances.is_empty());
         for inst in &l.instances {
             assert!(field(inst.pos.xz()) > 10.8, "{:?}", inst.pos);
+        }
+    }
+
+    /// A hero variant stands inside the authored piece's ground box and reach, so the clearances
+    /// sized for the authored piece (hex-sim's parking boxes, the scatter masks) hold for it.
+    #[test]
+    fn hero_variants_fit_inside_the_authored_piece() {
+        for (piece, variants) in hex_core::HERO_VARIANTS {
+            let b = ground_box(piece).unwrap();
+            for v in variants {
+                let vb = ground_box(v).unwrap();
+                assert!(
+                    vb.min[0] >= b.min[0]
+                        && vb.min[1] >= b.min[1]
+                        && vb.max[0] <= b.max[0]
+                        && vb.max[1] <= b.max[1],
+                    "{v} {vb:?} outside {piece} {b:?}"
+                );
+                assert!(footprint(v).ground <= footprint(piece).ground, "{v}");
+            }
         }
     }
 

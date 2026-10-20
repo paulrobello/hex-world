@@ -1,0 +1,15 @@
+[
+  {"cmd": "camera", "pos": [0, 70, 80], "look_at": [0, 0, 0]},
+  {"cmd": "select_tile", "id": "house_cluster"},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "place", "q": -1, "r": 0},
+  {"cmd": "place", "q": 0, "r": -1},
+  {"cmd": "place", "q": -1, "r": 1},
+  {"cmd": "dump_state", "name": "house-variants-placed"},
+  {"cmd": "wait", "frames": 240},
+  {"cmd": "screenshot", "name": "house-variants-overview"},
+  {"cmd": "camera", "pos": [27.7, 30, 34], "look_at": [27.7, 1.5, 0]},
+  {"cmd": "wait", "frames": 10},
+  {"cmd": "screenshot", "name": "house-variants-play"},
+  {"cmd": "exit"}
+]

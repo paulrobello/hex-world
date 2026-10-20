@@ -280,13 +280,11 @@ impl TreeInstance {
 }
 
 /// The hero trees on a tile. Its scattered spruces come from `play::scatter` through
-/// [`BoidPlan::set_scatter`].
-pub fn tree_instances(def: &TileDef) -> Vec<TreeInstance> {
-    def.props
-        .hero
-        .iter()
-        .map(|h| TreeInstance {
-            piece: h.piece.as_str().to_owned(),
+/// [`BoidPlan::set_scatter`]. Each hero is the piece its slot draws at `cell`.
+pub fn tree_instances(def: &TileDef, cell: Axial) -> Vec<TreeInstance> {
+    def.hero_pieces(cell)
+        .map(|(h, piece)| TreeInstance {
+            piece: piece.to_owned(),
             at: Vec3::new(h.at[0], 0.0, h.at[1]),
             yaw: Quat::from_rotation_y(-h.yaw_deg.to_radians()),
             scale: 1.0,
@@ -350,7 +348,7 @@ pub fn roosts_with(
         let [x, z] = t.cell.to_world(HEX_RADIUS);
         let (centre, rot) = (Vec3::new(x, 0.0, z), piece_rotation(t.rotation));
         let max = max.min(usize::from(u8::MAX));
-        let hero: Vec<(Vec3, Vec3)> = tree_instances(def)
+        let hero: Vec<(Vec3, Vec3)> = tree_instances(def, t.cell)
             .iter()
             .filter(|t| drawn(&t.piece))
             .flat_map(|t| t.perches().collect::<Vec<_>>())

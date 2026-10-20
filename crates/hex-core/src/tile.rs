@@ -341,14 +341,20 @@ impl TileDef {
             .sum()
     }
 
-    /// Every kit piece the tile references: base, center, edge pieces and props.
-    pub fn kit_refs<'a>(&'a self, sockets: &'a SocketTable) -> BTreeSet<&'a KitRef> {
-        let mut refs: BTreeSet<&KitRef> = BTreeSet::new();
-        refs.insert(&self.base);
-        refs.extend(self.center.iter());
-        refs.extend(self.edge_pieces(sockets).into_iter().flatten());
-        refs.extend(self.props.scatter.iter().map(|s| &s.piece));
-        refs.extend(self.props.hero.iter().map(|h| &h.piece));
+    /// Every kit piece the tile references: base, center, edge pieces and props, with every
+    /// variant a hero slot may draw ([`TileDef::hero_options`]).
+    pub fn kit_refs<'a>(&'a self, sockets: &'a SocketTable) -> BTreeSet<&'a str> {
+        let mut refs: BTreeSet<&str> = BTreeSet::new();
+        refs.insert(self.base.as_str());
+        refs.extend(self.center.iter().map(KitRef::as_str));
+        refs.extend(
+            self.edge_pieces(sockets)
+                .into_iter()
+                .flatten()
+                .map(KitRef::as_str),
+        );
+        refs.extend(self.props.scatter.iter().map(|s| s.piece.as_str()));
+        refs.extend((0..self.props.hero.len()).flat_map(|i| self.hero_options(i)));
         refs
     }
 
@@ -927,7 +933,7 @@ mod tests {
     fn kit_refs_collects_base_center_and_edges() {
         let t = bend60();
         let s = sockets();
-        let refs: Vec<&str> = t.kit_refs(&s).into_iter().map(KitRef::as_str).collect();
+        let refs: Vec<&str> = t.kit_refs(&s).into_iter().collect();
         assert_eq!(
             refs,
             ["meadow_base", "road_bend_60_center", "road_straight_edge"]

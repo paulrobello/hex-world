@@ -56,9 +56,10 @@ pub const MAX_STEP: f32 = 0.4;
 const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not.
-pub const OBSTACLES: [&str; 19] = [
+pub const OBSTACLES: [&str; 20] = [
     "house_cottage",
     "house_twostorey",
+    "house_longhouse",
     "windmill",
     "barn_red",
     "bakery_shop",
@@ -556,8 +557,7 @@ impl WalkGround {
             );
             let root = root_transform(t);
             let mut obs = vec![];
-            for h in &def.props.hero {
-                let piece = h.piece.as_str();
+            for (h, piece) in def.hero_pieces(t.cell) {
                 if OBSTACLES.contains(&piece) {
                     let local = Transform::from_xyz(h.at[0], 0.0, h.at[1])
                         .with_rotation(Quat::from_rotation_y(-h.yaw_deg.to_radians()));
@@ -938,6 +938,7 @@ mod tests {
             ("barn_red", "building"),
             ("house_cottage", "building"),
             ("house_twostorey", "building"),
+            ("house_longhouse", "building"),
             ("tree_hero_oak", "tree"),
             ("tree_forest_b", "tree"),
             ("rock_small", "rock"),
@@ -1314,6 +1315,35 @@ mod tests {
         let bank_low = g.ground(c + Vec2::new(0.0, 5.0)).unwrap();
         assert!(bank_top - bank_low > 0.3, "{bank_top} then {bank_low}");
         assert_eq!(g.ground(c), Err(Blocked::Water), "the channel centre");
+    }
+
+    /// Walk blocks at the piece the cell draws: a cluster at (1, 0) draws the longhouse in house
+    /// 1's slot (`hex_core::hero_piece`), at the origin the cottage.
+    #[test]
+    fn walk_obstacles_are_the_drawn_hero_variant() {
+        let pieces = |q, r| -> Vec<String> {
+            let g = world(&[(q, r, "house_cluster", 0)]);
+            g.obstacles[&Axial::new(q, r)]
+                .iter()
+                .filter(|o| o.piece.starts_with("house_"))
+                .map(|o| o.piece.clone())
+                .collect()
+        };
+        assert_eq!(
+            pieces(0, 0),
+            ["house_cottage", "house_cottage", "house_twostorey"]
+        );
+        assert_eq!(
+            pieces(1, 0),
+            ["house_cottage", "house_longhouse", "house_twostorey"]
+        );
+        // House 1 sits at (-0.5, 7.0): walk at its yard front from the pad.
+        let g = world(&[(1, 0, "house_cluster", 0)]);
+        let c = centre(1, 0);
+        let start = c + Vec2::new(-0.5, 1.5);
+        let s = walk(&g, start, Vec2::new(0.0, 6.0), 8.0);
+        assert_eq!(s.blocked, Some(Blocked::Obstacle("house_longhouse".into())));
+        assert_eq!(s.blocked.unwrap().reason(), "building");
     }
 
     #[test]

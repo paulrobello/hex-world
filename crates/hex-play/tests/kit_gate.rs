@@ -2335,15 +2335,14 @@ fn packs_declared_core_draws_the_start_tile_and_heroes_stream() {
     let start = catalog.get(hex_core::START_TILE).unwrap();
     for r in start.kit_refs(catalog.sockets()) {
         // Scatter props are not drawn in play yet (play.rs spawns `props.hero` only).
-        if start.props.scatter.iter().any(|s| &s.piece == r) {
+        if start.props.scatter.iter().any(|s| s.piece.as_str() == r) {
             continue;
         }
-        match m.piece_pack(r.as_str()) {
+        match m.piece_pack(r) {
             Some(CORE_PACK) | None => {}
             Some(k) => e.push(format!(
                 "start tile {} draws {} from pack {k}; it must be core",
-                start.id,
-                r.as_str()
+                start.id, r
             )),
         }
     }
