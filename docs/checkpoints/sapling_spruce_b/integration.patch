@@ -1,0 +1,86 @@
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index bf8367b..db5d471 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -130,7 +130,7 @@ pub const VERGE_BAND: f32 = 6.7;
+ 
+ /// Variants of a scatter piece (PRD §6 Variety), after the piece itself: a rule names the first
+ /// and each of its instances draws one of the group, picked by [`pick_variant`].
+-pub const VARIANTS: [(&str, &[&str]); 8] = [
++pub const VARIANTS: [(&str, &[&str]); 9] = [
+     ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
+     ("tree_oak", &["tree_oak_b"]),
+     ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
+@@ -149,6 +149,7 @@ pub const VARIANTS: [(&str, &[&str]); 8] = [
+         ],
+     ),
+     ("bush_verge", &["bush_verge_b"]),
++    ("sapling_spruce", &["sapling_spruce_b"]),
+ ];
+ 
+ fn extra_variants(piece: &str) -> &'static [&'static str] {
+@@ -235,7 +236,7 @@ pub struct Footprint {
+ 
+ /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
+ /// the GLBs).
+-pub const FOOTPRINTS: [(&str, Footprint); 38] = [
++pub const FOOTPRINTS: [(&str, Footprint); 39] = [
+     (
+         "tree_forest",
+         Footprint {
+@@ -491,6 +492,13 @@ pub const FOOTPRINTS: [(&str, Footprint); 38] = [
+             crown: 0.9,
+         },
+     ),
++    (
++        "sapling_spruce_b",
++        Footprint {
++            ground: 0.1,
++            crown: 1.1,
++        },
++    ),
+     (
+         "bush_verge",
+         Footprint {
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index 54b5e3c..c42b5d5 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -60,7 +60,7 @@ const SUBSTEP: f32 = 0.1;
+ /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
+ /// pieces do not. A sapling stops the walker at its stem, a shrub at its dense lower dome, a verge
+ /// bush at its clipped mass; ferns are walk-through.
+-pub const OBSTACLES: [&str; 30] = [
++pub const OBSTACLES: [&str; 31] = [
+     "house_cottage",
+     "house_twostorey",
+     "house_longhouse",
+@@ -88,6 +88,7 @@ pub const OBSTACLES: [&str; 30] = [
+     "tree_oak_b",
+     "fence_paddock",
+     "sapling_spruce",
++    "sapling_spruce_b",
+     "shrub_forest",
+     "bush_verge",
+     "bush_verge_b",
+@@ -1082,6 +1083,7 @@ mod tests {
+             ("log_fallen_b", "log"),
+             ("fence_paddock", "fence"),
+             ("sapling_spruce", "tree"),
++            ("sapling_spruce_b", "tree"),
+             ("shrub_forest", "tree"),
+             ("bush_verge", "tree"),
+             ("bush_verge_b", "tree"),
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 7005fd9..2a987d7 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -384,7 +384,7 @@ const UNDERGROWTH: [(&str, [f32; 2], f32, f32); 10] = [
+     ("shrub_forest", [2.5, -1.0], 0.0, -0.216),
+     ("shrub_forest", [-4.5, -1.5], 120.0, -0.133),
+     ("shrub_forest", [4.0, 3.5], 240.0, -0.127),
+-    ("sapling_spruce", [0.0, 2.0], 0.0, -0.198),
++    ("sapling_spruce_b", [0.0, 2.0], 0.0, -0.198),
+     ("sapling_spruce", [-2.5, 1.5], 140.0, -0.152),
+     ("sapling_spruce", [5.0, -4.0], 260.0, -0.193),
+     ("fern_clump", [-1.0, 5.5], 30.0, -0.112),
