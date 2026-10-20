@@ -1,0 +1,543 @@
+{
+  "pieceId": "tree_oak_b",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/tree_oak_b.py",
+    "sha256": "754bd572ddd2e2b7146897b018d35c70033e96a5d73fe2bc2f51f1dc0227c2f3"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_leaves.py",
+      "sha256": "d732efec23b5b9a52dca841bfc97f70fb9ab604b8f039eb6029fffaabb2ccf4a"
+    },
+    {
+      "path": "scripts/blender/kit/_oak.py",
+      "sha256": "f8fc3f9e33baae6a17514863cd95fb775f6ae5a9e6b3085606520ba4cbb4572c"
+    },
+    {
+      "path": "scripts/blender/kit/_oak_scatter.py",
+      "sha256": "d3a3ecac015df8b35fb11aa41c991db8716300847cda0f9b3e725800710143c9"
+    },
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    },
+    {
+      "path": "scripts/blender/kit/_tree.py",
+      "sha256": "037e8be778813c929864130240aa65e05042c153b8c386d3920566b6867d81ce"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.35,
+    "bakeStats": {
+      "barkAo": {
+        "mean": 0.9496259689331055,
+        "min": 0,
+        "p01": 0.1882353127002716,
+        "p05": 0.7176470756530762,
+        "texels": 3305
+      },
+      "barkAoVisible": {
+        "hiddenTexels": 439,
+        "mean": 0.9616381525993347,
+        "min": 0.0313725508749485,
+        "p01": 0.4909804165363312,
+        "p05": 0.7803922295570374,
+        "texels": 2866
+      },
+      "canopyAo": {
+        "mean": 0.725591778755188,
+        "min": 0,
+        "p01": 0.2196078598499298,
+        "p05": 0.3450980484485626,
+        "texels": 431192
+      },
+      "canopyGaps": {
+        "albedoScaleLinear": 0.5,
+        "roughness": 1,
+        "share": 0.27218965101393344
+      },
+      "canopyMasks": {
+        "aMin": 1,
+        "snowMean": 0.6501023769378662
+      },
+      "leafAlphaCoverageByMip": [
+        0.5651,
+        0.5585,
+        0.5641,
+        0.5701,
+        0.5762,
+        0.5625,
+        0.7031,
+        1,
+        1
+      ]
+    },
+    "barkTile": {
+      "aoTexelDensityPxPerM": {
+        "max": 17.05146781082675,
+        "median": 16.006282711549638,
+        "min": 15.260570713005363
+      },
+      "set": "bark",
+      "tileUvScale": 16,
+      "uvPerM": 0.03125
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.25,
+    "canopyShell": {
+      "aoDistanceM": 0.3,
+      "cageExtrusionM": 0.45,
+      "clumps": 10,
+      "columnsPerSector": [
+        2,
+        3,
+        4,
+        4,
+        3
+      ],
+      "culledHiddenFaces": {
+        "culled": 345,
+        "of": 1280
+      },
+      "leavesPerSector": 360,
+      "maxRayDistanceM": 0.9,
+      "ringLatitudes": [
+        -0.5422,
+        -0.1982,
+        0,
+        0.4244,
+        0.9352
+      ],
+      "sectors": 4,
+      "uvArea": 0.4109890318295065
+    },
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 1024
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "culledReceiverFaces": {
+      "buried": 71,
+      "inCrown": 48,
+      "of": 383,
+      "underground": 26
+    },
+    "device": "CPU",
+    "footprint": {
+      "crown": 3.348,
+      "ground": 0.346,
+      "height": 7.871
+    },
+    "fringe": {
+      "cardScale": 0.65,
+      "leafSeed": "tree_hero_oak",
+      "perClump": 6
+    },
+    "lodPartsTris": [
+      456,
+      935,
+      120
+    ],
+    "marginPx": 8,
+    "maxRayDistanceM": 0.5,
+    "receiverSignature": "f8775f3a5672e4df9c9636c4f19d55fddd693f7d72851c44626a75276eb57408",
+    "samples": 32,
+    "shape": {
+      "flare": 0.12,
+      "leader_r": [
+        0.1,
+        0.05
+      ],
+      "leader_z": 4,
+      "limb_r": [
+        0.12,
+        0.05
+      ],
+      "limb_step": 0.8,
+      "limb_z": [
+        2.8,
+        3.4
+      ],
+      "root_r": [
+        0.09,
+        0.13
+      ],
+      "root_reach": [
+        0.6,
+        0.9
+      ],
+      "root_z0": [
+        0.3,
+        0.55
+      ],
+      "roots": 4,
+      "sec_r": [
+        0.07,
+        0.035
+      ],
+      "sec_step": 0.7,
+      "trunk_r0": 0.22,
+      "trunk_r1": 0.09,
+      "trunk_step": 0.6,
+      "wobble": 0.07
+    },
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "tree_oak_b_bark": {
+        "max": 545.646969946456,
+        "median": 512.2010467695884,
+        "min": 488.3382628161716
+      },
+      "tree_oak_b_canopy": {
+        "max": 435.43337939394956,
+        "median": 326.8813524708894,
+        "min": 216.3891553097653
+      },
+      "tree_oak_b_leaves": {
+        "max": 346.01765125526185,
+        "median": 300.2799414860051,
+        "min": 257.4993471294284
+      }
+    },
+    "tiers": [
+      [
+        4,
+        1.6,
+        4.4,
+        1.15
+      ],
+      [
+        4,
+        1,
+        5.7,
+        1.15
+      ],
+      [
+        2,
+        0.45,
+        6.9,
+        1.1
+      ]
+    ]
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1511,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 743,
+      "ratio": 0.49172733289212445
+    },
+    {
+      "lod": 2,
+      "tris": 220,
+      "ratio": 0.14559894109861019
+    }
+  ],
+  "collider": {
+    "node": "tree_oak_b_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "tree_oak_b_bark": {
+      "max": 545.646969946456,
+      "median": 512.2010467695884,
+      "min": 488.3382628161716
+    },
+    "tree_oak_b_canopy": {
+      "max": 435.43337939394956,
+      "median": 326.8813524708894,
+      "min": 216.3891553097653
+    },
+    "tree_oak_b_leaves": {
+      "max": 346.01765125526185,
+      "median": 300.2799414860051,
+      "min": 257.4993471294284
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 1179159,
+        "astc": 1173057
+      },
+      "glbBytes": 130272
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 340089,
+        "sha256": "d94be4ebda7bd6ddf48be5f2314b761e41e0acc8f6a06a4c19b2bfdb582fbaf6"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 336846,
+        "sha256": "cdc0c458b98d0af1872b842dd2101c83413c9d338104e6d059ad11443b5ebd51"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 382516,
+        "sha256": "5ac76b51bb323a8765d27e016b994c21a3d5bfd5a92f4cf866b2f29e61d21552"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 95664,
+        "sha256": "3351eeb8ba85ca303ca20dfbfd8c963ad198cecd77f4b938400a7ef64a4c4cde"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 96549,
+        "sha256": "11abecacbb48d7e83957960360189d1c56e104f51472063cf6a881d21f9ad4ba"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 133850,
+        "sha256": "b3c0e5f4faff9d47acc9c2df254f758a091cd7d3d801b8950d7dd71f08c2c996"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 599237,
+        "sha256": "cf3ac1f8e20b9fa6790b00467d540d645c456c5d7a4f4259b0280de0c3340d09"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 591182,
+        "sha256": "8e56a612684b0c31ac73493ed0d9a249878892959613da0e0cf7cbd8a5688a06"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 946504,
+        "sha256": "c898bcb9ff55a2a8e649e353ee49b380b2ad562d5e23b9873fed739bd0b3546a"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 144169,
+        "sha256": "97702e303f7fffc60fff31a2054819b0e0abf6c5bfa0e42262be80452d233a0d"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 148480,
+        "sha256": "9ffdd6ea6688474e4a2a8a3ecb1513e5c62d894ec554735d488fb11cde1fbc21"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/tree_oak_b/tree_oak_b.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 201055,
+        "sha256": "36b1ba75fb09a20b7d27f7042cb2ffb7917cb57d1ecb70cebdaba7155f7514d7"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.glb",
+      "sha256": "cb402ac2e56f6c52e6e6d2e9f4d908231d4ffa019541572a38af56f4157595f7",
+      "bytes": 130272
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.albedo.bc7.ktx2",
+      "sha256": "d94be4ebda7bd6ddf48be5f2314b761e41e0acc8f6a06a4c19b2bfdb582fbaf6",
+      "bytes": 340089
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.albedo.astc.ktx2",
+      "sha256": "cdc0c458b98d0af1872b842dd2101c83413c9d338104e6d059ad11443b5ebd51",
+      "bytes": 336846
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.albedo.png",
+      "sha256": "5ac76b51bb323a8765d27e016b994c21a3d5bfd5a92f4cf866b2f29e61d21552",
+      "bytes": 382516
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.masks.bc7.ktx2",
+      "sha256": "3351eeb8ba85ca303ca20dfbfd8c963ad198cecd77f4b938400a7ef64a4c4cde",
+      "bytes": 95664
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.masks.astc.ktx2",
+      "sha256": "11abecacbb48d7e83957960360189d1c56e104f51472063cf6a881d21f9ad4ba",
+      "bytes": 96549
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.masks.png",
+      "sha256": "b3c0e5f4faff9d47acc9c2df254f758a091cd7d3d801b8950d7dd71f08c2c996",
+      "bytes": 133850
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.normal.bc7.ktx2",
+      "sha256": "cf3ac1f8e20b9fa6790b00467d540d645c456c5d7a4f4259b0280de0c3340d09",
+      "bytes": 599237
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.normal.astc.ktx2",
+      "sha256": "8e56a612684b0c31ac73493ed0d9a249878892959613da0e0cf7cbd8a5688a06",
+      "bytes": 591182
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.normal.png",
+      "sha256": "c898bcb9ff55a2a8e649e353ee49b380b2ad562d5e23b9873fed739bd0b3546a",
+      "bytes": 946504
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.orm.bc7.ktx2",
+      "sha256": "97702e303f7fffc60fff31a2054819b0e0abf6c5bfa0e42262be80452d233a0d",
+      "bytes": 144169
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.orm.astc.ktx2",
+      "sha256": "9ffdd6ea6688474e4a2a8a3ecb1513e5c62d894ec554735d488fb11cde1fbc21",
+      "bytes": 148480
+    },
+    {
+      "path": "assets/kit/p1/tree_oak_b/tree_oak_b.orm.png",
+      "sha256": "36b1ba75fb09a20b7d27f7042cb2ffb7917cb57d1ecb70cebdaba7155f7514d7",
+      "bytes": 201055
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/forest/ref-1.jpg",
+      "sha256": "91bec450432eaf9da8debc4f88820bc7da6b4fbbb17c6586e22f0ae1afc09ac6",
+      "sourceSha256": "3c9aa8f425d216ab897c74a17ba4d998a008fa7b0672024f9988a8813201e31d",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "23f27fd1-0218-42b6-92c4-0d22142c11e5",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel), covered by a dense mixed forest: a few broad rounded oaks among many tall spruce conifers with dark green needle tiers, undergrowth of ferns, shrubs and saplings, a fallen mossy log and leaf litter on the forest floor, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/forest/ref-2.jpg",
+      "sha256": "fd5b8a1ebb2c3df56a73f28095a39d07c6c7e303dfcdb79e34d4e05ce9164734",
+      "sourceSha256": "394bbf09c7fab300ef2e4e781ee047384e0bbdba2b6015750bfebdef5ae88ec8",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e3e4f64b-d10d-4a10-b22a-0fe15b9fee0e",
+      "prompt": "Close-up of a stylized-real spruce conifer and the forest undergrowth on a diorama tile: rough flaky bark, layered tiers of needle clusters, ferns, low shrubs, moss and leaf litter at the trunk base, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T07:04:49.160Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/forest/ref-1.jpg",
+        "assets-source/refs/forest/ref-2.jpg"
+      ],
+      "notes": "Approved: spruce among oaks, ferns, fallen log. ref-2 sits on a square fragment; tiles are hexagonal. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Review against assets-source/refs/forest (ref-1: oaks among the spruces): the variant of tree_oak, a younger, narrower oak about 7.9 m tall with a 6.7 m crown of ten smaller domes over a slim trunk, same bark set, canopy master, leaf tiles and wind data. Review sheet: docs/checkpoints/tree_oak/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

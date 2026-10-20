@@ -104,7 +104,7 @@ const BUCKETS: usize = 33;
 /// A piece not listed has none, so it is never placed.
 pub fn floor_slots(piece: &str) -> &'static [&'static str] {
     match family(piece) {
-        "tree_forest" | "fern_clump" | "log_fallen" => &["forest_base_floor"],
+        "tree_forest" | "tree_oak" | "fern_clump" | "log_fallen" => &["forest_base_floor"],
         "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
         "wildflower_single" => &["meadow_base_cap"],
         _ => &[],
@@ -113,8 +113,9 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
 
 /// Variants of a scatter piece (PRD §6 Variety), after the piece itself: a rule names the first
 /// and each of its instances draws one of the group, picked by [`pick_variant`].
-pub const VARIANTS: [(&str, &[&str]); 4] = [
+pub const VARIANTS: [(&str, &[&str]); 5] = [
     ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
+    ("tree_oak", &["tree_oak_b"]),
     ("rock_small", &["rock_small_b", "rock_small_c"]),
     (
         "wildflower_clump",
@@ -214,7 +215,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 24] = [
+pub const FOOTPRINTS: [(&str, Footprint); 26] = [
     (
         "tree_forest",
         Footprint {
@@ -384,6 +385,20 @@ pub const FOOTPRINTS: [(&str, Footprint); 24] = [
         Footprint {
             ground: 1.9,
             crown: 0.0,
+        },
+    ),
+    (
+        "tree_oak",
+        Footprint {
+            ground: 0.59,
+            crown: 4.86,
+        },
+    ),
+    (
+        "tree_oak_b",
+        Footprint {
+            ground: 0.35,
+            crown: 3.35,
         },
     ),
 ];
@@ -1999,7 +2014,7 @@ mod tests {
             ["tree_forest", "rock_small", "fern_clump", "log_fallen"]
         );
         assert!(pine.props.hero.is_empty() && pine.agents.is_empty());
-        assert_eq!(pieces(oak), ["rock_small", "wildflower_clump"]);
+        assert_eq!(pieces(oak), ["rock_small", "wildflower_clump", "tree_oak"]);
         assert_eq!(oak.props.hero.len(), 1);
         assert_eq!(oak.props.hero[0].piece.as_str(), "tree_hero_oak");
         let g = prepared(oak).unwrap();

@@ -1,0 +1,207 @@
+{
+  "aoDistanceM": 0.35,
+  "bakeStats": {
+    "barkAo": {
+      "mean": 0.9496259689331055,
+      "min": 0.0,
+      "p01": 0.1882353127002716,
+      "p05": 0.7176470756530762,
+      "texels": 3305
+    },
+    "barkAoVisible": {
+      "hiddenTexels": 439,
+      "mean": 0.9616381525993347,
+      "min": 0.0313725508749485,
+      "p01": 0.4909804165363312,
+      "p05": 0.7803922295570374,
+      "texels": 2866
+    },
+    "canopyAo": {
+      "mean": 0.725591778755188,
+      "min": 0.0,
+      "p01": 0.2196078598499298,
+      "p05": 0.3450980484485626,
+      "texels": 431192
+    },
+    "canopyGaps": {
+      "albedoScaleLinear": 0.5,
+      "roughness": 1.0,
+      "share": 0.27218965101393344
+    },
+    "canopyMasks": {
+      "aMin": 1.0,
+      "snowMean": 0.6501023769378662
+    },
+    "leafAlphaCoverageByMip": [
+      0.5651,
+      0.5585,
+      0.5641,
+      0.5701,
+      0.5762,
+      0.5625,
+      0.7031,
+      1.0,
+      1.0
+    ]
+  },
+  "barkTile": {
+    "aoTexelDensityPxPerM": {
+      "max": 17.05146781082675,
+      "median": 16.006282711549638,
+      "min": 15.260570713005363
+    },
+    "set": "bark",
+    "tileUvScale": 16.0,
+    "uvPerM": 0.03125
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.25,
+  "canopyShell": {
+    "aoDistanceM": 0.3,
+    "cageExtrusionM": 0.45,
+    "clumps": 10,
+    "columnsPerSector": [
+      2,
+      3,
+      4,
+      4,
+      3
+    ],
+    "culledHiddenFaces": {
+      "culled": 345,
+      "of": 1280
+    },
+    "leavesPerSector": 360,
+    "maxRayDistanceM": 0.9,
+    "ringLatitudes": [
+      -0.5422,
+      -0.1982,
+      0.0,
+      0.4244,
+      0.9352
+    ],
+    "sectors": 4,
+    "uvArea": 0.4109890318295065
+  },
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 1024
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "culledReceiverFaces": {
+    "buried": 71,
+    "inCrown": 48,
+    "of": 383,
+    "underground": 26
+  },
+  "device": "CPU",
+  "footprint": {
+    "crown": 3.348,
+    "ground": 0.346,
+    "height": 7.871
+  },
+  "fringe": {
+    "cardScale": 0.65,
+    "leafSeed": "tree_hero_oak",
+    "perClump": 6
+  },
+  "lodPartsTris": [
+    456,
+    935,
+    120
+  ],
+  "marginPx": 8,
+  "maxRayDistanceM": 0.5,
+  "receiverSignature": "f8775f3a5672e4df9c9636c4f19d55fddd693f7d72851c44626a75276eb57408",
+  "samples": 32,
+  "shape": {
+    "flare": 0.12,
+    "leader_r": [
+      0.1,
+      0.05
+    ],
+    "leader_z": 4.0,
+    "limb_r": [
+      0.12,
+      0.05
+    ],
+    "limb_step": 0.8,
+    "limb_z": [
+      2.8,
+      3.4
+    ],
+    "root_r": [
+      0.09,
+      0.13
+    ],
+    "root_reach": [
+      0.6,
+      0.9
+    ],
+    "root_z0": [
+      0.3,
+      0.55
+    ],
+    "roots": 4,
+    "sec_r": [
+      0.07,
+      0.035
+    ],
+    "sec_step": 0.7,
+    "trunk_r0": 0.22,
+    "trunk_r1": 0.09,
+    "trunk_step": 0.6,
+    "wobble": 0.07
+  },
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "tree_oak_b_bark": {
+      "max": 545.646969946456,
+      "median": 512.2010467695884,
+      "min": 488.3382628161716
+    },
+    "tree_oak_b_canopy": {
+      "max": 435.43337939394956,
+      "median": 326.8813524708894,
+      "min": 216.3891553097653
+    },
+    "tree_oak_b_leaves": {
+      "max": 346.01765125526185,
+      "median": 300.2799414860051,
+      "min": 257.4993471294284
+    }
+  },
+  "tiers": [
+    [
+      4,
+      1.6,
+      4.4,
+      1.15
+    ],
+    [
+      4,
+      1.0,
+      5.7,
+      1.15
+    ],
+    [
+      2,
+      0.45,
+      6.9,
+      1.1
+    ]
+  ]
+}

@@ -56,7 +56,7 @@ pub const MAX_STEP: f32 = 0.4;
 const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not.
-pub const OBSTACLES: [&str; 17] = [
+pub const OBSTACLES: [&str; 19] = [
     "house_cottage",
     "house_twostorey",
     "windmill",
@@ -74,6 +74,8 @@ pub const OBSTACLES: [&str; 17] = [
     "rock_small_b",
     "rock_small_c",
     "log_fallen",
+    "tree_oak",
+    "tree_oak_b",
 ];
 
 /// Why a move stopped.
@@ -1545,7 +1547,12 @@ mod tests {
         let eye = Vec3::new(oak.x, 1.7, oak.y + 40.0);
         let mid = Vec3::new(oak.x, 8.7, oak.y);
         let (t, piece) = g.pick_prop(ray(eye, mid - eye), 1000.0).unwrap();
-        assert_eq!((piece, prop_kind(piece)), ("tree_hero_oak", "tree"));
+        // The hero oak, or a scattered oak standing in front of it.
+        assert!(
+            ["tree_hero_oak", "tree_oak", "tree_oak_b"].contains(&piece),
+            "{piece}"
+        );
+        assert_eq!(prop_kind(piece), "tree");
         assert!(t > 25.0 && t < 40.0, "the crown's near side: {t}");
         // Beside the tree the ray meets nothing here (the ground is the caller's).
         let beside = Vec3::new(oak.x + 14.0, 8.7, oak.y);

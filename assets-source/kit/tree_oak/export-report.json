@@ -1,0 +1,44 @@
+{
+  "blender": "5.2.2 LTS",
+  "budgetClass": "piece",
+  "generator": {
+    "path": "scripts/blender/kit/tree_oak.py",
+    "sha256": "9f9c0830b1568d2b19dcdaca213f8a63975244d05c1bf0a1f4b851a731f8126b"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_leaves.py",
+      "sha256": "d732efec23b5b9a52dca841bfc97f70fb9ab604b8f039eb6029fffaabb2ccf4a"
+    },
+    {
+      "path": "scripts/blender/kit/_oak.py",
+      "sha256": "f8fc3f9e33baae6a17514863cd95fb775f6ae5a9e6b3085606520ba4cbb4572c"
+    },
+    {
+      "path": "scripts/blender/kit/_oak_scatter.py",
+      "sha256": "d3a3ecac015df8b35fb11aa41c991db8716300847cda0f9b3e725800710143c9"
+    },
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    },
+    {
+      "path": "scripts/blender/kit/_tree.py",
+      "sha256": "037e8be778813c929864130240aa65e05042c153b8c386d3920566b6867d81ce"
+    }
+  ],
+  "lodTris": {
+    "tree_oak_lod0": 2532,
+    "tree_oak_lod1": 1250,
+    "tree_oak_lod2": 371
+  },
+  "nodes": [
+    "tree_oak",
+    "tree_oak_collider",
+    "tree_oak_lod0",
+    "tree_oak_lod1",
+    "tree_oak_lod2"
+  ],
+  "pieceId": "tree_oak",
+  "sockets": []
+}

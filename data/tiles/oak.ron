@@ -1,4 +1,5 @@
-// The hero oak on forest_base's litter and grass rim, with rocks and a few flowers (owner U3).
+// The hero oak on forest_base's litter and grass rim, with rocks, a few flowers (owner U3) and
+// about two smaller scattered oaks ("spruce among oaks", forest refs; they do not roost birds).
 // Forest edges, so it mixes freely with the pine forest; the oak is the bird roost.
 (
     id: "oak",
@@ -16,6 +17,7 @@
         scatter: [
             (piece: "rock_small", density: 0.5),
             (piece: "wildflower_clump", density: 0.9),
+            (piece: "tree_oak", density: 0.3),
         ],
         hero: [
             (piece: "tree_hero_oak", at: (0.0, 0.0)),
