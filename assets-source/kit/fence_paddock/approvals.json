@@ -5,5 +5,12 @@
     "requested": "2026-10-20",
     "revision": "first build",
     "notes": "Pending owner review; not an approval. New piece (owner 2026-10-19, 'keep blender agents working on needed assets'): the farm's weathered grey post-and-rail paddock from refs/farm ref-1 and ref-2, one prop at the farm tile's centre with a 3 m gate toward the yard. Review docs/checkpoints/fence_paddock/sheet.jpg. The controller records the owner's decision."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "revision": "LOD2 posts",
+    "notes": "Pending owner review; not an approval. Defect fix: LOD2 had no posts (two rail prisms per run and a full-height leaf slab, 78 tris), so under Force LOD 2 the fence read as two faint lines and was lost at play distance. LOD2 now draws every other post of each run (every corner and both gate posts kept) as an open three-sided prism, the same two rails, and the leaf as its top bar (168 tris, ceiling 175). LOD0, LOD1 and the collider are unchanged on decoded values. Review docs/checkpoints/fence-lod2/sheet.jpg. The controller records the owner's decision."
   }
 ]

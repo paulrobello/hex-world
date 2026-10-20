@@ -2,13 +2,13 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/fence_paddock.py",
-    "sha256": "639b5fa311399b22886febb4f5d751d8a56d656f58ff497c8739265fd0bae39a"
+    "sha256": "af4b6134c4a19c3da4da343ff50f06b5beeacb2d2743f647331bc18b800555d5"
   },
   "generatorDeps": [],
   "lodTris": {
     "fence_paddock_lod0": 1172,
     "fence_paddock_lod1": 568,
-    "fence_paddock_lod2": 78
+    "fence_paddock_lod2": 168
   },
   "nodes": [
     "fence_paddock",

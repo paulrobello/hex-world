@@ -29,9 +29,12 @@ near-horizontal faces so no face has a degenerate UV), so the 64 px masks map is
 
 LODs are rebuilt from the same layout, never decimated: LOD0 five-facet split rails (three per span),
 square posts with a low pyramid top, the gate leaf with five bars and a brace; LOD1 three-facet top
-and middle rails, open square posts, the leaf's stiles, two bars and the brace; LOD2 the top and
-middle rails as one triangular prism per run over a flat cap (meadow_base LOD2 has no relief), and
-the leaf as one prism.
+and middle rails, open square posts, the leaf's stiles, two bars and the brace; LOD2, over a flat
+cap (meadow_base LOD2 has no relief), the top and middle rails as one triangular prism per run,
+every other post of each run (counted from its start, so every corner and both gate posts stay) as
+an open three-sided prism, and the leaf as its top bar. LOD2 posts are a little thicker than LOD0's
+so the line keeps its posts in coverage at distance; a LOD2 with rails only read as two faint lines
+and lost the fence at play distance under Force LOD 2 (2026-10-20).
 
 Collider: one box per run (six), disjoint meshes, the north-east one widened over the open leaf. The
 walker must treat each connected component as its own convex footprint (report, integration)."""
@@ -93,6 +96,10 @@ STILE_Z = (0.14, 1.22)
 BAR_D = 0.045
 
 HMIN, HMAX = -0.45, 1.5  # height range V spans
+
+# LOD2 posts: circumradius of the three-sided section (side-on width 1.5 r).
+LOD2_POST_R, LOD2_GATE_POST_R = 0.1, 0.12
+LOD2_FOOT = -0.05  # post feet just under the flat LOD2 cap
 
 
 def falloff(x, y):
@@ -241,6 +248,26 @@ def post(m, p, lod):
             m.face([hi[i], hi[j], apex], out.normalized() + Vector((0, 0, 1.5)))
 
 
+def post_lod2(m, p, d):
+    """A LOD2 post on the flat cap: an upright open three-sided prism from LOD2_FOOT to the post's
+    height, one edge pointing along the run direction d, so either side of the fence sees one face
+    square on."""
+    r = LOD2_GATE_POST_R if p["gate"] else LOD2_POST_R
+    yaw = math.atan2(d.y, d.x)
+    c = p["c"]
+    ring = [Vector((c.x + r * math.cos(yaw + k * 2 * math.pi / 3), c.y + r * math.sin(yaw + k * 2 * math.pi / 3), 0.0))
+            for k in range(3)]
+    lo = [v + Vector((0.0, 0.0, LOD2_FOOT)) for v in ring]
+    hi = [v + Vector((0.0, 0.0, p["h"])) for v in ring]
+    m.prism(lo, hi, Vector((c.x, c.y, LOD2_FOOT)), Vector((c.x, c.y, p["h"])))
+
+
+def lod2_posts(ps):
+    """The posts LOD2 keeps: every other post of each run from its start (corner posts start a run)
+    and both gate posts."""
+    return [p for p in ps if p["i"] % 2 == 0 or p["gate"]]
+
+
 def rail_ring(centre, d, prof, roll, scale):
     """The section `prof` (side, up) at `centre`, perpendicular to unit direction d, rolled and
     scaled."""
@@ -286,17 +313,18 @@ def leaf_frame(ps):
 def leaf(m, ps, lod):
     """The field gate's leaf, swung open 180 degrees against the inside of the north-east run: two
     stiles, five bars (two at LOD1), a brace from the hanging stile's foot up toward the far top; at
-    LOD2 one prism along it."""
+    LOD2 its top bar as one rail prism (a full-height prism read as a grey board)."""
     o, ea, ew, ez = leaf_frame(ps)
     frame = (o + ew * LEAF_OFF, ea, ew, ez)
     a0, a1 = LEAF_A0, LEAF_A0 + LEAF_L
     hd, hb = STILE_D / 2, BAR_D / 2
     if lod == 2:
-        zc = 0.75
-        c0, c1 = o + ew * LEAF_OFF + ez * zc + ea * a0, o + ew * LEAF_OFF + ez * zc + ea * a1
-        prof = [(-0.03, -0.45), (0.03, -0.45), (0.0, 0.45)]
+        # The flat LOD2 cap is y = 0, so the bar sits at its height above 0, not the hinge's ground.
+        zc = BARS[-1][0]
+        base = Vector((o.x, o.y, 0.0)) + ew * LEAF_OFF + ez * zc
+        c0, c1 = base + ea * a0, base + ea * a1
         d = (c1 - c0).normalized()
-        m.prism(rail_ring(c0, d, prof, 0.0, 1.0), rail_ring(c1, d, prof, 0.0, 1.0), c0, c1)
+        m.prism(rail_ring(c0, d, RAIL3, 0.0, 1.15), rail_ring(c1, d, RAIL3, 0.0, 1.15), c0, c1)
         return
     for s0, s1 in ((a0, a0 + STILE_W), (a1 - STILE_W, a1)):
         m.box((s0, -hd, STILE_Z[0]), (s1, hd, STILE_Z[1]), frame, skip=("-z",) if lod == 0 else ("-z", "+z"))
@@ -331,12 +359,16 @@ def build(lod, ps, heights, looks):
                 rail(m, ps[i0], ps[i1], heights[i0][r], heights[i1][r], RAIL5 if lod == 0 else RAIL3, roll, scale)
     else:
         # One prism per run for the top and middle rails, over a flat cap (meadow_base LOD2 is flat).
-        for (q0, q1) in runs():
+        rs = runs()
+        for (q0, q1) in rs:
             a, b = B(*q0), B(*q1)
             d = (b - a).normalized().to_3d()
             for h in RAILS[1:]:
                 c0, c1 = a.to_3d() + Vector((0, 0, h)), b.to_3d() + Vector((0, 0, h))
                 m.prism(rail_ring(c0, d, RAIL3, 0.0, 1.15), rail_ring(c1, d, RAIL3, 0.0, 1.15), c0, c1)
+        for p in lod2_posts(ps):
+            q0, q1 = rs[p["run"]]
+            post_lod2(m, p, (B(*q1) - B(*q0)).normalized())
     leaf(m, ps, lod)
     return m
 

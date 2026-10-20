@@ -18,3 +18,23 @@
 ## 4. Worktree hook refused a `for v in hero close` loop with a variable in a Blender argument (2 min)
 - **Fix.** Ran each still as its own plain command.
 - **Skill change.** None: SKILL.md "Worktree sessions" already says loops pass only when every command in them is literal.
+
+## 5. LOD2 had no posts, so Force LOD 2 lost the fence (defect fix, 2026-10-20, about 25 min to diagnose)
+- **Snag.** Another agent saw the paddock fence vanish in every Force LOD 2 shot of the farm. The LOD2 branch built only the top and middle rails (one three-facet prism per run) and the leaf as a 0.9 m slab: 6 runs x 2 rails x 6 + 6 = 78 tris, no posts. Two 0.1 m rails read as faint pale lines at play distance and a grey board at the gate. The GLB, the meshopt decode and Force LOD were fine: decoded LOD2 had all 78 tris, and LOD2 drew on both paths (kit scenario per-entity parts, play's instanced settled parts).
+- **Fix.** LOD2 keeps every other post of each run from its start (so all five corners and both gate posts) as an open three-sided prism, a little thicker than LOD0's, plus the same rails and the leaf as its top bar: 168 tris (ceiling floor(0.15 x 1172) = 175). LOD0, LOD1 and the collider are identical on decoded values (`docs/checkpoints/fence-lod2/compare_lods.mjs`).
+- **Skill change.** Proposed for `pitfalls.md` (LODs): "A thin multi-member prop (fence, railing, gate) keeps the members that carry its silhouette at every LOD: the uprights, not only the long runs. Rails alone at LOD2 read as faint lines and the prop disappears under Force LOD 2. Thin members may be thickened a little at LOD2 to hold coverage. Check every LOD of such a prop with `{"cmd":"debug","force_lod":"2"}` at play distance before review."
+
+## 6. Window screenshots all black; `photo_export` renders (15 min)
+- **Snag.** Every native window `screenshot` came back all black (16,717 B at 1280x800, 25,867 B at 1600x1000) on three runs at host load about 300, under `caffeinate -u -d`, with the display awake and the session unlocked; other agents' `hex-world` windows were open at the time. `{"cmd":"photo_export","scale":1,"name":...}` in the same runs rendered every frame, because it draws the game camera offscreen.
+- **Fix.** The checkpoint script shoots with `photo_export` and checks each PNG's mean.
+- **Skill change.** Proposed for `pitfalls.md` ("Native shots can come back black"): "When window screenshots stay black after a retry, shoot with `photo_export` (scale 1) instead: it renders offscreen, so a covered window or an unpresented swap chain does not blank it (2026-10-20: three black runs, every export rendered)."
+
+## 7. The bootstrap-cloned release binary crashed (3 min)
+- **Snag.** `target/release/hex-world` cloned from main by `worktree-bootstrap.sh` quit on its first frame with a wgpu validation error (`pbr_opaque_mesh_pipeline`, group 3 binding 100: buffer size 64 over `min_binding_size` 48): main's binary was older than its tree.
+- **Fix.** `cargo build -p hex-app --release` (2 min 10 s) before shooting.
+- **Skill change.** Proposed for `stages.md` or the worktree bootstrap note: "Rebuild the release binary after bootstrap before any native shot; the cloned one can predate main's shaders."
+
+## 8. The Force LOD census reads zero in play (note, 0 min)
+- **Snag.** In play, a `dump_state` 20 frames after a Force LOD 2 `photo_export` read `state().debug.lod.by_lod` and `tris_by_lod` as `[0,0,0]` while the export showed the farm drawn. `debug.rs` `count_lods` queries `(&Lod, &ViewVisibility, &Mesh3d)`, and the instanced settled kit draws (`chunks.rs`, `KitSlotDraw` entities) carry neither `Lod` nor `Mesh3d`; `KitSlot.tris` ("for the census/report") has no reader. So settled kit pieces in play are likely left out of the census; not confirmed with a dump outside a photo export.
+- **Fix.** None here (runtime, out of this piece's scope); reported to the orchestrator.
+- **Skill change.** None until the census counts instanced chunks.

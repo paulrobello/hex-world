@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/fence_paddock.py",
-    "sha256": "639b5fa311399b22886febb4f5d751d8a56d656f58ff497c8739265fd0bae39a"
+    "sha256": "af4b6134c4a19c3da4da343ff50f06b5beeacb2d2743f647331bc18b800555d5"
   },
   "generatorDeps": [],
   "authoringAgent": {
@@ -491,7 +491,7 @@
     "lodTris": [
       1172,
       568,
-      78
+      168
     ],
     "marginPx": 0,
     "masks": {
@@ -508,7 +508,7 @@
       "snow": 1
     },
     "reason": "no Cycles bake: masks is an analytic ramp in V (height above the ground)",
-    "receiverSignature": "fc3b62a12ec9665da2e0f2758656e83bef489de253c46b160b2ba1abd9f04334",
+    "receiverSignature": "9fa7b8d4f76196576144ce9ea9c7c6b005d150946fa38f738d024225519ed1b8",
     "samples": 0,
     "skipped": false,
     "texelDensityPxPerM": {
@@ -530,8 +530,8 @@
     },
     {
       "lod": 2,
-      "tris": 78,
-      "ratio": 0.06655290102389079
+      "tris": 168,
+      "ratio": 0.14334470989761092
     }
   ],
   "collider": {
@@ -553,7 +553,7 @@
         "bc7": 836,
         "astc": 824
       },
-      "glbBytes": 168624
+      "glbBytes": 172976
     },
     "textureEncodes": [
       {
@@ -592,8 +592,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/fence_paddock/fence_paddock.glb",
-      "sha256": "f99ef49ae731f60017006187be86c5d154e223903a8586c777f385eee423b8f8",
-      "bytes": 168624
+      "sha256": "daf7fb382637d1c1296e6c8c3f3aea19981900034707254f7d0081acc9f230d2",
+      "bytes": 172976
     },
     {
       "path": "assets/kit/p1/fence_paddock/fence_paddock.masks.bc7.ktx2",
@@ -634,7 +634,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T09:01:19.467Z",
+    "date": "2026-10-20T22:43:04.410Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -660,6 +660,13 @@
       "requested": "2026-10-20",
       "revision": "first build",
       "notes": "Pending owner review; not an approval. New piece (owner 2026-10-19, 'keep blender agents working on needed assets'): the farm's weathered grey post-and-rail paddock from refs/farm ref-1 and ref-2, one prop at the farm tile's centre with a 3 m gate toward the yard. Review docs/checkpoints/fence_paddock/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "revision": "LOD2 posts",
+      "notes": "Pending owner review; not an approval. Defect fix: LOD2 had no posts (two rail prisms per run and a full-height leaf slab, 78 tris), so under Force LOD 2 the fence read as two faint lines and was lost at play distance. LOD2 now draws every other post of each run (every corner and both gate posts kept) as an open three-sided prism, the same two rails, and the leaf as its top bar (168 tris, ceiling 175). LOD0, LOD1 and the collider are unchanged on decoded values. Review docs/checkpoints/fence-lod2/sheet.jpg. The controller records the owner's decision."
     }
   ]
 }

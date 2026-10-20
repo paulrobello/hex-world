@@ -1,0 +1,22 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 150 },
+  { "cmd": "debug", "force_lod": "2" },
+  { "cmd": "camera", "pos": [66.9, 1.8, 131.9], "look_at": [69.42, 0.9, 129.39] },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "photo_export", "scale": 1, "name": "fl2-eye-lod2" },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "camera", "pos": [50.57, 1.5, 133.5], "look_at": [47.87, 0.6, 130.3] },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "photo_export", "scale": 1, "name": "fl2-sun-lod2" },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "debug", "force_lod": "0" },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "photo_export", "scale": 1, "name": "fl2-sun-lod0" },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "camera", "pos": [66.9, 1.8, 131.9], "look_at": [69.42, 0.9, 129.39] },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "photo_export", "scale": 1, "name": "fl2-eye-lod0" },
+  { "cmd": "wait", "frames": 30 },
+  { "cmd": "exit" }
+]

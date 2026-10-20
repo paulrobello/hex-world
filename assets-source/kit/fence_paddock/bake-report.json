@@ -471,7 +471,7 @@
   "lodTris": [
     1172,
     568,
-    78
+    168
   ],
   "marginPx": 0,
   "masks": {
@@ -488,7 +488,7 @@
     "snow": 1.0
   },
   "reason": "no Cycles bake: masks is an analytic ramp in V (height above the ground)",
-  "receiverSignature": "fc3b62a12ec9665da2e0f2758656e83bef489de253c46b160b2ba1abd9f04334",
+  "receiverSignature": "9fa7b8d4f76196576144ce9ea9c7c6b005d150946fa38f738d024225519ed1b8",
   "samples": 0,
   "skipped": false,
   "texelDensityPxPerM": {
