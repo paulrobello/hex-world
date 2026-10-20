@@ -7,7 +7,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_hay.py",
-      "sha256": "62cc8bbf4110c002596b80e7a4b1763de89643b6680f22560554017bd827c8c5"
+      "sha256": "ed5142ba154f47216a6bd49bf4feb342486c509106dc12ffad7a74b64f11a03d"
     }
   ],
   "lodTris": {

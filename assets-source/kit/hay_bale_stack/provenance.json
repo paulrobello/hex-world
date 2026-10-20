@@ -9,7 +9,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_hay.py",
-      "sha256": "62cc8bbf4110c002596b80e7a4b1763de89643b6680f22560554017bd827c8c5"
+      "sha256": "ed5142ba154f47216a6bd49bf4feb342486c509106dc12ffad7a74b64f11a03d"
     }
   ],
   "authoringAgent": {
@@ -421,7 +421,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-19T16:56:53.454Z",
+    "date": "2026-10-20T22:17:09.788Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -446,6 +446,13 @@
       "when": "2026-10-19",
       "gate": "piece",
       "notes": "Approved in chat (\"all approved\") from docs/review/2026-10-19-walkthrough.html item A1, in-engine shots re-taken on the fixed renderer (c15edd8)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "bale-seam-fix",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Rebuilt for the bale-seam-fix edit of the shared _hay.py (its square-bale path is unchanged): GLB and every map byte-identical to the approved build, provenance hashes refreshed only. Nothing to review."
     }
   ]
 }

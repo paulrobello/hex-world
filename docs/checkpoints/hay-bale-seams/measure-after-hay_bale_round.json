@@ -1,0 +1,245 @@
+{
+ "hay_bale_round_lod0": {
+  "interior barrel|barrel": {
+   "edges": 520,
+   "dRGB": {
+    "mean": 8.167,
+    "p95": 33.04
+   },
+   "dAO": {
+    "mean": 0.646,
+    "p95": 1.959
+   },
+   "dNormalDeg": {
+    "mean": 2.148,
+    "p95": 5.994
+   }
+  },
+  "interior cap|cap": {
+   "edges": 256,
+   "dRGB": {
+    "mean": 8.92,
+    "p95": 29.53
+   },
+   "dAO": {
+    "mean": 0.327,
+    "p95": 1.544
+   },
+   "dNormalDeg": {
+    "mean": 2.043,
+    "p95": 8.53
+   }
+  },
+  "seam barrel|barrel": {
+   "edges": 24,
+   "dRGB": {
+    "mean": 4.953,
+    "p95": 26.898
+   },
+   "dAO": {
+    "mean": 0.607,
+    "p95": 2.441
+   },
+   "dNormalDeg": {
+    "mean": 1.486,
+    "p95": 4.668
+   },
+   "tiltX": {
+    "left": 0.0005,
+    "right": 0.0001
+   }
+  },
+  "seam barrel|cap +": {
+   "edges": 32,
+   "dRGB": {
+    "mean": 17.139,
+    "p95": 37.084
+   },
+   "dAO": {
+    "mean": 1.005,
+    "p95": 2.899
+   },
+   "dNormalDeg": {
+    "mean": 8.913,
+    "p95": 17.976
+   }
+  },
+  "seam barrel|cap -": {
+   "edges": 32,
+   "dRGB": {
+    "mean": 18.093,
+    "p95": 41.928
+   },
+   "dAO": {
+    "mean": 1.26,
+    "p95": 3.766
+   },
+   "dNormalDeg": {
+    "mean": 6.657,
+    "p95": 14.832
+   }
+  }
+ },
+ "hay_bale_round_lod1": {
+  "interior barrel|barrel": {
+   "edges": 180,
+   "dRGB": {
+    "mean": 8.018,
+    "p95": 33.079
+   },
+   "dAO": {
+    "mean": 0.621,
+    "p95": 1.988
+   },
+   "dNormalDeg": {
+    "mean": 1.837,
+    "p95": 6.147
+   }
+  },
+  "interior cap|cap": {
+   "edges": 24,
+   "dRGB": {
+    "mean": 7.67,
+    "p95": 29.565
+   },
+   "dAO": {
+    "mean": 0.391,
+    "p95": 1.455
+   },
+   "dNormalDeg": {
+    "mean": 1.061,
+    "p95": 2.55
+   }
+  },
+  "seam barrel|barrel": {
+   "edges": 24,
+   "dRGB": {
+    "mean": 2.981,
+    "p95": 11.589
+   },
+   "dAO": {
+    "mean": 0.618,
+    "p95": 2.609
+   },
+   "dNormalDeg": {
+    "mean": 1.673,
+    "p95": 3.924
+   },
+   "tiltX": {
+    "left": 0.0,
+    "right": -0.0001
+   }
+  },
+  "seam barrel|cap +": {
+   "edges": 12,
+   "dRGB": {
+    "mean": 15.956,
+    "p95": 37.559
+   },
+   "dAO": {
+    "mean": 1.258,
+    "p95": 3.776
+   },
+   "dNormalDeg": {
+    "mean": 7.515,
+    "p95": 16.979
+   }
+  },
+  "seam barrel|cap -": {
+   "edges": 12,
+   "dRGB": {
+    "mean": 16.768,
+    "p95": 37.16
+   },
+   "dAO": {
+    "mean": 1.174,
+    "p95": 3.6
+   },
+   "dNormalDeg": {
+    "mean": 7.57,
+    "p95": 17.137
+   }
+  }
+ },
+ "hay_bale_round_lod2": {
+  "interior barrel|barrel": {
+   "edges": 52,
+   "dRGB": {
+    "mean": 7.103,
+    "p95": 23.544
+   },
+   "dAO": {
+    "mean": 0.664,
+    "p95": 1.982
+   },
+   "dNormalDeg": {
+    "mean": 2.647,
+    "p95": 9.915
+   }
+  },
+  "interior cap|cap": {
+   "edges": 16,
+   "dRGB": {
+    "mean": 9.116,
+    "p95": 28.691
+   },
+   "dAO": {
+    "mean": 0.349,
+    "p95": 1.356
+   },
+   "dNormalDeg": {
+    "mean": 0.807,
+    "p95": 1.867
+   }
+  },
+  "seam barrel|barrel": {
+   "edges": 12,
+   "dRGB": {
+    "mean": 4.878,
+    "p95": 22.919
+   },
+   "dAO": {
+    "mean": 0.648,
+    "p95": 1.701
+   },
+   "dNormalDeg": {
+    "mean": 1.886,
+    "p95": 5.456
+   },
+   "tiltX": {
+    "left": -0.0013,
+    "right": 0.0029
+   }
+  },
+  "seam barrel|cap +": {
+   "edges": 8,
+   "dRGB": {
+    "mean": 17.795,
+    "p95": 40.687
+   },
+   "dAO": {
+    "mean": 0.945,
+    "p95": 3.483
+   },
+   "dNormalDeg": {
+    "mean": 8.901,
+    "p95": 19.581
+   }
+  },
+  "seam barrel|cap -": {
+   "edges": 8,
+   "dRGB": {
+    "mean": 17.946,
+    "p95": 42.752
+   },
+   "dAO": {
+    "mean": 0.917,
+    "p95": 3.524
+   },
+   "dNormalDeg": {
+    "mean": 7.571,
+    "p95": 16.279
+   }
+  }
+ }
+}

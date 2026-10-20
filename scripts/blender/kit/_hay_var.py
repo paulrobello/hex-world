@@ -3,7 +3,7 @@ stood on its flat end, slumped, with loose straw at its foot) and hay_bale_stack
 bales, two side by side with one laid across them). Refs: assets-source/refs/farm (ref-1 and ref-2:
 round bales and a small stack of rectangular bales in a yard scattered with loose straw).
 
-`_hay.py` is reused unchanged:
+`_hay.py` is reused through its functions and module globals:
 - stack_b runs `_hay.build_stack` with `_hay.stack_layout` replaced by `stack_b_layout` (a module
   global it looks up at call time) and an explicit `lod0_tris` (a default argument, which a module
   global cannot reach).
@@ -309,8 +309,12 @@ def build_round_b(piece: str, out: pathlib.Path, generator: str) -> None:
     scene.reset_scene(piece)
     mat = materials.pbr_material(f"{piece}_straw", materials.srgb("#c8a65c"), 0.86)
     high = hy.round_bale(f"{piece}_high", "high", 160, relief=0.012, seed=5)
+    # The straw reads the lathe frame before the slump: the lean (LEAN, along y) would shift the
+    # angle and radius the periodic fields read differently at a sector's two edges.
+    lathe = high.data.attributes.new("lathe", "FLOAT_VECTOR", "POINT")
+    lathe.data.foreach_set("vector", [c for v in high.data.vertices for c in v.co])
     slump(high.data)
-    high.data.materials.append(hy.straw_material(f"{piece}_high", "round"))
+    high.data.materials.append(hy.straw_material(f"{piece}_high", "round", coords="lathe"))
     high.matrix_world = stand(LIFT)
     ahigh = apron_high(f"{piece}_apron_high")
     ahigh.data.materials.append(loose_straw_material(f"{piece}_apron_high"))
@@ -327,19 +331,10 @@ def build_round_b(piece: str, out: pathlib.Path, generator: str) -> None:
         lod.triangulate(o)
         lods.append(o)
     texel = uv.measure_texel_density(lods[0], hy.ATLAS)
-    # Receiver: one barrel sector, the top (+x lathe) cap and the six apron islands of LOD0, lifted.
-    receiver = lods[0].copy()
-    receiver.data = lods[0].data.copy()
-    receiver.name = receiver.data.name = f"{piece}_receiver"
-    scene.link(receiver)
-    bm = bmesh.new()
-    bm.from_mesh(receiver.data)
-    isl = bm.faces.layers.int["island"]
+    # Receiver: one barrel sector, the top (+x lathe) cap and the six apron islands of LOD0, lifted,
+    # with LOD0's own normals on its open edges (`_hay.receiver_of`).
     keep = {hy.SECTORS - 1, hy.SECTORS + 1, *range(ISLAND_APRON, ISLAND_APRON + APRON_SEG)}
-    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f[isl] not in keep], context="FACES")
-    bm.transform(Matrix.Translation((0.0, 0.0, LIFT)))
-    bm.to_mesh(receiver.data)
-    bm.free()
+    receiver = hy.receiver_of(lods[0], f"{piece}_receiver", keep, LIFT)
     zs = [v.co.z for v in receiver.data.vertices]
     assert min(zs) > 0.0, f"the lifted receiver dips under the bake's ground occluder: {min(zs)}"
     stats = hy.bake_maps(piece, out, [high, ahigh], receiver, skip)

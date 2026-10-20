@@ -22,14 +22,14 @@
   },
   "bakeStats": {
     "albedoLuma": {
-      "mean": 0.47845497727394104,
+      "mean": 0.47680962085723877,
       "min": 0.0,
       "p01": 0.0,
       "p05": 0.0,
       "texels": 660018
     },
     "ao": {
-      "mean": 0.8128208518028259,
+      "mean": 0.8109807372093201,
       "min": 0.0,
       "p01": 0.0,
       "p05": 0.0,
@@ -38,7 +38,7 @@
     "islandFraction": 0.6294422149658203,
     "normalMissFraction": 0.0,
     "roughness": {
-      "mean": 0.7328448295593262,
+      "mean": 0.7309045791625977,
       "min": 0.0,
       "p01": 0.0,
       "p05": 0.0,
@@ -87,7 +87,7 @@
     "shoulderM": 0.15,
     "sinkM": 0.06
   },
-  "receiverSignature": "452923cce4b0e16684215d52c025c6fbc5b2dd89b41af2b46ffce9a000a4db6c",
+  "receiverSignature": "223cb8d3da4a73494fccda1b1079a28ca9628e85c3195d8d12f7961abe8f67b3",
   "samples": 32,
   "skipped": false,
   "texelDensityPerLod": [

@@ -26,3 +26,11 @@
    fixed: it lives in the approved `_hay` UVs and shader. Raised as an owner question. 0 min.
 5. **A worktree hook refused a `for p in …` loop over Blender runs.** Ran each piece as its own call.
    1 min. Already in SKILL.md ("Worktree sessions").
+6. **Entry 4 fixed (owner Q55, 2026-10-20, bale-seam-fix).** The seam had two causes, both in
+   `_hay` (see hay_bale_round friction entry 4): non-periodic straw and net, and a receiver whose
+   open edge normals leaned the normal map. The upright bale also leans (LEAN 3 cm along lathe y),
+   which moves the angle and radius the periodic fields read at a sector's two edges by different
+   amounts, so its high stores the lathe frame before the slump as the point attribute `lathe` and
+   the straw reads that (`straw_material(coords=...)`). Sector seam at LOD0: albedo step 14.4 -> 5.6
+   (interior 8.5), normal step 10.1 -> 2.0 degrees. 0 min lost beyond the hay_bale_round entry.
+   No skill change beyond that entry's proposal.

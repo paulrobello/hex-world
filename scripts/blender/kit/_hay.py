@@ -12,6 +12,15 @@ squashed a little where it rests and sunk 5 cm. Every LOD's UVs are analytic: th
 90-degree sectors that share one island, and both caps share one island (mirrored), so LOD1/LOD2
 sample LOD0's atlas exactly and the 1024² albedo holds about 400 px/m. The bake receiver is the top
 sector and one cap only, so the overlapping islands take one bake (contact AO never lands on top).
+Shared islands put a seam at every sector boundary and round each cap, so (Q55, 2026-10-20):
+- the straw and the high's relief are SECTORS-fold periodic about the axis (`periodic_point`, the
+  shader's circle embedding of SECTORS * theta, and a net with a whole number of lines per sector),
+  so a sector island's u = 0 and u = 1 edges carry the same straw;
+- the receiver keeps the full LOD0's vertex normals on its open edges (`receiver_of`); an open copy's
+  edge normals lean half a column into the kept faces, and the bake wrote the opposite lean into the
+  normal map's island edges (a 10 degree shading step at every sector seam);
+- round bakes lifted past the AO distance (BAKE_LIFT), as round_b does, so the cap island takes no
+  ground-contact AO that the shared barrel texels cannot match at the rim.
 
 stack: five small square bales (three below, two on top), each a bevelled box with a bulge, built
 low (one chamfer) and high (rounded, lumpy). Faces hidden inside the stack are dropped before one
@@ -44,6 +53,27 @@ SECTOR_LEN = 2 * math.pi * R / SECTORS
 PROFILE_LEN = B * math.pi + 2 * (W - B)
 GUTTER = 0.012
 UV_K = (1 - 3 * GUTTER) / (SECTOR_LEN + 2 * RC)  # UV units per metre (barrel and cap islands side by side)
+NET_LINES = 11  # net lines per sector and family: a whole number, so the net meets itself at the seams
+NET_SPACING = SECTOR_LEN / NET_LINES  # 0.107 m (0.11 m gave 10.7 lines and a zig-zag at every seam)
+FIBRE_K = 3.5 * R / SECTORS  # fibre circle radius: 3.5 noise units per metre of arc, as before
+CAP_BLEND = 0.15  # the cap's free (non-periodic) straw fades in this far inside the cap rim
+BAKE_LIFT = 0.5  # round's bake lift over bake_maps' ground occluder, past AO_DIST
+assert BAKE_LIFT > AO_DIST
+
+
+def periodic_point(x: float, y: float, z: float) -> Vector:
+    """The point the round straw's noises read at object point (x, y, z): the lathe's angle theta about
+    the axis (y, z - ZC) is embedded as a circle of SECTORS * theta at radius r / SECTORS (true arc
+    length), so every field repeats each sector and a sector island's two edges match. Inside the
+    caps it fades to the plain point (axis-relative) over CAP_BLEND, so the cap faces keep free,
+    non-repeating straw. Mirrors the node graph in `straw_material` (ZC is read at call time)."""
+    zr = z - ZC
+    r = math.hypot(y, zr)
+    phi = SECTORS * math.atan2(y, zr)
+    e = Vector((x, r / SECTORS * math.cos(phi), r / SECTORS * math.sin(phi)))
+    t = min(max((RC - r) / CAP_BLEND, 0.0), 1.0)
+    w = t * t * (3 - 2 * t)
+    return e.lerp(Vector((x, y, zr)), w)
 
 
 # ---------------------------------------------------------------------------------------------- shader
@@ -71,13 +101,23 @@ class _Nodes:
         self.link(vec, t.inputs["Vector"])
         return t
 
-    def rng(self, src, a, b, lo=0.0, hi=1.0):
+    def rng(self, src, a, b, lo=0.0, hi=1.0, interp="LINEAR"):
         r = self.N.new("ShaderNodeMapRange")
         r.inputs["From Min"].default_value, r.inputs["From Max"].default_value = a, b
         r.inputs["To Min"].default_value, r.inputs["To Max"].default_value = lo, hi
         r.clamp = True
+        r.interpolation_type = interp
         self.link(src, r.inputs["Value"])
         return r.outputs["Result"]
+
+    def mix_vec(self, fac, a, b):
+        n = self.N.new("ShaderNodeMix")
+        n.data_type = "VECTOR"
+        ins = {s.identifier: s for s in n.inputs}
+        self.link(fac, ins["Factor_Float"])
+        self.link(a, ins["A_Vector"])
+        self.link(b, ins["B_Vector"])
+        return next(s for s in n.outputs if s.identifier == "Result_Vector")
 
     def math(self, op, a, b=None):
         n = self.N.new("ShaderNodeMath")
@@ -121,23 +161,42 @@ class _Nodes:
         return c.outputs[0]
 
 
-def straw_material(name: str, kind: str, tone: float = 0.0) -> bpy.types.Material:
+def straw_material(name: str, kind: str, tone: float = 0.0, coords: str | None = None) -> bpy.types.Material:
     """Object-space procedural straw. kind 'round' (axis along object X, centre at z = ZC: circumferential
     fibres and a diamond net on the barrel, rolled rings on the caps) or 'square' (bale-local frame,
     long axis X, bottom at z = 0: fibres across, flake gaps along X, fibre-end speckle on the ends, two
-    orange twines over the top and ends). tone in [0, 1] weathers the straw toward grey-brown."""
+    orange twines over the top and ends). tone in [0, 1] weathers the straw toward grey-brown.
+    `coords` names a point vector attribute read instead of the object coordinates (round_b's lathe
+    frame before its slump, so the periodic fields stay periodic on the leaning bale)."""
     m = bpy.data.materials.new(name)
     n = _Nodes(m)
     c = materials.srgb
     obj = n.tc.outputs["Object"]
+    if coords:
+        attr = n.N.new("ShaderNodeAttribute")
+        attr.attribute_name = coords
+        obj = attr.outputs["Vector"]
     px, py, pz = n.xyz(obj)
     nx, ny, nz = n.xyz(n.tc.outputs["Normal"])
-    mottle = n.tex("ShaderNodeTexNoise", obj, 4.0, 3.0)
+    nvec = obj
+    if kind == "round":
+        # The SECTORS-fold periodic point of `periodic_point`: (x, r/S cos S.theta, r/S sin S.theta),
+        # fading to the plain axis-relative point inside the caps.
+        zr = n.math("SUBTRACT", pz, ZC)
+        theta = n.math("ARCTAN2", py, zr)
+        phi = n.math("MULTIPLY", theta, float(SECTORS))
+        cphi, sphi = n.math("COSINE", phi), n.math("SINE", phi)
+        rad = n.math("SQRT", n.math("ADD", n.math("MULTIPLY", py, py), n.math("MULTIPLY", zr, zr)))
+        rq = n.math("DIVIDE", rad, float(SECTORS))
+        wcap = n.rng(rad, RC, RC - CAP_BLEND, interp="SMOOTHSTEP")
+        nvec = n.mix_vec(wcap, n.combine(px, n.math("MULTIPLY", rq, cphi), n.math("MULTIPLY", rq, sphi)),
+                         n.combine(px, py, zr))
+    mottle = n.tex("ShaderNodeTexNoise", nvec, 4.0, 3.0)
     if kind == "round":
         lo, hi, dark, light = c("#b98f45"), c("#d3b064"), c("#8c6a2e"), c("#e6cf8c")
-        theta = n.math("ARCTAN2", py, n.math("SUBTRACT", pz, ZC))
         arc = n.math("MULTIPLY", theta, R)
-        fibre_vec = n.combine(n.math("MULTIPLY", px, 55.0), n.math("MULTIPLY", arc, 3.5), 0.0)
+        fibre_vec = n.combine(n.math("MULTIPLY", px, 55.0), n.math("MULTIPLY", cphi, FIBRE_K),
+                              n.math("MULTIPLY", sphi, FIBRE_K))
         fibre = n.tex("ShaderNodeTexNoise", fibre_vec, 1.0, 6.0, Roughness=0.65)
         cap = n.rng(n.math("ABSOLUTE", nx), 0.55, 0.85)
         barrel = n.math("SUBTRACT", 1.0, cap)
@@ -157,19 +216,26 @@ def straw_material(name: str, kind: str, tone: float = 0.0) -> bpy.types.Materia
     col = n.mix(n.math("MULTIPLY", n.rng(fibre.outputs["Fac"], 0.58, 0.78), 0.55), col, light)
     height = n.math("MULTIPLY", fibre.outputs["Fac"], 1.0)
     rough = n.math("ADD", n.math("MULTIPLY", fibre.outputs["Fac"], 0.08), 0.82)
-    speck = n.tex("ShaderNodeTexNoise", obj, 140.0, 1.0)
+    speck = n.tex("ShaderNodeTexNoise", nvec, 140.0, 1.0)
     ends = n.math("MULTIPLY", cap, n.rng(speck.outputs["Fac"], 0.42, 0.34))
     if kind == "round":
-        # Caps: the rolled layers as distorted rings about the axis.
-        ring_vec = n.combine(0.0, py, n.math("SUBTRACT", pz, ZC))
-        rings = n.tex("ShaderNodeTexWave", ring_vec, 9.0, 3.0, wave_type="RINGS", Distortion=3.0)
-        ring_dark = n.math("MULTIPLY", cap, n.rng(rings.outputs["Fac"], 0.25, 0.0))
+        # Caps: the rolled layers as distorted rings about the axis. Blender's Wave RINGS at scale 9,
+        # distortion 3, detail 3 (0.5 - 0.5 cos(180 r + 3 (2 N - 1)), N the fBm at 9 p), built from
+        # nodes so the distortion noise reads the periodic point near the rim.
+        ring_vec = n.mix_vec(wcap, n.combine(0.0, n.math("MULTIPLY", rq, cphi), n.math("MULTIPLY", rq, sphi)),
+                             n.combine(0.0, py, zr))
+        dist = n.tex("ShaderNodeTexNoise", ring_vec, 9.0, 3.0, Roughness=0.5)
+        ring_n = n.math("ADD", n.math("MULTIPLY", rad, 180.0),
+                        n.math("MULTIPLY", n.math("SUBTRACT", n.math("MULTIPLY", dist.outputs["Fac"], 2.0), 1.0), 3.0))
+        rings = n.math("SUBTRACT", 0.5, n.math("MULTIPLY", n.math("COSINE", ring_n), 0.5))
+        ring_dark = n.math("MULTIPLY", cap, n.rng(rings, 0.25, 0.0))
         col = n.mix(n.math("MULTIPLY", ring_dark, 0.7), col, c("#7d5f28"))
         height = n.math("ADD", height, n.math("MULTIPLY", ring_dark, -0.6))
-        # Barrel: a pale diamond net, two families of helical lines 0.11 m apart.
+        # Barrel: a pale diamond net, two families of helical lines NET_SPACING apart (a whole number
+        # per sector, so they meet across the sector seams).
         lines = []
         for sgn in (1.0, -1.0):
-            t = n.math("MULTIPLY", n.math("ADD", px, n.math("MULTIPLY", arc, sgn)), 1.0 / 0.11)
+            t = n.math("MULTIPLY", n.math("ADD", px, n.math("MULTIPLY", arc, sgn)), 1.0 / NET_SPACING)
             d = n.math("ABSOLUTE", n.math("SUBTRACT", n.math("FRACT", t), 0.5))
             lines.append(n.rng(d, 0.455, 0.485))
         net = n.math("MULTIPLY", n.math("MAXIMUM", *lines), barrel)
@@ -313,7 +379,7 @@ def round_bale(name: str, level: str, cols: int, relief: float = 0.0, seed: int 
         bm.normal_update()
         noise.seed_set(seed)
         off = Vector((11.3, -4.1, 7.7))
-        moved = [(v, v.normal * relief * noise.noise(v.co * 3.5 + off)) for v in bm.verts]
+        moved = [(v, v.normal * relief * noise.noise(periodic_point(*v.co) * 3.5 + off)) for v in bm.verts]
         for v, d in moved:
             v.co += d
     me = bpy.data.meshes.new(name)
@@ -555,6 +621,36 @@ def finish(piece: str, out: pathlib.Path, generator: str, lods: list, texel: dic
                            extentZ=[min(zs), max(zs)], colliderReachM=reach, skipped=skip, **extra)
 
 
+def receiver_of(src: bpy.types.Object, name: str, keep: set, lift: float = 0.0) -> bpy.types.Object:
+    """A bake receiver: a copy of `src` keeping only the faces whose int layer 'island' is in `keep`,
+    lifted `lift` m, with every kept corner's normal set to src's own vertex normal. An open copy's
+    edge vertices would otherwise average only the kept faces and lean into them, and the tangent
+    normal bake writes the opposite lean into the island's edges, which shows as a shading step
+    where the full mesh's other faces sample the same island."""
+    normals = [v.normal.copy() for v in src.data.vertices]
+    rec = src.copy()
+    rec.data = src.data.copy()
+    rec.name = rec.data.name = name
+    scene.link(rec)
+    bm = bmesh.new()
+    bm.from_mesh(rec.data)
+    src_index = bm.verts.layers.int.new("src_index")
+    for i, v in enumerate(bm.verts):
+        v[src_index] = i
+    isl = bm.faces.layers.int["island"]
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f[isl] not in keep], context="FACES")
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    orig = [v[src_index] for v in bm.verts]
+    bm.verts.layers.int.remove(src_index)
+    bm.transform(Matrix.Translation((0.0, 0.0, lift)))
+    bm.to_mesh(rec.data)
+    bm.free()
+    rec.data.normals_split_custom_set_from_vertices([normals[i] for i in orig])
+    for p in rec.data.polygons:
+        p.use_smooth = True
+    return rec
+
+
 # --------------------------------------------------------------------------------------------- pieces
 
 def build_round(piece: str, out: pathlib.Path, generator: str) -> None:
@@ -570,17 +666,10 @@ def build_round(piece: str, out: pathlib.Path, generator: str) -> None:
         lod.triangulate(o)
         lods.append(o)
     texel = uv.measure_texel_density(lods[0], ATLAS)
-    # Receiver: the top barrel sector and the +x cap of LOD0 (all other faces share their texels).
-    receiver = lods[0].copy()
-    receiver.data = lods[0].data.copy()
-    receiver.name = receiver.data.name = f"{piece}_receiver"
-    scene.link(receiver)
-    bm = bmesh.new()
-    bm.from_mesh(receiver.data)
-    isl = bm.faces.layers.int["island"]
-    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f[isl] not in (SECTORS - 1, SECTORS + 1)], context="FACES")
-    bm.to_mesh(receiver.data)
-    bm.free()
+    # Receiver: the top barrel sector and the +x cap of LOD0 (all other faces share their texels),
+    # lifted with the high past the AO distance of the bake's ground occluder.
+    receiver = receiver_of(lods[0], f"{piece}_receiver", {SECTORS - 1, SECTORS + 1}, BAKE_LIFT)
+    high.matrix_world = Matrix.Translation((0.0, 0.0, BAKE_LIFT))
     stats = bake_maps(piece, out, [high], receiver, skip)
     sig_obj = receiver
     bpy.data.objects.remove(high, do_unlink=True)

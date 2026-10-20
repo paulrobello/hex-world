@@ -4,5 +4,12 @@
     "status": "pending",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Variant of hay_bale_stack (PRD §6 Variety), against assets-source/refs/farm (ref-1's small stacks of rectangular bales): three of the same twine-bound bales, two side by side with one laid across them on top, about 1.0 x 1.0 m and 0.7 m high (the original's five make a 1.4 m long two-row stack). 323 LOD0 tris. Review sheet: docs/checkpoints/hay_variants/sheet.jpg (refs, EEVEE beside hay_bale_stack, in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "bale-seam-fix",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Rebuilt for the bale-seam-fix edit of the shared _hay.py and _hay_var.py (its square-bale path is unchanged): GLB and every map byte-identical to the previous build, provenance hashes refreshed only. Nothing new to review."
   }
 ]

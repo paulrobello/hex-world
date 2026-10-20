@@ -4,5 +4,12 @@
     "status": "pending",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Variant of hay_bale_round (PRD §6 Variety), against assets-source/refs/farm (ref-1 and ref-2: round bales in a yard scattered with loose straw): the same net-wrapped bale, profile, straw and atlas layout stood on its flat end, settled (a flattened foot that bulges 4.5 cm, a 5% lower height, a 3 cm lean), with a ring of loose straw round its foot that drapes on the meadow relief of both of the farm's round-bale slots. 792 LOD0 tris. Review sheet: docs/checkpoints/hay_variants/sheet.jpg (refs, EEVEE beside hay_bale_round, in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "bale-seam-fix",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Owner Q55: the round bale's sector seams, on the upright variant. Same fix as hay_bale_round (periodic straw and relief, 11 net lines per sector, receiver keeps LOD0's edge normals; the straw reads the lathe frame before the slump so the lean keeps it periodic). Same mesh, tris and UVs; new albedo, normal and ORM. Measured: sector seam albedo step 14.4 -> 5.6 (interior 8.5), normal step 10.1 -> 2.0 deg at LOD0, 14.5 -> 4.2 and 10.4 -> 2.3 deg at LOD1. Review docs/checkpoints/hay-bale-seams/sheet.jpg."
   }
 ]

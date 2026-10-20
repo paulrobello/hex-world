@@ -1,0 +1,18 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 150 },
+  { "cmd": "camera", "pos": [11.04, 1.6, 28.76], "look_at": [11.86, 0.43, 26.5] },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "screenshot", "name": "seam-round-barrel" },
+  { "cmd": "camera", "pos": [13.75, 1.3, 28.04], "look_at": [11.86, 0.43, 26.5] },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "screenshot", "name": "seam-round-cap" },
+  { "cmd": "camera", "pos": [110.2, 1.5, 121.6], "look_at": [107.4, 0.55, 118.6] },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "screenshot", "name": "seam-roundb-sun" },
+  { "cmd": "camera", "pos": [106.2, 1.4, 121.4], "look_at": [104.49, 0.6, 119.6] },
+  { "cmd": "wait", "frames": 20 },
+  { "cmd": "screenshot", "name": "seam-roundb-near" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

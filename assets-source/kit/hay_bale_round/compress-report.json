@@ -1,6 +1,6 @@
 {
   "name": "hay_bale_round",
-  "date": "2026-10-19T16:55:18.383Z",
+  "date": "2026-10-20T22:12:49.597Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "srgb",
       "vkFormat": 146,
       "levels": 11,
-      "bytes": 492811,
-      "sha256": "8ecde9fd55e6f8c85f1451b2da42ae17fbbd918bb88c0b23885325c763cb44b2"
+      "bytes": 496395,
+      "sha256": "6b243a758e1c9de53fc8171c3c6786db6e22d8e3c605d07576b6d249ab1f5416"
     },
     {
       "channel": "albedo",
@@ -59,8 +59,8 @@
       "transfer": "srgb",
       "vkFormat": 158,
       "levels": 11,
-      "bytes": 492718,
-      "sha256": "e9f9c2cc394609cea4419b4ef944471e39ea8b17d1b011a992ea97244f5802df"
+      "bytes": 496644,
+      "sha256": "f51f030c34c445e67228f95660b7f5c6d61a75cdc8c13a246a3903e464558fc3"
     },
     {
       "channel": "albedo",
@@ -68,8 +68,8 @@
       "path": "assets/kit/p1/hay_bale_round/hay_bale_round.albedo.png",
       "format": "PNG",
       "transfer": "srgb",
-      "bytes": 905068,
-      "sha256": "7de0755141177631f32bbeba27bbe99bc9a311186d1a41cad8ea1bb9fafa6ffe"
+      "bytes": 907030,
+      "sha256": "6df4e9594102c310d1ccf5049ef04a83ff1918276f5b5f4d6451370f7aefdf12"
     },
     {
       "channel": "masks",
@@ -110,8 +110,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 127997,
-      "sha256": "6c82612340121b35d1bb2d70b5eb353855002709aaad782da46026da95a22caf"
+      "bytes": 129152,
+      "sha256": "e86117ccdbd74e208d4e8df0a7c3502c3be2625ddfcecf9970f51d7497095e81"
     },
     {
       "channel": "normal",
@@ -121,8 +121,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 130835,
-      "sha256": "5f6561070c14e8fa29481262dd5b1e71cde1996ef2145dcb06d64f1e356faa32"
+      "bytes": 131665,
+      "sha256": "23992b6804d857aef7788fb6d1b03f84a2c0e5d77674d114f6dfcc056b83077a"
     },
     {
       "channel": "normal",
@@ -130,8 +130,8 @@
       "path": "assets/kit/p1/hay_bale_round/hay_bale_round.normal.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 233402,
-      "sha256": "00fd917138eba266e0f093c1d87c193c4f32c476aa38e950e3645024e0623ca6"
+      "bytes": 232433,
+      "sha256": "12b1d0b345b59c76a09fd85ba22960606a5f2bfe1055b60e056fecfa3320a7c8"
     },
     {
       "channel": "orm",
@@ -141,8 +141,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 75153,
-      "sha256": "91c0df1d37047af4286b3891a56baf6eca30ce42724545915f84944b3b32b876"
+      "bytes": 72171,
+      "sha256": "9739e49c7acb879e8e7e888cd191b503e3ca006ede0028b06bdbf75f9e3a4830"
     },
     {
       "channel": "orm",
@@ -152,8 +152,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 74855,
-      "sha256": "d36d58a91faf3cfdbbdbf745828bd79d3d4d9c4228dcc8a9f4e9dc8110462390"
+      "bytes": 71697,
+      "sha256": "70161c5fd51c8523676ace03a2dfc0b56f85cbfc848103b0856795b7af3b923d"
     },
     {
       "channel": "orm",
@@ -161,16 +161,16 @@
       "path": "assets/kit/p1/hay_bale_round/hay_bale_round.orm.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 149270,
-      "sha256": "9c40fb4a87779992cc7d91b5d116de09ffdbfeffd13e974d62b8c051a13fd849"
+      "bytes": 144554,
+      "sha256": "029bc20f6a3dcdc9cd2fdabbb2c411209f5707db6b1b2ddd65142cf0a785cb45"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 696602,
-      "astc": 699049
+      "bc7": 698359,
+      "astc": 700647
     },
     "glbBytes": 34248
   },
