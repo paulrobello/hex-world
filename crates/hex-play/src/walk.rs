@@ -91,6 +91,7 @@ pub const OBSTACLES: &[&str] = &[
     "animal_sheep_c",
     "tree_hero_oak",
     "tree_hero_oak_b",
+    "tree_hero_oak_c",
     "tree_forest",
     "tree_forest_b",
     "tree_forest_c",
@@ -1249,6 +1250,7 @@ pub(crate) mod tests {
             ("house_cottage_b", "building"),
             ("tree_hero_oak", "tree"),
             ("tree_hero_oak_b", "tree"),
+            ("tree_hero_oak_c", "tree"),
             ("tree_forest_b", "tree"),
             ("rock_small", "rock"),
             ("rock_small_c", "rock"),
@@ -2068,6 +2070,7 @@ pub(crate) mod tests {
             [
                 "tree_hero_oak",
                 "tree_hero_oak_b",
+                "tree_hero_oak_c",
                 "tree_oak",
                 "tree_oak_b",
                 "tree_oak_c"

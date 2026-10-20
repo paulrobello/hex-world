@@ -404,10 +404,13 @@ mod tests {
         );
         let oak = drawn_pieces(c.get("oak").unwrap(), &c);
         assert!(
-            oak.contains("tree_hero_oak") && oak.contains("tree_hero_oak_b"),
+            oak.contains("tree_hero_oak")
+                && oak.contains("tree_hero_oak_b")
+                && oak.contains("tree_hero_oak_c"),
             "{oak:?}"
         );
         assert_eq!(packs().manifest.piece_pack("tree_hero_oak_b"), Some("hero"));
+        assert_eq!(packs().manifest.piece_pack("tree_hero_oak_c"), Some("hero"));
     }
 
     #[test]

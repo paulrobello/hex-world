@@ -293,6 +293,33 @@ const OAK_B_PERCHES: [(usize, f32, f32, f32); 12] = [
     (8, 72.0, 0.3, 0.04),
     (9, 72.0, -1.2, 0.03),
 ];
+/// Canopy dome clumps of `tree_hero_oak_c` (`CLUMPS` in scripts/blender/kit/tree_hero_oak_c.py, 1x,
+/// Blender frame), as [`OAK_CLUMPS`]; the GLB ships at [`OAK_SCALE`] too.
+const OAK_C_CLUMPS: [([f32; 3], f32, u8); 7] = [
+    ([4.357, 0.612, 5.000], 1.900, 0),
+    ([2.685, 1.550, 6.900], 1.650, 1),
+    ([-0.729, 4.136, 5.600], 1.850, 0),
+    ([-1.721, 2.457, 7.200], 1.600, 1),
+    ([-4.400, 0.000, 4.700], 1.900, 0),
+    ([-2.913, -1.060, 6.500], 1.600, 1),
+    ([-2.279, -3.647, 4.200], 1.850, 0),
+];
+/// `tree_hero_oak_c`'s perches, as [`OAK_PERCHES`], on every lobe's dome tops (clumps 1, 3 and 5
+/// are the inner, higher domes), none under the bare dead leaders.
+const OAK_C_PERCHES: [(usize, f32, f32, f32); 12] = [
+    (0, 72.0, -0.9, 0.03),
+    (0, 68.0, 0.3, 0.06),
+    (1, 80.0, -0.9, 0.02),
+    (1, 76.0, 1.2, 0.01),
+    (2, 76.0, -1.5, 0.01),
+    (2, 76.0, 0.6, 0.17),
+    (3, 80.0, -0.9, 0.02),
+    (3, 76.0, 2.7, 0.02),
+    (4, 68.0, -1.2, 0.03),
+    (5, 80.0, 0.9, 0.02),
+    (5, 76.0, -3.0, 0.04),
+    (6, 80.0, -1.2, 0.02),
+];
 /// The lowest perch elevation on an oak dome (degrees): the dome's normal tilts about 20 degrees
 /// from vertical there.
 pub const PERCH_MIN_ELEVATION: f32 = 68.0;
@@ -316,6 +343,7 @@ pub fn canopy_perches(piece: &str) -> Vec<Vec3> {
     match piece {
         "tree_hero_oak" => oak_perches(&OAK_CLUMPS, &OAK_PERCHES),
         "tree_hero_oak_b" => oak_perches(&OAK_B_CLUMPS, &OAK_B_PERCHES),
+        "tree_hero_oak_c" => oak_perches(&OAK_C_CLUMPS, &OAK_C_PERCHES),
         "tree_forest" => spruce_perches(SPRUCE_TOP, 10.0, SPRUCE_R10),
         "tree_forest_b" => spruce_perches(SPRUCE_B.0, SPRUCE_B.1, SPRUCE_B.2),
         "tree_forest_c" => spruce_perches(SPRUCE_C.0, SPRUCE_C.1, SPRUCE_C.2),
@@ -370,6 +398,7 @@ pub struct Roost {
 pub const PERCH_PIECES: &[&str] = &[
     "tree_hero_oak",
     "tree_hero_oak_b",
+    "tree_hero_oak_c",
     "tree_forest",
     "tree_forest_b",
     "tree_forest_c",
@@ -1901,12 +1930,13 @@ mod tests {
         assert!(!plan.set_world_all(&world, &c, 1.3));
     }
 
-    /// The oak perches (both hero oaks) sit on the GLB's canopy shell and are open from above.
+    /// The oak perches (every hero oak) sit on the GLB's canopy shell and are open from above.
     #[test]
     fn oak_perches_sit_on_the_canopy() {
         for (piece, list) in [
             ("tree_hero_oak", &OAK_PERCHES),
             ("tree_hero_oak_b", &OAK_B_PERCHES),
+            ("tree_hero_oak_c", &OAK_C_PERCHES),
         ] {
             assert_eq!(canopy_perches(piece).len(), 12, "{piece}");
             perches_sit_on_the_canopy(piece, list);

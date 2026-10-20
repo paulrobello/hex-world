@@ -383,6 +383,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         },
     ),
     (
+        "tree_hero_oak_c",
+        Footprint {
+            ground: 2.45,
+            crown: 8.25,
+        },
+    ),
+    (
         "house_cottage",
         Footprint {
             ground: 4.3,

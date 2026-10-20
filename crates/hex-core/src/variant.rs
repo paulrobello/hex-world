@@ -13,7 +13,7 @@ pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
         "house_twostorey",
         &["house_twostorey_b", "house_twostorey_c"],
     ),
-    ("tree_hero_oak", &["tree_hero_oak_b"]),
+    ("tree_hero_oak", &["tree_hero_oak_b", "tree_hero_oak_c"]),
     ("hay_bale_round", &["hay_bale_round_b"]),
     ("hay_bale_stack", &["hay_bale_stack_b"]),
     ("barn_red", &["barn_red_b"]),
@@ -336,25 +336,33 @@ mod tests {
         assert_eq!(hero_piece(def, Axial::new(1, 0), 0), "windmill");
     }
 
-    /// The oak tile's one hero slot draws the forked oak in about one cell in three, and the
-    /// origin (the thumbnail cell) keeps the authored hero oak.
+    /// The oak tile's one hero slot varies in about one cell in three, split evenly between the
+    /// forked oak and the stag-headed oak, and the origin (the thumbnail cell) keeps the authored
+    /// hero oak.
     #[test]
-    fn some_oak_tiles_draw_the_forked_oak() {
+    fn some_oak_tiles_draw_the_forked_or_the_stag_headed_oak() {
         let c = TileCatalog::builtin().unwrap();
         let def = c.get("oak").unwrap();
-        let (mut oak, mut forked) = (0, 0);
+        let (mut oak, mut forked, mut stag) = (0, 0, 0);
         for cell in cells() {
             match hero_piece(def, cell, 0) {
                 "tree_hero_oak" => oak += 1,
                 "tree_hero_oak_b" => forked += 1,
+                "tree_hero_oak_c" => stag += 1,
                 p => panic!("{p} at {cell:?}"),
             }
         }
-        let share = forked as f32 / (oak + forked) as f32;
-        assert!(
-            (0.28..0.39).contains(&share),
-            "tree_hero_oak_b share {share}"
+        println!(
+            "oak slot over {} cells: {oak} authored, {forked} _b, {stag} _c",
+            oak + forked + stag
         );
+        let all = (oak + forked + stag) as f32;
+        let share = (forked + stag) as f32 / all;
+        assert!((0.28..0.39).contains(&share), "oak variant share {share}");
+        for (n, v) in [("tree_hero_oak_b", forked), ("tree_hero_oak_c", stag)] {
+            let share = v as f32 / all;
+            assert!((0.13..0.2).contains(&share), "{n} share {share}");
+        }
         assert_eq!(hero_piece(def, Axial::new(0, 0), 0), "tree_hero_oak");
     }
 
