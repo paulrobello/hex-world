@@ -1,0 +1,12 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 180 },
+  { "cmd": "camera", "pos": [2.0, 4.5, 15.0], "look_at": [-0.5, 0.5, 4.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "vergeb-kit-scale" },
+  { "cmd": "camera", "pos": [6.0, 1.7, 9.5], "look_at": [-1.0, 0.4, 4.8] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "vergeb-kit-eye" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

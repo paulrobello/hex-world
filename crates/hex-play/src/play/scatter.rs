@@ -130,7 +130,7 @@ pub const VERGE_BAND: f32 = 6.7;
 
 /// Variants of a scatter piece (PRD §6 Variety), after the piece itself: a rule names the first
 /// and each of its instances draws one of the group, picked by [`pick_variant`].
-pub const VARIANTS: [(&str, &[&str]); 7] = [
+pub const VARIANTS: [(&str, &[&str]); 8] = [
     ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
     ("tree_oak", &["tree_oak_b"]),
     ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
@@ -148,6 +148,7 @@ pub const VARIANTS: [(&str, &[&str]); 7] = [
             "wildflower_single_d",
         ],
     ),
+    ("bush_verge", &["bush_verge_b"]),
 ];
 
 fn extra_variants(piece: &str) -> &'static [&'static str] {
@@ -234,7 +235,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 37] = [
+pub const FOOTPRINTS: [(&str, Footprint); 38] = [
     (
         "tree_forest",
         Footprint {
@@ -494,6 +495,13 @@ pub const FOOTPRINTS: [(&str, Footprint); 37] = [
         "bush_verge",
         Footprint {
             ground: 0.52,
+            crown: 0.0,
+        },
+    ),
+    (
+        "bush_verge_b",
+        Footprint {
+            ground: 0.3,
             crown: 0.0,
         },
     ),
@@ -2425,21 +2433,31 @@ mod tests {
     /// Verge bushes (road ref-1's "grass verges with tufts and small bushes") come last on the four
     /// road tiles without parking: the wildflowers keep their spots, every planned bush is placed,
     /// and each bush's widest reach over its LODs (its leaves, wider than its collider; LOD2's
-    /// scaled-up cards reach furthest) at its scale stays beyond the kerb (3.25 m from the
-    /// centreline), never over asphalt, kerb or paint, with its centre inside the verge band, on
-    /// every seed.
+    /// scaled-up cards reach furthest), taken per variant, at its scale stays beyond the kerb
+    /// (3.25 m from the centreline), never over asphalt, kerb or paint, with its centre inside the
+    /// verge band, on every seed; both variants are drawn.
     #[test]
     fn verge_bushes_line_the_road_beyond_the_kerb() {
         const KERB_OUT: f32 = 3.25;
-        let leaves = (0..3)
-            .flat_map(|l| glb_mesh_tris("bush_verge", &format!("lod{l}")).unwrap())
-            .flat_map(|(t, _)| t)
-            .map(|p| Vec2::new(p[0], p[2]).length())
-            .fold(0.0, f32::max);
+        let leaves: std::collections::BTreeMap<&str, f32> = group("bush_verge")
+            .map(|v| {
+                let r = (0..3)
+                    .flat_map(|l| glb_mesh_tris(v, &format!("lod{l}")).unwrap())
+                    .flat_map(|(t, _)| t)
+                    .map(|p| Vec2::new(p[0], p[2]).length())
+                    .fold(0.0, f32::max);
+                (v, r)
+            })
+            .collect();
         assert!(
-            (0.55..0.8).contains(&leaves),
-            "bush_verge widest LOD reach {leaves}"
+            (0.55..0.8).contains(&leaves["bush_verge"]),
+            "widest LOD reach {leaves:?}"
         );
+        assert!(
+            (0.4..0.6).contains(&leaves["bush_verge_b"]),
+            "widest LOD reach {leaves:?}"
+        );
+        let mut drawn = std::collections::BTreeSet::new();
         let c = catalog();
         for id in [
             "road_straight",
@@ -2475,7 +2493,9 @@ mod tests {
                 placed += l.placed(n - 1);
                 for i in l.instances.iter().filter(|i| usize::from(i.rule) == n - 1) {
                     let p = i.pos.xz();
-                    let reach = leaves * i.scale;
+                    let piece = i.piece("bush_verge");
+                    drawn.insert(piece);
+                    let reach = leaves[piece] * i.scale;
                     let d = lanes
                         .iter()
                         .map(|(line, _)| polyline_distance(p, line))
@@ -2507,6 +2527,7 @@ mod tests {
             );
             assert!(planned > 32, "{id}: {planned}");
         }
+        assert_eq!(drawn.len(), leaves.len(), "variants drawn {drawn:?}");
     }
 
     /// No tile with parking carries verge bushes: hex-sim's parking sweep (tests/parking.rs) checks

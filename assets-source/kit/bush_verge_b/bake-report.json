@@ -1,0 +1,123 @@
+{
+  "bakeStats": {
+    "alphaCoverageByMip": {
+      "tile_0": [
+        0.5325,
+        0.5301,
+        0.5323,
+        0.5333,
+        0.5322,
+        0.5511,
+        0.6122,
+        0.8889,
+        1.0
+      ],
+      "tile_1": [
+        0.5338,
+        0.5315,
+        0.533,
+        0.5344,
+        0.5344,
+        0.5378,
+        0.5918,
+        0.7778,
+        1.0
+      ],
+      "tile_2": [
+        0.5442,
+        0.5418,
+        0.5436,
+        0.5439,
+        0.5478,
+        0.5378,
+        0.6327,
+        0.7778,
+        1.0
+      ],
+      "tile_3": [
+        0.5427,
+        0.5404,
+        0.5428,
+        0.5425,
+        0.5478,
+        0.5556,
+        0.6122,
+        0.7778,
+        1.0
+      ],
+      "tiles": [
+        0.5383,
+        0.536,
+        0.5379,
+        0.5385,
+        0.5406,
+        0.5456,
+        0.5156,
+        0.6122,
+        0.6667,
+        0.0
+      ]
+    },
+    "alphaCutoff": 0.5
+  },
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "coreRadiusM": 0.29,
+  "crown": {
+    "a": 0.38,
+    "b": 0.3,
+    "card": 0.24,
+    "cushion": 0.035,
+    "cx": 0.0,
+    "cz": 0.3,
+    "inner": 18,
+    "lean": 0.14,
+    "lump": 0.22,
+    "outer": 84,
+    "oval": 0.98,
+    "spread": 1.05,
+    "zmin": -0.92
+  },
+  "device": "none (numpy-drawn tiles, no Cycles bake)",
+  "extentZ": [
+    -0.10328061878681183,
+    0.6488131284713745
+  ],
+  "lowestLeafM": -0.023858683183789253,
+  "marginPx": 0,
+  "reachM": 0.5518354793930447,
+  "receiverSignature": "489643b0c83d4a73d4af66067d43469569f50cc291a6825f09ee666c71f59d5c",
+  "samples": 0,
+  "skipped": false,
+  "stem": {
+    "count": 3,
+    "length": 0.18,
+    "r0": 0.015,
+    "r1": 0.007,
+    "sink": 0.1
+  },
+  "texelDensityPxPerM": {
+    "bush_verge_b_leaves": {
+      "max": 2320.3658081216313,
+      "median": 1916.5736956979758,
+      "min": 1672.7926609673802
+    }
+  }
+}
