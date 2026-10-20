@@ -1,0 +1,181 @@
+{
+  "name": "shrub_forest_b",
+  "date": "2026-10-20T13:29:32.389Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 500793,
+      "sha256": "48bb669eca1ad5b8336ecb1e6166aa1b622309da87659aa455e374da8dc7cc72"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 508234,
+      "sha256": "99b39b77b0df6ff251251efb9c9389d41f67eff55619f29f0e7e17bcde1196c9"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 761712,
+      "sha256": "bb4729b9ec6b0653e06bb91b5dc3461ddb0404699bc7d32b69aec3dbe35aa4e7"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 983,
+      "sha256": "69fd91df7db7bfba3bc11ae2a64f3c636aada28b5973f433939320a0c373d5af"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 950,
+      "sha256": "bb5bd167ae6ce7e1b7050c4c6826b32d3a39410174d3404a8a30152cd5d85461"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 1881,
+      "sha256": "e8396d95acf06717aef5aefe18512c5a72e950183b888febfe8c9fc213b6ad09"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 149226,
+      "sha256": "38f21074065520ce30210ffb53c151857ec2d3d1b9edc01acded8c8bad8fdf04"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 148142,
+      "sha256": "3def7d912353c6d96faf314b6cbb3f5077c0f028d223a41e47128fdb5ad9695c"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 267046,
+      "sha256": "59215e2a5c4f34332d1c9963e863216acc7e211bc44656fd38ff4ab7d0a5418d"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 210721,
+      "sha256": "62c627b08c9f0ace1fad2586079bcfe2f24fb1614a84554cd33a507db7213c2c"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 205447,
+      "sha256": "3bd0afe84272586fd25daf1b68d4f6a6eb02974fb4601e3d64d22f40d3847253"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/shrub_forest_b/shrub_forest_b.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 127576,
+      "sha256": "773ac965bb0e8a1d1278ccacccc30ae011aa9c594675fd3a2f2e11796c264738"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 861723,
+      "astc": 862773
+    },
+    "glbBytes": 185032
+  },
+  "glb": {
+    "bytes": 185032,
+    "sha256": "38a8fde7252568129d157186a7ba6b4844a7ce7591107a34ef9d8cbaafc356a9"
+  }
+}

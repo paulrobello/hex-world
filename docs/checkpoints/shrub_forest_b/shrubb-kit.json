@@ -1,0 +1,18 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 180 },
+  { "cmd": "camera", "pos": [-35.0, 28.0, 76.0], "look_at": [-53.0, 0.0, 48.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "shrubb-kit-play" },
+  { "cmd": "camera", "pos": [-44.0, 1.6, 53.0], "look_at": [-48.9, 0.9, 48.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "shrubb-kit-sun" },
+  { "cmd": "camera", "pos": [-53.0, 1.4, 44.0], "look_at": [-48.9, 0.9, 48.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "shrubb-kit-shade" },
+  { "cmd": "camera", "pos": [-46.0, 1.7, 58.0], "look_at": [-52.0, 1.0, 47.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "shrubb-kit-eye" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

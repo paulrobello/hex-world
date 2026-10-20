@@ -1,0 +1,35 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/shrub_forest_b.py",
+    "sha256": "72d45f1776e07300264f771b4657a65937bedf2892530c7ec9d0ec55dfeaef37"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_shrub.py",
+      "sha256": "3341c8f954d7845267b0814115e563f59f1b408863b81dcd2c866062b3b1e6b6"
+    },
+    {
+      "path": "scripts/blender/kit/_shrub_holly.py",
+      "sha256": "9ca83c5ecfa1efb494c0cea5259345886ce729a8c4a29e3c04fbe39065456496"
+    }
+  ],
+  "lodTris": {
+    "shrub_forest_b_lod0": 1288,
+    "shrub_forest_b_lod1": 352,
+    "shrub_forest_b_lod2": 146
+  },
+  "nodes": [
+    "shrub_forest_b",
+    "shrub_forest_b_collider",
+    "shrub_forest_b_lod0",
+    "shrub_forest_b_lod1",
+    "shrub_forest_b_lod2"
+  ],
+  "pieceId": "shrub_forest_b",
+  "sockets": []
+}

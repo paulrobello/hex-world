@@ -130,7 +130,7 @@ pub const VERGE_BAND: f32 = 6.7;
 
 /// Variants of a scatter piece (PRD §6 Variety), after the piece itself: a rule names the first
 /// and each of its instances draws one of the group, picked by [`pick_variant`].
-pub const VARIANTS: [(&str, &[&str]); 8] = [
+pub const VARIANTS: [(&str, &[&str]); 9] = [
     ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
     ("tree_oak", &["tree_oak_b"]),
     ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
@@ -149,6 +149,7 @@ pub const VARIANTS: [(&str, &[&str]); 8] = [
         ],
     ),
     ("bush_verge", &["bush_verge_b"]),
+    ("shrub_forest", &["shrub_forest_b"]),
 ];
 
 fn extra_variants(piece: &str) -> &'static [&'static str] {
@@ -235,7 +236,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 41] = [
+pub const FOOTPRINTS: [(&str, Footprint); 42] = [
     (
         "tree_forest",
         Footprint {
@@ -503,6 +504,13 @@ pub const FOOTPRINTS: [(&str, Footprint); 41] = [
         "shrub_forest",
         Footprint {
             ground: 0.71,
+            crown: 0.0,
+        },
+    ),
+    (
+        "shrub_forest_b",
+        Footprint {
+            ground: 0.56,
             crown: 0.0,
         },
     ),
