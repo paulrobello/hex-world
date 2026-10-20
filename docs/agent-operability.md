@@ -440,7 +440,7 @@ Each event is an object whose `type` names it:
 | `riseStage` | `q, r, tile, stage, skipped`: a staged-rise cue for the audio layer (the rumble) and the HUD. `stage` is `column`, `cap`, `edges`, `props`, `agents`, then `settled`, or `sink` when an undo or a bulldoze takes the tile down. `skipped` cues come together in one frame from a fast-forward or under reduced motion. Not kept in `recent_events` |
 | `carPulledOut` | `id, q, r, x, z`: a car starts a trip, reversing out of its parking spot. `id` is the car's sim id, `q, r` the spot's cell and `x, z` the spot in world metres. From the 20 Hz car tick, for the audio layer's `car-start`. Not kept in `recent_events` |
 | `carParked` | `id, q, r, x, z`: a car finished its trip and stands in its reserved spot, as `carPulledOut`, for `car-door`. Not kept in `recent_events` |
-| `trainDeparted` | `id, x, z`: a train moves off from a stand: its first move after spawning, after its dwell at a line end, or after waiting for a junction or another train. `id` is the train's sim id and `x, z` its front in world metres. From the 20 Hz tick, for the audio layer's `train-whistle`. Not kept in `recent_events` |
+| `trainDeparted` | `id, x, z`: a train moves off from a stand: a station stop on the tick its dwell ends (`Railway::departures`), else its first move after spawning, after its dwell at a line end, or after waiting for a junction or another train; once per departure. `id` is the train's sim id and `x, z` its front in world metres. From the 20 Hz tick, for the audio layer's `train-whistle`. Not kept in `recent_events` |
 
 Natively each event is also logged as `event: {...}`.
 

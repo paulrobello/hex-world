@@ -69,6 +69,9 @@ pub struct CarSim {
     stats: SimStats,
     /// Fixed ticks run so far (photo mode's pause holds it still).
     ticks: u64,
+    /// Trains that left a station stop on the last tick: they start moving on this one, and their
+    /// whistle has already gone.
+    left_station: std::collections::BTreeSet<u64>,
 }
 
 impl CarSim {
@@ -79,6 +82,7 @@ impl CarSim {
             mirrored: world.tiles().clone(),
             stats: SimStats::default(),
             ticks: 0,
+            left_station: Default::default(),
         };
         s.refresh();
         s
@@ -170,14 +174,25 @@ impl CarSim {
                 .filter(|c| c.distance() <= 0.0)
                 .map(|c| car_event(c.id().0, c.from_spot().cell, c.pose_at(0.0).pos, false)),
         );
-        // A train spawned on this tick stood still before it, like one waiting at a stand.
+        // A departure is a train leaving a station stop on this tick (`Railway::departures`, its
+        // dwell over, still at rest), or a train moving off from any other stand. A train spawned
+        // on this tick stood still before it. A train that left a station last tick moves off now
+        // without a second departure.
+        let rails = self.sim.rails();
+        let stations: std::collections::BTreeSet<u64> =
+            rails.departures().iter().map(|(id, _)| id.0).collect();
         let cm = |v: f32| (v * 100.0).round() / 100.0;
         events.extend(
-            self.sim
-                .rails()
+            rails
                 .trains()
                 .iter()
-                .filter(|t| t.speed() > 0.0 && moving.get(&t.id().0) != Some(&true))
+                .filter(|t| {
+                    let id = t.id().0;
+                    stations.contains(&id)
+                        || (t.speed() > 0.0
+                            && moving.get(&id) != Some(&true)
+                            && !self.left_station.contains(&id))
+                })
                 .map(|t| {
                     let p = t.front();
                     GameEvent::TrainDeparted {
@@ -187,6 +202,7 @@ impl CarSim {
                     }
                 }),
         );
+        self.left_station = stations;
         events
     }
 
@@ -759,6 +775,60 @@ mod tests {
         let undone = &dumps["cars-05-undo"];
         assert_eq!(undone.connected_destinations, 2);
         assert_eq!(undone.spawn_rate_hz, rate);
+    }
+
+    /// A shuttle through a station: every station departure (`Railway::departures`, the dwell
+    /// over) is a `TrainDeparted` on that tick, and the train moving off on the next tick is not a
+    /// second one; line-end departures still come from the train moving off.
+    #[test]
+    fn station_departures_whistle_once() {
+        let c = TileCatalog::builtin().unwrap();
+        let mut w = World::new(1);
+        w.place(&c, Axial::new(0, -1), "rail_station", 0).unwrap();
+        for q in [1, 2, -1, -2] {
+            w.place(&c, Axial::new(q, -1), "rail_straight", 0).unwrap();
+        }
+        let mut sim = CarSim::new(&w, &c);
+        let (mut at_station, mut other) = (0, 0);
+        let mut last: BTreeMap<u64, u64> = BTreeMap::new();
+        for tick in 0..300 * u64::from(hex_sim::TICK_HZ) {
+            let events = sim.tick();
+            let stations: BTreeSet<u64> = sim
+                .sim
+                .rails()
+                .departures()
+                .iter()
+                .map(|(id, _)| id.0)
+                .collect();
+            let departed: Vec<u64> = events
+                .iter()
+                .filter_map(|e| match e {
+                    GameEvent::TrainDeparted { id, .. } => Some(*id),
+                    _ => None,
+                })
+                .collect();
+            for id in &stations {
+                assert!(
+                    departed.contains(id),
+                    "tick {tick}: train {id} left the station quietly"
+                );
+            }
+            for id in departed {
+                if let Some(t) = last.insert(id, tick) {
+                    assert!(
+                        tick - t > 1,
+                        "tick {tick}: train {id} whistled on two ticks running"
+                    );
+                }
+                if stations.contains(&id) {
+                    at_station += 1;
+                } else {
+                    other += 1;
+                }
+            }
+        }
+        assert!(at_station >= 2, "{at_station} station departures");
+        assert!(other >= 2, "{other} other departures (spawn, line ends)");
     }
 
     /// The two rail evidence worlds of docs/checkpoints/rail/rail-play.json, each replayed

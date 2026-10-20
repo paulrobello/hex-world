@@ -128,9 +128,10 @@ pub enum GameEvent {
         x: f32,
         z: f32,
     },
-    /// A train moves off from a stand (P3): its first move after spawning, after its dwell at a line
-    /// end, or after waiting for a junction or another train. The train's sim id and its front's
-    /// world XZ in metres; the audio layer's whistle. Not kept in `recent_events`.
+    /// A train moves off from a stand (P3): leaving a station stop, its first move after spawning,
+    /// after its dwell at a line end, or after waiting for a junction or another train. The
+    /// train's sim id and its front's world XZ in metres; the audio layer's whistle. Not kept in
+    /// `recent_events`.
     TrainDeparted {
         id: u64,
         x: f32,
