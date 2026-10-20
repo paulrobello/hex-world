@@ -1,0 +1,14 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 150 },
+  { "cmd": "camera", "pos": [83.8, 9.0, 8.8], "look_at": [97.0, 8.0, -24.0] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "windmill_b-kit-t1" },
+  { "cmd": "wait", "frames": 60 },
+  { "cmd": "screenshot", "name": "windmill_b-kit-t2" },
+  { "cmd": "camera", "pos": [83.1, 22.0, 30.0], "look_at": [83.1, 7.0, -24.0] },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "screenshot", "name": "windmill_b-kit-pair" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

@@ -393,6 +393,15 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
             crown: 0.0,
         },
     ),
+    // The smock mill: its octagonal brick base's foot corners (the stage and sails are overhead,
+    // from 2.66 m and 4.48 m up).
+    (
+        "windmill_b",
+        Footprint {
+            ground: 2.85,
+            crown: 0.0,
+        },
+    ),
     // The farm tile's heroes: the barn (10 x 7 m, so its reach is its corner) and the static
     // bales and animals.
     (

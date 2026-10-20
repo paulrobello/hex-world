@@ -1,0 +1,146 @@
+diff --git a/crates/hex-core/src/variant.rs b/crates/hex-core/src/variant.rs
+index 26a6c9d..ccfd274 100644
+--- a/crates/hex-core/src/variant.rs
++++ b/crates/hex-core/src/variant.rs
+@@ -18,6 +18,7 @@ pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
+     ("hay_bale_stack", &["hay_bale_stack_b"]),
+     ("barn_red", &["barn_red_b"]),
+     ("bakery_shop", &["bakery_shop_b"]),
++    ("windmill", &["windmill_b"]),
+ ];
+ 
+ /// One slot in this many draws a variant (the rest keep the authored piece).
+@@ -284,7 +285,29 @@ mod tests {
+                 }
+             }
+         }
+-        assert_eq!(hero_variants("windmill"), &[] as &[&str]);
++        assert_eq!(hero_variants("rock_small"), &[] as &[&str]);
++    }
++
++    /// The windmill tile's one hero slot draws the smock mill in about one cell in three, and the
++    /// origin (the thumbnail cell) keeps the authored windmill.
++    #[test]
++    fn some_windmill_tiles_draw_the_smock_mill() {
++        let c = TileCatalog::builtin().unwrap();
++        let def = c.get("windmill").unwrap();
++        let (mut mill, mut smock) = (0, 0);
++        for cell in cells() {
++            match hero_piece(def, cell, 0) {
++                "windmill" => mill += 1,
++                "windmill_b" => smock += 1,
++                p => panic!("{p} at {cell:?}"),
++            }
++        }
++        let share = smock as f32 / (mill + smock) as f32;
++        assert!((0.28..0.39).contains(&share), "windmill_b share {share}");
++        assert_eq!(hero_piece(def, Axial::ORIGIN, 0), "windmill");
++        // The review shots' cells (docs/checkpoints/windmill_b/play.json).
++        assert_eq!(hero_piece(def, Axial::new(0, 1), 0), "windmill_b");
++        assert_eq!(hero_piece(def, Axial::new(1, 0), 0), "windmill");
+     }
+ 
+     /// The oak tile's one hero slot draws the forked oak in about one cell in three, and the
+@@ -371,7 +394,11 @@ mod tests {
+         );
+         assert_eq!(
+             pick_piece("windmill", cell, 1, VariantPick::FixedSlot(1)),
+-            "windmill"
++            "windmill_b"
++        );
++        assert_eq!(
++            pick_piece("rock_small", cell, 1, VariantPick::FixedSlot(1)),
++            "rock_small"
+         );
+         // Per cluster: every cottage slot of a cell agrees.
+         for cell in cells() {
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index cfe8485..c4cf90b 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -393,6 +393,15 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
+             crown: 0.0,
+         },
+     ),
++    // The smock mill: its octagonal brick base's foot corners (the stage and sails are overhead,
++    // from 2.66 m and 4.48 m up).
++    (
++        "windmill_b",
++        Footprint {
++            ground: 2.85,
++            crown: 0.0,
++        },
++    ),
+     // The farm tile's heroes: the barn (10 x 7 m, so its reach is its corner) and the static
+     // bales and animals.
+     (
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index db1f1ec..6fcbbf5 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -72,6 +72,7 @@ pub const OBSTACLES: &[&str] = &[
+     "house_twostorey_c",
+     "house_cottage_b",
+     "windmill",
++    "windmill_b",
+     "barn_red",
+     "barn_red_b",
+     "bakery_shop",
+@@ -514,7 +515,7 @@ pub fn prop_kind(piece: &str) -> &'static str {
+     match piece {
+         p if p.starts_with("house")
+             || p.starts_with("barn")
+-            || p == "windmill"
++            || p.starts_with("windmill")
+             || p == "bakery_shop"
+             || p == "bakery_shop_b" =>
+         {
+@@ -1104,6 +1105,7 @@ mod tests {
+             ("animal_sheep_b", "animal"),
+             ("animal_sheep_c", "animal"),
+             ("windmill", "building"),
++            ("windmill_b", "building"),
+             ("bakery_shop", "building"),
+             ("bakery_shop_b", "building"),
+             ("barn_red", "building"),
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 5b7f2cf..0c39e8d 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -229,6 +229,15 @@ pub fn kit_layout() -> Vec<Placement> {
+         y: WINDMILL_Y,
+         ..place("windmill", 3, -1, 0)
+     });
++    // Its hero variant, the smock mill windmill_b, on its own meadow at (4, -1) east of it (outside
++    // the water patch, and off the line its sails face, so neither mill hides the other), at the same
++    // yaw and cap-centre relief, its rotor turning.
++    v.push(place("meadow_base", 4, -1, 0));
++    v.push(Placement {
++        yaw_deg: 120.0,
++        y: WINDMILL_Y,
++        ..place("windmill_b", 4, -1, 0)
++    });
+     // Rail (P3, refs A17) on two meadows south of the oak: the straight on (0, 2) and the sharp
+     // bend on (1, 2) at rot 2 (lanes on world edges 2 and 3), so the bend's edge-3 lane meets the
+     // straight's edge-0 lane and its other end runs out to the open rim rather than the ocean.
+diff --git a/crates/hex-render/src/lib.rs b/crates/hex-render/src/lib.rs
+index 6755c9b..db673d2 100644
+--- a/crates/hex-render/src/lib.rs
++++ b/crates/hex-render/src/lib.rs
+@@ -204,14 +204,14 @@ mod tests {
+         cells.dedup();
+         // The water patch's 11 cells plus the showcase blocks' cells; each block in
+         // `kit_scene::kit_layout` names its own cells. A new block adds its cells here.
+-        assert_eq!(cells.len(), 31);
++        assert_eq!(cells.len(), 32);
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
+         // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
+         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
+         // The fixture lays out water-patch cells only; the runtime kit adds the showcase blocks.
+         assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
+-        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 31);
++        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 32);
+         assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
+         assert!(!Scenario::Kit.has_water());
+     }

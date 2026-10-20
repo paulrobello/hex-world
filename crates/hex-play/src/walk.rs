@@ -72,6 +72,7 @@ pub const OBSTACLES: &[&str] = &[
     "house_twostorey_c",
     "house_cottage_b",
     "windmill",
+    "windmill_b",
     "barn_red",
     "barn_red_b",
     "bakery_shop",
@@ -584,7 +585,7 @@ pub fn prop_kind(piece: &str) -> &'static str {
     match piece {
         p if p.starts_with("house")
             || p.starts_with("barn")
-            || p == "windmill"
+            || p.starts_with("windmill")
             || p == "bakery_shop"
             || p == "bakery_shop_b" =>
         {
@@ -1202,6 +1203,7 @@ pub(crate) mod tests {
             ("animal_sheep_b", "animal"),
             ("animal_sheep_c", "animal"),
             ("windmill", "building"),
+            ("windmill_b", "building"),
             ("bakery_shop", "building"),
             ("bakery_shop_b", "building"),
             ("barn_red", "building"),

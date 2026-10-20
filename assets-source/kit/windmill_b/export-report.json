@@ -1,0 +1,61 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/windmill_b.py",
+    "sha256": "e94e71e2f3bfbff3324a4ddae771f82a7d24ec967e74b70082fb0564030234c8"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    }
+  ],
+  "lodTris": {
+    "windmill_b_lod0": 1408,
+    "windmill_b_lod1": 508,
+    "windmill_b_lod2": 158
+  },
+  "nodes": [
+    "windmill_b",
+    "windmill_b_collider",
+    "windmill_b_lod0",
+    "windmill_b_lod1",
+    "windmill_b_lod2",
+    "windmill_b_rotor_lod0",
+    "windmill_b_rotor_lod1",
+    "windmill_b_rotor_lod2"
+  ],
+  "partTris": {
+    "windmill_b_lod0": 930,
+    "windmill_b_lod1": 264,
+    "windmill_b_lod2": 126,
+    "windmill_b_rotor_lod0": 478,
+    "windmill_b_rotor_lod1": 244,
+    "windmill_b_rotor_lod2": 32
+  },
+  "pieceId": "windmill_b",
+  "rotor": {
+    "axisLocal": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "hubBlender": [
+      2.6094,
+      0.0,
+      10.7216
+    ],
+    "nodes": [
+      "windmill_b_rotor_lod0",
+      "windmill_b_rotor_lod1",
+      "windmill_b_rotor_lod2"
+    ],
+    "tiltDeg": 10.0
+  },
+  "sailClearance": {
+    "lowestZ": 4.482,
+    "radialGapM": 0.867,
+    "railTopZ": 3.75
+  },
+  "sockets": []
+}

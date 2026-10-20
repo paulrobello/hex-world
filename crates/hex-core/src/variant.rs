@@ -18,6 +18,7 @@ pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
     ("hay_bale_stack", &["hay_bale_stack_b"]),
     ("barn_red", &["barn_red_b"]),
     ("bakery_shop", &["bakery_shop_b"]),
+    ("windmill", &["windmill_b"]),
 ];
 
 /// One slot in this many draws a variant (the rest keep the authored piece).
@@ -284,7 +285,29 @@ mod tests {
                 }
             }
         }
-        assert_eq!(hero_variants("windmill"), &[] as &[&str]);
+        assert_eq!(hero_variants("rock_small"), &[] as &[&str]);
+    }
+
+    /// The windmill tile's one hero slot draws the smock mill in about one cell in three, and the
+    /// origin (the thumbnail cell) keeps the authored windmill.
+    #[test]
+    fn some_windmill_tiles_draw_the_smock_mill() {
+        let c = TileCatalog::builtin().unwrap();
+        let def = c.get("windmill").unwrap();
+        let (mut mill, mut smock) = (0, 0);
+        for cell in cells() {
+            match hero_piece(def, cell, 0) {
+                "windmill" => mill += 1,
+                "windmill_b" => smock += 1,
+                p => panic!("{p} at {cell:?}"),
+            }
+        }
+        let share = smock as f32 / (mill + smock) as f32;
+        assert!((0.28..0.39).contains(&share), "windmill_b share {share}");
+        assert_eq!(hero_piece(def, Axial::ORIGIN, 0), "windmill");
+        // The review shots' cells (docs/checkpoints/windmill_b/play.json).
+        assert_eq!(hero_piece(def, Axial::new(0, 1), 0), "windmill_b");
+        assert_eq!(hero_piece(def, Axial::new(1, 0), 0), "windmill");
     }
 
     /// The oak tile's one hero slot draws the forked oak in about one cell in three, and the
@@ -371,7 +394,11 @@ mod tests {
         );
         assert_eq!(
             pick_piece("windmill", cell, 1, VariantPick::FixedSlot(1)),
-            "windmill"
+            "windmill_b"
+        );
+        assert_eq!(
+            pick_piece("rock_small", cell, 1, VariantPick::FixedSlot(1)),
+            "rock_small"
         );
         // Per cluster: every cottage slot of a cell agrees.
         for cell in cells() {

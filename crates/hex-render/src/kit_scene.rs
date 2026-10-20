@@ -229,6 +229,15 @@ pub fn kit_layout() -> Vec<Placement> {
         y: WINDMILL_Y,
         ..place("windmill", 3, -1, 0)
     });
+    // Its hero variant, the smock mill windmill_b, on its own meadow at (4, -1) east of it (outside
+    // the water patch, and off the line its sails face, so neither mill hides the other), at the same
+    // yaw and cap-centre relief, its rotor turning.
+    v.push(place("meadow_base", 4, -1, 0));
+    v.push(Placement {
+        yaw_deg: 120.0,
+        y: WINDMILL_Y,
+        ..place("windmill_b", 4, -1, 0)
+    });
     // Rail (P3, refs A17) on two meadows south of the oak: the straight on (0, 2) and the sharp
     // bend on (1, 2) at rot 2 (lanes on world edges 2 and 3), so the bend's edge-3 lane meets the
     // straight's edge-0 lane and its other end runs out to the open rim rather than the ocean.
