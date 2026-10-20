@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/animal_cow_c.py",
+    "sha256": "41b208d4712eb38287ce9ea8889adc138c80a90d09005cd47f25567fa89db94a"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_animals.py",
+      "sha256": "deb6c7cbed087d76fad922ff380f1344fbff02ad81f1c60a82940828705e6ef6"
+    },
+    {
+      "path": "scripts/blender/kit/_fauna.py",
+      "sha256": "184bf0e63afe49ef50c453dec9e881575ef56aa54303340258e74de61f5cd2f1"
+    }
+  ],
+  "lodTris": {
+    "animal_cow_c_lod0": 1058,
+    "animal_cow_c_lod1": 468,
+    "animal_cow_c_lod2": 138
+  },
+  "nodes": [
+    "animal_cow_c",
+    "animal_cow_c_collider",
+    "animal_cow_c_lod0",
+    "animal_cow_c_lod1",
+    "animal_cow_c_lod2"
+  ],
+  "pieceId": "animal_cow_c",
+  "sockets": []
+}

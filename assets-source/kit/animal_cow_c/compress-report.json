@@ -1,0 +1,181 @@
+{
+  "name": "animal_cow_c",
+  "date": "2026-10-20T20:51:10.785Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 138255,
+      "sha256": "6259c7c37ff5426e1d7eb13b1e571bc26a8a0f3a6f45b72c787cbe34a39e20fb"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 137187,
+      "sha256": "e68f23bebfb5299c7c53f9f6d28863c3bdcaf548f9a5f9abbaa0ba9223aea9a2"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 170094,
+      "sha256": "7110c00aaaf8dd46e44339770699024030f6c7a57c86298bf986449f3927f30b"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 8,
+      "bytes": 5680,
+      "sha256": "1156101f145c0c3982b2430f64cace7c9e7bcd883b8138abdbdbeb3c0d605d2c"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 8,
+      "bytes": 6074,
+      "sha256": "fc89e3015555df713cf65b2dcbf674ace6dbb53af388275ed0f0c5a46106d550"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 5719,
+      "sha256": "bd78b36865c69ce2ea24fd951a208668eb6964206219d4f3c602be66c93a6c95"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 79065,
+      "sha256": "f51023f8a7966a984f71b8435d063023ec60ec294cd53de7c441ea101b3824be"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 75431,
+      "sha256": "cf8c8fe5c8601ed860009307f7933c0ec6f24693b436d6c544b467c920253e9b"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 94626,
+      "sha256": "300dc197ac618e085cf020aab389b3aea7df1fbfe91ef9840b3fd55d4953f2b2"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 103482,
+      "sha256": "a007dd3dfa83d9dcc66495fde8daf78170417ee4d5329743bae447faf6bb0eb7"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 108927,
+      "sha256": "0ece115703a4c03ddf0951d11e5eb6304642ee6ab272f9669ac6ea6578789601"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 142590,
+      "sha256": "3760241161682968a5896b9ace53f1d0147d9e23e0ee009ce7f738822a400c40"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 326482,
+      "astc": 327619
+    },
+    "glbBytes": 62700
+  },
+  "glb": {
+    "bytes": 62700,
+    "sha256": "901848c0e0e6f822f959310df2568a2b2707a70903a4073dcba9567dc428f7b1"
+  }
+}

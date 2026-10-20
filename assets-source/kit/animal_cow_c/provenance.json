@@ -1,0 +1,474 @@
+{
+  "pieceId": "animal_cow_c",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/animal_cow_c.py",
+    "sha256": "41b208d4712eb38287ce9ea8889adc138c80a90d09005cd47f25567fa89db94a"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_animals.py",
+      "sha256": "deb6c7cbed087d76fad922ff380f1344fbff02ad81f1c60a82940828705e6ef6"
+    },
+    {
+      "path": "scripts/blender/kit/_fauna.py",
+      "sha256": "184bf0e63afe49ef50c453dec9e881575ef56aa54303340258e74de61f5cd2f1"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "animal": {
+      "coat": "animal_cow in a Hereford-like coat: red-brown with a white face, crest, underline and socks",
+      "frame": "runtime +z forward, +y up, +x the animal's left; pivot on the ground under the body centre",
+      "gaitPhase": {
+        "leg_bl": 0.5,
+        "leg_br": 0,
+        "leg_fl": 0,
+        "leg_fr": 0.5
+      },
+      "graze": "U = 0 and V > 0: rotate about the axis parallel to x through neckPivot, nose down, by theta x V (V = 0 on the plane through neckBase normal to neckPivot -> muzzleTip, 1 at the muzzle tip)",
+      "grazeDegToGround": 55.5,
+      "hipY": 1,
+      "hips": {
+        "leg_bl": [
+          0.17,
+          1,
+          -0.58
+        ],
+        "leg_br": [
+          -0.17,
+          1,
+          -0.58
+        ],
+        "leg_fl": [
+          0.18,
+          1,
+          0.55
+        ],
+        "leg_fr": [
+          -0.18,
+          1,
+          0.55
+        ]
+      },
+      "legCodes": {
+        "leg_bl": 0.625,
+        "leg_br": 0.875,
+        "leg_fl": 0.125,
+        "leg_fr": 0.375
+      },
+      "muzzleTip": [
+        0,
+        0.95,
+        1.425
+      ],
+      "neckBase": [
+        0,
+        1.2,
+        0.82
+      ],
+      "neckPivot": [
+        0,
+        0.98,
+        0.35
+      ],
+      "real": {
+        "muzzleToRumpM": 2.325,
+        "withersM": 1.45
+      },
+      "tc1": {
+        "u": "leg weight: 0 off the legs; on a leg (hipY - y) / hipY, 0 at the hip pivot height, 1 at the hoof",
+        "v": "where U > 0 the leg code (0.125 front-left, 0.375 front-right, 0.625 back-left, 0.875 back-right); where U = 0 the head weight, 0 on the body, tail and up to the neck pivot, rising along the neck to 1 at the muzzle tip (ears take their attachment's value)"
+      },
+      "vPoll": 0.3145,
+      "walk": "U > 0: rotate about the axis parallel to x through hips[leg] by swing(t + gaitPhase[leg]); every leg vertex sits below hipY, so U > 0 selects the leg and U can soften the hip"
+    },
+    "aoDistanceM": 0.35,
+    "bakeStats": {
+      "albedoLuma": {
+        "mean": 0.431184858083725,
+        "p05": 0.24404649436473846
+      },
+      "aoAllIslandTexels": {
+        "mean": 0.7655493021011353,
+        "p05": 0
+      },
+      "aoVisible": {
+        "mean": 0.9538738131523132,
+        "min": 0,
+        "p05": 0.7490196228027344,
+        "texels": 528068
+      },
+      "coverage": 0.7437829971313477,
+      "hiddenTexelFraction": 0.32291422248378987
+    },
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 128
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "colourSource": "numpy paint from creature-frame position (no colour bake)",
+    "device": "CPU",
+    "lodTris": [
+      1058,
+      468,
+      138
+    ],
+    "marginPx": 4,
+    "motionCheck": {
+      "lod0": {
+        "headVerts": 188,
+        "legVerts": {
+          "leg_bl": 71,
+          "leg_br": 71,
+          "leg_fl": 71,
+          "leg_fr": 71
+        }
+      },
+      "lod1": {
+        "headVerts": 89,
+        "legVerts": {
+          "leg_bl": 41,
+          "leg_br": 41,
+          "leg_fl": 41,
+          "leg_fr": 41
+        }
+      },
+      "lod2": {
+        "headVerts": 28,
+        "legVerts": {
+          "leg_bl": 15,
+          "leg_br": 15,
+          "leg_fl": 15,
+          "leg_fr": 15
+        }
+      }
+    },
+    "packScalePxPerM": 292.04,
+    "receiverSignature": "12d791771e373152e9ab1c2ae47157d2a6e08d6c79b98d9681278a3dc1d2bf7d",
+    "samples": 32,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 509.5470501851963,
+      "median": 357.7842412392182,
+      "min": 229.56554634952914
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1058,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 468,
+      "ratio": 0.44234404536862004
+    },
+    {
+      "lod": 2,
+      "tris": 138,
+      "ratio": 0.13043478260869565
+    }
+  ],
+  "collider": {
+    "node": "animal_cow_c_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 509.5470501851963,
+    "median": 357.7842412392182,
+    "min": 229.56554634952914
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 326482,
+        "astc": 327619
+      },
+      "glbBytes": 62700
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 138255,
+        "sha256": "6259c7c37ff5426e1d7eb13b1e571bc26a8a0f3a6f45b72c787cbe34a39e20fb"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 137187,
+        "sha256": "e68f23bebfb5299c7c53f9f6d28863c3bdcaf548f9a5f9abbaa0ba9223aea9a2"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 170094,
+        "sha256": "7110c00aaaf8dd46e44339770699024030f6c7a57c86298bf986449f3927f30b"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 8,
+        "bytes": 5680,
+        "sha256": "1156101f145c0c3982b2430f64cace7c9e7bcd883b8138abdbdbeb3c0d605d2c"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 8,
+        "bytes": 6074,
+        "sha256": "fc89e3015555df713cf65b2dcbf674ace6dbb53af388275ed0f0c5a46106d550"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 5719,
+        "sha256": "bd78b36865c69ce2ea24fd951a208668eb6964206219d4f3c602be66c93a6c95"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 79065,
+        "sha256": "f51023f8a7966a984f71b8435d063023ec60ec294cd53de7c441ea101b3824be"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 75431,
+        "sha256": "cf8c8fe5c8601ed860009307f7933c0ec6f24693b436d6c544b467c920253e9b"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 94626,
+        "sha256": "300dc197ac618e085cf020aab389b3aea7df1fbfe91ef9840b3fd55d4953f2b2"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 103482,
+        "sha256": "a007dd3dfa83d9dcc66495fde8daf78170417ee4d5329743bae447faf6bb0eb7"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 108927,
+        "sha256": "0ece115703a4c03ddf0951d11e5eb6304642ee6ab272f9669ac6ea6578789601"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/animal_cow_c/animal_cow_c.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 142590,
+        "sha256": "3760241161682968a5896b9ace53f1d0147d9e23e0ee009ce7f738822a400c40"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.glb",
+      "sha256": "901848c0e0e6f822f959310df2568a2b2707a70903a4073dcba9567dc428f7b1",
+      "bytes": 62700
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.albedo.bc7.ktx2",
+      "sha256": "6259c7c37ff5426e1d7eb13b1e571bc26a8a0f3a6f45b72c787cbe34a39e20fb",
+      "bytes": 138255
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.albedo.astc.ktx2",
+      "sha256": "e68f23bebfb5299c7c53f9f6d28863c3bdcaf548f9a5f9abbaa0ba9223aea9a2",
+      "bytes": 137187
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.albedo.png",
+      "sha256": "7110c00aaaf8dd46e44339770699024030f6c7a57c86298bf986449f3927f30b",
+      "bytes": 170094
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.masks.bc7.ktx2",
+      "sha256": "1156101f145c0c3982b2430f64cace7c9e7bcd883b8138abdbdbeb3c0d605d2c",
+      "bytes": 5680
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.masks.astc.ktx2",
+      "sha256": "fc89e3015555df713cf65b2dcbf674ace6dbb53af388275ed0f0c5a46106d550",
+      "bytes": 6074
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.masks.png",
+      "sha256": "bd78b36865c69ce2ea24fd951a208668eb6964206219d4f3c602be66c93a6c95",
+      "bytes": 5719
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.normal.bc7.ktx2",
+      "sha256": "f51023f8a7966a984f71b8435d063023ec60ec294cd53de7c441ea101b3824be",
+      "bytes": 79065
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.normal.astc.ktx2",
+      "sha256": "cf8c8fe5c8601ed860009307f7933c0ec6f24693b436d6c544b467c920253e9b",
+      "bytes": 75431
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.normal.png",
+      "sha256": "300dc197ac618e085cf020aab389b3aea7df1fbfe91ef9840b3fd55d4953f2b2",
+      "bytes": 94626
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.orm.bc7.ktx2",
+      "sha256": "a007dd3dfa83d9dcc66495fde8daf78170417ee4d5329743bae447faf6bb0eb7",
+      "bytes": 103482
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.orm.astc.ktx2",
+      "sha256": "0ece115703a4c03ddf0951d11e5eb6304642ee6ab272f9669ac6ea6578789601",
+      "bytes": 108927
+    },
+    {
+      "path": "assets/kit/p1/animal_cow_c/animal_cow_c.orm.png",
+      "sha256": "3760241161682968a5896b9ace53f1d0147d9e23e0ee009ce7f738822a400c40",
+      "bytes": 142590
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/farm_animals/ref-1.jpg",
+      "sha256": "fae5622dfb84c4350497756a0bffa6959ffc1f9359f9ff830636404f793a1708",
+      "sourceSha256": "248178d0f88712a5b8d69009e32cc78446b5a388a27507cffa06b87e90949bd7",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "29e43910-106c-4df0-83b8-e482880d8f56",
+      "prompt": "A single black-and-white dairy cow about 1.5 m tall at the shoulder, with a sturdy rectangular body on four straight legs, a broad rounded head with small ears and a pale grey muzzle, a thin tail ending in a dark tuft, and bold irregular black and white patches, smooth sculpted forms like a quality scale model with a bold readable silhouette, the coat reading as broad smooth colour areas with a soft satin sheen, standing alone on the plain grey studio floor with a soft contact shadow, the whole animal centred in frame and seen exactly side-on in profile with the head to the left and the camera level with the animal, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/farm_animals/ref-2.jpg",
+      "sha256": "9433e66f6452c0ab8d487de5b9971c225afe6cf8225bca2963a42b8e2ab3314b",
+      "sourceSha256": "c31a529d7c65438ba0e4dd730f11ff7f5cd96580a244428e3b364293f3795003",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "b93cee68-68aa-46bc-a2ac-d04940d3771a",
+      "prompt": "A single adult sheep with a plump rounded body of thick creamy-white wool fleece, a black face, black legs, small dark ears and a short tail, smooth sculpted forms like a quality scale model with a bold readable silhouette, the coat reading as broad smooth colour areas with a soft satin sheen, standing alone on the plain grey studio floor with a soft contact shadow, the whole animal centred in frame and seen exactly side-on in profile with the head to the left and the camera level with the animal. The picture shows only the sheep on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/farm_animals/ref-3.jpg",
+      "sha256": "d7e26f3d6f024e64ab1077b253ea6fa5a76b464c07d68ebaaf0927828f9e62af",
+      "sourceSha256": "e72a45c530f345e0e0a92c3ea878af293c924b53e536889dd8cd3088c728eea2",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "f0677235-ab46-41bf-a8ac-53dd7de15db0",
+      "prompt": "A bird's-eye view photographed from directly overhead with the camera pointing straight down at the ground: a small herd of four black-and-white dairy cows and a flock of six sheep with creamy-white fleeces and black faces graze on a flat sunlit map-like meadow of lush green grass, in two loose separate groups, each animal seen flat from above so its back, head and ears read as a clear separate silhouette, with small soft shadows on the grass. The meadow runs out past every edge of the frame, smooth sculpted forms like a quality scale model with a bold readable silhouette, the coat reading as broad smooth colour areas with a soft satin sheen, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, bright midday light"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T20:52:28.191Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-14",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/farm_animals/ref-1.jpg",
+        "assets-source/refs/farm_animals/ref-2.jpg",
+        "assets-source/refs/farm_animals/ref-3.jpg"
+      ],
+      "notes": "Hornless brown-and-white cows; black-faced sheep; ref-2's smooth form is the low-poly target. All P3 tiles use the O4 cutaway skirt. Owner accepted every recommendation in docs/review/2026-10-14-walkthrough.html (A17)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Hero variant of animal_cow for the farm's standing cow slot (PRD §6 Variety, hex_core::HERO_VARIANTS, about one slot in three), against assets-source/refs/farm_animals (A17: hornless, brown and white, ref-2's smooth form): animal_cow's exact stations, pose and size in a polled-Hereford-like coat, deep red-brown with a white face and poll, white crest, dewlap, brisket, underline, socks and tail switch, red ears and eye patches. LOD0/LOD1 tris equal animal_cow's (1058, 468); LOD2 138 (animal_cow 148) with a four-station head and three-sided legs. Review sheet: docs/checkpoints/animal_cow_c/sheet.jpg (refs, EEVEE beside animal_cow and animal_cow_b, in play on a farm whose slot draws the variant: play distance, sun and shade close-ups, eye level). The controller records the owner's decision."
+    }
+  ]
+}

@@ -19,6 +19,7 @@ pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
     ("barn_red", &["barn_red_b"]),
     ("bakery_shop", &["bakery_shop_b"]),
     ("windmill", &["windmill_b"]),
+    ("animal_cow", &["animal_cow_c"]),
 ];
 
 /// One slot in this many draws a variant (the rest keep the authored piece).
@@ -222,7 +223,7 @@ mod tests {
                 match (h.piece.as_str(), piece) {
                     ("hay_bale_round", "hay_bale_round_b")
                     | ("hay_bale_stack", "hay_bale_stack_b") => variant += 1,
-                    ("barn_red", "barn_red_b") => {}
+                    ("barn_red", "barn_red_b") | ("animal_cow", "animal_cow_c") => {}
                     (a, b) => {
                         assert_eq!(a, b);
                         authored += a.starts_with("hay_") as i32;
@@ -271,6 +272,31 @@ mod tests {
         assert_eq!(hero_piece(def, Axial::new(0, 1), 0), "barn_red_b");
         assert_eq!(hero_piece(def, Axial::new(-1, 0), 0), "barn_red_b");
         assert_eq!(hero_piece(def, Axial::new(1, 0), 0), "barn_red");
+    }
+
+    /// The farm's standing cow slot (hero 4) draws the Hereford-coat animal_cow_c about one time
+    /// in three, and the thumbnail cell (the origin) keeps animal_cow. The grazing cow (hero 7)
+    /// is its own hero with no variant.
+    #[test]
+    fn some_farm_cow_slots_draw_animal_cow_c() {
+        let c = TileCatalog::builtin().unwrap();
+        let def = c.get("farm").unwrap();
+        assert_eq!(def.props.hero[4].piece.as_str(), "animal_cow");
+        let (mut cow, mut cow_c) = (0, 0);
+        for cell in cells() {
+            match hero_piece(def, cell, 4) {
+                "animal_cow" => cow += 1,
+                "animal_cow_c" => cow_c += 1,
+                p => panic!("{p} at {cell:?}"),
+            }
+            assert_eq!(hero_piece(def, cell, 7), "animal_cow_b");
+        }
+        let share = cow_c as f32 / (cow + cow_c) as f32;
+        assert!((0.28..0.39).contains(&share), "animal_cow_c share {share}");
+        assert_eq!(hero_piece(def, Axial::ORIGIN, 4), "animal_cow");
+        // The review shots' cells (docs/checkpoints/animal_cow_c/play.json).
+        assert_eq!(hero_piece(def, Axial::new(1, -2), 4), "animal_cow_c");
+        assert_eq!(hero_piece(def, Axial::new(1, -1), 4), "animal_cow");
     }
 
     #[test]
@@ -395,6 +421,10 @@ mod tests {
         assert_eq!(
             pick_piece("windmill", cell, 1, VariantPick::FixedSlot(1)),
             "windmill_b"
+        );
+        assert_eq!(
+            pick_piece("animal_cow", cell, 1, VariantPick::FixedSlot(1)),
+            "animal_cow_c"
         );
         assert_eq!(
             pick_piece("rock_small", cell, 1, VariantPick::FixedSlot(1)),

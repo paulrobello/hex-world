@@ -495,6 +495,14 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
             crown: 0.0,
         },
     ),
+    // animal_cow's body in another coat; its LOD2 head (the collider box) reaches 1.4 cm further.
+    (
+        "animal_cow_c",
+        Footprint {
+            ground: 1.5,
+            crown: 0.0,
+        },
+    ),
     (
         "animal_sheep_b",
         Footprint {
