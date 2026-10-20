@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_hay_var.py",
-      "sha256": "88b4613a34fbbdb47043c0024cc10072fe71f05f3541363950102e9c1ceed87a"
+      "sha256": "3cdb7f20d613e73f8d761739980ea3779338ea0f6f3eb9d45dfeeb6e87cd9708"
     }
   ],
   "authoringAgent": {
@@ -401,7 +401,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T22:17:12.844Z",
+    "date": "2026-10-20T22:43:26.379Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -433,6 +433,13 @@
       "revision": "bale-seam-fix",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Rebuilt for the bale-seam-fix edit of the shared _hay.py and _hay_var.py (its square-bale path is unchanged): GLB and every map byte-identical to the previous build, provenance hashes refreshed only. Nothing new to review."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "bale-b-apron",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Rebuilt for the bale-b-apron edit of the shared _hay_var.py (a round_b-only function): GLB and every map byte-identical to the previous build, provenance hashes refreshed only. Nothing new to review."
     }
   ]
 }

@@ -11,5 +11,12 @@
     "revision": "bale-seam-fix",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Rebuilt for the bale-seam-fix edit of the shared _hay.py and _hay_var.py (its square-bale path is unchanged): GLB and every map byte-identical to the previous build, provenance hashes refreshed only. Nothing new to review."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "bale-b-apron",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Rebuilt for the bale-b-apron edit of the shared _hay_var.py (a round_b-only function): GLB and every map byte-identical to the previous build, provenance hashes refreshed only. Nothing new to review."
   }
 ]

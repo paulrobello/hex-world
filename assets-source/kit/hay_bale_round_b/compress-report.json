@@ -1,6 +1,6 @@
 {
   "name": "hay_bale_round_b",
-  "date": "2026-10-20T22:13:02.010Z",
+  "date": "2026-10-20T22:39:10.673Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -172,10 +172,10 @@
       "bc7": 917010,
       "astc": 914644
     },
-    "glbBytes": 45908
+    "glbBytes": 45976
   },
   "glb": {
-    "bytes": 45908,
-    "sha256": "85ed3e05d853a3c8b911aedc7d1c25a9d3a91654bfb9aa6b39425d2a87b415fd"
+    "bytes": 45976,
+    "sha256": "9fa05baacb89d9a2e5e84a2e741632c9d9d2b4e741d5cf0e5507725bcba23221"
   }
 }

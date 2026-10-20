@@ -276,6 +276,37 @@ def loose_straw_material(name: str) -> bpy.types.Material:
     return m
 
 
+def apron_normals_from_lod0(lods: list, level: int) -> float:
+    """Gives LOD `level`'s apron corners LOD0's vertex normal for the same island at the same point,
+    and returns the largest change (degrees). Every apron vertex of a coarser LOD lies on a LOD0 apron
+    vertex of its segment, but at LOD2 a segment is one quad, so its own normal is that quad's facet
+    normal, 27 degrees off LOD0's on average: the tangent normal map, baked against LOD0's normals,
+    then read in a frame that differs on the two sides of each segment seam (a 36 degree shading
+    step). The bale's corners keep their own normals (zero vectors)."""
+    def corners(o):
+        me = o.data
+        isl = me.attributes["island"].data
+        for p in me.polygons:
+            k = isl[p.index].value
+            if k >= ISLAND_APRON:
+                for li in p.loop_indices:
+                    yield li, k, me.vertices[me.loops[li].vertex_index]
+
+    ref = {}
+    for _li, k, v in corners(lods[0]):
+        ref.setdefault(k, []).append((v.co.copy(), v.normal.copy()))
+    me = lods[level].data
+    normals = [(0.0, 0.0, 0.0)] * len(me.loops)
+    worst = 0.0
+    for li, k, v in corners(lods[level]):
+        co, n = min(ref[k], key=lambda r: (r[0] - v.co).length)
+        assert (co - v.co).length < 1e-5, (level, k, tuple(v.co))
+        worst = max(worst, math.degrees(n.angle(me.corner_normals[li].vector, 0.0)))
+        normals[li] = tuple(n)
+    me.normals_split_custom_set(normals)
+    return worst
+
+
 def slump(me: bpy.types.Mesh) -> None:
     """The settled bale in the lathe frame (axis along x at height ZC_B): the foot flattened and
     bulged, the height lowered, the top sagging a little to +y."""
@@ -337,6 +368,8 @@ def build_round_b(piece: str, out: pathlib.Path, generator: str) -> None:
     receiver = hy.receiver_of(lods[0], f"{piece}_receiver", keep, LIFT)
     zs = [v.co.z for v in receiver.data.vertices]
     assert min(zs) > 0.0, f"the lifted receiver dips under the bake's ground occluder: {min(zs)}"
+    turned = apron_normals_from_lod0(lods, 2)
+    print(f"{piece}: LOD2 apron normals set from LOD0 (largest turn {turned:.2f} deg)")
     stats = hy.bake_maps(piece, out, [high, ahigh], receiver, skip)
     for o in (high, ahigh):
         bpy.data.objects.remove(o, do_unlink=True)

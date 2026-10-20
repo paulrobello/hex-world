@@ -34,3 +34,43 @@
    the straw reads that (`straw_material(coords=...)`). Sector seam at LOD0: albedo step 14.4 -> 5.6
    (interior 8.5), normal step 10.1 -> 2.0 degrees. 0 min lost beyond the hay_bale_round entry.
    No skill change beyond that entry's proposal.
+7. **LOD2 straw-apron seam, 36 degrees (bale-b-apron, 2026-10-20).** Left by entry 6. Measured with
+   `docs/checkpoints/hay-bale-seams/measure.py` on the shipped GLB and maps: the LOD2 apron seam
+   stepped 36.4 degrees in shading normal (p95 44.6) against an apron interior of 2.5; LOD0 2.8 and
+   LOD1 4.9. Cause (`docs/checkpoints/hay-bale-b-apron/diag.py`): at LOD2 each 60-degree apron
+   segment is one quad whose vertices belong to that segment only, so a seam vertex carried that
+   quad's facet normal, 41 degrees from the other side's and 27 degrees off LOD0's normal at the
+   same point. The tangent normal map was baked against LOD0's normals (the receiver), so LOD2 read
+   it in a frame tilted differently on the two sides of each seam. Fix:
+   `_hay_var.apron_normals_from_lod0` gives LOD2's apron corners LOD0's vertex normal for the same
+   island at the same point (every LOD2 apron vertex lies on one), as custom normals; the bale's
+   corners keep their own (zero vectors). They survive `finish`'s second triangulate and the export
+   (0.00 degrees off LOD0 in the GLB). LOD2 apron seam 36.4 -> 4.5 degrees (p95 9.8), the LOD2
+   barrel seam's level (4.3). Tris, positions, UVs and maps unchanged; LOD0 and LOD1 decode
+   identical (`compare.py`). LOD1 has the same mechanism at 7.5 degrees off LOD0 (step 4.9 against
+   its interior 3.8), left byte-identical by the brief; the same call with level 1 would cover it.
+   0 min lost. Proposed pitfalls.md text, under "Leaves, foliage and LODs", after "Shared repeat
+   islands need periodic content and closed-mesh normals":
+   > **A coarse LOD that samples LOD0's baked tangent map needs LOD0's normals where it can take
+   > them.** The bake writes the high's normal relative to the receiver's (LOD0's) interpolated
+   > normal, so a LOD whose vertex normals differ reads the map in a tilted frame. Built per island
+   > with few columns (`hay_bale_round_b`'s apron: one quad per 60-degree segment at LOD2), a seam
+   > vertex's normal is that one facet's, and the tilt differs on the two sides of the seam (a 36
+   > degree step). Where a LOD's vertices coincide with LOD0's, copy LOD0's normal per island as a
+   > custom normal (`_hay_var.apron_normals_from_lod0`) and check it in the GLB.
+8. **Forced LOD2 in engine hid the apron it was meant to show.** `force_lod` sets every `Lod` part
+   (`crates/hex-play/src/debug.rs` `force_all`), the meadow base included, and the LOD2 apron's
+   straight chords run inside the bale's foot at mid-segment (0.878 x cos 30 = 0.76 m against a
+   0.78 m foot). The in-engine LOD2 shots show only a thin straw outline, before and after alike,
+   where the EEVEE still over a lowered ground shows the whole band, so the LOD2 meadow most likely
+   covers the rest (mean pixel difference 0.03-0.10, below the 0.56-1.10 that the
+   identical LOD0 shows from birds and TAA). Fix: textured EEVEE stills of each LOD alone over a
+   ground 0.1 m low (`docs/checkpoints/hay-bale-b-apron/still.py`), cropped to the apron corners.
+   At play LOD2 distance (400 m+) the 8 cm apron is under a pixel, so the hidden apron is not a
+   defect worth geometry. 6 min. Proposed pitfalls.md text, under "Look-dev and engine shots":
+   > **Forced LOD shots move the ground's LOD too.** A thin draped skirt (a straw apron, a verge)
+   > can sink under a LOD2 base and vanish from a `force_lod` shot. For seam evidence on such a
+   > part, render the LOD alone in a textured EEVEE still with the ground lowered.
+9. **`e2e/shots.mjs` failed: no `playwright` package.** I bootstrapped without `--web`. Fix:
+   `bash scripts/worktree-bootstrap.sh --web`. 1 min. No skill change: SKILL.md already says
+   "`--web` for e2e gates"; the web shot route uses those modules too, which this entry records.

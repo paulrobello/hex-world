@@ -11,5 +11,12 @@
     "revision": "bale-seam-fix",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Owner Q55: the round bale's sector seams, on the upright variant. Same fix as hay_bale_round (periodic straw and relief, 11 net lines per sector, receiver keeps LOD0's edge normals; the straw reads the lathe frame before the slump so the lean keeps it periodic). Same mesh, tris and UVs; new albedo, normal and ORM. Measured: sector seam albedo step 14.4 -> 5.6 (interior 8.5), normal step 10.1 -> 2.0 deg at LOD0, 14.5 -> 4.2 and 10.4 -> 2.3 deg at LOD1. Review docs/checkpoints/hay-bale-seams/sheet.jpg."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "bale-b-apron",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. The LOD2 straw-apron seam left by bale-seam-fix: each of the apron's six segments is one quad at LOD2, so its seam vertices carried that quad's facet normal, 27 deg off the LOD0 normals the normal map was baked against. LOD2's apron now takes LOD0's normals (same island, same point). Measured at LOD2: apron seam normal step 36.4 -> 4.5 deg (interior 2.6; LOD2 barrel seam 4.3). Same tris (792/240/76), positions, UVs and maps; LOD0 and LOD1 decode identical. Review docs/checkpoints/hay-bale-b-apron/sheet.jpg."
   }
 ]

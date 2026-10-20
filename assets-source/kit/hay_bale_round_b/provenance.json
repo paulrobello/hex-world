@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_hay_var.py",
-      "sha256": "88b4613a34fbbdb47043c0024cc10072fe71f05f3541363950102e9c1ceed87a"
+      "sha256": "3cdb7f20d613e73f8d761739980ea3779338ea0f6f3eb9d45dfeeb6e87cd9708"
     }
   ],
   "authoringAgent": {
@@ -178,7 +178,7 @@
         "bc7": 917010,
         "astc": 914644
       },
-      "glbBytes": 45908
+      "glbBytes": 45976
     },
     "textureEncodes": [
       {
@@ -310,8 +310,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.glb",
-      "sha256": "85ed3e05d853a3c8b911aedc7d1c25a9d3a91654bfb9aa6b39425d2a87b415fd",
-      "bytes": 45908
+      "sha256": "9fa05baacb89d9a2e5e84a2e741632c9d9d2b4e741d5cf0e5507725bcba23221",
+      "bytes": 45976
     },
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.bc7.ktx2",
@@ -397,7 +397,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T22:15:25.452Z",
+    "date": "2026-10-20T22:43:09.888Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -429,6 +429,13 @@
       "revision": "bale-seam-fix",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Owner Q55: the round bale's sector seams, on the upright variant. Same fix as hay_bale_round (periodic straw and relief, 11 net lines per sector, receiver keeps LOD0's edge normals; the straw reads the lathe frame before the slump so the lean keeps it periodic). Same mesh, tris and UVs; new albedo, normal and ORM. Measured: sector seam albedo step 14.4 -> 5.6 (interior 8.5), normal step 10.1 -> 2.0 deg at LOD0, 14.5 -> 4.2 and 10.4 -> 2.3 deg at LOD1. Review docs/checkpoints/hay-bale-seams/sheet.jpg."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "bale-b-apron",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. The LOD2 straw-apron seam left by bale-seam-fix: each of the apron's six segments is one quad at LOD2, so its seam vertices carried that quad's facet normal, 27 deg off the LOD0 normals the normal map was baked against. LOD2's apron now takes LOD0's normals (same island, same point). Measured at LOD2: apron seam normal step 36.4 -> 4.5 deg (interior 2.6; LOD2 barrel seam 4.3). Same tris (792/240/76), positions, UVs and maps; LOD0 and LOD1 decode identical. Review docs/checkpoints/hay-bale-b-apron/sheet.jpg."
     }
   ]
 }
