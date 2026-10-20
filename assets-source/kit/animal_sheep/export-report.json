@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/animal_sheep.py",
-    "sha256": "1b18825f93265a15ff727a60b0ee01a35d79da71e186d1873041fd4f2ee484f3"
+    "sha256": "7bba2ea29a71ba4203acfa75d6519cdf063398a3fda2e75bd4f8dcf34037702a"
   },
   "generatorDeps": [
     {
@@ -17,7 +17,7 @@
   "lodTris": {
     "animal_sheep_lod0": 736,
     "animal_sheep_lod1": 306,
-    "animal_sheep_lod2": 110
+    "animal_sheep_lod2": 108
   },
   "nodes": [
     "animal_sheep",

@@ -111,15 +111,17 @@ SPEC = {
         ((0, -1.00, 0.49), 0.0, 0.0, 0.0, 2.0),
     ], frame="path"),
 }
-# Per LOD: part -> (station indices, ring sides). Ears and tail drop out at LOD2 (beyond 400 m).
+# Per LOD: part -> (station indices, ring sides). Ears and tail drop out at LOD2 (beyond 400 m). LOD2
+# draws the head on four stations (three, [0, 2, 7], drew a beak: friction note 6) and pays for it
+# with three-sided legs, as animal_cow_c does.
 LODS = {
     0: {"body": (range(10), 18), "neck": (range(4), 12), "head": (range(8), 12),
         "front_leg": (range(8), 8), "back_leg": (range(8), 8), "ear": (range(4), 6), "tail": (range(8), 6)},
     1: {"body": ([0, 2, 3, 4, 6, 8, 9], 12), "neck": ([0, 2, 3], 8), "head": ([0, 2, 4, 5, 7], 8),
         "front_leg": ([0, 1, 3, 5, 6, 7], 6), "back_leg": ([0, 1, 3, 5, 6, 7], 6), "ear": ([0, 1, 3], 4),
         "tail": ([0, 2, 3, 5, 7], 4)},
-    2: {"body": ([0, 2, 5, 7, 9], 8), "neck": ([0, 3], 5), "head": ([0, 2, 7], 5),
-        "front_leg": ([0, 2, 6, 7], 4), "back_leg": ([0, 2, 6, 7], 4)},
+    2: {"body": ([0, 2, 5, 7, 9], 8), "neck": ([0, 3], 5), "head": ([0, 2, 5, 7], 5),
+        "front_leg": ([0, 2, 6, 7], 3), "back_leg": ([0, 2, 6, 7], 3)},
 }
 GAIT = {"leg_fl": 0.0, "leg_br": 0.0, "leg_fr": 0.5, "leg_bl": 0.5}
 

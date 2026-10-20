@@ -1,6 +1,6 @@
 {
   "name": "animal_sheep",
-  "date": "2026-10-20T21:48:53.730Z",
+  "date": "2026-10-20T22:03:26.753Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -172,10 +172,10 @@
       "bc7": 562209,
       "astc": 567486
     },
-    "glbBytes": 49592
+    "glbBytes": 49296
   },
   "glb": {
-    "bytes": 49592,
-    "sha256": "4b04c8eabec362d84a5cb37b159734b856827675d149eafe7e8c0becd77a7cdd"
+    "bytes": 49296,
+    "sha256": "c82db28f0bde74f18237b7264e11559fb2c77123c72c6dfe2f920886e2c76c36"
   }
 }

@@ -99,14 +99,16 @@ SPEC = {
         ((0, -0.535, 0.50), 0.0, 0.0, 0.0, 2.0),
     ], frame="path"),
 }
+# Per LOD: part -> (station indices, ring sides). LOD2 draws the head on four stations (three,
+# [0, 2, 7], drew a beak) and pays for it with three-sided legs, as animal_sheep_b and _c do.
 LODS = {
     0: {"body": (range(9), 16), "neck": (range(4), 10), "head": (range(8), 10),
         "front_leg": (range(6), 7), "back_leg": (range(6), 7), "ear": (range(4), 5), "tail": (range(4), 6)},
     1: {"body": ([0, 1, 3, 4, 5, 7, 8], 10), "neck": ([0, 2, 3], 7), "head": ([0, 2, 4, 5, 7], 7),
         "front_leg": ([0, 2, 4, 5], 5), "back_leg": ([0, 2, 4, 5], 5), "ear": ([0, 1, 3], 4),
         "tail": ([0, 2, 3], 4)},
-    2: {"body": ([0, 2, 4, 6, 8], 7), "neck": ([0, 3], 5), "head": ([0, 2, 7], 5),
-        "front_leg": ([0, 4, 5], 4), "back_leg": ([0, 4, 5], 4)},
+    2: {"body": ([0, 2, 4, 6, 8], 7), "neck": ([0, 3], 5), "head": ([0, 2, 5, 7], 5),
+        "front_leg": ([0, 4, 5], 3), "back_leg": ([0, 4, 5], 3)},
 }
 GAIT = {"leg_fl": 0.0, "leg_br": 0.0, "leg_fr": 0.5, "leg_bl": 0.5}
 

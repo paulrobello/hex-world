@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/animal_cow.py",
-    "sha256": "dbb53a176b08c4f5eabccd9b78adf1ff5aaeca18f2ca749c4c290e4586857207"
+    "sha256": "40fd2f3e0ac7997c7f1ad0c55e0976289d262f455699ae50f260c2391fd64f66"
   },
   "generatorDeps": [
     {
@@ -17,7 +17,7 @@
   "lodTris": {
     "animal_cow_lod0": 1058,
     "animal_cow_lod1": 468,
-    "animal_cow_lod2": 148
+    "animal_cow_lod2": 138
   },
   "nodes": [
     "animal_cow",

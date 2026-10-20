@@ -1,6 +1,6 @@
 {
   "name": "animal_cow",
-  "date": "2026-10-20T21:48:34.655Z",
+  "date": "2026-10-20T22:03:01.261Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -172,10 +172,10 @@
       "bc7": 331205,
       "astc": 330730
     },
-    "glbBytes": 63104
+    "glbBytes": 62572
   },
   "glb": {
-    "bytes": 63104,
-    "sha256": "6f068c73135b724c1ceb2b5a50bc68acc928b1c2948ec830a660ad24df4cccb1"
+    "bytes": 62572,
+    "sha256": "47c04b642fdc1347bc4ce7b57785cf764516346164a242706f0eeac7927679da"
   }
 }

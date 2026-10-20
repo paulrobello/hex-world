@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/animal_sheep.py",
-    "sha256": "1b18825f93265a15ff727a60b0ee01a35d79da71e186d1873041fd4f2ee484f3"
+    "sha256": "7bba2ea29a71ba4203acfa75d6519cdf063398a3fda2e75bd4f8dcf34037702a"
   },
   "generatorDeps": [
     {
@@ -130,14 +130,14 @@
             "all": {
               "dark": 0.00002,
               "hits": 56570,
-              "mean": 0.9825,
+              "mean": 0.9831,
               "p05": 0.898
             },
             "body": {
               "dark": 0,
               "hits": 44643,
-              "mean": 0.9931,
-              "p05": 0.9529
+              "mean": 0.9939,
+              "p05": 0.9608
             },
             "ears": {
               "dark": 0,
@@ -148,7 +148,7 @@
             "head": {
               "dark": 0.00029,
               "hits": 3471,
-              "mean": 0.9708,
+              "mean": 0.9711,
               "p05": 0.8353
             },
             "legs": {
@@ -166,8 +166,8 @@
             "tail": {
               "dark": 0,
               "hits": 1037,
-              "mean": 0.9319,
-              "p05": 0.6941
+              "mean": 0.9291,
+              "p05": 0.669
             }
           },
           "darkFilled": 0.9091,
@@ -266,13 +266,13 @@
             "all": {
               "dark": 0.00019,
               "hits": 53366,
-              "mean": 0.9802,
+              "mean": 0.9806,
               "p05": 0.8824
             },
             "body": {
               "dark": 0,
               "hits": 41456,
-              "mean": 0.9928,
+              "mean": 0.9934,
               "p05": 0.9529
             },
             "ears": {
@@ -284,7 +284,7 @@
             "head": {
               "dark": 0.00353,
               "hits": 2829,
-              "mean": 0.9727,
+              "mean": 0.9731,
               "p05": 0.8588
             },
             "legs": {
@@ -400,99 +400,99 @@
         "lod2": {
           "committed": {
             "all": {
-              "dark": 0.00074,
-              "hits": 51298,
-              "mean": 0.9783,
+              "dark": 0.0007,
+              "hits": 51395,
+              "mean": 0.9792,
               "p05": 0.8745
             },
             "body": {
               "dark": 0,
-              "hits": 42048,
-              "mean": 0.9894,
-              "p05": 0.9216
+              "hits": 41919,
+              "mean": 0.9903,
+              "p05": 0.9294
             },
             "head": {
-              "dark": 0.01557,
-              "hits": 2440,
-              "mean": 0.9481,
-              "p05": 0.7725
+              "dark": 0.01159,
+              "hits": 3107,
+              "mean": 0.9525,
+              "p05": 0.7961
             },
             "legs": {
               "dark": 0,
-              "hits": 5055,
-              "mean": 0.9228,
-              "p05": 0.7255
+              "hits": 4652,
+              "mean": 0.9198,
+              "p05": 0.7176
             },
             "neck": {
               "dark": 0,
-              "hits": 1755,
-              "mean": 0.9154,
-              "p05": 0.749
+              "hits": 1717,
+              "mean": 0.9162,
+              "p05": 0.7569
             }
           },
-          "darkFilled": 0.6379,
-          "darkHidden": 0.6263,
+          "darkFilled": 0.6426,
+          "darkHidden": 0.6352,
           "filled": {
             "all": {
-              "dark": 0.01587,
-              "hits": 51298,
-              "mean": 0.9655,
+              "dark": 0.01514,
+              "hits": 51395,
+              "mean": 0.9663,
               "p05": 0.8431
             },
             "body": {
-              "dark": 0.01534,
-              "hits": 42048,
-              "mean": 0.9767,
+              "dark": 0.0145,
+              "hits": 41919,
+              "mean": 0.9776,
               "p05": 0.9059
             },
             "head": {
-              "dark": 0.06885,
-              "hits": 2440,
-              "mean": 0.8971,
+              "dark": 0.05472,
+              "hits": 3107,
+              "mean": 0.9104,
               "p05": 0
             },
             "legs": {
               "dark": 0,
-              "hits": 5055,
-              "mean": 0.9227,
+              "hits": 4652,
+              "mean": 0.9199,
               "p05": 0.7176
             },
             "neck": {
-              "dark": 0.00057,
-              "hits": 1755,
-              "mean": 0.9156,
+              "dark": 0,
+              "hits": 1717,
+              "mean": 0.9154,
               "p05": 0.749
             }
           },
           "raw": {
             "all": {
-              "dark": 0.04376,
-              "hits": 51298,
-              "mean": 0.9391,
-              "p05": 0.6549
+              "dark": 0.0423,
+              "hits": 51395,
+              "mean": 0.9407,
+              "p05": 0.6863
             },
             "body": {
-              "dark": 0.0375,
-              "hits": 42048,
-              "mean": 0.9556,
+              "dark": 0.03648,
+              "hits": 41919,
+              "mean": 0.9568,
               "p05": 0.8745
             },
             "head": {
-              "dark": 0.12377,
-              "hits": 2440,
-              "mean": 0.8489,
+              "dark": 0.10653,
+              "hits": 3107,
+              "mean": 0.8647,
               "p05": 0
             },
             "legs": {
-              "dark": 0.04332,
-              "hits": 5055,
-              "mean": 0.8784,
-              "p05": 0.2824
+              "dark": 0.0374,
+              "hits": 4652,
+              "mean": 0.8818,
+              "p05": 0.3765
             },
             "neck": {
-              "dark": 0.08376,
-              "hits": 1755,
-              "mean": 0.8441,
+              "dark": 0.08154,
+              "hits": 1717,
+              "mean": 0.8443,
               "p05": 0
             }
           }
@@ -523,7 +523,7 @@
     "lodTris": [
       736,
       306,
-      110
+      108
     ],
     "marginPx": 4,
     "motionCheck": {
@@ -546,12 +546,12 @@
         }
       },
       "lod2": {
-        "headVerts": 26,
+        "headVerts": 28,
         "legVerts": {
-          "leg_bl": 14,
-          "leg_br": 14,
-          "leg_fl": 14,
-          "leg_fr": 14
+          "leg_bl": 11,
+          "leg_br": 11,
+          "leg_fl": 11,
+          "leg_fr": 11
         }
       }
     },
@@ -578,8 +578,8 @@
     },
     {
       "lod": 2,
-      "tris": 110,
-      "ratio": 0.14945652173913043
+      "tris": 108,
+      "ratio": 0.14673913043478262
     }
   ],
   "collider": {
@@ -601,7 +601,7 @@
         "bc7": 562209,
         "astc": 567486
       },
-      "glbBytes": 49592
+      "glbBytes": 49296
     },
     "textureEncodes": [
       {
@@ -733,8 +733,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/animal_sheep/animal_sheep.glb",
-      "sha256": "4b04c8eabec362d84a5cb37b159734b856827675d149eafe7e8c0becd77a7cdd",
-      "bytes": 49592
+      "sha256": "c82db28f0bde74f18237b7264e11559fb2c77123c72c6dfe2f920886e2c76c36",
+      "bytes": 49296
     },
     {
       "path": "assets/kit/p1/animal_sheep/animal_sheep.albedo.bc7.ktx2",
@@ -829,7 +829,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T21:50:46.620Z",
+    "date": "2026-10-20T22:07:01.789Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -862,6 +862,13 @@
       "revision": "lod2-neck-fix",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Re-export with the LOD2 neck fix: _animals.fill_hidden_ao gives the texels LOD0 buries inside another part (neck root, head root, leg tops; they baked to AO 0) the near-junction AO of their own island, so LOD1 and LOD2, whose coarser polygons expose part of that band, no longer draw black patches at the neck and leg-top junctions. Geometry, albedo, normal and masks unchanged; texels LOD0 shows keep their AO bit for bit. Per-LOD visible AO in the bake report (bakeStats.lodVisibleAo). Review sheet: docs/checkpoints/animal-lod2-neck/sheet.jpg (in engine, Force LOD 2 and 0 from the same cameras, before and after). The controller records the owner's decision."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod2-head-fix",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Re-export with the LOD2 head fix (animal_cow friction note 6, the same artefact): LOD2 draws the head on four stations [0, 2, 5, 7] instead of [0, 2, 7], which drew a beak, and pays for it with three-sided LOD2 legs, as animal_sheep_b and animal_sheep_c do (LOD2 110 -> 108 tris; four-sided legs would give 120, over the 110.4 ceiling). LOD0 and LOD1 are vertex-identical and the albedo, normal, ORM and masks maps byte-identical. The collider (LOD2's bounding box) moves its front 0.2 cm, 0.705 -> 0.707 m (ground reach 0.775 -> 0.777 m, FOOTPRINTS 0.8). Review sheet: docs/checkpoints/animal-lod2-head/sheet.jpg (in engine, Force LOD 2, 1 and 0 from the same cameras, before and after). The controller records the owner's decision."
     }
   ]
 }
