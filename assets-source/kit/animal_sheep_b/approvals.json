@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Variant of animal_sheep (PRD §6 Variety), against assets-source/refs/farm_animals: a lamb at about 60% of the sheep (0.51 m at the withers, 0.70 m long), with the same black face and legs, hood and creamy fleece, a relatively larger head, a shorter muzzle and longer, thinner legs. Same stations, palette and paint as animal_sheep (painted at rest positions), 736 LOD0 tris. Review sheet: docs/checkpoints/animal_variants/sheet.jpg (refs, EEVEE beside animal_sheep, in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
+  }
+]

@@ -59,7 +59,7 @@ pub const MAX_STEP: f32 = 0.4;
 const SUBSTEP: f32 = 0.1;
 /// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
 /// pieces do not.
-pub const OBSTACLES: [&str; 23] = [
+pub const OBSTACLES: [&str; 25] = [
     "house_cottage",
     "house_twostorey",
     "house_longhouse",
@@ -71,6 +71,8 @@ pub const OBSTACLES: [&str; 23] = [
     "hay_bale_stack",
     "animal_cow",
     "animal_sheep",
+    "animal_cow_b",
+    "animal_sheep_b",
     "tree_hero_oak",
     "tree_forest",
     "tree_forest_b",
@@ -1050,6 +1052,8 @@ mod tests {
             ("hay_bale_stack", "hay"),
             ("animal_cow", "animal"),
             ("animal_sheep", "animal"),
+            ("animal_cow_b", "animal"),
+            ("animal_sheep_b", "animal"),
             ("windmill", "building"),
             ("bakery_shop", "building"),
             ("barn_red", "building"),
@@ -1222,7 +1226,8 @@ mod tests {
             }
         }
         assert!(tested >= 4, "only {tested} approaches reached the barn");
-        // The cow stands in the pasture: walking at its flank from 4 m stops against it.
+        // The cow stands in the pasture: walking at its flank from 4 m stops against it. The
+        // grazing cow stands off its other flank.
         let cow = def
             .props
             .hero
@@ -1232,7 +1237,7 @@ mod tests {
         let at = Vec2::from(cow.at);
         let side = (Quat::from_rotation_y(-cow.yaw_deg.to_radians()) * Vec3::X).xz() * 4.0;
         let g = world(&[(0, 0, "farm", 0)]);
-        let s = walk(&g, at + side, -side, 4.0);
+        let s = walk(&g, at - side, side, 4.0);
         assert_eq!(s.blocked, Some(Blocked::Obstacle("animal_cow".into())));
         assert_eq!(s.blocked.as_ref().map(Blocked::reason), Some("animal"));
         assert!(s.pos.xz().distance(at) < 1.0, "{}", s.pos.xz().distance(at));

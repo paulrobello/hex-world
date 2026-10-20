@@ -1,0 +1,157 @@
+{
+  "animal": {
+    "frame": "runtime +z forward, +y up, +x the animal's left; pivot on the ground under the body centre",
+    "gaitPhase": {
+      "leg_bl": 0.5,
+      "leg_br": 0.0,
+      "leg_fl": 0.0,
+      "leg_fr": 0.5
+    },
+    "graze": "U = 0 and V > 0: rotate about the axis parallel to x through neckPivot, nose down, by theta x V (V = 0 on the plane through neckBase normal to neckPivot -> muzzleTip, 1 at the muzzle tip)",
+    "grazeDegToGround": 0.0,
+    "hipY": 1.0,
+    "hips": {
+      "leg_bl": [
+        0.17,
+        1.0,
+        -0.58
+      ],
+      "leg_br": [
+        -0.17,
+        1.0,
+        -0.58
+      ],
+      "leg_fl": [
+        0.18,
+        1.0,
+        0.55
+      ],
+      "leg_fr": [
+        -0.18,
+        1.0,
+        0.55
+      ]
+    },
+    "legCodes": {
+      "leg_bl": 0.625,
+      "leg_br": 0.875,
+      "leg_fl": 0.125,
+      "leg_fr": 0.375
+    },
+    "muzzleTip": [
+      0.0,
+      0.015,
+      1.2265
+    ],
+    "neckBase": [
+      0.0,
+      0.6547,
+      0.6455
+    ],
+    "neckPivot": [
+      0.0,
+      0.98,
+      0.35
+    ],
+    "pose": "grazing: animal_cow with its head turned -30 deg nose down to the grass",
+    "real": {
+      "muzzleClearM": 0.015,
+      "muzzleTip": [
+        0.0,
+        1.226,
+        0.015
+      ],
+      "withersM": 1.45
+    },
+    "tc1": {
+      "u": "leg weight: 0 off the legs; on a leg (hipY - y) / hipY, 0 at the hip pivot height, 1 at the hoof",
+      "v": "where U > 0 the leg code (0.125 front-left, 0.375 front-right, 0.625 back-left, 0.875 back-right); where U = 0 the head weight, 0 on the body, tail and up to the neck pivot, rising along the neck to 1 at the muzzle tip (ears take their attachment's value)"
+    },
+    "vPoll": 0.3701,
+    "walk": "U > 0: rotate about the axis parallel to x through hips[leg] by swing(t + gaitPhase[leg]); every leg vertex sits below hipY, so U > 0 selects the leg and U can soften the hip"
+  },
+  "aoDistanceM": 0.35,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.6006277203559875,
+      "p05": 0.26675909757614136
+    },
+    "aoAllIslandTexels": {
+      "mean": 0.7608410120010376,
+      "p05": 0.0
+    },
+    "aoVisible": {
+      "mean": 0.9397506713867188,
+      "min": 0.0,
+      "p05": 0.6549019813537598,
+      "texels": 542148
+    },
+    "coverage": 0.7778100967407227,
+    "hiddenTexelFraction": 0.3352713914906087
+  },
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 128
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colourSource": "numpy paint from creature-frame position (no colour bake)",
+  "device": "CPU",
+  "lodTris": [
+    1130,
+    484,
+    168
+  ],
+  "marginPx": 4,
+  "motionCheck": {
+    "lod0": {
+      "headVerts": 195,
+      "legVerts": {
+        "leg_bl": 71,
+        "leg_br": 71,
+        "leg_fl": 71,
+        "leg_fr": 71
+      }
+    },
+    "lod1": {
+      "headVerts": 89,
+      "legVerts": {
+        "leg_bl": 41,
+        "leg_br": 41,
+        "leg_fl": 41,
+        "leg_fr": 41
+      }
+    },
+    "lod2": {
+      "headVerts": 28,
+      "legVerts": {
+        "leg_bl": 19,
+        "leg_br": 19,
+        "leg_fl": 19,
+        "leg_fr": 19
+      }
+    }
+  },
+  "packScalePxPerM": 292.04,
+  "receiverSignature": "3567b590331cd75ce4350862d5506e7338448585a568f991907813401cd38af0",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 509.5470501851963,
+    "median": 355.9735598298333,
+    "min": 229.56554634952914
+  }
+}

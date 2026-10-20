@@ -218,7 +218,7 @@ pub struct Footprint {
 
 /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
 /// the GLBs).
-pub const FOOTPRINTS: [(&str, Footprint); 31] = [
+pub const FOOTPRINTS: [(&str, Footprint); 33] = [
     (
         "tree_forest",
         Footprint {
@@ -387,6 +387,20 @@ pub const FOOTPRINTS: [(&str, Footprint); 31] = [
         "animal_sheep",
         Footprint {
             ground: 0.8,
+            crown: 0.0,
+        },
+    ),
+    (
+        "animal_cow_b",
+        Footprint {
+            ground: 1.4,
+            crown: 0.0,
+        },
+    ),
+    (
+        "animal_sheep_b",
+        Footprint {
+            ground: 0.5,
             crown: 0.0,
         },
     ),

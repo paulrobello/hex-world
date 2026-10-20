@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Variant of animal_cow (PRD §6 Variety), against assets-source/refs/farm_animals (ref-3's grazing cows): the same hornless brown-and-white cow grazing, its head turned 30 degrees nose down and its neck re-lofted over the shoulder so the muzzle stands 1.5 cm off the grass about 0.6 m ahead of the front hooves. Same stations, palette, patches and paint as animal_cow (painted at rest positions), 1130 LOD0 tris. Review sheet: docs/checkpoints/animal_variants/sheet.jpg (refs, EEVEE beside animal_cow, in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
+  }
+]
