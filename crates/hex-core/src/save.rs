@@ -1074,6 +1074,24 @@ mod tests {
         assert_eq!(back.world.tile(EAST).unwrap().def, "wheat_field");
     }
 
+    /// The bakery (a Shop destination tile) saves and loads like any tile; its visitors are
+    /// re-derived on load, never saved.
+    #[test]
+    fn a_placed_bakery_round_trips() {
+        let c = catalog();
+        let mut w = World::new(9);
+        w.place(&c, EAST, "bakery", 1).unwrap();
+        let save = SaveData {
+            world: w,
+            unlocks: BTreeSet::new(),
+            camera: camera(),
+            settings: settings(),
+        };
+        let back = decode(&save.encode()).unwrap();
+        assert_eq!(back, save);
+        assert_eq!(back.world.tile(EAST).unwrap().def, "bakery");
+    }
+
     #[test]
     fn a_fresh_world_round_trips() {
         let save = SaveData {
