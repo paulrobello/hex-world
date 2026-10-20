@@ -300,9 +300,14 @@ fn slot_triangles(
     // A LOD's rotor (if any) draws beside it and samples the same masks atlas.
     let rotor_name = rotor_mesh_name(&p.id, lod);
     let rotor = doc.meshes().find(|m| m.name() == Some(rotor_name.as_str()));
+    // So do its animatable parts (oars, sails).
+    let parts = doc
+        .meshes()
+        .filter(|m| m.name().and_then(|n| part_of(&p.id, lod, n)).is_some());
     let mut out: Vec<(String, Vec<[[f32; 2]; 3]>)> = vec![];
     for prim in std::iter::once(mesh)
         .chain(rotor)
+        .chain(parts)
         .flat_map(|m| m.primitives())
     {
         let name = prim.material().name().unwrap_or_default().to_string();

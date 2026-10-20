@@ -624,10 +624,12 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
         .map(|i| mesh_named(&doc, &rotor_mesh_name(&p.id, i)))
         .collect();
     e.extend(rotor_errors(&p.id, &rotors, &buffers));
+    let parts = part_meshes(&doc, &p.id);
+    e.extend(part_errors(&p.id, &parts));
     let lod_tris = [0, 1, 2].map(|i| {
-        lods[i]
-            .as_ref()
-            .map(|m| tris(m) + rotors[i].as_ref().map_or(0, tris))
+        lods[i].as_ref().map(|m| {
+            tris(m) + rotors[i].as_ref().map_or(0, tris) + parts[i].iter().map(tris).sum::<usize>()
+        })
     });
     e.extend(lod_budget_errors(
         &p.id,
@@ -635,7 +637,12 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
         lod0_budget(p),
         lod2_max_ratio(kit, p),
     ));
-    for m in lods.iter().chain(&rotors).flatten() {
+    for m in lods
+        .iter()
+        .chain(&rotors)
+        .flatten()
+        .chain(parts.iter().flatten())
+    {
         for prim in m.primitives() {
             if prim.get(&gltf::Semantic::Tangents).is_none() {
                 e.push(format!(
@@ -662,7 +669,10 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
             }
         }
     }
-    let lod0_parts: Vec<_> = std::iter::once(lod0).chain(&rotors[0]).collect();
+    let lod0_parts: Vec<_> = std::iter::once(lod0)
+        .chain(&rotors[0])
+        .chain(&parts[0])
+        .collect();
     e.extend(check_texel_density(kit, p, &lod0_parts, &buffers));
     if p.kind == PieceKind::Tree {
         for (i, m) in lods.iter().enumerate() {
@@ -1086,6 +1096,48 @@ fn rotor_errors(
                         rotor_mesh_name(id, i)
                     ));
                 }
+            }
+        }
+    }
+    e
+}
+
+/// Each LOD's animatable parts (`<id>_<part>_lod<n>`: a boat's oars and sails), by name.
+fn part_meshes<'a>(doc: &'a gltf::Document, id: &str) -> [Vec<gltf::Mesh<'a>>; 3] {
+    [0, 1, 2].map(|lod| {
+        let mut v: Vec<_> = doc
+            .meshes()
+            .filter(|m| m.name().and_then(|n| part_of(id, lod, n)).is_some())
+            .collect();
+        v.sort_by_key(|m| m.name().map(str::to_owned));
+        v
+    })
+}
+
+/// A part is in every LOD or none (the runtime swaps a part with its LOD, as it does a rotor).
+fn part_errors(id: &str, parts: &[Vec<gltf::Mesh>; 3]) -> Vec<String> {
+    let names: Vec<BTreeSet<String>> = parts
+        .iter()
+        .enumerate()
+        .map(|(lod, ms)| {
+            ms.iter()
+                .filter_map(|m| {
+                    m.name()
+                        .and_then(|n| part_of(id, lod, n))
+                        .map(str::to_owned)
+                })
+                .collect()
+        })
+        .collect();
+    let all: BTreeSet<&String> = names.iter().flatten().collect();
+    let mut e = vec![];
+    for part in all {
+        for (lod, have) in names.iter().enumerate() {
+            if !have.contains(part) {
+                e.push(format!(
+                    "{id}: mesh {} missing (a part is in every LOD)",
+                    part_mesh_name(id, part, lod)
+                ));
             }
         }
     }
@@ -3274,6 +3326,45 @@ fn rotor_tris_count_toward_the_lod_budget() {
         ]) < 1e-6
     );
     assert!(axle_offset(&[[0.0, 1.0, 0.0], [0.0, -0.9, 0.0]]) > ROTOR_AXLE_TOL);
+}
+
+/// An animatable part's triangles count toward its LOD like a rotor's (the rowing boat's oars, PRD
+/// §7.2), so a LOD0 ceiling the hull alone meets fails once the oars count, and a part missing from
+/// one LOD fails.
+#[test]
+fn part_tris_count_toward_the_lod_budget() {
+    let k = kits().pop().unwrap();
+    let p = k
+        .manifest
+        .pieces
+        .iter()
+        .find(|p| p.id == "boat_rowing")
+        .expect("runtime kit holds boat_rowing");
+    let (doc, _, _) = plain(&k, p).unwrap();
+    let parts = part_meshes(&doc, &p.id);
+    assert!(parts.iter().all(|v| v.len() == 2), "two oars in every LOD");
+    assert_eq!(part_errors(&p.id, &parts), Vec::<String>::new());
+    let body = |i| tris(&mesh_named(&doc, &lod_mesh_name(&p.id, i)).unwrap());
+    let t = [0, 1, 2].map(|i| Some(body(i) + parts[i].iter().map(tris).sum::<usize>()));
+    assert_eq!(
+        lod_budget_errors(&p.id, t, lod0_budget(p), LOD2_MAX_RATIO),
+        Vec::<String>::new()
+    );
+    let e = lod_budget_errors(&p.id, t, body(0), LOD2_MAX_RATIO);
+    assert!(e.iter().any(|m| m.contains("LOD0")), "{e:?}");
+    let partial = [parts[0].clone(), vec![], parts[2].clone()];
+    assert!(
+        part_errors(&p.id, &partial)
+            .iter()
+            .any(|m| m.contains("boat_rowing_oar_port_lod1 missing")),
+    );
+    assert_eq!(
+        part_of("boat_rowing", 1, "boat_rowing_oar_port_lod1"),
+        Some("oar_port")
+    );
+    assert_eq!(part_of("boat_rowing", 1, "boat_rowing_lod1"), None);
+    assert_eq!(part_of("boat_rowing", 0, "boat_rowing_oar_port_lod1"), None);
+    assert_eq!(part_of("windmill", 0, "windmill_rotor_lod0"), None);
 }
 
 /// Joints are scoped by network kind: the river pieces meet river_edge at its inner end, the road

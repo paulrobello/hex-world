@@ -7,7 +7,8 @@ use bevy::{
     render::{renderer::RenderDevice, settings::WgpuFeatures},
 };
 use hex_assets::{
-    KitManifest, TextureFamily, lod_mesh_name, parse_manifest, rotor_mesh_name, select_family,
+    KitManifest, TextureFamily, lod_mesh_name, parse_manifest, part_of, rotor_mesh_name,
+    select_family,
 };
 use hex_core::{Axial, HEX_RADIUS};
 use std::collections::HashMap;
@@ -388,8 +389,32 @@ pub fn kit_layout() -> Vec<Placement> {
     for &(piece, at, yaw_deg) in FARM_HAY_VARIANTS {
         v.push(hero(piece, 1, 5, at, yaw_deg));
     }
+    // Boats (P3, refs D4), each origin on its water at rest: the landing stage on the downstream
+    // river straight (-2, 6) (rot 1: the flow runs along (0.5, 0.866)) at the play water
+    // (`hex_play::water::tiles::WATER_Y`), its origin on the bank's waterline 4 m from the centre
+    // line and its +x toward it, with a rowing boat on the far half of the channel heading
+    // downstream (no water is drawn there: the posts show against the bed); on the ocean tiles of
+    // the water patch the sailing boat on (2, 0) and a second rowing boat on (1, 1), on the
+    // look-dev water at y = 0 that `water_kit` draws there.
+    for &(piece, q, r, at, yaw_deg, y) in BOATS {
+        v.push(Placement {
+            y,
+            ..hero(piece, q, r, at, yaw_deg)
+        });
+    }
     v
 }
+
+/// The play water at rest (`hex_play::water::tiles::WATER_Y`).
+const PLAY_WATER_Y: f32 = -crate::water::LAND;
+
+/// (piece, q, r, at, yaw, y) of the boats showcase.
+const BOATS: &[(&str, i32, i32, [f32; 2], f32, f32)] = &[
+    ("landing_stage", -2, 6, [3.464, -2.0], 150.0, PLAY_WATER_Y),
+    ("boat_rowing", -2, 6, [-1.299, 0.75], 60.0, PLAY_WATER_Y),
+    ("boat_sail", 2, 0, [0.0, 0.0], 200.0, 0.0),
+    ("boat_rowing", 1, 1, [-3.0, 2.0], 30.0, 0.0),
+];
 
 /// (piece, at, yaw) of the hay-variants showcase on (1, 5): the farm's fence, the catslide barn
 /// barn_red_b in the barn slot (barn_red stands in the same slot next door on (0, 5)), and the
@@ -783,6 +808,18 @@ pub fn finish_kit(
                 let base = place * node.transform;
                 let phase = rotor_phase(base.translation);
                 parts.push((rm, base, Some(KitRotor { base, phase })));
+            }
+            // Animatable parts (a boat's oars and sails) draw at rest at their node transforms; the
+            // runtime that owns the piece moves them.
+            for (name, h) in &g.named_nodes {
+                if part_of(p.piece, lod, name).is_none() {
+                    continue;
+                }
+                if let Some(node) = gltf_nodes.get(h)
+                    && let Some(pm) = node.mesh.as_ref().and_then(|h| gltf_meshes.get(h))
+                {
+                    parts.push((pm, place * node.transform, None));
+                }
             }
             for (prim, t, rotor) in parts
                 .into_iter()

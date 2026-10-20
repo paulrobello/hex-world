@@ -35,6 +35,24 @@ pub fn rotor_mesh_name(id: &str, lod: usize) -> String {
     format!("{id}_rotor_lod{lod}")
 }
 
+/// Animatable part `part` of LOD `lod` of piece `id` (a boat's oars and sails): a node and mesh of
+/// this name beside the LOD, authored in the node's frame on its pivot. Unlike a rotor it does not
+/// turn by itself: the kit scenario draws it at rest, and the runtime that owns the piece moves it.
+/// A piece with a part has it in every LOD, and each LOD's budget counts its parts.
+pub fn part_mesh_name(id: &str, part: &str, lod: usize) -> String {
+    format!("{id}_{part}_lod{lod}")
+}
+
+/// The part name when `name` is a part node or mesh of LOD `lod` of piece `id`: `<id>_<part>_lod<lod>`
+/// other than the LOD itself and its rotor.
+pub fn part_of<'a>(id: &str, lod: usize, name: &'a str) -> Option<&'a str> {
+    let part = name
+        .strip_prefix(id)?
+        .strip_prefix('_')?
+        .strip_suffix(format!("_lod{lod}").as_str())?;
+    (!part.is_empty() && part != "rotor").then_some(part)
+}
+
 const fn hex_core_apothem() -> f32 {
     16.0 * 0.866_025_4
 }
