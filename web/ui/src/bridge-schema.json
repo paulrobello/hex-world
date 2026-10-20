@@ -483,6 +483,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": false,
         "id": "rail_straight",
         "land": [
           null,
@@ -505,6 +506,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": false,
         "id": "rail_bend_60",
         "land": [
           null,
@@ -527,6 +529,7 @@
           "Grass",
           "Grass"
         ],
+        "heroes": false,
         "id": "rail_junction",
         "land": [
           null,
@@ -549,6 +552,7 @@
           "Road",
           "Grass"
         ],
+        "heroes": false,
         "id": "rail_road_crossing",
         "land": [
           null,
@@ -634,6 +638,7 @@
           "Rail",
           "Grass"
         ],
+        "heroes": false,
         "id": "river_rail_bridge",
         "land": [
           null,
