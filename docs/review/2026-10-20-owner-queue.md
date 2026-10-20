@@ -18,7 +18,7 @@ Questions:
 - **Q3. Ghost.** Draw the stop in the placement ghost at the edges that would end the line? Recommendation: yes, so the dead end shows before you place it.
 - **Q4. Thumbnails.** Every tile thumbnail is drawn alone, so every rail edge in it is open. Drawing stops there would add two or three stops to every rail thumbnail. Recommendation: no stops in thumbnails, so the rail thumbnails stay as they are.
 - **Q5. Sound.** A soft buffer clunk when a train reaches the stop and reverses? Recommendation: yes, as a short one-shot, generated under the audio standing approval for you to approve by ear.
-Items waiting on your look. Nothing here is approved. Each entry is self-contained under its own heading, and its codes are prefixed with the entry's tag so entries from parallel agents don't collide.
+
 
 ## Beach dressing: reference approvals for `driftwood` and `dune_grass` (tag BD)
 
