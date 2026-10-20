@@ -1,0 +1,414 @@
+{
+  "pieceId": "beach_dunegrass_b",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/beach_dunegrass_b.py",
+    "sha256": "50e0349d1ad56ffa23eb0b8fabbfc3af790e791b8e7b9ca456250d5ca1c7ddd9"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_dunegrass.py",
+      "sha256": "29c517d444972709b1ff6f150a9e77c543d1e543e8cf957e8bd023ed5a4cd5a2"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "bakeStats": {
+      "alphaCoverageByMip": {
+        "tile_0": [
+          0.3299,
+          0.3103,
+          0.3211,
+          0.3179,
+          0.2998,
+          0.3008,
+          0.2812,
+          0.3125,
+          0.25,
+          0
+        ],
+        "tile_1": [
+          0.3209,
+          0.3008,
+          0.3113,
+          0.3059,
+          0.2998,
+          0.3125,
+          0.2812,
+          0.3125,
+          0,
+          0
+        ],
+        "tile_2": [
+          0.3222,
+          0.3004,
+          0.3129,
+          0.3074,
+          0.2871,
+          0.2969,
+          0.2969,
+          0.25,
+          0.25,
+          0
+        ],
+        "tile_3": [
+          0.3112,
+          0.2934,
+          0.3038,
+          0.2969,
+          0.292,
+          0.2812,
+          0.2812,
+          0.25,
+          0,
+          0
+        ]
+      },
+      "alphaCutoff": 0.5
+    },
+    "blender": "5.2.2 LTS",
+    "cardReachM": 0.46488215808876165,
+    "cards": 9,
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 64
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "colliderReachM": 0.4199999924210015,
+    "device": "none (numpy-drawn tiles, no Cycles bake)",
+    "extentZ": [
+      -0.30000001192092896,
+      0.7091621160507202
+    ],
+    "marginPx": 0,
+    "mound": {
+      "apronDropM": 0.3,
+      "apronWidthM": 0.3,
+      "heightM": 0.1,
+      "radiusM": 0.42,
+      "sinkM": 0.04
+    },
+    "receiverSignature": "cea70e2a397f4adca19208bdae54ffca4be6f21636237ea21ed695fff24c75c9",
+    "samples": 0,
+    "sinkM": 0.05,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 836.2443653271134,
+      "median": 775.3653197829453,
+      "min": 728.4177190439119
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 156,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 44,
+      "ratio": 0.28205128205128205
+    },
+    {
+      "lod": 2,
+      "tris": 21,
+      "ratio": 0.1346153846153846
+    }
+  ],
+  "collider": {
+    "node": "beach_dunegrass_b_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 836.2443653271134,
+    "median": 775.3653197829453,
+    "min": 728.4177190439119
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 1028990,
+        "astc": 1024476
+      },
+      "glbBytes": 26572
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 705135,
+        "sha256": "a623f43823d6d0357e41ca1717829262287fd77cb963291040eb0f4aae189e7a"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 689804,
+        "sha256": "60896f593f7e9dcd49a52299877508fb6f0eb2fdb30dceaef0625f34533c2402"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 1159576,
+        "sha256": "073a41694ffcaddfaa29e21080ad9c49a0d35066513d0e14cfb19c8e4b00048d"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 7,
+        "bytes": 775,
+        "sha256": "5b48e82eca73cd942fafa5c22db8c1b419a2010d2696f229d2c323e365159092"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 7,
+        "bytes": 742,
+        "sha256": "bd9072966aa6f1992d7c0f60a4fb9fd899b4452ffc05d1d132c6700b0608b1bb"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 397,
+        "sha256": "0daac71fff4567a00a8a76325124acf05ce1b1f2b6360d704390d79c3e116ed3"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 155944,
+        "sha256": "5cc40edd76d084d373bfef48e1c8be5306f1f8c7eef0ec23bac4d6ebcc121938"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 161437,
+        "sha256": "355fea81150428bde572d18b0775de70f491f55e75da55c22b5befc394af234f"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 286870,
+        "sha256": "8fee7f8d59241b64d236b6f0018c96bf44fde7667fd51f634b1455c59128c1a2"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 167136,
+        "sha256": "c1570c7b3c02cef25cbf655f64ac4d505bda4240237cd6624656bc849fc49fe3"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 172493,
+        "sha256": "44458c38533dab1d48b63ecf1bb3ee4d09204997c5b38df9d484f83402191bee"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 132114,
+        "sha256": "f5f324dad52ebfba9cddf74e726ead78e55e77f685622c320b081b17fd9918b3"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.glb",
+      "sha256": "a2ec58ed67dab6dbf5d2f91480a69d5d8f1da3b0e207df92a758314788f44e1d",
+      "bytes": 26572
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.albedo.bc7.ktx2",
+      "sha256": "a623f43823d6d0357e41ca1717829262287fd77cb963291040eb0f4aae189e7a",
+      "bytes": 705135
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.albedo.astc.ktx2",
+      "sha256": "60896f593f7e9dcd49a52299877508fb6f0eb2fdb30dceaef0625f34533c2402",
+      "bytes": 689804
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.albedo.png",
+      "sha256": "073a41694ffcaddfaa29e21080ad9c49a0d35066513d0e14cfb19c8e4b00048d",
+      "bytes": 1159576
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.masks.bc7.ktx2",
+      "sha256": "5b48e82eca73cd942fafa5c22db8c1b419a2010d2696f229d2c323e365159092",
+      "bytes": 775
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.masks.astc.ktx2",
+      "sha256": "bd9072966aa6f1992d7c0f60a4fb9fd899b4452ffc05d1d132c6700b0608b1bb",
+      "bytes": 742
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.masks.png",
+      "sha256": "0daac71fff4567a00a8a76325124acf05ce1b1f2b6360d704390d79c3e116ed3",
+      "bytes": 397
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.normal.bc7.ktx2",
+      "sha256": "5cc40edd76d084d373bfef48e1c8be5306f1f8c7eef0ec23bac4d6ebcc121938",
+      "bytes": 155944
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.normal.astc.ktx2",
+      "sha256": "355fea81150428bde572d18b0775de70f491f55e75da55c22b5befc394af234f",
+      "bytes": 161437
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.normal.png",
+      "sha256": "8fee7f8d59241b64d236b6f0018c96bf44fde7667fd51f634b1455c59128c1a2",
+      "bytes": 286870
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.orm.bc7.ktx2",
+      "sha256": "c1570c7b3c02cef25cbf655f64ac4d505bda4240237cd6624656bc849fc49fe3",
+      "bytes": 167136
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.orm.astc.ktx2",
+      "sha256": "44458c38533dab1d48b63ecf1bb3ee4d09204997c5b38df9d484f83402191bee",
+      "bytes": 172493
+    },
+    {
+      "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.orm.png",
+      "sha256": "f5f324dad52ebfba9cddf74e726ead78e55e77f685622c320b081b17fd9918b3",
+      "bytes": 132114
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/dune_grass/ref-1.jpg",
+      "sha256": "014f3e26c16f43511069dc17396c9dbb522526a03a1c34db0b528d58d38f91dd",
+      "sourceSha256": "53b96bcb441ba91090de90a695c9b738c239d30d12a366294dd81353a3ce181d",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "71c0c523-03e7-497f-b71f-da63cc236ebf",
+      "prompt": "A single clump of marram dune grass growing from a small mound of dry pale sand on the plain grey studio floor: a dense upright tuft of long narrow rolled grass blades, blue-green to grey-green at the base fading to pale straw at the tips, the blades arching outward and curling over at their tips, a few dry straw-coloured dead blades and two or three slender pale seed spikes rising above the tuft, smooth sculpted forms like a quality scale model with a bold readable silhouette, with a soft contact shadow, the whole clump centred in frame and seen from the front-left. The picture shows only the grass clump on its sand mound on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/dune_grass/ref-2.jpg",
+      "sha256": "876fa0e2eabbc3d0aa8a72f9873d43538ddedf79282d35ae891c30fddf0617fc",
+      "sourceSha256": "627666f904f4d3fd9c8db62fe968b198b081185a68ba2e56bdc1ffc44359f366",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "29cac616-8d42-43ea-8f77-fd446eddae39",
+      "prompt": "Close-up of low sand dunes on a diorama beach tile: lush meadow grass gives way to low rounded hummocks of dry pale sand, each crowned with clumps of marram dune grass with long narrow blue-green blades fading to pale straw tips that arch and lean the same way in the sea breeze, a few smaller tufts scattered on the dry pale sand toward the sea, then a darker damp-sand band, a thin lacy white surf foam line and clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T23:45:28.446Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/dune_grass/ref-1.jpg",
+        "assets-source/refs/dune_grass/ref-2.jpg"
+      ],
+      "notes": "D3 (BD-A2): approved; replaces the baked tufts; 10-14 clumps per straight beach tile, each on its own low sand mound. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "beach dressing (D3)",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. New beach scatter prop: the young, greener clump on a small mound, from the refs approved 2026-10-20 (BD-A1/BD-A2). Review docs/checkpoints/beach-dressing/sheet.jpg (six views, textured still, beach tiles in play before/after at play distance and eye level)."
+    }
+  ]
+}

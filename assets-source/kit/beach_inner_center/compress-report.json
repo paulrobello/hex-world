@@ -1,6 +1,6 @@
 {
   "name": "beach_inner_center",
-  "date": "2026-10-14T08:32:58.273Z",
+  "date": "2026-10-20T23:14:36.630Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 5850,
       "astc": 5606
     },
-    "glbBytes": 83896
+    "glbBytes": 36676
   },
   "glb": {
-    "bytes": 83896,
-    "sha256": "832921fe9e90a62d8f232fbe9a687924a262e68f214c4ed10f729d6672785d95"
+    "bytes": 36676,
+    "sha256": "5da07fe49aac5f9b9bd86e73bfaf52d2273999d2af67ec5b9ebdae7c900699d0"
   }
 }

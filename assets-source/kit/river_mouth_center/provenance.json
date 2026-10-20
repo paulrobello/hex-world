@@ -13,11 +13,11 @@
     },
     {
       "path": "scripts/blender/kit/_beach_dress.py",
-      "sha256": "aed7ba99a1047bb1941cca8d597f732951d885d38f66463610e5e5cc69b23926"
+      "sha256": "8a588f43ab867c12ce54a4bcfd067f4dab0efc400d0273d8f61829d73a7e3d37"
     },
     {
       "path": "scripts/blender/kit/_mouth_dress.py",
-      "sha256": "d97a8dbc854f45fd88f85968fbca74bd23a0e4176a77a733ac3fdc756b3b1fa2"
+      "sha256": "a464d626b47defe5e402f235dd706eb660ad9b0ba563efbe39d34d75e3e7fa44"
     },
     {
       "path": "scripts/blender/kit/_mouth_profile.py",
@@ -56,19 +56,23 @@
       "dryItemsEdge2Shoulder": 3,
       "dryItemsEdge5Shoulder": 11,
       "hand": "r",
-      "logs": 3,
+      "logs": 0,
       "pebbles": 11,
       "pebblesUnderWater": 3,
+      "placedNotBuilt": {
+        "logs": 3,
+        "tufts": 11
+      },
       "reedClumps": 3,
       "reedsEdge2Bank": 0,
       "reedsEdge5Bank": 3,
       "stones": 12,
       "tris": [
-        1040,
-        380,
-        108
+        706,
+        236,
+        60
       ],
-      "tufts": 11
+      "tufts": 0
     },
     "marginPx": 0,
     "masks": {
@@ -81,25 +85,25 @@
       "snow": "1 on dry bed, 0 under the water"
     },
     "reason": "no Cycles bake: the masks are an analytic field of the mouth bed on the planar UV0",
-    "receiverSignature": "afc05127fcfd3c4f4cdbc1785195788ea1ac55fd5f5e54f8e072bddd09946d7e",
+    "receiverSignature": "858f6de792049a6017ea369147c807d5a2a4ccbf1884aae1585495b11e8c6c19",
     "samples": 0,
     "skipped": true
   },
   "lods": [
     {
       "lod": 0,
-      "tris": 1040,
+      "tris": 706,
       "ratio": 1
     },
     {
       "lod": 1,
-      "tris": 380,
-      "ratio": 0.36538461538461536
+      "tris": 236,
+      "ratio": 0.3342776203966006
     },
     {
       "lod": 2,
-      "tris": 108,
-      "ratio": 0.10384615384615385
+      "tris": 60,
+      "ratio": 0.08498583569405099
     }
   ],
   "collider": {
@@ -117,7 +121,7 @@
         "bc7": 7315,
         "astc": 7478
       },
-      "glbBytes": 119632
+      "glbBytes": 81272
     },
     "textureEncodes": [
       {
@@ -156,8 +160,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_mouth_center/river_mouth_center.glb",
-      "sha256": "5e08d6b1f8c6384421cf1f2367310c14a655dcb31eac3e27dade76f7d149e2fa",
-      "bytes": 119632
+      "sha256": "b5de0bbe455c12bf4d32864436c59ad8a7c987d3db198fee63bc1e0c660d67ae",
+      "bytes": 81272
     },
     {
       "path": "assets/kit/p1/river_mouth_center/river_mouth_center.masks.bc7.ktx2",
@@ -207,7 +211,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T16:52:05.697Z",
+    "date": "2026-10-20T23:34:26.072Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -256,6 +260,15 @@
       "revision": "terrain-hump-water",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Rebuild only: a shared helper it imports (_river.py, or _spring.py) changed for the terrain-hump pass on the river bases. The GLB and every map are byte-identical to the approved build; provenance refreshed. Nothing to re-review visually."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "beach dressing (D3)",
+      "requested": "2026-10-20",
+      "notes": "Pending owner re-approval; not an approval. Owner D3 / BD-Q1: the baked driftwood logs and dune-grass tufts are removed (the scatter's beach_driftwood* and beach_dunegrass* replace them); every pebble (and, on the mouth centres, every bank stone and reed clump) is where it was, byte-identical in place. The beach_dunegrass and beach_driftwood slots leave the manifest entry. Review the before/after play shots in docs/checkpoints/beach-dressing/sheet.jpg. Earlier entries stay as history."
     }
   ]
 }

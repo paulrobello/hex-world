@@ -1,0 +1,405 @@
+[
+ {
+  "cmd": "camera",
+  "pos": [
+   30,
+   60,
+   62
+  ],
+  "look_at": [
+   14,
+   0,
+   0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": -1
+ },
+ {
+  "cmd": "rotate",
+  "dir": "cw"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -1
+ },
+ {
+  "cmd": "dump_state",
+  "name": "coast-02-refused-ocean"
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "dump_state",
+  "name": "coast-02-refused-grass"
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "screenshot",
+  "name": "coast-02-refused-beach"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "dump_state",
+  "name": "coast-02-refused-beach"
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_outer"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_inner"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_outer"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_outer"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_inner"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_outer"
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 1
+ },
+ {
+  "cmd": "hover",
+  "q": 9,
+  "r": -9
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_outer"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 1
+ },
+ {
+  "cmd": "hover",
+  "q": 9,
+  "r": -9
+ },
+ {
+  "cmd": "wait",
+  "frames": 600
+ },
+ {
+  "cmd": "dump_state",
+  "name": "bd-after-coast-state"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   95.0,
+   22.0,
+   62.0
+  ],
+  "look_at": [
+   62.0,
+   -1.5,
+   18.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "photo_export",
+  "scale": 1,
+  "name": "bd-after-headland-play"
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   48.0,
+   20.0,
+   -35.0
+  ],
+  "look_at": [
+   27.7,
+   -1.0,
+   0.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "photo_export",
+  "scale": 1,
+  "name": "bd-after-bay-play"
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "walk",
+  "on": true,
+  "pointer_lock": null
+ },
+ {
+  "cmd": "walk_to",
+  "x": 63.8,
+  "z": 27.0,
+  "heading": 327,
+  "pitch": -9
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "photo_export",
+  "scale": 1,
+  "name": "bd-after-headland-eye"
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "walk",
+  "on": false,
+  "pointer_lock": null
+ },
+ {
+  "cmd": "wait",
+  "frames": 10
+ },
+ {
+  "cmd": "exit"
+ }
+]

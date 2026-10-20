@@ -1,6 +1,8 @@
-"""Dressing centres for the beach tiles (refs/beach ref-1): dune-grass tufts along the grass edge, a
-few bleached driftwood logs on the dry sand and pebbles at the grass edge. Colour-only slots plus
-the piece's §9.4 masks map on the planar UV0 (`masks_field`). Everything sits on dry land (s <= DRY_S) and at least BORDER_M inside the border,
+"""Dressing centres for the beach tiles (refs/beach ref-1): pebbles in small groups at the grass edge.
+The dune grass and driftwood are scatter props since 2026-10-20 (owner D3, BD-Q1: replace the
+baked logs and tufts, keep the pebbles; `beach_dunegrass*`, `beach_driftwood*`), so the logs and
+tufts are still placed here, to keep every pebble where it was approved, but no longer built.
+Colour-only slots plus the piece's §9.4 masks map on the planar UV0 (`masks_field`). Everything sits on dry land (s <= DRY_S) and at least BORDER_M inside the border,
 so nothing changes the bed under the water (the water reads the prepass depth as its bed) and
 nothing crosses a seam. Kept apart from `_beach.py` so the bases do not depend on it."""
 import math
@@ -18,6 +20,7 @@ import _beach
 
 TUFT, WOOD, PEBBLE = "beach_dunegrass", "beach_driftwood", "beach_pebble"
 DRESS_SLOTS = (TUFT, WOOD, PEBBLE)
+BUILT_SLOTS = (PEBBLE,)  # the centres' slots since the logs and tufts moved to the scatter
 COLORS = {TUFT: ("#7d8b45", 0.85), WOOD: ("#a39a8a", 0.9), PEBBLE: ("#6f675d", 0.6)}
 DRY_S = -2.4  # the damp band's top is at s = -1.95
 BORDER_M = 1.5
@@ -54,12 +57,6 @@ def strip_point(layout, s, u):
         a1 += -2 * math.pi if a1 > a0 else 2 * math.pi
     a = a0 + (a1 - a0) * u
     return (cx + r * math.cos(a), r * math.sin(a))
-
-
-def along(layout, x, y):
-    """Unit vector along the coast (perpendicular to grad s) at (x, y)."""
-    g = _beach.grad_s(layout, x, y)
-    return (-g[1], g[0])
 
 
 def ground(layout, x, y):
@@ -102,55 +99,6 @@ def placements(piece, layout):
     return items
 
 
-def _tuft(bm, layout, x, y, seed, blades):
-    """Blades as tapered triangles, each doubled back to back (the slot is single-sided)."""
-    rnd = random.Random(seed)
-    z0 = ground(layout, x, y)
-    for _ in range(blades):
-        a = rnd.uniform(0, 2 * math.pi)
-        r = rnd.uniform(0.0, 0.3)
-        bx, by = x + r * math.cos(a), y + r * math.sin(a)
-        h = rnd.uniform(0.45, 0.85)
-        lean = rnd.uniform(0.1, 0.35)
-        tx, ty = bx + lean * math.cos(a), by + lean * math.sin(a)
-        px, py = -math.sin(a) * 0.035, math.cos(a) * 0.035
-        zb = ground(layout, bx, by) - 0.06
-        co = [(bx + px, by + py, zb), (bx - px, by - py, zb), (tx, ty, z0 + h)]
-        bm.faces.new([bm.verts.new(c) for c in co])
-        bm.faces.new([bm.verts.new(c) for c in reversed(co)])
-
-
-def _log(bm, layout, x, y, p, sides, segs):
-    """A weathered log: a tapered, slightly bent cylinder lying along the coast, half sunk."""
-    rnd = random.Random(p["seed"])
-    ax = along(layout, x, y)
-    yaw = math.radians(p["yaw"])
-    d = (ax[0] * math.cos(yaw) - ax[1] * math.sin(yaw), ax[0] * math.sin(yaw) + ax[1] * math.cos(yaw))
-    nrm = (-d[1], d[0])
-    L, R = p["length"], p["radius"]
-    bend = rnd.uniform(-0.15, 0.15)
-    rings = []
-    for i in range(segs + 1):
-        t = i / segs
-        cx = x + d[0] * (t - 0.5) * L + nrm[0] * bend * math.sin(math.pi * t)
-        cy = y + d[1] * (t - 0.5) * L + nrm[1] * bend * math.sin(math.pi * t)
-        r = R * (1.0 - 0.35 * t) * (1 + rnd.uniform(-0.08, 0.08))
-        cz = ground(layout, cx, cy) + 0.45 * r
-        ring = []
-        for k in range(sides):
-            a = 2 * math.pi * k / sides
-            ring.append(bm.verts.new((cx + nrm[0] * r * math.cos(a), cy + nrm[1] * r * math.cos(a),
-                                      cz + r * math.sin(a))))
-        rings.append(ring)
-    for i in range(segs):
-        for k in range(sides):
-            a, b = rings[i][k], rings[i][(k + 1) % sides]
-            c, e = rings[i + 1][(k + 1) % sides], rings[i + 1][k]
-            bm.faces.new([a, b, c, e])
-    bm.faces.new(list(reversed(rings[0])))
-    bm.faces.new(rings[-1])
-
-
 def _pebble(bm, layout, x, y, p):
     rnd = random.Random(p["seed"])
     m = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=1.0)
@@ -164,49 +112,40 @@ def _pebble(bm, layout, x, y, p):
 
 
 def build_centre(piece, layout, generator):
-    """Three LODs: LOD0 everything; LOD1 the logs (coarser), half the tufts with fewer blades and the
-    larger pebbles; LOD2 the logs as 5-sided single segments and the biggest pebbles."""
+    """Three LODs of the pebbles: LOD0 all of them, LOD1 the larger half, LOD2 the biggest two. The
+    logs and tufts are placed (`placements`, so the pebbles keep their places) but not built."""
     out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])
     scene.reset_scene(piece)
     root = scene.empty(piece)
-    mats = {k: materials.pbr_material(k, materials.srgb(c), r) for k, (c, r) in COLORS.items()}
+    mats = {k: materials.pbr_material(k, materials.srgb(c), r) for k, (c, r) in COLORS.items() if k in BUILT_SLOTS}
     items = placements(piece, layout)
     logs = [i for i in items if i[0] == WOOD]
     tufts = [i for i in items if i[0] == TUFT]
     pebbles = sorted((i for i in items if i[0] == PEBBLE), key=lambda i: -i[3]["r"])
-    plan = (
-        {"log": (8, 3), "tufts": tufts, "blades": 10, "pebbles": pebbles},
-        {"log": (6, 2), "tufts": tufts[::2], "blades": 6, "pebbles": pebbles[: len(pebbles) // 2]},
-        {"log": (5, 1), "tufts": [], "blades": 0, "pebbles": pebbles[:2]},
-    )
+    plan = ({"pebbles": pebbles}, {"pebbles": pebbles[: len(pebbles) // 2]}, {"pebbles": pebbles[:2]})
     lods = []
     for li, pl in enumerate(plan):
         bm = bmesh.new()
-        for _k, x, y, p in logs:
-            _log(bm, layout, x, y, p, *pl["log"])
-        n_wood = len(bm.faces)
-        for _k, x, y, p in pl["tufts"]:
-            _tuft(bm, layout, x, y, p["seed"], pl["blades"])
-        n_tuft = len(bm.faces)
         for _k, x, y, p in pl["pebbles"]:
             _pebble(bm, layout, x, y, p)
         bm.faces.ensure_lookup_table()
-        for fi, f in enumerate(bm.faces):
-            f.material_index = DRESS_SLOTS.index(WOOD if fi < n_wood else TUFT if fi < n_tuft else PEBBLE)
-            f.smooth = f.material_index != DRESS_SLOTS.index(TUFT)
-        bmesh.ops.recalc_face_normals(bm, faces=[f for f in bm.faces if f.material_index != DRESS_SLOTS.index(TUFT)])
+        for f in bm.faces:
+            f.material_index = BUILT_SLOTS.index(PEBBLE)
+            f.smooth = True
+        bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
         bmesh.ops.triangulate(bm, faces=bm.faces)
         mesh = bpy.data.meshes.new(f"{piece}_lod{li}")
         bm.to_mesh(mesh)
         bm.free()
         o = scene.link(bpy.data.objects.new(f"{piece}_lod{li}", mesh))
-        for name in DRESS_SLOTS:
+        for name in BUILT_SLOTS:
             o.data.materials.append(mats[name])
         uv.planar_cap_uv(o)
         o.parent = root
         lods.append(o)
     tris = [geom.tri_count(o) for o in lods]
-    print(f"{piece}: {len(logs)} logs, {len(tufts)} tufts, {len(pebbles)} pebbles, tris per LOD {tris}")
+    print(f"{piece}: {len(pebbles)} pebbles ({len(logs)} logs and {len(tufts)} tufts placed, not built), "
+          f"tris per LOD {tris}")
     assert tris[0] <= 1500 and tris[1] <= 0.5 * tris[0] and tris[2] <= 0.15 * tris[0], tris
     for o in lods:
         for v in o.data.vertices:
@@ -222,5 +161,6 @@ def build_centre(piece, layout, generator):
                            channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}}, skipped=True,
                            reason="no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
                            masks={"snow": 1.0, "porosity": list(POROSITY), "night": 0.0, "ao": 1.0},
-                           dressing={"logs": len(logs), "tufts": len(tufts), "pebbles": len(pebbles), "tris": tris})
+                           dressing={"logs": 0, "tufts": 0, "pebbles": len(pebbles), "tris": tris,
+                                     "placedNotBuilt": {"logs": len(logs), "tufts": len(tufts)}})
     return root, lods

@@ -1,0 +1,405 @@
+{
+  "pieceId": "beach_driftwood_b",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/beach_driftwood_b.py",
+    "sha256": "4219d515d2454c7929f571249a8e3f54eff2faa541a74da8bfb64a1efcedb6f1"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_driftwood.py",
+      "sha256": "6ff9997b6b610c6eafe1b4e5834aa5800f5daca9bb944f06caf9a9894fb6dd60"
+    },
+    {
+      "path": "scripts/blender/kit/_log.py",
+      "sha256": "d44411f14e3a50e4f9680fd9b207a4f7873cfa0e96112e8fcff87e42ddb4c42b"
+    },
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.3,
+    "bakeStats": {
+      "albedoLuma": {
+        "mean": 0.5717986822128296,
+        "min": 0.3189542591571808,
+        "p01": 0.458823561668396,
+        "p05": 0.5084967613220215,
+        "texels": 114428
+      },
+      "ao": {
+        "mean": 0.708078145980835,
+        "min": 0,
+        "p01": 0,
+        "p05": 0.08235294371843338,
+        "texels": 114428
+      },
+      "aoAboveGround": {
+        "mean": 0.659243643283844,
+        "min": 0,
+        "p01": 0,
+        "p05": 0.04313725605607033,
+        "texels": 94026
+      },
+      "mossFraction": 0,
+      "normalMissFraction": 0.00010486943755024994,
+      "roughness": {
+        "mean": 0.8427037596702576,
+        "min": 0.8392157554626465,
+        "p01": 0.8392157554626465,
+        "p05": 0.8392157554626465,
+        "texels": 114428
+      }
+    },
+    "barkSet": {
+      "set": "bark",
+      "tileM": 2,
+      "tint": [
+        0.92,
+        0.8,
+        0.72
+      ]
+    },
+    "blender": "5.2.2 LTS",
+    "buryM": 0.035,
+    "cageExtrusionM": 0.05,
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 128
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "colliderReachM": 1.0235061470173716,
+    "colliderTopM": 0.1498706191778183,
+    "device": "METAL",
+    "extentZ": [
+      -0.06652877479791641,
+      0.32451242208480835
+    ],
+    "lengthM": [
+      -0.9749999642372131,
+      1.1037580966949463
+    ],
+    "marginPx": 8,
+    "maxRayDistanceM": 0.14,
+    "receiverSignature": "54c46655613e129d336ef2635af3912e1d9c5b6165add9e300632f5ef5e48820",
+    "samples": 24,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 457.06734143372904,
+      "median": 282.3079384090498,
+      "min": 123.24129370936875
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 426,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 150,
+      "ratio": 0.352112676056338
+    },
+    {
+      "lod": 2,
+      "tris": 48,
+      "ratio": 0.11267605633802817
+    }
+  ],
+  "collider": {
+    "node": "beach_driftwood_b_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 457.06734143372904,
+    "median": 282.3079384090498,
+    "min": 123.24129370936875
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 210510,
+        "astc": 217524
+      },
+      "glbBytes": 27504
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 128599,
+        "sha256": "f45f95516d71cd2f36fb6a1587fb65ba65ad134a9ca3dc887a1a790c2acf9c74"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 131717,
+        "sha256": "391e4af74f8fc445a08397c3039c627260342ab7f271692ee34940138cc4f93f"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 245751,
+        "sha256": "c47cb9ddf8357de402740afef9fd34c6e7258666e320391a80d0144f6354f9b0"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 8,
+        "bytes": 641,
+        "sha256": "dfa824addee4c774445095aacb759708f9127dd13fa643fd99a6958cca097124"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 8,
+        "bytes": 641,
+        "sha256": "727582801e739ec9c024ace6c568ee88960d79b67d8bb077a29c018b177cd0c0"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 710,
+        "sha256": "c8ac1829c0b902f597070c8a843e950c241edd5d012d65263f4e8fb35102d8bd"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 44657,
+        "sha256": "24fc5b0b1348dae2e80cc044e560574913fa843b84e4ebeec9175416d5f569ed"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 45964,
+        "sha256": "1d4548c590c0b46a25b6c95e3ddfedc51bef15a73f82aafcb5897df507bf375e"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 107651,
+        "sha256": "8c2c5008f21ae44a79d943049bf34c3645bd3146144f58e2c786a0e26c4ce397"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 36613,
+        "sha256": "2f088c09829f6edc4b8ad430dbab10b47060c0871a41b892ef5a629ba275148e"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 39202,
+        "sha256": "eb526695110b845c37a31f44e2bd8b9a6de1dfb6c6ed87698088d7c7de8e6824"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 61186,
+        "sha256": "80b6c10bdd5ee051f7dc1fb2dad54893091ad8ed47792c462a3bdde26c8e01f9"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.glb",
+      "sha256": "4552747ae83ca4ff75e5728083235a06bf12a5c73dfb2e1c708f19531c51372f",
+      "bytes": 27504
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.albedo.bc7.ktx2",
+      "sha256": "f45f95516d71cd2f36fb6a1587fb65ba65ad134a9ca3dc887a1a790c2acf9c74",
+      "bytes": 128599
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.albedo.astc.ktx2",
+      "sha256": "391e4af74f8fc445a08397c3039c627260342ab7f271692ee34940138cc4f93f",
+      "bytes": 131717
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.albedo.png",
+      "sha256": "c47cb9ddf8357de402740afef9fd34c6e7258666e320391a80d0144f6354f9b0",
+      "bytes": 245751
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.masks.bc7.ktx2",
+      "sha256": "dfa824addee4c774445095aacb759708f9127dd13fa643fd99a6958cca097124",
+      "bytes": 641
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.masks.astc.ktx2",
+      "sha256": "727582801e739ec9c024ace6c568ee88960d79b67d8bb077a29c018b177cd0c0",
+      "bytes": 641
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.masks.png",
+      "sha256": "c8ac1829c0b902f597070c8a843e950c241edd5d012d65263f4e8fb35102d8bd",
+      "bytes": 710
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.normal.bc7.ktx2",
+      "sha256": "24fc5b0b1348dae2e80cc044e560574913fa843b84e4ebeec9175416d5f569ed",
+      "bytes": 44657
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.normal.astc.ktx2",
+      "sha256": "1d4548c590c0b46a25b6c95e3ddfedc51bef15a73f82aafcb5897df507bf375e",
+      "bytes": 45964
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.normal.png",
+      "sha256": "8c2c5008f21ae44a79d943049bf34c3645bd3146144f58e2c786a0e26c4ce397",
+      "bytes": 107651
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.orm.bc7.ktx2",
+      "sha256": "2f088c09829f6edc4b8ad430dbab10b47060c0871a41b892ef5a629ba275148e",
+      "bytes": 36613
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.orm.astc.ktx2",
+      "sha256": "eb526695110b845c37a31f44e2bd8b9a6de1dfb6c6ed87698088d7c7de8e6824",
+      "bytes": 39202
+    },
+    {
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.orm.png",
+      "sha256": "80b6c10bdd5ee051f7dc1fb2dad54893091ad8ed47792c462a3bdde26c8e01f9",
+      "bytes": 61186
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/driftwood/ref-1.jpg",
+      "sha256": "d49946bc3bc355c0e058086e9240fde7e82ffd8475d6f74c6ef675a03b6314f1",
+      "sourceSha256": "97f3164d39c3f2e06cd6d63aaefd3d988c53bffd95568b10d531b334a391452c",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "8c61d998-e87c-4393-a37f-c4a339350c88",
+      "prompt": "A single weathered driftwood log lying on its side on the plain grey studio floor: a bare barkless trunk section with a gently twisted spiral grain, bleached silver-grey and pale beige wood with darker grey cracks running along the grain, smooth sea-worn rounded ends, one short broken branch stub and a small splayed root flare at one end, the wood reading as a soft matte satin surface, smooth sculpted forms like a quality scale model with a bold readable silhouette, with a soft contact shadow, the whole log centred in frame and seen from the front-left. The picture shows only the driftwood log on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/driftwood/ref-2.jpg",
+      "sha256": "7cdb03561b9791ca6f2a7650715f8ee74924920bde15fde2f65a8f20c03bc2e1",
+      "sourceSha256": "b3ef48e092c1b63ae52576b3b31571e021543272ed00fc05559c39f263439b3a",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "3a1d88fc-8ae9-4110-9fdd-8d5afd2ca092",
+      "prompt": "Close-up of the dry sand on a diorama beach tile: two weathered driftwood logs and a forked driftwood branch lie half sunk in dry pale sand above a darker damp-sand band, their bare twisted wood bleached silver-grey, smooth and sea-worn with cracks along the grain, a few pebbles beside them and lush meadow grass at the back of the beach, a thin lacy white surf foam line and clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed beyond the damp band, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-20T23:33:59.822Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/driftwood/ref-1.jpg",
+        "assets-source/refs/driftwood/ref-2.jpg"
+      ],
+      "notes": "D3 (BD-A1): approved; replaces the beach centres' baked logs; about 3 per straight beach tile. Answered in chat from docs/review/2026-10-20-walkthrough.html."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "beach dressing (D3)",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. New beach scatter prop: the forked branch (ref-2), from the refs approved 2026-10-20 (BD-A1/BD-A2). Review docs/checkpoints/beach-dressing/sheet.jpg (six views, textured still, beach tiles in play before/after at play distance and eye level)."
+    }
+  ]
+}

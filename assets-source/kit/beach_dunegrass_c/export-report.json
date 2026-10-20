@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/beach_dunegrass_c.py",
+    "sha256": "b610fc03eb7f4377ac8bd8659d7fbfe30fed9008f3110991472a51b1b55fc8db"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_dunegrass.py",
+      "sha256": "29c517d444972709b1ff6f150a9e77c543d1e543e8cf957e8bd023ed5a4cd5a2"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    }
+  ],
+  "lodTris": {
+    "beach_dunegrass_c_lod0": 164,
+    "beach_dunegrass_c_lod1": 44,
+    "beach_dunegrass_c_lod2": 21
+  },
+  "nodes": [
+    "beach_dunegrass_c",
+    "beach_dunegrass_c_collider",
+    "beach_dunegrass_c_lod0",
+    "beach_dunegrass_c_lod1",
+    "beach_dunegrass_c_lod2"
+  ],
+  "pieceId": "beach_dunegrass_c",
+  "sockets": []
+}

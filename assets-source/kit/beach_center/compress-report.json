@@ -1,6 +1,6 @@
 {
   "name": "beach_center",
-  "date": "2026-10-14T08:32:55.926Z",
+  "date": "2026-10-20T23:14:34.451Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 6043,
       "astc": 6058
     },
-    "glbBytes": 81632
+    "glbBytes": 38544
   },
   "glb": {
-    "bytes": 81632,
-    "sha256": "aae09487109890c47379c3cab243dc60354f16de2c386233f98c9ef4eada3f29"
+    "bytes": 38544,
+    "sha256": "bc42d503e5eec037791383c15245479ea95a995eb0e05063ec52ffdab69f29dc"
   }
 }

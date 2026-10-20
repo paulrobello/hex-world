@@ -8,14 +8,18 @@
   },
   "device": "none",
   "dressing": {
-    "logs": 3,
+    "logs": 0,
     "pebbles": 22,
+    "placedNotBuilt": {
+      "logs": 3,
+      "tufts": 12
+    },
     "tris": [
-      860,
-      388,
-      88
+      440,
+      220,
+      40
     ],
-    "tufts": 12
+    "tufts": 0
   },
   "marginPx": 0,
   "masks": {
@@ -28,7 +32,7 @@
     "snow": 1.0
   },
   "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
-  "receiverSignature": "50db1a5279bcb272ec1741e84da57da67864201a7c7f25c86a9e5b10eca160df",
+  "receiverSignature": "9736f8849b050c238043d780750ba95f503939898e56197ef22af69b3c9d43af",
   "samples": 0,
   "skipped": true
 }

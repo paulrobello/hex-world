@@ -1,0 +1,35 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/beach_driftwood.py",
+    "sha256": "4ee12bc3a1a0442748a67935a41fb3d812106dc69515b6ce0f61900ee99ee967"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_driftwood.py",
+      "sha256": "6ff9997b6b610c6eafe1b4e5834aa5800f5daca9bb944f06caf9a9894fb6dd60"
+    },
+    {
+      "path": "scripts/blender/kit/_log.py",
+      "sha256": "d44411f14e3a50e4f9680fd9b207a4f7873cfa0e96112e8fcff87e42ddb4c42b"
+    },
+    {
+      "path": "scripts/blender/kit/_shared.py",
+      "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
+    }
+  ],
+  "lodTris": {
+    "beach_driftwood_lod0": 482,
+    "beach_driftwood_lod1": 175,
+    "beach_driftwood_lod2": 48
+  },
+  "nodes": [
+    "beach_driftwood",
+    "beach_driftwood_collider",
+    "beach_driftwood_lod0",
+    "beach_driftwood_lod1",
+    "beach_driftwood_lod2"
+  ],
+  "pieceId": "beach_driftwood",
+  "sockets": []
+}

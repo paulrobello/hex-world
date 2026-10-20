@@ -1,0 +1,781 @@
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index c7547b7..92ce521 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -402,21 +402,15 @@
+       "maps": { "masks": "p1/beach_inner_base/beach_inner_base.masks" } },
+     { "id": "beach_center", "pack": "water", "kind": "prop", "glb": "p1/beach_center/beach_center.glb",
+       "provenance": "assets-source/kit/beach_center/provenance.json",
+-      "slots": { "beach_dunegrass": { "color": [0.205, 0.258, 0.06], "roughness": 0.85, "foliage": true, "masks": true },
+-                 "beach_driftwood": { "color": [0.366, 0.323, 0.254], "roughness": 0.9, "masks": true },
+-                 "beach_pebble": { "color": [0.159, 0.136, 0.109], "roughness": 0.6, "masks": true } },
++      "slots": { "beach_pebble": { "color": [0.159, 0.136, 0.109], "roughness": 0.6, "masks": true } },
+       "maps": { "masks": "p1/beach_center/beach_center.masks" } },
+     { "id": "beach_outer_center", "pack": "water", "kind": "prop", "glb": "p1/beach_outer_center/beach_outer_center.glb",
+       "provenance": "assets-source/kit/beach_outer_center/provenance.json",
+-      "slots": { "beach_dunegrass": { "color": [0.205, 0.258, 0.06], "roughness": 0.85, "foliage": true, "masks": true },
+-                 "beach_driftwood": { "color": [0.366, 0.323, 0.254], "roughness": 0.9, "masks": true },
+-                 "beach_pebble": { "color": [0.159, 0.136, 0.109], "roughness": 0.6, "masks": true } },
++      "slots": { "beach_pebble": { "color": [0.159, 0.136, 0.109], "roughness": 0.6, "masks": true } },
+       "maps": { "masks": "p1/beach_outer_center/beach_outer_center.masks" } },
+     { "id": "beach_inner_center", "pack": "water", "kind": "prop", "glb": "p1/beach_inner_center/beach_inner_center.glb",
+       "provenance": "assets-source/kit/beach_inner_center/provenance.json",
+-      "slots": { "beach_dunegrass": { "color": [0.205, 0.258, 0.06], "roughness": 0.85, "foliage": true, "masks": true },
+-                 "beach_driftwood": { "color": [0.366, 0.323, 0.254], "roughness": 0.9, "masks": true },
+-                 "beach_pebble": { "color": [0.159, 0.136, 0.109], "roughness": 0.6, "masks": true } },
++      "slots": { "beach_pebble": { "color": [0.159, 0.136, 0.109], "roughness": 0.6, "masks": true } },
+       "maps": { "masks": "p1/beach_inner_center/beach_inner_center.masks" } },
+     { "id": "river_mouth_base", "pack": "water", "kind": "base", "glb": "p1/river_mouth_base/river_mouth_base.glb",
+       "provenance": "assets-source/kit/river_mouth_base/provenance.json",
+@@ -429,9 +423,7 @@
+       "maps": { "masks": "p1/river_mouth_base/river_mouth_base.masks" } },
+     { "id": "river_mouth_center", "pack": "water", "kind": "prop", "glb": "p1/river_mouth_center/river_mouth_center.glb",
+       "provenance": "assets-source/kit/river_mouth_center/provenance.json",
+-      "slots": { "beach_dunegrass": { "color": [0.205, 0.258, 0.06], "roughness": 0.85, "foliage": true, "masks": true },
+-                 "beach_driftwood": { "color": [0.366, 0.323, 0.254], "roughness": 0.9, "masks": true },
+-                 "beach_pebble": { "color": [0.159, 0.136, 0.109], "roughness": 0.6, "masks": true },
++      "slots": { "beach_pebble": { "color": [0.159, 0.136, 0.109], "roughness": 0.6, "masks": true },
+                  "river_stone": { "color": [0.254, 0.223, 0.184], "roughness": 0.8, "masks": true },
+                  "river_reed": { "color": [0.109, 0.195, 0.035], "roughness": 0.85, "foliage": true, "masks": true, "wind": 0.5 } },
+       "maps": { "masks": "p1/river_mouth_center/river_mouth_center.masks" } },
+@@ -446,12 +438,43 @@
+       "maps": { "masks": "p1/river_mouth_l_base/river_mouth_l_base.masks" } },
+     { "id": "river_mouth_l_center", "pack": "water", "kind": "prop", "glb": "p1/river_mouth_l_center/river_mouth_l_center.glb",
+       "provenance": "assets-source/kit/river_mouth_l_center/provenance.json",
+-      "slots": { "beach_dunegrass": { "color": [0.205, 0.258, 0.06], "roughness": 0.85, "foliage": true, "masks": true },
+-                 "beach_driftwood": { "color": [0.366, 0.323, 0.254], "roughness": 0.9, "masks": true },
+-                 "beach_pebble": { "color": [0.159, 0.136, 0.109], "roughness": 0.6, "masks": true },
++      "slots": { "beach_pebble": { "color": [0.159, 0.136, 0.109], "roughness": 0.6, "masks": true },
+                  "river_stone": { "color": [0.254, 0.223, 0.184], "roughness": 0.8, "masks": true },
+                  "river_reed": { "color": [0.109, 0.195, 0.035], "roughness": 0.85, "foliage": true, "masks": true, "wind": 0.5 } },
+       "maps": { "masks": "p1/river_mouth_l_center/river_mouth_l_center.masks" } },
++    { "id": "beach_driftwood", "pack": "water", "kind": "prop", "glb": "p1/beach_driftwood/beach_driftwood.glb",
++      "provenance": "assets-source/kit/beach_driftwood/provenance.json",
++      "slots": { "beach_driftwood_wood": { "unique": true, "masks": true } },
++      "maps": { "albedo": "p1/beach_driftwood/beach_driftwood.albedo", "normal": "p1/beach_driftwood/beach_driftwood.normal",
++                "orm": "p1/beach_driftwood/beach_driftwood.orm", "masks": "p1/beach_driftwood/beach_driftwood.masks" } },
++    { "id": "beach_driftwood_b", "pack": "water", "kind": "prop", "glb": "p1/beach_driftwood_b/beach_driftwood_b.glb",
++      "provenance": "assets-source/kit/beach_driftwood_b/provenance.json",
++      "slots": { "beach_driftwood_b_wood": { "unique": true, "masks": true } },
++      "maps": { "albedo": "p1/beach_driftwood_b/beach_driftwood_b.albedo", "normal": "p1/beach_driftwood_b/beach_driftwood_b.normal",
++                "orm": "p1/beach_driftwood_b/beach_driftwood_b.orm", "masks": "p1/beach_driftwood_b/beach_driftwood_b.masks" } },
++    { "id": "beach_driftwood_c", "pack": "water", "kind": "prop", "glb": "p1/beach_driftwood_c/beach_driftwood_c.glb",
++      "provenance": "assets-source/kit/beach_driftwood_c/provenance.json",
++      "slots": { "beach_driftwood_c_wood": { "unique": true, "masks": true } },
++      "maps": { "albedo": "p1/beach_driftwood_c/beach_driftwood_c.albedo", "normal": "p1/beach_driftwood_c/beach_driftwood_c.normal",
++                "orm": "p1/beach_driftwood_c/beach_driftwood_c.orm", "masks": "p1/beach_driftwood_c/beach_driftwood_c.masks" } },
++    { "id": "beach_dunegrass", "pack": "water", "kind": "prop", "glb": "p1/beach_dunegrass/beach_dunegrass.glb",
++      "provenance": "assets-source/kit/beach_dunegrass/provenance.json",
++      "slots": { "beach_dunegrass_foliage": { "unique": true, "masks": true, "alphaCutoff": 0.5, "wind": 0.15 },
++                 "beach_dunegrass_sand": { "tileable": "plaster", "color": [1.0, 0.95, 0.8], "masks": true } },
++      "maps": { "albedo": "p1/beach_dunegrass/beach_dunegrass.albedo", "normal": "p1/beach_dunegrass/beach_dunegrass.normal",
++                "orm": "p1/beach_dunegrass/beach_dunegrass.orm", "masks": "p1/beach_dunegrass/beach_dunegrass.masks" } },
++    { "id": "beach_dunegrass_b", "pack": "water", "kind": "prop", "glb": "p1/beach_dunegrass_b/beach_dunegrass_b.glb",
++      "provenance": "assets-source/kit/beach_dunegrass_b/provenance.json",
++      "slots": { "beach_dunegrass_b_foliage": { "unique": true, "masks": true, "alphaCutoff": 0.5, "wind": 0.15 },
++                 "beach_dunegrass_b_sand": { "tileable": "plaster", "color": [1.0, 0.95, 0.8], "masks": true } },
++      "maps": { "albedo": "p1/beach_dunegrass_b/beach_dunegrass_b.albedo", "normal": "p1/beach_dunegrass_b/beach_dunegrass_b.normal",
++                "orm": "p1/beach_dunegrass_b/beach_dunegrass_b.orm", "masks": "p1/beach_dunegrass_b/beach_dunegrass_b.masks" } },
++    { "id": "beach_dunegrass_c", "pack": "water", "kind": "prop", "glb": "p1/beach_dunegrass_c/beach_dunegrass_c.glb",
++      "provenance": "assets-source/kit/beach_dunegrass_c/provenance.json",
++      "slots": { "beach_dunegrass_c_foliage": { "unique": true, "masks": true, "alphaCutoff": 0.5, "wind": 0.15 },
++                 "beach_dunegrass_c_sand": { "tileable": "plaster", "color": [1.0, 0.95, 0.8], "masks": true } },
++      "maps": { "albedo": "p1/beach_dunegrass_c/beach_dunegrass_c.albedo", "normal": "p1/beach_dunegrass_c/beach_dunegrass_c.normal",
++                "orm": "p1/beach_dunegrass_c/beach_dunegrass_c.orm", "masks": "p1/beach_dunegrass_c/beach_dunegrass_c.masks" } },
+     { "id": "rock_small", "pack": "props", "kind": "prop", "glb": "p1/rock_small/rock_small.glb",
+       "provenance": "assets-source/kit/rock_small/provenance.json",
+       "slots": { "rock_small_rock": { "unique": true, "masks": true } },
+diff --git a/crates/hex-play/src/play/ghost.rs b/crates/hex-play/src/play/ghost.rs
+index eb02747..ce5319f 100644
+--- a/crates/hex-play/src/play/ghost.rs
++++ b/crates/hex-play/src/play/ghost.rs
+@@ -712,7 +712,8 @@ mod tests {
+     #[test]
+     fn water_tile_slots_tint_by_their_ground() {
+         assert_eq!(slot_role("beach_grass"), Some(Role::Grass));
+-        assert_eq!(slot_role("beach_dunegrass"), Some(Role::Grass));
++        assert_eq!(slot_role("beach_dunegrass_foliage"), Some(Role::Grass));
++        assert_eq!(slot_role("beach_dunegrass_sand"), Some(Role::Sand));
+         assert_eq!(slot_role("beach_sand"), Some(Role::Sand));
+         assert_eq!(slot_role("beach_wet"), Some(Role::WetSand));
+         assert_eq!(slot_role("beach_seabed"), Some(Role::Seabed));
+@@ -720,7 +721,7 @@ mod tests {
+         assert_eq!(slot_role("river_bed"), Some(Role::Seabed));
+         assert_eq!(slot_role("river_stone"), Some(Role::Prop));
+         assert_eq!(slot_role("beach_skirt"), None);
+-        assert_eq!(slot_role("beach_driftwood"), None);
++        assert_eq!(slot_role("beach_driftwood_wood"), None);
+     }
+ 
+     /// The surface covers the hex where the tile's water is: all of the ocean, the seaward side of
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index db5fa7e..ab629a6 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -30,7 +30,8 @@
+ //!   `surface_at` does: trees on `forest_base_floor` (the litter), rocks and wildflowers on either
+ //!   that and `meadow_base_cap`. Its whole ground footprint must lie on that floor, so nothing
+ //!   stands on a road, a river bed or bank, a house pad or driveway, a beach, a rim, a skirt or water
+-//!   ([`excluded_slot`]). It keeps clear of hero props (a tree clears the oak's canopy; a fence,
++//!   ([`excluded_slot`]), except the beach dressing on the dry sand ([`BEACH_FLOOR`],
++//!   [`beach_band`]). It keeps clear of hero props (a tree clears the oak's canopy; a fence,
+ //!   [`FENCES`], by its line, dropped after the darts so nothing else moves), of road and
+ //!   river centrelines (`lane_clearance`, at least the lane's half width plus [`LANE_GAP`]) and of
+ //!   the hex border (a crown overhangs it by at most [`CROWN_OVERHANG`]), and stands upright at the
+@@ -67,6 +68,7 @@ use super::{
+     rise::{PropKind, RiseRole},
+     spawn_kit_parts,
+ };
++use crate::water::tiles::{BEACH_TOP_S, Coastline};
+ use crate::{ActiveScenario, Scenario, SceneEntity};
+ 
+ /// Area of the hex cap in m² (pointy-top, circumradius [`HEX_RADIUS`]): what density counts per.
+@@ -110,6 +112,7 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
+         | "sapling_spruce" => &["forest_base_floor"],
+         "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
+         "wildflower_single" | "bush_verge" => &["meadow_base_cap"],
++        "beach_dunegrass" | "beach_driftwood" => &[BEACH_FLOOR],
+         _ => &[],
+     }
+ }
+@@ -132,6 +135,14 @@ pub const VERGE_BAND: f32 = 6.7;
+ /// Variants of a scatter piece (PRD §6 Variety), after the piece itself: a rule names the first
+ /// and each of its instances draws one of the group, picked by [`pick_variant`].
+ pub const VARIANTS: &[(&str, &[&str])] = &[
++    (
++        "beach_driftwood",
++        &["beach_driftwood_b", "beach_driftwood_c"],
++    ),
++    (
++        "beach_dunegrass",
++        &["beach_dunegrass_b", "beach_dunegrass_c"],
++    ),
+     ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
+     ("tree_oak", &["tree_oak_b", "tree_oak_c"]),
+     ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
+@@ -259,6 +270,99 @@ pub fn excluded_slot(slot: &str) -> bool {
+     PREFIXES.iter().any(|p| slot.starts_with(p)) || SUFFIXES.iter().any(|s| slot.ends_with(s))
+ }
+ 
++// ---------------------------------------------------------------------------------------------
++// Beach dressing (owner D3, 2026-10-20): driftwood and marram clumps on the dry sand
++
++/// The one [`excluded_slot`] a piece may stand on when its [`floor_slots`] list it: the dry sand
++/// of the beach and river-mouth bases. The grass strip, damp band, seabed and every other
++/// `beach_` slot stay excluded.
++pub const BEACH_FLOOR: &str = "beach_sand";
++/// Top of the damp band in s (m seaward of the coastline): `_beach.WET_TOP_S`, where the bed
++/// stands 0.6 m above the water.
++pub const DAMP_TOP_S: f32 = -1.953;
++/// Beach dressing keeps its whole ground footprint this far (m) inside the hex border.
++pub const BEACH_BORDER: f32 = 1.5;
++/// Largest turn (rad) of a driftwood piece off the coast's direction (12°): the sand is level
++/// along the coast and slopes across it (up to about 0.24 on the dry band), so a log lying across
++/// the slope would float at one end.
++pub const DRIFT_YAW_JITTER: f32 = 0.21;
++
++/// Where on a coast tile a beach dressing piece stands, in s ([`Coastline::seaward`]) of its centre.
++#[derive(Clone, Copy, Debug, PartialEq)]
++pub struct BeachBand {
++    pub near: f32,
++    pub far: f32,
++    /// Seaward thinning: a dart at `near` is always kept, one at `far` with probability 1 - thin.
++    pub thin: f32,
++    /// Laid along the coast within [`DRIFT_YAW_JITTER`] (driftwood) instead of at a free yaw.
++    pub along: bool,
++}
++
++/// The band of a beach dressing piece (owner BD-Q2, BD-Q4). Marram clumps: from about one
++/// clump's width (1.2 m) seaward of the grass line (s = -8) to 2 m short of the damp band, densest
++/// at the grass and thinning seaward. Driftwood: the seaward dry sand, about 3 m short of the grass
++/// line to the damp band (its 1.45 m footprint keeps it off the damp band). `None` for every
++/// other piece.
++pub fn beach_band(piece: &str) -> Option<BeachBand> {
++    match family(piece) {
++        "beach_dunegrass" => Some(BeachBand {
++            near: BEACH_TOP_S + 1.2,
++            far: DAMP_TOP_S - 2.0,
++            thin: 0.75,
++            along: false,
++        }),
++        "beach_driftwood" => Some(BeachBand {
++            near: BEACH_TOP_S + 3.0,
++            far: DAMP_TOP_S - 0.5,
++            thin: 0.0,
++            along: true,
++        }),
++        _ => None,
++    }
++}
++
++/// Whether `slot`, under a footprint, is ground for a piece standing on `floors`: one of them and
++/// never an [`excluded_slot`] other than [`BEACH_FLOOR`].
++pub fn floor_ok(floors: &[&str], slot: &str) -> bool {
++    floors.contains(&slot) && (slot == BEACH_FLOOR || !excluded_slot(slot))
++}
++
++/// Whether a beach dressing centre at `p` (reach `reach`) lies outside its band: off the band's
++/// s range, within [`BEACH_BORDER`] of the border, or on a tile with no coastline.
++fn off_beach_band(band: BeachBand, coast: Option<Coastline>, p: Vec2, reach: f32) -> bool {
++    let Some(coast) = coast else {
++        return true;
++    };
++    let s = coast.seaward(p);
++    s < band.near || s > band.far || hex_reach(p) > APOTHEM - reach - BEACH_BORDER
++}
++
++/// The chance a beach dressing dart at `p` is kept ([`BeachBand::thin`]).
++fn beach_keep(band: BeachBand, coast: Coastline, p: Vec2) -> f32 {
++    let t = ((coast.seaward(p) - band.near) / (band.far - band.near)).clamp(0.0, 1.0);
++    1.0 - band.thin * t
++}
++
++/// An instance's yaw from its yaw draw `u` in [0, 1): free (`u` × TAU), or for a piece laid along
++/// the coast the coast's direction at `p`, either way round (u < 0.5 or not) and turned by up to
++/// [`DRIFT_YAW_JITTER`] (from the same draw, so the dart stream is unchanged).
++fn instance_yaw(band: Option<BeachBand>, coast: Option<Coastline>, p: Vec2, u: f32) -> f32 {
++    let (Some(band), Some(coast)) = (band, coast) else {
++        return u * TAU;
++    };
++    if !band.along {
++        return u * TAU;
++    }
++    let t = match coast {
++        Coastline::Straight { sea } => sea.perp(),
++        Coastline::Arc { centre, .. } => (p - centre).perp(),
++    };
++    let flip = if u < 0.5 { 0.0 } else { std::f32::consts::PI };
++    let jitter = ((u * 2.0).fract() * 2.0 - 1.0) * DRIFT_YAW_JITTER;
++    // Quat::from_rotation_y(yaw) turns the piece's +x to (cos yaw, -sin yaw) in (x, z).
++    (-t.y).atan2(t.x) + flip + jitter
++}
++
+ /// Horizontal reach of a piece in metres: `ground` is its collider's (what it stands on and what
+ /// others must not overlap) and `crown` its LOD0 canopy's (0 for low props).
+ #[derive(Clone, Copy, Debug, PartialEq)]
+@@ -270,6 +374,48 @@ pub struct Footprint {
+ /// The pieces scatter places or keeps clear of (`footprints_match_the_kit` checks them against
+ /// the GLBs).
+ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
++    (
++        "beach_driftwood",
++        Footprint {
++            ground: 1.45,
++            crown: 0.0,
++        },
++    ),
++    (
++        "beach_driftwood_b",
++        Footprint {
++            ground: 1.03,
++            crown: 0.0,
++        },
++    ),
++    (
++        "beach_driftwood_c",
++        Footprint {
++            ground: 0.66,
++            crown: 0.0,
++        },
++    ),
++    (
++        "beach_dunegrass",
++        Footprint {
++            ground: 0.56,
++            crown: 0.0,
++        },
++    ),
++    (
++        "beach_dunegrass_b",
++        Footprint {
++            ground: 0.43,
++            crown: 0.0,
++        },
++    ),
++    (
++        "beach_dunegrass_c",
++        Footprint {
++            ground: 0.71,
++            crown: 0.0,
++        },
++    ),
+     (
+         "tree_forest",
+         Footprint {
+@@ -1145,11 +1291,8 @@ fn mask(
+     let piece = rule.piece.as_str();
+     let fp = group_footprint(piece);
+     let floors = floor_slots(piece);
+-    let ok_slot: Vec<bool> = surface
+-        .slots
+-        .iter()
+-        .map(|s| floors.contains(&s.as_str()) && !excluded_slot(s))
+-        .collect();
++    let ok_slot: Vec<bool> = surface.slots.iter().map(|s| floor_ok(floors, s)).collect();
++    let beach = beach_band(piece).map(|b| (b, Coastline::of(def, 0)));
+     let on_floor = |k: usize| raster[k].is_some_and(|(_, s)| ok_slot[s as usize]);
+     // The footprint, the half diagonal a dart may land from its cell centre, and the half diagonal
+     // from a footprint point to the nearest sample. `stand` then checks the footprint exactly.
+@@ -1190,6 +1333,7 @@ fn mask(
+                 || heroes.iter().any(|(h, c)| p.distance(*h) < *c)
+                 || lanes.iter().any(|(l, c)| polyline_distance(p, l) < *c)
+                 || band.is_some_and(|b| lanes.iter().all(|(l, _)| polyline_distance(p, l) > b))
++                || beach.is_some_and(|(b, c)| off_beach_band(b, c, p, fp.ground))
+             {
+                 continue;
+             }
+@@ -1381,11 +1525,7 @@ fn drift_cells(seed: u64, mask: &Mask) -> Vec<u32> {
+ 
+ /// Lowest surface height under the centre and a 0.3 m ring around `p`, if `p` stands on `floors`.
+ fn stand(surface: &Surface, p: Vec2, floors: &[&str], reach: f32) -> Option<f32> {
+-    let on_floor = |q: Vec2| {
+-        surface
+-            .at(q.x, q.y)
+-            .filter(|(_, s)| floors.contains(s) && !excluded_slot(s))
+-    };
++    let on_floor = |q: Vec2| surface.at(q.x, q.y).filter(|(_, s)| floor_ok(floors, s));
+     let (h, _) = on_floor(p)?;
+     // The footprint's rim and half-rim, exactly (the mask only eroded the sampled ground).
+     let ring16 = ring16();
+@@ -1408,6 +1548,7 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
+     let mut out = Layout::default();
+     // (centre, ground reach, rule) of everything placed so far.
+     let mut placed: Vec<(Vec2, f32, usize)> = vec![];
++    let coast = Coastline::of(def, 0);
+     for (ri, rule) in def.props.scatter.iter().enumerate() {
+         let piece = rule.piece.as_str();
+         let fp = group_footprint(piece);
+@@ -1434,6 +1575,7 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
+         let jitter = scale_jitter(fp);
+         let floors = floor_slots(piece);
+         let vary = rule.vary.clamp(0.0, 1.0);
++        let beach = beach_band(piece);
+         let mut n = 0;
+         for _ in 0..ATTEMPTS * want + 64 {
+             if n == want {
+@@ -1449,6 +1591,12 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
+             if vary > 0.0 && rng.unit() > 1.0 - vary * (1.0 - vary_noise(seed, p)) {
+                 continue;
+             }
++            if let (Some(b), Some(c)) = (beach, coast)
++                && b.thin > 0.0
++                && rng.unit() > beach_keep(b, c, p)
++            {
++                continue;
++            }
+             let clear = placed.iter().all(|&(q, g, r)| {
+                 let d = p.distance(q);
+                 if r == ri {
+@@ -1463,7 +1611,7 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
+             let Some(y) = stand(&ground.surface, p, floors, reach) else {
+                 continue;
+             };
+-            let yaw = rng.unit() * TAU;
++            let yaw = instance_yaw(beach, coast, p, rng.unit());
+             let scale = 1.0 + jitter * (2.0 * rng.unit() - 1.0);
+             placed.push((p, reach, ri));
+             out.instances.push(Instance {
+@@ -2040,7 +2188,7 @@ mod tests {
+                                 panic!("{} k{k}: {piece} over no ground at {p}", def.id)
+                             });
+                             assert!(
+-                                floors.contains(&slot) && !excluded_slot(slot),
++                                floor_ok(floors, slot),
+                                 "{} k{k} seed {seed}: {piece} at {} over {slot}",
+                                 def.id,
+                                 inst.pos
+@@ -2094,20 +2242,15 @@ mod tests {
+             "meadow",
+             "road_straight",
+             "house_cluster",
+-        ] {
+-            assert!(counts[id] > 0, "{id} scatters: {counts:?}");
+-        }
+-        for id in [
+-            "ocean",
+-            "river_straight",
+-            "river_bend",
+-            "river_spring",
+             "beach",
+             "beach_inner",
+             "beach_outer",
+             "river_mouth",
+             "river_mouth_l",
+         ] {
++            assert!(counts[id] > 0, "{id} scatters: {counts:?}");
++        }
++        for id in ["ocean", "river_straight", "river_bend", "river_spring"] {
+             assert_eq!(counts[id], 0, "{id} has no scatter floor: {counts:?}");
+         }
+     }
+@@ -2435,6 +2578,101 @@ mod tests {
+         }
+     }
+ 
++    /// Owner D3 (2026-10-20): on every coast tile the driftwood and marram clumps stand on the dry
++    /// sand inside their [`beach_band`], their whole footprint [`BEACH_BORDER`] inside the border
++    /// and clear of the river mouth's channel; every planned instance is placed, the driftwood lies
++    /// along the coast and the clumps thin seaward. Prints the mean count per tile.
++    #[test]
++    fn beach_dressing_stays_on_its_dry_sand_band() {
++        let c = catalog();
++        for id in [
++            "beach",
++            "beach_inner",
++            "beach_outer",
++            "river_mouth",
++            "river_mouth_l",
++        ] {
++            let def = c.get(id).unwrap();
++            let g = prepared(def).unwrap();
++            let coast = Coastline::of(def, 0).unwrap();
++            let lanes = lanes(def);
++            let (mut near, mut far) = (0usize, 0usize);
++            let mut per_rule = vec![0usize; def.props.scatter.len()];
++            let mut area = vec![];
++            let mut short = vec![];
++            let seeds = 24u64;
++            for seed in 0..seeds {
++                let l = layout(def, cell_seed(7, Axial::new(seed as i32, 0)), &g);
++                area.clone_from(&l.area);
++                for (ri, r) in def.props.scatter.iter().enumerate() {
++                    let piece = r.piece.as_str();
++                    assert!(beach_band(piece).is_some(), "{id}: {piece}");
++                    if l.placed(ri) as u32 != l.planned[ri] {
++                        short.push(format!(
++                            "{id} {piece}: {} of {}",
++                            l.placed(ri),
++                            l.planned[ri]
++                        ));
++                    }
++                    per_rule[ri] += l.placed(ri);
++                }
++                for inst in &l.instances {
++                    let r = &def.props.scatter[inst.rule as usize];
++                    let piece = r.piece.as_str();
++                    let band = beach_band(piece).unwrap();
++                    let fp = group_footprint(piece);
++                    let p = inst.pos.xz();
++                    let s = coast.seaward(p);
++                    assert!(
++                        s >= band.near - 0.2 && s <= band.far + 0.2,
++                        "{id}: {piece} at s {s}"
++                    );
++                    assert!(
++                        s + fp.ground <= DAMP_TOP_S + 0.2,
++                        "{id}: {piece} footprint on the damp band at s {s}"
++                    );
++                    assert!(
++                        hex_reach(p) <= APOTHEM - fp.ground - BEACH_BORDER + 0.2,
++                        "{id}: {piece} border"
++                    );
++                    for (line, half) in &lanes {
++                        let need = lane_clearance(r, *half, fp);
++                        assert!(
++                            polyline_distance(p, line) >= need - 0.2,
++                            "{id}: {piece} lane"
++                        );
++                    }
++                    if band.along {
++                        let t = match coast {
++                            Coastline::Straight { sea } => sea.perp(),
++                            Coastline::Arc { centre, .. } => (p - centre).perp(),
++                        }
++                        .normalize();
++                        let axis = Vec2::new(inst.yaw.cos(), -inst.yaw.sin());
++                        assert!(
++                            axis.dot(t).abs() >= DRIFT_YAW_JITTER.cos() - 1e-3,
++                            "{id}: {piece} lies across the coast"
++                        );
++                    } else if s < 0.5 * (band.near + band.far) {
++                        near += 1;
++                    } else {
++                        far += 1;
++                    }
++                }
++            }
++            assert!(
++                near > far,
++                "{id}: clumps thin seaward ({near} near, {far} far)"
++            );
++            let mean: Vec<f32> = per_rule.iter().map(|&n| n as f32 / seeds as f32).collect();
++            let pieces: Vec<&str> = def.props.scatter.iter().map(|r| r.piece.as_str()).collect();
++            println!(
++                "{id}: mean per tile {mean:?} for {pieces:?} on {area:?} m² ({near} near, {far} far)"
++            );
++            assert!(short.is_empty(), "shortfall: {short:?}");
++        }
++    }
++
+     #[test]
+     fn footprints_match_the_kit() {
+         let reach = |tris: &[(Tri, String)]| {
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index 580bce2..a7e7fff 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -100,6 +100,9 @@ pub const OBSTACLES: &[&str] = &[
+     "log_fallen",
+     "log_fallen_b",
+     "log_fallen_c",
++    "beach_driftwood",
++    "beach_driftwood_b",
++    "beach_driftwood_c",
+     "tree_oak",
+     "tree_oak_b",
+     "tree_oak_c",
+@@ -622,7 +625,7 @@ pub fn prop_kind(piece: &str) -> &'static str {
+         }
+         p if p.starts_with("hay_") => "hay",
+         p if p.starts_with("animal_") => "animal",
+-        p if p.starts_with("log_") => "log",
++        p if p.starts_with("log_") || p.starts_with("beach_driftwood") => "log",
+         p if p.starts_with("fence") => "fence",
+         "rail_lever" => "lever",
+         _ => "rock",
+@@ -1255,6 +1258,9 @@ pub(crate) mod tests {
+             ("log_fallen", "log"),
+             ("log_fallen_b", "log"),
+             ("log_fallen_c", "log"),
++            ("beach_driftwood", "log"),
++            ("beach_driftwood_b", "log"),
++            ("beach_driftwood_c", "log"),
+             ("fence_paddock", "fence"),
+             ("sapling_spruce", "tree"),
+             ("sapling_spruce_b", "tree"),
+diff --git a/crates/hex-play/tests/hooks/mod.rs b/crates/hex-play/tests/hooks/mod.rs
+index a86326f..1fc645c 100644
+--- a/crates/hex-play/tests/hooks/mod.rs
++++ b/crates/hex-play/tests/hooks/mod.rs
+@@ -382,7 +382,6 @@ fn authored_masks_carry_snow_wetness_and_night_channels() {
+ const PLANTS: &[(&str, &str)] = &[
+     ("house_pad_hedge", "the house pads' clipped hedges"),
+     ("bakery_pad_hedge", "the bakery forecourt's clipped hedge"),
+-    ("beach_dunegrass", "dune-grass tufts on the beach tiles"),
+     ("river_reed", "reed blades on the river banks"),
+     ("river_cattail", "cattail seed heads on the reeds"),
+     ("river_lily", "lily pads on the spring pool"),
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index c19e582..3176a76 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -238,6 +238,17 @@ pub fn kit_layout() -> Vec<Placement> {
+         y: WINDMILL_Y,
+         ..place("windmill_b", 4, -1, 0)
+     });
++    // Beach dressing (owner D3, refs approved 2026-10-20) on a straight beach at (5, -1), east of
++    // windmill_b and outside the water patch: the three driftwood pieces along the coast on the dry
++    // sand, the three marram clumps landward of them near the grass line, as the scatter lays them.
++    v.push(place("beach_base", 5, -1, 0));
++    v.push(place("beach_center", 5, -1, 0));
++    for &(piece, at, yaw_deg, y) in BEACH_DRESSING {
++        v.push(Placement {
++            y,
++            ..hero(piece, 5, -1, at, yaw_deg)
++        });
++    }
+     // Rail (P3, refs A17) on two meadows south of the oak: the straight on (0, 2) and the sharp
+     // bend on (1, 2) at rot 2 (lanes on world edges 2 and 3), so the bend's edge-3 lane meets the
+     // straight's edge-0 lane and its other end runs out to the open rim rather than the ocean.
+@@ -535,6 +546,19 @@ const FARM_ANIMALS: &[(&str, [f32; 2], f32, f32)] = &[
+     ("animal_sheep", [2.0, 9.0], 140.0, -0.059),
+ ];
+ 
++/// (piece, at, yaw, height) of the beach dressing showcase on the straight beach at (5, -1). The
++/// tile's coast runs along (-0.5, 0.866) in (x, z) with s = 0.866 x + 0.5 z seaward (`Coastline`),
++/// so each spot is (s, u) along it and its height is the coast profile there (`coast_height(s)`,
++/// -1.4 + 1.4 t (2 - t) with t = s / -8). The driftwood lies along the coast (yaw 120 or 300).
++const BEACH_DRESSING: &[(&str, [f32; 2], f32, f32)] = &[
++    ("beach_driftwood", [-0.964, -6.33], 120.0, -0.35),
++    ("beach_driftwood_b", [-3.79, -1.03], 300.0, -0.386),
++    ("beach_driftwood_c", [-6.64, 3.1], 120.0, -0.316),
++    ("beach_dunegrass", [-4.13, -5.85], 0.0, -0.049),
++    ("beach_dunegrass_b", [-6.45, -0.84], 70.0, -0.088),
++    ("beach_dunegrass_c", [-7.89, 0.06], 200.0, -0.032),
++];
++
+ /// (piece, offset, rotation, relief height) of the meadow props in the kit layout.
+ const MEADOW_PROPS: &[(&str, [f32; 2], u8, f32)] = &[
+     ("rock_small", [-6.0, 5.0], 0, -0.124),
+diff --git a/crates/hex-render/src/lib.rs b/crates/hex-render/src/lib.rs
+index db673d2..25c7c78 100644
+--- a/crates/hex-render/src/lib.rs
++++ b/crates/hex-render/src/lib.rs
+@@ -204,14 +204,14 @@ mod tests {
+         cells.dedup();
+         // The water patch's 11 cells plus the showcase blocks' cells; each block in
+         // `kit_scene::kit_layout` names its own cells. A new block adds its cells here.
+-        assert_eq!(cells.len(), 32);
++        assert_eq!(cells.len(), 33);
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
+         // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
+         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
+         // The fixture lays out water-patch cells only; the runtime kit adds the showcase blocks.
+         assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
+-        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 32);
++        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 33);
+         assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
+         assert!(!Scenario::Kit.has_water());
+     }
+diff --git a/data/tiles/beach.ron b/data/tiles/beach.ron
+index 9c8c14d..7c1d3d2 100644
+--- a/data/tiles/beach.ron
++++ b/data/tiles/beach.ron
+@@ -14,4 +14,10 @@
+         (kind: Beach, land: Some(Left)),
+     ),
+     center: Some("beach_center"),
++    props: (
++        scatter: [
++            (piece: "beach_driftwood", density: 0.452),
++            (piece: "beach_dunegrass", density: 1.805),
++        ],
++    ),
+ )
+diff --git a/data/tiles/beach_inner.ron b/data/tiles/beach_inner.ron
+index 121df62..d42fcba 100644
+--- a/data/tiles/beach_inner.ron
++++ b/data/tiles/beach_inner.ron
+@@ -13,4 +13,10 @@
+         (kind: Beach, land: Some(Left)),
+     ),
+     center: Some("beach_inner_center"),
++    props: (
++        scatter: [
++            (piece: "beach_driftwood", density: 0.452),
++            (piece: "beach_dunegrass", density: 2.105),
++        ],
++    ),
+ )
+diff --git a/data/tiles/beach_outer.ron b/data/tiles/beach_outer.ron
+index 38b1a65..8d34f61 100644
+--- a/data/tiles/beach_outer.ron
++++ b/data/tiles/beach_outer.ron
+@@ -13,4 +13,10 @@
+         (kind: Ocean),
+     ),
+     center: Some("beach_outer_center"),
++    props: (
++        scatter: [
++            (piece: "beach_driftwood", density: 0.301),
++            (piece: "beach_dunegrass", density: 1.053),
++        ],
++    ),
+ )
+diff --git a/data/tiles/river_mouth.ron b/data/tiles/river_mouth.ron
+index a33d81c..a09eb28 100644
+--- a/data/tiles/river_mouth.ron
++++ b/data/tiles/river_mouth.ron
+@@ -22,4 +22,10 @@
+     networks: [
+         (kind: River, from: Edge(3), to: Node("mouth")),
+     ],
++    props: (
++        scatter: [
++            (piece: "beach_driftwood", density: 0.151, lane_clearance: 5.5),
++            (piece: "beach_dunegrass", density: 0.602, lane_clearance: 5.5),
++        ],
++    ),
+ )
+diff --git a/data/tiles/river_mouth_l.ron b/data/tiles/river_mouth_l.ron
+index e9b6cd2..4004a8a 100644
+--- a/data/tiles/river_mouth_l.ron
++++ b/data/tiles/river_mouth_l.ron
+@@ -21,4 +21,10 @@
+     networks: [
+         (kind: River, from: Edge(4), to: Node("mouth")),
+     ],
++    props: (
++        scatter: [
++            (piece: "beach_driftwood", density: 0.151, lane_clearance: 5.5),
++            (piece: "beach_dunegrass", density: 0.602, lane_clearance: 5.5),
++        ],
++    ),
+ )
+diff --git a/docs/agent-operability.md b/docs/agent-operability.md
+index 448eb6a..a4ff7ff 100644
+--- a/docs/agent-operability.md
++++ b/docs/agent-operability.md
+@@ -469,7 +469,7 @@ The player HUD is the Legend direction (mockups in `design/ui/legend/`, the syst
+ PRD §4.6, `crates/hex-app/src/photo.rs`. Photo mode follows `play.photo_mode`, so P, Esc, `toggle photo` and the overlay share one snapshot: entering takes the orbit camera's transform, FOV, exposure and lens, and leaving writes them back exactly. The camera entity stays the same and photo mode adds no prepass, so no kit or water pipeline gains a binding (kit forward stays at 16 sampled textures beside refracting water):
+ 
+ - **DOF `manual`** puts Bevy's `DepthOfField` on the camera (focus distance, f-number) with a sensor 60 times Bevy's default, so the diorama blurs like a miniature. The play camera carries no `DepthOfField` (it drops the gate's far-focus one), so the lens is inserted while Manual is chosen and removed for the other choices and on exit; it is a post pass with its own pipelines, so no mesh pipeline gains a binding. **`tilt`** drives the game camera's tilt-shift pass through `tilt_shift::TiltOverride`, focused by the panel with no zoom fade and its strength from the f-number (full at f/1.4, gone at f/22). **`off`** leaves the lens at the game camera's far focus. The player's own tilt-shift setting comes back untouched.
+-- **Click to focus** (owner request, 2026-10-14). The overlay (`web/ui/src/photo-focus.ts`) takes a left press and release on the canvas as a click when the pointer travels at most 4 px over the whole press and the press lasts at most 350 ms. Anything else is the drag that looks around, and the right button never focuses. The panel and bar take their own pointer events above the canvas, so a click on them never reaches the scene. A click sends `photo` `focus_at`, and `photo::focus_pick` resolves it on the CPU after `photo::sync`. The pick casts the ray through that pixel from this frame's camera transform, FOV and aspect, so it includes roll. It marches the ray over the walk ground's visible top (`WalkGround::top`: the kit ground pieces' LOD0 surface, and the water surface on water tiles) out to a view depth of 1,000 m, in steps of 1% of the distance (at least 10 cm), and refines the crossing by bisection. It also tests the drawn props walk mode treats as obstacles (`walk::OBSTACLES`: the three houses (cottage, two-storey and longhouse), the windmill, the barn, the hay bales, the cow and sheep, the hero oak, forest spruces, the oak tile's scattered oaks, small rocks, the fallen logs; the same drawn hero and scatter instances, with each one's position, turn and scale) and keeps the nearest hit (owner request, 2026-10-14). Each piece's volume comes from its loaded GLB (`walk::PieceShape`): the `<piece>_collider` footprint extruded from the collider's lowest point to the top of the piece's non-foliage LOD0 mesh, and for trees a crown of 10 height bands by 8 wedges fitted to the LOD0 foliage slots (every slot but `<piece>_bark`). A ray that enters a volume lands on the first LOD0 triangle it crosses, or on the volume where it slips through a gap in the leaves. Wildflowers are not pickable, and a piece whose GLB has not loaded yet is not either. Where no walk ground is built (another scenario, or the kit still loading) it uses the plane y = 0. `focus` becomes the hit's view-space depth (view z, which the tilt-shift shader and Bevy's lens both read), clamped to 1 to 1,000 m. With Tilt, `TiltOverride::focus_uv_y` puts the band on the clicked row. The slider runs 1 to 1,000 m so any click fits, and it follows a landed click (`focus_picks` moves). A ring fades at the click and the band preview shows on the new row. Both are overlay DOM, so no PNG export has them. No GPU readback, sampled texture or prepass is added.
++- **Click to focus** (owner request, 2026-10-14). The overlay (`web/ui/src/photo-focus.ts`) takes a left press and release on the canvas as a click when the pointer travels at most 4 px over the whole press and the press lasts at most 350 ms. Anything else is the drag that looks around, and the right button never focuses. The panel and bar take their own pointer events above the canvas, so a click on them never reaches the scene. A click sends `photo` `focus_at`, and `photo::focus_pick` resolves it on the CPU after `photo::sync`. The pick casts the ray through that pixel from this frame's camera transform, FOV and aspect, so it includes roll. It marches the ray over the walk ground's visible top (`WalkGround::top`: the kit ground pieces' LOD0 surface, and the water surface on water tiles) out to a view depth of 1,000 m, in steps of 1% of the distance (at least 10 cm), and refines the crossing by bisection. It also tests the drawn props walk mode treats as obstacles (`walk::OBSTACLES`: the three houses (cottage, two-storey and longhouse), the windmill, the barn, the hay bales, the cow and sheep, the hero oak, forest spruces, the oak tile's scattered oaks, small rocks, the fallen logs, the beach driftwood; the same drawn hero and scatter instances, with each one's position, turn and scale) and keeps the nearest hit (owner request, 2026-10-14). Each piece's volume comes from its loaded GLB (`walk::PieceShape`): the `<piece>_collider` footprint extruded from the collider's lowest point to the top of the piece's non-foliage LOD0 mesh, and for trees a crown of 10 height bands by 8 wedges fitted to the LOD0 foliage slots (every slot but `<piece>_bark`). A ray that enters a volume lands on the first LOD0 triangle it crosses, or on the volume where it slips through a gap in the leaves. Wildflowers are not pickable, and a piece whose GLB has not loaded yet is not either. Where no walk ground is built (another scenario, or the kit still loading) it uses the plane y = 0. `focus` becomes the hit's view-space depth (view z, which the tilt-shift shader and Bevy's lens both read), clamped to 1 to 1,000 m. With Tilt, `TiltOverride::focus_uv_y` puts the band on the clicked row. The slider runs 1 to 1,000 m so any click fits, and it follows a landed click (`focus_picks` moves). A ring fades at the click and the band preview shows on the new row. Both are overlay DOM, so no PNG export has them. No GPU readback, sampled texture or prepass is added.
+ - **Pause** (default on): the car sim skips its fixed ticks and keeps the last published poses (interpolating with the cycling overstep would rock each car), and the boid compute step is 0. Water and the rise keep their clocks.
+ - **Export** retargets the game camera to an uninitialised `Rgba8UnormSrgb` image at the export size for 8 frames (TAA settles), captures it with `Screenshot::image`, then hands the camera back to the window. No camera draws to the window for those 9 frames. Bevy 0.20's `prepare_windows` then acquires no swap-chain texture for the window, so nothing is cleared or presented and the window keeps showing its last frame: the backdrop flash the 2026-10-14 queue warned of does not occur (owner decision A14; this rests on Bevy's `prepare_windows` and `handle_uncovered_swap_chains`, and no engine change was needed). `make ui-e2e` captures the canvas during the 2× export, counts only captures with `photo.exporting` set both before and after, and fails if one's mean brightness moves more than 25% from the frame before the export; it logs the count, since a fast export can end before any bracketed capture. Native is not captured: a native window `screenshot` reads the camera output, not the presented drawable. Sizes past `max_texture_dimension_2d` are refused, and the web refuses 4× until it is tested for GPU memory: the photo sheet's 4× option is disabled and struck through with the reason under it. The lens's pixel blur cap scales with the export.
+ 
+@@ -484,7 +484,7 @@ PRD P8 (the walk half; drive mode is later), `crates/hex-app/src/walk.rs` over t
+ - **Speed.** The walker walks at the walk speed setting, 5.0 m/s by default (owner, 2026-10-20), from 2.8 to 8.0 m/s (owner, 2026-10-14), and Shift sprints at exactly twice it. The Settings sheet's World tab has the Walk speed slider (0.1 m/s steps), which applies at once through `set_walk_speed` and is kept per viewer in `localStorage` (`hexWorld.walkSpeed`), outside the world save. Keys and scripted `walk_step` moves read the setting every frame, so a scripted move covers exactly speed × seconds on open ground.
+ - **Entering** puts the walker on the standable ground nearest the orbit camera's focus point (rings 0.5 m apart out to 48 m, then each tile's own ground nearest first), facing the way the orbit camera faced and 5° down. The eye is 1.7 m over the feet; the FOV is 60° (vertical) while walking. The near clip stays Bevy's default 0.1 m, which suits eye height. LODs follow the camera distance as always, so close pieces draw at LOD0.
+ - **Ground** is the topmost LOD0 surface of the tile's base, centre and lane edge pieces (the surface scatter stands on: meadow cap, road, beach slope, river banks and bed, the bridge deck), sampled in the tile frame through its rotation. Tiles hidden until their pack arrives are not ground; a tile drawn with placeholders stands at y = 0. The eye eases toward 1.7 m over the ground at 12/s, so kerbs and slopes glide.
+-- **Collision.** The walker is a 0.3 m circle. Moves are checked in sub-steps of at most 0.1 m and slide along whatever blocks them (each world axis alone). They stop at: a collider (`<piece>_collider` in the kit GLB, hulled to a convex footprint on the ground) of an obstacle piece (`walk::OBSTACLES`: the houses, the windmill, the barn, the bakery, the hay bales, the cow and sheep, the hero oak, spruces, scattered oaks, rocks, fallen logs and the farm's paddock fence), placed with the hero prop's or scatter instance's transform under the tile's rest transform (wildflowers do not block). A collider of disjoint parts is hulled part by part: the paddock fence blocks as six run boxes, so the walker enters the paddock through its 3 m gate and stands inside it; water deeper than 0.6 m on a sea tile (ocean, coast and river mouth; the surface is `water::tiles::WATER_Y`), so the walker wades into the shallows and stops at the shoreline. Rivers and spring streams are fords (owner, 2026-10-20): over water deeper than 0.6 m the feet hold 0.6 m under the surface, so the walker wades down the bank, crosses the channel with its eye 1.1 m above the water and climbs out on the far bank; a cell with no drawn tile (the map edge or an empty slot), with the body never overhanging it; and a step up of more than 0.4 m (a railing).
++- **Collision.** The walker is a 0.3 m circle. Moves are checked in sub-steps of at most 0.1 m and slide along whatever blocks them (each world axis alone). They stop at: a collider (`<piece>_collider` in the kit GLB, hulled to a convex footprint on the ground) of an obstacle piece (`walk::OBSTACLES`: the houses, the windmill, the barn, the bakery, the hay bales, the cow and sheep, the hero oak, spruces, scattered oaks, rocks, fallen logs, beach driftwood and the farm's paddock fence), placed with the hero prop's or scatter instance's transform under the tile's rest transform (wildflowers do not block). A collider of disjoint parts is hulled part by part: the paddock fence blocks as six run boxes, so the walker enters the paddock through its 3 m gate and stands inside it; water deeper than 0.6 m on a sea tile (ocean, coast and river mouth; the surface is `water::tiles::WATER_Y`), so the walker wades into the shallows and stops at the shoreline. Rivers and spring streams are fords (owner, 2026-10-20): over water deeper than 0.6 m the feet hold 0.6 m under the surface, so the walker wades down the bank, crosses the channel with its eye 1.1 m above the water and climbs out on the far bank; a cell with no drawn tile (the map edge or an empty slot), with the body never overhanging it; and a step up of more than 0.4 m (a railing).
+ - **The world keeps running**: cars, birds, fish, water, the rise and audio. The audio listener is the camera, so it is the walker's head, and `play.focus` and `play.zoom` follow the walker (see [State](#state)). Placement, pins, bulldoze, rotate, undo and redo are refused while walking (`actionRefused`, reason "leave walk mode first"), the ghost, slot ring and bulldoze target hide, and pointer hover stops. Photo mode is refused while walking. Tilt-shift is off in first person whatever the setting (a zero-strength `TiltOverride`); leaving restores the player's own.
+ - **Saves never store walk state.** `save`, the page-hide `saveNow` and `--save` take the orbit camera from the snapshot, not the walker's eye, and entering or leaving touches no undo history. On the web the overlay keeps the walker per viewer instead (see "The viewer's camera" under [UI overlay](#ui-overlay-webui)). A `load` or `new_world` while walking leaves walk mode at the loaded orbit camera.
+ - **The HUD** hides behind a walk hint at the bottom centre ("Click to look around", the keys, and a Leave button with Esc) and a small centre mark. The bar's Walk button (the walker icon, tooltip "Walk around F") and F enter it. In the browser entering takes the pointer lock inside that click or key press (a refusal is caught; dragging still looks); losing the lock while walking (the browser's Esc) leaves walk mode, and a click on the canvas retakes it. Natively the mouse looks while a button is held.
+diff --git a/web/ui/src/bridge-schema.json b/web/ui/src/bridge-schema.json
+index 2c1b851..c27d89d 100644
+--- a/web/ui/src/bridge-schema.json
++++ b/web/ui/src/bridge-schema.json
+@@ -719,7 +719,10 @@
+           null,
+           "Left"
+         ],
+-        "scatter": []
++        "scatter": [
++          "beach_driftwood",
++          "beach_dunegrass"
++        ]
+       },
+       {
+         "edges": [
+@@ -740,7 +743,10 @@
+           "Left",
+           null
+         ],
+-        "scatter": []
++        "scatter": [
++          "beach_driftwood",
++          "beach_dunegrass"
++        ]
+       },
+       {
+         "edges": [
+@@ -761,7 +767,10 @@
+           null,
+           "Left"
+         ],
+-        "scatter": []
++        "scatter": [
++          "beach_driftwood",
++          "beach_dunegrass"
++        ]
+       },
+       {
+         "edges": [
+@@ -782,7 +791,10 @@
+           null,
+           "Left"
+         ],
+-        "scatter": []
++        "scatter": [
++          "beach_driftwood",
++          "beach_dunegrass"
++        ]
+       },
+       {
+         "edges": [
+@@ -803,7 +815,10 @@
+           null,
+           "Left"
+         ],
+-        "scatter": []
++        "scatter": [
++          "beach_driftwood",
++          "beach_dunegrass"
++        ]
+       },
+       {
+         "edges": [

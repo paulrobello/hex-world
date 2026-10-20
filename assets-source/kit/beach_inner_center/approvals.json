@@ -18,5 +18,14 @@
     "gate": "piece",
     "status": "approved",
     "notes": "A11: approved; the static damp band is retinted to dry sand so the live wet band owns the gradient (A22). Colour re-checked on the TonyMcMapface re-shoot (Q4). A15: re-approved after the prop-mask rebuild. docs/review/2026-10-14-walkthrough.html"
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "beach dressing (D3)",
+    "requested": "2026-10-20",
+    "notes": "Pending owner re-approval; not an approval. Owner D3 / BD-Q1: the baked driftwood logs and dune-grass tufts are removed (the scatter's beach_driftwood* and beach_dunegrass* replace them); every pebble (and, on the mouth centres, every bank stone and reed clump) is where it was, byte-identical in place. The beach_dunegrass and beach_driftwood slots leave the manifest entry. Review the before/after play shots in docs/checkpoints/beach-dressing/sheet.jpg. Earlier entries stay as history."
   }
 ]

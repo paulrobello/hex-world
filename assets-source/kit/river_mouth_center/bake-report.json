@@ -11,19 +11,23 @@
     "dryItemsEdge2Shoulder": 3,
     "dryItemsEdge5Shoulder": 11,
     "hand": "r",
-    "logs": 3,
+    "logs": 0,
     "pebbles": 11,
     "pebblesUnderWater": 3,
+    "placedNotBuilt": {
+      "logs": 3,
+      "tufts": 11
+    },
     "reedClumps": 3,
     "reedsEdge2Bank": 0,
     "reedsEdge5Bank": 3,
     "stones": 12,
     "tris": [
-      1040,
-      380,
-      108
+      706,
+      236,
+      60
     ],
-    "tufts": 11
+    "tufts": 0
   },
   "marginPx": 0,
   "masks": {
@@ -36,7 +40,7 @@
     "snow": "1 on dry bed, 0 under the water"
   },
   "reason": "no Cycles bake: the masks are an analytic field of the mouth bed on the planar UV0",
-  "receiverSignature": "afc05127fcfd3c4f4cdbc1785195788ea1ac55fd5f5e54f8e072bddd09946d7e",
+  "receiverSignature": "858f6de792049a6017ea369147c807d5a2a4ccbf1884aae1585495b11e8c6c19",
   "samples": 0,
   "skipped": true
 }

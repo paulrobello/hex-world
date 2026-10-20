@@ -1,0 +1,86 @@
+{
+  "aoDistanceM": 0.3,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.5717986822128296,
+      "min": 0.3189542591571808,
+      "p01": 0.458823561668396,
+      "p05": 0.5084967613220215,
+      "texels": 114428
+    },
+    "ao": {
+      "mean": 0.708078145980835,
+      "min": 0.0,
+      "p01": 0.0,
+      "p05": 0.08235294371843338,
+      "texels": 114428
+    },
+    "aoAboveGround": {
+      "mean": 0.659243643283844,
+      "min": 0.0,
+      "p01": 0.0,
+      "p05": 0.04313725605607033,
+      "texels": 94026
+    },
+    "mossFraction": 0.0,
+    "normalMissFraction": 0.00010486943755024994,
+    "roughness": {
+      "mean": 0.8427037596702576,
+      "min": 0.8392157554626465,
+      "p01": 0.8392157554626465,
+      "p05": 0.8392157554626465,
+      "texels": 114428
+    }
+  },
+  "barkSet": {
+    "set": "bark",
+    "tileM": 2.0,
+    "tint": [
+      0.92,
+      0.8,
+      0.72
+    ]
+  },
+  "blender": "5.2.2 LTS",
+  "buryM": 0.035,
+  "cageExtrusionM": 0.05,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 128
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colliderReachM": 1.0235061470173716,
+  "colliderTopM": 0.1498706191778183,
+  "device": "METAL",
+  "extentZ": [
+    -0.06652877479791641,
+    0.32451242208480835
+  ],
+  "lengthM": [
+    -0.9749999642372131,
+    1.1037580966949463
+  ],
+  "marginPx": 8,
+  "maxRayDistanceM": 0.14,
+  "receiverSignature": "54c46655613e129d336ef2635af3912e1d9c5b6165add9e300632f5ef5e48820",
+  "samples": 24,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 457.06734143372904,
+    "median": 282.3079384090498,
+    "min": 123.24129370936875
+  }
+}

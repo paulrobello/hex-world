@@ -1,7 +1,8 @@
-"""Dressing centres for the river mouth tiles (refs/river_mouth, PLAN.md §2): beach_center's dune
-grass, driftwood and pebbles on the two dry-sand shoulders either side of the channel, and
-river_straight_center's bank stones at the channel waterline and reed clumps on the grass reach
-(s <= -8). Colour-only slots plus the piece's §9.4 masks map on the planar UV0 (`masks_field`).
+"""Dressing centres for the river mouth tiles (refs/river_mouth, PLAN.md §2): beach_center's pebbles
+on the two dry-sand shoulders either side of the channel, and river_straight_center's bank stones
+at the channel waterline and reed clumps on the grass reach (s <= -8). The dune grass and driftwood
+are scatter props since 2026-10-20 (owner D3, BD-Q1: keep the pebbles), so the logs and tufts are
+still placed here, to keep every other item where it was approved, but no longer built. Colour-only slots plus the piece's §9.4 masks map on the planar UV0 (`masks_field`).
 
 Every item is seated on the pinned mouth bed (`_mouth_profile.height`). The layout is generated
 once in the "r" frame (River on edge 3) from one seed; the "l" piece reflects each 2D anchor and
@@ -24,8 +25,8 @@ import _river_dress
 
 TUFT, WOOD, PEBBLE = _beach_dress.TUFT, _beach_dress.WOOD, _beach_dress.PEBBLE
 STONE, REED = _river_dress.STONE, _river_dress.REED
-DRESS_SLOTS = (TUFT, WOOD, PEBBLE, STONE, REED)
-COLORS = {**_beach_dress.COLORS, STONE: ("#8a8378", 0.8), REED: ("#5d7a35", 0.85)}
+DRESS_SLOTS = (PEBBLE, STONE, REED)
+COLORS = {PEBBLE: _beach_dress.COLORS[PEBBLE], STONE: ("#8a8378", 0.8), REED: ("#5d7a35", 0.85)}
 SEED = "river_mouth_center"
 DRY_S = _beach_dress.DRY_S
 DRY_Y = -0.8  # driftwood and tufts stand on bed at least 0.6 m above the water
@@ -196,53 +197,6 @@ def mirrored(items, hand):
     return out
 
 
-def _tuft(bm, ground, x, y, seed, blades):
-    """_beach_dress._tuft on the mouth bed."""
-    rnd = random.Random(seed)
-    z0 = ground(x, y)
-    for _ in range(blades):
-        a = rnd.uniform(0, 2 * math.pi)
-        r = rnd.uniform(0.0, 0.3)
-        bx, by = x + r * math.cos(a), y + r * math.sin(a)
-        h = rnd.uniform(0.45, 0.85)
-        lean = rnd.uniform(0.1, 0.35)
-        tx, ty = bx + lean * math.cos(a), by + lean * math.sin(a)
-        px, py = -math.sin(a) * 0.035, math.cos(a) * 0.035
-        zb = ground(bx, by) - 0.06
-        co = [(bx + px, by + py, zb), (bx - px, by - py, zb), (tx, ty, z0 + h)]
-        bm.faces.new([bm.verts.new(c) for c in co])
-        bm.faces.new([bm.verts.new(c) for c in reversed(co)])
-
-
-def _log(bm, ground, x, y, p, sides, segs):
-    """_beach_dress._log on the mouth bed, along the placement's own axis `dir`."""
-    rnd = random.Random(p["seed"])
-    d = p["dir"]
-    nrm = (-d[1], d[0])
-    L, R = p["length"], p["radius"]
-    bend = rnd.uniform(-0.15, 0.15)
-    rings = []
-    for i in range(segs + 1):
-        t = i / segs
-        cx = x + d[0] * (t - 0.5) * L + nrm[0] * bend * math.sin(math.pi * t)
-        cy = y + d[1] * (t - 0.5) * L + nrm[1] * bend * math.sin(math.pi * t)
-        r = R * (1.0 - 0.35 * t) * (1 + rnd.uniform(-0.08, 0.08))
-        cz = ground(cx, cy) + 0.45 * r
-        ring = []
-        for k in range(sides):
-            a = 2 * math.pi * k / sides
-            ring.append(bm.verts.new((cx + nrm[0] * r * math.cos(a), cy + nrm[1] * r * math.cos(a),
-                                      cz + r * math.sin(a))))
-        rings.append(ring)
-    for i in range(segs):
-        for k in range(sides):
-            a, b = rings[i][k], rings[i][(k + 1) % sides]
-            c, e = rings[i + 1][(k + 1) % sides], rings[i + 1][k]
-            bm.faces.new([a, b, c, e])
-    bm.faces.new(list(reversed(rings[0])))
-    bm.faces.new(rings[-1])
-
-
 def _pebble(bm, ground, x, y, p):
     """_beach_dress._pebble on the mouth bed."""
     rnd = random.Random(p["seed"])
@@ -272,9 +226,8 @@ def _check_masks(piece, lods, field):
 
 
 def build(piece, hand, generator):
-    """Three LODs: LOD0 everything; LOD1 coarser logs, the bigger half of the stones and pebbles,
-    half the tufts and reeds with fewer blades; LOD2 the logs as 5-sided single segments and the
-    three biggest stones."""
+    """Three LODs: LOD0 everything; LOD1 the bigger half of the stones and pebbles and half the reeds;
+    LOD2 the three biggest stones. The logs and tufts are placed but not built (module docstring)."""
     mp.check_spots()
     out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])
     scene.reset_scene(piece)
@@ -293,7 +246,8 @@ def build(piece, hand, generator):
     stones = sorted(of(STONE), key=lambda i: -i[3]["size"][0] * i[3]["size"][1])
     pebbles = sorted(of(PEBBLE), key=lambda i: -i[3]["r"])
     counts = {
-        "logs": len(logs), "tufts": len(tufts), "stones": len(stones), "reedClumps": len(reeds),
+        "logs": 0, "tufts": 0, "placedNotBuilt": {"logs": len(logs), "tufts": len(tufts)},
+        "stones": len(stones), "reedClumps": len(reeds),
         "pebbles": len(pebbles), "pebblesUnderWater": sum(1 for i in pebbles if i[3].get("wet")),
         "dryItemsEdge5Shoulder": sum(1 for i in base if i[0] in (WOOD, TUFT) and i[2] > 0),
         "dryItemsEdge2Shoulder": sum(1 for i in base if i[0] in (WOOD, TUFT) and i[2] < 0),
@@ -302,23 +256,14 @@ def build(piece, hand, generator):
     }
     print(f"{piece}: {counts}")
     plan = (
-        {"log": (8, 3), "stones": stones, "reeds": reeds, "tufts": tufts, "blades": 7,
-         "pebbles": pebbles},
-        {"log": (6, 2), "stones": stones[: len(stones) // 2], "reeds": reeds[::2],
-         "tufts": tufts[::2], "blades": 4, "pebbles": pebbles[: len(pebbles) // 2]},
-        {"log": (5, 1), "stones": stones[:3], "reeds": [], "tufts": [], "blades": 0,
-         "pebbles": []},
+        {"stones": stones, "reeds": reeds, "pebbles": pebbles},
+        {"stones": stones[: len(stones) // 2], "reeds": reeds[::2], "pebbles": pebbles[: len(pebbles) // 2]},
+        {"stones": stones[:3], "reeds": [], "pebbles": []},
     )
     lods = []
     for li, pl in enumerate(plan):
         bm = bmesh.new()
         spans = []
-        for _k, x, y, p in pl["tufts"]:
-            _tuft(bm, ground, x, y, p["seed"], pl["blades"])
-        spans.append(len(bm.faces))
-        for _k, x, y, p in logs:
-            _log(bm, ground, x, y, p, *pl["log"])
-        spans.append(len(bm.faces))
         for _k, x, y, p in pl["pebbles"]:
             _pebble(bm, ground, x, y, p)
         spans.append(len(bm.faces))
@@ -331,8 +276,8 @@ def build(piece, hand, generator):
         for fi, f in enumerate(bm.faces):
             f.material_index = next((si for si, end in enumerate(spans) if fi < end), len(spans))
             if DRESS_SLOTS[f.material_index] != REED:
-                f.smooth = DRESS_SLOTS[f.material_index] in (WOOD, PEBBLE)
-        bmesh.ops.recalc_face_normals(bm, faces=[f for f in bm.faces if DRESS_SLOTS[f.material_index] in (WOOD, PEBBLE)])
+                f.smooth = DRESS_SLOTS[f.material_index] == PEBBLE
+        bmesh.ops.recalc_face_normals(bm, faces=[f for f in bm.faces if DRESS_SLOTS[f.material_index] == PEBBLE])
         bmesh.ops.triangulate(bm, faces=bm.faces)
         mesh = bpy.data.meshes.new(f"{piece}_lod{li}")
         bm.to_mesh(mesh)

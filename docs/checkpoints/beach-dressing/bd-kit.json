@@ -1,0 +1,13 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 240 },
+  { "cmd": "camera", "pos": [132.5, 6.0, -19.5], "look_at": [120.4, -0.2, -26.5] },
+  { "cmd": "wait", "frames": 30 },
+  { "cmd": "photo_export", "scale": 1, "name": "bd-after-kit-beach" },
+  { "cmd": "wait", "frames": 30 },
+  { "cmd": "camera", "pos": [124.0, 2.2, -16.0], "look_at": [119.5, -0.1, -24.0] },
+  { "cmd": "wait", "frames": 30 },
+  { "cmd": "photo_export", "scale": 1, "name": "bd-after-kit-beach-close" },
+  { "cmd": "wait", "frames": 30 },
+  { "cmd": "exit" }
+]

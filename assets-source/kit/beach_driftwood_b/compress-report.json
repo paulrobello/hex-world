@@ -1,0 +1,181 @@
+{
+  "name": "beach_driftwood_b",
+  "date": "2026-10-20T23:22:34.197Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 128599,
+      "sha256": "f45f95516d71cd2f36fb6a1587fb65ba65ad134a9ca3dc887a1a790c2acf9c74"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 131717,
+      "sha256": "391e4af74f8fc445a08397c3039c627260342ab7f271692ee34940138cc4f93f"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 245751,
+      "sha256": "c47cb9ddf8357de402740afef9fd34c6e7258666e320391a80d0144f6354f9b0"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 8,
+      "bytes": 641,
+      "sha256": "dfa824addee4c774445095aacb759708f9127dd13fa643fd99a6958cca097124"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 8,
+      "bytes": 641,
+      "sha256": "727582801e739ec9c024ace6c568ee88960d79b67d8bb077a29c018b177cd0c0"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 710,
+      "sha256": "c8ac1829c0b902f597070c8a843e950c241edd5d012d65263f4e8fb35102d8bd"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 44657,
+      "sha256": "24fc5b0b1348dae2e80cc044e560574913fa843b84e4ebeec9175416d5f569ed"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 45964,
+      "sha256": "1d4548c590c0b46a25b6c95e3ddfedc51bef15a73f82aafcb5897df507bf375e"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 107651,
+      "sha256": "8c2c5008f21ae44a79d943049bf34c3645bd3146144f58e2c786a0e26c4ce397"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 36613,
+      "sha256": "2f088c09829f6edc4b8ad430dbab10b47060c0871a41b892ef5a629ba275148e"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 39202,
+      "sha256": "eb526695110b845c37a31f44e2bd8b9a6de1dfb6c6ed87698088d7c7de8e6824"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/beach_driftwood_b/beach_driftwood_b.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 61186,
+      "sha256": "80b6c10bdd5ee051f7dc1fb2dad54893091ad8ed47792c462a3bdde26c8e01f9"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 210510,
+      "astc": 217524
+    },
+    "glbBytes": 27504
+  },
+  "glb": {
+    "bytes": 27504,
+    "sha256": "4552747ae83ca4ff75e5728083235a06bf12a5c73dfb2e1c708f19531c51372f"
+  }
+}

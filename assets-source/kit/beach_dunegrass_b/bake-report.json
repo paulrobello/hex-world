@@ -1,0 +1,99 @@
+{
+  "bakeStats": {
+    "alphaCoverageByMip": {
+      "tile_0": [
+        0.3299,
+        0.3103,
+        0.3211,
+        0.3179,
+        0.2998,
+        0.3008,
+        0.2812,
+        0.3125,
+        0.25,
+        0.0
+      ],
+      "tile_1": [
+        0.3209,
+        0.3008,
+        0.3113,
+        0.3059,
+        0.2998,
+        0.3125,
+        0.2812,
+        0.3125,
+        0.0,
+        0.0
+      ],
+      "tile_2": [
+        0.3222,
+        0.3004,
+        0.3129,
+        0.3074,
+        0.2871,
+        0.2969,
+        0.2969,
+        0.25,
+        0.25,
+        0.0
+      ],
+      "tile_3": [
+        0.3112,
+        0.2934,
+        0.3038,
+        0.2969,
+        0.292,
+        0.2812,
+        0.2812,
+        0.25,
+        0.0,
+        0.0
+      ]
+    },
+    "alphaCutoff": 0.5
+  },
+  "blender": "5.2.2 LTS",
+  "cardReachM": 0.46488215808876165,
+  "cards": 9,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 64
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "colliderReachM": 0.4199999924210015,
+  "device": "none (numpy-drawn tiles, no Cycles bake)",
+  "extentZ": [
+    -0.30000001192092896,
+    0.7091621160507202
+  ],
+  "marginPx": 0,
+  "mound": {
+    "apronDropM": 0.3,
+    "apronWidthM": 0.3,
+    "heightM": 0.1,
+    "radiusM": 0.42,
+    "sinkM": 0.04
+  },
+  "receiverSignature": "cea70e2a397f4adca19208bdae54ffca4be6f21636237ea21ed695fff24c75c9",
+  "samples": 0,
+  "sinkM": 0.05,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 836.2443653271134,
+    "median": 775.3653197829453,
+    "min": 728.4177190439119
+  }
+}

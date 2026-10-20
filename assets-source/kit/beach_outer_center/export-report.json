@@ -11,13 +11,13 @@
     },
     {
       "path": "scripts/blender/kit/_beach_dress.py",
-      "sha256": "aed7ba99a1047bb1941cca8d597f732951d885d38f66463610e5e5cc69b23926"
+      "sha256": "8a588f43ab867c12ce54a4bcfd067f4dab0efc400d0273d8f61829d73a7e3d37"
     }
   ],
   "lodTris": {
-    "beach_outer_center_lod0": 820,
-    "beach_outer_center_lod1": 360,
-    "beach_outer_center_lod2": 88
+    "beach_outer_center_lod0": 360,
+    "beach_outer_center_lod1": 180,
+    "beach_outer_center_lod2": 40
   },
   "nodes": [
     "beach_outer_center",

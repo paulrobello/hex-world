@@ -1,6 +1,6 @@
 {
   "name": "beach_outer_center",
-  "date": "2026-10-14T08:32:57.125Z",
+  "date": "2026-10-20T23:14:39.178Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 5643,
       "astc": 5414
     },
-    "glbBytes": 80120
+    "glbBytes": 33288
   },
   "glb": {
-    "bytes": 80120,
-    "sha256": "bd873143bcddfcb961cfd27a1b0d377a0e46421a2ca970866286119d998d9ad1"
+    "bytes": 33288,
+    "sha256": "ced26124ffbda8ba7af28dd22b931027fdc98d1c405a186c36f5fa7e69a45678"
   }
 }
