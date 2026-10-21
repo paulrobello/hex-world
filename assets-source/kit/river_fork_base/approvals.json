@@ -7,5 +7,12 @@
     "revision": "river-fork",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. New piece for the owner's 2026-10-20 request (\"we need a river fork also\"): the channel-cut base of the river_fork tile, a symmetric Y with river lanes on edges 0, 2 and 4 meeting at the centre. Bed: the river_straight profile at the distance to the nearest arm (the engine's river bed on this tile), the three wedges meeting on the bisector ridges; water to 4.0 m from each axis and 4.62 m from the centre on the bisectors (a widened pool), about 6 m of meadow to the grass edges. Every River edge carries river_straight_base's ring and joint row, so seams with river tiles match. Built by _river.build_base on the \"fork\" layout (_river_fork.py) with _river_flat's flattened meadow relief. Tris LOD0/1/2 3432/1260/354. Review docs/checkpoints/river_fork/sheet.jpg. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all audio and pieces approved\") from docs/review/approvals.html, generated 2026-10-20 on land-b13."
   }
 ]

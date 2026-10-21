@@ -209,6 +209,13 @@
       "revision": "river-fork",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. New piece for the owner's 2026-10-20 request (\"we need a river fork also\"): the river_fork tile's dressing, river_straight_center's bank stones at the waterline and reed clumps up the banks (stone, reed and cattail slots, analytic masks, plant wind) along all three arms, built by _river_dress.build_dressing on the \"fork\" layout (_river_fork_dress.py walks the arms joint to centre and drops placements past an arm's crease). 36 stones, 10 reed clumps. Tris LOD0/1/2 2368/400/120 (river dressing LOD0 ceiling 2,500). Review docs/checkpoints/river_fork/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all audio and pieces approved\") from docs/review/approvals.html, generated 2026-10-20 on land-b13."
     }
   ]
 }

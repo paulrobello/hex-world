@@ -390,6 +390,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Review from the six-view renders in assets-source/kit/rail_bend_120_center/renders/ (top.jpg shows the arc) against assets-source/refs/rail/ref-2.jpg. The wide rail bend (owner 2026-10-20: rail bends like the road set) across edges 0 and 2, on a 24 m arc about the point where the two edge lines meet, meeting both borders square-on; same section, gauge, sleepers and rail top as rail_bend_60_center. Review sheet: docs/checkpoints/rail_bend_120/sheet.jpg (six views; in play a six-bend loop round the start meadow with trains on it, at play distance and close). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all audio and pieces approved\") from docs/review/approvals.html, generated 2026-10-20 on land-b13."
     }
   ]
 }

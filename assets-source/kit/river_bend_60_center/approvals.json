@@ -5,5 +5,12 @@
     "revision": "new-piece",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. New piece: the bank dressing of the tight river bend river_bend_60, river_bend_center's stones and reed clumps along the 7.42 m arc (_river_dress.py through _river_bend_60.py, helper unchanged), thinned on the short inner bank to 5 stones and 3 clumps against 14 and 5 outside. Tris 1779/212/120 under the river dressing ceiling of 2,500 (kit_gate RIVER_DRESSING_PROPS gains this id, a gate change in the integration patch). Review docs/checkpoints/river_bend_60/sheet.jpg. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all audio and pieces approved\") from docs/review/approvals.html, generated 2026-10-20 on land-b13."
   }
 ]

@@ -53,3 +53,10 @@ Paul answered `docs/review/2026-10-20-walkthrough.html` on 2026-10-20. Codes fol
 - **Farm animals:** F1 drive the leg and head motion data (in progress). F2 Q42 and Q57 closed: animals stand on the drawn ground, worst hoof 2.5 mm. F3 Q43 and Q59 closed: no grass clear under moving animals. F4 walking and grazing only, no run state. F5 the current liveliness stays.
 - **Boats:** Q2 flat sails are fine. Q3 no rower figure for now. Q4 ref-1's red-ochre tan on both sails. Q5 the sailing boat keeps seaward of the beach shelf (s about 3.6) on coast tiles.
 - **Defaults taken while waiting (override any):** buffer stop Q1 trains stop by body position on bends so buffers meet; Q2 a junction-end stop sits on the path a train takes; Q3 a stop beside a station ramp is fine. Boats Q1 water inside hulls on swell is fixed in the water pass by the boat runtime.
+
+## Later the same day
+
+- All models approved from `docs/review/approvals.html` (66 pieces); all audio approved except `train-whistle-1` (redone as attempt 66).
+- Buffer stop Q1 (stop at a terminal station's open platform end reaches about 1.0 m past the tile border, every axle on the level section): accepted (owner, 2026-10-20).
+- All audio and pieces approved from `docs/review/approvals.html` on land-b13: rail_bend_120_center, river_bend_60_base/_center, river_fork_base/_center, buffer-clunk-1/-2, the new train-whistle-1, boat-oar-1..3, boat-sail-1/-2.
+- The rail bend report was the road 120 bend on rail (owner's mistake); the rail 120 bend landed anyway.
