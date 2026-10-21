@@ -190,7 +190,10 @@ impl LanePath {
     /// [`LanePath::new`] with every corner sharper than [`CORNER_MIN`] rounded by a circular arc
     /// of radius at most [`CORNER_RADIUS`], as a car steers through a junction node. Each arc is
     /// shrunk until it stays on its own side of `centerline`, between half of `offset` and
-    /// `offset` from it, so the rounded lane never leaves the band an unrounded one keeps to.
+    /// `offset` from it, so the rounded lane never leaves the band an unrounded one keeps to. The
+    /// one exception is a corner next to either end of the path turning toward the offset side (the
+    /// inner corner of a destination spur): there the arc may swing [`INNER_SWING`] wider, since
+    /// the band's outer edge alone caps it too tight to drive (PRD §7.1).
     pub fn rounded(centerline: &[Vec2], offset: f32) -> Self {
         let line = dedup(centerline);
         let lane = offset_points(&line, offset);
@@ -217,6 +220,10 @@ impl LanePath {
             let t_max = avail(la, i == 1).min(avail(lb, i + 2 == lane.len()));
             let tan = (0.5 * turn).tan();
             let mut r = CORNER_RADIUS.min(t_max / tan);
+            // A path-end corner turning toward the offset side (a destination spur's inner
+            // corner) may swing wider than the offset.
+            let spur = (i == 1 || i + 2 == lane.len()) && cross(a, b) * offset > 0.0;
+            let hi = if spur { hi + INNER_SWING } else { hi };
             // The centerline steps around the corner; the arc cannot reach farther ones.
             let near = &line[i.saturating_sub(2)..(i + 3).min(line.len())];
             let arc = loop {
@@ -262,6 +269,11 @@ const CORNER_MIN: f32 = 1.5 * ARC_STEP;
 
 /// Corners sharper than this (a U-turn) are left alone.
 const CORNER_MAX: f32 = 170.0 * std::f32::consts::PI / 180.0;
+
+/// How much farther than the lane offset from the centerline a destination spur's inner-corner
+/// arc may swing, in meters: at the default 1.5 m offset a 2 m wide car's centre stays within
+/// 2 m of the centre line, so the car keeps to its half of a 6 m road.
+pub const INNER_SWING: f32 = 0.5;
 
 /// Largest radius of a rounded lane corner, in meters.
 pub const CORNER_RADIUS: f32 = 4.0;

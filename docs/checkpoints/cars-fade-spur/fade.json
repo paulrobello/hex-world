@@ -1,0 +1,207 @@
+[
+ {
+  "cmd": "camera",
+  "pos": [
+   14,
+   80,
+   100
+  ],
+  "look_at": [
+   14,
+   0,
+   4
+  ]
+ },
+ {
+  "cmd": "toggle",
+  "what": "photo"
+ },
+ {
+  "cmd": "photo",
+  "dof": "off",
+  "pause_agents": false
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "house_cluster"
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_bend_120"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "rotate",
+  "dir": "cw"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "house_cluster"
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": -1
+ },
+ {
+  "cmd": "wait",
+  "frames": 900
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   14,
+   48,
+   62
+  ],
+  "look_at": [
+   14,
+   0,
+   8
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 2
+ },
+ {
+  "cmd": "dump_state",
+  "name": "fade-00-before"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-00-before"
+ },
+ {
+  "cmd": "set_car_cap",
+  "cap": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-01"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-02"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-03"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-04"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-05"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-06"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-07"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-08"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-09"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-10"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-11"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-12"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-13"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-14"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-15"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-16"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-17"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-18"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-19"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "fade-20"
+ },
+ {
+  "cmd": "dump_state",
+  "name": "fade-21-after"
+ },
+ {
+  "cmd": "wait",
+  "frames": 10
+ },
+ {
+  "cmd": "exit"
+ }
+]

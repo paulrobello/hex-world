@@ -262,9 +262,11 @@ pub fn finish_kit(
                     })
                     .clone();
                 if let Some(material) = mat {
+                    // Trains never fade out.
                     parts.push(CarPart {
                         lod,
                         mesh: prim.mesh.clone(),
+                        fading: material.clone(),
                         material,
                     });
                 }

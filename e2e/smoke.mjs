@@ -897,5 +897,67 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
   console.log(`versions: index.html map has ${Object.keys(map ?? {}).length} files; ${refs} references in the built HTML, CSS and web manifest checked`);
 }
 
+// 12. Cars fading out over a lowered cap (PRD §7.2) draw with the blended copy of their car material,
+// a pipeline no other case compiles. With the device clamped to WebGPU's default 16 sampled textures,
+// the cars world of docs/checkpoints/cars/cars.json is built, `set_car_cap` drops the cap to 1 and
+// photo mode pauses the agents about two ticks into the 250 ms fade, freezing the fading cars half
+// drawn. The frozen frame must differ from the frame after the cars are gone (blended car pixels on
+// screen), with no validation error and no pipeline over the limit.
+{
+  const clamp = WEBGPU_DEFAULT_SAMPLED;
+  const script = JSON.parse(await readFile(join(dist, "../docs/checkpoints/cars/cars.json"), "utf8").catch(() => "[]"));
+  const build = script.slice(0, script.findIndex((c) => c.cmd === "dump_state"));
+  await withPage(gpuArgs, async (page) => {
+    let carKit = false;
+    page.on("console", (m) => { if (/kit car pieces ready/.test(m.text())) carKit = true; });
+    await page.addInitScript(clampSampledTextures, clamp);
+    await page.addInitScript(countSampledTextures);
+    await page.goto(base + "?tier=high");
+    const tag = `car fade (clamped ${clamp})`;
+    if (!(await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 }).then(() => true, () => false))) {
+      fail(`${tag}: never ready`);
+      return;
+    }
+    const cmd = (c) => page.evaluate((c) => window.hexWorld.cmd(c), c);
+    for (const c of build) await cmd(c);
+    const cars = () => page.evaluate(() => { const p = window.hexWorld.state().play ?? {}; return (p.cars ?? 0) + (p.parked_cars ?? 0); });
+    const deadline = Date.now() + 60_000;
+    while (Date.now() < deadline && !(carKit && (await cars()) >= 3)) await page.waitForTimeout(200);
+    if (!carKit || (await cars()) < 3) { fail(`${tag}: car kit ${carKit}, ${await cars()} cars`); return; }
+    await cmd({ cmd: "camera", pos: [-10, 12, 40], look_at: [-2, 0.5, 22.5] });
+    await page.waitForTimeout(1_000);
+    const canvas = page.locator("canvas#hex-world");
+    const before = (await canvas.screenshot()).toString("base64");
+    await cmd({ cmd: "set_car_cap", cap: 1 });
+    await cmd({ cmd: "wait", frames: 6 });
+    await cmd({ cmd: "photo", pause_agents: true });
+    await page.waitForTimeout(1_000);
+    const fading = (await canvas.screenshot()).toString("base64");
+    const during = await cars();
+    await cmd({ cmd: "photo", pause_agents: false });
+    await page.waitForTimeout(1_500);
+    const gone = (await canvas.screenshot()).toString("base64");
+    const after = await cars();
+    await canvas.screenshot({ path: "e2e/test-results/smoke-car-fade.png" });
+    // Pixels whose colour moves by more than 24/255 between two frames.
+    const changed = await page.evaluate(async ([a, b]) => {
+      const load = (s) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = "data:image/png;base64," + s; });
+      const [ia, ib] = await Promise.all([load(a), load(b)]);
+      const px = (i) => { const c = document.createElement("canvas"); c.width = i.width; c.height = i.height; const x = c.getContext("2d"); x.drawImage(i, 0, 0); return x.getImageData(0, 0, i.width, i.height).data; };
+      const [pa, pb] = [px(ia), px(ib)];
+      let n = 0;
+      for (let k = 0; k < pa.length; k += 4) if (Math.abs(pa[k] - pb[k]) + Math.abs(pa[k + 1] - pb[k + 1]) + Math.abs(pa[k + 2] - pb[k + 2]) > 24) n++;
+      return n;
+    }, [fading, gone]);
+    const { sampled, limit } = await page.evaluate(() => ({ sampled: window.__sampledTextures, limit: window.__deviceSampledLimit }));
+    console.log(`${tag}: cars ${during} frozen mid-fade, ${after} after; ${changed} px of fading cars on screen; sampled textures per stage max ${sampled?.max}`);
+    if (during < 3 || after !== 1) fail(`${tag}: ${during} cars while fading, ${after} after (want 1)`);
+    if (changed < 200) fail(`${tag}: only ${changed} px differ between the frozen fade and the empty spots`);
+    if (before === fading) fail(`${tag}: the frozen frame equals the frame before the fade`);
+    if (limit !== clamp) fail(`${tag}: device limit ${limit}, expected ${clamp}`);
+    if (!(sampled?.max <= clamp)) fail(`${tag}: a pipeline layout uses ${sampled?.max} sampled textures`);
+  });
+}
+
 server.close();
 console.log(process.exitCode ? "smoke FAILED" : "smoke OK");

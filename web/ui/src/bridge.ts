@@ -101,6 +101,8 @@ export type Command =
   /** `scale`: multiplier on every grass distance, 1 (Near) to 3; the engine clamps it and rounds to hundredths. */
   | { cmd: "set_grass_distance"; scale: number }
   | { cmd: "set_reduced_motion"; on: boolean }
+  /** Test hook (e2e, scripts): hold the car cap at `cap` over the tier's; `null` hands it back. The HUD never sends it. */
+  | { cmd: "set_car_cap"; cap: number | null }
   | { cmd: "exit" }
   | { cmd: "select_tile"; id: string }
   | { cmd: "hover"; q: number; r: number }
@@ -590,6 +592,7 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   set_grass: keys<CommandOf<"set_grass">>({ density: true }),
   set_grass_distance: keys<CommandOf<"set_grass_distance">>({ scale: true }),
   set_reduced_motion: keys<CommandOf<"set_reduced_motion">>({ on: true }),
+  set_car_cap: keys<CommandOf<"set_car_cap">>({ cap: true }),
   exit: keys<CommandOf<"exit">>({}),
   select_tile: keys<CommandOf<"select_tile">>({ id: true }),
   hover: keys<CommandOf<"hover">>({ q: true, r: true }),

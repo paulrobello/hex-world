@@ -1007,6 +1007,9 @@
     "select_tile": [
       "id"
     ],
+    "set_car_cap": [
+      "cap"
+    ],
     "set_grade": [
       "grade"
     ],

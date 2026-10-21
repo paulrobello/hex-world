@@ -7,7 +7,8 @@ use common::*;
 use hex_core::{Axial, NetworkKind};
 use hex_sim::geom;
 use hex_sim::{
-    CarId, HIGH_TIER_CAR_CAP, MAX_LANE_OFFSET, SimConfig, Simulation, TICK_HZ, TICK_SECONDS,
+    CAR_FADE_TICKS, CarId, HIGH_TIER_CAR_CAP, MAX_LANE_OFFSET, SimConfig, Simulation, TICK_HZ,
+    TICK_SECONDS,
 };
 
 fn busy() -> SimConfig {
@@ -150,8 +151,15 @@ fn cars_never_leave_the_road_graph() {
                         .iter()
                         .map(|pts| geom::distance_to_polyline(p, pts))
                         .fold(f32::INFINITY, f32::min);
+                    // A destination spur's inner corner may swing wider (geom::INNER_SWING).
+                    let spur = [car.from_spot().cell, car.to_spot().cell]
+                        .into_iter()
+                        .any(|c| {
+                            geom::dist(p, c.to_world(hex_core::HEX_RADIUS)) <= hex_core::HEX_RADIUS
+                        });
+                    let band = MAX_LANE_OFFSET + if spur { geom::INNER_SWING } else { 0.0 };
                     assert!(
-                        d <= MAX_LANE_OFFSET + 1e-3,
+                        d <= band + 1e-3,
                         "seed {seed} tick {t}: car {:?} is {d} m off its road",
                         car.id()
                     );
@@ -278,8 +286,9 @@ fn car_count_never_exceeds_the_cap() {
     assert!(peak > 0);
 }
 
-/// A quality-tier change (PRD §7.2): lowering the cap removes the newest cars at once, parked or
-/// driving, and frees their spots; raising it parks the missing cars again. Same seed, same result.
+/// A quality-tier change under reduced motion (PRD §7.2): lowering the cap with no fade removes
+/// the newest cars at once, parked or driving, and frees their spots; raising it parks the missing
+/// cars again. Same seed, same result.
 #[test]
 fn lowering_the_cap_removes_the_newest_cars_and_raising_it_refills() {
     let run = || {
@@ -296,7 +305,7 @@ fn lowering_the_cap_removes_the_newest_cars_and_raising_it_refills() {
             .chain(scene.sim.parked().iter().map(|c| c.id()))
             .collect();
         before.sort();
-        scene.sim.set_max_cars(2);
+        scene.sim.set_max_cars(2, 0);
         assert_eq!(scene.sim.config().max_cars, 2);
         let mut kept: Vec<CarId> = scene
             .sim
@@ -326,9 +335,115 @@ fn lowering_the_cap_removes_the_newest_cars_and_raising_it_refills() {
             assert!(scene.sim.car_count() <= 2);
         }
         let low = snapshot(&scene.sim);
-        scene.sim.set_max_cars(HIGH_TIER_CAR_CAP);
+        scene.sim.set_max_cars(HIGH_TIER_CAR_CAP, 0);
         assert_eq!(scene.sim.car_count(), full, "every house has its car again");
         (kept, low, snapshot(&scene.sim))
+    };
+    assert_eq!(run(), run());
+}
+
+fn ids(sim: &Simulation) -> Vec<CarId> {
+    let mut ids: Vec<CarId> = sim
+        .cars()
+        .iter()
+        .map(|c| c.id())
+        .chain(sim.parked().iter().map(|c| c.id()))
+        .collect();
+    ids.sort();
+    ids
+}
+
+/// A quality-tier drop (PRD §7.2): the newest cars over the new cap fade out over CAR_FADE_TICKS
+/// instead of vanishing. While fading they keep driving (a parked one starts no trip), their fade
+/// rises from 0 to 1 tick by tick, no car is added, and the tick after the fade they are gone with
+/// their spots free. Raising the cap mid-fade keeps the cars back under it. Same seed, same result.
+#[test]
+fn lowering_the_cap_fades_the_newest_cars_out_then_removes_them() {
+    let run = || {
+        let mut scene = Scene::with(13, busy(), &ring_and_pair());
+        while scene.sim.cars().len() < 3 {
+            scene.sim.tick();
+        }
+        let before = ids(&scene.sim);
+        scene.sim.set_max_cars(2, CAR_FADE_TICKS);
+        let going: Vec<CarId> = before[2..].to_vec();
+        assert_eq!(
+            scene.sim.leaving().keys().copied().collect::<Vec<_>>(),
+            going,
+            "the newest cars fade, chosen by id"
+        );
+        assert_eq!(ids(&scene.sim), before, "nothing vanishes at once");
+        let driving: Vec<CarId> = scene
+            .sim
+            .cars()
+            .iter()
+            .map(|c| c.id())
+            .filter(|id| going.contains(id))
+            .collect();
+        assert!(!driving.is_empty(), "a driving car is among them");
+        let mut fades = vec![];
+        for alpha in [0.0, 1.0] {
+            fades.push(scene.sim.fade(going[0], alpha));
+        }
+        for _ in 0..CAR_FADE_TICKS {
+            let dist: Vec<f32> = driving
+                .iter()
+                .map(|id| {
+                    scene
+                        .sim
+                        .cars()
+                        .iter()
+                        .find(|c| c.id() == *id)
+                        .map_or(0.0, |c| c.distance())
+                })
+                .collect();
+            scene.sim.tick();
+            assert_eq!(
+                ids(&scene.sim),
+                before,
+                "still fading, still drawn, none added"
+            );
+            for (id, d) in driving.iter().zip(dist) {
+                if let Some(c) = scene.sim.cars().iter().find(|c| c.id() == *id) {
+                    assert!(c.distance() >= d, "a fading car keeps driving");
+                }
+            }
+            for alpha in [0.0, 0.5, 1.0] {
+                fades.push(scene.sim.fade(going[0], alpha));
+            }
+        }
+        assert!(fades.windows(2).all(|w| w[1] >= w[0]), "{fades:?}");
+        assert_eq!((fades[0], *fades.last().unwrap()), (0.0, 1.0));
+        scene.sim.tick();
+        assert_eq!(ids(&scene.sim), before[..2], "gone the tick after the fade");
+        assert!(scene.sim.leaving().is_empty());
+        for cell in [
+            ring_house(0),
+            ring_house(2),
+            ring_house(4),
+            Axial::new(4, 0),
+            Axial::new(5, 0),
+        ] {
+            for (_, holder) in scene.sim.spots(cell) {
+                assert!(
+                    holder.is_none_or(|id| before[..2].contains(&id)),
+                    "{holder:?}"
+                );
+            }
+        }
+        // Raising the cap mid-fade: the cars back under it stay, opaque.
+        scene.sim.set_max_cars(HIGH_TIER_CAR_CAP, 0);
+        let full = ids(&scene.sim);
+        scene.sim.set_max_cars(3, CAR_FADE_TICKS);
+        scene.sim.tick();
+        scene.sim.set_max_cars(4, CAR_FADE_TICKS);
+        assert_eq!(scene.sim.leaving().len(), full.len() - 4);
+        assert_eq!(scene.sim.fade(full[3], 1.0), 0.0, "back under the cap");
+        for _ in 0..=CAR_FADE_TICKS {
+            scene.sim.tick();
+        }
+        assert_eq!(ids(&scene.sim), full[..4]);
+        (before, fades, snapshot(&scene.sim))
     };
     assert_eq!(run(), run());
 }

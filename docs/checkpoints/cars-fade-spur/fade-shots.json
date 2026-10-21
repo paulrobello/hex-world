@@ -1,0 +1,126 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/cars-fade-spur/fade.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--tier",
+    "high"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        243.19,
+        153.9,
+        153.39
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 14.0,
+      "load_after": [
+        215.46,
+        152.18,
+        152.79
+      ],
+      "frames": {
+        "fade-00-before": {
+          "mean": 0.2033,
+          "problem": null
+        },
+        "fade-01": {
+          "mean": 0.2033,
+          "problem": null
+        },
+        "fade-02": {
+          "mean": 0.2033,
+          "problem": null
+        },
+        "fade-03": {
+          "mean": 0.2033,
+          "problem": null
+        },
+        "fade-04": {
+          "mean": 0.2033,
+          "problem": null
+        },
+        "fade-05": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-06": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-07": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-08": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-09": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-10": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-11": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-12": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-13": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-14": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-15": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-16": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-17": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-18": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-19": {
+          "mean": 0.2035,
+          "problem": null
+        },
+        "fade-20": {
+          "mean": 0.2035,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

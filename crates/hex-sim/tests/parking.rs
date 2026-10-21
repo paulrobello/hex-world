@@ -481,7 +481,8 @@ fn bakery_parking_paths_clear_the_shop_kerbs_and_the_other_spot() {
 /// between them, which turn through the bakery's junction node "j". At rotation 0 visitors leave
 /// west (a right turn out, `back`), at 3 east (across the road, `back_alt`); both legs join the
 /// through lane past the node rather than turning about on the spur. Arrivals at rotation 3 turn
-/// right off the through lane before the node, since the spur's inner corner is too short to drive.
+/// right off the through lane before the node, where the turn into the spot is gentler than from
+/// the spur's end.
 #[test]
 fn bakery_visits_turn_smoothly() {
     let mut failures = vec![];
@@ -535,6 +536,58 @@ fn bakery_visits_turn_smoothly() {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+/// Every destination tile's spur lanes (PRD §7.1), at every rotation: the rounded lane from each
+/// of the tile's road edges to its destination node and back keeps the facing within 20° per tick,
+/// sliding the tick window along the whole lane, so a car may stay on the spur up to the node. The
+/// bakery's 3 m spur turns right off the through lane (an inner corner) arriving from the east and
+/// leaving west.
+#[test]
+fn destination_spur_lanes_turn_at_most_20_deg_per_tick() {
+    let cat = catalog();
+    let config = SimConfig::default();
+    let step = config.car_speed * TICK_SECONDS;
+    let mut tiles = vec![];
+    for def in cat.tiles().iter().filter(|d| {
+        d.nodes.iter().any(|n| n.destination.is_some())
+            && d.networks
+                .iter()
+                .any(|n| n.kind == hex_core::NetworkKind::Road)
+    }) {
+        let mut worst = 0.0f32;
+        for rot in 0..6u8 {
+            let mut net = hex_sim::Network::new(hex_core::NetworkKind::Road);
+            net.insert_tile(Axial::ORIGIN, def, rot);
+            let seams: Vec<_> = (0..6u8)
+                .filter_map(|e| net.seam_node(Axial::ORIGIN, e))
+                .collect();
+            for n in def.nodes.iter().filter(|n| n.destination.is_some()) {
+                let node = net
+                    .local_node(Axial::ORIGIN, &n.id)
+                    .expect("a road reaches it");
+                for &seam in &seams {
+                    for (a, b) in [(seam, node), (node, seam)] {
+                        let route = net.route(a, b).expect("one tile");
+                        let lane = hex_sim::geom::LanePath::rounded(
+                            &route.centerline(&net),
+                            config.lane_offset,
+                        );
+                        let turn = lane.max_turn_deg(step);
+                        worst = worst.max(turn);
+                        assert!(
+                            turn <= 20.0,
+                            "{} rot {rot} {a:?} to {b:?}: {turn:.1} deg per tick",
+                            def.id
+                        );
+                    }
+                }
+            }
+        }
+        println!("{}: spur lanes at most {worst:.1} deg per tick", def.id);
+        tiles.push(def.id.clone());
+    }
+    assert!(tiles.contains(&"bakery".to_owned()) && tiles.contains(&"house_cluster".to_owned()));
 }
 
 /// Drives `scene` for 6000 ticks and checks every trip's path, near each end's `tile`, keeps a

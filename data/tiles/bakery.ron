@@ -2,8 +2,9 @@
 // A straight road from edge 0 to edge 3 with the bakery north of it (runtime -z), its shop front to
 // the road (yaw 90 turns its +x front to +z), and a gravel forecourt beside it that opens straight off
 // the asphalt (bakery_pad, scripts/blender/kit/bakery_pad.py). The road graph runs through the
-// junction "j" with a short spur to the "bakery" Shop node at the forecourt's mouth, so the forecourt
-// belongs to the parking paths (as house_cluster's driveway does).
+// junction "j" with a 3 m spur to the "bakery" Shop node at the forecourt's mouth, so the forecourt
+// belongs to the parking paths (as house_cluster's driveway does). The spur's lanes drive within the
+// 20 deg/tick rule at every rotation (2 m was too short for the inner corner's arc).
 //
 // Parking (PRD §7.1): `park-<n>` is spot n, at the pad's `anchor-park-<n>` socket (hex-core
 // data_validator checks they match). A visitor noses in north (`enter`): up the spur from the node's
@@ -33,7 +34,7 @@
     ),
     nodes: [
         (id: "j", at: (2.0, 0.0)),
-        (id: "bakery", at: (2.0, -2.0), destination: Some(Shop)),
+        (id: "bakery", at: (2.0, -3.0), destination: Some(Shop)),
     ],
     networks: [
         (kind: Road, from: Edge(0), to: Node("j")),
@@ -43,14 +44,14 @@
     parking: [
         (
             id: "park-0", house: 0, node: "bakery", at: (1.8, -8.8), yaw_deg: 270.0,
-            enter: [(at: (1.8, -4.8), yaw_deg: 270.0)],
-            back: [(at: (1.8, -3.4), yaw_deg: 270.0), (at: (4.3, -1.4), yaw_deg: 200.0)],
-            back_alt: [(at: (1.8, -3.4), yaw_deg: 270.0), (at: (-0.7, -1.4), yaw_deg: 340.0)],
+            enter: [(at: (1.9, -4.6), yaw_deg: 270.0)],
+            back: [(at: (1.8, -3.8), yaw_deg: 270.0), (at: (4.3, -1.4), yaw_deg: 200.0)],
+            back_alt: [(at: (1.8, -3.8), yaw_deg: 270.0), (at: (-0.7, -1.4), yaw_deg: 340.0)],
         ),
         (
             id: "park-1", house: 0, node: "bakery", at: (4.5, -8.6), yaw_deg: 270.0,
-            enter: [(at: (3.8, -3.4), yaw_deg: 276.0)],
-            back: [(at: (4.5, -2.9), yaw_deg: 270.0), (at: (7.1, -0.8), yaw_deg: 205.0)],
+            enter: [(at: (3.8, -3.8), yaw_deg: 282.0)],
+            back: [(at: (4.5, -3.3), yaw_deg: 270.0), (at: (7.1, -0.8), yaw_deg: 205.0)],
             back_alt: [(at: (3.8, -3.0), yaw_deg: 270.0), (at: (1.6, 0.6), yaw_deg: 330.0)],
         ),
     ],

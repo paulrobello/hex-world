@@ -17,6 +17,6 @@ pub use network::{Components, Link, LinkId, Network, Node, NodeId, NodeKey};
 pub use rail::{Railway, Train, TrainId, VehicleKind, VehiclePose};
 pub use route::Route;
 pub use sim::{
-    Car, CarId, CarPhase, HIGH_TIER_CAR_CAP, Home, MAX_LANE_OFFSET, ParkedCar, SimConfig,
-    Simulation, SpotRef, TICK_HZ, TICK_SECONDS,
+    CAR_FADE_TICKS, Car, CarId, CarPhase, HIGH_TIER_CAR_CAP, Home, MAX_LANE_OFFSET, ParkedCar,
+    SimConfig, Simulation, SpotRef, TICK_HZ, TICK_SECONDS,
 };

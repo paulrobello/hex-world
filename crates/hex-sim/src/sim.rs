@@ -20,6 +20,10 @@ pub const TICK_SECONDS: f32 = 1.0 / TICK_HZ as f32;
 /// Vehicle cap at the High quality tier (PRD §7.2 reference target).
 pub const HIGH_TIER_CAR_CAP: usize = 300;
 
+/// Ticks an excess car fades out for before a lowered car cap removes it (PRD §7.2): the
+/// Legend's 240 ms motion token, rounded up to whole 20 Hz ticks (250 ms).
+pub const CAR_FADE_TICKS: u64 = 5;
+
 /// Largest distance a car drives right of the road centerline: the middle of the right half of the
 /// 6 m road lane (plan F3).
 pub const MAX_LANE_OFFSET: f32 = 1.5;
@@ -377,6 +381,8 @@ pub struct Simulation {
     departures: u64,
     refused: u64,
     ticks: u64,
+    /// Cars over a lowered cap, fading out: the tick each started fading and the tick it goes.
+    leaving: BTreeMap<CarId, (u64, u64)>,
 }
 
 impl Simulation {
@@ -398,6 +404,7 @@ impl Simulation {
             departures: 0,
             refused: 0,
             ticks: 0,
+            leaving: BTreeMap::new(),
         }
     }
 
@@ -417,41 +424,73 @@ impl Simulation {
         &self.config
     }
 
-    /// Changes the world's car cap (a quality-tier change, PRD §7.2). Lowering it removes the
-    /// newest cars, parked or driving, until `max_cars` remain, freeing their spots; raising it
-    /// gives the clusters their missing cars, parked. Deterministic: ids decide which cars go.
-    pub fn set_max_cars(&mut self, max_cars: usize) {
+    /// Changes the world's car cap (a quality-tier change, PRD §7.2). Lowering it below the car
+    /// count marks the newest cars, parked or driving, as leaving: they keep driving but start no
+    /// new trip, fade out for `fade_ticks` ([`CAR_FADE_TICKS`], 0 under reduced motion) and are
+    /// removed after it, freeing their spots; with `fade_ticks` 0 they go at once. Raising it
+    /// gives the clusters their missing cars, parked, and keeps any car no longer over the cap.
+    /// Deterministic: ids decide which cars go.
+    pub fn set_max_cars(&mut self, max_cars: usize, fade_ticks: u64) {
         self.config.max_cars = max_cars;
-        let excess = self.car_count().saturating_sub(max_cars);
-        if excess > 0 {
-            let mut ids: Vec<CarId> = self
-                .cars
-                .iter()
-                .map(|c| c.id)
-                .chain(self.parked.iter().map(|c| c.id))
-                .collect();
-            ids.sort_unstable();
-            let gone: std::collections::BTreeSet<CarId> =
-                ids.split_off(ids.len() - excess).into_iter().collect();
-            let freed: Vec<(SpotRef, CarId)> = self
-                .cars
-                .iter()
-                .filter(|c| gone.contains(&c.id))
-                .map(|c| (c.to, c.id))
-                .chain(
-                    self.parked
-                        .iter()
-                        .filter(|c| gone.contains(&c.id))
-                        .map(|c| (c.spot, c.id)),
-                )
-                .collect();
-            self.cars.retain(|c| !gone.contains(&c.id));
-            self.parked.retain(|c| !gone.contains(&c.id));
-            for (spot, id) in freed {
-                self.release(spot, id);
+        let mut ids: Vec<CarId> = self
+            .cars
+            .iter()
+            .map(|c| c.id)
+            .chain(self.parked.iter().map(|c| c.id))
+            .collect();
+        ids.sort_unstable();
+        let excess = ids.len().saturating_sub(max_cars);
+        let going: std::collections::BTreeSet<CarId> =
+            ids.split_off(ids.len() - excess).into_iter().collect();
+        self.leaving.retain(|id, _| going.contains(id));
+        if fade_ticks == 0 {
+            self.remove_cars(&going);
+        } else {
+            let span = (self.ticks, self.ticks + fade_ticks);
+            for id in going {
+                self.leaving.entry(id).or_insert(span);
             }
         }
         self.refill();
+    }
+
+    /// How far car `id` has faded out, from 0 (not leaving) to 1 (gone), `alpha` of the way from
+    /// the previous tick to the latest one (render interpolation, as [`Car::pose_at`]).
+    pub fn fade(&self, id: CarId, alpha: f32) -> f32 {
+        self.leaving.get(&id).map_or(0.0, |&(start, end)| {
+            let t = (self.ticks - start) as f32 - 1.0 + alpha.clamp(0.0, 1.0);
+            (t / (end - start) as f32).clamp(0.0, 1.0)
+        })
+    }
+
+    /// Cars fading out over a lowered cap, by id, with the tick each started and the tick it goes.
+    pub fn leaving(&self) -> &BTreeMap<CarId, (u64, u64)> {
+        &self.leaving
+    }
+
+    /// Removes the cars in `gone`, parked or driving, freeing the spots they held.
+    fn remove_cars(&mut self, gone: &std::collections::BTreeSet<CarId>) {
+        if gone.is_empty() {
+            return;
+        }
+        let freed: Vec<(SpotRef, CarId)> = self
+            .cars
+            .iter()
+            .filter(|c| gone.contains(&c.id))
+            .map(|c| (c.to, c.id))
+            .chain(
+                self.parked
+                    .iter()
+                    .filter(|c| gone.contains(&c.id))
+                    .map(|c| (c.spot, c.id)),
+            )
+            .collect();
+        self.cars.retain(|c| !gone.contains(&c.id));
+        self.parked.retain(|c| !gone.contains(&c.id));
+        for (spot, id) in freed {
+            self.release(spot, id);
+        }
+        self.leaving.retain(|id, _| !gone.contains(id));
     }
 
     /// Mirrors a tile placed at `cell`. Replacing a tile removes the cars routed over it and the
@@ -485,6 +524,13 @@ impl Simulation {
     /// had already arrived (so the final approach still renders), then starts departures.
     pub fn tick(&mut self) {
         self.ticks += 1;
+        let gone: std::collections::BTreeSet<CarId> = self
+            .leaving
+            .iter()
+            .filter(|(_, (_, end))| *end < self.ticks)
+            .map(|(id, _)| *id)
+            .collect();
+        self.remove_cars(&gone);
         self.rails.tick();
         let step = self.config.car_speed * TICK_SECONDS;
         let closed = self.rails.closed_crossings();
@@ -607,6 +653,9 @@ impl Simulation {
     /// car's cluster, scanning clusters in cell order from `to`. Returns the reserved spot, or
     /// `None` when the car is not parked or no connected cluster has room (the car stays).
     pub fn send(&mut self, id: CarId, to: Axial) -> Option<SpotRef> {
+        if self.leaving.contains_key(&id) {
+            return None;
+        }
         let car = self.parked.iter().find(|c| c.id == id)?.clone();
         let here = self.node_of(car.spot.cell)?;
         let mut order: Vec<(Axial, Option<NodeId>)> = self
@@ -706,8 +755,8 @@ impl Simulation {
         let (_, back_pts, leave_pts, out) = best?;
 
         // Into the spot: off the lane at the node when the turn there is gentle, else at the first
-        // distance before it that is (the bakery's short spur, whose inner corner is too tight to
-        // drive; its enter poses are laid out for both directions).
+        // distance before it that is (the bakery's arrivals from the east turn right off the through
+        // lane short of its spur; its enter poses are laid out for both directions).
         let into = pick_join(joins(), |e| {
             let s = lane.length() - e;
             let mut poses = vec![lane.pose_at_distance(s)];
@@ -872,6 +921,7 @@ impl Simulation {
             .iter()
             .filter(|c| {
                 self.ticks.saturating_sub(c.since) >= stay
+                    && !self.leaving.contains_key(&c.id)
                     && self.clusters.get(&c.spot.cell).is_some_and(|k| k.shop)
             })
             .cloned()
@@ -922,7 +972,7 @@ impl Simulation {
             let candidates: Vec<CarId> = self
                 .parked
                 .iter()
-                .filter(|c| !self.clusters[&c.spot.cell].shop)
+                .filter(|c| !self.clusters[&c.spot.cell].shop && !self.leaving.contains_key(&c.id))
                 .filter(|c| {
                     nodes
                         .iter()

@@ -6,7 +6,9 @@
 // so every car of one type and LOD stays in one instanced batch whatever its colour. `masks` (raw
 // UV0) carries the §9.4 hooks as in kit_material.wesl: R snow, G wetness, B night emissive (head and
 // tail lights), A baked AO; a slot without masks takes hex_render::hooks' uniform default. The
-// extension adds one sampled texture, the same as the kit material.
+// extension adds one sampled texture, the same as the kit material. A car fading out over a lowered
+// cap (PRD §7.2) carries its transparency in the tag's top byte and draws with a blended copy of
+// its slot material.
 import bevy_pbr::render::{
     mesh_functions,
     pbr_bindings,
@@ -50,11 +52,15 @@ fn srgb_to_linear(c: vec3<f32>) -> vec3<f32> {
 fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> FragmentOutput {
     var pbr_input = pbr_input_from_standard_material(in, is_front);
 
+    // The tag's top byte is a fading car's transparency (crates/hex-play/src/cars.rs fade_tag): its
+    // blended material draws at that alpha; the opaque material ignores alpha.
+    let tag = unpack4x8unorm(mesh_functions::get_tag(in.instance_index));
     @if(VERTEX_COLORS) {
-        let paint = srgb_to_linear(unpack4x8unorm(mesh_functions::get_tag(in.instance_index)).rgb);
+        let paint = srgb_to_linear(tag.rgb);
         let base = pbr_input.material.base_color.rgb;
         pbr_input.material.base_color = vec4(mix(base, base * paint, in.color.a), 1.0);
     }
+    pbr_input.material.base_color.a = 1.0 - tag.a;
 
     @if(VERTEX_UVS_A) {
     if ((car.car_flags & CAR_FLAG_MASKS) != 0u) {

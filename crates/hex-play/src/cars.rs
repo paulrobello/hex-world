@@ -16,6 +16,7 @@ use bevy::{
     asset::UntypedAssetId,
     core_pipeline::core_3d::Opaque3d,
     gltf::{Gltf, GltfMesh},
+    light::NotShadowCaster,
     mesh::MeshTag,
     prelude::*,
     render::{
@@ -124,6 +125,13 @@ pub fn paint_tag([r, g, b]: [u8; 3]) -> u32 {
     u32::from(r) | (u32::from(g) << 8) | (u32::from(b) << 16)
 }
 
+/// [`paint_tag`] with a fading car's transparency in the top byte (0 opaque, 255 gone), which the
+/// shader turns into the alpha of the car's blended material.
+pub fn fade_tag(paint: [u8; 3], opacity: f32) -> u32 {
+    let fade = ((1.0 - opacity.clamp(0.0, 1.0)) * 255.0).round() as u32;
+    paint_tag(paint) | (fade << 24)
+}
+
 /// One car's pose between the last two sim ticks, in world XZ metres.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CarPose {
@@ -134,6 +142,8 @@ pub struct CarPose {
     pub pos: [f32; 2],
     /// Heading in radians from +x toward +z (`hex_sim::Pose::yaw`).
     pub yaw: f32,
+    /// 1 for a car in the world, falling to 0 as a car over a lowered cap fades out (PRD §7.2).
+    pub opacity: f32,
 }
 
 /// The cars to draw, written by `hex-app` every frame while any car exists.
@@ -178,7 +188,24 @@ pub struct CarPart {
     pub lod: usize,
     pub mesh: Handle<Mesh>,
     pub material: Handle<CarMaterial>,
+    /// The slot's material with alpha blending, drawn while the car fades out.
+    pub fading: Handle<CarMaterial>,
 }
+
+/// A kit car's part: the opaque and fading materials it swaps between.
+#[derive(Component, Clone)]
+pub struct CarPartMaterials {
+    pub opaque: Handle<CarMaterial>,
+    pub fading: Handle<CarMaterial>,
+}
+
+/// Below this opacity a fading car stops casting its shadow: a shadow map cannot fade, and a full
+/// shadow left under a car that is nearly gone reads as a dark smudge on the road.
+const SHADOW_OPACITY: f32 = 0.5;
+
+/// The opacity a kit car's parts were last drawn at.
+#[derive(Component, Clone, Copy, Debug, PartialEq)]
+pub struct CarOpacity(pub f32);
 
 /// The car kit pieces, loaded with the village pack in the play scenario.
 #[derive(Resource, Default)]
@@ -307,7 +334,8 @@ pub fn finish_kit(
             continue;
         };
         let mut parts = vec![];
-        let mut by_slot: HashMap<String, Option<Handle<CarMaterial>>> = HashMap::new();
+        type Mats = Option<(Handle<CarMaterial>, Handle<CarMaterial>)>;
+        let mut by_slot: HashMap<String, Mats> = HashMap::new();
         for lod in 0..3usize {
             let Some(gm) = g
                 .named_meshes
@@ -336,7 +364,10 @@ pub fn finish_kit(
                     .entry(slot_name.clone())
                     .or_insert_with(|| match slot_requests(manifest, entry, slot, *family) {
                         Ok(r) => {
-                            Some(materials.add(build_material(&server, slot, &r, config.kit_hooks)))
+                            let opaque = build_material(&server, slot, &r, config.kit_hooks);
+                            let mut fading = opaque.clone();
+                            fading.base.alpha_mode = AlphaMode::Blend;
+                            Some((materials.add(opaque), materials.add(fading)))
                         }
                         Err(e) => {
                             warn!("cars: {e}, slot {slot_name} skipped");
@@ -344,12 +375,13 @@ pub fn finish_kit(
                         }
                     })
                     .clone();
-                if let Some(material) = mat {
+                if let Some((material, fading)) = mat {
                     labels.push((prim.mesh.id().untyped(), format!("{slot_name}@lod{lod}")));
                     parts.push(CarPart {
                         lod,
                         mesh: prim.mesh.clone(),
                         material,
+                        fading,
                     });
                 }
             }
@@ -438,7 +470,10 @@ pub fn grounded_transform(p: &CarPose, wheel_y: impl Fn(Vec2) -> f32) -> Transfo
 /// them, and this respawns whatever the view still holds. A kit car is a parent with the pose and
 /// one child per part (slot x LOD), every child tagged with the car's paint colour. Each car stands
 /// on the play ground ([`WalkGround::ride`], four lookups per car per frame) where `hex-app` keeps
-/// one, else on the road crown.
+/// one, else on the road crown. A kit car fading out over a lowered cap (opacity under 1) draws
+/// its parts with their blended materials, its transparency in the `MeshTag`'s top byte; the
+/// placeholder does not fade.
+#[allow(clippy::too_many_arguments)]
 pub fn sync(
     mut commands: Commands,
     active: Res<ActiveScenario>,
@@ -446,7 +481,19 @@ pub fn sync(
     assets: Res<CarAssets>,
     kit: Res<CarKit>,
     ground: Option<Res<WalkGround>>,
-    mut cars: Query<(Entity, &PlayCar, &mut Transform, Has<CarPlaceholder>)>,
+    mut cars: Query<(
+        Entity,
+        &PlayCar,
+        &mut Transform,
+        Has<CarPlaceholder>,
+        Option<&mut CarOpacity>,
+        Option<&Children>,
+    )>,
+    mut parts: Query<(
+        &CarPartMaterials,
+        &mut MeshTag,
+        &mut MeshMaterial3d<CarMaterial>,
+    )>,
 ) {
     let ride = |q: Vec2| {
         ground
@@ -468,13 +515,39 @@ pub fn sync(
         _ => None,
     };
     let mut have = HashSet::with_capacity(want.len());
-    for (e, car, mut t, placeholder) in &mut cars {
+    for (e, car, mut t, placeholder, opacity, children) in &mut cars {
         let upgrade = placeholder
             && want
                 .get(&car.0)
                 .is_some_and(|p| kit.is_some_and(|k| k.contains_key(&p.kind)));
         match want.get(&car.0) {
-            Some(p) if !upgrade && have.insert(car.0) => *t = place(p),
+            Some(p) if !upgrade && have.insert(car.0) => {
+                *t = place(p);
+                if let (Some(mut o), Some(children)) = (opacity, children)
+                    && o.0 != p.opacity
+                {
+                    o.0 = p.opacity;
+                    let tag = fade_tag(paint_for(car.0), p.opacity);
+                    for child in children.iter() {
+                        if let Ok((mats, mut mesh_tag, mut mat)) = parts.get_mut(child) {
+                            *mesh_tag = MeshTag::new(tag);
+                            let want = if p.opacity < 1.0 {
+                                &mats.fading
+                            } else {
+                                &mats.opaque
+                            };
+                            if mat.0 != *want {
+                                mat.0 = want.clone();
+                            }
+                            if p.opacity < SHADOW_OPACITY {
+                                commands.entity(child).insert(NotShadowCaster);
+                            } else {
+                                commands.entity(child).remove::<NotShadowCaster>();
+                            }
+                        }
+                    }
+                }
+            }
             _ => commands.entity(e).try_despawn(),
         }
     }
@@ -483,19 +556,34 @@ pub fn sync(
             continue;
         }
         match kit.and_then(|k| k.get(&p.kind)) {
-            Some(parts) => {
-                let tag = MeshTag::new(paint_tag(paint_for(id)));
+            Some(kit_parts) => {
+                let tag = MeshTag::new(fade_tag(paint_for(id), p.opacity));
+                let fading = p.opacity < 1.0;
                 commands
-                    .spawn((PlayCar(id), place(p), Visibility::default(), SceneEntity))
+                    .spawn((
+                        PlayCar(id),
+                        CarOpacity(p.opacity),
+                        place(p),
+                        Visibility::default(),
+                        SceneEntity,
+                    ))
                     .with_children(|c| {
-                        for part in parts {
-                            c.spawn((
+                        for part in kit_parts {
+                            let material = if fading { &part.fading } else { &part.material };
+                            let mut part_entity = c.spawn((
                                 Mesh3d(part.mesh.clone()),
-                                MeshMaterial3d(part.material.clone()),
+                                MeshMaterial3d(material.clone()),
+                                CarPartMaterials {
+                                    opaque: part.material.clone(),
+                                    fading: part.fading.clone(),
+                                },
                                 tag.clone(),
                                 lod_range(part.lod),
                                 Lod(part.lod as u8),
                             ));
+                            if p.opacity < SHADOW_OPACITY {
+                                part_entity.insert(NotShadowCaster);
+                            }
                         }
                     });
             }
@@ -623,6 +711,7 @@ mod tests {
                 kind: CarKind::Sedan,
                 pos: [3.0, -2.0],
                 yaw,
+                opacity: 1.0,
             });
             assert!((t.rotation * Vec3::X - dir).length() < 1e-5, "yaw {yaw}");
             assert_eq!(t.translation, Vec3::new(3.0, ROAD_SURFACE_Y, -2.0));
@@ -673,6 +762,7 @@ mod tests {
             kind,
             pos: pos.into(),
             yaw: dir.y.atan2(dir.x),
+            opacity: 1.0,
         }
     }
 
@@ -855,6 +945,10 @@ mod tests {
     #[test]
     fn paint_tag_packs_srgb_bytes_for_unpack4x8unorm() {
         assert_eq!(paint_tag([0x11, 0x22, 0x33]), 0x0033_2211);
+        // A fading car's transparency rides in the top byte: none when opaque, all when gone.
+        assert_eq!(fade_tag([0x11, 0x22, 0x33], 1.0), 0x0033_2211);
+        assert_eq!(fade_tag([0x11, 0x22, 0x33], 0.0), 0xFF33_2211);
+        assert_eq!(fade_tag([0x11, 0x22, 0x33], 0.5) >> 24, 128);
         let manifest = parse_manifest(MANIFEST).unwrap();
         for k in CarKind::ALL {
             assert!(

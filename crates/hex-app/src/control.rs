@@ -96,6 +96,12 @@ pub enum Command {
     SetReducedMotion {
         on: bool,
     },
+    /// Test hook (scripts and e2e; the HUD never sends it): holds the world's car cap at `cap` in
+    /// place of the quality tier's, so a run can drop the cap below the cars on the map and watch
+    /// the newest fade out (PRD §7.2); `null` hands the cap back to the tier.
+    SetCarCap {
+        cap: Option<usize>,
+    },
     Exit,
     // Play-scenario commands: each enqueues the same `Action` its key or mouse binding does.
     SelectTile {
@@ -316,6 +322,7 @@ pub struct CommandSettings<'w> {
     saved: ResMut<'w, SavedSettings>,
     walk: ResMut<'w, WalkSession>,
     debug: ResMut<'w, hex_play::debug::DebugOverlays>,
+    car_cap: Option<ResMut<'w, crate::sim::CarCapOverride>>,
 }
 
 #[derive(bevy::ecs::system::SystemParam)]
@@ -348,6 +355,7 @@ pub fn run_commands(
         mut saved,
         mut walk,
         mut debug,
+        mut car_cap,
     } = settings;
     queue
         .items
@@ -439,6 +447,10 @@ pub fn run_commands(
             }
         }
         Command::SetReducedMotion { on } => reduced.0 = on,
+        Command::SetCarCap { cap } => match car_cap.as_mut() {
+            Some(o) => o.0 = cap,
+            None => warn!("set_car_cap command: no car simulation, skipped"),
+        },
         Command::Photo {
             dof,
             focus,

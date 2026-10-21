@@ -8,11 +8,14 @@ use hex_core::{Axial, PlacedTile, TileCatalog, World};
 use hex_play::{
     ActiveScenario, AgentsPaused, Scenario,
     cars::{CarKind, CarPose, CarsView},
-    play::{PlaySystems, rise::PlayRises},
+    play::{
+        PlaySystems, affordances,
+        rise::{PlayRises, ReducedMotion},
+    },
     trains::{StockKind, StockPose, TrainsView},
 };
 use hex_render::{GateConfig, post::QualityTier};
-use hex_sim::{HIGH_TIER_CAR_CAP, SimConfig, Simulation, TICK_HZ};
+use hex_sim::{CAR_FADE_TICKS, HIGH_TIER_CAR_CAP, SimConfig, Simulation, TICK_HZ};
 use serde_json::{Value, json};
 
 use crate::game::{GameEvent, GameState};
@@ -27,6 +30,7 @@ pub struct SimPlugin;
 impl Plugin for SimPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Time::<Fixed>::from_hz(f64::from(TICK_HZ)))
+            .init_resource::<CarCapOverride>()
             .add_systems(FixedUpdate, (follow_tier, tick).chain())
             .configure_sets(
                 Update,
@@ -253,13 +257,14 @@ impl CarSim {
         self.sim.config().max_cars
     }
 
-    /// Applies a new car cap (a quality-tier change): lowering it removes the newest cars at once,
-    /// raising it parks the missing ones (`Simulation::set_max_cars`). Returns whether it changed.
-    pub fn set_car_cap(&mut self, cap: usize) -> bool {
+    /// Applies a new car cap (a quality-tier change): lowering it fades the newest cars out over
+    /// `fade_ticks` and then removes them (at once with 0, under reduced motion), raising it parks
+    /// the missing ones (`Simulation::set_max_cars`). Returns whether it changed.
+    pub fn set_car_cap(&mut self, cap: usize, fade_ticks: u64) -> bool {
         if self.car_cap() == cap {
             return false;
         }
-        self.sim.set_max_cars(cap);
+        self.sim.set_max_cars(cap, fade_ticks);
         self.refresh();
         true
     }
@@ -456,11 +461,27 @@ pub fn mirror_world(
     }
 }
 
+/// A car cap that wins over the quality tier's, set by the `set_car_cap` test command.
+#[derive(Resource, Default, Clone, Copy, Debug, PartialEq)]
+pub struct CarCapOverride(pub Option<usize>);
+
 /// Keeps the car cap on the quality tier in force (`GateConfig::tier`): startup detection, the
-/// probe's step-down and `set_tier` all change it there.
-pub fn follow_tier(gate: Option<Res<GateConfig>>, mut sim: ResMut<CarSim>) {
+/// probe's step-down and `set_tier` all change it there. Cars over a lowered cap fade out over
+/// [`CAR_FADE_TICKS`], or go at once under reduced motion.
+pub fn follow_tier(
+    gate: Option<Res<GateConfig>>,
+    reduced: Option<Res<ReducedMotion>>,
+    held: Option<Res<CarCapOverride>>,
+    mut sim: ResMut<CarSim>,
+) {
     if let Some(gate) = gate {
-        sim.set_car_cap(car_cap(gate.tier));
+        let cap = held.and_then(|h| h.0).unwrap_or(car_cap(gate.tier));
+        let fade = if reduced.is_some_and(|r| r.0) {
+            0
+        } else {
+            CAR_FADE_TICKS
+        };
+        sim.set_car_cap(cap, fade);
     }
 }
 
@@ -548,6 +569,8 @@ pub fn publish_cars(
         return;
     }
     let alpha = fixed.overstep_fraction();
+    // A car over a lowered cap fades out on the Legend motion curve (PRD §7.2).
+    let opacity = |id| 1.0 - affordances::ease(sim.sim.fade(id, alpha));
     view.cars.clear();
     view.cars.extend(cars.iter().map(|c| {
         let pose = c.pose_at(alpha);
@@ -557,6 +580,7 @@ pub fn publish_cars(
             kind: CarKind::from_seed(c.id().0),
             pos: pose.pos,
             yaw: pose.yaw(),
+            opacity: opacity(c.id()),
         }
     }));
     view.cars.extend(parked.iter().map(|c| {
@@ -566,6 +590,7 @@ pub fn publish_cars(
             kind: CarKind::from_seed(c.id().0),
             pos: pose.pos,
             yaw: pose.yaw(),
+            opacity: opacity(c.id()),
         }
     }));
 }
@@ -804,7 +829,7 @@ mod tests {
         }
         assert_eq!(tier(&mut world, QualityTier::High), (300, full));
         // A cap below the world's cars removes the newest at once; the state reports the cap.
-        world.resource_mut::<CarSim>().set_car_cap(1);
+        world.resource_mut::<CarSim>().set_car_cap(1, 0);
         assert_eq!(world.resource::<CarSim>().sim.car_count(), 1);
         let mut play = serde_json::json!({});
         world.resource::<CarSim>().extend_state(&mut play);
