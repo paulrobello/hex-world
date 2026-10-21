@@ -97,6 +97,35 @@ test("the UASTC encode is single-threaded and byte-identical for identical input
   assert.ok(a.equals(b), "two encodes of one PNG differ");
 });
 
+// Every map is its own --threads 1 process run in parallel; the bytes must match a one-at-a-time run.
+// Five distinct noise maps, so a result written to or reported for the wrong map changes the hashes.
+test("parallel per-map encode is byte-identical to serial", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "kitc-"));
+  await stage(dir);
+  const chans = ["albedo", "normal", "orm", "emissive", "masks"];
+  for (const [k, ch] of chans.entries()) {
+    const raw = Buffer.alloc(256 * 256 * 4);
+    let s = 7 + k * 7919;
+    for (let i = 0; i < raw.length; i++) raw[i] = (s = (s * 1103515245 + 12345) >>> 0) >>> 24;
+    await sharp(raw, { raw: { width: 256, height: 256, channels: 4 } }).png().toFile(join(dir, `t.${ch}.png`));
+  }
+  const runs = {};
+  for (const jobs of [1, 10]) {
+    const out = join(dir, `out-${jobs}`);
+    const rep = await compressDir({ stageDir: dir, outDir: out, reportPath: join(dir, `rep-${jobs}.json`), name: "t", jobs });
+    const files = Object.fromEntries(await Promise.all((await readdir(out)).sort().map(async (f) => [f, await readFile(join(out, f))])));
+    runs[jobs] = { rep, files };
+  }
+  const key = ({ rep }) => rep.textureEncodes.map((o) => [o.channel, o.family, o.sha256, o.bytes]);
+  assert.equal(runs[1].rep.textureEncodes.length, chans.length * 3);
+  assert.deepEqual(runs[1].rep.textureEncodes.map((o) => o.channel),
+    [...chans].sort().flatMap((ch) => [ch, ch, ch]), "report lists maps in file order");
+  assert.deepEqual(key(runs[10]), key(runs[1]));
+  assert.deepEqual(new Set(runs[1].rep.textureEncodes.map((o) => o.sha256)).size, chans.length * 3, "every output distinct");
+  assert.deepEqual(Object.keys(runs[10].files), Object.keys(runs[1].files));
+  for (const [f, b] of Object.entries(runs[1].files)) assert.ok(runs[10].files[f].equals(b), `${f} differs between serial and parallel`);
+});
+
 test("an over-budget piece throws and leaves outDir and the report untouched", async () => {
   const dir = await mkdtemp(join(tmpdir(), "kitc-"));
   await stage(dir);

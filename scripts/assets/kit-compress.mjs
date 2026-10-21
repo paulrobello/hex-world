@@ -1,7 +1,8 @@
 // Stage -> runtime: meshopt GLB (FLOAT attributes, D7) + per-channel UASTC -> BC7/ASTC KTX2 (zstd) + PNG.
-import { execFileSync } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { availableParallelism } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { NodeIO } from "@gltf-transform/core";
@@ -20,6 +21,32 @@ const ktxEnv = {
 };
 export const UASTC_THREADS = 1;
 const ktx = (...args) => execFileSync("ktx", args, { env: ktxEnv, stdio: ["ignore", "pipe", "pipe"] }).toString();
+const ktxAsync = (...args) => new Promise((ok, fail) =>
+  execFile("ktx", args, { env: ktxEnv }, (e, out, err) => (e ? fail(new Error(`ktx ${args[0]} ${args.at(-1)}: ${err || e.message}`)) : ok(out))));
+
+// Runs at most n tasks at once. Every map encode and transcode is its own single-threaded ktx process,
+// so wall time scales with cores while each process keeps the deterministic --threads 1 encode.
+function limiter(n) {
+  let active = 0;
+  const queue = [];
+  const next = () => {
+    if (active >= n || queue.length === 0) return;
+    active++;
+    const { task, ok, fail } = queue.shift();
+    task().then(ok, fail).finally(() => { active--; next(); });
+  };
+  return (task) => new Promise((ok, fail) => { queue.push({ task, ok, fail }); next(); });
+}
+const serial = (task) => task();
+
+// Awaits every promise before throwing the first failure, so no ktx child is still writing into a
+// work dir that the caller removes on error.
+async function settleAll(promises) {
+  const rs = await Promise.allSettled(promises);
+  const bad = rs.find((r) => r.status === "rejected");
+  if (bad) throw bad.reason;
+  return rs.map((r) => r.value);
+}
 
 export async function compressGlb(src, dst) {
   const bytes = await readFile(src);
@@ -52,13 +79,13 @@ export async function compressGlb(src, dst) {
 // min(4, threads) jobs, and with more than one job the same PNG can encode to different bytes
 // (seen under host load). --uastc-rdo-m cannot replace it: libktx 4.4.2 wires that flag to
 // "favor simpler modes" instead of the RDO multithreading switch.
-export async function encodeUastc(png, channel, path) {
+export async function encodeUastc(png, channel, path, run = serial) {
   const c = CHANNELS[channel];
   if (!c) throw new Error(`unknown channel ${channel}`);
   await mkdir(dirname(path), { recursive: true });
-  ktx("create", "--format", c.srgb ? "R8G8B8A8_SRGB" : "R8G8B8A8_UNORM", "--assign-tf", c.srgb ? "srgb" : "linear",
+  await run(() => ktxAsync("create", "--format", c.srgb ? "R8G8B8A8_SRGB" : "R8G8B8A8_UNORM", "--assign-tf", c.srgb ? "srgb" : "linear",
     ...(c.normalize ? ["--normalize"] : []), "--encode", "uastc", "--uastc-quality", "4",
-    "--uastc-rdo", "--uastc-rdo-l", String(c.rdo), "--threads", String(UASTC_THREADS), "--zstd", "18", "--generate-mipmap", png, path);
+    "--uastc-rdo", "--uastc-rdo-l", String(c.rdo), "--threads", String(UASTC_THREADS), "--zstd", "18", "--generate-mipmap", png, path));
   return path;
 }
 
@@ -68,23 +95,22 @@ export function decodeUastc(path, pngOut) {
   return pngOut;
 }
 
-export async function encodeMap(png, channel, outStem) {
+export async function encodeMap(png, channel, outStem, run = serial) {
   const c = CHANNELS[channel];
   if (!c) throw new Error(`unknown channel ${channel}`);
-  const tmp = await encodeUastc(png, channel, `${outStem}.uastc.ktx2`);
-  const outs = [];
-  for (const family of ["bc7", "astc"]) {
+  const tmp = await encodeUastc(png, channel, `${outStem}.uastc.ktx2`, run);
+  const outs = await settleAll(["bc7", "astc"].map(async (family) => {
     const path = `${outStem}.${family}.ktx2`;
-    ktx("transcode", "--target", family, "--zstd", "18", tmp, path);
+    await run(() => ktxAsync("transcode", "--target", family, "--zstd", "18", tmp, path));
     const buf = await readFile(path);
     const h = ktx2Header(buf);
     const want = VK[family][c.srgb ? "srgb" : "linear"];
     if (h.vkFormat !== want) throw new Error(`${path}: vkFormat ${h.vkFormat}, expected ${want} (${channel})`);
     if (h.levels !== fullLevels(h.width, h.height)) throw new Error(`${path}: ${h.levels} mip levels`);
     if (Math.max(h.width, h.height) > 2048) throw new Error(`${path}: ${h.width}x${h.height} > 2048`);
-    outs.push({ channel, family, path, format: `${family.toUpperCase()}_${c.srgb ? "SRGB" : "UNORM"}`,
-      transfer: c.srgb ? "srgb" : "linear", vkFormat: h.vkFormat, levels: h.levels, bytes: buf.length, sha256: sha256(buf) });
-  }
+    return { channel, family, path, format: `${family.toUpperCase()}_${c.srgb ? "SRGB" : "UNORM"}`,
+      transfer: c.srgb ? "srgb" : "linear", vkFormat: h.vkFormat, levels: h.levels, bytes: buf.length, sha256: sha256(buf) };
+  }));
   await rm(tmp);
   const pngOut = `${outStem}.png`;
   await copyFile(png, pngOut);
@@ -97,8 +123,10 @@ export async function encodeMap(png, channel, outStem) {
 // or "hero". Output goes to a sibling temp dir that replaces outDir only after every budget passes,
 // so a failed run leaves outDir and the report untouched. A piece stage (piece, the default) must
 // hold the GLB and export report kit-build writes: without the GLB the swap would replace the
-// shipped GLB with nothing. Material sets have neither.
-export async function compressDir({ stageDir, outDir, reportPath, name, budgetClass = "piece", budgets = KTX_BUDGETS, piece = true }) {
+// shipped GLB with nothing. Material sets have neither. jobs bounds the concurrent ktx processes
+// (default: the core count); the output bytes do not depend on it.
+export async function compressDir({ stageDir, outDir, reportPath, name, budgetClass = "piece", budgets = KTX_BUDGETS, piece = true,
+  jobs = availableParallelism() }) {
   const ktxMax = budgets[budgetClass];
   if (ktxMax === undefined) throw new Error(`${name}: unknown budget class "${budgetClass}" (${Object.keys(budgets)})`);
   const shown = stageDir.startsWith(ROOT + sep) ? relative(ROOT, stageDir) : stageDir;
@@ -107,7 +135,7 @@ export async function compressDir({ stageDir, outDir, reportPath, name, budgetCl
   const work = `${outDir}.tmp-${process.pid}`;
   await rm(work, { recursive: true, force: true });
   try {
-    const report = await compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax });
+    const report = await compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax, jobs });
     await rm(outDir, { recursive: true, force: true });
     await rename(work, outDir);
     await mkdir(dirname(reportPath), { recursive: true });
@@ -119,7 +147,7 @@ export async function compressDir({ stageDir, outDir, reportPath, name, budgetCl
   }
 }
 
-async function compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax }) {
+async function compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax, jobs }) {
   const files = await readdir(stageDir);
   const finalPath = (p) => {
     const q = join(outDir, p.slice(work.length + 1));
@@ -134,13 +162,14 @@ async function compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax 
     report.glb = await compressGlb(join(stageDir, `${name}.glb`), join(work, `${name}.glb`));
     report.budgets.glbBytes = report.glb.bytes;
   }
-  for (const f of files.sort()) {
-    const m = f.match(new RegExp(`^${name}\\.(albedo|normal|orm|emissive|masks)\\.png$`));
-    if (!m) continue;
-    for (const o of await encodeMap(join(stageDir, f), m[1], join(work, `${name}.${m[1]}`))) {
-      report.textureEncodes.push({ ...o, path: finalPath(o.path) });
-      if (o.family !== "png") report.budgets.ktxBytes[o.family] += o.bytes;
-    }
+  const maps = files.sort().map((f) => [f, f.match(new RegExp(`^${name}\\.(albedo|normal|orm|emissive|masks)\\.png$`))?.[1]])
+    .filter(([, ch]) => ch);
+  // A map runs its UASTC encode, then its two transcodes side by side: 2 processes per map at most.
+  const run = limiter(Math.max(1, Math.min(jobs, maps.length * 2)));
+  const encoded = await settleAll(maps.map(([f, ch]) => encodeMap(join(stageDir, f), ch, join(work, `${name}.${ch}`), run)));
+  for (const o of encoded.flat()) {
+    report.textureEncodes.push({ ...o, path: finalPath(o.path) });
+    if (o.family !== "png") report.budgets.ktxBytes[o.family] += o.bytes;
   }
   for (const [fam, b] of Object.entries(report.budgets.ktxBytes))
     if (b > ktxMax) throw new Error(`${name}: ${fam} KTX2 total ${b} B > ${ktxMax} B (${budgetClass} budget)`);
