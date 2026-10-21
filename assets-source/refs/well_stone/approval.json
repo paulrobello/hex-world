@@ -1,0 +1,11 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-20",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/well_stone/ref-1.jpg",
+    "assets-source/refs/well_stone/ref-2.jpg",
+    "assets-source/refs/well_stone/ref-3.jpg"
+  ],
+  "notes": "Owner 2026-10-20: \"stone well refrence approved\" (WL-A1, sheet docs/checkpoints/refs-well/refs-sheet.jpg). WQ1-WQ3 not yet answered; the build follows the recommendations until the owner says otherwise: one well on house_cluster's lawn (farm yard fallback), the covered well (ref-1) as the piece with the open well (ref-2) as a _b variant, about 1.5 m wide, 0.9 m wall, 2.4 m ridge."
+}
