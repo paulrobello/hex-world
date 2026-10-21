@@ -12,7 +12,7 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 ## Resume batch 13
 
 1. Boats do not know the river fork or the tight bend yet (they were written before both). Dispatch an agent that works directly in land-b13: rowing boats pick an outgoing arm at a junction (seeded, arithmetic-only), follow `river_bend_60` inside the channel, count fork and tight-bend tiles as river; tests in `crates/hex-play/src/boats/tests.rs`. Card `01a15bc5283e` (river fork) criterion 2 waits on this.
-2. Then in land-b13: `caffeinate -d -u make thumbs` (river_bend_60 has none), a second thumbs run to compare, `make kit-check`, `make audio-check`, `make checkall-ci`, `make web-smoke`, `make ui-e2e`; commit thumbs, `git merge --ff-only land-b13` on main, `gitleaks git --log-opts="origin/main..main"`, `make build-web`, push (standing approval), watch CI, remove land-b13.
+2. Then in land-b13: `caffeinate -d -u make thumbs` (river_bend_60 has none), a second thumbs run to compare, `make kit-check`, `make audio-check`, `make checkall-ci`, `make web-smoke`, `make ui-e2e`; first `git rebase main` in land-b13 (main has the handoff commit `968012e`), then commit thumbs, `git merge --ff-only land-b13` on main, `gitleaks git --log-opts="origin/main..main"`, `make build-web`, push (standing approval), watch CI, remove land-b13.
 3. Close cards after landing: boats `01a15b8439d1`, buffer stop `01a15b843efb`, river fork `01a15bc5283e`, whistle redo `01a15bdfd55c` (owner approved the retake), and file/close a river bend 60 card.
 
 ## Next asset work
