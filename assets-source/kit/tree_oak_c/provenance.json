@@ -531,7 +531,7 @@
         "assets-source/refs/forest/ref-1.jpg",
         "assets-source/refs/forest/ref-2.jpg"
       ],
-      "notes": "Approved: spruce among oaks, ferns, fallen log. ref-2 sits on a square fragment; tiles are hexagonal. Reviewed from assets-source/refs/contact-sheet.png in chat."
+      "notes": "Approved: spruce among oaks, ferns, fallen log. ref-2 sits on a square fragment; tiles are hexagonal. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
     },
     {
       "gate": "piece",

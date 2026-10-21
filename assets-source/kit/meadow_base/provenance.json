@@ -265,7 +265,7 @@
         "assets-source/refs/meadow_base/ref-1.jpg",
         "assets-source/refs/meadow_base/ref-2.jpg"
       ],
-      "notes": "Blend both: ref-1's layered soil side walls (dark topsoil, red clay, gravel) with ref-2's denser, clumpier grass. Reviewed from assets-source/refs/contact-sheet.png in chat."
+      "notes": "Blend both: ref-1's layered soil side walls (dark topsoil, red clay, gravel) with ref-2's denser, clumpier grass. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
     },
     {
       "who": "Paul Robello",

@@ -2034,6 +2034,19 @@ fn route_errors(id: &str, v: &serde_json::Value) -> Vec<String> {
     }
 }
 
+/// The bake report embedded in provenance may say `skipped: true` only with a `reason` (pieces whose
+/// masks are analytic by design). Without one it is a `HEXW_SKIP_BAKE=1` draft build.
+fn skipped_bake_errors(id: &str, v: &serde_json::Value) -> Vec<String> {
+    let reason = v["bake"]["reason"].as_str().unwrap_or_default().trim();
+    if v["bake"]["skipped"] == true && reason.is_empty() {
+        vec![format!(
+            "{id}: bake report is skipped with no reason, a HEXW_SKIP_BAKE=1 draft; rebuild without it (make kit-build PIECE={id}) before kit-compress and kit-provenance"
+        )]
+    } else {
+        vec![]
+    }
+}
+
 fn check_provenance(kit: &Kit, p: &PieceEntry) -> Vec<String> {
     let path = repo().join(&p.provenance);
     let Ok(text) = std::fs::read_to_string(&path) else {
@@ -2073,6 +2086,7 @@ fn check_provenance(kit: &Kit, p: &PieceEntry) -> Vec<String> {
     }
     e.extend(generator_errors(&p.id, &v));
     e.extend(route_errors(&p.id, &v));
+    e.extend(skipped_bake_errors(&p.id, &v));
     if v["authoringAgent"]["model"] != "claude-opus-5-5" {
         e.push(format!(
             "{}: authoringAgent.model must be claude-opus-5-5 (R3)",
@@ -2085,6 +2099,16 @@ fn check_provenance(kit: &Kit, p: &PieceEntry) -> Vec<String> {
     e.extend(encode_errors(&p.id, &v["compression"]["textureEncodes"]));
     // The provenance must record the class the maps were actually compressed under. A provenance
     // check, so `make kit-provenance` (which skips them until it writes) never needs an early write.
+    // The committed bake report beside it too: a skip-bake rebuild overwrites it even when the
+    // shipped files (and so the provenance hashes) come out unchanged.
+    let bake = path.with_file_name("bake-report.json");
+    if let Some(r) = std::fs::read_to_string(&bake)
+        .ok()
+        .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
+    {
+        let id = format!("{} ({})", p.id, repo_rel(&bake));
+        e.extend(skipped_bake_errors(&id, &serde_json::json!({ "bake": r })));
+    }
     let report = path.with_file_name("compress-report.json");
     if let Some(r) = std::fs::read_to_string(&report)
         .ok()
@@ -3072,6 +3096,63 @@ fn interactive_route_requires_a_blend_ref_matching_the_bake() {
     assert!(route_errors("t", &serde_json::json!({"route": "scripted"})).is_empty());
 }
 
+/// A `HEXW_SKIP_BAKE=1` build writes `skipped: true` with no `reason` and is a draft, never a final
+/// artifact. Pieces with no Cycles bake by design (analytic masks) say why in `reason` and pass.
+#[test]
+fn gate_rejects_a_skip_bake_draft() {
+    let has = |v: &serde_json::Value, want: &str| {
+        let e = skipped_bake_errors("t", v);
+        assert!(e.iter().any(|m| m.contains(want)), "want {want:?} in {e:?}");
+    };
+    has(
+        &serde_json::json!({"bake": {"skipped": true}}),
+        "HEXW_SKIP_BAKE",
+    );
+    has(
+        &serde_json::json!({"bake": {"skipped": true, "reason": " "}}),
+        "HEXW_SKIP_BAKE",
+    );
+    for ok in [
+        serde_json::json!({"bake": {"skipped": false}}),
+        serde_json::json!({"bake": {"device": "CPU"}}),
+        serde_json::json!({"bake": {"skipped": true, "reason": "analytic masks: no bake"}}),
+    ] {
+        assert_eq!(skipped_bake_errors("t", &ok), Vec::<String>::new(), "{ok}");
+    }
+    // Through the piece check: the fixture's provenance with its bake marked skipped fails.
+    let (k, mut p) = fixture();
+    let dir = temp("skipbake");
+    let tmp = dir.join("provenance.json");
+    let mut v: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(repo().join(&p.provenance)).unwrap())
+            .unwrap();
+    v["bake"]["skipped"] = true.into();
+    std::fs::write(&tmp, v.to_string()).unwrap();
+    p.provenance = tmp.to_string_lossy().into_owned();
+    assert!(
+        check_provenance(&k, &p)
+            .iter()
+            .any(|m| m.contains("HEXW_SKIP_BAKE")),
+        "{:?}",
+        check_provenance(&k, &p)
+    );
+    // A clean provenance beside a committed bake report from a later skip-bake rebuild fails too.
+    v["bake"]["skipped"] = false.into();
+    std::fs::write(&tmp, v.to_string()).unwrap();
+    std::fs::write(
+        dir.join("bake-report.json"),
+        serde_json::json!({"skipped": true}).to_string(),
+    )
+    .unwrap();
+    assert!(
+        check_provenance(&k, &p)
+            .iter()
+            .any(|m| m.contains("bake-report.json") && m.contains("HEXW_SKIP_BAKE")),
+        "{:?}",
+        check_provenance(&k, &p)
+    );
+}
+
 #[test]
 fn gate_requires_approved_references_for_real_pieces() {
     let (mut k, mut p) = fixture();
@@ -4039,4 +4120,146 @@ fn animal_pieces_carry_motion_data_in_every_lod() {
     }
     assert_eq!(seen, animal::RIGS.len());
     fail(e);
+}
+
+/// Paths cited in a provenance or approval record's strings that are not committed evidence: any
+/// `target/` or `e2e/test-results/` path anywhere in the record, and, in the approval notes, a repo
+/// path (one starting with a tracked top-level directory) that names no tracked file or directory.
+/// Patterns (`<id>`, `{a,b}`, `*`) are not checked.
+fn citation_errors(src: &str, v: &serde_json::Value, tracked: &BTreeSet<String>) -> Vec<String> {
+    fn strings<'a>(v: &'a serde_json::Value, in_approvals: bool, out: &mut Vec<(&'a str, bool)>) {
+        match v {
+            serde_json::Value::String(s) => out.push((s, in_approvals)),
+            serde_json::Value::Array(a) => a.iter().for_each(|x| strings(x, in_approvals, out)),
+            serde_json::Value::Object(o) => o
+                .iter()
+                .for_each(|(k, x)| strings(x, in_approvals || k == "approvals", out)),
+            _ => {}
+        }
+    }
+    let tops: BTreeSet<&str> = tracked
+        .iter()
+        .filter_map(|f| f.split_once('/'))
+        .map(|(t, _)| t)
+        .collect();
+    let is_tracked = |t: &str| {
+        let dir = format!("{}/", t.trim_end_matches('/'));
+        tracked.contains(t)
+            || tracked
+                .range(dir.clone()..)
+                .next()
+                .is_some_and(|f| f.starts_with(&dir))
+    };
+    let mut found = vec![];
+    // An approval record on its own (approval.json, approvals.json) is all approval notes.
+    let whole = v.get("approvals").is_none() && (v.is_array() || v.get("gate").is_some());
+    strings(v, whole, &mut found);
+    let mut e = vec![];
+    for (s, in_approvals) in found {
+        let tokens = s.split(|c: char| !(c.is_ascii_alphanumeric() || "_./*{}<>-".contains(c)));
+        for t in tokens
+            .map(|t| t.trim_end_matches('.'))
+            .filter(|t| t.contains('/'))
+        {
+            if t.starts_with("target/") || t.starts_with("e2e/test-results/") {
+                e.push(format!("{src}: cites {t}, which is never committed (cite the committed file or drop the claim)"));
+            } else if in_approvals
+                && !t.contains(['*', '{', '}', '<', '>'])
+                && t.split_once('/').is_some_and(|(top, _)| tops.contains(top))
+                && !is_tracked(t)
+            {
+                e.push(format!("{src}: cites {t}, which is not a committed file"));
+            }
+        }
+    }
+    e
+}
+
+/// Every provenance, piece approvals.json and reference approval.json cites only committed
+/// evidence (`citation_errors`). Reads the tracked file list from git.
+#[test]
+fn provenance_notes_cite_only_committed_files() {
+    let out = std::process::Command::new("git")
+        .args(["ls-files", "-z"])
+        .current_dir(repo())
+        .output()
+        .expect("git ls-files (the citation check needs the tracked file list)");
+    assert!(out.status.success(), "git ls-files failed");
+    let tracked: BTreeSet<String> = String::from_utf8_lossy(&out.stdout)
+        .split('\0')
+        .filter(|f| !f.is_empty())
+        .map(String::from)
+        .collect();
+    let records: Vec<&String> = tracked
+        .iter()
+        .filter(|f| {
+            let name = f.rsplit('/').next().unwrap_or_default();
+            (f.starts_with("assets-source/kit/")
+                && (name == "provenance.json" || name == "approvals.json"))
+                || (f.starts_with("assets-source/refs/") && name == "approval.json")
+                || (f.starts_with("crates/hex-render/tests/fixtures/kit/")
+                    && name == "provenance.json")
+        })
+        .collect();
+    assert!(records.len() > 100, "found only {} records", records.len());
+    let mut e = vec![];
+    for f in records {
+        let v: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(repo().join(f)).unwrap()).unwrap();
+        e.extend(citation_errors(f, &v, &tracked));
+    }
+    fail(e);
+}
+
+#[test]
+fn citations_must_be_committed_files() {
+    let tracked: BTreeSet<String> = [
+        "docs/checkpoints/a/shot.jpg",
+        "scripts/refs/contact-sheet.mjs",
+        "assets-source/refs/x/ref-1.jpg",
+    ]
+    .map(String::from)
+    .into();
+    let errs = |s: &str| {
+        citation_errors(
+            "t",
+            &serde_json::json!({"approvals": [{"notes": s}]}),
+            &tracked,
+        )
+    };
+    for ok in [
+        "Approved from docs/checkpoints/a/shot.jpg and docs/checkpoints/a/.",
+        "Reviewed in chat on a contact sheet (scripts/refs/contact-sheet.mjs).",
+        "Review assets-source/kit/<id>/renders/ later.",
+        "No paths at all, 1.5 m/s and a/b.",
+    ] {
+        assert_eq!(errs(ok), Vec::<String>::new(), "{ok}");
+    }
+    for (bad, want) in [
+        (
+            "Lossless at `target/shots/kit-tree.png`.",
+            "target/shots/kit-tree.png",
+        ),
+        (
+            "See e2e/test-results/web-kit.png",
+            "e2e/test-results/web-kit.png",
+        ),
+        (
+            "Reviewed from assets-source/refs/contact-sheet.png in chat.",
+            "assets-source/refs/contact-sheet.png",
+        ),
+    ] {
+        let e = errs(bad);
+        assert!(e.iter().any(|m| m.contains(want)), "want {want:?} in {e:?}");
+    }
+    // A target/ path anywhere in the record fails, not only in approval notes.
+    let e = citation_errors(
+        "t",
+        &serde_json::json!({"bake": {"evidence": "target/kit-stage/x.png"}}),
+        &tracked,
+    );
+    assert!(
+        e.iter().any(|m| m.contains("target/kit-stage/x.png")),
+        "{e:?}"
+    );
 }

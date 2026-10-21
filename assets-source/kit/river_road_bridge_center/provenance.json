@@ -251,7 +251,7 @@
         "assets-source/refs/river_road_bridge/ref-1.jpg",
         "assets-source/refs/river_road_bridge/ref-2.jpg"
       ],
-      "notes": "Approved: stone arch road bridge crossing the river at 60 degrees. Reviewed from assets-source/refs/contact-sheet.png in chat."
+      "notes": "Approved: stone arch road bridge crossing the river at 60 degrees. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
     },
     {
       "gate": "piece",

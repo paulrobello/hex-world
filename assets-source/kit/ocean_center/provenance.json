@@ -172,7 +172,7 @@
         "assets-source/refs/ocean/ref-1.jpg",
         "assets-source/refs/ocean/ref-2.jpg"
       ],
-      "notes": "Approved. ref-2's close-up shows a near-90 degree corner and a blue-tinted seabed; the tile is hexagonal per the kit contract. Reviewed from assets-source/refs/contact-sheet.png in chat."
+      "notes": "Approved. ref-2's close-up shows a near-90 degree corner and a blue-tinted seabed; the tile is hexagonal per the kit contract. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
     },
     {
       "who": "Paul Robello",

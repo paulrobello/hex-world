@@ -10,7 +10,7 @@ import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { CHANNELS, sha256 } from "./kit-lib.mjs";
+import { CHANNELS, kitItemDir, sha256 } from "./kit-lib.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const read = async (p) => JSON.parse(await readFile(p, "utf8"));
@@ -94,9 +94,15 @@ export async function assembleProvenance({ id, material = false, source, runtime
   // R1: an interactive piece without its .blend reference is refused, never written.
   if (route === "interactive" && !blend) throw new Error(`${id}: route interactive needs --blend (the high-poly in the blend store)`);
   const bk = await read(join(src, "bake-report.json"));
+  // A HEXW_SKIP_BAKE=1 build is a draft. Pieces with no Cycles bake by design say why in `reason`.
+  if (bk.skipped === true && !String(bk.reason ?? "").trim())
+    throw new Error(`${id}: bake report is skipped with no reason (a HEXW_SKIP_BAKE=1 draft); rebuild without HEXW_SKIP_BAKE, then kit-compress`);
   const cmp = await read(join(src, "compress-report.json"));
   checkTransfers(id, cmp.textureEncodes);
-  const derived = [await file(join(rt, `p1/${id}/${id}.glb`))];
+  // The GLB the manifest ships (or, before the entry exists, where its siblings' layout puts it).
+  const manifest = await read(join(rt, "manifest.json"));
+  const glb = manifest.pieces.find((p) => p.id === id)?.glb ?? `${kitItemDir(manifest, "piece", id)}/${id}.glb`;
+  const derived = [await file(join(rt, glb))];
   for (const t of cmp.textureEncodes) derived.push(await file(resolve(ROOT, t.path)));
   let references = [];
   const approvals = [];

@@ -6,5 +6,5 @@
     "assets-source/refs/river/ref-1.jpg",
     "assets-source/refs/river/ref-2.jpg"
   ],
-  "notes": "Approved: channel cut below the meadow surface, natural banks, water column on the cut face. Reviewed from assets-source/refs/contact-sheet.png in chat."
+  "notes": "Approved: channel cut below the meadow surface, natural banks, water column on the cut face. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
 }

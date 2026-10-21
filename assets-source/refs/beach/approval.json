@@ -6,5 +6,5 @@
     "assets-source/refs/beach/ref-1.jpg",
     "assets-source/refs/beach/ref-2.jpg"
   ],
-  "notes": "Approved: grass, dry sand, wet band, surf foam, water column on the cut side. Reviewed from assets-source/refs/contact-sheet.png in chat."
+  "notes": "Approved: grass, dry sand, wet band, surf foam, water column on the cut side. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
 }

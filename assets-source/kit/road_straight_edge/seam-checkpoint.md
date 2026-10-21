@@ -3,18 +3,15 @@
 Prepared by the authoring agent (claude-code / claude-opus-5-5) on 2026-10-13. No approval is recorded. The controller presents these files to the owner.
 
 ## Files to review
+Only the Blender renders are committed. The in-engine shots and crops the owner reviewed were local output and were not kept; regenerate the shots with the commands below (the crops were cut from them by hand).
+
 | What | Path |
 |---|---|
-| Native seam close-up (1600×1000) | `target/shots/kit-seam-closeup.png` |
-| Web seam close-up (1280×800) | `e2e/test-results/web-kit-seam-closeup.png` |
-| Native overview | `target/shots/kit-overview.png` |
-| Web overview | `e2e/test-results/web-kit-overview.png` |
-| Center piece, three-quarter render | `assets-source/kit/road_straight_center/renders/three_quarter.jpg` (lossless: `target/kit-renders/road_straight_center/three_quarter.png`) |
-| Edge piece, three-quarter render | `assets-source/kit/road_straight_edge/renders/three_quarter.jpg` (lossless: `target/kit-renders/road_straight_edge/three_quarter.png`) |
-| 4× crops of the joint at x = 13.856 | `target/shots/seam-crops/{native,web}-{crown-dash,kerb-near,verge-meadow-near,kerb-verge-far}-4x.png` |
-| Verge choice (C7) | `target/shots/seam-crops/ref1-verge-crop.png` against `target/shots/seam-crops/native-verge-crop.png` |
-| Kerb shadow fix, before / after / rejected | `target/shots/seam-crops/k1-{before,after,rejected-depthbias0.2}-kerb-{wall,contact}-4x.png` |
-| Diagnostic from the first round, shadows off | `target/shots/seam-crops/closeup-noshadow.png`, `target/shots/seam-crops/kerb4x-ns.png` |
+| Native seam close-up (1600×1000) and overview | not committed: `make shots-kit` (`kit-seam-closeup`, `kit-overview`) |
+| Web seam close-up (1280×800) and overview | not committed: `make web-shots-kit` |
+| Center piece, three-quarter render | `assets-source/kit/road_straight_center/renders/three_quarter.jpg` |
+| Edge piece, three-quarter render | `assets-source/kit/road_straight_edge/renders/three_quarter.jpg` |
+| 4× crops of the joint at x = 13.856, the verge choice (C7), the kerb shadow fix and the shadows-off diagnostic | not committed (crops of the shots above) |
 
 Fix round 1 regenerated every shot and crop. The 1-minute host load was 14.64 before and 13.95 after the native run, and 13.69 before and 13.07 after the web run. Runs whose after-reading exceeded 15 were discarded and rerun.
 
@@ -26,7 +23,7 @@ The crop boxes come from projecting the joint (x = 13.856) through the `scripts/
 - **Kerbs (kerb-near, kerb-verge-far).** The kerb top is continuous, with luminance 171.1-171.2 on all four samples across the joint (near) and 167.7-170.0 (far). There is no gap or step.
 - **Verge and meadow contact (verge-meadow-near).** The verge grass and the meadow grass use the same world-space grass set, and the verge slope runs into the cap below it. The contact line is not visible at 4×, and there is no crack.
 - **Web against native.** The web crops match the native ones: same texture phase, same dashes, same kerb.
-- **Kerb walls are clean.** The first round showed a sawtooth shadow-acne band on the sun-facing kerb walls. It came from the kit's first shadow cascade reaching 120 m, which makes a shadow texel about 0.1 m, close to the 0.12 m kerb height. Fix round 1 ends the kit scenario's first cascade at 25 m (`lookdev::KIT_FIRST_CASCADE_FAR_BOUND`) and keeps Bevy's default bias (depth 0.02, normal 1.8). Luminance along the wall now varies by a standard deviation of 0.46, against 3.36 before. The kerb also casts a visible 3 cm contact shadow on the asphalt, attached to its base (`k1-after-kerb-contact-4x.png`); before the change it cast none. Raising the depth bias to 0.2 at 120 m also removed the band, but it detached that contact shadow (`k1-rejected-depthbias0.2-*`), so I rejected it. The P0 scenarios keep the 120 m cascade.
+- **Kerb walls are clean.** The first round showed a sawtooth shadow-acne band on the sun-facing kerb walls. It came from the kit's first shadow cascade reaching 120 m, which makes a shadow texel about 0.1 m, close to the 0.12 m kerb height. Fix round 1 ends the kit scenario's first cascade at 25 m (`lookdev::KIT_FIRST_CASCADE_FAR_BOUND`) and keeps Bevy's default bias (depth 0.02, normal 1.8). Luminance along the wall now varies by a standard deviation of 0.46, against 3.36 before. The kerb also casts a visible 3 cm contact shadow on the asphalt, attached to its base; before the change it cast none. Raising the depth bias to 0.2 at 120 m also removed the band, but it detached that contact shadow, so I rejected it. The P0 scenarios keep the 120 m cascade.
 
 ## Profile and future bends (C1)
 `scripts/blender/kit/_road.py` holds one cross-section, `PROFILE`, as (t, z) points. It is identical in every LOD and every piece, and mirror-symmetric about t = 0:

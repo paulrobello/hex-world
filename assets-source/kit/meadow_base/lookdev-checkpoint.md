@@ -9,16 +9,10 @@ Every shot below uses the fix-round-1 engine state:
 
 Each shot run had host load ≤ 15 before and after.
 
+None of the shots below were committed: they were local output, and the commands named in each section regenerate them.
+
 ## 1. The nine look-dev PNGs (`make shots-lookdev`, real meadow, load 13.45 before and 11.91 after)
-- target/shots/lookdev-agx-kit-overview.png
-- target/shots/lookdev-agx-kit-seam-closeup.png
-- target/shots/lookdev-agx-kit-tree.png
-- target/shots/lookdev-tony-kit-overview.png
-- target/shots/lookdev-tony-kit-seam-closeup.png
-- target/shots/lookdev-tony-kit-tree.png
-- target/shots/lookdev-aces-kit-overview.png
-- target/shots/lookdev-aces-kit-seam-closeup.png
-- target/shots/lookdev-aces-kit-tree.png
+`kit-overview`, `kit-seam-closeup` and `kit-tree` under each of AgX, TonyMcMapface and ACES.
 
 Measured cap colour in kit-overview (sRGB, mean over a 300×200 region of the cap):
 
@@ -37,21 +31,21 @@ The tree shots show meadow only, because the road and tree pieces are not author
 ## 2. Exposure sweep (AgX, the default tonemap)
 Rendered with `make shots-kit ARGS="--ev100 <v>"`.
 
-| EV100 | Overview | Seam closeup | Cap colour (R, G, B) |
-|---|---|---|---|
-| 11.5 | target/shots/ev-sweep/agx-ev11.5-kit-overview.png | target/shots/ev-sweep/agx-ev11.5-kit-seam-closeup.png | (152, 178, 125): still pale |
-| **12.5 (chosen)** | target/shots/ev-sweep/agx-ev12.5-kit-overview.png | target/shots/ev-sweep/agx-ev12.5-kit-seam-closeup.png | (121, 147, 95): matches the references' brightness |
-| 13.3 | target/shots/ev-sweep/agx-ev13.3-kit-overview.png | target/shots/ev-sweep/agx-ev13.3-kit-seam-closeup.png | (96, 123, 69): darker than both references |
+| EV100 | Cap colour (R, G, B) in kit-overview |
+|---|---|
+| 11.5 | (152, 178, 125): still pale |
+| **12.5 (chosen)** | (121, 147, 95): matches the references' brightness |
+| 13.3 | (96, 123, 69): darker than both references |
 
-For comparison, the previous default (Bevy's EV100 9.7, the old sun) rendered the cap at (206, 225, 184), near white: target/shots/acceptance-before-fix1/kit-overview.png.
+For comparison, the previous default (Bevy's EV100 9.7, the old sun) rendered the cap at (206, 225, 184), near white.
 
 Owner decision: confirm 12.5, or choose another value. Any value can be previewed with `--ev100 <v>` or `?ev100=<v>`.
 
 ## 3. Hook shots (`make shots-kit ARGS="--kit_hooks <h>"`, at EV100 12.5)
-- target/shots/acceptance/kit-hooks-snow.png: the cap turns white (205, 206, 207) and the soil skirt keeps its strata. With the cap white, the meadow swell and the 2 m border falloff read as faint soft creases near the tile edges. This is geometry shading, not a crack.
-- target/shots/acceptance/kit-hooks-wet.png: the cap darkens to (109, 130, 78), from (126, 146, 97) dry.
-- target/shots/acceptance/kit-hooks-night.png: identical to the plain shot, with no emission, because masks B = 0 on the meadow.
-- Plain baseline: target/shots/acceptance/kit-overview.png.
+- Snow: the cap turns white (205, 206, 207) and the soil skirt keeps its strata. With the cap white, the meadow swell and the 2 m border falloff read as faint soft creases near the tile edges. This is geometry shading, not a crack.
+- Wet: the cap darkens to (109, 130, 78), from (126, 146, 97) dry.
+- Night: identical to the plain shot, with no emission, because masks B = 0 on the meadow.
+- Plain baseline: `make shots-kit` with no hooks.
 
 ## 4. Texel density (from assets-source/kit/meadow_base/provenance.json)
 - Unique masks: `texelDensityPxPerM` = min 31.85, median 31.99, max 32.00 px/m. D2 targets 32 px/m.
@@ -72,7 +66,7 @@ Owner decision: keep masks.A as AO, which costs no extra texture under the B5 fr
 2. **Three clamped sun texels** in `noon.specular.ktx2` (float16 overflow, recorded in lookdev.json). The meadow is rough (grass ORM G 0.80–0.91, soil 0.85–0.95), so no sparkle shows on it. Smooth surfaces such as the wet hook (roughness 0.12) and later roads may still sparkle.
 3. **HDRI sun vs. directional light: resolved.** The kit DirectionalLight now shines along −(0.553, 0.742, 0.379), the HDRI sun direction. P0 scenarios keep their light at (200, 400, 150).
    - Shadows still render: kit-state reports `shadows: true`, 4 cascades, and draws in every cascade's shadow pass.
-   - Before: target/shots/acceptance-before-fix1/kit-overview.png (old light, EV 9.7). After: target/shots/acceptance/kit-overview.png. The exposure also changed between the two, so this pair shows the combined change. On the meadow the light change alone is subtle, because the cap is nearly flat and there are no props to cast shadows yet.
+   - Before (old light, EV 9.7) and after shots of kit-overview were compared; the exposure also changed between the two, so that pair showed the combined change. On the meadow the light change alone is subtle, because the cap is nearly flat and there are no props to cast shadows yet.
 
 ## 8. Other things for the owner to see
 - The soil strata repeat twice down each 4 m skirt, because D2 fixes tileM at 2.0 m. Ref-1 shows one set of bands. To keep a single set, raise soil tileM to 4.0 (256 px/m on walls).

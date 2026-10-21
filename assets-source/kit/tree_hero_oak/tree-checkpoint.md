@@ -4,17 +4,17 @@ Prepared for the owner's re-approval after the P2 polish of the approved solid-d
 
 ## Screenshots (before left, after right; native, 1600x1000)
 
-| What | Committed | Lossless |
-|---|---|---|
-| About 8 m from the crown edge | `renders/p2_dome8m-none.jpg` | `target/oak-p2/cmp/dome8m-none.png` |
-| Same, after only, sharp (`--tilt off`: the default tilt-shift blurs every close-up) | `renders/p2_dome8m-sharp.jpg` | `target/oak-p2/sharp/oak-dome8m.png` |
-| `kit-tree` camera (8.8 m from the trunk, inside the crown) | `renders/p2_close8m-none.jpg` | `target/oak-p2/cmp/close8m-none.png` |
-| Low angle, limbs under the crown | `renders/p2_under-none.jpg` | `target/oak-p2/cmp/under-none.png` |
-| Mid (about 27 m) and strategic (about 70 m) | `renders/p2_mid-none.jpg`, `renders/p2_strategic-none.jpg` | `target/oak-p2/cmp/` |
-| Snow hook (`--kit_hooks snow`) | `renders/p2_dome8m-snow.jpg`, `renders/p2_under-snow.jpg` | `target/oak-p2/cmp/` |
-| Night hook (`--kit_hooks night`) | `renders/p2_dome8m-night.jpg` | `target/oak-p2/cmp/` |
-| LOD1 at 159 m and LOD2 at 411 m (just past the 400 m switch), 4x crops | `renders/p2_lod1-crop.jpg`, `renders/p2_lod2-crop.jpg` | `target/oak-p2/cmp/` |
-| Blender six-view (untextured evidence) | `renders/{front,back,left,right,top,three_quarter}.jpg` | `target/kit-renders/tree_hero_oak/` |
+| What | Committed |
+|---|---|
+| About 8 m from the crown edge | `renders/p2_dome8m-none.jpg` |
+| Same, after only, sharp (`--tilt off`: the default tilt-shift blurs every close-up) | `renders/p2_dome8m-sharp.jpg` |
+| `kit-tree` camera (8.8 m from the trunk, inside the crown) | `renders/p2_close8m-none.jpg` |
+| Low angle, limbs under the crown | `renders/p2_under-none.jpg` |
+| Mid (about 27 m) and strategic (about 70 m) | `renders/p2_mid-none.jpg`, `renders/p2_strategic-none.jpg` |
+| Snow hook (`--kit_hooks snow`) | `renders/p2_dome8m-snow.jpg`, `renders/p2_under-snow.jpg` |
+| Night hook (`--kit_hooks night`) | `renders/p2_dome8m-night.jpg` |
+| LOD1 at 159 m and LOD2 at 411 m (just past the 400 m switch), 4x crops | `renders/p2_lod1-crop.jpg`, `renders/p2_lod2-crop.jpg` |
+| Blender six-view (untextured evidence) | `renders/{front,back,left,right,top,three_quarter}.jpg` |
 
 Shot script: `assets-source/kit/tree_hero_oak/shots/oak-p2.json`.
 
@@ -29,7 +29,7 @@ Shot script: `assets-source/kit/tree_hero_oak/shots/oak-p2.json`.
 ## Budgets
 
 | Item | Budget | Actual |
-|---|---|---|
+|---|---|
 | LOD0 / LOD1 / LOD2 triangles | ≤ 3,000 / ≤ 50% / ≤ 15% | 2,988 / 1,476 (49.4%) / 440 (14.7%) |
 | LOD0 split (bark / canopy shells / fringe) | | 941 / 1,893 / 154 |
 | Texel density, per material | ≥ 256 px/m median each | bark 531 (tile, K = 18), canopy 267, fringe 392 |
@@ -48,16 +48,16 @@ Prepared for the owner's review after the solid-dome canopy pass. Nothing here r
 
 | What | Path |
 |---|---|
-| Side by side with ref-1: EEVEE high-poly showcase | `target/shots/tree-vs-ref1-showcase.png`, committed `renders/vs_ref1_showcase.jpg` |
-| Side by side with ref-1: in-engine overview crop | `target/shots/tree-vs-ref1-engine.png`, committed `renders/vs_ref1_engine.jpg` |
-| Side by side with ref-1: in-engine low-angle underside | `target/shots/tree-vs-ref1-under.png`, committed `renders/vs_ref1_under.jpg` |
-| Side by side with ref-1: in-engine close-up at gameplay zoom (new `kit-tree-game`, about 27 m) | `target/shots/tree-vs-ref1-game.png`, committed `renders/vs_ref1_game.jpg` |
-| In-engine native shots | `target/shots/kit-{overview,tree,tree-under,tree-game,lod1,lod2}.png` |
-| Web (WebGPU) versions | `e2e/test-results/web-kit-{overview,tree,tree-under,tree-game,lod1,lod2}.png` |
-| LOD crops (zoomed) | `target/live/{kit,web-kit}-lod{1,2}-crop.png` |
+| Side by side with ref-1: EEVEE high-poly showcase | `renders/vs_ref1_showcase.jpg` |
+| Side by side with ref-1: in-engine overview crop | `renders/vs_ref1_engine.jpg` |
+| Side by side with ref-1: in-engine low-angle underside | `renders/vs_ref1_under.jpg` |
+| Side by side with ref-1: in-engine close-up at gameplay zoom (new `kit-tree-game`, about 27 m) | `renders/vs_ref1_game.jpg` |
+| In-engine native shots | not committed: `make shots-kit` |
+| Web (WebGPU) versions | not committed: `make web-shots-kit` |
+| LOD crops (zoomed) | not committed (crops of the `kit-lod1` and `kit-lod2` shots) |
 | Blender six-view (untextured evidence) | `assets-source/kit/tree_hero_oak/renders/{front,back,left,right,top,three_quarter}.jpg` |
-| EEVEE showcase of the high poly (live session, key/fill/rim + noon HDRI) | `target/shots/tree-highpoly-live.png`, committed `renders/highpoly_showcase.jpg` |
-| Wind U / V debug | `target/shots/tree-wind-{u,v}.png`, committed `renders/wind_{u,v}.jpg` |
+| EEVEE showcase of the high poly (live session, key/fill/rim + noon HDRI) | `renders/highpoly_showcase.jpg` |
+| Wind U / V debug | `renders/wind_{u,v}.jpg` |
 
 In-engine shots use the kit defaults (ACES fitted, `KIT_EV100 = 12.5`, `IBL_INTENSITY = 1500`); kit LODs switch at 150 m and 400 m. The black background in the low-angle shots is the kit scene's clear colour.
 
@@ -75,7 +75,7 @@ In-engine shots use the kit defaults (ACES fitted, `KIT_EV100 = 12.5`, `IBL_INTE
 ## Budgets
 
 | Item | Budget | Actual |
-|---|---|---|
+|---|---|
 | LOD0 / LOD1 / LOD2 triangles | ≤ 3,000 / ≤ 50% / ≤ 15% | 2,981 / 1,472 (49.4%) / 436 (14.6%) |
 | LOD0 split (bark / canopy shells / fringe) | | 847 / 1,980 (11 x 180) / 154 |
 | LOD2 | | shells decimated to about 22 tris each (a faceted lump per clump), every 4th fringe card at 1.5x, bark decimated |

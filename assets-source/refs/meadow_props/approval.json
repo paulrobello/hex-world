@@ -6,5 +6,5 @@
     "assets-source/refs/meadow_props/ref-1.jpg",
     "assets-source/refs/meadow_props/ref-2.jpg"
   ],
-  "notes": "Approved: wildflower clumps (same species and colours) and rocks partly buried in the turf. Reviewed from assets-source/refs/contact-sheet.png in chat."
+  "notes": "Approved: wildflower clumps (same species and colours) and rocks partly buried in the turf. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
 }

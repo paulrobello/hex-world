@@ -280,7 +280,7 @@
         "assets-source/refs/house_cluster/ref-1.jpg",
         "assets-source/refs/house_cluster/ref-2.jpg"
       ],
-      "notes": "Approved, including the timber-framed English cottage style (owner, in chat). Reviewed from assets-source/refs/contact-sheet.png in chat."
+      "notes": "Approved, including the timber-framed English cottage style (owner, in chat). Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
     },
     {
       "gate": "piece",

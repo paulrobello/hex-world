@@ -56,7 +56,7 @@ ui-lint: $(UI_NPM)
 	cd $(UI) && ./node_modules/.bin/biome check .
 
 ui-test:
-	node --test "$(UI)/test/*.test.ts" "scripts/web/*.test.mjs" scripts/assets/kit-provenance.test.mjs scripts/shots/run.test.mjs
+	node --test "$(UI)/test/*.test.ts" "scripts/web/*.test.mjs" scripts/assets/kit-provenance.test.mjs scripts/assets/kit-lib.test.mjs scripts/shots/run.test.mjs
 
 ui-check: ui-typecheck ui-lint ui-test ui-build
 
@@ -668,7 +668,7 @@ shots-wet-band:
 # and asserts the dumps (check.mjs: birds per land tile, bird slots and fish, fish per region and river
 # group sizes, each region's palette, the boid pieces loaded, roosts, roosting, river groups in the
 # joined region and fish crossing the fan, which the fixed clock's fish track reads back from the GPU).
-BOIDS_SHOTS = boids-01-flock boids-02-roost boids-02-roost-close boids-03-fish-ocean boids-04-fish-river boids-04-fish-river-close boids-04-fish-river-play boids-07-settle boids-07-flap-close boids-10-mouth-fan boids-11-mouth-river
+BOIDS_SHOTS = boids-01-flock boids-02-roost boids-02-roost-close boids-03-fish-ocean boids-04-fish-river boids-04-fish-river-close boids-04-fish-river-play boids-07-settle boids-07-flap-close boids-10-mouth-fan boids-11-mouth-river boids-15-mouth-l-fan boids-15-mouth-l-side boids-15-mouth-l-wide
 BOIDS_DOCS = docs/checkpoints/boids
 shots-boids:
 	mkdir -p target/shots $(BOIDS_DOCS)

@@ -9,7 +9,7 @@ import { EXTMeshoptCompression } from "@gltf-transform/extensions";
 import { reorder } from "@gltf-transform/functions";
 import { MeshoptEncoder } from "meshoptimizer";
 import validator from "gltf-validator";
-import { CHANNELS, GLB_MAX, KTX_BUDGETS, VK, fullLevels, ktx2Header, sha256 } from "./kit-lib.mjs";
+import { CHANNELS, GLB_MAX, KTX_BUDGETS, VK, fullLevels, kitItemDir, ktx2Header, ktxPlatformError, sha256 } from "./kit-lib.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const KTX = join(ROOT, "tools/ktx-4.4.2");
@@ -143,6 +143,11 @@ async function compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax 
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const platformError = ktxPlatformError(process.platform, process.arch);
+  if (platformError) {
+    console.error(`kit-compress: ${platformError}`);
+    process.exit(1);
+  }
   const [kind, name, ...rest] = process.argv.slice(2);
   const opt = (k, d) => { const i = rest.indexOf(`--${k}`); return i >= 0 ? rest[i + 1] : d; };
   const sub = kind === "material" ? `materials/${name}` : name;
@@ -160,8 +165,11 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   }
   let rep;
   try {
+    // Default output: the item's folder under assets/kit as the runtime manifest lays it out.
+    const out = opt("out") ?? join("assets/kit",
+      kitItemDir(JSON.parse(await readFile(join(ROOT, "assets/kit/manifest.json"), "utf8")), kind, name));
     rep = await compressDir({ name, budgetClass, stageDir, piece: kind === "piece",
-      outDir: resolve(ROOT, opt("out", `assets/kit/p1/${sub}`)),
+      outDir: resolve(ROOT, out),
       reportPath: resolve(ROOT, opt("report", `assets-source/kit/${sub}/compress-report.json`)) });
   } catch (e) {
     console.error(`kit-compress: ${e.message}`);

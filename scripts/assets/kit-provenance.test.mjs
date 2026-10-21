@@ -21,7 +21,8 @@ async function stage({ approval = true, maskTransfer = "linear", inManifest = tr
   await mkdir(src, { recursive: true });
   await mkdir(refs, { recursive: true });
   await writeFile(join(runtime, "p1/pc/pc.glb"), "glb-bytes");
-  await writeFile(join(runtime, "manifest.json"), JSON.stringify({ version: 1, materials: {}, pieces: inManifest ? [{ id: "pc" }] : [] }));
+  await writeFile(join(runtime, "manifest.json"), JSON.stringify({ version: 1, materials: {},
+    pieces: [inManifest ? { id: "pc", glb: "p1/pc/pc.glb" } : { id: "other", glb: "p1/other/other.glb" }] }));
   const masks = join(runtime, "p1/pc/pc.masks.png");
   await writeFile(masks, "png-bytes");
   const w = (p, v) => writeFile(p, JSON.stringify(v));
@@ -128,6 +129,42 @@ test("validation.pass is refused for a piece the gate cannot see (not in the run
     await assert.rejects(assembleProvenance(opts), /not in .*manifest\.json/);
     const p = await assembleProvenance({ ...opts, validated: undefined });
     assert.equal(p.validation.pass, false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+// The GLB comes from where the runtime manifest puts it, never a hard-coded p1/<id> guess.
+test("the derived GLB path follows the runtime manifest, and an underivable layout is a clear error", async () => {
+  const { dir, opts } = await stage();
+  try {
+    const rt = opts.runtime;
+    await mkdir(join(rt, "p9/pc"), { recursive: true });
+    await writeFile(join(rt, "p9/pc/pc.glb"), "moved-glb");
+    await writeFile(join(rt, "manifest.json"), JSON.stringify({ version: 1, materials: {}, pieces: [{ id: "pc", glb: "p9/pc/pc.glb" }] }));
+    const p = await assembleProvenance(opts);
+    assert.ok(p.derivedFiles[0].path.endsWith("p9/pc/pc.glb"), p.derivedFiles[0].path);
+    assert.equal(p.derivedFiles[0].sha256, sha256(Buffer.from("moved-glb")));
+    // Not listed, and no sibling to take the layout from: refused with the reason, nothing guessed.
+    await writeFile(join(rt, "manifest.json"), JSON.stringify({ version: 1, materials: {}, pieces: [] }));
+    await assert.rejects(assembleProvenance({ ...opts, validated: undefined }),
+      /pc: cannot derive its output folder from the manifest \(no piece to follow\)/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+// A HEXW_SKIP_BAKE=1 build writes skipped: true with no reason: a draft, never a final artifact.
+// Pieces with analytic masks by design carry skipped: true with a reason and stay valid.
+test("a skip-bake draft (skipped with no reason) is refused, a reasoned no-bake piece is not", async () => {
+  const { dir, opts } = await stage();
+  try {
+    const rep = join(opts.source, "bake-report.json");
+    await writeFile(rep, JSON.stringify({ device: "CPU", receiverSignature: "sig", skipped: true }));
+    await assert.rejects(assembleProvenance(opts), /pc: bake report is skipped with no reason .*HEXW_SKIP_BAKE/);
+    await assert.rejects(assembleProvenance({ ...opts, validated: undefined, check: true }), /HEXW_SKIP_BAKE/);
+    await writeFile(rep, JSON.stringify({ device: "none", receiverSignature: "sig", skipped: true, reason: "analytic masks" }));
+    assert.equal((await assembleProvenance(opts)).validation.pass, true);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

@@ -1361,4 +1361,52 @@ mod tests {
         }
         assert_eq!(n, std::fs::read_dir(&served).unwrap().count());
     }
+
+    /// The probe tileable set under `assets/kit/p1/fixture_tile/` ships in `dist/` (Trunk copies
+    /// all of `assets/`, and web-smoke serves `kit_src=fixture_tiled` from it). Its provenance is
+    /// the gate fixture's: every probe map is a byte copy of a `fixture.masks` file that the
+    /// fixture's provenance lists in `derivedFiles` (and `kit_gate` hash-checks), and the folder
+    /// holds nothing else besides its manifest.
+    #[test]
+    fn probe_set_is_a_copy_of_the_fixture_masks() {
+        let repo = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let gate = "crates/hex-render/tests/fixtures/kit/p1/fixture";
+        let probe = repo.join("assets/kit/p1/fixture_tile");
+        let prov: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(
+                repo.join("crates/hex-render/tests/fixtures/kit/source/fixture/provenance.json"),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        let derived: Vec<&str> = prov["derivedFiles"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|f| f["path"].as_str())
+            .collect();
+        let mut want = std::collections::BTreeSet::from(["manifest.json".to_string()]);
+        for family in ["bc7.ktx2", "astc.ktx2", "png"] {
+            let src = format!("{gate}/fixture.masks.{family}");
+            assert!(
+                derived.contains(&src.as_str()),
+                "{src} not in fixture provenance"
+            );
+            let bytes = std::fs::read(repo.join(&src)).unwrap();
+            for channel in ["albedo", "normal", "orm"] {
+                let name = format!("probe.{channel}.{family}");
+                let copy = std::fs::read(probe.join(&name)).unwrap();
+                assert!(copy == bytes, "{name} is not a copy of {src}");
+                want.insert(name);
+            }
+        }
+        let have: std::collections::BTreeSet<String> = std::fs::read_dir(&probe)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(
+            have, want,
+            "assets/kit/p1/fixture_tile holds unexpected files"
+        );
+    }
 }

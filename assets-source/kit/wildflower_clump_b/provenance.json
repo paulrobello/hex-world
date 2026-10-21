@@ -250,7 +250,7 @@
     "receiverSignature": "409f341caa67d99680f3814524947fd7aa702c097cec42f8fee75a0d41738e24",
     "samples": 0,
     "sinkM": 0.07,
-    "skipped": true,
+    "skipped": false,
     "species": [
       "daisy",
       "buttercup"
@@ -517,7 +517,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-15T03:00:50.189Z",
+    "date": "2026-10-21T09:20:49.333Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -535,7 +535,7 @@
         "assets-source/refs/meadow_props/ref-1.jpg",
         "assets-source/refs/meadow_props/ref-2.jpg"
       ],
-      "notes": "Approved: wildflower clumps (same species and colours) and rocks partly buried in the turf. Reviewed from assets-source/refs/contact-sheet.png in chat."
+      "notes": "Approved: wildflower clumps (same species and colours) and rocks partly buried in the turf. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
     },
     {
       "gate": "piece",
