@@ -95,3 +95,10 @@ fn tiled_normal(f: TileFrame) -> vec3<f32> {
     let tn = textureSample(pbr_bindings::normal_map_texture, pbr_bindings::normal_map_sampler, f.uv).xyz * 2.0 - 1.0;
     return normalize(f.T * tn.x + f.B * tn.y + f.N * tn.z);
 }
+
+// A tiled normal `n` faded to the frame's geometric normal by the COLOR_0 detail weight `detail`
+// (the river mouth fan, kit_material.wesl): at 0 the slot has no normal relief, in colour or in the
+// normal prepass SSAO reads.
+fn detail_normal(f: TileFrame, n: vec3<f32>, detail: f32) -> vec3<f32> {
+    return normalize(mix(f.N, n, detail));
+}

@@ -1,0 +1,62 @@
+{
+  "what": "native 1600x1000 PNG frames, --scenario play --tier high (SSAO on) --clock fixed --water_clock fixed --tilt off, before = 1b20c99 shaders, after = prepass detail fade; per-pixel max-channel |after - before| in 8-bit units. Crops (before/after/diff x16) are of the rows listed in crops.",
+  "noise_floor": "two before runs, JPEG q85: mean abs 0.001-0.010, the same order as these diffs outside the fan; the diff images show the changed pixels only on the fan's COLOR_0 band (bed-to-sand bank and the plaster sand beside it)",
+  "crops": {
+    "mouth-fan-ssao-04-fan-seam-close": [
+      0,
+      100,
+      1300,
+      620
+    ],
+    "mouth-fan-ssao-05-bank-grazing": [
+      260,
+      330,
+      1600,
+      660
+    ],
+    "mouth-fan-ssao-06-bank-close": [
+      400,
+      260,
+      1460,
+      560
+    ]
+  },
+  "frames": {
+    "mouth-fan-ssao-01-fan-right": {
+      "changed_px": 2114,
+      "changed_px_over_2": 6,
+      "max_abs_8bit": 5.0,
+      "mean_abs_8bit": 0.0013
+    },
+    "mouth-fan-ssao-02-fan-topdown": {
+      "changed_px": 1648,
+      "changed_px_over_2": 7,
+      "max_abs_8bit": 5.0,
+      "mean_abs_8bit": 0.0011
+    },
+    "mouth-fan-ssao-03-fan-sand-oblique": {
+      "changed_px": 4859,
+      "changed_px_over_2": 17,
+      "max_abs_8bit": 5.0,
+      "mean_abs_8bit": 0.0031
+    },
+    "mouth-fan-ssao-04-fan-seam-close": {
+      "changed_px": 12018,
+      "changed_px_over_2": 114,
+      "max_abs_8bit": 8.0,
+      "mean_abs_8bit": 0.0079
+    },
+    "mouth-fan-ssao-05-bank-grazing": {
+      "changed_px": 27265,
+      "changed_px_over_2": 309,
+      "max_abs_8bit": 7.0,
+      "mean_abs_8bit": 0.018
+    },
+    "mouth-fan-ssao-06-bank-close": {
+      "changed_px": 21651,
+      "changed_px_over_2": 139,
+      "max_abs_8bit": 7.0,
+      "mean_abs_8bit": 0.014
+    }
+  }
+}

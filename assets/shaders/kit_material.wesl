@@ -90,7 +90,7 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
             tint = in.color.rgb;
             let mean = textureSampleLevel(pbr_bindings::base_color_texture, pbr_bindings::base_color_sampler, f.uv, 16.0);
             albedo = vec4(mix(mean.rgb, albedo.rgb, in.color.a), albedo.a);
-            n = normalize(mix(f.N, n, in.color.a));
+            n = kit_common::detail_normal(f, n, in.color.a);
         }
         pbr_input.material.base_color = vec4(factor.rgb * tint * albedo.rgb, factor.a);
         pbr_input.material.perceptual_roughness = orm.g;

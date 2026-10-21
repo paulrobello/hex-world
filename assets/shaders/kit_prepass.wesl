@@ -8,7 +8,8 @@
 //
 // Fragment:
 // Tileable slots write the world-space tiled normal from hex_render::kit_common, the same one the
-// forward pass lights with, so SSAO reads the normal the surface is shaded with. Every other slot
+// forward pass lights with, so SSAO reads the normal the surface is shaded with (faded by the COLOR_0
+// detail weight on meshes that carry it, as kit_material.wesl does). Every other slot
 // keeps Bevy 0.20's StandardMaterial prepass (bevy_pbr render/pbr_prepass.wesl, non-bindless and
 // non-meshlet only, which KitExt always is): alpha discard, geometric normal, unique normal map.
 //
@@ -364,7 +365,11 @@ fn fragment(
 @if(NORMAL_PREPASS) {
     if (kit_common::tileable()) {
         let f = kit_common::tile_frame(in.world_normal, in.world_position.xyz);
-        out.normal = vec4(kit_common::tiled_normal(f) * 0.5 + vec3(0.5), 1.0);
+        var n = kit_common::tiled_normal(f);
+        @if(VERTEX_COLORS) {
+            n = kit_common::detail_normal(f, n, in.color.a);
+        }
+        out.normal = vec4(n * 0.5 + vec3(0.5), 1.0);
     } else if (flags & pbr_types::STANDARD_MATERIAL_FLAGS_UNLIT_BIT) == 0u {
         let double_sided = (flags & pbr_types::STANDARD_MATERIAL_FLAGS_DOUBLE_SIDED_BIT) != 0u;
         // Foliage keeps its front normal on back faces, as in kit_material.wesl.
