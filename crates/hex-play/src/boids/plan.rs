@@ -2012,10 +2012,13 @@ mod tests {
         };
         let perches = canopy_perches("barn_red_b");
         assert_eq!(perches.len(), 11, "the finial and ten on the ridge");
-        for p in &perches {
-            let t = top(p.x, p.z).unwrap_or_else(|| panic!("{p} over the barn"));
-            assert!((0.0..0.02).contains(&(p.y - t)), "{p}: roof top {t}");
-        }
+        let off = off_the_roof(&perches, top);
+        assert!(
+            off.is_empty(),
+            "{} barn_red_b perches off its roof:\n{}",
+            off.len(),
+            off.join("\n")
+        );
         for w in BARN_B_RIDGE_X.windows(2) {
             assert!(w[1] - w[0] >= 1.0 - 1e-4, "{w:?}");
         }
@@ -2096,10 +2099,13 @@ mod tests {
         };
         let perches = canopy_perches("well_stone");
         assert_eq!(perches.len(), 3, "three on the ridge");
-        for p in &perches {
-            let t = top(p.x, p.z).unwrap_or_else(|| panic!("{p} over the well"));
-            assert!((0.0..0.02).contains(&(p.y - t)), "{p}: roof top {t}");
-        }
+        let off = off_the_roof(&perches, top);
+        assert!(
+            off.is_empty(),
+            "{} well_stone perches off its ridge:\n{}",
+            off.len(),
+            off.join("\n")
+        );
         // The gable bargeboards stand at |z| >= 1.055: every perch is on the ridge between them.
         let gable = tris
             .iter()
@@ -2144,19 +2150,47 @@ mod tests {
     }
 
     /// The oak perches (every hero oak) sit on the GLB's canopy shell and are open from above.
+    /// Every failing perch of every oak is listed in one failure, with all of its numbers.
     #[test]
     fn oak_perches_sit_on_the_canopy() {
+        let mut fails = vec![];
         for (piece, list) in [
             ("tree_hero_oak", &OAK_PERCHES),
             ("tree_hero_oak_b", &OAK_B_PERCHES),
             ("tree_hero_oak_c", &OAK_C_PERCHES),
         ] {
-            assert_eq!(canopy_perches(piece).len(), 12, "{piece}");
-            perches_sit_on_the_canopy(piece, list);
+            let n = canopy_perches(piece).len();
+            if n != 12 {
+                fails.push(format!("{piece}: {n} perches, want 12"));
+            }
+            fails.extend(perches_sit_on_the_canopy(piece, list));
         }
+        assert!(
+            fails.is_empty(),
+            "{} oak perch failures:\n{}",
+            fails.len(),
+            fails.join("\n")
+        );
     }
 
-    fn perches_sit_on_the_canopy(piece: &str, list: &[(usize, f32, f32, f32)]) {
+    /// One line per perch over no roof or more than 2 cm above the highest roof surface under it.
+    fn off_the_roof(perches: &[Vec3], top: impl Fn(f32, f32) -> Option<f32>) -> Vec<String> {
+        perches
+            .iter()
+            .enumerate()
+            .filter_map(|(k, p)| match top(p.x, p.z) {
+                None => Some(format!("perch {k} at {p}: no roof under it")),
+                Some(t) if !(0.0..0.02).contains(&(p.y - t)) => Some(format!(
+                    "perch {k} at {p}: {:+.3} m from the roof top {t:.3} (want 0 to +0.02)",
+                    p.y - t
+                )),
+                Some(_) => None,
+            })
+            .collect()
+    }
+
+    /// The failures of one oak's perches, one line per failing perch with every measure.
+    fn perches_sit_on_the_canopy(piece: &str, list: &[(usize, f32, f32, f32)]) -> Vec<String> {
         let root = format!(
             "{}/../../assets/kit/p1/{piece}/{piece}.glb",
             env!("CARGO_MANIFEST_DIR")
@@ -2192,11 +2226,18 @@ mod tests {
                 canopy.extend(pos);
             }
         }
-        assert!(canopy.len() > 100, "canopy primitive found");
-        assert!(
-            list.iter().all(|p| p.1 >= PERCH_MIN_ELEVATION),
-            "a perch mid-slope"
-        );
+        assert!(canopy.len() > 100, "{piece}: canopy primitive found");
+        let mut fails: Vec<String> = list
+            .iter()
+            .enumerate()
+            .filter(|(_, p)| p.1 < PERCH_MIN_ELEVATION)
+            .map(|(k, p)| {
+                format!(
+                    "{piece} perch {k}: elevation {} below {PERCH_MIN_ELEVATION} (mid-slope)",
+                    p.1
+                )
+            })
+            .collect();
         // The highest foliage surface over XZ point `q`: a vertical line against every triangle.
         let surface = |q: Vec2| -> f32 {
             let mut top = f32::MIN;
@@ -2217,42 +2258,45 @@ mod tests {
         // Owner feedback (2026-10-14): a perched bird sits on the foliage, not in it. Each perch
         // is at the highest canopy-or-leaf surface under the folded bird (0.35 m around it: the
         // body is 0.79 m long at display scale), so the pivot-to-feet lift puts it on the leaves.
-        let mut off = vec![];
-        for p in canopy_perches(piece) {
+        // Shell vertices are spaced at the tree's scale, so the nearest one is too: a perch within
+        // half that is on the shell, and no shell vertex within 0.8 m may stand 0.35 m above it.
+        let shell_limit = 0.5 * OAK_SCALE;
+        for (k, p) in canopy_perches(piece).into_iter().enumerate() {
             let top = (0..8)
                 .map(|k| Vec2::from_angle(k as f32 * std::f32::consts::FRAC_PI_4) * 0.35)
                 .chain([Vec2::ZERO])
                 .map(|o| surface(p.xz() + o))
                 .fold(f32::MIN, f32::max);
-            if p.y < top - 0.02 || p.y > top + 0.08 {
-                off.push((p, p.y - top));
-            }
-        }
-        assert!(
-            off.is_empty(),
-            "{piece} perches off the foliage top: {off:?}"
-        );
-        for p in canopy_perches(piece) {
+            let lift = p.y - top;
             let near = canopy
                 .iter()
                 .map(|v| v.distance(p))
                 .fold(f32::MAX, f32::min);
-            // Shell vertices are spaced at the tree's scale, so the nearest one is too.
-            assert!(
-                near < 0.5 * OAK_SCALE,
-                "perch {p} is {near} m from the canopy shell"
-            );
-            let above = canopy
+            let buried = canopy
                 .iter()
                 .filter(|v| v.xz().distance(p.xz()) < 0.8)
                 .map(|v| v.y)
-                .fold(f32::MIN, f32::max);
-            assert!(
-                above < p.y + 0.35,
-                "perch {p} is buried {} m under the canopy",
-                above - p.y
-            );
+                .fold(f32::MIN, f32::max)
+                - p.y;
+            let mut why = vec![];
+            if !(-0.02..=0.08).contains(&lift) {
+                why.push("off the foliage top");
+            }
+            if near >= shell_limit {
+                why.push("off the shell");
+            }
+            if buried >= 0.35 {
+                why.push("buried");
+            }
+            if !why.is_empty() {
+                fails.push(format!(
+                    "{piece} perch {k} at {p}: {}; foliage top {lift:+.3} m (want -0.02 to +0.08), \
+                     shell {near:.3} m (want < {shell_limit:.3}), buried {buried:.3} m (want < 0.35)",
+                    why.join(", ")
+                ));
+            }
         }
+        fails
     }
 
     #[test]

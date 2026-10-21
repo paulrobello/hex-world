@@ -22,7 +22,7 @@ trunk serve                       # dev server on 127.0.0.1:8094 (rebuilds live,
 python3 scripts/dev/serve.py 8094 dist   # static serve of dist/ (8095 serves the repo for review pages)
 bash scripts/worktree-bootstrap.sh [--web]   # fresh worktree: clone target/, node_modules, KTX tools from main
 
-make checkall                     # fast gate: fmt-check + clippy -D warnings + typecheck (native AND wasm32) + cargo test --workspace + ui-check
+make checkall                     # fast gate: fmt-check + clippy -D warnings + typecheck (native AND wasm32) + cargo test --workspace + ui-check + shots-test (shot runner, needs Pillow)
 make checkall-ci                  # push gate: checkall + web-size (12 MiB gzip wasm) + initial-download (30 MiB)
 
 # Single tests

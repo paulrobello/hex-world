@@ -1,0 +1,68 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "assets-source/kit/forest_forest_edge/shots/forest-play.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play"
+  ],
+  "env": {
+    "HEXW_PACK_HOLD_FRAMES": "300"
+  },
+  "attempts": [
+    {
+      "load_before": [
+        157.13,
+        116.61,
+        77.8
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 31.4,
+      "load_after": [
+        163.25,
+        121.95,
+        81.08
+      ],
+      "frames": {
+        "engine-01-two-overview": {
+          "mean": 0.1256,
+          "problem": null
+        },
+        "engine-02-two-seam": {
+          "mean": 0.1378,
+          "problem": null
+        },
+        "engine-03-three-overview": {
+          "mean": 0.1418,
+          "problem": null
+        },
+        "engine-04-three-junction": {
+          "mean": 0.1519,
+          "problem": null
+        },
+        "engine-05-meadow-corner": {
+          "mean": 0.137,
+          "problem": null
+        },
+        "engine-06-after-bulldoze": {
+          "mean": 0.1383,
+          "problem": null
+        },
+        "engine-07-after-undo": {
+          "mean": 0.1399,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

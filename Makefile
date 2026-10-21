@@ -1,4 +1,4 @@
-.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing
+.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-test
 
 fmt:
 	cargo fmt --all
@@ -29,7 +29,11 @@ check-wgpu:
 	test "$$count" = 1 || { echo "FAIL: expected one wgpu version, got $$count"; exit 1; }; \
 	printf 'single wgpu OK: %s\n' "$$tree"
 
-checkall: fmt-check lint typecheck test ui-check
+checkall: fmt-check lint typecheck test ui-check shots-test
+
+# The shot runner's black-frame check and retry (scripts/shots/piece.py). Local only: CI has no Pillow.
+shots-test:
+	python3 -m unittest discover -s scripts/shots -p 'test_*.py'
 
 # UI overlay (web/ui, PRD D18 and §14): TypeScript bundled by esbuild into web/ui/dist, which Trunk
 # ships as web/ui/ (index.html). Tools are pinned in web/ui/package-lock.json; npm ci runs only when
@@ -315,6 +319,16 @@ KIT_SHOTS = kit-overview kit-seam-closeup kit-tree kit-tree-under kit-tree-game 
 shots-foliage-wind:
 	cargo build -p hex-app --release
 	bash scripts/shots/run.sh docs/checkpoints/foliage-wind/shoot.sh target/release/hex-world
+
+# Owner-checkpoint shots from one script (scripts/shots/piece.py): builds once, runs the script under
+# caffeinate at 1600x1000 with tilt-shift off, never waits on host load, re-runs once on a black,
+# missing or timed-out frame, then writes JPEG q85 copies, the state dumps and <stem>-shots.json
+# (host load before and after) into OUT. ARGS adds hex-world flags, ENV sets variables for the run.
+# e.g. make shots-piece SCRIPT=docs/checkpoints/well_stone/kit.json OUT=docs/checkpoints/well_stone
+shots-piece:
+	@test -n "$(SCRIPT)" && test -n "$(OUT)" || { echo "usage: make shots-piece SCRIPT=<json> OUT=<dir> [ARGS='--scenario play'] [ENV='HEXW_PACK_HOLD_FRAMES=300']"; exit 2; }
+	cargo build -p hex-app --release
+	env $(ENV) python3 scripts/shots/piece.py --script $(SCRIPT) --out $(OUT) -- $(ARGS)
 
 shots-kit:
 	mkdir -p target/shots
