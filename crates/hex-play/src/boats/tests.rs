@@ -619,3 +619,246 @@ fn the_checkpoint_world_holds_three_of_each() {
         std::fs::write(path, save.encode()).unwrap();
     }
 }
+
+fn play_tiles(w: &World) -> Vec<PlayTile> {
+    w.tiles()
+        .iter()
+        .map(|(cell, t)| PlayTile {
+            cell: *cell,
+            tile: t.def.clone(),
+            rotation: t.rotation,
+        })
+        .collect()
+}
+
+/// The fork cell of [`fork_world`]: beside the start tile, a grass edge toward it.
+fn fork_cell() -> Axial {
+    Axial::ORIGIN.neighbor(2)
+}
+
+/// A river fork (arms on world edges 0, 2 and 4) with two straights up each arm, placed by the
+/// rules beside the start tile.
+fn fork_world() -> Vec<PlayTile> {
+    let c = catalog();
+    let mut w = World::new(5);
+    w.place(&c, fork_cell(), "river_fork", 0).unwrap();
+    // A straight at rotation r carries world edges r and r + 3.
+    for (e, rot) in [(0u8, 0u8), (2, 2), (4, 1)] {
+        let mut cell = fork_cell();
+        for _ in 0..2 {
+            cell = cell.neighbor(e);
+            w.place(&c, cell, "river_straight", rot)
+                .unwrap_or_else(|err| panic!("arm {e} at {cell:?}: {err:?}"));
+        }
+    }
+    play_tiles(&w)
+}
+
+/// Whether `p` lies on river water at least 5 cm deep: in a river cell of the plan, below the
+/// surface of its bed.
+fn on_river(plan: &BoatPlan, p: Vec2) -> bool {
+    use crate::water::{WaterField, tiles::WATER_Y};
+    plan.cells
+        .get(&cell_at_world(p))
+        .is_some_and(|w| w.kind == WaterKind::River && w.field().height(p.x, p.y) < WATER_Y - 0.05)
+}
+
+/// Ticks `plan` for `ticks`, checking every rowing boat's hull (centre, bow, stern and both sides)
+/// stays on river water and that no pose jumps between ticks. Returns each rower's (run, tick)
+/// whenever it enters another run, and how many times rowers turned back.
+fn row_and_check(plan: &mut BoatPlan, ticks: usize, what: &str) -> (Vec<(u64, usize)>, usize) {
+    let mut entered = vec![];
+    let mut turns = 0;
+    let mut last: std::collections::HashMap<u64, (Vec2, usize, f32)> = Default::default();
+    for t in 0..ticks {
+        plan.tick();
+        for b in &plan.boats {
+            let Motion::Rowing(r) = &b.motion else {
+                continue;
+            };
+            let (p, h) = plan.pose(b);
+            let side = Vec2::new(-h.y, h.x);
+            for q in [p, p + h * 2.3, p - h * 2.3, p + side * 0.6, p - side * 0.6] {
+                assert!(
+                    on_river(plan, q),
+                    "{what}, tick {t}: boat {} at {p} heading {h}: {q} off the water ({r:?})",
+                    b.id
+                );
+            }
+            if let Some((p0, run0, dir0)) = last.insert(b.id, (p, r.run, r.dir)) {
+                // A step at the rowing speed, plus a lane change, plus a chord's corner.
+                assert!(
+                    p.distance(p0) < 0.3,
+                    "{what}, tick {t}: boat {} jumped {p0} -> {p}",
+                    b.id
+                );
+                if run0 != r.run {
+                    entered.push((b.id, r.run));
+                } else if dir0 != r.dir {
+                    turns += 1;
+                }
+            }
+        }
+    }
+    (entered, turns)
+}
+
+#[test]
+fn a_fork_and_the_tight_bend_are_rowable_river() {
+    let c = catalog();
+    for id in ["river_fork", "river_bend_60"] {
+        let plan = BoatPlan::new(&[tile(0, 0, id, 0)], &c, 1);
+        let def = c.get(id).unwrap();
+        assert!(rowable(def, &plan.cells[&Axial::ORIGIN]), "{id}");
+        let rowing: Vec<_> = plan
+            .boats
+            .iter()
+            .filter(|b| b.kind == BoatKind::Rowing)
+            .collect();
+        assert_eq!(rowing.len(), 1, "{id}: {:?}", plan.boats);
+        assert!(matches!(rowing[0].motion, Motion::Rowing(_)), "{id}");
+    }
+    // Stages stay on plain straights and 120 degree bends.
+    let plan = BoatPlan::new(&fork_world(), &c, 3);
+    assert!(!plan.stages.is_empty());
+    for s in &plan.stages {
+        let id = &plan.cells[&s.cell].tile.tile;
+        assert_eq!(id, "river_straight", "stage on {id}");
+    }
+}
+
+/// Each fork arm is its own run ending at the node, each pair of arms is joined by a link, and
+/// rowers take more than one arm out of the fork across seeds, on the water and without a jump,
+/// never back up the arm they came down.
+#[test]
+fn rowing_boats_take_the_arms_of_a_fork_and_stay_on_the_water() {
+    let c = catalog();
+    let world = fork_world();
+    let plan = BoatPlan::new(&world, &c, 0);
+    let arms: Vec<usize> = (0..plan.runs.len())
+        .filter(|&i| plan.runs[i].joins.is_none())
+        .collect();
+    assert_eq!(arms.len(), 3, "{:?}", plan.runs);
+    for &i in &arms {
+        let run = &plan.runs[i];
+        assert_eq!(run.cells.len(), 3, "{:?}", run.cells);
+        let at_node = (0..2).filter(|&e| run.ends[e] == RunEnd::Junction).count();
+        assert_eq!(at_node, 1, "{:?}", run.ends);
+        assert!(run.cells.contains(&fork_cell()));
+    }
+    let links: Vec<[(usize, usize); 2]> = plan.runs.iter().filter_map(|r| r.joins).collect();
+    assert_eq!(links.len(), 3);
+    for [a, b] in &links {
+        assert_ne!(a.0, b.0, "a link joins two arms");
+        // The link meets each arm where the rower leaves it.
+        let link = plan
+            .runs
+            .iter()
+            .find(|r| r.joins == Some([*a, *b]))
+            .unwrap();
+        for (k, (arm, end)) in [(0usize, *a), (1, *b)] {
+            let line = &plan.runs[arm].line;
+            let u = if end == 0 {
+                JUNCTION_D
+            } else {
+                line.length() - JUNCTION_D
+            };
+            let at = if k == 0 { 0.0 } else { link.line.length() };
+            assert!(line.at(u).0.distance(link.line.at(at).0) < 1e-3);
+            assert!(line.at(u).1.dot(link.line.at(at).1).abs() > 0.99, "tangent");
+        }
+    }
+    let mut out_arms = BTreeSet::new();
+    let mut hops = 0;
+    for seed in 0..6u64 {
+        let mut plan = BoatPlan::new(&world, &c, seed);
+        let system = systems(&plan.runs);
+        let moving = plan
+            .boats
+            .iter()
+            .filter(|b| matches!(b.motion, Motion::Rowing(_)))
+            .count();
+        assert_eq!(moving, 1, "seed {seed}: one moving rower per river system");
+        assert!(system.iter().all(|s| *s == system[0]), "one system");
+        let (entered, _) = row_and_check(&mut plan, 20 * 600, &format!("seed {seed}"));
+        // A link leads only to the arms it joins.
+        for w in entered.windows(2) {
+            let (from, to) = (w[0].1, w[1].1);
+            if let Some([a, b]) = plan.runs[from].joins {
+                assert!(to == a.0 || to == b.0, "seed {seed}: link {from} to {to}");
+            }
+        }
+        // Arm, link, arm: never back up the arm it came down.
+        let path: Vec<usize> = entered.iter().map(|e| e.1).collect();
+        for w in path.windows(3) {
+            if plan.runs[w[1]].joins.is_some() {
+                assert_ne!(w[0], w[2], "seed {seed}: back up its own arm");
+                out_arms.insert(w[2]);
+                hops += 1;
+            }
+        }
+    }
+    assert!(hops >= 6, "{hops} junction crossings");
+    // A lone fork in every rotation: 4.66 m between an arm's turn-back and its link.
+    for rot in 0..6u8 {
+        let mut plan = BoatPlan::new(&[tile(0, 0, "river_fork", rot)], &c, rot as u64);
+        let (entered, turns) = row_and_check(&mut plan, 20 * 300, &format!("lone fork r{rot}"));
+        assert!(
+            entered.len() >= 4 && turns >= 2,
+            "r{rot}: {entered:?}, {turns} turns"
+        );
+    }
+    assert!(
+        out_arms.len() >= 2,
+        "arms taken out of the fork: {out_arms:?}"
+    );
+}
+
+/// A rowing boat on the tight bend, alone (its turn-backs on the arc) and between straights, keeps
+/// its hull on the water at its lane in every rotation.
+#[test]
+fn rowing_boats_keep_to_the_channel_round_the_tight_bend() {
+    let c = catalog();
+    for rot in 0..6u8 {
+        let mut plan = BoatPlan::new(&[tile(0, 0, "river_bend_60", rot)], &c, rot as u64);
+        assert_eq!(plan.runs.len(), 1);
+        let (_, turns) = row_and_check(&mut plan, 20 * 300, &format!("lone r{rot}"));
+        assert!(turns >= 4, "r{rot}: {turns} turns");
+    }
+    // Beside the start tile, a grass edge toward it.
+    let bend = Axial::ORIGIN.neighbor(5);
+    let mut w = World::new(2);
+    w.place(&c, bend, "river_bend_60", 0).unwrap();
+    w.place(&c, bend.neighbor(0), "river_straight", 0).unwrap();
+    w.place(&c, bend.neighbor(1), "river_straight", 1).unwrap();
+    let tiles = play_tiles(&w);
+    for seed in 0..4u64 {
+        let mut plan = BoatPlan::new(&tiles, &c, seed);
+        assert_eq!(plan.runs.len(), 1, "{:?}", plan.runs);
+        assert_eq!(plan.runs[0].cells.len(), 3);
+        row_and_check(
+            &mut plan,
+            20 * 300,
+            &format!("bend between straights, seed {seed}"),
+        );
+    }
+}
+
+#[test]
+fn the_same_fork_world_runs_the_same_boats() {
+    let c = catalog();
+    let world = fork_world();
+    let mut a = BoatPlan::new(&world, &c, 42);
+    let mut b = BoatPlan::new(&world, &c, 42);
+    assert_eq!(a, b);
+    let (mut ca, mut cb) = (vec![], vec![]);
+    for _ in 0..12000 {
+        ca.extend(a.tick());
+        cb.extend(b.tick());
+        assert_eq!(a.poses(), b.poses());
+    }
+    assert_eq!(a, b);
+    assert_eq!(ca, cb);
+    let other = BoatPlan::new(&world, &c, 43);
+    assert_ne!(other.poses(), BoatPlan::new(&world, &c, 42).poses());
+}

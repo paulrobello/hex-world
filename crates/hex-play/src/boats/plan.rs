@@ -3,11 +3,16 @@
 //!
 //! - **Water.** The fish regions ([`FishWorld`]): water tiles joined by continuous water.
 //! - **Rowing boats** row river runs: the oriented river centre lines ([`oriented_rivers`]) chained
-//!   across plain river tiles (`river_straight`, `river_bend`). A run ends at a bridge tile (a River
-//!   network beside a Road or Rail one: the 6 m sail mast and D4 keep boats off the arch), a spring,
-//!   a mouth or an open end, and the boat turns back [`ROW_END_MARGIN`] short of it, on a half
-//!   circle of [`ROW_LANE`] radius. It keeps to the right of its heading, so turning back puts it on
-//!   the other half of the channel. Each run holds at most one moving rowing boat.
+//!   across plain river tiles (`river_straight`, `river_bend`, `river_bend_60`, and each arm of a
+//!   `river_fork`). A run ends at a bridge tile (a River network beside a Road or Rail one: the 6 m
+//!   sail mast and D4 keep boats off the arch), a spring, a mouth or an open end, and the boat turns
+//!   back [`ROW_END_MARGIN`] short of it, on a half circle of [`ROW_LANE`] radius. It keeps to the
+//!   right of its heading, so turning back puts it on the other half of the channel.
+//! - **Junctions.** A fork's arms end their runs at its node ([`RunEnd::Junction`]). Each pair of
+//!   arms is joined by a link run ([`Run::joins`]): a curve from [`JUNCTION_D`] up one arm to as far
+//!   up the other, tangent to both. A rower reaching [`JUNCTION_D`] short of the node takes a
+//!   seeded link onto another arm, never back up its own. Runs joined by links form a river
+//!   system, and each system holds at most one moving rowing boat, so no two meet at a node.
 //! - **Sailing boats** sail closed routes over sea water (ocean tiles, and coast and mouth tiles at
 //!   least [`SAIL_S`] seaward of the coastline: the 0.45 m of water a 0.32 m keel needs, runtime
 //!   notes), every point of a route with a [`SAIL_CLEAR`] disc of such water round it.
@@ -42,6 +47,13 @@ pub const ROW_LANE: f32 = 1.9;
 pub const ROW_END_MARGIN: f32 = 4.2;
 /// Shortest run a rowing boat rows (the turn needs room at both ends).
 pub const MIN_RUN: f32 = 12.0;
+/// How far up each arm from a junction's node a link run starts (m). The link is a quadratic
+/// curve with the node as its control point: across a fork's 120 degrees between arms its tightest
+/// radius is 1.5 times this, so the inside lane keeps 4.1 m of radius, and its midpoint passes 1 m
+/// from the node, which keeps the hull inside the arms' 4 m waterlines.
+pub const JUNCTION_D: f32 = 4.0;
+/// Chords of a link run's curve.
+const LINK_STEPS: usize = 24;
 pub const ROW_SPEED: f32 = 1.1;
 /// Metres per oar stroke: one catch about every 2.5 s at [`ROW_SPEED`].
 pub const STROKE_M: f32 = 2.8;
@@ -171,9 +183,12 @@ pub enum RunEnd {
     Water,
     /// No river beyond (the map's edge or a river lane with no tile across it).
     Open,
+    /// A fork's node, where the run's arm meets the others: a rower goes on along a link run.
+    Junction,
 }
 
-/// A stretch of river centre line a rowing boat may row: plain river tiles in flow order.
+/// A stretch of river centre line a rowing boat may row: plain river tiles in flow order, or a
+/// link across a junction.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Run {
     pub line: Line,
@@ -182,9 +197,13 @@ pub struct Run {
     pub ends: [RunEnd; 2],
     /// Arc length at which each cell's stretch starts (with `cells`), for stage placement.
     pub cell_start: Vec<f32>,
+    /// A link run: the (arm run, its end: 0 upstream, 1 downstream) it leaves from at its start
+    /// and the one it reaches at its end, each [`JUNCTION_D`] from the node. `None` on river runs.
+    pub joins: Option<[(usize, usize); 2]>,
 }
 
-/// A river tile a boat may row on: river water that is no bridge, spring or mouth.
+/// A river tile a boat may row on: river water that is no bridge, spring or mouth. A fork and the
+/// tight `river_bend_60` are river water too.
 pub fn rowable(def: &TileDef, cell: &CellWater) -> bool {
     cell.kind == WaterKind::River && !bridge(def)
 }
@@ -224,7 +243,11 @@ pub fn runs(
     };
     let end_kind = |cell: Axial, end: RiverEnd, up: bool| -> RunEnd {
         let Some(e) = end.edge() else {
-            return RunEnd::Water;
+            return if end == RiverEnd::Junction {
+                RunEnd::Junction
+            } else {
+                RunEnd::Water
+            };
         };
         match def_at(cell.neighbor(e)) {
             Some((d, _)) if bridge(d) => RunEnd::Bridge,
@@ -274,9 +297,131 @@ pub fn runs(
             cells: cells_in,
             ends,
             cell_start,
+            joins: None,
         });
     }
+    // The arm ends at each junction node, then a link run for every pair of them.
+    let mut nodes: BTreeMap<Axial, Vec<(usize, usize)>> = BTreeMap::new();
+    for (i, run) in out.iter().enumerate() {
+        for end in 0..2 {
+            if run.ends[end] == RunEnd::Junction {
+                let cell = if end == 0 {
+                    run.cells[0]
+                } else {
+                    run.cells[run.cells.len() - 1]
+                };
+                nodes.entry(cell).or_default().push((i, end));
+            }
+        }
+    }
+    for (cell, arms) in nodes {
+        for (k, &a) in arms.iter().enumerate() {
+            for &b in &arms[k + 1..] {
+                if let Some(line) = link_line(&out[a.0].line, a.1, &out[b.0].line, b.1) {
+                    out.push(Run {
+                        line,
+                        cells: vec![cell],
+                        ends: [RunEnd::Junction; 2],
+                        cell_start: vec![0.0],
+                        joins: Some([a, b]),
+                    });
+                }
+            }
+        }
+    }
     out
+}
+
+/// The point [`JUNCTION_D`] up an arm from its junction `end` (0 its start, 1 its end), and the
+/// node itself. `None` on an arm too short to hold it.
+fn arm_point(line: &Line, end: usize) -> Option<(Vec2, Vec2)> {
+    let len = line.length();
+    if len < 2.0 * JUNCTION_D {
+        return None;
+    }
+    let (u, node) = if end == 0 {
+        (JUNCTION_D, 0.0)
+    } else {
+        (len - JUNCTION_D, len)
+    };
+    Some((line.at(u).0, line.at(node).0))
+}
+
+/// A link run from arm `a`'s junction end to arm `b`'s: the quadratic curve from [`JUNCTION_D`] up
+/// one to as far up the other with the node as its control point, so it leaves and reaches both
+/// along their (straight) centre lines.
+fn link_line(a: &Line, a_end: usize, b: &Line, b_end: usize) -> Option<Line> {
+    let (p0, node) = arm_point(a, a_end)?;
+    let (p2, _) = arm_point(b, b_end)?;
+    let points = (0..=LINK_STEPS)
+        .map(|i| {
+            let t = i as f32 / LINK_STEPS as f32;
+            p0 * ((1.0 - t) * (1.0 - t)) + node * (2.0 * t * (1.0 - t)) + p2 * (t * t)
+        })
+        .collect();
+    Some(Line::new(points, false))
+}
+
+/// Where a rower leaving run `run` through `end` (0 its start, 1 its end) goes on, as (run, the
+/// end it enters by): from a link to the arm it reaches, from an arm's junction end onto one of
+/// the links leaving that end (a SplitMix64 draw on `draw` among them, in run order). `None`
+/// where the rower turns back.
+pub fn onward(runs: &[Run], run: usize, end: usize, draw: &mut u64) -> Option<(usize, usize)> {
+    if let Some(joins) = runs[run].joins {
+        return Some(joins[end]);
+    }
+    if runs[run].ends[end] != RunEnd::Junction {
+        return None;
+    }
+    let links: Vec<(usize, usize)> = runs
+        .iter()
+        .enumerate()
+        .filter_map(|(i, l)| {
+            let j = l.joins?;
+            (0..2).find(|&k| j[k] == (run, end)).map(|k| (i, k))
+        })
+        .collect();
+    if links.is_empty() {
+        return None;
+    }
+    let mut g = Rng(*draw);
+    let pick = links[(g.next_u64() % links.len() as u64) as usize];
+    *draw = g.0;
+    Some(pick)
+}
+
+/// How far in from `end` of `run` a rower turns back or goes on: 0 on a link, [`JUNCTION_D`] at a
+/// junction (where the links start), [`ROW_END_MARGIN`] elsewhere.
+fn inset(run: &Run, end: usize) -> f32 {
+    if run.joins.is_some() {
+        0.0
+    } else if run.ends[end] == RunEnd::Junction {
+        JUNCTION_D
+    } else {
+        ROW_END_MARGIN
+    }
+}
+
+/// The river systems: each run's lowest-indexed run among those joined to it through links.
+pub fn systems(runs: &[Run]) -> Vec<usize> {
+    let mut sys: Vec<usize> = (0..runs.len()).collect();
+    loop {
+        let mut changed = false;
+        for (i, run) in runs.iter().enumerate() {
+            if let Some([a, b]) = run.joins {
+                let m = sys[i].min(sys[a.0]).min(sys[b.0]);
+                for k in [i, a.0, b.0] {
+                    if sys[k] != m {
+                        sys[k] = m;
+                        changed = true;
+                    }
+                }
+            }
+        }
+        if !changed {
+            return sys;
+        }
+    }
 }
 
 /// Whether `p` is sailing water of the sea cells `sea` (ocean, or coast and mouth at
@@ -466,6 +611,8 @@ pub struct Rower {
     pub stroke: f32,
     /// 0 rowing, 1 oars trailed.
     pub trail: f32,
+    /// SplitMix64 state of the rower's draws among the links at a junction.
+    pub draw: u64,
 }
 
 /// A sailing boat's tick state along its route.
@@ -566,13 +713,17 @@ impl BoatPlan {
         };
         let mut rng = Rng(cell_seed(seed, Axial::new(0, 0)) ^ 0xB0A7_5EED);
         let mut id = 0u64;
-        // Rowing: one moving boat per run long enough, the second boat world-wide at a stage.
-        let mut taken_runs: BTreeSet<usize> = BTreeSet::new();
+        // Rowing: one moving boat per river system with a run long enough, the second boat
+        // world-wide at a stage.
+        let system = systems(&plan.runs);
+        let mut taken: BTreeSet<usize> = BTreeSet::new();
         let mut rowing = 0usize;
         for (region, n) in share(&rowing_want, MAX_ROWING) {
             let region_cells: BTreeSet<Axial> = sizes[region].0.iter().copied().collect();
             let mut region_runs: Vec<usize> = (0..plan.runs.len())
-                .filter(|&i| region_cells.contains(&plan.runs[i].cells[0]))
+                .filter(|&i| {
+                    plan.runs[i].joins.is_none() && region_cells.contains(&plan.runs[i].cells[0])
+                })
                 .collect();
             region_runs.sort_by(|a, b| {
                 plan.runs[*b]
@@ -583,13 +734,12 @@ impl BoatPlan {
             });
             for _ in 0..n {
                 let moor = rowing == 1;
-                let free = region_runs
-                    .iter()
-                    .copied()
-                    .find(|r| !taken_runs.contains(r) && plan.runs[*r].line.length() >= MIN_RUN);
+                let free = region_runs.iter().copied().find(|r| {
+                    !taken.contains(&system[*r]) && plan.runs[*r].line.length() >= MIN_RUN
+                });
                 let motion = match (moor, free) {
                     (false, Some(r)) => {
-                        taken_runs.insert(r);
+                        taken.insert(system[r]);
                         let len = plan.runs[r].line.length();
                         let u = ROW_END_MARGIN + rng.unit() * (len - 2.0 * ROW_END_MARGIN);
                         let dir = if rng.unit() < 0.5 { 1.0 } else { -1.0 };
@@ -601,6 +751,8 @@ impl BoatPlan {
                             lat: ROW_LANE,
                             stroke: rng.unit(),
                             trail: 0.0,
+                            // Its own stream, so the plan's draws stay as they were.
+                            draw: cell_seed(seed, plan.runs[r].cells[0]) ^ id,
                         }))
                     }
                     _ => plan
@@ -674,7 +826,9 @@ impl BoatPlan {
     }
 
     /// Places a landing stage on a plain river tile of `region_runs` (straight or bend, not taken
-    /// by a stage yet), its side seeded. Returns its index.
+    /// by a stage yet), its side seeded. Returns its index. Not on `river_bend_60`, where a stage
+    /// [`STAGE_D`] inside its 7.42 m arc stands on the bank, nor on a fork's arm, whose midpoint
+    /// lies at the edge of the node's open water.
     fn place_stage(
         &mut self,
         region_runs: &[usize],
@@ -729,9 +883,10 @@ impl BoatPlan {
         for b in &mut self.boats {
             match &mut b.motion {
                 Motion::Rowing(r) => {
-                    let run = &self.runs[r.run];
+                    let runs = &self.runs;
+                    let run = &runs[r.run];
                     let len = run.line.length();
-                    let (lo, hi) = (ROW_END_MARGIN, len - ROW_END_MARGIN);
+                    let (lo, hi) = (inset(run, 0), len - inset(run, 1));
                     // A mooring on this run within the pass zone, on this boat's side of the channel.
                     let passing = stages.iter().any(|s| {
                         s.run == r.run && (s.u - r.u).abs() < PASS_ZONE && s.side == r.dir
@@ -754,9 +909,34 @@ impl BoatPlan {
                         }
                     } else {
                         r.u += r.dir * ROW_SPEED * dt;
-                        if (r.dir > 0.0 && r.u >= hi) || (r.dir < 0.0 && r.u <= lo) {
-                            r.u = r.u.clamp(lo, hi);
-                            r.turn = 1e-4;
+                        let end = if r.dir > 0.0 && r.u >= hi {
+                            Some(1)
+                        } else if r.dir < 0.0 && r.u <= lo {
+                            Some(0)
+                        } else {
+                            None
+                        };
+                        if let Some(end) = end {
+                            let over = if end == 1 { r.u - hi } else { lo - r.u };
+                            match onward(runs, r.run, end, &mut r.draw) {
+                                // On along a link or off it onto the next arm, carrying the
+                                // overshoot: the link meets both arms at their insets.
+                                Some((next, at)) => {
+                                    let n = &runs[next];
+                                    r.run = next;
+                                    if at == 0 {
+                                        r.u = inset(n, 0) + over;
+                                        r.dir = 1.0;
+                                    } else {
+                                        r.u = n.line.length() - inset(n, 1) - over;
+                                        r.dir = -1.0;
+                                    }
+                                }
+                                None => {
+                                    r.u = r.u.clamp(lo, hi);
+                                    r.turn = 1e-4;
+                                }
+                            }
                         }
                     }
                     let before = r.stroke;
@@ -765,7 +945,7 @@ impl BoatPlan {
                         r.stroke -= 1.0;
                     }
                     if r.stroke < before && r.trail < 0.5 {
-                        let (p, _) = run.line.at(r.u);
+                        let (p, _) = runs[r.run].line.at(r.u);
                         cues.push(BoatCue::Stroke { id: b.id, at: p });
                     }
                 }
@@ -812,15 +992,18 @@ impl BoatPlan {
 }
 
 /// A rowing boat's world XZ and heading: right of its heading by `lat`, or on the turn's half
-/// circle about the turning point.
+/// circle about the turning point. A turn begun while `lat` is still easing back from a pass lane
+/// runs a half ellipse from `lat` to its mirror, reaching at least 0.5 m past the turning point,
+/// so the pose does not jump at either end of the turn.
 pub fn rower_pose(line: &Line, r: &Rower) -> (Vec2, Vec2) {
     let (c, t) = line.at(r.u);
     let right = Vec2::new(-t.y, t.x);
     if r.turn > 0.0 {
         let a = std::f32::consts::PI * r.turn;
-        let lat = r.lat.abs().max(0.5);
-        let p = c + right * (r.dir * lat * a.cos()) + t * (r.dir * lat * a.sin());
-        let h = (-right * a.sin() + t * a.cos()) * r.dir;
+        let reach = r.lat.abs().max(0.5);
+        let side = if r.lat < 0.0 { -1.0 } else { 1.0 };
+        let p = c + right * (r.dir * r.lat * a.cos()) + t * (r.dir * reach * a.sin());
+        let h = (-right * (side * a.sin()) + t * a.cos()) * r.dir;
         (p, h.normalize_or(t))
     } else {
         (c + right * (r.dir * r.lat), t * r.dir)
