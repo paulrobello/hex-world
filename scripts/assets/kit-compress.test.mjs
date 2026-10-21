@@ -81,6 +81,22 @@ test("linear channels keep their values through the UASTC encode", async () => {
   }
 });
 
+// Pins --threads 1: with more threads basisu runs the UASTC RDO pass as parallel jobs, and the same
+// PNG encoded to different bytes under host load (wildflower_clump_b normal, 2026-10-21).
+test("the UASTC encode is single-threaded and byte-identical for identical input", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "kitc-"));
+  const raw = Buffer.alloc(128 * 128 * 4);
+  let s = 1;
+  for (let i = 0; i < raw.length; i++) raw[i] = (s = (s * 1103515245 + 12345) >>> 0) >>> 24;
+  const png = join(dir, "d.normal.png");
+  await sharp(raw, { raw: { width: 128, height: 128, channels: 4 } }).png().toFile(png);
+  const [a, b] = [await readFile(await encodeUastc(png, "normal", join(dir, "a.ktx2"))),
+    await readFile(await encodeUastc(png, "normal", join(dir, "b.ktx2")))];
+  const params = a.toString("latin1").match(/KTXwriterScParams\0([^\0]*)/)?.[1] ?? "";
+  assert.match(params, /--threads 1( |$)/, `KTXwriterScParams: ${params}`);
+  assert.ok(a.equals(b), "two encodes of one PNG differ");
+});
+
 test("an over-budget piece throws and leaves outDir and the report untouched", async () => {
   const dir = await mkdtemp(join(tmpdir(), "kitc-"));
   await stage(dir);

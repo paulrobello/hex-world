@@ -18,6 +18,7 @@ const ktxEnv = {
   PATH: `${KTX}/KTX-Software-4.4.2-Darwin-arm64-tools.pkg/Payload/usr/local/bin:${process.env.PATH}`,
   DYLD_LIBRARY_PATH: `${KTX}/KTX-Software-4.4.2-Darwin-arm64-library.pkg/Payload/usr/local/lib`,
 };
+export const UASTC_THREADS = 1;
 const ktx = (...args) => execFileSync("ktx", args, { env: ktxEnv, stdio: ["ignore", "pipe", "pipe"] }).toString();
 
 export async function compressGlb(src, dst) {
@@ -47,13 +48,17 @@ export async function compressGlb(src, dst) {
 
 // The UASTC source both families transcode from. --assign-tf is required: PNG carries no transfer
 // function, and ktx otherwise assumes sRGB and lossily converts UNORM channels.
+// --threads 1 makes the encode byte-deterministic: basisu splits the UASTC RDO pass into
+// min(4, threads) jobs, and with more than one job the same PNG can encode to different bytes
+// (seen under host load). --uastc-rdo-m cannot replace it: libktx 4.4.2 wires that flag to
+// "favor simpler modes" instead of the RDO multithreading switch.
 export async function encodeUastc(png, channel, path) {
   const c = CHANNELS[channel];
   if (!c) throw new Error(`unknown channel ${channel}`);
   await mkdir(dirname(path), { recursive: true });
   ktx("create", "--format", c.srgb ? "R8G8B8A8_SRGB" : "R8G8B8A8_UNORM", "--assign-tf", c.srgb ? "srgb" : "linear",
     ...(c.normalize ? ["--normalize"] : []), "--encode", "uastc", "--uastc-quality", "4",
-    "--uastc-rdo", "--uastc-rdo-l", String(c.rdo), "--zstd", "18", "--generate-mipmap", png, path);
+    "--uastc-rdo", "--uastc-rdo-l", String(c.rdo), "--threads", String(UASTC_THREADS), "--zstd", "18", "--generate-mipmap", png, path);
   return path;
 }
 
@@ -122,7 +127,7 @@ async function compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax 
   };
   const report = { name, date: new Date().toISOString(), toolVersions: {
       gltfTransform: "4.3.0", meshoptimizer: "0.25.0", ktxSoftware: ktx("--version").trim(), node: process.version },
-    settings: { meshopt: "EXT_meshopt_compression QUANTIZE (FLOAT attributes)", uastcQuality: 4, zstd: 18, rdo: CHANNELS },
+    settings: { meshopt: "EXT_meshopt_compression QUANTIZE (FLOAT attributes)", uastcQuality: 4, uastcThreads: UASTC_THREADS, zstd: 18, rdo: CHANNELS },
     textureEncodes: [], budgets: { class: budgetClass, ktxMax, ktxBytes: { bc7: 0, astc: 0 } } };
   await mkdir(work, { recursive: true });
   if (files.includes(`${name}.glb`)) {
