@@ -11,5 +11,12 @@
     "gate": "piece",
     "status": "approved",
     "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A10 (with the LOD2 head fix)."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-20",
+    "revision": "generator constants and comments only",
+    "notes": "Pending owner review; not an approval. Rebuilt after a generator edit that changes no output: COW_TRIS is now animal_cow's current (1058, 468, 138) and the docstring and LODS comment say all three LODs are animal_cow's (main's animal_cow draws its LOD2 head on stations [0, 2, 5, 7] with three-sided legs). The GLB, every map (PNG, BC7, ASTC) and the six-view renders are byte-identical to the approved build; only the generator hash and report stats moved. The controller records the owner's decision."
   }
 ]

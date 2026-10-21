@@ -7,7 +7,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_bakery_b.py",
-      "sha256": "4089e3f424a59db564c595589bc4beca5ae00d0ca0420f0c6e7912786ccfa9c5"
+      "sha256": "a6c57b511f941bd2f3f01a785ed4384e146212a15f96c46b07e7f89c3e5c419c"
     },
     {
       "path": "scripts/blender/kit/_house.py",

@@ -10,36 +10,36 @@
   "device": "CPU",
   "marginPx": 2,
   "maskStats": {
-    "aoMean": 0.5963767766952515,
+    "aoMean": 0.5982035398483276,
     "aoP05": 0.0,
     "centroids": {
       "lod0": {
         "minA": {
           "bread": 0.0,
           "brick": 0.0,
-          "display_glass": 0.176,
+          "display_glass": 0.196,
           "door": 0.0,
           "frame": 0.0,
-          "glass": 0.094,
-          "loaf_glass": 0.149,
+          "glass": 0.345,
+          "loaf_glass": 0.169,
           "roof": 0.0,
           "stone": 0.0,
           "timber": 0.0,
           "walls": 0.0,
-          "wicker": 0.031
+          "wicker": 0.016
         },
         "unbakedTris": 0
       },
       "lod1": {
         "minA": {
           "brick": 0.0,
-          "display_glass": 0.671,
+          "display_glass": 0.718,
           "door": 0.0,
-          "frame": 0.0,
-          "glass": 0.655,
-          "loaf_glass": 0.843,
+          "frame": 0.094,
+          "glass": 0.733,
+          "loaf_glass": 0.78,
           "roof": 0.0,
-          "stone": 0.608,
+          "stone": 0.0,
           "timber": 0.0,
           "walls": 0.0
         },
@@ -47,82 +47,82 @@
       },
       "lod2": {
         "minA": {
-          "brick": 0.345,
+          "brick": 0.298,
           "door": 0.0,
-          "glass": 0.671,
+          "glass": 0.686,
           "loaf_glass": 1.0,
           "roof": 0.016,
-          "timber": 0.047,
+          "timber": 0.514,
           "walls": 0.0
         },
         "unbakedTris": 0
       }
     },
-    "coverage": 0.4233264923095703,
-    "filledTexels": 30296,
-    "nightTexels": 28049
+    "coverage": 0.42826366424560547,
+    "filledTexels": 31712,
+    "nightTexels": 28070
   },
   "masksDensityBySlot": {
     "lod0": {
-      "bread": 21.37,
-      "brick": 23.25,
-      "display_glass": 58.12,
-      "door": 23.25,
-      "frame": 23.25,
-      "glass": 23.25,
-      "loaf_glass": 58.12,
-      "roof": 20.74,
-      "stone": 23.25,
-      "timber": 23.25,
-      "walls": 23.25,
-      "wicker": 22.32
+      "bread": 21.46,
+      "brick": 23.34,
+      "display_glass": 58.36,
+      "door": 23.34,
+      "frame": 23.34,
+      "glass": 23.34,
+      "loaf_glass": 58.36,
+      "roof": 20.83,
+      "stone": 23.34,
+      "timber": 23.34,
+      "walls": 23.34,
+      "wicker": 22.42
     },
     "lod1": {
-      "brick": 11.38,
-      "display_glass": 11.38,
-      "door": 11.38,
-      "frame": 11.48,
-      "glass": 11.38,
-      "loaf_glass": 11.38,
-      "roof": 11.76,
-      "stone": 11.25,
-      "timber": 11.48,
-      "walls": 11.38
+      "brick": 11.42,
+      "display_glass": 11.42,
+      "door": 11.42,
+      "frame": 11.53,
+      "glass": 11.42,
+      "loaf_glass": 11.42,
+      "roof": 11.81,
+      "stone": 11.29,
+      "timber": 11.53,
+      "walls": 11.42
     },
     "lod2": {
-      "brick": 7.24,
-      "door": 7.24,
-      "glass": 7.24,
-      "loaf_glass": 7.24,
-      "roof": 7.48,
-      "timber": 7.69,
-      "walls": 7.24
+      "brick": 7.27,
+      "door": 7.27,
+      "glass": 7.27,
+      "loaf_glass": 7.27,
+      "roof": 7.51,
+      "timber": 7.72,
+      "walls": 7.27
     }
   },
   "masksDensityPxPerM": {
     "bakery_shop_b_lod0": {
-      "max": 58.11548757088118,
-      "median": 23.245177078948423,
-      "min": 19.605975457099557
+      "max": 58.35682933030782,
+      "median": 23.34172110810752,
+      "min": 19.687275344800174
     },
     "bakery_shop_b_lod1": {
-      "max": 12.786179280859459,
-      "median": 11.376813950808312,
-      "min": 10.193463714425402
+      "max": 12.839329321505788,
+      "median": 11.424225419068454,
+      "min": 10.23558259463173
     },
     "bakery_shop_b_lod2": {
-      "max": 8.136502455695489,
-      "median": 7.239775271487794,
-      "min": 6.486670061388324
+      "max": 8.170199014433337,
+      "median": 7.269851578389879,
+      "min": 6.513591633467477
     }
   },
-  "receiverSignature": "220e1b6bf9ab3fc434046a35ea195b2f7d7906b0d1aa3390bf075b6e236d71f0",
+  "receiverSignature": "fed98203fe02639653aa21482ebdb25c74e80ba69996cec34901ffaf2a8d89bd",
   "samples": 64,
   "skipped": false,
   "texelDensityPxPerM": {
-    "max": 58.11548757088118,
-    "median": 23.245177078948423,
-    "min": 19.605975457099557
+    "max": 58.35682933030782,
+    "median": 23.34172110810752,
+    "min": 19.687275344800174
   },
   "uvMargin": 0.006
 }

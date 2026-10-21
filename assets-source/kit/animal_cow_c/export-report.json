@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/animal_cow_c.py",
-    "sha256": "41b208d4712eb38287ce9ea8889adc138c80a90d09005cd47f25567fa89db94a"
+    "sha256": "bc944d6d33e177ad4487d42dc0007c5b3a475429a731f2ee232527ea7aaffdaa"
   },
   "generatorDeps": [
     {

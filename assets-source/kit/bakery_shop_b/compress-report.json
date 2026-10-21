@@ -1,6 +1,6 @@
 {
   "name": "bakery_shop_b",
-  "date": "2026-10-20T17:11:52.026Z",
+  "date": "2026-10-21T00:11:56.481Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 388478,
-      "sha256": "a57e2db0456d9f8ce9ceed7339b32d429c3a991f00a1aa868b20101a5dffe552"
+      "bytes": 393090,
+      "sha256": "23a667ed7521a02165b71700f2296573c6baeb5eceed3830a0f4cb4d93514650"
     },
     {
       "channel": "masks",
@@ -59,8 +59,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 365626,
-      "sha256": "3f1876d02d1f0e028e1a3fe2b402b71eb11f8900efb7a087cbe4201f3018f676"
+      "bytes": 370723,
+      "sha256": "48c8e2738e81b7c8f1a6af870d45be70702f213550b1528ec70b2d1820ccd6a3"
     },
     {
       "channel": "masks",
@@ -68,21 +68,21 @@
       "path": "assets/kit/p1/bakery_shop_b/bakery_shop_b.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 581517,
-      "sha256": "bcb47866ee5ada2b901ccbdc50cd2e9174eedaea6f13488b4b930ea0b9cb3f42"
+      "bytes": 592069,
+      "sha256": "efd00a3e42a6b0db0aca0c64ab2ffc384f44d0c3520358e9957231966c1c2483"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 388478,
-      "astc": 365626
+      "bc7": 393090,
+      "astc": 370723
     },
-    "glbBytes": 134400
+    "glbBytes": 134940
   },
   "glb": {
-    "bytes": 134400,
-    "sha256": "84ef6d7ff9b11b7e284bde6af8a7c69700a87bf92073072483723cc4952d8326"
+    "bytes": 134940,
+    "sha256": "73555f3019f1f8b232ecb28decc3e021a63bad9e441a7b313bf0b90f50be52d7"
   }
 }

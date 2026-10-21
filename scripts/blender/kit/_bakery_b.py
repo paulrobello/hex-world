@@ -63,6 +63,11 @@ DISPLAY_BOOST = 2.5
 HD, HW, EAVE = 2.5, 3.5, 3.5
 PITCH, OVER, COURSES, KICK, THICK = math.radians(52.0), 0.3, 11, 0.035, 0.14
 HIP_CAP_FROM = 0.15  # the hip caps start this far in from the eave corners (inside the LOD0 bounds)
+# The back-left eave corner (ring index 3, Blender (-x, -y)) is the vertex nearest the hex border in the
+# bakery slot. On LOD0's kicked eave ring it slides KICK·SP up its hip line, staying on both kicked
+# planes, so in plan it sits on LOD1/LOD2's corner (-A, -B), BORDER_MIN from the border (owner A2,
+# 2026-10-20: as bakery_shop's 0.12 m; `border_clearance` asserts it per LOD).
+BORDER_CORNER, BORDER_MIN = 3, 0.12
 A, B = HD + OVER, HW + OVER  # eave rectangle half sizes
 TP, SP, CP = math.tan(PITCH), math.sin(PITCH), math.cos(PITCH)
 ZB = EAVE - OVER * TP  # eave edge height
@@ -125,6 +130,14 @@ def ring(t, off):
     return [Vector((ax, -ay, z)), Vector((ax, ay, z)), Vector((-ax, ay, z)), Vector((-ax, -ay, z))]
 
 
+def eave_ring(off):
+    """ring(0, off) with the border corner pulled in to (-A, -B) in plan when the eave is kicked."""
+    r = ring(0.0, off)
+    if off > 0:
+        r[BORDER_CORNER] = ring(off * SP, off)[BORDER_CORNER]
+    return r
+
+
 def side_normal(i):
     d = (X, Y, -X, -Y)[i]
     return d * SP + Z * CP
@@ -152,7 +165,7 @@ def hip_roof(mesh, s, lod):
     kick = KICK if lod == 0 else 0.0
     for k in range(n):
         t0, t1 = A * k / n, A * (k + 1) / n
-        lo, hi = ring(t0, kick), ring(t1, 0.0)
+        lo, hi = eave_ring(kick) if k == 0 else ring(t0, kick), ring(t1, 0.0)
         for i in range(4):
             j = (i + 1) % 4
             nrm = side_normal(i)
@@ -165,7 +178,7 @@ def hip_roof(mesh, s, lod):
                 up = ring(t1, kick)
                 d = (X, Y, -X, -Y)[i]
                 mesh.face([hi[i], hi[j], up[j], up[i]], roof, d * CP - Z * SP)
-    top = ring(0.0, kick)
+    top = eave_ring(kick)
     bot = ring(0.0, -THICK)
     wall = [Vector((HD, -HW, SOFFIT_Z)), Vector((HD, HW, SOFFIT_Z)), Vector((-HD, HW, SOFFIT_Z)),
             Vector((-HD, -HW, SOFFIT_Z))]
@@ -383,6 +396,15 @@ def envelope_errors(o):
     return bad
 
 
+def border_clearance(o):
+    """The smallest distance (m) from o's vertices to the hex border in the bakery slot (tile (x, z) =
+    (-4.1 + y, -8.5 + x), as ENVELOPE), with the vertex."""
+    apothem = 8.0 * math.sqrt(3.0)
+    normals = [(math.cos(k * math.pi / 3), math.sin(k * math.pi / 3)) for k in range(6)]
+    return min((apothem - max((-4.1 + v.co.y) * nx + (-8.5 + v.co.x) * nz for nx, nz in normals),
+                tuple(round(c, 4) for c in v.co)) for v in o.data.vertices)
+
+
 def build(spec, lod, slots, mats):
     s = spec["slots"]
     mesh = Mesh(slots)
@@ -434,6 +456,9 @@ def build(spec, lod, slots, mats):
     o = mesh.obj(f"{spec['piece']}_lod{lod}", mats)
     bad = envelope_errors(o)
     assert not bad, f"{o.name}: {len(bad)} vertices below {ENVELOPE_Z} m outside the parking envelope, e.g. {bad[:6]}"
+    gap, at = border_clearance(o)
+    print(f"bakery_b: {o.name} border clearance {gap:.4f} m at {at}")
+    assert gap >= BORDER_MIN, f"{o.name}: a vertex sits {gap:.4f} m from the hex border at {at} (< {BORDER_MIN})"
     BUILT.append(o.name)
     return o
 

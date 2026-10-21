@@ -9,9 +9,9 @@ unchanged (animal_cow.py is a monolithic script, frozen with the approved piece)
 collider box and scatter footprint are animal_cow's. Only the coat differs: a deep red-brown body with
 a white face and poll, a white crest behind the poll, a white dewlap, brisket and underline, white
 socks below the knees and hocks, and a white tail switch; the ears, the cheeks behind the eyes and a
-patch round each eye stay red. LOD0 and LOD1 are animal_cow's; LOD2 draws the head on four
-stations (three drew a beak, animal_cow friction note 6) paid for by three-sided legs beyond 400 m, so
-no LOD has more triangles than animal_cow's.
+patch round each eye stay red. All three LODs are animal_cow's: LOD2 draws the head on four stations
+(three drew a beak, animal_cow friction note 6) paid for by three-sided legs beyond 400 m, so no LOD
+has more triangles than animal_cow's.
 
 Real scale: 1.45 m at the withers, 2.32 m from muzzle tip to rump (the tail hangs 0.07 m behind it).
 Faces runtime +z, +y up, +x the cow's left; pivot on the ground under the body centre. Kind `prop`,
@@ -110,8 +110,8 @@ SPEC = {
         ((0, -1.00, 0.49), 0.0, 0.0, 0.0, 2.0),
     ], frame="path"),
 }
-# Per LOD: part -> (station indices, ring sides). animal_cow's LOD0 and LOD1; LOD2 with the head on
-# four stations and three-sided legs (animal_cow: head [0, 2, 7], legs at 4 sides).
+# Per LOD: part -> (station indices, ring sides). animal_cow's, LOD2 included: the head on four
+# stations [0, 2, 5, 7] and three-sided legs.
 LODS = {
     0: {"body": (range(10), 18), "neck": (range(4), 12), "head": (range(8), 12),
         "front_leg": (range(8), 8), "back_leg": (range(8), 8), "ear": (range(4), 6), "tail": (range(8), 6)},
@@ -123,7 +123,7 @@ LODS = {
 }
 GAIT = {"leg_fl": 0.0, "leg_br": 0.0, "leg_fr": 0.5, "leg_bl": 0.5}
 # animal_cow's triangles per LOD: the ceiling for this variant (brief: same pose and size).
-COW_TRIS = (1058, 468, 148)
+COW_TRIS = (1058, 468, 138)
 
 C = {k: fa.hexc(v) for k, v in {
     "white": "#ebe6dc", "white_shade": "#d9d2c6", "red": "#7b351c", "red_dark": "#5f2611",

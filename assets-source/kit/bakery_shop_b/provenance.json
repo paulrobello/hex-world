@@ -9,7 +9,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_bakery_b.py",
-      "sha256": "4089e3f424a59db564c595589bc4beca5ae00d0ca0420f0c6e7912786ccfa9c5"
+      "sha256": "a6c57b511f941bd2f3f01a785ed4384e146212a15f96c46b07e7f89c3e5c419c"
     },
     {
       "path": "scripts/blender/kit/_house.py",
@@ -43,36 +43,36 @@
     "device": "CPU",
     "marginPx": 2,
     "maskStats": {
-      "aoMean": 0.5963767766952515,
+      "aoMean": 0.5982035398483276,
       "aoP05": 0,
       "centroids": {
         "lod0": {
           "minA": {
             "bread": 0,
             "brick": 0,
-            "display_glass": 0.176,
+            "display_glass": 0.196,
             "door": 0,
             "frame": 0,
-            "glass": 0.094,
-            "loaf_glass": 0.149,
+            "glass": 0.345,
+            "loaf_glass": 0.169,
             "roof": 0,
             "stone": 0,
             "timber": 0,
             "walls": 0,
-            "wicker": 0.031
+            "wicker": 0.016
           },
           "unbakedTris": 0
         },
         "lod1": {
           "minA": {
             "brick": 0,
-            "display_glass": 0.671,
+            "display_glass": 0.718,
             "door": 0,
-            "frame": 0,
-            "glass": 0.655,
-            "loaf_glass": 0.843,
+            "frame": 0.094,
+            "glass": 0.733,
+            "loaf_glass": 0.78,
             "roof": 0,
-            "stone": 0.608,
+            "stone": 0,
             "timber": 0,
             "walls": 0
           },
@@ -80,82 +80,82 @@
         },
         "lod2": {
           "minA": {
-            "brick": 0.345,
+            "brick": 0.298,
             "door": 0,
-            "glass": 0.671,
+            "glass": 0.686,
             "loaf_glass": 1,
             "roof": 0.016,
-            "timber": 0.047,
+            "timber": 0.514,
             "walls": 0
           },
           "unbakedTris": 0
         }
       },
-      "coverage": 0.4233264923095703,
-      "filledTexels": 30296,
-      "nightTexels": 28049
+      "coverage": 0.42826366424560547,
+      "filledTexels": 31712,
+      "nightTexels": 28070
     },
     "masksDensityBySlot": {
       "lod0": {
-        "bread": 21.37,
-        "brick": 23.25,
-        "display_glass": 58.12,
-        "door": 23.25,
-        "frame": 23.25,
-        "glass": 23.25,
-        "loaf_glass": 58.12,
-        "roof": 20.74,
-        "stone": 23.25,
-        "timber": 23.25,
-        "walls": 23.25,
-        "wicker": 22.32
+        "bread": 21.46,
+        "brick": 23.34,
+        "display_glass": 58.36,
+        "door": 23.34,
+        "frame": 23.34,
+        "glass": 23.34,
+        "loaf_glass": 58.36,
+        "roof": 20.83,
+        "stone": 23.34,
+        "timber": 23.34,
+        "walls": 23.34,
+        "wicker": 22.42
       },
       "lod1": {
-        "brick": 11.38,
-        "display_glass": 11.38,
-        "door": 11.38,
-        "frame": 11.48,
-        "glass": 11.38,
-        "loaf_glass": 11.38,
-        "roof": 11.76,
-        "stone": 11.25,
-        "timber": 11.48,
-        "walls": 11.38
+        "brick": 11.42,
+        "display_glass": 11.42,
+        "door": 11.42,
+        "frame": 11.53,
+        "glass": 11.42,
+        "loaf_glass": 11.42,
+        "roof": 11.81,
+        "stone": 11.29,
+        "timber": 11.53,
+        "walls": 11.42
       },
       "lod2": {
-        "brick": 7.24,
-        "door": 7.24,
-        "glass": 7.24,
-        "loaf_glass": 7.24,
-        "roof": 7.48,
-        "timber": 7.69,
-        "walls": 7.24
+        "brick": 7.27,
+        "door": 7.27,
+        "glass": 7.27,
+        "loaf_glass": 7.27,
+        "roof": 7.51,
+        "timber": 7.72,
+        "walls": 7.27
       }
     },
     "masksDensityPxPerM": {
       "bakery_shop_b_lod0": {
-        "max": 58.11548757088118,
-        "median": 23.245177078948423,
-        "min": 19.605975457099557
+        "max": 58.35682933030782,
+        "median": 23.34172110810752,
+        "min": 19.687275344800174
       },
       "bakery_shop_b_lod1": {
-        "max": 12.786179280859459,
-        "median": 11.376813950808312,
-        "min": 10.193463714425402
+        "max": 12.839329321505788,
+        "median": 11.424225419068454,
+        "min": 10.23558259463173
       },
       "bakery_shop_b_lod2": {
-        "max": 8.136502455695489,
-        "median": 7.239775271487794,
-        "min": 6.486670061388324
+        "max": 8.170199014433337,
+        "median": 7.269851578389879,
+        "min": 6.513591633467477
       }
     },
-    "receiverSignature": "220e1b6bf9ab3fc434046a35ea195b2f7d7906b0d1aa3390bf075b6e236d71f0",
+    "receiverSignature": "fed98203fe02639653aa21482ebdb25c74e80ba69996cec34901ffaf2a8d89bd",
     "samples": 64,
     "skipped": false,
     "texelDensityPxPerM": {
-      "max": 58.11548757088118,
-      "median": 23.245177078948423,
-      "min": 19.605975457099557
+      "max": 58.35682933030782,
+      "median": 23.34172110810752,
+      "min": 19.687275344800174
     },
     "uvMargin": 0.006
   },
@@ -182,9 +182,9 @@
   "sockets": [],
   "pivot": "hex_center",
   "texelDensityPxPerM": {
-    "max": 58.11548757088118,
-    "median": 23.245177078948423,
-    "min": 19.605975457099557
+    "max": 58.35682933030782,
+    "median": 23.34172110810752,
+    "min": 19.687275344800174
   },
   "compression": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
@@ -192,10 +192,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 388478,
-        "astc": 365626
+        "bc7": 393090,
+        "astc": 370723
       },
-      "glbBytes": 134400
+      "glbBytes": 134940
     },
     "textureEncodes": [
       {
@@ -206,8 +206,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 388478,
-        "sha256": "a57e2db0456d9f8ce9ceed7339b32d429c3a991f00a1aa868b20101a5dffe552"
+        "bytes": 393090,
+        "sha256": "23a667ed7521a02165b71700f2296573c6baeb5eceed3830a0f4cb4d93514650"
       },
       {
         "channel": "masks",
@@ -217,8 +217,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 365626,
-        "sha256": "3f1876d02d1f0e028e1a3fe2b402b71eb11f8900efb7a087cbe4201f3018f676"
+        "bytes": 370723,
+        "sha256": "48c8e2738e81b7c8f1a6af870d45be70702f213550b1528ec70b2d1820ccd6a3"
       },
       {
         "channel": "masks",
@@ -226,31 +226,31 @@
         "path": "assets/kit/p1/bakery_shop_b/bakery_shop_b.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 581517,
-        "sha256": "bcb47866ee5ada2b901ccbdc50cd2e9174eedaea6f13488b4b930ea0b9cb3f42"
+        "bytes": 592069,
+        "sha256": "efd00a3e42a6b0db0aca0c64ab2ffc384f44d0c3520358e9957231966c1c2483"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/bakery_shop_b/bakery_shop_b.glb",
-      "sha256": "84ef6d7ff9b11b7e284bde6af8a7c69700a87bf92073072483723cc4952d8326",
-      "bytes": 134400
+      "sha256": "73555f3019f1f8b232ecb28decc3e021a63bad9e441a7b313bf0b90f50be52d7",
+      "bytes": 134940
     },
     {
       "path": "assets/kit/p1/bakery_shop_b/bakery_shop_b.masks.bc7.ktx2",
-      "sha256": "a57e2db0456d9f8ce9ceed7339b32d429c3a991f00a1aa868b20101a5dffe552",
-      "bytes": 388478
+      "sha256": "23a667ed7521a02165b71700f2296573c6baeb5eceed3830a0f4cb4d93514650",
+      "bytes": 393090
     },
     {
       "path": "assets/kit/p1/bakery_shop_b/bakery_shop_b.masks.astc.ktx2",
-      "sha256": "3f1876d02d1f0e028e1a3fe2b402b71eb11f8900efb7a087cbe4201f3018f676",
-      "bytes": 365626
+      "sha256": "48c8e2738e81b7c8f1a6af870d45be70702f213550b1528ec70b2d1820ccd6a3",
+      "bytes": 370723
     },
     {
       "path": "assets/kit/p1/bakery_shop_b/bakery_shop_b.masks.png",
-      "sha256": "bcb47866ee5ada2b901ccbdc50cd2e9174eedaea6f13488b4b930ea0b9cb3f42",
-      "bytes": 581517
+      "sha256": "efd00a3e42a6b0db0aca0c64ab2ffc384f44d0c3520358e9957231966c1c2483",
+      "bytes": 592069
     }
   ],
   "references": [
@@ -276,7 +276,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T17:14:32.608Z",
+    "date": "2026-10-21T00:17:01.414Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",

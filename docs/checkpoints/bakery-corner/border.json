@@ -1,0 +1,164 @@
+{
+ "before": {
+  "bakery_shop_b_collider": {
+   "tris": 12,
+   "borderM": 0.1203,
+   "blender": [
+    -2.8,
+    -3.8,
+    7.75
+   ],
+   "tile": [
+    -7.9,
+    -11.3
+   ]
+  },
+  "bakery_shop_b_lod0": {
+   "tris": 1304,
+   "borderM": 0.0826,
+   "blender": [
+    -2.8276,
+    -3.8276,
+    3.1376
+   ],
+   "tile": [
+    -7.9276,
+    -11.3276
+   ]
+  },
+  "bakery_shop_b_lod1": {
+   "tris": 429,
+   "borderM": 0.1203,
+   "blender": [
+    -2.8,
+    -3.8,
+    3.116
+   ],
+   "tile": [
+    -7.9,
+    -11.3
+   ]
+  },
+  "bakery_shop_b_lod2": {
+   "tris": 122,
+   "borderM": 0.1203,
+   "blender": [
+    -2.8,
+    -3.8,
+    3.116
+   ],
+   "tile": [
+    -7.9,
+    -11.3
+   ]
+  }
+ },
+ "after": {
+  "bakery_shop_b_collider": {
+   "tris": 12,
+   "borderM": 0.1203,
+   "blender": [
+    -2.8,
+    -3.8,
+    7.75
+   ],
+   "tile": [
+    -7.9,
+    -11.3
+   ]
+  },
+  "bakery_shop_b_lod0": {
+   "tris": 1304,
+   "borderM": 0.1203,
+   "blender": [
+    -2.8,
+    -3.8,
+    3.1729
+   ],
+   "tile": [
+    -7.9,
+    -11.3
+   ]
+  },
+  "bakery_shop_b_lod1": {
+   "tris": 429,
+   "borderM": 0.1203,
+   "blender": [
+    -2.8,
+    -3.8,
+    3.116
+   ],
+   "tile": [
+    -7.9,
+    -11.3
+   ]
+  },
+  "bakery_shop_b_lod2": {
+   "tris": 122,
+   "borderM": 0.1203,
+   "blender": [
+    -2.8,
+    -3.8,
+    3.116
+   ],
+   "tile": [
+    -7.9,
+    -11.3
+   ]
+  }
+ },
+ "bakery_shop": {
+  "bakery_shop_collider": {
+   "tris": 59,
+   "borderM": 0.1453,
+   "blender": [
+    -2.8,
+    -3.75,
+    4.0425
+   ],
+   "tile": [
+    -7.85,
+    -11.3
+   ]
+  },
+  "bakery_shop_lod0": {
+   "tris": 1405,
+   "borderM": 0.1188,
+   "blender": [
+    -2.8306,
+    -3.75,
+    4.0682
+   ],
+   "tile": [
+    -7.85,
+    -11.3306
+   ]
+  },
+  "bakery_shop_lod1": {
+   "tris": 601,
+   "borderM": 0.1453,
+   "blender": [
+    -2.8,
+    -3.75,
+    4.0425
+   ],
+   "tile": [
+    -7.85,
+    -11.3
+   ]
+  },
+  "bakery_shop_lod2": {
+   "tris": 127,
+   "borderM": 0.1453,
+   "blender": [
+    -2.8,
+    -3.75,
+    4.0425
+   ],
+   "tile": [
+    -7.85,
+    -11.3
+   ]
+  }
+ }
+}
