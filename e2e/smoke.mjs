@@ -586,7 +586,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
   });
 }
 
-// 9. Kit streaming by pack (PRD §10, crates/hex-render/src/play/packs.rs). Before the first
+// 9. Kit streaming by pack (PRD §10, crates/hex-play/src/play/packs.rs). Before the first
 // interaction the play scenario may fetch only core files (the network log, mapped to packs through
 // dist's kit manifest), and every core file must be in by READY. Selecting the oak tile requests
 // the forest and hero packs at once; their files are held (page.route) so the tile, placed next, is caught

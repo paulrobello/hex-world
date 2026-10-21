@@ -251,6 +251,7 @@ brand:
 web-smoke: build-web
 	cd e2e && npm ci --no-audit --no-fund
 	node e2e/smoke.mjs dist
+	node e2e/initial-download.mjs dist
 
 # Local only (GPU Chromium): ghost evidence for owner feedback U1, written to docs/checkpoints/ghost/.
 shots-ghost: build-web
