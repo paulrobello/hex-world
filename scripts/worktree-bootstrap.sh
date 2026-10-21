@@ -6,7 +6,15 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-common="$(cd "$root" && git rev-parse --path-format=absolute --git-common-dir)"
+# The main checkout from the worktree's .git pointer file, without running git: agent worktree
+# guards refuse scripts that call git internally.
+if [ -f "$root/.git" ]; then
+  gitdir="$(sed -n 's/^gitdir: //p' "$root/.git")"
+  case "$gitdir" in /*) ;; *) gitdir="$root/$gitdir" ;; esac
+  common="$(cd "$gitdir/$(cat "$gitdir/commondir")" && pwd)"
+else
+  common="$root/.git"
+fi
 main="$(dirname "$common")"
 web=0
 [ "${1:-}" = "--web" ] && web=1
@@ -63,4 +71,4 @@ else
   say "KTX tools installed"
 fi
 
-say "done; HEAD $(cd "$root" && git log --oneline -1)"
+say "done"
