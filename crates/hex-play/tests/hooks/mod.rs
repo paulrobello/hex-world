@@ -1019,8 +1019,24 @@ fn wgsl_fields(src: &str, name: &str) -> Option<Vec<String>> {
         .nth(1)?
         .split('}')
         .next()?;
+    // Split at the commas between fields, not those inside `array<T, N>`.
+    let mut fields = vec![];
+    let (mut depth, mut start) = (0i32, 0usize);
+    for (i, c) in body.char_indices() {
+        match c {
+            '<' => depth += 1,
+            '>' => depth -= 1,
+            ',' if depth == 0 => {
+                fields.push(&body[start..i]);
+                start = i + 1;
+            }
+            _ => {}
+        }
+    }
+    fields.push(&body[start..]);
     Some(
-        body.split(',')
+        fields
+            .into_iter()
             .filter_map(|f| f.split(':').next())
             .map(|f| f.trim().to_string())
             .filter(|f| !f.is_empty())

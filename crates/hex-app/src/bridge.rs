@@ -600,8 +600,18 @@ mod schema {
                 x: 37.07,
                 z: 0.0,
             },
+            GameEvent::BoatStroke {
+                id: 0,
+                x: 3.5,
+                z: 20.1,
+            },
+            GameEvent::SailFlap {
+                id: 3,
+                x: -40.2,
+                z: 8.0,
+            },
         ];
-        let mut seen = [false; 26];
+        let mut seen = [false; 28];
         for e in &samples {
             let i = match e {
                 GameEvent::TilePlaced { .. } => 0,
@@ -630,6 +640,8 @@ mod schema {
                 GameEvent::WalkModeToggled { .. } => 23,
                 GameEvent::TrainDeparted { .. } => 24,
                 GameEvent::TrainAtLineEnd { .. } => 25,
+                GameEvent::BoatStroke { .. } => 26,
+                GameEvent::SailFlap { .. } => 27,
             };
             seen[i] = true;
         }

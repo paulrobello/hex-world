@@ -1063,6 +1063,141 @@
       "provenance": "assets-source/audio/sfx/buffer-clunk-2/provenance.json"
     },
     {
+      "id": "boat-oar-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "boat-oar",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.619229,
+      "decodedBytes": 310892,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/boat-oar-1.webm",
+          "sha256": "caf64af1602398ad8e9edebedb35c0df5a4f7348d5d37ecfc664e9c32dd0bb4a",
+          "bytes": 15987
+        },
+        "m4a": {
+          "path": "ambience/boat-oar-1.m4a",
+          "sha256": "f3783e14e008bb16c6d25f6764a0665a737c2af78980800dc69289ec005967e0",
+          "bytes": 31906
+        }
+      },
+      "provenance": "assets-source/audio/ambience/boat-oar-1/provenance.json"
+    },
+    {
+      "id": "boat-oar-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "boat-oar",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.0,
+      "decodedBytes": 384000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/boat-oar-2.webm",
+          "sha256": "9402d8f175d0d8aae56cce3beb05c5c27af7e4c3943530a3219dc160c4b333ff",
+          "bytes": 16885
+        },
+        "m4a": {
+          "path": "ambience/boat-oar-2.m4a",
+          "sha256": "67381378698914a9a25abc1ddf61e4b7c2356705ae3e4855702017b315240651",
+          "bytes": 37134
+        }
+      },
+      "provenance": "assets-source/audio/ambience/boat-oar-2/provenance.json"
+    },
+    {
+      "id": "boat-oar-3",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "boat-oar",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.0,
+      "decodedBytes": 384000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/boat-oar-3.webm",
+          "sha256": "56c1e28bd67138d6a249330d7843d0dbfdf75f5ae5c65b0b3b8ce60f23721cd4",
+          "bytes": 14787
+        },
+        "m4a": {
+          "path": "ambience/boat-oar-3.m4a",
+          "sha256": "049d60c77cc16262a1b29e9c8edc2ab84541b963a416e4123ebca955e91c46e4",
+          "bytes": 38994
+        }
+      },
+      "provenance": "assets-source/audio/ambience/boat-oar-3/provenance.json"
+    },
+    {
+      "id": "boat-sail-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "boat-sail",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.912896,
+      "decodedBytes": 559276,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/boat-sail-1.webm",
+          "sha256": "51e62bcd3ae40a26770e872bed681da561fb5af8f46a1091a9cd001a81656273",
+          "bytes": 22073
+        },
+        "m4a": {
+          "path": "ambience/boat-sail-1.m4a",
+          "sha256": "93eac21742a3d653818c50d8e76b1b3f5ae774c45e851f45c00601f682a5cb2a",
+          "bytes": 56794
+        }
+      },
+      "provenance": "assets-source/audio/ambience/boat-sail-1/provenance.json"
+    },
+    {
+      "id": "boat-sail-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "boat-sail",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.442875,
+      "decodedBytes": 469032,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/boat-sail-2.webm",
+          "sha256": "f80b28bb8a461b50e3aba31fb7c7f1ca39e840b5e7c13f4e49e7188b8950dcc8",
+          "bytes": 17618
+        },
+        "m4a": {
+          "path": "ambience/boat-sail-2.m4a",
+          "sha256": "2112bcf07a0b70f994d62890b5bc20a61898510b6decf798c59745e3b7e428c7",
+          "bytes": 45998
+        }
+      },
+      "provenance": "assets-source/audio/ambience/boat-sail-2/provenance.json"
+    },
+    {
       "id": "meadow-day",
       "kind": "music",
       "class": "music",

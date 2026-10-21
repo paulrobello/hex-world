@@ -621,7 +621,20 @@ pub struct WaterParams {
     pub _pad0: f32,
     pub _pad1: f32,
     pub _pad2: f32,
+    /// The boats' hulls (`hex_play::boats`), two per boat: (centre x, centre z, heading x,
+    /// heading z) and (half length, half beam, top y, centre offset along the heading). The water
+    /// draws no surface inside them: on swell it would otherwise show through the hull floor.
+    pub hulls: [Vec4; HULL_SLOTS],
+    /// Boats in `hulls`: 0 draws the water everywhere.
+    pub boat_count: u32,
+    pub _pad3: u32,
+    pub _pad4: u32,
+    pub _pad5: u32,
 }
+
+/// Boats the water clips ([`WaterParams::hulls`]): two vec4 each, mirrored by `water.wesl`.
+pub const MAX_HULLS: usize = 6;
+pub const HULL_SLOTS: usize = 2 * MAX_HULLS;
 
 /// Shader variants: Low drops refraction (and with it caustics), Medium drops the second caustic
 /// layer and the screen-space reflection march. `freeze` compiles in the §9.4 ice paths, which read
@@ -1315,7 +1328,11 @@ mod tests {
 
     #[test]
     fn params_match_their_wgsl_structs() {
-        assert_eq!(WaterParams::min_size().get(), 32);
+        // 8 scalars, the 12 hull vec4s, the boat count and 3 pads (water.wesl `WaterParams`).
+        assert_eq!(
+            WaterParams::min_size().get(),
+            32 + 16 * HULL_SLOTS as u64 + 16
+        );
         assert_eq!(TerrainParams::min_size().get(), 16);
     }
 }

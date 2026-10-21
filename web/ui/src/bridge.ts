@@ -204,6 +204,10 @@ export type GameEvent =
   | { type: "trainDeparted"; id: number; x: number; z: number }
   /** A train comes to rest against a buffer stop (owner D2-Q5): its sim id and the stop's pivot XZ. */
   | { type: "trainAtLineEnd"; id: number; x: number; z: number }
+  /** A moving rowing boat's oar blades catch the water (one stroke): the boat's id and its world XZ. */
+  | { type: "boatStroke"; id: number; x: number; z: number }
+  /** A sailing boat's boom crosses to the other side on a turn (a tack or a gybe): its id and world XZ. */
+  | { type: "sailFlap"; id: number; x: number; z: number }
   | { type: "photoExported"; name: string; width: number; height: number }
   | { type: "photoExportFailed"; name: string; reason: string }
   | { type: "saved"; tag: string | null; tiles: number; bytes: number }
@@ -389,7 +393,18 @@ export interface PhotoState {
 }
 
 /** What a prop is to the player (`walk::prop_kind`): walk blocks and photo focus hits report it. */
-export type PropKind = "building" | "tree" | "hay" | "animal" | "log" | "fence" | "lever" | "buffer_stop" | "rock";
+export type PropKind =
+  | "building"
+  | "tree"
+  | "hay"
+  | "animal"
+  | "log"
+  | "fence"
+  | "lever"
+  | "buffer_stop"
+  | "boat"
+  | "stage"
+  | "rock";
 
 /** Why the walker's latest move stopped. */
 export type WalkBlocked = PropKind | "water" | "edge" | "steep";
@@ -637,6 +652,8 @@ export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
   carParked: keys<EventOf<"carParked">>({ id: true, q: true, r: true, x: true, z: true }),
   trainDeparted: keys<EventOf<"trainDeparted">>({ id: true, x: true, z: true }),
   trainAtLineEnd: keys<EventOf<"trainAtLineEnd">>({ id: true, x: true, z: true }),
+  boatStroke: keys<EventOf<"boatStroke">>({ id: true, x: true, z: true }),
+  sailFlap: keys<EventOf<"sailFlap">>({ id: true, x: true, z: true }),
   photoExported: keys<EventOf<"photoExported">>({ name: true, width: true, height: true }),
   photoExportFailed: keys<EventOf<"photoExportFailed">>({ name: true, reason: true }),
   saved: keys<EventOf<"saved">>({ tag: true, tiles: true, bytes: true }),

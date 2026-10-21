@@ -8,6 +8,14 @@ import {
   BED_CUE,
   bellIdle,
   bellStep,
+  BOAT_CUES,
+  BOAT_OAR_VOICES,
+  BOAT_RATE_SPREAD,
+  type BoatEvent,
+  type BoatState,
+  boatIdle,
+  boatInRange,
+  boatStep,
   CAR_CUES,
   CAR_DRIVE_GAP_S,
   CAR_EVENT_WAIT_S,
@@ -1003,4 +1011,114 @@ test("trains: an arrival at a buffer stop clunks once from the buffer-clunk pool
   assert.ok(pools["buffer-clunk"]!.includes(r.play[0]!.cue));
   close(r.play[0]!.gain, TRAIN_CUES.clunk.level * emitterGain(...cellWorld(1, 0, R), carView));
   assert.equal(step(r.state, [arrive]).play.length, 0, "no second clunk while the first sounds");
+});
+
+// ---------- Boats ----------
+const boatPools: Record<string, string[]> = { "boat-oar": ["oar-a", "oar-b", "oar-c"], "boat-sail": ["sail-a"] };
+const boatVariants = (pool: string) => boatPools[pool] ?? [];
+const boatSeconds = (cue: string) => (cue.startsWith("oar") ? 1.6 : 2.5);
+const boatAt = (boat: number, kind: "oar" | "sail", q: number, r: number): BoatEvent => {
+  const [x, z] = cellWorld(q, r, R);
+  return { boat, kind, x, z };
+};
+const bstep = (st: BoatState, now: number, events: BoatEvent[], gate: OneShotGate = null, rand = () => 0.5) =>
+  boatStep(st, now, events, carView, gate, boatVariants, boatSeconds, rand);
+
+test("boats: the oar and sail pools ship as decoded ambience one-shots routed by the runtime", () => {
+  for (const { pool } of Object.values(BOAT_CUES)) {
+    const variants = manifest.cues.filter((c) => c.pool === pool);
+    assert.ok(variants.length >= 1, `${pool} has variants`);
+    for (const c of variants) {
+      assert.ok(c.status === "mastered" && !c.loop && c.playback === "decode", `${c.id} is a decoded one-shot`);
+      assert.equal(busOf(c), "ambience", `${c.id} plays on the ambience bus`);
+      assert.deepEqual(c.events, [], `${c.id} is routed by the runtime, not by an event list`);
+    }
+  }
+  assert.ok(!ONE_SHOTS.some((r) => r.pool === "boat-oar" || r.pool === "boat-sail"), "no timer row");
+});
+
+test("boats: a stroke plays an oar at the boat under the focus mix, a flap a sail, each within the rate spread", () => {
+  const r = bstep(boatIdle(), 5, [boatAt(1, "oar", 1, 0), boatAt(2, "sail", 0, 1)], null, () => 0.99);
+  assert.deepEqual(
+    r.play.map((p) => [p.boat, p.kind, p.cue]),
+    [
+      [1, "oar", "oar-c"],
+      [2, "sail", "sail-a"],
+    ],
+  );
+  const [x, z] = cellWorld(1, 0, R);
+  assert.deepEqual([r.play[0]!.x, r.play[0]!.z], [x, z]);
+  close(r.play[0]!.gain, BOAT_CUES.oar.level * emitterGain(x, z, carView));
+  close(r.play[1]!.gain, BOAT_CUES.sail.level * emitterGain(...cellWorld(0, 1, R), carView));
+  close(r.state.voices[0]!.endsAt, 5 + 1.6 / r.play[0]!.rate);
+  assert.deepEqual([r.state.plays, r.state.dropped, r.state.gatedBy], [2, 0, null]);
+  for (const rand of [() => 0, () => 0.5, () => 0.999999]) {
+    const rate = bstep(boatIdle(), 0, [boatAt(1, "oar", 0, 0)], null, rand).play[0]!.rate;
+    assert.ok(Math.abs(rate - 1) <= BOAT_RATE_SPREAD + 1e-9, `rate ${rate} within the spread`);
+  }
+  close(bstep(boatIdle(), 0, [boatAt(1, "oar", 0, 0)], null, () => 0).play[0]!.rate, 1 - BOAT_RATE_SPREAD);
+});
+
+test("boats: dropped while muted, with the ambience bus at 0, or beyond three hex steps of the focus", () => {
+  const both = [boatAt(1, "oar", 0, 0), boatAt(2, "sail", 0, 0)];
+  for (const gate of ["muted", "ambience-off"] as const) {
+    const r = bstep(boatIdle(), 0, both, gate);
+    assert.deepEqual([r.play.length, r.state.gatedBy, r.state.dropped], [0, gate, 2], gate);
+  }
+  assert.ok(boatInRange(...cellWorld(3, 0, R), carView) && !boatInRange(...cellWorld(4, 0, R), carView));
+  const far = bstep(boatIdle(), 0, [boatAt(1, "oar", 4, 0), boatAt(2, "sail", 0, 4)]);
+  assert.deepEqual([far.play.length, far.state.gatedBy, far.state.dropped], [0, "out-of-range", 2]);
+  const empty = boatStep(
+    boatIdle(),
+    0,
+    [boatAt(1, "oar", 0, 0)],
+    carView,
+    null,
+    () => [],
+    boatSeconds,
+    () => 0.5,
+  );
+  assert.deepEqual([empty.play.length, empty.state.gatedBy], [0, "not-loaded"]);
+});
+
+test("boats: never the same oar twice running, and every take of the pool is used", () => {
+  let seed = 7;
+  const rand = () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed / 2147483648;
+  };
+  let st = boatIdle();
+  const cues: string[] = [];
+  for (let i = 0; i < 30; i++) {
+    const r = bstep(st, i * 3, [boatAt(i % 3, "oar", 0, 0)], null, rand);
+    st = r.state;
+    cues.push(r.play[0]!.cue);
+  }
+  for (let i = 1; i < cues.length; i++) assert.notEqual(cues[i], cues[i - 1], `stroke ${i} repeats ${cues[i]}`);
+  assert.deepEqual([...new Set(cues)].sort(), ["oar-a", "oar-b", "oar-c"]);
+  assert.equal(st.lastCue["boat-oar"], cues.at(-1));
+});
+
+test("boats: at most BOAT_OAR_VOICES oars at once; a stroke beyond them is dropped, a sail still plays", () => {
+  const strokes = [1, 2, 3].map((id) => boatAt(id, "oar", 0, 0));
+  const r1 = bstep(boatIdle(), 0, [...strokes, boatAt(4, "sail", 0, 0)]);
+  assert.deepEqual(
+    r1.play.map((p) => [p.boat, p.kind]),
+    [
+      [1, "oar"],
+      [2, "oar"],
+      [4, "sail"],
+    ],
+  );
+  assert.equal(BOAT_OAR_VOICES, 2);
+  assert.equal(r1.state.dropped, 1, "the third stroke is dropped");
+  assert.equal(r1.state.gatedBy, null, "the sail played after the drop");
+  const r2 = bstep(r1.state, 1, [boatAt(3, "oar", 0, 0)]);
+  assert.deepEqual([r2.play.length, r2.state.gatedBy, r2.state.dropped], [0, "cap", 2], "still capped, not queued");
+  const r3 = bstep(r2.state, 2, [boatAt(3, "oar", 0, 0)]);
+  assert.deepEqual(
+    r3.play.map((p) => p.boat),
+    [3],
+    "the oars ended: a new stroke plays",
+  );
 });

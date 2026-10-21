@@ -1,0 +1,44 @@
+{
+  "cueId": "boat-sail-2",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording of a canvas sail on a little wooden sailboat luffing as the boat turns through the wind: a brief soft flapping of the cloth, a gentle thump as the boom settles on the other side, then quiet, about two seconds. Silence before and after, no continuous wind, no voices, no music.",
+  "parameters": {
+    "text": "Close, isolated recording of a canvas sail on a little wooden sailboat luffing as the boat turns through the wind: a brief soft flapping of the cloth, a gentle thump as the boom settles on the other side, then quiet, about two seconds. Silence before and after, no continuous wind, no voices, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 3.0,
+    "prompt_influence": 0.6
+  },
+  "generationId": "5024350570393dd645915e5a79461745",
+  "responseHeaders": {
+    "date": "Tue, 20 Oct 2026 23:49:56 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "30",
+    "content-length": "48944",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "5024350570393dd645915e5a79461745",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-20T23:49:57+00:00",
+  "attempt": 64,
+  "creditsCharged": 30,
+  "sourceFile": "boat-sail-2.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  },
+  "rejectedReason": "first take was continuous repeated flapping with wind for the whole 3 s (floor 21.1 dB under the peak window, needs 40; -17.1 LUFS after mastering)"
+}

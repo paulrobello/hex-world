@@ -1,0 +1,43 @@
+{
+  "cueId": "boat-sail-1",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording of a small sailboat coming about: its canvas gaff sail and wooden boom swing across and the sail flaps and luffs once with a soft rattling flutter, then fills and goes quiet, about one and a half seconds. Only a light breath of wind as the sail fills. Silence before and after, no continuous wind, no water, no voices, no music.",
+  "parameters": {
+    "text": "Close, isolated recording of a small sailboat coming about: its canvas gaff sail and wooden boom swing across and the sail flaps and luffs once with a soft rattling flutter, then fills and goes quiet, about one and a half seconds. Only a light breath of wind as the sail fills. Silence before and after, no continuous wind, no water, no voices, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 3.0,
+    "prompt_influence": 0.6
+  },
+  "generationId": "8911a8a16bead0e659cc341b2e239b52",
+  "responseHeaders": {
+    "date": "Tue, 20 Oct 2026 23:49:53 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "30",
+    "content-length": "48944",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "8911a8a16bead0e659cc341b2e239b52",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-20T23:49:53+00:00",
+  "attempt": 63,
+  "creditsCharged": 30,
+  "sourceFile": "boat-sail-1.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}

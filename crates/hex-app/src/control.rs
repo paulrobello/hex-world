@@ -717,6 +717,7 @@ pub struct PresentationSnapshot<'w> {
     debug: Res<'w, hex_play::debug::DebugOverlays>,
     debug_report: Res<'w, hex_play::debug::DebugReport>,
     farm: Option<Res<'w, hex_play::farm::FarmHerds>>,
+    boats: Option<Res<'w, hex_play::boats::Boats>>,
 }
 
 #[derive(bevy::ecs::system::SystemParam)]
@@ -781,6 +782,7 @@ pub fn publish_state(
         debug,
         debug_report,
         farm,
+        boats,
     } = presentation;
     let CaptureSnapshot {
         photo,
@@ -834,6 +836,9 @@ pub fn publish_state(
         crate::walk::extend_play_view(&mut p, &walk);
         if let Some(farm) = &farm {
             p["farm"] = farm.state_json();
+        }
+        if let Some(boats) = &boats {
+            p["boats"] = boats.state_json();
         }
         let orbit = walk
             .orbit()

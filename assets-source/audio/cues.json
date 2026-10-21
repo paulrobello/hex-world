@@ -5,8 +5,8 @@
   "masterTruePeak": -2.0,
   "lufsTolerance": 1.0,
   "decodedBudgetBytes": 96000000,
-  "generationCap": 59,
-  "generationCapNote": "Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 57-59, 120 credits), and attempt 57 was kept, so the cap is set to the 59 attempts logged. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: the cap was raised from 53 by at most 6 for the place-slosh pool (three short one-shots, at most two attempts each). Three were spent (attempts 54-56, 60 credits), one first take per variant, all passing the floor criterion, so the cap is set to the 56 attempts logged. Before that, owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged. Owner D2-Q5, 2026-10-20 (a soft buffer clunk when a train comes to rest at a line end), under the standing approval for new sounds: the cap was raised from 56 by at most 4 for the buffer-clunk pool (two short one-shots, at most two attempts each). Three were spent (attempts 57-59, 30 credits): one first take per variant and one retake of buffer-clunk-1, whose first take was a flat hiss burst, not a clunk. The retake's rumble tail was held down by a gate instead of a second retake, so the cap is set to the 59 attempts logged. Before that, owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: the cap was raised from 53 by at most 6 for the place-slosh pool (three short one-shots, at most two attempts each). Three were spent (attempts 54-56, 60 credits), one first take per variant, all passing the floor criterion, so the cap is set to the 56 attempts logged. Before that, owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
+  "generationCap": 68,
+  "generationCapNote": "Landing, 2026-10-20: three branches each numbered their new attempts from 57 (buffer-clunk 2026-10-20T23:39-23:40, boats 23:49-23:51 and the train-whistle-1 retakes 2026-10-21T00:48-00:49), so the merged log was renumbered chronologically by requestedAt: buffer-clunk is attempts 57-59 (30 credits, unchanged), the boat-oar and boat-sail pools 60-65 (150 credits, were 57-62) and the train-whistle-1 retakes 66-68 (120 credits, were 57-59). Each of the three raised the cap from 56 under the 2026-10-19 standing approval for new sounds, and 12 attempts were spent in all, so the cap is set to the 68 attempts logged. The train-whistle-1 retakes: Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 66-68, 120 credits), and attempt 66 was kept, so the cap was set to the 59 attempts logged on its branch. The boats: Boats, 2026-10-20, under the owner's standing approval for new sounds (2026-10-19): the cap was raised from 56 by at most 10 for the boat-oar pool (three short one-shots) and the boat-sail pool (two), at most two attempts each. Six were spent (attempts 60-65, 150 credits): one first take per variant and one retake of boat-sail-2, whose first take flapped and blew wind for the whole 3 s (floor 21.1 dB under the peak window). boat-sail-1 was saved by a gate instead of a retake, so the cap was set to the 62 attempts logged on its branch. The buffer clunk: Owner D2-Q5, 2026-10-20 (a soft buffer clunk when a train comes to rest at a line end), under the standing approval for new sounds: the cap was raised from 56 by at most 4 for the buffer-clunk pool (two short one-shots, at most two attempts each). Three were spent (attempts 57-59, 30 credits): one first take per variant and one retake of buffer-clunk-1, whose first take was a flat hiss burst, not a clunk. The retake's rumble tail was held down by a gate instead of a second retake, so the cap was set to the 59 attempts logged on its branch. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: the cap was raised from 53 by at most 6 for the place-slosh pool (three short one-shots, at most two attempts each). Three were spent (attempts 54-56, 60 credits), one first take per variant, all passing the floor criterion, so the cap is set to the 56 attempts logged. Before that, owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
   "classes": {
     "music": {
       "lufs": -18,
@@ -1584,7 +1584,7 @@
       },
       "review": {
         "round": 4,
-        "roundNote": "Owner audition 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given). A new take of train-whistle-1, a small tank engine's departure whistle, auditioned beside the approved train-whistle-2. Three ElevenLabs attempts (57-59, 120 credits), each a different whistle: attempt 57, one long single note rising slightly (about 1.2-1.28 kHz, clearly apart from train-whistle-2's 0.86 kHz peep and toot), was kept. Attempt 58, two quick toots, failed the floor criterion as a hiss (56% of the floor over 9 kHz), and attempt 59, a swell sliding down, settled only 30 dB under its peak and sat on train-whistle-2's pitch.",
+        "roundNote": "Owner audition 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given). A new take of train-whistle-1, a small tank engine's departure whistle, auditioned beside the approved train-whistle-2. Three ElevenLabs attempts (66-68, 120 credits), each a different whistle: attempt 66, one long single note rising slightly (about 1.2-1.28 kHz, clearly apart from train-whistle-2's 0.86 kHz peep and toot), was kept. Attempt 67, two quick toots, failed the floor criterion as a hiss (56% of the floor over 9 kHz), and attempt 68, a swell sliding down, settled only 30 dB under its peak and sat on train-whistle-2's pitch.",
         "filterApplied": "high-pass 150 Hz, two stages, as train-whistle-2",
         "screening": {
           "measuredOn": "raw provider source, before any filter (scripts/audio/screen.py); the floor criterion on the mastered files is in provenance runtime[].floor",
@@ -1846,6 +1846,275 @@
             "below1500": 96.6,
             "1500to9k": 3.3,
             "above9k": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "boat-oar-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "boat-oar",
+      "use": "One oar stroke of the boat-oar pool: positional at a moving rowing boat on each boatStroke (one oar catch), within 3 hex steps of the camera focus, soft on the ambience bus, or on demand (hexWorld.audio.play). The runtime routes it (BOAT_CUES and boatStep in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a single wooden oar blade of a small rowing boat dipping into calm river water and pulling through: one short soft splash and swirl, then a few small drips falling back from the blade, about one second in all. Natural, gentle. Studio-quiet background, with silence before and after the stroke. No voices, no music, no hum.",
+        "durationSeconds": 2.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "lowpassHz": 9000,
+        "stages": 2
+      },
+      "review": {
+        "round": 6,
+        "roundNote": "Boats on the river, under the owner's standing approval for new sounds (2026-10-19): an oar-stroke pool that plays at each catch of a moving rowing boat (boatStroke) and a sail-flap pool for a sailing boat's boom crossing on a turn (sailFlap), both positional on the ambience bus. At most two ElevenLabs attempts per variant.",
+        "filterApplied": "high-pass 60 Hz and low-pass 9 kHz, two stages, as the place-slosh pool: the drip tail would otherwise leave a hiss floor",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/boat-oar-1.webm (scripts/audio/screen.py --floor), after the filter; the birds detector fires on splash and drip transients, not birds",
+          "below300HzPct": 0.1,
+          "band300to8kPct": 99.8,
+          "above8kPct": 0.1,
+          "band1to6kVsFullDb": -2.1,
+          "levelDeepestDipDb": 13.8,
+          "levelSpreadDb": 14.1,
+          "tone200HzSeriesMaxDb": 16.2,
+          "otherTonalPeaks": [
+            {
+              "hz": 633,
+              "db": 10.2
+            }
+          ],
+          "birdChirpEvents": 5,
+          "birds": true,
+          "floorBelowPeakDb": 43.1,
+          "floorBandPct": {
+            "below1500": 41.2,
+            "1500to9k": 53.0,
+            "above9k": 5.8
+          }
+        }
+      }
+    },
+    {
+      "id": "boat-oar-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "boat-oar",
+      "use": "One oar stroke of the boat-oar pool: positional at a moving rowing boat on each boatStroke (one oar catch), within 3 hex steps of the camera focus, soft on the ambience bus, or on demand (hexWorld.audio.play). The runtime routes it (BOAT_CUES and boatStep in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of one oar stroke on a quiet lake: a wooden oar blade slips into still water with a soft plunge, pulls with a gentle gurgle, and lifts out with a light trickle of drips, about one second. Studio-quiet background, with silence before and after. No voices, no music, no creaking.",
+        "durationSeconds": 2.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "lowpassHz": 9000,
+        "stages": 2
+      },
+      "review": {
+        "round": 6,
+        "roundNote": "Boats on the river, under the owner's standing approval for new sounds (2026-10-19): an oar-stroke pool that plays at each catch of a moving rowing boat (boatStroke) and a sail-flap pool for a sailing boat's boom crossing on a turn (sailFlap), both positional on the ambience bus. At most two ElevenLabs attempts per variant.",
+        "filterApplied": "high-pass 60 Hz and low-pass 9 kHz, two stages, as the place-slosh pool: the drip tail would otherwise leave a hiss floor",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/boat-oar-2.webm (scripts/audio/screen.py --floor), after the filter; the birds detector fires on splash and drip transients, not birds",
+          "below300HzPct": 0.2,
+          "band300to8kPct": 99.8,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -4.7,
+          "levelDeepestDipDb": 35.8,
+          "levelSpreadDb": 39.1,
+          "tone200HzSeriesMaxDb": 14.5,
+          "otherTonalPeaks": [
+            {
+              "hz": 1951,
+              "db": 11.0
+            },
+            {
+              "hz": 1898,
+              "db": 10.7
+            },
+            {
+              "hz": 2900,
+              "db": 10.4
+            }
+          ],
+          "birdChirpEvents": 5,
+          "birds": true,
+          "floorBelowPeakDb": 48.9,
+          "floorBandPct": {
+            "below1500": 80.6,
+            "1500to9k": 16.2,
+            "above9k": 3.1
+          }
+        }
+      }
+    },
+    {
+      "id": "boat-oar-3",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "boat-oar",
+      "use": "One oar stroke of the boat-oar pool: positional at a moving rowing boat on each boatStroke (one oar catch), within 3 hex steps of the camera focus, soft on the ambience bus, or on demand (hexWorld.audio.play). The runtime routes it (BOAT_CUES and boatStep in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a rowing boat's oar catching calm water once: a quiet rounded splash as the blade goes in and a short watery swish as it pulls, ending in two or three soft drips, about one second. Natural and gentle, close miniature scale. Studio-quiet background, with silence before and after. No voices, no music.",
+        "durationSeconds": 2.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "lowpassHz": 9000,
+        "stages": 2
+      },
+      "review": {
+        "round": 6,
+        "roundNote": "Boats on the river, under the owner's standing approval for new sounds (2026-10-19): an oar-stroke pool that plays at each catch of a moving rowing boat (boatStroke) and a sail-flap pool for a sailing boat's boom crossing on a turn (sailFlap), both positional on the ambience bus. At most two ElevenLabs attempts per variant.",
+        "filterApplied": "high-pass 60 Hz and low-pass 9 kHz, two stages, as the place-slosh pool: the drip tail would otherwise leave a hiss floor",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/boat-oar-3.webm (scripts/audio/screen.py --floor), after the filter; the birds detector fires on splash and drip transients, not birds",
+          "below300HzPct": 2.8,
+          "band300to8kPct": 96.4,
+          "above8kPct": 0.9,
+          "band1to6kVsFullDb": -2.4,
+          "levelDeepestDipDb": 20.3,
+          "levelSpreadDb": 23.3,
+          "tone200HzSeriesMaxDb": 9.1,
+          "otherTonalPeaks": [
+            {
+              "hz": 5051,
+              "db": 10.7
+            }
+          ],
+          "birdChirpEvents": 2,
+          "birds": false,
+          "floorBelowPeakDb": 46.2,
+          "floorBandPct": {
+            "below1500": 86.2,
+            "1500to9k": 13.5,
+            "above9k": 0.3
+          }
+        }
+      }
+    },
+    {
+      "id": "boat-sail-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "boat-sail",
+      "use": "One sail flap of the boat-sail pool: positional at a sailing boat on each sailFlap (its boom crossing on a turn), within 3 hex steps of the camera focus, soft on the ambience bus, or on demand (hexWorld.audio.play). The runtime routes it (BOAT_CUES and boatStep in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a small sailboat coming about: its canvas gaff sail and wooden boom swing across and the sail flaps and luffs once with a soft rattling flutter, then fills and goes quiet, about one and a half seconds. Only a light breath of wind as the sail fills. Silence before and after, no continuous wind, no water, no voices, no music.",
+        "durationSeconds": 3.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 24,
+        "ratio": 3,
+        "rangeDb": 20,
+        "attackMs": 5,
+        "releaseMs": 200
+      },
+      "filter": {
+        "highpassHz": 80,
+        "lowpassHz": 8500,
+        "stages": 2
+      },
+      "review": {
+        "round": 6,
+        "roundNote": "Boats on the river, under the owner's standing approval for new sounds (2026-10-19): an oar-stroke pool that plays at each catch of a moving rowing boat (boatStroke) and a sail-flap pool for a sailing boat's boom crossing on a turn (sailFlap), both positional on the ambience bus. At most two ElevenLabs attempts per variant.",
+        "filterApplied": "high-pass 80 Hz and low-pass 8.5 kHz, two stages: canvas flutter is high-frequency heavy, and the floor fails as a hiss over 9 kHz",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/boat-sail-1.webm (scripts/audio/screen.py --floor), after the filter and the gate; ungated, the floor sat 39.8 dB under the peak window (needs 40), as the breeze swells in and out around the flap",
+          "below300HzPct": 38.5,
+          "band300to8kPct": 61.5,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -8.8,
+          "levelDeepestDipDb": 39.6,
+          "levelSpreadDb": 46.2,
+          "tone200HzSeriesMaxDb": 3.9,
+          "otherTonalPeaks": [],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "floorBelowPeakDb": 58.0,
+          "floorBandPct": {
+            "below1500": 87.7,
+            "1500to9k": 12.3,
+            "above9k": 0.1
+          }
+        }
+      }
+    },
+    {
+      "id": "boat-sail-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "boat-sail",
+      "use": "One sail flap of the boat-sail pool: positional at a sailing boat on each sailFlap (its boom crossing on a turn), within 3 hex steps of the camera focus, soft on the ambience bus, or on demand (hexWorld.audio.play). The runtime routes it (BOAT_CUES and boatStep in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of one single flap of a small canvas sail: a little wooden sailboat turns and its loose sail gives one soft rattling luff and a muffled cloth snap as the boom swings over, then hangs still and silent. About one and a half seconds of sound, then silence. Starts from silence. No wind noise, no water, no repeated flapping, no voices, no music.",
+        "durationSeconds": 3.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 80,
+        "lowpassHz": 8500,
+        "stages": 2
+      },
+      "review": {
+        "round": 6,
+        "roundNote": "Boats on the river, under the owner's standing approval for new sounds (2026-10-19): an oar-stroke pool that plays at each catch of a moving rowing boat (boatStroke) and a sail-flap pool for a sailing boat's boom crossing on a turn (sailFlap), both positional on the ambience bus. At most two ElevenLabs attempts per variant.",
+        "filterApplied": "high-pass 80 Hz and low-pass 8.5 kHz, two stages: canvas flutter is high-frequency heavy, and the floor fails as a hiss over 9 kHz",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/boat-sail-2.webm (scripts/audio/screen.py --floor), after the filter, on the second take: two soft luffs about 1.6 s apart with silence between, the first starting at the head",
+          "below300HzPct": 32.4,
+          "band300to8kPct": 67.6,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -9.5,
+          "levelDeepestDipDb": 32.3,
+          "levelSpreadDb": 35.1,
+          "tone200HzSeriesMaxDb": 3.5,
+          "otherTonalPeaks": [
+            {
+              "hz": 7951,
+              "db": 10.5
+            },
+            {
+              "hz": 4852,
+              "db": 10.4
+            }
+          ],
+          "birdChirpEvents": 0,
+          "birds": false,
+          "floorBelowPeakDb": 47.5,
+          "floorBandPct": {
+            "below1500": 83.0,
+            "1500to9k": 16.9,
+            "above9k": 0.1
           }
         }
       }

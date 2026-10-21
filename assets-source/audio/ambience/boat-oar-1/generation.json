@@ -1,0 +1,43 @@
+{
+  "cueId": "boat-oar-1",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording of a single wooden oar blade of a small rowing boat dipping into calm river water and pulling through: one short soft splash and swirl, then a few small drips falling back from the blade, about one second in all. Natural, gentle. Studio-quiet background, with silence before and after the stroke. No voices, no music, no hum.",
+  "parameters": {
+    "text": "Close, isolated recording of a single wooden oar blade of a small rowing boat dipping into calm river water and pulling through: one short soft splash and swirl, then a few small drips falling back from the blade, about one second in all. Natural, gentle. Studio-quiet background, with silence before and after the stroke. No voices, no music, no hum.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 2.0,
+    "prompt_influence": 0.6
+  },
+  "generationId": "2b966f692d916d8bb51f6933e034fef2",
+  "responseHeaders": {
+    "date": "Tue, 20 Oct 2026 23:49:41 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "20",
+    "content-length": "33061",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "2b966f692d916d8bb51f6933e034fef2",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-20T23:49:41+00:00",
+  "attempt": 60,
+  "creditsCharged": 20,
+  "sourceFile": "boat-oar-1.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}

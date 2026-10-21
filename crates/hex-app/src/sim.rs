@@ -442,6 +442,27 @@ pub fn tick(mut sim: ResMut<CarSim>, active: Res<ActiveScenario>, paused: Res<Ag
     }
 }
 
+/// Sends the boats' cues of the latest ticks (`hex_play::boats::BoatCues`) out as events: an oar
+/// stroke and a sail flap for the audio layer.
+pub fn publish_boat_cues(mut cues: ResMut<hex_play::boats::BoatCues>) {
+    use hex_play::boats::plan::BoatCue;
+    for c in cues.0.drain(..) {
+        let e = match c {
+            BoatCue::Stroke { id, at } => GameEvent::BoatStroke {
+                id,
+                x: at.x,
+                z: at.y,
+            },
+            BoatCue::SailFlap { id, at } => GameEvent::SailFlap {
+                id,
+                x: at.x,
+                z: at.y,
+            },
+        };
+        crate::game::publish_event(&e);
+    }
+}
+
 /// Writes each driving car's pose between the last two ticks, at the fraction of a tick the fixed
 /// clock has accumulated since the latest one, and each parked car at its spot. A car keeps its id
 /// from spot to spot, so the same entity parks, pulls out and parks again without popping. Paused,

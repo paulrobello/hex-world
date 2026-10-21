@@ -703,6 +703,8 @@ pub fn prop_kind(piece: &str) -> &'static str {
         p if p.starts_with("fence") => "fence",
         "rail_lever" => "lever",
         "rail_buffer_stop" => "buffer_stop",
+        p if p.starts_with("boat_") => "boat",
+        "landing_stage" => "stage",
         _ => "rock",
     }
 }
@@ -788,9 +790,23 @@ pub struct WalkGround {
     /// The farm herds' animals (`farm`): they block and are clicked where they are drawn, so they
     /// are kept apart from the static obstacles and moved by [`WalkGround::pose_herd`].
     herd: Vec<HerdBody>,
+    /// The boats' pieces (`boats`), shaped once per rebuild.
+    boat_shapes: HashMap<String, Arc<PieceShape>>,
+    /// The drawn boats and the landing stages' bollards, where `boats::draw` last put them.
+    boats: Vec<(Obstacle, Option<PickProp>)>,
+    /// The landing stages' decks: walker ground ([`STAGE_DECK`]), placed by `boats::draw`.
+    decks: Vec<Transform>,
     /// Bumped on every rebuild.
     pub revision: u64,
 }
+
+/// A landing stage deck in its frame: x and z ranges and the top's world height (the runtime notes:
+/// 0.45 m over the water at rest).
+pub const STAGE_DECK: ([f32; 2], [f32; 2], f32) = ([-0.75, 1.40], [-1.4, 1.4], WATER_Y + 0.45);
+
+/// The stage's bollards (outer posts, 0.55 m over the deck: taller than [`MAX_STEP`]), stage frame.
+pub const STAGE_BOLLARDS: [[f32; 2]; 3] = [[1.3, -1.25], [1.3, 0.0], [1.3, 1.25]];
+const BOLLARD_HALF: f32 = 0.09;
 
 /// One wandering animal as walk mode sees it: its shape, its tile's rest transform, and its
 /// footprint and pickable volume at its latest drawn pose.
@@ -883,6 +899,10 @@ impl WalkGround {
             .iter()
             .filter_map(|t| Some((t.cell, (catalog.get(&t.tile)?, t.rotation))))
             .collect();
+        for piece in ["boat_rowing", "boat_sail", "landing_stage"] {
+            out.boat_shapes
+                .insert(piece.to_owned(), Arc::new(shape_of(piece)));
+        }
         let mut shapes: HashMap<String, Arc<PieceShape>> = HashMap::new();
         let mut shape = |piece: &str| -> Arc<PieceShape> {
             shapes
@@ -999,6 +1019,9 @@ impl WalkGround {
         let Some(g) = self.cells.get(&cell_at(p)) else {
             return Err(Blocked::Edge);
         };
+        if self.on_deck(p) {
+            return Ok((STAGE_DECK.2, 0.0, false));
+        }
         let d = p - g.centre;
         let l = turn((6 - g.rotation % 6) % 6, [d.x, 0.0, d.y]);
         let h = match &g.surface {
@@ -1065,6 +1088,7 @@ impl WalkGround {
         self.props
             .iter()
             .chain(self.herd.iter().filter_map(|b| b.pick.as_ref()))
+            .chain(self.boats.iter().filter_map(|b| b.1.as_ref()))
             .filter_map(|p| p.hit(ray).map(|t| (t, p.piece.as_str())))
             .filter(|(t, _)| *t <= max)
             .min_by(|a, b| a.0.total_cmp(&b.0))
@@ -1077,6 +1101,7 @@ impl WalkGround {
             .values()
             .flatten()
             .chain(self.herd.iter().map(|b| &b.obstacle))
+            .chain(self.boats.iter().map(|b| &b.0))
     }
 
     /// Moves the herd animals to their drawn poses: (cell, hero slot, transform under the tile
@@ -1091,6 +1116,56 @@ impl WalkGround {
                 b.place(local);
             }
         }
+    }
+
+    /// Moves the boats to their drawn poses (piece, world transform) and the landing stages to
+    /// theirs: each boat blocks by its collider footprint and is clicked as its volume, each deck
+    /// is ground and its bollards block.
+    pub fn pose_boats(&mut self, boats: &[(&str, Transform)], stages: &[Transform]) {
+        self.boats.clear();
+        for (piece, t) in boats {
+            let Some(shape) = self.boat_shapes.get(*piece) else {
+                continue;
+            };
+            self.boats.push((
+                Obstacle {
+                    piece: (*piece).to_owned(),
+                    poly: place_hull(&shape.hull, t),
+                },
+                PickProp::new(piece, shape, t),
+            ));
+        }
+        for t in stages {
+            let pick = self
+                .boat_shapes
+                .get("landing_stage")
+                .and_then(|s| PickProp::new("landing_stage", s, t));
+            for (k, [x, z]) in STAGE_BOLLARDS.iter().enumerate() {
+                let h = BOLLARD_HALF;
+                let poly = [[-h, -h], [h, -h], [h, h], [-h, h]]
+                    .map(|[a, b]| Vec2::new(x + a, z + b))
+                    .to_vec();
+                self.boats.push((
+                    Obstacle {
+                        piece: "landing_stage".to_owned(),
+                        poly: place_hull(&poly, t),
+                    },
+                    if k == 0 { pick.clone() } else { None },
+                ));
+            }
+        }
+        self.decks = stages.to_vec();
+    }
+
+    /// Whether `p` stands on a landing stage's deck.
+    pub fn on_deck(&self, p: Vec2) -> bool {
+        let ([x0, x1], [z0, z1], _) = STAGE_DECK;
+        self.decks.iter().any(|t| {
+            let d = p - t.translation.xz();
+            let (xa, za) = (t.rotation * Vec3::X, t.rotation * Vec3::Z);
+            let (x, z) = (d.dot(xa.xz()), d.dot(za.xz()));
+            (x0..=x1).contains(&x) && (z0..=z1).contains(&z)
+        })
     }
 
     pub fn is_empty(&self) -> bool {
@@ -1110,6 +1185,7 @@ impl WalkGround {
             .filter_map(|c| self.obstacles.get(&c))
             .flatten()
             .chain(self.herd.iter().map(|b| &b.obstacle))
+            .chain(self.boats.iter().map(|b| &b.0))
             .find(|o| o.hits(p, BODY_RADIUS))
     }
 

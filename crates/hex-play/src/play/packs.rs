@@ -63,8 +63,8 @@ pub struct PackRequests {
 /// still hidden for a pack that has not arrived.
 #[derive(Resource)]
 pub struct PlayPacks {
-    pub(super) manifest: KitManifest,
-    pub(super) family: TextureFamily,
+    pub(crate) manifest: KitManifest,
+    pub(crate) family: TextureFamily,
     packs: BTreeMap<&'static str, Pack>,
     /// Pack ids in `PACKS` order: the background stream order.
     order: Vec<&'static str>,

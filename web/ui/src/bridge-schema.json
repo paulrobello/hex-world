@@ -1115,6 +1115,11 @@
       "action",
       "reason"
     ],
+    "boatStroke": [
+      "id",
+      "x",
+      "z"
+    ],
     "bulldozeRefused": [
       "q",
       "r",
@@ -1183,6 +1188,11 @@
       "skipped",
       "stage",
       "tile"
+    ],
+    "sailFlap": [
+      "id",
+      "x",
+      "z"
     ],
     "saved": [
       "bytes",

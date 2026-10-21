@@ -145,6 +145,20 @@ pub enum GameEvent {
         x: f32,
         z: f32,
     },
+    /// A moving rowing boat's oars catch the water (one stroke, owner D4): the boat's id and its
+    /// world XZ in metres; the audio layer's oar splash. Not kept in `recent_events`.
+    BoatStroke {
+        id: u64,
+        x: f32,
+        z: f32,
+    },
+    /// A sailing boat's boom crosses to the other side on a turn: its id and world XZ; the audio
+    /// layer's sail flap. Not kept in `recent_events`.
+    SailFlap {
+        id: u64,
+        x: f32,
+        z: f32,
+    },
     /// A `save` command encoded the world (PRD §12.2). On the web the bytes wait for
     /// `hexWorld.takeSave(tag)`; natively a `path` was written. `tag` echoes the command's.
     Saved {

@@ -670,6 +670,121 @@ export function trainStep(
   return { state: s, play };
 }
 
+// ---------- Boats (river) ----------
+
+export type BoatKind = "oar" | "sail";
+
+/** A rowing boat's oar stroke and a sailing boat's sail flap: each pool and its level before the focus mix. */
+export const BOAT_CUES: Record<BoatKind, CarCue> = {
+  oar: { pool: "boat-oar", level: 0.3 },
+  sail: { pool: "boat-sail", level: 0.35 },
+};
+export const BOAT_EVENT_KIND: Record<string, BoatKind> = { boatStroke: "oar", sailFlap: "sail" };
+/** Boats sound only within this many hex steps of the focus. */
+export const BOAT_RANGE_STEPS = 3;
+/** Oar voices sounding at once, every boat together; a stroke beyond them is dropped, not queued. */
+export const BOAT_OAR_VOICES = 2;
+/** Each boat cue plays at its own random rate, up to this fraction either way, so a three-take pool varies. */
+export const BOAT_RATE_SPREAD = 0.05;
+
+/** A boatStroke or sailFlap event: the boat's id, the cue kind and the boat's world XZ. */
+export interface BoatEvent {
+  boat: number;
+  kind: BoatKind;
+  x: number;
+  z: number;
+}
+
+export interface BoatVoice {
+  boat: number;
+  cue: string;
+  kind: BoatKind;
+  endsAt: number;
+}
+
+export interface BoatState {
+  voices: BoatVoice[];
+  /** Per pool, the variant played last, so the next pick avoids it. */
+  lastCue: Record<string, string>;
+  plays: number;
+  /** Events dropped at the oar cap, out of range or while gated. */
+  dropped: number;
+  /** Why the last boat event was dropped, or null when it played. */
+  gatedBy: OneShotGate | "out-of-range" | "cap" | null;
+}
+
+export const boatIdle = (): BoatState => ({ voices: [], lastCue: {}, plays: 0, dropped: 0, gatedBy: null });
+
+export function boatInRange(x: number, z: number, v: View): boolean {
+  return Math.hypot(x - v.focus[0], z - v.focus[2]) <= BOAT_RANGE_STEPS * v.radius * Math.sqrt(3);
+}
+
+export interface BoatPlay {
+  boat: number;
+  kind: BoatKind;
+  cue: string;
+  x: number;
+  z: number;
+  gain: number;
+  rate: number;
+}
+
+/**
+ * One boat step at audio time `now`. Each event plays its pool's variant (never the last one again) at the boat
+ * under the focus mix, at a rate within BOAT_RATE_SPREAD of 1, or is dropped: while gated, out of range, too
+ * quiet, with no decoded variant, or (a stroke) while BOAT_OAR_VOICES oar voices still sound. Nothing waits.
+ */
+export function boatStep(
+  st: BoatState,
+  now: number,
+  events: readonly BoatEvent[],
+  v: View,
+  gate: OneShotGate,
+  variants: (pool: string) => readonly string[],
+  seconds: (cue: string) => number,
+  rand: () => number,
+): { state: BoatState; play: BoatPlay[] } {
+  const s: BoatState = { ...st, voices: st.voices.filter((x) => x.endsAt > now), lastCue: { ...st.lastCue } };
+  const play: BoatPlay[] = [];
+  const drop = (why: NonNullable<BoatState["gatedBy"]>) => {
+    s.dropped++;
+    s.gatedBy = why;
+  };
+  for (const e of events) {
+    if (gate) {
+      drop(gate);
+      continue;
+    }
+    if (!boatInRange(e.x, e.z, v)) {
+      drop("out-of-range");
+      continue;
+    }
+    if (e.kind === "oar" && s.voices.filter((x) => x.kind === "oar").length >= BOAT_OAR_VOICES) {
+      drop("cap");
+      continue;
+    }
+    const row = BOAT_CUES[e.kind];
+    const pool = variants(row.pool);
+    const gain = row.level * emitterGain(e.x, e.z, v);
+    if (gain < MIN_EMITTER_GAIN) {
+      drop("out-of-range");
+      continue;
+    }
+    const cue = pickVariant(pool, s.lastCue[row.pool] ?? null, rand);
+    if (!cue) {
+      drop("not-loaded");
+      continue;
+    }
+    const rate = 1 + BOAT_RATE_SPREAD * (2 * rand() - 1);
+    s.lastCue[row.pool] = cue;
+    s.voices.push({ boat: e.boat, cue, kind: e.kind, endsAt: now + seconds(cue) / rate });
+    s.plays++;
+    s.gatedBy = null;
+    play.push({ boat: e.boat, kind: e.kind, cue, x: e.x, z: e.z, gain, rate });
+  }
+  return { state: s, play };
+}
+
 // ---------- Placement slosh (water tiles) ----------
 
 /**

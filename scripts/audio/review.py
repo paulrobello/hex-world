@@ -161,19 +161,27 @@ def pool_sections(layout: A.Layout, reg: dict, manifest: dict, rel_runtime: str)
     pools = list(dict.fromkeys(e["pool"] for e in manifest["cues"] if e.get("pool")))
     pool_round = {p: max(rnd(e) for e in manifest["cues"] if e.get("pool") == p) for p in pools}
     newest = max(pool_round.values(), default=0)
-    pools.sort(key=lambda p: -pool_round[p])
+
+    def owner_pending(e: dict) -> bool:
+        prov = json.loads((layout.root / e["provenance"]).read_text())
+        return str((prov.get("approvals") or {}).get("owner", "")).startswith("pending")
+
+    pending = {p for p in pools if any(owner_pending(e) for e in manifest["cues"] if e.get("pool") == p)}
+    pools.sort(key=lambda p: (p not in pending and pool_round[p] != newest, -pool_round[p]))
     shown_earlier = False
     shown_notes: set[str] = set()
-    for i, pool in enumerate(pools):
+    heading_round = None
+    for pool in pools:
         group = [e for e in manifest["cues"] if e.get("pool") == pool]
-        is_new = bool(newest) and pool_round[pool] == newest
+        is_new = bool(newest) and (pool_round[pool] == newest or pool in pending)
         note = next(((cue_by_id[e["id"]].get("review") or {}).get("roundNote") for e in group
-                     if ((cue_by_id[e["id"]].get("review") or {}).get("round") == newest)), "") if is_new else ""
-        if is_new and i == 0:
-            out.append(f"<h2>Round {newest}: new one-shot pools to audition</h2><p class=lead>{html.escape(note or '')}</p>")
-            shown_notes.add(note or "")
+                     if ((cue_by_id[e["id"]].get("review") or {}).get("round") == pool_round[pool])), "") if is_new else ""
         round_lead = ""
-        if i > 0 and is_new and note and note not in shown_notes:
+        if is_new and pool_round[pool] != heading_round:
+            heading_round = pool_round[pool]
+            out.append(f"<h2>Round {heading_round}: new one-shot pools to audition</h2><p class=lead>{html.escape(note or '')}</p>")
+            shown_notes.add(note or "")
+        elif is_new and note and note not in shown_notes:
             round_lead = f"<p class=lead>{html.escape(note)}</p>"
             shown_notes.add(note)
         if newest and not is_new and not shown_earlier:

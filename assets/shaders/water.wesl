@@ -28,6 +28,13 @@ struct WaterParams {
     _pad0: f32,
     _pad1: f32,
     _pad2: f32,
+    // Boat hulls (water.rs `WaterParams::hulls`, hex_play::boats): two per boat, (centre xz,
+    // heading xz) then (half length, half beam, top y, centre offset along the heading).
+    hulls: array<vec4<f32>, 12>,
+    boat_count: u32,
+    _pad3: u32,
+    _pad4: u32,
+    _pad5: u32,
 }
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> water: WaterParams;
@@ -136,6 +143,21 @@ const ICE_ALBEDO: vec3<f32> = vec3(0.40, 0.55, 0.66);
 const ICE_ROUGHNESS: f32 = 0.3;
 const ICE_COVER: f32 = 0.7;
 
+// Whether world point `wp` lies inside a boat hull's plan ellipse, below its top.
+fn inside_hull(wp: vec3<f32>) -> bool {
+    for (var i = 0u; i < min(water.boat_count, 6u); i++) {
+        let a = water.hulls[2u * i];
+        let b = water.hulls[2u * i + 1u];
+        let d = wp.xz - a.xy;
+        let x = (dot(d, a.zw) - b.w) / b.x;
+        let z = dot(d, vec2(-a.w, a.z)) / b.y;
+        if (x * x + z * z < 1.0 && wp.y < b.z) {
+            return true;
+        }
+    }
+    return false;
+}
+
 @fragment
 fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
     let t = water.water_time;
@@ -163,6 +185,10 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
     let skirt = in.skirt > 0.5;
     // A cut face exists only where water stands above the terrain: inside a bank it is clipped away.
     if (skirt && in.world_position.y < in.ground) {
+        discard;
+    }
+    // Inside a boat's hull the surface would show through the floor on swell: none is drawn there.
+    if (!skirt && inside_hull(wp)) {
         discard;
     }
     // On a cut face the view looks straight into the volume: no surface slope to refract along.

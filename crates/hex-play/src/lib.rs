@@ -4,6 +4,7 @@ use bevy::prelude::*;
 pub use hex_render::instanced;
 pub use hex_render::{ActiveScenario, ActiveView, AgentsPaused, GpuLimits, Scenario, SceneEntity};
 pub use hex_render::{car_material, kit_material, kit_scene, post, scene, tilt_shift, workload};
+pub mod boats;
 pub mod boids;
 pub mod cars;
 #[cfg(feature = "gate-tools")]
@@ -35,6 +36,7 @@ impl Plugin for HexPlayPlugin {
                 cars::CarsPlugin,
                 trains::TrainsPlugin,
                 farm::FarmPlugin,
+                boats::BoatsPlugin,
                 boids::BoidsPlugin {
                     budget: boids::BoidBudget::for_tier(config.tier),
                 },

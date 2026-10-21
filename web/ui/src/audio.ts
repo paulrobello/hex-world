@@ -21,6 +21,14 @@ import {
   type BellState,
   bellIdle,
   bellStep,
+  BOAT_CUES,
+  BOAT_EVENT_KIND,
+  type BoatEvent,
+  type BoatPlay,
+  type BoatState,
+  type BoatVoice,
+  boatIdle,
+  boatStep,
   CAR_CUES,
   CAR_EVENT_KIND,
   type Candidate,
@@ -261,6 +269,20 @@ export interface AudioDebug {
    * demand too), the last variant and spot, and why the last due bell was dropped. `shops` counts bakeries in play.
    */
   shopBell: Omit<BellState, "pending"> & { pool: string; variants: string[]; pending: number; shops: number };
+  /**
+   * Boat cues: the voices sounding (oars capped at BOAT_OAR_VOICES), plays and drops so far, the last variant per
+   * pool, why the last event was dropped, each pool's variants, and the latest plays (`event` is boatStroke or
+   * sailFlap).
+   */
+  boats: {
+    voices: BoatVoice[];
+    plays: number;
+    dropped: number;
+    lastCue: Record<string, string>;
+    gatedBy: BoatState["gatedBy"];
+    pools: Record<string, string[]>;
+    recent: { id: string; event: string; boat: number; t: number; gain: number; rate: number }[];
+  };
   /** The water slosh a placed water tile plays with the thunk: its pool's variants, plays and the last variant. */
   placeSlosh: { pool: string; variants: string[]; plays: number; lastCue: string | null };
 }
@@ -333,6 +355,12 @@ export class GameAudio {
   private trainNodes = new Map<string, { follow: GainNode; pan: PannerNode; kind: TrainKind; train: number }>();
   private trainRecent: AudioDebug["trains"]["recent"] = [];
   private trainsInRange = 0;
+  private boats: BoatState = boatIdle();
+  /** Oar strokes and sail flaps drained since the last update. */
+  private boatEvents: BoatEvent[] = [];
+  /** Per boat pool, its variants from the manifest, in manifest order. */
+  private boatPools = new Map<string, string[]>();
+  private boatRecent: AudioDebug["boats"]["recent"] = [];
   private bell: BellState = bellIdle();
   /** Parks drained since the last update, for the shop bell. */
   private parks: Omit<BellRequest, "dueAt">[] = [];
@@ -419,6 +447,8 @@ export class GameAudio {
         this.carPools.set(pool, resolveOneShot(pool, m.cues, [])?.variants ?? []);
       for (const { pool } of Object.values(TRAIN_CUES))
         this.trainPools.set(pool, resolveOneShot(pool, m.cues, [])?.variants ?? []);
+      for (const { pool } of Object.values(BOAT_CUES))
+        this.boatPools.set(pool, resolveOneShot(pool, m.cues, [])?.variants ?? []);
       this.bellVariants = resolveOneShot(SHOP_BELL.pool, m.cues, [])?.variants ?? [];
       this.sloshVariants = resolveOneShot(PLACE_SLOSH.pool, m.cues, [])?.variants ?? [];
       const probe = document.createElement("audio");
@@ -518,6 +548,10 @@ export class GameAudio {
       // One pick from the buffer-clunk pool (TRAIN_CUES), never every variant the manifest lists for the event.
       if (e.type === "trainAtLineEnd") {
         this.trainEvents.push({ train: e.id, x: e.x, z: e.z, at: ctx.currentTime, kind: "clunk" });
+        continue;
+      }
+      if (e.type === "boatStroke" || e.type === "sailFlap") {
+        this.boatEvents.push({ boat: e.id, kind: BOAT_EVENT_KIND[e.type]!, x: e.x, z: e.z });
         continue;
       }
       const at = "q" in e && "r" in e ? { q: e.q, r: e.r } : null;
@@ -692,6 +726,7 @@ export class GameAudio {
     this.updateOneShots(ctx, v);
     this.updateCars(ctx, v, play.car_list, state.photo?.agents_paused === true);
     this.updateTrains(ctx, v, play.train_list, state.photo?.agents_paused === true);
+    this.updateBoats(ctx, v);
     this.updateBell(ctx, v);
     for (const [k, p] of this.pending)
       if (ctx.currentTime > p.deadline) {
@@ -950,6 +985,34 @@ export class GameAudio {
     if (this.trainRecent.length > 16) this.trainRecent.shift();
   }
 
+  /** Boat cues: an oar stroke at each catch of a rowing boat, a sail flap at each boom crossing, near the focus only. */
+  private updateBoats(ctx: AudioContext, v: View): void {
+    const { muted, volumes } = this.settings;
+    const events = this.boatEvents;
+    this.boatEvents = [];
+    const gate = oneShotGate({ muted, master: volumes.master, ambience: volumes.ambience, loaded: true });
+    const step = boatStep(
+      this.boats,
+      ctx.currentTime,
+      events,
+      v,
+      gate,
+      (pool) => (this.boatPools.get(pool) ?? []).filter((id) => this.buffers.has(id)),
+      (cue) => this.buffers.get(cue)?.duration ?? 0,
+      Math.random,
+    );
+    this.boats = step.state;
+    for (const p of step.play) this.playBoat(ctx, p);
+  }
+
+  private playBoat(ctx: AudioContext, p: BoatPlay): void {
+    this.playAt(p.cue, p.x, p.z, p.gain, p.rate);
+    const event = p.kind === "oar" ? "boatStroke" : "sailFlap";
+    const t = round(ctx.currentTime, 3);
+    this.boatRecent.push({ id: p.cue, event, boat: p.boat, t, gain: round(p.gain), rate: round(p.rate) });
+    if (this.boatRecent.length > 16) this.boatRecent.shift();
+  }
+
   /** The shop bell: a park at a bakery rings a bell at the spot a moment after its door, near the focus only. */
   private updateBell(ctx: AudioContext, v: View): void {
     const { muted, volumes } = this.settings;
@@ -976,8 +1039,8 @@ export class GameAudio {
     for (const p of step.play) this.playAt(p.cue, p.x, p.z, p.gain);
   }
 
-  /** A one-shot at a world point (a parking spot rather than a tile centre), on its cue's bus. */
-  private playAt(id: string, x: number, z: number, gain: number): void {
+  /** A one-shot at a world point (a parking spot or a boat rather than a tile centre), on its cue's bus. */
+  private playAt(id: string, x: number, z: number, gain: number, rate = 1): void {
     const ctx = this.ctx;
     const buf = this.buffers.get(id);
     const cue = this.cues.get(id);
@@ -985,11 +1048,13 @@ export class GameAudio {
     const t = ctx.currentTime;
     const src = ctx.createBufferSource();
     src.buffer = buf;
+    src.playbackRate.value = rate;
+    const dur = buf.duration / rate;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(gain, t + 0.005);
-    g.gain.setValueAtTime(gain, Math.max(t + 0.005, t + buf.duration - 0.012));
-    g.gain.linearRampToValueAtTime(0, t + buf.duration);
+    g.gain.setValueAtTime(gain, Math.max(t + 0.005, t + dur - 0.012));
+    g.gain.linearRampToValueAtTime(0, t + dur);
     const pan = this.pannerAt(ctx, x, z);
     src
       .connect(g)
@@ -1108,6 +1173,8 @@ export class GameAudio {
     this.carEvents = [];
     this.trains = trainIdle();
     this.trainEvents = [];
+    this.boats = boatIdle();
+    this.boatEvents = [];
     this.bell = bellIdle();
     this.parks = [];
   }
@@ -1222,6 +1289,15 @@ export class GameAudio {
         inRange: this.trainsInRange,
         pools: Object.fromEntries(this.trainPools),
         recent: this.trainRecent.map((f) => ({ ...f })),
+      },
+      boats: {
+        voices: this.boats.voices.map((x) => ({ ...x, endsAt: round(x.endsAt, 3) })),
+        plays: this.boats.plays,
+        dropped: this.boats.dropped,
+        lastCue: { ...this.boats.lastCue },
+        gatedBy: this.boats.gatedBy,
+        pools: Object.fromEntries(this.boatPools),
+        recent: this.boatRecent.map((f) => ({ ...f })),
       },
       shopBell: {
         pool: SHOP_BELL.pool,
