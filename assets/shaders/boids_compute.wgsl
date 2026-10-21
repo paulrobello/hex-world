@@ -17,6 +17,9 @@ struct Params {
 @group(0) @binding(3) var<storage, read> roosts: array<vec4<f32>>;
 @group(0) @binding(4) var<storage, read> chunks: array<i32>;
 @group(0) @binding(5) var<storage, read> field: array<vec4<f32>>;
+// Last frame's flock, copied from `boids` before this pass: every boid reads itself and its
+// neighbours here and writes only `boids[i]`, so no read depends on which thread ran first.
+@group(0) @binding(6) var<storage, read> prev: array<Boid>;
 
 // vel.w: what the boid is doing, read by boid_material.wesl.
 const FLY: f32 = 0.0;
@@ -117,7 +120,7 @@ fn stress(i: u32, me: Boid) -> Boid {
     // O(n^2) over the 1,000-boid budget.
     for (var j = 0u; j < params.count; j++) {
         if (j == i) { continue; }
-        let o = boids[j];
+        let o = prev[j];
         let d = o.pos.xyz - me.pos.xyz;
         let dist = length(d);
         if (dist < 40.0) {
@@ -186,7 +189,7 @@ fn fly(i: u32, me: Boid, c: Ctl) -> Boid {
     let flock = i / size;
     for (var j = 0u; j < params.birds; j++) {
         if (j == i) { continue; }
-        let o = boids[j];
+        let o = prev[j];
         if (o.vel.w != FLY) { continue; }
         let d = o.pos.xyz - p;
         let dist = length(d);
@@ -232,7 +235,7 @@ fn swim(i: u32, me: Boid, c: Ctl) -> Boid {
     // school, a river's group of 1 to 5), keep clear of every fish.
     for (var j = params.birds; j < params.birds + params.fish; j++) {
         if (j == i) { continue; }
-        let o = boids[j];
+        let o = prev[j];
         let d = o.pos.xyz - p;
         let dist = length(d);
         if (dist < 4.0 && ctl[j].info.w == c.info.w) {
@@ -279,7 +282,7 @@ fn swim(i: u32, me: Boid, c: Ctl) -> Boid {
 fn update(@builtin(global_invocation_id) id: vec3<u32>) {
     let i = id.x;
     if (i >= params.count) { return; }
-    let me = boids[i];
+    let me = prev[i];
     let c = ctl[i];
     // ctl info.x: 0 bird, 1 fish, 2 idle, 3 leaving bird.
     if (abs(c.info.x - 2.0) < 0.5) {

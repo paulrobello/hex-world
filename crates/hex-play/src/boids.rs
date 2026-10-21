@@ -15,6 +15,15 @@
 //!
 //! Fixed-clock capture runs (`--clock fixed`) also insert [`FishTrack`], which reads the flock
 //! back each frame to count fish crossing between river and sea water for the checkpoint dumps.
+//! Each readback is tagged with the frame, boid clock and plan it was copied under, and folded in
+//! frame order [`TRACK_LAG`] frames later, so the counts do not depend on when the GPU's map
+//! callbacks happen to land.
+//!
+//! The compute pass reads every boid from a copy of the flock taken before it runs (`boids_prev`)
+//! and writes the flock buffer, so each boid steers from its neighbours' state of the previous
+//! frame. Reading and writing one buffer in one dispatch raced: whether a neighbour was read
+//! before or after its own thread wrote it depended on GPU scheduling, and the flock diverged run
+//! to run.
 //!
 //! In `play` the birds fly in small flocks over the world and roost in waves on the oak tiles' oak
 //! canopies and on `barn_red_b`'s ridge and cupola (a tile's Bird rule; scattered spruces on such a tile would share its cap,
@@ -23,7 +32,10 @@
 //! every slot a bird over an 800 m square.
 use std::{
     borrow::Cow,
-    sync::atomic::{AtomicU32, Ordering},
+    sync::{
+        Arc,
+        atomic::{AtomicU32, Ordering},
+    },
 };
 
 use bevy::{
@@ -37,7 +49,7 @@ use bevy::{
     render::{
         Render, RenderApp, RenderStartup, RenderSystems,
         extract_resource::{ExtractResource, ExtractResourcePlugin},
-        gpu_readback::{Readback, ReadbackComplete},
+        gpu_readback::{ReadbackComplete, ReadbackOnce},
         render_asset::RenderAssets,
         render_resource::{
             binding_types::{storage_buffer_read_only_sized, storage_buffer_sized, uniform_buffer},
@@ -502,6 +514,9 @@ pub struct BoidState {
     /// Boid clock (s): sums the same clamped steps the GPU integrates.
     pub t: f32,
     scenario: Option<Scenario>,
+    /// The plan as last uploaded, shared by the [`FishTrack`] readbacks tagged since; cleared
+    /// whenever slots or the world upload again.
+    tracked: Option<Arc<BoidPlan>>,
 }
 
 #[derive(Clone, Copy, Default, ShaderType)]
@@ -563,6 +578,7 @@ impl Plugin for BoidsPlugin {
             plan: BoidPlan::stress(budget, 1),
             t: 0.0,
             scenario: None,
+            tracked: None,
         })
         .init_resource::<BoidReport>()
         .add_systems(
@@ -577,7 +593,7 @@ impl Plugin for BoidsPlugin {
             (
                 plan_boids.after(PlaySystems),
                 (load_pieces, build_forms, sync_flock).chain(),
-                track_fish,
+                (track_fish, drop_skipped_samples).chain().after(plan_boids),
             ),
         );
 
@@ -959,6 +975,7 @@ fn plan_boids(world: BoidWorld, outputs: BoidOutputs) {
     state.t += dt;
     let t = state.t;
     let plan = &mut state.plan;
+    let tracked = &mut state.tracked;
     if play {
         let ready: Vec<_> = view
             .tiles
@@ -973,6 +990,9 @@ fn plan_boids(world: BoidWorld, outputs: BoidOutputs) {
         }
         plan.set_world(&ready, &catalog.0, &drawn, t);
         plan.tick(t);
+    }
+    if plan.slots_dirty || plan.world_dirty {
+        *tracked = None;
     }
     if plan.slots_dirty {
         let birds = plan.birds as usize;
@@ -1084,7 +1104,34 @@ pub struct FishTrack {
     /// Per fish slot: (generation, water first seen in, crossed, last position, boid clock then,
     /// last mouth cell seen in).
     fish: Vec<Option<TrackedFish>>,
+    /// Frames [`track_fish`] has run: the frame each readback is tagged with.
+    frame: u64,
+    /// The next frame to fold in.
+    next: u64,
+    /// Readbacks that arrived before their turn, by frame.
+    pending: std::collections::BTreeMap<u64, TrackSample>,
+    /// The last frame folded in (`through`), and an FNV-1a hash of its fish (slot, position and
+    /// velocity bits; `digest`): two runs with equal digests drew the same fish at that frame.
+    pub through: Option<u64>,
+    pub digest: u64,
+    /// Readbacks that never arrived within [`TRACK_GIVE_UP`] frames.
+    pub skipped: u32,
 }
+
+/// One readback and what the GPU ran under when it was copied: the boid clock and the plan.
+#[derive(Clone, Debug)]
+struct TrackSample {
+    t: f32,
+    plan: Arc<BoidPlan>,
+    boids: Vec<Boid>,
+}
+
+/// Frames a readback waits before it is folded in, in frame order: the GPU's map callbacks land a
+/// few frames after the copy, on wall time, so folding each one as it landed made the counts
+/// depend on the host's load.
+pub const TRACK_LAG: u64 = 8;
+/// Frames after which a readback that never arrived is skipped (with a warning).
+pub const TRACK_GIVE_UP: u64 = 120;
 
 type TrackedFish = (u32, Side, bool, Vec2, f32, Option<hex_core::Axial>);
 
@@ -1116,13 +1163,45 @@ impl FishTrack {
             })
             .collect();
         format!(
-            "{{\"samples\":{},\"crossed\":{},\"river_to_sea\":{},\"sea_to_river\":{},\"mouths\":[{}]}}",
+            "{{\"samples\":{},\"crossed\":{},\"river_to_sea\":{},\"sea_to_river\":{},\"mouths\":[{}],\"through\":{},\"digest\":\"{:016x}\",\"skipped\":{}}}",
             self.samples,
             self.river_to_sea + self.sea_to_river,
             self.river_to_sea,
             self.sea_to_river,
-            mouths.join(",")
+            mouths.join(","),
+            self.through.map_or("null".to_owned(), |f| f.to_string()),
+            self.digest,
+            self.skipped,
         )
+    }
+
+    /// Takes the readback copied on `frame` (at boid clock `t`, under `plan`), in any order.
+    fn arrive(&mut self, frame: u64, t: f32, plan: Arc<BoidPlan>, boids: Vec<Boid>) {
+        if frame >= self.next {
+            self.pending.insert(frame, TrackSample { t, plan, boids });
+        }
+    }
+
+    /// Folds in, in frame order, every readback at least [`TRACK_LAG`] frames older than `now`.
+    fn advance(&mut self, now: u64) {
+        while self.next + TRACK_LAG <= now {
+            if let Some(s) = self.pending.remove(&self.next) {
+                if s.plan.play {
+                    self.observe(&s.plan, &s.boids, s.t);
+                    self.digest = fish_digest(&s.plan, &s.boids);
+                }
+                self.through = Some(self.next);
+            } else if self.next + TRACK_GIVE_UP <= now {
+                warn!(
+                    "boids: fish track readback of frame {} never arrived, skipped",
+                    self.next
+                );
+                self.skipped += 1;
+            } else {
+                break;
+            }
+            self.next += 1;
+        }
     }
 
     /// Folds one readback of the flock in at boid clock `t`.
@@ -1192,52 +1271,101 @@ impl FishTrack {
     }
 }
 
-/// Marks the entity that reads the flock back for [`FishTrack`].
-#[derive(Component)]
-struct FishReadback;
-
-/// With a [`FishTrack`], keeps one readback of the current flock buffer.
-fn track_fish(
-    mut commands: Commands,
-    track: Option<Res<FishTrack>>,
-    assets: Option<Res<BoidAssets>>,
-    readers: Query<(Entity, &Readback), With<FishReadback>>,
-) {
-    let (Some(_), Some(assets)) = (track, assets) else {
-        return;
+/// FNV-1a over every live fish's slot, position and velocity bits.
+fn fish_digest(plan: &BoidPlan, boids: &[Boid]) -> u64 {
+    let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+    let mut eat = |bytes: &[u8]| {
+        for &b in bytes {
+            h = (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01b3);
+        }
     };
-    let mut current = false;
-    for (e, r) in &readers {
-        match r {
-            Readback::Buffer { buffer, .. } if *buffer == assets.boids => current = true,
-            _ => commands.entity(e).despawn(),
+    for (i, (slot, b)) in plan.slots.iter().zip(boids).enumerate() {
+        if slot.kind != plan::SlotKind::Fish || b.pos[3] as u32 != slot.generation {
+            continue;
+        }
+        eat(&(i as u32).to_le_bytes());
+        for v in b.pos[..3].iter().chain(&b.vel[..3]) {
+            eat(&v.to_bits().to_le_bytes());
         }
     }
-    if !current {
-        commands
-            .spawn((Readback::buffer(assets.boids.clone()), FishReadback))
-            .observe(fold_readback);
+    h
+}
+
+/// A one-frame readback of the flock for [`FishTrack`]: the frame, boid clock and plan it was
+/// requested under, which are the ones the compute pass ran with before the copy.
+#[derive(Component)]
+struct FishSample {
+    frame: u64,
+    t: f32,
+    plan: Arc<BoidPlan>,
+}
+
+/// With a [`FishTrack`], reads this frame's flock back once (`ReadbackOnce`: Bevy copies it after
+/// this frame's compute pass) and folds in the readbacks old enough to be complete.
+fn track_fish(
+    mut commands: Commands,
+    track: Option<ResMut<FishTrack>>,
+    state: ResMut<BoidState>,
+    assets: Option<Res<BoidAssets>>,
+) {
+    let (Some(mut track), Some(assets)) = (track, assets) else {
+        return;
+    };
+    let state = state.into_inner();
+    let frame = track.frame;
+    track.frame += 1;
+    let plan = state
+        .tracked
+        .get_or_insert_with(|| Arc::new(state.plan.clone()))
+        .clone();
+    commands
+        .spawn((
+            ReadbackOnce::buffer(assets.boids.clone()),
+            FishSample {
+                frame,
+                t: state.t,
+                plan,
+            },
+        ))
+        .observe(fold_readback);
+    track.advance(frame);
+}
+
+/// Despawns the readback entities of frames the [`FishTrack`] has moved past: a readback that
+/// never landed was skipped (`TRACK_GIVE_UP`), and its entity would otherwise stay for the run.
+/// One that landed was despawned by [`fold_readback`] already.
+fn drop_skipped_samples(
+    mut commands: Commands,
+    track: Option<Res<FishTrack>>,
+    samples: Query<(Entity, &FishSample)>,
+) {
+    let Some(track) = track else {
+        return;
+    };
+    for (e, s) in &samples {
+        if s.frame < track.next {
+            commands.entity(e).despawn();
+        }
     }
 }
 
 fn fold_readback(
     ev: On<ReadbackComplete>,
-    state: Res<BoidState>,
+    mut commands: Commands,
+    samples: Query<&FishSample>,
     track: Option<ResMut<FishTrack>>,
 ) {
-    let Some(mut track) = track else {
-        return;
-    };
-    let boids: Vec<Boid> = ev
-        .data
-        .as_chunks::<{ std::mem::size_of::<Boid>() }>()
-        .0
-        .iter()
-        .map(|c| bytemuck::pod_read_unaligned(c.as_slice()))
-        .collect();
-    if state.plan.play {
-        track.observe(&state.plan, &boids, state.t);
+    if let (Ok(s), Some(mut track)) = (samples.get(ev.entity), track) {
+        let boids: Vec<Boid> = ev
+            .data
+            .as_chunks::<{ std::mem::size_of::<Boid>() }>()
+            .0
+            .iter()
+            .map(|c| bytemuck::pod_read_unaligned(c.as_slice()))
+            .collect();
+        track.arrive(s.frame, s.t, s.plan.clone(), boids);
     }
+    commands.entity(ev.entity).despawn();
 }
 
 /// River-palette fish per fish region (the plan's region order).
@@ -1321,7 +1449,15 @@ struct BoidsPipeline {
 struct BoidsBindGroup {
     group: BindGroup,
     count: u32,
+    /// The flock buffer and the copy of it the pass reads (`boids_prev`), refreshed before it runs.
+    boids: Buffer,
+    prev: Buffer,
 }
+
+/// The render world's `boids_prev`: last frame's flock, which the compute pass reads every boid
+/// from. Sized to the flock buffer and replaced with it on a budget change.
+#[derive(Resource)]
+struct BoidsPrev(Buffer);
 
 #[derive(Resource, Default)]
 struct BoidParams(UniformBuffer<Params>);
@@ -1338,6 +1474,7 @@ fn init_pipeline(
             (
                 storage_buffer_sized(false, None),
                 uniform_buffer::<Params>(false),
+                storage_buffer_read_only_sized(false, None),
                 storage_buffer_read_only_sized(false, None),
                 storage_buffer_read_only_sized(false, None),
                 storage_buffer_read_only_sized(false, None),
@@ -1370,6 +1507,7 @@ fn prepare_bind_group(
         Option<Res<BoidSim>>,
     ),
     mut params: ResMut<BoidParams>,
+    prev: Option<Res<BoidsPrev>>,
     device: Res<RenderDevice>,
     queue: Res<RenderQueue>,
 ) {
@@ -1387,6 +1525,20 @@ fn prepare_bind_group(
     };
     params.0.set(sim.0);
     params.0.write_buffer(&device, &queue);
+    let size = gpu.buffer.size();
+    let prev = match prev {
+        Some(p) if p.0.size() == size => p.0.clone(),
+        _ => {
+            let b = device.create_buffer(&BufferDescriptor {
+                label: Some("boids_prev"),
+                size,
+                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
+            commands.insert_resource(BoidsPrev(b.clone()));
+            b
+        }
+    };
     let group = device.create_bind_group(
         "boids",
         &pipeline_cache.get_bind_group_layout(&pipeline.layout),
@@ -1397,11 +1549,14 @@ fn prepare_bind_group(
             roosts.buffer.as_entire_binding(),
             chunks.buffer.as_entire_binding(),
             field.buffer.as_entire_binding(),
+            prev.as_entire_binding(),
         )),
     );
     commands.insert_resource(BoidsBindGroup {
         group,
         count: sim.0.count,
+        boids: gpu.buffer.clone(),
+        prev,
     });
 }
 
@@ -1418,12 +1573,18 @@ fn dispatch_boids(
         DISPATCHED.store(0, Ordering::Relaxed);
         return;
     };
-    let mut pass = render_context
-        .command_encoder()
-        .begin_compute_pass(&ComputePassDescriptor {
-            label: Some("boids"),
-            ..default()
-        });
+    let encoder = render_context.command_encoder();
+    encoder.copy_buffer_to_buffer(
+        &bind_group.boids,
+        0,
+        &bind_group.prev,
+        0,
+        bind_group.boids.size(),
+    );
+    let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor {
+        label: Some("boids"),
+        ..default()
+    });
     pass.set_pipeline(update);
     pass.set_bind_group(0, &bind_group.group, &[]);
     pass.dispatch_workgroups(bind_group.count.div_ceil(WORKGROUP_SIZE), 1, 1);
@@ -1900,6 +2061,142 @@ mod tests {
                 .parse()
                 .unwrap();
             assert_eq!(got, want, "{name}");
+        }
+    }
+
+    /// The tracker's counts and digest depend on which frame each readback was copied on, not on
+    /// when it lands: readbacks arriving late, two at once or out of order fold in to the same
+    /// result, and one that never arrives is skipped after `TRACK_GIVE_UP` frames.
+    #[test]
+    fn fish_track_folds_readbacks_in_frame_order_however_they_land() {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let o = hex_core::Axial::new(0, 0);
+        let (s, m) = (o.neighbor(3), o.neighbor(0));
+        let sea = m.neighbor(0);
+        let t = |a: hex_core::Axial, id: &str| crate::play::PlayTile {
+            cell: a,
+            tile: id.into(),
+            rotation: 0,
+        };
+        let world = [
+            t(s, "river_spring"),
+            t(o, "river_straight"),
+            t(m, "river_mouth"),
+            t(sea, "ocean"),
+        ];
+        let mut plan = BoidPlan::play(BoidBudget::HIGH, 1);
+        plan.set_world(&world, &c, &|_| true, 0.0);
+        let plan = Arc::new(plan);
+        let b = plan.birds as usize;
+        // Fish b swims from the river cell through the mouth into the sea at 1.5 m/s, a frame
+        // every 1/60 s.
+        let [x0, z0] = o.to_world(hex_core::HEX_RADIUS);
+        let [x1, z1] = sea.to_world(hex_core::HEX_RADIUS);
+        let (from, to) = (Vec2::new(x0, z0), Vec2::new(x1, z1));
+        let frames = ((to - from).length() / 1.5 * 60.0) as u64 + 2;
+        let sample = |f: u64| {
+            let p = from.lerp(to, (f as f32 / frames as f32).min(1.0));
+            let mut v = vec![Boid::zeroed(); plan.slots.len()];
+            v[b].pos = [p.x, -1.0, p.y, plan.slots[b].generation as f32];
+            (f as f32 / 60.0, v)
+        };
+        let run = |arrivals: &dyn Fn(u64) -> Vec<u64>| {
+            let mut track = FishTrack::default();
+            let end = frames + TRACK_LAG + 4;
+            for now in 0..=end {
+                for f in arrivals(now) {
+                    let (clock, v) = sample(f);
+                    track.arrive(f, clock, plan.clone(), v);
+                }
+                track.advance(now);
+            }
+            track
+        };
+        // Each readback the frame after its copy; three frames late; in pairs, newest first.
+        let prompt = run(&|now| now.checked_sub(1).into_iter().collect());
+        let late = run(&|now| now.checked_sub(3).into_iter().collect());
+        let pairs = run(&|now| {
+            if now % 2 == 1 {
+                vec![now, now - 1]
+            } else {
+                vec![]
+            }
+        });
+        assert_eq!((prompt.river_to_sea, prompt.sea_to_river), (1, 0));
+        assert_eq!(prompt.json(), late.json());
+        assert_eq!(prompt.json(), pairs.json());
+        assert_ne!(prompt.digest, 0);
+        // A readback that never lands holds the fold until it is given up on, then is skipped.
+        let mut track = FishTrack::default();
+        for now in 0..=TRACK_GIVE_UP + 2 {
+            if now != 0 {
+                let (clock, v) = sample(now.min(frames));
+                track.arrive(now, clock, plan.clone(), v);
+            }
+            track.advance(now);
+            if now < TRACK_GIVE_UP {
+                assert_eq!(track.through, None, "frame {now}");
+            }
+        }
+        assert_eq!(track.skipped, 1);
+        assert_eq!(track.through, Some(TRACK_GIVE_UP + 2 - TRACK_LAG));
+    }
+
+    /// A readback skipped after `TRACK_GIVE_UP` frames leaves no entity behind; a readback still
+    /// due is kept for its `ReadbackComplete`.
+    #[test]
+    fn a_skipped_readback_leaves_no_entity_behind() {
+        use bevy::ecs::system::RunSystemOnce;
+        let plan = Arc::new(BoidPlan::play(BoidBudget::HIGH, 1));
+        let mut world = World::new();
+        let sample = |frame: u64| FishSample {
+            frame,
+            t: frame as f32 / 60.0,
+            plan: plan.clone(),
+        };
+        let lost = world.spawn(sample(0)).id();
+        let due = world.spawn(sample(TRACK_GIVE_UP)).id();
+        let mut track = FishTrack::default();
+        for now in 0..=TRACK_GIVE_UP {
+            if now != 0 && now + TRACK_LAG <= TRACK_GIVE_UP {
+                track.arrive(now, now as f32 / 60.0, plan.clone(), vec![]);
+            }
+            track.advance(now);
+        }
+        assert_eq!(track.skipped, 1);
+        assert!(track.next > 0 && track.next <= TRACK_GIVE_UP);
+        world.insert_resource(track);
+        world.run_system_once(drop_skipped_samples).unwrap();
+        assert!(
+            world.get_entity(lost).is_err(),
+            "the skipped readback's entity stayed"
+        );
+        assert!(
+            world.get_entity(due).is_ok(),
+            "a readback still due was dropped"
+        );
+    }
+
+    /// The compute pass reads boids only from `prev` (last frame's copy) and writes only `boids`:
+    /// reading neighbours from the buffer it is writing raced, and the flock differed run to run.
+    #[test]
+    fn compute_pass_reads_last_frame_and_writes_the_flock() {
+        let src = include_str!("../../../assets/shaders/boids_compute.wgsl");
+        assert!(
+            src.contains("var<storage, read> prev: array<Boid>;"),
+            "no prev binding"
+        );
+        for (n, line) in src.lines().enumerate() {
+            let code = line.split("//").next().unwrap_or("");
+            for (at, _) in code.match_indices("boids[") {
+                let rest = &code[at..];
+                let close = rest.find(']').expect("boids[ closes");
+                assert!(
+                    rest[close + 1..].trim_start().starts_with('='),
+                    "line {}: boids[] read, not written: {line}",
+                    n + 1
+                );
+            }
         }
     }
 

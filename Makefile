@@ -668,12 +668,15 @@ shots-wet-band:
 # and asserts the dumps (check.mjs: birds per land tile, bird slots and fish, fish per region and river
 # group sizes, each region's palette, the boid pieces loaded, roosts, roosting, river groups in the
 # joined region and fish crossing the fan, which the fixed clock's fish track reads back from the GPU).
+# HEXW_PACK_READY_FRAMES pins each streamed pack's arrival to 30 frames after its request, so the
+# waiting tiles rise and their fish spawn on the same frame every run: three runs give identical
+# dumps (fish_track digest included).
 BOIDS_SHOTS = boids-01-flock boids-02-roost boids-02-roost-close boids-03-fish-ocean boids-04-fish-river boids-04-fish-river-close boids-04-fish-river-play boids-07-settle boids-07-flap-close boids-10-mouth-fan boids-11-mouth-river boids-15-mouth-l-fan boids-15-mouth-l-side boids-15-mouth-l-wide
 BOIDS_DOCS = docs/checkpoints/boids
 shots-boids:
 	mkdir -p target/shots $(BOIDS_DOCS)
 	rm -f target/shots/boids-*.png target/shots/boids-*.json
-	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(BOIDS_DOCS)/boids.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
+	HEXW_PACK_READY_FRAMES=30 bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(BOIDS_DOCS)/boids.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
 	bash scripts/shots/run.sh --jpegs $(BOIDS_DOCS) $(BOIDS_SHOTS)
 	cp target/shots/boids-*.json $(BOIDS_DOCS)/
 	node $(BOIDS_DOCS)/check.mjs $(BOIDS_DOCS)

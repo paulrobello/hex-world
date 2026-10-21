@@ -21,6 +21,12 @@ use crate::kit_material::{MapRequest, load_map, slot_requests};
 /// fetched, so a shot can catch a tile while it waits (`docs/checkpoints/streaming/`). Disk
 /// loads otherwise land within a few frames, inside the rise.
 pub const HOLD_ENV: &str = "HEXW_PACK_HOLD_FRAMES";
+/// Native only: a requested pack turns ready exactly this many frames after its request (or when
+/// its files land, if later), not on whichever frame the disk loads finish. A fixed-clock capture
+/// whose tiles wait on a pack then draws them, and spawns their agents, on the same frame every
+/// run (`make shots-boids`). A pack still loading at its ready frame logs a warning: that run
+/// will not replay identically.
+pub const READY_ENV: &str = "HEXW_PACK_READY_FRAMES";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PackState {
@@ -46,6 +52,8 @@ struct Pack {
     state: PackState,
     /// Frames left before the files are fetched.
     hold: u32,
+    /// Frames since the request.
+    age: u32,
     fetched: bool,
     glbs: Vec<(String, Handle<Gltf>)>,
     images: Vec<Handle<Image>>,
@@ -74,18 +82,27 @@ pub struct PlayPacks {
     first_selected: Option<String>,
     interacted: bool,
     hold_frames: u32,
+    ready_frames: u32,
     waiting: Vec<(Axial, String, Vec<&'static str>)>,
     /// Pieces whose pack arrived without them (their GLB failed for good): they draw placeholders
     /// for the session, and a tile's ground is built without them (`scatter::ground_tris`).
     lost: BTreeSet<String>,
 }
 
-fn hold_frames() -> u32 {
+fn env_frames(name: &str) -> u32 {
     #[cfg(not(target_arch = "wasm32"))]
-    if let Some(n) = std::env::var(HOLD_ENV).ok().and_then(|v| v.parse().ok()) {
+    if let Some(n) = std::env::var(name).ok().and_then(|v| v.parse().ok()) {
         return n;
     }
+    #[cfg(target_arch = "wasm32")]
+    let _ = name;
     0
+}
+
+/// A loading pack turns ready once its files have `landed` and `age` frames have passed since its
+/// request reach `ready_frames` ([`READY_ENV`]; 0 is as soon as the files land).
+pub fn pack_arrives(landed: bool, age: u32, ready_frames: u32) -> bool {
+    landed && age >= ready_frames
 }
 
 /// Kit pieces a placed tile draws: base, centre, edge pieces and hero props. Scatter props are left
@@ -109,6 +126,7 @@ impl PlayPacks {
                 let p = Pack {
                     state: PackState::Idle,
                     hold: 0,
+                    age: 0,
                     fetched: false,
                     glbs: vec![],
                     images: vec![],
@@ -124,7 +142,8 @@ impl PlayPacks {
             baseline: None,
             first_selected: None,
             interacted: false,
-            hold_frames: hold_frames(),
+            hold_frames: env_frames(HOLD_ENV),
+            ready_frames: env_frames(READY_ENV),
             waiting: vec![],
             lost: BTreeSet::new(),
         }
@@ -271,6 +290,9 @@ impl PlayPacks {
         }
         for k in ids {
             let fetch = self.packs.get_mut(k).is_some_and(|p| {
+                if p.state == PackState::Loading {
+                    p.age = p.age.saturating_add(1);
+                }
                 if p.state == PackState::Loading && !p.fetched {
                     p.hold = p.hold.saturating_sub(1);
                     p.hold == 0
@@ -300,7 +322,14 @@ impl PlayPacks {
                 let s = server.load_state(h);
                 s.is_loaded() || s.is_failed()
             });
-            if glbs_done && images_done {
+            let landed = glbs_done && images_done;
+            if !landed && self.ready_frames > 0 && p.age == self.ready_frames {
+                warn!(
+                    "play: pack {k} still loading {} frames after its request ({READY_ENV}): this run will not replay identically",
+                    p.age
+                );
+            }
+            if pack_arrives(landed, p.age, self.ready_frames) {
                 p.state = PackState::Ready;
                 info!("play: pack {k} ready");
                 out.push(*k);
@@ -446,6 +475,24 @@ mod tests {
             need("river_road_bridge"),
             BTreeSet::from([CORE_PACK, "water"])
         );
+    }
+
+    /// With a ready frame set, a pack turns ready on that frame however early its files land, so a
+    /// fixed-clock capture draws its waiting tiles on the same frame every run; files that land
+    /// late still make it ready, just not on a reproducible frame.
+    #[test]
+    fn a_pack_turns_ready_on_its_ready_frame_not_when_its_files_land() {
+        assert!(
+            pack_arrives(true, 0, 0),
+            "no ready frame: as soon as it lands"
+        );
+        assert!(!pack_arrives(false, 9, 0));
+        for landed_at in [1, 4, 29] {
+            let ready = (0..100).find(|&age| pack_arrives(age >= landed_at, age, 30));
+            assert_eq!(ready, Some(30), "files landed at frame {landed_at}");
+        }
+        let late = (0..100).find(|&age| pack_arrives(age >= 41, age, 30));
+        assert_eq!(late, Some(41));
     }
 
     #[test]
