@@ -40,6 +40,7 @@ Landing recipe for future asset agents (the one used all session):
 - Every asset brief carries the integration section (`.claude/skills/blender-asset/references/dispatch.md` part 11).
 - When asset work is active: at least 2 and at most 3 Blender agents at once, on Opus 5.5 at xhigh effort, in `isolation: "worktree"`. Each new piece reuses approved helpers through module globals from a new family file (never edit an approved helper), and its runtime changes come back as a verified `integration.patch` for the orchestrator to land.
 - The P3 recipe system (recipe book, hints, discovery moment, creative mode, the 6 recipes) is deferred until Paul says to start it (2026-10-20). P3 content keeps landing ahead of it.
+- No work past P3: nothing from P4 (elevation) onward (P5 atmosphere, P6 content breadth, P7 mobile, P8 first-person) starts until Paul says so (2026-10-20). Owner-requested items that fit P2 or P3 still go ahead.
 - Blender headless only. Never record an owner approval yourself (pending entries only). Tool bugs and flaky tests are high priority. Perf numbers need host load ≤ 15 before and after.
 
 ## Waiting on Paul
