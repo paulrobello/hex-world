@@ -137,6 +137,14 @@ pub enum GameEvent {
         x: f32,
         z: f32,
     },
+    /// A train comes to rest against a buffer stop at a line end (owner D2-Q5): the train's sim id
+    /// and the stop's pivot, world XZ in metres; the audio layer's buffer clunk. Once per arrival,
+    /// before its dwell. Not kept in `recent_events`.
+    TrainAtLineEnd {
+        id: u64,
+        x: f32,
+        z: f32,
+    },
     /// A `save` command encoded the world (PRD §12.2). On the web the bytes wait for
     /// `hexWorld.takeSave(tag)`; natively a `path` was written. `tag` echoes the command's.
     Saved {

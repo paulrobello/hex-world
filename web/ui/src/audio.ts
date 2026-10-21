@@ -244,7 +244,7 @@ export interface AudioDebug {
   /**
    * Train cues: the voices sounding, departures waiting for a whistle, plays so far, the last variant per pool,
    * why the last cue was held back, moving trains in range of the focus, each pool's variants, and the latest
-   * plays (`event` is trainDeparted for a whistle, trainMoving for a chuff).
+   * plays (`event` is trainDeparted for a whistle, trainAtLineEnd for a clunk, trainMoving for a chuff).
    */
   trains: {
     voices: TrainVoice[];
@@ -513,6 +513,11 @@ export class GameAudio {
       }
       if (e.type === "trainDeparted") {
         this.trainEvents.push({ train: e.id, x: e.x, z: e.z, at: ctx.currentTime });
+        continue;
+      }
+      // One pick from the buffer-clunk pool (TRAIN_CUES), never every variant the manifest lists for the event.
+      if (e.type === "trainAtLineEnd") {
+        this.trainEvents.push({ train: e.id, x: e.x, z: e.z, at: ctx.currentTime, kind: "clunk" });
         continue;
       }
       const at = "q" in e && "r" in e ? { q: e.q, r: e.r } : null;
@@ -940,7 +945,7 @@ export class GameAudio {
       pan.disconnect();
       if (this.trainNodes.get(k)?.follow === follow) this.trainNodes.delete(k);
     };
-    const event = p.kind === "whistle" ? "trainDeparted" : "trainMoving";
+    const event = { whistle: "trainDeparted", clunk: "trainAtLineEnd", chuff: "trainMoving" }[p.kind];
     this.trainRecent.push({ id: p.cue, event, train: p.train, t: round(t, 3), gain: round(p.gain) });
     if (this.trainRecent.length > 16) this.trainRecent.shift();
   }

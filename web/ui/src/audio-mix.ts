@@ -530,12 +530,16 @@ export function carStep(
 
 // ---------- Trains (P3 rail) ----------
 
-export type TrainKind = "whistle" | "chuff";
+export type TrainKind = "whistle" | "chuff" | "clunk";
 
-/** The whistle a departure blows at the train's front, and the chuff that follows a moving train. */
+/**
+ * The whistle a departure blows at the train's front, the chuff that follows a moving train, and the soft buffer
+ * clunk at a buffer stop's pivot when a train comes to rest against it (owner D2-Q5, 2026-10-20).
+ */
 export const TRAIN_CUES: Record<TrainKind, CarCue> = {
   whistle: { pool: "train-whistle", level: 0.45 },
   chuff: { pool: "train-chuff", level: 0.3 },
+  clunk: { pool: "buffer-clunk", level: 0.35 },
 };
 /** Trains sound only within this many hex steps of the focus: a train is louder and longer than a car. */
 export const TRAIN_RANGE_STEPS = 4;
@@ -546,13 +550,15 @@ export const TRAIN_EVENT_WAIT_S = 2;
 /** A train chuffs while it runs at least this fast (m/s). */
 export const TRAIN_CHUFF_MIN_SPEED = 0.5;
 
-/** A departure waiting for its whistle. */
+/** A departure waiting for its whistle, or an arrival at a buffer stop waiting for its clunk. */
 export interface TrainRequest {
   train: number;
   x: number;
   z: number;
   /** Audio time the event arrived. */
   at: number;
+  /** The cue it asks for: a whistle when absent. */
+  kind?: "whistle" | "clunk";
 }
 
 export interface TrainVoice {
@@ -639,13 +645,14 @@ export function trainStep(
       s.gatedBy = "out-of-range";
       continue;
     }
-    if (voiced(e.train, "whistle")) continue;
+    const kind = e.kind ?? "whistle";
+    if (voiced(e.train, kind)) continue;
     if (s.voices.length >= TRAIN_VOICES) {
       s.gatedBy = "cap";
       waiting.push(e);
       continue;
     }
-    start(e.train, "whistle", e.x, e.z);
+    start(e.train, kind, e.x, e.z);
   }
   s.pending = waiting;
   if (paused) return { state: s, play };

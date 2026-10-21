@@ -434,31 +434,206 @@ fn a_train_runs_back_from_a_line_end() {
     );
 }
 
-/// The brake third (its veranda and lookout at the train's tail) stays the vehicle farthest from
-/// the engine both ways, propelled as well as hauled.
+/// The engine runs at one end of every train and its two carriages in a seeded order per train
+/// (owner A13-Q2): the order holds through every reversal, and both orders run across trains.
 #[test]
-fn the_brake_third_runs_last_both_ways() {
+fn each_train_mixes_its_carriage_order_and_keeps_it() {
+    use hex_sim::VehicleKind::{BrakeCarriage, Carriage, Engine};
+    let orders: BTreeSet<_> = (0..32)
+        .map(|id| hex_sim::rail::consist_for(7, id))
+        .collect();
+    assert_eq!(orders.len(), 2, "{orders:?}");
+    for o in &orders {
+        assert_eq!(o[0], Engine);
+        let mut rest = [o[1], o[2]];
+        rest.sort();
+        assert_eq!(rest, [Carriage, BrakeCarriage]);
+    }
+    assert_eq!(
+        hex_sim::rail::consist_for(7, 3),
+        hex_sim::rail::consist_for(7, 3)
+    );
+    let c = catalog();
+    for seed in [1u64, 2, 3, 4] {
+        let mut r = Railway::with_seed(seed);
+        for q in 0..3 {
+            place(&mut r, &c, Axial::new(q, 0), "rail_straight", 0);
+        }
+        run(&mut r, 1);
+        let order = r.trains()[0].consist();
+        for _ in 0..60 * TICK_HZ {
+            r.tick();
+            let t = &r.trains()[0];
+            assert_eq!(t.consist(), order);
+            let vs = t.vehicles(1.0);
+            let kinds: Vec<_> = vs.iter().map(|v| v.kind).collect();
+            assert_eq!(kinds, order.to_vec());
+            // The engine stays at an end: every carriage is farther from it than the next.
+            let e = vs[0].pose.pos;
+            assert!(geom::dist(e, vs[2].pose.pos) > geom::dist(e, vs[1].pose.pos) + 7.0);
+        }
+        assert!(r.trains()[0].reversals() >= 1);
+    }
+}
+
+/// Where the leading vehicle's buffer face meets a stop: how far its foremost buffer head stands
+/// past the stop's contact plane (m), and its face centre's offset across the track.
+fn buffers_at(t: &hex_sim::rail::Train, stop: hex_sim::Pose) -> (f32, f32) {
+    use hex_sim::rail::{BUFFER_RADIUS, BUFFER_SIDE, CONSIST, TRAIN_LENGTH};
+    let vs = t.vehicles(1.0);
+    let (v, half, fwd) = if t.engine_leads() {
+        (vs[0], CONSIST[0].centre, vs[0].pose.dir)
+    } else {
+        let v = vs[vs.len() - 1];
+        (
+            v,
+            TRAIN_LENGTH - CONSIST[2].centre,
+            geom::scale(v.pose.dir, -1.0),
+        )
+    };
+    let face = geom::add(v.pose.pos, geom::scale(fwd, half));
+    let side = geom::scale(geom::right_of(fwd), BUFFER_SIDE);
+    let c = geom::dot(fwd, stop.dir);
+    let disc = BUFFER_RADIUS * (1.0 - c * c).max(0.0).sqrt();
+    let past = [geom::add(face, side), geom::sub(face, side)]
+        .iter()
+        .map(|p| geom::dot(geom::sub(*p, stop.pos), stop.dir))
+        .fold(f32::MIN, f32::max)
+        + disc;
+    let across = geom::dot(geom::sub(face, stop.pos), geom::right_of(stop.dir));
+    (past, across)
+}
+
+/// Runs the line's one train for `seconds`, checking every arrival at a buffer stop: the event
+/// names the stop's pivot, and the leading buffers meet the stop's contact plane. Returns each
+/// arrival's (leading end engine?, buffers past the plane, face offset across, stop's world edge).
+fn arrivals(r: &mut Railway, seconds: u32) -> Vec<(bool, f32, f32, u8)> {
+    let stops = r.buffer_stops();
+    let mut out = vec![];
+    let mut at_end = false;
+    for _ in 0..seconds * TICK_HZ {
+        r.tick();
+        let t = &r.trains()[0];
+        let now = t.blocker() == Blocker::LineEnd;
+        let events = r.line_end_arrivals();
+        assert_eq!(
+            events.len(),
+            usize::from(now && !at_end),
+            "one clunk per arrival"
+        );
+        if let Some(&(id, pivot)) = events.first() {
+            assert_eq!(id, t.id());
+            let &(_, edge, stop) = stops
+                .iter()
+                .find(|(.., p)| geom::dist(p.pos, pivot) < 1e-4)
+                .expect("the clunk sounds at a buffer stop");
+            let (past, across) = buffers_at(t, stop);
+            out.push((t.engine_leads(), past, across, edge));
+        }
+        at_end = now;
+    }
+    out
+}
+
+/// At a straight line end the train's buffer heads stand exactly on the stop's: 3.5 m inside the
+/// edge, the engine leading and propelling (the brake third or the carriage leading).
+#[test]
+fn trains_meet_the_buffer_stop_at_a_straight_end() {
     let c = catalog();
     let mut r = Railway::new();
     for q in 0..3 {
         place(&mut r, &c, Axial::new(q, 0), "rail_straight", 0);
     }
+    assert_eq!(r.buffer_stops().len(), 2, "both ends of the line");
     run(&mut r, 1);
-    let mut checked = 0;
-    for _ in 0..90 * TICK_HZ {
-        r.tick();
-        let t = &r.trains()[0];
-        let vs = t.vehicles(1.0);
-        let at = |k: hex_sim::VehicleKind| vs.iter().find(|v| v.kind == k).unwrap().pose.pos;
-        let e = at(hex_sim::VehicleKind::Engine);
-        let (car, brake) = (
-            at(hex_sim::VehicleKind::Carriage),
-            at(hex_sim::VehicleKind::BrakeCarriage),
+    let got = arrivals(&mut r, 150);
+    assert!(
+        got.iter().any(|a| a.0) && got.iter().any(|a| !a.0),
+        "{got:?}"
+    );
+    for (lead, past, across, _) in got {
+        assert!(
+            past.abs() < 0.01,
+            "engine leads {lead}: {past} m past the plane"
         );
-        assert!(geom::dist(e, brake) > geom::dist(e, car) + 7.0);
-        checked += 1;
+        assert!(
+            across.abs() < 0.01,
+            "engine leads {lead}: {across} m across"
+        );
     }
-    assert!(checked > 0 && r.trains()[0].reversals() >= 1);
+}
+
+/// At a line end on the 8 m bend the body lies on its axles' chord, skewed to the stop: the train
+/// stops when its foremost leading buffer head reaches the stop's contact plane (orchestrator's
+/// default for owner D2 Q1), so it never runs into the stop's beam.
+#[test]
+fn trains_meet_the_buffer_stop_with_their_body_at_a_bend_end() {
+    let c = catalog();
+    let mut bend = vec![];
+    // The bend at the east end, then at the west end, so the engine leads into one and the
+    // carriages into the other.
+    for (cell, rot) in [(Axial::new(2, 0), 3), (Axial::new(-1, 0), 0)] {
+        let mut r = Railway::new();
+        for q in 0..2 {
+            place(&mut r, &c, Axial::new(q, 0), "rail_straight", 0);
+        }
+        place(&mut r, &c, cell, "rail_bend_60", rot);
+        let bend_edge = r
+            .buffer_stops()
+            .iter()
+            .find(|(at, ..)| *at == cell)
+            .map(|s| s.1)
+            .expect("the bend's open end has a stop");
+        run(&mut r, 1);
+        let got = arrivals(&mut r, 150);
+        bend.extend(got.into_iter().filter(|a| a.3 == bend_edge));
+    }
+    assert!(
+        bend.iter().any(|a| a.0) && bend.iter().any(|a| !a.0),
+        "{bend:?}"
+    );
+    for (lead, past, across, _) in bend {
+        eprintln!(
+            "bend end, engine leads {lead}: buffers {past:.3} m past, face {across:.3} m across"
+        );
+        assert!(
+            past.abs() < 0.01,
+            "engine leads {lead}: {past} m past the plane"
+        );
+    }
+}
+
+/// A stop stands at every open end and only there: a loop has none, and placing a tile against an
+/// open end takes its stop away and puts one at the new end.
+#[test]
+fn buffer_stops_stand_at_the_open_ends_only() {
+    let c = catalog();
+    let mut r = Railway::new();
+    for q in 0..2 {
+        place(&mut r, &c, Axial::new(q, 0), "rail_straight", 0);
+    }
+    let cells = |r: &Railway| -> Vec<(Axial, u8)> {
+        r.buffer_stops().iter().map(|(c, e, _)| (*c, *e)).collect()
+    };
+    assert_eq!(
+        cells(&r),
+        vec![(Axial::new(0, 0), 3), (Axial::new(1, 0), 0)]
+    );
+    place(&mut r, &c, Axial::new(2, 0), "rail_straight", 0);
+    assert_eq!(
+        cells(&r),
+        vec![(Axial::new(0, 0), 3), (Axial::new(2, 0), 0)]
+    );
+    r.remove_tile(Axial::new(2, 0));
+    assert_eq!(
+        cells(&r),
+        vec![(Axial::new(0, 0), 3), (Axial::new(1, 0), 0)]
+    );
+    let mut lp = Railway::new();
+    for (cell, id, rot) in triangle(2) {
+        place(&mut lp, &c, cell, id, rot);
+    }
+    assert!(lp.buffer_stops().is_empty());
 }
 
 /// Trains are derived: a fresh simulation of the same world spawns the same trains in the same
@@ -655,4 +830,113 @@ fn cars_wait_at_the_level_crossing_while_a_train_is_near() {
     assert!(closed_ticks > 0, "the train never closed the crossing");
     assert!(trips.len() >= 3, "{} trips", trips.len());
     assert!(held > 0, "no car ever waited at the crossing");
+}
+
+/// A station at a line end: its platform-end stop stands close enough to the edge
+/// (`hex_core::rail_end::STATION_LEAD`) that a train makes its station stop with every axle on the
+/// level section, either way round, and never stands on the ramp.
+#[test]
+fn a_terminal_station_stands_every_axle_on_the_level_section() {
+    use hex_sim::rail::{CONSIST, TRAIN_LENGTH};
+    // The stop's lead is the longest buffer-to-outer-axle overhang of the stock.
+    let (head, tail) = (CONSIST[0], CONSIST[CONSIST.len() - 1]);
+    let lead =
+        (head.centre - head.half_wheelbase).max(TRAIN_LENGTH - tail.centre - tail.half_wheelbase);
+    assert!(
+        (lead - hex_core::rail_end::STATION_LEAD).abs() < 1e-4,
+        "{lead}"
+    );
+    let c = catalog();
+    let mut r = Railway::new();
+    for q in 0..2 {
+        place(&mut r, &c, Axial::new(q, 0), "rail_straight", 0);
+    }
+    let station = Axial::new(2, 0);
+    place(&mut r, &c, station, "rail_station", 0);
+    // The level section along the segment from edge 0 (+x): 3.856 to 23.856 m in.
+    let edge0 = station.to_world(hex_core::HEX_RADIUS)[0] + 13.856;
+    run(&mut r, 1);
+    let mut stood = [0, 0];
+    let mut was = false;
+    for _ in 0..150 * TICK_HZ {
+        r.tick();
+        let t = &r.trains()[0];
+        let now = t.blocker() == Blocker::Station(station);
+        if now && !was {
+            stood[usize::from(t.engine_leads())] += 1;
+            for (v, spec) in t.vehicles(1.0).iter().zip(CONSIST) {
+                for s in [-1.0, 1.0] {
+                    let axle =
+                        geom::add(v.pose.pos, geom::scale(v.pose.dir, s * spec.half_wheelbase));
+                    let along = edge0 - axle[0];
+                    assert!(
+                        (3.856 - 0.01..=23.856 + 0.01).contains(&along),
+                        "engine leads {}: an axle {along:.3} m in, off the level section",
+                        t.engine_leads()
+                    );
+                }
+            }
+        }
+        was = now;
+    }
+    assert!(
+        stood[0] >= 1 && stood[1] >= 1,
+        "station stops (propelled, hauled): {stood:?}"
+    );
+}
+
+/// The junction toe as a line end: a train coming off the branch trails through onto the toe and
+/// meets the main-line stop there with its foremost leading buffer head on the stop's plane, its
+/// face to the side of the stop by the branch's offset (runtime notes, owner Q3 open).
+#[test]
+fn a_train_off_the_branch_meets_the_toe_stop() {
+    let c = catalog();
+    let mut r = Railway::new();
+    place(&mut r, &c, Axial::ORIGIN, "rail_junction", 0);
+    for q in [-1, -2] {
+        place(&mut r, &c, Axial::new(q, 0), "rail_straight", 0);
+    }
+    for rr in [1, 2] {
+        place(&mut r, &c, Axial::new(0, rr), "rail_straight", 1);
+    }
+    let &(_, toe_edge, toe) = r
+        .buffer_stops()
+        .iter()
+        .find(|(cell, ..)| *cell == Axial::ORIGIN)
+        .expect("a stop at the open toe");
+    assert_eq!(toe_edge, 0);
+    // One train, on the branch's far tile heading for the junction.
+    let far = hex_sim::LinkId {
+        cell: Axial::new(0, 2),
+        segment: 0,
+    };
+    let len = r.network().link(far).unwrap().length();
+    r.spawn_at(far, true, len - 1.0)
+        .expect("a train fits on the branch");
+    let branch = hex_sim::LinkId {
+        cell: Axial::ORIGIN,
+        segment: 2,
+    };
+    let mut off_branch = vec![];
+    for _ in 0..600 * TICK_HZ {
+        r.tick();
+        let t = &r.trains()[0];
+        if let Some(&(_, p)) = r.line_end_arrivals().first()
+            && geom::dist(p, toe.pos) < 1e-4
+        {
+            // Its body still runs back onto the branch leg.
+            if r.body(t).iter().any(|&(l, ..)| l == branch) {
+                let (past, across) = buffers_at(t, toe);
+                eprintln!(
+                    "toe end off the branch: buffers {past:.3} m past, face {across:.3} m across"
+                );
+                assert!(past.abs() < 0.01, "{past} m past the toe stop's plane");
+                off_branch.push(across);
+            }
+        }
+    }
+    assert!(
+        !off_branch.is_empty(),
+        "no train came off the branch to the toe"
+    );
 }

@@ -202,6 +202,7 @@ impl Plugin for ThumbsPlugin {
             // The farm herd walks on the fixed tick, which runs every frame; a paused herd stands
             // at its slots, so a farm thumbnail does not depend on which frame captured it.
             .insert_resource(AgentsPaused(true))
+            .insert_resource(hex_play::play::NoBufferStops)
             .insert_resource(ThumbRun::new(&catalog))
             .insert_resource(PackRequests {
                 all: true,

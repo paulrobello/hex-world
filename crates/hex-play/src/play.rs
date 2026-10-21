@@ -18,6 +18,7 @@ use bevy::{
 use hex_assets::{parse_manifest, rotor_mesh_name, select_family};
 use hex_core::{
     Axial, Biome, HEX_RADIUS, LEVEL_STEP, PairPieces, SocketKind, TileCatalog, TileDef, hex_prism,
+    rail_end::{self, BUFFER_STOP, BufferStop},
 };
 
 pub mod affordances;
@@ -437,13 +438,26 @@ fn spawn_kit_parts(
     Some(out)
 }
 
-/// Re-draws the pair edge pieces of `cells` under their tile roots. Each piece is authored for
-/// edge 0 and placed at its local edge; the root already carries the tile's rotation. A tile new
-/// to the view rises its pieces with its edges; a neighbour's update draws them at rest.
+/// Leaves the buffer stops out of play: the thumbnail renderer (`--thumbs`) draws each tile alone,
+/// every rail edge open, and its images must not show them (owner D2-Q4).
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct NoBufferStops;
+
+/// A buffer stop's transform under its tile root ([`rail_end`]): at the cap height, its +X along
+/// the stop's heading toward the edge.
+pub(crate) fn buffer_stop_local(s: &BufferStop) -> Transform {
+    Transform::from_xyz(s.pos[0], 0.0, s.pos[1]).with_rotation(Quat::from_rotation_y(-s.yaw()))
+}
+
+/// Re-draws the pair edge pieces of `cells` under their tile roots, and the buffer stops at their
+/// open rail ends (owner D2). Each pair piece is authored for edge 0 and placed at its local edge;
+/// the root already carries the tile's rotation. A tile new to the view rises its pieces with its
+/// edges; a neighbour's update draws them at rest.
 fn respawn_pairs(
     commands: &mut Commands,
     spawned: &mut PlaySpawned,
     kit: &HashMap<String, Vec<KitPart>>,
+    (catalog, draw_stops): (&TileCatalog, bool),
     cells: &BTreeSet<Axial>,
     rising: &BTreeSet<Axial>,
 ) {
@@ -456,6 +470,17 @@ fn respawn_pairs(
             continue;
         };
         let rise = rising.contains(&cell).then_some((cell, RiseRole::Edge));
+        let tile_at = |c: Axial| {
+            spawned
+                .tiles
+                .get(&c)
+                .and_then(|(t, _)| Some((catalog.get(&t.tile)?, t.rotation)))
+        };
+        let stops = tile_at(cell)
+            .filter(|_| draw_stops)
+            .map_or(vec![], |(def, rot)| {
+                rail_end::open_stops(def, cell, rot, tile_at)
+            });
         let mut ids = vec![];
         commands.entity(*root).with_children(|p| {
             for (e, piece) in pieces.iter().enumerate() {
@@ -465,6 +490,12 @@ fn respawn_pairs(
                         spawn_kit_parts(p, kit, piece.as_str(), t, rise).unwrap_or_default(),
                     );
                 }
+            }
+            for s in &stops {
+                ids.extend(
+                    spawn_kit_parts(p, kit, BUFFER_STOP, buffer_stop_local(s), rise)
+                        .unwrap_or_default(),
+                );
             }
         });
         spawned.pair_entities.insert(cell, ids);
@@ -711,15 +742,19 @@ pub fn sync(
     config: Res<GateConfig>,
     (water, clock, cameras, mut meshes, mut images, mut water_mats, mut terrain_mats): WaterHooks,
     (mut rises, reduced, mut cues): RiseHooks,
-    (packs, waiting_out, children): (
+    (packs, waiting_out, children, no_stops): (
         Option<Res<PlayPacks>>,
         Option<ResMut<PlayWaiting>>,
         Query<&Children>,
+        Option<Res<NoBufferStops>>,
     ),
 ) {
     let (Scenario::Play, Some(mut spawned), Some(plain)) = (active.0, spawned, plain) else {
         return;
     };
+    let stops = no_stops.is_none();
+    // The buffer stop piece built since the last sync: every rail tile draws its stops now.
+    let stops_arrived = spawned.refresh.contains(BUFFER_STOP);
     let waits = |t: &PlayTile| {
         packs.as_deref().is_some_and(|p| {
             catalog
@@ -864,7 +899,18 @@ pub fn sync(
         want.get(&cell)
             .and_then(|t| Some((catalog.0.get(&t.tile)?, t.rotation)))
     };
+    // A rail tile's buffer stops depend on its neighbours: an edit next to it re-draws them.
+    let near: BTreeSet<Axial> = changed
+        .iter()
+        .flat_map(|c| (0..6).map(move |e| c.neighbor(e)))
+        .collect();
     let mut redraw = spawned.pairs.update(&catalog.0, changed, at);
+    let rail_tile =
+        |c: &Axial| at(*c).is_some_and(|(def, _)| (0..6).any(|e| rail_end::rail_edge(def, e)));
+    redraw.extend(near.into_iter().filter(rail_tile));
+    if stops_arrived {
+        redraw.extend(want.keys().copied().filter(rail_tile));
+    }
     // A tile drawn afresh, or whose children a pack refresh rebuilt, has none of its pair pieces
     // yet, even where the resolution did not change; a pair piece whose pack just arrived swaps
     // from nothing to the kit in place.
@@ -876,7 +922,14 @@ pub fn sync(
         added_cells
     };
     rising.extend(shown);
-    respawn_pairs(&mut commands, &mut spawned, kit, &redraw, &rising);
+    respawn_pairs(
+        &mut commands,
+        &mut spawned,
+        kit,
+        (&catalog.0, stops),
+        &redraw,
+        &rising,
+    );
     cues.write_batch(out);
     let mut now: Vec<Axial> = spawned.hidden.keys().copied().collect();
     now.sort_by_key(|c| (c.q, c.r));

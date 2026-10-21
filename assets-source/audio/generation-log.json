@@ -1,6 +1,6 @@
 {
   "cap": 59,
-  "capNote": "Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 57-59, 120 credits), and attempt 57 was kept, so the cap is set to the 59 attempts logged. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"): the cap was raised from 53 by at most 6 for the place-slosh pool; three were spent (attempts 54-56, 60 credits), so the cap is set to the 56 attempts logged. Before that, Owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
+  "capNote": "Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 57-59, 120 credits), and attempt 57 was kept, so the cap is set to the 59 attempts logged. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"): the cap was raised from 53 by at most 6 for the place-slosh pool; three were spent (attempts 54-56, 60 credits), so the cap is set to the 56 attempts logged. Before that, Owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged. Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"): the cap was raised from 53 by at most 6 for the place-slosh pool; three were spent (attempts 54-56, 60 credits), so the cap is set to the 56 attempts logged. Before that, Owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
   "attempts": [
     {
       "n": 1,
@@ -827,6 +827,47 @@
       "creditsCharged": 40,
       "subscriptionDelta": 0,
       "file": "assets-source/audio/ambience/train-whistle-1/train-whistle-1.mp3"
+    },
+    {
+      "cueId": "buffer-clunk-1",
+      "requestedAt": "2026-10-20T23:39:59+00:00",
+      "reason": "first take",
+      "creditsBefore": 12302,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "ae78f905ee16c2d9e4c4f91892da70c2",
+      "creditsAfter": 12302,
+      "creditsCharged": 10,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/sfx/buffer-clunk-1/buffer-clunk-1.mp3"
+    },
+    {
+      "n": 58,
+      "cueId": "buffer-clunk-2",
+      "requestedAt": "2026-10-20T23:40:04+00:00",
+      "reason": "first take",
+      "creditsBefore": 12302,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "9517f1b89f78339084cdd5cc18c5b2a0",
+      "creditsAfter": 12302,
+      "creditsCharged": 10,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/sfx/buffer-clunk-2/buffer-clunk-2.mp3"
+    },
+    {
+      "n": 59,
+      "cueId": "buffer-clunk-1",
+      "requestedAt": "2026-10-20T23:40:35+00:00",
+      "reason": "first take was a flat 0.5 s broadband hiss burst centred near 7 kHz (90% of its energy over 4 kHz), not a low clunk; prompt reworded to drop steam and ask for a dull wooden knock",
+      "creditsBefore": 12322,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "6ed6a247a24b4c76a56314da6ac9d66d",
+      "creditsAfter": 12322,
+      "creditsCharged": 10,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/sfx/buffer-clunk-1/buffer-clunk-1.mp3"
     }
   ]
 }

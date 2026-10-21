@@ -516,3 +516,28 @@ fn routed_trains_move_smoothly_or_turn_round() {
         prev = now;
     }
 }
+
+/// The two-station dumbbell with 3.5 m buffer stops: the trains want each other's terminal across
+/// one headshunt, so they can never swap. A train giving way for good used to take the nearest
+/// station by route, which was the one the other train stood at, so it followed that train in and
+/// out of the same branch for good and never arrived. It now takes the nearest station no other
+/// train stands at: each train reaches a station within the 900 s run.
+#[test]
+fn two_trains_swapping_terminals_across_one_headshunt_do_not_livelock() {
+    let c = catalog();
+    let mut r = Railway::new();
+    two_stations_long(&mut r, &c);
+    run(&mut r, 1);
+    assert_eq!(r.trains().len(), 2);
+    let mut first: BTreeMap<TrainId, u32> = BTreeMap::new();
+    for tick in 0..900 * TICK_HZ {
+        r.tick();
+        for t in r.trains() {
+            if !t.arrivals().is_empty() {
+                first.entry(t.id()).or_insert(tick / TICK_HZ);
+            }
+        }
+    }
+    eprintln!("first arrivals (s): {first:?}");
+    assert_eq!(first.len(), 2, "first arrivals (s): {first:?}");
+}

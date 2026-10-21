@@ -979,3 +979,28 @@ test("trains: voices are capped, a departure waits for one, then is dropped", ()
   );
   assert.deepEqual([gated.play.length, gated.state.gatedBy], [0, "muted"]);
 });
+
+test("trains: an arrival at a buffer stop clunks once from the buffer-clunk pool, no whistle", () => {
+  const pools: Record<string, string[]> = { ...trainPools, "buffer-clunk": ["clunk-a", "clunk-b"] };
+  const arrive = { ...departs(0, 1, 0, 10), kind: "clunk" as const };
+  const step = (st: TrainState, events: TrainRequest[]) =>
+    trainStep(
+      st,
+      10,
+      events,
+      [],
+      carView,
+      null,
+      (p) => pools[p] ?? [],
+      () => 1,
+      () => 0.5,
+    );
+  const r = step(trainIdle(), [arrive]);
+  assert.deepEqual(
+    r.play.map((p) => [p.train, p.kind]),
+    [[0, "clunk"]],
+  );
+  assert.ok(pools["buffer-clunk"]!.includes(r.play[0]!.cue));
+  close(r.play[0]!.gain, TRAIN_CUES.clunk.level * emitterGain(...cellWorld(1, 0, R), carView));
+  assert.equal(step(r.state, [arrive]).play.length, 0, "no second clunk while the first sounds");
+});

@@ -3,7 +3,8 @@
 //! with it.
 //!
 //! A train is the steam tank engine (`train_engine`), a carriage (`train_carriage`) and the brake
-//! third last (`train_carriage_b`, the same length and axles as the carriage), each standing on the
+//! third (`train_carriage_b`, the same length and axles as the carriage), the carriages in an order
+//! seeded per train (`hex_sim::rail::consist_for`, owner A13-Q2), each standing on the
 //! rail top ([`RAIL_TOP_Y`], the same over the level crossing's
 //! deck and the river bridge) and painted at runtime (PRD §6) like the cars: one model and one
 //! material per piece, the livery picked from [`LIVERIES`] by the train id and carried as a
@@ -39,8 +40,8 @@ pub const RAIL_TOP_Y: f32 = 0.46;
 pub enum StockKind {
     Engine,
     Carriage,
-    /// The brake third, last in every train (`hex_sim::rail::CONSIST`): its veranda and roof
-    /// lookout at the piece's -x end, the train's tail.
+    /// The brake third: its veranda and roof lookout at the piece's -x end. It runs second or last,
+    /// as the train's seeded order has it (`hex_sim::rail::consist_for`).
     BrakeCarriage,
 }
 

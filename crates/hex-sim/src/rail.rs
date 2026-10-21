@@ -6,9 +6,12 @@
 //!   the toe segment leaves on the leg the switch is set to, and from either leg it trails through
 //!   onto the toe segment. No route joins the two legs.
 //! - **Trains.** An engine, a carriage and a brake third ([`CONSIST`]), [`TRAIN_LENGTH`] meters
-//!   over the buffers. At a line end (a seam facing an empty cell; rail meets only rail, so a line
-//!   can end nowhere else) a train stops inside the last tile, waits [`DWELL_SECONDS`] and runs
-//!   back the other way, the tank engine propelling its carriages (a push-pull "autotrain": tank
+//!   over the buffers, the engine at one end and the two carriages in an order seeded per train
+//!   (owner A13-Q2, [`consist_for`]). At a line end (a seam facing an empty cell; rail meets only
+//!   rail, so a line can end nowhere else) a buffer stop stands [`hex_core::rail_end::STOP_U`]
+//!   inside the last tile ([`Railway::buffer_stops`]); a train stops with its leading buffers at
+//!   the stop's ([`Railway::line_end_arrivals`] names it that tick), waits [`DWELL_SECONDS`] and
+//!   runs back the other way, the tank engine propelling its carriages (a push-pull "autotrain": tank
 //!   engines work both ways without a turntable). On a loop it loops.
 //! - **Routing.** A train with a reachable station has a destination, one station stop, and a
 //!   route to it: an A* search over directed links ([`Railway::route_length`]). Its first
@@ -68,9 +71,19 @@ pub const LOOKAHEAD: f32 = 50.0;
 pub const TRAIN_GAP: f32 = 4.0;
 /// How far short of a junction zone a waiting train stands (m).
 pub const ZONE_MARGIN: f32 = 1.0;
-/// How far inside the last tile a train stops at a line end (m), so the engine's 2.47 m overhang
-/// never reaches the empty (or still rising) cell beyond.
-pub const END_MARGIN: f32 = 1.0;
+/// How far inside the last tile a train's front stops at a line end on a straight (m): at the
+/// buffer stop's contact plane (owner D2-Q2, [`hex_core::rail_end::STOP_U`]). Spawning keeps a
+/// train's tail this far in too. On a curve the train stops by its body instead: its foremost
+/// leading buffer head meets the stop's contact plane.
+pub const END_MARGIN: f32 = hex_core::rail_end::STOP_U;
+/// The buffer heads every vehicle shares with the stop: 0.85 m either side of the centreline,
+/// discs of 0.20 m radius (`docs/checkpoints/rail_buffer_stop/runtime-notes.md` section 2).
+pub const BUFFER_SIDE: f32 = 0.85;
+pub const BUFFER_RADIUS: f32 = 0.20;
+/// Overlap (m) below which a body only touches a stretch of track ([`Railway::body`] tests).
+const TOUCH: f32 = 0.05;
+/// Salt for the consist order's seed, so it does not follow a train's first destination.
+const CONSIST_SALT: u64 = 0x00C0_5157;
 /// Wait at a line end before running back (s).
 pub const DWELL_SECONDS: f32 = 3.0;
 /// Wait at a station stop before running on (s).
@@ -135,8 +148,9 @@ impl Leg {
 pub enum VehicleKind {
     Engine,
     Carriage,
-    /// The brake third (`train_carriage_b`): the guard's veranda and roof lookout at its rear, so it
-    /// runs last. Its length and axles are the carriage's.
+    /// The brake third (`train_carriage_b`): the guard's veranda and roof lookout at its rear. Its
+    /// length and axles are the carriage's, so it runs second or last (owner A13-Q2: a mix per
+    /// train, [`consist_for`]).
     BrakeCarriage,
 }
 
@@ -149,8 +163,9 @@ pub struct VehicleSpec {
     pub half_wheelbase: f32,
 }
 
-/// The engine (8.94 m, axles ±2.0 m), a carriage and the brake third last (both 7.14 m, axles
-/// ±1.5 m), 0.5 m apart.
+/// The engine (8.94 m, axles ±2.0 m), a carriage and the brake third (both 7.14 m, axles ±1.5 m),
+/// 0.5 m apart. The two carriage places share one envelope, so a train runs its carriages in
+/// either order ([`consist_for`]); `kind` here is one of the two.
 pub const CONSIST: [VehicleSpec; 3] = [
     VehicleSpec {
         kind: VehicleKind::Engine,
@@ -222,6 +237,8 @@ pub struct Train {
     blocker: Blocker,
     /// Ticks stopped in a row.
     stopped: u32,
+    /// The vehicle in each [`CONSIST`] place ([`consist_for`]).
+    kinds: [VehicleKind; 3],
     prev: Vec<VehiclePose>,
     now: Vec<VehiclePose>,
     /// Facing toes passed, as (junction cell, leg taken), oldest first; the last 16.
@@ -295,6 +312,11 @@ impl Train {
 
     pub fn reversals(&self) -> u32 {
         self.reversals
+    }
+
+    /// The vehicle in each [`CONSIST`] place, engine end first.
+    pub fn consist(&self) -> [VehicleKind; 3] {
+        self.kinds
     }
 
     /// Each vehicle between the previous tick (`alpha = 0`) and the latest (`alpha = 1`).
@@ -478,6 +500,10 @@ pub struct Railway {
     stops: Vec<Stop>,
     /// Trains that left a station stop on the last tick, with the stop's cell.
     departures: Vec<(TrainId, Axial)>,
+    /// Trains that came to rest at a buffer stop on the last tick, with the stop's pivot.
+    arrivals: Vec<(TrainId, Vec2)>,
+    /// A buffer stop for every rail lane end of the placed tiles, open or not.
+    ends: Vec<EndStop>,
     trains: Vec<Train>,
     next_train: u64,
     /// The graph changed (or a line still wants a train): run the spawner on the next tick.
@@ -498,6 +524,33 @@ enum Pick {
     After(LinkId),
     /// The reachable stop with the cheapest route.
     Nearest,
+}
+
+/// A buffer stop at a rail lane end of a placed tile: the end's seam node and the stop's pose.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct EndStop {
+    cell: Axial,
+    edge: u8,
+    node: NodeId,
+    pose: Pose,
+}
+
+/// The vehicle in each [`CONSIST`] place for train `id` in a world seeded `seed`: the engine first,
+/// then the carriage and the brake third in a seeded order (owner A13-Q2: a mix per train).
+pub fn consist_for(seed: u64, id: u64) -> [VehicleKind; 3] {
+    if mix(seed ^ CONSIST_SALT, id) & 1 == 0 {
+        [
+            VehicleKind::Engine,
+            VehicleKind::Carriage,
+            VehicleKind::BrakeCarriage,
+        ]
+    } else {
+        [
+            VehicleKind::Engine,
+            VehicleKind::BrakeCarriage,
+            VehicleKind::Carriage,
+        ]
+    }
 }
 
 /// SplitMix64's finaliser: a train's seeded start index among the stops.
@@ -578,6 +631,8 @@ impl Railway {
             crossings: vec![],
             stops: vec![],
             departures: vec![],
+            arrivals: vec![],
+            ends: vec![],
             trains: vec![],
             next_train: 0,
             dirty: false,
@@ -616,6 +671,26 @@ impl Railway {
     /// whistle's cue).
     pub fn departures(&self) -> &[(TrainId, Axial)] {
         &self.departures
+    }
+
+    /// Trains that came to rest against a buffer stop on the last tick, with the stop's pivot (the
+    /// buffer clunk's cue).
+    pub fn line_end_arrivals(&self) -> &[(TrainId, Vec2)] {
+        &self.arrivals
+    }
+
+    /// The buffer stops at the open line ends (a rail seam facing no rail), as (cell, world edge,
+    /// pivot and the piece's +X): [`hex_core::rail_end`]'s rule in world space.
+    pub fn buffer_stops(&self) -> Vec<(Axial, u8, Pose)> {
+        self.ends
+            .iter()
+            .filter(|e| self.open_end(e.node))
+            .map(|e| (e.cell, e.edge, e.pose))
+            .collect()
+    }
+
+    fn open_end(&self, node: NodeId) -> bool {
+        self.net.node(node).is_some_and(|n| n.links().len() == 1)
     }
 
     /// Cells of the crossings closed to cars this tick.
@@ -696,6 +771,22 @@ impl Railway {
             }
         }
         self.stops.sort_by_key(|s| (s.cell, s.link));
+        let centre = geom::cell_center(cell);
+        for s in hex_core::rail_end::buffer_stops(def) {
+            let edge = (s.edge + rotation) % 6;
+            if let Some(node) = self.net.seam_node(cell, edge) {
+                self.ends.push(EndStop {
+                    cell,
+                    edge,
+                    node,
+                    pose: Pose {
+                        pos: geom::add(centre, geom::rotate(s.pos, rotation)),
+                        dir: geom::rotate(s.dir, rotation),
+                    },
+                });
+            }
+        }
+        self.ends.sort_by_key(|e| (e.cell, e.edge));
         self.replan_all();
     }
 
@@ -724,6 +815,7 @@ impl Railway {
         self.junctions.retain(|j| j.cell != cell);
         self.crossings.retain(|c| c.cell != cell);
         self.stops.retain(|s| s.cell != cell);
+        self.ends.retain(|e| e.cell != cell);
     }
 
     fn drop_trains_on(&mut self, cell: Axial) {
@@ -805,9 +897,9 @@ impl Railway {
         t.route.get(k + 1).map(|s| s.link).filter(|&l| l != toe)
     }
 
-    /// The track ahead of a train's front, up to `dist` meters, and the distance to a line end if
-    /// one comes first.
-    fn ahead(&self, t: &Train, dist: f32) -> (Vec<Span>, Option<f32>) {
+    /// The track ahead of a train's front, up to `dist` meters, and the distance to a line end and
+    /// its node if one comes first.
+    fn ahead(&self, t: &Train, dist: f32) -> (Vec<Span>, Option<(f32, NodeId)>) {
         let net = self.net();
         let mut spans = vec![];
         let mut step = t.steps[0];
@@ -842,7 +934,7 @@ impl Railway {
                     step = next;
                     into = 0.0;
                 }
-                None => return (spans, Some(at)),
+                None => return (spans, Some((at, node))),
             }
         }
     }
@@ -923,10 +1015,68 @@ impl Railway {
         last
     }
 
+    /// The point `a` meters ahead of train `t`'s front along its path: on `spans`
+    /// ([`Railway::ahead`]) for `a >= 0`, under its body behind the front for `a < 0`.
+    fn path_point(&self, t: &Train, spans: &[Span], a: f32) -> Vec2 {
+        if a < 0.0 {
+            return self.point_behind(t, -a);
+        }
+        let net = self.net();
+        let mut last = self.point_behind(t, 0.0);
+        for sp in spans {
+            let len = (sp.to - sp.from).abs();
+            let k = (a - sp.at).clamp(0.0, len);
+            let s = if sp.forward() {
+                sp.from + k
+            } else {
+                sp.from - k
+            };
+            last = along(link_of(net, sp.link).points(), s).0;
+            if a <= sp.at + len {
+                break;
+            }
+        }
+        last
+    }
+
+    /// How far inside a line end `d` meters ahead train `t`'s front stands when its leading
+    /// buffers meet the stop `stop` (pivot, +X toward the edge): the leading vehicle's axles on the
+    /// track and its body on their chord, as [`Railway::poses`] places it. On a straight that is
+    /// [`END_MARGIN`]; on a curve the skewed body meets the contact plane with its foremost buffer
+    /// head first, a little farther in.
+    fn end_margin(&self, t: &Train, spans: &[Span], d: f32, stop: Pose) -> f32 {
+        let v = if t.engine_leads {
+            CONSIST[0]
+        } else {
+            CONSIST[CONSIST.len() - 1]
+        };
+        // The leading vehicle's centre behind the train's front, which is also its half length.
+        let o = if t.engine_leads {
+            v.centre
+        } else {
+            TRAIN_LENGTH - v.centre
+        };
+        let past = |m: f32| lead_buffers_past(self, t, spans, d - m, o, v.half_wheelbase, stop);
+        let (mut lo, mut hi) = (0.0f32, 2.0 * END_MARGIN + o);
+        if past(hi) > 0.0 {
+            return END_MARGIN;
+        }
+        for _ in 0..32 {
+            let m = 0.5 * (lo + hi);
+            if past(m) > 0.0 {
+                lo = m;
+            } else {
+                hi = m;
+            }
+        }
+        hi
+    }
+
     fn poses(&self, t: &Train) -> Vec<VehiclePose> {
         CONSIST
             .iter()
-            .map(|v| {
+            .zip(t.kinds)
+            .map(|(v, kind)| {
                 let at = |o: f32| {
                     let d = if t.engine_leads { o } else { TRAIN_LENGTH - o };
                     self.point_behind(t, d)
@@ -937,7 +1087,7 @@ impl Railway {
                 let d = geom::sub(front, back);
                 let l = geom::len(d).max(1e-6);
                 VehiclePose {
-                    kind: v.kind,
+                    kind,
                     pose: Pose {
                         pos: geom::lerp(front, back, 0.5),
                         dir: geom::scale(d, 1.0 / l),
@@ -963,9 +1113,12 @@ impl Railway {
         }
     }
 
+    /// Whether the body covers more than [`TOUCH`] of `[lo, hi]` on `link`. A train standing at a
+    /// straight tile's buffer stop ends 1 cm past the tile's far seam (3.5 m + 24.22 m against
+    /// 27.71 m); that touch must not foul a junction toe or a crossing across it.
     fn overlaps(body: &[(LinkId, f32, f32)], link: LinkId, lo: f32, hi: f32) -> bool {
         body.iter()
-            .any(|&(l, a, b)| l == link && a <= hi && b >= lo)
+            .any(|&(l, a, b)| l == link && a <= hi - TOUCH && b >= lo + TOUCH)
     }
 
     /// Whether a train other than `except` has its body in junction `j`'s zone.
@@ -1005,6 +1158,7 @@ impl Railway {
     pub fn tick(&mut self) {
         self.ticks += 1;
         self.departures.clear();
+        self.arrivals.clear();
         if self.dirty || self.ticks.is_multiple_of(40) {
             self.spawn();
         }
@@ -1040,8 +1194,16 @@ impl Railway {
         let (spans, line_end) = self.ahead(&self.trains[i], LOOKAHEAD);
         let mut limit = LOOKAHEAD;
         let mut blocker = Blocker::Clear;
-        if let Some(d) = line_end {
-            let d = d - END_MARGIN;
+        let mut end_pivot = None;
+        let mut end_limit = None;
+        if let Some((d, node)) = line_end {
+            let stop = self.ends.iter().find(|e| e.node == node).map(|e| e.pose);
+            end_pivot = stop.map(|p| p.pos);
+            let margin = stop.map_or(END_MARGIN, |p| {
+                self.end_margin(&self.trains[i], &spans, d, p)
+            });
+            let d = d - margin;
+            end_limit = Some(d.max(0.0));
             if d < limit {
                 limit = d;
                 blocker = Blocker::LineEnd;
@@ -1077,16 +1239,32 @@ impl Railway {
             TRAIN_LENGTH - mid
         };
         let mut stop_link = None;
+        let mut station_at_end = false;
         for st in self.stops.iter().filter(|s| t.served != Some(s.link)) {
             let centre = (st.level.0 + st.level.1) / 2.0;
             let Some(at) = self.offset_of(t, &spans, st.link, centre) else {
                 continue;
             };
-            let go = at + behind;
-            if go >= -STOP_EPS && go.max(0.0) < limit {
+            let mut go = at + behind;
+            // A terminal station: the buffer stop holds the train short of centring on the level
+            // section, so it stands at the stop while its axles are on the section there.
+            let mut at_end = false;
+            if let Some(end) = end_limit
+                && go > end
+                && let (Some(a), Some(b)) = (
+                    self.offset_of(t, &spans, st.link, st.level.0),
+                    self.offset_of(t, &spans, st.link, st.level.1),
+                )
+                && a.min(b) + behind <= end
+            {
+                go = end;
+                at_end = true;
+            }
+            if go >= -STOP_EPS && (go.max(0.0) < limit || at_end && go <= limit + 1e-4) {
                 limit = go.max(0.0);
                 blocker = Blocker::Station(st.cell);
                 stop_link = Some(st.link);
+                station_at_end = at_end;
             }
         }
         // Junctions: reserve the first zone ahead that this train does not hold, or stand short.
@@ -1190,7 +1368,15 @@ impl Railway {
             self.route_on(i, pick);
         }
         let t = &mut self.trains[i];
+        // Came to rest on this tick from running (not standing since a spawn or a reversal).
+        let at_stop = blocker == Blocker::LineEnd || station_at_end;
+        let arrived = ds < 1e-4 && t.stopped == 0 && t.speed * TICK_SECONDS >= 1e-4 && at_stop;
         t.speed = ds / TICK_SECONDS;
+        if arrived {
+            let at = end_pivot.unwrap_or_else(|| t.front());
+            self.arrivals.push((id, at));
+        }
+        let t = &mut self.trains[i];
         if ds < 1e-4 {
             t.stopped += 1;
             t.blocker = blocker;
@@ -1321,7 +1507,25 @@ impl Railway {
                     (0..n).map(|k| (start + k) % n).collect()
                 }
             },
-            Pick::Nearest => (0..n).collect(),
+            // A train giving way for good takes the nearest station no other train stands at: on a
+            // stretch of dead ends the train it yields to is often at the nearest one, and heading
+            // there again only repeats the meeting (two trains swapping terminals across one
+            // headshunt never pass). Only when every station is held does it take a held one.
+            Pick::Nearest => {
+                let held = |k: usize| {
+                    let l = self.stops[k].link;
+                    self.trains
+                        .iter()
+                        .filter(|u| u.id != t.id)
+                        .any(|u| self.body(u).iter().any(|&(b, ..)| b == l))
+                };
+                let free: Vec<usize> = (0..n).filter(|&k| !held(k)).collect();
+                if free.is_empty() {
+                    (0..n).collect()
+                } else {
+                    free
+                }
+            }
         };
         let mut best: Option<(f32, LinkId, Vec<Step>, bool)> = None;
         for k in order {
@@ -1673,7 +1877,7 @@ impl Railway {
     fn room_behind(&self, t: &Train) -> f32 {
         let back = turned(&self.net, t);
         let (spans, end) = self.ahead(&back, LOOKAHEAD);
-        let mut room = end.unwrap_or(LOOKAHEAD);
+        let mut room = end.map_or(LOOKAHEAD, |(d, _)| d);
         for u in self.trains.iter().filter(|u| u.id != t.id) {
             for (link, lo, hi) in self.body(u) {
                 for sp in spans.iter().filter(|sp| sp.link == link) {
@@ -1917,6 +2121,7 @@ impl Railway {
             engine_leads: true,
             blocker: Blocker::Clear,
             stopped: 0,
+            kinds: consist_for(self.seed, id.0),
             prev: vec![],
             now: vec![],
             routes: vec![],
@@ -1954,6 +2159,33 @@ impl Railway {
         self.next_train += 1;
         self.retarget(self.trains.len() - 1, Pick::First, None);
     }
+}
+
+/// How far the leading vehicle's foremost buffer head stands past the stop's contact plane (m,
+/// negative short of it), with the train's front `front` meters ahead along its path; the vehicle's
+/// centre is `o` behind the front and its outer axles `hw` either side.
+fn lead_buffers_past(
+    r: &Railway,
+    t: &Train,
+    spans: &[Span],
+    front: f32,
+    o: f32,
+    hw: f32,
+    stop: Pose,
+) -> f32 {
+    let f = r.path_point(t, spans, front - (o - hw));
+    let b = r.path_point(t, spans, front - (o + hw));
+    let fwd = geom::sub(f, b);
+    let fwd = geom::scale(fwd, 1.0 / geom::len(fwd).max(1e-6));
+    let face = geom::add(geom::lerp(f, b, 0.5), geom::scale(fwd, o));
+    let side = geom::scale(geom::right_of(fwd), BUFFER_SIDE);
+    let c = geom::dot(fwd, stop.dir);
+    let disc = BUFFER_RADIUS * (1.0 - c * c).max(0.0).sqrt();
+    [geom::add(face, side), geom::sub(face, side)]
+        .iter()
+        .map(|p| geom::dot(geom::sub(*p, stop.pos), stop.dir))
+        .fold(f32::MIN, f32::max)
+        + disc
 }
 
 /// The distance along `points` closest to `p`.

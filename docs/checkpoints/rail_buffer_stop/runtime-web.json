@@ -1,0 +1,45 @@
+{
+  "runtime-straight": [
+    {
+      "destination": null,
+      "id": 0,
+      "route": null,
+      "speed": 0,
+      "waiting": "line_end",
+      "x": -19.74,
+      "z": -24
+    }
+  ],
+  "runtime-bend": [
+    {
+      "destination": null,
+      "id": 0,
+      "route": null,
+      "speed": 0,
+      "waiting": "line_end",
+      "x": 20.87,
+      "z": -24
+    }
+  ],
+  "runtime-ghost": {
+    "edges": [
+      "Neutral",
+      "Neutral",
+      "Neutral",
+      "Neutral",
+      "Neutral",
+      "Compatible"
+    ],
+    "legal_rotations": [
+      0,
+      1,
+      3,
+      4
+    ],
+    "q": -1,
+    "r": 1,
+    "rotation": 0,
+    "tile": "rail_straight",
+    "valid": true
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "cueId": "buffer-clunk-1",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording of a heavy wooden cart rolling slowly into a timber railway buffer beam: one soft, low, dull knock of wood and iron, a single damped clunk under half a second, deep and muffled, that stops dead. No hiss, no steam, no squeal, no ringing, no screech, no metallic clang. Studio-quiet background, with silence before and after the clunk.",
+  "parameters": {
+    "text": "Close, isolated recording of a heavy wooden cart rolling slowly into a timber railway buffer beam: one soft, low, dull knock of wood and iron, a single damped clunk under half a second, deep and muffled, that stops dead. No hiss, no steam, no squeal, no ringing, no screech, no metallic clang. Studio-quiet background, with silence before and after the clunk.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 1.0,
+    "prompt_influence": 0.6
+  },
+  "generationId": "6ed6a247a24b4c76a56314da6ac9d66d",
+  "responseHeaders": {
+    "date": "Tue, 20 Oct 2026 23:40:35 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "10",
+    "content-length": "17179",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "6ed6a247a24b4c76a56314da6ac9d66d",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-20T23:40:35+00:00",
+  "attempt": 59,
+  "creditsCharged": 10,
+  "sourceFile": "buffer-clunk-1.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}

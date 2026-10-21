@@ -2,7 +2,9 @@
 
 pub mod axial;
 pub mod catalog;
+pub mod path;
 pub mod prism;
+pub mod rail_end;
 pub mod save;
 pub mod socket;
 pub mod tile;

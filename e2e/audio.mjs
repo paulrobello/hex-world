@@ -288,7 +288,7 @@ try {
   // The loop's placements: from the first tile selection that places, to the next hover.
   const start = rail.findIndex((c, i) => c.cmd === "select_tile" && rail[i + 1]?.cmd === "place");
   await cmd(rail.slice(start, rail.findIndex((c, i) => i > start && c.cmd === "hover")));
-  const trainPools = Object.fromEntries(["train-whistle", "train-chuff"]
+  const trainPools = Object.fromEntries(["train-whistle", "train-chuff", "buffer-clunk"]
     .map((p) => [p, manifest.cues.filter((c) => c.pool === p && c.status === "mastered").map((c) => c.id)]));
   a = await audio();
   check(JSON.stringify(a.trains.pools) === JSON.stringify(trainPools), `train pools from the manifest ${JSON.stringify(a.trains.pools)}`);

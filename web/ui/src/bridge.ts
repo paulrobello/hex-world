@@ -202,6 +202,8 @@ export type GameEvent =
   | { type: "carParked"; id: number; q: number; r: number; x: number; z: number }
   /** A train moves off from a stand (first move, line-end dwell, a junction or train hold): its sim id and front XZ. */
   | { type: "trainDeparted"; id: number; x: number; z: number }
+  /** A train comes to rest against a buffer stop (owner D2-Q5): its sim id and the stop's pivot XZ. */
+  | { type: "trainAtLineEnd"; id: number; x: number; z: number }
   | { type: "photoExported"; name: string; width: number; height: number }
   | { type: "photoExportFailed"; name: string; reason: string }
   | { type: "saved"; tag: string | null; tiles: number; bytes: number }
@@ -387,7 +389,7 @@ export interface PhotoState {
 }
 
 /** What a prop is to the player (`walk::prop_kind`): walk blocks and photo focus hits report it. */
-export type PropKind = "building" | "tree" | "hay" | "animal" | "log" | "fence" | "lever" | "rock";
+export type PropKind = "building" | "tree" | "hay" | "animal" | "log" | "fence" | "lever" | "buffer_stop" | "rock";
 
 /** Why the walker's latest move stopped. */
 export type WalkBlocked = PropKind | "water" | "edge" | "steep";
@@ -634,6 +636,7 @@ export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
   carPulledOut: keys<EventOf<"carPulledOut">>({ id: true, q: true, r: true, x: true, z: true }),
   carParked: keys<EventOf<"carParked">>({ id: true, q: true, r: true, x: true, z: true }),
   trainDeparted: keys<EventOf<"trainDeparted">>({ id: true, x: true, z: true }),
+  trainAtLineEnd: keys<EventOf<"trainAtLineEnd">>({ id: true, x: true, z: true }),
   photoExported: keys<EventOf<"photoExported">>({ name: true, width: true, height: true }),
   photoExportFailed: keys<EventOf<"photoExportFailed">>({ name: true, reason: true }),
   saved: keys<EventOf<"saved">>({ tag: true, tiles: true, bytes: true }),

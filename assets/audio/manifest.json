@@ -1005,6 +1005,64 @@
       "provenance": "assets-source/audio/ambience/train-chuff-1/provenance.json"
     },
     {
+      "id": "buffer-clunk-1",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "buffer-clunk",
+      "events": [
+        "trainAtLineEnd"
+      ],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.0,
+      "decodedBytes": 192000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/buffer-clunk-1.webm",
+          "sha256": "77214bf0d225ad8db5a55156ba8dc0ead9789110812ddd6742dec3464bc1e5c0",
+          "bytes": 7982
+        },
+        "m4a": {
+          "path": "sfx/buffer-clunk-1.m4a",
+          "sha256": "cacefc55924f8c8c4158273777e1de8f22290f4d9a181c8d9c9411be21b99de7",
+          "bytes": 17689
+        }
+      },
+      "provenance": "assets-source/audio/sfx/buffer-clunk-1/provenance.json"
+    },
+    {
+      "id": "buffer-clunk-2",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "buffer-clunk",
+      "events": [
+        "trainAtLineEnd"
+      ],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.0,
+      "decodedBytes": 192000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/buffer-clunk-2.webm",
+          "sha256": "ac048d0cb5ddc2ec92d8f03404a6de5ff6e3dc48bf7a61c52bebde2777ec59b2",
+          "bytes": 7780
+        },
+        "m4a": {
+          "path": "sfx/buffer-clunk-2.m4a",
+          "sha256": "8ec54583f3047999b3f61bc3e0f530ed7d5e809f0e1e1ccd86df0138fd4707a5",
+          "bytes": 18099
+        }
+      },
+      "provenance": "assets-source/audio/sfx/buffer-clunk-2/provenance.json"
+    },
+    {
       "id": "meadow-day",
       "kind": "music",
       "class": "music",

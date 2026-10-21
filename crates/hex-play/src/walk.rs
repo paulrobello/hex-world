@@ -49,7 +49,10 @@ use bevy::{
     math::Affine3A,
     prelude::*,
 };
-use hex_core::{Axial, HEX_RADIUS, NetworkKind, ParkPose, TileCatalog, TileDef};
+use hex_core::{
+    Axial, HEX_RADIUS, NetworkKind, ParkPose, TileCatalog, TileDef,
+    rail_end::{self, BUFFER_STOP},
+};
 
 use crate::{
     ActiveScenario, Scenario,
@@ -126,6 +129,7 @@ pub const OBSTACLES: &[&str] = &[
     "bush_verge_b",
     "bush_verge_c",
     "rail_station_shelter",
+    "rail_buffer_stop",
 ];
 
 /// Parts of centre pieces that block the walker, as (centre piece, part, footprint corners in the
@@ -672,8 +676,8 @@ impl PieceShape {
     }
 }
 
-/// What a prop is to the player: `building`, `tree`, `hay`, `animal`, `log`, `fence`, `lever` or
-/// `rock`.
+/// What a prop is to the player: `building`, `tree`, `hay`, `animal`, `log`, `fence`, `lever`,
+/// `buffer_stop` or `rock`.
 /// Walk mode's [`Blocked::reason`] and photo mode's click to focus both report it.
 pub fn prop_kind(piece: &str) -> &'static str {
     match piece {
@@ -698,6 +702,7 @@ pub fn prop_kind(piece: &str) -> &'static str {
         p if p.starts_with("log_") || p.starts_with("beach_driftwood") => "log",
         p if p.starts_with("fence") => "fence",
         "rail_lever" => "lever",
+        "rail_buffer_stop" => "buffer_stop",
         _ => "rock",
     }
 }
@@ -874,6 +879,10 @@ impl WalkGround {
         scatter: &BTreeMap<Axial, TileScatter>,
     ) -> Self {
         let mut out = Self::default();
+        let tile_at: HashMap<Axial, (&TileDef, u8)> = tiles
+            .iter()
+            .filter_map(|t| Some((t.cell, (catalog.get(&t.tile)?, t.rotation))))
+            .collect();
         let mut shapes: HashMap<String, Arc<PieceShape>> = HashMap::new();
         let mut shape = |piece: &str| -> Arc<PieceShape> {
             shapes
@@ -956,6 +965,11 @@ impl WalkGround {
                         place(piece, &shape(piece), &(root * inst.transform()));
                     }
                 }
+            }
+            // The buffer stops at the tile's open rail ends (`play::respawn_pairs` draws them).
+            for s in rail_end::open_stops(def, t.cell, t.rotation, |c| tile_at.get(&c).copied()) {
+                let local = crate::play::buffer_stop_local(&s);
+                place(BUFFER_STOP, &shape(BUFFER_STOP), &(root * local));
             }
             for (centre, part, corners) in CENTRE_OBSTACLES {
                 if def.center.as_ref().is_some_and(|c| c.as_str() == *centre) {
@@ -1410,6 +1424,7 @@ pub(crate) mod tests {
             ("bush_verge", "tree"),
             ("bush_verge_b", "tree"),
             ("bush_verge_c", "tree"),
+            ("rail_buffer_stop", "buffer_stop"),
         ] {
             assert_eq!(prop_kind(piece), kind, "{piece}");
             assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");

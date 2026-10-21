@@ -219,6 +219,16 @@ impl CarSim {
                 }),
         );
         self.left_station = stations;
+        events.extend(
+            rails
+                .line_end_arrivals()
+                .iter()
+                .map(|&(id, p)| GameEvent::TrainAtLineEnd {
+                    id: id.0,
+                    x: cm(p[0]),
+                    z: cm(p[1]),
+                }),
+        );
         events
     }
 

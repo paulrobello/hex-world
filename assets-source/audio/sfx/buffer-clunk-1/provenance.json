@@ -1,0 +1,233 @@
+{
+  "cueId": "buffer-clunk-1",
+  "kind": "sfx",
+  "class": "sfx",
+  "version": 1,
+  "use": "One soft buffer clunk of the buffer-clunk pool (owner D2-Q5, 2026-10-20): positional at the rail buffer stop, played once when a train comes to rest against a buffer stop at a line end (trainAtLineEnd), or on demand (hexWorld.audio.play).",
+  "events": [
+    "trainAtLineEnd"
+  ],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Close, isolated recording of a heavy wooden cart rolling slowly into a timber railway buffer beam: one soft, low, dull knock of wood and iron, a single damped clunk under half a second, deep and muffled, that stops dead. No hiss, no steam, no squeal, no ringing, no screech, no metallic clang. Studio-quiet background, with silence before and after the clunk.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Close, isolated recording of a heavy wooden cart rolling slowly into a timber railway buffer beam: one soft, low, dull knock of wood and iron, a single damped clunk under half a second, deep and muffled, that stops dead. No hiss, no steam, no squeal, no ringing, no screech, no metallic clang. Studio-quiet background, with silence before and after the clunk.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 1.0,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "6ed6a247a24b4c76a56314da6ac9d66d",
+    "generatedAt": "2026-10-20T23:40:35+00:00",
+    "attempt": 59,
+    "creditsCharged": 10,
+    "record": {
+      "path": "assets-source/audio/sfx/buffer-clunk-1/generation.json",
+      "sha256": "603e4ba0d1f7fd71c216342ccf87360ae84027d9333f004c2376400db4081692",
+      "bytes": 2242
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/sfx/buffer-clunk-1/buffer-clunk-1.mp3",
+    "sha256": "12073df9df69ed4c2f53dba2c423ad9792386a3748f3b3d34499faf005e860f0",
+    "bytes": 17179,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 1.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -25.8,
+      "lra": 0.0,
+      "truePeak": -8.6
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 0.0,
+      "truePeak": -2.4
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.2
+      },
+      "m4a": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.4
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 40,
+        "lowpassHz": 9000,
+        "stages": 2
+      },
+      "chain": "highpass=f=40:poles=2,highpass=f=40:poles=2,lowpass=f=9000:poles=2,lowpass=f=9000:poles=2",
+      "circularPadFrames": 0
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "gate",
+      "thresholdDbBelowPeak": 15,
+      "ratio": 4,
+      "rangeDb": 45,
+      "attackMs": 3,
+      "releaseMs": 60,
+      "peakWindowDb": -19.67,
+      "thresholdDb": -34.67,
+      "closedPct": 39.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -26.0,
+        "lra": 0.0,
+        "truePeak": -10.1
+      },
+      "targetLufs": -16.0,
+      "gainDb": 10.0,
+      "requiredPeakReductionDb": 1.9,
+      "mode": "limited",
+      "limiterInputGainDb": 11.1,
+      "limiterPasses": 3,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 12.0
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.1
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/sfx/buffer-clunk-1.wav",
+    "sha256": "d8b3634406ddf1fdb7ae2e1e4a5136bdc599d52a0929f45a583bb74597b8c2b9",
+    "frames": 48000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/sfx/buffer-clunk-1.webm",
+      "sha256": "77214bf0d225ad8db5a55156ba8dc0ead9789110812ddd6742dec3464bc1e5c0",
+      "bytes": 7982,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.008,
+      "decodedFrames": 48000,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.2
+      },
+      "floor": {
+        "peakWindowDb": -10.2,
+        "floorDb": -71.2,
+        "floorBelowPeakDb": 61.0,
+        "floorBandPct": {
+          "below1500": 100.6,
+          "1500to9k": 0.0,
+          "above9k": 0.0
+        },
+        "interiorWindows": 20,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/buffer-clunk-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/sfx/buffer-clunk-1.webm"
+    },
+    {
+      "path": "assets/audio/sfx/buffer-clunk-1.m4a",
+      "sha256": "cacefc55924f8c8c4158273777e1de8f22290f4d9a181c8d9c9411be21b99de7",
+      "bytes": 17689,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.0,
+      "decodedFrames": 48000,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.4
+      },
+      "floor": {
+        "peakWindowDb": -10.2,
+        "floorDb": -71.1,
+        "floorBelowPeakDb": 60.8,
+        "floorBandPct": {
+          "below1500": 100.8,
+          "1500to9k": 0.0,
+          "above9k": 0.0
+        },
+        "interiorWindows": 20,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/buffer-clunk-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/sfx/buffer-clunk-1.m4a"
+    }
+  ],
+  "decodedBytes": 192000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "bce93ae39ad1163524ac6756bf50a1fae8b59bccd9e7ca240a3bd741f177e054"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

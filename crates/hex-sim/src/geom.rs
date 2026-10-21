@@ -21,8 +21,7 @@ const EDGE_DIR: [[f32; 2]; 6] = [
 /// Distance from a cell center to each edge midpoint.
 pub const APOTHEM: f32 = HEX_RADIUS * HALF_SQRT3;
 
-/// Largest angle one arc sample may span, in radians (5°).
-const ARC_STEP: f32 = std::f32::consts::PI / 36.0;
+use hex_core::path::ARC_STEP;
 
 /// Shorter steps are dropped when a lane path is built, so every step has a direction.
 const MIN_STEP: f32 = 1e-4;
@@ -113,57 +112,7 @@ pub fn distance_to_polyline(p: Vec2, points: &[Vec2]) -> f32 {
     }
 }
 
-/// The sampled shape of a segment from `from` to `to` through `interior` control points.
-///
-/// No control point gives a straight line. One gives the circular arc through all three points,
-/// since tile data places a single point at the arc midpoint. More give the polyline through them.
-pub fn segment_shape(from: Vec2, interior: &[Vec2], to: Vec2) -> Vec<Vec2> {
-    match interior {
-        [] => vec![from, to],
-        [mid] => arc_through(from, *mid, to),
-        _ => {
-            let mut points = Vec::with_capacity(interior.len() + 2);
-            points.push(from);
-            points.extend_from_slice(interior);
-            points.push(to);
-            points
-        }
-    }
-}
-
-/// Samples the circle through `a`, `m` and `b` from `a` to `b` via `m`, at most [`ARC_STEP`] apart.
-/// Collinear points give the polyline `a, m, b`.
-fn arc_through(a: Vec2, m: Vec2, b: Vec2) -> Vec<Vec2> {
-    let turn = cross(sub(m, a), sub(b, m));
-    let d = 2.0 * cross(sub(m, a), sub(b, a));
-    if turn.abs() <= 1e-6 * dist(a, b).powi(2) || d == 0.0 {
-        return vec![a, m, b];
-    }
-    // Circumcenter relative to `a`.
-    let (u, v) = (sub(m, a), sub(b, a));
-    let (uu, vv) = (dot(u, u), dot(v, v));
-    let center = add(
-        a,
-        [(v[1] * uu - u[1] * vv) / d, (u[0] * vv - v[0] * uu) / d],
-    );
-    let radius = dist(a, center);
-    let angle = |p: Vec2| (p[1] - center[1]).atan2(p[0] - center[0]);
-    let start = angle(a);
-    let tau = std::f32::consts::TAU;
-    let mut sweep = (angle(b) - start).rem_euclid(tau);
-    if turn < 0.0 {
-        sweep -= tau;
-    }
-    let steps = ((sweep.abs() / ARC_STEP).ceil() as usize).max(2);
-    let mut points = Vec::with_capacity(steps + 1);
-    points.push(a);
-    for i in 1..steps {
-        let t = start + sweep * i as f32 / steps as f32;
-        points.push([center[0] + radius * t.cos(), center[1] + radius * t.sin()]);
-    }
-    points.push(b);
-    points
-}
+pub use hex_core::path::segment_shape;
 
 /// Largest step between samples of a Hermite parking leg, in meters.
 const LEG_STEP: f32 = 0.1;

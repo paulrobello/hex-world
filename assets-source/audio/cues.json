@@ -6,7 +6,7 @@
   "lufsTolerance": 1.0,
   "decodedBudgetBytes": 96000000,
   "generationCap": 59,
-  "generationCapNote": "Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 57-59, 120 credits), and attempt 57 was kept, so the cap is set to the 59 attempts logged. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: the cap was raised from 53 by at most 6 for the place-slosh pool (three short one-shots, at most two attempts each). Three were spent (attempts 54-56, 60 credits), one first take per variant, all passing the floor criterion, so the cap is set to the 56 attempts logged. Before that, owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
+  "generationCapNote": "Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 57-59, 120 credits), and attempt 57 was kept, so the cap is set to the 59 attempts logged. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: the cap was raised from 53 by at most 6 for the place-slosh pool (three short one-shots, at most two attempts each). Three were spent (attempts 54-56, 60 credits), one first take per variant, all passing the floor criterion, so the cap is set to the 56 attempts logged. Before that, owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged. Owner D2-Q5, 2026-10-20 (a soft buffer clunk when a train comes to rest at a line end), under the standing approval for new sounds: the cap was raised from 56 by at most 4 for the buffer-clunk pool (two short one-shots, at most two attempts each). Three were spent (attempts 57-59, 30 credits): one first take per variant and one retake of buffer-clunk-1, whose first take was a flat hiss burst, not a clunk. The retake's rumble tail was held down by a gate instead of a second retake, so the cap is set to the 59 attempts logged. Before that, owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: the cap was raised from 53 by at most 6 for the place-slosh pool (three short one-shots, at most two attempts each). Three were spent (attempts 54-56, 60 credits), one first take per variant, all passing the floor criterion, so the cap is set to the 56 attempts logged. Before that, owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
   "classes": {
     "music": {
       "lufs": -18,
@@ -1718,6 +1718,135 @@
           "birdChirpEvents": 1,
           "birds": false,
           "rawFloorBelowPeakDb": 23.8
+        }
+      }
+    },
+    {
+      "id": "buffer-clunk-1",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "buffer-clunk",
+      "use": "One soft buffer clunk of the buffer-clunk pool (owner D2-Q5, 2026-10-20): positional at the rail buffer stop, played once when a train comes to rest against a buffer stop at a line end (trainAtLineEnd), or on demand (hexWorld.audio.play).",
+      "events": [
+        "trainAtLineEnd"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a heavy wooden cart rolling slowly into a timber railway buffer beam: one soft, low, dull knock of wood and iron, a single damped clunk under half a second, deep and muffled, that stops dead. No hiss, no steam, no squeal, no ringing, no screech, no metallic clang. Studio-quiet background, with silence before and after the clunk.",
+        "durationSeconds": 1.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 40,
+        "lowpassHz": 9000,
+        "stages": 2
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 15,
+        "ratio": 4,
+        "rangeDb": 45,
+        "attackMs": 3,
+        "releaseMs": 60
+      },
+      "review": {
+        "round": 5,
+        "roundNote": "Owner D2-Q5 2026-10-20, under the standing approval for new sounds: a soft buffer clunk at the rail buffer stop, once when a train comes to rest against it at a line end. At most two ElevenLabs attempts per variant.",
+        "filterApplied": "high-pass 40 Hz and low-pass 9 kHz, two stages: keeps the low body of the clunk and stops a hiss floor. A gate (15 dB under the peak window, ratio 4, 45 dB range) pulls the 0.7-0.9 s rumble tail down: without it the floor sat only 31.7 dB under the peak",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/buffer-clunk-1.webm (scripts/audio/screen.py --floor), after the filter and the gate; the first take (attempt 57) was a flat 0.5 s hiss burst centred near 7 kHz and was rejected; levelSpreadDb and levelDeepestDipDb are 0 by construction on a 1 s file (one 1 s window)",
+          "below300HzPct": 95.9,
+          "band300to8kPct": 4.1,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -13.9,
+          "levelDeepestDipDb": 0.0,
+          "levelSpreadDb": 0.0,
+          "tone200HzSeriesMaxDb": 5.6,
+          "otherTonalPeaks": [
+            {
+              "hz": 6176,
+              "db": 12.6
+            },
+            {
+              "hz": 8771,
+              "db": 11.7
+            },
+            {
+              "hz": 6023,
+              "db": 11.7
+            }
+          ],
+          "birdChirpEvents": 0,
+          "birds": false,
+          "floorBelowPeakDb": 61.0,
+          "floorBandPct": {
+            "below1500": 100.6,
+            "1500to9k": 0.0,
+            "above9k": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "buffer-clunk-2",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "buffer-clunk",
+      "use": "One soft buffer clunk of the buffer-clunk pool (owner D2-Q5, 2026-10-20): positional at the rail buffer stop, played once when a train comes to rest against a buffer stop at a line end (trainAtLineEnd), or on demand (hexWorld.audio.play).",
+      "events": [
+        "trainAtLineEnd"
+      ],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of a little steam locomotive's sprung buffers nudging gently into a heavy timber buffer beam at the end of a line: a short, soft, low thud-and-clunk of wood and iron, under half a second, damped and settling at once. No squeal, no ringing, no screech, no clatter. Studio-quiet background, with silence before and after.",
+        "durationSeconds": 1.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 40,
+        "lowpassHz": 9000,
+        "stages": 2
+      },
+      "review": {
+        "round": 5,
+        "roundNote": "Owner D2-Q5 2026-10-20, under the standing approval for new sounds: a soft buffer clunk at the rail buffer stop, once when a train comes to rest against it at a line end. At most two ElevenLabs attempts per variant.",
+        "filterApplied": "high-pass 40 Hz and low-pass 9 kHz, two stages: keeps the low body of the clunk and stops a hiss floor",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/buffer-clunk-2.webm (scripts/audio/screen.py --floor), after the filter; levelSpreadDb and levelDeepestDipDb are 0 by construction on a 1 s file (one 1 s window)",
+          "below300HzPct": 7.8,
+          "band300to8kPct": 92.2,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -0.4,
+          "levelDeepestDipDb": 0.0,
+          "levelSpreadDb": 0.0,
+          "tone200HzSeriesMaxDb": 12.8,
+          "otherTonalPeaks": [
+            {
+              "hz": 299,
+              "db": 22.2
+            },
+            {
+              "hz": 1500,
+              "db": 17.7
+            },
+            {
+              "hz": 539,
+              "db": 17.3
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "floorBelowPeakDb": 52.5,
+          "floorBandPct": {
+            "below1500": 96.6,
+            "1500to9k": 3.3,
+            "above9k": 0.0
+          }
         }
       }
     },

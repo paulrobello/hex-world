@@ -30,7 +30,10 @@ use bevy::{
     render::render_resource::AsBindGroup,
     shader::ShaderRef,
 };
-use hex_core::{Axial, Biome, HEX_RADIUS, SocketKind, TileCatalog, TileDef, cell_seed};
+use hex_core::{
+    Axial, Biome, EdgeStatus, HEX_RADIUS, SocketKind, TileCatalog, TileDef, cell_seed,
+    rail_end::{self, BUFFER_STOP},
+};
 
 use super::{
     KitPart, PlayCatalog, PlayKit, PlayTile, PlayView,
@@ -132,6 +135,8 @@ struct Sig {
     world_seed: u64,
     /// Per scatter rule: its piece is in the kit (scatter pieces do not gate [`tile_ready`]).
     scatter: Vec<bool>,
+    /// The local rail edges whose end the ghost would leave open, one bit each ([`ghost_stops`]).
+    stops: u8,
 }
 
 /// The spawned ghost: its root, what it shows and its fade clock.
@@ -352,6 +357,39 @@ fn ghost_pieces<'a>(
     out
 }
 
+/// The local rail edges of `def` at `rotation` whose world edge (status `edges`) has no rail tile
+/// across it: the open ends the placed tile would have, one bit per local edge.
+fn open_mask(def: &TileDef, rotation: u8, edges: &[EdgeStatus; 6]) -> u8 {
+    (0..6u8)
+        .filter(|&e| {
+            rail_end::rail_edge(def, e)
+                && edges[((e + rotation) % 6) as usize] != EdgeStatus::Compatible
+        })
+        .fold(0, |m, e| m | (1 << e))
+}
+
+/// The buffer stops at the ghost's open rail ends (owner D2-Q3), at their tile-local transforms.
+fn ghost_stops(
+    def: &TileDef,
+    open: u8,
+    has: impl Fn(&str) -> bool,
+) -> Vec<(&'static str, Transform, Role)> {
+    if !has(BUFFER_STOP) {
+        return vec![];
+    }
+    rail_end::buffer_stops(def)
+        .iter()
+        .filter(|s| open & (1 << s.edge) != 0)
+        .map(|s| {
+            (
+                BUFFER_STOP,
+                crate::play::buffer_stop_local(s),
+                Role::Building,
+            )
+        })
+        .collect()
+}
+
 /// The tile's scatter instances whose piece is in the kit, at their tile-local transforms: trees
 /// tinted as trees, rocks and wildflowers as ground props.
 fn ghost_scatter<'a>(
@@ -414,6 +452,7 @@ pub fn sync(
                     .iter()
                     .map(|r| scatter::group(r.piece.as_str()).all(&in_kit))
                     .collect(),
+                stops: open_mask(def, g.rotation, &g.edges),
             })
         });
     drawn.set_if_neq(GhostDrawn(want.is_some()));
@@ -445,6 +484,7 @@ pub fn sync(
                     .map(|g| scatter::layout(def, seed, &g))
             };
             let mut pieces = ghost_pieces(def, &catalog.0, sig.cell, has);
+            pieces.extend(ghost_stops(def, sig.stops, has));
             if let Some(l) = &layout {
                 pieces.extend(ghost_scatter(def, l, has));
             }
@@ -815,5 +855,30 @@ mod tests {
         let raw = Color::srgb_u8(156, 196, 100).to_linear();
         let spread = |v: Vec3| v.max_element() - v.min_element();
         assert!(spread(grass) < raw.green - raw.blue);
+    }
+
+    /// The ghost draws a stop at each rail end it would leave open (owner D2-Q3), by world edge
+    /// at its rotation: a rotated bend facing a placed rail tile on one end gets one stop.
+    #[test]
+    fn the_ghost_draws_stops_at_the_ends_it_would_leave_open() {
+        let c = TileCatalog::builtin().unwrap();
+        let bend = c.get("rail_bend_60").unwrap();
+        // Rotation 2: local edges 0 and 1 face world edges 2 and 3.
+        let mut edges = [EdgeStatus::Neutral; 6];
+        assert_eq!(open_mask(bend, 2, &edges), 0b11);
+        edges[3] = EdgeStatus::Compatible;
+        assert_eq!(open_mask(bend, 2, &edges), 0b01);
+        edges[2] = EdgeStatus::Compatible;
+        assert_eq!(open_mask(bend, 2, &edges), 0);
+        let stops = ghost_stops(bend, 0b01, |_| true);
+        assert_eq!(stops.len(), 1);
+        let t = stops[0].1.translation;
+        assert!(
+            (t.x - 10.467).abs() < 0.02 && (t.z - 0.753).abs() < 0.02,
+            "{t}"
+        );
+        assert!(ghost_stops(bend, 0b11, |id| id != BUFFER_STOP).is_empty());
+        let meadow = c.tiles().iter().find(|t| t.networks.is_empty()).unwrap();
+        assert_eq!(open_mask(meadow, 0, &[EdgeStatus::Neutral; 6]), 0);
     }
 }
