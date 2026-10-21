@@ -81,3 +81,12 @@ Paul answered `docs/review/2026-10-20-walkthrough.html` on 2026-10-20. Codes fol
 - Saves follow-up (A12): Q1 no, Undo on Replace does not restore the replaced world's camera view; Q2 keep the 4 s Undo toast as is (pauses on hover only); Q3 yes, the 20 s hold and "Your changes to {current} are saved." with Load and Cancel are right.
 - Road bend trim (A7): keep holding until the no-new-asset-work rule lifts. A13 confirmed: yes to all.
 - Cars `set_car_cap` test hook: stays callable from the web bridge (owner, 2026-10-21: no need to hide it).
+
+## 2026-10-21 (afternoon)
+
+- Draw budget (A2): Q1 the orchestrator's pick: the 500-draw budget gates the overview camera; close cameras are tracked, not gated. Q2 yes, the scatter pair limit becomes 180 (60 per LOD). Q3 pick whichever structural fix benefits the whole game most (not a new budget). Q4 every piece should have a middle LOD (LOD1).
+- Water (A3): criterion 6 is met by the 208-tile water world (revisit if the large world becomes a problem). Q1 drying trail strength and Q2 foam level: show options. Q3 no drying trail on the fallback river bed.
+- Fish (A10): sea-to-river crossings covered by unit tests are accepted.
+- Engine feedback (A14): Q1 keep the 180 ms ghost turn; Q2 yes, the edge glow fades in when the turn lands; Q3 the ghost meshes fade out when the pointer leaves; Q4 the commit flash moves from 80 to 120 ms; Q5 Reduce motion stays under Accessibility.
+- LOD band (A15): Q1 band parts cast shadows from one LOD only; Q2 per-part LOD choice (more draws on small worlds) is acceptable.
+- Colour re-check on rich-3 (`docs/review/2026-10-21-rich3-recheck.html`): looks good.
