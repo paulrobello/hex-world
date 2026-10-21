@@ -1,0 +1,74 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/skirt-o4/skirt-o4.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        18.55,
+        19.86,
+        30.75
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 7.9,
+      "load_after": [
+        17.19,
+        19.52,
+        30.5
+      ],
+      "frames": {
+        "skirt-o4-01-play-default": {
+          "mean": 0.1125,
+          "problem": null
+        },
+        "skirt-o4-02-overview": {
+          "mean": 0.0935,
+          "problem": null
+        },
+        "skirt-o4-03-close-meadow-road": {
+          "mean": 0.1394,
+          "problem": null
+        },
+        "skirt-o4-04-close-forest": {
+          "mean": 0.1545,
+          "problem": null
+        },
+        "skirt-o4-05-close-house": {
+          "mean": 0.1386,
+          "problem": null
+        },
+        "skirt-o4-06-close-beach": {
+          "mean": 0.1894,
+          "problem": null
+        },
+        "skirt-o4-08-close-river-lip": {
+          "mean": 0.1761,
+          "problem": null
+        },
+        "skirt-o4-07-close-river": {
+          "mean": 0.1119,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}
