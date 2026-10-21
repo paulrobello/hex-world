@@ -9,6 +9,7 @@
 use std::{collections::HashMap, ops::Range, sync::Arc};
 
 use bevy::{
+    asset::{UntypedAssetId, uuid::Uuid},
     camera::primitives::{Aabb, Frustum},
     core_pipeline::{
         core_3d::{
@@ -108,6 +109,20 @@ pub struct KitSlot {
     pub material: AssetId<KitMaterial>,
     /// `StandardMaterialKey` bits (cull mode, normal map, depth bias, ...).
     pub key: u64,
+    /// The mesh family, numbered from the sorted piece ids: the slot's draw-order key.
+    pub family: u32,
+}
+
+/// The phase bin key of slot `slot`'s LOD `lod` draw, in family-then-LOD order. Bins sort by
+/// key within a pipeline, and at equal depth the later draw takes the pixel (the main pass tests
+/// `GreaterEqual` against the depth prepass), so the key must not be the mesh `AssetId`: its
+/// index follows the order the GLBs finished loading, which differs between runs.
+fn bin_key(family: u32, lod: u8, slot: u32) -> UntypedAssetId {
+    let bits = (u128::from(family) << 64) | (u128::from(lod) << 32) | u128::from(slot);
+    AssetId::<Mesh>::Uuid {
+        uuid: Uuid::from_u128(bits),
+    }
+    .untyped()
 }
 
 /// The whole world's instance data, rebuilt on each settle wave and swapped as one `Arc`.
@@ -868,6 +883,7 @@ fn queue_kit(
         main_entity: MainEntity,
         slot_idx: usize,
         mesh: AssetId<Mesh>,
+        bin: UntypedAssetId,
         topo: MeshPipelineKey,
         bits: MeshPipelineKey,
         key: u64,
@@ -899,6 +915,7 @@ fn queue_kit(
             main_entity: *me,
             slot_idx: g.slot as usize * 3 + g.lod as usize,
             mesh: slot.mesh[g.lod as usize].expect("checked above"),
+            bin: bin_key(slot.family, g.lod, g.slot),
             topo: MeshPipelineKey::from_primitive_topology_and_strip_index(
                 mesh.primitive_topology(),
                 mesh.index_format(),
@@ -1019,9 +1036,7 @@ fn queue_kit(
                             slabs: MeshSlabs::default(),
                             lightmap_slab: None,
                         },
-                        Opaque3dBinKey {
-                            asset_id: dr.mesh.untyped(),
-                        },
+                        Opaque3dBinKey { asset_id: dr.bin },
                         (dr.entity, dr.main_entity),
                         InputUniformIndex::default(),
                         BinnedRenderPhaseType::NonMesh,
@@ -1050,9 +1065,7 @@ fn queue_kit(
                             material_bind_group_index: None,
                             slabs: MeshSlabs::default(),
                         },
-                        OpaqueNoLightmap3dBinKey {
-                            asset_id: dr.mesh.untyped(),
-                        },
+                        OpaqueNoLightmap3dBinKey { asset_id: dr.bin },
                         (dr.entity, dr.main_entity),
                         InputUniformIndex::default(),
                         BinnedRenderPhaseType::NonMesh,
@@ -1085,9 +1098,7 @@ fn queue_kit(
                             material_bind_group_index: None,
                             slabs: MeshSlabs::default(),
                         },
-                        OpaqueNoLightmap3dBinKey {
-                            asset_id: dr.mesh.untyped(),
-                        },
+                        OpaqueNoLightmap3dBinKey { asset_id: dr.bin },
                         (dr.entity, dr.main_entity),
                         InputUniformIndex::default(),
                         BinnedRenderPhaseType::NonMesh,
@@ -1120,9 +1131,7 @@ fn queue_kit(
                             material_bind_group_index: None,
                             slabs: MeshSlabs::default(),
                         },
-                        OpaqueNoLightmap3dBinKey {
-                            asset_id: dr.mesh.untyped(),
-                        },
+                        OpaqueNoLightmap3dBinKey { asset_id: dr.bin },
                         (dr.entity, dr.main_entity),
                         InputUniformIndex::default(),
                         BinnedRenderPhaseType::NonMesh,
@@ -1171,9 +1180,7 @@ fn queue_kit(
                     material_bind_group_index: None,
                     slabs: MeshSlabs::default(),
                 },
-                ShadowBinKey {
-                    asset_id: dr.mesh.untyped(),
-                },
+                ShadowBinKey { asset_id: dr.bin },
                 (dr.entity, dr.main_entity),
                 InputUniformIndex::default(),
                 BinnedRenderPhaseType::NonMesh,
@@ -1351,6 +1358,19 @@ impl<P: PhaseItem> RenderCommand<P> for DrawKitInstances {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Draw order within a pipeline follows the family, then the LOD, whatever slot index or
+    /// mesh load order a run produced, and no two (slot, LOD) draws share a bin.
+    #[test]
+    fn bins_order_by_family_then_lod() {
+        assert!(bin_key(3, 0, 9) < bin_key(4, 0, 0));
+        assert!(bin_key(3, 0, 9) < bin_key(3, 1, 0));
+        assert!(bin_key(3, 1, 0) < bin_key(3, 1, 1));
+        let keys: std::collections::HashSet<_> = (0..4u32)
+            .flat_map(|f| (0..3u8).map(move |l| bin_key(f, l, f)))
+            .collect();
+        assert_eq!(keys.len(), 12);
+    }
 
     /// Binned phases keep last frame's items: a slot culled from a cascade (or despawned by a
     /// rebuild) stays binned, and drawn as a skipped item, until it is removed from every view.
@@ -1540,6 +1560,7 @@ mod tests {
                 tris: [12; 3],
                 material: AssetId::<KitMaterial>::default().untyped().typed(),
                 key: 0,
+                family: 0,
             }],
             chunks: vec![KitChunk {
                 centre: Vec3::ZERO,

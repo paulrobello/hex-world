@@ -418,6 +418,7 @@ fn rebuild(
             key: materials
                 .get(material)
                 .map_or(0, |m| StandardMaterialKey::from(&m.base).bits()),
+            family: *fid,
         });
     }
     let mut out_chunks: Vec<KitChunk> = vec![];

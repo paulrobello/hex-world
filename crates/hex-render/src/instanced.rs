@@ -24,6 +24,7 @@ use std::{
 };
 
 use bevy::{
+    asset::{UntypedAssetId, uuid::Uuid},
     camera::primitives::{Aabb, Frustum},
     core_pipeline::{
         core_3d::{CORE_3D_DEPTH_FORMAT, Opaque3d, Opaque3dBatchSetKey, Opaque3dBinKey},
@@ -837,11 +838,18 @@ fn queue_pieces(
     let draw_main = opaque_draw.read().id::<DrawPiecesMain>();
     let draw_prepass = prepass_draw.read().id::<DrawPiecesPrepass>();
     let draw_shadow = shadow_draw.read().id::<DrawPiecesPrepass>();
-    let slots: Vec<(Entity, MainEntity, AssetId<Mesh>, &RenderMesh, PieceGroup)> = groups
+    // Bins sort by key within a pipeline and the later draw wins an equal-depth pixel, so each
+    // slot's bin is its (kind, LOD), not the mesh `AssetId`, whose index follows load order.
+    let slots: Vec<(Entity, MainEntity, UntypedAssetId, &RenderMesh, PieceGroup)> = groups
         .iter()
         .filter_map(|(e, me, g)| {
             let id = scene.0.meshes[g.kind as usize][g.lod as usize];
-            render_meshes.get(id).map(|m| (e, *me, id, m, *g))
+            let bin = AssetId::<Mesh>::Uuid {
+                uuid: Uuid::from_u128(g.slot() as u128),
+            };
+            render_meshes
+                .get(id)
+                .map(|m| (e, *me, bin.untyped(), m, *g))
         })
         .collect();
     let topo = |m: &RenderMesh| {
@@ -856,7 +864,7 @@ fn queue_pieces(
             continue;
         };
         if let Some(phase) = opaque_phases.get_mut(&view.retained_view_entity) {
-            for &(e, me, id, mesh, _) in &slots {
+            for &(e, me, bin, mesh, _) in &slots {
                 phase.remove(me);
                 let Ok(pipeline) = main_pipelines.specialize(
                     &pipeline_cache,
@@ -874,9 +882,7 @@ fn queue_pieces(
                         slabs: MeshSlabs::default(),
                         lightmap_slab: None,
                     },
-                    Opaque3dBinKey {
-                        asset_id: id.untyped(),
-                    },
+                    Opaque3dBinKey { asset_id: bin },
                     (e, me),
                     InputUniformIndex::default(),
                     BinnedRenderPhaseType::NonMesh,
@@ -894,7 +900,7 @@ fn queue_pieces(
             if depth {
                 key |= MeshPipelineKey::DEPTH_PREPASS;
             }
-            for &(e, me, id, mesh, _) in &slots {
+            for &(e, me, bin, mesh, _) in &slots {
                 phase.remove(me);
                 let Ok(pipeline) = prepass_pipelines.specialize(
                     &pipeline_cache,
@@ -911,9 +917,7 @@ fn queue_pieces(
                         material_bind_group_index: None,
                         slabs: MeshSlabs::default(),
                     },
-                    OpaqueNoLightmap3dBinKey {
-                        asset_id: id.untyped(),
-                    },
+                    OpaqueNoLightmap3dBinKey { asset_id: bin },
                     (e, me),
                     InputUniformIndex::default(),
                     BinnedRenderPhaseType::NonMesh,
@@ -930,7 +934,7 @@ fn queue_pieces(
             continue;
         };
         let key = MeshPipelineKey::DEPTH_PREPASS | MeshPipelineKey::UNCLIPPED_DEPTH_ORTHO;
-        for &(e, me, id, mesh, g) in &slots {
+        for &(e, me, bin, mesh, g) in &slots {
             phase.remove(me);
             if !scene.0.casts[g.kind as usize][g.lod as usize] {
                 continue;
@@ -950,9 +954,7 @@ fn queue_pieces(
                     material_bind_group_index: None,
                     slabs: MeshSlabs::default(),
                 },
-                ShadowBinKey {
-                    asset_id: id.untyped(),
-                },
+                ShadowBinKey { asset_id: bin },
                 (e, me),
                 InputUniformIndex::default(),
                 BinnedRenderPhaseType::NonMesh,
