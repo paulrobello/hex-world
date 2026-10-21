@@ -1,0 +1,5688 @@
+{
+ "what": "Frame-time cost of the instanced-chunk LOD fade band (dithered band draws, discarding pipeline in main pass and prepass)",
+ "date": "2026-10-21T15:45:09.952Z",
+ "before": {
+  "commit": "6c9aab8",
+  "branch": "main",
+  "wasm_sha256": "00f6e497adae9077c3f1b0d719eb597ba09122cd0b024f052811bd45a47fbeb6"
+ },
+ "after": {
+  "commit": "f64ce28",
+  "branch": "worktree-agent-ab87f0fc4c9e7a471",
+  "wasm_sha256": "5dc9f42434572f955e0589fbeef6f8c6b4c73da2eec710fb14c44f9732f7faf4"
+ },
+ "host": {
+  "name": "MiniMac.attlocal.net",
+  "machine": "MiniMac, Apple M4 (base, 10-core GPU); a separate baseline from the M4 Max dev machine",
+  "cpu": "Apple M4"
+ },
+ "renderer": {
+  "unmasked_renderer_webgl": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+  "unmasked_vendor_webgl": "Google Inc. (Apple)",
+  "webgpu_adapter": "apple | metal-3 | ",
+  "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36"
+ },
+ "browser_mode": {
+  "mode": "chromium headless (new), channel chromium, uncapped",
+  "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit"
+ },
+ "viewport": "2560x1440",
+ "device_scale_factor": 1,
+ "inner_size": [
+  2560,
+  1440
+ ],
+ "dpr_reported": 1,
+ "query": {
+  "scenario": "play",
+  "tier": "high",
+  "tilt": "off",
+  "fps": "off",
+  "seed": "1"
+ },
+ "method": {
+  "runs": "one fresh browser per (build, world, round); builds alternate order each round; 5 rounds",
+  "world_build": "placements from docs/checkpoints/lod-band-instanced/draws.json (20 tiles) and band.json (7 forests), then hover (9,-9), photo mode on with dof off (as the draws census); wait for every pack ready and scatter placed, then 300 frames",
+  "window": "per camera: move, then wait 700 frames and read hexWorld.diag() (p50/p95/mean over its 600-frame ring, so the first 100 frames after the move are outside it)",
+  "load_guard": "e2e/perf-load.mjs guarded(): 1-minute load <= 15 before and after each run; over-limit samples discarded and re-run",
+  "statistic": "summary reports median and min-max over runs; delta = after median - before median",
+  "frame_distribution_note": "uncapped frames are bimodal on this host (about 5 ms and about 20 ms), so p50 jumps between modes from run to run; mean and p95 are the stable statistics. See aa_noise.",
+  "harness_source": "// LOD-band frame-time A/B (before = main 6c9aab8, after = the instanced LOD band branch).\n// Uncapped GPU Chromium, 2560x1440, DPR 1, scenario=play tier=high tilt=off fps=off seed=1, photo mode\n// with dof off (as the draws census). Each run is a fresh browser on one build and one world; every\n// camera window is read 700+ frames after the camera move, so the 600-frame diag ring holds only it.\n// Builds interleave per round; each run sits inside e2e/perf-load.mjs's guard.\n// usage: node lodband-perf.mjs <dist-before> <dist-after> <out.json>   ROUNDS (default 4)\nimport { chromium } from \"playwright\";\nimport { createServer } from \"node:http\";\nimport { readFile, writeFile } from \"node:fs/promises\";\nimport { extname, join } from \"node:path\";\nimport { loadavg, hostname, cpus } from \"node:os\";\nimport { LOAD_LIMIT, guarded } from \"./perf-load.mjs\";\nimport { BAD_TEXT } from \"./console-errors.mjs\";\nimport { buildWorld } from \"./build-world.mjs\";\n\nconst [distBefore, distAfter, OUT] = process.argv.slice(2);\nconst ROUNDS = Number(process.env.ROUNDS ?? 4);\nconst W = 2560, H = 1440, WINDOW_FRAMES = 700, SETTLE_FRAMES = 300;\nconst KEYS = { scenario: \"play\", tier: \"high\", tilt: \"off\", fps: \"off\", seed: \"1\" };\nconst ARGS = [\"--use-angle=metal\", \"--enable-gpu\", \"--ignore-gpu-blocklist\", \"--enable-unsafe-webgpu\",\n  \"--disable-gpu-vsync\", \"--disable-frame-rate-limit\"];\n\nconst place = (list) => list.flatMap(([id, cells]) => [{ cmd: \"select_tile\", id }, ...cells.map(([q, r]) => ({ cmd: \"place\", q, r }))]);\n// docs/checkpoints/lod-band-instanced/draws.json placements (the scatter checkpoint's 20-tile world).\nconst world20 = place([[\"forest\", [[1, 0]]], [\"oak\", [[2, 0]]], [\"forest\", [[1, -1], [2, -1]]], [\"oak\", [[3, -1]]],\n  [\"forest\", [[3, 0], [0, -1]]], [\"meadow\", [[-1, 0]]], [\"river_straight\", [[-1, -1]]], [\"road_straight\", [[1, -2], [2, -2]]],\n  [\"house_cluster\", [[3, -2]]], [\"meadow\", [[-1, 1], [0, 1], [1, 1], [0, 2], [-1, 2]]], [\"forest\", [[2, 1], [1, 2]]]]);\n// docs/checkpoints/lod-band-instanced/band.json placements (seven pine forests around the origin).\nconst world7 = place([[\"forest\", [[0, 0], [1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]]]]);\nconst WORLDS = {\n  world20: { tiles: 20, script: world20, start: [20, 160, 150, 20, 0, -5], cameras: {\n    overview: [20, 160, 150, 20, 0, -5],          // draws.json draws-overview (scatter-10-world camera)\n    band152: [20, 56, 136, 20, 0, -5],            // draws.json draws-band: world centre 152 m away\n  } },\n  world7: { tiles: 7, script: world7, start: [0, 60, 150, 0, 0, 0], cameras: {\n    at130: [0, 48.28, 120.7, 0, 0, 0],             // band.json band-130\n    at150: [0, 55.71, 139.27, 0, 0, 0],            // band.json band-150\n  } },\n};\nconst cam = ([x, y, z, lx, ly, lz]) => ({ cmd: \"camera\", pos: [x, y, z], look_at: [lx, ly, lz] });\n\nconst types = { \".html\": \"text/html\", \".js\": \"text/javascript\", \".wasm\": \"application/wasm\", \".css\": \"text/css\",\n  \".ktx2\": \"image/ktx2\", \".glb\": \"model/gltf-binary\", \".png\": \"image/png\", \".wgsl\": \"text/plain\", \".wesl\": \"text/plain\",\n  \".jpg\": \"image/jpeg\", \".woff2\": \"font/woff2\", \".json\": \"application/json\", \".webm\": \"audio/webm\", \".m4a\": \"audio/mp4\" };\nconst serve = (dist) => new Promise((ok) => {\n  const s = createServer(async (req, res) => {\n    let path = decodeURIComponent(new URL(req.url, \"http://x\").pathname);\n    if (path.endsWith(\"/\")) path += \"index.html\";\n    try {\n      const body = await readFile(join(dist, path));\n      res.writeHead(200, { \"content-type\": types[extname(path)] ?? \"application/octet-stream\" });\n      res.end(body);\n    } catch { res.writeHead(404); res.end(); }\n  }).listen(0, () => ok(s));\n});\nconst servers = { before: await serve(distBefore), after: await serve(distAfter) };\nconst baseOf = (b) => `http://127.0.0.1:${servers[b].address().port}/`;\nconst drawsOf = (passes) => (passes ?? []).reduce((n, p) => n + p.multidraw_sets + p.batchable_bins + p.unbatchable + p.non_mesh, 0);\n\nasync function run(build, worldName) {\n  const world = WORLDS[worldName];\n  const browser = await chromium.launch({ channel: \"chromium\", headless: true, args: ARGS });\n  const errors = [];\n  try {\n    const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });\n    page.on(\"console\", (m) => { if (m.type() === \"error\" || BAD_TEXT.test(m.text())) errors.push(m.text()); });\n    page.on(\"pageerror\", (e) => errors.push(String(e)));\n    await page.addInitScript(() => {\n      if (!window.GPUAdapter) return;\n      const rd = GPUAdapter.prototype.requestDevice;\n      GPUAdapter.prototype.requestDevice = function (...a) {\n        return rd.apply(this, a).then((dev) => {\n          dev.addEventListener(\"uncapturederror\", (e) => console.error(\"uncapturederror: \" + e.error?.message));\n          return dev;\n        });\n      };\n    });\n    await page.goto(baseOf(build) + \"?\" + new URLSearchParams(KEYS));\n    await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 180_000 });\n    const gpu = await page.evaluate(async () => {\n      const i = (await navigator.gpu.requestAdapter())?.info;\n      const gl = document.createElement(\"canvas\").getContext(\"webgl\");\n      const ext = gl?.getExtension(\"WEBGL_debug_renderer_info\");\n      return { webgpu_adapter: i ? [i.vendor, i.architecture, i.description].join(\" | \") : null,\n        unmasked_renderer: ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null,\n        unmasked_vendor: ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : null,\n        dpr: window.devicePixelRatio, inner: [window.innerWidth, window.innerHeight], ua: navigator.userAgent };\n    });\n    if (!/apple/i.test(gpu.unmasked_renderer ?? \"\") || /swiftshader/i.test(gpu.unmasked_renderer ?? \"\"))\n      throw new Error(\"renderer is not the Apple GPU: \" + gpu.unmasked_renderer);\n    await page.evaluate((c) => window.hexWorld.cmd(c), cam(world.start));\n    await buildWorld(page, world.script, world.tiles, 300_000);\n    await page.evaluate((s) => window.hexWorld.cmd(s), [{ cmd: \"hover\", q: 9, r: -9 }, { cmd: \"toggle\", what: \"photo\" },\n      { cmd: \"photo\", dof: \"off\", pause_agents: false }]);\n    // Every pack streamed and every scatter instance placed before any window opens.\n    await page.waitForFunction(() => {\n      const s = window.hexWorld.state();\n      return Object.values(s.packs ?? {}).every((v) => v === \"ready\") && !(s.scatter?.waiting?.length) && s.queued === 0;\n    }, null, { timeout: 180_000, polling: 500 });\n    const f0 = await page.evaluate(() => window.hexWorld.diag().frames);\n    await page.waitForFunction((f) => window.hexWorld.diag().frames >= f, f0 + SETTLE_FRAMES, { timeout: 240_000, polling: 250 });\n    const cameras = {};\n    for (const [name, c] of Object.entries(world.cameras)) {\n      await page.evaluate((j) => window.hexWorld.cmd(j), cam(c));\n      const f1 = await page.evaluate(() => window.hexWorld.diag().frames);\n      await page.waitForFunction((f) => window.hexWorld.diag().frames >= f, f1 + WINDOW_FRAMES, { timeout: 300_000, polling: 250 });\n      const d = await page.evaluate(() => window.hexWorld.diag());\n      const st = await page.evaluate(() => window.hexWorld.state());\n      if (st.tier?.tier !== \"high\") throw new Error(`tier ${st.tier?.tier}`);\n      if (st.play?.tiles?.length !== world.tiles) throw new Error(`world has ${st.play?.tiles?.length} tiles`);\n      cameras[name] = { p50: d.p50, p95: d.p95, p99: d.p99, mean: d.mean, max: d.max, dropped_over_25ms: d.dropped_over_25ms,\n        samples: d.samples, window_start: f1, read_at_frame: d.frames, draws: drawsOf(d.passes),\n        passes: Object.fromEntries((d.passes ?? []).map((p) => [`${p.view}/${p.phase}`, p.multidraw_sets + p.batchable_bins + p.unbatchable + p.non_mesh])),\n        gpu_preprocessing_supported: d.gpu_preprocessing_supported,\n        stall: d.stall && { histogram: d.stall.histogram, over_25ms: d.stall.over_25ms,\n          tail: d.stall.tail.map((s) => ({ frame: s.frame, ms: s.ms, pipelines_waiting: s.pipelines_waiting })) },\n        camera_pos: st.camera?.pos, load_at_read: loadavg()[0] };\n    }\n    return { build, world: worldName, ...gpu, cameras, console_errors: errors };\n  } finally {\n    await browser.close();\n  }\n}\n\nconst result = { date: new Date().toISOString(), host: hostname(), cpu: cpus()[0]?.model, viewport: `${W}x${H}`,\n  device_scale_factor: 1, keys: KEYS, browser: { mode: \"chromium headless (new), channel chromium, uncapped\", args: ARGS.join(\" \") },\n  window_frames: WINDOW_FRAMES, settle_frames: SETTLE_FRAMES, load_limit: LOAD_LIMIT, rounds: ROUNDS, rows: [] };\ntry {\n  for (let r = 0; r < ROUNDS; r++)\n    for (const worldName of [\"world20\", \"world7\"])\n      for (const build of r % 2 ? [\"after\", \"before\"] : [\"before\", \"after\"]) {\n        const label = `${build} ${worldName} round ${r}`;\n        const g = await guarded(() => run(build, worldName).catch((e) => ({ build, world: worldName, error: String(e.message ?? e) })), label);\n        result.rows.push({ round: r, ...g.result, load_before: g.load_before, load_after: g.load_after, load_discarded: g.load_discarded });\n        const x = result.rows.at(-1);\n        console.log(`${label}: ${x.error ?? Object.entries(x.cameras).map(([n, c]) => `${n} p50 ${c.p50} p95 ${c.p95} draws ${c.draws}`).join(\" | \")}` +\n          ` errors ${x.console_errors?.length ?? \"-\"} (load ${g.load_before.toFixed(2)} -> ${g.load_after.toFixed(2)})`);\n        await writeFile(OUT, JSON.stringify(result, null, 2) + \"\\n\");\n      }\n} finally {\n  for (const s of Object.values(servers)) s.close();\n}\nconsole.log(`wrote ${OUT}`);\n"
+ },
+ "aa_noise": {
+  "note": "a one-round run with the after dist in both arms (same build twice), before the A/B; the spread is run-to-run noise",
+  "cameras": {
+   "world20/overview": {
+    "p50": {
+     "run1": 8.3,
+     "run2": 6.4,
+     "spread": 1.9
+    },
+    "p95": {
+     "run1": 17.7,
+     "run2": 17.8,
+     "spread": 0.1
+    },
+    "mean": {
+     "run1": 10.7,
+     "run2": 10.68,
+     "spread": 0.02
+    }
+   },
+   "world20/band152": {
+    "p50": {
+     "run1": 11.7,
+     "run2": 10,
+     "spread": 1.7
+    },
+    "p95": {
+     "run1": 23.7,
+     "run2": 23.9,
+     "spread": 0.2
+    },
+    "mean": {
+     "run1": 13.99,
+     "run2": 13.87,
+     "spread": 0.12
+    }
+   },
+   "world7/at130": {
+    "p50": {
+     "run1": 5.3,
+     "run2": 5,
+     "spread": 0.3
+    },
+    "p95": {
+     "run1": 21.4,
+     "run2": 21.1,
+     "spread": 0.3
+    },
+    "mean": {
+     "run1": 12.04,
+     "run2": 11.99,
+     "spread": 0.05
+    }
+   },
+   "world7/at150": {
+    "p50": {
+     "run1": 6,
+     "run2": 10.5,
+     "spread": 4.5
+    },
+    "p95": {
+     "run1": 19.7,
+     "run2": 19.8,
+     "spread": 0.1
+    },
+    "mean": {
+     "run1": 11.22,
+     "run2": 11.23,
+     "spread": 0.01
+    }
+   }
+  }
+ },
+ "summary": {
+  "world20/overview": {
+   "label": "(a) 20-tile scatter world, overview camera [20,160,150] -> [20,0,-5]",
+   "before": {
+    "n": 5,
+    "p50": {
+     "median": 8.5,
+     "min": 6,
+     "max": 11.1
+    },
+    "p95": {
+     "median": 18.6,
+     "min": 18.1,
+     "max": 19
+    },
+    "mean": {
+     "median": 11.11,
+     "min": 10.66,
+     "max": 11.21
+    },
+    "draws": [
+     415
+    ],
+    "samples": [
+     {
+      "round": 0,
+      "p50": 8.5,
+      "p95": 18.1,
+      "mean": 10.66,
+      "p99": 18.8,
+      "max": 29,
+      "dropped_over_25ms": 4,
+      "draws": 415,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 1.96,
+      "load_after": 2.31,
+      "load_at_read": 2.46,
+      "load_discarded": 0
+     },
+     {
+      "round": 1,
+      "p50": 11.1,
+      "p95": 18.1,
+      "mean": 10.79,
+      "p99": 18.8,
+      "max": 33.7,
+      "dropped_over_25ms": 3,
+      "draws": 415,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.19,
+      "load_after": 3.51,
+      "load_at_read": 3.7,
+      "load_discarded": 0
+     },
+     {
+      "round": 2,
+      "p50": 10.8,
+      "p95": 18.6,
+      "mean": 11.11,
+      "p99": 20,
+      "max": 32.2,
+      "dropped_over_25ms": 4,
+      "draws": 415,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.22,
+      "load_after": 2.98,
+      "load_at_read": 3.16,
+      "load_discarded": 0
+     },
+     {
+      "round": 3,
+      "p50": 6.3,
+      "p95": 19,
+      "mean": 11.21,
+      "p99": 19.5,
+      "max": 34.7,
+      "dropped_over_25ms": 3,
+      "draws": 415,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.34,
+      "load_after": 1.98,
+      "load_at_read": 2.16,
+      "load_discarded": 0
+     },
+     {
+      "round": 4,
+      "p50": 6,
+      "p95": 19,
+      "mean": 11.21,
+      "p99": 19.6,
+      "max": 25.2,
+      "dropped_over_25ms": 1,
+      "draws": 415,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.53,
+      "load_after": 3.0,
+      "load_at_read": 2.74,
+      "load_discarded": 0
+     }
+    ]
+   },
+   "after": {
+    "n": 5,
+    "p50": {
+     "median": 6.3,
+     "min": 6.1,
+     "max": 9.6
+    },
+    "p95": {
+     "median": 18.6,
+     "min": 17.4,
+     "max": 19.1
+    },
+    "mean": {
+     "median": 11.14,
+     "min": 10.67,
+     "max": 11.27
+    },
+    "draws": [
+     415
+    ],
+    "samples": [
+     {
+      "round": 0,
+      "p50": 6.1,
+      "p95": 17.4,
+      "mean": 10.67,
+      "p99": 18.4,
+      "max": 31.8,
+      "dropped_over_25ms": 4,
+      "draws": 415,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.31,
+      "load_after": 2.96,
+      "load_at_read": 2.67,
+      "load_discarded": 0
+     },
+     {
+      "round": 1,
+      "p50": 9.6,
+      "p95": 17.8,
+      "mean": 10.68,
+      "p99": 18.7,
+      "max": 30,
+      "dropped_over_25ms": 3,
+      "draws": 415,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.38,
+      "load_after": 3.19,
+      "load_at_read": 3.4,
+      "load_discarded": 0
+     },
+     {
+      "round": 2,
+      "p50": 6.2,
+      "p95": 18.6,
+      "mean": 11.14,
+      "p99": 19.6,
+      "max": 34.3,
+      "dropped_over_25ms": 3,
+      "draws": 415,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.98,
+      "load_after": 3.05,
+      "load_at_read": 3.17,
+      "load_discarded": 0
+     },
+     {
+      "round": 3,
+      "p50": 6.3,
+      "p95": 19.1,
+      "mean": 11.24,
+      "p99": 19.8,
+      "max": 32.4,
+      "dropped_over_25ms": 5,
+      "draws": 415,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.22,
+      "load_after": 2.34,
+      "load_at_read": 2.59,
+      "load_discarded": 0
+     },
+     {
+      "round": 4,
+      "p50": 6.6,
+      "p95": 18.9,
+      "mean": 11.27,
+      "p99": 19.4,
+      "max": 31.8,
+      "dropped_over_25ms": 3,
+      "draws": 415,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.0,
+      "load_after": 4.35,
+      "load_at_read": 3.8,
+      "load_discarded": 0
+     }
+    ]
+   },
+   "delta_after_minus_before_ms": {
+    "p50": -2.2,
+    "p95": 0.0,
+    "mean": 0.03
+   }
+  },
+  "world20/band152": {
+   "label": "(b) 20-tile scatter world, centre 152 m away, camera [20,56,136] -> [20,0,-5]",
+   "before": {
+    "n": 5,
+    "p50": {
+     "median": 9.2,
+     "min": 6.8,
+     "max": 13.5
+    },
+    "p95": {
+     "median": 24.9,
+     "min": 23.9,
+     "max": 25.4
+    },
+    "mean": {
+     "median": 14.42,
+     "min": 13.9,
+     "max": 14.54
+    },
+    "draws": [
+     630
+    ],
+    "samples": [
+     {
+      "round": 0,
+      "p50": 12.7,
+      "p95": 23.9,
+      "mean": 13.9,
+      "p99": 26.2,
+      "max": 43.2,
+      "dropped_over_25ms": 9,
+      "draws": 630,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 1.96,
+      "load_after": 2.31,
+      "load_at_read": 2.31,
+      "load_discarded": 0
+     },
+     {
+      "round": 1,
+      "p50": 7.4,
+      "p95": 24.8,
+      "mean": 14.11,
+      "p99": 26.6,
+      "max": 36.1,
+      "dropped_over_25ms": 14,
+      "draws": 630,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.19,
+      "load_after": 3.51,
+      "load_at_read": 3.51,
+      "load_discarded": 0
+     },
+     {
+      "round": 2,
+      "p50": 6.8,
+      "p95": 24.9,
+      "mean": 14.42,
+      "p99": 26,
+      "max": 44.4,
+      "dropped_over_25ms": 19,
+      "draws": 630,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.22,
+      "load_after": 2.98,
+      "load_at_read": 2.98,
+      "load_discarded": 0
+     },
+     {
+      "round": 3,
+      "p50": 9.2,
+      "p95": 25.2,
+      "mean": 14.49,
+      "p99": 26.3,
+      "max": 42.2,
+      "dropped_over_25ms": 57,
+      "draws": 630,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.34,
+      "load_after": 1.98,
+      "load_at_read": 1.98,
+      "load_discarded": 0
+     },
+     {
+      "round": 4,
+      "p50": 13.5,
+      "p95": 25.4,
+      "mean": 14.54,
+      "p99": 26.7,
+      "max": 37.6,
+      "dropped_over_25ms": 62,
+      "draws": 630,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.53,
+      "load_after": 3.0,
+      "load_at_read": 3.0,
+      "load_discarded": 0
+     }
+    ]
+   },
+   "after": {
+    "n": 5,
+    "p50": {
+     "median": 10.1,
+     "min": 7.3,
+     "max": 12.4
+    },
+    "p95": {
+     "median": 24.9,
+     "min": 23.9,
+     "max": 25.2
+    },
+    "mean": {
+     "median": 14.43,
+     "min": 13.92,
+     "max": 14.62
+    },
+    "draws": [
+     762
+    ],
+    "samples": [
+     {
+      "round": 0,
+      "p50": 10.7,
+      "p95": 23.9,
+      "mean": 13.92,
+      "p99": 24.7,
+      "max": 43.2,
+      "dropped_over_25ms": 6,
+      "draws": 762,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.31,
+      "load_after": 2.96,
+      "load_at_read": 2.96,
+      "load_discarded": 0
+     },
+     {
+      "round": 1,
+      "p50": 7.3,
+      "p95": 24,
+      "mean": 13.92,
+      "p99": 26.4,
+      "max": 35.8,
+      "dropped_over_25ms": 9,
+      "draws": 762,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.38,
+      "load_after": 3.19,
+      "load_at_read": 3.19,
+      "load_discarded": 0
+     },
+     {
+      "round": 2,
+      "p50": 10.1,
+      "p95": 24.9,
+      "mean": 14.43,
+      "p99": 25.6,
+      "max": 45.2,
+      "dropped_over_25ms": 21,
+      "draws": 762,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.98,
+      "load_after": 3.05,
+      "load_at_read": 3.05,
+      "load_discarded": 0
+     },
+     {
+      "round": 3,
+      "p50": 12.4,
+      "p95": 25.2,
+      "mean": 14.55,
+      "p99": 25.8,
+      "max": 41.2,
+      "dropped_over_25ms": 48,
+      "draws": 762,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.22,
+      "load_after": 2.34,
+      "load_at_read": 2.34,
+      "load_discarded": 0
+     },
+     {
+      "round": 4,
+      "p50": 8.8,
+      "p95": 25.2,
+      "mean": 14.62,
+      "p99": 27.1,
+      "max": 38.6,
+      "dropped_over_25ms": 51,
+      "draws": 762,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.0,
+      "load_after": 4.35,
+      "load_at_read": 4.35,
+      "load_discarded": 0
+     }
+    ]
+   },
+   "delta_after_minus_before_ms": {
+    "p50": 0.9,
+    "p95": 0.0,
+    "mean": 0.01
+   }
+  },
+  "world7/at130": {
+   "label": "(c) 7 pine forests, camera 130 m from the origin [0,48.28,120.7] -> origin",
+   "before": {
+    "n": 5,
+    "p50": {
+     "median": 4.7,
+     "min": 4.7,
+     "max": 6.4
+    },
+    "p95": {
+     "median": 21.8,
+     "min": 20.8,
+     "max": 22
+    },
+    "mean": {
+     "median": 12.09,
+     "min": 11.54,
+     "max": 12.11
+    },
+    "draws": [
+     212
+    ],
+    "samples": [
+     {
+      "round": 0,
+      "p50": 4.7,
+      "p95": 20.8,
+      "mean": 11.54,
+      "p99": 21.3,
+      "max": 36.1,
+      "dropped_over_25ms": 2,
+      "draws": 212,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.96,
+      "load_after": 3.25,
+      "load_at_read": 3.2,
+      "load_discarded": 0
+     },
+     {
+      "round": 1,
+      "p50": 6.4,
+      "p95": 21.1,
+      "mean": 11.89,
+      "p99": 22.3,
+      "max": 37.9,
+      "dropped_over_25ms": 3,
+      "draws": 212,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.66,
+      "load_after": 3.22,
+      "load_at_read": 3.35,
+      "load_discarded": 0
+     },
+     {
+      "round": 2,
+      "p50": 5,
+      "p95": 22,
+      "mean": 12.09,
+      "p99": 22.6,
+      "max": 39.3,
+      "dropped_over_25ms": 2,
+      "draws": 212,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.05,
+      "load_after": 2.75,
+      "load_at_read": 2.81,
+      "load_discarded": 0
+     },
+     {
+      "round": 3,
+      "p50": 4.7,
+      "p95": 21.9,
+      "mean": 12.1,
+      "p99": 22.5,
+      "max": 40.2,
+      "dropped_over_25ms": 4,
+      "draws": 212,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.64,
+      "load_after": 2.53,
+      "load_at_read": 2.63,
+      "load_discarded": 0
+     },
+     {
+      "round": 4,
+      "p50": 4.7,
+      "p95": 21.8,
+      "mean": 12.11,
+      "p99": 22.2,
+      "max": 35.1,
+      "dropped_over_25ms": 2,
+      "draws": 212,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 4.35,
+      "load_after": 4.22,
+      "load_at_read": 4.43,
+      "load_discarded": 0
+     }
+    ]
+   },
+   "after": {
+    "n": 5,
+    "p50": {
+     "median": 7.8,
+     "min": 5.3,
+     "max": 8.6
+    },
+    "p95": {
+     "median": 22.9,
+     "min": 21.3,
+     "max": 23
+    },
+    "mean": {
+     "median": 12.61,
+     "min": 12.05,
+     "max": 12.7
+    },
+    "draws": [
+     352
+    ],
+    "samples": [
+     {
+      "round": 0,
+      "p50": 5.3,
+      "p95": 21.3,
+      "mean": 12.05,
+      "p99": 22.2,
+      "max": 36,
+      "dropped_over_25ms": 2,
+      "draws": 352,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.25,
+      "load_after": 3.38,
+      "load_at_read": 3.47,
+      "load_discarded": 0
+     },
+     {
+      "round": 1,
+      "p50": 7.8,
+      "p95": 22.1,
+      "mean": 12.32,
+      "p99": 22.6,
+      "max": 37.7,
+      "dropped_over_25ms": 2,
+      "draws": 352,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.51,
+      "load_after": 3.66,
+      "load_at_read": 3.45,
+      "load_discarded": 0
+     },
+     {
+      "round": 2,
+      "p50": 8.4,
+      "p95": 22.9,
+      "mean": 12.61,
+      "p99": 23.5,
+      "max": 43.9,
+      "dropped_over_25ms": 2,
+      "draws": 352,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.75,
+      "load_after": 2.22,
+      "load_at_read": 2.44,
+      "load_discarded": 0
+     },
+     {
+      "round": 3,
+      "p50": 5.4,
+      "p95": 22.9,
+      "mean": 12.62,
+      "p99": 23.4,
+      "max": 38.6,
+      "dropped_over_25ms": 3,
+      "draws": 352,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 1.98,
+      "load_after": 2.64,
+      "load_at_read": 2.39,
+      "load_discarded": 0
+     },
+     {
+      "round": 4,
+      "p50": 8.6,
+      "p95": 23,
+      "mean": 12.7,
+      "p99": 23.5,
+      "max": 36.4,
+      "dropped_over_25ms": 3,
+      "draws": 352,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 4.22,
+      "load_after": 3.46,
+      "load_at_read": 3.64,
+      "load_discarded": 0
+     }
+    ]
+   },
+   "delta_after_minus_before_ms": {
+    "p50": 3.1,
+    "p95": 1.1,
+    "mean": 0.52
+   }
+  },
+  "world7/at150": {
+   "label": "extra: 7 pine forests, camera 150 m from the origin [0,55.71,139.27] -> origin",
+   "before": {
+    "n": 5,
+    "p50": {
+     "median": 5.3,
+     "min": 4.7,
+     "max": 8.2
+    },
+    "p95": {
+     "median": 20.7,
+     "min": 19.8,
+     "max": 20.9
+    },
+    "mean": {
+     "median": 11.55,
+     "min": 11.1,
+     "max": 11.64
+    },
+    "draws": [
+     212
+    ],
+    "samples": [
+     {
+      "round": 0,
+      "p50": 6.9,
+      "p95": 19.8,
+      "mean": 11.1,
+      "p99": 20.6,
+      "max": 33,
+      "dropped_over_25ms": 2,
+      "draws": 212,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.96,
+      "load_after": 3.25,
+      "load_at_read": 3.25,
+      "load_discarded": 0
+     },
+     {
+      "round": 1,
+      "p50": 4.7,
+      "p95": 20.8,
+      "mean": 11.45,
+      "p99": 21.3,
+      "max": 34.4,
+      "dropped_over_25ms": 2,
+      "draws": 212,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.66,
+      "load_after": 3.22,
+      "load_at_read": 3.24,
+      "load_discarded": 0
+     },
+     {
+      "round": 2,
+      "p50": 8.2,
+      "p95": 20.9,
+      "mean": 11.55,
+      "p99": 21.5,
+      "max": 45.2,
+      "dropped_over_25ms": 2,
+      "draws": 212,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.05,
+      "load_after": 2.75,
+      "load_at_read": 2.75,
+      "load_discarded": 0
+     },
+     {
+      "round": 3,
+      "p50": 5.3,
+      "p95": 20.7,
+      "mean": 11.6,
+      "p99": 21.7,
+      "max": 35.6,
+      "dropped_over_25ms": 3,
+      "draws": 212,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.64,
+      "load_after": 2.53,
+      "load_at_read": 2.53,
+      "load_discarded": 0
+     },
+     {
+      "round": 4,
+      "p50": 4.7,
+      "p95": 20.7,
+      "mean": 11.64,
+      "p99": 21.9,
+      "max": 35,
+      "dropped_over_25ms": 2,
+      "draws": 212,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 4.35,
+      "load_after": 4.22,
+      "load_at_read": 4.22,
+      "load_discarded": 0
+     }
+    ]
+   },
+   "after": {
+    "n": 5,
+    "p50": {
+     "median": 4.8,
+     "min": 4.6,
+     "max": 9.6
+    },
+    "p95": {
+     "median": 20.6,
+     "min": 19.8,
+     "max": 20.8
+    },
+    "mean": {
+     "median": 11.7,
+     "min": 11.25,
+     "max": 11.81
+    },
+    "draws": [
+     404
+    ],
+    "samples": [
+     {
+      "round": 0,
+      "p50": 9.6,
+      "p95": 19.8,
+      "mean": 11.25,
+      "p99": 20.2,
+      "max": 34.6,
+      "dropped_over_25ms": 3,
+      "draws": 404,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.25,
+      "load_after": 3.38,
+      "load_at_read": 3.38,
+      "load_discarded": 0
+     },
+     {
+      "round": 1,
+      "p50": 4.7,
+      "p95": 20.6,
+      "mean": 11.48,
+      "p99": 21.1,
+      "max": 33.9,
+      "dropped_over_25ms": 2,
+      "draws": 404,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 3.51,
+      "load_after": 3.66,
+      "load_at_read": 3.66,
+      "load_discarded": 0
+     },
+     {
+      "round": 2,
+      "p50": 8.8,
+      "p95": 20.6,
+      "mean": 11.7,
+      "p99": 21.8,
+      "max": 42.1,
+      "dropped_over_25ms": 2,
+      "draws": 404,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 2.75,
+      "load_after": 2.22,
+      "load_at_read": 2.22,
+      "load_discarded": 0
+     },
+     {
+      "round": 3,
+      "p50": 4.6,
+      "p95": 20.7,
+      "mean": 11.71,
+      "p99": 21.3,
+      "max": 40.1,
+      "dropped_over_25ms": 2,
+      "draws": 404,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 1.98,
+      "load_after": 2.64,
+      "load_at_read": 2.64,
+      "load_discarded": 0
+     },
+     {
+      "round": 4,
+      "p50": 4.8,
+      "p95": 20.8,
+      "mean": 11.81,
+      "p99": 21.8,
+      "max": 35.4,
+      "dropped_over_25ms": 2,
+      "draws": 404,
+      "frames_in_window": 600,
+      "pipelines_waiting_in_window": false,
+      "load_before": 4.22,
+      "load_after": 3.46,
+      "load_at_read": 3.46,
+      "load_discarded": 0
+     }
+    ]
+   },
+   "delta_after_minus_before_ms": {
+    "p50": -0.5,
+    "p95": -0.1,
+    "mean": 0.15
+   }
+  }
+ },
+ "webgpu_validation_errors": {
+  "count": 0,
+  "messages": [],
+  "capture": "console errors, BAD_TEXT matches (ERROR, uncaptured, invalid), pageerror, and device uncapturederror listener"
+ },
+ "discarded_or_failed_runs": [],
+ "raw_rows": [
+  {
+   "round": 0,
+   "build": "before",
+   "world": "world20",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "overview": {
+     "p50": 8.5,
+     "p95": 18.1,
+     "p99": 18.8,
+     "mean": 10.66,
+     "max": 29,
+     "dropped_over_25ms": 4,
+     "samples": 600,
+     "window_start": 660,
+     "read_at_frame": 1380,
+     "draws": 415,
+     "passes": {
+      "main/alpha_mask": 27,
+      "main/alpha_mask_prepass": 27,
+      "main/opaque": 110,
+      "main/prepass": 106,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 0,
+      "cascade2/shadow": 133,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        103
+       ],
+       [
+        "<20",
+        194
+       ],
+       [
+        "<25",
+        0
+       ],
+       [
+        "<33.3",
+        4
+       ],
+       [
+        "<50",
+        0
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 4,
+      "tail": [
+       {
+        "frame": 1040,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1044,
+        "ms": 27.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1318,
+        "ms": 26,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1322,
+        "ms": 29,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      160,
+      150
+     ],
+     "load_at_read": 2.45751953125
+    },
+    "band152": {
+     "p50": 12.7,
+     "p95": 23.9,
+     "p99": 26.2,
+     "mean": 13.9,
+     "max": 43.2,
+     "dropped_over_25ms": 9,
+     "samples": 600,
+     "window_start": 1380,
+     "read_at_frame": 2100,
+     "draws": 630,
+     "passes": {
+      "main/alpha_mask": 30,
+      "main/alpha_mask_prepass": 30,
+      "main/opaque": 129,
+      "main/prepass": 125,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 149,
+      "cascade2/shadow": 155,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        0
+       ],
+       [
+        "<25",
+        291
+       ],
+       [
+        "<33.3",
+        7
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 9,
+      "tail": [
+       {
+        "frame": 1586,
+        "ms": 29.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1589,
+        "ms": 43.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1683,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1837,
+        "ms": 27.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1839,
+        "ms": 34.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1841,
+        "ms": 25.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2069,
+        "ms": 27.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2071,
+        "ms": 32.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2073,
+        "ms": 26.2,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      56,
+      136
+     ],
+     "load_at_read": 2.31298828125
+    }
+   },
+   "console_errors": [],
+   "load_before": 1.95703125,
+   "load_after": 2.31298828125,
+   "load_discarded": 0
+  },
+  {
+   "round": 0,
+   "build": "after",
+   "world": "world20",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "overview": {
+     "p50": 6.1,
+     "p95": 17.4,
+     "p99": 18.4,
+     "mean": 10.67,
+     "max": 31.8,
+     "dropped_over_25ms": 4,
+     "samples": 600,
+     "window_start": 690,
+     "read_at_frame": 1410,
+     "draws": 415,
+     "passes": {
+      "main/alpha_mask": 27,
+      "main/alpha_mask_prepass": 27,
+      "main/opaque": 110,
+      "main/prepass": 106,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 0,
+      "cascade2/shadow": 133,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        138
+       ],
+       [
+        "<20",
+        158
+       ],
+       [
+        "<25",
+        0
+       ],
+       [
+        "<33.3",
+        4
+       ],
+       [
+        "<50",
+        0
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 4,
+      "tail": [
+       {
+        "frame": 1105,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1109,
+        "ms": 31.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1373,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1377,
+        "ms": 30,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      160,
+      150
+     ],
+     "load_at_read": 2.666015625
+    },
+    "band152": {
+     "p50": 10.7,
+     "p95": 23.9,
+     "p99": 24.7,
+     "mean": 13.92,
+     "max": 43.2,
+     "dropped_over_25ms": 6,
+     "samples": 600,
+     "window_start": 1410,
+     "read_at_frame": 2130,
+     "draws": 762,
+     "passes": {
+      "main/alpha_mask": 48,
+      "main/alpha_mask_prepass": 48,
+      "main/opaque": 144,
+      "main/prepass": 140,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 182,
+      "cascade2/shadow": 188,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        2
+       ],
+       [
+        "<20",
+        2
+       ],
+       [
+        "<25",
+        291
+       ],
+       [
+        "<33.3",
+        4
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 6,
+      "tail": [
+       {
+        "frame": 1557,
+        "ms": 27.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1559,
+        "ms": 25.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1805,
+        "ms": 29,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1809,
+        "ms": 43.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2001,
+        "ms": 25.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2005,
+        "ms": 40.4,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      56,
+      136
+     ],
+     "load_at_read": 2.96337890625
+    }
+   },
+   "console_errors": [],
+   "load_before": 2.31298828125,
+   "load_after": 2.96337890625,
+   "load_discarded": 0
+  },
+  {
+   "round": 0,
+   "build": "before",
+   "world": "world7",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "at130": {
+     "p50": 4.7,
+     "p95": 20.8,
+     "p99": 21.3,
+     "mean": 11.54,
+     "max": 36.1,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 570,
+     "read_at_frame": 1290,
+     "draws": 212,
+     "passes": {
+      "main/alpha_mask": 20,
+      "main/alpha_mask_prepass": 20,
+      "main/opaque": 36,
+      "main/prepass": 32,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 52,
+      "cascade2/shadow": 52,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        193
+       ],
+       [
+        "<25",
+        104
+       ],
+       [
+        "<33.3",
+        1
+       ],
+       [
+        "<50",
+        1
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 983,
+        "ms": 36.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1239,
+        "ms": 32.9,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      48.279998779296875,
+      120.69999694824219
+     ],
+     "load_at_read": 3.20458984375
+    },
+    "at150": {
+     "p50": 6.9,
+     "p95": 19.8,
+     "p99": 20.6,
+     "mean": 11.1,
+     "max": 33,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 1290,
+     "read_at_frame": 2010,
+     "draws": 212,
+     "passes": {
+      "main/alpha_mask": 20,
+      "main/alpha_mask_prepass": 20,
+      "main/opaque": 36,
+      "main/prepass": 32,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 52,
+      "cascade2/shadow": 52,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        2
+       ],
+       [
+        "<20",
+        281
+       ],
+       [
+        "<25",
+        15
+       ],
+       [
+        "<33.3",
+        2
+       ],
+       [
+        "<50",
+        0
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 1563,
+        "ms": 33,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1877,
+        "ms": 32.5,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      55.709999084472656,
+      139.27000427246094
+     ],
+     "load_at_read": 3.24658203125
+    }
+   },
+   "console_errors": [],
+   "load_before": 2.96337890625,
+   "load_after": 3.24658203125,
+   "load_discarded": 0
+  },
+  {
+   "round": 0,
+   "build": "after",
+   "world": "world7",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "at130": {
+     "p50": 5.3,
+     "p95": 21.3,
+     "p99": 22.2,
+     "mean": 12.05,
+     "max": 36,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 570,
+     "read_at_frame": 1290,
+     "draws": 352,
+     "passes": {
+      "main/alpha_mask": 31,
+      "main/alpha_mask_prepass": 31,
+      "main/opaque": 60,
+      "main/prepass": 56,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 87,
+      "cascade2/shadow": 87,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        44
+       ],
+       [
+        "<25",
+        254
+       ],
+       [
+        "<33.3",
+        1
+       ],
+       [
+        "<50",
+        1
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 827,
+        "ms": 36,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1097,
+        "ms": 33,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      48.279998779296875,
+      120.69999694824219
+     ],
+     "load_at_read": 3.46875
+    },
+    "at150": {
+     "p50": 9.6,
+     "p95": 19.8,
+     "p99": 20.2,
+     "mean": 11.25,
+     "max": 34.6,
+     "dropped_over_25ms": 3,
+     "samples": 600,
+     "window_start": 1290,
+     "read_at_frame": 2010,
+     "draws": 404,
+     "passes": {
+      "main/alpha_mask": 39,
+      "main/alpha_mask_prepass": 39,
+      "main/opaque": 65,
+      "main/prepass": 61,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 100,
+      "cascade2/shadow": 100,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        2
+       ],
+       [
+        "<20",
+        284
+       ],
+       [
+        "<25",
+        11
+       ],
+       [
+        "<33.3",
+        2
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 3,
+      "tail": [
+       {
+        "frame": 1441,
+        "ms": 33.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1793,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1795,
+        "ms": 34.6,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      55.709999084472656,
+      139.27000427246094
+     ],
+     "load_at_read": 3.3837890625
+    }
+   },
+   "console_errors": [],
+   "load_before": 3.24658203125,
+   "load_after": 3.3837890625,
+   "load_discarded": 0
+  },
+  {
+   "round": 1,
+   "build": "after",
+   "world": "world20",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "overview": {
+     "p50": 9.6,
+     "p95": 17.8,
+     "p99": 18.7,
+     "mean": 10.68,
+     "max": 30,
+     "dropped_over_25ms": 3,
+     "samples": 600,
+     "window_start": 690,
+     "read_at_frame": 1410,
+     "draws": 415,
+     "passes": {
+      "main/alpha_mask": 27,
+      "main/alpha_mask_prepass": 27,
+      "main/opaque": 110,
+      "main/prepass": 106,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 0,
+      "cascade2/shadow": 133,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        143
+       ],
+       [
+        "<20",
+        154
+       ],
+       [
+        "<25",
+        0
+       ],
+       [
+        "<33.3",
+        4
+       ],
+       [
+        "<50",
+        0
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 3,
+      "tail": [
+       {
+        "frame": 1047,
+        "ms": 30,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1299,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1303,
+        "ms": 27.9,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      160,
+      150
+     ],
+     "load_at_read": 3.4033203125
+    },
+    "band152": {
+     "p50": 7.3,
+     "p95": 24,
+     "p99": 26.4,
+     "mean": 13.92,
+     "max": 35.8,
+     "dropped_over_25ms": 9,
+     "samples": 600,
+     "window_start": 1410,
+     "read_at_frame": 2130,
+     "draws": 762,
+     "passes": {
+      "main/alpha_mask": 48,
+      "main/alpha_mask_prepass": 48,
+      "main/opaque": 144,
+      "main/prepass": 140,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 182,
+      "cascade2/shadow": 188,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        0
+       ],
+       [
+        "<25",
+        290
+       ],
+       [
+        "<33.3",
+        7
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 9,
+      "tail": [
+       {
+        "frame": 1573,
+        "ms": 29.9,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1575,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1587,
+        "ms": 28,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1819,
+        "ms": 28.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1821,
+        "ms": 33.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1823,
+        "ms": 26,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2075,
+        "ms": 28.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2077,
+        "ms": 35.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2079,
+        "ms": 26.4,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      56,
+      136
+     ],
+     "load_at_read": 3.193359375
+    }
+   },
+   "console_errors": [],
+   "load_before": 3.3837890625,
+   "load_after": 3.193359375,
+   "load_discarded": 0
+  },
+  {
+   "round": 1,
+   "build": "before",
+   "world": "world20",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "overview": {
+     "p50": 11.1,
+     "p95": 18.1,
+     "p99": 18.8,
+     "mean": 10.79,
+     "max": 33.7,
+     "dropped_over_25ms": 3,
+     "samples": 600,
+     "window_start": 690,
+     "read_at_frame": 1410,
+     "draws": 415,
+     "passes": {
+      "main/alpha_mask": 27,
+      "main/alpha_mask_prepass": 27,
+      "main/opaque": 110,
+      "main/prepass": 106,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 0,
+      "cascade2/shadow": 133,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        298
+       ],
+       [
+        "<16.7",
+        114
+       ],
+       [
+        "<20",
+        184
+       ],
+       [
+        "<25",
+        1
+       ],
+       [
+        "<33.3",
+        2
+       ],
+       [
+        "<50",
+        1
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 3,
+      "tail": [
+       {
+        "frame": 947,
+        "ms": 33.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1211,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1215,
+        "ms": 27,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      160,
+      150
+     ],
+     "load_at_read": 3.6982421875
+    },
+    "band152": {
+     "p50": 7.4,
+     "p95": 24.8,
+     "p99": 26.6,
+     "mean": 14.11,
+     "max": 36.1,
+     "dropped_over_25ms": 14,
+     "samples": 600,
+     "window_start": 1410,
+     "read_at_frame": 2130,
+     "draws": 630,
+     "passes": {
+      "main/alpha_mask": 30,
+      "main/alpha_mask_prepass": 30,
+      "main/opaque": 129,
+      "main/prepass": 125,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 149,
+      "cascade2/shadow": 155,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        0
+       ],
+       [
+        "<25",
+        280
+       ],
+       [
+        "<33.3",
+        17
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 14,
+      "tail": [
+       {
+        "frame": 1587,
+        "ms": 30.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1675,
+        "ms": 36.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1677,
+        "ms": 27.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1805,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1871,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1901,
+        "ms": 26.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1903,
+        "ms": 36.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1905,
+        "ms": 26.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1923,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1997,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2023,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2067,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2119,
+        "ms": 25.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2129,
+        "ms": 27.2,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      56,
+      136
+     ],
+     "load_at_read": 3.51025390625
+    }
+   },
+   "console_errors": [],
+   "load_before": 3.193359375,
+   "load_after": 3.51025390625,
+   "load_discarded": 0
+  },
+  {
+   "round": 1,
+   "build": "after",
+   "world": "world7",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "at130": {
+     "p50": 7.8,
+     "p95": 22.1,
+     "p99": 22.6,
+     "mean": 12.32,
+     "max": 37.7,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 570,
+     "read_at_frame": 1290,
+     "draws": 352,
+     "passes": {
+      "main/alpha_mask": 31,
+      "main/alpha_mask_prepass": 31,
+      "main/opaque": 60,
+      "main/prepass": 56,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 87,
+      "cascade2/shadow": 87,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        29
+       ],
+       [
+        "<25",
+        269
+       ],
+       [
+        "<33.3",
+        0
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 832,
+        "ms": 35.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1164,
+        "ms": 37.7,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      48.279998779296875,
+      120.69999694824219
+     ],
+     "load_at_read": 3.45361328125
+    },
+    "at150": {
+     "p50": 4.7,
+     "p95": 20.6,
+     "p99": 21.1,
+     "mean": 11.48,
+     "max": 33.9,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 1290,
+     "read_at_frame": 2010,
+     "draws": 404,
+     "passes": {
+      "main/alpha_mask": 39,
+      "main/alpha_mask_prepass": 39,
+      "main/opaque": 65,
+      "main/prepass": 61,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 100,
+      "cascade2/shadow": 100,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        230
+       ],
+       [
+        "<25",
+        68
+       ],
+       [
+        "<33.3",
+        1
+       ],
+       [
+        "<50",
+        1
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 1502,
+        "ms": 33.9,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1850,
+        "ms": 30.2,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      55.709999084472656,
+      139.27000427246094
+     ],
+     "load_at_read": 3.6572265625
+    }
+   },
+   "console_errors": [],
+   "load_before": 3.51025390625,
+   "load_after": 3.6572265625,
+   "load_discarded": 0
+  },
+  {
+   "round": 1,
+   "build": "before",
+   "world": "world7",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "at130": {
+     "p50": 6.4,
+     "p95": 21.1,
+     "p99": 22.3,
+     "mean": 11.89,
+     "max": 37.9,
+     "dropped_over_25ms": 3,
+     "samples": 600,
+     "window_start": 570,
+     "read_at_frame": 1290,
+     "draws": 212,
+     "passes": {
+      "main/alpha_mask": 20,
+      "main/alpha_mask_prepass": 20,
+      "main/opaque": 36,
+      "main/prepass": 32,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 52,
+      "cascade2/shadow": 52,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        80
+       ],
+       [
+        "<25",
+        216
+       ],
+       [
+        "<33.3",
+        1
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 3,
+      "tail": [
+       {
+        "frame": 848,
+        "ms": 26.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 850,
+        "ms": 37.9,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1170,
+        "ms": 36.9,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      48.279998779296875,
+      120.69999694824219
+     ],
+     "load_at_read": 3.34521484375
+    },
+    "at150": {
+     "p50": 4.7,
+     "p95": 20.8,
+     "p99": 21.3,
+     "mean": 11.45,
+     "max": 34.4,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 1290,
+     "read_at_frame": 2010,
+     "draws": 212,
+     "passes": {
+      "main/alpha_mask": 20,
+      "main/alpha_mask_prepass": 20,
+      "main/opaque": 36,
+      "main/prepass": 32,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 52,
+      "cascade2/shadow": 52,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        217
+       ],
+       [
+        "<25",
+        81
+       ],
+       [
+        "<33.3",
+        0
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 1486,
+        "ms": 33.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1806,
+        "ms": 34.4,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      55.709999084472656,
+      139.27000427246094
+     ],
+     "load_at_read": 3.2373046875
+    }
+   },
+   "console_errors": [],
+   "load_before": 3.6572265625,
+   "load_after": 3.21826171875,
+   "load_discarded": 0
+  },
+  {
+   "round": 2,
+   "build": "before",
+   "world": "world20",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "overview": {
+     "p50": 10.8,
+     "p95": 18.6,
+     "p99": 20,
+     "mean": 11.11,
+     "max": 32.2,
+     "dropped_over_25ms": 4,
+     "samples": 600,
+     "window_start": 690,
+     "read_at_frame": 1410,
+     "draws": 415,
+     "passes": {
+      "main/alpha_mask": 27,
+      "main/alpha_mask_prepass": 27,
+      "main/opaque": 110,
+      "main/prepass": 106,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 0,
+      "cascade2/shadow": 133,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        33
+       ],
+       [
+        "<20",
+        261
+       ],
+       [
+        "<25",
+        3
+       ],
+       [
+        "<33.3",
+        4
+       ],
+       [
+        "<50",
+        0
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 4,
+      "tail": [
+       {
+        "frame": 967,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 971,
+        "ms": 32.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1147,
+        "ms": 27.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1325,
+        "ms": 32,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      160,
+      150
+     ],
+     "load_at_read": 3.16259765625
+    },
+    "band152": {
+     "p50": 6.8,
+     "p95": 24.9,
+     "p99": 26,
+     "mean": 14.42,
+     "max": 44.4,
+     "dropped_over_25ms": 19,
+     "samples": 600,
+     "window_start": 1410,
+     "read_at_frame": 2130,
+     "draws": 630,
+     "passes": {
+      "main/alpha_mask": 30,
+      "main/alpha_mask_prepass": 30,
+      "main/opaque": 129,
+      "main/prepass": 125,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 149,
+      "cascade2/shadow": 155,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        0
+       ],
+       [
+        "<25",
+        273
+       ],
+       [
+        "<33.3",
+        25
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 19,
+      "tail": [
+       {
+        "frame": 1543,
+        "ms": 26,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1571,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1587,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1595,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1641,
+        "ms": 26,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1669,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1677,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1683,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1761,
+        "ms": 27.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1763,
+        "ms": 37.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1765,
+        "ms": 26.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1779,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1797,
+        "ms": 25.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1831,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1961,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1997,
+        "ms": 27.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2001,
+        "ms": 44.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2043,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2111,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      56,
+      136
+     ],
+     "load_at_read": 2.9833984375
+    }
+   },
+   "console_errors": [],
+   "load_before": 3.21826171875,
+   "load_after": 2.9833984375,
+   "load_discarded": 0
+  },
+  {
+   "round": 2,
+   "build": "after",
+   "world": "world20",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "overview": {
+     "p50": 6.2,
+     "p95": 18.6,
+     "p99": 19.6,
+     "mean": 11.14,
+     "max": 34.3,
+     "dropped_over_25ms": 3,
+     "samples": 600,
+     "window_start": 690,
+     "read_at_frame": 1410,
+     "draws": 415,
+     "passes": {
+      "main/alpha_mask": 27,
+      "main/alpha_mask_prepass": 27,
+      "main/opaque": 110,
+      "main/prepass": 106,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 0,
+      "cascade2/shadow": 133,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        36
+       ],
+       [
+        "<20",
+        258
+       ],
+       [
+        "<25",
+        3
+       ],
+       [
+        "<33.3",
+        2
+       ],
+       [
+        "<50",
+        1
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 3,
+      "tail": [
+       {
+        "frame": 902,
+        "ms": 34.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1156,
+        "ms": 25.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1408,
+        "ms": 27.3,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      160,
+      150
+     ],
+     "load_at_read": 3.16650390625
+    },
+    "band152": {
+     "p50": 10.1,
+     "p95": 24.9,
+     "p99": 25.6,
+     "mean": 14.43,
+     "max": 45.2,
+     "dropped_over_25ms": 21,
+     "samples": 600,
+     "window_start": 1410,
+     "read_at_frame": 2130,
+     "draws": 762,
+     "passes": {
+      "main/alpha_mask": 48,
+      "main/alpha_mask_prepass": 48,
+      "main/opaque": 144,
+      "main/prepass": 140,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 182,
+      "cascade2/shadow": 188,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        1
+       ],
+       [
+        "<25",
+        272
+       ],
+       [
+        "<33.3",
+        25
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 21,
+      "tail": [
+       {
+        "frame": 1571,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1573,
+        "ms": 26.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1575,
+        "ms": 27.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1607,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1645,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1655,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1757,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1815,
+        "ms": 28.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1819,
+        "ms": 45.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1833,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1877,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1903,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1917,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1967,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1977,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1981,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2009,
+        "ms": 36.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2011,
+        "ms": 27.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2053,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2063,
+        "ms": 25.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2067,
+        "ms": 25.5,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      56,
+      136
+     ],
+     "load_at_read": 3.0537109375
+    }
+   },
+   "console_errors": [],
+   "load_before": 2.9833984375,
+   "load_after": 3.0537109375,
+   "load_discarded": 0
+  },
+  {
+   "round": 2,
+   "build": "before",
+   "world": "world7",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "at130": {
+     "p50": 5,
+     "p95": 22,
+     "p99": 22.6,
+     "mean": 12.09,
+     "max": 39.3,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 570,
+     "read_at_frame": 1290,
+     "draws": 212,
+     "passes": {
+      "main/alpha_mask": 20,
+      "main/alpha_mask_prepass": 20,
+      "main/opaque": 36,
+      "main/prepass": 32,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 52,
+      "cascade2/shadow": 52,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        50
+       ],
+       [
+        "<25",
+        248
+       ],
+       [
+        "<33.3",
+        0
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 898,
+        "ms": 39.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1216,
+        "ms": 36.4,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      48.279998779296875,
+      120.69999694824219
+     ],
+     "load_at_read": 2.81005859375
+    },
+    "at150": {
+     "p50": 8.2,
+     "p95": 20.9,
+     "p99": 21.5,
+     "mean": 11.55,
+     "max": 45.2,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 1290,
+     "read_at_frame": 2010,
+     "draws": 212,
+     "passes": {
+      "main/alpha_mask": 20,
+      "main/alpha_mask_prepass": 20,
+      "main/opaque": 36,
+      "main/prepass": 32,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 52,
+      "cascade2/shadow": 52,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        2
+       ],
+       [
+        "<20",
+        181
+       ],
+       [
+        "<25",
+        115
+       ],
+       [
+        "<33.3",
+        0
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 1534,
+        "ms": 34.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1854,
+        "ms": 45.2,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      55.709999084472656,
+      139.27000427246094
+     ],
+     "load_at_read": 2.7451171875
+    }
+   },
+   "console_errors": [],
+   "load_before": 3.0537109375,
+   "load_after": 2.7451171875,
+   "load_discarded": 0
+  },
+  {
+   "round": 2,
+   "build": "after",
+   "world": "world7",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "at130": {
+     "p50": 8.4,
+     "p95": 22.9,
+     "p99": 23.5,
+     "mean": 12.61,
+     "max": 43.9,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 540,
+     "read_at_frame": 1260,
+     "draws": 352,
+     "passes": {
+      "main/alpha_mask": 31,
+      "main/alpha_mask_prepass": 31,
+      "main/opaque": 60,
+      "main/prepass": 56,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 87,
+      "cascade2/shadow": 87,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        10
+       ],
+       [
+        "<25",
+        288
+       ],
+       [
+        "<33.3",
+        0
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 825,
+        "ms": 39.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1167,
+        "ms": 43.9,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      48.279998779296875,
+      120.69999694824219
+     ],
+     "load_at_read": 2.435546875
+    },
+    "at150": {
+     "p50": 8.8,
+     "p95": 20.6,
+     "p99": 21.8,
+     "mean": 11.7,
+     "max": 42.1,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 1260,
+     "read_at_frame": 1980,
+     "draws": 404,
+     "passes": {
+      "main/alpha_mask": 39,
+      "main/alpha_mask_prepass": 39,
+      "main/opaque": 65,
+      "main/prepass": 61,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 100,
+      "cascade2/shadow": 100,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        3
+       ],
+       [
+        "<20",
+        116
+       ],
+       [
+        "<25",
+        180
+       ],
+       [
+        "<33.3",
+        1
+       ],
+       [
+        "<50",
+        1
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 1421,
+        "ms": 32.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1755,
+        "ms": 42.1,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      55.709999084472656,
+      139.27000427246094
+     ],
+     "load_at_read": 2.220703125
+    }
+   },
+   "console_errors": [],
+   "load_before": 2.7451171875,
+   "load_after": 2.220703125,
+   "load_discarded": 0
+  },
+  {
+   "round": 3,
+   "build": "after",
+   "world": "world20",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "overview": {
+     "p50": 6.3,
+     "p95": 19.1,
+     "p99": 19.8,
+     "mean": 11.24,
+     "max": 32.4,
+     "dropped_over_25ms": 5,
+     "samples": 600,
+     "window_start": 690,
+     "read_at_frame": 1410,
+     "draws": 415,
+     "passes": {
+      "main/alpha_mask": 27,
+      "main/alpha_mask_prepass": 27,
+      "main/opaque": 110,
+      "main/prepass": 106,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 0,
+      "cascade2/shadow": 133,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        32
+       ],
+       [
+        "<20",
+        262
+       ],
+       [
+        "<25",
+        1
+       ],
+       [
+        "<33.3",
+        5
+       ],
+       [
+        "<50",
+        0
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 5,
+      "tail": [
+       {
+        "frame": 848,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 852,
+        "ms": 32.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1092,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1338,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1342,
+        "ms": 31.1,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      160,
+      150
+     ],
+     "load_at_read": 2.59033203125
+    },
+    "band152": {
+     "p50": 12.4,
+     "p95": 25.2,
+     "p99": 25.8,
+     "mean": 14.55,
+     "max": 41.2,
+     "dropped_over_25ms": 48,
+     "samples": 600,
+     "window_start": 1410,
+     "read_at_frame": 2130,
+     "draws": 762,
+     "passes": {
+      "main/alpha_mask": 48,
+      "main/alpha_mask_prepass": 48,
+      "main/opaque": 144,
+      "main/prepass": 140,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 182,
+      "cascade2/shadow": 188,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        1
+       ],
+       [
+        "<25",
+        240
+       ],
+       [
+        "<33.3",
+        57
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 48,
+      "tail": [
+       {
+        "frame": 1752,
+        "ms": 26.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1778,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1792,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1796,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1800,
+        "ms": 25.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1806,
+        "ms": 25.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1860,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1868,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1884,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1906,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1916,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1920,
+        "ms": 25.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1934,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1940,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1950,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1954,
+        "ms": 25.9,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1962,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1988,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1998,
+        "ms": 29.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2002,
+        "ms": 41.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2004,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2014,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2040,
+        "ms": 25.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2054,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2058,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2064,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2070,
+        "ms": 25.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2086,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2098,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2114,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2124,
+        "ms": 25.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2128,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      56,
+      136
+     ],
+     "load_at_read": 2.3388671875
+    }
+   },
+   "console_errors": [],
+   "load_before": 2.220703125,
+   "load_after": 2.3388671875,
+   "load_discarded": 0
+  },
+  {
+   "round": 3,
+   "build": "before",
+   "world": "world20",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "overview": {
+     "p50": 6.3,
+     "p95": 19,
+     "p99": 19.5,
+     "mean": 11.21,
+     "max": 34.7,
+     "dropped_over_25ms": 3,
+     "samples": 600,
+     "window_start": 690,
+     "read_at_frame": 1410,
+     "draws": 415,
+     "passes": {
+      "main/alpha_mask": 27,
+      "main/alpha_mask_prepass": 27,
+      "main/opaque": 110,
+      "main/prepass": 106,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 0,
+      "cascade2/shadow": 133,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        23
+       ],
+       [
+        "<20",
+        273
+       ],
+       [
+        "<25",
+        1
+       ],
+       [
+        "<33.3",
+        2
+       ],
+       [
+        "<50",
+        1
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 3,
+      "tail": [
+       {
+        "frame": 1017,
+        "ms": 25.9,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1021,
+        "ms": 34.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1233,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      160,
+      150
+     ],
+     "load_at_read": 2.16064453125
+    },
+    "band152": {
+     "p50": 9.2,
+     "p95": 25.2,
+     "p99": 26.3,
+     "mean": 14.49,
+     "max": 42.2,
+     "dropped_over_25ms": 57,
+     "samples": 600,
+     "window_start": 1410,
+     "read_at_frame": 2130,
+     "draws": 630,
+     "passes": {
+      "main/alpha_mask": 30,
+      "main/alpha_mask_prepass": 30,
+      "main/opaque": 129,
+      "main/prepass": 125,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 149,
+      "cascade2/shadow": 155,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        1
+       ],
+       [
+        "<25",
+        226
+       ],
+       [
+        "<33.3",
+        72
+       ],
+       [
+        "<50",
+        1
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 57,
+      "tail": [
+       {
+        "frame": 1777,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1791,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1803,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1823,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1831,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1835,
+        "ms": 25.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1847,
+        "ms": 26.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1851,
+        "ms": 26,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1861,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1875,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1887,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1903,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1907,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1911,
+        "ms": 32.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1913,
+        "ms": 29.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1915,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1943,
+        "ms": 26.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1949,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1953,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1957,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1967,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1993,
+        "ms": 25.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2015,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2031,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2043,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2063,
+        "ms": 25.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2081,
+        "ms": 25.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2089,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2109,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2113,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2117,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2123,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      56,
+      136
+     ],
+     "load_at_read": 1.97509765625
+    }
+   },
+   "console_errors": [],
+   "load_before": 2.3388671875,
+   "load_after": 1.97509765625,
+   "load_discarded": 0
+  },
+  {
+   "round": 3,
+   "build": "after",
+   "world": "world7",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "at130": {
+     "p50": 5.4,
+     "p95": 22.9,
+     "p99": 23.4,
+     "mean": 12.62,
+     "max": 38.6,
+     "dropped_over_25ms": 3,
+     "samples": 600,
+     "window_start": 570,
+     "read_at_frame": 1290,
+     "draws": 352,
+     "passes": {
+      "main/alpha_mask": 31,
+      "main/alpha_mask_prepass": 31,
+      "main/opaque": 60,
+      "main/prepass": 56,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 87,
+      "cascade2/shadow": 87,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        15
+       ],
+       [
+        "<25",
+        282
+       ],
+       [
+        "<33.3",
+        1
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 3,
+      "tail": [
+       {
+        "frame": 888,
+        "ms": 38.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1216,
+        "ms": 37.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1218,
+        "ms": 25.5,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      48.279998779296875,
+      120.69999694824219
+     ],
+     "load_at_read": 2.38818359375
+    },
+    "at150": {
+     "p50": 4.6,
+     "p95": 20.7,
+     "p99": 21.3,
+     "mean": 11.71,
+     "max": 40.1,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 1290,
+     "read_at_frame": 2010,
+     "draws": 404,
+     "passes": {
+      "main/alpha_mask": 39,
+      "main/alpha_mask_prepass": 39,
+      "main/opaque": 65,
+      "main/prepass": 61,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 100,
+      "cascade2/shadow": 100,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        103
+       ],
+       [
+        "<25",
+        195
+       ],
+       [
+        "<33.3",
+        0
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 1478,
+        "ms": 33.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1812,
+        "ms": 40.1,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      55.709999084472656,
+      139.27000427246094
+     ],
+     "load_at_read": 2.6357421875
+    }
+   },
+   "console_errors": [],
+   "load_before": 1.97509765625,
+   "load_after": 2.6357421875,
+   "load_discarded": 0
+  },
+  {
+   "round": 3,
+   "build": "before",
+   "world": "world7",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "at130": {
+     "p50": 4.7,
+     "p95": 21.9,
+     "p99": 22.5,
+     "mean": 12.1,
+     "max": 40.2,
+     "dropped_over_25ms": 4,
+     "samples": 600,
+     "window_start": 570,
+     "read_at_frame": 1290,
+     "draws": 212,
+     "passes": {
+      "main/alpha_mask": 20,
+      "main/alpha_mask_prepass": 20,
+      "main/opaque": 36,
+      "main/prepass": 32,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 52,
+      "cascade2/shadow": 52,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        26
+       ],
+       [
+        "<25",
+        270
+       ],
+       [
+        "<33.3",
+        3
+       ],
+       [
+        "<50",
+        1
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 4,
+      "tail": [
+       {
+        "frame": 901,
+        "ms": 25.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1237,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1239,
+        "ms": 40.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1241,
+        "ms": 27.4,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      48.279998779296875,
+      120.69999694824219
+     ],
+     "load_at_read": 2.62939453125
+    },
+    "at150": {
+     "p50": 5.3,
+     "p95": 20.7,
+     "p99": 21.7,
+     "mean": 11.6,
+     "max": 35.6,
+     "dropped_over_25ms": 3,
+     "samples": 600,
+     "window_start": 1290,
+     "read_at_frame": 2010,
+     "draws": 212,
+     "passes": {
+      "main/alpha_mask": 20,
+      "main/alpha_mask_prepass": 20,
+      "main/opaque": 36,
+      "main/prepass": 32,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 52,
+      "cascade2/shadow": 52,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        119
+       ],
+       [
+        "<25",
+        177
+       ],
+       [
+        "<33.3",
+        1
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 3,
+      "tail": [
+       {
+        "frame": 1479,
+        "ms": 31.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1717,
+        "ms": 35.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1955,
+        "ms": 35.6,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      55.709999084472656,
+      139.27000427246094
+     ],
+     "load_at_read": 2.525390625
+    }
+   },
+   "console_errors": [],
+   "load_before": 2.6357421875,
+   "load_after": 2.525390625,
+   "load_discarded": 0
+  },
+  {
+   "round": 4,
+   "build": "before",
+   "world": "world20",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "overview": {
+     "p50": 6,
+     "p95": 19,
+     "p99": 19.6,
+     "mean": 11.21,
+     "max": 25.2,
+     "dropped_over_25ms": 1,
+     "samples": 600,
+     "window_start": 690,
+     "read_at_frame": 1410,
+     "draws": 415,
+     "passes": {
+      "main/alpha_mask": 27,
+      "main/alpha_mask_prepass": 27,
+      "main/opaque": 110,
+      "main/prepass": 106,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 0,
+      "cascade2/shadow": 133,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        17
+       ],
+       [
+        "<20",
+        278
+       ],
+       [
+        "<25",
+        4
+       ],
+       [
+        "<33.3",
+        1
+       ],
+       [
+        "<50",
+        0
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 1,
+      "tail": [
+       {
+        "frame": 1238,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      160,
+      150
+     ],
+     "load_at_read": 2.744140625
+    },
+    "band152": {
+     "p50": 13.5,
+     "p95": 25.4,
+     "p99": 26.7,
+     "mean": 14.54,
+     "max": 37.6,
+     "dropped_over_25ms": 62,
+     "samples": 600,
+     "window_start": 1410,
+     "read_at_frame": 2130,
+     "draws": 630,
+     "passes": {
+      "main/alpha_mask": 30,
+      "main/alpha_mask_prepass": 30,
+      "main/opaque": 129,
+      "main/prepass": 125,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 149,
+      "cascade2/shadow": 155,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        2
+       ],
+       [
+        "<20",
+        0
+       ],
+       [
+        "<25",
+        211
+       ],
+       [
+        "<33.3",
+        86
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 62,
+      "tail": [
+       {
+        "frame": 1800,
+        "ms": 26,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1810,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1816,
+        "ms": 25.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1826,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1834,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1872,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1890,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1894,
+        "ms": 25.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1912,
+        "ms": 26.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1916,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1920,
+        "ms": 25.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1936,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1948,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1960,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1964,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1972,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1978,
+        "ms": 27.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1980,
+        "ms": 36.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1982,
+        "ms": 27.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2010,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2018,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2020,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2040,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2048,
+        "ms": 25.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2052,
+        "ms": 25.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2056,
+        "ms": 26.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2062,
+        "ms": 26.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2072,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2076,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2100,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2118,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2128,
+        "ms": 25.6,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      56,
+      136
+     ],
+     "load_at_read": 2.99755859375
+    }
+   },
+   "console_errors": [],
+   "load_before": 2.525390625,
+   "load_after": 2.99755859375,
+   "load_discarded": 0
+  },
+  {
+   "round": 4,
+   "build": "after",
+   "world": "world20",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "overview": {
+     "p50": 6.6,
+     "p95": 18.9,
+     "p99": 19.4,
+     "mean": 11.27,
+     "max": 31.8,
+     "dropped_over_25ms": 3,
+     "samples": 600,
+     "window_start": 690,
+     "read_at_frame": 1410,
+     "draws": 415,
+     "passes": {
+      "main/alpha_mask": 27,
+      "main/alpha_mask_prepass": 27,
+      "main/opaque": 110,
+      "main/prepass": 106,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 0,
+      "cascade2/shadow": 133,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        24
+       ],
+       [
+        "<20",
+        272
+       ],
+       [
+        "<25",
+        1
+       ],
+       [
+        "<33.3",
+        3
+       ],
+       [
+        "<50",
+        0
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 3,
+      "tail": [
+       {
+        "frame": 1011,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1015,
+        "ms": 31.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1289,
+        "ms": 30.5,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      160,
+      150
+     ],
+     "load_at_read": 3.80419921875
+    },
+    "band152": {
+     "p50": 8.8,
+     "p95": 25.2,
+     "p99": 27.1,
+     "mean": 14.62,
+     "max": 38.6,
+     "dropped_over_25ms": 51,
+     "samples": 600,
+     "window_start": 1410,
+     "read_at_frame": 2130,
+     "draws": 762,
+     "passes": {
+      "main/alpha_mask": 48,
+      "main/alpha_mask_prepass": 48,
+      "main/opaque": 144,
+      "main/prepass": 140,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 182,
+      "cascade2/shadow": 188,
+      "cascade3/shadow": 12
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        1
+       ],
+       [
+        "<25",
+        226
+       ],
+       [
+        "<33.3",
+        71
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 51,
+      "tail": [
+       {
+        "frame": 1745,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1749,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1763,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1781,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1783,
+        "ms": 25.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1789,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1793,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1797,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1799,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1803,
+        "ms": 25.7,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1809,
+        "ms": 28.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1811,
+        "ms": 38.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1813,
+        "ms": 26.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1825,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1835,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1869,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1877,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1925,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1955,
+        "ms": 25.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2001,
+        "ms": 25.5,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2011,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2019,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2045,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2059,
+        "ms": 25.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2061,
+        "ms": 28.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2063,
+        "ms": 38.6,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2065,
+        "ms": 27.9,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2081,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2085,
+        "ms": 25.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2093,
+        "ms": 26.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2115,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 2125,
+        "ms": 25.2,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      20,
+      56,
+      136
+     ],
+     "load_at_read": 4.35205078125
+    }
+   },
+   "console_errors": [],
+   "load_before": 2.99755859375,
+   "load_after": 4.35205078125,
+   "load_discarded": 0
+  },
+  {
+   "round": 4,
+   "build": "before",
+   "world": "world7",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "at130": {
+     "p50": 4.7,
+     "p95": 21.8,
+     "p99": 22.2,
+     "mean": 12.11,
+     "max": 35.1,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 570,
+     "read_at_frame": 1290,
+     "draws": 212,
+     "passes": {
+      "main/alpha_mask": 20,
+      "main/alpha_mask_prepass": 20,
+      "main/opaque": 36,
+      "main/prepass": 32,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 52,
+      "cascade2/shadow": 52,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        39
+       ],
+       [
+        "<25",
+        259
+       ],
+       [
+        "<33.3",
+        0
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 830,
+        "ms": 34.8,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1140,
+        "ms": 35.1,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      48.279998779296875,
+      120.69999694824219
+     ],
+     "load_at_read": 4.43310546875
+    },
+    "at150": {
+     "p50": 4.7,
+     "p95": 20.7,
+     "p99": 21.9,
+     "mean": 11.64,
+     "max": 35,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 1290,
+     "read_at_frame": 2010,
+     "draws": 212,
+     "passes": {
+      "main/alpha_mask": 20,
+      "main/alpha_mask_prepass": 20,
+      "main/opaque": 36,
+      "main/prepass": 32,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 52,
+      "cascade2/shadow": 52,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        103
+       ],
+       [
+        "<25",
+        195
+       ],
+       [
+        "<33.3",
+        0
+       ],
+       [
+        "<50",
+        2
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 1448,
+        "ms": 34.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1756,
+        "ms": 35,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      55.709999084472656,
+      139.27000427246094
+     ],
+     "load_at_read": 4.21875
+    }
+   },
+   "console_errors": [],
+   "load_before": 4.35205078125,
+   "load_after": 4.21875,
+   "load_discarded": 0
+  },
+  {
+   "round": 4,
+   "build": "after",
+   "world": "world7",
+   "webgpu_adapter": "apple | metal-3 | ",
+   "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+   "unmasked_vendor": "Google Inc. (Apple)",
+   "dpr": 1,
+   "inner": [
+    2560,
+    1440
+   ],
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cameras": {
+    "at130": {
+     "p50": 8.6,
+     "p95": 23,
+     "p99": 23.5,
+     "mean": 12.7,
+     "max": 36.4,
+     "dropped_over_25ms": 3,
+     "samples": 600,
+     "window_start": 570,
+     "read_at_frame": 1290,
+     "draws": 352,
+     "passes": {
+      "main/alpha_mask": 31,
+      "main/alpha_mask_prepass": 31,
+      "main/opaque": 60,
+      "main/prepass": 56,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 87,
+      "cascade2/shadow": 87,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        299
+       ],
+       [
+        "<16.7",
+        1
+       ],
+       [
+        "<20",
+        8
+       ],
+       [
+        "<25",
+        289
+       ],
+       [
+        "<33.3",
+        2
+       ],
+       [
+        "<50",
+        1
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 3,
+      "tail": [
+       {
+        "frame": 839,
+        "ms": 36.4,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1169,
+        "ms": 29.3,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1171,
+        "ms": 32.3,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      48.279998779296875,
+      120.69999694824219
+     ],
+     "load_at_read": 3.64111328125
+    },
+    "at150": {
+     "p50": 4.8,
+     "p95": 20.8,
+     "p99": 21.8,
+     "mean": 11.81,
+     "max": 35.4,
+     "dropped_over_25ms": 2,
+     "samples": 600,
+     "window_start": 1290,
+     "read_at_frame": 2010,
+     "draws": 404,
+     "passes": {
+      "main/alpha_mask": 39,
+      "main/alpha_mask_prepass": 39,
+      "main/opaque": 65,
+      "main/prepass": 61,
+      "cascade0/shadow": 0,
+      "cascade1/shadow": 100,
+      "cascade2/shadow": 100,
+      "cascade3/shadow": 0
+     },
+     "gpu_preprocessing_supported": "PreprocessingOnly",
+     "stall": {
+      "histogram": [
+       [
+        "<8.33",
+        300
+       ],
+       [
+        "<16.7",
+        0
+       ],
+       [
+        "<20",
+        100
+       ],
+       [
+        "<25",
+        198
+       ],
+       [
+        "<33.3",
+        1
+       ],
+       [
+        "<50",
+        1
+       ],
+       [
+        "<100",
+        0
+       ],
+       [
+        ">=100",
+        0
+       ]
+      ],
+      "over_25ms": 2,
+      "tail": [
+       {
+        "frame": 1431,
+        "ms": 33.1,
+        "pipelines_waiting": 0
+       },
+       {
+        "frame": 1765,
+        "ms": 35.4,
+        "pipelines_waiting": 0
+       }
+      ]
+     },
+     "camera_pos": [
+      0,
+      55.709999084472656,
+      139.27000427246094
+     ],
+     "load_at_read": 3.4619140625
+    }
+   },
+   "console_errors": [],
+   "load_before": 4.21875,
+   "load_after": 3.4619140625,
+   "load_discarded": 0
+  }
+ ],
+ "paired_deltas": {
+  "note": "after minus before within each round (builds ran back to back, order alternating); overview draws 415 in both builds and serves as the in-run control",
+  "world20/overview": {
+   "per_round": [
+    {
+     "round": 0,
+     "p50": -2.4,
+     "p95": -0.7,
+     "mean": 0.01
+    },
+    {
+     "round": 1,
+     "p50": -1.5,
+     "p95": -0.3,
+     "mean": -0.11
+    },
+    {
+     "round": 2,
+     "p50": -4.6,
+     "p95": 0.0,
+     "mean": 0.03
+    },
+    {
+     "round": 3,
+     "p50": 0.0,
+     "p95": 0.1,
+     "mean": 0.03
+    },
+    {
+     "round": 4,
+     "p50": 0.6,
+     "p95": -0.1,
+     "mean": 0.06
+    }
+   ],
+   "p95_positive_rounds": 1,
+   "mean_positive_rounds": 4
+  },
+  "world20/band152": {
+   "per_round": [
+    {
+     "round": 0,
+     "p50": -2.0,
+     "p95": 0.0,
+     "mean": 0.02
+    },
+    {
+     "round": 1,
+     "p50": -0.1,
+     "p95": -0.8,
+     "mean": -0.19
+    },
+    {
+     "round": 2,
+     "p50": 3.3,
+     "p95": 0.0,
+     "mean": 0.01
+    },
+    {
+     "round": 3,
+     "p50": 3.2,
+     "p95": 0.0,
+     "mean": 0.06
+    },
+    {
+     "round": 4,
+     "p50": -4.7,
+     "p95": -0.2,
+     "mean": 0.08
+    }
+   ],
+   "p95_positive_rounds": 0,
+   "mean_positive_rounds": 4
+  },
+  "world7/at130": {
+   "per_round": [
+    {
+     "round": 0,
+     "p50": 0.6,
+     "p95": 0.5,
+     "mean": 0.51
+    },
+    {
+     "round": 1,
+     "p50": 1.4,
+     "p95": 1.0,
+     "mean": 0.43
+    },
+    {
+     "round": 2,
+     "p50": 3.4,
+     "p95": 0.9,
+     "mean": 0.52
+    },
+    {
+     "round": 3,
+     "p50": 0.7,
+     "p95": 1.0,
+     "mean": 0.52
+    },
+    {
+     "round": 4,
+     "p50": 3.9,
+     "p95": 1.2,
+     "mean": 0.59
+    }
+   ],
+   "p95_positive_rounds": 5,
+   "mean_positive_rounds": 5
+  },
+  "world7/at150": {
+   "per_round": [
+    {
+     "round": 0,
+     "p50": 2.7,
+     "p95": 0.0,
+     "mean": 0.15
+    },
+    {
+     "round": 1,
+     "p50": 0.0,
+     "p95": -0.2,
+     "mean": 0.03
+    },
+    {
+     "round": 2,
+     "p50": 0.6,
+     "p95": -0.3,
+     "mean": 0.15
+    },
+    {
+     "round": 3,
+     "p50": -0.7,
+     "p95": 0.0,
+     "mean": 0.11
+    },
+    {
+     "round": 4,
+     "p50": 0.1,
+     "p95": 0.1,
+     "mean": 0.17
+    }
+   ],
+   "p95_positive_rounds": 1,
+   "mean_positive_rounds": 5
+  }
+ }
+}

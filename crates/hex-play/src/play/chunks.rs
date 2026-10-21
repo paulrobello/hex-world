@@ -312,7 +312,7 @@ fn rebuild(
     grouped.sort_by_key(|(centre, _)| (centre.q, centre.r));
     let mut slots: Vec<(u32, Handle<KitMaterial>, Vec<GpuKitInstance>)> = vec![];
     let mut slot_of: HashMap<(u32, AssetId<KitMaterial>), usize> = HashMap::new();
-    let mut per_chunk: Vec<(Vec3, Aabb, Vec<Range<u32>>)> = vec![];
+    let mut per_chunk: Vec<(Vec3, Aabb, Aabb, Vec<Range<u32>>)> = vec![];
     let mut local_bounds: HashMap<AssetId<Mesh>, (Vec3, Vec3)> = HashMap::new();
     // One instance per placement: a family's three LOD parts share it, so the first LOD seen
     // represents it and its siblings are dropped (the LOD draw picks the mesh, not the record).
@@ -326,6 +326,7 @@ fn rebuild(
         let mut ranges = vec![0..0u32; slots.len()];
         let mut lo = Vec3::splat(f32::MAX);
         let mut hi = Vec3::splat(f32::MIN);
+        let (mut origin_lo, mut origin_hi) = (Vec3::splat(f32::MAX), Vec3::splat(f32::MIN));
         for tile in tiles {
             for part in &tile.parts {
                 let Some((fid, _lod)) = families.family_of(part.mesh.id()) else {
@@ -345,6 +346,8 @@ fn rebuild(
                 let (min, max) = bounds_of(&blo, &bhi, &part.world);
                 lo = lo.min(min);
                 hi = hi.max(max);
+                origin_lo = origin_lo.min(part.world.translation);
+                origin_hi = origin_hi.max(part.world.translation);
                 let si = *slot_of.entry((fid, part.material.id())).or_insert_with(|| {
                     slots.push((fid, part.material.clone(), vec![]));
                     ranges.resize(slots.len(), 0..0);
@@ -367,12 +370,17 @@ fn rebuild(
                 }
             }
         }
-        per_chunk.push((origin, Aabb::from_min_max(lo, hi), ranges));
+        per_chunk.push((
+            origin,
+            Aabb::from_min_max(lo, hi),
+            Aabb::from_min_max(origin_lo, origin_hi),
+            ranges,
+        ));
     }
     // Chunks assembled before a slot exists have shorter range vectors; every chunk needs one
     // range per slot (empty when the chunk holds none of it).
     let slot_count = slots.len();
-    for (_, _, ranges) in &mut per_chunk {
+    for (_, _, _, ranges) in &mut per_chunk {
         ranges.resize(slot_count, 0..0);
     }
     // The ranges were accumulated as within-slot instance positions; the draw path indexes the
@@ -383,7 +391,7 @@ fn rebuild(
         offsets[si] = acc;
         acc += instances.len() as u32;
     }
-    for (_, _, ranges) in &mut per_chunk {
+    for (_, _, _, ranges) in &mut per_chunk {
         for (si, range) in ranges.iter_mut().enumerate() {
             if range.start < range.end {
                 *range = offsets[si] + range.start..offsets[si] + range.end;
@@ -422,10 +430,11 @@ fn rebuild(
         });
     }
     let mut out_chunks: Vec<KitChunk> = vec![];
-    for (origin, aabb, ranges) in per_chunk {
+    for (origin, aabb, origins, ranges) in per_chunk {
         out_chunks.push(KitChunk {
             centre: origin,
             aabb,
+            origins,
             ranges,
         });
     }
@@ -436,19 +445,23 @@ fn rebuild(
             if meshes3[lod as usize].is_none() {
                 continue;
             }
-            chunks.slot_entities.push(
-                commands
-                    .spawn((
-                        KitSlotDraw {
-                            slot: si as u32,
-                            lod,
-                        },
-                        MeshMaterial3d(material.clone()),
-                        Visibility::Inherited,
-                        SceneEntity,
-                    ))
-                    .id(),
-            );
+            // The whole draw, and the band draw of the parts inside a LOD cross-fade band.
+            for band in [false, true] {
+                chunks.slot_entities.push(
+                    commands
+                        .spawn((
+                            KitSlotDraw {
+                                slot: si as u32,
+                                lod,
+                                band,
+                            },
+                            MeshMaterial3d(material.clone()),
+                            Visibility::Inherited,
+                            SceneEntity,
+                        ))
+                        .id(),
+                );
+            }
         }
     }
     commands.insert_resource(KitInstanceSet(Arc::new(KitInstanceSetData {
@@ -476,6 +489,7 @@ fn gpu_meta(mesh: Option<&Mesh>) -> KitGpuMeta {
         _pad1: 0,
         uv_a: [0.0; 4],
         uv_b: [0.0; 4],
+        lod_range: [0.0; 4],
     };
     let Some(m) = mesh else {
         return ZERO;
@@ -504,6 +518,7 @@ fn gpu_meta(mesh: Option<&Mesh>) -> KitGpuMeta {
         _pad1: 0,
         uv_a,
         uv_b,
+        lod_range: [0.0; 4],
     }
 }
 
@@ -645,7 +660,8 @@ mod tests {
         assert_eq!(set, 50);
         let chunks = app.world().resource::<PlayChunks>();
         assert_eq!(chunks.tiles[&root].parts.len(), 50);
-        assert_eq!(chunks.slot_entities.len(), 50);
+        // A whole and a band draw per (slot, LOD).
+        assert_eq!(chunks.slot_entities.len(), 100);
         app.world_mut().resource_mut::<PlayView>().tiles.clear();
         app.add_systems(First, restore);
         app.update();

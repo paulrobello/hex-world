@@ -287,7 +287,11 @@ fn vertex(v: KitPrepassIn) -> KitPrepassOutput {
 @if(VERTEX_COLORS)
     vertex.color = v.color;
     let inst = kit_instances::kit_instance(v.kit_record);
-    return shade_kit_prepass_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag);
+    var out = shade_kit_prepass_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag);
+    // A band draw's cross-fade level, as kit_vertex.wesl writes it (the fragment dithers on it).
+@if(VISIBILITY_RANGE_DITHER)
+    out.visibility_range_dither = kit_instances::kit_lod_dither_level(inst.translation, view.lod_view_world_position);
+    return out;
 }
 
 @if(!KIT_INSTANCED)
@@ -414,5 +418,8 @@ fn fragment(
 @else
 @fragment
 fn fragment(in: KitPrepassOutput) {
+    // A depth-only band draw keeps its dither pattern's pixels, as the colour pass does.
+@if(VISIBILITY_RANGE_DITHER)
+    pbr_functions::visibility_range_dither(in.position, in.visibility_range_dither);
     kit_prepass_sample_color_and_alpha_discard(in);
 }

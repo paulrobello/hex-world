@@ -1,0 +1,127 @@
+{
+ "world20": {
+  "overview": {
+   "before": {
+    "draws": 407,
+    "passes": {
+     "main/alpha_mask": 27,
+     "main/alpha_mask_prepass": 27,
+     "main/opaque": 108,
+     "main/prepass": 104,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 0,
+     "cascade2/shadow": 131,
+     "cascade3/shadow": 10
+    }
+   },
+   "after": {
+    "draws": 407,
+    "passes": {
+     "main/alpha_mask": 27,
+     "main/alpha_mask_prepass": 27,
+     "main/opaque": 108,
+     "main/prepass": 104,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 0,
+     "cascade2/shadow": 131,
+     "cascade3/shadow": 10
+    }
+   }
+  },
+  "forest-cluster": {
+   "before": {
+    "draws": 633,
+    "passes": {
+     "main/alpha_mask": 27,
+     "main/alpha_mask_prepass": 27,
+     "main/opaque": 109,
+     "main/prepass": 105,
+     "cascade0/shadow": 85,
+     "cascade1/shadow": 135,
+     "cascade2/shadow": 135,
+     "cascade3/shadow": 10
+    }
+   },
+   "after": {
+    "draws": 633,
+    "passes": {
+     "main/alpha_mask": 27,
+     "main/alpha_mask_prepass": 27,
+     "main/opaque": 109,
+     "main/prepass": 105,
+     "cascade0/shadow": 85,
+     "cascade1/shadow": 135,
+     "cascade2/shadow": 135,
+     "cascade3/shadow": 10
+    }
+   }
+  },
+  "band": {
+   "before": {
+    "draws": 616,
+    "passes": {
+     "main/alpha_mask": 30,
+     "main/alpha_mask_prepass": 30,
+     "main/opaque": 127,
+     "main/prepass": 123,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 143,
+     "cascade2/shadow": 153,
+     "cascade3/shadow": 10
+    }
+   },
+   "after": {
+    "draws": 748,
+    "passes": {
+     "main/alpha_mask": 48,
+     "main/alpha_mask_prepass": 48,
+     "main/opaque": 142,
+     "main/prepass": 138,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 176,
+     "cascade2/shadow": 186,
+     "cascade3/shadow": 10
+    }
+   }
+  }
+ },
+ "forest7": {
+  "130m": {
+   "before": 212,
+   "after": 352
+  },
+  "140m": {
+   "before": 212,
+   "after": 376
+  },
+  "145m": {
+   "before": 212,
+   "after": 400
+  },
+  "148m": {
+   "before": 212,
+   "after": 404
+  },
+  "150m": {
+   "before": 212,
+   "after": 404
+  },
+  "152m": {
+   "before": 212,
+   "after": 416
+  },
+  "155m": {
+   "before": 212,
+   "after": 408
+  },
+  "160m": {
+   "before": 160,
+   "after": 298
+  },
+  "170m": {
+   "before": 160,
+   "after": 271
+  }
+ },
+ "note": "before = 6c9aab8, after = this branch; draws = every pass and cascade, as docs/checkpoints/scatter/check.mjs counts them"
+}

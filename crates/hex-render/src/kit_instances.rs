@@ -78,7 +78,8 @@ pub struct GpuKitInstance {
 }
 
 /// One slot's mesh metadata (decompress AABB + UV ranges), matching `hex_render::kit_instances`'
-/// `KitMeshMeta` (64 bytes). One entry per (slot, LOD) draw, selected by a dynamic offset.
+/// `KitMeshMeta` (80 bytes). One entry per (slot, LOD) draw, each bound by its own bind group.
+/// `lod_range` is written by the render world from [`kit_lod_range`] (callers leave it zero).
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct KitGpuMeta {
@@ -88,14 +89,20 @@ pub struct KitGpuMeta {
     pub _pad1: u32,
     pub uv_a: [f32; 4],
     pub uv_b: [f32; 4],
+    pub lod_range: [f32; 4],
 }
 
+/// Bytes of one `KitGpuMeta` binding.
+const META_SIZE: u64 = std::mem::size_of::<KitGpuMeta>() as u64;
+
 /// Per-chunk culling data: the chunk hex centre, the world-space bounds of every instanced part
-/// in it, and the instance range of each slot (`ranges[i]` is slot `i`'s).
+/// in it, the bounds of the parts' origins (the points LOD distances are measured to), and the
+/// instance range of each slot (`ranges[i]` is slot `i`'s).
 #[derive(Clone, Debug)]
 pub struct KitChunk {
     pub centre: Vec3,
     pub aabb: Aabb,
+    pub origins: Aabb,
     pub ranges: Vec<Range<u32>>,
 }
 
@@ -113,12 +120,16 @@ pub struct KitSlot {
     pub family: u32,
 }
 
-/// The phase bin key of slot `slot`'s LOD `lod` draw, in family-then-LOD order. Bins sort by
-/// key within a pipeline, and at equal depth the later draw takes the pixel (the main pass tests
-/// `GreaterEqual` against the depth prepass), so the key must not be the mesh `AssetId`: its
-/// index follows the order the GLBs finished loading, which differs between runs.
-fn bin_key(family: u32, lod: u8, slot: u32) -> UntypedAssetId {
-    let bits = (u128::from(family) << 64) | (u128::from(lod) << 32) | u128::from(slot);
+/// The phase bin key of slot `slot`'s LOD `lod` draw (its band draw when `band`), in
+/// family-then-LOD order. Bins sort by key within a pipeline, and at equal depth the later draw
+/// takes the pixel (the main pass tests `GreaterEqual` against the depth prepass), so the key must
+/// not be the mesh `AssetId`: its index follows the order the GLBs finished loading, which differs
+/// between runs.
+fn bin_key(family: u32, lod: u8, band: bool, slot: u32) -> UntypedAssetId {
+    let bits = (u128::from(family) << 64)
+        | (u128::from(lod) << 33)
+        | (u128::from(band) << 32)
+        | u128::from(slot);
     AssetId::<Mesh>::Uuid {
         uuid: Uuid::from_u128(bits),
     }
@@ -141,18 +152,32 @@ pub struct KitInstanceSetData {
 #[extract_app(RenderApp)]
 pub struct KitInstanceSet(pub Arc<KitInstanceSetData>);
 
-/// One (slot, LOD) draw entity. Carries the `KitMaterial` binding; hex-play spawns them.
+/// One (slot, LOD) draw entity. Carries the `KitMaterial` binding; hex-play spawns them. Each
+/// (slot, LOD) has two: the whole draw, and the `band` draw that replaces it in a view where any of
+/// its parts lies inside a cross-fade band, whose pipelines dither like a per-entity
+/// `VisibilityRange` band.
 #[derive(Component, Clone, Copy, Debug, ExtractComponent)]
 #[extract_app(RenderApp)]
 pub struct KitSlotDraw {
     pub slot: u32,
     pub lod: u8,
+    pub band: bool,
 }
 
 impl KitSlotDraw {
-    fn slot_index(self) -> usize {
+    /// The (slot, LOD) mesh metadata entry and bind group, shared by the whole and band draws.
+    fn meta_index(self) -> usize {
         self.slot as usize * 3 + self.lod as usize
     }
+
+    /// The key of this draw's per-view instance range.
+    fn draw_index(self) -> usize {
+        draw_index(self.meta_index(), self.band)
+    }
+}
+
+fn draw_index(meta_index: usize, band: bool) -> usize {
+    meta_index * 2 + usize::from(band)
 }
 
 /// The debug LOD overlays for the instanced path, which has no per-part entities for the
@@ -165,27 +190,92 @@ pub struct KitLodDebug {
     pub tint: bool,
 }
 
-/// Culling/LOD thresholds, mirroring the per-entity `VisibilityRange` bands (`scene::lod_range`).
-pub const LOD_NEAR: f32 = 150.0;
-pub const LOD_FAR: f32 = 400.0;
+/// LOD `lod`'s band edges `[x, y, z, w]` in metres from the camera, the per-entity
+/// `VisibilityRange` of `scene::lod_range` as bevy's `visibility_ranges` entries hold it: fading
+/// in over `x..y`, whole over `y..z`, fading out over `z..w`.
+pub fn kit_lod_range(lod: usize) -> [f32; 4] {
+    let r = crate::scene::lod_range(lod);
+    [
+        r.start_margin.start,
+        r.start_margin.end,
+        r.end_margin.start,
+        r.end_margin.end,
+    ]
+}
 
-/// LOD of a chunk `distance` metres from the camera.
-pub fn kit_chunk_lod(distance: f32) -> usize {
-    if distance < LOD_NEAR {
-        0
-    } else if distance < LOD_FAR {
-        1
-    } else {
-        2
+/// Where a settled part draws: whole at one LOD, or inside the cross-fade band between LOD `l`
+/// and `l + 1`, where both draw dithered in camera views and both cast whole shadows (as bevy
+/// treats a per-entity `VisibilityRange` band: its shadow queue adds no dither).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PartLod {
+    Whole(u8),
+    Band(u8),
+}
+
+impl PartLod {
+    /// Whether the part draws in `lod`'s whole (`band` false) or band draw of a camera view, or
+    /// of a shadow view (where band parts join both LODs' whole draws).
+    fn draws(self, lod: usize, band: bool, shadow: bool) -> bool {
+        match self {
+            PartLod::Whole(l) => l as usize == lod && !band,
+            PartLod::Band(l) => (l as usize == lod || l as usize + 1 == lod) && band != shadow,
+        }
     }
 }
 
-/// Appends the visible instance ids to `ids`, grouped by draw slot (`slot * 3 + lod`), and
-/// returns the non-empty slots' ranges into `ids`. `lods[ci]` is chunk `ci`'s LOD from the main
-/// camera; shadow views reuse it, as `VisibilityRange` does.
+/// The LOD of a part whose origin lies `distance` metres from the camera. The last LOD never
+/// fades out (the per-entity range ends at `LOD_END`, far past any world).
+pub fn kit_part_lod(distance: f32) -> PartLod {
+    for lod in 0..2u8 {
+        let [_, _, z, w] = kit_lod_range(lod as usize);
+        if distance < z {
+            return PartLod::Whole(lod);
+        }
+        if distance < w {
+            return PartLod::Band(lod);
+        }
+    }
+    PartLod::Whole(2)
+}
+
+/// A chunk's LOD this frame: every part in it at one `PartLod`, or `Split` per part.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ChunkLod {
+    All(PartLod),
+    Split,
+}
+
+/// The LOD of chunk `chunk` seen from `eye`: `All` when its nearest and farthest part origins fall
+/// in one `PartLod` (the bands are ordered by distance, so everything between does too).
+pub fn kit_chunk_lod(chunk: &KitChunk, eye: Vec3) -> ChunkLod {
+    let (lo, hi) = (
+        Vec3::from(chunk.origins.min()),
+        Vec3::from(chunk.origins.max()),
+    );
+    if lo.cmpgt(hi).any() {
+        return ChunkLod::All(PartLod::Whole(0));
+    }
+    let near = eye.distance(eye.clamp(lo, hi));
+    let far = (eye - lo).abs().max((eye - hi).abs()).length();
+    let (a, b) = (kit_part_lod(near), kit_part_lod(far));
+    if a == b {
+        ChunkLod::All(a)
+    } else {
+        ChunkLod::Split
+    }
+}
+
+/// Appends the visible instance ids to `ids`, grouped by (slot, LOD), and returns the non-empty
+/// draws' ranges into `ids` keyed by `draw_index(slot * 3 + lod, band)`. A (slot, LOD) with any
+/// part inside a band draws all its parts in one band draw: a whole part's dither level is 0, so
+/// the dithered pipeline draws it whole, and the band costs no draw beyond the neighbouring LOD's.
+/// `lods[ci]` is chunk `ci`'s LOD from the main camera and `parts[i]` record `i`'s where its
+/// chunk is `Split`; shadow views reuse them, as `VisibilityRange` does, and fold band parts into
+/// the whole draws.
 pub fn kit_view_ranges(
     set: &KitInstanceSetData,
-    lods: &[usize],
+    lods: &[ChunkLod],
+    parts: &[PartLod],
     frustum: &Frustum,
     shadow: bool,
     ids: &mut Vec<u32>,
@@ -200,20 +290,64 @@ pub fn kit_view_ranges(
     for slot in 0..set.slots.len() {
         for lod in 0..3usize {
             let first = ids.len() as u32;
-            for &ci in &visible {
-                if lods[ci] == lod
-                    && let Some(r) = set.chunks[ci].ranges.get(slot)
-                {
-                    ids.extend(r.clone());
+            let mut banded = false;
+            for band in [false, true] {
+                let start = ids.len();
+                for &ci in &visible {
+                    let Some(r) = set.chunks[ci].ranges.get(slot) else {
+                        continue;
+                    };
+                    match lods[ci] {
+                        ChunkLod::All(p) => {
+                            if p.draws(lod, band, shadow) {
+                                ids.extend(r.clone());
+                            }
+                        }
+                        ChunkLod::Split => ids.extend(
+                            r.clone()
+                                .filter(|&i| parts[i as usize].draws(lod, band, shadow)),
+                        ),
+                    }
                 }
+                banded |= band && ids.len() > start;
             }
             let last = ids.len() as u32;
             if last > first {
-                out.push((slot * 3 + lod, first..last));
+                out.push((draw_index(slot * 3 + lod, banded), first..last));
             }
         }
     }
     out
+}
+
+/// Every chunk's LOD from `eye` (all pinned to `force` when set, with no band), and the per-part
+/// LOD of every record in a `Split` chunk (`parts` is resized to the record count; the entries of
+/// other chunks' records are left stale and never read).
+pub fn kit_frame_lods(
+    set: &KitInstanceSetData,
+    eye: Vec3,
+    force: Option<u8>,
+    parts: &mut Vec<PartLod>,
+) -> Vec<ChunkLod> {
+    parts.resize(set.pieces.len(), PartLod::Whole(0));
+    set.chunks
+        .iter()
+        .map(|c| {
+            if let Some(l) = force {
+                return ChunkLod::All(PartLod::Whole(l.min(2)));
+            }
+            let lod = kit_chunk_lod(c, eye);
+            if lod == ChunkLod::Split {
+                for r in &c.ranges {
+                    for i in r.clone() {
+                        let p = Vec3::from(set.pieces[i as usize].translation);
+                        parts[i as usize] = kit_part_lod(eye.distance(p));
+                    }
+                }
+            }
+            lod
+        })
+        .collect()
 }
 
 /// The view depth (`-z` in the camera's view space) range of every point a caster inside
@@ -324,8 +458,10 @@ struct KitGpu {
     // storage — see kit_instances.wesl for why.)
     /// One static bind group per meta entry (no dynamic offsets).
     bind_groups: Vec<BindGroup>,
-    /// (view render entity, slot index `slot * 3 + lod`) -> instance range into `ids`.
+    /// (view render entity, `KitSlotDraw::draw_index`) -> instance range into `ids`.
     draws: HashMap<(Entity, usize), Range<u32>>,
+    /// Each record's LOD this frame where its chunk is split (kept to reuse the allocation).
+    parts: Vec<PartLod>,
     /// Slot draws binned last frame. Bevy's binned phases retain items across frames until
     /// `remove`d, so each queue first unbins these or culled and despawned slots stay binned.
     queued: Vec<MainEntity>,
@@ -342,6 +478,7 @@ impl Default for KitGpu {
             ids: RawBufferVec::new(BufferUsages::VERTEX),
             bind_groups: Vec::new(),
             draws: HashMap::default(),
+            parts: Vec::new(),
             queued: Vec::new(),
         }
     }
@@ -547,6 +684,11 @@ impl SpecializedMeshPipeline for KitPrepassPipeline {
         if mesh_key.contains(MeshPipelineKey::MAY_DISCARD) {
             defs.push("MAY_DISCARD".into());
         }
+        // A band draw: the fragment discards the pixels its dither pattern gives the other LOD.
+        let dither = mesh_key.contains(MeshPipelineKey::VISIBILITY_RANGE_DITHER);
+        if dither {
+            defs.push("VISIBILITY_RANGE_DITHER".into());
+        }
         if normal {
             defs.push("NORMAL_PREPASS".into());
             defs.push("NORMAL_PREPASS_OR_DEFERRED_PREPASS".into());
@@ -595,8 +737,10 @@ impl SpecializedMeshPipeline for KitPrepassPipeline {
         if targets.iter().all(Option::is_none) {
             targets.clear();
         }
-        let fragment_needed =
-            !targets.is_empty() || emulate || mesh_key.contains(MeshPipelineKey::MAY_DISCARD);
+        let fragment_needed = !targets.is_empty()
+            || emulate
+            || dither
+            || mesh_key.contains(MeshPipelineKey::MAY_DISCARD);
         let fragment = fragment_needed.then(|| FragmentState {
             shader: self.shader.clone(),
             shader_defs: defs.clone(),
@@ -707,7 +851,7 @@ fn prepare_kit(
             ShaderStages::VERTEX_FRAGMENT,
             (
                 storage_buffer_read_only_sized(false, None),
-                uniform_buffer_sized(false, Some(std::num::NonZeroU64::new(64).unwrap())),
+                uniform_buffer_sized(false, std::num::NonZeroU64::new(META_SIZE)),
             ),
         ),
     );
@@ -740,15 +884,16 @@ fn prepare_kit(
         contents: &records,
         usage: BufferUsages::STORAGE,
     }));
-    // One metadata entry per (slot, LOD), padded to the device's dynamic-offset alignment.
+    // One metadata entry per (slot, LOD), padded to the device's uniform offset alignment.
     let align = device.limits().min_uniform_buffer_offset_alignment;
-    gpu.meta_stride = 64u32.max(align);
+    gpu.meta_stride = (META_SIZE as u32).next_multiple_of(align);
     gpu.meta = Some(meta_buffer(&device, &scene.0.meta, gpu.meta_stride, tint));
     gpu.meta_tint = tint;
 }
 
 /// The (slot, LOD) metadata entries at `stride`. Entry `slot * 3 + lod` carries the debug LOD
-/// tint in its pad words: `_pad0` 1 when tinting, `_pad1` the LOD.
+/// tint in its pad words (`_pad0` 1 when tinting, `_pad1` the LOD) and the LOD's band edges, which
+/// the band draws dither on.
 fn meta_buffer(device: &RenderDevice, meta: &[KitGpuMeta], stride: u32, tint: bool) -> Buffer {
     let stride = stride as usize;
     let mut bytes = vec![0u8; stride * meta.len()];
@@ -756,6 +901,7 @@ fn meta_buffer(device: &RenderDevice, meta: &[KitGpuMeta], stride: u32, tint: bo
         let mut m = *m;
         m._pad0 = u32::from(tint);
         m._pad1 = (i % 3) as u32;
+        m.lod_range = kit_lod_range(i % 3);
         let src = bytemuck::bytes_of(&m);
         bytes[i * stride..i * stride + src.len()].copy_from_slice(src);
     }
@@ -791,7 +937,7 @@ fn prepare_kit_bind_group(
                 resource: BindingResource::Buffer(BufferBinding {
                     buffer: meta,
                     offset,
-                    size: Some(std::num::NonZeroU64::new(64).unwrap()),
+                    size: std::num::NonZeroU64::new(META_SIZE),
                 }),
             },
         ]
@@ -876,12 +1022,13 @@ fn queue_kit(
     let draw_prepass = prepass_draw.read().id::<DrawKitPrepass>();
     let draw_mask_prepass = mask_prepass_draw.read().id::<DrawKitPrepass>();
     let draw_shadow = shadow_draw.read().id::<DrawKitPrepass>();
-    // One queue-side record per (slot, LOD) draw: the render mesh for the key/topology and the
-    // material's pipeline key bits.
+    // One queue-side record per (slot, LOD) whole or band draw: the render mesh for the
+    // key/topology, the material's pipeline key bits, and the cross-fade dither for band draws.
     struct Draw {
         entity: Entity,
         main_entity: MainEntity,
         slot_idx: usize,
+        dither: MeshPipelineKey,
         mesh: AssetId<Mesh>,
         bin: UntypedAssetId,
         topo: MeshPipelineKey,
@@ -913,9 +1060,14 @@ fn queue_kit(
         draws.push(Draw {
             entity: e,
             main_entity: *me,
-            slot_idx: g.slot as usize * 3 + g.lod as usize,
+            slot_idx: g.draw_index(),
+            dither: if g.band {
+                MeshPipelineKey::VISIBILITY_RANGE_DITHER
+            } else {
+                MeshPipelineKey::NONE
+            },
             mesh: slot.mesh[g.lod as usize].expect("checked above"),
-            bin: bin_key(slot.family, g.lod, g.slot),
+            bin: bin_key(slot.family, g.lod, g.band, g.slot),
             topo: MeshPipelineKey::from_primitive_topology_and_strip_index(
                 mesh.primitive_topology(),
                 mesh.index_format(),
@@ -937,15 +1089,13 @@ fn queue_kit(
     let Some(camera) = cameras.iter().next() else {
         return;
     };
-    // LOD is per chunk from the main camera, in every view (as `VisibilityRange` did per entity).
-    // A forced debug LOD pins every chunk, as it pins every per-entity part's range.
+    // LOD is per part from the main camera's distance to its origin, in every view, as bevy's
+    // `VisibilityRange` resolves it per entity (shadow views measure from their camera too). A
+    // forced debug LOD pins every chunk, with no band, as it pins every per-entity part's range.
     let eye = camera.1.world_from_view.translation();
-    let force = debug.and_then(|d| d.force).map(|l| (l as usize).min(2));
-    let lods: Vec<usize> = d
-        .chunks
-        .iter()
-        .map(|c| force.unwrap_or_else(|| kit_chunk_lod(eye.distance(c.centre))))
-        .collect();
+    let force = debug.and_then(|d| d.force);
+    let mut parts = std::mem::take(&mut gpu.parts);
+    let lods = kit_frame_lods(&d, eye, force, &mut parts);
     // Shadow cascades whose shadow map no fragment the kit can shadow reads: the kit draws
     // nothing into them, which leaves every shaded pixel as it was (a strategic camera's world
     // lies past the first cascades and short of the last).
@@ -1005,11 +1155,11 @@ fn queue_kit(
         let Some(&view_key) = view_key_cache.get(&view.retained_view_entity) else {
             continue;
         };
-        // Chunk LOD replaces per-instance visibility ranges on this path.
+        // Band draws dither on their own LOD band (the `KitSlotDraw` key), not on visibility ranges.
         let view_key = view_key - MeshPipelineKey::VISIBILITY_RANGE_DITHER;
         let clip_from_world = view.clip_from_view * view.world_from_view.to_matrix().inverse();
         let frustum = Frustum(ViewFrustum::from_clip_from_world(&clip_from_world));
-        let ranges = kit_view_ranges(&d, &lods, &frustum, false, gpu.ids.values_mut());
+        let ranges = kit_view_ranges(&d, &lods, &parts, &frustum, false, gpu.ids.values_mut());
         for (slot_idx, r) in &ranges {
             gpu.draws.insert((ve, *slot_idx), r.clone());
         }
@@ -1021,7 +1171,7 @@ fn queue_kit(
                         &pipeline_cache,
                         &main,
                         KitKey {
-                            mesh: view_key | dr.topo | dr.bits,
+                            mesh: view_key | dr.topo | dr.bits | dr.dither,
                             mat: dr.key,
                         },
                         &render_meshes.get(dr.mesh).expect("mesh").layout,
@@ -1051,7 +1201,7 @@ fn queue_kit(
                         &pipeline_cache,
                         &main,
                         KitKey {
-                            mesh: view_key | dr.topo | dr.bits,
+                            mesh: view_key | dr.topo | dr.bits | dr.dither,
                             mat: dr.key,
                         },
                         &render_meshes.get(dr.mesh).expect("mesh").layout,
@@ -1084,7 +1234,8 @@ fn queue_kit(
                             mesh: MeshPipelineKey::from_msaa_samples(msaa.samples())
                                 | (view_key & MeshPipelineKey::ALL_PREPASS_BITS)
                                 | dr.topo
-                                | dr.bits,
+                                | dr.bits
+                                | dr.dither,
                             mat: dr.key,
                         },
                         &render_meshes.get(dr.mesh).expect("mesh").layout,
@@ -1117,7 +1268,8 @@ fn queue_kit(
                             mesh: MeshPipelineKey::from_msaa_samples(msaa.samples())
                                 | (view_key & MeshPipelineKey::ALL_PREPASS_BITS)
                                 | dr.topo
-                                | dr.bits,
+                                | dr.bits
+                                | dr.dither,
                             mat: dr.key,
                         },
                         &render_meshes.get(dr.mesh).expect("mesh").layout,
@@ -1153,7 +1305,7 @@ fn queue_kit(
         // Shadow views cull in their own frustum; cascade LODs follow the main camera's.
         let clip_from_world = view.clip_from_view * view.world_from_view.to_matrix().inverse();
         let frustum = Frustum(ViewFrustum::from_clip_from_world(&clip_from_world));
-        let ranges = kit_view_ranges(&d, &lods, &frustum, true, gpu.ids.values_mut());
+        let ranges = kit_view_ranges(&d, &lods, &parts, &frustum, true, gpu.ids.values_mut());
         for (slot_idx, r) in &ranges {
             gpu.draws.insert((ve, *slot_idx), r.clone());
         }
@@ -1188,6 +1340,7 @@ fn queue_kit(
         }
     }
     gpu.queued = draws.iter().map(|dr| dr.main_entity).collect();
+    gpu.parts = parts;
     if gpu.ids.is_empty() {
         gpu.ids.push(0);
     }
@@ -1277,7 +1430,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetKitInstancesBindGroup {
             return RenderCommandResult::Skip;
         };
         let gpu = gpu.into_inner();
-        let Some(bind_group) = gpu.bind_groups.get(group.slot_index()) else {
+        let Some(bind_group) = gpu.bind_groups.get(group.meta_index()) else {
             return RenderCommandResult::Skip;
         };
         pass.set_bind_group(2, bind_group, &[]);
@@ -1312,7 +1465,7 @@ impl<P: PhaseItem> RenderCommand<P> for DrawKitInstances {
         let (Some(group), Some(scene)) = (group, gpu.scene.as_ref()) else {
             return RenderCommandResult::Skip;
         };
-        let Some(range) = gpu.draws.get(&(view, group.slot_index())) else {
+        let Some(range) = gpu.draws.get(&(view, group.draw_index())) else {
             return RenderCommandResult::Skip;
         };
         let instances = range.end - range.start;
@@ -1360,16 +1513,19 @@ mod tests {
     use super::*;
 
     /// Draw order within a pipeline follows the family, then the LOD, whatever slot index or
-    /// mesh load order a run produced, and no two (slot, LOD) draws share a bin.
+    /// mesh load order a run produced, and no two (slot, LOD, band) draws share a bin.
     #[test]
     fn bins_order_by_family_then_lod() {
-        assert!(bin_key(3, 0, 9) < bin_key(4, 0, 0));
-        assert!(bin_key(3, 0, 9) < bin_key(3, 1, 0));
-        assert!(bin_key(3, 1, 0) < bin_key(3, 1, 1));
+        assert!(bin_key(3, 0, true, 9) < bin_key(4, 0, false, 0));
+        assert!(bin_key(3, 0, true, 9) < bin_key(3, 1, false, 0));
+        assert!(bin_key(3, 0, false, 9) < bin_key(3, 0, true, 0));
+        assert!(bin_key(3, 1, false, 0) < bin_key(3, 1, false, 1));
         let keys: std::collections::HashSet<_> = (0..4u32)
-            .flat_map(|f| (0..3u8).map(move |l| bin_key(f, l, f)))
+            .flat_map(|f| {
+                (0..3u8).flat_map(move |l| [false, true].map(move |b| bin_key(f, l, b, f)))
+            })
             .collect();
-        assert_eq!(keys.len(), 12);
+        assert_eq!(keys.len(), 24);
     }
 
     /// Binned phases keep last frame's items: a slot culled from a cascade (or despawned by a
@@ -1525,36 +1681,62 @@ mod tests {
         assert!(shadowed_depth_range(lo, hi, Vec3::NEG_Z, &view_from_world, 0.0).is_none());
     }
 
+    /// A part is whole at one LOD outside the 10 m bands around 150 m and 400 m and in both
+    /// neighbours' band draws inside them; the last LOD never fades out.
     #[test]
-    fn chunk_lod_switches_at_150_and_400_m() {
-        assert_eq!(kit_chunk_lod(0.0), 0);
-        assert_eq!(kit_chunk_lod(149.9), 0);
-        assert_eq!(kit_chunk_lod(150.0), 1);
-        assert_eq!(kit_chunk_lod(399.9), 1);
-        assert_eq!(kit_chunk_lod(400.0), 2);
+    fn part_lod_cross_fades_over_the_bands_at_150_and_400_m() {
+        use PartLod::{Band, Whole};
+        let at = kit_part_lod;
+        assert_eq!([at(0.0), at(140.0), at(144.99)], [Whole(0); 3]);
+        assert_eq!([at(145.0), at(150.0), at(154.99)], [Band(0); 3]);
+        assert_eq!([at(155.0), at(160.0), at(394.99)], [Whole(1); 3]);
+        assert_eq!([at(395.0), at(400.0), at(404.99)], [Band(1); 3]);
+        assert_eq!([at(405.0), at(1.0e6)], [Whole(2); 2]);
+        // The band is the per-entity VisibilityRange's: contiguous, LOD l fading out where l + 1
+        // fades in.
+        for l in 0..2 {
+            let (a, b) = (kit_lod_range(l), kit_lod_range(l + 1));
+            assert_eq!([a[2], a[3]], [b[0], b[1]]);
+            assert_eq!(a[3] - a[2], 10.0);
+        }
+        // In a camera view a band part draws in both LODs' band draws only; in a shadow view in
+        // both LODs' whole draws, as a per-entity band part casts with both LODs.
+        let draws = |p: PartLod, shadow: bool| -> Vec<bool> {
+            (0..3)
+                .flat_map(|l| [false, true].map(|b| p.draws(l, b, shadow)))
+                .collect()
+        };
+        assert_eq!(
+            draws(Band(0), false),
+            [false, true, false, true, false, false]
+        );
+        assert_eq!(
+            draws(Band(0), true),
+            [true, false, true, false, false, false]
+        );
+        assert_eq!(
+            draws(Whole(1), false),
+            [false, false, true, false, false, false]
+        );
+        assert_eq!(draws(Whole(1), true), draws(Whole(1), false));
     }
 
-    /// One chunk, one slot, two instances: visible views draw both exactly once; a frustum
-    /// missing the chunk draws nothing; shadow views use the same ranges.
-    #[test]
-    fn view_ranges_draw_each_visible_instance_once() {
-        let set = KitInstanceSetData {
-            pieces: vec![
-                GpuKitInstance {
-                    rotation: Quat::IDENTITY.to_array(),
-                    translation: [0.0, 0.0, 0.0],
-                    tag: 0,
-                    scale: [1.0; 3],
-                    _pad: 0,
-                },
-                GpuKitInstance {
-                    rotation: Quat::IDENTITY.to_array(),
-                    translation: [1.0, 0.0, 0.0],
-                    tag: 0,
-                    scale: [1.0; 3],
-                    _pad: 0,
-                },
-            ],
+    fn piece_at(x: f32) -> GpuKitInstance {
+        GpuKitInstance {
+            rotation: Quat::IDENTITY.to_array(),
+            translation: [x, 0.0, 0.0],
+            tag: 0,
+            scale: [1.0; 3],
+            _pad: 0,
+        }
+    }
+
+    /// One slot, one chunk of parts at `xs` along +x.
+    fn row(xs: &[f32]) -> KitInstanceSetData {
+        let lo = xs.iter().copied().fold(f32::MAX, f32::min);
+        let hi = xs.iter().copied().fold(f32::MIN, f32::max);
+        KitInstanceSetData {
+            pieces: xs.iter().map(|&x| piece_at(x)).collect(),
             slots: vec![KitSlot {
                 mesh: [None, None, None],
                 tris: [12; 3],
@@ -1563,25 +1745,126 @@ mod tests {
                 family: 0,
             }],
             chunks: vec![KitChunk {
-                centre: Vec3::ZERO,
-                aabb: Aabb::from_min_max(Vec3::new(-2.0, -1.0, -2.0), Vec3::new(2.0, 1.0, 2.0)),
-                ranges: vec![Range { start: 0, end: 2 }],
+                centre: Vec3::new((lo + hi) / 2.0, 0.0, 0.0),
+                aabb: Aabb::from_min_max(
+                    Vec3::new(lo - 2.0, -1.0, -2.0),
+                    Vec3::new(hi + 2.0, 1.0, 2.0),
+                ),
+                origins: Aabb::from_min_max(Vec3::new(lo, 0.0, 0.0), Vec3::new(hi, 0.0, 0.0)),
+                ranges: vec![Range {
+                    start: 0,
+                    end: xs.len() as u32,
+                }],
             }],
             meta: vec![],
             version: 1,
+        }
+    }
+
+    /// The (draw, records) lists a view of `set` from `eye` draws.
+    fn drawn(
+        set: &KitInstanceSetData,
+        eye: Vec3,
+        force: Option<u8>,
+        shadow: bool,
+    ) -> Vec<(usize, Vec<u32>)> {
+        let mut parts = vec![];
+        let lods = kit_frame_lods(set, eye, force, &mut parts);
+        let mut ids = vec![];
+        kit_view_ranges(set, &lods, &parts, &enclosing_frustum(), shadow, &mut ids)
+            .into_iter()
+            .map(|(k, r)| (k, ids[r.start as usize..r.end as usize].to_vec()))
+            .collect()
+    }
+
+    /// A chunk straddling the 150 m band splits per part: the part short of it draws at LOD0, the
+    /// part past it at LOD1 and the part in it at both, each LOD in one band (dithered) draw since
+    /// it holds a band part. Shadow views draw the band part in both whole draws, and a forced LOD
+    /// pins all of them with no band.
+    #[test]
+    fn chunk_across_the_band_draws_each_part_at_its_own_lod() {
+        let set = row(&[140.0, 150.0, 160.0]);
+        let eye = Vec3::ZERO;
+        assert_eq!(kit_chunk_lod(&set.chunks[0], eye), ChunkLod::Split);
+        let whole0 = draw_index(0, false);
+        let band0 = draw_index(0, true);
+        let whole1 = draw_index(1, false);
+        let band1 = draw_index(1, true);
+        assert_eq!(
+            drawn(&set, eye, None, false),
+            vec![(band0, vec![0, 1]), (band1, vec![2, 1])]
+        );
+        // Past the band on both sides: two whole draws, no dither.
+        assert_eq!(
+            drawn(&row(&[140.0, 160.0]), eye, None, false),
+            vec![(whole0, vec![0]), (whole1, vec![1])]
+        );
+        assert_eq!(
+            drawn(&set, eye, None, true),
+            vec![(whole0, vec![0, 1]), (whole1, vec![1, 2])]
+        );
+        assert_eq!(
+            drawn(&set, eye, Some(1), false),
+            vec![(whole1, vec![0, 1, 2])]
+        );
+        // Seen from 100 m nearer, the whole chunk is short of the band: one LOD, no split.
+        let near = Vec3::new(100.0, 0.0, 0.0);
+        assert_eq!(
+            kit_chunk_lod(&set.chunks[0], near),
+            ChunkLod::All(PartLod::Whole(0))
+        );
+        assert_eq!(
+            drawn(&set, near, None, false),
+            vec![(whole0, vec![0, 1, 2])]
+        );
+        // A chunk wholly inside the band draws all of it in both band draws.
+        let inside = row(&[146.0, 154.0]);
+        assert_eq!(
+            kit_chunk_lod(&inside.chunks[0], eye),
+            ChunkLod::All(PartLod::Band(0))
+        );
+        assert_eq!(
+            drawn(&inside, eye, None, false),
+            vec![(band0, vec![0, 1]), (band1, vec![0, 1])]
+        );
+    }
+
+    /// The meta entry and the draw key stay apart: the whole and band draws of one (slot, LOD)
+    /// share its bind group and keep their own instance ranges.
+    #[test]
+    fn band_draws_share_the_meta_entry_and_keep_their_own_range() {
+        let whole = KitSlotDraw {
+            slot: 4,
+            lod: 2,
+            band: false,
         };
+        let band = KitSlotDraw {
+            band: true,
+            ..whole
+        };
+        assert_eq!([whole.meta_index(), band.meta_index()], [14, 14]);
+        assert_eq!([whole.draw_index(), band.draw_index()], [28, 29]);
+        assert_eq!(META_SIZE, 80);
+    }
+
+    /// One chunk, one slot, two instances: visible views draw both exactly once; a frustum
+    /// missing the chunk draws nothing; shadow views use the same ranges.
+    #[test]
+    fn view_ranges_draw_each_visible_instance_once() {
+        let set = row(&[0.0, 1.0]);
+        let lods = [ChunkLod::All(PartLod::Whole(0))];
         let (mut ids, mut seen) = (vec![], vec![]);
         let enclosing = enclosing_frustum();
-        let ranges = kit_view_ranges(&set, &[0], &enclosing, false, &mut ids);
+        let ranges = kit_view_ranges(&set, &lods, &[], &enclosing, false, &mut ids);
         assert_eq!(ranges, vec![(0, 0..2)]);
         assert_eq!(ids.len(), 2);
-        kit_view_ranges(&set, &[0], &enclosing, true, &mut seen);
+        kit_view_ranges(&set, &lods, &[], &enclosing, true, &mut seen);
         assert_eq!(seen.len(), 2);
         let (mut ids, mut miss) = (vec![], vec![]);
         let other = frustum_around(Vec3::new(1_000_000.0, 0.0, 0.0));
-        assert!(kit_view_ranges(&set, &[0], &other, false, &mut ids).is_empty());
+        assert!(kit_view_ranges(&set, &lods, &[], &other, false, &mut ids).is_empty());
         assert!(ids.is_empty());
-        kit_view_ranges(&set, &[0], &other, true, &mut miss);
+        kit_view_ranges(&set, &lods, &[], &other, true, &mut miss);
         assert!(miss.is_empty());
     }
 

@@ -16,7 +16,7 @@ import bevy_pbr::render::{
     mesh_functions,
     skinning,
     morph::{morph_position, morph_normal, morph_tangent},
-    mesh_view_bindings::globals,
+    mesh_view_bindings::{globals, view},
     view_transformations::position_world_to_clip,
 };
 @if(!KIT_INSTANCED)
@@ -201,7 +201,12 @@ fn vertex(vertex_no_morph: KitVertexIn) -> KitVertexOutput {
 @if(VERTEX_COLORS)
     vertex.color = vertex_no_morph.color;
     let inst = kit_instances::kit_instance(vertex_no_morph.kit_record);
-    return shade_kit_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag);
+    var out = shade_kit_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag);
+    // A band draw (crates/hex-render/src/kit_instances.rs, `KitSlotDraw::band`): the part's level in
+    // its LOD's cross-fade band, as the per-entity entry below writes it from the VisibilityRange.
+@if(VISIBILITY_RANGE_DITHER)
+    out.visibility_range_dither = kit_instances::kit_lod_dither_level(inst.translation, view.lod_view_world_position);
+    return out;
 }
 
 @if(!KIT_INSTANCED)
