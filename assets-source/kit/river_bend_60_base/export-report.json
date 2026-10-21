@@ -1,0 +1,74 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_bend_60_base.py",
+    "sha256": "008827adabaa5d50ee0664e40f30ca5c302ffdcc27f896b89e20aa7138a58727"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_river_bend_60.py",
+      "sha256": "039a1693d20342e51c7967afbc1795b1b4dd7c69679649033803e2f6adbe77de"
+    },
+    {
+      "path": "scripts/blender/kit/_river_flat.py",
+      "sha256": "cb3c66803cab6b80816eff412f046371d65cb4b58cd7e8c4074db68b555a4124"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
+  "lodTris": {
+    "river_bend_60_base_lod0": 3970,
+    "river_bend_60_base_lod1": 1830,
+    "river_bend_60_base_lod2": 784
+  },
+  "nodes": [
+    "river_bend_60_base",
+    "river_bend_60_base_collider",
+    "river_bend_60_base_lod0",
+    "river_bend_60_base_lod1",
+    "river_bend_60_base_lod2",
+    "socket-lane-0",
+    "socket-lane-1"
+  ],
+  "pieceId": "river_bend_60_base",
+  "sockets": [
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 0,
+        "kind": "river",
+        "offset": 0.0,
+        "width": 8.0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 1,
+        "kind": "river",
+        "offset": 0.0,
+        "width": 8.0
+      },
+      "name": "socket-lane-1",
+      "position": [
+        6.928203105926514,
+        0.0,
+        12.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

@@ -152,6 +152,12 @@
         ]
       },
       {
+        "id": "river_bend_60",
+        "tiles": [
+          "river_bend_60"
+        ]
+      },
+      {
         "id": "river_road_bridge",
         "tiles": [
           "river_road_bridge"
@@ -661,6 +667,27 @@
           "Grass"
         ],
         "id": "river_bend",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "period": 1,
+        "scatter": []
+      },
+      {
+        "edges": [
+          "River",
+          "River",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "id": "river_bend_60",
         "land": [
           null,
           null,

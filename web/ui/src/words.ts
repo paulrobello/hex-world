@@ -25,6 +25,7 @@ export const TILE_NAMES: Record<string, string> = {
   rail_station: "Rail station",
   river_straight: "River straight",
   river_bend: "River bend",
+  river_bend_60: "River bend 60°",
   river_road_bridge: "River bridge",
   river_rail_bridge: "River rail bridge",
   river_spring: "River spring",

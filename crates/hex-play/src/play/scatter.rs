@@ -2299,7 +2299,7 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 30, "every inventory tile ran");
+        assert_eq!(counts.len(), 31, "every inventory tile ran");
         for id in [
             "forest",
             "oak",
@@ -2321,6 +2321,7 @@ mod tests {
             "ocean",
             "river_straight",
             "river_bend",
+            "river_bend_60",
             "river_spring",
             "river_fork",
         ] {

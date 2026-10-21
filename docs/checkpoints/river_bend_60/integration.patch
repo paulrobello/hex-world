@@ -1,0 +1,1220 @@
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index 8ff3fa4..c57a511 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -638,6 +638,18 @@
+                  "river_reed": { "color": [0.109, 0.195, 0.035], "roughness": 0.85, "foliage": true, "masks": true, "wind": 0.5 },
+                  "river_cattail": { "color": [0.102, 0.042, 0.016], "roughness": 0.9, "foliage": true, "masks": true, "wind": 0.5 } },
+       "maps": { "masks": "p1/river_bend_center/river_bend_center.masks" } },
++    { "id": "river_bend_60_base", "pack": "water", "kind": "base", "glb": "p1/river_bend_60_base/river_bend_60_base.glb",
++      "provenance": "assets-source/kit/river_bend_60_base/provenance.json",
++      "slots": { "river_grass": { "tileable": "grass", "masks": true },
++                 "river_bed": { "tileable": "gravel", "color": [0.78, 0.66, 0.5], "masks": true },
++                 "river_skirt": { "tileable": "soil", "color": [2.5, 2.5, 2.5] } },
++      "maps": { "masks": "p1/river_bend_60_base/river_bend_60_base.masks" } },
++    { "id": "river_bend_60_center", "pack": "water", "kind": "prop", "glb": "p1/river_bend_60_center/river_bend_60_center.glb",
++      "provenance": "assets-source/kit/river_bend_60_center/provenance.json",
++      "slots": { "river_stone": { "color": [0.254, 0.223, 0.184], "roughness": 0.8, "masks": true, "wind": 0.5 },
++                 "river_reed": { "color": [0.109, 0.195, 0.035], "roughness": 0.85, "foliage": true, "masks": true, "wind": 0.5 },
++                 "river_cattail": { "color": [0.102, 0.042, 0.016], "roughness": 0.9, "foliage": true, "masks": true, "wind": 0.5 } },
++      "maps": { "masks": "p1/river_bend_60_center/river_bend_60_center.masks" } },
+     { "id": "river_road_bridge_center", "pack": "water", "kind": "center", "glb": "p1/river_road_bridge_center/river_road_bridge_center.glb",
+       "provenance": "assets-source/kit/river_road_bridge_center/provenance.json",
+       "slots": { "road_asphalt": { "tileable": "asphalt", "masks": true }, "road_verge": { "tileable": "grass", "masks": true },
+diff --git a/crates/hex-app/src/thumbs.rs b/crates/hex-app/src/thumbs.rs
+index eeb0322..4249ea9 100644
+--- a/crates/hex-app/src/thumbs.rs
++++ b/crates/hex-app/src/thumbs.rs
+@@ -460,6 +460,7 @@ mod tests {
+             ("rail_station", 6),
+             ("river_straight", 3),
+             ("river_bend", 6),
++            ("river_bend_60", 6),
+             ("river_road_bridge", 3),
+             ("river_rail_bridge", 3),
+             ("river_spring", 6),
+@@ -474,7 +475,7 @@ mod tests {
+         for (id, n) in want {
+             assert_eq!(distinct(id), n, "{id}");
+         }
+-        assert_eq!(ThumbRun::new(&c).stages.len(), 30 + 136);
++        assert_eq!(ThumbRun::new(&c).stages.len(), 31 + 142);
+     }
+ 
+     #[test]
+diff --git a/crates/hex-core/src/catalog.rs b/crates/hex-core/src/catalog.rs
+index 6d3f9f9..9fd1692 100644
+--- a/crates/hex-core/src/catalog.rs
++++ b/crates/hex-core/src/catalog.rs
+@@ -75,6 +75,10 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
+         "river_bend",
+         include_str!("../../../data/tiles/river_bend.ron"),
+     ),
++    (
++        "river_bend_60",
++        include_str!("../../../data/tiles/river_bend_60.ron"),
++    ),
+     (
+         "river_road_bridge",
+         include_str!("../../../data/tiles/river_road_bridge.ron"),
+diff --git a/crates/hex-core/tests/data_validator.rs b/crates/hex-core/tests/data_validator.rs
+index 515174e..f668323 100644
+--- a/crates/hex-core/tests/data_validator.rs
++++ b/crates/hex-core/tests/data_validator.rs
+@@ -46,7 +46,7 @@ fn manifest_piece_ids() -> BTreeSet<String> {
+ /// Plan F1 with the owner O1 coast corners, the U3 oak split from the forest and the windmill, the
+ /// farm, the wheat field, the bakery and the rail tiles ahead of P3 (PRD §5.4): edges 0..5 for each
+ /// inventory tile.
+-const F1: [(&str, [SocketKind; 6]); 30] = [
++const F1: [(&str, [SocketKind; 6]); 31] = [
+     ("meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
+     ("forest", [Forest, Forest, Forest, Forest, Forest, Forest]),
+     ("oak", [Forest, Forest, Forest, Forest, Forest, Forest]),
+@@ -67,6 +67,7 @@ const F1: [(&str, [SocketKind; 6]); 30] = [
+     ("rail_station", [Rail, Grass, Grass, Rail, Grass, Grass]),
+     ("river_straight", [River, Grass, Grass, River, Grass, Grass]),
+     ("river_bend", [River, Grass, River, Grass, Grass, Grass]),
++    ("river_bend_60", [River, River, Grass, Grass, Grass, Grass]),
+     (
+         "river_road_bridge",
+         [River, Road, Grass, River, Road, Grass],
+diff --git a/crates/hex-play/src/play.rs b/crates/hex-play/src/play.rs
+index 3f34f77..6b563b0 100644
+--- a/crates/hex-play/src/play.rs
++++ b/crates/hex-play/src/play.rs
+@@ -1127,7 +1127,7 @@ mod tests {
+     #[test]
+     fn every_mvp_tile_resolves_and_biomes_index() {
+         let c = PlayCatalog::default();
+-        assert_eq!(c.0.tiles().len(), 30);
++        assert_eq!(c.0.tiles().len(), 31);
+         let biomes: std::collections::BTreeSet<_> =
+             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
+         assert_eq!(biomes.len(), 4);
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 8af03b1..7cdd11c 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -2299,7 +2299,7 @@ mod tests {
+                 }
+             }
+         }
+-        assert_eq!(counts.len(), 30, "every inventory tile ran");
++        assert_eq!(counts.len(), 31, "every inventory tile ran");
+         for id in [
+             "forest",
+             "oak",
+@@ -2317,7 +2317,14 @@ mod tests {
+         ] {
+             assert!(counts[id] > 0, "{id} scatters: {counts:?}");
+         }
+-        for id in ["ocean", "river_straight", "river_bend", "river_spring", "river_fork"] {
++        for id in [
++            "ocean",
++            "river_straight",
++            "river_bend",
++            "river_bend_60",
++            "river_spring",
++            "river_fork",
++        ] {
+             assert_eq!(counts[id], 0, "{id} has no scatter floor: {counts:?}");
+         }
+     }
+@@ -2553,13 +2560,14 @@ mod tests {
+             "road_junction",
+             "rail_straight",
+             "rail_bend_60",
++            "rail_bend_120",
+             "rail_junction",
+             "rail_road_crossing",
+             "rail_station",
+         ] {
+             assert!(verges.contains(&id), "{id} is a verge tile: {verges:?}");
+         }
+-        assert_eq!(verges.len(), 9, "{verges:?}");
++        assert_eq!(verges.len(), 10, "{verges:?}");
+         for d in c.tiles() {
+             let want = if verge_tile(d) {
+                 [3, 3, 3, 3, 4]
+diff --git a/crates/hex-play/src/water/tiles.rs b/crates/hex-play/src/water/tiles.rs
+index de1e533..b979690 100644
+--- a/crates/hex-play/src/water/tiles.rs
++++ b/crates/hex-play/src/water/tiles.rs
+@@ -1390,6 +1390,8 @@ mod tests {
+         for (id, rot) in [
+             ("river_bend", 0),
+             ("river_bend", 3),
++            ("river_bend_60", 0),
++            ("river_bend_60", 3),
+             ("river_straight", 1),
+             ("river_road_bridge", 4),
+         ] {
+@@ -1485,6 +1487,69 @@ mod tests {
+         assert_eq!(checked, 5 * 33);
+     }
+ 
++    /// The tight bend between two straights: the fields agree across both seams, and along the
++    /// bend's centre line the flow keeps the straights' speed and turns smoothly with the path
++    /// (no reversal, no jump at the stubs or between arc samples).
++    #[test]
++    fn tight_bend_flow_turns_smoothly_between_straights() {
++        let cat = catalog();
++        let tiles = [
++            tile(0, 0, "river_straight", 0),
++            tile(1, 0, "river_bend_60", 3),
++            tile(1, -1, "river_straight", 1),
++        ];
++        let lay = layout(&tiles, &cat, |_| false);
++        for (a, b) in [((0, 0), (1, 0)), ((1, 0), (1, -1))] {
++            let (ca, cb) = (Axial::new(a.0, a.1), Axial::new(b.0, b.1));
++            let e = (0..6u8).find(|&e| ca.neighbor(e) == cb).unwrap();
++            assert!(!lay[&ca].exposed.contains(&e), "{a:?} -> {b:?} exposed");
++            let (fa, fb) = (lay[&ca].field(), lay[&cb].field());
++            let mid = (center(ca) + center(cb)) * 0.5;
++            let along = edge_dir(e).perp();
++            for i in 0..=32 {
++                let p = mid + along * (-8.0 + 0.5 * i as f32);
++                let (wa, wb) = (fa.water(p.x, p.y), fb.water(p.x, p.y));
++                assert!((fa.height(p.x, p.y) - fb.height(p.x, p.y)).abs() < 1e-3);
++                assert!((wa.depth - wb.depth).abs() < 1e-3 && (wa.river - wb.river).abs() < 1e-4);
++                assert!(wa.flow.distance(wb.flow) < 1e-3, "{a:?}|{b:?} at {p}");
++            }
++        }
++        let r = oriented_rivers(&tiles, &cat);
++        let path = &r[&(Axial::new(1, 0), 0)];
++        let straight = lay[&Axial::new(0, 0)].field();
++        let c0 = center(Axial::new(0, 0));
++        let speed = straight.water(c0.x, c0.y).flow.length();
++        assert!(speed > 0.1, "{speed}");
++        let bend = lay[&Axial::new(1, 0)].field();
++        let mut prev: Option<Vec2> = None;
++        for w in path.points.windows(2) {
++            let p = (w[0] + w[1]) * 0.5;
++            let f = bend.water(p.x, p.y).flow;
++            assert!(
++                (f.length() - speed).abs() < 1e-3,
++                "speed {} at {p}",
++                f.length()
++            );
++            assert!(
++                f.normalize().dot((w[1] - w[0]).normalize()) > 0.999,
++                "flow off the path at {p}"
++            );
++            if let Some(q) = prev {
++                assert!(f.normalize().dot(q) > 0.995, "flow jumps at {p}");
++            }
++            prev = Some(f.normalize());
++        }
++        // 120 degrees of turn, start to end.
++        let first = (path.points[1] - path.points[0]).normalize();
++        let n = path.points.len();
++        let last = (path.points[n - 1] - path.points[n - 2]).normalize();
++        assert!(
++            (first.dot(last) - (-0.5)).abs() < 1e-3,
++            "{}",
++            first.dot(last)
++        );
++    }
++
+     /// Exposed edges follow adjacency: open river ends and lone ocean sides get a cut face; joined
+     /// water edges and dry edges do not; a beach edge against an ocean side is a mismatched seam
+     /// (the rules refuse it since owner O1, but the layout stays safe if one is ever loaded).
+diff --git a/crates/hex-play/tests/kit_gate.rs b/crates/hex-play/tests/kit_gate.rs
+index 16121c7..bcaa02f 100644
+--- a/crates/hex-play/tests/kit_gate.rs
++++ b/crates/hex-play/tests/kit_gate.rs
+@@ -1025,6 +1025,7 @@ const RIVER_DRESSING_LOD0_MAX: usize = 2_500;
+ const RIVER_DRESSING_PROPS: &[&str] = &[
+     "river_straight_center",
+     "river_bend_center",
++    "river_bend_60_center",
+     "river_spring_center",
+     "river_mouth_center",
+     "river_mouth_l_center",
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 8f6fd3b..9c77576 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -359,14 +359,22 @@ pub fn kit_layout() -> Vec<Placement> {
+         v.push(place("river_edge", q, r, 4));
+     }
+     // The river fork (owner 2026-10-20) on (-3, 4), west of the river straights: river_fork_base
+-    // and its dressing at rot 1 (river on world edges 1, 3 and 5, all facing empty cells; its grass
+-    // edge 0 meets the straight's grass edge 3 on (-2, 4)) with a river_edge stub on each River
++    // and its dressing at rot 1 (river on world edges 1 and 3 facing empty cells and 5 meeting the tight
++    // bend on (-2, 3); its grass edge 0 meets the straight's grass edge 3 on (-2, 4)) with a river_edge stub on each River
+     // edge. The kit scenario spawns no water, so its channel shows dry here; play draws the water.
+     v.push(place("river_fork_base", -3, 4, 1));
+     v.push(place("river_fork_center", -3, 4, 1));
+     for k in [1, 3, 5] {
+         v.push(place("river_edge", -3, 4, k));
+     }
++    // The tight river bend (river_bend_60: lanes on local edges 0 and 1) on (-2, 3) at rot 1 (lanes
++    // on world edges 1 and 2): it joins the straight on (-2, 4) across world edge 1 to the fork's
++    // edge-5 arm on (-3, 4) across world edge 2. Its own channel-cut base with a river_edge stub at
++    // each lane.
++    v.push(place("river_bend_60_base", -2, 3, 1));
++    v.push(place("river_bend_60_center", -2, 3, 1));
++    v.push(place("river_edge", -2, 3, 1));
++    v.push(place("river_edge", -2, 3, 2));
+     for (piece, offset) in TRAIN_ON_RAIL_BRIDGE {
+         v.push(Placement {
+             offset,
+@@ -1234,6 +1242,53 @@ mod tests {
+         }
+     }
+ 
++    /// The tight river bend's lanes are its local edges 0 and 1, each with a river_edge stub; one
++    /// meets the river straight upstream of the rail bridge on that straight's lane, the other a
++    /// river arm of the fork, and its cell holds no other base.
++    #[test]
++    fn river_bend_60_joins_the_straight_to_the_fork() {
++        let l = kit_layout();
++        let bend = *l
++            .iter()
++            .find(|p| p.piece == "river_bend_60_center")
++            .unwrap();
++        for k in [0, 1] {
++            let e = (k + bend.rot) % 6;
++            assert!(
++                l.iter()
++                    .any(|p| p.piece == "river_edge" && p.cell == bend.cell && p.rot == e),
++                "no river_edge on world edge {e}"
++            );
++        }
++        let met = [0u8, 1].into_iter().any(|k| {
++            let e = (k + bend.rot) % 6;
++            let n = bend.cell.neighbor(e);
++            l.iter().any(|p| {
++                p.piece == "river_straight_base"
++                    && p.cell == n
++                    && [p.rot % 6, (p.rot + 3) % 6].contains(&((e + 3) % 6))
++            })
++        });
++        assert!(met, "the bend meets no river straight on its lanes");
++        let fork = [0u8, 1].into_iter().any(|k| {
++            let e = (k + bend.rot) % 6;
++            let n = bend.cell.neighbor(e);
++            l.iter().any(|p| {
++                p.piece == "river_fork_base"
++                    && p.cell == n
++                    && [0u8, 2, 4]
++                        .map(|j| (j + p.rot) % 6)
++                        .contains(&((e + 3) % 6))
++            })
++        });
++        assert!(fork, "the bend meets no fork arm on its lanes");
++        assert!(l.iter().all(|p| p.cell != bend.cell
++            || !matches!(
++                p.piece,
++                "meadow_base" | "forest_base" | "river_straight_base"
++            )));
++    }
++
+     #[test]
+     fn missing_piece_is_skipped_not_panic() {
+         let m = parse_manifest(r#"{"version":1,"materials":{},"pieces":[]}"#).unwrap();
+diff --git a/crates/hex-render/src/lib.rs b/crates/hex-render/src/lib.rs
+index f4aa639..97f9b1e 100644
+--- a/crates/hex-render/src/lib.rs
++++ b/crates/hex-render/src/lib.rs
+@@ -206,14 +206,14 @@ mod tests {
+         cells.dedup();
+         // The water patch's 11 cells plus the showcase blocks' cells; each block in
+         // `kit_scene::kit_layout` names its own cells. A new block adds its cells here.
+-        assert_eq!(cells.len(), 33);
++        assert_eq!(cells.len(), 36);
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
+         // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
+         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
+         // The fixture lays out water-patch cells only; the runtime kit adds the showcase blocks.
+         assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
+-        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 33);
++        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 36);
+         assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
+         assert!(!Scenario::Kit.has_water());
+     }
+diff --git a/crates/hex-sim/tests/network.rs b/crates/hex-sim/tests/network.rs
+index 908906d..8223a86 100644
+--- a/crates/hex-sim/tests/network.rs
++++ b/crates/hex-sim/tests/network.rs
+@@ -305,6 +305,32 @@ fn river_fork_joins_three_river_neighbours_at_one_node() {
+     }
+ }
+ 
++/// The tight river bend joins two straights into one river graph: its link runs seam to seam along
++/// the 1 m stubs and the 7.42 m arc between them (2 m + 7.4226 m x 2 pi / 3 = 17.54 m).
++#[test]
++fn tight_river_bend_links_its_two_seams() {
++    let cat = catalog();
++    let mut rivers = Network::new(NetworkKind::River);
++    let a = Axial::ORIGIN;
++    let b = a.neighbor(0);
++    let c = b.neighbor(4);
++    put(&mut rivers, &cat, a, "river_straight", 0);
++    put(&mut rivers, &cat, b, "river_bend_60", 3);
++    put(&mut rivers, &cat, c, "river_straight", 1);
++    assert_eq!(rivers.links().count(), 3);
++    let bend = only_link(&rivers, b);
++    assert!(has_end_at(bend, seam_mid(a, b)) && has_end_at(bend, seam_mid(b, c)));
++    let arc = 2.0 + 12.856_406 * (30f32).to_radians().tan() * 2.0 * std::f32::consts::PI / 3.0;
++    assert!(
++        (bend.length() - arc).abs() < 0.01,
++        "{} vs {arc}",
++        bend.length()
++    );
++    let from = rivers.seam_node(a, 3).unwrap();
++    let to = rivers.seam_node(c, 1).unwrap();
++    assert!(rivers.route(from, to).is_some());
++}
++
+ #[test]
+ fn place_and_bulldoze_update_only_the_touched_tile() {
+     let cat = catalog();
+diff --git a/data/tiles/river_bend_60.ron b/data/tiles/river_bend_60.ron
+new file mode 100644
+index 0000000..c88bbf9
+--- /dev/null
++++ b/data/tiles/river_bend_60.ron
+@@ -0,0 +1,22 @@
++// Tight river bend across adjacent edges (river_bend_60_base, river_bend_60_center): straight from
++// each edge midpoint in to the joint plane 1 m inside the border (the river_edge stubs), joined by
++// the 7.423 m radius arc tangent to both about (12.856, 7.423), turning 120 degrees. The points are
++// the two joints and the arc sampled every 2.5 degrees between them, a polyline for hex-sim and the
++// water adapter (scripts/blender/kit/_river_bend_60.py; bake report centreLine).
++(
++    id: "river_bend_60",
++    biome: Grass,
++    base: "river_bend_60_base",
++    edges: (
++        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
++        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
++        (kind: Grass),
++        (kind: Grass),
++        (kind: Grass),
++        (kind: Grass),
++    ),
++    center: Some("river_bend_60_center"),
++    networks: [
++        (kind: River, from: Edge(0), to: Edge(1), points: [(12.856, 0.000), (12.533, 0.007), (12.209, 0.028), (11.888, 0.064), (11.567, 0.113), (11.250, 0.176), (10.935, 0.253), (10.624, 0.344), (10.318, 0.448), (10.016, 0.565), (9.719, 0.695), (9.429, 0.839), (9.145, 0.994), (8.868, 1.162), (8.599, 1.342), (8.338, 1.534), (8.085, 1.737), (7.842, 1.950), (7.608, 2.174), (7.384, 2.408), (7.170, 2.651), (6.968, 2.904), (6.776, 3.165), (6.596, 3.434), (6.428, 3.711), (6.272, 3.995), (6.129, 4.286), (5.999, 4.582), (5.881, 4.884), (5.777, 5.191), (5.687, 5.502), (5.610, 5.816), (5.547, 6.134), (5.497, 6.454), (5.462, 6.776), (5.441, 7.099), (5.434, 7.423), (5.441, 7.746), (5.462, 8.070), (5.497, 8.391), (5.547, 8.712), (5.610, 9.029), (5.687, 9.344), (5.777, 9.655), (5.881, 9.961), (5.999, 10.263), (6.129, 10.560), (6.272, 10.850), (6.428, 11.134)]),
++    ],
++)
+diff --git a/docs/kit/water-contract.md b/docs/kit/water-contract.md
+index c2c7fbb..4264845 100644
+--- a/docs/kit/water-contract.md
++++ b/docs/kit/water-contract.md
+@@ -23,7 +23,7 @@ Coordinates are runtime metres, Y up, tile-local before rotation, with edge 0 fa
+ 
+ The prototype's open sea reaches 6 m deep and reads deeper blue than 2.6 m will. A deeper ocean needs a deeper ocean column than the -4 m base, which is the owner's call. This is the main number that may move.
+ 
+-## 2. River channel (`river_straight`, `river_bend`, `river_road_bridge`)
++## 2. River channel (`river_straight`, `river_bend`, `river_bend_60`, `river_road_bridge`)
+ 
+ - **Width.** The lane is 8 m (`data/sockets.ron`) and is the water width at rest: the bank crosses y = -1.4 at 4.0 m from the centre line.
+ - **Profile.** The look-dev's `carve` with half-width parameter `w = 4.33`. With `d` the distance to the centre line, relative to the water surface:
+@@ -32,7 +32,7 @@ The prototype's open sea reaches 6 m deep and reads deeper blue than 2.6 m will.
+   - `h(d) = min(1.4, bed + (1.4 - bed) * bank)`, so `y = -1.4 + h(d)`
+   - Spot values (y): d = 0: -2.95; d = 3: -2.23; d = 4: -1.40 (waterline); d = 5: -0.69; d >= 6.83: 0.0 (meadow level).
+   - The channel is 13.66 m wide at the top.
+-- **Centre line.** From the lane point on the `from` edge to the lane point on the `to` edge (edge midpoint plus the lane offset, 0 for every MVP river). With no control point it is straight. With one point it is the circle through the three points: for `river_bend`, the 24 m radius arc centred on the edge-1 neighbour's centre `(13.856, 24)`, as `hex_sim::geom::segment_shape` reads it. Either way the centre line meets each lane edge at a right angle.
++- **Centre line.** From the lane point on the `from` edge to the lane point on the `to` edge (edge midpoint plus the lane offset, 0 for every MVP river). With no control point it is straight. With one point it is the circle through the three points: for `river_bend`, the 24 m radius arc centred on the edge-1 neighbour's centre `(13.856, 24)`, as `hex_sim::geom::segment_shape` reads it. With two or more points it is the polyline through them, and the bed's `d` is the distance to that polyline: for `river_bend_60` (lanes on adjacent edges 0 and 1), the straight `river_edge` stub from each edge midpoint in to the joint 1 m inside the border, joined by the 7.423 m radius arc tangent to both about `(12.856, 7.423)`, turning 120 degrees, sampled every 2.5 degrees (chord sag 0.002 m; `scripts/blender/kit/_river_bend_60.py`). The tight bend cannot use the arc about corner 0 through both edge midpoints: it sits 0.063 m off the frozen straight stub at the joint, about 0.06 m of bed height at the waterline. Every shape meets each lane edge at a right angle.
+ - **Bank tuck.** The engine's water strip runs 5 m either side of the centre line, so at `d = 5` the bank must stand at least 0.5 m above the water. The profile gives 0.71 m.
+ - **Width evidence.** The approved prototype river is 6 m wide (half-width 3), widening to 10 m at the mouth. 8 m sits inside that range, the road (6 m) bridges it, and the 13.66 m channel leaves at least 7 m of meadow to the tile corners, so **keep 8 m**. No change to `data/` is proposed.
+ 
+@@ -129,7 +129,7 @@ River on edge 0 only, the network from edge 0 to the node `spring` at (-2, 0) (Q
+ Bed requirements:
+ - **Opaque and in the depth prepass.** Water is not in the prepass and reads the prepass depth as its bed (refraction, absorption, foam, caustics). A bed that skips the prepass breaks all of these.
+ - **`KitMaterial` only, with no new sampled texture.** Next to refracting water the kit forward pipeline samples exactly 16 textures, WebGPU's baseline (ADR 0002, smoke case `water_kit`), so there is no headroom.
+-- **Every water tile's base is its bed.** The river tiles name their channel bases (`river_straight_base`, `river_bend_base`, `river_spring_base`, `river_fork_base`, `river_mouth_base`, `river_mouth_l_base`), the coast tiles their beach bases and the ocean `ocean_base`. No land tile shares one (`water/tiles.rs` `the_stand_in_bed_is_drawn_only_where_the_base_is_missing`). A water tile naming `meadow_base` would bury its water under the meadow cap, whose relief covers the whole hex at y in [-0.25, 0].
++- **Every water tile's base is its bed.** The river tiles name their channel bases (`river_straight_base`, `river_bend_base`, `river_bend_60_base`, `river_spring_base`, `river_fork_base`, `river_mouth_base`, `river_mouth_l_base`), the coast tiles their beach bases and the ocean `ocean_base`. No land tile shares one (`water/tiles.rs` `the_stand_in_bed_is_drawn_only_where_the_base_is_missing`). A water tile naming `meadow_base` would bury its water under the meadow cap, whose relief covers the whole hex at y in [-0.25, 0].
+ - **When the engine draws the placeholder bed.** Only while the tile's base is missing from the kit (`water::tiles::stand_in_bed`): a base outside `assets/kit/manifest.json`, or one that still failed after the `kit://` retries (`hexWorld.state().assets.failed`). Otherwise the base comes from the kit like any other tile, and the centre once it has loaded. While the centre is missing the tile draws no river strips and no hub over the channel, only the engine's water surface. Road strips stay as the bridge deck. Owner 2026-10-14: when `river_spring_center` failed to load, the old rule (keyed on the centre) drew the stand-in over the spring's kit base, which read as a pale hex.
+ - **What decides it is water.** A tile with a River network is a river tile: a river mouth if it also has a coastline (§3a), a spring if its network ends at a node (§3b). A tile with Ocean on every edge is ocean. A tile with some Ocean edges is a coast when its two beach edges form one of the three coastlines of §3. Only these tiles get water surfaces and cut faces.
+ 
+diff --git a/scripts/blender/lib/budgets.py b/scripts/blender/lib/budgets.py
+index c1453d1..3ea5082 100644
+--- a/scripts/blender/lib/budgets.py
++++ b/scripts/blender/lib/budgets.py
+@@ -13,8 +13,9 @@ LOD2_MAX_RATIO = 0.15
+ LANE_CUT_LOD2_MAX_RATIO = 0.20
+ COAST_ARC_LOD2_MAX_RATIO = 0.20
+ RIVER_DRESSING_LOD0_MAX = 2500
+-RIVER_DRESSING_PROPS = ("river_straight_center", "river_bend_center", "river_spring_center",
+-                        "river_mouth_center", "river_mouth_l_center", "river_fork_center")
++RIVER_DRESSING_PROPS = ("river_straight_center", "river_bend_center", "river_bend_60_center",
++                        "river_spring_center", "river_mouth_center", "river_mouth_l_center",
++                        "river_fork_center")
+ 
+ 
+ def lod_budget(kind, piece_id="", lane_cut=False, coast_arc=False):
+diff --git a/web/ui/src/bridge-schema.json b/web/ui/src/bridge-schema.json
+index a3ea5d3..6c62a74 100644
+--- a/web/ui/src/bridge-schema.json
++++ b/web/ui/src/bridge-schema.json
+@@ -151,6 +151,12 @@
+           "river_bend"
+         ]
+       },
++      {
++        "id": "river_bend_60",
++        "tiles": [
++          "river_bend_60"
++        ]
++      },
+       {
+         "id": "river_road_bridge",
+         "tiles": [
+@@ -547,7 +553,6 @@
+           "Grass",
+           "Grass"
+         ],
+-        "heroes": false,
+         "id": "rail_bend_120",
+         "land": [
+           null,
+@@ -557,6 +562,7 @@
+           null,
+           null
+         ],
++        "period": 1,
+         "scatter": [
+           "wildflower_single"
+         ]
+@@ -672,6 +678,27 @@
+         "period": 1,
+         "scatter": []
+       },
++      {
++        "edges": [
++          "River",
++          "River",
++          "Grass",
++          "Grass",
++          "Grass",
++          "Grass"
++        ],
++        "id": "river_bend_60",
++        "land": [
++          null,
++          null,
++          null,
++          null,
++          null,
++          null
++        ],
++        "period": 1,
++        "scatter": []
++      },
+       {
+         "edges": [
+           "River",
+@@ -744,7 +771,6 @@
+           "River",
+           "Grass"
+         ],
+-        "heroes": false,
+         "id": "river_fork",
+         "land": [
+           null,
+@@ -754,6 +780,7 @@
+           null,
+           null
+         ],
++        "period": 1,
+         "scatter": []
+       },
+       {
+diff --git a/web/ui/src/words.ts b/web/ui/src/words.ts
+index 7cc0129..1c4b805 100644
+--- a/web/ui/src/words.ts
++++ b/web/ui/src/words.ts
+@@ -25,6 +25,7 @@ export const TILE_NAMES: Record<string, string> = {
+   rail_station: "Rail station",
+   river_straight: "River straight",
+   river_bend: "River bend",
++  river_bend_60: "River bend 60°",
+   river_road_bridge: "River bridge",
+   river_rail_bridge: "River rail bridge",
+   river_spring: "River spring",
+diff --git a/web/ui/test/audio.test.ts b/web/ui/test/audio.test.ts
+index 7f276a9..2162a49 100644
+--- a/web/ui/test/audio.test.ts
++++ b/web/ui/test/audio.test.ts
+@@ -823,10 +823,11 @@ test("placement: a water tile selects the slosh pool and a land tile does not",
+   const poolOf = (id: string) => placementPool(edges.get(id)!);
+   const water = ["river_straight", "river_bend", "river_spring", "river_road_bridge", "river_rail_bridge"];
+   water.push("river_fork", "beach", "beach_outer", "beach_inner", "river_mouth", "river_mouth_l", "ocean");
++  water.push("river_bend_60");
+   for (const id of water) assert.equal(poolOf(id), PLACE_SLOSH.pool, `${id} sloshes`);
+   const land = ["meadow", "forest", "oak", "farm", "windmill", "wheat_field", "house_cluster", "bakery"];
+   land.push("road_straight", "road_bend_120", "road_bend_60", "road_junction");
+-  land.push("rail_straight", "rail_bend_60", "rail_junction", "rail_station", "rail_road_crossing");
++  land.push("rail_straight", "rail_bend_60", "rail_bend_120", "rail_junction", "rail_station", "rail_road_crossing");
+   for (const id of land) assert.equal(poolOf(id), null, `${id} has no slosh`);
+   assert.equal(water.length + land.length, schema.catalog.tiles.length, "every catalog tile is classified");
+   const variants = manifest.cues.filter((c) => c.pool === PLACE_SLOSH.pool);
+diff --git a/web/ui/test/rules-parity.json b/web/ui/test/rules-parity.json
+index 0e21df3..a9a599d 100644
+--- a/web/ui/test/rules-parity.json
++++ b/web/ui/test/rules-parity.json
+@@ -101,6 +101,12 @@
+             3,
+             4
+           ],
++          "river_bend_60": [
++            2,
++            3,
++            4,
++            5
++          ],
+           "river_fork": [
+             0,
+             2,
+@@ -250,6 +256,11 @@
+             0,
+             1
+           ],
++          "river_bend_60": [
++            0,
++            1,
++            2
++          ],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -394,6 +405,12 @@
+             3,
+             5
+           ],
++          "river_bend_60": [
++            1,
++            2,
++            3,
++            4
++          ],
+           "river_fork": [
+             1,
+             3,
+@@ -564,6 +581,12 @@
+             2,
+             4
+           ],
++          "river_bend_60": [
++            0,
++            1,
++            2,
++            3
++          ],
+           "river_fork": [
+             0,
+             2,
+@@ -713,6 +736,11 @@
+             3,
+             4
+           ],
++          "river_bend_60": [
++            3,
++            4,
++            5
++          ],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -818,6 +846,10 @@
+           "river_bend": [
+             1
+           ],
++          "river_bend_60": [
++            1,
++            2
++          ],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -953,6 +985,12 @@
+             2,
+             4
+           ],
++          "river_bend_60": [
++            0,
++            1,
++            2,
++            3
++          ],
+           "river_fork": [
+             0,
+             2,
+@@ -1051,6 +1089,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -1106,6 +1145,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -1234,6 +1274,12 @@
+             4,
+             5
+           ],
++          "river_bend_60": [
++            0,
++            3,
++            4,
++            5
++          ],
+           "river_fork": [
+             1,
+             3,
+@@ -1383,6 +1429,11 @@
+             4,
+             5
+           ],
++          "river_bend_60": [
++            0,
++            4,
++            5
++          ],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -1527,6 +1578,12 @@
+             4,
+             5
+           ],
++          "river_bend_60": [
++            0,
++            1,
++            4,
++            5
++          ],
+           "river_fork": [
+             0,
+             2,
+@@ -1650,6 +1707,10 @@
+             1,
+             5
+           ],
++          "river_bend_60": [
++            0,
++            1
++          ],
+           "river_fork": [
+             1,
+             3,
+@@ -1709,6 +1770,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -1836,6 +1898,12 @@
+             3,
+             5
+           ],
++          "river_bend_60": [
++            1,
++            2,
++            3,
++            4
++          ],
+           "river_fork": [
+             1,
+             3,
+@@ -1967,6 +2035,10 @@
+           "river_bend": [
+             2
+           ],
++          "river_bend_60": [
++            2,
++            3
++          ],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -2081,6 +2153,11 @@
+             0,
+             5
+           ],
++          "river_bend_60": [
++            0,
++            1,
++            5
++          ],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -2153,6 +2230,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -2280,6 +2358,12 @@
+             3,
+             5
+           ],
++          "river_bend_60": [
++            0,
++            1,
++            2,
++            5
++          ],
+           "river_fork": [
+             1,
+             3,
+@@ -2450,6 +2534,12 @@
+             3,
+             5
+           ],
++          "river_bend_60": [
++            1,
++            2,
++            3,
++            4
++          ],
+           "river_fork": [
+             1,
+             3,
+@@ -2543,6 +2633,10 @@
+             3,
+             5
+           ],
++          "river_bend_60": [
++            4,
++            5
++          ],
+           "river_fork": [
+             1,
+             3,
+@@ -2635,6 +2729,10 @@
+           "river_bend": [
+             3
+           ],
++          "river_bend_60": [
++            3,
++            4
++          ],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -2694,6 +2792,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -2742,6 +2841,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             4,
+@@ -2860,6 +2960,12 @@
+             3,
+             4
+           ],
++          "river_bend_60": [
++            2,
++            3,
++            4,
++            5
++          ],
+           "river_fork": [
+             0,
+             2,
+@@ -2966,6 +3072,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             3,
+@@ -3063,6 +3170,11 @@
+             3,
+             4
+           ],
++          "river_bend_60": [
++            3,
++            4,
++            5
++          ],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -3139,6 +3251,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             3
+@@ -3187,6 +3300,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             2
+@@ -3229,6 +3343,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             0
+@@ -3281,6 +3396,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             2,
+@@ -3391,6 +3507,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [
+@@ -3466,6 +3583,10 @@
+           "river_bend": [
+             1
+           ],
++          "river_bend_60": [
++            1,
++            2
++          ],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -3601,6 +3722,12 @@
+             2,
+             4
+           ],
++          "river_bend_60": [
++            0,
++            1,
++            2,
++            3
++          ],
+           "river_fork": [
+             0,
+             2,
+@@ -3771,6 +3898,12 @@
+             3,
+             5
+           ],
++          "river_bend_60": [
++            1,
++            2,
++            3,
++            4
++          ],
+           "river_fork": [
+             1,
+             3,
+@@ -3941,6 +4074,12 @@
+             2,
+             4
+           ],
++          "river_bend_60": [
++            0,
++            1,
++            2,
++            3
++          ],
+           "river_fork": [
+             0,
+             2,
+@@ -4047,6 +4186,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             0,
+@@ -4144,6 +4284,11 @@
+             0,
+             1
+           ],
++          "river_bend_60": [
++            0,
++            1,
++            2
++          ],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -4220,6 +4365,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             1
+@@ -4336,6 +4482,12 @@
+             3,
+             5
+           ],
++          "river_bend_60": [
++            0,
++            1,
++            2,
++            5
++          ],
+           "river_fork": [
+             1,
+             3,
+@@ -4438,6 +4590,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             2
+@@ -4490,6 +4643,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             1,
+@@ -4534,6 +4688,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             4
+@@ -4648,6 +4803,12 @@
+             4,
+             5
+           ],
++          "river_bend_60": [
++            0,
++            1,
++            4,
++            5
++          ],
+           "river_fork": [
+             0,
+             2,
+@@ -4802,6 +4963,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             0,
+@@ -4852,6 +5014,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             4
+@@ -4900,6 +5063,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             0
+@@ -4948,6 +5112,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             4
+@@ -4996,6 +5161,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             0
+@@ -5041,6 +5207,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -5089,6 +5256,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             4,
+@@ -5143,6 +5311,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             0,
+@@ -5193,6 +5362,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             5
+@@ -5241,6 +5411,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             5
+@@ -5293,6 +5464,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             4,
+@@ -5343,6 +5515,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             1
+@@ -5391,6 +5564,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             4
+@@ -5439,6 +5613,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             1
+@@ -5491,6 +5666,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             3,
+@@ -5541,6 +5717,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             1
+@@ -5589,6 +5766,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             3
+@@ -5634,6 +5812,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+@@ -5682,6 +5861,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             1,
+@@ -5732,6 +5912,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             3
+@@ -5780,6 +5961,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             2
+@@ -5832,6 +6014,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             1,
+@@ -5882,6 +6065,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             2
+@@ -5934,6 +6118,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_bend_60": [],
+           "river_fork": [],
+           "river_mouth": [
+             2,

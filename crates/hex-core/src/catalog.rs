@@ -76,6 +76,10 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
         include_str!("../../../data/tiles/river_bend.ron"),
     ),
     (
+        "river_bend_60",
+        include_str!("../../../data/tiles/river_bend_60.ron"),
+    ),
+    (
         "river_road_bridge",
         include_str!("../../../data/tiles/river_road_bridge.ron"),
     ),

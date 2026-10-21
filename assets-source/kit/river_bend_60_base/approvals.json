@@ -1,0 +1,9 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "new-piece",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. New piece: the channel-cut base of the tight river bend river_bend_60 (River on edges 0 and 1). Centre line: the river_edge stubs straight for 1 m, joined by the 7.42 m arc tangent to both (120 degree turn); the river family's bed profile, notched ring, O4 skirt and flattened meadow relief (_river.py, _river_flat.py through _river_bend_60.py, helpers unchanged). Tris 3970/1830/784 (LOD2 19.7%, lane-cut ceiling 20%); water contract error per LOD wet 0.021/0.026/0.030, dry 0.047/0.047/0.068. Review docs/checkpoints/river_bend_60/sheet.jpg. The controller records the owner's decision."
+  }
+]

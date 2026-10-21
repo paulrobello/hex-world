@@ -1,0 +1,88 @@
+{
+  "name": "river_bend_60_base",
+  "date": "2026-10-21T01:28:07.276Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/river_bend_60_base/river_bend_60_base.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 119932,
+      "sha256": "49efb8888542429af3098b3d63b7670c4f5254c46f905ab5a61ba9296d8d4838"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/river_bend_60_base/river_bend_60_base.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 116622,
+      "sha256": "6df0f5b06a450dafe622580fc5ccaa01dd7c69b7f7937906c5fd198045139c98"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/river_bend_60_base/river_bend_60_base.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 181149,
+      "sha256": "be5f7735a0e90e88e4986a4ec3abf9dc3397bf3bf0d6a060b0c9538943d72d60"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 119932,
+      "astc": 116622
+    },
+    "glbBytes": 129980
+  },
+  "glb": {
+    "bytes": 129980,
+    "sha256": "29f3ea4daf7329edbbfb38d84884b360dcb41f8c586c4e41828649c4858edea2"
+  }
+}

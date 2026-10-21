@@ -460,6 +460,7 @@ mod tests {
             ("rail_station", 6),
             ("river_straight", 3),
             ("river_bend", 6),
+            ("river_bend_60", 6),
             ("river_road_bridge", 3),
             ("river_rail_bridge", 3),
             ("river_spring", 6),
@@ -474,7 +475,7 @@ mod tests {
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 30 + 136);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 31 + 142);
     }
 
     #[test]

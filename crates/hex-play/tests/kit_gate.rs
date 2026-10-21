@@ -1025,6 +1025,7 @@ const RIVER_DRESSING_LOD0_MAX: usize = 2_500;
 const RIVER_DRESSING_PROPS: &[&str] = &[
     "river_straight_center",
     "river_bend_center",
+    "river_bend_60_center",
     "river_spring_center",
     "river_mouth_center",
     "river_mouth_l_center",

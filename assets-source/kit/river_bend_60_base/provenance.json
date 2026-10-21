@@ -1,0 +1,828 @@
+{
+  "pieceId": "river_bend_60_base",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/river_bend_60_base.py",
+    "sha256": "008827adabaa5d50ee0664e40f30ca5c302ffdcc27f896b89e20aa7138a58727"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_river_bend_60.py",
+      "sha256": "039a1693d20342e51c7967afbc1795b1b4dd7c69679649033803e2f6adbe77de"
+    },
+    {
+      "path": "scripts/blender/kit/_river_flat.py",
+      "sha256": "cb3c66803cab6b80816eff412f046371d65cb4b58cd7e8c4074db68b555a4124"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 6,
+    "blender": "5.2.2 LTS",
+    "centreLine": {
+      "centreRuntimeXZ": [
+        12.8564,
+        7.4226
+      ],
+      "networkPoints": [
+        [
+          12.856,
+          0
+        ],
+        [
+          12.533,
+          0.007
+        ],
+        [
+          12.209,
+          0.028
+        ],
+        [
+          11.888,
+          0.064
+        ],
+        [
+          11.567,
+          0.113
+        ],
+        [
+          11.25,
+          0.176
+        ],
+        [
+          10.935,
+          0.253
+        ],
+        [
+          10.624,
+          0.344
+        ],
+        [
+          10.318,
+          0.448
+        ],
+        [
+          10.016,
+          0.565
+        ],
+        [
+          9.719,
+          0.695
+        ],
+        [
+          9.429,
+          0.839
+        ],
+        [
+          9.145,
+          0.994
+        ],
+        [
+          8.868,
+          1.162
+        ],
+        [
+          8.599,
+          1.342
+        ],
+        [
+          8.338,
+          1.534
+        ],
+        [
+          8.085,
+          1.737
+        ],
+        [
+          7.842,
+          1.95
+        ],
+        [
+          7.608,
+          2.174
+        ],
+        [
+          7.384,
+          2.408
+        ],
+        [
+          7.17,
+          2.651
+        ],
+        [
+          6.968,
+          2.904
+        ],
+        [
+          6.776,
+          3.165
+        ],
+        [
+          6.596,
+          3.434
+        ],
+        [
+          6.428,
+          3.711
+        ],
+        [
+          6.272,
+          3.995
+        ],
+        [
+          6.129,
+          4.286
+        ],
+        [
+          5.999,
+          4.582
+        ],
+        [
+          5.881,
+          4.884
+        ],
+        [
+          5.777,
+          5.191
+        ],
+        [
+          5.687,
+          5.502
+        ],
+        [
+          5.61,
+          5.816
+        ],
+        [
+          5.547,
+          6.134
+        ],
+        [
+          5.497,
+          6.454
+        ],
+        [
+          5.462,
+          6.776
+        ],
+        [
+          5.441,
+          7.099
+        ],
+        [
+          5.434,
+          7.423
+        ],
+        [
+          5.441,
+          7.746
+        ],
+        [
+          5.462,
+          8.07
+        ],
+        [
+          5.497,
+          8.391
+        ],
+        [
+          5.547,
+          8.712
+        ],
+        [
+          5.61,
+          9.029
+        ],
+        [
+          5.687,
+          9.344
+        ],
+        [
+          5.777,
+          9.655
+        ],
+        [
+          5.881,
+          9.961
+        ],
+        [
+          5.999,
+          10.263
+        ],
+        [
+          6.129,
+          10.56
+        ],
+        [
+          6.272,
+          10.85
+        ],
+        [
+          6.428,
+          11.134
+        ]
+      ],
+      "radiusM": 7.4226,
+      "stepDeg": 2.5,
+      "sweepDeg": 120
+    },
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "interiorOffsets": [
+      [
+        [
+          -6.83,
+          8
+        ],
+        [
+          -6.342142857,
+          4
+        ],
+        [
+          -5.854285714,
+          4
+        ],
+        [
+          -5.366428571,
+          4
+        ],
+        [
+          -4.878571429,
+          2
+        ],
+        [
+          -4.390714286,
+          2
+        ],
+        [
+          -4.33,
+          2
+        ],
+        [
+          -3.902857143,
+          2
+        ],
+        [
+          -3.415,
+          2
+        ],
+        [
+          -3.031,
+          1
+        ],
+        [
+          -2.927142857,
+          1
+        ],
+        [
+          -2.439285714,
+          1
+        ],
+        [
+          -1.951428571,
+          1
+        ],
+        [
+          -1.463571429,
+          1
+        ],
+        [
+          -0.975714286,
+          1
+        ],
+        [
+          -0.487857143,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0.487857143,
+          1
+        ],
+        [
+          0.975714286,
+          1
+        ],
+        [
+          1.463571429,
+          1
+        ],
+        [
+          1.951428571,
+          1
+        ],
+        [
+          2.439285714,
+          1
+        ],
+        [
+          2.927142857,
+          1
+        ],
+        [
+          3.031,
+          1
+        ],
+        [
+          3.415,
+          1
+        ],
+        [
+          3.902857143,
+          1
+        ],
+        [
+          4.33,
+          1
+        ],
+        [
+          4.390714286,
+          1
+        ],
+        [
+          4.878571429,
+          1
+        ],
+        [
+          5.366428571,
+          1
+        ],
+        [
+          5.854285714,
+          1
+        ],
+        [
+          6.342142857,
+          1
+        ],
+        [
+          6.83,
+          1
+        ]
+      ],
+      [
+        [
+          -6.83,
+          4
+        ],
+        [
+          -6.342142857,
+          2
+        ],
+        [
+          -5.854285714,
+          2
+        ],
+        [
+          -5.366428571,
+          2
+        ],
+        [
+          -4.878571429,
+          1
+        ],
+        [
+          -4.390714286,
+          1
+        ],
+        [
+          -4.33,
+          1
+        ],
+        [
+          -3.902857143,
+          1
+        ],
+        [
+          -3.415,
+          1
+        ],
+        [
+          -3.031,
+          1
+        ],
+        [
+          -2.927142857,
+          1
+        ],
+        [
+          -2.439285714,
+          1
+        ],
+        [
+          -1.951428571,
+          1
+        ],
+        [
+          -1.463571429,
+          1
+        ],
+        [
+          -0.975714286,
+          1
+        ],
+        [
+          -0.487857143,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0.487857143,
+          1
+        ],
+        [
+          0.975714286,
+          1
+        ],
+        [
+          1.463571429,
+          1
+        ],
+        [
+          1.951428571,
+          1
+        ],
+        [
+          2.439285714,
+          1
+        ],
+        [
+          2.927142857,
+          1
+        ],
+        [
+          3.031,
+          1
+        ],
+        [
+          3.415,
+          1
+        ],
+        [
+          3.902857143,
+          1
+        ],
+        [
+          4.33,
+          1
+        ],
+        [
+          4.390714286,
+          1
+        ],
+        [
+          4.878571429,
+          1
+        ],
+        [
+          5.366428571,
+          1
+        ],
+        [
+          5.854285714,
+          1
+        ],
+        [
+          6.342142857,
+          1
+        ],
+        [
+          6.83,
+          1
+        ]
+      ],
+      [
+        [
+          -6.83,
+          4
+        ],
+        [
+          -5.7,
+          4
+        ],
+        [
+          -4.33,
+          1
+        ],
+        [
+          -3.5,
+          1
+        ],
+        [
+          -3.031,
+          1
+        ],
+        [
+          -2,
+          1
+        ],
+        [
+          -0.8,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0.8,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3.031,
+          1
+        ],
+        [
+          3.5,
+          1
+        ],
+        [
+          4.33,
+          1
+        ],
+        [
+          5.7,
+          1
+        ],
+        [
+          6.83,
+          1
+        ]
+      ]
+    ],
+    "lod2MaxRatio": 0.2,
+    "marginPx": 12,
+    "maskStats": {
+      "mean": 0.97353196144104,
+      "min": 0,
+      "p01": 0,
+      "p05": 0.9215686917304993,
+      "texels": 632404
+    },
+    "profileErrorM": [
+      {
+        "dryMaxM": 0.0474,
+        "wetMaxM": 0.0207
+      },
+      {
+        "dryMaxM": 0.0465,
+        "wetMaxM": 0.0262
+      },
+      {
+        "dryMaxM": 0.0676,
+        "wetMaxM": 0.0299
+      }
+    ],
+    "profileOffsets": [
+      -6.83,
+      -6.342142857142858,
+      -5.854285714285715,
+      -5.366428571428571,
+      -4.878571428571428,
+      -4.390714285714286,
+      -3.902857142857143,
+      -3.415,
+      -2.9271428571428575,
+      -2.439285714285714,
+      -1.9514285714285715,
+      -1.4635714285714287,
+      -0.9757142857142858,
+      -0.4878571428571429,
+      0,
+      0.4878571428571429,
+      0.9757142857142858,
+      1.4635714285714287,
+      1.9514285714285715,
+      2.439285714285714,
+      2.9271428571428575,
+      3.415,
+      3.902857142857143,
+      4.390714285714286,
+      4.878571428571428,
+      5.366428571428571,
+      5.854285714285715,
+      6.342142857142858,
+      6.83
+    ],
+    "receiverSignature": "508df0dc848d2c7d2cdb4181d6dfa4d928c8f69a20b8786c7d1cf6e4ba7e60cd",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 32.000092817345475,
+      "median": 31.702215016176595,
+      "min": 26.66167947068747
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 3970,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 1830,
+      "ratio": 0.4609571788413098
+    },
+    {
+      "lod": 2,
+      "tris": 784,
+      "ratio": 0.19748110831234256
+    }
+  ],
+  "collider": {
+    "node": "river_bend_60_base_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 0,
+        "kind": "river",
+        "offset": 0,
+        "width": 8
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0,
+        0
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 1,
+        "kind": "river",
+        "offset": 0,
+        "width": 8
+      },
+      "name": "socket-lane-1",
+      "position": [
+        6.928203105926514,
+        0,
+        12
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 32.000092817345475,
+    "median": 31.702215016176595,
+    "min": 26.66167947068747
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 119932,
+        "astc": 116622
+      },
+      "glbBytes": 129980
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/river_bend_60_base/river_bend_60_base.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 119932,
+        "sha256": "49efb8888542429af3098b3d63b7670c4f5254c46f905ab5a61ba9296d8d4838"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/river_bend_60_base/river_bend_60_base.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 116622,
+        "sha256": "6df0f5b06a450dafe622580fc5ccaa01dd7c69b7f7937906c5fd198045139c98"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/river_bend_60_base/river_bend_60_base.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 181149,
+        "sha256": "be5f7735a0e90e88e4986a4ec3abf9dc3397bf3bf0d6a060b0c9538943d72d60"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/river_bend_60_base/river_bend_60_base.glb",
+      "sha256": "29f3ea4daf7329edbbfb38d84884b360dcb41f8c586c4e41828649c4858edea2",
+      "bytes": 129980
+    },
+    {
+      "path": "assets/kit/p1/river_bend_60_base/river_bend_60_base.masks.bc7.ktx2",
+      "sha256": "49efb8888542429af3098b3d63b7670c4f5254c46f905ab5a61ba9296d8d4838",
+      "bytes": 119932
+    },
+    {
+      "path": "assets/kit/p1/river_bend_60_base/river_bend_60_base.masks.astc.ktx2",
+      "sha256": "6df0f5b06a450dafe622580fc5ccaa01dd7c69b7f7937906c5fd198045139c98",
+      "bytes": 116622
+    },
+    {
+      "path": "assets/kit/p1/river_bend_60_base/river_bend_60_base.masks.png",
+      "sha256": "be5f7735a0e90e88e4986a4ec3abf9dc3397bf3bf0d6a060b0c9538943d72d60",
+      "bytes": 181149
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/river/ref-1.jpg",
+      "sha256": "dab614b05590faabb7a2e7afe89f381d3cd356ffa06c18e6908f6f0e0c5e376d",
+      "sourceSha256": "29d6315023b50ce140ee9cd81df7bae4742d0456d2e2477d41ce8cb3d016f42f",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "4c55204d-d467-4828-849f-7f954e7d4786",
+      "prompt": "Two separate flat-sided hexagonal diorama tiles side by side, each 32 m across with a meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel). Left tile: a straight river running from one flat edge across to the opposite flat edge. Right tile: a curved river running from one flat edge to the flat edge two positions away, skipping one edge, a gentle bend. The 8 m wide river channel is sunk below the meadow surface between natural earthy banks with pebbles and reeds, clear water tinted pale turquoise at the margins and teal-blue in the middle, sun glints, soft caustics on the pebbly channel floor. Where the river reaches the tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/river/ref-2.jpg",
+      "sha256": "7c55c8d0a01b336a9934a7e1cf65e78ddbfc909f091bb92a320b37d9d968b4f9",
+      "sourceSha256": "2701aa68e02d17f45ec67ffcd7e4eb0dd5e3eebe5f1693cfa2c4419f0fb00d30",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "cf6a46c0-a15a-4455-884f-8b1e76c0746a",
+      "prompt": "Close-up of a natural river bank on a hexagonal diorama tile: the meadow grass edge, an earthy bank sloping down to the water, pebbles and reeds, clear water tinted pale turquoise at the margins and teal-blue in the middle, sun glints, soft caustics on the pebbly channel floor, and where the channel reaches the tile side wall the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-21T01:28:18.034Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/river/ref-1.jpg",
+        "assets-source/refs/river/ref-2.jpg"
+      ],
+      "notes": "Approved: channel cut below the meadow surface, natural banks, water column on the cut face. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "new-piece",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. New piece: the channel-cut base of the tight river bend river_bend_60 (River on edges 0 and 1). Centre line: the river_edge stubs straight for 1 m, joined by the 7.42 m arc tangent to both (120 degree turn); the river family's bed profile, notched ring, O4 skirt and flattened meadow relief (_river.py, _river_flat.py through _river_bend_60.py, helpers unchanged). Tris 3970/1830/784 (LOD2 19.7%, lane-cut ceiling 20%); water contract error per LOD wet 0.021/0.026/0.030, dry 0.047/0.047/0.068. Review docs/checkpoints/river_bend_60/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

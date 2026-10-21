@@ -1390,6 +1390,8 @@ mod tests {
         for (id, rot) in [
             ("river_bend", 0),
             ("river_bend", 3),
+            ("river_bend_60", 0),
+            ("river_bend_60", 3),
             ("river_straight", 1),
             ("river_road_bridge", 4),
         ] {
@@ -1483,6 +1485,69 @@ mod tests {
             }
         }
         assert_eq!(checked, 5 * 33);
+    }
+
+    /// The tight bend between two straights: the fields agree across both seams, and along the
+    /// bend's centre line the flow keeps the straights' speed and turns smoothly with the path
+    /// (no reversal, no jump at the stubs or between arc samples).
+    #[test]
+    fn tight_bend_flow_turns_smoothly_between_straights() {
+        let cat = catalog();
+        let tiles = [
+            tile(0, 0, "river_straight", 0),
+            tile(1, 0, "river_bend_60", 3),
+            tile(1, -1, "river_straight", 1),
+        ];
+        let lay = layout(&tiles, &cat, |_| false);
+        for (a, b) in [((0, 0), (1, 0)), ((1, 0), (1, -1))] {
+            let (ca, cb) = (Axial::new(a.0, a.1), Axial::new(b.0, b.1));
+            let e = (0..6u8).find(|&e| ca.neighbor(e) == cb).unwrap();
+            assert!(!lay[&ca].exposed.contains(&e), "{a:?} -> {b:?} exposed");
+            let (fa, fb) = (lay[&ca].field(), lay[&cb].field());
+            let mid = (center(ca) + center(cb)) * 0.5;
+            let along = edge_dir(e).perp();
+            for i in 0..=32 {
+                let p = mid + along * (-8.0 + 0.5 * i as f32);
+                let (wa, wb) = (fa.water(p.x, p.y), fb.water(p.x, p.y));
+                assert!((fa.height(p.x, p.y) - fb.height(p.x, p.y)).abs() < 1e-3);
+                assert!((wa.depth - wb.depth).abs() < 1e-3 && (wa.river - wb.river).abs() < 1e-4);
+                assert!(wa.flow.distance(wb.flow) < 1e-3, "{a:?}|{b:?} at {p}");
+            }
+        }
+        let r = oriented_rivers(&tiles, &cat);
+        let path = &r[&(Axial::new(1, 0), 0)];
+        let straight = lay[&Axial::new(0, 0)].field();
+        let c0 = center(Axial::new(0, 0));
+        let speed = straight.water(c0.x, c0.y).flow.length();
+        assert!(speed > 0.1, "{speed}");
+        let bend = lay[&Axial::new(1, 0)].field();
+        let mut prev: Option<Vec2> = None;
+        for w in path.points.windows(2) {
+            let p = (w[0] + w[1]) * 0.5;
+            let f = bend.water(p.x, p.y).flow;
+            assert!(
+                (f.length() - speed).abs() < 1e-3,
+                "speed {} at {p}",
+                f.length()
+            );
+            assert!(
+                f.normalize().dot((w[1] - w[0]).normalize()) > 0.999,
+                "flow off the path at {p}"
+            );
+            if let Some(q) = prev {
+                assert!(f.normalize().dot(q) > 0.995, "flow jumps at {p}");
+            }
+            prev = Some(f.normalize());
+        }
+        // 120 degrees of turn, start to end.
+        let first = (path.points[1] - path.points[0]).normalize();
+        let n = path.points.len();
+        let last = (path.points[n - 1] - path.points[n - 2]).normalize();
+        assert!(
+            (first.dot(last) - (-0.5)).abs() < 1e-3,
+            "{}",
+            first.dot(last)
+        );
     }
 
     /// Exposed edges follow adjacency: open river ends and lone ocean sides get a cut face; joined

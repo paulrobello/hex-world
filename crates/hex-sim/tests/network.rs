@@ -305,6 +305,32 @@ fn river_fork_joins_three_river_neighbours_at_one_node() {
     }
 }
 
+/// The tight river bend joins two straights into one river graph: its link runs seam to seam along
+/// the 1 m stubs and the 7.42 m arc between them (2 m + 7.4226 m x 2 pi / 3 = 17.54 m).
+#[test]
+fn tight_river_bend_links_its_two_seams() {
+    let cat = catalog();
+    let mut rivers = Network::new(NetworkKind::River);
+    let a = Axial::ORIGIN;
+    let b = a.neighbor(0);
+    let c = b.neighbor(4);
+    put(&mut rivers, &cat, a, "river_straight", 0);
+    put(&mut rivers, &cat, b, "river_bend_60", 3);
+    put(&mut rivers, &cat, c, "river_straight", 1);
+    assert_eq!(rivers.links().count(), 3);
+    let bend = only_link(&rivers, b);
+    assert!(has_end_at(bend, seam_mid(a, b)) && has_end_at(bend, seam_mid(b, c)));
+    let arc = 2.0 + 12.856_406 * (30f32).to_radians().tan() * 2.0 * std::f32::consts::PI / 3.0;
+    assert!(
+        (bend.length() - arc).abs() < 0.01,
+        "{} vs {arc}",
+        bend.length()
+    );
+    let from = rivers.seam_node(a, 3).unwrap();
+    let to = rivers.seam_node(c, 1).unwrap();
+    assert!(rivers.route(from, to).is_some());
+}
+
 #[test]
 fn place_and_bulldoze_update_only_the_touched_tile() {
     let cat = catalog();

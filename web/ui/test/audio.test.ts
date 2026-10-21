@@ -823,6 +823,7 @@ test("placement: a water tile selects the slosh pool and a land tile does not", 
   const poolOf = (id: string) => placementPool(edges.get(id)!);
   const water = ["river_straight", "river_bend", "river_spring", "river_road_bridge", "river_rail_bridge"];
   water.push("river_fork", "beach", "beach_outer", "beach_inner", "river_mouth", "river_mouth_l", "ocean");
+  water.push("river_bend_60");
   for (const id of water) assert.equal(poolOf(id), PLACE_SLOSH.pool, `${id} sloshes`);
   const land = ["meadow", "forest", "oak", "farm", "windmill", "wheat_field", "house_cluster", "bakery"];
   land.push("road_straight", "road_bend_120", "road_bend_60", "road_junction");

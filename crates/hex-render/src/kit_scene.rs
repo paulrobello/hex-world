@@ -359,14 +359,22 @@ pub fn kit_layout() -> Vec<Placement> {
         v.push(place("river_edge", q, r, 4));
     }
     // The river fork (owner 2026-10-20) on (-3, 4), west of the river straights: river_fork_base
-    // and its dressing at rot 1 (river on world edges 1, 3 and 5, all facing empty cells; its grass
-    // edge 0 meets the straight's grass edge 3 on (-2, 4)) with a river_edge stub on each River
+    // and its dressing at rot 1 (river on world edges 1 and 3 facing empty cells and 5 meeting the tight
+    // bend on (-2, 3); its grass edge 0 meets the straight's grass edge 3 on (-2, 4)) with a river_edge stub on each River
     // edge. The kit scenario spawns no water, so its channel shows dry here; play draws the water.
     v.push(place("river_fork_base", -3, 4, 1));
     v.push(place("river_fork_center", -3, 4, 1));
     for k in [1, 3, 5] {
         v.push(place("river_edge", -3, 4, k));
     }
+    // The tight river bend (river_bend_60: lanes on local edges 0 and 1) on (-2, 3) at rot 1 (lanes
+    // on world edges 1 and 2): it joins the straight on (-2, 4) across world edge 1 to the fork's
+    // edge-5 arm on (-3, 4) across world edge 2. Its own channel-cut base with a river_edge stub at
+    // each lane.
+    v.push(place("river_bend_60_base", -2, 3, 1));
+    v.push(place("river_bend_60_center", -2, 3, 1));
+    v.push(place("river_edge", -2, 3, 1));
+    v.push(place("river_edge", -2, 3, 2));
     for (piece, offset) in TRAIN_ON_RAIL_BRIDGE {
         v.push(Placement {
             offset,
@@ -1229,6 +1237,53 @@ mod tests {
                     .any(|p| p.cell == c && matches!(p.piece, "meadow_base" | "forest_base"))
             );
         }
+    }
+
+    /// The tight river bend's lanes are its local edges 0 and 1, each with a river_edge stub; one
+    /// meets the river straight upstream of the rail bridge on that straight's lane, the other a
+    /// river arm of the fork, and its cell holds no other base.
+    #[test]
+    fn river_bend_60_joins_the_straight_to_the_fork() {
+        let l = kit_layout();
+        let bend = *l
+            .iter()
+            .find(|p| p.piece == "river_bend_60_center")
+            .unwrap();
+        for k in [0, 1] {
+            let e = (k + bend.rot) % 6;
+            assert!(
+                l.iter()
+                    .any(|p| p.piece == "river_edge" && p.cell == bend.cell && p.rot == e),
+                "no river_edge on world edge {e}"
+            );
+        }
+        let met = [0u8, 1].into_iter().any(|k| {
+            let e = (k + bend.rot) % 6;
+            let n = bend.cell.neighbor(e);
+            l.iter().any(|p| {
+                p.piece == "river_straight_base"
+                    && p.cell == n
+                    && [p.rot % 6, (p.rot + 3) % 6].contains(&((e + 3) % 6))
+            })
+        });
+        assert!(met, "the bend meets no river straight on its lanes");
+        let fork = [0u8, 1].into_iter().any(|k| {
+            let e = (k + bend.rot) % 6;
+            let n = bend.cell.neighbor(e);
+            l.iter().any(|p| {
+                p.piece == "river_fork_base"
+                    && p.cell == n
+                    && [0u8, 2, 4]
+                        .map(|j| (j + p.rot) % 6)
+                        .contains(&((e + 3) % 6))
+            })
+        });
+        assert!(fork, "the bend meets no fork arm on its lanes");
+        assert!(l.iter().all(|p| p.cell != bend.cell
+            || !matches!(
+                p.piece,
+                "meadow_base" | "forest_base" | "river_straight_base"
+            )));
     }
 
     #[test]
