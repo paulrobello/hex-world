@@ -341,8 +341,10 @@ fn bulldozing_a_cluster_removes_its_cars_and_undo_restores_them() {
 
 // Clearance: obstacles of house_cluster in tile-local (x, z) meters, as min/max boxes. Houses from
 // the house pieces' footprints at their hero placements (data/tiles/house_cluster.ron); doorsteps
-// and hedges from scripts/blender/kit/house_pad.py (DOORSTEPS, HEDGES with HEDGE_W 0.65).
-const HOUSE_CLUSTER: [(&str, [f32; 4]); 12] = [
+// and hedges from scripts/blender/kit/house_pad.py (DOORSTEPS, HEDGES with HEDGE_W 0.65); the well
+// (hero 3 at (5.3, -7.7)) as its apron's bounds, radius 1.385 m (scripts/blender/kit/_house_well.py
+// APRON_R: every LOD of both wells stands inside it, the roof included).
+const HOUSE_CLUSTER: [(&str, [f32; 4]); 13] = [
     ("cottage 0", [-3.7, -9.2, 2.7, -4.8]),
     ("cottage 1", [-3.7, 4.8, 2.7, 9.2]),
     ("two-storey", [-10.0, -3.6, -5.0, 3.6]),
@@ -355,6 +357,7 @@ const HOUSE_CLUSTER: [(&str, [f32; 4]); 12] = [
     ("back hedge +", [-4.0, 10.27, 3.0, 10.93]),
     ("garden hedge -", [-11.6, -5.33, -5.7, -4.67]),
     ("garden hedge +", [-11.6, 4.67, -5.7, 5.33]),
+    ("well", [3.915, -9.085, 6.685, -6.315]),
 ];
 // The bakery tile (data/tiles/bakery.ron) in tile-local (x, z): bakery_shop at (-4.1, -8.5) yaw 90 from
 // its LOD0 bounds (scripts/blender/kit/bakery_shop.py: body with plinth, gable chimneys, the bow

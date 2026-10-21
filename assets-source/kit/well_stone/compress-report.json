@@ -1,0 +1,88 @@
+{
+  "name": "well_stone",
+  "date": "2026-10-21T05:00:10.910Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/well_stone/well_stone.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 411658,
+      "sha256": "8dd07b85f32643b0616348ed135fc87635a38a012e53128400c19b09904da1d0"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/well_stone/well_stone.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 390114,
+      "sha256": "c97af077f0a906821d25ad99a9914301ac3323457cfd9a0ad5b57886a2d0ac2a"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/well_stone/well_stone.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 588514,
+      "sha256": "3078dd9e67a73105b8d2d6230d39bd0394ad117455edd271c9a49d58ed215f7c"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 411658,
+      "astc": 390114
+    },
+    "glbBytes": 148324
+  },
+  "glb": {
+    "bytes": 148324,
+    "sha256": "d8a7e19a1efac8b6c3c5f9f7efe6603b68ec5ddf7b282b5bce03d16afdbf7f8a"
+  }
+}

@@ -40,8 +40,8 @@ that built it instead of starting a fresh one.
      `kit-renders`.
    - Then, by whoever owns the manifest: the manifest entry, `kit-provenance REFS=…`,
      `kit-check` and `checkall`.
-   - After a size or footprint change: `cargo test -p hex-render --lib -- boids scatter walk
-     kit_scene`.
+   - After a size or footprint change: `cargo test -p hex-play -p hex-render --lib -- boids
+     scatter walk kit_scene` (walk and scatter live in hex-play, as `project.md` gives it).
 8. **Before review.** The review sheet in `docs/checkpoints/<piece>/` (SKILL.md, "Owner
    checkpoints"). Flag any new gate branch before building (SKILL.md, "A new kind of piece
    needs its gate branch first").

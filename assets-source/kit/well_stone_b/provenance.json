@@ -1,0 +1,294 @@
+{
+  "pieceId": "well_stone_b",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/well_stone_b.py",
+    "sha256": "857700f38ebd03bb7d2fe25ce21f9cd6378621a4638ac7882889f55688695800"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_house.py",
+      "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    },
+    {
+      "path": "scripts/blender/kit/_house_longhouse.py",
+      "sha256": "c4e8805ae0750279370f70cde6c79cec36bf6d734e7c76e56b687c8f5c65a44b"
+    },
+    {
+      "path": "scripts/blender/kit/_house_well.py",
+      "sha256": "3727c9f07f7e7b684d65e6429995fd727617d31153f3fb079ffcdd92c410ab18"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.6,
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      }
+    },
+    "device": "CPU",
+    "marginPx": 4,
+    "maskStats": {
+      "aoMean": 0.629323422908783,
+      "aoP05": 0.01568627543747425,
+      "centroids": {
+        "lod0": {
+          "minA": {
+            "cap": 0,
+            "iron": 0.204,
+            "mortar": 0,
+            "rope": 0.188,
+            "stone": 0,
+            "stone_buff": 0,
+            "timber": 0,
+            "wood": 0.031
+          },
+          "unbakedTris": 0
+        },
+        "lod1": {
+          "minA": {
+            "cap": 0,
+            "iron": 0.188,
+            "rope": 0.392,
+            "stone": 0.392,
+            "timber": 0.282,
+            "wood": 0.157
+          },
+          "unbakedTris": 0
+        },
+        "lod2": {
+          "minA": {
+            "cap": 0.608,
+            "stone": 0.031,
+            "timber": 0.686,
+            "wood": 0.624
+          },
+          "unbakedTris": 0
+        }
+      },
+      "coverage": 0.43781375885009766,
+      "filledTexels": 377,
+      "nightTexels": 0
+    },
+    "masksDensityBySlot": {
+      "lod0": {
+        "cap": 53.51,
+        "iron": 53.69,
+        "mortar": 53.12,
+        "rope": 54.62,
+        "stone": 53.33,
+        "stone_buff": 54.15,
+        "timber": 54.58,
+        "wood": 54.4
+      },
+      "lod1": {
+        "cap": 54.85,
+        "iron": 55.26,
+        "rope": 55.26,
+        "stone": 54.31,
+        "timber": 55.26,
+        "wood": 51.98
+      },
+      "lod2": {
+        "cap": 55.25,
+        "stone": 54.06,
+        "timber": 54.22,
+        "wood": 51.58
+      }
+    },
+    "masksDensityPxPerM": {
+      "well_stone_b_lod0": {
+        "max": 55.26264369961003,
+        "median": 54.26727373424459,
+        "min": 46.003060853734766
+      },
+      "well_stone_b_lod1": {
+        "max": 55.26312785531001,
+        "median": 54.90813577841074,
+        "min": 46.4335287716369
+      },
+      "well_stone_b_lod2": {
+        "max": 55.262637786361466,
+        "median": 54.22151140639541,
+        "min": 46.46988664173171
+      }
+    },
+    "receiverSignature": "0b0279b55f3e42da0f378ab9c8bee16a218c09fdd5b23156324d667b5fe114d8",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 55.26264369961003,
+      "median": 54.26727373424459,
+      "min": 46.003060853734766
+    },
+    "uvMargin": 0.012
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1188,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 330,
+      "ratio": 0.2777777777777778
+    },
+    {
+      "lod": 2,
+      "tris": 112,
+      "ratio": 0.09427609427609428
+    }
+  ],
+  "collider": {
+    "node": "well_stone_b_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 55.26264369961003,
+    "median": 54.26727373424459,
+    "min": 46.003060853734766
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 414662,
+        "astc": 393551
+      },
+      "glbBytes": 123024
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/well_stone_b/well_stone_b.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 414662,
+        "sha256": "9fc1407c2adf4dfd61d9c9594b4ca6f8ce9c4f5b11f1dd8d9a9124e23a9c866e"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/well_stone_b/well_stone_b.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 393551,
+        "sha256": "0637439b85931565f4764baf15525db010b315744d6f6b0a18b2dc8968926748"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/well_stone_b/well_stone_b.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 580282,
+        "sha256": "df794bb2ffa11bd0da2c2e9bd0a30e60874401779579621abd08d0860cef4b34"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/well_stone_b/well_stone_b.glb",
+      "sha256": "d8007d89c79b1c5e82b9d6c7fbd05e0aade3d11afa7f517d6bd77ef7caa873c3",
+      "bytes": 123024
+    },
+    {
+      "path": "assets/kit/p1/well_stone_b/well_stone_b.masks.bc7.ktx2",
+      "sha256": "9fc1407c2adf4dfd61d9c9594b4ca6f8ce9c4f5b11f1dd8d9a9124e23a9c866e",
+      "bytes": 414662
+    },
+    {
+      "path": "assets/kit/p1/well_stone_b/well_stone_b.masks.astc.ktx2",
+      "sha256": "0637439b85931565f4764baf15525db010b315744d6f6b0a18b2dc8968926748",
+      "bytes": 393551
+    },
+    {
+      "path": "assets/kit/p1/well_stone_b/well_stone_b.masks.png",
+      "sha256": "df794bb2ffa11bd0da2c2e9bd0a30e60874401779579621abd08d0860cef4b34",
+      "bytes": 580282
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/well_stone/ref-1.jpg",
+      "sha256": "f503643dde21b4d65c7b2eca6f31a16f29e28d376e5721b8c06840730b7e09fe",
+      "sourceSha256": "fd1465953e54c928541ab3ce641a27867b8ca5fdfd11720f50c5eb974c25415b",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "f6302779-ee2e-4705-a8d8-2d556716e1f9",
+      "prompt": "A single roofed village well: a round waist-high well wall of rough weathered grey and buff fieldstones laid in pale lime mortar, noticeably wider than it is tall, topped with a flat ring of smooth pale grey dressed capstones, two stout dark oak posts rising from opposite sides of the wall to carry a small steep gabled roof covered in small overlapping terracotta clay roof tiles in warm orange-brown, the same fired clay tiles as an English cottage roof, with plain dark oak bargeboards, and between the posts under the roof a turned timber windlass axle with a small iron crank handle at one end, a coil of thick hemp rope wound on the axle and hanging down to a wooden bucket of timber staves bound with dark iron hoops, the bucket resting on the capstones beside the round opening, standing alone on the plain grey studio floor with a soft contact shadow, smooth sculpted forms like a quality scale model with a bold readable silhouette, the whole well centred in frame and seen from the front-left from a high three-quarter angle so the windlass, rope, bucket and wall top read clearly. The picture shows only the well on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/well_stone/ref-2.jpg",
+      "sha256": "f76d7586c9919f6011ab79c0bf76c849667a42cc3d44ce6dc1e002d4ab51eca1",
+      "sourceSha256": "c977cc723707f968a5a5bf6bac8af18280446e53ff41755f6d90b7448699b47a",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "68e935a8-0444-4dbf-a0e7-db8324cee77b",
+      "prompt": "A single open village well with no roof: a round waist-high well wall of rough weathered grey and buff fieldstones laid in pale lime mortar, noticeably wider than it is tall, topped with a flat ring of smooth pale grey dressed capstones, two stout dark oak posts rising from opposite sides of the wall and joined across the top by a plain dark oak crossbeam, and between the posts a turned timber windlass axle with a small iron crank handle at one end, a coil of thick hemp rope wound on the axle and hanging down to a wooden bucket of timber staves bound with dark iron hoops, the bucket hanging on its rope just above the round opening, standing alone on the plain grey studio floor with a soft contact shadow, smooth sculpted forms like a quality scale model with a bold readable silhouette, the whole well centred in frame and seen from the front-left from a high three-quarter angle so the windlass, rope, bucket and wall top read clearly. The picture shows only the well on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/well_stone/ref-3.jpg",
+      "sha256": "1871b8f69db5eb2aefd2117ac8b870c5ed5935c843b810eb9d0fd4cdb99253ef",
+      "sourceSha256": "d70ee5a552294ca308d66b448637169d064ec6cefdc5f9cb6895f75410452289",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "09938b8b-e9fd-4d74-9633-2c6116ba2761",
+      "prompt": "A single flat-sided hexagonal diorama tile, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. Near the middle of the tile stands one small timber-framed English village cottage: dark oak half-timbering over cream lime-plaster panels, a steep brown clay-tile roof with gables, tall red-brick chimneys with clay pots, and small-paned timber casement windows, with a gravel path to its front door, a small cottage garden and a low hedge. A few steps from the front door, beside the gravel path on a small round apron of flagstones, stands one roofed village well: a round waist-high well wall of rough weathered grey and buff fieldstones laid in pale lime mortar, noticeably wider than it is tall, topped with a flat ring of smooth pale grey dressed capstones, two stout dark oak posts rising from opposite sides of the wall to carry a small steep gabled roof of brown clay tiles with plain dark oak bargeboards, and between the posts under the roof a turned timber windlass axle with a small iron crank handle at one end, a coil of thick hemp rope wound on the axle and hanging down to a wooden bucket of timber staves bound with dark iron hoops, the bucket resting on the capstones beside the round opening. The well is about 1.5 m across, small beside the cottage, its roof ridge well below the cottage eaves. The rest of the tile is open meadow grass with a few wildflowers, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-21T05:04:46.494Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/well_stone/ref-1.jpg",
+        "assets-source/refs/well_stone/ref-2.jpg",
+        "assets-source/refs/well_stone/ref-3.jpg"
+      ],
+      "notes": "Owner 2026-10-20: \"stone well refrence approved\" (WL-A1, sheet docs/checkpoints/refs-well/refs-sheet.jpg). WQ1-WQ3 not yet answered; the build follows the recommendations until the owner says otherwise: one well on house_cluster's lawn (farm yard fallback), the covered well (ref-1) as the piece with the open well (ref-2) as a _b variant, about 1.5 m wide, 0.9 m wall, 2.4 m ridge."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. The open village well from assets-source/refs/well_stone ref-2 (owner WL-A1, 2026-10-20), well_stone's variant for house_cluster's well slot (about one cluster in three, WQ2 recommendation): well_stone's wall, capstones and apron, its oak posts taller (2.16 m) and joined by a crossbeam, the windlass at 1.55 m with its crank and rope, and the stave bucket hanging just above the opening. No roof. Review sheet: docs/checkpoints/well_stone/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "aoDistanceM": 0.6,
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "CPU",
+  "marginPx": 4,
+  "maskStats": {
+    "aoMean": 0.621091365814209,
+    "aoP05": 0.0,
+    "centroids": {
+      "lod0": {
+        "minA": {
+          "cap": 0.0,
+          "iron": 0.075,
+          "mortar": 0.0,
+          "roof": 0.0,
+          "rope": 0.11,
+          "stone": 0.0,
+          "stone_buff": 0.0,
+          "timber": 0.0,
+          "wood": 0.063
+        },
+        "unbakedTris": 0
+      },
+      "lod1": {
+        "minA": {
+          "cap": 0.0,
+          "iron": 0.173,
+          "roof": 0.0,
+          "rope": 0.251,
+          "stone": 0.376,
+          "timber": 0.0,
+          "wood": 0.047
+        },
+        "unbakedTris": 0
+      },
+      "lod2": {
+        "minA": {
+          "cap": 0.345,
+          "roof": 0.843,
+          "stone": 0.016,
+          "timber": 0.11,
+          "wood": 0.267
+        },
+        "unbakedTris": 0
+      }
+    },
+    "coverage": 0.3950967788696289,
+    "filledTexels": 1535,
+    "nightTexels": 0
+  },
+  "masksDensityBySlot": {
+    "lod0": {
+      "cap": 35.71,
+      "iron": 35.79,
+      "mortar": 35.09,
+      "roof": 41.11,
+      "rope": 41.1,
+      "stone": 35.71,
+      "stone_buff": 35.71,
+      "timber": 41.1,
+      "wood": 35.71
+    },
+    "lod1": {
+      "cap": 37.04,
+      "iron": 37.83,
+      "roof": 41.1,
+      "rope": 41.1,
+      "stone": 37.04,
+      "timber": 41.02,
+      "wood": 37.05
+    },
+    "lod2": {
+      "cap": 35.07,
+      "roof": 41.11,
+      "stone": 34.99,
+      "timber": 35.07,
+      "wood": 35.07
+    }
+  },
+  "masksDensityPxPerM": {
+    "well_stone_lod0": {
+      "max": 41.11253292191225,
+      "median": 36.178813557763554,
+      "min": 31.403454038174292
+    },
+    "well_stone_lod1": {
+      "max": 41.11035682564889,
+      "median": 38.487584979235564,
+      "min": 30.115544878971146
+    },
+    "well_stone_lod2": {
+      "max": 41.11154003817968,
+      "median": 35.069273632768734,
+      "min": 32.18254313681097
+    }
+  },
+  "receiverSignature": "2d749f6a4484a787383def568834c2ed3b883a7268328c4857ec8ec33ce24041",
+  "samples": 64,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 41.11253292191225,
+    "median": 36.178813557763554,
+    "min": 31.403454038174292
+  },
+  "uvMargin": 0.012
+}

@@ -11,6 +11,12 @@
 // across the driveway (`back`, ending at the cusp), then drives forward onto the outbound lane
 // (`leave`); the swing crosses the verge onto the lawn past the hedges. The paths keep a 5.4 x 2.0 m car clear of the houses, doorsteps, hedges and the other
 // two spots (hex-sim tests/parking.rs).
+//
+// The village well (hero 3, after the houses: parking's `house` is the hero index) stands on the
+// lawn east of cottage 0, beside the driveway's -z hedge, on its flagstone apron (2.77 m across,
+// scripts/blender/kit/_house_well.py): the apron keeps 0.57 m from cottage 0's collider box, 0.54 m
+// from the hedge and its rim 3.15 m inside edge 5, and the cars' swings stay north of the hedge. Its open
+// front faces the kit sun (yaw 60).
 (
     id: "house_cluster",
     biome: Grass,
@@ -29,6 +35,7 @@
             (piece: "house_cottage", at: (-0.5, -7.0), yaw_deg: 90.0),
             (piece: "house_cottage", at: (-0.5, 7.0), yaw_deg: 270.0),
             (piece: "house_twostorey", at: (-7.5, 0.0), yaw_deg: 0.0),
+            (piece: "well_stone", at: (5.3, -7.7), yaw_deg: 60.0),
         ],
     ),
     nodes: [

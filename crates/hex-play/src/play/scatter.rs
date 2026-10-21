@@ -623,6 +623,23 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
             crown: 0.0,
         },
     ),
+    // The wells: their LOD2 hull collider's reach, the flagstone apron's rim (1.385 m), so grass
+    // and scatter keep off the whole apron (`_house_well.py`; the walker stops at the wall instead,
+    // `walk::DECLARED_PARTS`).
+    (
+        "well_stone",
+        Footprint {
+            ground: 1.39,
+            crown: 0.0,
+        },
+    ),
+    (
+        "well_stone_b",
+        Footprint {
+            ground: 1.39,
+            crown: 0.0,
+        },
+    ),
     // The tower trunk only: the sails turn overhead, from 3.7 m up.
     (
         "windmill",

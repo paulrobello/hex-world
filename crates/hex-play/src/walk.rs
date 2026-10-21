@@ -130,6 +130,8 @@ pub const OBSTACLES: &[&str] = &[
     "bush_verge_c",
     "rail_station_shelter",
     "rail_buffer_stop",
+    "well_stone",
+    "well_stone_b",
 ];
 
 /// Parts of centre pieces that block the walker, as (centre piece, part, footprint corners in the
@@ -174,18 +176,41 @@ pub const PIECE_POSTS: &[(&str, [[f32; 2]; 4])] = &[
 /// at z -3.55, the shed's back wall at z 1.0; up to the cupola's finial), the shed's end walls
 /// (inner faces at x +-4.9 to the plinth, z 1.0..3.35, under the catslide at 3.6 m) and its four
 /// 0.2 m posts on the post line (x +-1.633 and +-4.9, z 3.35..3.55, to the plate at 2.65 m).
-pub const DECLARED_PARTS: &[(&str, &[[f32; 5]])] = &[(
-    "barn_red_b",
-    &[
-        [-5.05, 5.08, -3.55, 1.0, 7.85],
-        [4.9, 5.05, 1.0, 3.35, 3.6],
-        [-5.05, -4.9, 1.0, 3.35, 3.6],
-        [4.8, 5.0, 3.35, 3.55, 2.65],
-        [1.533, 1.733, 3.35, 3.55, 2.65],
-        [-1.733, -1.533, 3.35, 3.55, 2.65],
-        [-5.0, -4.8, 3.35, 3.55, 2.65],
-    ],
-)];
+///
+/// The wells' GLB collider is the LOD2 hull, which reaches the flagstone apron's rim (1.385 m, so
+/// grass and scatter keep off the apron: `scatter::FOOTPRINTS`); their parts keep the walker on the
+/// apron instead (`_house_well.py`, measured on LOD0). `well_stone` is its roof's footprint (the
+/// eaves and bargeboards to x +-0.9, the gable bargeboards and the crank to z +-1.09), so the eye at
+/// 1.7 m never enters the eave at 1.52 m. `well_stone_b` has no roof: a stepped disc over its wall
+/// and capstones (radius 0.79), its posts (0.17 m, centres on z +-0.8, to 2.16 m) and the crank on
+/// the +z post (x -0.03..0.09, out to z 1.09, to 1.62 m).
+pub const DECLARED_PARTS: &[(&str, &[[f32; 5]])] = &[
+    (
+        "barn_red_b",
+        &[
+            [-5.05, 5.08, -3.55, 1.0, 7.85],
+            [4.9, 5.05, 1.0, 3.35, 3.6],
+            [-5.05, -4.9, 1.0, 3.35, 3.6],
+            [4.8, 5.0, 3.35, 3.55, 2.65],
+            [1.533, 1.733, 3.35, 3.55, 2.65],
+            [-1.733, -1.533, 3.35, 3.55, 2.65],
+            [-5.0, -4.8, 3.35, 3.55, 2.65],
+        ],
+    ),
+    ("well_stone", &[[-0.9, 0.9, -1.09, 1.09, 2.46]]),
+    (
+        "well_stone_b",
+        &[
+            [-0.79, 0.79, -0.3, 0.3, 0.9],
+            [-0.74, 0.74, -0.5, 0.5, 0.9],
+            [-0.61, 0.61, -0.61, 0.61, 0.9],
+            [-0.5, 0.5, -0.74, 0.74, 0.9],
+            [-0.3, 0.3, -0.79, 0.79, 0.9],
+            [-0.085, 0.085, -0.885, 0.885, 2.16],
+            [-0.03, 0.09, 0.885, 1.09, 1.62],
+        ],
+    ),
+];
 
 /// [`DECLARED_PARTS`] of `piece`, if it has any.
 fn declared_parts(piece: &str) -> Option<&'static [[f32; 5]]> {
@@ -677,7 +702,7 @@ impl PieceShape {
 }
 
 /// What a prop is to the player: `building`, `tree`, `hay`, `animal`, `log`, `fence`, `lever`,
-/// `buffer_stop` or `rock`.
+/// `buffer_stop`, `boat`, `stage`, `well` or `rock`.
 /// Walk mode's [`Blocked::reason`] and photo mode's click to focus both report it.
 pub fn prop_kind(piece: &str) -> &'static str {
     match piece {
@@ -705,6 +730,7 @@ pub fn prop_kind(piece: &str) -> &'static str {
         "rail_buffer_stop" => "buffer_stop",
         p if p.starts_with("boat_") => "boat",
         "landing_stage" => "stage",
+        p if p.starts_with("well_") => "well",
         _ => "rock",
     }
 }
@@ -1501,6 +1527,8 @@ pub(crate) mod tests {
             ("bush_verge_b", "tree"),
             ("bush_verge_c", "tree"),
             ("rail_buffer_stop", "buffer_stop"),
+            ("well_stone", "well"),
+            ("well_stone_b", "well"),
         ] {
             assert_eq!(prop_kind(piece), kind, "{piece}");
             assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");
@@ -1516,13 +1544,22 @@ pub(crate) mod tests {
     }
 
     /// Only the paddock fence's collider has disjoint parts (one box per run) and only
-    /// `barn_red_b` declares its own ([`DECLARED_PARTS`], seven); every other obstacle is one
-    /// part, so it keeps the whole collider's hull and body exactly as before.
+    /// `barn_red_b` declares its own ([`DECLARED_PARTS`], seven), as do the wells (one roof
+    /// footprint for `well_stone`, seven for `well_stone_b`); every other obstacle is one part, so
+    /// it keeps the whole collider's hull and body exactly as before.
     #[test]
     fn only_the_fence_collider_splits_into_parts() {
         for &piece in OBSTACLES {
             let s = shape(piece);
-            if piece == "barn_red_b" {
+            if piece.starts_with("well_") {
+                let n = if piece == "well_stone" { 1 } else { 7 };
+                assert_eq!(s.parts.len(), n, "{piece}");
+                for p in &s.parts {
+                    assert_eq!(p.hull.len(), 4, "{:?}", p.hull);
+                    let (foot, top) = p.body.unwrap();
+                    assert!((foot + 0.35).abs() < 1e-3 && top >= 0.9, "{foot}..{top}");
+                }
+            } else if piece == "barn_red_b" {
                 assert_eq!(
                     s.parts.len(),
                     7,
@@ -1807,6 +1844,77 @@ pub(crate) mod tests {
             assert!(
                 near(&trim, x0, z0) && near(&trim, x1, z1),
                 "post {x0}..{x1}"
+            );
+        }
+    }
+
+    /// The wells' [`DECLARED_PARTS`] sit inside their GLB collider (the apron's hull, which grass
+    /// and scatter keep clear) and hold, within 2 cm, every LOD0 vertex above the apron: the wall,
+    /// the capstones, posts, windlass, crank, bucket and (`well_stone`) the roof. A rebuild that
+    /// moves any of them out fails here.
+    #[test]
+    fn well_parts_hold_the_well_above_its_apron() {
+        for piece in ["well_stone", "well_stone_b"] {
+            let collider = mesh_tris(piece, "collider").unwrap();
+            let (lo, hi) = collider
+                .iter()
+                .flat_map(|(t, _)| t.iter())
+                .fold((Vec3::MAX, Vec3::MIN), |(lo, hi), p| {
+                    (lo.min(Vec3::from(*p)), hi.max(Vec3::from(*p)))
+                });
+            let parts = declared_parts(piece).unwrap();
+            for &[x0, x1, z0, z1, top] in parts {
+                assert!(
+                    x0 >= lo.x && x1 <= hi.x && z0 >= lo.z && z1 <= hi.z,
+                    "{piece}: {x0}..{x1} {z0}..{z1}"
+                );
+                assert!(top <= hi.y + 0.1, "{piece}: {top}");
+            }
+            for (t, slot) in mesh_tris(piece, "lod0").unwrap() {
+                for p in t.iter().filter(|p| p[1] > 0.1) {
+                    let held = parts.iter().any(|&[x0, x1, z0, z1, _]| {
+                        (x0 - 0.02..=x1 + 0.02).contains(&p[0])
+                            && (z0 - 0.02..=z1 + 0.02).contains(&p[2])
+                    });
+                    assert!(held, "{piece}: {slot} vertex {p:?} outside its parts");
+                }
+            }
+        }
+    }
+
+    /// A house cluster's well stops the walker at its parts and reports `well`: walking in from
+    /// 2.6 m behind it, the walker stops on the apron (inside its 1.385 m rim), a body radius short
+    /// of the eaves (`well_stone`, x -0.9) or the wall (`well_stone_b`, x -0.79).
+    #[test]
+    fn the_well_stops_the_walker_on_its_apron() {
+        let c = catalog();
+        let def = c.get("house_cluster").unwrap();
+        let slot = def
+            .props
+            .hero
+            .iter()
+            .position(|h| h.piece.as_str() == "well_stone")
+            .unwrap();
+        let h = &def.props.hero[slot];
+        let axis = Vec2::new(h.yaw_deg.to_radians().cos(), h.yaw_deg.to_radians().sin());
+        for (piece, back) in [("well_stone", 0.9), ("well_stone_b", 0.79)] {
+            let cell = (-4..=4)
+                .flat_map(|q| (-4..=4).map(move |r| Axial::new(q, r)))
+                .find(|&a| hex_core::hero_piece(def, a, slot) == piece)
+                .unwrap();
+            let g = world(&[(cell.q, cell.r, "house_cluster", 0)]);
+            let well = centre(cell.q, cell.r) + Vec2::from(h.at);
+            let s = walk(&g, well - axis * 2.6, axis, 2.6);
+            assert_eq!(
+                s.blocked,
+                Some(Blocked::Obstacle(piece.into())),
+                "{piece} at {cell:?}"
+            );
+            assert_eq!(s.blocked.unwrap().reason(), "well");
+            let d = s.pos.xz().distance(well);
+            assert!(
+                d >= back + BODY_RADIUS - 0.06 && d < 1.385,
+                "{piece}: stopped {d} m from its centre"
             );
         }
     }

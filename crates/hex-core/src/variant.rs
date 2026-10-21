@@ -20,6 +20,7 @@ pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
     ("bakery_shop", &["bakery_shop_b"]),
     ("windmill", &["windmill_b"]),
     ("animal_cow", &["animal_cow_c"]),
+    ("well_stone", &["well_stone_b"]),
 ];
 
 /// One slot in this many draws a variant (the rest keep the authored piece).
@@ -179,6 +180,8 @@ mod tests {
                     ("house_twostorey", "house_twostorey") => twostorey += 1,
                     ("house_twostorey", "house_twostorey_b") => twostorey_b += 1,
                     ("house_twostorey", "house_twostorey_c") => twostorey_c += 1,
+                    // The well slot (its own test below).
+                    ("well_stone", "well_stone" | "well_stone_b") => {}
                     (a, b) => assert_eq!(a, b, "slot {i} at {cell:?}"),
                 }
             }
@@ -208,6 +211,48 @@ mod tests {
         for (n, v) in [("twostorey_b", twostorey_b), ("twostorey_c", twostorey_c)] {
             let share = v as f32 / all;
             assert!((0.13..0.2).contains(&share), "{n} share {share}");
+        }
+    }
+
+    /// The house cluster's well slot (hero 3, after the houses) draws the open well_stone_b about
+    /// one time in three. Each slot hashes (cell, slot) on its own, so the new slot moved no house
+    /// (the cottage test above and `PINNED` hold their picks).
+    #[test]
+    fn some_house_cluster_wells_are_open() {
+        let c = TileCatalog::builtin().unwrap();
+        let def = c.get("house_cluster").unwrap();
+        assert_eq!(def.props.hero[3].piece.as_str(), "well_stone");
+        let (mut covered, mut open) = (0, 0);
+        for cell in cells() {
+            match hero_piece(def, cell, 3) {
+                "well_stone" => covered += 1,
+                "well_stone_b" => open += 1,
+                p => panic!("{p} at {cell:?}"),
+            }
+        }
+        println!(
+            "well slot over {} cells: {covered} well_stone, {open} well_stone_b",
+            covered + open
+        );
+        let share = open as f32 / (covered + open) as f32;
+        assert!((0.28..0.39).contains(&share), "well_stone_b share {share}");
+        // The thumbnail cell and the review shots' cells (docs/checkpoints/well_stone/play.json).
+        assert_eq!(hero_piece(def, Axial::ORIGIN, 3), WELL_AT_ORIGIN);
+    }
+
+    const WELL_AT_ORIGIN: &str = "well_stone";
+
+    /// Prints the cells near the origin whose well slot draws well_stone_b (for checkpoint scripts):
+    /// `cargo test -p hex-core well_b_cells -- --nocapture --ignored`.
+    #[test]
+    #[ignore]
+    fn well_b_cells() {
+        let c = TileCatalog::builtin().unwrap();
+        let def = c.get("house_cluster").unwrap();
+        for cell in (-4..=4).flat_map(|q| (-4..=4).map(move |r| Axial::new(q, r))) {
+            if hero_piece(def, cell, 3) == "well_stone_b" {
+                println!("{} {}", cell.q, cell.r);
+            }
         }
     }
 

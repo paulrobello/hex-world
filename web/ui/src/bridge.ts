@@ -404,6 +404,7 @@ export type PropKind =
   | "buffer_stop"
   | "boat"
   | "stage"
+  | "well"
   | "rock";
 
 /** Why the walker's latest move stopped. */
