@@ -785,6 +785,8 @@ export class Hud {
     if (isTypingTarget(target)) return;
     // Inside Settings, Tab walks its controls and Enter, Space and arrows act on them; Esc still closes.
     if (settingsOwnsControlKey(this.settings, target, e.key)) return;
+    // Inside the Worlds sheet and its row menu, Tab walks the confirm and import panel buttons.
+    if (target?.closest?.(".sheet--worlds, .menu") && /^(Tab|Enter| )$/.test(e.key)) return;
     // An open select's list (the colour grade) takes every key: Esc closes it, letters type ahead.
     if (settingsOwnsListKey(this.settings, target)) return;
     const mod = e.ctrlKey || e.metaKey;

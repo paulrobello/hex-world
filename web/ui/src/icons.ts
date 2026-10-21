@@ -38,6 +38,8 @@ const ICONS: Record<string, string[]> = {
   plus: ["M12 5v14M5 12h14"],
   copy: ["M8.5 8.5h11v11h-11Z", "M15.5 8.5V4.5h-11v11h4"],
   more: ["M6 12h.01M12 12h.01M18 12h.01"],
+  x: ["m6.5 6.5 11 11M17.5 6.5l-11 11"],
+  file: ["M6 3.5h8l4 4v13H6Z", "M14 3.5v4h4"],
 };
 
 export function sprite(): SVGElement {

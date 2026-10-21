@@ -1,6 +1,6 @@
 // Local-only persistence e2e (make ui-e2e): GPU Chromium on the built site. Autosave to IndexedDB
-// and resume after a reload, rename, export, new world, import by picker, a refused file by
-// drag-and-drop and by picker, load and delete a slot, and the storage-blocked bar. Asserts through
+// and resume after a reload, rename, export, new world, import by picker (through its preview), a
+// refused file by drag-and-drop and by picker (its checks panel), load and delete a slot, and the storage-blocked bar. Asserts through
 // hexWorld.state() and the HUD's text, and saves captures to e2e/test-results/persistence/ (set
 // PERSIST_OUT=docs/checkpoints/persistence to refresh the owner's committed captures).
 import { chromium } from "playwright";
@@ -227,8 +227,10 @@ try {
   await until(async () => (await text(".bar__world")).includes("World 1"), "the new world takes the next free name");
   check(!(await play()).can_undo, "a new world has no history");
 
-  // Import by the picker: the tiles match the export.
+  // Import by the picker: the preview first (S10.6), then the tiles match the export.
   await page.locator(".sheet--worlds input[type=file]").setInputFiles(exported);
+  await until(async () => page.locator(".import[data-import=preview]").count(), "the import shows its preview first");
+  await page.locator(".import [data-act=import-new]").click();
   await until(async () => (await play()).tiles.length === exportedWorld.tiles.length, "import loads the exported world");
   check(tileSet(await play()) === tileSet(exportedWorld), "imported tiles match the exported world");
   await until(async () => (await text(".bar__world")).includes("Riverside 2"), "the import opens as a new world, Riverside 2");
@@ -237,7 +239,7 @@ try {
   await page.waitForTimeout(250);
   await shot("import-done");
 
-  // A refused file by drag-and-drop: a plain toast says why, and the world is unchanged.
+  // A refused file by drag-and-drop: the checks panel says why (S10.8), and the world is unchanged.
   const held = tileSet(await play());
   await page.evaluate(() => {
     const dt = new DataTransfer();
@@ -253,7 +255,7 @@ try {
     dt.items.add(new File([new Uint8Array([80, 75, 3, 4, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])], "holiday.hexworld"));
     window.dispatchEvent(new DragEvent("drop", { dataTransfer: dt, bubbles: true, cancelable: true }));
   });
-  await until(async () => (await text(".toast.is-shown")).includes("This isn't a Hex World file"), "a corrupt drop is refused with a toast saying why");
+  await until(async () => (await text(".import[data-import=refused] h2")).includes("This isn't a Hex World file"), "a corrupt drop is refused with the checks saying why");
   check(tileSet(await play()) === held, "the refused file leaves the world unchanged");
   await page.waitForTimeout(250);
   await shot("import-refused");
@@ -262,8 +264,9 @@ try {
   const cut = `${work}/cut-short.hexworld`;
   writeFileSync(cut, bytes.subarray(0, bytes.length - 9));
   await page.locator(".sheet--worlds input[type=file]").setInputFiles(cut);
-  await until(async () => (await text(".toast.is-shown")).includes("This file is cut short"), "a truncated file is refused with a toast");
+  await until(async () => (await text(".import[data-import=refused] h2")).includes("This file is cut short"), "a truncated file is refused with the checks");
   check(tileSet(await play()) === held, "the truncated file leaves the world unchanged");
+  await page.locator(".import [data-act=import-cancel]").click();
 
   // Load the other slot, then delete the one left behind.
   await until(async () => page.locator(".slot-row[data-slot]").count(), "saved worlds listed");

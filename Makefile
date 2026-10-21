@@ -81,6 +81,7 @@ ui-e2e: build-web
 	node e2e/ui-motion.mjs dist
 	node e2e/photo-fx.mjs dist
 	node e2e/persist.mjs dist
+	node e2e/saves-ui.mjs dist
 	node e2e/audio.mjs dist
 	node e2e/debug.mjs dist
 	node e2e/version.mjs dist

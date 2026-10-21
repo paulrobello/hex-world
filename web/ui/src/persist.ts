@@ -2,7 +2,7 @@
 // keeps the current world's name and slot, autosaves after every placement, bulldoze, undo and redo
 // (debounced), resumes the most recent slot on start, and moves bytes between the bridge, IndexedDB
 // and files. With no storage the game plays on and the bar says autosave is off.
-import type { Command, GameEvent, LoadRefusalCode, LoadResult, PlayTile, Volumes } from "./bridge.ts";
+import type { Command, GameEvent, InspectResult, LoadRefusalCode, LoadResult, PlayTile, Volumes } from "./bridge.ts";
 import {
   Debouncer,
   type MapTile,
@@ -37,6 +37,8 @@ export interface PersistHost {
   cmd(c: Command): void;
   takeSave(tag: string): Uint8Array | null;
   load(bytes: Uint8Array): LoadResult;
+  /** Decodes bytes as `load` would, with nothing loaded (the import preview). */
+  inspect(bytes: Uint8Array): InspectResult;
   /** The world as of the last frame, encoded at once (a page hide cannot wait for a frame). */
   saveNow(volumes: Volumes | null): Uint8Array | null;
 }
@@ -151,6 +153,10 @@ export class Persistence {
   private readonly switches: Switch[] = [];
   private writing = 0;
   private lastStamp = 0;
+  /** An autosave held back while the load confirm asks about it (S10.3). */
+  private held = false;
+  /** When the first change not yet written was made; null while everything is saved. */
+  private dirtyAt: number | null = null;
 
   constructor(host: PersistHost, store: SlotBackend | null, opts: PersistOptions = {}) {
     this.host = host;
@@ -222,7 +228,32 @@ export class Persistence {
 
   private dirty(): void {
     if (!this.store || !this.ready) return;
+    this.dirtyAt ??= this.now();
     this.setState("saving");
+    if (!this.held) this.debounce.poke();
+  }
+
+  /** The world on screen has changes its slot does not have yet (an autosave still waiting). */
+  get unsaved(): boolean {
+    return this.store !== null && this.ready && (this.held || this.debounce.pending);
+  }
+
+  /** When the oldest unsaved change was made, for the load confirm's words. */
+  get unsavedSince(): number | null {
+    return this.unsaved ? (this.dirtyAt ?? this.now()) : null;
+  }
+
+  /** Holds a waiting autosave while the load confirm is open, so the question stays true. */
+  holdAutosave(): void {
+    if (!this.debounce.pending) return;
+    this.debounce.cancel();
+    this.held = true;
+  }
+
+  /** Lets a held autosave run again (the load confirm was cancelled). */
+  releaseAutosave(): void {
+    if (!this.held) return;
+    this.held = false;
     this.debounce.poke();
   }
 
@@ -243,11 +274,13 @@ export class Persistence {
    * never run. The IndexedDB write starts before this returns; finishing it is best effort.
    */
   flushNow(): boolean {
-    const waiting = this.debounce.pending || [...this.pending.values()].some((p) => p.purpose === "autosave");
+    const waiting =
+      this.held || this.debounce.pending || [...this.pending.values()].some((p) => p.purpose === "autosave");
     if (!this.store || !this.ready || !waiting) return false;
     const bytes = this.host.saveNow(this.opts.volumes?.() ?? null);
     if (!bytes) return false;
     this.debounce.cancel();
+    this.held = false;
     void this.write({ world: { ...this.current }, purpose: "autosave", tiles: this.tiles }, bytes);
     return true;
   }
@@ -268,7 +301,10 @@ export class Persistence {
 
   private unwritten(): boolean {
     return (
-      this.debounce.pending || this.writing > 0 || [...this.pending.values()].some((p) => p.purpose === "autosave")
+      this.held ||
+      this.debounce.pending ||
+      this.writing > 0 ||
+      [...this.pending.values()].some((p) => p.purpose === "autosave")
     );
   }
 
@@ -325,6 +361,7 @@ export class Persistence {
     }
     if (
       this.store &&
+      !this.held &&
       !this.debounce.pending &&
       !this.writing &&
       ![...this.pending.values()].some((x) => x.purpose === "autosave")
@@ -373,11 +410,24 @@ export class Persistence {
     this.changed();
   }
 
-  /** Loads a stored slot (the Load button). Returns false when it could not be opened. */
-  async loadSlot(id: string): Promise<boolean> {
+  /**
+   * Loads a stored slot (the Load button). `save` writes the world on screen first (the default and
+   * "Save, then load"); `discard` drops its unsaved changes ("Load without saving"), so its slot
+   * keeps what was last written. Returns false when it could not be opened.
+   */
+  async loadSlot(id: string, changes: "save" | "discard" = "save"): Promise<boolean> {
     const meta = this.slots.find((s) => s.id === id);
     if (!meta || id === this.current.id) return false;
+    if (changes === "discard") this.discardChanges();
+    else this.releaseAutosave();
     return this.open(meta, true);
+  }
+
+  /** Forgets the autosave waiting for the world on screen, and any asked of the engine but not back yet. */
+  private discardChanges(): void {
+    this.held = false;
+    this.debounce.cancel();
+    for (const [tag, p] of this.pending) if (p.purpose === "autosave") this.pending.delete(tag);
   }
 
   private async open(meta: SlotMeta, flush: boolean): Promise<boolean> {
@@ -489,8 +539,22 @@ export class Persistence {
     return true;
   }
 
-  /** Imports a .hexworld file as a new world. A refused file gets a toast saying why. */
-  importFile(file: string, bytes: Uint8Array): boolean {
+  /** Decodes a .hexworld file without loading it (the import preview and its refusal checks). */
+  inspect(bytes: Uint8Array): InspectResult {
+    return this.host.inspect(bytes);
+  }
+
+  /** The name an imported file would open under: its file name, made unique. */
+  importName(file: string): string {
+    return this.ux.importName(file, this.allNames());
+  }
+
+  /**
+   * Imports a .hexworld file: as a new world (`new`), or over the world on screen (`replace`),
+   * which keeps its name and slot and drops its history. A refused file gets a toast saying why.
+   */
+  importFile(file: string, bytes: Uint8Array, into: "new" | "replace" = "new"): boolean {
+    if (into === "replace" && !this.ready) return false;
     this.flush();
     const r = this.host.load(bytes);
     if (!r.ok) {
@@ -498,14 +562,18 @@ export class Persistence {
       this.ux.notify({ text: w.text, sub: `${file}: ${w.sub}`, icon: "alert", tone: "bad" });
       return false;
     }
-    const name = this.ux.importName(file, this.allNames());
+    const tiles = `${r.tiles} ${r.tiles === 1 ? "tile" : "tiles"}`;
+    if (into === "replace") {
+      const name = this.current.name;
+      this.switches.push({ ...this.current, saveNow: true });
+      // The viewer's camera for this slot belonged to the world being replaced.
+      if (this.current.stored) this.opts.removed?.(this.current.id);
+      this.ux.notify({ text: `Replaced ${name}`, sub: `${tiles} from ${file}`, icon: "check", tone: "ok" });
+      return true;
+    }
+    const name = this.importName(file);
     this.switches.push({ id: newId(this.now()), name, stored: false, saveNow: true });
-    this.ux.notify({
-      text: `Imported ${name}`,
-      sub: `${r.tiles} ${r.tiles === 1 ? "tile" : "tiles"}, opened as a new world`,
-      icon: "check",
-      tone: "ok",
-    });
+    this.ux.notify({ text: `Imported ${name}`, sub: `${tiles}, opened as a new world`, icon: "check", tone: "ok" });
     return true;
   }
 
@@ -582,6 +650,7 @@ export class Persistence {
 
   private setState(s: SaveState): void {
     if (!this.store) s = "off";
+    if (s !== "saving") this.dirtyAt = null;
     if (this.state === s) return;
     this.state = s;
     this.changed();

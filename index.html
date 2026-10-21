@@ -116,6 +116,8 @@
             return w.hex_world_save_now(v ? new Float32Array([v.master, v.music, v.sfx, v.ambience, v.ui]) : undefined) || null;
           },
           load: function (bytes) { return JSON.parse(w.hex_world_load(bytes)); },
+          // Decodes .hexworld bytes without loading them (the import preview): {ok,version,supported,tiles} or {ok:false,code,reason,version,supported}.
+          inspect: function (bytes) { return JSON.parse(w.hex_world_inspect(bytes)); },
           newWorld: function () { this.cmd({ cmd: "new_world" }); },
           // Play-scenario actions: typed wrappers over cmd, queued like any other command.
           selectTile: function (id) { this.cmd({ cmd: "select_tile", id: id }); },

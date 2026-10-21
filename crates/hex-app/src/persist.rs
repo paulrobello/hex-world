@@ -254,6 +254,36 @@ pub fn load_result_json(r: &Result<(u32, u16), Refusal>) -> String {
     }
 }
 
+/// The web's `hexWorld.inspect(bytes)`: decodes `.hexworld` bytes as a load would, but changes
+/// nothing (no load is queued and no `loadRefused` event fires), for the import preview and the
+/// refusal checks. Returns JSON: `{"ok":true,"version":v,"supported":s,"tiles":[{q,r,tile,rotation}]}`
+/// or `{"ok":false,"code":..,"reason":..,"version":..,"supported":s}`, where `supported` is the
+/// newest format version this build reads.
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+pub fn inspect_json(bytes: &[u8]) -> String {
+    match decode(bytes) {
+        Ok((save, version)) => {
+            let tiles: Vec<serde_json::Value> = save
+                .world
+                .tiles()
+                .iter()
+                .map(|(c, t)| {
+                    serde_json::json!({ "q": c.q, "r": c.r, "tile": t.def, "rotation": t.rotation })
+                })
+                .collect();
+            serde_json::json!({
+                "ok": true, "version": version, "supported": SAVE_FORMAT_VERSION, "tiles": tiles,
+            })
+            .to_string()
+        }
+        Err(e) => serde_json::json!({
+            "ok": false, "code": e.code, "reason": e.reason, "version": e.version,
+            "supported": SAVE_FORMAT_VERSION,
+        })
+        .to_string(),
+    }
+}
+
 /// Where a `load` command finds its save.
 fn load_source(path: Option<&str>) -> Result<(SaveData, u16), Refusal> {
     match path {
@@ -740,6 +770,41 @@ mod tests {
             assert_eq!(json["ok"], false);
             assert_eq!(json["code"], code);
         }
+    }
+
+    /// `hexWorld.inspect(bytes)`: the import preview's decode reports the tiles and versions of a
+    /// good file and the typed refusal of a bad one, and queues nothing.
+    #[test]
+    fn inspect_reports_tiles_or_refusal_and_queues_nothing() {
+        let _outbox = outbox();
+        let (mut g, mut cam) = played();
+        let mut tilt = Tilt::default();
+        let mut saved = SavedSettings::default();
+        handle(
+            save_cmd("inspect-src", None),
+            &mut g,
+            Some(&mut cam),
+            tilt.live(),
+            &mut saved,
+            7,
+        );
+        let good = take_save("inspect-src").unwrap();
+        let loads = PENDING_LOADS.lock().unwrap().len();
+        let ok: serde_json::Value = serde_json::from_str(&inspect_json(&good)).unwrap();
+        assert_eq!(ok["ok"], true);
+        assert_eq!(ok["version"], SAVE_FORMAT_VERSION);
+        assert_eq!(ok["supported"], SAVE_FORMAT_VERSION);
+        let tiles = ok["tiles"].as_array().unwrap();
+        assert_eq!(tiles.len(), g.world.tiles().len());
+        assert!(tiles[0]["tile"].is_string() && tiles[0]["rotation"].is_u64());
+        let mut newer = good.clone();
+        newer[8..10].copy_from_slice(&(SAVE_FORMAT_VERSION + 1).to_le_bytes());
+        let bad: serde_json::Value = serde_json::from_str(&inspect_json(&newer)).unwrap();
+        assert_eq!(bad["ok"], false);
+        assert_eq!(bad["code"], "newer_version");
+        assert_eq!(bad["version"], SAVE_FORMAT_VERSION + 1);
+        assert_eq!(bad["supported"], SAVE_FORMAT_VERSION);
+        assert_eq!(PENDING_LOADS.lock().unwrap().len(), loads);
     }
 
     /// The web path: `hexWorld.load(bytes)` validates at once, then queues a `load` command that

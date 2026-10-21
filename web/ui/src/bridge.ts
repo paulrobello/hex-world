@@ -82,6 +82,11 @@ export type LoadResult =
   | { ok: true; tiles: number; version: number }
   | { ok: false; code: LoadRefusalCode; reason: string; version: number | null };
 
+/** `hexWorld.inspect(bytes)`: the same checks as `load`, with nothing loaded. `supported` is the newest format this build reads. */
+export type InspectResult =
+  | { ok: true; version: number; supported: number; tiles: PlayTile[] }
+  | { ok: false; code: LoadRefusalCode; reason: string; version: number | null; supported: number };
+
 export type Command =
   | { cmd: "camera"; pos: [number, number, number]; look_at: [number, number, number] }
   | { cmd: "screenshot"; name: string }
@@ -559,6 +564,8 @@ export interface HexWorld {
   takeSave(tag: string): Uint8Array | null;
   /** Validates `.hexworld` bytes and queues their load behind earlier commands. */
   load(bytes: Uint8Array): LoadResult;
+  /** Decodes `.hexworld` bytes without loading them, for the import preview and refusal checks. */
+  inspect(bytes: Uint8Array): InspectResult;
   /** The world as of the last frame as `.hexworld` bytes, at once; null before the first frame. */
   saveNow(volumes: Volumes | null): Uint8Array | null;
 }

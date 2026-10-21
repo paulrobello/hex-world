@@ -297,7 +297,7 @@ Every tool, button and row is at least 44 px tall, except the small button, whic
 
 **Performance corner** (developer overlay, Settings Debug tab): a `sheet` panel with `shadow-1` below the bar, top left at the bar's left edge, 12 px under it. It ignores the pointer and hides with H. The grid overlay's axial labels sit under every HUD panel.
 
-**The F6 Escape Rule.** Tab belongs to the sheet: it opens and closes Tiles. So F6, and Shift+F6 to go back, moves focus between `[data-region]` landmarks (bar, sheet, toast), skipping closed ones. The sheet foot and the Settings key table both state it.
+**The F6 Escape Rule.** Tab belongs to the sheet: it opens and closes Tiles, except while focus is inside the Settings or Worlds sheet, where Tab walks that sheet's controls (a confirm's buttons, the import panels). So F6, and Shift+F6 to go back, moves focus between `[data-region]` landmarks (bar, sheet, toast), skipping closed ones. The sheet foot and the Settings key table both state it.
 
 ## Elevation & Depth
 

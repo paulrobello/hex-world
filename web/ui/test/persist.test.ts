@@ -2,7 +2,7 @@
 // autosave/resume/import flow, against an in-memory slot backend and a fake bridge.
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
-import type { Command, GameEvent, LoadResult, PlayTile } from "../src/bridge.ts";
+import type { Command, GameEvent, InspectResult, LoadResult, PlayTile } from "../src/bridge.ts";
 import { type Note, Persistence, refusalText, stateWords, whenText } from "../src/persist.ts";
 import {
   Debouncer,
@@ -138,6 +138,10 @@ class FakeHost {
   load(bytes: Uint8Array): LoadResult {
     this.loads.push(bytes);
     return this.result;
+  }
+  inspected: InspectResult = { ok: true, version: 3, supported: 3, tiles: [] };
+  inspect(_bytes: Uint8Array): InspectResult {
+    return this.inspected;
   }
   nowCalls = 0;
   saveNow(): Uint8Array | null {
@@ -458,4 +462,102 @@ test("settings: a quality or tilt-shift change autosaves like an edit, and waits
   assert.equal(p.state, "saved");
   assert.equal((await store.list()).length, 1);
   assert.ok(p.flushNow() === false, "nothing left pending for a page hide");
+});
+
+test("load confirm (S10.3): unsaved changes are held while it asks, then saved first or dropped", async () => {
+  const store = new MemoryBackend();
+  await store.write(
+    { id: "w-b", name: "Beta", tiles: 2, updatedAt: 5, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([9]),
+  );
+  const { host, p, tick } = setup(store);
+  host.result = { ok: false, code: "no_file", reason: "x", version: null };
+  await p.start();
+  host.result = { ok: true, tiles: 2, version: 1 };
+  assert.equal(p.unsaved, false, "nothing changed yet");
+  p.observe([tile(0, 0, "meadow")]);
+  p.onEvents([placed]);
+  assert.equal(p.unsaved, true);
+  assert.equal(p.unsavedSince, 1_000);
+  tick(90_000);
+  p.holdAutosave();
+  await new Promise((r) => setTimeout(r, 60));
+  assert.equal(host.sent.filter((c) => c.cmd === "save").length, 0, "the held autosave does not run");
+  assert.equal(p.unsaved, true, "still unsaved while held");
+  assert.equal(p.unsavedSince, 1_000, "since the first change");
+  // Cancel: the autosave runs again.
+  p.releaseAutosave();
+  await new Promise((r) => setTimeout(r, 60));
+  assert.equal(host.sent.filter((c) => c.cmd === "save").length, 1, "released, it saves");
+  p.onEvents(host.savedEvents());
+  await settle();
+  assert.equal(p.unsaved, false);
+  assert.equal(p.unsavedSince, null);
+  // Load without saving: the held changes are dropped, nothing is saved, and the load goes ahead.
+  host.sent.length = 0;
+  host.loads.length = 0;
+  p.onEvents([placed]);
+  p.holdAutosave();
+  assert.equal(await p.loadSlot("w-b", "discard"), true);
+  assert.equal(host.sent.filter((c) => c.cmd === "save").length, 0, "discard sends no save");
+  assert.equal(host.loads.length, 1);
+  await new Promise((r) => setTimeout(r, 60));
+  assert.equal(host.sent.filter((c) => c.cmd === "save").length, 0, "and none later");
+  p.onEvents([{ type: "loaded", tiles: 2, version: 1, settings: null }]);
+  await settle();
+  assert.equal(p.current.id, "w-b");
+  assert.equal(p.unsaved, false);
+});
+
+test("load confirm (S10.3): Save, then load writes the held changes ahead of the load", async () => {
+  const store = new MemoryBackend();
+  await store.write(
+    { id: "w-b", name: "Beta", tiles: 2, updatedAt: 5, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([9]),
+  );
+  const { host, p } = setup(store);
+  host.result = { ok: false, code: "no_file", reason: "x", version: null };
+  await p.start();
+  host.result = { ok: true, tiles: 2, version: 1 };
+  const first = p.current.id;
+  p.observe([tile(0, 0, "meadow")]);
+  p.onEvents([placed]);
+  p.holdAutosave();
+  assert.equal(await p.loadSlot("w-b", "save"), true);
+  assert.equal(host.sent.at(-1)?.cmd, "save", "the held autosave is queued before the load");
+  p.onEvents(host.savedEvents());
+  p.onEvents([{ type: "loaded", tiles: 2, version: 1, settings: null }]);
+  await settle();
+  assert.ok(store.meta.has(first), "the changes landed in the world they were made in");
+  assert.equal(p.current.id, "w-b");
+});
+
+test("import replace (S10.6): the file opens over the world on screen, keeping its name and slot", async () => {
+  const store = new MemoryBackend();
+  const removed: string[] = [];
+  const host = new FakeHost();
+  const notes: Note[] = [];
+  const p = new Persistence(host, store, {
+    debounceMs: 30,
+    notify: (n) => notes.push(n),
+    removed: (id) => removed.push(id),
+  });
+  await p.start();
+  p.observe([tile(0, 0, "meadow")]);
+  p.onEvents([placed]);
+  await new Promise((r) => setTimeout(r, 60));
+  p.onEvents(host.savedEvents());
+  await settle();
+  const { id, name } = p.current;
+  assert.equal(p.current.stored, true);
+  host.result = { ok: true, tiles: 5, version: 2 };
+  assert.equal(p.importFile("harbour.hexworld", new Uint8Array([1]), "replace"), true);
+  assert.deepEqual(removed, [id], "the replaced world's camera pose is forgotten");
+  assert.equal(notes.at(-1)?.text, `Replaced ${name}`);
+  p.onEvents([{ type: "loaded", tiles: 5, version: 2, settings: null }]);
+  assert.equal(p.current.id, id);
+  assert.equal(p.current.name, name);
+  assert.equal(p.state, "saving", "written to its slot once the HUD has seen the tiles");
+  assert.equal(p.importName("harbour.hexworld"), "harbour", "the preview's name for a new world");
+  assert.deepEqual(p.inspect(new Uint8Array([1])), host.inspected, "inspect passes through to the bridge");
 });

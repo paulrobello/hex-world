@@ -1,14 +1,16 @@
 // The Worlds sheet (S10, design/ui/legend/saves.html): the current world with rename and export,
-// the worlds saved in this browser with load, rename, export and delete, New world and Import, and
-// a drop target for .hexworld files. Every world is keyed by its socket-colour mix strip and a
+// the worlds saved in this browser with load (asking first over unsaved changes, S10.3), rename,
+// export and delete, New world and Import, and a drop target for .hexworld files. An imported file
+// shows its preview (S10.6) or, when refused, the decoder's checks (S10.8) before anything changes. Every world is keyed by its socket-colour mix strip and a
 // socket map thumbnail, the Legend's legend for a whole world.
 import type { SocketKind } from "./bridge.ts";
 import { h, s } from "./dom.ts";
 import { KIND_CLASS } from "./glyph.ts";
 import { icon } from "./icons.ts";
+import { type Preview, type Refused, dayText, previewOf, refusedOf, unsavedText } from "./import-model.ts";
 import { type Persistence, stateWords, whenText } from "./persist.ts";
 import { rotated, tileDef } from "./rules.ts";
-import { KIND_ORDER, type MapTile, type Mix, type SlotMeta } from "./slots.ts";
+import { KIND_ORDER, type MapTile, type Mix, type SlotMeta, mixOf } from "./slots.ts";
 import { plural } from "./words.ts";
 
 const KIND_WORD: Record<SocketKind, string> = {
@@ -75,6 +77,18 @@ export function worldMap(map: readonly MapTile[]): SVGElement {
   return svg;
 }
 
+/** A file picked or dropped, waiting in the sheet: its preview, or why it was refused. */
+type Incoming =
+  | { kind: "preview"; seq: number; file: string; bytes: Uint8Array; savedAt: number; preview: Preview }
+  | { kind: "refused"; seq: number; refused: Refused };
+
+const btn = (cls: string, act: string, label: string, ic?: string, id?: string): HTMLElement => {
+  const b = h("button", { class: cls, type: "button", "data-act": act, "data-focus": act, "data-id": id ?? null });
+  if (ic) b.append(icon(ic));
+  b.append(label);
+  return b;
+};
+
 export class Worlds {
   readonly el: HTMLElement;
   private readonly p: Persistence;
@@ -84,6 +98,13 @@ export class Worlds {
   private openState = false;
   private menuFor: string | null = null;
   private confirmFor: string | null = null;
+  /** What the open row confirm asks: delete (S10.4) or load over unsaved changes (S10.3). */
+  private confirmKind: "delete" | "load" = "delete";
+  private incoming: Incoming | null = null;
+  private incomingSeq = 0;
+  /** A control to focus after the next render (a panel's first action). */
+  private focusNext: string | null = null;
+  private readonly dropSub: HTMLElement;
   private renaming: string | null = null;
   private dragDepth = 0;
   private sig = "";
@@ -98,12 +119,13 @@ export class Worlds {
     });
     close.append(icon("close"));
     close.addEventListener("click", onClose);
+    this.dropSub = h("small", {});
     const drop = h(
       "div",
       { class: "drop", "aria-hidden": "true" },
       icon("import"),
       "Drop a .hexworld file to import it",
-      h("small", {}, "It opens as a new world. The world on screen stays saved."),
+      this.dropSub,
     );
     this.body = h("div", { class: "sheet__body" });
     this.picker = h("input", { type: "file", accept: ".hexworld", class: "sr", tabindex: "-1", "aria-hidden": "true" });
@@ -143,21 +165,32 @@ export class Worlds {
     this.el.classList.toggle("is-closed", !v);
     if (!v) {
       this.closeMenu();
-      this.confirmFor = null;
+      this.closeConfirm();
+      this.incoming = null;
       this.renaming = null;
     } else void this.p.refresh().then(() => this.render(true));
     this.render(true);
   }
 
-  /** Esc: a menu, a confirm or a rename first, then the sheet. Returns whether it used the key. */
+  /** Esc: a menu, an import panel, a confirm or a rename first, then the sheet. Returns whether it used the key. */
   escape(): boolean {
     if (this.menuFor) this.closeMenu();
-    else if (this.confirmFor || this.renaming) {
-      this.confirmFor = null;
+    else if (this.incoming) {
+      this.incoming = null;
+      this.focusNext = "import";
+      this.render(true);
+    } else if (this.confirmFor || this.renaming) {
+      this.closeConfirm();
       this.renaming = null;
       this.render(true);
     } else return false;
     return true;
+  }
+
+  /** Closes the row confirm; a load confirm lets the autosave it held run again. */
+  private closeConfirm(): void {
+    if (this.confirmFor && this.confirmKind === "load") this.p.releaseAutosave();
+    this.confirmFor = null;
   }
 
   pickFile(): void {
@@ -177,14 +210,23 @@ export class Worlds {
       p.storageOn,
       p.slots.map((m) => `${m.id}:${m.name}:${m.updatedAt}`).join(),
       this.confirmFor,
+      this.confirmKind,
+      this.incoming?.seq,
       this.renaming,
       Math.floor(Date.now() / 10_000),
     ].join("|");
     if (!force && sig === this.sig) return;
     this.sig = sig;
-    const focusKey = (document.activeElement as HTMLElement | null)?.dataset?.focus;
+    const focusKey = this.focusNext ?? (document.activeElement as HTMLElement | null)?.dataset?.focus;
+    const scrollTo = this.focusNext !== null;
+    this.focusNext = null;
+    this.dropSub.textContent = `You choose whether it replaces ${p.current.name} or opens as a new world.`;
     this.body.replaceChildren(...this.content());
-    if (focusKey) this.body.querySelector<HTMLElement>(`[data-focus="${focusKey}"]`)?.focus();
+    if (focusKey) {
+      const el = this.body.querySelector<HTMLElement>(`[data-focus="${focusKey}"]`);
+      el?.focus({ preventScroll: true });
+      if (scrollTo) (el?.closest(".import, .slot-row") ?? el)?.scrollIntoView({ block: "nearest" });
+    }
     const input = this.body.querySelector<HTMLInputElement>(".rename");
     if (input && document.activeElement !== input) {
       input.focus();
@@ -269,12 +311,65 @@ export class Worlds {
       );
     else out.push(h("ul", { class: "slots" }, ...others.map((m, i) => this.row(m, i))));
 
+    if (this.incoming?.kind === "preview") out.push(this.previewPanel(this.incoming));
+    else if (this.incoming?.kind === "refused") out.push(this.refusedPanel(this.incoming.refused));
+
     const add = h("button", { class: "btn", type: "button", "data-act": "new", "data-focus": "new" });
     add.append(icon("plus"), "New world");
     const imp = h("button", { class: "btn", type: "button", "data-act": "import", "data-focus": "import" });
     imp.append(icon("import"), "Import .hexworld");
     out.push(h("div", { class: "foot-actions" }, add, imp));
     return out;
+  }
+
+  /** S10.6: the incoming file's world as a legend of its tiles, before it replaces or joins. */
+  private previewPanel(inc: Extract<Incoming, { kind: "preview" }>): HTMLElement {
+    const pv = inc.preview;
+    const rows = pv.rows.map(({ kind, tiles }) =>
+      h("li", {}, h("span", {}, h("i", { class: KIND_CLASS[kind] }), kind), h("span", {}, String(tiles))),
+    );
+    rows.push(h("li", {}, h("span", {}, "Tiles"), h("span", {}, String(pv.tiles.length))));
+    if (inc.savedAt) rows.push(h("li", {}, h("span", {}, "Saved"), h("span", {}, dayText(inc.savedAt))));
+    return h(
+      "div",
+      { class: "import", role: "region", "aria-label": "Import preview", "data-import": "preview" },
+      h("h2", {}, pv.name),
+      h("p", { class: "import__file" }, icon("file"), h("span", {}, pv.file)),
+      mixStrip(mixOf(pv.tiles)),
+      h("ul", { class: "legend-rows" }, ...rows),
+      h(
+        "div",
+        { class: "btn-row" },
+        btn("btn btn--ink btn--sm", "import-new", "Open as a new world"),
+        this.p.ready ? btn("btn btn--sm", "import-replace", `Replace ${this.p.current.name}`) : null,
+        btn("btn btn--quiet btn--sm", "import-cancel", "Cancel"),
+      ),
+    );
+  }
+
+  /** S10.8: what the decoder read, what failed and what it never reached, then what to do. */
+  private refusedPanel(r: Refused): HTMLElement {
+    const ic = { ok: "check", bad: "x", skip: "more" } as const;
+    return h(
+      "div",
+      { class: "import import--error", role: "alert", "data-import": "refused" },
+      h("h2", {}, r.title),
+      h("p", { class: "import__file" }, icon("file"), h("span", {}, r.file)),
+      h(
+        "ul",
+        { class: "checks" },
+        ...r.checks.map((c) =>
+          h("li", { class: c.state, "data-check": c.state }, icon(ic[c.state]), h("span", {}, c.text)),
+        ),
+      ),
+      h("p", { class: "import__todo" }, r.todo),
+      h(
+        "div",
+        { class: "btn-row" },
+        btn("btn btn--ink btn--sm", "import-again", "Choose another file", "import"),
+        btn("btn btn--quiet btn--sm", "import-cancel", "Cancel"),
+      ),
+    );
   }
 
   private nameLine(id: string, name: string, tag: "h2" | "b"): HTMLElement {
@@ -348,7 +443,24 @@ export class Worlds {
       more,
     );
     li.style.animationDelay = `${Math.min(i, 8) * 30}ms`;
-    if (this.confirmFor === m.id) {
+    if (this.confirmFor === m.id && this.confirmKind === "load") {
+      const cur = this.p.current.name;
+      li.append(
+        h(
+          "div",
+          { class: "confirm", role: "alert" },
+          h("b", {}, `Load ${m.name}?`),
+          unsavedText(cur, this.p.unsavedSince ?? Date.now(), Date.now()),
+          h(
+            "div",
+            { class: "btn-row" },
+            btn("btn btn--ink btn--sm", "load-save", `Save ${cur}, then load`, undefined, m.id),
+            btn("btn btn--sm", "load-discard", "Load without saving", undefined, m.id),
+            btn("btn btn--quiet btn--sm", "load-cancel", "Cancel"),
+          ),
+        ),
+      );
+    } else if (this.confirmFor === m.id) {
       const del = h("button", {
         class: "btn btn--bad btn--sm",
         type: "button",
@@ -397,13 +509,44 @@ export class Worlds {
       case "duplicate":
         void this.p.duplicate(this.p.current.id);
         break;
-      case "load": {
-        const name = this.p.slots.find((m) => m.id === id)?.name ?? "";
-        void this.p.loadSlot(id).then((ok) => {
-          if (ok) this.p.notifyLoaded(name);
-        });
+      case "load":
+        if (this.p.unsaved) {
+          // S10.3: ask first, holding the autosave so the question stays true while it is open.
+          this.closeConfirm();
+          this.p.holdAutosave();
+          this.confirmFor = id;
+          this.confirmKind = "load";
+          this.focusNext = "load-save";
+          this.render(true);
+        } else this.load(id, "save");
+        break;
+      case "load-save":
+      case "load-discard":
+        this.confirmFor = null;
+        this.load(id, b.dataset.act === "load-save" ? "save" : "discard");
+        this.render(true);
+        break;
+      case "load-cancel":
+        this.closeConfirm();
+        this.render(true);
+        break;
+      case "import-new":
+      case "import-replace": {
+        const inc = this.incoming;
+        this.incoming = null;
+        if (inc?.kind === "preview")
+          this.p.importFile(inc.file, inc.bytes, b.dataset.act === "import-new" ? "new" : "replace");
+        this.render(true);
         break;
       }
+      case "import-again":
+        this.pickFile();
+        break;
+      case "import-cancel":
+        this.incoming = null;
+        this.focusNext = "import";
+        this.render(true);
+        break;
       case "delete":
         void this.p.remove(id).then(() => {
           this.confirmFor = null;
@@ -411,7 +554,7 @@ export class Worlds {
         });
         break;
       case "keep":
-        this.confirmFor = null;
+        this.closeConfirm();
         this.render(true);
         break;
       case "new":
@@ -473,7 +616,9 @@ export class Worlds {
         void this.p.duplicate(id);
         break;
       case "delete":
+        this.closeConfirm();
         this.confirmFor = id;
+        this.confirmKind = "delete";
         break;
       default:
         break;
@@ -488,9 +633,28 @@ export class Worlds {
     this.render(true);
   }
 
+  private load(id: string, changes: "save" | "discard"): void {
+    const name = this.p.slots.find((m) => m.id === id)?.name ?? "";
+    void this.p.loadSlot(id, changes).then((ok) => {
+      if (ok) this.p.notifyLoaded(name);
+    });
+  }
+
+  /** Reads a picked or dropped file and shows its preview or its refusal; nothing loads yet. */
   private async importFile(f: File): Promise<void> {
     const bytes = new Uint8Array(await f.arrayBuffer());
-    this.p.importFile(f.name, bytes);
+    const r = this.p.inspect(bytes);
+    const seq = ++this.incomingSeq;
+    if (r.ok) {
+      const preview = previewOf(f.name, bytes.length, this.p.importName(f.name), r);
+      this.incoming = { kind: "preview", seq, file: f.name, bytes, savedAt: f.lastModified, preview };
+      this.focusNext = "import-new";
+    } else {
+      this.incoming = { kind: "refused", seq, refused: refusedOf(f.name, bytes.subarray(0, 16), bytes.length, r) };
+      this.focusNext = "import-again";
+    }
+    if (!this.openState) this.onWantOpen?.();
+    this.render(true);
   }
 
   private wireDrop(): void {

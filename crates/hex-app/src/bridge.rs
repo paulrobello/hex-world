@@ -324,6 +324,13 @@ mod exports {
     pub fn hex_world_load(bytes: &[u8]) -> String {
         crate::persist::load_result_json(&crate::persist::request_load(bytes))
     }
+
+    /// Decodes `.hexworld` bytes (a `Uint8Array`) without loading them, for the import preview:
+    /// the file's version, the newest version this build reads, and its tiles, or the refusal.
+    #[wasm_bindgen]
+    pub fn hex_world_inspect(bytes: &[u8]) -> String {
+        crate::persist::inspect_json(bytes)
+    }
 }
 
 /// The bridge contract the web UI overlay is typed against (`web/ui/src/bridge-schema.json`):
