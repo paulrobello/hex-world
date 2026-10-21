@@ -11,5 +11,12 @@
     "revision": "bale-seam-fix",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Rebuilt for the bale-seam-fix edit of the shared _hay.py (its square-bale path is unchanged): GLB and every map byte-identical to the approved build, provenance hashes refreshed only. Nothing to review."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-21",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
   }
 ]

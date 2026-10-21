@@ -2,7 +2,7 @@
 // Initial-download gate (PRD §10 "Initial download before first interaction ≤30 MB", §15 P2).
 //
 // Sums what a Trunk-built dist/ sends before the first interaction, per texture family, and fails
-// when the larger of BC7 and ASTC exceeds the budget. PNG (the fallback family) is reported only.
+// when the larger of BC7 and ASTC exceeds the budget. PNG (the fallback family) is reported only, with a warning within 1 MiB of the budget or over it.
 // Kit content counts only the `core` pack of assets/kit/manifest.json; the other packs stream after
 // the first interaction (crates/hex-play/src/play/packs.rs) and are printed per pack, not counted.
 // A hero-class piece (compress-report budgets.class) must stream: one in `core` is bad input.
@@ -27,6 +27,7 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
 const BUDGET_DEFAULT = 31_457_280; // 30 MiB, the MiB convention `make web-size` uses for 12 MiB.
+const WARN_HEADROOM = 1_048_576; // an ungated family within 1 MiB of the budget warns.
 const MIB = 1_048_576;
 const GZIP_EXT = new Set([".wasm", ".js", ".html", ".json", ".glb"]);
 export const FAMILIES = { bc7: "bc7.ktx2", astc: "astc.ktx2", png: "png" }; // hex-assets family_suffix
@@ -214,6 +215,13 @@ function main() {
   const totals = Object.fromEntries(Object.entries(a.families).map(([k, f]) => [k, f.total.wire]));
   const gated = GATED.reduce((x, y) => (totals[y] > totals[x] ? y : x));
   const verdict = `initial download ${n(totals[gated])} B (${mib(totals[gated])} MiB, family ${gated}) vs budget ${n(limit)} B (${mib(limit)} MiB), headroom ${n(limit - totals[gated])} B (${mib(limit - totals[gated])} MiB)`;
+  // Ungated families (the PNG fallback) are monitored: a warning near or over the budget, no failure
+  // (owner, 2026-10-21: keep report-only, watch it in case the lossless re-encode lever is needed).
+  for (const fam of Object.keys(totals).filter((k) => !GATED.includes(k))) {
+    const left = limit - totals[fam];
+    if (left < WARN_HEADROOM)
+      console.warn(`\nWARN: fallback family ${fam} ${n(totals[fam])} B (${mib(totals[fam])} MiB) is ${left < 0 ? `${mib(-left)} MiB over` : `within ${mib(left)} MiB of`} the ${mib(limit)} MiB budget (report only)`);
+  }
   if (totals[gated] > limit) {
     console.error(`\nFAIL: ${verdict}`);
     process.exit(1);

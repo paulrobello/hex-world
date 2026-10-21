@@ -11,5 +11,12 @@
     "revision": "bale-seam-fix",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Owner Q55: the round bale's sector seams. The straw and the high's relief are now 4-fold periodic about the axis and the net has 11 lines per sector, the bake receiver keeps LOD0's normals on its open edges, and the bake is lifted past the AO distance so the cap takes no ground-contact AO. Same mesh, tris and UVs; new albedo, normal and ORM. Measured (docs/checkpoints/hay-bale-seams/measure-*.json): sector seam albedo step 16.9 -> 5.0 (interior 8.2), normal step 10.2 -> 1.5 deg at LOD0, 15.0 -> 3.0 and 10.6 -> 1.7 deg at LOD1. Review docs/checkpoints/hay-bale-seams/sheet.jpg (before/after from the same cameras, LOD0 and LOD1)."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-21",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
   }
 ]

@@ -869,6 +869,13 @@
       "revision": "lod2-head-fix",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Re-export with the LOD2 head fix (animal_cow friction note 6, the same artefact): LOD2 draws the head on four stations [0, 2, 5, 7] instead of [0, 2, 7], which drew a beak, and pays for it with three-sided LOD2 legs, as animal_sheep_b and animal_sheep_c do (LOD2 110 -> 108 tris; four-sided legs would give 120, over the 110.4 ceiling). LOD0 and LOD1 are vertex-identical and the albedo, normal, ORM and masks maps byte-identical. The collider (LOD2's bounding box) moves its front 0.2 cm, 0.705 -> 0.707 m (ground reach 0.775 -> 0.777 m, FOOTPRINTS 0.8). Review sheet: docs/checkpoints/animal-lod2-head/sheet.jpg (in engine, Force LOD 2, 1 and 0 from the same cameras, before and after). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-21",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
     }
   ]
 }

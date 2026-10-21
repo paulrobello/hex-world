@@ -12,5 +12,12 @@
     "gate": "piece",
     "status": "pending",
     "notes": "Pending owner re-approval of the seam fix; not an approval. The seam was the painted gill-cover edge (a dark albedo band plus a height step that the normal map turned into a ridge, both around the full girth), now removed from the generator's paint() with geometry, UVs, LODs and the boid contract unchanged."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-21",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
   }
 ]

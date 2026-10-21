@@ -4,5 +4,12 @@
     "status": "pending",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. The open village well from assets-source/refs/well_stone ref-2 (owner WL-A1, 2026-10-20), well_stone's variant for house_cluster's well slot (about one cluster in three, WQ2 recommendation): well_stone's wall, capstones and apron, its oak posts taller (2.16 m) and joined by a crossbeam, the windlass at 1.55 m with its crank and rope, and the stave bucket hanging just above the opening. No roof. Review sheet: docs/checkpoints/well_stone/sheet.jpg. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-21",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
   }
 ]

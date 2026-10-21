@@ -295,6 +295,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. The covered village well from assets-source/refs/well_stone ref-1 (owner WL-A1, 2026-10-20): a round fieldstone wall (grey and buff stones proud of pale lime mortar) 1.58 m across the capstones and 0.9 m high, pale dressed capstones, a round flagstone apron 2.77 m across, two dark oak posts with tie beams, braces and wall plates under a 42-degree clay-tile roof (house_cottage's roof colour) with dark bargeboards, ridge 2.4 m; a turned windlass with a hemp rope coil, an iron crank on one post, a stave bucket with iron hoops and bail resting on the capstones. Placed as house_cluster hero 3 on the lawn east of cottage 0 (WQ1-WQ3 follow the recommendations until the owner answers). Review sheet: docs/checkpoints/well_stone/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-21",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
     }
   ]
 }

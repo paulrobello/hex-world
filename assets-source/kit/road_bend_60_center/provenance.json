@@ -322,6 +322,13 @@
       "requested": "2026-10-21",
       "revision": "verge sink normals (unchanged); inner-corner crease check",
       "notes": "Pending owner re-approval of the road_bend_60 tile; not an approval. No asset changed: this asks the owner to judge the 2026-10-14 verge-sink-normals build above against the inner-corner crease card 01a13887daba755ab6e588eabf7242f1. The crease does not reproduce at HEAD. It was road_straight_edge's inner verge sink slope on its true normal, facing away from the sun, cut off diagonally by the other stub's verge so it read as a crease; the 2026-10-14 +Z verge normals removed it. Swapping only road_straight_edge.glb back to 69f7f6f^ brings the line back at the top-down, shade-side and 25 m cameras (the sun-side close-up shows no line in either state), swapping only road_bend_60_center.glb back leaves those frames within 12 levels of HEAD, and HEAD at forced LOD 1 and 2 shows no z-fight speckle where the two stubs' coplanar verge tops still overlap. Review docs/checkpoints/road_bend_60-crease/sheet.jpg (before/after at the same kit cameras on both sun sides, cause, forced LODs, play distance, the seams with both road_straight neighbours and the meadow, inner-corner close-ups and eye level in play). Approving this closes the card with no geometry change; if the owner still wants the overlap trimmed, that is new work on the approved stub, the tile and the kit gate. The controller records the owner's decision. Earlier entries stay as history."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-21",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
     }
   ]
 }

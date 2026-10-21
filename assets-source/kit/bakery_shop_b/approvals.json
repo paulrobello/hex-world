@@ -19,5 +19,12 @@
     "requested": "2026-10-20",
     "revision": "back-left corner pulled in (A2)",
     "notes": "Pending owner review; not an approval. The rebuild the A2 approval asked for: LOD0's back-left eave corner, 0.083 m from the hex border in the bakery slot (the eave course kick pushed it out 2.76 cm on both axes), slides 2.76 cm up its hip line onto the plain eave corner (-2.8, -3.8), so every LOD and the collider sit 0.120 m from the border (bakery_shop 0.119). The corner sits 3.5 cm above the other eave corners. LOD1, LOD2 and the collider positions are unchanged (collider bounds -2.8..3.115 x ±3.8, so the GROUND_BOXES and walk rows hold); tris 1304/429/122 unchanged; the masks atlas repacked (walls 23.34 px/m, 0 unbaked triangles). Review sheet: docs/checkpoints/bakery-corner/sheet.jpg. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-21",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
   }
 ]

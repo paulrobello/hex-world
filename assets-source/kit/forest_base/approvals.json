@@ -27,5 +27,12 @@
     "revision": "terrain-flatten",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Swell hollows plus root-mound pits that fade in 2.5-5 m from the border; mean -0.011 m (was -0.104). Same tris (3192/1194/452). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-21",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
   }
 ]

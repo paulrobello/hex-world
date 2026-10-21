@@ -229,6 +229,13 @@
       "revision": "terrain-hump-water",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Rebuild only: a shared helper it imports (_river.py, or _spring.py) changed for the terrain-hump pass on the river bases. The GLB and every map are byte-identical to the approved build; provenance refreshed. Nothing to re-review visually."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-21",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
     }
   ]
 }

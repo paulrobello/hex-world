@@ -309,6 +309,13 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A2 (the back-left roof corner to pull in to 0.12 m)."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-21",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
     }
   ]
 }
