@@ -25,6 +25,7 @@ No Blender agents are running. The stone well landed in batch 15; no other P3 pi
 
 ## Standing rules from the owner (still in force)
 
+- Stop (owner, 2026-10-21 afternoon: "all asset work is frozen, we are almost out of tokens, dont start any new work"): start nothing new until Paul says so. Four agents were stopped mid-work; their partial worktrees are under `.claude/worktrees/` (draw rules + band shadows + LOD1 fallback `agent-ac66ca4cb0c5ce19a`, engine feedback A14 `agent-a886a30b9ea7bde3d`, water options `agent-a537aecf0b21b822e`; the close-camera analysis left none). Owner answers for that work are in `docs/review/2026-10-20-owner-answers.md` (2026-10-21 afternoon). Local `main` holds unpushed doc commits (rich-3 re-shoot 15b996b, answers 8244a9e, this note).
 - The 2026-10-20 stop rule ("dont start anything new") was lifted by Paul's "continue work" the same day; normal throughput resumed.
 - Fix friction or defects of any scope found along the way, don't only file them (Paul, 2026-10-20: "you can do fixes to any scope needed").
 - Standing push approval when a batch is a significant addition or change, after `make checkall-ci` passes; watch CI after. Small or doc-only commits ride along with the next push. `make build-web` after every merge to `main`.
