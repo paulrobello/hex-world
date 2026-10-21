@@ -3393,6 +3393,7 @@ fn center_lanes_come_from_the_tiles() {
     assert_eq!(center_lanes("road_straight_center"), vec![0, 3]);
     assert_eq!(center_lanes("road_bend_120_center"), vec![0, 2]);
     assert_eq!(center_lanes("road_bend_60_center"), vec![0, 1]);
+    assert_eq!(center_lanes("rail_bend_120_center"), vec![0, 2]);
     assert_eq!(center_lanes("road_junction_center"), vec![0, 2, 4]);
     assert_eq!(center_lanes("not_a_piece"), vec![0, 3]);
 }

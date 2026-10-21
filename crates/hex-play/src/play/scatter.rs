@@ -2299,7 +2299,7 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 28, "every inventory tile ran");
+        assert_eq!(counts.len(), 29, "every inventory tile ran");
         for id in [
             "forest",
             "oak",

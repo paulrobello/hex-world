@@ -2569,6 +2569,48 @@ pub(crate) mod tests {
         }
     }
 
+    /// The wide rail bend's track path is its GLB's track: every LOD0 rail-head vertex of
+    /// `rail_bend_120_center` stands a rail centre (0.84 m) off the `rail_bend_120` tile's network
+    /// polyline, within the head's half width, on both sides of it; and the polyline is the bake
+    /// report's arc (24 m about tile (13.856, 24), 25.133 m long) that trains run on.
+    #[test]
+    fn the_wide_rail_bend_path_runs_between_its_rails() {
+        let report: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../assets-source/kit/rail_bend_120_center/bake-report.json"
+        ))
+        .unwrap();
+        let path = &report["trackPath"];
+        let f = |v: &serde_json::Value| v.as_f64().unwrap() as f32;
+        let (radius, arc) = (f(&path["radiusM"]), f(&path["arcLengthM"]));
+        let rail = f(&report["section"]["railCentreM"]);
+        // Blender (x, y) is the tile frame's (x, -z).
+        let c = Vec2::new(f(&path["centre"][0]), -f(&path["centre"][1]));
+        assert!((radius - 24.0).abs() < 1e-3 && (arc - 25.133).abs() < 1e-3);
+        let def = catalog().get("rail_bend_120").unwrap().clone();
+        let (line, _) = scatter::lanes(&def).remove(0);
+        for p in &line {
+            assert!(
+                (p.distance(c) - radius).abs() < 0.002,
+                "path point {p} off the arc"
+            );
+        }
+        let length: f32 = line.windows(2).map(|w| w[0].distance(w[1])).sum();
+        assert!((length - arc).abs() < 0.01, "path {length} m, arc {arc} m");
+        let tris = mesh_tris("rail_bend_120_center", "lod0").expect("wide bend lod0");
+        let mut sides = [0usize; 2];
+        for (t, _) in tris.iter().filter(|(_, s)| s == "rail_head") {
+            for p in t.iter().map(|p| Vec2::new(p[0], p[2])) {
+                let d = scatter::polyline_distance(p, &line);
+                assert!(
+                    (d - rail).abs() < 0.045,
+                    "rail head at {p} stands {d} m off the path"
+                );
+                sides[usize::from(p.distance(c) > radius)] += 1;
+            }
+        }
+        assert!(sides[0] > 0 && sides[1] > 0, "rail heads by side {sides:?}");
+    }
+
     /// Criterion 3 (walker): the junction lever blocks the walker at every rotation, reported as a
     /// lever, while the track itself is walkable: across the straight, the bend and the junction's
     /// legs the walker never meets a step it cannot climb.
@@ -2594,13 +2636,20 @@ pub(crate) mod tests {
             (0, 0, "rail_straight", 0),
             (1, 0, "rail_bend_60", 0),
             (-1, 0, "rail_junction", 0),
+            (0, 1, "rail_bend_120", 0),
         ]);
-        // Across the straight, the bend's arc and the junction's two legs past the lever.
+        // Across the straight, both bends' arcs (the wide bend's at its middle, from 4 m inside to
+        // 4 m outside) and the junction's two legs past the lever.
         for (start, dir, dist) in [
             (centre(0, 0) + Vec2::new(0.0, -6.0), Vec2::Y, 12.0),
             (
                 centre(1, 0) + Vec2::new(3.0, 1.0),
                 Vec2::new(1.0, 0.857),
+                8.0,
+            ),
+            (
+                centre(0, 1) + Vec2::new(3.856, 6.679),
+                Vec2::new(-0.5, -0.866),
                 8.0,
             ),
             (centre(-1, 0) + Vec2::new(-4.0, -6.0), Vec2::Y, 12.0),

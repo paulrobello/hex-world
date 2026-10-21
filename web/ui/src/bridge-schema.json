@@ -116,6 +116,12 @@
         ]
       },
       {
+        "id": "rail_bend_120",
+        "tiles": [
+          "rail_bend_120"
+        ]
+      },
+      {
         "id": "rail_junction",
         "tiles": [
           "rail_junction"
@@ -522,6 +528,29 @@
           null
         ],
         "period": 1,
+        "scatter": [
+          "wildflower_single"
+        ]
+      },
+      {
+        "edges": [
+          "Rail",
+          "Grass",
+          "Rail",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heroes": false,
+        "id": "rail_bend_120",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
         "scatter": [
           "wildflower_single"
         ]

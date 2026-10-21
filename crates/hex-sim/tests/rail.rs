@@ -312,6 +312,50 @@ fn trains_on_stretches_closed_into_a_loop_turn_to_run_the_same_way_round() {
     }
 }
 
+/// Six wide bends on the ring round the start meadow close one 150.8 m circle (radius 24 m about
+/// the origin). A stretch of at least 55 m gets one train plus one per further 140 m, so the circle
+/// holds one, which laps it at line speed and never runs back.
+#[test]
+fn six_wide_bends_close_a_circle_that_trains_lap() {
+    let c = catalog();
+    let mut r = Railway::new();
+    for d in 0..6u8 {
+        place(&mut r, &c, ring_cell(d), "rail_bend_120", (d + 2) % 6);
+    }
+    let net = r.network();
+    assert_eq!(net.links().count(), 6);
+    for (_, node) in net.nodes() {
+        assert_eq!(node.links().len(), 2, "{:?}", node.key());
+    }
+    let len: f32 = net.links().map(|(_, l)| l.length()).sum();
+    let radius = APOTHEM * 3f32.sqrt();
+    assert!(
+        (len - 2.0 * std::f32::consts::PI * radius).abs() < 0.05,
+        "{len}"
+    );
+    for (_, l) in net.links() {
+        for p in l.points() {
+            assert!(
+                (geom::len(*p) - radius).abs() < 0.002,
+                "{p:?} off the circle"
+            );
+        }
+    }
+    run(&mut r, 60);
+    assert_eq!(r.trains().len(), 1);
+    let start = r.trains()[0].front();
+    let mut lapped = false;
+    for _ in 0..120 * TICK_HZ {
+        r.tick();
+        let t = &r.trains()[0];
+        assert!(t.speed() > 5.0, "{:?} at {} m/s", t.id(), t.speed());
+        lapped |= geom::dist(t.front(), start) > 40.0;
+    }
+    let t = &r.trains()[0];
+    assert!(lapped, "the train never left its start");
+    assert_eq!(t.reversals(), 0, "{:?} ran back on the circle", t.id());
+}
+
 /// On a loop a train never stops: it laps the 216 m triangle at line speed.
 #[test]
 fn a_train_laps_a_loop_without_stopping() {
@@ -479,6 +523,7 @@ fn random_rail_layouts_keep_trains_apart_and_moving() {
         "rail_station",
         "rail_straight",
         "rail_bend_60",
+        "rail_bend_120",
     ];
     let (mut trains_seen, mut routed, mut arrivals) = (0, 0, 0);
     for seed in 0..16u64 {

@@ -19,6 +19,7 @@ export const TILE_NAMES: Record<string, string> = {
   road_junction: "Road junction",
   rail_straight: "Rail straight",
   rail_bend_60: "Rail bend 60°",
+  rail_bend_120: "Rail bend 120°",
   rail_junction: "Rail junction",
   rail_road_crossing: "Level crossing",
   rail_station: "Rail station",

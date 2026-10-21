@@ -1,0 +1,26 @@
+// Wide rail bend across edges two apart (P3, rail_bend_120_center): edge 0 midpoint to edge 2
+// midpoint on the 24 m radius arc about the point where the two edge lines meet (tile (13.856,
+// 24.0)), 25.133 m long, turning 60 degrees, sampled every 2.5 degrees
+// (scripts/blender/kit/_rail_bend_wide.py; bake report trackPath).
+(
+    id: "rail_bend_120",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
+        (kind: Grass),
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    center: Some("rail_bend_120_center"),
+    networks: [
+        (kind: Rail, from: Edge(0), to: Edge(2), points: [(12.810, 0.023), (11.765, 0.091), (10.724, 0.205), (9.689, 0.365), (8.662, 0.569), (7.645, 0.818), (6.639, 1.111), (5.648, 1.447), (4.672, 1.827), (3.714, 2.249), (2.774, 2.712), (1.856, 3.215), (0.961, 3.759), (0.091, 4.340), (-0.754, 4.960), (-1.570, 5.615), (-2.358, 6.305), (-3.114, 7.029), (-3.838, 7.786), (-4.529, 8.573), (-5.184, 9.390), (-5.803, 10.234), (-6.385, 11.105)]),
+    ],
+    props: (
+        scatter: [
+            (piece: "wildflower_single", density: 3.0, vary: 0.8),
+        ],
+    ),
+)

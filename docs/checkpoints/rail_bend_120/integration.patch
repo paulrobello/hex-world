@@ -1,0 +1,1146 @@
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index 55117b2..fa073d5 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -87,6 +87,13 @@
+                  "rail_steel": { "color": [0.13, 0.085, 0.06], "roughness": 0.6, "masks": true },
+                  "rail_head": { "color": [0.56, 0.56, 0.54], "roughness": 0.28, "masks": true } },
+       "maps": { "masks": "p1/rail_bend_60_center/rail_bend_60_center.masks" } },
++    { "id": "rail_bend_120_center", "pack": "village", "kind": "center", "glb": "p1/rail_bend_120_center/rail_bend_120_center.glb",
++      "provenance": "assets-source/kit/rail_bend_120_center/provenance.json",
++      "slots": { "rail_ballast": { "tileable": "gravel", "color": [0.8, 0.9, 1.2], "masks": true },
++                 "rail_sleeper": { "color": [0.075, 0.056, 0.042], "roughness": 0.85, "masks": true },
++                 "rail_steel": { "color": [0.13, 0.085, 0.06], "roughness": 0.6, "masks": true },
++                 "rail_head": { "color": [0.56, 0.56, 0.54], "roughness": 0.28, "masks": true } },
++      "maps": { "masks": "p1/rail_bend_120_center/rail_bend_120_center.masks" } },
+     { "id": "rail_junction_center", "pack": "village", "kind": "center", "glb": "p1/rail_junction_center/rail_junction_center.glb",
+       "provenance": "assets-source/kit/rail_junction_center/provenance.json",
+       "slots": { "rail_ballast": { "tileable": "gravel", "color": [0.8, 0.9, 1.2], "masks": true },
+diff --git a/crates/hex-app/src/sim.rs b/crates/hex-app/src/sim.rs
+index 20c61e0..98f00e5 100644
+--- a/crates/hex-app/src/sim.rs
++++ b/crates/hex-app/src/sim.rs
+@@ -548,9 +548,10 @@ mod tests {
+         connected
+     }
+ 
+-    const ROADS: [&str; 8] = [
++    const ROADS: [&str; 9] = [
+         "rail_straight",
+         "rail_bend_60",
++        "rail_bend_120",
+         "rail_junction",
+         "road_straight",
+         "road_bend_60",
+diff --git a/crates/hex-app/src/thumbs.rs b/crates/hex-app/src/thumbs.rs
+index ec11fcd..770281b 100644
+--- a/crates/hex-app/src/thumbs.rs
++++ b/crates/hex-app/src/thumbs.rs
+@@ -451,6 +451,7 @@ mod tests {
+             ("road_junction", 2),
+             ("rail_straight", 3),
+             ("rail_bend_60", 6),
++            ("rail_bend_120", 6),
+             ("rail_junction", 6),
+             ("rail_road_crossing", 3),
+             ("rail_station", 6),
+@@ -469,7 +470,7 @@ mod tests {
+         for (id, n) in want {
+             assert_eq!(distinct(id), n, "{id}");
+         }
+-        assert_eq!(ThumbRun::new(&c).stages.len(), 28 + 126);
++        assert_eq!(ThumbRun::new(&c).stages.len(), 29 + 132);
+     }
+ 
+     #[test]
+diff --git a/crates/hex-core/src/catalog.rs b/crates/hex-core/src/catalog.rs
+index 1244d38..c350be3 100644
+--- a/crates/hex-core/src/catalog.rs
++++ b/crates/hex-core/src/catalog.rs
+@@ -51,6 +51,10 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
+         "rail_bend_60",
+         include_str!("../../../data/tiles/rail_bend_60.ron"),
+     ),
++    (
++        "rail_bend_120",
++        include_str!("../../../data/tiles/rail_bend_120.ron"),
++    ),
+     (
+         "rail_junction",
+         include_str!("../../../data/tiles/rail_junction.ron"),
+diff --git a/crates/hex-core/tests/data_validator.rs b/crates/hex-core/tests/data_validator.rs
+index 8ff9457..abe8aa9 100644
+--- a/crates/hex-core/tests/data_validator.rs
++++ b/crates/hex-core/tests/data_validator.rs
+@@ -46,7 +46,7 @@ fn manifest_piece_ids() -> BTreeSet<String> {
+ /// Plan F1 with the owner O1 coast corners, the U3 oak split from the forest and the windmill, the
+ /// farm, the wheat field, the bakery and the rail tiles ahead of P3 (PRD §5.4): edges 0..5 for each
+ /// inventory tile.
+-const F1: [(&str, [SocketKind; 6]); 28] = [
++const F1: [(&str, [SocketKind; 6]); 29] = [
+     ("meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
+     ("forest", [Forest, Forest, Forest, Forest, Forest, Forest]),
+     ("oak", [Forest, Forest, Forest, Forest, Forest, Forest]),
+@@ -61,6 +61,7 @@ const F1: [(&str, [SocketKind; 6]); 28] = [
+     ("road_junction", [Road, Grass, Road, Grass, Road, Grass]),
+     ("rail_straight", [Rail, Grass, Grass, Rail, Grass, Grass]),
+     ("rail_bend_60", [Rail, Rail, Grass, Grass, Grass, Grass]),
++    ("rail_bend_120", [Rail, Grass, Rail, Grass, Grass, Grass]),
+     ("rail_junction", [Rail, Rail, Grass, Rail, Grass, Grass]),
+     ("rail_road_crossing", [Rail, Road, Grass, Rail, Road, Grass]),
+     ("rail_station", [Rail, Grass, Grass, Rail, Grass, Grass]),
+diff --git a/crates/hex-play/src/play.rs b/crates/hex-play/src/play.rs
+index 828fa19..d483ca9 100644
+--- a/crates/hex-play/src/play.rs
++++ b/crates/hex-play/src/play.rs
+@@ -1107,7 +1107,7 @@ mod tests {
+     #[test]
+     fn every_mvp_tile_resolves_and_biomes_index() {
+         let c = PlayCatalog::default();
+-        assert_eq!(c.0.tiles().len(), 28);
++        assert_eq!(c.0.tiles().len(), 29);
+         let biomes: std::collections::BTreeSet<_> =
+             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
+         assert_eq!(biomes.len(), 4);
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 315985e..9383809 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -2091,7 +2091,7 @@ mod tests {
+                 }
+             }
+         }
+-        assert_eq!(counts.len(), 28, "every inventory tile ran");
++        assert_eq!(counts.len(), 29, "every inventory tile ran");
+         for id in [
+             "forest",
+             "oak",
+diff --git a/crates/hex-play/src/trains.rs b/crates/hex-play/src/trains.rs
+index 8512864..9a3e309 100644
+--- a/crates/hex-play/src/trains.rs
++++ b/crates/hex-play/src/trains.rs
+@@ -376,7 +376,7 @@ pub fn report(
+ mod tests {
+     use super::*;
+ 
+-    /// The rail top every train stands on is the bake reports' rail top on the four track pieces
++    /// The rail top every train stands on is the bake reports' rail top on the five track pieces
+     /// and the level crossing's deck top, so a train rides level over the deck and the bridge.
+     #[test]
+     fn trains_stand_on_every_rail_piece_s_rail_top() {
+@@ -389,6 +389,10 @@ mod tests {
+                 include_str!("../../../assets-source/kit/rail_bend_60_center/bake-report.json"),
+                 "railTopM",
+             ),
++            (
++                include_str!("../../../assets-source/kit/rail_bend_120_center/bake-report.json"),
++                "railTopM",
++            ),
+             (
+                 include_str!("../../../assets-source/kit/rail_junction_center/bake-report.json"),
+                 "railTopM",
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index 9d1da7d..5dbcc84 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -2255,6 +2255,48 @@ pub(crate) mod tests {
+         }
+     }
+ 
++    /// The wide rail bend's track path is its GLB's track: every LOD0 rail-head vertex of
++    /// `rail_bend_120_center` stands a rail centre (0.84 m) off the `rail_bend_120` tile's network
++    /// polyline, within the head's half width, on both sides of it; and the polyline is the bake
++    /// report's arc (24 m about tile (13.856, 24), 25.133 m long) that trains run on.
++    #[test]
++    fn the_wide_rail_bend_path_runs_between_its_rails() {
++        let report: serde_json::Value = serde_json::from_str(include_str!(
++            "../../../assets-source/kit/rail_bend_120_center/bake-report.json"
++        ))
++        .unwrap();
++        let path = &report["trackPath"];
++        let f = |v: &serde_json::Value| v.as_f64().unwrap() as f32;
++        let (radius, arc) = (f(&path["radiusM"]), f(&path["arcLengthM"]));
++        let rail = f(&report["section"]["railCentreM"]);
++        // Blender (x, y) is the tile frame's (x, -z).
++        let c = Vec2::new(f(&path["centre"][0]), -f(&path["centre"][1]));
++        assert!((radius - 24.0).abs() < 1e-3 && (arc - 25.133).abs() < 1e-3);
++        let def = catalog().get("rail_bend_120").unwrap().clone();
++        let (line, _) = scatter::lanes(&def).remove(0);
++        for p in &line {
++            assert!(
++                (p.distance(c) - radius).abs() < 0.002,
++                "path point {p} off the arc"
++            );
++        }
++        let length: f32 = line.windows(2).map(|w| w[0].distance(w[1])).sum();
++        assert!((length - arc).abs() < 0.01, "path {length} m, arc {arc} m");
++        let tris = mesh_tris("rail_bend_120_center", "lod0").expect("wide bend lod0");
++        let mut sides = [0usize; 2];
++        for (t, _) in tris.iter().filter(|(_, s)| s == "rail_head") {
++            for p in t.iter().map(|p| Vec2::new(p[0], p[2])) {
++                let d = scatter::polyline_distance(p, &line);
++                assert!(
++                    (d - rail).abs() < 0.045,
++                    "rail head at {p} stands {d} m off the path"
++                );
++                sides[usize::from(p.distance(c) > radius)] += 1;
++            }
++        }
++        assert!(sides[0] > 0 && sides[1] > 0, "rail heads by side {sides:?}");
++    }
++
+     /// Criterion 3 (walker): the junction lever blocks the walker at every rotation, reported as a
+     /// lever, while the track itself is walkable: across the straight, the bend and the junction's
+     /// legs the walker never meets a step it cannot climb.
+@@ -2280,8 +2322,10 @@ pub(crate) mod tests {
+             (0, 0, "rail_straight", 0),
+             (1, 0, "rail_bend_60", 0),
+             (-1, 0, "rail_junction", 0),
++            (0, 1, "rail_bend_120", 0),
+         ]);
+-        // Across the straight, the bend's arc and the junction's two legs past the lever.
++        // Across the straight, both bends' arcs (the wide bend's at its middle, from 4 m inside to
++        // 4 m outside) and the junction's two legs past the lever.
+         for (start, dir, dist) in [
+             (centre(0, 0) + Vec2::new(0.0, -6.0), Vec2::Y, 12.0),
+             (
+@@ -2289,6 +2333,11 @@ pub(crate) mod tests {
+                 Vec2::new(1.0, 0.857),
+                 8.0,
+             ),
++            (
++                centre(0, 1) + Vec2::new(3.856, 6.679),
++                Vec2::new(-0.5, -0.866),
++                8.0,
++            ),
+             (centre(-1, 0) + Vec2::new(-4.0, -6.0), Vec2::Y, 12.0),
+             (
+                 centre(-1, 0) + Vec2::new(9.0, 6.0),
+diff --git a/crates/hex-play/tests/kit_gate.rs b/crates/hex-play/tests/kit_gate.rs
+index e10dff2..84aa2c2 100644
+--- a/crates/hex-play/tests/kit_gate.rs
++++ b/crates/hex-play/tests/kit_gate.rs
+@@ -3302,6 +3302,7 @@ fn center_lanes_come_from_the_tiles() {
+     assert_eq!(center_lanes("road_straight_center"), vec![0, 3]);
+     assert_eq!(center_lanes("road_bend_120_center"), vec![0, 2]);
+     assert_eq!(center_lanes("road_bend_60_center"), vec![0, 1]);
++    assert_eq!(center_lanes("rail_bend_120_center"), vec![0, 2]);
+     assert_eq!(center_lanes("road_junction_center"), vec![0, 2, 4]);
+     assert_eq!(center_lanes("not_a_piece"), vec![0, 3]);
+ }
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index c19e582..6a066a4 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -331,6 +331,11 @@ pub fn kit_layout() -> Vec<Placement> {
+     // downstream on (-2, 6). The engine and a carriage stand on the deck at the rail top.
+     v.push(place("meadow_base", -3, 6, 0));
+     v.push(place("rail_straight_center", -3, 6, 2));
++    // The wide rail bend (P3, owner 2026-10-20: rail bends like the road set) on (-4, 7) at rot 3
++    // (lanes on world edges 3 and 5): its edge-5 lane carries that straight's free end on across
++    // world edge 2, and its other end runs out to the open rim.
++    v.push(place("meadow_base", -4, 7, 0));
++    v.push(place("rail_bend_120_center", -4, 7, 3));
+     for (q, r, center) in [
+         (-2, 4, "river_straight_center"),
+         (-2, 5, "river_rail_bridge_center"),
+@@ -983,6 +988,29 @@ mod tests {
+         assert_eq!((1 + b.rot) % 6, (s.rot + 3) % 6);
+     }
+ 
++    #[test]
++    fn wide_rail_bend_continues_the_bridge_line() {
++        let l = kit_layout();
++        let b = *l
++            .iter()
++            .find(|p| p.piece == "rail_bend_120_center")
++            .unwrap();
++        let s = *l
++            .iter()
++            .find(|p| p.piece == "rail_straight_center" && p.cell == Axial::new(-3, 6))
++            .unwrap();
++        // The bend's lanes are local edges 0 and 2, the straight's 0 and 3, turned by rot.
++        let world = |p: &Placement, local: &[u8]| -> Vec<u8> {
++            local.iter().map(|e| (e + p.rot) % 6).collect()
++        };
++        assert!(
++            world(&b, &[0, 2]).into_iter().any(
++                |e| b.cell.neighbor(e) == s.cell && world(&s, &[0, 3]).contains(&((e + 3) % 6))
++            ),
++            "the wide bend meets no lane of the straight on (-3, 6)"
++        );
++    }
++
+     #[test]
+     fn rail_crossing_continues_the_straight() {
+         let l = kit_layout();
+diff --git a/crates/hex-render/src/lib.rs b/crates/hex-render/src/lib.rs
+index db673d2..25c7c78 100644
+--- a/crates/hex-render/src/lib.rs
++++ b/crates/hex-render/src/lib.rs
+@@ -204,14 +204,14 @@ mod tests {
+         cells.dedup();
+         // The water patch's 11 cells plus the showcase blocks' cells; each block in
+         // `kit_scene::kit_layout` names its own cells. A new block adds its cells here.
+-        assert_eq!(cells.len(), 32);
++        assert_eq!(cells.len(), 33);
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
+         // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
+         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
+         // The fixture lays out water-patch cells only; the runtime kit adds the showcase blocks.
+         assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
+-        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 32);
++        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 33);
+         assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
+         assert!(!Scenario::Kit.has_water());
+     }
+diff --git a/crates/hex-sim/tests/network.rs b/crates/hex-sim/tests/network.rs
+index 8f8da51..578fee8 100644
+--- a/crates/hex-sim/tests/network.rs
++++ b/crates/hex-sim/tests/network.rs
+@@ -141,6 +141,34 @@ fn hundred_twenty_degree_bend_is_a_stub_tangent_arc_two_edges_apart() {
+     }
+ }
+ 
++/// The wide rail bend (`rail_bend_120_center`) has no edge stub: it meets both lane edges square-on
++/// at their midpoints, so it is the arc about the point where the two edge lines meet, the centre of
++/// the neighbour across the edge between them, radius APOTHEM tan 60 degrees = 24 m, turning pi / 3
++/// over 8 pi = 25.133 m. The tile samples it every 2.5 degrees, so its chords fall short by at most
++/// R (pi / 3) d^2 / 24 = 0.002 m and stand off the arc by at most R d^2 / 8 = 0.006 m.
++#[test]
++fn wide_rail_bend_is_the_24_m_arc_two_edges_apart() {
++    let cat = catalog();
++    let radius = APOTHEM * 3f32.sqrt();
++    let want = radius * std::f32::consts::FRAC_PI_3;
++    assert!((want - 25.133).abs() < 1e-3, "{want}");
++    for k in 0..6u8 {
++        let mut net = Network::new(NetworkKind::Rail);
++        put(&mut net, &cat, Axial::ORIGIN, "rail_bend_120", k);
++        let link = only_link(&net, Axial::ORIGIN);
++        assert!((link.length() - want).abs() < 0.02, "{}", link.length());
++        for e in [k, (k + 2) % 6] {
++            let mid = seam_mid(Axial::ORIGIN, Axial::ORIGIN.neighbor(e));
++            assert!(has_end_at(link, mid), "k{k} edge {e}");
++        }
++        let centre = Axial::ORIGIN.neighbor((k + 1) % 6).to_world(HEX_RADIUS);
++        for p in link.points() {
++            let off = geom::dist(*p, centre) - radius;
++            assert!(off.abs() < 0.002, "k{k}: {p:?} {off} m off the arc");
++        }
++    }
++}
++
+ #[test]
+ fn bend_continues_a_straight_road_at_both_seams() {
+     let cat = catalog();
+diff --git a/crates/hex-sim/tests/rail.rs b/crates/hex-sim/tests/rail.rs
+index bbf88d4..897b42a 100644
+--- a/crates/hex-sim/tests/rail.rs
++++ b/crates/hex-sim/tests/rail.rs
+@@ -312,6 +312,50 @@ fn trains_on_stretches_closed_into_a_loop_turn_to_run_the_same_way_round() {
+     }
+ }
+ 
++/// Six wide bends on the ring round the start meadow close one 150.8 m circle (radius 24 m about
++/// the origin). A stretch of at least 55 m gets one train plus one per further 140 m, so the circle
++/// holds one, which laps it at line speed and never runs back.
++#[test]
++fn six_wide_bends_close_a_circle_that_trains_lap() {
++    let c = catalog();
++    let mut r = Railway::new();
++    for d in 0..6u8 {
++        place(&mut r, &c, ring_cell(d), "rail_bend_120", (d + 2) % 6);
++    }
++    let net = r.network();
++    assert_eq!(net.links().count(), 6);
++    for (_, node) in net.nodes() {
++        assert_eq!(node.links().len(), 2, "{:?}", node.key());
++    }
++    let len: f32 = net.links().map(|(_, l)| l.length()).sum();
++    let radius = APOTHEM * 3f32.sqrt();
++    assert!(
++        (len - 2.0 * std::f32::consts::PI * radius).abs() < 0.05,
++        "{len}"
++    );
++    for (_, l) in net.links() {
++        for p in l.points() {
++            assert!(
++                (geom::len(*p) - radius).abs() < 0.002,
++                "{p:?} off the circle"
++            );
++        }
++    }
++    run(&mut r, 60);
++    assert_eq!(r.trains().len(), 1);
++    let start = r.trains()[0].front();
++    let mut lapped = false;
++    for _ in 0..120 * TICK_HZ {
++        r.tick();
++        let t = &r.trains()[0];
++        assert!(t.speed() > 5.0, "{:?} at {} m/s", t.id(), t.speed());
++        lapped |= geom::dist(t.front(), start) > 40.0;
++    }
++    let t = &r.trains()[0];
++    assert!(lapped, "the train never left its start");
++    assert_eq!(t.reversals(), 0, "{:?} ran back on the circle", t.id());
++}
++
+ /// On a loop a train never stops: it laps the 216 m triangle at line speed.
+ #[test]
+ fn a_train_laps_a_loop_without_stopping() {
+@@ -470,12 +514,13 @@ fn a_world_edit_removes_the_trains_on_the_cell() {
+ #[test]
+ fn random_rail_layouts_keep_trains_apart_and_moving() {
+     let c = catalog();
+-    const RAIL: [&str; 5] = [
++    const RAIL: [&str; 6] = [
+         "rail_straight",
+         "rail_bend_60",
+         "rail_junction",
+         "rail_straight",
+         "rail_bend_60",
++        "rail_bend_120",
+     ];
+     let mut trains_seen = 0;
+     for seed in 0..12u64 {
+diff --git a/data/tiles/rail_bend_120.ron b/data/tiles/rail_bend_120.ron
+new file mode 100644
+index 0000000..322c492
+--- /dev/null
++++ b/data/tiles/rail_bend_120.ron
+@@ -0,0 +1,26 @@
++// Wide rail bend across edges two apart (P3, rail_bend_120_center): edge 0 midpoint to edge 2
++// midpoint on the 24 m radius arc about the point where the two edge lines meet (tile (13.856,
++// 24.0)), 25.133 m long, turning 60 degrees, sampled every 2.5 degrees
++// (scripts/blender/kit/_rail_bend_wide.py; bake report trackPath).
++(
++    id: "rail_bend_120",
++    biome: Grass,
++    base: "meadow_base",
++    edges: (
++        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
++        (kind: Grass),
++        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
++        (kind: Grass),
++        (kind: Grass),
++        (kind: Grass),
++    ),
++    center: Some("rail_bend_120_center"),
++    networks: [
++        (kind: Rail, from: Edge(0), to: Edge(2), points: [(12.810, 0.023), (11.765, 0.091), (10.724, 0.205), (9.689, 0.365), (8.662, 0.569), (7.645, 0.818), (6.639, 1.111), (5.648, 1.447), (4.672, 1.827), (3.714, 2.249), (2.774, 2.712), (1.856, 3.215), (0.961, 3.759), (0.091, 4.340), (-0.754, 4.960), (-1.570, 5.615), (-2.358, 6.305), (-3.114, 7.029), (-3.838, 7.786), (-4.529, 8.573), (-5.184, 9.390), (-5.803, 10.234), (-6.385, 11.105)]),
++    ],
++    props: (
++        scatter: [
++            (piece: "wildflower_single", density: 3.0, vary: 0.8),
++        ],
++    ),
++)
+diff --git a/web/ui/src/bridge-schema.json b/web/ui/src/bridge-schema.json
+index 2c1b851..c227f24 100644
+--- a/web/ui/src/bridge-schema.json
++++ b/web/ui/src/bridge-schema.json
+@@ -115,6 +115,12 @@
+           "rail_bend_60"
+         ]
+       },
++      {
++        "id": "rail_bend_120",
++        "tiles": [
++          "rail_bend_120"
++        ]
++      },
+       {
+         "id": "rail_junction",
+         "tiles": [
+@@ -526,6 +532,29 @@
+           "wildflower_single"
+         ]
+       },
++      {
++        "edges": [
++          "Rail",
++          "Grass",
++          "Rail",
++          "Grass",
++          "Grass",
++          "Grass"
++        ],
++        "heroes": false,
++        "id": "rail_bend_120",
++        "land": [
++          null,
++          null,
++          null,
++          null,
++          null,
++          null
++        ],
++        "scatter": [
++          "wildflower_single"
++        ]
++      },
+       {
+         "edges": [
+           "Rail",
+diff --git a/web/ui/src/words.ts b/web/ui/src/words.ts
+index 6d41caf..fc27e36 100644
+--- a/web/ui/src/words.ts
++++ b/web/ui/src/words.ts
+@@ -19,6 +19,7 @@ export const TILE_NAMES: Record<string, string> = {
+   road_junction: "Road junction",
+   rail_straight: "Rail straight",
+   rail_bend_60: "Rail bend 60°",
++  rail_bend_120: "Rail bend 120°",
+   rail_junction: "Rail junction",
+   rail_road_crossing: "Level crossing",
+   rail_station: "Rail station",
+diff --git a/web/ui/test/rules-parity.json b/web/ui/test/rules-parity.json
+index 5dd0e15..6798d35 100644
+--- a/web/ui/test/rules-parity.json
++++ b/web/ui/test/rules-parity.json
+@@ -62,6 +62,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            2,
++            3,
++            4
++          ],
+           "rail_bend_60": [
+             2,
+             3,
+@@ -214,6 +220,10 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            1
++          ],
+           "rail_bend_60": [
+             0,
+             1,
+@@ -339,6 +349,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            1,
++            2,
++            3,
++            5
++          ],
+           "rail_bend_60": [
+             1,
+             2,
+@@ -498,6 +514,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            1,
++            2,
++            4
++          ],
+           "rail_bend_60": [
+             0,
+             1,
+@@ -650,6 +672,10 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            3,
++            4
++          ],
+           "rail_bend_60": [
+             3,
+             4,
+@@ -761,6 +787,9 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            1
++          ],
+           "rail_bend_60": [
+             1,
+             2
+@@ -867,6 +896,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            1,
++            2,
++            4
++          ],
+           "rail_bend_60": [
+             0,
+             1,
+@@ -983,6 +1018,7 @@
+           "meadow": [],
+           "oak": [],
+           "ocean": [],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [
+@@ -1036,6 +1072,7 @@
+           "meadow": [],
+           "oak": [],
+           "ocean": [],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [
+@@ -1133,6 +1170,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            1,
++            3,
++            4,
++            5
++          ],
+           "rail_bend_60": [
+             0,
+             3,
+@@ -1285,6 +1328,10 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            4,
++            5
++          ],
+           "rail_bend_60": [
+             0,
+             4,
+@@ -1410,6 +1457,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            2,
++            4,
++            5
++          ],
+           "rail_bend_60": [
+             0,
+             1,
+@@ -1551,6 +1604,7 @@
+           "meadow": [],
+           "oak": [],
+           "ocean": [],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -1604,6 +1658,7 @@
+           "meadow": [],
+           "oak": [],
+           "ocean": [],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [
+@@ -1700,6 +1755,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            1,
++            2,
++            3,
++            5
++          ],
+           "rail_bend_60": [
+             1,
+             2,
+@@ -1845,6 +1906,9 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            2
++          ],
+           "rail_bend_60": [
+             2,
+             3
+@@ -1944,6 +2008,10 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            5
++          ],
+           "rail_bend_60": [
+             0,
+             1,
+@@ -2026,6 +2094,7 @@
+           "meadow": [],
+           "oak": [],
+           "ocean": [],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [
+@@ -2122,6 +2191,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            1,
++            3,
++            5
++          ],
+           "rail_bend_60": [
+             0,
+             1,
+@@ -2281,6 +2356,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            1,
++            2,
++            3,
++            5
++          ],
+           "rail_bend_60": [
+             1,
+             2,
+@@ -2392,6 +2473,7 @@
+           "meadow": [],
+           "oak": [],
+           "ocean": [],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -2474,6 +2556,9 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            3
++          ],
+           "rail_bend_60": [
+             3,
+             4
+@@ -2536,6 +2621,7 @@
+           "meadow": [],
+           "oak": [],
+           "ocean": [],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -2582,6 +2668,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -2666,6 +2753,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            2,
++            3,
++            4
++          ],
+           "rail_bend_60": [
+             2,
+             3,
+@@ -2793,6 +2886,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -2870,6 +2964,10 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            3,
++            4
++          ],
+           "rail_bend_60": [
+             3,
+             4,
+@@ -2959,6 +3057,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -3005,6 +3104,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -3045,6 +3145,7 @@
+           "meadow": [],
+           "oak": [],
+           "ocean": [],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -3095,6 +3196,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -3203,6 +3305,7 @@
+           "meadow": [],
+           "oak": [],
+           "ocean": [],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -3269,6 +3372,9 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            1
++          ],
+           "rail_bend_60": [
+             1,
+             2
+@@ -3375,6 +3481,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            1,
++            2,
++            4
++          ],
+           "rail_bend_60": [
+             0,
+             1,
+@@ -3534,6 +3646,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            1,
++            2,
++            3,
++            5
++          ],
+           "rail_bend_60": [
+             1,
+             2,
+@@ -3693,6 +3811,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            1,
++            2,
++            4
++          ],
+           "rail_bend_60": [
+             0,
+             1,
+@@ -3820,6 +3944,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -3897,6 +4022,10 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            1
++          ],
+           "rail_bend_60": [
+             0,
+             1,
+@@ -3986,6 +4115,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4068,6 +4198,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            1,
++            3,
++            5
++          ],
+           "rail_bend_60": [
+             0,
+             1,
+@@ -4191,6 +4327,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4241,6 +4378,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4283,6 +4421,7 @@
+           "meadow": [],
+           "oak": [],
+           "ocean": [],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4363,6 +4502,12 @@
+             5
+           ],
+           "ocean": [],
++          "rail_bend_120": [
++            0,
++            2,
++            4,
++            5
++          ],
+           "rail_bend_60": [
+             0,
+             1,
+@@ -4538,6 +4683,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4586,6 +4732,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4632,6 +4779,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4678,6 +4826,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4724,6 +4873,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4767,6 +4917,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4813,6 +4964,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4865,6 +5017,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4913,6 +5066,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -4959,6 +5113,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5009,6 +5164,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5057,6 +5213,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5103,6 +5260,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5149,6 +5307,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5199,6 +5358,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5247,6 +5407,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5293,6 +5454,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5336,6 +5498,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5382,6 +5545,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5430,6 +5594,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5476,6 +5641,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5526,6 +5692,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5574,6 +5741,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],
+@@ -5624,6 +5792,7 @@
+             4,
+             5
+           ],
++          "rail_bend_120": [],
+           "rail_bend_60": [],
+           "rail_junction": [],
+           "rail_road_crossing": [],

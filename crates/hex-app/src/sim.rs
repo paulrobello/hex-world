@@ -574,9 +574,10 @@ mod tests {
         connected
     }
 
-    const ROADS: [&str; 8] = [
+    const ROADS: [&str; 9] = [
         "rail_straight",
         "rail_bend_60",
+        "rail_bend_120",
         "rail_junction",
         "road_straight",
         "road_bend_60",

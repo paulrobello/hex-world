@@ -343,6 +343,11 @@ pub fn kit_layout() -> Vec<Placement> {
     // downstream on (-2, 6). The engine and a carriage stand on the deck at the rail top.
     v.push(place("meadow_base", -3, 6, 0));
     v.push(place("rail_straight_center", -3, 6, 2));
+    // The wide rail bend (P3, owner 2026-10-20: rail bends like the road set) on (-4, 7) at rot 3
+    // (lanes on world edges 3 and 5): its edge-5 lane carries that straight's free end on across
+    // world edge 2, and its other end runs out to the open rim.
+    v.push(place("meadow_base", -4, 7, 0));
+    v.push(place("rail_bend_120_center", -4, 7, 3));
     for (q, r, center) in [
         (-2, 4, "river_straight_center"),
         (-2, 5, "river_rail_bridge_center"),
@@ -1067,6 +1072,29 @@ mod tests {
         // The straight's lanes are local edges 0 and 3, the bend's 0 and 1, turned by rot.
         assert_eq!(s.cell.neighbor(s.rot), b.cell);
         assert_eq!((1 + b.rot) % 6, (s.rot + 3) % 6);
+    }
+
+    #[test]
+    fn wide_rail_bend_continues_the_bridge_line() {
+        let l = kit_layout();
+        let b = *l
+            .iter()
+            .find(|p| p.piece == "rail_bend_120_center")
+            .unwrap();
+        let s = *l
+            .iter()
+            .find(|p| p.piece == "rail_straight_center" && p.cell == Axial::new(-3, 6))
+            .unwrap();
+        // The bend's lanes are local edges 0 and 2, the straight's 0 and 3, turned by rot.
+        let world = |p: &Placement, local: &[u8]| -> Vec<u8> {
+            local.iter().map(|e| (e + p.rot) % 6).collect()
+        };
+        assert!(
+            world(&b, &[0, 2]).into_iter().any(
+                |e| b.cell.neighbor(e) == s.cell && world(&s, &[0, 3]).contains(&((e + 3) % 6))
+            ),
+            "the wide bend meets no lane of the straight on (-3, 6)"
+        );
     }
 
     #[test]

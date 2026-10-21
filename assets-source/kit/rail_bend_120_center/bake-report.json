@@ -1,0 +1,180 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "none",
+  "lodTris": [
+    1272,
+    528,
+    152
+  ],
+  "marginPx": 0,
+  "masks": {
+    "ao": {
+      "crib": [
+        0.78,
+        0.95
+      ],
+      "shoulder": 0.95,
+      "sleeper_rail": 1.0
+    },
+    "night": 0.0,
+    "porosity": {
+      "ballast": 0.9,
+      "rail": 0.15,
+      "sleeper": 0.6
+    },
+    "snow": 1.0
+  },
+  "reason": "no Cycles bake: the masks are an analytic field of (along, across) on the planar UV0",
+  "receiverSignature": "695f4138f4b3732f819acb8963eed342bc7f0f0b1868db02c23bbb667efea5c4",
+  "samples": 0,
+  "section": {
+    "ballastTopM": 0.22,
+    "gaugeM": 1.6,
+    "laneWidthM": 3.5,
+    "railCentreM": 0.8400000000000001,
+    "railTopM": 0.45999999999999996,
+    "shoulderM": 1.75,
+    "sinkM": [
+      2.9,
+      -0.3
+    ],
+    "sleeper": {
+      "count": 36,
+      "lengthM": 2.6,
+      "pitchM": 0.7,
+      "topM": 0.3,
+      "widthM": 0.26
+    },
+    "toeM": [
+      2.5,
+      0.03
+    ]
+  },
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 16.000097829357742,
+    "median": 4.792917948725561,
+    "min": 0.5804791613763751
+  },
+  "trackPath": {
+    "arcLengthM": 25.132741228718338,
+    "centre": [
+      13.856406460551018,
+      -23.999999999999996
+    ],
+    "fromDeg": 90.0,
+    "kind": "bend",
+    "lanes": [
+      0,
+      2
+    ],
+    "radiusM": 23.999999999999996,
+    "segments": [
+      24,
+      12,
+      4
+    ],
+    "tilePointStepDeg": 2.5,
+    "tilePoints": [
+      [
+        12.81,
+        0.023
+      ],
+      [
+        11.765,
+        0.091
+      ],
+      [
+        10.724,
+        0.205
+      ],
+      [
+        9.689,
+        0.365
+      ],
+      [
+        8.662,
+        0.569
+      ],
+      [
+        7.645,
+        0.818
+      ],
+      [
+        6.639,
+        1.111
+      ],
+      [
+        5.648,
+        1.447
+      ],
+      [
+        4.672,
+        1.827
+      ],
+      [
+        3.714,
+        2.249
+      ],
+      [
+        2.774,
+        2.712
+      ],
+      [
+        1.856,
+        3.215
+      ],
+      [
+        0.961,
+        3.759
+      ],
+      [
+        0.091,
+        4.34
+      ],
+      [
+        -0.754,
+        4.96
+      ],
+      [
+        -1.57,
+        5.615
+      ],
+      [
+        -2.358,
+        6.305
+      ],
+      [
+        -3.114,
+        7.029
+      ],
+      [
+        -3.838,
+        7.786
+      ],
+      [
+        -4.529,
+        8.573
+      ],
+      [
+        -5.184,
+        9.39
+      ],
+      [
+        -5.803,
+        10.234
+      ],
+      [
+        -6.385,
+        11.105
+      ]
+    ],
+    "turnDeg": 60.0
+  }
+}

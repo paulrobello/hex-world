@@ -376,7 +376,7 @@ pub fn report(
 mod tests {
     use super::*;
 
-    /// The rail top every train stands on is the bake reports' rail top on the four track pieces
+    /// The rail top every train stands on is the bake reports' rail top on the five track pieces
     /// and the level crossing's deck top, so a train rides level over the deck and the bridge.
     #[test]
     fn trains_stand_on_every_rail_piece_s_rail_top() {
@@ -387,6 +387,10 @@ mod tests {
             ),
             (
                 include_str!("../../../assets-source/kit/rail_bend_60_center/bake-report.json"),
+                "railTopM",
+            ),
+            (
+                include_str!("../../../assets-source/kit/rail_bend_120_center/bake-report.json"),
                 "railTopM",
             ),
             (

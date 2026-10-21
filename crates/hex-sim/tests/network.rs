@@ -141,6 +141,34 @@ fn hundred_twenty_degree_bend_is_a_stub_tangent_arc_two_edges_apart() {
     }
 }
 
+/// The wide rail bend (`rail_bend_120_center`) has no edge stub: it meets both lane edges square-on
+/// at their midpoints, so it is the arc about the point where the two edge lines meet, the centre of
+/// the neighbour across the edge between them, radius APOTHEM tan 60 degrees = 24 m, turning pi / 3
+/// over 8 pi = 25.133 m. The tile samples it every 2.5 degrees, so its chords fall short by at most
+/// R (pi / 3) d^2 / 24 = 0.002 m and stand off the arc by at most R d^2 / 8 = 0.006 m.
+#[test]
+fn wide_rail_bend_is_the_24_m_arc_two_edges_apart() {
+    let cat = catalog();
+    let radius = APOTHEM * 3f32.sqrt();
+    let want = radius * std::f32::consts::FRAC_PI_3;
+    assert!((want - 25.133).abs() < 1e-3, "{want}");
+    for k in 0..6u8 {
+        let mut net = Network::new(NetworkKind::Rail);
+        put(&mut net, &cat, Axial::ORIGIN, "rail_bend_120", k);
+        let link = only_link(&net, Axial::ORIGIN);
+        assert!((link.length() - want).abs() < 0.02, "{}", link.length());
+        for e in [k, (k + 2) % 6] {
+            let mid = seam_mid(Axial::ORIGIN, Axial::ORIGIN.neighbor(e));
+            assert!(has_end_at(link, mid), "k{k} edge {e}");
+        }
+        let centre = Axial::ORIGIN.neighbor((k + 1) % 6).to_world(HEX_RADIUS);
+        for p in link.points() {
+            let off = geom::dist(*p, centre) - radius;
+            assert!(off.abs() < 0.002, "k{k}: {p:?} {off} m off the arc");
+        }
+    }
+}
+
 #[test]
 fn bend_continues_a_straight_road_at_both_seams() {
     let cat = catalog();
