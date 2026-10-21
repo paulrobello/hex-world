@@ -67,10 +67,13 @@ ui-schema:
 # audio checks (audio-e2e), then e2e/debug.mjs (the Settings Debug tab and every developer overlay;
 # e2e/test-results/debug/, or DEBUG_OUT=docs/checkpoints/debug for the committed shots), then e2e/version.mjs
 # (the new-version note: a swapped version.json, Reload saving first and loading the new build;
-# e2e/test-results/version/, or VERSION_OUT=docs/checkpoints/version-check for the committed shots).
+# e2e/test-results/version/, or VERSION_OUT=docs/checkpoints/version-check for the committed shots), and
+# e2e/ui-motion.mjs (input never waits on feedback, reduced motion from the OS or the engine flag, and frame
+# strips; e2e/test-results/ui-motion/, or MOTION_OUT=docs/checkpoints/ui-feedback for the committed strips).
 ui-e2e: build-web
 	cd e2e && npm ci --no-audit --no-fund
 	node e2e/ui.mjs dist
+	node e2e/ui-motion.mjs dist
 	node e2e/photo-fx.mjs dist
 	node e2e/persist.mjs dist
 	node e2e/audio.mjs dist

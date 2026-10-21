@@ -235,7 +235,7 @@
 [data-st=active] .mark { box-shadow: inset 0 0 0 4px var(--ink); }
 [data-st=done] .mark { box-shadow: none; background: var(--ok); }
 [data-st=failed] .mark { box-shadow: none; background: var(--bad); }
-.fail { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--rule); }
+.fail { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--rule); animation: panel-in var(--t-fast) var(--ease); }
 .fail p { margin: 0 0 12px; font-size: var(--fs-3); color: var(--ink-2); }
 .fail p b { display: block; margin-bottom: 2px; color: var(--ink); font-size: var(--fs-4); }
 .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -314,17 +314,22 @@
   .row__hex { width: 28px; height: 28px; }
 }
 
+/* Reduced motion: the OS setting (the media query, before the engine answers) or the engine's own
+   flag (`is-reduced-motion` on the root, dom.ts syncReducedMotion). Every transition and keyframe is
+   an instant cut; state still shows by colour, icon and text. The two sets of rules must stay in step. */
 @media (prefers-reduced-motion: reduce) {
-  /* Every transition and keyframe is an instant cut; state still shows by colour, icon and text. */
-  .hud *, .hud *::before, .hud *::after { transition-duration: 0s !important; transition-delay: 0s !important; animation: none !important; }
+  .hud, .hud *, .hud *::before, .hud *::after { transition-duration: 0s !important; transition-delay: 0s !important; animation: none !important; }
   .progress.is-indeterminate > i { width: 100%; opacity: .35; }
   .working { display: inline; }
 }
+:root.is-reduced-motion .hud, :root.is-reduced-motion .hud *, :root.is-reduced-motion .hud *::before, :root.is-reduced-motion .hud *::after { transition-duration: 0s !important; transition-delay: 0s !important; animation: none !important; }
+:root.is-reduced-motion .progress.is-indeterminate > i { width: 100%; opacity: .35; }
+:root.is-reduced-motion .working { display: inline; }
 
 /* ---------- Walk mode (PRD P8): the HUD steps aside for one hint and a centre mark ---------- */
 .hud.is-walking > .show-ui { display: none; }
-.walk-ui { z-index: 15; transition: opacity var(--t-slow) var(--ease); }
-.walk-ui.is-off { opacity: 0; visibility: hidden; transition: opacity var(--t-slow) var(--ease), visibility 0s linear var(--t-slow); }
+.walk-ui { z-index: 15; transition: opacity var(--t-toast) var(--ease); }
+.walk-ui.is-off { opacity: 0; visibility: hidden; transition: opacity var(--t-toast) var(--ease), visibility 0s linear var(--t-toast); }
 .walk-reticle { position: fixed; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: rgb(255 255 255 / .7); box-shadow: 0 0 0 1px rgb(18 39 58 / .35); }
 .walk-hint { position: fixed; left: 50%; bottom: var(--s-5); display: flex; align-items: center; gap: var(--s-4); padding: 8px 8px 8px 14px; background: var(--sheet); border-radius: var(--r); box-shadow: var(--shadow-1); transform: translateX(-50%); pointer-events: auto; white-space: nowrap; }
 .walk-ui.is-off .walk-hint { transform: translate(-50%, 8px); }
@@ -335,6 +340,8 @@
 .walk-hint__leave { display: flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 0; border-radius: var(--r-control); background: rgb(255 255 255 / .06); font-weight: 700; cursor: pointer; transition: background var(--t-fast) var(--ease); }
 .walk-hint__leave:hover { background: rgb(255 255 255 / .12); }
 @media (prefers-reduced-motion: reduce) { .walk-ui, .walk-ui.is-off { transition: none; } .walk-ui.is-off .walk-hint { transform: translateX(-50%); } }
+:root.is-reduced-motion .walk-ui, :root.is-reduced-motion .walk-ui.is-off { transition: none; }
+:root.is-reduced-motion .walk-ui.is-off .walk-hint { transform: translateX(-50%); }
 
 /* ---------- Debug tab (developer overlays) ---------- */
 .lod-legend { display: grid; gap: 3px; margin: 2px 0 4px; padding: var(--s-3); list-style: none; border-radius: var(--r-control); background: var(--sheet-2); font-size: var(--fs-2); color: var(--ink-2); --ink-3: var(--ink-3-lifted); }

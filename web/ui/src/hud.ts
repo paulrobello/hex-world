@@ -3,7 +3,7 @@
 // through bridge commands, so the engine stays the one owner of game state.
 import type { AudioApi } from "./audio.ts";
 import type { Cell, Command, GameEvent, HexWorld, PlayState, Rect, State } from "./bridge.ts";
-import { h, isMac, reduceMotion, retrigger, s } from "./dom.ts";
+import { h, isMac, reduceMotion, retrigger, s, syncReducedMotion } from "./dom.ts";
 import { icon } from "./icons.ts";
 import { Rebuild } from "./loading.ts";
 import { type Note, type Persistence, stateWords } from "./persist.ts";
@@ -374,6 +374,7 @@ export class Hud {
   }
 
   render(st: PlayState, state: State = {}): void {
+    syncReducedMotion(st.reduced_motion);
     this.rebuild.render(state.tier);
     this.photo.render(st.photo_mode, state.photo);
     this.walk.render(st.walk_mode);

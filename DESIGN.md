@@ -377,7 +377,7 @@ The slot key and socket code are the system's identity, and every later surface 
 - **Curve:** one curve, `cubic-bezier(.22, .9, .3, 1)`, for everything.
 - **Durations:** 120 ms for hover and select, 180 ms for nudges and the base, and 240 ms for the sheet slide, callouts and the refusal pulse.
 - **The rise:** belongs to the engine (1.5 to 2.5 s per tile).
-- **Reduced motion:** `prefers-reduced-motion: reduce` (and the in-game override in Settings, Controls) turns every transition and keyframe into an instant cut. Indeterminate progress becomes a full-width bar at 35%, and the ghost stops breathing. State still shows by colour, pattern, icon and text. The `?still` review flag pins motion the same way, for captures.
+- **Reduced motion:** `prefers-reduced-motion: reduce`, or the engine's own flag (`set_reduced_motion`, mirrored on the root as `is-reduced-motion`), turns every transition and keyframe into an instant cut. The in-game override in Settings, Controls is designed (mockup S9.6) but not built. Indeterminate progress becomes a full-width bar at 35%, and the ghost stops breathing. State still shows by colour, pattern, icon and text. The `?still` flag that pins motion for captures exists only in the mockups (`design/ui/legend/proto.js`).
 
 ## Do's and Don'ts
 

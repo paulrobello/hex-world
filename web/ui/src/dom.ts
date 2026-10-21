@@ -28,7 +28,28 @@ export function s(tag: string, attrs: Attrs = {}, ...children: (SVGElement | nul
   return el;
 }
 
-export const reduceMotion = (): boolean => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const REDUCE_QUERY = "(prefers-reduced-motion: reduce)";
+let engineReduced = false;
+
+/** Reduced motion: the OS setting, or the engine's own flag (`set_reduced_motion`, `play.reduced_motion`). */
+export const reduceMotion = (): boolean => engineReduced || matchMedia(REDUCE_QUERY).matches;
+
+/**
+ * Follows the engine's reduced-motion flag. `is-reduced-motion` on the root element carries either
+ * source to CSS, so a scripted or Settings override cuts the HUD's motion as the media query does.
+ */
+export function syncReducedMotion(engine: boolean): void {
+  engineReduced = engine;
+  const on = reduceMotion();
+  const root = document.documentElement;
+  if (root.classList.contains("is-reduced-motion") !== on) root.classList.toggle("is-reduced-motion", on);
+}
+
+/** A motion token (`--t-fast`, `--t`, `--t-slow`, `--t-toast`) in milliseconds, for Web Animations. */
+export function motionMs(token: string, fallback: number): number {
+  const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(token));
+  return Number.isFinite(v) ? v : fallback;
+}
 
 /** Restarts a one-shot CSS animation class. */
 export function retrigger(el: Element, cls: string): void {

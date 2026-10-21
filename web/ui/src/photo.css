@@ -135,7 +135,11 @@
 .focus-mark { position: fixed; width: 28px; height: 28px; margin: -14px 0 0 -14px; border: 2px solid rgb(238 243 246 / .9); border-radius: 50%; box-shadow: 0 0 0 1px rgb(0 0 0 / .35); opacity: 0; }
 .focus-mark.is-shown { animation: focus-mark 1.2s var(--ease) forwards; }
 @keyframes focus-mark { 0% { opacity: 0; transform: scale(1.8); } 15% { opacity: 1; transform: scale(1); } 70% { opacity: 1; } 100% { opacity: 0; transform: scale(1); } }
-@media (prefers-reduced-motion: reduce) { @keyframes focus-mark { 0%, 70% { opacity: 1; } 100% { opacity: 0; } } }
+/* Reduced motion keeps the mark as a still ring that fades (it shows only through its animation, so
+   it outranks the blanket animation cut in hud.css). */
+@keyframes focus-mark-still { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .hud .focus-mark.is-shown { animation: focus-mark-still 1.2s linear forwards !important; } }
+:root.is-reduced-motion .hud .focus-mark.is-shown { animation: focus-mark-still 1.2s linear forwards !important; }
 
 .photo-ui .toast small { font-size: var(--fs-2); color: var(--ink-2); }
 .toast--ok .ic { color: var(--ok); }
