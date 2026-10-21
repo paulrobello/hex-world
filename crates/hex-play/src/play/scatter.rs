@@ -2559,13 +2559,14 @@ mod tests {
             "road_junction",
             "rail_straight",
             "rail_bend_60",
+            "rail_bend_120",
             "rail_junction",
             "rail_road_crossing",
             "rail_station",
         ] {
             assert!(verges.contains(&id), "{id} is a verge tile: {verges:?}");
         }
-        assert_eq!(verges.len(), 9, "{verges:?}");
+        assert_eq!(verges.len(), 10, "{verges:?}");
         for d in c.tiles() {
             let want = if verge_tile(d) {
                 [3, 3, 3, 3, 4]

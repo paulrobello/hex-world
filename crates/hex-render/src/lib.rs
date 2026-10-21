@@ -206,14 +206,14 @@ mod tests {
         cells.dedup();
         // The water patch's 11 cells plus the showcase blocks' cells; each block in
         // `kit_scene::kit_layout` names its own cells. A new block adds its cells here.
-        assert_eq!(cells.len(), 33);
+        assert_eq!(cells.len(), 35);
         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
         // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
         // The fixture lays out water-patch cells only; the runtime kit adds the showcase blocks.
         assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
-        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 33);
+        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 35);
         assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
         assert!(!Scenario::Kit.has_water());
     }

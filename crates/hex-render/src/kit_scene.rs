@@ -375,9 +375,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place(piece, -2, 5, 1)
         });
     }
-    // Buffer stops (owner D2) at the layout's two open rail ends, local edge 0 of the straight on
-    // (-3, 6) and of the bend on (1, 3) (both rot 2, world edge 2, facing empty cells), each with the
-    // engine standing buffered up to it as hex-sim poses it.
+    // A buffer stop (owner D2) at the layout's open rail end at local edge 0 of the bend on (1, 3)
+    // (rot 2, world edge 2, facing an empty cell), with the engine standing buffered up to it as
+    // hex-sim poses it. The straight on (-3, 6) carries on into the wide bend, so it has none.
     for (q, r, stop, engine) in BUFFER_STOPS {
         v.push(Placement {
             offset: [stop[0], stop[1]],
@@ -553,12 +553,10 @@ const FOREST_FLOOR_VARIANTS: &[(&str, [f32; 2], f32, f32)] = &[
 /// The rail top above the cap (`RAIL_TOP` in scripts/blender/kit/_rail.py), where a train's wheels stand.
 const TRAIN_RAIL_TOP: f32 = 0.46;
 
-/// (q, r, stop [x, z, yaw], engine [x, z, yaw]) at the open local edge 0 of a rail straight and of a
-/// rail bend, both rot 2, in the rail piece's frame: the stop's buffer faces 3.5 m in along the track,
+/// (q, r, stop [x, z, yaw], engine [x, z, yaw]) at the open local edge 0 of a rail bend, rot 2, in the rail piece's frame: the stop's buffer faces 3.5 m in along the track,
 /// and the engine's front buffers there with its axles on the track
 /// (docs/checkpoints/rail_buffer_stop/poses.py, runtime-notes.md). The stop stands at cap level.
-const BUFFER_STOPS: [(i32, i32, [f32; 3], [f32; 3]); 2] = [
-    (-3, 6, [10.356, 0.0, 0.0], [5.886, 0.0, 0.0]),
+const BUFFER_STOPS: [(i32, i32, [f32; 3], [f32; 3]); 1] = [
     (1, 3, [10.467, 0.753, -17.05], [7.35, 3.788, -57.08]),
 ];
 
@@ -1156,7 +1154,7 @@ mod tests {
     fn buffer_stops_stand_at_open_rail_ends() {
         let l = kit_layout();
         let stops: Vec<_> = l.iter().filter(|p| p.piece == "rail_buffer_stop").collect();
-        assert_eq!(stops.len(), 2);
+        assert_eq!(stops.len(), 1);
         for s in stops {
             // The stop stands at its rail piece's local edge 0, which faces a cell with no rail.
             let rail = l

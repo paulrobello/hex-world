@@ -826,7 +826,7 @@ test("placement: a water tile selects the slosh pool and a land tile does not", 
   for (const id of water) assert.equal(poolOf(id), PLACE_SLOSH.pool, `${id} sloshes`);
   const land = ["meadow", "forest", "oak", "farm", "windmill", "wheat_field", "house_cluster", "bakery"];
   land.push("road_straight", "road_bend_120", "road_bend_60", "road_junction");
-  land.push("rail_straight", "rail_bend_60", "rail_junction", "rail_station", "rail_road_crossing");
+  land.push("rail_straight", "rail_bend_60", "rail_bend_120", "rail_junction", "rail_station", "rail_road_crossing");
   for (const id of land) assert.equal(poolOf(id), null, `${id} has no slosh`);
   assert.equal(water.length + land.length, schema.catalog.tiles.length, "every catalog tile is classified");
   const variants = manifest.cues.filter((c) => c.pool === PLACE_SLOSH.pool);
