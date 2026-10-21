@@ -2872,12 +2872,13 @@ mod tests {
                 });
                 assert!(part.is_some(), "{id}: no collider part on run {a}..{b}");
             }
-            // The post feet: LOD0 corners below y -0.3, grouped by the nearest entry.
+            // The post feet: LOD0 corners at or below y -0.3 (0.3 m under the meadow relief, which
+            // is at most 0), grouped by the nearest entry.
             let feet: Vec<Vec2> = glb_mesh_tris(id, "lod0")
                 .unwrap()
                 .iter()
                 .flat_map(|(t, _)| t.iter())
-                .filter(|p| p[1] < -0.3)
+                .filter(|p| p[1] <= -0.3 + 1e-4)
                 .map(|p| Vec2::new(p[0], p[2]))
                 .collect();
             let mut per: Vec<Vec<Vec2>> = vec![vec![]; f.posts.len()];

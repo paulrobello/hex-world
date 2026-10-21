@@ -2,9 +2,14 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/meadow_base.py",
-    "sha256": "4b9c3b979f9843397bf05639f85c70bb6ed366cb653cdd7fab4fa5cdc41a2c5f"
+    "sha256": "20c9c52a113da615c175eac0a86e3b8ea0c1450a34a7a55761262ced515c1e08"
   },
-  "generatorDeps": [],
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
   "lodTris": {
     "meadow_base_lod0": 2604,
     "meadow_base_lod1": 900,
@@ -33,7 +38,7 @@
       "name": "anchor-prop-0",
       "position": [
         8.410329818725586,
-        -0.032643020153045654,
+        0.0,
         -3.3695976734161377
       ],
       "yaw": 0.0
@@ -46,7 +51,7 @@
       "name": "anchor-prop-1",
       "position": [
         0.4676262140274048,
-        -0.1034674420952797,
+        0.0,
         -5.812877655029297
       ],
       "yaw": 0.0
@@ -59,7 +64,7 @@
       "name": "anchor-prop-2",
       "position": [
         -7.9476637840271,
-        -0.1303224414587021,
+        -0.0004532536549959332,
         -4.364846229553223
       ],
       "yaw": 0.0
@@ -72,7 +77,7 @@
       "name": "anchor-prop-3",
       "position": [
         -4.731332778930664,
-        -0.11811724305152893,
+        0.0,
         2.984726905822754
       ],
       "yaw": 0.0
@@ -85,7 +90,7 @@
       "name": "anchor-prop-4",
       "position": [
         0.827811062335968,
-        -0.018601812422275543,
+        0.0,
         8.824472427368164
       ],
       "yaw": 0.0
@@ -98,7 +103,7 @@
       "name": "anchor-prop-5",
       "position": [
         4.113753318786621,
-        -0.07917525619268417,
+        0.0,
         3.2690999507904053
       ],
       "yaw": 0.0

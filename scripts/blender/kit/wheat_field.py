@@ -5,8 +5,8 @@ Scripted route, kind `prop` (a centre with no lanes is a prop, pitfalls.md: LOD0
 LOD1 <= 50 %, LOD2 <= 15 %), KTX2 class `piece`. Usage: make kit-build PIECE=wheat_field.
 
 Frame: Blender (x, y, z) exports as runtime (x, z, -y). The pivot is the hex centre at y = 0; the
-piece stands on meadow_base at rotation 0 in the tile frame, so it follows `relief()` from
-scripts/blender/kit/meadow_base.py (copied in `_wheat.meadow_relief`). The field is a hexagon of
+piece stands on meadow_base at rotation 0 in the tile frame, so it follows meadow_base's cap relief
+(`_terrain.meadow_relief`, shared). The field is a hexagon of
 apothem FIELD_A inside the tile, leaving a grass margin of APOTHEM - FIELD_A on every edge, so all six
 edges stay Grass sockets. Rows run along Blender x (runtime x) at pitch PITCH, which divides the 24 m
 between tile centres one row apart, so neighbouring fields continue each other's rows; the cards face
@@ -47,6 +47,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from lib import bake, budgets, collider, export, geom, hexgeo, lod, materials, scene, uv  # noqa: E402
 import _props  # noqa: E402
+import _terrain  # noqa: E402
 import _wheat  # noqa: E402
 
 PIECE = "wheat_field"
@@ -80,7 +81,7 @@ WIND_AMP = 0.5  # manifest `wind` (the reeds' value)
 EPS = 0.5 / ATLAS
 
 COS30 = math.sqrt(3.0) / 2.0
-relief = _wheat.meadow_relief
+relief = _terrain.meadow_relief
 
 
 def half_width(y, a):

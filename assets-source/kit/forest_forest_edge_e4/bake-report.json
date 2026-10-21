@@ -12,20 +12,20 @@
     {
       "maxFloatOverFloorM": 0.02,
       "meanFloatOverFloorM": 0.02,
-      "minClearanceOverRimLod1M": -0.0099,
+      "minClearanceOverRimLod1M": 0.0195,
       "minClearanceOverRimM": 0.02
     },
     {
       "maxFloatOverFloorM": 0.02,
       "meanFloatOverFloorM": 0.02,
-      "minClearanceOverRimLod0M": -0.0089,
-      "minClearanceOverRimLod2M": -0.033,
+      "minClearanceOverRimLod0M": 0.0193,
+      "minClearanceOverRimLod2M": 0.0187,
       "minClearanceOverRimM": 0.02
     },
     {
       "maxFloatOverFloorM": 0.02,
       "meanFloatOverFloorM": 0.02,
-      "minClearanceOverRimLod1M": -0.0037,
+      "minClearanceOverRimLod1M": 0.013,
       "minClearanceOverRimM": 0.02
     }
   ],
@@ -34,16 +34,16 @@
   "diveM": 0.06,
   "epsM": 0.02,
   "extM": 0.6,
-  "forestBaseSignature": "ffa2d8fc08f9f551e19249933c0358ca12a74f0fbcf0cbd2af8ba96d74487dae",
+  "forestBaseSignature": "93ccf212f53a9054e8e81b7b62e889b9061c887f3c626eca2483a549240af038",
   "marginPx": 12,
   "maskStats": {
-    "mean": 0.11744076758623123,
+    "mean": 0.11746370047330856,
     "min": 0.0,
     "p01": 0.0,
     "p05": 0.0,
     "texels": 216658
   },
-  "receiverSignature": "cfff3c8bd274a880a003a3d44639cc519b46be8ee0cf2f20351dacf371c5743f",
+  "receiverSignature": "d4d16fc83e2b92cb5349ec920fedc63a5d17edc21636fe2261db87205fc47a1d",
   "samples": 64,
   "skipped": false,
   "taper": [
@@ -51,8 +51,8 @@
     false
   ],
   "texelDensityPxPerM": {
-    "max": 16.000017770761612,
-    "median": 15.992319240298363,
-    "min": 15.773281796493922
+    "max": 16.00016449582748,
+    "median": 15.999960465253316,
+    "min": 15.746721412857946
   }
 }

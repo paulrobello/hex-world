@@ -1446,8 +1446,14 @@ pub(crate) mod tests {
                 assert_eq!(s.parts.len(), 6, "one part per run");
                 for p in &s.parts {
                     assert_eq!(p.hull.len(), 4, "a run box: {:?}", p.hull);
+                    // The box runs from 0.3 m under the run's lowest ground (the meadow relief, at
+                    // most 0 and level with the ring on most of the paddock) to 5 cm over its
+                    // tallest post.
                     let (foot, top) = p.body.unwrap();
-                    assert!(foot < -0.3 && (1.1..1.4).contains(&top), "{foot}..{top}");
+                    assert!(
+                        foot <= -0.3 + 1e-4 && (1.1..1.5).contains(&top),
+                        "{foot}..{top}"
+                    );
                 }
             } else {
                 assert!(s.parts.is_empty(), "{piece}: {} parts", s.parts.len());

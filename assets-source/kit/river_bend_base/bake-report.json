@@ -32,7 +32,7 @@
   "lod2MaxRatio": 0.2,
   "marginPx": 12,
   "maskStats": {
-    "mean": 0.9668301343917847,
+    "mean": 0.966882050037384,
     "min": 0.0,
     "p01": 0.0,
     "p05": 0.9215686917304993,
@@ -40,11 +40,11 @@
   },
   "profileErrorM": [
     {
-      "dryMaxM": 0.0809,
+      "dryMaxM": 0.0385,
       "wetMaxM": 0.0274
     },
     {
-      "dryMaxM": 0.0709,
+      "dryMaxM": 0.0343,
       "wetMaxM": 0.0254
     },
     {
@@ -83,11 +83,11 @@
     6.342142857142858,
     6.83
   ],
-  "receiverSignature": "1c4db27f887774ae44f67e3dabc73b25844a48cf000d144f4ded59715b085b22",
+  "receiverSignature": "67f1b2857f9de8d9dc83009cef508f464a5b357eab16f17d238922940eb6a511",
   "samples": 64,
   "skipped": false,
   "texelDensityPxPerM": {
-    "max": 32.00001937391591,
+    "max": 32.00003004307368,
     "median": 31.429116175649508,
     "min": 26.669512971586283
   }

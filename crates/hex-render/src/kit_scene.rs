@@ -98,7 +98,7 @@ pub fn kit_layout() -> Vec<Placement> {
     v.push(Placement {
         offset: [-4.75, 8.227],
         yaw_deg: 30.0,
-        y: -0.154,
+        y: -0.013,
         ..place("barn_red", 0, 1, 0)
     });
     // The bakery (P3, refs A17) on road tile (1, 0), north of the road and facing it (yaw 90 turns
@@ -108,7 +108,7 @@ pub fn kit_layout() -> Vec<Placement> {
     v.push(Placement {
         offset: [1.5, -8.6],
         yaw_deg: 90.0,
-        y: -0.062,
+        y: 0.0,
         ..place("bakery_shop", 1, 0, 0)
     });
     // Its hero variant, the twin-gabled bakehouse bakery_shop_b, across the road on the same tile,
@@ -118,7 +118,7 @@ pub fn kit_layout() -> Vec<Placement> {
     v.push(Placement {
         offset: [1.5, 9.0],
         yaw_deg: 0.0,
-        y: -0.04,
+        y: 0.0,
         ..place("bakery_shop_b", 1, 0, 0)
     });
     // Verge bushes (road refs approved 2026-10-13, ref-1's "grass verges with tufts and small
@@ -466,27 +466,27 @@ const FARM_HEROES: &[(&str, [f32; 2], f32)] = &[
 
 /// (piece, offset, yaw, relief height) of the scatter-oak showcase on the forest at (-2, 2).
 const OAK_GROVE: &[(&str, [f32; 2], f32, f32)] = &[
-    ("tree_oak", [-4.0, 1.0], 0.0, -0.132),
-    ("tree_oak_b", [5.0, 2.0], 70.0, -0.087),
-    ("tree_oak_c", [0.0, 10.0], 40.0, -0.054),
-    ("tree_forest", [0.5, -6.5], 150.0, -0.081),
+    ("tree_oak", [-4.0, 1.0], 0.0, -0.006),
+    ("tree_oak_b", [5.0, 2.0], 70.0, 0.0),
+    ("tree_oak_c", [0.0, 10.0], 40.0, 0.0),
+    ("tree_forest", [0.5, -6.5], 150.0, 0.0),
 ];
 
 /// (piece, offset, yaw, relief height) of the forest undergrowth on the forest at (-3, 2), each on the
 /// litter at its spot (`relief()` in scripts/blender/kit/forest_base.py at Blender (x, -z)).
 const UNDERGROWTH: &[(&str, [f32; 2], f32, f32)] = &[
-    ("tree_forest", [-6.5, -5.5], 0.0, -0.134),
-    ("tree_forest_c", [-1.5, -6.5], 80.0, -0.128),
-    ("shrub_forest", [2.5, -1.0], 0.0, -0.216),
-    ("shrub_forest", [-4.5, -1.5], 120.0, -0.133),
-    ("shrub_forest", [4.0, 3.5], 240.0, -0.127),
-    ("shrub_forest_b", [6.5, 0.5], 30.0, -0.091),
-    ("shrub_forest_c", [8.0, -2.5], 200.0, -0.071),
-    ("sapling_spruce_b", [0.0, 2.0], 0.0, -0.198),
-    ("sapling_spruce", [-2.5, 1.5], 140.0, -0.152),
-    ("sapling_spruce_c", [5.0, -4.0], 260.0, -0.193),
-    ("fern_clump", [-1.0, 5.5], 30.0, -0.112),
-    ("fern_clump", [2.5, 6.0], 200.0, -0.076),
+    ("tree_forest", [-6.5, -5.5], 0.0, -0.013),
+    ("tree_forest_c", [-1.5, -6.5], 80.0, 0.0),
+    ("shrub_forest", [2.5, -1.0], 0.0, -0.134),
+    ("shrub_forest", [-4.5, -1.5], 120.0, -0.015),
+    ("shrub_forest", [4.0, 3.5], 240.0, -0.035),
+    ("shrub_forest_b", [6.5, 0.5], 30.0, -0.011),
+    ("shrub_forest_c", [8.0, -2.5], 200.0, -0.002),
+    ("sapling_spruce_b", [0.0, 2.0], 0.0, -0.094),
+    ("sapling_spruce", [-2.5, 1.5], 140.0, -0.028),
+    ("sapling_spruce_c", [5.0, -4.0], 260.0, -0.089),
+    ("fern_clump", [-1.0, 5.5], 30.0, 0.0),
+    ("fern_clump", [2.5, 6.0], 200.0, 0.0),
 ];
 
 /// house_pad's gravel top (`YARD_Z` in scripts/blender/kit/house_pad.py), where a parked car's wheels
@@ -504,36 +504,36 @@ const TRAIN_ON_RAIL_BRIDGE: [(&str, [f32; 2]); 2] = [
 /// (piece, offset, yaw, relief height) of the forest-floor showcase on the forest at (-2, 1), with a
 /// parked sedan beside the log for scale.
 const FOREST_FLOOR: &[(&str, [f32; 2], f32, f32)] = &[
-    ("tree_forest", [-6.5, -5.0], 0.0, -0.120),
-    ("tree_forest_b", [0.5, -7.5], 40.0, -0.109),
-    ("tree_forest_c", [-8.5, 2.5], 110.0, -0.107),
-    ("tree_forest", [4.5, -3.0], 200.0, -0.151),
-    ("log_fallen", [1.5, 3.0], -25.0, -0.096),
-    ("fern_clump", [-1.5, 1.5], 0.0, -0.153),
-    ("fern_clump", [0.0, 5.5], 60.0, -0.109),
-    ("fern_clump", [4.5, 1.0], 130.0, -0.101),
-    ("fern_clump", [-5.5, -2.5], 200.0, -0.102),
-    ("fern_clump", [-3.8, -5.6], 250.0, -0.146),
-    ("fern_clump", [2.4, -6.0], 310.0, -0.134),
-    ("fern_clump", [5.3, -2.6], 20.0, -0.131),
-    ("fern_clump", [-4.5, 4.5], 90.0, -0.109),
-    ("car_sedan", [7.0, 4.0], -25.0, -0.123),
+    ("tree_forest", [-6.5, -5.0], 0.0, -0.013),
+    ("tree_forest_b", [0.5, -7.5], 40.0, -0.004),
+    ("tree_forest_c", [-8.5, 2.5], 110.0, -0.012),
+    ("tree_forest", [4.5, -3.0], 200.0, -0.024),
+    ("log_fallen", [1.5, 3.0], -25.0, -0.007),
+    ("fern_clump", [-1.5, 1.5], 0.0, -0.068),
+    ("fern_clump", [0.0, 5.5], 60.0, -0.001),
+    ("fern_clump", [4.5, 1.0], 130.0, 0.0),
+    ("fern_clump", [-5.5, -2.5], 200.0, 0.0),
+    ("fern_clump", [-3.8, -5.6], 250.0, -0.016),
+    ("fern_clump", [2.4, -6.0], 310.0, -0.008),
+    ("fern_clump", [5.3, -2.6], 20.0, -0.002),
+    ("fern_clump", [-4.5, 4.5], 90.0, -0.006),
+    ("car_sedan", [7.0, 4.0], -25.0, 0.0),
 ];
 
 /// (piece, offset, yaw, relief height) of the forest-floor variants on the forest at (-3, 1), each on
 /// the litter at its spot (`relief()` in scripts/blender/kit/forest_base.py at Blender (x, -z)).
 const FOREST_FLOOR_VARIANTS: &[(&str, [f32; 2], f32, f32)] = &[
-    ("tree_forest", [-7.5, -5.0], 30.0, -0.141),
+    ("tree_forest", [-7.5, -5.0], 30.0, -0.004),
     // In the spruce's shade (the sun is at +x/+z), so its albedo is reviewed under the canopy.
-    ("log_fallen_c", [-8.5, -6.0], 130.0, -0.121),
-    ("log_fallen", [-2.0, -3.0], -10.0, -0.124),
-    ("log_fallen_b", [0.5, 2.0], 20.0, -0.188),
-    ("fern_clump", [4.0, -2.5], 0.0, -0.137),
-    ("fern_clump_b", [2.8, 0.2], 45.0, -0.173),
-    ("fern_clump_b", [-3.2, 4.0], 160.0, -0.165),
-    ("fern_clump_b", [4.2, 4.8], 270.0, -0.103),
-    ("fern_clump_c", [-3.8, 0.4], 0.0, -0.135),
-    ("fern_clump_c", [1.0, 6.2], 120.0, -0.096),
+    ("log_fallen_c", [-8.5, -6.0], 130.0, -0.003),
+    ("log_fallen", [-2.0, -3.0], -10.0, -0.001),
+    ("log_fallen_b", [0.5, 2.0], 20.0, -0.077),
+    ("fern_clump", [4.0, -2.5], 0.0, -0.037),
+    ("fern_clump_b", [2.8, 0.2], 45.0, -0.046),
+    ("fern_clump_b", [-3.2, 4.0], 160.0, -0.026),
+    ("fern_clump_b", [4.2, 4.8], 270.0, -0.001),
+    ("fern_clump_c", [-3.8, 0.4], 0.0, -0.008),
+    ("fern_clump_c", [1.0, 6.2], 120.0, -0.012),
 ];
 
 /// The rail top above the cap (`RAIL_TOP` in scripts/blender/kit/_rail.py), where a train's wheels stand.
@@ -566,13 +566,13 @@ const STATION_SHELTER_AT: [f32; 2] = [-0.3, -5.0];
 
 /// The meadow relief at the cap's centre (`relief(0, 0)` in scripts/blender/kit/meadow_base.py), where
 /// the windmill stands.
-const WINDMILL_Y: f32 = -0.233;
+const WINDMILL_Y: f32 = -0.185;
 
 /// (piece, offset, yaw, relief height) of the hay bales on the oak's meadow (0, 1), base rotation 0.
 const HAY_BALES: &[(&str, [f32; 2], f32, f32)] = &[
-    ("hay_bale_round", [-2.0, 2.5], 20.0, -0.198),
-    ("hay_bale_stack", [-9.5, 1.0], -15.0, -0.095),
-    ("hay_bale_round", [-8.0, -4.5], 75.0, -0.129),
+    ("hay_bale_round", [-2.0, 2.5], 20.0, -0.084),
+    ("hay_bale_stack", [-9.5, 1.0], -15.0, 0.0),
+    ("hay_bale_round", [-8.0, -4.5], 75.0, 0.0),
 ];
 
 /// (piece, offset, yaw, height) of the verge bushes on road tile (0, 0), base rotation 0, with a
@@ -580,20 +580,20 @@ const HAY_BALES: &[(&str, [f32; 2], f32, f32)] = &[
 /// lighter bush_verge_b beside the south pair and the flowering bush_verge_c east of them, all in
 /// open sun.
 const VERGE_BUSHES: &[(&str, [f32; 2], f32, f32)] = &[
-    ("bush_verge", [-5.0, 5.0], 0.0, -0.147),
-    ("bush_verge", [3.5, 5.0], 140.0, -0.072),
-    ("bush_verge", [0.5, -5.0], 250.0, -0.123),
-    ("bush_verge_b", [1.9, 5.2], 30.0, -0.067),
-    ("bush_verge_c", [5.8, 5.6], 75.0, -0.144),
-    ("shrub_forest", [-1.8, 6.3], 60.0, -0.108),
+    ("bush_verge", [-5.0, 5.0], 0.0, -0.008),
+    ("bush_verge", [3.5, 5.0], 140.0, 0.0),
+    ("bush_verge", [0.5, -5.0], 250.0, 0.0),
+    ("bush_verge_b", [1.9, 5.2], 30.0, 0.0),
+    ("bush_verge_c", [5.8, 5.6], 75.0, -0.006),
+    ("shrub_forest", [-1.8, 6.3], 60.0, 0.0),
     ("car_sedan", [0.5, 1.5], 0.0, 0.11),
 ];
 
 /// (piece, offset, yaw, relief height) of the farm animals on the oak's meadow (0, 1), base rotation 0.
 const FARM_ANIMALS: &[(&str, [f32; 2], f32, f32)] = &[
-    ("animal_cow", [7.0, 2.5], 70.0, -0.075),
-    ("animal_sheep", [3.5, 7.0], -30.0, -0.089),
-    ("animal_sheep", [2.0, 9.0], 140.0, -0.059),
+    ("animal_cow", [7.0, 2.5], 70.0, 0.0),
+    ("animal_sheep", [3.5, 7.0], -30.0, 0.0),
+    ("animal_sheep", [2.0, 9.0], 140.0, 0.0),
 ];
 
 /// (piece, at, yaw, height) of the beach dressing showcase on the straight beach at (5, -1). The
@@ -611,22 +611,22 @@ const BEACH_DRESSING: &[(&str, [f32; 2], f32, f32)] = &[
 
 /// (piece, offset, rotation, relief height) of the meadow props in the kit layout.
 const MEADOW_PROPS: &[(&str, [f32; 2], u8, f32)] = &[
-    ("rock_small", [-6.0, 5.0], 0, -0.124),
-    ("rock_small", [5.0, 6.0], 2, -0.083),
-    ("rock_small", [-2.5, -7.0], 4, -0.151),
-    ("wildflower_clump", [-4.8, 4.2], 1, -0.172),
-    ("wildflower_clump", [-6.9, 6.4], 3, -0.066),
-    ("wildflower_clump", [-5.0, 6.6], 5, -0.104),
-    ("wildflower_clump", [4.0, 7.2], 0, -0.091),
-    ("wildflower_clump", [6.2, 4.6], 2, -0.075),
-    ("wildflower_clump", [-3.6, -6.0], 1, -0.080),
-    ("wildflower_clump", [-1.4, -8.0], 3, -0.129),
-    ("wildflower_clump", [-7.4, 3.4], 4, -0.065),
-    ("wildflower_clump", [0.0, 5.5], 2, -0.163),
-    ("wildflower_clump", [-2.0, 3.0], 0, -0.138),
-    ("wildflower_clump", [-8.5, 0.5], 5, -0.176),
-    ("wildflower_clump", [2.0, 8.5], 1, -0.141),
-    ("wildflower_single_e", [2.5, 3.0], 0, -0.118),
+    ("rock_small", [-6.0, 5.0], 0, 0.0),
+    ("rock_small", [5.0, 6.0], 2, 0.0),
+    ("rock_small", [-2.5, -7.0], 4, -0.011),
+    ("wildflower_clump", [-4.8, 4.2], 1, -0.036),
+    ("wildflower_clump", [-6.9, 6.4], 3, 0.0),
+    ("wildflower_clump", [-5.0, 6.6], 5, 0.0),
+    ("wildflower_clump", [4.0, 7.2], 0, 0.0),
+    ("wildflower_clump", [6.2, 4.6], 2, 0.0),
+    ("wildflower_clump", [-3.6, -6.0], 1, 0.0),
+    ("wildflower_clump", [-1.4, -8.0], 3, 0.0),
+    ("wildflower_clump", [-7.4, 3.4], 4, 0.0),
+    ("wildflower_clump", [0.0, 5.5], 2, -0.024),
+    ("wildflower_clump", [-2.0, 3.0], 0, -0.003),
+    ("wildflower_clump", [-8.5, 0.5], 5, -0.041),
+    ("wildflower_clump", [2.0, 8.5], 1, -0.004),
+    ("wildflower_single_e", [2.5, 3.0], 0, 0.0),
 ];
 
 /// The gate fixture on the same seam as the road tiles, plus one rotated neighbour.

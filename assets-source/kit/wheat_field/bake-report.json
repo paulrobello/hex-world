@@ -58,13 +58,13 @@
   },
   "device": "none (numpy-drawn tiles, no Cycles bake)",
   "earthLiftM": [
-    0.0142,
-    0.0562,
+    0.0267,
+    0.0717,
     0.0
   ],
   "extentZ": [
-    -0.27407342195510864,
-    1.0670326948165894
+    -0.23035217821598053,
+    1.0726206302642822
   ],
   "field": {
     "apothemM": 10.8,
@@ -87,7 +87,7 @@
       "wheat_field_wheat": 80
     }
   },
-  "receiverSignature": "df00ad1183165cf15e81136dbe2a5cdfde34a643c30b566cf3ac8c3d3434b4fc",
+  "receiverSignature": "46bc2e138ded31866feb57e8b76701a29e5c27c3c8325c40bf989f0be9a07efd",
   "samples": 0,
   "skipped": false,
   "texelDensityPxPerM": {

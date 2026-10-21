@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/river_spring_base.py",
-    "sha256": "845405593f4d3f5727db8ba407845cae120e11af5dfd993eabe47780e2115c37"
+    "sha256": "8ef4bdf2ed76b0ba75771a47eb78e35ea97da9b00f7dba0e42c755e522bac4fb"
   },
   "generatorDeps": [
     {
@@ -12,6 +12,14 @@
     {
       "path": "scripts/blender/kit/_spring.py",
       "sha256": "b548707da2708223389671f561d9e76ad94971b7f3a9c2ca0133fc6a2075dcd6"
+    },
+    {
+      "path": "scripts/blender/kit/_spring_flat.py",
+      "sha256": "d66c923f2035f06090ae2f55cea3e6c8a1c1f3097d37c9700b022b79c7e99674"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
     }
   ],
   "lodTris": {

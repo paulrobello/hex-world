@@ -1,0 +1,23 @@
+1. relief mean (m) by distance from the border, bands [0,0.5) [0.5,1) [1,1.5) [1.5,2) [2,3) [3,4) [4,6) [6,14)
+  meadow
+    before -0.007 -0.039 -0.080 -0.110 -0.114 -0.111 -0.106 -0.128   mean -0.1013
+    after  -0.000 -0.002 -0.005 -0.008 -0.013 -0.014 -0.010 -0.023   mean -0.0133
+  forest
+    before -0.007 -0.039 -0.083 -0.114 -0.118 -0.116 -0.113 -0.127   mean -0.1039
+    after  -0.000 -0.001 -0.003 -0.005 -0.008 -0.011 -0.012 -0.020   mean -0.0113
+  river meadow part (0.10)
+    before -0.003 -0.015 -0.032 -0.044 -0.046 -0.044 -0.042 -0.051   mean -0.0405
+    after  -0.000 -0.002 -0.004 -0.005 -0.006 -0.006 -0.004 -0.009   mean -0.0057
+2. across the edge-0 border between two meadow tiles (A's edge 0 against B's edge 3), mean over |s| < 6 m
+  before -4.0:-0.082 -3.0:-0.088 -2.0:-0.098 -1.5:-0.087 -1.0:-0.054 -0.5:-0.018 +0.0:+0.000 +0.5:-0.015 +1.0:-0.048 +1.5:-0.079 +2.0:-0.092 +3.0:-0.090 +4.0:-0.091
+  after  -4.0:-0.010 -3.0:-0.005 -2.0:-0.001 -1.5:-0.000 -1.0:-0.000 -0.5:-0.000 +0.0:+0.000 +0.5:-0.001 +1.0:-0.001 +1.5:-0.001 +2.0:-0.001 +3.0:+0.000 +4.0:+0.000
+   border-normal rise toward the border over 0-3 m, all six edges, |s| < 7 m:
+     meadow                     before mean +2.08 deg, > 3 deg on 86.4% of the border
+     meadow                     after  mean +0.24 deg, > 3 deg on 7.0% of the border
+     forest                     before mean +2.16 deg, > 3 deg on 95.3% of the border
+     forest                     after  mean +0.15 deg, > 3 deg on 0.0% of the border
+     river meadow part (0.10)   before mean +0.83 deg, > 3 deg on 15.0% of the border
+     river meadow part (0.10)   after  mean +0.10 deg, > 3 deg on 0.0% of the border
+3. drawn LOD0 caps (vertex mean z by band, top-facing cap vertices above -0.3 m)
+  meadow_base: +0.000 -0.002 -0.005 -0.008 -0.012 -0.014 -0.010 -0.023   min -0.202 max +0.000
+  forest_base: +0.000 -0.001 -0.003 -0.005 -0.008 -0.010 -0.012 -0.020   min -0.146 max +0.000

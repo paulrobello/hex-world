@@ -7,6 +7,13 @@
     "notes": "Pending owner review; not an approval. New piece (owner request 2026-10-19, 'start an agent working on the wheat tile'): ripe wheat in V-pair row cards with wind on tinted-gravel ploughed earth, the centre of the Wheat field tile. Review docs/checkpoints/wheat_field/sheet.jpg. The controller records the owner's decision."
   },
   {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "terrain-flatten",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Rebuilt on the new meadow relief (_terrain.meadow_relief instead of a copy); same tris (1172/512/96). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
+  },
+  {
     "who": "Paul Robello (owner)",
     "when": "2026-10-20",
     "gate": "piece",

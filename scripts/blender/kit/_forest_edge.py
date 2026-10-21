@@ -20,8 +20,9 @@ wedge, rotated onto edge 0, clipped to the slice and lifted by EPS, so it follow
 - `taper` (option O-b, corner-aware; not shipped): a side flagged True ends on its ray, and the cover
   shrinks toward that ray into forest_base's own rim and mossy band (a `moss` slot), so the litter
   edge follows the base's grass outline at a corner whose next edge is not forest-forest.
-The forest_base formulas are a copy of scripts/blender/kit/forest_base.py (approved, frozen); every
-build asserts the copy reproduces forest_base LOD0's committed receiver signature."""
+The forest_base build steps are a copy of scripts/blender/kit/forest_base.py, and its relief and
+shading slope come from the shared `_terrain.py`; every build asserts the copy reproduces forest_base
+LOD0's committed receiver signature, so forest_base is rebuilt first."""
 import json
 import math
 import os
@@ -35,6 +36,8 @@ from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
 from lib import bake, collider, export, geom, hexgeo, lod, materials, scene, uv
+
+import _terrain
 
 A = hexgeo.APOTHEM
 COS30, SIN30 = math.cos(math.radians(30)), 0.5
@@ -66,40 +69,9 @@ def band_floor(phi, m=math):
     return band_rim(phi, m) + 0.9 + 0.3 * m.sin(7 * phi + 0.7)
 
 
-def falloff(x, y):
-    t = min(max(hexgeo.dist_to_border(x, y) / 2.0, 0.0), 1.0)
-    return t * t * (3 - 2 * t)
-
-
-def undulation(x, y, m=math):
-    s = (0.6 * m.sin(0.31 * x + 1.7) * m.cos(0.27 * y - 0.4)
-         + 0.4 * m.sin(0.53 * x - 0.45 * y + 0.9))
-    return 0.5 + 0.5 * s
-
-
-def mounds(x, y, m=math):
-    s = (0.5 * m.sin(0.9 * x + 0.3) * m.sin(0.8 * y + 1.1)
-         + 0.5 * m.sin(1.3 * x - 1.1 * y + 2.0) * m.cos(0.7 * x + 1.4 * y))
-    return 0.5 + 0.5 * s
-
-
-def relief(x, y):
-    return -falloff(x, y) * (0.15 * undulation(x, y) + 0.1 * mounds(x, y))
-
-
-def shade_slope(x, y):
-    """forest_base's shading slope (its cap's custom normals): the relief's slope without the
-    falloff's rise to the border, which shaded as a ridge along every tile border (2026-10-20)."""
-    f = falloff(x, y)
-    a, b, c = 0.31 * x + 1.7, 0.27 * y - 0.4, 0.53 * x - 0.45 * y + 0.9
-    dux = 0.5 * (0.6 * 0.31 * math.cos(a) * math.cos(b) + 0.4 * 0.53 * math.cos(c))
-    duy = 0.5 * (-0.6 * 0.27 * math.sin(a) * math.sin(b) - 0.4 * 0.45 * math.cos(c))
-    p, q, r, w = 0.9 * x + 0.3, 0.8 * y + 1.1, 1.3 * x - 1.1 * y + 2.0, 0.7 * x + 1.4 * y
-    dmx = 0.5 * (0.5 * 0.9 * math.cos(p) * math.sin(q)
-                 + 0.5 * (1.3 * math.cos(r) * math.cos(w) - 0.7 * math.sin(r) * math.sin(w)))
-    dmy = 0.5 * (0.5 * 0.8 * math.sin(p) * math.cos(q)
-                 + 0.5 * (-1.1 * math.cos(r) * math.cos(w) - 1.4 * math.sin(r) * math.sin(w)))
-    return -f * (0.15 * dux + 0.1 * dmx), -f * (0.15 * duy + 0.1 * dmy)
+# forest_base's cap relief and shading slope, shared (`_terrain.py`), not copied.
+relief = _terrain.forest_relief
+shade_slope = _terrain.forest_shade_slope
 
 
 def contour(band, step):

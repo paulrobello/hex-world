@@ -20,5 +20,12 @@
     "revision": "terrain-hump",
     "requested": "2026-10-20",
     "notes": "Re-export, geometry unchanged: the cap's custom normals now come from the relief's slope without the falloff's rise to the border ring (the meadow_base terrain-hump fix). Review docs/checkpoints/terrain-hump/sheet.jpg (forest field and meadow/forest seam)."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "terrain-flatten",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Swell hollows plus root-mound pits that fade in 2.5-5 m from the border; mean -0.011 m (was -0.104). Same tris (3192/1194/452). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
   }
 ]

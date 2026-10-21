@@ -13,7 +13,11 @@
     },
     {
       "path": "scripts/blender/kit/_hay_var.py",
-      "sha256": "3cdb7f20d613e73f8d761739980ea3779338ea0f6f3eb9d45dfeeb6e87cd9708"
+      "sha256": "18555e492c3e2041e50ec3817967a867d0a1ffd09bb428b19e6d01ec42c7e072"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
     }
   ],
   "authoringAgent": {
@@ -401,7 +405,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T22:43:26.379Z",
+    "date": "2026-10-21T00:08:16.559Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -440,6 +444,13 @@
       "revision": "bale-b-apron",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Rebuilt for the bale-b-apron edit of the shared _hay_var.py (a round_b-only function): GLB and every map byte-identical to the previous build, provenance hashes refreshed only. Nothing new to review."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-flatten",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Rebuilt for the _hay_var.py edit (the shared relief): GLB and maps byte-identical, provenance hashes refreshed only. Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
     },
     {
       "who": "Paul Robello (owner)",

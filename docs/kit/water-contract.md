@@ -15,7 +15,7 @@ Coordinates are runtime metres, Y up, tile-local before rotation, with edge 0 fa
 
 | Level | y (m) | Grounding |
 |---|---|---|
-| Meadow cap border ring | 0.0 | `meadow_base.py`: relief in [-0.25, 0], 0 within 2 m of the border |
+| Meadow cap border ring | 0.0 | `_terrain.meadow_relief`: relief in [-0.25, 0], hollows on a plane level with the ring, faded to 0 over the last 3 m of the border |
 | Water surface at rest | **-1.4** *(may move)* | `water.rs` `LAND = 1.4`: the approved look-dev puts the grass plateau 1.4 m above the water. The terrain shader's grass line (0.82-1.08 m above the water) and wet band (0.32-0.40 m) are tuned to it. -1.4 is 0.35 `LEVEL_STEP` |
 | River bed, centre line | -2.95 | 1.55 m below the water (`carve`: 1.5 m bowl + 0.05 m) |
 | Ocean bed | **-4.0** *(may move)* | The tile base. 2.6 m of water: Gerstner waves reach full height at 2.5 m depth (`wave_atten`) and the swash stops there (`swash_weight`), so ocean seams carry no shore-dependent motion |
@@ -106,7 +106,7 @@ River on edge 0 only, the network from edge 0 to the node `spring` at (-2, 0) (Q
 
 ## 4. Ocean (`ocean`)
 
-- Flat bed at y = -4.0 along the whole border ring. Interior relief (sand ripples) may rise at most 0.10 m and must fall to 0 within 2 m of the border, as in `meadow_base`. The bed never goes below the base.
+- Flat bed at y = -4.0 along the whole border ring. Interior relief (sand ripples) may rise at most 0.10 m and must fall to 0 within 2 m of the border, as the river bases' meadow does. The bed never goes below the base.
 - **Cut faces.** On an exposed edge the engine draws the water volume's cut face from the animated surface down to the bed: depth absorption and tint, plus the bright underside of the surface at the top (PRD §9.1). With the bed at the base, the face reaches the tile base. The kit's column skirt (the O4 cutaway soil set) covers only what lies below the bed, which is nothing for the ocean.
 
 ## 5. What the engine draws and what the kit supplies

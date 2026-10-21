@@ -25,20 +25,6 @@ EAR_LIGHT = np.array([0xec, 0xd2, 0x8a]) / 255
 AWN = np.array([0xe4, 0xcb, 0x86]) / 255
 
 
-def undulation(x, y):
-    """meadow_base's swell (`undulation()` in scripts/blender/kit/meadow_base.py), copied: that file is
-    a generator, not an importable helper. Scalars only."""
-    s = (0.6 * math.sin(0.31 * x + 1.7) * math.cos(0.27 * y - 0.4)
-         + 0.4 * math.sin(0.53 * x - 0.45 * y + 0.9))
-    return 0.5 + 0.5 * s
-
-
-def meadow_relief(x, y):
-    """meadow_base's cap relief more than 2 m inside the border (its falloff is 1 there): the field
-    sits wholly inside that band, so the falloff is left out."""
-    return -0.25 * undulation(x, y)
-
-
 def _wrap_dx(dx, w):
     """dx between a wrapped column and an unwrapped centre, brought into [-w/2, w/2): per-pixel
     geometry (normal tilt) on a horizontally wrapping tile must not see the wrap's w-pixel jump."""

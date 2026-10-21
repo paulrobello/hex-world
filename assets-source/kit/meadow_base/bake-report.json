@@ -9,7 +9,7 @@
   "device": "CPU",
   "marginPx": 12,
   "maskStats": {
-    "mean": 0.9993975162506104,
+    "mean": 0.9997637867927551,
     "min": 0.9686275124549866,
     "p01": 0.9843137860298157,
     "snowMean": 1.0,
@@ -17,12 +17,12 @@
     "wetMax": 0.6980392336845398,
     "wetMin": 0.5098039507865906
   },
-  "receiverSignature": "0690d6230a7d99645735c5f5d5f605aaaa49a026e3a06272a5a84b2c99dc191a",
+  "receiverSignature": "4a7c1e955cfd31c79b747fabf96b204e5e07745a3fd1806ede972a959942b423",
   "samples": 64,
   "skipped": false,
   "texelDensityPxPerM": {
-    "max": 31.99998723644545,
-    "median": 31.99301248399805,
-    "min": 31.85460175157288
+    "max": 32.0000535013358,
+    "median": 31.999987238788144,
+    "min": 31.922337917083528
   }
 }

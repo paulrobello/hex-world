@@ -3,7 +3,7 @@
     "gate": "piece",
     "status": "pending",
     "requested": "2026-10-20",
-    "notes": "Pending owner review; not an approval. Variant of hay_bale_stack (PRD §6 Variety), against assets-source/refs/farm (ref-1's small stacks of rectangular bales): three of the same twine-bound bales, two side by side with one laid across them on top, about 1.0 x 1.0 m and 0.7 m high (the original's five make a 1.4 m long two-row stack). 323 LOD0 tris. Review sheet: docs/checkpoints/hay_variants/sheet.jpg (refs, EEVEE beside hay_bale_stack, in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
+    "notes": "Pending owner review; not an approval. Variant of hay_bale_stack (PRD \u00a76 Variety), against assets-source/refs/farm (ref-1's small stacks of rectangular bales): three of the same twine-bound bales, two side by side with one laid across them on top, about 1.0 x 1.0 m and 0.7 m high (the original's five make a 1.4 m long two-row stack). 323 LOD0 tris. Review sheet: docs/checkpoints/hay_variants/sheet.jpg (refs, EEVEE beside hay_bale_stack, in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
   },
   {
     "gate": "piece",
@@ -18,6 +18,13 @@
     "revision": "bale-b-apron",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Rebuilt for the bale-b-apron edit of the shared _hay_var.py (a round_b-only function): GLB and every map byte-identical to the previous build, provenance hashes refreshed only. Nothing new to review."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "terrain-flatten",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Rebuilt for the _hay_var.py edit (the shared relief): GLB and maps byte-identical, provenance hashes refreshed only. Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
   },
   {
     "who": "Paul Robello (owner)",

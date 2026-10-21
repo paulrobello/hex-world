@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/river_spring_base.py",
-    "sha256": "845405593f4d3f5727db8ba407845cae120e11af5dfd993eabe47780e2115c37"
+    "sha256": "8ef4bdf2ed76b0ba75771a47eb78e35ea97da9b00f7dba0e42c755e522bac4fb"
   },
   "generatorDeps": [
     {
@@ -14,6 +14,14 @@
     {
       "path": "scripts/blender/kit/_spring.py",
       "sha256": "b548707da2708223389671f561d9e76ad94971b7f3a9c2ca0133fc6a2075dcd6"
+    },
+    {
+      "path": "scripts/blender/kit/_spring_flat.py",
+      "sha256": "d66c923f2035f06090ae2f55cea3e6c8a1c1f3097d37c9700b022b79c7e99674"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
     }
   ],
   "authoringAgent": {
@@ -63,7 +71,7 @@
     "lod2MaxRatio": 0.2,
     "marginPx": 12,
     "maskStats": {
-      "mean": 0.9735199809074402,
+      "mean": 0.9735473394393921,
       "min": 0,
       "p01": 0.8901961445808411,
       "p05": 0.9215686917304993,
@@ -100,11 +108,11 @@
       6.342142857142858,
       6.83
     ],
-    "receiverSignature": "fbcdd4074c71a6f07e6f3af4085919ce54509d2925ef8bbc39e7512747a3d294",
+    "receiverSignature": "4aa74b53403262308e10dcea309336b9991a187dfd937eee9ffabacf8b5abbc4",
     "samples": 64,
     "skipped": false,
     "texelDensityPxPerM": {
-      "max": 32.00005141964553,
+      "max": 32.00005899160951,
       "median": 31.70237346867073,
       "min": 19.277828198961316
     }
@@ -149,7 +157,7 @@
   ],
   "pivot": "hex_center",
   "texelDensityPxPerM": {
-    "max": 32.00005141964553,
+    "max": 32.00005899160951,
     "median": 31.70237346867073,
     "min": 19.277828198961316
   },
@@ -159,10 +167,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 157706,
-        "astc": 154099
+        "bc7": 151416,
+        "astc": 147869
       },
-      "glbBytes": 123044
+      "glbBytes": 118116
     },
     "textureEncodes": [
       {
@@ -173,8 +181,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 157706,
-        "sha256": "0fd8bd1bf8f50535e6334c012cec5ca2e3b100cd4d74fbcdd91be0c367cfe281"
+        "bytes": 151416,
+        "sha256": "b48e464dfe47eb70011e3d50bc96c5961a95fcaff1e1af7e9d8a99e33a301932"
       },
       {
         "channel": "masks",
@@ -184,8 +192,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 154099,
-        "sha256": "cc86d7be3bcb97638560949d073e699bcb4f09c01b1dfe0f9f3572331828a9ff"
+        "bytes": 147869,
+        "sha256": "ba8c7da0f3416cd0fe8afb638910388af2d0363b7c9d6de5fc4f0bab6b9042af"
       },
       {
         "channel": "masks",
@@ -193,31 +201,31 @@
         "path": "assets/kit/p1/river_spring_base/river_spring_base.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 242597,
-        "sha256": "9010cc860e41810d3dc5fafed84ea648d255ec50d7003c0813adb6f6ac05c3fa"
+        "bytes": 234947,
+        "sha256": "3a879b428d6a2f5db92818bea5b30d7e912b3e7d19063e9c5dcf63fd5dc87501"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_spring_base/river_spring_base.glb",
-      "sha256": "bd377f60f1e61b6d1d775124deb72991872530aa1d85d376d73cab885bd85efd",
-      "bytes": 123044
+      "sha256": "c1fe0b6c105ec3e0812bd15a83e9d7471736bef13757ca61ca7bca8f0b0fed0d",
+      "bytes": 118116
     },
     {
       "path": "assets/kit/p1/river_spring_base/river_spring_base.masks.bc7.ktx2",
-      "sha256": "0fd8bd1bf8f50535e6334c012cec5ca2e3b100cd4d74fbcdd91be0c367cfe281",
-      "bytes": 157706
+      "sha256": "b48e464dfe47eb70011e3d50bc96c5961a95fcaff1e1af7e9d8a99e33a301932",
+      "bytes": 151416
     },
     {
       "path": "assets/kit/p1/river_spring_base/river_spring_base.masks.astc.ktx2",
-      "sha256": "cc86d7be3bcb97638560949d073e699bcb4f09c01b1dfe0f9f3572331828a9ff",
-      "bytes": 154099
+      "sha256": "ba8c7da0f3416cd0fe8afb638910388af2d0363b7c9d6de5fc4f0bab6b9042af",
+      "bytes": 147869
     },
     {
       "path": "assets/kit/p1/river_spring_base/river_spring_base.masks.png",
-      "sha256": "9010cc860e41810d3dc5fafed84ea648d255ec50d7003c0813adb6f6ac05c3fa",
-      "bytes": 242597
+      "sha256": "3a879b428d6a2f5db92818bea5b30d7e912b3e7d19063e9c5dcf63fd5dc87501",
+      "bytes": 234947
     }
   ],
   "references": [
@@ -252,7 +260,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T16:51:38.460Z",
+    "date": "2026-10-21T00:07:41.585Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -287,6 +295,13 @@
       "revision": "terrain-hump-water",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Re-export, geometry unchanged in every LOD (positions, UVs, triangles, ring, water profile, sockets): the meadow part of the cap now takes custom normals from the relief's slope without the border falloff's rise to the ring (_river.cap_shade_slope, geom.set_cap_normals), so the shallow bowl over the last 2 m no longer shades as a ridge along the tile border (owner, 2026-10-14; as meadow_base). The channel strip keeps its normals. Review docs/checkpoints/terrain-hump-water/sheet.jpg (before/after at noon and dusk, orbit, seams, eye level)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-flatten",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Meadow part via _spring_flat.py (_spring.py unchanged); same tris (3970/1602/726). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
     },
     {
       "who": "Paul Robello (owner)",

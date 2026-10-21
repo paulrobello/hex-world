@@ -19,5 +19,12 @@
     "revision": "terrain-hump",
     "requested": "2026-10-20",
     "notes": "Re-export, geometry unchanged: the cap's custom normals now come from the relief's slope without the falloff's rise to the border ring, so the 0.11 m rise over the last 2 m no longer shades as a ridge along every tile border (owner, 2026-10-14). Review docs/checkpoints/terrain-hump/sheet.jpg (before/after orbit at noon and dusk, eye level, seams)."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "terrain-flatten",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Mean height -0.013 m (was -0.101); band mean at 1.5-2 m from the border -0.008 (was -0.110); falloff over 3 m. Same tris (2604/900/286). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
   }
 ]

@@ -3,7 +3,7 @@
     "gate": "piece",
     "status": "pending",
     "requested": "2026-10-20",
-    "notes": "Pending owner review; not an approval. Variant of hay_bale_round (PRD §6 Variety), against assets-source/refs/farm (ref-1 and ref-2: round bales in a yard scattered with loose straw): the same net-wrapped bale, profile, straw and atlas layout stood on its flat end, settled (a flattened foot that bulges 4.5 cm, a 5% lower height, a 3 cm lean), with a ring of loose straw round its foot that drapes on the meadow relief of both of the farm's round-bale slots. 792 LOD0 tris. Review sheet: docs/checkpoints/hay_variants/sheet.jpg (refs, EEVEE beside hay_bale_round, in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
+    "notes": "Pending owner review; not an approval. Variant of hay_bale_round (PRD \u00a76 Variety), against assets-source/refs/farm (ref-1 and ref-2: round bales in a yard scattered with loose straw): the same net-wrapped bale, profile, straw and atlas layout stood on its flat end, settled (a flattened foot that bulges 4.5 cm, a 5% lower height, a 3 cm lean), with a ring of loose straw round its foot that drapes on the meadow relief of both of the farm's round-bale slots. 792 LOD0 tris. Review sheet: docs/checkpoints/hay_variants/sheet.jpg (refs, EEVEE beside hay_bale_round, in engine on a farm: play distance, sun and shade close-ups, eye level, scale beside the barn). The controller records the owner's decision."
   },
   {
     "gate": "piece",
@@ -18,6 +18,13 @@
     "revision": "bale-b-apron",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. The LOD2 straw-apron seam left by bale-seam-fix: each of the apron's six segments is one quad at LOD2, so its seam vertices carried that quad's facet normal, 27 deg off the LOD0 normals the normal map was baked against. LOD2's apron now takes LOD0's normals (same island, same point). Measured at LOD2: apron seam normal step 36.4 -> 4.5 deg (interior 2.6; LOD2 barrel seam 4.3). Same tris (792/240/76), positions, UVs and maps; LOD0 and LOD1 decode identical. Review docs/checkpoints/hay-bale-b-apron/sheet.jpg."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "terrain-flatten",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Rebuilt: the apron drapes on the new relief at the farm's round slots, which is now level (0 m); contact float -0.005 m at both slots; same tris (792/240/76). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
   },
   {
     "who": "Paul Robello (owner)",

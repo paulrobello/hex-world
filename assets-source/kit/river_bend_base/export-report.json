@@ -2,12 +2,20 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/river_bend_base.py",
-    "sha256": "1c2be0b0f67b2ab381c7cbc8c40439c0aeecefd2611d9a324ff168f3d1b2823c"
+    "sha256": "3de8a82a6f45adbb417675a09a1e6d1065cf0af93fdc7feb84830425431bdf97"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_river.py",
       "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_river_flat.py",
+      "sha256": "cb3c66803cab6b80816eff412f046371d65cb4b58cd7e8c4074db68b555a4124"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
     }
   ],
   "lodTris": {

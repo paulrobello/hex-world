@@ -1,6 +1,6 @@
 {
   "name": "forest_base",
-  "date": "2026-10-20T16:16:25.337Z",
+  "date": "2026-10-20T23:57:22.466Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 211897,
-      "sha256": "c73644dd787fb29b7c54b2fe9e4eade899cc35c95abebc298cdf5345104bfe21"
+      "bytes": 173337,
+      "sha256": "ed793443624dc3db0b5f9cf30523c714f0aa7947774ac072cdab626611d04afb"
     },
     {
       "channel": "masks",
@@ -59,8 +59,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 217616,
-      "sha256": "c0c25076b585815622226dc929a12aaab8392f633041d14c7775acf5614dd8c1"
+      "bytes": 177592,
+      "sha256": "3be78d3dcaab5d13397944a673e42bfdf1c134ee9676a7c20c0f06f8bd39a042"
     },
     {
       "channel": "masks",
@@ -68,21 +68,21 @@
       "path": "assets/kit/p1/forest_base/forest_base.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 312774,
-      "sha256": "e71003359b61f7a24b3a5d9cd604c619552d53779c99c38276c20ebc9e8f0294"
+      "bytes": 235679,
+      "sha256": "d4bcb42a4e064a4c95a86bc03c4c0d984795ae49371cde362408e25e4b1a3be9"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 211897,
-      "astc": 217616
+      "bc7": 173337,
+      "astc": 177592
     },
-    "glbBytes": 131960
+    "glbBytes": 116568
   },
   "glb": {
-    "bytes": 131960,
-    "sha256": "ebdf96839ccddff834413c78b9d9b84f850a356a83e46126f8f84d1b513736a4"
+    "bytes": 116568,
+    "sha256": "8fda4017036f2e522268e03d5cf2e053c135b0e3a5ccba6f3cae771d7115977a"
   }
 }

@@ -17,7 +17,10 @@ import sys
 import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from lib import bake, collider, export, geom, hexgeo, lod, materials, scene, uv  # noqa: E402
+
+import _terrain  # noqa: E402
 
 PIECE = "forest_base"
 SPACING = (0.9, 1.8, None)
@@ -40,51 +43,12 @@ def band_floor(phi, m=math):
     return band_rim(phi, m) + 0.9 + 0.3 * m.sin(7 * phi + 0.7)
 
 
-def falloff(x, y):
-    t = min(max(hexgeo.dist_to_border(x, y) / 2.0, 0.0), 1.0)
-    return t * t * (3 - 2 * t)
-
-
-def undulation(x, y, m=math):
-    """meadow_base's swell in [0, 1] (same formula), so the rim matches the meadow's masks."""
-    s = (0.6 * m.sin(0.31 * x + 1.7) * m.cos(0.27 * y - 0.4)
-         + 0.4 * m.sin(0.53 * x - 0.45 * y + 0.9))
-    return 0.5 + 0.5 * s
-
-
-def mounds(x, y, m=math):
-    """Forest-floor root mounds and hollows in [0, 1], shorter than the meadow swell."""
-    s = (0.5 * m.sin(0.9 * x + 0.3) * m.sin(0.8 * y + 1.1)
-         + 0.5 * m.sin(1.3 * x - 1.1 * y + 2.0) * m.cos(0.7 * x + 1.4 * y))
-    return 0.5 + 0.5 * s
-
-
-def relief(x, y):
-    # meadow_base contract: z in [-0.25, 0.0], never above 0, smoothstep falloff to 0 (value and
-    # slope) within 2.0 m of the border.
-    return -falloff(x, y) * (0.15 * undulation(x, y) + 0.1 * mounds(x, y))
-
-
-def shade_slope(x, y):
-    """The slope the cap shades with (its custom normals): the swell and mounds' own slope under the
-    falloff, leaving out the falloff's rise to the border ring, which shaded as a ridge along every
-    tile border in side light (owner, 2026-10-14; as meadow_base). Copied in _forest_edge.py."""
-    f = falloff(x, y)
-    a, b, c = 0.31 * x + 1.7, 0.27 * y - 0.4, 0.53 * x - 0.45 * y + 0.9
-    dux = 0.5 * (0.6 * 0.31 * math.cos(a) * math.cos(b) + 0.4 * 0.53 * math.cos(c))
-    duy = 0.5 * (-0.6 * 0.27 * math.sin(a) * math.sin(b) - 0.4 * 0.45 * math.cos(c))
-    p, q, r, w = 0.9 * x + 0.3, 0.8 * y + 1.1, 1.3 * x - 1.1 * y + 2.0, 0.7 * x + 1.4 * y
-    dmx = 0.5 * (0.5 * 0.9 * math.cos(p) * math.sin(q)
-                 + 0.5 * (1.3 * math.cos(r) * math.cos(w) - 0.7 * math.sin(r) * math.sin(w)))
-    dmy = 0.5 * (0.5 * 0.8 * math.sin(p) * math.cos(q)
-                 + 0.5 * (-1.1 * math.cos(r) * math.cos(w) - 1.4 * math.sin(r) * math.sin(w)))
-    return -f * (0.15 * dux + 0.1 * dmx), -f * (0.15 * duy + 0.1 * dmy)
-
-
-for _x, _y in ((0.0, 0.0), (3.1, -4.2), (-6.5, 2.7)):  # falloff 1 here: the true slope of relief
-    _fd = ((relief(_x + 1e-5, _y) - relief(_x - 1e-5, _y)) / 2e-5,
-           (relief(_x, _y + 1e-5) - relief(_x, _y - 1e-5)) / 2e-5)
-    assert all(abs(p - q) < 1e-6 for p, q in zip(shade_slope(_x, _y), _fd)), (_x, _y, _fd)
+# The cap relief and its shading slope (`_terrain.py`, shared with _forest_edge.py): swell hollows and
+# root-mound pits on a plane level with the border ring, z in [-0.25, 0] (owner D6-Q1). The swell is
+# meadow_base's, so the rim matches the meadow's masks.
+undulation = _terrain.undulation
+relief = _terrain.forest_relief
+shade_slope = _terrain.forest_shade_slope
 
 
 def contour(band, step):

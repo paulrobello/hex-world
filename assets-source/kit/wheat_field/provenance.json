@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/wheat_field.py",
-    "sha256": "125186993f9dee0bf4ed8e0911daf621557bd2ed737db224cb04459e1486d59a"
+    "sha256": "b10cb279b62111b62bd41ff57860cfea004692ed1ee60f5a20b3887ce5e64c97"
   },
   "generatorDeps": [
     {
@@ -12,8 +12,12 @@
       "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
     },
     {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    },
+    {
       "path": "scripts/blender/kit/_wheat.py",
-      "sha256": "5cd386167c2815dbc91f9eaf3a7e017b5c8e7387a3caa97ade6c963397c281dc"
+      "sha256": "428adc565532fc99f2fa47c05627a54a23dffa274df31724780e18f544155aba"
     }
   ],
   "authoringAgent": {
@@ -87,13 +91,13 @@
     },
     "device": "none (numpy-drawn tiles, no Cycles bake)",
     "earthLiftM": [
-      0.0142,
-      0.0562,
+      0.0267,
+      0.0717,
       0
     ],
     "extentZ": [
-      -0.27407342195510864,
-      1.0670326948165894
+      -0.23035217821598053,
+      1.0726206302642822
     ],
     "field": {
       "apothemM": 10.8,
@@ -116,7 +120,7 @@
         "wheat_field_wheat": 80
       }
     },
-    "receiverSignature": "df00ad1183165cf15e81136dbe2a5cdfde34a643c30b566cf3ac8c3d3434b4fc",
+    "receiverSignature": "46bc2e138ded31866feb57e8b76701a29e5c27c3c8325c40bf989f0be9a07efd",
     "samples": 0,
     "skipped": false,
     "texelDensityPxPerM": {
@@ -165,7 +169,7 @@
         "bc7": 958817,
         "astc": 963855
       },
-      "glbBytes": 96308
+      "glbBytes": 89756
     },
     "textureEncodes": [
       {
@@ -297,8 +301,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/wheat_field/wheat_field.glb",
-      "sha256": "63095f27d903e78245ffba1baa95145729aaa63d1a7dda44abafd7f83e22b49e",
-      "bytes": 96308
+      "sha256": "bc2044d988c4fef889f6405f53d40abbec105d9831d65bd4b119bcbd123becef",
+      "bytes": 89756
     },
     {
       "path": "assets/kit/p1/wheat_field/wheat_field.albedo.bc7.ktx2",
@@ -384,7 +388,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T00:27:17.151Z",
+    "date": "2026-10-21T00:08:10.104Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -410,6 +414,13 @@
       "requested": "2026-10-19",
       "revision": "first build",
       "notes": "Pending owner review; not an approval. New piece (owner request 2026-10-19, 'start an agent working on the wheat tile'): ripe wheat in V-pair row cards with wind on tinted-gravel ploughed earth, the centre of the Wheat field tile. Review docs/checkpoints/wheat_field/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-flatten",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Rebuilt on the new meadow relief (_terrain.meadow_relief instead of a copy); same tris (1172/512/96). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
     },
     {
       "who": "Paul Robello (owner)",

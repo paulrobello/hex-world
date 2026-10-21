@@ -7,7 +7,11 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_forest_edge.py",
-      "sha256": "52984d41c2e3883c37994390954f7f2a554d15f5203054bf84c2c529d46f1e5a"
+      "sha256": "20d51ebbd5773a001e719cb80dca4bfb7695132a388c27add02e779ecdb415ec"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
     }
   ],
   "lodTris": {

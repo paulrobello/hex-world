@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/wheat_field.py",
-    "sha256": "125186993f9dee0bf4ed8e0911daf621557bd2ed737db224cb04459e1486d59a"
+    "sha256": "b10cb279b62111b62bd41ff57860cfea004692ed1ee60f5a20b3887ce5e64c97"
   },
   "generatorDeps": [
     {
@@ -10,8 +10,12 @@
       "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
     },
     {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    },
+    {
       "path": "scripts/blender/kit/_wheat.py",
-      "sha256": "5cd386167c2815dbc91f9eaf3a7e017b5c8e7387a3caa97ade6c963397c281dc"
+      "sha256": "428adc565532fc99f2fa47c05627a54a23dffa274df31724780e18f544155aba"
     }
   ],
   "lodTris": {

@@ -46,7 +46,9 @@ import random
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
+import _terrain  # noqa: E402
 import bmesh  # noqa: E402
 import bpy  # noqa: E402
 import numpy as np  # noqa: E402
@@ -102,22 +104,9 @@ LOD2_POST_R, LOD2_GATE_POST_R = 0.1, 0.12
 LOD2_FOOT = -0.05  # post feet just under the flat LOD2 cap
 
 
-def falloff(x, y):
-    """meadow_base.py `falloff`, copied: that generator runs on import, so it cannot be imported."""
-    t = min(max(hexgeo.dist_to_border(x, y) / 2.0, 0.0), 1.0)
-    return t * t * (3 - 2 * t)
-
-
-def undulation(x, y):
-    """meadow_base.py `undulation` (scalar path), copied."""
-    s = (0.6 * math.sin(0.31 * x + 1.7) * math.cos(0.27 * y - 0.4)
-         + 0.4 * math.sin(0.53 * x - 0.45 * y + 0.9))
-    return 0.5 + 0.5 * s
-
-
 def relief(x, y):
-    """meadow_base.py `relief`, copied (Blender x, y): the cap height the fence stands on."""
-    return -0.25 * falloff(x, y) * undulation(x, y)
+    """meadow_base's cap relief (`_terrain.meadow_relief`, Blender x, y): the height the fence stands on."""
+    return _terrain.meadow_relief(x, y)
 
 
 def B(x, z):
@@ -456,7 +445,10 @@ def colliders(ps, root):
                 w1 = ext
             else:
                 w0 = -ext
-        e0, e1 = a - d * 0.12, b + d * 0.12
+        # The ends reach 0.13 m past the end posts, more than the 0.12 m half width, so where two runs
+        # meet square-on their boxes overlap without sharing a corner: the walker splits the collider
+        # into runs by shared vertices (to 1 mm), and on level ground equal corners would join two.
+        e0, e1 = a - d * 0.13, b + d * 0.13
         corners = [e0 + n * w0, e1 + n * w0, e1 + n * w1, e0 + n * w1]
         boxes.append((corners, lo, hi))
         feet.append([[round(c.x, 3), round(-c.y, 3)] for c in corners])

@@ -4,9 +4,14 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/fence_paddock.py",
-    "sha256": "af4b6134c4a19c3da4da343ff50f06b5beeacb2d2743f647331bc18b800555d5"
+    "sha256": "80db6ccd0a7c43031d57dfddd89f556b72f8c7923a6d7bb61ef59794b44a87c4"
   },
-  "generatorDeps": [],
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
   "authoringAgent": {
     "harness": "claude-code",
     "model": "claude-opus-5-5"
@@ -31,109 +36,109 @@
       "colliderBoxes": [
         [
           [
-            3.62,
+            3.63,
             2.38
           ],
           [
-            -12.376,
+            -12.386,
             2.38
           ],
           [
-            -12.376,
+            -12.386,
             2.62
           ],
           [
-            3.62,
+            3.63,
             2.62
           ]
         ],
         [
           [
             -12.376,
-            2.38
+            2.37
           ],
           [
             -12.376,
-            7.196
+            7.206
           ],
           [
             -12.136,
-            7.196
+            7.206
           ],
           [
             -12.136,
-            2.38
+            2.37
           ]
         ],
         [
           [
-            -12.42,
-            7.12
+            -12.429,
+            7.115
           ],
           [
-            0.044,
-            14.316
+            0.053,
+            14.321
           ],
           [
-            0.164,
-            14.109
+            0.173,
+            14.114
           ],
           [
-            -12.3,
-            6.912
+            -12.309,
+            6.907
           ]
         ],
         [
           [
-            -0.044,
-            14.316
+            -0.053,
+            14.321
           ],
           [
-            12.42,
-            7.12
+            12.429,
+            7.115
           ],
           [
-            12.3,
-            6.912
+            12.309,
+            6.907
           ],
           [
-            -0.164,
-            14.109
+            -0.173,
+            14.114
           ]
         ],
         [
           [
             12.376,
-            7.196
+            7.206
           ],
           [
             12.376,
-            2.38
+            2.37
           ],
           [
             12.136,
-            2.38
+            2.37
           ],
           [
             12.136,
-            7.196
+            7.206
           ]
         ],
         [
           [
-            12.376,
+            12.386,
             2.38
           ],
           [
-            6.38,
+            6.37,
             2.38
           ],
           [
-            6.38,
+            6.37,
             2.785
           ],
           [
-            12.376,
+            12.386,
             2.785
           ]
         ]
@@ -222,9 +227,9 @@
             2.5
           ],
           "gate": true,
-          "ground": -0.104,
+          "ground": 0,
           "half": 0.08,
-          "top": 1.281
+          "top": 1.385
         },
         {
           "at": [
@@ -232,9 +237,9 @@
             2.5
           ],
           "gate": false,
-          "ground": -0.178,
+          "ground": -0.045,
           "half": 0.065,
-          "top": 1.085
+          "top": 1.218
         },
         {
           "at": [
@@ -242,9 +247,9 @@
             2.5
           ],
           "gate": false,
-          "ground": -0.21,
+          "ground": -0.115,
           "half": 0.065,
-          "top": 1.061
+          "top": 1.155
         },
         {
           "at": [
@@ -252,9 +257,9 @@
             2.5
           ],
           "gate": false,
-          "ground": -0.163,
+          "ground": -0.023,
           "half": 0.065,
-          "top": 1.119
+          "top": 1.259
         },
         {
           "at": [
@@ -262,9 +267,9 @@
             2.5
           ],
           "gate": false,
-          "ground": -0.086,
+          "ground": 0,
           "half": 0.065,
-          "top": 1.134
+          "top": 1.219
         },
         {
           "at": [
@@ -272,9 +277,9 @@
             2.5
           ],
           "gate": false,
-          "ground": -0.058,
+          "ground": 0,
           "half": 0.065,
-          "top": 1.202
+          "top": 1.26
         },
         {
           "at": [
@@ -282,9 +287,9 @@
             2.5
           ],
           "gate": false,
-          "ground": -0.097,
+          "ground": 0,
           "half": 0.065,
-          "top": 1.18
+          "top": 1.277
         },
         {
           "at": [
@@ -292,9 +297,9 @@
             2.5
           ],
           "gate": false,
-          "ground": -0.128,
+          "ground": -0.003,
           "half": 0.065,
-          "top": 1.132
+          "top": 1.257
         },
         {
           "at": [
@@ -302,9 +307,9 @@
             4.788
           ],
           "gate": false,
-          "ground": -0.132,
+          "ground": -0.005,
           "half": 0.065,
-          "top": 1.146
+          "top": 1.274
         },
         {
           "at": [
@@ -312,9 +317,9 @@
             7.076
           ],
           "gate": false,
-          "ground": -0.121,
+          "ground": -0.001,
           "half": 0.065,
-          "top": 1.113
+          "top": 1.233
         },
         {
           "at": [
@@ -322,9 +327,9 @@
             8.256
           ],
           "gate": false,
-          "ground": -0.138,
+          "ground": -0.008,
           "half": 0.065,
-          "top": 1.133
+          "top": 1.264
         },
         {
           "at": [
@@ -332,9 +337,9 @@
             9.435
           ],
           "gate": false,
-          "ground": -0.193,
+          "ground": -0.073,
           "half": 0.065,
-          "top": 1.067
+          "top": 1.188
         },
         {
           "at": [
@@ -342,9 +347,9 @@
             10.614
           ],
           "gate": false,
-          "ground": -0.155,
+          "ground": -0.02,
           "half": 0.065,
-          "top": 1.063
+          "top": 1.197
         },
         {
           "at": [
@@ -352,9 +357,9 @@
             11.794
           ],
           "gate": false,
-          "ground": -0.051,
+          "ground": 0,
           "half": 0.065,
-          "top": 1.231
+          "top": 1.283
         },
         {
           "at": [
@@ -362,9 +367,9 @@
             12.973
           ],
           "gate": false,
-          "ground": -0.043,
+          "ground": 0,
           "half": 0.065,
-          "top": 1.195
+          "top": 1.239
         },
         {
           "at": [
@@ -372,9 +377,9 @@
             14.152
           ],
           "gate": false,
-          "ground": -0.118,
+          "ground": 0,
           "half": 0.065,
-          "top": 1.118
+          "top": 1.236
         },
         {
           "at": [
@@ -382,9 +387,9 @@
             12.973
           ],
           "gate": false,
-          "ground": -0.122,
+          "ground": -0.001,
           "half": 0.065,
-          "top": 1.128
+          "top": 1.249
         },
         {
           "at": [
@@ -392,9 +397,9 @@
             11.794
           ],
           "gate": false,
-          "ground": -0.14,
+          "ground": -0.009,
           "half": 0.065,
-          "top": 1.083
+          "top": 1.215
         },
         {
           "at": [
@@ -402,9 +407,9 @@
             10.614
           ],
           "gate": false,
-          "ground": -0.163,
+          "ground": -0.028,
           "half": 0.065,
-          "top": 1.069
+          "top": 1.204
         },
         {
           "at": [
@@ -412,9 +417,9 @@
             9.435
           ],
           "gate": false,
-          "ground": -0.168,
+          "ground": -0.035,
           "half": 0.065,
-          "top": 1.089
+          "top": 1.222
         },
         {
           "at": [
@@ -422,9 +427,9 @@
             8.256
           ],
           "gate": false,
-          "ground": -0.144,
+          "ground": -0.012,
           "half": 0.065,
-          "top": 1.109
+          "top": 1.242
         },
         {
           "at": [
@@ -432,9 +437,9 @@
             7.076
           ],
           "gate": false,
-          "ground": -0.103,
+          "ground": 0,
           "half": 0.065,
-          "top": 1.163
+          "top": 1.266
         },
         {
           "at": [
@@ -442,9 +447,9 @@
             4.788
           ],
           "gate": false,
-          "ground": -0.112,
+          "ground": 0,
           "half": 0.065,
-          "top": 1.146
+          "top": 1.258
         },
         {
           "at": [
@@ -452,9 +457,9 @@
             2.5
           ],
           "gate": false,
-          "ground": -0.125,
+          "ground": -0.002,
           "half": 0.065,
-          "top": 1.146
+          "top": 1.268
         },
         {
           "at": [
@@ -462,9 +467,9 @@
             2.5
           ],
           "gate": false,
-          "ground": -0.137,
+          "ground": -0.002,
           "half": 0.065,
-          "top": 1.126
+          "top": 1.261
         },
         {
           "at": [
@@ -472,9 +477,9 @@
             2.5
           ],
           "gate": false,
-          "ground": -0.102,
+          "ground": 0,
           "half": 0.065,
-          "top": 1.12
+          "top": 1.222
         },
         {
           "at": [
@@ -482,9 +487,9 @@
             2.5
           ],
           "gate": true,
-          "ground": -0.069,
+          "ground": 0,
           "half": 0.08,
-          "top": 1.277
+          "top": 1.347
         }
       ]
     },
@@ -508,13 +513,13 @@
       "snow": 1
     },
     "reason": "no Cycles bake: masks is an analytic ramp in V (height above the ground)",
-    "receiverSignature": "9fa7b8d4f76196576144ce9ea9c7c6b005d150946fa38f738d024225519ed1b8",
+    "receiverSignature": "445a764d5549d9380bd0ad9d04b0c6863b9fa23ccc5c6cc838de102717b430dd",
     "samples": 0,
     "skipped": false,
     "texelDensityPxPerM": {
-      "max": 7.807835572564564,
-      "median": 7.330976286512846,
-      "min": 0.19923627709426822
+      "max": 7.791296680032036,
+      "median": 7.3426428564246,
+      "min": 0.09757105346348738
     }
   },
   "lods": [
@@ -540,9 +545,9 @@
   "sockets": [],
   "pivot": "hex_center",
   "texelDensityPxPerM": {
-    "max": 7.807835572564564,
-    "median": 7.330976286512846,
-    "min": 0.19923627709426822
+    "max": 7.791296680032036,
+    "median": 7.3426428564246,
+    "min": 0.09757105346348738
   },
   "compression": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
@@ -553,7 +558,7 @@
         "bc7": 836,
         "astc": 824
       },
-      "glbBytes": 172976
+      "glbBytes": 170216
     },
     "textureEncodes": [
       {
@@ -592,8 +597,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/fence_paddock/fence_paddock.glb",
-      "sha256": "daf7fb382637d1c1296e6c8c3f3aea19981900034707254f7d0081acc9f230d2",
-      "bytes": 172976
+      "sha256": "7dd981128fa7f54691d7d16e6313f990d0e76f4cc8d6b10e2e4a8c97145dd6c5",
+      "bytes": 170216
     },
     {
       "path": "assets/kit/p1/fence_paddock/fence_paddock.masks.bc7.ktx2",
@@ -634,7 +639,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T22:43:04.410Z",
+    "date": "2026-10-21T00:13:38.474Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -667,6 +672,13 @@
       "requested": "2026-10-20",
       "revision": "LOD2 posts",
       "notes": "Pending owner review; not an approval. Defect fix: LOD2 had no posts (two rail prisms per run and a full-height leaf slab, 78 tris), so under Force LOD 2 the fence read as two faint lines and was lost at play distance. LOD2 now draws every other post of each run (every corner and both gate posts kept) as an open three-sided prism, the same two rails, and the leaf as its top bar (168 tris, ceiling 175). LOD0, LOD1 and the collider are unchanged on decoded values. Review docs/checkpoints/fence-lod2/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-flatten",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Rebuilt on the new meadow relief (_terrain.meadow_relief instead of a copy); the paddock now stands on the flat plane; the six run boxes reach 0.13 m past their end posts (was 0.12) so two never share a corner on level ground (the walker keeps one part per run); same tris (1172/568/168). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
     },
     {
       "who": "Paul Robello (owner)",

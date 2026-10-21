@@ -21,5 +21,12 @@
     "revision": "terrain-hump",
     "requested": "2026-10-20",
     "notes": "Re-export, geometry unchanged: the overlay's custom normals follow forest_base's new shading slope (no falloff rise at the border), so the forest/forest seam shades as the cap beside it. Review docs/checkpoints/terrain-hump/sheet.jpg (3x3 forest field)."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "terrain-flatten",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Rebuilt over the new forest_base cap (the overlay follows it in every LOD). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
   }
 ]

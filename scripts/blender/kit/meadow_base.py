@@ -9,7 +9,10 @@ import sys
 import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from lib import bake, collider, export, geom, hexgeo, lod, materials, scene, uv  # noqa: E402
+
+import _terrain  # noqa: E402
 
 PIECE = "meadow_base"
 SPACING = (0.9, 1.8, None)
@@ -20,43 +23,11 @@ skip_bake = os.environ.get("HEXW_SKIP_BAKE") == "1"
 scene.reset_scene(PIECE)
 random.seed(PIECE)
 
-
-def falloff(x, y):
-    t = min(max(hexgeo.dist_to_border(x, y) / 2.0, 0.0), 1.0)
-    return t * t * (3 - 2 * t)
-
-
-def undulation(x, y, m=math):
-    """Deterministic meadow swell in [0, 1]: two crossed long waves plus a shorter ripple.
-    m = math for scalars (the relief), numpy for arrays (the masks), so both share one formula and
-    the scalar path stays bit-identical to libm."""
-    s = (0.6 * m.sin(0.31 * x + 1.7) * m.cos(0.27 * y - 0.4)
-         + 0.4 * m.sin(0.53 * x - 0.45 * y + 0.9))
-    return 0.5 + 0.5 * s
-
-
-def relief(x, y):
-    # Contract: z in [-0.25, 0.0], never above 0, smoothstep falloff to 0 (value and slope) within
-    # 2.0 m of the border, so a road bed at +0.08 m covers it.
-    return -0.25 * falloff(x, y) * undulation(x, y)
-
-
-def shade_slope(x, y):
-    """The slope the cap shades with (its custom normals): the swell's own slope under the falloff,
-    -0.25 * falloff * grad(undulation), leaving out the falloff's rise to the border ring. That rise
-    (0.11 m over the last 2 m on both sides of every border) shaded as a ridge along each tile border
-    in side light (owner, 2026-10-14). 0 at the border, the true slope where the falloff is 1."""
-    f = falloff(x, y)
-    a, b, c = 0.31 * x + 1.7, 0.27 * y - 0.4, 0.53 * x - 0.45 * y + 0.9
-    dux = 0.5 * (0.6 * 0.31 * math.cos(a) * math.cos(b) + 0.4 * 0.53 * math.cos(c))
-    duy = 0.5 * (-0.6 * 0.27 * math.sin(a) * math.sin(b) - 0.4 * 0.45 * math.cos(c))
-    return -0.25 * f * dux, -0.25 * f * duy
-
-
-for _x, _y in ((0.0, 0.0), (3.1, -4.2), (-6.5, 2.7)):  # falloff 1 here: the true slope of relief
-    _fd = ((relief(_x + 1e-5, _y) - relief(_x - 1e-5, _y)) / 2e-5,
-           (relief(_x, _y + 1e-5) - relief(_x, _y - 1e-5)) / 2e-5)
-    assert all(abs(p - q) < 1e-6 for p, q in zip(shade_slope(_x, _y), _fd)), (_x, _y, _fd)
+# The cap relief and its shading slope (`_terrain.py`): hollows on a plane level with the border ring,
+# z in [-0.25, 0], so the cap no longer rises to the ring along every border (owner D6-Q1).
+undulation = _terrain.undulation
+relief = _terrain.meadow_relief
+shade_slope = _terrain.meadow_shade_slope
 
 
 root = scene.empty(PIECE)

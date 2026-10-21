@@ -2,9 +2,14 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/fence_paddock.py",
-    "sha256": "af4b6134c4a19c3da4da343ff50f06b5beeacb2d2743f647331bc18b800555d5"
+    "sha256": "80db6ccd0a7c43031d57dfddd89f556b72f8c7923a6d7bb61ef59794b44a87c4"
   },
-  "generatorDeps": [],
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
   "lodTris": {
     "fence_paddock_lod0": 1172,
     "fence_paddock_lod1": 568,

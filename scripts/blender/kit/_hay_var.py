@@ -34,6 +34,7 @@ import bpy
 from mathutils import Matrix, Vector, noise
 
 import _hay as hy
+import _terrain
 from lib import geom, lod, materials, scene, uv
 
 # What the variants rely on in the approved builder (profile, atlas layout, bake sizes).
@@ -112,22 +113,11 @@ def r_out(theta: float) -> float:
             + 0.003 * math.sin(13 * theta + 0.4))
 
 
-# meadow_base.relief (scripts/blender/kit/meadow_base.py), its formula copied: meadow_base.py is a
-# monolithic generator and cannot be imported. Checked against kit_scene's relief constants below.
-def _dist_to_border(x: float, y: float) -> float:
-    apo = 16.0 * math.sqrt(3) / 2
-    return min(apo - (x * math.cos(math.radians(-60 * k)) + y * math.sin(math.radians(-60 * k)))
-               for k in range(6))
+# meadow_base's cap relief (`_terrain.meadow_relief`, shared). Checked against kit_scene's relief
+# constants (HAY_BALES, WINDMILL_Y).
+meadow_relief = _terrain.meadow_relief
 
-
-def meadow_relief(x: float, y: float) -> float:
-    t = min(max(_dist_to_border(x, y) / 2.0, 0.0), 1.0)
-    s = (0.6 * math.sin(0.31 * x + 1.7) * math.cos(0.27 * y - 0.4)
-         + 0.4 * math.sin(0.53 * x - 0.45 * y + 0.9))
-    return -0.25 * (t * t * (3 - 2 * t)) * (0.5 + 0.5 * s)
-
-
-assert abs(meadow_relief(-2.0, -2.5) + 0.198) < 5e-4 and abs(meadow_relief(0.0, 0.0) + 0.233) < 5e-4
+assert abs(meadow_relief(-2.0, -2.5) + 0.084) < 5e-4 and abs(meadow_relief(0.0, 0.0) + 0.185) < 5e-4
 
 
 def slot_ground(bx: float, by: float, slot: tuple) -> float:

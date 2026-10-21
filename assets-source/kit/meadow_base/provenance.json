@@ -4,9 +4,14 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/meadow_base.py",
-    "sha256": "4b9c3b979f9843397bf05639f85c70bb6ed366cb653cdd7fab4fa5cdc41a2c5f"
+    "sha256": "20c9c52a113da615c175eac0a86e3b8ea0c1450a34a7a55761262ced515c1e08"
   },
-  "generatorDeps": [],
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
   "authoringAgent": {
     "harness": "claude-code",
     "model": "claude-opus-5-5"
@@ -29,7 +34,7 @@
     "device": "CPU",
     "marginPx": 12,
     "maskStats": {
-      "mean": 0.9993975162506104,
+      "mean": 0.9997637867927551,
       "min": 0.9686275124549866,
       "p01": 0.9843137860298157,
       "snowMean": 1,
@@ -37,13 +42,13 @@
       "wetMax": 0.6980392336845398,
       "wetMin": 0.5098039507865906
     },
-    "receiverSignature": "0690d6230a7d99645735c5f5d5f605aaaa49a026e3a06272a5a84b2c99dc191a",
+    "receiverSignature": "4a7c1e955cfd31c79b747fabf96b204e5e07745a3fd1806ede972a959942b423",
     "samples": 64,
     "skipped": false,
     "texelDensityPxPerM": {
-      "max": 31.99998723644545,
-      "median": 31.99301248399805,
-      "min": 31.85460175157288
+      "max": 32.0000535013358,
+      "median": 31.999987238788144,
+      "min": 31.922337917083528
     }
   },
   "lods": [
@@ -75,7 +80,7 @@
       "name": "anchor-prop-0",
       "position": [
         8.410329818725586,
-        -0.032643020153045654,
+        0,
         -3.3695976734161377
       ],
       "yaw": 0
@@ -88,7 +93,7 @@
       "name": "anchor-prop-1",
       "position": [
         0.4676262140274048,
-        -0.1034674420952797,
+        0,
         -5.812877655029297
       ],
       "yaw": 0
@@ -101,7 +106,7 @@
       "name": "anchor-prop-2",
       "position": [
         -7.9476637840271,
-        -0.1303224414587021,
+        -0.0004532536549959332,
         -4.364846229553223
       ],
       "yaw": 0
@@ -114,7 +119,7 @@
       "name": "anchor-prop-3",
       "position": [
         -4.731332778930664,
-        -0.11811724305152893,
+        0,
         2.984726905822754
       ],
       "yaw": 0
@@ -127,7 +132,7 @@
       "name": "anchor-prop-4",
       "position": [
         0.827811062335968,
-        -0.018601812422275543,
+        0,
         8.824472427368164
       ],
       "yaw": 0
@@ -140,7 +145,7 @@
       "name": "anchor-prop-5",
       "position": [
         4.113753318786621,
-        -0.07917525619268417,
+        0,
         3.2690999507904053
       ],
       "yaw": 0
@@ -148,9 +153,9 @@
   ],
   "pivot": "hex_center",
   "texelDensityPxPerM": {
-    "max": 31.99998723644545,
-    "median": 31.99301248399805,
-    "min": 31.85460175157288
+    "max": 32.0000535013358,
+    "median": 31.999987238788144,
+    "min": 31.922337917083528
   },
   "compression": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
@@ -158,10 +163,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 232547,
-        "astc": 240625
+        "bc7": 195040,
+        "astc": 199088
       },
-      "glbBytes": 68896
+      "glbBytes": 61656
     },
     "textureEncodes": [
       {
@@ -172,8 +177,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 232547,
-        "sha256": "f86dd6ad9b8021d0f98d7bc69ac2a57de151a461f86e3eefec9ebe286c51bbed"
+        "bytes": 195040,
+        "sha256": "ec1cc56b31db95bd2978901c5715022e9ad204ce3bb703876e3b9758198aae62"
       },
       {
         "channel": "masks",
@@ -183,8 +188,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 240625,
-        "sha256": "16e9f1fe7a42270b763cf6b48e5d96029ae1764b43b3cd801194aab656f0ebc2"
+        "bytes": 199088,
+        "sha256": "33f1fe8c638a5b17daebaf1419adfac54a7f5ee8ec0c221db3c5988d086ebefc"
       },
       {
         "channel": "masks",
@@ -192,31 +197,31 @@
         "path": "assets/kit/p1/meadow_base/meadow_base.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 310411,
-        "sha256": "7c937f7331a12a01223972c1d002c6a8bd43b01b98438bd8f52f2770f0407730"
+        "bytes": 242179,
+        "sha256": "90c5e8fdb9c45194c974b8f2846ef732d8dc5901dd017a92545d4a2694bb9cf4"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/meadow_base/meadow_base.glb",
-      "sha256": "48c33214d9d073106d6df333e41774b67efbbe1a0c26b7bf23c931510ed8de2f",
-      "bytes": 68896
+      "sha256": "552c8ed73d7f4faa7c28409e39a953d0e267bc5f9467810f8fd57448bf13415f",
+      "bytes": 61656
     },
     {
       "path": "assets/kit/p1/meadow_base/meadow_base.masks.bc7.ktx2",
-      "sha256": "f86dd6ad9b8021d0f98d7bc69ac2a57de151a461f86e3eefec9ebe286c51bbed",
-      "bytes": 232547
+      "sha256": "ec1cc56b31db95bd2978901c5715022e9ad204ce3bb703876e3b9758198aae62",
+      "bytes": 195040
     },
     {
       "path": "assets/kit/p1/meadow_base/meadow_base.masks.astc.ktx2",
-      "sha256": "16e9f1fe7a42270b763cf6b48e5d96029ae1764b43b3cd801194aab656f0ebc2",
-      "bytes": 240625
+      "sha256": "33f1fe8c638a5b17daebaf1419adfac54a7f5ee8ec0c221db3c5988d086ebefc",
+      "bytes": 199088
     },
     {
       "path": "assets/kit/p1/meadow_base/meadow_base.masks.png",
-      "sha256": "7c937f7331a12a01223972c1d002c6a8bd43b01b98438bd8f52f2770f0407730",
-      "bytes": 310411
+      "sha256": "90c5e8fdb9c45194c974b8f2846ef732d8dc5901dd017a92545d4a2694bb9cf4",
+      "bytes": 242179
     }
   ],
   "references": [
@@ -242,7 +247,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T16:18:04.313Z",
+    "date": "2026-10-21T00:07:29.317Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -282,6 +287,13 @@
       "revision": "terrain-hump",
       "requested": "2026-10-20",
       "notes": "Re-export, geometry unchanged: the cap's custom normals now come from the relief's slope without the falloff's rise to the border ring, so the 0.11 m rise over the last 2 m no longer shades as a ridge along every tile border (owner, 2026-10-14). Review docs/checkpoints/terrain-hump/sheet.jpg (before/after orbit at noon and dusk, eye level, seams)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-flatten",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Mean height -0.013 m (was -0.101); band mean at 1.5-2 m from the border -0.008 (was -0.110); falloff over 3 m. Same tris (2604/900/286). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
     }
   ]
 }

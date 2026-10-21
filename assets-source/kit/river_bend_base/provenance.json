@@ -4,12 +4,20 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/river_bend_base.py",
-    "sha256": "1c2be0b0f67b2ab381c7cbc8c40439c0aeecefd2611d9a324ff168f3d1b2823c"
+    "sha256": "3de8a82a6f45adbb417675a09a1e6d1065cf0af93fdc7feb84830425431bdf97"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_river.py",
       "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_river_flat.py",
+      "sha256": "cb3c66803cab6b80816eff412f046371d65cb4b58cd7e8c4074db68b555a4124"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
     }
   ],
   "authoringAgent": {
@@ -57,7 +65,7 @@
     "lod2MaxRatio": 0.2,
     "marginPx": 12,
     "maskStats": {
-      "mean": 0.9668301343917847,
+      "mean": 0.966882050037384,
       "min": 0,
       "p01": 0,
       "p05": 0.9215686917304993,
@@ -65,11 +73,11 @@
     },
     "profileErrorM": [
       {
-        "dryMaxM": 0.0809,
+        "dryMaxM": 0.0385,
         "wetMaxM": 0.0274
       },
       {
-        "dryMaxM": 0.0709,
+        "dryMaxM": 0.0343,
         "wetMaxM": 0.0254
       },
       {
@@ -108,11 +116,11 @@
       6.342142857142858,
       6.83
     ],
-    "receiverSignature": "1c4db27f887774ae44f67e3dabc73b25844a48cf000d144f4ded59715b085b22",
+    "receiverSignature": "67f1b2857f9de8d9dc83009cef508f464a5b357eab16f17d238922940eb6a511",
     "samples": 64,
     "skipped": false,
     "texelDensityPxPerM": {
-      "max": 32.00001937391591,
+      "max": 32.00003004307368,
       "median": 31.429116175649508,
       "min": 26.669512971586283
     }
@@ -173,7 +181,7 @@
   ],
   "pivot": "hex_center",
   "texelDensityPxPerM": {
-    "max": 32.00001937391591,
+    "max": 32.00003004307368,
     "median": 31.429116175649508,
     "min": 26.669512971586283
   },
@@ -183,10 +191,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 163118,
-        "astc": 159443
+        "bc7": 153897,
+        "astc": 150527
       },
-      "glbBytes": 128952
+      "glbBytes": 124608
     },
     "textureEncodes": [
       {
@@ -197,8 +205,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 163118,
-        "sha256": "e258c200ab9c62acc7a4a07c8d76dcc4bbb53ef8306a2b39de31bd6b57edc747"
+        "bytes": 153897,
+        "sha256": "52881920d74c6423ddc0c583fc9c6804b8d1f169ed0d7cfa880f1b0db92b9cf2"
       },
       {
         "channel": "masks",
@@ -208,8 +216,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 159443,
-        "sha256": "35d6e3fb6cec1c651da96ff5357a1fa17549dfd2f7a97c1d7711a946766b773e"
+        "bytes": 150527,
+        "sha256": "9934974c1c514637c3bb229d9f726892a14c689ddf7ba4f8bf463abe4cae89f3"
       },
       {
         "channel": "masks",
@@ -217,31 +225,31 @@
         "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 241870,
-        "sha256": "d039c3d2deedd01adfe603a7446e1fe75928c5992e960ebddee11bd3523af439"
+        "bytes": 228868,
+        "sha256": "aff4fbec6bcb33e7f95989ea73c264486afe2c05d6c23e0a13b7a79d022a6a3e"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_bend_base/river_bend_base.glb",
-      "sha256": "69ea2c9090f367800eeb4de660524a9d566a1d3c0e6c3ca696e5ec052308de80",
-      "bytes": 128952
+      "sha256": "410e639cca7782f3bae750341dc1430dd210bf979f68a3d48e6ae7200ec3b4dd",
+      "bytes": 124608
     },
     {
       "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.bc7.ktx2",
-      "sha256": "e258c200ab9c62acc7a4a07c8d76dcc4bbb53ef8306a2b39de31bd6b57edc747",
-      "bytes": 163118
+      "sha256": "52881920d74c6423ddc0c583fc9c6804b8d1f169ed0d7cfa880f1b0db92b9cf2",
+      "bytes": 153897
     },
     {
       "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.astc.ktx2",
-      "sha256": "35d6e3fb6cec1c651da96ff5357a1fa17549dfd2f7a97c1d7711a946766b773e",
-      "bytes": 159443
+      "sha256": "9934974c1c514637c3bb229d9f726892a14c689ddf7ba4f8bf463abe4cae89f3",
+      "bytes": 150527
     },
     {
       "path": "assets/kit/p1/river_bend_base/river_bend_base.masks.png",
-      "sha256": "d039c3d2deedd01adfe603a7446e1fe75928c5992e960ebddee11bd3523af439",
-      "bytes": 241870
+      "sha256": "aff4fbec6bcb33e7f95989ea73c264486afe2c05d6c23e0a13b7a79d022a6a3e",
+      "bytes": 228868
     }
   ],
   "references": [
@@ -267,7 +275,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T16:51:33.727Z",
+    "date": "2026-10-21T00:07:38.493Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -295,6 +303,13 @@
       "revision": "terrain-hump-water",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Re-export, geometry unchanged in every LOD (positions, UVs, triangles, ring, water profile, sockets): the meadow part of the cap now takes custom normals from the relief's slope without the border falloff's rise to the ring (_river.cap_shade_slope, geom.set_cap_normals), so the shallow bowl over the last 2 m no longer shades as a ridge along the tile border (owner, 2026-10-14; as meadow_base). The channel strip keeps its normals. Review docs/checkpoints/terrain-hump-water/sheet.jpg (before/after at noon and dusk, orbit, seams, eye level)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-flatten",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Meadow part via _river_flat.py (_river.py unchanged); same tris (3678/1704/724). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
     },
     {
       "who": "Paul Robello (owner)",

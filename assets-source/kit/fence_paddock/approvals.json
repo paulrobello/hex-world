@@ -14,6 +14,13 @@
     "notes": "Pending owner review; not an approval. Defect fix: LOD2 had no posts (two rail prisms per run and a full-height leaf slab, 78 tris), so under Force LOD 2 the fence read as two faint lines and was lost at play distance. LOD2 now draws every other post of each run (every corner and both gate posts kept) as an open three-sided prism, the same two rails, and the leaf as its top bar (168 tris, ceiling 175). LOD0, LOD1 and the collider are unchanged on decoded values. Review docs/checkpoints/fence-lod2/sheet.jpg. The controller records the owner's decision."
   },
   {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "terrain-flatten",
+    "requested": "2026-10-20",
+    "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Rebuilt on the new meadow relief (_terrain.meadow_relief instead of a copy); the paddock now stands on the flat plane; the six run boxes reach 0.13 m past their end posts (was 0.12) so two never share a corner on level ground (the walker keeps one part per run); same tris (1172/568/168). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
+  },
+  {
     "who": "Paul Robello (owner)",
     "when": "2026-10-20",
     "gate": "piece",

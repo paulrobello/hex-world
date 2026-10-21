@@ -11,7 +11,11 @@
     },
     {
       "path": "scripts/blender/kit/_hay_var.py",
-      "sha256": "3cdb7f20d613e73f8d761739980ea3779338ea0f6f3eb9d45dfeeb6e87cd9708"
+      "sha256": "18555e492c3e2041e50ec3817967a867d0a1ffd09bb428b19e6d01ec42c7e072"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
     }
   ],
   "lodTris": {

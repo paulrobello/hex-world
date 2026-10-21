@@ -1,6 +1,6 @@
 {
   "name": "river_straight_base",
-  "date": "2026-10-20T16:49:11.216Z",
+  "date": "2026-10-20T23:57:34.566Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -48,8 +48,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 153853,
-      "sha256": "8931b4af9dbbc952e94cb1da554a2f3f056ea5f812842f5a0718949457729230"
+      "bytes": 145903,
+      "sha256": "2ddfed16deb127e6384149b21e174fe294d87af3be3c56b59be2b0bb0b7795cc"
     },
     {
       "channel": "masks",
@@ -59,8 +59,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 149908,
-      "sha256": "6ea6363141d25fa89ba7592d436a506c52428613a9e5b01e5d3aee75c86bacd3"
+      "bytes": 141907,
+      "sha256": "c4db116fdf15c1c55fc5a86db0a568137e51e214a1363e8003f9dcd692a71589"
     },
     {
       "channel": "masks",
@@ -68,21 +68,21 @@
       "path": "assets/kit/p1/river_straight_base/river_straight_base.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 259773,
-      "sha256": "4e7967c2198a03603576306cfed5da2c1c41bb8bb2881359ec46a34dafc978e6"
+      "bytes": 246863,
+      "sha256": "83e8a257b4695dff862d60eb20f68b38f46c96300a0ad6aec61fb8415ac01f35"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 153853,
-      "astc": 149908
+      "bc7": 145903,
+      "astc": 141907
     },
-    "glbBytes": 87404
+    "glbBytes": 83432
   },
   "glb": {
-    "bytes": 87404,
-    "sha256": "3f9ca020fcdf7aa015f35b8405cadf2a76a25c2b4b7aa717d3aae8e401640d50"
+    "bytes": 83432,
+    "sha256": "16ef375b22ea1c99cb32c39e69bbd2fc93acc473b3744cdf6f9fcc11205a631f"
   }
 }

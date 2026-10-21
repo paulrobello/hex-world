@@ -13,7 +13,11 @@
     },
     {
       "path": "scripts/blender/kit/_hay_var.py",
-      "sha256": "3cdb7f20d613e73f8d761739980ea3779338ea0f6f3eb9d45dfeeb6e87cd9708"
+      "sha256": "18555e492c3e2041e50ec3817967a867d0a1ffd09bb428b19e6d01ec42c7e072"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
     }
   ],
   "authoringAgent": {
@@ -51,14 +55,14 @@
     },
     "bakeStats": {
       "albedoLuma": {
-        "mean": 0.47680962085723877,
+        "mean": 0.46954628825187683,
         "min": 0,
         "p01": 0,
         "p05": 0,
         "texels": 660018
       },
       "ao": {
-        "mean": 0.8109807372093201,
+        "mean": 0.8010057806968689,
         "min": 0,
         "p01": 0,
         "p05": 0,
@@ -67,7 +71,7 @@
       "islandFraction": 0.6294422149658203,
       "normalMissFraction": 0,
       "roughness": {
-        "mean": 0.7309045791625977,
+        "mean": 0.7204384207725525,
         "min": 0,
         "p01": 0,
         "p05": 0,
@@ -101,7 +105,7 @@
     },
     "device": "CPU",
     "extentZ": [
-      -0.068511463701725,
+      -0.06000000238418579,
       1.065750002861023
     ],
     "marginPx": 8,
@@ -116,30 +120,30 @@
       "shoulderM": 0.15,
       "sinkM": 0.06
     },
-    "receiverSignature": "223cb8d3da4a73494fccda1b1079a28ca9628e85c3195d8d12f7961abe8f67b3",
+    "receiverSignature": "30fbdcfbe0ce2f1b45ee607c0c700edaa81fa34508b22dbba8218ff0aff0cfb2",
     "samples": 32,
     "skipped": false,
     "texelDensityPerLod": [
       {
         "max": 476.96962719523344,
         "median": 418.1262804041953,
-        "min": 231.03245219815864
+        "min": 313.4349613950938
       },
       {
         "max": 485.63186792266265,
         "median": 427.70728645004044,
-        "min": 304.3188250731271
+        "min": 345.66357597509176
       },
       {
         "max": 538.0544303315522,
         "median": 431.0234267689438,
-        "min": 326.9413887554261
+        "min": 371.9196353703833
       }
     ],
     "texelDensityPxPerM": {
       "max": 476.96962719523344,
       "median": 418.1262804041953,
-      "min": 231.03245219815864
+      "min": 313.4349613950938
     }
   },
   "lods": [
@@ -167,7 +171,7 @@
   "texelDensityPxPerM": {
     "max": 476.96962719523344,
     "median": 418.1262804041953,
-    "min": 231.03245219815864
+    "min": 313.4349613950938
   },
   "compression": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
@@ -175,10 +179,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 917010,
-        "astc": 914644
+        "bc7": 906598,
+        "astc": 904769
       },
-      "glbBytes": 45976
+      "glbBytes": 45808
     },
     "textureEncodes": [
       {
@@ -189,8 +193,8 @@
         "transfer": "srgb",
         "vkFormat": 146,
         "levels": 11,
-        "bytes": 634639,
-        "sha256": "1288beb2ce3c8aebcd66d46d46e0aaa77ecea8c2c35e95bda251371be4aade1d"
+        "bytes": 626478,
+        "sha256": "b984b40412be26bde73704247fe55ecbf128784759b5405603b6197092c4330f"
       },
       {
         "channel": "albedo",
@@ -200,8 +204,8 @@
         "transfer": "srgb",
         "vkFormat": 158,
         "levels": 11,
-        "bytes": 630366,
-        "sha256": "7f4b7128494f0ae11dc7d79764b517de0fa55a92a9d4fc2308711d19437ecc73"
+        "bytes": 622513,
+        "sha256": "9844dd5a8771ebda76bb3f977ee721d9ad3eef5d2433f6dec53554f036a3373d"
       },
       {
         "channel": "albedo",
@@ -209,8 +213,8 @@
         "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.png",
         "format": "PNG",
         "transfer": "srgb",
-        "bytes": 1111910,
-        "sha256": "211a9c7bfa3535f2aa65d62b9fdf02889678462fa60a13253ff093a204b4ab40"
+        "bytes": 1098235,
+        "sha256": "129097a370eca3f496281f8fdf2861bcfa361749b7bcfd913108e929306a47ab"
       },
       {
         "channel": "masks",
@@ -251,8 +255,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 168166,
-        "sha256": "cabbec25f0a8650f45f1a56023db06fa689f1c216d252f524a31bbcce0fef704"
+        "bytes": 165707,
+        "sha256": "7b82f0018f6fb36ed27ebf5a578a6712865000de060f9e6a4c3f5c2a161b1db5"
       },
       {
         "channel": "normal",
@@ -262,8 +266,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 169606,
-        "sha256": "dea5d1e49d579bbd44f0e62f78436c3bdd8a5f7ea85a60ed3fe01ca59b0a9085"
+        "bytes": 167592,
+        "sha256": "327f00c3821e504a90002848674b03e53f862dd07c1afe877896c09b07a29a93"
       },
       {
         "channel": "normal",
@@ -271,8 +275,8 @@
         "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 295484,
-        "sha256": "414e579375a04303acf26f8000c0e8c7b9265cc9dfa049e99d50ba5b91a8a0e6"
+        "bytes": 291863,
+        "sha256": "e0fcaaac8d0cfc2cb66f6c644e1a05ccaa029782da0d4ae077c9a33806f06d04"
       },
       {
         "channel": "orm",
@@ -282,8 +286,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 113564,
-        "sha256": "e8341b33125d8a6f9edb840c37078eb76bbecab8aec4a7b7b591120026dc9099"
+        "bytes": 113772,
+        "sha256": "a1daa900b0c7fc04d7a78068a84a6663239553f54b999a1c11681f6a099c47b1"
       },
       {
         "channel": "orm",
@@ -293,8 +297,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 114031,
-        "sha256": "cf300026f333990276ce82de1effb91e142c48775fe0aec802e47c474d93d590"
+        "bytes": 114023,
+        "sha256": "9cc7eb84fb4e045b1d904d7682f9a7d4baaf4ae76948fcf54814634b2a4a5701"
       },
       {
         "channel": "orm",
@@ -302,31 +306,31 @@
         "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 197559,
-        "sha256": "4c6d0a020c19eca4b3a29f4af8030f40d45083d773de2197c380ba313fbbb67e"
+        "bytes": 195066,
+        "sha256": "159cef24ca578ecfc0500c1344a50736c9afe126eee61e9b3e374eb23f7e3343"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.glb",
-      "sha256": "9fa05baacb89d9a2e5e84a2e741632c9d9d2b4e741d5cf0e5507725bcba23221",
-      "bytes": 45976
+      "sha256": "d863e6d6310835f067f111256b94fa54e5a0cb71ce247134b05a4384ff922a98",
+      "bytes": 45808
     },
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.bc7.ktx2",
-      "sha256": "1288beb2ce3c8aebcd66d46d46e0aaa77ecea8c2c35e95bda251371be4aade1d",
-      "bytes": 634639
+      "sha256": "b984b40412be26bde73704247fe55ecbf128784759b5405603b6197092c4330f",
+      "bytes": 626478
     },
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.astc.ktx2",
-      "sha256": "7f4b7128494f0ae11dc7d79764b517de0fa55a92a9d4fc2308711d19437ecc73",
-      "bytes": 630366
+      "sha256": "9844dd5a8771ebda76bb3f977ee721d9ad3eef5d2433f6dec53554f036a3373d",
+      "bytes": 622513
     },
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.albedo.png",
-      "sha256": "211a9c7bfa3535f2aa65d62b9fdf02889678462fa60a13253ff093a204b4ab40",
-      "bytes": 1111910
+      "sha256": "129097a370eca3f496281f8fdf2861bcfa361749b7bcfd913108e929306a47ab",
+      "bytes": 1098235
     },
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.masks.bc7.ktx2",
@@ -345,33 +349,33 @@
     },
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.bc7.ktx2",
-      "sha256": "cabbec25f0a8650f45f1a56023db06fa689f1c216d252f524a31bbcce0fef704",
-      "bytes": 168166
+      "sha256": "7b82f0018f6fb36ed27ebf5a578a6712865000de060f9e6a4c3f5c2a161b1db5",
+      "bytes": 165707
     },
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.astc.ktx2",
-      "sha256": "dea5d1e49d579bbd44f0e62f78436c3bdd8a5f7ea85a60ed3fe01ca59b0a9085",
-      "bytes": 169606
+      "sha256": "327f00c3821e504a90002848674b03e53f862dd07c1afe877896c09b07a29a93",
+      "bytes": 167592
     },
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.normal.png",
-      "sha256": "414e579375a04303acf26f8000c0e8c7b9265cc9dfa049e99d50ba5b91a8a0e6",
-      "bytes": 295484
+      "sha256": "e0fcaaac8d0cfc2cb66f6c644e1a05ccaa029782da0d4ae077c9a33806f06d04",
+      "bytes": 291863
     },
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.bc7.ktx2",
-      "sha256": "e8341b33125d8a6f9edb840c37078eb76bbecab8aec4a7b7b591120026dc9099",
-      "bytes": 113564
+      "sha256": "a1daa900b0c7fc04d7a78068a84a6663239553f54b999a1c11681f6a099c47b1",
+      "bytes": 113772
     },
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.astc.ktx2",
-      "sha256": "cf300026f333990276ce82de1effb91e142c48775fe0aec802e47c474d93d590",
-      "bytes": 114031
+      "sha256": "9cc7eb84fb4e045b1d904d7682f9a7d4baaf4ae76948fcf54814634b2a4a5701",
+      "bytes": 114023
     },
     {
       "path": "assets/kit/p1/hay_bale_round_b/hay_bale_round_b.orm.png",
-      "sha256": "4c6d0a020c19eca4b3a29f4af8030f40d45083d773de2197c380ba313fbbb67e",
-      "bytes": 197559
+      "sha256": "159cef24ca578ecfc0500c1344a50736c9afe126eee61e9b3e374eb23f7e3343",
+      "bytes": 195066
     }
   ],
   "references": [
@@ -397,7 +401,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T22:43:09.888Z",
+    "date": "2026-10-21T00:08:13.279Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -436,6 +440,13 @@
       "revision": "bale-b-apron",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. The LOD2 straw-apron seam left by bale-seam-fix: each of the apron's six segments is one quad at LOD2, so its seam vertices carried that quad's facet normal, 27 deg off the LOD0 normals the normal map was baked against. LOD2's apron now takes LOD0's normals (same island, same point). Measured at LOD2: apron seam normal step 36.4 -> 4.5 deg (interior 2.6; LOD2 barrel seam 4.3). Same tris (792/240/76), positions, UVs and maps; LOD0 and LOD1 decode identical. Review docs/checkpoints/hay-bale-b-apron/sheet.jpg."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-flatten",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Rebuilt: the apron drapes on the new relief at the farm's round slots, which is now level (0 m); contact float -0.005 m at both slots; same tris (792/240/76). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
     },
     {
       "who": "Paul Robello (owner)",

@@ -10,6 +10,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
 import _spring  # noqa: E402
+import _spring_flat  # noqa: E402,F401  (the flattened meadow relief, owner D6-Q1)
 
 PIECE = "river_spring_base"
 # Per LOD: pool rings about the node as (radius, spokes), on the bowl's kinks 4.165 and 5.95 and

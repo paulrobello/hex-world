@@ -1,6 +1,6 @@
 {
   "name": "fence_paddock",
-  "date": "2026-10-20T22:40:59.675Z",
+  "date": "2026-10-21T00:06:30.388Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -79,10 +79,10 @@
       "bc7": 836,
       "astc": 824
     },
-    "glbBytes": 172976
+    "glbBytes": 170216
   },
   "glb": {
-    "bytes": 172976,
-    "sha256": "daf7fb382637d1c1296e6c8c3f3aea19981900034707254f7d0081acc9f230d2"
+    "bytes": 170216,
+    "sha256": "7dd981128fa7f54691d7d16e6313f990d0e76f4cc8d6b10e2e4a8c97145dd6c5"
   }
 }

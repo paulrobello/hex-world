@@ -9,7 +9,11 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_forest_edge.py",
-      "sha256": "52984d41c2e3883c37994390954f7f2a554d15f5203054bf84c2c529d46f1e5a"
+      "sha256": "20d51ebbd5773a001e719cb80dca4bfb7695132a388c27add02e779ecdb415ec"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
     }
   ],
   "authoringAgent": {
@@ -37,20 +41,20 @@
       {
         "maxFloatOverFloorM": 0.02,
         "meanFloatOverFloorM": 0.02,
-        "minClearanceOverRimLod1M": -0.0531,
+        "minClearanceOverRimLod1M": 0.0037,
         "minClearanceOverRimM": 0.02
       },
       {
         "maxFloatOverFloorM": 0.02,
         "meanFloatOverFloorM": 0.02,
-        "minClearanceOverRimLod0M": 0.0026,
-        "minClearanceOverRimLod2M": -0.0427,
+        "minClearanceOverRimLod0M": 0.0148,
+        "minClearanceOverRimLod2M": 0.0077,
         "minClearanceOverRimM": 0.02
       },
       {
         "maxFloatOverFloorM": 0.02,
         "meanFloatOverFloorM": 0.02,
-        "minClearanceOverRimLod1M": -0.0068,
+        "minClearanceOverRimLod1M": 0.0113,
         "minClearanceOverRimM": 0.02
       }
     ],
@@ -59,16 +63,16 @@
     "diveM": 0.06,
     "epsM": 0.02,
     "extM": 0.6,
-    "forestBaseSignature": "ffa2d8fc08f9f551e19249933c0358ca12a74f0fbcf0cbd2af8ba96d74487dae",
+    "forestBaseSignature": "93ccf212f53a9054e8e81b7b62e889b9061c887f3c626eca2483a549240af038",
     "marginPx": 12,
     "maskStats": {
-      "mean": 0.10924460738897324,
+      "mean": 0.10926374793052673,
       "min": 0,
       "p01": 0,
       "p05": 0,
       "texels": 216658
     },
-    "receiverSignature": "3a7feda02049761d6734b45908952d5d4c422a6925e6d785b80db920524b4c96",
+    "receiverSignature": "2da2de4cd4a91440e309da3536ce7a035700d1e6d999b6a27dff5080df59d3b4",
     "samples": 64,
     "skipped": false,
     "taper": [
@@ -76,9 +80,9 @@
       false
     ],
     "texelDensityPxPerM": {
-      "max": 15.999999254410914,
-      "median": 15.992241157903498,
-      "min": 15.704546887217317
+      "max": 16.00004040220303,
+      "median": 15.999329001794912,
+      "min": 15.673652062111719
     }
   },
   "lods": [
@@ -120,9 +124,9 @@
   ],
   "pivot": "hex_center",
   "texelDensityPxPerM": {
-    "max": 15.999999254410914,
-    "median": 15.992241157903498,
-    "min": 15.704546887217317
+    "max": 16.00004040220303,
+    "median": 15.999329001794912,
+    "min": 15.673652062111719
   },
   "compression": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
@@ -130,10 +134,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 9594,
-        "astc": 9529
+        "bc7": 8712,
+        "astc": 8634
       },
-      "glbBytes": 39676
+      "glbBytes": 36800
     },
     "textureEncodes": [
       {
@@ -144,8 +148,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 9594,
-        "sha256": "527c546595289d884d2026223a026631f03585383c3cc3f5988060ffc540aa44"
+        "bytes": 8712,
+        "sha256": "eaf05c8423ec2b5b41714b596299754d41f11c192848f6130588a99af0d12766"
       },
       {
         "channel": "masks",
@@ -155,8 +159,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 9529,
-        "sha256": "e5b75adc768b6c46beb985b5f5b82719f28341ca93dc68c25499fcd17d29af60"
+        "bytes": 8634,
+        "sha256": "7835b31542fee7a8e10e252b3c52e8203a13bdefdc8d7c8608368edf0a161a69"
       },
       {
         "channel": "masks",
@@ -164,31 +168,31 @@
         "path": "assets/kit/p1/forest_forest_edge_e2/forest_forest_edge_e2.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 13142,
-        "sha256": "7aeb03629b1edf2e2104b3b1f1d7b1ac249f034520a2e7fe4239d2a454faf183"
+        "bytes": 11230,
+        "sha256": "498ac116595d216d6d7754c9c22c844dec2d3a84a51d7363f47d6df02b564061"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/forest_forest_edge_e2/forest_forest_edge_e2.glb",
-      "sha256": "18593d16fc40f224dae6151eb72b048c48885061bda6de3bce746dc9cbc545ad",
-      "bytes": 39676
+      "sha256": "6af90a794ccf4d5ffe6f2f52cf063e0d74197725576381eff047b13e3a51c1f5",
+      "bytes": 36800
     },
     {
       "path": "assets/kit/p1/forest_forest_edge_e2/forest_forest_edge_e2.masks.bc7.ktx2",
-      "sha256": "527c546595289d884d2026223a026631f03585383c3cc3f5988060ffc540aa44",
-      "bytes": 9594
+      "sha256": "eaf05c8423ec2b5b41714b596299754d41f11c192848f6130588a99af0d12766",
+      "bytes": 8712
     },
     {
       "path": "assets/kit/p1/forest_forest_edge_e2/forest_forest_edge_e2.masks.astc.ktx2",
-      "sha256": "e5b75adc768b6c46beb985b5f5b82719f28341ca93dc68c25499fcd17d29af60",
-      "bytes": 9529
+      "sha256": "7835b31542fee7a8e10e252b3c52e8203a13bdefdc8d7c8608368edf0a161a69",
+      "bytes": 8634
     },
     {
       "path": "assets/kit/p1/forest_forest_edge_e2/forest_forest_edge_e2.masks.png",
-      "sha256": "7aeb03629b1edf2e2104b3b1f1d7b1ac249f034520a2e7fe4239d2a454faf183",
-      "bytes": 13142
+      "sha256": "498ac116595d216d6d7754c9c22c844dec2d3a84a51d7363f47d6df02b564061",
+      "bytes": 11230
     }
   ],
   "references": [
@@ -214,7 +218,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T16:18:20.167Z",
+    "date": "2026-10-21T00:07:52.895Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -256,6 +260,13 @@
       "revision": "terrain-hump",
       "requested": "2026-10-20",
       "notes": "Re-export, geometry unchanged: the overlay's custom normals follow forest_base's new shading slope (no falloff rise at the border), so the forest/forest seam shades as the cap beside it. Review docs/checkpoints/terrain-hump/sheet.jpg (3x3 forest field)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "revision": "terrain-flatten",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. Owner D6-Q1 (2026-10-20): the border rise flattened in geometry. The cap relief (scripts/blender/kit/_terrain.py) now carves hollows only where the swell exceeds one half, on a plane level with the border ring, so the cap no longer rises to the ring along every border; z stays in [-0.25, 0] and the ring is unchanged in every LOD. Rebuilt over the new forest_base cap (the overlay follows it in every LOD). Review docs/checkpoints/terrain-flatten/sheet.jpg. The controller records the owner's decision."
     }
   ]
 }
