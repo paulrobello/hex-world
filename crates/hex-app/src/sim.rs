@@ -11,7 +11,8 @@ use hex_play::{
     play::{PlaySystems, rise::PlayRises},
     trains::{StockKind, StockPose, TrainsView},
 };
-use hex_sim::{SimConfig, Simulation, TICK_HZ};
+use hex_render::{GateConfig, post::QualityTier};
+use hex_sim::{HIGH_TIER_CAR_CAP, SimConfig, Simulation, TICK_HZ};
 use serde_json::{Value, json};
 
 use crate::game::{GameEvent, GameState};
@@ -26,7 +27,7 @@ pub struct SimPlugin;
 impl Plugin for SimPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Time::<Fixed>::from_hz(f64::from(TICK_HZ)))
-            .add_systems(FixedUpdate, tick)
+            .add_systems(FixedUpdate, (follow_tier, tick).chain())
             .configure_sets(
                 Update,
                 PlaySystems
@@ -40,6 +41,12 @@ impl Plugin for SimPlugin {
                     .before(crate::control::publish_state),
             );
     }
+}
+
+/// The world's car cap at `tier`: PRD §7.2's 300 at High, scaled by §9.2's agent caps (Low 75,
+/// Medium 150, High and Ultra 300), as the boid budget is.
+pub fn car_cap(tier: QualityTier) -> usize {
+    HIGH_TIER_CAR_CAP * tier.agent_cap_percent() as usize / 100
 }
 
 /// What the state JSON reports about the cars, refreshed after every tick and world edit.
@@ -241,6 +248,22 @@ impl CarSim {
         self.ticks
     }
 
+    /// The world's car cap in force.
+    pub fn car_cap(&self) -> usize {
+        self.sim.config().max_cars
+    }
+
+    /// Applies a new car cap (a quality-tier change): lowering it removes the newest cars at once,
+    /// raising it parks the missing ones (`Simulation::set_max_cars`). Returns whether it changed.
+    pub fn set_car_cap(&mut self, cap: usize) -> bool {
+        if self.car_cap() == cap {
+            return false;
+        }
+        self.sim.set_max_cars(cap);
+        self.refresh();
+        true
+    }
+
     fn refresh(&mut self) {
         self.stats = SimStats {
             cars: self.sim.cars().len(),
@@ -292,6 +315,7 @@ impl CarSim {
         let rate = (f64::from(self.stats.spawn_rate_hz) * 1e6).round() / 1e6;
         map.insert("cars".into(), json!(self.stats.cars));
         map.insert("parked_cars".into(), json!(self.stats.parked_cars));
+        map.insert("car_cap".into(), json!(self.car_cap()));
         let round = |v: f32| (f64::from(v) * 100.0).round() / 100.0;
         map.insert(
             "car_list".into(),
@@ -429,6 +453,14 @@ pub fn mirror_world(
         sim.mirror_gated(&game.world, &game.catalog, |c| rises.agents_ready(c));
     } else {
         sim.mirror(&game.world, &game.catalog);
+    }
+}
+
+/// Keeps the car cap on the quality tier in force (`GateConfig::tier`): startup detection, the
+/// probe's step-down and `set_tier` all change it there.
+pub fn follow_tier(gate: Option<Res<GateConfig>>, mut sim: ResMut<CarSim>) {
+    if let Some(gate) = gate {
+        sim.set_car_cap(car_cap(gate.tier));
     }
 }
 
@@ -732,6 +764,57 @@ mod tests {
     /// The trip events of the cars proof layout over two simulated minutes: every pull-out is at
     /// the car's spot as it was parked, every park at the spot the car was driving to, a car parks
     /// only after it pulled out, and the driving count is pull-outs minus parks throughout.
+    /// The car cap follows the tier in `GateConfig` (PRD §7.2, §9.2): 75, 150, 300 and 300.
+    #[test]
+    fn car_cap_follows_the_quality_tier() {
+        use bevy::ecs::system::RunSystemOnce;
+        assert_eq!(
+            [
+                QualityTier::Low,
+                QualityTier::Medium,
+                QualityTier::High,
+                QualityTier::Ultra
+            ]
+            .map(car_cap),
+            [75, 150, 300, 300]
+        );
+        let json = include_str!("../../../docs/checkpoints/cars/cars.json");
+        let mut g = GameState::new(1);
+        for c in parse_script(json).unwrap() {
+            if matches!(&c, Command::DumpState { name } if name == "cars-01-connected") {
+                break;
+            }
+            if let Some(a) = c.action() {
+                g.apply(a);
+            }
+        }
+        let mut world = bevy::ecs::world::World::new();
+        world.insert_resource(CarSim::new(&g.world, &g.catalog));
+        let full = world.resource::<CarSim>().sim.car_count();
+        assert!(full > 1, "the checkpoint world has {full} cars");
+        /// Sets the tier, runs `follow_tier` and returns the cap and the car count.
+        fn tier(world: &mut bevy::ecs::world::World, t: QualityTier) -> (usize, usize) {
+            world.insert_resource(GateConfig {
+                tier: t,
+                ..Default::default()
+            });
+            world.run_system_once(follow_tier).unwrap();
+            let sim = &world.resource::<CarSim>().sim;
+            (sim.config().max_cars, sim.car_count())
+        }
+        assert_eq!(tier(&mut world, QualityTier::High), (300, full));
+        // A cap below the world's cars removes the newest at once; the state reports the cap.
+        world.resource_mut::<CarSim>().set_car_cap(1);
+        assert_eq!(world.resource::<CarSim>().sim.car_count(), 1);
+        let mut play = serde_json::json!({});
+        world.resource::<CarSim>().extend_state(&mut play);
+        assert_eq!(play["car_cap"], 1);
+        let cars = play["cars"].as_u64().unwrap() + play["parked_cars"].as_u64().unwrap();
+        assert_eq!(cars, 1);
+        // Raising the cap again (to Low's 75) parks the missing cars.
+        assert_eq!(tier(&mut world, QualityTier::Low), (75, full));
+    }
+
     #[test]
     fn ticks_report_each_pull_out_and_park_at_the_spot() {
         let json = include_str!("../../../docs/checkpoints/cars/cars.json");

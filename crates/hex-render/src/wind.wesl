@@ -1,5 +1,6 @@
-// `hex_render::wind`: the world's wind field, shared by every swaying material (grass blades now,
-// tree sway later; crates/hex-render/src/play/grass.rs). Embedded like kit_common: an asset-path
+// `hex_render::wind`: the world's wind field, shared by every swaying material (the grass blades,
+// crates/hex-render/src/play/grass.rs, and the kit foliage of foliage_wind.wesl: trees, reeds,
+// cattails and wildflowers). Embedded like kit_common: an asset-path
 // WESL import 404s on the web. Declares no bindings and samples nothing (no sampled-texture
 // budget is left beside refracting water); all noise is integer-hashed value noise, unrolled.
 //

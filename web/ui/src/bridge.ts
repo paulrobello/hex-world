@@ -310,6 +310,8 @@ export interface PlayState {
   cars: number;
   /** Cars standing in house parking spots (PRD §7.1). */
   parked_cars: number;
+  /** The world's car cap at the quality tier in force (PRD §7.2: 75, 150, 300 and 300). */
+  car_cap: number;
   /** Every driving car and the part of its trip it is on. */
   car_list: CarInfo[];
   connected_destinations: number;
@@ -697,6 +699,7 @@ export const STATE_FIELDS = {
     recent_events: true,
     cars: true,
     parked_cars: true,
+    car_cap: true,
     car_list: true,
     connected_destinations: true,
     spawn_rate_hz: true,

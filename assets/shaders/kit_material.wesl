@@ -15,6 +15,8 @@ import bevy_pbr::render::{mesh_types, pbr_functions};
 @if(KIT_INSTANCED)
 import hex_render::kit_instances;
 import hex_render::{kit_common, hooks, water_common};
+@if(VISIBILITY_RANGE_DITHER)
+import bevy_pbr::render::pbr_functions::visibility_range_dither;
 
 @if(PREPASS_PIPELINE)
 import bevy_pbr::{
@@ -37,6 +39,11 @@ const DRY_SAND_OVER_SEABED: vec3<f32> = vec3(1.8285, 1.8762, 1.953);
 
 @fragment
 fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> FragmentOutput {
+    // A LOD in its VisibilityRange cross-fade band keeps the pixels its dither pattern gives it, the
+    // pattern kit_prepass.wesl writes depth with, so the band never draws both LODs in colour.
+@if(VISIBILITY_RANGE_DITHER)
+    visibility_range_dither(in.position, in.visibility_range_dither);
+
     // Foliage (an alpha-masked, double-sided slot such as leaf cards) shades its back faces with the
     // front normal: the card normals are authored as one rounded canopy (spherical-normal transfer),
     // and Bevy's back-face flip would turn half of them away from the sky (hero oak look pass).

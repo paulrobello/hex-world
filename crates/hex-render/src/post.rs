@@ -26,6 +26,16 @@ impl QualityTier {
             _ => None,
         }
     }
+
+    /// PRD §9.2's agent caps: the share of the High reference caps (§7.2) this tier allows, in
+    /// percent. The boid budget and the car cap both scale by it.
+    pub fn agent_cap_percent(self) -> u32 {
+        match self {
+            QualityTier::Low => 25,
+            QualityTier::Medium => 50,
+            QualityTier::High | QualityTier::Ultra => 100,
+        }
+    }
 }
 
 /// Components for the camera at a tier. TAA requires MSAA off. Required components pull in

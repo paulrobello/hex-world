@@ -417,6 +417,43 @@ impl Simulation {
         &self.config
     }
 
+    /// Changes the world's car cap (a quality-tier change, PRD §7.2). Lowering it removes the
+    /// newest cars, parked or driving, until `max_cars` remain, freeing their spots; raising it
+    /// gives the clusters their missing cars, parked. Deterministic: ids decide which cars go.
+    pub fn set_max_cars(&mut self, max_cars: usize) {
+        self.config.max_cars = max_cars;
+        let excess = self.car_count().saturating_sub(max_cars);
+        if excess > 0 {
+            let mut ids: Vec<CarId> = self
+                .cars
+                .iter()
+                .map(|c| c.id)
+                .chain(self.parked.iter().map(|c| c.id))
+                .collect();
+            ids.sort_unstable();
+            let gone: std::collections::BTreeSet<CarId> =
+                ids.split_off(ids.len() - excess).into_iter().collect();
+            let freed: Vec<(SpotRef, CarId)> = self
+                .cars
+                .iter()
+                .filter(|c| gone.contains(&c.id))
+                .map(|c| (c.to, c.id))
+                .chain(
+                    self.parked
+                        .iter()
+                        .filter(|c| gone.contains(&c.id))
+                        .map(|c| (c.spot, c.id)),
+                )
+                .collect();
+            self.cars.retain(|c| !gone.contains(&c.id));
+            self.parked.retain(|c| !gone.contains(&c.id));
+            for (spot, id) in freed {
+                self.release(spot, id);
+            }
+        }
+        self.refill();
+    }
+
     /// Mirrors a tile placed at `cell`. Replacing a tile removes the cars routed over it and the
     /// cars of the cluster it replaces. A tile with parking gets its owned cars, parked.
     pub fn apply_place(&mut self, cell: Axial, def: &TileDef, rotation: u8) {

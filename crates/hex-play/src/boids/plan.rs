@@ -39,14 +39,11 @@ impl BoidBudget {
         fish_per_water_tile: 12,
     };
 
-    /// The caps per tier: PRD §9.2's agent caps (Low 25%, Medium 50%, High and Ultra 100%) applied to
-    /// the High budget. The per-water-tile fish density stays, so only the caps shrink.
+    /// The caps per tier: PRD §9.2's agent caps (`QualityTier::agent_cap_percent`: Low 25%, Medium
+    /// 50%, High and Ultra 100%) applied to the High budget. The per-water-tile fish density stays,
+    /// so only the caps shrink.
     pub fn for_tier(tier: QualityTier) -> BoidBudget {
-        let percent = match tier {
-            QualityTier::Low => 25,
-            QualityTier::Medium => 50,
-            QualityTier::High | QualityTier::Ultra => 100,
-        };
+        let percent = tier.agent_cap_percent();
         BoidBudget {
             total: Self::HIGH.total * percent / 100,
             fish_max: Self::HIGH.fish_max * percent / 100,

@@ -250,5 +250,11 @@ fn vertex(vertex_no_morph: Vertex) -> KitVertexOutput {
         local.tangent = vec4(posed.tangent, local.tangent.w);
     }
 }
-    return shade_kit_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index);
+    var out = shade_kit_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index);
+    // The LOD cross-fade level of this entity's VisibilityRange band, as bevy's mesh.wesl writes it;
+    // kit_material.wesl dithers on it like the prepass, so two LODs split the band pixel for pixel.
+@if(VISIBILITY_RANGE_DITHER)
+    out.visibility_range_dither = mesh_functions::get_visibility_range_dither_level(
+        vertex_no_morph.instance_index, mesh_world_from_local[3]);
+    return out;
 }

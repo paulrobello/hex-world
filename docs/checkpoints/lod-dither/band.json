@@ -1,0 +1,9 @@
+[
+  {"cmd":"camera","pos":[0,50,150],"look_at":[0,0,0]},
+  {"cmd":"wait","frames":90},
+  {"cmd":"screenshot","name":"lod-band"},
+  {"cmd":"debug","lod_tint":true,"force_lod":"auto","perf":false,"grid":false,"sockets":false,"colliders":false,"scatter":false,"networks":false},
+  {"cmd":"wait","frames":30},
+  {"cmd":"screenshot","name":"lod-band-tint"},
+  {"cmd":"exit"}
+]

@@ -105,7 +105,7 @@ impl Default for SavedSettings {
                 master: 0.8,
                 music: 0.55,
                 sfx: 0.75,
-                ambience: 0.7,
+                ambience: 0.1,
                 ui: 0.5,
             },
         }

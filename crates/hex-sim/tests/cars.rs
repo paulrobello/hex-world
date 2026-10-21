@@ -278,6 +278,61 @@ fn car_count_never_exceeds_the_cap() {
     assert!(peak > 0);
 }
 
+/// A quality-tier change (PRD §7.2): lowering the cap removes the newest cars at once, parked or
+/// driving, and frees their spots; raising it parks the missing cars again. Same seed, same result.
+#[test]
+fn lowering_the_cap_removes_the_newest_cars_and_raising_it_refills() {
+    let run = || {
+        let mut scene = Scene::with(13, busy(), &ring_and_pair());
+        let full = scene.sim.car_count();
+        while scene.sim.cars().len() < 2 {
+            scene.sim.tick();
+        }
+        let mut before: Vec<CarId> = scene
+            .sim
+            .cars()
+            .iter()
+            .map(|c| c.id())
+            .chain(scene.sim.parked().iter().map(|c| c.id()))
+            .collect();
+        before.sort();
+        scene.sim.set_max_cars(2);
+        assert_eq!(scene.sim.config().max_cars, 2);
+        let mut kept: Vec<CarId> = scene
+            .sim
+            .cars()
+            .iter()
+            .map(|c| c.id())
+            .chain(scene.sim.parked().iter().map(|c| c.id()))
+            .collect();
+        kept.sort();
+        assert_eq!(kept, before[..2], "the two oldest cars stay");
+        // No spot is held by a car that is gone.
+        let clusters = [
+            ring_house(0),
+            ring_house(2),
+            ring_house(4),
+            Axial::new(4, 0),
+            Axial::new(5, 0),
+        ];
+        for cell in clusters {
+            assert!(!scene.sim.spots(cell).is_empty());
+            for (_, holder) in scene.sim.spots(cell) {
+                assert!(holder.is_none_or(|id| kept.contains(&id)), "{holder:?}");
+            }
+        }
+        for _ in 0..400 {
+            scene.sim.tick();
+            assert!(scene.sim.car_count() <= 2);
+        }
+        let low = snapshot(&scene.sim);
+        scene.sim.set_max_cars(HIGH_TIER_CAR_CAP);
+        assert_eq!(scene.sim.car_count(), full, "every house has its car again");
+        (kept, low, snapshot(&scene.sim))
+    };
+    assert_eq!(run(), run());
+}
+
 #[test]
 fn car_parks_the_tick_after_it_arrives() {
     let mut scene = Scene::with(17, busy(), &house_chain());

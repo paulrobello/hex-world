@@ -583,6 +583,36 @@ mod tests {
         }
     }
 
+    /// `SavedSettings::default` mirrors the web audio layer's `DEFAULTS` (`web/ui/src/audio.ts`),
+    /// whose `effects` and `interface` buses the save spells `sfx` and `ui`.
+    #[test]
+    fn default_volumes_match_the_web_audio_defaults() {
+        const AUDIO_TS: &str = include_str!("../../../web/ui/src/audio.ts");
+        let line = AUDIO_TS
+            .lines()
+            .find(|l| l.starts_with("const DEFAULTS: Volumes = {"))
+            .expect("audio.ts declares DEFAULTS on one line");
+        let web = |bus: &str| -> f32 {
+            let at = line
+                .find(&format!("{bus}: "))
+                .unwrap_or_else(|| panic!("no {bus}"));
+            let rest = &line[at + bus.len() + 2..];
+            let end = rest.find([',', ' ', '}']).unwrap_or(rest.len());
+            rest[..end].parse().unwrap_or_else(|e| panic!("{bus}: {e}"))
+        };
+        let v = SavedSettings::default().volumes;
+        assert_eq!(
+            [v.master, v.music, v.sfx, v.ambience, v.ui],
+            [
+                web("master"),
+                web("music"),
+                web("effects"),
+                web("ambience"),
+                web("interface")
+            ]
+        );
+    }
+
     #[test]
     fn save_then_load_through_the_commands_keeps_world_history_camera_and_settings() {
         let _outbox = outbox();

@@ -333,7 +333,12 @@ fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
         local.tangent = vec4(posed.tangent, local.tangent.w);
     }
 }
-    return shade_kit_prepass_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index);
+    var out = shade_kit_prepass_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index);
+    // The LOD cross-fade level, as bevy's prepass.wesl writes it (the fragment dithers on it).
+@if(VISIBILITY_RANGE_DITHER)
+    out.visibility_range_dither = mesh_functions::get_visibility_range_dither_level(
+        vertex_no_morph.instance_index, mesh_world_from_local[3]);
+    return out;
 }
 
 @if(PREPASS_FRAGMENT)

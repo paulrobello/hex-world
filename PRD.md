@@ -295,7 +295,7 @@ About 10 types. The exact variants are frozen at the start of P2. With the owner
 | Pedestrians | Walk sidewalk lanes in towns. | P6 |
 
 - Agent caps scale with the quality tier (reference target: 300 vehicles, 500 animals and 1,000 boids at High, split between birds and fish: fish scaled to the water tiles in the world up to 300, birds to the land tiles up to 75% of the slots the fish leave).
-  - Built so far: the boid budget scales (Low 250, Medium 500, High and Ultra 1,000; fish up to 75, 150 and 300). The car cap is a fixed 300 at every tier, which deviates from this rule (`docs/review/2026-10-14-prd-drift.md`).
+  - Built so far: the boid budget scales (Low 250, Medium 500, High and Ultra 1,000; fish up to 75, 150 and 300), and so does the car cap (Low 75, Medium 150, High and Ultra 300), both by `QualityTier::agent_cap_percent`. A tier change applies the new car cap at once: a lower cap removes the newest cars, parked or driving, and a higher one parks the missing cars in their houses' spots.
 - Agents are simulated at a fixed 20 Hz tick and interpolated at render time. Off-screen agents drop to a coarse simulation LOD (not built yet).
 - Cars follow lane paths built as polylines, with arcs sampled every 5°, driving up to 1.5 m right of the road's centre line.
 - Skinned creatures use baked animation (vertex animation textures or a bone-transform atlas) so they can be GPU-instanced. No per-agent CPU skinning.
@@ -369,7 +369,7 @@ The deterministic simulation core (grid, sockets, networks, pathing, agents) run
 - Bulldoze dust: a bulldozed tile sinks inside a dust cloud of at most 120 particles, at 80% of its first size and duration and clear 2.24 s after the bulldoze (owner, 2026-10-14). A tile taken down by undo or redo sinks with a smaller puff around its rim, and a replaced tile sinks with no dust.
 - Culling: GPU frustum and Hi-Z occlusion culling with indirect draws, organized in chunks (for example 7- or 19-hex clusters).
 - LOD: three mesh LODs per kit piece with distance and screen-size selection and dithered cross-fade. Far chunks use merged meshes.
-  - Built so far: GPU and Hi-Z occlusion culling with indirect draws are not built. Chunks of 7 or 19 hexes, merged chunk meshes and CPU chunk culling exist only in the `gate2000` perf layouts (`layout=chunks`, `layout=instanced`); play uses neither. LODs switch by distance only, at 150 m and 400 m with a 10 m `VisibilityRange` band. The band dithers in the prepass but not in the kit forward shader, so both LODs draw in colour across it (a deviation, see the drift report).
+  - Built so far: GPU and Hi-Z occlusion culling with indirect draws are not built. Chunks of 7 or 19 hexes, merged chunk meshes and CPU chunk culling exist only in the `gate2000` perf layouts (`layout=chunks`, `layout=instanced`); play uses neither. LODs switch by distance only, at 150 m and 400 m. Per-entity kit pieces (a tile's pieces while they rise, rotors such as windmill sails, cars, trains, boats and the `kit` scenario) cross-fade over a 10 m `VisibilityRange` band, dithered alike in the prepass, the shadow passes and colour, so each pixel of the band shows one LOD (2026-10-21, `docs/checkpoints/lod-dither/`; before it, the kit shaders never wrote the dither level, so both LODs drew in full across the band). Settled play pieces draw through the instanced chunk path, which picks one LOD per chunk from the camera's distance to the chunk centre and switches it with no band.
 
 ### 9.2 Quality tiers
 
@@ -382,16 +382,16 @@ The deterministic simulation core (grid, sockets, networks, pathing, agents) run
 
 The tier is auto-detected on first run from adapter info and a short benchmark, and the player can override it.
 
-As built (2026-10-14; `hex-play/src/tier.rs` and `hex-play/src/boids/plan.rs`, plus `hex-render/src/post.rs` and `hex-render/src/water.rs`, under `crates/`):
+As built (2026-10-14, cars 2026-10-21; `hex-play/src/tier.rs`, `hex-play/src/boids/plan.rs` and `hex-app/src/sim.rs`, plus `hex-render/src/post.rs` and `hex-render/src/water.rs`, under `crates/`):
 
-| Tier | Resolution scale | Shadows | AO | Water | Boids (fish at most) | Grass | Tilt-shift taps |
-|---|---|---|---|---|---|---|---|
-| Low | 1.0 | 4 cascades, default map | off | no refraction, 4 waves | 250 (75) | off | off |
-| Medium | 1.0 | same | off | refraction, one caustic layer, 6 waves | 500 (150) | off | 8 |
-| High | 1.0 | same | SSAO | refraction, two caustic layers, SSR, 8 waves | 1,000 (300) | on | 16 |
-| Ultra | 1.0 | same | SSAO | as High | 1,000 (300) | on | 24 |
+| Tier | Resolution scale | Shadows | AO | Water | Boids (fish at most) | Cars | Grass | Tilt-shift taps |
+|---|---|---|---|---|---|---|---|---|
+| Low | 1.0 | 4 cascades, default map | off | no refraction, 4 waves | 250 (75) | 75 | off | off |
+| Medium | 1.0 | same | off | refraction, one caustic layer, 6 waves | 500 (150) | 150 | off | 8 |
+| High | 1.0 | same | SSAO | refraction, two caustic layers, SSR, 8 waves | 1,000 (300) | 300 | on | 16 |
+| Ultra | 1.0 | same | SSAO | as High | 1,000 (300) | 300 | on | 24 |
 
-- Not built yet: the resolution scales, per-tier shadow cascades and map sizes, Medium's half-resolution AO, and Ultra's TAA-upsampled detail, 4k shadows, bent normals and planar reflection. With tilt-shift off by default, Ultra renders the same as High. The car cap does not follow the tier (§7.2).
+- Not built yet: the resolution scales, per-tier shadow cascades and map sizes, Medium's half-resolution AO, and Ultra's TAA-upsampled detail, 4k shadows, bent normals and planar reflection. With tilt-shift off by default, Ultra renders the same as High.
 - Detection never picks Ultra: a player picks it in Settings (offered when detection lands on High), or `?tier=ultra` sets it. On the web a warm-up probe reads frames 50–109 and steps down one tier when their median exceeds 25 ms. An explicit `tier` key always wins, and loading a save applies its quality unless a `tier` key is set. Rules: [`docs/agent-operability.md`](docs/agent-operability.md#quality-tier).
 - A quality change rebuilds the scene behind the loading panel (§4.8): one blocking rebuild frame, 0.21–0.48 s warm on the 208-tile water world, and about 3.2 s more in the browser's GPU process with a cold Metal shader cache (`docs/checkpoints/tier-change/`, `e2e/tier-stall.mjs`).
 
@@ -533,7 +533,7 @@ Following `~/.claude/guides/agent-operability.md`, both the native and web build
 ## 13. Deployment
 
 - GitHub Actions on push to `main`: build the WASM (release, `wasm-opt`), build the web bundle, run the gates, and deploy to Pages with `actions/deploy-pages`.
-  - As built (`.github/workflows/ci.yml`): a check job runs `make fmt-check`, `ui-check`, `lint`, `typecheck` and `test`; a web job runs `make web-size` (the Trunk release build with `wasm-opt` `z` and the 12 MiB gzip wasm gate) and deploys with `actions/deploy-pages`. CI does not run the initial-download gate; `make checkall-ci` runs it locally before a push.
+  - As built (`.github/workflows/ci.yml`): one job per concern runs `make fmt-check`, `ui-check` and `shots-test`, `lint`, `typecheck` and `check-wgpu`, and `test` (on ubuntu and macOS); a web job runs `make web-size` (the Trunk release build with `wasm-opt` `z` and the 12 MiB gzip wasm gate) and `make initial-download` (the 30 MiB gate) on that build, and deploys with `actions/deploy-pages`. CI does not run `make audio-check`: its runners have no ffmpeg, and Ubuntu's apt `ffmpeg` is 70 packages, 54 MB to download and 131 MB installed (Ubuntu 24.04 arm64, 2026-10-21), and its loudness readings against the committed masters are not yet proven on Linux, so `make audio-check` runs only locally.
 - Local play and review servers: `scripts/dev/serve.py <port> <dir>` serves `dist/` on 8094 after `make build-web` and the repo on 8095 for review pages, with a deep listen backlog and `Cache-Control: no-cache`, so a rebuilt kit GLB is never served from the browser's cache (`012d88e`, `1cc6d26`).
 - A `CNAME` file containing `hex-world.pardev.net`, plus a Cloudflare DNS CNAME record pointing to `paulrobello.github.io` (DNS-only, so GitHub can issue the TLS certificate). HTTPS is enforced.
 - Fingerprinted asset filenames with long cache lifetimes. The manifest has a short cache lifetime.
