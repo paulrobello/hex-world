@@ -11,8 +11,10 @@ NOTES = {
     "intro": (
         "Each pair shows the image committed before this re-take (left, copied into rich3-before/, labelled with its "
         "commit, date and the grade it was shot on) and the re-take on main f80b27c with the default grade rich-3 "
-        "(ACES fitted at EV100 12.5 with a +0.013 linear shadow lift; every new state dump reports grade rich-3). "
-        "Cameras, seed and scripts are unchanged. Most earlier images were taken on tony (TonyMcMapface EV100 12.9), "
+        "(ACES fitted at EV100 12.5 with a +0.013 linear shadow lift). No run passes a grade flag or command; "
+        "every new state dump reports grade rich-3, and the wet band and bend 60 runs, which write no dump, use the "
+        "same binary and default. Cameras, seed and scripts are unchanged except water play's three bulldoze "
+        "waits.Most earlier images were taken on tony (TonyMcMapface EV100 12.9), "
         "the wet band and most water look-dev stills on the earlier aces look, and the river fork and river bend 60 "
         "already on rich-3, so those two pairs show only content changes since 2026-10-20. Other differences in "
         "boats, fish, gulls, grass and dust are newer content, not the grade. Click an image for full size."),
@@ -23,20 +25,21 @@ NOTES = {
         "(skirt-o4/sheet.py)."),
     "river": (
         "Water and banks read richer (saturation +10%) and slightly darker overall. The mouth wall facing away from "
-        "the sun stays near black (8/255, tony 10), darker than the backdrop; the bridge arch underside reads as "
-        "before."),
+        "the sun stays near black (8/255, tony 10), darker than the backdrop. The bridge's shaded face (05) drops "
+        "from 30/255 on tony to 17, so the stonework that read as grey now barely separates from the backdrop "
+        "(14)."),
     "bend60": "Before and after are both rich-3: no grade change to check here, only content since 2026-10-20.",
     "fork": ("Before and after are both rich-3 (luma and saturation match within 0.5): the pair confirms nothing "
              "drifted since 2026-10-20."),
     "mouth": ("Sand and sea read warmer and more saturated (+9%); the fan, foam and the grass line are unchanged in "
               "shape. The shaded wall under the mirrored fan (05) is near black."),
     "beach": "Sand is a little brighter and the water more saturated (+10%).",
-    "coast": ("Ocean and sand more saturated (+14%), brightness unchanged. Shaded coast walls stay dark but brown "
-              "rather than black."),
+    "coast": "Ocean and sand more saturated (+14%), brightness unchanged.",
     "wetband": ("Compared with the older aces look: brighter (+5%) and less saturated, so the waterline reads "
                 "lighter."),
-    "waterplay": ("Water more saturated (+15%). 11 to 13 (bulldoze, undo, redo) are now mostly hidden by the "
-                  "bulldoze dust cloud added 2026-10-14: the script shoots before the dust clears."),
+    "waterplay": ("Water more saturated (+15%). 11 to 13 (bulldoze, undo, redo) now wait 240 frames for the "
+                  "bulldoze dust (added 2026-10-14, about 2.2 s) to clear, so they show the cut ocean face that the "
+                  "earlier frames had under the dust or before it existed."),
     "water": ("Compared with the older aces look (the overview with tony). These stills are the water look-dev "
               "scenario's placeholder world. The shaded river cut wall in water-edge-river is near black."),
     "pickup": ("New: three close-ups of driving pickups (green, teal, white paint) on the cars-kit road tree, taken "
@@ -48,6 +51,7 @@ NOTES = {
 }
 
 T14 = "9c80a87, 2026-10-14, tony"
+M14 = "374b1f6, 2026-10-14, tony (state dump)"
 # (section id, title, [(before folder under rich3-before, after folder relative to the repo root, before label,
 #  file glob)], extra after-only files relative to the repo root)
 FAMILIES = [
@@ -59,8 +63,10 @@ FAMILIES = [
     ("fork", "River fork", [("river-fork", "docs/checkpoints/river_fork", "681c432, 2026-10-20, rich-3 (rf-state.json)",
                              "*.jpg")], []),
     ("mouth", "River mouth and spring",
-     [("river-mouth", "docs/checkpoints/river-mouth", "374b1f6 / a36663b, 2026-10-14 (state dump: tony)",
-       "river-mouth-*.jpg")], []),
+     [("river-mouth", "docs/checkpoints/river-mouth", M14, "river-mouth-0*.jpg"),
+      ("river-mouth", "docs/checkpoints/river-mouth", M14, "river-mouth-1[0-2]-*.jpg"),
+      ("river-mouth", "docs/checkpoints/river-mouth", "a36663b, 2026-10-14 18:08, grade not recorded",
+       "river-mouth-1[3-6]-*.jpg")], []),
     ("beach", "Beach close-ups", [("beach", "assets-source/kit/beach_base/shots", T14, "beach-*.jpg")], []),
     ("coast", "Coast", [("coast", "docs/checkpoints/coast", T14, "*.jpg")], []),
     ("wetband", "Beach wet band", [("wet-band", "docs/checkpoints/wet-band",
