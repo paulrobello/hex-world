@@ -1,6 +1,6 @@
 {
-  "cap": 68,
-  "capNote": "Landing, 2026-10-20: three branches each numbered their new attempts from 57 (buffer-clunk 2026-10-20T23:39-23:40, boats 23:49-23:51 and the train-whistle-1 retakes 2026-10-21T00:48-00:49), so the merged log was renumbered chronologically by requestedAt: buffer-clunk is attempts 57-59 (30 credits, unchanged), the boat-oar and boat-sail pools 60-65 (150 credits, were 57-62) and the train-whistle-1 retakes 66-68 (120 credits, were 57-59). Each of the three raised the cap from 56 under the 2026-10-19 standing approval for new sounds, and 12 attempts were spent in all, so the cap is set to the 68 attempts logged. Before that, Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 66-68, 120 credits), and attempt 66 was kept, so the cap was set to the 59 attempts logged on its branch. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"): the cap was raised from 53 by at most 6 for the place-slosh pool; three were spent (attempts 54-56, 60 credits), so the cap is set to the 56 attempts logged. Before that, Owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
+  "cap": 71,
+  "capNote": "Stone well, 2026-10-20, under the owner's standing approval for new sounds (2026-10-19): the cap was raised from 68 by at most 4 for the well-windlass pool (two short one-shots for the stone well on every house_cluster tile, at most two attempts each). Three were spent (attempts 69-71, 120 credits): one first take per variant and one retake of well-windlass-2, whose first take (attempt 70) started mid-creak with no silence before it, had no splash at its end and cleared the floor criterion by only 0.3 dB. well-windlass-1's slow decay left its floor 35.7 dB under the peak window, so it was saved by a gate instead of a retake, and the cap is set to the 71 attempts logged. Before that, Landing, 2026-10-20: three branches each numbered their new attempts from 57 (buffer-clunk 2026-10-20T23:39-23:40, boats 23:49-23:51 and the train-whistle-1 retakes 2026-10-21T00:48-00:49), so the merged log was renumbered chronologically by requestedAt: buffer-clunk is attempts 57-59 (30 credits, unchanged), the boat-oar and boat-sail pools 60-65 (150 credits, were 57-62) and the train-whistle-1 retakes 66-68 (120 credits, were 57-59). Each of the three raised the cap from 56 under the 2026-10-19 standing approval for new sounds, and 12 attempts were spent in all, so the cap is set to the 68 attempts logged. Before that, Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 66-68, 120 credits), and attempt 66 was kept, so the cap was set to the 59 attempts logged on its branch. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"): the cap was raised from 53 by at most 6 for the place-slosh pool; three were spent (attempts 54-56, 60 credits), so the cap is set to the 56 attempts logged. Before that, Owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
   "attempts": [
     {
       "n": 1,
@@ -953,6 +953,48 @@
       "creditsCharged": 40,
       "subscriptionDelta": 0,
       "file": "assets-source/audio/ambience/train-whistle-1/train-whistle-1.mp3"
+    },
+    {
+      "n": 69,
+      "cueId": "well-windlass-1",
+      "requestedAt": "2026-10-21T05:33:05+00:00",
+      "reason": "first take",
+      "creditsBefore": 12602,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "ea9ad2c7c9965e8e75ae77aae5234aef",
+      "creditsAfter": 12602,
+      "creditsCharged": 40,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/well-windlass-1/well-windlass-1.mp3"
+    },
+    {
+      "n": 70,
+      "cueId": "well-windlass-2",
+      "requestedAt": "2026-10-21T05:33:28+00:00",
+      "reason": "first take",
+      "creditsBefore": 12642,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "507e53f7d71fe1dd2917661dfd9628a6",
+      "creditsAfter": 12642,
+      "creditsCharged": 40,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/well-windlass-2/well-windlass-2.mp3"
+    },
+    {
+      "n": 71,
+      "cueId": "well-windlass-2",
+      "requestedAt": "2026-10-21T05:36:24+00:00",
+      "reason": "no audible splash at the end (no late broadband transient), the take starts mid-creak with no silence before it, and its mastered floor clears 40 dB by only 0.3 dB",
+      "creditsBefore": 12682,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "900f15be55c76353e7b0a6bdd12a1c01",
+      "creditsAfter": 12682,
+      "creditsCharged": 40,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/well-windlass-2/well-windlass-2.mp3"
     }
   ]
 }

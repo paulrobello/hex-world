@@ -389,6 +389,7 @@ test("one-shot rows: bees at flower tiles, forest birds and leaves at forest til
       ["farm-sheep", "farm-sheep", [30, 90], 3, 0.25],
       ["windmill-creak", "windmill-creak", [25, 70], 3, 0.3],
       ["wheat-rustle", "wheat-rustle", [20, 60], 3, 0.3],
+      ["well-windlass", "well-windlass", [40, 110], 3, 0.25],
     ],
   );
   assert.ok(oneShotDefs(BEES, schema.catalog.tiles).has("meadow"));
@@ -787,6 +788,7 @@ const P3_ROWS: [string, string][] = [
   ["farm-sheep", "farm"],
   ["windmill-creak", "windmill"],
   ["wheat-rustle", "wheat_field"],
+  ["well-windlass", "house_cluster"],
 ];
 
 test("P3 rows play only at their own tile def, not at meadows that share the biome and scatter", () => {
@@ -824,6 +826,29 @@ test("P3 pools ship as decoded ambience one-shots; the train pools are mastered 
   for (const pool of ["train-whistle", "train-chuff", "shop-bell"])
     assert.ok(!ONE_SHOTS.some((r) => r.pool === pool), `${pool} has no timer row`);
   assert.equal(resolveOneShot("train-whistle", manifest.cues)?.row, null, "on demand only, non-positional");
+});
+
+test("the stone well's windlass: a quiet, rare row at house_cluster tiles over a two-variant ambience pool", () => {
+  const row = rowNamed("well-windlass");
+  assert.deepEqual([...oneShotDefs(row, schema.catalog.tiles)], ["house_cluster"], "plays only at house_cluster");
+  const mill = rowNamed("windmill-creak");
+  assert.ok(row.level < mill.level, "quieter than the windmill");
+  assert.ok(row.delay[0] > mill.delay[0] && row.delay[1] > mill.delay[1], "rarer than the windmill");
+  const variants = manifest.cues.filter((c) => c.pool === "well-windlass");
+  assert.deepEqual(
+    variants.map((c) => c.id),
+    ["well-windlass-1", "well-windlass-2"],
+  );
+  assert.deepEqual(resolveOneShot("well-windlass", manifest.cues)?.variants, ["well-windlass-1", "well-windlass-2"]);
+  assert.equal(resolveOneShot("well-windlass", manifest.cues)?.row, row, "the pool resolves to its timer row");
+  for (const c of variants) {
+    assert.ok(c.status === "mastered" && !c.loop && c.playback === "decode", `${c.id} is a decoded one-shot`);
+    assert.equal(c.channels, 1, `${c.id} is mono`);
+    assert.equal(busOf(c), "ambience", `${c.id} plays on the ambience bus`);
+    assert.deepEqual(c.events, [], `${c.id} is routed by the scheduler, not by an event list`);
+  }
+  const tile = pickOneShotTile(row, [cell(0, 0), cell(4, 0)], flowerView, () => 0.5);
+  assert.deepEqual(tile && [tile.q, tile.r], [0, 0], "a well in range, not one four steps out");
 });
 
 test("placement: a water tile selects the slosh pool and a land tile does not", () => {

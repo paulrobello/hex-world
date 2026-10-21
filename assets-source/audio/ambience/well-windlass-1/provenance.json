@@ -1,0 +1,230 @@
+{
+  "cueId": "well-windlass-1",
+  "kind": "ambience",
+  "class": "sfx",
+  "version": 1,
+  "use": "One old wooden well windlass turning a few creaking turns, of the well-windlass pool: positional at a house_cluster tile (its stone well) within 3 hex steps of the camera focus, every 40-110 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Close, isolated recording of an old wooden well windlass being turned slowly by hand: three or four dry, creaking turns of the wooden axle in its timber posts, with the hemp rope running and rubbing over the drum, about three seconds, settling back into silence. Quiet and rural, no music, no voices. Studio-quiet background, with silence before and after the creaks.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Close, isolated recording of an old wooden well windlass being turned slowly by hand: three or four dry, creaking turns of the wooden axle in its timber posts, with the hemp rope running and rubbing over the drum, about three seconds, settling back into silence. Quiet and rural, no music, no voices. Studio-quiet background, with silence before and after the creaks.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 4.0,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "ea9ad2c7c9965e8e75ae77aae5234aef",
+    "generatedAt": "2026-10-21T05:33:05+00:00",
+    "attempt": 69,
+    "creditsCharged": 40,
+    "record": {
+      "path": "assets-source/audio/ambience/well-windlass-1/generation.json",
+      "sha256": "a88e96d4e7e1eef7a5d6854c45f21c23c7d9bb850d06489a3c17dfc37f4887f7",
+      "bytes": 2260
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/well-windlass-1/well-windlass-1.mp3",
+    "sha256": "32d0092b2cca58a33e08ab7eb8957176eeb7ef5405d9834a7eaadd92bded2e2e",
+    "bytes": 65244,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 4.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -21.6,
+      "lra": 0.1,
+      "truePeak": -0.3
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 0.0,
+      "truePeak": -2.1
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -1.9
+      },
+      "m4a": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.0
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "filter",
+      "spec": {
+        "highpassHz": 60,
+        "stages": 2
+      },
+      "chain": "highpass=f=60:poles=2,highpass=f=60:poles=2",
+      "circularPadFrames": 0
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 17838,
+      "tailFramesRemoved": 50323,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "gate",
+      "thresholdDbBelowPeak": 26,
+      "ratio": 3,
+      "rangeDb": 30,
+      "attackMs": 5,
+      "releaseMs": 150,
+      "peakWindowDb": -11.32,
+      "thresholdDb": -37.32,
+      "closedPct": 54.6
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -22.2,
+        "lra": 0.0,
+        "truePeak": 0.3
+      },
+      "targetLufs": -16.0,
+      "gainDb": 6.2,
+      "requiredPeakReductionDb": 8.5,
+      "mode": "limited",
+      "limiterInputGainDb": 11.7,
+      "limiterPasses": 4,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 3.9
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.4
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/well-windlass-1.wav",
+    "sha256": "a9be23e2f65277e5d81bbcc3827fab3178d3551ea6156c39d0b3afc57679444a",
+    "frames": 123839,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/well-windlass-1.webm",
+      "sha256": "d1e21081a9a04f8efa9e39098a0d3550d189be2362fc0404a6db23ded35f9769",
+      "bytes": 21233,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 2.587,
+      "decodedFrames": 123839,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -1.9
+      },
+      "floor": {
+        "peakWindowDb": -8.7,
+        "floorDb": -69.1,
+        "floorBelowPeakDb": 60.4,
+        "floorBandPct": {
+          "below1500": 96.1,
+          "1500to9k": 3.9,
+          "above9k": 0.0
+        },
+        "interiorWindows": 51,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/well-windlass-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/well-windlass-1.webm"
+    },
+    {
+      "path": "assets/audio/ambience/well-windlass-1.m4a",
+      "sha256": "7f5ba293f0d4dbf297918d8b1427a8df592381f4b8d1bf94bd35025ad0221afd",
+      "bytes": 51572,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 2.58,
+      "decodedFrames": 123839,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.0
+      },
+      "floor": {
+        "peakWindowDb": -8.7,
+        "floorDb": -69.3,
+        "floorBelowPeakDb": 60.6,
+        "floorBandPct": {
+          "below1500": 96.2,
+          "1500to9k": 3.8,
+          "above9k": 0.0
+        },
+        "interiorWindows": 51,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/well-windlass-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/well-windlass-1.m4a"
+    }
+  ],
+  "decodedBytes": 495356,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.8",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "cd56507e621a35d91042d8e30f36db72f0e30fd0cce3da865eeee185fe583002"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

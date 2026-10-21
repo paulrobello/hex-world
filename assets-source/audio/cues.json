@@ -5,8 +5,8 @@
   "masterTruePeak": -2.0,
   "lufsTolerance": 1.0,
   "decodedBudgetBytes": 96000000,
-  "generationCap": 68,
-  "generationCapNote": "Landing, 2026-10-20: three branches each numbered their new attempts from 57 (buffer-clunk 2026-10-20T23:39-23:40, boats 23:49-23:51 and the train-whistle-1 retakes 2026-10-21T00:48-00:49), so the merged log was renumbered chronologically by requestedAt: buffer-clunk is attempts 57-59 (30 credits, unchanged), the boat-oar and boat-sail pools 60-65 (150 credits, were 57-62) and the train-whistle-1 retakes 66-68 (120 credits, were 57-59). Each of the three raised the cap from 56 under the 2026-10-19 standing approval for new sounds, and 12 attempts were spent in all, so the cap is set to the 68 attempts logged. The train-whistle-1 retakes: Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 66-68, 120 credits), and attempt 66 was kept, so the cap was set to the 59 attempts logged on its branch. The boats: Boats, 2026-10-20, under the owner's standing approval for new sounds (2026-10-19): the cap was raised from 56 by at most 10 for the boat-oar pool (three short one-shots) and the boat-sail pool (two), at most two attempts each. Six were spent (attempts 60-65, 150 credits): one first take per variant and one retake of boat-sail-2, whose first take flapped and blew wind for the whole 3 s (floor 21.1 dB under the peak window). boat-sail-1 was saved by a gate instead of a retake, so the cap was set to the 62 attempts logged on its branch. The buffer clunk: Owner D2-Q5, 2026-10-20 (a soft buffer clunk when a train comes to rest at a line end), under the standing approval for new sounds: the cap was raised from 56 by at most 4 for the buffer-clunk pool (two short one-shots, at most two attempts each). Three were spent (attempts 57-59, 30 credits): one first take per variant and one retake of buffer-clunk-1, whose first take was a flat hiss burst, not a clunk. The retake's rumble tail was held down by a gate instead of a second retake, so the cap was set to the 59 attempts logged on its branch. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: the cap was raised from 53 by at most 6 for the place-slosh pool (three short one-shots, at most two attempts each). Three were spent (attempts 54-56, 60 credits), one first take per variant, all passing the floor criterion, so the cap is set to the 56 attempts logged. Before that, owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
+  "generationCap": 71,
+  "generationCapNote": "Stone well, 2026-10-20, under the owner's standing approval for new sounds (2026-10-19): the cap was raised from 68 by at most 4 for the well-windlass pool (two short one-shots for the stone well on every house_cluster tile, at most two attempts each). Three were spent (attempts 69-71, 120 credits): one first take per variant and one retake of well-windlass-2, whose first take (attempt 70) started mid-creak with no silence before it, had no splash at its end and cleared the floor criterion by only 0.3 dB. well-windlass-1's slow decay left its floor 35.7 dB under the peak window, so it was saved by a gate instead of a retake, and the cap is set to the 71 attempts logged. Before that, Landing, 2026-10-20: three branches each numbered their new attempts from 57 (buffer-clunk 2026-10-20T23:39-23:40, boats 23:49-23:51 and the train-whistle-1 retakes 2026-10-21T00:48-00:49), so the merged log was renumbered chronologically by requestedAt: buffer-clunk is attempts 57-59 (30 credits, unchanged), the boat-oar and boat-sail pools 60-65 (150 credits, were 57-62) and the train-whistle-1 retakes 66-68 (120 credits, were 57-59). Each of the three raised the cap from 56 under the 2026-10-19 standing approval for new sounds, and 12 attempts were spent in all, so the cap is set to the 68 attempts logged. The train-whistle-1 retakes: Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 66-68, 120 credits), and attempt 66 was kept, so the cap was set to the 59 attempts logged on its branch. The boats: Boats, 2026-10-20, under the owner's standing approval for new sounds (2026-10-19): the cap was raised from 56 by at most 10 for the boat-oar pool (three short one-shots) and the boat-sail pool (two), at most two attempts each. Six were spent (attempts 60-65, 150 credits): one first take per variant and one retake of boat-sail-2, whose first take flapped and blew wind for the whole 3 s (floor 21.1 dB under the peak window). boat-sail-1 was saved by a gate instead of a retake, so the cap was set to the 62 attempts logged on its branch. The buffer clunk: Owner D2-Q5, 2026-10-20 (a soft buffer clunk when a train comes to rest at a line end), under the standing approval for new sounds: the cap was raised from 56 by at most 4 for the buffer-clunk pool (two short one-shots, at most two attempts each). Three were spent (attempts 57-59, 30 credits): one first take per variant and one retake of buffer-clunk-1, whose first take was a flat hiss burst, not a clunk. The retake's rumble tail was held down by a gate instead of a second retake, so the cap was set to the 59 attempts logged on its branch. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: the cap was raised from 53 by at most 6 for the place-slosh pool (three short one-shots, at most two attempts each). Three were spent (attempts 54-56, 60 credits), one first take per variant, all passing the floor criterion, so the cap is set to the 56 attempts logged. Before that, owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
   "classes": {
     "music": {
       "lufs": -18,
@@ -2115,6 +2115,129 @@
             "below1500": 83.0,
             "1500to9k": 16.9,
             "above9k": 0.1
+          }
+        }
+      }
+    },
+    {
+      "id": "well-windlass-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "well-windlass",
+      "use": "One old wooden well windlass turning a few creaking turns, of the well-windlass pool: positional at a house_cluster tile (its stone well) within 3 hex steps of the camera focus, every 40-110 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of an old wooden well windlass being turned slowly by hand: three or four dry, creaking turns of the wooden axle in its timber posts, with the hemp rope running and rubbing over the drum, about three seconds, settling back into silence. Quiet and rural, no music, no voices. Studio-quiet background, with silence before and after the creaks.",
+        "durationSeconds": 4.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "stages": 2
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 26,
+        "ratio": 3,
+        "rangeDb": 30,
+        "attackMs": 5,
+        "releaseMs": 150
+      },
+      "review": {
+        "round": 7,
+        "roundNote": "Stone well on every house_cluster tile, 2026-10-20, under the owner's standing approval for new sounds (2026-10-19): an occasional windlass one-shot pool positional at the well, quieter and rarer than the windmill (every 40-110 s, level 0.25). At most two ElevenLabs attempts per variant; three were spent (attempts 69-71, 120 credits).",
+        "filterApplied": "high-pass 60 Hz, two stages, then a gate (26 dB under the peak window, ratio 3, 30 dB range) that holds the slow decay of the last creak down: ungated, the floor sat 35.7 dB under the peak window (needs 40). The gate is closed for 55% of the take; listen for chopping",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/well-windlass-1.webm (scripts/audio/screen.py --floor), after the filter and the gate (attempt 69). The take is a low wooden groan centred near 165 Hz and 275 Hz with little rope noise over 3 kHz; the birds detector fires on the creak's tonal partials, not birds",
+          "below300HzPct": 83.0,
+          "band300to8kPct": 17.0,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -10.7,
+          "levelDeepestDipDb": 18.9,
+          "levelSpreadDb": 23.8,
+          "tone200HzSeriesMaxDb": 5.5,
+          "otherTonalPeaks": [
+            {
+              "hz": 275,
+              "db": 14.1
+            },
+            {
+              "hz": 164,
+              "db": 13.7
+            },
+            {
+              "hz": 545,
+              "db": 10.9
+            }
+          ],
+          "birdChirpEvents": 4,
+          "birds": true,
+          "floorBelowPeakDb": 60.4,
+          "floorBandPct": {
+            "below1500": 96.1,
+            "1500to9k": 3.9,
+            "above9k": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "well-windlass-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "well-windlass",
+      "use": "One old wooden well windlass turning a few creaking turns, of the well-windlass pool: positional at a house_cluster tile (its stone well) within 3 hex steps of the camera focus, every 40-110 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Close, isolated recording of an old stone village well, starting from silence: the wooden windlass creaks slowly through two turns as the rope pays out over the drum, then stops, and a moment later a faint, hollow splash of a bucket touching water echoes up from far down the deep stone shaft, then silence. Quiet and rural, no music, no voices. Studio-quiet background, with silence before and after.",
+        "durationSeconds": 4.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "filter": {
+        "highpassHz": 60,
+        "stages": 2
+      },
+      "review": {
+        "round": 7,
+        "roundNote": "Stone well on every house_cluster tile, 2026-10-20, under the owner's standing approval for new sounds (2026-10-19): an occasional windlass one-shot pool positional at the well, quieter and rarer than the windmill (every 40-110 s, level 0.25). At most two ElevenLabs attempts per variant; three were spent (attempts 69-71, 120 credits).",
+        "filterApplied": "high-pass 60 Hz, two stages, no gate: the retake settles to its floor on its own",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/well-windlass-2.webm (scripts/audio/screen.py --floor), after the filter (attempt 71, the retake). Creaks build from silence over about 2 s to a sudden, low-centred onset near 2.25 s of the source (spectral flux 0.77, centroid about 460 Hz) that decays smoothly to silence by 3 s with no separate late event: it was prompted to end in a faint splash, and the owner confirms by ear whether one is heard; the first take (attempt 70) started mid-creak, had no late transient and its floor sat only 40.3 dB under the peak window",
+          "below300HzPct": 56.0,
+          "band300to8kPct": 44.0,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -8.7,
+          "levelDeepestDipDb": 23.3,
+          "levelSpreadDb": 27.7,
+          "tone200HzSeriesMaxDb": 16.7,
+          "otherTonalPeaks": [
+            {
+              "hz": 7951,
+              "db": 13.5
+            },
+            {
+              "hz": 3498,
+              "db": 12.3
+            },
+            {
+              "hz": 2900,
+              "db": 11.9
+            }
+          ],
+          "birdChirpEvents": 2,
+          "birds": false,
+          "floorBelowPeakDb": 47.2,
+          "floorBandPct": {
+            "below1500": 73.7,
+            "1500to9k": 19.3,
+            "above9k": 7.0
           }
         }
       }

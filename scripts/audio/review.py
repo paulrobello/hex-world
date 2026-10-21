@@ -135,6 +135,11 @@ POOL_NOTE = {
                       "rail tile or train in play yet, so only hexWorld.audio.play('train-whistle') sounds it."),
     "train-chuff": ("A steam engine chuffing past, one 6 s one-shot (not a loop), high-passed at 50 Hz. Mastered, not "
                     "played: it waits for trains, which would carry it as the cars carry car-drive."),
+    "well-windlass": ("An old wooden well windlass turning a few creaking turns, one ElevenLabs take each, high-passed at "
+                      "60 Hz. well-windlass-1 is gated so its slow decay settles; well-windlass-2 is the retake "
+                      "(attempt 71), prompted to end in a faint splash down the shaft, though no separate late event shows in its "
+                      "level; confirm by ear. The game plays one at a house_cluster "
+                      "tile (its stone well) within 3 hex steps of the focus every 40-110 s, at level 0.25."),
 }
 
 

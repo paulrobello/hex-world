@@ -1198,6 +1198,60 @@
       "provenance": "assets-source/audio/ambience/boat-sail-2/provenance.json"
     },
     {
+      "id": "well-windlass-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "well-windlass",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 2.579979,
+      "decodedBytes": 495356,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/well-windlass-1.webm",
+          "sha256": "d1e21081a9a04f8efa9e39098a0d3550d189be2362fc0404a6db23ded35f9769",
+          "bytes": 21233
+        },
+        "m4a": {
+          "path": "ambience/well-windlass-1.m4a",
+          "sha256": "7f5ba293f0d4dbf297918d8b1427a8df592381f4b8d1bf94bd35025ad0221afd",
+          "bytes": 51572
+        }
+      },
+      "provenance": "assets-source/audio/ambience/well-windlass-1/provenance.json"
+    },
+    {
+      "id": "well-windlass-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "well-windlass",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 3.214229,
+      "decodedBytes": 617132,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/well-windlass-2.webm",
+          "sha256": "3b8906818684376e022bcad0991e6b3852e21c16ffa6bac23624478714769f9f",
+          "bytes": 24198
+        },
+        "m4a": {
+          "path": "ambience/well-windlass-2.m4a",
+          "sha256": "bf3a950c9f26108dc67111e4648dda5e84d2a55c763a533157cb4c4f9ccd549d",
+          "bytes": 59669
+        }
+      },
+      "provenance": "assets-source/audio/ambience/well-windlass-2/provenance.json"
+    },
+    {
       "id": "meadow-day",
       "kind": "music",
       "class": "music",

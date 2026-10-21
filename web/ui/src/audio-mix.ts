@@ -201,6 +201,14 @@ export const ONE_SHOTS: readonly OneShotRow[] = [
     rangeSteps: 3,
     level: 0.3,
   },
+  {
+    name: "well-windlass",
+    pool: "well-windlass",
+    tile: isTileId("house_cluster"),
+    delay: [40, 110],
+    rangeSteps: 3,
+    level: 0.25,
+  },
 ];
 
 /** The catalog defs a row may play at. */

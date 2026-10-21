@@ -1,0 +1,43 @@
+{
+  "cueId": "well-windlass-2",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Close, isolated recording of an old stone village well, starting from silence: the wooden windlass creaks slowly through two turns as the rope pays out over the drum, then stops, and a moment later a faint, hollow splash of a bucket touching water echoes up from far down the deep stone shaft, then silence. Quiet and rural, no music, no voices. Studio-quiet background, with silence before and after.",
+  "parameters": {
+    "text": "Close, isolated recording of an old stone village well, starting from silence: the wooden windlass creaks slowly through two turns as the rope pays out over the drum, then stops, and a moment later a faint, hollow splash of a bucket touching water echoes up from far down the deep stone shaft, then silence. Quiet and rural, no music, no voices. Studio-quiet background, with silence before and after.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 4.0,
+    "prompt_influence": 0.6
+  },
+  "generationId": "900f15be55c76353e7b0a6bdd12a1c01",
+  "responseHeaders": {
+    "date": "Wed, 21 Oct 2026 05:36:24 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "40",
+    "content-length": "65244",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "900f15be55c76353e7b0a6bdd12a1c01",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-21T05:36:24+00:00",
+  "attempt": 71,
+  "creditsCharged": 40,
+  "sourceFile": "well-windlass-2.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "0bfce3627be7bb44b427f5d4f2a07ceb2e024644361711ea8af046dcddf5866c"
+  }
+}
