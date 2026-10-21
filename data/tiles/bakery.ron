@@ -6,11 +6,13 @@
 // belongs to the parking paths (as house_cluster's driveway does).
 //
 // Parking (PRD §7.1): `park-<n>` is spot n, at the pad's `anchor-park-<n>` socket (hex-core
-// data_validator checks they match). A visitor noses in north from the node's inbound lane
-// (`enter`), and leaves with a three-point turn: it reverses straight back to the mouth and swings its
-// tail east onto the through road (`back`, ending at the cusp), then drives forward onto the outbound
-// lane. The paths keep a 5.4 x 2.0 m car clear of the shop, the forecourt edging and hedge, the cut
-// kerbs either side of the mouth and the other spot (hex-sim tests/parking.rs). A shop owns no cars.
+// data_validator checks they match). A visitor noses in north (`enter`): up the spur from the node's
+// inbound lane when it comes from the west, or turning right off the through lane short of the node
+// when it comes from the east. It leaves with a three-point turn: it reverses back to the mouth and
+// swings its tail onto the through road, east to leave west (`back`) or west to leave east
+// (`back_alt`), ending at the cusp, then drives forward onto the outbound lane. The paths keep a
+// 5.4 x 2.0 m car clear of the shop, the forecourt edging and hedge, the cut kerbs either side of
+// the mouth and the other spot (hex-sim tests/parking.rs). A shop owns no cars.
 (
     id: "bakery",
     biome: Grass,
@@ -43,10 +45,13 @@
             id: "park-0", house: 0, node: "bakery", at: (1.8, -8.8), yaw_deg: 270.0,
             enter: [(at: (1.8, -4.8), yaw_deg: 270.0)],
             back: [(at: (1.8, -3.4), yaw_deg: 270.0), (at: (4.3, -1.4), yaw_deg: 200.0)],
+            back_alt: [(at: (1.8, -3.4), yaw_deg: 270.0), (at: (-0.7, -1.4), yaw_deg: 340.0)],
         ),
         (
             id: "park-1", house: 0, node: "bakery", at: (4.5, -8.6), yaw_deg: 270.0,
+            enter: [(at: (3.8, -3.4), yaw_deg: 276.0)],
             back: [(at: (4.5, -2.9), yaw_deg: 270.0), (at: (7.1, -0.8), yaw_deg: 205.0)],
+            back_alt: [(at: (3.8, -3.0), yaw_deg: 270.0), (at: (1.6, 0.6), yaw_deg: 330.0)],
         ),
     ],
     agents: [],

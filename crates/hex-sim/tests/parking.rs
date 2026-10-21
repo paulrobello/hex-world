@@ -480,14 +480,9 @@ fn bakery_parking_paths_clear_the_shop_kerbs_and_the_other_spot() {
 /// legs (the enter curve, the reverse, its cusp and the swing onto the road) and not on the lanes
 /// between them, which turn through the bakery's junction node "j". At rotation 0 visitors leave
 /// west (a right turn out, `back`), at 3 east (across the road, `back_alt`); both legs join the
-/// through lane past the node rather than turning about on the spur.
-///
-/// Ignored: still fails (2026-10-20, after junction rounding and the leave-join search: rot 0 legs
-/// 20.3 deg/tick on the arrival, rot 3 legs 32.7 and lanes 39.8 on the spur's short inner corner).
-/// bakery.ron needs `back_alt` reverses and enter poses laid out for both directions, and arrivals
-/// that leave the lane before the node must clear the mouth kerbs.
+/// through lane past the node rather than turning about on the spur. Arrivals at rotation 3 turn
+/// right off the through lane before the node, since the spur's inner corner is too short to drive.
 #[test]
-#[ignore = "bakery legs still turn up to 33 deg per tick at rotation 3; see the doc comment"]
 fn bakery_visits_turn_smoothly() {
     let mut failures = vec![];
     for rot in [0, 3] {

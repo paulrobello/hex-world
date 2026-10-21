@@ -1,0 +1,1686 @@
+[
+{
+"cmd": "select_tile",
+"id": "house_cluster"
+},
+{
+"cmd": "place",
+"q": 1,
+"r": 0
+},
+{
+"cmd": "select_tile",
+"id": "road_straight"
+},
+{
+"cmd": "place",
+"q": 2,
+"r": 0
+},
+{
+"cmd": "select_tile",
+"id": "bakery"
+},
+{
+"cmd": "hover",
+"q": 3,
+"r": 0
+},
+{
+"cmd": "rotate",
+"dir": "cw"
+},
+{
+"cmd": "place",
+"q": 3,
+"r": 0
+},
+{
+"cmd": "select_tile",
+"id": "meadow"
+},
+{
+"cmd": "place",
+"q": 2,
+"r": -1
+},
+{
+"cmd": "place",
+"q": 3,
+"r": -1
+},
+{
+"cmd": "place",
+"q": 2,
+"r": 1
+},
+{
+"cmd": "hover",
+"q": 9,
+"r": -9
+},
+{
+"cmd": "camera",
+"pos": [
+83.1,
+30,
+-16
+],
+"look_at": [
+83.1,
+0,
+2
+]
+},
+{
+"cmd": "wait",
+"frames": 200
+},
+{
+"cmd": "dump_state",
+"name": "bp3-state"
+},
+{
+"cmd": "screenshot",
+"name": "bp3-000"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-001"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-002"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-003"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-004"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-005"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-006"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-007"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-008"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-009"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-010"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-011"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-012"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-013"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-014"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-015"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-016"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-017"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-018"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-019"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-020"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-021"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-022"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-023"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-024"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-025"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-026"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-027"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-028"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-029"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-030"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-031"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-032"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-033"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-034"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-035"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-036"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-037"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-038"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-039"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-040"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-041"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-042"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-043"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-044"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-045"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-046"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-047"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-048"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-049"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-050"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-051"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-052"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-053"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-054"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-055"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-056"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-057"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-058"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-059"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-060"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-061"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-062"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-063"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-064"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-065"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-066"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-067"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-068"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-069"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-070"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-071"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-072"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-073"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-074"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-075"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-076"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-077"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-078"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-079"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-080"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-081"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-082"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-083"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-084"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-085"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-086"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-087"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-088"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-089"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-090"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-091"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-092"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-093"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-094"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-095"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-096"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-097"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-098"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-099"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-100"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-101"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-102"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-103"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-104"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-105"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-106"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-107"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-108"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-109"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-110"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-111"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-112"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-113"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-114"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-115"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-116"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-117"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-118"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-119"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-120"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-121"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-122"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-123"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-124"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-125"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-126"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-127"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-128"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-129"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-130"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-131"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-132"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-133"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-134"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-135"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-136"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-137"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-138"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-139"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-140"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-141"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-142"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-143"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-144"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-145"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-146"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-147"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-148"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-149"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-150"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-151"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-152"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-153"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-154"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-155"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-156"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-157"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-158"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-159"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-160"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-161"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-162"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-163"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-164"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-165"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-166"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-167"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-168"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-169"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-170"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-171"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-172"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-173"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-174"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-175"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-176"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-177"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-178"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-179"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-180"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-181"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-182"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-183"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-184"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-185"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-186"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-187"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-188"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-189"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-190"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-191"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-192"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-193"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-194"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-195"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-196"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-197"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-198"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "screenshot",
+"name": "bp3-199"
+},
+{
+"cmd": "wait",
+"frames": 30
+},
+{
+"cmd": "exit"
+}
+]

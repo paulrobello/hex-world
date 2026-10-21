@@ -668,9 +668,10 @@ impl Simulation {
         }
         let (_, back_pts, leave_pts, out) = best?;
 
-        // Into the spot: off the lane at the node. Leaving the lane earlier cuts the mouth corner
-        // into the kerbs at the bakery, which the enter poses are not laid out for.
-        let into = pick_join(std::iter::once(0.0), |e| {
+        // Into the spot: off the lane at the node when the turn there is gentle, else at the first
+        // distance before it that is (the bakery's short spur, whose inner corner is too tight to
+        // drive; its enter poses are laid out for both directions).
+        let into = pick_join(joins(), |e| {
             let s = lane.length() - e;
             let mut poses = vec![lane.pose_at_distance(s)];
             poses.extend(dest.enter.iter().copied());
