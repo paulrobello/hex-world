@@ -113,3 +113,31 @@ test("update note words: saved first, or plainly unsaved", () => {
   assert.match(updateWords("off").sub, /Autosave is off, so reloading loses this world/);
   assert.equal(updateWords("failed").action, "Reload anyway");
 });
+
+test("each check resolves to what it did (e2e/version.mjs waits on these)", async () => {
+  const t = harness();
+  assert.equal(await t.watch.check(true), "same");
+  t.setReply(async () => Response.json({ id: "bbbbbbbbbb" }));
+  assert.equal(await t.watch.check(true), "newer");
+  assert.equal(await t.watch.check(true), "reported");
+  assert.equal(await t.watch.check(), "throttled");
+  t.setReply(async () => new Response("down", { status: 503 }));
+  assert.equal(await t.watch.check(true), "bad-status");
+  t.setReply(async () => Response.json({ id: "<script>" }));
+  assert.equal(await t.watch.check(true), "bad-body");
+  t.setReply(async () => {
+    throw new TypeError("Failed to fetch");
+  });
+  assert.equal(await t.watch.check(true), "error");
+  t.setOnline(false);
+  assert.equal(await t.watch.check(true), "offline");
+  t.setOnline(true);
+  let release: () => void = () => {};
+  t.setReply(() => new Promise((r) => (release = () => r(Response.json({ id: "aaaaaaaaaa" })))));
+  const first = t.watch.check(true);
+  assert.equal(await t.watch.check(true), "busy", "a check while one is in flight is skipped");
+  release();
+  assert.equal(await first, "same");
+  assert.deepEqual(t.found, ["bbbbbbbbbb"]);
+  assert.equal(await harness(null).watch.check(true), "no-build");
+});

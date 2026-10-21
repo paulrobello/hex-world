@@ -4,7 +4,7 @@
 import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { Persistence } from "./persist.ts";
-import { VersionWatch, pollMs, updateWords } from "./version-check-model.ts";
+import { type CheckOutcome, VersionWatch, pollMs, updateWords } from "./version-check-model.ts";
 
 declare global {
   interface Window {
@@ -78,6 +78,10 @@ export class UpdateNote {
   }
 }
 
+/** Dispatched on window after every check, `detail` its CheckOutcome: e2e/version.mjs waits on these
+ *  instead of on the clock. Nothing in the page listens. */
+export const CHECK_EVENT = "hexversioncheck";
+
 /** Checks on an interval (`version_poll` seconds in the address, else 3 minutes), on focus, when the
  *  tab shows again and when the browser comes back online. */
 export function watchVersion(note: UpdateNote, search: string = location.search): VersionWatch {
@@ -88,11 +92,15 @@ export function watchVersion(note: UpdateNote, search: string = location.search)
     now: Date.now,
     onNewer: () => note.show(),
   });
-  window.setInterval(() => void watch.check(true), pollMs(search));
-  addEventListener("focus", () => void watch.check());
-  addEventListener("online", () => void watch.check());
+  const run = (timed = false): void =>
+    void watch
+      .check(timed)
+      .then((outcome) => dispatchEvent(new CustomEvent<CheckOutcome>(CHECK_EVENT, { detail: outcome })));
+  window.setInterval(() => run(true), pollMs(search));
+  addEventListener("focus", () => run());
+  addEventListener("online", () => run());
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") void watch.check();
+    if (document.visibilityState === "visible") run();
   });
   return watch;
 }

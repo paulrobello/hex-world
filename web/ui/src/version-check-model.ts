@@ -30,6 +30,21 @@ export interface WatchDeps {
   onNewer: (id: string) => void;
 }
 
+/** What one check did: skipped (no build id, a check already running, throttled or offline), or the
+ *  fetch's result (the page's own id, a newer id reported now or already reported, a non-2xx status,
+ *  a body without a hex id, or a failed request). */
+export type CheckOutcome =
+  | "no-build"
+  | "busy"
+  | "throttled"
+  | "offline"
+  | "same"
+  | "newer"
+  | "reported"
+  | "bad-status"
+  | "bad-body"
+  | "error";
+
 export class VersionWatch {
   private readonly deps: WatchDeps;
   private busy = false;
@@ -43,24 +58,30 @@ export class VersionWatch {
   /**
    * One check of version.json, fetched past every cache. A timed check (`timed`) always runs; a focus
    * or visibility check is skipped within MIN_GAP_MS of the last. Offline, a failed request, a bad
-   * status or body are silent: the next check retries.
+   * status or body are silent: the next check retries. Resolves to what the check did.
    */
-  async check(timed = false): Promise<void> {
+  async check(timed = false): Promise<CheckOutcome> {
     const d = this.deps;
     const now = d.now();
-    if (!d.page || this.busy || (!timed && now - this.last < MIN_GAP_MS) || !d.online()) return;
+    if (!d.page) return "no-build";
+    if (this.busy) return "busy";
+    if (!timed && now - this.last < MIN_GAP_MS) return "throttled";
+    if (!d.online()) return "offline";
     this.busy = true;
     this.last = now;
     try {
       const res = await d.fetch(`version.json?t=${now}`, { cache: "no-store" });
-      if (!res.ok) return;
+      if (!res.ok) return "bad-status";
       const id = liveId(await res.json());
-      if (id && id !== d.page && id !== this.found) {
-        this.found = id;
-        d.onNewer(id);
-      }
+      if (!id) return "bad-body";
+      if (id === d.page) return "same";
+      if (id === this.found) return "reported";
+      this.found = id;
+      d.onNewer(id);
+      return "newer";
     } catch {
       // Silent by design: the next check retries.
+      return "error";
     } finally {
       this.busy = false;
     }
