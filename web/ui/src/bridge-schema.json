@@ -547,7 +547,6 @@
           "Grass",
           "Grass"
         ],
-        "heroes": false,
         "id": "rail_bend_120",
         "land": [
           null,
@@ -557,6 +556,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": [
           "wildflower_single"
         ]
@@ -744,7 +744,6 @@
           "River",
           "Grass"
         ],
-        "heroes": false,
         "id": "river_fork",
         "land": [
           null,
@@ -754,6 +753,7 @@
           null,
           null
         ],
+        "period": 1,
         "scatter": []
       },
       {

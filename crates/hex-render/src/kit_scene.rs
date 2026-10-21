@@ -556,9 +556,8 @@ const TRAIN_RAIL_TOP: f32 = 0.46;
 /// (q, r, stop [x, z, yaw], engine [x, z, yaw]) at the open local edge 0 of a rail bend, rot 2, in the rail piece's frame: the stop's buffer faces 3.5 m in along the track,
 /// and the engine's front buffers there with its axles on the track
 /// (docs/checkpoints/rail_buffer_stop/poses.py, runtime-notes.md). The stop stands at cap level.
-const BUFFER_STOPS: [(i32, i32, [f32; 3], [f32; 3]); 1] = [
-    (1, 3, [10.467, 0.753, -17.05], [7.35, 3.788, -57.08]),
-];
+const BUFFER_STOPS: [(i32, i32, [f32; 3], [f32; 3]); 1] =
+    [(1, 3, [10.467, 0.753, -17.05], [7.35, 3.788, -57.08])];
 
 /// (piece, offset, yaw) of the train consist on the rail bend at (1, 2), rot 2: the engine, a
 /// carriage and the brake third last (`hex_sim::rail::CONSIST`; the two carriage designs share one
