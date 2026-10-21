@@ -67,3 +67,7 @@ Paul answered `docs/review/2026-10-20-walkthrough.html` on 2026-10-20. Codes fol
 - Boats-fork Q1: keep a single moving rowing boat per river system for now.
 - Thumbnails: keep six images per rotation for the hero tiles (oak, windmill, farm, house_cluster).
 - Stone well (sheet `docs/checkpoints/well_stone/sheet.jpg`): Q1/WQ1 placement on house_cluster's lawn, about 6.5 m from cottage 0's door, yes. Q2/WQ2 covered `well_stone` as the piece with `well_stone_b` in about one cluster in three, yes. Q3/WQ3 1.58 m across, 0.9 m wall, 2.4 m ridge, yes. Q4 apron 5 cm above the lawn: keep as is. Q5 shaft water on the iron slot: see how it looks as is. Q6 the roof ridge is a bird perch: yes. Q7 shade-side stone read: acceptable (colour grade question).
+
+## 2026-10-21
+
+- Saves Q1-Q3 ("yes to all"): Q1 keep the load confirm as built; Q2 the autosave hold while the confirm is open gets a time limit; Q3 Replace gets an Undo on its toast (orchestrator's pick between the two options offered; the owner can switch it to a second confirm).
