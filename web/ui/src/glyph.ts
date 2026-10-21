@@ -1,8 +1,8 @@
 // A tile's picture in the sheet: the per-rotation thumbnail when `make thumbs` output was present
 // at build time (assets/thumbs, baked in by build.mjs), otherwise a glyph drawn from its sockets.
 import type { SocketKind } from "./bridge.ts";
-import { h, s } from "./dom.ts";
-import type { TileDef } from "./rules.ts";
+import { h, motionMs, reduceMotion, s } from "./dom.ts";
+import { type TileDef, turnAngle } from "./rules.ts";
 import { versioned } from "./versioned.ts";
 
 declare const HEXW_THUMBS: { tiles: Record<string, string[]>; size: [number, number] } | null;
@@ -108,6 +108,16 @@ export function thumbUrl(id: string, k: number): string | null {
   return file ? versioned(`assets/thumbs/${file}`) : null;
 }
 
+/**
+ * How a thumbnail turns on R (owner 2026-10-21): the old and new rotation's pictures crossfade while
+ * both turn TURN_DEG in the press direction. The renders look down at 58°, so the turn is a rotation
+ * in the ground plane: unsquash the hex top (THUMB_TILT), rotate, squash it back.
+ */
+const TURN_DEG = 30;
+const THUMB_TILT = 0.82;
+const EASE = "cubic-bezier(.22,.9,.3,1)";
+const plane = (deg: number): string => `scaleY(${THUMB_TILT}) rotate(${deg}deg) scaleY(${1 / THUMB_TILT})`;
+
 /** A row picture that can turn: an <img> swapped per rotation, or a glyph rotated in CSS. */
 export class TilePicture {
   readonly el: HTMLElement;
@@ -115,6 +125,9 @@ export class TilePicture {
   private readonly rot: SVGElement | null;
   private readonly def: TileDef;
   private k = -1;
+  private deg = 0;
+  /** The outgoing picture and both animations while a turn runs. */
+  private turning: { old: HTMLImageElement; anims: Animation[] } | null = null;
 
   constructor(def: TileDef) {
     this.def = def;
@@ -132,10 +145,63 @@ export class TilePicture {
     this.show(0);
   }
 
-  show(k: number): void {
-    if (k === this.k) return;
+  /**
+   * Shows rotation k. `dir` (1 clockwise, -1 back) turns the thumbnail into it under full motion; 0,
+   * or reduced motion, swaps it at once. A turn never holds anything back: a new rotation mid-turn
+   * drops the running one and starts again from the picture on screen. `prev` is the picture to turn
+   * from when another group member's picture was on screen.
+   */
+  show(k: number, dir = 0, prev: string | null = null): void {
+    if (k === this.k && !(dir && prev)) return;
+    const first = this.k < 0;
     this.k = k;
-    if (this.img) this.img.src = thumbUrl(this.def.id, k)!;
-    else if (this.rot) (this.rot as SVGGElement).style.transform = `rotate(${k * 60}deg)`;
+    if (this.img) {
+      const from = prev ?? this.img.getAttribute("src");
+      this.stopTurn();
+      this.img.src = thumbUrl(this.def.id, k)!;
+      if (dir && !first && from && !reduceMotion()) this.turn(from, Math.sign(dir));
+    } else if (this.rot) {
+      this.deg = turnAngle(this.deg, k);
+      (this.rot as SVGGElement).style.transform = `rotate(${this.deg}deg)`;
+    }
+  }
+
+  /** The thumbnail on screen, or null for a glyph. */
+  get src(): string | null {
+    return this.img?.getAttribute("src") ?? null;
+  }
+
+  private turn(from: string, dir: number): void {
+    const img = this.img!;
+    const old = h("img", { class: "row__thumb row__thumb--out", alt: "", width: 48, height: 48, src: from });
+    this.el.append(old);
+    const timing = { duration: motionMs("--t", 180), easing: EASE };
+    const a = TURN_DEG * dir;
+    const out = old.animate(
+      [
+        { opacity: 1, transform: plane(0) },
+        { opacity: 0, transform: plane(a) },
+      ],
+      { ...timing, fill: "forwards" },
+    );
+    const into = img.animate(
+      [
+        { opacity: 0, transform: plane(-a) },
+        { opacity: 1, transform: plane(0) },
+      ],
+      timing,
+    );
+    const turning = { old, anims: [out, into] };
+    this.turning = turning;
+    out.onfinish = () => {
+      if (this.turning === turning) this.stopTurn();
+    };
+  }
+
+  private stopTurn(): void {
+    if (!this.turning) return;
+    for (const a of this.turning.anims) a.cancel();
+    this.turning.old.remove();
+    this.turning = null;
   }
 }

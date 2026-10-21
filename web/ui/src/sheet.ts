@@ -16,6 +16,7 @@ import {
   fitEntry,
   needLines,
   nothingFitsWhy,
+  turnAngle,
 } from "./rules.ts";
 import { tileName } from "./words.ts";
 
@@ -25,6 +26,8 @@ interface Face {
   hex: SVGElement;
   /** The socket hex's turning group, rotated with `pic`. */
   hexRot: SVGGElement;
+  /** The angle the socket hex shows, accumulated so a turn always takes the short way. */
+  deg: number;
 }
 
 interface Row {
@@ -36,6 +39,9 @@ interface Row {
   faces: Map<string, Face>;
   shown: string;
 }
+
+/** How long after an R press the ghost's rotation may still land and turn the selected row (ms). */
+const TURN_FOLLOW_MS = 500;
 
 export interface SheetView {
   /** The slot the filter reads (sticky), with what its edges touch. */
@@ -63,6 +69,11 @@ export class Sheet {
   private readonly offCount: HTMLElement;
   private readonly rows: Row[];
   private order: string[] = [];
+  /** The last render's R count and ghost, and when R last moved, so only a turn turns a thumbnail. */
+  private turnsSeen = 0;
+  private ghostSeen: { tile: string | null; rotation: number | null } = { tile: null, rotation: null };
+  private turnDir = 1;
+  private turnedAt = Number.NEGATIVE_INFINITY;
   private keySig = "";
   private slotKey = "";
   private readonly body: HTMLElement;
@@ -152,7 +163,7 @@ export class Sheet {
         const hexRot = hex.querySelector<SVGGElement>(".g-rot")!;
         pic.el.toggleAttribute("hidden", def.id !== first);
         hex.toggleAttribute("hidden", def.id !== first);
-        faces.set(def.id, { pic, hex, hexRot });
+        faces.set(def.id, { pic, hex, hexRot, deg: 0 });
       }
       const all = [...faces.values()];
       const btn = h(
@@ -193,6 +204,22 @@ export class Sheet {
     this.renderKey(v, fitting.length > 0);
 
     const slotKey = v.slot ? `${v.slot.cell.q},${v.slot.cell.r}` : "";
+    // A thumbnail turns only for R at the same slot: its count moved (every fitting row), or the
+    // ghost's rotation followed a press on the same tile (the selected row). A new slot, a re-rank or
+    // a new selection swaps pictures at once.
+    const sameSlot = slotKey === this.slotKey;
+    const now = performance.now();
+    if (v.turns !== this.turnsSeen) {
+      if (sameSlot) {
+        this.turnDir = v.turns > this.turnsSeen ? 1 : -1;
+        this.turnedAt = now;
+      }
+      this.turnsSeen = v.turns;
+    }
+    const pressed = sameSlot && now - this.turnedAt < TURN_FOLLOW_MS;
+    const ghostTurned = pressed && v.ghostTile === this.ghostSeen.tile && v.ghostRotation !== this.ghostSeen.rotation;
+    const rowsTurned = pressed && this.turnedAt === now;
+    this.ghostSeen = { tile: v.ghostTile, rotation: v.ghostRotation };
     if (slotKey !== this.slotKey) {
       // A new slot re-ranks the sheet: start from the top so "Fits here" leads.
       this.slotKey = slotKey;
@@ -221,7 +248,8 @@ export class Sheet {
           : selected && ghost && v.ghostRotation != null
             ? { def: ghost, k: v.ghostRotation }
             : f.seq[((v.turns % n) + n) % n]!;
-      this.showFace(r, turn);
+      const follows = selected && !!ghost && v.ghostRotation != null;
+      this.showFace(r, turn, (follows ? ghostTurned : rowsTurned) && !moved ? this.turnDir : 0);
     }
     if (moved) {
       for (const r of fitting) this.fitList.append(r.li);
@@ -250,8 +278,11 @@ export class Sheet {
     }
   }
 
-  private showFace(r: Row, t: Turn): void {
+  private showFace(r: Row, t: Turn, dir: number): void {
+    let prev: string | null = null;
     if (r.shown !== t.def.id) {
+      // R moved a group row to another member: its picture turns in from the one on screen.
+      prev = r.faces.get(r.shown)!.pic.src;
       for (const [id, f] of r.faces) {
         f.pic.el.toggleAttribute("hidden", id !== t.def.id);
         f.hex.toggleAttribute("hidden", id !== t.def.id);
@@ -259,9 +290,12 @@ export class Sheet {
       r.shown = t.def.id;
     }
     const face = r.faces.get(t.def.id)!;
-    face.pic.show(t.k);
-    const turn = `rotate(${t.k * 60}deg)`;
-    if (face.hexRot.style.transform !== turn) face.hexRot.style.transform = turn;
+    face.pic.show(t.k, dir, dir ? prev : null);
+    const deg = turnAngle(face.deg, t.k);
+    if (deg !== face.deg || !face.hexRot.style.transform) {
+      face.deg = deg;
+      face.hexRot.style.transform = `rotate(${deg}deg)`;
+    }
   }
 
   private renderKey(v: SheetView, anyFit: boolean): void {

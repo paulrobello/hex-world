@@ -1,0 +1,1504 @@
+[
+ {
+  "cmd": "camera",
+  "pos": [
+   27.7,
+   38,
+   40
+  ],
+  "look_at": [
+   27.7,
+   0,
+   2
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 60
+ },
+ {
+  "cmd": "set_reduced_motion",
+  "on": false
+ },
+ {
+  "cmd": "select_tile",
+  "id": "windmill"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "rotate",
+  "dir": "cw"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-00"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-01"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-02"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-03"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-04"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-05"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-06"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-07"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-08"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-09"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-10"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-11"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-12"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-13"
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-00"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-01"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-02"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-03"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-04"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-05"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-06"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-07"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-08"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-09"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-10"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-in-11"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-00"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-01"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-02"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-03"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-04"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-05"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-06"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-07"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-08"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-09"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-10"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-11"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-12"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-13"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-14"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "refused-15"
+ },
+ {
+  "cmd": "select_tile",
+  "id": "windmill"
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-00"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-01"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-02"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-03"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-04"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-05"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-06"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-07"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-08"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-09"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-10"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-11"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-12"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-13"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-14"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-15"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-16"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-17"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-18"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-19"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-20"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-21"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-22"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rise-23"
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "wait",
+  "frames": 10
+ },
+ {
+  "cmd": "set_tool",
+  "mode": "bulldoze"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-00"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-01"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-02"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-03"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-04"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-05"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-06"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-07"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-08"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-09"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-10"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-11"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-12"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-mode-13"
+ },
+ {
+  "cmd": "bulldoze",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-00"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-01"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-02"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-03"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-04"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-05"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-06"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-07"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-08"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-09"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-10"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-11"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-12"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-13"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-14"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-15"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-16"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-17"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-18"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-19"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-20"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-21"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-22"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "bulldoze-23"
+ },
+ {
+  "cmd": "set_tool",
+  "mode": "place"
+ },
+ {
+  "cmd": "wait",
+  "frames": 60
+ },
+ {
+  "cmd": "set_reduced_motion",
+  "on": true
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "select_tile",
+  "id": "windmill"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "rotate",
+  "dir": "cw"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-00"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-01"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-02"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-03"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-04"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-05"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-06"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-07"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-08"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-09"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-10"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-11"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-12"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-13"
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-00"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-01"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-02"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-03"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-04"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-05"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-06"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-07"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-08"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-09"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-10"
+ },
+ {
+  "cmd": "wait",
+  "frames": 1
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-in-11"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-00"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-01"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-02"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-03"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-04"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-05"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-06"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-07"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-08"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-09"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-10"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-11"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-12"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-13"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-14"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-refused-15"
+ },
+ {
+  "cmd": "select_tile",
+  "id": "windmill"
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-00"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-01"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-02"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-03"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-04"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-05"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-06"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-07"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-08"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-09"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-10"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-11"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-12"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-13"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-14"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-15"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-16"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-17"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-18"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-19"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-20"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-21"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-22"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-rise-23"
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "wait",
+  "frames": 10
+ },
+ {
+  "cmd": "set_tool",
+  "mode": "bulldoze"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-00"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-01"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-02"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-03"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-04"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-05"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-06"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-07"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-08"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-09"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-10"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-11"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-12"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-mode-13"
+ },
+ {
+  "cmd": "bulldoze",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-00"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-01"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-02"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-03"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-04"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-05"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-06"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-07"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-08"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-09"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-10"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-11"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-12"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-13"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-14"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-15"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-16"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-17"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-18"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-19"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-20"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-21"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-22"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-bulldoze-23"
+ },
+ {
+  "cmd": "set_tool",
+  "mode": "place"
+ },
+ {
+  "cmd": "wait",
+  "frames": 60
+ },
+ {
+  "cmd": "exit"
+ }
+]

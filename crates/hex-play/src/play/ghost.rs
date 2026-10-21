@@ -53,8 +53,11 @@ pub const GHOST_SHADER: &str = "shaders/ghost.wesl";
 /// Opacity of the ghost meshes.
 const GHOST_ALPHA: f32 = 0.45;
 /// Fade in after the slot is hovered, as the ghost outline does (s).
-const FADE_DELAY: f32 = 0.15;
-const FADE_IN: f32 = 0.12;
+const FADE_DELAY: f32 = super::affordances::GHOST_DELAY;
+const FADE_IN: f32 = super::affordances::T_FAST;
+/// R turns the ghost into its new rotation over the HUD's `--t` (`in-world.md`, Rotate: 180 to
+/// 220 ms), on the Legend curve, in step with the sheet's socket codes and thumbnails.
+pub const GHOST_TURN: f32 = super::affordances::T;
 const INK: [u8; 3] = [238, 243, 246];
 const BUILDING: [u8; 3] = [222, 210, 190];
 /// Ground props: the scatter's rocks and wildflowers, and a water tile's stones.
@@ -145,11 +148,39 @@ pub struct GhostMeshes {
     root: Option<Entity>,
     sig: Option<Sig>,
     t: f32,
+    /// The yaw the root shows, in edge steps (60° each), and the turn running toward a new rotation.
+    shown: f32,
+    turn: Option<Turn>,
     /// The parts were respawned: write the materials' opacity even when the fade holds still.
     dirty: bool,
     materials: Vec<(Role, Handle<GhostMaterial>, Vec3)>,
     /// Water surface meshes by tile id (`None`: the tile carries no water).
     water: HashMap<String, Option<Handle<Mesh>>>,
+}
+
+/// A ghost turn on R: from the yaw on screen to the new rotation's nearest equivalent (edge steps).
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Turn {
+    from: f32,
+    to: f32,
+    t: f32,
+}
+
+/// The equivalent of rotation `rot` (edge steps) nearest `from`, so a turn takes the short way
+/// (a half turn goes clockwise).
+fn nearest_steps(from: f32, rot: u8) -> f32 {
+    let d = (f32::from(rot % 6) - from).rem_euclid(6.0);
+    from + if d > 3.0 { d - 6.0 } else { d }
+}
+
+/// The yaw (edge steps) a turn shows `t` seconds in: eased over [`GHOST_TURN`], then held.
+fn turn_steps(turn: Turn, t: f32) -> f32 {
+    turn.from + (turn.to - turn.from) * super::affordances::ease(t / GHOST_TURN)
+}
+
+/// The root's rotation at a yaw of `steps` edge steps ([`piece_rotation`] for whole steps).
+fn yaw(steps: f32) -> Quat {
+    Quat::from_rotation_y(-(60.0 * steps).to_radians())
 }
 
 /// sRGB desaturated 30% and tinted 15% toward ink, as linear rgb.
@@ -433,6 +464,7 @@ pub fn sync(
         Res<Assets<GltfMesh>>,
         ResMut<Assets<Mesh>>,
     ),
+    mut roots: Query<&mut Transform>,
 ) {
     let in_kit = |id: &str| matches!(kit.as_deref(), Some(PlayKit::Ready(k)) if k.contains_key(id));
     let want = view
@@ -462,6 +494,26 @@ pub fn sync(
             commands.entity(root).try_despawn();
         }
         let restart = ghost.sig.as_ref().map(|s| s.cell) != want.as_ref().map(|w| w.cell);
+        // Only R (the same tile turned on the same cell) turns; anything else shows the rotation at once.
+        let turned = match (ghost.sig.as_ref(), want.as_ref()) {
+            (Some(s), Some(w)) => !restart && s.tile == w.tile && s.rotation != w.rotation,
+            _ => false,
+        };
+        let shown = match ghost.turn {
+            Some(t) => turn_steps(t, t.t),
+            None => ghost.shown,
+        };
+        ghost.turn = None;
+        ghost.shown = want.as_ref().map_or(0.0, |w| f32::from(w.rotation));
+        if let Some(w) = want.as_ref().filter(|_| turned && !reduced.0) {
+            let to = nearest_steps(shown, w.rotation);
+            ghost.turn = Some(Turn {
+                from: shown,
+                to,
+                t: 0.0,
+            });
+            ghost.shown = to;
+        }
         ghost.sig = want.clone();
         if restart {
             ghost.t = 0.0;
@@ -510,7 +562,9 @@ pub fn sync(
                 (kit, &*meshes),
                 (&pieces, water_kind.is_some(), water),
                 sig.cell,
-                sig.rotation,
+                ghost
+                    .turn
+                    .map_or_else(|| piece_rotation(sig.rotation), |t| yaw(t.from)),
             );
             ghost.root = Some(root);
             let counts: Vec<String> = def
@@ -541,8 +595,22 @@ pub fn sync(
             );
         }
     }
-    if ghost.root.is_none() {
+    let Some(root) = ghost.root else {
         return;
+    };
+    if let Some(turn) = ghost.turn.as_mut() {
+        turn.t += time.delta_secs();
+        let (t, done) = (*turn, turn.t >= GHOST_TURN || reduced.0);
+        if done {
+            ghost.turn = None;
+        }
+        if let Ok(mut tf) = roots.get_mut(root) {
+            tf.rotation = if done {
+                yaw(t.to)
+            } else {
+                yaw(turn_steps(t, t.t))
+            };
+        }
     }
     let before = ghost.t;
     ghost.t += time.delta_secs();
@@ -588,12 +656,12 @@ fn spawn(
         Option<(Handle<Mesh>, Role)>,
     ),
     cell: Axial,
-    rotation: u8,
+    rotation: Quat,
 ) -> (Entity, Cost) {
     let [x, z] = cell.to_world(HEX_RADIUS);
     let root = commands
         .spawn((
-            Transform::from_xyz(x, 0.0, z).with_rotation(piece_rotation(rotation)),
+            Transform::from_xyz(x, 0.0, z).with_rotation(rotation),
             Visibility::default(),
             SceneEntity,
         ))
@@ -652,6 +720,32 @@ fn spawn(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_ghost_turns_the_short_way_over_the_hud_t_on_the_legend_curve() {
+        assert_eq!(GHOST_TURN, 0.18, "the HUD's --t");
+        assert_eq!(nearest_steps(0.0, 1), 1.0);
+        assert_eq!(nearest_steps(5.0, 0), 6.0, "5 to 0 turns one step on");
+        assert_eq!(nearest_steps(0.0, 5), -1.0, "0 to 5 turns one step back");
+        assert_eq!(nearest_steps(0.0, 3), 3.0, "a half turn goes clockwise");
+        assert_eq!(
+            nearest_steps(6.4, 2),
+            8.0,
+            "from mid-turn to the nearest equivalent"
+        );
+        let turn = Turn {
+            from: 0.0,
+            to: 1.0,
+            t: 0.0,
+        };
+        assert_eq!(turn_steps(turn, 0.0), 0.0);
+        let mid = turn_steps(turn, GHOST_TURN / 2.0);
+        assert!(mid > 0.75 && mid < 1.0, "front-loaded like the HUD: {mid}");
+        assert_eq!(turn_steps(turn, GHOST_TURN), 1.0);
+        assert_eq!(turn_steps(turn, 1.0), 1.0, "and held");
+        assert!(yaw(1.0).angle_between(piece_rotation(1)) < 1e-5);
+        assert!(yaw(-1.0).angle_between(piece_rotation(5)) < 1e-5);
+    }
 
     #[test]
     fn every_tile_ghosts_its_base_and_hero_props_from_the_catalog() {

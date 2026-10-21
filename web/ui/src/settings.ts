@@ -1,5 +1,6 @@
 // Settings (S9, design/ui/legend/settings.html): the Graphics tab (Quality, S9.1, Tilt-shift, S9.4,
-// Colour grade and Grass) and the Audio tab (S9.5). The Controls tab is not built. Graphics reads
+// Colour grade and Grass), the Audio tab (S9.5) and the Controls tab (S9.6: Reduce motion, Follow
+// system or On, kept per viewer and sent as `set_reduced_motion` with the OS setting). Graphics reads
 // `state().tier`, `state().tilt` and `state().grade` every frame while open, so the T key, scripts
 // and a loaded save show here too, and writes through the `set_tier`, `tilt` and `set_grade`
 // commands. Audio reads and writes `hexWorld.audio`, which keeps the levels per viewer in
@@ -26,6 +27,7 @@ import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { Rebuild } from "./loading.ts";
 import type { Persistence } from "./persist.ts";
+import { seg } from "./photo.ts";
 import { Select } from "./select.ts";
 import {
   autoTier,
@@ -36,13 +38,18 @@ import {
   GRASS_DISTANCE_STOPS,
   GRASS_KEY,
   GRASS_SLIDER,
+  MOTION_KEY,
+  type MotionChoice,
   gradeCommand,
   gradeView,
   grassCommand,
   grassDistanceCommand,
   grassDistanceView,
   grassView,
+  motionCommand,
   storedGrass,
+  storedMotion,
+  systemMotionLabel,
   percent,
   qualityView,
   roveIndex,
@@ -112,7 +119,33 @@ function saveGrass(pct: number): void {
   }
 }
 
-type Tab = "graphics" | "audio" | "world" | "debug";
+/** This page's latest Reduce motion pick, so the OS listener keeps it when storage is refused. */
+let motionPick: MotionChoice | null = null;
+
+/** The viewer's Reduce motion choice; Follow system without one or without storage. */
+export function loadMotion(): MotionChoice {
+  if (motionPick) return motionPick;
+  try {
+    return storedMotion(localStorage.getItem(MOTION_KEY));
+  } catch {
+    return "system";
+  }
+}
+
+function saveMotion(c: MotionChoice): void {
+  motionPick = c;
+  try {
+    if (c === "system") localStorage.removeItem(MOTION_KEY);
+    else localStorage.setItem(MOTION_KEY, c);
+  } catch {
+    /* Storage refused: the choice holds until the page closes. */
+  }
+}
+
+/** The OS reduced-motion query, shared by the start-up sender (main.ts) and the Controls tab. */
+export const OS_REDUCE = "(prefers-reduced-motion: reduce)";
+
+type Tab = "graphics" | "audio" | "controls" | "world" | "debug";
 
 /** A tier pick waits this long for `state().tier` to follow before the row shows the engine's answer again. */
 const PICK_HOLD_MS = 3000;
@@ -144,6 +177,8 @@ export class Settings {
   private readonly strengthField: HTMLElement;
   private readonly volumes = new Map<Channel, Slider>();
   private readonly mute: HTMLButtonElement;
+  private readonly motion: ReturnType<typeof seg<MotionChoice>>;
+  private motionChoice: MotionChoice = loadMotion();
   private readonly world = new WorldPanel((c) => this.hw.cmd(c));
   private readonly debug: DebugPanel;
   private shown = false;
@@ -365,11 +400,50 @@ export class Settings {
     });
     audioPanel.append(h("div", { class: "field" }, h("span", { class: "field__label" }, "Mute everything"), this.mute));
 
+    // ---------- Controls ----------
+    // Reduce motion (S9.6): Follow system or On. Each pick is kept for this viewer and sent at once with
+    // the OS setting; the HUD's is-reduced-motion follows the engine flag (dom.ts syncReducedMotion).
+    const os = matchMedia(OS_REDUCE);
+    this.motion = seg<MotionChoice>(
+      "Reduce motion",
+      [
+        { value: "system", text: "Follow system", sub: systemMotionLabel(os.matches) },
+        { value: "on", text: "On" },
+      ],
+      (c) => {
+        this.motionChoice = c;
+        saveMotion(c);
+        this.hw.cmd(motionCommand(c, os.matches));
+      },
+    );
+    this.motion.set(this.motionChoice);
+    os.addEventListener("change", () => {
+      const sub = this.motion.subs.get("system");
+      if (sub) sub.textContent = systemMotionLabel(os.matches);
+    });
+    const controls = h(
+      "div",
+      { class: "panel", role: "tabpanel", hidden: true },
+      h("h2", { class: "section-h" }, "Accessibility"),
+      h(
+        "div",
+        { class: "field field--force" },
+        h("span", { class: "field__label" }, "Reduce motion"),
+        this.motion.el,
+        h(
+          "span",
+          { class: "field__hint" },
+          "On turns slides, the tile rise and its dust into instant changes. While your system asks for reduced motion, it stays on.",
+        ),
+      ),
+    );
+
     // ---------- Tabs ----------
     const strip = h("div", { class: "tabs", role: "tablist", "aria-label": "Settings" });
     for (const [id, label, panel] of [
       ["graphics", "Graphics", graphics],
       ["audio", "Audio", audioPanel],
+      ["controls", "Controls", controls],
       ["world", "World", this.world.el],
       ["debug", "Debug", this.debug.el],
     ] as const) {
@@ -401,7 +475,7 @@ export class Settings {
       { class: "sheet sheet--wide sheet--settings is-closed", "data-region": "settings", "aria-label": "Settings" },
       h("header", { class: "sheet__head" }, h("h1", {}, "Settings"), close),
       strip,
-      h("div", { class: "sheet__body" }, graphics, audioPanel, this.world.el, this.debug.el),
+      h("div", { class: "sheet__body" }, graphics, audioPanel, controls, this.world.el, this.debug.el),
     );
     this.el.toggleAttribute("inert", true);
     // Tab walks this sheet's own controls (the Hud leaves Tab to it while focus is inside), wrapping.
@@ -435,6 +509,7 @@ export class Settings {
     this.grassSig = "";
     this.distSig = "";
     this.syncAudio();
+    this.motion.set(this.motionChoice);
     this.tabs.get(this.tab)!.btn.focus({ preventScroll: true });
   }
 

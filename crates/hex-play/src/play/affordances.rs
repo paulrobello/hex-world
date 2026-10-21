@@ -809,15 +809,29 @@ fn parts_for(key: Key, view: &PlayView, catalog: &TileCatalog, meshes: bool) -> 
     }
 }
 
-/// Fade timings (s) of `in-world.md`: (in, out, delay in).
+/// The HUD motion tokens (`.impeccable/design.json`: `--t-fast`, `--t`, `--t-slow`) in seconds.
+/// Every in-world state-change fade, turn and pulse takes one of them, on [`ease`] (owner
+/// 2026-10-21: the engine's feedback runs on the HUD's motion scale).
+pub const T_FAST: f32 = 0.12;
+pub const T: f32 = 0.18;
+pub const T_SLOW: f32 = 0.24;
+/// The ghost waits this long after a slot is hovered before it fades in (`in-world.md`, Ghost): a
+/// hover delay, not a transition.
+pub const GHOST_DELAY: f32 = 0.15;
+/// The commit flash's ink edges fade over this (`in-world.md`, Place: 80 ms): a flash, kept off the
+/// token scale on purpose.
+const FLASH: f32 = 0.08;
+
+/// Fade timings (s), on the motion tokens: (in, out, delay in). Bulldoze mode's changes (the ring
+/// leaving and the target arriving) share `T`, as the HUD's bulldoze dim does.
 fn timing(key: Key) -> (f32, f32, f32) {
     match key {
-        Key::Ring => (0.16, 0.16, 0.0),
-        Key::Hover(_) | Key::TileHover(_) => (0.12, 0.12, 0.0),
-        Key::Ghost(_) => (0.12, 0.10, 0.15),
-        Key::Bulldoze(_) => (0.16, 0.15, 0.0),
-        Key::Flash(..) => (0.0, 0.08, 0.0),
-        Key::Waiting(_) => (0.16, 0.12, 0.0),
+        Key::Ring => (T, T, 0.0),
+        Key::Hover(_) | Key::TileHover(_) => (T_FAST, T_FAST, 0.0),
+        Key::Ghost(_) => (T_FAST, T_FAST, GHOST_DELAY),
+        Key::Bulldoze(_) => (T, T, 0.0),
+        Key::Flash(..) => (0.0, FLASH, 0.0),
+        Key::Waiting(_) => (T, T_FAST, 0.0),
     }
 }
 
@@ -898,7 +912,7 @@ pub fn sync(
             parts_for(key, &view, &catalog.0, ghost_meshes),
         );
         let mut alpha = Fade::at(1.0);
-        alpha.to(0.0, 0.08, 0.0);
+        alpha.to(0.0, FLASH, 0.0);
         aff.elements.push(Element {
             key,
             sig: 0,
@@ -960,7 +974,7 @@ pub fn sync(
                         parts_for(key, &view, &catalog.0, ghost_meshes),
                     );
                     el.glow = Fade::at(0.0);
-                    el.glow.to(1.0, if instant { 0.0 } else { 0.12 }, 0.0);
+                    el.glow.to(1.0, if instant { 0.0 } else { T_FAST }, 0.0);
                 }
             }
             None => {
@@ -995,9 +1009,9 @@ pub fn breath(t: f32) -> f32 {
     1.0 - 0.45 * (0.5 - 0.5 * (std::f32::consts::TAU * t / 2.4).cos())
 }
 
-/// The 240 ms refusal pulse, 0 -> 1 -> 0.
+/// The refusal pulse over `T_SLOW` (240 ms, as the HUD tag's pulse), 0 -> 1 -> 0.
 fn pulse(t: f32) -> f32 {
-    let u = (t / 0.24).clamp(0.0, 1.0);
+    let u = (t / T_SLOW).clamp(0.0, 1.0);
     (std::f32::consts::PI * u).sin()
 }
 
@@ -1033,7 +1047,7 @@ pub fn animate(
         Some(t) => {
             *t += dt;
             let k = pulse(*t);
-            if *t >= 0.24 {
+            if *t >= T_SLOW {
                 aff.pulse = None;
             }
             k
@@ -1077,6 +1091,48 @@ pub fn animate(
 
 #[cfg(test)]
 mod tests {
+    /// The engine's motion constants are the HUD's tokens, read from the design sidecar the HUD
+    /// is built from, and every fade in the timing table is one of them.
+    #[test]
+    fn feedback_runs_on_the_hud_motion_tokens() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../.impeccable/design.json");
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(path).expect("design.json")).unwrap();
+        let token = |name: &str| -> f32 {
+            let v = json["extensions"]["motion"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|m| m["name"] == name)
+                .unwrap_or_else(|| panic!("token {name}"))["value"]
+                .as_str()
+                .unwrap()
+                .to_owned();
+            v.trim_end_matches("ms").parse::<f32>().unwrap() / 1000.0
+        };
+        assert_eq!(T_FAST, token("t-fast"));
+        assert_eq!(T, token("t"));
+        assert_eq!(T_SLOW, token("t-slow"));
+        let on_scale = |v: f32| [0.0, T_FAST, T, T_SLOW].contains(&v);
+        for key in [
+            Key::Ring,
+            Key::Hover(Axial::ORIGIN),
+            Key::TileHover(Axial::ORIGIN),
+            Key::Ghost(Axial::ORIGIN),
+            Key::Bulldoze(Axial::ORIGIN),
+            Key::Waiting(Axial::ORIGIN),
+        ] {
+            let (fade_in, fade_out, _) = timing(key);
+            assert!(
+                on_scale(fade_in) && on_scale(fade_out),
+                "{key:?}: {fade_in} / {fade_out}"
+            );
+        }
+        assert_eq!(timing(Key::Flash(Axial::ORIGIN, 0)).1, FLASH);
+        assert_eq!(pulse(T_SLOW / 2.0), 1.0);
+        assert_eq!(pulse(T_SLOW), (std::f32::consts::PI).sin());
+    }
+
     use super::*;
     use crate::play::{PlayGhost, PlayTile};
 

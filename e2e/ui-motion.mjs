@@ -6,6 +6,10 @@
 //    the root carries is-reduced-motion and no HUD animation or transition runs; with it off they do.
 // 3. Frame strips of the key transitions (animations paused and stepped through 0..100%), written to
 //    MOTION_OUT (default e2e/test-results/ui-motion; docs/checkpoints/ui-feedback for the owner).
+// 4. The tile sheet's thumbnails turn on R with full motion (old and new rotation crossfade while both
+//    turn) and swap at once under reduced motion.
+// 5. Settings, Controls, Reduce motion (S9.6): On cuts the HUD's and the engine's motion with the OS at
+//    no-preference, keeps it through OS changes and a reload; Follow system follows the OS both ways.
 import { chromium } from "playwright";
 import { createServer } from "node:http";
 import { mkdirSync, readFileSync } from "node:fs";
@@ -158,6 +162,23 @@ async function strip(name, action, clip, caption) {
   return n;
 }
 
+/** R, then the fitting rows whose thumbnail changed, with the animations on their pictures a frame later. */
+async function thumbTurn(label) {
+  const srcs = () => page.evaluate(() => Object.fromEntries([...document.querySelectorAll(".list--fit .row")].map((b) => [b.dataset.tile, b.querySelector(".row__glyph:not([hidden]) .row__thumb:not(.row__thumb--out)")?.getAttribute("src") ?? null])));
+  const before = await srcs();
+  await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "r", code: "KeyR", bubbles: true, cancelable: true })));
+  await frames(2);
+  const anims = await page.evaluate(() => document.getAnimations()
+    .filter((a) => a.playState === "running" && a.effect?.target?.classList?.contains("row__thumb"))
+    .map((a) => a.effect.target.closest(".row").dataset.tile));
+  const outs = await page.locator(".row__thumb--out").count();
+  const after = await srcs();
+  const changed = Object.keys(after).filter((id) => before[id] && after[id] && before[id] !== after[id]);
+  check(changed.length > 0, `${label}: R gives a new rotation's thumbnail to ${changed.length} fitting rows (${changed.join(",")})`);
+  await frames(14);
+  return { changed, anims, outs };
+}
+
 const keydown = (key, code) => `document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "${key}", code: "${code}", bubbles: true, cancelable: true }))`;
 
 try {
@@ -180,6 +201,21 @@ try {
   const row = await page.locator(".row[aria-pressed=true]").boundingBox();
   const rowClip = { x: Math.round(row.x) - 8, y: Math.round(row.y) - 8, width: Math.round(row.width) + 16, height: Math.round(row.height) + 16 };
   check(await strip("rotate-row", keydown("r", "KeyR"), rowClip, "R: the selected row's socket code turns 60°, 180 ms") > 0, "rotate turns the selected row's socket code");
+  // ---------- 4. Thumbnails turn on R (full motion) ----------
+  {
+    const t = await thumbTurn("full motion");
+    const turned = t.changed.filter((id) => t.anims.includes(id));
+    check(turned.length === t.changed.length && t.outs > 0, `full motion: every changed thumbnail turns into its new rotation (${turned.length} of ${t.changed.length} animate, ${t.outs} outgoing pictures; still: ${t.changed.filter((id) => !turned.includes(id)).join(",")})`);
+    check((await page.locator(".row__thumb--out").count()) === 0, "full motion: the outgoing pictures are gone once the turn ends");
+    const list = await page.locator(".list--fit").boundingBox();
+    const listClip = { x: Math.round(list.x), y: Math.round(list.y), width: Math.round(list.width), height: Math.min(260, Math.round(list.height)) };
+    check(await strip("thumb-turn", keydown("r", "KeyR"), listClip, "R: each thumbnail crossfades into the next rotation while both turn 30°, 180 ms") > 0, "the thumbnail turn animates");
+    // The same turn close up: two pictures, magnified, so the turn in the ground plane reads.
+    const g = await page.locator(".list--fit .row[data-tile=oak] .row__glyph:not([hidden])").boundingBox();
+    const close = { x: Math.round(g.x) - 4, y: Math.round(g.y) - 4, width: 112, height: Math.round(g.height) + 8 };
+    check(await strip("thumb-turn-close", keydown("r", "KeyR"), close, "R, close up: Oak's picture turns into its next rotation, 180 ms") > 0, "the close-up thumbnail turn animates");
+  }
+
   // A placement, then undo: the margin note rises 8 px and fades in.
   const ghost = (await play()).ghost;
   await page.evaluate((g) => window.hexWorld.cmd({ cmd: "place", q: g.q, r: g.r }), ghost);
@@ -213,6 +249,10 @@ try {
     await frames(2);
     const a = [...now, ...(await running())];
     check(a.length === 0, `OS reduce: ${what} runs no HUD animation, at the press or after it (${a.join("; ")})`);
+  }
+  {
+    const t = await thumbTurn("OS reduce");
+    check(t.anims.length === 0 && t.outs === 0, `OS reduce: the thumbnails swap at once, no turn (${t.anims.length} animations, ${t.outs} outgoing)`);
   }
   check(await strip("sheet-close-reduced", keydown("Tab", "Tab"), right, "Reduced motion: Tab cuts the sheet away at once") === 0, "OS reduce: the sheet close is an instant cut");
   await page.evaluate(keydown("Tab", "Tab"));
@@ -258,6 +298,58 @@ try {
   const back = await running(".sheet--tiles", keydown("Tab", "Tab"));
   check(back.length > 0, `full motion again: Tab slides the sheet (${back.length} running)`);
   await page.evaluate(keydown("Tab", "Tab"));
+
+  // ---------- 5. Settings, Controls: Reduce motion ----------
+  const rooted = () => page.evaluate(() => document.documentElement.classList.contains("is-reduced-motion"));
+  const openControls = async () => {
+    await page.click(".tool[data-action=settings]");
+    await until(async () => !(await page.locator(".sheet--settings.is-closed").count()), "Settings open");
+    await page.click("#settings-tab-controls");
+  };
+  const option = (text) => page.locator("#settings-controls .seg button", { hasText: text });
+  const checked = async (text) => (await option(text).getAttribute("aria-checked")) === "true";
+  await openControls();
+  check(await checked("Follow system"), "Controls: Reduce motion starts on Follow system");
+  check((await page.locator("#settings-controls .seg button").count()) === 2, "Controls: two options, Follow system and On (no Off)");
+  check(/System: off/.test(await option("Follow system").innerText()), "Controls: Follow system reads System: off with the OS at no-preference");
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${out}/settings-controls.jpg`, type: "jpeg", quality: 88, clip: { x: 900, y: 0, width: 540, height: 420 } });
+  await option("On").click();
+  await until(async () => (await play()).reduced_motion === true, "On: the engine's reduced motion turns on with the OS at no-preference");
+  await until(rooted, "On: the root carries is-reduced-motion");
+  check(await page.evaluate(() => localStorage.getItem("hexWorld.reduceMotion")) === "on", "On: kept for this viewer in localStorage");
+  await page.evaluate(keydown("Escape", "Escape"));
+  await until(async () => page.locator(".sheet--settings.is-closed").count(), "Settings closed");
+  await page.waitForTimeout(300);
+  await inputNeverWaits("Settings On");
+  for (const [what, action] of [["Tab", keydown("Tab", "Tab")], ["Tab again", keydown("Tab", "Tab")], ["R", keydown("r", "KeyR")]]) {
+    const now = await running("", action);
+    await frames(2);
+    const a = [...now, ...(await running())];
+    check(a.length === 0, `Reduce motion On: ${what} runs no HUD animation (${a.join("; ")})`);
+  }
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await frames(3);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await frames(3);
+  check((await play()).reduced_motion === true && (await rooted()), "On: an OS change to reduce and back leaves it on");
+  await page.reload({ waitUntil: "commit" });
+  await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
+  await until(async () => (await play())?.reduced_motion === true, "On survives a reload: the engine starts reduced");
+  await until(rooted, "On survives a reload: the root carries is-reduced-motion");
+  await until(async () => !(await page.locator(".load").count()), "loading layer removed after the reload", 5_000);
+  await openControls();
+  check(await checked("On"), "after the reload the Controls tab shows On");
+  await option("Follow system").click();
+  await until(async () => (await play()).reduced_motion === false, "Follow system with the OS at no-preference: motion back on");
+  await until(async () => !(await rooted()), "Follow system: the root drops is-reduced-motion");
+  check(await page.evaluate(() => localStorage.getItem("hexWorld.reduceMotion")) === null, "Follow system clears the stored choice");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await until(async () => (await play()).reduced_motion === true, "Follow system: the OS asking for reduce turns it on");
+  await until(async () => /System: on/.test(await option("Follow system").innerText()), "Follow system reads System: on");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await until(async () => (await play()).reduced_motion === false, "Follow system: and off again with the OS");
+  await page.evaluate(keydown("Escape", "Escape"));
 } catch (e) {
   fail(String(e?.stack ?? e));
 } finally {

@@ -356,3 +356,12 @@ export function diffTiles(before: TileMap, after: TileMap): TileDiff {
   const removed = [...before.values()].filter((t) => after.get(cellKey(t))?.tile !== t.tile);
   return { added, removed };
 }
+
+/**
+ * The angle (degrees) to turn a socket hex or glyph to for rotation k, from the angle it shows now:
+ * the nearest equivalent, so a CSS transition from rotation 5 to 0 turns 60°, not 300° the long way.
+ */
+export function turnAngle(current: number, k: number): number {
+  const d = ((((k * 60 - current) % 360) + 540) % 360) - 180;
+  return current + d;
+}

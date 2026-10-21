@@ -8,11 +8,12 @@ import { Hud } from "./hud.ts";
 import { sprite } from "./icons.ts";
 import { Loading } from "./loading.ts";
 import { Persistence } from "./persist.ts";
-import { loadGrade, loadGrass, loadGrassDistance } from "./settings.ts";
+import { OS_REDUCE, loadGrade, loadGrass, loadGrassDistance, loadMotion } from "./settings.ts";
 import {
   gradeCommand,
   grassCommand,
   grassDistanceCommand,
+  motionCommand,
   startupGrade,
   startupGrass,
   startupGrassDistance,
@@ -81,9 +82,10 @@ function run(root: HTMLElement, hw: Bridge): void {
   const audio = new GameAudio();
   audio.listen();
   hw.audio = audio.api();
-  // Engine motion (the staged rise, shake) follows the OS reduced-motion setting, at start and on change.
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  const syncMotion = () => hw.cmd({ cmd: "set_reduced_motion", on: reduced.matches });
+  // Engine motion (the staged rise, shake) follows the OS reduced-motion setting, at start and on change,
+  // unless the viewer's Reduce motion choice (Settings, Controls) is On.
+  const reduced = matchMedia(OS_REDUCE);
+  const syncMotion = () => hw.cmd(motionCommand(loadMotion(), reduced.matches));
   syncMotion();
   reduced.addEventListener("change", syncMotion);
   // The viewer's colour grade; a `grade` key in the address wins and leaves the stored choice alone.

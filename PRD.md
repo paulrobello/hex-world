@@ -157,20 +157,22 @@ The player-facing UI (D18 overlay) is held to a hero standard, like water:
 
 - **Polished:** a deliberate visual system (type scale, spacing, colour tokens, iconography) that frames the diorama instead of competing with it. No stock component-library look.
 - **Subtle interactions and motion:** every state change (hover, press, select, open, close, place, undo) has short, eased feedback. Motion explains cause and effect and never delays input. Reduced-motion is respected.
+- **Motion scale (owner, 2026-10-21):** the HUD and the engine's in-world feedback share one scale: 120, 180 and 240 ms (`--t-fast`, `--t`, `--t-slow` in `.impeccable/design.json`, mirrored as `T_FAST`, `T`, `T_SLOW` in `hex_play::play::affordances` and tested against it) on one curve, `cubic-bezier(.22, .9, .3, 1)`. R turns the ghost (180 ms), the sheet's socket codes and its thumbnails (the old and new rotation's pictures crossfade while both turn in the ground plane) in step; under reduced motion all three cut at once. Choreography keeps its own timing: the staged rise (§4.4, 2 s), the undo and bulldoze sinks (400 and 700 ms ease-in), the dust, the 2.4 s ghost breathing and the 80 ms commit flash. The inventory and frame strips are in [`docs/checkpoints/engine-feedback/`](docs/checkpoints/engine-feedback/inventory.md) and [`docs/checkpoints/ui-feedback/`](docs/checkpoints/ui-feedback/inventory.md).
 - **Highly intuitive:** a first-time player can place, rotate, undo and bulldoze without reading help text. Affordances and the legal-slot filter make valid actions obvious.
 - **Mockups first:** before any UI is implemented, the owner reviews and approves mockups of every screen and the key interaction states, including motion (clips or interactive prototypes). UI work goes through the `impeccable` skill with a named design direction.
 - **Direction (owner, 2026-10-13):** Legend, a survey-map margin with a socket-colour code ([`design/ui/legend/direction.md`](design/ui/legend/direction.md); product brief [`PRODUCT.md`](PRODUCT.md)). The inventory sheet stays open until Tab closes it. Tiles that do not fit stay listed, dimmed with their reason, below the tiles that fit.
 
 ### 4.8 Settings
 
-The Settings sheet (Legend S9, owner deviations accepted as A21 on 2026-10-14) has four tabs. The mockup's Controls tab is not built.
+The Settings sheet (Legend S9, owner deviations accepted as A21 on 2026-10-14) has five tabs.
 
 - **Graphics.** Quality: Auto, Low, Medium, High, and Ultra where detection lands on High (§9.2). A quality change rebuilds the scene behind a loading panel ("Changing quality") that takes the pointer and the keys until the new tier has drawn (owner report, 2026-10-14). Tilt-shift: a switch, off by default, and a strength slider (§9.1). Colour grade: the named grades, `rich-3` by default (§9.1). Grass density: 0–150% of Normal in 5% steps, 100% by default, drawn on High and Ultra only (§9.1).
 - **Audio.** Mute and five levels: master 80%, music 55%, effects 75%, interface 50%, and ambience 10% (owner, 2026-10-14).
+- **Controls.** Reduce motion (S9.6, owner 2026-10-21): Follow system (the default, its second line saying what the OS asks for) or On. There is no Off override: an OS set to reduce motion always gets it. On cuts the HUD's motion (`is-reduced-motion`) and the engine's (`set_reduced_motion`: the staged rise, dust, shake, sinks, ghost turn, every affordance fade and pulse) with the OS at no-preference. The mockup's Auto-rotate switch and Keys table are not built.
 - **World.** Walk speed: 2.8–8.0 m/s in 0.1 m/s steps, 2.8 m/s by default (§15 P8). Start over: after a confirm, it clears the current world to the start tile in place, keeping its name and save slot (owner, 2026-10-14).
 - **Debug.** Developer overlays, all off by default and never saved (owner request, 2026-10-14): LOD tint with its key and drawn counts, Force LOD (Auto, 0, 1, 2), a performance corner, the hex grid with axial labels, edge sockets, walk colliders, scatter footprints with their grass exclusion discs, and the road and river routing graph. Also driven by the `debug` command and `--debug` / `?debug=` ([`docs/agent-operability.md`](docs/agent-operability.md#debug-overlays)).
 
-Audio levels, the colour grade, the grass density and the walk speed are kept per viewer in `localStorage`, outside the world save. Quality and the tilt-shift choice travel with the save (§12.2). A save also carries the volumes, but loading it does not apply them (owner decision A16).
+Audio levels, the colour grade, the grass density, the walk speed and the Reduce motion choice are kept per viewer in `localStorage`, outside the world save. Quality and the tilt-shift choice travel with the save (§12.2). A save also carries the volumes, but loading it does not apply them (owner decision A16).
 
 ## 5. Tile system
 

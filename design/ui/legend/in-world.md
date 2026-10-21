@@ -29,7 +29,7 @@ Legality is never colour alone. Compatible edges are solid, incompatible edges a
 
 - Every free slot adjacent to the world draws its hex outline at ground height: neutral, 2 px, dashed 6 on and 7 off.
 - Hovered slot: outline goes to ink at 90% and the cap gets an ink fill at 4%. Crossfade 120 ms.
-- The slot ring hides in bulldoze and photo mode (160 ms fade).
+- The slot ring hides in bulldoze and photo mode (160 ms fade; built on `--t`, 180 ms, 2026-10-21).
 - The hovered slot stays the sheet's slot while the pointer moves onto the HUD. Another slot, Esc, or a placement replaces it.
 - Pinning (owner choice U4, 2026-10-14): a click on a free slot pins it. The ghost, its rotation and the sheet stay on the pinned slot while the pointer crosses other tiles on its way to the sheet, and a second click on it places. A click on another free slot pins that one; Esc or a click elsewhere unpins. The pinned ghost's outline is solid, and the slot under the pointer keeps the hovered outline so the next click's target is visible. Shift-click skips the pin and places at once (see Place).
 
@@ -49,7 +49,7 @@ Owner request, 2026-10-14: a placed tile under the pointer gets a faint outline,
 - The tile's own socket colours (owner choice U1): a 5 px line in the tile's socket colour on each edge at the current rotation, along the middle 72% of the edge, 11 px inside the rim.
 - Outline: ghost line colour, 2 px, dashed 10 on and 8 off, at the cap rim.
 - Breathing: cap fill opacity 100% to 55% and back over 2.4 s, ease-in-out, looping. Off under reduced motion.
-- Appears 150 ms after a slot is hovered with a tile selected, at the first legal rotation (auto-rotate). Disappears in 100 ms when the pointer leaves for a non-slot.
+- Appears 150 ms after a slot is hovered with a tile selected, at the first legal rotation (auto-rotate). Disappears in 100 ms when the pointer leaves for a non-slot (built: the outline on `--t-fast`, 120 ms, 2026-10-21; the ghost meshes still cut at once).
 
 ## Edge glow
 
@@ -69,7 +69,7 @@ The signature of the Legend direction, carried into the world. For every touched
 
 ## Rotate
 
-- R, Shift+R, or Ctrl+wheel turns the ghost 60° about its centre in 200 ms (range 180–220 ms).
+- R, Shift+R, or Ctrl+wheel turns the ghost 60° about its centre in 200 ms (range 180–220 ms; built on `--t`, 180 ms, the short way, 2026-10-21).
 - The edge glow fades out over the first 60 ms of the turn, recomputes, and fades in over 120 ms when the turn lands.
 - With auto-rotate on (default), R steps through legal rotations only and wraps. With it off, R steps all six, and clashing edges show as incompatible.
 - Holding R repeats every 250 ms. A press during a turn retargets the running turn instead of queueing.
@@ -108,10 +108,10 @@ When nothing fits, the tile stays. The tag carries the bad ring and the reason, 
 | Would split the world | 4 px incompatible, dashed 10 on and 8 off | None | The tiles it would cut off get a hatch: 45° ink stripes 2.5 px wide every 10 px over sheet blue `rgb(18 39 58)` at 35%, with a 2 px ink dotted outline (3 on, 5 off). Tag "Removing this would split your world" and the count. |
 | Last tile | Same as split, without the hatch | None | Tag "The world needs at least one tile" |
 
-- Mode change in and out: 150 ms. The cursor becomes the bulldoze cursor and the ghost and slot ring hide.
+- Mode change in and out: 150 ms (built on `--t`, 180 ms, for the ring leaving and the target arriving alike, 2026-10-21). The cursor becomes the bulldoze cursor and the ghost and slot ring hide.
 - Clicking a blocked target repeats the 240 ms pulse on its outline. Clicking a removable tile destroys it: it sinks 700 ms ease-in inside a dust cloud and the HUD toast offers Undo.
 - The dust cloud (owner request 2026-10-14) covers the whole hex: a darker earthy swell across the hex area, a lighter billow thrown past the rim and up from the centre several metres, and a few dark debris bits tossed up that fall back. It lingers about 1.5 s after the tile is gone, the upper billow thinning first, and is clear by 2.24 s: the owner asked for 20% less size and duration than the first look (2026-10-14), so every distance, particle size and phase is 80% of it. 120 particles at most on two shared meshes, unlit, no shadows, the same layout every time for a given cell. Reduced motion: no cloud, the tile is gone at once. Undo and redo keep the short puff above.
-- Highlights fade in 160 ms.
+- Highlights fade in 160 ms (built on `--t`, 180 ms, 2026-10-21).
 
 ## Audio pairing (§8.1)
 

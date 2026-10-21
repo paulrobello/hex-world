@@ -12,6 +12,11 @@ import {
   GRASS_DISTANCE_STOPS,
   GRASS_KEY,
   GRASS_SLIDER,
+  MOTION_KEY,
+  motionCommand,
+  reducedMotionWanted,
+  storedMotion,
+  systemMotionLabel,
   grassCommand,
   grassDistanceCommand,
   grassDistanceView,
@@ -305,4 +310,20 @@ test("grass slider sends at most every 150 ms while dragging and the last value 
   assert.deepEqual(sent, [100, 115, 120], "release sends the last value at once");
   s.flush();
   assert.deepEqual(sent, [100, 115, 120], "nothing pending, nothing sent");
+});
+
+test("reduce motion: Follow system follows the OS, On is on whatever the OS says, and there is no Off", () => {
+  assert.equal(MOTION_KEY, "hexWorld.reduceMotion");
+  assert.equal(reducedMotionWanted("system", false), false);
+  assert.equal(reducedMotionWanted("system", true), true);
+  assert.equal(reducedMotionWanted("on", false), true);
+  assert.equal(reducedMotionWanted("on", true), true);
+  assert.deepEqual(motionCommand("on", false), { cmd: "set_reduced_motion", on: true });
+  assert.deepEqual(motionCommand("system", false), { cmd: "set_reduced_motion", on: false });
+  // Nothing stored, a retired "off" or anything unknown follows the system: the OS always applies.
+  for (const v of [null, undefined, "", "off", "system", "ON", "true"])
+    assert.equal(storedMotion(v), "system", String(v));
+  assert.equal(storedMotion("on"), "on");
+  assert.equal(systemMotionLabel(true), "System: on");
+  assert.equal(systemMotionLabel(false), "System: off");
 });

@@ -115,7 +115,9 @@
 .row[aria-pressed=true] { background: var(--sheet-2); box-shadow: inset 0 0 0 1.5px var(--pick); --ink-3: var(--ink-3-lifted); }
 .row__glyph { position: relative; width: 48px; height: 48px; transition: opacity var(--t-fast) var(--ease), filter var(--t-fast) var(--ease), transform var(--t-fast) var(--ease); }
 .row:hover .row__glyph { transform: translateY(-2px) scale(1.04); }
-.row__thumb { display: block; width: 100%; height: 100%; object-fit: contain; }
+.row__thumb { display: block; width: 100%; height: 100%; object-fit: contain; transform-origin: 50% 46%; }
+/* The outgoing rotation's picture while a thumbnail turns (glyph.ts TilePicture). */
+.row__thumb--out { position: absolute; inset: 0; pointer-events: none; }
 .row__text { display: grid; min-width: 0; }
 .row__name { font-weight: 700; font-size: var(--fs-4); }
 .row__meta { font-size: var(--fs-2); color: var(--ink-2); }

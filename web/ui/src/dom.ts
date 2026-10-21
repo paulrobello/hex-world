@@ -47,8 +47,15 @@ export function syncReducedMotion(engine: boolean): void {
 
 /** A motion token (`--t-fast`, `--t`, `--t-slow`, `--t-toast`) in milliseconds, for Web Animations. */
 export function motionMs(token: string, fallback: number): number {
-  const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(token));
-  return Number.isFinite(v) ? v : fallback;
+  return cssMs(getComputedStyle(document.documentElement).getPropertyValue(token), fallback);
+}
+
+/** A CSS time in milliseconds: the minified sheet writes `180ms` as `.18s`. */
+export function cssMs(value: string, fallback: number): number {
+  const v = value.trim();
+  const n = parseFloat(v);
+  if (!Number.isFinite(n)) return fallback;
+  return /\ds$/.test(v) && !v.endsWith("ms") ? n * 1000 : n;
 }
 
 /** Restarts a one-shot CSS animation class. */

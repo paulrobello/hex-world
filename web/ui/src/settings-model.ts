@@ -339,3 +339,27 @@ export const CHANNELS: { bus: Channel; label: string; hint?: string }[] = [
 
 /** A 0–1 level as the slider's whole percent. */
 export const percent = (v: number): number => Math.round(Math.min(1, Math.max(0, v)) * 100);
+
+/** The viewer's Reduce motion choice in localStorage (Settings, Controls); it is not part of the world save. */
+export const MOTION_KEY = "hexWorld.reduceMotion";
+
+/**
+ * Reduce motion (S9.6, owner 2026-10-21): follow the OS setting, or on whatever the OS says. There is
+ * no Off override: an OS that asks for reduced motion always gets it.
+ */
+export type MotionChoice = "system" | "on";
+
+/** A stored choice; anything else (nothing stored, an old or unknown value) follows the system. */
+export const storedMotion = (v: string | null | undefined): MotionChoice => (v === "on" ? "on" : "system");
+
+/** The one rule both senders use (start-up, an OS change, a Settings pick): On, or the OS asks for it. */
+export const reducedMotionWanted = (choice: MotionChoice, osReduce: boolean): boolean => choice === "on" || osReduce;
+
+/** `set_reduced_motion` for the choice and the OS setting. */
+export const motionCommand = (choice: MotionChoice, osReduce: boolean): { cmd: "set_reduced_motion"; on: boolean } => ({
+  cmd: "set_reduced_motion",
+  on: reducedMotionWanted(choice, osReduce),
+});
+
+/** The Follow system option's second line: what the OS asks for now. */
+export const systemMotionLabel = (osReduce: boolean): string => `System: ${osReduce ? "on" : "off"}`;

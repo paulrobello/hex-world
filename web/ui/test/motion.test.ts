@@ -89,3 +89,11 @@ test("reduced motion: the blanket cut covers the HUD roots and every element und
       `blanket cut missing for scope "${scope}"`,
     );
 });
+
+test("motionMs reads a token whatever unit the minified sheet writes it in", async () => {
+  const { cssMs } = await import("../src/dom.ts");
+  assert.equal(cssMs("180ms", 0), 180);
+  assert.equal(cssMs(" .18s", 0), 180, "the built hud.css writes 180ms as .18s");
+  assert.equal(cssMs("0.24s", 0), 240);
+  assert.equal(cssMs("", 240), 240);
+});

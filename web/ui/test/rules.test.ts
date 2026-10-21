@@ -17,6 +17,7 @@ import {
   summary,
   tileDef,
   tileMap,
+  turnAngle,
 } from "../src/rules.ts";
 import { TILE_NAMES, actionText, bulldozeRefusal, coord } from "../src/words.ts";
 import parity from "./rules-parity.json" with { type: "json" };
@@ -207,4 +208,17 @@ test("undo and redo text comes from the tile diff", () => {
   assert.equal(actionText(diffTiles(meadow, replaced), true), "replaced Meadow with Pine forest");
   const t: PlayTile = { q: -1, r: 2, tile: "forest", rotation: 0 };
   assert.equal(coord(t), "(−1, 2)");
+});
+
+test("turnAngle: a socket hex turns the short way, also across rotation 5 to 0", () => {
+  assert.equal(turnAngle(0, 1), 60);
+  assert.equal(turnAngle(300, 0), 360, "5 to 0 is one step clockwise");
+  assert.equal(turnAngle(0, 5), -60, "0 to 5 is one step back");
+  assert.equal(turnAngle(360, 2), 480);
+  for (let from = -720; from <= 720; from += 60)
+    for (let k = 0; k < 6; k++) {
+      const to = turnAngle(from, k);
+      assert.ok(Math.abs(to - from) <= 180, `${from} to k=${k}: ${to}`);
+      assert.equal((((to - k * 60) % 360) + 360) % 360, 0, `${from} to k=${k} lands on rotation k`);
+    }
 });
