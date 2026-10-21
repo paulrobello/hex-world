@@ -41,6 +41,8 @@ const FLAG_BLOSSOM: u32 = 128u;
 // A farm animal: walks and grazes by its MeshTag motion word (hex_render::animal_motion, in the
 // vertex stage of every pass). Never a foliage slot, so the tag is not a season index there.
 const FLAG_ANIMAL: u32 = 256u;
+// The wet band's drying trail (kit_material.wesl), set by water::tick on every tier but Low.
+const FLAG_WET_TRAIL: u32 = 512u;
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> kit: KitParams;
 

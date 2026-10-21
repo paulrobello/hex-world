@@ -50,6 +50,9 @@ pub const FLAG_BLOSSOM: u32 = 128;
 /// A farm animal (`crate::animal`): its vertex stages pose the legs and head by the instance's
 /// `MeshTag` motion word with the rig in `KitParams::animal_rig` and `animal_head`.
 pub const FLAG_ANIMAL: u32 = 256;
+/// The wet band's drying trail on a [`FLAG_WET_BAND`] slot: sand the swash just left stays soaked
+/// and dries back. `water::tick` sets it while the water refracts (every tier but Low).
+pub const FLAG_WET_TRAIL: u32 = 512;
 
 pub type KitMaterial = ExtendedMaterial<StandardMaterial, KitExt>;
 

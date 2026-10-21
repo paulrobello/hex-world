@@ -1067,7 +1067,35 @@ impl WaterField for TileField<'_> {
         (1.0 - smoothstep(0.0, MOUTH_FOAM_S, s.abs()))
             * (1.0 - smoothstep(0.75 * w, w + 1.0, self.river(p).0))
     }
+
+    /// The flow's advective acceleration on a river tile, `speed * |d flow / d s|` along the flow
+    /// (central difference over [`CHURN_STEP`]): 0 on a straight, `speed² / R` round a bend of
+    /// radius R, and where the fork's arms turn into each other and slow. Faded to 0 over
+    /// [`CHURN_EDGE_FADE`] inside the hex border, so every river edge reads 0 on both sides.
+    fn churn(&self, x: f32, z: f32) -> f32 {
+        if self.cell.kind != WaterKind::River {
+            return 0.0;
+        }
+        let p = Vec2::new(x, z);
+        let u = self.water(x, z).flow;
+        let speed = u.length();
+        if speed < 1e-3 {
+            return 0.0;
+        }
+        let step = u / speed * CHURN_STEP;
+        let ahead = self.water(p.x + step.x, p.y + step.y).flow;
+        let behind = self.water(p.x - step.x, p.y - step.y).flow;
+        let accel = speed * (ahead - behind).length() / (2.0 * CHURN_STEP);
+        let d = p - center(self.cell.tile.cell);
+        let inside = APOTHEM - (0..6).map(|e| d.dot(edge_dir(e))).fold(f32::MIN, f32::max);
+        accel * smoothstep(0.0, CHURN_EDGE_FADE, inside)
+    }
 }
+
+/// Step (m) of the churn's central difference along the flow.
+const CHURN_STEP: f32 = 0.5;
+/// Width (m) inside the hex border over which the churn fades to 0 at the edge.
+const CHURN_EDGE_FADE: f32 = 3.0;
 
 /// Rows of a river strip along `path`: every [`RIBBON_STEP`] m, each with the lateral axis
 /// across the flow. The end rows lie exactly along their tile edges.
@@ -2884,4 +2912,48 @@ mod tests {
         (3, -1, "ocean", 4),
         (1, -1, "meadow", 0),
     ];
+
+    /// The river churn (foam where the flow turns or slows) is 0 on a straight and on every river
+    /// edge, so neighbouring strips agree at each seam under every rotation, and it reads round the
+    /// bends and in the fork, strongest in the tight bend.
+    #[test]
+    fn river_churn_reads_on_bends_and_the_fork_and_vanishes_on_straights_and_edges() {
+        let cat = catalog();
+        let o = Axial::ORIGIN;
+        let peak = |id: &str, rot: u8| {
+            let lay = layout(&[tile(0, 0, id, rot)], &cat, |_| false);
+            let f = lay[&o].field();
+            let mut best = 0.0f32;
+            for i in -32..=32 {
+                for j in -32..=32 {
+                    let p = Vec2::new(i as f32 * 0.5, j as f32 * 0.5);
+                    let c = f.churn(p.x, p.y);
+                    assert!(c.is_finite() && c >= 0.0, "{id} r{rot} at {p}: {c}");
+                    best = best.max(c);
+                    let inside =
+                        APOTHEM - (0..6).map(|e| p.dot(edge_dir(e))).fold(f32::MIN, f32::max);
+                    if inside <= 0.0 {
+                        assert!(c < 1e-6, "{id} r{rot}: churn {c} on the border at {p}");
+                    }
+                }
+            }
+            best
+        };
+        for rot in 0..6u8 {
+            let straight = peak("river_straight", rot);
+            let bend = peak("river_bend", rot);
+            let tight = peak("river_bend_60", rot);
+            let fork = peak("river_fork", rot);
+            eprintln!(
+                "r{rot}: straight {straight:.4} bend {bend:.4} bend_60 {tight:.4} fork {fork:.4}"
+            );
+            assert!(straight < 1e-3, "r{rot}: straight churn {straight}");
+            assert!(
+                bend > 0.03 && bend < tight,
+                "r{rot}: bend {bend}, bend_60 {tight}"
+            );
+            assert!(tight > 0.12, "r{rot}: bend_60 {tight}");
+            assert!(fork > 0.08, "r{rot}: fork {fork}");
+        }
+    }
 }

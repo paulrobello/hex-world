@@ -100,15 +100,31 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
     if ((kit_common::kit.flags & kit_common::FLAG_WET_BAND) != 0u) {
         let wp = in.world_position.xyz;
         let y = wp.y - water_common::COAST_WATER_Y;
-        let reach = kit_common::kit.wash_amp * water_common::swash(water_common::coast_shore(y), kit_common::kit.water_time);
+        let shore = water_common::coast_shore(y);
+        let reach = kit_common::kit.wash_amp * water_common::swash(shore, kit_common::kit.water_time);
         // Run-up holds only on faces flat enough to keep it: cliff walls and steep banks stay dry,
         // so the band doesn't crawl up every exposed coast side (owner, 2026-10-18).
         let hold = smoothstep(0.3, 0.6, in.world_normal.y);
         let damp = 1.0 - smoothstep(0.0, 0.32 + 0.08 * water_common::value_noise(wp.xz / 7.0), y);
         let soaked = 1.0 - smoothstep(reach - 0.01, reach + 0.05, y);
         shore_wet = hold * clamp(max(damp * 0.75, soaked), 0.0, 1.0) * step(-0.02, y) + step(y, -0.02);
+        // Drying trail (FLAG_WET_TRAIL, every tier but Low): the run-up covers its own soaked line,
+        // so the band reads live where the wash has just left. Sand the swash reached in the last
+        // two seconds or so is still soaked, darker and glossier than the damp band, and dries
+        // back to it as the wash retreats: the band's reach a few past steps back on the same
+        // clock, each fading with its age.
+        var sheen = soaked;
+        if ((kit_common::kit.flags & kit_common::FLAG_WET_TRAIL) != 0u) {
+            for (var k = 1u; k <= 3u; k++) {
+                let age = f32(k) * 0.6;
+                let past = kit_common::kit.wash_amp * water_common::swash(shore, kit_common::kit.water_time - age);
+                sheen = max(sheen, (1.0 - smoothstep(past - 0.02, past + 0.07, y)) * exp(-age / 1.1));
+            }
+        }
+        sheen *= hold * step(-0.02, y);
         @if(VERTEX_COLORS) {
             shore_wet *= in.color.a;  // the detail weight fades the live band too (mouth fan banks)
+            sheen *= in.color.a;
         }
         var c = pbr_input.material.base_color;
         // The seabed slot starts at the water at rest (`_beach.py` `slot_of`), so the retreating
@@ -126,9 +142,11 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
             let smooth_bed = mix(mean, c.rgb, 0.3) * DRY_SAND_OVER_SEABED;
             c = vec4(mix(smooth_bed, c.rgb, to_gravel), c.a);
             shore_wet *= 1.0 - to_gravel;
+            sheen *= 1.0 - to_gravel;
         }
-        pbr_input.material.base_color = vec4(c.rgb * mix(1.0, 0.55, shore_wet), c.a);
+        pbr_input.material.base_color = vec4(c.rgb * mix(1.0, 0.55, shore_wet) * mix(1.0, 0.8, sheen), c.a);
         pbr_input.material.perceptual_roughness = mix(pbr_input.material.perceptual_roughness, 0.18, shore_wet * step(-0.02, y));
+        pbr_input.material.perceptual_roughness = mix(pbr_input.material.perceptual_roughness, 0.09, sheen);
     }
 
     // §9.4 seasonal blossom (FLAG_BLOSSOM, docs/kit/hooks-contract.md): the unique ORM's A is

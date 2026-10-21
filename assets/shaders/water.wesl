@@ -55,6 +55,8 @@ struct WaterVarying {
     // Cut faces: terrain height under this point of the edge (the face is clipped below it).
     // Surface: the river-mouth foam weight (water.rs `MEET_TAG`), 0 on every other tile.
     @location(6) ground: f32,
+    // Surface: the river churn (water.rs `foam_tag`, the flow's advective acceleration in m/s²).
+    @location(7) churn: f32,
 }
 
 // water.rs `SKIRT_TAG`: a cut-face vertex carries SKIRT_TAG + terrain height in UV_0.y.
@@ -75,7 +77,7 @@ fn vertex(v: Vertex) -> WaterVarying {
     // Surface vertices and skirt tops (at rest on the sea level) move with the waves, by the same
     // function at the same world XZ as the rim they share, so the cut face never parts from the surface.
     let skirt = u.uv.y > 0.5;
-    out_ground = select(u.uv.y / MEET_TAG, u.uv.y - SKIRT_TAG, skirt);
+    out_ground = select(max(u.uv.y, 0.0) / MEET_TAG, u.uv.y - SKIRT_TAG, skirt);
     let moves = !skirt || rest.y > water.sea_level - 1e-4;
     let g = wc::gerstner(rest.xz, t, water.wave_count);
     var p = rest;
@@ -91,6 +93,7 @@ fn vertex(v: Vertex) -> WaterVarying {
     var out: WaterVarying;
     out.skirt = select(0.0, 1.0, skirt);
     out.ground = out_ground;
+    out.churn = select(max(-u.uv.y, 0.0), 0.0, skirt);
     out.position = vt::position_world_to_clip(p);
     out.world_position = vec4(p, 1.0);
     out.rest_xz = rest.xz;
@@ -236,7 +239,17 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
     let rapids = river * smoothstep(0.8, 1.3, speed) * 0.45;
     // River mouth: a band where the outflow meets the surf, surging as the swash runs in.
     let meet = select(in.ground, 0.0, skirt) * (0.5 + 0.5 * clamp(wc::swash(in.site.z, t), 0.0, 1.0));
-    let raw = max(contact, lines * 0.75) + crest + rapids + meet;
+    // River churn: white water where the flow turns or slows (the bends, the fork's meeting water),
+    // none on straights. Medium and up break it up with the ripples' flow-advected two-phase noise,
+    // so the streaks travel with the current; Low keeps the drifting breakup.
+    var streak = nb;
+    @if(WATER_REFRACTION) {
+        let s0 = noise_b(p - in.flow * ph0 * period, 2.9);
+        let s1 = noise_b(p - in.flow * ph1 * period + vec2(0.37, 0.61), 2.9);
+        streak = mix(s0, s1, w1);
+    }
+    let churn = river * smoothstep(0.05, 0.22, in.churn) * (0.1 + 0.3 * streak);
+    let raw = max(contact, lines * 0.75) + crest + rapids + meet + churn;
     let foam = select(clamp((raw - (1.0 - nb) * 0.85) * 2.4, 0.0, 1.0), 0.0, skirt);
 
     // Surface lighting from Bevy's PBR: IBL reflection and the sun's specular (glints) with its

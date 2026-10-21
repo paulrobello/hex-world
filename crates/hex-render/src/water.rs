@@ -251,11 +251,28 @@ pub trait WaterField {
     fn meet(&self, _x: f32, _z: f32) -> f32 {
         0.0
     }
+    /// River churn: the flow's advective acceleration `|(u · ∇) u|` (m/s²) where a river turns or
+    /// slows (bends, a junction), 0 on straights and wherever [`WaterField::meet`] is set. It must
+    /// be 0 on every river edge, so neighbouring strips agree there.
+    fn churn(&self, _x: f32, _z: f32) -> f32 {
+        0.0
+    }
 }
 
 /// UV_0.y of a surface vertex: the [`WaterField::meet`] foam weight times this, under the 0.5
 /// that marks a cut-face vertex (`water.wesl` reads it back).
 pub const MEET_TAG: f32 = 0.4;
+
+/// UV_0.y of a surface vertex: the mouth foam weight times [`MEET_TAG`] where it is set, else minus
+/// the [`WaterField::churn`] (`water.wesl` splits them by sign).
+pub fn foam_tag(field: &impl WaterField, x: f32, z: f32) -> f32 {
+    let meet = field.meet(x, z);
+    if meet > 0.0 {
+        meet * MEET_TAG
+    } else {
+        -field.churn(x, z)
+    }
+}
 
 /// The look-dev patch: [`height`], [`water_sample`] and the prototype's river and coast.
 pub struct Lookdev;
@@ -353,7 +370,7 @@ pub fn surface_mesh_where(
         let w = t.transform_point(*p);
         let s = field.water(w.x, w.z);
         colors.push([s.flow.x, s.flow.y, s.river, s.depth]);
-        uvs.push([s.shore, field.meet(w.x, w.z) * MEET_TAG]);
+        uvs.push([s.shore, foam_tag(field, w.x, w.z)]);
         kept.push(keep(w.xz()));
     }
     if kept.iter().any(|k| !k) {
@@ -406,7 +423,7 @@ pub fn ribbon_mesh(
             let s = field.water(w.x, w.y);
             pos.push([w.x - origin.x, level, w.y - origin.y]);
             colors.push([s.flow.x, s.flow.y, s.river, s.depth]);
-            uvs.push([s.shore, field.meet(w.x, w.y) * MEET_TAG]);
+            uvs.push([s.shore, foam_tag(field, w.x, w.y)]);
         }
     }
     let stride = cols + 1;
@@ -1001,17 +1018,26 @@ pub fn tick(
     for (_, m) in terrain.iter_mut() {
         m.params.terrain_time = t;
     }
+    // The band's drying trail follows the water's tier: off where the water does not refract (Low).
+    let trail = if water.iter().any(|(_, m)| m.key.refraction) {
+        crate::kit_material::FLAG_WET_TRAIL
+    } else {
+        0
+    };
     let banded: Vec<_> = kit
         .iter()
         .filter(|(_, m)| {
-            m.extension.params.flags & crate::kit_material::FLAG_WET_BAND != 0
-                && m.extension.params.water_time != t
+            let p = &m.extension.params;
+            p.flags & crate::kit_material::FLAG_WET_BAND != 0
+                && (p.water_time != t || p.flags & crate::kit_material::FLAG_WET_TRAIL != trail)
         })
         .map(|(id, _)| id)
         .collect();
     for id in banded {
         if let Some(mut m) = kit.get_mut(id) {
-            m.extension.params.water_time = t;
+            let p = &mut m.extension.params;
+            p.water_time = t;
+            p.flags = (p.flags & !crate::kit_material::FLAG_WET_TRAIL) | trail;
         }
     }
 }
