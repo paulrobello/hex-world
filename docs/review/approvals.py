@@ -1,8 +1,9 @@
 """Builds docs/review/approvals.html: every kit piece and audio cue still waiting on the owner.
 
 Run from the repo root: python3 docs/review/approvals.py
-The page reads the tree as it is: a piece is listed until its approvals.json holds an owner
-piece approval, a cue until its provenance records the owner's approval. Decisions made on the
+The page reads the tree as it is: a piece is listed while its newest piece-gate decision in
+approvals.json is not an owner approval (a rebuild's pending re-approval request lists it again),
+a cue until its provenance records the owner's approval. Decisions made on the
 page stay in the browser; "Copy answers" puts them on the clipboard to paste into chat, and the
 orchestrator records them. Rerun after each landing to drop what was approved.
 """
@@ -37,13 +38,20 @@ def family(pid: str) -> str:
 
 
 def owner_approved(rows: list) -> bool:
+    """Whether the newest owner decision or re-approval request on the piece gate is an owner
+    approval: a pending or rejected entry after an approval (a rebuild sent back for review)
+    lists the piece again."""
+    approved = False
     for r in rows:
-        who = str(r.get("who", ""))
-        if r.get("gate") != "piece" or ("owner" not in who and "Paul Robello" not in who) or who.startswith("pending"):
+        if r.get("gate") != "piece":
             continue
-        if r.get("status", "approved") not in ("pending", "rejected"):
-            return True
-    return False
+        who = str(r.get("who", ""))
+        status = r.get("status", "approved")
+        if status in ("pending", "rejected") or who.startswith("pending"):
+            approved = False
+        elif "owner" in who or "Paul Robello" in who:
+            approved = True
+    return approved
 
 
 def pending_pieces() -> list[dict]:
