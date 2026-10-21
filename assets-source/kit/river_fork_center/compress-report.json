@@ -1,0 +1,88 @@
+{
+  "name": "river_fork_center",
+  "date": "2026-10-21T00:50:11.109Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/river_fork_center/river_fork_center.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 5337,
+      "sha256": "106830d10a0a16a3cfb3ae78691a5e071d9429dc4bcb7168d52464f5f33e0a48"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/river_fork_center/river_fork_center.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 5301,
+      "sha256": "3cbfc6a67bd6d7c6d6f947f4d7194ce9f34a2454e6338636e867f5ef0db0ce55"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/river_fork_center/river_fork_center.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 7987,
+      "sha256": "76bf89a8ff4dfda0d76617b832a6e5fe83d72ab0a0e1c10ea69062b8240bdf0c"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 5337,
+      "astc": 5301
+    },
+    "glbBytes": 205468
+  },
+  "glb": {
+    "bytes": 205468,
+    "sha256": "52cbebb77494449e8bb851c7beb75b24ae7dcacbad9757eba1a37d1d19ef02d2"
+  }
+}

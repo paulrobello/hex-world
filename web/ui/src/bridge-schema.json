@@ -170,6 +170,12 @@
         ]
       },
       {
+        "id": "river_fork",
+        "tiles": [
+          "river_fork"
+        ]
+      },
+      {
         "id": "beach",
         "tiles": [
           "beach"
@@ -727,6 +733,27 @@
           null
         ],
         "period": 1,
+        "scatter": []
+      },
+      {
+        "edges": [
+          "River",
+          "Grass",
+          "River",
+          "Grass",
+          "River",
+          "Grass"
+        ],
+        "heroes": false,
+        "id": "river_fork",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
         "scatter": []
       },
       {

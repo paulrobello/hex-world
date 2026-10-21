@@ -1,0 +1,214 @@
+{
+  "pieceId": "river_fork_center",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/river_fork_center.py",
+    "sha256": "90323ffca58b7ee4a6016ce43ded49be1afa88db1d621a412ba5404f3424f05e"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
+    },
+    {
+      "path": "scripts/blender/kit/_river_fork.py",
+      "sha256": "de15535c499cb90b3683eef9d7d87124699f6233f0f738784acadcff8fc833cb"
+    },
+    {
+      "path": "scripts/blender/kit/_river_fork_dress.py",
+      "sha256": "585213764e170f10d0273d6eb09afecb497b37c61812ea2c000d37e1ab056ce9"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 256
+      }
+    },
+    "device": "none",
+    "dressing": {
+      "reedClumps": 10,
+      "stones": 36,
+      "tris": [
+        2368,
+        400,
+        120
+      ]
+    },
+    "marginPx": 0,
+    "masks": {
+      "ao": 1,
+      "night": 0,
+      "porosity": [
+        1,
+        0.8
+      ],
+      "snow": 1
+    },
+    "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
+    "receiverSignature": "ad75fb5a6728b7996c9c94c98641126e29e8f04aaf9e8e6cb536d54197181eb2",
+    "samples": 0,
+    "skipped": true
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 2368,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 400,
+      "ratio": 0.16891891891891891
+    },
+    {
+      "lod": 2,
+      "tris": 120,
+      "ratio": 0.05067567567567568
+    }
+  ],
+  "collider": {
+    "node": "river_fork_center_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": null,
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 5337,
+        "astc": 5301
+      },
+      "glbBytes": 205468
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/river_fork_center/river_fork_center.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 9,
+        "bytes": 5337,
+        "sha256": "106830d10a0a16a3cfb3ae78691a5e071d9429dc4bcb7168d52464f5f33e0a48"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/river_fork_center/river_fork_center.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 9,
+        "bytes": 5301,
+        "sha256": "3cbfc6a67bd6d7c6d6f947f4d7194ce9f34a2454e6338636e867f5ef0db0ce55"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/river_fork_center/river_fork_center.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 7987,
+        "sha256": "76bf89a8ff4dfda0d76617b832a6e5fe83d72ab0a0e1c10ea69062b8240bdf0c"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/river_fork_center/river_fork_center.glb",
+      "sha256": "52cbebb77494449e8bb851c7beb75b24ae7dcacbad9757eba1a37d1d19ef02d2",
+      "bytes": 205468
+    },
+    {
+      "path": "assets/kit/p1/river_fork_center/river_fork_center.masks.bc7.ktx2",
+      "sha256": "106830d10a0a16a3cfb3ae78691a5e071d9429dc4bcb7168d52464f5f33e0a48",
+      "bytes": 5337
+    },
+    {
+      "path": "assets/kit/p1/river_fork_center/river_fork_center.masks.astc.ktx2",
+      "sha256": "3cbfc6a67bd6d7c6d6f947f4d7194ce9f34a2454e6338636e867f5ef0db0ce55",
+      "bytes": 5301
+    },
+    {
+      "path": "assets/kit/p1/river_fork_center/river_fork_center.masks.png",
+      "sha256": "76bf89a8ff4dfda0d76617b832a6e5fe83d72ab0a0e1c10ea69062b8240bdf0c",
+      "bytes": 7987
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/river/ref-1.jpg",
+      "sha256": "dab614b05590faabb7a2e7afe89f381d3cd356ffa06c18e6908f6f0e0c5e376d",
+      "sourceSha256": "29d6315023b50ce140ee9cd81df7bae4742d0456d2e2477d41ce8cb3d016f42f",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "4c55204d-d467-4828-849f-7f954e7d4786",
+      "prompt": "Two separate flat-sided hexagonal diorama tiles side by side, each 32 m across with a meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel). Left tile: a straight river running from one flat edge across to the opposite flat edge. Right tile: a curved river running from one flat edge to the flat edge two positions away, skipping one edge, a gentle bend. The 8 m wide river channel is sunk below the meadow surface between natural earthy banks with pebbles and reeds, clear water tinted pale turquoise at the margins and teal-blue in the middle, sun glints, soft caustics on the pebbly channel floor. Where the river reaches the tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/river/ref-2.jpg",
+      "sha256": "7c55c8d0a01b336a9934a7e1cf65e78ddbfc909f091bb92a320b37d9d968b4f9",
+      "sourceSha256": "2701aa68e02d17f45ec67ffcd7e4eb0dd5e3eebe5f1693cfa2c4419f0fb00d30",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "cf6a46c0-a15a-4455-884f-8b1e76c0746a",
+      "prompt": "Close-up of a natural river bank on a hexagonal diorama tile: the meadow grass edge, an earthy bank sloping down to the water, pebbles and reeds, clear water tinted pale turquoise at the margins and teal-blue in the middle, sun glints, soft caustics on the pebbly channel floor, and where the channel reaches the tile side wall the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-21T01:00:04.872Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/river/ref-1.jpg",
+        "assets-source/refs/river/ref-2.jpg"
+      ],
+      "notes": "Approved: channel cut below the meadow surface, natural banks, water column on the cut face. Reviewed from assets-source/refs/contact-sheet.png in chat."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "river-fork",
+      "requested": "2026-10-20",
+      "notes": "Pending owner review; not an approval. New piece for the owner's 2026-10-20 request (\"we need a river fork also\"): the river_fork tile's dressing, river_straight_center's bank stones at the waterline and reed clumps up the banks (stone, reed and cattail slots, analytic masks, plant wind) along all three arms, built by _river_dress.build_dressing on the \"fork\" layout (_river_fork_dress.py walks the arms joint to centre and drops placements past an arm's crease). 36 stones, 10 reed clumps. Tris LOD0/1/2 2368/400/120 (river dressing LOD0 ceiling 2,500). Review docs/checkpoints/river_fork/sheet.jpg. The controller records the owner's decision."
+    }
+  ]
+}

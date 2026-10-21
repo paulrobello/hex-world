@@ -1,0 +1,91 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_fork_base.py",
+    "sha256": "807ae1666548b01221dcfce92a2d0fd70ec6e595167e22f9e7371cd5e0f2ae8e"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_river_flat.py",
+      "sha256": "cb3c66803cab6b80816eff412f046371d65cb4b58cd7e8c4074db68b555a4124"
+    },
+    {
+      "path": "scripts/blender/kit/_river_fork.py",
+      "sha256": "de15535c499cb90b3683eef9d7d87124699f6233f0f738784acadcff8fc833cb"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
+  "lodTris": {
+    "river_fork_base_lod0": 3432,
+    "river_fork_base_lod1": 1260,
+    "river_fork_base_lod2": 354
+  },
+  "nodes": [
+    "river_fork_base",
+    "river_fork_base_collider",
+    "river_fork_base_lod0",
+    "river_fork_base_lod1",
+    "river_fork_base_lod2",
+    "socket-lane-0",
+    "socket-lane-2",
+    "socket-lane-4"
+  ],
+  "pieceId": "river_fork_base",
+  "sockets": [
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 0,
+        "kind": "river",
+        "offset": 0.0,
+        "width": 8.0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 2,
+        "kind": "river",
+        "offset": 0.0,
+        "width": 8.0
+      },
+      "name": "socket-lane-2",
+      "position": [
+        -6.928203105926514,
+        0.0,
+        12.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "cut": 6.83,
+        "edge": 4,
+        "kind": "river",
+        "offset": 0.0,
+        "width": 8.0
+      },
+      "name": "socket-lane-4",
+      "position": [
+        -6.928203105926514,
+        0.0,
+        -12.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    }
+  },
+  "device": "none",
+  "dressing": {
+    "reedClumps": 10,
+    "stones": 36,
+    "tris": [
+      2368,
+      400,
+      120
+    ]
+  },
+  "marginPx": 0,
+  "masks": {
+    "ao": 1.0,
+    "night": 0.0,
+    "porosity": [
+      1.0,
+      0.8
+    ],
+    "snow": 1.0
+  },
+  "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
+  "receiverSignature": "ad75fb5a6728b7996c9c94c98641126e29e8f04aaf9e8e6cb536d54197181eb2",
+  "samples": 0,
+  "skipped": true
+}

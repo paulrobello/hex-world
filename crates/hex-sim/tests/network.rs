@@ -273,6 +273,38 @@ fn bridge_feeds_road_and_river_graphs_separately() {
     );
 }
 
+/// The river fork's three arms meet at one local node of degree 3, and each arm stitches to the
+/// river tile across its seam, so the river graph is one connected piece through the fork.
+#[test]
+fn river_fork_joins_three_river_neighbours_at_one_node() {
+    let cat = catalog();
+    for rot in [0u8, 1] {
+        let mut rivers = Network::new(NetworkKind::River);
+        let o = Axial::ORIGIN;
+        put(&mut rivers, &cat, o, "river_fork", rot);
+        for k in [0u8, 2, 4] {
+            let e = (k + rot) % 6;
+            let back = (e + 3) % 6;
+            put(&mut rivers, &cat, o.neighbor(e), "river_straight", back % 3);
+        }
+        assert_eq!(rivers.links().count(), 6, "r{rot}");
+        let hubs: Vec<_> = rivers
+            .nodes()
+            .filter(|(_, n)| n.links().len() == 3)
+            .collect();
+        assert_eq!(hubs.len(), 1, "r{rot}: one junction");
+        assert!(close(hubs[0].1.pos(), o.to_world(HEX_RADIUS)));
+        for k in [0u8, 2, 4] {
+            let seam = rivers.seam_node(o, (k + rot) % 6).expect("arm seam");
+            assert_eq!(
+                rivers.node(seam).unwrap().links().len(),
+                2,
+                "r{rot} arm {k}"
+            );
+        }
+    }
+}
+
 #[test]
 fn place_and_bulldoze_update_only_the_touched_tile() {
     let cat = catalog();

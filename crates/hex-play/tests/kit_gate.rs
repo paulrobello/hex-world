@@ -1028,6 +1028,7 @@ const RIVER_DRESSING_PROPS: &[&str] = &[
     "river_spring_center",
     "river_mouth_center",
     "river_mouth_l_center",
+    "river_fork_center",
 ];
 
 /// A piece's LOD0 triangle ceiling: its kind's, or `RIVER_DRESSING_LOD0_MAX` for a river dressing prop.

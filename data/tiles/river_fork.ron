@@ -1,0 +1,25 @@
+// River fork (owner 2026-10-20, "we need a river fork also"): a symmetric Y like road_junction, river
+// arms on edges 0, 2 and 4 meeting at the centre node. A River node shared by several segments is
+// a junction, not a spring (water contract §2a): two arms join or one splits by the flow rule (§6).
+(
+    id: "river_fork",
+    biome: Grass,
+    base: "river_fork_base",
+    edges: (
+        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
+        (kind: Grass),
+        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
+        (kind: Grass),
+        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
+        (kind: Grass),
+    ),
+    center: Some("river_fork_center"),
+    nodes: [
+        (id: "fork", at: (0.0, 0.0)),
+    ],
+    networks: [
+        (kind: River, from: Edge(0), to: Node("fork")),
+        (kind: River, from: Edge(2), to: Node("fork")),
+        (kind: River, from: Edge(4), to: Node("fork")),
+    ],
+)

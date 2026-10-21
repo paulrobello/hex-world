@@ -440,6 +440,7 @@ mod tests {
         assert_eq!(need("wheat_field"), BTreeSet::from([CORE_PACK, "village"]));
         assert_eq!(need("ocean"), BTreeSet::from(["water"]));
         assert_eq!(need("river_bend"), BTreeSet::from(["water"]));
+        assert_eq!(need("river_fork"), BTreeSet::from(["water"]));
         // The bridge's road lanes use the core edge piece.
         assert_eq!(
             need("river_road_bridge"),

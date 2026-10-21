@@ -358,6 +358,15 @@ pub fn kit_layout() -> Vec<Placement> {
         v.push(place("river_edge", q, r, 1));
         v.push(place("river_edge", q, r, 4));
     }
+    // The river fork (owner 2026-10-20) on (-3, 4), west of the river straights: river_fork_base
+    // and its dressing at rot 1 (river on world edges 1, 3 and 5, all facing empty cells; its grass
+    // edge 0 meets the straight's grass edge 3 on (-2, 4)) with a river_edge stub on each River
+    // edge. The kit scenario spawns no water, so its channel shows dry here; play draws the water.
+    v.push(place("river_fork_base", -3, 4, 1));
+    v.push(place("river_fork_center", -3, 4, 1));
+    for k in [1, 3, 5] {
+        v.push(place("river_edge", -3, 4, k));
+    }
     for (piece, offset) in TRAIN_ON_RAIL_BRIDGE {
         v.push(Placement {
             offset,

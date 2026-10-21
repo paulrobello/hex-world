@@ -78,6 +78,10 @@ const MOUTH_FOAM_S: f32 = 1.0;
 pub const POOL_W: f32 = 5.95;
 const POOL_SURFACE: f32 = 6.5;
 const SPRING_RAMP: f32 = 6.5;
+/// River junction (`river_fork`, water contract §2a): how far from an arm's centre line its
+/// tangent still steers the blended flow. Under the 12 m between a River edge's lane point and
+/// the other arms, so each edge's strip carries its own arm's flow, as the neighbour does.
+const JUNCTION_BLEND: f32 = 8.0;
 
 const APOTHEM: f32 = HEX_RADIUS * 0.866_025_4;
 
@@ -175,13 +179,16 @@ fn turn(rotation: u8, p: Vec2) -> Vec2 {
     Vec2::new(r.x, r.z)
 }
 
-/// The first River segment that joins an edge to a node: (local edge, node position, tile-local).
+/// The first River segment that joins an edge to a node that ends the river (a spring or a mouth,
+/// not a [`river_junction`]): (local edge, node position, tile-local).
 fn river_node_end(def: &TileDef) -> Option<(u8, Vec2)> {
     def.networks
         .iter()
         .filter(|n| n.kind == NetworkKind::River)
         .find_map(|n| match (&n.from, &n.to) {
-            (Endpoint::Edge(e), Endpoint::Node(id)) | (Endpoint::Node(id), Endpoint::Edge(e)) => {
+            (Endpoint::Edge(e), Endpoint::Node(id)) | (Endpoint::Node(id), Endpoint::Edge(e))
+                if !river_junction(def, id) =>
+            {
                 def.nodes
                     .iter()
                     .find(|k| &k.id == id)
@@ -189,6 +196,18 @@ fn river_node_end(def: &TileDef) -> Option<(u8, Vec2)> {
             }
             _ => None,
         })
+}
+
+/// Whether node `id` of `def` joins two or more River segments (`river_fork`'s centre): the arms
+/// meet there, so it is neither a spring nor a mouth, and the tile is a plain river tile whose
+/// bed is the channel along every arm (water contract §2a).
+fn river_junction(def: &TileDef, id: &str) -> bool {
+    let at = |e: &Endpoint| matches!(e, Endpoint::Node(k) if k == id);
+    def.networks
+        .iter()
+        .filter(|n| n.kind == NetworkKind::River && (at(&n.from) || at(&n.to)))
+        .count()
+        >= 2
 }
 
 fn edge_dir(e: u8) -> Vec2 {
@@ -282,7 +301,9 @@ impl Coastline {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum WaterKind {
-    /// Carries a river network: a channel and a surface strip along each river segment.
+    /// Carries a river network: a channel and a surface strip along each river segment. A tile
+    /// whose segments meet at a junction (`river_fork`) is one too: the channel along every arm,
+    /// under one surface.
     River,
     /// A river network ending at a node on a tile without a coastline: the pool around the node
     /// (offset from the tile centre, world orientation) and its stream, under one surface.
@@ -382,12 +403,14 @@ fn edge_water(def: &TileDef, t: &PlayTile, world: u8) -> EdgeWater {
 }
 
 /// Where a river segment ends: a world edge's lane, a spring (a node on a tile without a
-/// coastline) or a mouth (a node on a coast tile).
+/// coastline), a mouth (a node on a coast tile) or a junction (a node where two or more of the
+/// tile's River segments meet, [`river_junction`]; the tile's arms continue each other there).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum RiverEnd {
     Edge(u8),
     Spring,
     Mouth,
+    Junction,
 }
 
 impl RiverEnd {
@@ -399,11 +422,11 @@ impl RiverEnd {
     }
 
     /// Which end a chain's flow starts from: a spring, else an open edge, else a mouth (water
-    /// contract §6).
+    /// contract §6). Chains that reach a junction are oriented by [`junction_sources`] instead.
     fn source_rank(self) -> u8 {
         match self {
             RiverEnd::Spring => 0,
-            RiverEnd::Edge(_) => 1,
+            RiverEnd::Edge(_) | RiverEnd::Junction => 1,
             RiverEnd::Mouth => 2,
         }
     }
@@ -416,6 +439,13 @@ pub struct RiverPath {
     /// Where the path enters and leaves the tile.
     pub up: RiverEnd,
     pub down: RiverEnd,
+}
+
+impl RiverPath {
+    /// One arm of a junction tile: the path enters or leaves at the junction node.
+    pub fn at_junction(&self) -> bool {
+        self.up == RiverEnd::Junction || self.down == RiverEnd::Junction
+    }
 }
 
 /// The circle through `a`, `m` and `b`, sampled from `a` to `b` at most [`ARC_STEP`] apart (one
@@ -460,11 +490,14 @@ fn river_segments(def: &TileDef, t: &PlayTile) -> Vec<(RiverEnd, RiverEnd, Vec<V
             RiverEnd::Edge(world_edge(*k, t.rotation)),
             lane_point(def, *k),
         )),
-        Endpoint::Node(id) => def
-            .nodes
-            .iter()
-            .find(|n| &n.id == id)
-            .map(|n| (node_end, Vec2::from(n.at))),
+        Endpoint::Node(id) => def.nodes.iter().find(|n| &n.id == id).map(|n| {
+            let kind = if river_junction(def, id) {
+                RiverEnd::Junction
+            } else {
+                node_end
+            };
+            (kind, Vec2::from(n.at))
+        }),
     };
     def.networks
         .iter()
@@ -494,20 +527,28 @@ fn river_segments(def: &TileDef, t: &PlayTile) -> Vec<(RiverEnd, RiverEnd, Vec<V
         .collect()
 }
 
+/// One river segment of a placed tile: (from end, to end, world centre line from -> to).
+type Segment = (RiverEnd, RiverEnd, Vec<Vec2>);
+/// A chain end: (cell, the end, segment index on that cell).
+type ChainEnd = (Axial, RiverEnd, usize);
+
 /// Every placed river segment, oriented so the flow runs one way along each connected chain (water
 /// contract §6): each chain starts at its spring, else at its open end with the lowest
 /// (cell, edge), else at its mouth; among several of the same kind, at the lowest cell. A loop
-/// starts at its lowest cell. Keyed by (cell, segment index among the tile's river segments).
+/// starts at its lowest cell. Chains that meet at a junction (`river_fork`) are oriented together
+/// by [`junction_sources`]. Keyed by (cell, segment index among the tile's river segments).
 pub fn oriented_rivers(
     tiles: &[PlayTile],
     catalog: &TileCatalog,
 ) -> BTreeMap<(Axial, usize), RiverPath> {
-    let mut segs: BTreeMap<(Axial, usize), (RiverEnd, RiverEnd, Vec<Vec2>)> = BTreeMap::new();
+    let mut segs: BTreeMap<(Axial, usize), Segment> = BTreeMap::new();
+    let mut rotations: HashMap<Axial, u8> = HashMap::new();
     for t in tiles {
         if let Some(def) = catalog.get(&t.tile) {
             for (i, s) in river_segments(def, t).into_iter().enumerate() {
                 segs.insert((t.cell, i), s);
             }
+            rotations.insert(t.cell, t.rotation);
         }
     }
     // The segment across `end` of `cell`, if it is an edge with a segment ending across it.
@@ -519,38 +560,50 @@ pub fn oriented_rivers(
             .find(|(_, (a, b, _))| *a == back || *b == back)
             .map(|(k, _)| *k)
     };
-    let mut out = BTreeMap::new();
+    // The connected chains, each with its open ends.
+    let mut chains: Vec<(Vec<(Axial, usize)>, Vec<ChainEnd>)> = vec![];
     let mut seen: BTreeSet<(Axial, usize)> = BTreeSet::new();
     for &key in segs.keys() {
-        if seen.contains(&key) {
+        if !seen.insert(key) {
             continue;
         }
-        // The connected chain, then its upstream end.
         let mut chain = vec![key];
         let mut i = 0;
         while i < chain.len() {
             let (a, b, _) = segs[&chain[i]];
             for e in [a, b] {
                 if let Some(k) = across(chain[i].0, e)
-                    && !chain.contains(&k)
+                    && seen.insert(k)
                 {
                     chain.push(k);
                 }
             }
             i += 1;
         }
-        let ends: Vec<(u8, Axial, RiverEnd, usize)> = chain
+        let ends: Vec<ChainEnd> = chain
             .iter()
             .flat_map(|k| {
                 let (a, b, _) = segs[k];
                 [a, b]
                     .into_iter()
                     .filter(|&e| across(k.0, e).is_none())
-                    .map(move |e| (e.source_rank(), k.0, e, k.1))
+                    .map(move |e| (k.0, e, k.1))
             })
             .collect();
-        let (mut cur, mut up) = match ends.iter().min() {
-            Some(&(_, cell, e, i)) => ((cell, i), e),
+        chains.push((chain, ends));
+    }
+    let picked = junction_sources(&chains, &segs, &rotations);
+    let mut out = BTreeMap::new();
+    let mut walked: BTreeSet<(Axial, usize)> = BTreeSet::new();
+    for (ci, (chain, ends)) in chains.iter().enumerate() {
+        let start = picked.get(&ci).copied().or_else(|| {
+            ends.iter()
+                .map(|&(cell, e, i)| (e.source_rank(), cell, e, i))
+                .min()
+                .map(|(_, cell, e, i)| (cell, e, i))
+        });
+        let (mut cur, mut up) = match start {
+            Some((cell, e, i)) => ((cell, i), e),
             None => {
                 let k = *chain.iter().min().expect("non-empty chain");
                 let (a, b, _) = segs[&k];
@@ -558,7 +611,7 @@ pub fn oriented_rivers(
             }
         };
         loop {
-            seen.insert(cur);
+            walked.insert(cur);
             let (a, b, pts) = &segs[&cur];
             let (down, points) = if *a == up {
                 (*b, pts.clone())
@@ -567,7 +620,7 @@ pub fn oriented_rivers(
             };
             out.insert(cur, RiverPath { points, up, down });
             match (across(cur.0, down), down) {
-                (Some(next), RiverEnd::Edge(e)) if !seen.contains(&next) => {
+                (Some(next), RiverEnd::Edge(e)) if !walked.contains(&next) => {
                     up = RiverEnd::Edge(opposite_edge(e));
                     cur = next;
                 }
@@ -576,6 +629,187 @@ pub fn oriented_rivers(
         }
     }
     out
+}
+
+/// A node of the river network that chains join at: a junction (one per tile, keyed by its cell)
+/// or a chain's open end.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum NetVertex {
+    Junction(Axial),
+    End(Axial, RiverEnd, usize),
+}
+
+impl NetVertex {
+    fn of(&(cell, e, i): &ChainEnd) -> Self {
+        if e == RiverEnd::Junction {
+            NetVertex::Junction(cell)
+        } else {
+            NetVertex::End(cell, e, i)
+        }
+    }
+}
+
+/// The upstream end of every chain that reaches a junction (`river_fork`), by chain index (water
+/// contract §6, junctions). Chains joined at junctions form one network, and every chain in it runs
+/// downhill, measured in metres along the centre lines:
+/// - toward the nearest mouth when the network reaches one, so a fork with one arm toward the sea
+///   is a confluence and a fork with two arms that each reach the sea first is a split;
+/// - else away from the nearest spring, so one spring through a fork splits and two springs join;
+/// - else out through the lowest junction's local edge 0 arm, as if the sea lay past that arm's
+///   open end (the lowest open end when that arm meets another junction): a lone fork is a
+///   confluence whose rotation picks the outlet.
+///
+/// A chain whose two ends are equally far keeps the plain chain rule of [`oriented_rivers`].
+fn junction_sources(
+    chains: &[(Vec<(Axial, usize)>, Vec<ChainEnd>)],
+    segs: &BTreeMap<(Axial, usize), Segment>,
+    rotations: &HashMap<Axial, u8>,
+) -> BTreeMap<usize, ChainEnd> {
+    let length = |chain: &[(Axial, usize)]| -> f32 {
+        chain
+            .iter()
+            .map(|k| {
+                let pts = &segs[k].2;
+                pts.windows(2).map(|w| w[0].distance(w[1])).sum::<f32>()
+            })
+            .sum()
+    };
+    // Linear chains with a junction end: (chain index, end a, end b, length).
+    let links: Vec<(usize, ChainEnd, ChainEnd, f32)> = chains
+        .iter()
+        .enumerate()
+        .filter_map(|(ci, (chain, ends))| {
+            let [a, b] = ends[..] else {
+                return None;
+            };
+            (a.1 == RiverEnd::Junction || b.1 == RiverEnd::Junction)
+                .then(|| (ci, a, b, length(chain)))
+        })
+        .collect();
+    let mut out = BTreeMap::new();
+    let mut done = vec![false; links.len()];
+    for first in 0..links.len() {
+        if done[first] {
+            continue;
+        }
+        // The network: links joined at their junctions.
+        done[first] = true;
+        let mut net = vec![first];
+        let mut i = 0;
+        while i < net.len() {
+            let (_, a, b, _) = links[net[i]];
+            for v in [NetVertex::of(&a), NetVertex::of(&b)] {
+                if !matches!(v, NetVertex::Junction(_)) {
+                    continue;
+                }
+                for (j, l) in links.iter().enumerate() {
+                    if !done[j] && (NetVertex::of(&l.1) == v || NetVertex::of(&l.2) == v) {
+                        done[j] = true;
+                        net.push(j);
+                    }
+                }
+            }
+            i += 1;
+        }
+        let ends: Vec<ChainEnd> = net
+            .iter()
+            .flat_map(|&j| [links[j].1, links[j].2])
+            .filter(|e| e.1 != RiverEnd::Junction)
+            .collect();
+        let leaves = |kind: fn(&RiverEnd) -> bool| -> Vec<NetVertex> {
+            ends.iter()
+                .filter(|e| kind(&e.1))
+                .map(NetVertex::of)
+                .collect()
+        };
+        let mouths = leaves(|e| *e == RiverEnd::Mouth);
+        let springs = leaves(|e| *e == RiverEnd::Spring);
+        // The distance seeds, and whether the flow runs toward them or away from them.
+        let (seeds, toward) = if !mouths.is_empty() {
+            (mouths, true)
+        } else if !springs.is_empty() {
+            (springs, false)
+        } else {
+            let Some(outlet) = open_outlet(&net, &links, chains, segs, rotations) else {
+                continue;
+            };
+            (vec![outlet], true)
+        };
+        let mut dist: BTreeMap<NetVertex, f32> = seeds.iter().map(|&v| (v, 0.0)).collect();
+        loop {
+            let mut changed = false;
+            for &j in &net {
+                let (_, a, b, len) = links[j];
+                let (va, vb) = (NetVertex::of(&a), NetVertex::of(&b));
+                for (x, y) in [(va, vb), (vb, va)] {
+                    let Some(&dx) = dist.get(&x) else {
+                        continue;
+                    };
+                    if dist.get(&y).is_none_or(|&dy| dx + len < dy - 1e-4) {
+                        dist.insert(y, dx + len);
+                        changed = true;
+                    }
+                }
+            }
+            if !changed {
+                break;
+            }
+        }
+        for &j in &net {
+            let (ci, a, b, _) = links[j];
+            let (Some(&da), Some(&db)) =
+                (dist.get(&NetVertex::of(&a)), dist.get(&NetVertex::of(&b)))
+            else {
+                continue;
+            };
+            if (da - db).abs() < 1e-3 {
+                continue;
+            }
+            out.insert(ci, if (da > db) == toward { a } else { b });
+        }
+    }
+    out
+}
+
+/// The outlet of a junction network with neither a mouth nor a spring: the open end of the chain
+/// that leaves the lowest junction through its local edge 0, else the network's lowest open end.
+fn open_outlet(
+    net: &[usize],
+    links: &[(usize, ChainEnd, ChainEnd, f32)],
+    chains: &[(Vec<(Axial, usize)>, Vec<ChainEnd>)],
+    segs: &BTreeMap<(Axial, usize), Segment>,
+    rotations: &HashMap<Axial, u8>,
+) -> Option<NetVertex> {
+    let junction = net
+        .iter()
+        .flat_map(|&j| [links[j].1, links[j].2])
+        .filter(|e| e.1 == RiverEnd::Junction)
+        .map(|e| e.0)
+        .min()?;
+    let out_edge = RiverEnd::Edge(world_edge(
+        0,
+        rotations.get(&junction).copied().unwrap_or(0),
+    ));
+    let arm = segs
+        .range((junction, 0)..=(junction, usize::MAX))
+        .find(|(_, (a, b, _))| *a == out_edge || *b == out_edge)
+        .map(|(k, _)| *k);
+    let far = arm.and_then(|arm| {
+        let &(_, a, b, _) = links.iter().find(|l| chains[l.0].0.contains(&arm))?;
+        let far = if a == (junction, RiverEnd::Junction, arm.1) {
+            b
+        } else {
+            a
+        };
+        matches!(far.1, RiverEnd::Edge(_)).then(|| NetVertex::of(&far))
+    });
+    far.or_else(|| {
+        net.iter()
+            .flat_map(|&j| [links[j].1, links[j].2])
+            .filter(|e| matches!(e.1, RiverEnd::Edge(_)))
+            .min()
+            .map(|e| NetVertex::of(&e))
+    })
 }
 
 /// One water tile as the meshes see it. Rebuilt when any field changes.
@@ -689,6 +923,41 @@ impl TileField<'_> {
         best
     }
 
+    /// On a junction tile, the flow direction at `p`: the tile's arms' downstream tangents averaged
+    /// with weights that fall from 1 on an arm's centre line to 0 at [`JUNCTION_BLEND`] from it, so
+    /// the flow turns from the inflows into the outflows across the centre instead of switching
+    /// along the bisectors, and slows where they disagree (to 2/3 at the centre of a confluence or
+    /// a split). `None` off junction tiles and wherever fewer than two arms are that near (all of
+    /// each River edge's strip): there the nearest centre line's tangent applies, which is what the
+    /// neighbouring tile computes from the same paths, and which the blend reaches as the second
+    /// arm's weight falls to 0.
+    fn junction_flow(&self, p: Vec2) -> Option<Vec2> {
+        let arms = self.cell.paths[..self.cell.own_paths]
+            .iter()
+            .filter(|path| path.at_junction());
+        let (mut sum, mut weight, mut near) = (Vec2::ZERO, 0.0, 0);
+        for path in arms {
+            let mut best = (f32::MAX, Vec2::ZERO);
+            for w in path.points.windows(2) {
+                let seg = w[1] - w[0];
+                let len2 = seg.length_squared();
+                if len2 <= 0.0 {
+                    continue;
+                }
+                let t = ((p - w[0]).dot(seg) / len2).clamp(0.0, 1.0);
+                let d = p.distance(w[0] + seg * t);
+                if d < best.0 {
+                    best = (d, seg / len2.sqrt());
+                }
+            }
+            let k = 1.0 - smoothstep(0.0, JUNCTION_BLEND, best.0);
+            sum += best.1 * k;
+            weight += k;
+            near += usize::from(k > 0.0);
+        }
+        (near >= 2).then(|| sum / weight)
+    }
+
     fn seaward(&self, p: Vec2, coast: Coastline) -> f32 {
         coast.seaward(p - center(self.cell.tile.cell))
     }
@@ -724,8 +993,9 @@ impl WaterField for TileField<'_> {
             WaterKind::River => {
                 let (d, tangent) = self.river(p);
                 let (river, speed) = river_flow(d, RIVER_CUT_W);
+                let dir = self.junction_flow(p).unwrap_or(tangent);
                 WaterSample {
-                    flow: tangent * speed * river,
+                    flow: dir * speed * river,
                     river,
                     depth,
                     shore: INLAND,
@@ -976,6 +1246,15 @@ fn spawn_cell(
     }
     let mut surfaces = vec![];
     match cw.kind {
+        WaterKind::River if cw.paths[..cw.own_paths].iter().any(RiverPath::at_junction) => {
+            // A junction's arms meet at the centre, where strips would overlap: one hex-grid
+            // surface kept where any of them reaches, as on a spring.
+            let keep = |w: Vec2| field.river(w).0 < RIBBON_HALF + RIBBON_STEP;
+            surfaces.push((
+                surface_mesh_where(&field, cell, rot, keep),
+                cell_transform(cell, rot),
+            ));
+        }
         WaterKind::River => {
             for p in &cw.paths[..cw.own_paths] {
                 let rows = ribbon_rows(p);
@@ -1794,6 +2073,213 @@ mod tests {
             assert!(matches!(first.up, S | M), "{a}: {:?}", first.up);
             let other = r.iter().find(|(k, _)| k.0 != low).unwrap().1;
             assert!(matches!(other.down, S | M), "{a}: {:?}", other.down);
+        }
+    }
+
+    /// The fork's centre node joins three River segments, so it is a junction: the tile is a plain
+    /// river tile with an arm on each River edge, not a spring, and alone it is open on all three.
+    #[test]
+    fn the_fork_is_a_river_tile_with_three_arms() {
+        let cat = catalog();
+        let def = cat.get("river_fork").unwrap();
+        for rot in 0..6u8 {
+            assert_eq!(water_kind(def, rot), Some(WaterKind::River), "r{rot}");
+            let cw = alone(&cat, Axial::ORIGIN, "river_fork", rot);
+            assert_eq!(cw.own_paths, 3);
+            assert!(cw.paths.iter().all(RiverPath::at_junction));
+            let mut want: Vec<u8> = [0, 2, 4].map(|e| world_edge(e, rot)).to_vec();
+            want.sort();
+            assert_eq!(cw.exposed, want, "r{rot}");
+        }
+        assert!(Mouth::of(def, 0).is_none());
+        // The spring keeps its own node end.
+        let spring = cat.get("river_spring").unwrap();
+        assert!(matches!(water_kind(spring, 0), Some(WaterKind::Spring(_))));
+    }
+
+    /// The engine's fork bed is the kit's (`scripts/blender/kit/_river_fork.py` `_check` spots,
+    /// Blender (x, y) = runtime (x, -z)): the channel profile at the distance to the nearest arm.
+    #[test]
+    fn fork_bed_matches_the_kit_profile() {
+        let cat = catalog();
+        let cw = alone(&cat, Axial::ORIGIN, "river_fork", 0);
+        let f = cw.field();
+        let sin60 = 60f32.to_radians().sin();
+        let (wb, bb) = (4.0 / sin60, 6.83 / sin60);
+        for (x, y, want) in [
+            (0.0, 0.0, -2.95),
+            (APOTHEM, 4.0, -1.40),
+            (APOTHEM, 0.0, -2.95),
+            (0.5 * wb, sin60 * wb, -1.40),
+            (0.5 * bb, sin60 * bb, 0.0),
+            (-APOTHEM, 0.0, 0.0),
+        ] {
+            let h = f.height(x, -y);
+            assert!((h - want).abs() < 6e-3, "({x}, {y}): {h} vs {want}");
+        }
+        // Three-fold: each arm carries the same profile.
+        for i in 0..40 {
+            let p = Vec2::new((i % 8) as f32 * 1.6 - 1.0, (i / 8) as f32 * 1.5 - 3.0);
+            let h = f.height(p.x, p.y);
+            for k in [2u8, 4] {
+                let q = turn(k, p);
+                assert!((f.height(q.x, q.y) - h).abs() < 1e-4, "{p} turned {k}");
+            }
+        }
+    }
+
+    /// The fork flow rule (water contract §6, junctions): out through local edge 0 when nothing
+    /// decides; toward a mouth (a confluence); away from one spring (a split); two springs join.
+    #[test]
+    fn fork_arms_flow_by_the_junction_rule() {
+        let cat = catalog();
+        let o = Axial::ORIGIN;
+        use RiverEnd::{Edge, Junction as J, Mouth as M, Spring as S};
+        let arms = |tiles: &[PlayTile]| -> BTreeMap<u8, (RiverEnd, RiverEnd)> {
+            oriented_rivers(tiles, &cat)
+                .into_iter()
+                .filter(|(k, _)| k.0 == o)
+                .map(|(_, p)| {
+                    let e = p.up.edge().or(p.down.edge()).unwrap();
+                    (e, (p.up, p.down))
+                })
+                .collect()
+        };
+        // Spring or mouth tile across world edge e of the fork, its River edge (local 0 or 3)
+        // facing back.
+        let across = |id: &str, local: u8, e: u8| {
+            let n = o.neighbor(e);
+            let r = (0..6u8)
+                .find(|&r| world_edge(local, r) == opposite_edge(e))
+                .unwrap();
+            tile(n.q, n.r, id, r)
+        };
+        let out = |e: u8| (J, Edge(e));
+        let inn = |e: u8| (Edge(e), J);
+        // Alone: a confluence leaving through local edge 0, whatever the rotation.
+        for rot in 0..6u8 {
+            let got = arms(&[tile(0, 0, "river_fork", rot)]);
+            let e0 = world_edge(0, rot);
+            for (e, ends) in &got {
+                assert_eq!(*ends, if *e == e0 { out(*e) } else { inn(*e) }, "r{rot}");
+            }
+        }
+        // A mouth past arm 2: arm 2 leaves, 0 and 4 join it.
+        let tiles = [tile(0, 0, "river_fork", 0), across("river_mouth", 3, 2)];
+        assert_eq!(
+            arms(&tiles),
+            BTreeMap::from([(0, inn(0)), (2, out(2)), (4, inn(4))])
+        );
+        let r = oriented_rivers(&tiles, &cat);
+        assert!(r.values().any(|p| (p.up, p.down) == (Edge(5), M)));
+        // One spring past arm 4: arm 4 feeds the fork, which splits into 0 and 2.
+        let tiles = [tile(0, 0, "river_fork", 0), across("river_spring", 0, 4)];
+        assert_eq!(
+            arms(&tiles),
+            BTreeMap::from([(0, out(0)), (2, out(2)), (4, inn(4))])
+        );
+        let r = oriented_rivers(&tiles, &cat);
+        assert!(r.values().any(|p| (p.up, p.down) == (S, Edge(1))));
+        // Springs past arms 0 and 2: they join and leave through 4.
+        let tiles = [
+            tile(0, 0, "river_fork", 0),
+            across("river_spring", 0, 0),
+            across("river_spring", 0, 2),
+        ];
+        assert_eq!(
+            arms(&tiles),
+            BTreeMap::from([(0, inn(0)), (2, inn(2)), (4, out(4))])
+        );
+        // A spring and a mouth: the arm toward the mouth leaves, the other two (the spring's and
+        // the open one) join it, through a river tile between the fork and the mouth.
+        let mid = o.neighbor(0);
+        let tiles = [
+            tile(0, 0, "river_fork", 0),
+            tile(mid.q, mid.r, "river_straight", 0),
+            {
+                let n = mid.neighbor(0);
+                tile(n.q, n.r, "river_mouth", 0)
+            },
+            across("river_spring", 0, 2),
+        ];
+        assert_eq!(
+            arms(&tiles),
+            BTreeMap::from([(0, out(0)), (2, inn(2)), (4, inn(4))])
+        );
+    }
+
+    /// The fork meets river_straight and river_bend neighbours on all three arms with the same bed,
+    /// depth, river weight and flow along every shared edge, and its blended flow turns across the
+    /// bisectors instead of switching there.
+    #[test]
+    fn fork_meets_its_river_neighbours_and_turns_its_flow() {
+        let cat = catalog();
+        let o = Axial::ORIGIN;
+        for rot in [0u8, 1, 3] {
+            let mut tiles = vec![tile(0, 0, "river_fork", rot)];
+            let edges: Vec<u8> = [0, 2, 4].map(|k| world_edge(k, rot)).to_vec();
+            for (i, &e) in edges.iter().enumerate() {
+                let n = o.neighbor(e);
+                let back = opposite_edge(e);
+                let (id, r) = if i == 1 {
+                    (
+                        "river_bend",
+                        (0..6u8).find(|&r| world_edge(0, r) == back).unwrap(),
+                    )
+                } else {
+                    (
+                        "river_straight",
+                        (0..6u8).find(|&r| world_edge(0, r) == back).unwrap(),
+                    )
+                };
+                tiles.push(tile(n.q, n.r, id, r));
+            }
+            let lay = layout(&tiles, &cat, |_| false);
+            assert!(lay[&o].exposed.is_empty(), "r{rot}: {:?}", lay[&o].exposed);
+            let fa = lay[&o].field();
+            for &e in &edges {
+                let n = o.neighbor(e);
+                let fb = lay[&n].field();
+                let mid = (center(o) + center(n)) * 0.5;
+                let along = edge_dir(e).perp();
+                for i in 0..=32 {
+                    let p = mid + along * (-8.0 + 0.5 * i as f32);
+                    let (wa, wb) = (fa.water(p.x, p.y), fb.water(p.x, p.y));
+                    let at = format!("r{rot} edge {e} at {p}");
+                    assert!(
+                        (fa.height(p.x, p.y) - fb.height(p.x, p.y)).abs() < 1e-3,
+                        "{at}"
+                    );
+                    assert!((wa.depth - wb.depth).abs() < 1e-3, "{at}");
+                    assert!((wa.river - wb.river).abs() < 1e-4, "{at}");
+                    assert!(
+                        wa.flow.distance(wb.flow) < 1e-3,
+                        "{at}: {} vs {}",
+                        wa.flow,
+                        wb.flow
+                    );
+                }
+            }
+            // Across each bisector in the water the flow keeps its direction within 15 degrees.
+            for k in 0..3 {
+                let bis = edge_dir(world_edge(2 * k + 1, rot));
+                for r in [1.0f32, 2.0, 3.0, 4.0] {
+                    let p = bis * r;
+                    let side = bis.perp() * 0.25;
+                    let (a, b) = (
+                        fa.water(p.x + side.x, p.y + side.y),
+                        fa.water(p.x - side.x, p.y - side.y),
+                    );
+                    assert!(a.flow.length() > 0.0 && b.flow.length() > 0.0);
+                    let cos = a.flow.normalize().dot(b.flow.normalize());
+                    assert!(
+                        cos > 15f32.to_radians().cos(),
+                        "r{rot} bisector {k} r {r}: {} vs {}",
+                        a.flow,
+                        b.flow
+                    );
+                }
+            }
         }
     }
 

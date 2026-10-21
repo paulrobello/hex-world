@@ -1,0 +1,1715 @@
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index 8f8e7a3..77a845b 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -623,6 +623,18 @@
+                  "river_granite": { "color": [0.262, 0.258, 0.216], "roughness": 0.8, "masks": true },
+                  "river_lily": { "color": [0.078, 0.147, 0.042], "roughness": 0.7, "foliage": true, "masks": true } },
+       "maps": { "masks": "p1/river_spring_center/river_spring_center.masks" } },
++    { "id": "river_fork_base", "pack": "water", "kind": "base", "glb": "p1/river_fork_base/river_fork_base.glb",
++      "provenance": "assets-source/kit/river_fork_base/provenance.json",
++      "slots": { "river_grass": { "tileable": "grass", "masks": true },
++                 "river_bed": { "tileable": "gravel", "color": [0.78, 0.66, 0.5], "masks": true },
++                 "river_skirt": { "tileable": "soil", "color": [2.5, 2.5, 2.5] } },
++      "maps": { "masks": "p1/river_fork_base/river_fork_base.masks" } },
++    { "id": "river_fork_center", "pack": "water", "kind": "prop", "glb": "p1/river_fork_center/river_fork_center.glb",
++      "provenance": "assets-source/kit/river_fork_center/provenance.json",
++      "slots": { "river_stone": { "color": [0.254, 0.223, 0.184], "roughness": 0.8, "masks": true, "wind": 0.5 },
++                 "river_reed": { "color": [0.109, 0.195, 0.035], "roughness": 0.85, "foliage": true, "masks": true, "wind": 0.5 },
++                 "river_cattail": { "color": [0.102, 0.042, 0.016], "roughness": 0.9, "foliage": true, "masks": true, "wind": 0.5 } },
++      "maps": { "masks": "p1/river_fork_center/river_fork_center.masks" } },
+     { "id": "car_sedan", "pack": "village", "kind": "prop", "glb": "p1/car_sedan/car_sedan.glb",
+       "provenance": "assets-source/kit/car_sedan/provenance.json",
+       "slots": { "car_sedan_body": { "roughness": 0.36, "masks": true },
+diff --git a/crates/hex-app/src/thumbs.rs b/crates/hex-app/src/thumbs.rs
+index d9aa41e..f134114 100644
+--- a/crates/hex-app/src/thumbs.rs
++++ b/crates/hex-app/src/thumbs.rs
+@@ -462,6 +462,7 @@ mod tests {
+             ("river_road_bridge", 3),
+             ("river_rail_bridge", 3),
+             ("river_spring", 6),
++            ("river_fork", 2),
+             ("beach", 6),
+             ("beach_outer", 6),
+             ("beach_inner", 6),
+@@ -472,7 +473,7 @@ mod tests {
+         for (id, n) in want {
+             assert_eq!(distinct(id), n, "{id}");
+         }
+-        assert_eq!(ThumbRun::new(&c).stages.len(), 28 + 126);
++        assert_eq!(ThumbRun::new(&c).stages.len(), 29 + 128);
+     }
+ 
+     #[test]
+diff --git a/crates/hex-core/src/catalog.rs b/crates/hex-core/src/catalog.rs
+index 1244d38..7bde93e 100644
+--- a/crates/hex-core/src/catalog.rs
++++ b/crates/hex-core/src/catalog.rs
+@@ -83,6 +83,10 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
+         "river_spring",
+         include_str!("../../../data/tiles/river_spring.ron"),
+     ),
++    (
++        "river_fork",
++        include_str!("../../../data/tiles/river_fork.ron"),
++    ),
+     ("beach", include_str!("../../../data/tiles/beach.ron")),
+     (
+         "beach_outer",
+diff --git a/crates/hex-core/tests/data_validator.rs b/crates/hex-core/tests/data_validator.rs
+index 8ff9457..3046ff5 100644
+--- a/crates/hex-core/tests/data_validator.rs
++++ b/crates/hex-core/tests/data_validator.rs
+@@ -46,7 +46,7 @@ fn manifest_piece_ids() -> BTreeSet<String> {
+ /// Plan F1 with the owner O1 coast corners, the U3 oak split from the forest and the windmill, the
+ /// farm, the wheat field, the bakery and the rail tiles ahead of P3 (PRD §5.4): edges 0..5 for each
+ /// inventory tile.
+-const F1: [(&str, [SocketKind; 6]); 28] = [
++const F1: [(&str, [SocketKind; 6]); 29] = [
+     ("meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
+     ("forest", [Forest, Forest, Forest, Forest, Forest, Forest]),
+     ("oak", [Forest, Forest, Forest, Forest, Forest, Forest]),
+@@ -75,6 +75,7 @@ const F1: [(&str, [SocketKind; 6]); 28] = [
+         [River, Rail, Grass, River, Rail, Grass],
+     ),
+     ("river_spring", [River, Grass, Grass, Grass, Grass, Grass]),
++    ("river_fork", [River, Grass, River, Grass, River, Grass]),
+     ("beach", [Ocean, Ocean, Beach, Grass, Grass, Beach]),
+     ("beach_outer", [Ocean, Ocean, Beach, Grass, Beach, Ocean]),
+     ("beach_inner", [Ocean, Beach, Grass, Grass, Grass, Beach]),
+diff --git a/crates/hex-play/src/play.rs b/crates/hex-play/src/play.rs
+index efe9643..795781c 100644
+--- a/crates/hex-play/src/play.rs
++++ b/crates/hex-play/src/play.rs
+@@ -1127,7 +1127,7 @@ mod tests {
+     #[test]
+     fn every_mvp_tile_resolves_and_biomes_index() {
+         let c = PlayCatalog::default();
+-        assert_eq!(c.0.tiles().len(), 28);
++        assert_eq!(c.0.tiles().len(), 29);
+         let biomes: std::collections::BTreeSet<_> =
+             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
+         assert_eq!(biomes.len(), 4);
+diff --git a/crates/hex-play/src/play/packs.rs b/crates/hex-play/src/play/packs.rs
+index a389327..6a192c2 100644
+--- a/crates/hex-play/src/play/packs.rs
++++ b/crates/hex-play/src/play/packs.rs
+@@ -440,6 +440,7 @@ mod tests {
+         assert_eq!(need("wheat_field"), BTreeSet::from([CORE_PACK, "village"]));
+         assert_eq!(need("ocean"), BTreeSet::from(["water"]));
+         assert_eq!(need("river_bend"), BTreeSet::from(["water"]));
++        assert_eq!(need("river_fork"), BTreeSet::from(["water"]));
+         // The bridge's road lanes use the core edge piece.
+         assert_eq!(
+             need("river_road_bridge"),
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index bfd7436..5a16d2d 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -2091,7 +2091,7 @@ mod tests {
+                 }
+             }
+         }
+-        assert_eq!(counts.len(), 28, "every inventory tile ran");
++        assert_eq!(counts.len(), 29, "every inventory tile ran");
+         for id in [
+             "forest",
+             "oak",
+@@ -2109,6 +2109,7 @@ mod tests {
+             "river_straight",
+             "river_bend",
+             "river_spring",
++            "river_fork",
+             "beach",
+             "beach_inner",
+             "beach_outer",
+diff --git a/crates/hex-play/src/water/tiles.rs b/crates/hex-play/src/water/tiles.rs
+index a2d8e44..de1e533 100644
+--- a/crates/hex-play/src/water/tiles.rs
++++ b/crates/hex-play/src/water/tiles.rs
+@@ -78,6 +78,10 @@ const MOUTH_FOAM_S: f32 = 1.0;
+ pub const POOL_W: f32 = 5.95;
+ const POOL_SURFACE: f32 = 6.5;
+ const SPRING_RAMP: f32 = 6.5;
++/// River junction (`river_fork`, water contract §2a): how far from an arm's centre line its
++/// tangent still steers the blended flow. Under the 12 m between a River edge's lane point and
++/// the other arms, so each edge's strip carries its own arm's flow, as the neighbour does.
++const JUNCTION_BLEND: f32 = 8.0;
+ 
+ const APOTHEM: f32 = HEX_RADIUS * 0.866_025_4;
+ 
+@@ -175,13 +179,16 @@ fn turn(rotation: u8, p: Vec2) -> Vec2 {
+     Vec2::new(r.x, r.z)
+ }
+ 
+-/// The first River segment that joins an edge to a node: (local edge, node position, tile-local).
++/// The first River segment that joins an edge to a node that ends the river (a spring or a mouth,
++/// not a [`river_junction`]): (local edge, node position, tile-local).
+ fn river_node_end(def: &TileDef) -> Option<(u8, Vec2)> {
+     def.networks
+         .iter()
+         .filter(|n| n.kind == NetworkKind::River)
+         .find_map(|n| match (&n.from, &n.to) {
+-            (Endpoint::Edge(e), Endpoint::Node(id)) | (Endpoint::Node(id), Endpoint::Edge(e)) => {
++            (Endpoint::Edge(e), Endpoint::Node(id)) | (Endpoint::Node(id), Endpoint::Edge(e))
++                if !river_junction(def, id) =>
++            {
+                 def.nodes
+                     .iter()
+                     .find(|k| &k.id == id)
+@@ -191,6 +198,18 @@ fn river_node_end(def: &TileDef) -> Option<(u8, Vec2)> {
+         })
+ }
+ 
++/// Whether node `id` of `def` joins two or more River segments (`river_fork`'s centre): the arms
++/// meet there, so it is neither a spring nor a mouth, and the tile is a plain river tile whose
++/// bed is the channel along every arm (water contract §2a).
++fn river_junction(def: &TileDef, id: &str) -> bool {
++    let at = |e: &Endpoint| matches!(e, Endpoint::Node(k) if k == id);
++    def.networks
++        .iter()
++        .filter(|n| n.kind == NetworkKind::River && (at(&n.from) || at(&n.to)))
++        .count()
++        >= 2
++}
++
+ fn edge_dir(e: u8) -> Vec2 {
+     let a = (60.0 * (e % 6) as f32).to_radians();
+     Vec2::new(a.cos(), a.sin())
+@@ -282,7 +301,9 @@ impl Coastline {
+ 
+ #[derive(Clone, Debug, PartialEq)]
+ pub enum WaterKind {
+-    /// Carries a river network: a channel and a surface strip along each river segment.
++    /// Carries a river network: a channel and a surface strip along each river segment. A tile
++    /// whose segments meet at a junction (`river_fork`) is one too: the channel along every arm,
++    /// under one surface.
+     River,
+     /// A river network ending at a node on a tile without a coastline: the pool around the node
+     /// (offset from the tile centre, world orientation) and its stream, under one surface.
+@@ -382,12 +403,14 @@ fn edge_water(def: &TileDef, t: &PlayTile, world: u8) -> EdgeWater {
+ }
+ 
+ /// Where a river segment ends: a world edge's lane, a spring (a node on a tile without a
+-/// coastline) or a mouth (a node on a coast tile).
++/// coastline), a mouth (a node on a coast tile) or a junction (a node where two or more of the
++/// tile's River segments meet, [`river_junction`]; the tile's arms continue each other there).
+ #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+ pub enum RiverEnd {
+     Edge(u8),
+     Spring,
+     Mouth,
++    Junction,
+ }
+ 
+ impl RiverEnd {
+@@ -399,11 +422,11 @@ impl RiverEnd {
+     }
+ 
+     /// Which end a chain's flow starts from: a spring, else an open edge, else a mouth (water
+-    /// contract §6).
++    /// contract §6). Chains that reach a junction are oriented by [`junction_sources`] instead.
+     fn source_rank(self) -> u8 {
+         match self {
+             RiverEnd::Spring => 0,
+-            RiverEnd::Edge(_) => 1,
++            RiverEnd::Edge(_) | RiverEnd::Junction => 1,
+             RiverEnd::Mouth => 2,
+         }
+     }
+@@ -418,6 +441,13 @@ pub struct RiverPath {
+     pub down: RiverEnd,
+ }
+ 
++impl RiverPath {
++    /// One arm of a junction tile: the path enters or leaves at the junction node.
++    pub fn at_junction(&self) -> bool {
++        self.up == RiverEnd::Junction || self.down == RiverEnd::Junction
++    }
++}
++
+ /// The circle through `a`, `m` and `b`, sampled from `a` to `b` at most [`ARC_STEP`] apart (one
+ /// control point is the arc midpoint, as in `hex_sim::geom::segment_shape`); straight if collinear.
+ fn arc_through(a: Vec2, m: Vec2, b: Vec2) -> Vec<Vec2> {
+@@ -460,11 +490,14 @@ fn river_segments(def: &TileDef, t: &PlayTile) -> Vec<(RiverEnd, RiverEnd, Vec<V
+             RiverEnd::Edge(world_edge(*k, t.rotation)),
+             lane_point(def, *k),
+         )),
+-        Endpoint::Node(id) => def
+-            .nodes
+-            .iter()
+-            .find(|n| &n.id == id)
+-            .map(|n| (node_end, Vec2::from(n.at))),
++        Endpoint::Node(id) => def.nodes.iter().find(|n| &n.id == id).map(|n| {
++            let kind = if river_junction(def, id) {
++                RiverEnd::Junction
++            } else {
++                node_end
++            };
++            (kind, Vec2::from(n.at))
++        }),
+     };
+     def.networks
+         .iter()
+@@ -494,20 +527,28 @@ fn river_segments(def: &TileDef, t: &PlayTile) -> Vec<(RiverEnd, RiverEnd, Vec<V
+         .collect()
+ }
+ 
++/// One river segment of a placed tile: (from end, to end, world centre line from -> to).
++type Segment = (RiverEnd, RiverEnd, Vec<Vec2>);
++/// A chain end: (cell, the end, segment index on that cell).
++type ChainEnd = (Axial, RiverEnd, usize);
++
+ /// Every placed river segment, oriented so the flow runs one way along each connected chain (water
+ /// contract §6): each chain starts at its spring, else at its open end with the lowest
+ /// (cell, edge), else at its mouth; among several of the same kind, at the lowest cell. A loop
+-/// starts at its lowest cell. Keyed by (cell, segment index among the tile's river segments).
++/// starts at its lowest cell. Chains that meet at a junction (`river_fork`) are oriented together
++/// by [`junction_sources`]. Keyed by (cell, segment index among the tile's river segments).
+ pub fn oriented_rivers(
+     tiles: &[PlayTile],
+     catalog: &TileCatalog,
+ ) -> BTreeMap<(Axial, usize), RiverPath> {
+-    let mut segs: BTreeMap<(Axial, usize), (RiverEnd, RiverEnd, Vec<Vec2>)> = BTreeMap::new();
++    let mut segs: BTreeMap<(Axial, usize), Segment> = BTreeMap::new();
++    let mut rotations: HashMap<Axial, u8> = HashMap::new();
+     for t in tiles {
+         if let Some(def) = catalog.get(&t.tile) {
+             for (i, s) in river_segments(def, t).into_iter().enumerate() {
+                 segs.insert((t.cell, i), s);
+             }
++            rotations.insert(t.cell, t.rotation);
+         }
+     }
+     // The segment across `end` of `cell`, if it is an edge with a segment ending across it.
+@@ -519,38 +560,50 @@ pub fn oriented_rivers(
+             .find(|(_, (a, b, _))| *a == back || *b == back)
+             .map(|(k, _)| *k)
+     };
+-    let mut out = BTreeMap::new();
++    // The connected chains, each with its open ends.
++    let mut chains: Vec<(Vec<(Axial, usize)>, Vec<ChainEnd>)> = vec![];
+     let mut seen: BTreeSet<(Axial, usize)> = BTreeSet::new();
+     for &key in segs.keys() {
+-        if seen.contains(&key) {
++        if !seen.insert(key) {
+             continue;
+         }
+-        // The connected chain, then its upstream end.
+         let mut chain = vec![key];
+         let mut i = 0;
+         while i < chain.len() {
+             let (a, b, _) = segs[&chain[i]];
+             for e in [a, b] {
+                 if let Some(k) = across(chain[i].0, e)
+-                    && !chain.contains(&k)
++                    && seen.insert(k)
+                 {
+                     chain.push(k);
+                 }
+             }
+             i += 1;
+         }
+-        let ends: Vec<(u8, Axial, RiverEnd, usize)> = chain
++        let ends: Vec<ChainEnd> = chain
+             .iter()
+             .flat_map(|k| {
+                 let (a, b, _) = segs[k];
+                 [a, b]
+                     .into_iter()
+                     .filter(|&e| across(k.0, e).is_none())
+-                    .map(move |e| (e.source_rank(), k.0, e, k.1))
++                    .map(move |e| (k.0, e, k.1))
+             })
+             .collect();
+-        let (mut cur, mut up) = match ends.iter().min() {
+-            Some(&(_, cell, e, i)) => ((cell, i), e),
++        chains.push((chain, ends));
++    }
++    let picked = junction_sources(&chains, &segs, &rotations);
++    let mut out = BTreeMap::new();
++    let mut walked: BTreeSet<(Axial, usize)> = BTreeSet::new();
++    for (ci, (chain, ends)) in chains.iter().enumerate() {
++        let start = picked.get(&ci).copied().or_else(|| {
++            ends.iter()
++                .map(|&(cell, e, i)| (e.source_rank(), cell, e, i))
++                .min()
++                .map(|(_, cell, e, i)| (cell, e, i))
++        });
++        let (mut cur, mut up) = match start {
++            Some((cell, e, i)) => ((cell, i), e),
+             None => {
+                 let k = *chain.iter().min().expect("non-empty chain");
+                 let (a, b, _) = segs[&k];
+@@ -558,7 +611,7 @@ pub fn oriented_rivers(
+             }
+         };
+         loop {
+-            seen.insert(cur);
++            walked.insert(cur);
+             let (a, b, pts) = &segs[&cur];
+             let (down, points) = if *a == up {
+                 (*b, pts.clone())
+@@ -567,7 +620,7 @@ pub fn oriented_rivers(
+             };
+             out.insert(cur, RiverPath { points, up, down });
+             match (across(cur.0, down), down) {
+-                (Some(next), RiverEnd::Edge(e)) if !seen.contains(&next) => {
++                (Some(next), RiverEnd::Edge(e)) if !walked.contains(&next) => {
+                     up = RiverEnd::Edge(opposite_edge(e));
+                     cur = next;
+                 }
+@@ -578,6 +631,187 @@ pub fn oriented_rivers(
+     out
+ }
+ 
++/// A node of the river network that chains join at: a junction (one per tile, keyed by its cell)
++/// or a chain's open end.
++#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
++enum NetVertex {
++    Junction(Axial),
++    End(Axial, RiverEnd, usize),
++}
++
++impl NetVertex {
++    fn of(&(cell, e, i): &ChainEnd) -> Self {
++        if e == RiverEnd::Junction {
++            NetVertex::Junction(cell)
++        } else {
++            NetVertex::End(cell, e, i)
++        }
++    }
++}
++
++/// The upstream end of every chain that reaches a junction (`river_fork`), by chain index (water
++/// contract §6, junctions). Chains joined at junctions form one network, and every chain in it runs
++/// downhill, measured in metres along the centre lines:
++/// - toward the nearest mouth when the network reaches one, so a fork with one arm toward the sea
++///   is a confluence and a fork with two arms that each reach the sea first is a split;
++/// - else away from the nearest spring, so one spring through a fork splits and two springs join;
++/// - else out through the lowest junction's local edge 0 arm, as if the sea lay past that arm's
++///   open end (the lowest open end when that arm meets another junction): a lone fork is a
++///   confluence whose rotation picks the outlet.
++///
++/// A chain whose two ends are equally far keeps the plain chain rule of [`oriented_rivers`].
++fn junction_sources(
++    chains: &[(Vec<(Axial, usize)>, Vec<ChainEnd>)],
++    segs: &BTreeMap<(Axial, usize), Segment>,
++    rotations: &HashMap<Axial, u8>,
++) -> BTreeMap<usize, ChainEnd> {
++    let length = |chain: &[(Axial, usize)]| -> f32 {
++        chain
++            .iter()
++            .map(|k| {
++                let pts = &segs[k].2;
++                pts.windows(2).map(|w| w[0].distance(w[1])).sum::<f32>()
++            })
++            .sum()
++    };
++    // Linear chains with a junction end: (chain index, end a, end b, length).
++    let links: Vec<(usize, ChainEnd, ChainEnd, f32)> = chains
++        .iter()
++        .enumerate()
++        .filter_map(|(ci, (chain, ends))| {
++            let [a, b] = ends[..] else {
++                return None;
++            };
++            (a.1 == RiverEnd::Junction || b.1 == RiverEnd::Junction)
++                .then(|| (ci, a, b, length(chain)))
++        })
++        .collect();
++    let mut out = BTreeMap::new();
++    let mut done = vec![false; links.len()];
++    for first in 0..links.len() {
++        if done[first] {
++            continue;
++        }
++        // The network: links joined at their junctions.
++        done[first] = true;
++        let mut net = vec![first];
++        let mut i = 0;
++        while i < net.len() {
++            let (_, a, b, _) = links[net[i]];
++            for v in [NetVertex::of(&a), NetVertex::of(&b)] {
++                if !matches!(v, NetVertex::Junction(_)) {
++                    continue;
++                }
++                for (j, l) in links.iter().enumerate() {
++                    if !done[j] && (NetVertex::of(&l.1) == v || NetVertex::of(&l.2) == v) {
++                        done[j] = true;
++                        net.push(j);
++                    }
++                }
++            }
++            i += 1;
++        }
++        let ends: Vec<ChainEnd> = net
++            .iter()
++            .flat_map(|&j| [links[j].1, links[j].2])
++            .filter(|e| e.1 != RiverEnd::Junction)
++            .collect();
++        let leaves = |kind: fn(&RiverEnd) -> bool| -> Vec<NetVertex> {
++            ends.iter()
++                .filter(|e| kind(&e.1))
++                .map(NetVertex::of)
++                .collect()
++        };
++        let mouths = leaves(|e| *e == RiverEnd::Mouth);
++        let springs = leaves(|e| *e == RiverEnd::Spring);
++        // The distance seeds, and whether the flow runs toward them or away from them.
++        let (seeds, toward) = if !mouths.is_empty() {
++            (mouths, true)
++        } else if !springs.is_empty() {
++            (springs, false)
++        } else {
++            let Some(outlet) = open_outlet(&net, &links, chains, segs, rotations) else {
++                continue;
++            };
++            (vec![outlet], true)
++        };
++        let mut dist: BTreeMap<NetVertex, f32> = seeds.iter().map(|&v| (v, 0.0)).collect();
++        loop {
++            let mut changed = false;
++            for &j in &net {
++                let (_, a, b, len) = links[j];
++                let (va, vb) = (NetVertex::of(&a), NetVertex::of(&b));
++                for (x, y) in [(va, vb), (vb, va)] {
++                    let Some(&dx) = dist.get(&x) else {
++                        continue;
++                    };
++                    if dist.get(&y).is_none_or(|&dy| dx + len < dy - 1e-4) {
++                        dist.insert(y, dx + len);
++                        changed = true;
++                    }
++                }
++            }
++            if !changed {
++                break;
++            }
++        }
++        for &j in &net {
++            let (ci, a, b, _) = links[j];
++            let (Some(&da), Some(&db)) =
++                (dist.get(&NetVertex::of(&a)), dist.get(&NetVertex::of(&b)))
++            else {
++                continue;
++            };
++            if (da - db).abs() < 1e-3 {
++                continue;
++            }
++            out.insert(ci, if (da > db) == toward { a } else { b });
++        }
++    }
++    out
++}
++
++/// The outlet of a junction network with neither a mouth nor a spring: the open end of the chain
++/// that leaves the lowest junction through its local edge 0, else the network's lowest open end.
++fn open_outlet(
++    net: &[usize],
++    links: &[(usize, ChainEnd, ChainEnd, f32)],
++    chains: &[(Vec<(Axial, usize)>, Vec<ChainEnd>)],
++    segs: &BTreeMap<(Axial, usize), Segment>,
++    rotations: &HashMap<Axial, u8>,
++) -> Option<NetVertex> {
++    let junction = net
++        .iter()
++        .flat_map(|&j| [links[j].1, links[j].2])
++        .filter(|e| e.1 == RiverEnd::Junction)
++        .map(|e| e.0)
++        .min()?;
++    let out_edge = RiverEnd::Edge(world_edge(
++        0,
++        rotations.get(&junction).copied().unwrap_or(0),
++    ));
++    let arm = segs
++        .range((junction, 0)..=(junction, usize::MAX))
++        .find(|(_, (a, b, _))| *a == out_edge || *b == out_edge)
++        .map(|(k, _)| *k);
++    let far = arm.and_then(|arm| {
++        let &(_, a, b, _) = links.iter().find(|l| chains[l.0].0.contains(&arm))?;
++        let far = if a == (junction, RiverEnd::Junction, arm.1) {
++            b
++        } else {
++            a
++        };
++        matches!(far.1, RiverEnd::Edge(_)).then(|| NetVertex::of(&far))
++    });
++    far.or_else(|| {
++        net.iter()
++            .flat_map(|&j| [links[j].1, links[j].2])
++            .filter(|e| matches!(e.1, RiverEnd::Edge(_)))
++            .min()
++            .map(|e| NetVertex::of(&e))
++    })
++}
++
+ /// One water tile as the meshes see it. Rebuilt when any field changes.
+ #[derive(Clone, Debug, PartialEq)]
+ pub struct CellWater {
+@@ -689,6 +923,41 @@ impl TileField<'_> {
+         best
+     }
+ 
++    /// On a junction tile, the flow direction at `p`: the tile's arms' downstream tangents averaged
++    /// with weights that fall from 1 on an arm's centre line to 0 at [`JUNCTION_BLEND`] from it, so
++    /// the flow turns from the inflows into the outflows across the centre instead of switching
++    /// along the bisectors, and slows where they disagree (to 2/3 at the centre of a confluence or
++    /// a split). `None` off junction tiles and wherever fewer than two arms are that near (all of
++    /// each River edge's strip): there the nearest centre line's tangent applies, which is what the
++    /// neighbouring tile computes from the same paths, and which the blend reaches as the second
++    /// arm's weight falls to 0.
++    fn junction_flow(&self, p: Vec2) -> Option<Vec2> {
++        let arms = self.cell.paths[..self.cell.own_paths]
++            .iter()
++            .filter(|path| path.at_junction());
++        let (mut sum, mut weight, mut near) = (Vec2::ZERO, 0.0, 0);
++        for path in arms {
++            let mut best = (f32::MAX, Vec2::ZERO);
++            for w in path.points.windows(2) {
++                let seg = w[1] - w[0];
++                let len2 = seg.length_squared();
++                if len2 <= 0.0 {
++                    continue;
++                }
++                let t = ((p - w[0]).dot(seg) / len2).clamp(0.0, 1.0);
++                let d = p.distance(w[0] + seg * t);
++                if d < best.0 {
++                    best = (d, seg / len2.sqrt());
++                }
++            }
++            let k = 1.0 - smoothstep(0.0, JUNCTION_BLEND, best.0);
++            sum += best.1 * k;
++            weight += k;
++            near += usize::from(k > 0.0);
++        }
++        (near >= 2).then(|| sum / weight)
++    }
++
+     fn seaward(&self, p: Vec2, coast: Coastline) -> f32 {
+         coast.seaward(p - center(self.cell.tile.cell))
+     }
+@@ -724,8 +993,9 @@ impl WaterField for TileField<'_> {
+             WaterKind::River => {
+                 let (d, tangent) = self.river(p);
+                 let (river, speed) = river_flow(d, RIVER_CUT_W);
++                let dir = self.junction_flow(p).unwrap_or(tangent);
+                 WaterSample {
+-                    flow: tangent * speed * river,
++                    flow: dir * speed * river,
+                     river,
+                     depth,
+                     shore: INLAND,
+@@ -976,6 +1246,15 @@ fn spawn_cell(
+     }
+     let mut surfaces = vec![];
+     match cw.kind {
++        WaterKind::River if cw.paths[..cw.own_paths].iter().any(RiverPath::at_junction) => {
++            // A junction's arms meet at the centre, where strips would overlap: one hex-grid
++            // surface kept where any of them reaches, as on a spring.
++            let keep = |w: Vec2| field.river(w).0 < RIBBON_HALF + RIBBON_STEP;
++            surfaces.push((
++                surface_mesh_where(&field, cell, rot, keep),
++                cell_transform(cell, rot),
++            ));
++        }
+         WaterKind::River => {
+             for p in &cw.paths[..cw.own_paths] {
+                 let rows = ribbon_rows(p);
+@@ -1797,6 +2076,213 @@ mod tests {
+         }
+     }
+ 
++    /// The fork's centre node joins three River segments, so it is a junction: the tile is a plain
++    /// river tile with an arm on each River edge, not a spring, and alone it is open on all three.
++    #[test]
++    fn the_fork_is_a_river_tile_with_three_arms() {
++        let cat = catalog();
++        let def = cat.get("river_fork").unwrap();
++        for rot in 0..6u8 {
++            assert_eq!(water_kind(def, rot), Some(WaterKind::River), "r{rot}");
++            let cw = alone(&cat, Axial::ORIGIN, "river_fork", rot);
++            assert_eq!(cw.own_paths, 3);
++            assert!(cw.paths.iter().all(RiverPath::at_junction));
++            let mut want: Vec<u8> = [0, 2, 4].map(|e| world_edge(e, rot)).to_vec();
++            want.sort();
++            assert_eq!(cw.exposed, want, "r{rot}");
++        }
++        assert!(Mouth::of(def, 0).is_none());
++        // The spring keeps its own node end.
++        let spring = cat.get("river_spring").unwrap();
++        assert!(matches!(water_kind(spring, 0), Some(WaterKind::Spring(_))));
++    }
++
++    /// The engine's fork bed is the kit's (`scripts/blender/kit/_river_fork.py` `_check` spots,
++    /// Blender (x, y) = runtime (x, -z)): the channel profile at the distance to the nearest arm.
++    #[test]
++    fn fork_bed_matches_the_kit_profile() {
++        let cat = catalog();
++        let cw = alone(&cat, Axial::ORIGIN, "river_fork", 0);
++        let f = cw.field();
++        let sin60 = 60f32.to_radians().sin();
++        let (wb, bb) = (4.0 / sin60, 6.83 / sin60);
++        for (x, y, want) in [
++            (0.0, 0.0, -2.95),
++            (APOTHEM, 4.0, -1.40),
++            (APOTHEM, 0.0, -2.95),
++            (0.5 * wb, sin60 * wb, -1.40),
++            (0.5 * bb, sin60 * bb, 0.0),
++            (-APOTHEM, 0.0, 0.0),
++        ] {
++            let h = f.height(x, -y);
++            assert!((h - want).abs() < 6e-3, "({x}, {y}): {h} vs {want}");
++        }
++        // Three-fold: each arm carries the same profile.
++        for i in 0..40 {
++            let p = Vec2::new((i % 8) as f32 * 1.6 - 1.0, (i / 8) as f32 * 1.5 - 3.0);
++            let h = f.height(p.x, p.y);
++            for k in [2u8, 4] {
++                let q = turn(k, p);
++                assert!((f.height(q.x, q.y) - h).abs() < 1e-4, "{p} turned {k}");
++            }
++        }
++    }
++
++    /// The fork flow rule (water contract §6, junctions): out through local edge 0 when nothing
++    /// decides; toward a mouth (a confluence); away from one spring (a split); two springs join.
++    #[test]
++    fn fork_arms_flow_by_the_junction_rule() {
++        let cat = catalog();
++        let o = Axial::ORIGIN;
++        use RiverEnd::{Edge, Junction as J, Mouth as M, Spring as S};
++        let arms = |tiles: &[PlayTile]| -> BTreeMap<u8, (RiverEnd, RiverEnd)> {
++            oriented_rivers(tiles, &cat)
++                .into_iter()
++                .filter(|(k, _)| k.0 == o)
++                .map(|(_, p)| {
++                    let e = p.up.edge().or(p.down.edge()).unwrap();
++                    (e, (p.up, p.down))
++                })
++                .collect()
++        };
++        // Spring or mouth tile across world edge e of the fork, its River edge (local 0 or 3)
++        // facing back.
++        let across = |id: &str, local: u8, e: u8| {
++            let n = o.neighbor(e);
++            let r = (0..6u8)
++                .find(|&r| world_edge(local, r) == opposite_edge(e))
++                .unwrap();
++            tile(n.q, n.r, id, r)
++        };
++        let out = |e: u8| (J, Edge(e));
++        let inn = |e: u8| (Edge(e), J);
++        // Alone: a confluence leaving through local edge 0, whatever the rotation.
++        for rot in 0..6u8 {
++            let got = arms(&[tile(0, 0, "river_fork", rot)]);
++            let e0 = world_edge(0, rot);
++            for (e, ends) in &got {
++                assert_eq!(*ends, if *e == e0 { out(*e) } else { inn(*e) }, "r{rot}");
++            }
++        }
++        // A mouth past arm 2: arm 2 leaves, 0 and 4 join it.
++        let tiles = [tile(0, 0, "river_fork", 0), across("river_mouth", 3, 2)];
++        assert_eq!(
++            arms(&tiles),
++            BTreeMap::from([(0, inn(0)), (2, out(2)), (4, inn(4))])
++        );
++        let r = oriented_rivers(&tiles, &cat);
++        assert!(r.values().any(|p| (p.up, p.down) == (Edge(5), M)));
++        // One spring past arm 4: arm 4 feeds the fork, which splits into 0 and 2.
++        let tiles = [tile(0, 0, "river_fork", 0), across("river_spring", 0, 4)];
++        assert_eq!(
++            arms(&tiles),
++            BTreeMap::from([(0, out(0)), (2, out(2)), (4, inn(4))])
++        );
++        let r = oriented_rivers(&tiles, &cat);
++        assert!(r.values().any(|p| (p.up, p.down) == (S, Edge(1))));
++        // Springs past arms 0 and 2: they join and leave through 4.
++        let tiles = [
++            tile(0, 0, "river_fork", 0),
++            across("river_spring", 0, 0),
++            across("river_spring", 0, 2),
++        ];
++        assert_eq!(
++            arms(&tiles),
++            BTreeMap::from([(0, inn(0)), (2, inn(2)), (4, out(4))])
++        );
++        // A spring and a mouth: the arm toward the mouth leaves, the other two (the spring's and
++        // the open one) join it, through a river tile between the fork and the mouth.
++        let mid = o.neighbor(0);
++        let tiles = [
++            tile(0, 0, "river_fork", 0),
++            tile(mid.q, mid.r, "river_straight", 0),
++            {
++                let n = mid.neighbor(0);
++                tile(n.q, n.r, "river_mouth", 0)
++            },
++            across("river_spring", 0, 2),
++        ];
++        assert_eq!(
++            arms(&tiles),
++            BTreeMap::from([(0, out(0)), (2, inn(2)), (4, inn(4))])
++        );
++    }
++
++    /// The fork meets river_straight and river_bend neighbours on all three arms with the same bed,
++    /// depth, river weight and flow along every shared edge, and its blended flow turns across the
++    /// bisectors instead of switching there.
++    #[test]
++    fn fork_meets_its_river_neighbours_and_turns_its_flow() {
++        let cat = catalog();
++        let o = Axial::ORIGIN;
++        for rot in [0u8, 1, 3] {
++            let mut tiles = vec![tile(0, 0, "river_fork", rot)];
++            let edges: Vec<u8> = [0, 2, 4].map(|k| world_edge(k, rot)).to_vec();
++            for (i, &e) in edges.iter().enumerate() {
++                let n = o.neighbor(e);
++                let back = opposite_edge(e);
++                let (id, r) = if i == 1 {
++                    (
++                        "river_bend",
++                        (0..6u8).find(|&r| world_edge(0, r) == back).unwrap(),
++                    )
++                } else {
++                    (
++                        "river_straight",
++                        (0..6u8).find(|&r| world_edge(0, r) == back).unwrap(),
++                    )
++                };
++                tiles.push(tile(n.q, n.r, id, r));
++            }
++            let lay = layout(&tiles, &cat, |_| false);
++            assert!(lay[&o].exposed.is_empty(), "r{rot}: {:?}", lay[&o].exposed);
++            let fa = lay[&o].field();
++            for &e in &edges {
++                let n = o.neighbor(e);
++                let fb = lay[&n].field();
++                let mid = (center(o) + center(n)) * 0.5;
++                let along = edge_dir(e).perp();
++                for i in 0..=32 {
++                    let p = mid + along * (-8.0 + 0.5 * i as f32);
++                    let (wa, wb) = (fa.water(p.x, p.y), fb.water(p.x, p.y));
++                    let at = format!("r{rot} edge {e} at {p}");
++                    assert!(
++                        (fa.height(p.x, p.y) - fb.height(p.x, p.y)).abs() < 1e-3,
++                        "{at}"
++                    );
++                    assert!((wa.depth - wb.depth).abs() < 1e-3, "{at}");
++                    assert!((wa.river - wb.river).abs() < 1e-4, "{at}");
++                    assert!(
++                        wa.flow.distance(wb.flow) < 1e-3,
++                        "{at}: {} vs {}",
++                        wa.flow,
++                        wb.flow
++                    );
++                }
++            }
++            // Across each bisector in the water the flow keeps its direction within 15 degrees.
++            for k in 0..3 {
++                let bis = edge_dir(world_edge(2 * k + 1, rot));
++                for r in [1.0f32, 2.0, 3.0, 4.0] {
++                    let p = bis * r;
++                    let side = bis.perp() * 0.25;
++                    let (a, b) = (
++                        fa.water(p.x + side.x, p.y + side.y),
++                        fa.water(p.x - side.x, p.y - side.y),
++                    );
++                    assert!(a.flow.length() > 0.0 && b.flow.length() > 0.0);
++                    let cos = a.flow.normalize().dot(b.flow.normalize());
++                    assert!(
++                        cos > 15f32.to_radians().cos(),
++                        "r{rot} bisector {k} r {r}: {} vs {}",
++                        a.flow,
++                        b.flow
++                    );
++                }
++            }
++        }
++    }
++
+     /// The fish band's room along a mouth's centre line, from its River edge out to sea (water
+     /// contract §3a, Fish).
+     #[test]
+diff --git a/crates/hex-play/tests/kit_gate.rs b/crates/hex-play/tests/kit_gate.rs
+index e10dff2..4ed265c 100644
+--- a/crates/hex-play/tests/kit_gate.rs
++++ b/crates/hex-play/tests/kit_gate.rs
+@@ -1018,6 +1018,7 @@ const RIVER_DRESSING_PROPS: &[&str] = &[
+     "river_spring_center",
+     "river_mouth_center",
+     "river_mouth_l_center",
++    "river_fork_center",
+ ];
+ 
+ /// A piece's LOD0 triangle ceiling: its kind's, or `RIVER_DRESSING_LOD0_MAX` for a river dressing prop.
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index cc16430..3847b79 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -341,6 +341,15 @@ pub fn kit_layout() -> Vec<Placement> {
+         v.push(place("river_edge", q, r, 1));
+         v.push(place("river_edge", q, r, 4));
+     }
++    // The river fork (owner 2026-10-20) on (-3, 4), west of the river straights: river_fork_base
++    // and its dressing at rot 1 (river on world edges 1, 3 and 5, all facing empty cells; its grass
++    // edge 0 meets the straight's grass edge 3 on (-2, 4)) with a river_edge stub on each River
++    // edge. The kit scenario spawns no water, so its channel shows dry here; play draws the water.
++    v.push(place("river_fork_base", -3, 4, 1));
++    v.push(place("river_fork_center", -3, 4, 1));
++    for k in [1, 3, 5] {
++        v.push(place("river_edge", -3, 4, k));
++    }
+     for (piece, offset) in TRAIN_ON_RAIL_BRIDGE {
+         v.push(Placement {
+             offset,
+diff --git a/crates/hex-render/src/lib.rs b/crates/hex-render/src/lib.rs
+index db673d2..25c7c78 100644
+--- a/crates/hex-render/src/lib.rs
++++ b/crates/hex-render/src/lib.rs
+@@ -204,14 +204,14 @@ mod tests {
+         cells.dedup();
+         // The water patch's 11 cells plus the showcase blocks' cells; each block in
+         // `kit_scene::kit_layout` names its own cells. A new block adds its cells here.
+-        assert_eq!(cells.len(), 32);
++        assert_eq!(cells.len(), 33);
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
+         // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
+         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
+         // The fixture lays out water-patch cells only; the runtime kit adds the showcase blocks.
+         assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
+-        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 32);
++        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 33);
+         assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
+         assert!(!Scenario::Kit.has_water());
+     }
+diff --git a/crates/hex-sim/tests/network.rs b/crates/hex-sim/tests/network.rs
+index 8f8da51..dc749a9 100644
+--- a/crates/hex-sim/tests/network.rs
++++ b/crates/hex-sim/tests/network.rs
+@@ -245,6 +245,38 @@ fn bridge_feeds_road_and_river_graphs_separately() {
+     );
+ }
+ 
++/// The river fork's three arms meet at one local node of degree 3, and each arm stitches to the
++/// river tile across its seam, so the river graph is one connected piece through the fork.
++#[test]
++fn river_fork_joins_three_river_neighbours_at_one_node() {
++    let cat = catalog();
++    for rot in [0u8, 1] {
++        let mut rivers = Network::new(NetworkKind::River);
++        let o = Axial::ORIGIN;
++        put(&mut rivers, &cat, o, "river_fork", rot);
++        for k in [0u8, 2, 4] {
++            let e = (k + rot) % 6;
++            let back = (e + 3) % 6;
++            put(&mut rivers, &cat, o.neighbor(e), "river_straight", back % 3);
++        }
++        assert_eq!(rivers.links().count(), 6, "r{rot}");
++        let hubs: Vec<_> = rivers
++            .nodes()
++            .filter(|(_, n)| n.links().len() == 3)
++            .collect();
++        assert_eq!(hubs.len(), 1, "r{rot}: one junction");
++        assert!(close(hubs[0].1.pos(), o.to_world(HEX_RADIUS)));
++        for k in [0u8, 2, 4] {
++            let seam = rivers.seam_node(o, (k + rot) % 6).expect("arm seam");
++            assert_eq!(
++                rivers.node(seam).unwrap().links().len(),
++                2,
++                "r{rot} arm {k}"
++            );
++        }
++    }
++}
++
+ #[test]
+ fn place_and_bulldoze_update_only_the_touched_tile() {
+     let cat = catalog();
+diff --git a/data/tiles/river_fork.ron b/data/tiles/river_fork.ron
+new file mode 100644
+index 0000000..902dce6
+--- /dev/null
++++ b/data/tiles/river_fork.ron
+@@ -0,0 +1,25 @@
++// River fork (owner 2026-10-20, "we need a river fork also"): a symmetric Y like road_junction, river
++// arms on edges 0, 2 and 4 meeting at the centre node. A River node shared by several segments is
++// a junction, not a spring (water contract §2a): two arms join or one splits by the flow rule (§6).
++(
++    id: "river_fork",
++    biome: Grass,
++    base: "river_fork_base",
++    edges: (
++        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
++        (kind: Grass),
++        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
++        (kind: Grass),
++        (kind: River, lane: Some((offset: 0.0, width: 8.0))),
++        (kind: Grass),
++    ),
++    center: Some("river_fork_center"),
++    nodes: [
++        (id: "fork", at: (0.0, 0.0)),
++    ],
++    networks: [
++        (kind: River, from: Edge(0), to: Node("fork")),
++        (kind: River, from: Edge(2), to: Node("fork")),
++        (kind: River, from: Edge(4), to: Node("fork")),
++    ],
++)
+diff --git a/docs/agent-operability.md b/docs/agent-operability.md
+index 093fb1c..cb8c1b4 100644
+--- a/docs/agent-operability.md
++++ b/docs/agent-operability.md
+@@ -305,7 +305,7 @@ The in-world affordances are the Legend direction's (`design/ui/legend/in-world.
+ 
+ Widths are screen-space pixels at a device pixel ratio of 1 (multiplied by the window's scale factor), constant at every zoom: each line segment is a quad whose vertex shader (`assets/shaders/affordance.wesl`) projects both endpoints and pushes the corners out along the screen-space normal by the half-width in pixels. Dashes, the key marks' inset, the ticks and the hatch are in pixels too. The material binds no texture and draws without a depth test, over the world.
+ 
+-Water tiles (river, the spring `river_spring`, the three coast tiles `beach`, `beach_outer` and `beach_inner`, the river mouths `river_mouth` and `river_mouth_l`, and ocean) draw the approved water material (`crates/hex-render/src/water/tiles.rs`): a hex water surface on ocean, coast and river-mouth tiles, a 10 m strip along each river segment, one surface over a spring's pool and stream, and the underwater cut face on every water edge with no matching water across it, rebuilt on place, bulldoze, undo and redo (each rebuild logs `play water: (q, r) <tile> r<rotation> exposed [...]`). A water tile whose base piece is missing from the kit gets a placeholder bed (river channel, beach slope, ocean floor) instead of its base. A missing centre piece does not: the base is the bed. The levels and profiles are the bed contract in `docs/kit/water-contract.md`. The play camera always carries the depth prepass and, from Medium up, screen-space transmission, and has no depth of field.
++Water tiles (river, the spring `river_spring`, the fork `river_fork`, the three coast tiles `beach`, `beach_outer` and `beach_inner`, the river mouths `river_mouth` and `river_mouth_l`, and ocean) draw the approved water material (`crates/hex-render/src/water/tiles.rs`): a hex water surface on ocean, coast and river-mouth tiles, a 10 m strip along each river segment, one surface over a spring's pool and stream and over a fork's three arms, and the underwater cut face on every water edge with no matching water across it, rebuilt on place, bulldoze, undo and redo (each rebuild logs `play water: (q, r) <tile> r<rotation> exposed [...]`). A water tile whose base piece is missing from the kit gets a placeholder bed (river channel, beach slope, ocean floor) instead of its base. A missing centre piece does not: the base is the bed. The levels and profiles are the bed contract in `docs/kit/water-contract.md`. The play camera always carries the depth prepass and, from Medium up, screen-space transmission, and has no depth of field.
+ 
+ A placed tile plays the staged rise of PRD §4.4 from its `TileDef.rise` timeline (`crates/hex-play/src/play/rise.rs`; every MVP tile uses the default 2.0 s: column 0–0.6 s, cap 0.45–0.85 s, edges 0.8–1.2 s, props 1.1–1.7 s, agents 1.6–2.0 s):
+ 
+@@ -339,7 +339,7 @@ Kit content loads by pack (PRD §10, `crates/hex-play/src/play/packs.rs`). Every
+ | `forest` | forest_base, tree_forest, tree_oak, fern_clump, log_fallen and their variants; litter, bark | The pine forest and oak tile base and the pine forest's spruce, ferns and fallen log |
+ | `hero` | tree_hero_oak, tree_hero_oak_b, tree_hero_oak_c (budget class hero) | The oak tile's hero oak and its forked and stag-headed variants (also loads bark) |
+ | `village` | house_pad, house_cottage, house_twostorey, house_longhouse, house_twostorey_b, house_twostorey_c, house_cottage_b, windmill, barn_red, fence_paddock, wheat_field; plaster | The house cluster (also loads gravel for the driveway), the windmill tile's windmill, the farm tile's barn and paddock fence, and the wheat field (also loads gravel for its earth) |
+-| `water` | ocean_base, ocean_center, river_edge, river_straight_base, river_straight_center, river_bend_base, river_bend_center, river_road_bridge_center, river_spring_base, river_spring_center, the beach family, river_mouth_base, river_mouth_center, river_mouth_l_base, river_mouth_l_center; gravel | Ocean and river pieces; gravel is their seabed and river bed (also loads plaster for the bridge stone) |
++| `water` | ocean_base, ocean_center, river_edge, river_straight_base, river_straight_center, river_bend_base, river_bend_center, river_road_bridge_center, river_spring_base, river_spring_center, river_fork_base, river_fork_center, the beach family, river_mouth_base, river_mouth_center, river_mouth_l_base, river_mouth_l_center; gravel | Ocean and river pieces; gravel is their seabed and river bed (also loads plaster for the bridge stone) |
+ 
+ - **Core.** The play scenario requests `core` on entry and draws the world once it has loaded. A core piece may sample only core sets (`parse_manifest` rejects it otherwise), and `kit_gate` requires a pack on every runtime entry, core for everything the start tile draws, and no hero-class piece in core.
+ - **On demand.** A pack is requested the moment a tile that draws one of its pieces is selected (inventory, number keys, `select_tile`; `hex-app` hands the selection over in `PackRequests`) or in the view: placed (also by undo, redo or a script) or previewed as the ghost.
+diff --git a/docs/kit/water-contract.md b/docs/kit/water-contract.md
+index 3038089..c2c7fbb 100644
+--- a/docs/kit/water-contract.md
++++ b/docs/kit/water-contract.md
+@@ -36,6 +36,15 @@ The prototype's open sea reaches 6 m deep and reads deeper blue than 2.6 m will.
+ - **Bank tuck.** The engine's water strip runs 5 m either side of the centre line, so at `d = 5` the bank must stand at least 0.5 m above the water. The profile gives 0.71 m.
+ - **Width evidence.** The approved prototype river is 6 m wide (half-width 3), widening to 10 m at the mouth. 8 m sits inside that range, the road (6 m) bridges it, and the 13.66 m channel leaves at least 7 m of meadow to the tile corners, so **keep 8 m**. No change to `data/` is proposed.
+ 
++## 2a. River fork (`river_fork`)
++
++Owner request 2026-10-20 ("we need a river fork also"). River on edges 0, 2 and 4, a symmetric Y like `road_junction`: three segments from the lane edges to the node `fork` at the tile centre. A River node shared by two or more segments is a **junction** (`water::tiles::river_junction`), never a spring or a mouth, so the tile is a plain river tile (`WaterKind::River`).
++
++- **Bed.** The §2 profile at `d` = the distance to the nearest arm (`river_height`, exactly as on `river_straight`). Within 60 degrees of an arm's axis that arm is the nearest, so in its wedge the bed depends only on the lateral offset; two wedges meet on the bisector, where the bed folds into a ridge between the arms. The water reaches 4.0 m from each axis and 4.62 m from the centre along the bisectors (4 / sin 60), so the centre reads as a widened pool; the bank tops meet on the bisectors at 7.89 m, leaving about 6 m of meadow to the grass edges 1, 3 and 5. Each River edge's ring and joint row are `river_straight_base`'s, so every seam with a river tile matches. Kit: `scripts/blender/kit/_river_fork.py` (`LAYOUTS["fork"]`, built by `_river.build_base` with `_river_flat`'s relief); `fork_bed_matches_the_kit_profile` pins the spot values on both sides.
++- **Surface.** One hex-grid surface at -1.4, kept within 5.5 m of any arm (three strips would overlap at the centre), meeting each neighbour's strip at the River edge as a spring's does.
++- **Flow.** Each arm's direction comes from the junction rule (§6). On the tile the flow is the arms' downstream tangents averaged with weights falling from 1 on an arm's centre line to 0 at 8 m from it (`JUNCTION_BLEND`), so it turns from the inflows into the outflows across the centre and slows to 2/3 where they meet; where fewer than two arms are within 8 m (each River edge's whole strip) it is the nearest centre line's flow, the same paths and rule the neighbour uses.
++- **Fish and boats.** The three River edges are wet and continuous, so the fish region flood fill joins all three neighbours into one region (river water). The river network (`hex_sim`, `oriented_rivers`) ends each arm's path at the junction (`RiverEnd::Junction`); a boat route continues from one arm into the others there.
++
+ ## 3. Coast (`beach`, `beach_outer`, `beach_inner`)
+ 
+ Owner decision O1 (2026-10-13): beach sockets are directional, and two coast-corner tiles join the straight beach. This section is the bed the coast kit pieces must match: `beach_base`/`beach_center`, `beach_outer_base`/`beach_outer_center` and `beach_inner_base`/`beach_inner_center` (built, `scripts/blender/kit/_beach.py`; each base is the bed and `kit_gate` holds every LOD to this profile through `water::tiles::coast_height`, `coast_bases_are_held_to_the_coast_profile`).
+@@ -120,7 +129,7 @@ River on edge 0 only, the network from edge 0 to the node `spring` at (-2, 0) (Q
+ Bed requirements:
+ - **Opaque and in the depth prepass.** Water is not in the prepass and reads the prepass depth as its bed (refraction, absorption, foam, caustics). A bed that skips the prepass breaks all of these.
+ - **`KitMaterial` only, with no new sampled texture.** Next to refracting water the kit forward pipeline samples exactly 16 textures, WebGPU's baseline (ADR 0002, smoke case `water_kit`), so there is no headroom.
+-- **Every water tile's base is its bed.** The river tiles name their channel bases (`river_straight_base`, `river_bend_base`, `river_spring_base`, `river_mouth_base`, `river_mouth_l_base`), the coast tiles their beach bases and the ocean `ocean_base`. No land tile shares one (`water/tiles.rs` `the_stand_in_bed_is_drawn_only_where_the_base_is_missing`). A water tile naming `meadow_base` would bury its water under the meadow cap, whose relief covers the whole hex at y in [-0.25, 0].
++- **Every water tile's base is its bed.** The river tiles name their channel bases (`river_straight_base`, `river_bend_base`, `river_spring_base`, `river_fork_base`, `river_mouth_base`, `river_mouth_l_base`), the coast tiles their beach bases and the ocean `ocean_base`. No land tile shares one (`water/tiles.rs` `the_stand_in_bed_is_drawn_only_where_the_base_is_missing`). A water tile naming `meadow_base` would bury its water under the meadow cap, whose relief covers the whole hex at y in [-0.25, 0].
+ - **When the engine draws the placeholder bed.** Only while the tile's base is missing from the kit (`water::tiles::stand_in_bed`): a base outside `assets/kit/manifest.json`, or one that still failed after the `kit://` retries (`hexWorld.state().assets.failed`). Otherwise the base comes from the kit like any other tile, and the centre once it has loaded. While the centre is missing the tile draws no river strips and no hub over the channel, only the engine's water surface. Road strips stay as the bridge deck. Owner 2026-10-14: when `river_spring_center` failed to load, the old rule (keyed on the centre) drew the stand-in over the spring's kit base, which read as a pale hex.
+ - **What decides it is water.** A tile with a River network is a river tile: a river mouth if it also has a coastline (§3a), a spring if its network ends at a node (§3b). A tile with Ocean on every edge is ocean. A tile with some Ocean edges is a coast when its two beach edges form one of the three coastlines of §3. Only these tiles get water surfaces and cut faces.
+ 
+@@ -138,3 +147,4 @@ Each edge's bed profile depends only on its socket, so it matches any legal neig
+ - The engine treats an edge as continuous water when River meets River, Ocean meets Ocean, or Beach meets Beach with their seaward corners on the same point. Anywhere else it draws a cut face on each wet side.
+ - Since owner O1 the sockets refuse **Beach against Ocean**, **Beach against Grass or Forest** and **mirrored Beach against Beach** (the same land side on both tiles, so the land end meets the sea end). Every legal beach seam continues the coast with matching beds. If a mismatched seam is ever loaded anyway, the engine still draws cut faces on it.
+ - River flow runs one way along each connected chain: from its spring, else from its open end with the lowest `(cell, edge)`, else from its mouth (a chain of mouths alone). Two springs or two mouths (Q4) start at the lower cell; the other one then ends the flow. A chain with a spring never reverses when tiles are placed at its open end; one without can. Kit pieces carry no flow direction.
++- **Junctions** (`river_fork`, §2a; `water::tiles::junction_sources`). The chains that meet at junctions form one network, and every chain in it runs downhill, measured in metres along the centre lines: toward the nearest mouth when the network reaches one (a fork with one arm toward the sea is a confluence; a fork whose two arms each reach a mouth first is a split); else away from the nearest spring (one spring through a fork splits, two springs join); else out through the lowest junction's local edge 0 arm, as if the sea lay past its open end (a lone fork is a confluence, and its rotation picks the outlet). A chain whose two ends are equally far keeps the chain rule above.
+diff --git a/scripts/blender/lib/budgets.py b/scripts/blender/lib/budgets.py
+index 405b708..c1453d1 100644
+--- a/scripts/blender/lib/budgets.py
++++ b/scripts/blender/lib/budgets.py
+@@ -14,7 +14,7 @@ LANE_CUT_LOD2_MAX_RATIO = 0.20
+ COAST_ARC_LOD2_MAX_RATIO = 0.20
+ RIVER_DRESSING_LOD0_MAX = 2500
+ RIVER_DRESSING_PROPS = ("river_straight_center", "river_bend_center", "river_spring_center",
+-                        "river_mouth_center", "river_mouth_l_center")
++                        "river_mouth_center", "river_mouth_l_center", "river_fork_center")
+ 
+ 
+ def lod_budget(kind, piece_id="", lane_cut=False, coast_arc=False):
+diff --git a/web/ui/src/bridge-schema.json b/web/ui/src/bridge-schema.json
+index 2c1b851..370daff 100644
+--- a/web/ui/src/bridge-schema.json
++++ b/web/ui/src/bridge-schema.json
+@@ -163,6 +163,12 @@
+           "river_spring"
+         ]
+       },
++      {
++        "id": "river_fork",
++        "tiles": [
++          "river_fork"
++        ]
++      },
+       {
+         "id": "beach",
+         "tiles": [
+@@ -700,6 +706,27 @@
+         ],
+         "scatter": []
+       },
++      {
++        "edges": [
++          "River",
++          "Grass",
++          "River",
++          "Grass",
++          "River",
++          "Grass"
++        ],
++        "heroes": false,
++        "id": "river_fork",
++        "land": [
++          null,
++          null,
++          null,
++          null,
++          null,
++          null
++        ],
++        "scatter": []
++      },
+       {
+         "edges": [
+           "Ocean",
+diff --git a/web/ui/src/words.ts b/web/ui/src/words.ts
+index 6d41caf..8206a4c 100644
+--- a/web/ui/src/words.ts
++++ b/web/ui/src/words.ts
+@@ -27,6 +27,7 @@ export const TILE_NAMES: Record<string, string> = {
+   river_road_bridge: "River bridge",
+   river_rail_bridge: "River rail bridge",
+   river_spring: "River spring",
++  river_fork: "River fork",
+   beach: "Beach",
+   // One picker entry, the Beach Curve (owner, 2026-10-20): R turns it between the headland and the bay.
+   beach_outer: "Beach Curve",
+diff --git a/web/ui/test/audio.test.ts b/web/ui/test/audio.test.ts
+index 1ff67d5..7f276a9 100644
+--- a/web/ui/test/audio.test.ts
++++ b/web/ui/test/audio.test.ts
+@@ -822,7 +822,7 @@ test("placement: a water tile selects the slosh pool and a land tile does not",
+   const edges = new Map(schema.catalog.tiles.map((t) => [t.id, t.edges]));
+   const poolOf = (id: string) => placementPool(edges.get(id)!);
+   const water = ["river_straight", "river_bend", "river_spring", "river_road_bridge", "river_rail_bridge"];
+-  water.push("beach", "beach_outer", "beach_inner", "river_mouth", "river_mouth_l", "ocean");
++  water.push("river_fork", "beach", "beach_outer", "beach_inner", "river_mouth", "river_mouth_l", "ocean");
+   for (const id of water) assert.equal(poolOf(id), PLACE_SLOSH.pool, `${id} sloshes`);
+   const land = ["meadow", "forest", "oak", "farm", "windmill", "wheat_field", "house_cluster", "bakery"];
+   land.push("road_straight", "road_bend_120", "road_bend_60", "road_junction");
+diff --git a/web/ui/test/rules-parity.json b/web/ui/test/rules-parity.json
+index 5dd0e15..0f2e960 100644
+--- a/web/ui/test/rules-parity.json
++++ b/web/ui/test/rules-parity.json
+@@ -95,6 +95,11 @@
+             3,
+             4
+           ],
++          "river_fork": [
++            0,
++            2,
++            4
++          ],
+           "river_mouth": [
+             3
+           ],
+@@ -235,6 +240,7 @@
+             0,
+             1
+           ],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -372,6 +378,11 @@
+             3,
+             5
+           ],
++          "river_fork": [
++            1,
++            3,
++            5
++          ],
+           "river_mouth": [
+             2
+           ],
+@@ -531,6 +542,11 @@
+             2,
+             4
+           ],
++          "river_fork": [
++            0,
++            2,
++            4
++          ],
+           "river_mouth": [
+             1
+           ],
+@@ -671,6 +687,7 @@
+             3,
+             4
+           ],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -772,6 +789,7 @@
+           "river_bend": [
+             1
+           ],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -900,6 +918,11 @@
+             2,
+             4
+           ],
++          "river_fork": [
++            0,
++            2,
++            4
++          ],
+           "river_mouth": [
+             1
+           ],
+@@ -992,6 +1015,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -1045,6 +1069,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -1166,6 +1191,11 @@
+             4,
+             5
+           ],
++          "river_fork": [
++            1,
++            3,
++            5
++          ],
+           "river_mouth": [
+             4
+           ],
+@@ -1306,6 +1336,7 @@
+             4,
+             5
+           ],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -1443,6 +1474,11 @@
+             4,
+             5
+           ],
++          "river_fork": [
++            0,
++            2,
++            4
++          ],
+           "river_mouth": [
+             5
+           ],
+@@ -1560,6 +1596,11 @@
+             1,
+             5
+           ],
++          "river_fork": [
++            1,
++            3,
++            5
++          ],
+           "river_mouth": [
+             4
+           ],
+@@ -1613,6 +1654,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -1733,6 +1775,11 @@
+             3,
+             5
+           ],
++          "river_fork": [
++            1,
++            3,
++            5
++          ],
+           "river_mouth": [
+             2
+           ],
+@@ -1856,6 +1903,7 @@
+           "river_bend": [
+             2
+           ],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -1965,6 +2013,7 @@
+             0,
+             5
+           ],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -2035,6 +2084,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -2155,6 +2205,11 @@
+             3,
+             5
+           ],
++          "river_fork": [
++            1,
++            3,
++            5
++          ],
+           "river_mouth": [
+             0
+           ],
+@@ -2314,6 +2369,11 @@
+             3,
+             5
+           ],
++          "river_fork": [
++            1,
++            3,
++            5
++          ],
+           "river_mouth": [
+             2
+           ],
+@@ -2401,6 +2461,11 @@
+             3,
+             5
+           ],
++          "river_fork": [
++            1,
++            3,
++            5
++          ],
+           "river_mouth": [
+             2
+           ],
+@@ -2485,6 +2550,7 @@
+           "river_bend": [
+             3
+           ],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -2542,6 +2608,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -2588,6 +2655,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             4,
+             5
+@@ -2699,6 +2767,11 @@
+             3,
+             4
+           ],
++          "river_fork": [
++            0,
++            2,
++            4
++          ],
+           "river_mouth": [
+             3
+           ],
+@@ -2799,6 +2872,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             3,
+             4
+@@ -2891,6 +2965,7 @@
+             3,
+             4
+           ],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -2965,6 +3040,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             3
+           ],
+@@ -3011,6 +3087,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             2
+           ],
+@@ -3051,6 +3128,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             0
+           ],
+@@ -3101,6 +3179,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             2,
+             3
+@@ -3209,6 +3288,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [
+             4
+@@ -3280,6 +3360,7 @@
+           "river_bend": [
+             1
+           ],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -3408,6 +3489,11 @@
+             2,
+             4
+           ],
++          "river_fork": [
++            0,
++            2,
++            4
++          ],
+           "river_mouth": [
+             1
+           ],
+@@ -3567,6 +3653,11 @@
+             3,
+             5
+           ],
++          "river_fork": [
++            1,
++            3,
++            5
++          ],
+           "river_mouth": [
+             2
+           ],
+@@ -3726,6 +3817,11 @@
+             2,
+             4
+           ],
++          "river_fork": [
++            0,
++            2,
++            4
++          ],
+           "river_mouth": [
+             1
+           ],
+@@ -3826,6 +3922,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             0,
+             1
+@@ -3918,6 +4015,7 @@
+             0,
+             1
+           ],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -3992,6 +4090,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             1
+           ],
+@@ -4101,6 +4200,11 @@
+             3,
+             5
+           ],
++          "river_fork": [
++            1,
++            3,
++            5
++          ],
+           "river_mouth": [
+             0
+           ],
+@@ -4197,6 +4301,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             2
+           ],
+@@ -4247,6 +4352,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             1,
+             2
+@@ -4289,6 +4395,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             4
+           ],
+@@ -4396,6 +4503,11 @@
+             4,
+             5
+           ],
++          "river_fork": [
++            0,
++            2,
++            4
++          ],
+           "river_mouth": [
+             5
+           ],
+@@ -4544,6 +4656,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             0,
+             1
+@@ -4592,6 +4705,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             4
+           ],
+@@ -4638,6 +4752,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             0
+           ],
+@@ -4684,6 +4799,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             4
+           ],
+@@ -4730,6 +4846,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             0
+           ],
+@@ -4773,6 +4890,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -4819,6 +4937,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             4,
+             5
+@@ -4871,6 +4990,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             0,
+             5
+@@ -4919,6 +5039,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             5
+           ],
+@@ -4965,6 +5086,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             5
+           ],
+@@ -5015,6 +5137,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             4,
+             5
+@@ -5063,6 +5186,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             1
+           ],
+@@ -5109,6 +5233,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             4
+           ],
+@@ -5155,6 +5280,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             1
+           ],
+@@ -5205,6 +5331,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             3,
+             4
+@@ -5253,6 +5380,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             1
+           ],
+@@ -5299,6 +5427,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             3
+           ],
+@@ -5342,6 +5471,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [],
+           "river_mouth_l": [],
+           "river_rail_bridge": [],
+@@ -5388,6 +5518,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             1,
+             2
+@@ -5436,6 +5567,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             3
+           ],
+@@ -5482,6 +5614,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             2
+           ],
+@@ -5532,6 +5665,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             1,
+             2
+@@ -5580,6 +5714,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             2
+           ],
+@@ -5630,6 +5765,7 @@
+           "rail_station": [],
+           "rail_straight": [],
+           "river_bend": [],
++          "river_fork": [],
+           "river_mouth": [
+             2,
+             3

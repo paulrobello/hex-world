@@ -76,6 +76,7 @@ const F1: [(&str, [SocketKind; 6]); 29] = [
         [River, Rail, Grass, River, Rail, Grass],
     ),
     ("river_spring", [River, Grass, Grass, Grass, Grass, Grass]),
+    ("river_fork", [River, Grass, River, Grass, River, Grass]),
     ("beach", [Ocean, Ocean, Beach, Grass, Grass, Beach]),
     ("beach_outer", [Ocean, Ocean, Beach, Grass, Beach, Ocean]),
     ("beach_inner", [Ocean, Beach, Grass, Grass, Grass, Beach]),

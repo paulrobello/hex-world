@@ -2299,7 +2299,7 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 29, "every inventory tile ran");
+        assert_eq!(counts.len(), 30, "every inventory tile ran");
         for id in [
             "forest",
             "oak",
@@ -2317,7 +2317,7 @@ mod tests {
         ] {
             assert!(counts[id] > 0, "{id} scatters: {counts:?}");
         }
-        for id in ["ocean", "river_straight", "river_bend", "river_spring"] {
+        for id in ["ocean", "river_straight", "river_bend", "river_spring", "river_fork"] {
             assert_eq!(counts[id], 0, "{id} has no scatter floor: {counts:?}");
         }
     }
