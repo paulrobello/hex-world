@@ -3964,3 +3964,77 @@ fn forest_edge_covers_the_base_rim() {
     fail(e);
     assert_eq!(check_center_edge_joint(&k), Vec::<String>::new());
 }
+
+/// Farm animal motion contract (`hex_render::animal`, `_animals.py` `Motion`) on the shipped,
+/// compressed GLBs: every animal piece has a rig, its slots take `FLAG_ANIMAL` and never
+/// `FLAG_FOLIAGE` (its `MeshTag` is the motion word, not a season index), and every primitive of
+/// every LOD carries TEXCOORD_1 with all four leg codes (nearest bucket), the legs below the hip
+/// pivot on their own side and end, and head weights up to 1 at the muzzle. So every LOD poses
+/// the same way.
+#[test]
+fn animal_pieces_carry_motion_data_in_every_lod() {
+    use hex_render::{
+        animal,
+        kit_material::{FLAG_ANIMAL, FLAG_FOLIAGE, params_for, slot_requests},
+    };
+    let kit = kits().pop().unwrap();
+    let mut e = vec![];
+    let mut seen = 0;
+    for p in &kit.manifest.pieces {
+        let Some(rig) = animal::rig(&p.id) else {
+            assert!(
+                !p.id.starts_with("animal_"),
+                "{}: an animal without a rig",
+                p.id
+            );
+            continue;
+        };
+        seen += 1;
+        for (name, slot) in &p.slots {
+            let r = slot_requests(&kit.manifest, p, slot, TextureFamily::Png).unwrap();
+            let flags = params_for(&r, hex_render::KitHooks::None).flags;
+            if flags & FLAG_ANIMAL == 0 || flags & FLAG_FOLIAGE != 0 {
+                e.push(format!("{}: slot {name} flags {flags:#x}", p.id));
+            }
+        }
+        let (doc, buffers, _) = plain(&kit, p).unwrap();
+        for lod in 0..3 {
+            let mesh = format!("{}_lod{lod}", p.id);
+            let Some(m) = mesh_named(&doc, &mesh) else {
+                e.push(format!("{mesh} missing"));
+                continue;
+            };
+            let mut legs = [0usize; 4];
+            let mut head_max = 0.0f32;
+            for prim in m.primitives() {
+                let r = prim.reader(|b| Some(&buffers[b.index()]));
+                let pos: Vec<[f32; 3]> = r.read_positions().unwrap().collect();
+                let Some(uv) = r.read_tex_coords(1) else {
+                    e.push(format!("{mesh}: a primitive without TEXCOORD_1 (motion)"));
+                    continue;
+                };
+                for (q, [u, v]) in pos.iter().zip(uv.into_f32()) {
+                    if u > 0.0 {
+                        let k = ((v * 4.0 - 0.5).round().max(0.0) as usize).min(3);
+                        legs[k] += 1;
+                        let (left, front) = (k.is_multiple_of(2), k < 2);
+                        if q[1] >= rig.hip_y || (q[0] > 0.0) != left || (q[2] > 0.0) != front {
+                            e.push(format!("{mesh}: leg {k} vertex at {q:?}"));
+                            break;
+                        }
+                    } else {
+                        head_max = head_max.max(v);
+                    }
+                }
+            }
+            if legs.contains(&0) {
+                e.push(format!("{mesh}: leg vertices {legs:?}"));
+            }
+            if (head_max - 1.0).abs() > 1e-3 {
+                e.push(format!("{mesh}: head weight max {head_max}"));
+            }
+        }
+    }
+    assert_eq!(seen, animal::RIGS.len());
+    fail(e);
+}

@@ -777,6 +777,10 @@ const SHADER_EXEMPT: &[(&str, &str)] = &[
         "vertex displacement library (foliage wind): no surface",
     ),
     (
+        "crates/hex-render/src/animal_motion.wesl",
+        "vertex pose library (farm animal walk and graze): no surface",
+    ),
+    (
         "assets/shaders/water_terrain.wesl",
         "placeholder bed, drawn only while a water tile's base piece is missing from the kit (water contract)",
     ),

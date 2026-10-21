@@ -1,6 +1,7 @@
 //! Hex World Bevy render plugins.
 use bevy::prelude::*;
 
+pub mod animal;
 pub mod car_material;
 pub mod chunks;
 pub mod grade;
@@ -142,6 +143,7 @@ impl Plugin for HexRenderPlugin {
         bevy::shader::load_shader_library!(app, "wind.wesl");
         bevy::shader::load_shader_library!(app, "grass_common.wesl");
         bevy::shader::load_shader_library!(app, "foliage_wind.wesl");
+        bevy::shader::load_shader_library!(app, "animal_motion.wesl");
         app.insert_resource(ActiveScenario(self.scenario))
             .insert_resource(ClearColor(if grade::graded(self.scenario) {
                 self.config.grade.backdrop()

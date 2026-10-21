@@ -18,7 +18,7 @@ No hook adds a sampled texture. Kit forward is already at WebGPU's 16 next to re
 | Time-of-day block | nothing to author | `hooks::TimeOfDay` drives the sun (direction, lux, colour), the sky (IBL intensity), fog (`DistanceFog`) and exposure (EV100 offset) through `hooks::atmosphere`, and the `night` uniform | hour 12, whose row is the look-dev rig exactly |
 | Water freeze | nothing to author | `WaterParams::freeze`, read only by the `WATER_FREEZE` pipeline variant (ice holds the surface at rest, a pale rough sheet hides the water below) | 0, variant off |
 
-`MeshTag` on a `KitMaterial` entity is reserved for the season index: any other use tints a foliage slot. Cars use their own material (`CarMaterial`), where the tag is the paint colour.
+`MeshTag` on a `KitMaterial` entity is reserved for the season index: any other use tints a foliage slot. The one exception is an animal slot (`FLAG_ANIMAL`, `hex_render::animal`), which is never foliage: there the tag is the herd's motion word (gait phase, walk and head weights; 0 is the rest pose), and the kit gate's `animal_pieces_carry_motion_data_in_every_lod` holds every animal slot off `FLAG_FOLIAGE`. Cars use their own material (`CarMaterial`), where the tag is the paint colour.
 
 masks **A** stays baked AO. A slot that binds no masks map takes the shader's uniform default while a weather hook is on: full snow on up-facing faces, full porosity, no emitters, no AO (`hooks.wesl` `NO_MASKS`).
 

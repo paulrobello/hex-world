@@ -23,7 +23,7 @@ import bevy_pbr::render::{
 import bevy_pbr::render::forward_io::{Vertex, UncompressedVertex, decompress_vertex};
 @if(!KIT_INSTANCED)
 import bevy_pbr::render::mesh_bindings::mesh;
-import hex_render::{kit_common, foliage_wind};
+import hex_render::{kit_common, foliage_wind, animal_motion};
 import bevy_render::utils;
 @if(KIT_INSTANCED)
 import hex_render::kit_instances;
@@ -229,5 +229,26 @@ fn vertex(vertex_no_morph: Vertex) -> KitVertexOutput {
     local.tangent = vertex.tangent;
 @if(VERTEX_COLORS)
     local.color = vertex.color;
+    // A farm animal's walk and graze pose (hex_render::animal_motion) by its MeshTag motion word,
+    // in the piece frame. Only the per-entity path: the herd draws here, and settled (instanced)
+    // parts keep their rest pose.
+@if(VERTEX_POSITIONS && VERTEX_UVS_B) {
+    if ((kit_common::kit.flags & kit_common::FLAG_ANIMAL) != 0u) {
+        var n = vec3(0.0, 1.0, 0.0);
+@if(VERTEX_NORMALS)
+        n = local.normal;
+        var t = vec3(1.0, 0.0, 0.0);
+@if(VERTEX_TANGENTS)
+        t = local.tangent.xyz;
+        let posed = animal_motion::pose(local.position, n, t, local.uv_b,
+            mesh_functions::get_tag(vertex_no_morph.instance_index),
+            kit_common::kit.animal_rig, kit_common::kit.animal_head);
+        local.position = posed.position;
+@if(VERTEX_NORMALS)
+        local.normal = posed.normal;
+@if(VERTEX_TANGENTS)
+        local.tangent = vec4(posed.tangent, local.tangent.w);
+    }
+}
     return shade_kit_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index);
 }

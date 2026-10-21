@@ -47,6 +47,9 @@ pub const FLAG_WET_SEABED: u32 = 64;
 /// index that hides blossom shifts it to leaf by `KitParams::blossom` (`hooks.wesl`
 /// `blossom_shown`).
 pub const FLAG_BLOSSOM: u32 = 128;
+/// A farm animal (`crate::animal`): its vertex stages pose the legs and head by the instance's
+/// `MeshTag` motion word with the rig in `KitParams::animal_rig` and `animal_head`.
+pub const FLAG_ANIMAL: u32 = 256;
 
 pub type KitMaterial = ExtendedMaterial<StandardMaterial, KitExt>;
 
@@ -66,6 +69,11 @@ pub struct KitParams {
     /// Linear leaf - flower colour (`Slot::blossom`, A 1): out of season a texel shifts by its
     /// blossom coverage times this. 0 on other slots.
     pub blossom: Vec4,
+    /// An animal slot's (hipY, front hip z, back hip z, swing rad) (`AnimalRig::uniforms`); 0 on
+    /// other slots.
+    pub animal_rig: Vec4,
+    /// An animal slot's (neck pivot y, neck pivot z, head rad, bob rad); 0 on other slots.
+    pub animal_head: Vec4,
 }
 
 #[derive(Asset, AsBindGroup, Reflect, Debug, Clone, Default)]
@@ -122,6 +130,8 @@ pub struct SlotRequests {
     pub wind: Option<(f32, bool)>,
     /// Seasonal blossom: its leaf and flower colours (`Slot::blossom`).
     pub blossom: Option<Blossom>,
+    /// A farm animal's rig (`crate::animal::rig` of the piece).
+    pub animal: Option<crate::animal::AnimalRig>,
 }
 
 fn req(stem: &str, ch: Channel, family: TextureFamily, repeat: bool) -> MapRequest {
@@ -151,6 +161,7 @@ pub fn slot_requests(
         wet_seabed: slot.wet_band && slot.wet_band_seabed,
         wind: slot.wind.map(|a| (a, p.kind == PieceKind::Tree)),
         blossom: slot.blossom,
+        animal: crate::animal::rig(&p.id).copied(),
         ..default()
     };
     if slot.masks {
@@ -238,6 +249,10 @@ pub fn params_for(r: &SlotRequests, hooks: KitHooks) -> KitParams {
     if r.blossom.is_some() {
         flags |= FLAG_BLOSSOM;
     }
+    if r.animal.is_some() {
+        flags |= FLAG_ANIMAL;
+    }
+    let (animal_rig, animal_head) = r.animal.map_or((Vec4::ZERO, Vec4::ZERO), |a| a.uniforms());
     let [snow, wetness, night] = crate::hooks::surface_hooks(hooks);
     KitParams {
         tile_inv_m: r.tile.as_ref().map_or(0.0, |t| t.1),
@@ -254,6 +269,8 @@ pub fn params_for(r: &SlotRequests, hooks: KitHooks) -> KitParams {
         blossom: r.blossom.map_or(Vec4::ZERO, |b| {
             (Vec3::from(b.leaf) - Vec3::from(b.flower)).extend(1.0)
         }),
+        animal_rig,
+        animal_head,
         ..default()
     }
 }
@@ -675,10 +692,10 @@ mod tests {
         }
     }
 
-    /// The WGSL struct is eight scalars and the blossom vec4 (16-byte aligned at offset 32): the
-    /// Rust side must stay 48 bytes.
+    /// The WGSL struct is eight scalars, then the blossom vec4 (16-byte aligned at offset 32) and
+    /// the two animal rig vec4s: the Rust side must stay 80 bytes.
     #[test]
-    fn params_are_48_bytes() {
-        assert_eq!(KitParams::min_size().get(), 48);
+    fn params_are_80_bytes() {
+        assert_eq!(KitParams::min_size().get(), 80);
     }
 }

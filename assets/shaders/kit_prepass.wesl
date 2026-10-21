@@ -37,7 +37,7 @@ import bevy_pbr::render::morph::{morph_position, morph_normal, morph_tangent};
 import bevy_pbr::prepass::io::decompress_vertex;
 import bevy_render::globals::Globals;
 import bevy_render::utils;
-import hex_render::{kit_common, foliage_wind};
+import hex_render::{kit_common, foliage_wind, animal_motion};
 @if(KIT_INSTANCED)
 import hex_render::kit_instances;
 
@@ -313,6 +313,26 @@ fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
     local.tangent = vertex.tangent;
 @if(VERTEX_COLORS)
     local.color = vertex.color;
+    // The farm animal pose, as kit_vertex.wesl (the previous position for motion vectors takes the
+    // same pose: the per-entity path holds no previous motion word).
+@if(VERTEX_UVS_B) {
+    if ((kit_common::kit.flags & kit_common::FLAG_ANIMAL) != 0u) {
+        var n = vec3(0.0, 1.0, 0.0);
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_NORMALS)
+        n = local.normal;
+        var t = vec3(1.0, 0.0, 0.0);
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_TANGENTS)
+        t = local.tangent.xyz;
+        let posed = animal_motion::pose(local.position, n, t, local.uv_b,
+            mesh_functions::get_tag(vertex_no_morph.instance_index),
+            kit_common::kit.animal_rig, kit_common::kit.animal_head);
+        local.position = posed.position;
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_NORMALS)
+        local.normal = posed.normal;
+@if(NORMAL_PREPASS_OR_DEFERRED_PREPASS && VERTEX_TANGENTS)
+        local.tangent = vec4(posed.tangent, local.tangent.w);
+    }
+}
     return shade_kit_prepass_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index);
 }
 

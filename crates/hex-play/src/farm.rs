@@ -26,10 +26,23 @@
 //!   on the per-entity path, so the parts still batch by mesh and material and the parent's
 //!   transform is the only per-frame write. The ghost, the thumbnails and the grass keep the
 //!   tile's static layout.
+//! - **Motion.** Each tick also eases the drawn gait (`hex_render::animal`): the walk weight follows
+//!   the ground the animal covered (its walk and the arc its ends swing through on a turn, over
+//!   its walking speed), the gait phase advances by that distance over the rig's stride (so a hoof
+//!   in stance keeps still on the grass), and the head weight lifts a grazing piece's lowered head
+//!   while it walks, with a short nibble lift while it grazes. [`pose`] writes them, between the
+//!   last two ticks, as the motion word on every kit part's `MeshTag`; the kit vertex stages pose
+//!   the legs and head from the pieces' TEXCOORD_1 motion data. Presentation only: no decision
+//!   reads them. A herd that has not ticked (thumbs mode pauses the agents) writes no tag, so its
+//!   animals keep the authored pose, as static animals and the ghost do.
 use std::collections::BTreeMap;
 
-use bevy::prelude::*;
+use bevy::{mesh::MeshTag, prelude::*};
 use hex_core::{Axial, HEX_RADIUS, TileDef, cell_seed};
+use hex_render::{
+    animal::{self, AnimalRig},
+    kit_material::KitMaterial,
+};
 
 use crate::{
     ActiveScenario, AgentsPaused, Scenario,
@@ -65,6 +78,15 @@ const SLOW_RADIUS: f32 = 0.8;
 const ARRIVE: f32 = 0.1;
 /// Ticks an animal tries a blocked walk before it picks another goal (0.6 s).
 const BLOCKED_TICKS: u16 = 12;
+/// Walk weight change per tick: the gait eases in and out over 0.3 s.
+pub const WALK_EASE: f32 = TICK_SECONDS / 0.3;
+/// Head weight change per tick: a full raise or lowering takes 1 s.
+pub const HEAD_EASE: f32 = TICK_SECONDS / 1.0;
+/// A grazing piece's nibble: every [`NIBBLE_TICKS`] ticks of grazing its head lifts by up to this
+/// head weight and settles again over the first [`NIBBLE_LIFT_TICKS`].
+pub const NIBBLE: f32 = 0.15;
+pub const NIBBLE_TICKS: u64 = 100;
+const NIBBLE_LIFT_TICKS: u64 = 40;
 
 /// One animal piece: its capsule (along +z from `back` to `front`, `radius` its half width), the
 /// hooves under its hips (x, z), its walking speed and whether it is a grazing pose.
@@ -275,6 +297,15 @@ pub struct Animal {
     ramp: f32,
     blocked: u16,
     rng: u64,
+    pub rig: &'static AnimalRig,
+    /// Gait phase (cycles, in [0, 1)), walk weight and head weight ([`hex_render::animal`]), on
+    /// the latest tick and the one before.
+    pub phase: f32,
+    pub walk: f32,
+    pub head: f32,
+    prev_phase: f32,
+    prev_walk: f32,
+    prev_head: f32,
 }
 
 impl Animal {
@@ -292,6 +323,44 @@ impl Animal {
             (_, Mode::Pause(_)) if self.body.grazer => "graze",
             _ => "idle",
         }
+    }
+
+    /// Eases the drawn gait after tick `tick`'s move (see the module docs).
+    fn animate(&mut self, tick: u64) {
+        (self.prev_phase, self.prev_walk, self.prev_head) = (self.phase, self.walk, self.head);
+        let turned = self.prev_dir.perp_dot(self.dir).abs() * self.body.half() * 0.5;
+        let covered = self.pos.distance(self.prev_pos) + turned;
+        let target = (covered / (self.body.speed * TICK_SECONDS)).min(1.0);
+        self.walk += (target - self.walk).clamp(-WALK_EASE, WALK_EASE);
+        let p = self.phase + covered / self.rig.stride(self.walk);
+        self.phase = p - p.floor();
+        let head = match self.mode {
+            _ if !self.body.grazer => 0.0,
+            Mode::Walk(_) => 1.0,
+            Mode::Pause(_) => {
+                let k = (tick + self.slot as u64 * 53) % NIBBLE_TICKS;
+                if k < NIBBLE_LIFT_TICKS {
+                    let t = k as f32 / NIBBLE_LIFT_TICKS as f32;
+                    NIBBLE * 4.0 * t * (1.0 - t)
+                } else {
+                    0.0
+                }
+            }
+        };
+        self.head += (head - self.head).clamp(-HEAD_EASE, HEAD_EASE);
+    }
+
+    /// The motion word (`MeshTag`) `alpha` of the way from the previous tick to the latest.
+    pub fn motion_word(&self, alpha: f32) -> u32 {
+        let mut dp = self.phase - self.prev_phase;
+        if dp < 0.0 {
+            dp += 1.0;
+        }
+        animal::motion_word(
+            self.prev_phase + dp * alpha,
+            self.prev_walk + (self.walk - self.prev_walk) * alpha,
+            self.prev_head + (self.head - self.prev_head) * alpha,
+        )
     }
 }
 
@@ -384,6 +453,13 @@ impl Herd {
                     ramp: 0.0,
                     blocked: 0,
                     rng,
+                    rig: animal::rig(piece).expect("every herd piece has a rig"),
+                    phase: 0.0,
+                    walk: 0.0,
+                    head: 0.0,
+                    prev_phase: 0.0,
+                    prev_walk: 0.0,
+                    prev_head: 0.0,
                 }
             })
             .collect();
@@ -589,6 +665,10 @@ impl Herd {
                 }
             }
         }
+        let tick = self.ticks;
+        for a in &mut self.animals {
+            a.animate(tick);
+        }
     }
 
     /// Animal `i`'s pose in the tile frame `alpha` of the way from the previous tick to the
@@ -697,12 +777,17 @@ impl FarmHerds {
             .flat_map(|(cell, h)| {
                 h.herd.animals.iter().map(move |a| {
                     let w = to_world(*cell, h.rotation, a.pos);
+                    let d = to_world(*cell, h.rotation, a.pos + a.dir) - w;
                     serde_json::json!({
                         "cell": [cell.q, cell.r],
                         "slot": a.slot,
                         "piece": a.piece,
                         "state": a.state(),
                         "pos": [round(w.x), round(w.y)],
+                        "dir": [round(d.x), round(d.y)],
+                        "phase": round(a.phase),
+                        "walk": round(a.walk),
+                        "head": round(a.head),
                     })
                 })
             })
@@ -825,23 +910,33 @@ pub fn tick(
     }
 }
 
+/// The kit parts under the herd animals: their motion words.
+type HerdParts<'w, 's> = (
+    Commands<'w, 's>,
+    Query<'w, 's, &'static Children>,
+    Query<'w, 's, Option<&'static mut MeshTag>, With<MeshMaterial3d<KitMaterial>>>,
+);
+
 /// Poses every herd animal entity between the last two ticks on the drawn ground (the walk
-/// ground's kit surface, the relief formula until it is built) and gives walk mode and photo
-/// mode's click their drawn poses. Paused, the fraction of a tick holds where it was: the fixed
-/// clock's overstep keeps cycling, and interpolating with it would rock each animal.
+/// ground's kit surface, the relief formula until it is built), writes its motion word on every
+/// kit part under it (an untagged part draws at rest, so a word of 0 inserts nothing), and gives
+/// walk mode and photo mode's click their drawn poses. Paused, the fraction of a tick holds where
+/// it was: the fixed clock's overstep keeps cycling, and interpolating with it would rock each
+/// animal.
 pub fn pose(
     paused: Res<AgentsPaused>,
     fixed: Res<Time<Fixed>>,
     herds: Res<FarmHerds>,
-    mut animals: Query<(&HerdAnimal, &mut Transform)>,
+    mut animals: Query<(Entity, &HerdAnimal, &mut Transform)>,
     ground: Option<ResMut<WalkGround>>,
+    (mut commands, children, mut tags): HerdParts,
     mut held: Local<f32>,
 ) {
     if !paused.0 {
         *held = fixed.overstep_fraction();
     }
     let mut posed = vec![];
-    for (a, mut t) in &mut animals {
+    for (entity, a, mut t) in &mut animals {
         let Some(h) = herds.herds.get(&a.cell) else {
             continue;
         };
@@ -863,6 +958,16 @@ pub fn pose(
         let p = h.herd.pose(i, *held, &on);
         if *t != p {
             *t = p;
+        }
+        let word = h.herd.animals[i].motion_word(*held);
+        for part in children.iter_descendants(entity) {
+            match tags.get_mut(part) {
+                Ok(Some(mut tag)) if tag.value != word => tag.value = word,
+                Ok(None) if word != 0 => {
+                    commands.entity(part).insert(MeshTag::new(word));
+                }
+                _ => {}
+            }
         }
         posed.push((a.cell, a.slot as usize, p));
     }
@@ -1410,5 +1515,172 @@ mod tests {
             Herd::new(&def, cell, loaded.world.seed(), &rocks),
             Herd::new(&def, cell, w.seed(), &rocks)
         );
+    }
+
+    /// The gait phase advances by the ground covered over the stride (and only then), the walk
+    /// weight reaches 1 on a steady walk and 0 within 0.3 s of standing still, and standing still
+    /// never advances the phase.
+    #[test]
+    fn the_gait_phase_follows_the_ground_covered() {
+        let def = farm();
+        let mut h = Herd::new(&def, Axial::ORIGIN, 1, &rocks(&def, Axial::ORIGIN)).unwrap();
+        let n = h.animals.len();
+        let (mut still, mut full) = (vec![0u32; n], vec![false; n]);
+        for _ in 0..12_000 {
+            let before: Vec<(Vec2, Vec2, f32)> =
+                h.animals.iter().map(|a| (a.pos, a.dir, a.phase)).collect();
+            h.tick(None);
+            for (i, a) in h.animals.iter().enumerate() {
+                let (pos, dir, phase) = before[i];
+                let covered = a.pos.distance(pos) + dir.perp_dot(a.dir).abs() * a.body.half() * 0.5;
+                let mut dp = a.phase - phase;
+                if dp < 0.0 {
+                    dp += 1.0;
+                }
+                let want = covered / a.rig.stride(a.walk);
+                assert!(
+                    (dp - want).abs() < 1e-4,
+                    "{}: phase {dp} for {want}",
+                    a.piece
+                );
+                if covered == 0.0 {
+                    assert_eq!(a.phase, phase, "{}: standing still stepped", a.piece);
+                    still[i] += 1;
+                    if still[i] >= 6 {
+                        assert_eq!(a.walk, 0.0, "{}: still walking after 0.3 s", a.piece);
+                    }
+                } else {
+                    still[i] = 0;
+                }
+                full[i] |= a.walk == 1.0;
+            }
+        }
+        for (i, a) in h.animals.iter().enumerate() {
+            assert!(full[i], "{} never reached its full gait", a.piece);
+        }
+    }
+
+    /// A standing piece keeps its head at rest (bobbing only with the gait); a grazing piece lifts
+    /// its lowered head to walk and lowers it to graze, with only the nibble while it grazes. A herd
+    /// that has not ticked (thumbs mode pauses the agents) draws every animal at rest: motion word 0.
+    #[test]
+    fn heads_lift_to_walk_and_lower_to_graze() {
+        let def = farm();
+        let mut h = Herd::new(&def, Axial::ORIGIN, 1, &rocks(&def, Axial::ORIGIN)).unwrap();
+        for a in &h.animals {
+            assert_eq!(a.motion_word(0.0), 0, "{}", a.piece);
+            assert_eq!(a.motion_word(1.0), 0, "{}", a.piece);
+        }
+        let n = h.animals.len();
+        let (mut raised, mut grazed) = (vec![false; n], vec![false; n]);
+        let (mut walking, mut grazing) = (vec![0u32; n], vec![0u32; n]);
+        for _ in 0..12_000 {
+            h.tick(None);
+            for (i, a) in h.animals.iter().enumerate() {
+                if !a.body.grazer {
+                    assert_eq!(a.head, 0.0, "{}", a.piece);
+                    continue;
+                }
+                walking[i] = if a.state() == "walk" {
+                    walking[i] + 1
+                } else {
+                    0
+                };
+                raised[i] |= walking[i] > 20 && a.head == 1.0;
+                grazing[i] = if a.state() == "graze" {
+                    grazing[i] + 1
+                } else {
+                    0
+                };
+                grazed[i] |= grazing[i] > 0;
+                if grazing[i] > 20 {
+                    assert!(
+                        a.head <= NIBBLE + 1e-6,
+                        "{}: head {} grazing",
+                        a.piece,
+                        a.head
+                    );
+                }
+            }
+        }
+        for (i, a) in h.animals.iter().enumerate() {
+            if a.body.grazer {
+                assert!(
+                    raised[i] && grazed[i],
+                    "{}: raised {} grazed {}",
+                    a.piece,
+                    raised[i],
+                    grazed[i]
+                );
+            }
+        }
+    }
+
+    /// `pose` writes each animal's motion word on every kit part under it, and none on a herd that
+    /// has not ticked.
+    #[test]
+    fn pose_tags_every_part_with_the_motion_word() {
+        use bevy::ecs::system::RunSystemOnce;
+        let def = farm();
+        let cell = Axial::ORIGIN;
+        let herd = Herd::new(&def, cell, 1, &rocks(&def, cell)).unwrap();
+        let mut world = bevy::ecs::world::World::new();
+        world.insert_resource(AgentsPaused(false));
+        world.insert_resource(Time::<Fixed>::default());
+        let mut herds = FarmHerds::default();
+        herds.herds.insert(
+            cell,
+            TileHerd {
+                tile: "farm".into(),
+                rotation: 0,
+                herd,
+            },
+        );
+        world.insert_resource(herds);
+        let slot = world.resource::<FarmHerds>().herds[&cell].herd.animals[0].slot;
+        let parent = world
+            .spawn((
+                HerdAnimal {
+                    cell,
+                    slot: slot as u8,
+                },
+                Transform::IDENTITY,
+            ))
+            .id();
+        let lods: Vec<Entity> = (0..3)
+            .map(|_| {
+                world
+                    .spawn((
+                        MeshMaterial3d::<KitMaterial>(Handle::default()),
+                        ChildOf(parent),
+                    ))
+                    .id()
+            })
+            .collect();
+        world.run_system_once(pose).unwrap();
+        for e in &lods {
+            assert!(
+                world.get::<MeshTag>(*e).is_none(),
+                "a rest herd tagged a part"
+            );
+        }
+        let mut walked = false;
+        for _ in 0..4000 {
+            world
+                .resource_mut::<FarmHerds>()
+                .herds
+                .get_mut(&cell)
+                .unwrap()
+                .herd
+                .tick(None);
+            world.run_system_once(pose).unwrap();
+            let a = &world.resource::<FarmHerds>().herds[&cell].herd.animals[0];
+            let word = a.motion_word(0.0);
+            walked |= a.walk > 0.5;
+            for e in &lods {
+                assert_eq!(world.get::<MeshTag>(*e).map_or(0, |t| t.value), word);
+            }
+        }
+        assert!(walked, "the first animal never walked");
     }
 }
