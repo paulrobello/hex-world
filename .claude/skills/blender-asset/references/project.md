@@ -1,6 +1,18 @@
 # Hex World project specifics
 
-Everything in this file is specific to Hex World. When the skill is promoted to user level, this file stays with the project (or becomes a per-project overlay) and `SKILL.md` keeps only the portable pipeline. The frontmatter `description` in `SKILL.md` also names Hex World and is the one line to rewrite at promotion.
+Everything in this file is specific to Hex World. It is the project file for the user-level `blender-kit-pieces` skill (contract: `~/.claude/skills/blender-kit-pieces/references/project-contract.md`), and this overlay's rules win over that skill on conflict.
+
+## Contract map
+Where each section of the project-file contract lives for Hex World:
+- Owner rulings: below (R1-R3, R9), plus `docs/decisions/0002-asset-pipeline.md`.
+- Agent policy: `SKILL.md` Rules ("Effort", "Concurrency", "Worktree bootstrap", "Worktree sessions") and R3; up to 3 concurrent agents by owner ruling (PRD §11.1).
+- Frame and pivot, Seams, Textures, Budgets, Paths: the sections below.
+- Deliverables: R1 and "The blend store" below (scripted pieces keep the generator only; interactive pieces keep the high-poly `.blend` in the local store by SHA-256), and "Textures" (the GLB embeds no images; maps ship as BC7 and ASTC KTX2 plus PNG).
+- Commands: `stages.md` and "Tools and pins" below.
+- Gate table, including the stale-generator warning: `gates.md`.
+- Runtime loader: meshopt GLB rewrite in `crates/hex-assets` before `bevy_gltf` (FLOAT attributes, no `KHR_mesh_quantization`), KTX2 family chosen by GPU features, colour space from the channel name. Fallback: a placed tile stays hidden with a slot outline until its pack streams in (PRD, owner decision A10).
+- Runtime couplings: "Fast loops and runtime couplings" below and `dispatch.md` part 11.
+- Review and provenance values: `SKILL.md` "Owner checkpoints" and `provenance.md` ("Fixed values"); licence is set by `scripts/assets/kit-provenance.mjs`.
 
 ## Owner rulings (R1–R3, R9)
 - **R1.** `.blend` sources and bake intermediates stay local, in the gitignored blend store (below), referenced by SHA-256 in provenance. External storage is deferred. The look-dev HDRI is gitignored too: `make fetch-hdri` downloads it into `assets-source/hdri/` and verifies the SHA-256 in `assets-source/lookdev/lookdev.json`.

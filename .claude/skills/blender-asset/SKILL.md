@@ -7,7 +7,7 @@ description: Hex World kit-piece authoring pipeline in Blender. Use for any Hex 
 
 You author ONE kit piece (or one tileable material set). Read `references/stages.md` before touching Blender, and read `references/pitfalls.md` before your first bake.
 
-This skill is project-level for now and a later card promotes it to user level. The rules below are the portable pipeline. Everything specific to Hex World (frame, constants, seam rules, texture channels, budgets, paths and make targets) lives in **`references/project.md`**, and you must read it too.
+Overlay of the user-level blender-kit-pieces skill. The portable pipeline (stages, helper-library shape, gate categories, provenance schema, portable pitfalls, dispatch defaults) now lives in the user-level skill `blender-kit-pieces` (`~/.claude/skills/blender-kit-pieces/`); this skill keeps the Hex World pipeline in full, and where the two differ this skill and its references win. Everything specific to Hex World (frame, constants, seam rules, texture channels, budgets, paths and make targets) lives in **`references/project.md`**, the project file for `blender-kit-pieces`, and you must read it too.
 
 ## Rules
 - **Reference first.** Modeling starts only after the owner has approved the Higgsfield reference images for the piece (`make refs PIECE=<id>`, then the owner's `approval.json`). No approved reference, no high-poly.
