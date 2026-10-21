@@ -1,7 +1,9 @@
 // Local-only Worlds sheet e2e (make ui-e2e): GPU Chromium on the built site, for the three save
 // screens of design/ui/legend/saves.html. S10.3: Load over unsaved changes asks first, holds the
-// autosave while it asks, and each answer does what it says. S10.6: an imported file shows its
-// preview, then opens as a new world or replaces the one on screen. S10.8: a zip, a damaged file
+// autosave while it asks (for at most LOAD_HOLD_MS, then saves and asks only Load or Cancel), and
+// each answer does what it says. S10.6: an imported file shows its preview, then opens as a new
+// world or replaces the one on screen, and Undo on the Replace toast puts the replaced world's exact
+// bytes back in its slot. S10.8: a zip, a damaged file
 // and a file from a newer version each show the decoder's checks, and change nothing. Captures go to
 // e2e/test-results/saves-ui/ (SAVES_OUT=docs/checkpoints/saves-ui refreshes the committed ones).
 import { chromium } from "playwright";
@@ -61,6 +63,26 @@ try {
   }, pairs);
   const saved = () => until(async () => (await text(".bar__world")).includes("Saved"), "the world is saved");
   const pick = (file) => page.locator(".sheet--worlds input[type=file]").setInputFiles(file);
+  // A slot as IndexedDB holds it, found by name: its id, summary tile count and saved bytes.
+  const slot = (name) => page.evaluate(async (name) => {
+    const db = await new Promise((res, rej) => {
+      const r = indexedDB.open("hex-world");
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+    const get = (store, key) => new Promise((res, rej) => {
+      const os = db.transaction(store).objectStore(store);
+      const q = key === undefined ? os.getAll() : os.get(key);
+      q.onsuccess = () => res(q.result);
+      q.onerror = () => rej(q.error);
+    });
+    const metas = await get("slots");
+    const m = metas.find((x) => x.name === name);
+    const data = m ? await get("saves", m.id) : null;
+    db.close();
+    const bytes = data instanceof Uint8Array || data instanceof ArrayBuffer ? Array.from(new Uint8Array(data)) : null;
+    return { id: m?.id, tiles: m?.tiles, bytes, why: `${metas.map((x) => x.name).join(",")} / ${Object.prototype.toString.call(data)}` };
+  }, name);
   const checkStates = () => page.locator(".import [data-check]").evaluateAll((els) => els.map((e) => e.dataset.check).join(" "));
 
   await page.goto(base);
@@ -125,6 +147,44 @@ try {
   await place([["meadow", 2, 0]]);
   await until(async () => (await play()).tiles.length === riverside.tiles.length + 1, "Riverside 2 changed");
   await saved();
+
+  // Replace, then Undo on its toast: the slot gets back the exact bytes it held, same id and name.
+  const changed = await play();
+  // The bar can read Saved before the change's autosave is asked for, so wait on the slot itself.
+  const before = await until(async () => {
+    const s = await slot("Riverside 2");
+    return s.tiles === changed.tiles.length && s.bytes?.length && s;
+  }, "Riverside 2's change is in its slot");
+  check(!!before?.bytes?.length, `Riverside 2's slot bytes read before Replace (${before?.bytes?.length} B)`);
+  await pick(exported);
+  await until(async () => page.locator(".import[data-import=preview]").count(), "preview for replace and undo");
+  await page.locator(".import [data-act=import-replace]").click();
+  await until(async () => (await play()).tiles.length === riverside.tiles.length, "Replace loads the file's tiles (to undo)");
+  await until(async () => (await text(".toast.is-shown")).includes("Replaced Riverside 2"), "replace toast (to undo)");
+  check((await text(".toast.is-shown .toast__action")) === "Undo", "the Replace toast offers Undo");
+  const toastMotion = await page.locator("[data-region=toast]").evaluate((el) => getComputedStyle(el).transitionDuration);
+  check(/[1-9]/.test(toastMotion), `the toast moves on the motion tokens (${toastMotion})`);
+  await page.locator("[data-region=toast]").hover();
+  const imported = await until(async () => {
+    const s = await slot("Riverside 2");
+    return s?.bytes?.join() !== before?.bytes?.join() && s;
+  }, "the import's autosave writes over the slot");
+  check(imported?.id === before?.id, "the import is written over the same slot");
+  await saved();
+  await settleShot("s10-6-replace-undo-toast");
+  check(await page.locator(".toast.is-shown").count() === 1, "hovered, the toast stays up");
+  await page.locator("[data-region=toast] .toast__action").click();
+  await until(async () => tileSet(await play()) === tileSet(changed), "Undo brings back the replaced tiles");
+  await until(async () => (await text(".toast.is-shown")).includes("Restored Riverside 2"), "the restored toast");
+  check((await text(".bar__world")).includes("Riverside 2"), "Undo keeps the name");
+  await saved();
+  await page.waitForTimeout(1500);
+  const restored = await slot("Riverside 2");
+  check(restored?.id === before?.id, "Undo keeps the slot id");
+  check(restored?.bytes?.join() === before?.bytes?.join(), `the slot's bytes are byte-identical to before Replace (${restored?.bytes?.length} B)`);
+  check(restored?.tiles === changed.tiles.length, `the slot's summary is the replaced world's (${restored?.tiles} tiles)`);
+  await page.mouse.move(720, 450);
+
   await pick(exported);
   await until(async () => page.locator(".import[data-import=preview]").count(), "preview for replace");
   await page.locator(".import [data-act=import-replace]").click();
@@ -176,6 +236,8 @@ try {
   await until(async () => page.locator(".import[data-import=refused]").count(), "checks panel under reduced motion");
   const anim = await page.locator(".import").evaluate((el) => getComputedStyle(el).animationName);
   check(anim === "none", `reduced motion: the panel has no animation (${anim})`);
+  const toastCut = await page.locator("[data-region=toast]").evaluate((el) => getComputedStyle(el).transitionDuration);
+  check(/^0s(, 0s)*$/.test(toastCut), `reduced motion: the toast (Undo included) cuts in (${toastCut})`);
   await page.keyboard.press("Escape");
   await page.emulateMedia({ reducedMotion: "no-preference" });
 
@@ -238,6 +300,29 @@ try {
   await page.locator(".slot-row", { hasText: "Riverside 2" }).locator("[data-act=load]").click();
   await until(async () => (await text(".bar__world")).includes("Riverside 2"), "back to Riverside 2 again");
   await until(async () => (await play()).tiles.length === afterCancel + 1, `the saved change is in Riverside 2 (${afterCancel + 1} tiles)`);
+  await saved();
+
+  // The hold has a limit (LOAD_HOLD_MS, 20 s): left open, the confirm's held autosave runs and the
+  // confirm drops to a plain Load or Cancel.
+  check(await clickLoadWhileUnsaved(4), "Load clicked and left open");
+  await until(async () => page.locator(".slot-row.is-open [data-act=load-discard]").count(), "the three-answer confirm");
+  const heldAt = Date.now();
+  await until(async () => page.locator(".slot-row.is-open .confirm[data-confirm=load-saved]").count(), "the hold runs out", 40_000);
+  const heldFor = Date.now() - heldAt;
+  check(heldFor > 15_000 && heldFor < 30_000, `the hold lasted about 20 s (${heldFor} ms)`);
+  check(await page.locator(".save-state").getAttribute("data-state") === "saved", "the held autosave ran: the bar's state is saved");
+  const plain = (await text(".slot-row.is-open .confirm")).replace(/\s+/g, " ");
+  check(plain.includes("Load Riverside?") && plain.includes("Your changes to Riverside 2 are saved."), `the confirm says the world is saved (${plain})`);
+  const answers = await page.locator(".slot-row.is-open .confirm button").allInnerTexts();
+  check(answers.join("|") === "Load|Cancel", `the confirm offers Load and Cancel only (${answers.join("|")})`);
+  check(await page.evaluate(() => document.activeElement?.dataset?.focus) === "load-save", "focus stays on the first answer");
+  await settleShot("s10-3-load-confirm-saved");
+  await page.locator(".slot-row.is-open [data-act=load-save]").click();
+  await until(async () => !(await text(".bar__world")).includes("Riverside 2"), "Load opens Riverside");
+  await saved();
+  await page.locator(".slot-row", { hasText: "Riverside 2" }).locator("[data-act=load]").click();
+  await until(async () => (await text(".bar__world")).includes("Riverside 2"), "back to Riverside 2 once more");
+  await until(async () => (await play()).tiles.length === afterCancel + 2, `the change the hold saved is in Riverside 2 (${afterCancel + 2} tiles)`);
   await ctx.close();
 } catch (e) {
   fail(String(e?.stack ?? e));

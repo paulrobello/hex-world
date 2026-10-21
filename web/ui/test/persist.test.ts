@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 import type { Command, GameEvent, InspectResult, LoadResult, PlayTile } from "../src/bridge.ts";
-import { type Note, Persistence, refusalText, stateWords, whenText } from "../src/persist.ts";
+import { LOAD_HOLD_MS, type Note, Persistence, refusalText, stateWords, whenText } from "../src/persist.ts";
 import {
   Debouncer,
   MAP_LIMIT,
@@ -560,4 +560,230 @@ test("import replace (S10.6): the file opens over the world on screen, keeping i
   assert.equal(p.state, "saving", "written to its slot once the HUD has seen the tiles");
   assert.equal(p.importName("harbour.hexworld"), "harbour", "the preview's name for a new world");
   assert.deepEqual(p.inspect(new Uint8Array([1])), host.inspected, "inspect passes through to the bridge");
+});
+
+/**
+ * A Persistence on a stored slot "Beta" with one unsaved change, under mocked timers (the hold
+ * limit is tested by ticking, not by sleeping, so host load cannot make it flaky).
+ */
+async function heldSetup(holdMs?: number) {
+  const store = new MemoryBackend();
+  await store.write(
+    { id: "w-b", name: "Beta", tiles: 2, updatedAt: 5, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([9]),
+  );
+  const host = new FakeHost();
+  host.result = { ok: false, code: "no_file", reason: "x", version: null };
+  const p = new Persistence(host, store, holdMs === undefined ? { debounceMs: 30 } : { debounceMs: 30, holdMs });
+  await p.start();
+  host.result = { ok: true, tiles: 2, version: 1 };
+  mock.timers.enable({ apis: ["setTimeout"] });
+  p.observe([tile(0, 0, "meadow")]);
+  p.onEvents([placed]);
+  return { host, p, store, saves: () => host.sent.filter((c) => c.cmd === "save").length };
+}
+
+/** Lets the in-memory store's writes finish while setTimeout is mocked. */
+const microtasks = async () => {
+  for (let i = 0; i < 20; i++) await Promise.resolve();
+};
+
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+test("load confirm (S10.3): the hold runs out after LOAD_HOLD_MS and the held autosave is written", async () => {
+  assert.ok(LOAD_HOLD_MS >= 20_000 && LOAD_HOLD_MS <= 30_000, `between 20 and 30 s (${LOAD_HOLD_MS})`);
+  const { host, p, saves } = await heldSetup();
+  try {
+    p.holdAutosave();
+    mock.timers.tick(LOAD_HOLD_MS - 1);
+    assert.equal(saves(), 0, "still held inside the limit");
+    assert.equal(p.unsaved, true);
+    mock.timers.tick(1);
+    assert.equal(saves(), 1, "the hold expired: the held autosave was sent at once");
+    assert.equal(p.unsaved, false, "nothing is held any more");
+    assert.equal(p.state, "saving", "until the save lands");
+    p.onEvents(host.savedEvents());
+    await microtasks();
+    assert.equal(p.state, "saved");
+    assert.equal(p.unsavedSince, null);
+    p.releaseAutosave();
+    mock.timers.tick(1000);
+    assert.equal(saves(), 1, "a later Cancel has nothing left to release");
+  } finally {
+    mock.timers.reset();
+  }
+});
+
+test("load confirm (S10.3): ending the hold early (cancel or discard) stops its timer", async () => {
+  const a = await heldSetup(500);
+  try {
+    a.p.holdAutosave();
+    a.p.releaseAutosave();
+    mock.timers.tick(1000);
+    assert.equal(a.saves(), 1, "released: one debounced save, and the expired timer adds none");
+  } finally {
+    mock.timers.reset();
+  }
+  const b = await heldSetup(500);
+  try {
+    b.p.holdAutosave();
+    assert.equal(await b.p.loadSlot("w-b", "discard"), true);
+    mock.timers.tick(1000);
+    assert.equal(b.saves(), 0, "Load without saving: no stale timer saves the newly loaded world into the old slot");
+  } finally {
+    mock.timers.reset();
+  }
+});
+
+/** A stored world with tiles, saved once, ready to be replaced by an import. */
+async function replaceSetup() {
+  const store = new MemoryBackend();
+  const host = new FakeHost();
+  const notes: Note[] = [];
+  const p = new Persistence(host, store, { debounceMs: 30, notify: (n) => notes.push(n) });
+  await p.start();
+  p.observe([tile(0, 0, "meadow"), tile(1, 0, "forest")]);
+  p.onEvents([placed]);
+  await wait(60);
+  p.onEvents(host.savedEvents());
+  await settle();
+  const { id, name } = p.current;
+  const before = store.data.get(id)?.slice();
+  assert.ok(before, "the world is in its slot");
+  host.sent.length = 0;
+  host.loads.length = 0;
+  return { store, host, notes, p, id, name, before };
+}
+
+const five = [0, 2, 3, 4, 5].map((q) => tile(q, 0, "meadow"));
+
+test("import replace (S10.6): the toast's Undo puts the replaced world back byte for byte", async () => {
+  const { store, host, notes, p, id, name, before } = await replaceSetup();
+  // The import's autosave encodes to different bytes than the world it replaces.
+  const take = host.takeSave.bind(host);
+  host.takeSave = (tag) => {
+    const b = take(tag);
+    return b && new Uint8Array([...b, 7]);
+  };
+  host.result = { ok: true, tiles: 5, version: 2 };
+  assert.equal(p.importFile("harbour.hexworld", new Uint8Array([1, 2, 3]), "replace"), true);
+  const toast = notes.at(-1);
+  assert.equal(toast?.text, `Replaced ${name}`);
+  assert.equal(toast?.action, "Undo", "the Replace toast offers Undo");
+  // The import comes up and its autosave writes it over the slot.
+  p.onEvents([{ type: "loaded", tiles: 5, version: 2, settings: null }]);
+  p.observe(five);
+  await wait(60);
+  p.onEvents(host.savedEvents());
+  await settle();
+  assert.notDeepEqual(store.data.get(id), before, "the import is in the slot");
+  assert.equal(store.meta.get(id)?.tiles, 5);
+  const sent = host.sent.filter((c) => c.cmd === "save").length;
+  toast?.onAction?.();
+  await settle();
+  assert.deepEqual(store.data.get(id), before, "the slot holds the replaced world's exact bytes");
+  assert.deepEqual(host.loads.at(-1), before, "the engine loads those bytes");
+  p.onEvents([{ type: "loaded", tiles: 2, version: 1, settings: null }]);
+  p.observe([tile(0, 0, "meadow"), tile(1, 0, "forest")]);
+  await wait(60);
+  await settle();
+  assert.equal(host.sent.filter((c) => c.cmd === "save").length, sent, "no autosave encodes it again");
+  assert.deepEqual(store.data.get(id), before, "still byte-identical after the load");
+  assert.equal(p.current.id, id, "same id");
+  assert.equal(p.current.name, name, "same name");
+  assert.equal(store.meta.get(id)?.tiles, 2, "its summary is the replaced world's again");
+  assert.equal(store.meta.get(id)?.name, name);
+  assert.equal(p.state, "saved");
+  assert.equal(notes.at(-1)?.text, `Restored ${name}`);
+  assert.equal(await p.undoReplace(), false, "one Undo per Replace");
+});
+
+test("import replace (S10.6): Undo before the import is up drops its pending autosave", async () => {
+  const { store, host, p, id, before } = await replaceSetup();
+  host.result = { ok: true, tiles: 5, version: 2 };
+  p.importFile("harbour.hexworld", new Uint8Array([1]), "replace");
+  assert.equal(await p.undoReplace(), true);
+  // Both loads come up in order: the import's, then the restored world's.
+  p.onEvents([{ type: "loaded", tiles: 5, version: 2, settings: null }]);
+  p.onEvents([{ type: "loaded", tiles: 2, version: 1, settings: null }]);
+  await wait(60);
+  await settle();
+  assert.equal(host.sent.filter((c) => c.cmd === "save").length, 0, "the import's write never runs");
+  assert.deepEqual(store.data.get(id), before);
+  assert.equal(p.current.id, id);
+});
+
+test("import replace (S10.6): unsaved changes are written first and are what Undo restores", async () => {
+  const { store, host, notes, p, id } = await replaceSetup();
+  p.observe([tile(0, 0, "meadow"), tile(1, 0, "forest"), tile(2, 0, "meadow")]);
+  p.onEvents([placed]);
+  assert.equal(p.unsaved, true);
+  host.result = { ok: true, tiles: 5, version: 2 };
+  p.importFile("harbour.hexworld", new Uint8Array([1]), "replace");
+  assert.equal(host.nowCalls, 1, "the unsaved world is encoded at once, ahead of the load");
+  await settle();
+  const written = store.data.get(id)?.slice();
+  assert.deepEqual(written, new Uint8Array([72, 69, 88, 0]));
+  p.onEvents([{ type: "loaded", tiles: 5, version: 2, settings: null }]);
+  p.observe(five);
+  await wait(60);
+  p.onEvents(host.savedEvents());
+  await settle();
+  notes.at(-1)?.onAction?.();
+  await settle();
+  assert.deepEqual(store.data.get(id), written, "the slot holds the world as it was on screen");
+  assert.equal(store.meta.get(id)?.tiles, 3);
+});
+
+test("import replace (S10.6): Undo is gone once another world is on screen", async () => {
+  const { host, notes, p } = await replaceSetup();
+  host.result = { ok: true, tiles: 5, version: 2 };
+  p.importFile("harbour.hexworld", new Uint8Array([1]), "replace");
+  p.onEvents([{ type: "loaded", tiles: 5, version: 2, settings: null }]);
+  const undo = notes.at(-1)?.onAction;
+  p.newWorld();
+  p.onEvents([{ type: "loaded", tiles: 1, version: 1, settings: null }]);
+  const loads = host.loads.length;
+  undo?.();
+  await settle();
+  assert.equal(host.loads.length, loads, "nothing loads");
+  assert.equal(await p.undoReplace(), false);
+});
+
+test("import replace (S10.6): Undo is byte-exact after a Duplicate wrote another slot", async () => {
+  const { store, host, notes, p, id, before } = await replaceSetup();
+  await p.duplicate(id);
+  p.onEvents(host.savedEvents());
+  await settle();
+  assert.equal(store.meta.size, 2, "the copy has its own slot");
+  host.result = { ok: true, tiles: 5, version: 2 };
+  p.importFile("harbour.hexworld", new Uint8Array([1]), "replace");
+  assert.equal(host.nowCalls, 0, "the stored bytes are kept, not encoded again");
+  p.onEvents([{ type: "loaded", tiles: 5, version: 2, settings: null }]);
+  notes.at(-1)?.onAction?.();
+  await settle();
+  assert.deepEqual(store.data.get(id), before);
+});
+
+test("import replace (S10.6): Undo is byte-exact on a world opened by Save, then load", async () => {
+  const { store, host, notes, p } = await replaceSetup();
+  const beta = new Uint8Array([66, 69, 84, 65]);
+  await store.write({ id: "w-b", name: "Beta", tiles: 2, updatedAt: 5, bytes: 4, mix: {}, map: [] }, beta);
+  await p.refresh();
+  p.onEvents([placed]);
+  p.holdAutosave();
+  host.result = { ok: true, tiles: 2, version: 1 };
+  assert.equal(await p.loadSlot("w-b", "save"), true);
+  // The flushed autosave of the world left behind lands after Beta's bytes were read.
+  p.onEvents(host.savedEvents());
+  p.onEvents([{ type: "loaded", tiles: 2, version: 1, settings: null }]);
+  await settle();
+  assert.equal(p.current.id, "w-b");
+  host.result = { ok: true, tiles: 5, version: 2 };
+  p.importFile("harbour.hexworld", new Uint8Array([1]), "replace");
+  assert.equal(host.nowCalls, 0, "Beta's bytes as read are kept");
+  p.onEvents([{ type: "loaded", tiles: 5, version: 2, settings: null }]);
+  notes.at(-1)?.onAction?.();
+  await settle();
+  assert.deepEqual(store.data.get("w-b"), beta);
 });

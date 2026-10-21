@@ -100,6 +100,8 @@ export class Worlds {
   private confirmFor: string | null = null;
   /** What the open row confirm asks: delete (S10.4) or load over unsaved changes (S10.3). */
   private confirmKind: "delete" | "load" = "delete";
+  /** The load confirm's hold ran out and the changes it asked about are saved: it only asks Load or Cancel. */
+  private loadSaved = false;
   private incoming: Incoming | null = null;
   private incomingSeq = 0;
   /** A control to focus after the next render (a panel's first action). */
@@ -191,6 +193,7 @@ export class Worlds {
   private closeConfirm(): void {
     if (this.confirmFor && this.confirmKind === "load") this.p.releaseAutosave();
     this.confirmFor = null;
+    this.loadSaved = false;
   }
 
   pickFile(): void {
@@ -201,6 +204,10 @@ export class Worlds {
   render(force = false): void {
     if (!this.openState) return;
     const p = this.p;
+    // Once the held autosave has run (LOAD_HOLD_MS) and landed, the confirm stops asking about
+    // unsaved changes, and stays that way even if another edit lands while it is open.
+    if (this.confirmFor && this.confirmKind === "load" && !this.loadSaved && !p.unsaved && p.state === "saved")
+      this.loadSaved = true;
     const sig = [
       p.current.id,
       p.current.name,
@@ -211,6 +218,7 @@ export class Worlds {
       p.slots.map((m) => `${m.id}:${m.name}:${m.updatedAt}`).join(),
       this.confirmFor,
       this.confirmKind,
+      this.loadSaved,
       this.incoming?.seq,
       this.renaming,
       Math.floor(Date.now() / 10_000),
@@ -223,7 +231,10 @@ export class Worlds {
     this.dropSub.textContent = `You choose whether it replaces ${p.current.name} or opens as a new world.`;
     this.body.replaceChildren(...this.content());
     if (focusKey) {
-      const el = this.body.querySelector<HTMLElement>(`[data-focus="${focusKey}"]`);
+      // Load without saving goes when the hold runs out: focus moves to the plain confirm's Load.
+      const el =
+        this.body.querySelector<HTMLElement>(`[data-focus="${focusKey}"]`) ??
+        (focusKey === "load-discard" ? this.body.querySelector<HTMLElement>('[data-focus="load-save"]') : null);
       el?.focus({ preventScroll: true });
       if (scrollTo) (el?.closest(".import, .slot-row") ?? el)?.scrollIntoView({ block: "nearest" });
     }
@@ -443,7 +454,23 @@ export class Worlds {
       more,
     );
     li.style.animationDelay = `${Math.min(i, 8) * 30}ms`;
-    if (this.confirmFor === m.id && this.confirmKind === "load") {
+    if (this.confirmFor === m.id && this.confirmKind === "load" && this.loadSaved) {
+      // The same focus key as Save, then load, so focus stays on the first answer as the text swaps.
+      li.append(
+        h(
+          "div",
+          { class: "confirm", role: "alert", "data-confirm": "load-saved" },
+          h("b", {}, `Load ${m.name}?`),
+          `Your changes to ${this.p.current.name} are saved.`,
+          h(
+            "div",
+            { class: "btn-row" },
+            btn("btn btn--ink btn--sm", "load-save", "Load", undefined, m.id),
+            btn("btn btn--quiet btn--sm", "load-cancel", "Cancel"),
+          ),
+        ),
+      );
+    } else if (this.confirmFor === m.id && this.confirmKind === "load") {
       const cur = this.p.current.name;
       li.append(
         h(

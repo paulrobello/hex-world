@@ -343,6 +343,8 @@ Icons are a single authored set on a 24 px grid with a 1.8 px round-capped strok
 
 ### Toast
 - A margin note at bottom left on `sheet`: an icon, text over an optional 13 px sub line, and an optional action button on `sheet-2`. It rises 8 px and fades in, dismisses after 4 s, and pauses while hovered. One toast shows at a time and updates in place, with a count pill for repeats ("2 Undone"). The icon carries tone: `bad` or `ok`.
+- **Replace undo:** importing over the world on screen toasts "Replaced {name}" with an Undo action. Undo, while that toast is up, puts the replaced world back in its slot byte for byte under the same name and id, and toasts "Restored {name}". The next world switch (a load, New world, another import, Start over) ends the offer.
+- **Load confirm hold:** the load confirm (S10.3) holds the autosave while it asks, for at most 20 s (`LOAD_HOLD_MS`). Then the held changes are saved, the bar reads Saved, and the confirm drops to "Load {name}?", "Your changes to {current} are saved." with Load and Cancel. Focus stays on the first answer.
 - **Update note:** the toast's persistent variant for a newer deployed build: the `retry` icon, "New version available" over a sub line that says the world is saved first (or, in `caution`, that autosave is off and reloading loses it), and a Reload action. It sits above the toast at 84 px from the bottom, never times out, and hides with the HUD (H, photo and walk modes).
 
 ### Tag
