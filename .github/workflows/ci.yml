@@ -25,6 +25,8 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   TRUNK_VERSION: v0.21.14
+  # The shot runner's frame check (scripts/shots); same pin as scripts/thumbs/build.py.
+  PILLOW_VERSION: 12.2.0
 
 jobs:
   scope:
@@ -56,7 +58,8 @@ jobs:
       - run: make fmt-check
 
   # The HUD overlay (web/ui): typecheck, lint, unit tests and the esbuild bundle; npm ci runs via the
-  # lockfile stamp target.
+  # lockfile stamp target. Also the shot runner's tests (shots-test, and run.test.mjs inside
+  # ui-test), which read frames with Pillow, so Pillow installs before ui-check.
   ui:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -67,7 +70,12 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: web/ui/package-lock.json
+      - name: Install Pillow
+        run: |
+          python3 -m pip install --user --break-system-packages --only-binary=:all: "pillow==${PILLOW_VERSION}"
+          python3 -c 'import PIL; print("Pillow", PIL.__version__)'
       - run: make ui-check
+      - run: make shots-test
 
   lint:
     runs-on: ubuntu-latest

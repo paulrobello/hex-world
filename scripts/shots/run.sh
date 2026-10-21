@@ -1,15 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-check_frame() {
-    local file="$1" mean
-    test -s "$file" || { printf 'missing %s\n' "$file" >&2; exit 1; }
-    mean=$(magick "$file" -format '%[fx:mean]' info:)
-    awk -v m="$mean" 'BEGIN { exit !(m > 0.02) }' || {
-        printf '%s is black (mean %s): idle display or high load\n' "$file" "$mean" >&2
-        exit 1
-    }
-}
+# The black-frame check is piece.py's frame_problem (Pillow), shared with make shots-piece.
+check_frames="$(dirname "${BASH_SOURCE[0]}")/check_frames.py"
 
 # --state-only: the capture writes only state dumps; any PNG it does write is still checked.
 state_only=0
@@ -22,7 +15,9 @@ if [[ "${1:-}" == --jpegs ]]; then
     out="$2"
     shift 2
     # Validate the entire batch before replacing any committed evidence.
-    for name in "$@"; do check_frame "target/shots/$name.png"; done
+    frames=()
+    for name in "$@"; do frames+=("target/shots/$name.png"); done
+    python3 "$check_frames" ${frames[@]+"${frames[@]}"}
     for name in "$@"; do
         ffmpeg -loglevel error -y -i "target/shots/$name.png" -q:v 2 "$out/$name.jpg"
     done
@@ -31,12 +26,13 @@ else
     marker=$(mktemp target/shots/.capture-XXXXXX)
     trap 'rm -f "$marker"' EXIT
     caffeinate -d -u "$@"
-    frames=0
+    frames=()
     while IFS= read -r -d '' file; do
-        check_frame "$file"
-        frames=$((frames + 1))
+        frames+=("$file")
     done < <(find target/shots -name '*.png' -newer "$marker" -print0)
-    if [[ "$frames" == 0 && "$state_only" == 0 ]]; then
+    if [[ ${#frames[@]} -gt 0 ]]; then
+        python3 "$check_frames" "${frames[@]}"
+    elif [[ "$state_only" == 0 ]]; then
         printf 'capture produced no PNG frames\n' >&2
         exit 1
     fi

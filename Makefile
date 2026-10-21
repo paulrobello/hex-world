@@ -31,7 +31,8 @@ check-wgpu:
 
 checkall: fmt-check lint typecheck test ui-check shots-test
 
-# The shot runner's black-frame check and retry (scripts/shots/piece.py). Local only: CI has no Pillow.
+# The shot runner's black-frame check and retry (scripts/shots/piece.py; run.sh uses the same check).
+# Needs Pillow (CI's ui job installs PILLOW_VERSION).
 shots-test:
 	python3 -m unittest discover -s scripts/shots -p 'test_*.py'
 
@@ -457,11 +458,7 @@ shots-windmill-play:
 	mkdir -p target/shots $(WINDMILL_DOCS)
 	rm -f target/shots/windmill-play*.png target/shots/windmill-play-state.json target/shots/windmill-walk-*
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(WINDMILL_DOCS)/windmill-play.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	@for n in $(WINDMILL_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  m=$$(magick target/shots/$$n.png -format '%[fx:mean]' info:); \
-	  awk -v m="$$m" 'BEGIN { exit !(m < 0.02) }' && { echo "$$n.png is black (mean $$m): idle display or high load, run again"; exit 1; }; \
-	  true; done
-	@for n in $(WINDMILL_SHOTS); do ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(WINDMILL_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh --jpegs $(WINDMILL_DOCS) $(WINDMILL_SHOTS)
 	cp target/shots/windmill-play-state.json target/shots/windmill-walk-state.json $(WINDMILL_DOCS)/
 	@echo "wrote $(WINDMILL_DOCS)/"
 
@@ -476,11 +473,7 @@ shots-farm-play:
 	mkdir -p target/shots $(FARM_DOCS)
 	rm -f target/shots/farm-*.png target/shots/farm-*.json
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(FARM_DOCS)/farm-play.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	@for n in $(FARM_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  m=$$(magick target/shots/$$n.png -format '%[fx:mean]' info:); \
-	  awk -v m="$$m" 'BEGIN { exit !(m < 0.02) }' && { echo "$$n.png is black (mean $$m): idle display or high load, run again"; exit 1; }; \
-	  true; done
-	@for n in $(FARM_SHOTS); do ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(FARM_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh --jpegs $(FARM_DOCS) $(FARM_SHOTS)
 	cp target/shots/farm-play-state.json target/shots/farm-walk-state.json target/shots/farm-walk-fence-state.json target/shots/farm-walk-gate-state.json $(FARM_DOCS)/
 	@echo "wrote $(FARM_DOCS)/"
 
@@ -510,11 +503,7 @@ shots-wheat-play:
 	mkdir -p target/shots $(WHEAT_DOCS)
 	rm -f target/shots/wheat-*.png target/shots/wheat-*.json
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(WHEAT_DOCS)/wheat-play.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	@for n in $(WHEAT_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; \
-	  m=$$(magick target/shots/$$n.png -format '%[fx:mean]' info:); \
-	  awk -v m="$$m" 'BEGIN { exit !(m < 0.02) }' && { echo "$$n.png is black (mean $$m): idle display or high load, run again"; exit 1; }; \
-	  true; done
-	@for n in $(WHEAT_SHOTS); do ffmpeg -loglevel error -y -i target/shots/$$n.png -q:v 2 $(WHEAT_DOCS)/$$n.jpg || exit 1; done
+	bash scripts/shots/run.sh --jpegs $(WHEAT_DOCS) $(WHEAT_SHOTS)
 	cp target/shots/wheat-play-state.json target/shots/wheat-walk-state.json $(WHEAT_DOCS)/
 	@echo "wrote $(WHEAT_DOCS)/"
 
@@ -564,8 +553,6 @@ shots-photo:
 	bash scripts/shots/run.sh --jpegs $(PHOTO_DOCS) $(PHOTO_SHOTS)
 	magick identify -format '{"png": "%f", "width": %w, "height": %h, "mean": %[fx:mean]}\n' target/shots/photo-04-export-4x.png > $(PHOTO_DOCS)/photo-04-export-4x.size.json
 	@grep -q '"width": 5120, "height": 3200' $(PHOTO_DOCS)/photo-04-export-4x.size.json || { echo "4x export is not 5120x3200"; cat $(PHOTO_DOCS)/photo-04-export-4x.size.json; exit 1; }
-	@for n in $(PHOTO_SHOTS); do m=$$(magick target/shots/$$n.png -format '%[fx:mean]' info:); \
-	  awk -v m="$$m" 'BEGIN { exit !(m > 0.02) }' || { echo "$$n.png is black (mean $$m)"; exit 1; }; done
 	@r=$$(magick compare -metric RMSE target/shots/photo-02-dof-closeup.png target/shots/photo-02-dof-off-closeup.png null: 2>&1 | sed -E 's/.*\(([0-9.e-]+)\).*/\1/'); \
 	  awk -v r="$$r" 'BEGIN { exit !(r > 0.004) }' || { echo "manual DOF changed nothing (RMSE $$r)"; exit 1; }; \
 	  echo "{\"dof_vs_off_rmse\": $$r}" > $(PHOTO_DOCS)/photo-02-dof-rmse.json; echo "manual DOF vs off: RMSE $$r"

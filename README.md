@@ -29,6 +29,7 @@ For running and checking the game:
 - Rust **stable**, with `rustfmt`, `clippy` and the `wasm32-unknown-unknown` target.
 - [Trunk](https://trunkrs.dev/) **0.21.14** (the version used by CI).
 - Node.js **22.18+** (native TypeScript stripping) and npm. CI uses **Node 24**.
+- Python 3 with Pillow (CI pins **12.2.0**): the shot runner's black-frame check (`scripts/shots/`), tested by `make checkall`.
 - `make`, Git and a WebGPU-capable browser. On Linux, the native build also needs the system libraries installed in `.github/workflows/ci.yml`: `libasound2-dev`, `libudev-dev`, `libwayland-dev`, `libxkbcommon-dev`.
 
 Asset authoring is optional for playing or running the normal gates. Install its tools separately:
@@ -56,7 +57,7 @@ trunk serve
 
 Open http://127.0.0.1:8094. Trunk watches and rebuilds the game; its pre-build hook runs `make ui-build`, which installs the pinned UI npm dependencies when needed. The committed runtime assets are enough to play without Blender or KTX tools.
 
-Run `make checkall` for the fast gate (Rust formatting, Clippy, native/WASM checks, workspace tests and UI checks). `make checkall-ci` adds the release web build and size budgets. For native iteration use `make run ARGS="--scenario play"`; for a static release web build use `make build-web`.
+Run `make checkall` for the fast gate (Rust formatting, Clippy, native/WASM checks, workspace tests, UI checks and the shot runner's tests). `make checkall-ci` adds the release web build and size budgets. For native iteration use `make run ARGS="--scenario play"`; for a static release web build use `make build-web`.
 
 ## Where to start
 
