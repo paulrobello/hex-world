@@ -1078,9 +1078,15 @@ pub struct FishTrack {
     /// other way round: across a mouth's fan ([`FAN_S`]), which is neither.
     pub river_to_sea: u32,
     pub sea_to_river: u32,
-    /// Per fish slot: (generation, water first seen in, crossed, last position, boid clock then).
-    fish: Vec<Option<(u32, Side, bool, Vec2, f32)>>,
+    /// The same crossings per mouth cell, credited to the last mouth tile the fish swam in
+    /// (river_to_sea, sea_to_river): the checkpoint tells the two mouth handednesses apart by cell.
+    pub mouths: std::collections::BTreeMap<hex_core::Axial, (u32, u32)>,
+    /// Per fish slot: (generation, water first seen in, crossed, last position, boid clock then,
+    /// last mouth cell seen in).
+    fish: Vec<Option<TrackedFish>>,
 }
+
+type TrackedFish = (u32, Side, bool, Vec2, f32, Option<hex_core::Axial>);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Side {
@@ -1099,12 +1105,23 @@ const TRACK_SPEED: f32 = 2.5;
 
 impl FishTrack {
     fn json(&self) -> String {
+        let mouths: Vec<String> = self
+            .mouths
+            .iter()
+            .map(|(c, (out, back))| {
+                format!(
+                    "{{\"q\":{},\"r\":{},\"river_to_sea\":{out},\"sea_to_river\":{back}}}",
+                    c.q, c.r
+                )
+            })
+            .collect();
         format!(
-            "{{\"samples\":{},\"crossed\":{},\"river_to_sea\":{},\"sea_to_river\":{}}}",
+            "{{\"samples\":{},\"crossed\":{},\"river_to_sea\":{},\"sea_to_river\":{},\"mouths\":[{}]}}",
             self.samples,
             self.river_to_sea + self.sea_to_river,
             self.river_to_sea,
-            self.sea_to_river
+            self.sea_to_river,
+            mouths.join(",")
         )
     }
 
@@ -1137,22 +1154,38 @@ impl FishTrack {
                 None => None,
             };
             let entry = &mut self.fish[i];
-            let fresh = entry.is_none_or(|(g, _, _, last, at)| {
+            let mouth = matches!(
+                plan.water.cells.get(&cell).map(|c| &c.kind),
+                Some(crate::water::tiles::WaterKind::RiverMouth(_))
+            )
+            .then_some(cell);
+            let fresh = entry.is_none_or(|(g, _, _, last, at, _)| {
                 g != slot.generation || last.distance(p) > TRACK_SPEED * (t - at).max(0.0) + 0.5
             });
             if fresh {
-                *entry = side.map(|s| (slot.generation, s, false, p, t));
+                *entry = side.map(|s| (slot.generation, s, false, p, t, mouth));
                 continue;
             }
-            let Some((_, first, crossed, last, at)) = entry else {
+            let Some((_, first, crossed, last, at, via)) = entry else {
                 continue;
             };
             (*last, *at) = (p, t);
+            *via = mouth.or(*via);
             if !*crossed && side.is_some_and(|s| s != *first) {
                 *crossed = true;
-                match first {
-                    Side::River => self.river_to_sea += 1,
-                    Side::Sea => self.sea_to_river += 1,
+                let river = *first == Side::River;
+                if river {
+                    self.river_to_sea += 1;
+                } else {
+                    self.sea_to_river += 1;
+                }
+                if let Some(c) = *via {
+                    let n = self.mouths.entry(c).or_default();
+                    if river {
+                        n.0 += 1;
+                    } else {
+                        n.1 += 1;
+                    }
                 }
             }
         }
@@ -1781,6 +1814,67 @@ mod tests {
         track.observe(&plan, &at(sea, b + 1), clock + 0.1);
         assert_eq!((track.river_to_sea, track.sea_to_river), (1, 0));
         assert!(track.json().contains("\"crossed\":1"), "{}", track.json());
+        assert_eq!(track.mouths.get(&m), Some(&(1, 0)));
+    }
+
+    /// With a river_mouth and a mirrored river_mouth_l in one world, each crossing is credited to
+    /// the mouth the fish swam through, in both directions.
+    #[test]
+    fn fish_track_credits_each_mouth_handedness() {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let t = |a: hex_core::Axial, id: &str, rotation: u8| crate::play::PlayTile {
+            cell: a,
+            tile: id.into(),
+            rotation,
+        };
+        // river_mouth: River on edge 3 at rotation 0; river_mouth_l: River on edge 4.
+        let o = hex_core::Axial::new(0, 0);
+        let m = o.neighbor(0);
+        let ml = hex_core::Axial::new(0, 6);
+        let ol = ml.neighbor(4);
+        let world = [
+            t(o.neighbor(3), "river_spring", 0),
+            t(o, "river_straight", 0),
+            t(m, "river_mouth", 0),
+            t(m.neighbor(0), "ocean", 0),
+            t(ol.neighbor(4), "river_spring", 1),
+            t(ol, "river_straight", 1),
+            t(ml, "river_mouth_l", 0),
+            t(ml.neighbor(0), "ocean", 0),
+        ];
+        let mut plan = BoidPlan::play(BoidBudget::HIGH, 1);
+        plan.set_world(&world, &c, &|_| true, 0.0);
+        let b = plan.birds as usize;
+        let at = |cell: hex_core::Axial, i: usize| {
+            let mut v = vec![Boid::zeroed(); plan.slots.len()];
+            let [x, z] = cell.to_world(hex_core::HEX_RADIUS);
+            v[i].pos = [x, -1.0, z, plan.slots[i].generation as f32];
+            v
+        };
+        let mut track = FishTrack::default();
+        let mut clock = 0.0;
+        let mut swim = |track: &mut FishTrack, path: &[hex_core::Axial], i: usize| {
+            for (k, &cell) in path.iter().enumerate() {
+                if k > 0 {
+                    let [x0, z0] = path[k - 1].to_world(hex_core::HEX_RADIUS);
+                    let [x1, z1] = cell.to_world(hex_core::HEX_RADIUS);
+                    clock += Vec2::new(x1 - x0, z1 - z0).length() / 1.5;
+                }
+                track.observe(&plan, &at(cell, i), clock);
+            }
+        };
+        let sea_l = ml.neighbor(0);
+        swim(&mut track, &[ol, ml, sea_l], b);
+        swim(&mut track, &[sea_l, ml, ol], b + 1);
+        swim(&mut track, &[o, m, m.neighbor(0)], b + 2);
+        assert_eq!((track.river_to_sea, track.sea_to_river), (2, 1));
+        assert_eq!(track.mouths.get(&ml), Some(&(1, 1)));
+        assert_eq!(track.mouths.get(&m), Some(&(1, 0)));
+        let json = track.json();
+        assert!(
+            json.contains("{\"q\":0,\"r\":6,\"river_to_sea\":1,\"sea_to_river\":1}"),
+            "{json}"
+        );
     }
 
     /// The compute pass's copies of the plan's fish constants agree with it.

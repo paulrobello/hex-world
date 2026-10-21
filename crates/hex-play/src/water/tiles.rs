@@ -2801,8 +2801,8 @@ mod tests {
 
     /// `docs/checkpoints/boids/boids.json` replayed on the rules places every tile, bulldozes,
     /// undoes and redoes as scripted, and ends with 12 land tiles (three flocks, as before the
-    /// bulldoze's 13) and a spring, straight and mouth joined to the coast's sea as one fish
-    /// region.
+    /// bulldoze's 13) and two spring, straight and mouth chains (river_mouth, then the mirrored
+    /// river_mouth_l) joined to the coast's sea as one fish region.
     #[test]
     fn boids_script_builds_its_world() {
         let cat = catalog();
@@ -2822,9 +2822,9 @@ mod tests {
                 rotation: t.rotation,
             })
             .collect();
-        assert_eq!(tiles.len(), 31);
+        assert_eq!(tiles.len(), 34);
         let fish = crate::boids::plan::FishWorld::new(&tiles, &cat);
-        assert_eq!(fish.cells.len(), 19);
+        assert_eq!(fish.cells.len(), 22);
         assert_eq!(
             tiles.len() - fish.cells.len(),
             12,
@@ -2835,19 +2835,24 @@ mod tests {
             .iter()
             .find(|g| g.cells.contains(&Axial::new(7, -3)))
             .unwrap();
-        for c in [(6, -2), (5, -1), (4, -1), (1, 0)] {
+        for c in [(6, -2), (5, -1), (4, -1), (1, 0), (3, 4), (3, 3), (3, 2)] {
             assert!(
                 region.cells.contains(&Axial::new(c.0, c.1)),
                 "{c:?} {region:?}"
             );
         }
-        assert_eq!(region.cells.len(), 15);
+        assert_eq!(region.cells.len(), 18);
+        let at = |q, r| tiles.iter().find(|t| t.cell == Axial::new(q, r)).unwrap();
+        assert_eq!(at(5, -1).tile, "river_mouth");
+        assert_eq!(at(3, 2).tile, "river_mouth_l");
         let lay = layout(&tiles, &cat, |_| false);
-        let (s, m) = (
-            &lay[&Axial::new(7, -3)].paths[0],
-            &lay[&Axial::new(5, -1)].paths[0],
-        );
-        assert_eq!((s.up, m.down), (RiverEnd::Spring, RiverEnd::Mouth));
+        for (spring, mouth) in [((7, -3), (5, -1)), ((3, 4), (3, 2))] {
+            let (s, m) = (
+                &lay[&Axial::new(spring.0, spring.1)].paths[0],
+                &lay[&Axial::new(mouth.0, mouth.1)].paths[0],
+            );
+            assert_eq!((s.up, m.down), (RiverEnd::Spring, RiverEnd::Mouth));
+        }
     }
 
     /// Owner 2026-10-14: `river_spring_center` failed to load and the stand-in bed covered the

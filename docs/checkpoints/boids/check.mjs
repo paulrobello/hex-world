@@ -5,7 +5,10 @@
 // the roost shot, roosts leaving with a bulldozed oak, returning with its undo and leaving again
 // with the redo; then a spring, straight and mouth joined to the coast: river-spawned fish keep
 // their small groups in the joined region, and fish cross the mouth's fan (read back from the GPU
-// by the fixed-clock run's fish track) within the 6,240 frames (104 s) after the chain is placed.
+// by the fixed-clock run's fish track) within the 6,240 frames (104 s) after the chain is placed;
+// then a mirrored chain (river_mouth_l, straight, spring) joined to the coast at (3, 2): fish cross
+// river_mouth_l's fan within the 6,240 frames after it is placed, each crossing credited to the
+// mouth cell the fish swam through.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -71,6 +74,33 @@ const crossed = read("boids-12-mouth-crossed").boids;
 const late = crossed.fish_regions.find((r) => r.tiles === 15);
 check(crossed.fish_track?.crossed >= 1, "at least one fish crossed the mouth's fan", crossed.fish_track);
 check(late?.river_largest_group <= 5, "river groups stay at 5 or fewer", late);
+
+// Per-mouth credit: every crossing is credited to the mouth cell it went through.
+const mouthAt = (track, q, r) => track?.mouths?.find((c) => c.q === q && c.r === r);
+const sums = (track) => (track?.mouths ?? []).reduce((a, c) => [a[0] + c.river_to_sea, a[1] + c.sea_to_river], [0, 0]);
+check(mouthAt(crossed.fish_track, 5, -1)?.river_to_sea === crossed.fish_track?.river_to_sea && crossed.fish_track.mouths.length === 1,
+  "every crossing so far credited to river_mouth at (5, -1)", crossed.fish_track?.mouths);
+
+const mouthL = read("boids-13-mouth-l");
+const placedL = mouthL.play.recent_events.filter((e) => e.type === "tilePlaced").slice(-3);
+check(JSON.stringify(placedL.map((e) => [e.tile, e.q, e.r])) === JSON.stringify([["river_mouth_l", 3, 2], ["river_straight", 3, 3], ["river_spring", 3, 4]]),
+  "river_mouth_l (the mirrored mouth), straight and spring placed at (3, 2), (3, 3), (3, 4)", placedL);
+check(mouthL.tiles === 34 && mouthL.boids.water_tiles === 22 && mouthL.boids.fish === 264,
+  "34 tiles, 22 water tiles, 264 fish", { tiles: mouthL.tiles, water: mouthL.boids.water_tiles, fish: mouthL.boids.fish });
+const joinedL = mouthL.boids.fish_regions.find((r) => r.tiles === 18);
+check(joinedL?.river === false && joinedL.fish === 216 && joinedL.river_fish === 48,
+  "the mirrored chain joins the coast too: one 18-tile region of 216 fish, 48 river-spawned", mouthL.boids.fish_regions);
+check(mouthAt(mouthL.boids.fish_track, 3, 2) === undefined, "no crossing at (3, 2) when it is placed (control)", mouthL.boids.fish_track);
+
+for (const name of ["boids-14-mouth-l-crossed", "boids-16-mouth-l-late"]) {
+  const track = read(name).boids.fish_track;
+  check(JSON.stringify(sums(track)) === JSON.stringify([track?.river_to_sea, track?.sea_to_river]),
+    `${name}: the per-mouth counts sum to the totals`, track);
+}
+const crossedL = read("boids-14-mouth-l-crossed").boids;
+check(mouthAt(crossedL.fish_track, 3, 2)?.river_to_sea >= 1,
+  "at least one fish crossed river_mouth_l's fan, river to sea", mouthAt(crossedL.fish_track, 3, 2));
+check(crossedL.fish_regions.find((r) => r.tiles === 18)?.river_largest_group <= 5, "river groups stay at 5 or fewer", crossedL.fish_regions);
 
 if (failed) {
   console.error(`${failed} check(s) failed`);
