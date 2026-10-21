@@ -354,11 +354,28 @@ fn barn_b_perches() -> Vec<Vec3> {
         .collect()
 }
 
+/// `well_stone`'s ridge (owner Q6, 2026-10-20: the covered well's ridge is a bird perch), measured
+/// on its LOD0: the tiles' apex line runs along z at x 0, 2.400 m up, between the gable
+/// bargeboards at z +-1.055 (`_house_well.py` RIDGE_TOP, GABLE_Y). The open well_stone_b has none.
+const WELL_RIDGE_Y: f32 = 2.401;
+/// Its perches' z: the middle (a bird there faces across the ridge) and 0.95 m either side, 0.1 m
+/// inside the bargeboards (a starling at 4x is 0.79 m long).
+const WELL_RIDGE_Z: [f32; 3] = [-0.95, 0.0, 0.95];
+
+/// `well_stone`'s perches on its ridge, piece-local.
+fn well_perches() -> Vec<Vec3> {
+    WELL_RIDGE_Z
+        .iter()
+        .map(|&z| Vec3::new(0.0, WELL_RIDGE_Y, z))
+        .collect()
+}
+
 /// Perch points on a tree piece's canopy or a building's roof, piece-local in the runtime frame
 /// (Y up, trunk base or the piece's origin at the origin). Empty for a piece birds do not roost on.
 pub fn canopy_perches(piece: &str) -> Vec<Vec3> {
     match piece {
         "barn_red_b" => barn_b_perches(),
+        "well_stone" => well_perches(),
         "tree_hero_oak" => oak_perches(&OAK_CLUMPS, &OAK_PERCHES),
         "tree_hero_oak_b" => oak_perches(&OAK_B_CLUMPS, &OAK_B_PERCHES),
         "tree_hero_oak_c" => oak_perches(&OAK_C_CLUMPS, &OAK_C_PERCHES),
@@ -415,6 +432,7 @@ pub struct Roost {
 /// Pieces with perches ([`canopy_perches`]): what [`BoidPlan::set_world`] watches arrive in the kit.
 pub const PERCH_PIECES: &[&str] = &[
     "barn_red_b",
+    "well_stone",
     "tree_hero_oak",
     "tree_hero_oak_b",
     "tree_hero_oak_c",
@@ -2030,6 +2048,99 @@ mod tests {
         assert!(r.iter().all(|x| x.pos.xz().distance(at) < HEX_RADIUS));
         assert!(roosts(&[tile(1, 0, "farm", 0)], &c, &|_| true).is_empty());
         assert!(roosts(&[tile(0, 1, "farm", 0)], &c, &|p| p != "barn_red_b").is_empty());
+    }
+
+    /// `well_stone`'s perches (owner Q6, 2026-10-20) sit on its ridge: each within 2 cm above the
+    /// top of its LOD0 there (the tiles' apex), 0.95 m apart and inside the gable bargeboards; the
+    /// open well_stone_b has none. A house cluster drawing well_stone roosts its Bird rule (3) on
+    /// them, one drawing well_stone_b none.
+    #[test]
+    fn well_stone_perches_sit_on_its_ridge() {
+        let root = format!(
+            "{}/../../assets/kit/p1/well_stone/well_stone.glb",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        let bytes = std::fs::read(root).unwrap();
+        let plain = hex_assets::rewrite_glb(&bytes).unwrap();
+        let (doc, buffers, _) = gltf::import_slice(&plain).unwrap();
+        let mesh = doc
+            .meshes()
+            .find(|m| m.name() == Some("well_stone_lod0"))
+            .unwrap();
+        let mut tris: Vec<[Vec3; 3]> = vec![];
+        for prim in mesh.primitives() {
+            let rd = prim.reader(|b| Some(&buffers[b.index()]));
+            let pos: Vec<Vec3> = rd.read_positions().unwrap().map(Vec3::from).collect();
+            let idx: Vec<u32> = rd.read_indices().unwrap().into_u32().collect();
+            tris.extend(
+                idx.as_chunks::<3>()
+                    .0
+                    .iter()
+                    .map(|t| [pos[t[0] as usize], pos[t[1] as usize], pos[t[2] as usize]]),
+            );
+        }
+        // The highest LOD0 surface over (x, z), barycentric in XZ.
+        let top = |x: f32, z: f32| -> Option<f32> {
+            tris.iter()
+                .filter_map(|[a, b, c]| {
+                    let d = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
+                    if d.abs() < 1e-9 {
+                        return None;
+                    }
+                    let l1 = ((b.z - c.z) * (x - c.x) + (c.x - b.x) * (z - c.z)) / d;
+                    let l2 = ((c.z - a.z) * (x - c.x) + (a.x - c.x) * (z - c.z)) / d;
+                    let l3 = 1.0 - l1 - l2;
+                    (l1.min(l2).min(l3) >= -1e-5).then_some(l1 * a.y + l2 * b.y + l3 * c.y)
+                })
+                .reduce(f32::max)
+        };
+        let perches = canopy_perches("well_stone");
+        assert_eq!(perches.len(), 3, "three on the ridge");
+        for p in &perches {
+            let t = top(p.x, p.z).unwrap_or_else(|| panic!("{p} over the well"));
+            assert!((0.0..0.02).contains(&(p.y - t)), "{p}: roof top {t}");
+        }
+        // The gable bargeboards stand at |z| >= 1.055: every perch is on the ridge between them.
+        let gable = tris
+            .iter()
+            .flatten()
+            .filter(|v| v.y > 2.3)
+            .map(|v| v.z.abs())
+            .fold(0.0, f32::max);
+        assert!(gable > 1.05, "ridge ends at {gable}");
+        for w in WELL_RIDGE_Z.windows(2) {
+            assert!(w[1] - w[0] >= 0.9 - 1e-4, "{w:?}");
+        }
+        assert!(WELL_RIDGE_Z.iter().all(|z| z.abs() <= 1.055 - 0.1));
+        assert!(canopy_perches("well_stone_b").is_empty());
+
+        let c = catalog();
+        let cluster = c.get("house_cluster").unwrap();
+        let rule = cluster
+            .agents
+            .iter()
+            .find(|a| a.agent == AgentKind::Bird)
+            .unwrap();
+        assert_eq!(usize::from(rule.max), perches.len());
+        assert_eq!(
+            hex_core::hero_piece(cluster, Axial::ORIGIN, 3),
+            "well_stone"
+        );
+        assert_eq!(
+            hex_core::hero_piece(cluster, Axial::new(0, -1), 3),
+            "well_stone_b"
+        );
+        let r = roosts(&[tile(0, 0, "house_cluster", 0)], &c, &|_| true);
+        assert_eq!(r.len(), 3, "the well's perches");
+        let well = Vec2::from(cluster.props.hero[3].at);
+        assert!(r.iter().all(|x| x.cell == Axial::ORIGIN && x.pos.y > 2.3));
+        assert!(r.iter().all(|x| x.pos.xz().distance(well) < 1.0));
+        assert!(roosts(&[tile(0, -1, "house_cluster", 0)], &c, &|_| true).is_empty());
+        assert!(
+            roosts(&[tile(0, 0, "house_cluster", 0)], &c, &|p| p
+                != "well_stone")
+            .is_empty()
+        );
     }
 
     /// The oak perches (every hero oak) sit on the GLB's canopy shell and are open from above.

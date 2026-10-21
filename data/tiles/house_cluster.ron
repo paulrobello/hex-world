@@ -61,7 +61,10 @@
             back: [(at: (6.0, 0.0), yaw_deg: 180.0), (at: (8.5, -2.0), yaw_deg: 94.0)],
         ),
     ],
+    // Birds roost on well_stone's ridge (owner Q6, 2026-10-20; its 3 perches,
+    // hex_play::boids::plan::canopy_perches); a cluster drawing well_stone_b has none.
     agents: [
         (agent: Car, max: 2),
+        (agent: Bird, max: 3),
     ],
 )
