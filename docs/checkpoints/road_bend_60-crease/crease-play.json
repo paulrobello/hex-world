@@ -1,0 +1,72 @@
+[
+  {"cmd": "select_tile", "id": "road_bend_60"},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "select_tile", "id": "road_straight"},
+  {"cmd": "place", "q": 2, "r": 0},
+  {"cmd": "place", "q": 1, "r": 1},
+  {"cmd": "select_tile", "id": "meadow"},
+  {"cmd": "place", "q": 0, "r": 1},
+  {"cmd": "place", "q": 1, "r": -1},
+  {"cmd": "place", "q": 2, "r": -1},
+  {"cmd": "place", "q": 0, "r": -1},
+  {"cmd": "place", "q": 2, "r": 1},
+  {"cmd": "hover", "q": 9, "r": -9},
+  {"cmd": "camera", "pos": [14, 42, 50], "look_at": [30, 0, 6]},
+  {"cmd": "wait", "frames": 900},
+  {"cmd": "dump_state", "name": "rb60c-state"},
+  {"cmd": "photo_export", "scale": 1, "name": "rb60c-play"},
+  {"cmd": "wait", "frames": 20},
+
+  {"cmd": "camera", "pos": [34.58, 6.0, 4.6], "look_at": [34.58, 0.0, 3.9]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "photo_export", "scale": 1, "name": "rb60c-corner-top"},
+  {"cmd": "wait", "frames": 20},
+
+  {"cmd": "camera", "pos": [38.58, 2.5, 6.96], "look_at": [34.58, 0.0, 3.96]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "photo_export", "scale": 1, "name": "rb60c-corner-sun"},
+  {"cmd": "wait", "frames": 20},
+
+  {"cmd": "camera", "pos": [30.58, 2.5, 0.96], "look_at": [34.58, 0.0, 3.96]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "photo_export", "scale": 1, "name": "rb60c-corner-shade"},
+  {"cmd": "wait", "frames": 20},
+
+  {"cmd": "camera", "pos": [36.58, 2.0, 0.5], "look_at": [34.58, 0.0, 3.96]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "photo_export", "scale": 1, "name": "rb60c-corner-arm0"},
+  {"cmd": "wait", "frames": 20},
+
+  {"cmd": "camera", "pos": [32.58, 2.0, 7.42], "look_at": [34.58, 0.0, 3.96]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "photo_export", "scale": 1, "name": "rb60c-corner-arm1"},
+  {"cmd": "wait", "frames": 20},
+
+  {"cmd": "camera", "pos": [46.0, 4.0, -6.0], "look_at": [41.57, 0.0, 0.0]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "photo_export", "scale": 1, "name": "rb60c-seam-road-e0"},
+  {"cmd": "wait", "frames": 20},
+
+  {"cmd": "camera", "pos": [40.0, 4.0, 17.0], "look_at": [34.64, 0.0, 12.0]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "photo_export", "scale": 1, "name": "rb60c-seam-road-e1"},
+  {"cmd": "wait", "frames": 20},
+
+  {"cmd": "camera", "pos": [30.0, 5.0, -18.0], "look_at": [34.64, 0.0, -12.0]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "photo_export", "scale": 1, "name": "rb60c-seam-meadow-e5"},
+  {"cmd": "wait", "frames": 20},
+
+  {"cmd": "camera", "pos": [16.0, 5.0, 18.0], "look_at": [20.79, 0.0, 12.0]},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "photo_export", "scale": 1, "name": "rb60c-seam-meadow-e2"},
+  {"cmd": "wait", "frames": 20},
+
+  {"cmd": "walk", "on": true, "pointer_lock": null},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "walk_to", "x": 37.6, "z": 6.2, "heading": 306, "pitch": -18},
+  {"cmd": "wait", "frames": 60},
+  {"cmd": "photo_export", "scale": 1, "name": "rb60c-eye"},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "exit"}
+]

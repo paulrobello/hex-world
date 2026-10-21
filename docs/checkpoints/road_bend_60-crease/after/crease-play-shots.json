@@ -1,0 +1,86 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/road_bend_60-crease/crease-play.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        221.73,
+        171.67,
+        108.82
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 19.7,
+      "load_after": [
+        209.27,
+        172.09,
+        110.43
+      ],
+      "frames": {
+        "rb60c-play": {
+          "mean": 0.2672,
+          "problem": null
+        },
+        "rb60c-corner-top": {
+          "mean": 0.2612,
+          "problem": null
+        },
+        "rb60c-corner-sun": {
+          "mean": 0.3392,
+          "problem": null
+        },
+        "rb60c-corner-shade": {
+          "mean": 0.2801,
+          "problem": null
+        },
+        "rb60c-corner-arm0": {
+          "mean": 0.2768,
+          "problem": null
+        },
+        "rb60c-corner-arm1": {
+          "mean": 0.2703,
+          "problem": null
+        },
+        "rb60c-seam-road-e0": {
+          "mean": 0.2775,
+          "problem": null
+        },
+        "rb60c-seam-road-e1": {
+          "mean": 0.3038,
+          "problem": null
+        },
+        "rb60c-seam-meadow-e5": {
+          "mean": 0.3204,
+          "problem": null
+        },
+        "rb60c-seam-meadow-e2": {
+          "mean": 0.353,
+          "problem": null
+        },
+        "rb60c-eye": {
+          "mean": 0.3128,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/road_bend_60-crease/crease-kit.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        129.74,
+        143.9,
+        133.15
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 11.3,
+      "load_after": [
+        136.86,
+        144.74,
+        133.63
+      ],
+      "frames": {
+        "rb60k-corner-top": {
+          "mean": 0.2642,
+          "problem": null
+        },
+        "rb60k-corner-sun": {
+          "mean": 0.2581,
+          "problem": null
+        },
+        "rb60k-corner-shade": {
+          "mean": 0.3045,
+          "problem": null
+        },
+        "rb60k-corner-arm-a": {
+          "mean": 0.2803,
+          "problem": null
+        },
+        "rb60k-far-wedge": {
+          "mean": 0.1658,
+          "problem": null
+        },
+        "rb60k-far-shade": {
+          "mean": 0.2109,
+          "problem": null
+        },
+        "rb60k-lod1-top": {
+          "mean": 0.2711,
+          "problem": null
+        },
+        "rb60k-lod1-far-wedge": {
+          "mean": 0.1665,
+          "problem": null
+        },
+        "rb60k-lod2-top": {
+          "mean": 0.2665,
+          "problem": null
+        },
+        "rb60k-lod2-far-wedge": {
+          "mean": 0.1688,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

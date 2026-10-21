@@ -315,6 +315,13 @@
       "requested": "2026-10-14",
       "revision": "verge sink normals",
       "notes": "Pending owner seam re-approval; not an approval. Rebuilt for the owner's 2026-10-14 road-verge bug (a dark strip in the meadow beside the road): every road_verge loop, the 31-degree verge sink slope included, now carries a +Z custom normal (_road.verge_normals_up), so the slope shades like the flat meadow grass on both sun sides. Positions, the shared PROFILE, LODs, UVs, sockets and the masks bake are unchanged (masks PNG and KTX2 byte-identical). In play the shade-side band went from 0.536 to 1.014 of the adjacent meadow's mean luminance and the sun-side band from 1.115 to 1.035. Review docs/checkpoints/road-verge/road-verge-{before,after}-*.jpg and road-verge-{before,after}-crop4x-{sun,shade}.png. The controller records the owner's decision. Earlier entries stay as history."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-21",
+      "revision": "verge sink normals (unchanged); inner-corner crease check",
+      "notes": "Pending owner re-approval of the road_bend_60 tile; not an approval. No asset changed: this asks the owner to judge the 2026-10-14 verge-sink-normals build above against the inner-corner crease card 01a13887daba755ab6e588eabf7242f1. The crease does not reproduce at HEAD. It was road_straight_edge's inner verge sink slope on its true normal, facing away from the sun, cut off diagonally by the other stub's verge so it read as a crease; the 2026-10-14 +Z verge normals removed it. Swapping only road_straight_edge.glb back to 69f7f6f^ brings the line back at the top-down, shade-side and 25 m cameras (the sun-side close-up shows no line in either state), swapping only road_bend_60_center.glb back leaves those frames within 12 levels of HEAD, and HEAD at forced LOD 1 and 2 shows no z-fight speckle where the two stubs' coplanar verge tops still overlap. Review docs/checkpoints/road_bend_60-crease/sheet.jpg (before/after at the same kit cameras on both sun sides, cause, forced LODs, play distance, the seams with both road_straight neighbours and the meadow, inner-corner close-ups and eye level in play). Approving this closes the card with no geometry change; if the owner still wants the overlap trimmed, that is new work on the approved stub, the tile and the kit gate. The controller records the owner's decision. Earlier entries stay as history."
     }
   ]
 }
