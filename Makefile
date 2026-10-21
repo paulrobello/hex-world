@@ -1,4 +1,4 @@
-.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-test
+.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass perf-grass-drag shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-test
 
 fmt:
 	cargo fmt --all
@@ -436,6 +436,16 @@ perf-water-world: build-web
 perf-grass: build-web
 	cd e2e && npm ci --no-audit --no-fund
 	caffeinate -d -u node e2e/perf-grass.mjs dist
+
+# Grass density slider drag (criterion 2 of the grass slider card): e2e/perf-grass-drag.mjs builds
+# the radius-10 water world on High at 2560x1440 and records every frame interval in uncapped GPU
+# Chromium for a 5 s still baseline and a 5 s drag of Settings → Grass density (100 -> 0 -> 150 ->
+# 50 -> 100 in 5% steps), checks the drag rebuilt nothing, and reads blade counts, bytes and per-tile
+# build ms at 100% and 150%, every run inside the host-load guard; writes docs/perf/p2-grass-drag.json
+# (PERF_OUT, DRAG_RUNS, DRAG_RADIUS, DRAG_MS, DRAG_BASELINE_MS).
+perf-grass-drag: build-web
+	cd e2e && npm ci --no-audit --no-fund
+	caffeinate -d -u node e2e/perf-grass-drag.mjs dist
 
 # Play scenario checkpoint (P2 placement loop): runs the scripted proof docs/checkpoints/play/play.json
 # at 1280x800 with tilt-shift off, then copies JPEG stills and the state dumps next to it.

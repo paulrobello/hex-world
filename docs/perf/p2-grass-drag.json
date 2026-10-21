@@ -1,0 +1,993 @@
+{
+  "date": "2026-10-21T13:51:30.181Z",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "fps": "off",
+    "seed": "1",
+    "tilt": "off",
+    "grass": "1"
+  },
+  "camera": {
+    "cmd": "camera",
+    "pos": [
+      10,
+      12,
+      40
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  },
+  "world": {
+    "generator": "e2e/water-world.mjs waterWorldScript(10)",
+    "tiles": 317,
+    "counts": {
+      "meadow": 51,
+      "river_straight": 48,
+      "forest": 44,
+      "beach": 45,
+      "river_bend": 7,
+      "beach_inner": 7,
+      "beach_outer": 11,
+      "house_cluster": 10,
+      "road_straight": 15,
+      "ocean": 79
+    }
+  },
+  "drag": {
+    "percents": [
+      95,
+      90,
+      85,
+      80,
+      75,
+      70,
+      65,
+      60,
+      55,
+      50,
+      45,
+      40,
+      35,
+      30,
+      25,
+      20,
+      15,
+      10,
+      5,
+      0,
+      5,
+      10,
+      15,
+      20,
+      25,
+      30,
+      35,
+      40,
+      45,
+      50,
+      55,
+      60,
+      65,
+      70,
+      75,
+      80,
+      85,
+      90,
+      95,
+      100,
+      105,
+      110,
+      115,
+      120,
+      125,
+      130,
+      135,
+      140,
+      145,
+      150,
+      145,
+      140,
+      135,
+      130,
+      125,
+      120,
+      115,
+      110,
+      105,
+      100,
+      95,
+      90,
+      85,
+      80,
+      75,
+      70,
+      65,
+      60,
+      55,
+      50,
+      55,
+      60,
+      65,
+      70,
+      75,
+      80,
+      85,
+      90,
+      95,
+      100
+    ],
+    "ms": 5000,
+    "baseline_ms": 5000,
+    "path": "Settings sheet slider: input per step, change on release (150 ms throttle, flush)"
+  },
+  "budget_p95_ms": 16.6,
+  "load_limit": 15,
+  "runs": 3,
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "channel": "chromium",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit --enable-webgpu-developer-features"
+  },
+  "rows": [
+    {
+      "run": 0,
+      "build_id": "b46d16cf58",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "frame_latency": {
+        "limit": 3,
+        "source": "default"
+      },
+      "tiles": 317,
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "steps": 80,
+      "step_ms": 62.5,
+      "still_closed": {
+        "frames": 259,
+        "p50": 19.2,
+        "p95": 20.7,
+        "p99": 24.1,
+        "max": 38.4,
+        "mean": 19.33,
+        "over_16_6ms": 259,
+        "over_25ms": 1,
+        "tail_ms": [
+          38.4
+        ]
+      },
+      "baseline": {
+        "frames": 261,
+        "p50": 19,
+        "p95": 20.6,
+        "p99": 24.4,
+        "max": 25.7,
+        "mean": 19.18,
+        "over_16_6ms": 261,
+        "over_25ms": 1,
+        "tail_ms": [
+          25.7
+        ]
+      },
+      "drag": {
+        "frames": 256,
+        "p50": 19.5,
+        "p95": 20.8,
+        "p99": 24.6,
+        "max": 25.1,
+        "mean": 19.6,
+        "over_16_6ms": 256,
+        "over_25ms": 2,
+        "tail_ms": [
+          25.1,
+          25.1
+        ],
+        "tail": [
+          {
+            "ms": 25.1,
+            "at_ms": 1905.4,
+            "since_send_ms": 42.7
+          },
+          {
+            "ms": 25.1,
+            "at_ms": 1950.1,
+            "since_send_ms": 87.4
+          }
+        ]
+      },
+      "sends": {
+        "count": 31,
+        "min": 0.05,
+        "max": 1.45,
+        "last": 1,
+        "mean_gap_ms": 165.31,
+        "densities": [
+          0.95,
+          0.85,
+          0.75,
+          0.6,
+          0.45,
+          0.35,
+          0.2,
+          0.05,
+          0.05,
+          0.2,
+          0.35,
+          0.5,
+          0.65,
+          0.75,
+          0.9,
+          1.05,
+          1.15,
+          1.3,
+          1.45,
+          1.4,
+          1.3,
+          1.15,
+          1,
+          0.85,
+          0.75,
+          0.6,
+          0.55,
+          0.7,
+          0.8,
+          0.95,
+          1
+        ]
+      },
+      "still_0": {
+        "frames": 264,
+        "p50": 18.8,
+        "p95": 20.1,
+        "p99": 24.1,
+        "max": 24.8,
+        "mean": 18.96,
+        "over_16_6ms": 264,
+        "over_25ms": 0,
+        "tail_ms": []
+      },
+      "still_150": {
+        "frames": 260,
+        "p50": 19.1,
+        "p95": 20.6,
+        "p99": 24.9,
+        "max": 25.6,
+        "mean": 19.24,
+        "over_16_6ms": 260,
+        "over_25ms": 1,
+        "tail_ms": [
+          25.6
+        ]
+      },
+      "before": {
+        "tiles": 317,
+        "tier": "high",
+        "tier_changes": 0,
+        "entities": 569,
+        "pieces": 0,
+        "grass": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.8,
+          "last_swap_ms": 0
+        }
+      },
+      "after": {
+        "tiles": 317,
+        "tier": "high",
+        "tier_changes": 0,
+        "entities": 569,
+        "pieces": 0,
+        "grass": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.8,
+          "last_swap_ms": 0
+        }
+      },
+      "rebuild": {
+        "uploads_delta": 0,
+        "groups_delta": 0,
+        "instances_delta": 0,
+        "tier_changes_delta": 0,
+        "tiles_delta": 0,
+        "entities_delta": 0,
+        "last_swap_ms_after": 0,
+        "none": true
+      },
+      "counts": {
+        "at_100": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.8,
+          "last_swap_ms": 0
+        },
+        "at_150": {
+          "density": 1.5,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 269117,
+          "triangles": 1614702,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.8,
+          "last_swap_ms": 0
+        },
+        "bytes_per_group": 344476
+      },
+      "build": {
+        "at_100": {
+          "groups_built": 50,
+          "frames_building": 35,
+          "slowest_tile_per_frame_ms": {
+            "p50": 3.9,
+            "p95": 6,
+            "max": 6,
+            "mean": 4.33
+          },
+          "far": {
+            "density": 1,
+            "distance": 2,
+            "status": "on",
+            "groups": 75,
+            "blades": 615126,
+            "triangles": 3690756,
+            "instances": 922071,
+            "mesh_bytes": 29506428,
+            "uploads": 75,
+            "last_build_ms": 2.9,
+            "last_swap_ms": 0
+          }
+        },
+        "at_150": {
+          "groups_built": 42,
+          "frames_building": 29,
+          "slowest_tile_per_frame_ms": {
+            "p50": 3.9,
+            "p95": 5.6,
+            "max": 5.7,
+            "mean": 4.14
+          },
+          "far": {
+            "density": 1.5,
+            "distance": 2,
+            "status": "on",
+            "groups": 75,
+            "blades": 922071,
+            "triangles": 5532426,
+            "instances": 922071,
+            "mesh_bytes": 29506428,
+            "uploads": 117,
+            "last_build_ms": 2.9,
+            "last_swap_ms": 0.1
+          }
+        }
+      },
+      "console_errors": [],
+      "load_before": 10.8857421875,
+      "load_after": 11.11865234375,
+      "load_discarded": 0
+    },
+    {
+      "run": 1,
+      "build_id": "b46d16cf58",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "frame_latency": {
+        "limit": 3,
+        "source": "default"
+      },
+      "tiles": 317,
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "steps": 80,
+      "step_ms": 62.5,
+      "still_closed": {
+        "frames": 251,
+        "p50": 19.9,
+        "p95": 21.6,
+        "p99": 25,
+        "max": 41,
+        "mean": 20,
+        "over_16_6ms": 251,
+        "over_25ms": 2,
+        "tail_ms": [
+          25.9,
+          41
+        ]
+      },
+      "baseline": {
+        "frames": 255,
+        "p50": 19.5,
+        "p95": 20.8,
+        "p99": 23.7,
+        "max": 24.5,
+        "mean": 19.65,
+        "over_16_6ms": 255,
+        "over_25ms": 0,
+        "tail_ms": []
+      },
+      "drag": {
+        "frames": 256,
+        "p50": 19.4,
+        "p95": 20.6,
+        "p99": 25,
+        "max": 26.1,
+        "mean": 19.58,
+        "over_16_6ms": 256,
+        "over_25ms": 1,
+        "tail_ms": [
+          26.1
+        ],
+        "tail": [
+          {
+            "ms": 26.1,
+            "at_ms": 2809.4,
+            "since_send_ms": 89.6
+          }
+        ]
+      },
+      "sends": {
+        "count": 31,
+        "min": 0.05,
+        "max": 1.45,
+        "last": 1,
+        "mean_gap_ms": 165.77,
+        "densities": [
+          0.95,
+          0.85,
+          0.75,
+          0.6,
+          0.45,
+          0.35,
+          0.2,
+          0.05,
+          0.1,
+          0.2,
+          0.35,
+          0.5,
+          0.65,
+          0.75,
+          0.9,
+          1.05,
+          1.15,
+          1.3,
+          1.45,
+          1.4,
+          1.25,
+          1.15,
+          1,
+          0.85,
+          0.75,
+          0.6,
+          0.55,
+          0.65,
+          0.8,
+          0.95,
+          1
+        ]
+      },
+      "still_0": {
+        "frames": 258,
+        "p50": 19.3,
+        "p95": 20.5,
+        "p99": 24.5,
+        "max": 25,
+        "mean": 19.41,
+        "over_16_6ms": 258,
+        "over_25ms": 0,
+        "tail_ms": []
+      },
+      "still_150": {
+        "frames": 257,
+        "p50": 19.4,
+        "p95": 20.6,
+        "p99": 25,
+        "max": 25.6,
+        "mean": 19.53,
+        "over_16_6ms": 257,
+        "over_25ms": 2,
+        "tail_ms": [
+          25.1,
+          25.6
+        ]
+      },
+      "before": {
+        "tiles": 317,
+        "tier": "high",
+        "tier_changes": 0,
+        "entities": 569,
+        "pieces": 0,
+        "grass": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.9,
+          "last_swap_ms": 0
+        }
+      },
+      "after": {
+        "tiles": 317,
+        "tier": "high",
+        "tier_changes": 0,
+        "entities": 569,
+        "pieces": 0,
+        "grass": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.9,
+          "last_swap_ms": 0
+        }
+      },
+      "rebuild": {
+        "uploads_delta": 0,
+        "groups_delta": 0,
+        "instances_delta": 0,
+        "tier_changes_delta": 0,
+        "tiles_delta": 0,
+        "entities_delta": 0,
+        "last_swap_ms_after": 0,
+        "none": true
+      },
+      "counts": {
+        "at_100": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.9,
+          "last_swap_ms": 0
+        },
+        "at_150": {
+          "density": 1.5,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 269117,
+          "triangles": 1614702,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.9,
+          "last_swap_ms": 0
+        },
+        "bytes_per_group": 344476
+      },
+      "build": {
+        "at_100": {
+          "groups_built": 50,
+          "frames_building": 35,
+          "slowest_tile_per_frame_ms": {
+            "p50": 4,
+            "p95": 5.8,
+            "max": 5.9,
+            "mean": 4.33
+          },
+          "far": {
+            "density": 1,
+            "distance": 2,
+            "status": "on",
+            "groups": 75,
+            "blades": 615126,
+            "triangles": 3690756,
+            "instances": 922071,
+            "mesh_bytes": 29506428,
+            "uploads": 75,
+            "last_build_ms": 2.8,
+            "last_swap_ms": 0
+          }
+        },
+        "at_150": {
+          "groups_built": 42,
+          "frames_building": 28,
+          "slowest_tile_per_frame_ms": {
+            "p50": 4,
+            "p95": 5.6,
+            "max": 5.6,
+            "mean": 4.19
+          },
+          "far": {
+            "density": 1.5,
+            "distance": 2,
+            "status": "on",
+            "groups": 75,
+            "blades": 922071,
+            "triangles": 5532426,
+            "instances": 922071,
+            "mesh_bytes": 29506428,
+            "uploads": 117,
+            "last_build_ms": 2.8,
+            "last_swap_ms": 0.1
+          }
+        }
+      },
+      "console_errors": [],
+      "load_before": 11.11865234375,
+      "load_after": 11.099609375,
+      "load_discarded": 0
+    },
+    {
+      "run": 2,
+      "build_id": "b46d16cf58",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "webgpu_adapter": "apple | metal-3 | Apple M4 Max",
+      "frame_latency": {
+        "limit": 3,
+        "source": "default"
+      },
+      "tiles": 317,
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "steps": 80,
+      "step_ms": 62.5,
+      "still_closed": {
+        "frames": 262,
+        "p50": 19,
+        "p95": 20.2,
+        "p99": 24.1,
+        "max": 37.3,
+        "mean": 19.15,
+        "over_16_6ms": 262,
+        "over_25ms": 1,
+        "tail_ms": [
+          37.3
+        ]
+      },
+      "baseline": {
+        "frames": 258,
+        "p50": 19.3,
+        "p95": 20.6,
+        "p99": 24.9,
+        "max": 25.7,
+        "mean": 19.39,
+        "over_16_6ms": 258,
+        "over_25ms": 2,
+        "tail_ms": [
+          25.1,
+          25.7
+        ]
+      },
+      "drag": {
+        "frames": 258,
+        "p50": 19.3,
+        "p95": 20.8,
+        "p99": 24.4,
+        "max": 25.3,
+        "mean": 19.42,
+        "over_16_6ms": 258,
+        "over_25ms": 2,
+        "tail_ms": [
+          25.1,
+          25.3
+        ],
+        "tail": [
+          {
+            "ms": 25.3,
+            "at_ms": 4539,
+            "since_send_ms": 23.3
+          },
+          {
+            "ms": 25.1,
+            "at_ms": 4696,
+            "since_send_ms": 180.3
+          }
+        ]
+      },
+      "sends": {
+        "count": 31,
+        "min": 0.05,
+        "max": 1.45,
+        "last": 1,
+        "mean_gap_ms": 165.6,
+        "densities": [
+          0.95,
+          0.85,
+          0.75,
+          0.6,
+          0.45,
+          0.35,
+          0.2,
+          0.05,
+          0.05,
+          0.2,
+          0.35,
+          0.5,
+          0.6,
+          0.75,
+          0.85,
+          1,
+          1.15,
+          1.25,
+          1.4,
+          1.45,
+          1.35,
+          1.2,
+          1.05,
+          0.95,
+          0.8,
+          0.65,
+          0.55,
+          0.6,
+          0.75,
+          0.9,
+          1
+        ]
+      },
+      "still_0": {
+        "frames": 260,
+        "p50": 19.2,
+        "p95": 20.3,
+        "p99": 21.7,
+        "max": 24.9,
+        "mean": 19.26,
+        "over_16_6ms": 260,
+        "over_25ms": 0,
+        "tail_ms": []
+      },
+      "still_150": {
+        "frames": 260,
+        "p50": 19.2,
+        "p95": 20.5,
+        "p99": 21.3,
+        "max": 25.3,
+        "mean": 19.26,
+        "over_16_6ms": 260,
+        "over_25ms": 1,
+        "tail_ms": [
+          25.3
+        ]
+      },
+      "before": {
+        "tiles": 317,
+        "tier": "high",
+        "tier_changes": 0,
+        "entities": 569,
+        "pieces": 0,
+        "grass": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.9,
+          "last_swap_ms": 0
+        }
+      },
+      "after": {
+        "tiles": 317,
+        "tier": "high",
+        "tier_changes": 0,
+        "entities": 569,
+        "pieces": 0,
+        "grass": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.9,
+          "last_swap_ms": 0
+        }
+      },
+      "rebuild": {
+        "uploads_delta": 0,
+        "groups_delta": 0,
+        "instances_delta": 0,
+        "tier_changes_delta": 0,
+        "tiles_delta": 0,
+        "entities_delta": 0,
+        "last_swap_ms_after": 0,
+        "none": true
+      },
+      "counts": {
+        "at_100": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.9,
+          "last_swap_ms": 0
+        },
+        "at_150": {
+          "density": 1.5,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 269117,
+          "triangles": 1614702,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 2.9,
+          "last_swap_ms": 0
+        },
+        "bytes_per_group": 344476
+      },
+      "build": {
+        "at_100": {
+          "groups_built": 50,
+          "frames_building": 34,
+          "slowest_tile_per_frame_ms": {
+            "p50": 4,
+            "p95": 6.1,
+            "max": 6.2,
+            "mean": 4.33
+          },
+          "far": {
+            "density": 1,
+            "distance": 2,
+            "status": "on",
+            "groups": 75,
+            "blades": 615126,
+            "triangles": 3690756,
+            "instances": 922071,
+            "mesh_bytes": 29506428,
+            "uploads": 75,
+            "last_build_ms": 2.9,
+            "last_swap_ms": 0
+          }
+        },
+        "at_150": {
+          "groups_built": 42,
+          "frames_building": 29,
+          "slowest_tile_per_frame_ms": {
+            "p50": 3.9,
+            "p95": 5.7,
+            "max": 5.7,
+            "mean": 4.17
+          },
+          "far": {
+            "density": 1.5,
+            "distance": 2,
+            "status": "on",
+            "groups": 75,
+            "blades": 922071,
+            "triangles": 5532426,
+            "instances": 922071,
+            "mesh_bytes": 29506428,
+            "uploads": 117,
+            "last_build_ms": 2.7,
+            "last_swap_ms": 0
+          }
+        }
+      },
+      "console_errors": [],
+      "load_before": 11.099609375,
+      "load_after": 14.79296875,
+      "load_discarded": 0
+    }
+  ],
+  "summary": {
+    "runs": 3,
+    "still_closed_p95_median": 20.7,
+    "baseline_p95_median": 20.6,
+    "drag_p95_median": 20.8,
+    "baseline_over_25ms": [
+      1,
+      0,
+      2
+    ],
+    "drag_over_25ms": [
+      2,
+      1,
+      2
+    ],
+    "still_0_p95_median": 20.3,
+    "still_150_p95_median": 20.6,
+    "drag_minus_baseline_p95_ms": [
+      0.2,
+      -0.2,
+      0.2
+    ],
+    "drag_minus_baseline_max_ms": [
+      -0.6,
+      1.6,
+      -0.4
+    ],
+    "drag_extra_over_25ms": [
+      1,
+      1,
+      0
+    ],
+    "set_grass_sends": [
+      31,
+      31,
+      31
+    ],
+    "no_rebuild": true
+  }
+}
