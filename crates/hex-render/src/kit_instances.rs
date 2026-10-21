@@ -26,10 +26,11 @@ use bevy::{
     material::RenderPhaseType,
     math::Affine3A,
     pbr::{
-        LightEntity, MATERIAL_BIND_GROUP_INDEX, MeshPipeline, MeshPipelineKey, PreparedMaterial,
-        PrepassPipeline, SetMeshViewBindGroup, SetMeshViewBindingArrayBindGroup,
-        SetPrepassViewBindGroup, SetPrepassViewEmptyBindGroup, Shadow, ShadowBatchSetKey,
-        ShadowBinKey, ViewKeyCache, alpha_mode_pipeline_key,
+        ExtractedDirectionalLight, LightEntity, MATERIAL_BIND_GROUP_INDEX, MeshPipeline,
+        MeshPipelineKey, PreparedMaterial, PrepassPipeline, SetMeshViewBindGroup,
+        SetMeshViewBindingArrayBindGroup, SetPrepassViewBindGroup, SetPrepassViewEmptyBindGroup,
+        Shadow, ShadowBatchSetKey, ShadowBinKey, ViewKeyCache, ViewLightEntities,
+        alpha_mode_pipeline_key,
     },
     prelude::*,
     render::{
@@ -199,6 +200,59 @@ pub fn kit_view_ranges(
     }
     out
 }
+
+/// The view depth (`-z` in the camera's view space) range of every point a caster inside
+/// `lo..hi` can shadow, under a directional light shining along `dir`: the bounds grown by
+/// `margin` and swept along `dir` down to their grown floor (light falls downward, so nothing
+/// above the bounds or past the sweep is shadowed by them). `None` when the light is so near the
+/// horizon that the sweep is unbounded.
+pub fn shadowed_depth_range(
+    lo: Vec3,
+    hi: Vec3,
+    dir: Vec3,
+    view_from_world: &Mat4,
+    margin: f32,
+) -> Option<(f32, f32)> {
+    if dir.y > -0.05 {
+        return None;
+    }
+    let (lo, hi) = (lo - Vec3::splat(margin), hi + Vec3::splat(margin));
+    let sweep = dir * ((hi.y - lo.y) / -dir.y);
+    let (mut near, mut far) = (f32::MAX, f32::MIN);
+    for i in 0..8 {
+        let corner = Vec3::new(
+            if i & 1 == 0 { lo.x } else { hi.x },
+            if i & 2 == 0 { lo.y } else { hi.y },
+            if i & 4 == 0 { lo.z } else { hi.z },
+        );
+        for p in [corner, corner + sweep] {
+            let depth = -view_from_world.transform_point3(p).z;
+            near = near.min(depth);
+            far = far.max(depth);
+        }
+    }
+    Some((near, far))
+}
+
+/// Whether a fragment at a view depth inside `range` samples cascade `index`, by bevy_pbr's
+/// `fetch_directional_shadow`: a fragment samples the first cascade whose far bound lies past
+/// it, and inside the last `overlap` of that cascade it also blends in the next one. So cascade
+/// `i` is read from `(1 - overlap) * bounds[i - 1]` (0 for the first) up to `bounds[i]`.
+pub fn cascade_sampled(bounds: &[f32], overlap: f32, index: usize, range: (f32, f32)) -> bool {
+    let Some(&far) = bounds.get(index) else {
+        return true;
+    };
+    let near = match index {
+        0 => f32::MIN,
+        i => (1.0 - overlap) * bounds[i - 1],
+    };
+    range.1 >= near && range.0 < far
+}
+
+/// The shadow filter's reach past a caster's edge, in shadow-map texels of the cascade, plus a
+/// fixed allowance (m) for the depth and normal biases.
+const SHADOW_REACH_TEXELS: f32 = 8.0;
+const SHADOW_REACH_M: f32 = 2.0;
 // ---------------------------------------------------------------------------------------------
 // Render world.
 
@@ -776,8 +830,14 @@ fn queue_kit(
         ResMut<ViewBinnedRenderPhases<AlphaMask3dPrepass>>,
         ResMut<ViewBinnedRenderPhases<Shadow>>,
     ),
-    cameras: Query<(Entity, &ExtractedView, &Msaa), With<ExtractedCamera>>,
-    lights: Query<(Entity, &ExtractedView, &LightEntity)>,
+    cameras: Query<
+        (Entity, &ExtractedView, &Msaa, Option<&ViewLightEntities>),
+        With<ExtractedCamera>,
+    >,
+    (lights, sun): (
+        Query<(Entity, &ExtractedView, &LightEntity)>,
+        Query<&ExtractedDirectionalLight>,
+    ),
     (device, queue, debug): (
         Res<RenderDevice>,
         Res<RenderQueue>,
@@ -869,7 +929,62 @@ fn queue_kit(
         .iter()
         .map(|c| force.unwrap_or_else(|| kit_chunk_lod(eye.distance(c.centre))))
         .collect();
-    for (ve, view, msaa) in &cameras {
+    // Shadow cascades whose shadow map no fragment the kit can shadow reads: the kit draws
+    // nothing into them, which leaves every shaded pixel as it was (a strategic camera's world
+    // lies past the first cascades and short of the last).
+    let mut unsampled: Vec<Entity> = vec![];
+    let bounds = d
+        .chunks
+        .iter()
+        .filter(|c| c.aabb.half_extents.cmpge(Vec3A::ZERO).all())
+        .map(|c| (c.aabb.min(), c.aabb.max()))
+        .reduce(|(lo, hi), (l, h)| (lo.min(l), hi.max(h)));
+    for (ve, view, _, cascade_views) in &cameras {
+        let (Some((lo, hi)), Some(cascade_views)) = (bounds, cascade_views) else {
+            continue;
+        };
+        let view_from_world = view.world_from_view.to_matrix().inverse();
+        for &cascade_view in &cascade_views.lights {
+            let Ok((
+                _,
+                _,
+                LightEntity::Directional {
+                    light_entity,
+                    cascade_index,
+                },
+            )) = lights.get(cascade_view)
+            else {
+                continue;
+            };
+            // Volumetric lighting samples the cascades along each view ray, not by surface depth.
+            let Ok(light) = sun.get(*light_entity) else {
+                continue;
+            };
+            if light.volumetric {
+                continue;
+            }
+            let Some(cascade) = light.cascades.get(&ve).and_then(|c| c.get(*cascade_index)) else {
+                continue;
+            };
+            let margin = SHADOW_REACH_M + SHADOW_REACH_TEXELS * cascade.texel_size;
+            let dir = light.transform.forward().as_vec3();
+            let Some(range) =
+                shadowed_depth_range(lo.into(), hi.into(), dir, &view_from_world, margin)
+            else {
+                continue;
+            };
+            let config = &light.cascade_shadow_config;
+            if !cascade_sampled(
+                &config.bounds,
+                config.overlap_proportion,
+                *cascade_index,
+                range,
+            ) {
+                unsampled.push(cascade_view);
+            }
+        }
+    }
+    for (ve, view, msaa, _) in &cameras {
         let Some(&view_key) = view_key_cache.get(&view.retained_view_entity) else {
             continue;
         };
@@ -1020,6 +1135,9 @@ fn queue_kit(
         let LightEntity::Directional { .. } = light else {
             continue;
         };
+        if unsampled.contains(&ve) {
+            continue;
+        }
         let Some(phase) = shadow_phases.get_mut(&view.retained_view_entity) else {
             continue;
         };
@@ -1292,6 +1410,99 @@ mod tests {
         unqueue(&mut phases, &[slots[1].1]);
         assert_eq!(count(&phases), [0, 0]);
         assert!(views.iter().all(|v| phases[v].is_empty()));
+    }
+
+    fn view_from_world_at(eye: Vec3, target: Vec3, up: Vec3) -> Mat4 {
+        Transform::from_translation(eye)
+            .looking_at(target, up)
+            .to_matrix()
+            .inverse()
+    }
+
+    /// The scatter checkpoint's strategic camera over its 20-tile world under the kit sun: the
+    /// world's view depths lie past cascade 1 and short of cascade 3, so neither is read.
+    #[test]
+    fn strategic_camera_reads_only_the_cascades_over_the_world() {
+        let view_from_world = view_from_world_at(
+            Vec3::new(20.0, 160.0, 150.0),
+            Vec3::new(20.0, 0.0, -5.0),
+            Vec3::Y,
+        );
+        let dir = -crate::lighting::KIT_SUN_DIR.normalize();
+        let range = shadowed_depth_range(
+            Vec3::new(-40.0, -3.0, -60.0),
+            Vec3::new(80.0, 20.0, 60.0),
+            dir,
+            &view_from_world,
+            4.0,
+        )
+        .expect("the sun is high");
+        // Play's cascades: 4 out to 2,000 m, the first ending at 25 m.
+        let config = bevy::light::CascadeShadowConfigBuilder {
+            num_cascades: 4,
+            maximum_distance: 2000.0,
+            first_cascade_far_bound: crate::lighting::KIT_FIRST_CASCADE_FAR_BOUND,
+            ..default()
+        }
+        .build();
+        let read: Vec<bool> = (0..4)
+            .map(|i| cascade_sampled(&config.bounds, config.overlap_proportion, i, range))
+            .collect();
+        assert_eq!(read, [false, false, true, false], "{range:?} {config:?}");
+    }
+
+    /// A camera inside the world (walk mode) reads its near cascades; the far ones stay unread
+    /// only when the swept world ends short of them.
+    #[test]
+    fn camera_in_the_world_reads_the_near_cascades() {
+        let view_from_world =
+            view_from_world_at(Vec3::new(0.0, 1.7, 0.0), Vec3::new(10.0, 1.7, 0.0), Vec3::Y);
+        let dir = -crate::lighting::KIT_SUN_DIR.normalize();
+        let range = shadowed_depth_range(
+            Vec3::new(-40.0, -3.0, -60.0),
+            Vec3::new(80.0, 20.0, 60.0),
+            dir,
+            &view_from_world,
+            4.0,
+        )
+        .unwrap();
+        let bounds = [25.0, 108.0, 464.0, 2000.0];
+        assert!(cascade_sampled(&bounds, 0.2, 0, range));
+        assert!(cascade_sampled(&bounds, 0.2, 1, range));
+    }
+
+    /// A cascade is read from the overlap band before its near bound, and not at its far bound.
+    #[test]
+    fn cascade_sampled_follows_bevys_selection_and_blend() {
+        let bounds = [25.0, 108.0, 464.0];
+        // 0.8 * 25 = 20: a fragment at 21 m blends cascade 1 into cascade 0.
+        assert!(cascade_sampled(&bounds, 0.2, 1, (21.0, 21.0)));
+        assert!(!cascade_sampled(&bounds, 0.2, 1, (19.0, 19.9)));
+        assert!(!cascade_sampled(&bounds, 0.2, 0, (25.0, 30.0)));
+        assert!(cascade_sampled(&bounds, 0.2, 0, (-5.0, 0.0)));
+        // Past the last bound no cascade is read; an unknown cascade is kept.
+        assert!(!cascade_sampled(&bounds, 0.2, 2, (464.0, 900.0)));
+        assert!(cascade_sampled(&bounds, 0.2, 3, (0.0, 1.0)));
+    }
+
+    /// The sweep follows the light down to the floor, so a low sun reaches farther; a sun at the
+    /// horizon gives no bound and nothing is skipped.
+    #[test]
+    fn shadowed_range_sweeps_along_the_light() {
+        let view_from_world = view_from_world_at(Vec3::ZERO, Vec3::NEG_Z, Vec3::Y);
+        let (lo, hi) = (Vec3::new(-1.0, 0.0, -11.0), Vec3::new(1.0, 10.0, -9.0));
+        let high = shadowed_depth_range(lo, hi, Vec3::NEG_Y, &view_from_world, 0.0).unwrap();
+        assert_eq!(high, (9.0, 11.0));
+        let low = shadowed_depth_range(
+            lo,
+            hi,
+            Vec3::new(0.0, -1.0, -1.0).normalize(),
+            &view_from_world,
+            0.0,
+        )
+        .unwrap();
+        assert!((low.1 - 21.0).abs() < 1e-4, "{low:?}");
+        assert!(shadowed_depth_range(lo, hi, Vec3::NEG_Z, &view_from_world, 0.0).is_none());
     }
 
     #[test]

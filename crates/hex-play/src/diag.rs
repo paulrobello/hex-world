@@ -9,7 +9,10 @@ use std::{
 
 use bevy::{
     anti_alias::taa::TemporalAntiAliasing,
-    core_pipeline::{core_3d::Opaque3d, prepass::Opaque3dPrepass},
+    core_pipeline::{
+        core_3d::{AlphaMask3d, Opaque3d},
+        prepass::{AlphaMask3dPrepass, Opaque3dPrepass},
+    },
     diagnostic::FrameCount,
     light::CascadeShadowConfig,
     pbr::{LightEntity, Shadow, SsaoPipelineId},
@@ -21,7 +24,7 @@ use bevy::{
         render_phase::{BinnedPhaseItem, BinnedRenderPhase, ViewBinnedRenderPhases},
         render_resource::PipelineCache,
         renderer::RenderAdapterInfo,
-        view::ExtractedView,
+        view::{ExtractedView, RetainedViewEntity},
     },
 };
 
@@ -238,13 +241,13 @@ pub struct RenderModes {
 /// Written by the render world each frame, read by the main world.
 static RENDER_MODES: Mutex<Option<RenderModes>> = Mutex::new(None);
 
-/// What one render phase of one view holds in a census frame (I4: main, prepass and each
-/// shadow cascade counted separately).
+/// What one render phase of one view holds in a census frame (I4: main, prepass, their
+/// alpha-mask phases and each shadow cascade counted separately).
 #[derive(Clone, Debug, Default)]
 pub struct PassCensus {
     /// `main` (the camera) or `cascade<i>`.
     pub view: String,
-    /// `opaque`, `prepass` or `shadow`.
+    /// `opaque`, `alpha_mask`, `prepass`, `alpha_mask_prepass` or `shadow`.
     pub phase: &'static str,
     /// Multi-draw-indirect batch sets: one call each, drawing every bin inside (native only;
     /// web reports `PreprocessingOnly`, which turns these into batchable bins).
@@ -279,26 +282,56 @@ fn count_phase<BPI: BinnedPhaseItem>(
     }
 }
 
-/// Counts what each view's opaque, prepass and shadow phases will draw, when the main world
-/// asked for a census (outside the measured window).
+/// A camera's binned main and prepass phases, opaque and alpha-mask (the kit's foliage cards
+/// and other `AlphaMode::Mask` materials draw in the mask phases).
+struct CameraPhases<'a> {
+    opaque: &'a ViewBinnedRenderPhases<Opaque3d>,
+    alpha_mask: &'a ViewBinnedRenderPhases<AlphaMask3d>,
+    prepass: &'a ViewBinnedRenderPhases<Opaque3dPrepass>,
+    alpha_mask_prepass: &'a ViewBinnedRenderPhases<AlphaMask3dPrepass>,
+}
+
+/// One camera view's census rows: each of its binned phases that exists.
+fn camera_census(view: &RetainedViewEntity, phases: &CameraPhases) -> Vec<PassCensus> {
+    let mut out = vec![];
+    if let Some(p) = phases.opaque.get(view) {
+        out.push(count_phase("main".into(), "opaque", p));
+    }
+    if let Some(p) = phases.alpha_mask.get(view) {
+        out.push(count_phase("main".into(), "alpha_mask", p));
+    }
+    if let Some(p) = phases.prepass.get(view) {
+        out.push(count_phase("main".into(), "prepass", p));
+    }
+    if let Some(p) = phases.alpha_mask_prepass.get(view) {
+        out.push(count_phase("main".into(), "alpha_mask_prepass", p));
+    }
+    out
+}
+
+/// Counts what each view's opaque, alpha-mask, prepass and shadow phases will draw, when the
+/// main world asked for a census (outside the measured window).
 fn census_passes(
     cameras: Query<&ExtractedView, With<bevy::render::camera::ExtractedCamera>>,
     lights: Query<(&ExtractedView, &LightEntity)>,
     opaque: Res<ViewBinnedRenderPhases<Opaque3d>>,
+    alpha_mask: Res<ViewBinnedRenderPhases<AlphaMask3d>>,
     prepass: Res<ViewBinnedRenderPhases<Opaque3dPrepass>>,
+    alpha_mask_prepass: Res<ViewBinnedRenderPhases<AlphaMask3dPrepass>>,
     shadow: Res<ViewBinnedRenderPhases<Shadow>>,
 ) {
     if !PASS_CENSUS_REQUESTED.swap(false, Ordering::Relaxed) {
         return;
     }
+    let phases = CameraPhases {
+        opaque: &opaque,
+        alpha_mask: &alpha_mask,
+        prepass: &prepass,
+        alpha_mask_prepass: &alpha_mask_prepass,
+    };
     let mut out = vec![];
     for v in &cameras {
-        if let Some(p) = opaque.get(&v.retained_view_entity) {
-            out.push(count_phase("main".into(), "opaque", p));
-        }
-        if let Some(p) = prepass.get(&v.retained_view_entity) {
-            out.push(count_phase("main".into(), "prepass", p));
-        }
+        out.extend(camera_census(&v.retained_view_entity, &phases));
     }
     for (v, l) in &lights {
         if let (LightEntity::Directional { cascade_index, .. }, Some(p)) =
@@ -566,6 +599,99 @@ fn sample(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The alpha-mask phases draw too: a census that skips them undercounts every view.
+    #[test]
+    fn camera_census_counts_the_alpha_mask_phases() {
+        use bevy::{
+            asset::AssetIndex,
+            core_pipeline::{
+                core_3d::{Opaque3dBatchSetKey, Opaque3dBinKey},
+                prepass::{OpaqueNoLightmap3dBatchSetKey, OpaqueNoLightmap3dBinKey},
+            },
+            material::labels::DrawFunctionId,
+            render::{
+                mesh::allocator::MeshSlabs,
+                render_phase::{BinnedRenderPhaseType, InputUniformIndex},
+                render_resource::CachedRenderPipelineId,
+                sync_world::MainEntity,
+            },
+        };
+        let view = RetainedViewEntity::new(
+            MainEntity::from(Entity::from_raw_u32(100).unwrap()),
+            None,
+            0,
+        );
+        let item = |i: u32| {
+            let e = Entity::from_raw_u32(i).unwrap();
+            (e, MainEntity::from(e))
+        };
+        let mesh = |i: u64| AssetId::<Mesh>::from(AssetIndex::from_bits(i)).untyped();
+        let no_lightmap = || OpaqueNoLightmap3dBatchSetKey {
+            pipeline: CachedRenderPipelineId::INVALID,
+            draw_function: DrawFunctionId(0),
+            material_bind_group_index: None,
+            slabs: MeshSlabs::default(),
+        };
+        let mut opaque = ViewBinnedRenderPhases::<Opaque3d>::default();
+        let mut alpha_mask = ViewBinnedRenderPhases::<AlphaMask3d>::default();
+        let mut prepass = ViewBinnedRenderPhases::<Opaque3dPrepass>::default();
+        let mut alpha_mask_prepass = ViewBinnedRenderPhases::<AlphaMask3dPrepass>::default();
+        opaque.prepare_for_new_frame(view, GpuPreprocessingMode::Culling);
+        alpha_mask.prepare_for_new_frame(view, GpuPreprocessingMode::Culling);
+        prepass.prepare_for_new_frame(view, GpuPreprocessingMode::Culling);
+        alpha_mask_prepass.prepare_for_new_frame(view, GpuPreprocessingMode::Culling);
+        opaque.get_mut(&view).unwrap().add(
+            Opaque3dBatchSetKey {
+                pipeline: CachedRenderPipelineId::INVALID,
+                draw_function: DrawFunctionId(0),
+                material_bind_group_index: None,
+                slabs: MeshSlabs::default(),
+                lightmap_slab: None,
+            },
+            Opaque3dBinKey { asset_id: mesh(0) },
+            item(1),
+            InputUniformIndex::default(),
+            BinnedRenderPhaseType::NonMesh,
+        );
+        for i in 0..3 {
+            alpha_mask.get_mut(&view).unwrap().add(
+                no_lightmap(),
+                OpaqueNoLightmap3dBinKey { asset_id: mesh(i) },
+                item(10 + i as u32),
+                InputUniformIndex::default(),
+                BinnedRenderPhaseType::NonMesh,
+            );
+        }
+        for i in 0..2 {
+            alpha_mask_prepass.get_mut(&view).unwrap().add(
+                no_lightmap(),
+                OpaqueNoLightmap3dBinKey { asset_id: mesh(i) },
+                item(20 + i as u32),
+                InputUniformIndex::default(),
+                BinnedRenderPhaseType::NonMesh,
+            );
+        }
+        let rows = camera_census(
+            &view,
+            &CameraPhases {
+                opaque: &opaque,
+                alpha_mask: &alpha_mask,
+                prepass: &prepass,
+                alpha_mask_prepass: &alpha_mask_prepass,
+            },
+        );
+        let got: Vec<(&str, usize)> = rows.iter().map(|r| (r.phase, r.non_mesh)).collect();
+        assert_eq!(
+            got,
+            [
+                ("opaque", 1),
+                ("alpha_mask", 3),
+                ("prepass", 0),
+                ("alpha_mask_prepass", 2)
+            ]
+        );
+    }
 
     #[test]
     fn window_starts_after_ready() {

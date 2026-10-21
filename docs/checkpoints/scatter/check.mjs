@@ -54,7 +54,7 @@ const world = read("scatter-10-world");
 check(world.tiles === 20, "the 20-tile world", world.tiles);
 const passes = world.diag?.passes ?? [];
 const draws = passes.reduce((n, p) => n + p.multidraw_sets + p.batchable_bins + p.unbatchable + p.non_mesh, 0);
-check(passes.length > 0 && draws <= 500, "draw calls over every pass and cascade within 500 (PRD §10)", { draws, passes: passes.map((p) => `${p.view}/${p.phase}:${p.multidraw_sets}+${p.batchable_bins}+${p.unbatchable}`) });
+check(passes.length > 0 && draws <= 500, "draw calls over every pass and cascade within 500 (PRD §10)", { draws, passes: passes.map((p) => `${p.view}/${p.phase}:${p.multidraw_sets}+${p.batchable_bins}+${p.unbatchable}+${p.non_mesh}`) });
 check(world.scatter.mesh_material_pairs <= 15, "scatter adds at most 15 (mesh, material) batches per pass", world.scatter.mesh_material_pairs);
 const reduced = read("scatter-11-reduced");
 const cut = reduced.scatter.tiles.find((t) => t.q === 1 && t.r === 2);
