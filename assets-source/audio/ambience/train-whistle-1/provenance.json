@@ -15,28 +15,28 @@
     "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
     "outputFormat": "mp3_44100_128"
   },
-  "prompt": "Close, isolated recording of a small old steam locomotive giving one clear, mellow whistle blast, a warm two-tone call about two seconds long, heard from a short distance, that ends cleanly into silence. Studio-quiet background, with silence before and after the whistle.",
+  "prompt": "Close, isolated recording of a small steam tank engine's departure whistle at a little country station: one long, clear, single-note whistle, bright and slightly breathy, rising a little in pitch, held for about one and a half seconds, then cut off cleanly into silence. Studio-quiet background, with silence before and after the whistle.",
   "promptFile": null,
   "parameters": {
-    "text": "Close, isolated recording of a small old steam locomotive giving one clear, mellow whistle blast, a warm two-tone call about two seconds long, heard from a short distance, that ends cleanly into silence. Studio-quiet background, with silence before and after the whistle.",
+    "text": "Close, isolated recording of a small steam tank engine's departure whistle at a little country station: one long, clear, single-note whistle, bright and slightly breathy, rising a little in pitch, held for about one and a half seconds, then cut off cleanly into silence. Studio-quiet background, with silence before and after the whistle.",
     "model_id": "eleven_text_to_sound_v2",
     "duration_seconds": 4,
     "prompt_influence": 0.6
   },
   "generation": {
-    "id": "a4286d8884688b69b413730c3a782320",
-    "generatedAt": "2026-10-20T05:08:28+00:00",
-    "attempt": 50,
+    "id": "f33d3478c775800d24fe07e15488a395",
+    "generatedAt": "2026-10-21T00:48:41+00:00",
+    "attempt": 57,
     "creditsCharged": 40,
     "record": {
       "path": "assets-source/audio/ambience/train-whistle-1/generation.json",
-      "sha256": "47684195b24986cb0eb1ea667b82af2dccfa36cead0aad2673580d56acfc447b",
-      "bytes": 2066
+      "sha256": "e38b7077729ad64f511a543d7d70214d558bfe5519b44288e01674f8fe416cfa",
+      "bytes": 2200
     }
   },
   "source": {
     "path": "assets-source/audio/ambience/train-whistle-1/train-whistle-1.mp3",
-    "sha256": "5565f934dc0705cba8ce712fd1ad61ce038792d633466ae1249ee93bb5bd610f",
+    "sha256": "2f1b3cdae4b4f66471f84dc37c8d9cea980147dce854442c3344f65eab8c6fa1",
     "bytes": 65244,
     "codec": "mp3",
     "sampleRate": 44100,
@@ -49,25 +49,25 @@
     "truePeakCeilingDb": -1.0,
     "masterTruePeakDb": -2.0,
     "before": {
-      "integrated": -16.0,
-      "lra": 11.4,
-      "truePeak": -5.5
+      "integrated": -17.1,
+      "lra": 0.4,
+      "truePeak": -9.0
     },
     "master": {
       "integrated": -16.0,
-      "lra": 11.4,
-      "truePeak": -5.5
+      "lra": 0.0,
+      "truePeak": -7.7
     },
     "after": {
       "webm": {
         "integrated": -16.0,
-        "lra": 11.4,
-        "truePeak": -5.5
+        "lra": 0.0,
+        "truePeak": -7.7
       },
       "m4a": {
         "integrated": -16.0,
-        "lra": 11.4,
-        "truePeak": -5.5
+        "lra": 0.0,
+        "truePeak": -7.8
       }
     }
   },
@@ -89,7 +89,7 @@
     {
       "step": "trim",
       "leadFramesRemoved": 0,
-      "tailFramesRemoved": 0,
+      "tailFramesRemoved": 24024,
       "leadThresholdDb": -45.0,
       "tailThresholdDb": -60.0,
       "preRollSeconds": 0.003,
@@ -100,12 +100,12 @@
     {
       "step": "loudness",
       "pass1": {
-        "integrated": -16.0,
-        "lra": 11.4,
-        "truePeak": -5.5
+        "integrated": -17.1,
+        "lra": 0.0,
+        "truePeak": -8.8
       },
       "targetLufs": -16.0,
-      "gainDb": 0.0,
+      "gainDb": 1.1,
       "requiredPeakReductionDb": 0.0,
       "mode": "linear"
     },
@@ -124,72 +124,72 @@
   ],
   "master": {
     "path": "target/audio-master/ambience/train-whistle-1.wav",
-    "sha256": "6fb90ca177ee866fdaecb2d8e85ce7cf04f0ec3ba6e169636fbf1444d450103c",
-    "frames": 192000,
+    "sha256": "f75011992a19ff59ec94aa80f80c606e617b1de356ad2a4c7b1555e17cbeb77f",
+    "frames": 167976,
     "sampleRate": 48000,
     "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
   },
   "runtime": [
     {
       "path": "assets/audio/ambience/train-whistle-1.webm",
-      "sha256": "4e2fc424e936041d5663998604d0da7962423ec2a4dc946055f33a36db118a2b",
-      "bytes": 30014,
+      "sha256": "132d4a8f8d9a3b734ae564041d20922d192c9db6c85f932ec87aaccbeb7882d1",
+      "bytes": 30399,
       "codec": "opus",
       "bitrate": "64k",
       "channels": 1,
       "sampleRate": 48000,
-      "durationSeconds": 4.008,
-      "decodedFrames": 192000,
+      "durationSeconds": 3.507,
+      "decodedFrames": 167976,
       "loudness": {
         "integrated": -16.0,
-        "lra": 11.4,
-        "truePeak": -5.5
+        "lra": 0.0,
+        "truePeak": -7.7
       },
       "floor": {
-        "peakWindowDb": -11.5,
-        "floorDb": -86.1,
-        "floorBelowPeakDb": 74.6,
+        "peakWindowDb": -13.1,
+        "floorDb": -54.2,
+        "floorBelowPeakDb": 41.1,
         "floorBandPct": {
-          "below1500": 74.3,
-          "1500to9k": 22.4,
-          "above9k": 3.3
+          "below1500": 17.8,
+          "1500to9k": 79.4,
+          "above9k": 2.8
         },
-        "interiorWindows": 80,
+        "interiorWindows": 69,
         "problems": []
       },
       "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/train-whistle-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/train-whistle-1.webm"
     },
     {
       "path": "assets/audio/ambience/train-whistle-1.m4a",
-      "sha256": "c5087f402bbc9bed147b888972c981a359dbcb8aab3b7833f4f7328704ec9efe",
-      "bytes": 69802,
+      "sha256": "a1fc8c0f89b32444b328d243303c859c2897b86f1a19901eb1c5bc1a98a6afb2",
+      "bytes": 68671,
       "codec": "aac",
       "bitrate": "160k",
       "channels": 1,
       "sampleRate": 48000,
-      "durationSeconds": 4.0,
-      "decodedFrames": 192000,
+      "durationSeconds": 3.4995,
+      "decodedFrames": 167976,
       "loudness": {
         "integrated": -16.0,
-        "lra": 11.4,
-        "truePeak": -5.5
+        "lra": 0.0,
+        "truePeak": -7.8
       },
       "floor": {
-        "peakWindowDb": -11.5,
-        "floorDb": -86.1,
-        "floorBelowPeakDb": 74.6,
+        "peakWindowDb": -13.1,
+        "floorDb": -54.3,
+        "floorBelowPeakDb": 41.2,
         "floorBandPct": {
-          "below1500": 73.5,
-          "1500to9k": 23.1,
-          "above9k": 3.4
+          "below1500": 17.9,
+          "1500to9k": 79.4,
+          "above9k": 2.8
         },
-        "interiorWindows": 80,
+        "interiorWindows": 69,
         "problems": []
       },
       "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/train-whistle-1.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/train-whistle-1.m4a"
     }
   ],
-  "decodedBytes": 768000,
+  "decodedBytes": 671904,
   "toolVersions": {
     "ffmpeg": "9.0.2",
     "libavcodec": "63.1.102",
@@ -201,15 +201,15 @@
     "scripts": {
       "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
       "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
-      "scripts/audio/review.py": "bce93ae39ad1163524ac6756bf50a1fae8b59bccd9e7ca240a3bd741f177e054"
+      "scripts/audio/review.py": "7d4660219b1ff716c81c00920b6e7c2f6b9a6573fca9ab7d29a34ac7a1d97b53"
     }
   },
   "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
   "deviation": null,
   "approvals": {
     "technical": "make audio-check",
-    "creative": "not approved by the owner 2026-10-20 (docs/review/approvals.html); to redo",
+    "creative": "pending owner audition (review.html round 4; the first take was not approved 2026-10-20)",
     "rights": "owner attestation, PRD D21",
-    "owner": "not approved (Paul Robello, 2026-10-20)"
+    "owner": "pending"
   }
 }

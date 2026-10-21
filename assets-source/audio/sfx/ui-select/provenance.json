@@ -170,7 +170,7 @@
     "scripts": {
       "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
       "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
-      "scripts/audio/review.py": "bce93ae39ad1163524ac6756bf50a1fae8b59bccd9e7ca240a3bd741f177e054"
+      "scripts/audio/review.py": "7d4660219b1ff716c81c00920b6e7c2f6b9a6573fca9ab7d29a34ac7a1d97b53"
     }
   },
   "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",

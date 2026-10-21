@@ -1,6 +1,6 @@
 {
-  "cap": 56,
-  "capNote": "Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"): the cap was raised from 53 by at most 6 for the place-slosh pool; three were spent (attempts 54-56, 60 credits), so the cap is set to the 56 attempts logged. Before that, Owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
+  "cap": 59,
+  "capNote": "Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 57-59, 120 credits), and attempt 57 was kept, so the cap is set to the 59 attempts logged. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"): the cap was raised from 53 by at most 6 for the place-slosh pool; three were spent (attempts 54-56, 60 credits), so the cap is set to the 56 attempts logged. Before that, Owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
   "attempts": [
     {
       "n": 1,
@@ -785,6 +785,48 @@
       "creditsCharged": 20,
       "subscriptionDelta": 60,
       "file": "assets-source/audio/sfx/place-slosh-3/place-slosh-3.mp3"
+    },
+    {
+      "n": 57,
+      "cueId": "train-whistle-1",
+      "requestedAt": "2026-10-21T00:48:41+00:00",
+      "reason": "owner audition 2026-10-20: rejected (no reason given); the rest of the round-3 cues were approved",
+      "creditsBefore": 12482,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "f33d3478c775800d24fe07e15488a395",
+      "creditsAfter": 12482,
+      "creditsCharged": 40,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/train-whistle-1/train-whistle-1.mp3"
+    },
+    {
+      "n": 58,
+      "cueId": "train-whistle-1",
+      "requestedAt": "2026-10-21T00:48:56+00:00",
+      "reason": "round 4: candidate take 2 of 3 for train-whistle-1 (owner rejected attempt 50 on 2026-10-20)",
+      "creditsBefore": 12482,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "35f617dfe2572a1c8d0b4a81f5f23cc4",
+      "creditsAfter": 12482,
+      "creditsCharged": 40,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/train-whistle-1/train-whistle-1.mp3"
+    },
+    {
+      "n": 59,
+      "cueId": "train-whistle-1",
+      "requestedAt": "2026-10-21T00:49:10+00:00",
+      "reason": "round 4: candidate take 3 of 3 for train-whistle-1 (owner rejected attempt 50 on 2026-10-20)",
+      "creditsBefore": 12482,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "972e29606b798931733fa3a51f7b3537",
+      "creditsAfter": 12482,
+      "creditsCharged": 40,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/train-whistle-1/train-whistle-1.mp3"
     }
   ]
 }

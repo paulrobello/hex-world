@@ -516,7 +516,7 @@ fn a_world_edit_removes_the_trains_on_the_cell() {
 #[test]
 fn random_rail_layouts_keep_trains_apart_and_moving() {
     let c = catalog();
-    const RAIL: [&str; 6] = [
+    const RAIL: [&str; 7] = [
         "rail_straight",
         "rail_bend_60",
         "rail_junction",

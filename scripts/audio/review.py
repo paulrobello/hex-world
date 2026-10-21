@@ -163,17 +163,24 @@ def pool_sections(layout: A.Layout, reg: dict, manifest: dict, rel_runtime: str)
     newest = max(pool_round.values(), default=0)
     pools.sort(key=lambda p: -pool_round[p])
     shown_earlier = False
+    shown_notes: set[str] = set()
     for i, pool in enumerate(pools):
         group = [e for e in manifest["cues"] if e.get("pool") == pool]
         is_new = bool(newest) and pool_round[pool] == newest
+        note = next(((cue_by_id[e["id"]].get("review") or {}).get("roundNote") for e in group
+                     if ((cue_by_id[e["id"]].get("review") or {}).get("round") == newest)), "") if is_new else ""
         if is_new and i == 0:
-            note = next(((cue_by_id[e["id"]].get("review") or {}).get("roundNote") for e in group), "")
             out.append(f"<h2>Round {newest}: new one-shot pools to audition</h2><p class=lead>{html.escape(note or '')}</p>")
+            shown_notes.add(note or "")
+        round_lead = ""
+        if i > 0 and is_new and note and note not in shown_notes:
+            round_lead = f"<p class=lead>{html.escape(note)}</p>"
+            shown_notes.add(note)
         if newest and not is_new and not shown_earlier:
             out.append("<h2>Earlier one-shot pools</h2>")
             shown_earlier = True
         label = "New one-shot pool" if is_new else "One-shot pool"
-        out.append(f"<h2>{label}: {html.escape(pool)} ({len(group)} variants)</h2>"
+        out.append(f"<h2>{label}: {html.escape(pool)} ({len(group)} variants)</h2>{round_lead}"
                    f"<p class=lead>{html.escape(POOL_NOTE.get(pool, ''))} The floor numbers are the owner's 2026-10-14 "
                    "criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p>"
                    f"<p><button onclick=\"randomVariant(this, '{html.escape(pool)}')\">Play a random variant</button> "

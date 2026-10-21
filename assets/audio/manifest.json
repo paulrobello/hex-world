@@ -933,19 +933,19 @@
       "playback": "decode",
       "channels": 1,
       "loop": null,
-      "durationSeconds": 4.0,
-      "decodedBytes": 768000,
+      "durationSeconds": 3.4995,
+      "decodedBytes": 671904,
       "targetLufs": -16.0,
       "files": {
         "webm": {
           "path": "ambience/train-whistle-1.webm",
-          "sha256": "4e2fc424e936041d5663998604d0da7962423ec2a4dc946055f33a36db118a2b",
-          "bytes": 30014
+          "sha256": "132d4a8f8d9a3b734ae564041d20922d192c9db6c85f932ec87aaccbeb7882d1",
+          "bytes": 30399
         },
         "m4a": {
           "path": "ambience/train-whistle-1.m4a",
-          "sha256": "c5087f402bbc9bed147b888972c981a359dbcb8aab3b7833f4f7328704ec9efe",
-          "bytes": 69802
+          "sha256": "a1fc8c0f89b32444b328d243303c859c2897b86f1a19901eb1c5bc1a98a6afb2",
+          "bytes": 68671
         }
       },
       "provenance": "assets-source/audio/ambience/train-whistle-1/provenance.json"
