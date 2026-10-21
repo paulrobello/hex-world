@@ -4,16 +4,11 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## State
 
-- `main` at `8aff740` is pushed, CI green, auto-deployed (batches 11 and 12 today). `dist/` rebuilt from it.
-- **Batch 13 sits in `/Users/probello/Repos/hex-world-wt/land-b13` (branch `land-b13`, 6 commits on main, not merged):** river_bend_60 (the tight river bend), the buffer stop runtime (stops at open rail ends, buffer clunk, carriage order, give-way livelock fix), the boats runtime (rowing and sailing boats, landing stages, oar and sail sounds), the merged audio records (attempts renumbered 1-68, cap 68), and the owner's approvals of every piece and cue on the approvals page. Owner answers are appended to `docs/review/2026-10-20-owner-answers.md` there.
-- Working tree clean apart from the untracked `.claude/launch.json` (its `hex-world-review-staging` entry serves land-b13 on 8093). No agents running; `git worktree list` shows main and land-b13 only.
-- The review page generator is `python3 docs/review/approvals.py` (writes `docs/review/approvals.html`: every piece or cue without an owner approval, with players, sheets, decisions and Copy answers). It is empty on land-b13 now.
-
-## Resume batch 13
-
-1. Boats do not know the river fork or the tight bend yet (they were written before both). Dispatch an agent that works directly in land-b13: rowing boats pick an outgoing arm at a junction (seeded, arithmetic-only), follow `river_bend_60` inside the channel, count fork and tight-bend tiles as river; tests in `crates/hex-play/src/boats/tests.rs`. Card `01a15bc5283e` (river fork) criterion 2 waits on this.
-2. Then in land-b13: `caffeinate -d -u make thumbs` (river_bend_60 has none), a second thumbs run to compare, `make kit-check`, `make audio-check`, `make checkall-ci`, `make web-smoke`, `make ui-e2e`; first `git rebase main` in land-b13 (main has the handoff commit `968012e`), then commit thumbs, `git merge --ff-only land-b13` on main, `gitleaks git --log-opts="origin/main..main"`, `make build-web`, push (standing approval), watch CI, remove land-b13.
-3. Close cards after landing: boats `01a15b8439d1`, buffer stop `01a15b843efb`, river fork `01a15bc5283e`, whistle redo `01a15bdfd55c` (owner approved the retake), and file/close a river bend 60 card.
+- `main` at `d5cbad7` is pushed, CI green (run 39540131987), auto-deployed (batches 11-13 on 2026-10-20). `dist/` rebuilt from it.
+- Batch 13 landed: river_bend_60 (the tight river bend), the buffer stop runtime (stops at open rail ends, buffer clunk, carriage order, give-way livelock fix), the boats runtime (rowing and sailing boats, landing stages, oar and sail sounds), rowing boats through river forks (link runs between arms, a seeded arm pick, one moving rowing boat per river system) and round the tight bend, boats kept out of tile thumbnails (`hex_play::boats::NoBoats`), the merged audio records (attempts 1-68), and the owner's approvals of every piece and cue. Cards closed: boats, buffer stop, river fork, whistle redo, river bend 60.
+- Working tree clean apart from the untracked `.claude/launch.json`. No agents running; `git worktree list` shows main only.
+- The review page generator is `python3 docs/review/approvals.py` (writes `docs/review/approvals.html`: every piece or cue without an owner approval). It is empty now.
+- The boats-fork change also fixed a 0.83 m one-tick jump in `rower_pose` (a turn-back begun while easing back from a pass lane), so rowing poses in worlds with a landing stage differ from the `docs/checkpoints/boats-play/` shots frame for frame.
 
 ## Next asset work
 
@@ -33,7 +28,7 @@ No Blender agents are running: every P3 piece waits on the owner. The stone well
 
 ## Waiting on Paul
 
-New today (2026-10-20, later): flatten Q1 meadow mostly flat at ring height, Q2 hollow depth 0.25/0.18/0.15, Q3 forest root pits; farm motion Q1 TAA leg ghosting, Q2 standing animals graze, Q3 trot vs four-beat, Q4 tuning values; river fork Q1 plain Y vs round pool, Q2 flow rule, Q3 three-spring edge cases, Q4 crisp ridge; rail bend 120 Q1 single 24 m arc; river bend 60 Q1 LOD2 0.033 m water error, Q2 seventh river-dressing budget, Q3 name; boats Q1 keep sailing routes apart, Q2 boats re-derive on any water edit, Q3 anchored sails set 10 degrees, Q4 boat-sail-2 double luff; whistle retake 0.5 s lead-in.
+New today (2026-10-20, later): flatten Q1 meadow mostly flat at ring height, Q2 hollow depth 0.25/0.18/0.15, Q3 forest root pits; farm motion Q1 TAA leg ghosting, Q2 standing animals graze, Q3 trot vs four-beat, Q4 tuning values; river fork Q1 plain Y vs round pool, Q2 flow rule, Q3 three-spring edge cases, Q4 crisp ridge; rail bend 120 Q1 single 24 m arc; river bend 60 Q1 LOD2 0.033 m water error, Q2 seventh river-dressing budget, Q3 name; boats-fork Q1 one moving rowing boat per river system (a fork network gets 1 moving and up to 2 moored, where each arm could have had its own rower), boats Q1 keep sailing routes apart, Q2 boats re-derive on any water edit, Q3 anchored sails set 10 degrees, Q4 boat-sail-2 double luff; whistle retake 0.5 s lead-in.
 
 All pieces landed since 2026-10-19 await look approval (sheets in `docs/checkpoints/`). Open questions, numbered as asked in the session:
 - Station/rail: Q10 bogie or 4-wheel carriage; Q11 train palette; Q13 21% crossing ramp; Q14 gates open or closed; Q18 1.67 m unsupported branch run; Q19 mirrored turnout; Q20 red lever; Q27 bridge parapet height; Q28 provenance with several refs.
