@@ -1,0 +1,52 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/pickup/pickup.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        9.63,
+        14.89,
+        26.23
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 27.5,
+      "load_after": [
+        11.01,
+        14.71,
+        25.77
+      ],
+      "frames": {
+        "pickup-closeup-a": {
+          "mean": 0.2027,
+          "problem": null
+        },
+        "pickup-closeup-b": {
+          "mean": 0.2213,
+          "problem": null
+        },
+        "pickup-closeup-c": {
+          "mean": 0.2125,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

@@ -1,0 +1,300 @@
+[
+ {
+  "cmd": "camera",
+  "pos": [
+   40,
+   170,
+   130
+  ],
+  "look_at": [
+   30,
+   0,
+   0
+  ]
+ },
+ {
+  "cmd": "toggle",
+  "what": "photo"
+ },
+ {
+  "cmd": "photo",
+  "dof": "off",
+  "pause_agents": false
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_junction"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_junction"
+ },
+ {
+  "cmd": "place",
+  "q": 4,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "place",
+  "q": 4,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 5,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 4
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -3
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -4
+ },
+ {
+  "cmd": "select_tile",
+  "id": "house_cluster"
+ },
+ {
+  "cmd": "place",
+  "q": 4,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": 6,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 5
+ },
+ {
+  "cmd": "place",
+  "q": -4,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -3
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": -5
+ },
+ {
+  "cmd": "wait",
+  "frames": 2400
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -3.98,
+   2.2,
+   44.7
+  ],
+  "look_at": [
+   1.64,
+   0.7,
+   42.17
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "screenshot",
+  "name": "pickup-closeup-a"
+ },
+ {
+  "cmd": "dump_state",
+  "name": "pickup-closeup-a"
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   4.56,
+   2.2,
+   -29.91
+  ],
+  "look_at": [
+   5.17,
+   0.7,
+   -36.04
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "screenshot",
+  "name": "pickup-closeup-b"
+ },
+ {
+  "cmd": "dump_state",
+  "name": "pickup-closeup-b"
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   91.41,
+   2.2,
+   -5.16
+  ],
+  "look_at": [
+   96.36,
+   0.7,
+   -1.5
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "screenshot",
+  "name": "pickup-closeup-c"
+ },
+ {
+  "cmd": "dump_state",
+  "name": "pickup-closeup-c"
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "exit"
+ }
+]
