@@ -402,6 +402,13 @@
       "requested": "2026-10-20",
       "revision": "first build",
       "notes": "Pending owner review; not an approval. The P3 rowing boat from assets-source/refs/boat_rowing (D4, BA1 with the queue's lean on BQ1, BQ2, BQ4): 3.57 m overall by 1.41 m, a smooth planked hull (BQ4) painted white with one dark blue band under a white sheer strake, a raked stem, a narrow square transom, a varnished interior with frames, two thwarts, stern sheets, slatted floorboards and a small foredeck, and two oars in bronze rowlocks as separate oar nodes pivoted on the rowlock pins (boat_rowing_oar_port_lod<n>, boat_rowing_oar_stbd_lod<n>) so the runtime can row them. No rower figure (no ref draws one; anchor-prop-0 marks the seat). The waterline is the origin plane; the keel draws 0.15 m and every inboard surface stays 3 cm above the water. Review sheet: docs/checkpoints/boat_rowing/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

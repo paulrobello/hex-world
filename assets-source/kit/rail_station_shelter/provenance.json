@@ -283,6 +283,13 @@
       "status": "pending",
       "requested": "2026-10-19",
       "notes": "Pending owner review; not an approval. The ref-1 station shelter (A17: the ref-1 shelter is the house style), split from the platform per owner Q16 (2026-10-19): half-timbered waiting room and open bay under one tiled roof, two brick stacks, a bench. Stands on rail_station_platform's paving at platform-frame runtime offset (-0.3, -5.0), y 1.38. Review sheet: docs/checkpoints/rail_station/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

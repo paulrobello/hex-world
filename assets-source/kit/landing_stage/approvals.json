@@ -5,5 +5,12 @@
     "requested": "2026-10-20",
     "revision": "first build",
     "notes": "Pending owner review; not an approval. The ref-2 landing stage as its own river-bank prop (assets-source/refs/boat_rowing ref-2, BQ5): a 2.15 m by 2.8 m deck of nine weathered planks 0.45 m over the water on three bearers, five dark posts (the three outer ones standing 0.55 m over the deck as bollards) set into the river bed of the water contract's straight profile, cross braces, a bank sill and a fender board where a rowing boat moors alongside. Its origin is the bank's waterline 4.0 m from the channel centre line with +x toward it. Review sheet: docs/checkpoints/landing_stage/sheet.jpg. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
   }
 ]

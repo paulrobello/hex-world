@@ -315,6 +315,13 @@
       "status": "pending",
       "requested": "2026-10-19",
       "notes": "Pending owner review; not an approval. Review against assets-source/refs/rail (ref-1 straight, ref-2 bend): a single-track right-hand turnout, the straight on edges 0 and 3 as rail_straight_center and the branch leaving the switch by edge 0 on rail_bend_60_center's 8 m arc to edge 1, with switch blades, a frog with wing rails, two check rails, long timbers under the switch and frog, and a red point lever (ground frame) on the +y side by the toe. Review sheet: docs/checkpoints/rail_junction/sheet.jpg (refs, textured EEVEE stills including the blades and the frog close up, in engine at play distance, seams with the rail straight and the rail bend on each of its three edges, sun and shade close-ups, eye level). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

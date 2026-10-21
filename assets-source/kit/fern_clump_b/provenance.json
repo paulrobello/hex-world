@@ -402,6 +402,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Variant of fern_clump (PRD §6 Variety), against assets-source/refs/forest: a young fern, 12 fronds standing steep and bowing only at their tips, 0.48 m tall and about 0.7 m across, with fern_clump's frond tiles, palette, fold, sink and wind. Review sheet: docs/checkpoints/forest_floor_variants/sheet.jpg (refs, EEVEE beside fern_clump, in engine on the forest at (-3, 1): play distance, sun and shade close-ups, eye level). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

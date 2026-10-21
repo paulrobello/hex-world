@@ -279,6 +279,13 @@
       "revision": "terrain-hump-water",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Re-export, geometry unchanged in every LOD (positions, UVs, triangles, ring, water profile, sockets): the meadow part of the cap now takes custom normals from the relief's slope without the border falloff's rise to the ring (_river.cap_shade_slope, geom.set_cap_normals), so the shallow bowl over the last 2 m no longer shades as a ridge along the tile border (owner, 2026-10-14; as meadow_base). The channel strip keeps its normals. Review docs/checkpoints/terrain-hump-water/sheet.jpg (before/after at noon and dusk, orbit, seams, eye level)."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

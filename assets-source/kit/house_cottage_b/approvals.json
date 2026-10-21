@@ -4,5 +4,12 @@
     "status": "pending",
     "revision": "first build",
     "notes": "Second house_cottage variant (PRD §6 Variety, ref-1's slate-roofed right-hand house), awaiting owner review of docs/checkpoints/house_cottage_b/sheet.jpg (refs, textured EEVEE stills, the lineup beside house_cottage and house_longhouse, in-engine play distance, sun and shade close-ups, eye level, scale with a parked car)."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
   }
 ]

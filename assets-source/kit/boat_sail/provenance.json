@@ -435,6 +435,13 @@
       "requested": "2026-10-20",
       "revision": "first build",
       "notes": "Pending owner review; not an approval. The P3 sailing fishing boat from assets-source/refs/boat_sail (D4, BA2 with the queue's lean on BQ6, BQ7, BQ9): a 5.0 m hull (6.1 m with bowsprit and rudder) by 1.9 m, deep blue with a white band under a varnished sheer strake, a varnished interior with frames, three thwarts, floorboards and two wicker fish baskets, a 6.0 m mast with shrouds and a forestay to a short bowsprit, a hung rudder and tiller, and tan (tanbark, ref-1's red-ochre) sails: one gaff mainsail with boom and gaff and one jib (BQ9), each its own node (boat_sail_main_lod<n> on the mast, boat_sail_jib_lod<n> on the forestay) so the runtime can swing them. The waterline is the origin plane; the keel draws 0.32 m. Ocean and river mouths only (BQ7). Review sheet: docs/checkpoints/boat_sail/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

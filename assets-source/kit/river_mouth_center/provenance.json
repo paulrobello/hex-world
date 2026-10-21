@@ -269,6 +269,13 @@
       "revision": "beach dressing (D3)",
       "requested": "2026-10-20",
       "notes": "Pending owner re-approval; not an approval. Owner D3 / BD-Q1: the baked driftwood logs and dune-grass tufts are removed (the scatter's beach_driftwood* and beach_dunegrass* replace them); every pebble (and, on the mouth centres, every bank stone and reed clump) is where it was, byte-identical in place. The beach_dunegrass and beach_driftwood slots leave the manifest entry. Review the before/after play shots in docs/checkpoints/beach-dressing/sheet.jpg. Earlier entries stay as history."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

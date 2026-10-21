@@ -440,6 +440,13 @@
       "revision": "bale-b-apron",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Rebuilt for the bale-b-apron edit of the shared _hay_var.py (a round_b-only function): GLB and every map byte-identical to the previous build, provenance hashes refreshed only. Nothing new to review."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

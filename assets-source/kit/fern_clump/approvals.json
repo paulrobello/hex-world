@@ -4,5 +4,12 @@
     "status": "pending",
     "requested": "2026-10-19",
     "notes": "Pending owner review; not an approval. Review against assets-source/refs/forest (ref-1 ferns around the fallen log, ref-2 ferns at the spruce trunk): a shuttlecock fern of 22 arching once-pinnate fronds on alpha cards, 0.76 m tall and about 1.3 m across, with wind on every LOD. Review sheet: docs/checkpoints/forest_floor/sheet.jpg (refs, textured EEVEE stills, in engine at play distance on the forest at (-2, 1), sun and shade close-ups, eye level, scale). The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
   }
 ]

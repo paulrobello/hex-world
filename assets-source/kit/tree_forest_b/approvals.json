@@ -5,5 +5,12 @@
     "requested": "2026-10-14",
     "revision": "new variant: tall slender spruce",
     "notes": "Pending owner approval; not an approval. New PRD \u00a76 variety piece: tree_forest's species, bark set and needle tiles; 20.5 m, crown width/height 0.27. Review assets-source/kit/tree_forest_b/renders/ and the in-play shots in docs/checkpoints/prop-variants/. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
   }
 ]

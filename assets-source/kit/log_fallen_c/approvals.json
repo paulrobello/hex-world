@@ -4,5 +4,12 @@
     "status": "pending",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Third variant of log_fallen (PRD §6 Variety), against assets-source/refs/forest ref-1 (the fallen mossy log): an old hollow spruce log, 3.24 m long and about 0.5 m thick, bowed in a C-shaped crook in plan, moss over most of its top and down both flanks, and a broken tip opened into a wide, deep rotten hollow whose upper lip has fallen away so the dark inside shows; a small flare with two snapped roots and one short branch stub; the spruces' bark (the bark set times the trunks' tint, baked), sunk 0.13 m into the litter. Review sheet: docs/checkpoints/log_fallen_c/sheet.jpg. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
   }
 ]

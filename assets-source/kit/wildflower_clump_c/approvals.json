@@ -5,5 +5,12 @@
     "requested": "2026-10-14",
     "revision": "new variant: blue/purple clump",
     "notes": "Pending owner approval; not an approval. New PRD \u00a76 variety piece: wildflower_clump's clump with cornflowers and clover. Review assets-source/kit/wildflower_clump_c/renders/ and the in-play shots in docs/checkpoints/prop-variants/. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
   }
 ]

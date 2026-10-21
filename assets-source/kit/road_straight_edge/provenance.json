@@ -268,6 +268,13 @@
       "requested": "2026-10-14",
       "revision": "verge sink normals",
       "notes": "Pending owner seam re-approval; not an approval. Rebuilt for the owner's 2026-10-14 road-verge bug (a dark strip in the meadow beside the road): every road_verge loop, the 31-degree verge sink slope included, now carries a +Z custom normal (_road.verge_normals_up), so the slope shades like the flat meadow grass on both sun sides. Positions, the shared PROFILE, LODs, UVs, sockets and the masks bake are unchanged (masks PNG and KTX2 byte-identical). In play the shade-side band went from 0.536 to 1.014 of the adjacent meadow's mean luminance and the sun-side band from 1.115 to 1.035. Review docs/checkpoints/road-verge/road-verge-{before,after}-*.jpg and road-verge-{before,after}-crop4x-{sun,shade}.png. The controller records the owner's decision. Earlier entries stay as history."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

@@ -410,6 +410,13 @@
       "requested": "2026-10-19",
       "revision": "first build",
       "notes": "Pending owner review; not an approval. New piece (owner request 2026-10-19, 'start an agent working on the wheat tile'): ripe wheat in V-pair row cards with wind on tinted-gravel ploughed earth, the centre of the Wheat field tile. Review docs/checkpoints/wheat_field/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

@@ -287,6 +287,13 @@
       "status": "pending",
       "revision": "first build",
       "notes": "New house_twostorey variant for house_cluster's house 2 slot (PRD §6 Variety): a jettied, hip-roofed timber-framed two-storey house, awaiting owner review of docs/checkpoints/house_twostorey_b/sheet.jpg (refs, textured EEVEE stills beside house_twostorey and house_longhouse, in-engine play distance in a cluster, sun and shade close-ups on the yawed copy, eye level 1.7 m, scale with a parked car)."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

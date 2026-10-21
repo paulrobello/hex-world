@@ -5,5 +5,12 @@
     "requested": "2026-10-14",
     "revision": "new variant: single daisy",
     "notes": "Pending owner approval; not an approval. New PRD \u00a76 variety piece: one stem with leaves and a daisy head, 0.85 m, 14 tris. Review assets-source/kit/wildflower_single/renders/ and the in-play shots in docs/checkpoints/prop-variants/. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
   }
 ]

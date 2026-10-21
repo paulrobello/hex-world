@@ -538,6 +538,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Review against assets-source/refs/forest (ref-1: broad oaks among the spruces): the forest tiles' scatter oak, a mature broad oak about 9.2 m tall with a 9.7 m crown of fourteen baked leaf domes on one leaning trunk, the hero oak's bark set, canopy master, leaf tiles and wind data at the piece texture budget. Variant tree_oak_b. Review sheet: docs/checkpoints/tree_oak/sheet.jpg (refs, textured EEVEE stills, in engine beside the hero oak and a spruce, sun and shade close-ups, eye level under the canopy, a wind frame pair). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

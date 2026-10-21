@@ -439,6 +439,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Review against assets-source/refs/road_straight (ref-1: 'grass verges with tufts and small bushes', the small pale bush beside the dark round one): bush_verge's second variant, a smaller, lighter yellow-green, looser verge bush, 0.65 m tall and 0.95 x 0.80 m across (LOD0), lumpy and slightly leaning, numpy-drawn leaf-cluster cards down to the grass, plant wind data. Built on _shrub.build through _verge_bush.py and _verge_bush_b.py. Review sheet: docs/checkpoints/bush_verge_b/sheet.jpg (ref; textured EEVEE lineup with shrub_forest, bush_verge and a 1.7 m figure; the pair close up; the kit road tile (0, 0); play shots with docs/checkpoints/bush_verge_b/integration.patch applied). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

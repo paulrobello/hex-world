@@ -11,5 +11,12 @@
     "revision": "lod2-neck-fix",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Re-export with the LOD2 neck fix: _animals.fill_hidden_ao gives the texels LOD0 buries inside another part (neck root, head root, leg tops; they baked to AO 0) the near-junction AO of their own island, so LOD1 and LOD2, whose coarser polygons expose part of that band, no longer draw black patches at the neck and leg-top junctions. Geometry, albedo, normal and masks unchanged; texels LOD0 shows keep their AO bit for bit. Per-LOD visible AO in the bake report (bakeStats.lodVisibleAo). Review sheet: docs/checkpoints/animal-lod2-neck/sheet.jpg (in engine, Force LOD 2 and 0 from the same cameras, before and after). The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
   }
 ]

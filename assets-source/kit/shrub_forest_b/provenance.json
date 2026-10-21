@@ -435,6 +435,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Review against assets-source/refs/forest (ref-1: 'undergrowth of ferns, shrubs and saplings'): shrub_forest's second variant, a holly-like evergreen, 1.83 m tall (-0.09 to 1.83 m) and 1.47 x 1.43 m across (LOD0, from the GLB), a dark glossy blue-green cone broadest low down with a rounded top and red berry clusters on its outer leaves, numpy-drawn leaf-cluster cards down to the litter, plant wind data. Built on _shrub.build through _shrub_holly.py (palette, ogive card placer, glossy berried tiles). Review sheet: docs/checkpoints/shrub_forest_b/sheet.jpg (ref; textured EEVEE lineup with shrub_forest, bush_verge, bush_verge_b and a 1.7 m figure; play shots with docs/checkpoints/shrub_forest_b/integration.patch applied). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

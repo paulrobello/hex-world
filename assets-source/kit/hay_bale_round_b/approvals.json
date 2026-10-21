@@ -18,5 +18,12 @@
     "revision": "bale-b-apron",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. The LOD2 straw-apron seam left by bale-seam-fix: each of the apron's six segments is one quad at LOD2, so its seam vertices carried that quad's facet normal, 27 deg off the LOD0 normals the normal map was baked against. LOD2's apron now takes LOD0's normals (same island, same point). Measured at LOD2: apron seam normal step 36.4 -> 4.5 deg (interior 2.6; LOD2 barrel seam 4.3). Same tris (792/240/76), positions, UVs and maps; LOD0 and LOD1 decode identical. Review docs/checkpoints/hay-bale-b-apron/sheet.jpg."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
   }
 ]

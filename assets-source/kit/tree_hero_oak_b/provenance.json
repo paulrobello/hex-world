@@ -598,6 +598,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Review against assets-source/refs/tree_hero_oak (ref-1): the second hero oak of the oak tile, a forked, east-leaning oak (two leaders from 3.3 m into a tall east lobe and a lower west lobe, one heavy low limb under a south shelf of domes), 13.6 m tall with a crown reach of 8.37 m; same bark set, canopy master, leaf tiles, palette, canopy gaps, wind data and 1.2x scale as tree_hero_oak. Review sheet: docs/checkpoints/tree_hero_oak_b/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

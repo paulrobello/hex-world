@@ -4,5 +4,12 @@
     "status": "pending",
     "requested": "2026-10-20",
     "notes": "Pending owner review; not an approval. Review against assets-source/refs/road_straight (ref-1: 'grass verges with tufts and small bushes'): a small dense round verge bush, 0.88 m tall and 1.19 m across (LOD0), a compact dark box-green mass of numpy-drawn leaf-cluster cards running down to the grass, no stems showing, plant wind data. Built on _shrub.build (shrub_forest's family) through _verge_bush.py. Review sheet: docs/checkpoints/bush_verge/sheet.jpg (ref; textured EEVEE stills beside shrub_forest and a 1.7 m figure; the kit scenario's road tile (0, 0) with three bushes, shrub_forest and a sedan on the lane; play shots with docs/checkpoints/bush_verge/integration.patch applied: play distance, sun and shade close-ups, eye level 1.7 m in walk mode, a van on the road). The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-20",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
   }
 ]

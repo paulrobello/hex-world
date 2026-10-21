@@ -422,6 +422,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Review against assets-source/refs/forest (ref-1: 'undergrowth of ferns, shrubs and saplings'): sapling_spruce's second variant, a shorter, wider, bushier young spruce, 1.7 m stem (leader tip 1.95 m), about 2.1 m across, six close whorls of near-level branches with a filler frond on every whorl, a fuller dark heart and a leader bent slightly to one side. Same bark set, needle tiles and wind as sapling_spruce; built on _spruce.build through _sapling.py and _sapling_b.py. Review sheet: docs/checkpoints/sapling_spruce_b/sheet.jpg (ref; textured EEVEE lineup with sapling_spruce, tree_forest_c and a 1.7 m figure; the kit undergrowth forest at (-3, 2); play shots with docs/checkpoints/sapling_spruce_b/integration.patch applied). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

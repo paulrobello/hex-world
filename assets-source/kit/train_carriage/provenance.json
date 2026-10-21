@@ -348,6 +348,13 @@
       "status": "pending",
       "requested": "2026-10-19",
       "notes": "Pending owner review; not an approval. Four-wheeled passenger carriage from assets-source/refs/train ref-1/ref-2 (A17: two carriages; runtime colour on the body, like the cars). Body colour via COLOR_0 paint mask exactly as the cars. Sits on the rail pieces: wheel treads on the 0.46 m rail top, flanges inside the 1.6 m gauge. Review sheet: docs/checkpoints/train/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }

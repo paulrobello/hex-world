@@ -393,6 +393,13 @@
       "status": "pending",
       "requested": "2026-10-20",
       "notes": "Pending owner review; not an approval. Variant of log_fallen (PRD §6 Variety), against assets-source/refs/forest ref-1 (the fallen mossy log): the butt section of a fallen spruce, 2.4 m long and 0.52 m thick, a broad root flare with three snapped roots, one broken branch stub and a solid splintered break (no hollow), the spruces' bark (the bark set times the trunks' tint, baked) with moss in long streaks along the grain down one flank and small cushions on top, sunk 0.12 m into the litter. Review sheet: docs/checkpoints/forest_floor_variants/sheet.jpg (refs, EEVEE beside log_fallen, in engine on the forest at (-3, 1): play distance, sun and shade close-ups, eye level). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-20",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
     }
   ]
 }
