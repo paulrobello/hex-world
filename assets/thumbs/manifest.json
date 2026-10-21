@@ -62,11 +62,11 @@
     ],
     "wheat_field": [
       "wheat_field-r0.webp",
+      "wheat_field-r1.webp",
+      "wheat_field-r2.webp",
       "wheat_field-r0.webp",
-      "wheat_field-r0.webp",
-      "wheat_field-r0.webp",
-      "wheat_field-r0.webp",
-      "wheat_field-r0.webp"
+      "wheat_field-r1.webp",
+      "wheat_field-r2.webp"
     ],
     "house_cluster": [
       "house_cluster-r0.webp",
@@ -132,6 +132,14 @@
       "rail_bend_60-r4.webp",
       "rail_bend_60-r5.webp"
     ],
+    "rail_bend_120": [
+      "rail_bend_120-r0.webp",
+      "rail_bend_120-r1.webp",
+      "rail_bend_120-r2.webp",
+      "rail_bend_120-r3.webp",
+      "rail_bend_120-r4.webp",
+      "rail_bend_120-r5.webp"
+    ],
     "rail_junction": [
       "rail_junction-r0.webp",
       "rail_junction-r1.webp",
@@ -195,6 +203,14 @@
       "river_spring-r3.webp",
       "river_spring-r4.webp",
       "river_spring-r5.webp"
+    ],
+    "river_fork": [
+      "river_fork-r0.webp",
+      "river_fork-r1.webp",
+      "river_fork-r0.webp",
+      "river_fork-r1.webp",
+      "river_fork-r0.webp",
+      "river_fork-r1.webp"
     ],
     "beach": [
       "beach-r0.webp",

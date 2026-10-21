@@ -2317,7 +2317,13 @@ mod tests {
         ] {
             assert!(counts[id] > 0, "{id} scatters: {counts:?}");
         }
-        for id in ["ocean", "river_straight", "river_bend", "river_spring", "river_fork"] {
+        for id in [
+            "ocean",
+            "river_straight",
+            "river_bend",
+            "river_spring",
+            "river_fork",
+        ] {
             assert_eq!(counts[id], 0, "{id} has no scatter floor: {counts:?}");
         }
     }
