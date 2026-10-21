@@ -80,3 +80,4 @@ Paul answered `docs/review/2026-10-20-walkthrough.html` on 2026-10-20. Codes fol
 - Spur and bakery (A13, cars branch): Q1 accept park-1's east departures sharpening from 16.15 to 16.70 deg/tick; Q2 accept park-1's rotation-0 departure passing the kerb east of the forecourt mouth at 0.113 m (was 0.350); Q3 yes, fix the bakery departures' 21.8 deg/tick peak around the reverse cusp (target at most 20 deg/tick on the sliding maximum, all rotations).
 - Saves follow-up (A12): Q1 no, Undo on Replace does not restore the replaced world's camera view; Q2 keep the 4 s Undo toast as is (pauses on hover only); Q3 yes, the 20 s hold and "Your changes to {current} are saved." with Load and Cancel are right.
 - Road bend trim (A7): keep holding until the no-new-asset-work rule lifts. A13 confirmed: yes to all.
+- Cars `set_car_cap` test hook: stays callable from the web bridge (owner, 2026-10-21: no need to hide it).
