@@ -1,0 +1,417 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>
+<title>Rich-3 Colour Re-check</title><style>:root{--bg:#f4f5f2;--card:#fff;--ink:#1c211e;--muted:#5b655f;--line:#d7dbd5;--accent:#2f6f4f;--rec:#eaf3ee}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#121513;--card:#1b1f1d;--ink:#e6eae7;--muted:#a1aba5;--line:#2c3330;--accent:#7cc39c;--rec:#1d2b23}}
+:root[data-theme=dark]{--bg:#121513;--card:#1b1f1d;--ink:#e6eae7;--muted:#a1aba5;--line:#2c3330;--accent:#7cc39c;--rec:#1d2b23}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,sans-serif}
+main{max-width:1400px;margin:0 auto;padding:20px 16px 80px}h1{font-size:22px;margin:0 0 6px}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 20px}nav a{font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+section{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin:0 0 18px;scroll-margin-top:12px}
+h2{font-size:18px;margin:0 0 8px}p{margin:6px 0;max-width:100ch}
+.rec{background:var(--rec);border-left:3px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;max-width:100ch}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.pair h3{grid-column:1/-1;font-size:12px;font-weight:600;color:var(--muted);margin:0;word-break:break-all}
+figure{margin:0}figure img{width:100%;border-radius:4px;border:1px solid var(--line);display:block}
+figcaption{font-size:12px;color:var(--muted)}.none{border:1px dashed var(--line);border-radius:4px;min-height:80px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;padding:12px;text-align:center}
+.top{font-size:13px;color:var(--muted);max-width:110ch}
+@media (max-width:640px){.pair{grid-template-columns:1fr}}</style></head><body><main>
+<h1>Colour re-check on rich-3, 2026-10-21</h1>
+<p class=top>Each pair shows the image committed before this re-take (left, copied into rich3-before/, labelled with its commit, date and the grade it was shot on) and the re-take on main f80b27c with the default grade rich-3 (ACES fitted at EV100 12.5 with a +0.013 linear shadow lift; every new state dump reports grade rich-3). Cameras, seed and scripts are unchanged. Most earlier images were taken on tony (TonyMcMapface EV100 12.9), the wet band and most water look-dev stills on the earlier aces look, and the river fork and river bend 60 already on rich-3, so those two pairs show only content changes since 2026-10-20. Other differences in boats, fish, gulls, grass and dust are newer content, not the grade. Click an image for full size.</p><nav>
+<a href='#skirts'>Hex skirts (O4 cutaway)</a>
+<a href='#river'>River family</a>
+<a href='#bend60'>River bend 60</a>
+<a href='#fork'>River fork</a>
+<a href='#mouth'>River mouth and spring</a>
+<a href='#beach'>Beach close-ups</a>
+<a href='#coast'>Coast</a>
+<a href='#wetband'>Beach wet band</a>
+<a href='#waterplay'>Water in play</a>
+<a href='#water'>Water look-dev stills</a>
+<a href='#pickup'>Pickup truck close-up in play</a>
+</nav>
+<section id='skirts'><h2>Hex skirts (O4 cutaway)</h2>
+<div class=rec>Grass and soil read more saturated (mean saturation +9%). Shaded skirt walls go darker: the house close-up&#x27;s shaded wall measures 14/255 against 25 on tony, about the backdrop&#x27;s own 14, so it separates from the backdrop only by its edge. Lit walls drop from 57 to 43. The sheet is rebuilt from the new frames (skirt-o4/sheet.py).</div>
+<div class=pair><h3>sheet.jpg</h3>
+<figure><a href='rich3-before/skirts/sheet.jpg' target=_blank><img src='rich3-before/skirts/sheet.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/skirt-o4/sheet.jpg' target=_blank><img src='../../docs/checkpoints/skirt-o4/sheet.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>skirt-o4-01-play-default.jpg</h3>
+<figure><a href='rich3-before/skirts/skirt-o4-01-play-default.jpg' target=_blank><img src='rich3-before/skirts/skirt-o4-01-play-default.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/skirt-o4/skirt-o4-01-play-default.jpg' target=_blank><img src='../../docs/checkpoints/skirt-o4/skirt-o4-01-play-default.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>skirt-o4-02-overview.jpg</h3>
+<figure><a href='rich3-before/skirts/skirt-o4-02-overview.jpg' target=_blank><img src='rich3-before/skirts/skirt-o4-02-overview.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/skirt-o4/skirt-o4-02-overview.jpg' target=_blank><img src='../../docs/checkpoints/skirt-o4/skirt-o4-02-overview.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>skirt-o4-03-close-meadow-road.jpg</h3>
+<figure><a href='rich3-before/skirts/skirt-o4-03-close-meadow-road.jpg' target=_blank><img src='rich3-before/skirts/skirt-o4-03-close-meadow-road.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/skirt-o4/skirt-o4-03-close-meadow-road.jpg' target=_blank><img src='../../docs/checkpoints/skirt-o4/skirt-o4-03-close-meadow-road.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>skirt-o4-04-close-forest.jpg</h3>
+<figure><a href='rich3-before/skirts/skirt-o4-04-close-forest.jpg' target=_blank><img src='rich3-before/skirts/skirt-o4-04-close-forest.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/skirt-o4/skirt-o4-04-close-forest.jpg' target=_blank><img src='../../docs/checkpoints/skirt-o4/skirt-o4-04-close-forest.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>skirt-o4-05-close-house.jpg</h3>
+<figure><a href='rich3-before/skirts/skirt-o4-05-close-house.jpg' target=_blank><img src='rich3-before/skirts/skirt-o4-05-close-house.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/skirt-o4/skirt-o4-05-close-house.jpg' target=_blank><img src='../../docs/checkpoints/skirt-o4/skirt-o4-05-close-house.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>skirt-o4-06-close-beach.jpg</h3>
+<figure><a href='rich3-before/skirts/skirt-o4-06-close-beach.jpg' target=_blank><img src='rich3-before/skirts/skirt-o4-06-close-beach.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/skirt-o4/skirt-o4-06-close-beach.jpg' target=_blank><img src='../../docs/checkpoints/skirt-o4/skirt-o4-06-close-beach.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>skirt-o4-07-close-river.jpg</h3>
+<figure><a href='rich3-before/skirts/skirt-o4-07-close-river.jpg' target=_blank><img src='rich3-before/skirts/skirt-o4-07-close-river.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/skirt-o4/skirt-o4-07-close-river.jpg' target=_blank><img src='../../docs/checkpoints/skirt-o4/skirt-o4-07-close-river.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>skirt-o4-08-close-river-lip.jpg</h3>
+<figure><a href='rich3-before/skirts/skirt-o4-08-close-river-lip.jpg' target=_blank><img src='rich3-before/skirts/skirt-o4-08-close-river-lip.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/skirt-o4/skirt-o4-08-close-river-lip.jpg' target=_blank><img src='../../docs/checkpoints/skirt-o4/skirt-o4-08-close-river-lip.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+</section>
+<section id='river'><h2>River family: straight, bend, bridge, mouth wall (river_edge engine shots)</h2>
+<div class=rec>Water and banks read richer (saturation +10%) and slightly darker overall. The mouth wall facing away from the sun stays near black (8/255, tony 10), darker than the backdrop; the bridge arch underside reads as before.</div>
+<div class=pair><h3>engine-01-overview.jpg</h3>
+<figure><a href='rich3-before/river-edge/engine-01-overview.jpg' target=_blank><img src='rich3-before/river-edge/engine-01-overview.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/river_edge/shots/engine-01-overview.jpg' target=_blank><img src='../../assets-source/kit/river_edge/shots/engine-01-overview.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>engine-02-seam-straight-bend.jpg</h3>
+<figure><a href='rich3-before/river-edge/engine-02-seam-straight-bend.jpg' target=_blank><img src='rich3-before/river-edge/engine-02-seam-straight-bend.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/river_edge/shots/engine-02-seam-straight-bend.jpg' target=_blank><img src='../../assets-source/kit/river_edge/shots/engine-02-seam-straight-bend.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>engine-03-seam-bend-bridge.jpg</h3>
+<figure><a href='rich3-before/river-edge/engine-03-seam-bend-bridge.jpg' target=_blank><img src='rich3-before/river-edge/engine-03-seam-bend-bridge.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/river_edge/shots/engine-03-seam-bend-bridge.jpg' target=_blank><img src='../../assets-source/kit/river_edge/shots/engine-03-seam-bend-bridge.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>engine-04-mouth-straight.jpg</h3>
+<figure><a href='rich3-before/river-edge/engine-04-mouth-straight.jpg' target=_blank><img src='rich3-before/river-edge/engine-04-mouth-straight.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/river_edge/shots/engine-04-mouth-straight.jpg' target=_blank><img src='../../assets-source/kit/river_edge/shots/engine-04-mouth-straight.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>engine-05-bridge-arch.jpg</h3>
+<figure><a href='rich3-before/river-edge/engine-05-bridge-arch.jpg' target=_blank><img src='rich3-before/river-edge/engine-05-bridge-arch.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/river_edge/shots/engine-05-bridge-arch.jpg' target=_blank><img src='../../assets-source/kit/river_edge/shots/engine-05-bridge-arch.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>engine-06-bridge.jpg</h3>
+<figure><a href='rich3-before/river-edge/engine-06-bridge.jpg' target=_blank><img src='rich3-before/river-edge/engine-06-bridge.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/river_edge/shots/engine-06-bridge.jpg' target=_blank><img src='../../assets-source/kit/river_edge/shots/engine-06-bridge.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>engine-07-bend.jpg</h3>
+<figure><a href='rich3-before/river-edge/engine-07-bend.jpg' target=_blank><img src='rich3-before/river-edge/engine-07-bend.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/river_edge/shots/engine-07-bend.jpg' target=_blank><img src='../../assets-source/kit/river_edge/shots/engine-07-bend.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>engine-08-lod1.jpg</h3>
+<figure><a href='rich3-before/river-edge/engine-08-lod1.jpg' target=_blank><img src='rich3-before/river-edge/engine-08-lod1.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/river_edge/shots/engine-08-lod1.jpg' target=_blank><img src='../../assets-source/kit/river_edge/shots/engine-08-lod1.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>engine-09-lod2.jpg</h3>
+<figure><a href='rich3-before/river-edge/engine-09-lod2.jpg' target=_blank><img src='rich3-before/river-edge/engine-09-lod2.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/river_edge/shots/engine-09-lod2.jpg' target=_blank><img src='../../assets-source/kit/river_edge/shots/engine-09-lod2.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+</section>
+<section id='bend60'><h2>River bend 60</h2>
+<div class=rec>Before and after are both rich-3: no grade change to check here, only content since 2026-10-20.</div>
+<div class=pair><h3>sheet.jpg</h3>
+<figure><a href='rich3-before/river-bend-60/sheet.jpg' target=_blank><img src='rich3-before/river-bend-60/sheet.jpg' loading=lazy alt='Before (6d74073, 2026-10-20, rich-3)'></a><figcaption>Before (6d74073, 2026-10-20, rich-3)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_bend_60/sheet.jpg' target=_blank><img src='../../docs/checkpoints/river_bend_60/sheet.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+</section>
+<section id='fork'><h2>River fork</h2>
+<div class=rec>Before and after are both rich-3 (luma and saturation match within 0.5): the pair confirms nothing drifted since 2026-10-20.</div>
+<div class=pair><h3>rf-eye.jpg</h3>
+<figure><a href='rich3-before/river-fork/rf-eye.jpg' target=_blank><img src='rich3-before/river-fork/rf-eye.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/rf-eye.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/rf-eye.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>rf-flow-a.jpg</h3>
+<figure><a href='rich3-before/river-fork/rf-flow-a.jpg' target=_blank><img src='rich3-before/river-fork/rf-flow-a.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/rf-flow-a.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/rf-flow-a.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>rf-flow-b.jpg</h3>
+<figure><a href='rich3-before/river-fork/rf-flow-b.jpg' target=_blank><img src='rich3-before/river-fork/rf-flow-b.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/rf-flow-b.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/rf-flow-b.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>rf-play.jpg</h3>
+<figure><a href='rich3-before/river-fork/rf-play.jpg' target=_blank><img src='rich3-before/river-fork/rf-play.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/rf-play.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/rf-play.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>rf-scale-oak.jpg</h3>
+<figure><a href='rich3-before/river-fork/rf-scale-oak.jpg' target=_blank><img src='rich3-before/river-fork/rf-scale-oak.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/rf-scale-oak.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/rf-scale-oak.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>rf-seam-e0-straight.jpg</h3>
+<figure><a href='rich3-before/river-fork/rf-seam-e0-straight.jpg' target=_blank><img src='rich3-before/river-fork/rf-seam-e0-straight.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/rf-seam-e0-straight.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/rf-seam-e0-straight.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>rf-seam-e2-bend.jpg</h3>
+<figure><a href='rich3-before/river-fork/rf-seam-e2-bend.jpg' target=_blank><img src='rich3-before/river-fork/rf-seam-e2-bend.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/rf-seam-e2-bend.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/rf-seam-e2-bend.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>rf-seam-e4-straight.jpg</h3>
+<figure><a href='rich3-before/river-fork/rf-seam-e4-straight.jpg' target=_blank><img src='rich3-before/river-fork/rf-seam-e4-straight.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/rf-seam-e4-straight.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/rf-seam-e4-straight.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>rf-shade.jpg</h3>
+<figure><a href='rich3-before/river-fork/rf-shade.jpg' target=_blank><img src='rich3-before/river-fork/rf-shade.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/rf-shade.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/rf-shade.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>rf-sun.jpg</h3>
+<figure><a href='rich3-before/river-fork/rf-sun.jpg' target=_blank><img src='rich3-before/river-fork/rf-sun.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/rf-sun.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/rf-sun.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>rf-top.jpg</h3>
+<figure><a href='rich3-before/river-fork/rf-top.jpg' target=_blank><img src='rich3-before/river-fork/rf-top.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/rf-top.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/rf-top.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>sheet.jpg</h3>
+<figure><a href='rich3-before/river-fork/sheet.jpg' target=_blank><img src='rich3-before/river-fork/sheet.jpg' loading=lazy alt='Before (681c432, 2026-10-20, rich-3 (rf-state.json))'></a><figcaption>Before (681c432, 2026-10-20, rich-3 (rf-state.json))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river_fork/sheet.jpg' target=_blank><img src='../../docs/checkpoints/river_fork/sheet.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+</section>
+<section id='mouth'><h2>River mouth and spring</h2>
+<div class=rec>Sand and sea read warmer and more saturated (+9%); the fan, foam and the grass line are unchanged in shape. The shaded wall under the mirrored fan (05) is near black.</div>
+<div class=pair><h3>river-mouth-01-chain-right.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-01-chain-right.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-01-chain-right.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-01-chain-right.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-01-chain-right.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-02-chain-mirrored.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-02-chain-mirrored.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-02-chain-mirrored.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-02-chain-mirrored.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-02-chain-mirrored.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-03-fan-right.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-03-fan-right.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-03-fan-right.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-03-fan-right.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-03-fan-right.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-04-fan-foam-topdown.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-04-fan-foam-topdown.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-04-fan-foam-topdown.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-04-fan-foam-topdown.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-04-fan-foam-topdown.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-05-fan-mirrored.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-05-fan-mirrored.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-05-fan-mirrored.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-05-fan-mirrored.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-05-fan-mirrored.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-06-spring-pool.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-06-spring-pool.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-06-spring-pool.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-06-spring-pool.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-06-spring-pool.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-07-seam-river-edge.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-07-seam-river-edge.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-07-seam-river-edge.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-07-seam-river-edge.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-07-seam-river-edge.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-08-seam-river-edge-bend.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-08-seam-river-edge-bend.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-08-seam-river-edge-bend.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-08-seam-river-edge-bend.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-08-seam-river-edge-bend.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-09-seam-beach-edge5.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-09-seam-beach-edge5.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-09-seam-beach-edge5.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-09-seam-beach-edge5.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-09-seam-beach-edge5.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-10-seam-beach-edge2.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-10-seam-beach-edge2.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-10-seam-beach-edge2.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-10-seam-beach-edge2.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-10-seam-beach-edge2.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-11-fish-at-mouth.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-11-fish-at-mouth.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-11-fish-at-mouth.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-11-fish-at-mouth.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-11-fish-at-mouth.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-12-fan-sand-oblique.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-12-fan-sand-oblique.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-12-fan-sand-oblique.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-12-fan-sand-oblique.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-12-fan-sand-oblique.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-13-grass-line-right-long.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-13-grass-line-right-long.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-13-grass-line-right-long.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-13-grass-line-right-long.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-13-grass-line-right-long.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-14-grass-line-right-short.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-14-grass-line-right-short.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-14-grass-line-right-short.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-14-grass-line-right-short.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-14-grass-line-right-short.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-15-grass-line-mirrored-long.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-15-grass-line-mirrored-long.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-15-grass-line-mirrored-long.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-15-grass-line-mirrored-long.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-15-grass-line-mirrored-long.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>river-mouth-16-grass-line-mirrored-short.jpg</h3>
+<figure><a href='rich3-before/river-mouth/river-mouth-16-grass-line-mirrored-short.jpg' target=_blank><img src='rich3-before/river-mouth/river-mouth-16-grass-line-mirrored-short.jpg' loading=lazy alt='Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))'></a><figcaption>Before (374b1f6 / a36663b, 2026-10-14 (state dump: tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/river-mouth/river-mouth-16-grass-line-mirrored-short.jpg' target=_blank><img src='../../docs/checkpoints/river-mouth/river-mouth-16-grass-line-mirrored-short.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+</section>
+<section id='beach'><h2>Beach close-ups</h2>
+<div class=rec>Sand is a little brighter and the water more saturated (+10%).</div>
+<div class=pair><h3>beach-01-seam-straight-headland.jpg</h3>
+<figure><a href='rich3-before/beach/beach-01-seam-straight-headland.jpg' target=_blank><img src='rich3-before/beach/beach-01-seam-straight-headland.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/beach_base/shots/beach-01-seam-straight-headland.jpg' target=_blank><img src='../../assets-source/kit/beach_base/shots/beach-01-seam-straight-headland.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>beach-02-bay.jpg</h3>
+<figure><a href='rich3-before/beach/beach-02-bay.jpg' target=_blank><img src='rich3-before/beach/beach-02-bay.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/beach_base/shots/beach-02-bay.jpg' target=_blank><img src='../../assets-source/kit/beach_base/shots/beach-02-bay.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>beach-03-wet-band.jpg</h3>
+<figure><a href='rich3-before/beach/beach-03-wet-band.jpg' target=_blank><img src='rich3-before/beach/beach-03-wet-band.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/beach_base/shots/beach-03-wet-band.jpg' target=_blank><img src='../../assets-source/kit/beach_base/shots/beach-03-wet-band.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>beach-04-headland.jpg</h3>
+<figure><a href='rich3-before/beach/beach-04-headland.jpg' target=_blank><img src='rich3-before/beach/beach-04-headland.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/beach_base/shots/beach-04-headland.jpg' target=_blank><img src='../../assets-source/kit/beach_base/shots/beach-04-headland.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>beach-05-island-mid.jpg</h3>
+<figure><a href='rich3-before/beach/beach-05-island-mid.jpg' target=_blank><img src='rich3-before/beach/beach-05-island-mid.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../assets-source/kit/beach_base/shots/beach-05-island-mid.jpg' target=_blank><img src='../../assets-source/kit/beach_base/shots/beach-05-island-mid.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+</section>
+<section id='coast'><h2>Coast</h2>
+<div class=rec>Ocean and sand more saturated (+14%), brightness unchanged. Shaded coast walls stay dark but brown rather than black.</div>
+<div class=pair><h3>coast-01-overview.jpg</h3>
+<figure><a href='rich3-before/coast/coast-01-overview.jpg' target=_blank><img src='rich3-before/coast/coast-01-overview.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/coast/coast-01-overview.jpg' target=_blank><img src='../../docs/checkpoints/coast/coast-01-overview.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>coast-02-refused-beach.jpg</h3>
+<figure><a href='rich3-before/coast/coast-02-refused-beach.jpg' target=_blank><img src='rich3-before/coast/coast-02-refused-beach.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/coast/coast-02-refused-beach.jpg' target=_blank><img src='../../docs/checkpoints/coast/coast-02-refused-beach.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>coast-03-headland.jpg</h3>
+<figure><a href='rich3-before/coast/coast-03-headland.jpg' target=_blank><img src='rich3-before/coast/coast-03-headland.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/coast/coast-03-headland.jpg' target=_blank><img src='../../docs/checkpoints/coast/coast-03-headland.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>coast-04-bay.jpg</h3>
+<figure><a href='rich3-before/coast/coast-04-bay.jpg' target=_blank><img src='rich3-before/coast/coast-04-bay.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/coast/coast-04-bay.jpg' target=_blank><img src='../../docs/checkpoints/coast/coast-04-bay.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>coast-05-seam-straight-headland.jpg</h3>
+<figure><a href='rich3-before/coast/coast-05-seam-straight-headland.jpg' target=_blank><img src='rich3-before/coast/coast-05-seam-straight-headland.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/coast/coast-05-seam-straight-headland.jpg' target=_blank><img src='../../docs/checkpoints/coast/coast-05-seam-straight-headland.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>coast-06-seam-topdown.jpg</h3>
+<figure><a href='rich3-before/coast/coast-06-seam-topdown.jpg' target=_blank><img src='rich3-before/coast/coast-06-seam-topdown.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/coast/coast-06-seam-topdown.jpg' target=_blank><img src='../../docs/checkpoints/coast/coast-06-seam-topdown.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>coast-07-seam-straight-headland.jpg</h3>
+<figure><a href='rich3-before/coast/coast-07-seam-straight-headland.jpg' target=_blank><img src='rich3-before/coast/coast-07-seam-straight-headland.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/coast/coast-07-seam-straight-headland.jpg' target=_blank><img src='../../docs/checkpoints/coast/coast-07-seam-straight-headland.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>coast-08-rise-headland-fill.jpg</h3>
+<figure><a href='rich3-before/coast/coast-08-rise-headland-fill.jpg' target=_blank><img src='rich3-before/coast/coast-08-rise-headland-fill.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/coast/coast-08-rise-headland-fill.jpg' target=_blank><img src='../../docs/checkpoints/coast/coast-08-rise-headland-fill.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+</section>
+<section id='wetband'><h2>Beach wet band</h2>
+<div class=rec>Compared with the older aces look: brighter (+5%) and less saturated, so the waterline reads lighter.</div>
+<div class=pair><h3>wet-band-01-straight.jpg</h3>
+<figure><a href='rich3-before/wet-band/wet-band-01-straight.jpg' target=_blank><img src='rich3-before/wet-band/wet-band-01-straight.jpg' loading=lazy alt='Before (c9a4d03, 2026-10-14 04:15, aces (before the Tony look))'></a><figcaption>Before (c9a4d03, 2026-10-14 04:15, aces (before the Tony look))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/wet-band/wet-band-01-straight.jpg' target=_blank><img src='../../docs/checkpoints/wet-band/wet-band-01-straight.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>wet-band-02-bay.jpg</h3>
+<figure><a href='rich3-before/wet-band/wet-band-02-bay.jpg' target=_blank><img src='rich3-before/wet-band/wet-band-02-bay.jpg' loading=lazy alt='Before (c9a4d03, 2026-10-14 04:15, aces (before the Tony look))'></a><figcaption>Before (c9a4d03, 2026-10-14 04:15, aces (before the Tony look))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/wet-band/wet-band-02-bay.jpg' target=_blank><img src='../../docs/checkpoints/wet-band/wet-band-02-bay.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>wet-band-03-seam-straight-headland.jpg</h3>
+<figure><a href='rich3-before/wet-band/wet-band-03-seam-straight-headland.jpg' target=_blank><img src='rich3-before/wet-band/wet-band-03-seam-straight-headland.jpg' loading=lazy alt='Before (c9a4d03, 2026-10-14 04:15, aces (before the Tony look))'></a><figcaption>Before (c9a4d03, 2026-10-14 04:15, aces (before the Tony look))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/wet-band/wet-band-03-seam-straight-headland.jpg' target=_blank><img src='../../docs/checkpoints/wet-band/wet-band-03-seam-straight-headland.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>wet-band-04-headland.jpg</h3>
+<figure><a href='rich3-before/wet-band/wet-band-04-headland.jpg' target=_blank><img src='rich3-before/wet-band/wet-band-04-headland.jpg' loading=lazy alt='Before (c9a4d03, 2026-10-14 04:15, aces (before the Tony look))'></a><figcaption>Before (c9a4d03, 2026-10-14 04:15, aces (before the Tony look))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/wet-band/wet-band-04-headland.jpg' target=_blank><img src='../../docs/checkpoints/wet-band/wet-band-04-headland.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+</section>
+<section id='waterplay'><h2>Water in play</h2>
+<div class=rec>Water more saturated (+15%). 11 to 13 (bulldoze, undo, redo) are now mostly hidden by the bulldoze dust cloud added 2026-10-14: the script shoots before the dust clears.</div>
+<div class=pair><h3>water-play-01-overview.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-01-overview.jpg' target=_blank><img src='rich3-before/water-play/water-play-01-overview.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-01-overview.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-01-overview.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-02-coast.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-02-coast.jpg' target=_blank><img src='rich3-before/water-play/water-play-02-coast.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-02-coast.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-02-coast.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-03-river.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-03-river.jpg' target=_blank><img src='rich3-before/water-play/water-play-03-river.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-03-river.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-03-river.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-04-seam-river.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-04-seam-river.jpg' target=_blank><img src='rich3-before/water-play/water-play-04-seam-river.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-04-seam-river.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-04-seam-river.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-05-seam-bridge.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-05-seam-bridge.jpg' target=_blank><img src='rich3-before/water-play/water-play-05-seam-bridge.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-05-seam-bridge.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-05-seam-bridge.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-06-seam-coast.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-06-seam-coast.jpg' target=_blank><img src='rich3-before/water-play/water-play-06-seam-coast.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-06-seam-coast.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-06-seam-coast.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-07-seam-ocean.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-07-seam-ocean.jpg' target=_blank><img src='rich3-before/water-play/water-play-07-seam-ocean.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-07-seam-ocean.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-07-seam-ocean.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-08-edge-ocean.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-08-edge-ocean.jpg' target=_blank><img src='rich3-before/water-play/water-play-08-edge-ocean.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-08-edge-ocean.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-08-edge-ocean.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-09-edge-river.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-09-edge-river.jpg' target=_blank><img src='rich3-before/water-play/water-play-09-edge-river.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-09-edge-river.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-09-edge-river.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-10-before-bulldoze.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-10-before-bulldoze.jpg' target=_blank><img src='rich3-before/water-play/water-play-10-before-bulldoze.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-10-before-bulldoze.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-10-before-bulldoze.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-11-bulldozed.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-11-bulldozed.jpg' target=_blank><img src='rich3-before/water-play/water-play-11-bulldozed.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-11-bulldozed.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-11-bulldozed.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-12-undo.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-12-undo.jpg' target=_blank><img src='rich3-before/water-play/water-play-12-undo.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-12-undo.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-12-undo.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-play-13-redo.jpg</h3>
+<figure><a href='rich3-before/water-play/water-play-13-redo.jpg' target=_blank><img src='rich3-before/water-play/water-play-13-redo.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony)'></a><figcaption>Before (9c80a87, 2026-10-14, tony)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water-play/water-play-13-redo.jpg' target=_blank><img src='../../docs/checkpoints/water-play/water-play-13-redo.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+</section>
+<section id='water'><h2>Water look-dev stills</h2>
+<div class=rec>Compared with the older aces look (the overview with tony). These stills are the water look-dev scenario&#x27;s placeholder world. The shaded river cut wall in water-edge-river is near black.</div>
+<div class=pair><h3>water-beach.jpg</h3>
+<figure><a href='rich3-before/water/water-beach.jpg' target=_blank><img src='rich3-before/water/water-beach.jpg' loading=lazy alt='Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))'></a><figcaption>Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water/water-beach.jpg' target=_blank><img src='../../docs/checkpoints/water/water-beach.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-edge-river.jpg</h3>
+<figure><a href='rich3-before/water/water-edge-river.jpg' target=_blank><img src='rich3-before/water/water-edge-river.jpg' loading=lazy alt='Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))'></a><figcaption>Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water/water-edge-river.jpg' target=_blank><img src='../../docs/checkpoints/water/water-edge-river.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-edge.jpg</h3>
+<figure><a href='rich3-before/water/water-edge.jpg' target=_blank><img src='rich3-before/water/water-edge.jpg' loading=lazy alt='Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))'></a><figcaption>Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water/water-edge.jpg' target=_blank><img src='../../docs/checkpoints/water/water-edge.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-ocean.jpg</h3>
+<figure><a href='rich3-before/water/water-ocean.jpg' target=_blank><img src='rich3-before/water/water-ocean.jpg' loading=lazy alt='Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))'></a><figcaption>Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water/water-ocean.jpg' target=_blank><img src='../../docs/checkpoints/water/water-ocean.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-overview.jpg</h3>
+<figure><a href='rich3-before/water/water-overview.jpg' target=_blank><img src='rich3-before/water/water-overview.jpg' loading=lazy alt='Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))'></a><figcaption>Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water/water-overview.jpg' target=_blank><img src='../../docs/checkpoints/water/water-overview.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-river.jpg</h3>
+<figure><a href='rich3-before/water/water-river.jpg' target=_blank><img src='rich3-before/water/water-river.jpg' loading=lazy alt='Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))'></a><figcaption>Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water/water-river.jpg' target=_blank><img src='../../docs/checkpoints/water/water-river.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-seam-ocean.jpg</h3>
+<figure><a href='rich3-before/water/water-seam-ocean.jpg' target=_blank><img src='rich3-before/water/water-seam-ocean.jpg' loading=lazy alt='Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))'></a><figcaption>Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water/water-seam-ocean.jpg' target=_blank><img src='../../docs/checkpoints/water/water-seam-ocean.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>water-seam-river.jpg</h3>
+<figure><a href='rich3-before/water/water-seam-river.jpg' target=_blank><img src='rich3-before/water/water-seam-river.jpg' loading=lazy alt='Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))'></a><figcaption>Before (8f831bb, 2026-10-13, aces (overview: 9c80a87, tony))</figcaption></figure>
+<figure><a href='../../docs/checkpoints/water/water-seam-river.jpg' target=_blank><img src='../../docs/checkpoints/water/water-seam-river.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+</section>
+<section id='pickup'><h2>Pickup truck close-up in play</h2>
+<div class=rec>New: three close-ups of driving pickups (green, teal, white paint) on the cars-kit road tree, taken with docs/checkpoints/pickup/pickup.json under --clock fixed. The left image is the earlier tony close-up from the cars-kit hub for colour reference.</div>
+<div class=pair><h3>pickup-closeup-a.jpg</h3>
+<figure><a href='rich3-before/pickup/cars-kit-03-closeup-pickup.jpg' target=_blank><img src='rich3-before/pickup/cars-kit-03-closeup-pickup.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony, cars-kit hub close-up)'></a><figcaption>Before (9c80a87, 2026-10-14, tony, cars-kit hub close-up)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/pickup/pickup-closeup-a.jpg' target=_blank><img src='../../docs/checkpoints/pickup/pickup-closeup-a.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>pickup-closeup-b.jpg</h3>
+<figure><a href='rich3-before/pickup/cars-kit-03-closeup-pickup.jpg' target=_blank><img src='rich3-before/pickup/cars-kit-03-closeup-pickup.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony, cars-kit hub close-up)'></a><figcaption>Before (9c80a87, 2026-10-14, tony, cars-kit hub close-up)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/pickup/pickup-closeup-b.jpg' target=_blank><img src='../../docs/checkpoints/pickup/pickup-closeup-b.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+<div class=pair><h3>pickup-closeup-c.jpg</h3>
+<figure><a href='rich3-before/pickup/cars-kit-03-closeup-pickup.jpg' target=_blank><img src='rich3-before/pickup/cars-kit-03-closeup-pickup.jpg' loading=lazy alt='Before (9c80a87, 2026-10-14, tony, cars-kit hub close-up)'></a><figcaption>Before (9c80a87, 2026-10-14, tony, cars-kit hub close-up)</figcaption></figure>
+<figure><a href='../../docs/checkpoints/pickup/pickup-closeup-c.jpg' target=_blank><img src='../../docs/checkpoints/pickup/pickup-closeup-c.jpg' loading=lazy alt='After (rich-3 re-take, 2026-10-21)'></a><figcaption>After (rich-3 re-take, 2026-10-21)</figcaption></figure>
+</div>
+</section>
+<section id='later'><h2>Left for later</h2><div class=rec>Not re-taken, per the no-new-asset-work rule: the social share image (web/brand/og-image.png) and every icon or brand image. They still show the tony look and need a re-shoot once generated images are allowed again.</div></section>
+</main></body></html>
