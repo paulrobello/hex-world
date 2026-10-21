@@ -4,32 +4,20 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## State
 
-- `main` pushed and every 2026-10-20 push passed CI and auto-deployed to hex-world.pardev.net. Count unpushed with `git log --oneline origin/main..main`; check the last run with `gh run list -R paulrobello/hex-world --branch main --limit 1`.
-- `dist/` rebuilt from `main` after every merge (`make build-web`).
-- Working tree clean apart from an untracked `.claude/launch.json` (leave it). No worktrees, no agents running.
-- Piece tables are slices now (`&[T]`), so a new asset adds a row without touching a length line.
+- `main` at `8aff740` is pushed, CI green, auto-deployed (batches 11 and 12 today). `dist/` rebuilt from it.
+- **Batch 13 sits in `/Users/probello/Repos/hex-world-wt/land-b13` (branch `land-b13`, 6 commits on main, not merged):** river_bend_60 (the tight river bend), the buffer stop runtime (stops at open rail ends, buffer clunk, carriage order, give-way livelock fix), the boats runtime (rowing and sailing boats, landing stages, oar and sail sounds), the merged audio records (attempts renumbered 1-68, cap 68), and the owner's approvals of every piece and cue on the approvals page. Owner answers are appended to `docs/review/2026-10-20-owner-answers.md` there.
+- Working tree clean apart from the untracked `.claude/launch.json` (its `hex-world-review-staging` entry serves land-b13 on 8093). No agents running; `git worktree list` shows main and land-b13 only.
+- The review page generator is `python3 docs/review/approvals.py` (writes `docs/review/approvals.html`: every piece or cue without an owner approval, with players, sheets, decisions and Copy answers). It is empty on land-b13 now.
 
-## Landed 2026-10-19 evening to 2026-10-20 (all pushed)
+## Resume batch 13
 
-Assets (every piece's owner approval is still **pending**; review sheets under `docs/checkpoints/<piece>/sheet.jpg`):
-- Rail: river rail bridge `d6eb22a` (plus the train, crossing, station, junction from 2026-10-19).
-- Houses: `house_longhouse` `de3bf7e`, `house_twostorey_b` `885458b`, drawn through the hero variant resolver `e24a97c` (`crates/hex-core/src/variant.rs` `HERO_VARIANTS`, about one slot in three).
-- Oak tile: scattered `tree_oak`/`tree_oak_b` `2b6919b`; hero variant `tree_hero_oak_b` `36aa4a4` (12 bird perches).
-- Pine forest floor: ferns and log `261dc10`, variants `4aadbfb`, shrub and sapling `8eafaac`, `shrub_forest_b` (holly) `9f7ae7c`, `sapling_spruce_b` `576760e`, `log_fallen_c` (hollow log).
-- Houses (late): `house_cottage_b`, a slate-roofed rendered cottage with a gabled porch; the cottage slot now splits its one-in-three variant between the longhouse and `_b` (about 1/6 each).
-- Tooling: piece tables as slices (card `01a15994825570`).
-- Farm: paddock fence in play `f865be6` (per-part walker colliders, post-only grass clears, line-clear scatter), grazing cow and lamb `ae8e404`, hay bale variants `2da86b8`, grazing sheep `12d0d8d`.
-- Roads: verge bushes `bush_verge` `b8ad8e6` and `bush_verge_b` `8c5ad9b` (verge band scatter, none on parking tiles).
-- Audio: 13 one-shot cues for farm, windmill, wheat, bakery and train `2f40c53` (owner approves by ear on `assets-source/audio/review.html`).
+1. Boats do not know the river fork or the tight bend yet (they were written before both). Dispatch an agent that works directly in land-b13: rowing boats pick an outgoing arm at a junction (seeded, arithmetic-only), follow `river_bend_60` inside the channel, count fork and tight-bend tiles as river; tests in `crates/hex-play/src/boats/tests.rs`. Card `01a15bc5283e` (river fork) criterion 2 waits on this.
+2. Then in land-b13: `caffeinate -d -u make thumbs` (river_bend_60 has none), a second thumbs run to compare, `make kit-check`, `make audio-check`, `make checkall-ci`, `make web-smoke`, `make ui-e2e`; commit thumbs, `git merge --ff-only land-b13` on main, `gitleaks git --log-opts="origin/main..main"`, `make build-web`, push (standing approval), watch CI, remove land-b13.
+3. Close cards after landing: boats `01a15b8439d1`, buffer stop `01a15b843efb`, river fork `01a15bc5283e`, whistle redo `01a15bdfd55c` (owner approved the retake), and file/close a river bend 60 card.
 
-## In flight at handoff
+## Next asset work
 
-Nothing. Every agent finished and landed: the piece tables are slices (card `01a15994825570` done), `log_fallen_c` and `house_cottage_b` are on main. `git worktree list` should show only the main checkout.
-
-Landing recipe for future asset agents (the one used all session):
-1. `git -C <worktree> merge main`, then `git apply --3way docs/checkpoints/<piece>/integration.patch`, resolve, `cargo test -p hex-play -p hex-render --lib`, commit on the branch.
-2. `caffeinate -d -u make thumbs` in the worktree; thumbs are byte-reproducible, so only the tiles the piece changes (and the contact sheet) should come out dirty, apart from an occasional one-pixel `road_bend_60` difference (restore it); any other dirtied thumbnail is a real render change to look at.
-3. `make checkall-ci > log 2>&1; echo EXIT=$?`, then squash-merge into `main`, `make build-web`, remove the worktree (`git worktree unlock` first if a finished agent left it locked), delete the branch, push, watch CI with `gh run watch <id> --exit-status`.
+No Blender agents are running: every P3 piece waits on the owner. The stone well (card `01a15bdfd04e`) needs WL-A1 (approve `assets-source/refs/well_stone/` refs 1-3, sheet `docs/checkpoints/refs-well/refs-sheet.jpg`) and WQ1 placement (recommended: one well on house_cluster's lawn, farm yard fallback), WQ2 covered piece with the open one as a `_b` variant, WQ3 1.5 m wide, 0.9 m tall, 2.4 m ridge. Recipes are deferred and nothing past P3 starts until Paul says so.
 
 ## Standing rules from the owner (still in force)
 
@@ -44,6 +32,8 @@ Landing recipe for future asset agents (the one used all session):
 - Blender headless only. Never record an owner approval yourself (pending entries only). Tool bugs and flaky tests are high priority. Perf numbers need host load ≤ 15 before and after.
 
 ## Waiting on Paul
+
+New today (2026-10-20, later): flatten Q1 meadow mostly flat at ring height, Q2 hollow depth 0.25/0.18/0.15, Q3 forest root pits; farm motion Q1 TAA leg ghosting, Q2 standing animals graze, Q3 trot vs four-beat, Q4 tuning values; river fork Q1 plain Y vs round pool, Q2 flow rule, Q3 three-spring edge cases, Q4 crisp ridge; rail bend 120 Q1 single 24 m arc; river bend 60 Q1 LOD2 0.033 m water error, Q2 seventh river-dressing budget, Q3 name; boats Q1 keep sailing routes apart, Q2 boats re-derive on any water edit, Q3 anchored sails set 10 degrees, Q4 boat-sail-2 double luff; whistle retake 0.5 s lead-in.
 
 All pieces landed since 2026-10-19 await look approval (sheets in `docs/checkpoints/`). Open questions, numbered as asked in the session:
 - Station/rail: Q10 bogie or 4-wheel carriage; Q11 train palette; Q13 21% crossing ramp; Q14 gates open or closed; Q18 1.67 m unsupported branch run; Q19 mirrored turnout; Q20 red lever; Q27 bridge parapet height; Q28 provenance with several refs.
