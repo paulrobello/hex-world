@@ -199,14 +199,20 @@ fn water_key(view: &PlayView, catalog: &PlayCatalog) -> Vec<(Axial, String, u8)>
         .collect()
 }
 
+/// Leaves the boats and landing stages out of play: the thumbnail renderer (`--thumbs`) draws
+/// each tile at rest, and a boat on a river tile's image would be an agent, not the tile.
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct NoBoats;
+
 /// Re-derives the boats when the view's water, epoch or seed changes.
 pub fn sync(
     active: Res<ActiveScenario>,
     view: Res<PlayView>,
     catalog: Res<PlayCatalog>,
+    no_boats: Option<Res<NoBoats>>,
     mut boats: ResMut<Boats>,
 ) {
-    if active.0 != Scenario::Play {
+    if active.0 != Scenario::Play || no_boats.is_some() {
         if !boats.plan.boats.is_empty() || !boats.plan.stages.is_empty() {
             *boats = Boats::default();
         }
