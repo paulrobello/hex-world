@@ -35,7 +35,7 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## Next asset work
 
-No Blender agents are running. The stone well landed in batch 15; no other P3 piece has an approved reference set, so nothing is queued until the owner names a new piece. Recipes are deferred and nothing past P3 starts until Paul says so.
+No Blender agents are running (2026-10-26 19:20Z). The scatter-rebuild agents (riverbank, beach/ocean) and bush shine are finished. No new piece has an approved reference set, so the next wave waits on A19 (B1-B4) and A23 (the forest shrubs). Recipes are deferred and nothing past P3 starts until Paul says so.
 
 ## Standing rules from the owner (still in force)
 
