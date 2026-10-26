@@ -57,9 +57,9 @@ function resvgVersion() {
   try {
     v = execFileSync("resvg", ["--version"], { encoding: "utf8" }).trim();
   } catch {
-    throw new Error(`resvg not found; install resvg ${RESVG_VERSION} (brew install resvg)`);
+    throw new Error(`resvg not found; install resvg ${RESVG_VERSION} (cargo install resvg --version ${RESVG_VERSION} --locked)`);
   }
-  if (v !== RESVG_VERSION) throw new Error(`resvg ${v} found, ${RESVG_VERSION} required for byte-identical output`);
+  if (v !== RESVG_VERSION) throw new Error(`resvg ${v} found, ${RESVG_VERSION} required for byte-identical output (cargo install resvg --version ${RESVG_VERSION} --locked)`);
 }
 
 function render(svg, png, size) {

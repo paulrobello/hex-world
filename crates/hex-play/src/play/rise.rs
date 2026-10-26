@@ -681,6 +681,10 @@ const CLOUD_TIME: f32 = 0.8;
 /// Each puff's full-grown radius against the scaled first look's: the circles were still too big
 /// at 80% (owner, 2026-10-14: "reduce the largest size by 20%").
 const CLOUD_PEAK: f32 = 0.8;
+/// Every cloud particle's radius against the cut above, at spawn and grown, debris included, with
+/// its motion and timing unchanged: "bulldoze particle size still needs to reduce by another 20%"
+/// (owner, 2026-10-21).
+const CLOUD_PARTICLE: f32 = 0.8;
 
 /// The bulldoze cloud's layers at the first look's timing: a darker low swell over the hex, a
 /// lighter billow from the rim and the centre that thins sooner as it rises, and dark debris bits.
@@ -872,13 +876,18 @@ fn particles(cell: Axial, n: u32, strength: f32) -> Vec<Particle> {
 }
 
 /// The bulldoze cloud at `cell` as drawn: [`cloud_base`] at [`CLOUD_SIZE`] the size about the
-/// cell's centre on the ground and [`CLOUD_TIME`] the duration. Deterministic per cell.
+/// cell's centre on the ground and [`CLOUD_TIME`] the duration, its grown radii cut by
+/// [`CLOUD_PEAK`] and every radius by [`CLOUD_PARTICLE`]. Deterministic per cell.
 fn cloud(cell: Axial) -> Vec<Particle> {
     let [cx, cz] = cell.to_world(HEX_RADIUS);
     let centre = Vec3::new(cx, 0.0, cz);
     cloud_base(cell)
         .into_iter()
-        .map(|p| p.scaled(centre, CLOUD_SIZE, CLOUD_TIME).peaked(CLOUD_PEAK))
+        .map(|p| {
+            let mut p = p.scaled(centre, CLOUD_SIZE, CLOUD_TIME).peaked(CLOUD_PEAK);
+            p.size = (p.size.0 * CLOUD_PARTICLE, p.size.1 * CLOUD_PARTICLE);
+            p
+        })
         .collect()
 }
 
@@ -1349,8 +1358,9 @@ mod tests {
             .iter()
             .map(|p| flat(p.at(0.8)) + p.radius(0.8))
             .fold(0.0, f32::max);
-        // About 1.1 m past the rim since the owner's 20% cut of the full-grown puffs (was 1.5 m).
-        assert!(reach > HEX_RADIUS + 1.0, "spreads past the rim: {reach}");
+        // About 0.5 m past the rim since the owner's second 20% cut of every particle (2026-10-21; was
+        // 1.1 m after the cut of the full-grown puffs, 1.5 m before it).
+        assert!(reach > HEX_RADIUS + 0.4, "spreads past the rim: {reach}");
         let life = ps.iter().map(|p| p.life).fold(0.0, f32::max);
         assert!(life <= 2.24 + 1e-4, "clear by 2.24 s: {life}");
         assert!(
@@ -1371,7 +1381,8 @@ mod tests {
 
     /// Owner 2026-10-14: "reduce dust size and duration by 20%". The drawn cloud is the first look
     /// at 80% of its size about the cell's centre and 80% of its duration, every phase included, with
-    /// each puff's full-grown radius cut by [`CLOUD_PEAK`] on top ("reduce the largest size by 20%").
+    /// each puff's full-grown radius cut by [`CLOUD_PEAK`] on top ("reduce the largest size by 20%")
+    /// and every particle's radius by [`CLOUD_PARTICLE`] ("another 20%", 2026-10-21).
     #[test]
     fn the_cloud_is_the_first_look_at_80_percent_size_and_duration() {
         let cell = Axial::new(2, -1);
@@ -1382,7 +1393,10 @@ mod tests {
             .map(|p| {
                 let s = p.scaled(centre, CLOUD_SIZE, 1.0).peaked(CLOUD_PEAK);
                 Particle {
-                    size: (p.size.0, s.size.1 / CLOUD_SIZE),
+                    size: (
+                        p.size.0 * CLOUD_PARTICLE,
+                        s.size.1 / CLOUD_SIZE * CLOUD_PARTICLE,
+                    ),
                     ..p
                 }
             })
@@ -1419,6 +1433,35 @@ mod tests {
         }
         let life = |ps: &[Particle]| ps.iter().map(|p| p.life).fold(0.0, f32::max);
         assert!((life(&drawn) - 0.8 * life(&base)).abs() < 1e-5);
+    }
+
+    /// Owner 2026-10-21: "bulldoze particle size still needs to reduce by another 20%". Against the
+    /// cloud as drawn before, every particle (swell, billow and debris) is 80% of the radius at every
+    /// moment, at the same place, for the same life, in the same number.
+    #[test]
+    fn cloud_particles_are_80_percent_of_the_previous_radius_on_the_same_paths() {
+        let cell = Axial::new(-1, 3);
+        let [cx, cz] = cell.to_world(HEX_RADIUS);
+        let centre = Vec3::new(cx, 0.0, cz);
+        let before: Vec<Particle> = cloud_base(cell)
+            .into_iter()
+            .map(|p| p.scaled(centre, CLOUD_SIZE, CLOUD_TIME).peaked(CLOUD_PEAK))
+            .collect();
+        let drawn = cloud(cell);
+        assert_eq!(drawn.len(), before.len());
+        assert_eq!(drawn.len(), CLOUD_PARTICLES as usize);
+        for (b, d) in before.iter().zip(&drawn) {
+            assert_eq!((d.life, d.layer), (b.life, b.layer));
+            for t in [0.0, 0.05, 0.3, 0.7, 1.2, 1.8, b.life] {
+                assert_eq!(d.at(t), b.at(t), "same path at {t} s");
+                let want = (0.8 * b.radius(t)).max(1e-3);
+                assert!(
+                    (d.radius(t) - want).abs() < 1e-5,
+                    "radius at {t} s: {} against {want}",
+                    d.radius(t)
+                );
+            }
+        }
     }
 
     /// Entities the dust system spawns for one cue.

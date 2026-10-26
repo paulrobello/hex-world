@@ -245,7 +245,9 @@ initial-download:
 	node scripts/size/initial-download.mjs dist
 
 # App icons, favicon.ico, manifest icons, social share image and the concept sheet, rebuilt
-# byte-identically from design/brand/ sources. Needs resvg 0.48.1 (brew install resvg).
+# byte-identically from design/brand/ sources. Needs resvg 0.48.1 on PATH: Homebrew now ships a
+# newer one, so `cargo install resvg --version 0.48.1 --locked --root target/tools/resvg-0.48.1` and
+# run with PATH="$PWD/target/tools/resvg-0.48.1/bin:$PATH" (byte-identical to the brew 0.48.1 build).
 brand:
 	node scripts/brand/build.mjs
 

@@ -26,6 +26,11 @@
 //! - **Vary.** A rule with `vary` (the meadow's single wildflowers) spreads evenly but keeps a dart
 //!   with probability 1 - vary × (1 - [`vary_noise`]), so its density varies gently over the cap
 //!   while its count stays exact.
+//! - **Beaches.** A tile that scatters only beach dressing ([`beach_family`]: beach, beach_inner,
+//!   beach_outer and both river mouths) keeps a seeded 0 to [`BEACH_MAX`] of the pieces its rules
+//!   place ([`beach_count`], owner 2026-10-21), picked jointly across its rules from a stream of
+//!   its own, so a kept piece stands where it would among all of them and the dart stream is
+//!   untouched. Its `planned` counts what it keeps.
 //! - **Ground.** An instance stands only on its piece's floor slots ([`floor_slots`]) of the topmost
 //!   LOD0 surface of the tile's base, centre and lane edge pieces, sampled the way the kit gate's
 //!   `surface_at` does: trees on `forest_base_floor` (the litter), rocks and wildflowers on either
@@ -1612,8 +1617,51 @@ fn stand(surface: &Surface, p: Vec2, floors: &[&str], reach: f32) -> Option<f32>
     Some(ring.fold(h, f32::min))
 }
 
-/// The scatter of a tile with definition `def` and seed `seed` on its prepared ground.
-pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
+/// Most dressing pieces one coast tile draws: "the beaches have too much going on, every piece does
+/// not need to have all scatter items, 0 to 6 is plenty" (owner, 2026-10-21).
+pub const BEACH_MAX: usize = 6;
+
+/// Whether a tile is dressed as a beach: it scatters, and only beach dressing ([`beach_band`]).
+pub fn beach_family(def: &TileDef) -> bool {
+    !def.props.scatter.is_empty()
+        && def
+            .props
+            .scatter
+            .iter()
+            .all(|r| beach_band(r.piece.as_str()).is_some())
+}
+
+/// How many dressing pieces a coast tile with seed `seed` keeps: 0 to [`BEACH_MAX`], evenly.
+pub fn beach_count(seed: u64) -> usize {
+    Rng(seed ^ 0xB3AC_4C0D_7E11_5A29).below(BEACH_MAX + 1)
+}
+
+/// Keeps a seeded [`beach_count`] of a coast tile's placed dressing, picked jointly across its rules
+/// from its own stream, so a kept piece stands exactly where it stood among all of them, and plans
+/// what it keeps (a shortfall still means only that the spacing could not fit a piece).
+fn keep_beach(out: &mut Layout, seed: u64) {
+    let n = out.instances.len();
+    let k = beach_count(seed).min(n);
+    let mut rng = Rng(seed ^ 0x6E3D_19B7_A2C5_F041);
+    let mut pick: Vec<usize> = (0..n).collect();
+    for i in 0..k {
+        let j = i + rng.below(n - i);
+        pick.swap(i, j);
+    }
+    let mut keep = vec![false; n];
+    for &i in &pick[..k] {
+        keep[i] = true;
+    }
+    let mut kept = keep.into_iter();
+    out.instances.retain(|_| kept.next().unwrap_or(false));
+    out.planned = (0..out.planned.len())
+        .map(|ri| out.placed(ri) as u32)
+        .collect();
+}
+
+/// Every instance the darts place for a tile before a coast tile keeps its [`beach_count`], in dart
+/// order and not yet ranked.
+fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
     let mut rng = Rng(seed ^ 0x5CA7_7E25_D3A1_0B07);
     let mut out = Layout::default();
     // (centre, ground reach, rule) of everything placed so far.
@@ -1707,6 +1755,15 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
                 .iter()
                 .all(|l| polyline_distance(i.pos.xz(), l) >= need)
         });
+    }
+    out
+}
+
+/// The scatter of a tile with definition `def` and seed `seed` on its prepared ground.
+pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
+    let mut out = every_dart(def, seed, ground);
+    if beach_family(def) {
+        keep_beach(&mut out, seed);
     }
     let mut by_distance: Vec<usize> = (0..out.instances.len()).collect();
     by_distance.sort_by(|&a, &b| {
@@ -2846,6 +2903,64 @@ mod tests {
                 "{id}: mean per tile {mean:?} for {pieces:?} on {area:?} m² ({near} near, {far} far)"
             );
             assert!(short.is_empty(), "shortfall: {short:?}");
+        }
+    }
+
+    /// Owner 2026-10-21: "the beaches have too much going on, every piece does not need to have all
+    /// scatter items, 0 to 6 is plenty". Every beach-family tile draws 0 to [`BEACH_MAX`] dressing
+    /// pieces, the same for the same seed, each standing exactly where the full dart set put it,
+    /// and the count varies over seeds. Prints how often each count occurs.
+    #[test]
+    fn beach_tiles_draw_zero_to_six_dressing_pieces() {
+        let c = catalog();
+        let mut family: Vec<&str> = c
+            .tiles()
+            .iter()
+            .filter(|d| beach_family(d))
+            .map(|d| d.id.as_str())
+            .collect();
+        family.sort_unstable();
+        assert_eq!(
+            family,
+            [
+                "beach",
+                "beach_inner",
+                "beach_outer",
+                "river_mouth",
+                "river_mouth_l"
+            ]
+        );
+        for id in family {
+            let def = c.get(id).unwrap();
+            let g = prepared(def).unwrap();
+            let mut seen = [0u32; BEACH_MAX + 1];
+            for s in 0..64 {
+                let seed = cell_seed(11, Axial::new(s, -s / 2));
+                let l = layout(def, seed, &g);
+                let n = l.instances.len();
+                assert!(n <= BEACH_MAX, "{id} seed {seed}: {n} pieces");
+                seen[n] += 1;
+                assert_eq!(l, layout(def, seed, &g), "{id}: same seed, same beach");
+                let all = every_dart(def, seed, &g);
+                assert_eq!(n, beach_count(seed).min(all.instances.len()), "{id}");
+                for inst in &l.instances {
+                    assert!(
+                        all.instances.iter().any(|a| Instance {
+                            order: 0,
+                            ..inst.clone()
+                        } == *a),
+                        "{id}: a kept piece moved"
+                    );
+                }
+                for ri in 0..def.props.scatter.len() {
+                    assert_eq!(l.planned[ri], l.placed(ri) as u32, "{id}: planned is kept");
+                }
+            }
+            println!("{id}: tiles per count 0..=6 over 64 seeds {seen:?}");
+            assert!(
+                seen.iter().filter(|&&k| k > 0).count() >= 3,
+                "{id}: the count varies {seen:?}"
+            );
         }
     }
 
