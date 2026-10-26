@@ -431,7 +431,7 @@ Built: every hook is present and inert at the MVP values (noon, dry, summer, unf
 | Main-thread simulation tick | ≤4 ms |
 | Draw calls after instancing and indirect draws | ≤500 at the strategic overview camera. Owner A2 Q1 (2026-10-21) gates only that camera, natively (`make shots-scatter`) and on WebGPU (`make web-scatter`). Close cameras are tracked, with their counts printed, but not gated. On the 20-tile scatter world (`docs/checkpoints/lod-band-instanced/census.json`) the counts are: overview 419 (gated), forest cluster 633, meadow 645, and 756 with the world's centre 152 m away |
 | Scatter (mesh, material) pairs on the 20-tile scatter world | ≤60 per LOD and ≤180 in all (owner A2 Q2, 2026-10-21), gated by `make shots-scatter` |
-| Initial download before first interaction | ≤30 MiB (WASM + core kit + UI), the larger of BC7 and ASTC; an MVP target that may be raised as needed (owner, 2026-10-21). The PNG fallback is report only and warns within 1 MiB of the budget |
+| Initial download before first interaction | ≤30 MiB (WASM + core kit + UI), the larger of BC7 and ASTC; an MVP target that may be raised as needed (owner, 2026-10-21). The PNG fallback is report only and warns within 1 MiB of the budget. The social share image (`web/brand/og-image.png`) is not counted: only link-preview crawlers fetch it |
 | WASM binary over the wire (after `wasm-opt -Oz`, gzip as served by Pages) | ≤12 MB (Bevy's measured floor is about 7.6 MB) |
 | Total deployed site at the full game | ≤600 MB (TC2) |
 | Kit piece LOD0 | ≤4k tris typical, ≤12k for hero pieces (landmarks, volcano) |

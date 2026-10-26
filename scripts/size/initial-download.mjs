@@ -42,6 +42,8 @@ const OVERLAY = ["web", "ui"];
 // Shell files at the dist root besides index.html, counted when present: the browser's favicon
 // request and the version check's poll (scripts/web/version-dist.mjs writes version.json).
 const ROOT_SHELL = ["favicon.ico", "version.json"];
+// The social share image is fetched only by link-preview crawlers, never by the page.
+const NOT_FETCHED = [["web", "brand", "og-image.png"]];
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 
 /** Bad input (exit 2). */
@@ -120,7 +122,8 @@ export function account(dist) {
   };
 
   const overlayDir = join(dist, ...OVERLAY);
-  const webShell = filesUnder(join(dist, "web")).filter((f) => !f.startsWith(overlayDir + sep));
+  const notFetched = new Set(NOT_FETCHED.map((f) => join(dist, ...f)));
+  const webShell = filesUnder(join(dist, "web")).filter((f) => !f.startsWith(overlayDir + sep) && !notFetched.has(f));
   const rootShell = ROOT_SHELL.map((f) => join(dist, f)).filter(existsSync);
   const categories = (fam) => [
     ["wasm", [join(dist, wasm[0])]],
