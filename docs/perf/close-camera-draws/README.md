@@ -1,6 +1,6 @@
 # Close-camera draw calls: MiniMac before/after run
 
-This is the frame-time half of the close-camera draw-call work (owner A2 Q3). The draw counts are in `docs/checkpoints/close-camera-draws/README.md`. No timing has been taken yet: this host's load was 100 to 125 throughout the work, and frame time is measured on MiniMac only.
+This is the frame-time half of the close-camera draw-call work (owner A2 Q3). The draw counts are in `docs/checkpoints/close-camera-draws/README.md`. Frame time is measured on MiniMac only, because this host's load was 100 to 125 throughout the work. The first measurement is in [MiniMac results](#minimac-results-2026-10-26).
 
 ## Builds
 
@@ -94,9 +94,63 @@ Both worlds built, and the save loaded natively (`--load`) and on the web (`hexW
 
 On the 2,066-tile world the far cascades dominate. At the close camera, cascade 2 holds 324 draws and cascade 3 holds 393: the world reaches past 371 m, so every slot casts there at up to three LODs plus their band draws.
 
+## MiniMac results (2026-10-26)
+
+Measured on MiniMac (Mac mini Mac16,10, Apple M4 with a 10-core GPU, 32 GiB, macOS 27.0.1), with before = `29a67fb` and after = `fee30bd` (the work branch head, which holds O5, O4 and O6). Each arm was built on the dev host in its own fresh worktree, and no timing ran there. Both harnesses ran unchanged with `ROUNDS=4`, so each cell has 4 paired samples, and the arms alternated order every round. Every run passed the load guard: the 1-minute load was 2.1 to 4.7 before and after every run, and no sample was discarded or failed. The web renderer was `ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)` (WebGPU adapter `apple | metal-3`), in HeadlessChrome 153 at 2560x1440 and DPR 1. The console logged no error. Every sample, with its loads, renderer, DPR and build sha, is in [`results-2026-10-26.json`](results-2026-10-26.json), with the optional per-change arms under `optional_arms_web`.
+
+Each value is the median over the 4 rounds. A delta is after minus before, paired within a round, shown as the median with the min and max of the 4 paired deltas. A delta is marked real when all 4 paired deltas have the same sign and the median is larger than their spread. The arm-to-arm spread across rounds is larger at the 20-tile world: up to 0.9 ms on the web mean, because round 0 read low in both arms. Pairing within a round removes that drift.
+
+### Web (uncapped GPU Chromium)
+
+| World | Camera | Mean ms | Mean delta | p95 ms | p95 delta | Draws | Kit draws after (slots, total) |
+|---|---|---|---|---|---|---|---|
+| 20 tiles | overview | 11.25 -> 11.21 | -0.02 (-0.11 to +0.04), noise | 19.00 -> 19.05 | +0.10 (0.00 to +0.40), noise | 427 -> 343 | 97, 291 |
+| 20 tiles | forest cluster | 17.82 -> 17.06 | **-0.77** (-0.82 to -0.75), -4.3% | 31.35 -> 30.70 | **-0.80** (-1.00 to -0.60) | 637 -> 440 | 97, 388 |
+| 20 tiles | meadow | 15.93 -> 15.46 | **-0.47** (-0.53 to -0.46), -2.9% | 28.10 -> 27.80 | **-0.30** (-0.30 to -0.20) | 629 -> 481 | 97, 437 |
+| 20 tiles | 152 m band | 14.54 -> 14.49 | -0.05 (-0.08 to +0.01), noise | 25.20 -> 25.25 | +0.10 (-0.10 to +0.10), noise | 764 -> 648 | 97, 596 |
+| 2,066 tiles | close | 38.29 -> 34.55 | **-3.73** (-3.80 to -3.68), -9.7% | 53.80 -> 46.65 | **-7.20** (-7.30 to -7.00), -13.4% | 2,264 -> 1,609 | 127, 1,474 |
+| 2,066 tiles | overview | 42.27 -> 42.05 | **-0.23** (-0.25 to -0.19), -0.5% | 65.65 -> 66.25 | +0.55 (+0.20 to +0.80), noise | 1,426 -> 952 | 127, 871 |
+
+The web p50 is bimodal on this host, as the README warns. For example, at the 2,066-tile close camera p50 rose from 26.55 to 28.65 ms while the mean fell. So p50 is recorded in the JSON but is not used here.
+
+### Native (release, `--present immediate`)
+
+| World | Camera | Mean ms | Mean delta | p95 ms | Draws | Paced? |
+|---|---|---|---|---|---|---|
+| 20 tiles | overview | 16.67 -> 16.67 | 0.00 | 19.23 -> 18.89 | 419 -> 335 | both arms at 60 Hz |
+| 20 tiles | forest cluster | 16.66 -> 16.67 | +0.01 | 18.83 -> 17.87 | 631 -> 434 | both arms at 60 Hz |
+| 20 tiles | meadow | 16.67 -> 16.67 | 0.00 | 19.13 -> 18.36 | 623 -> 475 | both arms at 60 Hz |
+| 20 tiles | 152 m band | 16.67 -> 16.67 | 0.00 | 17.77 -> 20.14 | 756 or 759 -> 640 or 643 | both arms at 60 Hz |
+| 2,066 tiles | close | 28.05 -> 23.68 | **-4.37** (-4.46 to -2.55), -15.6% | 28.53 -> 24.34 | 2,190 -> 1,535 | neither |
+| 2,066 tiles | overview | 17.62 -> 16.62 | -0.99 (-1.02 to -0.66) | 18.47 -> 21.80 | 1,393 -> 919 | after arm at 60 Hz |
+
+Native play is pinned to 60 Hz even with `--present immediate`. A probe of the after binary showing one tile read a mean of 16.67 ms on a 2560x1440 surface (screenshot measured 2560x1440 px). So a native row at 16.67 ms measures pacing, not render cost. Only the 2,066-tile close camera is unpaced in both arms, and there the work saves 4.4 ms (median paired delta). At the 2,066-tile overview, the after arm reached the 60 Hz floor. That makes -0.99 ms a lower bound on the saving, and the p95 rise there comes from vsync misses, not from extra work. GPU timing (`gpu_timing=on`) is not among the harness's arguments, so the native rows have no unpaced GPU time for the paced cameras.
+
+`kit_draws` is null in the before arm because the census arrived in `a506747`. The after arm's `kit_draws` are the same on web and native at every camera.
+
+### Optional arms: each change alone (web, 3 rounds per pair)
+
+Next, the web harness ran three more times, with `ROUNDS=3` each. Each run used one adjacent pair of builds: before `29a67fb` against O5 `b37f0bb`, then O5 against O5 + O4 `4b90a09`, then O5 + O4 against after `fee30bd` (O6). Every run passed the load guard, with loads of 1.6 to 6.8. No run failed, and the console logged no error. These sessions ran later than the main run, so absolute frame times differ slightly from the tables above. The 2,066-tile overview drifted by up to 1.2 ms. Compare paired deltas only.
+
+| World | Camera | O5: mean delta, p95 delta, draws | O4: mean delta, p95 delta, draws | O6: mean delta, p95 delta, draws |
+|---|---|---|---|---|
+| 20 tiles | overview | -0.01, -0.20 (noise), 427 -> 427 | -0.02, +0.10 (noise), 427 -> 343 | 0.00, 0.00 (noise), 343 -> 343 |
+| 20 tiles | forest cluster | **-0.83**, **-1.30**, 637 -> 552 | +0.04, +0.10 (noise), 552 -> 440 | -0.03, -0.10 (noise), 440 -> 440 |
+| 20 tiles | meadow | -0.01, 0.00 (noise), 629 -> 629 | -0.02 (noise), **+0.20**, 629 -> 513 | **-0.47**, -0.70 (p95 noise), 513 -> 481 |
+| 20 tiles | 152 m band | 0.00, +0.10 (noise), 764 -> 764 | +0.03, +0.10 (noise), 764 -> 648 | +0.09, +0.10 (noise), 648 -> 648 |
+| 2,066 tiles | close | +0.07, +0.60 (noise), 2,264 -> 2,264 | +0.11 (noise), **+1.30**, 2,264 -> 1,863 | **-3.84**, **-8.20**, 1,863 -> 1,609 |
+| 2,066 tiles | overview | **+0.92**, **+2.50**, 1,426 -> 1,252 | +0.08 (noise), **+1.40**, 1,252 -> 990 | **-1.40**, **-3.00**, 990 -> 952 |
+
+Deltas are medians of 3 paired rounds in ms. Bold marks a real delta by the rule above.
+
+The changes contribute as follows:
+- O6 (per-tile culling cells, CPU) produces the whole 2,066-tile close-camera win and the 20-tile meadow win.
+- O5 produces the 20-tile forest-cluster win, and costs about 0.9 ms of mean at the 2,066-tile overview.
+- O4 cuts the most draws: 84 to 116 per 20-tile camera and 401 at the 2,066-tile close camera. On this host it changes no mean frame time, and it adds 1.3 to 1.4 ms of p95 on the 2,066-tile world.
+
 ## What to report
 
 - For each world and camera: the median, minimum and maximum over the runs of p50, p95 and mean per arm, and after minus before. Uncapped web frames on MiniMac are bimodal (`docs/perf/lod-band-instanced.json`), so mean and p95 are the stable statistics.
-- Each row's draw count and `kit_draws` (slots and total). These must match between the web and native rows of an arm, and must show the drop from the census.
+- Each row's draw count and `kit_draws` (slots and total). `kit_draws` must match between the web and native rows of an arm. The total draw count does not: web counts a near-constant few more per camera in both arms (8 at the 20-tile overview, 74 at the 2,066-tile close camera, and within 3 of constant at the 152 m band). Both must show the drop from the census.
 - The renderer string, which must be ANGLE Metal Apple M4 and not SwiftShader, the load before and after each run, and any discarded samples.
 - Write the results to `docs/perf/close-camera-draws/minimac-<date>.json` with this README's commands. Then add the summary to PRD §10's draw-call row.
