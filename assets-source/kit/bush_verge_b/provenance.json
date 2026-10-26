@@ -17,7 +17,7 @@
     },
     {
       "path": "scripts/blender/kit/_verge_bush.py",
-      "sha256": "124f792a1966fe40c16c14a4b2b10416fa1ecb303e3969ae45a5d87b6f692504"
+      "sha256": "b0564b4ad39ef1d92060097ed193458f847d04fad782c2606562edc4bd425c96"
     },
     {
       "path": "scripts/blender/kit/_verge_bush_b.py",
@@ -193,8 +193,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 912621,
-        "astc": 912441
+        "bc7": 903878,
+        "astc": 905742
       },
       "glbBytes": 140716
     },
@@ -207,8 +207,8 @@
         "transfer": "srgb",
         "vkFormat": 146,
         "levels": 11,
-        "bytes": 554726,
-        "sha256": "ddc897bfe32631751c5ea02a66d9c0cdcab86ab7e1e891fba62bb23da6ea274b"
+        "bytes": 554193,
+        "sha256": "6f473e09bda3451d9561b32ba18d47411f08d4f3483245dafba74d8e289c9d16"
       },
       {
         "channel": "albedo",
@@ -218,8 +218,8 @@
         "transfer": "srgb",
         "vkFormat": 158,
         "levels": 11,
-        "bytes": 563109,
-        "sha256": "0efa8044d983ef1d6e85439559a6270241d650ba4cb06f210c00f0cee9c830ee"
+        "bytes": 562472,
+        "sha256": "c3d0bc73e8dc26d32fee01124502d4d283ab3dec099d8045dbf6b183597ac86d"
       },
       {
         "channel": "albedo",
@@ -269,8 +269,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 147659,
-        "sha256": "93aa6f58405702394c7c1913b80a6f032738732a8eb6d336d59beddd7074dcec"
+        "bytes": 147454,
+        "sha256": "b4387b0e408909a8f2b8f9bd17ddbdee37ee36975f4b5cc37664a8001486e513"
       },
       {
         "channel": "normal",
@@ -280,8 +280,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 146504,
-        "sha256": "2ee5b66df09d14050e6487089d714491a05c845d631e5a9bf4c9c941f432d9f7"
+        "bytes": 146274,
+        "sha256": "d910f33bc0243bb5dc38f48c0c970470c6ee5ea75680cf01edbd4f03b3999355"
       },
       {
         "channel": "normal",
@@ -300,8 +300,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 209253,
-        "sha256": "e7a7b9ed473a733458302e2eef51da6c64432f3c7b0228f12e2b32ca2bac6e38"
+        "bytes": 201248,
+        "sha256": "763f5845d91c9b3ecd4793488cffdc19e35825ede1231913009549603950f065"
       },
       {
         "channel": "orm",
@@ -311,8 +311,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 201878,
-        "sha256": "4f32699708068c1e3433ee87a3754ae39470260efcba428d009f64dcced5ed89"
+        "bytes": 196046,
+        "sha256": "71ce4469a3b77b7f0acb704b9b15e943f9bcb38ded3e80be048cd221740324e8"
       },
       {
         "channel": "orm",
@@ -320,8 +320,8 @@
         "path": "assets/kit/p1/bush_verge_b/bush_verge_b.orm.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 124390,
-        "sha256": "8ec78834c74b5e6e035c77ba184755ca8daa2c7645a9ac27cdbff7ae05802816"
+        "bytes": 124078,
+        "sha256": "7cbfcba5aac7f425d31d7399b4847bcd122e48cc2bd05f2a4252b44e03b32733"
       }
     ]
   },
@@ -333,13 +333,13 @@
     },
     {
       "path": "assets/kit/p1/bush_verge_b/bush_verge_b.albedo.bc7.ktx2",
-      "sha256": "ddc897bfe32631751c5ea02a66d9c0cdcab86ab7e1e891fba62bb23da6ea274b",
-      "bytes": 554726
+      "sha256": "6f473e09bda3451d9561b32ba18d47411f08d4f3483245dafba74d8e289c9d16",
+      "bytes": 554193
     },
     {
       "path": "assets/kit/p1/bush_verge_b/bush_verge_b.albedo.astc.ktx2",
-      "sha256": "0efa8044d983ef1d6e85439559a6270241d650ba4cb06f210c00f0cee9c830ee",
-      "bytes": 563109
+      "sha256": "c3d0bc73e8dc26d32fee01124502d4d283ab3dec099d8045dbf6b183597ac86d",
+      "bytes": 562472
     },
     {
       "path": "assets/kit/p1/bush_verge_b/bush_verge_b.albedo.png",
@@ -363,13 +363,13 @@
     },
     {
       "path": "assets/kit/p1/bush_verge_b/bush_verge_b.normal.bc7.ktx2",
-      "sha256": "93aa6f58405702394c7c1913b80a6f032738732a8eb6d336d59beddd7074dcec",
-      "bytes": 147659
+      "sha256": "b4387b0e408909a8f2b8f9bd17ddbdee37ee36975f4b5cc37664a8001486e513",
+      "bytes": 147454
     },
     {
       "path": "assets/kit/p1/bush_verge_b/bush_verge_b.normal.astc.ktx2",
-      "sha256": "2ee5b66df09d14050e6487089d714491a05c845d631e5a9bf4c9c941f432d9f7",
-      "bytes": 146504
+      "sha256": "d910f33bc0243bb5dc38f48c0c970470c6ee5ea75680cf01edbd4f03b3999355",
+      "bytes": 146274
     },
     {
       "path": "assets/kit/p1/bush_verge_b/bush_verge_b.normal.png",
@@ -378,18 +378,18 @@
     },
     {
       "path": "assets/kit/p1/bush_verge_b/bush_verge_b.orm.bc7.ktx2",
-      "sha256": "e7a7b9ed473a733458302e2eef51da6c64432f3c7b0228f12e2b32ca2bac6e38",
-      "bytes": 209253
+      "sha256": "763f5845d91c9b3ecd4793488cffdc19e35825ede1231913009549603950f065",
+      "bytes": 201248
     },
     {
       "path": "assets/kit/p1/bush_verge_b/bush_verge_b.orm.astc.ktx2",
-      "sha256": "4f32699708068c1e3433ee87a3754ae39470260efcba428d009f64dcced5ed89",
-      "bytes": 201878
+      "sha256": "71ce4469a3b77b7f0acb704b9b15e943f9bcb38ded3e80be048cd221740324e8",
+      "bytes": 196046
     },
     {
       "path": "assets/kit/p1/bush_verge_b/bush_verge_b.orm.png",
-      "sha256": "8ec78834c74b5e6e035c77ba184755ca8daa2c7645a9ac27cdbff7ae05802816",
-      "bytes": 124390
+      "sha256": "7cbfcba5aac7f425d31d7399b4847bcd122e48cc2bd05f2a4252b44e03b32733",
+      "bytes": 124078
     }
   ],
   "references": [
@@ -415,7 +415,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T12:23:52.640Z",
+    "date": "2026-10-26T18:11:28.045Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -446,6 +446,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "matte-leaves",
+      "requested": "2026-10-26",
+      "notes": "Pending owner review; not an approval. Rebuilt for the owner's bug report (2026-10-26, \"these bushes are too shiny\"): the leaf texels' roughness (ORM G) was 0.50-0.64, glossy on the dark round mass, so the sky's specular lay across the top of the bush as a grey sheen at low play cameras. _verge_bush.py now maps it linearly onto 0.76-0.86 (mean 0.81 over the opaque texels, the grass draws at 0.78); the shade blob (0.85) keep theirs. Only the ORM's G changed: albedo, normal and masks PNGs, the mesh, LODs, collider and sockets are byte-identical to the approved build (the albedo and normal KTX2 re-encode under the current single-threaded UASTC settings). Before and after in play: docs/checkpoints/bush-shine/sheet.jpg. The controller records the owner's decision."
     }
   ]
 }

@@ -1,0 +1,60 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/bush-shine/bush-shine.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        749.05,
+        630.74,
+        563.58
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 15.4,
+      "load_after": [
+        733.61,
+        633.01,
+        565.56
+      ],
+      "frames": {
+        "bush-shine-overview": {
+          "mean": 0.1344,
+          "problem": null
+        },
+        "bush-shine-sun": {
+          "mean": 0.3144,
+          "problem": null
+        },
+        "bush-shine-near": {
+          "mean": 0.2737,
+          "problem": null
+        },
+        "bush-shine-blossom": {
+          "mean": 0.2172,
+          "problem": null
+        },
+        "bush-shine-far": {
+          "mean": 0.2662,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

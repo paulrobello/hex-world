@@ -1,6 +1,6 @@
 {
   "name": "bush_verge_c",
-  "date": "2026-10-20T19:07:30.912Z",
+  "date": "2026-10-26T18:09:00.640Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "srgb",
       "vkFormat": 146,
       "levels": 11,
-      "bytes": 526463,
-      "sha256": "29f0bb6d1d416081ba9b04fda3805e26861d64b197308bc456bb1c479cfb0e57"
+      "bytes": 526045,
+      "sha256": "b367844507aee933f1b0225ac451e02be35e53283991b2d954f6be5253033419"
     },
     {
       "channel": "albedo",
@@ -59,8 +60,8 @@
       "transfer": "srgb",
       "vkFormat": 158,
       "levels": 11,
-      "bytes": 526935,
-      "sha256": "c370b1b146ce35e0ae8d0eea359f98de238bcdc4457556ecacc7f325c88a9279"
+      "bytes": 526643,
+      "sha256": "c5d2f8becb3bebcca5e5e94ce9a566d9c91bde8a4804571fb10a6adfbbded90e"
     },
     {
       "channel": "albedo",
@@ -110,8 +111,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 152284,
-      "sha256": "a1cae80ee576db902126d47e83c2d190863e8780285c8b979241d5df39309dde"
+      "bytes": 151904,
+      "sha256": "138e1e05f24b8cf7ba50f94387fc791a104c0f5690da215f5e808ba6c1f4dcb7"
     },
     {
       "channel": "normal",
@@ -121,8 +122,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 151170,
-      "sha256": "feeffd6da60d03372bbac9fafe634da21830f4ffd64b7f063ad8d904e1218f2c"
+      "bytes": 150849,
+      "sha256": "5ade2fdad06ccd8f582762fb43e45fe09454170aa31b0f0bd18c16e9a0ace7e8"
     },
     {
       "channel": "normal",
@@ -141,8 +142,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 223153,
-      "sha256": "9ad0b2b9805f6ff7a4baba2f5cd9588f4993e27637489ce22c0549911885840d"
+      "bytes": 215648,
+      "sha256": "8f7cfefe9f87382e3a124118af659bde5fa62e523a6bd022e60e3af25a0d64cc"
     },
     {
       "channel": "orm",
@@ -152,8 +153,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 214157,
-      "sha256": "716f09a78d77b0fd9352cc2b3433555f3e56539cc106b4c14b336c530fac3db8"
+      "bytes": 209776,
+      "sha256": "2b16f2abcc89d9054a40bf5f596a0bb697a6099bdff0baeb74c10a1fbbe35a77"
     },
     {
       "channel": "orm",
@@ -161,16 +162,16 @@
       "path": "assets/kit/p1/bush_verge_c/bush_verge_c.orm.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 141491,
-      "sha256": "9f42a8e982493ece9b3d39c286f3962d555dd9c1c308a525562eba435d50ecc8"
+      "bytes": 141685,
+      "sha256": "822e3ae085f763d7bdf3b44df270e6a995b29ebba6e449a7a21bf9b0822fa62c"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 902883,
-      "astc": 893212
+      "bc7": 894580,
+      "astc": 888218
     },
     "glbBytes": 186388
   },
