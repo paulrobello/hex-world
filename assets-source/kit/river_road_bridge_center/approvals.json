@@ -74,5 +74,12 @@
     "revision": "riverbank scatter (2026-10-26)",
     "requested": "2026-10-26",
     "notes": "Pending owner review; not an approval. Bank stones and reed clumps taken out of the piece (owner 2026-10-26: \"scatter type items like rocks and reeds should not be built into the tile\"); the tile scatters river_stones and river_reeds instead, 0 to 4 per tile. Deck and causeway unchanged; LOD 480 / 224 / 60 tris (the road takes 4 segments at LOD1). Review assets-source/kit/river_road_bridge_center/renders/ and docs/checkpoints/riverbank-scatter/."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-26",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all approved with your recomendations\", 2026-10-26, from the open-questions page and docs/review/approvals.html): A22, review sheet docs/checkpoints/riverbank-scatter/sheet.jpg."
   }
 ]

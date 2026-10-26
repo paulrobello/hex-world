@@ -7,5 +7,12 @@
     "revision": "scatter props (owner 2026-10-26)",
     "requested": "2026-10-26",
     "notes": "Pending owner review; not an approval. A seven-pebble variant of beach_pebbles, placed per tile by the play scatter (owner 2026-10-26: \"scatter type items like rocks and reeds should not be built into the tile\"). Review the six-view renders in assets-source/kit/beach_pebbles_c/renders/ and the before/after sheet in docs/checkpoints/beach-ocean-scatter/. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-26",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all approved with your recomendations\", 2026-10-26, from the open-questions page and docs/review/approvals.html): A24, review sheet docs/checkpoints/beach-ocean-scatter/bos-sheet.jpg."
   }
 ]

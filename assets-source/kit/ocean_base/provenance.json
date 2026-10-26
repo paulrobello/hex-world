@@ -208,6 +208,13 @@
       "revision": "seabed stones out of the AO bake",
       "requested": "2026-10-26",
       "notes": "Pending owner re-approval; not an approval. The masks AO is re-baked from the rippled bed alone: the contact shadows of the rocks and pebbles ocean_center baked are gone with it (masks AO min 0.22 -> 0.97, mean 0.998 -> 0.999), since those stones are now scatter props (seabed_rock, seabed_pebbles). The GLB is unchanged. Review the ocean before/after in docs/checkpoints/beach-ocean-scatter/."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-26",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all approved with your recomendations\", 2026-10-26, from the open-questions page and docs/review/approvals.html): A24, review sheet docs/checkpoints/beach-ocean-scatter/bos-sheet.jpg."
     }
   ]
 }

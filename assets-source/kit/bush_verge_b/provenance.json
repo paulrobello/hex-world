@@ -455,6 +455,13 @@
       "revision": "matte-leaves",
       "requested": "2026-10-26",
       "notes": "Pending owner review; not an approval. Rebuilt for the owner's bug report (2026-10-26, \"these bushes are too shiny\"): the leaf texels' roughness (ORM G) was 0.50-0.64, glossy on the dark round mass, so the sky's specular lay across the top of the bush as a grey sheen at low play cameras. _verge_bush.py now maps it linearly onto 0.76-0.86 (mean 0.81 over the opaque texels, the grass draws at 0.78); the shade blob (0.85) keep theirs. Only the ORM's G changed: albedo, normal and masks PNGs, the mesh, LODs, collider and sockets are byte-identical to the approved build (the albedo and normal KTX2 re-encode under the current single-threaded UASTC settings). Before and after in play: docs/checkpoints/bush-shine/sheet.jpg. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-26",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all approved with your recomendations\", 2026-10-26, from the open-questions page and docs/review/approvals.html): A23, review sheet docs/checkpoints/bush-shine/sheet.jpg."
     }
   ]
 }

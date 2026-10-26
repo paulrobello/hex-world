@@ -7,5 +7,12 @@
     "revision": "riverbank scatter (2026-10-26)",
     "requested": "2026-10-26",
     "notes": "Pending owner review; not an approval. New riverbank scatter prop (four bank stones), the river centres' baked bank dressing rebuilt as a standalone piece (owner 2026-10-26: \"scatter type items like rocks and reeds should not be built into the tile\"; a seeded 0 to 4 per river tile). Review assets-source/kit/river_stones_c/renders/ and docs/checkpoints/riverbank-scatter/ (review sheet, river stretch before and after)."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-26",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all approved with your recomendations\", 2026-10-26, from the open-questions page and docs/review/approvals.html): A22, review sheet docs/checkpoints/riverbank-scatter/sheet.jpg."
   }
 ]
