@@ -1,0 +1,69 @@
+{
+  "cellM": 0.005,
+  "regionBlenderXY": [
+    4.8,
+    9.6,
+    -6.0,
+    -1.6
+  ],
+  "lods": [
+    {
+      "lod": 0,
+      "topMaxAbsDeltaM": 0.0,
+      "topCellsOverOneMm": 0,
+      "topSlotChangedCells": 0,
+      "coveredBeforeOnlyM2": 0.0,
+      "coveredAfterOnlyM2": 0.0002
+    },
+    {
+      "lod": 1,
+      "topMaxAbsDeltaM": 0.0,
+      "topCellsOverOneMm": 0,
+      "topSlotChangedCells": 0,
+      "coveredBeforeOnlyM2": 0.0,
+      "coveredAfterOnlyM2": 0.0002
+    },
+    {
+      "lod": 2,
+      "topMaxAbsDeltaM": 0.0,
+      "topCellsOverOneMm": 0,
+      "topSlotChangedCells": 0,
+      "coveredBeforeOnlyM2": 0.0,
+      "coveredAfterOnlyM2": 0.0002
+    }
+  ],
+  "before": {
+    "lod0": {
+      "overlapM2": 2.2348,
+      "coplanarOverlapM2": 0.5479,
+      "coveredM2": 19.4
+    },
+    "lod1": {
+      "overlapM2": 2.2348,
+      "coplanarOverlapM2": 0.5205,
+      "coveredM2": 19.4
+    },
+    "lod2": {
+      "overlapM2": 2.2348,
+      "coplanarOverlapM2": 0.5059,
+      "coveredM2": 19.4
+    }
+  },
+  "after": {
+    "lod0": {
+      "overlapM2": 0.0,
+      "coplanarOverlapM2": 0.0,
+      "coveredM2": 19.4002
+    },
+    "lod1": {
+      "overlapM2": 0.0,
+      "coplanarOverlapM2": 0.0,
+      "coveredM2": 19.4002
+    },
+    "lod2": {
+      "overlapM2": 0.0,
+      "coplanarOverlapM2": 0.0,
+      "coveredM2": 19.4002
+    }
+  }
+}

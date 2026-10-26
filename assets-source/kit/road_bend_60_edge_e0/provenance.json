@@ -1,0 +1,276 @@
+{
+  "pieceId": "road_bend_60_edge_e0",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/road_bend_60_edge_e0.py",
+    "sha256": "127bceea0e68792a00615c46b9f6702174b4e672f3565b15582464831ac7673b"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
+    },
+    {
+      "path": "scripts/blender/kit/_road_bend.py",
+      "sha256": "3600718e406beb143a5462ebfcc133e41d6fa38bb209ba7fe702ddc7c71cd041"
+    },
+    {
+      "path": "scripts/blender/kit/_road_bend_trim.py",
+      "sha256": "69a88ac2d76c71aef224fc14897363b6e2eec58a4abc235e6df4f9408df79887"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "dashPeriodM": 5.542562584220407,
+    "device": "CPU",
+    "marginPx": 12,
+    "profile": [
+      [
+        -4.6,
+        -0.3
+      ],
+      [
+        -4,
+        0.06
+      ],
+      [
+        -3.25,
+        0.06
+      ],
+      [
+        -3.25,
+        0.2
+      ],
+      [
+        -3,
+        0.2
+      ],
+      [
+        -3,
+        0.08
+      ],
+      [
+        -1.5,
+        0.1
+      ],
+      [
+        0,
+        0.11
+      ],
+      [
+        1.5,
+        0.1
+      ],
+      [
+        3,
+        0.08
+      ],
+      [
+        3,
+        0.2
+      ],
+      [
+        3.25,
+        0.2
+      ],
+      [
+        3.25,
+        0.06
+      ],
+      [
+        4,
+        0.06
+      ],
+      [
+        4.6,
+        -0.3
+      ]
+    ],
+    "receiverSignature": "a3c19c57b86deefcd42eb5316f3caeff096a66809b806b2ecca775e919018887",
+    "samples": 64,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 16.00006431333342,
+      "median": 15.99982229082961,
+      "min": 14.816135570586187
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 256,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 90,
+      "ratio": 0.3515625
+    },
+    {
+      "lod": 2,
+      "tris": 34,
+      "ratio": 0.1328125
+    }
+  ],
+  "collider": {
+    "node": "road_bend_60_edge_e0_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "road",
+        "offset": 0,
+        "width": 6
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0,
+        0
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 16.00006431333342,
+    "median": 15.99982229082961,
+    "min": 14.816135570586187
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 7202,
+        "astc": 7085
+      },
+      "glbBytes": 29572
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/road_bend_60_edge_e0/road_bend_60_edge_e0.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 7202,
+        "sha256": "295d971cbba2c099ad1b642263217e052835fa355b6cee41e5fea7b6108a96b4"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/road_bend_60_edge_e0/road_bend_60_edge_e0.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 7085,
+        "sha256": "4a0de3af40bc7147b8e5f68dba6f70e52178fa382dd1272c359dc06c570f1c48"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/road_bend_60_edge_e0/road_bend_60_edge_e0.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 17478,
+        "sha256": "47b1a4d6b6cba9619a854ce7e340859bb60e039d03173e3403f2af2dca10564d"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/road_bend_60_edge_e0/road_bend_60_edge_e0.glb",
+      "sha256": "5419ccdb908e6793fcda32c562a6a98347a2afb9335e89a5c9712377da415202",
+      "bytes": 29572
+    },
+    {
+      "path": "assets/kit/p1/road_bend_60_edge_e0/road_bend_60_edge_e0.masks.bc7.ktx2",
+      "sha256": "295d971cbba2c099ad1b642263217e052835fa355b6cee41e5fea7b6108a96b4",
+      "bytes": 7202
+    },
+    {
+      "path": "assets/kit/p1/road_bend_60_edge_e0/road_bend_60_edge_e0.masks.astc.ktx2",
+      "sha256": "4a0de3af40bc7147b8e5f68dba6f70e52178fa382dd1272c359dc06c570f1c48",
+      "bytes": 7085
+    },
+    {
+      "path": "assets/kit/p1/road_bend_60_edge_e0/road_bend_60_edge_e0.masks.png",
+      "sha256": "47b1a4d6b6cba9619a854ce7e340859bb60e039d03173e3403f2af2dca10564d",
+      "bytes": 17478
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/road_straight/ref-1.jpg",
+      "sha256": "50e69158a77b55057795a601c23f371db0ba6903aaa2b5000de9f986ec25de70",
+      "sourceSha256": "090dd4fd5be4c9db6e85829ec887b4ed2aac2a73f4b698458373d2e7b24cf1f0",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e87afc15-22e2-491e-8965-8fb7db92c39e",
+      "prompt": "A single hexagonal diorama tile with a straight two-lane asphalt country road crossing from one flat edge to the opposite flat edge, 6 m wide road, grass shoulders, faded centre line, low curbs, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/road_straight/ref-2.jpg",
+      "sha256": "c4923215bad5475f78a9fade60b0991185806b9c183b890209335478e7ecc9f2",
+      "sourceSha256": "17b7169cbf0916448219814410476498cf80e749efa3a0cd854b4745ef6c4799",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "6f4a663b-f6e2-4666-afca-3bbcdba36e44",
+      "prompt": "Two identical hexagonal road tiles placed edge to edge with the road continuing seamlessly across the joint, close-up at the seam, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-26T05:48:58.021Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/road_straight/ref-1.jpg"
+      ],
+      "notes": "ref-1: straight two-lane asphalt road, dashed centre line, kerbs, grass verges. ref-2 not approved. Kit requirement (owner: \"we will need bent road tiles so road can change direction\"): the road profile and the edge/center design must support bent and turning road pieces later. Bent pieces are not built in P1. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-25",
+      "revision": "inner-corner trim (owner A7)",
+      "notes": "Pending owner approval; not an approval. New piece for owner A7 (trim the road_bend_60 inner-corner stub overlap): road_straight_edge cut at the bend's inner bisector, for the tile's lane 0 (cut on its -y side), placed by data/tiles/road_bend_60.ron edge_pieces. road_bend_60_edge_e1 is this piece mirrored. Same profile, slots, sockets and border section as road_straight_edge; the masks bake matches its texels (R, G, B identical; A within 4 levels away from the cut). Review docs/checkpoints/road_bend_60-trim/sheet.jpg (before/after at the inner corner in the kit scenario and in play, the overlap overlays and the thumbnails). The controller records the owner's decision."
+    }
+  ]
+}

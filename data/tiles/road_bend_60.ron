@@ -1,5 +1,5 @@
-// Sharp bend (road_bend_60_center): straight from each edge midpoint in to r = 6 (the
-// road_straight_edge stubs), joined by a 3.464 m radius arc tangent to both. The points are the
+// Sharp bend (road_bend_60_center): straight from each edge midpoint in to r = 6 (the stubs,
+// road_straight_edge trimmed at the inner corner), joined by a 3.464 m radius arc tangent to both. The points are the
 // two joints and the arc sampled every 10 degrees between them, a polyline for hex-sim
 // (scripts/blender/kit/_road_bend.py).
 (
@@ -15,6 +15,9 @@
         (kind: Grass),
     ),
     center: Some("road_bend_60_center"),
+    // Stubs trimmed at the inner bisector (owner A7): road_straight_edge on both lanes overlapped
+    // there. e0 is trimmed on its -y side, e1 on its +y side (scripts/blender/kit/_road_bend_trim.py).
+    edge_pieces: Explicit((Some("road_bend_60_edge_e0"), Some("road_bend_60_edge_e1"), None, None, None, None)),
     networks: [
         (kind: Road, from: Edge(0), to: Edge(1), points: [(6.000, 0.000), (5.398, 0.053), (4.815, 0.209), (4.268, 0.464), (3.773, 0.810), (3.346, 1.237), (3.000, 1.732), (2.745, 2.279), (2.589, 2.863), (2.536, 3.464), (2.589, 4.066), (2.745, 4.649), (3.000, 5.196)]),
     ],

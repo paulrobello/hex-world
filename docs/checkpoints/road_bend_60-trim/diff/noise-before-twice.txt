@@ -1,0 +1,10 @@
+trk-corner-arm-a: max 4, > 8 levels 0.000%
+trk-corner-shade: max 6, > 8 levels 0.000%
+trk-corner-sun: max 5, > 8 levels 0.000%
+trk-corner-top: max 5, > 8 levels 0.000%
+trk-far-shade: max 1, > 8 levels 0.000%
+trk-far-wedge: max 1, > 8 levels 0.000%
+trk-lod1-far-wedge: max 11, > 8 levels 0.000%, box (762, 417, 763, 418)
+trk-lod1-top: max 6, > 8 levels 0.000%
+trk-lod2-far-wedge: max 1, > 8 levels 0.000%
+trk-lod2-top: max 3, > 8 levels 0.000%

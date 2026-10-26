@@ -1191,13 +1191,70 @@ fn base_cut_lanes(kit: &Kit, id: &str) -> BTreeSet<u8> {
         .unwrap_or_default()
 }
 
-/// A piece against every edge piece of the same network kind at each of `lanes`: the section at
-/// the joint (the edge piece's inner end, `joint_x`) on the lane, rotated onto edge 0, must equal
-/// the edge piece's section there in every LOD. A lane's kind comes from the piece's own lane
-/// socket, else from the tile that names it as `center`, else it is a road.
+/// The edge piece on each local edge of the tile whose `center` names `id`, as the tile places them
+/// (`TileDef::edge_pieces`: the socket table's piece for the edge's kind, or the tile's own
+/// `Explicit` list), or `None` when no tile names the piece.
+fn tile_edge_pieces(id: &str) -> Option<[Option<String>; 6]> {
+    let catalog = hex_core::TileCatalog::builtin().expect("builtin tile catalog");
+    let t = catalog
+        .tiles()
+        .iter()
+        .find(|t| t.center.as_ref().is_some_and(|c| c.as_str() == id))?;
+    let pieces = t.edge_pieces(catalog.sockets());
+    Some(std::array::from_fn(|e| {
+        pieces[e].map(|k| k.as_str().to_string())
+    }))
+}
+
+/// Edge pieces a tile lists in its own `Explicit` edge pieces (road_bend_60's trimmed stubs): they
+/// meet only that tile's centre, so the every-piece-of-the-kind fallback leaves them out.
+fn explicit_edge_pieces() -> BTreeSet<String> {
+    let catalog = hex_core::TileCatalog::builtin().expect("builtin tile catalog");
+    catalog
+        .tiles()
+        .iter()
+        .filter(|t| t.edge_pieces != hex_core::EdgePieces::Derived)
+        .flat_map(|t| t.edge_pieces(catalog.sockets()))
+        .flatten()
+        .map(|k| k.as_str().to_string())
+        .collect()
+}
+
+/// One lane joint: `c`'s section at `edge`'s inner end (`joint_x`) on lane `k`, rotated onto edge
+/// 0, must equal `edge`'s section there in every LOD.
+fn joint_errors_against(kit: &Kit, c: &PieceEntry, k: u8, edge: &PieceEntry) -> Vec<String> {
+    let mut e = vec![];
+    let x = joint_x(kit, edge);
+    let secs = lane_sections(kit, c, x, k);
+    if secs.len() != 3 || secs.iter().any(Vec::is_empty) {
+        e.push(format!(
+            "{}: a LOD has no vertices at the lane {k} joint (x = {x})",
+            c.id
+        ));
+    }
+    let center: Vec<Vec<_>> = secs.into_iter().map(|s| vec![s]).collect();
+    let id = format!("{} / {}", c.id, edge.id);
+    e.extend(joint_errors(
+        &id,
+        &[k],
+        &center,
+        &lod_sections(kit, edge, x),
+    ));
+    e
+}
+
+/// A piece against the edge pieces it meets at each of `lanes` (`joint_errors_against`). Where the
+/// tile that names a centre places an edge piece on the lane, the centre meets exactly that piece,
+/// which must carry the lane's network kind. Elsewhere (a lane-cut base, a centre no tile names
+/// yet, a lane the tile places nothing on) the piece meets every edge piece of the lane's kind
+/// except the tile-specific ones (`explicit_edge_pieces`), so a rail lane meets none and a road
+/// centre checked at a lane its tile lacks still fails. A lane's kind comes from the piece's own
+/// lane socket, else from the tile that names it as `center`, else it is a road.
 fn lane_joint_errors(kit: &Kit, c: &PieceEntry, lanes: &[u8]) -> Vec<String> {
     let declared = lane_sockets(kit, c);
     let tile = tile_lane_kinds(&c.id);
+    let placed = tile_edge_pieces(&c.id);
+    let explicit = explicit_edge_pieces();
     let mut e = vec![];
     for &k in lanes {
         let kind = declared
@@ -1205,27 +1262,37 @@ fn lane_joint_errors(kit: &Kit, c: &PieceEntry, lanes: &[u8]) -> Vec<String> {
             .map(|(s, _)| s.clone())
             .or_else(|| tile.get(&k).cloned())
             .unwrap_or_else(|| "road".to_string());
-        for edge in
-            kit.manifest.pieces.iter().filter(|p| {
-                p.kind == PieceKind::Edge && edge_kind(kit, p).as_deref() == Some(&kind)
-            })
-        {
-            let x = joint_x(kit, edge);
-            let secs = lane_sections(kit, c, x, k);
-            if secs.len() != 3 || secs.iter().any(Vec::is_empty) {
-                e.push(format!(
-                    "{}: a LOD has no vertices at the lane {k} joint (x = {x})",
-                    c.id
-                ));
+        let edges: Vec<&PieceEntry> = match placed.as_ref().and_then(|p| p[k as usize].as_deref()) {
+            Some(id) => {
+                let Some(edge) = kit.manifest.pieces.iter().find(|p| p.id == id) else {
+                    e.push(format!(
+                        "{}: its tile places {id} on lane {k}, not in the manifest",
+                        c.id
+                    ));
+                    continue;
+                };
+                if edge.kind != PieceKind::Edge || edge_kind(kit, edge).as_deref() != Some(&kind) {
+                    e.push(format!(
+                        "{}: its tile places {id} on lane {k}, not a {kind} edge piece",
+                        c.id
+                    ));
+                    continue;
+                }
+                vec![edge]
             }
-            let center: Vec<Vec<_>> = secs.into_iter().map(|s| vec![s]).collect();
-            let id = format!("{} / {}", c.id, edge.id);
-            e.extend(joint_errors(
-                &id,
-                &[k],
-                &center,
-                &lod_sections(kit, edge, x),
-            ));
+            None => kit
+                .manifest
+                .pieces
+                .iter()
+                .filter(|p| {
+                    p.kind == PieceKind::Edge
+                        && !explicit.contains(&p.id)
+                        && edge_kind(kit, p).as_deref() == Some(&kind)
+                })
+                .collect(),
+        };
+        for edge in edges {
+            e.extend(joint_errors_against(kit, c, k, edge));
         }
     }
     e
@@ -1640,9 +1707,10 @@ fn joint_lanes(kit: &Kit, c: &PieceEntry) -> Vec<u8> {
     }
 }
 
-/// Every centre piece against every edge piece of the same network kind, at each of its lane
-/// edges (`joint_lanes`: the tile that names it as `center`, else its declared lane sockets) that
-/// the tile's base does not cut. A centre that declares `socket-lane-*` nodes (house_pad's
+/// Every centre piece against the edge pieces it meets (`lane_joint_errors`: the one its tile
+/// places on the lane, else every edge piece of the lane's kind that no tile lists explicitly), at
+/// each of its lane edges (`joint_lanes`: the tile that names it as `center`, else its declared
+/// lane sockets) that the tile's base does not cut. A centre that declares `socket-lane-*` nodes (house_pad's
 /// driveway) must declare exactly those lane edges. Every lane-cut base is checked at its cut lanes.
 fn check_center_edge_joint(kit: &Kit) -> Vec<String> {
     let mut e = vec![];
@@ -3479,6 +3547,72 @@ fn center_lanes_come_from_the_tiles() {
     assert_eq!(center_lanes("rail_bend_120_center"), vec![0, 2]);
     assert_eq!(center_lanes("road_junction_center"), vec![0, 2, 4]);
     assert_eq!(center_lanes("not_a_piece"), vec![0, 3]);
+}
+
+/// A centre meets the edge pieces its tile places, not every edge piece of the lane's kind
+/// (owner A7, 2026-10-25): road_bend_60 lists stubs trimmed at its inner bisector, which meet only
+/// its centre, and the other road centres still meet road_straight_edge. The trimmed stubs are not
+/// interchangeable (e0 is cut on -y, e1 on +y), and neither fits the straight's joint, so the old
+/// every-piece rule would fail every road centre.
+#[test]
+fn joints_meet_the_edge_pieces_the_tile_places() {
+    let k = kits()
+        .into_iter()
+        .find(|k| {
+            k.manifest
+                .pieces
+                .iter()
+                .any(|p| p.id == "road_bend_60_edge_e0")
+        })
+        .expect("runtime kit holds road_bend_60_edge_e0");
+    let piece = |id: &str| k.manifest.pieces.iter().find(|p| p.id == id).unwrap();
+    let (e0, e1) = (piece("road_bend_60_edge_e0"), piece("road_bend_60_edge_e1"));
+    let straight_edge = piece("road_straight_edge");
+    let some = |s: &str| Some(s.to_string());
+    assert_eq!(
+        tile_edge_pieces("road_bend_60_center"),
+        Some([some(&e0.id), some(&e1.id), None, None, None, None])
+    );
+    assert_eq!(
+        tile_edge_pieces("road_straight_center").map(|p| p[3].clone()),
+        Some(some("road_straight_edge"))
+    );
+    assert_eq!(tile_edge_pieces("not_a_piece"), None);
+    assert_eq!(
+        explicit_edge_pieces(),
+        BTreeSet::from([e0.id.clone(), e1.id.clone()])
+    );
+    for edge in [e0, e1] {
+        assert_eq!(edge_kind(&k, edge).as_deref(), Some("road"));
+        assert!((joint_x(&k, edge) - 6.0).abs() < 1e-4, "{}", edge.id);
+        assert!(check_edge_profile(&k, edge).is_empty(), "{}", edge.id);
+    }
+    let bend = piece("road_bend_60_center");
+    assert!(lane_joint_errors(&k, bend, &[0, 1]).is_empty());
+    assert!(joint_errors_against(&k, bend, 0, e0).is_empty());
+    assert!(joint_errors_against(&k, bend, 1, e1).is_empty());
+    // Swapped stubs, or the untrimmed one, do not fit the trimmed bend.
+    assert!(!joint_errors_against(&k, bend, 0, e1).is_empty());
+    assert!(!joint_errors_against(&k, bend, 1, e0).is_empty());
+    assert!(!joint_errors_against(&k, bend, 0, straight_edge).is_empty());
+    // Nor does a trimmed stub fit any other road centre.
+    for id in [
+        "road_straight_center",
+        "road_bend_120_center",
+        "road_junction_center",
+    ] {
+        let c = piece(id);
+        let lanes = center_lanes(id);
+        assert!(lane_joint_errors(&k, c, &lanes).is_empty(), "{id}");
+        for edge in [e0, e1] {
+            assert!(
+                !joint_errors_against(&k, c, lanes[0], edge).is_empty(),
+                "{id} / {}",
+                edge.id
+            );
+        }
+    }
+    assert_eq!(check_center_edge_joint(&k), Vec::<String>::new());
 }
 
 /// A lane-socketed centre is checked at the edges its tile gives it, which must equal the edges its

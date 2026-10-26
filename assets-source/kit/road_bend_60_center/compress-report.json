@@ -1,6 +1,6 @@
 {
   "name": "road_bend_60_center",
-  "date": "2026-10-14T19:08:11.963Z",
+  "date": "2026-10-26T05:46:02.091Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 13823,
-      "sha256": "825ae94a83236184bde8081d65449cf09b3760671e393ad2339a00f0d0afa58d"
+      "bytes": 13208,
+      "sha256": "62d3cdd31b12c597d727587bb6de56e0ead245b53ec0b85e147d87f58f791665"
     },
     {
       "channel": "masks",
@@ -59,8 +60,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 13489,
-      "sha256": "a1a0dbe80913134d44b560a9ac9a58afa089da535edef4238debe93143fbddb9"
+      "bytes": 12939,
+      "sha256": "80f4af3c5ae52781863ef6b96e3e0129835637d1d6ad611c0d495a3098fd8ddb"
     },
     {
       "channel": "masks",
@@ -68,21 +69,21 @@
       "path": "assets/kit/p1/road_bend_60_center/road_bend_60_center.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 21346,
-      "sha256": "41654289dcdfac9224d8048d20f0ed48601cc41bbe4d1f5e10bd7d21890dacdc"
+      "bytes": 20872,
+      "sha256": "4900592beb9221e11d321671a6db17e43e0dd457eaaa0e83843bf8ed77dec45a"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 13823,
-      "astc": 13489
+      "bc7": 13208,
+      "astc": 12939
     },
-    "glbBytes": 45288
+    "glbBytes": 43680
   },
   "glb": {
-    "bytes": 45288,
-    "sha256": "3a192e8aad0ddbac9a9f54135f636f537f881b63585f2ae56c77772061992001"
+    "bytes": 43680,
+    "sha256": "dc53d11b362924eeea7aef34030132cefd68132902c4d8534ae90bdfdaa74f74"
   }
 }

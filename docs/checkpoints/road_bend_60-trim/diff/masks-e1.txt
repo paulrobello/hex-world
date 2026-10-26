@@ -1,0 +1,10 @@
+trimmed stub, >= 2 texels from the cut: 18270 texels
+  R: max diff 0, texels off by > 2: 0, mean 0.0000
+  G: max diff 0, texels off by > 2: 0, mean 0.0000
+  B: max diff 0, texels off by > 2: 0, mean 0.0000
+  A: max diff 20, texels off by > 2: 180, mean 0.0646
+within 2 texels of the cut: 149 texels
+  R: max diff 0, texels off by > 2: 0, mean 0.0000
+  G: max diff 0, texels off by > 2: 0, mean 0.0000
+  B: max diff 0, texels off by > 2: 0, mean 0.0000
+  A: max diff 7, texels off by > 2: 27, mean 0.8188

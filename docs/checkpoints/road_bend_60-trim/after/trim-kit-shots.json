@@ -1,0 +1,78 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/road_bend_60-trim/trim-kit.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        727.6,
+        765.31,
+        656.1
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 22.5,
+      "load_after": [
+        705.83,
+        757.3,
+        656.38
+      ],
+      "frames": {
+        "trk-corner-top": {
+          "mean": 0.2642,
+          "problem": null
+        },
+        "trk-corner-sun": {
+          "mean": 0.2581,
+          "problem": null
+        },
+        "trk-corner-shade": {
+          "mean": 0.3045,
+          "problem": null
+        },
+        "trk-corner-arm-a": {
+          "mean": 0.2803,
+          "problem": null
+        },
+        "trk-far-wedge": {
+          "mean": 0.1658,
+          "problem": null
+        },
+        "trk-far-shade": {
+          "mean": 0.2109,
+          "problem": null
+        },
+        "trk-lod1-top": {
+          "mean": 0.271,
+          "problem": null
+        },
+        "trk-lod1-far-wedge": {
+          "mean": 0.1665,
+          "problem": null
+        },
+        "trk-lod2-top": {
+          "mean": 0.2665,
+          "problem": null
+        },
+        "trk-lod2-far-wedge": {
+          "mean": 0.1688,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

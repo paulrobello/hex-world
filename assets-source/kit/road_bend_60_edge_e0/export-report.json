@@ -1,0 +1,52 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/road_bend_60_edge_e0.py",
+    "sha256": "127bceea0e68792a00615c46b9f6702174b4e672f3565b15582464831ac7673b"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
+    },
+    {
+      "path": "scripts/blender/kit/_road_bend.py",
+      "sha256": "3600718e406beb143a5462ebfcc133e41d6fa38bb209ba7fe702ddc7c71cd041"
+    },
+    {
+      "path": "scripts/blender/kit/_road_bend_trim.py",
+      "sha256": "69a88ac2d76c71aef224fc14897363b6e2eec58a4abc235e6df4f9408df79887"
+    }
+  ],
+  "lodTris": {
+    "road_bend_60_edge_e0_lod0": 256,
+    "road_bend_60_edge_e0_lod1": 90,
+    "road_bend_60_edge_e0_lod2": 34
+  },
+  "nodes": [
+    "road_bend_60_edge_e0",
+    "road_bend_60_edge_e0_collider",
+    "road_bend_60_edge_e0_lod0",
+    "road_bend_60_edge_e0_lod1",
+    "road_bend_60_edge_e0_lod2",
+    "socket-lane-0"
+  ],
+  "pieceId": "road_bend_60_edge_e0",
+  "sockets": [
+    {
+      "extras": {
+        "edge": 0,
+        "kind": "road",
+        "offset": 0.0,
+        "width": 6.0
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

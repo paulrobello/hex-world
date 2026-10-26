@@ -1,0 +1,18 @@
+trk-state: (multidraw sets, batchable bins, unbatchable, non-mesh) before -> after
+        main alpha_mask             (0, 0, 0, 0) -> (0, 0, 0, 0)
+        main alpha_mask_prepass     (0, 0, 0, 0) -> (0, 0, 0, 0)
+        main opaque                 (6, 0, 0, 0) -> (6, 0, 0, 0)
+        main prepass                (2, 0, 0, 0) -> (2, 0, 0, 0)
+    cascade0 shadow                 (2, 0, 0, 0) -> (2, 0, 0, 0)
+    cascade1 shadow                 (2, 0, 0, 0) -> (2, 0, 0, 0)
+    cascade2 shadow                 (2, 0, 0, 0) -> (2, 0, 0, 0)
+    cascade3 shadow                 (2, 0, 0, 0) -> (2, 0, 0, 0)
+trp-state: (multidraw sets, batchable bins, unbatchable, non-mesh) before -> after
+        main alpha_mask             (0, 0, 0, 11) -> (0, 0, 0, 11)
+        main alpha_mask_prepass     (0, 0, 0, 11) -> (0, 0, 0, 11)
+        main opaque                 (4, 0, 0, 24) -> (4, 0, 0, 32)   <- changed
+        main prepass                (0, 0, 0, 24) -> (0, 0, 0, 32)   <- changed
+    cascade0 shadow                 (0, 0, 0, 31) -> (0, 0, 0, 39)   <- changed
+    cascade1 shadow                 (0, 0, 0, 31) -> (0, 0, 0, 39)   <- changed
+    cascade2 shadow                 (0, 0, 0, 31) -> (0, 0, 0, 39)   <- changed
+    cascade3 shadow                 (0, 0, 0, 0) -> (0, 0, 0, 0)

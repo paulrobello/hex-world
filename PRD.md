@@ -201,6 +201,7 @@ EdgeSocket {
 - Grass and Forest edges meet themselves and each other. Road, River, Beach and Ocean meet only their own kind.
 - Lane sockets must also match in lane offset and width, so roads and rivers line up exactly across the seam. Road lanes are 6 m wide and river lanes 8 m, both centred on the edge (`data/sockets.ron`).
 - A forest edge against a forest edge also gets a pair edge piece (`pair_edge_pieces` in `data/sockets.ron`): `forest_forest_edge`, one variant per local edge of the forest base, carries the leaf litter across the seam, ending in a straight slope at a corner beside a meadow edge (owner D3, A19 and Q3 option O-a, 2026-10-14; O-b follows when forest moves into its own streamed pack).
+- A tile may list its own edge pieces instead of deriving them from its sockets (`edge_pieces: Explicit(...)`). `road_bend_60` does: its stubs are `road_straight_edge` trimmed at the inner bisector (`road_bend_60_edge_e0` on lane 0, its mirror `road_bend_60_edge_e1` on lane 1), so the two stubs and the centre meet at the inner corner without overlapping faces and with the same look (owner A7, 2026-10-21; built 2026-10-25). The kit gate checks each centre's joints against the edge pieces its tile places.
 - Height rules (P4): edges must have equal height, unless the edge profile is `Cliff` (any difference) or `Ramp` (a difference of exactly 1).
 
 ### 5.3 Tile definitions (data)

@@ -91,12 +91,12 @@
       -0.3
     ]
   ],
-  "receiverSignature": "792550ef3d50b4de8fa0fc42e84d69f8c77fda2acb79fc09beeb84d168946847",
+  "receiverSignature": "66f85fea2cc34dc787f3f2084f692e8211db87993afc7e6485d2e0c1df7c3bb3",
   "samples": 64,
   "skipped": false,
   "texelDensityPxPerM": {
     "max": 16.00074414892395,
-    "median": 15.99981237842464,
-    "min": 14.814162332757181
+    "median": 15.999819509135737,
+    "min": 14.814242581933096
   }
 }

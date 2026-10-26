@@ -1,0 +1,86 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/road_bend_60-trim/trim-play.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        705.83,
+        757.3,
+        656.38
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 16.9,
+      "load_after": [
+        688.06,
+        750.84,
+        655.84
+      ],
+      "frames": {
+        "trp-play": {
+          "mean": 0.2672,
+          "problem": null
+        },
+        "trp-corner-top": {
+          "mean": 0.2611,
+          "problem": null
+        },
+        "trp-corner-sun": {
+          "mean": 0.3392,
+          "problem": null
+        },
+        "trp-corner-shade": {
+          "mean": 0.2801,
+          "problem": null
+        },
+        "trp-corner-arm0": {
+          "mean": 0.2768,
+          "problem": null
+        },
+        "trp-corner-arm1": {
+          "mean": 0.2703,
+          "problem": null
+        },
+        "trp-seam-road-e0": {
+          "mean": 0.2775,
+          "problem": null
+        },
+        "trp-seam-road-e1": {
+          "mean": 0.3038,
+          "problem": null
+        },
+        "trp-seam-meadow-e5": {
+          "mean": 0.3204,
+          "problem": null
+        },
+        "trp-seam-meadow-e2": {
+          "mean": 0.353,
+          "problem": null
+        },
+        "trp-eye": {
+          "mean": 0.3127,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

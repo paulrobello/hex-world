@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/road_bend_60_center.py",
-    "sha256": "32de1cb4e25e8f687704fa33c0615377744f24d25f09090f314ddc80f2e69e9c"
+    "sha256": "21cbec4b89af9a28440b7691e92c50cb374a45f899e721384735b776f6d7a79e"
   },
   "generatorDeps": [
     {
@@ -12,12 +12,16 @@
     {
       "path": "scripts/blender/kit/_road_bend.py",
       "sha256": "3600718e406beb143a5462ebfcc133e41d6fa38bb209ba7fe702ddc7c71cd041"
+    },
+    {
+      "path": "scripts/blender/kit/_road_bend_trim.py",
+      "sha256": "69a88ac2d76c71aef224fc14897363b6e2eec58a4abc235e6df4f9408df79887"
     }
   ],
   "lodTris": {
-    "road_bend_60_center_lod0": 700,
-    "road_bend_60_center_lod1": 320,
-    "road_bend_60_center_lod2": 88
+    "road_bend_60_center_lod0": 628,
+    "road_bend_60_center_lod1": 287,
+    "road_bend_60_center_lod2": 79
   },
   "nodes": [
     "anchor-prop-0",

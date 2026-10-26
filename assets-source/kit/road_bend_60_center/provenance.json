@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/road_bend_60_center.py",
-    "sha256": "32de1cb4e25e8f687704fa33c0615377744f24d25f09090f314ddc80f2e69e9c"
+    "sha256": "21cbec4b89af9a28440b7691e92c50cb374a45f899e721384735b776f6d7a79e"
   },
   "generatorDeps": [
     {
@@ -14,6 +14,10 @@
     {
       "path": "scripts/blender/kit/_road_bend.py",
       "sha256": "3600718e406beb143a5462ebfcc133e41d6fa38bb209ba7fe702ddc7c71cd041"
+    },
+    {
+      "path": "scripts/blender/kit/_road_bend_trim.py",
+      "sha256": "69a88ac2d76c71aef224fc14897363b6e2eec58a4abc235e6df4f9408df79887"
     }
   ],
   "authoringAgent": {
@@ -120,30 +124,30 @@
         -0.3
       ]
     ],
-    "receiverSignature": "792550ef3d50b4de8fa0fc42e84d69f8c77fda2acb79fc09beeb84d168946847",
+    "receiverSignature": "66f85fea2cc34dc787f3f2084f692e8211db87993afc7e6485d2e0c1df7c3bb3",
     "samples": 64,
     "skipped": false,
     "texelDensityPxPerM": {
       "max": 16.00074414892395,
-      "median": 15.99981237842464,
-      "min": 14.814162332757181
+      "median": 15.999819509135737,
+      "min": 14.814242581933096
     }
   },
   "lods": [
     {
       "lod": 0,
-      "tris": 700,
+      "tris": 628,
       "ratio": 1
     },
     {
       "lod": 1,
-      "tris": 320,
-      "ratio": 0.45714285714285713
+      "tris": 287,
+      "ratio": 0.4570063694267516
     },
     {
       "lod": 2,
-      "tris": 88,
-      "ratio": 0.12571428571428572
+      "tris": 79,
+      "ratio": 0.12579617834394904
     }
   ],
   "collider": {
@@ -180,8 +184,8 @@
   "pivot": "hex_center",
   "texelDensityPxPerM": {
     "max": 16.00074414892395,
-    "median": 15.99981237842464,
-    "min": 14.814162332757181
+    "median": 15.999819509135737,
+    "min": 14.814242581933096
   },
   "compression": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
@@ -189,10 +193,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 13823,
-        "astc": 13489
+        "bc7": 13208,
+        "astc": 12939
       },
-      "glbBytes": 45288
+      "glbBytes": 43680
     },
     "textureEncodes": [
       {
@@ -203,8 +207,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 13823,
-        "sha256": "825ae94a83236184bde8081d65449cf09b3760671e393ad2339a00f0d0afa58d"
+        "bytes": 13208,
+        "sha256": "62d3cdd31b12c597d727587bb6de56e0ead245b53ec0b85e147d87f58f791665"
       },
       {
         "channel": "masks",
@@ -214,8 +218,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 13489,
-        "sha256": "a1a0dbe80913134d44b560a9ac9a58afa089da535edef4238debe93143fbddb9"
+        "bytes": 12939,
+        "sha256": "80f4af3c5ae52781863ef6b96e3e0129835637d1d6ad611c0d495a3098fd8ddb"
       },
       {
         "channel": "masks",
@@ -223,31 +227,31 @@
         "path": "assets/kit/p1/road_bend_60_center/road_bend_60_center.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 21346,
-        "sha256": "41654289dcdfac9224d8048d20f0ed48601cc41bbe4d1f5e10bd7d21890dacdc"
+        "bytes": 20872,
+        "sha256": "4900592beb9221e11d321671a6db17e43e0dd457eaaa0e83843bf8ed77dec45a"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/road_bend_60_center/road_bend_60_center.glb",
-      "sha256": "3a192e8aad0ddbac9a9f54135f636f537f881b63585f2ae56c77772061992001",
-      "bytes": 45288
+      "sha256": "dc53d11b362924eeea7aef34030132cefd68132902c4d8534ae90bdfdaa74f74",
+      "bytes": 43680
     },
     {
       "path": "assets/kit/p1/road_bend_60_center/road_bend_60_center.masks.bc7.ktx2",
-      "sha256": "825ae94a83236184bde8081d65449cf09b3760671e393ad2339a00f0d0afa58d",
-      "bytes": 13823
+      "sha256": "62d3cdd31b12c597d727587bb6de56e0ead245b53ec0b85e147d87f58f791665",
+      "bytes": 13208
     },
     {
       "path": "assets/kit/p1/road_bend_60_center/road_bend_60_center.masks.astc.ktx2",
-      "sha256": "a1a0dbe80913134d44b560a9ac9a58afa089da535edef4238debe93143fbddb9",
-      "bytes": 13489
+      "sha256": "80f4af3c5ae52781863ef6b96e3e0129835637d1d6ad611c0d495a3098fd8ddb",
+      "bytes": 12939
     },
     {
       "path": "assets/kit/p1/road_bend_60_center/road_bend_60_center.masks.png",
-      "sha256": "41654289dcdfac9224d8048d20f0ed48601cc41bbe4d1f5e10bd7d21890dacdc",
-      "bytes": 21346
+      "sha256": "4900592beb9221e11d321671a6db17e43e0dd457eaaa0e83843bf8ed77dec45a",
+      "bytes": 20872
     }
   ],
   "references": [
@@ -282,7 +286,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T19:14:11.694Z",
+    "date": "2026-10-26T05:49:08.487Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -329,6 +333,13 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-25",
+      "revision": "inner-corner trim (owner A7)",
+      "notes": "Pending owner re-approval; not an approval. Rebuilt for owner A7 (trim the inner-corner overlap): the far-side inner fan and sink rows, which lay under both stubs, are gone, and the pit fan inside the inner kerb now ends exactly at the arc centre (no 2 mm gap). The tile's stubs are now road_bend_60_edge_e0 and road_bend_60_edge_e1, road_straight_edge cut at the inner bisector, so the three pieces meet edge to edge with no overlapping faces (overlap 2.23 m2 before, 0 after, in every LOD) and the same top surface (largest height change 0). The swept arc, paint, LOD segments, sockets and wetness footprint are unchanged; tris 628 / 287 / 79 (were 700 / 320 / 88). Review docs/checkpoints/road_bend_60-trim/sheet.jpg. The controller records the owner's decision. Earlier entries stay as history."
     }
   ]
 }

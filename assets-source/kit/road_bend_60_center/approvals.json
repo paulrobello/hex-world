@@ -25,5 +25,12 @@
     "gate": "piece",
     "status": "approved",
     "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-25",
+    "revision": "inner-corner trim (owner A7)",
+    "notes": "Pending owner re-approval; not an approval. Rebuilt for owner A7 (trim the inner-corner overlap): the far-side inner fan and sink rows, which lay under both stubs, are gone, and the pit fan inside the inner kerb now ends exactly at the arc centre (no 2 mm gap). The tile's stubs are now road_bend_60_edge_e0 and road_bend_60_edge_e1, road_straight_edge cut at the inner bisector, so the three pieces meet edge to edge with no overlapping faces (overlap 2.23 m2 before, 0 after, in every LOD) and the same top surface (largest height change 0). The swept arc, paint, LOD segments, sockets and wetness footprint are unchanged; tris 628 / 287 / 79 (were 700 / 320 / 88). Review docs/checkpoints/road_bend_60-trim/sheet.jpg. The controller records the owner's decision. Earlier entries stay as history."
   }
 ]

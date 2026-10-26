@@ -1,0 +1,11 @@
+trp-corner-arm0: max 3, > 8 levels 0.000%
+trp-corner-arm1: max 3, > 8 levels 0.000%
+trp-corner-shade: max 3, > 8 levels 0.000%
+trp-corner-sun: max 2, > 8 levels 0.000%
+trp-corner-top: max 1, > 8 levels 0.000%
+trp-eye: max 2, > 8 levels 0.000%
+trp-play: max 22, > 8 levels 0.000%, box (170, 240, 1440, 364)
+trp-seam-meadow-e2: max 1, > 8 levels 0.000%
+trp-seam-meadow-e5: max 4, > 8 levels 0.000%
+trp-seam-road-e0: max 2, > 8 levels 0.000%
+trp-seam-road-e1: max 3, > 8 levels 0.000%
