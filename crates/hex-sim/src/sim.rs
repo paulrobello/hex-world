@@ -131,6 +131,8 @@ pub struct Car {
     /// Level crossings on the trip: the crossing cell and the distance along `path` where the car
     /// holds while the crossing is closed (P3).
     crossings: Vec<(Axial, f32)>,
+    /// Ticks the car has stood still in a row (giving way, queueing, waiting to pull out).
+    waiting: u32,
 }
 
 impl Car {
@@ -321,6 +323,46 @@ fn crossing_holds(cars: &[Car], closed: &[Axial], step: f32) -> Vec<f32> {
     holds
 }
 
+/// Meters short of the end of its lanes an arriving car starts to keep its destination's yard clear
+/// of new departures: about four seconds out at the default speed.
+const YARD_WATCH: f32 = 30.0;
+
+/// The farthest each car (in `cars` order) may drive this tick under the yard rule, one trip at a
+/// time through a parking tile's yard, `f32::INFINITY` when it does not hold the car:
+/// - a car that has not started its pull-out stays in its spot while a car bound for the same tile
+///   is within [`YARD_WATCH`] of its lanes' end or parking, or while another departure from the tile
+///   is still on its driveway (the one that started first, or the lower id when both are waiting);
+/// - an arriving car stops at the end of its lanes while a departure from its destination tile is
+///   backing out or on its driveway.
+fn yard_holds(cars: &[Car]) -> Vec<f32> {
+    let mut holds = vec![f32::INFINITY; cars.len()];
+    let leaving = |c: &Car| c.s < c.lanes.0;
+    for (i, car) in cars.iter().enumerate() {
+        if car.s <= 0.0 {
+            let busy = cars.iter().any(|o| {
+                o.id != car.id
+                    && ((o.to.cell == car.from.cell
+                        && o.s >= o.lanes.1 - YARD_WATCH
+                        && !o.arrived())
+                        || (o.from.cell == car.from.cell
+                            && leaving(o)
+                            && (o.s > 0.0 || o.id < car.id)))
+            });
+            if busy {
+                holds[i] = 0.0;
+            }
+        } else if car.s <= car.lanes.1 {
+            let busy = cars
+                .iter()
+                .any(|o| o.from.cell == car.to.cell && o.s > 0.0 && leaving(o));
+            if busy {
+                holds[i] = car.lanes.1;
+            }
+        }
+    }
+    holds
+}
+
 /// SplitMix64: small, fast and stable across releases, so seeds replay identically.
 #[derive(Clone, Debug)]
 struct Rng(u64);
@@ -352,6 +394,9 @@ struct Spot {
     node: String,
     /// The car parked here or driving here.
     taken: Option<CarId>,
+    /// A car that left for a trip but still stands in the spot or is backing out of it (it may be
+    /// waiting to merge), so no other car is sent here yet.
+    vacating: Option<CarId>,
 }
 
 /// A placed tile with parking: its spots and its car cap (0 at a shop, which owns no cars).
@@ -382,6 +427,7 @@ impl Cluster {
                 leave: s.leave.iter().copied().map(pose).collect(),
                 node: s.node.clone(),
                 taken: None,
+                vacating: None,
             })
             .collect();
         Self {
@@ -393,7 +439,7 @@ impl Cluster {
 
     /// The owner's own spot when free, else the lowest free spot.
     fn free_spot(&self, house: Option<u16>) -> Option<usize> {
-        let free = |i: &usize| self.spots[*i].taken.is_none();
+        let free = |i: &usize| self.spots[*i].taken.is_none() && self.spots[*i].vacating.is_none();
         house
             .and_then(|h| (0..self.spots.len()).find(|&i| self.spots[i].house == h))
             .filter(free)
@@ -558,8 +604,10 @@ impl Simulation {
     }
 
     /// Advances one fixed tick of [`TICK_SECONDS`]: moves the trains (closing the level crossings
-    /// they near), then every driving car, queueing short of a closed crossing; parks the cars that
-    /// had already arrived (so the final approach still renders), then starts departures.
+    /// they near), then every driving car, queueing short of a closed crossing, keeping the spacing
+    /// behind the car ahead and giving way at merges ([`crate::traffic`]) and taking turns through
+    /// a parking yard; parks the cars that had already arrived (so the final approach still
+    /// renders), then starts departures.
     pub fn tick(&mut self) {
         self.ticks += 1;
         let gone: std::collections::BTreeSet<CarId> = self
@@ -572,19 +620,43 @@ impl Simulation {
         self.rails.tick();
         let step = self.config.car_speed * TICK_SECONDS;
         let holds = crossing_holds(&self.cars, &self.rails.closed_crossings(), step);
+        let caps = crate::traffic::follow_caps(
+            &self
+                .cars
+                .iter()
+                .map(|c| crate::traffic::Mover {
+                    id: c.id.0,
+                    s: c.s,
+                    path: &c.path,
+                    lane_start: c.lanes.0,
+                    waiting: c.waiting,
+                })
+                .collect::<Vec<_>>(),
+        );
+        let yards = yard_holds(&self.cars);
         let mut arrived = vec![];
         let mut k = 0;
         self.cars.retain_mut(|car| {
-            let hold = holds[k];
+            let (hold, cap) = (holds[k].min(yards[k]), caps[k]);
             k += 1;
             if car.s >= car.path.length() {
                 arrived.push((car.id, car.home, car.to));
                 return false;
             }
             car.prev = car.s;
-            car.s = (car.s + step).min(car.path.length()).min(hold);
+            car.s = (car.s + step)
+                .min(car.path.length())
+                .min(hold)
+                .min(cap)
+                .max(car.s);
+            car.waiting = if car.s == car.prev {
+                car.waiting.saturating_add(1)
+            } else {
+                0
+            };
             true
         });
+        self.mark_vacating();
         for (id, home, spot) in arrived {
             let pose = self
                 .spot(spot)
@@ -829,6 +901,7 @@ impl Simulation {
         self.parked.retain(|c| c.id != id);
         if let Some(s) = self.spot_mut(car.spot) {
             s.taken = None;
+            s.vacating = Some(id);
         }
         if let Some(s) = self.spot_mut(to) {
             s.taken = Some(id);
@@ -847,11 +920,32 @@ impl Simulation {
             prev: 0.0,
             s: 0.0,
             crossings,
+            waiting: 0,
         };
         let at = self.cars.partition_point(|c| c.id < id);
         self.cars.insert(at, new);
         self.departures += 1;
         Some(to)
+    }
+
+    /// Marks every spot whose car has left on a trip but has not backed out of it yet.
+    fn mark_vacating(&mut self) {
+        for cluster in self.clusters.values_mut() {
+            for spot in &mut cluster.spots {
+                spot.vacating = None;
+            }
+        }
+        let still: Vec<(SpotRef, CarId)> = self
+            .cars
+            .iter()
+            .filter(|c| c.s < c.reverse)
+            .map(|c| (c.from, c.id))
+            .collect();
+        for (spot, id) in still {
+            if let Some(s) = self.spot_mut(spot) {
+                s.vacating = Some(id);
+            }
+        }
     }
 
     /// Frees the spot a removed car held, unless the cluster went with it.

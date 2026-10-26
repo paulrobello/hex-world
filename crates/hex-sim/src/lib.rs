@@ -11,6 +11,7 @@ pub mod network;
 pub mod rail;
 pub mod route;
 pub mod sim;
+pub mod traffic;
 
 pub use geom::Pose;
 pub use network::{Components, Link, LinkId, Network, Node, NodeId, NodeKey};

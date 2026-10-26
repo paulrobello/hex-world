@@ -355,10 +355,11 @@ impl LanePath {
     pub fn slice(&self, s0: f32, s1: f32) -> Vec<Vec2> {
         let (s0, s1) = (s0.clamp(0.0, self.length()), s1.clamp(0.0, self.length()));
         let mut out = vec![self.pose_at_distance(s0).pos];
-        for (p, c) in self.points.iter().zip(&self.cum) {
-            if *c > s0 + MIN_STEP && *c < s1 - MIN_STEP {
-                out.push(*p);
-            }
+        // `cum` rises strictly, so the points strictly between the two ends are one run.
+        let first = self.cum.partition_point(|&c| c <= s0 + MIN_STEP);
+        let end = self.cum.partition_point(|&c| c < s1 - MIN_STEP);
+        if first < end {
+            out.extend_from_slice(&self.points[first..end]);
         }
         out.push(self.pose_at_distance(s1).pos);
         out

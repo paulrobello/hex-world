@@ -20,25 +20,25 @@
   "attempts": [
     {
       "load_before": [
-        529.65,
-        586.23,
-        625.38
+        84.1,
+        65.37,
+        145.59
       ],
       "exit": 0,
       "timed_out": false,
-      "seconds": 62.3,
+      "seconds": 58.7,
       "load_after": [
-        550.91,
-        581.64,
-        620.97
+        46.69,
+        57.96,
+        137.35
       ],
       "frames": {
         "crossing-queue": {
-          "mean": 0.2788,
+          "mean": 0.2793,
           "problem": null
         },
         "crossing-queue-release": {
-          "mean": 0.2872,
+          "mean": 0.2883,
           "problem": null
         }
       },

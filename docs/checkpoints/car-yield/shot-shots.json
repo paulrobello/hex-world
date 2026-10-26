@@ -1,0 +1,48 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/car-yield/shot.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        187.88,
+        281.51,
+        338.14
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 7.9,
+      "load_after": [
+        183.24,
+        278.99,
+        336.92
+      ],
+      "frames": {
+        "car-yield": {
+          "mean": 0.2825,
+          "problem": null
+        },
+        "car-yield-after": {
+          "mean": 0.282,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

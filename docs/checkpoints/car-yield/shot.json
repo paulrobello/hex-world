@@ -1,0 +1,59 @@
+[
+ {
+  "cmd": "load",
+  "path": "docs/checkpoints/car-yield/car-yield.hexworld"
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   52,
+   20,
+   20
+  ],
+  "look_at": [
+   29,
+   0.5,
+   -1
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 2
+ },
+ {
+  "cmd": "hover",
+  "q": 8,
+  "r": -8
+ },
+ {
+  "cmd": "wait",
+  "frames": 598
+ },
+ {
+  "cmd": "screenshot",
+  "name": "car-yield"
+ },
+ {
+  "cmd": "dump_state",
+  "name": "car-yield"
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "car-yield-after"
+ },
+ {
+  "cmd": "dump_state",
+  "name": "car-yield-after"
+ },
+ {
+  "cmd": "exit"
+ }
+]

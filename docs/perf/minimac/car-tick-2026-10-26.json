@@ -1,0 +1,12 @@
+{
+  "bench": "cargo test -p hex-sim --release --test cars bench_tick_stays_within_budget_at_the_car_cap -- --ignored (zigzag(99): 2,000 tiles, 1,000 junctions, 300 driving cars; 400 warm-up ticks, mean of 1,000 ticks)",
+  "host": "MiniMac (Mac16,10, Apple M4)",
+  "before": "041ad32",
+  "after": "83ab3d2",
+  "load_guard": "1-minute load at most 15 before and after each run",
+  "rounds": [
+    {"round": 1, "before_ms": 0.4493, "before_load": [2.81, 3.15], "after_ms": 0.6756, "after_load": [3.15, 3.15]},
+    {"round": 2, "before_ms": 0.4440, "before_load": [3.15, 3.06], "after_ms": 0.6755, "after_load": [3.06, 3.06]},
+    {"round": 3, "before_ms": 0.4680, "before_load": [3.06, 3.06], "after_ms": 0.6743, "after_load": [3.06, 3.13]}
+  ]
+}

@@ -19,3 +19,7 @@ Runs copy `dist/`, `e2e/` and `web/ui/src/` to `~/perf/hex-world` on MiniMac, ru
 ## 2026-10-15, main 993c6d6 (world-build fix)
 
 `p2-grass-normal-3runs-2026-10-15.json`: grass normal, 3 rounds, with the 993c6d6 wait. All 3 runs built the full 2,066-tile world: p95 59.9, 66.7 and 64.0 ms (load 1.7 to 6.5).
+
+## 2026-10-26, car following and giving way (041ad32 against 83ab3d2)
+
+`car-tick-2026-10-26.json`: the hex-sim tick bench (`tests/cars.rs` `bench_tick_stays_within_budget_at_the_car_cap`, the 2,000-tile zigzag with 300 driving cars, mean of 1,000 ticks), built from each commit's `crates/` and run three rounds interleaved, load 2.8 to 3.2 before and after every run. Before: 0.444 to 0.468 ms. After: 0.674 to 0.676 ms, 0.22 ms more for the follow, give-way and yard rules (PRD §7.2), against the 4 ms main-thread budget. A first cut of the rules (4915294) measured 2.82 to 4.38 ms on the same bench; the final version finds each look-ahead by binary search in `LanePath::slice` (which walked every point of the trip) and culls pairs and path steps by bounding boxes.

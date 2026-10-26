@@ -91,12 +91,13 @@ fn run(seed: u64) -> Run {
                 .push((sim.ticks(), car.id().0, car.distance().to_bits()));
         }
 
-        // Held: standing still short of the closed crossing.
+        // Held: standing still on the road short of the closed crossing (a car waiting in its spot
+        // for the one ahead of it to leave the yard is not in the queue yet).
         let held: Vec<u64> = cars
             .iter()
             .filter(|c| {
                 let was = before.iter().find(|b| b.0 == c.id().0).map(|b| b.1);
-                closed && was == Some(c.distance())
+                closed && was == Some(c.distance()) && c.phase() == CarPhase::Road
             })
             .map(|c| c.id().0)
             .collect();
