@@ -1,10 +1,20 @@
-# Hex World handoff (2026-10-21)
+# Hex World handoff (2026-10-26)
 
 Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE.md`, `PRD.md` §15 and `.claude/skills/blender-asset/SKILL.md` before any asset work.
 
 ## State
 
-- `main` holds batch 26 (pushed, CI watched, auto-deployed); batch 25 is `d908e36`, CI green (run 40324963259). `dist/` rebuilt after each merge.
+- `main` holds batches 27 and 28 (`af963ad`, pushed 19:14Z 2026-10-26, CI watched). `dist/` rebuilt.
+- Batch 28 landed: riverbank stones and reeds are runtime scatter, a seeded 0 to 4 per river tile (owner, 2026-10-26: scatter is never baked into a tile). Five new props (`river_stones`, `_b`, `_c`, `river_reeds`, `_b`); the channel and mouth centres left the manifest; the road and rail bridges and the spring lost their baked dressing (the spring keeps its granite ring and lilies, A21). 41 thumbnails changed. Riverbank card closed. Their generators, provenance and `assets/kit/p1/` folders for the six removed centres remain on disk (`kit-compress.test.mjs` uses `river_fork_center`'s masks PNG as a fixture).
+- Batch 27 landed: cars follow at the queue spacing and yield at merges, crossings and yards (`tests/yielding.rs`). Card stays open on criterion 2: no test asserts the 6.9 m spacing for general following yet.
+- Waiting to land after parvault's macdaddy timing window (19:30-23:30Z, 2026-10-26), each needing thumbs on macdaddy:
+  - Bush shine (`worktree-agent-a33de3b2fef97e5c7`): verge bush leaves matte (roughness 0.57 -> 0.81), 17 road thumbs.
+  - Beach/ocean scatter (`worktree-agent-a2d19b8ab94674dc2`): land the branch (conflict resolution on `bos-combine` 409a4d9), then `integration.patch` from 3d7f32f, then `thumbs.patch`. Kit showcase placement of the new props still to do; check whether `river_mouth_center.py`, `_mouth_dress.py`, `_beach_dress.py` are now dead.
+  - Render (`worktree-agent-aaa39f84d10202f98`, ec47f79): cascade LOD pin and clamp reverted, bind-group cache kept. Squash on landing. Needs the MiniMac cache-only timing first.
+  - Grass build (`worktree-agent-ad4d4159bb5bcd17e`, head 4b6454f): needs the MiniMac `pairs` re-run first (`docs/perf/grass-build/README.md`); merge its README conflict by hand.
+- MiniMac booked 21:30-23:00Z 2026-10-26 (booking 01a1796024da): the cache-only web timing (`docs/perf/close-camera-draws/README.md`, builds saved in `/tmp/claude-501/mm-dists/{before-now,cache}`) and the grass pairs re-run.
+- Flaky (high): `shots-scatter` 'held' check fails when a first interaction fires before the script runs, card 01a1798512d7.
+- Batch 26: `0ace163`..`c56ee37`; batch 25 is `d908e36`, CI green (run 40324963259).
 - Batch 26 landed: the owner's A16/A17 approvals (21 pieces), the bulldoze dust reverted to its previous size (owner A9), the close-camera MiniMac frame times (`docs/perf/close-camera-draws/`), A3/A18 answers in the PRD.
 - Batch 25 landed: close-camera draws (screen-aware cascade skip, runtime slot coalescing per piece, per-tile culling): 20-tile overview 419 -> 335, forest cluster 633 -> 436, meadow 645 -> 497; MiniMac 2,066-tile close camera -3.7 ms web mean, -4.4 ms native. Cards closed: close-camera draws, draw budget.
 - Batch 24 landed: kit-compress spawns the UASTC encode with ASLR off (libktx 4.4.2's RDO selector-history hash reads struct padding), so identical PNGs give identical KTX2; every committed KTX2 is pre-pin and 287 of 321 maps change on re-encode (re-shoot thumbs after).
@@ -43,9 +53,10 @@ No Blender agents are running. The stone well landed in batch 15; no other P3 pi
 
 ## Waiting on Paul
 
-- A19: which Blender pieces next (no piece has an approved reference set, so the two-Blender-agents rule cannot be met until the owner names pieces; candidates: fish and bird kit pieces, the 7-hex mega tile, new P3 pieces).
-- A20: file the libktx 4.4.2 padding-hash bug upstream (KhronosGroup/KTX-Software, public GitHub issue) or not.
-- A4 UI hero-polish hallway test and sign-off; A9 grass blades look sign-off.
+- A19: which Blender pieces next (recommended B1 boulders/outcrops and B3 water-surface props, then B2 dry-stone walls).
+- A22: approve the 5 riverbank props and the rebuilt bridges and spring (`docs/checkpoints/riverbank-scatter/sheet.jpg`); raise the reed share (2 reed props to 9 stone clusters on the test stretch)?
+- A23: approve the matte verge bushes (`docs/checkpoints/bush-shine/sheet.jpg`); also matte `shrub_forest` and `shrub_forest_c` (same 0.50-0.64 leaf roughness)?
+- A24 (beach/ocean, `docs/checkpoints/beach-ocean-scatter/bos-sheet.jpg`): Q1 about half of beach tiles keep one pebble cluster, enough? Q2 seabed stones show 2-4 cm on swell crests, OK? Q3 uniform pebble wetness, OK? Q4 place the new props in the kit showcase? Q5 is the 60 scatter pairs per LOD limit per checkpoint world or any world (the scatter world is at 55)?
 - Non-blocking tuning lists from 2026-10-20 and the older numbered lists below each ship with a default.
 
 ## Filed follow-ups
