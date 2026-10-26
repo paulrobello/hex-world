@@ -371,7 +371,9 @@ fn fragment(
         let f = kit_common::tile_frame(in.world_normal, in.world_position.xyz);
         var n = kit_common::tiled_normal(f);
         @if(VERTEX_COLORS) {
-            n = kit_common::detail_normal(f, n, in.color.a);
+            if (!kit_common::slot_colors()) {
+                n = kit_common::detail_normal(f, n, in.color.a);
+            }
         }
         out.normal = vec4(n * 0.5 + vec3(0.5), 1.0);
     } else if (flags & pbr_types::STANDARD_MATERIAL_FLAGS_UNLIT_BIT) == 0u {

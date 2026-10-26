@@ -21,7 +21,10 @@ use hex_render::{
     scene::{Lod, LodCover, lod_cover_range, lod_range},
 };
 
-use super::{KitMaterial, KitPart, PlaySpawned, PlayView, RisePart, SceneEntity, rise::PlayRises};
+use super::{
+    KitMaterial, KitPart, PlaySpawned, PlayView, RisePart, SceneEntity, coalesce::CoalescedGroup,
+    rise::PlayRises,
+};
 
 #[derive(Clone)]
 struct Part {
@@ -53,25 +56,52 @@ pub(super) struct PlayChunks {
 /// Maps every kit part mesh to its (family, LOD): a family is one piece body primitive across
 /// the three LODs, identified by (piece, material, ordinal among that material's primitives in
 /// the LOD), so a LOD that drops a slot leaves the other slots' families paired. Parts without
-/// an entry stay on the per-entity path.
+/// an entry stay on the per-entity path. The slots of a coalesced group
+/// ([`super::coalesce`]) share one family that draws the group's merged meshes with its merged
+/// material.
 #[derive(Resource, Default)]
 pub(super) struct KitFamilies {
     family_of: HashMap<AssetId<Mesh>, (u32, u8)>,
     meshes_of: HashMap<u32, [Option<Handle<Mesh>>; 3]>,
+    piece_of: HashMap<u32, Arc<str>>,
+    /// A coalesced family's merged material (the members' own materials are not drawn).
+    material_of: HashMap<u32, Handle<KitMaterial>>,
 }
 
 impl KitFamilies {
     #[allow(clippy::type_complexity)]
-    pub(super) fn build(pieces: &HashMap<String, Vec<KitPart>>) -> Self {
+    pub(super) fn build(
+        pieces: &HashMap<String, Vec<KitPart>>,
+        coalesced: &HashMap<String, Vec<CoalescedGroup>>,
+    ) -> Self {
         let mut out = Self::default();
         let mut intern: HashMap<(String, AssetId<KitMaterial>, u32), u32> = HashMap::new();
         let mut next: u32 = 0;
         let mut ids: Vec<_> = pieces.keys().cloned().collect();
         ids.sort();
         for id in ids {
+            let groups = coalesced.get(&id).map_or(&[][..], Vec::as_slice);
             let mut seen: HashMap<(AssetId<KitMaterial>, usize), u32> = HashMap::new();
             for part in &pieces[&id] {
                 if part.rotor.is_some() {
+                    continue;
+                }
+                // A coalesced slot: the group's family, numbered at its first member part.
+                if let Some(g) = groups
+                    .iter()
+                    .find(|g| g.members.contains(&part.material.id()))
+                {
+                    let fid = *intern
+                        .entry((id.clone(), g.material.id(), 0))
+                        .or_insert_with(|| {
+                            let fid = next;
+                            next += 1;
+                            out.meshes_of.insert(fid, g.meshes.clone());
+                            out.piece_of.insert(fid, Arc::from(id.as_str()));
+                            out.material_of.insert(fid, g.material.clone());
+                            fid
+                        });
+                    out.family_of.insert(part.mesh.id(), (fid, part.lod as u8));
                     continue;
                 }
                 let n = seen.entry((part.material.id(), part.lod)).or_default();
@@ -83,6 +113,7 @@ impl KitFamilies {
                         let fid = next;
                         next += 1;
                         out.meshes_of.insert(fid, [None, None, None]);
+                        out.piece_of.insert(fid, Arc::from(id.as_str()));
                         fid
                     });
                 out.family_of.insert(part.mesh.id(), (fid, part.lod as u8));
@@ -95,6 +126,26 @@ impl KitFamilies {
 
     fn family_of(&self, mesh: AssetId<Mesh>) -> Option<(u32, u8)> {
         self.family_of.get(&mesh).copied()
+    }
+
+    /// How many families (instanced draw slots) the built kit has.
+    pub(super) fn count(&self) -> usize {
+        self.meshes_of.len()
+    }
+
+    /// The material family `family` draws with: a coalesced family's merged one, else `part`'s.
+    fn material_of(&self, family: u32, part: &Handle<KitMaterial>) -> Handle<KitMaterial> {
+        self.material_of
+            .get(&family)
+            .cloned()
+            .unwrap_or_else(|| part.clone())
+    }
+
+    fn piece_of(&self, family: u32) -> Arc<str> {
+        self.piece_of
+            .get(&family)
+            .cloned()
+            .unwrap_or_else(|| Arc::from(""))
     }
 
     fn meshes_of(&self, family: u32) -> [Option<Handle<Mesh>>; 3] {
@@ -306,12 +357,13 @@ fn rebuild(
     for e in chunks.slot_entities.drain(..) {
         commands.entity(e).try_despawn();
     }
-    // Tiles grouped by chunk, ordered by chunk centre so the set is deterministic, and slot
-    // instances ordered chunk-major so each chunk owns a contiguous per-slot range.
+    // One culling cell per tile (owner A2 Q3 O6: a close camera or a near cascade culls tile by
+    // tile), ordered by cell so the set is deterministic, and slot instances ordered cell-major
+    // so each cell owns a contiguous per-slot range.
     let mut grouped: Vec<(Axial, Vec<&Tile>)> = vec![];
     let mut chunk_of: HashMap<Axial, usize> = HashMap::new();
     for tile in chunks.tiles.values() {
-        let centre = chunk_center(tile.cell, 19);
+        let centre = tile.cell;
         let ci = *chunk_of.entry(centre).or_insert_with(|| {
             grouped.push((centre, vec![]));
             grouped.len() - 1
@@ -338,27 +390,29 @@ fn rebuild(
         let (mut origin_lo, mut origin_hi) = (Vec3::splat(f32::MAX), Vec3::splat(f32::MIN));
         for tile in tiles {
             for part in &tile.parts {
-                let Some((fid, _lod)) = families.family_of(part.mesh.id()) else {
+                let Some((fid, lod)) = families.family_of(part.mesh.id()) else {
                     continue;
                 };
-                if !seen.insert((
-                    fid,
-                    part.material.id(),
-                    part.parent,
-                    placement_bits(&part.local),
-                )) {
+                // A coalesced slot's parts share their group's family and merged material, so
+                // one placement of the piece instances the group once.
+                let material = families.material_of(fid, &part.material);
+                if !seen.insert((fid, material.id(), part.parent, placement_bits(&part.local))) {
                     continue;
                 }
+                // The drawn mesh's bounds: a coalesced family draws its merged mesh.
+                let drawn = families.meshes_of(fid)[lod as usize]
+                    .clone()
+                    .unwrap_or_else(|| part.mesh.clone());
                 let (blo, bhi) = *local_bounds
-                    .entry(part.mesh.id())
-                    .or_insert_with(|| mesh_bounds(meshes.get(&part.mesh)));
+                    .entry(drawn.id())
+                    .or_insert_with(|| mesh_bounds(meshes.get(&drawn)));
                 let (min, max) = bounds_of(&blo, &bhi, &part.world);
                 lo = lo.min(min);
                 hi = hi.max(max);
                 origin_lo = origin_lo.min(part.world.translation);
                 origin_hi = origin_hi.max(part.world.translation);
-                let si = *slot_of.entry((fid, part.material.id())).or_insert_with(|| {
-                    slots.push((fid, part.material.clone(), vec![]));
+                let si = *slot_of.entry((fid, material.id())).or_insert_with(|| {
+                    slots.push((fid, material.clone(), vec![]));
                     ranges.resize(slots.len(), 0..0);
                     slots.len() - 1
                 });
@@ -386,27 +440,29 @@ fn rebuild(
             ranges,
         ));
     }
-    // Chunks assembled before a slot exists have shorter range vectors; every chunk needs one
-    // range per slot (empty when the chunk holds none of it).
-    let slot_count = slots.len();
-    for (_, _, _, ranges) in &mut per_chunk {
-        ranges.resize(slot_count, 0..0);
-    }
     // The ranges were accumulated as within-slot instance positions; the draw path indexes the
-    // flat record array (slot-major), so lift them by each slot's offset before publishing.
+    // flat record array (slot-major), so lift them by each slot's offset, keeping only the slots
+    // each cell holds (sparse, in slot order).
+    let slot_count = slots.len();
     let mut offsets = vec![0u32; slot_count];
     let mut acc = 0u32;
     for (si, (_, _, instances)) in slots.iter().enumerate() {
         offsets[si] = acc;
         acc += instances.len() as u32;
     }
-    for (_, _, _, ranges) in &mut per_chunk {
-        for (si, range) in ranges.iter_mut().enumerate() {
-            if range.start < range.end {
-                *range = offsets[si] + range.start..offsets[si] + range.end;
-            }
-        }
-    }
+    #[allow(clippy::type_complexity)]
+    let per_chunk: Vec<(Vec3, Aabb, Aabb, Vec<(u32, Range<u32>)>)> = per_chunk
+        .into_iter()
+        .map(|(centre, aabb, origins, ranges)| {
+            let sparse = ranges
+                .into_iter()
+                .enumerate()
+                .filter(|(_, r)| r.start < r.end)
+                .map(|(si, r)| (si as u32, offsets[si] + r.start..offsets[si] + r.end))
+                .collect();
+            (centre, aabb, origins, sparse)
+        })
+        .collect();
     // Concatenate slot instances and derive the per-chunk ranges into the flat record buffer.
     let mut pieces: Vec<GpuKitInstance> = vec![];
     let mut out_slots: Vec<KitSlot> = vec![];
@@ -436,6 +492,7 @@ fn rebuild(
                 .get(material)
                 .map_or(0, |m| StandardMaterialKey::from(&m.base).bits()),
             family: *fid,
+            piece: families.piece_of(*fid),
         });
     }
     let mut out_chunks: Vec<KitChunk> = vec![];
@@ -473,13 +530,16 @@ fn rebuild(
             }
         }
     }
-    commands.insert_resource(KitInstanceSet(Arc::new(KitInstanceSetData {
+    let mut set = KitInstanceSetData {
         pieces,
         slots: out_slots,
         chunks: out_chunks,
         meta,
         version: 0,
-    })));
+        by_slot: vec![],
+    };
+    set.index_slots();
+    commands.insert_resource(KitInstanceSet(Arc::new(set)));
 }
 
 /// The exact bits of a part's local transform, identifying its placement under the parent.
@@ -747,7 +807,10 @@ mod tests {
                 });
             }
         }
-        let f = KitFamilies::build(&HashMap::from([("bakery".to_owned(), parts.clone())]));
+        let f = KitFamilies::build(
+            &HashMap::from([("bakery".to_owned(), parts.clone())]),
+            &HashMap::new(),
+        );
         let lods_of = |m: &Handle<KitMaterial>| -> Vec<[bool; 3]> {
             let mut fams: Vec<u32> = parts
                 .iter()
@@ -852,7 +915,8 @@ mod tests {
         app.update();
         let set = &app.world().resource::<KitInstanceSet>().0;
         assert_eq!(set.pieces.len(), 4);
-        assert_eq!(set.chunks[0].ranges, vec![0..4]);
+        assert_eq!(set.chunks[0].ranges, vec![(0, 0..4)]);
+        assert_eq!(set.by_slot, vec![vec![(0, 0..4)]]);
         assert_ne!(set.chunks[0].centre, Vec3::ZERO, "outside the origin chunk");
         let mut xs: Vec<[f32; 3]> = set.pieces.iter().map(|p| p.translation).collect();
         xs.sort_by(|a, b| a[0].total_cmp(&b[0]));

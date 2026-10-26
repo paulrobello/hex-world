@@ -1,0 +1,889 @@
+{
+ "label": "phase1 (O5 screen-aware cascade skip)",
+ "cameras": {
+  "overview": {
+   "draws": 419,
+   "passes": {
+    "main/alpha_mask": 27,
+    "main/alpha_mask_prepass": 27,
+    "main/opaque": 112,
+    "main/prepass": 108,
+    "cascade0/shadow": 0,
+    "cascade1/shadow": 0,
+    "cascade2/shadow": 135,
+    "cascade3/shadow": 10
+   },
+   "kit_slots": 125,
+   "kit_draws": 375,
+   "kit_by_piece": {
+    "bush_verge": [
+     4,
+     2
+    ],
+    "bush_verge_b": [
+     4,
+     2
+    ],
+    "bush_verge_c": [
+     4,
+     2
+    ],
+    "fern_clump": [
+     2,
+     1
+    ],
+    "fern_clump_b": [
+     2,
+     1
+    ],
+    "fern_clump_c": [
+     2,
+     1
+    ],
+    "forest_base": [
+     8,
+     4
+    ],
+    "forest_forest_edge_e0": [
+     2,
+     1
+    ],
+    "forest_forest_edge_e1": [
+     2,
+     1
+    ],
+    "forest_forest_edge_e2": [
+     2,
+     1
+    ],
+    "forest_forest_edge_e3": [
+     2,
+     1
+    ],
+    "forest_forest_edge_e4": [
+     2,
+     1
+    ],
+    "forest_forest_edge_e5": [
+     2,
+     1
+    ],
+    "house_cottage_b": [
+     14,
+     7
+    ],
+    "house_longhouse": [
+     16,
+     8
+    ],
+    "house_pad": [
+     16,
+     8
+    ],
+    "house_twostorey": [
+     12,
+     6
+    ],
+    "log_fallen": [
+     2,
+     1
+    ],
+    "log_fallen_b": [
+     2,
+     1
+    ],
+    "log_fallen_c": [
+     2,
+     1
+    ],
+    "meadow_base": [
+     4,
+     2
+    ],
+    "river_edge": [
+     6,
+     3
+    ],
+    "river_straight_base": [
+     6,
+     3
+    ],
+    "river_straight_center": [
+     6,
+     3
+    ],
+    "road_straight_center": [
+     8,
+     4
+    ],
+    "road_straight_edge": [
+     8,
+     4
+    ],
+    "rock_small": [
+     2,
+     1
+    ],
+    "rock_small_b": [
+     2,
+     1
+    ],
+    "rock_small_c": [
+     2,
+     1
+    ],
+    "sapling_spruce": [
+     6,
+     3
+    ],
+    "sapling_spruce_b": [
+     6,
+     3
+    ],
+    "sapling_spruce_c": [
+     6,
+     3
+    ],
+    "shrub_forest": [
+     4,
+     2
+    ],
+    "shrub_forest_b": [
+     4,
+     2
+    ],
+    "shrub_forest_c": [
+     4,
+     2
+    ],
+    "tree_forest": [
+     6,
+     3
+    ],
+    "tree_forest_b": [
+     6,
+     3
+    ],
+    "tree_forest_c": [
+     6,
+     3
+    ],
+    "tree_hero_oak": [
+     6,
+     3
+    ],
+    "tree_hero_oak_b": [
+     6,
+     3
+    ],
+    "tree_oak": [
+     6,
+     3
+    ],
+    "tree_oak_c": [
+     6,
+     3
+    ],
+    "well_stone_b": [
+     16,
+     8
+    ],
+    "wildflower_clump": [
+     2,
+     1
+    ],
+    "wildflower_clump_b": [
+     2,
+     1
+    ],
+    "wildflower_clump_c": [
+     2,
+     1
+    ],
+    "wildflower_single": [
+     2,
+     1
+    ],
+    "wildflower_single_b": [
+     2,
+     1
+    ],
+    "wildflower_single_c": [
+     2,
+     1
+    ],
+    "wildflower_single_d": [
+     2,
+     1
+    ],
+    "wildflower_single_e": [
+     2,
+     1
+    ]
+   }
+  },
+  "forest-cluster": {
+   "draws": 548,
+   "passes": {
+    "main/alpha_mask": 27,
+    "main/alpha_mask_prepass": 27,
+    "main/opaque": 109,
+    "main/prepass": 105,
+    "cascade0/shadow": 0,
+    "cascade1/shadow": 135,
+    "cascade2/shadow": 135,
+    "cascade3/shadow": 10
+   },
+   "kit_slots": 125,
+   "kit_draws": 500,
+   "kit_by_piece": {
+    "bush_verge": [
+     4,
+     4
+    ],
+    "bush_verge_b": [
+     4,
+     4
+    ],
+    "bush_verge_c": [
+     4,
+     4
+    ],
+    "fern_clump": [
+     2,
+     2
+    ],
+    "fern_clump_b": [
+     2,
+     2
+    ],
+    "fern_clump_c": [
+     2,
+     2
+    ],
+    "forest_base": [
+     8,
+     8
+    ],
+    "forest_forest_edge_e0": [
+     2,
+     2
+    ],
+    "forest_forest_edge_e1": [
+     2,
+     2
+    ],
+    "forest_forest_edge_e2": [
+     2,
+     2
+    ],
+    "forest_forest_edge_e3": [
+     2,
+     2
+    ],
+    "forest_forest_edge_e4": [
+     2,
+     2
+    ],
+    "forest_forest_edge_e5": [
+     2,
+     2
+    ],
+    "house_cottage_b": [
+     14,
+     14
+    ],
+    "house_longhouse": [
+     16,
+     16
+    ],
+    "house_pad": [
+     16,
+     16
+    ],
+    "house_twostorey": [
+     12,
+     12
+    ],
+    "log_fallen": [
+     2,
+     2
+    ],
+    "log_fallen_b": [
+     2,
+     2
+    ],
+    "log_fallen_c": [
+     2,
+     2
+    ],
+    "meadow_base": [
+     4,
+     4
+    ],
+    "river_edge": [
+     6,
+     6
+    ],
+    "river_straight_base": [
+     6,
+     6
+    ],
+    "river_straight_center": [
+     6,
+     6
+    ],
+    "road_straight_center": [
+     8,
+     8
+    ],
+    "road_straight_edge": [
+     8,
+     8
+    ],
+    "rock_small": [
+     2,
+     2
+    ],
+    "rock_small_b": [
+     2,
+     2
+    ],
+    "rock_small_c": [
+     2,
+     2
+    ],
+    "sapling_spruce": [
+     6,
+     6
+    ],
+    "sapling_spruce_b": [
+     6,
+     6
+    ],
+    "sapling_spruce_c": [
+     6,
+     6
+    ],
+    "shrub_forest": [
+     4,
+     4
+    ],
+    "shrub_forest_b": [
+     4,
+     4
+    ],
+    "shrub_forest_c": [
+     4,
+     4
+    ],
+    "tree_forest": [
+     6,
+     6
+    ],
+    "tree_forest_b": [
+     6,
+     6
+    ],
+    "tree_forest_c": [
+     6,
+     6
+    ],
+    "tree_hero_oak": [
+     6,
+     6
+    ],
+    "tree_hero_oak_b": [
+     6,
+     6
+    ],
+    "tree_oak": [
+     6,
+     6
+    ],
+    "tree_oak_c": [
+     6,
+     6
+    ],
+    "well_stone_b": [
+     16,
+     16
+    ],
+    "wildflower_clump": [
+     2,
+     2
+    ],
+    "wildflower_clump_b": [
+     2,
+     2
+    ],
+    "wildflower_clump_c": [
+     2,
+     2
+    ],
+    "wildflower_single": [
+     2,
+     2
+    ],
+    "wildflower_single_b": [
+     2,
+     2
+    ],
+    "wildflower_single_c": [
+     2,
+     2
+    ],
+    "wildflower_single_d": [
+     2,
+     2
+    ],
+    "wildflower_single_e": [
+     2,
+     2
+    ]
+   }
+  },
+  "meadow": {
+   "draws": 645,
+   "passes": {
+    "main/alpha_mask": 27,
+    "main/alpha_mask_prepass": 27,
+    "main/opaque": 115,
+    "main/prepass": 111,
+    "cascade0/shadow": 85,
+    "cascade1/shadow": 135,
+    "cascade2/shadow": 135,
+    "cascade3/shadow": 10
+   },
+   "kit_slots": 125,
+   "kit_draws": 585,
+   "kit_by_piece": {
+    "bush_verge": [
+     4,
+     6
+    ],
+    "bush_verge_b": [
+     4,
+     6
+    ],
+    "bush_verge_c": [
+     4,
+     6
+    ],
+    "fern_clump": [
+     2,
+     3
+    ],
+    "fern_clump_b": [
+     2,
+     3
+    ],
+    "fern_clump_c": [
+     2,
+     3
+    ],
+    "forest_base": [
+     8,
+     12
+    ],
+    "forest_forest_edge_e0": [
+     2,
+     3
+    ],
+    "forest_forest_edge_e1": [
+     2,
+     3
+    ],
+    "forest_forest_edge_e2": [
+     2,
+     3
+    ],
+    "forest_forest_edge_e3": [
+     2,
+     3
+    ],
+    "forest_forest_edge_e4": [
+     2,
+     3
+    ],
+    "forest_forest_edge_e5": [
+     2,
+     3
+    ],
+    "house_cottage_b": [
+     14,
+     14
+    ],
+    "house_longhouse": [
+     16,
+     16
+    ],
+    "house_pad": [
+     16,
+     16
+    ],
+    "house_twostorey": [
+     12,
+     12
+    ],
+    "log_fallen": [
+     2,
+     3
+    ],
+    "log_fallen_b": [
+     2,
+     3
+    ],
+    "log_fallen_c": [
+     2,
+     3
+    ],
+    "meadow_base": [
+     4,
+     6
+    ],
+    "river_edge": [
+     6,
+     9
+    ],
+    "river_straight_base": [
+     6,
+     9
+    ],
+    "river_straight_center": [
+     6,
+     9
+    ],
+    "road_straight_center": [
+     8,
+     12
+    ],
+    "road_straight_edge": [
+     8,
+     12
+    ],
+    "rock_small": [
+     2,
+     3
+    ],
+    "rock_small_b": [
+     2,
+     3
+    ],
+    "rock_small_c": [
+     2,
+     3
+    ],
+    "sapling_spruce": [
+     6,
+     9
+    ],
+    "sapling_spruce_b": [
+     6,
+     9
+    ],
+    "sapling_spruce_c": [
+     6,
+     9
+    ],
+    "shrub_forest": [
+     4,
+     6
+    ],
+    "shrub_forest_b": [
+     4,
+     6
+    ],
+    "shrub_forest_c": [
+     4,
+     6
+    ],
+    "tree_forest": [
+     6,
+     9
+    ],
+    "tree_forest_b": [
+     6,
+     9
+    ],
+    "tree_forest_c": [
+     6,
+     9
+    ],
+    "tree_hero_oak": [
+     6,
+     6
+    ],
+    "tree_hero_oak_b": [
+     6,
+     9
+    ],
+    "tree_oak": [
+     6,
+     9
+    ],
+    "tree_oak_c": [
+     6,
+     9
+    ],
+    "well_stone_b": [
+     16,
+     16
+    ],
+    "wildflower_clump": [
+     2,
+     3
+    ],
+    "wildflower_clump_b": [
+     2,
+     3
+    ],
+    "wildflower_clump_c": [
+     2,
+     3
+    ],
+    "wildflower_single": [
+     2,
+     3
+    ],
+    "wildflower_single_b": [
+     2,
+     3
+    ],
+    "wildflower_single_c": [
+     2,
+     3
+    ],
+    "wildflower_single_d": [
+     2,
+     3
+    ],
+    "wildflower_single_e": [
+     2,
+     3
+    ]
+   }
+  },
+  "band": {
+   "draws": 756,
+   "passes": {
+    "main/alpha_mask": 48,
+    "main/alpha_mask_prepass": 48,
+    "main/opaque": 146,
+    "main/prepass": 142,
+    "cascade0/shadow": 0,
+    "cascade1/shadow": 176,
+    "cascade2/shadow": 186,
+    "cascade3/shadow": 10
+   },
+   "kit_slots": 125,
+   "kit_draws": 712,
+   "kit_by_piece": {
+    "bush_verge": [
+     4,
+     4
+    ],
+    "bush_verge_b": [
+     4,
+     4
+    ],
+    "bush_verge_c": [
+     4,
+     4
+    ],
+    "fern_clump": [
+     4,
+     4
+    ],
+    "fern_clump_b": [
+     4,
+     4
+    ],
+    "fern_clump_c": [
+     4,
+     4
+    ],
+    "forest_base": [
+     16,
+     16
+    ],
+    "forest_forest_edge_e0": [
+     4,
+     4
+    ],
+    "forest_forest_edge_e1": [
+     4,
+     4
+    ],
+    "forest_forest_edge_e2": [
+     4,
+     4
+    ],
+    "forest_forest_edge_e3": [
+     4,
+     4
+    ],
+    "forest_forest_edge_e4": [
+     4,
+     4
+    ],
+    "forest_forest_edge_e5": [
+     4,
+     2
+    ],
+    "house_cottage_b": [
+     14,
+     14
+    ],
+    "house_longhouse": [
+     16,
+     16
+    ],
+    "house_pad": [
+     16,
+     16
+    ],
+    "house_twostorey": [
+     12,
+     12
+    ],
+    "log_fallen": [
+     2,
+     2
+    ],
+    "log_fallen_b": [
+     4,
+     4
+    ],
+    "log_fallen_c": [
+     4,
+     4
+    ],
+    "meadow_base": [
+     8,
+     8
+    ],
+    "river_edge": [
+     6,
+     6
+    ],
+    "river_straight_base": [
+     6,
+     6
+    ],
+    "river_straight_center": [
+     6,
+     6
+    ],
+    "road_straight_center": [
+     8,
+     8
+    ],
+    "road_straight_edge": [
+     8,
+     8
+    ],
+    "rock_small": [
+     4,
+     4
+    ],
+    "rock_small_b": [
+     4,
+     4
+    ],
+    "rock_small_c": [
+     4,
+     4
+    ],
+    "sapling_spruce": [
+     12,
+     12
+    ],
+    "sapling_spruce_b": [
+     6,
+     6
+    ],
+    "sapling_spruce_c": [
+     12,
+     12
+    ],
+    "shrub_forest": [
+     8,
+     8
+    ],
+    "shrub_forest_b": [
+     8,
+     8
+    ],
+    "shrub_forest_c": [
+     8,
+     8
+    ],
+    "tree_forest": [
+     12,
+     12
+    ],
+    "tree_forest_b": [
+     12,
+     12
+    ],
+    "tree_forest_c": [
+     12,
+     12
+    ],
+    "tree_hero_oak": [
+     6,
+     6
+    ],
+    "tree_hero_oak_b": [
+     12,
+     6
+    ],
+    "tree_oak": [
+     6,
+     6
+    ],
+    "tree_oak_c": [
+     12,
+     12
+    ],
+    "well_stone_b": [
+     16,
+     16
+    ],
+    "wildflower_clump": [
+     4,
+     4
+    ],
+    "wildflower_clump_b": [
+     4,
+     4
+    ],
+    "wildflower_clump_c": [
+     4,
+     4
+    ],
+    "wildflower_single": [
+     4,
+     4
+    ],
+    "wildflower_single_b": [
+     4,
+     4
+    ],
+    "wildflower_single_c": [
+     4,
+     4
+    ],
+    "wildflower_single_d": [
+     4,
+     4
+    ],
+    "wildflower_single_e": [
+     4,
+     4
+    ]
+   }
+  }
+ }
+}

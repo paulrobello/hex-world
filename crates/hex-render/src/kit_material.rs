@@ -53,6 +53,13 @@ pub const FLAG_ANIMAL: u32 = 256;
 /// The wet band's drying trail on a [`FLAG_WET_BAND`] slot: sand the swash just left stays soaked
 /// and dries back. `water::tick` sets it while the water refracts (every tier but Low).
 pub const FLAG_WET_TRAIL: u32 = 512;
+/// A coalesced slot group (hex-play `play::coalesce`): COLOR_0 RGB is each vertex's own slot
+/// colour (the material's base colour is white), the tint on the tileable path instead of the
+/// mouth fan's detail-weighted tint.
+pub const FLAG_SLOT_COLORS: u32 = 1024;
+/// With [`FLAG_SLOT_COLORS`] on opaque slots of differing roughness: COLOR_0 A is each vertex's
+/// slot roughness (the material's is 1).
+pub const FLAG_VERTEX_ROUGHNESS: u32 = 2048;
 
 pub type KitMaterial = ExtendedMaterial<StandardMaterial, KitExt>;
 

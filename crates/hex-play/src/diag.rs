@@ -1,6 +1,6 @@
 //! Frame-time percentiles and render-mode facts for the engine gate (PRD P0).
 use std::{
-    collections::VecDeque,
+    collections::{BTreeMap, VecDeque},
     sync::{
         Mutex,
         atomic::{AtomicBool, Ordering},
@@ -29,6 +29,7 @@ use bevy::{
 };
 
 use crate::scene::{Chunk, Lod, SceneFacts, Tile, Tris, Vehicle};
+use hex_render::kit_instances::{KitInstanceSet, KitInstanceSetData, KitSlotDraw};
 
 const RING: usize = 600;
 /// A frame slower than this missed a 60 Hz presentation (counted as dropped).
@@ -263,6 +264,44 @@ pub struct PassCensus {
 static PASS_CENSUS: Mutex<Vec<PassCensus>> = Mutex::new(Vec::new());
 static PASS_CENSUS_REQUESTED: AtomicBool = AtomicBool::new(false);
 
+/// The instanced kit draws of one census frame by piece: `[camera, shadow]` draws, a camera draw
+/// counted once in each of its colour and prepass phases and a shadow draw once per cascade, as
+/// [`PassCensus`] counts them. `slots` is the instance set's (family, material) draw slots.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct KitDrawCensus {
+    pub slots: usize,
+    pub by_piece: BTreeMap<String, [usize; 2]>,
+}
+
+static KIT_CENSUS: Mutex<Option<KitDrawCensus>> = Mutex::new(None);
+
+/// The render entities of `p`'s non-mesh items (the instanced kit's (slot, LOD) draws among them).
+fn non_mesh_entities<BPI: BinnedPhaseItem>(
+    p: &BinnedRenderPhase<BPI>,
+) -> impl Iterator<Item = Entity> + '_ {
+    p.non_mesh_items
+        .values()
+        .flat_map(|b| b.entities.values().copied())
+}
+
+/// Adds every kit slot draw among `entities` to `census` under its piece, in column `col`
+/// (0 camera, 1 shadow).
+fn count_kit_draws(
+    census: &mut KitDrawCensus,
+    set: &KitInstanceSetData,
+    draws: &Query<&KitSlotDraw>,
+    entities: impl Iterator<Item = Entity>,
+    col: usize,
+) {
+    for e in entities {
+        let Ok(d) = draws.get(e) else { continue };
+        let Some(slot) = set.slots.get(d.slot as usize) else {
+            continue;
+        };
+        census.by_piece.entry(slot.piece.to_string()).or_default()[col] += 1;
+    }
+}
+
 fn count_phase<BPI: BinnedPhaseItem>(
     view: String,
     phase: &'static str,
@@ -319,9 +358,43 @@ fn census_passes(
     prepass: Res<ViewBinnedRenderPhases<Opaque3dPrepass>>,
     alpha_mask_prepass: Res<ViewBinnedRenderPhases<AlphaMask3dPrepass>>,
     shadow: Res<ViewBinnedRenderPhases<Shadow>>,
+    (kit, kit_draws): (Option<Res<KitInstanceSet>>, Query<&KitSlotDraw>),
 ) {
     if !PASS_CENSUS_REQUESTED.swap(false, Ordering::Relaxed) {
         return;
+    }
+    if let Some(set) = kit.as_deref() {
+        let set = &set.0;
+        let mut k = KitDrawCensus {
+            slots: set.slots.len(),
+            ..default()
+        };
+        for v in &cameras {
+            let view = &v.retained_view_entity;
+            for e in [
+                opaque
+                    .get(view)
+                    .map(|p| non_mesh_entities(p).collect::<Vec<_>>()),
+                alpha_mask.get(view).map(|p| non_mesh_entities(p).collect()),
+                prepass.get(view).map(|p| non_mesh_entities(p).collect()),
+                alpha_mask_prepass
+                    .get(view)
+                    .map(|p| non_mesh_entities(p).collect()),
+            ]
+            .into_iter()
+            .flatten()
+            {
+                count_kit_draws(&mut k, set, &kit_draws, e.into_iter(), 0);
+            }
+        }
+        for (v, l) in &lights {
+            if let (LightEntity::Directional { .. }, Some(p)) =
+                (l, shadow.get(&v.retained_view_entity))
+            {
+                count_kit_draws(&mut k, set, &kit_draws, non_mesh_entities(p), 1);
+            }
+        }
+        *KIT_CENSUS.lock().unwrap() = Some(k);
     }
     let phases = CameraPhases {
         opaque: &opaque,
@@ -591,9 +664,27 @@ fn sample(
         let extra = serde_json::json!({
             "gpu": crate::gpu_timing::diag_json(gpu_timing.is_some_and(|g| g.enabled)),
             "stall": stall_json(&st.stats, &st.stalls),
+            "kit_draws": KIT_CENSUS.lock().unwrap().as_ref().map(kit_census_json),
         });
         snap.json = merge_json(&snap.json, &extra);
     }
+}
+
+/// The `kit_draws` snapshot field: the slot count, the total, and each piece's camera, shadow and
+/// total draws.
+fn kit_census_json(k: &KitDrawCensus) -> serde_json::Value {
+    let by_piece: serde_json::Map<String, serde_json::Value> = k
+        .by_piece
+        .iter()
+        .map(|(piece, [cam, sh])| {
+            (
+                piece.clone(),
+                serde_json::json!({"camera": cam, "shadow": sh, "total": cam + sh}),
+            )
+        })
+        .collect();
+    let total: usize = k.by_piece.values().map(|[c, s]| c + s).sum();
+    serde_json::json!({"slots": k.slots, "total": total, "by_piece": by_piece})
 }
 
 #[cfg(test)]

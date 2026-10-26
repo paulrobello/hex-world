@@ -23,6 +23,7 @@ use hex_core::{
 
 pub mod affordances;
 mod chunks;
+mod coalesce;
 pub mod ghost;
 pub mod grass;
 pub mod grass_gpu;
@@ -221,13 +222,15 @@ pub fn finish_kit(
     view: Res<PlayView>,
     catalog: Res<PlayCatalog>,
     server: Res<AssetServer>,
-    (gltfs, gltf_meshes, gltf_nodes, mut materials): (
+    (gltfs, gltf_meshes, gltf_nodes, mut materials, mut meshes): (
         Res<Assets<Gltf>>,
         Res<Assets<GltfMesh>>,
         Res<Assets<GltfNode>>,
         ResMut<Assets<KitMaterial>>,
+        ResMut<Assets<Mesh>>,
     ),
     config: Res<GateConfig>,
+    mut coalesced: Local<coalesce::KitCoalesced>,
 ) {
     let (Some(kit), Some(packs)) = (kit.as_deref_mut(), packs.as_deref_mut()) else {
         return;
@@ -258,6 +261,15 @@ pub fn finish_kit(
                 packs.mark_lost(&id);
                 continue;
             }
+            let (groups, left_out) = coalesce::coalesce_piece(&parts, &mut meshes, &mut materials);
+            for (m, why) in left_out {
+                if why != coalesce::Excluded::Alone
+                    && let Some(p) = parts.iter().find(|p| p.material.id() == m)
+                {
+                    coalesced.1.insert(format!("{id}/{}: {why:?}", p.slot));
+                }
+            }
+            coalesced.0.insert(id.clone(), groups);
             pieces.insert(id.clone(), parts);
             built.insert(id);
         }
@@ -267,7 +279,19 @@ pub fn finish_kit(
         ids.sort();
         ids
     });
-    commands.insert_resource(chunks::KitFamilies::build(pieces));
+    let families = chunks::KitFamilies::build(pieces, &coalesced.0);
+    let groups: Vec<_> = coalesced.0.values().flatten().collect();
+    info!(
+        "play: slot coalescing: {} instanced draw slots, {} without it ({} groups merge {} slots; {} groups use vertex roughness, {} more groups without it); left out: {:?}",
+        families.count(),
+        chunks::KitFamilies::build(pieces, &HashMap::new()).count(),
+        groups.len(),
+        groups.iter().map(|g| g.members.len()).sum::<usize>(),
+        groups.iter().filter(|g| g.roughness_values > 1).count(),
+        groups.iter().map(|g| g.roughness_values - 1).sum::<usize>(),
+        coalesced.1
+    );
+    commands.insert_resource(families);
     let mut spawned = spawned;
     if packs.core_ready()
         && let PlayKit::Loading(pieces) = &mut *kit

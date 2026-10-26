@@ -46,6 +46,15 @@ const FLAG_BLOSSOM: u32 = 128u;
 const FLAG_ANIMAL: u32 = 256u;
 // The wet band's drying trail (kit_material.wesl), set by water::tick on every tier but Low.
 const FLAG_WET_TRAIL: u32 = 512u;
+// A coalesced slot group (hex-play play::coalesce): COLOR_0 RGB is the vertex's slot colour.
+const FLAG_SLOT_COLORS: u32 = 1024u;
+// With FLAG_SLOT_COLORS on opaque slots: COLOR_0 A is the vertex's slot roughness.
+const FLAG_VERTEX_ROUGHNESS: u32 = 2048u;
+
+// Whether COLOR_0 is a coalesced group's slot colour rather than the mouth fan's detail weight.
+fn slot_colors() -> bool {
+    return (kit.flags & FLAG_SLOT_COLORS) != 0u;
+}
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(100) var<uniform> kit: KitParams;
 

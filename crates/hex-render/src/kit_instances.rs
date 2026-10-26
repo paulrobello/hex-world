@@ -95,15 +95,17 @@ pub struct KitGpuMeta {
 /// Bytes of one `KitGpuMeta` binding.
 const META_SIZE: u64 = std::mem::size_of::<KitGpuMeta>() as u64;
 
-/// Per-chunk culling data: the chunk hex centre, the world-space bounds of every instanced part
-/// in it, the bounds of the parts' origins (the points LOD distances are measured to), and the
-/// instance range of each slot (`ranges[i]` is slot `i`'s).
+/// Per-cell culling data (one cell per tile, owner A2 Q3 O6): the cell's hex centre, the
+/// world-space bounds of every instanced part in it, the bounds of the parts' origins (the points
+/// LOD distances are measured to), and the instance range of each slot it holds, as sparse
+/// `(slot, range)` entries in slot order. A tile holds a few of the world's slots, so per-tile
+/// cells cull close views tile by tile at the cost of the entries they hold, not of every slot.
 #[derive(Clone, Debug)]
 pub struct KitChunk {
     pub centre: Vec3,
     pub aabb: Aabb,
     pub origins: Aabb,
-    pub ranges: Vec<Range<u32>>,
+    pub ranges: Vec<(u32, Range<u32>)>,
 }
 
 /// One draw slot: a piece mesh family × material. `mesh[l]` is the family's LOD-`l` mesh and
@@ -118,6 +120,8 @@ pub struct KitSlot {
     pub key: u64,
     /// The mesh family, numbered from the sorted piece ids: the slot's draw-order key.
     pub family: u32,
+    /// The kit piece the family belongs to (the per-piece draw census; rendering ignores it).
+    pub piece: Arc<str>,
 }
 
 /// The phase bin key of slot `slot`'s LOD `lod` draw (its band draw when `band`), in
@@ -145,6 +149,25 @@ pub struct KitInstanceSetData {
     /// One `KitGpuMeta` per (slot, LOD) draw, in `slot * 3 + lod` order.
     pub meta: Vec<KitGpuMeta>,
     pub version: u64,
+    /// Each slot's `(chunk, range)` entries in chunk order, the transpose of the chunks' sparse
+    /// ranges ([`KitInstanceSetData::index_slots`]).
+    pub by_slot: Vec<Vec<(u32, Range<u32>)>>,
+}
+
+impl KitInstanceSetData {
+    /// Fills [`Self::by_slot`] from the chunks' ranges; the producer calls it once the chunks
+    /// and slots are final.
+    pub fn index_slots(&mut self) {
+        let mut by_slot = vec![vec![]; self.slots.len()];
+        for (ci, c) in self.chunks.iter().enumerate() {
+            for (slot, r) in &c.ranges {
+                if let Some(list) = by_slot.get_mut(*slot as usize) {
+                    list.push((ci as u32, r.clone()));
+                }
+            }
+        }
+        self.by_slot = by_slot;
+    }
 }
 
 /// The main world's instance set, extracted to the render world by `Arc`.
@@ -332,24 +355,30 @@ pub fn kit_view_ranges(
     shadow: bool,
     ids: &mut Vec<u32>,
 ) -> Vec<(usize, Range<u32>)> {
-    let visible: Vec<usize> = (0..set.chunks.len())
-        .filter(|&ci| {
+    let visible: Vec<bool> = set
+        .chunks
+        .iter()
+        .map(|c| {
             // Shadow casters in front of a cascade's near plane still cast into it.
-            frustum.intersects_obb(&set.chunks[ci].aabb, &Affine3A::IDENTITY, !shadow, true)
+            frustum.intersects_obb(&c.aabb, &Affine3A::IDENTITY, !shadow, true)
         })
         .collect();
     let mut out = vec![];
-    for slot in 0..set.slots.len() {
+    for (slot, cells) in set.by_slot.iter().enumerate().take(set.slots.len()) {
+        if !cells.iter().any(|(ci, _)| visible[*ci as usize]) {
+            continue;
+        }
         let map = slot_lod_map(&set.slots[slot]);
         for lod in 0..3usize {
             let first = ids.len() as u32;
             let mut banded = false;
             for band in [false, true] {
                 let start = ids.len();
-                for &ci in &visible {
-                    let Some(r) = set.chunks[ci].ranges.get(slot) else {
+                for (ci, r) in cells {
+                    let ci = *ci as usize;
+                    if !visible[ci] {
                         continue;
-                    };
+                    }
                     match lods[ci] {
                         ChunkLod::All(p) => {
                             if p.draws_in(map, lod, band, shadow) {
@@ -391,7 +420,7 @@ pub fn kit_frame_lods(
             }
             let lod = kit_chunk_lod(c, eye);
             if lod == ChunkLod::Split {
-                for r in &c.ranges {
+                for (_, r) in &c.ranges {
                     for i in r.clone() {
                         let p = Vec3::from(set.pieces[i as usize].translation);
                         parts[i as usize] = kit_part_lod(eye.distance(p));
@@ -403,37 +432,188 @@ pub fn kit_frame_lods(
         .collect()
 }
 
-/// The view depth (`-z` in the camera's view space) range of every point a caster inside
-/// `lo..hi` can shadow, under a directional light shining along `dir`: the bounds grown by
-/// `margin` and swept along `dir` down to their grown floor (light falls downward, so nothing
-/// above the bounds or past the sweep is shadowed by them). `None` when the light is so near the
-/// horizon that the sweep is unbounded.
+/// What of a shadow-casting region a camera sees, for [`shadowed_depth_range`].
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ShadowedDepth {
+    /// The light is so near the horizon that the sweep is unbounded: any cascade may be read.
+    Unbounded,
+    /// No point the casters can shadow lies inside the camera's frustum: no cascade is read.
+    OffScreen,
+    /// The view depths (`-z` in the camera's view space) of the points on screen they can shadow.
+    Range(f32, f32),
+}
+
+/// The view depth range of every point on screen that a caster inside `lo..hi` can shadow, under
+/// a directional light shining along `dir`. The shadowed region is the bounds grown by `margin`
+/// and swept along `dir` down to their grown floor (light falls downward, so nothing above the
+/// bounds or past the sweep is shadowed by them), clipped by the camera frustum of
+/// `clip_from_world`: a fragment off screen is never shaded, so it reads no cascade.
 pub fn shadowed_depth_range(
     lo: Vec3,
     hi: Vec3,
     dir: Vec3,
     view_from_world: &Mat4,
+    clip_from_world: &Mat4,
     margin: f32,
-) -> Option<(f32, f32)> {
+) -> ShadowedDepth {
     if dir.y > -0.05 {
-        return None;
+        return ShadowedDepth::Unbounded;
     }
     let (lo, hi) = (lo - Vec3::splat(margin), hi + Vec3::splat(margin));
     let sweep = dir * ((hi.y - lo.y) / -dir.y);
+    let planes = frustum_planes(clip_from_world);
     let (mut near, mut far) = (f32::MAX, f32::MIN);
-    for i in 0..8 {
-        let corner = Vec3::new(
+    let mut take = |p: Vec3| {
+        let depth = -view_from_world.transform_point3(p).z;
+        near = near.min(depth);
+        far = far.max(depth);
+    };
+    // The swept box is the Minkowski sum of the box and the sweep segment. Its boundary lies on
+    // the box's faces, their swept copies and the parallelograms each box edge sweeps out, so a
+    // vertex of its intersection with the frustum is a vertex of one of those polygons clipped by
+    // the frustum, or a frustum corner inside it.
+    let corner = |i: usize| {
+        Vec3::new(
             if i & 1 == 0 { lo.x } else { hi.x },
             if i & 2 == 0 { lo.y } else { hi.y },
             if i & 4 == 0 { lo.z } else { hi.z },
-        );
-        for p in [corner, corner + sweep] {
-            let depth = -view_from_world.transform_point3(p).z;
-            near = near.min(depth);
-            far = far.max(depth);
+        )
+    };
+    const FACES: [[usize; 4]; 6] = [
+        [0, 2, 6, 4],
+        [1, 3, 7, 5],
+        [0, 1, 5, 4],
+        [2, 3, 7, 6],
+        [0, 1, 3, 2],
+        [4, 5, 7, 6],
+    ];
+    const EDGES: [[usize; 2]; 12] = [
+        [0, 1],
+        [2, 3],
+        [4, 5],
+        [6, 7],
+        [0, 2],
+        [1, 3],
+        [4, 6],
+        [5, 7],
+        [0, 4],
+        [1, 5],
+        [2, 6],
+        [3, 7],
+    ];
+    let mut polygons: Vec<Vec<Vec3>> = vec![];
+    for f in FACES {
+        let face: Vec<Vec3> = f.iter().map(|&i| corner(i)).collect();
+        polygons.push(face.iter().map(|&p| p + sweep).collect());
+        polygons.push(face);
+    }
+    for [a, b] in EDGES {
+        let (a, b) = (corner(a), corner(b));
+        polygons.push(vec![a, b, b + sweep, a + sweep]);
+    }
+    for poly in polygons {
+        for p in planes
+            .iter()
+            .fold(poly, |poly, &plane| clip_polygon(&poly, plane))
+        {
+            take(p);
         }
     }
-    Some((near, far))
+    for p in frustum_corners(&planes) {
+        if in_swept_box(p, lo, hi, sweep) {
+            take(p);
+        }
+    }
+    if near > far {
+        ShadowedDepth::OffScreen
+    } else {
+        ShadowedDepth::Range(near, far)
+    }
+}
+
+/// The frustum of `clip_from_world` as inward half-spaces `n . p + d >= 0` (WebGPU clip space,
+/// `-w <= x, y <= w`, `0 <= z <= w`). A degenerate plane (the far plane of bevy's infinite
+/// reverse-z projection, `z = near`) bounds nothing and is left out.
+fn frustum_planes(clip_from_world: &Mat4) -> Vec<Vec4> {
+    let r = |i: usize| clip_from_world.row(i);
+    [
+        r(3) + r(0),
+        r(3) - r(0),
+        r(3) + r(1),
+        r(3) - r(1),
+        r(2),
+        r(3) - r(2),
+    ]
+    .into_iter()
+    .filter(|p| p.truncate().length() > 1e-6 * p.w.abs().max(1.0))
+    .collect()
+}
+
+/// Signed distance-like value of `p` against `plane` (positive inside).
+fn plane_side(plane: Vec4, p: Vec3) -> f32 {
+    plane.truncate().dot(p) + plane.w
+}
+
+/// One Sutherland-Hodgman step: the part of convex polygon `poly` inside `plane`.
+fn clip_polygon(poly: &[Vec3], plane: Vec4) -> Vec<Vec3> {
+    let mut out = Vec::with_capacity(poly.len() + 1);
+    for (i, &a) in poly.iter().enumerate() {
+        let b = poly[(i + 1) % poly.len()];
+        let (da, db) = (plane_side(plane, a), plane_side(plane, b));
+        if da >= 0.0 {
+            out.push(a);
+        }
+        if (da >= 0.0) != (db >= 0.0) {
+            out.push(a + (b - a) * (da / (da - db)));
+        }
+    }
+    out
+}
+
+/// The frustum's corners: every point where three of `planes` meet that lies inside all of them.
+fn frustum_corners(planes: &[Vec4]) -> Vec<Vec3> {
+    let mut out = vec![];
+    for i in 0..planes.len() {
+        for j in i + 1..planes.len() {
+            for k in j + 1..planes.len() {
+                let (a, b, c) = (planes[i], planes[j], planes[k]);
+                let m = Mat3::from_cols(a.truncate(), b.truncate(), c.truncate()).transpose();
+                let det = m.determinant();
+                let scale = a.truncate().length() * b.truncate().length() * c.truncate().length();
+                if det.abs() <= 1e-6 * scale {
+                    continue;
+                }
+                let p = m.inverse() * -Vec3::new(a.w, b.w, c.w);
+                let tol = 1e-4 * p.length().max(1.0);
+                if planes
+                    .iter()
+                    .all(|&q| plane_side(q, p) >= -tol * q.truncate().length())
+                {
+                    out.push(p);
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Whether `p` lies in the box `lo..hi` swept along `sweep`: some `t` in `0..=1` puts `p - t *
+/// sweep` inside the box.
+fn in_swept_box(p: Vec3, lo: Vec3, hi: Vec3, sweep: Vec3) -> bool {
+    let (mut t0, mut t1) = (0.0f32, 1.0f32);
+    for a in 0..3 {
+        let (p, lo, hi, s) = (p[a], lo[a], hi[a], sweep[a]);
+        if s.abs() < 1e-9 {
+            if p < lo || p > hi {
+                return false;
+            }
+            continue;
+        }
+        let (u, v) = ((p - hi) / s, (p - lo) / s);
+        t0 = t0.max(u.min(v));
+        t1 = t1.min(u.max(v));
+    }
+    t0 <= t1
 }
 
 /// Whether a fragment at a view depth inside `range` samples cascade `index`, by bevy_pbr's
@@ -1167,9 +1347,10 @@ fn queue_kit(
     let force = debug.and_then(|d| d.force);
     let mut parts = std::mem::take(&mut gpu.parts);
     let lods = kit_frame_lods(&d, eye, force, &mut parts);
-    // Shadow cascades whose shadow map no fragment the kit can shadow reads: the kit draws
-    // nothing into them, which leaves every shaded pixel as it was (a strategic camera's world
-    // lies past the first cascades and short of the last).
+    // Shadow cascades whose shadow map no fragment on screen that the kit can shadow reads: the
+    // kit draws nothing into them, which leaves every shaded pixel as it was (a strategic
+    // camera's world lies past the first cascades and short of the last; a close camera looking
+    // down sees none of the world nearer than the first cascade's far bound).
     let mut unsampled: Vec<Entity> = vec![];
     let bounds = d
         .chunks
@@ -1182,6 +1363,7 @@ fn queue_kit(
             continue;
         };
         let view_from_world = view.world_from_view.to_matrix().inverse();
+        let clip_from_world = view.clip_from_view * view_from_world;
         for &cascade_view in &cascade_views.lights {
             let Ok((
                 _,
@@ -1206,10 +1388,20 @@ fn queue_kit(
             };
             let margin = SHADOW_REACH_M + SHADOW_REACH_TEXELS * cascade.texel_size;
             let dir = light.transform.forward().as_vec3();
-            let Some(range) =
-                shadowed_depth_range(lo.into(), hi.into(), dir, &view_from_world, margin)
-            else {
-                continue;
+            let range = match shadowed_depth_range(
+                lo.into(),
+                hi.into(),
+                dir,
+                &view_from_world,
+                &clip_from_world,
+                margin,
+            ) {
+                ShadowedDepth::Unbounded => continue,
+                ShadowedDepth::OffScreen => {
+                    unsampled.push(cascade_view);
+                    continue;
+                }
+                ShadowedDepth::Range(near, far) => (near, far),
             };
             let config = &light.cascade_shadow_config;
             if !cascade_sampled(
@@ -1666,56 +1858,160 @@ mod tests {
             .inverse()
     }
 
-    /// The scatter checkpoint's strategic camera over its 20-tile world under the kit sun: the
-    /// world's view depths lie past cascade 1 and short of cascade 3, so neither is read.
-    #[test]
-    fn strategic_camera_reads_only_the_cascades_over_the_world() {
-        let view_from_world = view_from_world_at(
-            Vec3::new(20.0, 160.0, 150.0),
-            Vec3::new(20.0, 0.0, -5.0),
-            Vec3::Y,
-        );
-        let dir = -crate::lighting::KIT_SUN_DIR.normalize();
-        let range = shadowed_depth_range(
-            Vec3::new(-40.0, -3.0, -60.0),
-            Vec3::new(80.0, 20.0, 60.0),
-            dir,
-            &view_from_world,
-            4.0,
-        )
-        .expect("the sun is high");
-        // Play's cascades: 4 out to 2,000 m, the first ending at 25 m.
-        let config = bevy::light::CascadeShadowConfigBuilder {
+    /// `(view_from_world, clip_from_world)` of bevy's default perspective camera (45 degrees
+    /// vertical, near 0.1 m, infinite reverse-z) at `eye` looking at `target`, `aspect` wide.
+    fn camera_at(eye: Vec3, target: Vec3, fov_deg: f32, aspect: f32) -> (Mat4, Mat4) {
+        let view_from_world = view_from_world_at(eye, target, Vec3::Y);
+        use bevy::camera::CameraProjection;
+        let clip_from_view = PerspectiveProjection {
+            fov: fov_deg.to_radians(),
+            aspect_ratio: aspect,
+            near: 0.1,
+            ..default()
+        }
+        .get_clip_from_view();
+        (view_from_world, clip_from_view * view_from_world)
+    }
+
+    /// The 20-tile scatter world's kit bounds (`draws.json`), loosely.
+    const WORLD: (Vec3, Vec3) = (Vec3::new(-40.0, -3.0, -60.0), Vec3::new(80.0, 20.0, 60.0));
+
+    /// Play's cascades: 4 out to 2,000 m, the first ending at 25 m.
+    fn play_cascades() -> bevy::light::CascadeShadowConfig {
+        bevy::light::CascadeShadowConfigBuilder {
             num_cascades: 4,
             maximum_distance: 2000.0,
             first_cascade_far_bound: crate::lighting::KIT_FIRST_CASCADE_FAR_BOUND,
             ..default()
         }
-        .build();
-        let read: Vec<bool> = (0..4)
-            .map(|i| cascade_sampled(&config.bounds, config.overlap_proportion, i, range))
-            .collect();
-        assert_eq!(read, [false, false, true, false], "{range:?} {config:?}");
+        .build()
     }
 
-    /// A camera inside the world (walk mode) reads its near cascades; the far ones stay unread
-    /// only when the swept world ends short of them.
+    /// Which of play's cascades a 1600x1000 camera at `eye` looking at `target` reads for the
+    /// world's kit under the kit sun.
+    fn cascades_read(eye: Vec3, target: Vec3) -> Vec<bool> {
+        let (view, clip) = camera_at(eye, target, 45.0, 1.6);
+        let dir = -crate::lighting::KIT_SUN_DIR.normalize();
+        let ShadowedDepth::Range(near, far) =
+            shadowed_depth_range(WORLD.0, WORLD.1, dir, &view, &clip, 4.0)
+        else {
+            panic!("the world is on screen under a high sun");
+        };
+        let config = play_cascades();
+        (0..4)
+            .map(|i| cascade_sampled(&config.bounds, config.overlap_proportion, i, (near, far)))
+            .collect()
+    }
+
+    /// The scatter checkpoint's strategic camera over its 20-tile world under the kit sun: the
+    /// world's view depths lie past cascade 1 and short of cascade 3, so neither is read.
+    #[test]
+    fn strategic_camera_reads_only_the_cascades_over_the_world() {
+        let read = cascades_read(Vec3::new(20.0, 160.0, 150.0), Vec3::new(20.0, 0.0, -5.0));
+        assert_eq!(read, [false, false, true, false]);
+    }
+
+    /// The forest-cluster camera (`draws.json`) looks down from 58 m: the world under and behind
+    /// it is off screen, and the nearest shadowed point on screen lies past the first cascade's
+    /// reach, so cascade 0 is not read. Unclipped, the world's sweep reaches under the camera.
+    #[test]
+    fn close_camera_looking_down_skips_the_first_cascade() {
+        let (eye, target) = (Vec3::new(46.0, 58.0, 48.0), Vec3::new(46.0, 0.0, -12.0));
+        assert_eq!(cascades_read(eye, target), [false, true, true, false]);
+        // A frustum wide enough to see straight down puts the world back under the camera.
+        let (view, clip) = camera_at(eye, target, 170.0, 1.6);
+        let dir = -crate::lighting::KIT_SUN_DIR.normalize();
+        let ShadowedDepth::Range(near, _) =
+            shadowed_depth_range(WORLD.0, WORLD.1, dir, &view, &clip, 4.0)
+        else {
+            panic!("on screen");
+        };
+        assert!(near < 20.0, "{near}");
+    }
+
+    /// The meadow camera (`draws.json`) sits 13 m over the world: its near cascade is read.
+    #[test]
+    fn low_camera_over_the_world_reads_the_first_cascade() {
+        let read = cascades_read(Vec3::new(6.0, 13.0, 44.0), Vec3::new(12.0, 0.0, 22.0));
+        assert!(read[0] && read[1], "{read:?}");
+    }
+
+    /// A camera inside the world (walk mode) reads its near cascades.
     #[test]
     fn camera_in_the_world_reads_the_near_cascades() {
-        let view_from_world =
-            view_from_world_at(Vec3::new(0.0, 1.7, 0.0), Vec3::new(10.0, 1.7, 0.0), Vec3::Y);
-        let dir = -crate::lighting::KIT_SUN_DIR.normalize();
-        let range = shadowed_depth_range(
-            Vec3::new(-40.0, -3.0, -60.0),
-            Vec3::new(80.0, 20.0, 60.0),
-            dir,
-            &view_from_world,
-            4.0,
-        )
-        .unwrap();
-        let bounds = [25.0, 108.0, 464.0, 2000.0];
-        assert!(cascade_sampled(&bounds, 0.2, 0, range));
-        assert!(cascade_sampled(&bounds, 0.2, 1, range));
+        let read = cascades_read(Vec3::new(0.0, 1.7, 0.0), Vec3::new(10.0, 1.7, 0.0));
+        assert!(read[0] && read[1], "{read:?}");
+    }
+
+    /// Casters whose whole shadowed region lies behind the camera put nothing on screen: no
+    /// cascade is read.
+    #[test]
+    fn shadowed_region_behind_the_camera_is_off_screen() {
+        let (view, clip) = camera_at(Vec3::ZERO, Vec3::NEG_Z, 45.0, 1.6);
+        let (lo, hi) = (Vec3::new(-5.0, -1.0, 10.0), Vec3::new(5.0, 3.0, 20.0));
+        let got = shadowed_depth_range(lo, hi, Vec3::NEG_Y, &view, &clip, 0.0);
+        assert_eq!(got, ShadowedDepth::OffScreen);
+        // Off to the side, past the frustum's edge, is off screen too.
+        let (lo, hi) = (Vec3::new(40.0, -1.0, -20.0), Vec3::new(50.0, 3.0, -10.0));
+        let got = shadowed_depth_range(lo, hi, Vec3::NEG_Y, &view, &clip, 0.0);
+        assert_eq!(got, ShadowedDepth::OffScreen);
+    }
+
+    /// A box the camera stands inside reaches the near plane; one that fills the view from the
+    /// side is clipped to what the frustum holds of it.
+    #[test]
+    fn shadowed_range_is_clipped_to_the_frustum() {
+        let (view, clip) = camera_at(Vec3::ZERO, Vec3::NEG_Z, 90.0, 1.0);
+        let around = shadowed_depth_range(
+            Vec3::splat(-5.0),
+            Vec3::splat(5.0),
+            Vec3::NEG_Y,
+            &view,
+            &clip,
+            0.0,
+        );
+        let ShadowedDepth::Range(near, far) = around else {
+            panic!("{around:?}");
+        };
+        assert!(
+            (near - 0.1).abs() < 1e-3 && (far - 5.0).abs() < 1e-3,
+            "{near} {far}"
+        );
+        // A wall from x = -100 to 100 at z = -10: with a 90 degree view only |x| <= 10 of it is on
+        // screen, all at depth 10 (the unclipped range would be the same here, but its far end
+        // for a wall slanting away is not).
+        let slant = shadowed_depth_range(
+            Vec3::new(-100.0, -1.0, -10.0),
+            Vec3::new(100.0, 1.0, -10.0),
+            Vec3::NEG_Y,
+            &view,
+            &clip,
+            0.0,
+        );
+        let ShadowedDepth::Range(near, far) = slant else {
+            panic!("{slant:?}");
+        };
+        assert!(
+            (near - 10.0).abs() < 1e-3 && (far - 10.0).abs() < 1e-3,
+            "{near} {far}"
+        );
+        // A floor running away from the camera: the frustum's bottom plane ends it nowhere, so
+        // its far end is the box's.
+        let floor = shadowed_depth_range(
+            Vec3::new(-1.0, -2.0, -50.0),
+            Vec3::new(1.0, -1.0, -1.0),
+            Vec3::NEG_Y,
+            &view,
+            &clip,
+            0.0,
+        );
+        let ShadowedDepth::Range(near, far) = floor else {
+            panic!("{floor:?}");
+        };
+        assert!(
+            (near - 1.0).abs() < 1e-3 && (far - 50.0).abs() < 1e-3,
+            "{near} {far}"
+        );
     }
 
     /// A cascade is read from the overlap band before its near bound, and not at its far bound.
@@ -1736,20 +2032,26 @@ mod tests {
     /// horizon gives no bound and nothing is skipped.
     #[test]
     fn shadowed_range_sweeps_along_the_light() {
-        let view_from_world = view_from_world_at(Vec3::ZERO, Vec3::NEG_Z, Vec3::Y);
+        let (view, clip) = camera_at(Vec3::ZERO, Vec3::NEG_Z, 90.0, 1.0);
         let (lo, hi) = (Vec3::new(-1.0, 0.0, -11.0), Vec3::new(1.0, 10.0, -9.0));
-        let high = shadowed_depth_range(lo, hi, Vec3::NEG_Y, &view_from_world, 0.0).unwrap();
-        assert_eq!(high, (9.0, 11.0));
+        let high = shadowed_depth_range(lo, hi, Vec3::NEG_Y, &view, &clip, 0.0);
+        assert_eq!(high, ShadowedDepth::Range(9.0, 11.0));
         let low = shadowed_depth_range(
             lo,
             hi,
             Vec3::new(0.0, -1.0, -1.0).normalize(),
-            &view_from_world,
+            &view,
+            &clip,
             0.0,
-        )
-        .unwrap();
-        assert!((low.1 - 21.0).abs() < 1e-4, "{low:?}");
-        assert!(shadowed_depth_range(lo, hi, Vec3::NEG_Z, &view_from_world, 0.0).is_none());
+        );
+        let ShadowedDepth::Range(_, far) = low else {
+            panic!("{low:?}");
+        };
+        assert!((far - 21.0).abs() < 1e-4, "{low:?}");
+        assert_eq!(
+            shadowed_depth_range(lo, hi, Vec3::NEG_Z, &view, &clip, 0.0),
+            ShadowedDepth::Unbounded
+        );
     }
 
     /// A part is whole at one LOD outside the 10 m bands around 150 m and 400 m and in both
@@ -1810,7 +2112,7 @@ mod tests {
     fn row(xs: &[f32]) -> KitInstanceSetData {
         let lo = xs.iter().copied().fold(f32::MAX, f32::min);
         let hi = xs.iter().copied().fold(f32::MIN, f32::max);
-        KitInstanceSetData {
+        let mut set = KitInstanceSetData {
             pieces: xs.iter().map(|&x| piece_at(x)).collect(),
             slots: vec![KitSlot {
                 mesh: [None, None, None],
@@ -1818,6 +2120,7 @@ mod tests {
                 material: AssetId::<KitMaterial>::default().untyped().typed(),
                 key: 0,
                 family: 0,
+                piece: "test".into(),
             }],
             chunks: vec![KitChunk {
                 centre: Vec3::new((lo + hi) / 2.0, 0.0, 0.0),
@@ -1826,14 +2129,20 @@ mod tests {
                     Vec3::new(hi + 2.0, 1.0, 2.0),
                 ),
                 origins: Aabb::from_min_max(Vec3::new(lo, 0.0, 0.0), Vec3::new(hi, 0.0, 0.0)),
-                ranges: vec![Range {
-                    start: 0,
-                    end: xs.len() as u32,
-                }],
+                ranges: vec![(
+                    0,
+                    Range {
+                        start: 0,
+                        end: xs.len() as u32,
+                    },
+                )],
             }],
             meta: vec![],
             version: 1,
-        }
+            by_slot: vec![],
+        };
+        set.index_slots();
+        set
     }
 
     /// The (draw, records) lists a view of `set` from `eye` draws.
@@ -1977,6 +2286,53 @@ mod tests {
         assert!(ids.is_empty());
         kit_view_ranges(&set, &lods, &[], &other, true, &mut miss);
         assert!(miss.is_empty());
+    }
+
+    /// Per-tile cells hold sparse slot ranges: a view that sees one cell draws only the slots that
+    /// cell holds, with only its records, and a view over both draws each slot once across them.
+    #[test]
+    fn cells_cull_their_own_sparse_slot_ranges() {
+        let mut set = row(&[0.0, 1.0, 2.0, 100.0, 101.0]);
+        set.slots.push(set.slots[0].clone());
+        let cell = |x: f32, ranges: Vec<(u32, Range<u32>)>| KitChunk {
+            centre: Vec3::new(x, 0.0, 0.0),
+            aabb: Aabb::from_min_max(Vec3::new(x - 3.0, -1.0, -2.0), Vec3::new(x + 3.0, 1.0, 2.0)),
+            origins: Aabb::from_min_max(Vec3::new(x, 0.0, 0.0), Vec3::new(x + 2.0, 0.0, 0.0)),
+            ranges,
+        };
+        // Slot 0 has records 0..2 in cell 0; slot 1 has record 2 in cell 0 and 3..5 in cell 1.
+        set.chunks = vec![
+            cell(0.0, vec![(0, 0..2), (1, 2..3)]),
+            cell(100.0, vec![(1, 3..5)]),
+        ];
+        set.index_slots();
+        assert_eq!(
+            set.by_slot,
+            vec![vec![(0, 0..2)], vec![(0, 2..3), (1, 3..5)]]
+        );
+        let lods = [ChunkLod::All(PartLod::Whole(0)); 2];
+        // An orthographic box 10 m either side of `x`.
+        let around = |x: f32| {
+            let clip = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.5))
+                * Mat4::from_scale(Vec3::new(0.1, 0.1, 0.05))
+                * Mat4::from_translation(Vec3::new(-x, 0.0, 0.0));
+            Frustum(ViewFrustum::from_clip_from_world(&clip))
+        };
+        let view = |f: &Frustum| {
+            let mut ids = vec![];
+            let ranges = kit_view_ranges(&set, &lods, &[], f, false, &mut ids);
+            ranges
+                .into_iter()
+                .map(|(d, r)| (d, ids[r.start as usize..r.end as usize].to_vec()))
+                .collect::<Vec<_>>()
+        };
+        let (slot0, slot1) = (draw_index(0, false), draw_index(3, false));
+        assert_eq!(view(&around(0.0)), [(slot0, vec![0, 1]), (slot1, vec![2])]);
+        assert_eq!(view(&around(100.0)), [(slot1, vec![3, 4])]);
+        assert_eq!(
+            view(&enclosing_frustum()),
+            [(slot0, vec![0, 1]), (slot1, vec![2, 3, 4])]
+        );
     }
 
     fn enclosing_frustum() -> Frustum {
