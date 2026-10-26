@@ -90,3 +90,7 @@ Paul answered `docs/review/2026-10-20-walkthrough.html` on 2026-10-20. Codes fol
 - Engine feedback (A14): Q1 keep the 180 ms ghost turn; Q2 yes, the edge glow fades in when the turn lands; Q3 the ghost meshes fade out when the pointer leaves; Q4 the commit flash moves from 80 to 120 ms; Q5 Reduce motion stays under Accessibility.
 - LOD band (A15): Q1 band parts cast shadows from one LOD only; Q2 per-part LOD choice (more draws on small worlds) is acceptable.
 - Colour re-check on rich-3 (`docs/review/2026-10-21-rich3-recheck.html`): looks good.
+
+## 2026-10-26
+
+- Water looks (A3, `docs/review/2026-10-21-water-options.html`): Q1 drying trail O3, the current 0.8 darkening; Q2 churn foam O3, the current 1.0 scale; Q3 confirmed, no drying trail on the plain fallback river bed. No code change; the debug-only `--water_look` knob stays for later comparisons.
