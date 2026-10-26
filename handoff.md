@@ -25,7 +25,7 @@ No Blender agents are running. The stone well landed in batch 15; no other P3 pi
 
 ## Standing rules from the owner (still in force)
 
-- Stop (owner, 2026-10-21 afternoon: "all asset work is frozen, we are almost out of tokens, dont start any new work"): start nothing new until Paul says so. Four agents were stopped mid-work; their partial worktrees are under `.claude/worktrees/` (draw rules + band shadows + LOD1 fallback `agent-ac66ca4cb0c5ce19a`, engine feedback A14 `agent-a886a30b9ea7bde3d`, water options `agent-a537aecf0b21b822e`; the close-camera analysis left none). Owner answers for that work are in `docs/review/2026-10-20-owner-answers.md` (2026-10-21 afternoon). Local `main` holds unpushed doc commits (rich-3 re-shoot 15b996b, answers 8244a9e, this note).
+- Lifted 2026-10-25 (owner: "all asset creation and deploy limits are lifted, resume work"): the 2026-10-21 no-new-asset-work rule and the stop-new-work rule. Asset work and the two-to-three Blender agents rule are back in force; the three agents stopped on 2026-10-21 were resumed in their worktrees.
 - The 2026-10-20 stop rule ("dont start anything new") was lifted by Paul's "continue work" the same day; normal throughput resumed.
 - Fix friction or defects of any scope found along the way, don't only file them (Paul, 2026-10-20: "you can do fixes to any scope needed").
 - Standing push approval when a batch is a significant addition or change, after `make checkall-ci` passes; watch CI after. Small or doc-only commits ride along with the next push. `make build-web` after every merge to `main`.
@@ -33,7 +33,6 @@ No Blender agents are running. The stone well landed in batch 15; no other P3 pi
 - Every asset brief carries the integration section (`.claude/skills/blender-asset/references/dispatch.md` part 11).
 - When asset work is active: at least 2 and at most 3 Blender agents at once, on Opus 5.5 at xhigh effort, in `isolation: "worktree"`. Each new piece reuses approved helpers through module globals from a new family file (never edit an approved helper), and its runtime changes come back as a verified `integration.patch` for the orchestrator to land.
 - The P3 recipe system (recipe book, hints, discovery moment, creative mode, the 6 recipes) is deferred until Paul says to start it (2026-10-20). P3 content keeps landing ahead of it.
-- No new asset work (owner, 2026-10-21: "dont start any new asset work"): no new Blender kit pieces, reference rounds, piece rebuilds or generated sounds/images until Paul says so. This suspends the two-Blender-agents rule. Code, tooling, tests, perf and docs continue.
 - No work past P3: nothing from P4 (elevation) onward (P5 atmosphere, P6 content breadth, P7 mobile, P8 first-person) starts until Paul says so (2026-10-20). Owner-requested items that fit P2 or P3 still go ahead.
 - Blender headless only. Never record an owner approval yourself (pending entries only). Tool bugs and flaky tests are high priority. Perf numbers need host load ≤ 15 before and after.
 
