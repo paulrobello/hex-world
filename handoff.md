@@ -39,15 +39,14 @@ No Blender agents are running. The stone well landed in batch 15; no other P3 pi
 
 ## Waiting on Paul
 
-Coded as asked in the 2026-10-21 session (full descriptions in that session; answers logged in `docs/review/2026-10-20-owner-answers.md`):
-- A2 draw budget (card `01a156936f96`): Q1 which camera the 500-draw budget covers (overview 407, forest cluster 633, meadow 645, 152 m band camera 748); Q2 scatter pair limit 15 -> 180; Q3 close cameras: structural fix (material slots, per-chunk merge, texture arrays) or a new budget; Q4 17 pieces with no LOD1 (not drawn past 150 m).
-- A3 water: criterion 6 (208-tile world enough, or the ~2,066-tile CPU-bound world first); Q1 drying trail strength; Q2 foam level; Q3 trail on the fallback bed.
-- A4 UI hero-polish: hallway test and sign-off. A9 look sign-offs: bulldoze dust, grass blades, share image (after the rich-3 re-shoot). A10 fish crossings unit-tested only.
-- A14 engine feedback: Q1 180 ms ghost turn; Q2 edge glow 60 ms early; Q3 ghost mesh fade-out; Q4 80 ms commit flash; Q5 Reduce motion under Accessibility, Keys table, Auto-rotate switch.
-- A15 LOD band: Q1 band parts cast shadows from one LOD only; Q2 per-part LOD adds draws on small worlds.
-- A7 road bend trim: held until the no-new-asset-work rule lifts (card `01a15ee39d38`).
-- A6 was stale: rich-3 is the default since 2026-10-14; the kit/water evidence re-shoot on rich-3 (card `01a13ba24e9e`) is orchestrator work, then the owner's colour re-check.
-- Non-blocking tuning lists from 2026-10-20 (flatten, farm motion, river fork, rail bend 120, river bend 60, boats, whistle lead-in) and the older numbered lists below each ship with a default.
+Coded as asked in the session (answers logged in `docs/review/2026-10-20-owner-answers.md`):
+- A3 water looks: pick a drying trail strength and a churn foam level from `docs/review/2026-10-21-water-options.html` (O1-O5 each; current is O3). The review knob is `--water_look trail=<x>,churn=<g>` (native, debug only).
+- A16 road bend trim: Q1 approve `road_bend_60_center` and the new `road_bend_60_edge_e0`/`_e1` (sheet `docs/checkpoints/road_bend_60-trim/sheet.jpg`); Q2 accept +8 draws per pass while a road_bend_60 is on screen; Q3 accept e1's mirrored-bake AO noise (up to 20 levels on about 1% of texels).
+- A17 LOD slot pass (sheet `docs/checkpoints/lod1-pass/sheet.jpg`): Q1 the platform's flat flower mound at LOD1 (0.17 m below LOD0's cone); Q2 the wells' grey and buff courses at LOD1; plus re-approval of the 16 rebuilt pieces.
+- A18 rail ends: keep the stopped-end rule one-way (a meadow may go against a stopped end, but a new rail tile may not point its end at an existing meadow)?
+- Draw budget: A2 Q1-Q4 and A15 are answered and applied (overview-only 500 gate, scatter 60 per LOD, one-LOD band shadows, every LOD0 slot drawn in LOD1). The structural close-camera fix the owner delegated is card `01a176b5456e` (screen-aware cascade skip, runtime slot coalescing, per-tile culling).
+- A4 UI hero-polish hallway test and sign-off; A9 look sign-offs (bulldoze dust now 20% smaller again, grass blades, the R8 share image in `docs/checkpoints/share-image/`).
+- Non-blocking tuning lists from 2026-10-20 and the older numbered lists below each ship with a default.
 
 ## Filed follow-ups
 
