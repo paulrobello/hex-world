@@ -20,9 +20,14 @@ const ktxEnv = {
   DYLD_LIBRARY_PATH: `${KTX}/KTX-Software-4.4.2-Darwin-arm64-library.pkg/Payload/usr/local/lib`,
 };
 export const UASTC_THREADS = 1;
+// The UASTC encode runs with ASLR off (see no-aslr.py for the libktx padding-hash bug it pins).
+export const NO_ASLR = join(dirname(fileURLToPath(import.meta.url)), "no-aslr.py");
 const ktx = (...args) => execFileSync("ktx", args, { env: ktxEnv, stdio: ["ignore", "pipe", "pipe"] }).toString();
-const ktxAsync = (...args) => new Promise((ok, fail) =>
-  execFile("ktx", args, { env: ktxEnv }, (e, out, err) => (e ? fail(new Error(`ktx ${args[0]} ${args.at(-1)}: ${err || e.message}`)) : ok(out))));
+const run = (cmd, args, env, label) => new Promise((ok, fail) =>
+  execFile(cmd, args, { env }, (e, out, err) => (e ? fail(new Error(`${label}: ${err || e.message}`)) : ok(out))));
+const ktxAsync = (...args) => run("ktx", args, ktxEnv, `ktx ${args[0]} ${args.at(-1)}`);
+const ktxNoAslr = (...args) => run("python3", [NO_ASLR, "ktx", ...args],
+  { ...ktxEnv, HEXW_DYLD_LIBRARY_PATH: ktxEnv.DYLD_LIBRARY_PATH }, `ktx ${args[0]} ${args.at(-1)}`);
 
 // Runs at most n tasks at once. Every map encode and transcode is its own single-threaded ktx process,
 // so wall time scales with cores while each process keeps the deterministic --threads 1 encode.
@@ -79,11 +84,14 @@ export async function compressGlb(src, dst) {
 // min(4, threads) jobs, and with more than one job the same PNG can encode to different bytes
 // (seen under host load). --uastc-rdo-m cannot replace it: libktx 4.4.2 wires that flag to
 // "favor simpler modes" instead of the RDO multithreading switch.
+// Even single-threaded, the RDO pass hashes struct padding (stack garbage) in its selector history, so
+// with ASLR on the same PNG encoded to one of two files at idle (river_fork_center masks: 6 of 20 runs
+// differ in mip 3, 2026-10-26). ktxNoAslr spawns ktx with ASLR off, which fixes that garbage.
 export async function encodeUastc(png, channel, path, run = serial) {
   const c = CHANNELS[channel];
   if (!c) throw new Error(`unknown channel ${channel}`);
   await mkdir(dirname(path), { recursive: true });
-  await run(() => ktxAsync("create", "--format", c.srgb ? "R8G8B8A8_SRGB" : "R8G8B8A8_UNORM", "--assign-tf", c.srgb ? "srgb" : "linear",
+  await run(() => ktxNoAslr("create", "--format", c.srgb ? "R8G8B8A8_SRGB" : "R8G8B8A8_UNORM", "--assign-tf", c.srgb ? "srgb" : "linear",
     ...(c.normalize ? ["--normalize"] : []), "--encode", "uastc", "--uastc-quality", "4",
     "--uastc-rdo", "--uastc-rdo-l", String(c.rdo), "--threads", String(UASTC_THREADS), "--zstd", "18", "--generate-mipmap", png, path));
   return path;
