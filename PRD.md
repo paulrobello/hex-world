@@ -551,6 +551,7 @@ Following `~/.claude/guides/agent-operability.md`, both the native and web build
 - `?diag=1`: an overlay with frame timings, draw calls, agent counts and GPU memory.
 - A deterministic scenario runner (seeded world plus a placement script) for e2e and perf tests.
 - As built: `?shot=` and `--shot` take one of the fixed scenarios and capture at frame 120; on the web the PNG comes back as a data URL through `hexWorld.takeShot`. `?diag=1` shows the `diag()` JSON: frame-time percentiles, visible mesh and material pairs and triangles, car and boid counts, the wasm heap, GPU pass timings and the stall histogram. It has no GPU memory figure and no draw-call count. The runner is `--script <file.json>` natively with `--seed` and `--clock fixed`; web e2e sends the same command lists through `hexWorld.cmd`. Every flag, command and state field: [`docs/agent-operability.md`](docs/agent-operability.md).
+- As built (2026-10-26): a native `--script` run ignores the window's own keyboard, mouse and pointer until its commands have all run, so a window that opens under the cursor or takes keyboard focus cannot change the game, or trigger the packs' first interaction (§10), before the script acts. Scripted `hover` and `walk` commands still act, and live input returns once the queue drains (`CommandQueue::owns_input`). The same hold covers a whole `--thumbs` run and the F3 and T toggles, whose key state `hex-app` clears before `Update`.
 
 ## 13. Deployment
 

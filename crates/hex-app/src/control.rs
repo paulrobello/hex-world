@@ -287,13 +287,37 @@ pub static INBOX: Mutex<Vec<Command>> = Mutex::new(Vec::new());
 pub struct CommandQueue {
     items: VecDeque<Command>,
     wait: u32,
+    /// Loaded from `--script`: the run ignores live input until its commands have all run.
+    scripted: bool,
+    /// A `--thumbs` run: live input is ignored for the whole run.
+    unattended: bool,
 }
 
 impl CommandQueue {
-    // The web feeds commands through `INBOX` instead.
+    /// A `--script` queue: [`Self::owns_input`] holds while it has commands left. The web feeds
+    /// commands through `INBOX` instead.
     #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
-    pub fn push(&mut self, c: Command) {
-        self.items.push_back(c);
+    pub fn scripted(cmds: impl IntoIterator<Item = Command>) -> Self {
+        Self {
+            items: cmds.into_iter().collect(),
+            wait: 0,
+            scripted: true,
+            unattended: false,
+        }
+    }
+
+    /// Ignores live input for the whole run (`--thumbs`, whose captures are committed assets).
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+    pub fn hold_input(&mut self) {
+        self.unattended = true;
+    }
+
+    /// True for a `--thumbs` run, and while a `--script` run still has commands to run (waits
+    /// included). The window's keyboard, mouse and pointer are ignored then: a window that opens
+    /// under the pointer, or takes keyboard focus while someone types elsewhere, must not change
+    /// the game, the packs' first interaction or a capture behind the run's back.
+    pub fn owns_input(&self) -> bool {
+        self.unattended || (self.scripted && (!self.items.is_empty() || self.wait > 0))
     }
 
     #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
@@ -1166,9 +1190,7 @@ mod tests {
 
     #[test]
     fn queue_runs_in_order() {
-        let mut q = CommandQueue::default();
-        q.push(Command::Wait { frames: 2 });
-        q.push(Command::Exit);
+        let q = CommandQueue::scripted([Command::Wait { frames: 2 }, Command::Exit]);
         assert_eq!(q.items.len(), 2);
         assert_eq!(q.items.front(), Some(&Command::Wait { frames: 2 }));
     }

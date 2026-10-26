@@ -31,7 +31,11 @@ pub(crate) struct ActionsPlugin;
 impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<actions::ActionQueue>()
-            .add_systems(Update, actions::read_input.in_set(AppSet::Input));
+            .add_systems(Update, actions::read_input.in_set(AppSet::Input))
+            .add_systems(
+                PreUpdate,
+                actions::drop_live_input.after(bevy::input::InputSystems),
+            );
     }
 }
 

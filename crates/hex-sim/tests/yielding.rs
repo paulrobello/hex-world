@@ -1,6 +1,7 @@
 //! Car following and merge yielding (PRD §7.2): a car keeps the queue spacing behind the car ahead
 //! on its lane, gives way where routes merge (a junction entry, a driveway joining a lane, two
-//! departures from one cluster), never deadlocks and stays deterministic per seed.
+//! departures from one cluster), never deadlocks and stays deterministic per seed. Every run
+//! checks the spacing on shared lanes each tick ([`Spacing`]).
 
 mod common;
 
@@ -8,7 +9,8 @@ use std::collections::BTreeMap;
 
 use common::*;
 use hex_core::Axial;
-use hex_sim::rail::CAR_LENGTH;
+use hex_sim::rail::{CAR_LENGTH, CAR_QUEUE_SPACING};
+use hex_sim::traffic::{LANE_CLEAR, LOOK_AHEAD};
 use hex_sim::{Car, CarId, CarPhase, SimConfig, Simulation, geom};
 
 /// The width of the car body the sim sizes for (m), with its [`CAR_LENGTH`].
@@ -43,6 +45,236 @@ fn overlapping(a: &Car, b: &Car) -> Option<f32> {
     (!separated && !oncoming(a, b) && !oncoming(b, a)).then_some(geom::dist(pa.pos, pb.pos))
 }
 
+/// Spacing slack (m): float rounding only, as in `tests/crossing_queue.rs`. The PRD's "a gap opens
+/// by at most one 0.4 m tick step" bounds how far a gap opens above the spacing, not below it.
+const SPACING_TOL: f32 = 0.01;
+
+/// `traffic.rs` constants the rule's geometry needs that the crate keeps private: the look-ahead
+/// sample spacing, the on-path reach and the head-on cosine.
+const SAMPLE: f32 = 0.5;
+const ON_LANE: f32 = 0.75;
+const HEAD_ON: f32 = -0.97;
+
+/// A car's look-ahead as the following rule measures it (`traffic::Window`): its path from half a
+/// car behind its centre to [`LOOK_AHEAD`] past it, distances measured from its centre.
+struct Look {
+    pts: Vec<[f32; 2]>,
+    cum: Vec<f32>,
+    back: f32,
+    chord: [f32; 2],
+    /// The pose every [`SAMPLE`] from the centre to the end: `(position, unit direction)`.
+    samples: Vec<([f32; 2], [f32; 2])>,
+}
+
+impl Look {
+    fn new(car: &Car) -> Option<Self> {
+        let s = car.distance();
+        let back = s.min(0.5 * CAR_LENGTH);
+        let pts = car.path().slice(s - back, s + LOOK_AHEAD);
+        let mut cum = vec![0.0];
+        for w in pts.windows(2) {
+            cum.push(cum[cum.len() - 1] + geom::dist(w[0], w[1]));
+        }
+        let total = cum[cum.len() - 1];
+        if total - back <= 1e-3 {
+            return None;
+        }
+        let unit = |d: [f32; 2]| {
+            let l = geom::len(d);
+            if l > 1e-5 {
+                geom::scale(d, 1.0 / l)
+            } else {
+                [0.0, 0.0]
+            }
+        };
+        let chord = unit(geom::sub(pts[pts.len() - 1], pts[0]));
+        let mut samples = vec![];
+        let (mut k, mut at) = (0, back);
+        while at <= total {
+            while k + 2 < pts.len() && cum[k + 1] < at {
+                k += 1;
+            }
+            let len = cum[k + 1] - cum[k];
+            if len > 1e-5 {
+                let dir = unit(geom::sub(pts[k + 1], pts[k]));
+                let t = (at - cum[k]).clamp(0.0, len);
+                samples.push((geom::add(pts[k], geom::scale(dir, t)), dir));
+            }
+            at += SAMPLE;
+        }
+        Some(Self {
+            pts,
+            cum,
+            back,
+            chord,
+            samples,
+        })
+    }
+
+    /// The closest point of the look-ahead to `p` within [`LANE_CLEAR`], unless `p` lies behind
+    /// its start or past its end: the distance along it from the car's centre, its direction there
+    /// and the squared distance.
+    fn near(&self, p: [f32; 2]) -> Option<(f32, [f32; 2], f32)> {
+        let last = self.pts.len().checked_sub(2)?;
+        let mut best: Option<(f32, f32, [f32; 2], bool)> = None;
+        for k in 0..=last {
+            let (a, b) = (self.pts[k], self.pts[k + 1]);
+            let len = self.cum[k + 1] - self.cum[k];
+            if len <= 1e-5 {
+                continue;
+            }
+            let dir = geom::scale(geom::sub(b, a), 1.0 / len);
+            let raw = geom::dot(geom::sub(p, a), dir);
+            let along = raw.clamp(0.0, len);
+            let e = geom::sub(p, geom::add(a, geom::scale(dir, along)));
+            let d2 = geom::dot(e, e);
+            if best.is_none_or(|bst| d2 < bst.0) {
+                let off = (k == 0 && raw < 0.0) || (k == last && raw > len);
+                best = Some((d2, self.cum[k] + along - self.back, dir, off));
+            }
+        }
+        let (d2, along, dir, off) = best?;
+        (!off && d2 <= LANE_CLEAR * LANE_CLEAR).then_some((along, dir, d2))
+    }
+}
+
+/// Where look-ahead `a` first runs onto `b` at any angle but head-on: the distance from each car's
+/// centre to that meeting point (`traffic::touch`).
+fn touch(a: &Look, b: &Look) -> Option<(f32, f32)> {
+    a.samples.iter().enumerate().find_map(|(k, (pos, dir))| {
+        let (along, other, d2) = b.near(*pos)?;
+        (geom::dot(*dir, other) > HEAD_ON && d2 <= LANE_CLEAR * LANE_CLEAR)
+            .then_some((k as f32 * SAMPLE, along))
+    })
+}
+
+/// A follower and its leader on a shared lane at the start of a tick, as `traffic::follow_caps`
+/// pairs them: `(follower, leader, follower's distance, leader's distance, gap)`, the gap being
+/// the follower's distance to the meeting point less the leader's. Merges (neither car on the
+/// other's path yet) are left out: the car giving way holds at its hold line instead. So are
+/// oncoming pairs and pairs with a car still in its spot.
+fn following_pairs(cars: &[Car]) -> Vec<(CarId, CarId, f32, f32, f32)> {
+    let looks: Vec<Option<Look>> = cars
+        .iter()
+        .map(|c| {
+            (c.distance() < c.path().length())
+                .then(|| Look::new(c))
+                .flatten()
+        })
+        .collect();
+    let reach = 2.0 * LOOK_AHEAD + 2.0 * LANE_CLEAR;
+    let mut out = vec![];
+    for i in 0..cars.len() {
+        let Some(li) = &looks[i] else { continue };
+        for j in i + 1..cars.len() {
+            let Some(lj) = &looks[j] else { continue };
+            if geom::dist(li.pts[0], lj.pts[0]) > reach || geom::dot(li.chord, lj.chord) < HEAD_ON {
+                continue;
+            }
+            let Some((ai, aj)) = touch(li, lj).or_else(|| touch(lj, li).map(|(b, a)| (a, b)))
+            else {
+                continue;
+            };
+            let (on_i, on_j) = (ai <= ON_LANE, aj <= ON_LANE);
+            if !on_i && !on_j {
+                continue;
+            }
+            let i_leads = if on_i != on_j {
+                on_i
+            } else {
+                ai < aj || (ai == aj && cars[i].id() < cars[j].id())
+            };
+            let (l, f, al, af) = if i_leads {
+                (i, j, ai, aj)
+            } else {
+                (j, i, aj, ai)
+            };
+            let (sl, sf) = (cars[l].distance(), cars[f].distance());
+            if sl <= 0.0 || sf <= 0.0 {
+                continue;
+            }
+            out.push((cars[f].id(), cars[l].id(), sf, sl, af - al));
+        }
+    }
+    out
+}
+
+/// One following pair-tick: `(tick, follower, leader, gap at the start of the tick, how far the
+/// follower then kept behind the leader's start-of-tick position)`.
+type Follow = (u64, u64, u64, f32, f32);
+
+/// Pair-ticks of one kind where the rule was in play: how many, and the closest one.
+#[derive(Debug, Default, Clone, Copy)]
+struct Close {
+    n: u32,
+    min: Option<Follow>,
+}
+
+impl Close {
+    fn add(&mut self, rec: Follow) {
+        self.n += 1;
+        if self.min.is_none_or(|m| rec.4 < m.4) {
+            self.min = Some(rec);
+        }
+    }
+
+    fn min_kept(&self) -> f32 {
+        self.min.map_or(f32::INFINITY, |m| m.4)
+    }
+}
+
+/// The following rule on shared lanes (PRD §7.2), checked every tick: a follower that moves keeps
+/// at least [`CAR_QUEUE_SPACING`] behind its leader's start-of-tick position, by the distance each
+/// has to the meeting point; one already closer waits where it is. Records the pair-ticks where
+/// the follower moved with the gap within two tick steps of the spacing (the rule bound or nearly
+/// bound), split by what the leader did.
+#[derive(Debug, Default)]
+struct Spacing {
+    /// Behind a leader that stood still that tick.
+    stopped: Close,
+    /// Behind a leader that moved less than a full tick step.
+    slower: Close,
+    /// Every close pair-tick, by `(follower, leader)`.
+    pairs: BTreeMap<(u64, u64), Close>,
+    /// The least distance any moving follower kept, close or not.
+    min_kept: Option<Follow>,
+}
+
+impl Spacing {
+    fn check(&mut self, t: u64, pairs: &[(CarId, CarId, f32, f32, f32)], sim: &Simulation) {
+        let step = sim.config().car_speed * hex_sim::TICK_SECONDS;
+        let now: BTreeMap<CarId, f32> = sim.cars().iter().map(|c| (c.id(), c.distance())).collect();
+        for &(f, l, sf, sl, gap) in pairs {
+            let Some(&ef) = now.get(&f) else { continue };
+            let moved = ef - sf;
+            if moved <= 0.0 {
+                continue;
+            }
+            let kept = gap - moved;
+            assert!(
+                kept >= CAR_QUEUE_SPACING - SPACING_TOL,
+                "tick {t}: car {} moved {moved:.3} m from {gap:.3} m behind car {}'s start-of-tick \
+                 position along their shared lane, keeping only {kept:.3} m",
+                f.0,
+                l.0
+            );
+            let rec = (t, f.0, l.0, gap, kept);
+            if self.min_kept.is_none_or(|m| kept < m.4) {
+                self.min_kept = Some(rec);
+            }
+            if gap < CAR_QUEUE_SPACING + 2.0 * step {
+                let lead_moved = now.get(&l).map_or(0.0, |el| el - sl);
+                if lead_moved <= 0.0 {
+                    self.stopped.add(rec);
+                } else if lead_moved < step - 1e-3 {
+                    self.slower.add(rec);
+                }
+                self.pairs.entry((f.0, l.0)).or_default().add(rec);
+            }
+        }
+    }
+}
+
 /// What a run saw, checked every tick.
 #[derive(Debug, Default)]
 struct Watch {
@@ -60,14 +292,18 @@ struct Watch {
     arrivals: u64,
     /// Every driving car's `(tick, id, distance bits)`.
     trace: Vec<(u64, u64, u32)>,
+    /// The following rule on shared lanes.
+    spacing: Spacing,
 }
 
 impl Watch {
     fn tick(&mut self, sim: &mut Simulation) {
         let before: BTreeMap<CarId, f32> =
             sim.cars().iter().map(|c| (c.id(), c.distance())).collect();
+        let pairs = following_pairs(sim.cars());
         sim.tick();
         let t = sim.ticks();
+        self.spacing.check(t, &pairs, sim);
         let cars = sim.cars();
         let now: BTreeMap<CarId, &Car> = cars.iter().map(|c| (c.id(), c)).collect();
         self.arrivals += before.keys().filter(|id| !now.contains_key(id)).count() as u64;
@@ -295,7 +531,9 @@ fn crossing_and_junction(seed: u64) -> Simulation {
 /// shuttle's first closure at tick 388 with seed 3) and the queue reaches back into the junction
 /// south of it. A fifth car on the same lane, turning off at that junction and never crossing,
 /// stops behind the queue instead of driving through its last car, and goes on once the queue
-/// pulls away.
+/// pulls away. Every car closing on the car ahead keeps the queue spacing along their shared lane
+/// (checked every tick by [`Spacing`]): behind a stopped car, behind a slower one creeping up to
+/// its stop, and the turner behind the queue's last car while that car stands in the junction.
 #[test]
 fn a_crossing_queue_past_a_junction_holds_the_cars_behind_it() {
     let mut sim = crossing_and_junction(3);
@@ -304,7 +542,9 @@ fn a_crossing_queue_past_a_junction_holds_the_cars_behind_it() {
     let mut w = Watch::default();
     let mut turner_held = 0;
     let mut tail_in_junction = false;
+    let mut turner_closes_on_tail_in_junction = 0;
     let junction = geom::cell_center(Axial::new(0, 1));
+    let behind_tail = (turner.0, ids[3].0);
     for _ in 0..1200u64 {
         let t = sim.ticks();
         for (k, id) in ids.iter().enumerate().take(4) {
@@ -325,9 +565,17 @@ fn a_crossing_queue_past_a_junction_holds_the_cars_behind_it() {
             .iter()
             .find(|c| c.id() == turner)
             .map(|c| c.distance());
+        let closes_before = w.spacing.pairs.get(&behind_tail).map_or(0, |c| c.n);
         w.tick(&mut sim);
         let closed = sim.rails().crossings()[0].closed();
         let cars = sim.cars();
+        if w.spacing.pairs.get(&behind_tail).map_or(0, |c| c.n) > closes_before
+            && cars
+                .iter()
+                .any(|c| c.id() == ids[3] && geom::dist(c.pose_at(1.0).pos, junction) < 3.0)
+        {
+            turner_closes_on_tail_in_junction += 1;
+        }
         if let Some(c) = cars.iter().find(|c| c.id() == turner)
             && closed
             && was == Some(c.distance())
@@ -351,6 +599,36 @@ fn a_crossing_queue_past_a_junction_holds_the_cars_behind_it() {
     assert!(w.overlaps.is_empty(), "{:?}", w.overlaps);
     assert_eq!(w.arrivals, 5, "every trip finishes");
     assert_eq!(parked_at(&sim, Axial::new(1, 1)), vec![turner]);
+    let sp = &w.spacing;
+    println!(
+        "spacing: least kept {:?}, stopped leader {:?}, slower leader {:?}, turner behind tail {:?} \
+         ({turner_closes_on_tail_in_junction} with the tail in the junction)",
+        sp.min_kept,
+        sp.stopped,
+        sp.slower,
+        sp.pairs.get(&behind_tail)
+    );
+    assert!(sp.stopped.n > 0, "a car closes on a stopped car");
+    assert!(sp.slower.n > 0, "a car closes on a slower car");
+    for k in 1..4 {
+        assert!(
+            sp.pairs.contains_key(&(ids[k].0, ids[k - 1].0)),
+            "car {} closes on car {} in the queue: {:?}",
+            ids[k].0,
+            ids[k - 1].0,
+            sp.pairs.keys()
+        );
+    }
+    assert!(
+        turner_closes_on_tail_in_junction > 0,
+        "the turner closes on the queue's last car while it stands in the junction"
+    );
+    for close in [sp.stopped, sp.slower, sp.pairs[&behind_tail]] {
+        assert!(
+            close.min_kept() >= CAR_QUEUE_SPACING - SPACING_TOL,
+            "{close:?}"
+        );
+    }
 }
 
 /// F3: both cars of one cluster sent off on the same tick never overlap: the higher id waits in its
@@ -385,7 +663,8 @@ fn two_departures_from_one_cluster_never_overlap() {
 /// Bodies stay apart but for a few ticks in the busiest worlds: in a Y junction's tight turns a
 /// car may pass within a body of a car waiting behind its leader at the junction's mouth, their
 /// paths more than [`hex_sim::traffic::LANE_CLEAR`] apart (lane geometry, PRD §7.2); the count is
-/// bounded here so a regression shows.
+/// bounded here so a regression shows. In the six-junction ring and the zigzag, cars close on
+/// stopped and slower cars and keep the queue spacing behind them ([`Spacing`]).
 #[test]
 fn merges_feeding_each_other_never_deadlock() {
     const SWING_TICKS: usize = 60;
@@ -411,12 +690,22 @@ fn merges_feeding_each_other_never_deadlock() {
             }
         }
         println!(
-            "{name}: {} overlapping pair-ticks {:?}, longest stop {:?}, arrivals {}",
+            "{name}: {} overlapping pair-ticks {:?}, longest stop {:?}, arrivals {}, spacing \
+             least kept {:?}, stopped leader {:?}, slower leader {:?}",
             w.overlaps.len(),
             w.overlaps.first(),
             w.longest_stop,
-            w.arrivals
+            w.arrivals,
+            w.spacing.min_kept,
+            w.spacing.stopped,
+            w.spacing.slower
         );
+        if name != "two merges" {
+            assert!(
+                w.spacing.stopped.n > 0 && w.spacing.slower.n > 0,
+                "{name}: cars close on stopped and slower cars in busy traffic"
+            );
+        }
         assert!(
             w.overlaps.len() <= SWING_TICKS,
             "{name}: {:?}",

@@ -345,6 +345,25 @@ pub fn map_input(f: &InputFrame, rotate_wheel: &mut f32) -> Vec<Action> {
     out
 }
 
+/// While the run owns the game ([`crate::control::CommandQueue::owns_input`]), clears this
+/// frame's keyboard and mouse state before any `Update` system reads it, so the direct key reads
+/// outside [`read_input`] (F3 in `hex-play`, T in `hex-render`) stay inert too.
+pub fn drop_live_input(
+    script: Res<crate::control::CommandQueue>,
+    mut keys: ResMut<ButtonInput<KeyCode>>,
+    mut mouse: ResMut<ButtonInput<MouseButton>>,
+    mut motion: ResMut<AccumulatedMouseMotion>,
+    mut scroll: ResMut<AccumulatedMouseScroll>,
+) {
+    if !script.owns_input() {
+        return;
+    }
+    keys.reset_all();
+    mouse.reset_all();
+    *motion = default();
+    *scroll = default();
+}
+
 /// Reads this frame's keyboard and mouse into the action queue.
 #[allow(clippy::too_many_arguments)]
 pub fn read_input(
@@ -355,9 +374,13 @@ pub fn read_input(
     time: Res<Time>,
     game: Res<crate::game::GameState>,
     walk: Res<crate::walk::WalkSession>,
+    script: Res<crate::control::CommandQueue>,
     mut rotate_wheel: Local<f32>,
     mut queue: ResMut<ActionQueue>,
 ) {
+    if script.owns_input() {
+        return;
+    }
     let wheel = match scroll.unit {
         MouseScrollUnit::Line => scroll.delta.y,
         MouseScrollUnit::Pixel => scroll.delta.y / PIXELS_PER_NOTCH,
@@ -701,5 +724,119 @@ mod tests {
         assert!(Action::Pan(Vec2::X).is_camera());
         assert!(!Action::Primary.is_camera());
         assert!(!Action::Undo.is_camera());
+    }
+
+    /// The F key `read_input` maps to an action this frame, with `queue` as the command queue.
+    fn read_f_key(queue: crate::control::CommandQueue) -> Vec<Action> {
+        use bevy::ecs::system::RunSystemOnce;
+        let mut world = World::new();
+        let mut keys = ButtonInput::<KeyCode>::default();
+        keys.press(KeyCode::KeyF);
+        world.insert_resource(keys);
+        world.init_resource::<ButtonInput<MouseButton>>();
+        world.init_resource::<AccumulatedMouseMotion>();
+        world.init_resource::<AccumulatedMouseScroll>();
+        world.init_resource::<Time>();
+        world.insert_resource(crate::game::GameState::new(1));
+        world.init_resource::<crate::walk::WalkSession>();
+        world.init_resource::<ActionQueue>();
+        world.insert_resource(queue);
+        world.run_system_once(read_input).unwrap();
+        world.resource::<ActionQueue>().0.iter().cloned().collect()
+    }
+
+    #[test]
+    fn a_running_script_ignores_live_input() {
+        use crate::control::{Command, CommandQueue};
+        assert_eq!(read_f_key(CommandQueue::default()), [Action::ToggleWalk]);
+        let script = CommandQueue::scripted([Command::Wait { frames: 30 }]);
+        assert!(script.owns_input());
+        assert!(
+            read_f_key(script).is_empty(),
+            "a key typed into a scripted run's window must not act before the script does"
+        );
+        // Once the script has run out, the window's input acts again.
+        assert!(!CommandQueue::scripted([]).owns_input());
+        assert_eq!(read_f_key(CommandQueue::scripted([])), [Action::ToggleWalk]);
+    }
+
+    /// Whether T (tilt-shift, read in `hex-render`) and F3 (FPS counter, read in `hex-play`) still
+    /// read as just pressed after `drop_live_input` ran with `queue` as the command queue.
+    fn t_and_f3_after_drop(queue: crate::control::CommandQueue) -> [bool; 2] {
+        use bevy::ecs::system::RunSystemOnce;
+        let mut world = World::new();
+        let mut keys = ButtonInput::<KeyCode>::default();
+        keys.press(KeyCode::KeyT);
+        keys.press(KeyCode::F3);
+        world.insert_resource(keys);
+        world.init_resource::<ButtonInput<MouseButton>>();
+        world.init_resource::<AccumulatedMouseMotion>();
+        world.init_resource::<AccumulatedMouseScroll>();
+        world.insert_resource(queue);
+        world.run_system_once(drop_live_input).unwrap();
+        let keys = world.resource::<ButtonInput<KeyCode>>();
+        [
+            keys.just_pressed(KeyCode::KeyT),
+            keys.just_pressed(KeyCode::F3),
+        ]
+    }
+
+    #[test]
+    fn a_running_script_or_thumbs_run_drops_t_and_f3() {
+        use crate::control::{Command, CommandQueue};
+        assert_eq!(t_and_f3_after_drop(CommandQueue::default()), [true, true]);
+        assert_eq!(
+            t_and_f3_after_drop(CommandQueue::scripted([Command::Wait { frames: 30 }])),
+            [false, false],
+            "a stray T or F3 during a scripted capture must not change the frame"
+        );
+        assert_eq!(
+            t_and_f3_after_drop(CommandQueue::scripted([])),
+            [true, true]
+        );
+        let mut thumbs = CommandQueue::default();
+        thumbs.hold_input();
+        assert_eq!(t_and_f3_after_drop(thumbs), [false, false]);
+    }
+
+    /// The drop runs after Bevy's input systems and before `Update`, where T and F3 are read.
+    #[test]
+    fn a_t_press_reaches_update_only_when_the_run_does_not_own_input() {
+        use crate::control::{Command, CommandQueue};
+        use bevy::input::{ButtonState, keyboard::Key, keyboard::KeyboardInput};
+
+        #[derive(Resource, Default)]
+        struct SawT(bool);
+
+        let saw_t = |queue: CommandQueue| {
+            let mut app = App::new();
+            app.add_plugins((MinimalPlugins, bevy::input::InputPlugin))
+                .add_plugins(crate::app_plugins::ActionsPlugin)
+                .insert_resource(crate::game::GameState::new(1))
+                .init_resource::<crate::walk::WalkSession>()
+                .insert_resource(queue)
+                .init_resource::<SawT>()
+                .add_systems(
+                    Update,
+                    |keys: Res<ButtonInput<KeyCode>>, mut saw: ResMut<SawT>| {
+                        saw.0 |= keys.just_pressed(KeyCode::KeyT);
+                    },
+                );
+            let window = app.world_mut().spawn_empty().id();
+            app.world_mut().write_message(KeyboardInput {
+                key_code: KeyCode::KeyT,
+                logical_key: Key::Character("t".into()),
+                state: ButtonState::Pressed,
+                text: None,
+                repeat: false,
+                window,
+            });
+            app.update();
+            app.world().resource::<SawT>().0
+        };
+        assert!(saw_t(CommandQueue::default()));
+        assert!(!saw_t(CommandQueue::scripted([Command::Wait {
+            frames: 30
+        }])));
     }
 }

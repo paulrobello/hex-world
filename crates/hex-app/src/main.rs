@@ -48,12 +48,17 @@ fn main() {
             .map_err(|e| format!("cannot read script {path}: {e}"))
             .and_then(|s| control::parse_script(&s).map_err(|e| format!("bad script {path}: {e}")));
         match script {
-            Ok(cmds) => cmds.into_iter().for_each(|c| queue.push(c)),
+            Ok(cmds) => queue = control::CommandQueue::scripted(cmds),
             Err(e) => {
                 eprintln!("hex-world: {e}");
                 std::process::exit(2);
             }
         }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    if flags.thumbs {
+        queue.hold_input();
     }
 
     // `--load <path>` runs before any script command, once the scene is ready.

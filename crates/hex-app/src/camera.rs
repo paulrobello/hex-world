@@ -150,10 +150,12 @@ pub fn pick_hover(
     game: Res<crate::game::GameState>,
     windows: Query<&Window, With<PrimaryWindow>>,
     cameras: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
+    script: Res<crate::control::CommandQueue>,
     mut last: Local<Option<Axial>>,
     mut queue: ResMut<ActionQueue>,
 ) {
-    if active.0 != Scenario::Play {
+    // A script's `hover` command sets the hover; the OS cursor must not override it.
+    if active.0 != Scenario::Play || script.owns_input() {
         return;
     }
     let Ok(window) = windows.single() else {
