@@ -1,4 +1,4 @@
-"""Writes docs/review/2026-10-26-open-questions.html: the owner questions still open on 2026-10-26 (A19, A22, A23),
+"""Writes docs/review/2026-10-26-open-questions.html: the owner questions still open on 2026-10-26 (A25, A26),
 each with its review images embedded, so the page works served locally or published on its own.
 Run from the repo root: python3 docs/review/2026-10-26-open-questions.py
 View: python3 scripts/dev/serve.py 8095 . then http://127.0.0.1:8095/docs/review/2026-10-26-open-questions.html"""
@@ -31,36 +31,43 @@ def figure(path: pathlib.Path, caption: str, width: int = 1400) -> str:
 
 
 SECTIONS = [
-    ("A19", "Which Blender pieces next", [
-        ("Q1", "Pick the next pieces to build. Each needs an approved reference set first; nothing is queued until "
-               "you name pieces. My recommendation: B1 and B3 first, then B2."),
-    ], [
-        ("B1", "Boulder and outcrop set: three or four sizes of granite boulders and a low outcrop, as scatter for "
-               "meadow, forest and coast edges. Fits the new scatter-not-baked rule and fills empty ground cheaply."),
-        ("B2", "Dry-stone walls and hedgerows: field boundaries along meadow and farm edges, placed by rules "
-               "like fences. Gives farmland structure."),
-        ("B3", "Water-surface props: lily pad clusters and reed beds for ponds, the spring and slow river bends. "
-               "Pairs with the riverbank scatter just landed."),
-        ("B4", "Forest floor: stumps, mushroom clusters and mossy stones as forest scatter, varying the forest "
-               "tiles under the trees."),
-    ], []),
-    ("A22", "Riverbank scatter (landed, batch 28)", [
-        ("Q1", "Approve the five new bank props (river_stones, _b, _c, river_reeds, _b) and the rebuilt road "
-               "bridge, rail bridge and spring. Each river tile now draws a seeded 0 to 4 of them."),
-        ("Q2", "Reeds come up less often than stones: 2 reed props against 9 stone clusters on the five-tile test "
-               "stretch. Should the reed share go up (for example to half and half)?"),
+    ("A25", "B1 boulders and outcrop: references", [
+        ("Q1", "Approve the references. Recommended: ref-1 sets the four boulders and ref-2 the outcrop; ref-3 "
+               "(meadow and forest edge) and ref-4 (coast) set placement and look only, since they read larger "
+               "than the sizes in Q2."),
+        ("Q2", "Sizes, all above the existing rock_small (1.9 m): boulders 2.2, 2.6, 3.4 and 4.5 m long, and an "
+               "8 x 5 x 1.2 m whaleback outcrop. Recommended as listed."),
+        ("Q3", "Where and how many: boulders on meadow, forest and oak tiles (about 0.3 to 0.4 per tile), the "
+               "outcrop on meadow and forest (0.15 to 0.2), small boulders most common; none on farm, wheat and "
+               "windmill tiles. Recommended."),
+        ("Q4", "Coast: boulders stand at the grass-to-sand line, not on the wet beach (the waves ignore props, so "
+               "water would run through them), and count inside the beach tiles' 0 to 6 cap. Recommended."),
+        ("Q5", "Distance: every boulder stays at 150 m; past 400 m only the two big boulders and the outcrop "
+               "remain, which keeps the draw budget. Recommended."),
+        ("Q6", "Texture: a unique bake per piece at about 128 px/m (recommended), or one shared tileable granite "
+               "with a masks map per piece (cheaper, less unique)."),
+        ("Q7", "The walker cannot climb onto the outcrop. Recommended."),
     ], [], [
-        (CP / "riverbank-scatter/sheet.jpg", "Top: the five props. Then the river before (left) and after (right) "
-         "at four cameras, the approved reference, an eye-level still, and the bend, mouths and spring after."),
+        (CP / "boulders-refs/refs-sheet.jpg", "ref-1 four boulders, ref-2 the outcrop, ref-3 meadow and forest "
+         "edge with a 1.7 m hiker, ref-4 coast."),
     ]),
-    ("A23", "Bush shine (landed, batch 29)", [
-        ("Q1", "Approve the matte verge bushes. The leaf roughness went from about 0.57 to 0.81; nothing else "
-               "changed (albedo, normals and meshes are byte-identical)."),
-        ("Q2", "shrub_forest and shrub_forest_c have the same glossy leaves (roughness 0.50 to 0.64) and show the "
-               "same sheen. Make them matte too? Holly (shrub_forest_b) stays glossy on purpose. About 30 minutes."),
+    ("A26", "B3 lily pads and reed bed: references", [
+        ("Q8", "Approve the references. Recommended: ref-1 sets the pads' colour and form (dark olive, matching "
+               "the spring's own pads, which they reuse); ref-3 and ref-4 are layout only (their pads came out "
+               "lighter)."),
+        ("Q9", "Pieces: three lily clusters (3 pads; 7 with a white flower; 5 with a pink bud, 1.8 to 2.8 m "
+               "across) and a dense reed bed about 4 x 2 m and 2.4 m tall, distinct from the sparse cattail "
+               "clumps on the bank. Recommended."),
+        ("Q10", "Where: the spring (always lilies, a reed bed half the time) and river bends; not straights, "
+                "forks or mouths. They get their own 0 to 2 per tile so the riverbank's 0 to 4 stones and reeds "
+                "keep their new half and half share. Recommended."),
+        ("Q11", "Never on the ocean, beach or river-mouth fan, where waves move the surface; reed beds root in "
+                "shallow water 0.4 to 0.8 m deep. Recommended."),
+        ("Q12", "Distance: pads drop out past 400 m (as the spring's do); the reed bed keeps a low silhouette. "
+                "Recommended."),
     ], [], [
-        (CP / "bush-shine/sheet.jpg", "The three verge bushes before and after, same cameras and fixed clock."),
-        (CP / "bush-shine/kit-eye-after-crop.jpg", "Kit showcase after the fix: shrub_forest still shows the sheen."),
+        (CP / "water-props-refs/refs-sheet.jpg", "ref-1 lily clusters, ref-2 the reed bed, ref-3 on the spring, "
+         "ref-4 on a slow river bend."),
     ]),
 ]
 
@@ -83,9 +90,8 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-26. Answer by code, for example \"A22 Q1 yes, Q2 half and half\". "
-             "The 17 pieces still awaiting look approval are listed on docs/review/approvals.html "
-             "(local review server, port 8095).</p>"]
+             "<p class=sub>2026-10-26, second round. A19, A22 and A23 are answered. Answer by code, for example "
+             "\"A25 all recommended, A26 Q10 also straights\".</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
