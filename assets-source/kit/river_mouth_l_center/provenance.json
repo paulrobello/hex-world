@@ -285,6 +285,13 @@
       "revision": "lod1-middle-lod",
       "requested": "2026-10-25",
       "notes": "Pending owner review; not an approval. Provenance refresh only: a shared helper it imports (_river_dress.py) changed in the LOD1 pass (the river dressing centres' LOD1 cattails and their LOD2 drop record). This piece draws its reeds without cattail heads, so its rebuilt GLB is byte-identical to the approved build and its maps are unchanged (tris LOD0/1/2 706/236/60 -> 706/236/60). Nothing to re-review visually."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-26",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"A17 all approved\", 2026-10-26): the LOD slot pass (sheet docs/checkpoints/lod1-pass/sheet.jpg), including the platform's flat LOD1 flower mound and the wells' LOD1 courses. Byte-identical rebuild listed with the LOD slot pass (provenance refresh only)."
     }
   ]
 }

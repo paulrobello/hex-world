@@ -307,6 +307,13 @@
       "revision": "lod1-middle-lod",
       "requested": "2026-10-25",
       "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the rail_station_coping and rail_station_iron slots (the window sills and the bay bench's legs) had no LOD1 geometry, so it vanished between 150 and 400 m and the LOD1 primitives after it no longer lined up with LOD0's. LOD1 now carries an exact copy of LOD0's window sills and bay bench (58 tris: sills 20, iron legs 16, the bench's timber seat and back 22), joined after the masks bake with its baked UVs (scripts/blender/kit/_lod_copy.py), so the atlas packing, LOD0's primitives and the masks map are byte-identical to the approved build and LOD1 lists every LOD0 slot in LOD0's order. LOD2 is unchanged: the sills (0.08 m tall, a quarter of a pixel at 400 m) and the bench legs (0.06 m, under the roof; LOD2 has no bench) stay out of it on purpose, and LOD0's sills would not fit LOD2's own 1.2 and 0.9 m windows. Tris LOD0/1/2 626/238/64 -> 626/296/64. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-26",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"A17 all approved\", 2026-10-26): the LOD slot pass (sheet docs/checkpoints/lod1-pass/sheet.jpg), including the platform's flat LOD1 flower mound and the wells' LOD1 courses."
     }
   ]
 }

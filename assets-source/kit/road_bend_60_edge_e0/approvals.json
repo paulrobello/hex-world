@@ -5,5 +5,12 @@
     "requested": "2026-10-25",
     "revision": "inner-corner trim (owner A7)",
     "notes": "Pending owner approval; not an approval. New piece for owner A7 (trim the road_bend_60 inner-corner stub overlap): road_straight_edge cut at the bend's inner bisector, for the tile's lane 0 (cut on its -y side), placed by data/tiles/road_bend_60.ron edge_pieces. road_bend_60_edge_e1 is this piece mirrored. Same profile, slots, sockets and border section as road_straight_edge; the masks bake matches its texels (R, G, B identical; A within 4 levels away from the cut). Review docs/checkpoints/road_bend_60-trim/sheet.jpg (before/after at the inner corner in the kit scenario and in play, the overlap overlays and the thumbnails). The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-26",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"A16 all approved\", 2026-10-26): the road_bend_60 inner-corner trim (sheet docs/checkpoints/road_bend_60-trim/sheet.jpg), including +8 draws per pass while a road_bend_60 is on screen and e1's mirrored-bake AO noise."
   }
 ]

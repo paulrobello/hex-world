@@ -20,5 +20,12 @@
     "revision": "lod1-middle-lod",
     "requested": "2026-10-25",
     "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the rail_station_timber, rail_station_board and rail_station_flowers slots (the flower tubs and the nameboard's lettered faces) had no LOD1 geometry, so they vanished between 150 and 400 m and the LOD1 primitives after them no longer lined up with LOD0's. LOD1 was 116 of its 122-tri ceiling, so after the masks bake the nameboard's two posts become 3-sided prisms (10 -> 6 tris each), the board's two broad faces take the board slot, and each tub is a 3-sided timber drum under a flower triangle (7 tris; 1.178x LOD0's octagon radius for the same mean width; the flower mound reads flat, 0.17 m lower than LOD0's cone). Every new face's UVs sit on one baked texel of the LOD0 tub, flower or replaced post, so the atlas packing, LOD0's primitives and the masks map are byte-identical to the approved build, and LOD1 lists every LOD0 slot in LOD0's order. LOD2 is unchanged: the three slots stay out of it on purpose, because LOD2 is 36 tris against a 36.6-tri ceiling (15% of 244), so not one triangle fits. Tris LOD0/1/2 244/116/36 -> 244/122/36 (LOD1 exactly 50%). Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-26",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"A17 all approved\", 2026-10-26): the LOD slot pass (sheet docs/checkpoints/lod1-pass/sheet.jpg), including the platform's flat LOD1 flower mound and the wells' LOD1 courses."
   }
 ]

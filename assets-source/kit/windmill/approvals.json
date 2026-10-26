@@ -20,5 +20,12 @@
     "revision": "lod1-middle-lod",
     "requested": "2026-10-25",
     "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the windmill_iron slot (the fantail hub) had no geometry in LOD1 or LOD2, so it was not drawn past 150 m. LOD1 now carries an exact copy of LOD0's fantail iron hub (12 tris); LOD2 carries the same hub (0.32 m, about one pixel at 400 m). The copies join after the masks bake with their baked UVs (scripts/blender/kit/_lod_copy.py), so the atlas packing is unchanged. LOD0's primitives, the collider and the masks map are byte-identical to the approved build, and every other LOD2 primitive is unchanged. Tris LOD0/1/2 1138/534/132 -> 1138/546/144. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-26",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"A17 all approved\", 2026-10-26): the LOD slot pass (sheet docs/checkpoints/lod1-pass/sheet.jpg), including the platform's flat LOD1 flower mound and the wells' LOD1 courses."
   }
 ]

@@ -248,6 +248,13 @@
       "revision": "lod1-middle-lod",
       "requested": "2026-10-25",
       "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the river_cattail slot had no LOD1 geometry, so the heads vanished between 150 and 400 m. LOD1 now draws every cattail of each kept clump as LOD0's 3-sided stalk under a 3-sided head (circumradius 1.155x the LOD0 radius for the same mean silhouette width; no spike), with the plant wind attribute; the four LOD1 reed triangles now follow LOD0's blades (the plan draws with heads at LOD1). LOD0 primitives are byte-identical in the staged export and LOD2 is unchanged: the cattails stay out of LOD2 on purpose (a head is 0.044-0.054 m across, about a sixth of a pixel at 400 m, and the approved LOD2 has no reed clumps for them to stand in). Tris LOD0/1/2 2363/320/120 -> 2363/592/120. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-26",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"A17 all approved\", 2026-10-26): the LOD slot pass (sheet docs/checkpoints/lod1-pass/sheet.jpg), including the platform's flat LOD1 flower mound and the wells' LOD1 courses."
     }
   ]
 }
