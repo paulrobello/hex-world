@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_rail_bridge.py",
-      "sha256": "d4bb073ef3128ddbab18c52173eb7ffeb42afb84ca353b27746f43fbe5551131"
+      "sha256": "d52e0b72e40f3fcc1f42dc70b0273e0dc9ed5ee4444194dc45bafbd8cc63e4bd"
     },
     {
       "path": "scripts/blender/kit/_river.py",
@@ -21,11 +21,11 @@
     },
     {
       "path": "scripts/blender/kit/_river_bridge.py",
-      "sha256": "452d3c15752a5b9b887ecb6193edbf3021293a3610c56209bcbcc9d062ede976"
+      "sha256": "6c2ca14d32258789275e03f1afc8f66de4a0167c2c6cbb2093326c1113712b48"
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
+      "sha256": "3761223a50d85b8cdfb1cb1bce63902d91e82278ebf608f2185e3de35981deb5"
     },
     {
       "path": "scripts/blender/kit/_road.py",
@@ -89,9 +89,12 @@
       "reedClumps": 6,
       "stones": 16
     },
+    "lod2Drops": {
+      "river_cattail": "under a pixel at 400 m: a head is 0.044-0.054 m across (0.14-0.18 px at 0.31 m/px), and LOD2 has no reed clumps for the stalks to stand in"
+    },
     "lodTris": [
       2188,
-      446,
+      606,
       124
     ],
     "marginPx": 0,
@@ -140,8 +143,8 @@
     },
     {
       "lod": 1,
-      "tris": 446,
-      "ratio": 0.20383912248628885
+      "tris": 606,
+      "ratio": 0.27696526508226693
     },
     {
       "lod": 2,
@@ -196,10 +199,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 19740,
-        "astc": 19300
+        "bc7": 19463,
+        "astc": 19025
       },
-      "glbBytes": 193968
+      "glbBytes": 206580
     },
     "textureEncodes": [
       {
@@ -210,8 +213,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 19740,
-        "sha256": "26e1df82b673f22b5accb002361a1e3329192abb34e13938d305317c3a2ae5ad"
+        "bytes": 19463,
+        "sha256": "dfb50c55123f52d2f67848ba1bc5d701ed905a40db66cc5b45f3da57c7082efd"
       },
       {
         "channel": "masks",
@@ -221,8 +224,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 19300,
-        "sha256": "a8e52da3677fe6673d89129c816d229122998de74d1ec9229d633b429bef72d7"
+        "bytes": 19025,
+        "sha256": "27ba707bf4e0e278c3eb99245abb10a2d527b1e874f214ec35ad568062610d70"
       },
       {
         "channel": "masks",
@@ -238,18 +241,18 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.glb",
-      "sha256": "2a09595866da30d4f79bac19be8d5c059c1dfbc983b1d65e45a4741627c45065",
-      "bytes": 193968
+      "sha256": "e1aee1758067077fb9b4286fcf334c9ea4eba3ff3eb60a78fa7815e4a2c175d6",
+      "bytes": 206580
     },
     {
       "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.bc7.ktx2",
-      "sha256": "26e1df82b673f22b5accb002361a1e3329192abb34e13938d305317c3a2ae5ad",
-      "bytes": 19740
+      "sha256": "dfb50c55123f52d2f67848ba1bc5d701ed905a40db66cc5b45f3da57c7082efd",
+      "bytes": 19463
     },
     {
       "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.astc.ktx2",
-      "sha256": "a8e52da3677fe6673d89129c816d229122998de74d1ec9229d633b429bef72d7",
-      "bytes": 19300
+      "sha256": "27ba707bf4e0e278c3eb99245abb10a2d527b1e874f214ec35ad568062610d70",
+      "bytes": 19025
     },
     {
       "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.png",
@@ -289,7 +292,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T16:51:46.969Z",
+    "date": "2026-10-26T06:35:35.231Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -331,6 +334,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod1-middle-lod",
+      "requested": "2026-10-25",
+      "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the river_cattail slot had no LOD1 geometry, so the heads vanished between 150 and 400 m. LOD1 now draws every cattail of each kept clump as LOD0's 3-sided stalk under a 3-sided head (circumradius 1.155x the LOD0 radius for the same mean silhouette width; no spike), with the plant wind attribute; the four LOD1 reed triangles now follow LOD0's blades (the plan draws with heads at LOD1). LOD0 primitives are byte-identical in the staged export and LOD2 is unchanged: the cattails stay out of LOD2 on purpose (a head is 0.044-0.054 m across, about a sixth of a pixel at 400 m, and the approved LOD2 has no reed clumps for them to stand in). Tris LOD0/1/2 2188/446/124 -> 2188/606/124. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
     }
   ]
 }

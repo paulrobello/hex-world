@@ -17,7 +17,7 @@
     },
     {
       "path": "scripts/blender/kit/_house_well.py",
-      "sha256": "3727c9f07f7e7b684d65e6429995fd727617d31153f3fb079ffcdd92c410ab18"
+      "sha256": "27a96b1fb444b1ae9310df5588afbddfc25a5e0fab1032ef6969f5911d071e6e"
     }
   ],
   "authoringAgent": {
@@ -41,6 +41,9 @@
       }
     },
     "device": "CPU",
+    "lod2Drops": {
+      "well_stone_mortar": "under a pixel at 400 m: the mortar shows only in 0.03 m joints (LOD1: a 0.05 m bed joint), 0.10-0.16 px at 0.31 m/px"
+    },
     "marginPx": 4,
     "maskStats": {
       "aoMean": 0.621091365814209,
@@ -151,8 +154,8 @@
     },
     {
       "lod": 1,
-      "tris": 430,
-      "ratio": 0.3036723163841808
+      "tris": 478,
+      "ratio": 0.3375706214689266
     },
     {
       "lod": 2,
@@ -176,10 +179,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 411658,
-        "astc": 390114
+        "bc7": 411673,
+        "astc": 390073
       },
-      "glbBytes": 148324
+      "glbBytes": 155384
     },
     "textureEncodes": [
       {
@@ -190,8 +193,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 411658,
-        "sha256": "8dd07b85f32643b0616348ed135fc87635a38a012e53128400c19b09904da1d0"
+        "bytes": 411673,
+        "sha256": "27959b6033764f30731808a68d0fd6f5fd077507b47efd4a920566c150e9cfa9"
       },
       {
         "channel": "masks",
@@ -201,8 +204,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 390114,
-        "sha256": "c97af077f0a906821d25ad99a9914301ac3323457cfd9a0ad5b57886a2d0ac2a"
+        "bytes": 390073,
+        "sha256": "27fd03dff9abf94eaecc6ddb2bf886f4ce842d5b0cd1540813211cc7e7d7e20b"
       },
       {
         "channel": "masks",
@@ -218,18 +221,18 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/well_stone/well_stone.glb",
-      "sha256": "d8a7e19a1efac8b6c3c5f9f7efe6603b68ec5ddf7b282b5bce03d16afdbf7f8a",
-      "bytes": 148324
+      "sha256": "b42f5a17982db8d966276873e29630f92c344faec2e72b0d270475cf1d4af783",
+      "bytes": 155384
     },
     {
       "path": "assets/kit/p1/well_stone/well_stone.masks.bc7.ktx2",
-      "sha256": "8dd07b85f32643b0616348ed135fc87635a38a012e53128400c19b09904da1d0",
-      "bytes": 411658
+      "sha256": "27959b6033764f30731808a68d0fd6f5fd077507b47efd4a920566c150e9cfa9",
+      "bytes": 411673
     },
     {
       "path": "assets/kit/p1/well_stone/well_stone.masks.astc.ktx2",
-      "sha256": "c97af077f0a906821d25ad99a9914301ac3323457cfd9a0ad5b57886a2d0ac2a",
-      "bytes": 390114
+      "sha256": "27fd03dff9abf94eaecc6ddb2bf886f4ce842d5b0cd1540813211cc7e7d7e20b",
+      "bytes": 390073
     },
     {
       "path": "assets/kit/p1/well_stone/well_stone.masks.png",
@@ -269,7 +272,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-21T05:04:43.522Z",
+    "date": "2026-10-26T06:35:07.853Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -302,6 +305,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod1-middle-lod",
+      "requested": "2026-10-25",
+      "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the stone_buff and mortar slots (LOD1 and LOD2 drew the whole wall in the grey stone slot) had no geometry in LOD1 or LOD2, so it was not drawn past 150 m. After the masks bake, LOD1's 12 wall segments are cut into two courses under a 5 cm mortar bed joint below the capstones and 10 of the 24 course blocks take the buff slot (+48 tris); 3 of LOD2's 8 wall segments take the buff slot (recolour, no new faces; 0.56 x 0.75 m, about 1.8 x 2.4 px at 400 m). The mortar stays out of LOD2: its 3-5 cm joints are a sixth of a pixel at 400 m (scripts/blender/kit/_house_well.py lod1_wall_slots, lod2_wall_buff). The cuts interpolate the wall's baked UVs inside its own islands, so the atlas packing is unchanged. LOD0's primitives, the collider and the masks map are byte-identical to the approved build, and every other LOD2 primitive is unchanged except the wall's stone primitive, three of whose segments are now buff. Tris LOD0/1/2 1416/430/140 -> 1416/478/140. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "name": "well_stone_b",
-  "date": "2026-10-21T05:00:14.742Z",
+  "date": "2026-10-26T06:32:09.004Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 414662,
-      "sha256": "9fc1407c2adf4dfd61d9c9594b4ca6f8ce9c4f5b11f1dd8d9a9124e23a9c866e"
+      "bytes": 414552,
+      "sha256": "7e8aeb7944ee8cbbbdcbdde0c5ae8a0e7bf69e62a1469a461d392a0dab480a97"
     },
     {
       "channel": "masks",
@@ -59,8 +60,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 393551,
-      "sha256": "0637439b85931565f4764baf15525db010b315744d6f6b0a18b2dc8968926748"
+      "bytes": 393348,
+      "sha256": "7f952c01c0ab153015997ce8e7351405ec94dabc5a38862739028e46cabcf8ed"
     },
     {
       "channel": "masks",
@@ -76,13 +77,13 @@
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 414662,
-      "astc": 393551
+      "bc7": 414552,
+      "astc": 393348
     },
-    "glbBytes": 123024
+    "glbBytes": 130600
   },
   "glb": {
-    "bytes": 123024,
-    "sha256": "d8007d89c79b1c5e82b9d6c7fbd05e0aade3d11afa7f517d6bd77ef7caa873c3"
+    "bytes": 130600,
+    "sha256": "bf409a39628c877162722162ad85017b8ce43c107669066c4d31fd43e8229174"
   }
 }

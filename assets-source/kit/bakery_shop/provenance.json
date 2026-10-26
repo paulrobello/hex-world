@@ -4,12 +4,16 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/bakery_shop.py",
-    "sha256": "578265a0624add6196ea00dd963cfcc92113adc6e489ad94bff03333359a2384"
+    "sha256": "9223f0ab075499b6c52c3e4fc461a3e6e1920ed0b46c0f722b45ac951aa886da"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_house.py",
       "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    },
+    {
+      "path": "scripts/blender/kit/_lod_copy.py",
+      "sha256": "a3ff66917967758ade82f5e85c4241fde3ccb67c2ab87a26da7986c79ab6bf0e"
     }
   ],
   "authoringAgent": {
@@ -148,13 +152,13 @@
     },
     {
       "lod": 1,
-      "tris": 601,
-      "ratio": 0.4277580071174377
+      "tris": 693,
+      "ratio": 0.49323843416370106
     },
     {
       "lod": 2,
-      "tris": 127,
-      "ratio": 0.0903914590747331
+      "tris": 171,
+      "ratio": 0.12170818505338078
     }
   ],
   "collider": {
@@ -173,10 +177,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 432649,
-        "astc": 406711
+        "bc7": 432658,
+        "astc": 406675
       },
-      "glbBytes": 147260
+      "glbBytes": 160284
     },
     "textureEncodes": [
       {
@@ -187,8 +191,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 432649,
-        "sha256": "2d8a98644c371bd0fc43280fce843e6e1fb14e6329b3af9ab3debee8615a159f"
+        "bytes": 432658,
+        "sha256": "807d053678a3d2e8bb15fd50db1447d47fe3a68149d22f0f6b783ede1b7f2e30"
       },
       {
         "channel": "masks",
@@ -198,8 +202,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 406711,
-        "sha256": "c8015c077e00bb0846ccfb088e7fda9a2a8ebd74da16b3dc697d7bd3f80ecdeb"
+        "bytes": 406675,
+        "sha256": "6e4c1fc260fac49f8428a69af7880145cf679dff838b486138aa3309f6991ca5"
       },
       {
         "channel": "masks",
@@ -215,18 +219,18 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/bakery_shop/bakery_shop.glb",
-      "sha256": "c996e6eb4634e47ef81ac6191f4fc957a0af81775e864064d1f57a1f645524f8",
-      "bytes": 147260
+      "sha256": "df6acf132cf14fb18019eceb01dc9cec1a9783a7dae5ac17b91b994ea2cf6aa5",
+      "bytes": 160284
     },
     {
       "path": "assets/kit/p1/bakery_shop/bakery_shop.masks.bc7.ktx2",
-      "sha256": "2d8a98644c371bd0fc43280fce843e6e1fb14e6329b3af9ab3debee8615a159f",
-      "bytes": 432649
+      "sha256": "807d053678a3d2e8bb15fd50db1447d47fe3a68149d22f0f6b783ede1b7f2e30",
+      "bytes": 432658
     },
     {
       "path": "assets/kit/p1/bakery_shop/bakery_shop.masks.astc.ktx2",
-      "sha256": "c8015c077e00bb0846ccfb088e7fda9a2a8ebd74da16b3dc697d7bd3f80ecdeb",
-      "bytes": 406711
+      "sha256": "6e4c1fc260fac49f8428a69af7880145cf679dff838b486138aa3309f6991ca5",
+      "bytes": 406675
     },
     {
       "path": "assets/kit/p1/bakery_shop/bakery_shop.masks.png",
@@ -257,7 +261,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-19T18:45:46.537Z",
+    "date": "2026-10-26T06:25:10.586Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -282,6 +286,15 @@
       "when": "2026-10-19",
       "gate": "piece",
       "notes": "Approved in chat (\"all approved\") from docs/review/2026-10-19-walkthrough.html item A3, in-engine shots re-taken on the fixed renderer (c15edd8)."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod1-middle-lod",
+      "requested": "2026-10-25",
+      "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the bakery_shop_wicker and bakery_shop_bread slots (the bench basket and the drum basket of bread) had no geometry in LOD1 or LOD2, so it was not drawn past 150 m. LOD1 now carries an exact copy of LOD0's bench with its basket of loaves and the drum basket of bread (92 tris: wicker 26, bread 34, the bench's timber 32); LOD2 carries the drum basket standing by the bay (44 tris; 0.46 m across, about 1.5 px at 400 m), joined after the LOD2 hull collider; the bench and its 0.36 m basket stay out of LOD2 (under one pixel). The copies join after the masks bake with their baked UVs (scripts/blender/kit/_lod_copy.py), so the atlas packing is unchanged. LOD0's primitives, the collider and the masks map are byte-identical to the approved build, and every other LOD2 primitive is unchanged. Tris LOD0/1/2 1405/601/127 -> 1405/693/171. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
     }
   ]
 }

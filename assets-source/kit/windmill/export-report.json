@@ -2,13 +2,18 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/windmill.py",
-    "sha256": "5a6465cde1e9d71f0a868a98be13a28c0cce5632d9dea912f7cc3c5c688a77f9"
+    "sha256": "cc4c606efd44d758c632c7cbb515944c148c463d29d47a2e1edf37199758e8e9"
   },
-  "generatorDeps": [],
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_lod_copy.py",
+      "sha256": "a3ff66917967758ade82f5e85c4241fde3ccb67c2ab87a26da7986c79ab6bf0e"
+    }
+  ],
   "lodTris": {
     "windmill_lod0": 1138,
-    "windmill_lod1": 534,
-    "windmill_lod2": 132
+    "windmill_lod1": 546,
+    "windmill_lod2": 144
   },
   "nodes": [
     "windmill",
@@ -22,8 +27,8 @@
   ],
   "partTris": {
     "windmill_lod0": 612,
-    "windmill_lod1": 258,
-    "windmill_lod2": 100,
+    "windmill_lod1": 270,
+    "windmill_lod2": 112,
     "windmill_rotor_lod0": 526,
     "windmill_rotor_lod1": 276,
     "windmill_rotor_lod2": 32

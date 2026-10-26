@@ -45,9 +45,10 @@ from mathutils import Matrix, Vector
 
 import _house
 import _house_longhouse as lh
+import _lod_copy
 from _house import DROP, PLINTH_TOP, Z, Mesh, Wall, roof_profile
 from _house_longhouse import beam, box, plinth, sweep
-from lib import scene, uv
+from lib import budgets, collider, geom, scene, uv
 import bpy
 
 X, Y = Vector((1.0, 0.0, 0.0)), Vector((0.0, 1.0, 0.0))
@@ -563,10 +564,28 @@ def fill_with_loaves(px, lods, size, hooks, **kw):
     return _house.fill_unbaked(px, lods, size, hooks, **kw)
 
 
+def _late_then_box(src, kind, name):
+    """lh.build_piece's collider call is its last step before the export, after the bake: LOD1 first
+    takes the bench and the bread basket (bakery_shop.late_bench's rule; owner A2 Q4, 2026-10-21:
+    every piece has a middle LOD), copied from LOD0 with their baked UVs, then the box as before, then
+    LOD2 takes the drum basket (bakery_shop.late_drum's rule) after the box, so the box is unchanged."""
+    piece = name[: -len("_collider")]
+    lod0, lod1 = (bpy.data.objects[f"{piece}_lod{i}"] for i in (0, 1))
+    wicker, bread = f"{piece}_wicker", f"{piece}_bread"
+    _, late = _lod_copy.copy_with_support(lod0, lod1, (wicker, bread), f"{piece}_timber", 0.6, 1.0)
+    col = collider.collider_from(src, kind, name)
+    _, drum = _lod_copy.copy_faces(lod0, src, lambda c, m: m in (wicker, bread) and c.z < 0.4)
+    tris = [geom.tri_count(bpy.data.objects[f"{piece}_lod{i}"]) for i in range(3)]
+    print(f"{piece}: LOD1 + bench and basket {late}, LOD2 + drum basket {drum} tris -> tris per LOD {tris}")
+    budgets.check(tris, "prop", piece)
+    return col
+
+
 def build_piece(spec, generator):
     """`_house_longhouse.build_piece` with this module's builder and bakery_shop's fit and bake settings
     (module docstring)."""
     lh.build = build
+    lh.collider = types.SimpleNamespace(collider_from=_late_then_box)
     lh.COTTAGE_BOUNDS = BAKERY_BOX
     lh.COTTAGE_LOD0_BOUNDS = BAKERY_LOD0_BOUNDS
     lh.UV_MARGIN = UV_MARGIN

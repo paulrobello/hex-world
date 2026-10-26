@@ -9,7 +9,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_bakery_b.py",
-      "sha256": "a6c57b511f941bd2f3f01a785ed4384e146212a15f96c46b07e7f89c3e5c419c"
+      "sha256": "fc67853ab9e0139b793a40ec1b5a3617d2d780b84ff195a929765a67e9f0f013"
     },
     {
       "path": "scripts/blender/kit/_house.py",
@@ -18,6 +18,10 @@
     {
       "path": "scripts/blender/kit/_house_longhouse.py",
       "sha256": "c4e8805ae0750279370f70cde6c79cec36bf6d734e7c76e56b687c8f5c65a44b"
+    },
+    {
+      "path": "scripts/blender/kit/_lod_copy.py",
+      "sha256": "a3ff66917967758ade82f5e85c4241fde3ccb67c2ab87a26da7986c79ab6bf0e"
     }
   ],
   "authoringAgent": {
@@ -167,13 +171,13 @@
     },
     {
       "lod": 1,
-      "tris": 429,
-      "ratio": 0.3289877300613497
+      "tris": 521,
+      "ratio": 0.3995398773006135
     },
     {
       "lod": 2,
-      "tris": 122,
-      "ratio": 0.09355828220858896
+      "tris": 166,
+      "ratio": 0.1273006134969325
     }
   ],
   "collider": {
@@ -192,10 +196,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 393090,
-        "astc": 370723
+        "bc7": 392976,
+        "astc": 370586
       },
-      "glbBytes": 134940
+      "glbBytes": 147968
     },
     "textureEncodes": [
       {
@@ -206,8 +210,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 393090,
-        "sha256": "23a667ed7521a02165b71700f2296573c6baeb5eceed3830a0f4cb4d93514650"
+        "bytes": 392976,
+        "sha256": "a8b3940dadc8825afe4d6681def465262ad80f1dfd8d4327601311c3a4855207"
       },
       {
         "channel": "masks",
@@ -217,8 +221,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 370723,
-        "sha256": "48c8e2738e81b7c8f1a6af870d45be70702f213550b1528ec70b2d1820ccd6a3"
+        "bytes": 370586,
+        "sha256": "1eb922787e6ea41e4f1a0dbc21a00cfa07eb83afe2711be05f0937a787418a5b"
       },
       {
         "channel": "masks",
@@ -234,18 +238,18 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/bakery_shop_b/bakery_shop_b.glb",
-      "sha256": "73555f3019f1f8b232ecb28decc3e021a63bad9e441a7b313bf0b90f50be52d7",
-      "bytes": 134940
+      "sha256": "ccbfe069cb123dfe8889e178a476cefa161e05c4d8289f494eccba417bd9bcf9",
+      "bytes": 147968
     },
     {
       "path": "assets/kit/p1/bakery_shop_b/bakery_shop_b.masks.bc7.ktx2",
-      "sha256": "23a667ed7521a02165b71700f2296573c6baeb5eceed3830a0f4cb4d93514650",
-      "bytes": 393090
+      "sha256": "a8b3940dadc8825afe4d6681def465262ad80f1dfd8d4327601311c3a4855207",
+      "bytes": 392976
     },
     {
       "path": "assets/kit/p1/bakery_shop_b/bakery_shop_b.masks.astc.ktx2",
-      "sha256": "48c8e2738e81b7c8f1a6af870d45be70702f213550b1528ec70b2d1820ccd6a3",
-      "bytes": 370723
+      "sha256": "1eb922787e6ea41e4f1a0dbc21a00cfa07eb83afe2711be05f0937a787418a5b",
+      "bytes": 370586
     },
     {
       "path": "assets/kit/p1/bakery_shop_b/bakery_shop_b.masks.png",
@@ -276,7 +280,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-21T00:17:01.414Z",
+    "date": "2026-10-26T06:25:13.384Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -311,11 +315,27 @@
       "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A2 (the back-left roof corner to pull in to 0.12 m)."
     },
     {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-20",
+      "revision": "back-left corner pulled in (A2)",
+      "notes": "Pending owner review; not an approval. The rebuild the A2 approval asked for: LOD0's back-left eave corner, 0.083 m from the hex border in the bakery slot (the eave course kick pushed it out 2.76 cm on both axes), slides 2.76 cm up its hip line onto the plain eave corner (-2.8, -3.8), so every LOD and the collider sit 0.120 m from the border (bakery_shop 0.119). The corner sits 3.5 cm above the other eave corners. LOD1, LOD2 and the collider positions are unchanged (collider bounds -2.8..3.115 x ±3.8, so the GROUND_BOXES and walk rows hold); tris 1304/429/122 unchanged; the masks atlas repacked (walls 23.34 px/m, 0 unbaked triangles). Review sheet: docs/checkpoints/bakery-corner/sheet.jpg. The controller records the owner's decision."
+    },
+    {
       "who": "Paul Robello (owner)",
       "when": "2026-10-21",
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod1-middle-lod",
+      "requested": "2026-10-25",
+      "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the bakery_shop_b_wicker and bakery_shop_b_bread slots (the bench basket and the drum basket of bread) had no geometry in LOD1 or LOD2, so it was not drawn past 150 m. LOD1 now carries an exact copy of LOD0's bench with its basket of loaves and the drum basket of bread (92 tris: wicker 26, bread 34, the bench's timber 32); LOD2 carries the drum basket (44 tris; 0.46 m across, about 1.5 px at 400 m), joined after the LOD2 box collider; the bench and its 0.36 m basket stay out of LOD2 (under one pixel). The copies join after the masks bake with their baked UVs (scripts/blender/kit/_lod_copy.py), so the atlas packing is unchanged. LOD0's primitives, the collider and the masks map are byte-identical to the approved build, and every other LOD2 primitive is unchanged. Tris LOD0/1/2 1304/429/122 -> 1304/521/166. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
     }
   ]
 }

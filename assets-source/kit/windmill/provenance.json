@@ -4,9 +4,14 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/windmill.py",
-    "sha256": "5a6465cde1e9d71f0a868a98be13a28c0cce5632d9dea912f7cc3c5c688a77f9"
+    "sha256": "cc4c606efd44d758c632c7cbb515944c148c463d29d47a2e1edf37199758e8e9"
   },
-  "generatorDeps": [],
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_lod_copy.py",
+      "sha256": "a3ff66917967758ade82f5e85c4241fde3ccb67c2ab87a26da7986c79ab6bf0e"
+    }
+  ],
   "authoringAgent": {
     "harness": "claude-code",
     "model": "claude-opus-5-5"
@@ -43,12 +48,12 @@
       },
       "windmill_lod1": {
         "max": 13.59790384746317,
-        "median": 13.407743882041933,
+        "median": 13.40777166113833,
         "min": 11.390891479886623
       },
       "windmill_lod2": {
         "max": 13.597938369107824,
-        "median": 11.442333079031135,
+        "median": 11.442356056978952,
         "min": 9.625333188179859
       },
       "windmill_rotor_lod0": {
@@ -84,13 +89,13 @@
     },
     {
       "lod": 1,
-      "tris": 534,
-      "ratio": 0.46924428822495606
+      "tris": 546,
+      "ratio": 0.4797891036906854
     },
     {
       "lod": 2,
-      "tris": 132,
-      "ratio": 0.11599297012302284
+      "tris": 144,
+      "ratio": 0.1265377855887522
     }
   ],
   "collider": {
@@ -109,10 +114,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 241985,
-        "astc": 230062
+        "bc7": 241888,
+        "astc": 230014
       },
-      "glbBytes": 133488
+      "glbBytes": 137616
     },
     "textureEncodes": [
       {
@@ -123,8 +128,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 241985,
-        "sha256": "e8a7c2253185f25626ca5a662b4a85fa58e31b04f22f88e7394aafe33886bdc4"
+        "bytes": 241888,
+        "sha256": "b5ffc147628f41705063f6ed1a089d596f4c5d56a334da3521070cee838efe41"
       },
       {
         "channel": "masks",
@@ -134,8 +139,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 230062,
-        "sha256": "df63a0b1d8148289bd853d0918621423a0becdc07d678ec2ff8b2a4f8d00a803"
+        "bytes": 230014,
+        "sha256": "f3263f09cef22d282e4e7f95349e3a2ee8c6af988d77f7d2607d2b12925a71f2"
       },
       {
         "channel": "masks",
@@ -151,18 +156,18 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/windmill/windmill.glb",
-      "sha256": "b64a26597fdecb467e0fa0fee541f70c136306773dff0ef56e23a39c894d9bea",
-      "bytes": 133488
+      "sha256": "92da86f7a38dfa41fdb47bd2c88e34ba63d47f9aa9fffdfbe3e9116e7e2497cf",
+      "bytes": 137616
     },
     {
       "path": "assets/kit/p1/windmill/windmill.masks.bc7.ktx2",
-      "sha256": "e8a7c2253185f25626ca5a662b4a85fa58e31b04f22f88e7394aafe33886bdc4",
-      "bytes": 241985
+      "sha256": "b5ffc147628f41705063f6ed1a089d596f4c5d56a334da3521070cee838efe41",
+      "bytes": 241888
     },
     {
       "path": "assets/kit/p1/windmill/windmill.masks.astc.ktx2",
-      "sha256": "df63a0b1d8148289bd853d0918621423a0becdc07d678ec2ff8b2a4f8d00a803",
-      "bytes": 230062
+      "sha256": "f3263f09cef22d282e4e7f95349e3a2ee8c6af988d77f7d2607d2b12925a71f2",
+      "bytes": 230014
     },
     {
       "path": "assets/kit/p1/windmill/windmill.masks.png",
@@ -202,7 +207,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-15T02:58:16.065Z",
+    "date": "2026-10-26T06:25:05.108Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -235,6 +240,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod1-middle-lod",
+      "requested": "2026-10-25",
+      "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the windmill_iron slot (the fantail hub) had no geometry in LOD1 or LOD2, so it was not drawn past 150 m. LOD1 now carries an exact copy of LOD0's fantail iron hub (12 tris); LOD2 carries the same hub (0.32 m, about one pixel at 400 m). The copies join after the masks bake with their baked UVs (scripts/blender/kit/_lod_copy.py), so the atlas packing is unchanged. LOD0's primitives, the collider and the masks map are byte-identical to the approved build, and every other LOD2 primitive is unchanged. Tris LOD0/1/2 1138/534/132 -> 1138/546/144. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
     }
   ]
 }

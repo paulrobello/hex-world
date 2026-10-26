@@ -4,7 +4,7 @@
     "status": "pending",
     "requested": "2026-10-20",
     "revision": "first build",
-    "notes": "Pending owner review; not an approval. First bakery_shop variant (PRD §6 Variety) after ref-1's twin front gables (assets-source/refs/bakery, A17): a timber-framed bakery with a hipped clay-tile roof on 3.5 m eaves (bakery_shop: a 50° gable on 4.4 m eaves with one jettied cross wing), two front gables with casements, a broad brick bread-oven stack with three pots astride the short ridge (bakery_shop: two external gable-end stacks), a flat shelved shop window under an oak fascia beam and one long clay-tile pentice over the window and the door, with bakery_shop's bench and bread basket. Inside bakery_shop's collider box and LOD0 extents, and below 2.7 m inside the parking test's bakery boxes plus one added shop-front box, so the bakery slot's clearances hold. Review sheet: docs/checkpoints/bakery_shop_b/sheet.jpg. The controller records the owner's decision."
+    "notes": "Pending owner review; not an approval. First bakery_shop variant (PRD \u00a76 Variety) after ref-1's twin front gables (assets-source/refs/bakery, A17): a timber-framed bakery with a hipped clay-tile roof on 3.5 m eaves (bakery_shop: a 50\u00b0 gable on 4.4 m eaves with one jettied cross wing), two front gables with casements, a broad brick bread-oven stack with three pots astride the short ridge (bakery_shop: two external gable-end stacks), a flat shelved shop window under an oak fascia beam and one long clay-tile pentice over the window and the door, with bakery_shop's bench and bread basket. Inside bakery_shop's collider box and LOD0 extents, and below 2.7 m inside the parking test's bakery boxes plus one added shop-front box, so the bakery slot's clearances hold. Review sheet: docs/checkpoints/bakery_shop_b/sheet.jpg. The controller records the owner's decision."
   },
   {
     "who": "Paul Robello (owner)",
@@ -18,7 +18,7 @@
     "status": "pending",
     "requested": "2026-10-20",
     "revision": "back-left corner pulled in (A2)",
-    "notes": "Pending owner review; not an approval. The rebuild the A2 approval asked for: LOD0's back-left eave corner, 0.083 m from the hex border in the bakery slot (the eave course kick pushed it out 2.76 cm on both axes), slides 2.76 cm up its hip line onto the plain eave corner (-2.8, -3.8), so every LOD and the collider sit 0.120 m from the border (bakery_shop 0.119). The corner sits 3.5 cm above the other eave corners. LOD1, LOD2 and the collider positions are unchanged (collider bounds -2.8..3.115 x ±3.8, so the GROUND_BOXES and walk rows hold); tris 1304/429/122 unchanged; the masks atlas repacked (walls 23.34 px/m, 0 unbaked triangles). Review sheet: docs/checkpoints/bakery-corner/sheet.jpg. The controller records the owner's decision."
+    "notes": "Pending owner review; not an approval. The rebuild the A2 approval asked for: LOD0's back-left eave corner, 0.083 m from the hex border in the bakery slot (the eave course kick pushed it out 2.76 cm on both axes), slides 2.76 cm up its hip line onto the plain eave corner (-2.8, -3.8), so every LOD and the collider sit 0.120 m from the border (bakery_shop 0.119). The corner sits 3.5 cm above the other eave corners. LOD1, LOD2 and the collider positions are unchanged (collider bounds -2.8..3.115 x \u00b13.8, so the GROUND_BOXES and walk rows hold); tris 1304/429/122 unchanged; the masks atlas repacked (walls 23.34 px/m, 0 unbaked triangles). Review sheet: docs/checkpoints/bakery-corner/sheet.jpg. The controller records the owner's decision."
   },
   {
     "who": "Paul Robello (owner)",
@@ -26,5 +26,14 @@
     "gate": "piece",
     "status": "approved",
     "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "lod1-middle-lod",
+    "requested": "2026-10-25",
+    "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the bakery_shop_b_wicker and bakery_shop_b_bread slots (the bench basket and the drum basket of bread) had no geometry in LOD1 or LOD2, so it was not drawn past 150 m. LOD1 now carries an exact copy of LOD0's bench with its basket of loaves and the drum basket of bread (92 tris: wicker 26, bread 34, the bench's timber 32); LOD2 carries the drum basket (44 tris; 0.46 m across, about 1.5 px at 400 m), joined after the LOD2 box collider; the bench and its 0.36 m basket stay out of LOD2 (under one pixel). The copies join after the masks bake with their baked UVs (scripts/blender/kit/_lod_copy.py), so the atlas packing is unchanged. LOD0's primitives, the collider and the masks map are byte-identical to the approved build, and every other LOD2 primitive is unchanged. Tris LOD0/1/2 1304/429/122 -> 1304/521/166. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
   }
 ]

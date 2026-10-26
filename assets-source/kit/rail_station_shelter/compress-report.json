@@ -1,6 +1,6 @@
 {
   "name": "rail_station_shelter",
-  "date": "2026-10-20T04:25:53.094Z",
+  "date": "2026-10-26T06:33:04.727Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 380777,
-      "sha256": "ef11d1381760ff9debdd7315ca2c20717f93f643946bf3afc8d5201bfa5309e3"
+      "bytes": 380177,
+      "sha256": "b59e68325217e433646c22e4e5f43f8a67b3be8a8c13cf4a071bae4cbcd256af"
     },
     {
       "channel": "masks",
@@ -59,8 +60,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 364073,
-      "sha256": "bcd15aa1383815c902367713ef62c27b41baeb10b4e9b267ca28012cf14ae339"
+      "bytes": 363481,
+      "sha256": "9e28e76abc1b21bd0a3ef9f2b0a081fbdabc2a10e1ad32512f6303ac0a046cd5"
     },
     {
       "channel": "masks",
@@ -76,13 +77,13 @@
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 380777,
-      "astc": 364073
+      "bc7": 380177,
+      "astc": 363481
     },
-    "glbBytes": 65812
+    "glbBytes": 71060
   },
   "glb": {
-    "bytes": 65812,
-    "sha256": "c0ef3bbe8344437f702d2fca219d354aa2d26e3bc6afd6d1ef2e8b472437ec58"
+    "bytes": 71060,
+    "sha256": "cd2f516a6d79f4661ba8a28a2af0b48ed1a6e9c20e0033da8d486db6e4d8764f"
   }
 }

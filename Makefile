@@ -197,7 +197,7 @@ lookdev-ibl: fetch-hdri
 # prints the stale-generator warnings (edits since provenance warn, never fail: owner 2026-10-19).
 kit-check:
 	cargo test -p hex-play --test kit_gate
-	@cargo test -q -p hex-play --test kit_gate -- provenance_complete --nocapture 2>&1 | grep '^warning: ' || true
+	@cargo test -q -p hex-play --test kit_gate -- provenance_complete --nocapture 2>&1 | grep -o 'warning: .*' || true
 
 # Writes provenance once, with validation.pass, after every non-provenance gate passes. The first call
 # only checks (--check writes nothing) and refuses a missing build stage, which kit_render.py needs.

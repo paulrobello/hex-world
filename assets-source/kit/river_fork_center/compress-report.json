@@ -1,6 +1,6 @@
 {
   "name": "river_fork_center",
-  "date": "2026-10-21T00:50:11.109Z",
+  "date": "2026-10-26T05:39:21.569Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 9,
-      "bytes": 5337,
-      "sha256": "106830d10a0a16a3cfb3ae78691a5e071d9429dc4bcb7168d52464f5f33e0a48"
+      "bytes": 5034,
+      "sha256": "66a39e91734f692a6176f1bbb702d847787d669da988406a6345c62517cdde36"
     },
     {
       "channel": "masks",
@@ -59,8 +60,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 9,
-      "bytes": 5301,
-      "sha256": "3cbfc6a67bd6d7c6d6f947f4d7194ce9f34a2454e6338636e867f5ef0db0ce55"
+      "bytes": 5065,
+      "sha256": "37c1d43591defea5d42af0989404589b3c3cc5980770c5a99ee59d3ef3cf3fc1"
     },
     {
       "channel": "masks",
@@ -76,13 +77,13 @@
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 5337,
-      "astc": 5301
+      "bc7": 5034,
+      "astc": 5065
     },
-    "glbBytes": 205468
+    "glbBytes": 218876
   },
   "glb": {
-    "bytes": 205468,
-    "sha256": "52cbebb77494449e8bb851c7beb75b24ae7dcacbad9757eba1a37d1d19ef02d2"
+    "bytes": 218876,
+    "sha256": "3481427a6feecc0f79aa53800289b2f150c7ed36cb8aa574357ca27e8916e325"
   }
 }

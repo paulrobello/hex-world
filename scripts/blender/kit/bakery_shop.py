@@ -36,6 +36,7 @@ import bpy  # noqa: E402
 import numpy as np  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
 
+import _lod_copy  # noqa: E402
 from _house import (DROP, PLASTER_LIN, PLINTH_OUT, PLINTH_TOP, Z, Mesh, Wall, centroid_samples,  # noqa: E402
                     fill_unbaked, frame_matrix, roof_profile)
 from lib import bake, budgets, collider, export, geom, materials, scene, uv  # noqa: E402
@@ -484,6 +485,22 @@ def build(lod, slots, mats):
     return mesh.obj(f"{P}_lod{lod}", mats)
 
 
+def late_bench(lods):
+    """LOD1 keeps the bench and the bread baskets (owner A2 Q4, 2026-10-21: every piece has a middle
+    LOD): LOD0's wicker and bread faces and the bench's timber (face centres below 0.6 m and within
+    1 m of a basket face), copied after the bake with their baked UVs (_lod_copy). Returns the joined
+    LOD1 and the copied triangles."""
+    return _lod_copy.copy_with_support(lods[0], lods[1], (S["wicker"], S["bread"]), S["timber"], 0.6, 1.0)
+
+
+def late_drum(lods):
+    """LOD2 keeps the drum basket of bread standing on the ground by the bay (0.46 m across, about
+    1.5 px at 400 m), copied from LOD0 with its baked UVs after the LOD2 hull collider is built, so
+    the collider is unchanged; the bench and its 0.36 m basket stay LOD1-only (under one pixel at
+    400 m). Returns the joined LOD2 and the copied triangles."""
+    return _lod_copy.copy_faces(lods[0], lods[2], lambda c, m: m in (S["wicker"], S["bread"]) and c.z < 0.4)
+
+
 def unwrap(lods, display):
     """One atlas over every LOD (as lib.uv.atlas_unwrap). Before packing, each LOD's islands are
     scaled by LOD_UV_SCALE and LOD0's bow-window panes by DISPLAY_BOOST; packing keeps relative
@@ -654,11 +671,19 @@ def main():
         bad = {k: v["unbakedTris"] for k, v in samples.items() if v["unbakedTris"]}
         assert not bad, f"triangles on unbaked masks texels: {bad}"
 
+    lods[1], late = late_bench(lods)
+    tris[1] += late
+    print(f"{P}: LOD1 + bench and baskets {late} tris -> tris per LOD {tris}")
+    budgets.check(tris, "prop", P)
     for o in lods:
         o.data.shade_flat()
         o.parent = root
     col = collider.collider_from(lods[2], "hull", f"{P}_collider")
     col.parent = root
+    lods[2], late = late_drum(lods)
+    tris[2] += late
+    print(f"{P}: LOD2 + drum basket {late} tris -> tris per LOD {tris}")
+    budgets.check(tris, "prop", P)
     export.export_glb(root, str(out / f"{P}.glb"))
     export.write_export_report(str(out / "export-report.json"), root, P, __file__)
     bake.write_bake_report(str(out / "bake-report.json"), receiverSignature=signature,

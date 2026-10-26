@@ -33,5 +33,14 @@
     "gate": "piece",
     "status": "approved",
     "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "lod1-middle-lod",
+    "requested": "2026-10-25",
+    "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the house_pad_stone slot (the three doorsteps) had no geometry in LOD1 or LOD2, so it was not drawn past 150 m. LOD1 and LOD2 now carry LOD0's doorsteps, joined after the AO bake on the shared planar UV as at LOD0 (1.4 x 0.9 m and 0.9 x 1.6 m, about 4.5 x 2.9 px at 400 m); the LOD2 cap collider leaves their faces out. LOD0's primitives, the collider and the masks map are byte-identical to the approved build, and every other LOD2 primitive is unchanged. Tris LOD0/1/2 1766/476/142 -> 1766/506/172. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
   }
 ]

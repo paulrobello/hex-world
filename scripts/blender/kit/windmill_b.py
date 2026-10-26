@@ -41,6 +41,7 @@ import bpy  # noqa: E402
 import numpy as np  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
+import _lod_copy  # noqa: E402
 from _house import centroid_samples, fill_unbaked  # noqa: E402
 from lib import bake, budgets, collider, export, geom, materials, scene, uv  # noqa: E402
 
@@ -579,6 +580,19 @@ def main():
         bad = {o.name: samples[f"lod{i}"]["unbakedTris"] for i, o in enumerate(parts)
                if samples[f"lod{i}"]["unbakedTris"]}
         assert not bad, f"triangles on unbaked masks texels: {bad}"
+
+    # LOD1 keeps the iron finial and fantail hub, LOD2 the finial on the cap's silhouette (owner A2 Q4:
+    # every slot has a middle LOD; at 400 m the 0.38 x 0.64 m finial is about 1 x 2 px, and the hub's
+    # 12 tris would take LOD2 past its 15% ceiling): LOD0's iron faces, copied after the bake with
+    # their baked UVs, so the atlas and LOD0 are as before.
+    bodies[1], iron = _lod_copy.copy_faces(bodies[0], bodies[1], lambda _c, m: m == f"{P}_iron")
+    bodies[2], finial = _lod_copy.copy_faces(bodies[0], bodies[2],
+                                             lambda c, m: m == f"{P}_iron" and c.z > DOME_TOP - 0.05)
+    parts = bodies + rotors
+    tris[1] += iron
+    tris[2] += finial
+    print(f"{P}: LOD1 + iron {iron}, LOD2 + finial {finial} tris -> tris per LOD {tris}")
+    budgets.check(tuple(tris), "prop", P)
 
     for o in parts:
         o.parent = root

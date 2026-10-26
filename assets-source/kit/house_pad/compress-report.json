@@ -1,6 +1,6 @@
 {
   "name": "house_pad",
-  "date": "2026-10-14T19:08:14.005Z",
+  "date": "2026-10-26T06:21:12.910Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 17644,
-      "sha256": "72da17c815e97e6c374c1be844d7afc9c97ab46b0cd58ee0812187fd77a9dd18"
+      "bytes": 17535,
+      "sha256": "d16cbe4f460fc5a5800efeeaf03a24553f29b41c2eccbfc2a869b38241995d5f"
     },
     {
       "channel": "masks",
@@ -59,8 +60,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 16874,
-      "sha256": "52411bbd0728016e775077a0fa651d5aec836899afe81a4173bfb8c8a985cae4"
+      "bytes": 16780,
+      "sha256": "a1333ead18c1d92b417416f5069b70777a9826601a45c27cca7a37c29b53279b"
     },
     {
       "channel": "masks",
@@ -76,13 +77,13 @@
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 17644,
-      "astc": 16874
+      "bc7": 17535,
+      "astc": 16780
     },
-    "glbBytes": 118676
+    "glbBytes": 123468
   },
   "glb": {
-    "bytes": 118676,
-    "sha256": "03893ea816978bfc673b3acdcf5dc8eded61e32d82c808f9bd4c642a1c1d3644"
+    "bytes": 123468,
+    "sha256": "2cc368a7c564b07b78a0def8ac6e983acc87c783ab2dc369c5c499a6b6ff29e6"
   }
 }

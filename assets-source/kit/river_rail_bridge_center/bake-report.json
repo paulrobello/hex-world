@@ -44,9 +44,12 @@
     "reedClumps": 6,
     "stones": 16
   },
+  "lod2Drops": {
+    "river_cattail": "under a pixel at 400 m: a head is 0.044-0.054 m across (0.14-0.18 px at 0.31 m/px), and LOD2 has no reed clumps for the stalks to stand in"
+  },
   "lodTris": [
     2188,
-    446,
+    606,
     124
   ],
   "marginPx": 0,

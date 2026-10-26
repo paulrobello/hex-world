@@ -27,6 +27,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
 import bmesh  # noqa: E402
 import bpy  # noqa: E402
@@ -34,6 +35,8 @@ import numpy as np  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
 from lib import bake, collider, export, geom, materials, scene, uv  # noqa: E402
+
+import _lod_copy  # noqa: E402
 
 P = "windmill"
 DROP = -0.35
@@ -462,6 +465,17 @@ def main():
         stats = {"aoMean": float(a.mean()), "aoP05": float(np.percentile(a, 5)),
                  "nightTexels": int((px[:, 2] > 0.5).sum()), "coverage": float(covered.mean())}
         print(f"{P}: masks {stats}")
+
+    # LOD1 and LOD2 keep the fantail's iron hub (owner A2 Q4: every slot has a middle LOD; at 400 m the
+    # 0.32 m hub is about one pixel): LOD0's 12-tri hub, copied after the bake with its baked UVs, so
+    # the atlas and LOD0 are as before.
+    bodies[1], hub = _lod_copy.copy_faces(bodies[0], bodies[1], lambda _c, m: m == f"{P}_iron")
+    bodies[2], hub2 = _lod_copy.copy_faces(bodies[0], bodies[2], lambda _c, m: m == f"{P}_iron")
+    parts = bodies + rotors
+    tris[1] += hub
+    tris[2] += hub2
+    print(f"{P}: LOD1 + hub {hub}, LOD2 + hub {hub2} tris -> tris per LOD {tris}")
+    assert tris[1] <= 0.5 * tris[0] and tris[2] <= 0.15 * tris[0], tris
 
     for o in parts:
         o.parent = root

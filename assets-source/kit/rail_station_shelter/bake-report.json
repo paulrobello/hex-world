@@ -23,6 +23,10 @@
     ]
   },
   "device": "CPU",
+  "lod2Drops": {
+    "rail_station_coping": "under a pixel at 400 m: the window sills are 0.08 m tall (0.26 px at 0.31 m/px), and LOD2's own windows (1.2 and 0.9 m) are not LOD0's (1.5 and 1.2 m)",
+    "rail_station_iron": "under a pixel at 400 m: the bay bench's legs are 0.06 m (0.2 px) under the roof, and LOD2 has no bench"
+  },
   "lodUvScale": [
     1.0,
     0.55,

@@ -29,7 +29,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
+      "sha256": "3761223a50d85b8cdfb1cb1bce63902d91e82278ebf608f2185e3de35981deb5"
     }
   ],
   "authoringAgent": {
@@ -211,7 +211,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T23:34:28.683Z",
+    "date": "2026-10-26T06:35:04.846Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -276,6 +276,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod1-middle-lod",
+      "requested": "2026-10-25",
+      "notes": "Pending owner review; not an approval. Provenance refresh only: a shared helper it imports (_river_dress.py) changed in the LOD1 pass (the river dressing centres' LOD1 cattails and their LOD2 drop record). This piece draws its reeds without cattail heads, so its rebuilt GLB is byte-identical to the approved build and its maps are unchanged (tris LOD0/1/2 706/236/60 -> 706/236/60). Nothing to re-review visually."
     }
   ]
 }

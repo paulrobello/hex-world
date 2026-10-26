@@ -4,12 +4,16 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/windmill_b.py",
-    "sha256": "e94e71e2f3bfbff3324a4ddae771f82a7d24ec967e74b70082fb0564030234c8"
+    "sha256": "fc1dc8bc1dda8e2799edaa325c605cd8c28e0d24abd4285c53cde4263f2b8b01"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_house.py",
       "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    },
+    {
+      "path": "scripts/blender/kit/_lod_copy.py",
+      "sha256": "a3ff66917967758ade82f5e85c4241fde3ccb67c2ab87a26da7986c79ab6bf0e"
     }
   ],
   "authoringAgent": {
@@ -151,13 +155,13 @@
     },
     {
       "lod": 1,
-      "tris": 508,
-      "ratio": 0.36079545454545453
+      "tris": 566,
+      "ratio": 0.40198863636363635
     },
     {
       "lod": 2,
-      "tris": 158,
-      "ratio": 0.11221590909090909
+      "tris": 204,
+      "ratio": 0.14488636363636365
     }
   ],
   "collider": {
@@ -176,10 +180,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 237982,
-        "astc": 225525
+        "bc7": 237548,
+        "astc": 225073
       },
-      "glbBytes": 147204
+      "glbBytes": 155600
     },
     "textureEncodes": [
       {
@@ -190,8 +194,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 237982,
-        "sha256": "56834689b8f3c12ce7654b0b14f774989cb838259c3ae56733fb348be3917313"
+        "bytes": 237548,
+        "sha256": "42151d6fd903600ad5eb52aa59963acc56a674e9a3d0611a410b30cdb212e0c4"
       },
       {
         "channel": "masks",
@@ -201,8 +205,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 225525,
-        "sha256": "7fc51cb767180b422f427fd4212efc00c0eb0d41481508ddd57da739b938e918"
+        "bytes": 225073,
+        "sha256": "63522382b55d99f03b83331079da32f23e53e30a79c8c3ae761a0ae9ee54de38"
       },
       {
         "channel": "masks",
@@ -218,18 +222,18 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/windmill_b/windmill_b.glb",
-      "sha256": "743cc9d6e1f4af3963fa1088f714e9db182b010d9aebfe087cb15958afb5a98a",
-      "bytes": 147204
+      "sha256": "312fbabd0c30bacbb6dabecc70b9ab6989580170555b6e725d5e819ae59680be",
+      "bytes": 155600
     },
     {
       "path": "assets/kit/p1/windmill_b/windmill_b.masks.bc7.ktx2",
-      "sha256": "56834689b8f3c12ce7654b0b14f774989cb838259c3ae56733fb348be3917313",
-      "bytes": 237982
+      "sha256": "42151d6fd903600ad5eb52aa59963acc56a674e9a3d0611a410b30cdb212e0c4",
+      "bytes": 237548
     },
     {
       "path": "assets/kit/p1/windmill_b/windmill_b.masks.astc.ktx2",
-      "sha256": "7fc51cb767180b422f427fd4212efc00c0eb0d41481508ddd57da739b938e918",
-      "bytes": 225525
+      "sha256": "63522382b55d99f03b83331079da32f23e53e30a79c8c3ae761a0ae9ee54de38",
+      "bytes": 225073
     },
     {
       "path": "assets/kit/p1/windmill_b/windmill_b.masks.png",
@@ -269,7 +273,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T19:03:56.394Z",
+    "date": "2026-10-26T06:25:07.810Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -303,6 +307,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A4 (buff brick base, dark timber stage)."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod1-middle-lod",
+      "requested": "2026-10-25",
+      "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the windmill_b_iron slot (the cap finial and the fantail hub) had no geometry in LOD1 or LOD2, so it was not drawn past 150 m. LOD1 now carries an exact copy of LOD0's iron finial and fantail hub (58 tris); LOD2 carries the finial on the cap's silhouette (46 tris; 0.38 x 0.64 m, about 1 x 2 px at 400 m); the 0.3 m hub stays out of LOD2, whose 12 tris would pass the 15% ceiling. The copies join after the masks bake with their baked UVs (scripts/blender/kit/_lod_copy.py), so the atlas packing is unchanged. LOD0's primitives, the collider and the masks map are byte-identical to the approved build, and every other LOD2 primitive is unchanged. Tris LOD0/1/2 1408/508/158 -> 1408/566/204. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
     }
   ]
 }

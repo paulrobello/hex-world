@@ -8,6 +8,9 @@
     }
   },
   "device": "CPU",
+  "lod2Drops": {
+    "well_stone_mortar": "under a pixel at 400 m: the mortar shows only in 0.03 m joints (LOD1: a 0.05 m bed joint), 0.10-0.16 px at 0.31 m/px"
+  },
   "marginPx": 4,
   "maskStats": {
     "aoMean": 0.621091365814209,

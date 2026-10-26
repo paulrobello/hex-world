@@ -15,12 +15,12 @@
     },
     {
       "path": "scripts/blender/kit/_house_well.py",
-      "sha256": "3727c9f07f7e7b684d65e6429995fd727617d31153f3fb079ffcdd92c410ab18"
+      "sha256": "27a96b1fb444b1ae9310df5588afbddfc25a5e0fab1032ef6969f5911d071e6e"
     }
   ],
   "lodTris": {
     "well_stone_lod0": 1416,
-    "well_stone_lod1": 430,
+    "well_stone_lod1": 478,
     "well_stone_lod2": 140
   },
   "nodes": [

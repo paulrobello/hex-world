@@ -1,6 +1,6 @@
 {
   "name": "river_rail_bridge_center",
-  "date": "2026-10-20T16:49:22.042Z",
+  "date": "2026-10-26T06:33:59.525Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 19740,
-      "sha256": "26e1df82b673f22b5accb002361a1e3329192abb34e13938d305317c3a2ae5ad"
+      "bytes": 19463,
+      "sha256": "dfb50c55123f52d2f67848ba1bc5d701ed905a40db66cc5b45f3da57c7082efd"
     },
     {
       "channel": "masks",
@@ -59,8 +60,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 19300,
-      "sha256": "a8e52da3677fe6673d89129c816d229122998de74d1ec9229d633b429bef72d7"
+      "bytes": 19025,
+      "sha256": "27ba707bf4e0e278c3eb99245abb10a2d527b1e874f214ec35ad568062610d70"
     },
     {
       "channel": "masks",
@@ -76,13 +77,13 @@
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 19740,
-      "astc": 19300
+      "bc7": 19463,
+      "astc": 19025
     },
-    "glbBytes": 193968
+    "glbBytes": 206580
   },
   "glb": {
-    "bytes": 193968,
-    "sha256": "2a09595866da30d4f79bac19be8d5c059c1dfbc983b1d65e45a4741627c45065"
+    "bytes": 206580,
+    "sha256": "e1aee1758067077fb9b4286fcf334c9ea4eba3ff3eb60a78fa7815e4a2c175d6"
   }
 }

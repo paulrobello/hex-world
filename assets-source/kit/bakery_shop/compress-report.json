@@ -1,6 +1,6 @@
 {
   "name": "bakery_shop",
-  "date": "2026-10-19T18:43:39.485Z",
+  "date": "2026-10-26T06:22:12.842Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 432649,
-      "sha256": "2d8a98644c371bd0fc43280fce843e6e1fb14e6329b3af9ab3debee8615a159f"
+      "bytes": 432658,
+      "sha256": "807d053678a3d2e8bb15fd50db1447d47fe3a68149d22f0f6b783ede1b7f2e30"
     },
     {
       "channel": "masks",
@@ -59,8 +60,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 406711,
-      "sha256": "c8015c077e00bb0846ccfb088e7fda9a2a8ebd74da16b3dc697d7bd3f80ecdeb"
+      "bytes": 406675,
+      "sha256": "6e4c1fc260fac49f8428a69af7880145cf679dff838b486138aa3309f6991ca5"
     },
     {
       "channel": "masks",
@@ -76,13 +77,13 @@
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 432649,
-      "astc": 406711
+      "bc7": 432658,
+      "astc": 406675
     },
-    "glbBytes": 147260
+    "glbBytes": 160284
   },
   "glb": {
-    "bytes": 147260,
-    "sha256": "c996e6eb4634e47ef81ac6191f4fc957a0af81775e864064d1f57a1f645524f8"
+    "bytes": 160284,
+    "sha256": "df6acf132cf14fb18019eceb01dc9cec1a9783a7dae5ac17b91b994ea2cf6aa5"
   }
 }

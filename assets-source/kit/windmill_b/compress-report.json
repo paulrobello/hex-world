@@ -1,6 +1,6 @@
 {
   "name": "windmill_b",
-  "date": "2026-10-20T19:00:38.852Z",
+  "date": "2026-10-26T06:21:48.680Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 237982,
-      "sha256": "56834689b8f3c12ce7654b0b14f774989cb838259c3ae56733fb348be3917313"
+      "bytes": 237548,
+      "sha256": "42151d6fd903600ad5eb52aa59963acc56a674e9a3d0611a410b30cdb212e0c4"
     },
     {
       "channel": "masks",
@@ -59,8 +60,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 225525,
-      "sha256": "7fc51cb767180b422f427fd4212efc00c0eb0d41481508ddd57da739b938e918"
+      "bytes": 225073,
+      "sha256": "63522382b55d99f03b83331079da32f23e53e30a79c8c3ae761a0ae9ee54de38"
     },
     {
       "channel": "masks",
@@ -76,13 +77,13 @@
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 237982,
-      "astc": 225525
+      "bc7": 237548,
+      "astc": 225073
     },
-    "glbBytes": 147204
+    "glbBytes": 155600
   },
   "glb": {
-    "bytes": 147204,
-    "sha256": "743cc9d6e1f4af3963fa1088f714e9db182b010d9aebfe087cb15958afb5a98a"
+    "bytes": 155600,
+    "sha256": "312fbabd0c30bacbb6dabecc70b9ab6989580170555b6e725d5e819ae59680be"
   }
 }

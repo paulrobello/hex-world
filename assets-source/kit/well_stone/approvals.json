@@ -11,5 +11,14 @@
     "gate": "piece",
     "status": "approved",
     "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "lod1-middle-lod",
+    "requested": "2026-10-25",
+    "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the stone_buff and mortar slots (LOD1 and LOD2 drew the whole wall in the grey stone slot) had no geometry in LOD1 or LOD2, so it was not drawn past 150 m. After the masks bake, LOD1's 12 wall segments are cut into two courses under a 5 cm mortar bed joint below the capstones and 10 of the 24 course blocks take the buff slot (+48 tris); 3 of LOD2's 8 wall segments take the buff slot (recolour, no new faces; 0.56 x 0.75 m, about 1.8 x 2.4 px at 400 m). The mortar stays out of LOD2: its 3-5 cm joints are a sixth of a pixel at 400 m (scripts/blender/kit/_house_well.py lod1_wall_slots, lod2_wall_buff). The cuts interpolate the wall's baked UVs inside its own islands, so the atlas packing is unchanged. LOD0's primitives, the collider and the masks map are byte-identical to the approved build, and every other LOD2 primitive is unchanged except the wall's stone primitive, three of whose segments are now buff. Tris LOD0/1/2 1416/430/140 -> 1416/478/140. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
   }
 ]

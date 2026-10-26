@@ -15,8 +15,9 @@ clay) sample the world-space `plaster` set tinted per slot; directional detail (
 tile courses, framing) is geometry; timber, wood, rope and iron are colour-only. The roof tint is
 house_cottage's clay. The one unique map is the family's 1024² masks atlas, each LOD baked onto its
 own islands, then `fill_unbaked` and the zero-unbaked-triangle assert. LODs are rebuilt from the spec
-at lower detail, never decimated: LOD1 drops the stones (the wall face takes the grey stone tint),
-the braces, hoops, bail and flag joints; LOD2 is the apron, wall, capstone disc, posts and roof or
+at lower detail, never decimated: LOD1 drops the stones (the wall face, cut after the bake into two
+courses of grey and buff blocks under a mortar bed joint: `lod1_wall_slots`), the braces, hoops,
+bail and flag joints; LOD2 is the apron, wall, capstone disc, posts and roof or
 crossbeam. Every piece is flat shaded by the family pipeline: the stave bucket and the hewn drum are
 faceted by design.
 
@@ -31,16 +32,20 @@ and posts instead (walk::DECLARED_PARTS), so it stands on the apron beside the w
 Frame as _house.py: Blender (x, y, z) exports as runtime (x, z, -y); the pivot is the well's centre at
 ground level; the open front (the bucket side) faces +x and the posts stand on the y axis. Every foot
 (the mortar face, the flags' sides, the posts) runs down to DROP, under the meadow's deepest relief."""
+import json
 import math
+import pathlib
 import random
+import sys
 import types
 
+import bpy
 from mathutils import Vector
 
 import _house_longhouse as lh
 from _house import DROP, Z, Mesh, roof_profile
 from _house_longhouse import sweep
-from lib import collider
+from lib import budgets, collider, geom
 
 assert DROP == -0.35, DROP
 X, Y = Vector((1.0, 0.0, 0.0)), Vector((0.0, 1.0, 0.0))
@@ -57,6 +62,8 @@ COURSES, STONES = 6, 12
 JOINT, BURY, PROUD = 0.03, 0.03, (0.022, 0.05)
 ROLL = math.radians(4.0)  # each stone rolls about its own outward axis by up to this
 BUFF_SHARE = 0.4
+# LOD1 wall (lod1_wall_slots): the course split height and the mortar bed joint under the capstones.
+WALL1_COURSE, WALL1_JOINT = 0.40, 0.05
 # The apron: flag sectors from inside the wall to a jittered outer edge, some split in two across the
 # ring, with joints between them; LOD1 and LOD2 draw one polygon at APRON_R, outside every flag corner
 # (so the LOD2 hull, and scatter's footprint, cover the whole apron).
@@ -418,10 +425,98 @@ def build(spec, lod, slots, mats):
     return mesh.obj(f"{spec['piece']}_lod{lod}", mats)
 
 
+def lod1_wall_slots(piece):
+    """LOD1's wall carries the buff stones and the mortar too (owner A2 Q4, 2026-10-21: every piece
+    has a middle LOD; LOD1 had drawn the wall in the grey stone slot alone). After the masks bake,
+    its 12 segments are cut into two courses and a WALL1_JOINT mortar bed joint under the capstones,
+    and BUFF_SHARE of the course blocks (seeded) take the buff slot: +48 tris. The cuts interpolate
+    the baked UVs inside the wall's own islands, so the atlas and LOD0 stay as built."""
+    import bmesh
+    o = bpy.data.objects[f"{piece}_lod1"]
+    idx = {m.name: i for i, m in enumerate(o.data.materials)}
+    stone, buff, mortar = idx[f"{piece}_stone"], idx[f"{piece}_stone_buff"], idx[f"{piece}_mortar"]
+    r_wall = R_WALL + 0.03
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bm.normal_update()
+
+    def wall_faces():
+        """The outer wall: stone faces whose plane lies at the 12-gon's apothem, facing out."""
+        out = []
+        for f in bm.faces:
+            f.normal_update()
+            if (f.material_index == stone and abs(f.normal.z) < 0.2
+                    and abs(f.calc_center_median().dot(f.normal) - r_wall * math.cos(math.pi / 12)) < 0.005):
+                out.append(f)
+        return out
+    wall = wall_faces()
+    assert len(wall) == 24, len(wall)  # 12 segments, triangulated
+    bmesh.ops.join_triangles(bm, faces=wall, angle_face_threshold=0.05, angle_shape_threshold=math.pi)
+    wall = wall_faces()
+    assert len(wall) == 12, len(wall)
+    cuts = (WALL1_COURSE, CAP_Z0 - WALL1_JOINT)
+    for z in cuts:
+        geom = list({e for f in wall for e in f.edges}) + wall + list({v for f in wall for v in f.verts})
+        bmesh.ops.bisect_plane(bm, geom=geom, dist=1e-6, plane_co=(0.0, 0.0, z), plane_no=(0.0, 0.0, 1.0))
+        wall = wall_faces()
+    assert len(wall) == 36, len(wall)
+    cells = sorted(wall, key=lambda f: (round(f.calc_center_median().z, 3),
+                                        round(math.atan2(f.calc_center_median().y, f.calc_center_median().x), 3)))
+    blocks = [f for f in cells if f.calc_center_median().z < cuts[1]]
+    for f in cells:
+        if f.calc_center_median().z > cuts[1]:
+            f.material_index = mortar
+    for i in random.Random(f"{piece}-lod1-wall").sample(range(len(blocks)), round(BUFF_SHARE * len(blocks))):
+        blocks[i].material_index = buff
+    bmesh.ops.triangulate(bm, faces=wall)
+    bm.to_mesh(o.data)
+    bm.free()
+
+
+def lod2_wall_buff(piece):
+    """LOD2's 8 wall segments take the buff slot on BUFF_SHARE of them (seeded), a recolour after the
+    bake with no new faces (each segment is 0.54 x 0.75 m above the apron, about 1.7 x 2.4 px at
+    400 m). The mortar is left out of LOD2: its 3 cm joints and LOD1's 5 cm bed joint are a sixth of
+    a pixel there."""
+    import bmesh
+    o = bpy.data.objects[f"{piece}_lod2"]
+    idx = {m.name: i for i, m in enumerate(o.data.materials)}
+    stone, buff = idx[f"{piece}_stone"], idx[f"{piece}_stone_buff"]
+    apothem = (R_WALL + 0.03) * math.cos(math.pi / 8)
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bm.normal_update()
+    segments = {}
+    for f in bm.faces:
+        c = f.calc_center_median()
+        if f.material_index == stone and abs(f.normal.z) < 0.2 and abs(c.dot(f.normal) - apothem) < 0.005:
+            segments.setdefault(int((math.atan2(c.y, c.x) % (2 * math.pi)) // (math.pi / 4)), []).append(f)
+    assert sorted(segments) == list(range(8)), sorted(segments)
+    for k in random.Random(f"{piece}-lod2-wall").sample(range(8), round(BUFF_SHARE * 8)):
+        for f in segments[k]:
+            f.material_index = buff
+    bm.to_mesh(o.data)
+    bm.free()
+
+
 def _hull(src, kind, name):
-    """lh.build_piece asks for its LOD2 box; the well takes the LOD2 hull (module docstring)."""
+    """lh.build_piece asks for its LOD2 box; the well takes the LOD2 hull (module docstring). This is
+    lh.build_piece's last call before the export, after the bake: LOD1's wall takes its buff and
+    mortar slots here first (lod1_wall_slots)."""
     assert kind == "box", kind
+    piece = name[: -len("_collider")]
+    lod1_wall_slots(piece)
+    lod2_wall_buff(piece)
+    tris = [geom.tri_count(bpy.data.objects[f"{piece}_lod{i}"]) for i in range(3)]
+    print(f"{piece}: LOD1 wall with buff and mortar, LOD2 wall with buff -> tris per LOD {tris}")
+    budgets.check(tris, "prop", piece)
     return collider.collider_from(src, "hull", name)
+
+
+# Why the mortar leaves LOD2 (bake report `lod2Drops`, kit_gate `lod_slot_errors`): one pixel at 400 m is about
+# 0.31 m (45 degree vertical field of view, 1080 rows).
+MORTAR_LOD2_DROP = ("under a pixel at 400 m: the mortar shows only in 0.03 m joints (LOD1: a 0.05 m bed joint), "
+                    "0.10-0.16 px at 0.31 m/px")
 
 
 def build_piece(spec, generator):
@@ -429,4 +524,10 @@ def build_piece(spec, generator):
     lh.COTTAGE_BOUNDS = ENVELOPE
     lh.COTTAGE_LOD0_BOUNDS = ENVELOPE
     lh.collider = types.SimpleNamespace(collider_from=_hull)
-    return lh.build_piece(spec, generator)
+    root, lods = lh.build_piece(spec, generator)
+    # lh.build_piece writes the bake report last; add the LOD2 drop record to it in its own format.
+    path = pathlib.Path(sys.argv[sys.argv.index("--") + 1]) / "bake-report.json"
+    report = json.loads(path.read_text())
+    report["lod2Drops"] = {spec["slots"]["mortar"]: MORTAR_LOD2_DROP}
+    path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+    return root, lods

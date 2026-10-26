@@ -84,7 +84,12 @@ def _stone(bm, at, size, seed):
 # bottom cap and a rounded top, and a short 3-sided spike out of the top in the pale stone slot (no
 # pale slot exists, and a slot change is not needed for one). Every count depends on the seed and
 # the LOD only, so mirrored placements keep equal triangle counts. LOD1 keeps four flat back-to-back
-# triangles per clump (the old LOD1 budget) along four of the LOD0 blades.
+# triangles per clump (the old LOD1 budget) along four of the LOD0 blades, and every cattail of a
+# clump with heads as LOD0's 3-sided stalk under a 3-sided head and no spike (16 tris; owner A2 Q4,
+# 2026-10-21, "every piece should have a middle LOD": the heads had vanished between 150 and 400 m).
+# LOD1_HEAD_R: a triangle's circumradius with the 6-sided head's mean silhouette width
+# (6r / pi = 3 sqrt(3) R / pi).
+LOD1_HEAD_R = 2.0 / math.sqrt(3.0)
 LOD0_MAX = 2500  # river dressing props (kit_gate RIVER_DRESSING_LOD0_MAX): owner, 2026-10-14, "Raise to 2,500"
 FOLD = 0.3  # midrib depth behind the blade edges, as a fraction of the half-width (about 17 degrees)
 REACH_MAX = 0.6  # horizontal reach of a blade or stalk from the clump anchor (bridge causeway clearance)
@@ -98,6 +103,10 @@ FILL_ROWS = (0.0, 0.55)
 # a phase per blade or stalk. Stones, banks and lily pads stay 0. bmesh vertex layers carry it until
 # `wind_uv` writes the UV map on the finished LOD.
 WIND_REF_M = 2.0
+# Why river_cattail leaves LOD2 (bake report `lod2Drops`, kit_gate `lod_slot_errors`): one pixel at 400 m is
+# about 0.31 m (45 degree vertical field of view, 1080 rows).
+CATTAIL_LOD2_DROP = ("under a pixel at 400 m: a head is 0.044-0.054 m across (0.14-0.18 px at 0.31 m/px), "
+                     "and LOD2 has no reed clumps for the stalks to stand in")
 WIND_U, WIND_V = "dress_wind_u", "dress_wind_v"
 SPIKE_LAYER = "river_spike"  # bmesh face int layer: 1 on spike faces, which take the stone slot
 
@@ -306,7 +315,8 @@ def _reed_clump(bm, at, seed, lod, heads):
     """A reed clump at `at`: LOD0 the full clump (`_plan`), with each cattail's stalk built here (reed
     slot) and its head and spike returned for `_cattail` (built after every reed face, so the
     callers' slot ranges hold); LOD1 four flat back-to-back triangles along the first four LOD0
-    blades (every plan has at least four). Returns the cattail tops."""
+    blades (every plan has at least four), plus with `heads` LOD0's cattail stalks, whose tops carry
+    the LOD for `_cattail`. Returns the cattail tops."""
     blades, stalks = _plan(at, seed, heads)
     wind_layers(bm)  # before any vertex: adding a layer invalidates the BMVert references held below
     # Blade length: the centre line's arc length (`_centreline` samples it evenly).
@@ -324,10 +334,10 @@ def _reed_clump(bm, at, seed, lod, heads):
                 bm.faces.new(vs)
                 _set_wind(bm, [x for x, c in zip(vs, cs) if c is not co[2]], 0.0, v)
                 _set_wind(bm, [x for x, c in zip(vs, cs) if c is co[2]], 0.85 * u, v)
-        return []
-    rows = {"hero": HERO_ROWS, "tall": TALL_ROWS, "fill": FILL_ROWS}
-    for (kind, az, line, hw, tw), w in zip(blades, winds):
-        _blade(bm, line, az, rows[kind], hw, tw, kind != "fill", w)
+    else:
+        rows = {"hero": HERO_ROWS, "tall": TALL_ROWS, "fill": FILL_ROWS}
+        for (kind, az, line, hw, tw), w in zip(blades, winds):
+            _blade(bm, line, az, rows[kind], hw, tw, kind != "fill", w)
     tops = []
     for k, (base, axis, hs, hl, rad, sl, ph) in enumerate(stalks):
         total = hs + hl + sl
@@ -337,7 +347,7 @@ def _reed_clump(bm, at, seed, lod, heads):
         _tube(bm, rings)
         bm.verts.ensure_lookup_table()
         _wind_along(bm, bm.verts[n:], axis, wind)
-        tops.append((_add(base, axis, hs), axis, hl, rad, sl, ph, wind))
+        tops.append((_add(base, axis, hs), axis, hl, rad, sl, ph, wind, lod))
     return tops
 
 
@@ -354,8 +364,17 @@ def _wind_along(bm, verts, axis, wind):
 def _cattail(bm, top):
     """A seed head on its stalk: 6 sides, a flat bottom cap, tapering to 0.82 of the radius and
     rounding to an apex on top (smooth normals round the bottom edge too), then a pale 3-sided
-    spike (stone slot, tagged in SPIKE_LAYER) out of the apex: 6 + 22 + 3 triangles with the stalk."""
-    bottom, axis, hl, rad, sl, ph, wind = top
+    spike (stone slot, tagged in SPIKE_LAYER) out of the apex: 6 + 22 + 3 triangles with the stalk.
+    A LOD1 top gets 3 sides at LOD1_HEAD_R and no spike: 6 + 10."""
+    bottom, axis, hl, rad, sl, ph, wind, lod = top
+    if lod > 0:
+        n = len(bm.verts)
+        r = LOD1_HEAD_R * rad
+        rings = [_ring(bottom, axis, r, 3, ph), _ring(_add(bottom, axis, hl - 0.7 * rad), axis, 0.82 * r, 3, ph)]
+        _tube(bm, rings, close_bottom=True, apex_top=_add(bottom, axis, hl))
+        bm.verts.ensure_lookup_table()
+        _wind_along(bm, bm.verts[n:], axis, wind)
+        return
     layer = bm.faces.layers.int.get(SPIKE_LAYER) or bm.faces.layers.int.new(SPIKE_LAYER)
     n = len(bm.verts)
     rings = [_ring(bottom, axis, rad, 6, ph), _ring(_add(bottom, axis, hl - 0.7 * rad), axis, 0.82 * rad, 6, ph)]
@@ -381,7 +400,7 @@ def retag_spikes(bm, stone_index):
 
 def build_dressing(piece, layout, generator, per_side=14, skip=None, extra=None):
     """Bank stones at the waterline and reed clumps on the banks, both sides of the channel, seeded
-    by the piece id. Colour-only slots plus the masks map (`masks_field`, written to `out`). LOD1 keeps half the stones and reeds,
+    by the piece id. Colour-only slots plus the masks map (`masks_field`, written to `out`). LOD1 keeps half the stones and reeds (with their cattails),
     LOD2 the six biggest stones. `skip(x, y)` drops a placement (the bridge footprint); `extra(li)`
     returns more LOD objects to join (the bridge)."""
     import random
@@ -425,7 +444,7 @@ def build_dressing(piece, layout, generator, per_side=14, skip=None, extra=None)
         n_stone = len(bm.faces)
         tops = []
         for at, seed in (reeds, reeds[::2], [])[li]:
-            tops += _reed_clump(bm, at, seed, li, li == 0)
+            tops += _reed_clump(bm, at, seed, li, li < 2)
         n_reed = len(bm.faces)
         for t in tops:
             _cattail(bm, t)
@@ -467,4 +486,5 @@ def finish_dressing(root, lods, out, piece, generator, stats, **report):
                            channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}}, dressing=stats,
                            skipped=True,
                            reason="no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
-                           masks={"snow": 1.0, "porosity": list(POROSITY), "night": 0.0, "ao": 1.0}, **report)
+                           masks={"snow": 1.0, "porosity": list(POROSITY), "night": 0.0, "ao": 1.0},
+                           lod2Drops={CATTAIL: CATTAIL_LOD2_DROP}, **report)

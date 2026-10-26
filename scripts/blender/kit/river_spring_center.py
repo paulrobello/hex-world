@@ -117,7 +117,7 @@ def build():
     stones, granite, reeds, lilies = placements()
     plan = (  # per LOD: stream stones, granite, reeds (cattails), lilies
         (stones, granite, reeds, True, lilies),
-        (stones[:4], granite[:8], reeds[::2], False, lilies[:3]),
+        (stones[:4], granite[:8], reeds[::2], True, lilies[:3]),
         ([], granite[:5], [], False, []),
     )
     lods = []
@@ -171,7 +171,7 @@ def build():
         lods.append(o)
     tris = [geom.tri_count(o) for o in lods]
     print(f"{PIECE}: tris per LOD {tris}")
-    assert tris[0] <= _river_dress.LOD0_MAX and tris[1] <= 320 and tris[2] <= 120, tris
+    assert tris[0] <= _river_dress.LOD0_MAX and tris[2] <= 120, tris
     assert tris[1] <= 0.5 * tris[0] and tris[2] <= 0.15 * tris[0], tris
     col = collider.collider_from(lods[2], "box", f"{PIECE}_collider")
     col.parent = root
@@ -186,7 +186,8 @@ def build():
                            skipped=True,
                            reason="no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
                            masks={"snow": "0 under water, 1 elsewhere", "porosity": [1.0, 0.8], "night": 0.0,
-                                  "ao": 1.0, "lilyUv": list(LILY_UV)})
+                                  "ao": 1.0, "lilyUv": list(LILY_UV)},
+                           lod2Drops={CATTAIL: _river_dress.CATTAIL_LOD2_DROP})
 
 
 build()

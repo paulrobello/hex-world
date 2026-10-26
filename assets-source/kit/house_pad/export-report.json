@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/house_pad.py",
-    "sha256": "83002f31883a8000ccfbacd24c4663f27fa680a63e3d9cc484d85c6c364b868d"
+    "sha256": "79cff48597869793f354769b3c55f4f4e21b2b8f72ebfd8bb3232ac188b515c8"
   },
   "generatorDeps": [
     {
@@ -12,8 +12,8 @@
   ],
   "lodTris": {
     "house_pad_lod0": 1766,
-    "house_pad_lod1": 476,
-    "house_pad_lod2": 142
+    "house_pad_lod1": 506,
+    "house_pad_lod2": 172
   },
   "nodes": [
     "anchor-park-0",

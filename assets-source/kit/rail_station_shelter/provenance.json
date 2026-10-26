@@ -12,12 +12,16 @@
       "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
     },
     {
+      "path": "scripts/blender/kit/_lod_copy.py",
+      "sha256": "a3ff66917967758ade82f5e85c4241fde3ccb67c2ab87a26da7986c79ab6bf0e"
+    },
+    {
       "path": "scripts/blender/kit/_rail.py",
       "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
     },
     {
       "path": "scripts/blender/kit/_station.py",
-      "sha256": "75d4addddce6e39d609bb7b39851d2dd2104a5dae3834bde885f79f859056f42"
+      "sha256": "209e332552e597ee14783740d3f103734b1e63c721053d7972443875399b9ed0"
     }
   ],
   "authoringAgent": {
@@ -56,6 +60,10 @@
       ]
     },
     "device": "CPU",
+    "lod2Drops": {
+      "rail_station_coping": "under a pixel at 400 m: the window sills are 0.08 m tall (0.26 px at 0.31 m/px), and LOD2's own windows (1.2 and 0.9 m) are not LOD0's (1.5 and 1.2 m)",
+      "rail_station_iron": "under a pixel at 400 m: the bay bench's legs are 0.06 m (0.2 px) under the roof, and LOD2 has no bench"
+    },
     "lodUvScale": [
       1,
       0.55,
@@ -153,8 +161,8 @@
     },
     {
       "lod": 1,
-      "tris": 238,
-      "ratio": 0.3801916932907348
+      "tris": 296,
+      "ratio": 0.4728434504792332
     },
     {
       "lod": 2,
@@ -174,10 +182,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 380777,
-        "astc": 364073
+        "bc7": 380177,
+        "astc": 363481
       },
-      "glbBytes": 65812
+      "glbBytes": 71060
     },
     "textureEncodes": [
       {
@@ -188,8 +196,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 380777,
-        "sha256": "ef11d1381760ff9debdd7315ca2c20717f93f643946bf3afc8d5201bfa5309e3"
+        "bytes": 380177,
+        "sha256": "b59e68325217e433646c22e4e5f43f8a67b3be8a8c13cf4a071bae4cbcd256af"
       },
       {
         "channel": "masks",
@@ -199,8 +207,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 364073,
-        "sha256": "bcd15aa1383815c902367713ef62c27b41baeb10b4e9b267ca28012cf14ae339"
+        "bytes": 363481,
+        "sha256": "9e28e76abc1b21bd0a3ef9f2b0a081fbdabc2a10e1ad32512f6303ac0a046cd5"
       },
       {
         "channel": "masks",
@@ -216,18 +224,18 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/rail_station_shelter/rail_station_shelter.glb",
-      "sha256": "c0ef3bbe8344437f702d2fca219d354aa2d26e3bc6afd6d1ef2e8b472437ec58",
-      "bytes": 65812
+      "sha256": "cd2f516a6d79f4661ba8a28a2af0b48ed1a6e9c20e0033da8d486db6e4d8764f",
+      "bytes": 71060
     },
     {
       "path": "assets/kit/p1/rail_station_shelter/rail_station_shelter.masks.bc7.ktx2",
-      "sha256": "ef11d1381760ff9debdd7315ca2c20717f93f643946bf3afc8d5201bfa5309e3",
-      "bytes": 380777
+      "sha256": "b59e68325217e433646c22e4e5f43f8a67b3be8a8c13cf4a071bae4cbcd256af",
+      "bytes": 380177
     },
     {
       "path": "assets/kit/p1/rail_station_shelter/rail_station_shelter.masks.astc.ktx2",
-      "sha256": "bcd15aa1383815c902367713ef62c27b41baeb10b4e9b267ca28012cf14ae339",
-      "bytes": 364073
+      "sha256": "9e28e76abc1b21bd0a3ef9f2b0a081fbdabc2a10e1ad32512f6303ac0a046cd5",
+      "bytes": 363481
     },
     {
       "path": "assets/kit/p1/rail_station_shelter/rail_station_shelter.masks.png",
@@ -258,7 +266,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T04:27:56.600Z",
+    "date": "2026-10-26T06:35:16.936Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -290,6 +298,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod1-middle-lod",
+      "requested": "2026-10-25",
+      "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the rail_station_coping and rail_station_iron slots (the window sills and the bay bench's legs) had no LOD1 geometry, so it vanished between 150 and 400 m and the LOD1 primitives after it no longer lined up with LOD0's. LOD1 now carries an exact copy of LOD0's window sills and bay bench (58 tris: sills 20, iron legs 16, the bench's timber seat and back 22), joined after the masks bake with its baked UVs (scripts/blender/kit/_lod_copy.py), so the atlas packing, LOD0's primitives and the masks map are byte-identical to the approved build and LOD1 lists every LOD0 slot in LOD0's order. LOD2 is unchanged: the sills (0.08 m tall, a quarter of a pixel at 400 m) and the bench legs (0.06 m, under the roof; LOD2 has no bench) stay out of it on purpose, and LOD0's sills would not fit LOD2's own 1.2 and 0.9 m windows. Tris LOD0/1/2 626/238/64 -> 626/296/64. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
     }
   ]
 }

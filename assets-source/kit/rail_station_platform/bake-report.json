@@ -23,6 +23,11 @@
     ]
   },
   "device": "CPU",
+  "lod2Drops": {
+    "rail_station_board": "no room: LOD2 is 36 tris against its 36.6-tri ceiling (15% of 244), so not one more triangle fits (the 2.3 x 0.55 m nameboard)",
+    "rail_station_flowers": "no room: LOD2 is 36 tris against its 36.6-tri ceiling (15% of 244), so not one more triangle fits (the tubs' flowers)",
+    "rail_station_timber": "no room: LOD2 is 36 tris against its 36.6-tri ceiling (15% of 244), so not one more triangle fits (the 0.68 m flower tubs)"
+  },
   "lodUvScale": [
     1.0,
     0.55,

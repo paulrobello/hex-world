@@ -42,6 +42,7 @@ import bpy  # noqa: E402
 import numpy as np  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
 
+import _lod_copy  # noqa: E402
 import _rail  # noqa: E402
 from _house import (DROP, PLASTER_LIN, Z, Mesh, Wall, centroid_samples, fill_unbaked,  # noqa: E402
                     frame_matrix, roof_profile)
@@ -331,6 +332,86 @@ def furniture(mesh, lod, shelter):
                            (BOARD_X + 1.07, yy, H + 2.17), (BOARD_X - 1.07, yy, H + 2.17)], S["board"], Y * side)
 
 
+# Why these slots leave LOD2 (bake report `lod2Drops`, kit_gate `lod_slot_errors`): one pixel at 400 m is about
+# 0.31 m (45 degree vertical field of view, 1080 rows).
+_NO_ROOM = "no room: LOD2 is 36 tris against its 36.6-tri ceiling (15% of 244), so not one more triangle fits"
+LOD2_DROPS = {
+    "platform": {"timber": _NO_ROOM + " (the 0.68 m flower tubs)", "flowers": _NO_ROOM + " (the tubs' flowers)",
+                 "board": _NO_ROOM + " (the 2.3 x 0.55 m nameboard)"},
+    "shelter": {"coping": "under a pixel at 400 m: the window sills are 0.08 m tall (0.26 px at 0.31 m/px), and "
+                          "LOD2's own windows (1.2 and 0.9 m) are not LOD0's (1.5 and 1.2 m)",
+                "iron": "under a pixel at 400 m: the bay bench's legs are 0.06 m (0.2 px) under the roof, and LOD2 "
+                        "has no bench"},
+}
+
+
+def late_platform(lods):
+    """LOD1 keeps the flower tubs and the nameboard's lettered faces (owner A2 Q4, 2026-10-21: every
+    piece has a middle LOD) inside the 50% ceiling (LOD1 was 116 of 122 tris): the nameboard's two
+    posts become 3-sided prisms (10 -> 6 tris each), the board's two broad faces take the board slot,
+    and each tub is a 3-sided timber drum under a flower triangle (7 tris; circumradii 1.178x LOD0's
+    octagon for the same mean width). Edited after the masks bake: every new face's UVs sit on one
+    baked texel (a LOD0 tub or flower face, or the replaced LOD1 post), so the atlas and LOD0 stay as
+    built."""
+    def uv_at(obj, slot, near, reach=0.6):
+        """UV centroid of the first `slot` face of obj within `reach` (plan) of `near`."""
+        me = obj.data
+        names = [m.name for m in me.materials]
+        layer = me.uv_layers.active.data
+        for p in me.polygons:
+            if names[p.material_index] == slot and (p.center.xy - Vector(near)).length < reach:
+                return sum((layer[li].uv for li in p.loop_indices), Vector((0.0, 0.0))) / p.loop_total
+        raise AssertionError(f"no {slot} face near {near} in {obj.name}")
+
+    o = lods[1]
+    idx = {m.name: i for i, m in enumerate(o.data.materials)}
+    tub_uv = {t: (uv_at(lods[0], S["timber"], t), uv_at(lods[0], S["flowers"], t)) for t in TUBS}
+    post_uv = {dx: uv_at(o, S["iron"], (BOARD_X + dx, 3.0), 0.06) for dx in (-1.0, 1.0)}
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bm.normal_update()
+    uvl = bm.loops.layers.uv.active
+    gone = []
+    for f in bm.faces:
+        if f.material_index != idx[S["iron"]]:
+            continue
+        c = f.calc_center_median()
+        if any(abs(c.x - BOARD_X - dx) < 0.05 for dx in (-1.0, 1.0)) and abs(c.y - 3.0) < 0.05 and c.z < H + 2.21:
+            gone.append(f)
+        elif abs(abs(c.y - 3.0) - 0.03) < 1e-3 and abs(f.normal.y) > 0.9 and abs(c.x - BOARD_X) < 1.15:
+            f.material_index = idx[S["board"]]
+    assert len(gone) == 2 * 10, len(gone)  # two posts, five faces each, triangulated
+    bmesh.ops.delete(bm, geom=gone, context="FACES")
+
+    def ring(c, r, z):
+        return [bm.verts.new((c[0] + r * math.cos(a), c[1] + r * math.sin(a), z))
+                for a in (math.pi / 2 + 2 * math.pi * k / 3 for k in range(3))]
+
+    def drum(c, r, z0, z1, slot, uv, cap=None):
+        lo, hi = ring(c, r, z0), ring(c, r, z1)
+        faces = [bm.faces.new([lo[k], lo[(k + 1) % 3], hi[(k + 1) % 3], hi[k]]) for k in range(3)]
+        for f in faces:
+            f.material_index = idx[slot]
+        if cap:
+            top = bm.faces.new(hi)
+            top.material_index = idx[cap[0]]
+            faces.append(top)
+        for f in faces:
+            f.smooth = False
+            for loop in f.loops:
+                loop[uvl].uv = cap[1] if cap and f.material_index == idx[cap[0]] else uv
+        return faces
+
+    new = []
+    for dx in (-1.0, 1.0):
+        new += drum((BOARD_X + dx, 3.0), 0.0616, H, H + 2.2, S["iron"], post_uv[dx])
+    for t in TUBS:
+        new += drum(t, 0.32 * 1.178, H, H + 0.45, S["timber"], tub_uv[t][0], cap=(S["flowers"], tub_uv[t][1]))
+    bmesh.ops.triangulate(bm, faces=new)
+    bm.to_mesh(o.data)
+    bm.free()
+
+
 def build_platform(lod, mesh):
     platform(mesh, lod)
     furniture(mesh, lod, shelter=False)
@@ -486,6 +567,29 @@ def build_piece(which, generator):
     for o in occ:
         bpy.data.objects.remove(o, do_unlink=True)
     bpy.context.view_layer.update()
+    if which == "shelter":
+        # LOD1 keeps the window sills and the bay bench (owner A2 Q4, 2026-10-21: every piece has a
+        # middle LOD): LOD0's coping and iron faces and the bench's timber (inside the legs' plan box
+        # grown by 0.15 m, below 0.95 m over the paving), copied after the bake with their baked UVs
+        # (_lod_copy). The box keeps out the wall's long rail 0.55 m behind the bench.
+        names = [m.name for m in lods[0].data.materials]
+        legs = [p.center for p in lods[0].data.polygons if names[p.material_index] == S["iron"]]
+        lo = [min(c[i] for c in legs) - 0.15 for i in (0, 1)]
+        hi = [max(c[i] for c in legs) + 0.15 for i in (0, 1)]
+
+        def bench_part(c, m):
+            inside = all(lo[i] <= c[i] <= hi[i] for i in (0, 1)) and c.z < H + 0.95
+            return m == S["iron"] or (m == S["timber"] and inside)
+        lods[1], sills = _lod_copy.copy_faces(lods[0], lods[1], lambda _c, m: m == S["coping"])
+        lods[1], bench = _lod_copy.copy_faces(lods[0], lods[1], bench_part)
+        tris[1] += sills + bench
+        print(f"{piece}: LOD1 + sills {sills} + bench {bench} tris -> tris per LOD {tris}")
+        budgets.check(tris, "prop", piece)
+    else:
+        late_platform(lods)
+        tris = [geom.tri_count(o) for o in lods]
+        print(f"{piece}: LOD1 with tubs and the nameboard face -> tris per LOD {tris}")
+        budgets.check(tris, "prop", piece)
     shift = Matrix.Translation((-SHELTER_AT[0], -SHELTER_AT[1], -H)) if which == "shelter" else Matrix.Identity(4)
     for o in lods:
         o.data.transform(shift)
@@ -504,6 +608,7 @@ def build_piece(which, generator):
                            masksDensityBySlot=density, lodUvScale=list(LOD_UV_SCALE),
                            platformUvScale=PLATFORM_UV if which == "platform" else None,
                            aoOccluder=PIECES[other][0], maskStats=stats, skipped=skip_bake,
+                           lod2Drops={S[n]: r for n, r in LOD2_DROPS[which].items()},
                            colliderBoxBlender=box_bl,
                            station={"platformTopAboveCapM": round(H, 3), "platformTopAboveRailTopM": 0.92,
                                     "faceOffsetM": FACE_Y, "copingEdgeOffsetM": COPE_Y,

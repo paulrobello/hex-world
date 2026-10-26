@@ -2,18 +2,22 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/bakery_shop.py",
-    "sha256": "578265a0624add6196ea00dd963cfcc92113adc6e489ad94bff03333359a2384"
+    "sha256": "9223f0ab075499b6c52c3e4fc461a3e6e1920ed0b46c0f722b45ac951aa886da"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_house.py",
       "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
+    },
+    {
+      "path": "scripts/blender/kit/_lod_copy.py",
+      "sha256": "a3ff66917967758ade82f5e85c4241fde3ccb67c2ab87a26da7986c79ab6bf0e"
     }
   ],
   "lodTris": {
     "bakery_shop_lod0": 1405,
-    "bakery_shop_lod1": 601,
-    "bakery_shop_lod2": 127
+    "bakery_shop_lod1": 693,
+    "bakery_shop_lod2": 171
   },
   "nodes": [
     "bakery_shop",

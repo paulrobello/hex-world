@@ -199,7 +199,7 @@ def dressing(name, lod, rnd_seed):
     n_stone = len(bm.faces)
     tops = []
     for at, seed in (reeds, reeds[::2], [])[lod]:
-        tops += _river_dress._reed_clump(bm, at, seed, lod, lod == 0)
+        tops += _river_dress._reed_clump(bm, at, seed, lod, lod < 2)
     n_reed = len(bm.faces)
     for top in tops:
         _river_dress._cattail(bm, top)
@@ -390,6 +390,7 @@ def build(piece, generator):
                            device=os.environ.get("HEXW_BAKE_DEVICE", "CPU"), samples=64, marginPx=12,
                            channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}},
                            texelDensityPxPerM=texel, dressing=stats, maskStats=mask_stats,
+                           lod2Drops={_river_dress.CATTAIL: _river_dress.CATTAIL_LOD2_DROP},
                            masks={"dressPorosity": list(_river_dress.POROSITY), "stonePorosity": STONE_POROSITY,
                                   "stoneUv": list(STONE_UV), "stoneBlockPx": STONE_BLOCK, "haloPx": HALO_PX,
                                   "roadClearPx": ROAD_CLEAR_PX},

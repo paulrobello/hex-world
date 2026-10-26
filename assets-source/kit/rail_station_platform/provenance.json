@@ -12,12 +12,16 @@
       "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
     },
     {
+      "path": "scripts/blender/kit/_lod_copy.py",
+      "sha256": "a3ff66917967758ade82f5e85c4241fde3ccb67c2ab87a26da7986c79ab6bf0e"
+    },
+    {
       "path": "scripts/blender/kit/_rail.py",
       "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
     },
     {
       "path": "scripts/blender/kit/_station.py",
-      "sha256": "75d4addddce6e39d609bb7b39851d2dd2104a5dae3834bde885f79f859056f42"
+      "sha256": "209e332552e597ee14783740d3f103734b1e63c721053d7972443875399b9ed0"
     }
   ],
   "authoringAgent": {
@@ -56,6 +60,11 @@
       ]
     },
     "device": "CPU",
+    "lod2Drops": {
+      "rail_station_board": "no room: LOD2 is 36 tris against its 36.6-tri ceiling (15% of 244), so not one more triangle fits (the 2.3 x 0.55 m nameboard)",
+      "rail_station_flowers": "no room: LOD2 is 36 tris against its 36.6-tri ceiling (15% of 244), so not one more triangle fits (the tubs' flowers)",
+      "rail_station_timber": "no room: LOD2 is 36 tris against its 36.6-tri ceiling (15% of 244), so not one more triangle fits (the 0.68 m flower tubs)"
+    },
     "lodUvScale": [
       1,
       0.55,
@@ -153,8 +162,8 @@
     },
     {
       "lod": 1,
-      "tris": 116,
-      "ratio": 0.47540983606557374
+      "tris": 122,
+      "ratio": 0.5
     },
     {
       "lod": 2,
@@ -174,10 +183,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 175739,
-        "astc": 170672
+        "bc7": 175371,
+        "astc": 170254
       },
-      "glbBytes": 47648
+      "glbBytes": 52960
     },
     "textureEncodes": [
       {
@@ -188,8 +197,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 175739,
-        "sha256": "d4c1f54a13787e2f583ffb887a708d0a1da33f7729fb3474cc46d646d69c4177"
+        "bytes": 175371,
+        "sha256": "3252fd2305131c5658064530bd2efebfd3e3e4f6398afc63d2a1b91a5e1eebc7"
       },
       {
         "channel": "masks",
@@ -199,8 +208,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 170672,
-        "sha256": "0788b819be7f341dc72c89f84f95598b6aa50883b45507ab72f5b8985dea8f38"
+        "bytes": 170254,
+        "sha256": "1689bd267363b1dd97e017b513de15384d34f708372515284246e1f9e059ec98"
       },
       {
         "channel": "masks",
@@ -216,18 +225,18 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/rail_station_platform/rail_station_platform.glb",
-      "sha256": "e7892d577740dacf471005658190ef234ea04269b539c8091efe3f0d79341b53",
-      "bytes": 47648
+      "sha256": "5f314d19eaabd82b200275fb54f7b99d16b972cc99510022032ab3f017421f64",
+      "bytes": 52960
     },
     {
       "path": "assets/kit/p1/rail_station_platform/rail_station_platform.masks.bc7.ktx2",
-      "sha256": "d4c1f54a13787e2f583ffb887a708d0a1da33f7729fb3474cc46d646d69c4177",
-      "bytes": 175739
+      "sha256": "3252fd2305131c5658064530bd2efebfd3e3e4f6398afc63d2a1b91a5e1eebc7",
+      "bytes": 175371
     },
     {
       "path": "assets/kit/p1/rail_station_platform/rail_station_platform.masks.astc.ktx2",
-      "sha256": "0788b819be7f341dc72c89f84f95598b6aa50883b45507ab72f5b8985dea8f38",
-      "bytes": 170672
+      "sha256": "1689bd267363b1dd97e017b513de15384d34f708372515284246e1f9e059ec98",
+      "bytes": 170254
     },
     {
       "path": "assets/kit/p1/rail_station_platform/rail_station_platform.masks.png",
@@ -258,7 +267,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T04:27:50.318Z",
+    "date": "2026-10-26T06:35:13.650Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -290,6 +299,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod1-middle-lod",
+      "requested": "2026-10-25",
+      "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the rail_station_timber, rail_station_board and rail_station_flowers slots (the flower tubs and the nameboard's lettered faces) had no LOD1 geometry, so they vanished between 150 and 400 m and the LOD1 primitives after them no longer lined up with LOD0's. LOD1 was 116 of its 122-tri ceiling, so after the masks bake the nameboard's two posts become 3-sided prisms (10 -> 6 tris each), the board's two broad faces take the board slot, and each tub is a 3-sided timber drum under a flower triangle (7 tris; 1.178x LOD0's octagon radius for the same mean width; the flower mound reads flat, 0.17 m lower than LOD0's cone). Every new face's UVs sit on one baked texel of the LOD0 tub, flower or replaced post, so the atlas packing, LOD0's primitives and the masks map are byte-identical to the approved build, and LOD1 lists every LOD0 slot in LOD0's order. LOD2 is unchanged: the three slots stay out of it on purpose, because LOD2 is 36 tris against a 36.6-tri ceiling (15% of 244), so not one triangle fits. Tris LOD0/1/2 244/116/36 -> 244/122/36 (LOD1 exactly 50%). Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
     }
   ]
 }

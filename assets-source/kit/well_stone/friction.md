@@ -36,3 +36,5 @@ Both pieces share one builder (`scripts/blender/kit/_house_well.py`), so their s
    still about twice the houses' 13-18 px/m, `fill_unbaked` covers the sub-texel faces, and the build
    asserts 0 unbaked triangles. No skill change: pitfalls.md already says that the island margin sets
    a busy building's masks density.
+
+- **LOD1 pass (2026-10-25, owner A2 Q4).** This piece's LOD1 gained the slots it dropped; the snags and the proposed skill text are logged once for all 16 pieces in `docs/checkpoints/lod1-pass/friction.md`.

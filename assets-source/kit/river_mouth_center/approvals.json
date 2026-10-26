@@ -43,5 +43,14 @@
     "gate": "piece",
     "status": "approved",
     "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "lod1-middle-lod",
+    "requested": "2026-10-25",
+    "notes": "Pending owner review; not an approval. Provenance refresh only: a shared helper it imports (_river_dress.py) changed in the LOD1 pass (the river dressing centres' LOD1 cattails and their LOD2 drop record). This piece draws its reeds without cattail heads, so its rebuilt GLB is byte-identical to the approved build and its maps are unchanged (tris LOD0/1/2 706/236/60 -> 706/236/60). Nothing to re-review visually."
   }
 ]

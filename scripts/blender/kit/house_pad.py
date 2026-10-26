@@ -250,10 +250,10 @@ for i, segs in enumerate(ROAD_SEGMENTS):
     bodies.append(body)
     # Paint and doorsteps sit on top of the bed and the gravel and share their planar UV texels, so
     # they join after the AO bake (pitfalls.md, "Overlapping decals join after the bake").
-    late = [pt]
-    if i == 0:
-        late.append(doorsteps(f"{PIECE}_lod{i}_steps"))
-        uv.planar_cap_uv(late[-1])
+    # The doorsteps are in every LOD (owner A2 Q4, 2026-10-21: every piece has a middle LOD); the
+    # cap collider leaves them out (below).
+    late = [pt, doorsteps(f"{PIECE}_lod{i}_steps")]
+    uv.planar_cap_uv(late[-1])
     paints.append(late)
 
 # Joint planes: only the driveway sweep may put vertices on x = +6, and nothing on x = -6.
@@ -309,6 +309,13 @@ print(f"{PIECE}: tris per LOD {tris}")
 
 col = collider.collider_from(lods[2], "cap", f"{PIECE}_collider")
 col.parent = root
+# LOD2 carries the doorsteps too (owner A2 Q4: 1.4 x 0.9 m and 0.9 x 1.6 m stone on the gravel, about
+# 4.5 x 2.9 px at 400 m), but the cap collider stays the ground it was: drop their faces from it.
+cbm = bmesh.new()
+cbm.from_mesh(col.data)
+bmesh.ops.delete(cbm, geom=[f for f in cbm.faces if f.material_index == IDX[STONE]], context="FACES")
+cbm.to_mesh(col.data)
+cbm.free()
 c = hexgeo.lane_frame(0, 0.0, _road.ROAD_WIDTH)["center"]
 export.add_socket("socket-lane-0", (*c, 0.0), root, kind="road", edge=0, offset=0.0, width=_road.ROAD_WIDTH)
 for house, x, z, yaw in PARK:

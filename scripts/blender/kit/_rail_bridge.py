@@ -214,6 +214,7 @@ def build_piece(piece, generator):
     export.write_export_report(str(out / "export-report.json"), root, piece, generator)
     bake.write_bake_report(
         str(out / "bake-report.json"), receiverSignature=signature, device="none", samples=0, marginPx=0,
+        lod2Drops={_river_dress.CATTAIL: _river_dress.CATTAIL_LOD2_DROP},
         channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}}, texelDensityPxPerM=texel,
         reason="no Cycles bake: the masks are an analytic field (the rail's crib field on the ballast band, "
                "the river dressing's porosity, the parked stone block)",

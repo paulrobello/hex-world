@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/river_spring_center.py",
-    "sha256": "ffe511d185f0303d0360976c54fce04fa554406545c4f220f62a35478068e07f"
+    "sha256": "8ff8544109aca35a5b5a61758bce076daa0e08ac042ea731959e68ada0b29462"
   },
   "generatorDeps": [
     {
@@ -11,7 +11,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
+      "sha256": "3761223a50d85b8cdfb1cb1bce63902d91e82278ebf608f2185e3de35981deb5"
     },
     {
       "path": "scripts/blender/kit/_spring.py",
@@ -20,7 +20,7 @@
   ],
   "lodTris": {
     "river_spring_center_lod0": 2180,
-    "river_spring_center_lod1": 298,
+    "river_spring_center_lod1": 538,
     "river_spring_center_lod2": 100
   },
   "nodes": [

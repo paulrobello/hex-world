@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
+      "sha256": "3761223a50d85b8cdfb1cb1bce63902d91e82278ebf608f2185e3de35981deb5"
     }
   ],
   "authoringAgent": {
@@ -41,9 +41,12 @@
       "stones": 28,
       "tris": [
         2239,
-        320,
+        528,
         120
       ]
+    },
+    "lod2Drops": {
+      "river_cattail": "under a pixel at 400 m: a head is 0.044-0.054 m across (0.14-0.18 px at 0.31 m/px), and LOD2 has no reed clumps for the stalks to stand in"
     },
     "marginPx": 0,
     "masks": {
@@ -68,8 +71,8 @@
     },
     {
       "lod": 1,
-      "tris": 320,
-      "ratio": 0.14292094685127288
+      "tris": 528,
+      "ratio": 0.23581956230460027
     },
     {
       "lod": 2,
@@ -92,7 +95,7 @@
         "bc7": 1001,
         "astc": 970
       },
-      "glbBytes": 187092
+      "glbBytes": 201640
     },
     "textureEncodes": [
       {
@@ -131,8 +134,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_straight_center/river_straight_center.glb",
-      "sha256": "4953bfde897a31ad0989001ace22dd03b3e297a1c48d79b116ef19e9b85dda8d",
-      "bytes": 187092
+      "sha256": "b361042288187de30c806efae4c87a263f1f5d9ed54ae867ea2c0c6f398351f5",
+      "bytes": 201640
     },
     {
       "path": "assets/kit/p1/river_straight_center/river_straight_center.masks.bc7.ktx2",
@@ -173,7 +176,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T16:51:49.827Z",
+    "date": "2026-10-26T06:35:21.484Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -236,6 +239,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod1-middle-lod",
+      "requested": "2026-10-25",
+      "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the river_cattail slot had no LOD1 geometry, so the heads vanished between 150 and 400 m. LOD1 now draws every cattail of each kept clump as LOD0's 3-sided stalk under a 3-sided head (circumradius 1.155x the LOD0 radius for the same mean silhouette width; no spike), with the plant wind attribute; the four LOD1 reed triangles now follow LOD0's blades (the plan draws with heads at LOD1). LOD0 primitives are byte-identical in the staged export and LOD2 is unchanged: the cattails stay out of LOD2 on purpose (a head is 0.044-0.054 m across, about a sixth of a pixel at 400 m, and the approved LOD2 has no reed clumps for them to stand in). Tris LOD0/1/2 2239/320/120 -> 2239/528/120. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
     }
   ]
 }

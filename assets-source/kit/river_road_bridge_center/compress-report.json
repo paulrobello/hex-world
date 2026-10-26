@@ -1,6 +1,6 @@
 {
   "name": "river_road_bridge_center",
-  "date": "2026-10-20T16:49:21.335Z",
+  "date": "2026-10-26T06:33:52.573Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 26343,
-      "sha256": "be7564faf10a3fc29d4b0ff74d9a391c9aebc8b3c554aebf92aa7e0ff5cbb6df"
+      "bytes": 26176,
+      "sha256": "fbeb33cf67422c43becc96d6f7a429d708dc007513a951ad7ec08c8f33774d7f"
     },
     {
       "channel": "masks",
@@ -59,8 +60,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 25956,
-      "sha256": "3a96295da1fe0e591309ae0e215b732ba639261607e45fdc7f06668464cf1743"
+      "bytes": 25785,
+      "sha256": "099f619726e4080cb22ad40a0c88b3497553d7bade975dfa1c10b6c042f9a75d"
     },
     {
       "channel": "masks",
@@ -68,21 +69,21 @@
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 34523,
-      "sha256": "ae4cb2c7177e82ec9026f02e654b3bce828cf63c1884823da7eb861755dbf54e"
+      "bytes": 34526,
+      "sha256": "e3ef06fa8f62389be5c6e9e16fff7f476c7f04415370df3ed67e6b42bc99bca3"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 26343,
-      "astc": 25956
+      "bc7": 26176,
+      "astc": 25785
     },
-    "glbBytes": 163572
+    "glbBytes": 175428
   },
   "glb": {
-    "bytes": 163572,
-    "sha256": "1bf4bc5fc74de958802a4b961b03127c7817021dbfcc8cdb6186f642b11d9a69"
+    "bytes": 175428,
+    "sha256": "e3408cd35cd850cd64f37ce35e0e7f0a7d564aa311c9e2fa115e9300d5a49cb4"
   }
 }

@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
-      "sha256": "d5575549da48ea85031345deb71dc5a0c1ae98f95049ebe73f8beadde31df619"
+      "sha256": "3761223a50d85b8cdfb1cb1bce63902d91e82278ebf608f2185e3de35981deb5"
     }
   ],
   "authoringAgent": {
@@ -41,9 +41,12 @@
       "stones": 28,
       "tris": [
         2363,
-        320,
+        592,
         120
       ]
+    },
+    "lod2Drops": {
+      "river_cattail": "under a pixel at 400 m: a head is 0.044-0.054 m across (0.14-0.18 px at 0.31 m/px), and LOD2 has no reed clumps for the stalks to stand in"
     },
     "marginPx": 0,
     "masks": {
@@ -68,8 +71,8 @@
     },
     {
       "lod": 1,
-      "tris": 320,
-      "ratio": 0.13542107490478206
+      "tris": 592,
+      "ratio": 0.2505289885738468
     },
     {
       "lod": 2,
@@ -89,10 +92,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 4689,
-        "astc": 4888
+        "bc7": 4485,
+        "astc": 4733
       },
-      "glbBytes": 193684
+      "glbBytes": 211956
     },
     "textureEncodes": [
       {
@@ -103,8 +106,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 9,
-        "bytes": 4689,
-        "sha256": "3db9388839d8ffbad58af151f50cf6f8ce90c7728bead73b4dd6d82c83f4fdb0"
+        "bytes": 4485,
+        "sha256": "a5af0dc0859ba1c2965bda348eb8cf24a0fc5297db6cd1d5ba1a62aaefa2b690"
       },
       {
         "channel": "masks",
@@ -114,8 +117,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 9,
-        "bytes": 4888,
-        "sha256": "0adac15ea4e3a3673d6f1bbc9bfaa1a8915930a2ef0e14bbc5f2880a6efcf331"
+        "bytes": 4733,
+        "sha256": "ec3805d615762777fddabbaf920e755545f449bb5d12f70476a7ad279e5866ec"
       },
       {
         "channel": "masks",
@@ -131,18 +134,18 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_bend_center/river_bend_center.glb",
-      "sha256": "1f4ef9d8cdf55f5c49e63d00e537e14a58535cdb0f4a59c60181516d9a3c698c",
-      "bytes": 193684
+      "sha256": "19fa8013fdf914005fd184e582a94ec082345e95a88fdb589d4317d2afc6366c",
+      "bytes": 211956
     },
     {
       "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.bc7.ktx2",
-      "sha256": "3db9388839d8ffbad58af151f50cf6f8ce90c7728bead73b4dd6d82c83f4fdb0",
-      "bytes": 4689
+      "sha256": "a5af0dc0859ba1c2965bda348eb8cf24a0fc5297db6cd1d5ba1a62aaefa2b690",
+      "bytes": 4485
     },
     {
       "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.astc.ktx2",
-      "sha256": "0adac15ea4e3a3673d6f1bbc9bfaa1a8915930a2ef0e14bbc5f2880a6efcf331",
-      "bytes": 4888
+      "sha256": "ec3805d615762777fddabbaf920e755545f449bb5d12f70476a7ad279e5866ec",
+      "bytes": 4733
     },
     {
       "path": "assets/kit/p1/river_bend_center/river_bend_center.masks.png",
@@ -173,7 +176,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T16:51:52.640Z",
+    "date": "2026-10-26T06:35:25.304Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -236,6 +239,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all approved on approvals page\") from docs/review/approvals.html, generated 2026-10-21."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "lod1-middle-lod",
+      "requested": "2026-10-25",
+      "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the river_cattail slot had no LOD1 geometry, so the heads vanished between 150 and 400 m. LOD1 now draws every cattail of each kept clump as LOD0's 3-sided stalk under a 3-sided head (circumradius 1.155x the LOD0 radius for the same mean silhouette width; no spike), with the plant wind attribute; the four LOD1 reed triangles now follow LOD0's blades (the plan draws with heads at LOD1). LOD0 primitives are byte-identical in the staged export and LOD2 is unchanged: the cattails stay out of LOD2 on purpose (a head is 0.044-0.054 m across, about a sixth of a pixel at 400 m, and the approved LOD2 has no reed clumps for them to stand in). Tris LOD0/1/2 2363/320/120 -> 2363/592/120. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
     }
   ]
 }

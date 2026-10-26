@@ -1,6 +1,6 @@
 {
   "name": "river_straight_center",
-  "date": "2026-10-20T16:49:22.700Z",
+  "date": "2026-10-26T06:33:37.500Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -79,10 +80,10 @@
       "bc7": 1001,
       "astc": 970
     },
-    "glbBytes": 187092
+    "glbBytes": 201640
   },
   "glb": {
-    "bytes": 187092,
-    "sha256": "4953bfde897a31ad0989001ace22dd03b3e297a1c48d79b116ef19e9b85dda8d"
+    "bytes": 201640,
+    "sha256": "b361042288187de30c806efae4c87a263f1f5d9ed54ae867ea2c0c6f398351f5"
   }
 }

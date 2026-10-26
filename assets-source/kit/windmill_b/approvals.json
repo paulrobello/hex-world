@@ -4,7 +4,7 @@
     "status": "pending",
     "requested": "2026-10-20",
     "revision": "first build",
-    "notes": "Pending owner review; not an approval. First windmill variant (PRD §5.4 row 2b, §6 Variety), built to the owner's A17 answer to assets-source/refs/windmill (white, flat tile, sails turning, fantail still): a shorter, stouter smock mill (hub 10.7 m against windmill's 12.0 m, sails 6.2 m against 8.4 m): an octagonal white weatherboarded smock in six lapped courses on a buff brick octagonal base, a railed octagonal stage at the base top (deck 2.8 m up, the sails sweep 0.73 m above its rail), a domed ogee cap with a boarded petticoat and an iron ball finial, a still six-bladed fantail, and four double-shuttered patent sails (shutters both sides of the whip, six bars) on windmill's rotor contract. Its collider (the base and smock) reaches 2.77 m, inside windmill's 2.9 m footprint. Review sheet: docs/checkpoints/windmill_b/sheet.jpg. The controller records the owner's decision."
+    "notes": "Pending owner review; not an approval. First windmill variant (PRD \u00a75.4 row 2b, \u00a76 Variety), built to the owner's A17 answer to assets-source/refs/windmill (white, flat tile, sails turning, fantail still): a shorter, stouter smock mill (hub 10.7 m against windmill's 12.0 m, sails 6.2 m against 8.4 m): an octagonal white weatherboarded smock in six lapped courses on a buff brick octagonal base, a railed octagonal stage at the base top (deck 2.8 m up, the sails sweep 0.73 m above its rail), a domed ogee cap with a boarded petticoat and an iron ball finial, a still six-bladed fantail, and four double-shuttered patent sails (shutters both sides of the whip, six bars) on windmill's rotor contract. Its collider (the base and smock) reaches 2.77 m, inside windmill's 2.9 m footprint. Review sheet: docs/checkpoints/windmill_b/sheet.jpg. The controller records the owner's decision."
   },
   {
     "who": "Paul Robello (owner)",
@@ -12,5 +12,14 @@
     "gate": "piece",
     "status": "approved",
     "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A4 (buff brick base, dark timber stage)."
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "lod1-middle-lod",
+    "requested": "2026-10-25",
+    "notes": "Pending owner review; not an approval. Rebuilt for the owner's A2 Q4 answer (2026-10-21, \"every piece should have a middle LOD\"): the windmill_b_iron slot (the cap finial and the fantail hub) had no geometry in LOD1 or LOD2, so it was not drawn past 150 m. LOD1 now carries an exact copy of LOD0's iron finial and fantail hub (58 tris); LOD2 carries the finial on the cap's silhouette (46 tris; 0.38 x 0.64 m, about 1 x 2 px at 400 m); the 0.3 m hub stays out of LOD2, whose 12 tris would pass the 15% ceiling. The copies join after the masks bake with their baked UVs (scripts/blender/kit/_lod_copy.py), so the atlas packing is unchanged. LOD0's primitives, the collider and the masks map are byte-identical to the approved build, and every other LOD2 primitive is unchanged. Tris LOD0/1/2 1408/508/158 -> 1408/566/204. Review docs/checkpoints/lod1-pass/sheet.jpg (whole, detail and 150 m views per LOD). Earlier entries stay as history."
   }
 ]

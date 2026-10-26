@@ -10,17 +10,21 @@
       "sha256": "54f10f79da191519ad188938a4e948438924c8d0ae632a490b8c2f3922a3f789"
     },
     {
+      "path": "scripts/blender/kit/_lod_copy.py",
+      "sha256": "a3ff66917967758ade82f5e85c4241fde3ccb67c2ab87a26da7986c79ab6bf0e"
+    },
+    {
       "path": "scripts/blender/kit/_rail.py",
       "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
     },
     {
       "path": "scripts/blender/kit/_station.py",
-      "sha256": "75d4addddce6e39d609bb7b39851d2dd2104a5dae3834bde885f79f859056f42"
+      "sha256": "209e332552e597ee14783740d3f103734b1e63c721053d7972443875399b9ed0"
     }
   ],
   "lodTris": {
     "rail_station_platform_lod0": 244,
-    "rail_station_platform_lod1": 116,
+    "rail_station_platform_lod1": 122,
     "rail_station_platform_lod2": 36
   },
   "nodes": [

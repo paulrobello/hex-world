@@ -7,7 +7,7 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_bakery_b.py",
-      "sha256": "a6c57b511f941bd2f3f01a785ed4384e146212a15f96c46b07e7f89c3e5c419c"
+      "sha256": "fc67853ab9e0139b793a40ec1b5a3617d2d780b84ff195a929765a67e9f0f013"
     },
     {
       "path": "scripts/blender/kit/_house.py",
@@ -16,12 +16,16 @@
     {
       "path": "scripts/blender/kit/_house_longhouse.py",
       "sha256": "c4e8805ae0750279370f70cde6c79cec36bf6d734e7c76e56b687c8f5c65a44b"
+    },
+    {
+      "path": "scripts/blender/kit/_lod_copy.py",
+      "sha256": "a3ff66917967758ade82f5e85c4241fde3ccb67c2ab87a26da7986c79ab6bf0e"
     }
   ],
   "lodTris": {
     "bakery_shop_b_lod0": 1304,
-    "bakery_shop_b_lod1": 429,
-    "bakery_shop_b_lod2": 122
+    "bakery_shop_b_lod1": 521,
+    "bakery_shop_b_lod2": 166
   },
   "nodes": [
     "bakery_shop_b",

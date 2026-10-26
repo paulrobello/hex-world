@@ -4397,3 +4397,206 @@ fn citations_must_be_committed_files() {
         "{e:?}"
     );
 }
+
+/// (piece, slot) pairs whose owner-approved LOD2 left the slot out before the LOD2 slot rule
+/// (2026-10-25) and record no reason. Shrink only: a rebuild records its reason in the bake
+/// report's `lod2Drops` and leaves this list (`lod_slot_errors`).
+const LOD2_DROPS_BEFORE_RULE: &[(&str, &str)] = &[
+    ("rail_straight_center", "rail_sleeper"),
+    ("rail_bend_60_center", "rail_sleeper"),
+    ("rail_bend_120_center", "rail_sleeper"),
+    ("rail_junction_center", "rail_lever"),
+    ("rail_junction_center", "rail_sleeper"),
+    ("rail_road_crossing_center", "rail_crossing_gate"),
+    ("rail_road_crossing_center", "rail_sleeper"),
+    ("house_pad", "house_pad_edging"),
+    ("bakery_pad", "bakery_pad_edging"),
+    ("house_cottage", "house_cottage_frame"),
+    ("house_cottage", "house_cottage_timber"),
+    ("house_twostorey", "house_twostorey_frame"),
+    ("house_longhouse", "house_longhouse_frame"),
+    ("house_longhouse", "house_longhouse_stone"),
+    ("house_longhouse", "house_longhouse_timber"),
+    ("house_twostorey_b", "house_twostorey_b_frame"),
+    ("house_twostorey_b", "house_twostorey_b_stone"),
+    ("house_twostorey_c", "house_twostorey_c_frame"),
+    ("house_twostorey_c", "house_twostorey_c_pots"),
+    ("house_twostorey_c", "house_twostorey_c_stone"),
+    ("house_twostorey_c", "house_twostorey_c_timber"),
+    ("house_cottage_b", "house_cottage_b_pots"),
+    ("house_cottage_b", "house_cottage_b_timber"),
+    ("well_stone", "well_stone_iron"),
+    ("well_stone", "well_stone_rope"),
+    ("well_stone_b", "well_stone_b_iron"),
+    ("well_stone_b", "well_stone_b_rope"),
+    ("windmill_b", "windmill_b_door"),
+    ("windmill_b", "windmill_b_glass"),
+    ("barn_red", "barn_red_stone"),
+    ("barn_red_b", "barn_red_b_stone"),
+    ("bakery_shop", "bakery_shop_display_glass"),
+    ("bakery_shop", "bakery_shop_frame"),
+    ("bakery_shop", "bakery_shop_stone"),
+    ("bakery_shop_b", "bakery_shop_b_display_glass"),
+    ("bakery_shop_b", "bakery_shop_b_frame"),
+    ("bakery_shop_b", "bakery_shop_b_stone"),
+    ("rail_station_platform", "rail_station_glass"),
+    ("rail_station_platform", "rail_station_iron"),
+    ("rail_station_shelter", "rail_station_timber"),
+    ("ocean_center", "coast_pebble"),
+    ("boat_rowing", "boat_rowing_bronze"),
+    ("boat_sail", "boat_sail_wicker"),
+    ("river_mouth_center", "beach_pebble"),
+    ("river_mouth_center", "river_reed"),
+    ("river_mouth_l_center", "beach_pebble"),
+    ("river_mouth_l_center", "river_reed"),
+    ("river_straight_center", "river_reed"),
+    ("river_bend_center", "river_reed"),
+    ("river_bend_60_center", "river_reed"),
+    ("river_road_bridge_center", "river_reed"),
+    ("river_rail_bridge_center", "rail_sleeper"),
+    ("river_rail_bridge_center", "river_reed"),
+    ("river_spring_center", "river_lily"),
+    ("river_spring_center", "river_reed"),
+    ("river_spring_center", "river_stone"),
+    ("river_fork_center", "river_reed"),
+];
+
+/// The slots (material names) of each LOD: the body, the rotor and any extra part meshes.
+fn lod_slots(doc: &gltf::Document, id: &str) -> [BTreeSet<String>; 3] {
+    [0, 1, 2].map(|lod| {
+        let (body, rotor) = (format!("{id}_lod{lod}"), format!("{id}_rotor_lod{lod}"));
+        doc.meshes()
+            .filter(|m| {
+                m.name()
+                    .is_some_and(|n| n == body || n == rotor || part_of(id, lod, n).is_some())
+            })
+            .flat_map(|m| {
+                m.primitives()
+                    .filter_map(|p| p.material().name().map(str::to_owned))
+                    .collect::<Vec<_>>()
+            })
+            .collect()
+    })
+}
+
+/// Owner A2 Q4 (2026-10-21): every piece has a middle LOD. Every LOD0 slot is drawn in LOD1 (the
+/// runtime pairs LOD meshes per slot, so a slot LOD1 leaves out is not drawn from 150 to 400 m).
+fn lod1_slot_errors(id: &str, slots: &[BTreeSet<String>; 3]) -> Vec<String> {
+    slots[0]
+        .difference(&slots[1])
+        .map(|s| format!("{id}: LOD0 slot {s} has no LOD1 geometry (every slot has a middle LOD)"))
+        .collect()
+}
+
+/// A slot leaves LOD2 only with a measured reason in provenance (`bake.lod2Drops[slot]`: the part's
+/// size in pixels at 400 m, or the LOD2 ceiling it would break) or a `LOD2_DROPS_BEFORE_RULE`
+/// entry, and a recorded reason names a LOD0 slot that LOD2 leaves out.
+fn lod2_drop_errors(
+    id: &str,
+    slots: &[BTreeSet<String>; 3],
+    lod2_drops: &serde_json::Value,
+    before_rule: &[(&str, &str)],
+) -> Vec<String> {
+    let mut e = vec![];
+    for s in slots[0].difference(&slots[2]) {
+        let reason = lod2_drops[s.as_str()].as_str().unwrap_or_default().trim();
+        if reason.is_empty() && !before_rule.contains(&(id, s.as_str())) {
+            e.push(format!(
+                "{id}: LOD0 slot {s} has no LOD2 geometry and provenance bake.lod2Drops gives no reason"
+            ));
+        }
+    }
+    if let Some(m) = lod2_drops.as_object() {
+        for s in m.keys() {
+            if !slots[0].contains(s) || slots[2].contains(s) {
+                e.push(format!(
+                    "{id}: bake.lod2Drops names {s}, which is not a LOD0 slot LOD2 leaves out"
+                ));
+            }
+        }
+    }
+    e
+}
+
+/// Every manifest piece's slots per LOD, decoded through the `kit://` rewrite.
+fn kit_lod_slots(e: &mut Vec<String>) -> Vec<(PieceEntry, [BTreeSet<String>; 3])> {
+    let mut out = vec![];
+    for k in kits() {
+        for p in &k.manifest.pieces {
+            match plain(&k, p) {
+                Ok((doc, _, _)) => out.push((p.clone(), lod_slots(&doc, &p.id))),
+                Err(err) => e.push(err),
+            }
+        }
+    }
+    out
+}
+
+#[test]
+fn every_lod0_slot_is_drawn_in_lod1() {
+    let mut e = vec![];
+    for (p, slots) in kit_lod_slots(&mut e) {
+        e.extend(lod1_slot_errors(&p.id, &slots));
+    }
+    fail(e);
+}
+
+/// Named for provenance so `make kit-provenance`, which runs the gate before writing provenance,
+/// skips it (`--skip provenance`) like the other provenance checks.
+#[test]
+fn provenance_explains_every_slot_lod2_leaves_out() {
+    let mut e = vec![];
+    let mut dropped = BTreeSet::new();
+    for (p, slots) in kit_lod_slots(&mut e) {
+        let prov: serde_json::Value = std::fs::read_to_string(repo().join(&p.provenance))
+            .ok()
+            .and_then(|t| serde_json::from_str(&t).ok())
+            .unwrap_or_default();
+        e.extend(lod2_drop_errors(
+            &p.id,
+            &slots,
+            &prov["bake"]["lod2Drops"],
+            LOD2_DROPS_BEFORE_RULE,
+        ));
+        for s in slots[0].difference(&slots[2]) {
+            dropped.insert((p.id.clone(), s.clone()));
+        }
+    }
+    for (id, s) in LOD2_DROPS_BEFORE_RULE {
+        if !dropped.contains(&(id.to_string(), s.to_string())) {
+            e.push(format!(
+                "{id}: LOD2_DROPS_BEFORE_RULE lists {s}, which LOD2 now carries: remove it"
+            ));
+        }
+    }
+    fail(e);
+}
+
+#[test]
+fn gate_catches_a_slot_missing_from_lod1_or_leaving_lod2_without_a_reason() {
+    let set = |v: &[&str]| v.iter().map(|s| s.to_string()).collect::<BTreeSet<_>>();
+    let slots = [set(&["a", "b", "c"]), set(&["a", "b"]), set(&["a"])];
+    let e = lod1_slot_errors("p", &slots);
+    assert!(e.iter().any(|m| m.contains("slot c has no LOD1")), "{e:?}");
+    let none = serde_json::Value::Null;
+    let e = lod2_drop_errors("p", &slots, &none, &[]);
+    assert!(e.iter().any(|m| m.contains("slot b has no LOD2")), "{e:?}");
+    assert!(e.iter().any(|m| m.contains("slot c has no LOD2")), "{e:?}");
+    let full = [set(&["a", "b"]), set(&["a", "b"]), set(&["a"])];
+    assert_eq!(lod1_slot_errors("p", &full), Vec::<String>::new());
+    let why = serde_json::json!({"b": "under a pixel at 400 m: 0.05 m (0.16 px)"});
+    assert_eq!(
+        lod2_drop_errors("p", &full, &why, &[]),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        lod2_drop_errors("p", &full, &none, &[("p", "b")]),
+        Vec::<String>::new()
+    );
+    let blank = serde_json::json!({"b": "  "});
+    assert_eq!(lod2_drop_errors("p", &full, &blank, &[]).len(), 1);
+    // A reason for a slot that LOD2 does carry is stale.
+    let stale = serde_json::json!({"a": "gone"});
+    let e = lod2_drop_errors("p", &full, &stale, &[("p", "b")]);
+    assert!(e.iter().any(|m| m.contains("lod2Drops names a")), "{e:?}");
+}
