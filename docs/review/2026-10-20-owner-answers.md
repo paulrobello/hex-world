@@ -94,3 +94,8 @@ Paul answered `docs/review/2026-10-20-walkthrough.html` on 2026-10-20. Codes fol
 ## 2026-10-26
 
 - Water looks (A3, `docs/review/2026-10-21-water-options.html`): Q1 drying trail O3, the current 0.8 darkening; Q2 churn foam O3, the current 1.0 scale; Q3 confirmed, no drying trail on the plain fallback river bed. No code change; the debug-only `--water_look` knob stays for later comparisons.
+- Road bend trim (A16): all approved: road_bend_60_center and the trimmed stubs, the +8 draws per pass while a road_bend_60 is on screen, and e1's AO noise.
+- LOD slot pass (A17): all approved: the 16 rebuilt pieces (plus the two byte-identical river mouth refreshes listed with them), the platform's flat LOD1 flower mound and the wells' LOD1 courses.
+- Share image (A9): the R8 play shot (`docs/checkpoints/share-image/og-image-after.png`) is approved.
+- Bulldoze dust (A9): revert the 2026-10-21 "another 20%" particle cut; the particles go back to their previous size.
+- Rail ends (A18): approved one-way: a tile without rail may go against a stopped rail end, but a new rail tile may not point its end at an existing meadow.
