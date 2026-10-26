@@ -1052,7 +1052,8 @@
         "rail": false,
         "scatter": [
           "beach_driftwood",
-          "beach_dunegrass"
+          "beach_dunegrass",
+          "beach_pebbles"
         ],
         "stopped": [
           false,
@@ -1085,7 +1086,8 @@
         "rail": false,
         "scatter": [
           "beach_driftwood",
-          "beach_dunegrass"
+          "beach_dunegrass",
+          "beach_pebbles"
         ],
         "stopped": [
           false,
@@ -1118,7 +1120,8 @@
         "rail": false,
         "scatter": [
           "beach_driftwood",
-          "beach_dunegrass"
+          "beach_dunegrass",
+          "beach_pebbles"
         ],
         "stopped": [
           false,
@@ -1219,7 +1222,10 @@
         ],
         "period": 1,
         "rail": false,
-        "scatter": [],
+        "scatter": [
+          "seabed_rock",
+          "seabed_pebbles"
+        ],
         "stopped": [
           false,
           false,

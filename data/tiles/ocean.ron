@@ -11,5 +11,11 @@
         (kind: Ocean),
         (kind: Ocean),
     ),
-    center: Some("ocean_center"),
+    center: None,
+    props: (
+        scatter: [
+            (piece: "seabed_rock", density: 0.902),
+            (piece: "seabed_pebbles", density: 1.053),
+        ],
+    ),
 )

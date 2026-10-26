@@ -1,0 +1,51 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 32
+    }
+  },
+  "device": "none",
+  "marginPx": 0,
+  "masks": {
+    "ao": 1.0,
+    "night": 0.0,
+    "porosity": 0.0,
+    "snow": 0.0
+  },
+  "reason": "colour-only slot; uniform masks, no Cycles bake",
+  "receiverSignature": "235103bd146e604bc26d9a5a5f4ddfe0cf4c6afa135f9fb251d52054ed637562",
+  "samples": 0,
+  "skipped": true,
+  "stones": {
+    "count": 6,
+    "lod2Keeps": 3,
+    "pxAt150m": [
+      2.7,
+      2.47,
+      1.85,
+      1.69,
+      1.68,
+      1.62
+    ],
+    "pxAt400m": [
+      1.05,
+      0.96,
+      0.72,
+      0.65,
+      0.65,
+      0.63
+    ],
+    "reachM": 0.5393,
+    "topM": 0.0846,
+    "widthsM": [
+      0.3243,
+      0.2966,
+      0.2222,
+      0.2028,
+      0.2018,
+      0.1945
+    ]
+  }
+}

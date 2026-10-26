@@ -181,11 +181,11 @@ const SUBMERGED: &[(&str, &str)] = &[
     ("beach_seabed", "seabed: always under the sea"),
     (
         "coast_pebble",
-        "ocean_center: pebbles on the ocean floor, under at least 2.5 m of water",
+        "seabed_pebbles: pebbles on the ocean floor, under at least 2.5 m of water",
     ),
     (
         "coast_rock",
-        "ocean_center: rocks within 0.10 m of the ocean floor, under at least 2.5 m of water",
+        "seabed_rock: rocks within 0.10 m of the ocean floor, under at least 2.5 m of water",
     ),
     (
         "fish_trout_body",

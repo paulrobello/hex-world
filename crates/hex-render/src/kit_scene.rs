@@ -214,9 +214,9 @@ pub fn kit_layout() -> Vec<Placement> {
     }
     // Three ocean tiles meeting at one corner, each at another rotation (seams under rotation), with
     // open edges to the east. Cells stay inside the water look-dev patch, so `water_kit` keeps 12.
+    // The seabed rocks and pebbles are play scatter (seabed_rock, seabed_pebbles), not a centre.
     for (q, r, k) in [(1, 1, 0), (2, 1, 3), (2, 0, 1)] {
         v.push(place("ocean_base", q, r, k));
-        v.push(place("ocean_center", q, r, k));
     }
     // Meadow props on the meadow at (-1, 1) (base rotation 4), each lifted onto the meadow relief at
     // its spot (`relief()` in scripts/blender/kit/meadow_base.py, evaluated in the base's frame).
@@ -249,7 +249,6 @@ pub fn kit_layout() -> Vec<Placement> {
     // windmill_b and outside the water patch: the three driftwood pieces along the coast on the dry
     // sand, the three marram clumps landward of them near the grass line, as the scatter lays them.
     v.push(place("beach_base", 5, -1, 0));
-    v.push(place("beach_center", 5, -1, 0));
     for &(piece, at, yaw_deg, y) in BEACH_DRESSING {
         v.push(Placement {
             y,

@@ -3422,7 +3422,7 @@ fn river_dressing_lod0_budget_is_scoped_to_its_props() {
             assert_eq!(lod0_budget(p), p.kind.lod0_budget(), "{}", p.id);
         }
     }
-    assert_eq!(lod0_budget(piece("ocean_center")), 1_500);
+    assert_eq!(lod0_budget(piece("seabed_rock")), 1_500);
     assert_eq!(lod0_budget(piece("river_road_bridge_center")), 4_000);
 }
 
@@ -4437,7 +4437,6 @@ const LOD2_DROPS_BEFORE_RULE: &[(&str, &str)] = &[
     ("rail_station_platform", "rail_station_glass"),
     ("rail_station_platform", "rail_station_iron"),
     ("rail_station_shelter", "rail_station_timber"),
-    ("ocean_center", "coast_pebble"),
     ("boat_rowing", "boat_rowing_bronze"),
     ("boat_sail", "boat_sail_wicker"),
     ("river_rail_bridge_center", "rail_sleeper"),

@@ -1,0 +1,89 @@
+{
+  "name": "beach_pebbles_b",
+  "date": "2026-10-26T16:20:32.246Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/beach_pebbles_b/beach_pebbles_b.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 6,
+      "bytes": 525,
+      "sha256": "c0d407853e19b6d04442b83e9d9a90d68115ab9f7b4cfa8df322bd4f8b3239fb"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/beach_pebbles_b/beach_pebbles_b.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 6,
+      "bytes": 525,
+      "sha256": "e07aa4f5dae8acc75d11eaf5ef57d0732de4ceb4e888fb929a9f3c73187d0c12"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/beach_pebbles_b/beach_pebbles_b.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 291,
+      "sha256": "5c7f09c93c48fd7cfabc5593939e1e8caf41902faa46854db90735691d74f5c6"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 525,
+      "astc": 525
+    },
+    "glbBytes": 18836
+  },
+  "glb": {
+    "bytes": 18836,
+    "sha256": "3bbcb45c0bd26158c863da9ed60a34feef2111e0f6f01816547f448e3099bd47"
+  }
+}

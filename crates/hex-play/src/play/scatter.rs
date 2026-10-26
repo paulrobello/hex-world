@@ -36,14 +36,20 @@
 //!   A tile that scatters only bank props ([`river_family`]: the river channel tiles) keeps a
 //!   seeded 0 to [`RIVER_MAX`] of them ([`river_count`], owner 2026-10-26) the way a beach keeps
 //!   its count; the river mouths keep theirs under the beach cap.
+//! - **Seabed.** The ocean's rocks and pebble clusters ([`seabed`], owner 2026-10-26) stand on its
+//!   floor ([`SEABED_FLOOR`]) at the bed's contract level ([`SEABED_Y`], under the floor's relief)
+//!   and keep [`SEABED_BORDER`] inside the border, so the floor stays within its
+//!   [`SEABED_ALLOWANCE`] (water contract §4).
 //! - **Ground.** An instance stands only on its piece's floor slots ([`floor_slots`]) of the topmost
 //!   LOD0 surface of the tile's base, centre and lane edge pieces, sampled the way the kit gate's
 //!   `surface_at` does: trees on `forest_base_floor` (the litter), rocks and wildflowers on either
 //!   that and `meadow_base_cap`. Its whole ground footprint must lie on that floor, so nothing
 //!   stands on a road, a river bed or bank, a house pad or driveway, a beach, a rim, a skirt or water
 //!   ([`excluded_slot`]), except the beach dressing on the dry sand ([`BEACH_FLOOR`],
-//!   [`beach_band`]) and the bank props on a river's bank ([`BANK_FLOORS`], [`bank_band`]). It keeps clear of hero props (a tree clears the oak's canopy; a fence,
-//!   [`FENCES`], by its line, dropped after the darts so nothing else moves), of road and
+//!   [`beach_band`]), the bank props on a river's bank ([`BANK_FLOORS`], [`bank_band`]) and the
+//!   seabed dressing on the ocean floor ([`FLOOR_EXEMPT`]). It keeps clear of hero props (a tree
+//!   clears the oak's canopy; a fence, [`FENCES`], by its line, dropped after the darts so nothing
+//!   else moves), of road and
 //!   river centrelines (`lane_clearance`, at least the lane's half width plus [`LANE_GAP`]) and of
 //!   the hex border (a crown overhangs it by at most [`CROWN_OVERHANG`]), and stands upright at the
 //!   surface height.
@@ -70,8 +76,8 @@ use bevy::{
     prelude::*,
 };
 use hex_core::{
-    Axial, Endpoint, HEX_RADIUS, NetworkKind, ScatterRule, SocketKind, TileCatalog, TileDef,
-    cell_seed,
+    Axial, Endpoint, HEX_RADIUS, LEVEL_STEP, NetworkKind, ScatterRule, SocketKind, TileCatalog,
+    TileDef, cell_seed,
 };
 
 use super::{
@@ -124,8 +130,9 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
         | "sapling_spruce" => &["forest_base_floor"],
         "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
         "wildflower_single" | "bush_verge" => &["meadow_base_cap"],
-        "beach_dunegrass" | "beach_driftwood" => &[BEACH_FLOOR],
+        "beach_dunegrass" | "beach_driftwood" | "beach_pebbles" => &[BEACH_FLOOR],
         "river_stones" | "river_reeds" => &BANK_FLOORS,
+        "seabed_rock" | "seabed_pebbles" => &[SEABED_FLOOR],
         _ => &[],
     }
 }
@@ -156,6 +163,7 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
         "beach_dunegrass",
         &["beach_dunegrass_b", "beach_dunegrass_c"],
     ),
+    ("beach_pebbles", &["beach_pebbles_b", "beach_pebbles_c"]),
     ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
     ("tree_oak", &["tree_oak_b", "tree_oak_c"]),
     ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
@@ -335,10 +343,19 @@ pub struct BeachBand {
 /// The band of a beach dressing piece (owner BD-Q2, BD-Q4). Marram clumps: from about one
 /// clump's width (1.2 m) seaward of the grass line (s = -8) to 2 m short of the damp band, densest
 /// at the grass and thinning seaward. Driftwood: the seaward dry sand, about 3 m short of the grass
-/// line to the damp band (its 1.45 m footprint keeps it off the damp band). `None` for every
-/// other piece.
+/// line to the damp band (its 1.45 m footprint keeps it off the damp band). Pebble clusters (owner
+/// 2026-10-26, the pebbles the beach centres baked at the grass line): the dry sand within 2 m of
+/// the grass line, densest at it, where the bed is nearly level (slope under 0.09), so a cluster
+/// stood at its lowest ring point ([`stand`]) floats none of its pebbles. `None` for every other
+/// piece.
 pub fn beach_band(piece: &str) -> Option<BeachBand> {
     match family(piece) {
+        "beach_pebbles" => Some(BeachBand {
+            near: BEACH_TOP_S + 0.5,
+            far: BEACH_TOP_S + 2.0,
+            thin: 0.6,
+            along: false,
+        }),
         "beach_dunegrass" => Some(BeachBand {
             near: BEACH_TOP_S + 1.2,
             far: DAMP_TOP_S - 2.0,
@@ -355,12 +372,37 @@ pub fn beach_band(piece: &str) -> Option<BeachBand> {
     }
 }
 
+/// The [`excluded_slot`]s a piece may stand on when its [`floor_slots`] list them: the dry sand of
+/// the beach and river-mouth bases, and the ocean floor.
+pub const FLOOR_EXEMPT: [&str; 2] = [BEACH_FLOOR, SEABED_FLOOR];
+
 /// Whether `slot`, under a footprint, is ground for a piece standing on `floors`: one of them and
-/// never an [`excluded_slot`] other than [`BEACH_FLOOR`] and the [`BANK_FLOORS`] (only the bank
+/// never an [`excluded_slot`] outside [`FLOOR_EXEMPT`] and the [`BANK_FLOORS`] (only the bank
 /// props list those).
 pub fn floor_ok(floors: &[&str], slot: &str) -> bool {
     floors.contains(&slot)
-        && (slot == BEACH_FLOOR || BANK_FLOORS.contains(&slot) || !excluded_slot(slot))
+        && (FLOOR_EXEMPT.contains(&slot) || BANK_FLOORS.contains(&slot) || !excluded_slot(slot))
+}
+
+// ---------------------------------------------------------------------------------------------
+// Seabed dressing (owner 2026-10-26): rocks and pebble clusters on the ocean floor
+
+/// The ocean base's floor, the one slot the seabed dressing stands on.
+pub const SEABED_FLOOR: &str = "coast_seabed";
+/// Where a seabed piece stands: the ocean bed's contract level, under the floor's relief (at most
+/// 0.06 m above it, `_coast.RELIEF_MAX`), so its top, authored at most 0.085 m above its origin
+/// (`_stones.TOP_MAX_SEABED`), stays within [`SEABED_ALLOWANCE`] at the largest scale jitter.
+pub const SEABED_Y: f32 = -LEVEL_STEP;
+/// How far the ocean floor may rise above the bed (m, water contract §4): more brings the shallow
+/// water's damping and swash back.
+pub const SEABED_ALLOWANCE: f32 = 0.10;
+/// A seabed piece keeps its whole ground footprint this far (m) inside the hex border: the floor's
+/// relief-free band (water contract §4), where its neighbours' beds meet it flat.
+pub const SEABED_BORDER: f32 = 2.0;
+
+/// Whether `piece` is seabed dressing: it stands on the ocean floor alone.
+pub fn seabed(piece: &str) -> bool {
+    floor_slots(piece) == [SEABED_FLOOR]
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -516,6 +558,42 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         "beach_dunegrass_c",
         Footprint {
             ground: 0.71,
+            crown: 0.0,
+        },
+    ),
+    // Stone clusters: their LOD0 convex hull collider's reach (`_stones.py`).
+    (
+        "beach_pebbles",
+        Footprint {
+            ground: 0.49,
+            crown: 0.0,
+        },
+    ),
+    (
+        "beach_pebbles_b",
+        Footprint {
+            ground: 0.5,
+            crown: 0.0,
+        },
+    ),
+    (
+        "beach_pebbles_c",
+        Footprint {
+            ground: 0.55,
+            crown: 0.0,
+        },
+    ),
+    (
+        "seabed_rock",
+        Footprint {
+            ground: 0.43,
+            crown: 0.0,
+        },
+    ),
+    (
+        "seabed_pebbles",
+        Footprint {
+            ground: 0.54,
             crown: 0.0,
         },
     ),
@@ -1497,6 +1575,13 @@ fn mask(
         })
     };
     let band = verge_band(piece);
+    // At its largest scale, from anywhere in its cell (a dart lands up to half a cell diagonal off).
+    let seabed_border = seabed(piece).then_some(
+        APOTHEM
+            - SEABED_BORDER
+            - fp.ground * (1.0 + scale_jitter(fp))
+            - RASTER * std::f32::consts::FRAC_1_SQRT_2,
+    );
     let mut cells = vec![];
     for j in 0..CELLS {
         for i in 0..CELLS {
@@ -1511,6 +1596,7 @@ fn mask(
                 || band.is_some_and(|b| lanes.iter().all(|(l, _)| polyline_distance(p, l) > b))
                 || beach.is_some_and(|(b, c)| off_beach_band(b, c, p, fp.ground))
                 || off_bank(k, p)
+                || seabed_border.is_some_and(|r| hex_reach(p) > r)
             {
                 continue;
             }
@@ -1871,6 +1957,7 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
             if bank.is_some_and(|(low, high)| y < low || y > high) {
                 continue;
             }
+            let y = if seabed(piece) { SEABED_Y } else { y };
             let u = rng.unit();
             let yaw = match bank.and_then(|_| contour(&ground.surface, p)) {
                 Some(t) => along_yaw(t, u),
@@ -2549,10 +2636,10 @@ mod tests {
             "river_bend",
             "river_bend_60",
             "river_fork",
+            "ocean",
         ] {
             assert!(counts[id] > 0, "{id} scatters: {counts:?}");
         }
-        assert_eq!(counts["ocean"], 0, "ocean has no scatter floor: {counts:?}");
     }
 
     /// Density is per 100 m² of the hex cap: the mean count over cells matches it within 3%, every
@@ -3253,6 +3340,97 @@ mod tests {
             }
             assert!(n > 32, "{id}: {n} bank props over 32 seeds");
         }
+    }
+
+    /// Owner 2026-10-26 ("0 to 6 is plenty" stands): the beach pebble clusters count inside a coast
+    /// tile's [`BEACH_MAX`], drawn like any other dressing piece. Prints the mean kept per tile of
+    /// each piece, and the share of tiles that keep a pebble cluster.
+    #[test]
+    fn beach_pebbles_count_inside_the_beach_cap() {
+        let c = catalog();
+        for id in ["beach", "beach_inner", "beach_outer"] {
+            let def = c.get(id).unwrap();
+            let g = prepared(def).unwrap();
+            let rule = def
+                .props
+                .scatter
+                .iter()
+                .position(|r| r.piece.as_str() == "beach_pebbles")
+                .unwrap_or_else(|| panic!("{id}: a beach_pebbles rule"));
+            assert_eq!(rule + 1, def.props.scatter.len(), "{id}: pebbles last");
+            let seeds = 256;
+            let mut kept = vec![0usize; def.props.scatter.len()];
+            let (mut with_pebbles, mut darts) = (0, 0);
+            for s in 0..seeds {
+                let seed = cell_seed(13, Axial::new(s, 2 - s));
+                let l = layout(def, seed, &g);
+                assert!(l.instances.len() <= BEACH_MAX, "{id}");
+                for (ri, k) in kept.iter_mut().enumerate() {
+                    *k += l.placed(ri);
+                }
+                with_pebbles += usize::from(l.placed(rule) > 0);
+                darts += every_dart(def, seed, &g).placed(rule);
+            }
+            let mean: Vec<f32> = kept.iter().map(|&n| n as f32 / seeds as f32).collect();
+            println!(
+                "{id}: mean kept per tile {mean:?}, a pebble cluster on {with_pebbles} of {seeds} \
+                 tiles, {} clusters darted per tile",
+                darts as f32 / seeds as f32
+            );
+            assert!(with_pebbles > 0, "{id}: some tile keeps a pebble cluster");
+        }
+    }
+
+    /// Owner 2026-10-26: the ocean's rocks and pebble clusters are scatter on its floor, standing
+    /// at the bed's contract level, so the floor stays within its 0.10 m upward allowance (water
+    /// contract §4): every seabed instance's top (its piece's highest vertex in any LOD, times its
+    /// scale) stays within [`SEABED_ALLOWANCE`] of the bed, it never stands above the floor, and
+    /// its footprint keeps [`SEABED_BORDER`] inside the border. Every rule places its whole count.
+    #[test]
+    fn seabed_stones_stay_within_the_ocean_floor_allowance() {
+        let c = catalog();
+        let def = c.get("ocean").unwrap();
+        let g = prepared(def).unwrap();
+        let top = |id: &str| {
+            (0..3)
+                .flat_map(|l| glb_mesh_tris(id, &format!("lod{l}")).unwrap())
+                .flat_map(|(t, _)| t)
+                .map(|p| p[1])
+                .fold(f32::MIN, f32::max)
+        };
+        let mut per_rule = vec![0usize; def.props.scatter.len()];
+        let mut highest = 0.0f32;
+        let seeds = 32;
+        for s in 0..seeds {
+            let l = layout(def, cell_seed(5, Axial::new(s, 1 - s)), &g);
+            for inst in &l.instances {
+                let piece = inst.piece(def.props.scatter[inst.rule as usize].piece.as_str());
+                assert!(seabed(piece), "{piece}");
+                assert_eq!(inst.pos.y, SEABED_Y, "{piece}");
+                let p = inst.pos.xz();
+                let (floor, slot) = g.surface.at(p.x, p.y).unwrap();
+                assert_eq!(slot, SEABED_FLOOR);
+                assert!(inst.pos.y <= floor + 1e-4, "{piece} above the floor");
+                let rise = inst.pos.y + inst.scale * top(piece) - SEABED_Y;
+                highest = highest.max(rise);
+                assert!(
+                    rise <= SEABED_ALLOWANCE,
+                    "{piece}: top {rise} m over the bed"
+                );
+                assert!(
+                    hex_reach(p) + footprint(piece).ground * inst.scale
+                        <= APOTHEM - SEABED_BORDER + 1e-3,
+                    "{piece} within {SEABED_BORDER} m of the border"
+                );
+                per_rule[inst.rule as usize] += 1;
+            }
+            for ri in 0..def.props.scatter.len() {
+                assert_eq!(l.placed(ri) as u32, l.planned[ri], "ocean: shortfall");
+            }
+        }
+        let mean: Vec<f32> = per_rule.iter().map(|&n| n as f32 / seeds as f32).collect();
+        println!("ocean: mean per tile {mean:?}, highest top {highest} m over the bed");
+        assert!(per_rule.iter().all(|&n| n > 0), "{per_rule:?}");
     }
 
     #[test]

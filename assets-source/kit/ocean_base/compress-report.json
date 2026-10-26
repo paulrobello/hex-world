@@ -1,6 +1,6 @@
 {
   "name": "ocean_base",
-  "date": "2026-10-14T04:32:00.090Z",
+  "date": "2026-10-26T16:19:13.064Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 108107,
-      "sha256": "5550ace2fd8307ce655cf39e8c94ee95d8c9a9406bcdfb97f2bea6d6d594fd4c"
+      "bytes": 95873,
+      "sha256": "6e0cfecfd9ce15a603282a3985988eb38328c213d71ed788d214798cab88adae"
     },
     {
       "channel": "masks",
@@ -59,8 +60,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 112180,
-      "sha256": "d20c3b10fee8f7d77e508ab8bb8434640f3e1d4dffa7a5dcd3ed909da3fdf83c"
+      "bytes": 99234,
+      "sha256": "47d67873551bf5f31b292d9d1031bd2fefe8131f7326c5297f8c8b7e91b126a0"
     },
     {
       "channel": "masks",
@@ -68,16 +69,16 @@
       "path": "assets/kit/p1/ocean_base/ocean_base.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 213844,
-      "sha256": "865bba49ba51ab375ef8fe9eab2dd1569724217ff947d2c976240e9935889828"
+      "bytes": 198131,
+      "sha256": "3ce2fe837894a6e3067867a92794b00d064146c3bee5e93388b415602bd5e822"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 108107,
-      "astc": 112180
+      "bc7": 95873,
+      "astc": 99234
     },
     "glbBytes": 34076
   },

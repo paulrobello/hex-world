@@ -2874,10 +2874,12 @@ mod tests {
         ] {
             assert!(water.iter().any(|d| d.id == id), "{id} is a water tile");
         }
+        // The coast and ocean tiles have no centre: their dressing is scatter (owner 2026-10-26).
+        assert!(
+            water.iter().any(|d| d.center.is_none()),
+            "a water tile without a centre"
+        );
         for def in &water {
-            // A river channel tile has no centre (its banks are runtime scatter): "" is never a
-            // kit piece, so leaving it out changes nothing.
-            let center = def.center.as_ref().map_or("", |c| c.as_str());
             let base = def.base.as_str();
             let bed = |has: &dyn Fn(&str) -> bool| {
                 let lay = layout(&[tile(0, 0, &def.id, 0)], &cat, has);
@@ -2886,7 +2888,10 @@ mod tests {
                 bed
             };
             assert!(!bed(&|_| true), "{}: whole kit", def.id);
-            assert!(!bed(&|p| p != center), "{}: centre missing", def.id);
+            if let Some(center) = &def.center {
+                let center = center.as_str();
+                assert!(!bed(&|p| p != center), "{}: centre missing", def.id);
+            }
             assert!(bed(&|p| p != base), "{}: base missing", def.id);
             assert!(bed(&|_| false), "{}: no kit", def.id);
         }

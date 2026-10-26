@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/beach_pebbles_b.py",
+    "sha256": "e93dd4ee39b44475b0b45a285420cd6af31ff2066349f89fcbd5ee810fb44bdd"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_stones.py",
+      "sha256": "1e0bb5df8b8d0122bfae086e6c8f27355e4b48492c2c64e768932733edd74bba"
+    }
+  ],
+  "lodTris": {
+    "beach_pebbles_b_lod0": 60,
+    "beach_pebbles_b_lod1": 24,
+    "beach_pebbles_b_lod2": 8
+  },
+  "nodes": [
+    "beach_pebbles_b",
+    "beach_pebbles_b_collider",
+    "beach_pebbles_b_lod0",
+    "beach_pebbles_b_lod1",
+    "beach_pebbles_b_lod2"
+  ],
+  "pieceId": "beach_pebbles_b",
+  "sockets": []
+}

@@ -4,12 +4,12 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/ocean_base.py",
-    "sha256": "962a2565b203d4d637b701c880aa4097777f7d9e3e028af3a888204f0521b120"
+    "sha256": "1eba31f7f896c4d5b8d0a38bac45b6737f5e7a4d3c7cd4a12a19004525cf8ca8"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_coast.py",
-      "sha256": "e9810a9e852621856239bf566ce949d676ee7a647755983c8cc3e7b193a71574"
+      "sha256": "2e1b0a444dd9a5641452545da63af2bee06dd20e00b3094a719b94e890544f0c"
     }
   ],
   "authoringAgent": {
@@ -35,11 +35,11 @@
       }
     },
     "device": "CPU",
-    "highTris": 71600,
+    "highTris": 67440,
     "marginPx": 12,
     "maskStats": {
-      "mean": 0.9982153177261353,
-      "min": 0.2196078598499298,
+      "mean": 0.999011218547821,
+      "min": 0.9686275124549866,
       "missRate": 0,
       "p01": 0.9843137860298157,
       "p05": 0.9843137860298157,
@@ -90,8 +90,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 108107,
-        "astc": 112180
+        "bc7": 95873,
+        "astc": 99234
       },
       "glbBytes": 34076
     },
@@ -104,8 +104,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 108107,
-        "sha256": "5550ace2fd8307ce655cf39e8c94ee95d8c9a9406bcdfb97f2bea6d6d594fd4c"
+        "bytes": 95873,
+        "sha256": "6e0cfecfd9ce15a603282a3985988eb38328c213d71ed788d214798cab88adae"
       },
       {
         "channel": "masks",
@@ -115,8 +115,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 112180,
-        "sha256": "d20c3b10fee8f7d77e508ab8bb8434640f3e1d4dffa7a5dcd3ed909da3fdf83c"
+        "bytes": 99234,
+        "sha256": "47d67873551bf5f31b292d9d1031bd2fefe8131f7326c5297f8c8b7e91b126a0"
       },
       {
         "channel": "masks",
@@ -124,8 +124,8 @@
         "path": "assets/kit/p1/ocean_base/ocean_base.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 213844,
-        "sha256": "865bba49ba51ab375ef8fe9eab2dd1569724217ff947d2c976240e9935889828"
+        "bytes": 198131,
+        "sha256": "3ce2fe837894a6e3067867a92794b00d064146c3bee5e93388b415602bd5e822"
       }
     ]
   },
@@ -137,18 +137,18 @@
     },
     {
       "path": "assets/kit/p1/ocean_base/ocean_base.masks.bc7.ktx2",
-      "sha256": "5550ace2fd8307ce655cf39e8c94ee95d8c9a9406bcdfb97f2bea6d6d594fd4c",
-      "bytes": 108107
+      "sha256": "6e0cfecfd9ce15a603282a3985988eb38328c213d71ed788d214798cab88adae",
+      "bytes": 95873
     },
     {
       "path": "assets/kit/p1/ocean_base/ocean_base.masks.astc.ktx2",
-      "sha256": "d20c3b10fee8f7d77e508ab8bb8434640f3e1d4dffa7a5dcd3ed909da3fdf83c",
-      "bytes": 112180
+      "sha256": "47d67873551bf5f31b292d9d1031bd2fefe8131f7326c5297f8c8b7e91b126a0",
+      "bytes": 99234
     },
     {
       "path": "assets/kit/p1/ocean_base/ocean_base.masks.png",
-      "sha256": "865bba49ba51ab375ef8fe9eab2dd1569724217ff947d2c976240e9935889828",
-      "bytes": 213844
+      "sha256": "3ce2fe837894a6e3067867a92794b00d064146c3bee5e93388b415602bd5e822",
+      "bytes": 198131
     }
   ],
   "references": [
@@ -174,7 +174,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-14T04:32:15.845Z",
+    "date": "2026-10-26T16:24:09.783Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -199,6 +199,15 @@
       "when": "2026-10-13",
       "gate": "piece",
       "notes": "Ocean set approved in chat from in-engine play shots under real water at 2.6 m depth (docs/checkpoints/ocean)."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "seabed stones out of the AO bake",
+      "requested": "2026-10-26",
+      "notes": "Pending owner re-approval; not an approval. The masks AO is re-baked from the rippled bed alone: the contact shadows of the rocks and pebbles ocean_center baked are gone with it (masks AO min 0.22 -> 0.97, mean 0.998 -> 0.999), since those stones are now scatter props (seabed_rock, seabed_pebbles). The GLB is unchanged. Review the ocean before/after in docs/checkpoints/beach-ocean-scatter/."
     }
   ]
 }

@@ -1,0 +1,11 @@
+[
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "scatter props (owner 2026-10-26)",
+    "requested": "2026-10-26",
+    "notes": "Pending owner review; not an approval. The seabed pebble clusters that ocean_center baked, rebuilt as a scatter prop (six pebbles), placed per tile by the play scatter (owner 2026-10-26: \"scatter type items like rocks and reeds should not be built into the tile\"). Review the six-view renders in assets-source/kit/seabed_pebbles/renders/ and the before/after sheet in docs/checkpoints/beach-ocean-scatter/. The controller records the owner's decision."
+  }
+]

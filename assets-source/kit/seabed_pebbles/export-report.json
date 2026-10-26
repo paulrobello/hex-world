@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/seabed_pebbles.py",
+    "sha256": "6079cbf2c391c9107b37efd14cf5a04cb3acee4ae66b38d0301c2ab3829af76b"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_stones.py",
+      "sha256": "1e0bb5df8b8d0122bfae086e6c8f27355e4b48492c2c64e768932733edd74bba"
+    }
+  ],
+  "lodTris": {
+    "seabed_pebbles_lod0": 120,
+    "seabed_pebbles_lod1": 48,
+    "seabed_pebbles_lod2": 12
+  },
+  "nodes": [
+    "seabed_pebbles",
+    "seabed_pebbles_collider",
+    "seabed_pebbles_lod0",
+    "seabed_pebbles_lod1",
+    "seabed_pebbles_lod2"
+  ],
+  "pieceId": "seabed_pebbles",
+  "sockets": []
+}

@@ -20,7 +20,7 @@ PIECE = "ocean_base"
 SPACING = (1.2, 2.4, None)
 HIGH_SPACING = 0.15  # resolves the 0.85 m ripples for the AO bake
 MASK_SIZE = 1024  # 32 px/m over the 32 m square (D2)
-AO_DISTANCE_M = 0.6  # local relief scale: pebbles, rocks, ripples
+AO_DISTANCE_M = 0.6  # local relief scale: the ripples
 CAGE_M, MAX_RAY_M = 0.3, 0.6
 out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])
 skip_bake = os.environ.get("HEXW_SKIP_BAKE") == "1"
@@ -69,19 +69,19 @@ texel = uv.measure_texel_density(lods[0], MASK_SIZE)
 mask_stats = None
 bake_meta = {}
 if not skip_bake:
-    # AO source: the rippled high-poly bed plus the pebbles and rocks ocean_center lays on it, so
-    # the masks carry ripple troughs and contact shadows. None of these meshes is exported.
+    # AO source: the rippled high-poly bed alone, so the masks carry the ripple troughs. The seabed
+    # rocks and pebbles are scatter props (seabed_rock, seabed_pebbles; owner 2026-10-26), placed
+    # per tile, so no contact shadow of theirs is baked here. The high poly is not exported.
     high = cap(f"{PIECE}_high", HIGH_SPACING, _coast.ripples)
     high.data.transform(DROP)
     assert not _coast.bed_profile_errors(high), "high-poly bed off its profile"
-    stones = [_coast.stone(f"{PIECE}_high_stone{n}", it, 2) for n, it in enumerate(_coast.scatter())]
     bake.setup_cycles(samples=64)
     ao = bake.new_image(f"{PIECE}.ao", MASK_SIZE, non_color=True)
-    bake.bake_to(lods[0], "AO", ao, highs=[high, *stones], cage_extrusion=CAGE_M, max_ray=MAX_RAY_M, margin=12)
+    bake.bake_to(lods[0], "AO", ao, highs=[high], cage_extrusion=CAGE_M, max_ray=MAX_RAY_M, margin=12)
     ao_png = bake.save_png(ao, str(out / f"{PIECE}.ao.tmp.png"))
-    bake_meta = {"highTris": geom.tri_count(high) + sum(geom.tri_count(s) for s in stones),
+    bake_meta = {"highTris": geom.tri_count(high),
                  "aoDistanceM": AO_DISTANCE_M, "cageExtrusionM": CAGE_M, "maxRayDistanceM": MAX_RAY_M}
-    for o in [high, *stones]:
+    for o in [high]:
         bpy.data.objects.remove(o)
     bpy.context.view_layer.update()
     # Underwater: no snow capacity (R), no rain wetting (G, the bed is wet already), no lights (B).

@@ -1,0 +1,46 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/beach-ocean-scatter/bos-after-top.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        558.17,
+        598.0,
+        529.92
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 17.2,
+      "load_after": [
+        528.0,
+        589.21,
+        528.38
+      ],
+      "frames": {
+        "bos-after-pebbles-top": {
+          "mean": 0.555,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

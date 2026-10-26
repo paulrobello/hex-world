@@ -47,7 +47,7 @@ Owner request 2026-10-20 ("we need a river fork also"). River on edges 0, 2 and 
 
 ## 3. Coast (`beach`, `beach_outer`, `beach_inner`)
 
-Owner decision O1 (2026-10-13): beach sockets are directional, and two coast-corner tiles join the straight beach. This section is the bed the coast kit pieces must match: `beach_base`/`beach_center`, `beach_outer_base`/`beach_outer_center` and `beach_inner_base`/`beach_inner_center` (built, `scripts/blender/kit/_beach.py`; each base is the bed and `kit_gate` holds every LOD to this profile through `water::tiles::coast_height`, `coast_bases_are_held_to_the_coast_profile`).
+Owner decision O1 (2026-10-13): beach sockets are directional, and two coast-corner tiles join the straight beach. This section is the bed the coast kit pieces must match: `beach_base`, `beach_outer_base` and `beach_inner_base` (the coast tiles have no centre piece since 2026-10-26: their pebbles are the `beach_pebbles` scatter props; built, `scripts/blender/kit/_beach.py`; each base is the bed and `kit_gate` holds every LOD to this profile through `water::tiles::coast_height`, `coast_bases_are_held_to_the_coast_profile`).
 
 - **Sockets.** Every beach edge names the side its land is on, looking out across the edge from its own tile: `land: Right` puts the land at the corner the edge shares with the next edge clockwise (`e + 1`), `Left` at the corner it shares with `e - 1` (`data/sockets.ron` `directional: [Beach]`). A beach edge meets only a beach edge with the opposite side, so both tiles put their land corner on the same point, and it never meets grass, forest or ocean. Every legal coast seam therefore continues the same coast, and an ocean or grass neighbour only ever touches an ocean or grass edge.
 

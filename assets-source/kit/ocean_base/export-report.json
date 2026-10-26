@@ -2,12 +2,12 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/ocean_base.py",
-    "sha256": "962a2565b203d4d637b701c880aa4097777f7d9e3e028af3a888204f0521b120"
+    "sha256": "1eba31f7f896c4d5b8d0a38bac45b6737f5e7a4d3c7cd4a12a19004525cf8ca8"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_coast.py",
-      "sha256": "e9810a9e852621856239bf566ce949d676ee7a647755983c8cc3e7b193a71574"
+      "sha256": "2e1b0a444dd9a5641452545da63af2bee06dd20e00b3094a719b94e890544f0c"
     }
   ],
   "lodTris": {

@@ -1,0 +1,217 @@
+{
+  "pieceId": "beach_pebbles",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/beach_pebbles.py",
+    "sha256": "fa41fc0e3acf127b3f8c6feae85dda1a03a2e5b2fcb1b5487dadf218abd42bd1"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_stones.py",
+      "sha256": "1e0bb5df8b8d0122bfae086e6c8f27355e4b48492c2c64e768932733edd74bba"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 32
+      }
+    },
+    "device": "none",
+    "marginPx": 0,
+    "masks": {
+      "ao": 1,
+      "night": 0,
+      "porosity": 0.65,
+      "snow": 1
+    },
+    "reason": "colour-only slot; uniform masks, no Cycles bake",
+    "receiverSignature": "ef29ea9efa799a734619319fcacc4de10456166a9c6e4310c36ddaf5ade171b0",
+    "samples": 0,
+    "skipped": true,
+    "stones": {
+      "count": 5,
+      "lod2Keeps": 2,
+      "pxAt150m": [
+        2.35,
+        2.09,
+        2.08,
+        1.63,
+        1.49
+      ],
+      "pxAt400m": [
+        0.91,
+        0.81,
+        0.81,
+        0.63,
+        0.58
+      ],
+      "reachM": 0.4871,
+      "topM": 0.0986,
+      "widthsM": [
+        0.2815,
+        0.2511,
+        0.2501,
+        0.195,
+        0.179
+      ]
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 100,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 40,
+      "ratio": 0.4
+    },
+    {
+      "lod": 2,
+      "tris": 8,
+      "ratio": 0.08
+    }
+  ],
+  "collider": {
+    "node": "beach_pebbles_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": null,
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 525,
+        "astc": 525
+      },
+      "glbBytes": 22776
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/beach_pebbles/beach_pebbles.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 6,
+        "bytes": 525,
+        "sha256": "c0d407853e19b6d04442b83e9d9a90d68115ab9f7b4cfa8df322bd4f8b3239fb"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/beach_pebbles/beach_pebbles.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 6,
+        "bytes": 525,
+        "sha256": "e07aa4f5dae8acc75d11eaf5ef57d0732de4ceb4e888fb929a9f3c73187d0c12"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/beach_pebbles/beach_pebbles.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 291,
+        "sha256": "5c7f09c93c48fd7cfabc5593939e1e8caf41902faa46854db90735691d74f5c6"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/beach_pebbles/beach_pebbles.glb",
+      "sha256": "a36c5dc9b98607fb646b4a590f04e3c4157bd6afb30715d1759313898af97953",
+      "bytes": 22776
+    },
+    {
+      "path": "assets/kit/p1/beach_pebbles/beach_pebbles.masks.bc7.ktx2",
+      "sha256": "c0d407853e19b6d04442b83e9d9a90d68115ab9f7b4cfa8df322bd4f8b3239fb",
+      "bytes": 525
+    },
+    {
+      "path": "assets/kit/p1/beach_pebbles/beach_pebbles.masks.astc.ktx2",
+      "sha256": "e07aa4f5dae8acc75d11eaf5ef57d0732de4ceb4e888fb929a9f3c73187d0c12",
+      "bytes": 525
+    },
+    {
+      "path": "assets/kit/p1/beach_pebbles/beach_pebbles.masks.png",
+      "sha256": "5c7f09c93c48fd7cfabc5593939e1e8caf41902faa46854db90735691d74f5c6",
+      "bytes": 291
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/beach/ref-1.jpg",
+      "sha256": "70197b97b4579a58dc379b6ec221b40c6d52fc766d479fe0c52c09f5c6cb62d7",
+      "sourceSha256": "83fe5f0fa3c789100617486e46d202c3545d8e5adcafa158a4033f9f780c1799",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "081ff9a7-e526-474d-bd06-719886bf4d0c",
+      "prompt": "A single flat-sided hexagonal coast tile for a diorama, 32 m across. Ocean fills the side with two adjacent flat edges, lush meadow grass fills the two flat edges opposite them, and a curving sand shoreline runs across the tile from one flat edge to the opposite flat edge. Bands from land to sea: meadow grass, dry pale sand, a darker wet-sand band, a lacy white surf foam line, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Under the land the side walls show layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel); on the ocean side the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, with the sand floor sloping down, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/beach/ref-2.jpg",
+      "sha256": "d0a0cb5b52623c3962f484a30801d9fe29b991570c7d61949b228d7f38c72f16",
+      "sourceSha256": "b73a29c23160b506d955f670ec43fa5288badce025c83d4f2f2052b1bcb353ef",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "fc5bf24b-dec3-446a-ade8-a21f9e1efa3a",
+      "prompt": "Close-up of the waterline on a diorama beach tile: dry pale sand, a darker damp-sand band, a thin lacy white surf foam line along the shore, clear turquoise shallows over a rippled sandy floor with caustics, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-26T16:24:19.822Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/beach/ref-1.jpg",
+        "assets-source/refs/beach/ref-2.jpg"
+      ],
+      "notes": "Approved: grass, dry sand, wet band, surf foam, water column on the cut side. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "scatter props (owner 2026-10-26)",
+      "requested": "2026-10-26",
+      "notes": "Pending owner review; not an approval. The beach pebbles that beach_center, beach_inner_center and beach_outer_center baked at the grass line, rebuilt as a scatter prop of five pebbles, placed per tile by the play scatter (owner 2026-10-26: \"scatter type items like rocks and reeds should not be built into the tile\"). Review the six-view renders in assets-source/kit/beach_pebbles/renders/ and the before/after sheet in docs/checkpoints/beach-ocean-scatter/. The controller records the owner's decision."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/seabed_rock.py",
+    "sha256": "8422db6a04703609f0dfec95163b7550124ffc20bb27780b8990e092593938fd"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_stones.py",
+      "sha256": "1e0bb5df8b8d0122bfae086e6c8f27355e4b48492c2c64e768932733edd74bba"
+    }
+  ],
+  "lodTris": {
+    "seabed_rock_lod0": 80,
+    "seabed_rock_lod1": 20,
+    "seabed_rock_lod2": 6
+  },
+  "nodes": [
+    "seabed_rock",
+    "seabed_rock_collider",
+    "seabed_rock_lod0",
+    "seabed_rock_lod1",
+    "seabed_rock_lod2"
+  ],
+  "pieceId": "seabed_rock",
+  "sockets": []
+}

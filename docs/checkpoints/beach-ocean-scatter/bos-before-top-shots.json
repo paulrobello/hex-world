@@ -1,0 +1,46 @@
+{
+  "command": [
+    "/Users/probello/Repos/hex-world/.claude/worktrees/agent-a2d19b8ab94674dc2/target/scratch/beach-ocean/hex-world-before",
+    "--script",
+    "/Users/probello/Repos/hex-world/.claude/worktrees/agent-a2d19b8ab94674dc2/docs/checkpoints/beach-ocean-scatter/bos-before-top.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        781.55,
+        650.07,
+        533.54
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 41.5,
+      "load_after": [
+        686.82,
+        644.9,
+        537.16
+      ],
+      "frames": {
+        "bos-before-pebbles-top": {
+          "mean": 0.5536,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

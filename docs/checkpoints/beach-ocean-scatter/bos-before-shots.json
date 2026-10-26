@@ -1,0 +1,66 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/beach-ocean-scatter/bos-before.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        363.98,
+        305.04,
+        239.89
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 25.7,
+      "load_after": [
+        351.69,
+        306.8,
+        242.41
+      ],
+      "frames": {
+        "bos-before-beach-stretch": {
+          "mean": 0.4831,
+          "problem": null
+        },
+        "bos-before-beach-close": {
+          "mean": 0.5145,
+          "problem": null
+        },
+        "bos-before-ocean-stretch": {
+          "mean": 0.3189,
+          "problem": null
+        },
+        "bos-before-ocean-close": {
+          "mean": 0.4211,
+          "problem": null
+        },
+        "bos-before-far-150": {
+          "mean": 0.1673,
+          "problem": null
+        },
+        "bos-before-far-400": {
+          "mean": 0.074,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

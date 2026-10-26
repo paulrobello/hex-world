@@ -1,0 +1,220 @@
+{
+  "pieceId": "seabed_pebbles",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/seabed_pebbles.py",
+    "sha256": "6079cbf2c391c9107b37efd14cf5a04cb3acee4ae66b38d0301c2ab3829af76b"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_stones.py",
+      "sha256": "1e0bb5df8b8d0122bfae086e6c8f27355e4b48492c2c64e768932733edd74bba"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 32
+      }
+    },
+    "device": "none",
+    "marginPx": 0,
+    "masks": {
+      "ao": 1,
+      "night": 0,
+      "porosity": 0,
+      "snow": 0
+    },
+    "reason": "colour-only slot; uniform masks, no Cycles bake",
+    "receiverSignature": "235103bd146e604bc26d9a5a5f4ddfe0cf4c6afa135f9fb251d52054ed637562",
+    "samples": 0,
+    "skipped": true,
+    "stones": {
+      "count": 6,
+      "lod2Keeps": 3,
+      "pxAt150m": [
+        2.7,
+        2.47,
+        1.85,
+        1.69,
+        1.68,
+        1.62
+      ],
+      "pxAt400m": [
+        1.05,
+        0.96,
+        0.72,
+        0.65,
+        0.65,
+        0.63
+      ],
+      "reachM": 0.5393,
+      "topM": 0.0846,
+      "widthsM": [
+        0.3243,
+        0.2966,
+        0.2222,
+        0.2028,
+        0.2018,
+        0.1945
+      ]
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 120,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 48,
+      "ratio": 0.4
+    },
+    {
+      "lod": 2,
+      "tris": 12,
+      "ratio": 0.1
+    }
+  ],
+  "collider": {
+    "node": "seabed_pebbles_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": null,
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 525,
+        "astc": 525
+      },
+      "glbBytes": 26036
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/seabed_pebbles/seabed_pebbles.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 6,
+        "bytes": 525,
+        "sha256": "78939d569c8121d6c9b35b0d0c5034dd84212fea7ce622b8ad89bf6a4549c5ac"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/seabed_pebbles/seabed_pebbles.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 6,
+        "bytes": 525,
+        "sha256": "72eb16e3ac6013b45b60c598c164dd3bf77217e45d13b2cb7425572a3b40a3bd"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/seabed_pebbles/seabed_pebbles.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 291,
+        "sha256": "a705077c18c8d934b0aa6ea1e70a5bc10420c29f4cad89ed4eac9fa6105ff3c1"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/seabed_pebbles/seabed_pebbles.glb",
+      "sha256": "787ef90bd76f8900de4526a58647e9bd90c20da0f1d4ad5aed4c7414d0a1c0d0",
+      "bytes": 26036
+    },
+    {
+      "path": "assets/kit/p1/seabed_pebbles/seabed_pebbles.masks.bc7.ktx2",
+      "sha256": "78939d569c8121d6c9b35b0d0c5034dd84212fea7ce622b8ad89bf6a4549c5ac",
+      "bytes": 525
+    },
+    {
+      "path": "assets/kit/p1/seabed_pebbles/seabed_pebbles.masks.astc.ktx2",
+      "sha256": "72eb16e3ac6013b45b60c598c164dd3bf77217e45d13b2cb7425572a3b40a3bd",
+      "bytes": 525
+    },
+    {
+      "path": "assets/kit/p1/seabed_pebbles/seabed_pebbles.masks.png",
+      "sha256": "a705077c18c8d934b0aa6ea1e70a5bc10420c29f4cad89ed4eac9fa6105ff3c1",
+      "bytes": 291
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/ocean/ref-1.jpg",
+      "sha256": "3702fa1838b2b4868b78a899055dc65cb5df78ca21877f4e41fd3ea52e8410e9",
+      "sourceSha256": "b506b0b02c86e7db990ae556065825b00217824f2383b90444da349e17465ec7",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "88781f5f-812f-4b69-b54a-2280a7abee77",
+      "prompt": "A single regular hexagonal deep ocean tile for a diorama with exactly six straight flat edges, 32 m across, on a plain neutral grey studio backdrop. Open temperate sea with layered gentle waves, a few white foam flecks on crests, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. On every side the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. Through the clear side walls a pale sandy shelf rises toward one edge and slopes down to a darker sandy seabed with scattered pebbles. Photoreal PBR rendering with plain sand and pebbles only, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/ocean/ref-2.jpg",
+      "sha256": "009e38e8f4b171c1c09c0fdeee812dc908c4d9a20f4004c69886d773c10307b3",
+      "sourceSha256": "08f9aa28c0d45b9fbc36d30e8ad52e9117e9209fd92505adfec522295d4d931c",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "bdca8aae-2293-43f9-8765-c3db8809e125",
+      "prompt": "Close-up at one corner of a hexagonal diorama ocean tile on a plain neutral grey studio backdrop, looking at the 120 degree corner where two side faces of the hexagon meet. The tile is one cast block of clear tinted resin with no container, no glass walls and no rim: the top of each side face follows the wavy water surface exactly, the water column turquoise near the top fading to deep blue lower down, a pale sandy shelf stepping down to a darker sandy seabed with a few pebbles, soft caustic light on the sand, photoreal PBR rendering, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-26T16:24:31.627Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/ocean/ref-1.jpg",
+        "assets-source/refs/ocean/ref-2.jpg"
+      ],
+      "notes": "Approved. ref-2's close-up shows a near-90 degree corner and a blue-tinted seabed; the tile is hexagonal per the kit contract. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "scatter props (owner 2026-10-26)",
+      "requested": "2026-10-26",
+      "notes": "Pending owner review; not an approval. The seabed pebble clusters that ocean_center baked, rebuilt as a scatter prop (six pebbles), placed per tile by the play scatter (owner 2026-10-26: \"scatter type items like rocks and reeds should not be built into the tile\"). Review the six-view renders in assets-source/kit/seabed_pebbles/renders/ and the before/after sheet in docs/checkpoints/beach-ocean-scatter/. The controller records the owner's decision."
+    }
+  ]
+}
