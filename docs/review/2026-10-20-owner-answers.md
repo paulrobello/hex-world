@@ -99,3 +99,6 @@ Paul answered `docs/review/2026-10-20-walkthrough.html` on 2026-10-20. Codes fol
 - Share image (A9): the R8 play shot (`docs/checkpoints/share-image/og-image-after.png`) is approved.
 - Bulldoze dust (A9): revert the 2026-10-21 "another 20%" particle cut; the particles go back to their previous size.
 - Rail ends (A18): approved one-way: a tile without rail may go against a stopped rail end, but a new rail tile may not point its end at an existing meadow.
+- Spring (A21): keep the granite ring and the lily pads built into river_spring_center for now.
+- UI (A4): approved: the hallway test and the sign-off of the shipped UI (build 041ad32).
+- Grass blades (A9): look approved.
