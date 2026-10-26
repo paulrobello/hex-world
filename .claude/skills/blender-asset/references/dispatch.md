@@ -17,7 +17,7 @@ that built it instead of starting a fresh one.
    cites. Never cite a draft that is not on main.
 4. **Bootstrap.** Three calls:
    - `git merge --ff-only main`, then `git log --oneline -1` and confirm the SHA.
-   - `bash scripts/worktree-bootstrap.sh` (add `--web` when the brief needs the e2e gates). It
+   - `./scripts/worktree-bootstrap.sh` (add `--web` when the brief needs the e2e gates; agent worktree guards refuse the `bash scripts/...` form). It
      clones main's `target/` copy-on-write and cleans `hex-core`/`hex-assets`, clones or installs
      `web/ui`, `scripts/assets` (and `e2e`) node_modules, and installs the KTX tools. About 5 s;
      a second run is a no-op. Start it only when no cargo build is running in main.
