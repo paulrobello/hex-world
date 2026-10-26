@@ -45,9 +45,7 @@ NOTES = {
     "pickup": ("New: three close-ups of driving pickups (green, teal, white paint) on the cars-kit road tree, taken "
                "with docs/checkpoints/pickup/pickup.json under --clock fixed. The left image is the earlier tony "
                "close-up from the cars-kit hub for colour reference."),
-    "later": ("Not re-taken, per the no-new-asset-work rule: the social share image (web/brand/og-image.png) and every "
-              "icon or brand image. They still show the tony look and need a re-shoot once generated images are "
-              "allowed again."),
+    "later": ("Re-taken on 2026-10-25 after the freeze lifted: the social share image (web/brand/og-image.png) is a rich-3 play shot framed per the owner's R8 answer (docs/checkpoints/share-image/). The icons are unchanged: they are drawn marks, not shots, so the grade does not apply."),
 }
 
 T14 = "9c80a87, 2026-10-14, tony"
