@@ -1,0 +1,111 @@
+{
+  "trail": [
+    {
+      "option": "O1",
+      "trail": 0.95,
+      "sand_luma": [
+        164.01,
+        163.73,
+        162.8,
+        162.35,
+        162.38
+      ]
+    },
+    {
+      "option": "O2",
+      "trail": 0.9,
+      "sand_luma": [
+        163.94,
+        163.66,
+        162.72,
+        162.27,
+        162.3
+      ]
+    },
+    {
+      "option": "O3",
+      "trail": 0.8,
+      "sand_luma": [
+        163.8,
+        163.52,
+        162.56,
+        162.11,
+        162.14
+      ]
+    },
+    {
+      "option": "O4",
+      "trail": 0.7,
+      "sand_luma": [
+        163.66,
+        163.37,
+        162.39,
+        161.93,
+        161.97
+      ]
+    },
+    {
+      "option": "O5",
+      "trail": 0.6,
+      "sand_luma": [
+        163.5,
+        163.21,
+        162.2,
+        161.74,
+        161.8
+      ]
+    }
+  ],
+  "churn": [
+    {
+      "option": "O1",
+      "churn": 0.25,
+      "fork-top_luma": 101.593,
+      "fork-oblique_luma": 100.695,
+      "bend-top_luma": 79.163,
+      "bend-oblique_luma": 81.886,
+      "bend60-top_luma": 94.014,
+      "bend60-oblique_luma": 109.708
+    },
+    {
+      "option": "O2",
+      "churn": 0.5,
+      "fork-top_luma": 101.596,
+      "fork-oblique_luma": 100.712,
+      "bend-top_luma": 79.164,
+      "bend-oblique_luma": 81.896,
+      "bend60-top_luma": 94.063,
+      "bend60-oblique_luma": 109.835
+    },
+    {
+      "option": "O3",
+      "churn": 1.0,
+      "fork-top_luma": 101.629,
+      "fork-oblique_luma": 100.869,
+      "bend-top_luma": 79.167,
+      "bend-oblique_luma": 81.917,
+      "bend60-top_luma": 94.244,
+      "bend60-oblique_luma": 110.246
+    },
+    {
+      "option": "O4",
+      "churn": 2.0,
+      "fork-top_luma": 101.928,
+      "fork-oblique_luma": 102.179,
+      "bend-top_luma": 79.174,
+      "bend-oblique_luma": 81.964,
+      "bend60-top_luma": 94.796,
+      "bend60-oblique_luma": 111.602
+    },
+    {
+      "option": "O5",
+      "churn": 3.5,
+      "fork-top_luma": 102.531,
+      "fork-oblique_luma": 104.786,
+      "bend-top_luma": 79.185,
+      "bend-oblique_luma": 82.047,
+      "bend60-top_luma": 95.457,
+      "bend60-oblique_luma": 113.215
+    }
+  ]
+}

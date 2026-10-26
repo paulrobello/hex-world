@@ -69,6 +69,9 @@ pub struct KitParams {
     pub wash_amp: f32,
     /// Wind amplitude (m per unit wind push, `Slot::wind`); 0 on still slots.
     pub wind_amp: f32,
+    /// Review-only drying-trail offset (`crate::water::WaterLook`): the wet band's soaked sheen
+    /// darkens to x(0.8 - this). 0 (the shipped look) unless `--water_look trail=` is given.
+    pub trail_delta: f32,
     /// Linear leaf - flower colour (`Slot::blossom`, A 1): out of season a texel shifts by its
     /// blossom coverage times this. 0 on other slots.
     pub blossom: Vec4,
@@ -695,10 +698,10 @@ mod tests {
         }
     }
 
-    /// The WGSL struct is eight scalars, then the blossom vec4 (16-byte aligned at offset 32) and
-    /// the two animal rig vec4s: the Rust side must stay 80 bytes.
+    /// The WGSL struct is nine scalars, then the blossom vec4 (16-byte aligned at offset 48) and
+    /// the two animal rig vec4s: the Rust side must stay 96 bytes.
     #[test]
-    fn params_are_80_bytes() {
-        assert_eq!(KitParams::min_size().get(), 80);
+    fn params_are_96_bytes() {
+        assert_eq!(KitParams::min_size().get(), 96);
     }
 }

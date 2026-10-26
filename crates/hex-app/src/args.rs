@@ -71,6 +71,9 @@ pub struct Flags {
     /// `debug=lod,perf,grid,sockets,colliders,lod2`: developer overlays on from the start (never
     /// persisted; `hex_play::debug`).
     pub debug: hex_play::debug::DebugOverlays,
+    /// Native only, review/debug: `water_look=trail=<x>,churn=<g>` overrides the drying-trail
+    /// darkening and the river churn foam scale (`hex_render::water::WaterLook`).
+    pub water_look: Option<hex_render::water::WaterLook>,
 }
 
 /// `"1280x800"` -> `Some((1280, 800))`; zero or malformed sizes are rejected.
@@ -417,6 +420,15 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
             state.warnings.push(format!("unknown debug overlay '{u}'"));
         }
     }),
+    (
+        "water_look",
+        |state, _k, v| match hex_render::water::WaterLook::parse(v) {
+            Some(l) => state.f.water_look = Some(l),
+            None => state.warnings.push(format!(
+                "bad water_look '{v}', expected trail=<0.3..1>,churn=<0..6>"
+            )),
+        },
+    ),
     ("photo-export", |state, _k, v| match v.parse::<u32>() {
         Ok(n) if crate::photo::EXPORT_SCALES.contains(&n) => state.f.photo_export = Some(n),
         _ => state

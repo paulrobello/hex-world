@@ -25,7 +25,9 @@ struct WaterParams {
     // §9.4 water freeze (crates/hex-render/src/hooks.rs): 0 is open water, the MVP value; 1 is a
     // frozen sheet. Read only by the WATER_FREEZE variant (water.rs `WaterKey::freeze`).
     freeze: f32,
-    _pad0: f32,
+    // Review-only churn foam offset (`--water_look churn=`, water.rs `WaterLook`): the churn term
+    // is scaled by 1 + this, 0 in every shipped build.
+    churn_delta: f32,
     _pad1: f32,
     _pad2: f32,
     // Boat hulls (water.rs `WaterParams::hulls`, hex_play::boats): two per boat, (centre xz,
@@ -248,7 +250,7 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
         let s1 = noise_b(p - in.flow * ph1 * period + vec2(0.37, 0.61), 2.9);
         streak = mix(s0, s1, w1);
     }
-    let churn = river * smoothstep(0.05, 0.22, in.churn) * (0.1 + 0.3 * streak);
+    let churn = river * smoothstep(0.05, 0.22, in.churn) * (0.1 + 0.3 * streak) * (1.0 + water.churn_delta);
     let raw = max(contact, lines * 0.75) + crest + rapids + meet + churn;
     let foam = select(clamp((raw - (1.0 - nb) * 0.85) * 2.4, 0.0, 1.0), 0.0, skirt);
 

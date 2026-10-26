@@ -635,7 +635,9 @@ pub struct WaterParams {
     pub wash_amp: f32,
     /// PRD §9.4 water freeze: 0 is open water (the MVP value), 1 a frozen sheet (`crate::hooks`).
     pub freeze: f32,
-    pub _pad0: f32,
+    /// Review-only churn foam offset ([`WaterLook`]): `water.wesl` scales the churn term by
+    /// 1 + this. 0 (the shipped look) unless `--water_look churn=` is given.
+    pub churn_delta: f32,
     pub _pad1: f32,
     pub _pad2: f32,
     /// The boats' hulls (`hex_play::boats`), two per boat: (centre x, centre z, heading x,
@@ -905,6 +907,55 @@ pub struct WaterClock {
     pub fixed: bool,
 }
 
+/// Review-only water look knobs (native `--water_look trail=<x>,churn=<g>`, owner review
+/// 2026-10-21 A3): the wet band's soaked sheen darkens to x`trail` (shipped 0.8) and the river
+/// churn foam is scaled by `churn` (shipped 1.0). Absent, or at those values, the shipped look is
+/// unchanged: [`tick`] hands the uniforms only the offsets from them.
+#[derive(Resource, Clone, Copy, Debug, PartialEq)]
+pub struct WaterLook {
+    pub trail: f32,
+    pub churn: f32,
+}
+
+impl WaterLook {
+    /// The shipped drying-trail darkening (`kit_material.wesl`).
+    pub const TRAIL: f32 = 0.8;
+    /// The shipped churn foam scale (`water.wesl`).
+    pub const CHURN: f32 = 1.0;
+
+    /// `trail=<0.3..1>,churn=<0..6>` in any order, either key optional; `None` on anything else.
+    pub fn parse(s: &str) -> Option<WaterLook> {
+        let mut look = WaterLook::default();
+        for part in s.split(',') {
+            let (k, v) = part.split_once('=')?;
+            let v: f32 = v.trim().parse().ok()?;
+            match k.trim() {
+                "trail" if (0.3..=1.0).contains(&v) => look.trail = v,
+                "churn" if (0.0..=6.0).contains(&v) => look.churn = v,
+                _ => return None,
+            }
+        }
+        Some(look)
+    }
+
+    fn trail_delta(self) -> f32 {
+        Self::TRAIL - self.trail
+    }
+
+    fn churn_delta(self) -> f32 {
+        self.churn - Self::CHURN
+    }
+}
+
+impl Default for WaterLook {
+    fn default() -> Self {
+        Self {
+            trail: Self::TRAIL,
+            churn: Self::CHURN,
+        }
+    }
+}
+
 pub const FIXED_STEP: f32 = 1.0 / 30.0;
 
 #[derive(Component)]
@@ -1002,7 +1053,9 @@ pub fn tick(
     mut water: ResMut<Assets<WaterMaterial>>,
     mut terrain: ResMut<Assets<TerrainMaterial>>,
     mut kit: ResMut<Assets<crate::kit_material::KitMaterial>>,
+    look: Option<Res<WaterLook>>,
 ) {
+    let look = look.map(|l| *l).unwrap_or_default();
     let Some(mut clock) = clock else {
         return;
     };
@@ -1014,6 +1067,7 @@ pub fn tick(
     let t = clock.t;
     for (_, m) in water.iter_mut() {
         m.params.water_time = t;
+        m.params.churn_delta = look.churn_delta();
     }
     for (_, m) in terrain.iter_mut() {
         m.params.terrain_time = t;
@@ -1029,7 +1083,9 @@ pub fn tick(
         .filter(|(_, m)| {
             let p = &m.extension.params;
             p.flags & crate::kit_material::FLAG_WET_BAND != 0
-                && (p.water_time != t || p.flags & crate::kit_material::FLAG_WET_TRAIL != trail)
+                && (p.water_time != t
+                    || p.flags & crate::kit_material::FLAG_WET_TRAIL != trail
+                    || p.trail_delta != look.trail_delta())
         })
         .map(|(id, _)| id)
         .collect();
@@ -1038,6 +1094,7 @@ pub fn tick(
             let p = &mut m.extension.params;
             p.water_time = t;
             p.flags = (p.flags & !crate::kit_material::FLAG_WET_TRAIL) | trail;
+            p.trail_delta = look.trail_delta();
         }
     }
 }
@@ -1045,6 +1102,23 @@ pub fn tick(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The review knobs parse in any order, reject out-of-range values, and the shipped values
+    /// hand the shaders exactly zero offsets (the shipped look, bit for bit).
+    #[test]
+    fn water_look_parses_and_ships_zero_offsets() {
+        let l = WaterLook::parse("churn=2.5,trail=0.6").unwrap();
+        assert_eq!((l.trail, l.churn), (0.6, 2.5));
+        assert_eq!(
+            WaterLook::parse("trail=0.9").unwrap().churn,
+            WaterLook::CHURN
+        );
+        for bad in ["", "trail=0.1", "churn=7", "foam=1", "trail", "trail=x"] {
+            assert!(WaterLook::parse(bad).is_none(), "{bad}");
+        }
+        let d = WaterLook::default();
+        assert_eq!((d.trail_delta(), d.churn_delta()), (0.0, 0.0));
+    }
 
     #[test]
     fn hex_grid_counts_and_winding() {

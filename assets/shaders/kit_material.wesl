@@ -151,7 +151,7 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
             shore_wet *= 1.0 - to_gravel;
             sheen *= 1.0 - to_gravel;
         }
-        pbr_input.material.base_color = vec4(c.rgb * mix(1.0, 0.55, shore_wet) * mix(1.0, 0.8, sheen), c.a);
+        pbr_input.material.base_color = vec4(c.rgb * mix(1.0, 0.55, shore_wet) * mix(1.0, 0.8 - kit_common::kit.trail_delta, sheen), c.a);
         pbr_input.material.perceptual_roughness = mix(pbr_input.material.perceptual_roughness, 0.18, shore_wet * step(-0.02, y));
         pbr_input.material.perceptual_roughness = mix(pbr_input.material.perceptual_roughness, 0.09, sheen);
     }

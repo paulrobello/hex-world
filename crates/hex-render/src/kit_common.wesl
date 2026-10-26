@@ -15,6 +15,9 @@ struct KitParams {
     water_time: f32,
     wash_amp: f32,
     wind_amp: f32,
+    // Review-only drying-trail offset (`--water_look trail=`, water.rs `WaterLook`): the soaked
+    // sheen darkens to x(0.8 - this), 0 in every shipped build.
+    trail_delta: f32,
     // Linear leaf - flower colour of a FLAG_BLOSSOM slot (A 1): out of season a texel shifts by
     // its blossom coverage times this.
     blossom: vec4<f32>,

@@ -94,6 +94,9 @@ fn main() {
     let game = game::GameState::new(flags.seed);
     let cars = sim::CarSim::new(&game.world, &game.catalog);
     let mut app = App::new();
+    if let Some(look) = flags.water_look {
+        app.insert_resource(look);
+    }
     if flags.clock_fixed {
         // 1/60 s rounded up to the nanosecond, so three frames always cover one 50 ms sim tick.
         app.insert_resource(bevy::time::TimeUpdateStrategy::ManualDuration(
