@@ -1,0 +1,291 @@
+{
+ "note": "Owner decisions 2026-10-21 (A2 Q1, A2 Q2, A15 Q1, A2 Q4). before = 4ea55ca, after = this branch. draws = every pass and cascade, as docs/checkpoints/scatter/check.mjs counts them. world20 is draws.json (the 20-tile scatter world; band = its centre 152 m away); only the overview is gated at 500. forest7 is band.json (seven pine forests, camera 130-170 m from the origin); its before is census.json's after column.",
+ "world20": {
+  "overview": {
+   "gated": true,
+   "before": {
+    "draws": 407,
+    "passes": {
+     "main/alpha_mask": 27,
+     "main/alpha_mask_prepass": 27,
+     "main/opaque": 108,
+     "main/prepass": 104,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 0,
+     "cascade2/shadow": 131,
+     "cascade3/shadow": 10
+    }
+   },
+   "after": {
+    "draws": 419,
+    "passes": {
+     "main/alpha_mask": 27,
+     "main/alpha_mask_prepass": 27,
+     "main/opaque": 112,
+     "main/prepass": 108,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 0,
+     "cascade2/shadow": 135,
+     "cascade3/shadow": 10
+    },
+    "scatter_pairs": 159,
+    "scatter_pairs_by_lod": [
+     53,
+     53,
+     53
+    ]
+   }
+  },
+  "forest-cluster": {
+   "gated": false,
+   "before": {
+    "draws": 633,
+    "passes": {
+     "main/alpha_mask": 27,
+     "main/alpha_mask_prepass": 27,
+     "main/opaque": 109,
+     "main/prepass": 105,
+     "cascade0/shadow": 85,
+     "cascade1/shadow": 135,
+     "cascade2/shadow": 135,
+     "cascade3/shadow": 10
+    }
+   },
+   "after": {
+    "draws": 633,
+    "passes": {
+     "main/alpha_mask": 27,
+     "main/alpha_mask_prepass": 27,
+     "main/opaque": 109,
+     "main/prepass": 105,
+     "cascade0/shadow": 85,
+     "cascade1/shadow": 135,
+     "cascade2/shadow": 135,
+     "cascade3/shadow": 10
+    },
+    "scatter_pairs": 159,
+    "scatter_pairs_by_lod": [
+     53,
+     53,
+     53
+    ]
+   }
+  },
+  "meadow": {
+   "gated": false,
+   "before": {
+    "draws": 645,
+    "passes": {
+     "main/alpha_mask": 27,
+     "main/alpha_mask_prepass": 27,
+     "main/opaque": 115,
+     "main/prepass": 111,
+     "cascade0/shadow": 85,
+     "cascade1/shadow": 135,
+     "cascade2/shadow": 135,
+     "cascade3/shadow": 10
+    }
+   },
+   "after": {
+    "draws": 645,
+    "passes": {
+     "main/alpha_mask": 27,
+     "main/alpha_mask_prepass": 27,
+     "main/opaque": 115,
+     "main/prepass": 111,
+     "cascade0/shadow": 85,
+     "cascade1/shadow": 135,
+     "cascade2/shadow": 135,
+     "cascade3/shadow": 10
+    },
+    "scatter_pairs": 159,
+    "scatter_pairs_by_lod": [
+     53,
+     53,
+     53
+    ]
+   }
+  },
+  "band": {
+   "gated": false,
+   "before": {
+    "draws": 748,
+    "passes": {
+     "main/alpha_mask": 48,
+     "main/alpha_mask_prepass": 48,
+     "main/opaque": 142,
+     "main/prepass": 138,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 176,
+     "cascade2/shadow": 186,
+     "cascade3/shadow": 10
+    }
+   },
+   "after": {
+    "draws": 756,
+    "passes": {
+     "main/alpha_mask": 48,
+     "main/alpha_mask_prepass": 48,
+     "main/opaque": 146,
+     "main/prepass": 142,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 176,
+     "cascade2/shadow": 186,
+     "cascade3/shadow": 10
+    },
+    "scatter_pairs": 159,
+    "scatter_pairs_by_lod": [
+     53,
+     53,
+     53
+    ]
+   }
+  }
+ },
+ "forest7": {
+  "130m": {
+   "before": 352,
+   "after": {
+    "draws": 330,
+    "passes": {
+     "main/alpha_mask": 31,
+     "main/alpha_mask_prepass": 31,
+     "main/opaque": 60,
+     "main/prepass": 56,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 76,
+     "cascade2/shadow": 76,
+     "cascade3/shadow": 0
+    }
+   }
+  },
+  "140m": {
+   "before": 376,
+   "after": {
+    "draws": 364,
+    "passes": {
+     "main/alpha_mask": 37,
+     "main/alpha_mask_prepass": 37,
+     "main/opaque": 60,
+     "main/prepass": 56,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 87,
+     "cascade2/shadow": 87,
+     "cascade3/shadow": 0
+    }
+   }
+  },
+  "145m": {
+   "before": 400,
+   "after": {
+    "draws": 378,
+    "passes": {
+     "main/alpha_mask": 39,
+     "main/alpha_mask_prepass": 39,
+     "main/opaque": 64,
+     "main/prepass": 60,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 88,
+     "cascade2/shadow": 88,
+     "cascade3/shadow": 0
+    }
+   }
+  },
+  "148m": {
+   "before": 404,
+   "after": {
+    "draws": 388,
+    "passes": {
+     "main/alpha_mask": 39,
+     "main/alpha_mask_prepass": 39,
+     "main/opaque": 65,
+     "main/prepass": 61,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 92,
+     "cascade2/shadow": 92,
+     "cascade3/shadow": 0
+    }
+   }
+  },
+  "150m": {
+   "before": 404,
+   "after": {
+    "draws": 390,
+    "passes": {
+     "main/alpha_mask": 39,
+     "main/alpha_mask_prepass": 39,
+     "main/opaque": 65,
+     "main/prepass": 61,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 93,
+     "cascade2/shadow": 93,
+     "cascade3/shadow": 0
+    }
+   }
+  },
+  "152m": {
+   "before": 416,
+   "after": {
+    "draws": 400,
+    "passes": {
+     "main/alpha_mask": 40,
+     "main/alpha_mask_prepass": 40,
+     "main/opaque": 67,
+     "main/prepass": 63,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 95,
+     "cascade2/shadow": 95,
+     "cascade3/shadow": 0
+    }
+   }
+  },
+  "155m": {
+   "before": 408,
+   "after": {
+    "draws": 396,
+    "passes": {
+     "main/alpha_mask": 40,
+     "main/alpha_mask_prepass": 40,
+     "main/opaque": 65,
+     "main/prepass": 61,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 95,
+     "cascade2/shadow": 95,
+     "cascade3/shadow": 0
+    }
+   }
+  },
+  "160m": {
+   "before": 298,
+   "after": {
+    "draws": 295,
+    "passes": {
+     "main/alpha_mask": 40,
+     "main/alpha_mask_prepass": 40,
+     "main/opaque": 62,
+     "main/prepass": 58,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 0,
+     "cascade2/shadow": 95,
+     "cascade3/shadow": 0
+    }
+   }
+  },
+  "170m": {
+   "before": 271,
+   "after": {
+    "draws": 270,
+    "passes": {
+     "main/alpha_mask": 31,
+     "main/alpha_mask_prepass": 31,
+     "main/opaque": 62,
+     "main/prepass": 58,
+     "cascade0/shadow": 0,
+     "cascade1/shadow": 0,
+     "cascade2/shadow": 88,
+     "cascade3/shadow": 0
+    }
+   }
+  }
+ }
+}

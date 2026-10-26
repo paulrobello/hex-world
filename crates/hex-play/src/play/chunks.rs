@@ -18,7 +18,7 @@ use hex_render::{
         KitSlotDraw,
     },
     kit_scene::KitRotor,
-    scene::{Lod, lod_range},
+    scene::{Lod, LodCover, lod_cover_range, lod_range},
 };
 
 use super::{KitMaterial, KitPart, PlaySpawned, PlayView, RisePart, SceneEntity, rise::PlayRises};
@@ -33,6 +33,7 @@ struct Part {
     world: Transform,
     rise: Option<RisePart>,
     lod: u8,
+    cover: Option<LodCover>,
 }
 
 struct Tile {
@@ -50,8 +51,9 @@ pub(super) struct PlayChunks {
 }
 
 /// Maps every kit part mesh to its (family, LOD): a family is one piece body primitive across
-/// the three LODs, identified by (piece, material, ordinal within the LOD). Parts without an
-/// entry stay on the per-entity path.
+/// the three LODs, identified by (piece, material, ordinal among that material's primitives in
+/// the LOD), so a LOD that drops a slot leaves the other slots' families paired. Parts without
+/// an entry stay on the per-entity path.
 #[derive(Resource, Default)]
 pub(super) struct KitFamilies {
     family_of: HashMap<AssetId<Mesh>, (u32, u8)>,
@@ -67,13 +69,14 @@ impl KitFamilies {
         let mut ids: Vec<_> = pieces.keys().cloned().collect();
         ids.sort();
         for id in ids {
-            let mut per_lod_seen = [0u32; 3];
+            let mut seen: HashMap<(AssetId<KitMaterial>, usize), u32> = HashMap::new();
             for part in &pieces[&id] {
                 if part.rotor.is_some() {
                     continue;
                 }
-                let ord = per_lod_seen[part.lod];
-                per_lod_seen[part.lod] += 1;
+                let n = seen.entry((part.material.id(), part.lod)).or_default();
+                let ord = *n;
+                *n += 1;
                 let fid = *intern
                     .entry((id.clone(), part.material.id(), ord))
                     .or_insert_with(|| {
@@ -144,12 +147,16 @@ pub(super) fn restore(
                 MeshMaterial3d(part.material),
                 part.local,
                 Lod(part.lod),
-                lod_range(part.lod as usize),
+                part.cover
+                    .map_or_else(|| lod_range(part.lod as usize), lod_cover_range),
                 SceneEntity,
                 ChildOf(part.parent),
             ));
             if let Some(rise) = part.rise {
                 e.insert(rise);
+            }
+            if let Some(cover) = part.cover {
+                e.insert(cover);
             }
             let restored = e.id();
             if let Some(ids) = spawned
@@ -185,6 +192,7 @@ pub(super) fn settle(
             &Transform,
             Option<&RisePart>,
             &Lod,
+            Option<&LodCover>,
         ),
         (Without<KitRotor>,),
     >,
@@ -240,7 +248,7 @@ pub(super) fn settle(
         }
     }
     for (entity, parent, root, cell, world) in candidates {
-        let Ok((_, mesh, material, local, rise, lod)) = parts.get(entity) else {
+        let Ok((_, mesh, material, local, rise, lod, cover)) = parts.get(entity) else {
             continue;
         };
         if children
@@ -273,6 +281,7 @@ pub(super) fn settle(
                 world,
                 rise: rise.copied(),
                 lod: lod.0,
+                cover: cover.copied(),
             });
         chunks.dirty.insert(chunk_center(cell, 19));
         commands.entity(entity).try_despawn();
@@ -707,6 +716,53 @@ mod tests {
             app.update();
             assert_eq!(app.world().resource::<KitInstanceSet>().0.pieces.len(), 50);
         }
+    }
+
+    /// A LOD that drops a slot (the bakery's bread) leaves every other slot's primitives in one
+    /// family across all three LODs, so only the dropped slot's family lacks LOD1 and LOD2.
+    #[test]
+    fn families_pair_each_material_across_lods_when_a_lod_drops_a_slot() {
+        let mut meshes = Assets::<Mesh>::default();
+        let mut mats = Assets::<KitMaterial>::default();
+        let mat = |m: &mut Assets<KitMaterial>| {
+            m.add(KitMaterial {
+                base: StandardMaterial::default(),
+                extension: Default::default(),
+            })
+        };
+        let (walls, bread, roof) = (mat(&mut mats), mat(&mut mats), mat(&mut mats));
+        let mut parts = vec![];
+        for (lod, slots) in [
+            (0, vec![&walls, &bread, &roof]),
+            (1, vec![&walls, &roof]),
+            (2, vec![&walls, &roof]),
+        ] {
+            for (m, slot) in slots.into_iter().zip(["walls", "bread", "roof"]) {
+                parts.push(KitPart {
+                    lod,
+                    mesh: meshes.add(Cuboid::new(1.0, 1.0, 1.0)),
+                    material: m.clone(),
+                    slot: slot.into(),
+                    rotor: None,
+                });
+            }
+        }
+        let f = KitFamilies::build(&HashMap::from([("bakery".to_owned(), parts.clone())]));
+        let lods_of = |m: &Handle<KitMaterial>| -> Vec<[bool; 3]> {
+            let mut fams: Vec<u32> = parts
+                .iter()
+                .filter(|p| p.material == *m)
+                .map(|p| f.family_of(p.mesh.id()).expect("family").0)
+                .collect();
+            fams.sort();
+            fams.dedup();
+            fams.iter()
+                .map(|&id| f.meshes_of(id).map(|h| h.is_some()))
+                .collect()
+        };
+        assert_eq!(lods_of(&walls), vec![[true; 3]]);
+        assert_eq!(lods_of(&roof), vec![[true; 3]], "the roof stays one family");
+        assert_eq!(lods_of(&bread), vec![[true, false, false]]);
     }
 
     #[test]

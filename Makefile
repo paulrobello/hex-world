@@ -720,7 +720,8 @@ shots-grass:
 # bulldozed, undone, and again under reduced motion) after every pack has landed, then
 # scatter-stream.json with the streamed packs held (a forest and the start meadow before and after
 # their packs land). Copies JPEG stills and the state dumps next to it, and asserts the dumps
-# (check.mjs: per-tile counts, roosts, undo, reduced motion, streaming, draw calls).
+# (check.mjs: per-tile counts, roosts, undo, reduced motion, streaming, the overview's draw calls
+# gated at 500 with the close cameras tracked, scatter pairs at most 60 per LOD and 180 in all).
 SCATTER_SHOTS = scatter-01-overview scatter-02-forest-cluster scatter-03-meadow scatter-04-road-river scatter-05-forest-closeup scatter-06-rise-props scatter-07-rise-settled scatter-12-oak scatter-13-junction scatter-14-meadow-drifts
 SCATTER_DOCS = docs/checkpoints/scatter
 shots-scatter:
@@ -736,7 +737,8 @@ shots-scatter:
 # Scatter on WebGPU (local only, GPU Chromium): the scatter checkpoint's 20-tile world on the built
 # site with post=full and the device clamped to 16 sampled textures per stage. Asserts every kit
 # forward pipeline binds exactly 16 next to refracting water, the per-tile scatter matches the native
-# dump at the same seed, and the pass census stays within 500 draws (e2e/scatter.mjs).
+# dump at the same seed, and the overview camera's pass census stays within 500 draws, with the
+# forest-cluster camera's census printed as tracked (owner A2 Q1; e2e/scatter.mjs).
 web-scatter: build-web
 	cd e2e && npm ci --no-audit --no-fund
 	caffeinate -d -u node e2e/scatter.mjs dist $(SCATTER_DOCS)

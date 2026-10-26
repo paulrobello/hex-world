@@ -1936,8 +1936,13 @@ fn report(
         .iter()
         .filter(|(_, n)| **n > 0)
         .flat_map(|(p, _)| kit.get(*p).into_iter().flatten())
-        .map(|part| (part.mesh.id(), part.material.id()))
+        .map(|part| (part.lod.min(2), part.mesh.id(), part.material.id()))
         .collect();
+    // Per LOD, as the scatter pair limit gates them (owner A2 Q2: at most 60 each, 180 in all).
+    let mut by_lod = [0usize; 3];
+    for (lod, _, _) in &pairs {
+        by_lod[*lod] += 1;
+    }
     let drawn_total: usize = drawn_by_piece.values().sum();
     let by_piece: Vec<String> = drawn_by_piece
         .iter()
@@ -1948,11 +1953,14 @@ fn report(
         .map(|(c, t)| format!("{{\"q\":{},\"r\":{},\"tile\":\"{t}\"}}", c.q, c.r))
         .collect();
     format!(
-        "{{\"world_seed\":{world_seed},\"tiles\":[{}],\"waiting\":[{}],\"placed\":{placed_total},\"drawn\":{drawn_total},\"drawn_by_piece\":{{{}}},\"entities\":{entities},\"mesh_material_pairs\":{}}}",
+        "{{\"world_seed\":{world_seed},\"tiles\":[{}],\"waiting\":[{}],\"placed\":{placed_total},\"drawn\":{drawn_total},\"drawn_by_piece\":{{{}}},\"entities\":{entities},\"mesh_material_pairs\":{},\"mesh_material_pairs_by_lod\":[{},{},{}]}}",
         rows.join(","),
         waiting.join(","),
         by_piece.join(","),
-        pairs.len()
+        pairs.len(),
+        by_lod[0],
+        by_lod[1],
+        by_lod[2]
     )
 }
 

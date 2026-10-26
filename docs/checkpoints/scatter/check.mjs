@@ -2,7 +2,9 @@
 // shots, each pine forest, oak tile, meadow and straight road scatters its planned count (the density per 100 m²
 // of cap times 665 m²) and draws all of it, nothing else scatters, only the oak tiles roost (12
 // each), the rising forest scatters, bulldoze takes its scatter and undo brings back the same
-// counts, and the 20-tile world stays inside the draw-call budget.
+// counts, and the 20-tile world's overview camera stays inside the 500-draw budget (owner A2 Q1,
+// 2026-10-21: close cameras are tracked, not gated) with at most 60 scatter (mesh, material) pairs
+// per LOD and 180 in all (A2 Q2).
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -52,10 +54,22 @@ check(JSON.stringify(back) === JSON.stringify(risingRow), "undo brings back the 
 
 const world = read("scatter-10-world");
 check(world.tiles === 20, "the 20-tile world", world.tiles);
-const passes = world.diag?.passes ?? [];
-const draws = passes.reduce((n, p) => n + p.multidraw_sets + p.batchable_bins + p.unbatchable + p.non_mesh, 0);
-check(passes.length > 0 && draws <= 500, "draw calls over every pass and cascade within 500 (PRD §10)", { draws, passes: passes.map((p) => `${p.view}/${p.phase}:${p.multidraw_sets}+${p.batchable_bins}+${p.unbatchable}+${p.non_mesh}`) });
-check(world.scatter.mesh_material_pairs <= 15, "scatter adds at most 15 (mesh, material) batches per pass", world.scatter.mesh_material_pairs);
+const census = (dump) => {
+  const passes = dump.diag?.passes ?? [];
+  const draws = passes.reduce((n, p) => n + p.multidraw_sets + p.batchable_bins + p.unbatchable + p.non_mesh, 0);
+  return { passes, draws, by_pass: passes.map((p) => `${p.view}/${p.phase}:${p.multidraw_sets}+${p.batchable_bins}+${p.unbatchable}+${p.non_mesh}`) };
+};
+const overview = census(world);
+check(overview.passes.length > 0 && overview.draws <= 500, "overview camera: draw calls over every pass and cascade within 500 (PRD §10)", { draws: overview.draws, passes: overview.by_pass });
+// The close cameras are dumped after the overview, once the pass census is sampled (it is not
+// during the first 600-frame window), at the scatter-02 and scatter-03 still cameras.
+for (const name of ["scatter-10-forest-cluster", "scatter-10-meadow"]) {
+  const c = census(read(name));
+  console.log(`track ${name.replace("scatter-10-", "")} camera: ${c.draws} draws over every pass and cascade (tracked, not gated) ${JSON.stringify(c.by_pass)}`);
+}
+const pairs = world.scatter.mesh_material_pairs_by_lod ?? [];
+check(pairs.length === 3 && pairs.every((n) => n <= 60), "scatter adds at most 60 (mesh, material) batches per LOD", pairs);
+check(world.scatter.mesh_material_pairs <= 180, "scatter adds at most 180 (mesh, material) batches over all LODs", world.scatter.mesh_material_pairs);
 const reduced = read("scatter-11-reduced");
 const cut = reduced.scatter.tiles.find((t) => t.q === 1 && t.r === 2);
 check(reduced.play.reduced_motion === true && reduced.play.rising.length === 0, "reduced motion: the undone forest is at rest at once", { reduced: reduced.play.reduced_motion, rising: reduced.play.rising });

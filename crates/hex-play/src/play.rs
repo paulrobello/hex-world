@@ -40,7 +40,7 @@ use crate::{
     ActiveScenario, Scenario, SceneEntity,
     kit_material::{KitMaterial, build_material, slot_requests},
     kit_scene::{KitRotor, MANIFEST, piece_rotation, rotor_phase},
-    scene::{Lod, lod_range},
+    scene::{Lod, LodCover, lod_cover, lod_cover_range, lod_range},
     water,
     workload::GateConfig,
 };
@@ -371,6 +371,19 @@ fn build_piece(
     parts
 }
 
+/// The LODs body part `part` of a piece (`parts`) draws through: its own, plus the LOD1 range
+/// when the piece has no LOD1 mesh for its material slot ([`lod_cover`]).
+pub(crate) fn part_cover(parts: &[KitPart], part: &KitPart) -> LodCover {
+    let mut present = [false; 3];
+    for q in parts
+        .iter()
+        .filter(|q| q.rotor.is_none() && q.slot == part.slot)
+    {
+        present[q.lod.min(2)] = true;
+    }
+    lod_cover(present, part.lod)
+}
+
 fn spawn_kit(
     p: &mut ChildSpawnerCommands,
     kit: &HashMap<String, Vec<KitPart>>,
@@ -419,14 +432,18 @@ fn spawn_kit_parts(
             out.push(e.id());
             continue;
         }
+        let cover = part_cover(parts, part);
         let mut e = p.spawn((
             Mesh3d(part.mesh.clone()),
             MeshMaterial3d(part.material.clone()),
             t,
-            lod_range(part.lod),
+            lod_cover_range(cover),
             Lod(part.lod as u8),
             SceneEntity,
         ));
+        if cover.first as usize != part.lod || cover.last as usize != part.lod {
+            e.insert(cover);
+        }
         if let Some((cell, role)) = rise {
             e.insert(RisePart::new(cell, role, t));
         }
@@ -1175,6 +1192,57 @@ mod tests {
         }
         assert_ne!(found[0].2, found[1].2, "each LOD's rotor has its own body");
         assert_eq!(found[0].0.phase, found[1].0.phase, "one hub, one phase");
+    }
+
+    /// A slot with no LOD1 mesh (the windmill's iron straps) keeps its LOD0 part drawing through
+    /// the LOD1 range, so it does not vanish past 150 m (owner A2 Q4); a slot with a full chain
+    /// keeps each LOD's own range.
+    #[test]
+    fn a_slot_without_lod1_draws_its_lod0_through_the_lod1_range() {
+        let part = |lod: usize, slot: &str| KitPart {
+            lod,
+            mesh: Handle::default(),
+            material: Handle::default(),
+            slot: slot.into(),
+            rotor: None,
+        };
+        let parts = vec![
+            part(0, "windmill_stone"),
+            part(0, "windmill_iron"),
+            part(1, "windmill_stone"),
+            part(2, "windmill_stone"),
+        ];
+        let kit = HashMap::from([("windmill".to_owned(), parts)]);
+        let mut world = World::new();
+        let root = world.spawn_empty().id();
+        world.commands().entity(root).with_children(|p| {
+            spawn_kit_parts(p, &kit, "windmill", Transform::IDENTITY, None).unwrap();
+        });
+        world.flush();
+        let mut q = world.query::<(
+            &Lod,
+            &bevy::camera::visibility::VisibilityRange,
+            Option<&LodCover>,
+        )>();
+        let got: Vec<_> = q
+            .iter(&world)
+            .map(|(l, r, c)| (l.0, r.clone(), c.copied()))
+            .collect();
+        assert_eq!(got.len(), 4);
+        let at = |d: f32| {
+            got.iter()
+                .filter(|(_, r, _)| r.is_visible_at_all(d))
+                .count()
+        };
+        // Stone at LOD1 plus the iron's LOD0 between the bands, stone LOD2 alone past 405 m.
+        assert_eq!(at(200.0), 2);
+        assert_eq!(at(100.0), 2);
+        assert_eq!(at(500.0), 1);
+        let covered: Vec<_> = got
+            .iter()
+            .filter_map(|(l, _, c)| c.map(|c| (*l, c)))
+            .collect();
+        assert_eq!(covered, vec![(0, LodCover { first: 0, last: 1 })]);
     }
 
     #[test]

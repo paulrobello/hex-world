@@ -171,6 +171,7 @@ impl Plugin for HexRenderPlugin {
                     kit_scene::start_kit,
                     kit_scene::finish_kit,
                     kit_scene::spin_rotors,
+                    scene::band_shadows.run_if(|s: Res<ActiveScenario>| s.0 != Scenario::Gate2000),
                     record_gpu_limits,
                     water::tick,
                 ),

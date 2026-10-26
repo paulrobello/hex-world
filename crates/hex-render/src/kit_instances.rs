@@ -204,22 +204,74 @@ pub fn kit_lod_range(lod: usize) -> [f32; 4] {
 }
 
 /// Where a settled part draws: whole at one LOD, or inside the cross-fade band between LOD `l`
-/// and `l + 1`, where both draw dithered in camera views and both cast whole shadows (as bevy
-/// treats a per-entity `VisibilityRange` band: its shadow queue adds no dither).
+/// and `l + 1`, where both draw dithered in camera views. In shadow views a band part casts with
+/// LOD `l` alone, whole (owner A15 Q1, 2026-10-21): the outgoing LOD is the one still drawn
+/// whole up to the band, and a slot the next LOD drops keeps its shadow until it has faded out.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PartLod {
     Whole(u8),
     Band(u8),
 }
 
+/// The full LOD chain: each LOD's range is drawn by its own mesh.
+const FULL_CHAIN: [Option<u8>; 3] = [Some(0), Some(1), Some(2)];
+
 impl PartLod {
     /// Whether the part draws in `lod`'s whole (`band` false) or band draw of a camera view, or
-    /// of a shadow view (where band parts join both LODs' whole draws).
-    fn draws(self, lod: usize, band: bool, shadow: bool) -> bool {
+    /// of a shadow view, for a slot whose LOD-`g` range is drawn by its mesh `map[g]`
+    /// ([`slot_lod_map`]). A band whose two sides draw the same mesh draws it whole.
+    fn draws_in(self, map: [Option<u8>; 3], lod: usize, band: bool, shadow: bool) -> bool {
+        let is = |m: Option<u8>| m.is_some_and(|m| m as usize == lod);
         match self {
-            PartLod::Whole(l) => l as usize == lod && !band,
-            PartLod::Band(l) => (l as usize == lod || l as usize + 1 == lod) && band != shadow,
+            PartLod::Whole(g) => is(map[g as usize]) && !band,
+            PartLod::Band(g) => {
+                let (out, inc) = (map[g as usize], map[g as usize + 1]);
+                if out == inc || shadow {
+                    is(out) && !band
+                } else {
+                    (is(out) || is(inc)) && band
+                }
+            }
         }
+    }
+
+    #[cfg(test)]
+    fn draws(self, lod: usize, band: bool, shadow: bool) -> bool {
+        self.draws_in(FULL_CHAIN, lod, band, shadow)
+    }
+}
+
+/// Which of a slot's meshes draws each LOD range: a slot with no LOD1 mesh draws its LOD0 mesh
+/// there (or its LOD2 mesh with no LOD0 either), as the per-entity path does through
+/// `scene::lod_cover` (owner A2 Q4). A slot with no mesh at all (test fixtures) is a full chain.
+pub fn slot_lod_map(slot: &KitSlot) -> [Option<u8>; 3] {
+    let present = slot.mesh.map(|m| m.is_some());
+    if !present.iter().any(|&p| p) {
+        return FULL_CHAIN;
+    }
+    let mut map = [None; 3];
+    for lod in (0..3).filter(|&l| present[l]) {
+        let c = crate::scene::lod_cover(present, lod);
+        for g in c.first..=c.last {
+            map[g as usize] = Some(lod as u8);
+        }
+    }
+    map
+}
+
+/// The band edges (as [`kit_lod_range`]) slot `slot`'s LOD-`lod` mesh fades over: from its first
+/// covered LOD's fade-in to its last one's fade-out.
+fn slot_lod_range(slot: Option<&KitSlot>, lod: usize) -> [f32; 4] {
+    let Some(map) = slot.map(slot_lod_map) else {
+        return kit_lod_range(lod);
+    };
+    let covered: Vec<usize> = (0..3).filter(|&g| map[g] == Some(lod as u8)).collect();
+    match (covered.first(), covered.last()) {
+        (Some(&a), Some(&b)) => {
+            let (a, b) = (kit_lod_range(a), kit_lod_range(b));
+            [a[0], a[1], b[2], b[3]]
+        }
+        _ => kit_lod_range(lod),
     }
 }
 
@@ -288,6 +340,7 @@ pub fn kit_view_ranges(
         .collect();
     let mut out = vec![];
     for slot in 0..set.slots.len() {
+        let map = slot_lod_map(&set.slots[slot]);
         for lod in 0..3usize {
             let first = ids.len() as u32;
             let mut banded = false;
@@ -299,13 +352,13 @@ pub fn kit_view_ranges(
                     };
                     match lods[ci] {
                         ChunkLod::All(p) => {
-                            if p.draws(lod, band, shadow) {
+                            if p.draws_in(map, lod, band, shadow) {
                                 ids.extend(r.clone());
                             }
                         }
                         ChunkLod::Split => ids.extend(
                             r.clone()
-                                .filter(|&i| parts[i as usize].draws(lod, band, shadow)),
+                                .filter(|&i| parts[i as usize].draws_in(map, lod, band, shadow)),
                         ),
                     }
                 }
@@ -830,7 +883,13 @@ fn prepare_kit(
     let changed = gpu.scene.as_ref().is_none_or(|s| !Arc::ptr_eq(s, &scene.0));
     if !changed {
         if tint != gpu.meta_tint && gpu.meta.is_some() {
-            gpu.meta = Some(meta_buffer(&device, &scene.0.meta, gpu.meta_stride, tint));
+            gpu.meta = Some(meta_buffer(
+                &device,
+                &scene.0.meta,
+                &scene.0.slots,
+                gpu.meta_stride,
+                tint,
+            ));
             gpu.meta_tint = tint;
         }
         return;
@@ -887,21 +946,33 @@ fn prepare_kit(
     // One metadata entry per (slot, LOD), padded to the device's uniform offset alignment.
     let align = device.limits().min_uniform_buffer_offset_alignment;
     gpu.meta_stride = (META_SIZE as u32).next_multiple_of(align);
-    gpu.meta = Some(meta_buffer(&device, &scene.0.meta, gpu.meta_stride, tint));
+    gpu.meta = Some(meta_buffer(
+        &device,
+        &scene.0.meta,
+        &scene.0.slots,
+        gpu.meta_stride,
+        tint,
+    ));
     gpu.meta_tint = tint;
 }
 
 /// The (slot, LOD) metadata entries at `stride`. Entry `slot * 3 + lod` carries the debug LOD
 /// tint in its pad words (`_pad0` 1 when tinting, `_pad1` the LOD) and the LOD's band edges, which
 /// the band draws dither on.
-fn meta_buffer(device: &RenderDevice, meta: &[KitGpuMeta], stride: u32, tint: bool) -> Buffer {
+fn meta_buffer(
+    device: &RenderDevice,
+    meta: &[KitGpuMeta],
+    slots: &[KitSlot],
+    stride: u32,
+    tint: bool,
+) -> Buffer {
     let stride = stride as usize;
     let mut bytes = vec![0u8; stride * meta.len()];
     for (i, m) in meta.iter().enumerate() {
         let mut m = *m;
         m._pad0 = u32::from(tint);
         m._pad1 = (i % 3) as u32;
-        m.lod_range = kit_lod_range(i % 3);
+        m.lod_range = slot_lod_range(slots.get(i / 3), i % 3);
         let src = bytemuck::bytes_of(&m);
         bytes[i * stride..i * stride + src.len()].copy_from_slice(src);
     }
@@ -1700,7 +1771,7 @@ mod tests {
             assert_eq!(a[3] - a[2], 10.0);
         }
         // In a camera view a band part draws in both LODs' band draws only; in a shadow view in
-        // both LODs' whole draws, as a per-entity band part casts with both LODs.
+        // the outgoing LOD's whole draw alone (owner A15 Q1).
         let draws = |p: PartLod, shadow: bool| -> Vec<bool> {
             (0..3)
                 .flat_map(|l| [false, true].map(|b| p.draws(l, b, shadow)))
@@ -1712,7 +1783,11 @@ mod tests {
         );
         assert_eq!(
             draws(Band(0), true),
-            [true, false, true, false, false, false]
+            [true, false, false, false, false, false]
+        );
+        assert_eq!(
+            draws(Band(1), true),
+            [false, false, true, false, false, false]
         );
         assert_eq!(
             draws(Whole(1), false),
@@ -1777,10 +1852,46 @@ mod tests {
             .collect()
     }
 
+    /// A slot with no LOD1 (or LOD2) mesh draws its LOD0 mesh through the LOD1 range (owner A2
+    /// Q4): whole across the 150 m band, where both sides are the same mesh, and fading out over
+    /// the 400 m band, in camera and shadow views alike; its LOD0 metadata carries that range.
+    #[test]
+    fn a_slot_without_lod1_draws_lod0_through_the_lod1_range() {
+        let mut set = row(&[140.0, 150.0, 200.0, 400.0, 500.0]);
+        set.slots[0].mesh = [Some(AssetId::default()), None, None];
+        assert_eq!(slot_lod_map(&set.slots[0]), [Some(0), Some(0), None]);
+        let eye = Vec3::ZERO;
+        assert_eq!(
+            drawn(&set, eye, None, false),
+            vec![(draw_index(0, true), vec![0, 1, 2, 3])]
+        );
+        assert_eq!(
+            drawn(&set, eye, None, true),
+            vec![(draw_index(0, false), vec![0, 1, 2, 3])]
+        );
+        assert_eq!(
+            drawn(&row(&[200.0]), eye, None, false),
+            vec![(draw_index(1, false), vec![0])],
+            "a full chain draws LOD1 there"
+        );
+        assert_eq!(
+            slot_lod_range(set.slots.first(), 0),
+            [0.0, 0.0, 395.0, 405.0]
+        );
+        assert_eq!(
+            slot_lod_range(row(&[0.0]).slots.first(), 1),
+            kit_lod_range(1)
+        );
+        assert_eq!(
+            drawn(&set, eye, Some(1), false),
+            vec![(draw_index(0, false), vec![0, 1, 2, 3, 4])]
+        );
+    }
+
     /// A chunk straddling the 150 m band splits per part: the part short of it draws at LOD0, the
     /// part past it at LOD1 and the part in it at both, each LOD in one band (dithered) draw since
-    /// it holds a band part. Shadow views draw the band part in both whole draws, and a forced LOD
-    /// pins all of them with no band.
+    /// it holds a band part. Shadow views draw the band part in the outgoing LOD0's whole draw
+    /// alone (owner A15 Q1), and a forced LOD pins all of them with no band.
     #[test]
     fn chunk_across_the_band_draws_each_part_at_its_own_lod() {
         let set = row(&[140.0, 150.0, 160.0]);
@@ -1801,7 +1912,7 @@ mod tests {
         );
         assert_eq!(
             drawn(&set, eye, None, true),
-            vec![(whole0, vec![0, 1]), (whole1, vec![1, 2])]
+            vec![(whole0, vec![0, 1]), (whole1, vec![2])]
         );
         assert_eq!(
             drawn(&set, eye, Some(1), false),

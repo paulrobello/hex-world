@@ -35,7 +35,7 @@ use crate::{
         grass::{Clear, exclusions},
         scatter::{ScatterLayouts, footprint},
     },
-    scene::{Lod, lod_range},
+    scene::{Lod, LodCover, lod_cover_range},
     walk::WalkGround,
 };
 
@@ -285,21 +285,27 @@ fn pinned_range(show: bool) -> VisibilityRange {
     }
 }
 
-fn range_for(lod: u8, force: Option<u8>) -> VisibilityRange {
+/// A part's range under `force`: pinned on when the forced level is one its [`LodCover`]
+/// spans (its own LOD without one), else its auto range.
+fn range_for(lod: u8, cover: Option<&LodCover>, force: Option<u8>) -> VisibilityRange {
+    let cover = cover.copied().unwrap_or(LodCover {
+        first: lod,
+        last: lod,
+    });
     match force {
-        Some(f) => pinned_range(f == lod),
-        None => lod_range(lod as usize),
+        Some(f) => pinned_range((cover.first..=cover.last).contains(&f)),
+        None => lod_cover_range(cover),
     }
 }
 
 fn force_all(
     d: Res<DebugOverlays>,
-    mut parts: Query<(&Lod, &mut VisibilityRange)>,
+    mut parts: Query<(&Lod, Option<&LodCover>, &mut VisibilityRange)>,
     mut report: ResMut<DebugReport>,
 ) {
     report.work += 1;
-    for (lod, mut range) in &mut parts {
-        *range = range_for(lod.0, d.force_lod);
+    for (lod, cover, mut range) in &mut parts {
+        *range = range_for(lod.0, cover, d.force_lod);
     }
     report.forced = d.force_lod.is_some();
 }
@@ -307,12 +313,12 @@ fn force_all(
 /// Parts spawned while a level is forced (placements, pair edges, cars) take it at once.
 fn force_new(
     d: Res<DebugOverlays>,
-    mut parts: Query<(&Lod, &mut VisibilityRange), Added<Lod>>,
+    mut parts: Query<(&Lod, Option<&LodCover>, &mut VisibilityRange), Added<Lod>>,
     mut report: ResMut<DebugReport>,
 ) {
     report.work += 1;
-    for (lod, mut range) in &mut parts {
-        *range = range_for(lod.0, d.force_lod);
+    for (lod, cover, mut range) in &mut parts {
+        *range = range_for(lod.0, cover, d.force_lod);
     }
 }
 
@@ -557,6 +563,7 @@ fn draw_scatter(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hex_render::scene::lod_range;
 
     #[test]
     fn parses_the_flag_list() {
@@ -574,12 +581,19 @@ mod tests {
     fn forced_ranges_show_one_level_and_auto_restores_the_bands() {
         for f in 0..3u8 {
             for l in 0..3u8 {
-                let r = range_for(l, Some(f));
+                let r = range_for(l, None, Some(f));
                 let shown = r.start_margin.start <= 1.0e6;
                 assert_eq!(shown, f == l, "force {f} lod {l}");
             }
         }
-        assert!(range_for(1, None) == lod_range(1));
+        assert!(range_for(1, None, None) == lod_range(1));
+        // A LOD0 part covering the LOD1 range (no LOD1 mesh for its slot) shows when LOD1 is
+        // forced and restores its covering range on Auto.
+        let cover = LodCover { first: 0, last: 1 };
+        let shown = |r: VisibilityRange| r.start_margin.start <= 1.0e6;
+        assert!(shown(range_for(0, Some(&cover), Some(1))));
+        assert!(!shown(range_for(0, Some(&cover), Some(2))));
+        assert!(range_for(0, Some(&cover), None) == lod_cover_range(cover));
     }
 
     /// A headless app with LOD parts: every overlay off runs no overlay system, swaps no material
@@ -659,7 +673,7 @@ mod tests {
                 w.get::<MeshMaterial3d<KitMaterial>>(e).is_none(),
                 "lod {l} drawn once"
             );
-            assert!(*w.get::<VisibilityRange>(e).unwrap() == range_for(l as u8, Some(2)));
+            assert!(*w.get::<VisibilityRange>(e).unwrap() == range_for(l as u8, None, Some(2)));
         }
         *app.world_mut().resource_mut::<DebugOverlays>() = DebugOverlays::default();
         app.update();

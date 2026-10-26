@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use crate::{
     SceneEntity,
     kit_material::{KitMaterial, build_material, slot_requests},
-    scene::{Lod, lod_range},
+    scene::{Lod, lod_cover, lod_cover_range},
     workload::{GateConfig, KitSource},
 };
 
@@ -837,6 +837,28 @@ pub fn finish_kit(
         let pos = Vec3::new(x, p.y, z) + rot * Vec3::new(p.offset[0], 0.0, p.offset[1]);
         let rot = placement_rotation(p);
         let place = Transform::from_translation(pos).with_rotation(rot);
+        // Which LOD body meshes carry each material slot, for the missing-LOD1 fallback.
+        let mut present: HashMap<String, [bool; 3]> = HashMap::new();
+        for lod in 0..3usize {
+            let Some(gm) = g
+                .named_meshes
+                .get(lod_mesh_name(p.piece, lod).as_str())
+                .and_then(|mh| gltf_meshes.get(mh))
+            else {
+                continue;
+            };
+            for prim in &gm.primitives {
+                let name = prim.material.as_ref().and_then(|mh| {
+                    g.named_materials
+                        .iter()
+                        .find(|(_, v)| *v == mh)
+                        .map(|(k, _)| k.to_string())
+                });
+                if let Some(name) = name {
+                    present.entry(name).or_default()[lod] = true;
+                }
+            }
+        }
         for lod in 0..3usize {
             let Some(mh) = g.named_meshes.get(lod_mesh_name(p.piece, lod).as_str()) else {
                 warn!("kit: {} has no {}_lod{lod}", p.piece, p.piece);
@@ -907,14 +929,21 @@ pub fn finish_kit(
                 let Some(mat) = mat else {
                     continue;
                 };
+                let cover = match (&rotor, present.get(&slot_name)) {
+                    (None, Some(have)) => lod_cover(*have, lod),
+                    _ => lod_cover([true; 3], lod),
+                };
                 let mut e = commands.spawn((
                     Mesh3d(prim.mesh.clone()),
                     MeshMaterial3d(mat),
                     t,
-                    lod_range(lod),
+                    lod_cover_range(cover),
                     Lod(lod as u8),
                     SceneEntity,
                 ));
+                if cover.first as usize != lod || cover.last as usize != lod {
+                    e.insert(cover);
+                }
                 if let Some(r) = rotor {
                     e.insert(r);
                 }

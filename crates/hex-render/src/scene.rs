@@ -3,12 +3,10 @@ use crate::{
     chunks::{chunk_tiles, merge_by_material},
     workload::{GATE, ShadowCasters, piece_material, unit_hash},
 };
-#[cfg(feature = "gate-tools")]
-use bevy::light::NotShadowCaster;
 use bevy::{
     asset::RenderAssetUsages,
     camera::visibility::VisibilityRange,
-    light::CascadeShadowConfigBuilder,
+    light::{CascadeShadowConfigBuilder, NotShadowCaster},
     mesh::{Indices, PrimitiveTopology},
     prelude::*,
 };
@@ -37,6 +35,44 @@ pub struct Tile;
 /// debug overlays (`crate::debug`) tint and pin them.
 #[derive(Component, Clone, Copy)]
 pub struct Lod(pub u8);
+
+/// The LOD ranges a part covers when its slot has no mesh at a neighbouring LOD (owner A2 Q4,
+/// 2026-10-21): `first..=last`, a superset of its own [`Lod`]. Only parts whose cover differs
+/// from their own LOD carry it; the debug force and the chunk restore read it back.
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct LodCover {
+    pub first: u8,
+    pub last: u8,
+}
+
+/// The LODs a slot's LOD-`lod` mesh draws through, given which LODs the slot has a mesh at. A slot
+/// with no LOD1 mesh draws its LOD0 mesh through the LOD1 range, or its LOD2 mesh when it has no
+/// LOD0 either, so it never vanishes between 150 m and its next mesh (owner A2 Q4).
+pub fn lod_cover(present: [bool; 3], lod: usize) -> LodCover {
+    let (first, last) = match lod {
+        0 if !present[1] => (0, 1),
+        2 if !present[1] && !present[0] => (1, 2),
+        l => (l.min(2), l.min(2)),
+    };
+    LodCover {
+        first: first as u8,
+        last: last as u8,
+    }
+}
+
+/// The `VisibilityRange` of a part covering `cover`: fading in where its first LOD does and out
+/// where its last LOD does.
+pub fn lod_cover_range(cover: LodCover) -> VisibilityRange {
+    let (a, b) = (
+        lod_range(cover.first as usize),
+        lod_range(cover.last as usize),
+    );
+    VisibilityRange {
+        start_margin: a.start_margin,
+        end_margin: b.end_margin,
+        use_aabb: false,
+    }
+}
 
 /// What the current scene actually built, for diagnostics.
 #[derive(Resource, Clone, Default)]
@@ -90,6 +126,57 @@ pub fn lod_range(lod: usize) -> VisibilityRange {
         start_margin,
         end_margin,
         use_aabb: false,
+    }
+}
+
+/// Marks a per-entity LOD part whose shadow [`band_shadows`] turned off.
+#[derive(Component)]
+pub struct BandShadowOff;
+
+/// Inside a LOD cross-fade band a per-entity part casts with one LOD only (owner A15 Q1,
+/// 2026-10-21), as on the instanced path: a part whose distance from the main camera lies in its
+/// range's fade-in margin casts nothing, so the outgoing LOD alone does. Bevy's shadow views test
+/// the whole `VisibilityRange`, margins included, so without this both LODs cast across the band.
+/// A part that already carries `NotShadowCaster` for another reason (a fading car, the water) is
+/// left alone, and only the marker's own insertion is ever removed. Not run in the 2,000-tile
+/// gate scenario, whose tens of thousands of LOD-tagged pieces would make it a main-thread loop
+/// inside the perf budget.
+#[allow(clippy::type_complexity)]
+pub fn band_shadows(
+    mut commands: Commands,
+    cameras: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
+    parts: Query<
+        (
+            Entity,
+            &GlobalTransform,
+            &VisibilityRange,
+            Has<NotShadowCaster>,
+            Has<BandShadowOff>,
+        ),
+        With<Lod>,
+    >,
+) {
+    let Some(eye) = cameras
+        .iter()
+        .filter(|(c, _)| c.is_active)
+        .min_by_key(|(c, _)| c.order)
+        .map(|(_, t)| t.translation())
+    else {
+        return;
+    };
+    for (e, t, range, off, ours) in &parts {
+        let d = eye.distance(t.translation());
+        if range.start_margin.contains(&d) {
+            if !off {
+                commands
+                    .entity(e)
+                    .try_insert((NotShadowCaster, BandShadowOff));
+            }
+        } else if ours {
+            commands
+                .entity(e)
+                .try_remove::<(NotShadowCaster, BandShadowOff)>();
+        }
     }
 }
 
@@ -801,6 +888,52 @@ mod tests {
         let m = PieceMeshes::new(&mut assets);
         // 1,008 base + 6×604 edges + 1,620 center + 6×720 spheres + 6×796 cylinders.
         assert_eq!(tile_lod0_tris(&tile_pieces(&m, 0), &assets), 15_348);
+    }
+
+    /// Inside the 150 m band only the outgoing LOD0 part casts: the incoming LOD1 part gets
+    /// `NotShadowCaster` and loses it again past the band. A part already off for another reason
+    /// keeps its `NotShadowCaster` outside the band.
+    #[test]
+    fn band_parts_cast_from_the_outgoing_lod_only() {
+        let mut app = App::new();
+        app.add_systems(Update, band_shadows);
+        app.world_mut().spawn((
+            Camera3d::default(),
+            Camera::default(),
+            GlobalTransform::IDENTITY,
+        ));
+        let at = |x: f32| GlobalTransform::from_translation(Vec3::new(x, 0.0, 0.0));
+        let w = app.world_mut();
+        let lod0 = w.spawn((Lod(0), lod_range(0), at(150.0))).id();
+        let lod1 = w.spawn((Lod(1), lod_range(1), at(150.0))).id();
+        let other = w
+            .spawn((Lod(1), lod_range(1), at(200.0), NotShadowCaster))
+            .id();
+        app.update();
+        let casts = |app: &App, e: Entity| !app.world().entity(e).contains::<NotShadowCaster>();
+        assert!(casts(&app, lod0) && !casts(&app, lod1) && !casts(&app, other));
+        app.world_mut().entity_mut(lod1).insert(at(160.0));
+        app.update();
+        assert!(casts(&app, lod1), "past the band LOD1 casts again");
+        assert!(!casts(&app, other), "a foreign NotShadowCaster stays");
+    }
+
+    #[test]
+    fn a_slot_with_no_lod1_draws_lod0_through_the_lod1_range() {
+        let cover = lod_cover([true, false, false], 0);
+        assert_eq!(cover, LodCover { first: 0, last: 1 });
+        let r = lod_cover_range(cover);
+        assert_eq!(r.start_margin, lod_range(0).start_margin);
+        assert_eq!(r.end_margin, lod_range(1).end_margin);
+        assert!(r.is_visible_at_all(200.0) && r.is_visible_at_all(399.0));
+        assert!(!r.is_visible_at_all(406.0));
+        // With no LOD0 either, LOD2 reaches down into the LOD1 range instead.
+        let r = lod_cover_range(lod_cover([false, false, true], 2));
+        assert!(r.is_visible_at_all(200.0) && !r.is_visible_at_all(100.0));
+        // A full chain keeps each LOD's own range.
+        for l in 0..3 {
+            assert!(lod_cover_range(lod_cover([true; 3], l)) == lod_range(l));
+        }
     }
 
     #[test]

@@ -29,9 +29,27 @@ Shots come from `make shots-piece SCRIPT=docs/checkpoints/lod-band-instanced/ban
 - The overview and forest-cluster cameras have no part within 145–155 m, so nothing changes there.
 - Inside the band, a (slot, LOD) holding any band part draws all its parts in one dithered draw. So the band adds only the neighbouring LOD's draws.
   - In the 20-tile case that is 66 in the camera views.
-  - Another 66 are in the two shadow cascades, because band parts cast with both LODs undithered, as per-entity parts do (bevy's shadow queue adds no dither key).
+  - Another 66 are in the two shadow cascades. This was first put down to band parts casting with both LODs. The 2026-10-21 re-count below shows otherwise: these are the LOD1 draws of the parts past the band, which the per-part LOD gives their own draws in every view.
 - The 7-forest world was a single chunk, so before it drew one LOD. After, its near parts are LOD0 and its far parts LOD1, as per-entity parts would be.
 
 ## Thumbnails
 
 `make thumbs` (twice) leaves every `assets/thumbs/*.webp` byte-identical to `6c9aab8`. See the report for the hashes.
+
+## Owner decisions, 2026-10-21
+
+`census-2026-10-21.json` re-counts the same cameras before (`4ea55ca`) and after four owner decisions. It adds a meadow camera (`draws.json`), the seven-forest dolly (`band.json`), and the scatter pairs per LOD.
+
+| Camera | Before | After | Gated |
+|---|---|---|---|
+| 20-tile overview | 407 | 419 | yes, at 500 (A2 Q1) |
+| 20-tile forest cluster | 633 | 633 | tracked |
+| 20-tile meadow | 645 | 645 | tracked |
+| 20-tile world, centre 152 m away | 748 | 756 | tracked |
+
+- **A15 Q1, one-LOD band shadows.** A band part now casts with the outgoing LOD alone (`PartLod::draws_in` on the instanced path, `scene::band_shadows` on the per-entity path).
+  - At 152 m the shadow draws hold at 176 and 186. Every slot with band parts also has parts on both sides of the band, so no (slot, LOD) shadow draw empties out. What goes is the band parts' second instance inside those draws.
+  - On the seven-forest dolly, where most parts sit inside the band, draws fall by 14–22 at 145–155 m (for example 404 → 390 at 150 m). That before column is this README's earlier after column, measured on an older commit, so read it as indicative.
+- **A2 Q4, LOD0 through the LOD1 range.** The overview and 152 m cameras gain 4 draws in each of the opaque pass, the prepass and (at the overview) the far shadow cascade. These are the slots with no LOD1 mesh in this world, which now draw their LOD0 mesh past 150 m instead of vanishing: the river's cattails, the house pad's stone, and the well's stone and mortar (`docs/checkpoints/lod1-missing.md`).
+  - `far200.jpg` and `far200-tint.jpg` (`far200.json`) show the river tile from 200 m with a 15° lens. With the LOD tint on, the cattail stalks along both banks show LOD0 yellow against the LOD1 teal of everything else at that distance. The orange flecks in the channel are the fish boids, which the tint does not touch. No before still exists, because the before binary was rebuilt.
+- **A2 Q2, scatter pairs.** There are 53 (mesh, material) pairs per LOD, 159 in all, inside the new limits of 60 per LOD and 180 in all.
