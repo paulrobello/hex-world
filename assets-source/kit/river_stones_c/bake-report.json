@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 16
+    }
+  },
+  "device": "none",
+  "lod2Drops": {},
+  "marginPx": 0,
+  "masks": {
+    "ao": 1.0,
+    "night": 0.0,
+    "porosity": 0.9,
+    "snow": 1.0
+  },
+  "props": {
+    "reedClumps": 0,
+    "stones": 4,
+    "tris": [
+      320,
+      80,
+      8
+    ]
+  },
+  "reason": "no Cycles bake: colour-only slots and a constant masks map on the planar UV0",
+  "receiverSignature": "041857808b8e7144a6d5558c8ae907984240ad82bc5b315b4e4c0092a6edd3a3",
+  "samples": 0,
+  "skipped": true
+}

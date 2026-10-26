@@ -1,6 +1,9 @@
 // River spring (owner request 2026-10-14, PLAN Q6): a pool 11 m across centred 2 m behind the tile
 // centre, welling up and running out as a stream through edge 0. A River node on a tile without a
-// coastline is a spring (water contract §3b): its chain flows away from it.
+// coastline is a spring (water contract §3b): its chain flows away from it. Its centre keeps the
+// granite ring and lily pads; the bank stones and reed clumps are runtime scatter (owner, 2026-10-26:
+// "scatter type items like rocks and reeds should not be built into the tile"), a seeded 0 to 4 per
+// tile (`hex-play` scatter RIVER_MAX).
 (
     id: "river_spring",
     biome: Grass,
@@ -20,4 +23,10 @@
     networks: [
         (kind: River, from: Edge(0), to: Node("spring")),
     ],
+    props: (
+        scatter: [
+            (piece: "river_stones", density: 0.75),
+            (piece: "river_reeds", density: 0.6),
+        ],
+    ),
 )

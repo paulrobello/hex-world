@@ -1,3 +1,5 @@
+// Bank stones and reed clumps are runtime scatter (owner, 2026-10-26: "scatter type items like rocks and
+// reeds should not be built into the tile"), kept with the beach dressing under its 0 to 6 cap (BEACH_MAX).
 // River mouth, mirrored (owner Q1, 2026-10-14): `river_mouth` reflected across the coast's seaward
 // axis, so the river arrives on edge 4 instead of edge 3. Authored mirrored in Blender; the engine
 // never mirrors. Ocean on 0-1, beach on 2 (land right, the corner shared with grass edge 3) and 5
@@ -14,7 +16,6 @@
         (kind: River, lane: Some((offset: 0.0, width: 8.0))),
         (kind: Beach, land: Some(Left)),
     ),
-    center: Some("river_mouth_l_center"),
     nodes: [
         (id: "mouth", at: (0.0, 0.0)),
     ],
@@ -25,6 +26,8 @@
         scatter: [
             (piece: "beach_driftwood", density: 0.151, lane_clearance: 5.5),
             (piece: "beach_dunegrass", density: 0.602, lane_clearance: 5.5),
+            (piece: "river_stones", density: 0.75),
+            (piece: "river_reeds", density: 0.6),
         ],
     ),
 )

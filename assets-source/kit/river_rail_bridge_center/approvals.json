@@ -36,5 +36,14 @@
     "gate": "piece",
     "status": "approved",
     "notes": "Approved in chat (\"A17 all approved\", 2026-10-26): the LOD slot pass (sheet docs/checkpoints/lod1-pass/sheet.jpg), including the platform's flat LOD1 flower mound and the wells' LOD1 courses."
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "riverbank scatter (2026-10-26)",
+    "requested": "2026-10-26",
+    "notes": "Pending owner review; not an approval. Bank stones and reed clumps taken out of the piece (owner 2026-10-26: \"scatter type items like rocks and reeds should not be built into the tile\"); the tile scatters river_stones and river_reeds instead, 0 to 4 per tile. Deck and causeway unchanged; LOD 842 / 262 / 64 tris. Review assets-source/kit/river_rail_bridge_center/renders/ and docs/checkpoints/riverbank-scatter/."
   }
 ]

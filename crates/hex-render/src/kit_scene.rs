@@ -354,22 +354,31 @@ pub fn kit_layout() -> Vec<Placement> {
     // world edge 2, and its other end runs out to the open rim.
     v.push(place("meadow_base", -4, 7, 0));
     v.push(place("rail_bend_120_center", -4, 7, 3));
+    // The river straights have no centre piece: their bank stones and reeds are runtime scatter
+    // (owner, 2026-10-26), shown here as RIVER_BANK on the downstream straight.
     for (q, r, center) in [
-        (-2, 4, "river_straight_center"),
-        (-2, 5, "river_rail_bridge_center"),
-        (-2, 6, "river_straight_center"),
+        (-2, 4, None),
+        (-2, 5, Some("river_rail_bridge_center")),
+        (-2, 6, None),
     ] {
         v.push(place("river_straight_base", q, r, 1));
-        v.push(place(center, q, r, 1));
+        if let Some(center) = center {
+            v.push(place(center, q, r, 1));
+        }
         v.push(place("river_edge", q, r, 1));
         v.push(place("river_edge", q, r, 4));
     }
+    for &(piece, at, yaw_deg, y) in RIVER_BANK {
+        v.push(Placement {
+            y,
+            ..hero(piece, -2, 6, at, yaw_deg)
+        });
+    }
     // The river fork (owner 2026-10-20) on (-3, 4), west of the river straights: river_fork_base
-    // and its dressing at rot 1 (river on world edges 1 and 3 facing empty cells and 5 meeting the tight
+    // at rot 1 (river on world edges 1 and 3 facing empty cells and 5 meeting the tight
     // bend on (-2, 3); its grass edge 0 meets the straight's grass edge 3 on (-2, 4)) with a river_edge stub on each River
     // edge. The kit scenario spawns no water, so its channel shows dry here; play draws the water.
     v.push(place("river_fork_base", -3, 4, 1));
-    v.push(place("river_fork_center", -3, 4, 1));
     for k in [1, 3, 5] {
         v.push(place("river_edge", -3, 4, k));
     }
@@ -378,7 +387,6 @@ pub fn kit_layout() -> Vec<Placement> {
     // edge-5 arm on (-3, 4) across world edge 2. Its own channel-cut base with a river_edge stub at
     // each lane.
     v.push(place("river_bend_60_base", -2, 3, 1));
-    v.push(place("river_bend_60_center", -2, 3, 1));
     v.push(place("river_edge", -2, 3, 1));
     v.push(place("river_edge", -2, 3, 2));
     for (piece, offset) in TRAIN_ON_RAIL_BRIDGE {
@@ -632,6 +640,19 @@ const BEACH_DRESSING: &[(&str, [f32; 2], f32, f32)] = &[
     ("beach_dunegrass", [-4.13, -5.85], 0.0, -0.049),
     ("beach_dunegrass_b", [-6.45, -0.84], 70.0, -0.088),
     ("beach_dunegrass_c", [-7.89, 0.06], 200.0, -0.032),
+];
+
+/// (piece, at, yaw, height) of the riverbank scatter props (owner 2026-10-26) on the downstream river
+/// straight at (-2, 6), rot 1: the channel runs along t = (0.5, 0.866) in (x, z) with the bank
+/// normal n = (-0.866, 0.5), so each spot is u t + v n, its height `_river.profile_z(v)`; the stone
+/// clusters lie along the bank (yaw 60 or 240), straddling the waterline (|v| 4.0-4.1), and the reed
+/// clumps stand on the bank above it (|v| 5.2-5.4).
+const RIVER_BANK: &[(&str, [f32; 2], f32, f32)] = &[
+    ("river_stones", [-5.964, -2.33], 60.0, -1.399),
+    ("river_stones_b", [5.051, 0.548], 240.0, -1.295),
+    ("river_stones_c", [0.449, 8.978], 60.0, -1.295),
+    ("river_reeds", [-5.003, 1.734], 0.0, -0.572),
+    ("river_reeds_b", [7.676, 2.496], 0.0, -0.462),
 ];
 
 /// (piece, offset, rotation, relief height) of the meadow props in the kit layout.
@@ -1280,10 +1301,7 @@ mod tests {
     #[test]
     fn river_bend_60_joins_the_straight_to_the_fork() {
         let l = kit_layout();
-        let bend = *l
-            .iter()
-            .find(|p| p.piece == "river_bend_60_center")
-            .unwrap();
+        let bend = *l.iter().find(|p| p.piece == "river_bend_60_base").unwrap();
         for k in [0, 1] {
             let e = (k + bend.rot) % 6;
             assert!(

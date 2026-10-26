@@ -1,0 +1,35 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/river_stones_c.py",
+    "sha256": "ce5e595a422a122ad9357de71b48a510b902638c883821ba45632ed4c21f5239"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_bank_props.py",
+      "sha256": "1bb867ad8c5730664f30571815a0f5e594ac1f5083a11ba50dadb4fff1c30d88"
+    },
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "3761223a50d85b8cdfb1cb1bce63902d91e82278ebf608f2185e3de35981deb5"
+    }
+  ],
+  "lodTris": {
+    "river_stones_c_lod0": 320,
+    "river_stones_c_lod1": 80,
+    "river_stones_c_lod2": 8
+  },
+  "nodes": [
+    "river_stones_c",
+    "river_stones_c_collider",
+    "river_stones_c_lod0",
+    "river_stones_c_lod1",
+    "river_stones_c_lod2"
+  ],
+  "pieceId": "river_stones_c",
+  "sockets": []
+}

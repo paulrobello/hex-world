@@ -13,9 +13,7 @@ LOD2_MAX_RATIO = 0.15
 LANE_CUT_LOD2_MAX_RATIO = 0.20
 COAST_ARC_LOD2_MAX_RATIO = 0.20
 RIVER_DRESSING_LOD0_MAX = 2500
-RIVER_DRESSING_PROPS = ("river_straight_center", "river_bend_center", "river_bend_60_center",
-                        "river_spring_center", "river_mouth_center", "river_mouth_l_center",
-                        "river_fork_center")
+RIVER_DRESSING_PROPS = ("river_spring_center",)
 
 
 def lod_budget(kind, piece_id="", lane_cut=False, coast_arc=False):

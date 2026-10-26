@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/river_spring_center.py",
-    "sha256": "8ff8544109aca35a5b5a61758bce076daa0e08ac042ea731959e68ada0b29462"
+    "sha256": "2f08402a98e9e4b73b7fe9adb836978cab5fc7e0fc82cd94ac4012d6ec865d32"
   },
   "generatorDeps": [
     {
@@ -43,17 +43,17 @@
     "dressing": {
       "granite": 12,
       "lilyPads": 5,
-      "reedClumps": 10,
-      "streamStones": 10,
+      "toScatter": {
+        "reedClumps": 10,
+        "streamStones": 10
+      },
       "tris": [
-        2180,
-        538,
-        100
+        270,
+        114,
+        40
       ]
     },
-    "lod2Drops": {
-      "river_cattail": "under a pixel at 400 m: a head is 0.044-0.054 m across (0.14-0.18 px at 0.31 m/px), and LOD2 has no reed clumps for the stalks to stand in"
-    },
+    "lod2Drops": {},
     "marginPx": 0,
     "masks": {
       "ao": 1,
@@ -69,25 +69,25 @@
       "snow": "0 under water, 1 elsewhere"
     },
     "reason": "no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
-    "receiverSignature": "d874633824c5b6b4e08cee8bb6ea849a694032dfe0c5f24b3d57c57147b0b980",
+    "receiverSignature": "41ef512858494822e0b53ed8063f8b2aaef2623273275362be9868358215db2c",
     "samples": 0,
     "skipped": true
   },
   "lods": [
     {
       "lod": 0,
-      "tris": 2180,
+      "tris": 270,
       "ratio": 1
     },
     {
       "lod": 1,
-      "tris": 538,
-      "ratio": 0.2467889908256881
+      "tris": 114,
+      "ratio": 0.4222222222222222
     },
     {
       "lod": 2,
-      "tris": 100,
-      "ratio": 0.045871559633027525
+      "tris": 40,
+      "ratio": 0.14814814814814814
     }
   ],
   "collider": {
@@ -105,7 +105,7 @@
         "bc7": 4513,
         "astc": 4210
       },
-      "glbBytes": 201572
+      "glbBytes": 43772
     },
     "textureEncodes": [
       {
@@ -144,8 +144,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_spring_center/river_spring_center.glb",
-      "sha256": "accc35f356e981b00dd531e39eec0588be06c4da000145dcf035c3d536797089",
-      "bytes": 201572
+      "sha256": "9cfd229e3151b9bc54709d7e0afeddc156dded20a5f2ef18f0894fbb28dc2cea",
+      "bytes": 43772
     },
     {
       "path": "assets/kit/p1/river_spring_center/river_spring_center.masks.bc7.ktx2",
@@ -195,7 +195,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-26T06:35:37.959Z",
+    "date": "2026-10-26T17:30:31.761Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -267,6 +267,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"A17 all approved\", 2026-10-26): the LOD slot pass (sheet docs/checkpoints/lod1-pass/sheet.jpg), including the platform's flat LOD1 flower mound and the wells' LOD1 courses."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "riverbank scatter (2026-10-26)",
+      "requested": "2026-10-26",
+      "notes": "Pending owner review; not an approval. The stream bank stones and the reed clumps (stream and pool back bank) are taken out of the piece (owner 2026-10-26: \"scatter type items like rocks and reeds should not be built into the tile\"); the tile scatters river_stones and river_reeds instead, 0 to 4 per tile. The granite ring and lily pads stay, at the same places; LOD1 draws the 12 granite stones as octahedra and LOD2 the 5 biggest, so the piece keeps its LOD ratios. Review assets-source/kit/river_spring_center/renders/ and docs/checkpoints/riverbank-scatter/."
     }
   ]
 }

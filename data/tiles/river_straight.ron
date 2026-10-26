@@ -1,4 +1,6 @@
-// The channel-cut base carries the bed (water contract); the centre adds bank stones and reeds.
+// Bank stones and reed clumps are runtime scatter (owner, 2026-10-26: "scatter type items like rocks and
+// reeds should not be built into the tile"), a seeded 0 to 4 per tile (`hex-play` scatter RIVER_MAX).
+// The channel-cut base carries the bed (water contract).
 (
     id: "river_straight",
     biome: Grass,
@@ -11,8 +13,13 @@
         (kind: Grass),
         (kind: Grass),
     ),
-    center: Some("river_straight_center"),
     networks: [
         (kind: River, from: Edge(0), to: Edge(3)),
     ],
+    props: (
+        scatter: [
+            (piece: "river_stones", density: 0.75),
+            (piece: "river_reeds", density: 0.6),
+        ],
+    ),
 )

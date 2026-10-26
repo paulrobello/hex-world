@@ -1,3 +1,5 @@
+// Bank stones and reed clumps are runtime scatter (owner, 2026-10-26: "scatter type items like rocks and
+// reeds should not be built into the tile"), kept with the beach dressing under its 0 to 6 cap (BEACH_MAX).
 // River mouth (owner request 2026-10-14, assets-source/refs/river_mouth/PLAN.md): the straight beach
 // with land edge 3 turned into River. Ocean on 0-1, beach on 2 (land right, the corner shared with the
 // River edge) and 5 (land left, the corner shared with grass edge 4). The river runs from edge 3 to the
@@ -15,7 +17,6 @@
         (kind: Grass),
         (kind: Beach, land: Some(Left)),
     ),
-    center: Some("river_mouth_center"),
     nodes: [
         (id: "mouth", at: (0.0, 0.0)),
     ],
@@ -26,6 +27,8 @@
         scatter: [
             (piece: "beach_driftwood", density: 0.151, lane_clearance: 5.5),
             (piece: "beach_dunegrass", density: 0.602, lane_clearance: 5.5),
+            (piece: "river_stones", density: 0.75),
+            (piece: "river_reeds", density: 0.6),
         ],
     ),
 )

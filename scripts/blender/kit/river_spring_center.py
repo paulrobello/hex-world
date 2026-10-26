@@ -1,7 +1,11 @@
 """river_spring_center: the dressing of the river_spring tile, on river_spring_base (which carries the
-bed). river_straight_center bank stones and reed clumps along the stream, a ring of lichen-grey
-granite around the spring pool at its bank, reeds on the pool's back bank and a few flat lily pads
-floating on the pool. Every item is seated on the pinned bed (`_spring.bed_z`); the edge-0 stub
+bed): a ring of lichen-grey granite around the spring pool at its bank and a few flat lily pads
+floating on the pool. The stream's bank stones and reed clumps, and the reeds on the pool's back
+bank, are runtime scatter (owner, 2026-10-26: "scatter type items like rocks and reeds should not be
+built into the tile"; `river_stones`, `river_reeds`); `placements` still draws them, unbuilt, so
+the granite and lilies keep their seeded places. LODs: LOD0 the 12 granite stones (20 tris each)
+and 5 lilies; LOD1 the 12 as 8-tri octahedra (`granite_lo`) and 3 lilies; LOD2 the 5 biggest
+octahedra (the lilies, under a pixel at 400 m, were already left out of LOD2). Every item is seated on the pinned bed (`_spring.bed_z`); the edge-0 stub
 metre and 1.5 m from every hex edge stay clear. Colour-only slots plus the §9.4 masks map as an
 analytic field of (x, y) on the planar UV0 (no Cycles bake): R snow 0 under water, G porosity, B 0,
 A 1. The lily pads float over water, so their UVs point at one off-hex texel (dry meadow: R 1,
@@ -25,10 +29,9 @@ import _spring  # noqa: E402
 from _river import WATER  # noqa: E402
 
 PIECE = "river_spring_center"
-STONE, REED, CATTAIL, GRANITE, LILY = "river_stone", "river_reed", "river_cattail", "river_granite", "river_lily"
-SLOTS = (STONE, REED, CATTAIL, GRANITE, LILY)
-COLORS = {STONE: ("#8a8378", 0.8), REED: ("#5d7a35", 0.85), CATTAIL: ("#5a3a22", 0.9),
-          GRANITE: ("#8c8b80", 0.8), LILY: ("#4f6b3a", 0.7)}
+GRANITE, LILY = "river_granite", "river_lily"
+SLOTS = (GRANITE, LILY)
+COLORS = {GRANITE: ("#8c8b80", 0.8), LILY: ("#4f6b3a", 0.7)}
 MASK_SIZE = 256  # 8 px/m on the 32 m planar UV0: every channel is a smooth field of (x, y)
 LILY_UV = (0.5 / MASK_SIZE, 0.5 / MASK_SIZE)  # texel (0, 0): Blender (-15.94, -15.94), off the hex
 EDGE_CLEAR = 1.5
@@ -62,6 +65,21 @@ def lily(bm, at, radius, rot):
         a = rot + 2 * math.pi * k / 8
         ring.append(bm.verts.new((at[0] + radius * math.cos(a), at[1] + radius * math.sin(a), at[2])))
     return [bm.faces.new([c, ring[k], ring[k + 1]]) for k in range(6)]
+
+
+def granite_lo(bm, at, size, seed):
+    """A coarse granite stone: an octahedron (8 tris) on `at` with `size` semi-axes and a seeded
+    jitter, about the LOD0 icosahedron's extent (its axis vertices 1.1 out, where the icosahedron's
+    faces sit about 0.8-1.0 out)."""
+    rnd = random.Random(seed)
+    vs = []
+    for d in ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)):
+        j = 1.1 * (1.0 + 0.3 * (rnd.random() - 0.5))
+        vs.append(bm.verts.new((at[0] + d[0] * size[0] * j, at[1] + d[1] * size[1] * j,
+                                at[2] + d[2] * size[2] * j)))
+    for a, b in ((0, 2), (2, 1), (1, 3), (3, 0)):
+        bm.faces.new((vs[a], vs[b], vs[4]))
+        bm.faces.new((vs[b], vs[a], vs[5]))
 
 
 def placements():
@@ -115,31 +133,22 @@ def build():
     root = scene.empty(PIECE)
     mats = {s: materials.pbr_material(s, materials.srgb(c), r) for s, (c, r) in COLORS.items()}
     stones, granite, reeds, lilies = placements()
-    plan = (  # per LOD: stream stones, granite, reeds (cattails), lilies
-        (stones, granite, reeds, True, lilies),
-        (stones[:4], granite[:8], reeds[::2], True, lilies[:3]),
-        ([], granite[:5], [], False, []),
+    plan = (  # per LOD: granite, its builder, lilies
+        (granite, _river_dress._stone, lilies),
+        (granite, granite_lo, lilies[:3]),
+        (granite[:5], granite_lo, []),
     )
     lods = []
-    for li, (st, gr, rd, heads, ly) in enumerate(plan):
+    for li, (gr, build_stone, ly) in enumerate(plan):
         bm = bmesh.new()
+        _river_dress.wind_layers(bm)
         spans = []
 
         def mark(slot):
             spans.append((len(bm.faces), SLOTS.index(slot)))
-        mark(STONE)
-        for at, size, seed in st:
-            _river_dress._stone(bm, at, size, seed)
         mark(GRANITE)
         for at, size, seed in gr:
-            _river_dress._stone(bm, at, size, seed)
-        mark(REED)
-        tops = []
-        for at, seed in rd:
-            tops += _river_dress._reed_clump(bm, at, seed, li, heads)
-        mark(CATTAIL)
-        for t in tops:
-            _river_dress._cattail(bm, t)
+            build_stone(bm, at, size, seed)
         mark(LILY)
         lily_from = len(bm.faces)
         for at, rad, rot in ly:
@@ -147,9 +156,7 @@ def build():
         bm.faces.ensure_lookup_table()
         for fi, f in enumerate(bm.faces):
             f.material_index = [m for start, m in spans if start <= fi][-1]
-            if SLOTS[f.material_index] not in (REED, CATTAIL):
-                f.smooth = False
-        _river_dress.retag_spikes(bm, SLOTS.index(STONE))
+            f.smooth = False
         lily_faces = len(bm.faces) - lily_from
         bmesh.ops.triangulate(bm, faces=bm.faces)
         mesh = bpy.data.meshes.new(f"{PIECE}_lod{li}")
@@ -178,8 +185,8 @@ def build():
     bake.write_png(MASK_SIZE, np.stack(masks_field(), axis=1), str(out / f"{PIECE}.masks.png"))
     export.export_glb(root, str(out / f"{PIECE}.glb"))
     export.write_export_report(str(out / "export-report.json"), root, PIECE, __file__)
-    stats = {"streamStones": len(stones), "granite": len(granite), "reedClumps": len(reeds),
-             "lilyPads": len(lilies), "tris": tris}
+    stats = {"granite": len(granite), "lilyPads": len(lilies), "tris": tris,
+             "toScatter": {"streamStones": len(stones), "reedClumps": len(reeds)}}
     bake.write_bake_report(str(out / "bake-report.json"), receiverSignature=bake.receiver_signature([lods[0]]),
                            device="none", samples=0, marginPx=0,
                            channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}}, dressing=stats,
@@ -187,7 +194,7 @@ def build():
                            reason="no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
                            masks={"snow": "0 under water, 1 elsewhere", "porosity": [1.0, 0.8], "night": 0.0,
                                   "ao": 1.0, "lilyUv": list(LILY_UV)},
-                           lod2Drops={CATTAIL: _river_dress.CATTAIL_LOD2_DROP})
+                           lod2Drops={})
 
 
 build()

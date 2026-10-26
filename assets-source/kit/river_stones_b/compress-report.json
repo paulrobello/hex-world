@@ -1,0 +1,89 @@
+{
+  "name": "river_stones_b",
+  "date": "2026-10-26T16:12:14.183Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/river_stones_b/river_stones_b.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 5,
+      "bytes": 468,
+      "sha256": "9eca3f9e88bcd49b64bb05e602836aad0f8a3ae689afb53a26b13037ea7a1241"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/river_stones_b/river_stones_b.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 5,
+      "bytes": 468,
+      "sha256": "dfcef226ea975c5c65f0e66ed374c621bcc0798bf68543deac8ec5d6789f2f12"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/river_stones_b/river_stones_b.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 274,
+      "sha256": "8a8a516b11a44c5de12c2de3df5163e22dc1d949cfddc5cadee8198b440870ed"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 468,
+      "astc": 468
+    },
+    "glbBytes": 26004
+  },
+  "glb": {
+    "bytes": 26004,
+    "sha256": "c9c2f1b22e88bf6be91cdb29ecfcb2414033d66c7db6a2bd821d42610e777535"
+  }
+}

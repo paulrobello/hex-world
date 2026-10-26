@@ -1,6 +1,6 @@
 {
   "name": "river_spring_center",
-  "date": "2026-10-26T06:34:06.396Z",
+  "date": "2026-10-26T17:30:09.225Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -80,10 +80,10 @@
       "bc7": 4513,
       "astc": 4210
     },
-    "glbBytes": 201572
+    "glbBytes": 43772
   },
   "glb": {
-    "bytes": 201572,
-    "sha256": "accc35f356e981b00dd531e39eec0588be06c4da000145dcf035c3d536797089"
+    "bytes": 43772,
+    "sha256": "9cfd229e3151b9bc54709d7e0afeddc156dded20a5f2ef18f0894fbb28dc2cea"
   }
 }

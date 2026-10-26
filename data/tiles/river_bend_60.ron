@@ -1,3 +1,5 @@
+// Bank stones and reed clumps are runtime scatter (owner, 2026-10-26: "scatter type items like rocks and
+// reeds should not be built into the tile"), a seeded 0 to 4 per tile (`hex-play` scatter RIVER_MAX).
 // Tight river bend across adjacent edges (river_bend_60_base, river_bend_60_center): straight from
 // each edge midpoint in to the joint plane 1 m inside the border (the river_edge stubs), joined by
 // the 7.423 m radius arc tangent to both about (12.856, 7.423), turning 120 degrees. The points are
@@ -15,8 +17,13 @@
         (kind: Grass),
         (kind: Grass),
     ),
-    center: Some("river_bend_60_center"),
     networks: [
         (kind: River, from: Edge(0), to: Edge(1), points: [(12.856, 0.000), (12.533, 0.007), (12.209, 0.028), (11.888, 0.064), (11.567, 0.113), (11.250, 0.176), (10.935, 0.253), (10.624, 0.344), (10.318, 0.448), (10.016, 0.565), (9.719, 0.695), (9.429, 0.839), (9.145, 0.994), (8.868, 1.162), (8.599, 1.342), (8.338, 1.534), (8.085, 1.737), (7.842, 1.950), (7.608, 2.174), (7.384, 2.408), (7.170, 2.651), (6.968, 2.904), (6.776, 3.165), (6.596, 3.434), (6.428, 3.711), (6.272, 3.995), (6.129, 4.286), (5.999, 4.582), (5.881, 4.884), (5.777, 5.191), (5.687, 5.502), (5.610, 5.816), (5.547, 6.134), (5.497, 6.454), (5.462, 6.776), (5.441, 7.099), (5.434, 7.423), (5.441, 7.746), (5.462, 8.070), (5.497, 8.391), (5.547, 8.712), (5.610, 9.029), (5.687, 9.344), (5.777, 9.655), (5.881, 9.961), (5.999, 10.263), (6.129, 10.560), (6.272, 10.850), (6.428, 11.134)]),
     ],
+    props: (
+        scatter: [
+            (piece: "river_stones", density: 0.75),
+            (piece: "river_reeds", density: 0.6),
+        ],
+    ),
 )

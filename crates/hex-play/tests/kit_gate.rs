@@ -1020,17 +1020,12 @@ const LANE_CUT_LOD2_MAX_RATIO: f32 = 0.20;
 /// LOD0 ceiling of the river dressing props, whose reed clumps and cattails are modelled for close-up
 /// and eye-level views: owner approval 2026-10-14, "Raise to 2,500". Every other prop keeps
 /// `PieceKind::Prop`'s 1,500, and the LOD1/LOD2 ratio ceilings are unchanged.
-/// (river_road_bridge_center carries the same clumps as a `center` under its kind's 4,000.)
+/// Since 2026-10-26 every river bank's stones and reeds are runtime scatter (`river_stones`,
+/// `river_reeds` and their variants, ordinary props under 1,500): the channel and mouth centres left
+/// the kit, and river_spring_center keeps only its granite ring and lily pads, far under this
+/// ceiling.
 const RIVER_DRESSING_LOD0_MAX: usize = 2_500;
-const RIVER_DRESSING_PROPS: &[&str] = &[
-    "river_straight_center",
-    "river_bend_center",
-    "river_bend_60_center",
-    "river_spring_center",
-    "river_mouth_center",
-    "river_mouth_l_center",
-    "river_fork_center",
-];
+const RIVER_DRESSING_PROPS: &[&str] = &["river_spring_center"];
 
 /// A piece's LOD0 triangle ceiling: its kind's, or `RIVER_DRESSING_LOD0_MAX` for a river dressing prop.
 fn lod0_budget(p: &PieceEntry) -> usize {
@@ -3390,7 +3385,7 @@ fn lane_cut_bases_get_the_wider_lod2_ceiling() {
         "meadow_base",
         "river_edge",
         "road_straight_center",
-        "river_bend_center",
+        "river_stones",
     ] {
         assert_eq!(lod2_max_ratio(&k, piece(id)), LOD2_MAX_RATIO, "{id}");
     }
@@ -3414,9 +3409,9 @@ fn river_dressing_lod0_budget_is_scoped_to_its_props() {
             k.manifest
                 .pieces
                 .iter()
-                .any(|p| p.id == "river_straight_center")
+                .any(|p| p.id == "river_spring_center")
         })
-        .expect("runtime kit holds river_straight_center");
+        .expect("runtime kit holds river_spring_center");
     let piece = |id: &str| k.manifest.pieces.iter().find(|p| p.id == id).unwrap();
     for &id in RIVER_DRESSING_PROPS {
         assert_eq!(piece(id).kind, PieceKind::Prop, "{id}");
@@ -4445,20 +4440,8 @@ const LOD2_DROPS_BEFORE_RULE: &[(&str, &str)] = &[
     ("ocean_center", "coast_pebble"),
     ("boat_rowing", "boat_rowing_bronze"),
     ("boat_sail", "boat_sail_wicker"),
-    ("river_mouth_center", "beach_pebble"),
-    ("river_mouth_center", "river_reed"),
-    ("river_mouth_l_center", "beach_pebble"),
-    ("river_mouth_l_center", "river_reed"),
-    ("river_straight_center", "river_reed"),
-    ("river_bend_center", "river_reed"),
-    ("river_bend_60_center", "river_reed"),
-    ("river_road_bridge_center", "river_reed"),
     ("river_rail_bridge_center", "rail_sleeper"),
-    ("river_rail_bridge_center", "river_reed"),
     ("river_spring_center", "river_lily"),
-    ("river_spring_center", "river_reed"),
-    ("river_spring_center", "river_stone"),
-    ("river_fork_center", "river_reed"),
 ];
 
 /// The slots (material names) of each LOD: the body, the rotor and any extra part meshes.

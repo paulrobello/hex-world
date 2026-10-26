@@ -408,6 +408,12 @@ pub(crate) fn part_cover(parts: &[KitPart], part: &KitPart) -> LodCover {
     lod_cover(present, part.lod)
 }
 
+/// Whether a tile's centre is drawn from the kit: it has no centre piece (a river channel tile,
+/// whose banks are runtime scatter, or a plain land tile), or `has` its centre piece.
+pub(crate) fn centre_ready(def: &TileDef, has: impl Fn(&str) -> bool) -> bool {
+    def.center.as_ref().is_none_or(|c| has(c.as_str()))
+}
+
 fn spawn_kit(
     p: &mut ChildSpawnerCommands,
     kit: &HashMap<String, Vec<KitPart>>,
@@ -621,10 +627,7 @@ fn tile_children(
         }
     };
     let edge = Some((cell, RiseRole::Edge));
-    let center_kit = def
-        .center
-        .as_ref()
-        .is_some_and(|c| kit.contains_key(c.as_str()));
+    let center_kit = centre_ready(def, |id| kit.contains_key(id));
     // A water tile's water surface comes from `water::tiles`, and so does its placeholder bed when
     // its base (the bed) is missing. While its centre is missing no river strips or hub are drawn
     // over the channel; road strips stay as the bridge deck.
@@ -648,8 +651,9 @@ fn tile_children(
         })
         .collect();
     if center_kit {
-        let center = def.center.as_ref().expect("checked above");
-        spawn_kit(p, kit, center.as_str(), Transform::IDENTITY, edge);
+        if let Some(center) = &def.center {
+            spawn_kit(p, kit, center.as_str(), Transform::IDENTITY, edge);
+        }
         let pieces = def.edge_pieces(catalog.sockets());
         for &(e, kind) in &lanes {
             let piece = pieces[e as usize].map(|k| k.as_str()).unwrap_or_default();

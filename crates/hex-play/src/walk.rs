@@ -109,6 +109,9 @@ pub const OBSTACLES: &[&str] = &[
     "rock_small",
     "rock_small_b",
     "rock_small_c",
+    "river_stones",
+    "river_stones_b",
+    "river_stones_c",
     "log_fallen",
     "log_fallen_b",
     "log_fallen_c",
@@ -1510,6 +1513,8 @@ pub(crate) mod tests {
             ("tree_forest_b", "tree"),
             ("rock_small", "rock"),
             ("rock_small_c", "rock"),
+            ("river_stones", "rock"),
+            ("river_stones_c", "rock"),
             ("log_fallen", "log"),
             ("log_fallen_b", "log"),
             ("log_fallen_c", "log"),
@@ -1536,7 +1541,7 @@ pub(crate) mod tests {
         for &piece in OBSTACLES {
             assert_eq!(
                 prop_kind(piece) == "rock",
-                piece.starts_with("rock_"),
+                piece.starts_with("rock_") || piece.starts_with("river_stones"),
                 "{piece} reports {}",
                 prop_kind(piece)
             );

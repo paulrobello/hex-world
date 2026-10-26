@@ -6,7 +6,7 @@ from lib import budgets
 class Budgets(unittest.TestCase):
     def test_kind_and_flag_ceilings(self):
         self.assertEqual(budgets.lod_budget("prop"), (1500, 0.5, 0.15))
-        self.assertEqual(budgets.lod_budget("prop", "river_bend_center"), (2500, 0.5, 0.15))
+        self.assertEqual(budgets.lod_budget("prop", "river_spring_center"), (2500, 0.5, 0.15))
         self.assertEqual(budgets.lod_budget("base", lane_cut=True), (4000, 0.5, 0.20))
         self.assertEqual(budgets.lod_budget("base", coast_arc=True), (4000, 0.5, 0.20))
         self.assertEqual(budgets.lod_budget("center", lane_cut=True), (4000, 0.5, 0.15))  # bases only

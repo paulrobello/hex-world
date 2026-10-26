@@ -2875,11 +2875,9 @@ mod tests {
             assert!(water.iter().any(|d| d.id == id), "{id} is a water tile");
         }
         for def in &water {
-            let center = def
-                .center
-                .as_ref()
-                .expect("every water tile has a centre")
-                .as_str();
+            // A river channel tile has no centre (its banks are runtime scatter): "" is never a
+            // kit piece, so leaving it out changes nothing.
+            let center = def.center.as_ref().map_or("", |c| c.as_str());
             let base = def.base.as_str();
             let bed = |has: &dyn Fn(&str) -> bool| {
                 let lay = layout(&[tile(0, 0, &def.id, 0)], &cat, has);

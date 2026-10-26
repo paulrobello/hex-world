@@ -1,3 +1,5 @@
+// Bank stones and reed clumps are runtime scatter (owner, 2026-10-26: "scatter type items like rocks and
+// reeds should not be built into the tile"), a seeded 0 to 4 per tile (`hex-play` scatter RIVER_MAX).
 // The rail (edges 1-4) crosses the river (edges 0-3) at 60 degrees on a level stone arch
 // (P3, river_rail_bridge_center): the rail top stays at 0.46 m across the arch.
 (
@@ -17,4 +19,10 @@
         (kind: River, from: Edge(0), to: Edge(3)),
         (kind: Rail, from: Edge(1), to: Edge(4)),
     ],
+    props: (
+        scatter: [
+            (piece: "river_stones", density: 0.75),
+            (piece: "river_reeds", density: 0.6),
+        ],
+    ),
 )

@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_bridge.py",
-      "sha256": "6c2ca14d32258789275e03f1afc8f66de4a0167c2c6cbb2093326c1113712b48"
+      "sha256": "0c506b8364d00ebc715e2c5bd3788e14ccd82f758e521fb3e04d1899507dcd54"
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
@@ -51,25 +51,15 @@
       }
     },
     "device": "CPU",
-    "dressing": {
-      "reedClumps": 6,
-      "stones": 13
-    },
-    "lod2Drops": {
-      "river_cattail": "under a pixel at 400 m: a head is 0.044-0.054 m across (0.14-0.18 px at 0.31 m/px), and LOD2 has no reed clumps for the stalks to stand in"
-    },
+    "lod2Drops": {},
     "marginPx": 12,
     "maskStats": {
-      "dressTexels": 3847,
-      "haloTexels": 33342,
-      "roadTexels": 28290,
+      "dressTexels": 0,
+      "haloTexels": 0,
+      "roadTexels": 28286,
       "stoneTexels": 256
     },
     "masks": {
-      "dressPorosity": [
-        1,
-        0.8
-      ],
       "haloPx": 32,
       "roadClearPx": 11,
       "stoneBlockPx": 16,
@@ -91,18 +81,18 @@
   "lods": [
     {
       "lod": 0,
-      "tris": 1766,
+      "tris": 480,
       "ratio": 1
     },
     {
       "lod": 1,
-      "tris": 540,
-      "ratio": 0.3057757644394111
+      "tris": 224,
+      "ratio": 0.4666666666666667
     },
     {
       "lod": 2,
-      "tris": 120,
-      "ratio": 0.06795016987542468
+      "tris": 60,
+      "ratio": 0.125
     }
   ],
   "collider": {
@@ -152,10 +142,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 26176,
-        "astc": 25785
+        "bc7": 19198,
+        "astc": 19053
       },
-      "glbBytes": 175428
+      "glbBytes": 52280
     },
     "textureEncodes": [
       {
@@ -166,8 +156,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 26176,
-        "sha256": "fbeb33cf67422c43becc96d6f7a429d708dc007513a951ad7ec08c8f33774d7f"
+        "bytes": 19198,
+        "sha256": "edc3a999fe00635e89ccde36dbfdee14dc262bf433f5fc8b08e73871cb854cb0"
       },
       {
         "channel": "masks",
@@ -177,8 +167,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 25785,
-        "sha256": "099f619726e4080cb22ad40a0c88b3497553d7bade975dfa1c10b6c042f9a75d"
+        "bytes": 19053,
+        "sha256": "8f9cd1dafcf054f9f11699f0a8082926b9c55807da3f09905265cf1516ab1186"
       },
       {
         "channel": "masks",
@@ -186,31 +176,31 @@
         "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 34526,
-        "sha256": "e3ef06fa8f62389be5c6e9e16fff7f476c7f04415370df3ed67e6b42bc99bca3"
+        "bytes": 30048,
+        "sha256": "90c74465264edeedbcb28e45622cd52de5e9ee3f78a87c0ef618332b74ac7cbc"
       }
     ]
   },
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.glb",
-      "sha256": "e3408cd35cd850cd64f37ce35e0e7f0a7d564aa311c9e2fa115e9300d5a49cb4",
-      "bytes": 175428
+      "sha256": "33c91ab3554f603f8d3f1fba4930e47906c48dd3b112fd8ccd50e63b41db0a3e",
+      "bytes": 52280
     },
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.bc7.ktx2",
-      "sha256": "fbeb33cf67422c43becc96d6f7a429d708dc007513a951ad7ec08c8f33774d7f",
-      "bytes": 26176
+      "sha256": "edc3a999fe00635e89ccde36dbfdee14dc262bf433f5fc8b08e73871cb854cb0",
+      "bytes": 19198
     },
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.astc.ktx2",
-      "sha256": "099f619726e4080cb22ad40a0c88b3497553d7bade975dfa1c10b6c042f9a75d",
-      "bytes": 25785
+      "sha256": "8f9cd1dafcf054f9f11699f0a8082926b9c55807da3f09905265cf1516ab1186",
+      "bytes": 19053
     },
     {
       "path": "assets/kit/p1/river_road_bridge_center/river_road_bridge_center.masks.png",
-      "sha256": "e3ef06fa8f62389be5c6e9e16fff7f476c7f04415370df3ed67e6b42bc99bca3",
-      "bytes": 34526
+      "sha256": "90c74465264edeedbcb28e45622cd52de5e9ee3f78a87c0ef618332b74ac7cbc",
+      "bytes": 30048
     }
   ],
   "references": [
@@ -236,7 +226,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-26T06:35:32.243Z",
+    "date": "2026-10-26T16:22:29.331Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -322,6 +312,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"A17 all approved\", 2026-10-26): the LOD slot pass (sheet docs/checkpoints/lod1-pass/sheet.jpg), including the platform's flat LOD1 flower mound and the wells' LOD1 courses."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "riverbank scatter (2026-10-26)",
+      "requested": "2026-10-26",
+      "notes": "Pending owner review; not an approval. Bank stones and reed clumps taken out of the piece (owner 2026-10-26: \"scatter type items like rocks and reeds should not be built into the tile\"); the tile scatters river_stones and river_reeds instead, 0 to 4 per tile. Deck and causeway unchanged; LOD 480 / 224 / 60 tris (the road takes 4 segments at LOD1). Review assets-source/kit/river_road_bridge_center/renders/ and docs/checkpoints/riverbank-scatter/."
     }
   ]
 }

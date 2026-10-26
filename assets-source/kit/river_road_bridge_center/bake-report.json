@@ -14,25 +14,15 @@
     }
   },
   "device": "CPU",
-  "dressing": {
-    "reedClumps": 6,
-    "stones": 13
-  },
-  "lod2Drops": {
-    "river_cattail": "under a pixel at 400 m: a head is 0.044-0.054 m across (0.14-0.18 px at 0.31 m/px), and LOD2 has no reed clumps for the stalks to stand in"
-  },
+  "lod2Drops": {},
   "marginPx": 12,
   "maskStats": {
-    "dressTexels": 3847,
-    "haloTexels": 33342,
-    "roadTexels": 28290,
+    "dressTexels": 0,
+    "haloTexels": 0,
+    "roadTexels": 28286,
     "stoneTexels": 256
   },
   "masks": {
-    "dressPorosity": [
-      1.0,
-      0.8
-    ],
     "haloPx": 32,
     "roadClearPx": 11,
     "stoneBlockPx": 16,

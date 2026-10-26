@@ -171,7 +171,11 @@ class BakeExport(unittest.TestCase):
         want = [{"path": "scripts/blender/kit/_road.py", "sha256": bake.sha256_file(str(road))}]
         self.assertEqual(export.generator_deps(str(kit / "road_straight_edge.py")), want)
         self.assertEqual(export.generator_deps(str(kit / "road_straight_center.py")), want)
-        self.assertEqual(export.generator_deps(str(kit / "meadow_base.py")), [])
+        terrain = kit / "_terrain.py"
+        self.assertEqual(export.generator_deps(str(kit / "meadow_base.py")),
+                         [{"path": "scripts/blender/kit/_terrain.py", "sha256": bake.sha256_file(str(terrain))}])
+        self.assertEqual(export.generator_deps(str(kit / "river_stones.py"))[0]["path"],
+                         "scripts/blender/kit/_bank_props.py")
         # Transitive: a helper importing another helper records both, sorted, once each.
         with tempfile.TemporaryDirectory(dir=kit) as d:
             d = pathlib.Path(d)

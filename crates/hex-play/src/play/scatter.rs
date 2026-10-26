@@ -31,13 +31,18 @@
 //!   place ([`beach_count`], owner 2026-10-21), picked jointly across its rules from a stream of
 //!   its own, so a kept piece stands where it would among all of them and the dart stream is
 //!   untouched. Its `planned` counts what it keeps.
+//! - **Riverbanks.** Bank stone clusters and reed clumps ([`bank_band`]) stand in a band at a set
+//!   distance from the river centreline, on the river bases' bed and bank grass ([`BANK_FLOORS`]).
+//!   A tile that scatters only bank props ([`river_family`]: the river channel tiles) keeps a
+//!   seeded 0 to [`RIVER_MAX`] of them ([`river_count`], owner 2026-10-26) the way a beach keeps
+//!   its count; the river mouths keep theirs under the beach cap.
 //! - **Ground.** An instance stands only on its piece's floor slots ([`floor_slots`]) of the topmost
 //!   LOD0 surface of the tile's base, centre and lane edge pieces, sampled the way the kit gate's
 //!   `surface_at` does: trees on `forest_base_floor` (the litter), rocks and wildflowers on either
 //!   that and `meadow_base_cap`. Its whole ground footprint must lie on that floor, so nothing
 //!   stands on a road, a river bed or bank, a house pad or driveway, a beach, a rim, a skirt or water
 //!   ([`excluded_slot`]), except the beach dressing on the dry sand ([`BEACH_FLOOR`],
-//!   [`beach_band`]). It keeps clear of hero props (a tree clears the oak's canopy; a fence,
+//!   [`beach_band`]) and the bank props on a river's bank ([`BANK_FLOORS`], [`bank_band`]). It keeps clear of hero props (a tree clears the oak's canopy; a fence,
 //!   [`FENCES`], by its line, dropped after the darts so nothing else moves), of road and
 //!   river centrelines (`lane_clearance`, at least the lane's half width plus [`LANE_GAP`]) and of
 //!   the hex border (a crown overhangs it by at most [`CROWN_OVERHANG`]), and stands upright at the
@@ -120,6 +125,7 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
         "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
         "wildflower_single" | "bush_verge" => &["meadow_base_cap"],
         "beach_dunegrass" | "beach_driftwood" => &[BEACH_FLOOR],
+        "river_stones" | "river_reeds" => &BANK_FLOORS,
         _ => &[],
     }
 }
@@ -169,6 +175,8 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
         ],
     ),
     ("bush_verge", &["bush_verge_b", "bush_verge_c"]),
+    ("river_stones", &["river_stones_b", "river_stones_c"]),
+    ("river_reeds", &["river_reeds_b"]),
     ("shrub_forest", &["shrub_forest_b", "shrub_forest_c"]),
     ("sapling_spruce", &["sapling_spruce_b", "sapling_spruce_c"]),
 ];
@@ -348,10 +356,40 @@ pub fn beach_band(piece: &str) -> Option<BeachBand> {
 }
 
 /// Whether `slot`, under a footprint, is ground for a piece standing on `floors`: one of them and
-/// never an [`excluded_slot`] other than [`BEACH_FLOOR`].
+/// never an [`excluded_slot`] other than [`BEACH_FLOOR`] and the [`BANK_FLOORS`] (only the bank
+/// props list those).
 pub fn floor_ok(floors: &[&str], slot: &str) -> bool {
-    floors.contains(&slot) && (slot == BEACH_FLOOR || !excluded_slot(slot))
+    floors.contains(&slot)
+        && (slot == BEACH_FLOOR || BANK_FLOORS.contains(&slot) || !excluded_slot(slot))
 }
+
+// ---------------------------------------------------------------------------------------------
+// Riverbank props (owner, 2026-10-26: "scatter type items like rocks and reeds should not be built
+// into the tile"): bank stone clusters and reed clumps, a seeded 0 to [`RIVER_MAX`] per river tile
+
+/// The [`excluded_slot`]s the bank props stand on: the river bases' bed (the bank slope down to
+/// the waterline) and bank-top grass, and the river mouths' grass. Only the bank props list them.
+pub const BANK_FLOORS: [&str; 3] = ["river_bed", "river_grass", "beach_grass"];
+
+/// Where a bank prop's centre stands: `(low, high)`, the tile-frame height of the river bank
+/// under it, which is `_river.profile_z` of the distance from the centreline, so it follows a bend
+/// or a fork exactly where a centreline polyline would cut the arc. The bands are the ones
+/// `_river_dress` placed them in: stone clusters 3.6-4.6 m out, straddling the waterline (4 m,
+/// the water at rest at -1.4), reed clumps 4.7-5.8 m out on the bank above it (the bank top is
+/// 6.83 m out, at 0). Within [`BANK_REACH`] of a river centreline, and instead of the river lanes'
+/// `lane_clearance` (a road or rail lane on the same tile keeps its clearance). `None` for every
+/// other piece.
+pub fn bank_band(piece: &str) -> Option<(f32, f32)> {
+    match family(piece) {
+        "river_stones" => Some((-1.797, -0.912)),
+        "river_reeds" => Some((-0.856, -0.262)),
+        _ => None,
+    }
+}
+
+/// Farthest a bank prop's centre stands from a river centreline polyline (m): the bank top plus
+/// the bend polyline's chord sag (about 0.8 m), so only the channel's own banks qualify.
+pub const BANK_REACH: f32 = 8.0;
 
 /// Whether a beach dressing centre at `p` (reach `reach`) lies outside its band: off the band's
 /// s range, within [`BEACH_BORDER`] of the border, or on a tile with no coastline.
@@ -383,10 +421,24 @@ fn instance_yaw(band: Option<BeachBand>, coast: Option<Coastline>, p: Vec2, u: f
         Coastline::Straight { sea } => sea.perp(),
         Coastline::Arc { centre, .. } => (p - centre).perp(),
     };
+    along_yaw(t, u)
+}
+
+/// A yaw from draw `u` in [0, 1) laying the piece's +x along `t`, either way round, within
+/// [`DRIFT_YAW_JITTER`].
+fn along_yaw(t: Vec2, u: f32) -> f32 {
     let flip = if u < 0.5 { 0.0 } else { std::f32::consts::PI };
     let jitter = ((u * 2.0).fract() * 2.0 - 1.0) * DRIFT_YAW_JITTER;
     // Quat::from_rotation_y(yaw) turns the piece's +x to (cos yaw, -sin yaw) in (x, z).
     portable_atan2(-t.y, t.x) + flip + jitter
+}
+
+/// The bank's contour direction at `p`: across the surface's slope (central differences 0.5 m
+/// apart), or `None` where the ground is level or missing.
+fn contour(surface: &Surface, p: Vec2) -> Option<Vec2> {
+    let h = |dx: f32, dz: f32| surface.at(p.x + dx, p.y + dz).map(|(y, _)| y);
+    let g = Vec2::new(h(0.5, 0.0)? - h(-0.5, 0.0)?, h(0.0, 0.5)? - h(0.0, -0.5)?);
+    (g.length_squared() > 1e-6).then(|| g.perp())
 }
 
 /// `y.atan2(x)` from `+ - * /` alone (a degree-11 odd polynomial on [0, 1], max error
@@ -464,6 +516,41 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         "beach_dunegrass_c",
         Footprint {
             ground: 0.71,
+            crown: 0.0,
+        },
+    ),
+    (
+        "river_stones",
+        Footprint {
+            ground: 1.05,
+            crown: 0.0,
+        },
+    ),
+    (
+        "river_stones_b",
+        Footprint {
+            ground: 1.15,
+            crown: 0.0,
+        },
+    ),
+    (
+        "river_stones_c",
+        Footprint {
+            ground: 1.30,
+            crown: 0.0,
+        },
+    ),
+    (
+        "river_reeds",
+        Footprint {
+            ground: 0.45,
+            crown: 0.0,
+        },
+    ),
+    (
+        "river_reeds_b",
+        Footprint {
+            ground: 0.83,
             crown: 0.0,
         },
     ),
@@ -1175,8 +1262,8 @@ impl Surface {
 pub const GROUND_PROPS: &[&str] = &["rail_station_platform"];
 
 /// The ground pieces of a tile and their turn about +Y in the tile frame ([`turn`] steps, as
-/// `tile_children` draws them with `piece_rotation`): the base, with a centre piece the centre
-/// and its lanes' edge pieces, and its [`GROUND_PROPS`] heroes (a yaw of 60 k degrees is turn k).
+/// `tile_children` draws them with `piece_rotation`): the base, the centre piece if it has one, its
+/// lanes' edge pieces, and its [`GROUND_PROPS`] heroes (a yaw of 60 k degrees is turn k).
 pub fn ground_pieces<'a>(def: &'a TileDef, catalog: &'a TileCatalog) -> Vec<(&'a str, u8)> {
     let mut v = vec![(def.base.as_str(), 0)];
     for h in &def.props.hero {
@@ -1189,15 +1276,15 @@ pub fn ground_pieces<'a>(def: &'a TileDef, catalog: &'a TileCatalog) -> Vec<(&'a
     }
     if let Some(c) = &def.center {
         v.push((c.as_str(), 0));
-        let pieces = def.edge_pieces(catalog.sockets());
-        for e in 0..6u8 {
-            let s = &def.edges[e as usize];
-            if s.lane.is_some()
-                && matches!(s.kind, SocketKind::Road | SocketKind::River)
-                && let Some(p) = pieces[e as usize]
-            {
-                v.push((p.as_str(), e));
-            }
+    }
+    let pieces = def.edge_pieces(catalog.sockets());
+    for e in 0..6u8 {
+        let s = &def.edges[e as usize];
+        if s.lane.is_some()
+            && matches!(s.kind, SocketKind::Road | SocketKind::River)
+            && let Some(p) = pieces[e as usize]
+        {
+            v.push((p.as_str(), e));
         }
     }
     v
@@ -1391,10 +1478,24 @@ fn mask(
             (Vec2::from(h.at), c)
         })
         .collect();
-    let lanes: Vec<(Vec<Vec2>, f32)> = lanes(def)
-        .into_iter()
-        .map(|(line, half)| (line, lane_clearance(rule, half, fp)))
-        .collect();
+    let bank = bank_band(piece);
+    let (rivers, lanes): (Vec<_>, Vec<_>) = def
+        .networks
+        .iter()
+        .zip(lanes(def))
+        .map(|(n, (line, half))| {
+            let river = n.kind == NetworkKind::River;
+            (river, (line, lane_clearance(rule, half, fp)))
+        })
+        .partition(|(river, _)| bank.is_some() && *river);
+    let rivers: Vec<Vec<Vec2>> = rivers.into_iter().map(|(_, (l, _))| l).collect();
+    let lanes: Vec<(Vec<Vec2>, f32)> = lanes.into_iter().map(|(_, l)| l).collect();
+    let off_bank = |k: usize, p: Vec2| {
+        bank.is_some_and(|(low, high)| {
+            let near = rivers.iter().any(|l| polyline_distance(p, l) <= BANK_REACH);
+            !near || raster[k].is_none_or(|(h, _)| h < low || h > high)
+        })
+    };
     let band = verge_band(piece);
     let mut cells = vec![];
     for j in 0..CELLS {
@@ -1409,6 +1510,7 @@ fn mask(
                 || lanes.iter().any(|(l, c)| polyline_distance(p, l) < *c)
                 || band.is_some_and(|b| lanes.iter().all(|(l, _)| polyline_distance(p, l) > b))
                 || beach.is_some_and(|(b, c)| off_beach_band(b, c, p, fp.ground))
+                || off_bank(k, p)
             {
                 continue;
             }
@@ -1598,8 +1700,9 @@ fn drift_cells(seed: u64, mask: &Mask) -> Vec<u32> {
     cells
 }
 
-/// Lowest surface height under the centre and a 0.3 m ring around `p`, if `p` stands on `floors`.
-fn stand(surface: &Surface, p: Vec2, floors: &[&str], reach: f32) -> Option<f32> {
+/// Lowest surface height under the centre and a 0.3 m ring around `p` (the centre's own height
+/// when `level` is false: a bank prop, laid along the bank's contour), if `p` stands on `floors`.
+fn stand(surface: &Surface, p: Vec2, floors: &[&str], reach: f32, level: bool) -> Option<f32> {
     let on_floor = |q: Vec2| surface.at(q.x, q.y).filter(|(_, s)| floor_ok(floors, s));
     let (h, _) = on_floor(p)?;
     // The footprint's rim and half-rim, exactly (the mask only eroded the sampled ground).
@@ -1609,6 +1712,9 @@ fn stand(surface: &Surface, p: Vec2, floors: &[&str], reach: f32) -> Option<f32>
     }
     for d in ring16.iter().step_by(2) {
         on_floor(p + 0.5 * reach * *d)?;
+    }
+    if !level {
+        return Some(h);
     }
     let ring = (0..6).filter_map(|k| {
         let q = p + 0.3 * hex_dir(k);
@@ -1621,14 +1727,14 @@ fn stand(surface: &Surface, p: Vec2, floors: &[&str], reach: f32) -> Option<f32>
 /// not need to have all scatter items, 0 to 6 is plenty" (owner, 2026-10-21).
 pub const BEACH_MAX: usize = 6;
 
-/// Whether a tile is dressed as a beach: it scatters, and only beach dressing ([`beach_band`]).
+/// Whether a tile is dressed as a beach: it scatters beach dressing ([`beach_band`]), and nothing
+/// but beach dressing and bank props ([`bank_band`]: the river mouths' banks).
 pub fn beach_family(def: &TileDef) -> bool {
-    !def.props.scatter.is_empty()
-        && def
-            .props
-            .scatter
-            .iter()
-            .all(|r| beach_band(r.piece.as_str()).is_some())
+    let rules = &def.props.scatter;
+    rules.iter().any(|r| beach_band(r.piece.as_str()).is_some())
+        && rules.iter().all(|r| {
+            beach_band(r.piece.as_str()).is_some() || bank_band(r.piece.as_str()).is_some()
+        })
 }
 
 /// How many dressing pieces a coast tile with seed `seed` keeps: 0 to [`BEACH_MAX`], evenly.
@@ -1636,12 +1742,43 @@ pub fn beach_count(seed: u64) -> usize {
     Rng(seed ^ 0xB3AC_4C0D_7E11_5A29).below(BEACH_MAX + 1)
 }
 
-/// Keeps a seeded [`beach_count`] of a coast tile's placed dressing, picked jointly across its rules
+/// Most bank props one river tile draws (owner, 2026-10-26: "riverbank scatter is too concentrated
+/// and repetitive, change scatter to 0-4 things").
+pub const RIVER_MAX: usize = 4;
+
+/// Whether a tile is dressed as a riverbank: it scatters, and only bank props ([`bank_band`]).
+pub fn river_family(def: &TileDef) -> bool {
+    !def.props.scatter.is_empty()
+        && def
+            .props
+            .scatter
+            .iter()
+            .all(|r| bank_band(r.piece.as_str()).is_some())
+}
+
+/// How many bank props a river tile with seed `seed` keeps: 0 to [`RIVER_MAX`], evenly.
+pub fn river_count(seed: u64) -> usize {
+    Rng(seed ^ 0x51D3_8E0A_C4B7_2F69).below(RIVER_MAX + 1)
+}
+
+/// The seeded cap on a tile's scatter: [`beach_count`] on a [`beach_family`] tile, [`river_count`]
+/// on a [`river_family`] tile, none on every other tile.
+pub fn dressing_cap(def: &TileDef, seed: u64) -> Option<usize> {
+    if beach_family(def) {
+        Some(beach_count(seed))
+    } else if river_family(def) {
+        Some(river_count(seed))
+    } else {
+        None
+    }
+}
+
+/// Keeps `cap` of a capped tile's placed pieces ([`dressing_cap`]), picked jointly across its rules
 /// from its own stream, so a kept piece stands exactly where it stood among all of them, and plans
 /// what it keeps (a shortfall still means only that the spacing could not fit a piece).
-fn keep_beach(out: &mut Layout, seed: u64) {
+fn keep_dressing(out: &mut Layout, seed: u64, cap: usize) {
     let n = out.instances.len();
-    let k = beach_count(seed).min(n);
+    let k = cap.min(n);
     let mut rng = Rng(seed ^ 0x6E3D_19B7_A2C5_F041);
     let mut pick: Vec<usize> = (0..n).collect();
     for i in 0..k {
@@ -1659,8 +1796,8 @@ fn keep_beach(out: &mut Layout, seed: u64) {
         .collect();
 }
 
-/// Every instance the darts place for a tile before a coast tile keeps its [`beach_count`], in dart
-/// order and not yet ranked.
+/// Every instance the darts place for a tile before a capped tile keeps its [`dressing_cap`], in
+/// dart order and not yet ranked.
 fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
     let mut rng = Rng(seed ^ 0x5CA7_7E25_D3A1_0B07);
     let mut out = Layout::default();
@@ -1694,6 +1831,7 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
         let floors = floor_slots(piece);
         let vary = rule.vary.clamp(0.0, 1.0);
         let beach = beach_band(piece);
+        let bank = bank_band(piece);
         let mut n = 0;
         for _ in 0..ATTEMPTS * want + 64 {
             if n == want {
@@ -1726,10 +1864,18 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
             if !clear {
                 continue;
             }
-            let Some(y) = stand(&ground.surface, p, floors, reach) else {
+            let Some(y) = stand(&ground.surface, p, floors, reach, bank.is_none()) else {
                 continue;
             };
-            let yaw = instance_yaw(beach, coast, p, rng.unit());
+            // The mask checks the band at its cell centres; the dart, off-centre, exactly.
+            if bank.is_some_and(|(low, high)| y < low || y > high) {
+                continue;
+            }
+            let u = rng.unit();
+            let yaw = match bank.and_then(|_| contour(&ground.surface, p)) {
+                Some(t) => along_yaw(t, u),
+                None => instance_yaw(beach, coast, p, u),
+            };
             let scale = 1.0 + jitter * (2.0 * rng.unit() - 1.0);
             placed.push((p, reach, ri));
             out.instances.push(Instance {
@@ -1762,8 +1908,8 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
 /// The scatter of a tile with definition `def` and seed `seed` on its prepared ground.
 pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
     let mut out = every_dart(def, seed, ground);
-    if beach_family(def) {
-        keep_beach(&mut out, seed);
+    if let Some(cap) = dressing_cap(def, seed) {
+        keep_dressing(&mut out, seed, cap);
     }
     let mut by_distance: Vec<usize> = (0..out.instances.len()).collect();
     by_distance.sort_by(|&a, &b| {
@@ -2234,7 +2380,7 @@ mod tests {
     fn a_lost_ground_piece_does_not_hold_the_ground_back() {
         let c = catalog();
         let def = c.get("river_straight").unwrap();
-        let centre = "river_straight_center";
+        let centre = "river_edge";
         let kit: HashMap<String, Vec<KitPart>> = ground_pieces(def, &c)
             .into_iter()
             .filter(|(id, _)| *id != centre)
@@ -2373,7 +2519,10 @@ mod tests {
                                 );
                             }
                         }
-                        for (line, half) in &lanes {
+                        for (n, (line, half)) in def.networks.iter().zip(&lanes) {
+                            if n.kind == NetworkKind::River && bank_band(piece).is_some() {
+                                continue;
+                            }
                             let need = lane_clearance(r, *half, fp);
                             assert!(polyline_distance(p, line) >= need - 0.2, "{} lane", def.id);
                         }
@@ -2396,19 +2545,14 @@ mod tests {
             "beach_outer",
             "river_mouth",
             "river_mouth_l",
-        ] {
-            assert!(counts[id] > 0, "{id} scatters: {counts:?}");
-        }
-        for id in [
-            "ocean",
             "river_straight",
             "river_bend",
             "river_bend_60",
-            "river_spring",
             "river_fork",
         ] {
-            assert_eq!(counts[id], 0, "{id} has no scatter floor: {counts:?}");
+            assert!(counts[id] > 0, "{id} scatters: {counts:?}");
         }
+        assert_eq!(counts["ocean"], 0, "ocean has no scatter floor: {counts:?}");
     }
 
     /// Density is per 100 m² of the hex cap: the mean count over cells matches it within 3%, every
@@ -2839,6 +2983,10 @@ mod tests {
                 area.clone_from(&l.area);
                 for (ri, r) in def.props.scatter.iter().enumerate() {
                     let piece = r.piece.as_str();
+                    if bank_band(piece).is_some() {
+                        // The mouths' bank props: `bank_props_stand_in_their_band`.
+                        continue;
+                    }
                     assert!(beach_band(piece).is_some(), "{id}: {piece}");
                     if l.placed(ri) as u32 != l.planned[ri] {
                         short.push(format!(
@@ -2852,7 +3000,9 @@ mod tests {
                 for inst in &l.instances {
                     let r = &def.props.scatter[inst.rule as usize];
                     let piece = r.piece.as_str();
-                    let band = beach_band(piece).unwrap();
+                    let Some(band) = beach_band(piece) else {
+                        continue;
+                    };
                     let fp = group_footprint(piece);
                     let p = inst.pos.xz();
                     let s = coast.seaward(p);
@@ -2961,6 +3111,147 @@ mod tests {
                 seen.iter().filter(|&&k| k > 0).count() >= 3,
                 "{id}: the count varies {seen:?}"
             );
+        }
+    }
+
+    /// Owner 2026-10-26: "riverbank scatter is too concentrated and repetitive, change scatter to
+    /// 0-4 things", and "scatter type items like rocks and reeds should not be built into the
+    /// tile". Every river channel tile (with no centre piece), both river bridges (whose centre is
+    /// only the deck) and the spring (granite and lilies) is a [`river_family`] tile and draws 0 to [`RIVER_MAX`] bank props, the same for the same seed, each standing where the full dart
+    /// set put it. Over seeds every count 0 to 4 occurs, both kinds and at least four of the five
+    /// pieces turn up, and no two tiles with props share a layout. Prints the count histogram.
+    #[test]
+    fn river_tiles_draw_zero_to_four_bank_props() {
+        let c = catalog();
+        let mut family: Vec<&str> = c
+            .tiles()
+            .iter()
+            .filter(|d| river_family(d))
+            .map(|d| d.id.as_str())
+            .collect();
+        family.sort_unstable();
+        assert_eq!(
+            family,
+            [
+                "river_bend",
+                "river_bend_60",
+                "river_fork",
+                "river_rail_bridge",
+                "river_road_bridge",
+                "river_spring",
+                "river_straight"
+            ]
+        );
+        for id in family {
+            let def = c.get(id).unwrap();
+            assert!(
+                def.center.is_none() || id.ends_with("_bridge") || id == "river_spring",
+                "{id}: the banks are scatter, not a centre"
+            );
+            let g = prepared(def).unwrap();
+            let mut seen = [0u32; RIVER_MAX + 1];
+            let mut pieces = HashSet::new();
+            let mut layouts = HashSet::new();
+            let mut with_props = 0;
+            for s in 0..64 {
+                let seed = cell_seed(13, Axial::new(s, -s / 2));
+                let l = layout(def, seed, &g);
+                let n = l.instances.len();
+                assert!(n <= RIVER_MAX, "{id} seed {seed}: {n} props");
+                seen[n] += 1;
+                assert_eq!(l, layout(def, seed, &g), "{id}: same seed, same bank");
+                let all = every_dart(def, seed, &g);
+                assert!(
+                    all.instances.len() >= RIVER_MAX,
+                    "{id} seed {seed}: room for 4"
+                );
+                assert_eq!(n, river_count(seed).min(all.instances.len()), "{id}");
+                for inst in &l.instances {
+                    assert!(
+                        all.instances.iter().any(|a| Instance {
+                            order: 0,
+                            ..inst.clone()
+                        } == *a),
+                        "{id}: a kept prop moved"
+                    );
+                    let piece = inst.piece(def.props.scatter[inst.rule as usize].piece.as_str());
+                    pieces.insert(piece.to_owned());
+                }
+                if n > 0 {
+                    with_props += 1;
+                    let key: Vec<[i32; 3]> = l
+                        .instances
+                        .iter()
+                        .map(|i| (i.pos * 100.0).round().as_ivec3().to_array())
+                        .collect();
+                    layouts.insert(key);
+                }
+            }
+            println!("{id}: tiles per count 0..=4 over 64 seeds {seen:?}, pieces {pieces:?}");
+            assert!(
+                seen.iter().all(|&k| k > 0),
+                "{id}: every count occurs {seen:?}"
+            );
+            assert_eq!(layouts.len(), with_props, "{id}: no two banks alike");
+            assert!(pieces.len() >= 4, "{id}: the variants vary {pieces:?}");
+            assert!(
+                pieces.iter().any(|p| p.starts_with("river_stones"))
+                    && pieces.iter().any(|p| p.starts_with("river_reeds")),
+                "{id}: stones and reeds {pieces:?}"
+            );
+        }
+    }
+
+    /// Every bank prop stands on the bank of its band ([`bank_band`]: the surface height under its
+    /// centre, which is how far from the centreline it stands), on the [`BANK_FLOORS`], at that
+    /// height, and a stone cluster lies along the bank's contour within [`DRIFT_YAW_JITTER`].
+    #[test]
+    fn bank_props_stand_in_their_band() {
+        let c = catalog();
+        for id in [
+            "river_straight",
+            "river_bend",
+            "river_bend_60",
+            "river_fork",
+            "river_mouth",
+            "river_mouth_l",
+            "river_road_bridge",
+            "river_rail_bridge",
+            "river_spring",
+        ] {
+            let def = c.get(id).unwrap();
+            let g = prepared(def).unwrap();
+            let mut n = 0;
+            for s in 0..32 {
+                let all = every_dart(def, cell_seed(17, Axial::new(s, 0)), &g);
+                for inst in &all.instances {
+                    let rule = def.props.scatter[inst.rule as usize].piece.as_str();
+                    let Some((low, high)) = bank_band(rule) else {
+                        continue;
+                    };
+                    n += 1;
+                    let p = inst.pos.xz();
+                    let (h, slot) = g.surface.at(p.x, p.y).unwrap();
+                    assert!(BANK_FLOORS.contains(&slot), "{id}: {rule} on {slot}");
+                    assert!(
+                        (inst.pos.y - h).abs() < 1e-4,
+                        "{id}: {rule} at the bank's height"
+                    );
+                    assert!(
+                        h >= low && h <= high,
+                        "{id}: {rule} at height {h}, band {low}..{high}"
+                    );
+                    if rule == "river_stones" {
+                        let t = contour(&g.surface, p).unwrap().normalize();
+                        let axis = Vec2::new(inst.yaw.cos(), -inst.yaw.sin());
+                        assert!(
+                            axis.dot(t).abs() >= DRIFT_YAW_JITTER.cos() - 1e-3,
+                            "{id}: stones across the bank"
+                        );
+                    }
+                }
+            }
+            assert!(n > 32, "{id}: {n} bank props over 32 seeds");
         }
     }
 

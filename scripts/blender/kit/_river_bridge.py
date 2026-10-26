@@ -11,18 +11,17 @@ carries the whole bed.
   DECK_Z (1 cm under the road's sink edge), an elliptical arch across the river (springing at
   y = +-ARCH_A just above the water, crown 1 m higher) and its barrel along the river, pier faces
   under the springing, and parapets with end pillars on the road edges over the water.
-- Bank stones and reeds as on the other river centres, kept clear of the causeway.
-- Masks (planar UV0, 512 px): the road's AO bake as before, plus `dress_masks` for the slots that
-  carry no AO: the bank stones and reeds take the river centres' field (`_river_dress.masks_field`)
-  over their own texels and a halo around them, and the causeway's one parked texel (`STONE_UV`)
-  takes stone values. A is 1 on all of it, the AO those slots had before they bound the map, so the
-  MVP look is unchanged. The halo keeps the unbaked A = 0 background out of the dressing's mips.
+- No bank stones or reeds: they are runtime scatter (owner, 2026-10-26: "scatter type items like
+  rocks and reeds should not be built into the tile"; `river_stones`, `river_reeds`).
+- Masks (planar UV0, 512 px): the road's AO bake as before, plus `dress_masks` for the causeway's
+  one parked texel (`STONE_UV`), which takes stone values with A 1.
+- LODs: the road has 12, 4 and 1 segments (road_straight_center's 12, 5, 1 less one at LOD1), so
+  LOD1 stays within half of LOD0 now that the dressing no longer pads LOD0.
 Road frame: r along the road (lane 4 -> lane 1), t across it; Blender (x, y) = r u + t v with
 u = (0.5, -0.866) and v = (0.866, 0.5) (hexgeo.rotate_xy by one edge step)."""
 import math
 import os
 import pathlib
-import random
 import sys
 
 import bmesh
@@ -49,7 +48,7 @@ PARAPET_Y = 5.0  # parapets cover |y| <= PARAPET_Y (the water and the lower bank
 PILLAR = 0.25  # pillar half-size
 PILLAR_TOP = 0.95
 STONE_SLOT = "bridge_stone"
-ROAD_SEGMENTS = (12, 5, 1)  # = road_straight_center
+ROAD_SEGMENTS = (12, 4, 1)  # road_straight_center's (12, 5, 1), one fewer at LOD1 (LOD1 <= 50%)
 ARCH_SEGMENTS = (16, 8, 3)
 MASK_SIZE = 512
 STONE_UV = (0.005, 0.005)  # where every causeway loop is parked (a world-space tileable slot)
@@ -175,47 +174,6 @@ def road(name, lod, slots_index):
     return bed, pt
 
 
-def dressing(name, lod, rnd_seed):
-    """Bank stones and reeds along the straight channel, clear of the causeway (|t| > W + 1.2)."""
-    rnd = random.Random(rnd_seed)
-    stones, reeds = [], []
-    for side in (-1, 1):
-        for i in range(14):
-            x = _river.JOINT_X - 2 * _river.JOINT_X * (i + 0.5 + 0.6 * (rnd.random() - 0.5)) / 14
-            y = side * rnd.uniform(3.6, 4.5)
-            size = (rnd.uniform(0.25, 0.55), rnd.uniform(0.2, 0.45), rnd.uniform(0.15, 0.3))
-            stones.append(((x, y, _river.profile_z(y) + 0.03), size, rnd.randrange(1 << 30)))
-        for i in range(5):
-            x = _river.JOINT_X - 2 * _river.JOINT_X * (i + 0.3 + 0.4 * rnd.random()) / 5
-            y = side * rnd.uniform(4.7, 5.7)
-            reeds.append(((x, y, _river.profile_z(y)), rnd.randrange(1 << 30)))
-    clear = W + 1.2
-    stones = [s for s in stones if abs(road_t(s[0][0], s[0][1])) > clear]
-    reeds = [r for r in reeds if abs(road_t(r[0][0], r[0][1])) > clear]
-    stones.sort(key=lambda st: -st[1][0] * st[1][1])
-    bm = bmesh.new()
-    for at, size, seed in stones[: (len(stones), len(stones) // 2, 3)[lod]]:
-        _river_dress._stone(bm, at, size, seed)
-    n_stone = len(bm.faces)
-    tops = []
-    for at, seed in (reeds, reeds[::2], [])[lod]:
-        tops += _river_dress._reed_clump(bm, at, seed, lod, lod < 2)
-    n_reed = len(bm.faces)
-    for top in tops:
-        _river_dress._cattail(bm, top)
-    bm.faces.ensure_lookup_table()
-    for fi, f in enumerate(bm.faces):
-        f.material_index = 0 if fi < n_stone else (1 if fi < n_reed else 2)
-        if fi < n_stone:
-            f.smooth = False
-    _river_dress.retag_spikes(bm, 0)
-    bmesh.ops.triangulate(bm, faces=bm.faces)
-    mesh = bpy.data.meshes.new(name)
-    bm.to_mesh(mesh)
-    bm.free()
-    return scene.link(bpy.data.objects.new(name, mesh)), len(stones), len(reeds)
-
-
 def uv_footprint(objs, size, grow=0):
     """(size*size,) bool, Blender pixel order: the texels whose centres lie in a UV0 triangle of
     objs, plus every texel under a UV0 vertex (thin reed blades), grown by `grow` texels."""
@@ -306,25 +264,18 @@ def build(piece, generator):
         _road.PAINT: materials.pbr_material(_road.PAINT, materials.srgb("#e6e2d6"), 0.6),
     }
     stone_mat = materials.pbr_material(STONE_SLOT, materials.srgb("#8f877a"), 0.85)
-    dress_mats = [materials.pbr_material(n, materials.srgb(c), r) for n, c, r in (
-        (_river_dress.STONE, "#8a8378", 0.8), (_river_dress.REED, "#5d7a35", 0.85),
-        (_river_dress.CATTAIL, "#5a3a22", 0.9))]
-    slots = list(_road.SLOTS) + [STONE_SLOT] + list(_river_dress.DRESS_SLOTS)
-    all_mats = [road_mats[n] for n in _road.SLOTS] + [stone_mat] + dress_mats
+    slots = list(_road.SLOTS) + [STONE_SLOT]
+    all_mats = [road_mats[n] for n in _road.SLOTS] + [stone_mat]
     index = {n: i for i, n in enumerate(slots)}
     parts, beds, dresses, roads = [], [], [], []
-    stats = {}
     for li in range(3):
         bed, pt = road(f"{piece}_lod{li}_road", li, index)
         cw = causeway(f"{piece}_lod{li}_causeway", ARCH_SEGMENTS[li])
         stone_parts = [cw] + ([parapets(f"{piece}_lod{li}_parapets")] if li < 2 else [])
-        dress, n_st, n_re = dressing(f"{piece}_lod{li}_dress", li, piece)
-        stats = {"stones": n_st, "reedClumps": n_re}
-        joint_clearance(stone_parts + [dress])
-        group = [bed, pt] + stone_parts + [dress]
+        joint_clearance(stone_parts)
+        group = [bed, pt] + stone_parts
         # Slots first: Blender clamps a polygon's material_index to the mesh's slot count, so an
         # index set before the slots exist silently becomes 0.
-        dress_index = [p.material_index for p in dress.data.polygons]
         road_index = {o.name: [p.material_index for p in o.data.polygons] for o in (bed, pt)}
         for o in group:
             o.data.materials.clear()
@@ -338,15 +289,12 @@ def build(piece, generator):
             for p in o.data.polygons:
                 p.material_index = index[STONE_SLOT]
                 p.use_smooth = False
-        for p, i in zip(dress.data.polygons, dress_index):
-            p.material_index = i + index[_river_dress.STONE]
         # The stone slot samples no UV map (world-space tileable): park every stone loop on one
         # texel like the meadow skirt instead of the lines a planar map collapses walls to.
         for o in stone_parts:
             for d in o.data.uv_layers["UVMap"].data:
                 d.uv = (0.005, 0.005)
         beds.append(bed)
-        dresses.append(dress)
         roads += [bed, pt]
         parts.append(group)
 
@@ -389,9 +337,8 @@ def build(piece, generator):
     bake.write_bake_report(str(out / "bake-report.json"), receiverSignature=signature,
                            device=os.environ.get("HEXW_BAKE_DEVICE", "CPU"), samples=64, marginPx=12,
                            channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}},
-                           texelDensityPxPerM=texel, dressing=stats, maskStats=mask_stats,
-                           lod2Drops={_river_dress.CATTAIL: _river_dress.CATTAIL_LOD2_DROP},
-                           masks={"dressPorosity": list(_river_dress.POROSITY), "stonePorosity": STONE_POROSITY,
+                           texelDensityPxPerM=texel, maskStats=mask_stats, lod2Drops={},
+                           masks={"stonePorosity": STONE_POROSITY,
                                   "stoneUv": list(STONE_UV), "stoneBlockPx": STONE_BLOCK, "haloPx": HALO_PX,
                                   "roadClearPx": ROAD_CLEAR_PX},
                            causeway={"halfWidthM": W, "deckZ": DECK_Z, "archHalfSpanM": ARCH_A,

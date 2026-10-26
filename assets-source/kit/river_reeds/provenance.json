@@ -1,0 +1,211 @@
+{
+  "pieceId": "river_reeds",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/river_reeds.py",
+    "sha256": "9cc1761b3d6ed60ad6f817b185680d004c5322ef74c5fed01d3e971a5dba1413"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_bank_props.py",
+      "sha256": "1bb867ad8c5730664f30571815a0f5e594ac1f5083a11ba50dadb4fff1c30d88"
+    },
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "3761223a50d85b8cdfb1cb1bce63902d91e82278ebf608f2185e3de35981deb5"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 16
+      }
+    },
+    "device": "none",
+    "lod2Drops": {
+      "river_cattail": "under a pixel at 400 m: a head is 0.044-0.054 m across (0.14-0.18 px at 0.31 m/px), and LOD2 has no reed clumps for the stalks to stand in",
+      "river_stone": "under a pixel at 400 m: a cattail spike is 0.011 m across and 0.12-0.19 m long (0.04 x 0.6 px at 0.31 m/px), and LOD2 has no cattail heads to carry it"
+    },
+    "marginPx": 0,
+    "masks": {
+      "ao": 1,
+      "night": 0,
+      "porosity": 0.9,
+      "snow": 1
+    },
+    "props": {
+      "reedClumps": 1,
+      "stones": 0,
+      "tris": [
+        140,
+        46,
+        2
+      ]
+    },
+    "reason": "no Cycles bake: colour-only slots and a constant masks map on the planar UV0",
+    "receiverSignature": "4b31132292d1fe91e3a88049aafd96bb44a00f76e952c4130640ef465435c7cd",
+    "samples": 0,
+    "skipped": true
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 140,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 46,
+      "ratio": 0.32857142857142857
+    },
+    {
+      "lod": 2,
+      "tris": 2,
+      "ratio": 0.014285714285714285
+    }
+  ],
+  "collider": {
+    "node": "river_reeds_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": null,
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 468,
+        "astc": 468
+      },
+      "glbBytes": 30120
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/river_reeds/river_reeds.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 5,
+        "bytes": 468,
+        "sha256": "9eca3f9e88bcd49b64bb05e602836aad0f8a3ae689afb53a26b13037ea7a1241"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/river_reeds/river_reeds.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 5,
+        "bytes": 468,
+        "sha256": "dfcef226ea975c5c65f0e66ed374c621bcc0798bf68543deac8ec5d6789f2f12"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/river_reeds/river_reeds.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 274,
+        "sha256": "8a8a516b11a44c5de12c2de3df5163e22dc1d949cfddc5cadee8198b440870ed"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/river_reeds/river_reeds.glb",
+      "sha256": "4815fcd376142066bbaf87a4bc2c76df831a09495d883125a4dd98892072f57e",
+      "bytes": 30120
+    },
+    {
+      "path": "assets/kit/p1/river_reeds/river_reeds.masks.bc7.ktx2",
+      "sha256": "9eca3f9e88bcd49b64bb05e602836aad0f8a3ae689afb53a26b13037ea7a1241",
+      "bytes": 468
+    },
+    {
+      "path": "assets/kit/p1/river_reeds/river_reeds.masks.astc.ktx2",
+      "sha256": "dfcef226ea975c5c65f0e66ed374c621bcc0798bf68543deac8ec5d6789f2f12",
+      "bytes": 468
+    },
+    {
+      "path": "assets/kit/p1/river_reeds/river_reeds.masks.png",
+      "sha256": "8a8a516b11a44c5de12c2de3df5163e22dc1d949cfddc5cadee8198b440870ed",
+      "bytes": 274
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/river/ref-1.jpg",
+      "sha256": "dab614b05590faabb7a2e7afe89f381d3cd356ffa06c18e6908f6f0e0c5e376d",
+      "sourceSha256": "29d6315023b50ce140ee9cd81df7bae4742d0456d2e2477d41ce8cb3d016f42f",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "4c55204d-d467-4828-849f-7f954e7d4786",
+      "prompt": "Two separate flat-sided hexagonal diorama tiles side by side, each 32 m across with a meadow grass cap and layered soil strata on the hexagon side walls (dark topsoil, red clay, gravel). Left tile: a straight river running from one flat edge across to the opposite flat edge. Right tile: a curved river running from one flat edge to the flat edge two positions away, skipping one edge, a gentle bend. The 8 m wide river channel is sunk below the meadow surface between natural earthy banks with pebbles and reeds, clear water tinted pale turquoise at the margins and teal-blue in the middle, sun glints, soft caustics on the pebbly channel floor. Where the river reaches the tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/river/ref-2.jpg",
+      "sha256": "7c55c8d0a01b336a9934a7e1cf65e78ddbfc909f091bb92a320b37d9d968b4f9",
+      "sourceSha256": "2701aa68e02d17f45ec67ffcd7e4eb0dd5e3eebe5f1693cfa2c4419f0fb00d30",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "cf6a46c0-a15a-4455-884f-8b1e76c0746a",
+      "prompt": "Close-up of a natural river bank on a hexagonal diorama tile: the meadow grass edge, an earthy bank sloping down to the water, pebbles and reeds, clear water tinted pale turquoise at the margins and teal-blue in the middle, sun glints, soft caustics on the pebbly channel floor, and where the channel reaches the tile side wall the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-26T16:15:50.726Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/river/ref-1.jpg",
+        "assets-source/refs/river/ref-2.jpg"
+      ],
+      "notes": "Approved: channel cut below the meadow surface, natural banks, water column on the cut face. Reviewed in chat on a contact sheet of the approved ref images (scripts/refs/contact-sheet.mjs)."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "riverbank scatter (2026-10-26)",
+      "requested": "2026-10-26",
+      "notes": "Pending owner review; not an approval. New riverbank scatter prop (one reed clump with cattails), the river centres' baked bank dressing rebuilt as a standalone piece (owner 2026-10-26: \"scatter type items like rocks and reeds should not be built into the tile\"; a seeded 0 to 4 per river tile). Review assets-source/kit/river_reeds/renders/ and docs/checkpoints/riverbank-scatter/ (review sheet, river stretch before and after)."
+    }
+  ]
+}

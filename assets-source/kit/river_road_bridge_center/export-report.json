@@ -11,7 +11,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_bridge.py",
-      "sha256": "6c2ca14d32258789275e03f1afc8f66de4a0167c2c6cbb2093326c1113712b48"
+      "sha256": "0c506b8364d00ebc715e2c5bd3788e14ccd82f758e521fb3e04d1899507dcd54"
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
@@ -23,9 +23,9 @@
     }
   ],
   "lodTris": {
-    "river_road_bridge_center_lod0": 1766,
-    "river_road_bridge_center_lod1": 540,
-    "river_road_bridge_center_lod2": 120
+    "river_road_bridge_center_lod0": 480,
+    "river_road_bridge_center_lod1": 224,
+    "river_road_bridge_center_lod2": 60
   },
   "nodes": [
     "river_road_bridge_center",

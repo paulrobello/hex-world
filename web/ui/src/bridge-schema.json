@@ -819,7 +819,10 @@
         ],
         "period": 1,
         "rail": false,
-        "scatter": [],
+        "scatter": [
+          "river_stones",
+          "river_reeds"
+        ],
         "stopped": [
           false,
           false,
@@ -849,7 +852,10 @@
         ],
         "period": 1,
         "rail": false,
-        "scatter": [],
+        "scatter": [
+          "river_stones",
+          "river_reeds"
+        ],
         "stopped": [
           false,
           false,
@@ -879,7 +885,10 @@
         ],
         "period": 1,
         "rail": false,
-        "scatter": [],
+        "scatter": [
+          "river_stones",
+          "river_reeds"
+        ],
         "stopped": [
           false,
           false,
@@ -909,7 +918,10 @@
         ],
         "period": 1,
         "rail": false,
-        "scatter": [],
+        "scatter": [
+          "river_stones",
+          "river_reeds"
+        ],
         "stopped": [
           false,
           false,
@@ -939,7 +951,10 @@
         ],
         "period": 1,
         "rail": true,
-        "scatter": [],
+        "scatter": [
+          "river_stones",
+          "river_reeds"
+        ],
         "stopped": [
           false,
           true,
@@ -969,7 +984,10 @@
         ],
         "period": 1,
         "rail": false,
-        "scatter": [],
+        "scatter": [
+          "river_stones",
+          "river_reeds"
+        ],
         "stopped": [
           false,
           false,
@@ -999,7 +1017,10 @@
         ],
         "period": 1,
         "rail": false,
-        "scatter": [],
+        "scatter": [
+          "river_stones",
+          "river_reeds"
+        ],
         "stopped": [
           false,
           false,
@@ -1130,7 +1151,9 @@
         "rail": false,
         "scatter": [
           "beach_driftwood",
-          "beach_dunegrass"
+          "beach_dunegrass",
+          "river_stones",
+          "river_reeds"
         ],
         "stopped": [
           false,
@@ -1163,7 +1186,9 @@
         "rail": false,
         "scatter": [
           "beach_driftwood",
-          "beach_dunegrass"
+          "beach_dunegrass",
+          "river_stones",
+          "river_reeds"
         ],
         "stopped": [
           false,

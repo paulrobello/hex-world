@@ -1,6 +1,7 @@
 // Asserts the scatter checkpoint's state dumps (make shots-scatter): every pack landed before the
 // shots, each pine forest, oak tile, meadow and straight road scatters its planned count (the density per 100 m²
-// of cap times 665 m²) and draws all of it, nothing else scatters, only the oak tiles roost (12
+// of cap times 665 m²) and draws all of it, the river straight draws 0 to 4 bank props (owner 2026-10-26),
+// nothing else scatters, only the oak tiles roost (12
 // each), the rising forest scatters, bulldoze takes its scatter and undo brings back the same
 // counts, and the 20-tile world's overview camera stays inside the 500-draw budget (owner A2 Q1,
 // 2026-10-21: close cameras are tracked, not gated) with at most 60 scatter (mesh, material) pairs
@@ -22,6 +23,8 @@ const DENSITY = {
   meadow: { wildflower_clump: 4.0, rock_small: 0.3 },
   road_straight: { wildflower_single: 3.0 },
 };
+// Capped tiles: a seeded 0 to cap of their placed pieces (scatter.rs RIVER_MAX), each drawn.
+const CAPPED = { river_straight: 4 };
 const key = (t) => `${t.q},${t.r}`;
 
 const placed = read("scatter-01-placed");
@@ -29,9 +32,14 @@ const s = placed.scatter;
 check(placed.tiles === 19, "19 tiles placed (refused placements would be missing)", placed.tiles);
 check(Object.values(placed.packs).every((v) => v === "ready"), "every pack ready", placed.packs);
 check((placed.pack_waiting ?? []).length === 0 && s.waiting.length === 0, "no tile waits on a pack or its ground", { packs: placed.pack_waiting, scatter: s.waiting });
-const scattering = placed.play.tiles.filter((t) => t.tile in DENSITY).map(key).sort();
-check(JSON.stringify(s.tiles.map(key).sort()) === JSON.stringify(scattering), "exactly the pine forests, oak tiles, meadows and straight roads scatter", s.tiles.map((t) => `${t.tile}@${key(t)}`));
-for (const t of s.tiles) {
+const scattering = placed.play.tiles.filter((t) => t.tile in DENSITY || (t.tile in CAPPED && s.tiles.some((x) => key(x) === key(t)))).map(key).sort();
+check(JSON.stringify(s.tiles.map(key).sort()) === JSON.stringify(scattering), "exactly the pine forests, oak tiles, meadows, straight roads and river straights with bank props scatter", s.tiles.map((t) => `${t.tile}@${key(t)}`));
+for (const t of s.tiles.filter((x) => x.tile in CAPPED)) {
+  const n = Object.values(t.placed).reduce((a, b) => a + b, 0);
+  const ok = n <= CAPPED[t.tile] && Object.keys(t.placed).every((p) => t.planned[p] === t.placed[p] && t.placed[p] === t.drawn[p]);
+  check(ok, `${t.tile}@${key(t)} draws 0 to ${CAPPED[t.tile]} bank props, planned = placed = drawn`, [n, t.placed, t.drawn]);
+}
+for (const t of s.tiles.filter((x) => x.tile in DENSITY)) {
   for (const [piece, d] of Object.entries(DENSITY[t.tile])) {
     const want = (d * CAP) / 100;
     const ok = t.planned[piece] === t.placed[piece] && t.placed[piece] === t.drawn[piece] && Math.abs(t.placed[piece] - want) < 1;

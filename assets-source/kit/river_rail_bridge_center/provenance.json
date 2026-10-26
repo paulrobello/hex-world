@@ -13,7 +13,7 @@
     },
     {
       "path": "scripts/blender/kit/_rail_bridge.py",
-      "sha256": "d52e0b72e40f3fcc1f42dc70b0273e0dc9ed5ee4444194dc45bafbd8cc63e4bd"
+      "sha256": "a784221f1f9d34c52baaee071158dab7e57fcc9402a27641bed2f855e12e283e"
     },
     {
       "path": "scripts/blender/kit/_river.py",
@@ -21,7 +21,7 @@
     },
     {
       "path": "scripts/blender/kit/_river_bridge.py",
-      "sha256": "6c2ca14d32258789275e03f1afc8f66de4a0167c2c6cbb2093326c1113712b48"
+      "sha256": "0c506b8364d00ebc715e2c5bd3788e14ccd82f758e521fb3e04d1899507dcd54"
     },
     {
       "path": "scripts/blender/kit/_river_dress.py",
@@ -85,17 +85,11 @@
       }
     },
     "device": "none",
-    "dressing": {
-      "reedClumps": 6,
-      "stones": 16
-    },
-    "lod2Drops": {
-      "river_cattail": "under a pixel at 400 m: a head is 0.044-0.054 m across (0.14-0.18 px at 0.31 m/px), and LOD2 has no reed clumps for the stalks to stand in"
-    },
+    "lod2Drops": {},
     "lodTris": [
-      2188,
-      606,
-      124
+      842,
+      262,
+      64
     ],
     "marginPx": 0,
     "masks": {
@@ -125,8 +119,8 @@
         0.005
       ]
     },
-    "reason": "no Cycles bake: the masks are an analytic field (the rail's crib field on the ballast band, the river dressing's porosity, the parked stone block)",
-    "receiverSignature": "e59ba49dc494e46410444afb97b080766533a571dd06f6621e6493f69d467512",
+    "reason": "no Cycles bake: the masks are an analytic field (the rail's crib field on the ballast band, the river banks' porosity, the parked stone block)",
+    "receiverSignature": "8ee8fc54b45e76c81c27041e919251177273e2738e1dceaddedf652685caaf7b",
     "samples": 0,
     "skipped": false,
     "texelDensityPxPerM": {
@@ -138,18 +132,18 @@
   "lods": [
     {
       "lod": 0,
-      "tris": 2188,
+      "tris": 842,
       "ratio": 1
     },
     {
       "lod": 1,
-      "tris": 606,
-      "ratio": 0.27696526508226693
+      "tris": 262,
+      "ratio": 0.31116389548693585
     },
     {
       "lod": 2,
-      "tris": 124,
-      "ratio": 0.056672760511883
+      "tris": 64,
+      "ratio": 0.07600950118764846
     }
   ],
   "collider": {
@@ -202,7 +196,7 @@
         "bc7": 19463,
         "astc": 19025
       },
-      "glbBytes": 206580
+      "glbBytes": 74496
     },
     "textureEncodes": [
       {
@@ -241,8 +235,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.glb",
-      "sha256": "e1aee1758067077fb9b4286fcf334c9ea4eba3ff3eb60a78fa7815e4a2c175d6",
-      "bytes": 206580
+      "sha256": "a9c9d3b923f611a9730496799a109be00d5e9c44ee72de4e57b9aa37d5cc9ac7",
+      "bytes": 74496
     },
     {
       "path": "assets/kit/p1/river_rail_bridge_center/river_rail_bridge_center.masks.bc7.ktx2",
@@ -292,7 +286,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-26T06:35:35.231Z",
+    "date": "2026-10-26T16:22:26.575Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -350,6 +344,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"A17 all approved\", 2026-10-26): the LOD slot pass (sheet docs/checkpoints/lod1-pass/sheet.jpg), including the platform's flat LOD1 flower mound and the wells' LOD1 courses."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "riverbank scatter (2026-10-26)",
+      "requested": "2026-10-26",
+      "notes": "Pending owner review; not an approval. Bank stones and reed clumps taken out of the piece (owner 2026-10-26: \"scatter type items like rocks and reeds should not be built into the tile\"); the tile scatters river_stones and river_reeds instead, 0 to 4 per tile. Deck and causeway unchanged; LOD 842 / 262 / 64 tris. Review assets-source/kit/river_rail_bridge_center/renders/ and docs/checkpoints/riverbank-scatter/."
     }
   ]
 }

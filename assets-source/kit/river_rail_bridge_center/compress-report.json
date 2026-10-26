@@ -1,6 +1,6 @@
 {
   "name": "river_rail_bridge_center",
-  "date": "2026-10-26T06:33:59.525Z",
+  "date": "2026-10-26T16:21:11.591Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -80,10 +80,10 @@
       "bc7": 19463,
       "astc": 19025
     },
-    "glbBytes": 206580
+    "glbBytes": 74496
   },
   "glb": {
-    "bytes": 206580,
-    "sha256": "e1aee1758067077fb9b4286fcf334c9ea4eba3ff3eb60a78fa7815e4a2c175d6"
+    "bytes": 74496,
+    "sha256": "a9c9d3b923f611a9730496799a109be00d5e9c44ee72de4e57b9aa37d5cc9ac7"
   }
 }

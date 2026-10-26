@@ -21,10 +21,11 @@ globals are set once below (the `_spruce` pattern; `_river_bridge.py` itself is 
   -0.45 m: 0.95 m over the -1.4 m water, as on the road bridge) and its barrel;
 - parapets on t in PARAPET_T over |y| <= 5 m (the water and lower banks), inner face 2.6 m from the
   track centre (the train is 1.48 m half-wide and sweeps 2.5 m), top PARAPET_TOP; end pillars;
-- bank stones and reeds clear of the causeway (|t| > W + 1.2).
+- no bank stones or reeds: they are runtime scatter (owner, 2026-10-26; `river_stones`,
+  `river_reeds`).
 
 Masks are analytic (no Cycles bake), on the planar UV0: rail_straight_center's crib, sleeper and
-rail field in the rail's own frame over the ballast band, the river dressing's porosity elsewhere,
+rail field in the rail's own frame over the ballast band, the river banks' porosity elsewhere,
 and the stone block where every causeway loop is parked (`_river_bridge.STONE_UV`, a world-space
 tileable slot). R 1 and B 0 everywhere; A 1 off the cribs.
 """
@@ -64,7 +65,7 @@ RAIL_SEGMENTS = (8, 2, 1)  # = rail_straight_center
 ARCH_SEGMENTS = _river_bridge.ARCH_SEGMENTS
 LANES = (1, 4)
 STONE_SLOT = _river_bridge.STONE_SLOT
-SLOTS = _rail.SLOTS + (STONE_SLOT,) + tuple(_river_dress.DRESS_SLOTS)
+SLOTS = _rail.SLOTS + (STONE_SLOT,)
 SLOT_INDEX = {s: i for i, s in enumerate(SLOTS)}
 MASK_SIZE = _rail.MASK_SIZE
 
@@ -82,13 +83,11 @@ def rail(name, lod, mats):
     return o
 
 
-def stone_and_dressing(piece, lod, mats):
-    """The road bridge's causeway, parapets (LOD0 and LOD1) and bank dressing at this width."""
+def stone_parts(piece, lod, mats):
+    """The road bridge's causeway and parapets (LOD0 and LOD1) at this width."""
     cw = _river_bridge.causeway(f"{piece}_lod{lod}_causeway", ARCH_SEGMENTS[lod])
     stone = [cw] + ([_river_bridge.parapets(f"{piece}_lod{lod}_parapets")] if lod < 2 else [])
-    dress, n_st, n_re = _river_bridge.dressing(f"{piece}_lod{lod}_dress", lod, piece)
-    dress_index = [p.material_index for p in dress.data.polygons]
-    for o in stone + [dress]:
+    for o in stone:
         o.data.materials.clear()
         for s in SLOTS:
             o.data.materials.append(mats[s])
@@ -99,9 +98,7 @@ def stone_and_dressing(piece, lod, mats):
             p.use_smooth = False
         for d in o.data.uv_layers["UVMap"].data:
             d.uv = _river_bridge.STONE_UV
-    for p, i in zip(dress.data.polygons, dress_index):
-        p.material_index = i + SLOT_INDEX[_river_dress.STONE]
-    return stone, dress, n_st, n_re
+    return stone
 
 
 # --- masks --------------------------------------------------------------------------------------
@@ -169,19 +166,15 @@ def build_piece(piece, generator):
         _rail.STEEL: materials.pbr_material(_rail.STEEL, (*_rail.STEEL_COLOR, 1.0), _rail.STEEL_ROUGH),
         _rail.HEAD: materials.pbr_material(_rail.HEAD, (*_rail.HEAD_COLOR, 1.0), _rail.HEAD_ROUGH),
         STONE_SLOT: materials.pbr_material(STONE_SLOT, materials.srgb("#8f877a"), 0.85),
-        _river_dress.STONE: materials.pbr_material(_river_dress.STONE, materials.srgb("#8a8378"), 0.8),
-        _river_dress.REED: materials.pbr_material(_river_dress.REED, materials.srgb("#5d7a35"), 0.85),
-        _river_dress.CATTAIL: materials.pbr_material(_river_dress.CATTAIL, materials.srgb("#5a3a22"), 0.9),
     }
-    lods, rails, stats, clear = [], [], {}, []
+    lods, rails, clear = [], [], []
     for li in range(3):
         tr = rail(f"{piece}_lod{li}_rail", li, mats)
-        stone, dress, n_st, n_re = stone_and_dressing(piece, li, mats)
-        stats = {"stones": n_st, "reedClumps": n_re}
+        stone = stone_parts(piece, li, mats)
         clear.append(clearance(stone))
         rails.append(tr)
         texel = uv.measure_texel_density(tr, MASK_SIZE) if li == 0 else texel
-        body = geom.join([tr] + stone + [dress], f"{piece}_lod{li}")
+        body = geom.join([tr] + stone, f"{piece}_lod{li}")
         print(f"{piece}_lod{li}: wind U max {_river_dress.wind_uv(body):.3f}")
         body.data.set_sharp_from_angle(angle=math.radians(30.0))
         assert [mt.name for mt in body.data.materials] == list(SLOTS), [mt.name for mt in body.data.materials]
@@ -214,10 +207,10 @@ def build_piece(piece, generator):
     export.write_export_report(str(out / "export-report.json"), root, piece, generator)
     bake.write_bake_report(
         str(out / "bake-report.json"), receiverSignature=signature, device="none", samples=0, marginPx=0,
-        lod2Drops={_river_dress.CATTAIL: _river_dress.CATTAIL_LOD2_DROP},
+        lod2Drops={},
         channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}}, texelDensityPxPerM=texel,
         reason="no Cycles bake: the masks are an analytic field (the rail's crib field on the ballast band, "
-               "the river dressing's porosity, the parked stone block)",
+               "the river banks' porosity, the parked stone block)",
         masks={"snow": 1.0, "porosity": {"ballast": 0.9, "sleeper": 0.6, "rail": 0.15,
                                          "stone": _river_bridge.STONE_POROSITY, "dressing": list(_river_dress.POROSITY)},
                "ao": {"crib": [0.78, 0.95], "shoulder": 0.95, "other": 1.0}, "night": 0.0,
@@ -232,6 +225,6 @@ def build_piece(piece, generator):
                 "pillarTopM": PILLAR_TOP, "parapetHalfLengthAcrossRiverM": _river_bridge.PARAPET_Y,
                 "minStoneClearanceFromTrackM": min(clear), "trainHalfWidthM": TRAIN_HALF_W,
                 "sweptHalfWidthM": SWEPT},
-        dressing=stats, lodTris=tris, skipped=False)
+        lodTris=tris, skipped=False)
     print(json.dumps({"piece": piece, "tris": tris, "texel": texel}))
     return root, lods

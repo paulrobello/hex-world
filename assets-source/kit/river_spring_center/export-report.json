@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/river_spring_center.py",
-    "sha256": "8ff8544109aca35a5b5a61758bce076daa0e08ac042ea731959e68ada0b29462"
+    "sha256": "2f08402a98e9e4b73b7fe9adb836978cab5fc7e0fc82cd94ac4012d6ec865d32"
   },
   "generatorDeps": [
     {
@@ -19,9 +19,9 @@
     }
   ],
   "lodTris": {
-    "river_spring_center_lod0": 2180,
-    "river_spring_center_lod1": 538,
-    "river_spring_center_lod2": 100
+    "river_spring_center_lod0": 270,
+    "river_spring_center_lod1": 114,
+    "river_spring_center_lod2": 40
   },
   "nodes": [
     "river_spring_center",

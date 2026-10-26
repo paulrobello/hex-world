@@ -1,3 +1,5 @@
+// Bank stones and reed clumps are runtime scatter (owner, 2026-10-26: "scatter type items like rocks and
+// reeds should not be built into the tile"), a seeded 0 to 4 per tile (`hex-play` scatter RIVER_MAX).
 // River fork (owner 2026-10-20, "we need a river fork also"): a symmetric Y like road_junction, river
 // arms on edges 0, 2 and 4 meeting at the centre node. A River node shared by several segments is
 // a junction, not a spring (water contract §2a): two arms join or one splits by the flow rule (§6).
@@ -13,7 +15,6 @@
         (kind: River, lane: Some((offset: 0.0, width: 8.0))),
         (kind: Grass),
     ),
-    center: Some("river_fork_center"),
     nodes: [
         (id: "fork", at: (0.0, 0.0)),
     ],
@@ -22,4 +23,10 @@
         (kind: River, from: Edge(2), to: Node("fork")),
         (kind: River, from: Edge(4), to: Node("fork")),
     ],
+    props: (
+        scatter: [
+            (piece: "river_stones", density: 0.75),
+            (piece: "river_reeds", density: 0.6),
+        ],
+    ),
 )

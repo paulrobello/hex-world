@@ -395,7 +395,7 @@ fn ghost_pieces<'a>(
     has: impl Fn(&str) -> bool,
 ) -> Vec<(&'a str, Transform, Role)> {
     let mut out = vec![];
-    let center_kit = def.center.as_ref().is_some_and(|c| has(c.as_str()));
+    let center_kit = crate::play::centre_ready(def, &has);
     if !water::tiles::stand_in_bed(def, &has) {
         out.push((
             def.base.as_str(),
@@ -403,10 +403,12 @@ fn ghost_pieces<'a>(
             Role::Base(def.biome),
         ));
     }
-    if let Some(center) = def.center.as_ref().filter(|_| center_kit) {
-        let lane_kind = def.edges.iter().find(|s| s.lane.is_some()).map(|s| s.kind);
-        let role = lane_kind.map_or(Role::Centre, Role::Lane);
-        out.push((center.as_str(), Transform::IDENTITY, role));
+    if center_kit {
+        if let Some(center) = &def.center {
+            let lane_kind = def.edges.iter().find(|s| s.lane.is_some()).map(|s| s.kind);
+            let role = lane_kind.map_or(Role::Centre, Role::Lane);
+            out.push((center.as_str(), Transform::IDENTITY, role));
+        }
         let pieces = def.edge_pieces(catalog.sockets());
         for e in 0..6u8 {
             let s = &def.edges[e as usize];
