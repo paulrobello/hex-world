@@ -4,7 +4,11 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## State
 
-- `main` holds batch 22 (pushed, CI watched, auto-deployed); batch 21 is `df96289`, CI green (run 39630526496). `dist/` rebuilt after each merge.
+- `main` holds batch 26 (pushed, CI watched, auto-deployed); batch 25 is `d908e36`, CI green (run 40324963259). `dist/` rebuilt after each merge.
+- Batch 26 landed: the owner's A16/A17 approvals (21 pieces), the bulldoze dust reverted to its previous size (owner A9), the close-camera MiniMac frame times (`docs/perf/close-camera-draws/`), A3/A18 answers in the PRD.
+- Batch 25 landed: close-camera draws (screen-aware cascade skip, runtime slot coalescing per piece, per-tile culling): 20-tile overview 419 -> 335, forest cluster 633 -> 436, meadow 645 -> 497; MiniMac 2,066-tile close camera -3.7 ms web mean, -4.4 ms native. Cards closed: close-camera draws, draw budget.
+- Batch 24 landed: kit-compress spawns the UASTC encode with ASLR off (libktx 4.4.2's RDO selector-history hash reads struct padding), so identical PNGs give identical KTX2; every committed KTX2 is pre-pin and 287 of 321 maps change on re-encode (re-shoot thumbs after).
+- Batch 23 landed: overview-only 500-draw gate and scatter 60 per LOD; one-LOD band shadows; LOD0-through-LOD1 fallback; A14 engine feedback; road_bend_60 trim (A7); water review knob and options page; cars queue at crossings; every LOD0 slot in LOD1 (16 pieces, new kit gates); stopped rail ends accept non-rail tiles; beach scatter 0-6; R8 share image; share image left out of the initial-download count.
 - Batch 22 landed: the instanced chunk path cross-fades settled pieces per part over the 10 m LOD bands (MiniMac timing in `docs/perf/lod-band-instanced.json`: no cost at the 152 m band camera, about +1 ms p95 on the 7-forest world at 130 m; draws 616 -> 748 at 152 m); cars over a lowered tier cap fade out over 250 ms (instant under reduced motion), with the `set_car_cap` test hook (owner: stays callable from the web), the fade evidence in `docs/checkpoints/cars-fade-spur/` and a web-smoke case drawing the blended car pipeline under the 16-texture clamp; destination spurs drive at most 20 deg/tick (bakery spur 3 m, every bakery trip at most 18.85 deg/tick on the sliding maximum, owner A13).
 - Batch 21 landed: the saves follow-up (load-confirm autosave hold ends after 20 s; Replace's toast has Undo restoring the slot byte for byte), the UI motion work (Settings Controls Reduce motion: Follow system or On; tile pictures turn on R; the engine feedback pass on the HUD motion tokens; `cssMs` read minified `.24s` as 0.24 ms, fixed), the grass slider drag measurement (no hitch, no rebuild), the initial-download PNG monitor warning, the owner answers and the approvals of 27 pieces and 2 cues. Cards closed: saves follow-up, UI motion, grass density, road bend crease.
 - Batch 20 landed: kit prepass COLOR_0 normal fade (mouth fan SSAO), `e2e/initial-download.mjs` in web-smoke (runtime matches the gate per texture family; PNG 29.59 MiB, headroom 433 KB), parallel single-threaded KTX2 encodes (2x faster, byte-identical), the saves screens S10.3/S10.6/S10.8, road_bend_60 crease verified gone (card blocked on re-approval), and `scripts/worktree-bootstrap.sh` no longer runs git (agent guards refused it). Cards closed: prepass fade, initial download, parallel encode, saves screens. No agents running; `git worktree list` shows main only.
@@ -39,13 +43,9 @@ No Blender agents are running. The stone well landed in batch 15; no other P3 pi
 
 ## Waiting on Paul
 
-Coded as asked in the session (answers logged in `docs/review/2026-10-20-owner-answers.md`):
-- A3 water looks: pick a drying trail strength and a churn foam level from `docs/review/2026-10-21-water-options.html` (O1-O5 each; current is O3). The review knob is `--water_look trail=<x>,churn=<g>` (native, debug only).
-- A16 road bend trim: Q1 approve `road_bend_60_center` and the new `road_bend_60_edge_e0`/`_e1` (sheet `docs/checkpoints/road_bend_60-trim/sheet.jpg`); Q2 accept +8 draws per pass while a road_bend_60 is on screen; Q3 accept e1's mirrored-bake AO noise (up to 20 levels on about 1% of texels).
-- A17 LOD slot pass (sheet `docs/checkpoints/lod1-pass/sheet.jpg`): Q1 the platform's flat flower mound at LOD1 (0.17 m below LOD0's cone); Q2 the wells' grey and buff courses at LOD1; plus re-approval of the 16 rebuilt pieces.
-- A18 rail ends: keep the stopped-end rule one-way (a meadow may go against a stopped end, but a new rail tile may not point its end at an existing meadow)?
-- Draw budget: A2 Q1-Q4 and A15 are answered and applied (overview-only 500 gate, scatter 60 per LOD, one-LOD band shadows, every LOD0 slot drawn in LOD1). The structural close-camera fix the owner delegated is card `01a176b5456e` (screen-aware cascade skip, runtime slot coalescing, per-tile culling).
-- A4 UI hero-polish hallway test and sign-off; A9 look sign-offs (bulldoze dust now 20% smaller again, grass blades, the R8 share image in `docs/checkpoints/share-image/`).
+- A19: which Blender pieces next (no piece has an approved reference set, so the two-Blender-agents rule cannot be met until the owner names pieces; candidates: fish and bird kit pieces, the 7-hex mega tile, new P3 pieces).
+- A20: file the libktx 4.4.2 padding-hash bug upstream (KhronosGroup/KTX-Software, public GitHub issue) or not.
+- A4 UI hero-polish hallway test and sign-off; A9 grass blades look sign-off.
 - Non-blocking tuning lists from 2026-10-20 and the older numbered lists below each ship with a default.
 
 ## Filed follow-ups
