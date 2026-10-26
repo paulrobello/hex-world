@@ -34,6 +34,7 @@ No Blender agents are running. The stone well landed in batch 15; no other P3 pi
 - When asset work is active: at least 2 and at most 3 Blender agents at once, on Opus 5.5 at xhigh effort, in `isolation: "worktree"`. Each new piece reuses approved helpers through module globals from a new family file (never edit an approved helper), and its runtime changes come back as a verified `integration.patch` for the orchestrator to land.
 - The P3 recipe system (recipe book, hints, discovery moment, creative mode, the 6 recipes) is deferred until Paul says to start it (2026-10-20). P3 content keeps landing ahead of it.
 - No work past P3: nothing from P4 (elevation) onward (P5 atmosphere, P6 content breadth, P7 mobile, P8 first-person) starts until Paul says so (2026-10-20). Owner-requested items that fit P2 or P3 still go ahead.
+- Book shared-host windows on the kanban scheduler before load-sensitive or GPU work (global rule, 2026-10-25): `kanban schedule book --resource macdaddy|minimac ...`, check in, heartbeat, cancel when done. Sub-agents may not run kanban, so the orchestrator books the window for each agent wave (GPU shots, thumbs, e2e, kit bakes) and for every MiniMac perf run before dispatching it.
 - Blender headless only. Never record an owner approval yourself (pending entries only). Tool bugs and flaky tests are high priority. Perf numbers need host load ≤ 15 before and after.
 
 ## Waiting on Paul
