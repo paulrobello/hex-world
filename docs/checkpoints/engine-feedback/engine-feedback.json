@@ -94,6 +94,38 @@
   "name": "ghost-turn-13"
  },
  {
+  "cmd": "screenshot",
+  "name": "ghost-turn-14"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-15"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-16"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-17"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-18"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-19"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-20"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-turn-21"
+ },
+ {
   "cmd": "wait",
   "frames": 30
  },
@@ -193,6 +225,68 @@
  {
   "cmd": "screenshot",
   "name": "ghost-in-11"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "hover",
+  "q": 8,
+  "r": 0
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-00"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-01"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-02"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-03"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-04"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-05"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-06"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-07"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-08"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-09"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-10"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "ghost-out-11"
  },
  {
   "cmd": "hover",
@@ -837,6 +931,38 @@
   "name": "rm-ghost-turn-13"
  },
  {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-14"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-15"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-16"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-17"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-18"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-19"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-20"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-turn-21"
+ },
+ {
   "cmd": "wait",
   "frames": 30
  },
@@ -936,6 +1062,68 @@
  {
   "cmd": "screenshot",
   "name": "rm-ghost-in-11"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "hover",
+  "q": 8,
+  "r": 0
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-00"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-01"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-02"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-03"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-04"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-05"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-06"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-07"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-08"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-09"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-10"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "rm-ghost-out-11"
  },
  {
   "cmd": "hover",

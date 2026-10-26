@@ -15,10 +15,11 @@ FRAME_MS = 1000 / 60
 HERE = Path(__file__).parent
 # (strip, frames to show, frame step in the script, crop box in the 960x600 capture, caption)
 STRIPS = [
-    ("ghost-turn", range(0, 14, 1), 1, "R: the windmill ghost turns 60° over 180 ms (--t) on the Legend curve"),
+    ("ghost-turn", range(0, 22, 1), 1, "R: the ghost turns 60° over 180 ms (--t); the edge glow fades in over 120 ms (--t-fast) once it lands"),
     ("ghost-in", range(0, 12, 1), 2, "A new slot: the ghost waits 150 ms, then fades in over 120 ms (--t-fast)"),
+    ("ghost-out", range(0, 12, 1), 1, "The pointer leaves: the ghost's meshes and outline fade out together over 120 ms (--t-fast)"),
     ("refused", range(0, 16, 1), 1, "A refused placement: the ghost's edges pulse once over 240 ms (--t-slow)"),
-    ("rise", range(0, 24, 1), 6, "Placement: the 80 ms commit flash, then the staged rise (2 s, §4.4)"),
+    ("rise", range(0, 24, 1), 6, "Placement: the 120 ms commit flash (--t-fast), then the staged rise (2 s, §4.4)"),
     ("bulldoze-mode", range(0, 14, 1), 1, "Bulldoze on: the slot ring leaves and the target arrives, both 180 ms (--t)"),
     ("bulldoze", range(0, 24, 1), 6, "Bulldoze: a 700 ms ease-in sink inside the dust cloud"),
 ]

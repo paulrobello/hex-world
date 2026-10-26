@@ -32,7 +32,7 @@ use hex_core::{Axial, EdgeStatus, HEX_RADIUS, SocketKind, TileCatalog, opposite_
 
 use super::{
     PlayCatalog, PlayView, PlayWaiting,
-    ghost::GhostDrawn,
+    ghost::{GhostDrawn, GhostMeshes},
     rise::{ReducedMotion, RiseCue, RiseMessage},
 };
 use crate::{ActiveScenario, Scenario, SceneEntity};
@@ -383,6 +383,46 @@ impl Fade {
     }
 }
 
+/// The ghost's edge glow, socket colours and key marks (`in-world.md`, Rotate): after R they wait
+/// at 0 while the ghost turns and fade in over `T_FAST` from the frame the turn lands.
+#[derive(Clone, Copy, Debug)]
+struct Glow {
+    fade: Fade,
+    /// Waiting for the running turn to land.
+    held: bool,
+}
+
+impl Glow {
+    fn at(v: f32) -> Self {
+        Self {
+            fade: Fade::at(v),
+            held: false,
+        }
+    }
+
+    /// The element was rebuilt: the glow restarts from 0, held while the ghost `turning`.
+    fn restart(&mut self, turning: bool, instant: bool) {
+        self.fade = Fade::at(0.0);
+        self.held = turning && !instant;
+        if !self.held {
+            self.fade.to(1.0, if instant { 0.0 } else { T_FAST }, 0.0);
+        }
+    }
+
+    /// One frame: a held glow starts its fade on the frame the turn lands.
+    fn step(&mut self, turning: bool, instant: bool, dt: f32) {
+        if self.held && (!turning || instant) {
+            self.held = false;
+            self.fade.to(1.0, if instant { 0.0 } else { T_FAST }, 0.0);
+        }
+        self.fade.t += dt;
+    }
+
+    fn value(&self) -> f32 {
+        if self.held { 0.0 } else { self.fade.value() }
+    }
+}
+
 /// `cubic-bezier(.22, .9, .3, 1)`, the Legend motion curve.
 pub fn ease(u: f32) -> f32 {
     if u <= 0.0 {
@@ -426,7 +466,10 @@ struct Element {
     root: Entity,
     parts: Vec<Part>,
     alpha: Fade,
-    glow: Fade,
+    glow: Glow,
+    /// The glow parts of the rotation the ghost turned from, fading out over `glow_out`.
+    fading: Vec<Part>,
+    glow_out: Fade,
     /// Fading out, despawned when invisible.
     leaving: bool,
 }
@@ -818,9 +861,11 @@ pub const T_SLOW: f32 = 0.24;
 /// The ghost waits this long after a slot is hovered before it fades in (`in-world.md`, Ghost): a
 /// hover delay, not a transition.
 pub const GHOST_DELAY: f32 = 0.15;
-/// The commit flash's ink edges fade over this (`in-world.md`, Place: 80 ms): a flash, kept off the
-/// token scale on purpose.
-const FLASH: f32 = 0.08;
+/// The commit flash's ink edges fade over `--t-fast` (owner A14 Q4, 2026-10-21; `in-world.md`,
+/// Place, specified 80 ms).
+const FLASH: f32 = T_FAST;
+/// The ghost leaves its cell over this: the outline here, and its meshes in [`super::ghost`].
+pub const GHOST_OUT: f32 = T_FAST;
 
 /// Fade timings (s), on the motion tokens: (in, out, delay in). Bulldoze mode's changes (the ring
 /// leaving and the target arriving) share `T`, as the HUD's bulldoze dim does.
@@ -828,7 +873,7 @@ fn timing(key: Key) -> (f32, f32, f32) {
     match key {
         Key::Ring => (T, T, 0.0),
         Key::Hover(_) | Key::TileHover(_) => (T_FAST, T_FAST, 0.0),
-        Key::Ghost(_) => (T_FAST, T_FAST, GHOST_DELAY),
+        Key::Ghost(_) => (T_FAST, GHOST_OUT, GHOST_DELAY),
         Key::Bulldoze(_) => (T, T, 0.0),
         Key::Flash(..) => (0.0, FLASH, 0.0),
         Key::Waiting(_) => (T, T_FAST, 0.0),
@@ -880,6 +925,7 @@ pub fn sync(
     catalog: Res<PlayCatalog>,
     reduced: Res<ReducedMotion>,
     drawn: Res<GhostDrawn>,
+    ghost: Option<Res<GhostMeshes>>,
     mut aff: ResMut<Affordances>,
     mut cues: MessageReader<RiseMessage>,
     (mut meshes, mut materials): (ResMut<Assets<Mesh>>, ResMut<Assets<AffordanceMaterial>>),
@@ -919,7 +965,9 @@ pub fn sync(
             root,
             parts,
             alpha,
-            glow: Fade::at(1.0),
+            glow: Glow::at(1.0),
+            fading: vec![],
+            glow_out: Fade::at(0.0),
             leaving: true,
         });
     }
@@ -940,6 +988,7 @@ pub fn sync(
         ghost_meshes,
     );
     let keys: HashSet<Key> = want.iter().filter(|w| w.2).map(|w| w.0).collect();
+    let turning = ghost.as_ref().is_some_and(|g| g.turning());
     for el in aff.elements.iter_mut() {
         if !keys.contains(&el.key) && !matches!(el.key, Key::Flash(..)) {
             let (_, out, _) = timing(el.key);
@@ -963,9 +1012,21 @@ pub fn sync(
                 el.alpha.to(1.0, fade_in, 0.0);
                 if el.sig != sig {
                     el.sig = sig;
-                    for p in el.parts.drain(..) {
+                    // R: the old rotation's glow fades out while the ghost turns; the rest goes now.
+                    let turning = turning && matches!(key, Key::Ghost(_)) && !instant;
+                    let g = el.glow.value();
+                    for p in el.fading.drain(..) {
                         commands.entity(p.entity).try_despawn();
                     }
+                    for p in std::mem::take(&mut el.parts) {
+                        if turning && g > 0.0 && matches!(p.anim, Anim::Glow | Anim::GlowPulse) {
+                            el.fading.push(p);
+                        } else {
+                            commands.entity(p.entity).try_despawn();
+                        }
+                    }
+                    el.glow_out = Fade::at(g);
+                    el.glow_out.to(0.0, T_FAST, 0.0);
                     el.parts = spawn_parts(
                         &mut commands,
                         &mut meshes,
@@ -973,8 +1034,7 @@ pub fn sync(
                         el.root,
                         parts_for(key, &view, &catalog.0, ghost_meshes),
                     );
-                    el.glow = Fade::at(0.0);
-                    el.glow.to(1.0, if instant { 0.0 } else { T_FAST }, 0.0);
+                    el.glow.restart(turning, instant);
                 }
             }
             None => {
@@ -996,7 +1056,9 @@ pub fn sync(
                     root,
                     parts,
                     alpha,
-                    glow: Fade::at(1.0),
+                    glow: Glow::at(1.0),
+                    fading: vec![],
+                    glow_out: Fade::at(0.0),
                     leaving: false,
                 });
             }
@@ -1031,6 +1093,7 @@ pub fn animate(
     mut commands: Commands,
     active: Res<ActiveScenario>,
     reduced: Res<ReducedMotion>,
+    ghost: Option<Res<GhostMeshes>>,
     mut aff: ResMut<Affordances>,
     mut materials: ResMut<Assets<AffordanceMaterial>>,
     window: Query<&Window, With<PrimaryWindow>>,
@@ -1039,6 +1102,7 @@ pub fn animate(
         return;
     }
     let dt = time.delta_secs();
+    let turning = ghost.as_ref().is_some_and(|g| g.turning());
     let scale = window.iter().next().map_or(1.0, |w| w.scale_factor());
     let aff = aff.as_mut();
     aff.breath += dt;
@@ -1056,11 +1120,30 @@ pub fn animate(
     };
     aff.elements.retain_mut(|el| {
         el.alpha.t += dt;
-        el.glow.t += dt;
+        el.glow.step(turning, reduced.0, dt);
+        el.glow_out.t += dt;
         let a = el.alpha.value();
         if el.leaving && el.alpha.done() && a <= 1e-3 {
             commands.entity(el.root).try_despawn();
             return false;
+        }
+        if !el.fading.is_empty() && (el.glow_out.done() || reduced.0) {
+            for p in el.fading.drain(..) {
+                commands.entity(p.entity).try_despawn();
+            }
+        }
+        let out = el.glow_out.value();
+        for p in &el.fading {
+            let mut q = p.base;
+            q.misc.z = scale;
+            q.color.w *= a * out;
+            q.hatch.w *= a;
+            if let Some(m) = materials.get(&p.material)
+                && m.params != q
+                && let Some(mut m) = materials.get_mut(&p.material)
+            {
+                m.params = q;
+            }
         }
         let g = el.glow.value();
         for p in &el.parts {
@@ -1120,6 +1203,7 @@ mod tests {
             Key::TileHover(Axial::ORIGIN),
             Key::Ghost(Axial::ORIGIN),
             Key::Bulldoze(Axial::ORIGIN),
+            Key::Flash(Axial::ORIGIN, 0),
             Key::Waiting(Axial::ORIGIN),
         ] {
             let (fade_in, fade_out, _) = timing(key);
@@ -1128,9 +1212,95 @@ mod tests {
                 "{key:?}: {fade_in} / {fade_out}"
             );
         }
-        assert_eq!(timing(Key::Flash(Axial::ORIGIN, 0)).1, FLASH);
+        assert_eq!(timing(Key::Ghost(Axial::ORIGIN)).1, GHOST_OUT);
+        assert_eq!(
+            GHOST_OUT, T_FAST,
+            "the ghost's meshes and outline leave on --t-fast"
+        );
         assert_eq!(pulse(T_SLOW / 2.0), 1.0);
         assert_eq!(pulse(T_SLOW), (std::f32::consts::PI).sin());
+    }
+
+    /// The commit flash's ink edges fade over `--t-fast` (owner A14 Q4), no longer 80 ms.
+    #[test]
+    fn the_commit_flash_fades_over_t_fast() {
+        assert_eq!(FLASH, 0.12);
+        assert_eq!(timing(Key::Flash(Axial::ORIGIN, 0)), (0.0, T_FAST, 0.0));
+        let mut f = Fade::at(1.0);
+        f.to(0.0, FLASH, 0.0);
+        f.t = 0.08;
+        assert!(f.value() > 0.0, "still showing at the old 80 ms");
+        f.t = T_FAST;
+        assert_eq!(f.value(), 0.0);
+        assert!(f.done());
+    }
+
+    /// The ghost turn as `ghost::sync` runs it, one frame at a time: started on the press frame and
+    /// advanced in it, landed on the first frame it has run `GHOST_TURN`.
+    struct TurnSim(Option<f32>);
+    impl TurnSim {
+        fn step(&mut self, dt: f32) {
+            if let Some(t) = self.0.as_mut() {
+                *t += dt;
+                if *t >= crate::play::ghost::GHOST_TURN {
+                    self.0 = None;
+                }
+            }
+        }
+    }
+
+    /// Owner A14 Q2: after R the edge glow comes back when the ghost's turn lands (`in-world.md`,
+    /// Rotate), not 60 ms before. It waits at 0 through the turn, its first visible frame is the
+    /// landing frame, and it is full `T_FAST` later; a press mid-turn holds it until the last turn
+    /// lands; under reduced motion it is full at once.
+    #[test]
+    fn the_edge_glow_fades_in_when_the_ghost_turn_lands() {
+        let dt = 1.0 / 60.0;
+        // Frame 0 is the press: the ghost starts and advances its turn, the affordances rebuild.
+        let run = |presses: &[usize], instant: bool| -> Vec<(bool, f32)> {
+            let mut turn = TurnSim(None);
+            let mut glow = Glow::at(1.0);
+            (0..40)
+                .map(|f| {
+                    if presses.contains(&f) {
+                        turn.0 = (!instant).then_some(0.0);
+                    }
+                    turn.step(dt);
+                    let turning = turn.0.is_some();
+                    if presses.contains(&f) {
+                        glow.restart(turning, instant);
+                    }
+                    glow.step(turning, instant, dt);
+                    (turning, glow.value())
+                })
+                .collect()
+        };
+        let frames = run(&[0], false);
+        let landed = frames.iter().position(|(turning, _)| !turning).unwrap();
+        assert_eq!(landed, 10, "the 180 ms turn lands on frame 10 (t = 183 ms)");
+        assert!(
+            frames[..landed].iter().all(|&(_, g)| g == 0.0),
+            "{frames:?}"
+        );
+        assert!(frames[landed].1 > 0.0, "visible on the landing frame");
+        let full = landed + (T_FAST / dt).ceil() as usize - 1;
+        assert!(
+            frames[full - 1].1 < 1.0 && frames[full].1 == 1.0,
+            "{frames:?}"
+        );
+        // Two presses: the second (frame 5) restarts the turn and the hold.
+        let frames = run(&[0, 5], false);
+        let landed = frames.iter().position(|(turning, _)| !turning).unwrap();
+        assert_eq!(landed, 15);
+        assert!(frames[..landed].iter().all(|&(_, g)| g == 0.0));
+        assert!(frames[landed].1 > 0.0);
+        // Reduced motion: the ghost snaps and the glow is full on the press frame.
+        assert_eq!(run(&[0], true)[0].1, 1.0);
+        // A change with no turn (a tile change, a ghost whose pack streams) fades in at once.
+        let mut glow = Glow::at(1.0);
+        glow.restart(false, false);
+        glow.step(false, false, dt);
+        assert!(glow.value() > 0.0);
     }
 
     use super::*;

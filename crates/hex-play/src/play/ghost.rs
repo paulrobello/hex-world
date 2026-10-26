@@ -17,6 +17,12 @@
 //! samples only the view's textures, fewer than the kit forward pipeline, which is exactly at
 //! WebGPU's 16 beside refracting water. It stays out of the prepass and the shadow passes.
 //!
+//! Fades: the meshes fade in and out through the uniform's opacity alone (blended, as the outline
+//! is), so a fade adds no binding and no pipeline and sorts in the transparent phase as the steady
+//! ghost does. A ghost that leaves its cell (the pointer moves off the slot or to another one) keeps
+//! its root and its own materials while it fades out over [`GHOST_OUT`], the outline's fade; the
+//! new ghost gets fresh materials. A placement removes the ghost at once, as the rise takes over.
+//!
 //! While a piece the tile draws is in a pack still streaming there is no mesh to show: the
 //! affordances keep the outline, the edge colours and the lane strokes ([`GhostDrawn`]).
 use std::collections::{HashMap, HashSet};
@@ -55,6 +61,8 @@ const GHOST_ALPHA: f32 = 0.45;
 /// Fade in after the slot is hovered, as the ghost outline does (s).
 const FADE_DELAY: f32 = super::affordances::GHOST_DELAY;
 const FADE_IN: f32 = super::affordances::T_FAST;
+/// The meshes fade out when the ghost leaves its cell on the outline's fade (`T_FAST`).
+const GHOST_OUT: f32 = super::affordances::GHOST_OUT;
 /// R turns the ghost into its new rotation over the HUD's `--t` (`in-world.md`, Rotate: 180 to
 /// 220 ms), on the Legend curve, in step with the sheet's socket codes and thumbnails.
 pub const GHOST_TURN: f32 = super::affordances::T;
@@ -156,6 +164,46 @@ pub struct GhostMeshes {
     materials: Vec<(Role, Handle<GhostMaterial>, Vec3)>,
     /// Water surface meshes by tile id (`None`: the tile carries no water).
     water: HashMap<String, Option<Handle<Mesh>>>,
+    /// Ghosts that left their cell, fading out with their own materials.
+    leaving: Vec<Leaving>,
+}
+
+impl GhostMeshes {
+    /// Whether the ghost is turning into a new rotation: the edge glow waits for the turn to land.
+    pub fn turning(&self) -> bool {
+        self.turn.is_some()
+    }
+}
+
+/// A ghost root fading out after its cell was left, from opacity `from` over [`GHOST_OUT`].
+struct Leaving {
+    root: Entity,
+    materials: Vec<Handle<GhostMaterial>>,
+    from: f32,
+    t: f32,
+}
+
+/// The opacity of a leaving ghost `t` seconds after it left at opacity `from`, on the Legend curve.
+fn leave_alpha(from: f32, t: f32) -> f32 {
+    from * (1.0 - super::affordances::ease(t / GHOST_OUT))
+}
+
+/// How a ghost root goes when the ghost changes: kept (`None`), faded out or cut at once.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Exit {
+    Fade,
+    Cut,
+}
+
+/// Whether the old ghost fades out: only when it leaves its cell (to no ghost or another cell),
+/// is showing, and motion is on. A placement on its cell cuts it (the rise takes over in the same
+/// frame), and a change on the same cell (a turn, another tile, a pin) rebuilds it in place.
+fn exit(old: Axial, new: Option<Axial>, placed: bool, shown: f32, reduced: bool) -> Exit {
+    if new == Some(old) || placed || reduced || shown <= 0.0 {
+        Exit::Cut
+    } else {
+        Exit::Fade
+    }
 }
 
 /// A ghost turn on R: from the yaw on screen to the new rotation's nearest equivalent (edge steps).
@@ -489,9 +537,31 @@ pub fn sync(
         });
     drawn.set_if_neq(GhostDrawn(want.is_some()));
     let ghost = ghost.as_mut();
+    let fade = |t: f32| {
+        if reduced.0 {
+            1.0
+        } else {
+            ((t - FADE_DELAY) / FADE_IN).clamp(0.0, 1.0)
+        }
+    };
     if ghost.sig != want {
-        if let Some(root) = ghost.root.take() {
-            commands.entity(root).try_despawn();
+        if let (Some(root), Some(old)) = (ghost.root.take(), ghost.sig.as_ref()) {
+            let placed = view.tiles.iter().any(|t| t.cell == old.cell);
+            let shown = GHOST_ALPHA * super::affordances::ease(fade(ghost.t));
+            let new = want.as_ref().map(|w| w.cell);
+            if exit(old.cell, new, placed, shown, reduced.0) == Exit::Fade {
+                ghost.leaving.push(Leaving {
+                    root,
+                    materials: std::mem::take(&mut ghost.materials)
+                        .into_iter()
+                        .map(|(_, h, _)| h)
+                        .collect(),
+                    from: shown,
+                    t: 0.0,
+                });
+            } else {
+                commands.entity(root).try_despawn();
+            }
         }
         let restart = ghost.sig.as_ref().map(|s| s.cell) != want.as_ref().map(|w| w.cell);
         // Only R (the same tile turned on the same cell) turns; anything else shows the rotation at once.
@@ -595,6 +665,20 @@ pub fn sync(
             );
         }
     }
+    ghost.leaving.retain_mut(|l| {
+        l.t += time.delta_secs();
+        if reduced.0 || l.t >= GHOST_OUT {
+            commands.entity(l.root).try_despawn();
+            return false;
+        }
+        let a = leave_alpha(l.from, l.t);
+        for h in &l.materials {
+            if let Some(mut m) = materials.get_mut(h) {
+                m.color.w = a;
+            }
+        }
+        true
+    });
     let Some(root) = ghost.root else {
         return;
     };
@@ -614,13 +698,6 @@ pub fn sync(
     }
     let before = ghost.t;
     ghost.t += time.delta_secs();
-    let fade = |t: f32| {
-        if reduced.0 {
-            1.0
-        } else {
-            ((t - FADE_DELAY) / FADE_IN).clamp(0.0, 1.0)
-        }
-    };
     let (a, b) = (fade(before), fade(ghost.t));
     if a == b && !ghost.dirty {
         return;
@@ -745,6 +822,41 @@ mod tests {
         assert_eq!(turn_steps(turn, 1.0), 1.0, "and held");
         assert!(yaw(1.0).angle_between(piece_rotation(1)) < 1e-5);
         assert!(yaw(-1.0).angle_between(piece_rotation(5)) < 1e-5);
+    }
+
+    /// Owner A14 Q3: when the ghost leaves its cell its meshes fade out on the outline's timing
+    /// (`T_FAST`, the Legend curve) instead of vanishing; a placement, a change on the same cell
+    /// and reduced motion still cut.
+    #[test]
+    fn the_ghost_meshes_fade_out_with_the_outline() {
+        assert_eq!(GHOST_OUT, super::super::affordances::T_FAST);
+        let a = GHOST_ALPHA;
+        assert_eq!(leave_alpha(a, 0.0), a);
+        let mid = leave_alpha(a, GHOST_OUT / 2.0);
+        assert!(
+            mid > 0.0 && mid < a * 0.25,
+            "front-loaded like the outline: {mid}"
+        );
+        assert_eq!(leave_alpha(a, GHOST_OUT), 0.0);
+        let (c, d) = (Axial::ORIGIN, Axial::new(1, 0));
+        assert_eq!(exit(c, None, false, a, false), Exit::Fade, "pointer off");
+        assert_eq!(
+            exit(c, Some(d), false, a, false),
+            Exit::Fade,
+            "to another slot"
+        );
+        assert_eq!(
+            exit(c, None, true, a, false),
+            Exit::Cut,
+            "placed: the rise takes over"
+        );
+        assert_eq!(
+            exit(c, Some(c), false, a, false),
+            Exit::Cut,
+            "same cell: rebuilt"
+        );
+        assert_eq!(exit(c, None, false, a, true), Exit::Cut, "reduced motion");
+        assert_eq!(exit(c, None, false, 0.0, false), Exit::Cut, "never showed");
     }
 
     #[test]

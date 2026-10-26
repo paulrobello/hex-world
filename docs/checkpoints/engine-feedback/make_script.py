@@ -25,11 +25,16 @@ def strips(reduced: bool) -> None:
     # Ghost turn on R: the windmill (six distinct rotations) on the free slot east of the start tile.
     s.extend([{"cmd": "select_tile", "id": "windmill"}, {"cmd": "hover", "q": 1, "r": 0}, {"cmd": "wait", "frames": 40}])
     s.append({"cmd": "rotate", "dir": "cw"})
-    shots(f"{p}ghost-turn", 14)
+    shots(f"{p}ghost-turn", 22)
     s.append({"cmd": "wait", "frames": 30})
     # Ghost appears on a newly hovered slot: 150 ms wait, then a 120 ms fade.
     s.append({"cmd": "hover", "q": 0, "r": 1})
     shots(f"{p}ghost-in", 12, 2)
+    s.append({"cmd": "hover", "q": 1, "r": 0})
+    s.append({"cmd": "wait", "frames": 40})
+    # The pointer leaves for a cell that is no slot: the meshes and the outline fade out (120 ms).
+    s.append({"cmd": "hover", "q": 8, "r": 0})
+    shots(f"{p}ghost-out", 12)
     s.append({"cmd": "hover", "q": 1, "r": 0})
     s.append({"cmd": "wait", "frames": 40})
     # Refused placement: an ocean tile does not fit here; the ghost's edges pulse once (240 ms).

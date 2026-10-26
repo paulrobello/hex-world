@@ -49,7 +49,7 @@ Owner request, 2026-10-14: a placed tile under the pointer gets a faint outline,
 - The tile's own socket colours (owner choice U1): a 5 px line in the tile's socket colour on each edge at the current rotation, along the middle 72% of the edge, 11 px inside the rim.
 - Outline: ghost line colour, 2 px, dashed 10 on and 8 off, at the cap rim.
 - Breathing: cap fill opacity 100% to 55% and back over 2.4 s, ease-in-out, looping. Off under reduced motion.
-- Appears 150 ms after a slot is hovered with a tile selected, at the first legal rotation (auto-rotate). Disappears in 100 ms when the pointer leaves for a non-slot (built: the outline on `--t-fast`, 120 ms, 2026-10-21; the ghost meshes still cut at once).
+- Appears 150 ms after a slot is hovered with a tile selected, at the first legal rotation (auto-rotate). Disappears in 100 ms when the pointer leaves for a non-slot (built: the outline and the ghost meshes fade out together on `--t-fast`, 120 ms, on the Legend curve, owner A14 Q3, 2026-10-25; a placement removes the ghost at once, and under reduced motion it cuts).
 
 ## Edge glow
 
@@ -70,7 +70,7 @@ The signature of the Legend direction, carried into the world. For every touched
 ## Rotate
 
 - R, Shift+R, or Ctrl+wheel turns the ghost 60° about its centre in 200 ms (range 180–220 ms; built on `--t`, 180 ms, the short way, 2026-10-21).
-- The edge glow fades out over the first 60 ms of the turn, recomputes, and fades in over 120 ms when the turn lands.
+- The edge glow fades out over the first 60 ms of the turn, recomputes, and fades in over 120 ms when the turn lands (built, owner A14 Q2, 2026-10-25: the old glow fades out on `--t-fast`, 120 ms, which ends inside the 180 ms turn; the new glow, socket colours and key marks wait at 0 until the turn lands, then fade in on `--t-fast`. A press mid-turn holds them until the last turn lands. A ghost still waiting for its pack has no turn, so its glow returns at once).
 - With auto-rotate on (default), R steps through legal rotations only and wraps. With it off, R steps all six, and clashing edges show as incompatible.
 - Holding R repeats every 250 ms. A press during a turn retargets the running turn instead of queueing.
 - Sheet glyphs of fitting tiles turn in step (220 ms).
@@ -79,7 +79,7 @@ The signature of the Legend direction, carried into the world. For every touched
 
 | Time | World | HUD |
 |---|---|---|
-| 0 ms | Edges flash ink, emissive ×4, for 80 ms. The ghost is removed and the staged rise starts in the same frame (§4.4, 1.5–2.5 s, per tile data). | Place tool fires its 200 ms ring. |
+| 0 ms | Edges flash ink, emissive ×4, for 80 ms (built on `--t-fast`, 120 ms, owner A14 Q4, 2026-10-25). The ghost is removed and the staged rise starts in the same frame (§4.4, 1.5–2.5 s, per tile data). | Place tool fires its 200 ms ring. |
 | ≤ 200 ms | Rise in progress. | Tag beside the slot reads "Placed {tile}" with a check, then fades at 1.1 s. Autosave reads "Saving…". |
 | Next placement | Any running rise jumps to its end state. | Nothing extra. |
 
