@@ -102,3 +102,4 @@ Paul answered `docs/review/2026-10-20-walkthrough.html` on 2026-10-20. Codes fol
 - Spring (A21): keep the granite ring and the lily pads built into river_spring_center for now.
 - UI (A4): approved: the hallway test and the sign-off of the shipped UI (build 041ad32).
 - Grass blades (A9): look approved.
+- Beach and ocean scatter (A24, 2026-10-26): Q1 yes, about half of beach tiles keeping one pebble cluster is enough. Q2 yes, seabed stones showing 2-4 cm on swell crests is acceptable. Q3 yes, the uniform pebble wetness is fine. Q4 yes, place the new props in the kit showcase. Q5: the owner asked why the scatter (mesh, material) cap exists and said rivers and oceans in one world must be supported.
