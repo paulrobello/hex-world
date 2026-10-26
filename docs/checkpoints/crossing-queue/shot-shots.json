@@ -1,0 +1,48 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/crossing-queue/shot.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        529.65,
+        586.23,
+        625.38
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 62.3,
+      "load_after": [
+        550.91,
+        581.64,
+        620.97
+      ],
+      "frames": {
+        "crossing-queue": {
+          "mean": 0.2788,
+          "problem": null
+        },
+        "crossing-queue-release": {
+          "mean": 0.2872,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+[
+  {"cmd": "load", "path": "docs/checkpoints/crossing-queue/crossing-queue.hexworld"},
+  {"cmd": "wait", "frames": 30},
+  {"cmd": "camera", "pos": [-28, 16, -66], "look_at": [-50, 0.5, -90]},
+  {"cmd": "wait", "frames": 2},
+  {"cmd": "hover", "q": 8, "r": -8},
+  {"cmd": "wait", "frames": 5190},
+  {"cmd": "screenshot", "name": "crossing-queue"},
+  {"cmd": "dump_state", "name": "crossing-queue"},
+  {"cmd": "wait", "frames": 420},
+  {"cmd": "screenshot", "name": "crossing-queue-release"},
+  {"cmd": "dump_state", "name": "crossing-queue-release"},
+  {"cmd": "exit"}
+]

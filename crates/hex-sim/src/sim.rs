@@ -283,6 +283,44 @@ fn pick_join(
     best
 }
 
+/// The farthest each car (in `cars` order) may drive this tick, `f32::INFINITY` when nothing holds
+/// it: short of each closed crossing on its trip, cars that have not passed the hold queue on
+/// their approach (the way they face at the hold) in order of the distance left to it, the front
+/// car stopping at the hold and each car behind it at least [`crate::rail::CAR_QUEUE_SPACING`]
+/// behind the car ahead's new position. No car is moved backwards, so one already too close waits
+/// where it is. Ties go to the lower id, so the queue is deterministic.
+fn crossing_holds(cars: &[Car], closed: &[Axial], step: f32) -> Vec<f32> {
+    let mut holds = vec![f32::INFINITY; cars.len()];
+    for &cell in closed {
+        // (car, its hold on the path, distance left to it, its heading there)
+        let mut waiting: Vec<(usize, f32, f32, Vec2)> = cars
+            .iter()
+            .enumerate()
+            .filter_map(|(i, car)| {
+                let &(_, stop) = car.crossings.iter().find(|(c, _)| *c == cell)?;
+                let left = stop - car.s;
+                (left >= -1e-3).then(|| (i, stop, left, car.path.pose_at_distance(stop).dir))
+            })
+            .collect();
+        let Some(&(_, _, _, reference)) = waiting.first() else {
+            continue;
+        };
+        waiting.sort_by(|a, b| a.2.total_cmp(&b.2).then(cars[a.0].id.cmp(&cars[b.0].id)));
+        for side in [true, false] {
+            let mut floor = 0.0_f32;
+            for &(i, stop, left, _) in waiting
+                .iter()
+                .filter(|w| (geom::dot(w.3, reference) > 0.0) == side)
+            {
+                let next_left = (left - step).max(floor).min(left);
+                holds[i] = holds[i].min(stop - next_left);
+                floor = next_left + crate::rail::CAR_QUEUE_SPACING;
+            }
+        }
+    }
+    holds
+}
+
 /// SplitMix64: small, fast and stable across releases, so seeds replay identically.
 #[derive(Clone, Debug)]
 struct Rng(u64);
@@ -520,7 +558,7 @@ impl Simulation {
     }
 
     /// Advances one fixed tick of [`TICK_SECONDS`]: moves the trains (closing the level crossings
-    /// they near), then every driving car, holding short of a closed crossing; parks the cars that
+    /// they near), then every driving car, queueing short of a closed crossing; parks the cars that
     /// had already arrived (so the final approach still renders), then starts departures.
     pub fn tick(&mut self) {
         self.ticks += 1;
@@ -533,21 +571,18 @@ impl Simulation {
         self.remove_cars(&gone);
         self.rails.tick();
         let step = self.config.car_speed * TICK_SECONDS;
-        let closed = self.rails.closed_crossings();
+        let holds = crossing_holds(&self.cars, &self.rails.closed_crossings(), step);
         let mut arrived = vec![];
+        let mut k = 0;
         self.cars.retain_mut(|car| {
+            let hold = holds[k];
+            k += 1;
             if car.s >= car.path.length() {
                 arrived.push((car.id, car.home, car.to));
                 return false;
             }
             car.prev = car.s;
-            let mut next = (car.s + step).min(car.path.length());
-            for &(cell, stop) in &car.crossings {
-                if closed.contains(&cell) && car.s <= stop + 1e-3 && next > stop {
-                    next = stop.max(car.s);
-                }
-            }
-            car.s = next;
+            car.s = (car.s + step).min(car.path.length()).min(hold);
             true
         });
         for (id, home, spot) in arrived {

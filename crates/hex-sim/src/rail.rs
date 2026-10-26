@@ -43,7 +43,8 @@
 //!   it arrives, it takes the nearest station by route from its new heading, so two trains that
 //!   can never pass (a single line) still each reach stations instead of turning each other back.
 //! - **Crossings.** A level crossing is closed while a train body is on its deck or a train's front
-//!   is within [`CROSSING_WARN`] of it, and cars hold short of a closed crossing ([`crate::Car`]).
+//!   is within [`CROSSING_WARN`] of it, and cars hold short of a closed crossing ([`crate::Car`]),
+//!   queueing on each approach [`CAR_QUEUE_SPACING`] apart.
 //! - **Spawning.** Trains are derived, never saved: on each tick after the graph changed, every
 //!   connected stretch of at least [`MIN_TRACK`] meters gets one train, plus one per further
 //!   [`TRACK_PER_TRAIN`], up to [`MAX_TRAINS`], placed where the whole train fits clear of others
@@ -115,6 +116,14 @@ pub const CROSSING_HALF: f32 = 4.0;
 /// crossing point (m): its front stays outside the train's 2.5 m swept half width with 1 m spare at
 /// 60 degrees, for a 5.4 m pickup.
 pub const CAR_CROSSING_STOP: f32 = 7.0;
+/// The car length the sim sizes for (m): the 5.4 m pickup box of the parking clearance sweep and
+/// [`CAR_CROSSING_STOP`], longer than every body (the van, longest, is 4.99 m). The sim does not
+/// know a car's body type (hex-play picks it from the car's seed).
+pub const CAR_LENGTH: f32 = 5.4;
+/// Bumper-to-bumper gap between cars queued at a closed crossing (m), at [`CAR_LENGTH`].
+pub const CAR_QUEUE_GAP: f32 = 1.5;
+/// Centre-to-centre spacing of cars queued on one approach to a closed crossing (m).
+pub const CAR_QUEUE_SPACING: f32 = CAR_LENGTH + CAR_QUEUE_GAP;
 
 /// Train id; ids count up from 0 in spawn order and are never reused.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
