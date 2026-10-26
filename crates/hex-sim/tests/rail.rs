@@ -535,6 +535,29 @@ fn arrivals(r: &mut Railway, seconds: u32) -> Vec<(bool, f32, f32, u8)> {
     out
 }
 
+/// A tile without rail beyond a stopped end (owner, 2026-10-25) leaves the line end where it is: the
+/// stop stays, and trains still meet it, through placing and removing the meadow.
+#[test]
+fn a_meadow_beyond_a_line_end_keeps_its_buffer_stop() {
+    let c = catalog();
+    let mut r = Railway::new();
+    for q in 0..3 {
+        place(&mut r, &c, Axial::new(q, 0), "rail_straight", 0);
+    }
+    let before = r.buffer_stops();
+    place(&mut r, &c, Axial::new(3, 0), "meadow", 0);
+    place(&mut r, &c, Axial::new(-1, 0), "forest", 0);
+    assert_eq!(r.buffer_stops(), before);
+    run(&mut r, 1);
+    let got = arrivals(&mut r, 150);
+    assert!(
+        !got.is_empty() && got.iter().all(|a| a.1.abs() < 0.01),
+        "{got:?}"
+    );
+    r.remove_tile(Axial::new(3, 0));
+    assert_eq!(r.buffer_stops(), before);
+}
+
 /// At a straight line end the train's buffer heads stand exactly on the stop's: 3.5 m inside the
 /// edge, the engine leading and propelling (the brake third or the carriage leading).
 #[test]

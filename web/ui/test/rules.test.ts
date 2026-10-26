@@ -75,6 +75,38 @@ test("fit counts distinct orientations and words refusals", () => {
   assert.equal(off.why, "Needs a river edge to meet the river.");
 });
 
+test("a stopped rail end takes a tile without rail, and a rail tile must continue the line", () => {
+  // A station east of the start meadow turned once: rail ends on world edges 1 and 4. (1,1) faces
+  // the end on edge 1 across its own edge 4 (owner, 2026-10-25; hex-core world tests mirror this).
+  const w = world([0, 0, "meadow", 0], [1, 0, "rail_station", 1]);
+  const beyond = needsAt({ q: 1, r: 1 }, w);
+  assert.equal(beyond.kinds[4], "Rail");
+  assert.equal(beyond.stopped[4], true);
+  for (const id of ["meadow", "forest", "windmill"]) assert.equal(fit(def(id), beyond).legal.length, 6, id);
+  assert.deepEqual(fit(def("house_cluster"), beyond).legal, [0, 1, 2, 3, 5]);
+  assert.deepEqual(fit(def("road_straight"), beyond).legal, [0, 2, 3, 5]);
+  assert.equal(fit(def("ocean"), beyond).ok, false);
+  assert.deepEqual(fit(def("rail_straight"), beyond).legal, [1, 4]);
+  // A rail tile never turns an end toward a placed meadow.
+  assert.deepEqual(fit(def("rail_station"), needsAt({ q: 1, r: 0 }, start)).legal, [1, 2, 4, 5]);
+  // The slot key names what fits the stopped end; a rail end that is not stopped still needs rail.
+  assert.deepEqual(needLines(beyond.kinds, beyond.stopped), [
+    { kind: "Rail", text: "Rail, grass or forest on one edge" },
+  ]);
+  assert.deepEqual(
+    needLines(beyond.kinds).map((l) => l.text),
+    ["Rail on one edge"],
+  );
+  const both = world([0, 0, "meadow", 0], [1, 0, "rail_station", 1], [2, 0, "meadow", 0]);
+  assert.deepEqual(
+    needLines(needsAt({ q: 1, r: 1 }, both).kinds, needsAt({ q: 1, r: 1 }, both).stopped).map((l) => l.text),
+    ["Rail, grass or forest on one edge", "Grass or forest beside it"],
+  );
+  // A rail edge with no stop still meets only rail.
+  const stub = { ...def("rail_straight"), stopped: [false, false, false, false, false, false] };
+  assert.deepEqual(fit(stub, needsAt({ q: 1, r: 0 }, start)).legal, [1, 2, 4, 5]);
+});
+
 test("rotation readout counts distinct orientations (the engine's R steps through them)", () => {
   const slot = needsAt({ q: 1, r: 0 }, start);
   const road = def("road_straight");

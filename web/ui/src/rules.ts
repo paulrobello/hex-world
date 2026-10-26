@@ -1,6 +1,6 @@
 // The placement rules the sheet reads (PRD §4.1–4.2), from the Rust catalog and socket table in
 // bridge-schema.json. hex-core stays the authority: test/rules.test.ts checks legalRotations
-// against hex-core's own answers for every slot of four scripted worlds (rules-parity.json).
+// against hex-core's own answers for every slot of five worlds (rules-parity.json).
 import type { Cell, PlayTile, SocketKind } from "./bridge.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
 
@@ -17,6 +17,13 @@ export interface TileDef {
   /** The land side of each directional edge, null on the others (hex-core `EdgeSocket::land`). */
   land: (Side | null)[];
   /**
+   * Which local edges are rail ends that get a buffer stop (hex-core `rail_end::stopped_edges`):
+   * such an end also meets a tile that carries no rail, as `STOPPED_END_GROUND` (owner, 2026-10-25).
+   */
+  stopped: boolean[];
+  /** Whether any edge carries rail (hex-core `rail_end::carries_rail`). */
+  rail: boolean;
+  /**
    * Rotations after which its look repeats (hex-core `orientation_period`): 6 with hero props, which
    * turn with it, 3 for the wheat field's rows, 1 where the sockets alone decide (`same_orientation`).
    */
@@ -27,10 +34,14 @@ export const TILES: TileDef[] = schema.catalog.tiles.map((t) => ({
   id: t.id,
   edges: t.edges as SocketKind[],
   land: t.land as (Side | null)[],
+  stopped: t.stopped,
+  rail: t.rail,
   period: t.period,
 }));
 export const START_TILE: string = schema.catalog.start;
 const COMPAT = schema.catalog.compatible as Record<SocketKind, SocketKind[]>;
+/** What a stopped rail end meets a tile without rail as (hex-core `rail_end::STOPPED_END_GROUND`). */
+const STOPPED_END_GROUND = schema.catalog.stopped_end_ground as SocketKind;
 const BY_ID = new Map(TILES.map((t) => [t.id, t]));
 
 export const tileDef = (id: string): TileDef | undefined => BY_ID.get(id);
@@ -81,6 +92,11 @@ export function rotatedLand(def: TileDef, k: number): (Side | null)[] {
   return [0, 1, 2, 3, 4, 5].map((w) => def.land[(w - k + 12) % 6]!);
 }
 
+/** Which world edges of a tile turned by k are stopped rail ends. */
+export function rotatedStopped(def: TileDef, k: number): boolean[] {
+  return [0, 1, 2, 3, 4, 5].map((w) => def.stopped[(w - k + 12) % 6]!);
+}
+
 /** Equal for two rotations exactly when their world-edge sockets are equal and they are a whole number of periods apart. */
 const orientation = (def: TileDef, k: number): string =>
   `${k % def.period}|${rotated(def, k).join()}|${rotatedLand(def, k).join()}`;
@@ -92,16 +108,41 @@ const orientation = (def: TileDef, k: number): string =>
 export const meets = (theirs: SocketKind, theirLand: Side | null, mine: SocketKind, myLand: Side | null): boolean =>
   compatible(theirs, mine) && (theirLand === null || myLand === null ? theirLand === myLand : theirLand !== myLand);
 
+/** One side of a seam: the edge's kind, land side and whether it is a stopped rail end, and whether its tile carries rail. */
+export interface Facing {
+  kind: SocketKind;
+  land: Side | null;
+  stopped: boolean;
+  rail: boolean;
+}
+
+/** Whether `end` is a stopped rail end that `other`, a tile without rail, meets as grass (owner, 2026-10-25). */
+const stopCloses = (end: Facing, other: Facing): boolean =>
+  end.stopped && !other.rail && other.land === null && compatible(STOPPED_END_GROUND, other.kind);
+
+/**
+ * Whether my edge may be placed against the placed edge it faces (hex-core
+ * `TileCatalog::placement_meets`): the sockets meet, or theirs is a stopped rail end and my tile
+ * carries no rail. A tile with rail never turns an end toward a placed tile without rail.
+ */
+export const placementMeets = (theirs: Facing, mine: Facing): boolean =>
+  meets(theirs.kind, theirs.land, mine.kind, mine.land) || stopCloses(theirs, mine);
+
 export type TileMap = Map<string, PlayTile>;
 export const tileMap = (tiles: readonly PlayTile[]): TileMap => new Map(tiles.map((t) => [cellKey(t), t]));
 
 /** The socket kinds around a slot, by world edge, null where nothing touches it. */
 export type Kinds = (SocketKind | null)[];
 
-/** What each world edge of a slot touches: the neighbour's facing socket kind and its land side. */
+/**
+ * What each world edge of a slot touches: the neighbour's facing socket kind and its land side,
+ * whether that edge is a stopped rail end, and whether the neighbour carries rail.
+ */
 export interface Needs {
   kinds: Kinds;
   land: (Side | null)[];
+  stopped: boolean[];
+  rail: boolean[];
 }
 
 export function needsAt(slot: Cell, tiles: TileMap): Needs {
@@ -109,9 +150,21 @@ export function needsAt(slot: Cell, tiles: TileMap): Needs {
     const n = tiles.get(cellKey(neighbor(slot, w)));
     const def = n && tileDef(n.tile);
     const back = (w + 3) % 6;
-    return def ? { kind: rotated(def, n.rotation)[back]!, land: rotatedLand(def, n.rotation)[back]! } : null;
+    return def
+      ? {
+          kind: rotated(def, n.rotation)[back]!,
+          land: rotatedLand(def, n.rotation)[back]!,
+          stopped: rotatedStopped(def, n.rotation)[back]!,
+          rail: def.rail,
+        }
+      : null;
   });
-  return { kinds: facing.map((f) => f?.kind ?? null), land: facing.map((f) => f?.land ?? null) };
+  return {
+    kinds: facing.map((f) => f?.kind ?? null),
+    land: facing.map((f) => f?.land ?? null),
+    stopped: facing.map((f) => f?.stopped ?? false),
+    rail: facing.map((f) => f?.rail ?? false),
+  };
 }
 
 export const isSlot = (c: Cell, tiles: TileMap): boolean =>
@@ -119,10 +172,17 @@ export const isSlot = (c: Cell, tiles: TileMap): boolean =>
 
 /** World edges where `def` turned by k does not meet what the slot touches. */
 function clashes(def: TileDef, k: number, needs: Needs): number[] {
-  const [r, l] = [rotated(def, k), rotatedLand(def, k)];
+  const [r, l, st] = [rotated(def, k), rotatedLand(def, k), rotatedStopped(def, k)];
   return [0, 1, 2, 3, 4, 5].filter((w) => {
-    const theirs = needs.kinds[w];
-    return theirs != null && !meets(theirs, needs.land[w] ?? null, r[w]!, l[w]!);
+    const kind = needs.kinds[w];
+    if (kind == null) return false;
+    const theirs = {
+      kind,
+      land: needs.land[w] ?? null,
+      stopped: needs.stopped[w] ?? false,
+      rail: needs.rail[w] ?? false,
+    };
+    return !placementMeets(theirs, { kind: r[w]!, land: l[w]!, stopped: st[w]!, rail: def.rail });
   });
 }
 
@@ -268,14 +328,25 @@ const LINE_ORDER: SocketKind[] = ["River", "Road", "Rail", "Ocean", "Beach", "Fo
 /** Kinds that carry a lane: they meet only their own kind, so the key names them first. */
 const isLane = (k: SocketKind): boolean => k === "Road" || k === "River" || k === "Rail";
 
-/** What the slot key prints: lanes first ("River on one edge"), then what may sit beside them. */
-export function needLines(needs: Kinds): { kind: SocketKind; text: string }[] {
-  const kinds = needs.filter((n): n is SocketKind => n != null);
-  const uniq = LINE_ORDER.filter((k) => kinds.includes(k));
-  const hasLane = uniq.some(isLane);
-  return uniq.map((n) => {
-    const count = kinds.filter((x) => x === n).length;
+/**
+ * What the slot key prints: lanes first ("River on one edge"), then what may sit beside them. A
+ * stopped rail end (`stopped`, by world edge) takes a tile without rail as grass (owner,
+ * 2026-10-25), so its line names both ("Rail, grass or forest on one edge"), after any rail line.
+ */
+export function needLines(needs: Kinds, stopped: readonly boolean[] = []): { kind: SocketKind; text: string }[] {
+  const edges = needs.flatMap((n, w) => (n == null ? [] : [{ kind: n, stop: n === "Rail" && stopped[w] === true }]));
+  const groups = LINE_ORDER.flatMap((k) =>
+    [false, true].map((stop) => ({
+      kind: k,
+      stop,
+      count: edges.filter((e) => e.kind === k && e.stop === stop).length,
+    })),
+  ).filter((g) => g.count > 0);
+  const hasLane = groups.some((g) => isLane(g.kind));
+  return groups.map(({ kind: n, stop, count }) => {
     const where = count === 1 ? "on one edge" : `on ${count} edges`;
+    if (stop)
+      return { kind: n, text: `${listOr([KIND_NAME[n], ...accepting(STOPPED_END_GROUND).map(lower)])} ${where}` };
     if (isLane(n)) return { kind: n, text: `${KIND_NAME[n]} ${where}` };
     return { kind: n, text: `${cap(listOr(accepting(n).map(lower)))} ${hasLane ? "beside it" : where}` };
   });

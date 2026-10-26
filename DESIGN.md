@@ -332,7 +332,7 @@ Icons are a single authored set on a 24 px grid with a 1.8 px round-capped strok
 - Bulldoze makes the sheet body inert (40% opacity, no pointer events).
 
 ### Key (signature)
-- **Slot key:** a `sheet-2` card, a 64 px hex with a 2.5 px dashed `neutral` body, and a 9 px round-capped edge in the socket colour of each touched edge. Beside it sit a title and a list. Each line leads with a 14 × 4 px socket swatch: "River on one edge", "Grass or forest beside it".
+- **Slot key:** a `sheet-2` card, a 64 px hex with a 2.5 px dashed `neutral` body, and a 9 px round-capped edge in the socket colour of each touched edge. Beside it sit a title and a list. Each line leads with a 14 × 4 px socket swatch: "River on one edge", "Grass or forest beside it". A rail end closed by a buffer stop also takes a tile without rail, so its line names both: "Rail, grass or forest on one edge".
 - **Nothing fits:** the same key with a 5 px `bad` cross in the hex, a 1.5 px inset `bad` ring, the reason, and a "Show the nearest slot" button.
 - **Bulldoze key:** the hex filled with `bad` at 15% and crossed, with three swatches: remove (filled and outlined), would split (dashed), and cut off (ink hatch).
 

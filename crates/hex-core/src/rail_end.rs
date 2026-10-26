@@ -52,6 +52,20 @@ pub fn rail_edge(def: &TileDef, edge: u8) -> bool {
         .is_some_and(|s| s.kind == SocketKind::Rail && s.lane.is_some())
 }
 
+/// Whether `def` carries a rail lane on any edge.
+pub fn carries_rail(def: &TileDef) -> bool {
+    (0..6).any(|e| rail_edge(def, e))
+}
+
+/// The local edges of `def` whose open end gets a buffer stop, as a mask (bit `k` is edge `k`).
+pub fn stopped_edges(def: &TileDef) -> u8 {
+    buffer_stops(def).iter().fold(0, |m, s| m | 1 << s.edge)
+}
+
+/// What a stopped rail end presents to a neighbour tile that carries no rail (owner, 2026-10-25):
+/// the stop closes the line, so the end meets that tile as the rail pieces' grass verge.
+pub const STOPPED_END_GROUND: SocketKind = SocketKind::Grass;
+
 /// Whether world edge `edge` of a tile is open: the tile across it (with its rotation) has no rail
 /// lane back, or there is none.
 pub fn open_across(neighbour: Option<(&TileDef, u8)>, edge: u8) -> bool {

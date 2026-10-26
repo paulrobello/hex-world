@@ -6,8 +6,9 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::socket::{SocketTable, SocketTableError};
-use crate::tile::{KitRef, TileDef};
+use crate::rail_end::{STOPPED_END_GROUND, carries_rail, stopped_edges};
+use crate::socket::{EdgeSocket, SocketTable, SocketTableError};
+use crate::tile::{KitRef, TileDef, local_edge, opposite_edge};
 
 /// Every file in `data/tiles/`, as `(id, RON text)`, in inventory order (plan F1, with the owner O1
 /// coast corners after the straight beach, as PRD §5.4 lists them, and the windmill, the farm and
@@ -174,6 +175,8 @@ impl std::error::Error for CatalogError {}
 pub struct TileCatalog {
     sockets: SocketTable,
     tiles: Vec<TileDef>,
+    /// Per tile, in `tiles` order: its [`stopped_edges`] mask and whether it [`carries_rail`].
+    rail_ends: Vec<(u8, bool)>,
 }
 
 impl TileCatalog {
@@ -189,7 +192,15 @@ impl TileCatalog {
         if !issues.is_empty() {
             return Err(CatalogError::Invalid(issues));
         }
-        Ok(Self { sockets, tiles })
+        let rail_ends = tiles
+            .iter()
+            .map(|t| (stopped_edges(t), carries_rail(t)))
+            .collect();
+        Ok(Self {
+            sockets,
+            tiles,
+            rail_ends,
+        })
     }
 
     /// Parses a socket table and `(file stem, RON)` tile files; each file's id must equal its stem.
@@ -230,6 +241,63 @@ impl TileCatalog {
     /// The validated socket table used by this catalog.
     pub fn sockets(&self) -> &SocketTable {
         &self.sockets
+    }
+
+    /// `def`'s [`stopped_edges`] mask and whether it [`carries_rail`], cached for catalog tiles.
+    pub fn rail_ends(&self, def: &TileDef) -> (u8, bool) {
+        self.tiles.iter().position(|t| t.id == def.id).map_or_else(
+            || (stopped_edges(def), carries_rail(def)),
+            |i| self.rail_ends[i],
+        )
+    }
+
+    /// Whether `def` turned by `rotation` may be placed with its world edge `w` against the placed
+    /// `neighbour` turned by `nrot` (owner, 2026-10-25): the sockets meet
+    /// ([`SocketTable::edges_compatible`]), or `def` carries no rail at all and the neighbour's
+    /// facing edge is a rail end that gets a buffer stop, which closes the line, so `def` meets it
+    /// as [`STOPPED_END_GROUND`]. A tile that carries rail gets the socket rule alone: it continues
+    /// the line, and it never turns an end toward a placed tile without rail.
+    pub fn placement_meets(
+        &self,
+        def: &TileDef,
+        rotation: u8,
+        w: u8,
+        neighbour: &TileDef,
+        nrot: u8,
+    ) -> bool {
+        let back = opposite_edge(w);
+        let (mine, theirs) = (def.edge(w, rotation), neighbour.edge(back, nrot));
+        self.sockets.edges_compatible(mine, theirs)
+            || self.stop_closes(neighbour, local_edge(back, nrot), theirs, def, mine)
+    }
+
+    /// Whether placed tiles `a` (turned by `ra`) and `b` (turned by `rb`) may touch across `a`'s
+    /// world edge `w`, in either placement order: [`TileCatalog::placement_meets`] one way or the
+    /// other. Loading checks this, as a world holds the pair however it was built (a station placed
+    /// before the meadow beyond its end looks the same as one placed after). It is symmetric and
+    /// depends only on the two tiles, so no third tile's placement or removal can change it.
+    pub fn edges_meet(&self, a: &TileDef, ra: u8, w: u8, b: &TileDef, rb: u8) -> bool {
+        self.placement_meets(a, ra, w, b, rb)
+            || self.placement_meets(b, rb, opposite_edge(w), a, ra)
+    }
+
+    /// Whether local edge `edge` (socket `own`) of `def` is a stopped rail end that meets `other`'s
+    /// socket `theirs` as [`STOPPED_END_GROUND`], `other` carrying no rail.
+    fn stop_closes(
+        &self,
+        def: &TileDef,
+        edge: u8,
+        own: &EdgeSocket,
+        other: &TileDef,
+        theirs: &EdgeSocket,
+    ) -> bool {
+        let stopped = self.rail_ends(def).0 & (1 << edge) != 0;
+        let ground = EdgeSocket {
+            height: own.height,
+            profile: own.profile,
+            ..EdgeSocket::new(STOPPED_END_GROUND)
+        };
+        stopped && !self.rail_ends(other).1 && self.sockets.edges_compatible(&ground, theirs)
     }
 
     /// The picker group `id` belongs to, when it is a member of one in this catalog.

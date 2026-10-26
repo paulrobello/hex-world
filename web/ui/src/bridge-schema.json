@@ -209,6 +209,7 @@
       }
     ],
     "start": "meadow",
+    "stopped_end_ground": "Grass",
     "tiles": [
       {
         "edges": [
@@ -229,10 +230,19 @@
           null
         ],
         "period": 1,
+        "rail": false,
         "scatter": [
           "wildflower_clump",
           "rock_small",
           "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -254,6 +264,7 @@
           null
         ],
         "period": 1,
+        "rail": false,
         "scatter": [
           "tree_forest",
           "rock_small",
@@ -261,6 +272,14 @@
           "log_fallen",
           "shrub_forest",
           "sapling_spruce"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -282,10 +301,19 @@
           null
         ],
         "period": 6,
+        "rail": false,
         "scatter": [
           "rock_small",
           "wildflower_clump",
           "tree_oak"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -307,9 +335,18 @@
           null
         ],
         "period": 6,
+        "rail": false,
         "scatter": [
           "wildflower_clump",
           "rock_small"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -331,9 +368,18 @@
           null
         ],
         "period": 6,
+        "rail": false,
         "scatter": [
           "wildflower_clump",
           "rock_small"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -355,9 +401,18 @@
           null
         ],
         "period": 3,
+        "rail": false,
         "scatter": [
           "wildflower_clump",
           "rock_small"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -379,7 +434,16 @@
           null
         ],
         "period": 6,
-        "scatter": []
+        "rail": false,
+        "scatter": [],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
       },
       {
         "edges": [
@@ -400,7 +464,16 @@
           null
         ],
         "period": 6,
-        "scatter": []
+        "rail": false,
+        "scatter": [],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
       },
       {
         "edges": [
@@ -421,9 +494,18 @@
           null
         ],
         "period": 1,
+        "rail": false,
         "scatter": [
           "wildflower_single",
           "bush_verge"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -445,9 +527,18 @@
           null
         ],
         "period": 1,
+        "rail": false,
         "scatter": [
           "wildflower_single",
           "bush_verge"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -469,9 +560,18 @@
           null
         ],
         "period": 1,
+        "rail": false,
         "scatter": [
           "wildflower_single",
           "bush_verge"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -493,9 +593,18 @@
           null
         ],
         "period": 1,
+        "rail": false,
         "scatter": [
           "wildflower_single",
           "bush_verge"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -517,8 +626,17 @@
           null
         ],
         "period": 1,
+        "rail": true,
         "scatter": [
           "wildflower_single"
+        ],
+        "stopped": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
         ]
       },
       {
@@ -540,8 +658,17 @@
           null
         ],
         "period": 1,
+        "rail": true,
         "scatter": [
           "wildflower_single"
+        ],
+        "stopped": [
+          true,
+          true,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -563,8 +690,17 @@
           null
         ],
         "period": 1,
+        "rail": true,
         "scatter": [
           "wildflower_single"
+        ],
+        "stopped": [
+          true,
+          false,
+          true,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -586,8 +722,17 @@
           null
         ],
         "period": 1,
+        "rail": true,
         "scatter": [
           "wildflower_single"
+        ],
+        "stopped": [
+          true,
+          true,
+          false,
+          true,
+          false,
+          false
         ]
       },
       {
@@ -609,8 +754,17 @@
           null
         ],
         "period": 1,
+        "rail": true,
         "scatter": [
           "wildflower_single"
+        ],
+        "stopped": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
         ]
       },
       {
@@ -632,8 +786,17 @@
           null
         ],
         "period": 6,
+        "rail": true,
         "scatter": [
           "wildflower_single"
+        ],
+        "stopped": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
         ]
       },
       {
@@ -655,7 +818,16 @@
           null
         ],
         "period": 1,
-        "scatter": []
+        "rail": false,
+        "scatter": [],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
       },
       {
         "edges": [
@@ -676,7 +848,16 @@
           null
         ],
         "period": 1,
-        "scatter": []
+        "rail": false,
+        "scatter": [],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
       },
       {
         "edges": [
@@ -697,7 +878,16 @@
           null
         ],
         "period": 1,
-        "scatter": []
+        "rail": false,
+        "scatter": [],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
       },
       {
         "edges": [
@@ -718,7 +908,16 @@
           null
         ],
         "period": 1,
-        "scatter": []
+        "rail": false,
+        "scatter": [],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
       },
       {
         "edges": [
@@ -739,7 +938,16 @@
           null
         ],
         "period": 1,
-        "scatter": []
+        "rail": true,
+        "scatter": [],
+        "stopped": [
+          false,
+          true,
+          false,
+          false,
+          true,
+          false
+        ]
       },
       {
         "edges": [
@@ -760,7 +968,16 @@
           null
         ],
         "period": 1,
-        "scatter": []
+        "rail": false,
+        "scatter": [],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
       },
       {
         "edges": [
@@ -781,7 +998,16 @@
           null
         ],
         "period": 1,
-        "scatter": []
+        "rail": false,
+        "scatter": [],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
       },
       {
         "edges": [
@@ -802,9 +1028,18 @@
           "Left"
         ],
         "period": 1,
+        "rail": false,
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -826,9 +1061,18 @@
           null
         ],
         "period": 1,
+        "rail": false,
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -850,9 +1094,18 @@
           "Left"
         ],
         "period": 1,
+        "rail": false,
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -874,9 +1127,18 @@
           "Left"
         ],
         "period": 1,
+        "rail": false,
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -898,9 +1160,18 @@
           "Left"
         ],
         "period": 1,
+        "rail": false,
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       {
@@ -922,7 +1193,16 @@
           null
         ],
         "period": 1,
-        "scatter": []
+        "rail": false,
+        "scatter": [],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
       }
     ]
   },

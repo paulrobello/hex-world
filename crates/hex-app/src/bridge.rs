@@ -335,7 +335,7 @@ mod exports {
 
 /// The bridge contract the web UI overlay is typed against (`web/ui/src/bridge-schema.json`):
 /// command and event names with their fields, enum spellings, the `play` state keys, the tile
-/// catalog with its socket table, and legal rotations for every frontier slot of four scripted
+/// catalog with its socket table, and legal rotations for every frontier slot of five
 /// worlds (the overlay's fit rules are checked against them). `make ui-schema` rewrites the file;
 /// `web/ui/test/bridge-sync.test.ts` checks the TypeScript side against it.
 #[cfg(test)]
@@ -770,9 +770,12 @@ mod schema {
             .tiles()
             .iter()
             .map(|t| {
+                let (stopped, rail) = c.rail_ends(t);
                 json!({
                     "id": t.id,
                     "edges": t.edges.iter().map(|e| kind_name(e.kind)).collect::<Vec<_>>(),
+                    "stopped": (0..6).map(|e| stopped & (1 << e) != 0).collect::<Vec<_>>(),
+                    "rail": rail,
                     "land": t.edges.iter().map(|e| serde_json::to_value(e.land).unwrap()).collect::<Vec<_>>(),
                     "scatter": t.props.scatter.iter().map(|s| s.piece.0.as_str()).collect::<Vec<_>>(),
                     "period": t.orientation_period(),
@@ -800,6 +803,7 @@ mod schema {
             "tiles": tiles,
             "picker": c.picker(),
             "compatible": compatible,
+            "stopped_end_ground": kind_name(hex_core::rail_end::STOPPED_END_GROUND),
             "directional": directional,
             "hex_radius": HEX_RADIUS,
         })
@@ -820,6 +824,25 @@ mod schema {
         {"cmd": "place", "q": 1, "r": 0}
     ]"#;
 
+    /// Stopped rail ends (owner, 2026-10-25): a station with a meadow beyond one end, a junction
+    /// off its other end and a level crossing west of the start meadow, so the frontier holds slots
+    /// that stopped ends of each kind face.
+    const RAIL_ENDS: &[(i32, i32, &str, u8)] = &[
+        (1, 0, "rail_station", 1),
+        (1, 1, "meadow", 0),
+        (1, -1, "rail_junction", 0),
+        (-1, 0, "rail_road_crossing", 1),
+    ];
+
+    /// [`RAIL_ENDS`] placed on a new world, each placement legal.
+    fn rail_ends_world(c: &TileCatalog) -> World {
+        let mut w = World::new(1);
+        for &(q, r, id, k) in RAIL_ENDS {
+            w.place(c, Axial::new(q, r), id, k).unwrap();
+        }
+        w
+    }
+
     /// Legal rotations of every catalog tile at every frontier slot of the world a script leaves.
     fn parity(c: &TileCatalog, script: &str) -> Value {
         let mut g = GameState::new(1);
@@ -828,7 +851,11 @@ mod schema {
                 g.apply(a);
             }
         }
-        let w: &World = &g.world;
+        parity_of(c, &g.world)
+    }
+
+    /// Legal rotations of every catalog tile at every frontier slot of `w`.
+    fn parity_of(c: &TileCatalog, w: &World) -> Value {
         let tiles: Vec<Value> = w
             .tiles()
             .iter()
@@ -881,12 +908,13 @@ mod schema {
     fn parity_worlds() -> Value {
         let c = TileCatalog::builtin().unwrap();
         json!({
-            "about": "Legal rotations of every tile at every frontier slot of four scripted worlds, from hex-core (make ui-schema). web/ui/test/rules.test.ts checks the overlay's fit rules against it.",
+            "about": "Legal rotations of every tile at every frontier slot of five worlds, from hex-core (make ui-schema). web/ui/test/rules.test.ts checks the overlay's fit rules against it.",
             "worlds": [
                 parity(&c, include_str!("../../../docs/checkpoints/play/play.json")),
                 parity(&c, include_str!("../../../docs/checkpoints/water-play/water-play.json")),
                 parity(&c, COAST_PART_BUILT),
                 parity(&c, include_str!("../../../docs/checkpoints/coast/coast.json")),
+                parity_of(&c, &rail_ends_world(&c)),
             ],
         })
     }

@@ -344,7 +344,7 @@ export class Sheet {
     }
     if (!anyFit) k.classList.add("key--none");
     const list = h("ul", { class: "key__list" });
-    for (const l of needLines(v.slot.needs.kinds))
+    for (const l of needLines(v.slot.needs.kinds, v.slot.needs.stopped))
       list.append(h("li", {}, h("i", { class: KIND_CLASS[l.kind] }), l.text));
     const body = h(
       "div",

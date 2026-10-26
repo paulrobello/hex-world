@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::axial::Axial;
 use crate::catalog::TileCatalog;
-use crate::tile::{TileDef, opposite_edge};
+use crate::tile::TileDef;
 use crate::world::{Action, HISTORY_DEPTH, PlacedTile, World};
 
 /// First bytes of every `.hexworld` file.
@@ -436,18 +436,14 @@ fn validate_tiles(
         }
         defs.insert(cell, (def, t.rotation));
     }
-    // The socket table is symmetric, so checking world edges 0..3 of every tile covers each
+    // The edge rule (`TileCatalog::edges_meet`) is symmetric, so checking world edges 0..3 of every tile covers each
     // touching pair once.
     for (&cell, &(def, rotation)) in &defs {
         for w in 0..3 {
             let Some(&(other, other_rotation)) = defs.get(&cell.neighbor(w)) else {
                 continue;
             };
-            let theirs = other.edge(opposite_edge(w), other_rotation);
-            if !catalog
-                .sockets()
-                .edges_compatible(def.edge(w, rotation), theirs)
-            {
+            if !catalog.edges_meet(def, rotation, w, other, other_rotation) {
                 return Err(WorldIssue::Incompatible { cell, edge: w });
             }
         }
@@ -965,6 +961,25 @@ mod tests {
             camera: camera(),
             settings: settings(),
         }
+    }
+
+    /// Tiles without rail beyond a station's stopped rail ends (owner, 2026-10-25) pass load
+    /// validation, history included.
+    #[test]
+    fn tiles_against_a_stopped_rail_end_load() {
+        let c = catalog();
+        let mut w = World::new(42);
+        w.place(&c, EAST, "rail_station", 1).unwrap();
+        w.place(&c, Axial::new(1, 1), "meadow", 0).unwrap();
+        w.place(&c, Axial::new(1, -1), "forest", 0).unwrap();
+        w.undo();
+        let save = SaveData {
+            world: w,
+            unlocks: BTreeSet::new(),
+            camera: camera(),
+            settings: settings(),
+        };
+        assert_eq!(decode(&save.encode()).unwrap(), save);
     }
 
     fn wire(save: &SaveData) -> v3::Save {

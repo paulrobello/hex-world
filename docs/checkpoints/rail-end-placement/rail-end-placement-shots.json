@@ -1,0 +1,56 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/rail-end-placement/rail-end-placement.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        583.64,
+        645.57,
+        652.77
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 11.5,
+      "load_after": [
+        566.5,
+        638.76,
+        650.22
+      ],
+      "frames": {
+        "rail-end-meadow-ghost": {
+          "mean": 0.1195,
+          "problem": null
+        },
+        "rail-end-houses-ghost": {
+          "mean": 0.1243,
+          "problem": null
+        },
+        "rail-end-meadow-placed": {
+          "mean": 0.111,
+          "problem": null
+        },
+        "rail-end-rail-ghost": {
+          "mean": 0.1209,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

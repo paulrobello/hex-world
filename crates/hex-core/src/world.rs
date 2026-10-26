@@ -252,11 +252,7 @@ impl World {
             let Some(neighbor) = catalog.get(&placed.def) else {
                 return EdgeStatus::Incompatible;
             };
-            let theirs = neighbor.edge(opposite_edge(w), placed.rotation);
-            if catalog
-                .sockets()
-                .edges_compatible(def.edge(w, rotation), theirs)
-            {
+            if catalog.placement_meets(def, rotation, w, neighbor, placed.rotation) {
                 EdgeStatus::Compatible
             } else {
                 EdgeStatus::Incompatible
@@ -712,6 +708,169 @@ mod tests {
 
     /// East neighbor of the origin; its world edge 3 faces the start meadow.
     const EAST: Axial = Axial { q: 1, r: 0 };
+
+    /// A station east of the start meadow turned once: rail on world edges 1 and 4, grass toward
+    /// the meadow. Its end on world edge 1 faces (1,1), a slot only the station touches (across its
+    /// own edge 4).
+    fn station_world(c: &TileCatalog) -> World {
+        let mut w = World::new(1);
+        w.place(c, EAST, "rail_station", 1).unwrap();
+        w
+    }
+    const BEYOND_END: Axial = Axial { q: 1, r: 1 };
+
+    /// The world edges of the station's open ends, from the buffer stop rule.
+    fn station_stops(c: &TileCatalog, w: &World) -> Vec<u8> {
+        let at = |cell: Axial| w.tile(cell).map(|t| (def(c, &t.def), t.rotation));
+        crate::rail_end::open_stops(def(c, "rail_station"), EAST, 1, at)
+            .iter()
+            .map(|s| (s.edge + 1) % 6)
+            .collect()
+    }
+
+    /// Owner, 2026-10-25: a rail end closed by a buffer stop takes a neighbour with no rail (meadow,
+    /// forest, houses) at any rotation, and the stop stays through placing, bulldozing, undo and
+    /// redo. A road or river still may not dead-end into it, nor ocean meet it.
+    #[test]
+    fn stopped_rail_end_accepts_a_tile_without_rail() {
+        let c = catalog();
+        let mut w = station_world(&c);
+        for id in ["meadow", "forest", "oak", "windmill", "wheat_field"] {
+            assert_eq!(
+                w.legal_rotations(&c, BEYOND_END, def(&c, id)).len(),
+                6,
+                "{id} beyond the stop"
+            );
+        }
+        // The houses (a road edge 0) fit every way but with their road to the stop.
+        assert_eq!(
+            w.legal_rotations(&c, BEYOND_END, def(&c, "house_cluster")),
+            vec![0, 1, 2, 3, 5]
+        );
+        // road_straight fits with a grass side to the stop, never its road.
+        let road = def(&c, "road_straight");
+        let legal = w.legal_rotations(&c, BEYOND_END, road);
+        assert_eq!(legal, vec![0, 2, 3, 5]);
+        assert!(
+            legal
+                .iter()
+                .all(|&k| road.edge(4, k).kind == SocketKind::Grass)
+        );
+        assert!(
+            w.legal_rotations(&c, BEYOND_END, def(&c, "ocean"))
+                .is_empty()
+        );
+        assert_eq!(
+            w.edge_status(&c, BEYOND_END, def(&c, "meadow"), 0)[4],
+            EdgeStatus::Compatible
+        );
+        assert_eq!(station_stops(&c, &w), vec![1, 4]);
+        w.place(&c, BEYOND_END, "meadow", 0).unwrap();
+        assert_eq!(station_stops(&c, &w), vec![1, 4], "the stop stays");
+        w.bulldoze(BEYOND_END).unwrap();
+        assert_eq!(station_stops(&c, &w), vec![1, 4]);
+        assert!(w.undo() && w.tile(BEYOND_END).is_some());
+        assert!(w.undo() && w.tile(BEYOND_END).is_none());
+        assert!(w.redo() && w.redo() && w.tile(BEYOND_END).is_none());
+        assert_eq!(station_stops(&c, &w), vec![1, 4]);
+        // A rail tile never turns an end toward a placed tile without rail.
+        assert_eq!(
+            World::new(1).legal_rotations(&c, EAST, def(&c, "rail_station")),
+            vec![1, 2, 4, 5]
+        );
+        // With a meadow beyond the end that also touches the start meadow, the station can be
+        // bulldozed and restored by undo, its end against the meadow again.
+        let mut v = station_world(&c);
+        v.place(&c, Axial::new(1, -1), "meadow", 0).unwrap();
+        v.bulldoze(EAST).unwrap();
+        assert!(v.undo());
+        assert_eq!(v.tile(EAST).map(|t| t.rotation), Some(1));
+        let at = |cell: Axial| v.tile(cell).map(|t| (def(&c, &t.def), t.rotation));
+        assert_eq!(
+            crate::rail_end::open_stops(def(&c, "rail_station"), EAST, 1, at).len(),
+            2
+        );
+    }
+
+    /// A rail tile beyond a stopped end still has to continue the line: its legal rotations are
+    /// exactly those whose sockets meet, the ones with a rail edge facing the end, and placing one
+    /// closes the end (its stop goes).
+    #[test]
+    fn rail_neighbour_still_connects_to_a_stopped_end() {
+        let c = catalog();
+        let mut w = station_world(&c);
+        for d in c
+            .tiles()
+            .iter()
+            .filter(|d| crate::rail_end::carries_rail(d))
+        {
+            let sockets_meet: Vec<u8> = (0..6)
+                .filter(|&k| {
+                    c.sockets()
+                        .edges_compatible(d.edge(4, k), def(&c, "rail_station").edge(1, 1))
+                })
+                .collect();
+            let legal = w.legal_rotations(&c, BEYOND_END, d);
+            assert_eq!(legal, sockets_meet, "{}", d.id);
+            assert!(
+                legal.iter().all(|&k| d.edge(4, k).kind == SocketKind::Rail),
+                "{}",
+                d.id
+            );
+        }
+        assert_eq!(
+            w.legal_rotations(&c, BEYOND_END, def(&c, "rail_straight")),
+            vec![1, 4]
+        );
+        assert_eq!(
+            w.auto_rotate(&c, BEYOND_END, def(&c, "rail_straight")),
+            Some(1)
+        );
+        w.place(&c, BEYOND_END, "rail_straight", 1).unwrap();
+        assert_eq!(station_stops(&c, &w), vec![4], "the line runs on");
+    }
+
+    /// Only a rail end that gets a buffer stop closes: a rail lane edge with no stop (here a stub
+    /// whose lane edges carry no track to stand one on) still refuses a tile without rail, as every
+    /// rail edge did before.
+    #[test]
+    fn rail_edge_without_a_stop_still_refuses_a_tile_without_rail() {
+        let c = catalog();
+        let straight = def(&c, "rail_straight");
+        let meadow = def(&c, "meadow");
+        let mut stub = straight.clone();
+        stub.id = "rail_stub".into();
+        stub.networks.clear();
+        assert_eq!(crate::rail_end::stopped_edges(&stub), 0);
+        assert_eq!(crate::rail_end::stopped_edges(straight), 0b1001);
+        // A meadow placed west of a straight's stopped end 0, then the stub's unstopped one.
+        assert!(c.placement_meets(meadow, 0, 3, straight, 0));
+        assert!(c.edges_meet(straight, 0, 0, meadow, 0));
+        assert!(!c.placement_meets(meadow, 0, 3, &stub, 0));
+        assert!(!c.edges_meet(&stub, 0, 0, meadow, 0));
+        // A rail tile never turns its end toward the meadow.
+        assert!(!c.placement_meets(straight, 0, 0, meadow, 0));
+    }
+
+    /// The load rule is symmetric for every pair of catalog tiles, rotations and edges, so load
+    /// validation (which checks each touching pair once) accepts a pair placed in either order, and
+    /// it accepts every pair placement accepts.
+    #[test]
+    fn edges_meet_is_symmetric() {
+        let c = catalog();
+        for a in c.tiles() {
+            for b in c.tiles() {
+                for (ra, rb, w) in
+                    (0..216u16).map(|i| ((i / 36) as u8, (i / 6 % 6) as u8, (i % 6) as u8))
+                {
+                    let seam = format!("{} r{ra} | {} r{rb} across {w}", a.id, b.id);
+                    let meet = c.edges_meet(a, ra, w, b, rb);
+                    assert_eq!(meet, c.edges_meet(b, rb, opposite_edge(w), a, ra), "{seam}");
+                    assert!(meet || !c.placement_meets(a, ra, w, b, rb), "{seam}");
+                }
+            }
+        }
+    }
 
     #[test]
     fn new_world_is_one_meadow_at_the_origin() {

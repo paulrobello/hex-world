@@ -10,8 +10,10 @@
         // A coast never steps against grass or ocean: beach edges meet only beach edges.
         Beach: [Beach],
         Ocean: [Ocean],
-        // P3 rail meets only rail, as a road does: a line never dead-ends into an edge, so it ends
-        // only where the cell beyond is empty.
+        // P3 rail meets only rail, as a road does. The one exception is not a kind pair, so it
+        // lives in hex-core `TileCatalog::edges_meet` (owner, 2026-10-25): a rail end that gets a
+        // buffer stop also meets a tile that carries no rail, as grass, because the stop closes
+        // the line there.
         Rail: [Rail],
     },
     lanes: {
