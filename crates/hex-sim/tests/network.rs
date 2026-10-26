@@ -96,7 +96,8 @@ fn road_ends_that_do_not_face_each_other_stay_apart() {
 }
 
 /// Centre-line length of a road bend whose lane rays leave the hex center `alpha` apart: the two
-/// straight `road_straight_edge` stubs from each edge midpoint in to r = 6, joined by the arc
+/// straight edge stubs (`road_straight_edge`; road_bend_60's trimmed `road_bend_60_edge_e0`/`_e1`
+/// share its centre line) from each edge midpoint in to r = 6, joined by the arc
 /// tangent to both, radius 6 tan(alpha / 2) turning through pi - alpha. The tile polyline samples
 /// that arc every 10 degrees, so its chords fall short by at most rho (pi - alpha) d^2 / 24
 /// (d = 10 degrees): 0.009 m and 0.014 m, inside the 0.02 m tolerance.
