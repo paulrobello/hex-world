@@ -24,6 +24,11 @@
 //! keeps plain start-of-pass markers resolved in the same frame. There the frame total is usable,
 //! but the split is not: in Chrome on the M4 Max most of the frame landed in `preprocess` and
 //! `prepass` and the later segments read 0, so per-pass attribution comes from native runs.
+//! Natively on Metal neither the split nor the total held against a Metal System Trace on the base
+//! M4 (`UNTRUSTED_METAL`), so `diag().gpu.trusted` is false there and on the web.
+//!
+//! A frame whose camera had no colour target is refused (`GpuTimer::no_target`): natively an
+//! occluded window gets no swap-chain texture, and the passes that draw to it never run.
 //!
 //! The dependencies remove the overlap between passes, so timing-on frames are slower than real
 //! ones: frame-time baselines are measured with timing off. Timing starts at the camera's GPU
@@ -129,6 +134,24 @@ pub const SEGMENT_SPANS: [(&str, &str); 10] = [
     ),
 ];
 
+/// `diag().gpu.note` on Metal. On the base M4 (MiniMac, 2026-10-27, `--offscreen on`) a Metal System
+/// Trace put the marker encoders where they belong, after the passes they wait for, yet the stamps
+/// they wrote ran early: one frame read shadow 2.1, prepass 2.3, opaque 6.4 and transmission
+/// 12.4 ms where the trace's markers bounded 7.0, 6.3, 10.5 and 1.8, so the missing time piled into
+/// the later segments, and the split moved between runs. The total moved too: 19.5 ms in one run
+/// and 26.2 ms in another of the same 33 ms frame, against about 28.4 ms of in-span GPU-busy time
+/// in the trace. Why the end-of-encoder samples run early is not known.
+const UNTRUSTED_METAL: &str = "not trusted on Metal: on the base M4 the per-pass stamps disagreed \
+     with a Metal System Trace by 2-3x per segment and the total read 8-31% under the trace's \
+     GPU-busy time; take GPU numbers from scripts/perf/low-camera-trace.sh";
+/// `diag().gpu.note` on the web.
+const UNTRUSTED_WEB: &str = "split not trusted on the web: start-of-pass markers cluster the \
+     cost early, and the span leaves out upscaling and the browser's own passes";
+
+/// `diag().gpu.reason` when every frame was refused for lack of a colour target.
+const NO_TARGET_REASON: &str = "refused: the camera had no colour target (window occluded, minimized or \
+     on a locked screen, so no swap-chain texture), so the main pass and post never ran";
+
 /// One rendered frame's GPU time per segment (ms), in `SEGMENTS` order where present.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GpuFrame {
@@ -143,12 +166,17 @@ pub struct GpuFrame {
 #[derive(Default)]
 struct Published {
     supported: Option<bool>,
+    /// The adapter is Metal (see `UNTRUSTED_METAL`).
+    metal: bool,
     timestamp_period_ns: f32,
     ring: VecDeque<GpuFrame>,
     tail: VecDeque<GpuFrame>,
     frames: u64,
     /// Frames dropped because a stamp ran ahead of the one before it (see the module docs).
     rejected: u64,
+    /// Frames dropped because the camera had no colour target, so its main pass and everything
+    /// after it never ran (see `GpuTimer::no_target`).
+    rejected_no_target: u64,
 }
 
 static PUBLISHED: Mutex<Option<Published>> = Mutex::new(None);
@@ -224,9 +252,16 @@ pub fn diag_json(enabled: bool) -> serde_json::Value {
         (true, Some(true)) => "pass-boundary timestamps",
     };
     let Some(p) = p.filter(|p| enabled && p.supported == Some(true) && !p.ring.is_empty()) else {
+        let no_target = p.map_or(0, |p| p.rejected_no_target);
+        let reason = if enabled && supported == Some(true) && no_target > 0 {
+            NO_TARGET_REASON
+        } else {
+            reason
+        };
         return serde_json::json!({
             "enabled": enabled, "supported": supported, "reason": reason,
-            "frames": 0, "passes": serde_json::Value::Null, "total": serde_json::Value::Null,
+            "frames": 0, "rejected_no_target": no_target,
+            "passes": serde_json::Value::Null, "total": serde_json::Value::Null,
             "tail_over_25ms": [],
         });
     };
@@ -242,14 +277,24 @@ pub fn diag_json(enabled: bool) -> serde_json::Value {
         })
         .collect();
     let totals: Vec<f32> = p.ring.iter().map(|f| f.total_ms).collect();
+    let note = if !NATIVE_MARKERS {
+        Some(UNTRUSTED_WEB)
+    } else if p.metal {
+        Some(UNTRUSTED_METAL)
+    } else {
+        None
+    };
     serde_json::json!({
         "enabled": enabled,
         "supported": true,
         "reason": reason,
+        "trusted": note.is_none(),
+        "note": note,
         "timestamp_period_ns": p.timestamp_period_ns,
         "frames": p.ring.len(),
         "frames_total": p.frames,
         "rejected_non_monotonic": p.rejected,
+        "rejected_no_target": p.rejected_no_target,
         "passes": passes,
         "total": stats(&totals),
         "spans": SEGMENT_SPANS.iter().map(|(n, s)| (n.to_string(), serde_json::json!(s)))
@@ -323,6 +368,8 @@ struct Slot {
     frame: u32,
     /// First query index of the half this slot's frame wrote.
     base: u32,
+    /// The frame's camera had no colour target (`GpuTimer::no_target`).
+    no_target: bool,
 }
 
 #[derive(Resource)]
@@ -346,6 +393,11 @@ struct GpuTimer {
     labels: Vec<&'static str>,
     /// The view that owns this frame's markers (the first camera to reach one).
     view: Option<Entity>,
+    /// A marker that reads the main colour target found none: the camera got no `ViewTarget`
+    /// (natively, wgpu hands out no swap-chain texture while the window is occluded, and Bevy then
+    /// skips every pass that draws to the target), so the later markers stamp back to back and
+    /// the frame's split would read the main pass and post as 0.
+    no_target: bool,
     period_ns: f32,
 }
 
@@ -434,11 +486,18 @@ impl Plugin for GpuTimingPlugin {
     }
 }
 
-fn init_timer(device: Res<RenderDevice>, queue: Res<RenderQueue>, mut commands: Commands) {
+fn init_timer(
+    device: Res<RenderDevice>,
+    queue: Res<RenderQueue>,
+    adapter: Res<bevy::render::renderer::RenderAdapterInfo>,
+    mut commands: Commands,
+) {
     let supported = device.features().contains(wgpu::Features::TIMESTAMP_QUERY);
     let period_ns = queue.get_timestamp_period();
+    let metal = adapter.backend == wgpu::Backend::Metal;
     publish(|p| {
         p.supported = Some(supported);
+        p.metal = metal;
         p.timestamp_period_ns = period_ns;
     });
     info!("gpu_timing: timestamp-query {supported}, period {period_ns} ns");
@@ -565,6 +624,7 @@ fn init_timer(device: Res<RenderDevice>, queue: Res<RenderQueue>, mut commands: 
             labels: vec![],
             frame: 0,
             base: 0,
+            no_target: false,
         })
         .collect();
     commands.insert_resource(GpuTimer {
@@ -585,6 +645,7 @@ fn init_timer(device: Res<RenderDevice>, queue: Res<RenderQueue>, mut commands: 
         half: 0,
         labels: vec![],
         view: None,
+        no_target: false,
         period_ns,
     });
 }
@@ -622,6 +683,7 @@ fn begin_frame(timer: Option<ResMut<GpuTimer>>, frame: Res<FrameCount>) {
                 .collect();
             info!("gpu_timing frame {}: {}", slot.frame, rel.join(" "));
         }
+        let no_target = slot.no_target;
         let (segments, total_ms, non_monotonic) = segments(&slot.labels, &stamps, period);
         let f = GpuFrame {
             frame: slot.frame,
@@ -631,6 +693,10 @@ fn begin_frame(timer: Option<ResMut<GpuTimer>>, frame: Res<FrameCount>) {
         };
         publish(|p| {
             p.frames += 1;
+            if no_target {
+                p.rejected_no_target += 1;
+                return;
+            }
             if f.non_monotonic {
                 p.rejected += 1;
                 return;
@@ -650,6 +716,7 @@ fn begin_frame(timer: Option<ResMut<GpuTimer>>, frame: Res<FrameCount>) {
     }
     timer.labels.clear();
     timer.view = None;
+    timer.no_target = false;
     timer.current = timer
         .slots
         .iter()
@@ -694,10 +761,13 @@ fn mark<const I: usize>(
         std::cmp::Ordering::Greater => "sentinel",
     };
     timer.labels.push(label);
-    let timer = &*timer;
     let owner = timer.view;
     let row = views.iter().find(|(e, ..)| Some(*e) == owner);
     let d = dep(I);
+    if d == Dep::Main && row.is_some_and(|(_, target, ..)| target.is_none()) {
+        timer.no_target = true;
+    }
+    let timer = &*timer;
     // (pipeline index, texture): 0 depth array, 1 depth, 2 float.
     let texture: Option<(usize, &wgpu::TextureView)> =
         row.and_then(|(_, target, prepass, shadow, ssao)| {
@@ -774,8 +844,10 @@ fn resolve(
         if labels.len() < 2 {
             timer.current = None;
         } else {
+            let no_target = timer.no_target;
             let slot = &mut timer.slots[i];
             slot.labels = labels;
+            slot.no_target = no_target;
             slot.state.store(1, Ordering::Release);
             timer.written = Some(i);
         }

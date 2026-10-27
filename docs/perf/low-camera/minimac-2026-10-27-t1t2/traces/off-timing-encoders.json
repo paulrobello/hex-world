@@ -1,0 +1,373 @@
+{
+  "source": "traces/off-timing-intervals.xml",
+  "process": "hex-world",
+  "window_s": 3.0,
+  "skip_end_s": 0.5,
+  "frame_ms_given": 32.44,
+  "frames": 92.5,
+  "frame_interval_ms": 32.441,
+  "gpu_busy_ms_per_frame": 28.919,
+  "sum_of_encoders_ms_per_frame": 43.93,
+  "by_label": {
+    "early prepass:early prepass": 10.56,
+    "main_opaque_pass_3d:main_opaque_pass_3d": 9.893,
+    "shadow_directional_light_0_cascade_2:shadow_directional_light_0_cascade_2": 4.625,
+    "ssao:ssao": 3.303,
+    "shadow_directional_light_0_cascade_3:shadow_directional_light_0_cascade_3": 3.228,
+    "shadow_directional_light_0_cascade_1:shadow_directional_light_0_cascade_1": 2.749,
+    "GPU Execution": 1.907,
+    "main_transmissive_pass_3d:main_transmissive_pass_3d": 1.673,
+    "taa:taa": 0.926,
+    "shadow_directional_light_0_cascade_0:shadow_directional_light_0_cascade_0": 0.76,
+    "(wgpu internal) Pre Pass:Blit Command 0": 0.505,
+    "<Enable the debug feature to see the name>:Blit Command 0": 0.492,
+    "bloom_upsampling_final_pass:bloom_upsampling_final_pass": 0.413,
+    "tonemapping:tonemapping": 0.379,
+    "ssao_spatial_denoise:ssao_spatial_denoise": 0.367,
+    "main_indirect_parameters_building:main_indirect_parameters_building": 0.279,
+    "ssao_preprocess_depth:ssao_preprocess_depth": 0.225,
+    "(wgpu internal) Pre Pass:(wgpu internal) Indirect draw validation pass": 0.196,
+    "bloom_downsampling_first_pass:bloom_downsampling_first_pass": 0.185,
+    "bloom_upsampling_pass:bloom_upsampling_pass": 0.142,
+    "upscaling:upscaling": 0.136,
+    "uniform allocation:uniform allocation": 0.13,
+    "(wgpu internal) Signal:upscaling": 0.119,
+    "boids:boids": 0.097,
+    "bloom_downsampling_pass:bloom_downsampling_pass": 0.088,
+    "bin unpacking:bin unpacking": 0.084,
+    "early_view_shadow_indirect_parameters_building:early_view_shadow_indirect_parameters_building": 0.076,
+    "gpu_timing_marker:gpu_timing_marker": 0.073,
+    "main_transparent_pass_3d:main_transparent_pass_3d": 0.068,
+    "early_prepass_indirect_parameters_building:early_prepass_indirect_parameters_building": 0.067,
+    "(wgpu internal) PendingWrites:Blit Command 0": 0.062,
+    "early_mesh_preprocessing:early_mesh_preprocessing": 0.037,
+    "late_view_shadow_indirect_parameters_building:late_view_shadow_indirect_parameters_building": 0.018,
+    "clustering count pass:clustering count pass": 0.016,
+    "gpu_timing_resolve:Blit Command 0": 0.01,
+    "clustering populate pass:clustering populate pass": 0.01,
+    "clustering allocation global pass:clustering allocation global pass": 0.009,
+    "(wgpu internal) Deferred query set resolve:Blit Command 0": 0.006,
+    "sparse buffer updates:sparse buffer updates": 0.005,
+    "clustering allocation local pass:clustering allocation local pass": 0.005,
+    "clustering Z slicing pass:clustering Z slicing pass": 0.004,
+    "(wgpu internal) Transit:Blit Command 0": 0.002,
+    "(wgpu internal) Signal:Blit Command 0": 0.001
+  },
+  "by_label_channel": [
+    {
+      "label": "early prepass:early prepass",
+      "channel": "Vertex",
+      "ms_per_frame": 6.57
+    },
+    {
+      "label": "main_opaque_pass_3d:main_opaque_pass_3d",
+      "channel": "Fragment",
+      "ms_per_frame": 5.008
+    },
+    {
+      "label": "main_opaque_pass_3d:main_opaque_pass_3d",
+      "channel": "Vertex",
+      "ms_per_frame": 4.885
+    },
+    {
+      "label": "early prepass:early prepass",
+      "channel": "Fragment",
+      "ms_per_frame": 3.99
+    },
+    {
+      "label": "ssao:ssao",
+      "channel": "Compute",
+      "ms_per_frame": 3.303
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_3:shadow_directional_light_0_cascade_3",
+      "channel": "Fragment",
+      "ms_per_frame": 3.091
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_2:shadow_directional_light_0_cascade_2",
+      "channel": "Fragment",
+      "ms_per_frame": 3.025
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_1:shadow_directional_light_0_cascade_1",
+      "channel": "Fragment",
+      "ms_per_frame": 1.833
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_2:shadow_directional_light_0_cascade_2",
+      "channel": "Vertex",
+      "ms_per_frame": 1.6
+    },
+    {
+      "label": "main_transmissive_pass_3d:main_transmissive_pass_3d",
+      "channel": "Fragment",
+      "ms_per_frame": 1.45
+    },
+    {
+      "label": "GPU Execution",
+      "channel": "Fragment",
+      "ms_per_frame": 0.945
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_1:shadow_directional_light_0_cascade_1",
+      "channel": "Vertex",
+      "ms_per_frame": 0.916
+    },
+    {
+      "label": "taa:taa",
+      "channel": "Fragment",
+      "ms_per_frame": 0.913
+    },
+    {
+      "label": "GPU Execution",
+      "channel": "Vertex",
+      "ms_per_frame": 0.648
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_0:shadow_directional_light_0_cascade_0",
+      "channel": "Fragment",
+      "ms_per_frame": 0.594
+    },
+    {
+      "label": "(wgpu internal) Pre Pass:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.505
+    },
+    {
+      "label": "<Enable the debug feature to see the name>:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.492
+    },
+    {
+      "label": "bloom_upsampling_final_pass:bloom_upsampling_final_pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.406
+    },
+    {
+      "label": "ssao_spatial_denoise:ssao_spatial_denoise",
+      "channel": "Compute",
+      "ms_per_frame": 0.367
+    },
+    {
+      "label": "tonemapping:tonemapping",
+      "channel": "Fragment",
+      "ms_per_frame": 0.357
+    },
+    {
+      "label": "GPU Execution",
+      "channel": "Compute",
+      "ms_per_frame": 0.314
+    },
+    {
+      "label": "main_indirect_parameters_building:main_indirect_parameters_building",
+      "channel": "Compute",
+      "ms_per_frame": 0.279
+    },
+    {
+      "label": "ssao_preprocess_depth:ssao_preprocess_depth",
+      "channel": "Compute",
+      "ms_per_frame": 0.225
+    },
+    {
+      "label": "main_transmissive_pass_3d:main_transmissive_pass_3d",
+      "channel": "Vertex",
+      "ms_per_frame": 0.223
+    },
+    {
+      "label": "(wgpu internal) Pre Pass:(wgpu internal) Indirect draw validation pass",
+      "channel": "Compute",
+      "ms_per_frame": 0.196
+    },
+    {
+      "label": "bloom_downsampling_first_pass:bloom_downsampling_first_pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.181
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_0:shadow_directional_light_0_cascade_0",
+      "channel": "Vertex",
+      "ms_per_frame": 0.166
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_3:shadow_directional_light_0_cascade_3",
+      "channel": "Vertex",
+      "ms_per_frame": 0.137
+    },
+    {
+      "label": "uniform allocation:uniform allocation",
+      "channel": "Compute",
+      "ms_per_frame": 0.13
+    },
+    {
+      "label": "upscaling:upscaling",
+      "channel": "Fragment",
+      "ms_per_frame": 0.129
+    },
+    {
+      "label": "(wgpu internal) Signal:upscaling",
+      "channel": "Fragment",
+      "ms_per_frame": 0.106
+    },
+    {
+      "label": "boids:boids",
+      "channel": "Compute",
+      "ms_per_frame": 0.097
+    },
+    {
+      "label": "bin unpacking:bin unpacking",
+      "channel": "Compute",
+      "ms_per_frame": 0.084
+    },
+    {
+      "label": "bloom_upsampling_pass:bloom_upsampling_pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.078
+    },
+    {
+      "label": "early_view_shadow_indirect_parameters_building:early_view_shadow_indirect_parameters_building",
+      "channel": "Compute",
+      "ms_per_frame": 0.076
+    },
+    {
+      "label": "gpu_timing_marker:gpu_timing_marker",
+      "channel": "Compute",
+      "ms_per_frame": 0.073
+    },
+    {
+      "label": "early_prepass_indirect_parameters_building:early_prepass_indirect_parameters_building",
+      "channel": "Compute",
+      "ms_per_frame": 0.067
+    },
+    {
+      "label": "bloom_upsampling_pass:bloom_upsampling_pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.064
+    },
+    {
+      "label": "(wgpu internal) PendingWrites:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.062
+    },
+    {
+      "label": "main_transparent_pass_3d:main_transparent_pass_3d",
+      "channel": "Fragment",
+      "ms_per_frame": 0.05
+    },
+    {
+      "label": "bloom_downsampling_pass:bloom_downsampling_pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.05
+    },
+    {
+      "label": "bloom_downsampling_pass:bloom_downsampling_pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.038
+    },
+    {
+      "label": "early_mesh_preprocessing:early_mesh_preprocessing",
+      "channel": "Compute",
+      "ms_per_frame": 0.037
+    },
+    {
+      "label": "tonemapping:tonemapping",
+      "channel": "Vertex",
+      "ms_per_frame": 0.022
+    },
+    {
+      "label": "late_view_shadow_indirect_parameters_building:late_view_shadow_indirect_parameters_building",
+      "channel": "Compute",
+      "ms_per_frame": 0.018
+    },
+    {
+      "label": "main_transparent_pass_3d:main_transparent_pass_3d",
+      "channel": "Vertex",
+      "ms_per_frame": 0.018
+    },
+    {
+      "label": "taa:taa",
+      "channel": "Vertex",
+      "ms_per_frame": 0.013
+    },
+    {
+      "label": "(wgpu internal) Signal:upscaling",
+      "channel": "Vertex",
+      "ms_per_frame": 0.013
+    },
+    {
+      "label": "clustering count pass:clustering count pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.011
+    },
+    {
+      "label": "gpu_timing_resolve:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.01
+    },
+    {
+      "label": "clustering allocation global pass:clustering allocation global pass",
+      "channel": "Compute",
+      "ms_per_frame": 0.009
+    },
+    {
+      "label": "bloom_upsampling_final_pass:bloom_upsampling_final_pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.007
+    },
+    {
+      "label": "upscaling:upscaling",
+      "channel": "Vertex",
+      "ms_per_frame": 0.007
+    },
+    {
+      "label": "clustering populate pass:clustering populate pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.006
+    },
+    {
+      "label": "(wgpu internal) Deferred query set resolve:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.006
+    },
+    {
+      "label": "sparse buffer updates:sparse buffer updates",
+      "channel": "Compute",
+      "ms_per_frame": 0.005
+    },
+    {
+      "label": "clustering count pass:clustering count pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.005
+    },
+    {
+      "label": "clustering allocation local pass:clustering allocation local pass",
+      "channel": "Compute",
+      "ms_per_frame": 0.005
+    },
+    {
+      "label": "clustering Z slicing pass:clustering Z slicing pass",
+      "channel": "Compute",
+      "ms_per_frame": 0.004
+    },
+    {
+      "label": "clustering populate pass:clustering populate pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.004
+    },
+    {
+      "label": "bloom_downsampling_first_pass:bloom_downsampling_first_pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.004
+    },
+    {
+      "label": "(wgpu internal) Transit:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.002
+    },
+    {
+      "label": "(wgpu internal) Signal:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.001
+    }
+  ]
+}

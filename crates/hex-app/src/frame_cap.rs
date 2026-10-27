@@ -3,11 +3,22 @@
 //! the end of the main schedule holds each frame to its deadline. On the web the main thread cannot
 //! sleep, so the engine hands the cap to the page's animation-frame gate (`window.__frameCap`,
 //! web/frame-latency.js), which holds every animation frame until the interval has elapsed.
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::Instant;
 
 use bevy::prelude::*;
+
+/// Natively, whether an unfocused window keeps the continuous update: set at start when the present
+/// mode is uncapped (`--present immediate|novsync`), else Bevy's `WinitSettings::game()` steps an
+/// unfocused window at 60 Hz.
+static UNFOCUSED_CONTINUOUS: AtomicBool = AtomicBool::new(cfg!(target_arch = "wasm32"));
+
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+pub fn set_unfocused_continuous(on: bool) {
+    UNFOCUSED_CONTINUOUS.store(on, Ordering::Relaxed);
+}
 
 /// The caps the Settings sheet offers and the command accepts; `None` is Off.
 pub const CHOICES: [u32; 3] = [30, 60, 120];
@@ -47,7 +58,7 @@ impl FrameCap {
             "fps": self.0,
             "interval_ms": self.interval().map(|d| (d.as_secs_f64() * 1e5).round() / 100.0),
             "limiter": if web { "raf" } else { "sleep" },
-            "unfocused": if web { "continuous" } else { "reactive_60hz" },
+            "unfocused": if UNFOCUSED_CONTINUOUS.load(Ordering::Relaxed) { "continuous" } else { "reactive_60hz" },
         })
     }
 }

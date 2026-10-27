@@ -6,8 +6,13 @@
 // so `base_off` gives the frame time without it. One process per arm; the arm order rotates each
 // round, and every run sits inside e2e/perf-load.mjs's guard (1-minute load <= 15).
 // The binary runs from <repo> (it loads ./assets at run time): <repo>/target/release/hex-world.
+// A row whose window got no swap-chain texture (occluded: another window on top, or a locked or
+// sleeping screen, as on a host driven over SSH) fails: the camera then draws nothing, so the frame
+// runs shadows, prepass and SSAO only. LOWCAM_OFFSCREEN=1 passes `--offscreen on`, which draws the
+// camera into an image instead, so a locked host still renders every pass (and presents nothing).
 // usage: node e2e/perf-low-camera-native.mjs <repo> <out.json>   ROUNDS (default 3), ARMS (comma list),
-//   LOWCAM_SIZE (default 2560x1440), LOWCAM_WAIT (frames after the camera move, default 700)
+//   LOWCAM_SIZE (default 2560x1440), LOWCAM_WAIT (frames after the camera move, default 700),
+//   LOWCAM_OFFSCREEN (default unset), HEXW_BIN (default <repo>/target/release/hex-world)
 import { spawn } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { cpus, hostname } from "node:os";
@@ -18,13 +23,15 @@ import { waterWorldScript } from "./water-world.mjs";
 const [repoArg, OUT] = process.argv.slice(2);
 if (!OUT) throw new Error("usage: node e2e/perf-low-camera-native.mjs <repo> <out.json>");
 const REPO = resolve(repoArg);
-const BIN = join(REPO, "target/release/hex-world");
+const BIN = process.env.HEXW_BIN ? resolve(process.env.HEXW_BIN) : join(REPO, "target/release/hex-world");
+const OFFSCREEN = process.env.LOWCAM_OFFSCREEN === "1";
 const ROUNDS = Number(process.env.ROUNDS ?? 3);
 const SIZE = process.env.LOWCAM_SIZE ?? "2560x1440";
 const WAIT = Number(process.env.LOWCAM_WAIT ?? 700);
 const world = waterWorldScript(10);
 const CAMERA = { cmd: "camera", pos: [10, 12, 40], look_at: [0, 0, 0] };
-const BASE = { scenario: "play", tier: "high", grass: "1", tilt: "off", seed: "1", fps: "off", present: "immediate", diag: "1" };
+const BASE = { scenario: "play", tier: "high", grass: "1", tilt: "off", seed: "1", fps: "off", present: "immediate", diag: "1",
+  ...(OFFSCREEN ? { offscreen: "on" } : {}) };
 const T = { gpu_timing: "on" };
 // `expect` is checked against the dumped diag and state, so a flag that does not apply in play fails
 // the row instead of reading as a zero saving.
@@ -72,13 +79,15 @@ async function run(name) {
   if (st.play?.tiles?.length !== world.tiles.length) throw new Error(`world has ${st.play?.tiles?.length} tiles`);
   if (st.play?.rising?.length) throw new Error(`${st.play.rising.length} tiles still rising at the read`);
   if ((d.samples ?? 0) < 600) throw new Error(`diag window not full: ${d.samples} samples`);
+  if (d.window?.not_acquired) throw new Error(`window occluded: ${d.window.not_acquired} of ${d.window.frames} frames got no ` +
+    "swap-chain texture, so the camera drew nothing (unlock the screen or set LOWCAM_OFFSCREEN=1)");
   const got = { tier: st.tier?.tier, shadows: d.shadows, cascades: d.cascades, ssao: d.ssao, grass_blades: st.grass?.blades ?? null };
   const bad = Object.entries(arm.expect).filter(([k, v]) => JSON.stringify(got[k]) !== JSON.stringify(v));
   if (bad.length) throw new Error(`toggle not applied: ${bad.map(([k, v]) => `${k} ${JSON.stringify(got[k])} != ${JSON.stringify(v)}`).join(", ")}`);
   if (arm.flags.gpu_timing === "on" && !d.gpu?.passes) throw new Error(`no GPU pass timing: ${JSON.stringify(d.gpu)}`);
   const passes = (d.passes ?? []).map((p) => ({ view: p.view, phase: p.phase, draws: count(p) }));
   return { arm: name, args, exit_code: code, p50: d.p50, p95: d.p95, p99: d.p99, mean: d.mean, max: d.max,
-    vsync_like: vsyncLike(d.p50), samples: d.samples, ...got, shadow_dist: d.shadow_dist, post: d.post,
+    vsync_like: vsyncLike(d.p50), samples: d.samples, window: d.window ?? null, ...got, shadow_dist: d.shadow_dist, post: d.post,
     cars: d.cars, boids: d.boids, adapter: d.adapter, visible_tris: d.visible_tris,
     draws_total: passes.reduce((n, p) => n + p.draws, 0), passes,
     kit_draws: d.kit_draws ? { slots: d.kit_draws.slots, total: d.kit_draws.total } : null,
@@ -87,7 +96,7 @@ async function run(name) {
 
 const result = { date: new Date().toISOString(), host: hostname(), cpu: cpus()[0]?.model, repo: REPO, size: SIZE, base: BASE,
   camera: CAMERA, world: { generator: "e2e/water-world.mjs waterWorldScript(10)", tiles: world.tiles.length },
-  wait_frames: WAIT, load_limit: LOAD_LIMIT, rounds: ROUNDS, rows: [] };
+  wait_frames: WAIT, offscreen: OFFSCREEN, load_limit: LOAD_LIMIT, rounds: ROUNDS, rows: [] };
 for (let r = 0; r < ROUNDS; r++)
   for (const name of [...pick.slice(r % pick.length), ...pick.slice(0, r % pick.length)]) {
     const label = `native ${name} round ${r}`;

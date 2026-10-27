@@ -24,14 +24,65 @@ use bevy::{
         render_phase::{BinnedPhaseItem, BinnedRenderPhase, ViewBinnedRenderPhases},
         render_resource::PipelineCache,
         renderer::RenderAdapterInfo,
-        view::{ExtractedView, RetainedViewEntity},
+        view::{
+            ExtractedView, RetainedViewEntity,
+            window::{ExtractedWindow, prepare_windows},
+        },
     },
+    window::Window,
 };
 
 use crate::scene::{Chunk, Lod, SceneFacts, Tile, Tris, Vehicle};
 use hex_render::kit_instances::{KitInstanceSet, KitInstanceSetData, KitSlotDraw};
 
 const RING: usize = 600;
+
+/// The last `RING` render frames: whether every window had a swap-chain texture after
+/// `prepare_windows`. Natively wgpu hands out none while a window is occluded (behind another
+/// window, minimized, or on a locked or sleeping screen), and Bevy then skips every pass that
+/// draws to it: the frame runs shadows, prepass and SSAO only and presents nothing.
+static ACQUIRED: Mutex<VecDeque<bool>> = Mutex::new(VecDeque::new());
+
+fn count_acquired(
+    windows: Query<(&bevy::render::sync_world::MainEntity, &ExtractedWindow)>,
+    cameras: Query<&bevy::render::camera::ExtractedCamera>,
+) {
+    use bevy::camera::NormalizedRenderTarget;
+    // Only windows a camera draws to: an offscreen run (`--offscreen on`) targets none.
+    let mut targeted = cameras
+        .iter()
+        .filter_map(|c| match &c.target {
+            Some(NormalizedRenderTarget::Window(w)) => Some(w.entity()),
+            _ => None,
+        })
+        .peekable();
+    if targeted.peek().is_none() {
+        return;
+    }
+    let ok = targeted.all(|e| {
+        windows
+            .iter()
+            .any(|(m, w)| m.id() == e && w.swap_chain_texture_view.is_some())
+    });
+    let mut ring = ACQUIRED.lock().unwrap();
+    if ring.len() == RING {
+        ring.pop_front();
+    }
+    ring.push_back(ok);
+}
+
+/// The `window` object of the diag snapshot: `focused` (the primary window has focus; natively an
+/// unfocused window updates at 60 Hz unless the present mode is uncapped), and over the last
+/// `frames` render frames, `not_acquired` (frames a window got no swap-chain texture, so the
+/// camera drew nothing to it).
+pub fn window_json(focused: Option<bool>) -> serde_json::Value {
+    let ring = ACQUIRED.lock().unwrap();
+    serde_json::json!({
+        "focused": focused,
+        "frames": ring.len(),
+        "not_acquired": ring.iter().filter(|ok| !**ok).count(),
+    })
+}
 /// A frame slower than this missed a 60 Hz presentation (counted as dropped).
 const DROPPED_MS: f32 = 25.0;
 /// Upper bucket edges (ms) of the frame-time histogram; the last bucket is open.
@@ -426,12 +477,19 @@ impl Plugin for DiagPlugin {
             .init_resource::<RenderModes>()
             .add_systems(Update, (sync_render_modes, sample).chain());
         if let Some(render_app) = app.get_sub_app_mut(RenderApp) {
-            render_app.add_systems(
-                Render,
-                (probe_render_modes, census_passes)
-                    .after(RenderSystems::PrepareBindGroups)
-                    .before(RenderSystems::Render),
-            );
+            render_app
+                .add_systems(
+                    Render,
+                    (probe_render_modes, census_passes)
+                        .after(RenderSystems::PrepareBindGroups)
+                        .before(RenderSystems::Render),
+                )
+                .add_systems(
+                    Render,
+                    count_acquired
+                        .after(prepare_windows)
+                        .before(RenderSystems::Render),
+                );
         }
     }
 }
@@ -528,10 +586,11 @@ fn sample(
     lights: Query<(&DirectionalLight, &CascadeShadowConfig)>,
     instanced: Option<Res<crate::instanced::InstancedScene>>,
     config: Option<Res<crate::workload::GateConfig>>,
-    (frame, gpu_timing, virt): (
+    (frame, gpu_timing, virt, windows): (
         Res<FrameCount>,
         Option<Res<crate::gpu_timing::GpuTiming>>,
         Option<Res<Time<bevy::time::Virtual>>>,
+        Query<&Window>,
     ),
 ) {
     st.frames += 1;
@@ -675,6 +734,7 @@ fn sample(
         let extra = serde_json::json!({
             "gpu": crate::gpu_timing::diag_json(gpu_timing.is_some_and(|g| g.enabled)),
             "stall": stall_json(&st.stats, &st.stalls),
+            "window": window_json(windows.iter().next().map(|w| w.focused)),
             "kit_draws": KIT_CENSUS.lock().unwrap().as_ref().map(kit_census_json),
             "kit_queue": hex_render::kit_instances::queue_stats().map(|q| kit_queue_json(&q)),
         });

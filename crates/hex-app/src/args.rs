@@ -77,6 +77,10 @@ pub struct Flags {
     /// `frame_cap=off|30|60|120` (natively also `--frame-cap 60`): the start frame rate cap
     /// (`crate::frame_cap`); the Settings sheet's stored choice follows as a command.
     pub frame_cap: crate::frame_cap::FrameCap,
+    /// Native only, `offscreen=on`: the game camera draws into an image the window's size instead
+    /// of the window (`crate::offscreen`), so a frame renders in full while the window is occluded
+    /// (a locked or sleeping screen, another window on top) and presents nothing.
+    pub offscreen: bool,
 }
 
 /// `"1280x800"` -> `Some((1280, 800))`; zero or malformed sizes are rejected.
@@ -334,6 +338,15 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
         let t = hex_render::post::QualityTier::parse(v);
         state.f.tier_explicit |= t.is_some();
         set_or_warn(&mut state.f.gate.tier, t, k, v, &mut state.warnings);
+    }),
+    ("offscreen", |state, k, v| {
+        set_or_warn(
+            &mut state.f.offscreen,
+            hex_render::parse_shadows(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
     }),
     ("gpu_timing", |state, k, v| {
         set_or_warn(
@@ -647,6 +660,16 @@ mod tests {
         assert!(f.gpu_timing && w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("gpu_timing", "yes")]));
         assert!(!f.gpu_timing && w.len() == 1);
+    }
+
+    #[test]
+    fn offscreen_key() {
+        let (f, w) = flags_from_pairs(&[]);
+        assert!(!f.offscreen && w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("offscreen", "on")]));
+        assert!(f.offscreen && w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("offscreen", "maybe")]));
+        assert!(!f.offscreen && w.len() == 1);
     }
 
     #[test]

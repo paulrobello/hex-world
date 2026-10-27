@@ -1,0 +1,4 @@
+2026-10-27T11:21:38.615556Z  INFO hex_play::gpu_timing: gpu_timing: timestamp-query true, period 1 ns
+2026-10-27T11:21:40.740818Z  INFO hex_play::gpu_timing: gpu_timing frame 200: preprocess:0.000 shadow:0.262 prepass:1.540 ssao:2.158 opaque:6.469 transmission:8.063 transparent:9.338 taa:9.475 tilt_shift:10.337 post:10.340 end:11.896
+2026-10-27T11:21:48.875411Z  INFO hex_play::gpu_timing: gpu_timing frame 600: preprocess:0.000 shadow:1.981 prepass:4.354 ssao:6.265 opaque:10.467 transmission:14.440 transparent:24.761 taa:24.893 tilt_shift:25.679 post:25.693 end:27.870
+2026-10-27T11:21:55.292548Z  INFO hex_play::gpu_timing: gpu_timing frame 800: preprocess:0.000 shadow:2.568 prepass:4.668 ssao:6.992 opaque:10.409 transmission:16.777 transparent:29.205 taa:29.234 tilt_shift:30.030 post:30.045 end:31.770

@@ -556,7 +556,7 @@ impl PhotoExports {
 }
 
 /// An uninitialised colour target the size of the export (no CPU copy of a 4× buffer).
-fn target_image(size: UVec2) -> Image {
+pub(crate) fn target_image(size: UVec2) -> Image {
     let mut img = Image::new_uninit(
         Extent3d {
             width: size.x,

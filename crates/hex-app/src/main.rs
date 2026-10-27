@@ -14,6 +14,8 @@ mod control;
 mod exit_guard;
 mod frame_cap;
 mod game;
+#[cfg(not(target_arch = "wasm32"))]
+mod offscreen;
 mod persist;
 mod photo;
 mod photo_fx;
@@ -209,6 +211,17 @@ fn main() {
     // it has no overlay to take focus, so an unfocused native window is one the user left.
     #[cfg(target_arch = "wasm32")]
     app.insert_resource(bevy::winit::WinitSettings::continuous());
+    // Native with an uncapped present mode (perf runs) keeps it too: `game()` steps an unfocused
+    // window at exactly 60 Hz, and a window opened over SSH or behind another app never gets focus.
+    #[cfg(not(target_arch = "wasm32"))]
+    if app.world().resource::<RunFlags>().0.present != args::Present::Fifo {
+        app.insert_resource(bevy::winit::WinitSettings::continuous());
+        frame_cap::set_unfocused_continuous(true);
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    if app.world().resource::<RunFlags>().0.offscreen {
+        app.add_plugins(offscreen::OffscreenPlugin);
+    }
 
     #[cfg(not(target_arch = "wasm32"))]
     if app.world().resource::<RunFlags>().0.thumbs {

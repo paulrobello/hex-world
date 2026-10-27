@@ -1,0 +1,16 @@
+[2m2026-10-27T11:28:09.520116Z[0m [32m INFO[0m [2mbevy_render::renderer[0m[2m:[0m AdapterInfo { name: "Apple M4", vendor: 0, device: 0, device_type: IntegratedGpu, device_pci_bus_id: "", driver: "", driver_info: "", backend: Metal, subgroup_min_size: 4, subgroup_max_size: 64, transient_saves_memory: Some(true), limit_bucket: None }
+[2m2026-10-27T11:28:09.564568Z[0m [32m INFO[0m [2mbevy_pbr::cluster[0m[2m:[0m GPU clustering is supported on this device.
+[2m2026-10-27T11:28:09.564599Z[0m [32m INFO[0m [2mbevy_render::batching::gpu_preprocessing[0m[2m:[0m GPU preprocessing is fully supported on this device.
+[2m2026-10-27T11:28:09.606729Z[0m [32m INFO[0m [2mbevy_winit::system[0m[2m:[0m Creating new window Hex World (68v0)
+[2m2026-10-27T11:28:09.665810Z[0m [32m INFO[0m [2mhex_render[0m[2m:[0m gpu: max_sampled_textures_per_shader_stage=96
+[2m2026-10-27T11:28:09.665835Z[0m [32m INFO[0m [2mhex_play::tier[0m[2m:[0m tier: detected high (Apple M4: Apple silicon, the reference desktop class)
+[2m2026-10-27T11:28:09.667101Z[0m [32m INFO[0m [2mhex_play::play::packs[0m[2m:[0m play: pack core requested
+[2m2026-10-27T11:28:09.688873Z[0m [32m INFO[0m [2mhex_play::boids[0m[2m:[0m boids: bird_starling x496, bird_goldfinch x504, fish_trout x475, fish_mackerel x475 built (fish from slot 525)
+[2m2026-10-27T11:28:09.719965Z[0m [32m INFO[0m [2mhex_play::play::packs[0m[2m:[0m play: pack core ready
+[2m2026-10-27T11:28:09.720527Z[0m [32m INFO[0m [2mhex_play::play[0m[2m:[0m play: kit pieces ready: ["bird_goldfinch", "bird_starling", "fish_mackerel", "fish_trout", "meadow_base", "road_bend_120_center", "road_bend_60_center", "road_bend_60_edge_e0", "road_bend_60_edge_e1", "road_junction_center", "road_straight_center", "road_straight_edge"]
+[2m2026-10-27T11:28:09.720594Z[0m [32m INFO[0m [2mhex_play::play[0m[2m:[0m play: slot coalescing: 27 instanced draw slots, 34 without it (7 groups merge 14 slots; 7 groups use vertex roughness, 7 more groups without it); left out: {}
+[2m2026-10-27T11:28:09.928161Z[0m [32m INFO[0m [2mhex_play::diag[0m[2m:[0m render modes: ssao=true gpu_preprocessing_supported=Culling adapter=Apple M4 | Metal | IntegratedGpu | 
+[2m2026-10-27T11:28:11.745356Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m command: Wait { frames: 700 }
+[2m2026-10-27T11:28:23.428353Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m command: Exit
+[2m2026-10-27T11:28:23.430681Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m wrote /Users/probello/perf/hex-world-t1t2/results/light-old-window.json
+[2m2026-10-27T11:28:23.430714Z[0m [32m INFO[0m [2mhex_world::exit_guard[0m[2m:[0m exit: outputs written, ending the process with code 0

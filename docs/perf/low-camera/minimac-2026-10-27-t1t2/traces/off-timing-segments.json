@@ -1,0 +1,51 @@
+{
+  "source": "traces/off-timing-intervals.xml",
+  "process": "hex-world",
+  "window_s": 3.0,
+  "skip_end_s": 0.5,
+  "frames": 10,
+  "marker_phase": 0,
+  "span_ms": 32.986,
+  "segments": {
+    "preprocess": {
+      "busy_ms": 0.307,
+      "wall_ms": 1.425
+    },
+    "shadow": {
+      "busy_ms": 6.499,
+      "wall_ms": 7.013
+    },
+    "prepass": {
+      "busy_ms": 5.955,
+      "wall_ms": 5.956
+    },
+    "ssao": {
+      "busy_ms": 3.725,
+      "wall_ms": 3.726
+    },
+    "opaque": {
+      "busy_ms": 10.065,
+      "wall_ms": 10.172
+    },
+    "transmission": {
+      "busy_ms": 1.842,
+      "wall_ms": 1.845
+    },
+    "transparent": {
+      "busy_ms": 0.493,
+      "wall_ms": 0.493
+    },
+    "taa": {
+      "busy_ms": 0.606,
+      "wall_ms": 0.606
+    },
+    "tilt_shift": {
+      "busy_ms": 0.06,
+      "wall_ms": 0.06
+    },
+    "post": {
+      "busy_ms": 0.896,
+      "wall_ms": 1.689
+    }
+  }
+}

@@ -4,7 +4,8 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## State
 
-- `main` holds batches 27-37. Batches 27-36 are pushed (`cf5be40`, CI green). Batch 37 (`e9e0b8d`, docs and harness only) is local and rides along with the next push. `dist/` rebuilt.
+- `main` holds batches 27-38. Batches 27-36 are pushed (`cf5be40`, CI green). Batches 37 and 38 are local until the next push. `dist/` rebuilt.
+- Batch 38 landed: the M4 tooling fixes (cards 01a17ce2f4b4 and 01a17ce2f75a, closed). On MiniMac the window is occluded (locked screen over SSH), so wgpu hands out no swap-chain texture and Bevy skips every pass that draws to it. That explains both the zero native `gpu_timing` segments and the 60 Hz pin (`WinitSettings::game()` steps an unfocused window at 60 Hz). Native `gpu_timing` now refuses frames with no colour target, `diag().window` counts them, `--offscreen on` renders every pass on a locked host, and uncapped present modes keep a continuous update. Even with every pass rendering, the M4 stamps disagree with a Metal trace by 2-3x, so `diag().gpu.trusted` is false on Metal and on the web: per-pass GPU numbers on Apple hardware come only from `scripts/perf/low-camera-trace.sh` + `scripts/perf/metal-segments.py`. The native low-camera frame with every pass is 32-35 ms on the M4, so the earlier native-faster-than-web reading (O7) is withdrawn.
 - Batch 37 landed (`e9e0b8d`): the low-camera frame profile (`docs/perf/low-camera/`). On MiniMac's base M4 the 317-tile low-camera frame is GPU-bound at 30.2 ms. The early prepass is the biggest pass (14.1 ms of encoder time), and the post stack is the biggest removable cost (-11.6 ms). On the reference M4 Max the frame is 11.2 to 11.5 ms p95, CPU-bound (load-guarded, 3 rounds), so card 01a15ec0b1d3 is closed. Per-pass numbers on Apple hardware come from `scripts/perf/low-camera-trace.sh`, because `gpu_timing` is wrong on the M4 (card 01a17ce2f4b4).
 - Batches 35-36 landed (`e88b1bd`, `84cbce0`, `876609e`, `cf5be40`, CI green):
   - Frame pacing: the latency limiter counts a frame from its first submit.
@@ -69,7 +70,7 @@ No Blender agents are running (2026-10-27 06:30Z): B1 and B3 are built, B2's ref
 - Rail network (Rail socket, tiles, switch routing, junction lever), card `01a1579e911c`.
 - Station tile integration (platform walker ground, shelter obstacle, train stop), card `01a157994d7a`.
 - Cars follow road height (`ROAD_SURFACE_Y` is a fixed 0.11 m; the crossing deck is 0.46 m), card `01a1575a45d4`.
-- Large play worlds slow on web, card `01a14028862a` (high). Tooling: `gpu_timing` per-pass stamps are wrong on Apple M4 (`01a17ce2f4b4`, high); native present-immediate stays pinned at 60 Hz on MiniMac (`01a17ce2f75a`, high). Dependabot alerts, card `01a1547b6ac5747e967b94e245b57a6e` (high).
+- Large play worlds slow on web, card `01a14028862a` (high). Dependabot alerts, card `01a1547b6ac5747e967b94e245b57a6e` (high).
 - Known small items: LOD2 dark neck patches on the grazing animals (draws past 400 m only).
 
 ## References

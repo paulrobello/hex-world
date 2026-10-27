@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-27T10:45:10.346Z",
+  "host": "MiniMac.attlocal.net",
+  "cpu": "Apple M4",
+  "repo": "/Users/probello/perf/hex-world-t1t2",
+  "size": "2560x1440",
+  "base": {
+    "scenario": "play",
+    "tier": "high",
+    "grass": "1",
+    "tilt": "off",
+    "seed": "1",
+    "fps": "off",
+    "present": "immediate",
+    "diag": "1"
+  },
+  "camera": {
+    "cmd": "camera",
+    "pos": [
+      10,
+      12,
+      40
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  },
+  "world": {
+    "generator": "e2e/water-world.mjs waterWorldScript(10)",
+    "tiles": 317
+  },
+  "wait_frames": 700,
+  "offscreen": false,
+  "load_limit": 15,
+  "rounds": 1,
+  "rows": [
+    {
+      "round": 0,
+      "arm": "base",
+      "error": "window occluded: 600 of 600 frames got no swap-chain texture, so the camera drew nothing (unlock the screen or set LOWCAM_OFFSCREEN=1)",
+      "load_before": 2.5751953125,
+      "load_after": 3.31005859375,
+      "load_discarded": 0
+    }
+  ]
+}

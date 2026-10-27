@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 # Metal System Trace of the low-camera frame (docs/perf/low-camera/README.md), web or native, then
 # the per-encoder GPU table (scripts/perf/metal-encoders.py). Run from the shipped directory.
-# The intervals XML is kept when the table step fails. NATIVE_FRAME_MS (default 16.667) is the native
-# frame interval the table is divided by.
+# The intervals XML is kept when the table step fails. Native: HEXW_BIN (default
+# target/release/hex-world) is the binary, the run's state goes to <out-prefix>-state.json, and the
+# table is divided by that run's mean frame time (diag().mean; NATIVE_FRAME_MS overrides). With
+# `--gpu_timing on` among the flags, scripts/perf/metal-segments.py also writes the trace's GPU time
+# per gpu_timing segment (<out-prefix>-segments.json), to set against diag().gpu.passes. The native
+# trace attaches to the running app for TRACE_SECS (default 4) seconds, ATTACH_AFTER (default 30)
+# seconds after launch, inside the script's wait after the camera move: a trace of the whole run
+# reached 17 GB and its processing did not finish in 20 minutes on MiniMac.
 # usage: low-camera-trace.sh web <lc_arm> <out-prefix>      (e2e/frame-pacing.mjs, one arm, 25 s windows;
 #                                                             records 12 s inside the second window)
 #        low-camera-trace.sh native "<extra flags>" <out-prefix>
@@ -24,10 +30,16 @@ if [ "$mode" = web ]; then
   proc="for Testing Helpe"
 else
   script=target/shots/lc-native-script.json
+  secs=${TRACE_SECS:-4}
   # shellcheck disable=SC2086
-  xct record --template 'Metal System Trace' --time-limit 120s --output "$out.trace" --launch -- target/release/hex-world \
-    --scenario play --tier high --grass 1 --tilt off --seed 1 --fps off --present immediate --size 2560x1440 $arg \
-    --script "$script" > "$out-xctrace.log" 2>&1
+  "${HEXW_BIN:-target/release/hex-world}" --scenario play --tier high --grass 1 --tilt off --seed 1 --fps off \
+    --present immediate --size 2560x1440 --diag 1 $arg --dump-state "$PWD/$out-state.json" --script "$script" \
+    > "$out-app.log" 2>&1 &
+  app_pid=$!
+  sleep "${ATTACH_AFTER:-30}"
+  xct record --template 'Metal System Trace' --attach "$app_pid" --time-limit "${secs}s" --output "$out.trace" \
+    > "$out-xctrace.log" 2>&1
+  wait "$app_pid"
   proc="hex-world"
 fi
 echo "load after: $(sysctl -n vm.loadavg)"
@@ -37,12 +49,20 @@ if [ "$mode" = web ]; then
   fms=$(node -e 'const j=require(process.argv[1]); console.log(j.rows[0].phases[1].submit.mean)' "$PWD/$out-pacing.json" 2>/dev/null || node -e 'const j=require(process.argv[1]); console.log(j.rows[0].phases[1].submit.mean)' "$out-pacing.json")
   python3 scripts/perf/metal-encoders.py "$out-intervals.xml" "$out-encoders.json" --process "$proc" --window 10 --frame-ms "$fms"
 else
-  # The native trace's frame numbers do not count engine frames either. Play opened over SSH runs at
-  # the display's 60 Hz (docs/perf/low-camera/README.md), so the window is divided by 16.667 ms.
-  python3 scripts/perf/metal-encoders.py "$out-intervals.xml" "$out-encoders.json" --process "$proc" --window 8 --skip-end 0.5 \
-    --frame-ms "${NATIVE_FRAME_MS:-16.667}"
+  # The native trace's frame numbers do not count engine frames either, so the window is divided by
+  # the run's own mean frame time.
+  fms=${NATIVE_FRAME_MS:-$(node -e 'console.log(require(process.argv[1]).diag.mean)' "$PWD/$out-state.json")}
+  win=$((secs - 1))
+  python3 scripts/perf/metal-encoders.py "$out-intervals.xml" "$out-encoders.json" --process "$proc" --window "$win" \
+    --skip-end 0.5 --frame-ms "$fms"
+  status=$?
+  case " $arg " in
+    *"--gpu_timing on"*) python3 scripts/perf/metal-segments.py "$out-intervals.xml" "$out-segments.json" --process "$proc" \
+      --window "$win" --skip-end 0.5 || status=$? ;;
+  esac
+  (exit "$status")
 fi
 status=$?
 rm -rf "$out.trace"
-[ "$status" -eq 0 ] && rm -f "$out-intervals.xml"
+[ "$status" -eq 0 ] && [ -z "${KEEP_XML:-}" ] && rm -f "$out-intervals.xml"
 exit "$status"

@@ -22,14 +22,8 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 
 
-def main() -> None:
-    args = sys.argv[1:]
-    src, out = args[0], args[1]
-    proc = args[args.index("--process") + 1] if "--process" in args else "hex-world"
-    window = float(args[args.index("--window") + 1]) if "--window" in args else 8.0
-    skip_end = float(args[args.index("--skip-end") + 1]) if "--skip-end" in args else 0.0
-    frame_ms = float(args[args.index("--frame-ms") + 1]) if "--frame-ms" in args else None
-
+def read_rows(src: str) -> list[dict[str, tuple[str, str]]]:
+    """The table's rows, each column as (text, fmt), with xctrace's id/ref sharing resolved."""
     ids: dict[str, tuple[str, str]] = {}
     cols: list[str] = []
     rows: list[dict[str, tuple[str, str]]] = []
@@ -51,6 +45,17 @@ def main() -> None:
                     row[name] = val
             rows.append(row)
             el.clear()
+    return rows
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    src, out = args[0], args[1]
+    proc = args[args.index("--process") + 1] if "--process" in args else "hex-world"
+    window = float(args[args.index("--window") + 1]) if "--window" in args else 8.0
+    skip_end = float(args[args.index("--skip-end") + 1]) if "--skip-end" in args else 0.0
+    frame_ms = float(args[args.index("--frame-ms") + 1]) if "--frame-ms" in args else None
+    rows = read_rows(src)
 
     mine = [r for r in rows if proc in r.get("process", ("", ""))[1]]
     if not mine:
