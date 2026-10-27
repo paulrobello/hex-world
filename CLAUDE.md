@@ -35,7 +35,7 @@ node e2e/smoke.mjs dist                           # one e2e script (after make b
 - UI overlay gates: `make ui-check` (tsc, Biome, node --test, esbuild bundle). If the bridge contract test fails after a Rust enum change, run `make ui-schema` to regenerate `web/ui/src/bridge-schema.json` and `web/ui/test/rules-parity.json`.
 - Browser e2e/perf (`e2e/*.mjs`, Playwright) run **locally on GPU Chromium only, never in CI**. CI runs the make gates per concern (`.github/workflows/ci.yml`), with `test` on ubuntu + macos.
 - Perf/timing runs are load-guarded: host 1-minute load ≤ 15 immediately before and after each run or the run is discarded (`e2e/perf-load.mjs` enforces it). Timing without the guard is not evidence.
-- Unattended native captures (`make thumbs`, `make shots-*`) run under `caffeinate -d -u` — a sleeping display produces black frames.
+- Unattended native captures (`make thumbs`, `make shots-*`) run under `caffeinate -d -u` — a sleeping display produces black frames. Capture runs render offscreen by default (`--offscreen`), so an occluded, minimized or other-Space window still captures; `--offscreen off` captures the window, which must then be visible.
 - Asset gates: `make kit-build`, `kit-compress`, `kit-check`, `kit-provenance` (see the blender-asset skill). `make brand` rebuilds icons/favicon from `design/brand/`.
 
 ## Architecture

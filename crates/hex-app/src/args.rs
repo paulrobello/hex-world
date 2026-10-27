@@ -79,11 +79,34 @@ pub struct Flags {
     pub frame_cap: crate::frame_cap::FrameCap,
     /// Native only, `offscreen=on`: the game camera draws into an image the window's size instead
     /// of the window (`crate::offscreen`), so a frame renders in full while the window is occluded
-    /// (a locked or sleeping screen, another window on top) and presents nothing.
+    /// (a locked or sleeping screen, another window on top, another Space) and presents nothing,
+    /// and screenshots capture the image. A capture run turns it on unless the key is given
+    /// ([`Flags::capture_default`]).
     pub offscreen: bool,
+    /// An `offscreen` key was given: it wins over the capture-run default.
+    pub offscreen_explicit: bool,
     /// Perf ablation, `kit_ablate=cascade_clip,coalesce`: turns off the named close-camera draw
     /// cuts (O5, O4) to time each against the same build (`hex_render::kit_instances::KitAblate`).
     pub kit_ablate: hex_render::kit_instances::KitAblate,
+}
+
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+impl Flags {
+    /// The run takes screenshots: `--thumbs`, `--shot`, `--screenshot-after`, or a script with a
+    /// `screenshot` command (`script_shoots`).
+    pub fn captures(&self, script_shoots: bool) -> bool {
+        self.thumbs || self.shot.is_some() || self.screenshot_after_secs.is_some() || script_shoots
+    }
+
+    /// A capture run renders offscreen unless an `offscreen` key was given, so an occluded window
+    /// cannot turn its screenshots black. True when this default turned it on.
+    pub fn capture_default(&mut self, script_shoots: bool) -> bool {
+        let implicit = !self.offscreen_explicit && self.captures(script_shoots);
+        if implicit {
+            self.offscreen = true;
+        }
+        implicit
+    }
 }
 
 /// `"1280x800"` -> `Some((1280, 800))`; zero or malformed sizes are rejected.
@@ -352,13 +375,9 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
         )
     }),
     ("offscreen", |state, k, v| {
-        set_or_warn(
-            &mut state.f.offscreen,
-            hex_render::parse_shadows(v),
-            k,
-            v,
-            &mut state.warnings,
-        )
+        let on = hex_render::parse_shadows(v);
+        state.f.offscreen_explicit |= on.is_some();
+        set_or_warn(&mut state.f.offscreen, on, k, v, &mut state.warnings)
     }),
     ("kit_ablate", |state, k, v| {
         set_or_warn(
@@ -692,7 +711,44 @@ mod tests {
         let (f, w) = flags_from_pairs(&p(&[("offscreen", "on")]));
         assert!(f.offscreen && w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("offscreen", "maybe")]));
-        assert!(!f.offscreen && w.len() == 1);
+        assert!(!f.offscreen && !f.offscreen_explicit && w.len() == 1);
+    }
+
+    #[test]
+    fn capture_runs_render_offscreen_unless_told_otherwise() {
+        let run = |pairs: &[(&str, &str)], script_shoots: bool| {
+            let (mut f, _) = flags_from_pairs(&p(pairs));
+            let implicit = f.capture_default(script_shoots);
+            (f.offscreen, implicit)
+        };
+        assert_eq!(
+            run(&[], false),
+            (false, false),
+            "a plain run draws to the window"
+        );
+        assert_eq!(
+            run(&[("script", "perf.json")], false),
+            (false, false),
+            "a script without screenshots (a perf run) keeps the window"
+        );
+        assert_eq!(run(&[("script", "s.json")], true), (true, true));
+        assert_eq!(run(&[("shot", "single")], false), (true, true));
+        assert_eq!(run(&[("screenshot-after", "2")], false), (true, true));
+        assert_eq!(run(&[("thumbs", "")], false), (true, true));
+        assert_eq!(
+            run(&[("shot", "single"), ("offscreen", "off")], false),
+            (false, false),
+            "an explicit off captures the window"
+        );
+        assert_eq!(
+            run(&[("offscreen", "on")], false),
+            (true, false),
+            "an explicit on is not a capture default (unpaced)"
+        );
+        assert_eq!(
+            run(&[("shot", "single"), ("offscreen", "on")], false),
+            (true, false)
+        );
     }
 
     #[test]

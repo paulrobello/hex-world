@@ -102,8 +102,9 @@ impl PhotoFxSettings {
 }
 
 /// Hands the effects to the renderer while photo mode is on, and takes them away when it ends.
-/// Runs after `photo::run_exports`: while an export renders, the camera targets its offscreen
-/// image, and the grain holds the fixed export seed.
+/// Runs after `photo::run_exports`: while an export renders, the camera targets its export image
+/// (not the `--offscreen` image it may draw into the rest of the time), and the grain holds the
+/// fixed export seed.
 pub fn sync(
     mut commands: Commands,
     settings: Res<PhotoFxSettings>,
@@ -111,6 +112,7 @@ pub fn sync(
     frames: Res<FrameCount>,
     have: Option<Res<PhotoFxLook>>,
     cams: Query<&RenderTarget, With<Camera3d>>,
+    offscreen: Option<Res<crate::capture::OffscreenTarget>>,
 ) {
     if session.saved.is_none() {
         if have.is_some() {
@@ -118,10 +120,9 @@ pub fn sync(
         }
         return;
     }
-    let exporting = cams
-        .iter()
-        .next()
-        .is_some_and(|t| matches!(t, RenderTarget::Image(_)));
+    let exporting = cams.iter().next().is_some_and(
+        |t| matches!(t, RenderTarget::Image(i) if offscreen.as_ref().is_none_or(|o| o.0 != *i)),
+    );
     let seed = if exporting { EXPORT_SEED } else { frames.0 };
     let want = settings.look(seed);
     if have.as_deref() != Some(&want) {
@@ -286,9 +287,18 @@ mod tests {
         assert_eq!(frame(&mut app).unwrap().seed, 41);
         app.world_mut().resource_mut::<FrameCount>().0 = 42;
         assert_eq!(frame(&mut app).unwrap().seed, 42);
-        // An export points the camera at its offscreen image (`photo::run_exports`).
+        // `--offscreen` points the camera at its image for the whole run: not an export.
         let mut q = app.world_mut().query_filtered::<Entity, With<Camera3d>>();
         let cam = q.single(app.world()).unwrap();
+        let offscreen: bevy::camera::ImageRenderTarget =
+            bevy::asset::uuid_handle!("6e0a1d0e-3f43-4c1b-9b8e-0ff5c4ee0a11").into();
+        app.insert_resource(crate::capture::OffscreenTarget(offscreen.clone()));
+        app.world_mut()
+            .entity_mut(cam)
+            .insert(RenderTarget::Image(offscreen));
+        app.world_mut().resource_mut::<FrameCount>().0 = 43;
+        assert_eq!(frame(&mut app).unwrap().seed, 43);
+        // An export points the camera at its export image (`photo::run_exports`).
         app.world_mut()
             .entity_mut(cam)
             .insert(RenderTarget::Image(Handle::<Image>::default().into()));

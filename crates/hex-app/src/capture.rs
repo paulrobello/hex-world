@@ -1,7 +1,14 @@
 //! In-app screenshots to PNG: a file under `target/shots` natively, a data URL on the web.
+//!
+//! A screenshot captures the primary window, or while `--offscreen` is on (`crate::offscreen`)
+//! the image the game camera draws into instead ([`shot_for`]). On macOS an occluded window gets
+//! no swap-chain texture, so a window capture comes back all black however long it is retaken;
+//! the offscreen image draws whatever the window's state, and capture runs turn it on by default.
 use std::io::Cursor;
 use std::sync::atomic::{AtomicU32, Ordering};
 
+use bevy::camera::{ImageRenderTarget, RenderTarget};
+use bevy::ecs::observer::IntoEntityObserver;
 use bevy::prelude::*;
 use bevy::render::render_resource::TextureFormat;
 use bevy::render::view::screenshot::{Screenshot, ScreenshotCaptured};
@@ -16,7 +23,8 @@ static HELD: AtomicU32 = AtomicU32::new(0);
 
 /// How long a capture whose frame comes back all black is captured again before the run stops
 /// with exit 1. Wall time, not frames: under host load the GPU can return black frames for
-/// several seconds, across several shots in a row.
+/// several seconds, across several shots in a row. A window capture of an occluded window
+/// (`--offscreen off`) stays black until the window is uncovered.
 pub const BLANK_WAIT: std::time::Duration = std::time::Duration::from_secs(60);
 /// Test hook: the first N frames of every held capture count as all black, so the retake runs
 /// on a GPU that draws.
@@ -25,6 +33,28 @@ const FORCE_BLACK_ENV: &str = "HEXW_SHOT_FORCE_BLACK";
 /// Finished web captures keyed by name, taken by `hex_world_take_shot`.
 #[cfg(target_arch = "wasm32")]
 pub static SHOTS: std::sync::Mutex<Vec<(String, String)>> = std::sync::Mutex::new(Vec::new());
+
+/// The image `crate::offscreen` points the game cameras at, exactly as their `RenderTarget` holds
+/// it: a screenshot finds the camera output it captures by target, scale factor included.
+#[derive(Resource, Clone, Debug, PartialEq)]
+pub struct OffscreenTarget(pub ImageRenderTarget);
+
+/// What a screenshot captures: the offscreen image when there is one, else the primary window.
+pub fn shot_for(offscreen: Option<&OffscreenTarget>) -> Screenshot {
+    match offscreen {
+        Some(t) => Screenshot(RenderTarget::Image(t.0.clone())),
+        None => Screenshot::primary_window(),
+    }
+}
+
+/// Spawns a screenshot of [`shot_for`]'s target with `observer` on it. The target is read when the
+/// command applies, so a retake requested after the offscreen image appears captures it.
+fn spawn_shot<M>(commands: &mut Commands, observer: impl IntoEntityObserver<M>) {
+    commands.queue(move |world: &mut World| {
+        let shot = shot_for(world.get_resource::<OffscreenTarget>());
+        world.spawn(shot).observe(observer);
+    });
+}
 
 /// Screenshots requested but not yet encoded; exit waits for this to reach zero.
 pub fn pending() -> u32 {
@@ -43,16 +73,15 @@ pub fn request(commands: &mut Commands, name: &str) {
     expect_shot(name);
     PENDING.fetch_add(1, Ordering::SeqCst);
     let name = name.to_string();
-    commands
-        .spawn(Screenshot::primary_window())
-        .observe(move |shot: On<ScreenshotCaptured>| {
-            let _ = store(&name, encode_png(shot.image.clone()));
-            PENDING.fetch_sub(1, Ordering::SeqCst);
-        });
+    spawn_shot(commands, move |shot: On<ScreenshotCaptured>| {
+        let _ = store(&name, encode_png(shot.image.clone()));
+        PENDING.fetch_sub(1, Ordering::SeqCst);
+    });
 }
 
-/// Every pixel's colour channels are zero: a frame the GPU never drew (seen under heavy GPU
-/// contention), as opposed to a dark scene, which always carries some colour.
+/// Every pixel's colour channels are zero: a frame the GPU never drew (a window capture while the
+/// window is occluded, a sleeping display, or heavy GPU contention), as opposed to a dark scene,
+/// which always carries some colour.
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 pub fn all_black(data: &[u8]) -> bool {
     !data.is_empty()
@@ -75,20 +104,18 @@ pub fn request_unless_blank(
     expect_shot(name);
     PENDING.fetch_add(1, Ordering::SeqCst);
     let name = name.to_string();
-    commands
-        .spawn(Screenshot::primary_window())
-        .observe(move |shot: On<ScreenshotCaptured>| {
-            let black = shot.image.data.as_deref().is_some_and(all_black);
-            if black {
-                blank.store(true, Ordering::SeqCst);
-            }
-            if !black || keep_black {
-                let _ = store(&name, encode_png(shot.image.clone()));
-            } else {
-                warn!("screenshot {name} came back all black; capturing again");
-            }
-            PENDING.fetch_sub(1, Ordering::SeqCst);
-        });
+    spawn_shot(commands, move |shot: On<ScreenshotCaptured>| {
+        let black = shot.image.data.as_deref().is_some_and(all_black);
+        if black {
+            blank.store(true, Ordering::SeqCst);
+        }
+        if !black || keep_black {
+            let _ = store(&name, encode_png(shot.image.clone()));
+        } else {
+            warn!("screenshot {name} came back all black; capturing again");
+        }
+        PENDING.fetch_sub(1, Ordering::SeqCst);
+    });
 }
 
 /// What a held capture does with a frame that came back `waited` after the shot was requested.
@@ -137,9 +164,11 @@ pub fn request_held(commands: &mut Commands, name: &str) {
 
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 fn capture_held(commands: &mut Commands, name: String, since: std::time::Instant, blanks: u32) {
-    commands.spawn(Screenshot::primary_window()).observe(
+    spawn_shot(
+        commands,
         move |shot: On<ScreenshotCaptured>, mut commands: Commands| {
-            let black = blanks < forced_black() || shot.image.data.as_deref().is_some_and(all_black);
+            let black =
+                blanks < forced_black() || shot.image.data.as_deref().is_some_and(all_black);
             let waited = since.elapsed().as_secs_f32();
             match verdict(black, since.elapsed()) {
                 Verdict::Retake => {

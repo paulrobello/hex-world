@@ -51,12 +51,19 @@ fn main() {
     #[cfg_attr(target_arch = "wasm32", allow(unused_mut))]
     let mut queue = control::CommandQueue::default();
     #[cfg(not(target_arch = "wasm32"))]
+    let mut script_shoots = false;
+    #[cfg(not(target_arch = "wasm32"))]
     if let Some(path) = &flags.script {
         let script = std::fs::read_to_string(path)
             .map_err(|e| format!("cannot read script {path}: {e}"))
             .and_then(|s| control::parse_script(&s).map_err(|e| format!("bad script {path}: {e}")));
         match script {
-            Ok(cmds) => queue = control::CommandQueue::scripted(cmds),
+            Ok(cmds) => {
+                script_shoots = cmds
+                    .iter()
+                    .any(|c| matches!(c, control::Command::Screenshot { .. }));
+                queue = control::CommandQueue::scripted(cmds);
+            }
             Err(e) => {
                 eprintln!("hex-world: {e}");
                 std::process::exit(2);
@@ -68,6 +75,9 @@ fn main() {
     if flags.thumbs {
         queue.hold_input();
     }
+    // Capture runs render offscreen (`crate::offscreen`) unless `--offscreen` says otherwise.
+    #[cfg(not(target_arch = "wasm32"))]
+    let offscreen_paced = flags.capture_default(script_shoots);
 
     // `--load <path>` runs before any script command, once the scene is ready.
     #[cfg(not(target_arch = "wasm32"))]
@@ -97,9 +107,10 @@ fn main() {
             args::Present::Immediate => PresentMode::Immediate,
             args::Present::NoVsync => PresentMode::AutoNoVsync,
         };
-        // Thumbnails capture the window, and on macOS a window fully behind another app's window
-        // captures all black: the small thumbnail window opens behind the active app, so it floats.
-        if flags.thumbs {
+        // A window capture of a window fully behind another app's window is all black on macOS,
+        // and the small thumbnail window opens behind the active app: with `--offscreen off`
+        // thumbnails capture the window, so it floats. Offscreen (the default) it need not.
+        if flags.thumbs && !flags.offscreen {
             window.window_level = bevy::window::WindowLevel::AlwaysOnTop;
         }
     }
@@ -221,7 +232,9 @@ fn main() {
     }
     #[cfg(not(target_arch = "wasm32"))]
     if app.world().resource::<RunFlags>().0.offscreen {
-        app.add_plugins(offscreen::OffscreenPlugin);
+        app.add_plugins(offscreen::OffscreenPlugin {
+            paced: offscreen_paced,
+        });
     }
 
     #[cfg(not(target_arch = "wasm32"))]
