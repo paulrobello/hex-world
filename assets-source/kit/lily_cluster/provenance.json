@@ -245,6 +245,13 @@
       "revision": "B3 water props (2026-10-27)",
       "requested": "2026-10-27",
       "notes": "Pending owner review; not an approval. New water-surface scatter prop: three river_lily pads about 1.8 m across (B3, refs approved as A26 on 2026-10-27). Review assets-source/kit/lily_cluster/renders/ and docs/checkpoints/water-props/ (review sheet)."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-27",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all approved\", 2026-10-27, A32 on the open-questions page, every recommended default): the piece, Q2 the far LOD keeps the biggest pads as flat quads, Q3 reed beds mostly on bends (8 of 168 springs), Q4 the reed bed's leaning plumes may reach past its footprint. Review sheet docs/checkpoints/water-props/."
     }
   ]
 }

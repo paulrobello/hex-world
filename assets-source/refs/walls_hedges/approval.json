@@ -1,0 +1,12 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-27",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/walls_hedges/ref-1.jpg",
+    "assets-source/refs/walls_hedges/ref-2.jpg",
+    "assets-source/refs/walls_hedges/ref-3.jpg",
+    "assets-source/refs/walls_hedges/ref-4.jpg"
+  ],
+  "notes": "Approved in chat (\"all approved\", 2026-10-27, A31 on the open-questions page, every recommended default). Q1 refs 1-4 as look and scale: dry granite walls with an upright cope in the boulders' granite, a timber five-bar gate between granite posts, untrimmed hawthorn and hazel hedges in the matte verge-bush green, one with a hedgerow oak; corners built at the hex's 120 degrees, not copied from the refs. Q2 sizes: wall 1.1 m tall and 0.7 m at the foot, hedge 1.9 m tall and 1.5 m wide; pieces are 4 m straight runs (two variants each), a 2 m end, a 120 degree bend, a three-way junction, a 4 m gateway (wall) and a 4 m run with an 8 m oak (hedge), so a 16 m edge is 2+4+4+4+2 m. Q3 O1: automatic field boundaries on shared tile edges where a farm or wheat tile meets a grass land tile, wall or hedge per edge from the world seed, one gate edge per farm; roads, rivers, rail and coast break them (O3, short meadow runs, later). Q4 walls and hedges block the walker, gaps pass, a closed gate blocks. Q5 build, measure the overview draws against 500, and bring the numbers back."
+}

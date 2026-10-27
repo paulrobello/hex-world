@@ -62,8 +62,7 @@ No Blender agents are running (2026-10-27 06:30Z): B1 and B3 are built, B2's ref
 
 ## Waiting on Paul
 
-- A30 (B1: approve the pieces, rule order, thumbnails, mixed-world extension), A31 (B2 refs and layout), A32 (B3 pieces, far pads, reeds on springs, plume reach), each with a recommended default.
-- A27: approve the matte hazel and bramble shrubs (`docs/checkpoints/shrub-matte/sheet.jpg`).
+- Nothing on the open-questions page: A30, A31 and A32 approved 2026-10-27 ("all approved"); A27 was approved in the second round (`c84d670`).
 - Whether hex-world yields its macdaddy windows to par-term's package-update work (a peer relayed an owner priority directive; not verified).
 - Non-blocking tuning lists from 2026-10-20 and the older numbered lists below each ship with a default.
 
