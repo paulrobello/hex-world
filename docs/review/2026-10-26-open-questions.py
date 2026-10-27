@@ -36,25 +36,35 @@ SHEET_BOTTOM = pathlib.Path("/tmp/claude-501/b1-sheet-bottom.jpg")
 THUMBS = pathlib.Path("/tmp/claude-501/thumbs-cmp.jpg")
 B2 = CP / "walls-hedges-refs/refs-sheet.jpg"
 B3 = CP / "water-props/sheet.jpg"
+B2_SHEET = ROOT / ".claude/worktrees/agent-a166db2800bc9c429/docs/checkpoints/walls-hedges/sheet.jpg"
 
 SECTIONS = [
-    ("A33", "Quality changes: precompile the other tier's shaders after load?", [
-        ("Q1", "A quality change in play no longer rebuilds the scene: tiles stay and only the camera, water, tilt-shift "
-               "and flock settings change. A repeated High to Medium change drops from 141 ms to about 40 ms. This part "
-               "lands either way."),
-        ("Q2", "The first change with a cold shader cache (a new browser or a browser update) froze the page for 9.7 s "
-               "compiling 39 shaders. A warm-up after load compiles the other tier's shaders in the background, so "
-               "that first change takes 455 ms. But the warm-up itself freezes the page in short bursts after load: "
-               "12 to 13 s in total on a cold cache (3.3 s just after loading, 2 to 3 s while the world builds, 6.7 s "
-               "once it settles), and about 0.5 s on a warm cache. Every player pays that, and only players who change "
-               "quality get the saving. Measured on MiniMac, 208-tile world, load-guarded."),
+    ("A34", "B2 dry-stone walls and hedgerows: built and gated, landing now", [
+        ("Q1", "Approve the twelve pieces: wall_run, _b, wall_end, wall_bend, wall_junction and wall_gate (1.1 m, "
+               "the boulders' granite, upright cope, closed five-bar gate between granite posts), and hedge_run, _b, "
+               "hedge_end, hedge_bend, hedge_junction and hedge_oak (1.9 m, matte verge-bush green; hedge_oak stands "
+               "the approved tree_oak_b, about 8 m, at its centre instead of a new oak). Corners at 120 degrees. "
+               "Recommended: approve."),
+        ("Q2", "Placement as built (O1 from A31): boundaries on shared edges where a farm or wheat field meets meadow, "
+               "forest, oak or windmill; wall or hedge per edge from the seed, about half and half; one gate edge per "
+               "farm, only where the ground inside is clear of the barn and paddock; about one hedge edge in three gets "
+               "the oak; runs that would hit a hero are left out (the barn's edge keeps only its corner stubs). The "
+               "junction pieces are built but never placed, since at most two edges meet at a corner. "
+               "Recommended: accept."),
+        ("Q3", "Draw cost, as you asked. B2 adds 48 overview draws on a 37-tile farm world (354 to 402) and 0 on the "
+               "mixed river/beach/ocean test world, which has no farms. But the mixed world plus two farms is 531 "
+               "draws without B2 and 549 with it, over the 500 budget: the farm tiles' own pieces are most of it, B2 "
+               "adds 18. So the 500 budget fails once a world mixes water, coast and farms."),
     ], [
-        ("O1", "Warm-up on by default: no freeze when you change quality, short freezes after load on a cold cache."),
-        ("O2", "Warm-up off by default (on with ?tier_warm=on): no freezes after load; the first quality change on a "
-               "cold cache still takes about 10 s behind the existing \"changing quality\" indicator. Recommended."),
-        ("O3", "Warm-up only once the Settings sheet is opened: the cost moves to the moment you show intent to change "
-               "quality (more work; not measured)."),
-    ], []),
+        ("O1", "Start shared scatter materials now (A28 option O2, colour-only pieces sharing plus texture arrays per "
+               "variant group; about a week; estimated about 352 draws on the mixed world before B1, B2 and farms). "
+               "Recommended, since every new piece family pushes this further."),
+        ("O2", "Raise the overview budget to 600 and track it; revisit with P7 (mobile)."),
+        ("O3", "Leave it: keep the mixed test world without farms at 500 and track worlds with farms."),
+    ], [
+        (B2_SHEET, "B2 review sheet: approved refs, Blender stills with a 1.7 m figure, the farm at play distance and "
+                   "overview, the gate, a 120 degree bend, a wall meeting a hedge, and eye level in walk mode"),
+    ]),
 ]
 
 CSS = """
@@ -76,7 +86,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, fifth round. A19 to A33 are answered (A33 O2 on 2026-10-27: the warm-up stays off by default). Nothing is open.</p>"]
+             "<p class=sub>2026-10-27, fifth round. A19 to A33 are answered (A33 O2 on 2026-10-27). A34 is open. Answer by code, for example &quot;A34 all recommended&quot;.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
