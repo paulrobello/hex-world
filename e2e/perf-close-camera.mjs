@@ -6,6 +6,8 @@
 // seed=1. Each run is a fresh browser on one build and one world; every camera window is read
 // 700 frames after the camera move, so the 600-frame diag ring holds only it. Builds alternate
 // order each round; every run sits inside e2e/perf-load.mjs's guard (1-minute load <= 15).
+// The 31-tile mixed world (docs/checkpoints/scatter/scatter-mixed.json) runs at its every-tile overview and
+// the 20-tile overview pose.
 // usage: node e2e/perf-close-camera.mjs <dist-before> <dist-after> <out.json>   ROUNDS (default 5), WORLDS (default all)
 import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
@@ -32,6 +34,10 @@ const place = (list) => list.flatMap(([id, cells]) => [{ cmd: "select_tile", id 
 const world20 = place([["forest", [[1, 0]]], ["oak", [[2, 0]]], ["forest", [[1, -1], [2, -1]]], ["oak", [[3, -1]]],
   ["forest", [[3, 0], [0, -1]]], ["meadow", [[-1, 0]]], ["river_straight", [[-1, -1]]], ["road_straight", [[1, -2], [2, -2]]],
   ["house_cluster", [[3, -2]]], ["meadow", [[-1, 1], [0, 1], [1, 1], [0, 2], [-1, 2]]], ["forest", [[2, 1], [1, 2]]]]);
+// The 31-tile mixed river, beach and ocean world of make shots-scatter (owner A24 Q5): its placements,
+// read from the checkpoint script, at its every-tile overview and at the 20-tile overview pose.
+const mixedScript = JSON.parse(await readFile("docs/checkpoints/scatter/scatter-mixed.json", "utf8"))
+  .filter((c) => ["select_tile", "hover", "place"].includes(c.cmd));
 const WORLDS = {
   world20: { tiles: 20, script: world20, start: [20, 160, 150, 20, 0, -5], cameras: {
     overview: [20, 160, 150, 20, 0, -5],      // draws-overview (gated at 500 draws)
@@ -42,6 +48,10 @@ const WORLDS = {
   world2066: { tiles: 2066, save: SAVE, cameras: {
     close: [10, 12, 40, 0, 0, 0],             // the post-arc001 measurement camera
     overview: [20, 160, 150, 20, 0, -5],
+  } },
+  mixed: { tiles: 31, script: mixedScript, start: [12, 172, 165, 12, 0, -2], cameras: {
+    overview: [12, 172, 165, 12, 0, -2],      // every tile in frame (scatter-mixed-world)
+    pose20: [20, 160, 150, 20, 0, -5],        // the 20-tile overview pose (scatter-mixed-20tile-camera)
   } },
 };
 // WORLDS=world2066 (comma list) runs only the named worlds; every world by default.

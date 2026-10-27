@@ -8,7 +8,9 @@
 // Each build runs from its own checkout (<repo>/target/release/hex-world with <repo> as the working
 // directory), because a native build loads ./assets/shaders at run time and the two commits' kit
 // shaders differ.
-// usage: node e2e/perf-close-camera-native.mjs <repo-before> <repo-after> <out.json>   ROUNDS (default 5)
+// The 31-tile mixed world (docs/checkpoints/scatter/scatter-mixed.json) runs at its every-tile overview and
+// the 20-tile overview pose. WORLDS (comma list) runs only the named worlds; every world by default.
+// usage: node e2e/perf-close-camera-native.mjs <repo-before> <repo-after> <out.json>   ROUNDS (default 5), WORLDS
 import { spawn } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { cpus, hostname } from "node:os";
@@ -35,6 +37,10 @@ const cam = ([x, y, z, lx, ly, lz]) => ({ cmd: "camera", pos: [x, y, z], look_at
 // pack landed (780 frames) before the first window.
 const settle = [{ cmd: "hover", q: 9, r: -9 }, { cmd: "toggle", what: "photo" },
   { cmd: "photo", dof: "off", pause_agents: false }, { cmd: "wait", frames: 780 }];
+// The 31-tile mixed river, beach and ocean world of make shots-scatter (owner A24 Q5): its placements,
+// read from the checkpoint script, at its every-tile overview and at the 20-tile overview pose.
+const mixedScript = JSON.parse(await readFile("docs/checkpoints/scatter/scatter-mixed.json", "utf8"))
+  .filter((c) => ["select_tile", "hover", "place"].includes(c.cmd));
 const WORLDS = {
   world20: { tiles: 20, args: [], setup: [cam([20, 160, 150, 20, 0, -5]), { cmd: "wait", frames: 30 }, ...world20, ...settle],
     cameras: {
@@ -47,7 +53,16 @@ const WORLDS = {
     close: [10, 12, 40, 0, 0, 0],
     overview: [20, 160, 150, 20, 0, -5],
   } },
+  mixed: { tiles: 31, args: [], setup: [cam([12, 172, 165, 12, 0, -2]), { cmd: "wait", frames: 30 }, ...mixedScript, ...settle],
+    cameras: {
+      overview: [12, 172, 165, 12, 0, -2],
+      pose20: [20, 160, 150, 20, 0, -5],
+    } },
 };
+const RUN_WORLDS = (process.env.WORLDS ?? Object.keys(WORLDS).join(",")).split(",").filter((w) => {
+  if (!WORLDS[w]) throw new Error(`unknown world ${w}; known: ${Object.keys(WORLDS).join(", ")}`);
+  return true;
+});
 
 async function run(build, worldName) {
   const world = WORLDS[worldName];
@@ -93,7 +108,7 @@ const result = { date: new Date().toISOString(), host: hostname(), cpu: cpus()[0
   pacing_note: "Play may impose 60 Hz despite immediate presentation; compare mean and p95, and the GPU timing when present.",
   rows: [] };
 for (let r = 0; r < ROUNDS; r++)
-  for (const worldName of Object.keys(WORLDS))
+  for (const worldName of RUN_WORLDS)
     for (const build of r % 2 ? ["after", "before"] : ["before", "after"]) {
       const label = `native ${build} ${worldName} round ${r}`;
       const g = await guarded(() => run(build, worldName).catch((e) => ({ build, world: worldName, error: String(e.message ?? e) })), label);

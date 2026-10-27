@@ -7,8 +7,9 @@
 // 2026-10-21: close cameras are tracked, not gated). The mixed world (scatter-mixed.json: the
 // beach-dressing mouth world's rivers, mouths, beaches and ocean plus forest, oak, meadow and road,
 // 31 tiles drawing all 48 scatter pieces) is owner A24 Q5's 500-draw case: its overview census is
-// printed as tracked, not gated, while it is over the budget (548 framing every tile, 2026-10-26;
-// the fix is structural, shared scatter materials, not fewer props). Scatter (mesh, material)
+// printed as tracked, not gated (548 framing every tile on 2026-10-26; 452 since the per-cell
+// cascade skip of 2026-10-27, which fits only because one tile lies past the cascade 3 bound: the
+// fix is structural, shared scatter materials, not fewer props). Scatter (mesh, material)
 // pairs are tracked, not gated (A24 Q5, replacing A2 Q2's 60 per LOD and 180 in all).
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -98,7 +99,7 @@ check(Object.values(landed.packs).every((v) => v === "ready") && landed.scatter.
   landedRows.every((t) => Object.keys(t.planned).every((p) => t.drawn[p] === t.planned[p])), "landed: both tiles draw their whole scatter", landedRows);
 check(JSON.stringify(landedRows.find((t) => t.q === 0 && t.r === 0).planned) === JSON.stringify(heldMeadow.planned), "landed: the meadow's layout did not change when its pieces arrived", heldMeadow.planned);
 // scatter-mixed.json: the mixed river, beach and ocean world (owner A24 Q5). Every scatter piece
-// and variant draws. Its overview camera (every tile in frame) is over 500 draws, so its census is
+// and variant draws. Its overview camera (every tile in frame) was over 500 draws, and its census is
 // tracked until the shared-scatter-materials fix lands; the same world from the 20-tile world's
 // overview pose (a corner cropped) is tracked beside it, the difference being whether the farthest
 // shadow cascade takes the scatter.

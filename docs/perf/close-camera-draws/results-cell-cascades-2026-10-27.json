@@ -1,0 +1,255 @@
+{
+ "date": "2026-10-27",
+ "host": "MiniMac (Apple M4)",
+ "before": "8464de8",
+ "after": "per-cell cascade skip (worktree-agent-a8336699f78a8237e e38c20a)",
+ "recipe": "docs/perf/close-camera-draws/README.md#per-cell-cascade-skip-minimac-beforeafter",
+ "rounds": 5,
+ "load_guard": "<=15 before and after every run; 0 discarded",
+ "verdict": "kept: no camera slower than the round-to-round spread",
+ "harnesses": {
+  "web": {
+   "settings": {
+    "date": "2026-10-27T04:15:59.705Z",
+    "host": "MiniMac.attlocal.net",
+    "cpu": "Apple M4",
+    "viewport": "2560x1440",
+    "device_scale_factor": 1,
+    "keys": {
+     "scenario": "play",
+     "tier": "high",
+     "tilt": "off",
+     "fps": "off",
+     "grass": "off",
+     "seed": "1"
+    },
+    "save": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+    "browser": {
+     "mode": "chromium headless (new), channel chromium, uncapped",
+     "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit"
+    },
+    "window_frames": 700,
+    "settle_frames": 300,
+    "load_limit": 15,
+    "rounds": 5
+   },
+   "max_load": 9.84619140625,
+   "cameras": {
+    "mixed/overview": {
+     "draws": [
+      564,
+      468
+     ],
+     "mean_ms": {
+      "before_median": 12.54,
+      "after_median": 12.54,
+      "delta_median": -0.02,
+      "delta_min": -0.09,
+      "delta_max": 0.1,
+      "before_spread": 0.67
+     },
+     "p95_ms": {
+      "before_median": 21.9,
+      "after_median": 21.9,
+      "delta_median": 0.0,
+      "delta_min": -0.1,
+      "delta_max": 0.3,
+      "before_spread": 1.4
+     }
+    },
+    "mixed/pose20": {
+     "draws": [
+      446,
+      446
+     ],
+     "mean_ms": {
+      "before_median": 13.09,
+      "after_median": 13.11,
+      "delta_median": 0.0,
+      "delta_min": -0.08,
+      "delta_max": 0.14,
+      "before_spread": 0.66
+     },
+     "p95_ms": {
+      "before_median": 22.6,
+      "after_median": 22.7,
+      "delta_median": 0.1,
+      "delta_min": 0.0,
+      "delta_max": 0.2,
+      "before_spread": 1.3
+     }
+    },
+    "world2066/close": {
+     "draws": [
+      1660,
+      1402
+     ],
+     "mean_ms": {
+      "before_median": 34.11,
+      "after_median": 30.39,
+      "delta_median": -3.65,
+      "delta_min": -7.53,
+      "delta_max": -3.15,
+      "before_spread": 4.08
+     },
+     "p95_ms": {
+      "before_median": 39.1,
+      "after_median": 32.3,
+      "delta_median": -6.9,
+      "delta_min": -14.1,
+      "delta_max": -5.5,
+      "before_spread": 8.0
+     }
+    },
+    "world2066/overview": {
+     "draws": [
+      984,
+      913
+     ],
+     "mean_ms": {
+      "before_median": 41.73,
+      "after_median": 38.92,
+      "delta_median": -2.84,
+      "delta_min": -5.6,
+      "delta_max": -2.32,
+      "before_spread": 2.32
+     },
+     "p95_ms": {
+      "before_median": 56.5,
+      "after_median": 51.8,
+      "delta_median": -4.9,
+      "delta_min": -6.1,
+      "delta_max": -1.7,
+      "before_spread": 7.4
+     }
+    }
+   }
+  },
+  "native": {
+   "settings": {
+    "date": "2026-10-27T04:33:04.158Z",
+    "host": "MiniMac.attlocal.net",
+    "cpu": "Apple M4",
+    "repos": {
+     "before": "/Users/probello/perf/hex-world-ccd/before",
+     "after": "/Users/probello/perf/hex-world-ccd/after"
+    },
+    "args": [
+     "--scenario",
+     "play",
+     "--tier",
+     "high",
+     "--grass",
+     "off",
+     "--tilt",
+     "off",
+     "--seed",
+     "1",
+     "--fps",
+     "off",
+     "--present",
+     "immediate",
+     "--size",
+     "2560x1440",
+     "--diag"
+    ],
+    "save": "/Users/probello/perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+    "window_frames": 700,
+    "load_limit": 15,
+    "rounds": 5,
+    "pacing_note": "Play may impose 60 Hz despite immediate presentation; compare mean and p95, and the GPU timing when present."
+   },
+   "max_load": 4.52099609375,
+   "cameras": {
+    "mixed/overview": {
+     "draws": [
+      548,
+      452
+     ],
+     "mean_ms": {
+      "before_median": 16.67,
+      "after_median": 16.67,
+      "delta_median": 0.0,
+      "delta_min": -0.02,
+      "delta_max": 0.01,
+      "before_spread": 0.02
+     },
+     "p95_ms": {
+      "before_median": 19.42,
+      "after_median": 19.47,
+      "delta_median": -0.04,
+      "delta_min": -1.75,
+      "delta_max": 5.7,
+      "before_spread": 3.78
+     }
+    },
+    "mixed/pose20": {
+     "draws": [
+      428,
+      428
+     ],
+     "mean_ms": {
+      "before_median": 16.66,
+      "after_median": 16.67,
+      "delta_median": 0.01,
+      "delta_min": -0.01,
+      "delta_max": 0.01,
+      "before_spread": 0.0
+     },
+     "p95_ms": {
+      "before_median": 21.37,
+      "after_median": 19.5,
+      "delta_median": -0.09,
+      "delta_min": -1.88,
+      "delta_max": 3.1,
+      "before_spread": 4.02
+     }
+    },
+    "world2066/close": {
+     "draws": [
+      1586,
+      1328
+     ],
+     "mean_ms": {
+      "before_median": 23.32,
+      "after_median": 18.89,
+      "delta_median": -4.43,
+      "delta_min": -4.9,
+      "delta_max": -3.54,
+      "before_spread": 1.14
+     },
+     "p95_ms": {
+      "before_median": 23.84,
+      "after_median": 19.41,
+      "delta_median": -4.41,
+      "delta_min": -5.15,
+      "delta_max": -3.96,
+      "before_spread": 1.13
+     }
+    },
+    "world2066/overview": {
+     "draws": [
+      951,
+      880
+     ],
+     "mean_ms": {
+      "before_median": 16.63,
+      "after_median": 16.66,
+      "delta_median": 0.04,
+      "delta_min": 0.03,
+      "delta_max": 0.04,
+      "before_spread": 0.01
+     },
+     "p95_ms": {
+      "before_median": 22.38,
+      "after_median": 23.18,
+      "delta_median": 0.53,
+      "delta_min": -2.33,
+      "delta_max": 4.84,
+      "before_spread": 4.75
+     }
+    }
+   }
+  }
+ }
+}

@@ -225,6 +225,72 @@ The optional arms above showed O5 alone at +0.92 ms web mean on the 2,066-tile o
 
 So the census finds no CPU cause in the kit's work for either regression. Both are 3-round deltas on a bimodal web frame-time distribution, between builds that differ in their whole wasm module. To settle them, re-run the optional O5 and O4 arms from [Optional arms](#optional-arms-each-change-alone-web-3-rounds-per-pair) with `ROUNDS=5`.
 
+## Per-cell cascade skip: MiniMac before/after
+
+The per-cell cascade skip (PRD §9.1, 2026-10-27) takes casters out of shadow cascades they cannot shadow anything in, tile by tile. It changes no shading, and it removes draws and instances only from cascades. Earlier far-cascade rules measured slower on MiniMac because they traded fewer draws for more shadow triangles (above). This one removes triangles as well, so it needs its own frame-time check before it is kept.
+
+| Arm | Commit | What it holds |
+|---|---|---|
+| before | `8464de8` | main before the change |
+| after | the commit that lands it (`git log -1 --format=%h -S cell_shadowed_depth_range -- crates/hex-render/src/kit_instances.rs`) | the per-cell cascade skip |
+
+Build each arm as in [Builds](#builds): `/tmp/ccd-before` at `8464de8`, `/tmp/ccd-after` at the after sha, with both `make build-web` and `cargo build -p hex-app --release` in each.
+
+Copy to MiniMac as in [Copy to MiniMac](#copy-to-minimac), with the harnesses from the after arm (they add the `mixed` world and a `WORLDS` filter to the native harness), plus the mixed world's script, which both harnesses read from `docs/checkpoints/scatter/scatter-mixed.json` relative to the working directory:
+
+```bash
+for arm in before after; do
+  rsync -a --delete /tmp/ccd-$arm/dist/ minimac:perf/hex-world-ccd/$arm/dist/
+  rsync -a --delete /tmp/ccd-$arm/assets/ minimac:perf/hex-world-ccd/$arm/assets/
+  rsync -a /tmp/ccd-$arm/target/release/hex-world minimac:perf/hex-world-ccd/$arm/target/release/
+done
+rsync -a --delete --exclude node_modules /tmp/ccd-after/e2e/ minimac:perf/hex-world-ccd/e2e/
+rsync -a /tmp/ccd-after/web/ui/src/ minimac:perf/hex-world-ccd/web/ui/src/
+rsync -a /tmp/ccd-after/docs/perf/post-arc001-2026-10-16/local-world.hexworld minimac:perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/
+rsync -a /tmp/ccd-after/docs/checkpoints/scatter/scatter-mixed.json minimac:perf/hex-world-ccd/docs/checkpoints/scatter/
+ssh minimac 'cd perf/hex-world-ccd/e2e && npm ci --no-audit --no-fund'
+```
+
+Book the window first (`kanban schedule book --resource minimac ...`): about 75 minutes for 5 rounds of both harnesses on two worlds. On MiniMac:
+
+```bash
+ssh minimac
+cd perf/hex-world-ccd
+ulimit -n 10240
+# The mixed world (every-tile overview, 20-tile pose) and the 2,066-tile world (close, overview), 5 rounds, arms alternating.
+WORLDS=mixed,world2066 caffeinate -d -u node e2e/perf-close-camera.mjs before/dist after/dist cell-cascades-web.json
+WORLDS=mixed,world2066 caffeinate -d -u node e2e/perf-close-camera-native.mjs before after cell-cascades-native.json
+```
+
+Check before reading the timings:
+
+- Each row's `draws` matches the dev-host dry run of both harnesses (2026-10-27, `ROUNDS=1 PERF_LOAD_LIMIT=1000`, grass off, timings discarded at host loads of 40 to 290):
+
+  | World | Camera | Native draws, before -> after (kit draws) | Web draws, before -> after |
+  |---|---|---|---|
+  | mixed (31 tiles) | overview (every tile) | 548 -> 452 (500 -> 404) | 564 -> 468 |
+  | | 20-tile pose | 428 -> 428 (375) | 446 -> 446 |
+  | 2,066 tiles | close | 1,586 -> 1,328 (1,525 -> 1,267) | 1,660 -> 1,402 |
+  | | overview | 951 -> 880 (903 -> 832) | 984 -> 913 |
+
+  The kit's work in the cascades fell more than its draws (native, `HEXW_KIT_QUEUE`): at the 2,066-tile close camera, 35.3 M -> 16.0 M indices over the four cascades (cascade 3: 1,892 -> 538 tiles, 47,917 -> 12,166 instances, 17.4 M -> 3.1 M indices), and at its overview 21.7 M -> 11.1 M. The main view is unchanged at every camera.
+- The renderer is ANGLE Metal Apple M4, and every run passed the load guard.
+
+Report each camera's paired mean and p95 deltas (after minus before; median, minimum and maximum over the 5 rounds) as [What to report](#what-to-report) says, and write them to `docs/perf/close-camera-draws/results-cell-cascades-<date>.json`. The skip is kept only if no camera is slower by more than the round-to-round spread. The 2,066-tile close camera, whose far cascades hold most of its draws, is where a saving should show.
+
+### Result (2026-10-27)
+
+Run on MiniMac 04:15–04:49Z, 5 rounds, every run within the load guard (highest load 9.8 web, 4.5 native), renderer ANGLE Metal Apple M4, no console errors. The draws matched the dry-run table. Results: `results-cell-cascades-2026-10-27.json`. Paired deltas, after minus before, as median [min, max] over the rounds:
+
+| World / camera | Web mean ms | Web p95 ms | Native mean ms | Native p95 ms |
+|---|---|---|---|---|
+| mixed / overview | 12.54 -> 12.54, -0.02 [-0.09, 0.10] | 0.0 [-0.1, 0.3] | 16.67 -> 16.67 (60 Hz cadence) | -0.04 [-1.75, 5.7] |
+| mixed / 20-tile pose | 13.09 -> 13.11, 0.00 [-0.08, 0.14] | 0.1 [0.0, 0.2] | 16.66 -> 16.67 (60 Hz cadence) | -0.09 [-1.88, 3.1] |
+| 2,066 / close | 34.11 -> 30.39, -3.65 [-7.53, -3.15] | -6.9 [-14.1, -5.5] | 23.32 -> 18.89, -4.43 [-4.90, -3.54] | -4.41 [-5.15, -3.96] |
+| 2,066 / overview | 41.73 -> 38.92, -2.84 [-5.60, -2.32] | -4.9 [-6.1, -1.7] | 16.63 -> 16.66 (60 Hz cadence) | 0.53 [-2.33, 4.84] |
+
+No camera is slower than the round-to-round spread, so the skip is kept. The native rows marked 60 Hz cadence sit at the play loop's pace in both builds, so their means cannot show a GPU change, and their p95 swings are frame-pacing jitter, which spans 3.8 to 4.8 ms across the before rounds alone.
+
 ## What to report
 
 - For each world and camera: the median, minimum and maximum over the runs of p50, p95 and mean per arm, and after minus before. Uncapped web frames on MiniMac are bimodal (`docs/perf/lod-band-instanced.json`), so mean and p95 are the stable statistics.
