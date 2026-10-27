@@ -429,6 +429,32 @@ fn yard_holds(cars: &[Car]) -> Vec<f32> {
     holds
 }
 
+/// Whether car `j`, its body first meeting `sweep` `d` meters ahead, would stop inside it: a car that
+/// stood still last tick (another road car, or one in its spot) stands on `j`'s path between `d`
+/// and a queue spacing past the last of `look` poses ahead where `j`'s body meets the sweep.
+fn queued(cars: &[Car], j: usize, d: f32, look: usize, sweep: &[Pose]) -> bool {
+    let o = &cars[j];
+    let last = (0..look)
+        .rev()
+        .map(|k| k as f32 * DRIVE_STEP)
+        .find(|e| meets_any(o.path.pose_at_distance(o.s + e), sweep))
+        .unwrap_or(d);
+    let reach = last + crate::rail::CAR_QUEUE_SPACING;
+    let line: Vec<Pose> = (0..)
+        .map(|k| d + k as f32 * DRIVE_STEP * 2.0)
+        .take_while(|e| *e <= reach)
+        .map(|e| o.path.pose_at_distance(o.s + e))
+        .collect();
+    cars.iter().enumerate().any(|(k, other)| {
+        if k == j || other.waiting == 0 || other.s <= 0.0 {
+            return false;
+        }
+        let p = other.path.pose_at_distance(other.s);
+        line.iter()
+            .any(|q| geom::dist(p.pos, q.pos) <= 1.5 && geom::dot(p.dir, q.dir) > 0.5)
+    })
+}
+
 /// A forecourt manoeuvre about to start or under way ([`drive_holds`]).
 struct Manoeuvre {
     /// Where the car holds before it starts, in meters along its path.
@@ -498,8 +524,14 @@ fn meets_any(p: Pose, sweep: &[Pose]) -> bool {
 /// other way on the road:
 /// - a manoeuvre not yet started waits (in the spot, or at the end of the arrival's lane) while the
 ///   other car's body anywhere along its [`crate::traffic::LOOK_AHEAD`], from where it stands, would
-///   come within [`PASS_GAP`] of the car's body anywhere along the manoeuvre; a car in its spot
-///   waits so for road cars going either way, since its reverse swings across both lanes;
+///   come within [`PASS_GAP`] of the car's body anywhere along the manoeuvre and the other car can
+///   drive through; a car in its spot waits so for road cars going either way, since its reverse
+///   swings across both lanes;
+/// - a pull-out stopped on its way out by another rule checks again, as if in its spot, before it
+///   moves on;
+/// - keep clear: a road car that stood still last tick, or would stop inside a turn-in behind a
+///   car standing still ahead of it ([`queued`]), instead stops short of it and the turn-in goes
+///   first, so no queue stands inside another forecourt's turn-in;
 /// - once the manoeuvre has started, the other car stops short of the first point of its
 ///   look-ahead where its body would come that close to the rest of the manoeuvre, unless its body
 ///   already stands that close, when it drives on clear of it and the manoeuvre waits instead;
@@ -520,7 +552,8 @@ fn drive_holds(cars: &[Car]) -> Vec<f32> {
         let here = c.path.pose_at_distance(c.s.max(0.0)).pos;
         // A car still in its spot waits for every road car, either way, whose body would meet its
         // pull-out: its reverse swings its tail across the near lane as well as the far one.
-        let in_spot = c.s <= 0.0 && out_end > 0.0;
+        // So does a pull-out stopped on its way out (held by another rule) before it moves on.
+        let in_spot = out_end > 0.0 && (c.s <= 0.0 || (c.s < c.lanes.0 && c.waiting > 0));
         let forecourt = if c.s < out_end {
             c.from.cell
         } else {
@@ -571,10 +604,22 @@ fn drive_holds(cars: &[Car]) -> Vec<f32> {
                 }
                 continue;
             }
+            if in_spot {
+                // On its driveway the car gives way: the merge rule leaves the road car its way.
+                if first.is_some() {
+                    holds[i] = holds[i].min(c.s.max(0.0));
+                }
+                continue;
+            }
             match first {
                 None => {}
-                Some(d) if !started || d <= 0.0 => {
-                    holds[i] = holds[i].min(if started { c.s } else { hold_at });
+                Some(d) if d <= 0.0 => holds[i] = holds[i].min(if started { c.s } else { hold_at }),
+                // Keep clear: a car that has stopped, or would stop inside the manoeuvre behind a
+                // stopped car ahead, waits short of it and lets it go first.
+                Some(d)
+                    if !started && o.waiting == 0 && !queued(cars, j, d, ahead.len(), sweep) =>
+                {
+                    holds[i] = holds[i].min(hold_at);
                 }
                 Some(d) => holds[j] = holds[j].min(o.s + d - DRIVE_STEP),
             }

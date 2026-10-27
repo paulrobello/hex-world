@@ -806,6 +806,57 @@ fn bakery_rush(seed: u64) -> Simulation {
     Scene::with(seed, config, &bakery_line()).sim
 }
 
+/// Two bakeries back to back on a straight road between two house clusters, each forecourt's
+/// turn-in across the road from the other's through queue.
+fn back_to_back_bakeries() -> Vec<Edit> {
+    vec![
+        Edit::Place(Axial::new(1, 0), "house_cluster", 0),
+        Edit::Place(Axial::new(2, 0), "road_straight", 0),
+        Edit::Place(Axial::new(3, 0), "bakery", 0),
+        Edit::Place(Axial::new(4, 0), "bakery", 3),
+        Edit::Place(Axial::new(5, 0), "road_straight", 0),
+        Edit::Place(Axial::new(6, 0), "house_cluster", 3),
+    ]
+}
+
+/// Two forecourts back to back at four times the busy departure rate never gridlock: a queue
+/// stops short of the other forecourt's turn-in and pull-out instead of standing in it (the keep
+/// clear part of `sim::drive_holds`; seed 8 gridlocked without it, each queue inside the other's
+/// turn-in). Over 12 seeds no bodies overlap, no car stands still for 30 s and trips keep
+/// finishing.
+#[test]
+fn back_to_back_forecourts_never_gridlock() {
+    let config = SimConfig {
+        spawn_per_destination_hz: 2.0,
+        ..SimConfig::default()
+    };
+    for seed in 1..=12u64 {
+        let mut sim = Scene::with(seed, config, &back_to_back_bakeries()).sim;
+        let mut w = Watch::default();
+        let mut half = 0;
+        for t in 0..12_000 {
+            w.tick(&mut sim);
+            if t == 6_000 {
+                half = w.arrivals;
+            }
+        }
+        println!(
+            "seed {seed}: {} overlapping pair-ticks, longest stop {:?}, arrivals {}",
+            w.overlaps.len(),
+            w.longest_stop,
+            w.arrivals
+        );
+        assert!(w.overlaps.is_empty(), "seed {seed}: {:?}", w.overlaps);
+        assert!(
+            w.longest_stop.0 < 600,
+            "seed {seed}: car {} stood still for {} ticks",
+            w.longest_stop.1,
+            w.longest_stop.0
+        );
+        assert!(w.arrivals - half > 20, "seed {seed}: trips keep finishing");
+    }
+}
+
 /// The 2,000-tile zigzag of `tests/cars.rs`: 1,000 junctions, each with a house on its free arm.
 fn zigzag(seed: u64) -> Simulation {
     let cat = catalog();
