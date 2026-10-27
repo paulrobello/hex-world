@@ -190,13 +190,32 @@ impl LanePath {
     /// [`LanePath::new`] with every corner sharper than [`CORNER_MIN`] rounded by a circular arc
     /// of radius at most [`CORNER_RADIUS`], as a car steers through a junction node. Each arc is
     /// shrunk until it stays on its own side of `centerline`, between half of `offset` and
-    /// `offset` from it, so the rounded lane never leaves the band an unrounded one keeps to. The
-    /// one exception is a corner next to either end of the path turning toward the offset side (the
-    /// inner corner of a destination spur): there the arc may swing [`INNER_SWING`] wider, since
-    /// the band's outer edge alone caps it too tight to drive (PRD §7.1).
+    /// `offset` from it, so the rounded lane never leaves the band an unrounded one keeps to. Two
+    /// kinds of corner turning toward the offset side are exceptions (PRD §7.1, §7.2):
+    ///
+    /// - Next to either end of the path (the inner corner of a destination spur) the arc may swing
+    ///   [`INNER_SWING`] wider, since the band's outer edge alone caps it too tight to drive.
+    /// - Anywhere else, turning at least [`TURN_MIN`] (a right turn through a junction node; a
+    ///   bend's sampled arc turns far less at each point), the corner sits a full `offset` from both
+    ///   steps, and its arc, of radius up to [`TURN_RADIUS`], may swing [`TURN_SWING`] wider, out
+    ///   over the kerb fillet between the two arms. A tighter turn swings the body's back across
+    ///   the arm it leaves and its front across the arm it enters, into cars on lanes the follow
+    ///   and merge rules never pair (they stay more than `traffic::LANE_CLEAR` apart).
     pub fn rounded(centerline: &[Vec2], offset: f32) -> Self {
         let line = dedup(centerline);
-        let lane = offset_points(&line, offset);
+        let mut lane = offset_points(&line, offset);
+        let n = line.len();
+        for i in 2..n.saturating_sub(2) {
+            let (a, b) = (sub(line[i], line[i - 1]), sub(line[i + 1], line[i]));
+            let (a, b) = (scale(a, 1.0 / len(a)), scale(b, 1.0 / len(b)));
+            let turn = dot(a, b).clamp(-1.0, 1.0).acos();
+            if (TURN_MIN..=CORNER_MAX).contains(&turn) && cross(a, b) * offset > 0.0 {
+                // The averaged normal alone leaves the corner `offset · cos(turn / 2)` from both.
+                let normal = add(right_of(a), right_of(b));
+                let reach = offset / (len(normal) * (0.5 * turn).cos());
+                lane[i] = add(line[i], scale(normal, reach));
+            }
+        }
         let (lo, hi) = (0.5 * offset, offset + 1e-4);
         let mut out: Vec<Vec2> = Vec::with_capacity(lane.len());
         for i in 0..lane.len() {
@@ -219,11 +238,14 @@ impl LanePath {
             let avail = |l: f32, end: bool| if end { 0.95 * l } else { 0.5 * l };
             let t_max = avail(la, i == 1).min(avail(lb, i + 2 == lane.len()));
             let tan = (0.5 * turn).tan();
-            let mut r = CORNER_RADIUS.min(t_max / tan);
-            // A path-end corner turning toward the offset side (a destination spur's inner
-            // corner) may swing wider than the offset.
-            let spur = (i == 1 || i + 2 == lane.len()) && cross(a, b) * offset > 0.0;
-            let hi = if spur { hi + INNER_SWING } else { hi };
+            let inner = cross(a, b) * offset > 0.0;
+            let end = i == 1 || i + 2 == lane.len();
+            let (radius, hi) = match (inner, end) {
+                (true, true) => (CORNER_RADIUS, hi + INNER_SWING),
+                (true, false) if turn >= TURN_MIN => (TURN_RADIUS, hi + TURN_SWING),
+                _ => (CORNER_RADIUS, hi),
+            };
+            let mut r = radius.min(t_max / tan);
             // The centerline steps around the corner; the arc cannot reach farther ones.
             let near = &line[i.saturating_sub(2)..(i + 3).min(line.len())];
             let arc = loop {
@@ -277,6 +299,20 @@ pub const INNER_SWING: f32 = 0.5;
 
 /// Largest radius of a rounded lane corner, in meters.
 pub const CORNER_RADIUS: f32 = 4.0;
+
+/// Corners inside a route turning at least this much are junction turns (a Y junction turns 60°).
+const TURN_MIN: f32 = 45.0 * std::f32::consts::PI / 180.0;
+
+/// How much farther than the lane offset from the centerline a right turn's arc inside a route
+/// may swing, in meters: at the default 1.5 m offset the car's centre comes within 2.9 m of each
+/// arm's centre line at the turn's apex, over the junction's kerb fillet, with its body on the
+/// deck (`tests/junction_clearance.rs`).
+pub const TURN_SWING: f32 = 1.4;
+
+/// Largest radius of a right turn's arc inside a route, in meters: wide enough that a car
+/// starting the turn and one ending a right turn into the same arm pass with a quarter meter
+/// between their bodies (`tests/junction_clearance.rs`).
+pub const TURN_RADIUS: f32 = 12.0;
 
 /// Largest angle one rounded-corner sample may span, in radians (2°).
 const FILLET_STEP: f32 = std::f32::consts::PI / 90.0;

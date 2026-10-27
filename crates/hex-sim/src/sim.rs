@@ -133,6 +133,9 @@ pub struct Car {
     crossings: Vec<(Axial, f32)>,
     /// Ticks the car has stood still in a row (giving way, queueing, waiting to pull out).
     waiting: u32,
+    /// Where a pull-out from a forecourt on a through road ends and where a turn into one starts,
+    /// in meters along `path` ([`drive_holds`]): `(0, ∞)` for a trip with neither.
+    drives: (f32, f32),
 }
 
 impl Car {
@@ -181,6 +184,12 @@ impl Car {
     /// The stretch of the path on road lanes, in meters from its start; the rest is driveway.
     pub fn lane_span(&self) -> (f32, f32) {
         self.lanes
+    }
+
+    /// Where a pull-out from a forecourt on a through road ends and where a turn into one starts,
+    /// in meters along the path: `(0, ∞)` for a trip with neither (PRD §7.2, the forecourt rule).
+    pub fn drives(&self) -> (f32, f32) {
+        self.drives
     }
 
     /// Meters driven along the path.
@@ -265,6 +274,63 @@ const JOIN_REACH: f32 = 10.0;
 
 /// Meters of lane scored with a parking leg, so the turn where they meet counts too.
 const JOIN_TAIL: f32 = 2.0;
+
+/// Least gap a car turning right off or onto a lane keeps between its body and the body of a car
+/// on the oncoming lane, in meters (PRD §7.2): the follow rules never pair the two, since their
+/// paths stay more than `traffic::LANE_CLEAR` apart.
+const PASS_GAP: f32 = 0.25;
+
+/// How far the body of a car driving `pts` reaches past the near side of a car body on the
+/// lane oncoming to `along` (a pose on a straight stretch of the car's own lane), less
+/// [`PASS_GAP`], else 0. The oncoming lane runs `2 · offset` left of `along`.
+fn oncoming_reach(pts: &[Vec2], along: Pose, offset: f32) -> f32 {
+    let path = LanePath::new(pts, 0.0);
+    let left = geom::scale(geom::right_of(along.dir), -1.0);
+    let limit = 2.0 * offset - 0.5 * crate::traffic::CAR_WIDTH - PASS_GAP;
+    let (f, w) = (
+        0.5 * crate::rail::CAR_LENGTH,
+        0.5 * crate::traffic::CAR_WIDTH,
+    );
+    let mut worst = 0.0f32;
+    let mut d = 0.0;
+    while d <= path.length() {
+        let p = path.pose_at_distance(d);
+        let r = geom::right_of(p.dir);
+        for (a, b) in [(f, w), (f, -w), (-f, w), (-f, -w)] {
+            let c = geom::add(p.pos, geom::add(geom::scale(p.dir, a), geom::scale(r, b)));
+            worst = worst.max(geom::dot(geom::sub(c, along.pos), left) - limit);
+        }
+        d += 0.1;
+    }
+    worst
+}
+
+/// Whether `pts` turns at least [`OFF_TURN_DEG`] right of `along` (toward the lane offset side): a
+/// turn off the road into a forecourt, not a house cluster's gentle pull-in.
+fn turns_off(pts: &[Vec2], along: Pose, offset: f32) -> bool {
+    let path = LanePath::new(pts, 0.0);
+    let end = path.pose_at_distance(path.length()).dir;
+    let turn = geom::dot(along.dir, end)
+        .clamp(-1.0, 1.0)
+        .acos()
+        .to_degrees();
+    turn >= OFF_TURN_DEG && geom::cross(along.dir, end) * offset > 0.0
+}
+
+/// Turns off the lane at least this sharp, in degrees, are checked against the oncoming lane
+/// ([`oncoming_reach`]).
+const OFF_TURN_DEG: f32 = 45.0;
+
+/// A leg's score for [`pick_join`], lowest first: a gentle leg (turning at most
+/// [`TURN_LIMIT_DEG`] per tick) clear of the oncoming lane ([`oncoming_reach`]) by its turn, then a
+/// gentle one reaching toward it by how far, then any other by its turn.
+fn reach_score(turn: f32, reach: f32) -> f32 {
+    match (turn <= TURN_LIMIT_DEG, reach > 0.0) {
+        (true, false) => turn,
+        (true, true) => TURN_LIMIT_DEG + 1e-3 + reach.min(10.0),
+        (false, _) => TURN_LIMIT_DEG + 20.0 + turn,
+    }
+}
 
 /// The first candidate whose leg turns at most [`TURN_LIMIT_DEG`] per tick, else the one that
 /// turns least: `(turn, candidate, leg)`. `leg` scores a candidate as `(turn, leg)`.
@@ -357,6 +423,160 @@ fn yard_holds(cars: &[Car]) -> Vec<f32> {
                 .any(|o| o.from.cell == car.to.cell && o.s > 0.0 && leaving(o));
             if busy {
                 holds[i] = car.lanes.1;
+            }
+        }
+    }
+    holds
+}
+
+/// A forecourt manoeuvre about to start or under way ([`drive_holds`]).
+struct Manoeuvre {
+    /// Where the car holds before it starts, in meters along its path.
+    hold_at: f32,
+    started: bool,
+    /// The car's heading on its lane where the manoeuvre leaves or joins it.
+    dir: Vec2,
+    /// The car's poses along the rest of the manoeuvre.
+    sweep: Vec<Pose>,
+}
+
+/// `car`'s pull-out until it ends, or its turn-in from [`crate::traffic::LOOK_AHEAD`] before it
+/// starts.
+fn manoeuvre(car: &Car) -> Option<Manoeuvre> {
+    let (out_end, in_start) = car.drives;
+    let look = crate::traffic::LOOK_AHEAD;
+    if car.s < out_end {
+        Some(Manoeuvre {
+            hold_at: 0.0,
+            started: car.s > 0.0,
+            dir: car.path.pose_at_distance(out_end).dir,
+            sweep: drive_sweep(&car.path, car.s.max(0.0), out_end),
+        })
+    } else if in_start.is_finite() && car.s >= in_start - look {
+        Some(Manoeuvre {
+            hold_at: in_start,
+            // An arrival kept waiting [`crate::traffic::STARVE_TICKS`] turns in anyway, and the
+            // cars driving the other way stop short of it, so a wait that a queue behind it feeds
+            // back into (that queue held by a car giving way to this one) cannot last.
+            started: car.s > in_start || car.waiting >= crate::traffic::STARVE_TICKS,
+            dir: car.path.pose_at_distance(in_start).dir,
+            sweep: drive_sweep(&car.path, car.s.max(in_start), car.path.length()),
+        })
+    } else {
+        None
+    }
+}
+
+/// Spacing of the poses [`drive_holds`] sweeps, in meters.
+const DRIVE_STEP: f32 = 0.25;
+
+/// The poses every [`DRIVE_STEP`] along `path` from `from` to `to`.
+fn drive_sweep(path: &LanePath, from: f32, to: f32) -> Vec<Pose> {
+    let mut out = vec![];
+    let mut d = from;
+    while d <= to {
+        out.push(path.pose_at_distance(d));
+        d += DRIVE_STEP;
+    }
+    out
+}
+
+/// Whether a car body at `p` comes within [`PASS_GAP`] of one at any pose of `sweep`.
+fn meets_any(p: Pose, sweep: &[Pose]) -> bool {
+    let reach = (crate::rail::CAR_LENGTH + crate::traffic::CAR_WIDTH + PASS_GAP).powi(2);
+    sweep.iter().any(|q| {
+        let d = geom::sub(q.pos, p.pos);
+        geom::dot(d, d) <= reach && crate::traffic::bodies_meet(p, *q, PASS_GAP)
+    })
+}
+
+/// The farthest each car (in `cars` order) may drive this tick under the forecourt rule (PRD §7.2),
+/// `f32::INFINITY` when it does not hold the car. A pull-out from a forecourt on a through road
+/// (the bakery's) swings the car's body out over the oncoming lane, and so may the turn into one;
+/// the follow rules never pair those cars, since their paths stay more than
+/// `traffic::LANE_CLEAR` apart. For each such manoeuvre (`Car::drives`) and each car driving the
+/// other way on the road:
+/// - a manoeuvre not yet started waits (in the spot, or at the end of the arrival's lane) while the
+///   other car's body anywhere along its [`crate::traffic::LOOK_AHEAD`], from where it stands, would
+///   come within [`PASS_GAP`] of the car's body anywhere along the manoeuvre; a car in its spot
+///   waits so for road cars going either way, since its reverse swings across both lanes;
+/// - once the manoeuvre has started, the other car stops short of the first point of its
+///   look-ahead where its body would come that close to the rest of the manoeuvre, unless its body
+///   already stands that close, when it drives on clear of it and the manoeuvre waits instead;
+/// - paths the follow rules pair (a turn across the other car's lane) are left to them, and so are
+///   cars bound for or leaving the same forecourt (with the yard rule); of two manoeuvres each in
+///   the other's way, the lower id goes first and the other waits;
+/// - an arrival kept waiting [`crate::traffic::STARVE_TICKS`] counts as started.
+fn drive_holds(cars: &[Car]) -> Vec<f32> {
+    let mut holds = vec![f32::INFINITY; cars.len()];
+    let look = crate::traffic::LOOK_AHEAD;
+    let manoeuvres: Vec<Option<Manoeuvre>> = cars.iter().map(manoeuvre).collect();
+    for (i, c) in cars.iter().enumerate() {
+        let Some(m) = &manoeuvres[i] else {
+            continue;
+        };
+        let (out_end, hold_at, started, dir) = (c.drives.0, m.hold_at, m.started, m.dir);
+        let sweep: &[Pose] = &m.sweep;
+        let here = c.path.pose_at_distance(c.s.max(0.0)).pos;
+        // A car still in its spot waits for every road car, either way, whose body would meet its
+        // pull-out: its reverse swings its tail across the near lane as well as the far one.
+        let in_spot = c.s <= 0.0 && out_end > 0.0;
+        let forecourt = if c.s < out_end {
+            c.from.cell
+        } else {
+            c.to.cell
+        };
+        for (j, o) in cars.iter().enumerate() {
+            // Cars bound for or leaving the same forecourt are the yard and merge rules' to order.
+            let yard = [o.from.cell, o.to.cell].contains(&forecourt);
+            if j == i || o.s < o.lanes.0 || o.s > o.lanes.1 || yard {
+                continue;
+            }
+            let at = o.path.pose_at_distance(o.s);
+            if geom::dist(at.pos, here) > 2.0 * look || (!in_spot && geom::dot(at.dir, dir) > -0.5)
+            {
+                continue;
+            }
+            let ahead: Vec<Pose> = (0..)
+                .map(|k| k as f32 * DRIVE_STEP)
+                .take_while(|d| *d <= look)
+                .map(|d| o.path.pose_at_distance(o.s + d))
+                .collect();
+            // Paths that come within `LANE_CLEAR` at any angle but head-on (a turn across the
+            // other's lane, or into the drive behind it) are the follow and merge rules' to order.
+            let clear = crate::traffic::LANE_CLEAR;
+            let paired = ahead.iter().any(|p| {
+                sweep
+                    .iter()
+                    .any(|q| geom::dist(p.pos, q.pos) <= clear && geom::dot(p.dir, q.dir) > -0.97)
+            });
+            if paired && !in_spot {
+                continue;
+            }
+            let first = ahead
+                .iter()
+                .position(|p| meets_any(*p, sweep))
+                .map(|k| k as f32 * DRIVE_STEP);
+            // Two manoeuvres each in the other's way: the lower id goes first, the other waits.
+            let mutual = first.is_some()
+                && manoeuvres[j].as_ref().is_some_and(|om| {
+                    (0..)
+                        .map(|k| k as f32 * DRIVE_STEP)
+                        .take_while(|d| *d <= look)
+                        .any(|d| meets_any(c.path.pose_at_distance(c.s + d), &om.sweep))
+                });
+            if mutual {
+                if c.id > o.id {
+                    holds[i] = holds[i].min(if started { c.s } else { hold_at });
+                }
+                continue;
+            }
+            match first {
+                None => {}
+                Some(d) if !started || d <= 0.0 => {
+                    holds[i] = holds[i].min(if started { c.s } else { hold_at });
+                }
+                Some(d) => holds[j] = holds[j].min(o.s + d - DRIVE_STEP),
             }
         }
     }
@@ -634,10 +854,11 @@ impl Simulation {
                 .collect::<Vec<_>>(),
         );
         let yards = yard_holds(&self.cars);
+        let drives = drive_holds(&self.cars);
         let mut arrived = vec![];
         let mut k = 0;
         self.cars.retain_mut(|car| {
-            let (hold, cap) = (holds[k].min(yards[k]), caps[k]);
+            let (hold, cap) = (holds[k].min(yards[k]).min(drives[k]), caps[k]);
             k += 1;
             if car.s >= car.path.length() {
                 arrived.push((car.id, car.home, car.to));
@@ -826,6 +1047,25 @@ impl Simulation {
                 .take_while(move |s| *s <= reach)
         };
 
+        // A drive whose spur meets a through road at a junction node (the bakery's): departures
+        // keep their bodies clear of the oncoming lane there ([`oncoming_reach`]), measured from
+        // the outbound lane's straight past every join.
+        let through = route.links.first().is_some_and(|l| {
+            self.roads.link(*l).is_some_and(|link| {
+                let (a, b) = link.ends();
+                let next = if a == origin { b } else { a };
+                self.roads.node(next).is_some_and(|n| n.links().len() >= 3)
+            })
+        });
+        let outbound = lane.pose_at_distance(reach + JOIN_TAIL);
+        let into_through = route.links.last().is_some_and(|l| {
+            self.roads.link(*l).is_some_and(|link| {
+                let (a, b) = link.ends();
+                let next = if a == destination { b } else { a };
+                self.roads.node(next).is_some_and(|n| n.links().len() >= 3)
+            })
+        });
+
         // Out of the spot: each reverse the spot gives, joining the lane at the first distance
         // from the node that keeps the turn gentle (the node itself when it does).
         let mut best: Option<(f32, Vec<Vec2>, Vec<Vec2>, f32)> = None;
@@ -849,7 +1089,12 @@ impl Simulation {
                 let mut whole = leg.clone();
                 whole.extend(lane.slice(s, s + JOIN_TAIL).into_iter().skip(1));
                 let turn = LanePath::new(&whole, 0.0).max_turn_deg(step).max(back_turn);
-                (turn, leg)
+                let reach = if through {
+                    oncoming_reach(&whole, outbound, self.config.lane_offset)
+                } else {
+                    0.0
+                };
+                (reach_score(turn, reach), leg)
             });
             if let Some((turn, s, leg)) = pick
                 && best
@@ -864,6 +1109,8 @@ impl Simulation {
         // Into the spot: off the lane at the node when the turn there is gentle, else at the first
         // distance before it that is (the bakery's arrivals from the east turn right off the through
         // lane short of its spur; its enter poses are laid out for both directions).
+        // The lane's straight approach, short of where any arrival leg may leave it.
+        let approach = lane.pose_at_distance(lane.length() - reach - JOIN_TAIL);
         let into = pick_join(joins(), |e| {
             let s = lane.length() - e;
             let mut poses = vec![lane.pose_at_distance(s)];
@@ -872,7 +1119,14 @@ impl Simulation {
             let leg = geom::hermite_leg(&poses, false);
             let mut whole = lane.slice(s - JOIN_TAIL, s);
             whole.extend(leg.iter().skip(1));
-            (LanePath::new(&whole, 0.0).max_turn_deg(step), leg)
+            let turn = LanePath::new(&whole, 0.0).max_turn_deg(step);
+            let offset = self.config.lane_offset;
+            let reach = if turns_off(&whole, approach, offset) {
+                oncoming_reach(&whole, approach, offset)
+            } else {
+                0.0
+            };
+            (reach_score(turn, reach), leg)
         });
         let (_, e, enter_pts) = into?;
 
@@ -921,6 +1175,18 @@ impl Simulation {
             s: 0.0,
             crossings,
             waiting: 0,
+            drives: (
+                if through {
+                    lane_start + crate::rail::CAR_LENGTH
+                } else {
+                    0.0
+                },
+                if into_through {
+                    lane_end - crate::rail::CAR_LENGTH
+                } else {
+                    f32::INFINITY
+                },
+            ),
         };
         let at = self.cars.partition_point(|c| c.id < id);
         self.cars.insert(at, new);

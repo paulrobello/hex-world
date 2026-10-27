@@ -282,7 +282,7 @@ fn hold_line(car: &Mover, merge: f32, others: &[&Mover]) -> f32 {
 /// Whether two car bodies ([`CAR_LENGTH`] by [`CAR_WIDTH`], centred on their poses), each grown
 /// by half of `gap`, overlap: the separating axis test on the two boxes. The pose's direction is
 /// the path's, which is the body's axis whichever way the car drives.
-fn bodies_meet(a: Pose, b: Pose, gap: f32) -> bool {
+pub(crate) fn bodies_meet(a: Pose, b: Pose, gap: f32) -> bool {
     let half = [0.5 * (CAR_LENGTH + gap), 0.5 * (CAR_WIDTH + gap)];
     let axes = |d: Vec2| [d, [-d[1], d[0]]];
     let (ua, ub) = (axes(a.dir), axes(b.dir));

@@ -157,7 +157,16 @@ fn cars_never_leave_the_road_graph() {
                         .any(|c| {
                             geom::dist(p, c.to_world(hex_core::HEX_RADIUS)) <= hex_core::HEX_RADIUS
                         });
-                    let band = MAX_LANE_OFFSET + if spur { geom::INNER_SWING } else { 0.0 };
+                    // So may a right turn through a junction node (geom::TURN_SWING).
+                    let junction = car.links().iter().any(|l| {
+                        let (a, b) = net.link(*l).expect("live link").ends();
+                        [a, b].into_iter().filter_map(|n| net.node(n)).any(|n| {
+                            n.links().len() >= 3 && geom::dist(p, n.pos()) <= hex_core::HEX_RADIUS
+                        })
+                    });
+                    let band = MAX_LANE_OFFSET
+                        + if spur { geom::INNER_SWING } else { 0.0 }
+                        + if junction { geom::TURN_SWING } else { 0.0 };
                     assert!(
                         d <= band + 1e-3,
                         "seed {seed} tick {t}: car {:?} is {d} m off its road",

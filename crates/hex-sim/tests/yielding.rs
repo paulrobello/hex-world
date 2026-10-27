@@ -16,19 +16,8 @@ use hex_sim::{Car, CarId, CarPhase, SimConfig, Simulation, geom};
 /// The width of the car body the sim sizes for (m), with its [`CAR_LENGTH`].
 const CAR_WIDTH: f32 = 2.0;
 
-/// Whether `b` is oncoming traffic for `a`: where `b` stands, `a`'s path runs the opposite way
-/// (more than about 150° from `b`'s heading), so `b` drives the other lane of `a`'s road. Their
-/// bodies passing close in a junction's tight turns is the lanes' geometry, which the follow and
-/// merge rules leave alone.
-fn oncoming(a: &Car, b: &Car) -> bool {
-    let pb = b.pose_at(1.0);
-    let (_, s) = hex_sim::rail::closest_distance(a.path().points(), pb.pos);
-    geom::dot(a.path().pose_at_distance(s).dir, pb.dir) < -0.85
-}
-
 /// The centre distance of two driving cars whose 5.4 x 2 m bodies overlap at any angle (each
-/// shrunk by 5 cm a side), by the separating axis test on the two boxes; oncoming pairs are left
-/// out ([`oncoming`]).
+/// shrunk by 5 cm a side), by the separating axis test on the two boxes, oncoming cars included.
 fn overlapping(a: &Car, b: &Car) -> Option<f32> {
     let (pa, pb) = (a.pose_at(1.0), b.pose_at(1.0));
     let half = [0.5 * CAR_LENGTH - 0.05, 0.5 * CAR_WIDTH - 0.05];
@@ -42,7 +31,7 @@ fn overlapping(a: &Car, b: &Car) -> Option<f32> {
         .iter()
         .chain(ub.iter())
         .any(|&axis| geom::dot(d, axis).abs() > radius(&ua, axis) + radius(&ub, axis));
-    (!separated && !oncoming(a, b) && !oncoming(b, a)).then_some(geom::dist(pa.pos, pb.pos))
+    (!separated).then_some(geom::dist(pa.pos, pb.pos))
 }
 
 /// Spacing slack (m): float rounding only, as in `tests/crossing_queue.rs`. The PRD's "a gap opens
@@ -530,10 +519,11 @@ fn crossing_and_junction(seed: u64) -> Simulation {
 /// F2: four cars queue at the closed crossing (timed, as in `tests/crossing_queue.rs`, to the
 /// shuttle's first closure at tick 388 with seed 3) and the queue reaches back into the junction
 /// south of it. A fifth car on the same lane, turning off at that junction and never crossing,
-/// stops behind the queue instead of driving through its last car, and goes on once the queue
-/// pulls away. Every car closing on the car ahead keeps the queue spacing along their shared lane
-/// (checked every tick by [`Spacing`]): behind a stopped car, behind a slower one creeping up to
-/// its stop, and the turner behind the queue's last car while that car stands in the junction.
+/// stops behind the queue instead of driving through its last car (only briefly: its wide right
+/// turn leaves the queue's lane short of the junction), and goes on once the queue pulls away.
+/// Every car closing on the car ahead keeps the queue spacing along their shared lane (checked
+/// every tick by [`Spacing`]): behind a stopped car, behind a slower one creeping up to its stop,
+/// and the turner behind the queue's last car while that car stands in the junction.
 #[test]
 fn a_crossing_queue_past_a_junction_holds_the_cars_behind_it() {
     let mut sim = crossing_and_junction(3);
@@ -593,7 +583,7 @@ fn a_crossing_queue_past_a_junction_holds_the_cars_behind_it() {
     }
     assert!(tail_in_junction, "the queue reaches back into the junction");
     assert!(
-        turner_held >= 5,
+        turner_held > 0,
         "the turning car waits behind the queue ({turner_held} ticks)"
     );
     assert!(w.overlaps.is_empty(), "{:?}", w.overlaps);
@@ -659,15 +649,15 @@ fn two_departures_from_one_cluster_never_overlap() {
 
 /// Merges that feed each other never deadlock: two and six junctions on a ring, each merge's
 /// traffic driving on to the next, under ten times the default departure rate, and the 300-car,
-/// 1,000-junction zigzag of `tests/cars.rs`. No car stands still for 30 s and trips keep finishing.
-/// Bodies stay apart but for a few ticks in the busiest worlds: in a Y junction's tight turns a
-/// car may pass within a body of a car waiting behind its leader at the junction's mouth, their
-/// paths more than [`hex_sim::traffic::LANE_CLEAR`] apart (lane geometry, PRD §7.2); the count is
-/// bounded here so a regression shows. In the six-junction ring and the zigzag, cars close on
-/// stopped and slower cars and keep the queue spacing behind them ([`Spacing`]).
+/// 1,000-junction zigzag of `tests/cars.rs`, and a bakery between two house clusters
+/// ([`bakery_line`]). No car stands still for 30 s, trips keep finishing and bodies never overlap,
+/// cars turning past each other in a Y junction included (right turns swing wide enough there to
+/// keep clear of lanes the rules never pair, `tests/junction_clearance.rs`) and cars pulling out of
+/// or turning into the bakery's forecourt past through traffic (the forecourt rule,
+/// `sim::drive_holds`). In the six-junction ring and the zigzag, cars close on stopped and slower
+/// cars and keep the queue spacing behind them ([`Spacing`]).
 #[test]
 fn merges_feeding_each_other_never_deadlock() {
-    const SWING_TICKS: usize = 60;
     for (name, mut sim, ticks) in [
         (
             "two merges",
@@ -680,6 +670,9 @@ fn merges_feeding_each_other_never_deadlock() {
             12_000,
         ),
         ("zigzag", zigzag(99), 1_500),
+        ("bakery", Scene::with(5, busy(), &bakery_line()).sim, 12_000),
+        ("bakery rush 5", bakery_rush(5), 12_000),
+        ("bakery rush 6", bakery_rush(6), 12_000),
     ] {
         let mut w = Watch::default();
         let mut last_half = 0;
@@ -700,17 +693,13 @@ fn merges_feeding_each_other_never_deadlock() {
             w.spacing.stopped,
             w.spacing.slower
         );
-        if name != "two merges" {
+        if name == "six merges" || name == "zigzag" {
             assert!(
                 w.spacing.stopped.n > 0 && w.spacing.slower.n > 0,
                 "{name}: cars close on stopped and slower cars in busy traffic"
             );
         }
-        assert!(
-            w.overlaps.len() <= SWING_TICKS,
-            "{name}: {:?}",
-            &w.overlaps[..1]
-        );
+        assert!(w.overlaps.is_empty(), "{name}: {:?}", w.overlaps);
         assert!(
             w.longest_stop.0 < 600,
             "{name}: car {} stood still for {} ticks",
@@ -793,6 +782,28 @@ fn the_same_seed_gives_the_same_traffic() {
         w.trace
     };
     assert_eq!(run(11), run(11));
+}
+
+/// The bakery on a straight road between two house clusters, so its forecourt sees visits from
+/// both sides and through traffic both ways (`sim::drive_holds`).
+fn bakery_line() -> Vec<Edit> {
+    vec![
+        Edit::Place(Axial::new(1, 0), "house_cluster", 0),
+        Edit::Place(Axial::new(2, 0), "road_straight", 0),
+        Edit::Place(Axial::new(3, 0), "bakery", 0),
+        Edit::Place(Axial::new(4, 0), "road_straight", 0),
+        Edit::Place(Axial::new(5, 0), "house_cluster", 3),
+    ]
+}
+
+/// [`bakery_line`] at four times the busy departure rate: seeds 5 and 6 deadlocked an arrival
+/// waiting to turn into the forecourt against the queue it held up.
+fn bakery_rush(seed: u64) -> Simulation {
+    let config = SimConfig {
+        spawn_per_destination_hz: 2.0,
+        ..SimConfig::default()
+    };
+    Scene::with(seed, config, &bakery_line()).sim
 }
 
 /// The 2,000-tile zigzag of `tests/cars.rs`: 1,000 junctions, each with a house on its free arm.

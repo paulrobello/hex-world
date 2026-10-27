@@ -271,7 +271,10 @@ struct CellGround {
 }
 
 /// How far (m) from a road lane's centreline a car's wheels reach: the widest lane offset
-/// (`hex_sim::MAX_LANE_OFFSET`, 1.5 m) and rounded corners, short of the kerbs at 3 m.
+/// (`hex_sim::MAX_LANE_OFFSET`, 1.5 m) and rounded corners, short of the kerbs at 3 m. A Y
+/// junction's right turns swing farther (`hex_sim::geom::TURN_SWING`), over the asphalt of the
+/// kerb fillet between two arms, which lies at the bed height below the crown, so it never sets
+/// the ride height.
 pub const ROAD_CORRIDOR: f32 = 2.5;
 /// How far (m) from the poses of a parking path a car's wheels reach.
 pub const PARKING_CORRIDOR: f32 = 2.0;
