@@ -53,6 +53,18 @@ SECTIONS = [
         ("O2", "Matte everything listed, holly included."),
         ("O3", "Matte only the oaks (the card's original complaint was the same sheen); leave the rest allow-listed."),
     ], []),
+    ("A36", "Music bitrates against the full payload", [
+        ("Q1", "With the P2 content in, one player downloads about 120 MiB in a full session (BC7 textures, WebM audio); "
+               "music is 15 MiB of it (12%), all streamed in the background when a cue first plays, never in the 21 MiB "
+               "initial download. Cutting Opus 128 to 96 kbps (and AAC 160 to 128) saves about 2.75 MB in a session "
+               "that hears four cues; loudness, loop points and stereo width are unchanged, and the high band keeps its "
+               "energy but its texture changes (measured, not heard). Lower rates (Opus 64, AAC 96) audibly risk the top "
+               "end and AAC 96 breaks a loop seam, so they are off the table. Listen to meadow-day, the brightest cue: "
+               "http://127.0.0.1:8095/.claude/worktrees/agent-af09c276bdfa7ba55/docs/review/music-bitrate.html"),
+    ], [
+        ("O1", "Keep the current bitrates (Opus 128k, AAC 160k). Recommended: music is outside every budget."),
+        ("O2", "Cut to Opus 96k and AAC 128k, if you hear no difference on meadow-day."),
+    ], []),
 ]
 
 CSS = """
@@ -74,7 +86,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, fifth round. A19 to A33 are answered (A33 O2 on 2026-10-27). A34 answered 2026-10-27 (&quot;all approved&quot;). A35 is open.</p>"]
+             "<p class=sub>2026-10-27, fifth round. A19 to A33 are answered (A33 O2 on 2026-10-27). A34 answered 2026-10-27 (&quot;all approved&quot;). A35 and A36 are open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
