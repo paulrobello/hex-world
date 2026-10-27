@@ -49,11 +49,10 @@ const WARM_FRAMES: u32 = 30;
 const SETTLE_FRAMES: u32 = 20;
 /// Frames held after the request, so the capture never sees the next tile.
 const HOLD_FRAMES: u32 = 3;
-/// How long a tile whose frame came back all black is captured again before the run stops with
-/// exit 1 (so `make thumbs` fails before the build step). Wall time, not frames: under host load
-/// the GPU can return black frames for several seconds, across several shots in a row. Stopping
-/// at the first expired shot bounds a run on a GPU that never draws to one wait.
-const BLANK_WAIT: std::time::Duration = std::time::Duration::from_secs(60);
+/// A tile whose frame came back all black is captured again for [`capture::BLANK_WAIT`] (from its
+/// first black frame) before the run stops with exit 1, so `make thumbs` fails before the build
+/// step. Stopping at the first expired shot bounds a run on a GPU that never draws to one wait.
+const BLANK_WAIT: std::time::Duration = capture::BLANK_WAIT;
 /// `Time` elapsed and water time held for every frame of the run, so wind, grass, rotors and
 /// water draw the same phase in every capture whatever frame it lands on: the frame a capture
 /// lands on depends on pack loading and screenshot readback, which take wall time.

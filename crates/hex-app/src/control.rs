@@ -291,6 +291,8 @@ pub struct CommandQueue {
     scripted: bool,
     /// A `--thumbs` run: live input is ignored for the whole run.
     unattended: bool,
+    /// A held screenshot (`capture::holding`) stopped the queue this frame.
+    held: bool,
 }
 
 impl CommandQueue {
@@ -303,6 +305,7 @@ impl CommandQueue {
             wait: 0,
             scripted: true,
             unattended: false,
+            held: false,
         }
     }
 
@@ -317,7 +320,21 @@ impl CommandQueue {
     /// under the pointer, or takes keyboard focus while someone types elsewhere, must not change
     /// the game, the packs' first interaction or a capture behind the run's back.
     pub fn owns_input(&self) -> bool {
-        self.unattended || (self.scripted && (!self.items.is_empty() || self.wait > 0))
+        self.unattended || (self.scripted && (!self.items.is_empty() || self.wait > 0 || self.held))
+    }
+
+    /// The command to run this frame: none while `held` (a screenshot is being captured, see
+    /// `capture::request_held`) or a `wait` counts down.
+    fn next(&mut self, held: bool) -> Option<Command> {
+        self.held = held;
+        if held {
+            return None;
+        }
+        if self.wait > 0 {
+            self.wait -= 1;
+            return None;
+        }
+        self.items.pop_front()
     }
 
     #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
@@ -353,6 +370,7 @@ pub struct CommandSettings<'w> {
 pub struct CommandScene<'w, 's> {
     cameras: Query<'w, 's, &'static mut Transform, With<Camera3d>>,
     scene: Query<'w, 's, Entity, With<SceneEntity>>,
+    time: Res<'w, Time<bevy::time::Virtual>>,
 }
 
 /// Runs one command per frame once the scene is ready. Bad commands are logged and skipped.
@@ -365,7 +383,11 @@ pub fn run_commands(
     capture: CommandPhoto,
     settings: CommandSettings,
 ) {
-    let CommandScene { mut cameras, scene } = scene;
+    let CommandScene {
+        mut cameras,
+        scene,
+        time,
+    } = scene;
     let CommandPhoto {
         mut photo,
         mut exports,
@@ -387,11 +409,7 @@ pub fn run_commands(
     if !*bridge::READY.lock().unwrap_or_else(|p| p.into_inner()) {
         return;
     }
-    if queue.wait > 0 {
-        queue.wait -= 1;
-        return;
-    }
-    let Some(cmd) = queue.items.pop_front() else {
+    let Some(cmd) = queue.next(capture::holding(&time)) else {
         return;
     };
     info!("command: {cmd:?}");
@@ -405,7 +423,7 @@ pub fn run_commands(
                 *c = t;
             }
         }
-        Command::Screenshot { name } => capture::request(&mut commands, &name),
+        Command::Screenshot { name } => capture::request_held(&mut commands, &name),
         Command::Wait { frames } => queue.wait = frames,
         Command::Scenario { name } => match Scenario::parse(&name) {
             Some(s) => {
@@ -1195,5 +1213,22 @@ mod tests {
         let q = CommandQueue::scripted([Command::Wait { frames: 2 }, Command::Exit]);
         assert_eq!(q.items.len(), 2);
         assert_eq!(q.items.front(), Some(&Command::Wait { frames: 2 }));
+    }
+
+    /// Nothing after a screenshot runs, and live input stays ignored, until its capture is stored.
+    #[test]
+    fn queue_holds_behind_a_held_screenshot() {
+        let shot = Command::Screenshot { name: "a".into() };
+        let mut q = CommandQueue::scripted([shot.clone(), Command::Exit]);
+        assert_eq!(q.next(false), Some(shot));
+        for _ in 0..3 {
+            assert_eq!(q.next(true), None);
+        }
+        assert_eq!(q.next(false), Some(Command::Exit));
+        assert!(!q.owns_input());
+        assert_eq!(q.next(true), None);
+        assert!(q.owns_input(), "a held last screenshot still owns input");
+        assert_eq!(q.next(false), None);
+        assert!(!q.owns_input());
     }
 }

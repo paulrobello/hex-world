@@ -528,10 +528,16 @@ fn sample(
     lights: Query<(&DirectionalLight, &CascadeShadowConfig)>,
     instanced: Option<Res<crate::instanced::InstancedScene>>,
     config: Option<Res<crate::workload::GateConfig>>,
-    (frame, gpu_timing): (Res<FrameCount>, Option<Res<crate::gpu_timing::GpuTiming>>),
+    (frame, gpu_timing, virt): (
+        Res<FrameCount>,
+        Option<Res<crate::gpu_timing::GpuTiming>>,
+        Option<Res<Time<bevy::time::Virtual>>>,
+    ),
 ) {
     st.frames += 1;
-    if in_window(st.frames) {
+    // A frame with virtual time paused (hex-app holding a screenshot's retake) has no game time to
+    // measure: its zero delta would pull the percentiles down.
+    if in_window(st.frames) && !virt.is_some_and(|v| v.was_paused()) {
         let ms = time.delta_secs() * 1000.0;
         st.stats.push(ms);
         // Stalls follow the 600-frame window, like the percentiles.

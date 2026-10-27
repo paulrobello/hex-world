@@ -3,7 +3,7 @@ use bevy::prelude::*;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::exit_guard;
-use crate::{actions, control, persist, photo, photo_fx};
+use crate::{actions, capture, control, persist, photo, photo_fx};
 
 #[derive(SystemSet, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum AppSet {
@@ -83,6 +83,7 @@ impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<control::ExitRequest>()
             .add_systems(Update, control::run_commands.in_set(AppSet::Commands))
+            .add_systems(Update, capture::hold_time.after(control::run_commands))
             .add_systems(Update, control::publish_state.in_set(AppSet::State))
             .add_systems(Update, control::exit_when_idle.in_set(AppSet::Exit))
             .add_systems(Last, control::dump_state_on_exit.in_set(OnAppExitSystems));

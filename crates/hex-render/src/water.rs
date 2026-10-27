@@ -899,8 +899,9 @@ pub fn noise_image() -> Image {
     img
 }
 
-/// Water animation time. `fixed` advances it by exactly 1/30 s per frame (motion captures),
-/// otherwise it follows real time.
+/// Water animation time. `fixed` advances it by exactly 1/30 s per frame (motion captures), and
+/// not at all on a frame whose virtual time was paused (a held screenshot's retake), otherwise it
+/// follows real time.
 #[derive(Resource, Default)]
 pub struct WaterClock {
     pub t: f32,
@@ -1049,6 +1050,7 @@ pub fn insert_camera(cam: &mut EntityCommands, tier: QualityTier) {
 /// re-prepare them all each frame.
 pub fn tick(
     time: Res<Time>,
+    virt: Option<Res<Time<Virtual>>>,
     clock: Option<ResMut<WaterClock>>,
     mut water: ResMut<Assets<WaterMaterial>>,
     mut terrain: ResMut<Assets<TerrainMaterial>>,
@@ -1060,7 +1062,11 @@ pub fn tick(
         return;
     };
     clock.t += if clock.fixed {
-        FIXED_STEP
+        if virt.is_some_and(|v| v.was_paused()) {
+            0.0
+        } else {
+            FIXED_STEP
+        }
     } else {
         time.delta_secs()
     };

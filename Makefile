@@ -464,8 +464,8 @@ shots-play:
 # Windmill tile in play: docs/checkpoints/windmill/windmill-play.json places the windmill tile among
 # meadows and an oak, shoots it twice 60 frames (1 s, 24° of sail at 4 rpm) apart, then walks into the
 # tower and dumps the block. 1280x800, tilt-shift off and `--clock fixed`, so the sails replay exactly.
-# Native shots can come back black (idle display, high load): the target fails then and leaves the
-# committed stills alone.
+# The app retakes a black frame (high load) for up to 60 s with the scene held; a still black after
+# that (an idle display) exits 1, so the target fails and leaves the committed stills alone.
 WINDMILL_SHOTS = windmill-play windmill-play-1s windmill-walk-blocked
 WINDMILL_DOCS = docs/checkpoints/windmill
 shots-windmill-play:

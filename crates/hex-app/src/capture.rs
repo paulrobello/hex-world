@@ -11,6 +11,16 @@ use image::{DynamicImage, ImageFormat, RgbaImage};
 pub const SHOT_DIR: &str = "target/shots";
 
 static PENDING: AtomicU32 = AtomicU32::new(0);
+/// Held captures ([`request_held`]) whose frame is not stored yet.
+static HELD: AtomicU32 = AtomicU32::new(0);
+
+/// How long a capture whose frame comes back all black is captured again before the run stops
+/// with exit 1. Wall time, not frames: under host load the GPU can return black frames for
+/// several seconds, across several shots in a row.
+pub const BLANK_WAIT: std::time::Duration = std::time::Duration::from_secs(60);
+/// Test hook: the first N frames of every held capture count as all black, so the retake runs
+/// on a GPU that draws.
+const FORCE_BLACK_ENV: &str = "HEXW_SHOT_FORCE_BLACK";
 
 /// Finished web captures keyed by name, taken by `hex_world_take_shot`.
 #[cfg(target_arch = "wasm32")]
@@ -27,6 +37,8 @@ pub fn expect_shot(_name: &str) {
     crate::exit_guard::expect(format!("{SHOT_DIR}/{_name}.png"));
 }
 
+/// The web's screenshots: native ones are all [`request_held`] or retaken by thumbs.
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 pub fn request(commands: &mut Commands, name: &str) {
     expect_shot(name);
     PENDING.fetch_add(1, Ordering::SeqCst);
@@ -77,6 +89,126 @@ pub fn request_unless_blank(
             }
             PENDING.fetch_sub(1, Ordering::SeqCst);
         });
+}
+
+/// What a held capture does with a frame that came back `waited` after the shot was requested.
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+#[derive(Debug, PartialEq, Eq)]
+pub enum Verdict {
+    Store,
+    Retake,
+    /// Still all black at [`BLANK_WAIT`]: the frame is stored so the shot checks see it, then the
+    /// run stops.
+    Fail,
+}
+
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+pub fn verdict(black: bool, waited: std::time::Duration) -> Verdict {
+    match (black, waited >= BLANK_WAIT) {
+        (false, _) => Verdict::Store,
+        (true, false) => Verdict::Retake,
+        (true, true) => Verdict::Fail,
+    }
+}
+
+/// Held captures are out, or `Time<Virtual>` was still paused for one this frame: a script waits
+/// for both, so its next command runs at the simulated time it would have without the hold.
+pub fn holding(time: &Time<bevy::time::Virtual>) -> bool {
+    HELD.load(Ordering::SeqCst) > 0 || time.was_paused()
+}
+
+/// Like [`request`], for a scripted or CLI screenshot: an all-black frame is captured again until
+/// one is not, for up to [`BLANK_WAIT`] after the request, and the run is held meanwhile:
+/// [`holding`] is true and [`hold_time`] pauses simulated time, so a retake draws the scene the
+/// shot was requested in.
+/// On the web it is a plain [`request`]: the page's promise has its own timeout and no black-frame
+/// report.
+pub fn request_held(commands: &mut Commands, name: &str) {
+    #[cfg(target_arch = "wasm32")]
+    request(commands, name);
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        expect_shot(name);
+        PENDING.fetch_add(1, Ordering::SeqCst);
+        HELD.fetch_add(1, Ordering::SeqCst);
+        capture_held(commands, name.to_string(), std::time::Instant::now(), 0);
+    }
+}
+
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+fn capture_held(commands: &mut Commands, name: String, since: std::time::Instant, blanks: u32) {
+    commands.spawn(Screenshot::primary_window()).observe(
+        move |shot: On<ScreenshotCaptured>, mut commands: Commands| {
+            let black = blanks < forced_black() || shot.image.data.as_deref().is_some_and(all_black);
+            let waited = since.elapsed().as_secs_f32();
+            match verdict(black, since.elapsed()) {
+                Verdict::Retake => {
+                    warn!("screenshot {name} came back all black; capturing again");
+                    capture_held(&mut commands, name.clone(), since, blanks + 1);
+                    return;
+                }
+                Verdict::Store => {
+                    let _ = store(&name, encode_png(shot.image.clone()));
+                    if blanks > 0 {
+                        info!(
+                            "screenshot {name} rendered after {waited:.1} s and {blanks} black frame(s)"
+                        );
+                    }
+                }
+                Verdict::Fail => {
+                    let _ = store(&name, encode_png(shot.image.clone()));
+                    error!(
+                        "screenshot {name} still all black {waited:.1} s after the request ({} black frames); exiting 1",
+                        blanks + 1
+                    );
+                    std::process::exit(1);
+                }
+            }
+            HELD.fetch_sub(1, Ordering::SeqCst);
+            PENDING.fetch_sub(1, Ordering::SeqCst);
+        },
+    );
+}
+
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+fn forced_black() -> u32 {
+    static N: std::sync::OnceLock<u32> = std::sync::OnceLock::new();
+    *N.get_or_init(|| {
+        std::env::var(FORCE_BLACK_ENV)
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(0)
+    })
+}
+
+/// Pauses `Time<Virtual>` while a held capture is out and resumes it once none is. Run after the
+/// requests: the pause takes effect at the next frame's time update, so the requested frame itself
+/// advances as usual, and from then until the frame is stored no `Time` delta, fixed tick or
+/// fixed water step passes. A readback still out a further [`BLANK_WAIT`] past the retake bound
+/// stops the run with exit 1, so a capture that never returns cannot hold a script forever.
+pub fn hold_time(
+    mut time: ResMut<Time<bevy::time::Virtual>>,
+    mut paused_at: Local<Option<std::time::Instant>>,
+) {
+    let held = HELD.load(Ordering::SeqCst) > 0;
+    match *paused_at {
+        None if held => {
+            time.pause();
+            *paused_at = Some(std::time::Instant::now());
+        }
+        Some(_) if !held => {
+            time.unpause();
+            *paused_at = None;
+        }
+        Some(t) if t.elapsed() >= 2 * BLANK_WAIT => {
+            error!(
+                "a held screenshot has had no frame back for {:.1} s; exiting 1",
+                t.elapsed().as_secs_f32()
+            );
+            std::process::exit(1);
+        }
+        _ => {}
+    }
 }
 
 /// Captures an offscreen image target (photo mode's export) to a PNG stored like a screenshot,
@@ -190,6 +322,56 @@ mod tests {
             format,
             RenderAssetUsages::default(),
         )
+    }
+
+    #[test]
+    fn a_held_black_frame_is_retaken_until_the_wait_runs_out() {
+        use std::time::Duration;
+        assert_eq!(verdict(false, Duration::ZERO), Verdict::Store);
+        assert_eq!(
+            verdict(false, BLANK_WAIT * 2),
+            Verdict::Store,
+            "a frame that draws is stored however late"
+        );
+        assert_eq!(verdict(true, Duration::ZERO), Verdict::Retake);
+        assert_eq!(verdict(true, BLANK_WAIT / 2), Verdict::Retake);
+        assert_eq!(verdict(true, BLANK_WAIT), Verdict::Fail);
+    }
+
+    /// The hold pauses virtual time from the frame after the request until the frame after the
+    /// capture lands, and `holding` stays true through the first unpaused-again frame's start.
+    #[test]
+    fn a_held_capture_pauses_virtual_time() {
+        use bevy::time::{TimePlugin, TimeUpdateStrategy, Virtual};
+        let step = std::time::Duration::from_nanos(16_666_667);
+        let mut app = App::new();
+        app.add_plugins(TimePlugin)
+            .insert_resource(TimeUpdateStrategy::ManualDuration(step))
+            .add_systems(Update, hold_time);
+        app.update();
+        HELD.fetch_add(1, Ordering::SeqCst);
+        app.update();
+        let elapsed = app.world().resource::<Time<Virtual>>().elapsed();
+        for _ in 0..3 {
+            app.update();
+            let time = app.world().resource::<Time<Virtual>>();
+            assert_eq!(
+                time.elapsed(),
+                elapsed,
+                "no simulated time passes while held"
+            );
+            assert!(holding(time));
+        }
+        HELD.fetch_sub(1, Ordering::SeqCst);
+        app.update();
+        assert!(
+            holding(app.world().resource::<Time<Virtual>>()),
+            "the frame the capture lands on was still paused"
+        );
+        app.update();
+        let time = app.world().resource::<Time<Virtual>>();
+        assert_eq!(time.elapsed(), elapsed + step);
+        assert!(!holding(time));
     }
 
     #[test]

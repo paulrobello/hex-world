@@ -243,7 +243,7 @@ fn frame_hooks(
     if frames.0 == SHOT_FRAME
         && let Some(name) = &flags.0.shot
     {
-        capture::request(&mut commands, name);
+        capture::request_held(&mut commands, name);
     }
     if frames.0 == SHOT_FRAME
         && let Some(scale) = flags.0.photo_export
@@ -291,7 +291,7 @@ fn timed_flags(
     if !*shot_taken && flags.0.screenshot_after_secs.is_some_and(|s| t >= s) {
         *shot_taken = true;
         let name = flags.0.shot.as_deref().unwrap_or("screenshot-after");
-        capture::request(&mut commands, name);
+        capture::request_held(&mut commands, name);
     }
     if flags.0.exit_after_secs.is_some_and(|s| t >= s) {
         exit.0 = true;
