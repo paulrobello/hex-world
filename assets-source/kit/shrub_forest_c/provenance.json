@@ -453,6 +453,13 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat from docs/review/2026-10-20-walkthrough.html item A7."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-27",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"All recommendations approved\", 2026-10-27, A27 on the open-questions page): matte leaves, review sheet docs/checkpoints/shrub-matte/sheet.jpg."
     }
   ]
 }

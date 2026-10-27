@@ -1,0 +1,12 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-27",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/boulders/ref-1.jpg",
+    "assets-source/refs/boulders/ref-2.jpg",
+    "assets-source/refs/boulders/ref-3.jpg",
+    "assets-source/refs/boulders/ref-4.jpg"
+  ],
+  "notes": "Approved in chat (\"All recommendations approved\", 2026-10-27, A25 on the open-questions page, sheet docs/checkpoints/boulders-refs/refs-sheet.jpg). ref-1 sets the four boulders and ref-2 the whaleback outcrop; ref-3 (meadow and forest edge) and ref-4 (coast) set placement and look only, since they read larger than the sizes. Sizes: boulder_granite 2.2 x 1.8 x 1.0, _b 2.6 x 2.2 x 1.4, _c 3.4 x 2.4 x 2.0, _d 4.5 x 3.5 x 2.4, outcrop_granite 8 x 5 x 1.2 m. Scatter: boulders meadow 0.4, forest 0.4, oak 0.3; outcrop meadow 0.15, forest 0.2; variant weights 3:3:2:1; none on farm, wheat or windmill. Coast: grass-to-sand band, inside the beach 0-6 cap (boulders 0.4, outcrop 0.2). LOD: all stay to 400 m; past 400 m only _c, _d and the outcrop. Texture: a unique bake per piece at about 128 px/m. Walker: the outcrop top is not walkable."
+}

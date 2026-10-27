@@ -1,0 +1,12 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-27",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/water_props/ref-1.jpg",
+    "assets-source/refs/water_props/ref-2.jpg",
+    "assets-source/refs/water_props/ref-3.jpg",
+    "assets-source/refs/water_props/ref-4.jpg"
+  ],
+  "notes": "Approved in chat (\"All recommendations approved\", 2026-10-27, A26 on the open-questions page, sheet docs/checkpoints/water-props-refs/refs-sheet.jpg). ref-1 sets the pads' colour and form (dark olive, reusing the spring's river_lily slot); ref-2 the reed bed; ref-3 and ref-4 are layout only. Pieces: lily_cluster (3 pads, about 1.8 m), lily_cluster_b (7 pads with the white flower, about 2.8 m), lily_cluster_c (5 pads with the pink bud, about 2.4 m), reed_bed (dense common reed, about 4 x 2 m footprint, 2.4 m tall). Scatter: spring lilies 1.0 and reed bed 0.5; river_bend lilies 0.6 and reed bed 0.4; not straights, forks or mouths; their own seeded 0-2 per tile. Never on ocean, beach or the mouth fan; pads within 4.0 m of the centreline minus their radius; reed bed rooted 3.0-3.6 m out (0.4-0.8 m deep); spring within 6.5 m of the node, clear of the built-in pads; 1.5 m from the hex edge. LOD: pads drop past 400 m; reed bed keeps a low silhouette."
+}
