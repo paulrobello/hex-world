@@ -18,6 +18,7 @@
 //! new view or kit texture binding needs headroom found first (`water_kit` smoke case).
 use bevy::{
     asset::RenderAssetUsages,
+    camera::{primitives::MeshAabb, visibility::NoAutoAabb},
     core_pipeline::prepass::DepthPrepass,
     image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
     light::NotShadowCaster,
@@ -962,6 +963,26 @@ pub const FIXED_STEP: f32 = 1.0 / 30.0;
 #[derive(Component)]
 pub struct WaterSurface;
 
+/// Spawns a water or terrain-bed mesh with its bounds computed once. [`tick`] modifies the water
+/// and terrain materials every frame, and Bevy then marks the `Mesh3d` of every entity using them
+/// changed, so `calculate_bounds` would re-read all their vertices each frame (4.1 M on the
+/// 2,066-tile world, `docs/perf/large-world-bounds/`). The `Aabb` is Bevy's own
+/// (`MeshAabb::get_aabb`) and `NoAutoAabb` keeps it, so these meshes must never be modified in
+/// place or swapped on the entity. A mesh with no positions gets no `Aabb`, as Bevy gives it none.
+pub fn spawn_fixed_mesh<'a>(
+    commands: &'a mut Commands,
+    meshes: &mut Assets<Mesh>,
+    mesh: Mesh,
+    bundle: impl Bundle,
+) -> EntityCommands<'a> {
+    let aabb = mesh.get_aabb();
+    let mut e = commands.spawn((Mesh3d(meshes.add(mesh)), NoAutoAabb, bundle));
+    if let Some(aabb) = aabb {
+        e.insert(aabb);
+    }
+    e
+}
+
 /// The water and placeholder-terrain materials for a water surface at `level`, sharing one noise
 /// texture.
 pub fn materials(
@@ -1027,30 +1048,38 @@ pub fn spawn(
     let (water, terrain) = materials(images, water_mats, terrain_mats, tier, SEA_LEVEL);
     for (cell, rot) in layout() {
         let t = cell_transform(cell, rot);
-        commands.spawn((
-            Mesh3d(meshes.add(terrain_mesh(cell, rot))),
-            MeshMaterial3d(terrain.clone()),
-            t,
-            SceneEntity,
-        ));
-        commands.spawn((
-            Mesh3d(meshes.add(water_mesh(cell, rot))),
-            MeshMaterial3d(water.clone()),
-            t,
-            NotShadowCaster,
-            WaterSurface,
-            SceneEntity,
-        ));
-        if let Some(skirt) = skirt_mesh(cell) {
-            let [x, z] = cell.to_world(HEX_RADIUS);
-            commands.spawn((
-                Mesh3d(meshes.add(skirt)),
+        spawn_fixed_mesh(
+            commands,
+            meshes,
+            terrain_mesh(cell, rot),
+            (MeshMaterial3d(terrain.clone()), t, SceneEntity),
+        );
+        spawn_fixed_mesh(
+            commands,
+            meshes,
+            water_mesh(cell, rot),
+            (
                 MeshMaterial3d(water.clone()),
-                Transform::from_xyz(x, 0.0, z),
+                t,
                 NotShadowCaster,
                 WaterSurface,
                 SceneEntity,
-            ));
+            ),
+        );
+        if let Some(skirt) = skirt_mesh(cell) {
+            let [x, z] = cell.to_world(HEX_RADIUS);
+            spawn_fixed_mesh(
+                commands,
+                meshes,
+                skirt,
+                (
+                    MeshMaterial3d(water.clone()),
+                    Transform::from_xyz(x, 0.0, z),
+                    NotShadowCaster,
+                    WaterSurface,
+                    SceneEntity,
+                ),
+            );
         }
     }
 }
@@ -1128,6 +1157,46 @@ pub fn tick(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A water mesh spawned with fixed bounds keeps Bevy's own `Aabb` when its `Mesh3d` is marked
+    /// changed, as Bevy marks it each frame `tick` modifies the material; a plain spawn beside it
+    /// has its bounds recomputed.
+    #[test]
+    fn fixed_mesh_bounds_survive_a_changed_mesh3d() {
+        use bevy::camera::{primitives::Aabb, visibility::calculate_bounds};
+        use bevy::ecs::system::RunSystemOnce;
+        let mut world = World::new();
+        world.init_resource::<Assets<Mesh>>();
+        let mesh = water_mesh(Axial::new(1, -1), 2);
+        let expected = mesh.get_aabb().unwrap();
+        let handle = world.resource_mut::<Assets<Mesh>>().add(mesh.clone());
+        let plain = world.spawn(Mesh3d(handle)).id();
+        let fixed = world
+            .run_system_once(
+                move |mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>| {
+                    spawn_fixed_mesh(&mut commands, &mut meshes, mesh.clone(), WaterSurface).id()
+                },
+            )
+            .unwrap();
+        let mut schedule = Schedule::default();
+        schedule.add_systems(calculate_bounds);
+        schedule.run(&mut world);
+        assert_eq!(world.get::<Aabb>(fixed), Some(&expected));
+        assert_eq!(world.get::<Aabb>(plain), Some(&expected));
+        world.clear_trackers();
+        let ticks = |w: &mut World| {
+            [fixed, plain].map(|e| w.entity(e).get_ref::<Aabb>().unwrap().last_changed())
+        };
+        let before = ticks(&mut world);
+        for e in [fixed, plain] {
+            world.get_mut::<Mesh3d>(e).unwrap().set_changed();
+        }
+        schedule.run(&mut world);
+        let after = ticks(&mut world);
+        assert_eq!(after[0], before[0], "fixed bounds were recomputed");
+        assert_ne!(after[1], before[1], "the plain spawn should be recomputed");
+        assert_eq!(world.get::<Aabb>(fixed), Some(&expected));
+    }
 
     /// The review knobs parse in any order, reject out-of-range values, and the shipped values
     /// hand the shaders exactly zero offsets (the shipped look, bit for bit).

@@ -20,8 +20,8 @@ use hex_core::{
 
 use super::{
     LAND, TerrainMaterial, WaterField, WaterKey, WaterMaterial, WaterSample, WaterSurface, carve,
-    cell_transform, materials, ribbon_mesh, river_flow, skirt_mesh_for, smoothstep, surface_mesh,
-    surface_mesh_where, terrain_color, terrain_mesh_for,
+    cell_transform, materials, ribbon_mesh, river_flow, skirt_mesh_for, smoothstep,
+    spawn_fixed_mesh, surface_mesh, surface_mesh_where, terrain_color, terrain_mesh_for,
 };
 use crate::{SceneEntity, post::QualityTier};
 
@@ -1268,15 +1268,18 @@ fn spawn_cell(
     if cw.bed {
         let t = cell_transform(cell, rot);
         out.push(
-            commands
-                .spawn((
-                    Mesh3d(meshes.add(terrain_mesh_for(&field, cell, rot, FLOOR_Y))),
+            spawn_fixed_mesh(
+                commands,
+                meshes,
+                terrain_mesh_for(&field, cell, rot, FLOOR_Y),
+                (
                     MeshMaterial3d(terrain.clone()),
                     t,
                     RisePart::new(cell, RiseRole::Bed, t),
                     SceneEntity,
-                ))
-                .id(),
+                ),
+            )
+            .id(),
         );
     }
     let mut surfaces = vec![];
@@ -1320,17 +1323,20 @@ fn spawn_cell(
     }
     for (mesh, t) in surfaces {
         out.push(
-            commands
-                .spawn((
-                    Mesh3d(meshes.add(mesh)),
+            spawn_fixed_mesh(
+                commands,
+                meshes,
+                mesh,
+                (
                     MeshMaterial3d(water.clone()),
                     t,
                     RisePart::new(cell, RiseRole::Water, t),
                     NotShadowCaster,
                     WaterSurface,
                     SceneEntity,
-                ))
-                .id(),
+                ),
+            )
+            .id(),
         );
     }
     out
