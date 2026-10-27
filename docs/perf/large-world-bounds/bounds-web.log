@@ -1,0 +1,13 @@
+warm-up main world2066 discarded (load 4.55 -> 3.95)
+main world2066 round 0: close p50 38 p95 40 mean 37.96 cpu 23.9/24.8 draws 1472 kit 1337 | overview p50 45.5 p95 48.7 mean 45.74 cpu 20.23/21.1 draws 962 kit 881 errors 0 (load 3.95 -> 4.55)
+fix world2066 round 0: close p50 37.4 p95 40.7 mean 37.57 cpu 17.61/18.5 draws 1472 kit 1337 | overview p50 45.1 p95 49 mean 45.5 cpu 14.47/15.5 draws 962 kit 881 errors 0 (load 4.55 -> 3.57)
+fix world2066 round 1: close p50 37.3 p95 40.3 mean 37.52 cpu 17.85/18.8 draws 1472 kit 1337 | overview p50 44.3 p95 48.6 mean 44.81 cpu 14.42/15.2 draws 962 kit 881 errors 0 (load 3.57 -> 4.06)
+main world2066 round 1: close p50 37.1 p95 39.4 mean 37.1 cpu 23.63/24.8 draws 1472 kit 1337 | overview p50 44.8 p95 47.7 mean 44.99 cpu 20.01/21 draws 962 kit 881 errors 0 (load 4.06 -> 3.79)
+main world2066 round 2: close p50 37.1 p95 39.5 mean 37.14 cpu 23.55/24.7 draws 1472 kit 1337 | overview p50 44.9 p95 48.1 mean 45.07 cpu 19.96/20.9 draws 962 kit 881 errors 0 (load 3.79 -> 4.28)
+fix world2066 round 2: close p50 36.8 p95 39.8 mean 37.15 cpu 17.55/18.4 draws 1472 kit 1337 | overview p50 44.4 p95 48.6 mean 44.84 cpu 14.27/15 draws 962 kit 881 errors 0 (load 4.28 -> 3.85)
+fix world2066 round 3: close p50 36.9 p95 39.6 mean 36.95 cpu 17.67/18.5 draws 1472 kit 1337 | overview p50 44.5 p95 48.4 mean 44.79 cpu 14.44/15.2 draws 962 kit 881 errors 0 (load 3.85 -> 3.69)
+main world2066 round 3: close p50 37.2 p95 39.5 mean 37.19 cpu 23.6/24.6 draws 1472 kit 1337 | overview p50 44.9 p95 48 mean 45.13 cpu 19.99/21 draws 962 kit 881 errors 0 (load 3.69 -> 3.79)
+main world2066 round 4: close p50 37.2 p95 39.6 mean 37.24 cpu 23.62/24.8 draws 1472 kit 1337 | overview p50 44.8 p95 47.9 mean 45.03 cpu 19.94/20.9 draws 962 kit 881 errors 0 (load 3.79 -> 4.02)
+fix world2066 round 4: close p50 36.9 p95 39.7 mean 36.97 cpu 17.5/18.5 draws 1472 kit 1337 | overview p50 44.4 p95 48.6 mean 44.8 cpu 14.37/15.1 draws 962 kit 881 errors 0 (load 4.02 -> 3.69)
+wrote results/bounds-web.json
+EXIT=0

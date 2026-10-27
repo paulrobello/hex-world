@@ -1,0 +1,26 @@
+    incl     self  function (ms per frame)
+  12.944    0.005  system bevy_render::run_render_schedule::run_unsafe
+   6.106    6.101  system bevy_camera::visibility::calculate_bounds::run_unsafe
+   3.432    0.006  system bevy_render::renderer::render_system::run_unsafe
+   3.233    0.005  system bevy_core_pipeline::schedule::camera_driver::run_unsafe
+   2.843    0.466  system hex_render::kit_instances::queue_kit::run_unsafe
+   0.925    0.017  system bevy_pbr::transmission::node::main_transmissive_pass_3d::run_unsafe
+   0.779    0.156  system bevy_pbr::material::queue_material_meshes::run_unsafe
+   0.669    0.001  system bevy_core_pipeline::prepass::node::early_prepass::run_unsafe
+   0.655    0.126  system bevy_pbr::material::specialize_material_meshes::run_unsafe
+   0.553    0.012  system bevy_pbr::render::mesh::collect_meshes_for_gpu_building::run_unsafe
+   0.484    0.002  system bevy_time::fixed::run_fixed_main_schedule::run_unsafe
+   0.481    0.244  system hex_play::play::grass::sync::run_unsafe
+   0.449    0.329  system hex_world::control::publish_state::run_unsafe
+   0.435    0.025  system hex_world::sim::tick::run_unsafe
+   0.334    0.171  system hex_play::boids::plan_boids::run_unsafe
+   0.315    0.017  system bevy_core_pipeline::core_3d::main_opaque_pass_3d_node::main_opaque_pass_3d::run_unsafe
+   0.224    0.026  system bevy_pbr::cluster::gpu::prepare_clusters_for_gpu_clustering::run_unsafe
+   0.213    0.175  system bevy_pbr::render::light::queue_shadows::run_unsafe
+   0.203    0.115  system bevy_pbr::render::mesh::extract_meshes_for_gpu_building::run_unsafe
+   0.185    0.016  system bevy_pbr::prepass::specialize_prepass_material_meshes::run_unsafe
+   0.176    0.012  system bevy_render::material_bind_groups::prepare_material_bind_groups::run_unsafe
+   0.172    0.030  system bevy_camera::visibility::check_visibility_cpu_culling::run_unsafe
+   0.156    0.085  system bevy_pbr::prepass::queue_prepass_material_meshes::run_unsafe
+   0.149    0.007  system bevy_pbr::render::light::specialize_shadows::run_unsafe
+   0.145    0.023  system bevy_pbr::render::light::prepare_lights::run_unsafe

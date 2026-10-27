@@ -483,6 +483,11 @@ Large-world main thread (2026-10-27, `docs/perf/large-world-cpu/`; the 2,066-til
 - Since `c032d97`, `PlayKit` changes only on a frame where a pack arrives. Main-thread time is down 13.0 ms close (29.1 → 16.1) and 10.6 ms overview (25.8 → 15.3), with the same draws, scatter and sim. The close camera's frame is GPU-bound at 30.4 ms, so its mean barely moves.
 - Change detection on a resource that systems react to is a per-frame cost when the resource is taken mutably every frame. A system takes `ResMut` or `as_deref_mut` only on the path that writes.
 
+Large-world bounds (2026-10-27, `docs/perf/large-world-bounds/`; the same save and settings, MiniMac, 5 load-guarded rounds). Bevy's `calculate_bounds` was the largest main-thread system, 6.1 ms a frame.
+- It recomputed the `Aabb` of all 1,658 water surfaces (4.1 M vertices) every frame. `water::tick` writes the water clock into the water and terrain materials each frame, Bevy then marks the `Mesh3d` of every entity using a modified material changed, and `calculate_bounds` re-walks the vertices of every changed `Mesh3d`.
+- Water surfaces and terrain beds now spawn with their `Aabb` computed once (Bevy's own `get_aabb`) and `NoAutoAabb` (`water::spawn_fixed_mesh`). Main-thread time is down 6.0 ms close (23.6 → 17.6) and 5.6 ms overview (20.0 → 14.4), with the same draws and thumbnails. Both frames are GPU-bound, so the mean moves 0.2 ms at most.
+- A mesh spawned this way must not be modified in place or swapped onto the entity, because its bounds would go stale.
+
 Kit content streams in by biome pack after the first interaction.
 
 ## 11. Asset pipeline (D17)
