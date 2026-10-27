@@ -3042,7 +3042,8 @@ mod tests {
         }
     }
 
-    /// Density is per 100 m² of the hex cap: the mean count over cells matches it within 3%, every
+    /// Density is per 100 m² of the hex cap: the mean count over cells matches it within three
+    /// standard errors of the per-tile rounding (plus 3%), every
     /// tile places its whole planned count, and same-piece neighbours keep the rule's spacing: the
     /// blue-noise spacing over its ground (a drift's share of it), never under two ground reaches
     /// ([`DRIFT_PACK`] in a drift).
@@ -3096,13 +3097,23 @@ mod tests {
                 }
             }
             for (ri, r) in def.props.scatter.iter().enumerate() {
+                // A tile plans floor(want + u), so its count is Bernoulli on want's fraction: the
+                // tolerance is three standard errors of the 64-seed mean (plus 3% of the density),
+                // relative to how sparse the rule is, so a rare rule that places half or none fails.
+                let want = r.density * CAP_AREA / 100.0;
+                let f = want.fract();
+                let se = (f * (1.0 - f) / seeds as f32).sqrt() * 100.0 / CAP_AREA;
+                let tol = 3.0 * se + 0.03 * r.density;
                 let mean = sums[ri] as f32 / seeds as f32 / CAP_AREA * 100.0;
                 assert!(
-                    (mean - r.density).abs() <= 0.03 * r.density.max(1.0),
-                    "{id} {}: {mean} per 100 m² vs {}",
+                    (mean - r.density).abs() <= tol,
+                    "{id} {}: {mean} per 100 m² vs {} (tolerance {tol})",
                     r.piece.as_str(),
                     r.density
                 );
+                if want * seeds as f32 >= 3.0 {
+                    assert!(sums[ri] > 0, "{id} {}: never placed", r.piece.as_str());
+                }
             }
         }
     }
