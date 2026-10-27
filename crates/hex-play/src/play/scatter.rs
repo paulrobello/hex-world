@@ -2264,7 +2264,7 @@ fn report(
         .flat_map(|(p, _)| kit.get(*p).into_iter().flatten())
         .map(|part| (part.lod.min(2), part.mesh.id(), part.material.id()))
         .collect();
-    // Per LOD, as the scatter pair limit gates them (owner A2 Q2: at most 60 each, 180 in all).
+    // Per LOD, tracked, not gated (owner A24 Q5, 2026-10-26, replacing A2 Q2's 60 per LOD).
     let mut by_lod = [0usize; 3];
     for (lod, _, _) in &pairs {
         by_lod[*lod] += 1;
@@ -3380,6 +3380,54 @@ mod tests {
                     && pieces.iter().any(|p| p.starts_with("river_reeds")),
                 "{id}: stones and reeds {pieces:?}"
             );
+        }
+    }
+
+    /// Owner A22 Q2 (2026-10-26): reeds and stone clusters about half and half (the densities
+    /// were 0.75 stones to 0.6 reeds, a 43% reed share over 1024 seeds). Over 64 seeds every
+    /// [`river_family`] tile's kept bank props are 35% to 65% reed clumps, and over 1024 seeds 45%
+    /// to 55%. Prints each tile's share and its histogram of reeds per tile.
+    #[test]
+    fn river_tiles_draw_reeds_and_stones_about_half_and_half() {
+        let c = catalog();
+        let mut ids: Vec<&str> = c
+            .tiles()
+            .iter()
+            .filter(|d| river_family(d))
+            .map(|d| d.id.as_str())
+            .collect();
+        ids.sort_unstable();
+        for id in ids {
+            let def = c.get(id).unwrap();
+            let g = prepared(def).unwrap();
+            for (seeds, band) in [(64, 0.35..=0.65), (1024, 0.45..=0.55)] {
+                let (mut reeds, mut stones) = (0u32, 0u32);
+                let mut reeds_per_tile = [0u32; RIVER_MAX + 1];
+                for s in 0..seeds {
+                    let seed = cell_seed(13, Axial::new(s, -s / 2));
+                    let l = layout(def, seed, &g);
+                    let mut r = 0;
+                    for inst in &l.instances {
+                        let rule = def.props.scatter[inst.rule as usize].piece.as_str();
+                        match family(inst.piece(rule)) {
+                            "river_reeds" => r += 1,
+                            "river_stones" => stones += 1,
+                            other => panic!("{id}: {other} is not a bank prop"),
+                        }
+                    }
+                    reeds += r;
+                    reeds_per_tile[r as usize] += 1;
+                }
+                let share = f64::from(reeds) / f64::from(reeds + stones);
+                println!(
+                    "{id} over {seeds} seeds: {reeds} reeds, {stones} stones, reed share {:.0}%, tiles per reed count 0..=4 {reeds_per_tile:?}",
+                    share * 100.0
+                );
+                assert!(
+                    band.contains(&share),
+                    "{id} over {seeds} seeds: reed share {share:.2} ({reeds} reeds, {stones} stones)"
+                );
+            }
         }
     }
 

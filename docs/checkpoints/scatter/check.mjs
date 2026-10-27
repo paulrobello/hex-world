@@ -4,8 +4,12 @@
 // nothing else scatters, only the oak tiles roost (12
 // each), the rising forest scatters, bulldoze takes its scatter and undo brings back the same
 // counts, and the 20-tile world's overview camera stays inside the 500-draw budget (owner A2 Q1,
-// 2026-10-21: close cameras are tracked, not gated) with at most 60 scatter (mesh, material) pairs
-// per LOD and 180 in all (A2 Q2).
+// 2026-10-21: close cameras are tracked, not gated). The mixed world (scatter-mixed.json: the
+// beach-dressing mouth world's rivers, mouths, beaches and ocean plus forest, oak, meadow and road,
+// 31 tiles drawing all 48 scatter pieces) is owner A24 Q5's 500-draw case: its overview census is
+// printed as tracked, not gated, while it is over the budget (548 framing every tile, 2026-10-26;
+// the fix is structural, shared scatter materials, not fewer props). Scatter (mesh, material)
+// pairs are tracked, not gated (A24 Q5, replacing A2 Q2's 60 per LOD and 180 in all).
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -75,9 +79,9 @@ for (const name of ["scatter-10-forest-cluster", "scatter-10-meadow"]) {
   const c = census(read(name));
   console.log(`track ${name.replace("scatter-10-", "")} camera: ${c.draws} draws over every pass and cascade (tracked, not gated) ${JSON.stringify(c.by_pass)}`);
 }
-const pairs = world.scatter.mesh_material_pairs_by_lod ?? [];
-check(pairs.length === 3 && pairs.every((n) => n <= 60), "scatter adds at most 60 (mesh, material) batches per LOD", pairs);
-check(world.scatter.mesh_material_pairs <= 180, "scatter adds at most 180 (mesh, material) batches over all LODs", world.scatter.mesh_material_pairs);
+const trackPairs = (name, dump) =>
+  console.log(`track ${name}: ${dump.scatter.mesh_material_pairs} scatter (mesh, material) pairs over all LODs, ${JSON.stringify(dump.scatter.mesh_material_pairs_by_lod)} per LOD (tracked, not gated)`);
+trackPairs("20-tile world", world);
 const reduced = read("scatter-11-reduced");
 const cut = reduced.scatter.tiles.find((t) => t.q === 1 && t.r === 2);
 check(reduced.play.reduced_motion === true && reduced.play.rising.length === 0, "reduced motion: the undone forest is at rest at once", { reduced: reduced.play.reduced_motion, rising: reduced.play.rising });
@@ -93,6 +97,38 @@ const landedRows = landed.scatter.tiles;
 check(Object.values(landed.packs).every((v) => v === "ready") && landed.scatter.waiting.length === 0 && landedRows.length === 2 &&
   landedRows.every((t) => Object.keys(t.planned).every((p) => t.drawn[p] === t.planned[p])), "landed: both tiles draw their whole scatter", landedRows);
 check(JSON.stringify(landedRows.find((t) => t.q === 0 && t.r === 0).planned) === JSON.stringify(heldMeadow.planned), "landed: the meadow's layout did not change when its pieces arrived", heldMeadow.planned);
+// scatter-mixed.json: the mixed river, beach and ocean world (owner A24 Q5). Every scatter piece
+// and variant draws. Its overview camera (every tile in frame) is over 500 draws, so its census is
+// tracked until the shared-scatter-materials fix lands; the same world from the 20-tile world's
+// overview pose (a corner cropped) is tracked beside it, the difference being whether the farthest
+// shadow cascade takes the scatter.
+const PIECES = [
+  ...["beach_driftwood", "beach_dunegrass", "beach_pebbles", "tree_forest", "tree_oak", "fern_clump", "log_fallen", "rock_small",
+    "wildflower_clump", "bush_verge", "river_stones", "shrub_forest", "sapling_spruce"].flatMap((p) => [p, `${p}_b`, `${p}_c`]),
+  ..."abcde".split("").map((v) => (v === "a" ? "wildflower_single" : `wildflower_single_${v}`)),
+  "river_reeds", "river_reeds_b", "seabed_rock", "seabed_pebbles",
+];
+const mixed = read("scatter-mixed-world");
+const mixedTiles = [...new Set(mixed.play.tiles.map((t) => t.tile))].sort();
+check(mixed.tiles === 31, "the 31-tile mixed world (refused placements would be missing)", mixed.tiles);
+check(["beach", "forest", "meadow", "oak", "ocean", "river_straight", "road_straight"].every((t) => mixedTiles.includes(t)), "river, beach, ocean, forest, oak, meadow and road tiles", mixedTiles);
+check(Object.values(mixed.packs).every((v) => v === "ready") && mixed.scatter.waiting.length === 0, "mixed: every pack ready, no tile waits", mixed.packs);
+const missing = PIECES.filter((p) => !(mixed.scatter.drawn_by_piece[p] > 0));
+check(missing.length === 0, `mixed: all ${PIECES.length} scatter pieces draw (bank props, beach dressing, seabed, land scatter)`, missing.length ? { missing } : mixed.scatter.drawn_by_piece);
+const mixedOverview = census(mixed);
+check(mixedOverview.passes.length > 0, "mixed overview camera: the pass census is sampled", mixedOverview.passes.length);
+const budget = (draws) => (draws <= 500 ? "within the 500 budget" : `OVER the 500 budget by ${draws - 500}`);
+console.log(`track mixed overview camera (every tile in frame): ${mixedOverview.draws} draws over every pass and cascade, ${budget(mixedOverview.draws)} (tracked until shared scatter materials land) ${JSON.stringify(mixedOverview.by_pass)}`);
+const mixed20 = census(read("scatter-mixed-20tile-camera"));
+console.log(`track mixed world from the 20-tile overview pose: ${mixed20.draws} draws, ${budget(mixed20.draws)} ${JSON.stringify(mixed20.by_pass)}`);
+trackPairs("mixed world", mixed);
+const sum = (rows, fam) => rows.reduce((n, t) => n + Object.entries(t.drawn).filter(([p]) => p.startsWith(fam)).reduce((a, [, v]) => a + v, 0), 0);
+for (const [what, rows] of [
+  ["river family tiles", mixed.scatter.tiles.filter((t) => t.tile.startsWith("river_") && !t.tile.startsWith("river_mouth"))],
+  ["river mouths", mixed.scatter.tiles.filter((t) => t.tile.startsWith("river_mouth"))],
+]) {
+  console.log(`track mixed ${what}: ${sum(rows, "river_reeds")} reed props, ${sum(rows, "river_stones")} stone clusters on ${rows.length} tiles`);
+}
 console.log(`scatter: ${world.scatter.drawn} instances (${JSON.stringify(world.scatter.drawn_by_piece)}), ${world.scatter.entities} entities`);
 
 if (failed) {

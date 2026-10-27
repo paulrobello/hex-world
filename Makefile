@@ -721,16 +721,20 @@ shots-grass:
 # road and a river, a house cluster; then a forest rising,
 # bulldozed, undone, and again under reduced motion) after every pack has landed, then
 # scatter-stream.json with the streamed packs held (a forest and the start meadow before and after
-# their packs land). Copies JPEG stills and the state dumps next to it, and asserts the dumps
-# (check.mjs: per-tile counts, roosts, undo, reduced motion, streaming, the overview's draw calls
-# gated at 500 with the close cameras tracked, scatter pairs at most 60 per LOD and 180 in all).
-SCATTER_SHOTS = scatter-01-overview scatter-02-forest-cluster scatter-03-meadow scatter-04-road-river scatter-05-forest-closeup scatter-06-rise-props scatter-07-rise-settled scatter-12-oak scatter-13-junction scatter-14-meadow-drifts
+# their packs land), then scatter-mixed.json (a 31-tile river, beach and ocean world with forest,
+# oak, meadow and road, all 48 scatter pieces drawn). Copies JPEG stills and the state dumps next to
+# it, and asserts the dumps (check.mjs: per-tile counts, roosts, undo, reduced motion, streaming,
+# the 20-tile overview's draw calls gated at 500 with the close cameras tracked, the mixed world's
+# pieces; its overview draws, over 500 until shared scatter materials land, and the scatter pairs
+# are tracked).
+SCATTER_SHOTS = scatter-01-overview scatter-02-forest-cluster scatter-03-meadow scatter-04-road-river scatter-05-forest-closeup scatter-06-rise-props scatter-07-rise-settled scatter-12-oak scatter-13-junction scatter-14-meadow-drifts scatter-15-mixed-overview
 SCATTER_DOCS = docs/checkpoints/scatter
 shots-scatter:
 	mkdir -p target/shots $(SCATTER_DOCS)
 	rm -f target/shots/scatter-*.png target/shots/scatter-*.json
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
 	HEXW_PACK_HOLD_FRAMES=120 bash scripts/shots/run.sh --state-only cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter-stream.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
+	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter-mixed.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
 	bash scripts/shots/run.sh --jpegs $(SCATTER_DOCS) $(SCATTER_SHOTS)
 	cp target/shots/scatter-*.json $(SCATTER_DOCS)/
 	node $(SCATTER_DOCS)/check.mjs $(SCATTER_DOCS)

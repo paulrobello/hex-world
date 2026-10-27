@@ -20,8 +20,8 @@
     ],
     props: (
         scatter: [
-            (piece: "river_stones", density: 0.75),
-            (piece: "river_reeds", density: 0.6),
+            (piece: "river_stones", density: 0.7),
+            (piece: "river_reeds", density: 0.75),
         ],
     ),
 )

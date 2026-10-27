@@ -214,9 +214,16 @@ pub fn kit_layout() -> Vec<Placement> {
     }
     // Three ocean tiles meeting at one corner, each at another rotation (seams under rotation), with
     // open edges to the east. Cells stay inside the water look-dev patch, so `water_kit` keeps 12.
-    // The seabed rocks and pebbles are play scatter (seabed_rock, seabed_pebbles), not a centre.
+    // The seabed rocks and pebbles are play scatter (seabed_rock, seabed_pebbles), not a centre;
+    // SEABED shows them on the first ocean tile.
     for (q, r, k) in [(1, 1, 0), (2, 1, 3), (2, 0, 1)] {
         v.push(place("ocean_base", q, r, k));
+    }
+    for &(piece, at, yaw_deg) in SEABED {
+        v.push(Placement {
+            y: SEABED_Y,
+            ..hero(piece, 1, 1, at, yaw_deg)
+        });
     }
     // Meadow props on the meadow at (-1, 1) (base rotation 4), each lifted onto the meadow relief at
     // its spot (`relief()` in scripts/blender/kit/meadow_base.py, evaluated in the base's frame).
@@ -247,7 +254,8 @@ pub fn kit_layout() -> Vec<Placement> {
     });
     // Beach dressing (owner D3, refs approved 2026-10-20) on a straight beach at (5, -1), east of
     // windmill_b and outside the water patch: the three driftwood pieces along the coast on the dry
-    // sand, the three marram clumps landward of them near the grass line, as the scatter lays them.
+    // sand, the three marram clumps landward of them and the three pebble clusters at the grass
+    // line, as the scatter lays them.
     v.push(place("beach_base", 5, -1, 0));
     for &(piece, at, yaw_deg, y) in BEACH_DRESSING {
         v.push(Placement {
@@ -631,7 +639,9 @@ const FARM_ANIMALS: &[(&str, [f32; 2], f32, f32)] = &[
 /// (piece, at, yaw, height) of the beach dressing showcase on the straight beach at (5, -1). The
 /// tile's coast runs along (-0.5, 0.866) in (x, z) with s = 0.866 x + 0.5 z seaward (`Coastline`),
 /// so each spot is (s, u) along it and its height is the coast profile there (`coast_height(s)`,
-/// -1.4 + 1.4 t (2 - t) with t = s / -8). The driftwood lies along the coast (yaw 120 or 300).
+/// -1.4 + 1.4 t (2 - t) with t = s / -8). The driftwood lies along the coast (yaw 120 or 300). The
+/// pebble clusters stand 0.8-1 m seaward of the grass line (s = -8), inside their band
+/// (`beach_band`: s -7.5 to -6), between the marram clumps.
 const BEACH_DRESSING: &[(&str, [f32; 2], f32, f32)] = &[
     ("beach_driftwood", [-0.964, -6.33], 120.0, -0.35),
     ("beach_driftwood_b", [-3.79, -1.03], 300.0, -0.386),
@@ -639,6 +649,22 @@ const BEACH_DRESSING: &[(&str, [f32; 2], f32, f32)] = &[
     ("beach_dunegrass", [-4.13, -5.85], 0.0, -0.049),
     ("beach_dunegrass_b", [-6.45, -0.84], 70.0, -0.088),
     ("beach_dunegrass_c", [-7.89, 0.06], 200.0, -0.032),
+    ("beach_pebbles", [-2.812, -9.129], 30.0, -0.022),
+    ("beach_pebbles_b", [-6.235, -3.6], 150.0, -0.014),
+    ("beach_pebbles_c", [-9.562, 2.562], 260.0, -0.022),
+];
+
+/// Height of the seabed dressing: the ocean bed's contract level (`scatter::SEABED_Y`, one level
+/// step under the land), under the floor's relief.
+const SEABED_Y: f32 = -hex_core::LEVEL_STEP;
+
+/// (piece, at, yaw) of the seabed dressing (owner 2026-10-26) on the ocean at (1, 1), rot 0: two
+/// rocks and two pebble clusters well inside the 2 m border the scatter keeps (`SEABED_BORDER`).
+const SEABED: &[(&str, [f32; 2], f32)] = &[
+    ("seabed_rock", [-3.0, 2.5], 40.0),
+    ("seabed_rock", [4.5, -2.0], 200.0),
+    ("seabed_pebbles", [1.0, 4.5], 110.0),
+    ("seabed_pebbles", [-4.0, -3.5], 290.0),
 ];
 
 /// (piece, at, yaw, height) of the riverbank scatter props (owner 2026-10-26) on the downstream river
@@ -1336,6 +1362,38 @@ mod tests {
                 p.piece,
                 "meadow_base" | "forest_base" | "river_straight_base"
             )));
+    }
+
+    /// Owner A24 Q4: the showcase shows the beach and ocean props and the riverbank props, each
+    /// on its own tile (the beach, the first ocean tile, the downstream river straight).
+    #[test]
+    fn showcase_places_the_coast_and_riverbank_props() {
+        let l = kit_layout();
+        let on = |piece: &str, cell: (i32, i32)| {
+            l.iter()
+                .any(|p| p.piece == piece && (p.cell.q, p.cell.r) == cell)
+        };
+        for piece in ["beach_pebbles", "beach_pebbles_b", "beach_pebbles_c"] {
+            assert!(on(piece, (5, -1)) && on("beach_base", (5, -1)), "{piece}");
+        }
+        for piece in ["seabed_rock", "seabed_pebbles"] {
+            assert!(on(piece, (1, 1)) && on("ocean_base", (1, 1)), "{piece}");
+        }
+        for piece in [
+            "river_stones",
+            "river_stones_b",
+            "river_stones_c",
+            "river_reeds",
+            "river_reeds_b",
+        ] {
+            assert!(
+                on(piece, (-2, 6)) && on("river_straight_base", (-2, 6)),
+                "{piece}"
+            );
+        }
+        let m = parse_manifest(MANIFEST).unwrap();
+        let (_, warn) = resolve_placements(&m, &l);
+        assert!(warn.is_empty(), "{warn:?}");
     }
 
     #[test]
