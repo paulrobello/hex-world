@@ -39,32 +39,20 @@ B3 = CP / "water-props/sheet.jpg"
 B2_SHEET = ROOT / ".claude/worktrees/agent-a166db2800bc9c429/docs/checkpoints/walls-hedges/sheet.jpg"
 
 SECTIONS = [
-    ("A34", "B2 dry-stone walls and hedgerows: built and gated, landing now", [
-        ("Q1", "Approve the twelve pieces: wall_run, _b, wall_end, wall_bend, wall_junction and wall_gate (1.1 m, "
-               "the boulders' granite, upright cope, closed five-bar gate between granite posts), and hedge_run, _b, "
-               "hedge_end, hedge_bend, hedge_junction and hedge_oak (1.9 m, matte verge-bush green; hedge_oak stands "
-               "the approved tree_oak_b, about 8 m, at its centre instead of a new oak). Corners at 120 degrees. "
-               "Recommended: approve."),
-        ("Q2", "Placement as built (O1 from A31): boundaries on shared edges where a farm or wheat field meets meadow, "
-               "forest, oak or windmill; wall or hedge per edge from the seed, about half and half; one gate edge per "
-               "farm, only where the ground inside is clear of the barn and paddock; about one hedge edge in three gets "
-               "the oak; runs that would hit a hero are left out (the barn's edge keeps only its corner stubs). The "
-               "junction pieces are built but never placed, since at most two edges meet at a corner. "
-               "Recommended: accept."),
-        ("Q3", "Draw cost, as you asked. B2 adds 48 overview draws on a 37-tile farm world (354 to 402) and 0 on the "
-               "mixed river/beach/ocean test world, which has no farms. But the mixed world plus two farms is 531 "
-               "draws without B2 and 549 with it, over the 500 budget: the farm tiles' own pieces are most of it, B2 "
-               "adds 18. So the 500 budget fails once a world mixes water, coast and farms."),
+    ("A35", "Glossy foliage found by the new matte-foliage gate", [
+        ("Q1", "A new kit gate requires every leaf, needle, frond and flower slot to keep a median roughness of at "
+               "least 0.7 (the bushes and forest shrubs were matted from 0.50-0.64 after your shiny-bush report; "
+               "grass draws at 0.78). These current slots are below it and sit on a shrink-only allow-list until you "
+               "decide: the six oaks' leaf cards (median 0.58) and their canopy shells (0.62), the holly "
+               "shrub_forest_b (0.37, built glossy on purpose), dune grass (0.66), ferns (0.67), and the water-lily "
+               "petal and bud (0.60). Spruce needles (0.81), wildflowers (0.70), wheat (0.72) and the B2 hedges pass."),
     ], [
-        ("O1", "Start shared scatter materials now (A28 option O2, colour-only pieces sharing plus texture arrays per "
-               "variant group; about a week; estimated about 352 draws on the mixed world before B1, B2 and farms). "
-               "Recommended, since every new piece family pushes this further."),
-        ("O2", "Raise the overview budget to 600 and track it; revisit with P7 (mobile)."),
-        ("O3", "Leave it: keep the mixed test world without farms at 500 and track worlds with farms."),
-    ], [
-        (B2_SHEET, "B2 review sheet: approved refs, Blender stills with a 1.7 m figure, the farm at play distance and "
-                   "overview, the gate, a 120 degree bend, a wall meeting a hedge, and eye level in walk mode"),
-    ]),
+        ("O1", "Matte everything listed except the holly, which keeps its real-world gloss: the oaks, dune grass and "
+               "ferns map onto 0.76-0.86 the way the bushes did (only the ORM green channel changes; thumbnails of "
+               "oak, forest and beach tiles shift slightly), and lily flower parts leave the rule. Recommended."),
+        ("O2", "Matte everything listed, holly included."),
+        ("O3", "Matte only the oaks (the card's original complaint was the same sheen); leave the rest allow-listed."),
+    ], []),
 ]
 
 CSS = """
@@ -86,7 +74,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, fifth round. A19 to A33 are answered (A33 O2 on 2026-10-27). A34 answered 2026-10-27 (&quot;all approved&quot;). Nothing is open.</p>"]
+             "<p class=sub>2026-10-27, fifth round. A19 to A33 are answered (A33 O2 on 2026-10-27). A34 answered 2026-10-27 (&quot;all approved&quot;). A35 is open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
