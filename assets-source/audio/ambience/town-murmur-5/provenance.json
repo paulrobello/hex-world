@@ -1,0 +1,206 @@
+{
+  "cueId": "town-murmur-5",
+  "kind": "ambience",
+  "class": "sfx",
+  "version": 1,
+  "use": "One town sound (call) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Two villagers in a small village street a short way off: one calls out a short, cheerful, indistinct greeting and the other answers with a brief warm laugh, about one and a half seconds in all, then silence. No intelligible words, no crowd, no music. Studio-quiet background, with silence before and after.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Two villagers in a small village street a short way off: one calls out a short, cheerful, indistinct greeting and the other answers with a brief warm laugh, about one and a half seconds in all, then silence. No intelligible words, no crowd, no music. Studio-quiet background, with silence before and after.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 3.0,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "928b597f97ef09608c78c537c9c35b25",
+    "generatedAt": "2026-10-27T15:57:00+00:00",
+    "attempt": 88,
+    "creditsCharged": 30,
+    "record": {
+      "path": "assets-source/audio/ambience/town-murmur-5/generation.json",
+      "sha256": "e83bff2ba5124352387eec42ea4ab4d71202a5ec9d13d0cb19517189be4b8caf",
+      "bytes": 2134
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/town-murmur-5/town-murmur-5.mp3",
+    "sha256": "92e2459f74766a1bd58cf320579c0fa88bc643a2a18b6f900274d0e04d90f431",
+    "bytes": 48944,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 3.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -13.9,
+      "lra": 20.0,
+      "truePeak": -0.2
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 20.0,
+      "truePeak": -2.3
+    },
+    "after": {
+      "webm": {
+        "integrated": -15.9,
+        "lra": 20.0,
+        "truePeak": -1.8
+      },
+      "m4a": {
+        "integrated": -16.0,
+        "lra": 20.0,
+        "truePeak": -2.3
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -13.9,
+        "lra": 20.0,
+        "truePeak": -0.2
+      },
+      "targetLufs": -16.0,
+      "gainDb": -2.1,
+      "requiredPeakReductionDb": 0.0,
+      "mode": "linear"
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.0
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/town-murmur-5.wav",
+    "sha256": "153d08bb556af2da3494fd1d9345c835160592d7323c709af9e08670f5bac17d",
+    "frames": 144000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/town-murmur-5.webm",
+      "sha256": "e1577adf5d379cbff391bbd13308f1ddaf2bd8e134f3e1a8f10d3509e2854ad2",
+      "bytes": 23085,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 3.008,
+      "decodedFrames": 144000,
+      "loudness": {
+        "integrated": -15.9,
+        "lra": 20.0,
+        "truePeak": -1.8
+      },
+      "floor": {
+        "peakWindowDb": -8.4,
+        "floorDb": -74.6,
+        "floorBelowPeakDb": 66.2,
+        "floorBandPct": {
+          "below1500": 87.8,
+          "1500to9k": 8.8,
+          "above9k": 3.4
+        },
+        "interiorWindows": 60,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/town-murmur-5.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/town-murmur-5.webm"
+    },
+    {
+      "path": "assets/audio/ambience/town-murmur-5.m4a",
+      "sha256": "c69f1f7694eed4a50cdbe5b863128eca89341bf2724f3185f4553500a7b9441e",
+      "bytes": 56961,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 3.0,
+      "decodedFrames": 144000,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 20.0,
+        "truePeak": -2.3
+      },
+      "floor": {
+        "peakWindowDb": -8.4,
+        "floorDb": -74.7,
+        "floorBelowPeakDb": 66.3,
+        "floorBandPct": {
+          "below1500": 87.7,
+          "1500to9k": 9.1,
+          "above9k": 3.2
+        },
+        "interiorWindows": 60,
+        "problems": []
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/town-murmur-5.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/town-murmur-5.m4a"
+    }
+  ],
+  "decodedBytes": 576000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.10",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "cd56507e621a35d91042d8e30f36db72f0e30fd0cce3da865eeee185fe583002"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

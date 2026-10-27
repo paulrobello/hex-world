@@ -69,8 +69,12 @@ import {
   pickEmitters,
   pickOneShotTile,
   PLACE_SLOSH,
+  PLACE_STINGER,
   pickVariant,
   placementPool,
+  placementStinger,
+  STINGER_FAMILIES,
+  type StingerFamily,
   resolveOneShot,
   SHOP_BELL,
   TRAIN_CUES,
@@ -106,6 +110,8 @@ const BIOME_OF = new Map<string, Biome>(schema.catalog.tiles.map((t) => [t.id, b
 const CUES_OF = new Map<string, string[]>(schema.catalog.tiles.map((t) => [t.id, emitterCues(t.id, t.edges)]));
 /** Per tile def, the extra pool its placement plays with the thunk: the slosh for water tiles. */
 const PLACE_POOL_OF = new Map(schema.catalog.tiles.map((t) => [t.id, placementPool(t.edges)]));
+/** Per tile def, its family's placement stinger cue, played with the thunk as the tile settles. */
+const STINGER_OF = new Map(schema.catalog.tiles.map((t) => [t.id, placementStinger(t.id, t.edges)]));
 /** Per one-shot row, the tile defs it may play at. */
 const ONE_SHOT_DEFS = new Map(ONE_SHOTS.map((row) => [row.name, oneShotDefs(row, schema.catalog.tiles)]));
 
@@ -183,6 +189,8 @@ interface Pending {
   skipSinks: number;
   /** A water tile's slosh variant, played with the thunk as the tile settles. */
   slosh: string | null;
+  /** The placed tile's family stinger, played with the thunk as the tile settles. */
+  stinger: string | null;
 }
 
 export interface AudioDebug {
@@ -285,6 +293,19 @@ export interface AudioDebug {
   };
   /** The water slosh a placed water tile plays with the thunk: its pool's variants, plays and the last variant. */
   placeSlosh: { pool: string; variants: string[]; plays: number; lastCue: string | null };
+  /**
+   * The per-family placement stinger played with the thunk: its level as a share of the thunk's, each family's
+   * cue and whether it decoded, plays so far, and the last stinger's cue, family, cell and audio time.
+   */
+  placeStinger: {
+    level: number;
+    cues: Record<StingerFamily, { cue: string; loaded: boolean }>;
+    plays: number;
+    lastCue: string | null;
+    lastFamily: StingerFamily | null;
+    lastTile: { q: number; r: number } | null;
+    lastAt: number | null;
+  };
 }
 
 /** What `audio.play(name)` did: the variant played and where, or why nothing played. */
@@ -371,6 +392,13 @@ export class GameAudio {
   private slosh = { plays: 0, lastCue: null as string | null };
   /** The slosh last picked, at the event: several placements can wait for their settle at once. */
   private sloshPicked: string | null = null;
+  private stinger = {
+    plays: 0,
+    lastCue: null as string | null,
+    lastFamily: null as StingerFamily | null,
+    lastTile: null as { q: number; r: number } | null,
+    lastAt: null as number | null,
+  };
   /** Shop tiles in play at the last update, by cell key. */
   private shops = new Map<string, OneShotTile>();
   private recent: Fired[] = [];
@@ -566,6 +594,7 @@ export class GameAudio {
             deadline: ctx.currentTime + SETTLE_TIMEOUT_S,
             skipSinks: e.type === "tileReplaced" ? 1 : 0,
             slosh: "tile" in e && PLACE_POOL_OF.get(e.tile) ? this.pickSlosh() : null,
+            stinger: "tile" in e ? (STINGER_OF.get(e.tile) ?? null) : null,
           });
           continue;
         }
@@ -595,11 +624,22 @@ export class GameAudio {
     return id;
   }
 
-  /** The held thunk, and a water tile's slosh under it at a share of the placement level. */
+  /** The held thunk, with the tile family's stinger and a water tile's slosh under it at shares of its level. */
   private settle(p: Pending): void {
     this.play(p.id, p.event, p, 1);
-    if (!p.slosh) return;
     const level = this.view ? this.placementLevel(p.q, p.r, this.view) : 1;
+    if (p.stinger && this.buffers.has(p.stinger) && this.ctx) {
+      this.play(p.stinger, p.event, p, 1, level * PLACE_STINGER.level, false);
+      const family = STINGER_FAMILIES.find((f) => PLACE_STINGER.cue(f) === p.stinger) ?? null;
+      this.stinger = {
+        plays: this.stinger.plays + 1,
+        lastCue: p.stinger,
+        lastFamily: family,
+        lastTile: { q: p.q, r: p.r },
+        lastAt: this.ctx.currentTime,
+      };
+    }
+    if (!p.slosh) return;
     this.play(p.slosh, p.event, p, 1, level * PLACE_SLOSH.level, false);
     this.slosh = { plays: this.slosh.plays + 1, lastCue: p.slosh };
   }
@@ -1315,6 +1355,20 @@ export class GameAudio {
         variants: [...this.sloshVariants],
         plays: this.slosh.plays,
         lastCue: this.slosh.lastCue,
+      },
+      placeStinger: {
+        level: PLACE_STINGER.level,
+        cues: Object.fromEntries(
+          STINGER_FAMILIES.map((f) => [
+            f,
+            { cue: PLACE_STINGER.cue(f), loaded: this.buffers.has(PLACE_STINGER.cue(f)) },
+          ]),
+        ) as AudioDebug["placeStinger"]["cues"],
+        plays: this.stinger.plays,
+        lastCue: this.stinger.lastCue,
+        lastFamily: this.stinger.lastFamily,
+        lastTile: this.stinger.lastTile && { ...this.stinger.lastTile },
+        lastAt: at(this.stinger.lastAt),
       },
     };
   }

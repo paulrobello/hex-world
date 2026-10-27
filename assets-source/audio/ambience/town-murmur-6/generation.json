@@ -1,0 +1,43 @@
+{
+  "cueId": "town-murmur-6",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "A village blacksmith a few houses away striking a small anvil with a hammer three times, light ringing metallic taps with a short natural decay, then silence. Gentle and distant, not harsh. No voices, no music. Studio-quiet background, with silence before and after.",
+  "parameters": {
+    "text": "A village blacksmith a few houses away striking a small anvil with a hammer three times, light ringing metallic taps with a short natural decay, then silence. Gentle and distant, not harsh. No voices, no music. Studio-quiet background, with silence before and after.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 3.5,
+    "prompt_influence": 0.6
+  },
+  "generationId": "5ef12f74bbc3c18366189fb8c01d495c",
+  "responseHeaders": {
+    "date": "Tue, 27 Oct 2026 15:57:04 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "35",
+    "content-length": "56885",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "5ef12f74bbc3c18366189fb8c01d495c",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-27T15:57:04+00:00",
+  "attempt": 89,
+  "creditsCharged": 35,
+  "sourceFile": "town-murmur-6.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "5d1a77aa6050a5acc3480d8292a778944e1622163576c50641a56af937aef943"
+  }
+}

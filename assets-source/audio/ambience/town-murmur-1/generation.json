@@ -1,0 +1,43 @@
+{
+  "cueId": "town-murmur-1",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Two villagers exchanging a few quiet, indistinct words in a small village street, heard from a short distance: a soft, muffled, friendly murmur lasting about one and a half seconds, with no intelligible words, then silence. No music, no crowd, no traffic. Studio-quiet background, with silence before and after the voices.",
+  "parameters": {
+    "text": "Two villagers exchanging a few quiet, indistinct words in a small village street, heard from a short distance: a soft, muffled, friendly murmur lasting about one and a half seconds, with no intelligible words, then silence. No music, no crowd, no traffic. Studio-quiet background, with silence before and after the voices.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 3.0,
+    "prompt_influence": 0.6
+  },
+  "generationId": "2e404197cefe3b6feda41f0184a576fe",
+  "responseHeaders": {
+    "date": "Tue, 27 Oct 2026 15:55:27 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "30",
+    "content-length": "48944",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "2e404197cefe3b6feda41f0184a576fe",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-27T15:55:28+00:00",
+  "attempt": 85,
+  "creditsCharged": 30,
+  "sourceFile": "town-murmur-1.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "5d1a77aa6050a5acc3480d8292a778944e1622163576c50641a56af937aef943"
+  }
+}

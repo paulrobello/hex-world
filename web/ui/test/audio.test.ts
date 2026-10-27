@@ -60,10 +60,15 @@ import {
   pickEmitters,
   pickOneShotTile,
   PLACE_SLOSH,
+  PLACE_STINGER,
   pickVariant,
   placementPool,
+  placementStinger,
   resolveOneShot,
   SHOP_BELL,
+  STINGER_FAMILIES,
+  stingerFamily,
+  TOWN_MURMUR_TILES,
   TRAIN_CUES,
   TRAIN_EVENT_WAIT_S,
   TRAIN_VOICES,
@@ -240,6 +245,7 @@ test("beds and loop emitters: river and coast only; meadow and forest are quiet 
   assert.equal(BED_CUE.forest, null);
   assert.equal(EMITTER_CUE.meadow, null);
   assert.equal(EMITTER_CUE.forest, null);
+  assert.equal(EMITTER_CUE.town, null, "the town murmur is one-shots, never a loop bed");
   assert.equal(EMITTER_CUE.river, "river-babble");
   assert.equal(EMITTER_CUE.coast, "surf");
   const beds = bedGains({ ...emptyMix(), meadow: 0.4, forest: 0.2, river: 0.2, coast: 0.2 });
@@ -390,6 +396,7 @@ test("one-shot rows: bees at flower tiles, forest birds and leaves at forest til
       ["windmill-creak", "windmill-creak", [25, 70], 3, 0.3],
       ["wheat-rustle", "wheat-rustle", [20, 60], 3, 0.3],
       ["well-windlass", "well-windlass", [40, 110], 3, 0.25],
+      ["town-murmur", "town-murmur", [30, 80], 3, 0.25],
     ],
   );
   assert.ok(oneShotDefs(BEES, schema.catalog.tiles).has("meadow"));
@@ -849,6 +856,90 @@ test("the stone well's windlass: a quiet, rare row at house_cluster tiles over a
   }
   const tile = pickOneShotTile(row, [cell(0, 0), cell(4, 0)], flowerView, () => 0.5);
   assert.deepEqual(tile && [tile.q, tile.r], [0, 0], "a well in range, not one four steps out");
+});
+
+test("town murmur: an ambience one-shot pool at houses, the bakery and the station, never a loop", () => {
+  const row = rowNamed("town-murmur");
+  assert.deepEqual([...oneShotDefs(row, schema.catalog.tiles)].sort(), ["bakery", "house_cluster", "rail_station"]);
+  assert.deepEqual([...TOWN_MURMUR_TILES].sort(), ["bakery", "house_cluster", "rail_station"]);
+  const variants = manifest.cues.filter((c) => c.pool === "town-murmur");
+  assert.ok(variants.length >= 4, `several variants (${variants.length})`);
+  assert.deepEqual(
+    resolveOneShot("town-murmur", manifest.cues)?.variants,
+    variants.map((c) => c.id),
+  );
+  assert.equal(resolveOneShot("town-murmur", manifest.cues)?.row, row, "the pool resolves to its timer row");
+  for (const c of variants) {
+    assert.ok(c.status === "mastered" && !c.loop && c.playback === "decode", `${c.id} is a decoded one-shot`);
+    assert.equal(c.channels, 1, `${c.id} is mono`);
+    assert.equal(busOf(c), "ambience", `${c.id} plays on the ambience bus`);
+    assert.deepEqual(c.events, [], `${c.id} is routed by the scheduler, not by an event list`);
+  }
+  assert.ok(!manifest.cues.some((c) => c.id === "town-murmur" || (c.loop && c.id.startsWith("town"))), "no town loop");
+  const tile = pickOneShotTile(row, [cell(0, 0), cell(4, 0)], flowerView, () => 0.5);
+  assert.deepEqual(tile && [tile.q, tile.r], [0, 0], "a house in range, not one four steps out");
+});
+
+test("placement stingers: every catalog tile has a family whose stinger is a mastered effects one-shot", () => {
+  const family: Record<string, string> = {
+    meadow: "meadow",
+    forest: "forest",
+    oak: "forest",
+    windmill: "farm",
+    farm: "farm",
+    wheat_field: "farm",
+    house_cluster: "town",
+    bakery: "town",
+    road_straight: "road",
+    road_bend_120: "road",
+    road_bend_60: "road",
+    road_junction: "road",
+    rail_straight: "rail",
+    rail_bend_60: "rail",
+    rail_bend_120: "rail",
+    rail_junction: "rail",
+    rail_road_crossing: "rail",
+    rail_station: "rail",
+    river_straight: "water",
+    river_bend: "water",
+    river_bend_60: "water",
+    river_road_bridge: "water",
+    river_rail_bridge: "water",
+    river_spring: "water",
+    river_fork: "water",
+    river_mouth: "water",
+    river_mouth_l: "water",
+    beach: "coast",
+    beach_outer: "coast",
+    beach_inner: "coast",
+    ocean: "coast",
+  };
+  assert.deepEqual(
+    schema.catalog.tiles.map((t) => t.id).sort(),
+    Object.keys(family).sort(),
+    "the grouping covers every catalog tile; a new tile needs a row here",
+  );
+  for (const t of schema.catalog.tiles) {
+    assert.equal(stingerFamily(t.id, t.edges), family[t.id], `${t.id} is ${family[t.id]}`);
+    assert.equal(placementStinger(t.id, t.edges), `place-stinger-${family[t.id]}`);
+  }
+  assert.deepEqual([...new Set(Object.values(family))].sort(), [...STINGER_FAMILIES].sort(), "every family is used");
+  const thunk = manifest.cues.find((c) => c.id === "place-thunk")!;
+  for (const f of STINGER_FAMILIES) {
+    const c = manifest.cues.find((x) => x.id === PLACE_STINGER.cue(f));
+    assert.ok(c, `${f} has a mastered stinger`);
+    assert.ok(
+      c.status === "mastered" && !c.loop && c.playback === "decode" && c.channels === 1,
+      `${c.id} is a mono one-shot`,
+    );
+    assert.equal(busOf(c), busOf(thunk), `${c.id} plays on the thunk's bus`);
+    assert.equal(busOf(c), "effects");
+    assert.deepEqual(c.events, [], `${c.id} is routed by the runtime, so it waits for the settle`);
+    assert.ok((c.durationSeconds ?? 0) <= 1.0, `${c.id} is short (${c.durationSeconds} s)`);
+    assert.equal(c.targetLufs, thunk.targetLufs, "mastered like the thunk, so the runtime level sets the balance");
+  }
+  assert.ok(PLACE_STINGER.level < PLACE_SLOSH.level && PLACE_STINGER.level < 1, "quieter than the slosh and the thunk");
+  assert.ok(!ONE_SHOTS.some((r) => r.pool.startsWith("place-stinger")), "no timer row");
 });
 
 test("placement: a water tile selects the slosh pool and a land tile does not", () => {

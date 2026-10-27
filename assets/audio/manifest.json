@@ -146,6 +146,214 @@
       "provenance": "assets-source/audio/sfx/place-slosh-3/provenance.json"
     },
     {
+      "id": "place-stinger-water",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.0,
+      "decodedBytes": 192000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/place-stinger-water.webm",
+          "sha256": "b31541adbd06555c56830c3aded3158f7f84cc3fb9acee164dd1ac056b350b54",
+          "bytes": 9065
+        },
+        "m4a": {
+          "path": "sfx/place-stinger-water.m4a",
+          "sha256": "effb81db11bd70ac5588170333fdd84dde1a2ed42c40019559ac5cc0ca020687",
+          "bytes": 17955
+        }
+      },
+      "provenance": "assets-source/audio/sfx/place-stinger-water/provenance.json"
+    },
+    {
+      "id": "place-stinger-coast",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.0,
+      "decodedBytes": 192000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/place-stinger-coast.webm",
+          "sha256": "7217db00d21aa8a08e279b8ee4dc9bc40a1301fe0ed0176cb799969fed095519",
+          "bytes": 9030
+        },
+        "m4a": {
+          "path": "sfx/place-stinger-coast.m4a",
+          "sha256": "4c562afcb53b42cdaf1ea4b7b1211a006b8130561d8eab7aeb08b9c08254fefa",
+          "bytes": 18152
+        }
+      },
+      "provenance": "assets-source/audio/sfx/place-stinger-coast/provenance.json"
+    },
+    {
+      "id": "place-stinger-forest",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.0,
+      "decodedBytes": 192000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/place-stinger-forest.webm",
+          "sha256": "02a055dcbb6864dbffbabd2fbbf52c46a24a1aab32ff16f5831d4cbdeb724710",
+          "bytes": 8832
+        },
+        "m4a": {
+          "path": "sfx/place-stinger-forest.m4a",
+          "sha256": "ee98c190180f759a2fe0b069d8b5ebcbb003863a559997b7778bb0e6c0d8d7f9",
+          "bytes": 18088
+        }
+      },
+      "provenance": "assets-source/audio/sfx/place-stinger-forest/provenance.json"
+    },
+    {
+      "id": "place-stinger-meadow",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.0,
+      "decodedBytes": 192000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/place-stinger-meadow.webm",
+          "sha256": "33b5a78535a463ea8bf4f016a512caa74b86e5068782542efbd30578d81350cc",
+          "bytes": 8635
+        },
+        "m4a": {
+          "path": "sfx/place-stinger-meadow.m4a",
+          "sha256": "c5adc88c7dd7ee650f0c3c5f8f4fdd88d51eaf0b813496bc2828a3eb24247729",
+          "bytes": 18485
+        }
+      },
+      "provenance": "assets-source/audio/sfx/place-stinger-meadow/provenance.json"
+    },
+    {
+      "id": "place-stinger-farm",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.0,
+      "decodedBytes": 192000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/place-stinger-farm.webm",
+          "sha256": "ac7f39763e9daf1cb3b955630d162d1321b04df67c34c5dd7f007c5d1dc20729",
+          "bytes": 9573
+        },
+        "m4a": {
+          "path": "sfx/place-stinger-farm.m4a",
+          "sha256": "1b2b20c34b5861420046efaeb0541b69ede04f3b9667dea691c7d7f84df8d8a1",
+          "bytes": 18725
+        }
+      },
+      "provenance": "assets-source/audio/sfx/place-stinger-farm/provenance.json"
+    },
+    {
+      "id": "place-stinger-town",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.0,
+      "decodedBytes": 192000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/place-stinger-town.webm",
+          "sha256": "421da3fcb56149e35205bb85136773d090151d4291946cc5c85594aecfec5c4a",
+          "bytes": 9112
+        },
+        "m4a": {
+          "path": "sfx/place-stinger-town.m4a",
+          "sha256": "60ba606712d4e87464dff042c6281083663e290bdccce79552e46fc40e4bd9da",
+          "bytes": 18519
+        }
+      },
+      "provenance": "assets-source/audio/sfx/place-stinger-town/provenance.json"
+    },
+    {
+      "id": "place-stinger-road",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 0.954021,
+      "decodedBytes": 183172,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/place-stinger-road.webm",
+          "sha256": "8bffbf57f93d2db8ff4ba999678805dbd0e3978e046850f4f7ae19c8bbdf4a62",
+          "bytes": 9663
+        },
+        "m4a": {
+          "path": "sfx/place-stinger-road.m4a",
+          "sha256": "6efdef8326b2b82f9df806428d4c85254ad8a3a354e0afb9205ae901d4aa6107",
+          "bytes": 18503
+        }
+      },
+      "provenance": "assets-source/audio/sfx/place-stinger-road/provenance.json"
+    },
+    {
+      "id": "place-stinger-rail",
+      "kind": "sfx",
+      "class": "sfx",
+      "status": "mastered",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 1.0,
+      "decodedBytes": 192000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "sfx/place-stinger-rail.webm",
+          "sha256": "5433a8aafaed250f650800f9e1d8533e5f95b14ca828fa3fc8ff62e9ae1c575f",
+          "bytes": 8863
+        },
+        "m4a": {
+          "path": "sfx/place-stinger-rail.m4a",
+          "sha256": "9625ee30b9eefa7233b20a965a102597e9fca2db58616ab9a8653c266e1d4fd1",
+          "bytes": 18295
+        }
+      },
+      "provenance": "assets-source/audio/sfx/place-stinger-rail/provenance.json"
+    },
+    {
       "id": "ui-select",
       "kind": "sfx",
       "class": "ui",
@@ -1250,6 +1458,141 @@
         }
       },
       "provenance": "assets-source/audio/ambience/well-windlass-2/provenance.json"
+    },
+    {
+      "id": "town-murmur-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "town-murmur",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 3.0,
+      "decodedBytes": 576000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/town-murmur-2.webm",
+          "sha256": "bb35d7542ad22e380132bb487ed85bbd7a5582fa6ed2130aba600c68e51efa68",
+          "bytes": 22085
+        },
+        "m4a": {
+          "path": "ambience/town-murmur-2.m4a",
+          "sha256": "ca3deded2c25d3ce18e44b6031b2bce2fc7c5dd6afb91d53f00e7dbeeb631e7c",
+          "bytes": 52644
+        }
+      },
+      "provenance": "assets-source/audio/ambience/town-murmur-2/provenance.json"
+    },
+    {
+      "id": "town-murmur-3",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "town-murmur",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 3.0,
+      "decodedBytes": 576000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/town-murmur-3.webm",
+          "sha256": "02427bf34bfb643013cd0b01636487c1d10c6b77a06c45f6c65fe6ac41d7c9fd",
+          "bytes": 23041
+        },
+        "m4a": {
+          "path": "ambience/town-murmur-3.m4a",
+          "sha256": "8328029386268c1053bbfe197bd076cfeae25393b51af3e6b60b9bd0fffafd61",
+          "bytes": 55213
+        }
+      },
+      "provenance": "assets-source/audio/ambience/town-murmur-3/provenance.json"
+    },
+    {
+      "id": "town-murmur-4",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "town-murmur",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 3.48,
+      "decodedBytes": 668160,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/town-murmur-4.webm",
+          "sha256": "e8ee300a698f9bb46ae443cf6a700c978cfcf81c93b96dd1ecbd0e37f093fd01",
+          "bytes": 26748
+        },
+        "m4a": {
+          "path": "ambience/town-murmur-4.m4a",
+          "sha256": "6e185f450b589c1e94152b498a155ed05a3d862140cb898f2ac37844fa7f31ec",
+          "bytes": 64732
+        }
+      },
+      "provenance": "assets-source/audio/ambience/town-murmur-4/provenance.json"
+    },
+    {
+      "id": "town-murmur-5",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "town-murmur",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 3.0,
+      "decodedBytes": 576000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/town-murmur-5.webm",
+          "sha256": "e1577adf5d379cbff391bbd13308f1ddaf2bd8e134f3e1a8f10d3509e2854ad2",
+          "bytes": 23085
+        },
+        "m4a": {
+          "path": "ambience/town-murmur-5.m4a",
+          "sha256": "c69f1f7694eed4a50cdbe5b863128eca89341bf2724f3185f4553500a7b9441e",
+          "bytes": 56961
+        }
+      },
+      "provenance": "assets-source/audio/ambience/town-murmur-5/provenance.json"
+    },
+    {
+      "id": "town-murmur-6",
+      "kind": "ambience",
+      "class": "sfx",
+      "status": "mastered",
+      "pool": "town-murmur",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": null,
+      "durationSeconds": 3.48,
+      "decodedBytes": 668160,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/town-murmur-6.webm",
+          "sha256": "91b0eadc68fe197ed8f80bc2266492e12356c1999c1931bb369623c9fb8b86a7",
+          "bytes": 25429
+        },
+        "m4a": {
+          "path": "ambience/town-murmur-6.m4a",
+          "sha256": "a15ca4ab1c6777f4efa6b4434113bb0c0382da64a2432a3e5150d2fd70839312",
+          "bytes": 62562
+        }
+      },
+      "provenance": "assets-source/audio/ambience/town-murmur-6/provenance.json"
     },
     {
       "id": "meadow-day",

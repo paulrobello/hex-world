@@ -5,8 +5,8 @@
   "masterTruePeak": -2.0,
   "lufsTolerance": 1.0,
   "decodedBudgetBytes": 96000000,
-  "generationCap": 71,
-  "generationCapNote": "Stone well, 2026-10-20, under the owner's standing approval for new sounds (2026-10-19): the cap was raised from 68 by at most 4 for the well-windlass pool (two short one-shots for the stone well on every house_cluster tile, at most two attempts each). Three were spent (attempts 69-71, 120 credits): one first take per variant and one retake of well-windlass-2, whose first take (attempt 70) started mid-creak with no silence before it, had no splash at its end and cleared the floor criterion by only 0.3 dB. well-windlass-1's slow decay left its floor 35.7 dB under the peak window, so it was saved by a gate instead of a retake, and the cap is set to the 71 attempts logged. Before that, Landing, 2026-10-20: three branches each numbered their new attempts from 57 (buffer-clunk 2026-10-20T23:39-23:40, boats 23:49-23:51 and the train-whistle-1 retakes 2026-10-21T00:48-00:49), so the merged log was renumbered chronologically by requestedAt: buffer-clunk is attempts 57-59 (30 credits, unchanged), the boat-oar and boat-sail pools 60-65 (150 credits, were 57-62) and the train-whistle-1 retakes 66-68 (120 credits, were 57-59). Each of the three raised the cap from 56 under the 2026-10-19 standing approval for new sounds, and 12 attempts were spent in all, so the cap is set to the 68 attempts logged. The train-whistle-1 retakes: Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 66-68, 120 credits), and attempt 66 was kept, so the cap was set to the 59 attempts logged on its branch. The boats: Boats, 2026-10-20, under the owner's standing approval for new sounds (2026-10-19): the cap was raised from 56 by at most 10 for the boat-oar pool (three short one-shots) and the boat-sail pool (two), at most two attempts each. Six were spent (attempts 60-65, 150 credits): one first take per variant and one retake of boat-sail-2, whose first take flapped and blew wind for the whole 3 s (floor 21.1 dB under the peak window). boat-sail-1 was saved by a gate instead of a retake, so the cap was set to the 62 attempts logged on its branch. The buffer clunk: Owner D2-Q5, 2026-10-20 (a soft buffer clunk when a train comes to rest at a line end), under the standing approval for new sounds: the cap was raised from 56 by at most 4 for the buffer-clunk pool (two short one-shots, at most two attempts each). Three were spent (attempts 57-59, 30 credits): one first take per variant and one retake of buffer-clunk-1, whose first take was a flat hiss burst, not a clunk. The retake's rumble tail was held down by a gate instead of a second retake, so the cap was set to the 59 attempts logged on its branch. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: the cap was raised from 53 by at most 6 for the place-slosh pool (three short one-shots, at most two attempts each). Three were spent (attempts 54-56, 60 credits), one first take per variant, all passing the floor criterion, so the cap is set to the 56 attempts logged. Before that, owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
+  "generationCap": 89,
+  "generationCapNote": "Town murmur and placement stingers, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the cap was raised from 71 by at most 24 for the town-murmur pool and the eight place-stinger-<family> cues, at most two paid takes per cue. Eighteen attempts were logged (72-89), 17 ok, 355 credits charged: one first take for each of the eight stingers and town-murmur-1 to -4 (72-83), then retakes of place-stinger-road (its first take, attempt 78, held all its energy under 300 Hz, in the thunk's band), town-murmur-1 (an unbroken murmur with no quiet floor) and town-murmur-4 (no silence before it and a -40 dB rumble tail). Attempt 84, the first road retake, was refused by the API with HTTP 400 (prompt 469 characters, over the 450 limit) and charged no credits that the response reported; the shortened prompt went out as attempt 87, whose log reason was corrected by hand because the script had already moved attempt 78 to rejected/ and logged 87 as a first take. The chatter retake failed the same way, so town-murmur-1 was retired and two new variants took its place (town-murmur-5, a call and laugh, and -6, a smithy; attempts 88-89). town-murmur-4's retake was saved by a gate instead of a third take. The cap is set to the 89 attempts logged. Before that, Stone well, 2026-10-20, under the owner's standing approval for new sounds (2026-10-19): the cap was raised from 68 by at most 4 for the well-windlass pool (two short one-shots for the stone well on every house_cluster tile, at most two attempts each). Three were spent (attempts 69-71, 120 credits): one first take per variant and one retake of well-windlass-2, whose first take (attempt 70) started mid-creak with no silence before it, had no splash at its end and cleared the floor criterion by only 0.3 dB. well-windlass-1's slow decay left its floor 35.7 dB under the peak window, so it was saved by a gate instead of a retake, and the cap is set to the 71 attempts logged. Before that, Landing, 2026-10-20: three branches each numbered their new attempts from 57 (buffer-clunk 2026-10-20T23:39-23:40, boats 23:49-23:51 and the train-whistle-1 retakes 2026-10-21T00:48-00:49), so the merged log was renumbered chronologically by requestedAt: buffer-clunk is attempts 57-59 (30 credits, unchanged), the boat-oar and boat-sail pools 60-65 (150 credits, were 57-62) and the train-whistle-1 retakes 66-68 (120 credits, were 57-59). Each of the three raised the cap from 56 under the 2026-10-19 standing approval for new sounds, and 12 attempts were spent in all, so the cap is set to the 68 attempts logged. The train-whistle-1 retakes: Owner audition, 2026-10-20: every round-3 cue was approved except train-whistle-1 (attempt 50, no reason given), so under the 2026-10-19 standing approval for new sounds the cap was raised from 56 by at most 3 for round-4 retakes of train-whistle-1. All three were spent (attempts 66-68, 120 credits), and attempt 66 was kept, so the cap was set to the 59 attempts logged on its branch. The boats: Boats, 2026-10-20, under the owner's standing approval for new sounds (2026-10-19): the cap was raised from 56 by at most 10 for the boat-oar pool (three short one-shots) and the boat-sail pool (two), at most two attempts each. Six were spent (attempts 60-65, 150 credits): one first take per variant and one retake of boat-sail-2, whose first take flapped and blew wind for the whole 3 s (floor 21.1 dB under the peak window). boat-sail-1 was saved by a gate instead of a retake, so the cap was set to the 62 attempts logged on its branch. The buffer clunk: Owner D2-Q5, 2026-10-20 (a soft buffer clunk when a train comes to rest at a line end), under the standing approval for new sounds: the cap was raised from 56 by at most 4 for the buffer-clunk pool (two short one-shots, at most two attempts each). Three were spent (attempts 57-59, 30 credits): one first take per variant and one retake of buffer-clunk-1, whose first take was a flat hiss burst, not a clunk. The retake's rumble tail was held down by a gate instead of a second retake, so the cap was set to the 59 attempts logged on its branch. Before that, Owner request, 2026-10-20 (\"a slosh sound when placing water tiles would be nice\"), under the standing approval for new sounds: the cap was raised from 53 by at most 6 for the place-slosh pool (three short one-shots, at most two attempts each). Three were spent (attempts 54-56, 60 credits), one first take per variant, all passing the floor criterion, so the cap is set to the 56 attempts logged. Before that, owner, 2026-10-19 (\"you have standing approval to generate any new sounds needed for the new items\"): the cap was raised from 39 by at most 18 for short non-loop ElevenLabs one-shots for the P3 items (farm-cow, farm-sheep, windmill-creak, wheat-rustle and shop-bell pools, and the unwired train-whistle and train-chuff). Fourteen were spent (attempts 40-53, 520 credits): one first take per cue and one retake of wheat-rustle-1, whose first take was a flat rustle with no swell. farm-sheep-2 and wheat-rustle-2 were saved by a cut and a gate instead of a retake, so the cap is set to the 53 attempts logged. Before that, owner request, 2026-10-14 (\"also add some sfx for the cars\"): the cap was raised from 30 by at most 10 for short non-loop ElevenLabs car takes (car-door, car-start and car-drive pools, and an optional rare car-horn). Nine were spent (attempts 31-39, 295 credits); the horn was not generated, so the cap is set to the 39 attempts logged. Before that, the forest and meadow loop beds were retired and the forests got one-shot pools: the cap was raised from 27 for short forest-leaves takes, three were spent (attempts 28-30, 40 credits each), and it was set to the 30 attempts logged.",
   "classes": {
     "music": {
       "lufs": -18,
@@ -238,6 +238,430 @@
             "below1500": 60.5,
             "1500to9k": 34.2,
             "above9k": 5.3
+          }
+        }
+      }
+    },
+    {
+      "id": "place-stinger-water",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "use": "The water family's placement stinger: a short tonal cue layered over the place-rumble and place-thunk when one of the river, spring, fork, bridge and river-mouth tiles (any River edge) settles after a placement or a replace, positional at the tile, on the effects bus, at PLACE_STINGER.level (0.45) times the thunk's placement level, or on demand (hexWorld.audio.play). The runtime routes it (stingerFamily and PLACE_STINGER in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Gentle game placement stinger for a river: two soft rising notes on a wooden kalimba, the second with a small rounded water-drop bloop, cool and clear. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+        "durationSeconds": 1.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/place-stinger-water.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Tonal (partials 525, 390 and 560 Hz), within 30 dB of its peak for 0.40 s, floor 68.1 dB under the peak window",
+          "below300HzPct": 0.2,
+          "band300to8kPct": 99.8,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -28.2,
+          "levelDeepestDipDb": 0.0,
+          "levelSpreadDb": 0.0,
+          "tone200HzSeriesMaxDb": 26.7,
+          "otherTonalPeaks": [
+            {
+              "hz": 264,
+              "db": 16.2
+            },
+            {
+              "hz": 527,
+              "db": 12.4
+            },
+            {
+              "hz": 1049,
+              "db": 10.7
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "floorBelowPeakDb": 68.1,
+          "floorBandPct": {
+            "below1500": 85.2,
+            "1500to9k": 14.1,
+            "above9k": 0.7
+          }
+        }
+      }
+    },
+    {
+      "id": "place-stinger-coast",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "use": "The coast family's placement stinger: a short tonal cue layered over the place-rumble and place-thunk when one of the beach and ocean tiles (Ocean or Beach edges, no River) settles after a placement or a replace, positional at the tile, on the effects bus, at PLACE_STINGER.level (0.45) times the thunk's placement level, or on demand (hexWorld.audio.play). The runtime routes it (stingerFamily and PLACE_STINGER in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Gentle game placement stinger for a seashore: two soft airy notes on small glass chimes, bright and open like a light sea breeze. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+        "durationSeconds": 1.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/place-stinger-coast.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Tonal glass-chime ring (880 Hz with 660 Hz), within 30 dB of its peak for 0.55 s, floor 58.1 dB under the peak window",
+          "below300HzPct": 0.0,
+          "band300to8kPct": 100.0,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -40.7,
+          "levelDeepestDipDb": 0.0,
+          "levelSpreadDb": 0.0,
+          "tone200HzSeriesMaxDb": 20.8,
+          "otherTonalPeaks": [
+            {
+              "hz": 879,
+              "db": 25.4
+            },
+            {
+              "hz": 1184,
+              "db": 13.6
+            },
+            {
+              "hz": 1852,
+              "db": 12.8
+            }
+          ],
+          "birdChirpEvents": 0,
+          "birds": false,
+          "floorBelowPeakDb": 58.1,
+          "floorBandPct": {
+            "below1500": 79.0,
+            "1500to9k": 20.3,
+            "above9k": 0.7
+          }
+        }
+      }
+    },
+    {
+      "id": "place-stinger-forest",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "use": "The forest family's placement stinger: a short tonal cue layered over the place-rumble and place-thunk when one of the forest and oak tiles settles after a placement or a replace, positional at the tile, on the effects bus, at PLACE_STINGER.level (0.45) times the thunk's placement level, or on demand (hexWorld.audio.play). The runtime routes it (stingerFamily and PLACE_STINGER in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Gentle game placement stinger for a forest: two soft low notes on a warm wooden marimba, woody, calm and deep. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+        "durationSeconds": 1.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/place-stinger-forest.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Tonal marimba pair (527 and 260 Hz), within 30 dB of its peak for 0.50 s, floor 57.7 dB under the peak window",
+          "below300HzPct": 0.4,
+          "band300to8kPct": 99.6,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -47.4,
+          "levelDeepestDipDb": 0.0,
+          "levelSpreadDb": 0.0,
+          "tone200HzSeriesMaxDb": 21.1,
+          "otherTonalPeaks": [
+            {
+              "hz": 527,
+              "db": 35.7
+            },
+            {
+              "hz": 264,
+              "db": 32.4
+            },
+            {
+              "hz": 2900,
+              "db": 14.4
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "floorBelowPeakDb": 57.7,
+          "floorBandPct": {
+            "below1500": 94.5,
+            "1500to9k": 5.3,
+            "above9k": 0.2
+          }
+        }
+      }
+    },
+    {
+      "id": "place-stinger-meadow",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "use": "The meadow family's placement stinger: a short tonal cue layered over the place-rumble and place-thunk when one of the meadow tiles settles after a placement or a replace, positional at the tile, on the effects bus, at PLACE_STINGER.level (0.45) times the thunk's placement level, or on demand (hexWorld.audio.play). The runtime routes it (stingerFamily and PLACE_STINGER in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Gentle game placement stinger for a sunny meadow: three quick soft rising plucks on a kalimba, light and cheerful. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+        "durationSeconds": 1.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/place-stinger-meadow.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Tonal plucks (247, 327 and 373 Hz), within 30 dB of its peak for 0.80 s, floor 42.4 dB under the peak window",
+          "below300HzPct": 54.5,
+          "band300to8kPct": 45.5,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -14.2,
+          "levelDeepestDipDb": 0.0,
+          "levelSpreadDb": 0.0,
+          "tone200HzSeriesMaxDb": 20.5,
+          "otherTonalPeaks": [
+            {
+              "hz": 246,
+              "db": 30.6
+            },
+            {
+              "hz": 328,
+              "db": 27.0
+            },
+            {
+              "hz": 369,
+              "db": 20.1
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "floorBelowPeakDb": 42.4,
+          "floorBandPct": {
+            "below1500": 98.3,
+            "1500to9k": 1.6,
+            "above9k": 0.1
+          }
+        }
+      }
+    },
+    {
+      "id": "place-stinger-farm",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "use": "The farm family's placement stinger: a short tonal cue layered over the place-rumble and place-thunk when one of the farm, windmill and wheat_field tiles settles after a placement or a replace, positional at the tile, on the effects bus, at PLACE_STINGER.level (0.45) times the thunk's placement level, or on demand (hexWorld.audio.play). The runtime routes it (stingerFamily and PLACE_STINGER in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Gentle game placement stinger for a farm: two soft hollow notes on a small wooden xylophone and a wooden temple block, homely and rustic. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+        "durationSeconds": 1.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/place-stinger-farm.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Tonal (330 and 440 Hz), two onsets, within 30 dB of its peak for 0.70 s, floor 41.3 dB under the peak window; mastered linearly (true peak -4.5 dBTP)",
+          "below300HzPct": 10.0,
+          "band300to8kPct": 90.0,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -23.5,
+          "levelDeepestDipDb": 0.0,
+          "levelSpreadDb": 0.0,
+          "tone200HzSeriesMaxDb": 20.9,
+          "otherTonalPeaks": [
+            {
+              "hz": 328,
+              "db": 41.1
+            },
+            {
+              "hz": 2900,
+              "db": 11.7
+            },
+            {
+              "hz": 3498,
+              "db": 11.3
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "floorBelowPeakDb": 41.3,
+          "floorBandPct": {
+            "below1500": 100.1,
+            "1500to9k": 0.0,
+            "above9k": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "place-stinger-town",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "use": "The town family's placement stinger: a short tonal cue layered over the place-rumble and place-thunk when one of the house_cluster and bakery tiles settles after a placement or a replace, positional at the tile, on the effects bus, at PLACE_STINGER.level (0.45) times the thunk's placement level, or on demand (hexWorld.audio.play). The runtime routes it (stingerFamily and PLACE_STINGER in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Gentle game placement stinger for a village house: one soft warm note on a small brass handbell struck gently with a felt mallet, cosy, with a short ring. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+        "durationSeconds": 1.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/place-stinger-town.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). One bell note (507 Hz, partials 273 and 1053 Hz), within 30 dB of its peak for 0.70 s, floor 48.0 dB under the peak window",
+          "below300HzPct": 18.9,
+          "band300to8kPct": 81.1,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -18.2,
+          "levelDeepestDipDb": 0.0,
+          "levelSpreadDb": 0.0,
+          "tone200HzSeriesMaxDb": 20.4,
+          "otherTonalPeaks": [
+            {
+              "hz": 510,
+              "db": 46.2
+            },
+            {
+              "hz": 275,
+              "db": 31.0
+            },
+            {
+              "hz": 463,
+              "db": 25.5
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "floorBelowPeakDb": 48.0,
+          "floorBandPct": {
+            "below1500": 98.6,
+            "1500to9k": 1.4,
+            "above9k": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "place-stinger-road",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "use": "The road family's placement stinger: a short tonal cue layered over the place-rumble and place-thunk when one of the road tiles (straight, bends, junction) settles after a placement or a replace, positional at the tile, on the effects bus, at PLACE_STINGER.level (0.45) times the thunk's placement level, or on demand (hexWorld.audio.play). The runtime routes it (stingerFamily and PLACE_STINGER in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Gentle game placement stinger for a country road: two soft, light, pitched taps on a small hollow wooden woodblock in a mid-high register, tock-tock, a gentle falling interval. Soft felt-mallet attack, warm and rounded, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no low thump, no click, no reverb tail, no voices, no other music.",
+        "durationSeconds": 1.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/place-stinger-road.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). The retake (attempt 87): three light woodblock taps at about 815 Hz, the last within 30 dB of the peak window until 0.90 s, floor 57.4 dB under the peak window. The first take (attempt 78) held 100% of its energy under 300 Hz (centroid 149 Hz), in the thunk's own band",
+          "below300HzPct": 0.0,
+          "band300to8kPct": 100.0,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -9.1,
+          "levelDeepestDipDb": 0.2,
+          "levelSpreadDb": 0.9,
+          "tone200HzSeriesMaxDb": 44.7,
+          "otherTonalPeaks": [
+            {
+              "hz": 814,
+              "db": 44.7
+            },
+            {
+              "hz": 785,
+              "db": 14.4
+            },
+            {
+              "hz": 3586,
+              "db": 13.2
+            }
+          ],
+          "birdChirpEvents": 3,
+          "birds": true,
+          "floorBelowPeakDb": 57.4,
+          "floorBandPct": {
+            "below1500": 83.7,
+            "1500to9k": 16.0,
+            "above9k": 0.3
+          }
+        }
+      }
+    },
+    {
+      "id": "place-stinger-rail",
+      "kind": "sfx",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "use": "The rail family's placement stinger: a short tonal cue layered over the place-rumble and place-thunk when one of the rail tiles, the rail station and the rail-road crossing settles after a placement or a replace, positional at the tile, on the effects bus, at PLACE_STINGER.level (0.45) times the thunk's placement level, or on demand (hexWorld.audio.play). The runtime routes it (stingerFamily and PLACE_STINGER in web/ui/src/audio-mix.ts), so it lists no event.",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Gentle game placement stinger for a railway: two soft light notes on a small metal chime struck gently, a clean little tink-tink, bright but quiet. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+        "durationSeconds": 1.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/sfx/place-stinger-rail.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Tonal chime (520 Hz with its 1040 Hz octave), within 30 dB of its peak for 0.60 s, floor 57.0 dB under the peak window",
+          "below300HzPct": 0.0,
+          "band300to8kPct": 100.0,
+          "above8kPct": 0.0,
+          "band1to6kVsFullDb": -27.3,
+          "levelDeepestDipDb": 0.0,
+          "levelSpreadDb": 0.0,
+          "tone200HzSeriesMaxDb": 22.2,
+          "otherTonalPeaks": [
+            {
+              "hz": 516,
+              "db": 32.1
+            },
+            {
+              "hz": 1049,
+              "db": 11.9
+            },
+            {
+              "hz": 5818,
+              "db": 10.3
+            }
+          ],
+          "birdChirpEvents": 1,
+          "birds": false,
+          "floorBelowPeakDb": 57.0,
+          "floorBandPct": {
+            "below1500": 79.4,
+            "1500to9k": 19.8,
+            "above9k": 0.8
           }
         }
       }
@@ -2238,6 +2662,293 @@
             "below1500": 73.7,
             "1500to9k": 19.3,
             "above9k": 7.0
+          }
+        }
+      }
+    },
+    {
+      "id": "town-murmur-1",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "town-murmur",
+      "use": "One town sound (chatter) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Two villagers exchanging a few quiet, indistinct words in a small village street, heard from a short distance: a soft, muffled, friendly murmur lasting about one and a half seconds, with no intelligible words, then silence. No music, no crowd, no traffic. Studio-quiet background, with silence before and after the voices.",
+        "durationSeconds": 3.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue."
+      },
+      "retired": true,
+      "retiredNote": "2026-10-27, at mastering: both takes (attempts 80 and 85, the retake prompted for a short exchange then silence) came back as an unbroken muffled murmur for their whole length, at -59.9 and -60.9 LUFS, so mastering raised the source 44 dB. The level never dips more than 6 dB, and the floor sat 12.4 and 15.7 dB under the peak window (the pool floor criterion needs 40); a gate cannot help a take with no quiet interior. A continuous murmur is the kind of bed the owner heard as noise (2026-10-14), so chatter is out of the pool, replaced by a short call-and-laugh (town-murmur-5) and a distant smithy (town-murmur-6)."
+    },
+    {
+      "id": "town-murmur-2",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "town-murmur",
+      "use": "One town sound (door) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "A wooden cottage door with an iron thumb latch heard from a little way down a village street: the latch clicks, the door creaks briefly open and then shuts with a soft wooden knock, about two seconds. No voices, no music. Studio-quiet background, with silence before and after.",
+        "durationSeconds": 3.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/town-murmur-2.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). A latch click (loudest window centred near 6.5 kHz), a creak and two short knocks near 1.6 and 1.85 s, floor 55.0 dB under the peak window; the birds detector fires on the latch's clicks, not birds",
+          "below300HzPct": 20.9,
+          "band300to8kPct": 77.0,
+          "above8kPct": 2.0,
+          "band1to6kVsFullDb": -10.2,
+          "levelDeepestDipDb": 39.7,
+          "levelSpreadDb": 43.4,
+          "tone200HzSeriesMaxDb": 7.1,
+          "otherTonalPeaks": [
+            {
+              "hz": 2900,
+              "db": 12.7
+            },
+            {
+              "hz": 4500,
+              "db": 12.0
+            },
+            {
+              "hz": 3551,
+              "db": 11.7
+            }
+          ],
+          "birdChirpEvents": 4,
+          "birds": true,
+          "floorBelowPeakDb": 55.0,
+          "floorBandPct": {
+            "below1500": 94.7,
+            "1500to9k": 5.3,
+            "above9k": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "town-murmur-3",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "town-murmur",
+      "use": "One town sound (dog) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "A small friendly village dog barking twice, a few houses away, softened by outdoor distance, not aggressive, then quiet. No voices, no music, no other animals. Studio-quiet background, with silence before and after.",
+        "durationSeconds": 3.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/town-murmur-3.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Three short barks (0.15, 0.5 and 1.8 s; the prompt asked for two), strongest partial about 695 Hz, floor 68.2 dB under the peak window",
+          "below300HzPct": 0.0,
+          "band300to8kPct": 99.9,
+          "above8kPct": 0.1,
+          "band1to6kVsFullDb": -4.8,
+          "levelDeepestDipDb": 38.4,
+          "levelSpreadDb": 42.4,
+          "tone200HzSeriesMaxDb": 19.8,
+          "otherTonalPeaks": [],
+          "birdChirpEvents": 2,
+          "birds": false,
+          "floorBelowPeakDb": 68.2,
+          "floorBandPct": {
+            "below1500": 90.1,
+            "1500to9k": 9.3,
+            "above9k": 0.6
+          }
+        }
+      }
+    },
+    {
+      "id": "town-murmur-4",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "town-murmur",
+      "use": "One town sound (cart) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Starting from silence: a small wooden handcart with iron-rimmed wheels rolls briefly over cobblestones in a village street a short distance away, about two seconds of soft rattling as it passes, then it fades into silence. No horse, no voices, no music. Studio-quiet background, with silence before and after.",
+        "durationSeconds": 3.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "gate (24 dB under the peak window, ratio 3, 30 dB range), closed for 57% of the take: ungated, the retake's rattle stops at 1.6 s into a -33 dB rumble that left the floor 34.3 dB under the peak window (needs 40)",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/town-murmur-4.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). The retake (attempt 86): about 1.5 s of rattle from the first sample, then the gated tail, floor 55.7 dB under the peak window. Both takes start at full level with no silence before; the runtime's 5 ms attack ramp covers the start",
+          "below300HzPct": 42.5,
+          "band300to8kPct": 57.4,
+          "above8kPct": 0.1,
+          "band1to6kVsFullDb": -4.3,
+          "levelDeepestDipDb": 42.5,
+          "levelSpreadDb": 49.2,
+          "tone200HzSeriesMaxDb": 8.7,
+          "otherTonalPeaks": [
+            {
+              "hz": 2900,
+              "db": 14.0
+            },
+            {
+              "hz": 1852,
+              "db": 13.7
+            },
+            {
+              "hz": 1951,
+              "db": 12.4
+            }
+          ],
+          "birdChirpEvents": 4,
+          "birds": true,
+          "floorBelowPeakDb": 55.7,
+          "floorBandPct": {
+            "below1500": 98.4,
+            "1500to9k": 1.6,
+            "above9k": 0.0
+          }
+        }
+      },
+      "gate": {
+        "thresholdDbBelowPeak": 24,
+        "ratio": 3,
+        "rangeDb": 30,
+        "attackMs": 5,
+        "releaseMs": 150
+      }
+    },
+    {
+      "id": "town-murmur-5",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "town-murmur",
+      "use": "One town sound (call) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "Two villagers in a small village street a short way off: one calls out a short, cheerful, indistinct greeting and the other answers with a brief warm laugh, about one and a half seconds in all, then silence. No intelligible words, no crowd, no music. Studio-quiet background, with silence before and after.",
+        "durationSeconds": 3.0,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/town-murmur-5.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Two bursts of short syllable-like pulses (0.1-0.7 s and 1.1-2.35 s) with dips of 30 dB or more between them, floor 66.2 dB under the peak window; whether any word is intelligible is for the owner's ear",
+          "below300HzPct": 39.3,
+          "band300to8kPct": 60.6,
+          "above8kPct": 0.1,
+          "band1to6kVsFullDb": -12.4,
+          "levelDeepestDipDb": 10.2,
+          "levelSpreadDb": 12.0,
+          "tone200HzSeriesMaxDb": 14.1,
+          "otherTonalPeaks": [
+            {
+              "hz": 475,
+              "db": 18.9
+            },
+            {
+              "hz": 8314,
+              "db": 13.2
+            },
+            {
+              "hz": 3340,
+              "db": 11.5
+            }
+          ],
+          "birdChirpEvents": 6,
+          "birds": true,
+          "floorBelowPeakDb": 66.2,
+          "floorBandPct": {
+            "below1500": 87.8,
+            "1500to9k": 8.8,
+            "above9k": 3.4
+          }
+        }
+      }
+    },
+    {
+      "id": "town-murmur-6",
+      "kind": "ambience",
+      "class": "sfx",
+      "channels": 1,
+      "loop": false,
+      "pool": "town-murmur",
+      "use": "One town sound (smithy) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).",
+      "events": [],
+      "provider": "elevenlabs",
+      "generation": {
+        "text": "A village blacksmith a few houses away striking a small anvil with a hammer three times, light ringing metallic taps with a short natural decay, then silence. Gentle and distant, not harsh. No voices, no music. Studio-quiet background, with silence before and after.",
+        "durationSeconds": 3.5,
+        "promptInfluence": 0.6,
+        "loop": false
+      },
+      "review": {
+        "round": 8,
+        "roundNote": "P2 audio, 2026-10-27, under the owner's standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.",
+        "filterApplied": "none",
+        "screening": {
+          "measuredOn": "mastered assets/audio/ambience/town-murmur-6.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Two anvil strikes (0 and 0.95 s; the prompt asked for three), each ringing about 0.8 s, centroid about 3.8 kHz, floor 64.6 dB under the peak window",
+          "below300HzPct": 0.7,
+          "band300to8kPct": 91.0,
+          "above8kPct": 8.3,
+          "band1to6kVsFullDb": -2.7,
+          "levelDeepestDipDb": 54.0,
+          "levelSpreadDb": 55.0,
+          "tone200HzSeriesMaxDb": 14.9,
+          "otherTonalPeaks": [
+            {
+              "hz": 2900,
+              "db": 13.1
+            },
+            {
+              "hz": 1898,
+              "db": 12.8
+            },
+            {
+              "hz": 1102,
+              "db": 12.8
+            }
+          ],
+          "birdChirpEvents": 3,
+          "birds": true,
+          "floorBelowPeakDb": 64.6,
+          "floorBandPct": {
+            "below1500": 68.6,
+            "1500to9k": 21.9,
+            "above9k": 9.5
           }
         }
       }

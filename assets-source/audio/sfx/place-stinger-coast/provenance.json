@@ -1,0 +1,186 @@
+{
+  "cueId": "place-stinger-coast",
+  "kind": "sfx",
+  "class": "sfx",
+  "version": 1,
+  "use": "The coast family's placement stinger: a short tonal cue layered over the place-rumble and place-thunk when one of the beach and ocean tiles (Ocean or Beach edges, no River) settles after a placement or a replace, positional at the tile, on the effects bus, at PLACE_STINGER.level (0.45) times the thunk's placement level, or on demand (hexWorld.audio.play). The runtime routes it (stingerFamily and PLACE_STINGER in web/ui/src/audio-mix.ts), so it lists no event.",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Gentle game placement stinger for a seashore: two soft airy notes on small glass chimes, bright and open like a light sea breeze. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Gentle game placement stinger for a seashore: two soft airy notes on small glass chimes, bright and open like a light sea breeze. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 1.0,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "189234bbc2ac9be3ecfdc56216157e8b",
+    "generatedAt": "2026-10-27T15:53:04+00:00",
+    "attempt": 73,
+    "creditsCharged": 10,
+    "record": {
+      "path": "assets-source/audio/sfx/place-stinger-coast/generation.json",
+      "sha256": "d33040768f3737296d255fb1fb7333be68f43463b85168bf9c4e544e19491305",
+      "bytes": 2295
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/sfx/place-stinger-coast/place-stinger-coast.mp3",
+    "sha256": "13b5454cff025aa87f2b4c6ff96d7905e3ca77ff6d55008a9e74585b3e5f9c97",
+    "bytes": 17179,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 1.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -35.5,
+      "lra": 0.0,
+      "truePeak": -16.8
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 0.0,
+      "truePeak": -2.3
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.2
+      },
+      "m4a": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.2
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -35.6,
+        "lra": 0.0,
+        "truePeak": -16.8
+      },
+      "targetLufs": -16.0,
+      "gainDb": 19.6,
+      "requiredPeakReductionDb": 4.8,
+      "mode": "limited",
+      "limiterInputGainDb": 21.4,
+      "limiterPasses": 3,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 6.0
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.2
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/sfx/place-stinger-coast.wav",
+    "sha256": "4bf117aa636cdf5d2719760636825adad23669bff6fa7a2840024d90ac9fed13",
+    "frames": 48000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/sfx/place-stinger-coast.webm",
+      "sha256": "7217db00d21aa8a08e279b8ee4dc9bc40a1301fe0ed0176cb799969fed095519",
+      "bytes": 9030,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.008,
+      "decodedFrames": 48000,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.2
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/place-stinger-coast.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/sfx/place-stinger-coast.webm"
+    },
+    {
+      "path": "assets/audio/sfx/place-stinger-coast.m4a",
+      "sha256": "4c562afcb53b42cdaf1ea4b7b1211a006b8130561d8eab7aeb08b9c08254fefa",
+      "bytes": 18152,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.0,
+      "decodedFrames": 48000,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.2
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/place-stinger-coast.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/sfx/place-stinger-coast.m4a"
+    }
+  ],
+  "decodedBytes": 192000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.10",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "cd56507e621a35d91042d8e30f36db72f0e30fd0cce3da865eeee185fe583002"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

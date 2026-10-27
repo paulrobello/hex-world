@@ -140,6 +140,13 @@ POOL_NOTE = {
                       "(attempt 71), prompted to end in a faint splash down the shaft, though no separate late event shows in its "
                       "level; confirm by ear. The game plays one at a house_cluster "
                       "tile (its stone well) within 3 hex steps of the focus every 40-110 s, at level 0.25."),
+    "town-murmur": ("Occasional town sounds in place of a murmur loop bed: a cottage door with a latch (2), a small dog "
+                    "barking a few houses away (3), a handcart on cobbles (4, the retake, gated so its rumble tail "
+                    "settles), a villager's call answered by a laugh (5) and a blacksmith's anvil (6), one ElevenLabs "
+                    "take each, unfiltered. Voices are prompted to be indistinct; confirm by ear that no words can be "
+                    "made out. town-murmur-1 (chatter) was retired at mastering (see its retiredNote). The game plays "
+                    "one at a house_cluster, bakery or rail_station tile within 3 hex steps of the focus every 30-80 s, "
+                    "at level 0.25 on the ambience bus."),
 }
 
 

@@ -1,0 +1,186 @@
+{
+  "cueId": "place-stinger-water",
+  "kind": "sfx",
+  "class": "sfx",
+  "version": 1,
+  "use": "The water family's placement stinger: a short tonal cue layered over the place-rumble and place-thunk when one of the river, spring, fork, bridge and river-mouth tiles (any River edge) settles after a placement or a replace, positional at the tile, on the effects bus, at PLACE_STINGER.level (0.45) times the thunk's placement level, or on demand (hexWorld.audio.play). The runtime routes it (stingerFamily and PLACE_STINGER in web/ui/src/audio-mix.ts), so it lists no event.",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Gentle game placement stinger for a river: two soft rising notes on a wooden kalimba, the second with a small rounded water-drop bloop, cool and clear. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Gentle game placement stinger for a river: two soft rising notes on a wooden kalimba, the second with a small rounded water-drop bloop, cool and clear. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 1.0,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "3559710bb33bee4ba639d86504c282f0",
+    "generatedAt": "2026-10-27T15:53:00+00:00",
+    "attempt": 72,
+    "creditsCharged": 10,
+    "record": {
+      "path": "assets-source/audio/sfx/place-stinger-water/generation.json",
+      "sha256": "6c5aaffc4455dcb3c247fd710d5d34cc866c0c8325e1b6124a6c7c2a9bb8394c",
+      "bytes": 2339
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/sfx/place-stinger-water/place-stinger-water.mp3",
+    "sha256": "e8e877fe9bd162e8e0c36c9bd9981f6024cab77509f086b5e5e7870c75bd6bc3",
+    "bytes": 17179,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 1.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -23.3,
+      "lra": 0.0,
+      "truePeak": -8.5
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 0.0,
+      "truePeak": -2.0
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.0
+      },
+      "m4a": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -1.9
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -23.3,
+        "lra": 0.0,
+        "truePeak": -8.5
+      },
+      "targetLufs": -16.0,
+      "gainDb": 7.3,
+      "requiredPeakReductionDb": 0.8,
+      "mode": "limited",
+      "limiterInputGainDb": 11.7,
+      "limiterPasses": 4,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 4.0
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.5
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/sfx/place-stinger-water.wav",
+    "sha256": "744f7f29dbfb5b591453bf74a5199f37147d1a68bfcd3be326ac2324ae7702b2",
+    "frames": 48000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/sfx/place-stinger-water.webm",
+      "sha256": "b31541adbd06555c56830c3aded3158f7f84cc3fb9acee164dd1ac056b350b54",
+      "bytes": 9065,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.008,
+      "decodedFrames": 48000,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.0
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/place-stinger-water.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/sfx/place-stinger-water.webm"
+    },
+    {
+      "path": "assets/audio/sfx/place-stinger-water.m4a",
+      "sha256": "effb81db11bd70ac5588170333fdd84dde1a2ed42c40019559ac5cc0ca020687",
+      "bytes": 17955,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.0,
+      "decodedFrames": 48000,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -1.9
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/place-stinger-water.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/sfx/place-stinger-water.m4a"
+    }
+  ],
+  "decodedBytes": 192000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.10",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "d6434b8d11347ac4c5c87ddb08ad4bb16140e16cd97d4a0a24f39e79299f2a6b"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

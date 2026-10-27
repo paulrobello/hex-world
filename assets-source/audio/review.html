@@ -28,8 +28,73 @@ button { font:inherit; font-size:13px; padding:6px 10px; border-radius:6px; bord
 measured on the WebM by <code>make audio-master</code>. Loop cues have a gapless Web Audio player that loops at the
 manifest loop points, as the game will; the plain player's <code>loop</code> attribute can gap between repeats in some browsers.
 Serve the repo root over http (<code>python3 -m http.server</code>) for the gapless player.</p>
-<p class=lead>Generation attempts logged: 71 of 71. Approvals pending: creative and owner.</p>
-<h2>Round 7: new one-shot pools to audition</h2><p class=lead>Stone well on every house_cluster tile, 2026-10-20, under the owner&#x27;s standing approval for new sounds (2026-10-19): an occasional windlass one-shot pool positional at the well, quieter and rarer than the windmill (every 40-110 s, level 0.25). At most two ElevenLabs attempts per variant; three were spent (attempts 69-71, 120 credits).</p><h2>New one-shot pool: well-windlass (2 variants)</h2><p class=lead>An old wooden well windlass turning a few creaking turns, one ElevenLabs take each, high-passed at 60 Hz. well-windlass-1 is gated so its slow decay settles; well-windlass-2 is the retake (attempt 71), prompted to end in a faint splash down the shaft, though no separate late event shows in its level; confirm by ear. The game plays one at a house_cluster tile (its stone well) within 3 hex steps of the focus every 40-110 s, at level 0.25. The floor numbers are the owner's 2026-10-14 criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p><p><button onclick="randomVariant(this, 'well-windlass')">Play a random variant</button> <span class=meta data-now='well-windlass'></span></p><div class=grid data-pool='well-windlass'><div class=card><h3>well-windlass-1</h3>
+<p class=lead>Generation attempts logged: 89 of 89. Approvals pending: creative and owner.</p>
+<h2>Round 8: new one-shot pools to audition</h2><p class=lead>P2 audio, 2026-10-27, under the owner&#x27;s standing approval for new sounds (2026-10-19): the town murmur as an occasional one-shot pool at house_cluster, bakery and rail_station tiles (land ambience is one-shots, never a loop bed, owner 2026-10-14), and one short tonal placement stinger per tile family, layered over the shared rumble and thunk at the settle. At most two ElevenLabs attempts per cue.</p><h2>New one-shot pool: town-murmur (5 variants)</h2><p class=lead>Occasional town sounds in place of a murmur loop bed: a cottage door with a latch (2), a small dog barking a few houses away (3), a handcart on cobbles (4, the retake, gated so its rumble tail settles), a villager&#x27;s call answered by a laugh (5) and a blacksmith&#x27;s anvil (6), one ElevenLabs take each, unfiltered. Voices are prompted to be indistinct; confirm by ear that no words can be made out. town-murmur-1 (chatter) was retired at mastering (see its retiredNote). The game plays one at a house_cluster, bakery or rail_station tile within 3 hex steps of the focus every 30-80 s, at level 0.25 on the ambience bus. The floor numbers are the owner's 2026-10-14 criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p><p><button onclick="randomVariant(this, 'town-murmur')">Play a random variant</button> <span class=meta data-now='town-murmur'></span></p><div class=grid data-pool='town-murmur'><div class=card><h3>town-murmur-2</h3>
+<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/town-murmur-2.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/town-murmur-2.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>3.00 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-1.9 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.2</b></span>
+<span>source <b>-17.7 LUFS</b></span>
+<span>runtime <b>73 KB</b></span></div>
+<p class=meta>limited 3.3 dB on 4.0% of 20 ms windows</p><div class=nums><span>webm floor <b>55.0 dB</b> under peak (pass), &lt;1.5k 94.7% · 1.5–9k 5.3% · &gt;9k 0.0%</span><span>m4a floor <b>55.1 dB</b> under peak (pass), &lt;1.5k 96.0% · 1.5–9k 4.0% · &gt;9k 0.0%</span></div><div class=nums><span>300 Hz–8 kHz <b>77.0%</b></span><span>&lt;300 Hz <b>20.9%</b></span><span>&gt;8 kHz <b>2.0%</b></span><span>1–6 kHz vs full <b>-10.2 dB</b></span><span>deepest dip <b>39.7 dB</b> (spread 43.4)</span><span>200 Hz series <b>+7.1 dB</b>, other tones 2900 Hz +12.7, 4500 Hz +12.0, 3551 Hz +11.7</span><span>birds <b>yes</b> (4 chirp events)</span></div><p class=meta>Screened on the mastered assets/audio/ambience/town-murmur-2.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). A latch click (loudest window centred near 6.5 kHz), a creak and two short knocks near 1.6 and 1.85 s, floor 55.0 dB under the peak window; the birds detector fires on the latch&#x27;s clicks, not birds. Filter: none.</p><p class=meta>Use: One town sound (door) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).</p>
+<details><summary>Prompt and generation</summary><p>A wooden cottage door with an iron thumb latch heard from a little way down a village street: the latch clicks, the door creaks briefly open and then shuts with a soft wooden knock, about two seconds. No voices, no music. Studio-quiet background, with silence before and after.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 81 ·
+id <code>a93aec1d2ef8740c06b98bd4b16e858b</code> · <a href="ambience/town-murmur-2/town-murmur-2.mp3">source</a></p></details>
+</div><div class=card><h3>town-murmur-3</h3>
+<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/town-murmur-3.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/town-murmur-3.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>3.00 s</b></span>
+<span>WebM <b>-15.9 LUFS</b> / <b>-1.6 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-1.9</b></span>
+<span>source <b>-16.3 LUFS</b></span>
+<span>runtime <b>76 KB</b></span></div>
+<p class=meta>limited 2.0 dB on 6.7% of 20 ms windows</p><div class=nums><span>webm floor <b>68.2 dB</b> under peak (pass), &lt;1.5k 90.1% · 1.5–9k 9.3% · &gt;9k 0.6%</span><span>m4a floor <b>47.7 dB</b> under peak (pass), &lt;1.5k 100.0% · 1.5–9k 0.0% · &gt;9k 0.0%</span></div><div class=nums><span>300 Hz–8 kHz <b>99.9%</b></span><span>&lt;300 Hz <b>0.0%</b></span><span>&gt;8 kHz <b>0.1%</b></span><span>1–6 kHz vs full <b>-4.8 dB</b></span><span>deepest dip <b>38.4 dB</b> (spread 42.4)</span><span>200 Hz series <b>+19.8 dB</b>, other tones none</span><span>birds <b>no</b> (2 chirp events)</span></div><p class=meta>Screened on the mastered assets/audio/ambience/town-murmur-3.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Three short barks (0.15, 0.5 and 1.8 s; the prompt asked for two), strongest partial about 695 Hz, floor 68.2 dB under the peak window. Filter: none.</p><p class=meta>Use: One town sound (dog) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).</p>
+<details><summary>Prompt and generation</summary><p>A small friendly village dog barking twice, a few houses away, softened by outdoor distance, not aggressive, then quiet. No voices, no music, no other animals. Studio-quiet background, with silence before and after.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 82 ·
+id <code>c1b7aa5a3f44bb65fd82bb4c48cd94b8</code> · <a href="ambience/town-murmur-3/town-murmur-3.mp3">source</a></p></details>
+</div><div class=card><h3>town-murmur-4</h3>
+<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/town-murmur-4.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/town-murmur-4.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>3.48 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-1.9 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.0</b></span>
+<span>source <b>-34.2 LUFS</b></span>
+<span>runtime <b>89 KB</b></span></div>
+<p class=meta>limited 9.1 dB on 4.6% of 20 ms windows</p><div class=nums><span>webm floor <b>55.7 dB</b> under peak (pass), &lt;1.5k 98.4% · 1.5–9k 1.6% · &gt;9k 0.0%</span><span>m4a floor <b>55.4 dB</b> under peak (pass), &lt;1.5k 98.3% · 1.5–9k 1.7% · &gt;9k 0.0%</span></div><div class=nums><span>300 Hz–8 kHz <b>57.4%</b></span><span>&lt;300 Hz <b>42.5%</b></span><span>&gt;8 kHz <b>0.1%</b></span><span>1–6 kHz vs full <b>-4.3 dB</b></span><span>deepest dip <b>42.5 dB</b> (spread 49.2)</span><span>200 Hz series <b>+8.7 dB</b>, other tones 2900 Hz +14.0, 1852 Hz +13.7, 1951 Hz +12.4</span><span>birds <b>yes</b> (4 chirp events)</span></div><p class=meta>Screened on the mastered assets/audio/ambience/town-murmur-4.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). The retake (attempt 86): about 1.5 s of rattle from the first sample, then the gated tail, floor 55.7 dB under the peak window. Both takes start at full level with no silence before; the runtime&#x27;s 5 ms attack ramp covers the start. Filter: gate (24 dB under the peak window, ratio 3, 30 dB range), closed for 57% of the take: ungated, the retake&#x27;s rattle stops at 1.6 s into a -33 dB rumble that left the floor 34.3 dB under the peak window (needs 40).</p><p class=meta>Use: One town sound (cart) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).</p>
+<details><summary>Prompt and generation</summary><p>Starting from silence: a small wooden handcart with iron-rimmed wheels rolls briefly over cobblestones in a village street a short distance away, about two seconds of soft rattling as it passes, then it fades into silence. No horse, no voices, no music. Studio-quiet background, with silence before and after.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 86 ·
+id <code>d608ae0b2607a78eca9d924c3b02d33f</code> · <a href="ambience/town-murmur-4/town-murmur-4.mp3">source</a></p></details>
+</div><div class=card><h3>town-murmur-5</h3>
+<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/town-murmur-5.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/town-murmur-5.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>3.00 s</b></span>
+<span>WebM <b>-15.9 LUFS</b> / <b>-1.8 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.3</b></span>
+<span>source <b>-13.9 LUFS</b></span>
+<span>runtime <b>78 KB</b></span></div>
+<p class=meta>linear</p><div class=nums><span>webm floor <b>66.2 dB</b> under peak (pass), &lt;1.5k 87.8% · 1.5–9k 8.8% · &gt;9k 3.4%</span><span>m4a floor <b>66.3 dB</b> under peak (pass), &lt;1.5k 87.7% · 1.5–9k 9.1% · &gt;9k 3.2%</span></div><div class=nums><span>300 Hz–8 kHz <b>60.6%</b></span><span>&lt;300 Hz <b>39.3%</b></span><span>&gt;8 kHz <b>0.1%</b></span><span>1–6 kHz vs full <b>-12.4 dB</b></span><span>deepest dip <b>10.2 dB</b> (spread 12.0)</span><span>200 Hz series <b>+14.1 dB</b>, other tones 475 Hz +18.9, 8314 Hz +13.2, 3340 Hz +11.5</span><span>birds <b>yes</b> (6 chirp events)</span></div><p class=meta>Screened on the mastered assets/audio/ambience/town-murmur-5.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Two bursts of short syllable-like pulses (0.1-0.7 s and 1.1-2.35 s) with dips of 30 dB or more between them, floor 66.2 dB under the peak window; whether any word is intelligible is for the owner&#x27;s ear. Filter: none.</p><p class=meta>Use: One town sound (call) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).</p>
+<details><summary>Prompt and generation</summary><p>Two villagers in a small village street a short way off: one calls out a short, cheerful, indistinct greeting and the other answers with a brief warm laugh, about one and a half seconds in all, then silence. No intelligible words, no crowd, no music. Studio-quiet background, with silence before and after.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 88 ·
+id <code>928b597f97ef09608c78c537c9c35b25</code> · <a href="ambience/town-murmur-5/town-murmur-5.mp3">source</a></p></details>
+</div><div class=card><h3>town-murmur-6</h3>
+<p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/ambience/town-murmur-6.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/town-murmur-6.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>3.48 s</b></span>
+<span>WebM <b>-16.3 LUFS</b> / <b>-2.0 dBTP</b></span>
+<span>m4a <b>-16.4</b> / <b>-1.7</b></span>
+<span>source <b>-15.6 LUFS</b></span>
+<span>runtime <b>86 KB</b></span></div>
+<p class=meta>limited 2.1 dB on 4.0% of 20 ms windows</p><div class=nums><span>webm floor <b>64.6 dB</b> under peak (pass), &lt;1.5k 68.6% · 1.5–9k 21.9% · &gt;9k 9.5%</span><span>m4a floor <b>64.3 dB</b> under peak (pass), &lt;1.5k 72.0% · 1.5–9k 20.0% · &gt;9k 8.0%</span></div><div class=nums><span>300 Hz–8 kHz <b>91.0%</b></span><span>&lt;300 Hz <b>0.7%</b></span><span>&gt;8 kHz <b>8.3%</b></span><span>1–6 kHz vs full <b>-2.7 dB</b></span><span>deepest dip <b>54.0 dB</b> (spread 55.0)</span><span>200 Hz series <b>+14.9 dB</b>, other tones 2900 Hz +13.1, 1898 Hz +12.8, 1102 Hz +12.8</span><span>birds <b>yes</b> (3 chirp events)</span></div><p class=meta>Screened on the mastered assets/audio/ambience/town-murmur-6.webm: scripts/audio/screen.py --floor, plus a 50 ms RMS envelope, the spectral centroid and the strongest partials of the loudest 200 ms (a script self-tested on a sine, white noise and a decaying two-note tone). Two anvil strikes (0 and 0.95 s; the prompt asked for three), each ringing about 0.8 s, centroid about 3.8 kHz, floor 64.6 dB under the peak window. Filter: none.</p><p class=meta>Use: One town sound (smithy) of the town-murmur pool: positional at a house_cluster, bakery or rail_station tile within 3 hex steps of the camera focus, every 30-80 s at random, on the ambience bus, or on demand (hexWorld.audio.play).</p>
+<details><summary>Prompt and generation</summary><p>A village blacksmith a few houses away striking a small anvil with a hammer three times, light ringing metallic taps with a short natural decay, then silence. Gentle and distant, not harsh. No voices, no music. Studio-quiet background, with silence before and after.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 89 ·
+id <code>5ef12f74bbc3c18366189fb8c01d495c</code> · <a href="ambience/town-murmur-6/town-murmur-6.mp3">source</a></p></details>
+</div></div><h2>Earlier one-shot pools</h2><h2>One-shot pool: well-windlass (2 variants)</h2><p class=lead>An old wooden well windlass turning a few creaking turns, one ElevenLabs take each, high-passed at 60 Hz. well-windlass-1 is gated so its slow decay settles; well-windlass-2 is the retake (attempt 71), prompted to end in a faint splash down the shaft, though no separate late event shows in its level; confirm by ear. The game plays one at a house_cluster tile (its stone well) within 3 hex steps of the focus every 40-110 s, at level 0.25. The floor numbers are the owner's 2026-10-14 criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p><p><button onclick="randomVariant(this, 'well-windlass')">Play a random variant</button> <span class=meta data-now='well-windlass'></span></p><div class=grid data-pool='well-windlass'><div class=card><h3>well-windlass-1</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
 <audio controls preload=none><source src="../../assets/audio/ambience/well-windlass-1.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/well-windlass-1.m4a" type="audio/mp4"></audio>
 
@@ -55,7 +120,7 @@ id <code>ea9ad2c7c9965e8e75ae77aae5234aef</code> · <a href="ambience/well-windl
 <details><summary>Prompt and generation</summary><p>Close, isolated recording of an old stone village well, starting from silence: the wooden windlass creaks slowly through two turns as the rope pays out over the drum, then stops, and a moment later a faint, hollow splash of a bucket touching water echoes up from far down the deep stone shaft, then silence. Quiet and rural, no music, no voices. Studio-quiet background, with silence before and after.</p><p>prompt influence 0.6</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 71 ·
 id <code>900f15be55c76353e7b0a6bdd12a1c01</code> · <a href="ambience/well-windlass-2/well-windlass-2.mp3">source</a></p></details>
-</div></div><h2>Earlier one-shot pools</h2><h2>One-shot pool: boat-oar (3 variants)</h2><p class=lead> The floor numbers are the owner's 2026-10-14 criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p><p><button onclick="randomVariant(this, 'boat-oar')">Play a random variant</button> <span class=meta data-now='boat-oar'></span></p><div class=grid data-pool='boat-oar'><div class=card><h3>boat-oar-1</h3>
+</div></div><h2>One-shot pool: boat-oar (3 variants)</h2><p class=lead> The floor numbers are the owner's 2026-10-14 criterion: the quietest interior 50 ms windows at least 40 dB under the loudest, and not a hiss.</p><p><button onclick="randomVariant(this, 'boat-oar')">Play a random variant</button> <span class=meta data-now='boat-oar'></span></p><div class=grid data-pool='boat-oar'><div class=card><h3>boat-oar-1</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
 <audio controls preload=none><source src="../../assets/audio/ambience/boat-oar-1.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/boat-oar-1.m4a" type="audio/mp4"></audio>
 
@@ -523,6 +588,110 @@ id <code>621be729fb0ccb30a2bd6b93f8804bd9</code> · <a href="sfx/place-rumble/pl
 <details><summary>Prompt and generation</summary><p>A single soft satisfying thunk of a small wooden-and-earth tile settling firmly into place on a tabletop: muted, warm, rounded low-mid body, very short decay. No click, no ring, no reverb tail, no music.</p><p>prompt influence 0.6</p>
 <p>ElevenLabs · eleven_text_to_sound_v2 · attempt 3 ·
 id <code>63f9d415c5e53ecc4b077eb90cd90178</code> · <a href="sfx/place-thunk/place-thunk.mp3">source</a></p></details>
+</div><div class=card><h3>place-stinger-water</h3>
+<p class=meta>sfx · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/sfx/place-stinger-water.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/sfx/place-stinger-water.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>1.00 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-2.0 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-1.9</b></span>
+<span>source <b>-23.3 LUFS</b></span>
+<span>runtime <b>26 KB</b></span></div>
+<p class=meta>limited 0.8 dB on 4.0% of 20 ms windows</p>
+<details><summary>Prompt and generation</summary><p>Gentle game placement stinger for a river: two soft rising notes on a wooden kalimba, the second with a small rounded water-drop bloop, cool and clear. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 72 ·
+id <code>3559710bb33bee4ba639d86504c282f0</code> · <a href="sfx/place-stinger-water/place-stinger-water.mp3">source</a></p></details>
+</div><div class=card><h3>place-stinger-coast</h3>
+<p class=meta>sfx · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/sfx/place-stinger-coast.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/sfx/place-stinger-coast.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>1.00 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-2.2 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.2</b></span>
+<span>source <b>-35.5 LUFS</b></span>
+<span>runtime <b>27 KB</b></span></div>
+<p class=meta>limited 4.8 dB on 6.0% of 20 ms windows</p>
+<details><summary>Prompt and generation</summary><p>Gentle game placement stinger for a seashore: two soft airy notes on small glass chimes, bright and open like a light sea breeze. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 73 ·
+id <code>189234bbc2ac9be3ecfdc56216157e8b</code> · <a href="sfx/place-stinger-coast/place-stinger-coast.mp3">source</a></p></details>
+</div><div class=card><h3>place-stinger-forest</h3>
+<p class=meta>sfx · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/sfx/place-stinger-forest.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/sfx/place-stinger-forest.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>1.00 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-2.5 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.4</b></span>
+<span>source <b>-27.3 LUFS</b></span>
+<span>runtime <b>26 KB</b></span></div>
+<p class=meta>limited 0.1 dB on 2.0% of 20 ms windows</p>
+<details><summary>Prompt and generation</summary><p>Gentle game placement stinger for a forest: two soft low notes on a warm wooden marimba, woody, calm and deep. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 74 ·
+id <code>e34704df09ff7e34b35a65aa4e86b47b</code> · <a href="sfx/place-stinger-forest/place-stinger-forest.mp3">source</a></p></details>
+</div><div class=card><h3>place-stinger-meadow</h3>
+<p class=meta>sfx · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/sfx/place-stinger-meadow.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/sfx/place-stinger-meadow.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>1.00 s</b></span>
+<span>WebM <b>-15.9 LUFS</b> / <b>-2.1 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.3</b></span>
+<span>source <b>-37.3 LUFS</b></span>
+<span>runtime <b>26 KB</b></span></div>
+<p class=meta>limited 4.8 dB on 10.0% of 20 ms windows</p>
+<details><summary>Prompt and generation</summary><p>Gentle game placement stinger for a sunny meadow: three quick soft rising plucks on a kalimba, light and cheerful. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 75 ·
+id <code>cac3326bf1bc4baeb1ff4e8999bb21f0</code> · <a href="sfx/place-stinger-meadow/place-stinger-meadow.mp3">source</a></p></details>
+</div><div class=card><h3>place-stinger-farm</h3>
+<p class=meta>sfx · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/sfx/place-stinger-farm.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/sfx/place-stinger-farm.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>1.00 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-4.5 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-4.5</b></span>
+<span>source <b>-23.1 LUFS</b></span>
+<span>runtime <b>28 KB</b></span></div>
+<p class=meta>linear</p>
+<details><summary>Prompt and generation</summary><p>Gentle game placement stinger for a farm: two soft hollow notes on a small wooden xylophone and a wooden temple block, homely and rustic. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 76 ·
+id <code>881f783b834b1bd43b2822797646a08f</code> · <a href="sfx/place-stinger-farm/place-stinger-farm.mp3">source</a></p></details>
+</div><div class=card><h3>place-stinger-town</h3>
+<p class=meta>sfx · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/sfx/place-stinger-town.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/sfx/place-stinger-town.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>1.00 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-2.2 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.3</b></span>
+<span>source <b>-22.9 LUFS</b></span>
+<span>runtime <b>27 KB</b></span></div>
+<p class=meta>limited 0.5 dB on 6.0% of 20 ms windows</p>
+<details><summary>Prompt and generation</summary><p>Gentle game placement stinger for a village house: one soft warm note on a small brass handbell struck gently with a felt mallet, cosy, with a short ring. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 77 ·
+id <code>6da13645352737b922e2450943597750</code> · <a href="sfx/place-stinger-town/place-stinger-town.mp3">source</a></p></details>
+</div><div class=card><h3>place-stinger-road</h3>
+<p class=meta>sfx · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/sfx/place-stinger-road.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/sfx/place-stinger-road.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>0.95 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-1.9 dBTP</b></span>
+<span>m4a <b>-16.0</b> / <b>-2.1</b></span>
+<span>source <b>-22.4 LUFS</b></span>
+<span>runtime <b>28 KB</b></span></div>
+<p class=meta>limited 7.0 dB on 6.4% of 20 ms windows</p>
+<details><summary>Prompt and generation</summary><p>Gentle game placement stinger for a country road: two soft, light, pitched taps on a small hollow wooden woodblock in a mid-high register, tock-tock, a gentle falling interval. Soft felt-mallet attack, warm and rounded, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no low thump, no click, no reverb tail, no voices, no other music.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 87 ·
+id <code>8cd312360c25fb649e278b2a211a618e</code> · <a href="sfx/place-stinger-road/place-stinger-road.mp3">source</a></p></details>
+</div><div class=card><h3>place-stinger-rail</h3>
+<p class=meta>sfx · 1 ch · decode · events: none (continuous emitter or bed)</p>
+<audio controls preload=none><source src="../../assets/audio/sfx/place-stinger-rail.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/sfx/place-stinger-rail.m4a" type="audio/mp4"></audio>
+
+<div class=nums><span>length <b>1.00 s</b></span>
+<span>WebM <b>-16.0 LUFS</b> / <b>-2.3 dBTP</b></span>
+<span>m4a <b>-15.9</b> / <b>-2.3</b></span>
+<span>source <b>-38.8 LUFS</b></span>
+<span>runtime <b>27 KB</b></span></div>
+<p class=meta>limited 1.0 dB on 6.0% of 20 ms windows</p>
+<details><summary>Prompt and generation</summary><p>Gentle game placement stinger for a railway: two soft light notes on a small metal chime struck gently, a clean little tink-tink, bright but quiet. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.</p><p>prompt influence 0.6</p>
+<p>ElevenLabs · eleven_text_to_sound_v2 · attempt 79 ·
+id <code>73d577949f32c063fec03c8486340bde</code> · <a href="sfx/place-stinger-rail/place-stinger-rail.mp3">source</a></p></details>
 </div><div class=card><h3>meadow-bees</h3>
 <p class=meta>ambience · 1 ch · decode · events: none (continuous emitter or bed)</p>
 <audio controls preload=none><source src="../../assets/audio/ambience/meadow-bees.webm" type="audio/webm; codecs=opus"><source src="../../assets/audio/ambience/meadow-bees.m4a" type="audio/mp4"></audio>

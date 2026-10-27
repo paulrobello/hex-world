@@ -16,15 +16,15 @@ export function biomeOf(id: string, edges: readonly string[]): Biome {
 }
 
 /**
- * The positional loop each biome's tiles carry (§8.1). Town murmur has no mastered cue yet. Meadow and forest
- * have no loop: they sound only through the occasional one-shots below.
+ * The positional loop each biome's tiles carry (§8.1). Meadow, forest and town have no loop: land ambience is
+ * occasional one-shots (owner, 2026-10-14), so they sound only through the scheduler rows below.
  */
 export const EMITTER_CUE: Record<Biome, string | null> = {
   meadow: null,
   forest: null,
   river: "river-babble",
   coast: "surf",
-  town: "town-murmur",
+  town: null,
 };
 
 /** The positional loops a tile carries: its biome's, plus the surf on a river mouth (River and sea edges). */
@@ -164,6 +164,11 @@ const isTileId =
   (_biome: Biome, _scatter: readonly string[], id: string): boolean =>
     id === want;
 
+/** The tile defs the town murmur plays at: the houses, the bakery and the station, where people are. */
+export const TOWN_MURMUR_TILES: readonly string[] = ["house_cluster", "bakery", "rail_station"];
+
+const isTownTile = (_biome: Biome, _scatter: readonly string[], id: string): boolean => TOWN_MURMUR_TILES.includes(id);
+
 /** One row of the occasional one-shot scheduler. */
 export interface OneShotRow {
   name: string;
@@ -209,6 +214,7 @@ export const ONE_SHOTS: readonly OneShotRow[] = [
     rangeSteps: 3,
     level: 0.25,
   },
+  { name: "town-murmur", pool: "town-murmur", tile: isTownTile, delay: [30, 80], rangeSteps: 3, level: 0.25 },
 ];
 
 /** The catalog defs a row may play at. */
@@ -808,6 +814,49 @@ export const isWaterTile = (edges: readonly string[]): boolean =>
 /** The extra pool a placement of this tile def plays as it settles: the slosh for water, none on land. */
 export const placementPool = (edges: readonly string[]): string | null =>
   isWaterTile(edges) ? PLACE_SLOSH.pool : null;
+
+// ---------- Placement stingers (§8.1) ----------
+
+/** Tile families that share a placement stinger. */
+export type StingerFamily = "water" | "coast" | "forest" | "meadow" | "farm" | "town" | "road" | "rail";
+export const STINGER_FAMILIES: readonly StingerFamily[] = [
+  "water",
+  "coast",
+  "forest",
+  "meadow",
+  "farm",
+  "town",
+  "road",
+  "rail",
+];
+
+/**
+ * The short tonal stinger a placement or replace plays with the thunk as the tile settles: its cue per family and
+ * its level as a share of the thunk's placement level, so it sits under the thunk (and under the 0.7 slosh).
+ */
+export const PLACE_STINGER = { level: 0.45, cue: (f: StingerFamily): string => `place-stinger-${f}` } as const;
+
+const FARM_TILES = new Set(["farm", "windmill", "wheat_field"]);
+const TOWN_TILES = new Set(["house_cluster", "bakery"]);
+
+/**
+ * A tile def's stinger family, first match: any River edge is water (bridges and river mouths included, as they
+ * slosh), then Ocean or Beach is coast, then farm and town by id, then Rail (the crossing and the station), Road,
+ * Forest, and meadow for the rest.
+ */
+export function stingerFamily(id: string, edges: readonly string[]): StingerFamily {
+  if (edges.includes("River")) return "water";
+  if (edges.includes("Ocean") || edges.includes("Beach")) return "coast";
+  if (FARM_TILES.has(id)) return "farm";
+  if (TOWN_TILES.has(id)) return "town";
+  if (edges.includes("Rail")) return "rail";
+  if (edges.includes("Road")) return "road";
+  if (edges.includes("Forest")) return "forest";
+  return "meadow";
+}
+
+export const placementStinger = (id: string, edges: readonly string[]): string =>
+  PLACE_STINGER.cue(stingerFamily(id, edges));
 
 // ---------- Shop bell (P3 bakery) ----------
 

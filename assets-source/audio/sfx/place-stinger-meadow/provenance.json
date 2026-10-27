@@ -1,0 +1,186 @@
+{
+  "cueId": "place-stinger-meadow",
+  "kind": "sfx",
+  "class": "sfx",
+  "version": 1,
+  "use": "The meadow family's placement stinger: a short tonal cue layered over the place-rumble and place-thunk when one of the meadow tiles settles after a placement or a replace, positional at the tile, on the effects bus, at PLACE_STINGER.level (0.45) times the thunk's placement level, or on demand (hexWorld.audio.play). The runtime routes it (stingerFamily and PLACE_STINGER in web/ui/src/audio-mix.ts), so it lists no event.",
+  "events": [],
+  "loop": null,
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Gentle game placement stinger for a sunny meadow: three quick soft rising plucks on a kalimba, light and cheerful. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Gentle game placement stinger for a sunny meadow: three quick soft rising plucks on a kalimba, light and cheerful. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 1.0,
+    "prompt_influence": 0.6
+  },
+  "generation": {
+    "id": "cac3326bf1bc4baeb1ff4e8999bb21f0",
+    "generatedAt": "2026-10-27T15:53:11+00:00",
+    "attempt": 75,
+    "creditsCharged": 10,
+    "record": {
+      "path": "assets-source/audio/sfx/place-stinger-meadow/generation.json",
+      "sha256": "af0f252ec1375a5248a1a129d643a98d137872aa615ae7e5c7c6be9f9e8a320a",
+      "bytes": 2294
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/sfx/place-stinger-meadow/place-stinger-meadow.mp3",
+    "sha256": "fd5f767a631c695c91eb0074dffe039872feb6ac795bb541a11d73ebabf3af1a",
+    "bytes": 17179,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 1.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -37.3,
+      "lra": 0.0,
+      "truePeak": -18.5
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 0.0,
+      "truePeak": -2.4
+    },
+    "after": {
+      "webm": {
+        "integrated": -15.9,
+        "lra": 0.0,
+        "truePeak": -2.1
+      },
+      "m4a": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.3
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "trim",
+      "leadFramesRemoved": 0,
+      "tailFramesRemoved": 0,
+      "leadThresholdDb": -45.0,
+      "tailThresholdDb": -60.0,
+      "preRollSeconds": 0.003,
+      "fadeInSeconds": 0.001,
+      "fadeOutSeconds": 0.015,
+      "minSeconds": 0.5
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -37.3,
+        "lra": 0.0,
+        "truePeak": -18.5
+      },
+      "targetLufs": -16.0,
+      "gainDb": 21.3,
+      "requiredPeakReductionDb": 4.8,
+      "mode": "limited",
+      "limiterInputGainDb": 24.7,
+      "limiterPasses": 4,
+      "limiterCeilingDb": -2.5,
+      "windowsOverCeilingPct": 10.0
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.1
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "160k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/sfx/place-stinger-meadow.wav",
+    "sha256": "765db5ab4c0471cd63ba180fb78265d8fb2107d5333db1a1dc4f09f11ded84a8",
+    "frames": 48000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/sfx/place-stinger-meadow.webm",
+      "sha256": "33b5a78535a463ea8bf4f016a512caa74b86e5068782542efbd30578d81350cc",
+      "bytes": 8635,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.008,
+      "decodedFrames": 48000,
+      "loudness": {
+        "integrated": -15.9,
+        "lra": 0.0,
+        "truePeak": -2.1
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/place-stinger-meadow.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/sfx/place-stinger-meadow.webm"
+    },
+    {
+      "path": "assets/audio/sfx/place-stinger-meadow.m4a",
+      "sha256": "c5adc88c7dd7ee650f0c3c5f8f4fdd88d51eaf0b813496bc2828a3eb24247729",
+      "bytes": 18485,
+      "codec": "aac",
+      "bitrate": "160k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 1.0,
+      "decodedFrames": 48000,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.0,
+        "truePeak": -2.3
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/sfx/place-stinger-meadow.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/sfx/place-stinger-meadow.m4a"
+    }
+  ],
+  "decodedBytes": 192000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.10",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "cd56507e621a35d91042d8e30f36db72f0e30fd0cce3da865eeee185fe583002"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

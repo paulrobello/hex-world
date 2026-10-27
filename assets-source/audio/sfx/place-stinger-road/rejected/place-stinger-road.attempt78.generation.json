@@ -1,0 +1,44 @@
+{
+  "cueId": "place-stinger-road",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "Gentle game placement stinger for a country road: two soft muted pitched wooden block taps, tock-tock, a gentle falling interval, dry and tidy. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+  "parameters": {
+    "text": "Gentle game placement stinger for a country road: two soft muted pitched wooden block taps, tock-tock, a gentle falling interval, dry and tidy. Soft felt-mallet attack, warm and rounded, quiet and friendly, in the family of a cosy wooden game interface. The notes ring briefly and fade to silence within about 0.7 seconds, with silence after. No drum hit, no click, no reverb tail, no voices, no other music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 1.0,
+    "prompt_influence": 0.6
+  },
+  "generationId": "574a0179ef188cda8a5c5113d6c3e57b",
+  "responseHeaders": {
+    "date": "Tue, 27 Oct 2026 15:53:23 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "10",
+    "content-length": "17179",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "574a0179ef188cda8a5c5113d6c3e57b",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-27T15:53:24+00:00",
+  "attempt": 78,
+  "creditsCharged": 10,
+  "sourceFile": "place-stinger-road.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "5d1a77aa6050a5acc3480d8292a778944e1622163576c50641a56af937aef943"
+  },
+  "rejectedReason": "a low thump, not a woodblock: 100% of its energy under 300 Hz (centroid 149 Hz, strongest partial 147 Hz), in the thunk's own band (180 Hz), so it would sit under the thunk rather than over it; the source came in at -44.6 LUFS"
+}

@@ -133,7 +133,9 @@ try {
   await cmd({ cmd: "toggle", what: "photo" });
   await until(async () => (await play()).photo_mode === false, "photo mode closes");
   await until(async () => (await audio()).music.current === "meadow-day", "closing photo mode returns to meadow-day");
-  check(JSON.stringify(a.missingEmitters) === '["town-murmur"]', `only town murmur missing (${a.missingEmitters})`);
+  check(JSON.stringify(a.missingEmitters) === "[]", `no loop emitter missing; the town murmur is one-shots (${a.missingEmitters})`);
+  check(Object.values(a.placeStinger?.cues ?? {}).length === 8 && Object.values(a.placeStinger.cues).every((c) => c.loaded),
+    `the eight placement stingers decode ${JSON.stringify(a.placeStinger?.cues)}`);
   check(audioRequests.every((u) => !/\.m4a$/.test(u)), "no m4a fetched when WebM plays");
   // The start meadow has no bed: an on-demand forest-birds play is what reaches the output. The start world
   // has no forest tile, so it may play non-positional (at null).
@@ -175,6 +177,12 @@ try {
   const rumble = a.recent.find((f) => f.id === "place-rumble");
   const thunk = a.recent.find((f) => f.id === "place-thunk");
   check(thunk.t - rumble.t > 0.5, `the thunk waits for the settle (${(thunk.t - rumble.t).toFixed(2)} s after the rumble)`);
+  // The road's family stinger plays with the thunk at the settle, never on the event like the rumble.
+  const sting = a.placeStinger;
+  check(sting.plays === 1 && sting.lastCue === "place-stinger-road" && sting.lastFamily === "road"
+    && same(sting.lastTile, 1, 0) && Math.abs(sting.lastAt - thunk.t) < 0.01,
+    `the road stinger plays with the thunk ${JSON.stringify(sting)} (thunk at ${thunk.t.toFixed(3)})`);
+  check(a.recent.every((f) => !f.id.startsWith("place-stinger")), "stingers stay out of the event-cue history");
   await page.keyboard.press("ControlOrMeta+z");
   await fired("ui-undo", "undone");
   await page.waitForTimeout(200);
@@ -223,6 +231,15 @@ try {
   a = await audio();
   check(sloshes.includes(a.placeSlosh.lastCue) && a.placeSlosh.plays <= river.cells.length,
     `the water placements play slosh variants ${JSON.stringify(a.placeSlosh)}`);
+  await until(async () => (await audio()).placeStinger?.lastFamily === "water", "a river tile plays the water stinger", 6_000);
+  // A replace plays the new tile's stinger as it settles: the road at (1, 0) becomes a meadow.
+  const stung = (await audio()).placeStinger.plays;
+  await page.evaluate(() => { window.hexWorld.selectTile("meadow"); window.hexWorld.replaceTile(1, 0); });
+  await until(async () => (await play()).tiles.find((t) => t.q === 1 && t.r === 0)?.tile === "meadow", "the road is replaced by a meadow");
+  await until(async () => {
+    const s = (await audio()).placeStinger;
+    return s.plays > stung && s.lastFamily === "meadow" && same(s.lastTile, 1, 0);
+  }, "the replace plays the meadow stinger at (1, 0)", 6_000);
   const near = river.cells[0];
   const end = river.cells.at(-1);
   const gainAt = (s, c) => s.emitters.find((e) => e.cue === "river-babble" && e.q === c.q && e.r === c.r)?.gain ?? 0;
@@ -257,7 +274,18 @@ try {
   await cmd(build);
   await until(async () => (await play()).connected_destinations === 2, "two house clusters connected", 20_000);
   await cmd({ cmd: "camera", pos: [14, 80, 100], look_at: [14, 0, 4] });
-  const pools = Object.fromEntries(["car-start", "car-door", "car-drive"]
+  // The town murmur: its timer row counts the two house clusters, and an on-demand play sounds a variant at one.
+  const murmurs = manifest.cues.filter((c) => c.pool === "town-murmur").map((c) => c.id);
+  const houses = (await play()).tiles.filter((t) => ["house_cluster", "bakery", "rail_station"].includes(t.tile));
+  await until(async () => (await audio()).oneShots?.["town-murmur"]?.tiles === houses.length, `town murmur counts ${houses.length} town tiles`);
+  a = await audio();
+  check(houses.length >= 2 && JSON.stringify(a.oneShots["town-murmur"].variants) === JSON.stringify(murmurs)
+    && murmurs.length >= 4 && a.oneShots["town-murmur"].nextAt > a.currentTime,
+    `town murmur armed over ${murmurs.length} variants ${JSON.stringify(a.oneShots["town-murmur"])}`);
+  const murmur = await playCue("town-murmur");
+  check(murmurs.includes(murmur.played) && murmur.pool === "town-murmur" && houses.some((h) => same(murmur.at, h.q, h.r)),
+    `play("town-murmur") sounds a variant at a house ${JSON.stringify(murmur)}`);
+  const pools =Object.fromEntries(["car-start", "car-door", "car-drive"]
     .map((p) => [p, manifest.cues.filter((c) => c.pool === p && c.status === "mastered").map((c) => c.id)]));
   a = await audio();
   check(JSON.stringify(a.cars.pools) === JSON.stringify(pools), `car pools from the manifest ${JSON.stringify(a.cars.pools)}`);
