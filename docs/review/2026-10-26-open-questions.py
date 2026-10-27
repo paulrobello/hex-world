@@ -69,6 +69,22 @@ SECTIONS = [
         (CP / "water-props-refs/refs-sheet.jpg", "ref-1 lily clusters, ref-2 the reed bed, ref-3 on the spring, "
          "ref-4 on a slow river bend."),
     ]),
+    ("A27", "Matte forest shrubs (landed, batch 32)", [
+        ("Q1", "Approve the matte hazel and bramble leaves (roughness about 0.57 to 0.81, the verge bushes' fix). "
+               "The holly stays glossy; meshes and other maps are byte-identical."),
+    ], [], [
+        (CP / "shrub-matte/sheet.jpg", "Hazel and bramble before and after at the same cameras."),
+    ]),
+    ("A28", "Scatter draws on a mixed river, beach and ocean world", [
+        ("Q1", "A mixed world with every scatter piece measured 548 draws against the 500 overview budget. A "
+               "per-tile shadow-cascade skip (no shading change) brings it to 452 natively and 468 on the web; it "
+               "lands only if its MiniMac frame-time run tonight shows no camera slower. Shared scatter materials, "
+               "your preferred route, cannot remove a web draw without a bigger renderer change. Pick one: "
+               "O2 vertex pulling plus texture arrays per variant group (about 352 draws, about a week, risk: "
+               "thumbnail edges, memory); O3 one material per alpha mode (about 284 draws, 1 to 2 weeks, needs "
+               "re-baked maps and your look review); or stop at the cascade skip for now. Recommended: stop at the "
+               "cascade skip if MiniMac confirms it, and revisit O2 when scatter grows again."),
+    ], [], []),
 ]
 
 CSS = """
