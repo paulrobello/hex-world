@@ -334,7 +334,7 @@ The deterministic simulation core (grid, sockets, networks, pathing, agents) run
 - The owner generates the tracks in Suno and drops the WAV or MP3 into `assets-source/audio/music/<cue-id>/` in the main checkout. That folder's audio is git-ignored (a local store shared by worktrees), and provenance records each source's SHA-256 and size.
 - `make audio-master` normalizes loudness (music −18 LUFS integrated), sets loop points, encodes the runtime format, and writes the provenance JSON (provider and subscription, per D21).
 - The playlist crossfades between cues by world mood (the biome mix in view). Adaptive stems are a P5 option.
-- Built (2026-10-14, `f0bc0c1`): six Suno cues are mastered. `meadow-day` (meadow, forest and river), `coast-breeze` (coast) and `hearth-town` (houses) crossfade at equal power over 6 s by the biome mix in view, after a 30 s dwell. `photo-mode` takes over while photo mode is open. `title-theme` and `discovery-stinger` have no hook yet. Music streams through media elements.
+- Built (2026-10-14, `f0bc0c1`): six Suno cues are mastered. `meadow-day` (meadow, forest and river), `coast-breeze` (coast) and `hearth-town` (houses) crossfade at equal power over 6 s by the biome mix in view, after a 30 s dwell. `photo-mode` takes over while photo mode is open. `title-theme` and `discovery-stinger` have no hook yet; `title-theme` is to play when a new, empty world starts and fade into the biome music once the first tiles go down (owner A37 O1, 2026-10-27). Until it does, CI leaves it out of the deployed site. Music streams through media elements.
 
 ### 8.3 Runtime formats
 
@@ -492,7 +492,7 @@ This adapts par-factory's pipeline (`~/Repos/par-factory/docs/specs/09-asset-pip
 ### 11.1 Authoring routes
 
 - **Scripted (structural):** bases, edge pieces, road, rail, river and coast pieces, buildings. An Opus 5.5 subagent writes a reproducible `scripts/blender/kit/<piece-id>.py` generator and runs it headless (`blender -b -P`). Rebuilding from the script must be deterministic.
-- **Interactive (organic heroes):** mountains, volcano, cliffs, animals, hero trees. An Opus 5.5 subagent sculpts through the Blender MCP in a live session. The `.blend` source is saved to the local blend store and referenced by SHA-256 (§11.6), and the piece is exported through the same scripted bake and LOD stage.
+- **Interactive (organic heroes):** animals and hero trees. An Opus 5.5 subagent sculpts through the Blender MCP in a live session. Mountains, cliffs and the volcano moved to headless procedural generators (owner A42 O1, 2026-10-27). The `.blend` source is saved to the local blend store and referenced by SHA-256 (§11.6), and the piece is exported through the same scripted bake and LOD stage.
 - **Headless only for now (owner, 2026-10-13):** the owner paused the live route ("go headless until I say otherwise"). Blender work since then runs headless (`blender -b`), and the hero oak's later rounds replay its live steps headless from its stored `.blend` (`assets-source/kit/tree_hero_oak/friction.md`, entry 33). An organic hero piece needs a headless plan or the owner's say-so before it starts.
 
 One subagent works on one kit piece at a time. At most 3 Blender asset subagents run concurrently, to avoid exhausting the machine's resources. The owner reviews each family together.
@@ -669,7 +669,14 @@ P3 references are owner-approved (A17, 2026-10-14, `assets-source/refs/<id>/appr
 
 - [ ] Height levels 0–3, with `Cliff` and `Ramp` edge profiles and height-aware socket rules.
 - [ ] Hills and mountain tiles. Rivers that flow downhill (river lanes carry a flow direction). Waterfalls at cliff edges.
-- [ ] Roads and rails need ramps between levels.
+- [ ] Roads ramp between levels; rail crosses height on viaducts and in tunnels.
+
+P4 decisions (owner, 2026-10-27, open questions A38–A42, recommended options):
+- A38 O1, setting a level: a tile takes the level its neighbours imply, the way placement already picks a rotation, and R/scroll cycles the legal levels when more than one fits. Tile definitions keep edge heights relative to the tile's own level, so a placed tile stores one absolute level and the per-(tile, rotation) thumbnails stay valid.
+- A39 O1, grade: a road ramp climbs one level (4 m) within one tile, about 14% across the 27.7 m flat-to-flat. Rail never changes level: it crosses height on viaducts and in tunnels, since a one-tile rail ramp would be far too steep for a steam train.
+- A40 O1, mountains: single-tile hills and peaks that rise inside the hex and meet their neighbours at the edge level. Bigger massifs come with the 7-hex mega-tile card.
+- A41 O1, rivers: river lanes carry a flow direction. Saves load with flow derived from the sea and height (flat rivers keep flowing as now), new placement refuses a river that would run uphill, and waterfalls form where a river meets a cliff edge.
+- A42 O1, modelling: mountains, cliffs and the other organic P4 pieces are headless procedural Blender generators (displacement and erosion-style noise, baked like every piece so far), not live sculpting (§11.1).
 
 ### P5 — Atmosphere
 
