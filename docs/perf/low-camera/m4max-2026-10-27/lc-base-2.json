@@ -1,0 +1,529 @@
+{
+  "date": "2026-10-27T10:35:40.678Z",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "fps": "off",
+    "seed": "1",
+    "tilt": "off",
+    "grass": "1"
+  },
+  "camera": {
+    "cmd": "camera",
+    "pos": [
+      10,
+      12,
+      40
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  },
+  "window_ms": 5000,
+  "guard": true,
+  "paced": false,
+  "web": {
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit --enable-webgpu-developer-features"
+  },
+  "rows": [
+    {
+      "arm": "lc_base",
+      "run": 0,
+      "build_id": "e56b6711e0",
+      "adapter": "apple | metal-3 | Apple M4 Max",
+      "frame_latency": {
+        "limit": 3,
+        "source": "default"
+      },
+      "frame_cap": {
+        "state": {
+          "fps": null,
+          "interval_ms": null,
+          "limiter": "raf",
+          "unfocused": "continuous"
+        },
+        "gate": 0
+      },
+      "canvas": [
+        2560,
+        1440
+      ],
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "census": {
+        "tier": "high",
+        "shadows": true,
+        "cascades": 4,
+        "shadow_dist": 2000,
+        "shadow_casters": "all",
+        "post": [
+          "taa",
+          "ssao",
+          "bloom"
+        ],
+        "ssao": true,
+        "grass_blades": 179580,
+        "tilt": false,
+        "tiles": 317,
+        "cars": 20,
+        "boids": 1000,
+        "diag": {
+          "p50": 10.9,
+          "p95": 11.5,
+          "mean": 10.95,
+          "samples": 600
+        },
+        "draws_total": 999,
+        "passes": [
+          {
+            "view": "main",
+            "phase": "alpha_mask",
+            "draws": 45
+          },
+          {
+            "view": "main",
+            "phase": "alpha_mask_prepass",
+            "draws": 45
+          },
+          {
+            "view": "main",
+            "phase": "opaque",
+            "draws": 173
+          },
+          {
+            "view": "main",
+            "phase": "prepass",
+            "draws": 169
+          },
+          {
+            "view": "cascade0",
+            "phase": "shadow",
+            "draws": 81
+          },
+          {
+            "view": "cascade1",
+            "phase": "shadow",
+            "draws": 167
+          },
+          {
+            "view": "cascade2",
+            "phase": "shadow",
+            "draws": 232
+          },
+          {
+            "view": "cascade3",
+            "phase": "shadow",
+            "draws": 87
+          }
+        ],
+        "kit_draws": {
+          "slots": 132,
+          "total": 849
+        },
+        "visible_tris": 0,
+        "gpu": {
+          "enabled": false,
+          "frames": 0,
+          "passes": null,
+          "reason": "off (gpu_timing=on enables it)",
+          "supported": null,
+          "tail_over_25ms": 0,
+          "total": null
+        }
+      },
+      "phases": [
+        {
+          "phase": "closed",
+          "state": {
+            "settings": false,
+            "tiles": true,
+            "hidden": false,
+            "focus": "canvas"
+          },
+          "frames": 458,
+          "p50": 10.9,
+          "p95": 11.6,
+          "max": 42.1,
+          "mean": 10.93,
+          "over_25ms": 1,
+          "pairs": {
+            "pairs": 229,
+            "short_mean": 10.64,
+            "long_mean": 11.22,
+            "alternation": 0.46
+          },
+          "first_40": [
+            11.5,
+            11.4,
+            11.8,
+            11.4,
+            11.3,
+            11,
+            11.1,
+            11.2,
+            10.3,
+            10.9,
+            11.1,
+            10.8,
+            11.4,
+            10.9,
+            11.3,
+            11.2,
+            11.4,
+            10.7,
+            10.6,
+            10.6,
+            11,
+            11.1,
+            10.8,
+            11,
+            11.4,
+            11.1,
+            11.1,
+            10.4,
+            10.9,
+            11,
+            10.4,
+            10.6,
+            10.7,
+            10.9,
+            10.7,
+            10.9,
+            10.9,
+            11.2,
+            10.7,
+            10.8
+          ],
+          "submit": {
+            "frames": 458,
+            "p50": 10.9,
+            "p95": 11.6,
+            "max": 41.7,
+            "mean": 10.92,
+            "over_25ms": 1,
+            "pairs": {
+              "pairs": 229,
+              "short_mean": 10.59,
+              "long_mean": 11.25,
+              "alternation": 0.52
+            },
+            "first_40": [
+              11.6,
+              11.8,
+              11.4,
+              11.3,
+              11,
+              11,
+              11.2,
+              10.3,
+              11.1,
+              11,
+              10.9,
+              11.2,
+              10.9,
+              11.4,
+              11.3,
+              11.3,
+              10.8,
+              10.5,
+              10.6,
+              11,
+              11.1,
+              10.9,
+              11,
+              11.4,
+              11,
+              11.1,
+              10.4,
+              10.9,
+              11,
+              10.3,
+              10.8,
+              10.6,
+              10.8,
+              10.7,
+              11,
+              10.9,
+              11.1,
+              10.9,
+              10.6,
+              10.6
+            ]
+          },
+          "done": {
+            "frames": 456,
+            "p50": 10.9,
+            "p95": 21.8,
+            "max": 42.5,
+            "mean": 10.92,
+            "over_25ms": 2,
+            "pairs": {
+              "pairs": 228,
+              "short_mean": 6.26,
+              "long_mean": 15.59,
+              "alternation": 0.56
+            },
+            "first_40": [
+              11.8,
+              11.4,
+              11.3,
+              11,
+              11,
+              11.2,
+              21.4,
+              0,
+              11,
+              10.9,
+              11.3,
+              22.2,
+              0,
+              11.2,
+              11.4,
+              10.7,
+              21.2,
+              11,
+              0.1,
+              11,
+              21.8,
+              0.1,
+              11.3,
+              22.1,
+              10.5,
+              10.8,
+              0,
+              11.1,
+              21,
+              0,
+              21.5,
+              0,
+              10.7,
+              11,
+              10.9,
+              11.1,
+              10.9,
+              21.2,
+              0,
+              10.7
+            ]
+          },
+          "deferrals": 517,
+          "engine_frames": 459,
+          "latency": {
+            "p50": 11.9,
+            "p95": 22.6,
+            "mean": 15.01
+          },
+          "cpu": {
+            "frames": 459,
+            "p50": 10.1,
+            "p95": 10.7,
+            "mean": 10.03,
+            "max": 14
+          }
+        },
+        {
+          "phase": "closed",
+          "state": {
+            "settings": false,
+            "tiles": true,
+            "hidden": false,
+            "focus": "canvas"
+          },
+          "frames": 460,
+          "p50": 10.9,
+          "p95": 11.5,
+          "max": 16,
+          "mean": 10.89,
+          "over_25ms": 0,
+          "pairs": {
+            "pairs": 230,
+            "short_mean": 10.68,
+            "long_mean": 11.1,
+            "alternation": 0.46
+          },
+          "first_40": [
+            10.2,
+            11,
+            10.6,
+            10.2,
+            10,
+            10.7,
+            10.6,
+            10.9,
+            10.7,
+            10.7,
+            10.8,
+            10.1,
+            10.8,
+            10.6,
+            10.5,
+            10.8,
+            10.7,
+            10.6,
+            10.6,
+            10.5,
+            10.5,
+            10.9,
+            10.5,
+            11.4,
+            10.8,
+            10.5,
+            10.1,
+            11.1,
+            11.1,
+            10.5,
+            11.2,
+            9.9,
+            10.6,
+            10.7,
+            11,
+            11,
+            10.5,
+            10.8,
+            10.6,
+            10.5
+          ],
+          "submit": {
+            "frames": 460,
+            "p50": 10.9,
+            "p95": 11.6,
+            "max": 16.7,
+            "mean": 10.9,
+            "over_25ms": 0,
+            "pairs": {
+              "pairs": 230,
+              "short_mean": 10.7,
+              "long_mean": 11.1,
+              "alternation": 0.45
+            },
+            "first_40": [
+              11,
+              10.6,
+              10.4,
+              9.9,
+              10.7,
+              10.6,
+              10.7,
+              10.8,
+              10.7,
+              11,
+              10,
+              10.7,
+              10.6,
+              10.5,
+              10.7,
+              10.9,
+              10.6,
+              10.6,
+              10.5,
+              10.5,
+              10.8,
+              10.6,
+              11.3,
+              10.9,
+              10.5,
+              10,
+              11,
+              11.2,
+              10.5,
+              11.1,
+              10.1,
+              10.5,
+              10.6,
+              11.1,
+              11,
+              10.5,
+              10.8,
+              10.7,
+              10.4,
+              11
+            ]
+          },
+          "done": {
+            "frames": 458,
+            "p50": 11,
+            "p95": 21.7,
+            "max": 22.8,
+            "mean": 10.89,
+            "over_25ms": 0,
+            "pairs": {
+              "pairs": 229,
+              "short_mean": 7.11,
+              "long_mean": 14.67,
+              "alternation": 0.55
+            },
+            "first_40": [
+              10.6,
+              10.2,
+              20.7,
+              0,
+              10.7,
+              10.7,
+              10.8,
+              10.7,
+              10.9,
+              9.9,
+              10.9,
+              10.6,
+              10.4,
+              10.8,
+              10.9,
+              10.6,
+              10.5,
+              10.5,
+              10.5,
+              10.9,
+              21.9,
+              0,
+              10.8,
+              10.5,
+              21.1,
+              0,
+              11.2,
+              21.6,
+              0,
+              10,
+              10.6,
+              21.7,
+              0,
+              11,
+              21.4,
+              10.5,
+              0,
+              21.5,
+              10.9,
+              0
+            ]
+          },
+          "deferrals": 438,
+          "engine_frames": 461,
+          "latency": {
+            "p50": 11.8,
+            "p95": 22.5,
+            "mean": 14.06
+          },
+          "cpu": {
+            "frames": 461,
+            "p50": 10.1,
+            "p95": 10.7,
+            "mean": 10.08,
+            "max": 11.1
+          }
+        }
+      ],
+      "load_before": 10.9912109375,
+      "load_after": 8.94091796875
+    }
+  ]
+}

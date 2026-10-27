@@ -115,6 +115,18 @@ Savings are measured on the M4 unless marked as an estimate. On the M4 Max the G
 
 O2 and O3 together cover most of `post=none`'s 11.6 ms, and on the M4 they would still leave the frame at about 19 ms. Getting the base M4 itself under 16.6 ms at this camera needs one of them plus O4 or O5. On the reference M4 Max, O1 comes first: if the re-measure confirms about 11 ms, the remaining options are for slower M-series GPUs, not for criterion 2.
 
+## M4 Max result (2026-10-27, criterion 2)
+
+The reference re-measure (O1) ran on macdaddy (Apple M4 Max) at 10:29-10:37Z. It used `PACING_GUARD=1 PACING_ARMS=lc_base node e2e/frame-pacing.mjs dist` on `main` at `e9e0b8d`, with the same world, camera, High tier, grass 100%, 2560x1440 at DPR 1 and uncapped Chromium. There were 3 rounds, with a 1-minute load of 8.9 to 14.3 before and after each (`m4max-2026-10-27/lc-base-<n>.json`).
+
+| Round | Frames | Submit mean ms | p50 | p95 | CPU mean (p95) ms | Load before -> after |
+|---|---|---|---|---|---|---|
+| 1 | 467 | 10.72 | 10.7 | 11.2 | 9.83 (10.3) | 14.33 -> 10.99 |
+| 2 | 460 | 10.89 | 10.9 | 11.5 | 10.08 (10.7) | 10.99 -> 8.94 |
+| 3 | 458 | 10.93 | 10.9 | 11.4 | 10.04 (10.6) | 8.94 -> 9.42 |
+
+The frame is CPU-bound at about 10.9 ms, as estimated above: the engine callback is 9.8-10.1 ms of it. p95 is 11.2-11.5 ms, inside the 16.6 ms budget, so criterion 2 is met on the reference hardware. The card's 20.5 ms predates the close-camera draw cuts. The M4 options above (O2-O8) remain for slower M-series GPUs.
+
 ## Reproduce
 
 On the build host (any load): `make build-web`, `cargo build -p hex-app --release`, then copy `dist/`, `e2e/` (without `node_modules`), `web/ui/src/`, `assets/`, `target/release/hex-world` and `scripts/perf/` to `minimac:perf/hex-world-lowcam/`, and run `npm ci` in its `e2e/`. On MiniMac, inside a booked window:

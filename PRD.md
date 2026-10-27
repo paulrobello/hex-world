@@ -467,7 +467,7 @@ Built: every hook is present and inert at the MVP values (noon, dry, summer, unf
 Low-camera frame profile (2026-10-27, `docs/perf/low-camera/`; the 317-tile water world, High, 2560x1440, camera at (10, 12, 40)). On MiniMac (base M4, load 2.3 to 4.4, 3 rounds) the web frame is GPU-bound at 30.2 ms mean and 31.1 ms p95, against a main thread of 10.5 ms.
 - The biggest pass is the early prepass, 14.1 ms of encoder time in a Metal System Trace. Half of it is the normals and motion vectors that SSAO and TAA need.
 - The post stack (SSAO, TAA, bloom) is the biggest removable cost: turning it off saves 11.6 ms.
-- The reference M4 Max has four times the GPU cores, so this frame is expected to be CPU-bound at about 11 ms there. A load-guarded re-measure on it decides the 16.6 ms budget at this camera.
+- On the reference M4 Max the same frame is CPU-bound at 10.7 to 10.9 ms mean and 11.2 to 11.5 ms p95 (3 rounds, load 8.9 to 14.3), inside the 16.6 ms budget.
 - Neither platform's `gpu_timing` stamps give per-pass cost on Apple M4. Use the Metal System Trace route in `scripts/perf/low-camera-trace.sh`.
 
 Kit content streams in by biome pack after the first interaction.

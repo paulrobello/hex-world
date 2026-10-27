@@ -5,7 +5,7 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 ## State
 
 - `main` holds batches 27-37. Batches 27-36 are pushed (`cf5be40`, CI green). Batch 37 (`e9e0b8d`, docs and harness only) is local and rides along with the next push. `dist/` rebuilt.
-- Batch 37 landed (`e9e0b8d`): the low-camera frame profile (`docs/perf/low-camera/`). On MiniMac's base M4 the 317-tile low-camera frame is GPU-bound at 30.2 ms. The early prepass is the biggest pass (14.1 ms of encoder time), and the post stack is the biggest removable cost (-11.6 ms). Card 01a15ec0b1d3 criterion 1 is checked. Criterion 2 waits on a load-guarded M4 Max re-measure (`PACING_GUARD=1 PACING_ARMS=lc_base node e2e/frame-pacing.mjs dist`), which is expected to come in near 11 ms, CPU-bound. Per-pass numbers on Apple hardware come from `scripts/perf/low-camera-trace.sh`, because `gpu_timing` is wrong on the M4 (card 01a17ce2f4b4).
+- Batch 37 landed (`e9e0b8d`): the low-camera frame profile (`docs/perf/low-camera/`). On MiniMac's base M4 the 317-tile low-camera frame is GPU-bound at 30.2 ms. The early prepass is the biggest pass (14.1 ms of encoder time), and the post stack is the biggest removable cost (-11.6 ms). On the reference M4 Max the frame is 11.2 to 11.5 ms p95, CPU-bound (load-guarded, 3 rounds), so card 01a15ec0b1d3 is closed. Per-pass numbers on Apple hardware come from `scripts/perf/low-camera-trace.sh`, because `gpu_timing` is wrong on the M4 (card 01a17ce2f4b4).
 - Batches 35-36 landed (`e88b1bd`, `84cbce0`, `876609e`, `cf5be40`, CI green):
   - Frame pacing: the latency limiter counts a frame from its first submit.
   - The A29 frame rate cap (Off, 30, 60 or 120), with the web at full rate while a HUD control has focus.
