@@ -34,6 +34,7 @@ B1 = ROOT / ".claude/worktrees/agent-a02bc131da7e3f31b/docs/checkpoints/boulders
 SHEET_TOP = pathlib.Path("/tmp/claude-501/b1-sheet-top.jpg")
 SHEET_BOTTOM = pathlib.Path("/tmp/claude-501/b1-sheet-bottom.jpg")
 THUMBS = pathlib.Path("/tmp/claude-501/thumbs-cmp.jpg")
+B2 = ROOT / ".claude/worktrees/agent-a700afd6da1effb61/docs/checkpoints/walls-hedges-refs/refs-sheet.jpg"
 
 SECTIONS = [
     ("A30", "B1 boulders and outcrop: built and gated, ready to land", [
@@ -58,6 +59,28 @@ SECTIONS = [
         (SHEET_BOTTOM, "B1 review sheet, part 2: in play on meadow, forest, oak and coast tiles, and at walking eye level"),
         (THUMBS, "Thumbnails: left as now, right with B1 (boulders in meadow and forest, camera look-at 2 m higher)"),
     ]),
+    ("A31", "B2 dry-stone walls and hedgerows: references and layout", [
+        ("Q1", "Approve refs 1 to 4 (top row) as the look and scale: dry granite walls with an upright cope, the same "
+               "granite as the boulders, a timber five-bar gate between granite posts, and untrimmed hawthorn and hazel "
+               "hedges in the matte verge-bush green, one with a hedgerow oak. The image model keeps drawing right-angle "
+               "corners; hex boundaries meet at 120°, so corners would be built to that spec rather than copied. "
+               "Recommended: approve as look and scale."),
+        ("Q2", "Sizes. Wall 1.1 m tall, 0.7 m wide at the foot. Hedge 1.9 m tall, 1.5 m wide. Pieces: 4 m straight runs "
+               "(two variants each), a 2 m end, a 120° bend, a three-way junction, a 4 m gateway (wall), and a 4 m run with "
+               "an 8 m oak (hedge). A 16 m tile edge is then exactly 2 + 4 + 4 + 4 + 2 m. Recommended: these sizes."),
+        ("Q3", "Where they go. O1: automatic field boundaries on shared tile edges, wherever a farm or wheat tile meets "
+               "a grass land tile; wall or hedge picked per edge from the world seed, one gate edge per farm. Roads, "
+               "rivers, rail and coast break them, and you place nothing yourself. O2: boundaries inside the farm tile "
+               "(the paddock fence already does this). O3: short 4 to 8 m runs as meadow scatter. A per-edge toggle you "
+               "control could come later; it needs a save-format change. Recommended: O1 now, O3 later."),
+        ("Q4", "Walking: walls and hedges block the walker, gaps pass, a closed gate blocks. Recommended: yes."),
+        ("Q5", "Draw cost: about 40 to 65 more draws at the overview where walls and hedges show. The mixed scatter "
+               "world now sits at 452 of 500 after the cascade skip, so with B1, B3 and B2 together the overview may "
+               "pass 500 again; shared scatter materials (A28) would then come back. Recommended: build, measure, and "
+               "bring the numbers back here."),
+    ], [], [
+        (B2, "B2 reference sheet: walls_hedges refs 1 to 4 (top row) beside the approved boulder, farm and well refs"),
+    ]),
 ]
 
 CSS = """
@@ -79,7 +102,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, fourth round. A19 to A29 are answered.</p>"]
+             "<p class=sub>2026-10-27, fourth round. A19 to A29 are answered; A30 and A31 are open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
