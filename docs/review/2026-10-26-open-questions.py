@@ -76,7 +76,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, fifth round. A19 to A32 are answered; A33 is open. Answer by code, for example &quot;A33 O2&quot;.</p>"]
+             "<p class=sub>2026-10-27, fifth round. A19 to A33 are answered (A33 O2 on 2026-10-27: the warm-up stays off by default). Nothing is open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
