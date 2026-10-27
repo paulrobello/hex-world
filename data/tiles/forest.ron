@@ -17,8 +17,8 @@
     ),
     props: (
         scatter: [
-            (piece: "outcrop_granite", density: 0.2),
-            (piece: "boulder_granite", density: 0.4),
+            (piece: "outcrop_granite", density: 0.03),
+            (piece: "boulder_granite", density: 0.06),
             (piece: "log_fallen", density: 0.15),
             (piece: "tree_forest", density: 3.0),
             (piece: "rock_small", density: 0.2),

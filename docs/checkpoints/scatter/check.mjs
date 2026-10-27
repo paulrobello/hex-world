@@ -9,7 +9,8 @@
 // 34 tiles drawing all 57 scatter pieces) is owner A24 Q5's 500-draw case: its overview camera,
 // every tile in frame, is gated at 500 draws (scatter-gate card criterion 2, 2026-10-27). History:
 // 548 on 2026-10-26, 452 after the per-cell cascade skip, 464 with B3's lily pads and reed beds,
-// 487 with B1's boulders and outcrop and the two tiles owner A30 Q4 added so every piece draws. It
+// 487 with B1's boulders and outcrop and the two tiles owner A30 Q4 added so every piece draws, 485
+// after the owner's seven-fold cut of their densities (2026-10-27, every piece still drawing). It
 // fits only because one tile lies past the cascade 3 bound; the structural fix is shared scatter
 // materials, not fewer props. Scatter (mesh, material) pairs are tracked, not gated (A24 Q5,
 // replacing A2 Q2's 60 per LOD and 180 in all).
@@ -25,9 +26,9 @@ const check = (ok, what, got) => {
 };
 const CAP = 1.5 * Math.sqrt(3) * 16 * 16;
 const DENSITY = {
-  forest: { tree_forest: 3.0, rock_small: 0.2, boulder_granite: 0.4, outcrop_granite: 0.2 },
-  oak: { rock_small: 0.5, wildflower_clump: 0.9, boulder_granite: 0.3 },
-  meadow: { wildflower_clump: 4.0, rock_small: 0.3, boulder_granite: 0.4, outcrop_granite: 0.15 },
+  forest: { tree_forest: 3.0, rock_small: 0.2, boulder_granite: 0.06, outcrop_granite: 0.03 },
+  oak: { rock_small: 0.5, wildflower_clump: 0.9, boulder_granite: 0.045 },
+  meadow: { wildflower_clump: 4.0, rock_small: 0.3, boulder_granite: 0.06, outcrop_granite: 0.03 },
   road_straight: { wildflower_single: 3.0 },
 };
 // Capped tiles: a seeded 0 to cap of their placed pieces (scatter.rs RIVER_MAX), each drawn.

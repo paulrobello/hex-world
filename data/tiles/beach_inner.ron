@@ -18,7 +18,7 @@
             (piece: "beach_driftwood", density: 0.452),
             (piece: "beach_dunegrass", density: 2.105),
             (piece: "beach_pebbles", density: 0.752),
-            (piece: "boulder_granite", density: 0.4),
+            (piece: "boulder_granite", density: 0.06),
         ],
     ),
 )

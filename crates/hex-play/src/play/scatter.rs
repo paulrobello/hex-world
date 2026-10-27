@@ -3063,19 +3063,12 @@ mod tests {
                 for (ri, r) in def.props.scatter.iter().enumerate() {
                     let want = r.density * CAP_AREA / 100.0;
                     let n = l.placed(ri);
-                    // Two granite outcrops (4.25 m reach, so 8.5 m apart inside a 9.3 m reach of
-                    // the centre) do not always fit one tile: at owner A25's 0.2 about 1 tile in
-                    // 64 plans two, and keeps one.
-                    let two_outcrops =
-                        r.piece.as_str() == "outcrop_granite" && l.planned[ri] >= 2 && n >= 1;
-                    if !two_outcrops {
-                        assert_eq!(
-                            n as u32,
-                            l.planned[ri],
-                            "{id} {}: shortfall",
-                            r.piece.as_str()
-                        );
-                    }
+                    assert_eq!(
+                        n as u32,
+                        l.planned[ri],
+                        "{id} {}: shortfall",
+                        r.piece.as_str()
+                    );
                     assert!((n as f32 - want).abs() < 1.0, "{id}: {n} vs {want}");
                     sums[ri] += n;
                     let fp = group_footprint(r.piece.as_str());
