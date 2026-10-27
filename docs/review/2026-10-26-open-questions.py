@@ -31,59 +31,13 @@ def figure(path: pathlib.Path, caption: str, width: int = 1400) -> str:
 
 
 SECTIONS = [
-    ("A25", "B1 boulders and outcrop: references", [
-        ("Q1", "Approve the references. Recommended: ref-1 sets the four boulders and ref-2 the outcrop; ref-3 "
-               "(meadow and forest edge) and ref-4 (coast) set placement and look only, since they read larger "
-               "than the sizes in Q2."),
-        ("Q2", "Sizes, all above the existing rock_small (1.9 m): boulders 2.2, 2.6, 3.4 and 4.5 m long, and an "
-               "8 x 5 x 1.2 m whaleback outcrop. Recommended as listed."),
-        ("Q3", "Where and how many: boulders on meadow, forest and oak tiles (about 0.3 to 0.4 per tile), the "
-               "outcrop on meadow and forest (0.15 to 0.2), small boulders most common; none on farm, wheat and "
-               "windmill tiles. Recommended."),
-        ("Q4", "Coast: boulders stand at the grass-to-sand line, not on the wet beach (the waves ignore props, so "
-               "water would run through them), and count inside the beach tiles' 0 to 6 cap. Recommended."),
-        ("Q5", "Distance: every boulder stays at 150 m; past 400 m only the two big boulders and the outcrop "
-               "remain, which keeps the draw budget. Recommended."),
-        ("Q6", "Texture: a unique bake per piece at about 128 px/m (recommended), or one shared tileable granite "
-               "with a masks map per piece (cheaper, less unique)."),
-        ("Q7", "The walker cannot climb onto the outcrop. Recommended."),
-    ], [], [
-        (CP / "boulders-refs/refs-sheet.jpg", "ref-1 four boulders, ref-2 the outcrop, ref-3 meadow and forest "
-         "edge with a 1.7 m hiker, ref-4 coast."),
-    ]),
-    ("A26", "B3 lily pads and reed bed: references", [
-        ("Q8", "Approve the references. Recommended: ref-1 sets the pads' colour and form (dark olive, matching "
-               "the spring's own pads, which they reuse); ref-3 and ref-4 are layout only (their pads came out "
-               "lighter)."),
-        ("Q9", "Pieces: three lily clusters (3 pads; 7 with a white flower; 5 with a pink bud, 1.8 to 2.8 m "
-               "across) and a dense reed bed about 4 x 2 m and 2.4 m tall, distinct from the sparse cattail "
-               "clumps on the bank. Recommended."),
-        ("Q10", "Where: the spring (always lilies, a reed bed half the time) and river bends; not straights, "
-                "forks or mouths. They get their own 0 to 2 per tile so the riverbank's 0 to 4 stones and reeds "
-                "keep their new half and half share. Recommended."),
-        ("Q11", "Never on the ocean, beach or river-mouth fan, where waves move the surface; reed beds root in "
-                "shallow water 0.4 to 0.8 m deep. Recommended."),
-        ("Q12", "Distance: pads drop out past 400 m (as the spring's do); the reed bed keeps a low silhouette. "
-                "Recommended."),
-    ], [], [
-        (CP / "water-props-refs/refs-sheet.jpg", "ref-1 lily clusters, ref-2 the reed bed, ref-3 on the spring, "
-         "ref-4 on a slow river bend."),
-    ]),
-    ("A27", "Matte forest shrubs (landed, batch 32)", [
-        ("Q1", "Approve the matte hazel and bramble leaves (roughness about 0.57 to 0.81, the verge bushes' fix). "
-               "The holly stays glossy; meshes and other maps are byte-identical."),
-    ], [], [
-        (CP / "shrub-matte/sheet.jpg", "Hazel and bramble before and after at the same cameras."),
-    ]),
-    ("A28", "Scatter draws on a mixed river, beach and ocean world", [
-        ("Q1", "A mixed world with every scatter piece measured 548 draws against the 500 overview budget. A "
-               "per-tile shadow-cascade skip (no shading change) brings it to 452 natively and 468 on the web; it "
-               "lands only if its MiniMac frame-time run tonight shows no camera slower. Shared scatter materials, "
-               "your preferred route, cannot remove a web draw without a bigger renderer change. Pick one: "
-               "O2 vertex pulling plus texture arrays per variant group (about 352 draws, about a week, risk: "
-               "thumbnail edges, memory); O3 one material per alpha mode (about 284 draws, 1 to 2 weeks, needs "
-               "re-baked maps and your look review); or stop at the cascade skip for now. Recommended: stop at the "
-               "cascade skip if MiniMac confirms it, and revisit O2 when scatter grows again."),
+    ("A29", "Engine drops to 60 Hz while a HUD control has focus", [
+        ("Q1", "Found while fixing the frame pacing judder: whenever a HUD control has keyboard focus (opening "
+               "Settings focuses its tab button), the engine falls to a 60 Hz update (Bevy's default for an "
+               "unfocused window). On a 120 Hz display, opening Settings halves the frame rate. "
+               "O1: keep the engine at full rate when the canvas is unfocused on the web (about one line; the "
+               "browser already throttles background tabs). O2: the HUD hands focus back to the canvas when a "
+               "sheet closes (still 60 Hz while a sheet is open). O3: leave it. Recommended: O1."),
     ], [], []),
 ]
 
@@ -106,8 +60,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-26, second round. A19, A22 and A23 are answered. Answer by code, for example "
-             "\"A25 all recommended, A26 Q10 also straights\".</p>"]
+             "<p class=sub>2026-10-27, third round. A19 to A28 are answered.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
