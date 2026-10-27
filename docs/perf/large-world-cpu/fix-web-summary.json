@@ -1,0 +1,354 @@
+{
+  "source": "/tmp/a021/res/fix-web.json",
+  "reference": "main",
+  "loads": {
+    "min": 1.76,
+    "max": 3.12
+  },
+  "discarded": 0,
+  "failed": 0,
+  "cells": [
+    {
+      "world": "world2066",
+      "camera": "close",
+      "arm": "main",
+      "rounds": 5,
+      "stats": {
+        "mean": {
+          "median": 30.44,
+          "min": 30.42,
+          "max": 30.47,
+          "n": 5
+        },
+        "p95": {
+          "median": 31.9,
+          "min": 31.3,
+          "max": 32,
+          "n": 5
+        },
+        "p50": {
+          "median": 30.3,
+          "min": 30.3,
+          "max": 30.5,
+          "n": 5
+        },
+        "cpu_mean": {
+          "median": 29.11,
+          "min": 29.02,
+          "max": 29.71,
+          "n": 5
+        },
+        "cpu_p95": {
+          "median": 29.8,
+          "min": 29.7,
+          "max": 30.4,
+          "n": 5
+        },
+        "over_25ms": {
+          "median": 600,
+          "min": 600,
+          "max": 600,
+          "n": 5
+        },
+        "draws": {
+          "median": 1422,
+          "min": 1422,
+          "max": 1422,
+          "n": 5
+        },
+        "kit_draws": {
+          "median": 1287,
+          "min": 1287,
+          "max": 1287,
+          "n": 5
+        }
+      },
+      "delta": {}
+    },
+    {
+      "world": "world2066",
+      "camera": "close",
+      "arm": "fix",
+      "rounds": 5,
+      "stats": {
+        "mean": {
+          "median": 30.36,
+          "min": 30.35,
+          "max": 30.37,
+          "n": 5
+        },
+        "p95": {
+          "median": 31.6,
+          "min": 31.5,
+          "max": 31.9,
+          "n": 5
+        },
+        "p50": {
+          "median": 30.4,
+          "min": 30.3,
+          "max": 30.5,
+          "n": 5
+        },
+        "cpu_mean": {
+          "median": 16.09,
+          "min": 16.05,
+          "max": 16.23,
+          "n": 5
+        },
+        "cpu_p95": {
+          "median": 16.7,
+          "min": 16.6,
+          "max": 16.8,
+          "n": 5
+        },
+        "over_25ms": {
+          "median": 600,
+          "min": 600,
+          "max": 600,
+          "n": 5
+        },
+        "draws": {
+          "median": 1422,
+          "min": 1422,
+          "max": 1422,
+          "n": 5
+        },
+        "kit_draws": {
+          "median": 1287,
+          "min": 1287,
+          "max": 1287,
+          "n": 5
+        }
+      },
+      "delta": {
+        "mean": {
+          "median": -0.08,
+          "min": -0.11,
+          "max": -0.05,
+          "n": 5,
+          "real": true
+        },
+        "p95": {
+          "median": -0.1,
+          "min": -0.5,
+          "max": 0.6,
+          "n": 5,
+          "real": false
+        },
+        "p50": {
+          "median": 0,
+          "min": -0.1,
+          "max": 0.2,
+          "n": 5,
+          "real": false
+        },
+        "cpu_mean": {
+          "median": -13.02,
+          "min": -13.66,
+          "max": -12.88,
+          "n": 5,
+          "real": true
+        },
+        "cpu_p95": {
+          "median": -13,
+          "min": -13.8,
+          "max": -13,
+          "n": 5,
+          "real": true
+        },
+        "over_25ms": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 5,
+          "real": false
+        },
+        "draws": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 5,
+          "real": false
+        },
+        "kit_draws": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 5,
+          "real": false
+        }
+      }
+    },
+    {
+      "world": "world2066",
+      "camera": "overview",
+      "arm": "main",
+      "rounds": 5,
+      "stats": {
+        "mean": {
+          "median": 38.9,
+          "min": 38.88,
+          "max": 38.92,
+          "n": 5
+        },
+        "p95": {
+          "median": 40.1,
+          "min": 39.9,
+          "max": 40.5,
+          "n": 5
+        },
+        "p50": {
+          "median": 39,
+          "min": 39,
+          "max": 39,
+          "n": 5
+        },
+        "cpu_mean": {
+          "median": 25.79,
+          "min": 25.66,
+          "max": 26.19,
+          "n": 5
+        },
+        "cpu_p95": {
+          "median": 26.3,
+          "min": 26.1,
+          "max": 26.7,
+          "n": 5
+        },
+        "over_25ms": {
+          "median": 600,
+          "min": 600,
+          "max": 600,
+          "n": 5
+        },
+        "draws": {
+          "median": 930,
+          "min": 930,
+          "max": 930,
+          "n": 5
+        },
+        "kit_draws": {
+          "median": 849,
+          "min": 849,
+          "max": 849,
+          "n": 5
+        }
+      },
+      "delta": {}
+    },
+    {
+      "world": "world2066",
+      "camera": "overview",
+      "arm": "fix",
+      "rounds": 5,
+      "stats": {
+        "mean": {
+          "median": 38.4,
+          "min": 38.27,
+          "max": 38.67,
+          "n": 5
+        },
+        "p95": {
+          "median": 40,
+          "min": 39.7,
+          "max": 40,
+          "n": 5
+        },
+        "p50": {
+          "median": 38.2,
+          "min": 38.1,
+          "max": 38.6,
+          "n": 5
+        },
+        "cpu_mean": {
+          "median": 15.28,
+          "min": 15.14,
+          "max": 15.45,
+          "n": 5
+        },
+        "cpu_p95": {
+          "median": 15.8,
+          "min": 15.7,
+          "max": 16,
+          "n": 5
+        },
+        "over_25ms": {
+          "median": 600,
+          "min": 600,
+          "max": 600,
+          "n": 5
+        },
+        "draws": {
+          "median": 930,
+          "min": 930,
+          "max": 930,
+          "n": 5
+        },
+        "kit_draws": {
+          "median": 849,
+          "min": 849,
+          "max": 849,
+          "n": 5
+        }
+      },
+      "delta": {
+        "mean": {
+          "median": -0.51,
+          "min": -0.62,
+          "max": -0.21,
+          "n": 5,
+          "real": true
+        },
+        "p95": {
+          "median": -0.2,
+          "min": -0.5,
+          "max": -0.1,
+          "n": 5,
+          "real": false
+        },
+        "p50": {
+          "median": -0.8,
+          "min": -0.9,
+          "max": -0.4,
+          "n": 5,
+          "real": true
+        },
+        "cpu_mean": {
+          "median": -10.58,
+          "min": -10.91,
+          "max": -10.33,
+          "n": 5,
+          "real": true
+        },
+        "cpu_p95": {
+          "median": -10.5,
+          "min": -10.9,
+          "max": -10.3,
+          "n": 5,
+          "real": true
+        },
+        "over_25ms": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 5,
+          "real": false
+        },
+        "draws": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 5,
+          "real": false
+        },
+        "kit_draws": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 5,
+          "real": false
+        }
+      }
+    }
+  ]
+}

@@ -234,13 +234,16 @@ pub fn finish_kit(
     config: Res<GateConfig>,
     mut coalesced: Local<coalesce::KitCoalesced>,
 ) {
-    let (Some(kit), Some(packs)) = (kit.as_deref_mut(), packs.as_deref_mut()) else {
+    let (Some(kit), Some(packs)) = (kit.as_mut(), packs.as_deref_mut()) else {
         return;
     };
     let arrived = packs.poll(&server);
     if arrived.is_empty() {
         return;
     }
+    // `PlayKit` is marked changed only on a frame a pack arrives: scatter's `sync` redraws every
+    // tile and rewrites its report whenever it changes.
+    let kit: &mut PlayKit = kit;
     packs.refresh_waiting(&view, &catalog.0);
     let (PlayKit::Loading(pieces) | PlayKit::Ready(pieces)) = &mut *kit;
     let mut built = HashSet::new();
@@ -1145,6 +1148,42 @@ mod tests {
             !s.rebuild_for(1),
             "once per epoch, so later placements rise"
         );
+    }
+
+    /// A frame on which no pack arrives leaves `PlayKit` unchanged, so scatter's `sync` (which
+    /// redraws every tile and rewrites its report when the kit changes) stays idle.
+    #[test]
+    fn finish_kit_leaves_the_kit_unchanged_when_no_pack_arrives() {
+        #[derive(Resource, Default)]
+        struct Seen(Vec<bool>);
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()))
+            .init_asset::<Gltf>()
+            .init_asset::<GltfMesh>()
+            .init_asset::<GltfNode>()
+            .init_asset::<Mesh>()
+            .init_asset::<StandardMaterial>()
+            .init_asset::<KitMaterial>()
+            .init_resource::<PlayView>()
+            .init_resource::<PlayCatalog>()
+            .init_resource::<GateConfig>()
+            .init_resource::<Seen>()
+            .insert_resource(PlayKit::Ready(HashMap::new()))
+            .insert_resource(PlayPacks::new(
+                parse_manifest(MANIFEST).unwrap(),
+                hex_assets::TextureFamily::Png,
+            ))
+            .add_systems(
+                Update,
+                (finish_kit, |kit: Res<PlayKit>, mut seen: ResMut<Seen>| {
+                    seen.0.push(kit.is_changed())
+                })
+                    .chain(),
+            );
+        for _ in 0..3 {
+            app.update();
+        }
+        assert_eq!(app.world().resource::<Seen>().0, vec![true, false, false]);
     }
 
     #[test]

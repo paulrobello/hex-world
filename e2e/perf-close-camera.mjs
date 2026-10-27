@@ -14,6 +14,8 @@
 // WARMUP=1 runs the first arm once on the first world before round 0 and discards it (a session's first run
 // can read fast). Each camera window also records `cpu`: the main-thread time of each engine rAF callback
 // that submitted GPU work, over the window's last 600 frames, so a delta splits into CPU and the rest.
+// An arm key `pause_agents=1` opens photo mode with the agents paused (no sim tick). GPU_CALLS=1 and
+// PROFILE_DIR are diagnostics (docs/perf/large-world-cpu/), not timing evidence.
 import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
@@ -126,6 +128,43 @@ const CB_PROBE = () => {
     return submit.call(this, b);
   };
 };
+// GPU_CALLS=1: also the time spent inside WebGPU queue, device, canvas, encoder and buffer methods
+// (not the per-draw pass encoder calls) while the callback probe is on, summed per method, so a
+// callback's time splits into time in the browser's WebGPU implementation and the rest.
+const GPU_CALLS = process.env.GPU_CALLS === "1";
+// PROFILE_DIR=<dir>: a V8 CPU profile (250 us sampling) of each camera window, written there as
+// <arm>-<world>-<camera>-<ms>.cpuprofile with the window's engine frame count; for attribution only,
+// since the profiler slows the frames it samples. Function names need a wasm with its name section.
+const PROFILE_DIR = process.env.PROFILE_DIR ?? "";
+const GPU_PROBE = () => {
+  const G = (window.__gpuCalls = {});
+  const wrap = (proto, names) => {
+    if (!proto) return;
+    for (const n of names) {
+      const f = proto[n];
+      if (typeof f !== "function") continue;
+      proto[n] = function (...a) {
+        if (!window.__cb?.on) return f.apply(this, a);
+        const t0 = performance.now();
+        try { return f.apply(this, a); } finally {
+          const e = (G[n] ??= { ms: 0, calls: 0 });
+          e.ms += performance.now() - t0;
+          e.calls++;
+        }
+      };
+    }
+  };
+  wrap(window.GPUQueue?.prototype, ["submit", "writeBuffer", "writeTexture", "copyExternalImageToTexture", "onSubmittedWorkDone"]);
+  wrap(window.GPUCanvasContext?.prototype, ["getCurrentTexture", "configure"]);
+  wrap(window.GPUDevice?.prototype, ["createBindGroup", "createBuffer", "createTexture", "createSampler", "createCommandEncoder",
+    "createRenderPipeline", "createComputePipeline", "createShaderModule", "createBindGroupLayout", "createPipelineLayout"]);
+  wrap(window.GPUTexture?.prototype, ["createView", "destroy"]);
+  wrap(window.GPUCommandEncoder?.prototype, ["beginRenderPass", "beginComputePass", "finish", "copyBufferToBuffer",
+    "copyBufferToTexture", "copyTextureToTexture", "clearBuffer", "resolveQuerySet", "writeTimestamp"]);
+  wrap(window.GPUBuffer?.prototype, ["mapAsync", "getMappedRange", "unmap", "destroy"]);
+  wrap(window.GPURenderPassEncoder?.prototype, ["end", "executeBundles"]);
+  wrap(window.GPUComputePassEncoder?.prototype, ["end"]);
+};
 const msStats = (ms) => {
   if (ms.length < 3) return null;
   const s = [...ms].sort((a, b) => a - b);
@@ -143,9 +182,12 @@ async function run(build, worldName) {
   try {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
     await page.addInitScript(CB_PROBE);
+    if (GPU_CALLS) await page.addInitScript(GPU_PROBE);
     page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text())) errors.push(m.text()); });
     page.on("pageerror", (e) => errors.push(String(e)));
-    await page.goto(`${baseOf(build)}?${new URLSearchParams({ ...KEYS, ...extraKeys[build] })}`);
+    // `pause_agents=1` is the harness's own arm key, not a page key: photo mode pauses the agents (sim tick).
+    const { pause_agents: pauseKey, ...pageKeys } = extraKeys[build];
+    await page.goto(`${baseOf(build)}?${new URLSearchParams({ ...KEYS, ...pageKeys })}`);
     await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 180_000 });
     const gpu = await page.evaluate(async () => {
       const i = (await navigator.gpu.requestAdapter())?.info;
@@ -168,12 +210,17 @@ async function run(build, worldName) {
     }
     // As the draws census (draws.json): the pointer off the world, photo mode on with DOF off.
     await page.evaluate((s) => window.hexWorld.cmd(s), [{ cmd: "hover", q: 9, r: -9 }, { cmd: "toggle", what: "photo" },
-      { cmd: "photo", dof: "off", pause_agents: false }]);
+      { cmd: "photo", dof: "off", pause_agents: pauseKey === "1" }]);
     // Every pack streamed and every scatter instance placed before any window opens.
     await page.waitForFunction(() => {
       const s = window.hexWorld.state();
       return Object.values(s.packs ?? {}).every((v) => v === "ready") && !s.scatter?.waiting?.length && s.queued === 0;
     }, null, { timeout: 300_000, polling: 500 });
+    const cdp = PROFILE_DIR ? await page.context().newCDPSession(page) : null;
+    if (cdp) {
+      await cdp.send("Profiler.enable");
+      await cdp.send("Profiler.setSamplingInterval", { interval: 250 });
+    }
     const f0 = await page.evaluate(() => window.hexWorld.diag().frames);
     await page.waitForFunction((f) => window.hexWorld.diag().frames >= f, f0 + SETTLE_FRAMES, { timeout: 300_000, polling: 250 });
     const cameras = {};
@@ -182,15 +229,22 @@ async function run(build, worldName) {
       const f1 = await page.evaluate(() => window.hexWorld.diag().frames);
       // The callback probe covers about the window's last 600 frames, as the diag ring does.
       await page.waitForFunction((f) => window.hexWorld.diag().frames >= f, f1 + WINDOW_FRAMES - 600, { timeout: 600_000, polling: 50 });
-      await page.evaluate(() => { window.__cb.ms = []; window.__cb.on = true; });
+      await page.evaluate(() => { window.__cb.ms = []; window.__cb.on = true; if (window.__gpuCalls) for (const k in window.__gpuCalls) delete window.__gpuCalls[k]; });
+      if (cdp) await cdp.send("Profiler.start");
       await page.waitForFunction((f) => window.hexWorld.diag().frames >= f, f1 + WINDOW_FRAMES, { timeout: 600_000, polling: 250 });
       const cbMs = await page.evaluate(() => { window.__cb.on = false; return window.__cb.ms; });
+      if (cdp) {
+        const { profile } = await cdp.send("Profiler.stop");
+        await writeFile(join(PROFILE_DIR, `${build}-${worldName}-${name}-${Date.now()}.cpuprofile`), JSON.stringify({ ...profile, frames: cbMs.length }));
+      }
+      const gpuCalls = GPU_CALLS ? await page.evaluate((n) => Object.fromEntries(Object.entries(window.__gpuCalls)
+        .map(([k, v]) => [k, { ms_per_frame: Math.round((v.ms / n) * 1000) / 1000, calls_per_frame: Math.round((v.calls / n) * 10) / 10 }])), cbMs.length) : undefined;
       const d = await page.evaluate(() => window.hexWorld.diag());
       const st = await page.evaluate(() => window.hexWorld.state());
       if (st.tier?.tier !== "high") throw new Error(`tier ${st.tier?.tier}`);
       if (st.play?.tiles?.length !== world.tiles) throw new Error(`world has ${st.play?.tiles?.length} tiles`);
       cameras[name] = { p50: d.p50, p95: d.p95, p99: d.p99, mean: d.mean, max: d.max,
-        dropped_over_25ms: d.dropped_over_25ms, samples: d.samples, cpu: msStats(cbMs), histogram: d.stall?.histogram ?? null, window_start: f1, read_at_frame: d.frames,
+        dropped_over_25ms: d.dropped_over_25ms, samples: d.samples, cpu: msStats(cbMs), gpu_calls: gpuCalls, histogram: d.stall?.histogram ?? null, window_start: f1, read_at_frame: d.frames,
         draws: (d.passes ?? []).reduce((n, p) => n + count(p), 0),
         passes: Object.fromEntries((d.passes ?? []).map((p) => [`${p.view}/${p.phase}`, count(p)])),
         kit_draws: d.kit_draws ? { slots: d.kit_draws.slots, total: d.kit_draws.total } : null,

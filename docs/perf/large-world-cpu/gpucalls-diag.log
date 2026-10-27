@@ -1,0 +1,3 @@
+main world2066 round 0: close p50 30.4 p95 31 mean 30.39 cpu 29.65/30.4 draws 1422 kit 1287 | overview p50 36.7 p95 37.7 mean 36.61 cpu 25.8/26.3 draws 930 kit 849 errors 0 (load 2.25 -> 2.76)
+o5o4 world2066 round 0: close p50 25.2 p95 50.6 mean 36.5 cpu 23.06/23.8 draws 1863 kit 1728 | overview p50 23.7 p95 66.4 mean 41.87 cpu 19.59/20.9 draws 990 kit 909 errors 0 (load 2.76 -> 2.51)
+wrote results/gpucalls-diag.json

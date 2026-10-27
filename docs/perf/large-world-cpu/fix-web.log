@@ -1,0 +1,12 @@
+warm-up main world2066 discarded (load 2.29 -> 2.93)
+main world2066 round 0: close p50 30.5 p95 31.5 mean 30.44 cpu 29.11/29.7 draws 1422 kit 1287 | overview p50 39 p95 39.9 mean 38.89 cpu 25.79/26.3 draws 930 kit 849 errors 0 (load 2.93 -> 2.67)
+fix world2066 round 0: close p50 30.4 p95 31.6 mean 30.35 cpu 16.09/16.7 draws 1422 kit 1287 | overview p50 38.4 p95 39.7 mean 38.27 cpu 15.17/15.7 draws 930 kit 849 errors 0 (load 2.67 -> 1.76)
+fix world2066 round 1: close p50 30.5 p95 31.5 mean 30.37 cpu 16.09/16.7 draws 1422 kit 1287 | overview p50 38.6 p95 40 mean 38.67 cpu 15.14/15.7 draws 930 kit 849 errors 0 (load 1.76 -> 2.47)
+main world2066 round 1: close p50 30.3 p95 32 mean 30.42 cpu 29.02/29.7 draws 1422 kit 1287 | overview p50 39 p95 40.1 mean 38.88 cpu 25.66/26.1 draws 930 kit 849 errors 0 (load 2.47 -> 2.21)
+main world2066 round 2: close p50 30.3 p95 31.9 mean 30.44 cpu 29.27/29.9 draws 1422 kit 1287 | overview p50 39 p95 40.5 mean 38.91 cpu 25.98/26.5 draws 930 kit 849 errors 0 (load 2.21 -> 2.53)
+fix world2066 round 2: close p50 30.3 p95 31.8 mean 30.36 cpu 16.15/16.7 draws 1422 kit 1287 | overview p50 38.1 p95 40 mean 38.4 cpu 15.4/16 draws 930 kit 849 errors 0 (load 2.53 -> 2.29)
+fix world2066 round 3: close p50 30.4 p95 31.6 mean 30.37 cpu 16.23/16.8 draws 1422 kit 1287 | overview p50 38.2 p95 40 mean 38.5 cpu 15.45/16 draws 930 kit 849 errors 0 (load 2.29 -> 2.27)
+main world2066 round 3: close p50 30.3 p95 31.9 mean 30.42 cpu 29.11/29.8 draws 1422 kit 1287 | overview p50 39 p95 40.1 mean 38.92 cpu 25.78/26.3 draws 930 kit 849 errors 0 (load 2.27 -> 2.21)
+main world2066 round 4: close p50 30.4 p95 31.3 mean 30.47 cpu 29.71/30.4 draws 1422 kit 1287 | overview p50 39 p95 40.3 mean 38.9 cpu 26.19/26.7 draws 930 kit 849 errors 0 (load 2.21 -> 3.12)
+fix world2066 round 4: close p50 30.3 p95 31.9 mean 30.36 cpu 16.05/16.6 draws 1422 kit 1287 | overview p50 38.1 p95 40 mean 38.34 cpu 15.28/15.8 draws 930 kit 849 errors 0 (load 3.12 -> 2.19)
+wrote results/fix-web.json

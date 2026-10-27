@@ -1,0 +1,2 @@
+named_fix world2066 round 0: close p50 30.4 p95 31.6 mean 30.38 cpu 16.65/17.3 draws 1422 kit 1287 | overview p50 39 p95 40.3 mean 38.97 cpu 14.57/15.5 draws 930 kit 849 errors 0 (load 2.29 -> 2.18)
+wrote results/profile-fix-web.json

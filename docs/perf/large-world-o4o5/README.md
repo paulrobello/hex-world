@@ -91,7 +91,7 @@ The diag census gives the overview's cascade draws as 0 / 174 / 342 / 376 (casca
 | overview | O5 off | 978 (897) | 39.05 | +0.16 [+0.13, +1.20] | 40.6 | +0.3 [+0.2, +1.3] | 26.07 (+0.35) |
 | overview | O4 off | 1,061 (980) | 38.86 | -0.01 [-0.06, +1.02] | 40.1 | -0.2 [-0.5, +0.9] | 26.07 (+0.44) |
 
-- At the close camera the frame is main-thread-bound: `cpu` is 29.2 of 30.4 ms. At the overview it is GPU-bound: `cpu` is 25.6 of 38.9 ms.
+- At the close camera `cpu` is 29.2 of the 30.4 ms frame, but the frame is GPU-bound: cutting 13 ms of main-thread time later moved its mean by 0.08 ms (`docs/perf/large-world-cpu/`). At the overview it is GPU-bound too: `cpu` is 25.6 of 38.9 ms.
 - Turning O5 off is slower at the overview in all 5 rounds, though its spread keeps it short of "real". Turning O4 off costs 0.4 to 0.6 ms of main-thread time, which shows at neither camera's mean because neither frame is limited by that time.
 - A trace of main at the overview (`traces/o5-main-overview-diff.json`, loads 3.33 -> 3.03 and 3.19 -> 3.41) puts O5 on at 38.36 ms GPU busy, against 38.71 ms with O5 off: O5 saves 0.35 ms.
   - With O5 off, cascade 1 holds 48 draws and 0.19 ms of encoder time, against 174 draws and 3.5 ms in the historical before build. Cascade 2 holds 261 draws, against 342 (cascade 3: 231 against 376).

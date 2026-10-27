@@ -1,0 +1,696 @@
+{
+  "date": "2026-10-27T14:02:06.278Z",
+  "host": "MiniMac.attlocal.net",
+  "cpu": "Apple M4",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "tilt": "off",
+    "fps": "off",
+    "grass": "off",
+    "seed": "1"
+  },
+  "save": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+  "browser": {
+    "mode": "chromium headless (new), channel chromium, uncapped",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit"
+  },
+  "window_frames": 700,
+  "settle_frames": 300,
+  "load_limit": 15,
+  "rounds": 1,
+  "arms": [
+    {
+      "name": "main",
+      "dist": "arms/main",
+      "keys": ""
+    },
+    {
+      "name": "o5o4",
+      "dist": "arms/o5o4",
+      "keys": ""
+    }
+  ],
+  "rows": [
+    {
+      "round": 0,
+      "build": "main",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 30.4,
+          "p95": 31,
+          "p99": 31.9,
+          "mean": 30.39,
+          "max": 34.2,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 607,
+            "mean": 29.65,
+            "p50": 29.6,
+            "p95": 30.4,
+            "max": 33.1
+          },
+          "gpu_calls": {
+            "getMappedRange": {
+              "ms_per_frame": 0.02,
+              "calls_per_frame": 27
+            },
+            "unmap": {
+              "ms_per_frame": 0.015,
+              "calls_per_frame": 27
+            },
+            "createBuffer": {
+              "ms_per_frame": 0.05,
+              "calls_per_frame": 28
+            },
+            "writeBuffer": {
+              "ms_per_frame": 0.158,
+              "calls_per_frame": 20
+            },
+            "createView": {
+              "ms_per_frame": 0.033,
+              "calls_per_frame": 29
+            },
+            "getCurrentTexture": {
+              "ms_per_frame": 0.014,
+              "calls_per_frame": 1
+            },
+            "createSampler": {
+              "ms_per_frame": 0.006,
+              "calls_per_frame": 1
+            },
+            "createBindGroup": {
+              "ms_per_frame": 0.105,
+              "calls_per_frame": 56
+            },
+            "createCommandEncoder": {
+              "ms_per_frame": 0.011,
+              "calls_per_frame": 15
+            },
+            "copyBufferToBuffer": {
+              "ms_per_frame": 0.003,
+              "calls_per_frame": 2
+            },
+            "beginComputePass": {
+              "ms_per_frame": 0.006,
+              "calls_per_frame": 9
+            },
+            "end": {
+              "ms_per_frame": 0.003,
+              "calls_per_frame": 37
+            },
+            "beginRenderPass": {
+              "ms_per_frame": 0.044,
+              "calls_per_frame": 28
+            },
+            "copyTextureToTexture": {
+              "ms_per_frame": 0.007,
+              "calls_per_frame": 2
+            },
+            "finish": {
+              "ms_per_frame": 0.009,
+              "calls_per_frame": 15
+            },
+            "submit": {
+              "ms_per_frame": 0.018,
+              "calls_per_frame": 2
+            },
+            "mapAsync": {
+              "ms_per_frame": 0.015,
+              "calls_per_frame": 1
+            },
+            "onSubmittedWorkDone": {
+              "ms_per_frame": 0.003,
+              "calls_per_frame": 1
+            }
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              599
+            ],
+            [
+              "<50",
+              1
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1422,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 241,
+            "main/prepass": 237,
+            "cascade0/shadow": 73,
+            "cascade1/shadow": 159,
+            "cascade2/shadow": 331,
+            "cascade3/shadow": 245
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 1287
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "rejected_no_target": 0,
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 3.24658203125
+        },
+        "overview": {
+          "p50": 36.7,
+          "p95": 37.7,
+          "p99": 38.3,
+          "mean": 36.61,
+          "max": 44.1,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 602,
+            "mean": 25.8,
+            "p50": 25.8,
+            "p95": 26.3,
+            "max": 29.7
+          },
+          "gpu_calls": {
+            "getMappedRange": {
+              "ms_per_frame": 0.018,
+              "calls_per_frame": 27
+            },
+            "unmap": {
+              "ms_per_frame": 0.016,
+              "calls_per_frame": 27
+            },
+            "createBuffer": {
+              "ms_per_frame": 0.042,
+              "calls_per_frame": 28
+            },
+            "writeBuffer": {
+              "ms_per_frame": 0.083,
+              "calls_per_frame": 24
+            },
+            "createView": {
+              "ms_per_frame": 0.032,
+              "calls_per_frame": 29
+            },
+            "getCurrentTexture": {
+              "ms_per_frame": 0.014,
+              "calls_per_frame": 1
+            },
+            "createSampler": {
+              "ms_per_frame": 0.005,
+              "calls_per_frame": 1
+            },
+            "createBindGroup": {
+              "ms_per_frame": 0.11,
+              "calls_per_frame": 58
+            },
+            "createCommandEncoder": {
+              "ms_per_frame": 0.011,
+              "calls_per_frame": 16
+            },
+            "copyBufferToBuffer": {
+              "ms_per_frame": 0.002,
+              "calls_per_frame": 2
+            },
+            "beginComputePass": {
+              "ms_per_frame": 0.007,
+              "calls_per_frame": 10
+            },
+            "end": {
+              "ms_per_frame": 0.005,
+              "calls_per_frame": 38
+            },
+            "beginRenderPass": {
+              "ms_per_frame": 0.042,
+              "calls_per_frame": 28
+            },
+            "copyTextureToTexture": {
+              "ms_per_frame": 0.004,
+              "calls_per_frame": 2
+            },
+            "finish": {
+              "ms_per_frame": 0.009,
+              "calls_per_frame": 16
+            },
+            "submit": {
+              "ms_per_frame": 0.014,
+              "calls_per_frame": 2
+            },
+            "mapAsync": {
+              "ms_per_frame": 0.009,
+              "calls_per_frame": 1
+            },
+            "onSubmittedWorkDone": {
+              "ms_per_frame": 0.004,
+              "calls_per_frame": 1
+            }
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              600
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 930,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 173,
+            "main/prepass": 169,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 261,
+            "cascade3/shadow": 231
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 849
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "rejected_no_target": 0,
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.7568359375
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.25,
+      "load_after": 2.7568359375,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "build": "o5o4",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 25.2,
+          "p95": 50.6,
+          "p99": 52.8,
+          "mean": 36.5,
+          "max": 69.7,
+          "dropped_over_25ms": 302,
+          "samples": 600,
+          "cpu": {
+            "frames": 604,
+            "mean": 23.06,
+            "p50": 23,
+            "p95": 23.8,
+            "max": 24.8
+          },
+          "gpu_calls": {
+            "getMappedRange": {
+              "ms_per_frame": 0.023,
+              "calls_per_frame": 27
+            },
+            "unmap": {
+              "ms_per_frame": 0.014,
+              "calls_per_frame": 27
+            },
+            "createBuffer": {
+              "ms_per_frame": 0.05,
+              "calls_per_frame": 28
+            },
+            "writeBuffer": {
+              "ms_per_frame": 0.204,
+              "calls_per_frame": 20
+            },
+            "createView": {
+              "ms_per_frame": 0.034,
+              "calls_per_frame": 29
+            },
+            "getCurrentTexture": {
+              "ms_per_frame": 0.017,
+              "calls_per_frame": 1
+            },
+            "createSampler": {
+              "ms_per_frame": 0.005,
+              "calls_per_frame": 1
+            },
+            "createBindGroup": {
+              "ms_per_frame": 0.422,
+              "calls_per_frame": 437
+            },
+            "createCommandEncoder": {
+              "ms_per_frame": 0.01,
+              "calls_per_frame": 15
+            },
+            "copyBufferToBuffer": {
+              "ms_per_frame": 0.003,
+              "calls_per_frame": 2
+            },
+            "beginComputePass": {
+              "ms_per_frame": 0.008,
+              "calls_per_frame": 9
+            },
+            "end": {
+              "ms_per_frame": 0.006,
+              "calls_per_frame": 37
+            },
+            "beginRenderPass": {
+              "ms_per_frame": 0.039,
+              "calls_per_frame": 28
+            },
+            "copyTextureToTexture": {
+              "ms_per_frame": 0.005,
+              "calls_per_frame": 2
+            },
+            "finish": {
+              "ms_per_frame": 0.009,
+              "calls_per_frame": 15
+            },
+            "submit": {
+              "ms_per_frame": 0.014,
+              "calls_per_frame": 2
+            },
+            "mapAsync": {
+              "ms_per_frame": 0.012,
+              "calls_per_frame": 1
+            },
+            "onSubmittedWorkDone": {
+              "ms_per_frame": 0.002,
+              "calls_per_frame": 1
+            }
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              297
+            ],
+            [
+              "<33.3",
+              3
+            ],
+            [
+              "<50",
+              246
+            ],
+            [
+              "<100",
+              54
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1863,
+          "passes": {
+            "main/alpha_mask": 69,
+            "main/alpha_mask_prepass": 69,
+            "main/opaque": 249,
+            "main/prepass": 245,
+            "cascade0/shadow": 196,
+            "cascade1/shadow": 231,
+            "cascade2/shadow": 374,
+            "cascade3/shadow": 430
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 1728
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.65771484375
+        },
+        "overview": {
+          "p50": 23.7,
+          "p95": 66.4,
+          "p99": 67.6,
+          "mean": 41.87,
+          "max": 86.6,
+          "dropped_over_25ms": 300,
+          "samples": 600,
+          "cpu": {
+            "frames": 600,
+            "mean": 19.59,
+            "p50": 20,
+            "p95": 20.9,
+            "max": 24.5
+          },
+          "gpu_calls": {
+            "getMappedRange": {
+              "ms_per_frame": 0.023,
+              "calls_per_frame": 27
+            },
+            "unmap": {
+              "ms_per_frame": 0.017,
+              "calls_per_frame": 27
+            },
+            "createBuffer": {
+              "ms_per_frame": 0.043,
+              "calls_per_frame": 28.1
+            },
+            "writeBuffer": {
+              "ms_per_frame": 0.131,
+              "calls_per_frame": 24
+            },
+            "createView": {
+              "ms_per_frame": 0.026,
+              "calls_per_frame": 29
+            },
+            "getCurrentTexture": {
+              "ms_per_frame": 0.018,
+              "calls_per_frame": 1
+            },
+            "createSampler": {
+              "ms_per_frame": 0.005,
+              "calls_per_frame": 1
+            },
+            "createBindGroup": {
+              "ms_per_frame": 0.419,
+              "calls_per_frame": 439
+            },
+            "createCommandEncoder": {
+              "ms_per_frame": 0.011,
+              "calls_per_frame": 16
+            },
+            "copyBufferToBuffer": {
+              "ms_per_frame": 0.002,
+              "calls_per_frame": 2
+            },
+            "beginComputePass": {
+              "ms_per_frame": 0.009,
+              "calls_per_frame": 10
+            },
+            "end": {
+              "ms_per_frame": 0.004,
+              "calls_per_frame": 38
+            },
+            "beginRenderPass": {
+              "ms_per_frame": 0.038,
+              "calls_per_frame": 28
+            },
+            "copyTextureToTexture": {
+              "ms_per_frame": 0.005,
+              "calls_per_frame": 2
+            },
+            "finish": {
+              "ms_per_frame": 0.009,
+              "calls_per_frame": 16
+            },
+            "submit": {
+              "ms_per_frame": 0.017,
+              "calls_per_frame": 2
+            },
+            "mapAsync": {
+              "ms_per_frame": 0.011,
+              "calls_per_frame": 1
+            },
+            "onSubmittedWorkDone": {
+              "ms_per_frame": 0.004,
+              "calls_per_frame": 1
+            }
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              277
+            ],
+            [
+              "<25",
+              23
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              0
+            ],
+            [
+              "<100",
+              300
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 990,
+          "passes": {
+            "main/alpha_mask": 49,
+            "main/alpha_mask_prepass": 49,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 266,
+            "cascade3/shadow": 290
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 909
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.51318359375
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.7568359375,
+      "load_after": 2.51318359375,
+      "load_discarded": 0
+    }
+  ]
+}

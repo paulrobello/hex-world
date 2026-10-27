@@ -1,0 +1,8 @@
+warm-up main world2066 discarded (load 2.04 -> 3.02)
+main world2066 round 0: close p50 32.1 p95 35.3 mean 32.18 cpu 31.53/34.9 draws 1422 kit 1287 | overview p50 39 p95 40.1 mean 38.87 cpu 25.94/26.5 draws 930 kit 849 errors 0 (load 3.02 -> 3.75)
+paused world2066 round 0: close p50 30.5 p95 31.5 mean 30.5 cpu 28.28/29.4 draws 1389 kit 1287 | overview p50 39.1 p95 39.8 mean 38.9 cpu 24.96/25.4 draws 917 kit 849 errors 0 (load 3.75 -> 2.96)
+paused world2066 round 1: close p50 30.5 p95 31.3 mean 30.42 cpu 28.44/28.9 draws 1389 kit 1287 | overview p50 39.1 p95 40 mean 38.91 cpu 25.22/25.6 draws 917 kit 849 errors 0 (load 2.96 -> 2.67)
+main world2066 round 1: close p50 30.3 p95 32 mean 30.56 cpu 29.15/30 draws 1422 kit 1287 | overview p50 39 p95 40.4 mean 38.91 cpu 25.85/26.4 draws 930 kit 849 errors 0 (load 2.67 -> 2.71)
+main world2066 round 2: close p50 30.3 p95 31.9 mean 30.44 cpu 29.22/29.9 draws 1422 kit 1287 | overview p50 39 p95 40.3 mean 38.91 cpu 25.84/26.4 draws 930 kit 849 errors 0 (load 2.71 -> 2.42)
+paused world2066 round 2: close p50 30.3 p95 31.6 mean 30.44 cpu 28.11/28.6 draws 1389 kit 1287 | overview p50 39 p95 40.4 mean 38.9 cpu 24.86/25.2 draws 917 kit 849 errors 0 (load 2.42 -> 2.67)
+wrote results/ablate-agents-web.json

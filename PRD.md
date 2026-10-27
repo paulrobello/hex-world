@@ -476,6 +476,11 @@ Low-camera frame profile (2026-10-27, `docs/perf/low-camera/`; the 317-tile wate
 - Neither platform's `gpu_timing` stamps give per-pass cost on Apple M4. Use the Metal System Trace route in `scripts/perf/low-camera-trace.sh`. Since the follow-up the same day, `diag().gpu.trusted` is `false` on Metal and on the web: even with every pass rendering, the native M4 split disagreed with the trace by 2-3x per segment.
 - Native runs on a host with a locked screen (MiniMac over SSH) draw no main pass, because the occluded window gets no swap-chain texture. Such runs need `--offscreen on`, and the native harness refuses them without it. With every pass running, the native frame is about as slow as the web's (32-35 ms), so the earlier native-faster-than-web reading is withdrawn.
 
+Large-world main thread (2026-10-27, `docs/perf/large-world-cpu/`; the 2,066-tile save, High, 2560x1440, MiniMac, load-guarded). Main-thread time per web frame had grown 6.5 ms at the close camera and 5.7 ms at the overview since the O5+O4 build `4b90a09`.
+- The growth came from the runtime river and coast scatter commits (`e9ea60d`, `2e331f3`). They enlarged a per-frame recompute: `finish_kit` marked `PlayKit` changed every frame, so scatter's `sync` re-laid every scatter tile and rebuilt its JSON report each frame, and `chunks::settle` re-parsed and rewrote that report.
+- Since `c032d97`, `PlayKit` changes only on a frame where a pack arrives. Main-thread time is down 13.0 ms close (29.1 → 16.1) and 10.6 ms overview (25.8 → 15.3), with the same draws, scatter and sim. The close camera's frame is GPU-bound at 30.4 ms, so its mean barely moves.
+- Change detection on a resource that systems react to is a per-frame cost when the resource is taken mutably every frame. A system takes `ResMut` or `as_deref_mut` only on the path that writes.
+
 Kit content streams in by biome pack after the first interaction.
 
 ## 11. Asset pipeline (D17)

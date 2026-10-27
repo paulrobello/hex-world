@@ -1,0 +1,3856 @@
+{
+  "date": "2026-10-27T14:15:49.334Z",
+  "host": "MiniMac.attlocal.net",
+  "cpu": "Apple M4",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "tilt": "off",
+    "fps": "off",
+    "grass": "off",
+    "seed": "1"
+  },
+  "save": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+  "browser": {
+    "mode": "chromium headless (new), channel chromium, uncapped",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit"
+  },
+  "window_frames": 700,
+  "settle_frames": 300,
+  "load_limit": 15,
+  "rounds": 3,
+  "arms": [
+    {
+      "name": "main",
+      "dist": "arms/main",
+      "keys": ""
+    },
+    {
+      "name": "o5o4_fl",
+      "dist": "arms/fl-4b90a09",
+      "keys": ""
+    },
+    {
+      "name": "o6",
+      "dist": "arms/fl-6bc3a43",
+      "keys": ""
+    },
+    {
+      "name": "scatter",
+      "dist": "arms/fl-2e331f3",
+      "keys": ""
+    },
+    {
+      "name": "cellskip",
+      "dist": "arms/fl-f1aff3e",
+      "keys": ""
+    },
+    {
+      "name": "prelimiter",
+      "dist": "arms/fl-6b8dca3",
+      "keys": ""
+    },
+    {
+      "name": "o5o4_oldlim",
+      "dist": "arms/o5o4",
+      "keys": ""
+    }
+  ],
+  "rows": [
+    {
+      "round": 0,
+      "build": "main",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 30.4,
+          "p95": 31.2,
+          "p99": 31.7,
+          "mean": 30.4,
+          "max": 34.9,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 605,
+            "mean": 29.11,
+            "p50": 29.1,
+            "p95": 29.7,
+            "max": 33.1
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              599
+            ],
+            [
+              "<50",
+              1
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1422,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 241,
+            "main/prepass": 237,
+            "cascade0/shadow": 73,
+            "cascade1/shadow": 159,
+            "cascade2/shadow": 331,
+            "cascade3/shadow": 245
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 1287
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "rejected_no_target": 0,
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.45751953125
+        },
+        "overview": {
+          "p50": 39.1,
+          "p95": 40,
+          "p99": 40.7,
+          "mean": 38.94,
+          "max": 49.1,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 602,
+            "mean": 25.89,
+            "p50": 25.9,
+            "p95": 26.4,
+            "max": 29.9
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              1
+            ],
+            [
+              "<50",
+              599
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 930,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 173,
+            "main/prepass": 169,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 261,
+            "cascade3/shadow": 231
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 849
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "rejected_no_target": 0,
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.7734375
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.185546875,
+      "load_after": 2.7734375,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "build": "o5o4_fl",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 38.4,
+          "p95": 39.6,
+          "p99": 40.3,
+          "mean": 38.28,
+          "max": 50,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 22.58,
+            "p50": 22.5,
+            "p95": 23.1,
+            "max": 24.6
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              599
+            ],
+            [
+              "<100",
+              1
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1863,
+          "passes": {
+            "main/alpha_mask": 69,
+            "main/alpha_mask_prepass": 69,
+            "main/opaque": 249,
+            "main/prepass": 245,
+            "cascade0/shadow": 196,
+            "cascade1/shadow": 231,
+            "cascade2/shadow": 374,
+            "cascade3/shadow": 430
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 1728
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.560546875
+        },
+        "overview": {
+          "p50": 43.2,
+          "p95": 44.7,
+          "p99": 45.3,
+          "mean": 43.07,
+          "max": 55.6,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 605,
+            "mean": 20.2,
+            "p50": 20.2,
+            "p95": 20.7,
+            "max": 25.3
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              598
+            ],
+            [
+              "<100",
+              2
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 990,
+          "passes": {
+            "main/alpha_mask": 49,
+            "main/alpha_mask_prepass": 49,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 266,
+            "cascade3/shadow": 290
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 909
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.615234375
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.7734375,
+      "load_after": 2.615234375,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "build": "o6",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 34.6,
+          "p95": 35.3,
+          "p99": 36,
+          "mean": 34.46,
+          "max": 44.9,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 600,
+            "mean": 22.54,
+            "p50": 22.5,
+            "p95": 23.1,
+            "max": 26.1
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              41
+            ],
+            [
+              "<50",
+              559
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1609,
+          "passes": {
+            "main/alpha_mask": 69,
+            "main/alpha_mask_prepass": 69,
+            "main/opaque": 228,
+            "main/prepass": 224,
+            "cascade0/shadow": 71,
+            "cascade1/shadow": 179,
+            "cascade2/shadow": 341,
+            "cascade3/shadow": 428
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 1474
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.3388671875
+        },
+        "overview": {
+          "p50": 42,
+          "p95": 43.5,
+          "p99": 43.9,
+          "mean": 41.95,
+          "max": 50.9,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 20.3,
+            "p50": 20.3,
+            "p95": 20.7,
+            "max": 21.8
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              599
+            ],
+            [
+              "<100",
+              1
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 952,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 162,
+            "main/prepass": 158,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 246,
+            "cascade3/shadow": 290
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 871
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.3310546875
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.615234375,
+      "load_after": 2.3310546875,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "build": "scatter",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 34,
+          "p95": 35.7,
+          "p99": 37.8,
+          "mean": 34.17,
+          "max": 41.8,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 605,
+            "mean": 30.22,
+            "p50": 30.1,
+            "p95": 30.9,
+            "max": 36.9
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              140
+            ],
+            [
+              "<50",
+              460
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1660,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 238,
+            "main/prepass": 234,
+            "cascade0/shadow": 72,
+            "cascade1/shadow": 187,
+            "cascade2/shadow": 353,
+            "cascade3/shadow": 440
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 1525
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.70556640625
+        },
+        "overview": {
+          "p50": 41.9,
+          "p95": 43,
+          "p99": 43.9,
+          "mean": 41.79,
+          "max": 50.8,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 600,
+            "mean": 26.43,
+            "p50": 26.4,
+            "p95": 26.9,
+            "max": 29.6
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              598
+            ],
+            [
+              "<100",
+              2
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 984,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 254,
+            "cascade3/shadow": 298
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 903
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.56787109375
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.3310546875,
+      "load_after": 2.56787109375,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "build": "cellskip",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 30.3,
+          "p95": 32.1,
+          "p99": 35.6,
+          "mean": 30.52,
+          "max": 42.5,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 28.96,
+            "p50": 28.9,
+            "p95": 29.6,
+            "max": 32.4
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              590
+            ],
+            [
+              "<50",
+              10
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1402,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 238,
+            "main/prepass": 234,
+            "cascade0/shadow": 72,
+            "cascade1/shadow": 157,
+            "cascade2/shadow": 324,
+            "cascade3/shadow": 241
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 1267
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.72998046875
+        },
+        "overview": {
+          "p50": 39,
+          "p95": 40.3,
+          "p99": 40.9,
+          "mean": 38.89,
+          "max": 45.3,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 25.74,
+            "p50": 25.7,
+            "p95": 26.2,
+            "max": 30.4
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              600
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 913,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 254,
+            "cascade3/shadow": 227
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 832
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.39990234375
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.56787109375,
+      "load_after": 2.39990234375,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "build": "prelimiter",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 30.4,
+          "p95": 32.6,
+          "p99": 35.2,
+          "mean": 30.66,
+          "max": 36.4,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 607,
+            "mean": 29.59,
+            "p50": 29.3,
+            "p95": 31.8,
+            "max": 35.9
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              579
+            ],
+            [
+              "<50",
+              21
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1422,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 241,
+            "main/prepass": 237,
+            "cascade0/shadow": 73,
+            "cascade1/shadow": 159,
+            "cascade2/shadow": 331,
+            "cascade3/shadow": 245
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 1287
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 4.22412109375
+        },
+        "overview": {
+          "p50": 39,
+          "p95": 40.4,
+          "p99": 41,
+          "mean": 38.92,
+          "max": 49.1,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 25.93,
+            "p50": 25.9,
+            "p95": 26.4,
+            "max": 28.8
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              1
+            ],
+            [
+              "<50",
+              599
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 930,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 173,
+            "main/prepass": 169,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 261,
+            "cascade3/shadow": 231
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 849
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 3.63525390625
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.39990234375,
+      "load_after": 3.63525390625,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "build": "o5o4_oldlim",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 24.5,
+          "p95": 55.2,
+          "p99": 55.7,
+          "mean": 38.35,
+          "max": 87,
+          "dropped_over_25ms": 300,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 22.32,
+            "p50": 22.3,
+            "p95": 23,
+            "max": 24
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              300
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              1
+            ],
+            [
+              "<100",
+              299
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1863,
+          "passes": {
+            "main/alpha_mask": 69,
+            "main/alpha_mask_prepass": 69,
+            "main/opaque": 249,
+            "main/prepass": 245,
+            "cascade0/shadow": 196,
+            "cascade1/shadow": 231,
+            "cascade2/shadow": 374,
+            "cascade3/shadow": 430
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 1728
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 4.5361328125
+        },
+        "overview": {
+          "p50": 20.7,
+          "p95": 68.3,
+          "p99": 69.1,
+          "mean": 42.72,
+          "max": 91.1,
+          "dropped_over_25ms": 300,
+          "samples": 600,
+          "cpu": {
+            "frames": 600,
+            "mean": 19.27,
+            "p50": 19.8,
+            "p95": 20.5,
+            "max": 21.8
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              296
+            ],
+            [
+              "<25",
+              4
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              0
+            ],
+            [
+              "<100",
+              300
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 990,
+          "passes": {
+            "main/alpha_mask": 49,
+            "main/alpha_mask_prepass": 49,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 266,
+            "cascade3/shadow": 290
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 909
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 3.64453125
+        }
+      },
+      "console_errors": [],
+      "load_before": 3.63525390625,
+      "load_after": 3.64453125,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "build": "o5o4_fl",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 38.1,
+          "p95": 39.8,
+          "p99": 40.7,
+          "mean": 38.3,
+          "max": 50.9,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 22.58,
+            "p50": 22.5,
+            "p95": 23.1,
+            "max": 24.9
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              599
+            ],
+            [
+              "<100",
+              1
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1863,
+          "passes": {
+            "main/alpha_mask": 69,
+            "main/alpha_mask_prepass": 69,
+            "main/opaque": 249,
+            "main/prepass": 245,
+            "cascade0/shadow": 196,
+            "cascade1/shadow": 231,
+            "cascade2/shadow": 374,
+            "cascade3/shadow": 430
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 1728
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 3.140625
+        },
+        "overview": {
+          "p50": 42.4,
+          "p95": 44.3,
+          "p99": 44.6,
+          "mean": 42.79,
+          "max": 52.6,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 600,
+            "mean": 20.46,
+            "p50": 20.4,
+            "p95": 20.9,
+            "max": 23.3
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              598
+            ],
+            [
+              "<100",
+              2
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 990,
+          "passes": {
+            "main/alpha_mask": 49,
+            "main/alpha_mask_prepass": 49,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 266,
+            "cascade3/shadow": 290
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 909
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.3310546875
+        }
+      },
+      "console_errors": [],
+      "load_before": 3.64453125,
+      "load_after": 2.3310546875,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "build": "o6",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 34.6,
+          "p95": 35.7,
+          "p99": 36.5,
+          "mean": 34.45,
+          "max": 41.4,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 600,
+            "mean": 22.83,
+            "p50": 22.8,
+            "p95": 23.4,
+            "max": 26.9
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              64
+            ],
+            [
+              "<50",
+              536
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1609,
+          "passes": {
+            "main/alpha_mask": 69,
+            "main/alpha_mask_prepass": 69,
+            "main/opaque": 228,
+            "main/prepass": 224,
+            "cascade0/shadow": 71,
+            "cascade1/shadow": 179,
+            "cascade2/shadow": 341,
+            "cascade3/shadow": 428
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 1474
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.33740234375
+        },
+        "overview": {
+          "p50": 42.1,
+          "p95": 43.6,
+          "p99": 44.2,
+          "mean": 42.04,
+          "max": 51.6,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 600,
+            "mean": 20.55,
+            "p50": 20.5,
+            "p95": 21.2,
+            "max": 25.7
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              599
+            ],
+            [
+              "<100",
+              1
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 952,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 162,
+            "main/prepass": 158,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 246,
+            "cascade3/shadow": 290
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 871
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.47705078125
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.3310546875,
+      "load_after": 2.47705078125,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "build": "scatter",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 34,
+          "p95": 35.7,
+          "p99": 36.3,
+          "mean": 34.13,
+          "max": 52,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 599,
+            "mean": 30.08,
+            "p50": 30,
+            "p95": 30.7,
+            "max": 33.2
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              146
+            ],
+            [
+              "<50",
+              453
+            ],
+            [
+              "<100",
+              1
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1660,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 238,
+            "main/prepass": 234,
+            "cascade0/shadow": 72,
+            "cascade1/shadow": 187,
+            "cascade2/shadow": 353,
+            "cascade3/shadow": 440
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 1525
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.82080078125
+        },
+        "overview": {
+          "p50": 41.9,
+          "p95": 42.9,
+          "p99": 43.7,
+          "mean": 41.77,
+          "max": 51.9,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 605,
+            "mean": 26.43,
+            "p50": 26.4,
+            "p95": 26.9,
+            "max": 30
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              598
+            ],
+            [
+              "<100",
+              2
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 984,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 254,
+            "cascade3/shadow": 298
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 903
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.755859375
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.47705078125,
+      "load_after": 2.755859375,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "build": "cellskip",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 30.2,
+          "p95": 31.9,
+          "p99": 32.5,
+          "mean": 30.42,
+          "max": 33.6,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 604,
+            "mean": 29.16,
+            "p50": 29.1,
+            "p95": 29.7,
+            "max": 32.5
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              598
+            ],
+            [
+              "<50",
+              2
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1402,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 238,
+            "main/prepass": 234,
+            "cascade0/shadow": 72,
+            "cascade1/shadow": 157,
+            "cascade2/shadow": 324,
+            "cascade3/shadow": 241
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 1267
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.986328125
+        },
+        "overview": {
+          "p50": 39,
+          "p95": 40.5,
+          "p99": 41.3,
+          "mean": 39.05,
+          "max": 48.6,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 604,
+            "mean": 26.23,
+            "p50": 25.9,
+            "p95": 28.8,
+            "max": 34.4
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              600
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 913,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 254,
+            "cascade3/shadow": 227
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 832
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.748046875
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.755859375,
+      "load_after": 2.748046875,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "build": "prelimiter",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 30.2,
+          "p95": 32.2,
+          "p99": 34.5,
+          "mean": 30.55,
+          "max": 59.2,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 29.09,
+            "p50": 29,
+            "p95": 30,
+            "max": 32.6
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              587
+            ],
+            [
+              "<50",
+              12
+            ],
+            [
+              "<100",
+              1
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1422,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 241,
+            "main/prepass": 237,
+            "cascade0/shadow": 73,
+            "cascade1/shadow": 159,
+            "cascade2/shadow": 331,
+            "cascade3/shadow": 245
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 1287
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.68505859375
+        },
+        "overview": {
+          "p50": 39,
+          "p95": 40.2,
+          "p99": 41.6,
+          "mean": 38.9,
+          "max": 43.1,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 602,
+            "mean": 25.76,
+            "p50": 25.7,
+            "p95": 26.3,
+            "max": 29.7
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              600
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 930,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 173,
+            "main/prepass": 169,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 261,
+            "cascade3/shadow": 231
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 849
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.5947265625
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.748046875,
+      "load_after": 2.5947265625,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "build": "o5o4_oldlim",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 29.9,
+          "p95": 55.1,
+          "p99": 55.8,
+          "mean": 38.35,
+          "max": 90.6,
+          "dropped_over_25ms": 301,
+          "samples": 600,
+          "cpu": {
+            "frames": 600,
+            "mean": 22.34,
+            "p50": 22.3,
+            "p95": 22.9,
+            "max": 28.9
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              299
+            ],
+            [
+              "<33.3",
+              1
+            ],
+            [
+              "<50",
+              1
+            ],
+            [
+              "<100",
+              299
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1863,
+          "passes": {
+            "main/alpha_mask": 69,
+            "main/alpha_mask_prepass": 69,
+            "main/opaque": 249,
+            "main/prepass": 245,
+            "cascade0/shadow": 196,
+            "cascade1/shadow": 231,
+            "cascade2/shadow": 374,
+            "cascade3/shadow": 430
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 1728
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 1.99169921875
+        },
+        "overview": {
+          "p50": 20.9,
+          "p95": 68.4,
+          "p99": 69,
+          "mean": 42.73,
+          "max": 89.9,
+          "dropped_over_25ms": 300,
+          "samples": 600,
+          "cpu": {
+            "frames": 600,
+            "mean": 19.2,
+            "p50": 19.7,
+            "p95": 20.5,
+            "max": 22.2
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              297
+            ],
+            [
+              "<25",
+              3
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              0
+            ],
+            [
+              "<100",
+              300
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 990,
+          "passes": {
+            "main/alpha_mask": 49,
+            "main/alpha_mask_prepass": 49,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 266,
+            "cascade3/shadow": 290
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 909
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.53662109375
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.5947265625,
+      "load_after": 2.53662109375,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "build": "main",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 30.2,
+          "p95": 32,
+          "p99": 32.6,
+          "mean": 30.42,
+          "max": 32.9,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 605,
+            "mean": 29.26,
+            "p50": 29.2,
+            "p95": 29.9,
+            "max": 32.3
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              600
+            ],
+            [
+              "<50",
+              0
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1422,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 241,
+            "main/prepass": 237,
+            "cascade0/shadow": 73,
+            "cascade1/shadow": 159,
+            "cascade2/shadow": 331,
+            "cascade3/shadow": 245
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 1287
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "rejected_no_target": 0,
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.50146484375
+        },
+        "overview": {
+          "p50": 39,
+          "p95": 40.2,
+          "p99": 41,
+          "mean": 38.95,
+          "max": 49.5,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 26.11,
+            "p50": 26.1,
+            "p95": 26.7,
+            "max": 29.2
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              1
+            ],
+            [
+              "<50",
+              599
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 930,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 173,
+            "main/prepass": 169,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 261,
+            "cascade3/shadow": 231
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 849
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "rejected_no_target": 0,
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.5380859375
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.53662109375,
+      "load_after": 2.5380859375,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "build": "o6",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 34.7,
+          "p95": 35.5,
+          "p99": 36.4,
+          "mean": 34.47,
+          "max": 45.5,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 607,
+            "mean": 22.47,
+            "p50": 22.4,
+            "p95": 23,
+            "max": 25.6
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              67
+            ],
+            [
+              "<50",
+              533
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1609,
+          "passes": {
+            "main/alpha_mask": 69,
+            "main/alpha_mask_prepass": 69,
+            "main/opaque": 228,
+            "main/prepass": 224,
+            "cascade0/shadow": 71,
+            "cascade1/shadow": 179,
+            "cascade2/shadow": 341,
+            "cascade3/shadow": 428
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 1474
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.4169921875
+        },
+        "overview": {
+          "p50": 42.1,
+          "p95": 43.7,
+          "p99": 44.3,
+          "mean": 41.96,
+          "max": 50.3,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 20.36,
+            "p50": 20.3,
+            "p95": 20.8,
+            "max": 23.6
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              599
+            ],
+            [
+              "<100",
+              1
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 952,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 162,
+            "main/prepass": 158,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 246,
+            "cascade3/shadow": 290
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 871
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.34814453125
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.5380859375,
+      "load_after": 2.34814453125,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "build": "scatter",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 33.9,
+          "p95": 35.8,
+          "p99": 37.6,
+          "mean": 34.16,
+          "max": 50.8,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 607,
+            "mean": 30.3,
+            "p50": 30.2,
+            "p95": 30.9,
+            "max": 36.8
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              142
+            ],
+            [
+              "<50",
+              457
+            ],
+            [
+              "<100",
+              1
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1660,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 238,
+            "main/prepass": 234,
+            "cascade0/shadow": 72,
+            "cascade1/shadow": 187,
+            "cascade2/shadow": 353,
+            "cascade3/shadow": 440
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 1525
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.51953125
+        },
+        "overview": {
+          "p50": 41.9,
+          "p95": 43,
+          "p99": 43.6,
+          "mean": 41.77,
+          "max": 47.2,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 600,
+            "mean": 26.73,
+            "p50": 26.7,
+            "p95": 27.3,
+            "max": 30.2
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              600
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 984,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 254,
+            "cascade3/shadow": 298
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 903
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.326171875
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.34814453125,
+      "load_after": 2.326171875,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "build": "cellskip",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 30.3,
+          "p95": 31.9,
+          "p99": 32.8,
+          "mean": 30.43,
+          "max": 34.6,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 604,
+            "mean": 29.03,
+            "p50": 28.9,
+            "p95": 29.9,
+            "max": 32.8
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              596
+            ],
+            [
+              "<50",
+              4
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1402,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 238,
+            "main/prepass": 234,
+            "cascade0/shadow": 72,
+            "cascade1/shadow": 157,
+            "cascade2/shadow": 324,
+            "cascade3/shadow": 241
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 1267
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.51171875
+        },
+        "overview": {
+          "p50": 39,
+          "p95": 40.2,
+          "p99": 40.8,
+          "mean": 38.92,
+          "max": 49.2,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 25.58,
+            "p50": 25.6,
+            "p95": 26.1,
+            "max": 28.8
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              1
+            ],
+            [
+              "<50",
+              599
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 913,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 254,
+            "cascade3/shadow": 227
+          },
+          "kit_draws": {
+            "slots": 131,
+            "total": 832
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.5673828125
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.326171875,
+      "load_after": 2.5673828125,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "build": "prelimiter",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 30.3,
+          "p95": 31.9,
+          "p99": 32.5,
+          "mean": 30.45,
+          "max": 34.2,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 604,
+            "mean": 29.07,
+            "p50": 29,
+            "p95": 29.7,
+            "max": 32.3
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              599
+            ],
+            [
+              "<50",
+              1
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1422,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 241,
+            "main/prepass": 237,
+            "cascade0/shadow": 73,
+            "cascade1/shadow": 159,
+            "cascade2/shadow": 331,
+            "cascade3/shadow": 245
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 1287
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.49755859375
+        },
+        "overview": {
+          "p50": 39,
+          "p95": 40.3,
+          "p99": 41,
+          "mean": 38.88,
+          "max": 43.6,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 25.61,
+            "p50": 25.6,
+            "p95": 26.2,
+            "max": 29.1
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              600
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 930,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 173,
+            "main/prepass": 169,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 261,
+            "cascade3/shadow": 231
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 849
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.94140625
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.5673828125,
+      "load_after": 2.94140625,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "build": "o5o4_oldlim",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 25.9,
+          "p95": 55,
+          "p99": 56,
+          "mean": 38.33,
+          "max": 70.5,
+          "dropped_over_25ms": 302,
+          "samples": 600,
+          "cpu": {
+            "frames": 602,
+            "mean": 22.55,
+            "p50": 22.5,
+            "p95": 23.2,
+            "max": 29.4
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              298
+            ],
+            [
+              "<33.3",
+              2
+            ],
+            [
+              "<50",
+              2
+            ],
+            [
+              "<100",
+              298
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1863,
+          "passes": {
+            "main/alpha_mask": 69,
+            "main/alpha_mask_prepass": 69,
+            "main/opaque": 249,
+            "main/prepass": 245,
+            "cascade0/shadow": 196,
+            "cascade1/shadow": 231,
+            "cascade2/shadow": 374,
+            "cascade3/shadow": 430
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 1728
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.92724609375
+        },
+        "overview": {
+          "p50": 23.3,
+          "p95": 68.6,
+          "p99": 69.9,
+          "mean": 43.02,
+          "max": 86.2,
+          "dropped_over_25ms": 300,
+          "samples": 600,
+          "cpu": {
+            "frames": 600,
+            "mean": 19.32,
+            "p50": 19.9,
+            "p95": 20.6,
+            "max": 22.3
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              295
+            ],
+            [
+              "<25",
+              5
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              0
+            ],
+            [
+              "<100",
+              300
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 990,
+          "passes": {
+            "main/alpha_mask": 49,
+            "main/alpha_mask_prepass": 49,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 266,
+            "cascade3/shadow": 290
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 909
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.41650390625
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.94140625,
+      "load_after": 2.41650390625,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "build": "main",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 30.3,
+          "p95": 31.9,
+          "p99": 32.3,
+          "mean": 30.42,
+          "max": 33.5,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 605,
+            "mean": 29.02,
+            "p50": 29,
+            "p95": 29.6,
+            "max": 32.7
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              599
+            ],
+            [
+              "<50",
+              1
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1422,
+          "passes": {
+            "main/alpha_mask": 68,
+            "main/alpha_mask_prepass": 68,
+            "main/opaque": 241,
+            "main/prepass": 237,
+            "cascade0/shadow": 73,
+            "cascade1/shadow": 159,
+            "cascade2/shadow": 331,
+            "cascade3/shadow": 245
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 1287
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "rejected_no_target": 0,
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.80224609375
+        },
+        "overview": {
+          "p50": 39,
+          "p95": 40.4,
+          "p99": 41.1,
+          "mean": 38.99,
+          "max": 48.2,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 25.74,
+            "p50": 25.7,
+            "p95": 26.3,
+            "max": 28.8
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              600
+            ],
+            [
+              "<100",
+              0
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 930,
+          "passes": {
+            "main/alpha_mask": 48,
+            "main/alpha_mask_prepass": 48,
+            "main/opaque": 173,
+            "main/prepass": 169,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 261,
+            "cascade3/shadow": 231
+          },
+          "kit_draws": {
+            "slots": 135,
+            "total": 849
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "rejected_no_target": 0,
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.69775390625
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.41650390625,
+      "load_after": 2.69775390625,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "build": "o5o4_fl",
+      "keys": {},
+      "world": "world2066",
+      "webgpu_adapter": "apple | metal-3 | ",
+      "unmasked_renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "dpr": 1,
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "cameras": {
+        "close": {
+          "p50": 38.1,
+          "p95": 39.8,
+          "p99": 40.5,
+          "mean": 38.29,
+          "max": 50.8,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 601,
+            "mean": 22.48,
+            "p50": 22.4,
+            "p95": 23,
+            "max": 24.6
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              599
+            ],
+            [
+              "<100",
+              1
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 450,
+          "read_at_frame": 1170,
+          "draws": 1863,
+          "passes": {
+            "main/alpha_mask": 69,
+            "main/alpha_mask_prepass": 69,
+            "main/opaque": 249,
+            "main/prepass": 245,
+            "cascade0/shadow": 196,
+            "cascade1/shadow": 231,
+            "cascade2/shadow": 374,
+            "cascade3/shadow": 430
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 1728
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            10,
+            12,
+            40
+          ],
+          "load_at_read": 2.9228515625
+        },
+        "overview": {
+          "p50": 43.6,
+          "p95": 44.6,
+          "p99": 45.7,
+          "mean": 43.34,
+          "max": 57,
+          "dropped_over_25ms": 600,
+          "samples": 600,
+          "cpu": {
+            "frames": 599,
+            "mean": 20.41,
+            "p50": 20.4,
+            "p95": 20.9,
+            "max": 23.6
+          },
+          "histogram": [
+            [
+              "<8.33",
+              0
+            ],
+            [
+              "<16.7",
+              0
+            ],
+            [
+              "<20",
+              0
+            ],
+            [
+              "<25",
+              0
+            ],
+            [
+              "<33.3",
+              0
+            ],
+            [
+              "<50",
+              598
+            ],
+            [
+              "<100",
+              2
+            ],
+            [
+              ">=100",
+              0
+            ]
+          ],
+          "window_start": 1170,
+          "read_at_frame": 1890,
+          "draws": 990,
+          "passes": {
+            "main/alpha_mask": 49,
+            "main/alpha_mask_prepass": 49,
+            "main/opaque": 170,
+            "main/prepass": 166,
+            "cascade0/shadow": 0,
+            "cascade1/shadow": 0,
+            "cascade2/shadow": 266,
+            "cascade3/shadow": 290
+          },
+          "kit_draws": {
+            "slots": 127,
+            "total": 909
+          },
+          "gpu_timing": {
+            "enabled": false,
+            "frames": 0,
+            "passes": null,
+            "reason": "off (gpu_timing=on enables it)",
+            "supported": null,
+            "tail_over_25ms": [],
+            "total": null
+          },
+          "camera_pos": [
+            20,
+            160,
+            150
+          ],
+          "load_at_read": 2.4921875
+        }
+      },
+      "console_errors": [],
+      "load_before": 2.69775390625,
+      "load_after": 2.4921875,
+      "load_discarded": 0
+    }
+  ],
+  "warmup": {
+    "build": "main",
+    "world": "world2066",
+    "error": null,
+    "load_before": 2.37451171875,
+    "load_after": 2.185546875
+  }
+}
