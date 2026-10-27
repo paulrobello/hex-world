@@ -38,69 +38,23 @@ B2 = CP / "walls-hedges-refs/refs-sheet.jpg"
 B3 = CP / "water-props/sheet.jpg"
 
 SECTIONS = [
-    ("A30", "B1 boulders and outcrop: built and gated, ready to land", [
-        ("Q1", "Approve the five pieces: boulder_granite, _b, _c, _d (2.2 to 4.5 m) and outcrop_granite (8 x 5 x 1.3 m), "
-               "built from the A25 refs at the approved sizes, scatter densities, coast band and LOD rule. They pass every "
-               "asset gate. Recommended: approve."),
-        ("Q2", "Rule order. The boulders and outcrop lead their tiles' scatter rules (O1), so every meadow and forest lays "
-               "out again. Appended after the existing rules instead (O2), earlier props keep their spots, but the outcrop "
-               "never fits (0 placed in 64 seeds on meadow and on forest). Recommended: O1."),
-        ("Q3", "Thumbnails. Meadow and forest thumbnails now show boulders, and the thumbnail camera aims 2 m higher "
-               "(look-at 3.5 to 5.5 m) so a spruce tip no longer touches the frame edge. Every thumbnail shifts slightly, "
-               "as in the comparison below (left: now, right: with B1). Recommended: accept."),
-        ("Q4", "Every-piece check. With boulders sharing the beach's 0 to 6 cap and the forest's rules reordered, the "
-               "31-tile mixed world no longer happens to draw beach_driftwood's base variant or log_fallen_c, so the "
-               "check that every scatter piece draws fails. O1: add a few tiles to the mixed world so every piece draws "
-               "again. O2: accept the miss for those two. Recommended: O1."),
-        ("Q5", "Smaller defaults as built: no outcrop on the coast band (it never fits), no boulders on beach_outer (none "
-               "fit), the outcrop's bake at 109 px/m against about 128 (its size at 1024²), and the small boulders "
-               "ending at 400 m as approved. Recommended: accept."),
-    ], [], [
-        (SHEET_TOP, "B1 review sheet, part 1: the approved refs, the Blender renders with a 1.7 m figure, and the pieces in the kit view"),
-        (SHEET_BOTTOM, "B1 review sheet, part 2: in play on meadow, forest, oak and coast tiles, and at walking eye level"),
-        (THUMBS, "Thumbnails: left as now, right with B1 (boulders in meadow and forest, camera look-at 2 m higher)"),
-    ]),
-    ("A31", "B2 dry-stone walls and hedgerows: references and layout", [
-        ("Q1", "Approve refs 1 to 4 (top row) as the look and scale: dry granite walls with an upright cope, the same "
-               "granite as the boulders, a timber five-bar gate between granite posts, and untrimmed hawthorn and hazel "
-               "hedges in the matte verge-bush green, one with a hedgerow oak. The image model keeps drawing right-angle "
-               "corners; hex boundaries meet at 120°, so corners would be built to that spec rather than copied. "
-               "Recommended: approve as look and scale."),
-        ("Q2", "Sizes. Wall 1.1 m tall, 0.7 m wide at the foot. Hedge 1.9 m tall, 1.5 m wide. Pieces: 4 m straight runs "
-               "(two variants each), a 2 m end, a 120° bend, a three-way junction, a 4 m gateway (wall), and a 4 m run with "
-               "an 8 m oak (hedge). A 16 m tile edge is then exactly 2 + 4 + 4 + 4 + 2 m. Recommended: these sizes."),
-        ("Q3", "Where they go. O1: automatic field boundaries on shared tile edges, wherever a farm or wheat tile meets "
-               "a grass land tile; wall or hedge picked per edge from the world seed, one gate edge per farm. Roads, "
-               "rivers, rail and coast break them, and you place nothing yourself. O2: boundaries inside the farm tile "
-               "(the paddock fence already does this). O3: short 4 to 8 m runs as meadow scatter. A per-edge toggle you "
-               "control could come later; it needs a save-format change. Recommended: O1 now, O3 later."),
-        ("Q4", "Walking: walls and hedges block the walker, gaps pass, a closed gate blocks. Recommended: yes."),
-        ("Q5", "Draw cost: about 40 to 65 more draws at the overview where walls and hedges show. The mixed scatter "
-               "world now sits at 452 of 500 after the cascade skip, so with B1, B3 and B2 together the overview may "
-               "pass 500 again; shared scatter materials (A28) would then come back. Recommended: build, measure, and "
-               "bring the numbers back here."),
-    ], [], [
-        (B2, "B2 reference sheet: walls_hedges refs 1 to 4 (top row) beside the approved boulder, farm and well refs"),
-    ]),
-    ("A32", "B3 lily pads and reed bed: built and gated, landing now", [
-        ("Q1", "Approve the four pieces: lily_cluster (3 pads), lily_cluster_b (7 pads and a white lily), lily_cluster_c "
-               "(5 pads and a pink bud), all using the spring's own pad so they read as one family, and reed_bed "
-               "(70 common reed stems, about 3.6 x 1.8 m, 2.4 m tall, swaying in the wind), scattered on river bends, "
-               "slow straights and springs at the approved densities. They pass every asset gate and are landing now with "
-               "approval pending. Recommended: approve."),
-        ("Q2", "Far pads. The approval says pads drop out past 400 m, but the gate needs every piece to keep a far LOD. "
-               "So the far LOD keeps the biggest pads as flat 2-triangle quads (1 of 3, 7 of 7 and 3 of 5). The other way "
-               "is to let a piece have no far LOD at all, a change across the gate, scatter test and exporter. "
-               "Recommended: accept as built."),
-        ("Q3", "Reeds on springs are rare: 8 of 168 spring tiles get a reed bed, against 68 of 168 bends, because the "
-               "spring's granite ring and built-in pads leave little room. O1: accept (reeds mostly on bends). O2: a "
-               "smaller reed bed variant for springs. Recommended: O1."),
-        ("Q4", "At its largest scale the reed bed's leaning edge plumes can reach past its 1.85 m footprint, over a "
-               "bank prop or within about 0.8 m of the tile edge. Reducing the lean needs a rebuild. Recommended: accept."),
-    ], [], [
-        (B3, "B3 review sheet: approved refs, Blender stills with a 1.7 m figure, the spring and a bend at play distance, "
-             "close-ups, eye level, and the spring's own pads beside lily_cluster_c"),
-    ]),
+    ("A33", "Quality changes: precompile the other tier's shaders after load?", [
+        ("Q1", "A quality change in play no longer rebuilds the scene: tiles stay and only the camera, water, tilt-shift "
+               "and flock settings change. A repeated High to Medium change drops from 141 ms to about 40 ms. This part "
+               "lands either way."),
+        ("Q2", "The first change with a cold shader cache (a new browser or a browser update) froze the page for 9.7 s "
+               "compiling 39 shaders. A warm-up after load compiles the other tier's shaders in the background, so "
+               "that first change takes 455 ms. But the warm-up itself freezes the page in short bursts after load: "
+               "12 to 13 s in total on a cold cache (3.3 s just after loading, 2 to 3 s while the world builds, 6.7 s "
+               "once it settles), and about 0.5 s on a warm cache. Every player pays that, and only players who change "
+               "quality get the saving. Measured on MiniMac, 208-tile world, load-guarded."),
+    ], [
+        ("O1", "Warm-up on by default: no freeze when you change quality, short freezes after load on a cold cache."),
+        ("O2", "Warm-up off by default (on with ?tier_warm=on): no freezes after load; the first quality change on a "
+               "cold cache still takes about 10 s behind the existing \"changing quality\" indicator. Recommended."),
+        ("O3", "Warm-up only once the Settings sheet is opened: the cost moves to the moment you show intent to change "
+               "quality (more work; not measured)."),
+    ], []),
 ]
 
 CSS = """
@@ -122,7 +76,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, fourth round. A19 to A32 are answered (A30 to A32 on 2026-10-27, &quot;all approved&quot;).</p>"]
+             "<p class=sub>2026-10-27, fifth round. A19 to A32 are answered; A33 is open. Answer by code, for example &quot;A33 O2&quot;.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
