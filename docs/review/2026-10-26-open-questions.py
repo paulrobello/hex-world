@@ -34,7 +34,7 @@ B1 = ROOT / ".claude/worktrees/agent-a02bc131da7e3f31b/docs/checkpoints/boulders
 SHEET_TOP = pathlib.Path("/tmp/claude-501/b1-sheet-top.jpg")
 SHEET_BOTTOM = pathlib.Path("/tmp/claude-501/b1-sheet-bottom.jpg")
 THUMBS = pathlib.Path("/tmp/claude-501/thumbs-cmp.jpg")
-B2 = ROOT / ".claude/worktrees/agent-a700afd6da1effb61/docs/checkpoints/walls-hedges-refs/refs-sheet.jpg"
+B2 = CP / "walls-hedges-refs/refs-sheet.jpg"
 
 SECTIONS = [
     ("A30", "B1 boulders and outcrop: built and gated, ready to land", [
