@@ -1,5 +1,5 @@
 // Removes files from the built dist/ that the deployed site never fetches. Trunk's copy-dir copies all
-// of assets/, so test fixtures and unplayed cues land in dist/ too. The local dist/ keeps them
+// of assets/, so test fixtures land in dist/ too. The local dist/ keeps them
 // (make web-smoke serves kit_src=fixture_tiled from it); CI runs this only on the Pages artifact, after
 // initial-download. index.html is left alone: its hash map's entries for pruned files are never read,
 // and rewriting it would change the inline script's CSP hash.
@@ -18,10 +18,6 @@ export const NOT_DEPLOYED = [
   "assets/kit/p0/hex_test.astc.ktx2",
   "assets/kit/p1/fixture",
   "assets/kit/p1/fixture_tile",
-  // title-theme is mastered but no event plays it (audio-mix.ts keeps it off the biome playlist).
-  // Drop these two lines when something plays it.
-  "assets/audio/music/title-theme.webm",
-  "assets/audio/music/title-theme.m4a",
 ];
 
 /** Deletes every NOT_DEPLOYED path under `dir`; returns the bytes removed. Throws if one is missing. */

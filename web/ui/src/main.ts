@@ -130,6 +130,7 @@ function run(root: HTMLElement, hw: Bridge): void {
         opened: (id) => camera.begin(id),
         switching: () => camera.flush(),
         removed: (id) => camera.forget(id),
+        shown: (fresh) => audio.worldShown(fresh),
       });
       h.attach(persist);
       const p = persist;

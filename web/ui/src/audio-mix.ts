@@ -962,7 +962,8 @@ export function bellStep(
 /**
  * The biomes each playlist cue scores on. The manifest carries no mood yet, so it lives here; cues not
  * listed (photo-mode, title-theme, discovery-stinger) never join the biome playlist. photo-mode plays as
- * the forced cue while photo mode is open; title-theme and discovery-stinger have no hook yet.
+ * the forced cue while photo mode is open, title-theme as the pinned cue of a New world (`musicPin`);
+ * discovery-stinger has no hook yet.
  */
 export const MUSIC_MOOD: Record<string, readonly Biome[]> = {
   "meadow-day": ["meadow", "forest", "river"],
@@ -1006,9 +1007,51 @@ export function bestCue(ids: readonly string[], mix: Mix): string | null {
 /** The cue photo mode (D7) plays in place of the biome playlist. */
 export const PHOTO_CUE = "photo-mode";
 
+/** The cue a New world (owner A37 O1) plays until its first tiles go down. */
+export const TITLE_CUE = "title-theme";
+
+/**
+ * The title cue's phase for the world on screen. `armed`: a New world came on screen and nothing has been
+ * placed yet. `placed`: the first tile went down, and the title holds only until its dwell is out. `off`:
+ * any other world (the start-up resume, a Load, an import, Start over), the title's end, or leaving play.
+ */
+export type TitlePhase = "off" | "armed" | "placed";
+
+/** What moves the title phase: a world on screen (fresh when New world made it), a placement, the title's end. */
+export type TitleInput = { kind: "world"; fresh: boolean } | { kind: "placed" } | { kind: "ended" };
+
+export function titleStep(phase: TitlePhase, input: TitleInput): TitlePhase {
+  switch (input.kind) {
+    case "world":
+      return input.fresh ? "armed" : "off";
+    case "placed":
+      return phase === "armed" ? "placed" : phase;
+    case "ended":
+      return "off";
+  }
+}
+
+/**
+ * The cue `musicStep` pins this step. Photo mode's wins at once. An armed title holds whatever the mix.
+ * Once the first tile is placed the title keeps the 30 s dwell any playlist cue gets, counted from when
+ * it started, and then the mood's pick crossfades in through the playlist's own equal-power fade.
+ */
+export function musicPin(
+  photo: boolean,
+  title: TitlePhase,
+  st: MusicState,
+  now: number,
+  o = MUSIC_OPTS,
+): string | null {
+  if (photo) return PHOTO_CUE;
+  if (title === "armed") return TITLE_CUE;
+  if (title === "placed" && st.current === TITLE_CUE && now - st.since < o.dwell) return TITLE_CUE;
+  return null;
+}
+
 /**
  * One playlist step at audio time `now`. With no playable cues it stays idle. A playable `forced` cue
- * (photo mode's) takes over at once, past the dwell and margin; when it clears, the mood's pick returns
+ * (`musicPin`: photo mode's, or a New world's title) takes over at once, past the dwell and margin; when it clears, the mood's pick returns
  * at once, since a cue outside the playlist never holds the dwell.
  */
 export function musicStep(

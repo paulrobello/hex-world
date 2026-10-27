@@ -35,3 +35,7 @@ test("every NOT_DEPLOYED entry exists in the source assets/ Trunk copies", () =>
   const repo = new URL("../../", import.meta.url).pathname;
   for (const p of NOT_DEPLOYED) assert.ok(existsSync(join(repo, p)), p);
 });
+
+test("the New world title ships: a played cue is never pruned", () => {
+  assert.ok(!NOT_DEPLOYED.some((p) => p.includes("title-theme")));
+});

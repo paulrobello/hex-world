@@ -293,6 +293,35 @@ test("new world, rename and delete", async () => {
   assert.equal(store.data.has("w-x"), false);
 });
 
+test("shown: only the player's New world is fresh (the title cue); resume, Load, import and Start over are not", async () => {
+  const store = new MemoryBackend();
+  await store.write(
+    { id: "w-t", name: "Town", tiles: 9, updatedAt: 5, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([7]),
+  );
+  const host = new FakeHost();
+  const shown: boolean[] = [];
+  const p = new Persistence(host, store, { debounceMs: 30, notify: () => {}, shown: (fresh) => shown.push(fresh) });
+  host.result = { ok: true, tiles: 9, version: 1 };
+  await p.start();
+  p.onEvents([{ type: "loaded", tiles: 9, version: 1, settings: null }]);
+  assert.deepEqual(shown, [false], "the returning player's autosave resume never starts the title");
+  p.newWorld();
+  p.onEvents([{ type: "loaded", tiles: 1, version: 1, settings: null }]);
+  assert.deepEqual(shown, [false, true], "New world is fresh once its world is on screen");
+  assert.equal(await p.loadSlot("w-t"), true);
+  p.onEvents([{ type: "loaded", tiles: 9, version: 1, settings: null }]);
+  assert.deepEqual(shown, [false, true, false], "loading a saved world while the title plays ends it");
+  assert.equal(p.importFile("harbour.hexworld", new Uint8Array([1])), true);
+  p.onEvents([{ type: "loaded", tiles: 9, version: 1, settings: null }]);
+  assert.equal(p.startOver(), true);
+  p.onEvents([{ type: "loaded", tiles: 1, version: 1, settings: null }]);
+  assert.deepEqual(shown, [false, true, false, false, false], "an import and Start over are not fresh");
+  // A new_world no HUD action asked for (a script's own command) is not the player's New world either.
+  p.onEvents([{ type: "loaded", tiles: 1, version: 1, settings: null }]);
+  assert.equal(shown.at(-1), false);
+});
+
 test("start over clears the world in place: same name and slot, the cleared world autosaved there", async () => {
   const store = new MemoryBackend();
   await store.write(

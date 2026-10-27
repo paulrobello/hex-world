@@ -30,6 +30,7 @@ import {
   carStep,
   EMITTER_CUE,
   type Mix,
+  type MusicState,
   MUSIC_OPTS,
   ONE_SHOTS,
   type OneShotGate,
@@ -49,9 +50,13 @@ import {
   isFlowerTile,
   musicGains,
   musicIdle,
+  musicPin,
   musicStep,
   nearestOneShotTile,
   PHOTO_CUE,
+  TITLE_CUE,
+  type TitlePhase,
+  titleStep,
   oneShotDefs,
   oneShotDelay,
   oneShotGate,
@@ -324,6 +329,84 @@ test("photo mode's cue takes over at once and the mood's pick returns at once wh
   assert.deepEqual([st.current, st.previous], ["coast-breeze", PHOTO_CUE], "leaving photo mode skips the dwell");
   st = musicStep(musicIdle(), SONGS, moodMix({ meadow: 1 }), 0, o, PHOTO_CUE);
   assert.equal(st.current, "meadow-day", "an unplayable photo cue leaves the playlist alone");
+});
+
+// ---------- The New world title (owner A37 O1) ----------
+
+/** One playlist step with the title's phase and photo mode, as `GameAudio.updateMusic` runs it. */
+const titled = (st: MusicState, title: TitlePhase, mix: Mix, now: number, photo = false) =>
+  musicStep(st, [...SONGS, PHOTO_CUE, TITLE_CUE], mix, now, MUSIC_OPTS, musicPin(photo, title, st, now));
+
+test("the title phase: New world arms it, the first tiles release it, any other world or its end stops it", () => {
+  assert.equal(titleStep("off", { kind: "world", fresh: true }), "armed");
+  assert.equal(titleStep("armed", { kind: "placed" }), "placed");
+  assert.equal(titleStep("off", { kind: "placed" }), "off", "a placement never starts the title");
+  assert.equal(titleStep("placed", { kind: "placed" }), "placed");
+  assert.equal(titleStep("armed", { kind: "world", fresh: false }), "off", "a Load, import or resume ends it");
+  assert.equal(titleStep("armed", { kind: "ended" }), "off");
+  assert.equal(titleStep("placed", { kind: "world", fresh: true }), "armed", "another New world starts it again");
+});
+
+test("a new, empty world plays the title over the start meadow's mood", () => {
+  const meadow = moodMix({ meadow: 1 });
+  let st = titled(musicIdle(), "off", meadow, 0);
+  assert.equal(st.current, "meadow-day");
+  // New world at 40 s: the title takes over at once, through the playlist's equal-power crossfade.
+  st = titled(st, "armed", meadow, 40);
+  assert.deepEqual([st.current, st.previous], [TITLE_CUE, "meadow-day"]);
+  close(musicGains(st, 40 + MUSIC_OPTS.fade / 2).get(TITLE_CUE)!, Math.SQRT1_2);
+  // Armed, it holds past the dwell, whatever the mix.
+  st = titled(st, "armed", moodMix({ coast: 1 }), 40 + 3 * MUSIC_OPTS.dwell);
+  assert.equal(st.current, TITLE_CUE);
+});
+
+test("the first tiles fade the title into the biome music after its dwell", () => {
+  const o = MUSIC_OPTS;
+  const meadow = moodMix({ meadow: 1 });
+  let st = titled(musicIdle(), "armed", meadow, 0);
+  assert.equal(st.current, TITLE_CUE);
+  // The first tile goes down 5 s in: the title keeps the dwell any playlist cue gets.
+  st = titled(st, "placed", meadow, 5);
+  assert.equal(st.current, TITLE_CUE);
+  st = titled(st, "placed", meadow, o.dwell - 0.1);
+  assert.equal(st.current, TITLE_CUE, "inside the dwell");
+  st = titled(st, "placed", meadow, o.dwell);
+  assert.deepEqual([st.current, st.previous], ["meadow-day", TITLE_CUE], "the mood's pick takes over");
+  const mid = musicGains(st, o.dwell + o.fade / 2);
+  close(mid.get("meadow-day")!, Math.SQRT1_2);
+  close(mid.get(TITLE_CUE)!, Math.SQRT1_2);
+  st = titled(st, "off", meadow, o.dwell + o.fade);
+  assert.deepEqual([st.current, st.previous], ["meadow-day", null]);
+  // A placement after the dwell hands over at once; an empty mix still hands over (no margin to clear).
+  st = titled(titled(musicIdle(), "armed", meadow, 0), "placed", moodMix({}), 2 * o.dwell);
+  assert.deepEqual([st.current, st.previous], ["meadow-day", TITLE_CUE]);
+});
+
+test("loading a world (resume, Load, import) never starts the title, and ends one that plays", () => {
+  const town = moodMix({ town: 1 });
+  let phase = titleStep("off", { kind: "world", fresh: false });
+  let st = titled(musicIdle(), phase, town, 0);
+  assert.equal(st.current, "hearth-town", "a returning player's restored world plays its mood, never the title");
+  phase = titleStep(phase, { kind: "placed" });
+  assert.equal(titled(st, phase, town, 1).current, "hearth-town");
+  // A Load while the title plays: the title yields at once to the loaded world's mood.
+  st = titled(musicIdle(), "armed", moodMix({ meadow: 1 }), 0);
+  phase = titleStep("armed", { kind: "world", fresh: false });
+  st = titled(st, phase, town, 3);
+  assert.deepEqual([st.current, st.previous], ["hearth-town", TITLE_CUE]);
+});
+
+test("photo mode takes over from the title at once and gives it back while it is armed", () => {
+  const meadow = moodMix({ meadow: 1 });
+  let st = titled(musicIdle(), "armed", meadow, 0);
+  st = titled(st, "armed", meadow, 4, true);
+  assert.deepEqual([st.current, st.previous], [PHOTO_CUE, TITLE_CUE]);
+  st = titled(st, "armed", meadow, 60);
+  assert.deepEqual([st.current, st.previous], [TITLE_CUE, PHOTO_CUE], "closing photo mode returns to the title");
+  // Placed while photo mode is open: closing it goes to the mood, as the title has handed over.
+  st = titled(st, "placed", meadow, 70, true);
+  st = titled(st, "placed", meadow, 80);
+  assert.equal(st.current, "meadow-day");
 });
 
 // ---------- Occasional one-shots (bees, forest birds and leaves) ----------

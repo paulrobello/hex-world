@@ -59,8 +59,8 @@ import {
   MUSIC_OPTS,
   musicGains,
   musicIdle,
+  musicPin,
   musicStep,
-  PHOTO_CUE,
   nearestOneShotTile,
   oneShotDefs,
   oneShotGate,
@@ -77,6 +77,9 @@ import {
   type StingerFamily,
   resolveOneShot,
   SHOP_BELL,
+  TITLE_CUE,
+  type TitlePhase,
+  titleStep,
   TRAIN_CUES,
   type TrainKind,
   type TrainPlay,
@@ -225,6 +228,8 @@ export interface AudioDebug {
     previous: string | null;
     /** Per streamed track: its playlist gain, and whether its media element plays and where it is (seconds). */
     gains: { id: string; gain: number; paused: boolean; time: number }[];
+    /** The New world title cue's phase (`TitlePhase` in audio-mix.ts). */
+    title: TitlePhase;
   };
   lastCue: Fired | null;
   fired: number;
@@ -354,6 +359,7 @@ export class GameAudio {
   private bedLevels = new Map<string, number>();
   private tracks = new Map<string, Track>();
   private music: MusicState = musicIdle();
+  private title: TitlePhase = "off";
   private mix: Mix = emptyMix();
   private view: View | null = null;
   private instances = new Map<string, AudioBufferSourceNode[]>();
@@ -404,6 +410,16 @@ export class GameAudio {
   private recent: Fired[] = [];
   private fired = 0;
   private lastAt = 0;
+
+  /**
+   * A world came on screen (persistence's `shown`): `fresh` when the player's New world made it. A fresh
+   * world arms the title from its start; any other world ends a title still playing.
+   */
+  worldShown(fresh: boolean): void {
+    this.title = titleStep(this.title, { kind: "world", fresh });
+    const tr = this.tracks.get(TITLE_CUE);
+    if (fresh && tr) tr.el.currentTime = 0;
+  }
 
   /** Unlocks on the first pointer or key press. Install before the HUD's own capture listeners. */
   listen(): void {
@@ -556,6 +572,10 @@ export class GameAudio {
 
   // ---------- Events ----------
   onEvents(batch: readonly GameEvent[]): void {
+    // The first tiles release the title even before the context runs, so a placement made while the
+    // cues load never leaves it armed.
+    if (batch.some((e) => e.type === "tilePlaced" || e.type === "tileReplaced"))
+      this.title = titleStep(this.title, { kind: "placed" });
     const ctx = this.ctx;
     if (ctx?.state !== "running" || !this.active) return;
     for (const e of batch) {
@@ -1164,8 +1184,19 @@ export class GameAudio {
 
   private updateMusic(ctx: AudioContext, photo: boolean): void {
     const ids = this.streams.filter((c) => c.kind === "music" || c.class === "music").map((c) => c.id);
-    this.music = musicStep(this.music, ids, this.mix, ctx.currentTime, MUSIC_OPTS, photo ? PHOTO_CUE : null);
-    const gains = musicGains(this.music, ctx.currentTime);
+    const now = ctx.currentTime;
+    // The title plays once: it hands over one fade before its end, so the crossfade finishes with it.
+    const title = this.tracks.get(TITLE_CUE);
+    if (this.title !== "off" && this.music.current === TITLE_CUE && title) {
+      const end = Number.isFinite(title.el.duration) ? title.el.duration : this.cues.get(TITLE_CUE)?.durationSeconds;
+      if (title.el.ended || (end != null && title.el.currentTime >= end - MUSIC_OPTS.fade))
+        this.title = titleStep(this.title, { kind: "ended" });
+    }
+    const pin = musicPin(photo, this.title, this.music, now);
+    this.music = musicStep(this.music, ids, this.mix, now, MUSIC_OPTS, pin);
+    // A released title that has handed over has nothing left to hold.
+    if (this.title === "placed" && this.music.current !== TITLE_CUE) this.title = "off";
+    const gains = musicGains(this.music, now);
     for (const [id, g] of gains) {
       let tr = this.tracks.get(id);
       if (!tr && g > 0) tr = this.track(ctx, id) ?? undefined;
@@ -1188,7 +1219,8 @@ export class GameAudio {
     if (!file) return null;
     const el = document.createElement("audio");
     el.src = versioned(BASE + file.path);
-    el.loop = true;
+    // The playlist and photo cues loop; the title (no manifest loop) plays once.
+    el.loop = this.cues.get(id)?.loop != null;
     el.preload = "auto";
     const gain = ctx.createGain();
     gain.gain.value = 0;
@@ -1207,6 +1239,7 @@ export class GameAudio {
     this.beds.clear();
     for (const tr of this.tracks.values()) tr.el.pause();
     this.music = musicIdle();
+    this.title = "off";
     this.oneShots = new Map(ONE_SHOTS.map((row) => [row.name, oneShotIdle()]));
     this.pending.clear();
     this.cars = carIdle();
@@ -1295,6 +1328,7 @@ export class GameAudio {
           paused: tr.el.paused,
           time: round(tr.el.currentTime, 3),
         })),
+        title: this.title,
       },
       lastCue: last && { ...last },
       fired: this.fired,

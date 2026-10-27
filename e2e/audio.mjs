@@ -334,6 +334,55 @@ try {
   check(a.trains.voices.length <= 3, `never more than three train voices (${a.trains.voices.length})`);
   check(a.recent.every((f) => !f.id.startsWith("train-")), "train cues stay out of the event-cue history");
 
+  // The New world title (owner A37 O1): the Worlds sheet's New world plays title-theme over the start meadow,
+  // photo mode still takes over from it, and the first tile fades it into meadow-day after its 30 s dwell.
+  // A raw new_world (the cars and trains worlds above) never played it.
+  check(!audioRequests.some((u) => /\/music\/title-theme\./.test(u)), "no title-theme fetched before New world");
+  if (!(await page.locator(".sheet--worlds:not(.is-closed)").count())) await page.locator(".bar__world").click();
+  await page.locator(".sheet--worlds [data-act=new]").click();
+  await until(async () => (await tiles()) === 1, "New world from the Worlds sheet");
+  await page.keyboard.press("Escape");
+  await until(async () => {
+    const m = (await audio()).music;
+    return m.title === "armed" && m.current === "title-theme";
+  }, "New world arms the title and plays title-theme");
+  const tStart = (await audio()).currentTime;
+  const t0Title = await streaming("title-theme");
+  await page.waitForTimeout(1500);
+  const t1Title = await track("title-theme");
+  check(t0Title && t1Title && t1Title.gain > t0Title.gain && t1Title.time > t0Title.time,
+    `title-theme's gain rises (${t0Title?.gain} -> ${t1Title?.gain}) while it plays (${t0Title?.time} -> ${t1Title?.time} s)`);
+  check(audioRequests.some((u) => /\/assets\/audio\/music\/title-theme\.webm$/.test(u)), "title-theme.webm streams on demand after New world");
+  await cmd({ cmd: "toggle", what: "photo" });
+  await until(async () => (await audio()).music.current === "photo-mode", "photo mode takes over from the title");
+  await cmd({ cmd: "toggle", what: "photo" });
+  await until(async () => (await play()).photo_mode === false, "photo mode closes over the title");
+  await until(async () => {
+    const m = (await audio()).music;
+    return m.current === "title-theme" && m.title === "armed";
+  }, "closing photo mode returns to the title");
+  await page.evaluate(() => { window.hexWorld.selectTile("meadow"); window.hexWorld.placeTile(1, 0); });
+  await until(async () => (await tiles()) === 2, "the first tile goes down in the new world");
+  await until(async () => (await audio()).music.title === "placed", "the first tile releases the title");
+  a = await audio();
+  check(a.music.current === "title-theme", `the released title keeps its dwell (${a.music.current})`);
+  const handed = await until(async () => {
+    const s = await audio();
+    return s.music.current === "meadow-day" && s.music.previous === "title-theme" ? s : null;
+  }, "the title fades into meadow-day", 45_000);
+  check(handed && handed.currentTime - tStart >= 30 - 0.5,
+    `the hand-over waits out the 30 s dwell (${handed && (handed.currentTime - tStart).toFixed(1)} s after the title started)`);
+  await page.waitForTimeout(3000);
+  const mid = await audio();
+  const gT = mid.music.gains.find((g) => g.id === "title-theme")?.gain ?? 0;
+  const gM = mid.music.gains.find((g) => g.id === "meadow-day")?.gain ?? 0;
+  check(mid.music.previous === "title-theme" && gT > 0 && gM > 0 && Math.abs(gT * gT + gM * gM - 1) < 0.15,
+    `mid-crossfade at equal power (title ${gT}, meadow-day ${gM})`);
+  await until(async () => (await audio()).music.title === "off" && !(await audio()).music.previous, "the crossfade finishes", 10_000);
+  save("title", { started: [t0Title, t1Title], handed: handed?.music, mid: mid.music, state: await audio() });
+  // The placement autosaves this two-tile world, which the reload below restores.
+  await until(async () => (await page.locator(".bar__world").innerText()).includes("Saved"), "the new world is autosaved", 10_000);
+
   // Mute silences the output, and the setting persists for this viewer.
   await page.evaluate(() => window.hexWorld.audio.setMuted(true));
   await page.waitForTimeout(500);
@@ -351,6 +400,10 @@ try {
   await page.waitForTimeout(800);
   a = await audio();
   check(a.outputRms < 1e-5 && a.masterGain < 1e-4, `still silent after the reload (rms ${a.outputRms})`);
+  // A returning player: the autosave restores the two-tile world, and the title never plays.
+  check((await tiles()) === 2, `the reload restores the autosaved world (${await tiles()} tiles)`);
+  check(a.music.title === "off" && a.music.current !== "title-theme" && !audioRequests.some((u) => /\/music\/title-theme\./.test(u)),
+    `a restored world never plays the title (${a.music.title}, ${a.music.current})`);
   await page.evaluate(() => window.hexWorld.audio.setMuted(false));
   // A play, so the check doesn't hang on what the restored world and camera happen to make audible.
   t0 = Date.now();

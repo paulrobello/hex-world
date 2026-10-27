@@ -63,6 +63,11 @@ export interface PersistOptions extends PersistenceUiHost {
   switching?: () => void;
   /** A stored world was deleted. */
   removed?: (id: string) => void;
+  /**
+   * A world is on screen after the engine's `loaded`: `fresh` only for the player's New world, never the
+   * start-up resume, a Load, an import or Start over (the New world title cue, owner A37 O1).
+   */
+  shown?: (fresh: boolean) => void;
 }
 
 /** The world on screen: its slot id, its name, and whether its slot exists in storage yet. */
@@ -77,6 +82,8 @@ interface Switch extends CurrentWorld {
   saveNow: boolean;
   /** A stored world opened (resume or Load): its viewer's camera comes back once it is up. */
   opened?: boolean;
+  /** The player's New world: a fresh, empty world. */
+  fresh?: boolean;
 }
 
 /** The world a Replace wrote over, kept so the toast's Undo can put it back byte for byte. */
@@ -442,6 +449,7 @@ export class Persistence {
     this.ready = true;
     this.setState(this.store ? "saved" : "off");
     if (sw.opened) this.opts.opened?.(sw.id);
+    this.opts.shown?.(sw.fresh === true);
     // An import is written as soon as the HUD has seen its tiles (the debounce outlasts a frame).
     if (sw.saveNow && this.store) {
       this.setState("saving");
@@ -566,6 +574,7 @@ export class Persistence {
       name: this.ux.nextName(this.allNames()),
       stored: false,
       saveNow: false,
+      fresh: true,
     });
   }
 
