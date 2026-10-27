@@ -1,18 +1,22 @@
-# Hex World handoff (2026-10-26)
+# Hex World handoff (2026-10-27)
 
 Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE.md`, `PRD.md` §15 and `.claude/skills/blender-asset/SKILL.md` before any asset work.
 
 ## State
 
-- `main` holds batches 27-32 (`8464de8`, pushed 2026-10-27 02:43Z). `dist/` rebuilt.
+- `main` holds batches 27-35 (`6b8dca3`, pushed 2026-10-27 06:26Z). `dist/` rebuilt.
+- Batch 35 landed (`5a6b0d2`, `6b8dca3`): B3 water-surface props (`lily_cluster`, `_b`, `_c`, `reed_bed`) as runtime scatter on river bends and springs, owner approval pending (A32); the mixed scatter world is 32 tiles and 52 pieces, overview 464 draws (tracked). Scripted and CLI screenshots retake an all-black frame in-engine while the clock is held (`capture::request_held`), closing the shots-* black-frame flake under load.
+- Batch 33 landed (`f1aff3e`, CI green): the per-cell cascade skip. MiniMac (5 rounds, load-guarded): the 2,066-tile close camera 34.1 -> 30.4 ms web mean, 23.3 -> 18.9 ms native, no camera slower; mixed overview 548 -> 452 draws. Per owner A28 scatter draw work stops here; shared scatter materials (card 01a17b1967e5) are for later.
+- Waiting to land:
+  - Frame pacing (worktree-agent-a36f92651cd67e0f9) and the frame rate cap built on it (worktree-agent-acc02046f8f98737c, owner A29: Settings Graphics Off/30/60/120, web keeps full rate while a HUD control has focus). The MiniMac frame-pacing before/after runs 07:00-07:57Z 2026-10-27 (`/tmp/claude-501/mm-pacing.sh`, results in `/tmp/claude-501/pacing/`); land pacing first, then the cap (`git diff` between the two branches).
+  - B1 boulders and outcrop (worktree-agent-a02bc131da7e3f31b: commits plus `docs/checkpoints/boulders/integration.patch` and `thumbs-camera.patch`, made against `c84d670`), waiting on A30. It must be re-based onto B3's `scatter.rs` changes, and its shots-scatter every-piece check fails until the mixed world is extended (A30 Q4).
 - Batch 28 landed: riverbank stones and reeds are runtime scatter, a seeded 0 to 4 per river tile (owner, 2026-10-26: scatter is never baked into a tile). Five new props (`river_stones`, `_b`, `_c`, `river_reeds`, `_b`); the channel and mouth centres left the manifest; the road and rail bridges and the spring lost their baked dressing (the spring keeps its granite ring and lilies, A21). 41 thumbnails changed. Riverbank card closed. The six removed centres' generators, `assets-source/kit/` and `assets/kit/p1/` folders and their three dress helpers (`_mouth_dress`, `_river_bend_60_dress`, `_river_fork_dress`) are deleted too; `kit-compress.test.mjs` keeps `river_fork_center`'s masks PNG as `scripts/assets/test-fixtures/`, and `kit_gate::no_kit_artifacts_outside_the_manifest` now fails on any such leftover.
 - Batch 27 landed: cars follow at the queue spacing and yield at merges, crossings and yards (`tests/yielding.rs`). Card stays open on criterion 2: no test asserts the 6.9 m spacing for general following yet.
 - Batch 32 landed (`8464de8`): native runs end the process once every output is written. This skips a Bevy/winit teardown deadlock: in a forced repro the render thread sat in winit `Window::drop` dispatch_sync while the main thread sat in `RenderAppChannels::drop`; vault note Debugging/bevy-native-exit-deadlock-macos-pipelined-rendering-winit.md. An exit watchdog samples any future hang into `target/exit-hang-<pid>.txt`. Also: the six dead river centres and three helpers are deleted, with an orphan-artifact kit gate; hazel and bramble leaves are matte (A27 look approval pending); river bank reeds and stones are half and half (A22 Q2); the kit showcase holds the coast and bank props; scatter pairs are tracked, and a mixed river/beach/ocean world is in shots-scatter. That world's overview is 548 draws, over the 500 budget, tracked on card 01a17b1967e5 (shared scatter materials).
 - Batch 31 landed (`e1cae5a`, CI green): kit bind-group cache (cascade LOD pin and clamp rejected); grass build 2x faster, web p95 2.9-3.0 ms on MiniMac.
 - Batch 30 landed (`de54703`, CI green): scripted and thumbs runs ignore live window input (the shots-scatter 'held' flake was a stray F key toggling walk mode); thumbs watchdog; car queue-spacing assertions (car-yield card closed).
 - Batch 29 landed (`84ca31f`, CI green): beach and seabed scatter, matte verge bushes.
-- Running (macdaddy booked to 08:00Z 2026-10-27, load-tolerant): the shared scatter materials agent (card 01a17b1967e5) and the frame pacing diagnosis (card 01a179600790). Both hand back MiniMac recipes for the orchestrator to book and run.
-- B1 boulders and B3 lily pads and reed bed: reference sets on main (`assets-source/refs/boulders`, `water_props`); waiting on owner A25 and A26 (open-questions page https://artifacts.pardev.net/a/01a17a68d64b70e1a86e84e65d1362cc). B2 follows.
+- B2 dry-stone walls and hedgerows: reference set on main (`assets-source/refs/walls_hedges`), waiting on A31 (layout model: edge boundaries recommended). Open-questions page: https://artifacts.pardev.net/a/01a17a68d64b70e1a86e84e65d1362cc (generator `docs/review/2026-10-26-open-questions.py`).
 - Batch 26: `0ace163`..`c56ee37`; batch 25 is `d908e36`, CI green (run 40324963259).
 - Batch 26 landed: the owner's A16/A17 approvals (21 pieces), the bulldoze dust reverted to its previous size (owner A9), the close-camera MiniMac frame times (`docs/perf/close-camera-draws/`), A3/A18 answers in the PRD.
 - Batch 25 landed: close-camera draws (screen-aware cascade skip, runtime slot coalescing per piece, per-tile culling): 20-tile overview 419 -> 335, forest cluster 633 -> 436, meadow 645 -> 497; MiniMac 2,066-tile close camera -3.7 ms web mean, -4.4 ms native. Cards closed: close-camera draws, draw budget.
@@ -34,7 +38,7 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## Next asset work
 
-No Blender agents are running (2026-10-26 19:20Z). The scatter-rebuild agents (riverbank, beach/ocean) and bush shine are finished. No new piece has an approved reference set, so the next wave waits on A19 (B1-B4) and A23 (the forest shrubs). Recipes are deferred and nothing past P3 starts until Paul says so.
+No Blender agents are running (2026-10-27 06:30Z): B1 and B3 are built, B2's refs wait on A31. The next modelling wave is B2 after A31, then B1's follow-ups after A30. Recipes are deferred and nothing past P3 starts until Paul says so.
 
 ## Standing rules from the owner (still in force)
 
@@ -52,7 +56,7 @@ No Blender agents are running (2026-10-26 19:20Z). The scatter-rebuild agents (r
 
 ## Waiting on Paul
 
-- A25 (B1 boulder refs, Q1-Q7) and A26 (B3 lily and reed refs, Q8-Q12) on the open-questions page; each question has a recommended default.
+- A30 (B1: approve the pieces, rule order, thumbnails, mixed-world extension), A31 (B2 refs and layout), A32 (B3 pieces, far pads, reeds on springs, plume reach), each with a recommended default.
 - A27: approve the matte hazel and bramble shrubs (`docs/checkpoints/shrub-matte/sheet.jpg`).
 - Whether hex-world yields its macdaddy windows to par-term's package-update work (a peer relayed an owner priority directive; not verified).
 - Non-blocking tuning lists from 2026-10-20 and the older numbered lists below each ship with a default.
