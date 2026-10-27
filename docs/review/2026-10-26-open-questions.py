@@ -35,6 +35,7 @@ SHEET_TOP = pathlib.Path("/tmp/claude-501/b1-sheet-top.jpg")
 SHEET_BOTTOM = pathlib.Path("/tmp/claude-501/b1-sheet-bottom.jpg")
 THUMBS = pathlib.Path("/tmp/claude-501/thumbs-cmp.jpg")
 B2 = CP / "walls-hedges-refs/refs-sheet.jpg"
+B3 = ROOT / ".claude/worktrees/agent-a99414f39c7437fd1/docs/checkpoints/water-props/sheet.jpg"
 
 SECTIONS = [
     ("A30", "B1 boulders and outcrop: built and gated, ready to land", [
@@ -81,6 +82,25 @@ SECTIONS = [
     ], [], [
         (B2, "B2 reference sheet: walls_hedges refs 1 to 4 (top row) beside the approved boulder, farm and well refs"),
     ]),
+    ("A32", "B3 lily pads and reed bed: built and gated, landing now", [
+        ("Q1", "Approve the four pieces: lily_cluster (3 pads), lily_cluster_b (7 pads and a white lily), lily_cluster_c "
+               "(5 pads and a pink bud), all using the spring's own pad so they read as one family, and reed_bed "
+               "(70 common reed stems, about 3.6 x 1.8 m, 2.4 m tall, swaying in the wind), scattered on river bends, "
+               "slow straights and springs at the approved densities. They pass every asset gate and are landing now with "
+               "approval pending. Recommended: approve."),
+        ("Q2", "Far pads. The approval says pads drop out past 400 m, but the gate needs every piece to keep a far LOD. "
+               "So the far LOD keeps the biggest pads as flat 2-triangle quads (1 of 3, 7 of 7 and 3 of 5). The other way "
+               "is to let a piece have no far LOD at all, a change across the gate, scatter test and exporter. "
+               "Recommended: accept as built."),
+        ("Q3", "Reeds on springs are rare: 8 of 168 spring tiles get a reed bed, against 68 of 168 bends, because the "
+               "spring's granite ring and built-in pads leave little room. O1: accept (reeds mostly on bends). O2: a "
+               "smaller reed bed variant for springs. Recommended: O1."),
+        ("Q4", "At its largest scale the reed bed's leaning edge plumes can reach past its 1.85 m footprint, over a "
+               "bank prop or within about 0.8 m of the tile edge. Reducing the lean needs a rebuild. Recommended: accept."),
+    ], [], [
+        (B3, "B3 review sheet: approved refs, Blender stills with a 1.7 m figure, the spring and a bend at play distance, "
+             "close-ups, eye level, and the spring's own pads beside lily_cluster_c"),
+    ]),
 ]
 
 CSS = """
@@ -102,7 +122,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, fourth round. A19 to A29 are answered; A30 and A31 are open.</p>"]
+             "<p class=sub>2026-10-27, fourth round. A19 to A29 are answered; A30 to A32 are open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
