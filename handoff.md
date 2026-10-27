@@ -4,8 +4,8 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## State
 
-- `main` holds batches 27-35 (`6b8dca3`, pushed 2026-10-27 06:26Z). `dist/` rebuilt.
-- Batch 35 landed (`5a6b0d2`, `6b8dca3`): B3 water-surface props (`lily_cluster`, `_b`, `_c`, `reed_bed`) as runtime scatter on river bends and springs, owner approval pending (A32); the mixed scatter world is 32 tiles and 52 pieces, overview 464 draws (tracked). Scripted and CLI screenshots retake an all-black frame in-engine while the clock is held (`capture::request_held`), closing the shots-* black-frame flake under load.
+- `main` holds batches 27-34 (`6b8dca3`, pushed 2026-10-27 06:26Z). `dist/` rebuilt.
+- Batch 34 landed (`5a6b0d2`, `6b8dca3`): B3 water-surface props (`lily_cluster`, `_b`, `_c`, `reed_bed`) as runtime scatter on river bends and springs, owner approval pending (A32); the mixed scatter world is 32 tiles and 52 pieces, overview 464 draws (tracked). Scripted and CLI screenshots retake an all-black frame in-engine while the clock is held (`capture::request_held`), closing the shots-* black-frame flake under load.
 - Batch 33 landed (`f1aff3e`, CI green): the per-cell cascade skip. MiniMac (5 rounds, load-guarded): the 2,066-tile close camera 34.1 -> 30.4 ms web mean, 23.3 -> 18.9 ms native, no camera slower; mixed overview 548 -> 452 draws. Per owner A28 scatter draw work stops here; shared scatter materials (card 01a17b1967e5) are for later.
 - Waiting to land:
   - Frame pacing (worktree-agent-a36f92651cd67e0f9) and the frame rate cap built on it (worktree-agent-acc02046f8f98737c, owner A29: Settings Graphics Off/30/60/120, web keeps full rate while a HUD control has focus). The MiniMac frame-pacing before/after runs 07:00-07:57Z 2026-10-27 (`/tmp/claude-501/mm-pacing.sh`, results in `/tmp/claude-501/pacing/`); land pacing first, then the cap (`git diff` between the two branches).
