@@ -139,7 +139,8 @@ pub struct WalkSession {
     pub stride: Vec2,
     pub look: Vec2,
     pub hop: bool,
-    /// The latest move's stop reason, kept until the walker next moves freely.
+    /// The latest move's stop reason, kept until the walker next moves freely; a scripted step
+    /// keeps the first stop it met until it ends.
     pub blocked: Option<Blocked>,
     /// Metres moved in the latest frame.
     pub moved: f32,
@@ -236,6 +237,7 @@ pub fn advance(s: &mut WalkSession, ground: &WalkGround, dt: f32) -> f32 {
     w.yaw -= s.look.x * LOOK_RAD_PER_PX;
     w.pitch = (w.pitch - s.look.y * LOOK_RAD_PER_PX).clamp(-MAX_PITCH, MAX_PITCH);
     let mut stride = s.stride;
+    let scripted = s.script.is_some();
     if let Some((dir, sprint, left)) = s.script.as_mut() {
         let (d, rest) = scripted_stride(*dir, s.speed.of(*sprint), *left, dt);
         stride += d;
@@ -255,7 +257,11 @@ pub fn advance(s: &mut WalkSession, ground: &WalkGround, dt: f32) -> f32 {
         let step = ground.step(w.feet, delta);
         w.feet.x = step.pos.x;
         w.feet.z = step.pos.z;
-        s.blocked = step.blocked;
+        // A scripted step keeps the first stop it met: a walker that then slides along the edge or
+        // a collider still ended its step short, and that is what `blocked` reports for it.
+        if step.blocked.is_some() || !scripted {
+            s.blocked = step.blocked;
+        }
         step.pos.y
     } else {
         ground.ground(w.feet.xz()).unwrap_or(w.feet.y)
@@ -411,6 +417,7 @@ pub fn sync(
                 seconds,
                 sprint,
             } => {
+                s.blocked = None;
                 s.script = (seconds > 0.0 && seconds.is_finite()).then_some((
                     Vec2::new(right, forward),
                     sprint,

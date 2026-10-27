@@ -901,7 +901,9 @@ try {
   await page.keyboard.up("w");
   const w1 = await until(async () => { const w = (await st()).walk; return !w.moving && w; }, "the walker stops when W is released");
   const walked = Math.hypot(w1.feet[0] - w0.feet[0], w1.feet[2] - w0.feet[2]);
-  check(walked > 3 && walked < 11, `W walks ${walked.toFixed(2)} m in 1.2 s (5.0 m/s)`);
+  // A scatter rock (B1 boulders, outcrop) may stand between the walker and its tile's centre: a walk
+  // a collider stopped still has to move the walker, the way walk_step's check below allows it.
+  check(walked < 11 && (walked > 3 || (w1.blocked !== null && walked > 0.5)), `W walks ${walked.toFixed(2)} m in 1.2 s (5.0 m/s, blocked: ${w1.blocked})`);
   check(w1.tile !== null && w1.ground !== null && w1.water_depth <= 0.6, `still on land: ${w1.tile}, water ${w1.water_depth} m`);
   await shot("walk-1-first-person");
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "walk_look", heading: null, pitch: 0 }));

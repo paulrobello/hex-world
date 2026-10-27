@@ -42,6 +42,9 @@ that built it instead of starting a fresh one.
      `kit-check` and `checkall`.
    - After a size or footprint change: `cargo test -p hex-play -p hex-render --lib -- boids
      scatter walk kit_scene` (walk and scatter live in hex-play, as `project.md` gives it).
+   - A piece that blocks the walker or changes a tile's scatter layout also runs `make ui-e2e`:
+     its first-person walk check walks from a meadow toward the tile centre, and B1's outcrop
+     stopped it short of 3 m after B1 had passed every other gate (2026-10-27).
 8. **Before review.** The review sheet in `docs/checkpoints/<piece>/` (SKILL.md, "Owner
    checkpoints"). Flag any new gate branch before building (SKILL.md, "A new kind of piece
    needs its gate branch first").
